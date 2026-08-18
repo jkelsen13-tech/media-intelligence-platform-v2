@@ -1,0 +1,18 @@
+-- Isolated v2, compliance-only tracker. No file content, person entities, allegations,
+-- graph nodes, embeddings, articles, or links to the underlying file corpus are created.
+BEGIN;
+
+INSERT INTO public.p3_policy (name,jurisdiction,instrument_type,description,review_status,agency,source_locator)
+SELECT 'Epstein Files Transparency Act — disclosure-process compliance','US Federal','statutory compliance tracker','Closed-curated-beta tracker for statutory and agency-process milestones only. It does not ingest, index, store, quote, search, or link to underlying released files; it does not make person-level allegations or findings.','draft','DOJ',jsonb_build_object('chapter',0,'pages','Public Law 119-38','edition','2025-11-19','chapter_title','Congress.gov official legislative record','url','https://www.congress.gov/bill/119th-congress/house-bill/4405/text','scope','process metadata only')
+WHERE NOT EXISTS (SELECT 1 FROM public.p3_policy WHERE name='Epstein Files Transparency Act — disclosure-process compliance');
+
+DELETE FROM public.p3_policy_track_event WHERE policy_id=(SELECT id FROM public.p3_policy WHERE name='Epstein Files Transparency Act — disclosure-process compliance') AND method_version='epstein-compliance-process-v1';
+
+INSERT INTO public.p3_policy_track_event (policy_id,track,state,event_date,source_passage,method_version,remaining_uncertainty,missing_evidence,review_status,source_locator)
+SELECT id,'stated_objective','became_law',DATE '2025-11-19','Congress.gov identifies H.R. 4405 as Public Law 119-38 and marks the bill as law.','epstein-compliance-process-v1','Statutory requirements are tracked only at high level; underlying materials are never ingested.',false,'draft',jsonb_build_object('chapter',0,'pages','Public Law 119-38','edition','2025-11-19','chapter_title','Congress.gov official legislative record','url','https://www.congress.gov/bill/119th-congress/house-bill/4405/text','source_type','official_legislative_record') FROM public.p3_policy WHERE name='Epstein Files Transparency Act — disclosure-process compliance'
+UNION ALL
+SELECT id,'actual_outcome','agency_process_statement',DATE '2026-01-30','DOJ stated that it published additional responsive pages and provided a combined production total.','epstein-compliance-process-v1','This is an attributed DOJ process statement, not an independent conclusion that statutory obligations are complete. Underlying materials are not accessed or stored.',false,'draft',jsonb_build_object('chapter',0,'pages','DOJ process announcement','edition','2026-01-30','chapter_title','U.S. Department of Justice','url','https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files','source_type','official_agency_statement') FROM public.p3_policy WHERE name='Epstein Files Transparency Act — disclosure-process compliance'
+UNION ALL
+SELECT id,'actual_outcome','audit_open',DATE '2026-04-23','DOJ OIG states that it is auditing DOJ processes for identifying, redacting, withholding, releasing, and addressing post-release concerns.','epstein-compliance-process-v1','The audit is ongoing; no compliance conclusion is inferred. No victim-identifying or underlying-file information is stored.',false,'draft',jsonb_build_object('chapter',0,'pages','OIG audit notice','edition','2026-04-23','chapter_title','DOJ Office of Inspector General','url','https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act','source_type','official_oversight_record') FROM public.p3_policy WHERE name='Epstein Files Transparency Act — disclosure-process compliance';
+COMMIT;
+SELECT count(*) AS seeded_events FROM public.p3_policy_track_event WHERE method_version='epstein-compliance-process-v1' LIMIT 1;

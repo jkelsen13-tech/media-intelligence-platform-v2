@@ -282,3 +282,31 @@
 .sc-search {
   margin: 0 0 4px;
 }
+
+/* Reference-alignment pass: the blue outer field is intentionally outside this
+   component. These rules build the white-card hierarchy inside the content area. */
+.sc-view { gap: 20px; max-width: 980px; margin: 0 auto; }
+.sc-banner { padding: 22px 24px; border-radius: 22px; box-shadow: 0 7px 18px rgb(22 52 92 / 7%); }
+.sc-banner h2 { font-size: clamp(1.45rem, 3vw, 2rem); letter-spacing: -0.02em; color: var(--text-primary); }
+.sc-banner p { font-size: 0.92rem; line-height: 1.55; max-width: 72ch; }
+.sc-event { padding: 22px 24px; border-radius: 22px; background: var(--bg-panel); box-shadow: 0 6px 16px rgb(22 52 92 / 6%); gap: 14px; }
+.sc-event-head { align-items: flex-start; }
+.sc-event-head h3 { font-size: clamp(1.1rem, 2.5vw, 1.42rem); line-height: 1.23; max-width: 42rem; }
+.sc-event-head > .sc-meta { border: 1px solid var(--status-blue-border); color: var(--status-blue-text); background: var(--bg-inset); border-radius: 999px; padding: 4px 9px; white-space: nowrap; }
+.sc-single-source, .sc-empty { padding: 10px 13px; border-radius: 14px; background: var(--bg-inset); }
+.sc-claim { border-radius: 18px; padding: 16px 18px; background: var(--bg-elevated); box-shadow: 0 2px 8px rgb(22 52 92 / 4%); }
+.sc-claim-text { font-size: 1rem; line-height: 1.52; }
+.sc-chip { padding: 3px 9px; font-size: 0.74rem; font-weight: 650; }
+.sc-surface { padding: 12px 14px; border-radius: 14px; background: var(--bg-panel); }
+.sc-surface-head { padding-bottom: 6px; border-bottom: 1px solid var(--border-color); }
+.sc-surface-text { font-size: 0.9rem; }
+.sc-meta { line-height: 1.45; }
+.sc-search { min-height: 44px; border-radius: 16px; }
+@media (max-width: 640px) {
+  .sc-view { gap: 14px; }
+  .sc-banner, .sc-event { padding: 18px 16px; border-radius: 18px; }
+  .sc-event-head { flex-direction: column; gap: 7px; }
+  .sc-claim { padding: 14px; border-radius: 15px; }
+  .sc-xlinks { gap: 8px; }
+  .sc-xlink-group { flex-wrap: wrap; gap: 8px; }
+}
