@@ -11,11 +11,18 @@
 // crumb navigation) keep their existing stack/panel semantics and do NOT go
 // through this seam.
 
-// Transient UI state a jump must clear. App.jsx's resetJumpContext clears
-// exactly these; the unit pin statically guards that the App handler still
-// clears every entry, so a future panel can't be added and silently leak
-// across jumps.
-export const JUMP_CLEARS = ['edgeEvidence', 'selected', 'pinned', 'policyNode']
+// Transient UI state a jump must clear. App.jsx's resetJumpContext delegates
+// to clearPrimaryGraphOverlays for these values, then resets the focus stack,
+// so a future panel cannot silently leak across jumps.
+export const JUMP_CLEARS = [
+  'edgeEvidence',
+  'selected',
+  'pinned',
+  'policyNode',
+  'edgeListOpen',
+  'reviewStatusOpen',
+  'topicsOpen',
+]
 
 // The focus stack after a jump: exactly one crumb rooted at the target.
 // `extra` carries kind-specific payload (e.g. topic memberIds) without

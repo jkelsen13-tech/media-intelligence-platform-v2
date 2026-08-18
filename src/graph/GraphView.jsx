@@ -959,6 +959,18 @@ export default function GraphView({
     [nodes, edges],
   )
 
+  // Package 3 item 19: an isolated focus is evidence state, not a visual
+  // failure. The reader is told plainly that no documented relationships are
+  // present and is directed to the node inspector where attached articles and
+  // node-level source records are shown. No edge is inferred to fill the gap.
+  const isolatedFocusNode = useMemo(() => {
+    if (!focusNodeId) return null
+    const node = nodes.find((n) => String(n.id ?? n.slug) === String(focusNodeId))
+    if (!node) return null
+    const nodeKey = node.id ?? node.slug
+    return edges.some((edge) => edge.source === nodeKey || edge.target === nodeKey) ? null : node
+  }, [focusNodeId, nodes, edges])
+
   return (
     <div className="graph-canvas-wrap">
       <canvas ref={gridRef} className="graph-grid" aria-hidden="true" />
@@ -981,6 +993,16 @@ export default function GraphView({
       >
         No documented connections ({disconnectedCount})
       </div>
+      {isolatedFocusNode && (
+        <aside className="graph-isolated-reader" aria-live="polite" aria-label="Isolated node evidence state">
+          <strong>{isolatedFocusNode.label}</strong>
+          <p>No documented relationships are recorded for this node.</p>
+          <p>Attached articles and node-level source records remain available without inferring a connection.</p>
+          <button type="button" onClick={() => onSelect?.(isolatedFocusNode)}>
+            Open node evidence
+          </button>
+        </aside>
+      )}
       <GraphViewControls
         cyRef={cyRef}
         onReset={() => resetLayoutRef.current?.()}

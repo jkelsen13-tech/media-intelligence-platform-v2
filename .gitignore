@@ -4,3 +4,25 @@ dist
 .env.local
 *.local
 .DS_Store
+
+# Raw owner-supplied planning materials and local-only execution records.
+# Keep these out of the public v2 repository; publish only intentionally
+# redacted, owner-approved summaries.
+verifier/owner-document-text/
+verifier/attachment-inventory.tsv
+verifier/document-catalog.md
+verifier/document-classification-summary.json
+verifier/document-classifications.jsonl
+verifier/document-status-scan.tsv
+verifier/live-llm-model-catalog.json
+verifier/project-2025-doc07-overlap-query.json
+verifier/project-2025-stage-b-dry-run-*.md
+verifier/reference-image-map-*.md
+verifier/unresolved-work-signals.txt
+verifier/v2-open-action-ledger-*.md
+verifier/build_document_catalog.sh
+verifier/classify_owner_documents.py
+verifier/extract_document_statuses.sh
+verifier/extract_owner_documents.sh
+verifier/summarize_document_classifications.py
+verifier/document-execution-matrix.md

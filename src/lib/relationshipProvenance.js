@@ -43,6 +43,19 @@ function humanize(token) {
   return String(token ?? '').replace(/_/g, ' ').trim()
 }
 
+// Legacy reliability remains an ordinal scale, but the UI must never make a
+// reader infer whether a larger number is better. The stored convention is
+// 1 = highest, so every rendered value carries an explicit plain-language tier.
+function reliabilityLabel(value) {
+  const tiers = {
+    1: 'highest reliability',
+    2: 'high reliability',
+    3: 'moderate reliability',
+    4: 'limited reliability',
+  }
+  return Number.isFinite(value) && tiers[value] ? `${value} of 4 — ${tiers[value]}` : null
+}
+
 /**
  * Build the full view model for the docked relationship panel.
  *
@@ -123,12 +136,14 @@ export function buildRelationshipPanelView({ edge, explanation = null, sources =
   const rel = Number(edge?.reliability)
   const axes = []
 
-  // 1. Source reliability (R): legacy 1–4 scale carried on the edge.
+  // 1. Source reliability (R): legacy 1–4 scale carried on the edge. The
+  // plain-language tier is required because the ordinal alone is ambiguous.
+  const sourceReliability = reliabilityLabel(rel)
   axes.push({
     key: 'source_reliability',
     label: 'Source reliability',
-    value: Number.isFinite(rel) ? `${rel} of 4 (1 = highest)` : 'Not yet available — no reliability recorded',
-    tone: Number.isFinite(rel) ? 'value' : 'unavailable',
+    value: sourceReliability ?? 'Not yet available — no reliability recorded',
+    tone: sourceReliability ? 'value' : 'unavailable',
   })
 
   // 2. Evidence strength (E): recorded doc_strength only — a source count
@@ -157,15 +172,18 @@ export function buildRelationshipPanelView({ edge, explanation = null, sources =
     tone: authValue.startsWith('Archived') ? 'value' : 'unavailable',
   })
 
-  // 4. Relationship type (RT): G2 vocabulary on the explanation, plus the
-  //    plain-language phrase the canvas shows.
+  // 4. Relationship type (RT): the graph's stored type is distinct from
+  // edge-specific provenance. A missing explanation never erases or
+  // contradicts the recorded visual relationship type.
+  const recordedType = hasText(edge?.type) ? humanize(edge.type) : plain
+  const provenanceType = hasText(explanation?.relationship_type)
+    ? `Edge-specific provenance classification: ${humanize(explanation.relationship_type)} — recorded`
+    : 'Edge-specific provenance classification: not yet recorded'
   axes.push({
     key: 'relationship_type',
     label: 'Relationship type',
-    value: hasText(explanation?.relationship_type)
-      ? `${humanize(explanation.relationship_type)} — “${plain}”`
-      : `“${plain}” — G2 classification not yet recorded`,
-    tone: hasText(explanation?.relationship_type) ? 'value' : 'unavailable',
+    value: `Stored graph type: ${recordedType}; ${provenanceType}`,
+    tone: hasText(edge?.type) || hasText(plain) ? 'value' : 'unavailable',
   })
 
   // 5. Review status (V): the mandated badge vocabulary.

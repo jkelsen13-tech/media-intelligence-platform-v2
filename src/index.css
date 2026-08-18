@@ -1200,6 +1200,34 @@ body {
   color: var(--text-muted);
   margin-bottom: 6px;
 }
+.ap-evidence-axes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+.ap-evidence-axis {
+  min-width: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 7px 8px;
+  background: var(--surface-subtle, rgba(0, 0, 0, 0.025));
+}
+.ap-evidence-axis dt {
+  margin-bottom: 2px;
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--text-muted);
+}
+.ap-evidence-axis dd {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--text-body);
+}
+.ap-evidence-axis.tone-unavailable dd {
+  color: var(--text-muted);
+}
 
 .ap-confidence-row {
   display: flex;
@@ -1403,6 +1431,9 @@ a.ap-source-headline:hover {
     box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.45);
   }
 
+  .ap-evidence-axes {
+    grid-template-columns: 1fr;
+  }
   .article-panel.sheet-mode.pinned {
     border-top-color: var(--accent);
   }
@@ -2725,4 +2756,56 @@ body {
   border: 1px solid var(--border-strong, #8a8a80);
   border-radius: 999px;
   padding: 1px 7px;
+}
+
+/* Package 3 item 19 — explicit reader state for a focused node with no
+   documented relationships. This is intentionally a small anchored card, not
+   a graph annotation or a fabricated connector. */
+.graph-isolated-reader {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 8;
+  max-width: min(360px, calc(100% - 88px));
+  padding: 11px 12px;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  background: var(--surface, #fff);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+  color: var(--text-body);
+}
+.graph-isolated-reader strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+.graph-isolated-reader p {
+  margin: 3px 0;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.graph-isolated-reader button {
+  margin-top: 8px;
+  border: 1px solid var(--accent);
+  border-radius: 7px;
+  padding: 5px 8px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.graph-isolated-reader button:hover,
+.graph-isolated-reader button:focus-visible {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+@media (max-width: 767px) {
+  .graph-isolated-reader {
+    left: 10px;
+    bottom: 10px;
+    max-width: calc(100% - 20px);
+    padding: 9px 10px;
+  }
 }

@@ -212,6 +212,12 @@ export default function App() {
         if (!pinned) setSelected(null)
         return
       }
+      // A node inspector is the one primary overlay. Lists, review panels,
+      // topic browser, and prior relationship evidence close before it opens.
+      setEdgeEvidence(null)
+      setEdgeListOpen(false)
+      setReviewStatusOpen(false)
+      setTopicsOpen(false)
       // Step 10: policy nodes open the Consequence view instead of the
       // article panel; everything else keeps the existing behavior.
       if (data.type === 'policy') {
@@ -219,6 +225,7 @@ export default function App() {
         setPinned(false)
         setPolicyNode(data)
       } else {
+        setPolicyNode(null)
         setSelected(data)
       }
       pushFocus(data)
@@ -227,6 +234,10 @@ export default function App() {
   )
 
   const openConsequenceView = useCallback((node) => {
+    setEdgeEvidence(null)
+    setEdgeListOpen(false)
+    setReviewStatusOpen(false)
+    setTopicsOpen(false)
     setSelected(null)
     setPinned(false)
     setPolicyNode(node)
@@ -239,6 +250,10 @@ export default function App() {
       if (!graph) return
       const next = graph.nodes.find((n) => (n.id ?? n.slug) === nodeKey)
       if (next) {
+        setEdgeEvidence(null)
+        setEdgeListOpen(false)
+        setReviewStatusOpen(false)
+        setTopicsOpen(false)
         if (next.type === 'policy') {
           setSelected(null)
           setPolicyNode(next)
@@ -277,20 +292,59 @@ export default function App() {
     setPinned(false)
   }, [])
 
+  // One primary graph overlay at a time. A relationship panel, node/policy
+  // inspector, relationship list, review panel, or topic browser never stacks
+  // above another interactive surface and overloads the canvas.
+  const clearPrimaryGraphOverlays = useCallback(() => {
+    setEdgeEvidence(null)
+    setSelected(null)
+    setPinned(false)
+    setPolicyNode(null)
+    setEdgeListOpen(false)
+    setReviewStatusOpen(false)
+    setTopicsOpen(false)
+  }, [])
+
+  const openRelationshipEvidence = useCallback((edge) => {
+    clearPrimaryGraphOverlays()
+    setEdgeEvidence({ edge, position: null })
+  }, [clearPrimaryGraphOverlays])
+
+  const toggleRelationshipList = useCallback(() => {
+    if (edgeListOpen) {
+      setEdgeListOpen(false)
+      return
+    }
+    clearPrimaryGraphOverlays()
+    setEdgeListOpen(true)
+  }, [edgeListOpen, clearPrimaryGraphOverlays])
+
+  const toggleReviewStatus = useCallback(() => {
+    if (reviewStatusOpen) {
+      setReviewStatusOpen(false)
+      return
+    }
+    clearPrimaryGraphOverlays()
+    setReviewStatusOpen(true)
+  }, [reviewStatusOpen, clearPrimaryGraphOverlays])
+
   // Escape closes the article / policy / relationship panel (§4.4 close
   // affordance; item 5 extends it to the docked relationship panel).
   useEffect(() => {
-    if (!selected && !policyNode && !edgeEvidence) return
+    if (!selected && !policyNode && !edgeEvidence && !edgeListOpen && !reviewStatusOpen && !topicsOpen) return
     const onKey = (e) => {
       if (e.key === 'Escape') {
         handleClose()
         closePolicyPanel()
         setEdgeEvidence(null)
+        setEdgeListOpen(false)
+        setReviewStatusOpen(false)
+        setTopicsOpen(false)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selected, policyNode, edgeEvidence, handleClose, closePolicyPanel])
+  }, [selected, policyNode, edgeEvidence, edgeListOpen, reviewStatusOpen, topicsOpen, handleClose, closePolicyPanel])
 
   // --- Cross-view navigation ---
   // Package 1 item 1 (22_NOTE action 1): a cross-view jump REPLACES context.
@@ -298,11 +352,11 @@ export default function App() {
   // excerpt, or uncertainty from a prior relationship/panel can survive into
   // the destination surface (see src/lib/jumpReset.js — JUMP_CLEARS).
   const resetJumpContext = useCallback(() => {
-    setEdgeEvidence(null)
-    setSelected(null)
-    setPinned(false)
-    setPolicyNode(null)
-  }, [])
+    clearPrimaryGraphOverlays()
+    // Cross-view navigation replaces the old graph focal context rather than
+    // appending to it. A graph-target jump installs its own one-crumb root.
+    setFocusStack([])
+  }, [clearPrimaryGraphOverlays])
 
   const openNodeInGraph = useCallback(
     (nodeKey) => {
@@ -367,6 +421,11 @@ export default function App() {
   }, [graph, nodeQuery])
 
   const pickNode = (node) => {
+    setEdgeEvidence(null)
+    setEdgeListOpen(false)
+    setReviewStatusOpen(false)
+    setTopicsOpen(false)
+    setPolicyNode(null)
     setSelected(node)
     setNodeQuery('')
     pushFocus(node)
@@ -390,6 +449,11 @@ export default function App() {
   }, [graph, focal, isMobile])
 
   const openHub = useCallback((node) => {
+    setEdgeEvidence(null)
+    setEdgeListOpen(false)
+    setReviewStatusOpen(false)
+    setTopicsOpen(false)
+    setPolicyNode(null)
     setFocusStack([{ kind: 'node', id: node.id ?? node.slug, label: node.label }])
     setGraphScreen('all')
     setSelected(null)
@@ -596,7 +660,7 @@ export default function App() {
                       type="button"
                       className="graph-toolbar-btn"
                       aria-expanded={edgeListOpen}
-                      onClick={() => setEdgeListOpen((v) => !v)}
+                      onClick={toggleRelationshipList}
                     >
                       Relationship list
                     </button>
@@ -604,7 +668,7 @@ export default function App() {
                       type="button"
                       className="graph-toolbar-btn"
                       aria-expanded={reviewStatusOpen}
-                      onClick={() => setReviewStatusOpen((v) => !v)}
+                      onClick={toggleReviewStatus}
                     >
                       Review status
                     </button>
@@ -668,7 +732,14 @@ export default function App() {
                         onShowInferredChange={setShowInferred}
                         inferredCount={inferredCount}
                         topicsAvailable={!!topicsData}
-                        onOpenTopics={() => setTopicsOpen((v) => !v)}
+                          onOpenTopics={() => {
+                            if (topicsOpen) {
+                              setTopicsOpen(false)
+                            } else {
+                              clearPrimaryGraphOverlays()
+                              setTopicsOpen(true)
+                            }
+                          }}
                       />
                       {topicsOpen && topicsData && (
                         <TopicBrowser
@@ -703,7 +774,7 @@ export default function App() {
                         focusNodeId={isMobile && focal?.kind === 'node' ? focal.id : null}
                         minReliability={minReliability}
                         showInferred={showInferred}
-                        onEdgeSelect={setEdgeEvidence}
+                        onEdgeSelect={(selection) => openRelationshipEvidence(selection.edge)}
                         allNodes={graph?.nodes ?? null}
                         focused={subgraph != null}
                       />
@@ -713,7 +784,7 @@ export default function App() {
                           edges={displayEdges ?? []}
                           minReliability={minReliability}
                           showInferred={showInferred}
-                          onSelectEdge={(edge) => setEdgeEvidence({ edge, position: null })}
+                          onSelectEdge={openRelationshipEvidence}
                           onClose={() => setEdgeListOpen(false)}
                         />
                       )}
@@ -756,7 +827,7 @@ export default function App() {
                     onNavigate={handleNavigate}
                     onFocusNode={handleFocusNode}
                     onOpenConsequence={openConsequenceView}
-                    onShowEdgeEvidence={(edge) => setEdgeEvidence({ edge, position: null })}
+                    onShowEdgeEvidence={openRelationshipEvidence}
                     onOpenArticle={openArticleInNews}
                     onClose={handleClose}
                     isMobile={isMobile}

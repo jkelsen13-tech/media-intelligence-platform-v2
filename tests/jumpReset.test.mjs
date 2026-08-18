@@ -28,7 +28,15 @@ test('extra defaults to nothing (null-safe)', () => {
 })
 
 test('JUMP_CLEARS names every transient panel state App holds', () => {
-  assert.deepEqual([...JUMP_CLEARS].sort(), ['edgeEvidence', 'pinned', 'policyNode', 'selected'])
+  assert.deepEqual([...JUMP_CLEARS].sort(), [
+    'edgeEvidence',
+    'edgeListOpen',
+    'pinned',
+    'policyNode',
+    'reviewStatusOpen',
+    'selected',
+    'topicsOpen',
+  ])
 })
 
 // Static drift guard: the seam is worthless if a cross-view handler forgets

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { loadSources, loadNodeArticles, loadNodeCategory, loadSkyVerificationForNode, loadActorDerivation } from '../lib/supabase'
 import { NODE_TYPES, EDGE_TYPES, CATEGORY_TYPES, edgePlainLabel } from '../graph/theme'
-import { applySkyBoost } from '../lib/sky'
+import { buildNodeEvidenceAxes } from '../lib/nodeEvidence'
 import SkyBadge from './SkyBadge'
 
 // Article panel (spec §4.4): title + category tag, confidence score on a
@@ -16,13 +16,6 @@ import SkyBadge from './SkyBadge'
 // fetched_at, outlet_id, author_id, body_text, embedding, claims, arc_id,
 // unattributed, monoculture), so there is nothing to render — the section
 // is omitted rather than fabricated.
-
-function confidenceColor(score) {
-  if (score == null) return 'var(--text-muted)'
-  // red (0) -> amber (50) -> green (100)
-  const hue = Math.round((score / 100) * 120)
-  return `hsl(${hue}, 70%, 45%)`
-}
 
 // Trim a synthesis to at most `max` sentences (spec calls for 3–5).
 function trimSentences(text, max = 5) {
@@ -254,7 +247,7 @@ export default function ArticlePanel({
   const sourcesDerived = !(sources && sources.length > 0) && (derived?.sources?.length ?? 0) > 0
   const summary = trimSentences(node.summary ?? node.description)
   const activeFrac = dragFrac ?? sheetFrac
-  const confidence = node.confidence
+  const evidenceAxes = useMemo(() => buildNodeEvidenceAxes(node), [node])
 
   const panelStyle = isMobile
     ? { height: `${Math.round(activeFrac * 100)}vh`, transition: dragFrac == null ? undefined : 'none' }
@@ -339,45 +332,17 @@ export default function ArticlePanel({
         </div>
       </header>
 
-      {confidence != null &&
-        (() => {
-          // Location corroboration boost (formerly Sky verification; 02A
-          // Amendment B): the boost is visible, never silent — the score
-          // shows the adjusted value with a location-corroborated marker and
-          // the pre-boost score in the title.
-          const boost = applySkyBoost(confidence, sky)
-          const shown = boost.value
-          return (
-            <section className="ap-section">
-              <div className="ap-confidence-row">
-                <span className="ap-label">Confidence</span>
-                <span className="ap-confidence-value num" style={{ color: confidenceColor(shown) }}>
-                  {shown}%
-                  {boost.boosted && (
-                    <span
-                      className="sky-boost-marker"
-                      title={`Location-corroborated: ${confidence}% + ${boost.delta} (sensor quality: ${sky.sensor_quality})`}
-                    >
-                      ◈ location-corroborated
-                    </span>
-                  )}
-                </span>
-              </div>
-              <div className="ap-confidence-bar">
-                {/* Red→green gradient spans the FULL track; the fill clips it to
-                    the score by sizing the gradient relative to the fill width. */}
-                <div
-                  className="ap-confidence-fill"
-                  style={{
-                    width: `${shown}%`,
-                    background: 'linear-gradient(90deg, hsl(0, 70%, 45%), hsl(45, 80%, 45%), hsl(120, 60%, 42%))',
-                    backgroundSize: `${shown > 0 ? 10000 / shown : 100}% 100%`,
-                  }}
-                />
-              </div>
-            </section>
-          )
-        })()}
+      <section className="ap-section" aria-label="Node evidence state">
+        <span className="ap-label">Node evidence state</span>
+        <dl className="ap-evidence-axes">
+          {evidenceAxes.map((axis) => (
+            <div key={axis.key} className={`ap-evidence-axis tone-${axis.tone}`}>
+              <dt>{axis.label}</dt>
+              <dd>{axis.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       {sky && (
         <section className="ap-section">
@@ -395,7 +360,7 @@ export default function ArticlePanel({
       {backing && backing.length > 0 && (
         <section className="ap-section">
           <span className="ap-label">
-            Backing articles (<span className="num">{backing.length}</span>)
+            Articles attached to this node (<span className="num">{backing.length}</span>)
           </span>
           <ul className="ap-sources">
             {backing.map((a) => (
@@ -432,11 +397,11 @@ export default function ArticlePanel({
       )}
 
       <section className="ap-section">
-        <span className="ap-label">Sources</span>
+        <span className="ap-label">Node-level source records</span>
         {sourcesError && <p className="ap-sources-error">Failed to load sources: {sourcesError}</p>}
         {!sources && !sourcesError && <p className="ap-muted">Loading sources…</p>}
         {sources && displaySources.length === 0 && (
-          <p className="ap-muted">No sources documented yet.</p>
+          <p className="ap-muted">No node-level source records documented yet.</p>
         )}
         {sources && displaySources.length > 0 && (
           <>
