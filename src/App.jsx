@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import GraphView from './graph/GraphView'
 import Legend from './graph/Legend'
 import EdgeControls from './graph/EdgeControls'
+import GraphModePanel from './graph/GraphModePanel'
 import RelationshipPanel from './panels/RelationshipPanel'
 import EdgeList from './graph/EdgeList'
 import ReviewStatusPanel from './panels/ReviewStatusPanel'
@@ -22,6 +23,11 @@ import { computeHubs } from './lib/hubs'
 import { jumpFocusStack } from './lib/jumpReset'
 import { resolveTimelineJump } from './lib/navigationContract'
 import { resolveFocal, focusDepth } from './lib/desktopFocus'
+import {
+  filterGraphRegion,
+  graphRegionOptions,
+  GRAPH_WORKSPACE_MODES,
+} from './lib/graphWorkspaceModel'
 import AccountPanel from './panels/AccountPanel'
 import { loadAccountUiFlag } from './lib/auth'
 
@@ -108,6 +114,11 @@ export default function App() {
   // subgraph; the full graph is an explicit opt-in (this flag). Mobile is
   // out of scope — it already enters through the hub list.
   const [desktopShowAll, setDesktopShowAll] = useState(false)
+  // Screen 6 focused-Graph workspace. Geography and Time stay data-backed
+  // record views; Region filters semantic clusters without fabricating links.
+  const [graphMode, setGraphMode] = useState('relationships')
+  const [graphRegion, setGraphRegion] = useState('all')
+  const [focusExpansion, setFocusExpansion] = useState(0)
   // Step 9 (§8): focus stack. Each crumb is
   // { kind: 'node', id, label } or { kind: 'topic', id, label, memberIds }.
   // Non-empty stack = the graph renders the focal node's depth-2
@@ -442,11 +453,20 @@ export default function App() {
     () => resolveFocal({ isMobile, desktopShowAll, focusStack, topHub }),
     [isMobile, desktopShowAll, focusStack, topHub],
   )
+  const focalKey = focal ? `${focal.kind}:${focal.id}` : null
+  useEffect(() => {
+    // A new focus is a new bounded investigation. Carrying a previous
+    // expansion or a region filter across it would hide context without a
+    // reader request, so both return to their documented defaults.
+    setFocusExpansion(0)
+    setGraphRegion('all')
+  }, [focalKey])
+
   const subgraph = useMemo(() => {
     if (!graph || !focal) return null
     if (focal.kind === 'topic') return topicSubgraph(graph.nodes, graph.edges, focal.memberIds)
-    return localSubgraph(graph.nodes, graph.edges, focal.id, focusDepth(isMobile))
-  }, [graph, focal, isMobile])
+    return localSubgraph(graph.nodes, graph.edges, focal.id, focusDepth(isMobile) + focusExpansion)
+  }, [graph, focal, isMobile, focusExpansion])
 
   const openHub = useCallback((node) => {
     setEdgeEvidence(null)
@@ -460,8 +480,22 @@ export default function App() {
     setPinned(false)
   }, [])
 
-  const displayNodes = subgraph ? subgraph.nodes : graph?.nodes
-  const displayEdges = subgraph ? subgraph.edges : graph?.edges
+  const focusedNodes = subgraph ? subgraph.nodes : graph?.nodes ?? []
+  const focusedEdges = subgraph ? subgraph.edges : graph?.edges ?? []
+  const regionOptions = useMemo(() => graphRegionOptions(focusedNodes), [focusedNodes])
+  const regionScopedGraph = useMemo(
+    () => filterGraphRegion(focusedNodes, focusedEdges, graphRegion),
+    [focusedNodes, focusedEdges, graphRegion],
+  )
+  const displayNodes = regionScopedGraph.nodes
+  const displayEdges = regionScopedGraph.edges
+  const canExpandFocus = Boolean(
+    focal && focal.kind === 'node' && focusExpansion < 2 && focusedNodes.length < (graph?.nodes.length ?? 0),
+  )
+  const graphScopeLabel =
+    subgraph != null
+      ? `Focused view · ${displayNodes.length} of ${graph?.nodes.length ?? 0} nodes · ${displayEdges.length} documented relationships`
+      : `Full graph · ${displayNodes.length} nodes · ${displayEdges.length} documented relationships`
   // On desktop the graph screen is always the full canvas.
   const showHubList = isMobile && graphScreen === 'hubs' && focusStack.length === 0
 
@@ -722,7 +756,60 @@ export default function App() {
                       </button>
                     </nav>
                   )}
+                  <div className="graph-workspace-controls">
+                    <div className="graph-workspace-tabs" role="tablist" aria-label="Focused Graph views">
+                      {GRAPH_WORKSPACE_MODES.map((mode) => (
+                        <button
+                          key={mode.id}
+                          type="button"
+                          role="tab"
+                          aria-selected={graphMode === mode.id}
+                          className={`graph-workspace-tab${graphMode === mode.id ? ' active' : ''}`}
+                          onClick={() => {
+                            clearPrimaryGraphOverlays()
+                            setGraphMode(mode.id)
+                          }}
+                        >
+                          {mode.label}
+                        </button>
+                      ))}
+                    </div>
+                    <label className="graph-region-filter">
+                      <span>Region</span>
+                      <select
+                        value={graphRegion}
+                        onChange={(event) => {
+                          clearPrimaryGraphOverlays()
+                          setGraphRegion(event.target.value)
+                        }}
+                      >
+                        {regionOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.label} ({option.count})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      className="graph-toolbar-btn"
+                      disabled={!canExpandFocus}
+                      title={canExpandFocus ? 'Include one more documented relationship level' : 'No additional documented focus level is available'}
+                      onClick={() => setFocusExpansion((depth) => Math.min(depth + 1, 2))}
+                    >
+                      Expand
+                    </button>
+                    <p className="graph-scope-status" aria-live="polite">{graphScopeLabel}</p>
+                  </div>
                   <div className="graph-body">
+                    {graphMode !== 'relationships' ? (
+                      <GraphModePanel
+                        mode={graphMode}
+                        nodes={displayNodes}
+                        onReturnToRelationships={() => setGraphMode('relationships')}
+                      />
+                    ) : (
+                    <>
                     <div className="graph-rail">
                       <Legend />
                       <EdgeControls
@@ -811,6 +898,8 @@ export default function App() {
                         onClose={() => setEdgeEvidence(null)}
                       />
                     )}
+                    </>
+                    )}
                   </div>
                 </div>
                 {/* Mobile: scrim behind the bottom sheet (tap to close). */}
@@ -838,7 +927,7 @@ export default function App() {
                   <div className="ap-scrim" onClick={closePolicyPanel} aria-hidden="true" />
                 )}
                 {policyNode && (
-                  <PolicyPanel
+                      <PolicyPanel
                     node={policyNode}
                     nodes={graph.nodes}
                     edges={graph.edges}

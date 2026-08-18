@@ -2809,3 +2809,157 @@ body {
     padding: 9px 10px;
   }
 }
+
+/* Focused Graph workspace — Screen 6 controls. The canvas remains the
+   Relationships mode; Geography and Time are data-backed record lists rather
+   than inferred maps or chronologies. */
+.graph-workspace-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-panel);
+}
+.graph-workspace-tabs {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+.graph-workspace-tab {
+  min-height: 30px;
+  border: 0;
+  border-radius: 5px;
+  padding: 4px 9px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.graph-workspace-tab:hover,
+.graph-workspace-tab:focus-visible {
+  color: var(--text-primary);
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.graph-workspace-tab.active {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 12%, transparent);
+}
+.graph-region-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.graph-region-filter select {
+  min-height: 30px;
+  max-width: 168px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 24px 4px 8px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+}
+.graph-scope-status {
+  margin: 0 0 0 auto;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.3;
+}
+.graph-mode-panel {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 20px;
+  background: var(--bg-main);
+}
+.graph-mode-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 780px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+.graph-mode-panel h2 {
+  margin: 2px 0 0;
+  color: var(--text-primary);
+  font-size: 20px;
+}
+.graph-mode-eyebrow {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.graph-mode-list {
+  display: grid;
+  gap: 8px;
+  max-width: 780px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.graph-mode-list li {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+.graph-mode-primary {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 650;
+}
+.graph-mode-secondary,
+.graph-mode-empty {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.graph-mode-empty {
+  max-width: 680px;
+  margin: 20px 0;
+  padding: 12px;
+  border-left: 3px solid var(--border-strong);
+  background: var(--bg-panel);
+}
+@media (max-width: 767px) {
+  .graph-workspace-controls {
+    align-items: flex-start;
+    padding: 8px 10px;
+  }
+  .graph-workspace-tabs {
+    width: 100%;
+  }
+  .graph-workspace-tab {
+    flex: 1;
+  }
+  .graph-scope-status {
+    width: 100%;
+    margin-left: 0;
+  }
+  .graph-mode-panel {
+    padding: 14px 10px;
+  }
+  .graph-mode-panel-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
