@@ -28,12 +28,6 @@ const LINK_FILTERS = [
   { id: 'none', label: 'No links' },
 ]
 
-function confidenceColor(score) {
-  if (score == null) return 'var(--text-muted)'
-  const hue = Math.round((score / 100) * 120)
-  return `hsl(${hue}, 70%, 45%)`
-}
-
 // One event card — same structure as the flat view's card so the two modes
 // stay visually consistent; arc chip is omitted inside an arc section (the
 // section header IS the arc context) but the News Feed chip is kept.
@@ -77,11 +71,6 @@ function EventCard({ evt, outbound, inbound, isCollapsed, onToggle, onOpenArticl
         </div>
         {!isCollapsed && (
           <>
-            {evt.confidence != null && (
-              <span className="timeline-confidence" style={{ color: confidenceColor(evt.confidence) }}>
-                {evt.confidence}% documented
-              </span>
-            )}
             {(evt.summary ?? evt.description) && <p>{evt.summary ?? evt.description}</p>}
             {inbound.length > 0 && (
               <div className="timeline-links">

@@ -18,18 +18,16 @@ const src = (p) => readFileSync(join(here, '..', p), 'utf8')
 
 test('ArcsView renders three tabs in addendum order: Overview / Timeline / Evidence', () => {
   const view = src('src/views/ArcsView.jsx')
-  const tabsBlock = view.slice(view.indexOf('role="tablist"'), view.indexOf('</header>'))
-  const overviewAt = tabsBlock.indexOf("setActiveTab('overview')")
-  const timelineAt = tabsBlock.indexOf("setActiveTab('timeline')")
-  const evidenceAt = tabsBlock.indexOf("setActiveTab('evidence')")
+  const sharedTabs = src('src/components/EvidenceTabs.jsx')
+  const tabsBlock = view.slice(view.indexOf('<EvidenceTabs'), view.indexOf('/>', view.indexOf('<EvidenceTabs')))
+  const overviewAt = tabsBlock.indexOf("{ id: 'overview', label: 'Overview'")
+  const timelineAt = tabsBlock.indexOf("{ id: 'timeline', label: 'Timeline'")
+  const evidenceAt = tabsBlock.indexOf("{ id: 'evidence', label: 'Evidence'")
+  assert.ok(view.includes("import EvidenceTabs from '../components/EvidenceTabs'"), 'shared tab seam is imported')
   assert.ok(overviewAt !== -1 && timelineAt !== -1 && evidenceAt !== -1, 'all three tabs present')
   assert.ok(overviewAt < timelineAt && timelineAt < evidenceAt, 'tabs in addendum order')
-  for (const tab of ['overview', 'timeline', 'evidence']) {
-    assert.ok(
-      tabsBlock.includes(`aria-selected={activeTab === '${tab}'}`),
-      `tab ${tab} carries aria-selected`,
-    )
-  }
+  assert.ok(sharedTabs.includes('role="tablist"'), 'shared row supplies tablist semantics')
+  assert.ok(sharedTabs.includes('aria-selected={selected}'), 'shared row supplies active-tab semantics')
   assert.ok(view.includes("activeTab === 'timeline' && detail"), 'Timeline body gated on the tab')
 })
 

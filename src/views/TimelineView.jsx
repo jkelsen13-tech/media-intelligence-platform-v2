@@ -31,6 +31,7 @@ import {
 } from '../lib/policyArcModel'
 import ArcTimeline from '../components/ArcTimeline'
 import ArcEvidencePanel from '../components/ArcEvidencePanel'
+import EvidenceTabs from '../components/EvidenceTabs'
 import EpistemicBanner from '../components/EpistemicBanner'
 import EvidenceStateBar from '../components/EvidenceStateBar'
 import RemainingUncertaintyBlock from '../components/RemainingUncertaintyBlock'
@@ -351,36 +352,20 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
           </button>
         </div>
 
-        <div className="ep-tabs" role="tablist" aria-label="Timeline sections">
-          <button
-            role="tab"
-            aria-selected={activeTab === 'timeline'}
-            className={`ep-tab${activeTab === 'timeline' ? ' ep-tab-active' : ''}`}
-            onClick={() => setActiveTab('timeline')}
-          >
-            Timeline
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'connections'}
-            className={`ep-tab${activeTab === 'connections' ? ' ep-tab-active' : ''}`}
-            onClick={() => setActiveTab('connections')}
-          >
-            Connections
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'evidence'}
-            className={`ep-tab${activeTab === 'evidence' ? ' ep-tab-active' : ''}`}
-            onClick={() => setActiveTab('evidence')}
-          >
-            Evidence
-          </button>
-        </div>
+        <EvidenceTabs
+          label="Timeline sections"
+          activeId={activeTab}
+          onSelect={setActiveTab}
+          tabs={[
+            { id: 'timeline', label: 'Timeline', panelId: 'timeline-panel' },
+            { id: 'connections', label: 'Connections', panelId: 'timeline-connections-panel' },
+            { id: 'evidence', label: 'Evidence', panelId: 'timeline-evidence-panel' },
+          ]}
+        />
       </div>
 
       {activeTab === 'timeline' && (
-        <>
+        <section id="timeline-panel" role="tabpanel" aria-labelledby="timeline-tab">
           <div className="ep-tl-filters">
             <select
               className="ep-tl-pill"
@@ -533,11 +518,11 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
               )}
             </>
           )}
-        </>
+        </section>
       )}
 
       {activeTab === 'connections' && (
-        <section className="ap-section">
+        <section id="timeline-connections-panel" role="tabpanel" aria-labelledby="connections-tab" className="ap-section">
           {scopeIsGlobal ? (
             !global ? (
               <div className="notice">Loading connections…</div>
@@ -593,7 +578,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
       {activeTab === 'evidence' && (
         <>
           {scopeIsGlobal ? (
-            <section className="ap-section">
+            <section id="timeline-evidence-panel" role="tabpanel" aria-labelledby="evidence-tab" className="ap-section">
               <p className="arc-empty">
                 Evidence state is tracked per story arc. Choose an arc above to see its
                 supporting / contested / missing counts.
@@ -622,7 +607,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
           ) : !detail ? (
             <div className="notice">Loading evidence…</div>
           ) : (
-            <>
+            <section id="timeline-evidence-panel" role="tabpanel" aria-labelledby="evidence-tab">
               <section className="ap-section">
                 <span className="ep-section-label">Evidence state</span>
                 <EvidenceStateBar
@@ -643,7 +628,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
                 arcArticles={arcArticles ?? []}
                 onOpenArticle={onOpenArticle}
               />
-            </>
+            </section>
           )}
         </>
       )}

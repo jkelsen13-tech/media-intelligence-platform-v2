@@ -4,6 +4,7 @@ import { filterArcs } from '../lib/listFilters'
 import { normalizeArcEvent, TIMELINE_CLOSING_FOOTNOTE } from '../lib/timelineScreenModel'
 import ArcEvidencePanel from '../components/ArcEvidencePanel'
 import ArcTimeline from '../components/ArcTimeline'
+import EvidenceTabs from '../components/EvidenceTabs'
 import EpistemicBanner from '../components/EpistemicBanner'
 import EvidenceStateBar from '../components/EvidenceStateBar'
 import LifecycleStrip from '../components/LifecycleStrip'
@@ -273,32 +274,16 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
               </button>
             )}
 
-            <div className="ep-tabs" role="tablist" aria-label="Arc sections">
-              <button
-                role="tab"
-                aria-selected={activeTab === 'overview'}
-                className={`ep-tab${activeTab === 'overview' ? ' ep-tab-active' : ''}`}
-                onClick={() => setActiveTab('overview')}
-              >
-                Overview
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'timeline'}
-                className={`ep-tab${activeTab === 'timeline' ? ' ep-tab-active' : ''}`}
-                onClick={() => setActiveTab('timeline')}
-              >
-                Timeline
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'evidence'}
-                className={`ep-tab${activeTab === 'evidence' ? ' ep-tab-active' : ''}`}
-                onClick={() => setActiveTab('evidence')}
-              >
-                Evidence
-              </button>
-            </div>
+            <EvidenceTabs
+              label="Arc sections"
+              activeId={activeTab}
+              onSelect={setActiveTab}
+              tabs={[
+                { id: 'overview', label: 'Overview', panelId: 'arc-overview-panel' },
+                { id: 'timeline', label: 'Timeline', panelId: 'arc-timeline-panel' },
+                { id: 'evidence', label: 'Evidence', panelId: 'arc-evidence-panel' },
+              ]}
+            />
           </header>
 
           {detailError && (
@@ -307,7 +292,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
           {!detail && !detailError && <div className="notice">Loading arc detail…</div>}
 
           {activeTab === 'overview' && detail && (
-            <>
+            <section id="arc-overview-panel" role="tabpanel" aria-labelledby="overview-tab">
               <section className="ap-section">
                 <span className="ep-section-label">Policy lifecycle</span>
                 <LifecycleStrip />
@@ -372,35 +357,39 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
                   Sources: {outlets.join(', ')}
                 </p>
               )}
-            </>
+            </section>
           )}
 
           {activeTab === 'timeline' && detail && (
-            /* The shared ArcTimeline renderer (item 4) over the same
+            <section id="arc-timeline-panel" role="tabpanel" aria-labelledby="timeline-tab">
+            {/* The shared ArcTimeline renderer (item 4) over the same
                arc_events — edges=[] by construction (arc_events are not
                graph nodes), so every connector between every adjacent
                pair honestly renders "Sequence only", identical to Screen
-               5's arc scope. Connectors are never dropped for density. */
+               5's arc scope. Connectors are never dropped for density. */}
             <ArcTimeline
               entries={timelineEntries}
               edges={[]}
               loadArticle={loadArticleExcerpt}
               emptyText="No consequence events recorded yet for this arc."
             />
+            </section>
           )}
 
           {activeTab === 'evidence' && detail && (
-            /* Pre-existing §2.5.4 elements folded into the Evidence tab
+            <section id="arc-evidence-panel" role="tabpanel" aria-labelledby="evidence-tab">
+            {/* Pre-existing §2.5.4 elements folded into the Evidence tab
                (owner delegation 2026-08-18): arc-age bar, coverage-gap
                indicator, coverage-gap warning, milestone checklist,
                attached articles. None retired — extracted into the shared
-               ArcEvidencePanel in item 4 so Screen 5 reuses them. */
+               ArcEvidencePanel in item 4 so Screen 5 reuses them. */}
             <ArcEvidencePanel
               arc={selected}
               detail={detail}
               arcArticles={arcArticles}
               onOpenArticle={onOpenArticle}
             />
+            </section>
           )}
 
           {/* Trust footer (addendum: bottom of every screen). reviewedAt is
