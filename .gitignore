@@ -34,3 +34,6 @@ verifier/owner-only-scaling-readiness-*.md
 verifier/v2-doj-consent-actions-population-manifest-*.md
 verifier/reference-tiles/
 verifier/owner-only-final-status-*.md
+verifier/owner-only-epstein-compliance-scope-*.md
+verifier/tmp-epstein-*.json
+verifier/tmp-p3-locator-query.json
