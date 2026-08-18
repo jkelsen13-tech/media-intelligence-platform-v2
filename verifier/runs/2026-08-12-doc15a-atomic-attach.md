@@ -1,6 +1,6 @@
 # Run log — 2026-08-12 — Doc 15A atomic attach (verifier v6)
 
-All SQL executed live against project niejaejtbxgakyrsntxm via the Supabase
+All SQL executed live against project SUPABASE_PRODUCTION_REF_REDACTED via the Supabase
 management SQL interface; every row below records the statement's result.
 Scratch fixtures: arcs 15aa0000-…-0001..0004 (T1–T4), articles
 15ab0000-…-0001 (A, emb 0.04×384), -0002 (B, 0.08), -0003 (M2, 0.02),

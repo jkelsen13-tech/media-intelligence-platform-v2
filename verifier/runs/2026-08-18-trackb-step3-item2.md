@@ -4,7 +4,7 @@ Date: 2026-08-18. Namespace: trackb3-v2. Criteria: `trackb3-v2/trackb3-step3-ite
 Branch: main. Environment: master working copy on /mnt mount; rsync copy in
 /tmp for install/test/build (mount blocks exec bits — v4 precedent).
 
-## Live-DB pre-implementation queries (read-only, project niejaejtbxgakyrsntxm)
+## Live-DB pre-implementation queries (read-only, project SUPABASE_PRODUCTION_REF_REDACTED)
 
 - `SELECT category, count(*) FROM arc_events GROUP BY category` →
   accountability 34, geopolitical 23, economic 8, legislative 5.

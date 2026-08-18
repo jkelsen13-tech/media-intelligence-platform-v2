@@ -20,7 +20,7 @@ Date: 2026-08-18. Criteria: `verifier/trackb3-v4/trackb3-step3-item4.md`
   served under /tmp/mip-serve/media-intelligence-platform (vite base
   path; a bare dist serve 404s the assets).
 
-## 2. Live-data basis (read-only, project niejaejtbxgakyrsntxm, 2026-08-18)
+## 2. Live-data basis (read-only, project SUPABASE_PRODUCTION_REF_REDACTED, 2026-08-18)
 
 - 49 story arcs; default arc resolves to the first active arc in
   loadArcs order ("Sophie Cunningham — misconduct case" at smoke time).

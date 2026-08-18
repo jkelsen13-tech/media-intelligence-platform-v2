@@ -17,8 +17,9 @@ import { splitByConnectivity, placeDisconnectedBand } from '../../src/graph/band
 
 cytoscape.use(fcose)
 
-const SUPA = 'https://niejaejtbxgakyrsntxm.supabase.co'
-const KEY = 'sb_publishable_rlHzgeDjVuw9kO3cqcVa-g_ZavxEY7V'
+const SUPA = process.env.VITE_SUPABASE_URL
+const KEY = process.env.VITE_SUPABASE_ANON_KEY
+if (!SUPA || !KEY) throw new Error('VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must target the disposable sandbox.')
 const VIEW = { w: 1600, h: 900 } // fit-zoom assumption, landscape
 
 const PARAMS = {

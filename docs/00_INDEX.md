@@ -198,7 +198,7 @@ Zero-delta census confirmation (read live 2026-08-12): articles 752, `p3_legal_c
 
 Magic-link account pipeline shipped behind the `account_ui` pipeline_config flag (withhold posture: unreadable → false). All evidence in `verifier/runs/2026-08-13_run4.md` through `run7.md` (repo mirror) and the session screenshots.
 
-Schema and trigger (namespaced — shared Supabase project `niejaejtbxgakyrsntxm` also hosts Threshold; `public.profiles` and neighbors belong to Threshold and were not touched):
+Schema and trigger (namespaced — shared Supabase project `SUPABASE_PRODUCTION_REF_REDACTED` also hosts Threshold; `public.profiles` and neighbors belong to Threshold and were not touched):
 - `public.mip_profiles` — migration `20260813_mip_profiles.sql` (applied history version `20260812175607`): `id uuid PK references auth.users(id) on delete cascade, display_name text, created_at timestamptz not null default now()`; RLS enabled from creation; policies `mip_profiles_select_own/insert_own/update_own`, all `auth.uid() = id`; no delete, no public read.
 - `public.handle_new_mip_user()` + trigger `on_auth_user_created_mip` — migration `20260813_scope_mip_signup_trigger.sql`: security definer, `set search_path = public`, inserts only when `new.raw_user_meta_data->>'app' = 'mip'`, `on conflict (id) do nothing`. Scoped to MIP signups by metadata key (not domain gating), so Threshold signups produce zero mip_profiles rows.
 

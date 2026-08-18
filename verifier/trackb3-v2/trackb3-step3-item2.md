@@ -14,7 +14,7 @@ Screen 4 structure, composed from the item-1 shared kit
 new pure seam (`src/lib/policyArcModel.js`).
 
 Live-data facts this item is built against (read-only queries,
-2026-08-18, project niejaejtbxgakyrsntxm):
+2026-08-18, project SUPABASE_PRODUCTION_REF_REDACTED):
 - story_arcs.category ∈ {unclassified 14, geopolitical_consequence 11,
   institutional_accountability 10, legislative_regulatory 10,
   economic_policy 4}.

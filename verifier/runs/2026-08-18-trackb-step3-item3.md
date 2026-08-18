@@ -16,7 +16,7 @@ Date: 2026-08-18. Criteria: `verifier/trackb3-v3/trackb3-step3-item3.md`
   log download is admin-gated, so failures are root-caused by local
   reproduction instead).
 
-## 2. Live-data basis (read-only, project niejaejtbxgakyrsntxm, 2026-08-18)
+## 2. Live-data basis (read-only, project SUPABASE_PRODUCTION_REF_REDACTED, 2026-08-18)
 
 - edges 411 rows: actor 330, sequence 80, constrained_by 1, causal 0.
 - edges.doc_strength: corroborated 294, circumstantial 80, documented 37.

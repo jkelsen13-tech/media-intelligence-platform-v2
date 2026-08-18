@@ -56,7 +56,7 @@ Append-only. Times UTC.
   (README first-verify found a 1-byte newline mismatch in the local copy;
   remote content confirmed correct, local reconstruction re-matched.)
 - Migration `20260815_track_b_light_theme_flag` applied to live project
-  niejaejtbxgakyrsntxm via apply_migration (recorded in schema_migrations);
+  SUPABASE_PRODUCTION_REF_REDACTED via apply_migration (recorded in schema_migrations);
   SELECT confirms key present, value false.
 - CI at every commit, including final HEAD 79b51b97: Golden regression suite
   success + Deploy to GitHub Pages success (runs 31866394534 / 31866397530).

@@ -18,7 +18,7 @@ Timeline tab, item 5) consume:
 
 No screen wiring in this item (that is item 4/5); no DB writes.
 
-## Live-data facts (read-only queries, 2026-08-18, project niejaejtbxgakyrsntxm)
+## Live-data facts (read-only queries, 2026-08-18, project SUPABASE_PRODUCTION_REF_REDACTED)
 
 - edges: 411 rows — actor 330, sequence 80, constrained_by 1. ZERO causal.
 - edges.doc_strength vocabulary: corroborated 294, circumstantial 80,

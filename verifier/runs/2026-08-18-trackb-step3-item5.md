@@ -15,7 +15,7 @@ implementation, per protocol).
 - Pushes: GitHub MCP push_files only (no git credentials in sandbox).
 - CI: unauthenticated actions/runs polling.
 
-## 2. Live-data basis (read-only, project niejaejtbxgakyrsntxm, 2026-08-18)
+## 2. Live-data basis (read-only, project SUPABASE_PRODUCTION_REF_REDACTED, 2026-08-18)
 
 - arc_events per arc (read-only REST count): China — military
   escalation 12, Charlie Kirk — media feud 10, Andy Burnham — domestic

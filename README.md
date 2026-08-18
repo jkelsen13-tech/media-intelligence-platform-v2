@@ -13,7 +13,7 @@ With no Supabase credentials configured, the app renders the bundled demo datase
 
 ## Status
 
-- Backend: **live** — Supabase project `niejaejtbxgakyrsntxm` (us-west-2).
+- Backend: **live** — Supabase project `SUPABASE_PRODUCTION_REF_REDACTED` (us-west-2).
 - Graph: 11 nodes / 14 edges (Fort Campbell accountability arc), anon read-only RLS.
 - Live news: `ingest-rss` edge function deployed (v2), scheduled via pg_cron every 6 hours — first run ingested 200 articles from 8 international outlets into `public.articles`.
 - Frontend builds clean (`npm run build`). With `.env` configured, header shows `data: supabase`.

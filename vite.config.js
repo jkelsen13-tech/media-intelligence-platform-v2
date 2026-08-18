@@ -3,5 +3,5 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/media-intelligence-platform/',
+  base: '/media-intelligence-platform-v2/',
 })

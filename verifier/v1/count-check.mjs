@@ -6,8 +6,10 @@
 import { canonicalizeTimelineEvents } from '../../src/lib/timelineDedup.js'
 import { buildArcSections, buildMirrorArcMap, verifyExactlyOnce } from '../../src/lib/arcGroupedTimeline.js'
 
-const base = 'https://niejaejtbxgakyrsntxm.supabase.co/rest/v1'
-const key = 'sb_publishable_rlHzgeDjVuw9kO3cqcVa-g_ZavxEY7V'
+const sandboxUrl = process.env.VITE_SUPABASE_URL
+const key = process.env.VITE_SUPABASE_ANON_KEY
+if (!sandboxUrl || !key) throw new Error('VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must target the disposable sandbox.')
+const base = `${sandboxUrl}/rest/v1`
 
 async function table(path) {
   const res = await fetch(`${base}/${path}`, {

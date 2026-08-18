@@ -1,6 +1,6 @@
 -- G1 golden artifact: live production constraint, REGENERATED 2026-08-10.
 -- Table: public.edges, constraint: edges_causal_evidence_guard (convalidated=true).
--- Source: pg_get_constraintdef on project niejaejtbxgakyrsntxm, captured
+-- Source: pg_get_constraintdef on project SUPABASE_PRODUCTION_REF_REDACTED, captured
 -- 2026-08-10 during the incident session — the text below is the verbatim
 -- function output, not a transcription.
 --
