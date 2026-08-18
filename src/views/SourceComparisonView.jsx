@@ -101,9 +101,13 @@ function ClaimCard({ claim, onOpenArticle }) {
       <p className="sc-claim-text">{claim.canonicalText}</p>
 
       <p className="sc-meta">
-        Also reported by: {claim.independentOutlets.join(', ') || 'none'}
+        Reported by: {claim.independentOutlets.join(', ') || 'none'}
         {' '}
-        <span className="sc-lineage-note">(separate articles; lineage not verified)</span>
+        <span className="sc-lineage-note">
+          {claim.independentOutlets.length <= 1
+            ? '(one outlet in this event)'
+            : '(multiple outlets; lineage not verified)'}
+        </span>
         {claim.syndicatedExtra > 0 && (
           <span className="sc-syndicated">
             {' '}· single original source, syndicated {claim.syndicatedExtra + 1} times

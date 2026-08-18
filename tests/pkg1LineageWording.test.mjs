@@ -16,12 +16,14 @@ const libSrc = readFileSync(
   'utf8',
 )
 
-test('item4: claim meta uses lineage-safe "Also reported by"', () => {
-  assert.match(viewSrc, /Also reported by:/)
+test('item4: claim meta uses an attribution label that does not imply another source', () => {
+  assert.match(viewSrc, /Reported by:/)
+  assert.doesNotMatch(viewSrc, /Also reported by:/)
 })
 
-test('item4: claim meta carries an explicit lineage-not-verified note', () => {
-  assert.match(viewSrc, /lineage not verified/i)
+test('item4: claim meta distinguishes one-outlet events from multiple outlets with lineage unverified', () => {
+  assert.match(viewSrc, /one outlet in this event/i)
+  assert.match(viewSrc, /multiple outlets; lineage not verified/i)
 })
 
 test('item4: no user-facing string claims independence', () => {
