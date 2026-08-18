@@ -133,7 +133,7 @@ export async function loadPhase3BetaView() {
         .order('created_at', { ascending: true }),
       supabase
         .from('p3_policy_track_event')
-        .select('id, policy_id, track, state, event_date, source_id, source_passage, method_version, remaining_uncertainty, missing_evidence, review_status, reviewed_by, reviewed_at, correction_notice, created_at')
+        .select('id, policy_id, track, state, event_date, source_id, source_passage, source_locator, method_version, remaining_uncertainty, missing_evidence, review_status, reviewed_by, reviewed_at, correction_notice, created_at')
         .order('event_date', { ascending: true, nullsFirst: false }),
     ])
     if (!polRes.error && !evRes.error) {

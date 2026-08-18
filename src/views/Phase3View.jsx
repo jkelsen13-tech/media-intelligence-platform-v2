@@ -164,6 +164,9 @@ function LifecycleStrip({ events, emptyCopy }) {
                 <p className="p3-marker-copy">Outcome evidence missing — labeled missing, not failure or contradiction.</p>
               )}
               {e.source_passage && <blockquote className="p3-ev-passage">{e.source_passage}</blockquote>}
+              {typeof e.source_locator?.url === 'string' && /^https:\/\//.test(e.source_locator.url) && (
+                <a className="p3-ev-src" href={e.source_locator.url} target="_blank" rel="noreferrer">Official source ↗</a>
+              )}
               {e.method_version && <p className="p3-ev-meta">Method: {e.method_version}</p>}
               {e.remaining_uncertainty && (
                 <p className="p3-ev-meta">Remaining uncertainty: {e.remaining_uncertainty}</p>
