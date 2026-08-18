@@ -129,7 +129,7 @@ export async function loadPhase3BetaView() {
     const [polRes, evRes] = await Promise.all([
       supabase
         .from('p3_policy')
-        .select('id, name, jurisdiction, instrument_type, description, review_status, reviewed_by, reviewed_at, correction_notice, created_at')
+        .select('id, name, jurisdiction, instrument_type, description, review_status, reviewed_by, reviewed_at, correction_notice, created_at, agency, source_locator')
         .order('created_at', { ascending: true }),
       supabase
         .from('p3_policy_track_event')

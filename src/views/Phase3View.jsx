@@ -185,6 +185,12 @@ function PolicyCard({ policy }) {
         <ReviewChip status={policy.review_status} reviewedBy={policy.reviewed_by} />
       </header>
       {policy.jurisdiction && <p className="p3-ev-meta">{policy.jurisdiction}{policy.instrument_type ? ` · ${policy.instrument_type}` : ''}</p>}
+      {policy.agency && <p className="p3-ev-meta">Owning agency: {policy.agency}</p>}
+      {policy.source_locator && (
+        <p className="p3-ev-meta">
+          Source locator: Chapter {policy.source_locator.chapter}, {policy.source_locator.chapter_title}, pp. {policy.source_locator.pages} ({policy.source_locator.edition})
+        </p>
+      )}
       {policy.description && <p className="p3-ev-desc">{policy.description}</p>}
       <section className="p3-track">
         <h4>Stated objective</h4>
