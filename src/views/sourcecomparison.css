@@ -310,3 +310,11 @@
   .sc-xlinks { gap: 8px; }
   .sc-xlink-group { flex-wrap: wrap; gap: 8px; }
 }
+
+.sc-kicker, .sc-event-eyebrow { margin: 0 0 4px; color: var(--status-blue-text); font-size: 0.72rem; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; }
+.sc-subtitle { margin: -2px 0 8px; color: var(--text-body); font-size: 1.02rem; font-weight: 560; }
+.sc-banner-detail { margin: 0; color: var(--text-secondary); }
+.sc-evidence-notice { display: flex; align-items: center; min-height: 44px; padding: 11px 16px; border: 1px solid var(--status-blue-border); border-radius: 16px; background: var(--bg-inset); color: var(--status-blue-text); font-size: 0.88rem; line-height: 1.45; }
+.sc-event-state { display: flex; align-items: flex-end; flex-direction: column; gap: 7px; }
+.sc-event-state .sc-meta { border: 0; background: transparent; padding: 0; }
+@media (max-width: 640px) { .sc-event-state { align-items: flex-start; } .sc-evidence-notice { border-radius: 14px; padding: 10px 13px; } }

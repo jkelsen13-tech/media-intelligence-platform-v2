@@ -158,11 +158,17 @@ function EventCard({ event, onOpenArticle, onOpenArc, onOpenTimeline, focused, s
   return (
     <section className={`sc-event${focused ? ' sc-focused' : ''}`} ref={sectionRef}>
       <header className="sc-event-head">
-        <h3>{event.title}</h3>
-        <span className="sc-meta">
-          {event.occurredAtStart}
-          {event.occurredAtEnd && event.occurredAtEnd !== event.occurredAtStart ? ` → ${event.occurredAtEnd}` : ''}
-        </span>
+        <div>
+          <p className="sc-event-eyebrow">Coverage comparison</p>
+          <h3>{event.title}</h3>
+        </div>
+        <div className="sc-event-state">
+          <span className="sc-chip sc-chip-shared">{event.outlets.length} {event.outlets.length === 1 ? 'outlet' : 'outlets'} ingested</span>
+          <span className="sc-meta">
+            {event.occurredAtStart}
+            {event.occurredAtEnd && event.occurredAtEnd !== event.occurredAtStart ? ` → ${event.occurredAtEnd}` : ''}
+          </span>
+        </div>
       </header>
 
       {(event.arcLinks?.length ?? 0) > 0 && (onOpenArc || onOpenTimeline) && (
@@ -283,14 +289,19 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
   return (
     <div className="sc-view">
       <section className="sc-banner">
+        <p className="sc-kicker">Evidence review</p>
         <h2>Source Comparison</h2>
-        <p>
-          Coverage of the same event compared claim by claim. Shared facts, unique claims,
-          omissions, loaded language, primary evidence, corrections, timing, and source quality
-          are shown as separate dimensions — no composite score is computed. Omissions describe
-          extracted coverage only; missing evidence is never contradicting evidence.
+        <p className="sc-subtitle">How outlets cover the same event.</p>
+        <p className="sc-banner-detail">
+          Compare source-linked coverage claim by claim. Shared facts, unique claims, omissions,
+          loaded language, primary evidence, corrections, timing, and source quality stay separate;
+          no composite score is computed.
         </p>
       </section>
+      <aside className="sc-evidence-notice">
+        Missing evidence is recorded, not treated as contradiction. Coverage labels describe only
+        material ingested into this comparison.
+      </aside>
 
       {view.loadError && (
         <div className="notice error">Comparison tables unreachable: {view.loadError}</div>
