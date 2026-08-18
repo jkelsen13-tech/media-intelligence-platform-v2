@@ -18,3 +18,7 @@ The project identifier is recorded for ownership and cleanup purposes only. No s
 The selected `mop-extraction` project is explicitly hard-coded in the repository's existing manual Cloud Run deployment workflow for the `mop-extraction` service in `us-central1`. The Cloud Run services inventory was opened in read-only inspection mode. This establishes that the project is already coupled to an existing MIP extraction deployment, not a newly created v2-only cloud workspace. No deployment, API enablement, IAM change, credential creation, billing change, or service update was performed.
 
 **Execution boundary:** this existing Google Cloud project will not be modified during the v2 work without a separate owner confirmation that it is not the main-platform extraction project. The independently named Supabase project `mip-v2-manus-sandbox-20260818` remains the authorized service-side sandbox.
+
+## Isolated-project creation attempt
+
+The Google Cloud Resource Manager and project-creation route were opened while authenticated. The console rendered no project fields or creation controls after loading; no project name, billing account, API, service account, or other cloud resource was submitted or created. The currently active MIP-linked project remains untouched. Because no visible isolated project target could be verified in the console, the no-mutation boundary remains in effect for Google Cloud.

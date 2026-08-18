@@ -32,3 +32,9 @@ The target is only Supabase project `yhbwnrtlqbjtcrrlpbge` (`mip-v2-manus-sandbo
 - `/home/ubuntu/upload/08PROJECT2025TRACKER(4).pdf`
 - `/home/ubuntu/upload/08STAGEACANDIDATEMANIFEST(3).pdf`
 - `/home/ubuntu/media-intelligence-platform-v2/docs/00_INDEX.md`
+
+## Existing-record reconciliation check
+
+A bounded, read-only search of the isolated v2 sandbox found **no existing Epstein-related record** in `articles`, `nodes`, `entities`, `story_arcs`, or `p3_policy`. The owner-supplied Epstein compliance note confirms this is an **idea capture only**: it is explicitly not scoped or authorized, has no manifest, and permits no data write. Therefore no Epstein data, score, event, graph relationship, article, source, or policy record was created.
+
+This is a deliberate safety and authorization boundary, not an omitted backfill. Any future work on that subject requires a fresh working document and must preserve its locked victim-privacy and non-allegation rules.

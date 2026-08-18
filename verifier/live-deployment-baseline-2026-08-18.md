@@ -43,3 +43,23 @@ At this check, the two new policy-card provenance lines (owning agency and chapt
 ## Final published provenance confirmation
 
 A cache-busted live check resumed after the Pages workflow completed. Legal & Policy now visibly renders `Owning agency: DOJ` and the complete structured source locator on every Project 2025 policy card. All six card rows retain the distinct **stated objective** lifecycle, `draft` review status, the 2023-04-21 source-capture date, explicit primary-source requirement for any later outcome, and an empty actual-outcome strip. This resolves the transient post-deploy visibility lag and passes the desktop live-screen content check.
+
+## Responsive News validation
+
+Independent Chromium captures of the actual GitHub Pages release were reviewed at **390 × 844** and **1440 × 1024**. The mobile view preserved the intended light card system, readable masthead, evidence banner, search/filter affordances, rounded article cards, and fixed five-item bottom navigation. The desktop view preserved the same light-card hierarchy and evidence-first copy with a stable top navigation and no overflow observed. The supplied blue outer animated-background treatment was intentionally not changed, per owner direction.
+
+Captured evidence: `verifier/screenshots/live-mobile-news.png` and `verifier/screenshots/live-desktop-news.png`.
+
+## Cross-surface integrity: graph boundary
+
+The live Knowledge Graph remains reachable and renders its explicit empty-state copy: no published graph nodes or documented relationships exist in the isolated live sandbox. This is consistent with the documented separation between the Phase 3 policy tracker and graph/arc tables. No Project 2025 graph node, edge, causal tag, or arc was fabricated merely to fill the Graph screen; adding one would exceed Document 08’s authorization and violate its no-Callais-link rule.
+
+## Cross-surface integrity: Timeline and Arcs
+
+The live Causal Timeline remains reachable with its reference-aligned controls and an explicit zero-event empty state. The live Story Arcs surface remains reachable with its explicit no-arcs state. These screens are not silently populated with Project 2025 data because the approved Track 1 record is a bounded Phase 3 policy-lifecycle canary, not a graph, article, timeline, or arc publication. The results are internally consistent: News contains eight independently ingested articles; Graph, Timeline, and Arcs contain no published derived records; Legal & Policy contains the six approved curated policy objectives.
+
+## Responsive Legal & Policy validation
+
+A DevTools-emulated live capture at **390 × 844** opened More → Legal & Policy successfully. The light-card layout retained a usable fixed bottom navigation; the Legal & Policy banner, policy title, draft status, agency, source locator, stated-objective pill, and explicit empty actual-outcome copy all fit without horizontal clipping or background artifact. The policy remains visibly framed as a source-stated objective, not an executed outcome.
+
+Captured evidence: `verifier/screenshots/live-mobile-phase3.png`.
