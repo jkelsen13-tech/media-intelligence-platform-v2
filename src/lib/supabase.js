@@ -106,8 +106,10 @@ function sanitizeSearch(q) {
 }
 
 // Loads the graph from Supabase when configured, otherwise returns the
-// bundled demo dataset. Both paths return { nodes, edges, source } in the
-// shape GraphView expects.
+// bundled demo dataset for an offline/local build only. A configured but empty
+// database is an explicit empty live graph — it must never silently mix a real
+// News Feed or Timeline with unrelated demonstration nodes and relationships.
+// Both paths return { nodes, edges, source } in the shape GraphView expects.
 export async function loadGraph({ supabaseClient } = {}) {
   const client = supabaseClient ?? supabase
   if (!client) {
@@ -138,7 +140,7 @@ export async function loadGraph({ supabaseClient } = {}) {
   if (edgesRes.error) throw edgesRes.error
 
   if (nodesRes.data.length === 0) {
-    return { nodes: demoNodes, edges: demoEdges, source: 'demo (Supabase empty)' }
+    return { nodes: [], edges: [], source: 'supabase' }
   }
 
   return {

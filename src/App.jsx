@@ -531,7 +531,17 @@ export default function App() {
         {view === 'graph' && (
           <>
             {!graph && !error && <div className="notice">Loading graph…</div>}
-            {graph && showHubList && (
+            {graph && graph.nodes.length === 0 && (
+              <section className="graph-empty-state" aria-labelledby="graph-empty-title">
+                <h2 id="graph-empty-title">Knowledge Graph</h2>
+                <p>No published graph nodes or documented relationships are available in the live sandbox yet.</p>
+                <p className="muted">
+                  The News Feed can contain newly ingested articles before entity-to-node resolution and
+                  relationship publication are complete. This view will populate only from those published rows.
+                </p>
+              </section>
+            )}
+            {graph && graph.nodes.length > 0 && showHubList && (
               <div className="hub-list">
                 <h2>Knowledge Graph</h2>
                 <p className="hub-sub">
@@ -555,7 +565,7 @@ export default function App() {
                 </button>
               </div>
             )}
-            {graph && !showHubList && (
+            {graph && graph.nodes.length > 0 && !showHubList && (
               <div className="graph-layout">
                 {/* Track B Step 2 item 1: graph chrome in normal flow —
                     toolbar on top, controls rail beside the canvas stage.
@@ -689,6 +699,8 @@ export default function App() {
                         onSelect={handleSelect}
                         panelOpen={!!(selected || policyNode || edgeEvidence) && !isMobile}
                         controlsDimmed={isMobile && !!(selected || policyNode)}
+                        isMobile={isMobile}
+                        focusNodeId={isMobile && focal?.kind === 'node' ? focal.id : null}
                         minReliability={minReliability}
                         showInferred={showInferred}
                         onEdgeSelect={setEdgeEvidence}

@@ -175,6 +175,14 @@ export default function GraphView({
   onEdgeSelect,
   // Fade the view controls while a mobile bottom sheet is open.
   controlsDimmed = false,
+  // Mobile uses the hub list/search and tap panels as its readable graph
+  // navigation. Inline relationship labels remain desktop-only; at 390px the
+  // focused node is the only allowed detail card, never a field of overlapping
+  // boxes.
+  isMobile = false,
+  // On mobile, the selected hub becomes the sole eligible detail card; null
+  // leaves a full graph as compact shapes only.
+  focusNodeId = null,
   // Step 2b: full-corpus node list (for region "+N" collapsed counts) and
   // whether this render is a focused view (region boundaries are
   // focused-view-only, owner-ruled adjustment 4).
@@ -378,6 +386,10 @@ export default function GraphView({
       .sort((a, b) => b.degree(false) - a.degree(false))
       .slice(0, LABEL_HUB_COUNT)
     const manualLabels = new Set()
+    // Mobile keeps at most one explicit detail target. The active node is the
+    // only permitted card; every surrounding node stays a compact shape so
+    // mobile boxes can never overlap.
+    let mobileActiveNodeId = isMobile ? focusNodeId : null
 
     const applyLabels = () => {
       const z = cy.zoom()
@@ -385,7 +397,19 @@ export default function GraphView({
       // Step 2b: cards engage only in FOCUSED views (owner-ruled adjustments
       // 2+4). The full-corpus opt-in keeps the shipped label policy at every
       // zoom — compact shapes, hub labels 0.6-1.2x, all labels above 1.2x.
-      const cardMode = focused && z >= CARD_ZOOM_MIN
+      // A 390px canvas cannot support persistent relationship labels or a
+      // field of DOM cards without collisions. Mobile begins with the named
+      // hub list and retains search, node taps, the relationship list, and
+      // evidence panels. Only the one node the reader selected may show a
+      // card; all surrounding nodes remain compact at every zoom.
+      const cardMode = focused && !isMobile && z >= CARD_ZOOM_MIN
+      if (isMobile) {
+        if (mobileActiveNodeId) {
+          const n = cy.getElementById(mobileActiveNodeId)
+          if (n.nonempty()) n.addClass('lbl')
+        }
+        return
+      }
       if (cardMode) {
         // DOM cards carry node text; canvas node labels stay off so text
         // never double-renders. Edges keep their shipped 1.2x gating.
@@ -405,6 +429,7 @@ export default function GraphView({
     cy.on('zoom', applyLabels)
     cy.on('tap', 'node', (evt) => {
       manualLabels.add(evt.target.id())
+      mobileActiveNodeId = evt.target.id()
       applyLabels()
     })
 
@@ -634,7 +659,8 @@ export default function GraphView({
       if (!layer) return
       const z = cy.zoom()
       const { regime } = cardRegime(z)
-      if (!focused || regime !== 'cards') {
+      const mobileFocusCard = isMobile && focused && mobileActiveNodeId != null
+      if (!focused || (isMobile ? !mobileFocusCard : regime !== 'cards')) {
         if (cardEls.size > 0) clearCards()
         return
       }
@@ -652,7 +678,11 @@ export default function GraphView({
       // the rest stay compact shapes (their text is unreadable at that
       // density anyway — the relationship list remains the full equivalent).
       visible.sort((a, b) => b.degree(false) - a.degree(false))
-      const carded = visible.slice(0, MAX_CARDS)
+      const active = mobileFocusCard ? cy.getElementById(mobileActiveNodeId) : null
+      const carded =
+        active?.nonempty()
+          ? [active]
+          : visible.slice(0, MAX_CARDS)
       const keep = new Set(carded.map((n) => n.id()))
       cardEls.forEach((el, id) => {
         if (!keep.has(id)) {
@@ -668,8 +698,13 @@ export default function GraphView({
           layer.appendChild(el)
         }
         const rp = n.renderedPosition()
-        el.style.transform = `translate(${rp.x}px, ${rp.y}px) translate(-50%, -50%) scale(${Math.min(z, 1.6)})`
+        const cardScale = isMobile ? 1 : Math.min(z, 1.6)
+        el.style.transform = `translate(${rp.x}px, ${rp.y}px) translate(-50%, -50%) scale(${cardScale})`
         el.classList.toggle('selected', n.selected())
+        // Defensive mobile gate: only the declared focus node may remain
+        // visible as a card. The CSS rule backs this up across asynchronous
+        // layout/zoom frames, so stale neighbors cannot overlap it.
+        el.classList.toggle('mobile-active', isMobile && n.id() === mobileActiveNodeId)
       }
     }
 
@@ -679,7 +714,7 @@ export default function GraphView({
     const runRelax = () => {
       const z = cy.zoom()
       const { regime, relaxScope } = cardRegime(z)
-      if (!focused || regime !== 'cards' || relaxScope === 'none') return
+      if (!focused || isMobile || regime !== 'cards' || relaxScope === 'none') return
       const cw = cy.width()
       const ch = cy.height()
       const cx = cw / 2
@@ -714,7 +749,7 @@ export default function GraphView({
     // zooms — so in focused views the separation pass runs at layout settle
     // regardless of the card regime (cards themselves stay zoom-gated).
     const runSettleSeparation = () => {
-      if (!focused) return
+      if (!focused || isMobile) return
       let scope = cy.nodes().toArray()
       if (scope.length > MAX_CARDS) {
         scope = scope.sort((a, b) => b.degree(false) - a.degree(false)).slice(0, MAX_CARDS)
@@ -855,7 +890,7 @@ export default function GraphView({
       resizeObserver?.disconnect()
       cy.destroy()
     }
-  }, [nodes, edges, onSelect])
+  }, [nodes, edges, onSelect, isMobile, focusNodeId])
 
   // Step 7 (§6): reliability + hypothesis filtering. Toggling classes on
   // the existing instance avoids a full re-layout; edges with no

@@ -128,3 +128,11 @@ test('pre-migration fallback: evidence-column 400 still returns ALL edges', asyn
   assert.ok(edgeIds.has(`e-${pad(1001)}`), 'fallback path dropped edge at position 1001')
   assert.ok(edgeIds.has(`e-${pad(N_EDGES)}`), 'fallback path dropped final edge')
 })
+
+
+test('configured empty Supabase returns an explicit empty graph, never bundled demo content', async () => {
+  const graph = await loadGraph({ supabaseClient: fakePostgrest({ nodes: [], edges: [] }) })
+  assert.equal(graph.source, 'supabase')
+  assert.deepEqual(graph.nodes, [])
+  assert.deepEqual(graph.edges, [])
+})

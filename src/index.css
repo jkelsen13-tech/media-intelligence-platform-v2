@@ -98,6 +98,32 @@ body {
   min-height: 0;
 }
 
+/* A configured live corpus may have articles before graph publication. Keep
+   that state explicit rather than substituting unrelated demonstration data. */
+.graph-empty-state {
+  margin: 24px;
+  max-width: 680px;
+  padding: 24px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-radius);
+  background: var(--bg-panel);
+}
+
+.graph-empty-state h2 {
+  margin: 0 0 10px;
+  font-size: 20px;
+}
+
+.graph-empty-state p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.graph-empty-state p + p {
+  margin-top: 10px;
+}
+
 .graph-area {
   position: relative;
   flex: 1;
@@ -2352,6 +2378,11 @@ body {
     flex-direction: column;
   }
 
+  .graph-empty-state {
+    margin: 16px;
+    padding: 20px;
+  }
+
   .graph-area {
     flex: 1;
     min-height: 0;
@@ -2388,6 +2419,17 @@ body {
   .graph-stage {
     flex: 1;
     min-height: 280px;
+  }
+
+  /* The mobile graph may retain card elements through an asynchronous Cytoscape
+     layout frame, but only the reader’s focused node may ever be visible as a
+     detail box. Every other node stays a compact canvas shape. */
+  .graph-cards .graph-card {
+    display: none;
+  }
+
+  .graph-cards .graph-card.mobile-active {
+    display: grid;
   }
 
   .graph-search input {
