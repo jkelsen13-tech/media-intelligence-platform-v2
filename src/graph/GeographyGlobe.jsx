@@ -50,13 +50,35 @@ function markerSize(mentionCount) {
   return 4.6 + Math.min(4.5, Math.sqrt(Math.max(1, mentionCount)) * 1.6)
 }
 
-export default function GeographyGlobe({ locations, onSelectNode, variant = 'panel' }) {
+export default function GeographyGlobe({
+  locations,
+  onSelectNode,
+  onSelectLocation,
+  activeNodeKey = null,
+  activePlaceKey = null,
+  variant = 'panel',
+}) {
   const size = variant === 'overlay' ? OVERLAY_SIZE : PANEL_SIZE
-  const [rotation, setRotation] = useState(DEFAULT_ROTATION)
   const [activePlace, setActivePlace] = useState(null)
   const dragRef = useRef(null)
   const movedRef = useRef(false)
   const markerGroups = useMemo(() => groupedLocations(locations), [locations])
+
+  // The globe is a Graph control, not a detached map. A focused graph node
+  // highlights its documented place; a location focus persists until the reader
+  // selects another graph node or clears the focused view.
+  useEffect(() => {
+    if (activeNodeKey) {
+      const linked = markerGroups.find((row) => row.nodeKeys.includes(activeNodeKey))
+      setActivePlace(linked ? placeKey(linked) : null)
+      return
+    }
+    if (activePlaceKey) {
+      setActivePlace(activePlaceKey)
+      return
+    }
+    setActivePlace(null)
+  }, [activeNodeKey, activePlaceKey, markerGroups])
 
   const geometry = useMemo(() => {
     const projection = geoOrthographic()
@@ -90,7 +112,12 @@ export default function GeographyGlobe({ locations, onSelectNode, variant = 'pan
   }
 
   const selectMarker = (marker) => {
-    setActivePlace(placeKey(marker))
+    const key = placeKey(marker)
+    setActivePlace(key)
+    if (onSelectLocation) {
+      onSelectLocation({ placeKey: key, place: marker.place, nodeKeys: marker.nodeKeys })
+      return
+    }
     const [firstNode] = marker.nodeKeys
     if (firstNode) onSelectNode?.(firstNode)
   }
@@ -176,7 +203,7 @@ export default function GeographyGlobe({ locations, onSelectNode, variant = 'pan
               className={`geography-globe-marker${isActive ? ' active' : ''}`}
               role="button"
               tabIndex={0}
-              aria-label={`Open ${marker.label}, at ${marker.place}; ${marker.mentionCount} ${noun}; city-level representative point`}
+              aria-label={`Focus ${marker.nodeKeys.length} documented graph ${marker.nodeKeys.length === 1 ? 'node' : 'nodes'} at ${marker.place}; ${marker.mentionCount} ${noun}; city-level representative point`}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={() => {
                 if (!movedRef.current) selectMarker(marker)
@@ -201,7 +228,7 @@ export default function GeographyGlobe({ locations, onSelectNode, variant = 'pan
       </svg>
       <figcaption id={`geography-globe-caption-${variant}`}>
         {visibleCount} visible of {markerGroups.length} confirmed city-level representative {markerGroups.length === 1 ? 'point' : 'points'}. Drag or use arrow keys to rotate; markers open their documented graph node.
-        {active && ` Selected: ${active.place} (${active.mentionCount} confirmed ${active.mentionCount === 1 ? 'mention' : 'mentions'}).`}
+        {active && ` Selected: ${active.place} (${active.mentionCount} confirmed ${active.mentionCount === 1 ? 'mention' : 'mentions'}; ${active.nodeKeys.length} linked graph ${active.nodeKeys.length === 1 ? 'node' : 'nodes'}).`}
       </figcaption>
     </figure>
   )

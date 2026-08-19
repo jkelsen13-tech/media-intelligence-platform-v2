@@ -123,6 +123,10 @@ export default function App() {
   // Location mentions are optional and failure-isolated. They carry explicit
   // provenance/review states; an unreadable table yields an honest empty layer.
   const [locationMentions, setLocationMentions] = useState([])
+  // A selected geography marker owns an explicit Graph focus until the reader
+  // chooses another node or clears focus. This makes the map an interaction
+  // surface for the graph, rather than a detached visual overlay.
+  const [activeLocationKey, setActiveLocationKey] = useState(null)
   const [graphRegion, setGraphRegion] = useState('all')
   const [focusExpansion, setFocusExpansion] = useState(0)
   // Step 9 (§8): focus stack. Each crumb is
@@ -220,6 +224,7 @@ export default function App() {
   // user explicitly returns via the toolbar's "Focused view" control.
   const clearFocus = useCallback(() => {
     setFocusStack([])
+    setActiveLocationKey(null)
     setDesktopShowAll(true)
   }, [])
 
@@ -236,6 +241,7 @@ export default function App() {
       setEdgeListOpen(false)
       setReviewStatusOpen(false)
       setTopicsOpen(false)
+      setActiveLocationKey(null)
       // Step 10: policy nodes open the Consequence view instead of the
       // article panel; everything else keeps the existing behavior.
       if (data.type === 'policy') {
@@ -272,6 +278,7 @@ export default function App() {
         setEdgeListOpen(false)
         setReviewStatusOpen(false)
         setTopicsOpen(false)
+        setActiveLocationKey(null)
         if (next.type === 'policy') {
           setSelected(null)
           setPolicyNode(next)
@@ -283,6 +290,31 @@ export default function App() {
       }
     },
     [graph, pushFocus],
+  )
+
+  // A location marker focuses the complete documented set at that place.
+  // The canvas uses the same member list, so a multi-node city marker is not
+  // reduced to an arbitrary first node.
+  const handleLocationFocus = useCallback(
+    ({ placeKey, place, nodeKeys }) => {
+      if (!graph) return
+      const members = (nodeKeys ?? [])
+        .map((key) => graph.nodes.find((node) => (node.id ?? node.slug) === key))
+        .filter(Boolean)
+      if (members.length === 0) return
+      setEdgeEvidence(null)
+      setEdgeListOpen(false)
+      setReviewStatusOpen(false)
+      setTopicsOpen(false)
+      setPolicyNode(null)
+      setPinned(false)
+      setSelected(members[0])
+      setActiveLocationKey(placeKey)
+      setGraphMode('relationships')
+      setGraphScreen('all')
+      setFocusStack([{ kind: 'location', id: placeKey, label: `Location: ${place}`, memberIds: members.map((node) => node.id ?? node.slug) }])
+    },
+    [graph],
   )
 
   // Step 9: "Focus" affordance in the article panel — make the viewed
@@ -444,6 +476,7 @@ export default function App() {
     setReviewStatusOpen(false)
     setTopicsOpen(false)
     setPolicyNode(null)
+    setActiveLocationKey(null)
     setSelected(node)
     setNodeQuery('')
     pushFocus(node)
@@ -471,9 +504,19 @@ export default function App() {
 
   const subgraph = useMemo(() => {
     if (!graph || !focal) return null
-    if (focal.kind === 'topic') return topicSubgraph(graph.nodes, graph.edges, focal.memberIds)
+    if (focal.kind === 'topic' || focal.kind === 'location') {
+      return topicSubgraph(graph.nodes, graph.edges, focal.memberIds)
+    }
     return localSubgraph(graph.nodes, graph.edges, focal.id, focusDepth(isMobile) + focusExpansion)
   }, [graph, focal, isMobile, focusExpansion])
+
+  const activeGraphNodeKey = selected
+    ? selected.id ?? selected.slug
+    : policyNode
+      ? policyNode.id ?? policyNode.slug
+      : focal?.kind === 'node'
+        ? focal.id
+        : null
 
   const openHub = useCallback((node) => {
     setEdgeEvidence(null)
@@ -481,6 +524,7 @@ export default function App() {
     setReviewStatusOpen(false)
     setTopicsOpen(false)
     setPolicyNode(null)
+    setActiveLocationKey(null)
     setFocusStack([{ kind: 'node', id: node.id ?? node.slug, label: node.label }])
     setGraphScreen('all')
     setSelected(null)
@@ -897,6 +941,9 @@ export default function App() {
                             variant="overlay"
                             locations={graphLocationSummary.confirmedMappable}
                             onSelectNode={handleNavigate}
+                            onSelectLocation={handleLocationFocus}
+                            activeNodeKey={activeGraphNodeKey}
+                            activePlaceKey={activeLocationKey}
                           />
                         </aside>
                       )}
