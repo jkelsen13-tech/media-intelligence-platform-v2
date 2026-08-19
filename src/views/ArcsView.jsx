@@ -110,7 +110,14 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
     loadArcs()
       .then((rows) => {
         setArcs(rows)
-        if (rows.length > 0) setSelectedSlug(rows[0].slug)
+        if (rows.length > 0) {
+          setSelectedSlug(rows[0].slug)
+          // On narrow screens the list and detail are intentionally separate
+          // views. Open the chosen arc's reference-style Overview first; the
+          // persistent back control retains access to the complete arc list.
+          // Desktop ignores this class and retains its split-pane layout.
+          setPushed(true)
+        }
       })
       .catch((err) => setError(err.message))
   }, [])

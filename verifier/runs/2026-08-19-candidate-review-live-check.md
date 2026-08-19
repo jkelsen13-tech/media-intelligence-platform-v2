@@ -15,3 +15,29 @@ The public **Knowledge Graph** loaded after the candidate-ledger closure. It sho
 The public **Causal Timeline** loaded after the candidate-ledger closure. The selected `Epstein Files Transparency Act — process, safeguards, and oversight` arc rendered 13 timeline records, including six News records; records were explicitly marked `Sequence only` where causality was not source-supported. The shared evidence and connection controls were present. Capture: `/home/ubuntu/screenshots/jkelsen13-tech_githu_2026-08-19_18-53-03_7197.webp`.
 
 These are baseline live surfaces; no newly approved candidate was present because the approved count was zero. The candidate ledger's 18 rejected records and three owner-held records remain excluded from propagation.
+
+## Current reference-screen audit — initial observations
+
+A fresh public News check after the current 10k isolated backfill loaded the 12,558-article corpus with live date, region, evidence, topic, source-order, outlet, and article-state controls. The screen retained its explicit no-composite-score and unverified-lineage disclosures. At the top of the default, newest-first feed, several records correctly disclose `Publisher source URL recorded` where no text or richer provenance is retained; one record title is itself a publisher URL. These records are not presented with fabricated summaries, citations, status badges, or graph/arc links.
+
+A fresh public Knowledge Graph check loaded the focused workspace with 15 of 47 nodes, 14 documented relationships, the Relationships / Geography / Time modes, region filter, Fit / Reset / Expand controls, dashed cluster boundaries, a type/edge legend, reliability controls, and a confirmed-location overlay. The rendered graph continued to distinguish causal from sequence edges in plain language and did not display an aggregate confidence score.
+
+Screenshots: `/home/ubuntu/screenshots/jkelsen13-tech_githu_2026-08-19_18-56-59_5853.webp` and `/home/ubuntu/screenshots/jkelsen13-tech_githu_2026-08-19_18-58-43_6130.webp`.
+
+The public **Causal Timeline** loaded its Epstein process-only arc with a 13-record sequence, three semantic tabs, date/event filters, an evidence/connection count, `View details` affordances, white-card hierarchy, and explicit `Sequence only` labels between every adjacent record. The screen retained the mandatory chronology/causality footnote and no causal connector was implied by visual adjacency. Screenshot: `/home/ubuntu/screenshots/jkelsen13-tech_githu_2026-08-19_18-59-03_4234.webp`.
+
+The public **Story Arcs** screen loaded the February 2026 source-mapped policy-watch arc with an honest dormant status, bounded-scope description, tabs, Graph jump, arc-age and coverage measures, coverage-gap explanation, explicit lifecycle orientation caption, key developments, evidence-state counts, and chronology/correlation boundary. Screenshot: `/home/ubuntu/screenshots/jkelsen13-tech_githu_2026-08-19_18-59-19_5355.webp`.
+
+The public **Source Comparison** screen loaded with light cards, an evidence-review header, explicit no-composite-score boundary, source-comparison search, claim and primary-evidence-link totals, review date, lineage-status disclosure, one-outlet disclosure, exact captured framing, included-claim count, source-tier state, claim evidence class, article and primary-document links where available, and remaining uncertainty. It used `Reported by` rather than an unsupported independence claim. Screenshot: `/home/ubuntu/screenshots/jkelsen13-tech_githu_2026-08-19_18-59-42_1540.webp`.
+
+The public **Legal & Policy** view loaded with curated-record framing, explicit documented-claim and no-composite-score language, draft statuses, Source Locator detail, stated-objective versus actual-outcome separation, official source links where available, and explicit evidence-gap markers. The active rendering preserves the distinction between a source-stated objective, a documented action, and an unidentified outcome; no conclusion is drawn from missing evidence. Screenshot: `/home/ubuntu/screenshots/jkelsen13-tech_githu_2026-08-19_19-00-07_6479.webp`.
+
+## Narrow mobile visual verification — 390 × 844
+
+The live responsive check at 390 × 844 entered the mobile breakpoint and reported no horizontal overflow for the focused Graph, full Graph, Timeline, or Story Arcs views. The expanded Graph reported 47 total nodes and 36 documented relationships with zero visible DOM node cards, retaining the canvas-first mobile treatment; its one-line status, Relationships / Geography / Time modes, region filter, legend, reliability controls, graph grid, location overlay, and five-item bottom navigation all remained readable in the captured mobile frame.
+
+The Timeline capture rendered the policy-change eyebrow, legible title/subtitle, arc selector, global-events control, semantic tabs, date/type controls, inline missing-evidence banner, count line, white event cards, dated vertical spine, per-gap `Sequence only` connector, status icon plus label, and fixed five-item navigation without horizontal scrolling. Screenshots: `verifier/live_responsive_surface_check/graph-expanded-mobile.png` and `verifier/live_responsive_surface_check/timeline-mobile.png`.
+
+### Mobile Story Arcs reference-alignment repair
+
+The initial 390 × 844 live capture confirmed the underlying mobile list/detail route worked but opened on the list-selector state, pushing the selected arc’s reference-style overview below the fold. The reference screen places the selected arc overview first. `ArcsView` now marks the initial selected arc as opened on narrow screens; the existing **All story arcs** control continues to return to the searchable list. Desktop keeps the split-pane because its layout ignores the mobile-only detail class. The complete regression suite passed 433/433 and the Vite production build completed after the repair.
