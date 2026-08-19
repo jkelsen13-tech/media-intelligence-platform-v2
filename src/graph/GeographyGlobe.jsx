@@ -59,6 +59,7 @@ export default function GeographyGlobe({
   variant = 'panel',
 }) {
   const size = variant === 'overlay' ? OVERLAY_SIZE : PANEL_SIZE
+  const [rotation, setRotation] = useState(DEFAULT_ROTATION)
   const [activePlace, setActivePlace] = useState(null)
   const dragRef = useRef(null)
   const movedRef = useRef(false)
