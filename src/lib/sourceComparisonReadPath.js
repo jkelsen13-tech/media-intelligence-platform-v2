@@ -243,9 +243,9 @@ export function buildEventView(event, memberRows, ctx) {
 // source-comparison-run pagedSelect precedent:
 //   - keysetAll: keyset pagination on the unique id column — immune to
 //     concurrent inserts shifting page boundaries mid-read;
-//   - pagedAll: offset pagination over a deterministic TOTAL order, for
-//     event_articles, whose key is composite (event_id, article_id) and has
-//     no single unique column to keyset on.
+//   - selectInChunks: bounded lookups by the already-filtered eligible event
+//     IDs. This keeps Timeline-only material from forcing Source Comparison to
+//     scan every chronological event membership before it can render.
 async function keysetAll(supabase, table, cols, { filter = (q) => q, pageSize = 1000 } = {}) {
   const out = []
   let last = null
@@ -314,14 +314,18 @@ export async function loadSourceComparisonView({ supabaseClient } = {}) {
     .maybeSingle()
   if (flagError || flagRow?.value !== true) return { enabled: false, events: [] }
 
-  const [eventsRes, membersRes, claimsRes, surfacesRes, linksRes, corrRes, explRes] = await Promise.all([
-    // Timeline-only article records are deliberately excluded: a source
-    // comparison requires actual multi-source event processing, not merely a
-    // chronological placement.
-    keysetAll(supabase, 'events', 'id, canonical_title, occurred_at_start, occurred_at_end, status', {
-      filter: (q) => q.neq('status', 'timeline_only'),
-    }),
-    pagedAll(supabase, 'event_articles', 'event_id, article_id, membership_method, membership_confidence', ['event_id', 'article_id']),
+  // Timeline-only article records are deliberately excluded before member
+  // reads begin. A source comparison needs actual event processing, not merely
+  // chronological placement, and should never scan every Timeline member.
+  const eventsRes = await keysetAll(supabase, 'events', 'id, canonical_title, occurred_at_start, occurred_at_end, status', {
+    filter: (q) => q.neq('status', 'timeline_only'),
+  })
+  if (eventsRes.error) return { enabled: true, events: [], loadError: eventsRes.error.message }
+
+  const events = eventsRes.data ?? []
+  const eligibleEventIds = events.map((event) => event.id)
+  const [membersRes, claimsRes, surfacesRes, linksRes, corrRes, explRes] = await Promise.all([
+    selectInChunks(supabase, 'event_articles', 'event_id, article_id, membership_method, membership_confidence', 'event_id', eligibleEventIds),
     keysetAll(supabase, 'claims', 'id, event_id, canonical_text, thin_extraction, status', { filter: (q) => q.eq('status', 'active') }),
     keysetAll(supabase, 'article_claims', 'id, claim_id, article_id, surface_text, stance, loaded_language', { filter: (q) => q.eq('is_current', true) }),
     keysetAll(supabase, 'claim_evidence_links', 'id, claim_id, evidence_url, evidence_type'),
@@ -330,10 +334,8 @@ export async function loadSourceComparisonView({ supabaseClient } = {}) {
       filter: (q) => q.in('assertion_type', ['event_membership', 'claim_grouping']).like('rule_version', 'sc-v1|%').eq('is_current', true),
     }),
   ])
-  const firstError = [eventsRes, membersRes, claimsRes, surfacesRes].find((r) => r.error)?.error
+  const firstError = [membersRes, claimsRes, surfacesRes, linksRes, corrRes, explRes].find((result) => result.error)?.error
   if (firstError) return { enabled: true, events: [], loadError: firstError.message }
-
-  const events = eventsRes.data ?? []
   const members = membersRes.data ?? []
   const claims = claimsRes.data ?? []
   const surfaces = surfacesRes.data ?? []

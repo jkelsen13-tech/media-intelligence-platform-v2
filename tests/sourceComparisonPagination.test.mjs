@@ -15,7 +15,9 @@ import { loadSourceComparisonView } from '../src/lib/sourceComparisonReadPath.js
 // gt/order/range/limit/maybeSingle + await. The 1000-row server cap is
 // applied unconditionally at response time — that IS the bug being tested.
 function fakePostgrest(tables) {
+  const calls = []
   return {
+    calls,
     from(table) {
       let rows = [...(tables[table] ?? [])]
       const state = { range: null, limit: null, single: false }
@@ -23,7 +25,7 @@ function fakePostgrest(tables) {
         select: () => q,
         eq: (c, v) => { rows = rows.filter((r) => r[c] === v); return q },
         neq: (c, v) => { rows = rows.filter((r) => r[c] !== v); return q },
-        in: (c, vs) => { const s = new Set(vs); rows = rows.filter((r) => s.has(r[c])); return q },
+        in: (c, vs) => { calls.push({ table, column: c, values: [...vs] }); const s = new Set(vs); rows = rows.filter((r) => s.has(r[c])); return q },
         like: (c, p) => {
           const re = new RegExp('^' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*') + '$')
           rows = rows.filter((r) => re.test(String(r[c] ?? '')))
@@ -189,6 +191,11 @@ test('loadSourceComparisonView excludes Timeline-only and single-outlet event re
     ],
     story_arcs: [], nodes: [],
   }
-  const view = await loadSourceComparisonView({ supabaseClient: fakePostgrest(tables) })
+  const db = fakePostgrest(tables)
+  const view = await loadSourceComparisonView({ supabaseClient: db })
   assert.deepEqual(view.events.map((event) => event.id), ['compare'])
+  const memberIds = db.calls
+    .filter((call) => call.table === 'event_articles' && call.column === 'event_id')
+    .flatMap((call) => call.values)
+  assert.deepEqual(memberIds.sort(), ['compare', 'one-outlet'])
 })
