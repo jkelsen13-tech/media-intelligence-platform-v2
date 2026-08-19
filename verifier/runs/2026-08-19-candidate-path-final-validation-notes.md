@@ -25,3 +25,14 @@ The public **Story Arcs** surface loaded successfully and presented the remainin
 ## Live Source Comparison check
 
 The public **Source Comparison** view loaded promptly after the bounded eligible-event read repair. It displayed a genuine three-outlet event, its one reviewed claim, a linked primary document, per-outlet framing, timing, provenance caveats, and explicit lineage uncertainty. The view did not remain in a loading state and did not expose the materialized Timeline-only corpus as comparison events.
+
+## Candidate-funnel reconciliation
+
+| Ingestion population | Articles assessed | Candidate-path result | Decision result |
+|---|---:|---|---|
+| `v2-original-reference-news-2026-08-19` | 752 | All withheld as metadata-only because the stored body is an explicit reference-manifest sentinel, not original publisher text. | No candidate was materialized or approved. Articles remain in News and Timeline. |
+| `mip-v2-bigquery-final-deterministic-resume-20260819` | 1,510 | 396 lacked a qualifying literal stored claim; 1,110 lacked a `court_doc` or `agency_release` classification; 4 lacked a recognized primary-record URL. | No candidate met all three evidence-floor requirements, so none was materialized or approved. |
+| `mip-v2-bigquery-redistricting-exclusion-resume-20260819` | 10,000 | All withheld by the explicit redistricting-sensitive owner-review hard stop. | No candidate was materialized or approved. |
+| Prior reviewed candidate ledger | 21 candidates | 18 had inadequate primary-evidence links or literal grounding; 3 were redistricting-sensitive. | 18 rejected; 3 owner-held; 0 approved. |
+
+The repaired candidate path now records why each assessed article is withheld or materialized. It is no longer possible for a bulk run to silently bypass assessment, and the output remains review-gated: candidate materialization cannot publish a Timeline, Story Arc, Graph node, edge, or Source Comparison record.
