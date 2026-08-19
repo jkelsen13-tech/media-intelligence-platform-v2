@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT name, country, parent_ownership FROM public.outlets ORDER BY name ASC LIMIT 100;"
+}

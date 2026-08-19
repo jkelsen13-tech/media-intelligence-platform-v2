@@ -1,0 +1,49 @@
+
+/* Provenance disclosure revision: publisher attribution, byline availability,
+   structured claims, framing markers, and citations are separate records. */
+.news-source-record {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border-color));
+  border-left: 3px solid var(--accent);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg-panel));
+}
+.news-source-record .source-attribution {
+  margin: 0;
+}
+.news-source-record-copy {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.42;
+}
+.news-source-record-link {
+  justify-self: start;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.news-source-record-link:hover,
+.news-source-record-link:focus-visible {
+  color: var(--text-primary);
+  text-decoration: underline;
+  outline: none;
+}
+.news-detail .ap-muted {
+  display: block;
+  margin-top: 5px;
+  line-height: 1.45;
+}
+@media (max-width: 767px) {
+  .news-source-record {
+    padding: 11px;
+  }
+  .news-source-record-copy,
+  .news-source-record-link {
+    font-size: 13px;
+  }
+}

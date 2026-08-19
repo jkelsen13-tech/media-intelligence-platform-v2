@@ -108,6 +108,32 @@ function strengthBadge(strength, citedType, citedEntity) {
   )
 }
 
+function PublisherSourceRecord({ article, region }) {
+  if (!article) return null
+  const outlet = article.outlet ?? 'Publisher record'
+  return (
+    <section className="news-source-record" aria-label="Publisher source record">
+      <span className="ap-label">Publisher source record</span>
+      <SourceAttributionLine outlet={outlet} region={region ?? null} badge={null} />
+      <p className="news-source-record-copy">
+        {article.url
+          ? 'An original publisher URL is recorded for this article.'
+          : 'No original publisher URL is stored for this article.'}
+      </p>
+      <p className="news-source-record-copy">
+        {article.author_name
+          ? `Byline recorded: ${article.author_name}.`
+          : 'No author byline is stored. This is a metadata gap, not an absence of publisher attribution.'}
+      </p>
+      {article.url && (
+        <a className="news-source-record-link" href={article.url} target="_blank" rel="noreferrer">
+          Open publisher record at {outlet} →
+        </a>
+      )}
+    </section>
+  )
+}
+
 // Doc 05 pairs 3 & 5: onOpenTimeline / onOpenComparison are optional — when a
 // destination is unavailable the corresponding chip simply never renders.
 export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison }) {
@@ -376,12 +402,16 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     </div>
   )
 
-  // Per-card provenance footer (owner ruling #6): the label is derived from
-  // the real cited_type discriminator via the seam; no basis → no line.
+  // Every card discloses the publisher record when a URL exists. Structured
+  // citation classes remain additive and never substitute for a source URL.
   const provenanceLine = (a) => {
     const basis = provenanceBasis(a, citationMap.get(a.id)?.citedTypes)
-    if (!basis) return null
-    return <div className="news-prov">{PROVENANCE_LABELS[basis]}</div>
+    const label = basis
+      ? PROVENANCE_LABELS[basis]
+      : a.url
+        ? 'Publisher source URL recorded'
+        : 'Publisher source URL not recorded'
+    return <div className="news-prov">{label}</div>
   }
 
   // Per-card cross-navigation is a true button group, rendered only where the
@@ -467,6 +497,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
             </div>
           )}
           {crossWindowChips}
+          <PublisherSourceRecord article={detail} region={outletRegions.get(detail.outlet) ?? null} />
           {/* Location corroboration (formerly Sky verification; 02A
               Amendment B): renders only when a corroboration exists. */}
           <SkyBadge verification={sky} />
@@ -479,7 +510,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
             <div>
               <span className="ap-label">Substantive claims</span>
               {claims.substantive.length === 0 && (
-                <span className="ap-muted">None extracted.</span>
+                <span className="ap-muted">No structured substantive claims have been extracted yet. This is an extraction gap, not a statement that the publisher record contains no claims.</span>
               )}
               <ul className="news-claims">
                 {claims.substantive.map((c, i) => (
@@ -489,7 +520,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
             </div>
             <div>
               <span className="ap-label">Framing markers</span>
-              {claims.framing.length === 0 && <span className="ap-muted">None detected.</span>}
+              {claims.framing.length === 0 && <span className="ap-muted">No structured framing markers have been extracted yet. This is not a neutrality or bias finding.</span>}
               <ul className="news-claims framing">
                 {claims.framing.map((c, i) => (
                   <li key={i}>{c.text}</li>
@@ -506,15 +537,15 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
             return (
               <div className="news-badges">
                 {src.author_name && <span className="news-badge">by {src.author_name}</span>}
-                {src.unattributed && <span className="news-badge muted">unattributed</span>}
+                {src.unattributed && <span className="news-badge muted">byline not recorded</span>}
                 {src.monoculture && <span className="news-badge mono">monoculture</span>}
                 {sky && <span className="news-badge sky">◈ location-corroborated</span>}
               </div>
             )
           })()}
-          <span className="ap-label">Citations</span>
+          <span className="ap-label">Supporting citation records</span>
           {detail.citations.length === 0 && (
-            <span className="ap-muted">No citations extracted.</span>
+            <span className="ap-muted">No additional structured citation records have been extracted. The publisher source record above is not a claim-level citation.</span>
           )}
           <ul className="news-citations">
             {detail.citations.map((c, i) => (

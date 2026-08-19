@@ -3291,3 +3291,121 @@ body {
     font-size: 11px;
   }
 }
+
+/* Public-data globe revision: Natural Earth land/country topology makes the
+   spherical projection visibly geographic. The overlay is bounded and hides
+   while a reader is open, so it provides context without covering evidence. */
+.geography-globe-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 1px 4px 7px;
+}
+.geography-globe-kicker {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .075em;
+  text-transform: uppercase;
+}
+.geography-globe-reset {
+  min-height: 28px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 3px 7px;
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.geography-globe-reset:hover,
+.geography-globe-reset:focus-visible {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  outline: none;
+}
+.geography-globe svg {
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+.geography-globe svg:active { cursor: grabbing; }
+.geography-globe svg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+.geography-globe-land {
+  fill: color-mix(in srgb, var(--accent) 18%, var(--bg-panel));
+  stroke: none;
+}
+.geography-globe-borders {
+  fill: none;
+  stroke: color-mix(in srgb, var(--text-secondary) 32%, var(--border-color));
+  stroke-width: .52;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.geography-globe-marker-label {
+  fill: var(--text-primary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .015em;
+  paint-order: stroke;
+  stroke: var(--bg-panel);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.geography-globe-marker.active .geography-globe-marker-halo {
+  fill: color-mix(in srgb, var(--accent) 55%, transparent);
+  transform: scale(1.45);
+}
+.geography-globe-marker.active .geography-globe-marker-dot {
+  stroke: var(--text-primary);
+  stroke-width: 2.2;
+}
+.graph-geography-overlay {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 5;
+  width: 214px;
+  max-width: min(214px, calc(100% - 24px));
+  filter: drop-shadow(0 8px 18px rgb(18 38 68 / 18%));
+}
+.graph-geography-overlay .geography-globe {
+  width: 100%;
+  padding: 7px;
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border-color));
+  background: color-mix(in srgb, var(--bg-panel) 92%, var(--accent) 8%);
+  backdrop-filter: blur(5px);
+}
+.graph-geography-overlay .geography-globe-kicker { font-size: 9px; }
+.graph-geography-overlay .geography-globe-reset {
+  min-height: 24px;
+  font-size: 10px;
+}
+.graph-geography-overlay .geography-globe figcaption {
+  padding: 4px 3px 0;
+  font-size: 10px;
+}
+.graph-geography-overlay .geography-globe-sphere { stroke-width: 1.8; }
+.graph-geography-overlay .geography-globe-marker-dot { stroke-width: 2; }
+
+@media (max-width: 767px) {
+  .graph-geography-overlay {
+    right: 8px;
+    bottom: 8px;
+    width: 156px;
+    max-width: calc(100% - 16px);
+  }
+  .graph-geography-overlay .geography-globe { padding: 5px; }
+  .graph-geography-overlay .geography-globe-head { padding-bottom: 3px; }
+  .graph-geography-overlay .geography-globe-kicker { font-size: 8px; }
+  .graph-geography-overlay .geography-globe-reset { min-height: 22px; padding: 2px 5px; font-size: 9px; }
+  .graph-geography-overlay .geography-globe figcaption { font-size: 9px; line-height: 1.25; }
+  .geography-globe-marker-label { font-size: 8px; }
+}

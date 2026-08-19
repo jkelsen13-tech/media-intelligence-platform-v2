@@ -1,72 +1,10 @@
 import { useMemo } from 'react'
-import { geoGraticule10, geoOrthographic, geoPath } from 'd3-geo'
 import { recordedGeography, recordedTime, summarizeGeography } from '../lib/graphWorkspaceModel.js'
-
-const GLOBE_SIZE = 310
-const GLOBE_CENTER = Object.freeze([98, -39]) // centers the initial view over the seeded U.S. locations
+import GeographyGlobe from './GeographyGlobe.jsx'
 
 function labelForPrecision(precision) {
   if (!precision) return 'Precision not recorded'
   return `${precision[0].toUpperCase()}${precision.slice(1)}-level representative point`
-}
-
-function Globe({ locations, onSelectNode }) {
-  const { spherePath, graticulePath, markers } = useMemo(() => {
-    const projection = geoOrthographic()
-      .translate([GLOBE_SIZE / 2, GLOBE_SIZE / 2])
-      .scale(GLOBE_SIZE * 0.45)
-      .rotate(GLOBE_CENTER)
-      .clipAngle(90)
-      .precision(0.3)
-    const path = geoPath(projection)
-    return {
-      spherePath: path({ type: 'Sphere' }),
-      graticulePath: path(geoGraticule10()),
-      markers: (locations ?? [])
-        .map((row) => {
-          const point = projection([row.longitude, row.latitude])
-          return point ? { ...row, x: point[0], y: point[1] } : null
-        })
-        .filter(Boolean),
-    }
-  }, [locations])
-
-  return (
-    <figure className="geography-globe" aria-labelledby="geography-globe-caption">
-      <svg viewBox={`0 0 ${GLOBE_SIZE} ${GLOBE_SIZE}`} role="img" aria-labelledby="geography-globe-title geography-globe-desc">
-        <title id="geography-globe-title">Confirmed city-level location representatives</title>
-        <desc id="geography-globe-desc">
-          A static orthographic globe showing only literal, confirmed, source-record or human-verified city-level location mentions in the current graph focus.
-        </desc>
-        <path className="geography-globe-sphere" d={spherePath ?? undefined} />
-        <path className="geography-globe-graticule" d={graticulePath ?? undefined} />
-        {markers.map((row) => (
-          <g
-            key={row.id}
-            className="geography-globe-marker"
-            role="button"
-            tabIndex={0}
-            aria-label={`Open ${row.label}, located at ${row.place}; ${labelForPrecision(row.precision)}`}
-            onClick={() => onSelectNode?.(row.key)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault()
-                onSelectNode?.(row.key)
-              }
-            }}
-          >
-            <circle className="geography-globe-marker-halo" cx={row.x} cy={row.y} r="8" />
-            <circle className="geography-globe-marker-dot" cx={row.x} cy={row.y} r="3.8" />
-          </g>
-        ))}
-      </svg>
-      <figcaption id="geography-globe-caption">
-        {markers.length > 0
-          ? `${markers.length} confirmed city-level representative ${markers.length === 1 ? 'point' : 'points'} in this focus.`
-          : 'No confirmed mappable representative points in this focus.'}
-      </figcaption>
-    </figure>
-  )
 }
 
 // Focused-Graph addendum modes. Relationships remains the Cytoscape canvas;
@@ -92,7 +30,7 @@ export default function GraphModePanel({ mode, nodes, locationMentions, onReturn
       {isGeography ? (
         <div className="geography-mode-content">
           <p className="geography-mode-intro">
-            Location markers are shown only when the current graph node has a literal, confirmed source record or human-verified location. Every dot below is a broad city-level representative point, not an exact incident coordinate.
+            Location markers are shown only when the current graph node has a literal, confirmed source record or human-verified location. Every dot is a broad city-level representative point, not an exact incident coordinate. Drag the globe or use its arrow-key controls to rotate it; select a marker to open its documented graph node.
           </p>
           <dl className="geography-state-counts">
             <div>
@@ -112,14 +50,17 @@ export default function GraphModePanel({ mode, nodes, locationMentions, onReturn
             </div>
           </dl>
           <div className="geography-layout">
-            <Globe locations={geographySummary.confirmedMappable} onSelectNode={onSelectNode} />
+            <GeographyGlobe locations={geographySummary.confirmedMappable} onSelectNode={onSelectNode} />
             <aside className="geography-legend" aria-label="Geographic corroboration legend">
               <p className="graph-mode-eyebrow">Display rule</p>
               <p>
-                Blue markers denote a location phrase present in a source record and resolved at the stated precision. Candidate, ambiguous, and unlocated records remain out of the marker layer.
+                Public-domain Natural Earth land and country boundaries make the projection legible as a globe. Blue markers denote a location phrase present in a source record and resolved at the stated precision.
+              </p>
+              <p>
+                Marker size reflects only the number of confirmed location mentions collapsed at the same displayed city. It does not rate an event’s importance, reliability, or geographic size.
               </p>
               <p className="geography-legend-note">
-                Map coverage is intentionally incomplete while only reviewed, provenance-bearing locations are published.
+                Candidate, ambiguous, and unlocated records remain out of the marker layer. Map coverage is intentionally incomplete while only reviewed, provenance-bearing locations are published.
               </p>
             </aside>
           </div>

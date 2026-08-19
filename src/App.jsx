@@ -3,6 +3,7 @@ import GraphView from './graph/GraphView'
 import Legend from './graph/Legend'
 import EdgeControls from './graph/EdgeControls'
 import GraphModePanel from './graph/GraphModePanel'
+import GeographyGlobe from './graph/GeographyGlobe'
 import RelationshipPanel from './panels/RelationshipPanel'
 import EdgeList from './graph/EdgeList'
 import ReviewStatusPanel from './panels/ReviewStatusPanel'
@@ -26,6 +27,8 @@ import { resolveFocal, focusDepth } from './lib/desktopFocus'
 import {
   filterGraphRegion,
   graphRegionOptions,
+  recordedGeography,
+  summarizeGeography,
   GRAPH_WORKSPACE_MODES,
 } from './lib/graphWorkspaceModel'
 import AccountPanel from './panels/AccountPanel'
@@ -493,6 +496,12 @@ export default function App() {
   )
   const displayNodes = regionScopedGraph.nodes
   const displayEdges = regionScopedGraph.edges
+  // The canvas overlay uses the same provenance filter as Geography mode.
+  // It never derives locations from labels or article text in the browser.
+  const graphLocationSummary = useMemo(
+    () => summarizeGeography(displayNodes, recordedGeography(displayNodes, locationMentions)),
+    [displayNodes, locationMentions],
+  )
   const canExpandFocus = Boolean(
     focal && focal.kind === 'node' && focusExpansion < 2 && focusedNodes.length < (graph?.nodes.length ?? 0),
   )
@@ -872,10 +881,25 @@ export default function App() {
                         focusNodeId={isMobile && focal?.kind === 'node' ? focal.id : null}
                         minReliability={minReliability}
                         showInferred={showInferred}
-                        onEdgeSelect={(selection) => openRelationshipEvidence(selection.edge)}
+                        onEdgeSelect={(selection) => {
+                          if (!selection?.edge) {
+                            setEdgeEvidence(null)
+                            return
+                          }
+                          openRelationshipEvidence(selection.edge)
+                        }}
                         allNodes={graph?.nodes ?? null}
                         focused={subgraph != null}
                       />
+                      {!selected && !policyNode && !edgeEvidence && graphLocationSummary.confirmedMappable.length > 0 && (
+                        <aside className="graph-geography-overlay" aria-label="Source-backed location context">
+                          <GeographyGlobe
+                            variant="overlay"
+                            locations={graphLocationSummary.confirmedMappable}
+                            onSelectNode={handleNavigate}
+                          />
+                        </aside>
+                      )}
                       {edgeListOpen && (
                         <EdgeList
                           nodes={graph.nodes}

@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "WITH article_stats AS (SELECT COUNT(*) AS total_articles, COUNT(*) FILTER (WHERE unattributed IS TRUE) AS unattributed_rows, COUNT(*) FILTER (WHERE author_id IS NOT NULL) AS rows_with_author, COUNT(*) FILTER (WHERE url IS NOT NULL AND btrim(url) <> '') AS rows_with_original_url, COUNT(*) FILTER (WHERE outlet IS NOT NULL AND btrim(outlet) <> '') AS rows_with_outlet, COUNT(*) FILTER (WHERE claims IS NOT NULL AND claims <> '[]'::jsonb) AS rows_with_claims, COUNT(*) FILTER (WHERE claims @> '[{\"kind\":\"framing\"}]'::jsonb) AS rows_with_framing_claims FROM articles), citation_stats AS (SELECT COUNT(*) AS total_citations, COUNT(DISTINCT article_id) AS cited_articles FROM citations) SELECT article_stats.*, citation_stats.total_citations, citation_stats.cited_articles FROM article_stats CROSS JOIN citation_stats LIMIT 1;"
+}

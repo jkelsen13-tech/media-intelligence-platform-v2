@@ -1,38 +1,25 @@
-// Track B Step 3 item 4 — shared arc evidence panel. Extracted verbatim
-// from ArcsView's Evidence tab (the pre-existing §2.5.4 elements: arc-age
-// bar, coverage-gap indicator, coverage-gap warning, milestone checklist,
-// attached articles) so Screen 5's Evidence tab REUSES it instead of
-// rebuilding (addendum system conventions: shared components are reused,
-// not rebuilt per screen). ArcsView consumes this same component.
+// Story Arc presentation seam: longitudinal status context belongs in Overview;
+// attached source records belong in Evidence. Both exports use the same proxy
+// calculation and source list, avoiding duplicate status logic across tabs.
 
-// --- C6: coverage-gap bar (signature element) ------------------------------
-// The arc schema has no expected-vs-actual coverage fields, so the bar uses
-// a documented PROXY: the arc's lifespan (started_at → now) is split into
-// equal time slices; a slice is "covered" when at least one attached article
-// was published inside it, "gap" (red) otherwise. Stats show attached
-// articles, distinct outlets, and days since the most recent article.
 const GAP_SEGMENTS = 8
 const GAP_STALE_DAYS = 30
 
 function CoverageGapBar({ articles, startedAt }) {
   const now = Date.now()
   const times = articles
-    .map((a) => new Date(a.published_at).getTime())
-    .filter((t) => Number.isFinite(t))
+    .map((article) => new Date(article.published_at).getTime())
+    .filter((time) => Number.isFinite(time))
   const start = startedAt ? new Date(startedAt).getTime() : Math.min(...times)
   if (!Number.isFinite(start) || times.length === 0) {
     return (
       <div className="gap-bar">
         <div className="gap-bar-head">
           <span className="gap-bar-title">Coverage over time</span>
-          <span className="gap-bar-stats">
-            <span className="num gap-flag">NO ATTACHED ARTICLES</span>
-          </span>
+          <span className="gap-bar-stats"><span className="num gap-flag">NO ATTACHED ARTICLES</span></span>
         </div>
         <div className="gap-bar-track">
-          {Array.from({ length: GAP_SEGMENTS }, (_, i) => (
-            <span key={i} className="gap-seg gap" />
-          ))}
+          {Array.from({ length: GAP_SEGMENTS }, (_, index) => <span key={index} className="gap-seg gap" />)}
         </div>
         <div className="gap-bar-foot">
           <span>proxy: attached-article timestamps</span>
@@ -42,12 +29,12 @@ function CoverageGapBar({ articles, startedAt }) {
     )
   }
   const span = Math.max(now - start, 86400000)
-  const segments = Array.from({ length: GAP_SEGMENTS }, (_, i) => {
-    const t0 = start + (span * i) / GAP_SEGMENTS
-    const t1 = start + (span * (i + 1)) / GAP_SEGMENTS
-    return times.some((t) => t >= t0 && t < t1)
+  const segments = Array.from({ length: GAP_SEGMENTS }, (_, index) => {
+    const from = start + (span * index) / GAP_SEGMENTS
+    const to = start + (span * (index + 1)) / GAP_SEGMENTS
+    return times.some((time) => time >= from && time < to)
   })
-  const outlets = new Set(articles.map((a) => a.outlet).filter(Boolean)).size
+  const outlets = new Set(articles.map((article) => article.outlet).filter(Boolean)).size
   const daysSinceLatest = Math.floor((now - Math.max(...times)) / 86400000)
   const stale = daysSinceLatest > GAP_STALE_DAYS
   return (
@@ -55,27 +42,13 @@ function CoverageGapBar({ articles, startedAt }) {
       <div className="gap-bar-head">
         <span className="gap-bar-title">Coverage over time</span>
         <span className="gap-bar-stats">
-          <span className="num">
-            {articles.length} <span className="stat-full">ARTICLES</span>
-            <span className="stat-short">ART</span>
-          </span>
-          <span className="num">
-            {outlets} <span className="stat-full">OUTLETS</span>
-            <span className="stat-short">OUT</span>
-          </span>
-          <span className={`num${stale ? ' gap-flag' : ''}`}>
-            {daysSinceLatest}D<span className="stat-full"> SINCE LAST</span>
-          </span>
+          <span className="num">{articles.length} <span className="stat-full">ARTICLES</span><span className="stat-short">ART</span></span>
+          <span className="num">{outlets} <span className="stat-full">OUTLETS</span><span className="stat-short">OUT</span></span>
+          <span className={`num${stale ? ' gap-flag' : ''}`}>{daysSinceLatest}D<span className="stat-full"> SINCE LAST</span></span>
         </span>
       </div>
       <div className="gap-bar-track">
-        {segments.map((covered, i) => (
-          <span
-            key={i}
-            className={`gap-seg ${covered ? 'covered' : 'gap'}`}
-            title={covered ? 'covered' : 'coverage gap'}
-          />
-        ))}
+        {segments.map((covered, index) => <span key={index} className={`gap-seg ${covered ? 'covered' : 'gap'}`} title={covered ? 'covered' : 'coverage gap'} />)}
       </div>
       <div className="gap-bar-foot">
         <span>{new Date(start).toISOString().slice(0, 10)}</span>
@@ -86,8 +59,6 @@ function CoverageGapBar({ articles, startedAt }) {
   )
 }
 
-// Spec §2.5.4 four-state milestone taxonomy. Legacy values from
-// pre-§2.5.4 data shapes map onto the new states.
 const MILESTONE_META = {
   pending: { color: 'var(--cat-amber)', label: 'Pending', icon: '○' },
   confirmed: { color: 'var(--cat-green)', label: 'Confirmed', icon: '✓' },
@@ -99,9 +70,9 @@ const MILESTONE_LEGACY = {
   confirmed_failed: 'failed',
   unresolved: 'pending',
 }
+
 function milestoneMeta(status) {
-  const key = MILESTONE_META[status] ? status : MILESTONE_LEGACY[status] ?? 'pending'
-  return MILESTONE_META[key]
+  return MILESTONE_META[MILESTONE_META[status] ? status : MILESTONE_LEGACY[status] ?? 'pending']
 }
 
 export function arcAgeDays(startedAt) {
@@ -109,88 +80,78 @@ export function arcAgeDays(startedAt) {
   return Math.max(0, Math.round((Date.now() - new Date(startedAt).getTime()) / 86400000))
 }
 
-export default function ArcEvidencePanel({ arc, detail, arcArticles, onOpenArticle }) {
+// Overview only: the status/proxy block describes the arc as a whole and
+// contains no attached source-card list.
+export function ArcOverviewStatus({ arc, detail, arcArticles }) {
   const ageDays = arcAgeDays(arc?.started_at)
+  const milestones = detail?.milestones ?? []
   return (
-    <>
-      <section className="arc-status-panel">
-        <div className="arc-age-row">
-          <span className="ap-label">Arc age</span>
-          <div className="arc-age-bar">
-            <div
-              className="arc-age-fill"
-              style={{ width: `${Math.min(100, ((ageDays ?? 0) / 365) * 100)}%` }}
-            />
-          </div>
-          <span className="arc-age-label">
-            <span className="num">{ageDays ?? '—'}</span> days
-          </span>
+    <section className="arc-status-panel arc-overview-status" aria-label="Arc age and coverage status">
+      <div className="arc-age-row">
+        <span className="ap-label">Arc age</span>
+        <div className="arc-age-bar"><div className="arc-age-fill" style={{ width: `${Math.min(100, ((ageDays ?? 0) / 365) * 100)}%` }} /></div>
+        <span className="arc-age-label"><span className="num">{ageDays ?? '—'}</span> days</span>
+      </div>
+      <CoverageGapBar articles={arcArticles} startedAt={arc?.started_at} />
+      {arc?.coverage_gap && (
+        <div className="arc-coverage-gap">
+          Coverage gap — real-world developments are outpacing recorded media coverage. The story may still be unfolding, and the coverage proxy is incomplete.
         </div>
-
-        <CoverageGapBar articles={arcArticles} startedAt={arc?.started_at} />
-
-        {arc?.coverage_gap && (
-          <div className="arc-coverage-gap">
-            ⚠ Coverage gap — real-world developments are outpacing media coverage. The story is
-            still unfolding; the media has moved on.
-          </div>
-        )}
-
-        <div className="arc-status-subsection">
-          <span className="ap-label">Milestone checklist — did anything actually happen?</span>
-          {detail.milestones.length === 0 ? (
-            <p className="arc-empty">
-              No milestones tracked yet — expected outcomes have not been recorded for this arc.
-            </p>
-          ) : (
-            <ul className="arc-milestones">
-              {detail.milestones.map((m) => {
-                const meta = milestoneMeta(m.status)
-                return (
-                  <li key={m.id} className="arc-milestone">
-                    <span className="arc-milestone-status" style={{ color: meta.color }}>
-                      {meta.icon}
-                    </span>
-                    <div className="arc-milestone-body">
-                      <span className="arc-milestone-title">{m.title}</span>
-                      <span className="arc-milestone-meta" style={{ color: meta.color }}>
-                        {meta.label}
-                        {m.updated_at && ` · updated ${String(m.updated_at).slice(0, 10)}`}
-                      </span>
-                      {m.notes && <span className="arc-milestone-notes">{m.notes}</span>}
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </div>
-      </section>
-
-      {arcArticles.length > 0 && (
-        <section className="ap-section">
-          <span className="ap-label">
-            Attached articles (<span className="num">{arcArticles.length}</span>)
-          </span>
-          <ul className="ap-sources">
-            {arcArticles.map((a) => (
-              <li key={a.id} className="ap-source">
-                <span className="ap-source-outlet">{a.outlet}</span>
-                <button
-                  className="ap-source-headline ap-article-link"
-                  title="Open in News Feed"
-                  onClick={() => onOpenArticle?.(a.id)}
-                >
-                  {a.title}
-                </button>
-                {a.published_at && (
-                  <span className="ap-source-date">{String(a.published_at).slice(0, 10)}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
       )}
-    </>
+      <div className="arc-status-subsection">
+        <span className="ap-label">Milestone checklist — did anything actually happen?</span>
+        {milestones.length === 0 ? (
+          <p className="arc-empty">No milestones tracked yet — expected outcomes have not been recorded for this arc.</p>
+        ) : (
+          <ul className="arc-milestones">
+            {milestones.map((milestone) => {
+              const meta = milestoneMeta(milestone.status)
+              return (
+                <li key={milestone.id} className="arc-milestone">
+                  <span className="arc-milestone-status" style={{ color: meta.color }}>{meta.icon}</span>
+                  <div className="arc-milestone-body">
+                    <span className="arc-milestone-title">{milestone.title}</span>
+                    <span className="arc-milestone-meta" style={{ color: meta.color }}>
+                      {meta.label}{milestone.updated_at && ` · updated ${String(milestone.updated_at).slice(0, 10)}`}
+                    </span>
+                    {milestone.notes && <span className="arc-milestone-notes">{milestone.notes}</span>}
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+    </section>
+  )
+}
+
+// Evidence only: attached publisher records. No lifecycle/status content is
+// repeated here, so the tab is unambiguously a source inventory.
+export default function ArcEvidencePanel({ arcArticles, onOpenArticle }) {
+  if (!arcArticles?.length) {
+    return (
+      <section className="ap-section" aria-label="Attached source records">
+        <span className="ap-label">Attached source records</span>
+        <p className="arc-empty">No attached publisher records are stored for this arc.</p>
+      </section>
+    )
+  }
+  return (
+    <section className="ap-section" aria-label="Attached source records">
+      <span className="ap-label">Attached source records (<span className="num">{arcArticles.length}</span>)</span>
+      <p className="ap-muted">These are publisher records attached to this arc. Arc age, coverage, and milestone context appear in Overview.</p>
+      <ul className="ap-sources">
+        {arcArticles.map((article) => (
+          <li key={article.id} className="ap-source">
+            <span className="ap-source-outlet">{article.outlet}</span>
+            <button className="ap-source-headline ap-article-link" title="Open in News Feed" onClick={() => onOpenArticle?.(article.id)}>
+              {article.title}
+            </button>
+            {article.published_at && <span className="ap-source-date">{String(article.published_at).slice(0, 10)}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

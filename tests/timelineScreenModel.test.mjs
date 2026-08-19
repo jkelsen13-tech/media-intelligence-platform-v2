@@ -258,7 +258,7 @@ test('evidence panel exists in exactly one file, consumed by both views', () => 
   assert.match(panel, /gap-bar-track/)
   assert.match(panel, /Milestone checklist/)
   const arcs = src('src/views/ArcsView.jsx')
-  assert.ok(arcs.includes("import ArcEvidencePanel from '../components/ArcEvidencePanel'"))
+  assert.match(arcs, /import ArcEvidencePanel(?:, \{ ArcOverviewStatus \})? from '..\/components\/ArcEvidencePanel'/)
   assert.ok(!arcs.includes('gap-bar-track'), 'ArcsView must not reimplement the coverage bar')
   assert.ok(!arcs.includes('MILESTONE_META'), 'ArcsView must not reimplement milestone meta')
   const view = src('src/views/TimelineView.jsx')

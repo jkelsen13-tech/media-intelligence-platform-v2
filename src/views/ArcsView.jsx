@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { loadArcs, loadArcDetail, loadArcArticles, loadArticleExcerpt } from '../lib/supabase'
 import { filterArcs } from '../lib/listFilters'
 import { normalizeArcEvent, TIMELINE_CLOSING_FOOTNOTE } from '../lib/timelineScreenModel'
-import ArcEvidencePanel from '../components/ArcEvidencePanel'
+import ArcEvidencePanel, { ArcOverviewStatus } from '../components/ArcEvidencePanel'
 import ArcTimeline from '../components/ArcTimeline'
 import EvidenceTabs from '../components/EvidenceTabs'
 import EpistemicBanner from '../components/EpistemicBanner'
@@ -18,7 +18,6 @@ import {
   missingScopeCopy,
   lastMilestoneCheck,
   pendingUncertainty,
-  distinctOutlets,
 } from '../lib/policyArcModel'
 
 // Story Arcs (concept doc §2.5): persistent longitudinal tracking through a
@@ -201,7 +200,6 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
       })
     : null
   const uncertainty = detail ? pendingUncertainty(detail.milestones) : null
-  const outlets = distinctOutlets(arcArticles)
 
   return (
     <div className={`arcs-view${pushed ? ' detail-open' : ''}`}>
@@ -312,6 +310,8 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
 
           {activeTab === 'overview' && detail && (
             <section id="arc-overview-panel" role="tabpanel" aria-labelledby="overview-tab">
+              <ArcOverviewStatus arc={selected} detail={detail} arcArticles={arcArticles} />
+
               <section className="ap-section">
                 <span className="ep-section-label">Policy lifecycle</span>
                 <LifecycleStrip />
@@ -398,15 +398,6 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
                 </RemainingUncertaintyBlock>
               )}
 
-              {outlets.length > 0 && (
-                <p className="ep-sources-line">
-                  <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true" focusable="false">
-                    <path d="M6 8a2.5 2.5 0 0 0 3.5.4l1.6-1.6a2.5 2.5 0 0 0-3.5-3.5l-.9.9" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                    <path d="M8 6a2.5 2.5 0 0 0-3.5-.4L2.9 7.2a2.5 2.5 0 0 0 3.5 3.5l.9-.9" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                  </svg>
-                  Sources: {outlets.join(', ')}
-                </p>
-              )}
             </section>
           )}
 
@@ -428,17 +419,9 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
 
           {activeTab === 'evidence' && detail && (
             <section id="arc-evidence-panel" role="tabpanel" aria-labelledby="evidence-tab">
-            {/* Pre-existing §2.5.4 elements folded into the Evidence tab
-               (owner delegation 2026-08-18): arc-age bar, coverage-gap
-               indicator, coverage-gap warning, milestone checklist,
-               attached articles. None retired — extracted into the shared
-               ArcEvidencePanel in item 4 so Screen 5 reuses them. */}
-            <ArcEvidencePanel
-              arc={selected}
-              detail={detail}
-              arcArticles={arcArticles}
-              onOpenArticle={onOpenArticle}
-            />
+            {/* Evidence is intentionally source-only: Arc age, coverage proxy,
+               and milestone status are longitudinal context in Overview. */}
+            <ArcEvidencePanel arcArticles={arcArticles} onOpenArticle={onOpenArticle} />
             </section>
           )}
 

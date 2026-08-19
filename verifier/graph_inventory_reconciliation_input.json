@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "WITH node_counts AS (SELECT COUNT(*) AS nodes_total, COUNT(*) FILTER (WHERE occurred_at IS NOT NULL) AS dated_nodes, COUNT(*) FILTER (WHERE arc_id IS NOT NULL) AS arc_linked_nodes FROM nodes), edge_counts AS (SELECT COUNT(*) AS relationships_total, COUNT(*) FILTER (WHERE claimed_by = 'MIP_inferred') AS relationships_inferred, COUNT(*) FILTER (WHERE claimed_by IS DISTINCT FROM 'MIP_inferred') AS relationships_documented FROM edges), integrity AS (SELECT COUNT(*) AS edges_with_both_endpoints FROM edges e JOIN nodes s ON s.id = e.source_id JOIN nodes t ON t.id = e.target_id) SELECT node_counts.nodes_total, node_counts.dated_nodes, node_counts.arc_linked_nodes, edge_counts.relationships_total, edge_counts.relationships_documented, edge_counts.relationships_inferred, integrity.edges_with_both_endpoints FROM node_counts CROSS JOIN edge_counts CROSS JOIN integrity LIMIT 1;"
+}
