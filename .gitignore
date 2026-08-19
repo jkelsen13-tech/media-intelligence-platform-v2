@@ -55,3 +55,6 @@ verifier/v2-exceeds-original-corpus-validation-*.md
 # Local candidate-review payloads and transient connectivity diagnostics.
 verifier/tmp_*.json
 verifier/llm_connectivity_probe*.json
+
+# Local rendered screenshots used during live desktop/mobile validation.
+verifier/live_validation/

@@ -24,6 +24,10 @@ A direct isolated-sandbox verification found all 21 reviewed candidates had `tar
 
 The pre-deployment live checkpoint retained **47 total nodes**, a focused view of **15 nodes with 14 documented relationships**, and **4 visible confirmed city-level geographic points**. The privacy-safe Epstein process arc retained the existing process-only treatment. No new article was automatically promoted to graph, timeline, arc, source-comparison, legal/policy, or geography surfaces during the backfill.
 
-## Follow-up validation on deployment
+## Completed live deployment validation
 
-After the v2 commit is deployed, the live GitHub Pages site will be checked on desktop and mobile against the permitted reference set for the new News date, topic, and source-order controls. Cross-surface validation will explicitly confirm that the no-propagation result is preserved and that only the existing confirmed records render beyond the News corpus.
+GitHub Pages successfully deployed commits `09a23a6`, `c0c4947`, `78feae8`, and `6f08660`. The desktop News surface rendered a **12,558-article** live corpus with working date, publisher-country, evidence, and topic controls. The source list now shows separate literal fields: **V** for current-filter article volume, **F** for a unique earliest publisher timestamp in a recorded multi-outlet event, and **C** as unavailable pending verified source lineage. No composite vendor, trust, reliability, or independence score is displayed or calculated.
+
+A target **390 × 844** mobile render of the deployed `6f08660` build confirmed that the filters, source-field definitions, source-order selector, and disclosure text wrap within the viewport without horizontal page overflow. The screenshots are retained locally under `verifier/live_validation/` and are intentionally not committed as build artifacts.
+
+The final desktop cross-surface pass confirmed the following visible baseline: Knowledge Graph retained **47 total nodes**, a focused view of **15 nodes and 14 documented relationships**, and **4 confirmed city-level points**; the Causal Timeline showed only its documented arc/event records; Story Arcs kept arc age in Overview and article sources in Evidence; Source Comparison retained explicit one-outlet and unverified-lineage disclosures; and Legal & Policy retained source-linked Project 2025 and process-only Epstein records with stated uncertainty. No newly backfilled record was propagated to any non-News surface because the strict eligibility count remained zero.

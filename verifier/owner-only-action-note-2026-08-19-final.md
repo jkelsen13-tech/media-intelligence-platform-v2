@@ -46,3 +46,10 @@ The isolated Supabase ingestion writer uses a separate, locally stored one-purpo
 ## Transparent 3D Möbius logo status
 
 A transparent true-3D Möbius asset was not generated because the connected image tooling did not provide a dependable free modeling-and-alpha-export path. The best free production workflow is **Blender**: model or generate the strip, use a transparent film/background, then export a high-resolution PNG or WebP with alpha plus a compressed web derivative. **Spline** is the most accessible browser alternative; its free-tier export and account limits should be verified before relying on it. The final asset should retain an alpha background and avoid any matte, white, blue, or textured canvas.
+
+
+## Final v2 deployment and validation
+
+GitHub Pages deployment completed successfully through commit **`6f08660`**. The live desktop News surface showed 12,558 corpus records and separate non-composite publisher fields: current-filter volume, timestamp-derived first-to-report within recorded multi-outlet events, and an explicit unavailable corroboration field pending verified source lineage. Date, publisher-country, evidence, and expanded topic controls were available.
+
+A live **390 × 844** mobile validation exposed and then corrected source-control overflow. The final deployed render wraps the source field legend, source-order selector, and transparency disclosure inside the viewport without a horizontal page scrollbar. The site-wide desktop validation confirmed Graph, Causal Timeline, Story Arcs, Source Comparison, and Legal & Policy continue to render their existing confirmed records and their evidence-boundary disclosures. The strict cross-surface eligibility audit found **0** newly backfilled records eligible for propagation, so the 10,000-record News expansion did not fabricate graph, timeline, arc, comparison, legal/policy, or geography data.
