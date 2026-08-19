@@ -41,3 +41,9 @@ The Timeline capture rendered the policy-change eyebrow, legible title/subtitle,
 ### Mobile Story Arcs reference-alignment repair
 
 The initial 390 × 844 live capture confirmed the underlying mobile list/detail route worked but opened on the list-selector state, pushing the selected arc’s reference-style overview below the fold. The reference screen places the selected arc overview first. `ArcsView` now marks the initial selected arc as opened on narrow screens; the existing **All story arcs** control continues to return to the searchable list. Desktop keeps the split-pane because its layout ignores the mobile-only detail class. The complete regression suite passed 433/433 and the Vite production build completed after the repair.
+
+## Deployment confirmation — `21fee2b`
+
+GitHub Pages deployment workflow `32291340394` completed successfully for commit `21fee2b`. A fresh public load with a cache-busting release parameter rendered the 12,558-article News corpus and the Story Arc overview with the expected source/evidence controls, bounded-scope disclosures, lifecycle orientation caption, and evidence-state treatment. The deployed desktop view retained the intended split-pane Arc presentation; the mobile-specific first-detail behavior is verified separately below.
+
+The post-deployment 390 × 844 mobile capture confirmed the selected **February 2026 — source-mapped public-policy watch** now opens directly to its overview. The visible first frame includes the **All story arcs** return control, eyebrow, full title, dormant/update status, category, bounded-scope explanation, Graph CTA, Overview/Timeline/Evidence tabs, arc-age bar, and bottom navigation. The viewport stayed free of horizontal overflow. Screenshot retained locally during verification: `verifier/live_responsive_surface_check/arcs-mobile.png`.
