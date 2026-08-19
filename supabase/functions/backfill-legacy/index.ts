@@ -143,6 +143,37 @@ function sanitize(raw: string | null | undefined): Sanitized {
   return { text: s, imageUrl, imageAlt }
 }
 
+// Reference-manifest rows intentionally retain publisher metadata only. Their
+// placeholder text expressly states that no original publisher body, claims,
+// entities, or relationship data were copied. Treating that sentinel as
+// evidence would fabricate cross-surface links from a non-source string.
+const METADATA_ONLY_REFERENCE_BODY = 'Read-only reference import: public source metadata only. No original body text, embeddings, entities, claims, or relationship data were copied.'
+
+function isMetadataOnlyReferenceBody(text: string): boolean {
+  return text.trim() === METADATA_ONLY_REFERENCE_BODY
+}
+
+const PRIMARY_RECORD_HOST_RE = /(^|\.)([a-z0-9-]+\.gov|justice\.gov|uscourts\.gov|supremecourt\.gov|congress\.gov|whitehouse\.gov|federalregister\.gov|ecfr\.gov)$/i
+
+function isResolvablePrimaryRecordUrl(url: string | null | undefined): boolean {
+  if (!url) return false
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' && PRIMARY_RECORD_HOST_RE.test(parsed.hostname)
+  } catch {
+    return false
+  }
+}
+
+function literalClaimFromStoredClaims(claims: any, bodyText: string): string | null {
+  if (!Array.isArray(claims)) return null
+  for (const claim of claims) {
+    const text = typeof claim?.text === 'string' ? claim.text.trim() : ''
+    if (text.length >= 80 && bodyText.includes(text)) return text.slice(0, 1200)
+  }
+  return null
+}
+
 function tag(block: string, name: string): string | null {
   const openTag = '<' + name
   const i = block.indexOf(openTag)
@@ -1374,6 +1405,23 @@ async function extractBatch(
       if (!art.image_url && s.imageUrl) updates.image_url = s.imageUrl
       if (!art.image_alt && s.imageAlt) updates.image_alt = s.imageAlt
 
+      if (isMetadataOnlyReferenceBody(b.text)) {
+        // Preserve the article for News and chronological Timeline access, but
+        // explicitly withhold every inferred cross-surface relation until an
+        // original publisher body is hydrated and can supply literal evidence.
+        updates.claims = []
+        updates.is_digest = false
+        updates.arc_assign_attempted_at = new Date().toISOString()
+        updates.source_status_changed_at = new Date().toISOString()
+        updates.source_status_note = 'Reference-manifest metadata only; original publisher body is unavailable for literal extraction or cross-surface assignment.'
+        await supabase.from('citations').delete().eq('article_id', art.id)
+        await supabase.from('article_entities').delete().eq('article_id', art.id)
+        const { error: upErr } = await supabase.from('articles').update(updates).eq('id', art.id)
+        if (upErr) throw upErr
+        report.metadataOnlySkipped = (report.metadataOnlySkipped ?? 0) + 1
+        continue
+      }
+
       const analysisText = `${t.text}. ${b.text || s.text}`
       const claims = extractClaims(analysisText)
       updates.claims = claims
@@ -1399,6 +1447,116 @@ async function extractBatch(
       await supabase.from('articles').update({ entities_extracted_at: new Date().toISOString() }).eq('id', art.id)
     }
   }
+  return true
+}
+
+// Review-gated candidate pass. It assesses only literal source text that is
+// stored locally, an actual HTTPS primary-record publisher URL, and a primary
+// citation classification. It never writes a Graph/Arc/Timeline surface and
+// therefore cannot convert a proposal into a live claim.
+// Keep PostgREST .in() URLs safely below the edge gateway request limit.
+const CANDIDATE_BATCH = 100
+const CANDIDATE_ALGORITHM_VERSION = 'provenance-first-v2.4-evidence-floor'
+
+async function candidateStep(supabase: any, report: any, runTag: string | null = null): Promise<boolean> {
+  let q = supabase
+    .from('articles')
+    .select('id, url, body_text, claims')
+    .is('candidate_generation_attempted_at', null)
+    .order('fetched_at', { ascending: true })
+    .limit(CANDIDATE_BATCH)
+  // Scoped BigQuery runs already persist structured extraction results through
+  // article_extraction_results; they are eligible for candidate assessment
+  // even when the legacy entity-backfill marker has not been populated.
+  if (runTag) q = q.eq('ingestion_run_id', runTag)
+  else q = q.not('entities_extracted_at', 'is', null)
+  const { data: batch, error } = await q
+  if (error) throw error
+  if (!batch || batch.length === 0) return false
+
+  const articleIds = batch.map((article: any) => article.id)
+  const [{ data: citationRows, error: citationError }, { data: existingRows, error: existingError }] = await Promise.all([
+    supabase.from('citations').select('article_id, cited_type').in('article_id', articleIds),
+    supabase.from('cross_surface_candidates').select('article_id').in('article_id', articleIds)
+      .eq('candidate_type', 'graph_node').eq('target_table', 'nodes').is('target_id', null)
+      .eq('algorithm_version', CANDIDATE_ALGORITHM_VERSION),
+  ])
+  if (citationError) throw citationError
+  if (existingError) throw existingError
+
+  const citationTypesByArticle = new Map<string, Set<string>>()
+  for (const citation of citationRows ?? []) {
+    const types = citationTypesByArticle.get(citation.article_id) ?? new Set<string>()
+    types.add(citation.cited_type)
+    citationTypesByArticle.set(citation.article_id, types)
+  }
+  const existingArticleIds = new Set<string>((existingRows ?? []).map((row: any) => row.article_id))
+  const notes = new Map<string, string[]>()
+  const candidates: any[] = []
+  const now = new Date().toISOString()
+  const redistrictingSensitiveScope = Boolean(runTag && runTag.includes('redistricting-exclusion'))
+
+  for (const article of batch) {
+    const body = String(article.body_text ?? '').trim()
+    let note: string
+    if (redistrictingSensitiveScope) {
+      note = 'withheld: redistricting-sensitive ingestion scope is reserved for owner review'
+      report.candidateOwnerHoldWithheld++
+    } else if (isMetadataOnlyReferenceBody(body)) {
+      note = 'withheld: reference-manifest metadata only; no original publisher body for literal evidence'
+      report.candidateMetadataOnlyWithheld++
+    } else {
+      const literal = literalClaimFromStoredClaims(article.claims, body)
+      const hasPrimaryCitation = [...(citationTypesByArticle.get(article.id) ?? new Set<string>())]
+        .some((type) => ['court_doc', 'agency_release'].includes(type))
+      const hasPrimaryUrl = isResolvablePrimaryRecordUrl(article.url)
+      if (!literal) {
+        note = 'withheld: no stored literal claim span of sufficient length'
+        report.candidateNoLiteralWithheld++
+      } else if (!hasPrimaryCitation) {
+        note = 'withheld: no court_doc or agency_release citation classification'
+        report.candidateNoPrimaryCitationWithheld++
+      } else if (!hasPrimaryUrl) {
+        note = 'withheld: publisher URL is not a recognized HTTPS primary-record host'
+        report.candidateNoPrimaryUrlWithheld++
+      } else {
+        note = 'candidate materialized: literal claim plus primary citation and primary-record URL'
+        if (existingArticleIds.has(article.id)) {
+          report.candidatesAlreadyPresent++
+        } else {
+          candidates.push({
+            article_id: article.id,
+            candidate_type: 'graph_node',
+            target_table: 'nodes',
+            target_id: null,
+            evidence_excerpt: literal,
+            evidence_start: body.indexOf(literal),
+            evidence_end: body.indexOf(literal) + literal.length,
+            algorithm_version: CANDIDATE_ALGORITHM_VERSION,
+            review_state: 'pending',
+            remaining_uncertainty: 'Pending review: literal stored publisher text, primary citation classification, and a resolvable primary-record URL meet the generation floor. No node or relationship has been published.',
+          })
+          report.candidatesMaterialized++
+        }
+      }
+    }
+    const ids = notes.get(note) ?? []
+    ids.push(article.id)
+    notes.set(note, ids)
+  }
+
+  if (candidates.length > 0) {
+    const { error: insertError } = await supabase.from('cross_surface_candidates').insert(candidates)
+    if (insertError) throw insertError
+  }
+  for (const [note, ids] of notes) {
+    const { error: markError } = await supabase
+      .from('articles')
+      .update({ candidate_generation_attempted_at: now, candidate_generation_note: note })
+      .in('id', ids)
+    if (markError) throw markError
+  }
+  report.candidateAssessed += batch.length
   return true
 }
 
@@ -1737,12 +1895,37 @@ Deno.serve(async (req: Request) => {
     clustersRejectedNoProcess: 0,
     milestonesCreated: 0,
     milestonesUpdated: 0,
+    metadataOnlySkipped: 0,
+    candidateAssessed: 0,
+    candidatesMaterialized: 0,
+    candidatesAlreadyPresent: 0,
+    candidateMetadataOnlyWithheld: 0,
+    candidateOwnerHoldWithheld: 0,
+    candidateNoLiteralWithheld: 0,
+    candidateNoPrimaryCitationWithheld: 0,
+    candidateNoPrimaryUrlWithheld: 0,
     errors: [] as string[],
   }
 
   const deadline0 = Date.now() + BUDGET_MS
   const mode = reqUrl.searchParams.get('mode')
   const runTag = reqUrl.searchParams.get('run')
+
+  if (mode === 'candidates') {
+    try {
+      while (Date.now() < deadline0) {
+        const more = await candidateStep(supabase, report, runTag)
+        if (!more) break
+      }
+      return Response.json({ ok: true, mode, runTag, ...report })
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : (() => {
+        try { return JSON.stringify(err) } catch { return String(err) }
+      })()
+      report.errors.push(`candidate pass: ${detail}`)
+      return Response.json({ ok: false, mode, runTag, ...report }, { status: 500 })
+    }
+  }
 
   // Scoped mode (Doc 07 Item 2b): ?run=<tag> processes ONLY that ingestion
   // run's rows through extract -> originate -> attach, phase logic verbatim.
