@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT policyname, roles, cmd, qual, with_check FROM pg_policies WHERE schemaname = 'public' AND tablename IN ('articles','ingestion_runs','ingestion_checkpoints','article_extraction_results','cross_surface_candidates','citations') ORDER BY tablename, policyname LIMIT 100;"
+}

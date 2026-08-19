@@ -61,3 +61,23 @@ A live News-record **View details** reader displayed its source attribution, sou
 ## Source Comparison live-reference check
 
 The live **Source Comparison** page rendered the requested reference-aligned hierarchy: a blue-accent coverage header, event-level claim/evidence/review totals, explicit lineage disclosure, an **Ingested outlet sample** card, captured framing, included-claim count, source-tier disclosure, and per-claim epistemic state. Where only one outlet is ingested, the interface explicitly says comparison and source independence are **not established**. It also exposes button controls for Story Arc, Causal Timeline, and News, plus a separate provenance/explanation disclosure. This matches the designated Source Comparison reference without inventing an independence finding or a composite reliability score.
+
+
+## Post-57129b8 correction validation — News baseline
+
+A cache-busted direct visit to the deployed v2 website loaded the isolated **838-article** corpus and active Region, Evidence, Topic, source-order, outlet, and status controls. Cards visibly show publisher outlets and a provenance footer such as **“Source-linked summary.”** The expanded reader is the next target for confirming the new publisher-source, byline-availability, structured-claim, framing-marker, and supporting-citation disclosures.
+
+The isolated-v2 inventory reconciliation confirms that the live graph’s **47** is its node count. The same tables contain **36 documented relationships**, **0 inferred relationships**, and all 36 edges have valid source and target endpoints.
+
+
+The expanded live DOJ News record now displays a **Publisher source record** with its outlet, a direct publisher URL button, an explicit byline-availability statement, and separate structured-substantive-claim, framing-marker, and supporting-citation availability disclosures. The text correctly identifies missing structured extraction as a gap rather than a claim of neutrality, lack of content, or lack of publisher attribution.
+
+The live Knowledge Graph now shows a compact **Graph location overlay** directly on the Relationships canvas. It contains visible land and country boundaries, a title identifying it as an interactive orthographic globe, reset control, keyboard/drag instruction, and four individually selectable source-backed city markers. The overlay is bounded in the lower-right canvas area and does not cover the primary graph controls or visible desktop node cards.
+
+
+Selecting a live geographic marker opened the corresponding focused node reader and rendered source-linked node records and connection evidence controls, confirming the repaired marker-to-graph selection path. The reader’s focused graph scope correctly updated to **9 of 47 nodes** and **8 documented relationships** for the selected Norfolk matter.
+
+The live Story Arc Overview now places **Arc age**, **Coverage over time**, the coverage-gap disclosure, and the milestone checklist above **Policy lifecycle**. The lifecycle table itself explicitly states that attached articles remain in Evidence. The Overview contains no attached-source inventory, matching the requested split.
+
+
+The live Arc Evidence tab contains only the eight labelled **Attached source records** and an explicit note that Arc age, coverage, and milestone context appear in Overview. Each attached publisher record exposes an **Open in News Feed** control. The public **More** menu also opened correctly and exposes button-driven Source Comparison and Legal & Policy destinations; login remains intentionally out of scope.

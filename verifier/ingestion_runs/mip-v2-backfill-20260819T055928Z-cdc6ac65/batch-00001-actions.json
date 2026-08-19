@@ -1,0 +1,266 @@
+{
+  "run_id": "mip-v2-backfill-20260819T055928Z-cdc6ac65",
+  "batch_number": 1,
+  "source_key": "bbc-news-rss",
+  "manifest_size": 10,
+  "manifest": [
+    {
+      "source_key": "bbc-news-rss",
+      "feed": "bbc-news-rss",
+      "source_label": "BBC News RSS",
+      "url": "https://www.bbc.co.uk/news/articles/cm2gmjd36pvo?at_medium=RSS&at_campaign=rss",
+      "title": "Three dead after family get into difficulty in sea",
+      "outlet": "bbc.co.uk",
+      "published_at": null,
+      "summary": "A man, a woman and a teenage girl die, and a younger girl is in critical condition, after swimming off Shoreham on the Sussex coast."
+    },
+    {
+      "source_key": "bbc-news-rss",
+      "feed": "bbc-news-rss",
+      "source_label": "BBC News RSS",
+      "url": "https://www.bbc.co.uk/news/articles/cvgvy2n6grno?at_medium=RSS&at_campaign=rss",
+      "title": "'Everyone in for Christmas' - Burnham unveils rough sleeping plan",
+      "outlet": "bbc.co.uk",
+      "published_at": null,
+      "summary": "Rough sleepers in England will be offered housing, in a move likened to the “Everyone In” initiative during the pandemic."
+    },
+    {
+      "source_key": "bbc-news-rss",
+      "feed": "bbc-news-rss",
+      "source_label": "BBC News RSS",
+      "url": "https://www.bbc.co.uk/news/articles/cdew8n9erlwo?at_medium=RSS&at_campaign=rss",
+      "title": "Sacked Ukrainian defence minister calls for presidential election",
+      "outlet": "bbc.co.uk",
+      "published_at": null,
+      "summary": "Martial law has been in place in Ukraine since February 2022, under which elections are suspended."
+    },
+    {
+      "source_key": "bbc-news-rss",
+      "feed": "bbc-news-rss",
+      "source_label": "BBC News RSS",
+      "url": "https://www.bbc.co.uk/news/articles/ckg374p4e24o?at_medium=RSS&at_campaign=rss",
+      "title": "Demand for degree apprenticeships in England quadruples in three years",
+      "outlet": "bbc.co.uk",
+      "published_at": null,
+      "summary": "The popularity of degree apprenticeships has grown as the cost of university has come under increased scrutiny."
+    },
+    {
+      "source_key": "bbc-news-rss",
+      "feed": "bbc-news-rss",
+      "source_label": "BBC News RSS",
+      "url": "https://www.bbc.co.uk/news/articles/c80n48kg0vjo?at_medium=RSS&at_campaign=rss",
+      "title": "Camilla admits it was 'difficult' to keep King's cancer diagnosis a secret",
+      "outlet": "bbc.co.uk",
+      "published_at": null,
+      "summary": "In a video to mark the 30th anniversary of Maggie's cancer charity, Queen Camilla speaks about her husband's own diagnosis."
+    },
+    {
+      "source_key": "bbc-news-rss",
+      "feed": "bbc-news-rss",
+      "source_label": "BBC News RSS",
+      "url": "https://www.bbc.co.uk/news/articles/c1l1r1zne1ro?at_medium=RSS&at_campaign=rss",
+      "title": "Scientists stunned by children's lung recovery in ultra low emission zone",
+      "outlet": "bbc.co.uk",
+      "published_at": null,
+      "summary": "Children's lung capacity caught up with their peers in less polluted areas once a clean air zone came in, a study shows."
+    },
+    {
+      "source_key": "bbc-news-rss",
+      "feed": "bbc-news-rss",
+      "source_label": "BBC News RSS",
+      "url": "https://www.bbc.co.uk/news/articles/crrv48lenwgo?at_medium=RSS&at_campaign=rss",
+      "title": "French civil servant drugged us to make us urinate on ourselves, say accusers",
+      "outlet": "bbc.co.uk",
+      "published_at": null,
+      "summary": "More than 200 women accuse Christian Nègre of drugging them to make them urinate - two share their stories."
+    },
+    {
+      "source_key": "bbc-news-rss",
+      "feed": "bbc-news-rss",
+      "source_label": "BBC News RSS",
+      "url": "https://www.bbc.co.uk/weather/articles/c79g04899wno?at_medium=RSS&at_campaign=rss",
+      "title": "Is another UK heatwave on the way in September?",
+      "outlet": "bbc.co.uk",
+      "published_at": null,
+      "summary": "Some long range forecasts are suggesting autumn could be hotter and drier than average. Simon King explores whether a warm spell might be on the cards."
+    },
+    {
+      "source_key": "bbc-news-rss",
+      "feed": "bbc-news-rss",
+      "source_label": "BBC News RSS",
+      "url": "https://www.bbc.co.uk/news/articles/c4gd1mez8zvo?at_medium=RSS&at_campaign=rss",
+      "title": "Suspended Reform UK member vows to fight to remain in party",
+      "outlet": "bbc.co.uk",
+      "published_at": null,
+      "summary": "Tim Montgomerie says his appeal will be a test of whether the party can tolerate free speech."
+    },
+    {
+      "source_key": "bbc-news-rss",
+      "feed": "bbc-news-rss",
+      "source_label": "BBC News RSS",
+      "url": "https://www.bbc.co.uk/news/articles/cn8nmm51l49o?at_medium=RSS&at_campaign=rss",
+      "title": "Deaf patient given wrong jab due to sign language error, report says",
+      "outlet": "bbc.co.uk",
+      "published_at": null,
+      "summary": "An ombudsman report says disabled people are being let down by a lack of accessible communication methods."
+    }
+  ],
+  "actions": [
+    {
+      "article": {
+        "source_key": "bbc-news-rss",
+        "feed": "bbc-news-rss",
+        "source_label": "BBC News RSS",
+        "url": "https://www.bbc.co.uk/news/articles/cm2gmjd36pvo?at_medium=RSS&at_campaign=rss",
+        "title": "Three dead after family get into difficulty in sea",
+        "outlet": "bbc.co.uk",
+        "published_at": null,
+        "summary": "A man, a woman and a teenage girl die, and a younger girl is in critical condition, after swimming off Shoreham on the Sussex coast.",
+        "ingestion_run_id": "mip-v2-backfill-20260819T055928Z-cdc6ac65"
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "source_key": "bbc-news-rss",
+        "feed": "bbc-news-rss",
+        "source_label": "BBC News RSS",
+        "url": "https://www.bbc.co.uk/news/articles/cvgvy2n6grno?at_medium=RSS&at_campaign=rss",
+        "title": "'Everyone in for Christmas' - Burnham unveils rough sleeping plan",
+        "outlet": "bbc.co.uk",
+        "published_at": null,
+        "summary": "Rough sleepers in England will be offered housing, in a move likened to the “Everyone In” initiative during the pandemic.",
+        "ingestion_run_id": "mip-v2-backfill-20260819T055928Z-cdc6ac65"
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "source_key": "bbc-news-rss",
+        "feed": "bbc-news-rss",
+        "source_label": "BBC News RSS",
+        "url": "https://www.bbc.co.uk/news/articles/cdew8n9erlwo?at_medium=RSS&at_campaign=rss",
+        "title": "Sacked Ukrainian defence minister calls for presidential election",
+        "outlet": "bbc.co.uk",
+        "published_at": null,
+        "summary": "Martial law has been in place in Ukraine since February 2022, under which elections are suspended.",
+        "ingestion_run_id": "mip-v2-backfill-20260819T055928Z-cdc6ac65"
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "source_key": "bbc-news-rss",
+        "feed": "bbc-news-rss",
+        "source_label": "BBC News RSS",
+        "url": "https://www.bbc.co.uk/news/articles/ckg374p4e24o?at_medium=RSS&at_campaign=rss",
+        "title": "Demand for degree apprenticeships in England quadruples in three years",
+        "outlet": "bbc.co.uk",
+        "published_at": null,
+        "summary": "The popularity of degree apprenticeships has grown as the cost of university has come under increased scrutiny.",
+        "ingestion_run_id": "mip-v2-backfill-20260819T055928Z-cdc6ac65"
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "source_key": "bbc-news-rss",
+        "feed": "bbc-news-rss",
+        "source_label": "BBC News RSS",
+        "url": "https://www.bbc.co.uk/news/articles/c80n48kg0vjo?at_medium=RSS&at_campaign=rss",
+        "title": "Camilla admits it was 'difficult' to keep King's cancer diagnosis a secret",
+        "outlet": "bbc.co.uk",
+        "published_at": null,
+        "summary": "In a video to mark the 30th anniversary of Maggie's cancer charity, Queen Camilla speaks about her husband's own diagnosis.",
+        "ingestion_run_id": "mip-v2-backfill-20260819T055928Z-cdc6ac65"
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "source_key": "bbc-news-rss",
+        "feed": "bbc-news-rss",
+        "source_label": "BBC News RSS",
+        "url": "https://www.bbc.co.uk/news/articles/c1l1r1zne1ro?at_medium=RSS&at_campaign=rss",
+        "title": "Scientists stunned by children's lung recovery in ultra low emission zone",
+        "outlet": "bbc.co.uk",
+        "published_at": null,
+        "summary": "Children's lung capacity caught up with their peers in less polluted areas once a clean air zone came in, a study shows.",
+        "ingestion_run_id": "mip-v2-backfill-20260819T055928Z-cdc6ac65"
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "source_key": "bbc-news-rss",
+        "feed": "bbc-news-rss",
+        "source_label": "BBC News RSS",
+        "url": "https://www.bbc.co.uk/news/articles/crrv48lenwgo?at_medium=RSS&at_campaign=rss",
+        "title": "French civil servant drugged us to make us urinate on ourselves, say accusers",
+        "outlet": "bbc.co.uk",
+        "published_at": null,
+        "summary": "More than 200 women accuse Christian Nègre of drugging them to make them urinate - two share their stories.",
+        "ingestion_run_id": "mip-v2-backfill-20260819T055928Z-cdc6ac65"
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "source_key": "bbc-news-rss",
+        "feed": "bbc-news-rss",
+        "source_label": "BBC News RSS",
+        "url": "https://www.bbc.co.uk/weather/articles/c79g04899wno?at_medium=RSS&at_campaign=rss",
+        "title": "Is another UK heatwave on the way in September?",
+        "outlet": "bbc.co.uk",
+        "published_at": null,
+        "summary": "Some long range forecasts are suggesting autumn could be hotter and drier than average. Simon King explores whether a warm spell might be on the cards.",
+        "ingestion_run_id": "mip-v2-backfill-20260819T055928Z-cdc6ac65"
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "source_key": "bbc-news-rss",
+        "feed": "bbc-news-rss",
+        "source_label": "BBC News RSS",
+        "url": "https://www.bbc.co.uk/news/articles/c4gd1mez8zvo?at_medium=RSS&at_campaign=rss",
+        "title": "Suspended Reform UK member vows to fight to remain in party",
+        "outlet": "bbc.co.uk",
+        "published_at": null,
+        "summary": "Tim Montgomerie says his appeal will be a test of whether the party can tolerate free speech.",
+        "ingestion_run_id": "mip-v2-backfill-20260819T055928Z-cdc6ac65"
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "source_key": "bbc-news-rss",
+        "feed": "bbc-news-rss",
+        "source_label": "BBC News RSS",
+        "url": "https://www.bbc.co.uk/news/articles/cn8nmm51l49o?at_medium=RSS&at_campaign=rss",
+        "title": "Deaf patient given wrong jab due to sign language error, report says",
+        "outlet": "bbc.co.uk",
+        "published_at": null,
+        "summary": "An ombudsman report says disabled people are being let down by a lack of accessible communication methods.",
+        "ingestion_run_id": "mip-v2-backfill-20260819T055928Z-cdc6ac65"
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    }
+  ],
+  "apply_contract": {
+    "isolated_project_ref": "yhbwnrtlqbjtcrrlpbge",
+    "maximum_manifest_size": 10,
+    "existing_articles": "DO NOTHING; no legacy record can be updated by a backfill action",
+    "cross_surface": "all candidates remain review_state=pending; no graph/timeline/arc promotion"
+  }
+}

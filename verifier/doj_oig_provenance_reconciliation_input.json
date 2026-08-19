@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT a.id, a.title, a.outlet, a.url, a.claims, count(DISTINCT c.id) AS citation_rows, count(DISTINCT ac.id) AS article_claim_rows, count(DISTINCT cel.id) AS claim_evidence_link_rows, array_agg(DISTINCT c.cited_type) FILTER (WHERE c.id IS NOT NULL) AS citation_types FROM public.articles a LEFT JOIN public.citations c ON c.article_id = a.id LEFT JOIN public.article_claims ac ON ac.article_id = a.id AND ac.is_current = true LEFT JOIN public.claim_evidence_links cel ON cel.claim_id = ac.claim_id WHERE lower(a.title) LIKE '%audit%' OR lower(a.url) LIKE '%audit%' GROUP BY a.id, a.title, a.outlet, a.url, a.claims ORDER BY a.published_at DESC NULLS LAST LIMIT 30;"
+}

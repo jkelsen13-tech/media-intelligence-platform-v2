@@ -871,7 +871,7 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
 // Full detail for one article: claims + provenance citations.
 export async function loadArticleDetail(id) {
   if (!supabase) return null
-  const [artRes, citRes] = await Promise.all([
+  const [artRes, citRes, articleClaimsRes] = await Promise.all([
     supabase
       .from('articles')
       .select('id, title, url, summary, published_at, outlet, claims, monoculture, unattributed, authors(name), story_arcs!articles_arc_id_fkey(title)')
@@ -882,14 +882,61 @@ export async function loadArticleDetail(id) {
       .select('cited_entity, cited_type, documentation_strength')
       .eq('article_id', id)
       .order('documentation_strength', { ascending: false, nullsFirst: false }),
+    // Some reviewed cross-surface records were written through article_claims
+    // and claim_evidence_links before News acquired an extraction display.
+    // Read those records directly so the News detail does not misleadingly
+    // report an extraction gap where a source-backed reviewed claim exists.
+    supabase
+      .from('article_claims')
+      .select('claim_id, surface_text, stance, loaded_language, claims(canonical_text, claim_kind, status)')
+      .eq('article_id', id)
+      .eq('is_current', true),
   ])
   if (artRes.error) throw artRes.error
   if (citRes.error) throw citRes.error
+  if (articleClaimsRes.error) throw articleClaimsRes.error
+
+  const storedClaims = Array.isArray(artRes.data.claims) ? artRes.data.claims : []
+  const reviewedClaims = (articleClaimsRes.data ?? []).map((row) => ({
+    kind: 'substantive',
+    text: row.surface_text || row.claims?.canonical_text || 'Reviewed claim text not recorded.',
+    stance: row.stance ?? 'asserts',
+    loaded_language: Array.isArray(row.loaded_language) ? row.loaded_language : [],
+    provenance: 'reviewed_claim_record',
+    claim_id: row.claim_id,
+    claim_kind: row.claims?.claim_kind ?? null,
+  }))
+  const seenClaimText = new Set()
+  const claims = [...storedClaims, ...reviewedClaims].filter((claim) => {
+    const key = `${claim.kind ?? 'substantive'}|${String(claim.text ?? '').trim().toLowerCase()}`
+    if (!key || seenClaimText.has(key)) return false
+    seenClaimText.add(key)
+    return true
+  })
+  const reviewedClaimIds = [...new Set(reviewedClaims.map((claim) => claim.claim_id).filter(Boolean))]
+  let evidenceRecords = []
+  if (reviewedClaimIds.length > 0) {
+    const { data, error } = await supabase
+      .from('claim_evidence_links')
+      .select('claim_id, evidence_url, evidence_type')
+      .in('claim_id', reviewedClaimIds)
+    if (!error) {
+      const seenEvidence = new Set()
+      evidenceRecords = (data ?? []).filter((row) => {
+        const key = `${row.evidence_type ?? ''}|${row.evidence_url ?? ''}`
+        if (!row.evidence_url || seenEvidence.has(key)) return false
+        seenEvidence.add(key)
+        return true
+      })
+    }
+  }
   return {
     ...artRes.data,
+    claims,
     author_name: artRes.data.authors?.name ?? null,
     arc_title: artRes.data.story_arcs?.title ?? null,
-    citations: citRes.data,
+    citations: citRes.data ?? [],
+    evidenceRecords,
   }
 }
 

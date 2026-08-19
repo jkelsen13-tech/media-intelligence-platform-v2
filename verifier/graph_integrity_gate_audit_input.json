@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "WITH edge_rows AS (SELECT e.id, e.source_id, e.target_id, e.type FROM public.edges e), duplicate_groups AS (SELECT source_id, target_id, type, count(*) AS n FROM edge_rows GROUP BY source_id, target_id, type HAVING count(*) > 1) SELECT (SELECT count(*) FROM public.nodes) AS node_count, (SELECT count(*) FROM edge_rows) AS edge_count, (SELECT count(*) FROM edge_rows e LEFT JOIN public.nodes s ON s.id = e.source_id LEFT JOIN public.nodes t ON t.id = e.target_id WHERE s.id IS NULL OR t.id IS NULL) AS orphan_edge_count, (SELECT count(*) FROM edge_rows WHERE source_id = target_id) AS self_edge_count, (SELECT count(*) FROM duplicate_groups) AS duplicate_edge_group_count LIMIT 1;"
+}

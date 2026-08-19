@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT ac.id AS article_claim_id, ac.surface_text, ac.char_start, ac.char_end, ac.extraction_method, ac.stance, ac.loaded_language, c.canonical_text, c.claim_kind, c.status AS claim_status, cel.evidence_url, cel.evidence_type FROM public.article_claims ac JOIN public.claims c ON c.id = ac.claim_id LEFT JOIN public.claim_evidence_links cel ON cel.claim_id = c.id WHERE ac.article_id = 'f0f63297-e847-4274-9ea2-a7dd8264f624' AND ac.is_current = true ORDER BY ac.created_at LIMIT 20;"
+}

@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT table_name, column_name, data_type, is_nullable FROM information_schema.columns WHERE table_schema = 'public' AND table_name IN ('articles','authors','sources','citations','claims','article_claims','event_articles','story_arcs','arc_events','nodes','edges','pipeline_config') ORDER BY table_name, ordinal_position LIMIT 500;"
+}

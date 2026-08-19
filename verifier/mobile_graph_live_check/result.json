@@ -1,0 +1,13 @@
+{
+  "checked_url": "https://jkelsen13-tech.github.io/media-intelligence-platform-v2/",
+  "viewport": {
+    "width": 375,
+    "height": 812
+  },
+  "mobile_media_query": true,
+  "hub_label": "U.S. Department of Justice — Civil Rights Division",
+  "focused_card_label": "U.S. Department of Justice — Civil Righ…",
+  "reader_label": "Article panel: U.S. Department of Justice — Civil Rights Division",
+  "passed": true,
+  "screenshot": "/home/ubuntu/media-intelligence-platform-v2/verifier/mobile_graph_live_check/mobile_graph_reader_open.png"
+}

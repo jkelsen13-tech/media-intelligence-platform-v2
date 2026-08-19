@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT count(*) AS current_article_claims, count(*) FILTER (WHERE jsonb_typeof(loaded_language) = 'array' AND jsonb_array_length(loaded_language) > 0) AS claims_with_loaded_language, count(*) FILTER (WHERE stance IS NOT NULL) AS claims_with_stance FROM public.article_claims WHERE is_current = true LIMIT 1;"
+}

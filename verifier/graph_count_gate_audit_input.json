@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT (SELECT count(*) FROM public.nodes) AS node_count, (SELECT count(*) FROM public.edges) AS edge_count, (SELECT count(*) FROM public.edges WHERE source_id IS NOT NULL AND target_id IS NOT NULL) AS connected_edge_count, (SELECT count(*) FROM public.articles) AS article_count LIMIT 1;"
+}

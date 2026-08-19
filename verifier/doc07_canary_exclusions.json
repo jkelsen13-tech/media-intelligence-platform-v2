@@ -1,0 +1,17 @@
+{
+  "version": "doc07-canary-exclusion-2026-08-19",
+  "held_run_tags": [
+    "doc07-canary-2026-08-08"
+  ],
+  "case_name_patterns": [
+    "\\bcallais\\b",
+    "louisiana v. callais"
+  ],
+  "scope_hold_patterns": [
+    "louisiana + redistricting",
+    "voting rights act + redistricting",
+    "vra section 2 + redistricting"
+  ],
+  "protected_urls": [],
+  "policy": "Skip direct Document 07/Callais matches; halt on canary-adjacent matches until the owner explicitly authorizes that content. Existing corpus URLs are immutable to automated backfill and are never hydrated or extracted by this pipeline."
+}

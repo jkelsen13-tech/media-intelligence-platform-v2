@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT id, url, title, outlet, published_at, ingestion_run_id, source_status, source_status_note, arc_id, entities_extracted_at, claims FROM public.articles WHERE ingestion_run_id = 'doc07-canary-2026-08-08' ORDER BY published_at, id LIMIT 40;"
+}

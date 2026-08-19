@@ -1,0 +1,336 @@
+{
+  "run_id": "mip-v2-backfill-20260819T060010Z-17db4820",
+  "batch_number": 1,
+  "source_key": "npr-news-rss",
+  "manifest_size": 10,
+  "manifest": [
+    {
+      "source_key": "npr-news-rss",
+      "feed": "npr-news-rss",
+      "source_label": "NPR News RSS",
+      "url": "https://www.npr.org/2026/08/19/g-s1-139156/trump-canada-tariffs",
+      "title": "Trump says U.S. and Canada reached deal to delay 50% U.S. tariffs on Canadian imports",
+      "outlet": "npr.org",
+      "published_at": null,
+      "summary": "President Trump said he was delaying the 50% U.S. tariffs on Canadian imports after the two countries reached a last-minute deal less than two hours before the sanctions were to go into effect."
+    },
+    {
+      "source_key": "npr-news-rss",
+      "feed": "npr-news-rss",
+      "source_label": "NPR News RSS",
+      "url": "https://www.npr.org/2026/08/18/nx-s1-5936403/what-to-watch-for-in-the-florida-primaries",
+      "title": "Key results from Florida primaries, so far",
+      "outlet": "npr.org",
+      "published_at": null,
+      "summary": "Voters in Florida are picking their party's candidates for governor, Senate and a number of U.S. House seats after redistricting."
+    },
+    {
+      "source_key": "npr-news-rss",
+      "feed": "npr-news-rss",
+      "source_label": "NPR News RSS",
+      "url": "https://www.npr.org/2026/08/18/nx-s1-5936435/mills-elijah-florida-republican-primary",
+      "title": "Embattled Florida Republican Rep. Cory Mills loses his fight to keep his House seat",
+      "outlet": "npr.org",
+      "published_at": null,
+      "summary": "Mills is the latest lawmaker in a recent string of congressional members facing scandals and allegations of domestic abuse while trying to run for elected office."
+    },
+    {
+      "source_key": "npr-news-rss",
+      "feed": "npr-news-rss",
+      "source_label": "NPR News RSS",
+      "url": "https://www.npr.org/2026/08/18/nx-s1-5936406/abc-and-disney-sue-fcc-alleging-first-amendment-violations",
+      "title": "ABC and Disney sue FCC, alleging First Amendment violations",
+      "outlet": "npr.org",
+      "published_at": null,
+      "summary": "The ABC network has sued the Federal Communications Commission, alleging that the Trump administration is violating its First Amendment rights by challenging ABC broadcast licenses and investigating the network's talk show <em>The View</em>."
+    },
+    {
+      "source_key": "npr-news-rss",
+      "feed": "npr-news-rss",
+      "source_label": "NPR News RSS",
+      "url": "https://www.npr.org/2026/08/18/nx-s1-5935458/meta-child-safety-social-media-addiction-trial-opening",
+      "title": "'Profits won.' The child safety trial against Meta kicks off in federal court",
+      "outlet": "npr.org",
+      "published_at": null,
+      "summary": "Opening arguments are underway in a trial that pits four states against the company that owns Facebook and Instagram. They allege that Meta knew its products could hook kids — and lied about the danger."
+    },
+    {
+      "source_key": "npr-news-rss",
+      "feed": "npr-news-rss",
+      "source_label": "NPR News RSS",
+      "url": "https://www.npr.org/2026/08/18/g-s1-139096/s-korea-stresses-us-alliance-amid-confusion-over-trump-drill-cut",
+      "title": "S. Korea stresses US alliance amid confusion over Trump drill cut",
+      "outlet": "npr.org",
+      "published_at": null,
+      "summary": "Lee's comments Tuesday come as many South Koreans remain baffled and concerned about U.S. President Donald Trump's abrupt order to \"substantially reduce\" military exercises with South Korea."
+    },
+    {
+      "source_key": "npr-news-rss",
+      "feed": "npr-news-rss",
+      "source_label": "NPR News RSS",
+      "url": "https://www.npr.org/2026/08/18/g-s1-139072/up-first-newsletter-iran-south-korea-jared-kushner-florida-wyoming-alaska-primaries-luigi-mangione",
+      "title": "U.S. and Iran miss peace talks deadline. And, Alaska, Florida and Wyoming primaries",
+      "outlet": "npr.org",
+      "published_at": null,
+      "summary": "The U.S. and Iran missed a deadline to begin peace talks this week. The monthslong war has depleted U.S. resources. And, what to know about Alaska's U.S. Senate seat primary."
+    },
+    {
+      "source_key": "npr-news-rss",
+      "feed": "npr-news-rss",
+      "source_label": "NPR News RSS",
+      "url": "https://www.npr.org/sections/planet-money/2026/08/18/g-s1-138852/grueling-fight-over-who-profits-from-ai-music",
+      "title": "The grueling fight over who profits from AI music",
+      "outlet": "npr.org",
+      "published_at": null,
+      "summary": "AI can generate songs in seconds. But behind every AI track is a complicated question: Who should get paid? And, how? The fights have started."
+    },
+    {
+      "source_key": "npr-news-rss",
+      "feed": "npr-news-rss",
+      "source_label": "NPR News RSS",
+      "url": "https://www.npr.org/2026/08/18/nx-s1-5935518/portland-oregon-soap-box-derby-race-pdx",
+      "title": "In Portland, this soap box derby combines downhill speed with extreme pageantry",
+      "outlet": "npr.org",
+      "published_at": null,
+      "summary": "Soap box derbies send motorless cars down a steep incline. At one event, contestants make their cars look like cartoon characters, subway cars, food, and giant animals (among other outlandish shapes)."
+    },
+    {
+      "source_key": "npr-news-rss",
+      "feed": "npr-news-rss",
+      "source_label": "NPR News RSS",
+      "url": "https://www.npr.org/2026/08/18/nx-s1-5929575/ai-suicide-risks-mental-health",
+      "title": "She told no one about her agony except ChatGPT. What her death reveals about AI risks",
+      "outlet": "npr.org",
+      "published_at": null,
+      "summary": "A 29-year-old woman confided her suicidal thoughts to an AI chatbot — not to her therapist, not to her parents, not to her best friend. What can AI learn from her death?"
+    }
+  ],
+  "actions": [
+    {
+      "article": {
+        "feed": "npr-news-rss",
+        "outlet": "npr.org",
+        "title": "Trump says U.S. and Canada reached deal to delay 50% U.S. tariffs on Canadian imports",
+        "url": "https://www.npr.org/2026/08/19/g-s1-139156/trump-canada-tariffs",
+        "summary": "President Trump said he was delaying the 50% U.S. tariffs on Canadian imports after the two countries reached a last-minute deal less than two hours before the sanctions were to go into effect.",
+        "published_at": null,
+        "body_text": null,
+        "claims": [],
+        "unattributed": true,
+        "monoculture": false,
+        "is_digest": false,
+        "entities_extracted_at": null,
+        "arc_assign_attempted_at": null,
+        "ingestion_run_id": "mip-v2-backfill-20260819T060010Z-17db4820",
+        "source_status": "active",
+        "source_status_note": "Discovery provenance: NPR News RSS (npr-news-rss); original publisher URL recorded. publisher body not hydrated: discovery-only mode. This record does not establish source independence or an evidentiary conclusion."
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "feed": "npr-news-rss",
+        "outlet": "npr.org",
+        "title": "Key results from Florida primaries, so far",
+        "url": "https://www.npr.org/2026/08/18/nx-s1-5936403/what-to-watch-for-in-the-florida-primaries",
+        "summary": "Voters in Florida are picking their party's candidates for governor, Senate and a number of U.S. House seats after redistricting.",
+        "published_at": null,
+        "body_text": null,
+        "claims": [],
+        "unattributed": true,
+        "monoculture": false,
+        "is_digest": false,
+        "entities_extracted_at": null,
+        "arc_assign_attempted_at": null,
+        "ingestion_run_id": "mip-v2-backfill-20260819T060010Z-17db4820",
+        "source_status": "active",
+        "source_status_note": "Discovery provenance: NPR News RSS (npr-news-rss); original publisher URL recorded. publisher body not hydrated: discovery-only mode. This record does not establish source independence or an evidentiary conclusion."
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "feed": "npr-news-rss",
+        "outlet": "npr.org",
+        "title": "Embattled Florida Republican Rep. Cory Mills loses his fight to keep his House seat",
+        "url": "https://www.npr.org/2026/08/18/nx-s1-5936435/mills-elijah-florida-republican-primary",
+        "summary": "Mills is the latest lawmaker in a recent string of congressional members facing scandals and allegations of domestic abuse while trying to run for elected office.",
+        "published_at": null,
+        "body_text": null,
+        "claims": [],
+        "unattributed": true,
+        "monoculture": false,
+        "is_digest": false,
+        "entities_extracted_at": null,
+        "arc_assign_attempted_at": null,
+        "ingestion_run_id": "mip-v2-backfill-20260819T060010Z-17db4820",
+        "source_status": "active",
+        "source_status_note": "Discovery provenance: NPR News RSS (npr-news-rss); original publisher URL recorded. publisher body not hydrated: discovery-only mode. This record does not establish source independence or an evidentiary conclusion."
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "feed": "npr-news-rss",
+        "outlet": "npr.org",
+        "title": "ABC and Disney sue FCC, alleging First Amendment violations",
+        "url": "https://www.npr.org/2026/08/18/nx-s1-5936406/abc-and-disney-sue-fcc-alleging-first-amendment-violations",
+        "summary": "The ABC network has sued the Federal Communications Commission, alleging that the Trump administration is violating its First Amendment rights by challenging ABC broadcast licenses and investigating the network's talk show <em>The View</em>.",
+        "published_at": null,
+        "body_text": null,
+        "claims": [],
+        "unattributed": true,
+        "monoculture": false,
+        "is_digest": false,
+        "entities_extracted_at": null,
+        "arc_assign_attempted_at": null,
+        "ingestion_run_id": "mip-v2-backfill-20260819T060010Z-17db4820",
+        "source_status": "active",
+        "source_status_note": "Discovery provenance: NPR News RSS (npr-news-rss); original publisher URL recorded. publisher body not hydrated: discovery-only mode. This record does not establish source independence or an evidentiary conclusion."
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "feed": "npr-news-rss",
+        "outlet": "npr.org",
+        "title": "'Profits won.' The child safety trial against Meta kicks off in federal court",
+        "url": "https://www.npr.org/2026/08/18/nx-s1-5935458/meta-child-safety-social-media-addiction-trial-opening",
+        "summary": "Opening arguments are underway in a trial that pits four states against the company that owns Facebook and Instagram. They allege that Meta knew its products could hook kids — and lied about the danger.",
+        "published_at": null,
+        "body_text": null,
+        "claims": [],
+        "unattributed": true,
+        "monoculture": false,
+        "is_digest": false,
+        "entities_extracted_at": null,
+        "arc_assign_attempted_at": null,
+        "ingestion_run_id": "mip-v2-backfill-20260819T060010Z-17db4820",
+        "source_status": "active",
+        "source_status_note": "Discovery provenance: NPR News RSS (npr-news-rss); original publisher URL recorded. publisher body not hydrated: discovery-only mode. This record does not establish source independence or an evidentiary conclusion."
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "feed": "npr-news-rss",
+        "outlet": "npr.org",
+        "title": "S. Korea stresses US alliance amid confusion over Trump drill cut",
+        "url": "https://www.npr.org/2026/08/18/g-s1-139096/s-korea-stresses-us-alliance-amid-confusion-over-trump-drill-cut",
+        "summary": "Lee's comments Tuesday come as many South Koreans remain baffled and concerned about U.S. President Donald Trump's abrupt order to \"substantially reduce\" military exercises with South Korea.",
+        "published_at": null,
+        "body_text": null,
+        "claims": [],
+        "unattributed": true,
+        "monoculture": false,
+        "is_digest": false,
+        "entities_extracted_at": null,
+        "arc_assign_attempted_at": null,
+        "ingestion_run_id": "mip-v2-backfill-20260819T060010Z-17db4820",
+        "source_status": "active",
+        "source_status_note": "Discovery provenance: NPR News RSS (npr-news-rss); original publisher URL recorded. publisher body not hydrated: discovery-only mode. This record does not establish source independence or an evidentiary conclusion."
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "feed": "npr-news-rss",
+        "outlet": "npr.org",
+        "title": "U.S. and Iran miss peace talks deadline. And, Alaska, Florida and Wyoming primaries",
+        "url": "https://www.npr.org/2026/08/18/g-s1-139072/up-first-newsletter-iran-south-korea-jared-kushner-florida-wyoming-alaska-primaries-luigi-mangione",
+        "summary": "The U.S. and Iran missed a deadline to begin peace talks this week. The monthslong war has depleted U.S. resources. And, what to know about Alaska's U.S. Senate seat primary.",
+        "published_at": null,
+        "body_text": null,
+        "claims": [],
+        "unattributed": true,
+        "monoculture": false,
+        "is_digest": false,
+        "entities_extracted_at": null,
+        "arc_assign_attempted_at": null,
+        "ingestion_run_id": "mip-v2-backfill-20260819T060010Z-17db4820",
+        "source_status": "active",
+        "source_status_note": "Discovery provenance: NPR News RSS (npr-news-rss); original publisher URL recorded. publisher body not hydrated: discovery-only mode. This record does not establish source independence or an evidentiary conclusion."
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "feed": "npr-news-rss",
+        "outlet": "npr.org",
+        "title": "The grueling fight over who profits from AI music",
+        "url": "https://www.npr.org/sections/planet-money/2026/08/18/g-s1-138852/grueling-fight-over-who-profits-from-ai-music",
+        "summary": "AI can generate songs in seconds. But behind every AI track is a complicated question: Who should get paid? And, how? The fights have started.",
+        "published_at": null,
+        "body_text": null,
+        "claims": [],
+        "unattributed": true,
+        "monoculture": false,
+        "is_digest": false,
+        "entities_extracted_at": null,
+        "arc_assign_attempted_at": null,
+        "ingestion_run_id": "mip-v2-backfill-20260819T060010Z-17db4820",
+        "source_status": "active",
+        "source_status_note": "Discovery provenance: NPR News RSS (npr-news-rss); original publisher URL recorded. publisher body not hydrated: discovery-only mode. This record does not establish source independence or an evidentiary conclusion."
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "feed": "npr-news-rss",
+        "outlet": "npr.org",
+        "title": "In Portland, this soap box derby combines downhill speed with extreme pageantry",
+        "url": "https://www.npr.org/2026/08/18/nx-s1-5935518/portland-oregon-soap-box-derby-race-pdx",
+        "summary": "Soap box derbies send motorless cars down a steep incline. At one event, contestants make their cars look like cartoon characters, subway cars, food, and giant animals (among other outlandish shapes).",
+        "published_at": null,
+        "body_text": null,
+        "claims": [],
+        "unattributed": true,
+        "monoculture": false,
+        "is_digest": false,
+        "entities_extracted_at": null,
+        "arc_assign_attempted_at": null,
+        "ingestion_run_id": "mip-v2-backfill-20260819T060010Z-17db4820",
+        "source_status": "active",
+        "source_status_note": "Discovery provenance: NPR News RSS (npr-news-rss); original publisher URL recorded. publisher body not hydrated: discovery-only mode. This record does not establish source independence or an evidentiary conclusion."
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    },
+    {
+      "article": {
+        "feed": "npr-news-rss",
+        "outlet": "npr.org",
+        "title": "She told no one about her agony except ChatGPT. What her death reveals about AI risks",
+        "url": "https://www.npr.org/2026/08/18/nx-s1-5929575/ai-suicide-risks-mental-health",
+        "summary": "A 29-year-old woman confided her suicidal thoughts to an AI chatbot — not to her therapist, not to her parents, not to her best friend. What can AI learn from her death?",
+        "published_at": null,
+        "body_text": null,
+        "claims": [],
+        "unattributed": true,
+        "monoculture": false,
+        "is_digest": false,
+        "entities_extracted_at": null,
+        "arc_assign_attempted_at": null,
+        "ingestion_run_id": "mip-v2-backfill-20260819T060010Z-17db4820",
+        "source_status": "active",
+        "source_status_note": "Discovery provenance: NPR News RSS (npr-news-rss); original publisher URL recorded. publisher body not hydrated: discovery-only mode. This record does not establish source independence or an evidentiary conclusion."
+      },
+      "citations": [],
+      "cross_surface_candidates": []
+    }
+  ],
+  "apply_contract": {
+    "isolated_project_ref": "yhbwnrtlqbjtcrrlpbge",
+    "maximum_manifest_size": 10,
+    "existing_articles": "DO NOTHING; no legacy record can be updated by a backfill action",
+    "cross_surface": "all candidates remain review_state=pending; no graph/timeline/arc promotion"
+  }
+}

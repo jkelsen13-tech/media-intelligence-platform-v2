@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT id, url, title, outlet, published_at, ingestion_run_id, source_status, source_status_note, arc_id, entities_extracted_at, claims FROM public.articles WHERE lower(coalesce(source_status, '')) IN ('raw', 'inert', 'raw/inert') OR lower(coalesce(source_status_note, '')) LIKE '%raw/inert%' OR lower(coalesce(title, '')) LIKE '%callais%' OR lower(coalesce(summary, '')) LIKE '%callais%' OR lower(coalesce(body_text, '')) LIKE '%louisiana v. callais%' ORDER BY published_at, id LIMIT 100;"
+}

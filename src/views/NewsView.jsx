@@ -556,6 +556,21 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
               </li>
             ))}
           </ul>
+          <span className="ap-label">Linked evidence records</span>
+          {(detail.evidenceRecords ?? []).length === 0 ? (
+            <span className="ap-muted">No linked evidence record is stored for the reviewed claims attached to this article.</span>
+          ) : (
+            <ul className="news-citations">
+              {detail.evidenceRecords.map((record, i) => (
+                <li key={`${record.evidence_type}-${record.evidence_url}-${i}`}>
+                  <span className="news-cit-type">{String(record.evidence_type ?? 'evidence record').replace(/_/g, ' ')}</span>
+                  <a className="news-source-record-link" href={record.evidence_url} target="_blank" rel="noreferrer">
+                    Open linked evidence record →
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
           {detail.url && (
             <a className="news-read-link" href={detail.url} target="_blank" rel="noreferrer">
               Read original at {detail.outlet ?? 'source'} →

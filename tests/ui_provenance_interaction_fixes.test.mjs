@@ -8,6 +8,7 @@ const modePanel = readFileSync(new URL('../src/graph/GraphModePanel.jsx', import
 const arcEvidence = readFileSync(new URL('../src/components/ArcEvidencePanel.jsx', import.meta.url), 'utf8')
 const arcs = readFileSync(new URL('../src/views/ArcsView.jsx', import.meta.url), 'utf8')
 const news = readFileSync(new URL('../src/views/NewsView.jsx', import.meta.url), 'utf8')
+const supabaseReadPath = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8')
 
 test('interactive globe uses local public-data geography and preserves source-backed marker semantics', () => {
   assert.match(globe, /world-atlas\/countries-110m\.json/)
@@ -44,4 +45,12 @@ test('News makes publisher records and extraction gaps visible without fabricati
   assert.match(news, /No structured framing markers have been extracted yet/)
   assert.match(news, /No additional structured citation records have been extracted/)
   assert.match(news, /byline not recorded/)
+})
+
+test('News reads existing reviewed claim and linked-evidence records without relabeling them as extracted citations', () => {
+  assert.match(supabaseReadPath, /from\('article_claims'\)/)
+  assert.match(supabaseReadPath, /from\('claim_evidence_links'\)/)
+  assert.match(supabaseReadPath, /provenance: 'reviewed_claim_record'/)
+  assert.match(news, /Linked evidence records/)
+  assert.match(news, /Open linked evidence record/)
 })
