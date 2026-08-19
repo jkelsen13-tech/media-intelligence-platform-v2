@@ -37,3 +37,10 @@ verifier/owner-only-final-status-*.md
 verifier/owner-only-epstein-compliance-scope-*.md
 verifier/tmp-epstein-*.json
 verifier/tmp-p3-locator-query.json
+
+# Original-platform access remains read-only; do not publish local baseline queries, exports, or validators.
+verifier/tmp-original-*.json
+verifier/tmp-v2-original-reference-import.json
+verifier/generate_v2_reference_news_seed.mjs
+verifier/original-platform-readonly-baseline-*.md
+verifier/v2-exceeds-original-corpus-validation-*.md
