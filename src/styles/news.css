@@ -834,3 +834,32 @@
     font-size: 11px;
   }
 }
+
+/* Mobile validation: prevent the source-order label and its long literal
+   option text from creating a horizontal page scroll. */
+.news-source-order-row,
+.news-source-order-row .news-source-order {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.news-source-order-row .news-source-order select {
+  min-width: 0;
+  width: 100%;
+}
+
+.news-source-order-row p {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .news-source-order-row {
+    overflow: hidden;
+  }
+
+  .news-source-order-row .news-source-order {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
