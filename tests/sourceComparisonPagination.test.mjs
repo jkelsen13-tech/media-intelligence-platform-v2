@@ -22,6 +22,7 @@ function fakePostgrest(tables) {
       const q = {
         select: () => q,
         eq: (c, v) => { rows = rows.filter((r) => r[c] === v); return q },
+        neq: (c, v) => { rows = rows.filter((r) => r[c] !== v); return q },
         in: (c, vs) => { const s = new Set(vs); rows = rows.filter((r) => s.has(r[c])); return q },
         like: (c, p) => {
           const re = new RegExp('^' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*') + '$')
@@ -53,7 +54,7 @@ const pad = (n) => String(n).padStart(6, '0')
 
 // --- Fixture: every read table past the ceiling -----------------------------
 const N_EVENTS = 1200
-const N_MEMBERS = 1500
+const N_MEMBERS = 2400
 const N_CLAIMS = 1300
 const N_SURFACES = 2400
 const N_LINKS = 1200
@@ -162,4 +163,32 @@ test('loadSourceComparisonView returns the complete set past 1000 rows on every 
   assert.ok(renderedLinks.has(`lk-${pad(1200)}`))
   assert.equal(renderedCorrections.size, N_CORR)
   assert.ok(renderedCorrections.has(`cr-${pad(1100)}`))
+})
+
+
+test('loadSourceComparisonView excludes Timeline-only and single-outlet event records', async () => {
+  const tables = {
+    pipeline_config: [{ key: 'source_comparison_beta', value: true }],
+    events: [
+      { id: 'compare', canonical_title: 'Comparable event', occurred_at_start: '2026-08-19', occurred_at_end: null, status: 'active' },
+      { id: 'one-outlet', canonical_title: 'One source only', occurred_at_start: '2026-08-18', occurred_at_end: null, status: 'active' },
+      { id: 'timeline', canonical_title: 'Chronology only', occurred_at_start: '2026-08-17', occurred_at_end: null, status: 'timeline_only' },
+    ],
+    event_articles: [
+      { event_id: 'compare', article_id: 'a1', membership_method: 'documented', membership_confidence: 1 },
+      { event_id: 'compare', article_id: 'a2', membership_method: 'documented', membership_confidence: 1 },
+      { event_id: 'one-outlet', article_id: 'a3', membership_method: 'documented', membership_confidence: 1 },
+      { event_id: 'timeline', article_id: 'a4', membership_method: 'chronological', membership_confidence: 1 },
+    ],
+    claims: [], article_claims: [], claim_evidence_links: [], claim_corrections: [], explanations: [],
+    articles: [
+      { id: 'a1', outlet: 'Outlet A', title: 'A', url: 'https://a.example/a', published_at: '2026-08-19', claims: [], unattributed: false, monoculture: false, is_digest: false, arc_id: null },
+      { id: 'a2', outlet: 'Outlet B', title: 'B', url: 'https://b.example/b', published_at: '2026-08-19', claims: [], unattributed: false, monoculture: false, is_digest: false, arc_id: null },
+      { id: 'a3', outlet: 'Outlet A', title: 'C', url: 'https://a.example/c', published_at: '2026-08-18', claims: [], unattributed: false, monoculture: false, is_digest: false, arc_id: null },
+      { id: 'a4', outlet: 'Outlet C', title: 'D', url: 'https://c.example/d', published_at: '2026-08-17', claims: [], unattributed: false, monoculture: false, is_digest: false, arc_id: null },
+    ],
+    story_arcs: [], nodes: [],
+  }
+  const view = await loadSourceComparisonView({ supabaseClient: fakePostgrest(tables) })
+  assert.deepEqual(view.events.map((event) => event.id), ['compare'])
 })

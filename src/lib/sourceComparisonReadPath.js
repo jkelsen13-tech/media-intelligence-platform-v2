@@ -315,7 +315,12 @@ export async function loadSourceComparisonView({ supabaseClient } = {}) {
   if (flagError || flagRow?.value !== true) return { enabled: false, events: [] }
 
   const [eventsRes, membersRes, claimsRes, surfacesRes, linksRes, corrRes, explRes] = await Promise.all([
-    keysetAll(supabase, 'events', 'id, canonical_title, occurred_at_start, occurred_at_end, status'),
+    // Timeline-only article records are deliberately excluded: a source
+    // comparison requires actual multi-source event processing, not merely a
+    // chronological placement.
+    keysetAll(supabase, 'events', 'id, canonical_title, occurred_at_start, occurred_at_end, status', {
+      filter: (q) => q.neq('status', 'timeline_only'),
+    }),
     pagedAll(supabase, 'event_articles', 'event_id, article_id, membership_method, membership_confidence', ['event_id', 'article_id']),
     keysetAll(supabase, 'claims', 'id, event_id, canonical_text, thin_extraction, status', { filter: (q) => q.eq('status', 'active') }),
     keysetAll(supabase, 'article_claims', 'id, claim_id, article_id, surface_text, stance, loaded_language', { filter: (q) => q.eq('is_current', true) }),
@@ -421,5 +426,8 @@ export async function loadSourceComparisonView({ supabaseClient } = {}) {
     return { ...buildEventView(event, memberRows, { articlesById, claimViews }), arcLinks }
   })
 
-  return { enabled: true, events: eventViews }
+  // A comparison view exists only where readers can actually compare source
+  // coverage. Single-outlet event records remain available on the Timeline,
+  // but are not presented as a comparison.
+  return { enabled: true, events: eventViews.filter((event) => event.outlets.length >= 2) }
 }
