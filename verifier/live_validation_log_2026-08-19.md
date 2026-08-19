@@ -81,3 +81,11 @@ The live Story Arc Overview now places **Arc age**, **Coverage over time**, the 
 
 
 The live Arc Evidence tab contains only the eight labelled **Attached source records** and an explicit note that Arc age, coverage, and milestone context appear in Overview. Each attached publisher record exposes an **Open in News Feed** control. The public **More** menu also opened correctly and exposes button-driven Source Comparison and Legal & Policy destinations; login remains intentionally out of scope.
+
+## Gate correction validation — commit 691194b
+
+The source-table graph census confirms **47 nodes** and **36 documented relationships**; no edge has a missing endpoint, self-reference, or duplicate `(source, target, type)` group. The live Graph labels use keyset-paginated reads of those source tables.
+
+The mobile graph reader was verified at a 375 × 812 viewport by a reproducible Chromium run: a hub selection created the one eligible mobile graph card, and tapping that card opened the `Article panel` bottom-sheet reader. The null edge-clear guard permits node selection to proceed on mobile.
+
+The live News record **DOJ OIG announces audit initiation** now renders its reviewed substantive claim and the separately labeled primary-document evidence record. Its empty framing-marker and citation sections remain explicit data gaps, not inferred neutrality or an absence of publisher attribution. This verifies the narrow read-path correction for existing cross-surface provenance without changing the wider extraction backlog.

@@ -39,3 +39,19 @@ The reconciliation establishes two distinct conditions: **a read-path gap** for 
 The deployed globe uses **D3 `geoOrthographic`** with local `world-atlas/countries-110m.json` / `topojson-client` Natural Earth geometry. This was selected over a heavier WebGL globe because the requirement is a bounded, readable overlay inside an existing Cytoscape workspace: D3 supports drag rotation, keyboard rotation, visible graticules/borders, deterministic SVG hit targets, and source-backed marker sizing without introducing a second 3D rendering engine. Marker radius denotes only the count of confirmed location mentions at a displayed city; it does not imply event importance, reliability, or prevalence.
 
 A dedicated headless Chromium check ran against the live deployment at a **375 × 812** viewport. It confirmed the mobile breakpoint, opened the first graph hub, found the one eligible active card, tapped it, and observed the `Article panel` mobile bottom-sheet reader. The historical mobile-only failure was the graph integration path invoking an optional edge-clear callback with a null selection; the guarded callback now clears edge evidence only when a real edge is present, allowing the independent node selection callback to open the reader. Desktop remains unaffected because it uses the same node selection state but desktop card presentation.
+
+## Post-Deploy News Read-Path Target
+
+Commit `691194b` was pushed to the authorized v2 repository. A cache-busted live visit loads the 838-article corpus, and filtering to **U.S. Department of Justice Office of Inspector General** yields the single **DOJ OIG announces audit initiation** record targeted for final verification of the reviewed-claim and linked-evidence display.
+
+The first cache-busted post-push live check still rendered the prior News detail bundle: the DOJ OIG record remained claim-empty and did not show the new **Linked evidence records** section. This is recorded as a **pending deployment propagation check**, not a source-data failure; the local production build and full regression suite passed before push.
+
+After the GitHub Pages workflow completed, a second cache-busted visit loaded the current News bundle shell and restored the target OIG record through the outlet filter. The record-detail content check follows separately.
+
+## Post-Deploy News Read-Path Result
+
+The completed GitHub Pages deployment now renders the target DOJ OIG record with its existing reviewed substantive claim and a separate **Linked evidence records** section containing a **primary document** link. The record still truthfully reports no structured framing markers and no additional `citations` rows, preserving the distinction between a reviewed claim-evidence link and a claim-level citation. This resolves the verified display/read-path gap without rebuilding or overwriting the broader extraction corpus.
+
+## Final Gate Validation
+
+The final regression run passed **285 / 285** tests, the production build completed successfully, and the reproducible 375 × 812 live mobile verifier passed with a reader panel opened from the active graph card. The post-deploy browser check confirmed the OIG reviewed claim and linked primary-document record on the public v2 site. The five gate criteria are therefore complete: Overview/Evidence separation, interactive overlaid globe, mobile graph-card reader, a scoped News provenance read-path correction backed by a corpus pattern audit, and the independently confirmed **47-node / 36-edge** graph census.
