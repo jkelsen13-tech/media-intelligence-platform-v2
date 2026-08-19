@@ -64,9 +64,21 @@ const TOPIC_FILTERS = [
   { key: 'courts', label: 'Courts & law', terms: ['court', 'justice', 'legal', 'ruling'] },
   { key: 'immigration', label: 'Immigration', terms: ['immigration', 'migrant', 'detention', 'asylum'] },
   { key: 'climate', label: 'Climate & energy', terms: ['climate', 'environment', 'epa', 'energy'] },
-  { key: 'economy', label: 'Economy & trade', terms: ['tariff', 'economic', 'tax', 'trade'] },
+  { key: 'economy', label: 'Economy & trade', terms: ['tariff', 'economic', 'tax', 'trade', 'finance'] },
   { key: 'health', label: 'Public health', terms: ['health', 'vaccine', 'medical'] },
-  { key: 'foreign', label: 'Foreign policy', terms: ['foreign policy', 'china', 'international', 'diplomatic'] },
+  { key: 'foreign', label: 'Foreign policy', terms: ['foreign policy', 'china', 'international', 'diplomatic', 'war', 'conflict'] },
+  { key: 'infrastructure', label: 'Infrastructure', terms: ['infrastructure', 'bridge', 'rail', 'transit', 'power grid'] },
+  { key: 'food', label: 'Food & agriculture', terms: ['agriculture', 'farm', 'food', 'crop'] },
+  { key: 'sports', label: 'Sports', terms: ['sport', 'league', 'athlete', 'football', 'baseball', 'basketball'] },
+  { key: 'fashion', label: 'Fashion & culture', terms: ['fashion', 'runway', 'designer', 'style'] },
+]
+
+const DATE_FILTERS = [
+  { key: 'all', label: 'All dates' },
+  { key: '24h', label: 'Last 24 hours' },
+  { key: '7d', label: 'Last 7 days' },
+  { key: '30d', label: 'Last 30 days' },
+  { key: 'custom', label: 'Custom range' },
 ]
 
 function reliabilityOrder(outlet) {
@@ -144,6 +156,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const [region, setRegion] = useState('all')
   const [evidenceBasis, setEvidenceBasis] = useState('all')
   const [topic, setTopic] = useState('all')
+  const [dateRange, setDateRange] = useState('all')
+  const [customDateStart, setCustomDateStart] = useState('')
+  const [customDateEnd, setCustomDateEnd] = useState('')
   const [sourceOrder, setSourceOrder] = useState('corpus')
   const [outlets, setOutlets] = useState([])
   const [articles, setArticles] = useState([])
@@ -215,11 +230,19 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     [topic],
   )
 
+  const publicationBounds = useMemo(() => {
+    if (dateRange === 'custom') {
+      return {
+        after: customDateStart ? new Date(`${customDateStart}T00:00:00`).toISOString() : undefined,
+        before: customDateEnd ? new Date(`${customDateEnd}T23:59:59.999`).toISOString() : undefined,
+      }
+    }
+    const hours = dateRange === '24h' ? 24 : dateRange === '7d' ? 24 * 7 : dateRange === '30d' ? 24 * 30 : 0
+    return { after: hours ? new Date(Date.now() - hours * 60 * 60 * 1000).toISOString() : undefined, before: undefined }
+  }, [dateRange, customDateStart, customDateEnd])
+
   const orderedOutlets = useMemo(() => {
     const rows = [...outlets]
-    if (sourceOrder === 'tier') {
-      return rows.sort((a, b) => reliabilityOrder(a.name) - reliabilityOrder(b.name) || a.name.localeCompare(b.name))
-    }
     if (sourceOrder === 'name') return rows.sort((a, b) => a.name.localeCompare(b.name))
     return rows.sort((a, b) => b.articleCount - a.articleCount || a.name.localeCompare(b.name))
   }, [outlets, sourceOrder])
@@ -240,6 +263,8 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       status: evidenceBasis === 'arc' ? 'arc' : status,
       feeds: evidenceBasis === 'primary' ? PRIMARY_RECORD_FEEDS : undefined,
       topicTerms: selectedTopicTerms,
+      publishedAfter: publicationBounds.after,
+      publishedBefore: publicationBounds.before,
       limit: PAGE_SIZE,
       offset: 0,
     })
@@ -256,7 +281,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         if (seq !== requestRef.current) return
         setLoading(false)
       })
-  }, [debouncedQ, outlet, status, evidenceBasis, selectedRegionOutlets, selectedTopicTerms])
+  }, [debouncedQ, outlet, status, evidenceBasis, selectedRegionOutlets, selectedTopicTerms, publicationBounds])
 
   const expandArticle = (id) => {
     setExpanded(id)
@@ -299,6 +324,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     setRegion('all')
     setEvidenceBasis('all')
     setTopic('all')
+    setDateRange('all')
+    setCustomDateStart('')
+    setCustomDateEnd('')
     expandArticle(focusArticleId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusArticleId])
@@ -319,6 +347,8 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       status: evidenceBasis === 'arc' ? 'arc' : status,
       feeds: evidenceBasis === 'primary' ? PRIMARY_RECORD_FEEDS : undefined,
       topicTerms: selectedTopicTerms,
+      publishedAfter: publicationBounds.after,
+      publishedBefore: publicationBounds.before,
       limit: PAGE_SIZE,
       offset: articles.length,
     })
@@ -618,6 +648,18 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const referenceFilters = (suffix = '') => (
     <div className={`news-reference-filter-row${suffix}`} aria-label="Article filters">
       <label className="news-filter-select">
+        <span>◷ Date</span>
+        <select value={dateRange} onChange={(event) => setDateRange(event.target.value)}>
+          {DATE_FILTERS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+        </select>
+      </label>
+      {dateRange === 'custom' && (
+        <div className="news-custom-date-range" aria-label="Custom publication date range">
+          <label>From <input type="date" value={customDateStart} onChange={(event) => setCustomDateStart(event.target.value)} /></label>
+          <label>To <input type="date" value={customDateEnd} onChange={(event) => setCustomDateEnd(event.target.value)} /></label>
+        </div>
+      )}
+      <label className="news-filter-select">
         <span>◎ Region</span>
         <select value={region} onChange={(event) => setRegion(event.target.value)}>
           <option value="all">All regions</option>
@@ -674,13 +716,14 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
             Filters
           </button>
         </div>
-        {(outlet !== null || status !== 'all' || region !== 'all' || evidenceBasis !== 'all' || topic !== 'all') && (
+        {(outlet !== null || status !== 'all' || region !== 'all' || evidenceBasis !== 'all' || topic !== 'all' || dateRange !== 'all') && (
           <div className="news-filter-row news-active-filters">
             {outlet !== null && <button className="news-chip active" title="Clear outlet filter" onClick={() => setOutlet(null)}>{outlet} ×</button>}
             {status !== 'all' && <button className="news-chip active" title="Clear status filter" onClick={() => setStatus('all')}>{STATUS_FILTERS.find((f) => f.key === status)?.label} ×</button>}
             {region !== 'all' && <button className="news-chip active" title="Clear region filter" onClick={() => setRegion('all')}>{region} ×</button>}
             {evidenceBasis !== 'all' && <button className="news-chip active" title="Clear evidence filter" onClick={() => setEvidenceBasis('all')}>{EVIDENCE_FILTERS.find((item) => item.key === evidenceBasis)?.label} ×</button>}
             {topic !== 'all' && <button className="news-chip active" title="Clear topic filter" onClick={() => setTopic('all')}>{TOPIC_FILTERS.find((item) => item.key === topic)?.label} ×</button>}
+            {dateRange !== 'all' && <button className="news-chip active" title="Clear date filter" onClick={() => { setDateRange('all'); setCustomDateStart(''); setCustomDateEnd('') }}>{DATE_FILTERS.find((item) => item.key === dateRange)?.label} ×</button>}
           </div>
         )}
         <input
@@ -695,12 +738,11 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           <label className="news-source-order">
             <span>Source order</span>
             <select value={sourceOrder} onChange={(event) => setSourceOrder(event.target.value)}>
-              <option value="corpus">Corpus representation</option>
-              <option value="tier">Recorded source tier</option>
+              <option value="corpus">Volume — articles in corpus</option>
               <option value="name">Source name A–Z</option>
             </select>
           </label>
-          <p>Corpus representation is not audience popularity. Source tiers appear only where already recorded; no composite reliability score is calculated.</p>
+          <p>Sorted by: volume — a literal article count. First-to-report and corroboration are separate measures and are not displayed until the corpus has verified event matching and source-lineage records. No composite vendor score or reliability ranking is calculated.</p>
         </div>
         <div className="news-desktop-filters">
           {outletRow}

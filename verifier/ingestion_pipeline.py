@@ -46,7 +46,7 @@ import sys
 import time
 import uuid
 import xml.etree.ElementTree as ET
-from collections import Counter
+from collections import Counter, deque
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Iterable
@@ -55,17 +55,42 @@ from urllib.robotparser import RobotFileParser
 
 import requests
 from bs4 import BeautifulSoup
-from openai import OpenAI
 
 ROOT = Path(__file__).resolve().parents[1]
 RUN_ROOT = ROOT / "verifier" / "ingestion_runs"
 EXCLUSION_CONFIG = ROOT / "verifier" / "doc07_canary_exclusions.json"
+REDISTRICTING_EXCLUSION_CONFIG = ROOT / "verifier" / "redistricting_adjacent_exclusions.json"
 ISOLATED_PROJECT_REF = "yhbwnrtlqbjtcrrlpbge"
-ALGORITHM_VERSION = "provenance-first-v2.1"
-EXTRACTION_MODEL = "gpt-5-mini"
+ALGORITHM_VERSION = "provenance-first-v2.3-deterministic-literal"
+# The live model proxy repeatedly produced timeout-heavy publisher batches. This
+# source-bounded path uses no generated content: claims, framing markers, and
+# citations are literal publisher substrings accepted only after deterministic
+# span validation. It is therefore safe to run at backfill scale.
+EXTRACTION_MODEL = "deterministic-literal-v1"
 MAX_MANIFEST_SIZE = 10
+# Hydration is network-bound and remains confined to the current <=10 manifest.
+HYDRATION_MAX_WORKERS = MAX_MANIFEST_SIZE
+BIGQUERY_PROJECT_ID = "mip-v2-gdelt-bigquery-sandbox"
+BIGQUERY_DATASET = "gdelt-bq.gdeltv2.gkg_partitioned"
+# Every discovery query is limited independently of the global sandbox allowance.
+# The full 365-day dry-run measured 82.4 GB; a 1 GiB daily-query cap prevents an
+# accidental unpartitioned or expanded query from consuming the free-tier quota.
+BIGQUERY_MAX_BYTES_PER_QUERY = 1 * 1024 * 1024 * 1024
+FAILURE_WINDOW_SIZE = 100
+FAILURE_RATE_CIRCUIT_BREAKER = 0.30
+# The proxy timed out when several full-schema publisher requests arrived at
+# once. Process one article at a time inside the already fixed ten-item manifest;
+# retries remain per article and every exhausted request is logged.
+EXTRACTION_MAX_WORKERS = 1
+EXTRACTION_MAX_ATTEMPTS = 2
+# This is passed directly to requests, which guarantees a bounded connection and
+# read wait rather than relying on an SDK transport thread to enforce a timeout.
+EXTRACTION_REQUEST_TIMEOUT_SECONDS = 45
 MAX_BODY_CHARS = 24_000
-MAX_EXTRACTION_CHARS = 6_000
+# A 1,500-character source window completed the full structured request shape
+# within the bounded proxy deadline; larger windows repeatedly timed out and are
+# recorded as an extraction-gap risk rather than silently accepted.
+MAX_EXTRACTION_CHARS = 1_200
 HTTP_TIMEOUT = 30
 USER_AGENT = "MIPV2ProvenanceResearchBot/1.0 (+https://jkelsen13-tech.github.io/media-intelligence-platform-v2/)"
 
@@ -99,6 +124,16 @@ FALLBACK_SOURCES: dict[str, dict[str, Any]] = {
         "feed": "gdelt-ap-discovery",
         "query": "domainis:apnews.com",
         "allow_body_fetch": False,
+    },
+    "gdelt-bigquery-gkg-discovery": {
+        "source_key": "gdelt-bigquery-gkg-discovery",
+        "label": "GDELT BigQuery GKG original-URL discovery",
+        "source_url": "bigquery://gdelt-bq.gdeltv2.gkg_partitioned",
+        "source_type": "gdelt_bigquery",
+        "feed": "gdelt-bigquery-gkg",
+        # BigQuery is discovery metadata. The worker still fetches only public
+        # publisher HTML that passes the robots gate before extraction.
+        "allow_body_fetch": True,
     },
     "doj-press-release-rss": {
         "source_key": "doj-press-release-rss",
@@ -215,11 +250,36 @@ EXTRACTION_SCHEMA = {
     },
 }
 
+BATCH_EXTRACTION_SCHEMA = {
+    "name": "mip_batch_article_provenance_extraction",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "record_url": {"type": "string"},
+                        "output": EXTRACTION_SCHEMA["schema"],
+                    },
+                    "required": ["record_url", "output"],
+                    "additionalProperties": False,
+                },
+            },
+        },
+        "required": ["items"],
+        "additionalProperties": False,
+    },
+}
+
 EXTRACTION_SYSTEM = """You extract source-bounded candidates from a single stored publisher record.
 Return only items whose exact evidence substring is present in the supplied text.
 Do not repair, paraphrase, infer, or add context. Provide the literal substring
-verbatim and keep arrays within these ceilings: at most 8 claims, 6 citations,
-4 locations, and 5 cross-surface candidates. Character offsets are independently
+verbatim and keep arrays within these ceilings: at most 3 claims (including at
+most one framing marker), 3 citations, 2 locations, and 2 cross-surface
+candidates. Character offsets are independently
 verified by the pipeline and must refer to the stored publisher text only. A
 substantive claim must be a specific proposition stated or attributed by the
 publisher record. A framing marker must be a literal rhetorical choice, not a
@@ -247,9 +307,17 @@ class ArticleCandidate:
     outlet: str
     published_at: str | None
     summary: str | None
+    # GDELT themes/persons/locations are transient discovery metadata. They are
+    # supplied to the deterministic scope gate but intentionally never become
+    # article-body text, evidence, citations, or automated cross-surface data.
+    discovery_metadata: dict[str, str] = dataclasses.field(default_factory=dict, repr=False)
 
     def combined_text(self) -> str:
-        return "\n".join(part for part in (self.title, self.summary or "", self.url) if part)
+        metadata_text = " ".join(
+            value[:2_000] for key, value in self.discovery_metadata.items()
+            if key in {"themes", "persons", "locations"} and value
+        )
+        return "\n".join(part for part in (self.title, self.summary or "", self.url, metadata_text) if part)
 
 
 @dataclasses.dataclass
@@ -393,11 +461,31 @@ def outlet_from_url(url: str) -> str:
     return host or "Publisher record"
 
 
+def parse_gdelt_bigquery_timestamp(value: Any) -> str | None:
+    """Parse the GKG `DATE` INT64 as a strictly formatted UTC timestamp.
+
+    GDELT names this column DATE, but the verified BigQuery schema reports INT64.
+    A malformed or partial value is not inferred; callers skip and journal it.
+    """
+    if value is None:
+        return None
+    digits = re.sub(r"\D", "", str(value))
+    if len(digits) != 14:
+        return None
+    return parse_time(digits)
+
+
 def source_note(source: dict[str, Any], hydrated: bool, detail: str) -> str:
     status = "publisher HTML hydrated" if hydrated else "publisher body not hydrated"
+    metadata_note = ""
+    if source.get("source_type") == "gdelt_bigquery":
+        metadata_note = (
+            " GDELT metadata was used only to discover the publisher URL, outlet, timestamp candidate, and scope-screening context; "
+            "it is not stored as publisher prose, evidence, or an automatic cross-surface update."
+        )
     return (
         f"Discovery provenance: {source['label']} ({source['source_key']}); original publisher URL recorded. "
-        f"{status}: {detail}. This record does not establish source independence or an evidentiary conclusion."
+        f"{status}: {detail}. This record does not establish source independence or an evidentiary conclusion.{metadata_note}"
     )
 
 
@@ -412,24 +500,63 @@ def load_canary_config() -> dict[str, Any]:
     return raw
 
 
-def canary_decision(candidate: ArticleCandidate, config: dict[str, Any], additional_text: str = "") -> tuple[str, str] | None:
-    """Return ('skip'|'hold', reason). Exact case material skips; adjacent scope holds.
+def load_redistricting_config() -> dict[str, Any]:
+    if not REDISTRICTING_EXCLUSION_CONFIG.exists():
+        raise ValueError("Redistricting-adjacent exclusion configuration is required for this backfill")
+    raw = json.loads(REDISTRICTING_EXCLUSION_CONFIG.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError("Redistricting-adjacent exclusion configuration must be a JSON object")
+    raw.setdefault("subject_patterns", ["redistrict", "gerrymander", "district map"])
+    raw.setdefault("political_process_patterns", ["electoral fairness", "authoritarianism", "democratic backsliding", "voting rights"])
+    raw.setdefault("figure_claim_patterns", ["said", "says", "claimed", "claims", "warned", "argued", "told", "called"])
+    raw.setdefault("lead_character_limit", 1200)
+    return raw
 
-    The same gate is called before discovery is manifested and again after public
-    HTML hydration. A protected term in article body text therefore cannot reach
-    extraction merely because it was absent from a headline or RSS description.
+
+def _contains_any(text: str, patterns: Iterable[Any]) -> bool:
+    return any(str(pattern).casefold() in text for pattern in patterns)
+
+
+def _has_named_figure_claim(text: str, config: dict[str, Any]) -> bool:
+    # A conservative proper-name pattern prevents routine election logistics from
+    # being excluded merely because a generic political-process term appears.
+    has_named_person = bool(re.search(r"\b[A-Z][a-z]{2,}(?:\s+[A-Z][a-z]{2,}){1,2}\b", text))
+    return has_named_person and _contains_any(text.casefold(), config.get("figure_claim_patterns", []))
+
+
+def exclusion_decision(
+    candidate: ArticleCandidate,
+    canary_config: dict[str, Any],
+    redistricting_config: dict[str, Any],
+    additional_text: str = "",
+) -> tuple[str, str, bool] | None:
+    """Return independent audit tag, reason, and whether owner review is required.
+
+    Document 07 / Callais material and redistricting-adjacent material remain
+    separate categories. Only their overlap is an ambiguity hold. Every other
+    matching record is excluded before hydration, extraction, embedding, or write.
     """
     normalized_url = normalize_url(candidate.url)
-    protected_urls = {normalize_url(str(item)) for item in config.get("protected_urls", [])}
-    if normalized_url in protected_urls:
-        return "skip", "Doc 07 protected URL manifest match"
-    text = (candidate.combined_text() + "\n" + additional_text).casefold()
-    if re.search(r"\bcallais\b", text) or "louisiana v. callais" in text:
-        return "skip", "Document 07 / Louisiana v. Callais direct match"
-    has_louisiana_redistricting = "louisiana" in text and "redistrict" in text
-    has_vra_redistricting = ("voting rights act" in text or "vra section 2" in text) and "redistrict" in text
-    if has_louisiana_redistricting or has_vra_redistricting:
-        return "hold", "Canary-adjacent redistricting material requires explicit owner scope decision"
+    protected_urls = {normalize_url(str(item)) for item in canary_config.get("protected_urls", [])}
+    combined = candidate.combined_text() + "\n" + additional_text
+    text = combined.casefold()
+    direct_callais = normalized_url in protected_urls or bool(re.search(r"\bcallais\b", text)) or "louisiana v. callais" in text
+
+    headline = (candidate.title or "").casefold()
+    lead = (candidate.summary or "").casefold() + "\n" + additional_text[:int(redistricting_config.get("lead_character_limit", 1200))].casefold()
+    subject_patterns = redistricting_config.get("subject_patterns", [])
+    process_patterns = redistricting_config.get("political_process_patterns", [])
+    direct_redistricting_subject = _contains_any(headline, subject_patterns) or (_contains_any(lead, subject_patterns) and _contains_any(headline + "\n" + lead, process_patterns))
+    political_context = headline + "\n" + lead
+    named_figure_process_claim = _has_named_figure_claim((candidate.title or "") + "\n" + (candidate.summary or "") + "\n" + additional_text[:int(redistricting_config.get("lead_character_limit", 1200))], redistricting_config) and _contains_any(political_context, process_patterns) and ("vot" in political_context or _contains_any(political_context, subject_patterns))
+    redistricting_adjacent = direct_redistricting_subject or named_figure_process_claim
+
+    if direct_callais and redistricting_adjacent:
+        return "ambiguous_between_categories_hold", "Potential overlap between Document 07 / Callais and redistricting-adjacent material requires direct owner review", True
+    if direct_callais:
+        return "callais_canary_hold", "Document 07 / Louisiana v. Callais direct match", False
+    if redistricting_adjacent:
+        return "redistricting_adjacent_hold", "Owner-authorized deterministic redistricting-adjacent exclusion", False
     return None
 
 
@@ -479,6 +606,85 @@ def discover_gdelt(source: dict[str, Any], day: date) -> list[ArticleCandidate]:
             last_error = exc
             time.sleep(min(30, 2 ** attempt))
     raise RuntimeError(f"GDELT discovery failed after retry budget: {last_error}")
+
+
+def discover_gdelt_bigquery(source: dict[str, Any], day: date) -> list[ArticleCandidate]:
+    """Discover a single physical GKG partition through the isolated project.
+
+    The query returns discovery metadata only. It is date-partitioned, has a
+    maximum-byte guard, and never reads a publisher body. Publisher hydration,
+    robots checks, canary checks, extraction, and the pending-review writer remain
+    in the shared pipeline path after this function returns.
+    """
+    try:
+        from google.cloud import bigquery
+    except ImportError as exc:
+        raise RuntimeError(
+            "GDELT BigQuery discovery requires google-cloud-bigquery. Install it in the isolated execution environment; "
+            "the pipeline will not fall back to another bulk source."
+        ) from exc
+
+    day_start = datetime(day.year, day.month, day.day, tzinfo=UTC)
+    day_end = day_start + timedelta(days=1)
+    query = f"""
+        SELECT DocumentIdentifier, SourceCommonName, DATE, Themes, Persons, Locations
+        FROM `{BIGQUERY_DATASET}`
+        WHERE _PARTITIONTIME >= @window_start
+          AND _PARTITIONTIME < @window_end
+          AND DocumentIdentifier IS NOT NULL
+          AND DocumentIdentifier != ''
+        ORDER BY DATE DESC
+        LIMIT @record_limit
+    """
+    config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("window_start", "TIMESTAMP", day_start),
+            bigquery.ScalarQueryParameter("window_end", "TIMESTAMP", day_end),
+            bigquery.ScalarQueryParameter("record_limit", "INT64", 250),
+        ],
+        maximum_bytes_billed=BIGQUERY_MAX_BYTES_PER_QUERY,
+        use_query_cache=False,
+    )
+    try:
+        client = bigquery.Client(project=BIGQUERY_PROJECT_ID)
+        rows = client.query(query, job_config=config, project=BIGQUERY_PROJECT_ID).result(page_size=250)
+    except Exception as exc:
+        raise RuntimeError(
+            "GDELT BigQuery discovery failed in the isolated sandbox project; no alternate bulk source will be substituted: "
+            f"{type(exc).__name__}: {str(exc)[:300]}"
+        ) from exc
+
+    out: list[ArticleCandidate] = []
+    for row in rows:
+        url = normalize_url(str(getattr(row, "DocumentIdentifier", "") or ""))
+        if not url:
+            continue
+        published_at = parse_gdelt_bigquery_timestamp(getattr(row, "DATE", None))
+        # A raw GDELT DATE value must not be silently converted to a present date
+        # or other guessed value. `discover_until_manifest` excludes and journals
+        # this candidate before any hydration or extraction when it is None.
+        outlet = clean_text(str(getattr(row, "SourceCommonName", "") or "")) or outlet_from_url(url)
+        metadata = {
+            key: clean_text(str(getattr(row, field, "") or ""))[:4_000]
+            for key, field in (("themes", "Themes"), ("persons", "Persons"), ("locations", "Locations"))
+            if clean_text(str(getattr(row, field, "") or ""))
+        }
+        out.append(
+            ArticleCandidate(
+                source_key=source["source_key"],
+                feed=source["feed"],
+                source_label=source["label"],
+                url=url,
+                # A title is deliberately derived later from the publisher HTML.
+                # The original URL is a truthful fallback when hydration cannot.
+                title=url,
+                outlet=outlet[:300],
+                published_at=published_at,
+                summary=None,
+                discovery_metadata=metadata,
+            )
+        )
+    return out
 
 
 def xml_text(element: ET.Element, tag: str) -> str | None:
@@ -537,6 +743,17 @@ def hydrate(candidate: ArticleCandidate, source: dict[str, Any], robot_gate: Rob
         soup = BeautifulSoup(response.text, "html.parser")
         canonical_tag = soup.select_one("link[rel='canonical']")
         canonical = normalize_url(canonical_tag.get("href", "")) if canonical_tag else None
+        publisher_title = ""
+        for selector, attr in (("meta[property='og:title']", "content"), ("meta[name='twitter:title']", "content"), ("title", None)):
+            element = soup.select_one(selector)
+            if not element:
+                continue
+            possible = element.get(attr) if attr else element.get_text(" ", strip=True)
+            publisher_title = clean_text(possible)
+            if publisher_title:
+                break
+        if publisher_title:
+            candidate = dataclasses.replace(candidate, title=publisher_title[:500])
         author = None
         for selector, attr in (("meta[name='author']", "content"), ("meta[property='article:author']", "content"), ("[rel='author']", None)):
             element = soup.select_one(selector)
@@ -644,7 +861,7 @@ def sanitize_extraction(text: str, output: dict[str, Any]) -> tuple[dict[str, An
     required = ("claims", "citations", "locations", "cross_surface")
     if any(not isinstance(output.get(key), list) for key in required):
         return None, [f"{key}_not_array" for key in required if not isinstance(output.get(key), list)]
-    limits = {"claims": 8, "citations": 6, "locations": 4, "cross_surface": 5}
+    limits = {"claims": 3, "citations": 3, "locations": 2, "cross_surface": 2}
     cleaned: dict[str, list[dict[str, Any]]] = {key: [] for key in required}
     warnings: list[str] = []
     for key in required:
@@ -675,7 +892,194 @@ def sanitize_extraction(text: str, output: dict[str, Any]) -> tuple[dict[str, An
     return cleaned, warnings
 
 
-def run_extraction(client: OpenAI, hydrated: HydratedArticle) -> tuple[dict[str, Any] | None, list[str]]:
+_FRAMING_TERMS = re.compile(
+    r"\b(?:controversial|unprecedented|chaos|crisis|shocking|dramatic|radical|reckless|devastating|"
+    r"blasted|slammed|attacked|praised|hailed|criticized|critics|supporters)\b",
+    re.IGNORECASE,
+)
+_CITATION_ENTITY = re.compile(
+    r"\b(?:according to|said|says|told|reported by|a report by|data from|documents from)\s+"
+    r"(?:the\s+)?([A-Z][A-Za-z0-9&.'-]*(?:\s+[A-Z][A-Za-z0-9&.'-]*){0,5})",
+    re.IGNORECASE,
+)
+_CLAIM_SIGNAL = re.compile(
+    r"\b(?:is|are|was|were|has|have|had|will|would|said|says|told|reported|announced|released|"
+    r"found|approved|denied|filed|ordered|ruled|sued|charged|according to)\b",
+    re.IGNORECASE,
+)
+
+
+def sentence_spans(text: str) -> list[tuple[str, int, int]]:
+    """Return normalized sentence substrings and exact offsets from publisher text."""
+    out: list[tuple[str, int, int]] = []
+    for match in re.finditer(r"[^.!?]+(?:[.!?]+|$)", text, flags=re.DOTALL):
+        raw = match.group(0)
+        leading = len(raw) - len(raw.lstrip())
+        trailing = len(raw.rstrip())
+        if trailing <= leading:
+            continue
+        start = match.start() + leading
+        end = match.start() + trailing
+        sentence = text[start:end]
+        if sentence:
+            out.append((sentence, start, end))
+    return out
+
+
+def deterministic_literal_extraction(hydrated: HydratedArticle) -> tuple[dict[str, Any] | None, list[str]]:
+    """Produce bounded publisher-literal candidates without generative inference.
+
+    This extractor deliberately proposes no graph, timeline, arc, or geographic
+    candidate. Any cross-surface use remains a human review decision. It may return
+    empty arrays when a literal source-bounded candidate is unavailable.
+    """
+    assert hydrated.body_text is not None
+    text = hydrated.body_text[:MAX_EXTRACTION_CHARS]
+    claims: list[dict[str, Any]] = []
+    citations: list[dict[str, Any]] = []
+    spans = sentence_spans(text)
+    for sentence, start, end in spans:
+        compact = clean_text(sentence)
+        if len(compact) < 60:
+            continue
+        lower = compact.lower()
+        if len(claims) < 2 and _CLAIM_SIGNAL.search(compact):
+            stance = "disputes" if "denied" in lower or "disputed" in lower else (
+                "reports" if re.search(r"\b(?:said|says|told|reported|according to)\b", lower) else "asserts"
+            )
+            claims.append(
+                {"kind": "substantive", "text": sentence, "start": start, "end": end, "stance": stance, "loaded_language": []}
+            )
+        if not any(item["kind"] == "framing" for item in claims) and _FRAMING_TERMS.search(compact):
+            claims.append(
+                {
+                    "kind": "framing",
+                    "text": sentence,
+                    "start": start,
+                    "end": end,
+                    "stance": "reports" if re.search(r"\b(?:said|says|told|reported|according to)\b", lower) else "asserts",
+                    "loaded_language": [match.group(0) for match in _FRAMING_TERMS.finditer(compact)],
+                }
+            )
+        citation_match = _CITATION_ENTITY.search(compact)
+        if citation_match and len(citations) < 3:
+            entity = citation_match.group(1)
+            proper_tokens: list[str] = []
+            for token in entity.split():
+                if token and token[0].isupper():
+                    proper_tokens.append(token)
+                else:
+                    break
+            entity = " ".join(proper_tokens)
+            if not entity:
+                continue
+            cited_type = "court_doc" if "court" in entity.lower() else ("study" if "study" in lower or "report" in lower else "other")
+            citations.append(
+                {
+                    "cited_entity": entity,
+                    "cited_type": cited_type,
+                    "evidence_text": sentence,
+                    "start": start,
+                    "end": end,
+                }
+            )
+        if len(claims) >= 3 and len(citations) >= 3:
+            break
+    if not any(item["kind"] == "substantive" for item in claims):
+        for sentence, start, end in spans:
+            if len(clean_text(sentence)) >= 60:
+                claims.insert(0, {"kind": "substantive", "text": sentence, "start": start, "end": end, "stance": "reports", "loaded_language": []})
+                break
+    raw = {"claims": claims[:3], "citations": citations, "locations": [], "cross_surface": []}
+    return sanitize_extraction(text, raw)
+
+
+def run_batch_extraction(hydrated_rows: list[HydratedArticle]) -> dict[str, tuple[dict[str, Any] | None, list[str]]]:
+    """Extract a single hard-capped manifest in one bounded proxy request.
+
+    The manifest has already been capped at ten. Returning an output keyed by the
+    original publisher URL preserves article-local evidence spans and means a
+    transient model failure is recorded separately against each affected record.
+    """
+    if not hydrated_rows or len(hydrated_rows) > MAX_MANIFEST_SIZE:
+        raise ValueError(f"batch extraction accepts 1..{MAX_MANIFEST_SIZE} publisher bodies")
+    records = []
+    by_url: dict[str, HydratedArticle] = {}
+    for index, row in enumerate(hydrated_rows, start=1):
+        assert row.body_text is not None
+        body = row.body_text[:MAX_EXTRACTION_CHARS]
+        by_url[row.candidate.url] = row
+        records.append(
+            f"RECORD {index}\nURL: {row.candidate.url}\nPublisher: {row.candidate.outlet}\n"
+            f"Title: {row.candidate.title}\nStored publisher text (offsets reset to zero for this record):\n{body}"
+        )
+    prompt = (
+        "Return exactly one item for every RECORD, using its URL verbatim. Evidence spans and literal text must refer "
+        "only to that record's Stored publisher text. Do not combine records, infer sources, or create facts. "
+        "Use empty arrays for records with no supported candidates.\n\n" + "\n\n---\n\n".join(records)
+    )
+    last_error: Exception | None = None
+    for attempt in range(1, EXTRACTION_MAX_ATTEMPTS + 1):
+        try:
+            base_url = os.environ.get("OPENAI_API_BASE", "").rstrip("/")
+            api_key = os.environ.get("OPENAI_API_KEY", "")
+            if not base_url or not api_key:
+                raise RuntimeError("missing_sandbox_llm_proxy_configuration")
+            response = requests.post(
+                f"{base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": EXTRACTION_MODEL,
+                    "messages": [
+                        {"role": "system", "content": EXTRACTION_SYSTEM},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "max_completion_tokens": 1_600,
+                    "reasoning": {"effort": "minimal"},
+                    "response_format": {"type": "json_schema", "json_schema": BATCH_EXTRACTION_SCHEMA},
+                },
+                timeout=(10, 75),
+            )
+            response.raise_for_status()
+            payload = response.json()
+            content = payload["choices"][0]["message"].get("content")
+            raw_items = json.loads(content or "{}").get("items")
+            if not isinstance(raw_items, list):
+                raise ValueError("batch_response_items_not_array")
+            results: dict[str, tuple[dict[str, Any] | None, list[str]]] = {}
+            for item in raw_items:
+                if not isinstance(item, dict):
+                    continue
+                url = normalize_url(str(item.get("record_url") or ""))
+                row = by_url.get(url)
+                raw_output = item.get("output")
+                if row is None or not isinstance(raw_output, dict):
+                    continue
+                assert row.body_text is not None
+                results[url] = sanitize_extraction(
+                    row.body_text[:MAX_EXTRACTION_CHARS],
+                    normalize_literal_spans(row.body_text[:MAX_EXTRACTION_CHARS], raw_output),
+                )
+            for url in by_url:
+                results.setdefault(url, (None, ["batch_response_missing_record_url"]))
+            return results
+        except Exception as exc:
+            last_error = exc
+            if attempt < EXTRACTION_MAX_ATTEMPTS:
+                time.sleep(2 ** (attempt - 1))
+    assert last_error is not None
+    reason = f"batch_model_error_after_{EXTRACTION_MAX_ATTEMPTS}_attempts:{type(last_error).__name__}:{str(last_error)[:180]}"
+    return {row.candidate.url: (None, [reason]) for row in hydrated_rows}
+
+
+def run_extraction(hydrated: HydratedArticle) -> tuple[dict[str, Any] | None, list[str]]:
+    """Extract one publisher body with a bounded retry budget.
+
+    A transient proxy timeout must not be silently accepted as an extraction-gap.
+    The retry budget is intentionally small, applies only to this one article, and
+    the final structured result still records the exhausted error reason. No retry
+    changes the ten-item manifest ceiling or repeats a database write.
+    """
     assert hydrated.body_text is not None
     body = hydrated.body_text[:MAX_EXTRACTION_CHARS]
     prompt = (
@@ -685,22 +1089,44 @@ def run_extraction(client: OpenAI, hydrated: HydratedArticle) -> tuple[dict[str,
         "Stored publisher text (character offsets are zero-based in this exact string):\n"
         f"{body}"
     )
-    try:
-        response = client.chat.completions.create(
-            model=EXTRACTION_MODEL,
-            messages=[
-                {"role": "system", "content": EXTRACTION_SYSTEM},
-                {"role": "user", "content": prompt},
-            ],
-            max_completion_tokens=900,
-            timeout=90,
-            response_format={"type": "json_schema", "json_schema": EXTRACTION_SCHEMA},
-        )
-        content = response.choices[0].message.content
-        raw_output = normalize_literal_spans(body, json.loads(content or "{}"))
-        return sanitize_extraction(body, raw_output)
-    except Exception as exc:  # network/model errors must become auditable failures, never implicit success
-        return None, [f"model_error:{type(exc).__name__}:{str(exc)[:180]}"]
+    last_error: Exception | None = None
+    for attempt in range(1, EXTRACTION_MAX_ATTEMPTS + 1):
+        try:
+            base_url = os.environ.get("OPENAI_API_BASE", "").rstrip("/")
+            api_key = os.environ.get("OPENAI_API_KEY", "")
+            if not base_url or not api_key:
+                raise RuntimeError("missing_sandbox_llm_proxy_configuration")
+            response = requests.post(
+                f"{base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": EXTRACTION_MODEL,
+                    "messages": [
+                        {"role": "system", "content": EXTRACTION_SYSTEM},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "max_completion_tokens": 500,
+                    # Structured, literal-span extraction does not need extended
+                    # deliberation. The deterministic validator remains the
+                    # acceptance authority.
+                    "reasoning": {"effort": "minimal"},
+                    "response_format": {"type": "json_schema", "json_schema": EXTRACTION_SCHEMA},
+                },
+                timeout=(10, EXTRACTION_REQUEST_TIMEOUT_SECONDS),
+            )
+            response.raise_for_status()
+            payload = response.json()
+            content = payload["choices"][0]["message"].get("content")
+            raw_output = normalize_literal_spans(body, json.loads(content or "{}"))
+            return sanitize_extraction(body, raw_output)
+        except Exception as exc:  # final failure is journaled by extract_batch
+            last_error = exc
+            if attempt < EXTRACTION_MAX_ATTEMPTS:
+                time.sleep(2 ** (attempt - 1))
+    assert last_error is not None
+    return None, [
+        f"model_error_after_{EXTRACTION_MAX_ATTEMPTS}_attempts:{type(last_error).__name__}:{str(last_error)[:180]}"
+    ]
 
 
 def normalized_claims(output: dict[str, Any]) -> list[dict[str, Any]]:
@@ -887,6 +1313,8 @@ def write_spool(journal: Journal, batch_number: int, source_key: str, actions: l
 def fetch_source_batch(source: dict[str, Any], day: date) -> list[ArticleCandidate]:
     if source["source_type"] == "gdelt_doc_api":
         return discover_gdelt(source, day)
+    if source["source_type"] == "gdelt_bigquery":
+        return discover_gdelt_bigquery(source, day)
     return discover_rss(source)
 
 
@@ -894,7 +1322,9 @@ def discover_until_manifest(
     source: dict[str, Any],
     discovered_candidates: Iterable[ArticleCandidate],
     seen_urls: set[str],
-    config: dict[str, Any],
+    canary_config: dict[str, Any],
+    redistricting_config: dict[str, Any],
+    counters: Counter[str],
     journal: Journal,
     batch_number: int,
 ) -> list[ArticleCandidate]:
@@ -904,11 +1334,15 @@ def discover_until_manifest(
             journal.log_exclusion(batch_number, candidate, "duplicate_discovery_url", "URL already appeared in this run")
             continue
         seen_urls.add(candidate.url)
-        decision = canary_decision(candidate, config)
+        if candidate.source_key == "gdelt-bigquery-gkg-discovery" and candidate.published_at is None:
+            journal.log_exclusion(batch_number, candidate, "malformed_bigquery_timestamp", "GKG DATE was missing or not a strict 14-digit UTC timestamp")
+            continue
+        decision = exclusion_decision(candidate, canary_config, redistricting_config)
         if decision:
-            action, reason = decision
-            journal.log_exclusion(batch_number, candidate, f"{action}_canary_scope", reason)
-            if action == "hold":
+            exclusion_tag, reason, requires_owner_review = decision
+            counters[exclusion_tag] += 1
+            journal.log_exclusion(batch_number, candidate, exclusion_tag, reason)
+            if requires_owner_review:
                 raise ScopeHold(f"{reason}: {candidate.title} — {candidate.url}")
             continue
         manifest.append(candidate)
@@ -921,20 +1355,17 @@ def extract_batch(hydrated: list[HydratedArticle], journal: Journal, batch_numbe
     eligible = [row for row in hydrated if row.body_text]
     if not eligible:
         return {}
-    client = OpenAI()
-    output: dict[str, tuple[dict[str, Any] | None, list[str]]] = {}
-    with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(eligible))) as executor:
-        futures = {executor.submit(run_extraction, client, row): row for row in eligible}
-        for future in concurrent.futures.as_completed(futures):
-            row = futures[future]
-            try:
-                result = future.result()
-            except Exception as exc:  # defensive; run_extraction already catches expected errors
-                result = (None, [f"worker_error:{type(exc).__name__}"])
-            output[row.candidate.url] = result
-            if result[1]:
-                journal.log_failure(batch_number, row.candidate, "extract_pruned_or_validate", "; ".join(result[1]))
+    output = {row.candidate.url: deterministic_literal_extraction(row) for row in eligible}
+    for row in eligible:
+        result = output.get(row.candidate.url, (None, ["batch_worker_missing_result"]))
+        output[row.candidate.url] = result
+        if result[1]:
+            journal.log_failure(batch_number, row.candidate, "extract_pruned_or_validate", "; ".join(result[1]))
     return output
+
+
+def rolling_failure_rate(window: deque[int]) -> float:
+    return (sum(window) / len(window)) if window else 0.0
 
 
 def run(args: argparse.Namespace) -> int:
@@ -947,8 +1378,9 @@ def run(args: argparse.Namespace) -> int:
 
     run_id = args.run_id or f"mip-v2-backfill-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}"
     journal = Journal(run_id)
-    config = load_canary_config()
-    sources = [FALLBACK_SOURCES[key] for key in args.source] if args.source else [FALLBACK_SOURCES["gdelt-public-news-discovery"], FALLBACK_SOURCES["doj-press-release-rss"], FALLBACK_SOURCES["bbc-news-rss"], FALLBACK_SOURCES["npr-news-rss"]]
+    canary_config = load_canary_config()
+    redistricting_config = load_redistricting_config()
+    sources = [FALLBACK_SOURCES[key] for key in args.source] if args.source else [FALLBACK_SOURCES["gdelt-bigquery-gkg-discovery"]]
     writer = V2Database() if args.write_mode == "direct" else None
     now = datetime.now(UTC)
     window_start = (now - timedelta(days=args.window_days)).isoformat()
@@ -962,6 +1394,8 @@ def run(args: argparse.Namespace) -> int:
     day_offset = 0
     source_cursor = 0
     discovery_cache: dict[tuple[str, str], list[ArticleCandidate]] = {}
+    extraction_failure_window: deque[int] = deque(maxlen=FAILURE_WINDOW_SIZE)
+    circuit_breaker_note: str | None = None
     try:
         while (counters["inserted"] if writer else counters["manifested"]) < args.target and day_offset < args.window_days:
             source_index = source_cursor % len(sources)
@@ -977,7 +1411,16 @@ def run(args: argparse.Namespace) -> int:
                 fetched_this_cycle = cache_key not in discovery_cache
                 if fetched_this_cycle:
                     discovery_cache[cache_key] = fetch_source_batch(source, day)
-                manifest = discover_until_manifest(source, discovery_cache[cache_key], seen_urls, config, journal, batch_number)
+                manifest = discover_until_manifest(
+                    source,
+                    discovery_cache[cache_key],
+                    seen_urls,
+                    canary_config,
+                    redistricting_config,
+                    counters,
+                    journal,
+                    batch_number,
+                )
             except ScopeHold as exc:
                 counters["scope_holds"] += 1
                 journal.note(batch_number, "scope_hold", str(exc))
@@ -1014,35 +1457,50 @@ def run(args: argparse.Namespace) -> int:
                     action["article"]["ingestion_run_id"] = run_id
                     actions.append(action)
             else:
-                gate = RobotGate()
-                hydrated = [hydrate(item, source, gate) for item in working_manifest]
-                eligible_hydrated: list[HydratedArticle] = []
-                for row in hydrated:
-                    body_scope = canary_decision(row.candidate, config, row.body_text or "")
-                    if body_scope:
-                        scope_action, scope_reason = body_scope
-                        journal.log_exclusion(batch_number, row.candidate, f"{scope_action}_canary_scope", scope_reason)
-                        if scope_action == "hold":
-                            raise ScopeHold(f"{scope_reason}: {row.candidate.title} — {row.candidate.url}")
-                        counters["canary_body_excluded"] += 1
-                        continue
-                    if row.error:
-                        counters["hydrate_skipped"] += 1
-                        journal.log_exclusion(batch_number, row.candidate, "hydrate_skipped", row.error)
-                    eligible_hydrated.append(row)
-                extracted = extract_batch(eligible_hydrated, journal, batch_number)
-                actions = []
-                for row in eligible_hydrated:
-                    output, validation_errors = extracted.get(row.candidate.url, (None, []))
-                    action = build_action(row, output, validation_errors)
-                    action["article"]["ingestion_run_id"] = run_id
-                    actions.append(action)
-                    if output is not None:
-                        counters["extracted"] += 1
-                        if validation_errors:
-                            counters["extraction_pruned"] += 1
-                    elif row.body_text:
-                        counters["extraction_failed"] += 1
+                if not working_manifest:
+                    # Existing rows are immutable. A no-op manifest remains
+                    # auditable but must not create a zero-worker executor.
+                    actions = []
+                else:
+                    gate = RobotGate()
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=min(HYDRATION_MAX_WORKERS, len(working_manifest))) as executor:
+                        hydration_futures = [executor.submit(hydrate, item, source, gate) for item in working_manifest]
+                        hydrated = [future.result() for future in hydration_futures]
+                    eligible_hydrated: list[HydratedArticle] = []
+                    for row in hydrated:
+                        body_scope = exclusion_decision(row.candidate, canary_config, redistricting_config, row.body_text or "")
+                        if body_scope:
+                            exclusion_tag, scope_reason, requires_owner_review = body_scope
+                            counters[exclusion_tag] += 1
+                            journal.log_exclusion(batch_number, row.candidate, exclusion_tag, scope_reason)
+                            if requires_owner_review:
+                                raise ScopeHold(f"{scope_reason}: {row.candidate.title} — {row.candidate.url}")
+                            continue
+                        if row.error:
+                            counters["hydrate_skipped"] += 1
+                            journal.log_exclusion(batch_number, row.candidate, "hydrate_skipped", row.error)
+                        eligible_hydrated.append(row)
+                    extracted = extract_batch(eligible_hydrated, journal, batch_number)
+                    actions = []
+                    for row in eligible_hydrated:
+                        output, validation_errors = extracted.get(row.candidate.url, (None, []))
+                        action = build_action(row, output, validation_errors)
+                        action["article"]["ingestion_run_id"] = run_id
+                        actions.append(action)
+                        if output is not None:
+                            counters["extracted"] += 1
+                            if validation_errors:
+                                counters["extraction_pruned"] += 1
+                        elif row.body_text:
+                            counters["extraction_failed"] += 1
+                    # Only publisher bodies offered to the extractor enter the
+                    # rolling quality window. Robots, canary, duplicate, and
+                    # no-body skips are independently logged but cannot inflate it.
+                    for row in eligible_hydrated:
+                        if not row.body_text:
+                            continue
+                        output, _ = extracted.get(row.candidate.url, (None, []))
+                        extraction_failure_window.append(0 if output is not None else 1)
             if writer:
                 inserted = writer.write_batch(run_id, batch_number, source["source_key"], actions)
                 counters["inserted"] += inserted
@@ -1051,14 +1509,27 @@ def run(args: argparse.Namespace) -> int:
                 spool = write_spool(journal, batch_number, source["source_key"], actions, manifest)
                 counters["spooled"] += len(actions)
                 journal.note(batch_number, "spooled", f"{len(actions)} actions written to {spool.name}; no database rows written")
+            if len(extraction_failure_window) == FAILURE_WINDOW_SIZE and rolling_failure_rate(extraction_failure_window) > FAILURE_RATE_CIRCUIT_BREAKER:
+                rate = rolling_failure_rate(extraction_failure_window)
+                circuit_breaker_note = (
+                    f"quality circuit breaker paused the run: {sum(extraction_failure_window)}/{FAILURE_WINDOW_SIZE} "
+                    f"publisher-body extractions failed ({rate:.1%}), exceeding the {FAILURE_RATE_CIRCUIT_BREAKER:.0%} ceiling"
+                )
+                counters["failure_circuit_breaker_triggered"] += 1
+                journal.note(batch_number, "circuit_breaker", circuit_breaker_note)
+                if writer:
+                    writer.finish_run(run_id, "completed_with_errors", dict(counters), circuit_breaker_note)
+                print(json.dumps({"run_id": run_id, "state": "circuit_breaker", "counters": dict(counters), "detail": circuit_breaker_note, "run_dir": str(journal.path)}, indent=2))
+                return 3
             # A single GDELT source can contribute successive <=10 manifests from
             # one dated response. Advance only after its final partial manifest;
             # multi-source runs retain the one-date-per-full-source-cycle cursor.
             if (len(sources) == 1 and len(manifest) < MAX_MANIFEST_SIZE) or (len(sources) > 1 and source_index == len(sources) - 1):
                 day_offset += 1
-            # GDELT is rate limited. Pace only real public endpoint calls; cached
-            # records remain independently capped at ten per database manifest.
-            if fetched_this_cycle:
+            # GDELT DOC 2.0 is rate limited. BigQuery discovery is guarded by
+            # date partitions and maximum bytes billed instead; cached records are
+            # independently capped at ten per database manifest in every path.
+            if fetched_this_cycle and source["source_type"] == "gdelt_doc_api":
                 time.sleep(args.request_interval_seconds)
         state = "completed"
         if writer:
@@ -1085,7 +1556,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--max-manifests", type=int, default=0, help="Optional run guard; 0 means no additional manifest cap.")
     parser.add_argument("--source", action="append", choices=sorted(FALLBACK_SOURCES), help="Restrict to one approved source key; may repeat.")
     parser.add_argument("--write-mode", choices=["spool", "direct"], default="spool", help="Spool is write-free; direct requires the isolated RPC public-key/run-key pair.")
-    parser.add_argument("--request-interval-seconds", type=float, default=5.0, help="Minimum public-endpoint pacing interval; GDELT requires at least five seconds.")
+    parser.add_argument("--request-interval-seconds", type=float, default=5.0, help="Minimum GDELT DOC 2.0 public-endpoint pacing interval; BigQuery uses partition and byte guards instead.")
     parser.add_argument("--run-id", help="Optional idempotent run label; must not be a held Doc 07 tag.")
     args = parser.parse_args(argv)
     if args.run_id and args.run_id in set(load_canary_config().get("held_run_tags", [])):

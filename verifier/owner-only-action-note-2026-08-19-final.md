@@ -1,41 +1,48 @@
 # Owner-Only Action Record — 2026-08-19
 
-## Completed Automated Work
+## Completed isolated-v2 work
 
-The isolated v2 sandbox now has a provenance-first ingestion schema, approved source catalog, resumable run ledger, checkpoint table, extraction-result table, and review-gated cross-surface candidate table. The worker enforces a fixed maximum manifest size of **10**, deterministic Document 07 / Louisiana v. Callais exclusion, source-level deduplication, robots-aware publisher hydration for approved publisher feeds, literal-evidence validation, and explicit local exclusion/failure logs. It cannot write graph nodes, graph edges, timeline records, arc memberships, or geographic placements.
+The v2 sandbox now has a provenance-first ingestion schema, approved source catalog, resumable run ledger, checkpoint table, extraction-result table, and a review-gated cross-surface candidate ledger. The implementation is confined to the isolated Supabase project `yhbwnrtlqbjtcrrlpbge` and the isolated BigQuery project `mip-v2-gdelt-bigquery-sandbox`. **No production Supabase writes and no Google Cloud changes to `mop-extraction` were made.**
 
-A narrowly scoped isolated-v2 RPC writer was added so the local worker can insert only new article URLs, candidate extraction output, citations, and `pending` cross-surface candidates without using a production database or a service-role credential. Existing articles are immutable to this worker. The writer has been exercised against two real publisher-feed manifests: **10 BBC** and **10 NPR** records were inserted, for **20 new source-mapped articles**. The source-table graph remains at **47 nodes** and **36 documented relationships**; no automated graph or timeline promotion occurred.
+The worker enforces a maximum manifest size of **10**, deterministic Callais and redistricting-adjacent exclusions that are separately logged, source-level URL deduplication, robots-aware bounded publisher hydration, literal-evidence validation, and a 30% rolling-100 extraction-failure circuit breaker. It does not automatically create graph nodes, graph edges, timeline records, arc memberships, source-comparison events, or geographic placements.
 
-| Completed direct-manifest result | BBC | NPR | Combined |
-|---|---:|---:|---:|
-| New source-linked articles | 10 | 10 | 20 |
-| Candidate extraction results | 4 | 8 | 12 |
-| Failed extraction results retained for audit | 6 | 2 | 8 |
-| Pending cross-surface candidates | 0 | 8 | 8 |
-| Approved or live cross-surface promotions | 0 | 0 | 0 |
+## Completed BigQuery backfill
 
-The current extraction behavior is intentionally conservative. It retains only claims, citations, locations, and candidate proposals whose literal evidence can be grounded unambiguously in stored publisher text. Invalid or ambiguous individual items are pruned and logged; they do not erase other valid items in the same record.
+**Completed run:** `mip-v2-bigquery-redistricting-exclusion-resume-20260819`
 
-## Human Review Required
+| Measured output | Count |
+|---|---:|
+| Newly inserted immutable article records | 10,000 |
+| Structured extraction records retained | 7,648 |
+| Hydration skips | 2,352 |
+| Pre-existing articles skipped | 1,269 |
+| Redistricting-adjacent holds | 11 |
+| Callais canary holds | 0 |
+| Ambiguous-between-categories holds | 0 |
+| Automated cross-surface promotions | 0 |
 
-The eight newly created cross-surface candidates require a human decision before any use on live Graph, Causal Timeline, Story Arc, or geographic display surfaces. They comprise **seven geography mentions** and **one graph-node candidate**, all marked `review_state = pending`. The worker makes no relationship, event, causal, location-coordinate, or source-independence assertion.
+The completed run respected the ten-item manifest ceiling. Detailed manifest-level success, skip, and failure records remain locally in the gitignored run directory; the concise committed audit summary is `verifier/ingestion_working_notebook.md`.
 
-Extraction-result rows in `failed` state should be reviewed or reprocessed only after validating a changed model/prompt/version against a bounded manifest. They are retained as audit evidence and are not presented as completed extraction.
+## Candidate review and propagation outcome
 
-## Backfill Blocker and Required Owner Decision
+All 21 candidates pending at review start were individually decided and logged in both the isolated database and `verifier/pending_candidate_decision_ledger_2026-08-19.md`.
 
-The approved bulk discovery endpoint, **GDELT DOC 2.0**, repeatedly returned HTTP `429 Too Many Requests` even after the worker was updated to honor GDELT’s reported minimum of one request every five seconds. No 10,000-record run was started after this persistent rate limit, and no unapproved alternative source endpoint was substituted.
+| Final state | Count | Basis |
+|---|---:|---|
+| Approved | 0 | No candidate had a machine-resolvable primary-evidence URL, even where a descriptive primary-citation label existed. |
+| Rejected | 18 | Failed the required primary-evidence-link gate; one also failed literal publisher-text grounding. |
+| Owner hold | 3 | An NPR Florida-primary article directly discusses redistricting and revised congressional maps. It is not Callais, but remains a hard-stop owner review category. |
 
-> The currently approved BBC, NPR, and DOJ RSS endpoints do not expose a documented historic archive path in the approved source catalog sufficient to supply the requested 10,000-record chronological corpus. Introducing publisher sitemaps, web archives, commercial APIs, or a different dataset would expand source scope and requires explicit owner approval.
+No likely duplicate of an already approved candidate was found. No Callais match was found. Because no pending candidate passed the approval gate, no self-approved propagation sample existed. The controlled propagation step therefore did **not** relax the no-auto-promotion rule or test unapproved records. No candidate data entered Graph, Timeline, Arcs, Source Comparison, Legal & Policy, or geographic placement surfaces.
 
-To resume the 10,000-record backfill, authorize **one** of the following scope changes: an approved alternate bulk discovery dataset/end point, a defined publisher sitemap/archive list, or a documented GDELT access/limit arrangement. The existing worker will continue to enforce ten-item manifests and Document 07 exclusion regardless of the selected source.
+A sandbox-only migration, `20260819_candidate_owner_hold_review_state.sql`, adds the explicit `owner_hold` state so hard-stop records remain distinguishable from ordinary pending work and cannot be propagated inadvertently.
 
-## Credential Record and Rotation
+## Credential record and required rotation
 
-A one-purpose, locally stored ingestion RPC key was provisioned for the isolated project only. Its plaintext is stored only in the ignored local file `.mip_v2_ingestion_writer_key.local`; Supabase stores a SHA-256 hash in `ingestion_writer_credentials`. It is not a service-role key and cannot be read through the public application.
+The GDELT ingestion service account is **`mip-v2-gdelt-ingestion@mip-v2-gdelt-bigquery-sandbox.iam.gserviceaccount.com`**. Its downloaded private key is stored only in the gitignored local credential directory used by the isolated worker. **Rotate or revoke that service-account key before any operator handoff, environment sharing, repository export, or move beyond this clone/test environment.**
 
-Rotate or deactivate this key before any environment sharing, host migration, or change in operator. Rotation requires generating a new local key, replacing the isolated hash, and restarting the worker with the matching local key. No production Supabase project and no Google Cloud project was accessed or modified.
+The isolated Supabase ingestion writer uses a separate, locally stored one-purpose key. Its plaintext is retained only in the ignored local key file; Supabase stores only its hash. Rotate or deactivate it before host migration or operator change. Neither credential is a production MIP credential.
 
-## Transparent 3D Möbius Logo
+## Transparent 3D Möbius logo status
 
-No transparent 3D Möbius-strip logo was generated in this run because the connected image tooling was not a reliable free 3D modeling/export path. The recommended free workflow is **Blender** for a true transparent-background render with controllable materials and camera, followed by a PNG/WebP export with alpha. A lighter browser-based alternative is **Spline** on its free tier, subject to its current export and account limits. The design brief should preserve an alpha background, avoid a matte or colored canvas, and export a high-resolution asset plus a compressed web derivative.
+A transparent true-3D Möbius asset was not generated because the connected image tooling did not provide a dependable free modeling-and-alpha-export path. The best free production workflow is **Blender**: model or generate the strip, use a transparent film/background, then export a high-resolution PNG or WebP with alpha plus a compressed web derivative. **Spline** is the most accessible browser alternative; its free-tier export and account limits should be verified before relying on it. The final asset should retain an alpha background and avoid any matte, white, blue, or textured canvas.

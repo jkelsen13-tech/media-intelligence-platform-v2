@@ -1,5 +1,5 @@
 {
-  "version": "doc07-canary-exclusion-2026-08-19",
+  "version": "doc07-callais-exclusion-2026-08-19",
   "held_run_tags": [
     "doc07-canary-2026-08-08"
   ],
@@ -7,11 +7,6 @@
     "\\bcallais\\b",
     "louisiana v. callais"
   ],
-  "scope_hold_patterns": [
-    "louisiana + redistricting",
-    "voting rights act + redistricting",
-    "vra section 2 + redistricting"
-  ],
   "protected_urls": [],
-  "policy": "Skip direct Document 07/Callais matches; halt on canary-adjacent matches until the owner explicitly authorizes that content. Existing corpus URLs are immutable to automated backfill and are never hydrated or extracted by this pipeline."
+  "policy": "Exclude direct Document 07 / Louisiana v. Callais material before hydration, extraction, embedding, or writing. This category is independently logged as callais_canary_hold. Redistricting-adjacent material is governed exclusively by verifier/redistricting_adjacent_exclusions.json. A record that matches both categories is held as ambiguous_between_categories_hold for owner review. Existing corpus URLs are immutable to automated backfill and are never hydrated or extracted by this pipeline."
 }

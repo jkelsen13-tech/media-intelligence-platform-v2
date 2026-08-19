@@ -1,0 +1,7 @@
+# Dependencies for the isolated, provenance-first ingestion worker.
+# Install in an isolated environment with:
+#   sudo pip3 install -r verifier/requirements.txt
+beautifulsoup4
+openai
+requests
+google-cloud-bigquery

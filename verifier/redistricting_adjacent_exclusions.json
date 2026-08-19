@@ -1,0 +1,33 @@
+{
+  "version": "redistricting-adjacent-exclusion-2026-08-19",
+  "subject_patterns": [
+    "redistrict",
+    "gerrymander",
+    "district map",
+    "district maps",
+    "electoral map",
+    "electoral maps"
+  ],
+  "political_process_patterns": [
+    "electoral fairness",
+    "authoritarianism",
+    "democratic backsliding",
+    "democratic decline",
+    "voting rights",
+    "voting policy",
+    "election integrity",
+    "election administration"
+  ],
+  "figure_claim_patterns": [
+    "said",
+    "says",
+    "claimed",
+    "claims",
+    "warned",
+    "argued",
+    "told",
+    "called"
+  ],
+  "lead_character_limit": 1200,
+  "policy": "Exclude, without hydration, extraction, embedding, or writing, material whose headline or lead directly concerns redistricting, district maps, or gerrymandering, or centers a named political figure's electoral-fairness or contested political-process framing in connection with voting-related policy. General election-administration coverage and passing mentions are out of scope for this exclusion. A record that also matches Document 07 / Callais is held as ambiguous for owner review."
+}

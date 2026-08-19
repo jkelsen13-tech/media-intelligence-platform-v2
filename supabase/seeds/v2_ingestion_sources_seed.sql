@@ -49,6 +49,18 @@ values
     '{}'::jsonb
   ),
   (
+    'gdelt-bigquery-gkg-discovery',
+    'GDELT BigQuery GKG original-URL discovery',
+    'bigquery://gdelt-bq.gdeltv2.gkg_partitioned',
+    'gdelt_bigquery',
+    null,
+    'gdelt-bigquery-gkg',
+    true,
+    true,
+    'Discovery metadata only through GDELT BigQuery. The worker maps `DocumentIdentifier` to the original publisher URL, hydrates only robot-permitted publisher HTML, logs every skip or failure, and leaves cross-surface candidates pending review. GDELT metadata is not publisher evidence or an automatic graph/timeline/arc/geography update.',
+    '{"dataset":"gdelt-bq.gdeltv2","table":"gkg_partitioned","partition_field":"_PARTITIONTIME","url_field":"DocumentIdentifier","outlet_field":"SourceCommonName","timestamp_field":"DATE"}'::jsonb
+  ),
+  (
     'doj-press-release-rss',
     'U.S. Department of Justice Press Releases RSS',
     'https://www.justice.gov/news/rss?type=press_release&m=1',

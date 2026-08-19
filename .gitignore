@@ -27,7 +27,9 @@ verifier/extract_owner_documents.sh
 verifier/summarize_document_classifications.py
 verifier/document-execution-matrix.md
 
-# Local isolated-sandbox request payloads and owner-only population records.
+# Local isolated-sandbox request payloads, temporary cloud credentials, and owner-only population records.
+.env.backfill
+verifier/.gcp/
 .mip_v2_ingestion_writer_key.local
 verifier/tmp-v2-ingestion-writer-key-provision.json
 verifier/tmp-v2-*.json
@@ -49,3 +51,7 @@ verifier/tmp-v2-original-reference-import.json
 verifier/generate_v2_reference_news_seed.mjs
 verifier/original-platform-readonly-baseline-*.md
 verifier/v2-exceeds-original-corpus-validation-*.md
+
+# Local candidate-review payloads and transient connectivity diagnostics.
+verifier/tmp_*.json
+verifier/llm_connectivity_probe*.json

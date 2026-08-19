@@ -821,7 +821,7 @@ export async function loadOutletDirectory({ supabaseClient } = {}) {
 // Paged, searchable article stream across all outlets. `outlets`, `feeds`,
 // and `topicTerms` are optional working filters. Topic terms are explicitly
 // title/summary matches rather than a claim of a complete article taxonomy.
-export async function loadArticles({ q, outlet, outlets, status, feeds, topicTerms, limit = 30, offset = 0 } = {}) {
+export async function loadArticles({ q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore, limit = 30, offset = 0 } = {}) {
   if (!supabase) return { articles: [], total: 0 }
   let query = supabase
     .from('articles')
@@ -850,6 +850,8 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
     ])
     query = query.or(topicClauses.join(','))
   }
+  if (publishedAfter) query = query.gte('published_at', publishedAfter)
+  if (publishedBefore) query = query.lte('published_at', publishedBefore)
   if (status === 'arc') query = query.not('arc_id', 'is', null)
   if (status === 'unattributed') query = query.eq('unattributed', true)
   if (status === 'monoculture') query = query.eq('monoculture', true)
