@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { geoDistance, geoGraticule10, geoOrthographic, geoPath } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
 import worldAtlas from 'world-atlas/countries-110m.json'
