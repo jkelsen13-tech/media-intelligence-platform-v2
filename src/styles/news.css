@@ -863,3 +863,9 @@
     grid-template-columns: auto minmax(0, 1fr);
   }
 }
+
+@media (max-width: 767px) {
+  .news-source-metric-key span {
+    white-space: normal;
+  }
+}

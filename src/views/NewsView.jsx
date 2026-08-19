@@ -757,9 +757,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           <label className="news-source-order">
             <span>Source order</span>
             <select value={sourceOrder} onChange={(event) => setSourceOrder(event.target.value)}>
-              <option value="corpus">Volume — articles in current filter</option>
-              <option value="first">First-to-report — recorded event timestamps</option>
-              <option value="corroboration" disabled>Corroboration — unavailable without verified lineage</option>
+              <option value="corpus">Volume (current filter)</option>
+              <option value="first">First-to-report (recorded events)</option>
+              <option value="corroboration" disabled>Corroboration unavailable</option>
               <option value="name">Source name A–Z</option>
             </select>
           </label>
@@ -794,9 +794,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
             <label className="news-source-order sheet-source-order">
               <span>Order source list by</span>
               <select value={sourceOrder} onChange={(event) => setSourceOrder(event.target.value)}>
-                <option value="corpus">Volume — articles in current filter</option>
-                <option value="first">First-to-report — recorded event timestamps</option>
-                <option value="corroboration" disabled>Corroboration — unavailable without verified lineage</option>
+                <option value="corpus">Volume (current filter)</option>
+                <option value="first">First-to-report (recorded events)</option>
+                <option value="corroboration" disabled>Corroboration unavailable</option>
                 <option value="name">Source name A–Z</option>
               </select>
             </label>
