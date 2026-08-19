@@ -28,7 +28,12 @@ verifier/summarize_document_classifications.py
 verifier/document-execution-matrix.md
 
 # Local isolated-sandbox request payloads and owner-only population records.
+.mip_v2_ingestion_writer_key.local
+verifier/tmp-v2-ingestion-writer-key-provision.json
 verifier/tmp-v2-*.json
+verifier/authenticated_writer*_input.json
+verifier/ingestion_runs/
+verifier/__pycache__/
 verifier/make_mcp_seed_input.mjs
 verifier/owner-only-scaling-readiness-*.md
 verifier/v2-doj-consent-actions-population-manifest-*.md

@@ -14,13 +14,19 @@ Operational safeguards
 * Every skipped item is recorded in a per-run working notebook and JSONL ledger.
 * Existing articles are never updated by discovery. This protects legacy records,
   including the historic RAW/INERT canary even if old run metadata is absent.
-* Direct REST writes require an isolated-v2 service key. Without it, spool mode
-  creates immutable per-manifest action files for review/apply through the
-  isolated database control path; it does not silently target the browser key.
+* Direct writes require the isolated-v2 public client key plus a separately
+  provisioned local RPC run key. The database function cannot update historic
+  articles or promote graph/timeline/arc/geography rows. Without both keys,
+  spool mode creates immutable per-manifest action files and performs no writes.
 
 Environment for --write-mode direct (never commit values):
   MIP_V2_SUPABASE_URL=https://yhbwnrtlqbjtcrrlpbge.supabase.co
-  MIP_V2_SERVICE_ROLE_KEY=<isolated v2 service role key>
+  MIP_V2_SUPABASE_ANON_KEY=<isolated v2 public client key>
+  MIP_V2_INGESTION_WRITER_KEY=<locally provisioned RPC run key>
+
+The direct writer uses a narrowly scoped authenticated RPC rather than a
+service-role key. The RPC accepts only new URLs, candidate extraction rows,
+and review-pending cross-surface candidates.
 
 The sandbox's OPENAI_API_KEY and OPENAI_API_BASE are used only for structured
 extraction; no model output is executed as instructions.
@@ -74,7 +80,7 @@ FALLBACK_SOURCES: dict[str, dict[str, Any]] = {
         "source_type": "gdelt_doc_api",
         "feed": "gdelt-public-news",
         "query": "language:english",
-        "allow_body_fetch": True,
+        "allow_body_fetch": False,
     },
     "gdelt-reuters-original-url-discovery": {
         "source_key": "gdelt-reuters-original-url-discovery",
@@ -83,7 +89,7 @@ FALLBACK_SOURCES: dict[str, dict[str, Any]] = {
         "source_type": "gdelt_doc_api",
         "feed": "gdelt-reuters-discovery",
         "query": "domainis:reuters.com",
-        "allow_body_fetch": True,
+        "allow_body_fetch": False,
     },
     "gdelt-ap-original-url-discovery": {
         "source_key": "gdelt-ap-original-url-discovery",
@@ -92,7 +98,7 @@ FALLBACK_SOURCES: dict[str, dict[str, Any]] = {
         "source_type": "gdelt_doc_api",
         "feed": "gdelt-ap-discovery",
         "query": "domainis:apnews.com",
-        "allow_body_fetch": True,
+        "allow_body_fetch": False,
     },
     "doj-press-release-rss": {
         "source_key": "doj-press-release-rss",
@@ -210,13 +216,16 @@ EXTRACTION_SCHEMA = {
 }
 
 EXTRACTION_SYSTEM = """You extract source-bounded candidates from a single stored publisher record.
-Return only items whose exact evidence substring is present in the supplied text at
-the supplied half-open character span. Do not repair, paraphrase, infer, or add
-context. A substantive claim must be a specific proposition stated or attributed
-by the publisher record. A framing marker must be a literal rhetorical choice,
-not a neutrality, truth, or bias conclusion. A citation is only an explicitly
-named source, document, study, official, or prior reporting reference; do not
-turn the publisher itself into a citation. A cross-surface item is a REVIEW-PENDING
+Return only items whose exact evidence substring is present in the supplied text.
+Do not repair, paraphrase, infer, or add context. Provide the literal substring
+verbatim and keep arrays within these ceilings: at most 8 claims, 6 citations,
+4 locations, and 5 cross-surface candidates. Character offsets are independently
+verified by the pipeline and must refer to the stored publisher text only. A
+substantive claim must be a specific proposition stated or attributed by the
+publisher record. A framing marker must be a literal rhetorical choice, not a
+neutrality, truth, or bias conclusion. A citation is only an explicitly named
+source, document, study, official, or prior reporting reference; do not turn the
+publisher itself into a citation. A cross-surface item is a REVIEW-PENDING
 proposal only, never an outcome, relationship, causal statement, location
 resolution, or graph edge. Use empty arrays where the record has no supported
 items. Never identify alleged victims, person-level allegations, private personal
@@ -555,6 +564,40 @@ def valid_span(text: str, start: Any, end: Any, expected: str) -> bool:
     return clean_text(text[start:end]).casefold() == clean_text(expected).casefold()
 
 
+def locate_literal_span(text: str, expected: Any) -> tuple[int, int] | None:
+    """Return a source-text span only when a normalized literal occurs once.
+
+    Model-provided coordinates are not trusted. The extraction is accepted only
+    when its quoted evidence can be deterministically grounded in the exact stored
+    publisher text; repeated or absent phrases remain validation failures.
+    """
+    needle = clean_text(str(expected or ""))
+    if not needle:
+        return None
+    haystack = text.casefold()
+    normalized_needle = needle.casefold()
+    first = haystack.find(normalized_needle)
+    if first < 0 or haystack.find(normalized_needle, first + 1) >= 0:
+        return None
+    return first, first + len(needle)
+
+
+def normalize_literal_spans(text: str, output: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(output, dict):
+        return output
+    for key, field in (("claims", "text"), ("citations", "evidence_text"), ("locations", "mention_text"), ("cross_surface", "evidence_text")):
+        rows = output.get(key)
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            span = locate_literal_span(text, row.get(field))
+            if span is not None:
+                row["start"], row["end"] = span
+    return output
+
+
 def validate_extraction(text: str, output: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     if not isinstance(output, dict):
@@ -587,6 +630,49 @@ def validate_extraction(text: str, output: dict[str, Any]) -> list[str]:
     return errors
 
 
+def sanitize_extraction(text: str, output: dict[str, Any]) -> tuple[dict[str, Any] | None, list[str]]:
+    """Retain only individually valid, source-grounded extraction items.
+
+    A malformed or ambiguous location/citation must not erase a separately
+    grounded substantive claim. The retained output is still fully validated;
+    the warning list records every pruned item for later review.
+    """
+    if not isinstance(output, dict):
+        return None, ["response_not_object"]
+    required = ("claims", "citations", "locations", "cross_surface")
+    if any(not isinstance(output.get(key), list) for key in required):
+        return None, [f"{key}_not_array" for key in required if not isinstance(output.get(key), list)]
+    limits = {"claims": 8, "citations": 6, "locations": 4, "cross_surface": 5}
+    cleaned: dict[str, list[dict[str, Any]]] = {key: [] for key in required}
+    warnings: list[str] = []
+    for key in required:
+        for index, item in enumerate(output[key]):
+            if len(cleaned[key]) >= limits[key]:
+                warnings.append(f"{key}_{index}_dropped_over_limit")
+                continue
+            if not isinstance(item, dict):
+                warnings.append(f"{key}_{index}_not_object")
+                continue
+            evidence_field = {"claims": "text", "citations": "evidence_text", "locations": "mention_text", "cross_surface": "evidence_text"}[key]
+            if key == "claims" and item.get("kind") not in {"substantive", "framing"}:
+                warnings.append(f"claim_{index}_kind")
+                continue
+            if key == "citations" and item.get("cited_type") not in CITATION_TYPES:
+                warnings.append(f"citation_{index}_type")
+                continue
+            if key == "cross_surface" and item.get("candidate_type") not in CANDIDATE_TARGETS:
+                warnings.append(f"cross_surface_{index}_type")
+                continue
+            if not valid_span(text, item.get("start"), item.get("end"), str(item.get(evidence_field) or "")):
+                warnings.append(f"{key}_{index}_span")
+                continue
+            cleaned[key].append(item)
+    validation_errors = validate_extraction(text, cleaned)
+    if validation_errors:
+        return None, warnings + validation_errors
+    return cleaned, warnings
+
+
 def run_extraction(client: OpenAI, hydrated: HydratedArticle) -> tuple[dict[str, Any] | None, list[str]]:
     assert hydrated.body_text is not None
     body = hydrated.body_text[:MAX_EXTRACTION_CHARS]
@@ -604,13 +690,13 @@ def run_extraction(client: OpenAI, hydrated: HydratedArticle) -> tuple[dict[str,
                 {"role": "system", "content": EXTRACTION_SYSTEM},
                 {"role": "user", "content": prompt},
             ],
-            max_completion_tokens=1800,
+            max_completion_tokens=900,
+            timeout=90,
             response_format={"type": "json_schema", "json_schema": EXTRACTION_SCHEMA},
         )
         content = response.choices[0].message.content
-        output = json.loads(content or "{}")
-        errors = validate_extraction(body, output)
-        return output, errors
+        raw_output = normalize_literal_spans(body, json.loads(content or "{}"))
+        return sanitize_extraction(body, raw_output)
     except Exception as exc:  # network/model errors must become auditable failures, never implicit success
         return None, [f"model_error:{type(exc).__name__}:{str(exc)[:180]}"]
 
@@ -629,58 +715,55 @@ def input_sha(hydrated: HydratedArticle) -> str:
 
 
 class V2Database:
-    """Minimal server-only REST writer. It refuses any non-isolated project URL."""
+    """Constrained isolated-v2 RPC writer; no service-role or production fallback."""
 
     def __init__(self) -> None:
         self.base = os.environ.get("MIP_V2_SUPABASE_URL", "").rstrip("/")
-        self.key = os.environ.get("MIP_V2_SERVICE_ROLE_KEY", "")
-        if ISOLATED_PROJECT_REF not in self.base or not self.key:
+        self.anon_key = os.environ.get("MIP_V2_SUPABASE_ANON_KEY", "")
+        self.writer_key = os.environ.get("MIP_V2_INGESTION_WRITER_KEY", "")
+        if ISOLATED_PROJECT_REF not in self.base or not self.anon_key or not self.writer_key:
             raise RuntimeError(
-                "Direct writes require MIP_V2_SUPABASE_URL for yhbwnrtlqbjtcrrlpbge and MIP_V2_SERVICE_ROLE_KEY. "
-                "No public/production fallback is permitted."
+                "Direct writes require the isolated v2 URL, public client key, and locally provisioned ingestion writer key. "
+                "No service-role, browser-key, or production fallback is permitted."
             )
         self.headers = {
-            "apikey": self.key,
-            "Authorization": f"Bearer {self.key}",
+            "apikey": self.anon_key,
+            "Authorization": f"Bearer {self.anon_key}",
             "Content-Type": "application/json",
         }
 
-    def _request(self, method: str, table: str, *, params: dict[str, str] | None = None, body: Any = None, prefer: str | None = None) -> Any:
-        headers = dict(self.headers)
-        if prefer:
-            headers["Prefer"] = prefer
-        response = requests.request(method, f"{self.base}/rest/v1/{table}", headers=headers, params=params, json=body, timeout=60)
+    def _request(self, method: str, table: str, *, params: dict[str, str] | None = None) -> Any:
+        response = requests.request(method, f"{self.base}/rest/v1/{table}", headers=self.headers, params=params, timeout=60)
         response.raise_for_status()
-        if not response.content:
-            return None
-        return response.json()
+        return response.json() if response.content else None
+
+    def _rpc(self, function: str, body: dict[str, Any]) -> Any:
+        response = requests.post(f"{self.base}/rest/v1/rpc/{function}", headers=self.headers, json=body, timeout=90)
+        if not response.ok:
+            # Never include credentials; the response payload is retained only to
+            # make schema/constraint failures auditable in the run notebook.
+            raise RuntimeError(f"RPC {function} failed ({response.status_code}): {response.text[:800]}")
+        return response.json() if response.content else None
 
     def start_run(self, run_id: str, mode: str, window_start: str, window_end: str) -> None:
-        self._request(
-            "POST",
-            "ingestion_runs",
-            body={
-                "run_id": run_id,
-                "mode": mode,
-                "state": "running",
-                "source_window_start": window_start,
-                "source_window_end": window_end,
-                "algorithm_version": ALGORITHM_VERSION,
-                "model_id": EXTRACTION_MODEL,
-                "counters": {},
-                "notes": "Doc 07 canary exclusion and <=10 manifest ceiling enforced.",
-            },
-            prefer="resolution=merge-duplicates,return=minimal",
-        )
+        self._rpc("mip_v2_ingestion_begin_run", {
+            "p_run_id": run_id,
+            "p_mode": mode,
+            "p_window_start": window_start,
+            "p_window_end": window_end,
+            "p_algorithm_version": ALGORITHM_VERSION,
+            "p_model_id": EXTRACTION_MODEL,
+            "p_writer_key": self.writer_key,
+        })
 
     def finish_run(self, run_id: str, state: str, counters: dict[str, int], note: str | None = None) -> None:
-        self._request(
-            "PATCH",
-            "ingestion_runs",
-            params={"run_id": f"eq.{run_id}"},
-            body={"state": state, "completed_at": datetime.now(UTC).isoformat(), "counters": counters, "notes": note},
-            prefer="return=minimal",
-        )
+        self._rpc("mip_v2_ingestion_finish_run", {
+            "p_run_id": run_id,
+            "p_state": state,
+            "p_counters": counters,
+            "p_note": note,
+            "p_writer_key": self.writer_key,
+        })
 
     def existing_urls(self, urls: list[str]) -> set[str]:
         if not urls:
@@ -689,63 +772,18 @@ class V2Database:
         rows = self._request("GET", "articles", params={"select": "url", "url": f"in.{value}"}) or []
         return {str(row["url"]) for row in rows}
 
-    def source_ids(self) -> dict[str, str]:
-        rows = self._request("GET", "ingestion_sources", params={"select": "id,source_key", "active": "eq.true"}) or []
-        return {str(row["source_key"]): str(row["id"]) for row in rows}
-
-    def write_batch(self, run_id: str, batch_number: int, source_id: str | None, actions: list[dict[str, Any]]) -> int:
-        # Only new URLs appear in actions. Discovery never updates historic rows.
-        article_rows = [action["article"] for action in actions]
-        inserted = self._request(
-            "POST",
-            "articles",
-            params={"on_conflict": "url"},
-            body=article_rows,
-            prefer="resolution=ignore-duplicates,return=representation",
-        ) or []
-        inserted_by_url = {row["url"]: row["id"] for row in inserted}
-        for action in actions:
-            article_id = inserted_by_url.get(action["article"]["url"])
-            if not article_id:
-                continue
-            extraction = action.get("extraction_result")
-            if extraction:
-                extraction["article_id"] = article_id
-                self._request(
-                    "POST",
-                    "article_extraction_results",
-                    params={"on_conflict": "article_id,algorithm_version,input_sha256"},
-                    body=extraction,
-                    prefer="resolution=ignore-duplicates,return=minimal",
-                )
-            citations = [{**citation, "article_id": article_id} for citation in action.get("citations", [])]
-            if citations:
-                self._request(
-                    "POST",
-                    "citations",
-                    params={"on_conflict": "article_id,cited_entity,cited_type"},
-                    body=citations,
-                    prefer="resolution=ignore-duplicates,return=minimal",
-                )
-            candidates = [{**candidate, "article_id": article_id} for candidate in action.get("cross_surface_candidates", [])]
-            if candidates:
-                self._request("POST", "cross_surface_candidates", body=candidates, prefer="return=minimal")
-        if source_id:
-            self._request(
-                "POST",
-                "ingestion_checkpoints",
-                params={"on_conflict": "run_id,source_id,checkpoint_key"},
-                body={
-                    "run_id": run_id,
-                    "source_id": source_id,
-                    "checkpoint_key": f"batch-{batch_number:05d}",
-                    "cursor": {"batch": batch_number, "action_count": len(actions)},
-                    "state": "completed",
-                    "article_count": len(inserted),
-                },
-                prefer="resolution=merge-duplicates,return=minimal",
-            )
-        return len(inserted)
+    def write_batch(self, run_id: str, batch_number: int, source_key: str, actions: list[dict[str, Any]]) -> int:
+        # The database RPC independently enforces the hard <=10 ceiling, approved
+        # source, immutable existing URLs, candidate extraction state, and pending
+        # cross-surface review state.
+        result = self._rpc("mip_v2_ingestion_write_batch", {
+            "p_run_id": run_id,
+            "p_source_key": source_key,
+            "p_batch_number": batch_number,
+            "p_actions": actions,
+            "p_writer_key": self.writer_key,
+        }) or {}
+        return int(result.get("inserted", 0))
 
 
 def build_action(hydrated: HydratedArticle, output: dict[str, Any] | None, validation_errors: list[str]) -> dict[str, Any]:
@@ -758,7 +796,7 @@ def build_action(hydrated: HydratedArticle, output: dict[str, Any] | None, valid
         "summary": candidate.summary,
         "published_at": candidate.published_at,
         "body_text": hydrated.body_text,
-        "claims": normalized_claims(output) if output and not validation_errors else [],
+        "claims": normalized_claims(output) if output else [],
         "unattributed": not bool(hydrated.author_name),
         "monoculture": False,
         "is_digest": False,
@@ -777,10 +815,10 @@ def build_action(hydrated: HydratedArticle, output: dict[str, Any] | None, valid
         "model_id": EXTRACTION_MODEL,
         "input_sha256": input_sha(hydrated),
         "output": output_payload,
-        "state": "candidate" if not validation_errors else "failed",
+        "state": "candidate" if output is not None else "failed",
         "validation_errors": validation_errors,
     }
-    if validation_errors or output is None:
+    if output is None:
         return action
     for citation in output["citations"]:
         # 0 records 'no documentation-strength assessment made'; UI suppresses a
@@ -852,14 +890,14 @@ def fetch_source_batch(source: dict[str, Any], day: date) -> list[ArticleCandida
 
 def discover_until_manifest(
     source: dict[str, Any],
-    day: date,
+    discovered_candidates: Iterable[ArticleCandidate],
     seen_urls: set[str],
     config: dict[str, Any],
     journal: Journal,
     batch_number: int,
 ) -> list[ArticleCandidate]:
     manifest: list[ArticleCandidate] = []
-    for candidate in fetch_source_batch(source, day):
+    for candidate in discovered_candidates:
         if candidate.url in seen_urls:
             journal.log_exclusion(batch_number, candidate, "duplicate_discovery_url", "URL already appeared in this run")
             continue
@@ -893,7 +931,7 @@ def extract_batch(hydrated: list[HydratedArticle], journal: Journal, batch_numbe
                 result = (None, [f"worker_error:{type(exc).__name__}"])
             output[row.candidate.url] = result
             if result[1]:
-                journal.log_failure(batch_number, row.candidate, "extract_or_validate", "; ".join(result[1]))
+                journal.log_failure(batch_number, row.candidate, "extract_pruned_or_validate", "; ".join(result[1]))
     return output
 
 
@@ -918,23 +956,25 @@ def run(args: argparse.Namespace) -> int:
 
     counters: Counter[str] = Counter()
     seen_urls: set[str] = set()
-    source_ids = writer.source_ids() if writer else {}
     batch_number = 0
     day_offset = 0
     source_cursor = 0
+    discovery_cache: dict[tuple[str, str], list[ArticleCandidate]] = {}
     try:
-        while counters["manifested"] < args.target and day_offset < args.window_days:
-            source = sources[source_cursor % len(sources)]
+        while (counters["inserted"] if writer else counters["manifested"]) < args.target and day_offset < args.window_days:
+            source_index = source_cursor % len(sources)
+            source = sources[source_index]
             day = (now - timedelta(days=day_offset)).date()
-            if source_cursor % len(sources) == len(sources) - 1:
-                day_offset += 1
             source_cursor += 1
             batch_number += 1
             if args.max_manifests and batch_number > args.max_manifests:
                 journal.note(batch_number, "stopped", "configured maximum manifest count reached")
                 break
             try:
-                manifest = discover_until_manifest(source, day, seen_urls, config, journal, batch_number)
+                cache_key = (source["source_key"], day.isoformat())
+                if cache_key not in discovery_cache:
+                    discovery_cache[cache_key] = fetch_source_batch(source, day)
+                manifest = discover_until_manifest(source, discovery_cache[cache_key], seen_urls, config, journal, batch_number)
             except ScopeHold as exc:
                 counters["scope_holds"] += 1
                 journal.note(batch_number, "scope_hold", str(exc))
@@ -944,6 +984,10 @@ def run(args: argparse.Namespace) -> int:
                 return 2
             if not manifest:
                 journal.note(batch_number, "empty", f"no eligible records from {source['source_key']} for {day.isoformat()}")
+                # A multi-source cycle advances after its final source. A single
+                # dated discovery source advances only after its date is exhausted.
+                if len(sources) == 1 or source_index == len(sources) - 1:
+                    day_offset += 1
                 continue
             if len(manifest) > MAX_MANIFEST_SIZE:
                 raise AssertionError("manifest ceiling breach")
@@ -980,8 +1024,10 @@ def run(args: argparse.Namespace) -> int:
                     action = build_action(row, output, validation_errors)
                     action["article"]["ingestion_run_id"] = run_id
                     actions.append(action)
-                    if output and not validation_errors:
+                    if output is not None:
                         counters["extracted"] += 1
+                        if validation_errors:
+                            counters["extraction_pruned"] += 1
                     elif row.body_text:
                         counters["extraction_failed"] += 1
             if writer:
@@ -995,13 +1041,18 @@ def run(args: argparse.Namespace) -> int:
                         journal.log_exclusion(batch_number, match, "preexisting_article", "existing row is immutable to this backfill")
                     else:
                         new_actions.append(action)
-                inserted = writer.write_batch(run_id, batch_number, source_ids.get(source["source_key"]), new_actions)
+                inserted = writer.write_batch(run_id, batch_number, source["source_key"], new_actions)
                 counters["inserted"] += inserted
                 journal.note(batch_number, "written", f"{inserted} new articles; {len(new_actions) - inserted} duplicate race/no-op")
             else:
                 spool = write_spool(journal, batch_number, source["source_key"], actions, manifest)
                 counters["spooled"] += len(actions)
                 journal.note(batch_number, "spooled", f"{len(actions)} actions written to {spool.name}; no database rows written")
+            # A single GDELT source can contribute successive <=10 manifests from
+            # one dated response. Advance only after its final partial manifest;
+            # multi-source runs retain the one-date-per-full-source-cycle cursor.
+            if (len(sources) == 1 and len(manifest) < MAX_MANIFEST_SIZE) or (len(sources) > 1 and source_index == len(sources) - 1):
+                day_offset += 1
             # GDELT is rate limited. All public endpoint calls receive an explicit pacing interval.
             time.sleep(args.request_interval_seconds)
         state = "completed"
@@ -1023,7 +1074,7 @@ def run(args: argparse.Namespace) -> int:
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=["discover", "backfill"], default="backfill")
-    parser.add_argument("--target", type=int, default=10_000, help="Maximum new records to manifest; no padding if fewer real records are found.")
+    parser.add_argument("--target", type=int, default=10_000, help="Target new rows for direct runs or manifested rows for spool runs; no padding if fewer real records are found.")
     parser.add_argument("--window-days", type=int, default=365, help="Discover from today backwards over this many days.")
     parser.add_argument("--batch-size", type=int, default=MAX_MANIFEST_SIZE, help="Hard ceiling; values other than 10 are rejected.")
     parser.add_argument("--max-manifests", type=int, default=0, help="Optional run guard; 0 means no additional manifest cap.")
