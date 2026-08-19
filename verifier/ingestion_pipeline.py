@@ -448,7 +448,9 @@ def discover_gdelt(source: dict[str, Any], day: date) -> list[ArticleCandidate]:
         try:
             response = requests.get(source["source_url"], params=params, headers={"User-Agent": USER_AGENT}, timeout=HTTP_TIMEOUT)
             if response.status_code == 429:
-                time.sleep(min(60, 2 ** (attempt + 1)))
+                # GDELT's recorded public limit is one request every five seconds.
+                # Back off from that floor rather than issuing another early retry.
+                time.sleep(min(60, 5 * (attempt + 1)))
                 continue
             response.raise_for_status()
             payload = response.json()
@@ -1082,8 +1084,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=MAX_MANIFEST_SIZE, help="Hard ceiling; values other than 10 are rejected.")
     parser.add_argument("--max-manifests", type=int, default=0, help="Optional run guard; 0 means no additional manifest cap.")
     parser.add_argument("--source", action="append", choices=sorted(FALLBACK_SOURCES), help="Restrict to one approved source key; may repeat.")
-    parser.add_argument("--write-mode", choices=["spool", "direct"], default="spool", help="Spool is write-free; direct requires isolated-v2 service credentials.")
-    parser.add_argument("--request-interval-seconds", type=float, default=2.0, help="Minimum public-endpoint pacing interval.")
+    parser.add_argument("--write-mode", choices=["spool", "direct"], default="spool", help="Spool is write-free; direct requires the isolated RPC public-key/run-key pair.")
+    parser.add_argument("--request-interval-seconds", type=float, default=5.0, help="Minimum public-endpoint pacing interval; GDELT requires at least five seconds.")
     parser.add_argument("--run-id", help="Optional idempotent run label; must not be a held Doc 07 tag.")
     args = parser.parse_args(argv)
     if args.run_id and args.run_id in set(load_canary_config().get("held_run_tags", [])):
