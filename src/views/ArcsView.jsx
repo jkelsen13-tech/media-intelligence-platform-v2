@@ -63,6 +63,25 @@ function categoryStyle(category) {
   return color ? { color } : undefined
 }
 
+function lifecycleStage(category) {
+  const stages = {
+    legislative: 'Legislation / rule',
+    accountability: 'Review / enforcement',
+    economic: 'Policy effect',
+    geopolitical: 'External context',
+  }
+  return stages[category] ?? 'Recorded development'
+}
+
+function evidenceStateLabel(confidence) {
+  const labels = {
+    confirmed: 'Confirmed record',
+    corroborated: 'Corroborated record',
+    inferred: 'Inferred record',
+  }
+  return labels[confidence] ?? 'Evidence state not recorded'
+}
+
 export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
   const [arcs, setArcs] = useState(null)
   const [error, setError] = useState(null)
@@ -296,6 +315,37 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
               <section className="ap-section">
                 <span className="ep-section-label">Policy lifecycle</span>
                 <LifecycleStrip />
+              </section>
+
+              <section className="ap-section">
+                <span className="ep-section-label">Policy lifecycle record</span>
+                {detail.events.length === 0 ? (
+                  <p className="arc-empty">No consequence events recorded yet.</p>
+                ) : (
+                  <div className="arc-lifecycle-table-wrap">
+                    <table className="arc-lifecycle-table">
+                      <caption>Orientation table of recorded lifecycle developments; attached articles remain in the Evidence tab.</caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">Lifecycle stage</th>
+                          <th scope="col">Recorded date</th>
+                          <th scope="col">Development</th>
+                          <th scope="col">Evidence state</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detail.events.map((event) => (
+                          <tr key={`lifecycle-${event.id}`}>
+                            <td><span className="arc-lifecycle-stage"><TypeIcon type={event.category} />{lifecycleStage(event.category)}</span></td>
+                            <td>{event.occurred_at ?? 'Undated'}</td>
+                            <td>{event.title}</td>
+                            <td><span className={`arc-lifecycle-evidence arc-lifecycle-evidence-${event.confidence ?? 'unknown'}`}>{evidenceStateLabel(event.confidence)}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </section>
 
               <section className="ap-section">

@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT 'outlets_columns' AS section, json_agg(column_name ORDER BY ordinal_position) AS detail FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'outlets' UNION ALL SELECT 'articles_columns' AS section, json_agg(column_name ORDER BY ordinal_position) AS detail FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'articles' UNION ALL SELECT 'february_2026_articles' AS section, json_agg(json_build_object('outlet', outlet, 'count', article_count) ORDER BY article_count DESC, outlet ASC) AS detail FROM (SELECT outlet, count(*)::int AS article_count FROM public.articles WHERE published_at >= TIMESTAMPTZ '2026-02-01 00:00:00+00' AND published_at < TIMESTAMPTZ '2026-03-01 00:00:00+00' GROUP BY outlet ORDER BY article_count DESC, outlet ASC LIMIT 100) feb LIMIT 3;"
+}

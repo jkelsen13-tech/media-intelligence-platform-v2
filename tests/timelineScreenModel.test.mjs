@@ -15,7 +15,9 @@ import {
   ALL_EVENTS_SCOPE,
   defaultArcSlug,
   normalizeArcEvent,
+  normalizeArticleTimelineRecord,
   normalizeNodeEvent,
+  sortTimelineEntries,
   deriveDateOptions,
   deriveTypeOptions,
   entryMatchesFilters,
@@ -100,8 +102,37 @@ test('normalizeNodeEvent maps canonical nodes; numeric confidence is not a badge
   assert.equal(typePillLabel(e.type), 'Event') // humanized, not leaked raw
   assert.equal(e.badgeState, null)
   assert.equal(e.articleId, 'art-1')
+  assert.equal(e.kind, 'graph_event')
   assert.equal(confidenceToBadgeState(87), null)
   assert.equal(confidenceToBadgeState(undefined), null)
+})
+
+test('an arc-assigned News article becomes an explicit reporting record, not an event', () => {
+  const entry = normalizeArticleTimelineRecord({
+    id: 'article-1',
+    title: 'Source reporting',
+    summary: 'Recorded coverage summary.',
+    outlet: 'Example News',
+    published_at: '2026-08-19T15:00:00Z',
+    arc_id: 'arc-1',
+  })
+  assert.equal(entry.key, 'article-article-1')
+  assert.equal(entry.date, '2026-08-19')
+  assert.equal(entry.type, 'news')
+  assert.equal(entry.kind, 'article_record')
+  assert.equal(entry.articleId, 'article-1')
+  assert.equal(entry.arcId, 'arc-1')
+  assert.equal(entry.badgeState, null)
+  assert.equal(normalizeArticleTimelineRecord(null), null)
+})
+
+test('timeline sorting keeps an event before a same-day reporting record', () => {
+  const sorted = sortTimelineEntries([
+    { key: 'article-a', date: '2026-08-19', kind: 'article_record', title: 'Article' },
+    { key: 'event-a', date: '2026-08-19', kind: 'graph_event', title: 'Event' },
+    { key: 'event-old', date: '2026-08-18', kind: 'graph_event', title: 'Earlier' },
+  ])
+  assert.deepEqual(sorted.map((entry) => entry.key), ['event-old', 'event-a', 'article-a'])
 })
 
 // --- A4.4: filter pills -------------------------------------------------------------
@@ -151,7 +182,7 @@ test('footerCounts: arc scope reads attached rows; global scope derives from ent
     articles: 0,
     connections: 0,
   })
-  const entries = [{ articleId: 'a' }, { articleId: null }, { articleId: 'b' }]
+  const entries = [{ articleId: 'a' }, { articleId: null }, { articleId: 'b' }, { articleId: 'a' }]
   assert.deepEqual(
     footerCounts({ scope: ALL_EVENTS_SCOPE, entries, connections: [{}, {}, {}] }),
     { articles: 2, connections: 3 },
@@ -182,6 +213,18 @@ test('remapTimelineEdges passes doc_strength through to canonical keys', () => {
   )
   assert.equal(out[0].source, 'evt-x')
   assert.equal(out[0].doc_strength, 'documented')
+})
+
+test('flat and grouped timeline loaders retain arc-assigned News records as explicit reporting entries', () => {
+  const supa = src('src/lib/supabase.js')
+  const grouped = src('src/lib/arcGroupedTimeline.js')
+  assert.match(supa, /articleRecords: articlesRes\.data\.filter\(\(article\) => article\.arc_id\)/)
+  assert.match(supa, /return `article-\$\{article\.id\}`/)
+  assert.match(supa, /export async function loadArcArticles\(arcId\)/)
+  assert.match(supa, /'id, title, summary, outlet, published_at, url, arc_id'/)
+  assert.ok(!/loadArcArticles[\s\S]{0,700}\.limit\(50\)/.test(supa), 'arc article loader must not retain a 50-row cap')
+  assert.match(grouped, /record_kind: 'article_record'/)
+  assert.match(grouped, /newsRecords/)
 })
 
 test('both timeline loaders select doc_strength (read-path only)', () => {

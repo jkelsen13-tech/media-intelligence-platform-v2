@@ -34,7 +34,13 @@ test('semantic region controls expose only real regions and preserve ungrouped e
 })
 
 test('Geography and Time models preserve explicit missing fields rather than infer them', () => {
-  assert.deepEqual(recordedGeography(nodes), [{ key: 'event', label: 'Incident', location: 'Recorded place' }])
+  const geography = recordedGeography(nodes)
+  assert.equal(geography.length, 1)
+  assert.equal(geography[0].key, 'event')
+  assert.equal(geography[0].place, 'Recorded place')
+  assert.equal(geography[0].reviewState, 'recorded_legacy')
+  assert.equal(geography[0].latitude, null)
+  assert.equal(geography[0].longitude, null)
   const time = recordedTime(nodes)
   assert.deepEqual(time.map((row) => row.key), ['event', 'policy', 'institution', 'person'])
   assert.equal(time.at(-1).occurredAt, null)
@@ -47,6 +53,6 @@ test('focused Graph workspace exposes the documented modes and a real Expand con
   assert.match(app, /\n\s*Expand\s*\n\s*<\/button>/)
   assert.match(app, /Focused view · \$\{displayNodes\.length\} of/)
   assert.match(app, /focusDepth\(isMobile\) \+ focusExpansion/)
-  assert.match(modePanel, /Locations are not inferred from labels or source context\./)
+  assert.match(modePanel, /Locations are not inferred from headlines, labels, outlet context, or automated candidates\./)
   assert.match(modePanel, /No recorded date/)
 })

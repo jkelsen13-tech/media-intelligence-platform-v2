@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT DISTINCT provenance_class FROM public.explanations ORDER BY provenance_class LIMIT 100;"
+}

@@ -16,6 +16,24 @@ function text(value) {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
+function numberOrNull(value) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function isConfirmedLocation(row) {
+  return (
+    row?.reviewState === 'confirmed' &&
+    row?.literalStatus === 'literal' &&
+    (row?.resolutionMethod === 'source_record' || row?.resolutionMethod === 'human_verified') &&
+    row?.place
+  )
+}
+
+function hasCoordinates(row) {
+  return numberOrNull(row?.latitude) !== null && numberOrNull(row?.longitude) !== null
+}
+
 // Semantic graph regions are data-derived from node type/entity type. The
 // "ungrouped" option is explicit so institutions and other entities are never
 // silently forced into a mockup region.
@@ -50,17 +68,86 @@ export function filterGraphRegion(nodes, edges, region = 'all') {
   }
 }
 
-// Geography is intentionally a record list rather than a drawn map: MIP’s
-// graph read path provides optional location labels, not verified coordinates.
-// Only a named, nonempty field is shown; an absent field is an honest absence.
-export function recordedGeography(nodes) {
-  const rows = []
-  for (const node of nodes ?? []) {
-    const metadata = node?.metadata && typeof node.metadata === 'object' ? node.metadata : {}
-    const location = LOCATION_KEYS.map((key) => text(metadata[key])).find(Boolean) ?? null
-    if (location) rows.push({ key: nodeKey(node), label: node.label ?? nodeKey(node), location })
+// Geography starts with source-span records produced by the explicit
+// geographic-provenance model. A map dot can appear only for a literal,
+// confirmed record resolved from the source itself or by a human verifier.
+// Legacy text metadata remains a list-only disclosure and never gains a map
+// coordinate in the browser.
+export function recordedGeography(nodes, locationMentions = null) {
+  const nodeByKey = new Map((nodes ?? []).map((node) => [nodeKey(node), node]))
+  const scopedRows = []
+
+  if (Array.isArray(locationMentions) && locationMentions.length > 0) {
+    for (const mention of locationMentions) {
+      const node = nodeByKey.get(mention?.node_id)
+      if (!node) continue
+      const place = text(mention?.place?.canonical_name)
+      if (!place) continue
+      scopedRows.push({
+        id: mention.id ?? `${mention.node_id}-${mention.place_id ?? place}`,
+        key: nodeKey(node),
+        label: node.label ?? nodeKey(node),
+        place,
+        mentionText: text(mention.mention_text),
+        textField: text(mention.text_field),
+        locationRole: text(mention.location_role),
+        literalStatus: text(mention.literal_status),
+        resolutionMethod: text(mention.resolution_method),
+        reviewState: text(mention.review_state),
+        remainingUncertainty: text(mention.remaining_uncertainty),
+        precision: text(mention?.place?.precision),
+        latitude: numberOrNull(mention?.place?.latitude),
+        longitude: numberOrNull(mention?.place?.longitude),
+        source: 'provenance record',
+      })
+    }
+  } else {
+    for (const node of nodes ?? []) {
+      const metadata = node?.metadata && typeof node.metadata === 'object' ? node.metadata : {}
+      const place = LOCATION_KEYS.map((key) => text(metadata[key])).find(Boolean) ?? null
+      if (!place) continue
+      scopedRows.push({
+        id: `legacy-${nodeKey(node)}`,
+        key: nodeKey(node),
+        label: node.label ?? nodeKey(node),
+        place,
+        mentionText: null,
+        textField: null,
+        locationRole: null,
+        literalStatus: null,
+        resolutionMethod: null,
+        reviewState: 'recorded_legacy',
+        remainingUncertainty: 'Recorded metadata has no source-span provenance or map coordinate in this view.',
+        precision: null,
+        latitude: null,
+        longitude: null,
+        source: 'legacy metadata',
+      })
+    }
   }
-  return rows.sort((a, b) => a.location.localeCompare(b.location) || a.label.localeCompare(b.label))
+
+  return scopedRows.sort((a, b) => a.place.localeCompare(b.place) || a.label.localeCompare(b.label))
+}
+
+export function summarizeGeography(nodes, rows) {
+  const geographicRows = rows ?? []
+  const locatedNodeKeys = new Set(geographicRows.map((row) => row.key).filter(Boolean))
+  const confirmed = geographicRows.filter(isConfirmedLocation)
+  const candidates = geographicRows.filter(
+    (row) => row.reviewState === 'review_pending' || row.resolutionMethod === 'automated_candidate',
+  )
+  return {
+    confirmed,
+    confirmedMappable: confirmed.filter(hasCoordinates),
+    automatedCandidates: candidates,
+    ambiguous: geographicRows.filter((row) => row.reviewState === 'ambiguous'),
+    legacy: geographicRows.filter((row) => row.reviewState === 'recorded_legacy'),
+    unlocatedNodeCount: (nodes ?? []).filter((node) => !locatedNodeKeys.has(nodeKey(node))).length,
+  }
+}
+
+export function isMappableConfirmedLocation(row) {
+  return isConfirmedLocation(row) && hasCoordinates(row)
 }
 
 // Time order preserves undated nodes as explicit unknowns rather than placing

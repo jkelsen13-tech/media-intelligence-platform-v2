@@ -185,7 +185,7 @@ test('structure: frontend loaders use keyset pagination on every Doc 13 table', 
   assert.match(src, /keysetAll\(client, 'arc_events', 'id, arc_id, occurred_at'\)/)
   assert.match(src, /keysetAll\(client, 'arc_milestones', 'id, arc_id, status'\)/)
   // Site 3: timeline reads (event nodes, edges, labels, articles, story_arcs).
-  assert.match(src, /keysetAll\(client, 'articles', 'id'\)/)
+  assert.match(src, /keysetAll\(client, 'articles', 'id, title, summary, published_at, outlet, arc_id'\)/)
   assert.match(src, /keysetAll\(client, 'story_arcs', 'id, title'\)/)
   // Site 5: outlets read.
   assert.match(src, /keysetAll\(client, 'articles', 'id, outlet'/)

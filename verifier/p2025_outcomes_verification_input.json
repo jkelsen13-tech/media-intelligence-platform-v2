@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT track, state, missing_evidence, count(*)::int AS row_count FROM public.p3_policy_track_event WHERE method_version = 'p2025-track1-stageE-v1' GROUP BY track, state, missing_evidence ORDER BY state LIMIT 100;"
+}

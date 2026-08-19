@@ -1,0 +1,43 @@
+{
+  "source": "/home/ubuntu/upload/IMG_2994.PNG",
+  "pixel_width": 1179,
+  "pixel_height": 2556,
+  "aspect_ratio": "131:284",
+  "aspect_ratio_decimal_width_over_height": 0.461268,
+  "orientation": "portrait",
+  "tiled": true,
+  "mode": "vertical",
+  "overlap_fraction_requested_target": 0.12,
+  "overlap_fraction_actual_minimum": {
+    "horizontal": 0.0,
+    "vertical": 0.054299
+  },
+  "reading_order": "top-to-bottom",
+  "tile_count": 3,
+  "tiles": [
+    {
+      "index": 1,
+      "path": "/home/ubuntu/media-intelligence-platform-v2/verifier/current-gap-reference-tiles/2994/tile_001_x000000_y000000.png",
+      "x": 0,
+      "y": 0,
+      "pixel_width": 1179,
+      "pixel_height": 884
+    },
+    {
+      "index": 2,
+      "path": "/home/ubuntu/media-intelligence-platform-v2/verifier/current-gap-reference-tiles/2994/tile_002_x000000_y000836.png",
+      "x": 0,
+      "y": 836,
+      "pixel_width": 1179,
+      "pixel_height": 884
+    },
+    {
+      "index": 3,
+      "path": "/home/ubuntu/media-intelligence-platform-v2/verifier/current-gap-reference-tiles/2994/tile_003_x000000_y001672.png",
+      "x": 0,
+      "y": 1672,
+      "pixel_width": 1179,
+      "pixel_height": 884
+    }
+  ]
+}

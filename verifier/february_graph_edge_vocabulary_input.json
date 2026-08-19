@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT type, count(*)::int AS count FROM public.edges GROUP BY type ORDER BY type LIMIT 100;"
+}

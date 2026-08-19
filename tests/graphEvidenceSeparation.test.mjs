@@ -14,7 +14,8 @@ test('node inspector labels node-attached articles and node-level source records
 
 test('relationship evidence is opened only from an explicit selected-edge action', () => {
   assert.match(articlePanel, /aria-label=\{`Evidence for connection to \$\{c\.label\}`\}/)
-  assert.match(articlePanel, /onClick=\{\(\) => onShowEdgeEvidence\(c\.edge\)\}/)
+  assert.match(articlePanel, /setSelectedConnectionId\(c\.edgeId\)/)
+  assert.match(articlePanel, /onShowEdgeEvidence\(c\.edge\)/)
   assert.match(relationshipPanel, /<h2>Relationship<\/h2>/)
   assert.match(relationshipPanel, /loadEdgeSources\(explanation\.source_ids\)/)
   assert.doesNotMatch(articlePanel, /loadEdgeSources/)

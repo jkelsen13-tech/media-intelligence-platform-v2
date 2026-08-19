@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "WITH article_counts AS (SELECT arc_id, count(*)::int AS article_count FROM articles WHERE arc_id IS NOT NULL GROUP BY arc_id), event_counts AS (SELECT arc_id, count(*)::int AS event_count FROM arc_events GROUP BY arc_id) SELECT sa.id, sa.slug, sa.title, coalesce(ac.article_count, 0) AS assigned_news_articles, coalesce(ec.event_count, 0) AS recorded_arc_events FROM story_arcs sa LEFT JOIN article_counts ac ON ac.arc_id = sa.id LEFT JOIN event_counts ec ON ec.arc_id = sa.id ORDER BY assigned_news_articles DESC, sa.title ASC LIMIT 100;"
+}

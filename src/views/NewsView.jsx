@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   loadArticles,
-  loadOutlets,
+  loadOutletDirectory,
   loadArticleDetail,
   loadArticleGraphLinks,
   loadSkyVerification,
@@ -22,6 +22,7 @@ import {
 import EpistemicBanner from '../components/EpistemicBanner'
 import SourceAttributionLine from '../components/SourceAttributionLine'
 import SkyBadge from '../panels/SkyBadge'
+import { OUTLET_RELIABILITY, R_LEVEL_NAMES } from '../lib/sourceComparisonReadPath.js'
 
 // News Feed (Track B Step 4, addendum Screen 1): title block with the
 // browser-local last-visit count, epistemic banner, wired outlet/status
@@ -41,13 +42,37 @@ const STATUS_FILTERS = [
   { key: 'monoculture', label: 'Monoculture flagged' },
 ]
 
-// Addendum Screen 1 filter row — UI-only per 04_NOTE; rendered disabled with
-// an honest tooltip (owner ruling #2).
-const INERT_PILLS = [
-  { key: 'region', label: 'Region' },
-  { key: 'evidence', label: 'Evidence' },
-  { key: 'topic', label: 'Topic' },
+// Reference-style filters. Every option maps to currently available metadata.
+// Topic options are documented title/summary term matches, not an assertion of
+// a complete article taxonomy. Source-tier ordering only uses the locked tier
+// record where it exists; no popularity or composite reliability score is made.
+const PRIMARY_RECORD_FEEDS = [
+  'doj-primary-records',
+  'p2025-primary-records',
+  'curated-public-records',
+  'epstein-process-only',
 ]
+
+const EVIDENCE_FILTERS = [
+  { key: 'all', label: 'All evidence bases' },
+  { key: 'primary', label: 'Primary records linked' },
+  { key: 'arc', label: 'Linked to story arc' },
+]
+
+const TOPIC_FILTERS = [
+  { key: 'all', label: 'All topics', terms: [] },
+  { key: 'courts', label: 'Courts & law', terms: ['court', 'justice', 'legal', 'ruling'] },
+  { key: 'immigration', label: 'Immigration', terms: ['immigration', 'migrant', 'detention', 'asylum'] },
+  { key: 'climate', label: 'Climate & energy', terms: ['climate', 'environment', 'epa', 'energy'] },
+  { key: 'economy', label: 'Economy & trade', terms: ['tariff', 'economic', 'tax', 'trade'] },
+  { key: 'health', label: 'Public health', terms: ['health', 'vaccine', 'medical'] },
+  { key: 'foreign', label: 'Foreign policy', terms: ['foreign policy', 'china', 'international', 'diplomatic'] },
+]
+
+function reliabilityOrder(outlet) {
+  const tier = OUTLET_RELIABILITY[outlet]
+  return tier ? Number(tier.slice(1)) : Number.POSITIVE_INFINITY
+}
 
 function fmtDate(iso) {
   if (!iso) return 'undated'
@@ -61,7 +86,13 @@ function fmtDate(iso) {
   })
 }
 
-function strengthBadge(strength) {
+function strengthBadge(strength, citedType, citedEntity) {
+  // A direct source-mapped Graph attachment is a routing/provenance link, not
+  // a composite evidence or reliability score. Its required database value is
+  // therefore rendered as a descriptive label rather than a percentage.
+  if (String(citedEntity ?? '').startsWith('Source-mapped event:')) {
+    return <span className="news-cit-strength">source-mapped</span>
+  }
   if (strength == null) return null
   const pct = Math.round(strength * 100)
   const color =
@@ -84,6 +115,10 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const [debouncedQ, setDebouncedQ] = useState('')
   const [outlet, setOutlet] = useState(null)
   const [status, setStatus] = useState('all')
+  const [region, setRegion] = useState('all')
+  const [evidenceBasis, setEvidenceBasis] = useState('all')
+  const [topic, setTopic] = useState('all')
+  const [sourceOrder, setSourceOrder] = useState('corpus')
   const [outlets, setOutlets] = useState([])
   const [articles, setArticles] = useState([])
   const [total, setTotal] = useState(0)
@@ -120,7 +155,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const loadingMoreRef = useRef(false)
 
   useEffect(() => {
-    loadOutlets().then(setOutlets).catch(() => {})
+    loadOutletDirectory().then(setOutlets).catch(() => {})
   }, [])
 
   // Step 4 mount loads: corpus meta, the last-visit count, and the three
@@ -144,11 +179,44 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     return () => clearTimeout(debounceRef.current)
   }, [q])
 
+  const selectedRegionOutlets = useMemo(() => {
+    if (region === 'all') return undefined
+    return outlets.filter((item) => item.country === region).map((item) => item.name)
+  }, [outlets, region])
+
+  const selectedTopicTerms = useMemo(
+    () => TOPIC_FILTERS.find((item) => item.key === topic)?.terms ?? [],
+    [topic],
+  )
+
+  const orderedOutlets = useMemo(() => {
+    const rows = [...outlets]
+    if (sourceOrder === 'tier') {
+      return rows.sort((a, b) => reliabilityOrder(a.name) - reliabilityOrder(b.name) || a.name.localeCompare(b.name))
+    }
+    if (sourceOrder === 'name') return rows.sort((a, b) => a.name.localeCompare(b.name))
+    return rows.sort((a, b) => b.articleCount - a.articleCount || a.name.localeCompare(b.name))
+  }, [outlets, sourceOrder])
+
+  const availableRegions = useMemo(
+    () => [...new Set(outlets.map((item) => item.country).filter(Boolean))].sort(),
+    [outlets],
+  )
+
   useEffect(() => {
     const seq = ++requestRef.current
     setLoading(true)
     setError(null)
-    loadArticles({ q: debouncedQ, outlet, status, limit: PAGE_SIZE, offset: 0 })
+    loadArticles({
+      q: debouncedQ,
+      outlet,
+      outlets: selectedRegionOutlets,
+      status: evidenceBasis === 'arc' ? 'arc' : status,
+      feeds: evidenceBasis === 'primary' ? PRIMARY_RECORD_FEEDS : undefined,
+      topicTerms: selectedTopicTerms,
+      limit: PAGE_SIZE,
+      offset: 0,
+    })
       .then(({ articles, total }) => {
         if (seq !== requestRef.current) return // stale response — drop
         setArticles(articles)
@@ -162,7 +230,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         if (seq !== requestRef.current) return
         setLoading(false)
       })
-  }, [debouncedQ, outlet, status])
+  }, [debouncedQ, outlet, status, evidenceBasis, selectedRegionOutlets, selectedTopicTerms])
 
   const expandArticle = (id) => {
     setExpanded(id)
@@ -202,6 +270,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     setQ('')
     setOutlet(null)
     setStatus('all')
+    setRegion('all')
+    setEvidenceBasis('all')
+    setTopic('all')
     expandArticle(focusArticleId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusArticleId])
@@ -215,7 +286,16 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     if (loadingMoreRef.current) return
     loadingMoreRef.current = true
     const seq = requestRef.current
-    loadArticles({ q: debouncedQ, outlet, status, limit: PAGE_SIZE, offset: articles.length })
+    loadArticles({
+      q: debouncedQ,
+      outlet,
+      outlets: selectedRegionOutlets,
+      status: evidenceBasis === 'arc' ? 'arc' : status,
+      feeds: evidenceBasis === 'primary' ? PRIMARY_RECORD_FEEDS : undefined,
+      topicTerms: selectedTopicTerms,
+      limit: PAGE_SIZE,
+      offset: articles.length,
+    })
       .then(({ articles: more }) => {
         if (seq !== requestRef.current) return
         setArticles((prev) => [...prev, ...more])
@@ -304,64 +384,62 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     return <div className="news-prov">{PROVENANCE_LABELS[basis]}</div>
   }
 
-  // Per-card cross-nav chips (addendum: shown ONLY when the link exists).
+  // Per-card cross-navigation is a true button group, rendered only where the
+  // underlying live destination is present. The card body is a separate button
+  // so controls never become invalid nested interactive elements.
   const cardChips = (a) => {
     const cit = citationMap.get(a.id)
     const hasArc = Boolean(a.arc_id)
     const hasGraph = Boolean(cit?.hasGraphLink && cit.firstNodeId)
     if (!hasArc && !hasGraph) return null
     return (
-      <div className="news-card-chips">
+      <div className="news-card-chips" aria-label="Open linked views">
         {hasArc && (
-          <span
-            className="news-badge arc clickable"
-            role="link"
+          <button
+            type="button"
+            className="news-action-button"
             title={`Open story arc “${a.arc_title ?? ''}”`}
-            onClick={(e) => {
-              e.stopPropagation()
-              onOpenArc?.(a.arc_id)
-            }}
+            onClick={() => onOpenArc?.(a.arc_id)}
           >
-            Arc{a.arc_title ? `: ${a.arc_title}` : ''} →
-          </span>
+            ◈ Open arc
+          </button>
         )}
         {hasGraph && (
-          <span
-            className="news-badge graph clickable"
-            role="link"
+          <button
+            type="button"
+            className="news-action-button secondary"
             title="Open the cited node in the knowledge graph"
-            onClick={(e) => {
-              e.stopPropagation()
-              onOpenNode?.(cit.firstNodeId)
-            }}
+            onClick={() => onOpenNode?.(cit.firstNodeId)}
           >
-            ◈ Graph →
-          </span>
+            ⌘ Open graph
+          </button>
         )}
       </div>
     )
   }
 
   const articleCard = (a, { inGroup = false } = {}) => (
-    <button
-      className={`news-card${inGroup ? ' in-group' : ''}`}
-      onClick={() => toggleExpand(a.id)}
-    >
-      <div className="news-card-top">
-        {/* Addendum: date leads in blue; outlet + region carry the
-            attribution line. */}
-        <span className="news-date accent">{fmtDate(a.published_at)}</span>
-      </div>
-      <h3>{a.title}</h3>
-      <SourceAttributionLine
-        outlet={a.outlet}
-        region={outletRegions.get(a.outlet) ?? null}
-        badge={null}
-      />
-      {a.summary && <p className="news-summary">{a.summary}</p>}
+    <article className={`news-card${inGroup ? ' in-group' : ''}`}>
+      <button
+        type="button"
+        className="news-card-trigger"
+        onClick={() => toggleExpand(a.id)}
+        aria-expanded={expanded === a.id}
+      >
+        <div className="news-card-top">
+          <span className="news-date accent">{fmtDate(a.published_at)}</span>
+        </div>
+        <h3>{a.title}</h3>
+        <SourceAttributionLine
+          outlet={a.outlet}
+          region={outletRegions.get(a.outlet) ?? null}
+          badge={null}
+        />
+        {a.summary && <p className="news-summary">{a.summary}</p>}
+      </button>
       {cardChips(a)}
       {provenanceLine(a)}
-    </button>
+    </article>
   )
 
   const expandedDetail = (
@@ -441,9 +519,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           <ul className="news-citations">
             {detail.citations.map((c, i) => (
               <li key={i}>
-                <span className="news-cit-entity">{c.cited_entity}</span>
-                <span className="news-cit-type">{c.cited_type}</span>
-                {strengthBadge(c.documentation_strength)}
+                <span className="news-cit-entity">{String(c.cited_entity ?? '').replace(/^Source-mapped event: /, '')}</span>
+                <span className="news-cit-type">{String(c.cited_entity ?? '').startsWith('Source-mapped event:') ? 'source mapping' : c.cited_type}</span>
+                {strengthBadge(c.documentation_strength, c.cited_type, c.cited_entity)}
               </li>
             ))}
           </ul>
@@ -465,13 +543,14 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       >
         All outlets
       </button>
-      {outlets.map((o) => (
+      {orderedOutlets.map((item) => (
         <button
-          key={o}
-          className={`news-chip${outlet === o ? ' active' : ''}`}
-          onClick={() => setOutlet(o)}
+          key={item.name}
+          className={`news-chip${outlet === item.name ? ' active' : ''}`}
+          onClick={() => setOutlet(item.name)}
+          title={`${item.articleCount} articles currently represented${item.country ? ` · ${item.country}` : ''}${item.parentOwnership ? ` · ownership: ${item.parentOwnership}` : ''}`}
         >
-          {o}
+          {item.name}
         </button>
       ))}
     </div>
@@ -487,6 +566,30 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           {f.label}
         </button>
       ))}
+    </div>
+  )
+
+  const referenceFilters = (suffix = '') => (
+    <div className={`news-reference-filter-row${suffix}`} aria-label="Article filters">
+      <label className="news-filter-select">
+        <span>◎ Region</span>
+        <select value={region} onChange={(event) => setRegion(event.target.value)}>
+          <option value="all">All regions</option>
+          {availableRegions.map((name) => <option key={name} value={name}>{name}</option>)}
+        </select>
+      </label>
+      <label className="news-filter-select">
+        <span>◈ Evidence</span>
+        <select value={evidenceBasis} onChange={(event) => setEvidenceBasis(event.target.value)}>
+          {EVIDENCE_FILTERS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+        </select>
+      </label>
+      <label className="news-filter-select">
+        <span>◇ Topic</span>
+        <select value={topic} onChange={(event) => setTopic(event.target.value)}>
+          {TOPIC_FILTERS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+        </select>
+      </label>
     </div>
   )
 
@@ -525,26 +628,13 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
             Filters
           </button>
         </div>
-        {(outlet !== null || status !== 'all') && (
+        {(outlet !== null || status !== 'all' || region !== 'all' || evidenceBasis !== 'all' || topic !== 'all') && (
           <div className="news-filter-row news-active-filters">
-            {outlet !== null && (
-              <button
-                className="news-chip active"
-                title="Clear outlet filter"
-                onClick={() => setOutlet(null)}
-              >
-                {outlet} ×
-              </button>
-            )}
-            {status !== 'all' && (
-              <button
-                className="news-chip active"
-                title="Clear status filter"
-                onClick={() => setStatus('all')}
-              >
-                {STATUS_FILTERS.find((f) => f.key === status)?.label} ×
-              </button>
-            )}
+            {outlet !== null && <button className="news-chip active" title="Clear outlet filter" onClick={() => setOutlet(null)}>{outlet} ×</button>}
+            {status !== 'all' && <button className="news-chip active" title="Clear status filter" onClick={() => setStatus('all')}>{STATUS_FILTERS.find((f) => f.key === status)?.label} ×</button>}
+            {region !== 'all' && <button className="news-chip active" title="Clear region filter" onClick={() => setRegion('all')}>{region} ×</button>}
+            {evidenceBasis !== 'all' && <button className="news-chip active" title="Clear evidence filter" onClick={() => setEvidenceBasis('all')}>{EVIDENCE_FILTERS.find((item) => item.key === evidenceBasis)?.label} ×</button>}
+            {topic !== 'all' && <button className="news-chip active" title="Clear topic filter" onClick={() => setTopic('all')}>{TOPIC_FILTERS.find((item) => item.key === topic)?.label} ×</button>}
           </div>
         )}
         <input
@@ -554,19 +644,17 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        {/* Spec filter row — visibly inert (owner ruling #2): disabled, with
-            a tooltip stating these do not filter yet. */}
-        <div className="news-filter-row news-inert-row" aria-label="Planned filters (not yet active)">
-          {INERT_PILLS.map((p) => (
-            <button
-              key={p.key}
-              className="news-chip inert"
-              disabled
-              title={`${p.label} filtering is planned but not yet wired — shown for orientation only.`}
-            >
-              {p.label}
-            </button>
-          ))}
+        {referenceFilters()}
+        <div className="news-source-order-row">
+          <label className="news-source-order">
+            <span>Source order</span>
+            <select value={sourceOrder} onChange={(event) => setSourceOrder(event.target.value)}>
+              <option value="corpus">Corpus representation</option>
+              <option value="tier">Recorded source tier</option>
+              <option value="name">Source name A–Z</option>
+            </select>
+          </label>
+          <p>Corpus representation is not audience popularity. Source tiers appear only where already recorded; no composite reliability score is calculated.</p>
         </div>
         <div className="news-desktop-filters">
           {outletRow}
@@ -592,6 +680,16 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
                 ×
               </button>
             </div>
+            {referenceFilters(' sheet-reference-filters')}
+            <span className="ap-label">Source order</span>
+            <label className="news-source-order sheet-source-order">
+              <span>Order source list by</span>
+              <select value={sourceOrder} onChange={(event) => setSourceOrder(event.target.value)}>
+                <option value="corpus">Corpus representation</option>
+                <option value="tier">Recorded source tier</option>
+                <option value="name">Source name A–Z</option>
+              </select>
+            </label>
             <span className="ap-label">Outlet</span>
             {outletRow}
             <span className="ap-label">Status</span>

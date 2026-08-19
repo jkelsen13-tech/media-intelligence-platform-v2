@@ -17,7 +17,7 @@ import SourceComparisonView from './views/SourceComparisonView'
 import { loadPhase3BetaFlag } from './lib/phase3ReadPath'
 import { loadSourceComparisonBetaFlag } from './lib/sourceComparisonReadPath'
 import { buildNavViews, buildMoreEntries, isMoreViewKey } from './lib/navViews'
-import { loadGraph, loadTopics, loadCorpusMeta } from './lib/supabase'
+import { loadGraph, loadTopics, loadCorpusMeta, loadNodeLocations } from './lib/supabase'
 import { liveCorpusLabel } from './lib/newsFeedModel'
 import { computeHubs } from './lib/hubs'
 import { jumpFocusStack } from './lib/jumpReset'
@@ -117,6 +117,9 @@ export default function App() {
   // Screen 6 focused-Graph workspace. Geography and Time stay data-backed
   // record views; Region filters semantic clusters without fabricating links.
   const [graphMode, setGraphMode] = useState('relationships')
+  // Location mentions are optional and failure-isolated. They carry explicit
+  // provenance/review states; an unreadable table yields an honest empty layer.
+  const [locationMentions, setLocationMentions] = useState([])
   const [graphRegion, setGraphRegion] = useState('all')
   const [focusExpansion, setFocusExpansion] = useState(0)
   // Step 9 (§8): focus stack. Each crumb is
@@ -177,6 +180,7 @@ export default function App() {
 
   useEffect(() => {
     loadGraph().then(setGraph).catch((err) => setError(err.message))
+    loadNodeLocations().then(setLocationMentions).catch(() => setLocationMentions([]))
     loadTopics()
       .then((data) => {
         // Only expose the affordance when the tables exist AND carry data.
@@ -806,7 +810,14 @@ export default function App() {
                       <GraphModePanel
                         mode={graphMode}
                         nodes={displayNodes}
+                        locationMentions={locationMentions}
                         onReturnToRelationships={() => setGraphMode('relationships')}
+                        onSelectNode={(nodeId) => {
+                          const node = (graph?.nodes ?? []).find((candidate) => (candidate.id ?? candidate.slug) === nodeId)
+                          if (!node) return
+                          setGraphMode('relationships')
+                          pickNode(node)
+                        }}
                       />
                     ) : (
                     <>

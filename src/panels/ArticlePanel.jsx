@@ -72,6 +72,10 @@ export default function ArticlePanel({
   const [derived, setDerived] = useState(null)
   // Location corroboration across this node's backing articles (null = none).
   const [sky, setSky] = useState(null)
+  // Selection is local to the currently open node's connection table. It is
+  // not a graph assertion; it simply gives the reader a contained visual
+  // anchor for the relationship whose detail was opened.
+  const [selectedConnectionId, setSelectedConnectionId] = useState(null)
 
   // Bottom-sheet geometry (mobile only). sheetFrac is the committed snap
   // point; dragFrac tracks an in-progress drag and overrides it.
@@ -81,6 +85,10 @@ export default function ArticlePanel({
 
   const nodeKey = node.id ?? node.slug
   const isUuid = typeof node.id === 'string' && node.id.includes('-')
+
+  useEffect(() => {
+    setSelectedConnectionId(null)
+  }, [nodeKey])
 
   useEffect(() => {
     let cancelled = false
@@ -435,8 +443,15 @@ export default function ArticlePanel({
           {connections.map((c) => {
             const edgeMeta = EDGE_TYPES[c.edgeType]
             return (
-              <li key={c.edgeId} className="ap-connection-row">
-                <button className="ap-connection" onClick={() => onNavigate(c.otherKey)}>
+              <li key={c.edgeId} className={`ap-connection-row${selectedConnectionId === c.edgeId ? ' selected' : ''}`}>
+                <button
+                  className="ap-connection"
+                  aria-current={selectedConnectionId === c.edgeId ? 'true' : undefined}
+                  onClick={() => {
+                    setSelectedConnectionId(c.edgeId)
+                    onNavigate(c.otherKey)
+                  }}
+                >
                   <span
                     className="ap-conn-dot"
                     style={{
@@ -458,7 +473,10 @@ export default function ArticlePanel({
                     className="ap-conn-evidence"
                     title="Edge evidence"
                     aria-label={`Evidence for connection to ${c.label}`}
-                    onClick={() => onShowEdgeEvidence(c.edge)}
+                    onClick={() => {
+                      setSelectedConnectionId(c.edgeId)
+                      onShowEdgeEvidence(c.edge)
+                    }}
                   >
                     ⓘ
                   </button>

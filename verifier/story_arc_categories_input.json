@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT DISTINCT category FROM public.story_arcs ORDER BY category LIMIT 100;"
+}

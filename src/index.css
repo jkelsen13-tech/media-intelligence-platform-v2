@@ -724,13 +724,29 @@ body {
 .ap-connection-row {
   display: flex;
   align-items: stretch;
-  gap: 2px;
+  min-width: 0;
+  gap: 4px;
 }
 
 .ap-connection-row .ap-connection {
   flex: 1;
   min-width: 0;
 }
+
+/* Connection selection belongs to a single documented row. Use a solid,
+   opaque fill inside that row's own border; never draw one outline around the
+   surrounding list, because several relationships can coexist in the table. */
+.ap-connection-row.selected .ap-connection {
+  background: color-mix(in srgb, var(--accent) 16%, var(--bg-panel));
+  border-color: color-mix(in srgb, var(--accent) 68%, var(--border-color));
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.ap-connection-row.selected .ap-conn-evidence {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--bg-panel));
+  border-color: color-mix(in srgb, var(--accent) 68%, var(--border-color));
+}
+
 
 .ap-conn-evidence {
   flex-shrink: 0;
@@ -1360,9 +1376,17 @@ a.ap-source-headline:hover {
   cursor: pointer;
 }
 
-.ap-connection:hover {
+.ap-connection:hover,
+.ap-connection:focus-visible {
   background: var(--bg-elevated);
   border-color: var(--border-color);
+  outline: none;
+}
+
+.ap-connection-row.selected .ap-connection:hover,
+.ap-connection-row.selected .ap-connection:focus-visible {
+  background: color-mix(in srgb, var(--accent) 21%, var(--bg-panel));
+  border-color: var(--accent);
 }
 
 .ap-conn-dot {
@@ -2940,6 +2964,196 @@ body {
   border-left: 3px solid var(--border-strong);
   background: var(--bg-panel);
 }
+
+/* Geography is a provenance-first globe, not a decorative basemap. The panel
+   names both the source-resolution status and its stated spatial precision. */
+.geography-mode-content {
+  max-width: 920px;
+}
+.geography-mode-intro {
+  max-width: 780px;
+  margin: 16px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.geography-state-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 920px;
+  margin: 16px 0 0;
+}
+.geography-state-counts > div {
+  display: grid;
+  gap: 2px;
+  min-height: 92px;
+  padding: 11px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background: var(--bg-panel);
+}
+.geography-state-counts dt {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.geography-state-counts dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 25px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 1.05;
+}
+.geography-state-counts span {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+.geography-layout {
+  display: grid;
+  grid-template-columns: minmax(250px, 340px) minmax(220px, 1fr);
+  align-items: center;
+  gap: 18px;
+  max-width: 780px;
+  margin-top: 16px;
+}
+.geography-globe {
+  width: min(100%, 330px);
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: radial-gradient(circle at 33% 27%, color-mix(in srgb, var(--accent) 13%, var(--bg-panel)), var(--bg-panel) 65%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 35%, transparent);
+}
+.geography-globe svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.geography-globe-sphere {
+  fill: color-mix(in srgb, var(--accent) 12%, var(--bg-inset));
+  stroke: color-mix(in srgb, var(--accent) 52%, var(--border-strong));
+  stroke-width: 1.4;
+}
+.geography-globe-graticule {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 24%, var(--border-color));
+  stroke-width: .65;
+}
+.geography-globe-marker {
+  cursor: pointer;
+  outline: none;
+}
+.geography-globe-marker-halo {
+  fill: color-mix(in srgb, var(--accent) 24%, transparent);
+  transition: transform 160ms var(--ease-out, ease-out), fill 160ms var(--ease-out, ease-out);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.geography-globe-marker-dot {
+  fill: var(--accent);
+  stroke: var(--bg-panel);
+  stroke-width: 1.6;
+}
+.geography-globe-marker:hover .geography-globe-marker-halo,
+.geography-globe-marker:focus .geography-globe-marker-halo {
+  fill: color-mix(in srgb, var(--accent) 38%, transparent);
+  transform: scale(1.45);
+}
+.geography-globe-marker:focus .geography-globe-marker-dot {
+  stroke: var(--text-primary);
+  stroke-width: 2;
+}
+.geography-globe figcaption {
+  padding: 2px 5px 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.geography-legend {
+  padding: 14px;
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-panel));
+}
+.geography-legend p:not(.graph-mode-eyebrow) {
+  margin: 7px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.geography-legend-note {
+  color: var(--text-muted) !important;
+}
+.geography-record-list {
+  display: grid;
+  gap: 8px;
+  max-width: 920px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.geography-record {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background: var(--bg-panel);
+  color: inherit;
+  text-align: left;
+  transition: border-color 160ms var(--ease-out, ease-out), background 160ms var(--ease-out, ease-out), transform 160ms var(--ease-out, ease-out);
+}
+.geography-record:hover,
+.geography-record:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 62%, var(--border-color));
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-panel));
+  outline: none;
+}
+.geography-record:active {
+  transform: scale(.99);
+}
+.geography-record-marker {
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  border: 2px solid var(--bg-panel);
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 75%, var(--border-strong));
+}
+.geography-record-content {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.geography-record-node {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.geography-record-uncertainty {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.geography-record-state {
+  align-self: start;
+  padding: 3px 6px;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border-color));
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 @media (max-width: 767px) {
   .graph-workspace-controls {
     align-items: flex-start;
@@ -2961,6 +3175,29 @@ body {
   .graph-mode-panel-head {
     align-items: stretch;
     flex-direction: column;
+  }
+  .geography-state-counts {
+    grid-template-columns: 1fr;
+  }
+  .geography-state-counts > div {
+    min-height: 0;
+  }
+  .geography-layout {
+    grid-template-columns: 1fr;
+  }
+  .geography-globe {
+    justify-self: center;
+  }
+  .geography-legend {
+    border-top: 3px solid var(--accent);
+    border-left: 0;
+  }
+  .geography-record {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .geography-record-state {
+    grid-column: 2;
+    justify-self: start;
   }
 }
 

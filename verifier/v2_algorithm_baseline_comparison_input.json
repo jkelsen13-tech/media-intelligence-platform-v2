@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT (SELECT count(*)::int FROM public.articles) AS articles, (SELECT count(*)::int FROM public.nodes) AS nodes, (SELECT count(*)::int FROM public.edges) AS edges, (SELECT count(*)::int FROM public.story_arcs) AS story_arcs, (SELECT count(*)::int FROM public.arc_events) AS arc_events, (SELECT count(*)::int FROM public.events) AS comparison_events, (SELECT count(*)::int FROM public.citations) AS citations LIMIT 1;"
+}

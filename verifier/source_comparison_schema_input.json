@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT table_name, column_name, data_type, udt_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name IN ('events','event_articles','claims','article_claims','claim_evidence_links','explanations') ORDER BY table_name, ordinal_position LIMIT 200;"
+}

@@ -17,7 +17,9 @@ import {
   ALL_EVENTS_SCOPE,
   defaultArcSlug,
   normalizeArcEvent,
+  normalizeArticleTimelineRecord,
   normalizeNodeEvent,
+  sortTimelineEntries,
   deriveDateOptions,
   deriveTypeOptions,
   entryMatchesFilters,
@@ -170,13 +172,20 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
 
   // --- entry lists ---------------------------------------------------------------
   const arcEntries = useMemo(
-    () => (detail ? detail.events.map(normalizeArcEvent).filter(Boolean) : []),
-    [detail],
+    () =>
+      sortTimelineEntries([
+        ...(detail ? detail.events.map(normalizeArcEvent).filter(Boolean) : []),
+        ...(arcArticles ?? []).map(normalizeArticleTimelineRecord).filter(Boolean),
+      ]),
+    [detail, arcArticles],
   )
 
   const global = useMemo(() => {
     if (!globalData) return null
-    const entries = globalData.events.map(normalizeNodeEvent).filter(Boolean)
+    const entries = sortTimelineEntries([
+      ...(globalData.events ?? []).map(normalizeNodeEvent).filter(Boolean),
+      ...(globalData.articleRecords ?? []).map(normalizeArticleTimelineRecord).filter(Boolean),
+    ])
     const edges = globalData.relationEdges ?? []
     const labels = new Map(
       (globalData.labels ?? []).map((n) => [n.id ?? n.slug, n.label]),
@@ -239,7 +248,9 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   // (Package 1 item 2: only when the jump named NO originating arc.)
   useEffect(() => {
     if (!focusEventKey || focusArcKey || !global) return
-    const idx = global.entries.findIndex((e) => (e.slug ?? '').slice(-8) === focusEventKey)
+    const idx = global.entries.findIndex(
+      (entry) => entry.key === focusEventKey || (entry.slug ?? '').slice(-8) === focusEventKey,
+    )
     if (idx === -1) return
     const entry = global.entries[idx]
     setAllEvents(true)
@@ -256,7 +267,9 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   // suffix join resolves; the arc landing itself is the guaranteed part.
   useEffect(() => {
     if (!focusEventKey || !focusArcKey || allEvents || !detail) return
-    const entry = arcEntries.find((e) => (e.key ?? '').slice(-8) === focusEventKey)
+    const entry = arcEntries.find(
+      (candidate) => candidate.key === focusEventKey || (candidate.key ?? '').slice(-8) === focusEventKey,
+    )
     if (entry) setPendingFocus(entry.key)
   }, [focusEventKey, focusArcKey, allEvents, detail, arcEntries])
 
@@ -289,6 +302,9 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   const entries = scopeIsGlobal ? (global?.filtered ?? []) : arcEntries.filter((e) => entryMatchesFilters(e, { month, type }))
   const dateOptions = deriveDateOptions(scopeIsGlobal ? (global?.entries ?? []) : arcEntries)
   const typeOptions = deriveTypeOptions(scopeIsGlobal ? (global?.entries ?? []) : arcEntries)
+
+  const graphEventCount = (scopeIsGlobal ? global?.entries : arcEntries)?.filter((entry) => entry.kind === 'graph_event').length ?? 0
+  const articleRecordCount = (scopeIsGlobal ? global?.entries : arcEntries)?.filter((entry) => entry.kind === 'article_record').length ?? 0
 
   const counts = detail ? deriveEvidenceStates(detail.events, detail.milestones) : null
   const missingScope = counts
@@ -484,13 +500,13 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
               {((scopeIsGlobal && global) || (!scopeIsGlobal && detail)) && (
                 <>
                   <p className="timeline-count" aria-live="polite">
-                    {entries.length} event{entries.length === 1 ? '' : 's'}
+                    {entries.length} timeline record{entries.length === 1 ? '' : 's'} · {graphEventCount} graph event{graphEventCount === 1 ? '' : 's'} · {articleRecordCount} News record{articleRecordCount === 1 ? '' : 's'}
                     {!scopeIsGlobal && entries.length !== arcEntries.length &&
                       ` (filtered from ${arcEntries.length})`}
                     {scopeIsGlobal && entries.length !== (global?.entries.length ?? 0) &&
                       ` (filtered from ${global?.entries.length ?? 0})`}
                     {scopeIsGlobal && (global?.suppressed ?? 0) > 0 &&
-                      ` · ${global.suppressed} duplicate article mirrors suppressed (same article, same event: the evt- node is canonical)`}
+                      ` · ${global.suppressed} duplicate event mirrors suppressed; separately listed News records remain visible`}
                   </p>
                   <ArcTimeline
                     entries={visibleEntries}
@@ -594,22 +610,24 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
                 Evidence state is tracked per story arc. Choose an arc above to see its
                 supporting / contested / missing counts.
               </p>
-              {global && foot.articles > 0 && (
+                  {global && foot.articles > 0 && (
                 <ul className="ap-sources">
-                  {global.entries
-                    .filter((e) => e.articleId)
-                    .map((e) => (
-                      <li key={e.key} className="ap-source">
-                        <button
-                          className="ap-source-headline ap-article-link"
-                          title="Open in News Feed"
-                          onClick={() => onOpenArticle?.(e.articleId)}
-                        >
-                          {e.title}
-                        </button>
-                        {e.date && <span className="ap-source-date">{e.date}</span>}
-                      </li>
-                    ))}
+                  {[...new Map(
+                    global.entries
+                      .filter((entry) => entry.articleId)
+                      .map((entry) => [entry.articleId, entry]),
+                  ).values()].map((entry) => (
+                    <li key={entry.articleId} className="ap-source">
+                      <button
+                        className="ap-source-headline ap-article-link"
+                        title="Open in News Feed"
+                        onClick={() => onOpenArticle?.(entry.articleId)}
+                      >
+                        {entry.title}
+                      </button>
+                      {entry.date && <span className="ap-source-date">{entry.date}</span>}
+                    </li>
+                  ))}
                 </ul>
               )}
             </section>

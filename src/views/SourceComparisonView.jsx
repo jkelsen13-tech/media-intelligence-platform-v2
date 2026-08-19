@@ -20,7 +20,9 @@ import './sourcecomparison.css'
 
 function ReliabilityChip({ outlet }) {
   const level = OUTLET_RELIABILITY[outlet]
-  if (!level) return <span className="sc-chip sc-chip-muted">tier not assigned</span>
+  // A missing G2 worked-example tier is a documentation gap, not a judgment
+  // about the outlet. Never substitute a score or an improvised tier.
+  if (!level) return <span className="sc-chip sc-chip-muted">source tier not recorded</span>
   return <span className={`sc-chip sc-chip-${level.toLowerCase()}`}>{R_LEVEL_NAMES[level]}</span>
 }
 
@@ -34,34 +36,49 @@ function formatReviewedAt(value) {
   return Number.isNaN(date.valueOf()) ? 'not recorded' : date.toLocaleDateString()
 }
 
+function outletReviewPresentation(states) {
+  const values = [...new Set((states ?? []).filter(Boolean))]
+  if (values.length === 0 || values.every((state) => state === 'explanation_pending')) {
+    return { label: 'Explanation pending', tone: 'pending' }
+  }
+  if (values.length > 1) return { label: 'Mixed review states', tone: 'mixed' }
+  if (values[0] === 'ok') return { label: 'Explanation recorded', tone: 'recorded' }
+  if (values[0] === 'under_review') return { label: 'Under review', tone: 'pending' }
+  if (values[0] === 'insufficient_evidence') return { label: 'Evidence gap', tone: 'gap' }
+  if (values[0] === 'source_unavailable') return { label: 'Source unavailable', tone: 'gap' }
+  return { label: values[0].replace(/_/g, ' '), tone: 'mixed' }
+}
+
 function OutletCoverageCard({ coverage }) {
   const framing = coverage.framing.slice(0, 2)
-  const states = coverage.explanationStates.length > 0
-    ? coverage.explanationStates.map((state) => state.replace(/_/g, ' ')).join(' · ')
-    : 'explanation pending'
+  const review = outletReviewPresentation(coverage.explanationStates)
+  const includedLabel = `${coverage.includedClaimCount} extracted claim${coverage.includedClaimCount === 1 ? '' : 's'}`
   return (
     <article className="sc-outlet-card">
       <header className="sc-outlet-card-head">
-        <div>
-          <p className="sc-outlet-card-label">Outlet record</p>
+        <div className="sc-outlet-identity">
+          <p className="sc-outlet-card-label">Ingested outlet sample</p>
           <h4>{coverage.outlet}</h4>
+          <span className="sc-outlet-card-article-count">
+            {coverage.articleCount} ingested article{coverage.articleCount === 1 ? '' : 's'} · reviewed {formatReviewedAt(coverage.latestReviewedAt)}
+          </span>
         </div>
-        <ReliabilityChip outlet={coverage.outlet} />
+        <span className={`sc-outlet-review-state sc-outlet-review-${review.tone}`}>{review.label}</span>
       </header>
-      <dl className="sc-outlet-facts">
-        <div><dt>Included</dt><dd>{coverage.includedClaimCount} extracted claim{coverage.includedClaimCount === 1 ? '' : 's'} across {coverage.articleCount} ingested article{coverage.articleCount === 1 ? '' : 's'}</dd></div>
-        <div><dt>Epistemic state</dt><dd>{states}</dd></div>
-        <div><dt>Latest review</dt><dd>{formatReviewedAt(coverage.latestReviewedAt)}</dd></div>
-      </dl>
-      <section className="sc-outlet-framing">
-        <p>Framing captured from the ingested source</p>
+      <section className="sc-outlet-framing" aria-label={`${coverage.outlet} framing`}>
+        <p>Captured framing</p>
         {framing.length === 0 ? (
-          <span>No claim surface is currently extracted for this outlet.</span>
+          <span>No claim surface is currently extracted for this outlet sample.</span>
         ) : framing.map((row) => (
           <blockquote key={`${row.claimId}-${row.surfaceText}`}>{row.surfaceText}</blockquote>
         ))}
-        {coverage.framing.length > framing.length && <span>Additional extracted framing remains in the claim detail below.</span>}
+        {coverage.framing.length > framing.length && <span>Additional extracted framing is available in the claim detail below.</span>}
       </section>
+      <div className="sc-outlet-facts" aria-label={`${coverage.outlet} sample facts`}>
+        <span className="sc-outlet-fact-token">Framing: {framing.length > 0 ? 'source text extracted' : 'not extracted'}</span>
+        <span className="sc-outlet-fact-token">Included: {includedLabel}</span>
+        <ReliabilityChip outlet={coverage.outlet} />
+      </div>
     </article>
   )
 }

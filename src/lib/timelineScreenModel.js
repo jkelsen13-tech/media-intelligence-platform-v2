@@ -81,7 +81,48 @@ export function normalizeNodeEvent(e) {
     badgeState: null,
     outlet: null,
     articleId: e.article_id ?? null,
+    kind: 'graph_event',
+    arcId: e.arc_id ?? null,
   }
+}
+
+/**
+ * A News article assigned to a story arc but not represented by a published
+ * graph-event node still belongs in the chronology as a **reporting record**.
+ * This is deliberately a separate `news` entry type: publication date is not
+ * silently converted into an occurrence date, and it creates no edge, causal
+ * claim, or graph event. The entry preserves a direct News destination.
+ */
+export function normalizeArticleTimelineRecord(article) {
+  if (!article?.id) return null
+  return {
+    key: `article-${article.id}`,
+    slug: `article-${article.id}`,
+    date: dateOf(article.published_at),
+    type: 'news',
+    title: article.title ?? 'Untitled news record',
+    description: article.summary ?? 'Source-linked news record assigned to this story arc.',
+    confidence: null,
+    badgeState: null,
+    outlet: article.outlet ?? null,
+    articleId: article.id,
+    kind: 'article_record',
+    arcId: article.arc_id ?? null,
+  }
+}
+
+export function sortTimelineEntries(entries) {
+  return [...(entries ?? [])].sort((a, b) => {
+    const dateA = a?.date ?? '9999-12-31'
+    const dateB = b?.date ?? '9999-12-31'
+    if (dateA !== dateB) return dateA.localeCompare(dateB)
+    // At the same date, preserve the underlying event record before the
+    // publication record so reporting remains visibly distinct from the event.
+    const kindA = a?.kind === 'article_record' ? 1 : 0
+    const kindB = b?.kind === 'article_record' ? 1 : 0
+    if (kindA !== kindB) return kindA - kindB
+    return String(a?.title ?? '').localeCompare(String(b?.title ?? ''))
+  })
 }
 
 // --- Filter pills (D5) ---------------------------------------------------------
@@ -140,13 +181,13 @@ export function entryMatchesFilters(entry, { month = null, type = null } = {}) {
 /**
  * Live footer counts — derivations, never literals.
  * Arc scope: articles = attached-article rows; connections = arc-edge rows.
- * Global scope: articles = entries with a resolved article join;
- * connections = relation edges in scope.
+ * Global scope: articles = distinct article identifiers across graph-event
+ * joins and explicit News-record rows; connections = relation edges in scope.
  */
 export function footerCounts({ scope, entries = [], articles = null, connections = null }) {
   if (scope === ALL_EVENTS_SCOPE) {
     return Object.freeze({
-      articles: entries.filter((e) => e?.articleId).length,
+      articles: new Set(entries.map((entry) => entry?.articleId).filter(Boolean)).size,
       connections: Array.isArray(connections) ? connections.length : 0,
     })
   }

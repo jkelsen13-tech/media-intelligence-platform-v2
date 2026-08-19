@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT assertion_type, provenance_class, review_status, state, count(*)::int AS row_count FROM public.explanations GROUP BY assertion_type, provenance_class, review_status, state ORDER BY row_count DESC LIMIT 100;"
+}

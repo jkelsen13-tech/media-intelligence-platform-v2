@@ -76,6 +76,7 @@ export function buildArcSections(events, arcsById, articleArcBySuffix, directArc
   const unclassified = []
   let direct = 0
   let derivable = 0
+  let newsRecords = 0
 
   for (const evt of events) {
     const { arcId, resolution } = resolveEventArc(evt, directArcByKey, articleArcBySuffix)
@@ -83,7 +84,10 @@ export function buildArcSections(events, arcsById, articleArcBySuffix, directArc
       unclassified.push(evt)
       continue
     }
-    if (resolution === 'direct') direct += 1
+    // Article records are display-only reporting chronology. They never count
+    // as graph-resolved events or as direct/derived graph membership.
+    if (evt.record_kind === 'article_record') newsRecords += 1
+    else if (resolution === 'direct') direct += 1
     else derivable += 1
     const arr = byArc.get(arcId) ?? []
     arr.push(evt)
@@ -131,6 +135,8 @@ export function buildArcSections(events, arcsById, articleArcBySuffix, directArc
     unclassified,
     counts: {
       total: events.length,
+      graphEvents: events.length - newsRecords,
+      newsRecords,
       direct,
       derivable,
       unclassified: unclassified.length,
@@ -344,9 +350,10 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
         filter: (q) => q.in('type', ['causal', 'sequence']),
       }),
       keysetAll(supabase, 'nodes', 'id, slug, label'),
-      // id + arc_id + outlet: article derivation (26 events), News Feed chip
-      // join, and the Package 1 arc-grouped outlet count per event.
-      keysetAll(supabase, 'articles', 'id, arc_id, outlet'),
+      // Article rows support both the historical suffix join and explicit
+      // News-record entries for every article assigned to an arc. A reporting
+      // record retains its publication date and is never promoted to an event.
+      keysetAll(supabase, 'articles', 'id, title, summary, published_at, arc_id, outlet'),
       keysetAll(supabase, 'story_arcs', 'id, title, category, started_at'),
       // End date + status derive from real signals (loadArcs() pattern).
       // id included: the keyset cursor reads it back off the returned rows.
@@ -412,12 +419,30 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
     ]),
   )
 
+  const articleRecords = articlesRes.data
+    .filter((article) => article.arc_id)
+    .map((article) => ({
+      id: `article-${article.id}`,
+      slug: `article-${article.id}`,
+      label: article.title ?? 'Untitled news record',
+      summary: article.summary ?? null,
+      description: article.summary ?? null,
+      occurred_at: article.published_at ?? null,
+      arc_id: article.arc_id,
+      article_id: article.id,
+      outlet: article.outlet ?? null,
+      record_kind: 'article_record',
+    }))
+
   const grouped = buildArcSections(
     attachEventOutlets(
-      events.map((evt) => ({
-        ...evt,
-        article_id: articleIdBySuffix.get((evt.slug ?? '').slice(-8)) ?? null,
-      })),
+      [
+        ...events.map((evt) => ({
+          ...evt,
+          article_id: articleIdBySuffix.get((evt.slug ?? '').slice(-8)) ?? null,
+        })),
+        ...articleRecords,
+      ],
       eventIdByArticleId,
       outletIndex,
     ),

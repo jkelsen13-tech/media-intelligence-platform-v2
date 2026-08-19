@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT count(*) OVER () AS seeded_mention_count, n.slug AS node_slug, m.mention_text, m.text_field, m.location_role, m.literal_status, m.resolution_method, m.review_state, gp.canonical_name, gp.precision, gp.latitude, gp.longitude, a.url AS source_url, m.remaining_uncertainty FROM public.node_location_mentions m JOIN public.nodes n ON n.id = m.node_id JOIN public.geographic_places gp ON gp.id = m.place_id LEFT JOIN public.articles a ON a.id = m.article_id WHERE m.extraction_version = 'v2-geographic-seed-2026-08-19' ORDER BY m.mention_text LIMIT 10;"
+}

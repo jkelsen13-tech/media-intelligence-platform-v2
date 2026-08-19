@@ -149,9 +149,9 @@ test('structure: grouped loader keyset-paginates all eight reads', () => {
   // any gap may be labeled "Source-supported causal link".
   assert.match(src, /keysetAll\(supabase, 'edges', 'id, source_id, target_id, type, weight, label, doc_strength'/)
   assert.match(src, /keysetAll\(supabase, 'nodes', 'id, slug, label'\)/)
-  // outlet added 2026-08-18 (Package 1 arc-grouped addition): per-event
-  // outlet counts on grouped cards.
-  assert.match(src, /keysetAll\(supabase, 'articles', 'id, arc_id, outlet'\)/)
+  // Expanded metadata supports both outlet counts and explicit, source-backed
+  // News-record rows for articles assigned to an arc.
+  assert.match(src, /keysetAll\(supabase, 'articles', 'id, title, summary, published_at, arc_id, outlet'\)/)
   assert.match(src, /keysetAll\(supabase, 'story_arcs', 'id, title, category, started_at'\)/)
   assert.match(src, /keysetAll\(supabase, 'arc_events', 'id, arc_id, occurred_at'\)/)
   assert.match(src, /keysetAll\(supabase, 'arc_milestones', 'id, arc_id, status'\)/)

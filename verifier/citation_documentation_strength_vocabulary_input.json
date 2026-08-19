@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT documentation_strength, count(*)::int AS count FROM public.citations GROUP BY documentation_strength ORDER BY documentation_strength LIMIT 20;"
+}

@@ -38,15 +38,22 @@ const LINK_FILTERS = [
 function EventCard({ evt, outbound, inbound, isCollapsed, onToggle, onOpenArticle, registerRef }) {
   const key = evt.id ?? evt.slug
   const showArticle = Boolean(evt.article_id && onOpenArticle)
+  const isArticleRecord = evt.record_kind === 'article_record'
   return (
     <li className="timeline-item" ref={registerRef}>
       <div className="timeline-marker" />
       <div className="timeline-card">
         <div className="timeline-card-head">
           <div>
-            <div className="timeline-date">{evt.occurred_at ?? 'undated'}</div>
+            <div className="timeline-date">{evt.occurred_at ? String(evt.occurred_at).slice(0, 10) : 'undated'}</div>
             <h3>{evt.label}</h3>
-            {evt.outletCount > 0 && (
+            {isArticleRecord && (
+              <span className="timeline-record-kind">News record · publication date</span>
+            )}
+            {isArticleRecord && evt.outlet && (
+              <span className="timeline-outlets">Source: {evt.outlet}</span>
+            )}
+            {!isArticleRecord && evt.outletCount > 0 && (
               <span className="timeline-outlets">
                 {evt.outletCount} outlet{evt.outletCount === 1 ? '' : 's'} reporting
               </span>
@@ -128,7 +135,7 @@ export default function GroupedTimelineView({ onOpenArc, onOpenArticle, focusEve
       .then((d) => {
         // Real numbers, not placeholders (04-ADD evidence requirement).
         const loadMs = Math.round(performance.now() - loadStart.current)
-        console.info(`[grouped-timeline] data load: ${loadMs}ms, events: ${d.grouped.counts.total}, sections: ${d.grouped.counts.sectionCount}`)
+        console.info(`[grouped-timeline] data load: ${loadMs}ms, timeline records: ${d.grouped.counts.total}, sections: ${d.grouped.counts.sectionCount}`)
         setData(d)
       })
       .catch((err) => setError(err.message))
@@ -196,7 +203,7 @@ export default function GroupedTimelineView({ onOpenArc, onOpenArticle, focusEve
   // page containing it, expand, then scroll + highlight below.
   useEffect(() => {
     if (!focusEventKey || !data || !filtered) return
-    const match = (evt) => (evt.slug ?? '').slice(-8) === focusEventKey
+    const match = (evt) => (evt.id ?? evt.slug) === focusEventKey || (evt.slug ?? '').slice(-8) === focusEventKey
     let secIdx = filtered.sections.findIndex((s) => s.events.some(match))
     focusGuard.current = true
     setQuery('')
@@ -366,14 +373,14 @@ export default function GroupedTimelineView({ onOpenArc, onOpenArticle, focusEve
 
       {arcId ? (
         <p className="timeline-count" aria-live="polite">
-          {filtered.sections.reduce((n, s) => n + s.events.length, 0)} event
+          {filtered.sections.reduce((n, s) => n + s.events.length, 0)} timeline record
           {filtered.sections.reduce((n, s) => n + s.events.length, 0) === 1 ? '' : 's'} in this arc
-          — grouped view{query || linkFilter !== 'any' || dateFrom || dateTo ? ' · filters active' : ''}
+          — graph events and assigned News records are shown separately{query || linkFilter !== 'any' || dateFrom || dateTo ? ' · filters active' : ''}
         </p>
       ) : (
         <p className="timeline-count" aria-live="polite">
-          {counts.total} events · {counts.sectionCount} arc sections + {counts.unclassified}{' '}
-          unclassified ({counts.direct} direct, {counts.derivable} via article arc) — every event
+          {counts.total} timeline records · {counts.graphEvents} graph events · {counts.newsRecords} News records · {counts.sectionCount} arc sections + {counts.unclassified}{' '}
+          unclassified ({counts.direct} direct, {counts.derivable} via article arc) — every record
           shown exactly once
           {countCheck && !countCheck.ok && (
             <strong className="timeline-count-error">
@@ -421,7 +428,7 @@ export default function GroupedTimelineView({ onOpenArc, onOpenArticle, focusEve
               )}
               <span className="timeline-badge-text">Category: {sec.category ?? 'uncategorized'}</span>
               <span className="timeline-badge-text">
-                {sec.events.length} event{sec.events.length === 1 ? '' : 's'}
+                {sec.events.length} timeline record{sec.events.length === 1 ? '' : 's'}
               </span>
             </p>
           </header>

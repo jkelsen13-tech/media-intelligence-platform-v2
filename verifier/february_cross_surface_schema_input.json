@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT table_name, json_agg(column_name ORDER BY ordinal_position) AS columns FROM information_schema.columns WHERE table_schema = 'public' AND table_name IN ('citations','events','event_articles','article_claims','claims','sources') GROUP BY table_name ORDER BY table_name LIMIT 20;"
+}

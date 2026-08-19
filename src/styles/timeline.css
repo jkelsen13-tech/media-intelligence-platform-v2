@@ -319,3 +319,21 @@
   margin-bottom: 6px;
   color: var(--text-muted);
 }
+
+/* Explicit reporting-record marker for grouped Timeline rows. This indicates
+   a News article's publication chronology; it does not represent a graph event
+   or establish an additional relationship. */
+.timeline-record-kind {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 3px;
+  padding: 2px 6px;
+  border: 1px solid var(--status-blue-border);
+  border-radius: 999px;
+  color: var(--status-blue-text);
+  background: color-mix(in srgb, var(--status-blue-border) 6%, var(--bg-panel));
+  font-size: 0.72rem;
+  font-weight: 680;
+  line-height: 1.25;
+}

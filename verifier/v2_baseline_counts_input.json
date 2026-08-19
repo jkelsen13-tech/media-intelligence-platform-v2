@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT (SELECT count(*) FROM public.articles) AS articles, (SELECT count(*) FROM public.story_arcs) AS story_arcs, (SELECT count(*) FROM public.nodes) AS nodes, (SELECT count(*) FROM public.edges) AS edges, (SELECT count(*) FROM public.p3_policy WHERE name LIKE 'P2025-T1-G%') AS p2025_policies, (SELECT count(*) FROM public.p3_policy_track_event WHERE method_version LIKE 'p2025%') AS p2025_track_events, (SELECT count(*) FROM public.p3_policy WHERE name ILIKE '%Epstein%') AS epstein_policies, (SELECT count(*) FROM public.p3_policy_track_event WHERE method_version LIKE 'epstein%') AS epstein_track_events, (SELECT count(*) FROM public.events) AS comparison_events, (SELECT count(*) FROM public.explanations WHERE rule_version LIKE 'sc-v1|%') AS sc_explanations LIMIT 1;"
+}

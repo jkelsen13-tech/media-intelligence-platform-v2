@@ -169,6 +169,31 @@ export async function loadGraph({ supabaseClient } = {}) {
   }
 }
 
+// Geography lens: source-span-backed location rows only. The queried
+// `geographic_places` relation includes an explicit precision level; no
+// coordinates are inferred in the browser. Feature-detection keeps pre-schema
+// environments and offline builds usable, and failure remains isolated from
+// the graph itself.
+export async function loadNodeLocations({ supabaseClient } = {}) {
+  const client = supabaseClient ?? supabase
+  if (!client) return []
+  try {
+    const { data, error } = await keysetAll(
+      client,
+      'node_location_mentions',
+      'id, node_id, article_id, event_id, place_id, mention_text, text_field, location_role, literal_status, resolution_method, review_state, remaining_uncertainty, geographic_places(canonical_name, country_code, admin1_name, latitude, longitude, precision, gazetteer_provider, gazetteer_id)',
+    )
+    if (error) return []
+    return (data ?? []).map((row) => ({
+      ...row,
+      place: Array.isArray(row.geographic_places) ? row.geographic_places[0] ?? null : row.geographic_places ?? null,
+      geographic_places: undefined,
+    }))
+  } catch {
+    return []
+  }
+}
+
 // Step 10 (§7.4): policy detail for the Consequence view. The `policies`
 // table (and policy_actors / policy_topics) may not exist yet — every
 // query is feature-detected and failures degrade to empty values so the
@@ -504,14 +529,24 @@ export async function loadArticleTimelineKey(articleId) {
   if (!supabase || !articleId) return null
   const prefix = String(articleId).slice(0, 8)
   try {
-    const { data, error } = await supabase
+    const { data: eventRows, error: eventError } = await supabase
       .from('nodes')
       .select('id, slug')
       .eq('type', 'event')
       .like('slug', `%${prefix}`)
       .limit(1)
-    if (error) return null
-    return data && data.length > 0 ? prefix : null
+    if (!eventError && eventRows && eventRows.length > 0) return prefix
+
+    // If no graph event mirror exists but the article already belongs to an
+    // arc, return the explicit article-record key instead of withholding the
+    // Timeline destination. This creates no event assertion.
+    const { data: article, error: articleError } = await supabase
+      .from('articles')
+      .select('id, arc_id')
+      .eq('id', articleId)
+      .maybeSingle()
+    if (articleError || !article?.arc_id) return null
+    return `article-${article.id}`
   } catch {
     return null
   }
@@ -587,9 +622,11 @@ export async function loadTimeline({ supabaseClient } = {}) {
       filter: (q) => q.in('type', ['causal', 'sequence']),
     }),
     keysetAll(client, 'nodes', 'id, slug, label'),
-    // Doc 05 pairs 2/3: art- slug 8-hex suffix = article id 8-hex prefix
-    // (verified 361/361 live). Ids only — the map is built in JS below.
-    keysetAll(client, 'articles', 'id'),
+    // Doc 05 pairs 2/3: art- slug 8-hex suffix = article id 8-hex prefix.
+    // The same complete read supplies explicit News-record timeline entries
+    // for every article carrying an arc assignment. Publication dates remain
+    // publication dates; the UI labels these as News records, not events.
+    keysetAll(client, 'articles', 'id, title, summary, published_at, outlet, arc_id'),
     // Doc 05 pair 1: arc titles for event nodes that carry arc_id.
     keysetAll(client, 'story_arcs', 'id, title'),
   ])
@@ -612,6 +649,10 @@ export async function loadTimeline({ supabaseClient } = {}) {
       ...evt,
       article_id: articleIdBySuffix.get((evt.slug ?? '').slice(-8)) ?? null,
     })),
+    // Additive reporting-record layer: no synthetic graph nodes, relationships,
+    // or occurrence dates. These rows make every News article already assigned
+    // to an arc reachable in the Timeline, even when no event node exists.
+    articleRecords: articlesRes.data.filter((article) => article.arc_id),
     suppressed,
     arcTitles: arcTitleById,
     relationEdges: remapTimelineEdges(
@@ -747,8 +788,40 @@ export async function loadOutlets({ supabaseClient } = {}) {
   return names
 }
 
-// Paged, searchable article stream across all outlets.
-export async function loadArticles({ q, outlet, status, limit = 30, offset = 0 } = {}) {
+// News source directory used by the working Region and source-order controls.
+// `articleCount` is corpus representation, not audience popularity. The outlets
+// table supplies publisher-provided context only; it does not imply a platform
+// endorsement or a composite reliability score.
+export async function loadOutletDirectory({ supabaseClient } = {}) {
+  const client = supabaseClient ?? supabase
+  if (!client) return []
+  const [articlesRes, outletsRes] = await Promise.all([
+    keysetAll(client, 'articles', 'id, outlet', { filter: (q) => q.not('outlet', 'is', null) }),
+    keysetAll(client, 'outlets', 'id, name, country, parent_ownership'),
+  ])
+  if (articlesRes.error) throw articlesRes.error
+  if (outletsRes.error) throw outletsRes.error
+  const countByName = new Map()
+  for (const row of articlesRes.data ?? []) {
+    if (!row.outlet) continue
+    countByName.set(row.outlet, (countByName.get(row.outlet) ?? 0) + 1)
+  }
+  const metadataByName = new Map((outletsRes.data ?? []).filter((row) => row.name).map((row) => [row.name, row]))
+  return [...countByName.entries()].map(([name, articleCount]) => {
+    const metadata = metadataByName.get(name)
+    return {
+      name,
+      articleCount,
+      country: metadata?.country ?? null,
+      parentOwnership: metadata?.parent_ownership ?? null,
+    }
+  })
+}
+
+// Paged, searchable article stream across all outlets. `outlets`, `feeds`,
+// and `topicTerms` are optional working filters. Topic terms are explicitly
+// title/summary matches rather than a claim of a complete article taxonomy.
+export async function loadArticles({ q, outlet, outlets, status, feeds, topicTerms, limit = 30, offset = 0 } = {}) {
   if (!supabase) return { articles: [], total: 0 }
   let query = supabase
     .from('articles')
@@ -767,6 +840,16 @@ export async function loadArticles({ q, outlet, status, limit = 30, offset = 0 }
     )
   }
   if (outlet) query = query.eq('outlet', outlet)
+  if (Array.isArray(outlets) && outlets.length > 0) query = query.in('outlet', outlets)
+  if (Array.isArray(feeds) && feeds.length > 0) query = query.in('feed', feeds)
+  const safeTopicTerms = [...new Set((topicTerms ?? []).map(sanitizeSearch).filter(Boolean))]
+  if (safeTopicTerms.length > 0) {
+    const topicClauses = safeTopicTerms.flatMap((term) => [
+      `title.ilike.%${term}%`,
+      `summary.ilike.%${term}%`,
+    ])
+    query = query.or(topicClauses.join(','))
+  }
   if (status === 'arc') query = query.not('arc_id', 'is', null)
   if (status === 'unattributed') query = query.eq('unattributed', true)
   if (status === 'monoculture') query = query.eq('monoculture', true)
@@ -968,17 +1051,18 @@ export async function loadSkyVerificationForNode(nodeId) {
   }
 }
 
-// Articles attached to a story arc.
+// Articles attached to a story arc. Complete keyset read: the Timeline and
+// Evidence tab must not silently stop at 50 assigned News records.
 export async function loadArcArticles(arcId) {
   if (!supabase || !arcId) return []
-  const { data, error } = await supabase
-    .from('articles')
-    .select('id, title, outlet, published_at, url')
-    .eq('arc_id', arcId)
-    .order('published_at', { ascending: false, nullsFirst: false })
-    .limit(50)
-  if (error) throw error
-  return data
+  const result = await keysetAll(
+    supabase,
+    'articles',
+    'id, title, summary, outlet, published_at, url, arc_id',
+    { filter: (query) => query.eq('arc_id', arcId) },
+  )
+  if (result.error) throw result.error
+  return resortRows(result.data ?? [], 'published_at', { ascending: false, nullsFirst: false })
 }
 
 // Track B Step 3 item 4 (Screen 5 Connections tab + footer count): every

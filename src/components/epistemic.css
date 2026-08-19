@@ -978,3 +978,85 @@
     padding: 4px;
   }
 }
+
+/* Story Arc overview: lifecycle record is a compact event-and-evidence table.
+   It deliberately contains no attached-article rows; those remain in Evidence. */
+.arc-lifecycle-table-wrap {
+  overflow-x: auto;
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--card-radius);
+  background: var(--bg-panel);
+}
+.arc-lifecycle-table {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: collapse;
+  color: var(--text-body);
+  font-size: var(--fs-meta);
+  line-height: 1.4;
+}
+.arc-lifecycle-table caption {
+  padding: 9px 12px;
+  border-bottom: var(--border-width) solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: var(--fs-meta);
+  font-style: italic;
+  text-align: left;
+}
+.arc-lifecycle-table th,
+.arc-lifecycle-table td {
+  padding: 10px 12px;
+  border-bottom: var(--border-width) solid var(--border-color);
+  text-align: left;
+  vertical-align: top;
+}
+.arc-lifecycle-table th {
+  color: var(--text-muted);
+  font-size: calc(var(--fs-meta) * .92);
+  font-weight: var(--fw-label);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  background: var(--bg-inset);
+}
+.arc-lifecycle-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.arc-lifecycle-table td:nth-child(2) {
+  min-width: 95px;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-label);
+  white-space: nowrap;
+}
+.arc-lifecycle-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 130px;
+  color: var(--text-primary);
+  font-weight: var(--fw-label);
+}
+.arc-lifecycle-stage .ep-typeicon {
+  width: 22px;
+  height: 22px;
+}
+.arc-lifecycle-evidence {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 7px;
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: calc(var(--fs-meta) * .94);
+  font-weight: var(--fw-label);
+  white-space: nowrap;
+}
+.arc-lifecycle-evidence-confirmed { border-color: var(--tier-1-border); color: var(--tier-1-text); }
+.arc-lifecycle-evidence-corroborated { border-color: var(--status-blue-border); color: var(--status-blue-text); }
+.arc-lifecycle-evidence-inferred { border-style: dashed; border-color: var(--cat-inferred); color: var(--cat-inferred); }
+@media (max-width: 767px) {
+  .arc-lifecycle-table-wrap { margin-inline: -2px; }
+  .arc-lifecycle-table { min-width: 590px; }
+  .arc-lifecycle-table th,
+  .arc-lifecycle-table td { padding: 9px 10px; }
+}

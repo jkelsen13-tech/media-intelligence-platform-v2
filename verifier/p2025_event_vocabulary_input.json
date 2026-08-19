@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT track, state, review_status, count(*)::int AS row_count FROM public.p3_policy_track_event GROUP BY track, state, review_status ORDER BY row_count DESC, track, state LIMIT 100;"
+}

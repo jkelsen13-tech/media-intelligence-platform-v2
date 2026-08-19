@@ -1,0 +1,4 @@
+{
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "query": "SELECT 'source_status' AS section, json_agg(value ORDER BY value) AS detail FROM (SELECT DISTINCT COALESCE(source_status, 'not_recorded') AS value FROM public.articles LIMIT 100) valueset UNION ALL SELECT 'feeds' AS section, json_agg(value ORDER BY value) AS detail FROM (SELECT DISTINCT COALESCE(feed, 'not_recorded') AS value FROM public.articles LIMIT 100) valueset UNION ALL SELECT 'topic_tables' AS section, json_agg(table_name ORDER BY table_name) AS detail FROM information_schema.tables WHERE table_schema = 'public' AND table_name ILIKE '%topic%' UNION ALL SELECT 'article_counts' AS section, json_build_object('total', count(*), 'with_arc', count(*) FILTER (WHERE arc_id IS NOT NULL), 'with_outlet', count(*) FILTER (WHERE outlet IS NOT NULL), 'with_source_status', count(*) FILTER (WHERE source_status IS NOT NULL)) AS detail FROM public.articles;"
+}
