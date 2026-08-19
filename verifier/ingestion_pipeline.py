@@ -996,16 +996,26 @@ def run(args: argparse.Namespace) -> int:
                 raise AssertionError("manifest ceiling breach")
             counters["manifested"] += len(manifest)
             journal.note(batch_number, "manifested", f"{len(manifest)} articles from {source['source_key']} for {day.isoformat()}")
+            working_manifest = manifest
+            if writer:
+                existing_urls = writer.existing_urls([item.url for item in manifest])
+                working_manifest = []
+                for item in manifest:
+                    if item.url in existing_urls:
+                        counters["preexisting_skipped"] += 1
+                        journal.log_exclusion(batch_number, item, "preexisting_article", "existing row is immutable to this backfill")
+                    else:
+                        working_manifest.append(item)
             if args.mode == "discover":
                 actions = []
-                for item in manifest:
+                for item in working_manifest:
                     row = HydratedArticle(item, None, None, None, source_note(source, False, "discovery-only mode"))
                     action = build_action(row, None, [])
                     action["article"]["ingestion_run_id"] = run_id
                     actions.append(action)
             else:
                 gate = RobotGate()
-                hydrated = [hydrate(item, source, gate) for item in manifest]
+                hydrated = [hydrate(item, source, gate) for item in working_manifest]
                 eligible_hydrated: list[HydratedArticle] = []
                 for row in hydrated:
                     body_scope = canary_decision(row.candidate, config, row.body_text or "")
@@ -1034,19 +1044,9 @@ def run(args: argparse.Namespace) -> int:
                     elif row.body_text:
                         counters["extraction_failed"] += 1
             if writer:
-                existing = writer.existing_urls([action["article"]["url"] for action in actions])
-                new_actions = []
-                for action in actions:
-                    url = action["article"]["url"]
-                    if url in existing:
-                        counters["preexisting_skipped"] += 1
-                        match = next(item for item in manifest if item.url == url)
-                        journal.log_exclusion(batch_number, match, "preexisting_article", "existing row is immutable to this backfill")
-                    else:
-                        new_actions.append(action)
-                inserted = writer.write_batch(run_id, batch_number, source["source_key"], new_actions)
+                inserted = writer.write_batch(run_id, batch_number, source["source_key"], actions)
                 counters["inserted"] += inserted
-                journal.note(batch_number, "written", f"{inserted} new articles; {len(new_actions) - inserted} duplicate race/no-op")
+                journal.note(batch_number, "written", f"{inserted} new articles; {len(actions) - inserted} duplicate race/no-op")
             else:
                 spool = write_spool(journal, batch_number, source["source_key"], actions, manifest)
                 counters["spooled"] += len(actions)
