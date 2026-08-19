@@ -4,7 +4,7 @@
 //   - omission and coverage_unknown are structurally distinct;
 //   - thin extraction carries a visible marker;
 //   - evidence strength maps to G2 E-levels with NO composite score;
-//   - untiered outlets return null (rendered "not yet tiered"), never guessed.
+//   - untiered outlets return null (rendered "tier not assigned"), never guessed.
 // Fixtures are inline: this file tests pure functions, not Supabase I/O.
 
 import test from 'node:test'
@@ -128,6 +128,33 @@ test('single-source event is labeled, not hidden', () => {
   )
   assert.equal(view.singleSource, true)
   assert.deepEqual(view.outlets, ['BBC'])
+})
+
+test('event view exposes per-outlet framing, explanation state, review date, and evidence totals separately', () => {
+  const byId = new Map([['a1', A1], ['a3', A3]])
+  const claimViews = [
+    {
+      id: 'c1',
+      evidenceLinks: [{ id: 'ev1', evidence_url: 'https://example.com/primary' }],
+      surfaces: [
+        { outlet: 'BBC', surfaceText: 'BBC framing', explanation: { state: 'ok' }, reviewedAt: '2026-08-11T00:00:00Z' },
+        { outlet: 'NPR', surfaceText: 'NPR framing', explanation: null, reviewedAt: null },
+      ],
+    },
+  ]
+  const view = buildEventView(
+    { id: 'e3', canonical_title: 'Framing event', status: 'active', occurred_at_start: '2026-08-05' },
+    [{ article_id: 'a1' }, { article_id: 'a3' }],
+    { articlesById: byId, claimViews },
+  )
+  assert.deepEqual(view.evidenceTotals, { claims: 1, primaryLinks: 1, outlets: 2 })
+  assert.equal(view.reviewedAt, '2026-08-11T00:00:00Z')
+  const bbc = view.outletCoverage.find((coverage) => coverage.outlet === 'BBC')
+  const npr = view.outletCoverage.find((coverage) => coverage.outlet === 'NPR')
+  assert.equal(bbc.includedClaimCount, 1)
+  assert.equal(bbc.framing[0].surfaceText, 'BBC framing')
+  assert.deepEqual(bbc.explanationStates, ['ok'])
+  assert.deepEqual(npr.explanationStates, ['explanation_pending'])
 })
 
 test('claim surface attaches its explanation object by article id', () => {

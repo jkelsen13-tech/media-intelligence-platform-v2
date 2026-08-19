@@ -2963,3 +2963,94 @@ body {
     flex-direction: column;
   }
 }
+
+/* Reference alignment — Knowledge Graph (IMG_2995): foreground node cards use
+   a visible type icon token and the small-screen rail yields more space to the
+   canvas. These are presentation refinements; relationship semantics remain
+   entirely in the source-backed graph data. */
+.graph-card {
+  border-color: color-mix(in srgb, var(--border-strong, #8a8a80) 82%, var(--accent) 18%);
+  box-shadow: 0 7px 18px rgb(22 52 92 / 12%);
+}
+.graph-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-inset);
+  color: var(--accent);
+}
+.graph-card-icon svg {
+  width: 13px;
+  height: 13px;
+}
+.graph-card-name {
+  font-size: 12.5px;
+  letter-spacing: -0.01em;
+}
+.graph-card-type {
+  margin-top: 1px;
+  color: var(--text-muted);
+  font-weight: 650;
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+.graph-card.selected {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent), 0 9px 22px rgb(22 52 92 / 14%);
+}
+.graph-region-label {
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 6px rgb(22 52 92 / 8%);
+  font-size: 11px;
+  font-weight: 720;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+@media (max-width: 767px) {
+  .graph-toolbar {
+    gap: 6px;
+    padding: 8px 10px;
+  }
+  .graph-toolbar-btn {
+    min-height: 38px;
+    padding-inline: 10px;
+  }
+  .graph-rail {
+    max-height: 31vh;
+    gap: 8px;
+    padding: 8px 10px;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+  .graph-rail .legend,
+  .graph-rail .graph-controls,
+  .graph-rail .topic-browser {
+    min-width: min(100%, 260px);
+  }
+  .graph-stage {
+    min-height: 330px;
+  }
+  .graph-cards .graph-card.mobile-active {
+    width: min(260px, calc(100% - 28px));
+    min-height: 72px;
+    padding: 10px 12px;
+    border-width: 2px;
+    box-shadow: 0 10px 24px rgb(22 52 92 / 18%);
+  }
+  .graph-cards .graph-card.mobile-active .graph-card-name {
+    font-size: 13px;
+  }
+  .graph-band-label {
+    top: 6px;
+    left: 8px;
+    max-width: calc(100% - 16px);
+    padding: 3px 6px;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--bg-panel) 88%, transparent);
+    font-size: 11px;
+  }
+}

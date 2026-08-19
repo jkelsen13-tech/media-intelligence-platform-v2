@@ -61,6 +61,17 @@ const LINK_FILTERS = [
   { id: 'none', label: 'No links' },
 ]
 
+function TimelineTabIcon({ kind }) {
+  const common = { fill: 'none', stroke: 'currentColor', strokeWidth: '1.6', strokeLinecap: 'round', strokeLinejoin: 'round' }
+  if (kind === 'connections') {
+    return <svg viewBox="0 0 18 18" width="16" height="16" focusable="false"><circle cx="4" cy="4" r="2" {...common} /><circle cx="14" cy="9" r="2" {...common} /><circle cx="4" cy="14" r="2" {...common} /><path d="m5.8 5.1 6.3 2.8M5.8 12.9l6.3-2.8" {...common} /></svg>
+  }
+  if (kind === 'evidence') {
+    return <svg viewBox="0 0 18 18" width="16" height="16" focusable="false"><path d="M4 2.5h7l3 3v10H4z" {...common} /><path d="M11 2.5v3h3M6.5 9h5M6.5 12h4" {...common} /></svg>
+  }
+  return <svg viewBox="0 0 18 18" width="16" height="16" focusable="false"><circle cx="9" cy="9" r="6.2" {...common} /><path d="M9 5.5V9l2.5 1.8" {...common} /></svg>
+}
+
 export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, focusArcKey }) {
   // --- arcs + scope -----------------------------------------------------------
   const [arcs, setArcs] = useState(null)
@@ -357,9 +368,9 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
           activeId={activeTab}
           onSelect={setActiveTab}
           tabs={[
-            { id: 'timeline', label: 'Timeline', panelId: 'timeline-panel' },
-            { id: 'connections', label: 'Connections', panelId: 'timeline-connections-panel' },
-            { id: 'evidence', label: 'Evidence', panelId: 'timeline-evidence-panel' },
+            { id: 'timeline', label: 'Timeline', icon: <TimelineTabIcon kind="timeline" />, panelId: 'timeline-panel' },
+            { id: 'connections', label: 'Connections', icon: <TimelineTabIcon kind="connections" />, panelId: 'timeline-connections-panel' },
+            { id: 'evidence', label: 'Evidence', icon: <TimelineTabIcon kind="evidence" />, panelId: 'timeline-evidence-panel' },
           ]}
         />
       </div>

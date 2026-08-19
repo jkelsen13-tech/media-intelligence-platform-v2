@@ -855,3 +855,126 @@
     gap: 0 8px;
   }
 }
+
+/* Reference alignment — Timeline hierarchy (IMG_2994): semantic tab glyphs,
+   year-forward dates, bordered reader cards, and a visible event drill-in. */
+.ep-tabs .ep-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.ep-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  color: var(--text-secondary);
+}
+.ep-tab-active .ep-tab-icon {
+  color: var(--accent);
+}
+.ep-tl-entry {
+  grid-template-columns: 72px 34px minmax(0, 1fr);
+  gap: 0 12px;
+}
+.ep-tl-date {
+  align-items: flex-end;
+  padding-top: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.ep-tl-date-y {
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 760;
+  letter-spacing: 0.05em;
+  line-height: 1.05;
+}
+.ep-tl-date-md {
+  margin-top: 2px;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+.ep-tl-spine {
+  padding-top: 9px;
+}
+.ep-tl-card {
+  margin-bottom: 8px;
+  padding: 13px 15px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-panel);
+  box-shadow: 0 4px 12px rgb(22 52 92 / 5%);
+}
+.ep-tl-card-head {
+  margin-bottom: 8px;
+}
+.ep-tl-title {
+  font-size: clamp(1rem, 2.4vw, 1.13rem);
+  line-height: 1.3;
+  margin-bottom: 5px;
+}
+.ep-tl-desc {
+  line-height: 1.55;
+}
+.ep-tl-toggle {
+  width: auto;
+  min-height: 29px;
+  gap: 5px;
+  padding: 4px 7px 4px 9px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.ep-tl-toggle:hover,
+.ep-tl-toggle:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-inset);
+}
+.ep-tl-toggle-label {
+  white-space: nowrap;
+}
+.ep-tl-foot {
+  padding-top: 7px;
+  border-top: 1px solid var(--border-color);
+}
+@media (max-width: 480px) {
+  .ep-tabs .ep-tab {
+    flex: 1 1 0;
+    min-height: 42px;
+    padding-inline: 7px;
+    font-size: 0.78rem;
+  }
+  .ep-tl-entry {
+    grid-template-columns: 57px 28px minmax(0, 1fr);
+    gap: 0 7px;
+  }
+  .ep-tl-date {
+    padding-top: 9px;
+  }
+  .ep-tl-date-y {
+    font-size: 0.82rem;
+  }
+  .ep-tl-date-md {
+    font-size: 0.68rem;
+  }
+  .ep-tl-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  .ep-tl-toggle-label {
+    display: none;
+  }
+  .ep-tl-toggle {
+    width: 31px;
+    padding: 4px;
+  }
+}

@@ -18,7 +18,8 @@ export default function EvidenceTabs({ label, tabs, activeId, onSelect, classNam
             className={`ep-tab${selected ? ' ep-tab-active' : ''}`}
             onClick={() => onSelect?.(tab.id)}
           >
-            {tab.label}
+            {tab.icon && <span className="ep-tab-icon" aria-hidden="true">{tab.icon}</span>}
+            <span className="ep-tab-label">{tab.label}</span>
           </button>
         )
       })}

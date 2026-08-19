@@ -33,12 +33,10 @@ function DateAxis({ date }) {
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
   ][Number(m) - 1]
   return (
-    <span className="ep-tl-date">
-      <span className="ep-tl-date-md">
-        {month} {Number(d)},
+      <span className="ep-tl-date" aria-label={`${month} ${Number(d)}, ${y}`}>
+        <span className="ep-tl-date-y">{y}</span>
+        <span className="ep-tl-date-md">{month} {Number(d)}</span>
       </span>
-      <span className="ep-tl-date-y">{y}</span>
-    </span>
   )
 }
 
@@ -59,6 +57,7 @@ function TimelineEntry({ entry, article, expanded, onToggle }) {
             aria-label={expanded ? `Collapse ${entry.title}` : `Expand ${entry.title}`}
             onClick={onToggle}
           >
+            <span className="ep-tl-toggle-label">{expanded ? 'Hide details' : 'View details'}</span>
             <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false">
               {expanded ? (
                 <path d="M2 8 6 4l4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />

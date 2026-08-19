@@ -133,6 +133,7 @@ export function buildClaimView(claim, surfaces, ctx) {
       url: article.url ?? null,
       loadedLanguage: Array.isArray(s.loaded_language) ? s.loaded_language : [],
       explanation: explanationsByArticle.get(s.article_id) ?? null,
+      reviewedAt: explanationsByArticle.get(s.article_id)?.reviewed_at ?? null,
     }
   })
   const independent = independentOutlets(surfaces.map((s) => s.article_id), articlesById, syndicates)
@@ -189,6 +190,34 @@ export function buildEventView(event, memberRows, ctx) {
         ? Math.round(((new Date(t.firstPublishedAt) - new Date(first.firstPublishedAt)) / 3600000) * 10) / 10
         : null,
   }))
+  const outletCoverage = outlets.map((outlet) => {
+    const rows = ctx.claimViews.flatMap((claim) =>
+      claim.surfaces
+        .filter((surface) => surface.outlet === outlet)
+        .map((surface) => ({
+          claimId: claim.id,
+          claimText: claim.canonicalText,
+          surfaceText: surface.surfaceText,
+          explanationState: surface.explanation?.state ?? 'explanation_pending',
+          reviewedAt: surface.reviewedAt ?? null,
+        })),
+    )
+    const latestReviewedAt = rows
+      .map((row) => row.reviewedAt)
+      .filter(Boolean)
+      .sort()
+      .at(-1) ?? null
+    return {
+      outlet,
+      articleCount: articles.filter((article) => article.outlet === outlet).length,
+      includedClaimCount: new Set(rows.map((row) => row.claimId)).size,
+      framing: rows,
+      explanationStates: [...new Set(rows.map((row) => row.explanationState))],
+      latestReviewedAt,
+    }
+  })
+  const evidenceLinkCount = ctx.claimViews.reduce((total, claim) => total + claim.evidenceLinks.length, 0)
+  const reviewedAt = outletCoverage.map((coverage) => coverage.latestReviewedAt).filter(Boolean).sort().at(-1) ?? null
   return {
     id: event.id,
     title: event.canonical_title,
@@ -200,6 +229,9 @@ export function buildEventView(event, memberRows, ctx) {
     firstOutlet: first?.outlet ?? null,
     timing: timingView,
     claims: ctx.claimViews,
+    outletCoverage,
+    evidenceTotals: { claims: ctx.claimViews.length, primaryLinks: evidenceLinkCount, outlets: outlets.length },
+    reviewedAt,
   }
 }
 
@@ -289,7 +321,7 @@ export async function loadSourceComparisonView({ supabaseClient } = {}) {
     keysetAll(supabase, 'article_claims', 'id, claim_id, article_id, surface_text, stance, loaded_language', { filter: (q) => q.eq('is_current', true) }),
     keysetAll(supabase, 'claim_evidence_links', 'id, claim_id, evidence_url, evidence_type'),
     keysetAll(supabase, 'claim_corrections', 'id, claim_id, correcting_article_id, corrected_article_id, correction_text, occurred_at'),
-    keysetAll(supabase, 'explanations', 'id, assertion_id, assertion_type, supporting_passage, rule_version, provenance_class, review_status, state, remaining_uncertainty', {
+    keysetAll(supabase, 'explanations', 'id, assertion_id, assertion_type, supporting_passage, rule_version, provenance_class, reviewed_at, review_status, state, remaining_uncertainty', {
       filter: (q) => q.in('assertion_type', ['event_membership', 'claim_grouping']).like('rule_version', 'sc-v1|%').eq('is_current', true),
     }),
   ])

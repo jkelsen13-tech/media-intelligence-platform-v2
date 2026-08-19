@@ -20,12 +20,50 @@ import './sourcecomparison.css'
 
 function ReliabilityChip({ outlet }) {
   const level = OUTLET_RELIABILITY[outlet]
-  if (!level) return <span className="sc-chip sc-chip-muted">not yet tiered</span>
+  if (!level) return <span className="sc-chip sc-chip-muted">tier not assigned</span>
   return <span className={`sc-chip sc-chip-${level.toLowerCase()}`}>{R_LEVEL_NAMES[level]}</span>
 }
 
 function StrengthChip({ level }) {
   return <span className={`sc-chip sc-chip-${level.toLowerCase()}`}>{E_LEVEL_NAMES[level]}</span>
+}
+
+function formatReviewedAt(value) {
+  if (!value) return 'not recorded'
+  const date = new Date(value)
+  return Number.isNaN(date.valueOf()) ? 'not recorded' : date.toLocaleDateString()
+}
+
+function OutletCoverageCard({ coverage }) {
+  const framing = coverage.framing.slice(0, 2)
+  const states = coverage.explanationStates.length > 0
+    ? coverage.explanationStates.map((state) => state.replace(/_/g, ' ')).join(' · ')
+    : 'explanation pending'
+  return (
+    <article className="sc-outlet-card">
+      <header className="sc-outlet-card-head">
+        <div>
+          <p className="sc-outlet-card-label">Outlet record</p>
+          <h4>{coverage.outlet}</h4>
+        </div>
+        <ReliabilityChip outlet={coverage.outlet} />
+      </header>
+      <dl className="sc-outlet-facts">
+        <div><dt>Included</dt><dd>{coverage.includedClaimCount} extracted claim{coverage.includedClaimCount === 1 ? '' : 's'} across {coverage.articleCount} ingested article{coverage.articleCount === 1 ? '' : 's'}</dd></div>
+        <div><dt>Epistemic state</dt><dd>{states}</dd></div>
+        <div><dt>Latest review</dt><dd>{formatReviewedAt(coverage.latestReviewedAt)}</dd></div>
+      </dl>
+      <section className="sc-outlet-framing">
+        <p>Framing captured from the ingested source</p>
+        {framing.length === 0 ? (
+          <span>No claim surface is currently extracted for this outlet.</span>
+        ) : framing.map((row) => (
+          <blockquote key={`${row.claimId}-${row.surfaceText}`}>{row.surfaceText}</blockquote>
+        ))}
+        {coverage.framing.length > framing.length && <span>Additional extracted framing remains in the claim detail below.</span>}
+      </section>
+    </article>
+  )
 }
 
 function ExplanationDetails({ explanation }) {
@@ -171,6 +209,13 @@ function EventCard({ event, onOpenArticle, onOpenArc, onOpenTimeline, focused, s
         </div>
       </header>
 
+      <div className="sc-event-evidence-bar">
+        <span><strong>{event.evidenceTotals?.claims ?? 0}</strong> claim{event.evidenceTotals?.claims === 1 ? '' : 's'} reviewed</span>
+        <span><strong>{event.evidenceTotals?.primaryLinks ?? 0}</strong> primary evidence link{event.evidenceTotals?.primaryLinks === 1 ? '' : 's'}</span>
+        <span>Latest review: <strong>{formatReviewedAt(event.reviewedAt)}</strong></span>
+      </div>
+      <p className="sc-lineage-status">Lineage status: canonical-URL duplicates are collapsed; wire, ownership, and editorial lineage are not yet verified.</p>
+
       {(event.arcLinks?.length ?? 0) > 0 && (onOpenArc || onOpenTimeline) && (
         <p className="sc-meta sc-xlinks">
           {event.arcLinks.map((l) => (
@@ -200,26 +245,23 @@ function EventCard({ event, onOpenArticle, onOpenArc, onOpenTimeline, focused, s
         </p>
       )}
 
-      {event.singleSource ? (
+      {event.singleSource && (
         <p className="sc-single-source">
-          Only one outlet's coverage ingested for this event — comparison unavailable.
+          One outlet is currently ingested for this event. Its captured record is shown below; comparison and source independence are not established.
         </p>
-      ) : (
-        <>
-          <p className="sc-meta">
-            Outlets in this event: {event.outlets.map((o) => (
-              <span key={o} className="sc-outlet-inline">{o} <ReliabilityChip outlet={o} /></span>
-            ))}
-          </p>
-          <p className="sc-meta">
-            Publication timing: first reported by {event.firstOutlet ?? 'unknown'}
-            {event.timing.filter((t) => t.outlet !== event.firstOutlet).map((t) => (
-              <span key={t.outlet} className="sc-timing">
-                {' '}· {t.outlet} {t.lagHours === null ? '(time unknown)' : t.lagHours === 0 ? '(same hour)' : `(+${t.lagHours}h)`}
-              </span>
-            ))}
-          </p>
-        </>
+      )}
+      <div className="sc-outlet-grid" aria-label="Per-outlet coverage records">
+        {(event.outletCoverage ?? []).map((coverage) => <OutletCoverageCard key={coverage.outlet} coverage={coverage} />)}
+      </div>
+      {!event.singleSource && (
+        <p className="sc-meta">
+          Publication timing: first reported by {event.firstOutlet ?? 'unknown'}
+          {event.timing.filter((t) => t.outlet !== event.firstOutlet).map((t) => (
+            <span key={t.outlet} className="sc-timing">
+              {' '}· {t.outlet} {t.lagHours === null ? '(time unknown)' : t.lagHours === 0 ? '(same hour)' : `(+${t.lagHours}h)`}
+            </span>
+          ))}
+        </p>
       )}
 
       {event.claims.length === 0 ? (
