@@ -46,3 +46,7 @@ mip-v2-backfill-20260819T065756Z-80faeaf3: | 2026-08-19 07:02:54Z | 1 | failure 
 mip-v2-backfill-20260819T065756Z-80faeaf3: | 2026-08-19 07:03:22Z | 1 | failure | extract_pruned_or_validate: model_error:APITimeoutError:Request timed out. |
 mip-v2-backfill-20260819T065756Z-80faeaf3: | 2026-08-19 07:03:23Z | 1 | written | 10 new articles; 0 duplicate race/no-op |
 mip-v2-backfill-20260819T065756Z-80faeaf3: | 2026-08-19 07:03:25Z | — | completed | {"extracted": 8, "extraction_failed": 2, "extraction_pruned": 4, "inserted": 10, "manifested": 10} |
+mip-v2-backfill-20260819T070712Z-36a5b2f9: | 2026-08-19 07:07:13Z | — | started | mode=discover; target=10000; sources=gdelt-public-news-discovery; write_mode=direct |
+mip-v2-backfill-20260819T070712Z-36a5b2f9: | 2026-08-19 07:10:06Z | — | failure | run: RuntimeError: GDELT discovery failed after retry budget: Expecting value: line 1 column 1 (char 0) |
+mip-v2-backfill-20260819T071139Z-f16e1e7a: | 2026-08-19 07:11:40Z | — | started | mode=discover; target=10; sources=gdelt-public-news-discovery; write_mode=direct |
+mip-v2-backfill-20260819T071139Z-f16e1e7a: | 2026-08-19 07:14:46Z | — | failure | run: RuntimeError: GDELT discovery failed after retry budget: Expecting value: line 1 column 1 (char 0) |
