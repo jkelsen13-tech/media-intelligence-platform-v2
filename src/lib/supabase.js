@@ -818,6 +818,49 @@ export async function loadOutletDirectory({ supabaseClient } = {}) {
   })
 }
 
+// Applies the concrete News filters shared by the paged feed and its separate
+// source-metric read. Source metrics intentionally omit a selected outlet so
+// their list remains a comparison of the current non-vendor filter context.
+function applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore } = {}) {
+  const term = sanitizeSearch(q)
+  if (term) {
+    query = query.or(
+      `title.ilike.%${term}%,summary.ilike.%${term}%,body_text.ilike.%${term}%`,
+    )
+  }
+  if (outlet) query = query.eq('outlet', outlet)
+  if (Array.isArray(outlets) && outlets.length > 0) query = query.in('outlet', outlets)
+  if (Array.isArray(feeds) && feeds.length > 0) query = query.in('feed', feeds)
+  const safeTopicTerms = [...new Set((topicTerms ?? []).map(sanitizeSearch).filter(Boolean))]
+  if (safeTopicTerms.length > 0) {
+    const topicClauses = safeTopicTerms.flatMap((topicTerm) => [
+      `title.ilike.%${topicTerm}%`,
+      `summary.ilike.%${topicTerm}%`,
+    ])
+    query = query.or(topicClauses.join(','))
+  }
+  if (publishedAfter) query = query.gte('published_at', publishedAfter)
+  if (publishedBefore) query = query.lte('published_at', publishedBefore)
+  if (status === 'arc') query = query.not('arc_id', 'is', null)
+  if (status === 'unattributed') query = query.eq('unattributed', true)
+  if (status === 'monoculture') query = query.eq('monoculture', true)
+  return query
+}
+
+// Complete, keyset-paginated source-metric population for the current News
+// context. It excludes a selected outlet intentionally: publisher selection is
+// an interaction target, not a condition that should zero every other vendor.
+export async function loadFilteredSourceMetricRows(filters = {}, { supabaseClient } = {}) {
+  const client = supabaseClient ?? supabase
+  if (!client) return []
+  const { outlet: _selectedOutlet, ...contextFilters } = filters
+  const { data, error } = await keysetAll(client, 'articles', 'id, outlet, published_at', {
+    filter: (query) => applyNewsArticleFilters(query, contextFilters),
+  })
+  if (error) throw error
+  return data ?? []
+}
+
 // Paged, searchable article stream across all outlets. `outlets`, `feeds`,
 // and `topicTerms` are optional working filters. Topic terms are explicitly
 // title/summary matches rather than a claim of a complete article taxonomy.
@@ -833,28 +876,7 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
     .order('fetched_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
-  const term = sanitizeSearch(q)
-  if (term) {
-    query = query.or(
-      `title.ilike.%${term}%,summary.ilike.%${term}%,body_text.ilike.%${term}%`,
-    )
-  }
-  if (outlet) query = query.eq('outlet', outlet)
-  if (Array.isArray(outlets) && outlets.length > 0) query = query.in('outlet', outlets)
-  if (Array.isArray(feeds) && feeds.length > 0) query = query.in('feed', feeds)
-  const safeTopicTerms = [...new Set((topicTerms ?? []).map(sanitizeSearch).filter(Boolean))]
-  if (safeTopicTerms.length > 0) {
-    const topicClauses = safeTopicTerms.flatMap((term) => [
-      `title.ilike.%${term}%`,
-      `summary.ilike.%${term}%`,
-    ])
-    query = query.or(topicClauses.join(','))
-  }
-  if (publishedAfter) query = query.gte('published_at', publishedAfter)
-  if (publishedBefore) query = query.lte('published_at', publishedBefore)
-  if (status === 'arc') query = query.not('arc_id', 'is', null)
-  if (status === 'unattributed') query = query.eq('unattributed', true)
-  if (status === 'monoculture') query = query.eq('monoculture', true)
+  query = applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore })
 
   const { data, error, count } = await query
   if (error) throw error

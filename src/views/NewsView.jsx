@@ -12,6 +12,7 @@ import {
   loadArticleCitationMap,
   loadEventGrouping,
   loadOutletRegions,
+  loadFilteredSourceMetricRows,
 } from '../lib/supabase'
 import {
   PROVENANCE_LABELS,
@@ -22,7 +23,7 @@ import {
 import EpistemicBanner from '../components/EpistemicBanner'
 import SourceAttributionLine from '../components/SourceAttributionLine'
 import SkyBadge from '../panels/SkyBadge'
-import { OUTLET_RELIABILITY, R_LEVEL_NAMES } from '../lib/sourceComparisonReadPath.js'
+import { buildSourceMetrics, enrichOutletsWithMetrics, sortOutletsBySourceMetric } from '../lib/sourceMetrics.js'
 
 // News Feed (Track B Step 4, addendum Screen 1): title block with the
 // browser-local last-visit count, epistemic banner, wired outlet/status
@@ -44,8 +45,8 @@ const STATUS_FILTERS = [
 
 // Reference-style filters. Every option maps to currently available metadata.
 // Topic options are documented title/summary term matches, not an assertion of
-// a complete article taxonomy. Source-tier ordering only uses the locked tier
-// record where it exists; no popularity or composite reliability score is made.
+// a complete article taxonomy. Source metrics remain distinct literal fields;
+// no popularity, reliability, or composite vendor score is calculated.
 const PRIMARY_RECORD_FEEDS = [
   'doj-primary-records',
   'p2025-primary-records',
@@ -80,11 +81,6 @@ const DATE_FILTERS = [
   { key: '30d', label: 'Last 30 days' },
   { key: 'custom', label: 'Custom range' },
 ]
-
-function reliabilityOrder(outlet) {
-  const tier = OUTLET_RELIABILITY[outlet]
-  return tier ? Number(tier.slice(1)) : Number.POSITIVE_INFINITY
-}
 
 function fmtDate(iso) {
   if (!iso) return 'undated'
@@ -161,6 +157,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const [customDateEnd, setCustomDateEnd] = useState('')
   const [sourceOrder, setSourceOrder] = useState('corpus')
   const [outlets, setOutlets] = useState([])
+  const [sourceMetricRows, setSourceMetricRows] = useState([])
   const [articles, setArticles] = useState([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -241,11 +238,29 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     return { after: hours ? new Date(Date.now() - hours * 60 * 60 * 1000).toISOString() : undefined, before: undefined }
   }, [dateRange, customDateStart, customDateEnd])
 
+  const sourceMetricContext = useMemo(() => ({
+    q: debouncedQ,
+    outlets: selectedRegionOutlets,
+    status: evidenceBasis === 'arc' ? 'arc' : status,
+    feeds: evidenceBasis === 'primary' ? PRIMARY_RECORD_FEEDS : undefined,
+    topicTerms: selectedTopicTerms,
+    publishedAfter: publicationBounds.after,
+    publishedBefore: publicationBounds.before,
+  }), [debouncedQ, evidenceBasis, publicationBounds.after, publicationBounds.before, selectedRegionOutlets, selectedTopicTerms, status])
+
+  useEffect(() => {
+    let cancelled = false
+    loadFilteredSourceMetricRows(sourceMetricContext)
+      .then((rows) => { if (!cancelled) setSourceMetricRows(rows) })
+      .catch(() => { if (!cancelled) setSourceMetricRows([]) })
+    return () => { cancelled = true }
+  }, [sourceMetricContext])
+
+  const sourceMetrics = useMemo(() => buildSourceMetrics(sourceMetricRows, eventMap), [sourceMetricRows, eventMap])
   const orderedOutlets = useMemo(() => {
-    const rows = [...outlets]
-    if (sourceOrder === 'name') return rows.sort((a, b) => a.name.localeCompare(b.name))
-    return rows.sort((a, b) => b.articleCount - a.articleCount || a.name.localeCompare(b.name))
-  }, [outlets, sourceOrder])
+    const rows = enrichOutletsWithMetrics(outlets, sourceMetrics).filter((item) => item.volume > 0)
+    return sortOutletsBySourceMetric(rows, sourceOrder)
+  }, [outlets, sourceMetrics, sourceOrder])
 
   const availableRegions = useMemo(
     () => [...new Set(outlets.map((item) => item.country).filter(Boolean))].sort(),
@@ -624,9 +639,12 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           key={item.name}
           className={`news-chip${outlet === item.name ? ' active' : ''}`}
           onClick={() => setOutlet(item.name)}
-          title={`${item.articleCount} articles currently represented${item.country ? ` · ${item.country}` : ''}${item.parentOwnership ? ` · ownership: ${item.parentOwnership}` : ''}`}
+          title={`Volume: ${item.volume} article${item.volume === 1 ? '' : 's'} in the current filter · Earliest timestamp in recorded multi-outlet events: ${item.firstToReportCount}${item.country ? ` · publisher country: ${item.country}` : ''}${item.parentOwnership ? ` · ownership: ${item.parentOwnership}` : ''}`}
         >
-          {item.name}
+          <span className="news-source-name">{item.name}</span>
+          <span className="news-source-metric num" aria-label={`Volume ${item.volume}`}>V {item.volume}</span>
+          <span className="news-source-metric num" aria-label={`First to report ${item.firstToReportCount}`}>F {item.firstToReportCount}</span>
+          <span className="news-source-metric unavailable" aria-label="Independent corroboration unavailable without verified lineage">C —</span>
         </button>
       ))}
     </div>
@@ -735,14 +753,17 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         />
         {referenceFilters()}
         <div className="news-source-order-row">
+          <p className="news-source-metric-key"><strong>Source fields:</strong> <span>V = volume in current filter</span><span>F = first-to-report count in recorded multi-outlet events</span><span>C = corroboration, unavailable without verified lineage</span></p>
           <label className="news-source-order">
             <span>Source order</span>
             <select value={sourceOrder} onChange={(event) => setSourceOrder(event.target.value)}>
-              <option value="corpus">Volume — articles in corpus</option>
+              <option value="corpus">Volume — articles in current filter</option>
+              <option value="first">First-to-report — recorded event timestamps</option>
+              <option value="corroboration" disabled>Corroboration — unavailable without verified lineage</option>
               <option value="name">Source name A–Z</option>
             </select>
           </label>
-          <p>Sorted by: volume — a literal article count. First-to-report and corroboration are separate measures and are not displayed until the corpus has verified event matching and source-lineage records. No composite vendor score or reliability ranking is calculated.</p>
+          <p>Sorted by: {sourceOrder === 'first' ? 'first-to-report — a unique earliest publisher timestamp within a recorded multi-outlet event in this corpus' : sourceOrder === 'name' ? 'source name A–Z' : 'volume — a literal article count in the current filter'}. Corroboration is unavailable until verified source-lineage records exist; multiple outlets do not establish independence. No composite vendor score or reliability ranking is calculated.</p>
         </div>
         <div className="news-desktop-filters">
           {outletRow}
@@ -773,8 +794,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
             <label className="news-source-order sheet-source-order">
               <span>Order source list by</span>
               <select value={sourceOrder} onChange={(event) => setSourceOrder(event.target.value)}>
-                <option value="corpus">Corpus representation</option>
-                <option value="tier">Recorded source tier</option>
+                <option value="corpus">Volume — articles in current filter</option>
+                <option value="first">First-to-report — recorded event timestamps</option>
+                <option value="corroboration" disabled>Corroboration — unavailable without verified lineage</option>
                 <option value="name">Source name A–Z</option>
               </select>
             </label>
