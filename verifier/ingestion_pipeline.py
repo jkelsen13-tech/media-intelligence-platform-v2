@@ -972,7 +972,8 @@ def run(args: argparse.Namespace) -> int:
                 break
             try:
                 cache_key = (source["source_key"], day.isoformat())
-                if cache_key not in discovery_cache:
+                fetched_this_cycle = cache_key not in discovery_cache
+                if fetched_this_cycle:
                     discovery_cache[cache_key] = fetch_source_batch(source, day)
                 manifest = discover_until_manifest(source, discovery_cache[cache_key], seen_urls, config, journal, batch_number)
             except ScopeHold as exc:
@@ -1053,8 +1054,10 @@ def run(args: argparse.Namespace) -> int:
             # multi-source runs retain the one-date-per-full-source-cycle cursor.
             if (len(sources) == 1 and len(manifest) < MAX_MANIFEST_SIZE) or (len(sources) > 1 and source_index == len(sources) - 1):
                 day_offset += 1
-            # GDELT is rate limited. All public endpoint calls receive an explicit pacing interval.
-            time.sleep(args.request_interval_seconds)
+            # GDELT is rate limited. Pace only real public endpoint calls; cached
+            # records remain independently capped at ten per database manifest.
+            if fetched_this_cycle:
+                time.sleep(args.request_interval_seconds)
         state = "completed"
         if writer:
             writer.finish_run(run_id, state, dict(counters), "Completed without auto-promoting cross-surface candidates.")
