@@ -871,6 +871,9 @@ export default function App() {
                           setGraphMode('relationships')
                           pickNode(node)
                         }}
+                        onSelectLocation={handleLocationFocus}
+                        activeNodeKey={activeGraphNodeKey}
+                        activePlaceKey={activeLocationKey}
                       />
                     ) : (
                     <>

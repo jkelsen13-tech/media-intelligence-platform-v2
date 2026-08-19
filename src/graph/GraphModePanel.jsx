@@ -7,14 +7,38 @@ function labelForPrecision(precision) {
   return `${precision[0].toUpperCase()}${precision.slice(1)}-level representative point`
 }
 
+function locationPlaceKey(row) {
+  return row.placeId ?? `${row.place ?? 'location'}:${row.longitude}:${row.latitude}`
+}
+
 // Focused-Graph addendum modes. Relationships remains the Cytoscape canvas;
 // Geography exposes only source-backed location provenance. City dots are
 // representative points, not claimed exact event coordinates.
-export default function GraphModePanel({ mode, nodes, locationMentions, onReturnToRelationships, onSelectNode }) {
+export default function GraphModePanel({
+  mode,
+  nodes,
+  locationMentions,
+  onReturnToRelationships,
+  onSelectNode,
+  onSelectLocation,
+  activeNodeKey = null,
+  activePlaceKey = null,
+}) {
   const geography = useMemo(() => recordedGeography(nodes, locationMentions), [nodes, locationMentions])
   const geographySummary = useMemo(() => summarizeGeography(nodes, geography), [nodes, geography])
   const chronological = useMemo(() => recordedTime(nodes), [nodes])
   const isGeography = mode === 'geography'
+  const selectLocationRecord = (row) => {
+    const placeKey = locationPlaceKey(row)
+    const nodeKeys = geographySummary.confirmed
+      .filter((candidate) => locationPlaceKey(candidate) === placeKey)
+      .map((candidate) => candidate.key)
+    if (onSelectLocation) {
+      onSelectLocation({ placeKey, place: row.place, nodeKeys })
+      return
+    }
+    if (row.key) onSelectNode?.(row.key)
+  }
 
   return (
     <section className="graph-mode-panel" aria-live="polite" aria-label={isGeography ? 'Geography records' : 'Time records'}>
@@ -50,7 +74,13 @@ export default function GraphModePanel({ mode, nodes, locationMentions, onReturn
             </div>
           </dl>
           <div className="geography-layout">
-            <GeographyGlobe locations={geographySummary.confirmedMappable} onSelectNode={onSelectNode} />
+            <GeographyGlobe
+              locations={geographySummary.confirmedMappable}
+              onSelectNode={onSelectNode}
+              onSelectLocation={onSelectLocation}
+              activeNodeKey={activeNodeKey}
+              activePlaceKey={activePlaceKey}
+            />
             <aside className="geography-legend" aria-label="Geographic corroboration legend">
               <p className="graph-mode-eyebrow">Display rule</p>
               <p>
@@ -68,7 +98,7 @@ export default function GraphModePanel({ mode, nodes, locationMentions, onReturn
             <ul className="geography-record-list">
               {geographySummary.confirmed.map((row) => (
                 <li key={row.id}>
-                  <button type="button" className="geography-record" onClick={() => onSelectNode?.(row.key)}>
+                  <button type="button" className="geography-record" onClick={() => selectLocationRecord(row)}>
                     <span className="geography-record-marker" aria-hidden="true" />
                     <span className="geography-record-content">
                       <span className="graph-mode-primary">{row.place}</span>
