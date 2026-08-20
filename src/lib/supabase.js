@@ -426,6 +426,8 @@ export function deriveArcStatus(events, milestones, dormantDays = 14) {
 }
 
 // All story arcs, newest activity first, with derived status attached.
+const PUBLIC_DORMANT_ARC_DAYS = 14
+
 export async function loadArcs({ supabaseClient } = {}) {
   const client = supabaseClient ?? supabase
   if (!client) {
@@ -437,7 +439,7 @@ export async function loadArcs({ supabaseClient } = {}) {
       ),
     }))
   }
-  const [arcsRes, eventsRes, milestonesRes, cfgRes] = await Promise.all([
+  const [arcsRes, eventsRes, milestonesRes] = await Promise.all([
     // Doc 13: all three arc tables keyset-paginate past the 1000-row ceiling;
     // the story_arcs display order (last_update_at desc, PostgREST default
     // nulls-first) is re-applied client-side over the complete set. id is
@@ -446,13 +448,15 @@ export async function loadArcs({ supabaseClient } = {}) {
     keysetAll(client, 'story_arcs', 'id, slug, title, category, category_confidence, category_evidence, status, root_node_id, coverage_gap, summary, started_at, last_update_at')
       .then((r) => (r.data ? { ...r, data: resortRows(r.data, 'last_update_at', { ascending: false }) } : r)),
     keysetAll(client, 'arc_events', 'id, arc_id, occurred_at'),
-    keysetAll(client, 'arc_milestones', 'id, arc_id, status'),
-    client.from('pipeline_config').select('value').eq('key', 'status_dormant_days').maybeSingle(),
+    keysetAll(client, 'arc_milestones_public', 'id, arc_id, status'),
   ])
   if (arcsRes.error) throw arcsRes.error
   if (eventsRes.error) throw eventsRes.error
   if (milestonesRes.error) throw milestonesRes.error
-  const dormantDays = Number(cfgRes.data?.value ?? 14) || 14
+  // The public route must not read operational pipeline_config. Its prior
+  // denied-read fallback was the documented 14-day value, retained here
+  // explicitly so anonymous behavior is deterministic and request-free.
+  const dormantDays = PUBLIC_DORMANT_ARC_DAYS
   const eventsByArc = new Map()
   for (const e of eventsRes.data) {
     const arr = eventsByArc.get(e.arc_id) ?? []
@@ -481,7 +485,7 @@ export async function loadArcDetail(arcKey) {
   }
   const [milestonesRes, eventsRes] = await Promise.all([
     supabase
-      .from('arc_milestones')
+      .from('arc_milestones_public')
       .select('id, title, status, notes, updated_at')
       .eq('arc_id', arcKey)
       .order('updated_at', { ascending: true }),
@@ -553,33 +557,40 @@ export async function loadArticleTimelineKey(articleId) {
 }
 
 // Doc 05 pair 5 (News → Source Comparison): comparison events covering an
-// article, via event_articles and via article_claims → claims. Returns
-// [{ eventId, title }] (deduped); empty when the article is in no comparison
-// event — the link then does not render.
-export async function loadArticleComparisonEvents(articleId) {
-  if (!supabase || !articleId) return []
+// article, via the existing narrow comparison_public projection only. The
+// projection is event-keyed and carries opaque article keys, so this helper
+// joins the already-public article URL to the projected member URL. Returns
+// [{ eventId, title }] (deduped); no matching projected event means no link.
+export async function loadArticleComparisonEvents(articleId, { supabaseClient } = {}) {
+  const client = supabaseClient ?? supabase
+  if (!client || !articleId) return []
   try {
-    const [memberRes, claimRes] = await Promise.all([
-      supabase.from('event_articles').select('event_id').eq('article_id', articleId),
-      supabase.from('article_claims').select('claim_id').eq('article_id', articleId).eq('is_current', true),
-    ])
-    if (memberRes.error) return []
-    const eventIds = new Set((memberRes.data ?? []).map((r) => r.event_id))
-    if (!claimRes.error && (claimRes.data ?? []).length > 0) {
-      const claimIds = [...new Set(claimRes.data.map((r) => r.claim_id))]
-      const { data: claimRows, error: cErr } = await supabase
-        .from('claims')
-        .select('event_id')
-        .in('id', claimIds)
-      if (!cErr) for (const c of claimRows ?? []) eventIds.add(c.event_id)
+    const { data: article, error: articleError } = await client
+      .from('articles')
+      .select('url')
+      .eq('id', articleId)
+      .maybeSingle()
+    if (articleError || !article?.url) return []
+
+    const matches = []
+    const seen = new Set()
+    const pageSize = 100
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await client
+        .from('comparison_public')
+        .select('event_key, canonical_title, articles')
+        .order('event_key', { ascending: true })
+        .range(from, from + pageSize - 1)
+      if (error) return []
+      for (const event of data ?? []) {
+        const isMember = (Array.isArray(event.articles) ? event.articles : [])
+          .some((member) => member.article_url === article.url)
+        if (!isMember || seen.has(event.event_key)) continue
+        seen.add(event.event_key)
+        matches.push({ eventId: event.event_key, title: event.canonical_title })
+      }
+      if (!data || data.length < pageSize) return matches
     }
-    if (eventIds.size === 0) return []
-    const { data: evRows, error: eErr } = await supabase
-      .from('events')
-      .select('id, canonical_title')
-      .in('id', [...eventIds])
-    if (eErr) return []
-    return (evRows ?? []).map((e) => ({ eventId: e.id, title: e.canonical_title }))
   } catch {
     return []
   }
@@ -910,7 +921,7 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
 // Full detail for one article: claims + provenance citations.
 export async function loadArticleDetail(id) {
   if (!supabase) return null
-  const [artRes, citRes, articleClaimsRes] = await Promise.all([
+  const [artRes, citRes, newsDetailRes] = await Promise.all([
     supabase
       .from('articles')
       .select('id, title, url, summary, published_at, outlet, claims, monoculture, unattributed, author_id, story_arcs!articles_arc_id_fkey(title)')
@@ -921,30 +932,26 @@ export async function loadArticleDetail(id) {
       .select('cited_entity, cited_type, documentation_strength')
       .eq('article_id', id)
       .order('documentation_strength', { ascending: false, nullsFirst: false }),
-    // Some reviewed cross-surface records were written through article_claims
-    // and claim_evidence_links before News acquired an extraction display.
-    // Read those records directly so the News detail does not misleadingly
-    // report an extraction gap where a source-backed reviewed claim exists.
+    // The security-barrier projection is the only anonymous contract for
+    // reviewed claim text and linked evidence in an expanded News record.
     supabase
-      .from('article_claims')
-      .select('claim_id, surface_text, stance, loaded_language, claims(canonical_text, claim_kind, status)')
+      .from('news_detail_public')
+      .select('article_id, reviewed_claims')
       .eq('article_id', id)
-      .eq('is_current', true),
+      .maybeSingle(),
   ])
   if (artRes.error) throw artRes.error
   if (citRes.error) throw citRes.error
-  if (articleClaimsRes.error) throw articleClaimsRes.error
+  if (newsDetailRes.error) throw newsDetailRes.error
   const authorNames = await loadPublicAuthorNameMap([artRes.data.author_id])
 
   const storedClaims = Array.isArray(artRes.data.claims) ? artRes.data.claims : []
-  const reviewedClaims = (articleClaimsRes.data ?? []).map((row) => ({
+  const reviewedClaims = (newsDetailRes.data?.reviewed_claims ?? []).map((row) => ({
     kind: 'substantive',
-    text: row.surface_text || row.claims?.canonical_text || 'Reviewed claim text not recorded.',
-    stance: row.stance ?? 'asserts',
-    loaded_language: Array.isArray(row.loaded_language) ? row.loaded_language : [],
+    text: row.surface_text || row.canonical_text || 'Reviewed claim text not recorded.',
+    stance: 'asserts',
+    loaded_language: [],
     provenance: 'reviewed_claim_record',
-    claim_id: row.claim_id,
-    claim_kind: row.claims?.claim_kind ?? null,
   }))
   const seenClaimText = new Set()
   const claims = [...storedClaims, ...reviewedClaims].filter((claim) => {
@@ -953,23 +960,15 @@ export async function loadArticleDetail(id) {
     seenClaimText.add(key)
     return true
   })
-  const reviewedClaimIds = [...new Set(reviewedClaims.map((claim) => claim.claim_id).filter(Boolean))]
-  let evidenceRecords = []
-  if (reviewedClaimIds.length > 0) {
-    const { data, error } = await supabase
-      .from('claim_evidence_links')
-      .select('claim_id, evidence_url, evidence_type')
-      .in('claim_id', reviewedClaimIds)
-    if (!error) {
-      const seenEvidence = new Set()
-      evidenceRecords = (data ?? []).filter((row) => {
-        const key = `${row.evidence_type ?? ''}|${row.evidence_url ?? ''}`
-        if (!row.evidence_url || seenEvidence.has(key)) return false
-        seenEvidence.add(key)
-        return true
-      })
-    }
-  }
+  const seenEvidence = new Set()
+  const evidenceRecords = (newsDetailRes.data?.reviewed_claims ?? [])
+    .flatMap((row) => (Array.isArray(row.evidence_records) ? row.evidence_records : []))
+    .filter((row) => {
+      const key = `${row.evidence_type ?? ''}|${row.evidence_url ?? ''}`
+      if (!row.evidence_url || seenEvidence.has(key)) return false
+      seenEvidence.add(key)
+      return true
+    })
   return {
     ...artRes.data,
     claims,

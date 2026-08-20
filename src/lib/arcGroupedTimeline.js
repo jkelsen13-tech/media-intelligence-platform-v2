@@ -16,6 +16,7 @@
 //     it collapses to a one-line placeholder with a toggle, never vanishes.
 
 export const SECTION_PAGE_SIZE = 5
+const PUBLIC_DORMANT_ARC_DAYS = 14
 export const UNCLASSIFIED_PAGE_SIZE = 25
 
 // "active" maps to "ongoing" per the addendum; labeled text, not color.
@@ -339,7 +340,7 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
   // Doc 13 site 4: identical read set to the flat timeline loader — both
   // keyset-paginate past the 1000-row ceiling so the two views can never
   // disagree on node/edge counts; display order re-applied client-side.
-  const [nodesRes, edgesRes, labelsRes, articlesRes, arcsRes, arcEventsRes, milestonesRes, cfgRes, eventArticlesRes] =
+  const [nodesRes, edgesRes, labelsRes, articlesRes, arcsRes, arcEventsRes, milestonesRes, eventArticlesRes] =
     await Promise.all([
       keysetAll(supabase, 'nodes', 'id, slug, label, description, confidence, summary, occurred_at, arc_id', {
         filter: (q) => q.eq('type', 'event'),
@@ -358,8 +359,7 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
       // End date + status derive from real signals (loadArcs() pattern).
       // id included: the keyset cursor reads it back off the returned rows.
       keysetAll(supabase, 'arc_events', 'id, arc_id, occurred_at'),
-      keysetAll(supabase, 'arc_milestones', 'id, arc_id, status'),
-      supabase.from('pipeline_config').select('value').eq('key', 'status_dormant_days').maybeSingle(),
+      keysetAll(supabase, 'arc_milestones_public', 'id, arc_id, status'),
       // Package 1 arc-grouped addition: event memberships for the per-event
       // outlet count (composite PK — keysetAllComposite, Doc 13 discipline).
       keysetAllComposite(supabase, 'event_articles', 'event_id, article_id', { keyCols: ['event_id', 'article_id'] }),
@@ -367,7 +367,9 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
   for (const r of [nodesRes, edgesRes, labelsRes, articlesRes, arcsRes, arcEventsRes, milestonesRes, eventArticlesRes]) {
     if (r.error) throw r.error
   }
-  const dormantDays = Number(cfgRes.data?.value ?? 14) || 14
+  // The grouped public view intentionally matches the flat/Arc route's
+  // deterministic anonymous default and does not read operational config.
+  const dormantDays = PUBLIC_DORMANT_ARC_DAYS
 
   const { events, canonicalOf, suppressed } = canonicalizeTimelineEvents(nodesRes.data)
 

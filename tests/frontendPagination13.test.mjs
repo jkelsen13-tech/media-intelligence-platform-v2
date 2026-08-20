@@ -93,7 +93,7 @@ test('site 1: loadTopics returns ALL node_topics rows past 1000 (composite PK, n
   assert.ok(keys.has(`nd-${pad(1300)}|tp-01`), 'final node_topics row missing')
 })
 
-// --- loadArcs: story_arcs / arc_events / arc_milestones past 1000 -----------
+// --- loadArcs: story_arcs / arc_events / public milestone projection past 1000 ---
 test('loadArcs returns all arcs past 1000, display order last_update_at desc re-applied', async () => {
   const storyArcs = []
   for (let i = 1; i <= 1200; i++) {
@@ -110,7 +110,7 @@ test('loadArcs returns all arcs past 1000, display order last_update_at desc re-
   for (let i = 1; i <= 1100; i++) {
     arcEvents.push({ id: `ae-${pad(i)}`, arc_id: `arc-${pad(1200)}`, occurred_at: '2999-01-01' })
   }
-  const out = await loadArcs({ supabaseClient: fakePostgrest({ story_arcs: storyArcs, arc_events: arcEvents, arc_milestones: [] }) })
+  const out = await loadArcs({ supabaseClient: fakePostgrest({ story_arcs: storyArcs, arc_events: arcEvents, arc_milestones_public: [] }) })
   assert.equal(out.length, 1200)
   const ids = new Set(out.map((a) => a.id))
   assert.ok(ids.has(`arc-${pad(1001)}`), 'story_arcs row at position 1001 missing')
@@ -183,7 +183,7 @@ test('structure: frontend loaders use keyset pagination on every Doc 13 table', 
   // loadArcs: all three arc tables.
   assert.match(src, /keysetAll\(client, 'story_arcs', 'id, slug, title/)
   assert.match(src, /keysetAll\(client, 'arc_events', 'id, arc_id, occurred_at'\)/)
-  assert.match(src, /keysetAll\(client, 'arc_milestones', 'id, arc_id, status'\)/)
+  assert.match(src, /keysetAll\(client, 'arc_milestones_public', 'id, arc_id, status'\)/)
   // Site 3: timeline reads (event nodes, edges, labels, articles, story_arcs).
   assert.match(src, /keysetAll\(client, 'articles', 'id, title, summary, published_at, outlet, arc_id'\)/)
   assert.match(src, /keysetAll\(client, 'story_arcs', 'id, title'\)/)

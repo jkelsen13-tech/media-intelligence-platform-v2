@@ -9,6 +9,10 @@ const arcEvidence = readFileSync(new URL('../src/components/ArcEvidencePanel.jsx
 const arcs = readFileSync(new URL('../src/views/ArcsView.jsx', import.meta.url), 'utf8')
 const news = readFileSync(new URL('../src/views/NewsView.jsx', import.meta.url), 'utf8')
 const supabaseReadPath = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8')
+const articleDetailReadPath = supabaseReadPath.slice(
+  supabaseReadPath.indexOf('export async function loadArticleDetail'),
+  supabaseReadPath.indexOf('// ---------- Cross-view graph integration ----------'),
+)
 
 test('interactive globe uses local public-data geography and preserves source-backed marker semantics', () => {
   assert.match(globe, /world-atlas\/countries-110m\.json/)
@@ -54,10 +58,11 @@ test('News makes publisher records and extraction gaps visible without fabricati
   assert.match(news, /byline not recorded/)
 })
 
-test('News reads existing reviewed claim and linked-evidence records without relabeling them as extracted citations', () => {
-  assert.match(supabaseReadPath, /from\('article_claims'\)/)
-  assert.match(supabaseReadPath, /from\('claim_evidence_links'\)/)
-  assert.match(supabaseReadPath, /provenance: 'reviewed_claim_record'/)
+test('News reads reviewed claim and linked-evidence records through the narrow public projection without relabeling them as extracted citations', () => {
+  assert.match(articleDetailReadPath, /from\('news_detail_public'\)/)
+  assert.doesNotMatch(articleDetailReadPath, /from\('article_claims'\)/)
+  assert.doesNotMatch(articleDetailReadPath, /from\('claim_evidence_links'\)/)
+  assert.match(articleDetailReadPath, /provenance: 'reviewed_claim_record'/)
   assert.match(news, /Linked evidence records/)
   assert.match(news, /Open linked evidence record/)
 })

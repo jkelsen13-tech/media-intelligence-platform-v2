@@ -63,7 +63,7 @@ function fakePostgrest(tables) {
 const pad = (n) => String(n).padStart(6, '0')
 
 // 1200 event nodes across 1200 arcs; 1100 arc_events all on the deepest arc;
-// 1050 arc_milestones all 'confirmed' on the second-deepest arc. Unique slug
+// 1050 projected milestone rows all 'confirmed' on the second-deepest arc. Unique slug
 // suffixes → timelineDedup suppresses nothing (each event is its own group).
 function buildTables() {
   const storyArcs = []
@@ -90,7 +90,7 @@ function buildTables() {
   const edges = [
     { id: 'e-1', source_id: `n-${pad(1001)}`, target_id: `n-${pad(1200)}`, type: 'causal', weight: 1, label: null },
   ]
-  return { nodes, edges, articles: [], story_arcs: storyArcs, arc_events: arcEvents, arc_milestones: arcMilestones }
+  return { nodes, edges, articles: [], story_arcs: storyArcs, arc_events: arcEvents, arc_milestones_public: arcMilestones }
 }
 
 test('control: the fake PostgREST really does cap naive selects at 1000', async () => {
@@ -114,8 +114,8 @@ test('site 4: loadArcGroupedTimeline renders every event and arc past 1000', asy
   const check = verifyExactlyOnce(out.grouped, 1200)
   assert.equal(check.ok, true, `duplicates: ${check.duplicates}`)
   // arc_events read complete (1100 rows): the deepest arc derives 'active'
-  // (far-future occurred_at → recent). arc_milestones read complete (1050
-  // rows): arc-001199 derives 'resolved' — a truncated milestone read would
+  // (far-future occurred_at → recent). The narrow milestone projection reads
+  // complete (1050 rows): arc-001199 derives 'resolved' — a truncated read would
   // leave it 'dormant'/null instead.
   const active = out.grouped.sections.find((s) => s.arcId === `arc-${pad(1200)}`)
   assert.equal(active.statusLabel, 'Ongoing')
@@ -154,7 +154,7 @@ test('structure: grouped loader keyset-paginates all eight reads', () => {
   assert.match(src, /keysetAll\(supabase, 'articles', 'id, title, summary, published_at, arc_id, outlet'\)/)
   assert.match(src, /keysetAll\(supabase, 'story_arcs', 'id, title, category, started_at'\)/)
   assert.match(src, /keysetAll\(supabase, 'arc_events', 'id, arc_id, occurred_at'\)/)
-  assert.match(src, /keysetAll\(supabase, 'arc_milestones', 'id, arc_id, status'\)/)
+  assert.match(src, /keysetAll\(supabase, 'arc_milestones_public', 'id, arc_id, status'\)/)
   // Package 1 arc-grouped addition: event memberships for the outlet index,
   // composite-PK keyset (same helper as loadEventGrouping).
   assert.match(src, /keysetAllComposite\(supabase, 'event_articles', 'event_id, article_id'/)
