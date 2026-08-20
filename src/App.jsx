@@ -16,7 +16,6 @@ import NewsView from './views/NewsView'
 import Phase3View from './views/Phase3View'
 import SourceComparisonView from './views/SourceComparisonView'
 import { loadPhase3BetaFlag } from './lib/phase3ReadPath'
-import { loadSourceComparisonBetaFlag } from './lib/sourceComparisonReadPath'
 import { buildNavViews, buildMoreEntries, isMoreViewKey } from './lib/navViews'
 import { loadGraph, loadTopics, loadCorpusMeta, loadNodeLocations } from './lib/supabase'
 import { liveCorpusLabel } from './lib/newsFeedModel'
@@ -153,9 +152,10 @@ export default function App() {
   // 02C Phase 3: beta flag. False until pipeline_config.phase3_beta === true;
   // unreadable flag also resolves false (withhold posture).
   const [phase3Beta, setPhase3Beta] = useState(false)
-  // 03_BACKLOG Item 1: source comparison beta flag. Same withhold posture:
-  // false until pipeline_config.source_comparison_beta === true.
-  const [sourceComparisonBeta, setSourceComparisonBeta] = useState(false)
+  // Source Comparison is publicly enabled through the narrow
+  // comparison_public projection. It no longer reads pipeline_config in the
+  // browser, so the operational beta flag is intentionally not public input.
+  const sourceComparisonBeta = true
   // 04-ADD Step 3 item 4: the arc-grouped timeline beta flag moved inside
   // TimelineView (the mode toggle is a Screen 5 control, not App chrome).
   // 16_ACCOUNT_PIPELINE: account UI flag. Same withhold posture: false
@@ -197,9 +197,6 @@ export default function App() {
     loadPhase3BetaFlag()
       .then((on) => setPhase3Beta(on === true))
       .catch(() => setPhase3Beta(false))
-    loadSourceComparisonBetaFlag()
-      .then((on) => setSourceComparisonBeta(on === true))
-      .catch(() => setSourceComparisonBeta(false))
     loadAccountUiFlag()
       .then((on) => setAccountUi(on === true))
       .catch(() => setAccountUi(false))
@@ -561,9 +558,8 @@ export default function App() {
     [graph],
   )
 
-  // Nav entries — 4 core tabs + "More" while at least one gated surface is
-  // authorized. Withhold posture: an unreadable flag resolves false above,
-  // and with both flags false the More tab hides entirely (not grayed out).
+  // Nav entries — Source Comparison is backed by its narrow public projection;
+  // Legal & Policy retains its independent, separately governed flag.
   const navViews = buildNavViews({ phase3Beta, sourceComparisonBeta })
   const moreEntries = buildMoreEntries({ phase3Beta, sourceComparisonBeta })
   // The More tab shows active while one of its member views is on screen.

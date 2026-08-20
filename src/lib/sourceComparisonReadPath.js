@@ -293,150 +293,121 @@ async function selectInChunks(supabase, table, cols, col, ids, chunkSize = 100) 
   return { data: out, error: null }
 }
 
-/** Flag read. Exactly-true only when the DB value is boolean true. */
+// The comparison route is now publicly gated by the narrow
+// `comparison_public` projection, not by a readable operational configuration
+// row. The projection is present only when the feature is deployed, so the
+// former pipeline_config feature-flag read is intentionally removed.
 export async function loadSourceComparisonBetaFlag() {
-  const { supabase } = await import('./supabase.js')
-  if (!supabase) return false
-  const { data, error } = await supabase
-    .from('pipeline_config')
-    .select('value')
-    .eq('key', 'source_comparison_beta')
-    .maybeSingle()
-  if (error) return false
-  return data?.value === true
+  return true
+}
+
+async function projectionAll(supabase, pageSize = 100) {
+  const rows = []
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase
+      .from('comparison_public')
+      .select('event_key, canonical_title, occurred_at_start, occurred_at_end, articles, claims')
+      .order('event_key', { ascending: true })
+      .range(from, from + pageSize - 1)
+    if (error) return { data: null, error }
+    rows.push(...(data ?? []))
+    if (!data || data.length < pageSize) return { data: rows, error: null }
+  }
+}
+
+function projectionEventView(row) {
+  const articles = (Array.isArray(row.articles) ? row.articles : []).map((article) => ({
+    id: article.article_key,
+    outlet: article.outlet,
+    url: article.article_url,
+    published_at: article.published_at,
+    arc_slug: article.arc_slug ?? null,
+    arc_title: article.arc_title ?? null,
+    timeline_key: article.timeline_key ?? null,
+    has_extracted_claim: article.has_extracted_claim === true,
+  }))
+  const articlesById = new Map(articles.map((article) => [article.id, article]))
+  const memberRows = articles.map((article) => ({ article_id: article.id }))
+  const syndicates = collapseBySyndication(articles)
+  const eventArticlesByOutlet = new Map()
+  for (const article of articles) {
+    if (!eventArticlesByOutlet.has(article.outlet)) eventArticlesByOutlet.set(article.outlet, [])
+    eventArticlesByOutlet.get(article.outlet).push(article)
+  }
+  const outlets = [...new Set(articles.map((article) => article.outlet).filter(Boolean))]
+  const extractedArticleIds = new Set(articles.filter((article) => article.has_extracted_claim).map((article) => article.id))
+  const claimViews = (Array.isArray(row.claims) ? row.claims : [])
+    .map((claim) => {
+      const surfaces = (Array.isArray(claim.surfaces) ? claim.surfaces : []).map((surface, index) => ({
+        id: `${claim.claim_key}:${surface.article_key}:${index}`,
+        article_id: surface.article_key,
+        surface_text: surface.surface_text,
+        loaded_language: Array.isArray(surface.loaded_language) ? surface.loaded_language : [],
+        explanation: surface.explanation ?? null,
+      }))
+      const evidenceLinks = (Array.isArray(claim.evidence_links) ? claim.evidence_links : []).map((link, index) => ({
+        id: `${claim.claim_key}:evidence:${index}`,
+        claim_id: claim.claim_key,
+        evidence_url: link.evidence_url,
+        evidence_type: link.evidence_type,
+      }))
+      const corrections = (Array.isArray(claim.corrections) ? claim.corrections : []).map((correction, index) => ({
+        id: `${claim.claim_key}:correction:${index}`,
+        claim_id: claim.claim_key,
+        correction_text: correction.correction_text,
+        occurred_at: correction.occurred_at,
+      }))
+      const explanationsByArticle = new Map(
+        surfaces.filter((surface) => surface.explanation).map((surface) => [surface.article_id, surface.explanation]),
+      )
+      return buildClaimView({
+        id: claim.claim_key,
+        canonical_text: claim.canonical_text,
+        thin_extraction: claim.thin_extraction === true,
+      }, surfaces, {
+        articlesById,
+        syndicates,
+        eventOutlets: outlets,
+        eventArticlesByOutlet,
+        extractedArticleIds,
+        evidenceLinks,
+        corrections,
+        explanationsByArticle,
+      })
+    })
+    .sort((a, b) => (a.classification === b.classification ? a.canonicalText.localeCompare(b.canonicalText) : a.classification === 'shared' ? -1 : 1))
+  const arcLinks = []
+  const seenArcs = new Set()
+  for (const article of articles) {
+    if (!article.arc_slug || seenArcs.has(article.arc_slug)) continue
+    seenArcs.add(article.arc_slug)
+    arcLinks.push({ arcId: article.arc_slug, title: article.arc_title, timelineKey: article.timeline_key })
+  }
+  return {
+    ...buildEventView({
+      id: row.event_key,
+      canonical_title: row.canonical_title,
+      occurred_at_start: row.occurred_at_start,
+      occurred_at_end: row.occurred_at_end,
+      status: 'active',
+    }, memberRows, { articlesById, claimViews }),
+    arcLinks,
+  }
 }
 
 /**
- * Beta view loader. Disabled flag -> { enabled: false } and no table reads.
- * Item 1 tables may be empty (pipeline not yet invoked) — that is a normal
- * empty state, not an error.
+ * Public comparison loader. It reads only `comparison_public`, a deliberately
+ * narrow view with opaque keys and card-rendered fields. Base claims and the
+ * operational pipeline_config table are never requested by the browser.
  */
 export async function loadSourceComparisonView({ supabaseClient } = {}) {
   const supabase = supabaseClient ?? (await import('./supabase.js')).supabase
   if (!supabase) return { enabled: false, events: [] }
-  const { data: flagRow, error: flagError } = await supabase
-    .from('pipeline_config')
-    .select('value')
-    .eq('key', 'source_comparison_beta')
-    .maybeSingle()
-  if (flagError || flagRow?.value !== true) return { enabled: false, events: [] }
-
-  // Timeline-only article records are deliberately excluded before member
-  // reads begin. A source comparison needs actual event processing, not merely
-  // chronological placement, and should never scan every Timeline member.
-  const eventsRes = await keysetAll(supabase, 'events', 'id, canonical_title, occurred_at_start, occurred_at_end, status', {
-    filter: (q) => q.neq('status', 'timeline_only'),
-  })
-  if (eventsRes.error) return { enabled: true, events: [], loadError: eventsRes.error.message }
-
-  const events = eventsRes.data ?? []
-  const eligibleEventIds = events.map((event) => event.id)
-  const [membersRes, claimsRes, surfacesRes, linksRes, corrRes, explRes] = await Promise.all([
-    selectInChunks(supabase, 'event_articles', 'event_id, article_id, membership_method, membership_confidence', 'event_id', eligibleEventIds),
-    keysetAll(supabase, 'claims', 'id, event_id, canonical_text, thin_extraction, status', { filter: (q) => q.eq('status', 'active').eq('rule_version', V2_EVENT_PROJECTION_RULE_VERSION) }),
-    keysetAll(supabase, 'article_claims', 'id, claim_id, article_id, surface_text, stance, loaded_language', { filter: (q) => q.eq('is_current', true) }),
-    keysetAll(supabase, 'claim_evidence_links', 'id, claim_id, evidence_url, evidence_type'),
-    keysetAll(supabase, 'claim_corrections', 'id, claim_id, correcting_article_id, corrected_article_id, correction_text, occurred_at'),
-    keysetAll(supabase, 'explanations', 'id, assertion_id, assertion_type, supporting_passage, rule_version, provenance_class, reviewed_at, review_status, state, remaining_uncertainty', {
-      filter: (q) => q.eq('assertion_type', 'claim_grouping').like('rule_version', `${V2_EVENT_PROJECTION_RULE_VERSION}|%`).eq('is_current', true),
-    }),
-  ])
-  const firstError = [membersRes, claimsRes, surfacesRes, linksRes, corrRes, explRes].find((result) => result.error)?.error
-  if (firstError) return { enabled: true, events: [], loadError: firstError.message }
-  const members = membersRes.data ?? []
-  const claims = claimsRes.data ?? []
-  const surfaces = surfacesRes.data ?? []
-  const links = linksRes.data ?? []
-  const corrections = corrRes.data ?? []
-  const explanations = explRes.data ?? []
-
-  // Presentation order preserved from the pre-fix query (occurred_at_start
-  // desc, nulls last); pagination orders by id, so the display sort is
-  // reapplied here after the complete read.
-  events.sort((a, b) => String(b.occurred_at_start ?? '').localeCompare(String(a.occurred_at_start ?? '')))
-
-  const articleIds = [...new Set([...members.map((m) => m.article_id), ...surfaces.map((s) => s.article_id)])]
-  let articlesById = new Map()
-  if (articleIds.length > 0) {
-    const { data: articleRows, error: artErr } = await selectInChunks(
-      supabase, 'articles', 'id, outlet, title, url, published_at, claims, unattributed, monoculture, is_digest, arc_id', 'id', articleIds,
-    )
-    if (artErr) return { enabled: true, events: [], loadError: artErr.message }
-    articlesById = new Map((articleRows ?? []).map((a) => [a.id, a]))
-  }
-
-  // Doc 05 pair 6 (Open Decision resolved 2026-08-10): LIVE JOIN —
-  // event_articles → articles.arc_id, resolved at read time. No backfill, no
-  // migration; events.arc_id stays NULL. Events whose member articles carry
-  // no arc_id get arcLinks: [] and render no chips (honest degradation).
-  const arcIds = [...new Set([...articlesById.values()].map((a) => a.arc_id).filter(Boolean))]
-  let arcTitleById = new Map()
-  let timelineKeyByArcId = new Map()
-  if (arcIds.length > 0) {
-    const [arcRes, nodeRes] = await Promise.all([
-      supabase.from('story_arcs').select('id, title').in('id', arcIds),
-      supabase.from('nodes').select('id, slug, arc_id').eq('type', 'event').in('arc_id', arcIds),
-    ])
-    if (!arcRes.error) arcTitleById = new Map((arcRes.data ?? []).map((a) => [a.id, a.title]))
-    if (!nodeRes.error) {
-      const nodes = nodeRes.data ?? []
-      // Prefer canonical evt- slugs over art- mirrors for the timeline focus
-      // key (the 8-hex group suffix is shared, so either lands correctly).
-      for (const preferEvt of [true, false]) {
-        for (const n of nodes) {
-          if (!n.arc_id || !n.slug || timelineKeyByArcId.has(n.arc_id)) continue
-          if (preferEvt !== (n.slug.startsWith('evt-'))) continue
-          timelineKeyByArcId.set(n.arc_id, n.slug.slice(-8))
-        }
-      }
-    }
-  }
-
-  // Explanation objects keyed by trailing article id
-  // (assertion_id = sc:<type>:<key>:<articleId>).
-  const explanationsByArticle = new Map()
-  for (const e of explanations) {
-    const articleId = String(e.assertion_id).split(':').pop()
-    if (e.assertion_type === 'claim_grouping') explanationsByArticle.set(articleId, e)
-  }
-
-  // An article counts as extracted when it produced surface rows or carries a
-  // non-empty claims payload; empty extraction -> coverage_unknown, never omission.
-  const extractedArticleIds = new Set(surfaces.map((s) => s.article_id))
-  for (const a of articlesById.values()) {
-    if (Array.isArray(a.claims) && a.claims.length > 0) extractedArticleIds.add(a.id)
-  }
-
-  const eventViews = events.map((event) => {
-    const memberRows = members.filter((m) => m.event_id === event.id)
-    const memberArticles = memberRows.map((m) => articlesById.get(m.article_id)).filter(Boolean)
-    const syndicates = collapseBySyndication(memberArticles)
-    const eventArticlesByOutlet = new Map()
-    for (const a of memberArticles) {
-      if (!eventArticlesByOutlet.has(a.outlet)) eventArticlesByOutlet.set(a.outlet, [])
-      eventArticlesByOutlet.get(a.outlet).push(a)
-    }
-    const outlets = [...new Set(memberArticles.map((a) => a.outlet))]
-    const claimViews = claims
-      .filter((c) => c.event_id === event.id)
-      .map((claim) => buildClaimView(claim, surfaces.filter((s) => s.claim_id === claim.id), {
-        articlesById, syndicates, eventOutlets: outlets, eventArticlesByOutlet,
-        extractedArticleIds, evidenceLinks: links, corrections, explanationsByArticle,
-      }))
-      // shared facts first, then unique claims; stable within class by canonical text
-      .sort((a, b) => (a.classification === b.classification ? a.canonicalText.localeCompare(b.canonicalText) : a.classification === 'shared' ? -1 : 1))
-    // Pair 6: distinct arcs across this event's member articles (live join).
-    const eventArcIds = [...new Set(memberArticles.map((a) => a.arc_id).filter(Boolean))]
-    const arcLinks = eventArcIds.map((arcId) => ({
-      arcId,
-      title: arcTitleById.get(arcId) ?? null,
-      timelineKey: timelineKeyByArcId.get(arcId) ?? null,
-    }))
-    return { ...buildEventView(event, memberRows, { articlesById, claimViews }), arcLinks }
-  })
-
-  // A comparison view exists only where readers can actually compare source
-  // coverage. Single-outlet event records remain available on the Timeline,
-  // but are not presented as a comparison.
-  return { enabled: true, events: eventViews.filter((event) => event.outlets.length >= 2) }
+  const projectionRes = await projectionAll(supabase)
+  if (projectionRes.error) return { enabled: true, events: [], loadError: projectionRes.error.message }
+  const events = (projectionRes.data ?? [])
+    .map(projectionEventView)
+    .filter((event) => event.outlets.length >= 2)
+    .sort((a, b) => String(b.occurredAtStart ?? '').localeCompare(String(a.occurredAtStart ?? '')))
+  return { enabled: true, events }
 }
