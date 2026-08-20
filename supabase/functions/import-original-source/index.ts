@@ -60,6 +60,28 @@ function originMeta(metadata: any, sourceId: string) {
   }
 }
 
+function edgeMetadataWithMappedReferences(metadata: any, sourceEdgeId: string, maps: MappingState) {
+  const base = metadata && typeof metadata === 'object' && !Array.isArray(metadata) ? metadata : {}
+  const sourceIds = {
+    ...(typeof base.article_id === 'string' ? { article_id: base.article_id } : {}),
+    ...(typeof base.entity_id === 'string' ? { entity_id: base.entity_id } : {}),
+  }
+  const mappedMetadata = {
+    ...base,
+    ...(sourceIds.article_id ? { article_id: mapped(maps, 'articles', sourceIds.article_id) } : {}),
+    ...(sourceIds.entity_id ? { entity_id: mapped(maps, 'entities', sourceIds.entity_id) } : {}),
+  }
+  return {
+    ...mappedMetadata,
+    original_source: {
+      project_ref: SOURCE_PROJECT_REF,
+      source_id: sourceEdgeId,
+      import_run: IMPORT_RUN_KEY,
+      ...(Object.keys(sourceIds).length ? { edge_metadata_source_ids: sourceIds } : {}),
+    },
+  }
+}
+
 function sourceUrl() {
   return `https://${SOURCE_PROJECT_REF}.supabase.co/rest/v1`
 }
@@ -387,7 +409,7 @@ async function importEdges(target: any, source: Row[], maps: MappingState, repor
     const sourceId = mapped(maps, 'nodes', row.source_id)
     const targetId = mapped(maps, 'nodes', row.target_id)
     if (!sourceId || !targetId) { report.edgesSkippedUnmapped++; continue }
-    payload.push({ ...row, id: row.id, source_id: sourceId, target_id: targetId, metadata: originMeta(row.metadata, row.id) })
+    payload.push({ ...row, id: row.id, source_id: sourceId, target_id: targetId, metadata: edgeMetadataWithMappedReferences(row.metadata, row.id, maps) })
     await remember(target, maps, 'edges', row.id, row.id)
     report.edgesInserted++
   }
