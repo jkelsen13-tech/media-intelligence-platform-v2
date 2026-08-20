@@ -75,9 +75,9 @@ function buildTables() {
   }
   const claims = []
   for (let i = 1; i <= N_CLAIMS; i++) {
-    claims.push({ id: `cl-${pad(i)}`, event_id: `ev-${pad((i % N_EVENTS) + 1)}`, canonical_text: `Claim ${i}`, thin_extraction: false, status: 'active' })
+    claims.push({ id: `cl-${pad(i)}`, event_id: `ev-${pad((i % N_EVENTS) + 1)}`, canonical_text: `Claim ${i}`, thin_extraction: false, status: 'active', rule_version: 'sc-v2-event-projection' })
   }
-  claims.push({ id: 'cl-inactive', event_id: 'ev-000001', canonical_text: 'archived', thin_extraction: false, status: 'archived' })
+  claims.push({ id: 'cl-inactive', event_id: 'ev-000001', canonical_text: 'archived', thin_extraction: false, status: 'archived', rule_version: 'sc-v2-event-projection' })
   const article_claims = []
   for (let i = 1; i <= N_SURFACES; i++) {
     article_claims.push({ id: `ac-${pad(i)}`, claim_id: `cl-${pad((i % N_CLAIMS) + 1)}`, article_id: `art-${pad((i % N_MEMBERS) + 1)}`, surface_text: `Surface ${i}`, stance: 'asserts', loaded_language: [], is_current: true })
@@ -88,7 +88,7 @@ function buildTables() {
   for (let i = 1; i <= N_CORR; i++) claim_corrections.push({ id: `cr-${pad(i)}`, claim_id: `cl-${pad((i % N_CLAIMS) + 1)}`, correcting_article_id: null, corrected_article_id: null, correction_text: `fix ${i}`, occurred_at: null })
   const explanations = []
   for (let i = 1; i <= N_CG_EXPL; i++) {
-    explanations.push({ id: `ex-cg-${pad(i)}`, assertion_id: `sc:claim_grouping:evt-c${i}:art-${pad((i % N_MEMBERS) + 1)}`, assertion_type: 'claim_grouping', supporting_passage: `cg ${i}`, rule_version: 'sc-v1|deterministic_text_similarity', provenance_class: 'machine', review_status: 'awaiting_review', state: 'ok', remaining_uncertainty: null, is_current: true })
+    explanations.push({ id: `ex-cg-${pad(i)}`, assertion_id: `sc:claim_grouping:evt-c${i}:art-${pad((i % N_MEMBERS) + 1)}`, assertion_type: 'claim_grouping', supporting_passage: `cg ${i}`, rule_version: 'sc-v2-event-projection|deterministic_text_similarity', provenance_class: 'machine', review_status: 'awaiting_review', state: 'ok', remaining_uncertainty: null, is_current: true })
   }
   for (let i = 1; i <= N_EM_EXPL; i++) {
     explanations.push({ id: `ex-em-${pad(i)}`, assertion_id: `sc:event_membership:evt-${i}:art-${pad((i % N_MEMBERS) + 1)}`, assertion_type: 'event_membership', supporting_passage: `em ${i}`, rule_version: 'sc-v1|embedding_cluster', provenance_class: 'machine', review_status: 'awaiting_review', state: 'ok', remaining_uncertainty: null, is_current: true })

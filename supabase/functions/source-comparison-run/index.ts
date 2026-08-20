@@ -1,232 +1,222 @@
-// Source Comparison (03_BACKLOG Item 1) — pipeline runner. Owner-authorized Batch 2, 2026-08-06.
+// V2 Source Comparison runner — deterministic projection over existing V2 events.
 //
-// Manually invoked, service-role only. Reads articles + article_entities
-// (read-only), runs the deterministic sc-v1 pipeline, and writes ONLY to the
-// Item 1 tables (events, claims, article_claims, event_articles) plus Phase 2
-// explanation rows (assertion_type event_membership / claim_grouping,
-// rule_version sc-v1|<method>). It NEVER writes to articles, nodes, edges,
-// story_arcs, arc_events, or any other production table.
-// Rebuild semantics: before writing, it deletes its own prior sc-v1 rows
-// (events/claims with rule_version 'sc-v1', their dependent rows, and
-// explanations with assertion_type in (event_membership, claim_grouping) and
-// rule_version LIKE 'sc-v1|%'). No cron, no trigger: runs only when called.
+// V2 already has imported, source-backed events and event_articles. This function
+// rebuilds only derived comparison records (claims, article_claims, and
+// comparison explanations) for existing multi-outlet events. It never writes to
+// articles, sources, events, event_articles, graph, arcs, or RLS/grant state.
 //
-// Auth: fail-closed shared secret. Requires header
-//   x-source-comparison-key: <SOURCE_COMPARISON_RUN_KEY>
-// and refuses to run at all if the secret is not configured.
-// Body: {"dry_run": true} computes and returns stats without writing.
-//
-// Memory fix (owner-authorized 2026-08-09, WORKER_RESOURCE_LIMIT remediation):
-// the corpus reads are PAGED in id-ordered chunks instead of one unpaginated
-// select. A single full-corpus response (728+ articles incl. body_text +
-// embedding, 1490+ article_entities) exceeded the Edge Function worker's
-// resource ceiling (HTTP 546). body_text and embedding remain selected in
-// full: the pipeline genuinely requires them (syndication body-hash +
-// thin-extraction labeling; embedding-cosine clustering). Page size defaults
-// to SOURCE_COMPARISON_PAGE_SIZE env (fallback 100, clamped 1..1000) and may
-// be overridden per-invocation via body {"page_size": N} for ceiling probes.
+// The V1 full-corpus clusterer is intentionally not invoked here: at V2 scale it
+// would be O(n²), duplicate the imported event namespace, and exceed the worker
+// budget. Existing event membership is the V2 cluster contract.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { runPipeline, parseEmbedding, RULE_VERSION, pagedSelect } from './lib.js'
+import {
+  EVENT_PROJECTION_RULE_VERSION,
+  pagedSelect,
+  runEventProjection,
+} from './lib.js'
 import lexicon from './loadedLanguageLexicon.json' with { type: 'json' }
 
 const JSON_HEADERS = { 'content-type': 'application/json' }
+const PROJECTED_EXPLANATION_PREFIX = `${EVENT_PROJECTION_RULE_VERSION}|`
+const PAGE_SIZE = 500
+const CHUNK = 100
+
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
 }
 
-const ARTICLE_COLS = 'id,outlet,title,url,summary,body_text,published_at,claims,embedding,unattributed,monoculture,is_digest'
-const ENTITY_COLS = 'article_id,entity_id'
-
-function resolvePageSize(raw: unknown): number {
-  const env = Number(Deno.env.get('SOURCE_COMPARISON_PAGE_SIZE') ?? 100)
-  const fallback = Number.isFinite(env) && env > 0 ? Math.floor(env) : 100
-  const req = Number(raw)
-  const chosen = Number.isFinite(req) && req > 0 ? Math.floor(req) : fallback
-  return Math.max(1, Math.min(chosen, 1000))
+function sha256Hex(value: string) {
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+    .then((buffer) => [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join(''))
 }
 
-// --- dedupe begin ---
-// Insert-time dedupe (owner-authorized 2026-08-09, Option A, live-run repair):
-// the pipeline may legitimately group two DISTINCT surface texts from the same
-// article into one claim group, but the DB constraints are one row per
-// (claim, article) — article_claims_claim_id_article_id_version_key, and the
-// same duplicates would collide on explanation assertion_ids.
-// Winner per (claim_key, article_id): highest extraction_confidence; tiebreak
-// longer surface_text; then lexicographically smallest surface_text.
-// The SAME winner set filters the claim_grouping explanation rows, so
-// article_claims and explanations always agree on which row survived.
-function dedupeArticleClaims(rows: any[]): { winners: Map<string, any>; rows: any[] } {
+async function authorizeWriter(req: Request, supabase: any, serviceKey: string) {
+  // Internal callers (ingest-rss) use the service credential; manual V2 import
+  // calls use the established, isolated import secret. Neither credential is
+  // written to the database in plaintext.
+  if (req.headers.get('authorization') === `Bearer ${serviceKey}`) return true
+  const supplied = req.headers.get('x-mip-original-import-key')
+  if (!supplied) return false
+  const suppliedHash = await sha256Hex(supplied)
+  const { data, error } = await supabase
+    .from('original_source_import_credentials')
+    .select('key_hash')
+    .eq('credential_name', 'original-source-import')
+    .eq('active', true)
+    .maybeSingle()
+  return !error && !!data && data.key_hash === suppliedHash
+}
+
+async function selectInChunks(supabase: any, table: string, cols: string, column: string, ids: string[]) {
+  const out: any[] = []
+  for (let offset = 0; offset < ids.length; offset += CHUNK) {
+    const { data, error } = await supabase.from(table).select(cols).in(column, ids.slice(offset, offset + CHUNK))
+    if (error) return { data: null, error }
+    out.push(...(data ?? []))
+  }
+  return { data: out, error: null }
+}
+
+async function deleteInChunks(supabase: any, table: string, column: string, ids: string[]) {
+  for (let offset = 0; offset < ids.length; offset += CHUNK) {
+    const { error } = await supabase.from(table).delete().in(column, ids.slice(offset, offset + CHUNK))
+    if (error) return error
+  }
+  return null
+}
+
+function dedupeArticleClaims(rows: any[]) {
   const winners = new Map<string, any>()
-  for (const r of rows) {
-    const k = r.claim_key + '|' + r.article_id
-    const cur = winners.get(k)
-    if (!cur ||
-        r.extraction_confidence > cur.extraction_confidence ||
-        (r.extraction_confidence === cur.extraction_confidence &&
-          (r.surface_text.length > cur.surface_text.length ||
-            (r.surface_text.length === cur.surface_text.length && r.surface_text < cur.surface_text)))) {
-      winners.set(k, r)
+  for (const row of rows) {
+    const key = `${row.claim_key}|${row.article_id}`
+    const current = winners.get(key)
+    if (!current ||
+      row.extraction_confidence > current.extraction_confidence ||
+      (row.extraction_confidence === current.extraction_confidence &&
+        (row.surface_text.length > current.surface_text.length ||
+          (row.surface_text.length === current.surface_text.length && row.surface_text < current.surface_text)))) {
+      winners.set(key, row)
     }
   }
-  return { winners, rows: rows.filter((r) => winners.get(r.claim_key + '|' + r.article_id) === r) }
+  return { winners, rows: rows.filter((row) => winners.get(`${row.claim_key}|${row.article_id}`) === row) }
 }
 
-function dedupeExplanations(explanations: any[], winners: Map<string, any>): any[] {
-  const PREFIX = 'sc:claim_grouping:'
-  const groups = new Map<string, any[]>()
-  for (const e of explanations) {
-    if (e.assertion_type !== 'claim_grouping') continue
-    if (!groups.has(e.assertion_id)) groups.set(e.assertion_id, [])
-    groups.get(e.assertion_id)!.push(e)
-  }
-  const keep = new Set<any>()
-  for (const [aid, rows] of groups) {
-    if (rows.length === 1) { keep.add(rows[0]); continue }
-    const rest = aid.slice(PREFIX.length)
-    const cut = rest.lastIndexOf(':')
-    const w = winners.get(rest.slice(0, cut) + '|' + rest.slice(cut + 1))
-    if (!w) throw new Error('dedupe: no article_claims winner for ' + aid)
-    const matches = rows.filter((e) => e.supporting_passage.startsWith(
-      'Surface claim "' + w.surface_text + '" grouped under canonical "'))
-    if (matches.length !== 1) {
-      throw new Error('dedupe: explanation winner match failed for ' + aid + ' (' + matches.length + ' matches)')
-    }
-    keep.add(matches[0])
-  }
-  return explanations.filter((e) => e.assertion_type !== 'claim_grouping' || keep.has(e))
+function dedupeProjectionExplanations(rows: any[], winners: Map<string, any>) {
+  return rows.filter((row) => {
+    const parts = String(row.assertion_id).split(':')
+    const articleId = parts.at(-1)
+    const ordinal = parts.at(-2)
+    const eventId = parts.at(-3)
+    const winner = winners.get(`${eventId}:c${ordinal}|${articleId}`)
+    return !!winner && String(row.supporting_passage).startsWith(`Surface claim "${winner.surface_text}" grouped under canonical "`)
+  })
 }
-// --- dedupe end ---
+
+async function buildEventInputs(supabase: any) {
+  const [eventsRes, memberRes, outletsRes] = await Promise.all([
+    pagedSelect(supabase, 'events', 'id,canonical_title,status', ['id'], PAGE_SIZE, (q: any) => q.neq('status', 'timeline_only')),
+    pagedSelect(supabase, 'event_articles', 'event_id,article_id', ['event_id', 'article_id'], PAGE_SIZE),
+    pagedSelect(supabase, 'articles', 'id,outlet', ['id'], PAGE_SIZE),
+  ])
+  const firstError = [eventsRes, memberRes, outletsRes].find((result: any) => result.error)?.error
+  if (firstError) return { error: firstError, inputs: [] }
+
+  const eventById = new Map((eventsRes.data ?? []).map((event: any) => [event.id, event]))
+  const outletByArticleId = new Map((outletsRes.data ?? []).map((article: any) => [article.id, article.outlet]))
+  const memberIdsByEvent = new Map<string, string[]>()
+  for (const member of memberRes.data ?? []) {
+    if (!eventById.has(member.event_id)) continue
+    const ids = memberIdsByEvent.get(member.event_id) ?? []
+    ids.push(member.article_id)
+    memberIdsByEvent.set(member.event_id, ids)
+  }
+  const eligibleEventIds = [...memberIdsByEvent.entries()]
+    .filter(([, articleIds]) => new Set(articleIds.map((articleId) => outletByArticleId.get(articleId)).filter(Boolean)).size >= 2)
+    .map(([eventId]) => eventId)
+  const eligibleArticleIds = [...new Set(eligibleEventIds.flatMap((eventId) => memberIdsByEvent.get(eventId) ?? []))]
+  const articlesRes = await selectInChunks(
+    supabase,
+    'articles',
+    'id,outlet,title,url,summary,body_text,published_at,claims,embedding,unattributed,monoculture,is_digest',
+    'id',
+    eligibleArticleIds,
+  )
+  if (articlesRes.error) return { error: articlesRes.error, inputs: [] }
+  const articleById = new Map((articlesRes.data ?? []).map((article: any) => [article.id, article]))
+  const inputs = eligibleEventIds.map((eventId) => ({
+    event: eventById.get(eventId),
+    members: (memberIdsByEvent.get(eventId) ?? []).map((articleId) => ({ article: articleById.get(articleId) })).filter((member) => member.article),
+  }))
+  return { error: null, inputs, eligibleEventCount: eligibleEventIds.length }
+}
+
+async function rebuildProjection(supabase: any, cfg: any, dryRun: boolean) {
+  const prepared = await buildEventInputs(supabase)
+  if (prepared.error) return { error: `event projection input read failed: ${prepared.error.message}` }
+  const plan = runEventProjection(prepared.inputs, cfg, lexicon)
+  const deduped = dedupeArticleClaims(plan.article_claims)
+  const articleClaims = deduped.rows
+  const explanations = dedupeProjectionExplanations(plan.explanations, deduped.winners)
+  const stats = {
+    ...plan.stats,
+    eligible_events: prepared.eligibleEventCount ?? 0,
+    article_claims_deduped: articleClaims.length,
+    explanations_deduped: explanations.length,
+    primary_evidence_links: 0,
+    primary_evidence_note: 'No explicit primary-record URLs are stored in the V2 citation schema; no evidence link is fabricated.',
+  }
+  if (dryRun) return { data: { dry_run: true, rule_version: EVENT_PROJECTION_RULE_VERSION, ...stats } }
+
+  const { data: oldClaimRows, error: oldClaimError } = await pagedSelect(
+    supabase,
+    'claims',
+    'id',
+    ['id'],
+    PAGE_SIZE,
+    (q: any) => q.eq('rule_version', EVENT_PROJECTION_RULE_VERSION),
+  )
+  if (oldClaimError) return { error: `projected-claim cleanup lookup failed: ${oldClaimError.message}` }
+  const oldClaimIds = (oldClaimRows ?? []).map((row: any) => row.id)
+  for (const [table, column] of [['claim_evidence_links', 'claim_id'], ['article_claims', 'claim_id']] as const) {
+    const error = await deleteInChunks(supabase, table, column, oldClaimIds)
+    if (error) return { error: `${table} cleanup failed: ${error.message}` }
+  }
+  const claimDeleteError = await deleteInChunks(supabase, 'claims', 'id', oldClaimIds)
+  if (claimDeleteError) return { error: `claims cleanup failed: ${claimDeleteError.message}` }
+  const { error: explanationDeleteError } = await supabase.from('explanations').delete()
+    .eq('is_current', true).like('rule_version', `${PROJECTED_EXPLANATION_PREFIX}%`)
+  if (explanationDeleteError) return { error: `explanations cleanup failed: ${explanationDeleteError.message}` }
+
+  const claimIdByKey = new Map<string, string>()
+  for (const claim of plan.claims) {
+    const { claim_key, ...row } = claim
+    const { data, error } = await supabase.from('claims').insert(row).select('id').single()
+    if (error) return { error: `claim insert failed: ${error.message}` }
+    claimIdByKey.set(claim_key, data.id)
+  }
+  const surfaceRows = articleClaims.map((row: any) => ({
+    claim_id: claimIdByKey.get(row.claim_key),
+    article_id: row.article_id,
+    surface_text: row.surface_text,
+    extraction_method: row.extraction_method,
+    extraction_confidence: row.extraction_confidence,
+    stance: row.stance,
+    loaded_language: row.loaded_language,
+    version: 1,
+    is_current: true,
+  }))
+  for (let offset = 0; offset < surfaceRows.length; offset += 500) {
+    const { error } = await supabase.from('article_claims').insert(surfaceRows.slice(offset, offset + 500))
+    if (error) return { error: `article_claims insert failed: ${error.message}` }
+  }
+  const recomputedAt = new Date().toISOString()
+  for (let offset = 0; offset < explanations.length; offset += 500) {
+    const { error } = await supabase.from('explanations').insert(
+      explanations.slice(offset, offset + 500).map((row: any) => ({ ...row, recomputed_at: recomputedAt })),
+    )
+    if (error) return { error: `explanations insert failed: ${error.message}` }
+  }
+  return { data: { dry_run: false, rule_version: EVENT_PROJECTION_RULE_VERSION, ...stats } }
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') return json(405, { error: 'POST only' })
-
-  const expected = Deno.env.get('SOURCE_COMPARISON_RUN_KEY')
-  if (!expected) return json(503, { error: 'SOURCE_COMPARISON_RUN_KEY not configured; writer disabled' })
-  if (req.headers.get('x-source-comparison-key') !== expected) return json(401, { error: 'unauthorized' })
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (!supabaseUrl || !serviceKey) return json(500, { error: 'Missing target service configuration' })
+  const supabase = createClient(supabaseUrl, serviceKey)
+  if (!await authorizeWriter(req, supabase, serviceKey)) return json(401, { error: 'unauthorized' })
 
   let body: any = {}
-  try { body = (await req.json()) || {} } catch { /* empty body = write run */ }
-  const dryRun = !!body?.dry_run
-  const pageSize = resolvePageSize(body?.page_size)
-
-  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-
-  // Config from pipeline_config (locked values; owner-tunable without migration)
-  const { data: cfgRows, error: cfgErr } = await supabase.from('pipeline_config')
-    .select('key,value').in('key', [
-      'event_cluster_similarity_threshold', 'event_cluster_window_days',
-      'claim_group_confidence_floor', 'event_membership_confidence_floor'])
-  if (cfgErr) return json(500, { error: `config read failed: ${cfgErr.message}` })
-  const cfgVal = (k: string, d: number) => Number(cfgRows?.find((r: any) => r.key === k)?.value ?? d)
-  const cfg = {
-    similarityThreshold: cfgVal('event_cluster_similarity_threshold', 0.82),
-    windowDays: cfgVal('event_cluster_window_days', 3),
-    groupFloor: cfgVal('claim_group_confidence_floor', 0.6),
-    membershipFloor: cfgVal('event_membership_confidence_floor', 0.55),
-    minSharedEntities: 2,
+  try { body = (await req.json()) || {} } catch { /* empty body uses projection default */ }
+  if (body?.mode && body.mode !== 'event_projection') {
+    return json(400, { error: 'V2 supports event_projection only; full reclustering is intentionally disabled at this corpus scale.' })
   }
-
-  const { data: articleRows, error: aErr } = await pagedSelect(supabase, 'articles', ARTICLE_COLS, ['id'], pageSize)
-  if (aErr) return json(500, { error: `articles read failed: ${aErr.message}` })
-  const { data: entityPairs, error: eErr } = await pagedSelect(supabase, 'article_entities', ENTITY_COLS, ['article_id', 'entity_id'], pageSize)
-  if (eErr) return json(500, { error: `article_entities read failed: ${eErr.message}` })
-
-  const articles = (articleRows || []).map((a: any) => ({ ...a, embedding: parseEmbedding(a.embedding) }))
-  const plan = runPipeline(articles, entityPairs || [], cfg, lexicon)
-
-  // Option A dedupe (fail-closed): single shared winner logic for both tables.
-  let dedupedAC: any[] = plan.article_claims
-  let dedupedExp: any[] = plan.explanations
-  try {
-    const d = dedupeArticleClaims(plan.article_claims)
-    dedupedAC = d.rows
-    dedupedExp = dedupeExplanations(plan.explanations, d.winners)
-  } catch (e) {
-    return json(500, { error: `dedupe failed: ${(e as Error).message}` })
-  }
-
-  const stats = { ...plan.stats, comparisons: undefined, comparison_sample: plan.stats.comparisons.slice(0, 5), page_size: pageSize,
-    article_claims_deduped: dedupedAC.length, explanations_deduped: dedupedExp.length }
-  if (dryRun) return json(200, { dry_run: true, rule_version: RULE_VERSION, ...stats })
-
-  // Rebuild: clear own sc-v1 namespace only, in dependency order.
-  // (article_claims/event_articles carry no rule_version; scope through the
-  // sc-v1 events/claims they belong to.)
-  // IN-lists are chunked: a single .in() with hundreds of UUIDs exceeds the
-  // PostgREST URL length limit (Bad Request) — hit live 2026-08-09 with 839
-  // claim ids. Chunking deletes the identical row set, just batched.
-  const deleteInChunks = async (table: string, col: string, ids: string[], label: string) => {
-    for (let i = 0; i < ids.length; i += 100) {
-      const { error } = await supabase.from(table).delete().in(col, ids.slice(i, i + 100))
-      if (error) return json(500, { error: `${label} cleanup failed: ${error.message}` })
-    }
-    return null
-  }
-  {
-    // Doc 13: paginate the rebuild cleanup read — a >1000-event rebuild would
-    // silently truncate the deletion set and leave orphan rows behind.
-    const { data: eventIdRows, error: evErr } = await pagedSelect(supabase, 'events', 'id', ['id'], 1000, (q) =>
-      q.eq('rule_version', RULE_VERSION),
-    )
-    if (evErr) return json(500, { error: `events cleanup lookup failed: ${evErr.message}` })
-    const eventIds = eventIdRows?.map((r: any) => r.id) || []
-    if (eventIds.length) {
-      let r = await deleteInChunks('event_articles', 'event_id', eventIds, 'event_articles')
-      if (r) return r
-      // The claims id select carries the event ids in its query string too —
-      // same URL ceiling — so it is chunked identically.
-      const claimIdsChunked: string[] = []
-      for (let i = 0; i < eventIds.length; i += 100) {
-        const { data } = await supabase.from('claims').select('id').in('event_id', eventIds.slice(i, i + 100))
-        claimIdsChunked.push(...(data?.map((r: any) => r.id) || []))
-      }
-      if (claimIdsChunked.length) {
-        r = await deleteInChunks('article_claims', 'claim_id', claimIdsChunked, 'article_claims')
-        if (r) return r
-        r = await deleteInChunks('claims', 'id', claimIdsChunked, 'claims')
-        if (r) return r
-      }
-      r = await deleteInChunks('events', 'id', eventIds, 'events')
-      if (r) return r
-    }
-  }
-  {
-    const { error } = await supabase.from('explanations').delete()
-      .in('assertion_type', ['event_membership', 'claim_grouping']).like('rule_version', RULE_VERSION + '|%')
-    if (error) return json(500, { error: `explanations cleanup failed: ${error.message}` })
-  }
-
-  // Write: events first, then resolve keys to ids
-  const keyToEventId = new Map<string, string>()
-  for (const ev of plan.events) {
-    const { event_key, ...row } = ev as any
-    const { data, error } = await supabase.from('events').insert(row).select('id').single()
-    if (error) return json(500, { error: `event insert failed: ${error.message}` })
-    keyToEventId.set(event_key, data.id)
-  }
-  const keyToClaimId = new Map<string, string>()
-  for (const c of plan.claims) {
-    const { claim_key, event_key, ...row } = c as any
-    const { data, error } = await supabase.from('claims')
-      .insert({ ...row, event_id: keyToEventId.get(event_key) }).select('id').single()
-    if (error) return json(500, { error: `claim insert failed: ${error.message}` })
-    keyToClaimId.set(claim_key, data.id)
-  }
-  for (const t of ['event_articles', 'article_claims'] as const) {
-    const src = t === 'article_claims' ? dedupedAC : (plan as any)[t]
-    const rows = src.map((r: any) => t === 'event_articles'
-      ? { event_id: keyToEventId.get(r.event_key), article_id: r.article_id, membership_method: r.membership_method, membership_confidence: r.membership_confidence }
-      : { claim_id: keyToClaimId.get(r.claim_key), article_id: r.article_id, surface_text: r.surface_text, extraction_method: r.extraction_method, extraction_confidence: r.extraction_confidence, stance: r.stance, loaded_language: r.loaded_language })
-    for (let i = 0; i < rows.length; i += 500) {
-      const { error } = await supabase.from(t).insert(rows.slice(i, i + 500))
-      if (error) return json(500, { error: `${t} insert failed: ${error.message}` })
-    }
-  }
-  for (let i = 0; i < dedupedExp.length; i += 500) {
-    const { error } = await supabase.from('explanations').insert(dedupedExp.slice(i, i + 500))
-    if (error) return json(500, { error: `explanations insert failed: ${error.message}` })
-  }
-
-  return json(200, { dry_run: false, rule_version: RULE_VERSION, ...stats })
+  const { data: cfgRows, error: cfgError } = await supabase.from('pipeline_config')
+    .select('key,value').in('key', ['claim_group_confidence_floor'])
+  if (cfgError) return json(500, { error: `config read failed: ${cfgError.message}` })
+  const cfg = { groupFloor: Number(cfgRows?.find((row: any) => row.key === 'claim_group_confidence_floor')?.value ?? 0.6) }
+  const result = await rebuildProjection(supabase, cfg, !!body?.dry_run)
+  return result.error ? json(500, { error: result.error }) : json(200, result.data)
 })

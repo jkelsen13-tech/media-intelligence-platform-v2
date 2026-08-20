@@ -22,10 +22,15 @@ function StrengthChip({ level }) {
   return <span className={`sc-chip sc-chip-${level.toLowerCase()}`}>{E_LEVEL_NAMES[level]}</span>
 }
 
-function formatReviewedAt(value) {
-  if (!value) return 'not recorded'
-  const date = new Date(value)
-  return Number.isNaN(date.valueOf()) ? 'not recorded' : date.toLocaleDateString()
+function formatReviewedAt(value, statuses = []) {
+  if (value) {
+    const date = new Date(value)
+    if (!Number.isNaN(date.valueOf())) return date.toLocaleDateString()
+  }
+  const values = [...new Set((statuses ?? []).filter(Boolean))]
+  if (values.length === 1) return values[0].replace(/_/g, ' ')
+  if (values.length > 1) return 'mixed states'
+  return 'not recorded'
 }
 
 function outletReviewPresentation(states) {
@@ -52,7 +57,7 @@ function OutletCoverageCard({ coverage }) {
           <p className="sc-outlet-card-label">Ingested outlet sample</p>
           <h4>{coverage.outlet}</h4>
           <span className="sc-outlet-card-article-count">
-            {coverage.articleCount} ingested article{coverage.articleCount === 1 ? '' : 's'} · reviewed {formatReviewedAt(coverage.latestReviewedAt)}
+            {coverage.articleCount} ingested article{coverage.articleCount === 1 ? '' : 's'} · review {formatReviewedAt(coverage.latestReviewedAt, coverage.reviewStatuses)}
           </span>
         </div>
         <span className={`sc-outlet-review-state sc-outlet-review-${review.tone}`}>{review.label}</span>
@@ -218,9 +223,9 @@ function EventCard({ event, onOpenArticle, onOpenArc, onOpenTimeline, focused, s
       </header>
 
       <div className="sc-event-evidence-bar">
-        <span><strong>{event.evidenceTotals?.claims ?? 0}</strong> claim{event.evidenceTotals?.claims === 1 ? '' : 's'} reviewed</span>
+        <span><strong>{event.evidenceTotals?.claims ?? 0}</strong> claim{event.evidenceTotals?.claims === 1 ? '' : 's'} extracted</span>
         <span><strong>{event.evidenceTotals?.primaryLinks ?? 0}</strong> primary evidence link{event.evidenceTotals?.primaryLinks === 1 ? '' : 's'}</span>
-        <span>Latest review: <strong>{formatReviewedAt(event.reviewedAt)}</strong></span>
+        <span>Latest review: <strong>{formatReviewedAt(event.reviewedAt, event.reviewStatuses)}</strong></span>
       </div>
       <p className="sc-lineage-status">Lineage status: canonical-URL duplicates are collapsed; wire, ownership, and editorial lineage are not yet verified.</p>
 

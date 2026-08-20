@@ -471,6 +471,97 @@ export function runPipeline(articles, entityPairs, cfg, lexicon) {
   return plan
 }
 
+// V2 event projection: Version Two already carries imported, source-backed
+// events and event_articles. Re-clustering its 12k+ article corpus with the V1
+// O(n²) event builder would create a duplicate event namespace and exceed the
+// worker budget. This planner therefore treats the existing event membership as
+// the cluster boundary and deterministically rebuilds only the comparison
+// derived tables for multi-outlet events. It never edits articles, events, or
+// event_articles.
+export const EVENT_PROJECTION_RULE_VERSION = 'sc-v2-event-projection'
+
+function eventProjectionExplanation(eventId, claimOrdinal, articleId, surfaceText, canonicalText, confidence) {
+  return {
+    assertion_id: `sc:claim_grouping:${eventId}:${claimOrdinal}:${articleId}`,
+    assertion_type: 'claim_grouping',
+    version: 1,
+    is_current: true,
+    source_ids: [],
+    archived_sources: [],
+    source_roles: {},
+    supporting_passage: `Surface claim "${surfaceText}" grouped under canonical "${canonicalText}" (similarity ${confidence}).`,
+    contradicting_evidence: [],
+    missing_evidence: [],
+    shared_entities: [],
+    relationship_type: null,
+    rule_version: EVENT_PROJECTION_RULE_VERSION + '|deterministic_text_similarity',
+    provenance_class: 'machine',
+    review_status: 'awaiting_review',
+    state: 'ok',
+    correction_history: [],
+    remaining_uncertainty: 'Machine grouping is not a human review; primary evidence links are omitted unless an explicit primary-record URL exists.',
+  }
+}
+
+export function runEventProjection(eventInputs, cfg, lexicon) {
+  const plan = { claims: [], article_claims: [], explanations: [], stats: {} }
+  let claimCount = 0
+  let eventCount = 0
+  for (const { event, members } of eventInputs) {
+    const articles = members.map((m) => m.article).filter(Boolean)
+    const outlets = new Set(articles.map((a) => a.outlet).filter(Boolean))
+    if (outlets.size < 2) continue
+    eventCount++
+    const items = []
+    for (const article of articles) {
+      const claims = Array.isArray(article.claims) ? article.claims : []
+      for (const claim of claims) {
+        if (claim?.text) items.push({ articleId: article.id, text: String(claim.text) })
+      }
+    }
+    const groups = groupClaims(items, cfg.groupFloor)
+    let ordinal = 0
+    for (const group of groups) {
+      ordinal++
+      claimCount++
+      const claimKey = `${event.id}:c${ordinal}`
+      const byArticle = new Map(articles.map((article) => [article.id, article]))
+      plan.claims.push({
+        claim_key: claimKey,
+        event_id: event.id,
+        canonical_text: group.canonicalText,
+        claim_kind: 'fact',
+        thin_extraction: group.members.some((member) => !byArticle.get(member.articleId)?.body_text),
+        status: 'active',
+        rule_version: EVENT_PROJECTION_RULE_VERSION,
+      })
+      for (const member of group.members) {
+        const surfaceText = member.surfaceText
+        plan.article_claims.push({
+          claim_key: claimKey,
+          article_id: member.articleId,
+          surface_text: surfaceText,
+          extraction_method: 'existing_claims_jsonb',
+          extraction_confidence: member.confidence,
+          stance: 'asserts',
+          loaded_language: scanLoadedLanguage(surfaceText, lexicon),
+        })
+        plan.explanations.push(eventProjectionExplanation(
+          event.id, ordinal, member.articleId, surfaceText, group.canonicalText, member.confidence,
+        ))
+      }
+    }
+  }
+  plan.stats = {
+    mode: 'event_projection',
+    events_processed: eventCount,
+    claims: plan.claims.length,
+    article_claims: plan.article_claims.length,
+    explanations: plan.explanations.length,
+  }
+  return plan
+}
+
 // Doc 13 site 9: shared paged read with an optional caller filter. Plain ESM
 // JavaScript so the same file runs in the Deno edge runtime and node:test.
 export async function pagedSelect(supabase, table, cols, orderCols, pageSize, filter = (q) => q) {

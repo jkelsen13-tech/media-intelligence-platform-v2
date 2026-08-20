@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url'
 import {
   runPipeline, clusterArticles, groupClaims, detectSyndicates, independentOutlets,
   scanLoadedLanguage, computeComparison, canonicalUrl, claimSimilarity, RULE_VERSION,
+  EVENT_PROJECTION_RULE_VERSION, runEventProjection,
 } from '../../supabase/functions/source-comparison-run/lib.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -170,6 +171,23 @@ test('explanation rows: one per membership and grouping decision, machine proven
     assert.equal(r.version, 1)
     assert.ok(r.supporting_passage.length > 0)
   }
+})
+
+test('V2 event projection writes comparison claims against existing multi-outlet events only', () => {
+  const event = { id: 'existing-v2-event', canonical_title: 'Existing V2 event' }
+  const multiOutletMembers = eventCluster().members.map((member) => ({ article: member.article }))
+  const projection = runEventProjection([{ event, members: multiOutletMembers }], CFG, lexicon)
+  assert.ok(projection.claims.length > 0, 'expected projected claims for existing event membership')
+  assert.equal(projection.stats.events_processed, 1)
+  assert.ok(projection.claims.every((claim) => claim.event_id === event.id))
+  assert.ok(projection.claims.every((claim) => claim.rule_version === EVENT_PROJECTION_RULE_VERSION))
+  assert.equal(projection.explanations.length, projection.article_claims.length)
+  assert.ok(projection.explanations.every((row) => row.rule_version.startsWith(EVENT_PROJECTION_RULE_VERSION + '|')))
+
+  const singleOutlet = runEventProjection([
+    { event: { id: 'single-outlet' }, members: [{ article: { id: 'only', outlet: 'one', claims: [{ text: 'one claim' }] } }] },
+  ], CFG, lexicon)
+  assert.equal(singleOutlet.claims.length, 0, 'single-outlet event must not create a comparison projection')
 })
 
 // canonical URL normalization (Q5)

@@ -18,6 +18,7 @@
 //     details disclosure.
 
 const TRACKING_PARAMS = /^(utm_|fbclid$|gclid$|mc_cid$|mc_eid$|igshid$|ref$|spm$)/
+const V2_EVENT_PROJECTION_RULE_VERSION = 'sc-v2-event-projection'
 
 export function canonicalUrl(url) {
   if (!url) return null
@@ -134,6 +135,7 @@ export function buildClaimView(claim, surfaces, ctx) {
       loadedLanguage: Array.isArray(s.loaded_language) ? s.loaded_language : [],
       explanation: explanationsByArticle.get(s.article_id) ?? null,
       reviewedAt: explanationsByArticle.get(s.article_id)?.reviewed_at ?? null,
+      reviewStatus: explanationsByArticle.get(s.article_id)?.review_status ?? null,
     }
   })
   const independent = independentOutlets(surfaces.map((s) => s.article_id), articlesById, syndicates)
@@ -200,6 +202,7 @@ export function buildEventView(event, memberRows, ctx) {
           surfaceText: surface.surfaceText,
           explanationState: surface.explanation?.state ?? 'explanation_pending',
           reviewedAt: surface.reviewedAt ?? null,
+          reviewStatus: surface.reviewStatus ?? null,
         })),
     )
     const latestReviewedAt = rows
@@ -207,6 +210,7 @@ export function buildEventView(event, memberRows, ctx) {
       .filter(Boolean)
       .sort()
       .at(-1) ?? null
+    const reviewStatuses = [...new Set(rows.map((row) => row.reviewStatus).filter(Boolean))]
     return {
       outlet,
       articleCount: articles.filter((article) => article.outlet === outlet).length,
@@ -214,10 +218,12 @@ export function buildEventView(event, memberRows, ctx) {
       framing: rows,
       explanationStates: [...new Set(rows.map((row) => row.explanationState))],
       latestReviewedAt,
+      reviewStatuses,
     }
   })
   const evidenceLinkCount = ctx.claimViews.reduce((total, claim) => total + claim.evidenceLinks.length, 0)
   const reviewedAt = outletCoverage.map((coverage) => coverage.latestReviewedAt).filter(Boolean).sort().at(-1) ?? null
+  const reviewStatuses = [...new Set(outletCoverage.flatMap((coverage) => coverage.reviewStatuses ?? []))]
   return {
     id: event.id,
     title: event.canonical_title,
@@ -232,6 +238,7 @@ export function buildEventView(event, memberRows, ctx) {
     outletCoverage,
     evidenceTotals: { claims: ctx.claimViews.length, primaryLinks: evidenceLinkCount, outlets: outlets.length },
     reviewedAt,
+    reviewStatuses,
   }
 }
 
@@ -326,12 +333,12 @@ export async function loadSourceComparisonView({ supabaseClient } = {}) {
   const eligibleEventIds = events.map((event) => event.id)
   const [membersRes, claimsRes, surfacesRes, linksRes, corrRes, explRes] = await Promise.all([
     selectInChunks(supabase, 'event_articles', 'event_id, article_id, membership_method, membership_confidence', 'event_id', eligibleEventIds),
-    keysetAll(supabase, 'claims', 'id, event_id, canonical_text, thin_extraction, status', { filter: (q) => q.eq('status', 'active') }),
+    keysetAll(supabase, 'claims', 'id, event_id, canonical_text, thin_extraction, status', { filter: (q) => q.eq('status', 'active').eq('rule_version', V2_EVENT_PROJECTION_RULE_VERSION) }),
     keysetAll(supabase, 'article_claims', 'id, claim_id, article_id, surface_text, stance, loaded_language', { filter: (q) => q.eq('is_current', true) }),
     keysetAll(supabase, 'claim_evidence_links', 'id, claim_id, evidence_url, evidence_type'),
     keysetAll(supabase, 'claim_corrections', 'id, claim_id, correcting_article_id, corrected_article_id, correction_text, occurred_at'),
     keysetAll(supabase, 'explanations', 'id, assertion_id, assertion_type, supporting_passage, rule_version, provenance_class, reviewed_at, review_status, state, remaining_uncertainty', {
-      filter: (q) => q.in('assertion_type', ['event_membership', 'claim_grouping']).like('rule_version', 'sc-v1|%').eq('is_current', true),
+      filter: (q) => q.eq('assertion_type', 'claim_grouping').like('rule_version', `${V2_EVENT_PROJECTION_RULE_VERSION}|%`).eq('is_current', true),
     }),
   ])
   const firstError = [membersRes, claimsRes, surfacesRes, linksRes, corrRes, explRes].find((result) => result.error)?.error

@@ -2,6 +2,20 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SOURCE_PROJECT_REF = 'niejaejtbxgakyrsntxm'
 const IMPORT_RUN_KEY = 'original-readonly-cross-surface-import-20260820'
+
+async function refreshV2SourceComparison(targetUrl: string, targetServiceKey: string) {
+  const response = await fetch(`${targetUrl}/functions/v1/source-comparison-run`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${targetServiceKey}`,
+    },
+    body: JSON.stringify({ mode: 'event_projection' }),
+  })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(`source comparison projection failed: ${payload?.error ?? response.status}`)
+  return payload
+}
 const PAGE_SIZE = 100
 const WRITE_BATCH_SIZE = 500
 
@@ -524,6 +538,7 @@ Deno.serve(async (req: Request) => {
     await importP3TrackEvents(target, p3Tracks, maps, report)
     await importP3Legal(target, p3Cases, p3Evidence, maps, report)
     await flushMappings(target, maps)
+    report.sourceComparisonProjection = await refreshV2SourceComparison(targetUrl, targetServiceKey)
 
     await target.from('original_source_import_runs').update({ status: 'completed', completed_at: new Date().toISOString(), report }).eq('run_key', IMPORT_RUN_KEY)
     return Response.json({ ok: true, ...report })

@@ -1,14 +1,12 @@
-// Doc 13 site 9 regression test: source-comparison-run rebuild cleanup must
-// read the COMPLETE sc-v1 event-id set past the PostgREST 1000-row ceiling.
-// A truncated cleanup read would leave event_articles/claims/events orphans
-// behind on the next rebuild.
+// V2 Source Comparison projection regression: complete event reads must survive
+// the PostgREST 1000-row cap, while the projection must not mutate V2 events.
 
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { pagedSelect, RULE_VERSION } from '../../supabase/functions/source-comparison-run/lib.js'
+import { pagedSelect } from '../../supabase/functions/source-comparison-run/lib.js'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const INDEX_TS = join(HERE, '..', '..', 'supabase', 'functions', 'source-comparison-run', 'index.ts')
@@ -20,17 +18,16 @@ function fakePostgrest(tables) {
       const state = { range: null }
       const q = {
         select: () => q,
-        eq: (c, v) => { rows = rows.filter((r) => r[c] === v); return q },
-        order: (c, { ascending = true } = {}) => {
-          rows = [...rows].sort((a, b) => (String(a[c] ?? '') < String(b[c] ?? '') ? -1 : String(a[c] ?? '') > String(b[c] ?? '') ? 1 : 0) * (ascending ? 1 : -1))
+        neq: (column, value) => { rows = rows.filter((row) => row[column] !== value); return q },
+        order: (column, { ascending = true } = {}) => {
+          rows = [...rows].sort((a, b) => (String(a[column] ?? '') < String(b[column] ?? '') ? -1 : String(a[column] ?? '') > String(b[column] ?? '') ? 1 : 0) * (ascending ? 1 : -1))
           return q
         },
-        range: (f, t) => { state.range = [f, t]; return q },
+        range: (from, to) => { state.range = [from, to]; return q },
         then: (resolve) => {
-          let r = rows
-          if (state.range) r = r.slice(state.range[0], state.range[1] + 1)
-          r = r.slice(0, 1000) // PostgREST max-rows cap — the bug under test
-          resolve({ data: r, error: null })
+          let result = rows
+          if (state.range) result = result.slice(state.range[0], state.range[1] + 1)
+          resolve({ data: result.slice(0, 1000), error: null })
         },
       }
       return q
@@ -39,57 +36,42 @@ function fakePostgrest(tables) {
 }
 
 const pad = (n) => String(n).padStart(6, '0')
-const N_MATCHING = 1300
-const N_FOREIGN = 400
+const N_ELIGIBLE = 1300
+const N_TIMELINE_ONLY = 400
 
 function buildTables() {
   const events = []
-  for (let i = 1; i <= N_MATCHING; i++) {
-    events.push({ id: `ev-${pad(i)}`, rule_version: RULE_VERSION })
-    if (i <= N_FOREIGN) events.push({ id: `fx-${pad(i)}`, rule_version: `foreign-v${(i % 3) + 1}` })
-  }
+  for (let i = 1; i <= N_ELIGIBLE; i++) events.push({ id: `ev-${pad(i)}`, status: 'candidate' })
+  for (let i = 1; i <= N_TIMELINE_ONLY; i++) events.push({ id: `tl-${pad(i)}`, status: 'timeline_only' })
   return { events }
 }
 
-// The exact cleanup read index.ts now performs (site-9 block).
-async function readCleanupEventIds(db) {
-  const { data, error } = await pagedSelect(db, 'events', 'id', ['id'], 1000, (q) =>
-    q.eq('rule_version', RULE_VERSION),
-  )
+async function readProjectionEventIds(db) {
+  const { data, error } = await pagedSelect(db, 'events', 'id,canonical_title,status', ['id'], 500, (q) => q.neq('status', 'timeline_only'))
   assert.equal(error, null)
-  return (data ?? []).map((r) => r.id)
+  return (data ?? []).map((row) => row.id)
 }
 
-test('control: the fake PostgREST really does cap naive selects at 1000', async () => {
+test('control: the fake PostgREST caps a naive event select at 1000 rows', async () => {
   const db = fakePostgrest(buildTables())
   const { data } = await db.from('events').select('id')
   assert.equal(data.length, 1000)
 })
 
-test('cleanup event-id read returns the complete matching set past 1000', async () => {
-  const ids = await readCleanupEventIds(fakePostgrest(buildTables()))
-  assert.equal(ids.length, N_MATCHING)
-  assert.ok(ids.includes(`ev-${pad(1001)}`), 'matching event at position 1001 missing from cleanup set')
-  assert.ok(ids.includes(`ev-${pad(N_MATCHING)}`), 'final matching event missing from cleanup set')
-  assert.ok(!ids.some((id) => id.startsWith('fx-')), 'foreign rule_version leaked into cleanup set')
-
-  // Consumption proof: run the same 100-id delete chunking and assert the
-  // beyond-1000 rows are actually deleted, not merely returned.
-  const deleted = []
-  for (let i = 0; i < ids.length; i += 100) deleted.push(...ids.slice(i, i + 100))
-  assert.equal(deleted.length, N_MATCHING)
-  assert.ok(deleted.includes(`ev-${pad(1001)}`), 'event at position 1001 would not be deleted')
-  assert.ok(deleted.includes(`ev-${pad(N_MATCHING)}`), 'final event would not be deleted')
+test('V2 projection event read returns every non-timeline event past 1000 rows', async () => {
+  const ids = await readProjectionEventIds(fakePostgrest(buildTables()))
+  assert.equal(ids.length, N_ELIGIBLE)
+  assert.ok(ids.includes(`ev-${pad(1001)}`), 'event at position 1001 missing from projection input')
+  assert.ok(ids.includes(`ev-${pad(N_ELIGIBLE)}`), 'final event missing from projection input')
+  assert.ok(!ids.some((id) => id.startsWith('tl-')), 'timeline-only event leaked into projection input')
 })
 
-test('source structure: cleanup read uses pagedSelect with the rule_version filter', () => {
+test('source structure paginates V2 projection input and never mutates events', () => {
   const src = readFileSync(INDEX_TS, 'utf8')
-  assert.match(src, /pagedSelect\(supabase, 'events', 'id', \['id'\], 1000, \(q\) =>\s*\n?\s*q\.eq\('rule_version', RULE_VERSION\)/)
-  assert.doesNotMatch(
-    src,
-    /from\('events'\)\s*\n?\s*\.select\('id'\)\s*\n?\s*\.eq\('rule_version', RULE_VERSION\)/,
-    'raw unpaginated events cleanup select still present',
-  )
+  assert.match(src, /pagedSelect\(supabase, 'events', 'id,canonical_title,status', \['id'\], PAGE_SIZE, \(q: any\) => q\.neq\('status', 'timeline_only'\)\)/)
+  assert.doesNotMatch(src, /from\('events'\)\.insert\(/)
+  assert.doesNotMatch(src, /from\('events'\)\.delete\(/)
+  assert.doesNotMatch(src, /from\('event_articles'\)\.insert\(/)
   const lib = readFileSync(join(HERE, '..', '..', 'supabase', 'functions', 'source-comparison-run', 'lib.js'), 'utf8')
   assert.match(lib, /export async function pagedSelect\(supabase, table, cols, orderCols, pageSize, filter = \(q\) => q\)/)
 })

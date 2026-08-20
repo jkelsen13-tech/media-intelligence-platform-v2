@@ -7,12 +7,14 @@ const migration = fs.readFileSync(new URL('../supabase/migrations/20260820_origi
 const edgeCompatibilityMigration = fs.readFileSync(new URL('../supabase/migrations/20260820_original_source_edge_sequence_compatibility.sql', import.meta.url), 'utf8')
 const conflictAuditMigration = fs.readFileSync(new URL('../supabase/migrations/20260820_original_source_article_conflict_audit.sql', import.meta.url), 'utf8')
 const sourceComparisonView = fs.readFileSync(new URL('../src/views/SourceComparisonView.jsx', import.meta.url), 'utf8')
+const sourceReadPath = importer.slice(importer.indexOf('async function fetchSourceAll'), importer.indexOf('async function existingBy'))
 
 test('original-source importer reads the original project only through paginated GET requests', () => {
   assert.match(importer, /const SOURCE_PROJECT_REF = 'niejaejtbxgakyrsntxm'/)
   assert.match(importer, /async function fetchSourceAll/)
   assert.match(importer, /headers: \{ apikey: sourceKey, Authorization: `Bearer \$\{sourceKey\}`/)
-  assert.doesNotMatch(importer, /method:\s*['"](?:POST|PATCH|PUT|DELETE)['"]/) 
+  assert.doesNotMatch(sourceReadPath, /method:\s*['"](?:POST|PATCH|PUT|DELETE)['"]/)
+
   assert.match(migration, /It neither\n-- references nor writes to the original Supabase project/)
 })
 
@@ -44,6 +46,14 @@ test('original-source importer uses insert-only handling for existing article UR
   assert.match(conflictAuditMigration, /original_source_import_conflicts/)
   assert.match(conflictAuditMigration, /revoke all on public\.original_source_import_conflicts from anon, authenticated/)
   assert.match(conflictAuditMigration, /historical_url_upsert_no_snapshot/)
+})
+
+test('original-source importer triggers the secured V2 comparison projection after the import mappings flush', () => {
+  assert.match(importer, /async function refreshV2SourceComparison/)
+  assert.match(importer, /functions\/v1\/source-comparison-run/)
+  assert.match(importer, /authorization: `Bearer \$\{targetServiceKey\}`/)
+  assert.match(importer, /mode: 'event_projection'/)
+  assert.match(importer, /await flushMappings\(target, maps\)\s*\n\s*report\.sourceComparisonProjection = await refreshV2SourceComparison/)
 })
 
 test('source-comparison cards do not render public R1–R4 outlet tier labels', () => {
