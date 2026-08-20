@@ -62,3 +62,18 @@ The `NOT_OBSERVED` outcomes are deliberate coverage disclosures, not false passe
 ## Track 3 disposition
 
 **Track 3 is ready for the audited original-source batch.** The only propagation defect found was the omitted documented arc-root mapping; it was repaired in V2, deployed in the future importer, and rechecked. Four original arcs remain rootless because the retained source itself supplies no root relationship, so their 71 articles are correctly excluded from direct graph reachability rather than linked by assumption. The standing checker converts the assessed conditions into a repeatable regression gate while preserving all existing withholding boundaries.
+
+
+## Final deployed public-surface replay
+
+After the final GitHub Pages deployment completed successfully, the live public site was replayed against the current 12,558-article corpus. This replay confirms rendering and interaction rather than treating the database census as a UI proxy.
+
+| Surface | Live deployed observation | Result |
+|---|---|---|
+| News | The exact full-text search `Michigan Looks Left` returned the one matching New York Times card with its stored summary, without a timeout. | **Pass** |
+| Knowledge Graph | The focused graph rendered 20 of 805 nodes and 22 relationships. `Expand` changed it to 26 nodes and 28 relationships. | **Pass** |
+| Causal Timeline | The selected arc rendered 13 chronological records, date/type filters, record detail, and Evidence/Connections controls. | **Pass** |
+| Story Arcs | The directory rendered imported arcs; the selected source-mapped arc showed status, coverage, lifecycle, developments, and Overview/Timeline/Evidence tabs. | **Pass** |
+| Source Comparison | A projection-backed four-outlet comparison card rendered 20 extracted claims, timing, review state, article links, provenance disclosures, and Arc/Timeline/News actions. | **Pass** |
+
+No public-route failure or base-table grant restoration was required during the final replay.
