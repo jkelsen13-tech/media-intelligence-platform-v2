@@ -344,6 +344,30 @@ async function importNodes(target: any, source: Row[], maps: MappingState, repor
   await batched(payload, async (chunk) => insertRows(target, 'nodes', chunk))
 }
 
+// Arc roots are source-record relationships, not inferred graph links. Arcs are
+// imported before nodes, so this runs only after node mappings are durable. It
+// preserves an existing V2 root and reports an unmapped source reference rather
+// than guessing or synthesizing a replacement.
+async function restoreArcRoots(target: any, source: Row[], maps: MappingState, report: any) {
+  for (const row of source) {
+    if (!row.root_node_id) continue
+    const arcId = mapped(maps, 'story_arcs', row.id)
+    const rootNodeId = mapped(maps, 'nodes', row.root_node_id)
+    if (!arcId || !rootNodeId) {
+      report.arcRootsSkippedUnmapped++
+      continue
+    }
+    const { data, error } = await target
+      .from('story_arcs')
+      .update({ root_node_id: rootNodeId })
+      .eq('id', arcId)
+      .is('root_node_id', null)
+      .select('id')
+    if (error) throw error
+    report.arcRootsRestored += data?.length ?? 0
+  }
+}
+
 async function importEntities(target: any, source: Row[], maps: MappingState, report: any) {
   const existing = new Map((await existingBy(target, 'entities', 'id, normalized_name')).map((r) => [r.normalized_name, r.id]))
   const payload: Row[] = []
@@ -566,7 +590,7 @@ Deno.serve(async (req: Request) => {
   const report: any = {
     sourceProject: SOURCE_PROJECT_REF, runKey: IMPORT_RUN_KEY, articlesInserted: 0,
     articlesSkippedExisting: 0, articleConflictsLogged: 0,
-    storyArcsInserted: 0, nodesInserted: 0, entitiesInserted: 0, arcEventsInserted: 0, eventsInserted: 0,
+    storyArcsInserted: 0, nodesInserted: 0, arcRootsRestored: 0, arcRootsSkippedUnmapped: 0, entitiesInserted: 0, arcEventsInserted: 0, eventsInserted: 0,
     eventArticlesLinked: 0, edgesInserted: 0, edgesSkippedUnmapped: 0, sourcesInserted: 0, sourcesSkippedUnmapped: 0,
     citationsInserted: 0, citationsSkippedUnmapped: 0, articleEntitiesLinked: 0, policiesInserted: 0,
     policyDocumentsInserted: 0, policyActorsLinked: 0, policyTopicsLinked: 0, p3PoliciesInserted: 0,
@@ -618,6 +642,7 @@ Deno.serve(async (req: Request) => {
     await importStage(target, maps, 'story_arcs', checkpoints, report, () => importArcs(target, arcs, maps, report))
     await importStage(target, maps, 'articles', checkpoints, report, () => importArticles(target, articles, maps, report))
     await importStage(target, maps, 'nodes', checkpoints, report, () => importNodes(target, nodes, maps, report))
+    await importStage(target, maps, 'arc_root_mapping', checkpoints, report, () => restoreArcRoots(target, arcs, maps, report))
     await importStage(target, maps, 'entities', checkpoints, report, () => importEntities(target, entities, maps, report))
     await importStage(target, maps, 'arc_events', checkpoints, report, () => importArcEvents(target, arcEvents, maps, report))
     await importStage(target, maps, 'events', checkpoints, report, () => importEvents(target, events, maps, report))

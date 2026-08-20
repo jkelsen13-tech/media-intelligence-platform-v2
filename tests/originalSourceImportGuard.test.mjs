@@ -44,6 +44,19 @@ test('original-source importer maps provenance and only materializes cross-surfa
   assert.match(importer, /existingBy\(target, 'policy_topics', 'policy_id, topic_id'\)/)
 })
 
+test('original-source importer restores documented arc roots after node mappings without inferring missing roots', () => {
+  const roots = importer.slice(importer.indexOf('async function restoreArcRoots'), importer.indexOf('async function importEntities'))
+  const orchestrator = importer.slice(importer.indexOf('const maps = await getMappings'), importer.indexOf("await importStage(target, maps, 'entities'"))
+  assert.match(roots, /if \(!row\.root_node_id\) continue/)
+  assert.match(roots, /const arcId = mapped\(maps, 'story_arcs', row\.id\)/)
+  assert.match(roots, /const rootNodeId = mapped\(maps, 'nodes', row\.root_node_id\)/)
+  assert.match(roots, /report\.arcRootsSkippedUnmapped\+\+/)
+  assert.match(roots, /\.is\('root_node_id', null\)/)
+  assert.match(roots, /report\.arcRootsRestored \+= data\?\.length \?\? 0/)
+  assert.match(orchestrator, /'nodes'[\s\S]*'arc_root_mapping'/)
+  assert.match(importer, /arcRootsRestored: 0, arcRootsSkippedUnmapped: 0/)
+})
+
 test('original-source importer uses insert-only handling for existing article URLs and logs each conflict privately', () => {
   assert.match(importer, /async function insertOnlyRows/)
   assert.match(importer, /await batched\(payload, async \(chunk\) => insertOnlyRows\(target, 'articles', chunk\)\)/)
