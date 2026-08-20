@@ -66,3 +66,11 @@ The complete suite passed **470 tests** and the production build completed succe
 
 [1]: `../CLAIM_AUDITABILITY_PROMOTION_CHECK.md` "Standing V2 claim-auditability and promotion verifier"
 [2]: `2026-08-20-v2-claim-followup-working-evidence.md` "Raw V2-only census and exclusion evidence"
+
+## Live deployment validation — verified sample
+
+GitHub Pages deployment for commit `64a38c4` completed successfully. On the deployed News page, searching **“Mathilde Favier”** returned the selected promoted record. Expanding it rendered the source-bounded claim and the visible label **“Verified against retained title text.”** The record retained its publisher source URL and did not show fabricated linked-evidence metadata.
+
+## Live deployment validation — unverified sample
+
+On the same deployed News page, searching **“As Trump reshapes foreign policy”** returned the selected non-protected legacy record. Its expanded detail rendered the legacy surface with the visible label **“Unverified against retained source — No exact retained publisher excerpt supports this public claim surface.”** It continued to show the publisher URL and source-mapping context, without relabeling the manual metadata as verified publisher prose.
