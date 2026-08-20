@@ -861,6 +861,19 @@ export async function loadFilteredSourceMetricRows(filters = {}, { supabaseClien
   return data ?? []
 }
 
+// Narrow author-byline lookup. `authors_public` is the only anonymous author
+// contract: its `id` joins an article's stored `author_id` and its `name` is
+// the exact public byline that News renders. The private `authors` relation is
+// never joined by a browser query.
+export async function loadPublicAuthorNameMap(authorIds, { supabaseClient } = {}) {
+  const client = supabaseClient ?? supabase
+  const ids = [...new Set((authorIds ?? []).filter(Boolean))]
+  if (!client || ids.length === 0) return new Map()
+  const { data, error } = await client.from('authors_public').select('id, name').in('id', ids)
+  if (error) throw error
+  return new Map((data ?? []).filter((row) => row.id && row.name).map((row) => [row.id, row.name]))
+}
+
 // Paged, searchable article stream across all outlets. `outlets`, `feeds`,
 // and `topicTerms` are optional working filters. Topic terms are explicitly
 // title/summary matches rather than a claim of a complete article taxonomy.
@@ -869,7 +882,7 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
   let query = supabase
     .from('articles')
     .select(
-      'id, title, url, summary, published_at, outlet, monoculture, unattributed, arc_id, authors(name), story_arcs!articles_arc_id_fkey(title)',
+      'id, title, url, summary, published_at, outlet, monoculture, unattributed, arc_id, author_id, story_arcs!articles_arc_id_fkey(title)',
       { count: 'exact' },
     )
     .order('published_at', { ascending: false, nullsFirst: false })
@@ -880,15 +893,17 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
 
   const { data, error, count } = await query
   if (error) throw error
+  const rows = data ?? []
+  const authorNames = await loadPublicAuthorNameMap(rows.map((article) => article.author_id))
   return {
-    articles: data.map((a) => ({
+    articles: rows.map((a) => ({
       ...a,
-      author_name: a.authors?.name ?? null,
+      author_name: authorNames.get(a.author_id) ?? null,
+      author_id: undefined,
       arc_title: a.story_arcs?.title ?? null,
-      authors: undefined,
       story_arcs: undefined,
     })),
-    total: count ?? data.length,
+    total: count ?? rows.length,
   }
 }
 
@@ -898,7 +913,7 @@ export async function loadArticleDetail(id) {
   const [artRes, citRes, articleClaimsRes] = await Promise.all([
     supabase
       .from('articles')
-      .select('id, title, url, summary, published_at, outlet, claims, monoculture, unattributed, authors(name), story_arcs!articles_arc_id_fkey(title)')
+      .select('id, title, url, summary, published_at, outlet, claims, monoculture, unattributed, author_id, story_arcs!articles_arc_id_fkey(title)')
       .eq('id', id)
       .single(),
     supabase
@@ -919,6 +934,7 @@ export async function loadArticleDetail(id) {
   if (artRes.error) throw artRes.error
   if (citRes.error) throw citRes.error
   if (articleClaimsRes.error) throw articleClaimsRes.error
+  const authorNames = await loadPublicAuthorNameMap([artRes.data.author_id])
 
   const storedClaims = Array.isArray(artRes.data.claims) ? artRes.data.claims : []
   const reviewedClaims = (articleClaimsRes.data ?? []).map((row) => ({
@@ -957,7 +973,8 @@ export async function loadArticleDetail(id) {
   return {
     ...artRes.data,
     claims,
-    author_name: artRes.data.authors?.name ?? null,
+    author_name: authorNames.get(artRes.data.author_id) ?? null,
+    author_id: undefined,
     arc_title: artRes.data.story_arcs?.title ?? null,
     citations: citRes.data ?? [],
     evidenceRecords,
