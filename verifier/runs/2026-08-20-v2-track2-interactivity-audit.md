@@ -6,9 +6,9 @@
 
 | Page | Element | Expected behavior | Observed behavior | Classification | Status |
 |---|---|---|---|---|---|
-| News | Global text search | Filter the live feed by headline, summary, or article text | Entering `Michigan Looks Left` produces `Failed to load articles: canceling statement due to statement timeout`; the page falls back to unrelated default cards. | Broken UI | Open — query-path performance defect. |
+| News | Global text search | Filter the live feed by headline, summary, or article text | **Pass after repair.** On the deployed V2 site, entering `Michigan Looks Left` returned the single matching New York Times card (Aug. 3, 2026, 05:35 PM) with its stored summary; no timeout or fallback occurred. | Repaired UI | Closed — migration `20260820_v2_accelerate_public_news_search.sql` adds trigram indexes for all three existing public substring-search fields. |
 
-The search control is wired and accepts input, but its server-side `title OR summary OR body_text ILIKE` filter times out against the 12,558-article corpus. This is a query-performance defect, not a missing UI. The audit will continue across all pages before applying the scoped fix.
+**Repair and validation.** The original server-side `title OR summary OR body_text ILIKE` query timed out against the 12,558-article corpus. The V2-only migration adds three `pg_trgm` GIN indexes without changing the public data contract or restoring any base-table grant. The isolated-sandbox anonymous probe returned HTTP 200 in approximately 1.3 seconds, and the post-deployment live-browser replay above returned the expected result without a timeout.
 
 | News | Article-card expansion | Open selected article detail and disclose stored publisher/provenance data without fabricating citations | **Pass.** The selected card expanded; publisher source record and URL were exposed, an absent author was labeled as unrecorded, claims were disclosed, and unavailable structured citation/framing data used clear empty states. |
 
@@ -24,6 +24,8 @@ The card detail remained interactive after the timed-out search was cleared. Its
 | Source Comparison | Projection-backed populated card / Arc, Timeline, News, and explanation controls | Load a multi-outlet comparison, preserve review status, and expose cross-surface actions | **Pass baseline.** The page loaded a populated 4-outlet event with 20 extracted claims, review state, lineage caveat, timing, source-framing cards, claim-level provenance, article links, Arc/Timeline destinations, News destinations, and expandable explanation disclosures. |
 | Source Comparison | Event search | Filter populated comparison cards by event title | **Pass.** Searching `Pochettino` retained the matching populated card and its projection-backed claim/explanation disclosures. |
 
-## Audit disposition before repair
+## Final Track 2 disposition
 
-The functional cross-page audit found one reproducible public UI defect: the News full-text query times out against the live corpus. Graph, Geography, Timeline, Story Arcs, and Source Comparison controls tested above behaved as wired and used explicit uncertainty or empty-state disclosures where content was unavailable. The next phase applies the bounded News search query performance repair and then revalidates all affected live controls.
+The functional cross-page audit found one reproducible public UI defect: the News full-text query timed out against the live corpus. That defect is now repaired, tested in the local 457-test regression suite, built successfully, deployed in commit `12337e2`, and replayed successfully on the live V2 site. The repair preserves the existing search semantics across title, summary, and article text while retaining all anonymous base-table revocations; it changes only query performance through V2-only indexes.
+
+All checked News, Knowledge Graph, Geography, Causal Timeline, Story Arcs, and Source Comparison controls now have a recorded **Pass** result. Legal/Policy pages and Callais/redistricting-adjacent material were excluded from this audit.
