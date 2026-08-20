@@ -46,13 +46,9 @@ async function fetchSourceAll(table: string, sourceKey: string, order = 'id'): P
 type MappingState = Map<string, string> & { pending?: Map<string, Row> }
 
 async function getMappings(target: any): Promise<MappingState> {
-  const { data, error } = await target
-    .from('original_source_import_mappings')
-    .select('source_table, source_id, target_id')
-    .eq('source_project_ref', SOURCE_PROJECT_REF)
-  if (error) throw error
+  const rows = await existingBy(target, 'original_source_import_mappings', 'source_table, source_id, target_id', [['source_project_ref', SOURCE_PROJECT_REF]])
   const out = new Map<string, string>() as MappingState
-  for (const row of data ?? []) out.set(`${row.source_table}:${row.source_id}`, row.target_id)
+  for (const row of rows) out.set(`${row.source_table}:${row.source_id}`, row.target_id)
   out.pending = new Map<string, Row>()
   return out
 }
@@ -93,6 +89,20 @@ async function insertRows(target: any, table: string, rows: Row[], onConflict?: 
   if (error) throw new Error(`${table}: ${error.message}`)
 }
 
+async function insertOnlyRows(target: any, table: string, rows: Row[]) {
+  if (!rows.length) return
+  const { error } = await target.from(table).insert(rows)
+  if (error) throw new Error(`${table}: ${error.message}`)
+}
+
+async function recordArticleConflicts(target: any, conflicts: Row[]) {
+  if (!conflicts.length) return
+  await batched(conflicts, async (chunk) => {
+    await insertRows(target, 'original_source_import_conflicts', chunk,
+      'source_project_ref,run_key,source_table,source_id,conflict_kind')
+  })
+}
+
 async function assertImporterCredential(target: any, req: Request) {
   const credential = req.headers.get('x-mip-original-import-key')
   if (!credential) return false
@@ -106,10 +116,12 @@ async function assertImporterCredential(target: any, req: Request) {
   return digest === data.key_hash
 }
 
-async function existingBy(target: any, table: string, fields: string) {
+async function existingBy(target: any, table: string, fields: string, filters: Array<[string, string]> = []) {
   const rows: Row[] = []
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await target.from(table).select(fields).range(from, from + 999)
+    let query = target.from(table).select(fields)
+    for (const [column, value] of filters) query = query.eq(column, value)
+    const { data, error } = await query.range(from, from + 999)
     if (error) throw error
     rows.push(...(data ?? []))
     if (!data || data.length < 1000) return rows
@@ -136,43 +148,87 @@ async function importArcs(target: any, source: Row[], maps: Map<string, string>,
   }
 }
 
-async function importArticles(target: any, source: Row[], maps: Map<string, string>, report: any) {
-  const existing = new Map((await existingBy(target, 'articles', 'id, url')).filter((r) => r.url).map((r) => [r.url, r.id]))
-  await batched(source, async (chunk) => {
-    const payload: Row[] = []
-    for (const row of chunk) {
-      const targetId = maps.get(`articles:${row.id}`) ?? existing.get(row.url) ?? row.id
-      payload.push({
-        id: targetId, feed: row.feed, outlet: row.outlet, title: row.title, url: row.url,
-        summary: row.summary, published_at: row.published_at, fetched_at: row.fetched_at,
-        body_text: row.body_text, claims: row.claims ?? [], unattributed: row.unattributed ?? false,
-        monoculture: row.monoculture ?? false, is_digest: row.is_digest ?? false,
-        image_url: row.image_url, image_alt: row.image_alt,
-        entities_extracted_at: row.entities_extracted_at, arc_assign_attempted_at: row.arc_assign_attempted_at,
-        arc_assignment_evidence: row.arc_assignment_evidence,
-        source_status: row.source_status ?? 'active', source_status_changed_at: row.source_status_changed_at,
-        source_status_note: `Imported read-only from original project ${SOURCE_PROJECT_REF}; source article ${row.id}`,
-        ingestion_run_id: IMPORT_RUN_KEY,
+async function importArticles(target: any, source: Row[], maps: MappingState, report: any) {
+  const existingRows = await existingBy(target, 'articles', 'id, url')
+  const existingByUrl = new Map(existingRows.filter((row) => row.url).map((row) => [row.url, row.id]))
+  const existingIds = new Set(existingRows.map((row) => row.id))
+  const insertedArticleIds = new Set<string>()
+  const conflicts: Row[] = []
+  const payload: Row[] = []
+
+  for (const row of source) {
+    const mappedId = maps.get(`articles:${row.id}`)
+    const urlTargetId = existingByUrl.get(row.url)
+    const idAlreadyExists = existingIds.has(row.id)
+    const baseConflict = {
+      source_project_ref: SOURCE_PROJECT_REF,
+      run_key: IMPORT_RUN_KEY,
+      source_table: 'articles',
+      source_id: row.id,
+      source_url: row.url,
+      affected_fields: [],
+      details: { policy: 'insert-only; existing Version Two article fields are never updated' },
+    }
+
+    if (mappedId) {
+      conflicts.push({
+        ...baseConflict, target_id: mappedId, conflict_kind: 'existing_import_mapping_skipped',
+        recovery_status: 'not_applicable_existing_mapping',
       })
-      if (!existing.has(row.url)) report.articlesInserted++
-      else report.articlesEnriched++
+      report.articlesSkippedExisting++
+      report.articleConflictsLogged++
+      continue
     }
-    await insertRows(target, 'articles', payload, 'id')
-    for (const row of chunk) {
-      const targetId = maps.get(`articles:${row.id}`) ?? existing.get(row.url) ?? row.id
-      await remember(target, maps, 'articles', row.id, targetId, row.url)
+    if (urlTargetId) {
+      conflicts.push({
+        ...baseConflict, target_id: urlTargetId, conflict_kind: 'existing_url_skipped',
+        recovery_status: 'not_applicable_existing_url',
+      })
+      await remember(target, maps, 'articles', row.id, urlTargetId, row.url)
+      report.articlesSkippedExisting++
+      report.articleConflictsLogged++
+      continue
     }
-  })
-  // Resolve article Arc membership only after source Arc ids have a target map.
-  // Grouped updates avoid partial upserts, which would be treated as incomplete
-  // inserts by the target's non-null article columns before conflict resolution.
+    if (idAlreadyExists) {
+      conflicts.push({
+        ...baseConflict, target_id: row.id, conflict_kind: 'existing_id_skipped',
+        recovery_status: 'manual_review_required_identifier_collision',
+      })
+      await remember(target, maps, 'articles', row.id, row.id, row.url)
+      report.articlesSkippedExisting++
+      report.articleConflictsLogged++
+      continue
+    }
+
+    payload.push({
+      id: row.id, feed: row.feed, outlet: row.outlet, title: row.title, url: row.url,
+      summary: row.summary, published_at: row.published_at, fetched_at: row.fetched_at,
+      body_text: row.body_text, claims: row.claims ?? [], unattributed: row.unattributed ?? false,
+      monoculture: row.monoculture ?? false, is_digest: row.is_digest ?? false,
+      image_url: row.image_url, image_alt: row.image_alt,
+      entities_extracted_at: row.entities_extracted_at, arc_assign_attempted_at: row.arc_assign_attempted_at,
+      arc_assignment_evidence: row.arc_assignment_evidence,
+      source_status: row.source_status ?? 'active', source_status_changed_at: row.source_status_changed_at,
+      source_status_note: `Imported read-only from original project ${SOURCE_PROJECT_REF}; source article ${row.id}`,
+      ingestion_run_id: IMPORT_RUN_KEY,
+    })
+    insertedArticleIds.add(row.id)
+    await remember(target, maps, 'articles', row.id, row.id, row.url)
+    report.articlesInserted++
+  }
+
+  await batched(payload, async (chunk) => insertOnlyRows(target, 'articles', chunk))
+  await recordArticleConflicts(target, conflicts)
+
+  // Only newly inserted articles receive Arc membership. Existing Version Two
+  // rows are deliberately not enriched or reassigned by this importer.
   const articleIdsByArc = new Map<string, string[]>()
   for (const row of source) {
-    const articleId = mapped(maps, 'articles', row.id)
+    if (!insertedArticleIds.has(row.id)) continue
     const arcId = mapped(maps, 'story_arcs', row.arc_id)
-    if (!articleId || !arcId) continue
+    if (!arcId) continue
     const ids = articleIdsByArc.get(arcId) ?? []
-    ids.push(articleId)
+    ids.push(row.id)
     articleIdsByArc.set(arcId, ids)
   }
   for (const [arcId, articleIds] of articleIdsByArc) {
@@ -422,7 +478,8 @@ Deno.serve(async (req: Request) => {
   if (!sourceKey) return Response.json({ error: 'source_anon_key is required for read-only export' }, { status: 400 })
 
   const report: any = {
-    sourceProject: SOURCE_PROJECT_REF, runKey: IMPORT_RUN_KEY, articlesInserted: 0, articlesEnriched: 0,
+    sourceProject: SOURCE_PROJECT_REF, runKey: IMPORT_RUN_KEY, articlesInserted: 0,
+    articlesSkippedExisting: 0, articleConflictsLogged: 0,
     storyArcsInserted: 0, nodesInserted: 0, entitiesInserted: 0, arcEventsInserted: 0, eventsInserted: 0,
     eventArticlesLinked: 0, edgesInserted: 0, edgesSkippedUnmapped: 0, sourcesInserted: 0, sourcesSkippedUnmapped: 0,
     citationsInserted: 0, citationsSkippedUnmapped: 0, articleEntitiesLinked: 0, policiesInserted: 0,

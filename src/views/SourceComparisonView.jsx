@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { loadSourceComparisonView, R_LEVEL_NAMES, E_LEVEL_NAMES, OUTLET_RELIABILITY } from '../lib/sourceComparisonReadPath.js'
+import { loadSourceComparisonView, E_LEVEL_NAMES } from '../lib/sourceComparisonReadPath.js'
 import { filterEventsByTitle } from '../lib/listFilters.js'
 import './sourcecomparison.css'
 
@@ -17,14 +17,6 @@ import './sourcecomparison.css'
 //     times", never as N independent sources;
 //   - thin/empty outlet columns are shown, not hidden;
 //   - every surface claim opens its Phase 2 explanation object.
-
-function ReliabilityChip({ outlet }) {
-  const level = OUTLET_RELIABILITY[outlet]
-  // A missing G2 worked-example tier is a documentation gap, not a judgment
-  // about the outlet. Never substitute a score or an improvised tier.
-  if (!level) return <span className="sc-chip sc-chip-muted">source tier not recorded</span>
-  return <span className={`sc-chip sc-chip-${level.toLowerCase()}`}>{R_LEVEL_NAMES[level]}</span>
-}
 
 function StrengthChip({ level }) {
   return <span className={`sc-chip sc-chip-${level.toLowerCase()}`}>{E_LEVEL_NAMES[level]}</span>
@@ -77,7 +69,6 @@ function OutletCoverageCard({ coverage }) {
       <div className="sc-outlet-facts" aria-label={`${coverage.outlet} sample facts`}>
         <span className="sc-outlet-fact-token">Framing: {framing.length > 0 ? 'source text extracted' : 'not extracted'}</span>
         <span className="sc-outlet-fact-token">Included: {includedLabel}</span>
-        <ReliabilityChip outlet={coverage.outlet} />
       </div>
     </article>
   )
