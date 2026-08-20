@@ -8,6 +8,7 @@
     "build": "vite build",
     "test": "node --test $(find tests -type f -name '*.test.mjs' | sort)",
     "verify:track3": "node verifier/runV2Track3Propagation.mjs",
+    "verify:claims": "node verifier/runV2ClaimAuditabilityPromotion.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

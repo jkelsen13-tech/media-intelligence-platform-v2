@@ -221,6 +221,22 @@
   font-style: italic;
 }
 
+.news-claim-auditability {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.news-claim-auditability.verified {
+  color: var(--green-bright);
+}
+
+.news-claim-auditability.unverified {
+  color: var(--flag-yellow);
+}
+
 .news-citations {
   list-style: none;
   padding: 0;

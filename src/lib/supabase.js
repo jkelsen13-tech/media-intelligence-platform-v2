@@ -952,9 +952,13 @@ export async function loadArticleDetail(id) {
     stance: 'asserts',
     loaded_language: [],
     provenance: 'reviewed_claim_record',
+    auditability_state: row.auditability_state ?? 'unverified_against_retained_source',
+    auditability_note: row.auditability_note ?? 'No exact retained publisher excerpt supports this public claim surface.',
+    evidence_source_field: row.evidence_source_field ?? null,
+    evidence_excerpt: row.evidence_excerpt ?? null,
   }))
   const seenClaimText = new Set()
-  const claims = [...storedClaims, ...reviewedClaims].filter((claim) => {
+  const claims = [...reviewedClaims, ...storedClaims].filter((claim) => {
     const key = `${claim.kind ?? 'substantive'}|${String(claim.text ?? '').trim().toLowerCase()}`
     if (!key || seenClaimText.has(key)) return false
     seenClaimText.add(key)

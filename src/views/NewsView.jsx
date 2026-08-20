@@ -559,7 +559,16 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
               )}
               <ul className="news-claims">
                 {claims.substantive.map((c, i) => (
-                  <li key={i}>{c.text}</li>
+                  <li key={i}>
+                    <span>{c.text}</span>
+                    {c.provenance === 'reviewed_claim_record' && (
+                      <span className={`news-claim-auditability ${c.auditability_state === 'verified_retained_source' ? 'verified' : 'unverified'}`}>
+                        {c.auditability_state === 'verified_retained_source'
+                          ? `Verified against retained ${String(c.evidence_source_field ?? 'publisher')} text${c.evidence_excerpt ? '.' : '; excerpt not recorded.'}`
+                          : `Unverified against retained source — ${c.auditability_note ?? 'no exact retained publisher excerpt is stored.'}`}
+                      </span>
+                    )}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -568,7 +577,16 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
               {claims.framing.length === 0 && <span className="ap-muted">No structured framing markers have been extracted yet. This is not a neutrality or bias finding.</span>}
               <ul className="news-claims framing">
                 {claims.framing.map((c, i) => (
-                  <li key={i}>{c.text}</li>
+                  <li key={i}>
+                    <span>{c.text}</span>
+                    {c.provenance === 'reviewed_claim_record' && (
+                      <span className={`news-claim-auditability ${c.auditability_state === 'verified_retained_source' ? 'verified' : 'unverified'}`}>
+                        {c.auditability_state === 'verified_retained_source'
+                          ? `Verified against retained ${String(c.evidence_source_field ?? 'publisher')} text${c.evidence_excerpt ? '.' : '; excerpt not recorded.'}`
+                          : `Unverified against retained source — ${c.auditability_note ?? 'no exact retained publisher excerpt is stored.'}`}
+                      </span>
+                    )}
+                  </li>
                 ))}
               </ul>
             </div>
