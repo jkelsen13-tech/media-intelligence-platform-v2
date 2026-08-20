@@ -27,6 +27,32 @@ async function sha256(value: string) {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+// A snapshot is represented by deterministic hashes, never by copying source
+// payloads into the run ledger. This lets operators prove which read-only
+// source material a run saw without storing a second private-source export.
+function stableJson(value: any): any {
+  if (Array.isArray(value)) return value.map(stableJson)
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, stableJson(value[key])]))
+  }
+  return value
+}
+
+async function buildSourceSnapshot(sourceTables: Record<string, Row[]>) {
+  const tables: Record<string, { row_count: number, checksum: string }> = {}
+  for (const table of Object.keys(sourceTables).sort()) {
+    const rowManifest = (sourceTables[table] ?? []).map((row) => JSON.stringify(stableJson(row))).sort()
+    tables[table] = { row_count: rowManifest.length, checksum: await sha256(JSON.stringify(rowManifest)) }
+  }
+  const source_snapshot_checksum = await sha256(JSON.stringify({ source_project_ref: SOURCE_PROJECT_REF, tables }))
+  return {
+    source_snapshot_id: `${SOURCE_PROJECT_REF}:${source_snapshot_checksum.slice(0, 24)}`,
+    source_snapshot_checksum,
+    snapshot_checksum_method: 'sha256:canonical-json-table-manifest:v1',
+    tables,
+  }
+}
+
 function originMeta(metadata: any, sourceId: string) {
   return {
     ...(metadata && typeof metadata === 'object' && !Array.isArray(metadata) ? metadata : {}),
@@ -86,6 +112,30 @@ async function flushMappings(target: any, mappings: MappingState) {
     await insertRows(target, 'original_source_import_mappings', chunk, 'source_project_ref,source_table,source_id')
   })
   mappings.pending?.clear()
+}
+
+function checkpointCounts(report: Row) {
+  return Object.fromEntries(Object.entries(report).filter(([, value]) => typeof value === 'number'))
+}
+
+async function checkpointImportStage(target: any, stage: string, checkpoints: Row[], report: Row) {
+  const completed_at = new Date().toISOString()
+  checkpoints.push({ stage, completed_at, counts: checkpointCounts(report) })
+  const { error } = await target.from('original_source_import_runs').update({
+    current_stage: stage,
+    stage_checkpoints: checkpoints,
+    report,
+    updated_at: completed_at,
+  }).eq('run_key', IMPORT_RUN_KEY)
+  if (error) throw new Error(`import checkpoint ${stage}: ${error.message}`)
+}
+
+async function importStage(target: any, maps: MappingState, stage: string, checkpoints: Row[], report: Row, work: () => Promise<void>) {
+  await work()
+  // Flush after every completed stage: a retry can reuse durable source-to-
+  // target identity mappings instead of replaying an earlier stage blindly.
+  await flushMappings(target, maps)
+  await checkpointImportStage(target, stage, checkpoints, report)
 }
 
 function mapped(mappings: Map<string, string>, table: string, sourceId: string | null | undefined) {
@@ -502,9 +552,16 @@ Deno.serve(async (req: Request) => {
     p3LegalCasesExcluded: 0, errors: [] as string[],
   }
 
+  const checkpoints: Row[] = []
   try {
     const { error: runError } = await target.from('original_source_import_runs').upsert({
-      source_project_ref: SOURCE_PROJECT_REF, run_key: IMPORT_RUN_KEY, status: 'running', report,
+      source_project_ref: SOURCE_PROJECT_REF,
+      run_key: IMPORT_RUN_KEY,
+      status: 'running',
+      current_stage: 'source_read_pending',
+      stage_checkpoints: checkpoints,
+      report,
+      updated_at: new Date().toISOString(),
     }, { onConflict: 'run_key' })
     if (runError) throw runError
 
@@ -518,34 +575,65 @@ Deno.serve(async (req: Request) => {
       fetchSourceAll('p3_legal_case', sourceKey), fetchSourceAll('p3_legal_case_evidence', sourceKey, 'case_id'),
     ])
 
-    const maps = await getMappings(target)
-    await importArcs(target, arcs, maps, report)
-    await importArticles(target, articles, maps, report)
-    await importNodes(target, nodes, maps, report)
-    await importEntities(target, entities, maps, report)
-    await importArcEvents(target, arcEvents, maps, report)
-    await importEvents(target, events, maps, report)
-    await importEventArticles(target, eventArticles, maps, report)
-    await importEdges(target, edges, maps, report)
-    await importSources(target, sources, maps, report)
-    await importCitations(target, citations, maps, report)
-    await importArticleEntities(target, articleEntities, maps, report)
-    await importPolicies(target, policies, maps, report)
-    await importPolicyDocs(target, policyDocs, maps, report)
-    await importPolicyActors(target, policyActors, maps, report)
-    await importPolicyTopics(target, policyTopics, maps, report)
-    await importP3Policies(target, p3Policies, maps, report)
-    await importP3TrackEvents(target, p3Tracks, maps, report)
-    await importP3Legal(target, p3Cases, p3Evidence, maps, report)
-    await flushMappings(target, maps)
-    report.sourceComparisonProjection = await refreshV2SourceComparison(targetUrl, targetServiceKey)
+    const snapshot = await buildSourceSnapshot({
+      story_arcs: arcs, articles, nodes, entities, arc_events: arcEvents, events, event_articles: eventArticles,
+      edges, sources, citations, article_entities: articleEntities, policies, policy_documents: policyDocs,
+      policy_actors: policyActors, policy_topics: policyTopics, p3_policy: p3Policies,
+      p3_policy_track_event: p3Tracks, p3_legal_case: p3Cases, p3_legal_case_evidence: p3Evidence,
+    })
+    report.sourceSnapshot = snapshot
+    const { error: snapshotError } = await target.from('original_source_import_runs').update({
+      source_snapshot_id: snapshot.source_snapshot_id,
+      source_snapshot_checksum: snapshot.source_snapshot_checksum,
+      snapshot_checksum_method: snapshot.snapshot_checksum_method,
+      report,
+      updated_at: new Date().toISOString(),
+    }).eq('run_key', IMPORT_RUN_KEY)
+    if (snapshotError) throw snapshotError
+    await checkpointImportStage(target, 'source_snapshot_loaded', checkpoints, report)
 
-    await target.from('original_source_import_runs').update({ status: 'completed', completed_at: new Date().toISOString(), report }).eq('run_key', IMPORT_RUN_KEY)
+    const maps = await getMappings(target)
+    await importStage(target, maps, 'story_arcs', checkpoints, report, () => importArcs(target, arcs, maps, report))
+    await importStage(target, maps, 'articles', checkpoints, report, () => importArticles(target, articles, maps, report))
+    await importStage(target, maps, 'nodes', checkpoints, report, () => importNodes(target, nodes, maps, report))
+    await importStage(target, maps, 'entities', checkpoints, report, () => importEntities(target, entities, maps, report))
+    await importStage(target, maps, 'arc_events', checkpoints, report, () => importArcEvents(target, arcEvents, maps, report))
+    await importStage(target, maps, 'events', checkpoints, report, () => importEvents(target, events, maps, report))
+    await importStage(target, maps, 'event_articles', checkpoints, report, () => importEventArticles(target, eventArticles, maps, report))
+    await importStage(target, maps, 'edges', checkpoints, report, () => importEdges(target, edges, maps, report))
+    await importStage(target, maps, 'sources', checkpoints, report, () => importSources(target, sources, maps, report))
+    await importStage(target, maps, 'citations', checkpoints, report, () => importCitations(target, citations, maps, report))
+    await importStage(target, maps, 'article_entities', checkpoints, report, () => importArticleEntities(target, articleEntities, maps, report))
+    await importStage(target, maps, 'policies', checkpoints, report, () => importPolicies(target, policies, maps, report))
+    await importStage(target, maps, 'policy_documents', checkpoints, report, () => importPolicyDocs(target, policyDocs, maps, report))
+    await importStage(target, maps, 'policy_actors', checkpoints, report, () => importPolicyActors(target, policyActors, maps, report))
+    await importStage(target, maps, 'policy_topics', checkpoints, report, () => importPolicyTopics(target, policyTopics, maps, report))
+    await importStage(target, maps, 'p3_policy', checkpoints, report, () => importP3Policies(target, p3Policies, maps, report))
+    await importStage(target, maps, 'p3_policy_track_event', checkpoints, report, () => importP3TrackEvents(target, p3Tracks, maps, report))
+    await importStage(target, maps, 'p3_legal', checkpoints, report, () => importP3Legal(target, p3Cases, p3Evidence, maps, report))
+    report.sourceComparisonProjection = await refreshV2SourceComparison(targetUrl, targetServiceKey)
+    await checkpointImportStage(target, 'source_comparison_projection', checkpoints, report)
+
+    await target.from('original_source_import_runs').update({
+      status: 'completed',
+      current_stage: 'completed',
+      completed_at: new Date().toISOString(),
+      stage_checkpoints: checkpoints,
+      report,
+      updated_at: new Date().toISOString(),
+    }).eq('run_key', IMPORT_RUN_KEY)
     return Response.json({ ok: true, ...report })
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)
     report.errors.push(detail)
-    await target.from('original_source_import_runs').update({ status: 'failed', completed_at: new Date().toISOString(), report }).eq('run_key', IMPORT_RUN_KEY)
+    await target.from('original_source_import_runs').update({
+      status: 'failed',
+      current_stage: 'failed',
+      completed_at: new Date().toISOString(),
+      stage_checkpoints: checkpoints,
+      report,
+      updated_at: new Date().toISOString(),
+    }).eq('run_key', IMPORT_RUN_KEY)
     return Response.json({ ok: false, ...report }, { status: 500 })
   }
 })

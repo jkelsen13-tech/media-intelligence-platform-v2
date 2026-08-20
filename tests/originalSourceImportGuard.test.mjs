@@ -6,6 +6,7 @@ const importer = fs.readFileSync(new URL('../supabase/functions/import-original-
 const migration = fs.readFileSync(new URL('../supabase/migrations/20260820_original_source_readonly_import.sql', import.meta.url), 'utf8')
 const edgeCompatibilityMigration = fs.readFileSync(new URL('../supabase/migrations/20260820_original_source_edge_sequence_compatibility.sql', import.meta.url), 'utf8')
 const conflictAuditMigration = fs.readFileSync(new URL('../supabase/migrations/20260820_original_source_article_conflict_audit.sql', import.meta.url), 'utf8')
+const importCheckpointMigration = fs.readFileSync(new URL('../supabase/migrations/20260820_v2_import_snapshot_stage_checkpoints.sql', import.meta.url), 'utf8')
 const sourceComparisonView = fs.readFileSync(new URL('../src/views/SourceComparisonView.jsx', import.meta.url), 'utf8')
 const sourceReadPath = importer.slice(importer.indexOf('async function fetchSourceAll'), importer.indexOf('async function existingBy'))
 
@@ -29,7 +30,10 @@ test('original-source importer maps provenance and only materializes cross-surfa
   assert.doesNotMatch(importer, /different_causal_chain/)
   assert.match(importer, /const WRITE_BATCH_SIZE = 500/)
   assert.match(importer, /async function flushMappings/)
-  assert.match(importer, /await flushMappings\(target, maps\)/)
+  assert.match(importer, /async function importStage/)
+  assert.match(importer, /await flushMappings\(target, maps\)\n  await checkpointImportStage\(target, stage, checkpoints, report\)/)
+  assert.match(importer, /await importStage\(target, maps, 'story_arcs'/)
+  assert.match(importer, /await importStage\(target, maps, 'p3_legal'/)
   assert.match(importer, /existingBy\(target, 'original_source_import_mappings', 'source_table, source_id, target_id', \[\['source_project_ref', SOURCE_PROJECT_REF\]\]\)/)
   assert.match(importer, /insertRows\(target, 'edges', chunk, 'id'\)/)
   assert.match(edgeCompatibilityMigration, /'sequence'/)
@@ -48,12 +52,24 @@ test('original-source importer uses insert-only handling for existing article UR
   assert.match(conflictAuditMigration, /historical_url_upsert_no_snapshot/)
 })
 
-test('original-source importer triggers the secured V2 comparison projection after the import mappings flush', () => {
+test('original-source importer triggers the secured V2 comparison projection after the durable stage checkpoints', () => {
   assert.match(importer, /async function refreshV2SourceComparison/)
   assert.match(importer, /functions\/v1\/source-comparison-run/)
   assert.match(importer, /authorization: `Bearer \$\{targetServiceKey\}`/)
   assert.match(importer, /mode: 'event_projection'/)
-  assert.match(importer, /await flushMappings\(target, maps\)\s*\n\s*report\.sourceComparisonProjection = await refreshV2SourceComparison/)
+  assert.match(importer, /await checkpointImportStage\(target, 'source_comparison_projection', checkpoints, report\)/)
+  assert.match(importer, /report\.sourceComparisonProjection = await refreshV2SourceComparison/)
+})
+
+test('original-source importer records a deterministic private snapshot manifest and stage ledger', () => {
+  assert.match(importer, /async function buildSourceSnapshot/)
+  assert.match(importer, /sha256:canonical-json-table-manifest:v1/)
+  assert.match(importer, /source_snapshot_checksum/)
+  assert.match(importer, /source_snapshot_id/)
+  assert.match(importer, /stage_checkpoints/)
+  assert.match(importCheckpointMigration, /add column if not exists source_snapshot_checksum text/)
+  assert.match(importCheckpointMigration, /add column if not exists stage_checkpoints jsonb not null default '\[\]'::jsonb/)
+  assert.match(importCheckpointMigration, /revoke all on public\.original_source_import_runs from anon, authenticated/)
 })
 
 test('source-comparison cards do not render public R1–R4 outlet tier labels', () => {
