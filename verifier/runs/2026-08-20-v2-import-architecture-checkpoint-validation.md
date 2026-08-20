@@ -20,3 +20,7 @@ The updated importer now derives a deterministic, hashed manifest from the read-
 The deployed authenticated importer completed successfully. It read 752 source articles and made no article-field update or duplicate insertion: `articlesInserted = 0`, `articlesSkippedExisting = 752`. The run retained the established protected-case rule and excluded one source legal record; no new legal record or evidence row was inserted. The public comparison projection completed without fabricated primary-evidence links.
 
 The checkpoint ledger begins with `source_snapshot_loaded` and ends with `source_comparison_projection`; after the final status update the current stage is `completed`. The ledger therefore records both the source material fingerprint and every durable import-to-projection handoff without exposing source data or operational metadata publicly.
+
+## Post-import anonymous projection check
+
+After the checkpointed importer completed, the anonymous `comparison_public` probe remained successful. The required Michigan comparison row returned one event with 13 projected claims, 13 projected surfaces, the Fox News and New York Times outlet pair, and `awaiting_review` status. Direct V2 base-table grants remain revoked; public card reads continue through the narrow projection.
