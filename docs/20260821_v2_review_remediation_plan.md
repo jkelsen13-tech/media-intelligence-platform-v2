@@ -63,3 +63,26 @@ These items can improve reader honesty and usability but cannot reopen Source Co
 5. February policy-watch seed: `supabase/seeds/v2_february_2026_general_news_cross_surface.sql`.
 6. Responsive News Feed controls: `src/views/NewsView.jsx` and `src/styles/news.css`.
 7. Theme tokens and opt-in behavior: `src/styles/tokens.css` and `src/lib/themeFlag.js`.
+
+## Implementation and live verification record
+
+**Implementation status: completed in Version Two only.** The application and migration changes were committed in `73a9c30` (`fix(v2): gate comparisons and improve review findings`) and the membership-mutation hardening in `ce2075d` (`fix(v2): invalidate comparison approval on membership change`). Both commits were pushed to `jkelsen13-tech/media-intelligence-platform-v2` on `main`. No Version One repository, schema, or service was modified.
+
+| Verification area | Measured Version Two result | Interpretation |
+| --- | --- | --- |
+| Comparison membership state | All 12,868 stored events are `pending_review`; zero are `approved`. The Pochettino-title event records are also `pending_review`. | The gate is intentionally closed until article-level semantic review approves a precise membership set. |
+| Public Source Comparison | `comparison_public` contains 0 events. | Readers cannot receive outlet, timing, shared/unique claim, or omission metrics from an unvalidated event cluster. |
+| Previously derived comparison rows | 789 projected claims, 844 projected article-claim rows, and 844 projected explanations were removed after the public gate took effect; final verification returned zero for each projection category. | Old downstream calculations no longer remain stored as apparently current evidence while their membership boundary is unapproved. Source events and event-article rows were preserved. |
+| Mutation invalidation | The deployed trigger resets an approved event to `pending_review` on any `event_articles` insert, deletion, or reassignment. | A subsequent import or edit cannot silently retain prior comparison approval after changing the member set. |
+| Research collection taxonomy | `february-2026-source-mapped-policy-watch` now has display kind `research_collection`. | The reader UI can distinguish a bounded source-mapped collection from a longitudinal story arc without changing its underlying joins. |
+| Graph coverage disclosure | The aggregate projection reports 12,558 corpus articles, 805 published nodes, 447 documented relationships, 9 article records linked to a published node, 0 pending graph candidates, and 12,549 article records not yet node-linked. | These are explicit stored-state counts, not a graph completeness, reliability, causal, or outcome score. |
+| News Feed intake | 10,485 records remain reader-eligible; 1,990 malformed-title records and 83 exact canonical-URL duplicates were withheld. | The deterministic gate removed the verified malformed/duplicate cases while retaining all rows for review. Promotional and off-mission classification remains intentionally human-reviewed rather than inferred. |
+| Automated validation | The complete Node suite passed 478/478 tests. The production bundle completed successfully. The first implementation commit’s Golden regression and GitHub Pages deployment workflows completed successfully. | Code-level and repository deployment checks passed; the Source Comparison gate remains intentionally closed by policy, not due to a failed deployment. |
+
+> **Current reader-facing status:** Source Comparison is correctly **withheld pending semantic event-membership review**. This is the intended safety posture. It is not accurate to say that comparison quality metrics have been fixed, improved, or validated; only their unapproved publication path has been closed.
+
+## Controlled next step for Source Comparison
+
+A reviewer may approve an event only after confirming that every member article describes the same discrete world event and that the title, date, actors, and event action are coherent across the set. Approval should be recorded as an explicit update from `pending_review` to `approved`; after membership changes, the database trigger will require this review again. The safe operating sequence is therefore **review member set → approve exact membership → rebuild projection → inspect reader output**.
+
+The light-theme and broader desktop visual-system work remains a separate P2 design pass. It was not enabled or reported as part of the correctness repair.
