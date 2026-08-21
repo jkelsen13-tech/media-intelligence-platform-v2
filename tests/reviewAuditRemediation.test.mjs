@@ -7,6 +7,7 @@ const newsMigration = readFileSync(new URL('../supabase/migrations/20260821_v2_n
 const collectionMigration = readFileSync(new URL('../supabase/migrations/20260821_v2_story_container_display_kind.sql', import.meta.url), 'utf8')
 const graphMigration = readFileSync(new URL('../supabase/migrations/20260821_v2_public_graph_coverage_projection.sql', import.meta.url), 'utf8')
 const comparisonMigration = readFileSync(new URL('../supabase/migrations/20260821_v2_source_comparison_membership_gate.sql', import.meta.url), 'utf8')
+const membershipMutationGuard = readFileSync(new URL('../supabase/migrations/20260821_v2_source_comparison_membership_mutation_guard.sql', import.meta.url), 'utf8')
 const readPath = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8')
 const arcsView = readFileSync(new URL('../src/views/ArcsView.jsx', import.meta.url), 'utf8')
 const graphCoverage = readFileSync(new URL('../src/graph/GraphCoverageNotice.jsx', import.meta.url), 'utf8')
@@ -19,6 +20,8 @@ test('P0 comparison projection and public view default-deny unreviewed event mem
   assert.match(comparisonProjection, /comparison_validation_state/)
   assert.match(comparisonProjection, /\.eq\('comparison_validation_state', 'approved'\)/)
   assert.match(comparisonView, /Candidate event clusters are withheld/)
+  assert.match(membershipMutationGuard, /after insert or delete or update of event_id on public\.event_articles/)
+  assert.match(membershipMutationGuard, /comparison_validation_state = 'pending_review'/)
 })
 
 test('P1 News Feed intake gate preserves review states and filters reader data to eligible records', () => {
