@@ -87,3 +87,10 @@ test('More member views never appear as top-level tabs', () => {
     assert.ok(!keys.includes('compare'))
   }
 })
+
+
+test('arc route names both longitudinal arcs and bounded research collections', () => {
+  const arcRoute = CORE_VIEWS.find((view) => view.key === 'arcs')
+  assert.equal(arcRoute?.label, 'Arcs & Collections')
+  assert.equal(arcRoute?.shortLabel, 'Arcs')
+})

@@ -503,11 +503,25 @@ function eventProjectionExplanation(eventId, claimOrdinal, articleId, surfaceTex
   }
 }
 
+// Membership is an upstream correctness boundary. Similarity, shared entities,
+// or imported event status can produce a candidate, but none can establish that
+// all member articles concern the same world event. Projection is therefore
+// default-deny: a reviewer must explicitly admit an event before any downstream
+// comparison metric can be derived.
+export function isComparisonApprovedEvent(event) {
+  return event?.comparison_validation_state === 'approved'
+}
+
 export function runEventProjection(eventInputs, cfg, lexicon) {
   const plan = { claims: [], article_claims: [], explanations: [], stats: {} }
   let claimCount = 0
   let eventCount = 0
+  let withheldEventCount = 0
   for (const { event, members } of eventInputs) {
+    if (!isComparisonApprovedEvent(event)) {
+      withheldEventCount++
+      continue
+    }
     const articles = members.map((m) => m.article).filter(Boolean)
     const outlets = new Set(articles.map((a) => a.outlet).filter(Boolean))
     if (outlets.size < 2) continue
@@ -555,6 +569,7 @@ export function runEventProjection(eventInputs, cfg, lexicon) {
   plan.stats = {
     mode: 'event_projection',
     events_processed: eventCount,
+    events_withheld_pending_membership_validation: withheldEventCount,
     claims: plan.claims.length,
     article_claims: plan.article_claims.length,
     explanations: plan.explanations.length,

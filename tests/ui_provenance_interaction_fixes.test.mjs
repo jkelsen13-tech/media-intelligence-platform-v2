@@ -66,3 +66,17 @@ test('News reads reviewed claim and linked-evidence records through the narrow p
   assert.match(news, /Linked evidence records/)
   assert.match(news, /Open linked evidence record/)
 })
+
+
+test('mobile News Feed keeps source and status chips behind the intentional Filters sheet', () => {
+  const css = readFileSync(new URL('../src/styles/news.css', import.meta.url), 'utf8')
+  assert.match(news, /const \[filtersOpen, setFiltersOpen\] = useState\(false\)/)
+  assert.match(news, /<button className="news-filters-btn" onClick=\{\(\) => setFiltersOpen\(true\)\}>/)
+  assert.match(news, /\{filtersOpen && \(/)
+  assert.match(news, /<span className="ap-label">Outlet<\/span>/)
+  assert.match(news, /\{outletRow\}/)
+  assert.match(news, /<span className="ap-label">Status<\/span>/)
+  assert.match(news, /\{statusRow\}/)
+  assert.match(css, /@media \(max-width: 767px\) \{[\s\S]*?\.news-desktop-filters \{\s*display: none;/)
+  assert.match(css, /@media \(max-width: 767px\) \{[\s\S]*?\.news-filters-btn \{\s*display: block;/)
+})

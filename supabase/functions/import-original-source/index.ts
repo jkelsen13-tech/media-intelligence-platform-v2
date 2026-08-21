@@ -402,8 +402,11 @@ async function importEvents(target: any, source: Row[], maps: MappingState, repo
     payload.push({
       ...row, id: row.id, arc_id: mapped(maps, 'story_arcs', row.arc_id),
       arc_event_id: mapped(maps, 'arc_events', row.arc_event_id),
-      // Original event status is preserved. The comparison read path separately
-      // excludes only Timeline-only records and requires multiple outlets.
+      // Original event status is preserved for its source-system meaning, but
+      // comparison admission is a separate V2 review decision. Imported
+      // memberships therefore begin pending; an import never silently publishes
+      // downstream comparison metrics from a machine/source grouping.
+      comparison_validation_state: 'pending_review',
       rule_version: `original-readonly-import|${row.id}`,
     })
     await remember(target, maps, 'events', row.id, row.id)

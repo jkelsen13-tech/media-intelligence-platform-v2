@@ -364,8 +364,9 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
 
       {view.events.length === 0 ? (
         <p className="sc-empty">
-          No comparison events yet — the sc-v1 pipeline has not been run against the corpus.
-          Events appear here after the source-comparison-run function is invoked.
+          No validated comparison events are currently available. Candidate event clusters are withheld
+          until article membership has passed same-event review; no outlet, timing, claim, or omission
+          metric is shown before that gate is satisfied.
         </p>
       ) : (
         <>

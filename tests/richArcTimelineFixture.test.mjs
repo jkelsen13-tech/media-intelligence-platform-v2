@@ -14,7 +14,7 @@ test('rich Arc/Timeline fixture includes mixed evidence states without an aggreg
 
 test('rich fixture preserves known and missing provenance states explicitly', () => {
   const [confirmed, inferred, contested, missing] = fixture.entries
-  assert.equal(badgeState(confirmed.badgeState)?.label, 'Confirmed')
+  assert.equal(badgeState(confirmed.badgeState)?.label, 'Documented record')
   assert.equal(badgeState(inferred.badgeState)?.label, 'Inferred')
   assert.equal(badgeState(contested.badgeState)?.label, 'Contested')
   assert.equal(badgeState(missing.badgeState), null)

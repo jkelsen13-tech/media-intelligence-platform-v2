@@ -16,7 +16,10 @@
 // (dashed is load-bearing on inferred — it must survive accent-color
 // removal), distinct text label.
 export const BADGE_STATES = Object.freeze({
-  confirmed: Object.freeze({ label: 'Confirmed', icon: 'check', dashed: false, tone: 'confirmed' }),
+  // A check confirms the bounded record and its recorded scope—not the full
+  // underlying subject, outcome, or causal implication. The narrower label is
+  // especially important for procedural and documentary timeline entries.
+  confirmed: Object.freeze({ label: 'Documented record', icon: 'check', dashed: false, tone: 'confirmed' }),
   contested: Object.freeze({ label: 'Contested', icon: 'question', dashed: false, tone: 'contested' }),
   inferred: Object.freeze({ label: 'Inferred', icon: 'question', dashed: true, tone: 'inferred' }),
 })

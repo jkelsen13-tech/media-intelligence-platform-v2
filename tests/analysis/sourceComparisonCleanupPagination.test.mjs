@@ -19,6 +19,7 @@ function fakePostgrest(tables) {
       const q = {
         select: () => q,
         neq: (column, value) => { rows = rows.filter((row) => row[column] !== value); return q },
+        eq: (column, value) => { rows = rows.filter((row) => row[column] === value); return q },
         order: (column, { ascending = true } = {}) => {
           rows = [...rows].sort((a, b) => (String(a[column] ?? '') < String(b[column] ?? '') ? -1 : String(a[column] ?? '') > String(b[column] ?? '') ? 1 : 0) * (ascending ? 1 : -1))
           return q
@@ -41,13 +42,13 @@ const N_TIMELINE_ONLY = 400
 
 function buildTables() {
   const events = []
-  for (let i = 1; i <= N_ELIGIBLE; i++) events.push({ id: `ev-${pad(i)}`, status: 'candidate' })
+  for (let i = 1; i <= N_ELIGIBLE; i++) events.push({ id: `ev-${pad(i)}`, status: 'candidate', comparison_validation_state: 'approved' })
   for (let i = 1; i <= N_TIMELINE_ONLY; i++) events.push({ id: `tl-${pad(i)}`, status: 'timeline_only' })
   return { events }
 }
 
 async function readProjectionEventIds(db) {
-  const { data, error } = await pagedSelect(db, 'events', 'id,canonical_title,status', ['id'], 500, (q) => q.neq('status', 'timeline_only'))
+  const { data, error } = await pagedSelect(db, 'events', 'id,canonical_title,status,comparison_validation_state', ['id'], 500, (q) => q.neq('status', 'timeline_only').eq('comparison_validation_state', 'approved'))
   assert.equal(error, null)
   return (data ?? []).map((row) => row.id)
 }
@@ -68,7 +69,8 @@ test('V2 projection event read returns every non-timeline event past 1000 rows',
 
 test('source structure paginates V2 projection input and never mutates events', () => {
   const src = readFileSync(INDEX_TS, 'utf8')
-  assert.match(src, /pagedSelect\(supabase, 'events', 'id,canonical_title,status', \['id'\], PAGE_SIZE, \(q: any\) => q\.neq\('status', 'timeline_only'\)\)/)
+  assert.match(src, /'id,canonical_title,status,comparison_validation_state'/)
+  assert.match(src, /q\.neq\('status', 'timeline_only'\)\.eq\('comparison_validation_state', 'approved'\)/)
   assert.doesNotMatch(src, /from\('events'\)\.insert\(/)
   assert.doesNotMatch(src, /from\('events'\)\.delete\(/)
   assert.doesNotMatch(src, /from\('event_articles'\)\.insert\(/)

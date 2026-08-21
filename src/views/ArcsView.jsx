@@ -13,7 +13,6 @@ import TrustFooter from '../components/TrustFooter'
 import TypeIcon from '../components/TypeIcon'
 import TypePill from '../components/TypePill'
 import {
-  policyArcEyebrow,
   deriveEvidenceStates,
   missingScopeCopy,
   lastMilestoneCheck,
@@ -62,6 +61,14 @@ function categoryStyle(category) {
   return color ? { color } : undefined
 }
 
+function isResearchCollection(arc) {
+  return arc?.display_kind === 'research_collection'
+}
+
+function displayKindLabel(arc) {
+  return isResearchCollection(arc) ? 'Research collection' : 'Story arc'
+}
+
 function lifecycleStage(category) {
   const stages = {
     legislative: 'Legislation / rule',
@@ -74,8 +81,8 @@ function lifecycleStage(category) {
 
 function evidenceStateLabel(confidence) {
   const labels = {
-    confirmed: 'Confirmed record',
-    corroborated: 'Corroborated record',
+    confirmed: 'Documented record',
+    corroborated: 'Documented across records',
     inferred: 'Inferred record',
   }
   return labels[confidence] ?? 'Evidence state not recorded'
@@ -207,14 +214,17 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
       })
     : null
   const uncertainty = detail ? pendingUncertainty(detail.milestones) : null
+  const selectedIsCollection = isResearchCollection(selected)
+  const recordLabel = selectedIsCollection ? 'Collection record' : 'Policy lifecycle record'
+  const developmentsLabel = selectedIsCollection ? 'Included records' : 'Key developments'
 
   return (
     <div className={`arcs-view${pushed ? ' detail-open' : ''}`}>
       <aside className="arcs-list">
-        <h2>Story Arcs</h2>
+        <h2>Tracked objects</h2>
         <p className="arcs-sub">
-          Longitudinal tracking — stories followed through their full consequence arc, not their
-          coverage arc.
+          Longitudinal story arcs and bounded research collections. Object type states whether the
+          record follows one development through consequences or organizes separate source-mapped records.
         </p>
         <input
           className="news-search"
@@ -244,6 +254,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
             >
               {meta && <span className="arc-status-dot" style={{ background: meta.color }} />}
               <span className="arc-list-title">{arc.title}</span>
+              <span className="arc-list-object-kind">{displayKindLabel(arc)}</span>
               <span className="arc-list-meta" style={categoryStyle(arc.category)}>
                 {categoryLabel(arc.category)}
               </span>
@@ -258,7 +269,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
             <button className="arc-back-btn" onClick={() => setPushed(false)}>
               ← All story arcs
             </button>
-            <p className="ep-eyebrow">{policyArcEyebrow(selected.category)}</p>
+            <p className="ep-eyebrow">{displayKindLabel(selected)}</p>
             <h2 className="ep-report-title">{selected.title}</h2>
             {statusMeta && (
               <div className="ep-statusline">
@@ -280,9 +291,9 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
               </span>
             )}
             <p className="arc-summary">
-              A story arc follows one policy or event through its full consequence — not its
-              coverage arc. This view shows what changed, what followed, and what is still
-              unreported.
+              {selectedIsCollection
+                ? 'This research collection organizes bounded, source-mapped records across separate topics. It does not establish a common outcome, causal connection, editorial lineage, or completeness.'
+                : 'A story arc follows one policy or event through its full consequence — not its coverage arc. This view shows what changed, what followed, and what is still unreported.'}
             </p>
             {selected.summary && <p className="arc-summary">{selected.summary}</p>}
 
@@ -320,21 +331,21 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
               <ArcOverviewStatus arc={selected} detail={detail} arcArticles={arcArticles} />
 
               <section className="ap-section">
-                <span className="ep-section-label">Policy lifecycle</span>
+                <span className="ep-section-label">{selectedIsCollection ? 'Collection scope' : 'Policy lifecycle'}</span>
                 <LifecycleStrip />
               </section>
 
               <section className="ap-section">
-                <span className="ep-section-label">Policy lifecycle record</span>
+                <span className="ep-section-label">{recordLabel}</span>
                 {detail.events.length === 0 ? (
-                  <p className="arc-empty">No consequence events recorded yet.</p>
+                  <p className="arc-empty">{selectedIsCollection ? 'No source-mapped records are available yet.' : 'No consequence events recorded yet.'}</p>
                 ) : (
                   <div className="arc-lifecycle-table-wrap">
                     <table className="arc-lifecycle-table">
-                      <caption>Orientation table of recorded lifecycle developments; attached articles remain in the Evidence tab.</caption>
+                      <caption>{selectedIsCollection ? 'Orientation table of separately source-mapped records; attached articles remain in the Evidence tab.' : 'Orientation table of recorded lifecycle developments; attached articles remain in the Evidence tab.'}</caption>
                       <thead>
                         <tr>
-                          <th scope="col">Lifecycle stage</th>
+                          <th scope="col">{selectedIsCollection ? 'Record category' : 'Lifecycle stage'}</th>
                           <th scope="col">Recorded date</th>
                           <th scope="col">Development</th>
                           <th scope="col">Evidence state</th>
@@ -356,9 +367,9 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
               </section>
 
               <section className="ap-section">
-                <span className="ep-section-label">Key developments</span>
+                <span className="ep-section-label">{developmentsLabel}</span>
                 {detail.events.length === 0 ? (
-                  <p className="arc-empty">No consequence events recorded yet.</p>
+                  <p className="arc-empty">{selectedIsCollection ? 'No source-mapped records are available yet.' : 'No consequence events recorded yet.'}</p>
                 ) : (
                   <ol className="ep-keydevs">
                     {detail.events.map((e, i) => (
@@ -368,7 +379,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
                           <div className="ep-keydev-toprow">
                             <span className="ep-keydev-date">{e.occurred_at ?? 'undated'}</span>
                             <TypePill type={e.category} />
-                            {i === 0 && (
+                            {i === 0 && !selectedIsCollection && (
                               <span className="arc-event-trigger">Triggering event</span>
                             )}
                           </div>

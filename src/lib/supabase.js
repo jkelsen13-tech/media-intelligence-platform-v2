@@ -169,6 +169,32 @@ export async function loadGraph({ supabaseClient } = {}) {
   }
 }
 
+// Reader-facing coverage disclosure. These aggregates account only for stored
+// published/review states; they are deliberately not a graph-completeness or
+// reliability score. A missing projection is an honest no-disclosure state,
+// allowing older V2 database revisions to continue rendering the graph.
+export async function loadGraphCoverage({ supabaseClient } = {}) {
+  const client = supabaseClient ?? supabase
+  if (!client) return null
+  try {
+    const { data, error } = await client
+      .from('graph_coverage_public')
+      .select('article_count,articles_with_published_node,articles_without_published_node,pending_graph_candidate_count,published_node_count,documented_relationship_count')
+      .maybeSingle()
+    if (error || !data) return null
+    return {
+      articleCount: data.article_count,
+      articlesWithPublishedNode: data.articles_with_published_node,
+      articlesWithoutPublishedNode: data.articles_without_published_node,
+      pendingGraphCandidates: data.pending_graph_candidate_count,
+      publishedNodeCount: data.published_node_count,
+      documentedRelationshipCount: data.documented_relationship_count,
+    }
+  } catch {
+    return null
+  }
+}
+
 // Geography lens: source-span-backed location rows only. The queried
 // `geographic_places` relation includes an explicit precision level; no
 // coordinates are inferred in the browser. Feature-detection keeps pre-schema
@@ -445,7 +471,7 @@ export async function loadArcs({ supabaseClient } = {}) {
     // nulls-first) is re-applied client-side over the complete set. id is
     // included in every cols list: the keyset cursor reads it back off the
     // returned rows, so a cols list without it silently breaks paging.
-    keysetAll(client, 'story_arcs', 'id, slug, title, category, category_confidence, category_evidence, status, root_node_id, coverage_gap, summary, started_at, last_update_at')
+    keysetAll(client, 'story_arcs', 'id, slug, title, category, category_confidence, category_evidence, status, display_kind, root_node_id, coverage_gap, summary, started_at, last_update_at')
       .then((r) => (r.data ? { ...r, data: resortRows(r.data, 'last_update_at', { ascending: false }) } : r)),
     keysetAll(client, 'arc_events', 'id, arc_id, occurred_at'),
     keysetAll(client, 'arc_milestones_public', 'id, arc_id, status'),
@@ -692,10 +718,11 @@ export async function loadCorpusMeta({ supabaseClient } = {}) {
   const client = supabaseClient ?? supabase
   if (!client) return { count: null, latestFetchedAt: null }
   const [countRes, latestRes] = await Promise.all([
-    client.from('articles').select('id', { count: 'exact', head: true }),
+    client.from('articles').select('id', { count: 'exact', head: true }).eq('reader_state', 'eligible'),
     client
       .from('articles')
       .select('fetched_at')
+      .eq('reader_state', 'eligible')
       .order('fetched_at', { ascending: false, nullsFirst: false })
       .limit(1),
   ])
@@ -715,6 +742,7 @@ export async function loadNewSinceCount(isoTs, { supabaseClient } = {}) {
   const { count, error } = await client
     .from('articles')
     .select('id', { count: 'exact', head: true })
+    .eq('reader_state', 'eligible')
     .gt('fetched_at', isoTs)
   if (error) throw error
   return count ?? null
@@ -791,7 +819,7 @@ export async function loadOutlets({ supabaseClient } = {}) {
   // Doc 13: the outlet filter list read keyset-paginates past the 1000-row
   // ceiling; dedupe/sort happen client-side below, unchanged.
   const { data, error } = await keysetAll(client, 'articles', 'id, outlet', {
-    filter: (q) => q.not('outlet', 'is', null),
+    filter: (q) => q.eq('reader_state', 'eligible').not('outlet', 'is', null),
   })
   if (error) throw error
   const names = [...new Set(data.map((r) => r.outlet))]
@@ -807,7 +835,7 @@ export async function loadOutletDirectory({ supabaseClient } = {}) {
   const client = supabaseClient ?? supabase
   if (!client) return []
   const [articlesRes, outletsRes] = await Promise.all([
-    keysetAll(client, 'articles', 'id, outlet', { filter: (q) => q.not('outlet', 'is', null) }),
+    keysetAll(client, 'articles', 'id, outlet', { filter: (q) => q.eq('reader_state', 'eligible').not('outlet', 'is', null) }),
     keysetAll(client, 'outlets', 'id, name, country, parent_ownership'),
   ])
   if (articlesRes.error) throw articlesRes.error
@@ -833,6 +861,10 @@ export async function loadOutletDirectory({ supabaseClient } = {}) {
 // source-metric read. Source metrics intentionally omit a selected outlet so
 // their list remains a comparison of the current non-vendor filter context.
 function applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore } = {}) {
+  // Reader eligibility is a quality gate, not a source-reliability score. The
+  // withheld/pending rows remain retained in the base table for review but do
+  // not affect reader counts, filters, or source metrics.
+  query = query.eq('reader_state', 'eligible')
   const term = sanitizeSearch(q)
   if (term) {
     query = query.or(

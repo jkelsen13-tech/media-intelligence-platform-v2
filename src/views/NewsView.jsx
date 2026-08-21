@@ -736,6 +736,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       <EpistemicBanner>
         Missing evidence is recorded, not treated as contradiction.
       </EpistemicBanner>
+      <p className="news-intake-note">
+        Reader feed includes records marked eligible for display. Pending-review and withheld intake records remain retained for review and do not change outlet, source-order, or corpus-count fields.
+      </p>
 
       <div className="news-controls">
         <div className="news-result-row">

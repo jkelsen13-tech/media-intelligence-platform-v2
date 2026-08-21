@@ -3,6 +3,7 @@ import GraphView from './graph/GraphView'
 import Legend from './graph/Legend'
 import EdgeControls from './graph/EdgeControls'
 import GraphModePanel from './graph/GraphModePanel'
+import GraphCoverageNotice from './graph/GraphCoverageNotice'
 import GeographyGlobe from './graph/GeographyGlobe'
 import RelationshipPanel from './panels/RelationshipPanel'
 import EdgeList from './graph/EdgeList'
@@ -17,7 +18,7 @@ import Phase3View from './views/Phase3View'
 import SourceComparisonView from './views/SourceComparisonView'
 import { loadPhase3BetaFlag } from './lib/phase3ReadPath'
 import { buildNavViews, buildMoreEntries, isMoreViewKey } from './lib/navViews'
-import { loadGraph, loadTopics, loadCorpusMeta, loadNodeLocations } from './lib/supabase'
+import { loadGraph, loadTopics, loadCorpusMeta, loadNodeLocations, loadGraphCoverage } from './lib/supabase'
 import { liveCorpusLabel } from './lib/newsFeedModel'
 import { computeHubs } from './lib/hubs'
 import { jumpFocusStack } from './lib/jumpReset'
@@ -101,6 +102,9 @@ function topicSubgraph(nodes, edges, memberIds) {
 
 export default function App() {
   const [graph, setGraph] = useState(null)
+  // Aggregate coverage is optional: unavailable data omits the disclosure but
+  // never changes the graph itself or implies a zero count.
+  const [graphCoverage, setGraphCoverage] = useState(null)
   const [error, setError] = useState(null)
   const [selected, setSelected] = useState(null) // selected node data
   const [pinned, setPinned] = useState(false)
@@ -187,6 +191,7 @@ export default function App() {
 
   useEffect(() => {
     loadGraph().then(setGraph).catch((err) => setError(err.message))
+    loadGraphCoverage().then(setGraphCoverage).catch(() => setGraphCoverage(null))
     loadNodeLocations().then(setLocationMentions).catch(() => setLocationMentions([]))
     loadTopics()
       .then((data) => {
@@ -854,6 +859,13 @@ export default function App() {
                     </button>
                     <p className="graph-scope-status" aria-live="polite">{graphScopeLabel}</p>
                   </div>
+                  {graphCoverage && (
+                    <GraphCoverageNotice
+                      coverage={graphCoverage}
+                      shownNodeCount={displayNodes.length}
+                      totalNodeCount={graphCoverage.publishedNodeCount ?? graph.nodes.length}
+                    />
+                  )}
                   <div className="graph-body">
                     {graphMode !== 'relationships' ? (
                       <GraphModePanel

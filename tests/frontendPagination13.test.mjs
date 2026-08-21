@@ -167,7 +167,7 @@ test('site 3: loadTimeline returns all event nodes past 1000, occurred_at asc nu
 test('site 5: loadOutlets sees outlets that only exist beyond row 1000', async () => {
   const articles = []
   for (let i = 1; i <= 1500; i++) {
-    articles.push({ id: `art-${pad(i)}`, outlet: i === 1500 ? 'DeepOutlet' : `Outlet ${(i % 40) + 1}` })
+    articles.push({ id: `art-${pad(i)}`, outlet: i === 1500 ? 'DeepOutlet' : `Outlet ${(i % 40) + 1}`, reader_state: 'eligible' })
   }
   const out = await loadOutlets({ supabaseClient: fakePostgrest({ articles }) })
   assert.equal(out.length, 41)

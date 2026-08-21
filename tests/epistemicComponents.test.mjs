@@ -38,10 +38,10 @@ test('the three states are distinguishable without color (icon, dash, label)', (
   const x = badgeState('contested')
   const i = badgeState('inferred')
   // Distinct text labels.
-  assert.equal(c.label, 'Confirmed')
+  assert.equal(c.label, 'Documented record')
   assert.equal(x.label, 'Contested')
   assert.equal(i.label, 'Inferred')
-  // Confirmed carries a check; the other two carry a question mark.
+  // The documented-record state carries a check; the other two carry a question mark.
   assert.equal(c.icon, 'check')
   assert.equal(x.icon, 'question')
   assert.equal(i.icon, 'question')

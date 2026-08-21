@@ -95,7 +95,18 @@ function dedupeProjectionExplanations(rows: any[], winners: Map<string, any>) {
 
 async function buildEventInputs(supabase: any) {
   const [eventsRes, memberRes, outletsRes] = await Promise.all([
-    pagedSelect(supabase, 'events', 'id,canonical_title,status', ['id'], PAGE_SIZE, (q: any) => q.neq('status', 'timeline_only')),
+    // The imported event namespace is preserved for audit, but Source
+    // Comparison may derive claims only after article-level same-event review.
+    // This is intentionally narrower than non-timeline eligibility: candidate
+    // and quarantined clusters remain invisible to all comparison metrics.
+    pagedSelect(
+      supabase,
+      'events',
+      'id,canonical_title,status,comparison_validation_state',
+      ['id'],
+      PAGE_SIZE,
+      (q: any) => q.neq('status', 'timeline_only').eq('comparison_validation_state', 'approved'),
+    ),
     pagedSelect(supabase, 'event_articles', 'event_id,article_id', ['event_id', 'article_id'], PAGE_SIZE),
     pagedSelect(supabase, 'articles', 'id,outlet', ['id'], PAGE_SIZE),
   ])
@@ -141,6 +152,7 @@ async function rebuildProjection(supabase: any, cfg: any, dryRun: boolean) {
   const stats = {
     ...plan.stats,
     eligible_events: prepared.eligibleEventCount ?? 0,
+    membership_gate: 'approved event memberships only',
     article_claims_deduped: articleClaims.length,
     explanations_deduped: explanations.length,
     primary_evidence_links: 0,

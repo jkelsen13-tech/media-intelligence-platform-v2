@@ -885,3 +885,15 @@
     white-space: normal;
   }
 }
+
+/* Reader-intake disclosure. This describes display eligibility only and is
+   intentionally neutral: it is not an editorial reliability badge or score. */
+.news-intake-note {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+@media (max-width: 767px) {
+  .news-intake-note { font-size: 13px; }
+}

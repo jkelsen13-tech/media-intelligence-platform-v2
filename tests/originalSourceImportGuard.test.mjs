@@ -95,9 +95,10 @@ test('source-comparison cards do not render public R1–R4 outlet tier labels', 
   assert.doesNotMatch(sourceComparisonView, /source tier not recorded/)
 })
 
-test('original-source importer preserves source-comparison eligibility and excludes protected legal cases', () => {
-  assert.match(importer, /Original event status is preserved/)
-  assert.match(importer, /excludes only Timeline-only records and requires multiple outlets/)
+test('original-source importer preserves source event status but starts comparison membership pending review', () => {
+  assert.match(importer, /Original event status is preserved for its source-system meaning/)
+  assert.match(importer, /comparison_validation_state: 'pending_review'/)
+  assert.match(importer, /an import never silently publishes/)
   assert.match(importer, /!row\.involves_minor_or_private_person && !row\.sealed_or_expunged/)
   assert.match(importer, /maps\.get\(`p3_legal_case:\$\{row\.case_id\}`\)/)
   assert.match(migration, /p3_legal_case/)

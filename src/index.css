@@ -3409,3 +3409,88 @@ body {
   .graph-geography-overlay .geography-globe figcaption { font-size: 9px; line-height: 1.25; }
   .geography-globe-marker-label { font-size: 8px; }
 }
+
+/* Graph coverage disclosure: reader-facing accounting of stored graph states.
+   It is intentionally compact and avoids score-like visual treatment. */
+.graph-coverage-notice {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-inset);
+}
+.graph-coverage-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.graph-coverage-kicker {
+  margin: 0 0 3px;
+  color: var(--text-muted);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-label);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.graph-coverage-heading h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+.graph-coverage-focus {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.graph-coverage-copy {
+  max-width: 900px;
+  margin: 7px 0 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.graph-coverage-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.graph-coverage-metrics > div {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+.graph-coverage-metrics dt {
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.25;
+}
+.graph-coverage-metrics dd {
+  margin: 4px 0 3px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+}
+.graph-coverage-metrics span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+@media (max-width: 900px) {
+  .graph-coverage-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .graph-coverage-notice { padding: 10px; }
+  .graph-coverage-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .graph-coverage-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+}
+@media (max-width: 420px) {
+  .graph-coverage-metrics { grid-template-columns: 1fr; }
+}

@@ -60,7 +60,7 @@ WHERE arc_id = (SELECT id FROM public.story_arcs WHERE slug = 'february-2026-sou
 -- Arc: a bounded reading and linking container, not a conclusion about the
 -- relationship among the separate policy topics.
 INSERT INTO public.story_arcs (
-  slug, title, category, status, coverage_gap, summary, started_at,
+  slug, title, category, status, display_kind, coverage_gap, summary, started_at,
   category_confidence, category_evidence, title_article_count
 )
 VALUES (
@@ -68,6 +68,7 @@ VALUES (
   'February 2026 — source-mapped public-policy watch',
   'institutional_accountability',
   'active',
+  'research_collection',
   true,
   'A bounded source-mapped set of directly reviewed February 2026 publisher records across separate public-policy subjects. Arc membership organizes access and chronology only; it does not establish causation, completeness, shared editorial lineage, or a common policy outcome.',
   DATE '2026-02-05',
@@ -79,6 +80,7 @@ ON CONFLICT (slug) DO UPDATE SET
   title = EXCLUDED.title,
   category = EXCLUDED.category,
   status = EXCLUDED.status,
+  display_kind = EXCLUDED.display_kind,
   coverage_gap = EXCLUDED.coverage_gap,
   summary = EXCLUDED.summary,
   started_at = EXCLUDED.started_at,

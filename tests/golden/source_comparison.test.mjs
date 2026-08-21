@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url'
 import {
   runPipeline, clusterArticles, groupClaims, detectSyndicates, independentOutlets,
   scanLoadedLanguage, computeComparison, canonicalUrl, claimSimilarity, RULE_VERSION,
-  EVENT_PROJECTION_RULE_VERSION, runEventProjection,
+  EVENT_PROJECTION_RULE_VERSION, runEventProjection, isComparisonApprovedEvent,
 } from '../../supabase/functions/source-comparison-run/lib.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -173,8 +173,12 @@ test('explanation rows: one per membership and grouping decision, machine proven
   }
 })
 
-test('V2 event projection writes comparison claims against existing multi-outlet events only', () => {
-  const event = { id: 'existing-v2-event', canonical_title: 'Existing V2 event' }
+test('V2 event projection writes comparison claims against explicitly approved multi-outlet events only', () => {
+  const event = {
+    id: 'existing-v2-event',
+    canonical_title: 'Existing V2 event',
+    comparison_validation_state: 'approved',
+  }
   const multiOutletMembers = eventCluster().members.map((member) => ({ article: member.article }))
   const projection = runEventProjection([{ event, members: multiOutletMembers }], CFG, lexicon)
   assert.ok(projection.claims.length > 0, 'expected projected claims for existing event membership')
@@ -185,9 +189,35 @@ test('V2 event projection writes comparison claims against existing multi-outlet
   assert.ok(projection.explanations.every((row) => row.rule_version.startsWith(EVENT_PROJECTION_RULE_VERSION + '|')))
 
   const singleOutlet = runEventProjection([
-    { event: { id: 'single-outlet' }, members: [{ article: { id: 'only', outlet: 'one', claims: [{ text: 'one claim' }] } }] },
+    { event: { id: 'single-outlet', comparison_validation_state: 'approved' }, members: [{ article: { id: 'only', outlet: 'one', claims: [{ text: 'one claim' }] } }] },
   ], CFG, lexicon)
   assert.equal(singleOutlet.claims.length, 0, 'single-outlet event must not create a comparison projection')
+})
+
+test('semantic membership gate withholds a Pochettino-like cross-topic candidate cluster', () => {
+  const candidate = {
+    id: 'pochettino-mixed-candidate',
+    canonical_title: 'Pochettino agrees to new manager contract with US Soccer',
+    comparison_validation_state: 'pending_review',
+  }
+  const members = [
+    { article: { id: 'coach-a', outlet: 'sport-a', title: 'Pochettino agrees to new manager contract with US Soccer', claims: [{ text: 'Pochettino agreed a new US Soccer contract.' }] } },
+    { article: { id: 'coach-b', outlet: 'sport-b', title: 'USMNT agree to new contract with coach Mauricio Pochettino', claims: [{ text: 'USMNT agreed a new contract with Pochettino.' }] } },
+    { article: { id: 'fifa-a', outlet: 'world-a', title: 'English FA set to withdraw support for Fifa president Infantino', claims: [{ text: 'English FA may withdraw support for Infantino.' }] } },
+    { article: { id: 'iran-a', outlet: 'world-b', title: 'Iran says it is in talks with Oman but not the US', claims: [{ text: 'Iran says it is in talks with Oman.' }] } },
+  ]
+
+  assert.equal(isComparisonApprovedEvent(candidate), false)
+  const withheld = runEventProjection([{ event: candidate, members }], CFG, lexicon)
+  assert.equal(withheld.stats.events_processed, 0)
+  assert.equal(withheld.stats.events_withheld_pending_membership_validation, 1)
+  assert.equal(withheld.claims.length, 0, 'no unique/shared/omission metric may be derived for a candidate cluster')
+
+  const approved = runEventProjection([
+    { event: { ...candidate, id: 'pochettino-reviewed-control', comparison_validation_state: 'approved' }, members: members.slice(0, 2) },
+  ], CFG, lexicon)
+  assert.equal(approved.stats.events_processed, 1)
+  assert.ok(approved.claims.length > 0, 'an explicitly reviewed coherent event remains projectable')
 })
 
 // canonical URL normalization (Q5)

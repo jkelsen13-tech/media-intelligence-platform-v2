@@ -17,7 +17,7 @@ export const CORE_VIEWS = [
   { key: 'news', label: 'News Feed', shortLabel: 'News' },
   { key: 'graph', label: 'Knowledge Graph', shortLabel: 'Graph' },
   { key: 'timeline', label: 'Causal Timeline', shortLabel: 'Timeline' },
-  { key: 'arcs', label: 'Story Arcs', shortLabel: 'Arcs' },
+  { key: 'arcs', label: 'Arcs & Collections', shortLabel: 'Arcs' },
 ]
 
 // 02C Phase 3 internal closed beta. Public release stays blocked per the
