@@ -10,6 +10,18 @@ const sql = `${contract}\n${hardening}`
 const candidateRelation = 'timeline_v2_graph_identity_candidates'
 const auditRelation = 'timeline_v2_graph_identity_audits'
 
+function createTableBodies(source) {
+  return [...source.matchAll(/CREATE TABLE public\.([a-z0-9_]+) \(([\s\S]*?)\n\);/g)].map(([, name, body]) => ({ name, body }))
+}
+
+function countMatches(source, pattern) {
+  return [...source.matchAll(pattern)].length
+}
+
+function namedConstraints(body) {
+  return [...body.matchAll(/\bCONSTRAINT\s+([a-z0-9_]+)/gi)].map(([, name]) => name)
+}
+
 test('mirrors the live 20-row proposal cohort as non-claims requiring independent audit', () => {
   const seeds = contract.match(/requires_independent_audit":true/g) ?? []
   const nonClaims = contract.match(/identity_claim":false/g) ?? []
@@ -81,6 +93,25 @@ test('keeps Graph consumption, overlays, and edge support separately default-den
   assert.match(hardening, /g\.requires_edge_specific_relationship_provenance/)
   assert.match(hardening, /graph_consumption_disabled/)
   assert.match(hardening, /timeline_status_not_release_qualified/)
+})
+
+test('rejects duplicate primary keys, duplicate named constraints, and obvious malformed mirror DDL', () => {
+  const tables = createTableBodies(contract)
+  assert.deepEqual(tables.map(({ name }) => name), [candidateRelation, auditRelation])
+  assert.equal(new Set(tables.map(({ name }) => name)).size, tables.length)
+
+  const allConstraintNames = []
+  for (const { name, body } of tables) {
+    const primaryKeys = countMatches(body, /\bPRIMARY\s+KEY\b/gi)
+    assert.equal(primaryKeys, 1, `${name} must declare exactly one primary key`)
+    assert.doesNotMatch(body, /,\s*\n\s*\);/, `${name} must not have a dangling comma before its closing parenthesis`)
+    assert.equal(countMatches(body, /\(/g), countMatches(body, /\)/g), `${name} must have balanced parentheses`)
+    for (const constraint of namedConstraints(body)) allConstraintNames.push(constraint)
+  }
+
+  assert.equal(new Set(allConstraintNames).size, allConstraintNames.length, 'named constraints must be unique')
+  assert.doesNotMatch(contract, /timeline_v2_graph_identity_audits_pkey\s+PRIMARY\s+KEY/i)
+  assert.doesNotMatch(sql, /\bCONSTRAINT\s+[a-z0-9_]+\s*,/i)
 })
 
 test('does not alter public Timeline, existing Graph nodes or edges, or Timeline scoring/release state', () => {

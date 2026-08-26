@@ -43,7 +43,6 @@ CREATE TABLE public.timeline_v2_graph_identity_audits (
   notes text NULL,
   audited_at timestamptz NOT NULL DEFAULT now(),
   created_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT timeline_v2_graph_identity_audits_pkey PRIMARY KEY (id),
   CONSTRAINT timeline_v2_graph_identity_audits_mapping_candidate_id_key UNIQUE (mapping_candidate_id),
   CONSTRAINT timeline_v2_graph_identity_audits_audit_outcome_check
     CHECK (audit_outcome = ANY (ARRAY['confirmed_same_event', 'rejected_not_same_event', 'undetermined'])),
