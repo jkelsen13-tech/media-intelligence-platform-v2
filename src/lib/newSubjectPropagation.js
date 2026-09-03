@@ -14,7 +14,7 @@
 //   6) analytical pages read canonical_subject_id after that one commit —
 //      no per-page search.
 //
-// This module never writes V2, never touches reader_state, never invents
+// This module is DISPLAY-only. It never writes V2 tables, never invents
 // events, articles, edges, weather, titles, or a second subject, and does
 // not fork a ranking engine.
 
