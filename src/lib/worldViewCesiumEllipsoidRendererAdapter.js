@@ -51,6 +51,33 @@ export function destroyCesiumResources({ eventHandler, viewer }) {
   }
 }
 
+// Normalize the Vite deployment base into the URL Cesium uses to resolve
+// its static Workers/Assets/Widgets directories.
+//
+// Examples:
+//   '/some-deploy-subpath/' -> '/some-deploy-subpath/cesium/'
+//   '/some-deploy-subpath'  -> '/some-deploy-subpath/cesium/'
+//   '/'                     -> '/cesium/'
+//   undefined / ''          -> '/cesium/' (root/local deployment)
+export function resolveCesiumBaseUrl(deploymentBase) {
+  const raw = typeof deploymentBase === 'string' && deploymentBase.length > 0 ? deploymentBase : '/'
+  const normalized = raw.endsWith('/') ? raw : `${raw}/`
+  return `${normalized}cesium/`
+}
+
+function viteDeploymentBase() {
+  // IMPORTANT: plain member access only. Vite statically replaces
+  // `import.meta.env.BASE_URL` in production builds; an optional-chained
+  // member expression is not replaced and silently evaluates to undefined
+  // in the built bundle, which previously caused CESIUM_BASE_URL to fall
+  // back to domain-root '/cesium/' on GitHub Pages.
+  // In non-Vite runtimes (node --test) import.meta.env is undefined, so the
+  // guard keeps this safe there as well.
+  const env = import.meta.env
+  if (env && typeof env.BASE_URL === 'string' && env.BASE_URL.length > 0) return env.BASE_URL
+  return '/'
+}
+
 function isWebGLAvailable() {
   if (typeof document === 'undefined') return false
   try {
@@ -106,20 +133,24 @@ export function createCesiumEllipsoidRendererAdapter({
       return
     }
 
+    // Set CESIUM_BASE_URL from the Vite deployment base BEFORE the lazy
+    // Cesium import/initialization so Workers/Assets/Widgets resolve under
+    // the deployment base (e.g. the GitHub Pages subpath). Root and local
+    // deployments still resolve to '/cesium/'.
+    globalThis.CESIUM_BASE_URL = resolveCesiumBaseUrl(viteDeploymentBase())
+
     try {
       Cesium = await import('cesium')
       // Cesium's widgets.css is required for credits and cursor styling.
       await import('cesium/Build/Cesium/Widgets/widgets.css')
-    } catch {
+    } catch (importError) {
+      // eslint-disable-next-line no-console
+      console.error('Cesium failed to load; falling back to MapLibre:', importError?.message ?? importError)
       if (!cancelledNow()) onStackIdChange?.('openfreemap-positron')
       return
     }
 
     if (cancelledNow()) return
-
-    const baseUrl = (import.meta?.env?.BASE_URL ?? '/') + 'cesium/'
-    // Cesium uses this global to resolve workers/assets under the GH Pages base path.
-    globalThis.CESIUM_BASE_URL = baseUrl
 
     // Clear host to avoid duplicate canvases if the adapter is rebooted.
     try {
@@ -139,17 +170,51 @@ export function createCesiumEllipsoidRendererAdapter({
     })
 
     // Minimal Viewer UI: no terrain, no 3D tiles.
-    viewer = new Cesium.Viewer(hostEl, {
-      animation: false,
-      timeline: false,
-      baseLayerPicker: false,
-      geocoder: false,
-      homeButton: false,
-      navigationHelpButton: false,
-      sceneMode: Cesium.SceneMode.SCENE3D,
-      infoBox: false,
-      selectionIndicator: false,
-      imageryProvider,
+    try {
+      viewer = new Cesium.Viewer(hostEl, {
+        animation: false,
+        timeline: false,
+        baseLayerPicker: false,
+        geocoder: false,
+        homeButton: false,
+        navigationHelpButton: false,
+        sceneMode: Cesium.SceneMode.SCENE3D,
+        infoBox: false,
+        selectionIndicator: false,
+        imageryProvider,
+      })
+    } catch (bootError) {
+      // eslint-disable-next-line no-console
+      console.error('Cesium failed to boot; falling back to MapLibre:', bootError?.message ?? bootError)
+      viewer = null
+      if (!cancelledNow()) onStackIdChange?.('openfreemap-positron')
+      return
+    }
+
+    // Fatal render/boot failure handling: never leave a black canvas with
+    // Cesium's raw error modal. Log the real diagnostic, tear the viewer
+    // down, and advance honestly to the MapLibre fallback stack. No pins or
+    // geometry are fabricated in the fallback; it re-renders from the same
+    // projection rows.
+    try {
+      if (viewer.cesiumWidget) {
+        // Suppress Cesium's default "Rendering has stopped" modal; the
+        // fallback below is the user-visible outcome instead.
+        viewer.cesiumWidget.showRenderLoopError = () => {}
+      }
+    } catch {
+      /* ignore */
+    }
+
+    viewer.scene.renderError.addEventListener((scene, renderError) => {
+      // eslint-disable-next-line no-console
+      console.error('Cesium render failure; falling back to MapLibre:', renderError?.message ?? renderError)
+      if (cancelledNow() || !viewer) return
+      destroyCesiumResources({ eventHandler, viewer })
+      viewer = null
+      eventHandler = null
+      entities = []
+      onStackIdChange?.('openfreemap-positron')
     })
 
     // Request-only rendering governance: only redraw on camera/props changes.
@@ -352,4 +417,3 @@ export function createCesiumEllipsoidRendererAdapter({
     destroy,
   }
 }
-
