@@ -64,7 +64,7 @@ export function mapLibreStyleForStack(id) {
       layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
     }
   }
-  // Keyless vector style. Do not use paid basemap APIs.
+  // Keyless open vector style. Do not use paid basemap APIs.
   return 'https://tiles.openfreemap.org/styles/positron'
 }
 
@@ -103,18 +103,56 @@ export function maxInspectRangeInMetersForPrecisionClass(precisionClass) {
 // Convert the inspection-range ceiling (ground distance, in meters) into a camera
 // altitude above the ellipsoid (meters). Calibrated to the live-measured
 // ~5km scale bar around Cleveland at the city precision ceiling.
+
+// Perspective model constants shared by the height<->zoom conversions below.
+const CAMERA_FOVY_DEG = 60
+const TAN_HALF_FOVY = Math.tan((CAMERA_FOVY_DEG / 2) * (Math.PI / 180))
+// Empirical mapping: the scale line represents ~25% of the visible ground
+// extent at the precision ceiling.
+const SCALEBAR_FRACTION = 0.25
+
 export function heightMetersForPrecisionClass(precisionClass) {
   const range = maxInspectRangeInMetersForPrecisionClass(precisionClass)
+  return range / (TAN_HALF_FOVY * SCALEBAR_FRACTION)
+}
 
-  // Approximate perspective model for a fixed vertical field-of-view.
-  const FOVY_DEG = 60
-  const tanHalfFov = Math.tan((FOVY_DEG / 2) * (Math.PI / 180))
+// ---- MapLibre zoom <-> ellipsoid height-meters bridge (Stage C) ----
+//
+// The renderer-neutral camera contract speaks in meters of height above the
+// ellipsoid. The MapLibre fallback adapter still speaks in Mercator zoom
+// integers; these helpers translate between the two using the same
+// perspective model as heightMetersForPrecisionClass, so the ~5 km city
+// ceiling stays a single meter-denominated value across renderers.
+// DISPLAY-only: no projection row or precision class is ever rewritten.
 
-  // Empirical mapping: the scale line represents ~25% of the visible ground
-  // extent at the precision ceiling.
-  const SCALEBAR_FRACTION = 0.25
+const WEB_MERCATOR_METERS_PER_PIXEL_AT_ZOOM0 = 156543.03392
+const DEFAULT_VIEWPORT_WIDTH_PX = 800
 
-  return range / (tanHalfFov * SCALEBAR_FRACTION)
+/** Approximate visible ground span (meters) across a viewport at a Mercator zoom. */
+export function groundSpanMetersAtZoom(zoom, latDegrees, viewportWidthPx = DEFAULT_VIEWPORT_WIDTH_PX) {
+  const z = Number(zoom)
+  const lat = Number(latDegrees)
+  if (!Number.isFinite(z) || !Number.isFinite(lat)) return null
+  const cosLat = Math.cos((lat * Math.PI) / 180)
+  return (viewportWidthPx * WEB_MERCATOR_METERS_PER_PIXEL_AT_ZOOM0 * cosLat) / 2 ** z
+}
+
+/** Camera height in meters whose visible ground span matches a Mercator zoom. */
+export function heightMetersFromMapZoom(zoom, latDegrees) {
+  const span = groundSpanMetersAtZoom(zoom, latDegrees)
+  if (span === null) return null
+  return span * TAN_HALF_FOVY * SCALEBAR_FRACTION
+}
+
+/** Mercator zoom whose visible ground span matches a camera height in meters. */
+export function mapZoomForHeightMeters(heightMeters, latDegrees, viewportWidthPx = DEFAULT_VIEWPORT_WIDTH_PX) {
+  const height = Number(heightMeters)
+  const lat = Number(latDegrees)
+  if (!Number.isFinite(height) || !Number.isFinite(lat) || height <= 0) return null
+  const span = height / (TAN_HALF_FOVY * SCALEBAR_FRACTION)
+  const cosLat = Math.cos((lat * Math.PI) / 180)
+  if (cosLat <= 1e-6) return null // pole singularity in the Mercator bridge
+  return Math.log2((viewportWidthPx * WEB_MERCATOR_METERS_PER_PIXEL_AT_ZOOM0 * cosLat) / span)
 }
 
 // Heading/pitch/roll orientation contract derived from the MapLibre subject camera.
