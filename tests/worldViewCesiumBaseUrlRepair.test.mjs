@@ -102,3 +102,18 @@ test('fallback diagnostics are honest (real error logged, nothing fabricated)', 
   // default modal is replaced by a no-op before any render error can show it.
   assert.match(CESIUM_ADAPTER, /showRenderLoopError = \(\) => \{\}/)
 })
+
+// ---- Base imagery layer (Cesium >= 1.107 Viewer API) ----
+
+test('globe imagery is passed as an explicit baseLayer ImageryLayer, not the removed Viewer imageryProvider option', () => {
+  // Cesium >= 1.107 removed the Viewer `imageryProvider` constructor option:
+  // passing it only suppresses the default base layer and the provider is
+  // silently never added, leaving a black (imageless) ellipsoid with zero
+  // tile requests. The adapter must construct an explicit ImageryLayer.
+  assert.match(CESIUM_ADAPTER, /baseLayer: new Cesium\.ImageryLayer\(imageryProvider\)/)
+  const viewerCtor = CESIUM_ADAPTER.match(/new Cesium\.Viewer\(hostEl, \{[\s\S]*?\}\)/)
+  assert.ok(viewerCtor, 'Viewer construction must exist')
+  assert.doesNotMatch(viewerCtor[0], /^\s*imageryProvider,$/m)
+  // Keyless open imagery only.
+  assert.match(CESIUM_ADAPTER, /tile\.openstreetmap\.org/)
+})
