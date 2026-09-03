@@ -292,6 +292,17 @@
   font-size: var(--fs-meta);
 }
 
+.wv-temporal {
+  margin: 0 0 16px;
+}
+
+.wv-temporal-copy {
+  margin: 0 0 8px;
+  color: var(--text-body);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+}
+
 .wv-weather-copy {
   margin: 0 0 10px;
   color: var(--text-secondary);

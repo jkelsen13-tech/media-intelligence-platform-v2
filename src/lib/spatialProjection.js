@@ -579,7 +579,7 @@ function unavailableResult(reason, error = null) {
   }
 }
 
-function resolveWorldViewClient(options = {}) {
+export function resolveWorldViewClient(options = {}) {
   const injected = Object.hasOwn(options, 'supabaseClient')
   if (!injected) {
     const origin = resolveV2ClientOrigin(options.envUrl ?? readViteSupabaseUrl())

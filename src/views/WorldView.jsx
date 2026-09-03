@@ -32,6 +32,10 @@ import {
   fitExtentGeometry,
   spatialProjectionUnavailableCopy,
 } from '../lib/spatialProjection'
+import {
+  canonicalEventIdFromWorldView,
+  loadTemporalAssessment,
+} from '../lib/temporalAssessment'
 import './worldview.css'
 
 const MODES = [
@@ -192,7 +196,23 @@ function WeatherPanel() {
   )
 }
 
-function EventInspector({ loadStatus, selected, visibleRow, atMs }) {
+function TemporalIntelligenceBlock({ assessment }) {
+  if (!assessment) return null
+  return (
+    <section className="wv-temporal" aria-label="Temporal Intelligence">
+      <header className="wv-section-head">
+        <h3>Temporal Intelligence</h3>
+        <span className="wv-pill wv-pill-empty">{assessment.panel}</span>
+      </header>
+      <p className="wv-temporal-copy">{assessment.copy}</p>
+      {assessment.status === 'ok' && assessment.copy !== assessment.panel && (
+        <p className="wv-meta">{assessment.panel}</p>
+      )}
+    </section>
+  )
+}
+
+function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssessment }) {
   const coverage = visibleRow && Number.isFinite(atMs) ? revisionCoverageAt(visibleRow, atMs) : null
   const plot = visibleRow ? plotDecision(visibleRow) : { plot: false, reason: 'no_row', geometry: null }
   const availability = inspectorAvailability(visibleRow, { plot: plot.plot })
@@ -352,6 +372,7 @@ function EventInspector({ loadStatus, selected, visibleRow, atMs }) {
       <header className="wv-section-head">
         <h2>Inspector</h2>
       </header>
+      <TemporalIntelligenceBlock assessment={temporalAssessment} />
       {body}
     </aside>
   )
@@ -416,6 +437,7 @@ export default function WorldView({
     reason: null,
   })
   const [stampIndex, setStampIndex] = useState(0)
+  const [temporalAssessment, setTemporalAssessment] = useState(null)
   const didAutoSelect = useRef(false)
 
   useEffect(() => {
@@ -467,6 +489,25 @@ export default function WorldView({
     : selectedRows.length
       ? [...selectedRows].sort((a, b) => (a.revision_ordinal ?? 0) - (b.revision_ordinal ?? 0)).at(-1)
       : null
+
+  const canonicalEventId = useMemo(
+    () => canonicalEventIdFromWorldView(selected, visibleRow),
+    [selected, visibleRow],
+  )
+
+  useEffect(() => {
+    if (!canonicalEventId) {
+      setTemporalAssessment(null)
+      return
+    }
+    let cancelled = false
+    loadTemporalAssessment(canonicalEventId).then((view) => {
+      if (!cancelled) setTemporalAssessment(view)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [canonicalEventId])
 
   const mapRows = useMemo(() => {
     if (loadStatus.status !== 'ok') return []
@@ -581,6 +622,7 @@ export default function WorldView({
           selected={selected}
           visibleRow={visibleRow}
           atMs={atMs}
+          temporalAssessment={temporalAssessment}
         />
       </div>
 
