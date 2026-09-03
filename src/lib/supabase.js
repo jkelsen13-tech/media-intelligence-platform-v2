@@ -189,6 +189,22 @@ function emptyArticlesUnavailable(error) {
   }
 }
 
+// HEAD-only PostgREST privilege misses can arrive as `{ message: '' }` with
+// no code. Confirm against a 1-row articles SELECT before fail-closing;
+// unclassified empties and 500s still throw.
+function isEmptyPostgrestError(error) {
+  if (!error) return false
+  return !String(error.code ?? '') && !String(error.message ?? error.details ?? error.hint ?? '')
+}
+
+async function confirmArticlesPermissionDenied(client, errors) {
+  const list = (Array.isArray(errors) ? errors : [errors]).filter(Boolean)
+  if (list.some((error) => isPostgrestPermissionDenied(error))) return true
+  if (!client || !list.some((error) => isEmptyPostgrestError(error))) return false
+  const probe = await client.from('articles').select('id').limit(1)
+  return isPostgrestPermissionDenied(probe.error)
+}
+
 export function edgesUnavailableMessage(error) {
   return error?.message ?? String(error)
 }
@@ -872,13 +888,13 @@ export async function loadCorpusMeta({ supabaseClient } = {}) {
       .order('fetched_at', { ascending: false, nullsFirst: false })
       .limit(1),
   ])
-  if (countRes.error) {
-    if (isPostgrestPermissionDenied(countRes.error)) return { count: null, latestFetchedAt: null }
-    throw countRes.error
-  }
-  if (latestRes.error) {
-    if (isPostgrestPermissionDenied(latestRes.error)) return { count: null, latestFetchedAt: null }
-    throw latestRes.error
+  if (countRes.error || latestRes.error) {
+    if (await confirmArticlesPermissionDenied(client, [countRes.error, latestRes.error])) {
+      return { count: null, latestFetchedAt: null }
+    }
+    throw [latestRes.error, countRes.error].find((error) => error && !isEmptyPostgrestError(error))
+      || countRes.error
+      || latestRes.error
   }
   return {
     count: countRes.count ?? null,
@@ -897,7 +913,7 @@ export async function loadNewSinceCount(isoTs, { supabaseClient } = {}) {
     .eq('reader_state', 'eligible')
     .gt('fetched_at', isoTs)
   if (error) {
-    if (isPostgrestPermissionDenied(error)) return null
+    if (await confirmArticlesPermissionDenied(client, error)) return null
     throw error
   }
   return count ?? null

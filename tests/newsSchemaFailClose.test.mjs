@@ -17,6 +17,7 @@ import {
   loadArticleDetail,
   loadFilteredSourceMetricRows,
   loadCorpusMeta,
+  loadNewSinceCount,
 } from '../src/lib/supabase.js'
 
 const SRC = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8')
@@ -80,17 +81,18 @@ const LIVE_NODE = Object.freeze({
   metadata: null,
 })
 
-function fakeClient(tables, { errors = {}, missingColsByTable = {} } = {}) {
+function fakeClient(tables, { errors = {}, headErrors = {}, missingColsByTable = {} } = {}) {
   const selects = []
   return {
     selects,
     from(table) {
       selects.push(table)
       let rows = [...(tables[table] ?? [])]
-      const state = { cols: '', range: null, limit: null }
+      const state = { cols: '', range: null, limit: null, head: false }
       const q = {
-        select: (cols) => {
+        select: (cols, opts) => {
           state.cols = String(cols ?? '')
+          state.head = Boolean(opts?.head)
           return q
         },
         eq: (c, v) => {
@@ -128,6 +130,9 @@ function fakeClient(tables, { errors = {}, missingColsByTable = {} } = {}) {
           return q
         },
         then: (resolve) => {
+          if (state.head && headErrors[table]) {
+            return resolve({ data: null, error: headErrors[table], count: 0 })
+          }
           if (errors[table]) {
             return resolve({ data: null, error: errors[table], count: 0 })
           }
@@ -335,6 +340,29 @@ test('loadFilteredSourceMetricRows / loadCorpusMeta: permission denied is empty,
   const boom = fakeClient({ articles: [] }, { errors: { articles: ARTICLES_500 } })
   await assert.rejects(() => loadFilteredSourceMetricRows({}, { supabaseClient: boom }), (err) => err === ARTICLES_500)
   await assert.rejects(() => loadCorpusMeta({ supabaseClient: boom }), (err) => err === ARTICLES_500)
+})
+
+test('loadCorpusMeta / loadNewSinceCount: empty HEAD error + 42501 row probe fail-closes', async () => {
+  const client = fakeClient(
+    { articles: [NASA_PENDING] },
+    {
+      headErrors: { articles: { message: '' } },
+      errors: { articles: ARTICLES_PERMISSION_DENIED },
+    },
+  )
+  assert.deepEqual(await loadCorpusMeta({ supabaseClient: client }), { count: null, latestFetchedAt: null })
+  assert.equal(await loadNewSinceCount('2026-01-01T00:00:00Z', { supabaseClient: client }), null)
+})
+
+test('loadCorpusMeta: empty HEAD error + 500 row probe still throws', async () => {
+  const client = fakeClient(
+    { articles: [] },
+    {
+      headErrors: { articles: { message: '' } },
+      errors: { articles: ARTICLES_500 },
+    },
+  )
+  await assert.rejects(() => loadCorpusMeta({ supabaseClient: client }), (err) => err === ARTICLES_500)
 })
 
 test('browser selects never ask story_arcs.title and never join the title embed', () => {
