@@ -14,6 +14,8 @@ import {
   ELLIPSOID_GLOBE_STACK_ID,
   mapStackById,
   mapLibreStyleForStack,
+  heightMetersFromMapZoom,
+  mapZoomForHeightMeters,
   maxZoomForPrecisionClass,
   minZoom,
   nextMapStackOnFailure,
@@ -21,7 +23,52 @@ import {
   worldCamera,
   worldViewRenderMode,
 } from './worldViewMapStack.js'
+import {
+  makeCameraState,
+  parseCameraState,
+  serializeCameraState,
+} from './worldViewCameraState.js'
 import { overlayAllowed } from './worldViewPrivacyLock.js'
+
+// ---- Stage C: renderer-neutral camera-state contract (2D/2.5D side) ----
+//
+// Same serializable camera contract as the globe adapter, expressed through
+// the zoom<->height bridge in worldViewMapStack.js. Heading/pitch use the
+// contract convention (heading 346 === bearing -14; pitch negative looks
+// down). Restore is clamped to the precision-class zoom cap so it can never
+// reach finer-than-recorded precision.
+
+/** Build a normalized camera state from a 2D/2.5D map camera snapshot. */
+export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 0 }, precisionClass) {
+  const heightMeters = heightMetersFromMapZoom(zoom, lat)
+  if (heightMeters === null) return null
+  return makeCameraState(
+    {
+      lon: lng,
+      lat,
+      heightMeters,
+      headingDegrees: bearing,
+      pitchDegrees: -pitch,
+      rollDegrees: 0,
+    },
+    precisionClass,
+  )
+}
+
+/** Convert a normalized camera state into 2D/2.5D map camera parameters. */
+export function mapCameraForCameraState(cameraState, precisionClass) {
+  if (!cameraState) return null
+  const cap = maxZoomForPrecisionClass(precisionClass)
+  const zoomRaw = mapZoomForHeightMeters(cameraState.heightMeters, cameraState.lat)
+  const zoom = Math.min(zoomRaw ?? cap, cap)
+  const heading = cameraState.headingDegrees
+  return Object.freeze({
+    center: Object.freeze([cameraState.lon, cameraState.lat]),
+    zoom,
+    bearing: heading > 180 ? heading - 360 : heading,
+    pitch: -cameraState.pitchDegrees,
+  })
+}
 
 /**
  * Convert projection rows into a stable, pickable feature record list.
@@ -336,6 +383,47 @@ function createMapLibreWorldViewRendererAdapter({
     requestRepaint(map)
   }
 
+  // Stage C: serialize the live map camera into the renderer-neutral
+  // contract. Returns a JSON string (or null when no map is available).
+  function getCameraState() {
+    if (!map) return null
+    try {
+      const center = map.getCenter?.()
+      const zoom = map.getZoom?.()
+      if (!center || !Number.isFinite(zoom)) return null
+      return serializeCameraState(
+        cameraStateFromMapCamera(
+          {
+            lng: center.lng,
+            lat: center.lat,
+            zoom,
+            bearing: map.getBearing?.() ?? 0,
+            pitch: map.getPitch?.() ?? 0,
+          },
+          precisionClass,
+        ),
+        precisionClass,
+      )
+    } catch {
+      return null
+    }
+  }
+
+  // Stage C: restore a serialized camera state. FAIL-SAFE: invalid or
+  // unsupported state returns false and leaves the camera, the
+  // Investigation Context, and the route untouched. The precision-class
+  // zoom cap keeps restored views at or above the recorded ceiling.
+  function setCameraState(serialized) {
+    if (!map) return false
+    const parsed = parseCameraState(serialized, { precisionClass })
+    if (!parsed) return false
+    const cam = mapCameraForCameraState(parsed, precisionClass)
+    if (!cam) return false
+    map.jumpTo({ center: cam.center, zoom: cam.zoom, bearing: cam.bearing, pitch: cam.pitch })
+    requestRepaint(map)
+    return true
+  }
+
   function destroy() {
     localCancelled = true
     destroyRendererResources({ overlay, map })
@@ -351,6 +439,8 @@ function createMapLibreWorldViewRendererAdapter({
     setFeatures,
     setOnSelectRow,
     flyToSubjectCamera: flyToSubjectCamera,
+    getCameraState,
+    setCameraState,
     requestRender,
     destroy,
   }
@@ -396,8 +486,9 @@ export function createWorldViewRendererAdapter(args) {
     setFeatures: (nextFeatures, nextSelectedKeys) => impl?.setFeatures?.(nextFeatures, nextSelectedKeys),
     setOnSelectRow: (nextOnSelectRow) => impl?.setOnSelectRow?.(nextOnSelectRow),
     flyToSubjectCamera: (opts) => impl?.flyToSubjectCamera?.(opts) ?? false,
+    getCameraState: () => impl?.getCameraState?.() ?? null,
+    setCameraState: (serialized) => impl?.setCameraState?.(serialized) ?? false,
     requestRender: () => impl?.requestRender?.(),
     destroy: () => impl?.destroy?.(),
   }
 }
-

@@ -168,6 +168,25 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
     if (ok) flewRef.current = true
   }, [coordinate, first, stackId])
 
+  // Stage C acceptance probe (DISPLAY-only): exposes the renderer-neutral
+  // camera-state contract of the active adapter so the live acceptance walk
+  // can serialize/restore the camera. Application code never reads this
+  // handle; camera state is never written to Investigation Context or the
+  // hash/deep-link route.
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    const probe = {
+      getCameraState: () => adapterRef.current?.getCameraState?.() ?? null,
+      setCameraState: (serialized) => adapterRef.current?.setCameraState?.(serialized) ?? false,
+    }
+    window.__MIP_WORLD_VIEW_CAMERA_PROBE__ = probe
+    return () => {
+      if (window.__MIP_WORLD_VIEW_CAMERA_PROBE__ === probe) {
+        delete window.__MIP_WORLD_VIEW_CAMERA_PROBE__
+      }
+    }
+  }, [stackId])
+
   if (stackId === FALLBACK_MAP_STACK_ID) {
     return (
       <AtlasFallbackMap
