@@ -12,6 +12,18 @@ import { canonicalizeTimelineEvents, remapTimelineEdges } from './timelineDedup.
 // Sandbox safety: V2 only connects to the explicit environment target. When
 // either value is absent, makeClient() returns null and the application follows
 // its bundled demo-data path. Never add a production URL or key fallback here.
+// Fail closed: leftover Manus / paused-original hosts must never be used.
+const FORBIDDEN_SUPABASE_HOST_REFS = Object.freeze([
+  'yhbwnrtlqbjtcrrlpbge',
+  'niejaejtbxgakyrsntxm',
+])
+
+export function isForbiddenSupabaseUrl(value) {
+  if (!value) return false
+  const lower = String(value).toLowerCase()
+  return FORBIDDEN_SUPABASE_HOST_REFS.some((ref) => lower.includes(`${ref}.supabase.co`))
+}
+
 const url = import.meta.env?.VITE_SUPABASE_URL
 const anonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY
 
@@ -19,6 +31,7 @@ const anonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY
 // without a WebSocket implementation); fall back to the demo-data path.
 function makeClient() {
   if (!url || !anonKey) return null
+  if (isForbiddenSupabaseUrl(url)) return null
   try {
     return createClient(url, anonKey)
   } catch {

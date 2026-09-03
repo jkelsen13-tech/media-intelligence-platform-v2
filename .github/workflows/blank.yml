@@ -32,10 +32,12 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     env:
-      # Sandbox-only build target. VITE_* values are public client settings once
-      # bundled; this disposable project has RLS and no production fallback.
-      VITE_SUPABASE_URL: https://yhbwnrtlqbjtcrrlpbge.supabase.co
-      VITE_SUPABASE_ANON_KEY: sb_publishable_VB9q-7kUl_9zqi_K1-lVYw_Q9XCL_M2
+      # V2-only Pages build target. VITE_* values are public client settings
+      # once bundled. Do not inject leftover Manus or paused-original hosts.
+      # Actions secret VITE_SUPABASE_ANON_KEY is preferred when writable;
+      # this repo's existing pattern is an in-workflow publishable key.
+      VITE_SUPABASE_URL: https://qikvmopbtijoebdqosyq.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_7EVSYlCWYiE6YL0bDBYr_w_iwB9tve_
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
