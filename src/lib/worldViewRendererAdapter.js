@@ -228,6 +228,7 @@ function createMapLibreWorldViewRendererAdapter({
   getHostEl,
   coordinate,
   precisionClass,
+  getPrecisionClass,
   getSelectedKeys,
   onSelectRow,
   onStackIdChange,
@@ -244,6 +245,10 @@ function createMapLibreWorldViewRendererAdapter({
   let localCancelled = false
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
+
+  // Stage C: resolve the recorded precision class live at call time — it can
+  // arrive after mount when rows load asynchronously.
+  const activePrecisionClass = () => getPrecisionClass?.() ?? precisionClass
 
   async function mount() {
     if (mounted) return
@@ -400,9 +405,9 @@ function createMapLibreWorldViewRendererAdapter({
             bearing: map.getBearing?.() ?? 0,
             pitch: map.getPitch?.() ?? 0,
           },
-          precisionClass,
+          activePrecisionClass(),
         ),
-        precisionClass,
+        activePrecisionClass(),
       )
     } catch {
       return null
@@ -415,9 +420,9 @@ function createMapLibreWorldViewRendererAdapter({
   // zoom cap keeps restored views at or above the recorded ceiling.
   function setCameraState(serialized) {
     if (!map) return false
-    const parsed = parseCameraState(serialized, { precisionClass })
+    const parsed = parseCameraState(serialized, { precisionClass: activePrecisionClass() })
     if (!parsed) return false
-    const cam = mapCameraForCameraState(parsed, precisionClass)
+    const cam = mapCameraForCameraState(parsed, activePrecisionClass())
     if (!cam) return false
     map.jumpTo({ center: cam.center, zoom: cam.zoom, bearing: cam.bearing, pitch: cam.pitch })
     requestRepaint(map)
