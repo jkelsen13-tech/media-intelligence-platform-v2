@@ -700,7 +700,12 @@ export default function App() {
       {accountOpen && accountUi && <AccountPanel onClose={() => setAccountOpen(false)} />}
 
       <main className="app-main">
-        {error && <div className="notice error">Failed to load graph: {error}</div>}
+        {error && view === 'graph' && <div className="notice error">Failed to load graph: {error}</div>}
+        {graph?.edgesUnavailable && view === 'graph' && (
+          <div className="notice">
+            public.edges is unavailable ({graph.edgesUnavailable}). Nodes may still render; no relationships are invented.
+          </div>
+        )}
 
         {view === 'news' && (
           <NewsView

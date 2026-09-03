@@ -111,19 +111,20 @@ test('loadArcs returns all arcs past 1000, display order last_update_at desc re-
     arcEvents.push({ id: `ae-${pad(i)}`, arc_id: `arc-${pad(1200)}`, occurred_at: '2999-01-01' })
   }
   const out = await loadArcs({ supabaseClient: fakePostgrest({ story_arcs: storyArcs, arc_events: arcEvents, arc_milestones_public: [] }) })
-  assert.equal(out.length, 1200)
-  const ids = new Set(out.map((a) => a.id))
+  assert.equal(out.arcsUnavailable, null)
+  assert.equal(out.arcs.length, 1200)
+  const ids = new Set(out.arcs.map((a) => a.id))
   assert.ok(ids.has(`arc-${pad(1001)}`), 'story_arcs row at position 1001 missing')
   assert.ok(ids.has(`arc-${pad(1200)}`), 'final story_arcs row missing')
   // Display order re-applied client-side over the COMPLETE set: strictly
   // non-increasing last_update_at.
-  for (let i = 1; i < out.length; i++) {
-    assert.ok(String(out[i - 1].last_update_at) >= String(out[i].last_update_at), `order broken at index ${i}`)
+  for (let i = 1; i < out.arcs.length; i++) {
+    assert.ok(String(out.arcs[i - 1].last_update_at) >= String(out.arcs[i].last_update_at), `order broken at index ${i}`)
   }
   // Deep-arc derived status proves the arc_events read was complete:
   // 1100 events all dated far-future → 'active' for arc-001200 only.
-  assert.equal(out.find((a) => a.id === `arc-${pad(1200)}`).derived_status, 'active')
-  assert.equal(out.find((a) => a.id === `arc-${pad(500)}`).derived_status, null)
+  assert.equal(out.arcs.find((a) => a.id === `arc-${pad(1200)}`).derived_status, 'active')
+  assert.equal(out.arcs.find((a) => a.id === `arc-${pad(500)}`).derived_status, null)
 })
 
 // --- Site 3: loadTimeline five reads past 1000 ------------------------------
@@ -181,12 +182,13 @@ test('structure: frontend loaders use keyset pagination on every Doc 13 table', 
   // Site 1: composite-PK pagination for node_topics.
   assert.match(src, /keysetAllComposite\(client, 'node_topics', 'node_id, topic_id, confidence'/)
   // loadArcs: all three arc tables.
-  assert.match(src, /keysetAll\(client, 'story_arcs', 'id, slug, title/)
+  assert.match(src, /keysetAll\(client, 'story_arcs', 'id, slug, category/)
+  assert.doesNotMatch(src, /keysetAll\(client, 'story_arcs', 'id, slug, title/)
   assert.match(src, /keysetAll\(client, 'arc_events', 'id, arc_id, occurred_at'\)/)
   assert.match(src, /keysetAll\(client, 'arc_milestones_public', 'id, arc_id, status'\)/)
   // Site 3: timeline reads (event nodes, edges, labels, articles, story_arcs).
   assert.match(src, /keysetAll\(client, 'articles', 'id, title, summary, published_at, outlet, arc_id'\)/)
-  assert.match(src, /keysetAll\(client, 'story_arcs', 'id, title'\)/)
+  assert.match(src, /keysetAll\(client, 'story_arcs', STORY_ARCS_ID_ONLY\)/)
   // Site 5: outlets read.
   assert.match(src, /keysetAll\(client, 'articles', 'id, outlet'/)
   // No raw unpaginated selects remain on the Doc 13 frontend tables inside

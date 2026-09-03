@@ -316,7 +316,7 @@ export async function loadTimelineGroupedBetaFlag() {
 export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
   const mod = await getClient()
   const supabase = supabaseClient ?? mod.supabase
-  const { deriveArcStatus, keysetAll, keysetAllComposite, resortRows } = mod
+  const { deriveArcStatus, keysetAll, keysetAllComposite, resortRows, isPostgrestSchemaGap } = mod
   const { canonicalizeTimelineEvents, remapTimelineEdges } = await import('./timelineDedup.js')
 
   if (!supabase) {
@@ -347,7 +347,7 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
       }).then((r) => (r.data ? { ...r, data: resortRows(r.data, 'occurred_at', { ascending: true, nullsFirst: false }) } : r)),
       // doc_strength added 2026-08-18 (item 4, read-path only): the Screen 5
       // connector engine requires it before any causal label may render.
-      keysetAll(supabase, 'edges', 'id, source_id, target_id, type, weight, label, doc_strength', {
+      mod.readEdgesOrUnavailable(supabase, 'id, source_id, target_id, type, weight, label, doc_strength', {
         filter: (q) => q.in('type', ['causal', 'sequence']),
       }),
       keysetAll(supabase, 'nodes', 'id, slug, label'),
@@ -355,7 +355,7 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
       // News-record entries for every article assigned to an arc. A reporting
       // record retains its publication date and is never promoted to an event.
       keysetAll(supabase, 'articles', 'id, title, summary, published_at, arc_id, outlet'),
-      keysetAll(supabase, 'story_arcs', 'id, title, category, started_at'),
+      keysetAll(supabase, 'story_arcs', 'id, category, started_at'),
       // End date + status derive from real signals (loadArcs() pattern).
       // id included: the keyset cursor reads it back off the returned rows.
       keysetAll(supabase, 'arc_events', 'id, arc_id, occurred_at'),
@@ -364,9 +364,18 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
       // outlet count (composite PK — keysetAllComposite, Doc 13 discipline).
       keysetAllComposite(supabase, 'event_articles', 'event_id, article_id', { keyCols: ['event_id', 'article_id'] }),
     ])
-  for (const r of [nodesRes, edgesRes, labelsRes, articlesRes, arcsRes, arcEventsRes, milestonesRes, eventArticlesRes]) {
+  for (const r of [nodesRes, labelsRes, articlesRes]) {
     if (r.error) throw r.error
   }
+  if (arcsRes.error && !isPostgrestSchemaGap(arcsRes.error)) throw arcsRes.error
+  if (arcEventsRes.error && !isPostgrestSchemaGap(arcEventsRes.error)) throw arcEventsRes.error
+  if (milestonesRes.error && !isPostgrestSchemaGap(milestonesRes.error)) throw milestonesRes.error
+  if (eventArticlesRes.error && !isPostgrestSchemaGap(eventArticlesRes.error)) throw eventArticlesRes.error
+  const arcRows = arcsRes.error ? [] : (arcsRes.data ?? [])
+  const arcEventRows = arcEventsRes.error ? [] : (arcEventsRes.data ?? [])
+  const milestoneRows = milestonesRes.error ? [] : (milestonesRes.data ?? [])
+  const eventArticleRows = eventArticlesRes.error ? [] : (eventArticlesRes.data ?? [])
+  const edgeRows = edgesRes.data ?? []
   // The grouped public view intentionally matches the flat/Arc route's
   // deterministic anonymous default and does not read operational config.
   const dormantDays = PUBLIC_DORMANT_ARC_DAYS
@@ -385,15 +394,15 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
 
   // Package 1 arc-grouped addition: per-event outlet index + per-article
   // event membership, attached to canonical events below.
-  const outletIndex = buildEventOutletIndex(eventArticlesRes.data, outletByArticleId)
+  const outletIndex = buildEventOutletIndex(eventArticleRows, outletByArticleId)
   const eventIdByArticleId = new Map()
-  for (const m of eventArticlesRes.data ?? []) {
+  for (const m of eventArticleRows) {
     if (m.article_id && m.event_id) eventIdByArticleId.set(m.article_id, m.event_id)
   }
 
   const eventsByArc = new Map()
   const endByArc = new Map()
-  for (const e of arcEventsRes.data) {
+  for (const e of arcEventRows) {
     const arr = eventsByArc.get(e.arc_id) ?? []
     arr.push(e)
     eventsByArc.set(e.arc_id, arr)
@@ -402,23 +411,26 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
     }
   }
   const milestonesByArc = new Map()
-  for (const m of milestonesRes.data) {
+  for (const m of milestoneRows) {
     const arr = milestonesByArc.get(m.arc_id) ?? []
     arr.push(m)
     milestonesByArc.set(m.arc_id, arr)
   }
 
+  // Id-only stub rows are no-arc: no title is selected or invented.
   const arcsById = new Map(
-    arcsRes.data.map((a) => [
-      a.id,
-      {
-        title: a.title,
-        category: a.category,
-        started_at: a.started_at,
-        endAt: endByArc.get(a.id) ?? null,
-        status: deriveArcStatus(eventsByArc.get(a.id), milestonesByArc.get(a.id), dormantDays),
-      },
-    ]),
+    arcRows
+      .filter((a) => a.category || a.started_at)
+      .map((a) => [
+        a.id,
+        {
+          title: null,
+          category: a.category,
+          started_at: a.started_at,
+          endAt: endByArc.get(a.id) ?? null,
+          status: deriveArcStatus(eventsByArc.get(a.id), milestonesByArc.get(a.id), dormantDays),
+        },
+      ]),
   )
 
   const articleRecords = articlesRes.data
@@ -456,8 +468,9 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
   return {
     grouped,
     suppressed,
+    edgesUnavailable: edgesRes.edgesUnavailable ?? null,
     relationEdges: remapTimelineEdges(
-      edgesRes.data.map((e) => ({
+      edgeRows.map((e) => ({
         id: e.id,
         source: e.source_id,
         target: e.target_id,

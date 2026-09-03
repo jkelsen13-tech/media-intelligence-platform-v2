@@ -90,6 +90,7 @@ function evidenceStateLabel(confidence) {
 
 export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
   const [arcs, setArcs] = useState(null)
+  const [arcsUnavailable, setArcsUnavailable] = useState(null)
   const [error, setError] = useState(null)
   const [selectedSlug, setSelectedSlug] = useState(null)
   const [detail, setDetail] = useState(null)
@@ -115,8 +116,10 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
 
   useEffect(() => {
     loadArcs()
-      .then((rows) => {
+      .then((result) => {
+        const rows = result.arcs ?? []
         setArcs(rows)
+        setArcsUnavailable(result.arcsUnavailable ?? null)
         if (rows.length > 0) {
           setSelectedSlug(rows[0].slug)
           // On narrow screens the list and detail are intentionally separate
@@ -191,6 +194,13 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
 
   if (error) return <div className="notice error">Failed to load story arcs: {error}</div>
   if (!arcs) return <div className="notice">Loading story arcs…</div>
+  if (arcsUnavailable) {
+    return (
+      <div className="notice">
+        Story arcs are unavailable ({arcsUnavailable}). Id-only stub rows are treated as no-arc; no titles are invented.
+      </div>
+    )
+  }
   if (arcs.length === 0) return <div className="notice">No story arcs tracked yet.</div>
 
   // Derived status is the real signal; fall back to the stored column only
