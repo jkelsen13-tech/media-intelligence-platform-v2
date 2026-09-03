@@ -71,6 +71,19 @@
   background: rgba(var(--accent-rgb), 0.12);
 }
 
+.news-chip[aria-pressed='true'] {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.filter-active-mark {
+  margin-left: 6px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
 .news-chip.graph-link {
   color: var(--accent);
   border-color: rgba(var(--accent-rgb), 0.5);

@@ -40,6 +40,7 @@ import {
   investigationContextDomProps,
   selectionStubFromInvestigation,
 } from '../lib/investigationContext'
+import { freshnessFromExistingMarkers } from '../lib/investigationJoinState'
 import './worldview.css'
 
 const MODES = [
@@ -224,6 +225,11 @@ function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssess
   const confidence = visibleRow ? confidenceTextDimension(visibleRow) : null
   const refs = visibleRow ? normalizeEvidenceRefs(visibleRow.evidence_refs) : []
   const locationHidden = visibleRow && !mayShowLocation(visibleRow)
+  const freshness = freshnessFromExistingMarkers({
+    asOfTime: investigationContext?.as_of_time,
+    revisionRow: visibleRow,
+    atMs,
+  })
 
   let body
   if (loadStatus.status === 'unavailable') {
@@ -399,6 +405,11 @@ function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssess
             empty="none"
           />
         </dl>
+        {freshness.summary && (
+          <p className="wv-freshness" data-freshness-kind={freshness.kind}>
+            {freshness.summary}
+          </p>
+        )}
       </section>
       <TemporalIntelligenceBlock assessment={temporalAssessment} />
       {body}

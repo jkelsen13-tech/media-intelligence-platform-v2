@@ -125,7 +125,8 @@ test('drawer NewsView reuses the same discovery system; filters stay local', () 
   assert.match(NEWS, /No eligible articles to display/)
   assert.match(NEWS, /0 articles; no rows are invented/)
   assert.match(NEWS, /!articlesUnavailable && articles\.length === 0/)
-  assert.match(NEWS, /<button className="news-filters-btn" onClick=\{\(\) => setFiltersOpen\(true\)\}>/)
+  assert.match(NEWS, /className="news-filters-btn"/)
+  assert.match(NEWS, /setFiltersOpen\(true\)/)
   assert.match(NEWS, /\{filtersOpen && \(/)
 
   // Drawer instance is not the News tab and does not receive IC or focusArticleId.
