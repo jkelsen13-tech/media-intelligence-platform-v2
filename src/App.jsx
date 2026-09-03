@@ -32,9 +32,9 @@ import {
   applySubject,
   subjectFromWorldViewSelection,
   subjectFromGraphNode,
-  subjectFromNamedTarget,
   graphNodeMatchingInvestigation,
 } from './lib/investigationContext'
+import { commitNewSubject } from './lib/newSubjectPropagation'
 import InvestigationContextBar from './components/InvestigationContextBar'
 import {
   filterGraphRegion,
@@ -424,9 +424,9 @@ export default function App() {
     setExploreOpen(false)
   }, [])
 
-  // Explicit result select from the drawer: close overlay, then the existing
-  // News jump handler (applySubject). Browse / filter / preview / dismiss
-  // never reach this wrapper.
+  // Explicit result select from the drawer: close overlay, then the News
+  // jump handler (commitNewSubject — R4.75 Step 5). Browse / filter /
+  // preview / dismiss never reach this wrapper.
   const closeExploreThen = useCallback((handler) => {
     if (!handler) return undefined
     return (...args) => {
@@ -503,6 +503,8 @@ export default function App() {
   // Every handler below routes through this reset so no endpoint, source,
   // excerpt, or uncertainty from a prior relationship/panel can survive into
   // the destination surface (see src/lib/jumpReset.js — JUMP_CLEARS).
+  // R4.75 Step 5: Explore / News explicit select commits one new IC via
+  // commitNewSubject, then clears only invalid prior-subject leftovers.
   const resetJumpContext = useCallback(() => {
     clearPrimaryGraphOverlays()
     // Cross-view navigation replaces the old graph focal context rather than
@@ -510,10 +512,22 @@ export default function App() {
     setFocusStack([])
   }, [clearPrimaryGraphOverlays])
 
+  // R4.75 Step 5: prior-subject leftovers that JUMP_CLEARS does not cover.
+  // Discovery filters stay in NewsView — they are not investigation evidence.
+  const clearInvalidNewSubjectSubSelections = useCallback(() => {
+    setFocusArc(null)
+    setFocusArticle(null)
+    setFocusTimelineEvent(null)
+    setFocusTimelineArc(null)
+    setFocusComparisonEvent(null)
+    setActiveLocationKey(null)
+  }, [])
+
   const openNodeInGraph = useCallback(
     (nodeKey) => {
       if (!graph) return
       resetJumpContext()
+      clearInvalidNewSubjectSubSelections()
       const next = graph.nodes.find((n) => (n.id ?? n.slug) === nodeKey)
       setGraphScreen('all')
       setView('graph')
@@ -523,36 +537,38 @@ export default function App() {
         // so no stale focus path from a prior arc's exploration remains.
         const key = next.id ?? next.slug
         setFocusStack(jumpFocusStack('node', key, next.label ?? key))
+        setInvestigationContext((ic) => commitNewSubject(ic, next, { landingView: 'graph' }).investigationContext)
+      } else if (nodeKey) {
+        // Caller-supplied id only. Do not invent a live node or a type.
         setInvestigationContext((ic) =>
-          applySubject(setInvestigationActiveView(ic, 'graph'), subjectFromGraphNode(next)),
+          commitNewSubject(ic, { id: nodeKey }, { landingView: 'graph' }).investigationContext,
         )
       } else {
         setInvestigationContext((ic) => setInvestigationActiveView(ic, 'graph'))
       }
     },
-    [graph, resetJumpContext],
+    [graph, resetJumpContext, clearInvalidNewSubjectSubSelections],
   )
 
   const openArcInView = useCallback((arcKey) => {
     resetJumpContext()
+    clearInvalidNewSubjectSubSelections()
     setFocusArc(arcKey)
     setView('arcs')
     setInvestigationContext((ic) =>
-      applySubject(setInvestigationActiveView(ic, 'arcs'), subjectFromNamedTarget({ type: 'arc', id: arcKey })),
+      commitNewSubject(ic, { type: 'arc', id: arcKey }, { landingView: 'arcs' }).investigationContext,
     )
-  }, [resetJumpContext])
+  }, [resetJumpContext, clearInvalidNewSubjectSubSelections])
 
   const openArticleInNews = useCallback((articleId) => {
     resetJumpContext()
+    clearInvalidNewSubjectSubSelections()
     setFocusArticle(articleId)
     setView('news')
     setInvestigationContext((ic) =>
-      applySubject(
-        setInvestigationActiveView(ic, 'news'),
-        subjectFromNamedTarget({ type: 'article', id: articleId }),
-      ),
+      commitNewSubject(ic, { type: 'article', id: articleId }, { landingView: 'news' }).investigationContext,
     )
-  }, [resetJumpContext])
+  }, [resetJumpContext, clearInvalidNewSubjectSubSelections])
 
   // Doc 05 pair 3/6 destination, now under the Package 1 item 2 navigation
   // contract: the jump target is resolved through lib/navigationContract.js.
@@ -565,33 +581,32 @@ export default function App() {
     const resolved = resolveTimelineJump(target)
     if (!resolved) return
     resetJumpContext()
+    clearInvalidNewSubjectSubSelections()
     setFocusTimelineEvent(resolved.eventKey)
     setFocusTimelineArc(resolved.scope === 'arc' ? resolved.arcId : null)
     setView('timeline')
-    setInvestigationContext((ic) =>
-      applySubject(
-        setInvestigationActiveView(ic, 'timeline'),
-        subjectFromNamedTarget({
+    const payload = resolved.eventKey
+      ? {
           type: 'event',
           id: resolved.eventKey,
           parentEventId: resolved.scope === 'arc' ? resolved.arcId : null,
-        }),
-      ),
+        }
+      : { type: 'arc', id: resolved.arcId }
+    setInvestigationContext((ic) =>
+      commitNewSubject(ic, payload, { landingView: 'timeline' }).investigationContext,
     )
-  }, [resetJumpContext])
+  }, [resetJumpContext, clearInvalidNewSubjectSubSelections])
 
   // Doc 05 pair 5 destination: focus an event in Source Comparison.
   const openComparisonEvent = useCallback((eventId) => {
     resetJumpContext()
+    clearInvalidNewSubjectSubSelections()
     setFocusComparisonEvent(eventId)
     setView('compare')
     setInvestigationContext((ic) =>
-      applySubject(
-        setInvestigationActiveView(ic, 'compare'),
-        subjectFromNamedTarget({ type: 'event', id: eventId }),
-      ),
+      commitNewSubject(ic, { type: 'event', id: eventId }, { landingView: 'compare' }).investigationContext,
     )
-  }, [resetJumpContext])
+  }, [resetJumpContext, clearInvalidNewSubjectSubSelections])
 
   // Graph node search: label substring match, top 8 suggestions.
   const nodeMatches = useMemo(() => {
@@ -1255,6 +1270,7 @@ export default function App() {
             onOpenArc={openArcInView}
             onOpenTimeline={openEventInTimeline}
             focusEventId={focusComparisonEvent}
+            investigationContext={investigationContext}
           />
         )}
         {view === 'world' && (
