@@ -71,6 +71,8 @@ function recordedTimeRange(from, to) {
 /**
  * Explicit new-subject select. Replaces identity fields. Does not invent
  * ids, types, parents, or time bounds that the caller did not supply.
+ * Explore / News result select goes through commitNewSubject (Step 5),
+ * which calls this once.
  */
 export function applySubject(ic, subject = {}) {
   const base = ic ?? emptyInvestigationContext()

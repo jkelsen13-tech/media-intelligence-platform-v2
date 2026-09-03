@@ -154,7 +154,7 @@ function PublisherSourceRecord({ article, region }) {
 // overlay — same discovery system (search, chips, list, honest empty). Local
 // discovery filters stay in this instance and never write Investigation Context.
 // They do not filter Graph / World View / Timeline / Arcs evidence.
-export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison, variant = 'page' }) {
+export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison, variant = 'page', investigationContext }) {
   const isDrawer = variant === 'drawer'
   const [q, setQ] = useState('')
   const [debouncedQ, setDebouncedQ] = useState('')
@@ -365,6 +365,18 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     expandArticle(focusArticleId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusArticleId])
+
+  // Investigation Context restore after a tab switch (not a JUMP).
+  // Article subjects expand only when the id is already on IC. Event / arc
+  // subjects do not invent an article. Discovery chips stay local.
+  useEffect(() => {
+    if (focusArticleId || isDrawer) return
+    if (investigationContext?.canonical_subject_type !== 'article') return
+    const id = investigationContext.canonical_subject_id
+    if (!id) return
+    expandArticle(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusArticleId, isDrawer, investigationContext?.canonical_subject_type, investigationContext?.canonical_subject_id])
 
   const loadMore = () => {
     // Tier 5: captured under the CURRENT token — if the user starts a new

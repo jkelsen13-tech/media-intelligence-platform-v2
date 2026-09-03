@@ -289,7 +289,7 @@ function EventCard({ event, onOpenArticle, onOpenArc, onOpenTimeline, focused, s
 // Doc 05 pairs 4–6: onOpenArticle / onOpenArc / onOpenTimeline are optional;
 // focusEventId scrolls + highlights a specific comparison event (pair 5's
 // destination).
-export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenTimeline, focusEventId }) {
+export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenTimeline, focusEventId, investigationContext }) {
   const [view, setView] = useState(null)
   const [error, setError] = useState(null)
   const eventRefs = useRef(new Map())
@@ -319,17 +319,24 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
     [view, debouncedEventQuery],
   )
 
-  // Cross-window focus (Doc 05 pair 5): once events render, scroll to the
-  // requested comparison event and highlight it briefly.
+  // Jump focus, or Investigation Context restore after a tab switch.
+  // Event subjects highlight only when a loaded row already matches.
+  // No match → no invented event. Arc / article subjects do not become events.
+  const highlightEventId =
+    focusEventId ??
+    (investigationContext?.canonical_subject_type === 'event'
+      ? investigationContext.canonical_subject_id
+      : null)
+
   useEffect(() => {
-    if (!focusEventId || !view?.events?.length) return
-    const el = eventRefs.current.get(focusEventId)
+    if (!highlightEventId || !view?.events?.length) return
+    const el = eventRefs.current.get(highlightEventId)
     if (!el) return
     el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     el.classList.add('sc-focused')
     const t = setTimeout(() => el.classList.remove('sc-focused'), 4000)
     return () => clearTimeout(t)
-  }, [focusEventId, view])
+  }, [highlightEventId, view])
 
   if (error) return <div className="notice error">Source comparison view failed to load.</div>
   if (view === null) return <div className="notice">Loading…</div>
@@ -391,7 +398,7 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
             onOpenArticle={onOpenArticle}
             onOpenArc={onOpenArc}
             onOpenTimeline={onOpenTimeline}
-            focused={event.id === focusEventId}
+            focused={event.id === highlightEventId}
             sectionRef={(el) => {
               if (el) eventRefs.current.set(event.id, el)
               else eventRefs.current.delete(event.id)
