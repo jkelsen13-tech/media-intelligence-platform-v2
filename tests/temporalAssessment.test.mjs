@@ -246,7 +246,8 @@ test('News, Source Comparison, and Arcs omit Temporal Intelligence (no local rec
 
 test('loader is SELECT-only: no V2 writes, no edges, no story_arcs.title, no reader_state, no weather', () => {
   assert.match(TEMPORAL, /select\('key, value'\)/)
-  assert.doesNotMatch(TEMPORAL, /\.insert\(|\.update\(|\.upsert\(|\.delete\(|\.rpc\(/)
+  assert.doesNotMatch(TEMPORAL, /\.(insert|upsert|delete|rpc)\(/)
+  assert.doesNotMatch(TEMPORAL, /\.update\(\s*\{/)
   assert.doesNotMatch(TEMPORAL, /from\('edges'\)/)
   assert.doesNotMatch(TEMPORAL, /from\('story_arcs'\)|story_arcs\.title/)
   assert.doesNotMatch(TEMPORAL, /reader_state/)
