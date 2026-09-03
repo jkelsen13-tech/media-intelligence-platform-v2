@@ -26,6 +26,17 @@ import { jumpFocusStack } from './lib/jumpReset'
 import { resolveTimelineJump } from './lib/navigationContract'
 import { resolveFocal, focusDepth } from './lib/desktopFocus'
 import {
+  emptyInvestigationContext,
+  setInvestigationActiveView,
+  setInvestigationAsOfTime,
+  applySubject,
+  subjectFromWorldViewSelection,
+  subjectFromGraphNode,
+  subjectFromNamedTarget,
+  graphNodeMatchingInvestigation,
+} from './lib/investigationContext'
+import InvestigationContextBar from './components/InvestigationContextBar'
+import {
   filterGraphRegion,
   graphRegionOptions,
   recordedGeography,
@@ -109,6 +120,9 @@ export default function App() {
   const [selected, setSelected] = useState(null) // selected node data
   const [pinned, setPinned] = useState(false)
   const [view, setView] = useState('news')
+  // R4.75 Step 1 — one shared Investigation Context. Tab switches update
+  // active_view only. Explicit subject select replaces identity fields.
+  const [investigationContext, setInvestigationContext] = useState(() => emptyInvestigationContext('news'))
   const [nodeQuery, setNodeQuery] = useState('')
   const [aboutOpen, setAboutOpen] = useState(false)
   // Track B nav restructure: the "More" tab opens a bottom sheet listing
@@ -250,9 +264,11 @@ export default function App() {
         setSelected(null)
         setPinned(false)
         setPolicyNode(data)
+        setInvestigationContext((ic) => applySubject(ic, subjectFromGraphNode(data)))
       } else {
         setPolicyNode(null)
         setSelected(data)
+        setInvestigationContext((ic) => applySubject(ic, subjectFromGraphNode(data)))
       }
       pushFocus(data)
     },
@@ -287,6 +303,7 @@ export default function App() {
         } else {
           setSelected(next)
           setPolicyNode(null)
+          setInvestigationContext((ic) => applySubject(ic, subjectFromGraphNode(next)))
         }
         pushFocus(next)
       }
@@ -347,12 +364,20 @@ export default function App() {
   // World View Map / Graph / Split share App's selected-node seam
   // (mip_object_id / subject_graph_node_id). A projection stub is used only
   // when the live graph has not published that node yet.
+  // Selecting Cleveland acc55cb2 SETS Investigation Context to that event.
   const handleSelectProjection = useCallback(
-    (node) => {
+    (node, row) => {
       if (!node) return
       setPolicyNode(null)
       setActiveLocationKey(null)
       setPinned(false)
+      const seedNode =
+        node.fromSpatialProjection && graph?.source === 'supabase' && node.subject_graph_node_id
+          ? graph.nodes.find((n) => (n.id ?? n.slug) === node.subject_graph_node_id) ?? node
+          : node
+      setInvestigationContext((ic) =>
+        applySubject(ic, subjectFromWorldViewSelection({ node: seedNode, row })),
+      )
       if (node.fromSpatialProjection) {
         const liveKey = node.subject_graph_node_id
         const live =
@@ -372,6 +397,16 @@ export default function App() {
     },
     [graph, pushFocus],
   )
+
+  const handleInvestigationAsOfTime = useCallback((iso) => {
+    setInvestigationContext((ic) => setInvestigationAsOfTime(ic, iso))
+  }, [])
+
+  // Ordinary nav tab switch — MUST NOT JUMP_CLEARS or replace the subject.
+  const changeView = useCallback((key) => {
+    setView(key)
+    setInvestigationContext((ic) => setInvestigationActiveView(ic, key))
+  }, [])
 
   // One primary graph overlay at a time. A relationship panel, node/policy
   // inspector, relationship list, review panel, or topic browser never stacks
@@ -452,6 +487,11 @@ export default function App() {
         // so no stale focus path from a prior arc's exploration remains.
         const key = next.id ?? next.slug
         setFocusStack(jumpFocusStack('node', key, next.label ?? key))
+        setInvestigationContext((ic) =>
+          applySubject(setInvestigationActiveView(ic, 'graph'), subjectFromGraphNode(next)),
+        )
+      } else {
+        setInvestigationContext((ic) => setInvestigationActiveView(ic, 'graph'))
       }
     },
     [graph, resetJumpContext],
@@ -461,12 +501,21 @@ export default function App() {
     resetJumpContext()
     setFocusArc(arcKey)
     setView('arcs')
+    setInvestigationContext((ic) =>
+      applySubject(setInvestigationActiveView(ic, 'arcs'), subjectFromNamedTarget({ type: 'arc', id: arcKey })),
+    )
   }, [resetJumpContext])
 
   const openArticleInNews = useCallback((articleId) => {
     resetJumpContext()
     setFocusArticle(articleId)
     setView('news')
+    setInvestigationContext((ic) =>
+      applySubject(
+        setInvestigationActiveView(ic, 'news'),
+        subjectFromNamedTarget({ type: 'article', id: articleId }),
+      ),
+    )
   }, [resetJumpContext])
 
   // Doc 05 pair 3/6 destination, now under the Package 1 item 2 navigation
@@ -483,6 +532,16 @@ export default function App() {
     setFocusTimelineEvent(resolved.eventKey)
     setFocusTimelineArc(resolved.scope === 'arc' ? resolved.arcId : null)
     setView('timeline')
+    setInvestigationContext((ic) =>
+      applySubject(
+        setInvestigationActiveView(ic, 'timeline'),
+        subjectFromNamedTarget({
+          type: 'event',
+          id: resolved.eventKey,
+          parentEventId: resolved.scope === 'arc' ? resolved.arcId : null,
+        }),
+      ),
+    )
   }, [resetJumpContext])
 
   // Doc 05 pair 5 destination: focus an event in Source Comparison.
@@ -490,6 +549,12 @@ export default function App() {
     resetJumpContext()
     setFocusComparisonEvent(eventId)
     setView('compare')
+    setInvestigationContext((ic) =>
+      applySubject(
+        setInvestigationActiveView(ic, 'compare'),
+        subjectFromNamedTarget({ type: 'event', id: eventId }),
+      ),
+    )
   }, [resetJumpContext])
 
   // Graph node search: label substring match, top 8 suggestions.
@@ -511,6 +576,7 @@ export default function App() {
     setSelected(node)
     setNodeQuery('')
     pushFocus(node)
+    setInvestigationContext((ic) => applySubject(ic, subjectFromGraphNode(node)))
   }
 
   // --- Mobile graph entry: ranked hubs by degree centrality ---
@@ -560,6 +626,7 @@ export default function App() {
     setGraphScreen('all')
     setSelected(null)
     setPinned(false)
+    setInvestigationContext((ic) => applySubject(ic, subjectFromGraphNode(node)))
   }, [])
 
   const focusedNodes = subgraph ? subgraph.nodes : graph?.nodes ?? []
@@ -600,9 +667,20 @@ export default function App() {
   const moreActive = isMoreViewKey(view)
 
   const openFromMore = (key) => {
-    setView(key)
+    changeView(key)
     setMoreOpen(false)
   }
+
+  // Returning to Graph restores a live matching node from IC. No node → no
+  // invented subject. Tab switch never clears IC.
+  useEffect(() => {
+    if (view !== 'graph' || !graph?.nodes?.length) return
+    const match = graphNodeMatchingInvestigation(graph.nodes, investigationContext)
+    if (!match) return
+    const selectedKey = selected ? selected.id ?? selected.slug ?? selected.subject_graph_node_id : null
+    if (selectedKey && String(selectedKey) === String(match.id ?? match.slug)) return
+    setSelected(match)
+  }, [view, graph, investigationContext, selected])
 
   return (
     <div className="app">
@@ -614,7 +692,7 @@ export default function App() {
             <button
               key={v.key}
               className={`nav-tab${(v.key === 'more' ? moreActive : view === v.key) ? ' active' : ''}`}
-              onClick={() => (v.key === 'more' ? setMoreOpen(true) : setView(v.key))}
+              onClick={() => (v.key === 'more' ? setMoreOpen(true) : changeView(v.key))}
             >
               {v.label}
             </button>
@@ -699,6 +777,8 @@ export default function App() {
 
       {accountOpen && accountUi && <AccountPanel onClose={() => setAccountOpen(false)} />}
 
+      <InvestigationContextBar investigationContext={investigationContext} />
+
       <main className="app-main">
         {error && view === 'graph' && <div className="notice error">Failed to load graph: {error}</div>}
         {graph?.edgesUnavailable && view === 'graph' && (
@@ -715,6 +795,7 @@ export default function App() {
             onOpenTimeline={openEventInTimeline}
             // Pair 5 degrades honestly when the destination tab is gated off.
             onOpenComparison={sourceComparisonBeta ? openComparisonEvent : undefined}
+            investigationContext={investigationContext}
           />
         )}
 
@@ -1074,6 +1155,7 @@ export default function App() {
             onOpenArticle={openArticleInNews}
             focusEventKey={focusTimelineEvent}
             focusArcKey={focusTimelineArc}
+            investigationContext={investigationContext}
           />
         )}
         {view === 'arcs' && (
@@ -1081,6 +1163,7 @@ export default function App() {
             focusArcId={focusArc}
             onOpenArticle={openArticleInNews}
             onOpenNode={openNodeInGraph}
+            investigationContext={investigationContext}
           />
         )}
         {view === 'phase3' && phase3Beta && <Phase3View />}
@@ -1099,6 +1182,8 @@ export default function App() {
             selected={selected}
             onSelectProjection={handleSelectProjection}
             onSelectGraphNode={handleSelect}
+            investigationContext={investigationContext}
+            onInvestigationAsOfTime={handleInvestigationAsOfTime}
           />
         )}
       </main>
@@ -1108,7 +1193,7 @@ export default function App() {
           <button
             key={v.key}
             className={`bottom-tab${(v.key === 'more' ? moreActive : view === v.key) ? ' active' : ''}`}
-            onClick={() => (v.key === 'more' ? setMoreOpen(true) : setView(v.key))}
+            onClick={() => (v.key === 'more' ? setMoreOpen(true) : changeView(v.key))}
           >
             {v.shortLabel}
           </button>
