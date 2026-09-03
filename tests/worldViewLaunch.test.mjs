@@ -320,10 +320,28 @@ test('#/event/<id>/world reconstructs Cleveland onto World View', () => {
 
 test('src has no globe-vendor / 3D-tile strings; map pick goes through commitNewSubject', () => {
   const files = collectSrcFiles(new URL('../src', import.meta.url).pathname)
-  const banned = /Cesium|cesium|GEV\b|ion\.cesium|photorealistic 3d|google 3d tiles/i
+  const bannedCesiumWord = /Cesium|cesium/
+  const bannedIonAndProviders = /GEV\b|ion\.cesium|photorealistic 3d|google 3d tiles/i
+  const bannedIonTokenStrings =
+    /Ion\.defaultAccessToken|defaultAccessToken\s*=|ion\s*access\s*token|CESIUM_ION_ACCESS_TOKEN|ION_ACCESS_TOKEN/i
+  const bannedPaidImageryKeyStrings = /api[_-]?key|apikey|accessToken\b|access[_-]?token/i
+
+  const allowedCesiumFiles = [
+    /\/src\/lib\/worldViewRendererAdapter\.js$/,
+    /\/src\/lib\/worldViewCesiumEllipsoidRendererAdapter\.js$/,
+  ]
   for (const file of files) {
     const text = readFileSync(file, 'utf8')
-    assert.doesNotMatch(text, banned, file)
+    assert.doesNotMatch(text, bannedIonTokenStrings, file)
+    assert.doesNotMatch(text, bannedIonAndProviders, file)
+
+    const isAllowedCesiumFile = allowedCesiumFiles.some((re) => re.test(file))
+    if (!isAllowedCesiumFile) {
+      assert.doesNotMatch(text, bannedCesiumWord, file)
+    } else {
+      // Paid imagery keys (e.g. provider access tokens) must not be used by the globe adapter.
+      assert.doesNotMatch(text, bannedPaidImageryKeyStrings, file)
+    }
   }
   assert.match(APP, /handleSelectProjection[\s\S]*commitNewSubjectFromApp/)
   void EVENT_FROM_MS

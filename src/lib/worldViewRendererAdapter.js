@@ -4,11 +4,14 @@
 // canonical identity, or projection coordinates. It only owns the
 // renderer lifecycle for a given map canvas host element.
 //
-// No renderer vendor globe integrations are allowed.
+// Renderer governance:
+// - This module provides the renderer adapter seam only.
+// - Cesium ellipsoid rendering is permitted behind this seam (owner authorized).
 
 import { plotDecision, collectPositions, sourceNativeLocationLabel, displayCoordinateText } from './spatialProjection.js'
 import {
   FALLBACK_MAP_STACK_ID,
+  ELLIPSOID_GLOBE_STACK_ID,
   mapStackById,
   mapLibreStyleForStack,
   maxZoomForPrecisionClass,
@@ -146,6 +149,22 @@ export function destroyRendererResources({ overlay, map }) {
   }
 }
 
+export function rendererKindForStackId(stackId) {
+  return stackId === ELLIPSOID_GLOBE_STACK_ID ? 'ellipsoid-globe' : 'maplibre-deck.gl'
+}
+
+/**
+ * Pure renderer selection plan for adapter contract tests.
+ * This does not attempt to import any renderer vendors.
+ */
+export function rendererPlanForStackId({ stackId, webglAvailable }) {
+  if (stackId === ELLIPSOID_GLOBE_STACK_ID) {
+    if (webglAvailable) return { rendererKind: 'ellipsoid-globe', mountStackId: stackId }
+    return { rendererKind: 'maplibre-deck.gl', mountStackId: nextMapStackOnFailure(stackId) }
+  }
+  return { rendererKind: 'maplibre-deck.gl', mountStackId: stackId }
+}
+
 /**
  * MapLibre+deck.gl renderer adapter.
  *
@@ -157,7 +176,7 @@ export function destroyRendererResources({ overlay, map }) {
  * - destroy(): cleanup overlay + map
  * - fallback selection: handled internally via onStackIdChange requests
  */
-export function createWorldViewRendererAdapter({
+function createMapLibreWorldViewRendererAdapter({
   stackId,
   getHostEl,
   coordinate,
@@ -334,6 +353,51 @@ export function createWorldViewRendererAdapter({
     flyToSubjectCamera: flyToSubjectCamera,
     requestRender,
     destroy,
+  }
+}
+
+/**
+ * World View renderer adapter seam dispatcher.
+ *
+ * Fallback chain:
+ *   ellipsoid-globe (Cesium) fails -> openfreemap-positron (MapLibre)
+ *   MapLibre fails -> osm -> atlas-fallback (SVG atlas)
+ */
+export function createWorldViewRendererAdapter(args) {
+  let impl = null
+  let rendererKind = null
+
+  async function mount() {
+    if (impl) return
+    const { stackId } = args ?? {}
+
+    if (stackId === ELLIPSOID_GLOBE_STACK_ID) {
+      try {
+        const mod = await import('./worldViewCesiumEllipsoidRendererAdapter.js')
+        rendererKind = 'ellipsoid-globe'
+        impl = mod.createCesiumEllipsoidRendererAdapter(args)
+      } catch {
+        rendererKind = 'maplibre-deck.gl'
+        onStackIdChange?.(nextMapStackOnFailure(stackId))
+        return
+      }
+    } else {
+      rendererKind = 'maplibre-deck.gl'
+      impl = createMapLibreWorldViewRendererAdapter(args)
+    }
+
+    await impl?.mount?.()
+  }
+
+  return {
+    getRendererKind: () => rendererKind ?? rendererKindForStackId(args?.stackId),
+    getAttribution: () => impl?.getAttribution?.() ?? stackAttribution(args?.stackId),
+    mount,
+    setFeatures: (nextFeatures, nextSelectedKeys) => impl?.setFeatures?.(nextFeatures, nextSelectedKeys),
+    setOnSelectRow: (nextOnSelectRow) => impl?.setOnSelectRow?.(nextOnSelectRow),
+    flyToSubjectCamera: (opts) => impl?.flyToSubjectCamera?.(opts) ?? false,
+    requestRender: () => impl?.requestRender?.(),
+    destroy: () => impl?.destroy?.(),
   }
 }
 

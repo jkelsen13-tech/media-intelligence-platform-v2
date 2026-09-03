@@ -13,6 +13,12 @@ export const WORLD_VIEW_RENDERER = 'maplibre-deck.gl'
 
 export const MAP_STACKS = Object.freeze([
   {
+    id: 'ellipsoid-globe',
+    label: 'Ellipsoid globe',
+    kind: 'ellipsoid-globe',
+    attribution: '© OpenStreetMap contributors © OpenFreeMap | OpenFreeMap © OpenMapTiles Data from OpenStreetMap',
+  },
+  {
     id: 'openfreemap-positron',
     label: 'OpenFreeMap Positron',
     kind: 'vector',
@@ -32,8 +38,10 @@ export const MAP_STACKS = Object.freeze([
   },
 ])
 
-export const DEFAULT_MAP_STACK_ID = 'openfreemap-positron'
+export const DEFAULT_MAP_STACK_ID = 'ellipsoid-globe'
 export const FALLBACK_MAP_STACK_ID = 'atlas-fallback'
+
+export const ELLIPSOID_GLOBE_STACK_ID = 'ellipsoid-globe'
 
 export function mapStackById(id) {
   return MAP_STACKS.find((s) => s.id === id) ?? MAP_STACKS.find((s) => s.id === FALLBACK_MAP_STACK_ID)
@@ -67,6 +75,82 @@ export function worldCamera() {
     zoom: 1.35,
     pitch: 0,
     bearing: 0,
+  })
+}
+
+// ---- Ellipsoid globe camera / inspect-range contract ----
+
+// Shared maximum inspection range contract (ground distance) by precision class.
+// Used by the ellipsoid globe renderer to constrain "zoom in" so it cannot
+// impersonate a finer recorded precision class.
+export function maxInspectRangeInMetersForPrecisionClass(precisionClass) {
+  switch (String(precisionClass ?? '').toLowerCase()) {
+    case 'country':
+      return 40000
+    case 'region':
+      return 20000
+    case 'city':
+      return 5000
+    case 'area':
+      return 2500
+    case 'facility':
+      return 1250
+    default:
+      return 20000
+  }
+}
+
+// Convert the inspection-range ceiling (ground distance, in meters) into a camera
+// altitude above the ellipsoid (meters). Calibrated to the live-measured
+// ~5km scale bar around Cleveland at the city precision ceiling.
+export function heightMetersForPrecisionClass(precisionClass) {
+  const range = maxInspectRangeInMetersForPrecisionClass(precisionClass)
+
+  // Approximate perspective model for a fixed vertical field-of-view.
+  const FOVY_DEG = 60
+  const tanHalfFov = Math.tan((FOVY_DEG / 2) * (Math.PI / 180))
+
+  // Empirical mapping: the scale line represents ~25% of the visible ground
+  // extent at the precision ceiling.
+  const SCALEBAR_FRACTION = 0.25
+
+  return range / (tanHalfFov * SCALEBAR_FRACTION)
+}
+
+// Heading/pitch/roll orientation contract derived from the MapLibre subject camera.
+// This updates only renderer-local camera framing; it does not rewrite projection
+// coordinates or precision_class.
+export function subjectOrientationDegrees() {
+  // MapLibre contract: pitch=32deg, bearing=-14deg.
+  return Object.freeze({
+    headingDegrees: 346, // (-14 + 360) % 360
+    pitchDegrees: -32, // opposite sign for "look down" convention
+    rollDegrees: 0,
+  })
+}
+
+export const EARTH_SEMI_MAJOR_METERS = 6378137
+
+export function minCameraDistanceFromCenterMetersForPrecisionClass(precisionClass) {
+  const height = heightMetersForPrecisionClass(precisionClass)
+  return EARTH_SEMI_MAJOR_METERS + height
+}
+
+export function subjectEllipsoidCamera(coordinate, precisionClass) {
+  if (!Array.isArray(coordinate) || coordinate.length < 2) return null
+  const lon = Number(coordinate[0])
+  const lat = Number(coordinate[1])
+  if (!Number.isFinite(lon) || !Number.isFinite(lat)) return null
+
+  const orient = subjectOrientationDegrees()
+  return Object.freeze({
+    lon,
+    lat,
+    heightMeters: heightMetersForPrecisionClass(precisionClass),
+    headingDegrees: orient.headingDegrees,
+    pitchDegrees: orient.pitchDegrees,
+    rollDegrees: orient.rollDegrees,
+    minZoomDistanceMeters: minCameraDistanceFromCenterMetersForPrecisionClass(precisionClass),
   })
 }
 
@@ -150,6 +234,7 @@ export function geometryAfterCamera(row, _camera = null) {
 }
 
 export function nextMapStackOnFailure(currentId) {
+  if (currentId === ELLIPSOID_GLOBE_STACK_ID) return 'openfreemap-positron'
   if (currentId === 'openfreemap-positron') return 'osm'
   return FALLBACK_MAP_STACK_ID
 }
