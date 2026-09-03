@@ -17,6 +17,55 @@ import {
   minCameraDistanceFromCenterMetersForPrecisionClass,
   subjectEllipsoidCamera,
 } from './worldViewMapStack.js'
+import {
+  makeCameraState,
+  parseCameraState,
+  serializeCameraState,
+} from './worldViewCameraState.js'
+
+// ---- Stage C: renderer-neutral camera-state contract (globe side) ----
+//
+// Camera state is serializable and renderer-neutral (degrees + meters, see
+// worldViewCameraState.js). It is DISPLAY-only: it never enters
+// Investigation Context, canonical identity, or the route, and restoring it
+// never changes the subject, time range, or precision class. The precision
+// floor keeps the ~5 km city ceiling in meters on restore.
+
+/** Build a normalized camera state from a live globe camera. */
+export function cameraStateFromGlobeCamera(math, camera, precisionClass) {
+  const carto = camera?.positionCartographic
+  if (!math || !carto) return null
+  return makeCameraState(
+    {
+      lon: math.toDegrees(carto.longitude),
+      lat: math.toDegrees(carto.latitude),
+      heightMeters: carto.height,
+      headingDegrees: math.toDegrees(camera.heading),
+      pitchDegrees: math.toDegrees(camera.pitch),
+      rollDegrees: math.toDegrees(camera.roll),
+    },
+    precisionClass,
+  )
+}
+
+/** Apply an already-normalized camera state to a live globe viewer. */
+export function applyCameraStateToGlobeViewer(Cesium, viewer, cameraState) {
+  if (!Cesium || !viewer || !cameraState) return false
+  viewer.camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(
+      cameraState.lon,
+      cameraState.lat,
+      cameraState.heightMeters,
+    ),
+    orientation: {
+      heading: Cesium.Math.toRadians(cameraState.headingDegrees),
+      pitch: Cesium.Math.toRadians(cameraState.pitchDegrees),
+      roll: Cesium.Math.toRadians(cameraState.rollDegrees),
+    },
+  })
+  viewer.scene?.requestRender?.()
+  return true
+}
 
 export function cesiumMarkerEntityDescriptors(features = []) {
   // Convert projection features into pickable entity descriptors.
@@ -404,6 +453,31 @@ export function createCesiumEllipsoidRendererAdapter({
     viewer?.scene?.requestRender?.()
   }
 
+  // Stage C: serialize the live camera into the renderer-neutral contract.
+  // Returns a JSON string (or null when no viewer/camera is available).
+  function getCameraState() {
+    if (!viewer || !Cesium) return null
+    try {
+      return serializeCameraState(
+        cameraStateFromGlobeCamera(Cesium.Math, viewer.camera, precisionClass),
+        precisionClass,
+      )
+    } catch {
+      return null
+    }
+  }
+
+  // Stage C: restore a serialized camera state. FAIL-SAFE: invalid or
+  // unsupported state returns false and leaves the camera, the Investigation
+  // Context, and the route untouched. The precision-class floor clamps the
+  // restored height to the ~5 km city ceiling in meters — never finer.
+  function setCameraState(serialized) {
+    if (!viewer || !Cesium) return false
+    const parsed = parseCameraState(serialized, { precisionClass })
+    if (!parsed) return false
+    return applyCameraStateToGlobeViewer(Cesium, viewer, parsed)
+  }
+
   function destroy() {
     localCancelled = true
     destroyCesiumResources({ eventHandler, viewer })
@@ -420,6 +494,8 @@ export function createCesiumEllipsoidRendererAdapter({
     setFeatures,
     setOnSelectRow,
     flyToSubjectCamera,
+    getCameraState,
+    setCameraState,
     requestRender,
     destroy,
   }
