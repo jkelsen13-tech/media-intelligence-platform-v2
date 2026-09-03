@@ -8,11 +8,16 @@ import { readFileSync } from 'node:fs'
 
 import {
   isPostgrestSchemaGap,
+  isPostgrestPermissionDenied,
+  articlesUnavailableReason,
   loadGraph,
   loadArcs,
   loadTimeline,
   loadArticles,
   loadArticleDetail,
+  loadFilteredSourceMetricRows,
+  loadCorpusMeta,
+  loadNewSinceCount,
 } from '../src/lib/supabase.js'
 
 const SRC = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8')
@@ -31,6 +36,21 @@ const MISSING_TITLE = {
 const MISSING_SLUG = {
   code: 'PGRST204',
   message: "Could not find the 'slug' column of 'story_arcs' in the schema cache",
+}
+const ARTICLES_PERMISSION_DENIED = {
+  code: '42501',
+  message: 'permission denied for table articles',
+}
+const ARTICLES_PGRST301 = {
+  code: 'PGRST301',
+  message: 'permission denied for table articles',
+}
+const ARTICLES_INSUFFICIENT = {
+  message: 'insufficient privilege',
+}
+const ARTICLES_500 = {
+  code: 'PGRST000',
+  message: 'Internal Server Error',
 }
 
 const NASA_PENDING = Object.freeze({
@@ -61,17 +81,18 @@ const LIVE_NODE = Object.freeze({
   metadata: null,
 })
 
-function fakeClient(tables, { errors = {}, missingColsByTable = {} } = {}) {
+function fakeClient(tables, { errors = {}, headErrors = {}, missingColsByTable = {} } = {}) {
   const selects = []
   return {
     selects,
     from(table) {
       selects.push(table)
       let rows = [...(tables[table] ?? [])]
-      const state = { cols: '', range: null, limit: null }
+      const state = { cols: '', range: null, limit: null, head: false }
       const q = {
-        select: (cols) => {
+        select: (cols, opts) => {
           state.cols = String(cols ?? '')
+          state.head = Boolean(opts?.head)
           return q
         },
         eq: (c, v) => {
@@ -109,6 +130,9 @@ function fakeClient(tables, { errors = {}, missingColsByTable = {} } = {}) {
           return q
         },
         then: (resolve) => {
+          if (state.head && headErrors[table]) {
+            return resolve({ data: null, error: headErrors[table], count: 0 })
+          }
           if (errors[table]) {
             return resolve({ data: null, error: errors[table], count: 0 })
           }
@@ -150,6 +174,21 @@ test('isPostgrestSchemaGap detects schema-cache table/column misses, not other e
   assert.equal(isPostgrestSchemaGap({ code: '42501', message: 'permission denied for table articles' }), false)
   assert.equal(isPostgrestSchemaGap({ message: 'TypeError: Failed to fetch' }), false)
   assert.equal(isPostgrestSchemaGap(null), false)
+})
+
+test('isPostgrestPermissionDenied detects 42501 / PGRST301 / permission-denied, not schema gaps or 500s', () => {
+  assert.equal(isPostgrestPermissionDenied(ARTICLES_PERMISSION_DENIED), true)
+  assert.equal(isPostgrestPermissionDenied(ARTICLES_PGRST301), true)
+  assert.equal(isPostgrestPermissionDenied({ code: 'PGRST301', message: 'JWT expired' }), true)
+  assert.equal(isPostgrestPermissionDenied(ARTICLES_INSUFFICIENT), true)
+  assert.equal(isPostgrestPermissionDenied({ message: 'permission denied for table articles' }), true)
+  assert.equal(isPostgrestPermissionDenied(MISSING_EDGES), false)
+  assert.equal(isPostgrestPermissionDenied(MISSING_TITLE), false)
+  assert.equal(isPostgrestPermissionDenied(ARTICLES_500), false)
+  assert.equal(isPostgrestPermissionDenied({ message: 'TypeError: Failed to fetch' }), false)
+  assert.equal(isPostgrestPermissionDenied(null), false)
+  assert.equal(articlesUnavailableReason(ARTICLES_PERMISSION_DENIED), 'permission_denied')
+  assert.equal(articlesUnavailableReason(ARTICLES_500), null)
 })
 
 test('loadGraph: missing public.edges does not throw; empty edges + unavailable flag', async () => {
@@ -245,6 +284,87 @@ test('loadArticleDetail: does not join story_arcs; arc_title stays null', async 
   assert.equal(detail.id, eligible.id)
 })
 
+test('loadArticles: 42501 permission denied fail-closes to empty + permission_denied', async () => {
+  const client = fakeClient(
+    { articles: [NASA_PENDING] },
+    { errors: { articles: ARTICLES_PERMISSION_DENIED } },
+  )
+  const result = await loadArticles({ supabaseClient: client })
+  assert.deepEqual(result.articles, [])
+  assert.equal(result.total, 0)
+  assert.equal(result.articlesUnavailable, 'permission_denied')
+  assert.doesNotMatch(JSON.stringify(result), /NASA Where|e5a84674/)
+})
+
+test('loadArticles: PGRST301 and permission-denied message fail-close the same way', async () => {
+  for (const err of [ARTICLES_PGRST301, ARTICLES_INSUFFICIENT]) {
+    const result = await loadArticles({
+      supabaseClient: fakeClient({ articles: [NASA_PENDING] }, { errors: { articles: err } }),
+    })
+    assert.deepEqual(result.articles, [])
+    assert.equal(result.total, 0)
+    assert.equal(result.articlesUnavailable, 'permission_denied')
+  }
+})
+
+test('loadArticles: unrelated 500 still throws', async () => {
+  await assert.rejects(
+    () => loadArticles({
+      supabaseClient: fakeClient({ articles: [] }, { errors: { articles: ARTICLES_500 } }),
+    }),
+    (err) => err === ARTICLES_500,
+  )
+})
+
+test('loadArticleDetail: permission denied fail-closes; does not invent a row', async () => {
+  const eligible = { ...NASA_PENDING, reader_state: 'eligible' }
+  const detail = await loadArticleDetail(eligible.id, {
+    supabaseClient: fakeClient(
+      { articles: [eligible], citations: [], news_detail_public: [] },
+      { errors: { articles: ARTICLES_PERMISSION_DENIED } },
+    ),
+  })
+  assert.equal(detail.articlesUnavailable, 'permission_denied')
+  assert.equal(detail.id, undefined)
+  assert.equal(detail.title, undefined)
+})
+
+test('loadFilteredSourceMetricRows / loadCorpusMeta: permission denied is empty, 500 throws', async () => {
+  const denied = fakeClient(
+    { articles: [NASA_PENDING] },
+    { errors: { articles: ARTICLES_PERMISSION_DENIED } },
+  )
+  assert.deepEqual(await loadFilteredSourceMetricRows({}, { supabaseClient: denied }), [])
+  assert.deepEqual(await loadCorpusMeta({ supabaseClient: denied }), { count: null, latestFetchedAt: null })
+
+  const boom = fakeClient({ articles: [] }, { errors: { articles: ARTICLES_500 } })
+  await assert.rejects(() => loadFilteredSourceMetricRows({}, { supabaseClient: boom }), (err) => err === ARTICLES_500)
+  await assert.rejects(() => loadCorpusMeta({ supabaseClient: boom }), (err) => err === ARTICLES_500)
+})
+
+test('loadCorpusMeta / loadNewSinceCount: empty HEAD error + 42501 row probe fail-closes', async () => {
+  const client = fakeClient(
+    { articles: [NASA_PENDING] },
+    {
+      headErrors: { articles: { message: '' } },
+      errors: { articles: ARTICLES_PERMISSION_DENIED },
+    },
+  )
+  assert.deepEqual(await loadCorpusMeta({ supabaseClient: client }), { count: null, latestFetchedAt: null })
+  assert.equal(await loadNewSinceCount('2026-01-01T00:00:00Z', { supabaseClient: client }), null)
+})
+
+test('loadCorpusMeta: empty HEAD error + 500 row probe still throws', async () => {
+  const client = fakeClient(
+    { articles: [] },
+    {
+      headErrors: { articles: { message: '' } },
+      errors: { articles: ARTICLES_500 },
+    },
+  )
+  await assert.rejects(() => loadCorpusMeta({ supabaseClient: client }), (err) => err === ARTICLES_500)
+})
+
 test('browser selects never ask story_arcs.title and never join the title embed', () => {
   assert.doesNotMatch(SRC, /story_arcs!articles_arc_id_fkey/)
   assert.doesNotMatch(SRC, /keysetAll\([^)]*'story_arcs',\s*'[^']*title/)
@@ -266,6 +386,16 @@ test('News empty while pending_review is honest: eligibility gate is unchanged',
   assert.doesNotMatch(SRC, /reader_state:\s*'eligible'/)
   assert.match(NEWS, /No articles match/)
   assert.match(NEWS, /Pending-review and withheld intake records remain retained/)
+})
+
+test('News paints permission-denied as an honest notice, not a red Failed to load articles', () => {
+  assert.match(NEWS, /articlesUnavailable/)
+  assert.match(NEWS, /public\.articles is unavailable/)
+  assert.match(NEWS, /permission denied/)
+  assert.match(NEWS, /0 articles; no rows are invented/)
+  assert.match(NEWS, /!articlesUnavailable && articles\.length === 0/)
+  assert.match(NEWS, /\{error && <div className="notice error">Failed to load articles: \{error\}<\/div>\}/)
+  assert.match(NEWS, /className="notice">/)
 })
 
 test('App does not paint News red for missing edges; Graph reuses World View banner', () => {
