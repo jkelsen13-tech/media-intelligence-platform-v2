@@ -43,6 +43,12 @@ test('makeClient refuses leftover hosts before createClient', () => {
   assert.ok(forbid > -1 && create > -1 && forbid < create)
 })
 
+test('client source does not embed leftover project refs as literals', () => {
+  for (const ref of LEFTOVER_REFS) {
+    assert.doesNotMatch(CLIENT, new RegExp(ref))
+  }
+})
+
 test('Pages workflow injects V2 URL and no leftover hosts or Manus key', () => {
   assert.match(WORKFLOW, new RegExp(`VITE_SUPABASE_URL:\\s*https://${V2_HOST}`))
   for (const ref of LEFTOVER_REFS) {

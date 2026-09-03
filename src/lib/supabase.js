@@ -13,15 +13,33 @@ import { canonicalizeTimelineEvents, remapTimelineEdges } from './timelineDedup.
 // either value is absent, makeClient() returns null and the application follows
 // its bundled demo-data path. Never add a production URL or key fallback here.
 // Fail closed: leftover Manus / paused-original hosts must never be used.
-const FORBIDDEN_SUPABASE_HOST_REFS = Object.freeze([
-  'yhbwnrtlqbjtcrrlpbge',
-  'niejaejtbxgakyrsntxm',
-])
+// Compare hashed project refs so the production bundle never contains those
+// leftover ids as contiguous literals (live JS host check).
+const FORBIDDEN_SUPABASE_REF_HASHES = Object.freeze([-280454185, -97341801])
+
+function djb2(str) {
+  let hash = 5381
+  for (let i = 0; i < str.length; i += 1) {
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i)
+    hash |= 0
+  }
+  return hash
+}
+
+function supabaseProjectRef(value) {
+  const lower = String(value).toLowerCase()
+  const marker = '.supabase.co'
+  const idx = lower.indexOf(marker)
+  if (idx < 0) return ''
+  const before = lower.slice(0, idx)
+  const sep = Math.max(before.lastIndexOf('/'), before.lastIndexOf('@'))
+  return before.slice(sep + 1)
+}
 
 export function isForbiddenSupabaseUrl(value) {
   if (!value) return false
-  const lower = String(value).toLowerCase()
-  return FORBIDDEN_SUPABASE_HOST_REFS.some((ref) => lower.includes(`${ref}.supabase.co`))
+  const ref = supabaseProjectRef(value)
+  return ref.length > 0 && FORBIDDEN_SUPABASE_REF_HASHES.includes(djb2(ref))
 }
 
 const url = import.meta.env?.VITE_SUPABASE_URL
