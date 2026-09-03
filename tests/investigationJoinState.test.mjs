@@ -33,6 +33,7 @@ import {
   freshnessFromExistingMarkers,
   weatherJoinState,
   shellJoinDisclosures,
+  visibleJoinDisclosures,
   rapidViewBurst,
   exploreDismissPreserves,
   boundContextHistory,
@@ -207,7 +208,44 @@ test('invalid selection IDs fail closed to parent IC with consistent disclosure'
   assert.ok(disclosures.some((item) => item.kind === 'invalid_selection'))
   assert.match(BAR, /data-join-disclosures/)
   assert.match(BAR, /selectionFallbackCopy/)
+  assert.match(BAR, /visibleJoinDisclosures/)
   assert.match(APP, /joinDisclosures=\{joinDisclosures\}/)
+})
+
+test('spatial mip_object_id entity is honest parent-fallback; IC copy is one line', () => {
+  const cleveland = seedCleveland('world')
+  assert.equal(cleveland.canonical_subject_id, CLEVELAND_CANONICAL_EVENT_ID)
+  assert.notEqual(cleveland.canonical_subject_id, CLEVELAND_MIP_OBJECT_ID)
+
+  const applied = invalidSelectionAgainstParent(
+    { entity: CLEVELAND_MIP_OBJECT_ID, claim: null, source: null, place: null, time: null },
+    PARENT_CATALOG,
+    CLEVELAND_CANONICAL_EVENT_ID,
+  )
+  assert.equal(applied.invented, false)
+  assert.equal(applied.selection.entity, null)
+  assert.equal(applied.fallbacks.length, 1)
+  assert.equal(applied.fallbacks[0].kind, 'entity')
+  assert.equal(applied.fallbacks[0].requestedId, CLEVELAND_MIP_OBJECT_ID)
+  assert.equal(applied.fallbacks[0].action, 'parent_context')
+  assert.match(applied.disclosures[0].copy, /Showing the parent investigation context/)
+  assert.notEqual(cleveland.canonical_subject_id, INVENTED_EVENT_ID)
+
+  const joins = shellJoinDisclosures({
+    investigationContext: cleveland,
+    view: 'world',
+    selectionFallbacks: applied.fallbacks,
+  })
+  const duplicated = joins.filter((item) => item.copy === selectionFallbackCopy(applied.fallbacks[0]))
+  assert.equal(duplicated.length, 1, 'helper still records the fallback once in join state')
+
+  const visible = visibleJoinDisclosures(applied.fallbacks, joins)
+  const surfaceCopy = [
+    ...applied.fallbacks.map(selectionFallbackCopy),
+    ...visible.map((item) => item.copy),
+  ].filter((copy) => copy.includes(CLEVELAND_MIP_OBJECT_ID))
+  assert.equal(surfaceCopy.length, 1)
+  assert.equal(visible.some((item) => item.copy.includes(CLEVELAND_MIP_OBJECT_ID)), false)
 })
 
 test('stale / as-of freshness uses existing markers and invents no revision API', () => {

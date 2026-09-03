@@ -2,6 +2,7 @@ import { investigationContextDomProps } from '../lib/investigationContext'
 import {
   selectionFallbackCopy,
   freshnessFromExistingMarkers,
+  visibleJoinDisclosures,
 } from '../lib/investigationJoinState'
 
 function display(value, empty = 'none') {
@@ -26,7 +27,7 @@ export default function InvestigationContextBar({
   const hasSubject = Boolean(ic?.canonical_subject_id)
   const recents = recentInvestigations ?? []
   const fallbacks = selectionFallbacks ?? []
-  const joins = joinDisclosures ?? []
+  const joins = visibleJoinDisclosures(fallbacks, joinDisclosures ?? [])
   const freshness = freshnessFromExistingMarkers({ asOfTime: ic?.as_of_time })
   return (
     <section
