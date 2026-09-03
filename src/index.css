@@ -127,6 +127,72 @@ body {
   word-break: break-all;
 }
 
+.ic-bar-fallbacks {
+  margin: 8px 0 0;
+  padding-left: 1.1rem;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ic-bar-recent {
+  margin-top: 8px;
+}
+
+.ic-bar-recent-title {
+  margin: 0 0 2px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ic-bar-recent-note {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.ic-bar-recent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ic-bar-recent-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  max-width: 22rem;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.ic-bar-recent-item:hover {
+  border-color: var(--accent);
+}
+
+.ic-bar-recent-type,
+.ic-bar-recent-view {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ic-bar-recent-id {
+  font-size: 12px;
+  word-break: break-all;
+}
+
 /* R4.75 Step 4 — two filter families. Discovery (News / Explore) and
    investigation (Graph / World View / Timeline) stay visually distinct. */
 .filter-family-label {

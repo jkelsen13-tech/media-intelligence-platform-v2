@@ -10,13 +10,28 @@ function rangeText(range) {
   return `${display(range.from, 'not recorded')} → ${display(range.to, 'not recorded')}`
 }
 
-export default function InvestigationContextBar({ investigationContext }) {
+function fallbackCopy(fallback) {
+  const kind = fallback?.kind ?? 'selection'
+  const id = fallback?.requestedId ?? 'unknown'
+  return `Sub-selection ${kind} ${id} is not valid on this subject. Showing the parent investigation context.`
+}
+
+export default function InvestigationContextBar({
+  investigationContext,
+  recentInvestigations = [],
+  onRestoreRecent,
+  selectionFallbacks = [],
+  storageKey,
+}) {
   const ic = investigationContext
   const hasSubject = Boolean(ic?.canonical_subject_id)
+  const recents = recentInvestigations ?? []
+  const fallbacks = selectionFallbacks ?? []
   return (
     <section
       className="ic-bar"
       aria-label="Investigation context"
+      data-recent-storage-key={storageKey ?? ''}
       {...investigationContextDomProps(ic)}
     >
       <h2 className="ic-bar-title">Investigation context</h2>
@@ -55,6 +70,40 @@ export default function InvestigationContextBar({ investigationContext }) {
             <dd className="num">{display(ic.temporal_assessment_reference, 'none')}</dd>
           </div>
         </dl>
+      )}
+      {fallbacks.length > 0 && (
+        <ul className="ic-bar-fallbacks" data-deep-link-fallback="true">
+          {fallbacks.map((fallback) => (
+            <li key={`${fallback.kind}:${fallback.requestedId}`}>
+              {fallbackCopy(fallback)}
+            </li>
+          ))}
+        </ul>
+      )}
+      {recents.length > 0 && (
+        <nav className="ic-bar-recent" aria-label="Recent investigations">
+          <h3 className="ic-bar-recent-title">Recent investigations</h3>
+          <p className="ic-bar-recent-note">
+            Local to this browser. Restore re-opens the prior subject and view. This is not an
+            account sync and not a multi-investigation tab strip.
+          </p>
+          <ul className="ic-bar-recent-list">
+            {recents.map((item) => (
+              <li key={item.canonical_subject_id}>
+                <button
+                  type="button"
+                  className="ic-bar-recent-item"
+                  data-recent-subject-id={item.canonical_subject_id}
+                  onClick={() => onRestoreRecent?.(item)}
+                >
+                  <span className="ic-bar-recent-type">{display(item.canonical_subject_type, 'subject')}</span>
+                  <span className="ic-bar-recent-id num">{item.canonical_subject_id}</span>
+                  <span className="ic-bar-recent-view">{display(item.active_view, 'view')}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
       )}
     </section>
   )
