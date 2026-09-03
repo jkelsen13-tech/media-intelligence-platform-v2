@@ -2032,6 +2032,28 @@ body {
   border-color: var(--accent);
 }
 
+/* R4.75 Step 3 — Explore / Change Topic. Same header chrome as nav-tab /
+   info-btn. Stays visible on mobile (sibling of .app-nav, not inside it). */
+.explore-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.explore-btn:hover,
+.explore-btn[aria-expanded='true'] {
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.explore-btn[aria-expanded='true'] {
+  background: rgba(var(--accent-rgb), 0.12);
+}
+
 /* ---------- Bottom sheets (filters, about) ---------- */
 
 .sheet-backdrop {
@@ -2143,6 +2165,12 @@ body {
   color: var(--text-primary);
   font-size: 15px;
   cursor: pointer;
+}
+
+/* Explore reuses .sheet; taller so the existing News discovery list is usable. */
+.explore-sheet {
+  max-width: 720px;
+  max-height: 88vh;
 }
 
 /* ---------- Fixed bottom tab bar (mobile) ---------- */
@@ -2412,6 +2440,14 @@ body {
 
   .info-btn {
     display: block;
+    margin-left: 0;
+  }
+
+  .explore-btn {
+    margin-left: auto;
+    min-height: 44px;
+    font-size: 13px;
+    padding: 8px 10px;
   }
 
   .bottom-nav {

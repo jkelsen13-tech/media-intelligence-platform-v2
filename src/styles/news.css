@@ -7,6 +7,14 @@
   max-width: 900px;
 }
 
+/* Compact discovery panel inside the Explore sheet. Sheet scrolls; this does not. */
+.news-view.news-view-drawer {
+  flex: none;
+  overflow: visible;
+  padding: 0 0 8px;
+  max-width: none;
+}
+
 .news-controls {
   margin-bottom: 18px;
   display: flex;
@@ -457,6 +465,21 @@
 
   .news-load-more {
     min-height: 48px;
+  }
+
+  /* Drawer keeps chips/filters inline so Explore does not nest a second sheet. */
+  .news-view-drawer .news-desktop-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .news-view-drawer .news-filters-btn {
+    display: none;
+  }
+
+  .news-view-drawer .news-active-filters {
+    display: flex;
   }
 }
 
