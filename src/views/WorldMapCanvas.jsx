@@ -3,25 +3,14 @@ import { geoMercator, geoPath, geoGraticule10 } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
 import worldAtlas from 'world-atlas/countries-110m.json'
 import {
-  plotDecision,
-  collectPositions,
-  sourceNativeLocationLabel,
-  displayCoordinateText,
   fitExtentGeometry,
 } from '../lib/spatialProjection'
 import {
   DEFAULT_MAP_STACK_ID,
   FALLBACK_MAP_STACK_ID,
-  mapLibreStyleForStack,
   mapStackById,
-  maxZoomForPrecisionClass,
-  minZoom,
-  nextMapStackOnFailure,
-  subjectCamera,
-  worldCamera,
-  worldViewRenderMode,
 } from '../lib/worldViewMapStack'
-import { overlayAllowed } from '../lib/worldViewPrivacyLock'
+import { createWorldViewRendererAdapter, projectionMarkerRecords } from '../lib/worldViewRendererAdapter'
 
 const MAP_W = 960
 const MAP_H = 480
@@ -32,28 +21,8 @@ const BORDERS = worldObjects.countries
   ? mesh(worldAtlas, worldObjects.countries, (a, b) => a !== b)
   : null
 
-function markerRecords(rows, selectedKeys) {
-  return (rows ?? []).flatMap((row) => {
-    const decision = plotDecision(row)
-    if (!decision.plot) return []
-    const positions = collectPositions(decision.geometry)
-    const selected =
-      selectedKeys.has(String(row.mip_object_id)) || selectedKeys.has(String(row.subject_graph_node_id))
-    return [
-      {
-        row,
-        geometry: decision.geometry,
-        positions,
-        selected,
-        label: sourceNativeLocationLabel(row),
-        coords: displayCoordinateText(decision.geometry),
-      },
-    ]
-  })
-}
-
 function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attribution }) {
-  const features = useMemo(() => markerRecords(rows, selectedKeys), [rows, selectedKeys])
+  const features = useMemo(() => projectionMarkerRecords(rows, selectedKeys), [rows, selectedKeys])
   const geometry = useMemo(() => {
     const projection = geoMercator()
     const positions = features.flatMap((f) => f.positions)
@@ -140,200 +109,63 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
   )
 }
 
-function DeckProjectionLayers(deck, features, onSelectRow, selectedKeys) {
-  const ScatterplotLayer = deck.ScatterplotLayer
-  const TextLayer = deck.TextLayer
-  const data = features.flatMap((f) =>
-    f.positions.map((position) => ({
-      ...f,
-      position,
-    })),
-  )
-  return [
-    new ScatterplotLayer({
-      id: 'mip-projection-points',
-      data,
-      pickable: true,
-      opacity: 0.85,
-      stroked: true,
-      filled: true,
-      radiusUnits: 'pixels',
-      lineWidthUnits: 'pixels',
-      getPosition: (d) => [Number(d.position[0]), Number(d.position[1])],
-      getRadius: (d) => (d.selected ? 9 : 7),
-      getFillColor: (d) => (d.selected ? [21, 110, 191, 220] : [21, 110, 191, 150]),
-      getLineColor: [21, 110, 191, 255],
-      getLineWidth: 1.5,
-      radiusMinPixels: 6,
-      radiusMaxPixels: 12,
-      onClick: (info) => {
-        if (info?.object?.row) onSelectRow(info.object.row)
-      },
-      updateTriggers: { getRadius: selectedKeys, getFillColor: selectedKeys },
-    }),
-    new TextLayer({
-      id: 'mip-projection-labels',
-      data,
-      getPosition: (d) => [Number(d.position[0]), Number(d.position[1])],
-      getText: (d) => d.label || d.row.precision_class || 'projected location',
-      getSize: 12,
-      getColor: [26, 26, 23, 230],
-      getPixelOffset: [14, -8],
-      getTextAnchor: 'start',
-      getAlignmentBaseline: 'center',
-      pickable: false,
-    }),
-  ]
-}
-
 export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyMessage }) {
   const hostRef = useRef(null)
-  const mapRef = useRef(null)
-  const overlayRef = useRef(null)
   const flewRef = useRef(false)
+  const adapterRef = useRef(null)
   const [stackId, setStackId] = useState(DEFAULT_MAP_STACK_ID)
   const stack = mapStackById(stackId)
-  const features = useMemo(() => markerRecords(rows, selectedKeys), [rows, selectedKeys])
+  const features = useMemo(() => projectionMarkerRecords(rows, selectedKeys), [rows, selectedKeys])
   const first = features[0]
   const coordinate = first?.positions?.[0] ?? null
 
   useEffect(() => {
     if (stackId === FALLBACK_MAP_STACK_ID) return undefined
-    const host = hostRef.current
-    if (!host) return undefined
     let cancelled = false
-    let map
-    let overlay
-    let errorCount = 0
-
-    async function boot() {
-      let maplibregl
-      let MapboxOverlay
-      let ScatterplotLayer
-      let TextLayer
-      try {
-        maplibregl = (await import('maplibre-gl')).default
-        await import('maplibre-gl/dist/maplibre-gl.css')
-        MapboxOverlay = (await import('@deck.gl/mapbox')).MapboxOverlay
-        ScatterplotLayer = (await import('@deck.gl/layers')).ScatterplotLayer
-        TextLayer = (await import('@deck.gl/layers')).TextLayer
-      } catch {
-        if (!cancelled) setStackId(FALLBACK_MAP_STACK_ID)
-        return
-      }
-      if (cancelled || !hostRef.current) return
-      void overlayAllowed
-      void worldViewRenderMode()
-
-      const start = worldCamera()
-      const precision = first?.row?.precision_class
-      try {
-        map = new maplibregl.Map({
-          container: hostRef.current,
-          style: mapLibreStyleForStack(stackId),
-          center: start.center,
-          zoom: start.zoom,
-          pitch: start.pitch,
-          bearing: start.bearing,
-          minZoom: minZoom(),
-          maxZoom: maxZoomForPrecisionClass(precision),
-          attributionControl: false,
-          cooperativeGestures: false,
-        })
-      } catch {
-        if (!cancelled) setStackId(nextMapStackOnFailure(stackId))
-        return
-      }
-
-      map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-left')
-      map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-left')
-      map.addControl(
-        new maplibregl.AttributionControl({ compact: false, customAttribution: stack.attribution }),
-        'bottom-right',
-      )
-
-      overlay = new MapboxOverlay({
-        interleaved: true,
-        layers: DeckProjectionLayers({ ScatterplotLayer, TextLayer }, features, onSelectRow, selectedKeys),
-      })
-      map.addControl(overlay)
-      mapRef.current = map
-      overlayRef.current = overlay
-
-      const fail = () => {
-        errorCount += 1
-        if (errorCount < 2) return
-        const next = nextMapStackOnFailure(stackId)
-        if (!cancelled) setStackId(next)
-      }
-      map.on('error', fail)
-
-      map.on('load', () => {
+    adapterRef.current?.destroy?.()
+    adapterRef.current = createWorldViewRendererAdapter({
+      stackId,
+      getHostEl: () => hostRef.current,
+      coordinate,
+      precisionClass: first?.row?.precision_class,
+      getSelectedKeys: () => selectedKeys,
+      onSelectRow,
+      onStackIdChange: (next) => {
         if (cancelled) return
-        const cam = subjectCamera(coordinate, precision)
-        if (cam && !flewRef.current) {
-          flewRef.current = true
-          map.flyTo({
-            center: cam.center,
-            zoom: cam.zoom,
-            pitch: cam.pitch,
-            bearing: cam.bearing,
-            duration: 1600,
-            essential: true,
-          })
-        }
-      })
-    }
-
-    boot()
+        setStackId(next)
+      },
+      shouldFlyTo: () => !flewRef.current,
+      markFlew: () => {
+        flewRef.current = true
+      },
+      initialFeatures: features,
+      isCancelled: () => cancelled,
+    })
+    void adapterRef.current.mount()
     return () => {
       cancelled = true
-      overlayRef.current = null
-      mapRef.current = null
-      try {
-        overlay?.finalize?.()
-      } catch {
-        /* overlay already removed with the map */
-      }
-      try {
-        map?.remove()
-      } catch {
-        /* already torn down */
-      }
+      adapterRef.current?.destroy?.()
+      adapterRef.current = null
     }
     // Reboot only when the stack changes. Layer updates happen in the next effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stackId])
 
   useEffect(() => {
-    const overlay = overlayRef.current
-    if (!overlay || stackId === FALLBACK_MAP_STACK_ID) return
-    let cancelled = false
-    import('@deck.gl/layers').then(({ ScatterplotLayer, TextLayer }) => {
-      if (cancelled) return
-      overlay.setProps({
-        layers: DeckProjectionLayers({ ScatterplotLayer, TextLayer }, features, onSelectRow, selectedKeys),
-      })
-    })
-    return () => {
-      cancelled = true
-    }
+    const adapter = adapterRef.current
+    if (!adapter || stackId === FALLBACK_MAP_STACK_ID) return undefined
+    adapter.setOnSelectRow?.(onSelectRow)
+    void adapter.setFeatures(features, selectedKeys)
   }, [features, onSelectRow, selectedKeys, stackId])
 
   useEffect(() => {
-    const map = mapRef.current
-    if (!map || stackId === FALLBACK_MAP_STACK_ID || flewRef.current) return
-    const cam = subjectCamera(coordinate, first?.row?.precision_class)
-    if (!cam) return
-    flewRef.current = true
-    map.flyTo({
-      center: cam.center,
-      zoom: cam.zoom,
-      pitch: cam.pitch,
-      bearing: cam.bearing,
-      duration: 1600,
-      essential: true,
+    const adapter = adapterRef.current
+    if (!adapter || stackId === FALLBACK_MAP_STACK_ID || flewRef.current) return
+    const ok = adapter.flyToSubjectCamera({
+      nextCoordinate: coordinate,
+      nextPrecisionClass: first?.row?.precision_class,
     })
+    if (ok) flewRef.current = true
   }, [coordinate, first, stackId])
 
   if (stackId === FALLBACK_MAP_STACK_ID) {

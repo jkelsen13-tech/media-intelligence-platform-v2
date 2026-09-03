@@ -56,6 +56,7 @@ import {
 
 const WORLD = readFileSync(new URL('../src/views/WorldView.jsx', import.meta.url), 'utf8')
 const MAP = readFileSync(new URL('../src/views/WorldMapCanvas.jsx', import.meta.url), 'utf8')
+const ADAPTER = readFileSync(new URL('../src/lib/worldViewRendererAdapter.js', import.meta.url), 'utf8')
 const APP = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
 const WEATHER = readFileSync(new URL('../src/lib/eventTimeWeather.js', import.meta.url), 'utf8')
 const STACK = readFileSync(new URL('../src/lib/worldViewMapStack.js', import.meta.url), 'utf8')
@@ -253,8 +254,8 @@ test('G: pan/zoom/scale-adaptive camera does not change precision class', () => 
   assert.ok(zoomForPrecisionClass('city') < zoomForPrecisionClass('facility'))
   assert.ok(maxZoomForPrecisionClass('city') < 14)
   assert.match(STACK, /MapLibre/)
-  assert.match(MAP, /maplibre-gl/)
-  assert.match(MAP, /@deck\.gl/)
+  assert.match(ADAPTER, /maplibre-gl/)
+  assert.match(ADAPTER, /@deck\.gl/)
 })
 
 test('H: no private-person point/track/face; no CCTV/aircraft/vessel overlay', () => {
@@ -271,7 +272,7 @@ test('H: no private-person point/track/face; no CCTV/aircraft/vessel overlay', (
 })
 
 test('I: base map / renderer attribution is visible', () => {
-  assert.match(MAP, /AttributionControl/)
+  assert.match(ADAPTER, /AttributionControl/)
   assert.match(STACK, /OpenStreetMap/)
   assert.match(STACK, /OpenFreeMap|Natural Earth/)
   assert.match(MAP, /wv-map-attrib|attribution/)
