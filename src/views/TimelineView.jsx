@@ -77,6 +77,7 @@ function TimelineTabIcon({ kind }) {
 export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, focusArcKey }) {
   // --- arcs + scope -----------------------------------------------------------
   const [arcs, setArcs] = useState(null)
+  const [arcsUnavailable, setArcsUnavailable] = useState(null)
   const [arcsError, setArcsError] = useState(null)
   const [selectedSlug, setSelectedSlug] = useState(null)
   const [allEvents, setAllEvents] = useState(false)
@@ -106,8 +107,10 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
 
   useEffect(() => {
     loadArcs()
-      .then((rows) => {
+      .then((result) => {
+        const rows = result.arcs ?? []
         setArcs(rows)
+        setArcsUnavailable(result.arcsUnavailable ?? null)
         const slug = defaultArcSlug(rows)
         if (slug) setSelectedSlug(slug)
         else setAllEvents(true) // no arcs tracked — global is the only honest scope
@@ -223,7 +226,15 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
           return true
       }
     })
-    return { entries, filtered, edges, labels, linksByKey, suppressed: globalData.suppressed ?? 0 }
+    return {
+      entries,
+      filtered,
+      edges,
+      labels,
+      linksByKey,
+      suppressed: globalData.suppressed ?? 0,
+      edgesUnavailable: globalData.edgesUnavailable ?? null,
+    }
   }, [globalData, query, linkFilter, month, type])
 
   // Package 1 item 2 return-to-origin (Three-Screen Review named finding):
@@ -297,6 +308,11 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
 
   if (arcsError) return <div className="notice error">Failed to load story arcs: {arcsError}</div>
   if (!arcs) return <div className="notice">Loading timeline…</div>
+  const arcsUnavailableNotice = arcsUnavailable ? (
+    <div className="notice">
+      Story arcs are unavailable ({arcsUnavailable}). Id-only stub rows are treated as no-arc; no titles are invented.
+    </div>
+  ) : null
 
   const scopeIsGlobal = allEvents || !selected
   const entries = scopeIsGlobal ? (global?.filtered ?? []) : arcEntries.filter((e) => entryMatchesFilters(e, { month, type }))
@@ -344,6 +360,12 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
 
   return (
     <div className="timeline-view">
+      {arcsUnavailableNotice}
+      {global?.edgesUnavailable && (
+        <div className="notice">
+          public.edges is unavailable ({global.edgesUnavailable}). No relationships are invented.
+        </div>
+      )}
       <div className="timeline-intro">
         <p className="ep-eyebrow">{SCREEN5_EYEBROW}</p>
         <h2 className="ep-report-title">
@@ -574,6 +596,10 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
                 ))}
               </ul>
             )
+          ) : connections?.edgesUnavailable ? (
+            <div className="notice">
+              public.edges is unavailable ({connections.edgesUnavailable}). No relationships are invented.
+            </div>
           ) : connectionsError ? (
             <div className="notice error">Failed to load connections: {connectionsError}</div>
           ) : !connections ? (

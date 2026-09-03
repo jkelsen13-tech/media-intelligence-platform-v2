@@ -257,6 +257,11 @@ export default function GroupedTimelineView({ onOpenArc, onOpenArticle, focusEve
 
   if (error) return <div className="notice error">Failed to load grouped timeline: {error}</div>
   if (!data || !filtered) return <div className="notice">Loading grouped timeline…</div>
+  const edgesUnavailableNotice = data.edgesUnavailable ? (
+    <div className="notice">
+      public.edges is unavailable ({data.edgesUnavailable}). No relationships are invented.
+    </div>
+  ) : null
 
   const { counts } = data.grouped
   const { pageSections, pageCount, safePage, isLastPage } = paginateSections(
@@ -310,6 +315,7 @@ export default function GroupedTimelineView({ onOpenArc, onOpenArticle, focusEve
 
   return (
     <div className="timeline-view timeline-grouped">
+      {edgesUnavailableNotice}
       {!arcId && (
         <div className="timeline-intro">
           <h2>Causal Timeline — grouped by story arc</h2>

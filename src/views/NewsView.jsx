@@ -464,7 +464,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   // so controls never become invalid nested interactive elements.
   const cardChips = (a) => {
     const cit = citationMap.get(a.id)
-    const hasArc = Boolean(a.arc_id)
+    const hasArc = Boolean(a.arc_id && a.arc_title)
     const hasGraph = Boolean(cit?.hasGraphLink && cit.firstNodeId)
     if (!hasArc && !hasGraph) return null
     return (

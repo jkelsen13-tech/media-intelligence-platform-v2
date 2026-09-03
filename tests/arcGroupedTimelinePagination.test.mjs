@@ -147,12 +147,13 @@ test('structure: grouped loader keyset-paginates all eight reads', () => {
   // doc_strength added 2026-08-18 (Track B Step 3 item 4, read-path only):
   // the Screen 5 connector engine requires confirmed-grade strength before
   // any gap may be labeled "Source-supported causal link".
-  assert.match(src, /keysetAll\(supabase, 'edges', 'id, source_id, target_id, type, weight, label, doc_strength'/)
+  assert.match(src, /readEdgesOrUnavailable\(supabase, 'id, source_id, target_id, type, weight, label, doc_strength'/)
   assert.match(src, /keysetAll\(supabase, 'nodes', 'id, slug, label'\)/)
   // Expanded metadata supports both outlet counts and explicit, source-backed
   // News-record rows for articles assigned to an arc.
   assert.match(src, /keysetAll\(supabase, 'articles', 'id, title, summary, published_at, arc_id, outlet'\)/)
-  assert.match(src, /keysetAll\(supabase, 'story_arcs', 'id, title, category, started_at'\)/)
+  assert.match(src, /keysetAll\(supabase, 'story_arcs', 'id, category, started_at'\)/)
+  assert.doesNotMatch(src, /keysetAll\(supabase, 'story_arcs', 'id, title, category, started_at'\)/)
   assert.match(src, /keysetAll\(supabase, 'arc_events', 'id, arc_id, occurred_at'\)/)
   assert.match(src, /keysetAll\(supabase, 'arc_milestones_public', 'id, arc_id, status'\)/)
   // Package 1 arc-grouped addition: event memberships for the outlet index,

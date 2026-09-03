@@ -140,6 +140,83 @@ function sanitizeSearch(q) {
   return (q ?? '').replace(/[(),"\\%_]/g, ' ').trim()
 }
 
+// PostgREST schema-cache gaps (missing table / missing column) versus other
+// errors (RLS, network, 500). World View fail-closes missing public.edges
+// with an honest edgesUnavailable flag; News/Graph/Arcs/Timeline reuse that
+// contract instead of throwing a red exception on every App load.
+const POSTGREST_SCHEMA_GAP_CODES = new Set(['PGRST204', 'PGRST205', '42P01', '42703'])
+
+export function isPostgrestSchemaGap(error) {
+  if (!error) return false
+  const code = String(error.code ?? '')
+  if (POSTGREST_SCHEMA_GAP_CODES.has(code)) return true
+  const message = String(error.message ?? error.details ?? error.hint ?? '')
+  if (/schema cache/i.test(message)) return true
+  if (/Could not find the table /i.test(message)) return true
+  if (/Could not find the '[^']+' column/i.test(message)) return true
+  if (/column .+ does not exist/i.test(message)) return true
+  if (/relation .+ does not exist/i.test(message)) return true
+  return false
+}
+
+export function edgesUnavailableMessage(error) {
+  return error?.message ?? String(error)
+}
+
+// Same missing-edges contract as loadWorldViewGraph: never throw, never
+// invent rows. Any edges read error → empty data + edgesUnavailable.
+export async function readEdgesOrUnavailable(client, cols, options) {
+  try {
+    const res = await keysetAll(client, 'edges', cols, options)
+    if (res.error) {
+      return { data: [], error: res.error, edgesUnavailable: edgesUnavailableMessage(res.error) }
+    }
+    return { data: res.data ?? [], error: null, edgesUnavailable: null }
+  } catch (err) {
+    return { data: [], error: err, edgesUnavailable: edgesUnavailableMessage(err) }
+  }
+}
+
+const GRAPH_EDGE_BASE = 'id, source_id, target_id, type, weight, label, similarity'
+const GRAPH_EDGE_EVIDENCE =
+  ', signal_source, doc_strength, claimed_by, stance, disputed_by, alternative_causes, counterfactual_test, reliability, metadata'
+
+export async function readGraphEdgesOrUnavailable(client, options) {
+  let res = await readEdgesOrUnavailable(client, GRAPH_EDGE_BASE + GRAPH_EDGE_EVIDENCE, options)
+  if (res.edgesUnavailable) {
+    res = await readEdgesOrUnavailable(client, GRAPH_EDGE_BASE, options)
+  }
+  return res
+}
+
+function mapGraphEdgeRows(rows) {
+  return (rows ?? []).map((e) => ({
+    id: e.id,
+    source: e.source_id,
+    target: e.target_id,
+    type: e.type,
+    weight: e.weight,
+    label: e.label,
+    similarity: e.similarity,
+    signal_source: e.signal_source,
+    doc_strength: e.doc_strength,
+    claimed_by: e.claimed_by,
+    stance: e.stance,
+    disputed_by: e.disputed_by,
+    alternative_causes: e.alternative_causes,
+    counterfactual_test: e.counterfactual_test,
+    reliability: e.reliability,
+    metadata: e.metadata,
+  }))
+}
+
+// story_arcs on live V2 is an id-only stub. Never select title. Extra
+// display columns are attempted only by loadArcs; a schema-cache miss is
+// empty/unavailable, not a crash, and stub rows are treated as no-arc.
+const STORY_ARCS_ID_ONLY = 'id'
+const STORY_ARCS_DISPLAY_COLS =
+  'id, slug, category, category_confidence, category_evidence, status, display_kind, root_node_id, coverage_gap, summary, started_at, last_update_at'
+
 // Loads the graph from Supabase when configured, otherwise returns the
 // bundled demo dataset for an offline/local build only. A configured but empty
 // database is an explicit empty live graph — it must never silently mix a real
@@ -148,59 +225,37 @@ function sanitizeSearch(q) {
 export async function loadGraph({ supabaseClient } = {}) {
   const client = supabaseClient ?? supabase
   if (!client) {
-    return { nodes: demoNodes, edges: demoEdges, source: 'demo' }
+    return { nodes: demoNodes, edges: demoEdges, source: 'demo', edgesUnavailable: null }
   }
 
-  const EDGE_BASE = 'id, source_id, target_id, type, weight, label, similarity'
-  // Evidence columns land with the Steps 6–9 backend migration. Try the
-  // extended select first; if the columns don't exist yet (PostgREST 400),
-  // fall back to the base select so the graph keeps working pre-migration.
-  const EDGE_EVIDENCE =
-    ', signal_source, doc_strength, claimed_by, stance, disputed_by, alternative_causes, counterfactual_test, reliability, metadata'
-
   // Doc 13 site 2: both reads keyset-paginate past the 1000-row ceiling.
-  let [nodesRes, edgesRes] = await Promise.all([
+  // Missing public.edges is the World View contract: empty edges +
+  // edgesUnavailable, never a throw that paints News Feed red.
+  const [nodesRes, edgesRead] = await Promise.all([
     // metadata added 2026-08-18 (mapping-fix track): cardTypeInfo/regionOf
     // read metadata.entity_type; without it every actor fell to the
     // missing-metadata default and rendered "Person" in Civil society
     // regardless of the stored value. Read-path only.
     keysetAll(client, 'nodes', 'id, slug, label, type, description, confidence, summary, occurred_at, arc_id, metadata'),
-    keysetAll(client, 'edges', EDGE_BASE + EDGE_EVIDENCE),
+    readGraphEdgesOrUnavailable(client),
   ])
-  if (edgesRes.error) {
-    edgesRes = await keysetAll(client, 'edges', EDGE_BASE)
-  }
 
   if (nodesRes.error) throw nodesRes.error
-  if (edgesRes.error) throw edgesRes.error
 
-  if (nodesRes.data.length === 0) {
-    return { nodes: [], edges: [], source: 'supabase' }
+  if ((nodesRes.data ?? []).length === 0) {
+    return {
+      nodes: [],
+      edges: [],
+      source: 'supabase',
+      edgesUnavailable: edgesRead.edgesUnavailable,
+    }
   }
 
   return {
     nodes: nodesRes.data,
-    edges: edgesRes.data.map((e) => ({
-      id: e.id,
-      source: e.source_id,
-      target: e.target_id,
-      type: e.type,
-      weight: e.weight,
-      label: e.label,
-      similarity: e.similarity,
-      // Optional evidence fields — present only once the backend migration
-      // lands; every consumer treats them as possibly undefined.
-      signal_source: e.signal_source,
-      doc_strength: e.doc_strength,
-      claimed_by: e.claimed_by,
-      stance: e.stance,
-      disputed_by: e.disputed_by,
-      alternative_causes: e.alternative_causes,
-      counterfactual_test: e.counterfactual_test,
-      reliability: e.reliability,
-      metadata: e.metadata,
-    })),
+    edges: edgesRead.edgesUnavailable ? [] : mapGraphEdgeRows(edgesRead.data),
     source: 'supabase',
+    edgesUnavailable: edgesRead.edgesUnavailable,
   }
 }
 
@@ -332,7 +387,10 @@ export async function loadNodeCategory(node) {
       .select('category')
       .eq('id', node.arc_id)
       .maybeSingle()
-    if (error) throw error
+    if (error) {
+      if (isPostgrestSchemaGap(error)) return null
+      throw error
+    }
     if (data?.category) return data.category
   }
   if (node.id) {
@@ -341,7 +399,10 @@ export async function loadNodeCategory(node) {
       .select('category')
       .eq('root_node_id', node.id)
       .limit(1)
-    if (error) throw error
+    if (error) {
+      if (isPostgrestSchemaGap(error)) return null
+      throw error
+    }
     return data?.[0]?.category ?? null
   }
   return null
@@ -492,13 +553,16 @@ const PUBLIC_DORMANT_ARC_DAYS = 14
 export async function loadArcs({ supabaseClient } = {}) {
   const client = supabaseClient ?? supabase
   if (!client) {
-    return demoArcs.map((a) => ({
-      ...a,
-      derived_status: deriveArcStatus(
-        demoArcEvents.filter((e) => e.arc_slug === a.slug),
-        demoMilestones.filter((m) => m.arc_slug === a.slug),
-      ),
-    }))
+    return {
+      arcs: demoArcs.map((a) => ({
+        ...a,
+        derived_status: deriveArcStatus(
+          demoArcEvents.filter((e) => e.arc_slug === a.slug),
+          demoMilestones.filter((m) => m.arc_slug === a.slug),
+        ),
+      })),
+      arcsUnavailable: null,
+    }
   }
   const [arcsRes, eventsRes, milestonesRes] = await Promise.all([
     // Doc 13: all three arc tables keyset-paginate past the 1000-row ceiling;
@@ -506,34 +570,48 @@ export async function loadArcs({ supabaseClient } = {}) {
     // nulls-first) is re-applied client-side over the complete set. id is
     // included in every cols list: the keyset cursor reads it back off the
     // returned rows, so a cols list without it silently breaks paging.
-    keysetAll(client, 'story_arcs', 'id, slug, title, category, category_confidence, category_evidence, status, display_kind, root_node_id, coverage_gap, summary, started_at, last_update_at')
+    // title is never selected: live V2 story_arcs is an id-only stub.
+    keysetAll(client, 'story_arcs', STORY_ARCS_DISPLAY_COLS)
       .then((r) => (r.data ? { ...r, data: resortRows(r.data, 'last_update_at', { ascending: false }) } : r)),
     keysetAll(client, 'arc_events', 'id, arc_id, occurred_at'),
     keysetAll(client, 'arc_milestones_public', 'id, arc_id, status'),
   ])
-  if (arcsRes.error) throw arcsRes.error
-  if (eventsRes.error) throw eventsRes.error
-  if (milestonesRes.error) throw milestonesRes.error
+  if (arcsRes.error) {
+    if (isPostgrestSchemaGap(arcsRes.error)) {
+      return { arcs: [], arcsUnavailable: arcsRes.error.message ?? String(arcsRes.error) }
+    }
+    throw arcsRes.error
+  }
+  if (eventsRes.error && !isPostgrestSchemaGap(eventsRes.error)) throw eventsRes.error
+  if (milestonesRes.error && !isPostgrestSchemaGap(milestonesRes.error)) throw milestonesRes.error
   // The public route must not read operational pipeline_config. Its prior
   // denied-read fallback was the documented 14-day value, retained here
   // explicitly so anonymous behavior is deterministic and request-free.
   const dormantDays = PUBLIC_DORMANT_ARC_DAYS
   const eventsByArc = new Map()
-  for (const e of eventsRes.data) {
+  for (const e of eventsRes.error ? [] : eventsRes.data) {
     const arr = eventsByArc.get(e.arc_id) ?? []
     arr.push(e)
     eventsByArc.set(e.arc_id, arr)
   }
   const milestonesByArc = new Map()
-  for (const m of milestonesRes.data) {
+  for (const m of milestonesRes.error ? [] : milestonesRes.data) {
     const arr = milestonesByArc.get(m.arc_id) ?? []
     arr.push(m)
     milestonesByArc.set(m.arc_id, arr)
   }
-  return arcsRes.data.map((a) => ({
-    ...a,
-    derived_status: deriveArcStatus(eventsByArc.get(a.id), milestonesByArc.get(a.id), dormantDays),
-  }))
+  // Id-only stub rows have no slug/category/summary — treat as no-arc.
+  const displayArcs = (arcsRes.data ?? []).filter((a) => a.slug || a.category || a.summary || a.started_at)
+  return {
+    arcs: displayArcs.map((a) => ({
+      ...a,
+      title: null,
+      derived_status: deriveArcStatus(eventsByArc.get(a.id), milestonesByArc.get(a.id), dormantDays),
+    })),
+    arcsUnavailable: displayArcs.length === 0 && (arcsRes.data ?? []).length > 0
+      ? 'story_arcs is an id-only stub; stub rows are treated as no-arc'
+      : null,
+  }
 }
 
 // Milestones + consequence events for one arc.
@@ -676,12 +754,13 @@ export async function loadTimeline({ supabaseClient } = {}) {
         canonicalOf,
       ),
       labels: demoNodes.map((n) => ({ id: n.id ?? n.slug, slug: n.slug, label: n.label })),
+      edgesUnavailable: null,
     }
   }
   // Doc 13 site 3: all five timeline reads keyset-paginate past the 1000-row
   // ceiling; the event-node display order (occurred_at asc, nulls last) is
   // re-applied client-side over the complete set.
-  const [nodesRes, edgesRes, labelsRes, articlesRes, arcsRes] = await Promise.all([
+  const [nodesRes, edgesRead, labelsRes, articlesRes, arcsRes] = await Promise.all([
     keysetAll(client, 'nodes', 'id, slug, label, description, confidence, summary, occurred_at, arc_id', {
       filter: (q) => q.eq('type', 'event'),
     }).then((r) => (r.data ? { ...r, data: resortRows(r.data, 'occurred_at', { ascending: true, nullsFirst: false }) } : r)),
@@ -690,7 +769,8 @@ export async function loadTimeline({ supabaseClient } = {}) {
     // doc_strength added 2026-08-18 (Track B Step 3 item 4, read-path only):
     // the Screen 5 connector engine requires confirmed-grade strength before
     // any gap may be labeled "Source-supported causal link".
-    keysetAll(client, 'edges', 'id, source_id, target_id, type, weight, label, doc_strength', {
+    // Missing public.edges uses the World View contract: empty + flag.
+    readEdgesOrUnavailable(client, 'id, source_id, target_id, type, weight, label, doc_strength', {
       filter: (q) => q.in('type', ['causal', 'sequence']),
     }),
     keysetAll(client, 'nodes', 'id, slug, label'),
@@ -699,20 +779,20 @@ export async function loadTimeline({ supabaseClient } = {}) {
     // for every article carrying an arc assignment. Publication dates remain
     // publication dates; the UI labels these as News records, not events.
     keysetAll(client, 'articles', 'id, title, summary, published_at, outlet, arc_id'),
-    // Doc 05 pair 1: arc titles for event nodes that carry arc_id.
-    keysetAll(client, 'story_arcs', 'id, title'),
+    // Never select story_arcs.title. Id-only stub rows are no-arc.
+    keysetAll(client, 'story_arcs', STORY_ARCS_ID_ONLY),
   ])
   if (nodesRes.error) throw nodesRes.error
-  if (edgesRes.error) throw edgesRes.error
   if (labelsRes.error) throw labelsRes.error
   if (articlesRes.error) throw articlesRes.error
-  if (arcsRes.error) throw arcsRes.error
+  if (arcsRes.error && !isPostgrestSchemaGap(arcsRes.error)) throw arcsRes.error
+  const arcRows = arcsRes.error ? [] : arcsRes.data
   const { events, canonicalOf, suppressed } = canonicalizeTimelineEvents(nodesRes.data)
   const { articleIdBySuffix, arcTitleById } = buildTimelineCrossLinks(
     nodesRes.data,
     canonicalOf,
     articlesRes.data,
-    arcsRes.data,
+    arcRows,
   )
   return {
     // Cross-link fields are additive and optional: article_id only when the
@@ -727,8 +807,9 @@ export async function loadTimeline({ supabaseClient } = {}) {
     articleRecords: articlesRes.data.filter((article) => article.arc_id),
     suppressed,
     arcTitles: arcTitleById,
+    edgesUnavailable: edgesRead.edgesUnavailable,
     relationEdges: remapTimelineEdges(
-      edgesRes.data.map((e) => ({
+      (edgesRead.data ?? []).map((e) => ({
         id: e.id,
         source: e.source_id,
         target: e.target_id,
@@ -955,12 +1036,15 @@ export async function loadPublicAuthorNameMap(authorIds, { supabaseClient } = {}
 // Paged, searchable article stream across all outlets. `outlets`, `feeds`,
 // and `topicTerms` are optional working filters. Topic terms are explicitly
 // title/summary matches rather than a claim of a complete article taxonomy.
-export async function loadArticles({ q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore, limit = 30, offset = 0 } = {}) {
-  if (!supabase) return { articles: [], total: 0 }
-  let query = supabase
+export async function loadArticles({ q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore, limit = 30, offset = 0, supabaseClient } = {}) {
+  const client = supabaseClient ?? supabase
+  if (!client) return { articles: [], total: 0 }
+  // Do not join story_arcs for title. Live V2 story_arcs is an id-only stub;
+  // stub arcs are no-arc and arc_title stays null.
+  let query = client
     .from('articles')
     .select(
-      'id, title, url, summary, published_at, outlet, monoculture, unattributed, arc_id, author_id, story_arcs!articles_arc_id_fkey(title)',
+      'id, title, url, summary, published_at, outlet, monoculture, unattributed, arc_id, author_id',
       { count: 'exact' },
     )
     .order('published_at', { ascending: false, nullsFirst: false })
@@ -972,13 +1056,13 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
   const { data, error, count } = await query
   if (error) throw error
   const rows = data ?? []
-  const authorNames = await loadPublicAuthorNameMap(rows.map((article) => article.author_id))
+  const authorNames = await loadPublicAuthorNameMap(rows.map((article) => article.author_id), { supabaseClient: client })
   return {
     articles: rows.map((a) => ({
       ...a,
       author_name: authorNames.get(a.author_id) ?? null,
       author_id: undefined,
-      arc_title: a.story_arcs?.title ?? null,
+      arc_title: null,
       story_arcs: undefined,
     })),
     total: count ?? rows.length,
@@ -986,22 +1070,23 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
 }
 
 // Full detail for one article: claims + provenance citations.
-export async function loadArticleDetail(id) {
-  if (!supabase) return null
+export async function loadArticleDetail(id, { supabaseClient } = {}) {
+  const client = supabaseClient ?? supabase
+  if (!client) return null
   const [artRes, citRes, newsDetailRes] = await Promise.all([
-    supabase
+    client
       .from('articles')
-      .select('id, title, url, summary, published_at, outlet, claims, monoculture, unattributed, author_id, story_arcs!articles_arc_id_fkey(title)')
+      .select('id, title, url, summary, published_at, outlet, claims, monoculture, unattributed, author_id')
       .eq('id', id)
       .single(),
-    supabase
+    client
       .from('citations')
       .select('cited_entity, cited_type, documentation_strength')
       .eq('article_id', id)
       .order('documentation_strength', { ascending: false, nullsFirst: false }),
     // The security-barrier projection is the only anonymous contract for
     // reviewed claim text and linked evidence in an expanded News record.
-    supabase
+    client
       .from('news_detail_public')
       .select('article_id, reviewed_claims')
       .eq('article_id', id)
@@ -1010,7 +1095,7 @@ export async function loadArticleDetail(id) {
   if (artRes.error) throw artRes.error
   if (citRes.error) throw citRes.error
   if (newsDetailRes.error) throw newsDetailRes.error
-  const authorNames = await loadPublicAuthorNameMap([artRes.data.author_id])
+  const authorNames = await loadPublicAuthorNameMap([artRes.data.author_id], { supabaseClient: client })
 
   const storedClaims = Array.isArray(artRes.data.claims) ? artRes.data.claims : []
   const reviewedClaims = (newsDetailRes.data?.reviewed_claims ?? []).map((row) => ({
@@ -1045,7 +1130,7 @@ export async function loadArticleDetail(id) {
     claims,
     author_name: authorNames.get(artRes.data.author_id) ?? null,
     author_id: undefined,
-    arc_title: artRes.data.story_arcs?.title ?? null,
+    arc_title: null,
     citations: citRes.data ?? [],
     evidenceRecords,
   }
@@ -1230,20 +1315,19 @@ export async function loadArcArticles(arcId) {
 // Returns { edges, labels } with edges mapped to { id, source, target,
 // type, weight, label, doc_strength } — empty when the arc owns no nodes.
 export async function loadArcConnections(arcId) {
-  if (!supabase || !arcId) return { edges: [], labels: new Map() }
+  if (!supabase || !arcId) return { edges: [], labels: new Map(), edgesUnavailable: null }
   const nodesRes = await keysetAll(supabase, 'nodes', 'id, slug, label', {
     filter: (q) => q.eq('arc_id', arcId),
   })
   if (nodesRes.error) throw nodesRes.error
   const nodeRows = nodesRes.data ?? []
   const labels = new Map(nodeRows.map((n) => [n.id ?? n.slug, n.label]))
-  if (nodeRows.length === 0) return { edges: [], labels }
+  if (nodeRows.length === 0) return { edges: [], labels, edgesUnavailable: null }
   const keys = nodeRows.map((n) => n.id ?? n.slug)
-  const edgesRes = await keysetAll(supabase, 'edges', 'id, source_id, target_id, type, weight, label, doc_strength', {
+  const edgesRead = await readEdgesOrUnavailable(supabase, 'id, source_id, target_id, type, weight, label, doc_strength', {
     filter: (q) => q.or(`source_id.in.(${keys.join(',')}),target_id.in.(${keys.join(',')})`),
   })
-  if (edgesRes.error) throw edgesRes.error
-  const edgeRows = edgesRes.data ?? []
+  const edgeRows = edgesRead.data ?? []
   // Label BOTH endpoints: an edge's far end can be a node outside the arc,
   // and an endpoint must never render as a raw uuid.
   const missing = [...new Set(edgeRows.flatMap((e) => [e.source_id, e.target_id]))].filter(
@@ -1267,6 +1351,7 @@ export async function loadArcConnections(arcId) {
       doc_strength: e.doc_strength ?? null,
     })),
     labels,
+    edgesUnavailable: edgesRead.edgesUnavailable,
   }
 }
 

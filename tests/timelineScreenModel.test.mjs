@@ -236,14 +236,14 @@ test('both timeline loaders select doc_strength (read-path only)', () => {
   ]) {
     assert.match(
       file,
-      /'edges', 'id, source_id, target_id, type, weight, label, doc_strength'/,
+      /readEdgesOrUnavailable\([^,]+, 'id, source_id, target_id, type, weight, label, doc_strength'/,
       `${name} edge select must include doc_strength`,
     )
     assert.ok(file.includes('doc_strength: e.doc_strength ?? null'), `${name} edge map passes strength`)
   }
   // New item-4 reads exist and are null-safe on the no-supabase path.
   assert.match(supa, /export async function loadArcConnections\(arcId\)/)
-  assert.match(supa, /if \(!supabase \|\| !arcId\) return \{ edges: \[\], labels: new Map\(\) \}/)
+  assert.match(supa, /if \(!supabase \|\| !arcId\) return \{ edges: \[\], labels: new Map\(\), edgesUnavailable: null \}/)
   assert.match(supa, /export async function loadArticleExcerpt\(articleId\)/)
   assert.match(supa, /if \(!supabase \|\| !articleId\) return null/)
   // No writes anywhere in the new read functions.

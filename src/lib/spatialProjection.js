@@ -9,7 +9,7 @@
 //
 // Column contract: only the view columns listed below. Do not invent fields.
 
-import { keysetAll, supabase } from './supabase.js'
+import { keysetAll, readGraphEdgesOrUnavailable, supabase } from './supabase.js'
 import {
   readViteSupabaseUrl,
   rejectNonV2Client,
@@ -579,7 +579,7 @@ function unavailableResult(reason, error = null) {
   }
 }
 
-function resolveWorldViewClient(options = {}) {
+export function resolveWorldViewClient(options = {}) {
   const injected = Object.hasOwn(options, 'supabaseClient')
   if (!injected) {
     const origin = resolveV2ClientOrigin(options.envUrl ?? readViteSupabaseUrl())
@@ -688,10 +688,6 @@ export async function loadWorldViewGraph(options = {}) {
     }
   }
 
-  const EDGE_BASE = 'id, source_id, target_id, type, weight, label, similarity'
-  const EDGE_EVIDENCE =
-    ', signal_source, doc_strength, claimed_by, stance, disputed_by, alternative_causes, counterfactual_test, reliability, metadata'
-
   let nodesRes
   try {
     nodesRes = await keysetAll(
@@ -720,30 +716,15 @@ export async function loadWorldViewGraph(options = {}) {
     }
   }
 
-  let edgesRes
-  try {
-    edgesRes = await keysetAll(resolved.client, 'edges', EDGE_BASE + EDGE_EVIDENCE)
-    if (edgesRes.error) {
-      edgesRes = await keysetAll(resolved.client, 'edges', EDGE_BASE)
-    }
-  } catch (err) {
+  // Same missing-edges contract as loadGraph: empty edges + unavailable flag.
+  const edgesRead = await readGraphEdgesOrUnavailable(resolved.client)
+  if (edgesRead.edgesUnavailable) {
     return {
       status: 'ok',
       reason: null,
       nodes: nodesRes.data ?? [],
       edges: [],
-      edgesUnavailable: err?.message ?? String(err),
-      error: null,
-    }
-  }
-
-  if (edgesRes.error) {
-    return {
-      status: 'ok',
-      reason: null,
-      nodes: nodesRes.data ?? [],
-      edges: [],
-      edgesUnavailable: edgesRes.error.message ?? String(edgesRes.error),
+      edgesUnavailable: edgesRead.edgesUnavailable,
       error: null,
     }
   }
@@ -752,7 +733,7 @@ export async function loadWorldViewGraph(options = {}) {
     status: 'ok',
     reason: null,
     nodes: nodesRes.data ?? [],
-    edges: mapGraphEdges(edgesRes.data),
+    edges: mapGraphEdges(edgesRead.data),
     edgesUnavailable: null,
     error: null,
   }
