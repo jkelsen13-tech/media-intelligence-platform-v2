@@ -163,6 +163,10 @@ export function createCesiumEllipsoidRendererAdapter({
     const attributionText = stack?.attribution ?? '© OpenStreetMap contributors'
 
     // Keyless open imagery.
+    // Cesium >= 1.107 removed the Viewer `imageryProvider` option: passing it
+    // only suppresses the default base layer and the provider is never added,
+    // which leaves a black (imageless) ellipsoid. The supported path is an
+    // explicit ImageryLayer passed as `baseLayer`.
     const imageryProvider = new Cesium.UrlTemplateImageryProvider({
       url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       credit: new Cesium.Credit(attributionText),
@@ -181,7 +185,7 @@ export function createCesiumEllipsoidRendererAdapter({
         sceneMode: Cesium.SceneMode.SCENE3D,
         infoBox: false,
         selectionIndicator: false,
-        imageryProvider,
+        baseLayer: new Cesium.ImageryLayer(imageryProvider),
       })
     } catch (bootError) {
       // eslint-disable-next-line no-console
