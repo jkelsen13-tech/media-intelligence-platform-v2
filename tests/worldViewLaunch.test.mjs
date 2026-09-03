@@ -273,7 +273,7 @@ test('H: no private-person point/track/face; no CCTV/aircraft/vessel overlay', (
 test('I: base map / renderer attribution is visible', () => {
   assert.match(MAP, /AttributionControl/)
   assert.match(STACK, /OpenStreetMap/)
-  assert.match(STACK, /CARTO|Natural Earth/)
+  assert.match(STACK, /OpenFreeMap|Natural Earth/)
   assert.match(MAP, /wv-map-attrib|attribution/)
 })
 

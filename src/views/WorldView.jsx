@@ -436,7 +436,7 @@ export default function WorldView({
       return
     }
     if (selected?.fromSpatialProjection && node) {
-      onSelectProjection(node)
+      onSelectProjection(node, row)
     }
   }, [loadStatus, graphNodes, selected, onSelectProjection])
 

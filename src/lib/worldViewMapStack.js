@@ -13,10 +13,10 @@ export const WORLD_VIEW_RENDERER = 'maplibre-deck.gl'
 
 export const MAP_STACKS = Object.freeze([
   {
-    id: 'carto-positron',
-    label: 'Carto Positron',
-    kind: 'raster',
-    attribution: '© OpenStreetMap contributors © CARTO',
+    id: 'openfreemap-positron',
+    label: 'OpenFreeMap Positron',
+    kind: 'vector',
+    attribution: '© OpenStreetMap contributors © OpenFreeMap',
   },
   {
     id: 'osm',
@@ -32,7 +32,7 @@ export const MAP_STACKS = Object.freeze([
   },
 ])
 
-export const DEFAULT_MAP_STACK_ID = 'carto-positron'
+export const DEFAULT_MAP_STACK_ID = 'openfreemap-positron'
 export const FALLBACK_MAP_STACK_ID = 'atlas-fallback'
 
 export function mapStackById(id) {
@@ -56,24 +56,8 @@ export function mapLibreStyleForStack(id) {
       layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
     }
   }
-  return {
-    version: 8,
-    name: 'MIP Carto Positron',
-    sources: {
-      carto: {
-        type: 'raster',
-        tiles: [
-          'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
-          'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
-          'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
-        ],
-        tileSize: 256,
-        attribution: '© OpenStreetMap contributors © CARTO',
-        maxzoom: 19,
-      },
-    },
-    layers: [{ id: 'carto', type: 'raster', source: 'carto' }],
-  }
+  // Keyless vector style. Do not use paid basemap APIs.
+  return 'https://tiles.openfreemap.org/styles/positron'
 }
 
 /** World-scale default — not a single-facility framing. */
@@ -166,7 +150,7 @@ export function geometryAfterCamera(row, _camera = null) {
 }
 
 export function nextMapStackOnFailure(currentId) {
-  if (currentId === 'carto-positron') return 'osm'
+  if (currentId === 'openfreemap-positron') return 'osm'
   return FALLBACK_MAP_STACK_ID
 }
 
