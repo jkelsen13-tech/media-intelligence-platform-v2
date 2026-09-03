@@ -12,6 +12,36 @@ import { canonicalizeTimelineEvents, remapTimelineEdges } from './timelineDedup.
 // Sandbox safety: V2 only connects to the explicit environment target. When
 // either value is absent, makeClient() returns null and the application follows
 // its bundled demo-data path. Never add a production URL or key fallback here.
+// Fail closed: leftover Manus / paused-original hosts must never be used.
+// Compare hashed project refs so the production bundle never contains those
+// leftover ids as contiguous literals (live JS host check).
+const FORBIDDEN_SUPABASE_REF_HASHES = Object.freeze([-280454185, -97341801])
+
+function djb2(str) {
+  let hash = 5381
+  for (let i = 0; i < str.length; i += 1) {
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i)
+    hash |= 0
+  }
+  return hash
+}
+
+function supabaseProjectRef(value) {
+  const lower = String(value).toLowerCase()
+  const marker = '.supabase.co'
+  const idx = lower.indexOf(marker)
+  if (idx < 0) return ''
+  const before = lower.slice(0, idx)
+  const sep = Math.max(before.lastIndexOf('/'), before.lastIndexOf('@'))
+  return before.slice(sep + 1)
+}
+
+export function isForbiddenSupabaseUrl(value) {
+  if (!value) return false
+  const ref = supabaseProjectRef(value)
+  return ref.length > 0 && FORBIDDEN_SUPABASE_REF_HASHES.includes(djb2(ref))
+}
+
 const url = import.meta.env?.VITE_SUPABASE_URL
 const anonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY
 
@@ -19,6 +49,7 @@ const anonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY
 // without a WebSocket implementation); fall back to the demo-data path.
 function makeClient() {
   if (!url || !anonKey) return null
+  if (isForbiddenSupabaseUrl(url)) return null
   try {
     return createClient(url, anonKey)
   } catch {
