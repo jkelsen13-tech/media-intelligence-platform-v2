@@ -82,12 +82,43 @@ test('route shape is hash; slugs map to existing views', () => {
   assert.equal(DEEP_LINK_SLUG_TO_VIEW.sources, 'compare')
   assert.equal(DEEP_LINK_SLUG_TO_VIEW.timeline, 'timeline')
   assert.equal(DEEP_LINK_SLUG_TO_VIEW.arc, 'arcs')
+  assert.equal(DEEP_LINK_SLUG_TO_VIEW.arcs, 'arcs')
   assert.equal(DEEP_LINK_SLUG_TO_VIEW.world, 'world')
   assert.equal(VIEW_TO_DEEP_LINK_SLUG.compare, 'sources')
   assert.equal(VIEW_TO_DEEP_LINK_SLUG.arcs, 'arc')
   assert.equal(isInvestigationDeepLink('#/event/abc/graph'), true)
   assert.equal(isInvestigationDeepLink('#error=access_denied'), false)
   assert.equal(isInvestigationDeepLink('#/'), false)
+})
+
+test('/arc and /arcs both reconstruct the fixture subject onto Arcs; unknown slugs fail-close', () => {
+  for (const slug of ['arc', 'arcs']) {
+    const parsed = parseDeepLink(`#/event/${CLEVELAND_CANONICAL_EVENT_ID}/${slug}`)
+    assert.equal(parsed.subjectId, CLEVELAND_CANONICAL_EVENT_ID)
+    assert.equal(parsed.view, 'arcs')
+    assert.equal(parsed.unknownView, false)
+    const reconstructed = reconstructFromDeepLink(parsed, {
+      currentIc: emptyInvestigationContext('news'),
+      catalog: PARENT_CATALOG,
+    })
+    assert.equal(reconstructed.investigationContext.canonical_subject_id, CLEVELAND_CANONICAL_EVENT_ID)
+    assert.equal(reconstructed.investigationContext.active_view, 'arcs')
+    assert.equal(reconstructed.invented, false)
+    assert.equal(reconstructed.fallbacks.some((item) => item.kind === 'view'), false)
+    assert.notEqual(reconstructed.investigationContext.active_view, 'graph')
+  }
+
+  const unknown = parseDeepLink(`#/event/${CLEVELAND_CANONICAL_EVENT_ID}/not-a-view`)
+  assert.equal(unknown.unknownView, true)
+  assert.equal(unknown.view, null)
+  const reconstructedUnknown = reconstructFromDeepLink(unknown, {
+    currentIc: emptyInvestigationContext('news'),
+    catalog: PARENT_CATALOG,
+  })
+  assert.equal(reconstructedUnknown.investigationContext.canonical_subject_id, CLEVELAND_CANONICAL_EVENT_ID)
+  assert.equal(reconstructedUnknown.investigationContext.active_view, 'graph')
+  assert.equal(reconstructedUnknown.fallbacks.some((item) => item.kind === 'view'), true)
+  assert.equal(reconstructedUnknown.invented, false)
 })
 
 test('deep link reconstructs fixture subject + view from ids', () => {

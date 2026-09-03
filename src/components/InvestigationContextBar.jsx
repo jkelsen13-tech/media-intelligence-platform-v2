@@ -1,4 +1,8 @@
 import { investigationContextDomProps } from '../lib/investigationContext'
+import {
+  selectionFallbackCopy,
+  freshnessFromExistingMarkers,
+} from '../lib/investigationJoinState'
 
 function display(value, empty = 'none') {
   if (value == null || String(value).trim() === '') return empty
@@ -10,23 +14,20 @@ function rangeText(range) {
   return `${display(range.from, 'not recorded')} → ${display(range.to, 'not recorded')}`
 }
 
-function fallbackCopy(fallback) {
-  const kind = fallback?.kind ?? 'selection'
-  const id = fallback?.requestedId ?? 'unknown'
-  return `Sub-selection ${kind} ${id} is not valid on this subject. Showing the parent investigation context.`
-}
-
 export default function InvestigationContextBar({
   investigationContext,
   recentInvestigations = [],
   onRestoreRecent,
   selectionFallbacks = [],
+  joinDisclosures = [],
   storageKey,
 }) {
   const ic = investigationContext
   const hasSubject = Boolean(ic?.canonical_subject_id)
   const recents = recentInvestigations ?? []
   const fallbacks = selectionFallbacks ?? []
+  const joins = joinDisclosures ?? []
+  const freshness = freshnessFromExistingMarkers({ asOfTime: ic?.as_of_time })
   return (
     <section
       className="ic-bar"
@@ -55,7 +56,9 @@ export default function InvestigationContextBar({
           </div>
           <div>
             <dt>as_of_time</dt>
-            <dd className="num">{display(ic.as_of_time, 'not recorded')}</dd>
+            <dd className="num" data-freshness={ic.as_of_time ? 'as-of' : ''}>
+              {display(ic.as_of_time, 'not recorded')}
+            </dd>
           </div>
           <div>
             <dt>selected_time_range</dt>
@@ -71,11 +74,29 @@ export default function InvestigationContextBar({
           </div>
         </dl>
       )}
+      {hasSubject && freshness.summary && (
+        <p className="ic-bar-freshness" data-freshness-kind={freshness.kind}>
+          {freshness.summary}
+        </p>
+      )}
       {fallbacks.length > 0 && (
         <ul className="ic-bar-fallbacks" data-deep-link-fallback="true">
           {fallbacks.map((fallback) => (
             <li key={`${fallback.kind}:${fallback.requestedId}`}>
-              {fallbackCopy(fallback)}
+              {selectionFallbackCopy(fallback)}
+            </li>
+          ))}
+        </ul>
+      )}
+      {joins.length > 0 && (
+        <ul className="ic-bar-joins" data-join-disclosures="true">
+          {joins.map((join, index) => (
+            <li
+              key={`${join.kind}:${join.view ?? ''}:${join.requestedId ?? index}`}
+              data-join-kind={join.kind}
+              data-join-action={join.action ?? ''}
+            >
+              {join.copy}
             </li>
           ))}
         </ul>

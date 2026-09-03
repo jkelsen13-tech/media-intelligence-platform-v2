@@ -29,6 +29,11 @@ import {
   applyDiscoveryFilters,
   discoveryFiltersAreActive,
 } from '../lib/discoveryFilters.js'
+import {
+  EXPLORE_A11Y,
+  SEARCH_DEBOUNCE_MS,
+  filterChipA11y,
+} from '../lib/investigationJoinState.js'
 
 // News Feed (Track B Step 4, addendum Screen 1): title block with the
 // browser-local last-visit count, epistemic banner, wired outlet/status
@@ -224,7 +229,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
 
   useEffect(() => {
     clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => setDebouncedQ(q.trim()), 350)
+    debounceRef.current = setTimeout(() => setDebouncedQ(q.trim()), SEARCH_DEBOUNCE_MS)
     return () => clearTimeout(debounceRef.current)
   }, [q])
 
@@ -696,15 +701,20 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const outletRow = (
     <div className="news-filter-row">
       <button
+        type="button"
         className={`news-chip${outlet === null ? ' active' : ''}`}
+        {...filterChipA11y(outlet === null)}
         onClick={() => patchDiscovery({ outlet: null })}
       >
         All outlets
+        {outlet === null && <span className="filter-active-mark">selected</span>}
       </button>
       {orderedOutlets.map((item) => (
         <button
           key={item.name}
+          type="button"
           className={`news-chip${outlet === item.name ? ' active' : ''}`}
+          {...filterChipA11y(outlet === item.name)}
           onClick={() => patchDiscovery({ outlet: item.name })}
           title={`Volume: ${item.volume} article${item.volume === 1 ? '' : 's'} in the current filter · Earliest timestamp in recorded multi-outlet events: ${item.firstToReportCount}${item.country ? ` · publisher country: ${item.country}` : ''}${item.parentOwnership ? ` · ownership: ${item.parentOwnership}` : ''}`}
         >
@@ -712,6 +722,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           <span className="news-source-metric num" aria-label={`Volume ${item.volume}`}>V {item.volume}</span>
           <span className="news-source-metric num" aria-label={`First to report ${item.firstToReportCount}`}>F {item.firstToReportCount}</span>
           <span className="news-source-metric unavailable" aria-label="Independent corroboration unavailable without verified lineage">C —</span>
+          {outlet === item.name && <span className="filter-active-mark">selected</span>}
         </button>
       ))}
     </div>
@@ -721,10 +732,13 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       {STATUS_FILTERS.map((f) => (
         <button
           key={f.key}
+          type="button"
           className={`news-chip${status === f.key ? ' active' : ''}`}
+          {...filterChipA11y(status === f.key)}
           onClick={() => patchDiscovery({ status: f.key })}
         >
           {f.label}
+          {status === f.key && <span className="filter-active-mark">selected</span>}
         </button>
       ))}
     </div>
@@ -803,7 +817,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
               </>
             )}
           </span>
-          <button className="news-filters-btn" onClick={() => setFiltersOpen(true)}>
+          <button className="news-filters-btn" onClick={() => setFiltersOpen(true)} aria-haspopup="dialog" aria-expanded={filtersOpen} aria-label={EXPLORE_A11Y.filtersLabel}>
             Discovery filters
           </button>
         </div>
@@ -814,20 +828,22 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           </p>
         {discoveryFiltersAreActive(discovery) && (
           <div className="news-filter-row news-active-filters">
-            {outlet !== null && <button className="news-chip active" title="Clear outlet filter" onClick={() => patchDiscovery({ outlet: null })}>{outlet} ×</button>}
-            {status !== 'all' && <button className="news-chip active" title="Clear status filter" onClick={() => patchDiscovery({ status: 'all' })}>{STATUS_FILTERS.find((f) => f.key === status)?.label} ×</button>}
-            {region !== 'all' && <button className="news-chip active" title="Clear region filter" onClick={() => patchDiscovery({ region: 'all' })}>{region} ×</button>}
-            {evidenceBasis !== 'all' && <button className="news-chip active" title="Clear evidence filter" onClick={() => patchDiscovery({ evidenceBasis: 'all' })}>{EVIDENCE_FILTERS.find((item) => item.key === evidenceBasis)?.label} ×</button>}
-            {topic !== 'all' && <button className="news-chip active" title="Clear topic filter" onClick={() => patchDiscovery({ topic: 'all' })}>{TOPIC_FILTERS.find((item) => item.key === topic)?.label} ×</button>}
-            {dateRange !== 'all' && <button className="news-chip active" title="Clear date filter" onClick={() => patchDiscovery({ dateRange: 'all', customDateStart: '', customDateEnd: '' })}>{DATE_FILTERS.find((item) => item.key === dateRange)?.label} ×</button>}
+            {outlet !== null && <button type="button" className="news-chip active" {...filterChipA11y(true)} title="Clear outlet filter" onClick={() => patchDiscovery({ outlet: null })}>{outlet} ×<span className="filter-active-mark">selected</span></button>}
+            {status !== 'all' && <button type="button" className="news-chip active" {...filterChipA11y(true)} title="Clear status filter" onClick={() => patchDiscovery({ status: 'all' })}>{STATUS_FILTERS.find((f) => f.key === status)?.label} ×<span className="filter-active-mark">selected</span></button>}
+            {region !== 'all' && <button type="button" className="news-chip active" {...filterChipA11y(true)} title="Clear region filter" onClick={() => patchDiscovery({ region: 'all' })}>{region} ×<span className="filter-active-mark">selected</span></button>}
+            {evidenceBasis !== 'all' && <button type="button" className="news-chip active" {...filterChipA11y(true)} title="Clear evidence filter" onClick={() => patchDiscovery({ evidenceBasis: 'all' })}>{EVIDENCE_FILTERS.find((item) => item.key === evidenceBasis)?.label} ×<span className="filter-active-mark">selected</span></button>}
+            {topic !== 'all' && <button type="button" className="news-chip active" {...filterChipA11y(true)} title="Clear topic filter" onClick={() => patchDiscovery({ topic: 'all' })}>{TOPIC_FILTERS.find((item) => item.key === topic)?.label} ×<span className="filter-active-mark">selected</span></button>}
+            {dateRange !== 'all' && <button type="button" className="news-chip active" {...filterChipA11y(true)} title="Clear date filter" onClick={() => patchDiscovery({ dateRange: 'all', customDateStart: '', customDateEnd: '' })}>{DATE_FILTERS.find((item) => item.key === dateRange)?.label} ×<span className="filter-active-mark">selected</span></button>}
           </div>
         )}
         <input
           className="news-search"
           type="search"
+          aria-label={EXPLORE_A11Y.searchLabel}
           placeholder="Search headlines, summaries, article text…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          data-explore-search={isDrawer ? 'true' : undefined}
         />
         {referenceFilters()}
         <div className="news-source-order-row">

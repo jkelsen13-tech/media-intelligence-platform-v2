@@ -5,8 +5,12 @@
 //
 // GitHub Pages has no SPA path fallback, and this app has no existing
 // router. Shareable state lives in the hash:
-//   #/event/<canonical_subject_id>/<graph|sources|timeline|arc|world|news>
+//   #/event/<canonical_subject_id>/<graph|sources|timeline|arc|arcs|world|news>
 //   ?claim=&entity=&source=&time=&place=
+//
+// Canonical §10 slug for Story Arcs is `arc` (serialized). The App view
+// key is `arcs`. Live hash `#/event/<id>/arcs` (plural) aliases to that
+// same Arcs view — it is not an unknown slug and must not fall back to Graph.
 //
 // Canonical identity is the path id only. Display title / label / name / q
 // are never read as identity. Invalid or stale sub-selection ids fall back
@@ -23,12 +27,13 @@ export const DEEP_LINK_CONTRACT = 'MIP_INVESTIGATION_CONTEXT_AND_GLOBAL_DISCOVER
 
 export const DEEP_LINK_ROUTE_SHAPE = 'hash'
 
-/** Conceptual §10 slugs → existing App view keys. */
+/** Conceptual §10 slugs → existing App view keys. `arcs` aliases `arc`. */
 export const DEEP_LINK_SLUG_TO_VIEW = Object.freeze({
   graph: 'graph',
   sources: 'compare',
   timeline: 'timeline',
   arc: 'arcs',
+  arcs: 'arcs',
   world: 'world',
   news: 'news',
 })

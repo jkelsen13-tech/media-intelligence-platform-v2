@@ -56,6 +56,13 @@ import {
 } from './lib/recentInvestigation'
 import InvestigationContextBar from './components/InvestigationContextBar'
 import {
+  EXPLORE_A11Y,
+  exploreFocusClose,
+  exploreFocusOpen,
+  handleExploreDialogKeyDown,
+  shellJoinDisclosures,
+} from './lib/investigationJoinState'
+import {
   filterGraphRegion,
   graphRegionOptions,
   recordedGeography,
@@ -202,6 +209,9 @@ export default function App() {
   // a sheet containing NewsView in drawer variant. Opening is NOT a view
   // change — do not changeView('news'), do not applySubject.
   const [exploreOpen, setExploreOpen] = useState(false)
+  const exploreBtnRef = useRef(null)
+  const exploreDialogRef = useRef(null)
+  const exploreFocusPrimed = useRef(false)
   // Mobile graph entry: 'hubs' (ranked list) -> 'sub' (hub subgraph) / 'all'.
   const [graphScreen, setGraphScreen] = useState('hubs')
   // Track B Step 2 item 3: desktop defaults to the top hub's focused
@@ -279,6 +289,8 @@ export default function App() {
   }, [])
   const corpusLine = liveCorpusLabel(corpusMeta?.count, corpusMeta?.latestFetchedAt, Date.now())
 
+  // Canonical graph/event state loads once. Lens / tab changes must not
+  // re-fetch the entire graph (Step 7 §14).
   useEffect(() => {
     loadGraph().then(setGraph).catch((err) => setError(err.message))
     loadGraphCoverage().then(setGraphCoverage).catch(() => setGraphCoverage(null))
@@ -550,6 +562,19 @@ export default function App() {
   const closeExplore = useCallback(() => {
     setExploreOpen(false)
   }, [])
+
+  // §14: predictable focus — search (or dialog) on open, trigger on close.
+  useEffect(() => {
+    if (exploreOpen) {
+      exploreFocusPrimed.current = true
+      exploreFocusOpen(exploreDialogRef.current)
+      return
+    }
+    if (exploreFocusPrimed.current) {
+      exploreFocusPrimed.current = false
+      exploreFocusClose(exploreBtnRef.current)
+    }
+  }, [exploreOpen])
 
   // Explicit result select from the drawer: close overlay, then the News
   // jump handler (commitNewSubject — R4.75 Step 5). Browse / filter /
@@ -917,6 +942,19 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash)
   }, [deepLinkCatalog, rememberPriorSubject])
 
+  const joinDisclosures = useMemo(
+    () =>
+      shellJoinDisclosures({
+        investigationContext,
+        view,
+        selectionFallbacks,
+        graphError: error,
+        edgesUnavailable: graph?.edgesUnavailable ?? null,
+        nodeCount: graph?.nodes?.length ?? null,
+      }),
+    [investigationContext, view, selectionFallbacks, error, graph],
+  )
+
   // Returning to Graph restores a live matching node from IC. No node → no
   // invented subject. Tab switch never clears IC. A valid entity sub-selection
   // from the deep link is preferred; stale ids already fell back to parent.
@@ -948,6 +986,7 @@ export default function App() {
             <button
               key={v.key}
               className={`nav-tab${(v.key === 'more' ? moreActive : view === v.key) ? ' active' : ''}`}
+              aria-current={(v.key === 'more' ? moreActive : view === v.key) ? 'page' : undefined}
               onClick={() => (v.key === 'more' ? setMoreOpen(true) : changeView(v.key))}
             >
               {v.label}
@@ -956,10 +995,13 @@ export default function App() {
         </nav>
         <button
           type="button"
+          ref={exploreBtnRef}
           className="explore-btn"
           aria-label="Explore / Change Topic"
           aria-haspopup="dialog"
           aria-expanded={exploreOpen}
+          aria-controls={EXPLORE_A11Y.dialogId}
+          data-explore-trigger="true"
           onClick={openExplore}
         >
           Explore / Change Topic
@@ -1044,14 +1086,22 @@ export default function App() {
       {exploreOpen && (
         <div className="sheet-backdrop" onClick={closeExplore}>
           <div
+            id={EXPLORE_A11Y.dialogId}
+            ref={exploreDialogRef}
             className="sheet explore-sheet"
             role="dialog"
+            aria-modal="true"
             aria-label="Explore / Change Topic"
+            tabIndex={-1}
+            data-explore-dialog="true"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) =>
+              handleExploreDialogKeyDown(e, { dialogEl: exploreDialogRef.current, onDismiss: closeExplore })
+            }
           >
             <div className="sheet-head">
               <h2>Explore / Change Topic</h2>
-              <button className="sheet-close" aria-label="Close" onClick={closeExplore}>
+              <button className="sheet-close" aria-label={EXPLORE_A11Y.closeLabel} onClick={closeExplore}>
                 ×
               </button>
             </div>
@@ -1077,6 +1127,7 @@ export default function App() {
         recentInvestigations={recentInvestigations}
         onRestoreRecent={restoreRecentItem}
         selectionFallbacks={selectionFallbacks}
+        joinDisclosures={joinDisclosures}
         storageKey={RECENT_INVESTIGATION_STORAGE_KEY}
       />
 
@@ -1240,6 +1291,7 @@ export default function App() {
                           aria-selected={graphMode === mode.id}
                           className={`graph-workspace-tab${graphMode === mode.id ? ' active' : ''}`}
                           onClick={() => {
+                            // Lens change only — do not loadGraph / refetch canonical event state.
                             clearPrimaryGraphOverlays()
                             setGraphMode(mode.id)
                           }}
@@ -1502,6 +1554,7 @@ export default function App() {
           <button
             key={v.key}
             className={`bottom-tab${(v.key === 'more' ? moreActive : view === v.key) ? ' active' : ''}`}
+            aria-current={(v.key === 'more' ? moreActive : view === v.key) ? 'page' : undefined}
             onClick={() => (v.key === 'more' ? setMoreOpen(true) : changeView(v.key))}
           >
             {v.shortLabel}
