@@ -159,6 +159,36 @@ export function isPostgrestSchemaGap(error) {
   return false
 }
 
+// Privilege / GRANT misses on public.articles (PostgREST 42501, PGRST301,
+// or a permission-denied / insufficient-privilege message). Distinct from
+// schema-cache gaps: the table exists, the anon/publishable role cannot
+// SELECT it. News fail-closes to honest empty — never a red exception,
+// never invented rows, never a GRANT/RLS write.
+const POSTGREST_PERMISSION_DENIED_CODES = new Set(['42501', 'PGRST301'])
+
+export function isPostgrestPermissionDenied(error) {
+  if (!error) return false
+  const code = String(error.code ?? '')
+  if (POSTGREST_PERMISSION_DENIED_CODES.has(code)) return true
+  const message = String(error.message ?? error.details ?? error.hint ?? '')
+  if (/permission denied/i.test(message)) return true
+  if (/insufficient privilege/i.test(message)) return true
+  return false
+}
+
+export function articlesUnavailableReason(error) {
+  if (isPostgrestPermissionDenied(error)) return 'permission_denied'
+  return null
+}
+
+function emptyArticlesUnavailable(error) {
+  return {
+    articles: [],
+    total: 0,
+    articlesUnavailable: articlesUnavailableReason(error) ?? 'permission_denied',
+  }
+}
+
 export function edgesUnavailableMessage(error) {
   return error?.message ?? String(error)
 }
@@ -842,8 +872,14 @@ export async function loadCorpusMeta({ supabaseClient } = {}) {
       .order('fetched_at', { ascending: false, nullsFirst: false })
       .limit(1),
   ])
-  if (countRes.error) throw countRes.error
-  if (latestRes.error) throw latestRes.error
+  if (countRes.error) {
+    if (isPostgrestPermissionDenied(countRes.error)) return { count: null, latestFetchedAt: null }
+    throw countRes.error
+  }
+  if (latestRes.error) {
+    if (isPostgrestPermissionDenied(latestRes.error)) return { count: null, latestFetchedAt: null }
+    throw latestRes.error
+  }
   return {
     count: countRes.count ?? null,
     latestFetchedAt: latestRes.data?.[0]?.fetched_at ?? null,
@@ -860,7 +896,10 @@ export async function loadNewSinceCount(isoTs, { supabaseClient } = {}) {
     .select('id', { count: 'exact', head: true })
     .eq('reader_state', 'eligible')
     .gt('fetched_at', isoTs)
-  if (error) throw error
+  if (error) {
+    if (isPostgrestPermissionDenied(error)) return null
+    throw error
+  }
   return count ?? null
 }
 
@@ -954,7 +993,10 @@ export async function loadOutletDirectory({ supabaseClient } = {}) {
     keysetAll(client, 'articles', 'id, outlet', { filter: (q) => q.eq('reader_state', 'eligible').not('outlet', 'is', null) }),
     keysetAll(client, 'outlets', 'id, name, country, parent_ownership'),
   ])
-  if (articlesRes.error) throw articlesRes.error
+  if (articlesRes.error) {
+    if (isPostgrestPermissionDenied(articlesRes.error)) return []
+    throw articlesRes.error
+  }
   if (outletsRes.error) throw outletsRes.error
   const countByName = new Map()
   for (const row of articlesRes.data ?? []) {
@@ -1016,7 +1058,10 @@ export async function loadFilteredSourceMetricRows(filters = {}, { supabaseClien
   const { data, error } = await keysetAll(client, 'articles', 'id, outlet, published_at', {
     filter: (query) => applyNewsArticleFilters(query, contextFilters),
   })
-  if (error) throw error
+  if (error) {
+    if (isPostgrestPermissionDenied(error)) return []
+    throw error
+  }
   return data ?? []
 }
 
@@ -1038,7 +1083,7 @@ export async function loadPublicAuthorNameMap(authorIds, { supabaseClient } = {}
 // title/summary matches rather than a claim of a complete article taxonomy.
 export async function loadArticles({ q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore, limit = 30, offset = 0, supabaseClient } = {}) {
   const client = supabaseClient ?? supabase
-  if (!client) return { articles: [], total: 0 }
+  if (!client) return { articles: [], total: 0, articlesUnavailable: null }
   // Do not join story_arcs for title. Live V2 story_arcs is an id-only stub;
   // stub arcs are no-arc and arc_title stays null.
   let query = client
@@ -1054,7 +1099,10 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
   query = applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore })
 
   const { data, error, count } = await query
-  if (error) throw error
+  if (error) {
+    if (isPostgrestPermissionDenied(error)) return emptyArticlesUnavailable(error)
+    throw error
+  }
   const rows = data ?? []
   const authorNames = await loadPublicAuthorNameMap(rows.map((article) => article.author_id), { supabaseClient: client })
   return {
@@ -1066,6 +1114,7 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
       story_arcs: undefined,
     })),
     total: count ?? rows.length,
+    articlesUnavailable: null,
   }
 }
 
@@ -1092,7 +1141,12 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
       .eq('article_id', id)
       .maybeSingle(),
   ])
-  if (artRes.error) throw artRes.error
+  if (artRes.error) {
+    if (isPostgrestPermissionDenied(artRes.error)) {
+      return { articlesUnavailable: articlesUnavailableReason(artRes.error) }
+    }
+    throw artRes.error
+  }
   if (citRes.error) throw citRes.error
   if (newsDetailRes.error) throw newsDetailRes.error
   const authorNames = await loadPublicAuthorNameMap([artRes.data.author_id], { supabaseClient: client })

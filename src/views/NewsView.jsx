@@ -162,10 +162,12 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [articlesUnavailable, setArticlesUnavailable] = useState(null)
   const [expanded, setExpanded] = useState(null) // article id
   const [detail, setDetail] = useState(null)
   const [graphLinks, setGraphLinks] = useState([])
   const [detailError, setDetailError] = useState(null)
+  const [detailUnavailable, setDetailUnavailable] = useState(null)
   // Location corroboration for the expanded article (null = none / table absent).
   const [sky, setSky] = useState(null)
   // Doc 05: cross-window keys for the expanded article. null = join found no
@@ -271,6 +273,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     const seq = ++requestRef.current
     setLoading(true)
     setError(null)
+    setArticlesUnavailable(null)
     loadArticles({
       q: debouncedQ,
       outlet,
@@ -283,10 +286,11 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       limit: PAGE_SIZE,
       offset: 0,
     })
-      .then(({ articles, total }) => {
+      .then(({ articles, total, articlesUnavailable: reason }) => {
         if (seq !== requestRef.current) return // stale response — drop
         setArticles(articles)
         setTotal(total)
+        setArticlesUnavailable(reason ?? null)
       })
       .catch((err) => {
         if (seq !== requestRef.current) return
@@ -303,11 +307,19 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     setDetail(null)
     setGraphLinks([])
     setDetailError(null)
+    setDetailUnavailable(null)
     setSky(null)
     setTimelineKey(null)
     setComparisonEvents([])
     loadArticleDetail(id)
-      .then(setDetail)
+      .then((d) => {
+        if (d?.articlesUnavailable) {
+          setDetail(null)
+          setDetailUnavailable(d.articlesUnavailable)
+          return
+        }
+        setDetail(d)
+      })
       .catch((err) => setDetailError(err.message))
     loadArticleGraphLinks(id)
       .then(setGraphLinks)
@@ -367,8 +379,12 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       limit: PAGE_SIZE,
       offset: articles.length,
     })
-      .then(({ articles: more }) => {
+      .then(({ articles: more, articlesUnavailable: reason }) => {
         if (seq !== requestRef.current) return
+        if (reason) {
+          setArticlesUnavailable(reason)
+          return
+        }
         setArticles((prev) => [...prev, ...more])
       })
       .catch((err) => {
@@ -517,10 +533,18 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     </article>
   )
 
+  const articleUnavailableNotice = (reason) =>
+    reason ? (
+      <div className="notice">
+        public.articles is unavailable ({reason === 'permission_denied' ? 'permission denied' : reason}). 0 articles; no rows are invented.
+      </div>
+    ) : null
+
   const expandedDetail = (
     <div className="news-detail">
+      {detailUnavailable && articleUnavailableNotice(detailUnavailable)}
       {detailError && <div className="notice error">{detailError}</div>}
-      {!detail && !detailError && <div className="news-detail-loading">Loading detail…</div>}
+      {!detail && !detailError && !detailUnavailable && <div className="news-detail-loading">Loading detail…</div>}
       {detail && (
         <>
           {graphLinks.length > 0 && (
@@ -832,8 +856,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         </div>
       )}
 
+      {articlesUnavailable && articleUnavailableNotice(articlesUnavailable)}
       {error && <div className="notice error">Failed to load articles: {error}</div>}
-      {!loading && !error && articles.length === 0 && !focusedMissing && (
+      {!loading && !error && !articlesUnavailable && articles.length === 0 && !focusedMissing && (
         <div className="notice">No articles match. The ingestion pipeline runs every 24h.</div>
       )}
 
@@ -872,8 +897,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
 
       {focusedMissing && (
         <div className="news-detail">
+          {detailUnavailable && articleUnavailableNotice(detailUnavailable)}
           {detailError && <div className="notice error">{detailError}</div>}
-          {!detail && !detailError && <div className="news-detail-loading">Loading detail…</div>}
+          {!detail && !detailError && !detailUnavailable && <div className="news-detail-loading">Loading detail…</div>}
           {detail && (
             <>
               <h3 className="news-focus-title">{detail.title}</h3>
