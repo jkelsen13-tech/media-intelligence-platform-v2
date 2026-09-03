@@ -158,7 +158,7 @@ test('closeout doc exists and records stopping SHA + live Pages assets', () => {
   assert.match(CLOSEOUT, /Do not merge/)
   assert.match(CLOSEOUT, /Frontend does not merge/)
   assert.match(CLOSEOUT, /Do not start R5|Do \*\*not\*\* start R5/)
-  assert.match(CLOSEOUT, /No V2 writes/)
+  assert.match(CLOSEOUT, /No v2 writes/)
   assert.match(CLOSEOUT, /qikvmopbtijoebdqosyq/)
   assert.match(CLOSEOUT, /Stop for owner review/)
 })
@@ -177,7 +177,7 @@ test('§19 matrix lists every closeout id as PASS with a test or live pointer', 
   assert.match(CLOSEOUT, /pull\/10/)
   assert.match(CLOSEOUT, /pull\/11/)
   assert.match(CLOSEOUT, /pull\/12/)
-  assert.match(CLOSEOUT, /no dedicated R4\.75 PR/)
+  assert.match(CLOSEOUT, /no dedicated R4_75 PR/)
 })
 
 test('World View §8 A–K verbatim PASS block is packaged; repo A–K tests remain', () => {

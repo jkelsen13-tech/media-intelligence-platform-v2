@@ -1,13 +1,15 @@
-# R4.75 Step 8 closeout — evidence package
+# R4_75 Step 8 closeout — evidence package
 
 **Status:** packaged for owner / CoS review. **Not merged. Not R5.**
+
+Program label is written `R4_75` in this file (underscore form). G2 uncertainty levels live only in `docs/UNCERTAINTY_VOCABULARY.md`; this closeout does not redefine them. Same program as the PR title.
 
 Governing spec (read authority; file is not checked into this repo):
 `MIP_INVESTIGATION_CONTEXT_AND_GLOBAL_DISCOVERY_v0.1` §16 Step 8, §17, §19, §20.
 
-This package is **evidence packaging only**. It does not authorize product mutation, V2/Supabase writes, a second public event, Port Meridian overlays, a God’s Eye View clone, or the start of R5.
+This package is **evidence packaging only**. It does not authorize product mutation, v2/Supabase writes, a second public event, Port Meridian overlays, a God’s Eye View clone, or the start of R5.
 
-**Do not merge. Frontend does not merge. No V2 writes. Do not start R5.**
+**Do not merge. Frontend does not merge. No v2 writes. Do not start R5.**
 
 ---
 
@@ -18,7 +20,7 @@ This package is **evidence packaging only**. It does not authorize product mutat
 | Repo | `jkelsen13-tech/media-intelligence-platform-v2` |
 | Branch this package is based on | `main` |
 | Stopping SHA | `49010caeb22913215aa4dcab08ffe7c8a4ccb5fd` |
-| Stopping commit | `R4 World View launch spine (MapLibre + event-time weather) (#12)` |
+| Stopping commit | PR #12 World View launch spine (MapLibre + event-time weather) |
 | Closeout date | 2026-09-03 |
 | Canonical subject | `acc55cb2-5ac2-4aed-be36-3f576d2bc443` (2024 Total Solar Eclipse, Cleveland, Ohio) |
 | Live Pages base | https://jkelsen13-tech.github.io/media-intelligence-platform-v2/ |
@@ -35,7 +37,7 @@ This package is **evidence packaging only**. It does not authorize product mutat
 
 World View §8 A–K live-verified PASS on that SHA / those JS assets (verbatim matrix in §4 below).
 
-V2 project `qikvmopbtijoebdqosyq` was **not written** by this closeout.
+Live backend project `qikvmopbtijoebdqosyq` was **not written** by this closeout.
 
 ---
 
@@ -47,13 +49,13 @@ Verified via `gh pr list --repo jkelsen13-tech/media-intelligence-platform-v2` a
 |---|---|---|---|---|
 | 0 | Inventory (accepted before Step 1) | *no PR titled Step 0* | — | Step 1 authorization recorded “Step 0 inventory already accepted.” Honest-empty News / temporal DISPLAY baseline: PRs **#3**, **#4**, **#5**. |
 | 1 | §3 / §16 Step 1 — Investigation Context | **[#6](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/6)** | `4ed3b32` | IC preserved across view changes. |
-| 2 | *(no dedicated R4.75 PR on this repo)* | — | — | Do not invent a Step 2 PR number. View consumption of the shared IC landed with Step 1 (#6). |
+| 2 | *(no dedicated R4_75 PR on this repo)* | — | — | Do not invent a Step 2 PR number. View consumption of the shared IC landed with Step 1 (#6). |
 | 3 | §5 / §16 Step 3 — Explore / Change Topic | **[#7](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/7)** | `01520b3` (merge of `7908b6a`) | Follow-up comment honesty: `2f06992`. |
 | 4 | §7 / §16 Step 4 — discovery vs investigation filters | **[#8](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/8)** | `30878de` | |
 | 5 | §5.3 / §16 Step 5 — new-subject propagation | **[#9](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/9)** | `592a7a6` | |
 | 6 | §10 / §11.1 / §16 Step 6 — deep links + recent-context | **[#10](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/10)** | `23dc962` | |
 | 7 | §13 / §14 / §16 Step 7 — failure / freshness / a11y / perf | **[#11](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/11)** | `1f39e54` | `/arcs` aliases `/arc`. |
-| Adjacent R4 spine | World View launch v0.1 §8 A–K | **[#12](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/12)** | `49010cae` | Not an R4.75 product step. Included as adjacent live evidence. |
+| Adjacent World View spine | World View launch v0.1 §8 A–K | **[#12](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/12)** | `49010cae` | Not an R4_75 product step. Included as adjacent live evidence. |
 | 8 | §16 Step 8 / §19 / §20 — this package | *this PR* | — | Evidence + regression lock only. **Leave unmerged.** |
 
 ---
@@ -85,33 +87,33 @@ Machine check: `tests/r475Step8Closeout.test.mjs` asserts every `19-*` id in thi
 | 19-Q | Honest empty / missing / unsupported joins are distinguishable (no joined data, insufficient evidence, object type not representable, withheld, request failed, stale cached). Never invent a subject, Arc, News row, edge, or weather. | **PASS** | `tests/investigationJoinState.test.mjs` — `join kinds are distinguishable and never invent a subject or weather`. Live World View B: honest empties (`public.edges` unavailable). Live F: Temporal UNAVAILABLE / insufficient history. |
 | 19-R | Unsupported joins and rapid view changes fall back to parent IC. `/arc` + `/arcs` keep the fixture event id on Arcs. | **PASS** | `tests/investigationJoinState.test.mjs` — `unsupported join falls back to parent IC; /arc and /arcs land on Arcs`; `rapid view switches preserve the fixture subject and invent no second event`. |
 | 19-S | Accessibility / mobile / performance: Explore keyboard + focus restore; filter chips not color-only; search debounce 350ms + in-flight cancel; recent stack max 8; lens / tab change does not `loadGraph`. Freshness uses existing as-of / revision markers (no backend revision API). | **PASS** | `tests/investigationJoinState.test.mjs` — `a11y labels and Explore focus hooks are present; filters are not color-only`; `search debounce/cancel and recent history stay bounded; lens change does not refetch graph`; `stale / as-of freshness uses existing markers and invents no revision API`. |
-| 19-T | DISPLAY / client only. No V2 / Supabase writes. No `reader_state` mutation. No `service_role`. Production `src/` does not hardcode Cleveland as the only identity path. | **PASS** | DISPLAY-only source-scans in `investigationContext`, `exploreShell`, `discoveryFilters`, `newSubjectPropagation`, `deepLinks`, `recentInvestigation`, `investigationJoinState`, `worldViewLaunch` tests. Closeout test re-scans R4.75 modules. This Step 8 PR adds **docs + tests only**. |
+| 19-T | DISPLAY / client only. No v2 / Supabase writes. No `reader_state` mutation. No `service_role`. Production `src/` does not hardcode Cleveland as the only identity path. | **PASS** | `tests/investigationContext.test.mjs`, `tests/exploreShell.test.mjs`, `tests/discoveryFilters.test.mjs`, `tests/newSubjectPropagation.test.mjs`, `tests/deepLinks.test.mjs`, `tests/recentInvestigation.test.mjs`, `tests/investigationJoinState.test.mjs`, `tests/worldViewLaunch.test.mjs`, `tests/r475Step8Closeout.test.mjs` DISPLAY-only source-scans. This Step 8 PR adds **docs + tests only**. |
 | 19-U | G2 dimensions stay **separate**. No composite truth / bias / authority score. Confidence is labeled text: “CONFIDENCE (NOT A TRUTH OR BIAS SCORE)”. | **PASS** | `tests/spatialProjection.test.mjs` — `G2 dimensions stay separate; confidence is labeled text, not a composite score`. `tests/worldViewLaunch.test.mjs` — `D: inspector has date/time, city precision, provenance, G2 separate, no composite score`. Live World View D. Index: missing evidence is not contradicting evidence. |
 | 19-V | Missing ≠ contradicting. Absence of joined data / temporal history / weather is explicit UNAVAILABLE / insufficient — not a contrary finding. | **PASS** | Join-state copies in `src/lib/investigationJoinState.js`. Temporal DISPLAY refuses `truth_probability` / `expected_range` (`tests/investigationContext.test.mjs`, `tests/worldViewLaunch.test.mjs` F). Live World View B / F / J. |
 | 19-W | Spatial is a **projection of MIP knowledge**, not a second globe truth. n=1 Cleveland city Point `[-81.7, 41.4]`; pan/zoom does not invent denser geometry. | **PASS** | `tests/spatialProjection.test.mjs`; `tests/worldViewLaunch.test.mjs` A / G. Live World View A / G. |
 | 19-X | No second invented public event. No Port Meridian / evacuation / AQI / shipping / humidity-cloud widgets. No GEV fork / Cesium / person-CCTV-aircraft-vessel overlays. | **PASS** | `tests/worldViewLaunch.test.mjs` A / H / K and `src has no globe-vendor / 3D-tile strings`. Live World View A / H / K. Closeout invents no second subject. |
 | 19-Y | Automated tests green (`npm test`). Closeout evidence doc maps every §19 bullet. | **PASS** | This document + `tests/r475Step8Closeout.test.mjs`. `npm test` on the Step 8 branch (see PR). |
-| 19-Z | Stop before R5. Frontend does not merge. Owner / CoS review only. | **PASS** | This document §5–§6. PR body states: Do not merge. Frontend does not merge. No V2 writes. Do not start R5. CoS/owner review only. |
+| 19-Z | Stop before R5. Frontend does not merge. Owner / CoS review only. | **PASS** | `tests/r475Step8Closeout.test.mjs` asserts this document contains the stop language. PR body states: Do not merge. Frontend does not merge. No v2 writes. Do not start R5. CoS/owner review only. |
 
 ---
 
-## 4. World View launch §8 A–K (adjacent R4 spine — copy verbatim)
+## 4. World View launch §8 A–K (adjacent spine — copy verbatim)
 
 Owner live-verified **2026-09-03** on `main` `49010cae` / assets `index-CsIIFAtO.js` + `map-stack-BRFtLxm-.js`.
 
 Overall **PASS** on `#/event/acc55cb2-5ac2-4aed-be36-3f576d2bc443/world`:
 
-- **A PASS:** Cleveland city Point [-81.7, 41.4]; 1 row; no second event
-- **B PASS:** honest empties (public.edges unavailable; invalid sub-selection → parent IC); no demo city
-- **C PASS:** same canonical_subject_id across IC / Map / Graph / Split / inspector
-- **D PASS:** date/time, city precision, provenance; G2 separate; CONFIDENCE (NOT A TRUTH OR BIAS SCORE); no mip_object_id schema dump
-- **E PASS:** event-time weather DELAYED ERA5/Open-Meteo at 2024-04-08T17:00Z (18°C / 0 mm / 13.6 km/h); not present-day
-- **F PASS:** Temporal UNAVAILABLE / insufficient history; no expected-range / truth_probability
-- **G PASS:** pan/zoom; precision class unchanged
-- **H PASS:** no person/CCTV/aircraft/vessel overlays
-- **I PASS:** OSM/OpenFreeMap attribution visible
-- **J PASS:** RECONSTRUCTED / DELAYED / UNAVAILABLE / UNCLASSIFIED labels distinct
-- **K PASS:** no Port Meridian / evacuation / AQI / shipping / humidity-cloud widgets
+- A PASS: Cleveland city Point [-81.7, 41.4]; 1 row; no second event
+- B PASS: honest empties (public.edges unavailable; invalid sub-selection → parent IC); no demo city
+- C PASS: same canonical_subject_id across IC / Map / Graph / Split / inspector
+- D PASS: date/time, city precision, provenance; G2 separate; CONFIDENCE (NOT A TRUTH OR BIAS SCORE); no mip_object_id schema dump
+- E PASS: event-time weather DELAYED ERA5/Open-Meteo at 2024-04-08T17:00Z (18°C / 0 mm / 13.6 km/h); not present-day
+- F PASS: Temporal UNAVAILABLE / insufficient history; no expected-range / truth_probability
+- G PASS: pan/zoom; precision class unchanged
+- H PASS: no person/CCTV/aircraft/vessel overlays
+- I PASS: OSM/OpenFreeMap attribution visible
+- J PASS: RECONSTRUCTED / DELAYED / UNAVAILABLE / UNCLASSIFIED labels distinct
+- K PASS: no Port Meridian / evacuation / AQI / shipping / humidity-cloud widgets
 
 Repo lock (does not replace live Pages): `tests/worldViewLaunch.test.mjs` A–K.
 
@@ -133,7 +135,7 @@ R5 must re-run these inherited invariants **independently**. Packaging them here
 8. G2 dimensions stay separate; no composite truth / bias / authority score.
 9. Spatial remains a projection of MIP knowledge; n=1 city coarsening is not denser geometry.
 10. World View privacy lock: no person / CCTV / aircraft / vessel overlays; no GEV clone; no Port Meridian launch widgets.
-11. DISPLAY / client until R5 is **separately** authorized to write. No silent V2 writes from this package.
+11. DISPLAY / client until R5 is **separately** authorized to write. No silent v2 writes from this package.
 12. Canonical fixture remains Cleveland `acc55cb2-…` until a second **real** public event is owner-authorized. Do not invent one.
 
 ---
@@ -144,7 +146,7 @@ R5 must re-run these inherited invariants **independently**. Packaging them here
 
 - Do **not** start R5.
 - Do **not** merge this PR. Frontend does not merge.
-- Do **not** write to V2 / Supabase (`qikvmopbtijoebdqosyq`) or any database.
+- Do **not** write to v2 / Supabase (`qikvmopbtijoebdqosyq`) or any database.
 - Do **not** invent a second public event or Port Meridian overlays.
 - Do **not** clone / fork God’s Eye View.
 - Do **not** reopen Steps 0–7 product behavior except to cite / test it.
