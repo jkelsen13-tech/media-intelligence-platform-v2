@@ -409,22 +409,25 @@ function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssess
 function TimelineScrubber({ stamps, index, onChange, disabledReason }) {
   if (!stamps.length) {
     return (
-      <section className="wv-scrubber" aria-label="Projection time">
+      <section className="wv-scrubber" data-filter-family="investigation" aria-label="Investigation filters">
         <header className="wv-section-head">
-          <h3>Recorded time</h3>
+          <h3>Investigation filters</h3>
         </header>
+        <p className="filter-family-label">Recorded time</p>
         <p className="wv-empty">{disabledReason}</p>
       </section>
     )
   }
   const current = stamps[index] ?? stamps[stamps.length - 1]
   return (
-    <section className="wv-scrubber" aria-label="Projection time">
+    <section className="wv-scrubber" data-filter-family="investigation" aria-label="Investigation filters">
       <header className="wv-section-head">
-        <h3>Recorded time</h3>
+        <h3>Investigation filters</h3>
         <span className="wv-meta num">{current?.iso}</span>
       </header>
+      <p className="filter-family-label">Recorded time</p>
       <p className="wv-meta">
+        Recorded time inspects the current subject and writes as_of_time only. The canonical subject does not change.
         Scrubber snaps to timestamps recorded on the projection. Intermediate history is not interpolated.
       </p>
       <input

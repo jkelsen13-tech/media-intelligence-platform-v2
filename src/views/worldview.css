@@ -176,6 +176,14 @@
   padding: var(--card-pad-y) var(--card-pad-x);
 }
 
+.wv-scrubber .filter-family-label {
+  margin: 0 0 8px;
+}
+
+.wv-scrubber > .wv-section-head h3 {
+  font-size: var(--fs-title);
+}
+
 .wv-inspector {
   min-height: 360px;
   overflow: auto;

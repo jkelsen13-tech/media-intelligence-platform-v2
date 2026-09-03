@@ -22,6 +22,12 @@
   gap: 10px;
 }
 
+.discovery-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .news-search {
   width: 100%;
   padding: 10px 14px;
@@ -403,8 +409,8 @@
   flex: 1;
 }
 
-/* The single "Filters" button and inline active-filter chips are mobile-only;
-   desktop keeps the full filter rows. */
+/* The single "Discovery filters" button and inline active-filter chips are
+   mobile-only; desktop keeps the full discovery filter rows. */
 .news-filters-btn,
 .news-active-filters {
   display: none;

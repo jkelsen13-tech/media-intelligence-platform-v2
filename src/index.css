@@ -127,6 +127,23 @@ body {
   word-break: break-all;
 }
 
+/* R4.75 Step 4 — two filter families. Discovery (News / Explore) and
+   investigation (Graph / World View / Timeline) stay visually distinct. */
+.filter-family-label {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.filter-family-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
 .wv-ic {
   margin: 0 0 12px;
   padding-bottom: 10px;
@@ -2980,6 +2997,17 @@ body {
   color: var(--text-primary);
   box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 12%, transparent);
 }
+.graph-investigation-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.graph-investigation-filters .filter-family-label {
+  width: 100%;
+}
+
 .graph-region-filter {
   display: inline-flex;
   align-items: center;
