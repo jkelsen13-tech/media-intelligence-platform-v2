@@ -507,7 +507,8 @@ export default function App() {
   // World View Map / Graph / Split share App's selected-node seam
   // (mip_object_id / subject_graph_node_id). A projection stub is used only
   // when the live graph has not published that node yet.
-  // Selecting Cleveland acc55cb2 SETS Investigation Context to that event.
+  // Map pick commits through commitNewSubject → applySubject (one identity).
+  // Entering World View does not clear Investigation Context.
   const handleSelectProjection = useCallback(
     (node, row) => {
       if (!node) return
@@ -520,8 +521,16 @@ export default function App() {
           : node
       setInvestigationContext((ic) => {
         const subject = subjectFromWorldViewSelection({ node: seedNode, row })
-        rememberPriorSubject(ic, subject.canonical_subject_id)
-        return applySubject(ic, subject)
+        return commitNewSubjectFromApp(
+          ic,
+          {
+            ...subject,
+            node: seedNode,
+            row,
+            fromSpatialProjection: Boolean(seedNode?.fromSpatialProjection || row),
+          },
+          { landingView: 'world' },
+        )
       })
       if (node.fromSpatialProjection) {
         const liveKey = node.subject_graph_node_id
@@ -540,7 +549,7 @@ export default function App() {
       setSelected(node)
       pushFocus(node)
     },
-    [graph, pushFocus],
+    [graph, pushFocus, commitNewSubjectFromApp],
   )
 
   const handleInvestigationAsOfTime = useCallback((iso) => {

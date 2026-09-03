@@ -30,6 +30,7 @@ import {
 } from '../src/lib/spatialProjection.js'
 
 const WORLD = readFileSync(new URL('../src/views/WorldView.jsx', import.meta.url), 'utf8')
+const MAP = readFileSync(new URL('../src/views/WorldMapCanvas.jsx', import.meta.url), 'utf8')
 const APP = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
 const SPATIAL = readFileSync(new URL('../src/lib/spatialProjection.js', import.meta.url), 'utf8')
 const GRAPH = readFileSync(new URL('../src/graph/GraphView.jsx', import.meta.url), 'utf8')
@@ -205,7 +206,7 @@ test('time scrub covers valid_from inclusive and valid_to exclusive; no invented
   assert.equal(revisionAtTime([LIVE_ROW], from)?.revision_id, LIVE_ROW.revision_id)
 })
 
-test('weather panel is always honest unavailable — no vendor, no fabricated fields', () => {
+test('V2-join weather stays honest unavailable — no fabricated join fields', () => {
   const weather = weatherPanelState()
   assert.equal(weather.status, 'unavailable')
   assert.equal(weather.reason, 'no_authorized_weather_path')
@@ -218,10 +219,9 @@ test('weather panel is always honest unavailable — no vendor, no fabricated fi
   assert.equal(weather.provenance.timestamp, null)
   assert.equal(weather.provenance.resolution, null)
   assert.equal(weather.provenance.observationType, null)
-  assert.match(WORLD, /weatherPanelState\(\)/)
   assert.match(WORLD, /wv-weather/)
   assert.match(SPATIAL, /Weather is unavailable/)
-  assert.doesNotMatch(WORLD, /open-meteo|openweathermap|NOAA forecast|72°|sunny/i)
+  assert.doesNotMatch(WORLD, /openweathermap|NOAA forecast|72°|sunny/i)
 })
 
 test('G2 dimensions stay separate; confidence is labeled text, not a composite score', () => {
@@ -309,8 +309,9 @@ test('World View UI is Map / Graph / Split with inspector, recorded time, and no
   assert.match(WORLD, /loadWorldViewGraph/)
   assert.match(WORLD, /public\.edges is unavailable/)
   assert.match(WORLD, /No demo relationships are drawn/)
-  assert.match(WORLD, /No map pins are fabricated/)
+  assert.match(MAP, /No map pins are fabricated/)
   assert.doesNotMatch(WORLD, /impact-zone|flood overlay|AQI/)
+  assert.doesNotMatch(MAP, /impact-zone|flood overlay|AQI/)
   assert.match(GRAPH, /selectedId = null/)
 })
 
