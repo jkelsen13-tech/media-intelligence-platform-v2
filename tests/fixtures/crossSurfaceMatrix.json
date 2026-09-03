@@ -1,0 +1,661 @@
+{
+  "matrixVersion": "r5-cross-surface-matrix-v0.1",
+  "generatedAt": "2026-09-03T00:00:00Z",
+  "rows": [
+    {
+      "matrixCaseId": "positive-released-spatial-cleveland",
+      "canonicalObjectId": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+      "objectType": "event",
+      "expectedTitleOrName": "2024 Total Solar Eclipse, Cleveland, Ohio",
+      "canonicalTemporalFields": {
+        "validFromUtc": "2024-04-08 17:59:00+00",
+        "validToUtc": "2024-04-08 20:29:00+00",
+        "temporalAssessmentReference": "temporal.assessment.v0.1.acc55cb2-5ac2-4aed-be36-3f576d2bc443"
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "positive_released",
+        "spatialProjection": {
+          "release_state": "released",
+          "review_state": "operative",
+          "geometry_status": "coarsened_to_precision_class",
+          "precision_class": "city",
+          "evidence_snapshot_id": "c05b4eed-d260-4e27-a029-bac330ef21e9"
+        }
+      },
+      "expectedPublicDisclosureState": {
+        "spatialProjection": "released"
+      },
+      "expectedSurfaces": [
+        "World View",
+        "Investigation Context bar",
+        "Spatial inspector availability (World View)",
+        "Temporal Intelligence display key"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "mip_object_id is a projection-specific id; canonical identity uses subject_graph_node_id"
+      ],
+      "allowedDifferences": [
+        "presentation labels may differ, but canonical ids and stored review/release states must not"
+      ],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "spatialProjectionSubjectFromRow",
+        "spatialProjectionRow": {
+          "projection_contract_version": "spatial_projection_v1",
+          "mip_object_id": "777b3951-4a82-4dd7-befb-958991b1318f",
+          "object_type": "event_spatial_relationship",
+          "subject_graph_node_id": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+          "spatial_role": "event",
+          "parent_event_id": null,
+          "valid_from_utc": "2024-04-08 17:59:00+00",
+          "valid_to_utc": "2024-04-08 20:29:00+00",
+          "review_state": "operative",
+          "release_state": "released",
+          "geometry_status": "coarsened_to_precision_class",
+          "precision_class": "city",
+          "evidence_refs": [
+            {
+              "evidence_role": "primary_support",
+              "evidence_snapshot_id": "c05b4eed-d260-4e27-a029-bac330ef21e9"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "matrixCaseId": "no-matching-object-spatial-empty",
+      "canonicalObjectId": null,
+      "objectType": "spatial_projection_v1",
+      "expectedTitleOrName": null,
+      "canonicalTemporalFields": {
+        "validFromUtc": null,
+        "validToUtc": null,
+        "temporalAssessmentReference": null
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "no_matching_object",
+        "spatialInspectorState": {
+          "expected": "empty"
+        }
+      },
+      "expectedPublicDisclosureState": {
+        "spatialProjection": "unavailable"
+      },
+      "expectedSurfaces": [
+        "World View"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "no selected projection row"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "inspectorAvailability",
+        "rowIsNull": true
+      }
+    },
+    {
+      "matrixCaseId": "no-evidence-captured-join-no-joined-data",
+      "canonicalObjectId": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+      "objectType": "event",
+      "expectedTitleOrName": "2024 Total Solar Eclipse, Cleveland, Ohio",
+      "canonicalTemporalFields": {
+        "validFromUtc": "2024-04-08 17:59:00+00",
+        "validToUtc": "2024-04-08 20:29:00+00",
+        "temporalAssessmentReference": "temporal.assessment.v0.1.acc55cb2-5ac2-4aed-be36-3f576d2bc443"
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "no_evidence_captured",
+        "join": {
+          "expectedJoinKind": "no_joined_data",
+          "expectedAction": "disclose"
+        }
+      },
+      "expectedPublicDisclosureState": {
+        "joinedRepresentation": "not presented"
+      },
+      "expectedSurfaces": [
+        "Graph join surface"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "no joined data payload is invented"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "classifyJoinState",
+        "args": {
+          "availableCount": 0,
+          "view": "graph",
+          "subjectType": "event"
+        }
+      }
+    },
+    {
+      "matrixCaseId": "insufficient-evidence-join-insufficient-evidence",
+      "canonicalObjectId": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+      "objectType": "event",
+      "expectedTitleOrName": "2024 Total Solar Eclipse, Cleveland, Ohio",
+      "canonicalTemporalFields": {
+        "validFromUtc": "2024-04-08 17:59:00+00",
+        "validToUtc": "2024-04-08 20:29:00+00",
+        "temporalAssessmentReference": "temporal.assessment.v0.1.acc55cb2-5ac2-4aed-be36-3f576d2bc443"
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "insufficient_evidence",
+        "join": {
+          "expectedJoinKind": "insufficient_evidence",
+          "expectedAction": "disclose"
+        }
+      },
+      "expectedPublicDisclosureState": {
+        "joinedRepresentation": "withheld as insufficient"
+      },
+      "expectedSurfaces": [
+        "World View join surface"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "no evidence fields are inferred"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "classifyJoinState",
+        "args": {
+          "insufficientEvidence": true,
+          "view": "world",
+          "subjectType": "event"
+        }
+      }
+    },
+    {
+      "matrixCaseId": "source-unavailable-evidence-archived-missing",
+      "canonicalObjectId": "edge:archived-missing",
+      "objectType": "explanation_edge",
+      "expectedTitleOrName": null,
+      "canonicalTemporalFields": {
+        "validFromUtc": null,
+        "validToUtc": null,
+        "temporalAssessmentReference": null
+      },
+      "canonicalRelationshipTypes": [
+        "causal"
+      ],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "source_unavailable",
+        "expectedFailureState": "source_unavailable",
+        "review_status": "published",
+        "explanation_state": "ok",
+        "archived_sources_missing": true
+      },
+      "expectedPublicDisclosureState": {
+        "provenance": "excluded"
+      },
+      "expectedSurfaces": [
+        "Graph relationship provenance panel"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "no contradiction text is fabricated"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "buildExplanationReadView",
+        "enabled": true,
+        "explanationRow": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "assertion_id": "edge:archived-missing",
+          "assertion_type": "edge",
+          "version": 1,
+          "is_current": true,
+          "source_ids": [
+            "00000000-0000-0000-0000-0000000000aa"
+          ],
+          "archived_sources": [
+            {
+              "source_id": "x",
+              "status": "missing"
+            }
+          ],
+          "supporting_passage": "Houthi forces announced restrictions on Red Sea transit.",
+          "relationship_type": "causal",
+          "rule_version": "d2-3a-full-backfill",
+          "provenance_class": "human_reviewed",
+          "review_status": "published",
+          "falsification_condition": "Retraction by both primary sources",
+          "correction_history": [],
+          "remaining_uncertainty": "Single-theater reporting only",
+          "state": "ok"
+        }
+      }
+    },
+    {
+      "matrixCaseId": "join-unavailable-unsupported-object-type",
+      "canonicalObjectId": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+      "objectType": "event",
+      "expectedTitleOrName": "2024 Total Solar Eclipse, Cleveland, Ohio",
+      "canonicalTemporalFields": {
+        "validFromUtc": "2024-04-08 17:59:00+00",
+        "validToUtc": "2024-04-08 20:29:00+00",
+        "temporalAssessmentReference": "temporal.assessment.v0.1.acc55cb2-5ac2-4aed-be36-3f576d2bc443"
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "join_unavailable",
+        "join": {
+          "expectedJoinKind": "unsupported_object_type",
+          "expectedAction": "parent_context"
+        }
+      },
+      "expectedPublicDisclosureState": {
+        "joinedRepresentation": "not representable on this view"
+      },
+      "expectedSurfaces": [
+        "Arcs join surface"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "no joined arc content is invented"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "classifyJoinState",
+        "args": {
+          "view": "arcs",
+          "subjectType": "event"
+        }
+      }
+    },
+    {
+      "matrixCaseId": "permission-denied-join-withheld",
+      "canonicalObjectId": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+      "objectType": "event",
+      "expectedTitleOrName": "2024 Total Solar Eclipse, Cleveland, Ohio",
+      "canonicalTemporalFields": {
+        "validFromUtc": "2024-04-08 17:59:00+00",
+        "validToUtc": "2024-04-08 20:29:00+00",
+        "temporalAssessmentReference": "temporal.assessment.v0.1.acc55cb2-5ac2-4aed-be36-3f576d2bc443"
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "permission_denied",
+        "join": {
+          "expectedJoinKind": "withheld",
+          "expectedAction": "disclose"
+        }
+      },
+      "expectedPublicDisclosureState": {
+        "joinedRepresentation": "withheld"
+      },
+      "expectedSurfaces": [
+        "Graph join surface"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "no permission-denied join content is invented"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "classifyJoinState",
+        "args": {
+          "permissionDenied": true,
+          "view": "graph",
+          "subjectType": "event"
+        }
+      }
+    },
+    {
+      "matrixCaseId": "request-failure-join-request-failed",
+      "canonicalObjectId": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+      "objectType": "event",
+      "expectedTitleOrName": "2024 Total Solar Eclipse, Cleveland, Ohio",
+      "canonicalTemporalFields": {
+        "validFromUtc": "2024-04-08 17:59:00+00",
+        "validToUtc": "2024-04-08 20:29:00+00",
+        "temporalAssessmentReference": "temporal.assessment.v0.1.acc55cb2-5ac2-4aed-be36-3f576d2bc443"
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "request_failure",
+        "join": {
+          "expectedJoinKind": "request_failed",
+          "expectedAction": "disclose"
+        }
+      },
+      "expectedPublicDisclosureState": {
+        "joinedRepresentation": "request failed; parent IC only"
+      },
+      "expectedSurfaces": [
+        "Graph join surface"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "no joined rows are invented after failure"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "classifyJoinState",
+        "args": {
+          "failed": true,
+          "failureReason": "network",
+          "view": "graph",
+          "subjectType": "event"
+        }
+      }
+    },
+    {
+      "matrixCaseId": "stale-partial-join-stale-cached",
+      "canonicalObjectId": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+      "objectType": "event",
+      "expectedTitleOrName": "2024 Total Solar Eclipse, Cleveland, Ohio",
+      "canonicalTemporalFields": {
+        "validFromUtc": "2024-04-08 17:59:00+00",
+        "validToUtc": "2024-04-08 20:29:00+00",
+        "temporalAssessmentReference": "temporal.assessment.v0.1.acc55cb2-5ac2-4aed-be36-3f576d2bc443"
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "stale_partial",
+        "join": {
+          "expectedJoinKind": "stale_cached",
+          "expectedAction": "disclose"
+        }
+      },
+      "expectedPublicDisclosureState": {
+        "joinedRepresentation": "stale cached projection; explicit markers only"
+      },
+      "expectedSurfaces": [
+        "World View join surface"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "no backend revision API is queried for this label"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "classifyJoinState",
+        "args": {
+          "stale": true,
+          "view": "world",
+          "subjectType": "event"
+        }
+      }
+    },
+    {
+      "matrixCaseId": "loading-ui-world-view",
+      "canonicalObjectId": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+      "objectType": "event",
+      "expectedTitleOrName": "2024 Total Solar Eclipse, Cleveland, Ohio",
+      "canonicalTemporalFields": {
+        "validFromUtc": null,
+        "validToUtc": null,
+        "temporalAssessmentReference": null
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "loading",
+        "uiExpected": {
+          "worldViewStatusInitial": "loading"
+        }
+      },
+      "expectedPublicDisclosureState": {
+        "joinedRepresentation": "still loading; no negative claims"
+      },
+      "expectedSurfaces": [
+        "World View loading state"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "uiLoadingState",
+        "files": [
+          "src/views/WorldView.jsx",
+          "src/panels/RelationshipPanel.jsx"
+        ]
+      }
+    },
+    {
+      "matrixCaseId": "uncertain-arc-timeline-inferred",
+      "canonicalObjectId": "evt-fixture-response",
+      "objectType": "arc_timeline_entry",
+      "expectedTitleOrName": "Agency response announced",
+      "canonicalTemporalFields": {
+        "validFromUtc": null,
+        "validToUtc": null,
+        "temporalAssessmentReference": null
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "uncertain_inferred",
+        "badgeState": "inferred",
+        "fixtureArcId": "arc-fixture-public-records"
+      },
+      "expectedPublicDisclosureState": {
+        "arcEvidence": "inferred; dashed/low-confidence presentation"
+      },
+      "expectedSurfaces": [
+        "Timeline (within arc scope via shared renderer)",
+        "ArcsView timeline tab"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "fixture values are synthetic acceptance data"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "fixtureRichArcTimelineEntry",
+        "entryKey": "evt-fixture-response"
+      }
+    },
+    {
+      "matrixCaseId": "contested-arc-timeline-contested",
+      "canonicalObjectId": "evt-fixture-coverage",
+      "objectType": "arc_timeline_entry",
+      "expectedTitleOrName": "Independent reporting describes dispute",
+      "canonicalTemporalFields": {
+        "validFromUtc": null,
+        "validToUtc": null,
+        "temporalAssessmentReference": null
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "contested",
+        "badgeState": "contested",
+        "fixtureArcId": "arc-fixture-public-records"
+      },
+      "expectedPublicDisclosureState": {
+        "arcEvidence": "contested"
+      },
+      "expectedSurfaces": [
+        "Timeline (within arc scope via shared renderer)",
+        "ArcsView timeline tab"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "fixture values are synthetic acceptance data"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "fixtureRichArcTimelineEntry",
+        "entryKey": "evt-fixture-coverage"
+      }
+    },
+    {
+      "matrixCaseId": "corrected-revised-evidence-source-corrected",
+      "canonicalObjectId": "edge:src-corrected",
+      "objectType": "explanation_edge",
+      "expectedTitleOrName": null,
+      "canonicalTemporalFields": {
+        "validFromUtc": null,
+        "validToUtc": null,
+        "temporalAssessmentReference": null
+      },
+      "canonicalRelationshipTypes": [
+        "causal"
+      ],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "corrected_revised",
+        "expectedFailureState": "source_corrected",
+        "review_status": "awaiting_review",
+        "explanation_state": "source_corrected"
+      },
+      "expectedPublicDisclosureState": {
+        "provenance": "excluded until renewed human review"
+      },
+      "expectedSurfaces": [
+        "Graph relationship provenance panel"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "no promotion to eligible presentation"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "buildExplanationReadView",
+        "enabled": true,
+        "explanationRow": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "assertion_id": "edge:src-corrected",
+          "assertion_type": "edge",
+          "version": 1,
+          "is_current": true,
+          "source_ids": [
+            "00000000-0000-0000-0000-0000000000aa"
+          ],
+          "archived_sources": [
+            {
+              "source_id": "00000000-0000-0000-0000-0000000000aa",
+              "status": "archived"
+            }
+          ],
+          "supporting_passage": "Houthi forces announced restrictions on Red Sea transit.",
+          "relationship_type": "causal",
+          "rule_version": "d2-3a-full-backfill",
+          "provenance_class": "human_reviewed",
+          "review_status": "awaiting_review",
+          "falsification_condition": "Retraction by both primary sources",
+          "correction_history": [],
+          "remaining_uncertainty": "Single-theater reporting only",
+          "state": "source_corrected"
+        }
+      }
+    },
+    {
+      "matrixCaseId": "missing-source-evidence-source-unavailable",
+      "canonicalObjectId": "edge:archived-missing",
+      "objectType": "explanation_edge",
+      "expectedTitleOrName": null,
+      "canonicalTemporalFields": {
+        "validFromUtc": null,
+        "validToUtc": null,
+        "temporalAssessmentReference": null
+      },
+      "canonicalRelationshipTypes": [
+        "causal"
+      ],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "missing_source",
+        "expectedFailureState": "source_unavailable"
+      },
+      "expectedPublicDisclosureState": {
+        "provenance": "excluded as source unavailable"
+      },
+      "expectedSurfaces": [
+        "Graph relationship provenance panel"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "buildExplanationReadView",
+        "enabled": true,
+        "explanationRow": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "assertion_id": "edge:archived-missing",
+          "assertion_type": "edge",
+          "version": 1,
+          "is_current": true,
+          "source_ids": [
+            "00000000-0000-0000-0000-0000000000aa"
+          ],
+          "archived_sources": [
+            {
+              "source_id": "x",
+              "status": "missing"
+            }
+          ],
+          "supporting_passage": "Houthi forces announced restrictions on Red Sea transit.",
+          "relationship_type": "causal",
+          "rule_version": "d2-3a-full-backfill",
+          "provenance_class": "human_reviewed",
+          "review_status": "published",
+          "falsification_condition": "Retraction by both primary sources",
+          "correction_history": [],
+          "remaining_uncertainty": "Single-theater reporting only",
+          "state": "ok"
+        }
+      }
+    },
+    {
+      "matrixCaseId": "empty-join-invalid-subselection-fallback",
+      "canonicalObjectId": "stale-entity-not-in-parent",
+      "objectType": "entity",
+      "expectedTitleOrName": null,
+      "canonicalTemporalFields": {
+        "validFromUtc": null,
+        "validToUtc": null,
+        "temporalAssessmentReference": null
+      },
+      "canonicalRelationshipTypes": [],
+      "evidenceReviewUncertaintyState": {
+        "stateKey": "empty_join",
+        "expectedInvalidSelectionKind": "invalid_selection"
+      },
+      "expectedPublicDisclosureState": {
+        "joinedRepresentation": "parent investigation context only"
+      },
+      "expectedSurfaces": [
+        "World View and other join surfaces that attempt entity sub-selection"
+      ],
+      "intentionallyOmittedOrGeneralizedFields": [
+        "sub-selection is dropped and never rewritten as a different subject"
+      ],
+      "allowedDifferences": [],
+      "lastVerificationResult": "pending_contract_verification",
+      "resolution": {
+        "kind": "invalidSelectionAgainstParent",
+        "catalog": {
+          "entity": [
+            {
+              "id": "entity-fixture-under-parent",
+              "parentId": "acc55cb2-5ac2-4aed-be36-3f576d2bc443"
+            },
+            {
+              "id": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+              "parentId": "acc55cb2-5ac2-4aed-be36-3f576d2bc443"
+            }
+          ],
+          "claim": [],
+          "source": [],
+          "place": [
+            "place-cleveland-city"
+          ]
+        },
+        "parentSubjectId": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+        "selection": {
+          "entity": "stale-entity-not-in-parent",
+          "claim": null,
+          "source": null,
+          "place": null,
+          "time": null
+        }
+      }
+    }
+  ]
+}
+
