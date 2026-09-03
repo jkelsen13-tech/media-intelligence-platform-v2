@@ -1,0 +1,319 @@
+/* R4 World View launch-minimum. Token-driven only; no command-center overlays. */
+
+.wv-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  padding: var(--view-pad-top) 20px 20px;
+  overflow: auto;
+}
+
+.wv-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--bg-panel);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--card-radius);
+  padding: var(--card-pad-y) var(--card-pad-x);
+}
+
+.wv-banner h2 {
+  margin: 0 0 6px;
+  font-size: var(--fs-title);
+}
+
+.wv-banner p {
+  margin: 0;
+  max-width: 52rem;
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+}
+
+.wv-banner code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+.wv-mode {
+  display: flex;
+  gap: 4px;
+}
+
+.wv-mode-btn {
+  background: var(--bg-elevated);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: var(--fs-meta);
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.wv-mode-btn.active {
+  color: var(--text-primary);
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+}
+
+.wv-stage {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+  flex: 1;
+}
+
+.wv-stage-map,
+.wv-stage-graph {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+}
+
+.wv-stage-split {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(280px, 340px);
+}
+
+.wv-map,
+.wv-graph {
+  position: relative;
+  min-height: 360px;
+  background: var(--bg-inset);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+}
+
+.wv-graph .graph-canvas-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.wv-map-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+}
+
+.wv-map-sea {
+  fill: var(--bg-inset);
+}
+
+.wv-map-land {
+  fill: var(--bg-elevated);
+  stroke: none;
+}
+
+.wv-map-borders,
+.wv-graticule {
+  fill: none;
+  stroke: var(--border-color);
+  stroke-width: 0.6;
+}
+
+.wv-feature {
+  cursor: pointer;
+  fill: rgba(var(--accent-rgb), 0.45);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.wv-feature.is-selected {
+  fill: var(--accent);
+}
+
+.wv-map-label,
+.wv-map-coords {
+  fill: var(--text-primary);
+  font-size: 11px;
+  font-family: var(--font-sans);
+  stroke: var(--bg-inset);
+  stroke-width: 3px;
+  paint-order: stroke;
+  pointer-events: none;
+}
+
+.wv-map-coords {
+  fill: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+.wv-map-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.wv-map-empty p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+}
+
+.wv-map-empty-sub {
+  margin-top: 6px !important;
+  color: var(--text-muted);
+  font-size: var(--fs-meta);
+}
+
+.wv-inspector,
+.wv-weather,
+.wv-scrubber {
+  background: var(--bg-panel);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--card-radius);
+  padding: var(--card-pad-y) var(--card-pad-x);
+}
+
+.wv-inspector {
+  min-height: 360px;
+  overflow: auto;
+}
+
+.wv-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.wv-section-head h2,
+.wv-section-head h3,
+.wv-inspector-title {
+  margin: 0;
+  font-size: var(--fs-title);
+}
+
+.wv-inspector h4 {
+  margin: 16px 0 8px;
+  font-size: var(--fs-meta);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.wv-fields {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.wv-field {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+}
+
+.wv-field dt {
+  font-size: var(--fs-label);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.wv-field dd {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--text-body);
+  word-break: break-word;
+}
+
+.wv-empty,
+.wv-empty-state {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+}
+
+.wv-field dd.wv-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.wv-meta {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: var(--fs-meta);
+}
+
+.wv-pill {
+  font-size: var(--fs-label);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: var(--border-width) solid var(--border-color);
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: var(--text-secondary);
+}
+
+.wv-callout {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: var(--border-width) solid var(--status-amber-border);
+  background: var(--status-amber-bg);
+  color: var(--status-amber-text);
+  font-size: var(--fs-body);
+}
+
+.wv-evidence ul,
+.wv-tags {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--text-body);
+  font-size: var(--fs-body);
+}
+
+.wv-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding-left: 0;
+}
+
+.wv-tags li {
+  border: var(--border-width) solid var(--border-color);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: var(--fs-meta);
+}
+
+.wv-weather-copy {
+  margin: 0 0 10px;
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+}
+
+.wv-weather-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.wv-scrubber input[type='range'] {
+  width: 100%;
+}
+
+@media (max-width: 960px) {
+  .wv-stage-map,
+  .wv-stage-graph,
+  .wv-stage-split {
+    grid-template-columns: 1fr;
+  }
+}

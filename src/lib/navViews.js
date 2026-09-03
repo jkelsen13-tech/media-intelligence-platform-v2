@@ -1,11 +1,12 @@
 // Navigation structure — single source of truth for the tab bar(s).
 //
-// Track B nav restructure (2026-08-16, owner-authorized): the bar is five
-// entries — the four core views plus "More". The two flag-gated beta
-// surfaces (Legal & Policy, Source Comparison) no longer occupy top-level
-// tabs; they are listed inside the More sheet. Their view keys ('phase3',
-// 'compare') and render blocks are unchanged, so every existing setView
-// caller and cross-view jump (Doc 05 pairs) keeps working untouched.
+// Track B nav restructure (2026-08-16, owner-authorized): the bar is the
+// core views plus "More". R4 adds World View as a fifth core tab. The two
+// flag-gated beta surfaces (Legal & Policy, Source Comparison) no longer
+// occupy top-level tabs; they are listed inside the More sheet. Their view
+// keys ('phase3', 'compare') and render blocks are unchanged, so every
+// existing setView caller and cross-view jump (Doc 05 pairs) keeps working
+// untouched.
 //
 // Withhold posture, per owner: when BOTH flags are off, "More" hides
 // entirely — no grayed-out state, no visible trace. Each entry inside the
@@ -18,6 +19,9 @@ export const CORE_VIEWS = [
   { key: 'graph', label: 'Knowledge Graph', shortLabel: 'Graph' },
   { key: 'timeline', label: 'Causal Timeline', shortLabel: 'Timeline' },
   { key: 'arcs', label: 'Arcs & Collections', shortLabel: 'Arcs' },
+  // R4 launch-minimum World View — core tab, not flag-gated. Shares the
+  // Graph selected-node seam in App.jsx (mip_object_id / subject_graph_node_id).
+  { key: 'world', label: 'World View', shortLabel: 'World' },
 ]
 
 // 02C Phase 3 internal closed beta. Public release stays blocked per the

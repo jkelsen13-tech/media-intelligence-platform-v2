@@ -16,6 +16,7 @@ import ArcsView from './views/ArcsView'
 import NewsView from './views/NewsView'
 import Phase3View from './views/Phase3View'
 import SourceComparisonView from './views/SourceComparisonView'
+import WorldView from './views/WorldView'
 import { loadPhase3BetaFlag } from './lib/phase3ReadPath'
 import { buildNavViews, buildMoreEntries, isMoreViewKey } from './lib/navViews'
 import { loadGraph, loadTopics, loadCorpusMeta, loadNodeLocations, loadGraphCoverage } from './lib/supabase'
@@ -35,9 +36,8 @@ import AccountPanel from './panels/AccountPanel'
 import { loadAccountUiFlag } from './lib/auth'
 
 // Nav structure lives in ./lib/navViews (Track B 6->5 restructure,
-// 2026-08-16): four core tabs + "More"; the flag-gated Legal & Policy and
-// Source Comparison surfaces moved into the More sheet. View keys and
-// render blocks below are unchanged.
+// 2026-08-16): core tabs + "More". R4 adds World View as a fifth core tab.
+// Flag-gated Legal & Policy and Source Comparison stay in the More sheet.
 
 // Mobile-first graph entry: the top N hubs by degree centrality.
 const HUB_LIST_SIZE = 30
@@ -343,6 +343,35 @@ export default function App() {
     setSelected(null)
     setPinned(false)
   }, [])
+
+  // World View Map / Graph / Split share App's selected-node seam
+  // (mip_object_id / subject_graph_node_id). A projection stub is used only
+  // when the live graph has not published that node yet.
+  const handleSelectProjection = useCallback(
+    (node) => {
+      if (!node) return
+      setPolicyNode(null)
+      setActiveLocationKey(null)
+      setPinned(false)
+      if (node.fromSpatialProjection) {
+        const liveKey = node.subject_graph_node_id
+        const live =
+          graph?.source === 'supabase' && liveKey
+            ? graph.nodes.find((n) => (n.id ?? n.slug) === liveKey)
+            : null
+        if (live) {
+          setSelected(live)
+          pushFocus(live)
+          return
+        }
+        setSelected(node)
+        return
+      }
+      setSelected(node)
+      pushFocus(node)
+    },
+    [graph, pushFocus],
+  )
 
   // One primary graph overlay at a time. A relationship panel, node/policy
   // inspector, relationship list, review panel, or topic browser never stacks
@@ -1056,6 +1085,15 @@ export default function App() {
             onOpenArc={openArcInView}
             onOpenTimeline={openEventInTimeline}
             focusEventId={focusComparisonEvent}
+          />
+        )}
+        {view === 'world' && (
+          <WorldView
+            graph={graph}
+            graphError={error}
+            selected={selected}
+            onSelectProjection={handleSelectProjection}
+            onSelectGraphNode={handleSelect}
           />
         )}
       </main>

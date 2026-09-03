@@ -183,6 +183,8 @@ export default function GraphView({
   // On mobile, the selected hub becomes the sole eligible detail card; null
   // leaves a full graph as compact shapes only.
   focusNodeId = null,
+  // World View Graph/Map/Split share one selected id with the inspector.
+  selectedId = null,
   // Step 2b: full-corpus node list (for region "+N" collapsed counts) and
   // whether this render is a focused view (region boundaries are
   // focused-view-only, owner-ruled adjustment 4).
@@ -891,6 +893,16 @@ export default function GraphView({
       cy.destroy()
     }
   }, [nodes, edges, onSelect, isMobile, focusNodeId])
+
+  useEffect(() => {
+    const cy = cyRef.current
+    if (!cy) return
+    const highlightId = selectedId ?? null
+    cy.elements().unselect()
+    if (!highlightId) return
+    const highlighted = cy.getElementById(String(highlightId))
+    if (highlighted.nonempty()) highlighted.select()
+  }, [selectedId])
 
   // Step 7 (§6): reliability + hypothesis filtering. Toggling classes on
   // the existing instance avoids a full re-layout; edges with no
