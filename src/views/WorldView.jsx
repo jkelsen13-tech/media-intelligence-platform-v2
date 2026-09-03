@@ -36,6 +36,10 @@ import {
   canonicalEventIdFromWorldView,
   loadTemporalAssessment,
 } from '../lib/temporalAssessment'
+import {
+  investigationContextDomProps,
+  selectionStubFromInvestigation,
+} from '../lib/investigationContext'
 import './worldview.css'
 
 const MODES = [
@@ -212,7 +216,7 @@ function TemporalIntelligenceBlock({ assessment }) {
   )
 }
 
-function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssessment }) {
+function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssessment, investigationContext }) {
   const coverage = visibleRow && Number.isFinite(atMs) ? revisionCoverageAt(visibleRow, atMs) : null
   const plot = visibleRow ? plotDecision(visibleRow) : { plot: false, reason: 'no_row', geometry: null }
   const availability = inspectorAvailability(visibleRow, { plot: plot.plot })
@@ -372,6 +376,30 @@ function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssess
       <header className="wv-section-head">
         <h2>Inspector</h2>
       </header>
+      <section className="wv-ic" aria-label="Investigation context">
+        <h4>Investigation context</h4>
+        <dl className="wv-fields">
+          <Field label="canonical_subject_type" value={investigationContext?.canonical_subject_type} empty="not recorded" />
+          <Field label="canonical_subject_id" value={investigationContext?.canonical_subject_id} empty="none" />
+          <Field label="parent_event_id" value={investigationContext?.parent_event_id} empty="none" />
+          <Field label="as_of_time" value={investigationContext?.as_of_time} empty="not recorded" />
+          <Field
+            label="selected_time_range"
+            value={
+              investigationContext?.selected_time_range
+                ? `${investigationContext.selected_time_range.from ?? 'not recorded'} → ${investigationContext.selected_time_range.to ?? 'not recorded'}`
+                : null
+            }
+            empty="none"
+          />
+          <Field label="active_view" value={investigationContext?.active_view} empty="none" />
+          <Field
+            label="temporal_assessment_reference"
+            value={investigationContext?.temporal_assessment_reference}
+            empty="none"
+          />
+        </dl>
+      </section>
       <TemporalIntelligenceBlock assessment={temporalAssessment} />
       {body}
     </aside>
@@ -419,6 +447,8 @@ export default function WorldView({
   selected,
   onSelectProjection,
   onSelectGraphNode,
+  investigationContext,
+  onInvestigationAsOfTime,
 }) {
   const [mode, setMode] = useState('map')
   const [loadStatus, setLoadStatus] = useState({
@@ -458,9 +488,10 @@ export default function WorldView({
     return worldGraph.nodes.length > 0 ? worldGraph.nodes : live
   }, [graph, worldGraph.nodes])
 
+  const selectedForMatch = selected ?? selectionStubFromInvestigation(investigationContext)
   const selectedRows = useMemo(
-    () => rowsMatchingSelection(loadStatus.rows, selected),
-    [loadStatus.rows, selected],
+    () => rowsMatchingSelection(loadStatus.rows, selectedForMatch),
+    [loadStatus.rows, selectedForMatch],
   )
   const stamps = useMemo(() => recordedTimestampsForRows(selectedRows), [selectedRows])
 
@@ -475,7 +506,7 @@ export default function WorldView({
     const node = graphNodeMatchingProjection(graphNodes, row)
     if (!didAutoSelect.current) {
       didAutoSelect.current = true
-      if (!selected) onSelectProjection(node ?? selectionStubFromProjection(row))
+      if (!selected) onSelectProjection(node ?? selectionStubFromProjection(row), row)
       return
     }
     if (selected?.fromSpatialProjection && node) {
@@ -484,6 +515,12 @@ export default function WorldView({
   }, [loadStatus, graphNodes, selected, onSelectProjection])
 
   const atMs = stamps[stampIndex]?.ms ?? null
+  const atIso = stamps[stampIndex]?.iso ?? null
+  useEffect(() => {
+    if (!onInvestigationAsOfTime) return
+    if (!investigationContext?.canonical_subject_id) return
+    onInvestigationAsOfTime(atIso)
+  }, [atIso, investigationContext?.canonical_subject_id, onInvestigationAsOfTime])
   const visibleRow = Number.isFinite(atMs)
     ? revisionAtTime(selectedRows, atMs)
     : selectedRows.length
@@ -511,31 +548,31 @@ export default function WorldView({
 
   const mapRows = useMemo(() => {
     if (loadStatus.status !== 'ok') return []
-    if (selected && selectedRows.length > 0) {
+    if (selectedForMatch && selectedRows.length > 0) {
       return visibleRow ? [visibleRow] : []
     }
     return loadStatus.rows.filter((row) => plotDecision(row).plot)
-  }, [loadStatus, selected, selectedRows, visibleRow])
+  }, [loadStatus, selectedForMatch, selectedRows, visibleRow])
 
   const selectedKeys = useMemo(() => {
     const keys = new Set()
-    if (selected?.id) keys.add(String(selected.id))
-    if (selected?.slug) keys.add(String(selected.slug))
-    if (selected?.mip_object_id) keys.add(String(selected.mip_object_id))
-    if (selected?.subject_graph_node_id) keys.add(String(selected.subject_graph_node_id))
+    if (selectedForMatch?.id) keys.add(String(selectedForMatch.id))
+    if (selectedForMatch?.slug) keys.add(String(selectedForMatch.slug))
+    if (selectedForMatch?.mip_object_id) keys.add(String(selectedForMatch.mip_object_id))
+    if (selectedForMatch?.subject_graph_node_id) keys.add(String(selectedForMatch.subject_graph_node_id))
     if (visibleRow?.mip_object_id) keys.add(String(visibleRow.mip_object_id))
     if (visibleRow?.subject_graph_node_id) keys.add(String(visibleRow.subject_graph_node_id))
     return keys
-  }, [selected, visibleRow])
+  }, [selectedForMatch, visibleRow])
 
   const emptyMessage =
     loadStatus.status === 'unavailable'
       ? spatialProjectionUnavailableCopy(loadStatus.reason, loadStatus.error)
       : loadStatus.status === 'empty'
         ? 'No spatial projection rows. The map stays empty.'
-        : selected && selectedRows.length === 0
+        : selectedForMatch && selectedRows.length === 0
           ? 'This selection has no spatial projection row.'
-          : selected && !visibleRow
+          : selectedForMatch && !visibleRow
             ? 'No spatial state recorded at this time.'
             : 'No display_geometry available to plot.'
 
@@ -552,7 +589,7 @@ export default function WorldView({
     (demoGraphBlocked && worldGraph.status !== 'ok')
 
   return (
-    <div className="wv-view">
+    <div className="wv-view" {...investigationContextDomProps(investigationContext)}>
       <header className="wv-banner">
         <div>
           <h2>World View</h2>
@@ -619,10 +656,11 @@ export default function WorldView({
         )}
         <EventInspector
           loadStatus={loadStatus}
-          selected={selected}
+          selected={selectedForMatch}
           visibleRow={visibleRow}
           atMs={atMs}
           temporalAssessment={temporalAssessment}
+          investigationContext={investigationContext}
         />
       </div>
 

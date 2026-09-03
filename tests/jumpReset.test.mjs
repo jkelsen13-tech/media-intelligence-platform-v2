@@ -27,6 +27,11 @@ test('extra defaults to nothing (null-safe)', () => {
   assert.deepEqual(jumpFocusStack('node', 'x', 'X'), [{ kind: 'node', id: 'x', label: 'X' }])
 })
 
+test('JUMP_CLEARS does not include Investigation Context (tab switches must preserve it)', () => {
+  assert.ok(!JUMP_CLEARS.includes('investigationContext'))
+  assert.ok(!JUMP_CLEARS.includes('canonical_subject_id'))
+})
+
 test('JUMP_CLEARS names every transient panel state App holds', () => {
   assert.deepEqual([...JUMP_CLEARS].sort(), [
     'edgeEvidence',

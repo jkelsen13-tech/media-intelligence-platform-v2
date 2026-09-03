@@ -81,6 +81,66 @@ body {
   flex-direction: column;
 }
 
+/* R4.75 Step 1 — shared Investigation Context (DISPLAY only). */
+.ic-bar {
+  padding: 8px 20px 10px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-panel);
+}
+
+.ic-bar-title {
+  margin: 0 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ic-bar-empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ic-bar-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+}
+
+.ic-bar-fields > div {
+  min-width: 12rem;
+}
+
+.ic-bar-fields dt {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ic-bar-fields dd {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.wv-ic {
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.wv-ic h4 {
+  margin: 0 0 8px;
+  font-size: var(--fs-meta);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
 .notice {
   padding: 20px;
   color: var(--text-secondary);
@@ -2340,6 +2400,14 @@ body {
   .app-header .app-nav,
   .app-header .data-source {
     display: none;
+  }
+
+  .ic-bar {
+    padding: 6px 16px 8px;
+  }
+
+  .ic-bar-fields > div {
+    min-width: 9rem;
   }
 
   .info-btn {

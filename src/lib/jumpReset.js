@@ -14,6 +14,10 @@
 // Transient UI state a jump must clear. App.jsx's resetJumpContext delegates
 // to clearPrimaryGraphOverlays for these values, then resets the focus stack,
 // so a future panel cannot silently leak across jumps.
+//
+// R4.75: JUMP_CLEARS is for explicit jump-to-new-object only. Ordinary nav
+// tab switches (changeView) must not call resetJumpContext and must not
+// clear Investigation Context. investigationContext is intentionally absent.
 export const JUMP_CLEARS = [
   'edgeEvidence',
   'selected',

@@ -18,6 +18,7 @@ import {
   lastMilestoneCheck,
   pendingUncertainty,
 } from '../lib/policyArcModel'
+import { investigationContextDomProps } from '../lib/investigationContext'
 
 // Story Arcs (concept doc §2.5): persistent longitudinal tracking through a
 // story's full consequence arc. Track B Step 3 item 2 rebuilt the detail
@@ -88,7 +89,7 @@ function evidenceStateLabel(confidence) {
   return labels[confidence] ?? 'Evidence state not recorded'
 }
 
-export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
+export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, investigationContext }) {
   const [arcs, setArcs] = useState(null)
   const [arcsUnavailable, setArcsUnavailable] = useState(null)
   const [error, setError] = useState(null)
@@ -142,6 +143,19 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
     }
   }, [focusArcId, arcs])
 
+  // Investigation Context restore after a tab switch. Event subjects do not
+  // invent an arc; only an explicit arc id selects one.
+  useEffect(() => {
+    if (focusArcId || !arcs || investigationContext?.canonical_subject_type !== 'arc') return
+    const id = investigationContext.canonical_subject_id
+    if (!id) return
+    const match = arcs.find((a) => a.id === id || a.slug === id)
+    if (match) {
+      setSelectedSlug(match.slug)
+      setPushed(true)
+    }
+  }, [focusArcId, arcs, investigationContext?.canonical_subject_type, investigationContext?.canonical_subject_id])
+
   const selected = useMemo(
     () => arcs?.find((a) => a.slug === selectedSlug) ?? null,
     [arcs, selectedSlug],
@@ -192,16 +206,34 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
     [detail],
   )
 
-  if (error) return <div className="notice error">Failed to load story arcs: {error}</div>
-  if (!arcs) return <div className="notice">Loading story arcs…</div>
+  if (error) {
+    return (
+      <div className="notice error" {...investigationContextDomProps(investigationContext)}>
+        Failed to load story arcs: {error}
+      </div>
+    )
+  }
+  if (!arcs) {
+    return (
+      <div className="notice" {...investigationContextDomProps(investigationContext)}>
+        Loading story arcs…
+      </div>
+    )
+  }
   if (arcsUnavailable) {
     return (
-      <div className="notice">
+      <div className="notice" {...investigationContextDomProps(investigationContext)}>
         Story arcs are unavailable ({arcsUnavailable}). Id-only stub rows are treated as no-arc; no titles are invented.
       </div>
     )
   }
-  if (arcs.length === 0) return <div className="notice">No story arcs tracked yet.</div>
+  if (arcs.length === 0) {
+    return (
+      <div className="notice" {...investigationContextDomProps(investigationContext)}>
+        No story arcs tracked yet.
+      </div>
+    )
+  }
 
   // Derived status is the real signal; fall back to the stored column only
   // for data shapes that predate derivation (demo data without it).
@@ -229,7 +261,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode }) {
   const developmentsLabel = selectedIsCollection ? 'Included records' : 'Key developments'
 
   return (
-    <div className={`arcs-view${pushed ? ' detail-open' : ''}`}>
+    <div className={`arcs-view${pushed ? ' detail-open' : ''}`} {...investigationContextDomProps(investigationContext)}>
       <aside className="arcs-list">
         <h2>Tracked objects</h2>
         <p className="arcs-sub">

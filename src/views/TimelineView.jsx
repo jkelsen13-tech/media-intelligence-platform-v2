@@ -39,6 +39,7 @@ import EvidenceStateBar from '../components/EvidenceStateBar'
 import RemainingUncertaintyBlock from '../components/RemainingUncertaintyBlock'
 import TrustFooter from '../components/TrustFooter'
 import GroupedTimelineView from './GroupedTimelineView'
+import { investigationContextDomProps } from '../lib/investigationContext'
 import '../styles/timeline.css'
 
 // Track B Step 3 item 4 — the addendum's Screen 5 (Timeline), arc-scoped by
@@ -74,7 +75,7 @@ function TimelineTabIcon({ kind }) {
   return <svg viewBox="0 0 18 18" width="16" height="16" focusable="false"><circle cx="9" cy="9" r="6.2" {...common} /><path d="M9 5.5V9l2.5 1.8" {...common} /></svg>
 }
 
-export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, focusArcKey }) {
+export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, focusArcKey, investigationContext }) {
   // --- arcs + scope -----------------------------------------------------------
   const [arcs, setArcs] = useState(null)
   const [arcsUnavailable, setArcsUnavailable] = useState(null)
@@ -304,10 +305,41 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
     return () => clearTimeout(t)
   }, [pendingFocus, global, page, allEvents, selected, arcEntries, month, type])
 
+  // Investigation Context restore after a tab switch (not a JUMP).
+  // Highlight only when a loaded entry already matches. No match → no invented event.
+  useEffect(() => {
+    if (focusEventKey) return
+    const id = investigationContext?.canonical_subject_id
+    if (!id) return
+    if (investigationContext?.canonical_subject_type === 'arc' || investigationContext?.canonical_subject_type === 'article') return
+    const pool = [...(arcEntries ?? []), ...(global?.entries ?? [])]
+    const entry = pool.find(
+      (candidate) =>
+        candidate.key === id ||
+        candidate.id === id ||
+        (candidate.slug ?? '') === id ||
+        (candidate.slug ?? '').slice(-8) === id ||
+        (candidate.key ?? '').slice(-8) === id,
+    )
+    if (entry) setPendingFocus(entry.key)
+  }, [investigationContext?.canonical_subject_id, investigationContext?.canonical_subject_type, focusEventKey, arcEntries, global])
+
   // --- render ---------------------------------------------------------------
 
-  if (arcsError) return <div className="notice error">Failed to load story arcs: {arcsError}</div>
-  if (!arcs) return <div className="notice">Loading timeline…</div>
+  if (arcsError) {
+    return (
+      <div className="notice error" {...investigationContextDomProps(investigationContext)}>
+        Failed to load story arcs: {arcsError}
+      </div>
+    )
+  }
+  if (!arcs) {
+    return (
+      <div className="notice" {...investigationContextDomProps(investigationContext)}>
+        Loading timeline…
+      </div>
+    )
+  }
   const arcsUnavailableNotice = arcsUnavailable ? (
     <div className="notice">
       Story arcs are unavailable ({arcsUnavailable}). Id-only stub rows are treated as no-arc; no titles are invented.
@@ -359,7 +391,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   const connectionLabel = (key, labels) => labels?.get(key) ?? key
 
   return (
-    <div className="timeline-view">
+    <div className="timeline-view" {...investigationContextDomProps(investigationContext)}>
       {arcsUnavailableNotice}
       {global?.edgesUnavailable && (
         <div className="notice">
