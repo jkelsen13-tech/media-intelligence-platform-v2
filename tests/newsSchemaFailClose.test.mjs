@@ -184,7 +184,7 @@ test('isPostgrestPermissionDenied detects 42501 / PGRST301 / permission-denied, 
   assert.equal(isPostgrestPermissionDenied(null), false)
   assert.equal(articlesUnavailableReason(ARTICLES_PERMISSION_DENIED), 'permission_denied')
   assert.equal(articlesUnavailableReason(ARTICLES_500), null)
-}))
+})
 
 test('loadGraph: missing public.edges does not throw; empty edges + unavailable flag', async () => {
   const client = fakeClient(
@@ -335,7 +335,7 @@ test('loadFilteredSourceMetricRows / loadCorpusMeta: permission denied is empty,
   const boom = fakeClient({ articles: [] }, { errors: { articles: ARTICLES_500 } })
   await assert.rejects(() => loadFilteredSourceMetricRows({}, { supabaseClient: boom }), (err) => err === ARTICLES_500)
   await assert.rejects(() => loadCorpusMeta({ supabaseClient: boom }), (err) => err === ARTICLES_500)
-}))
+})
 
 test('browser selects never ask story_arcs.title and never join the title embed', () => {
   assert.doesNotMatch(SRC, /story_arcs!articles_arc_id_fkey/)
