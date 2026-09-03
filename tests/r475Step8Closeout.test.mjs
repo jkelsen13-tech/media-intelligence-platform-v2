@@ -291,10 +291,22 @@ test('Step 1–7 test files exist; R4.75 src stays DISPLAY-only; no R5 product i
   }
 
   const srcFiles = collectSrcFiles(new URL('../src', import.meta.url).pathname)
-  const bannedGlobe = /Cesium|cesium|ion\.cesium|photorealistic 3d|google 3d tiles/i
+  const bannedCesiumWord = /Cesium|cesium/
+  const bannedIonAndProviders = /ion\.cesium|photorealistic 3d|google 3d tiles/i
+  const bannedIonTokenStrings = /Ion\.defaultAccessToken|defaultAccessToken\s*=|ion\s*access\s*token/i
+  const allowedCesiumFiles = [
+    /\/src\/lib\/worldViewRendererAdapter\.js$/,
+    /\/src\/lib\/worldViewCesiumEllipsoidRendererAdapter\.js$/,
+  ]
   for (const file of srcFiles) {
     const text = readFileSync(file, 'utf8')
-    assert.doesNotMatch(text, bannedGlobe, file)
+    assert.doesNotMatch(text, bannedIonTokenStrings, file)
+    assert.doesNotMatch(text, bannedIonAndProviders, file)
+
+    const isAllowedCesiumFile = allowedCesiumFiles.some((re) => re.test(file))
+    if (!isAllowedCesiumFile) {
+      assert.doesNotMatch(text, bannedCesiumWord, file)
+    }
     assert.doesNotMatch(text, /Port Meridian/, file)
   }
 

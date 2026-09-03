@@ -80,9 +80,13 @@ test('deckProjectionLayers pick handler commits the original row (no new identit
 })
 
 test('nextStackAfterRendererError switches stacks only at the 2nd renderer error', () => {
+  // ellipsoid-globe -> openfreemap-positron fallback
   assert.equal(nextStackAfterRendererError(DEFAULT_MAP_STACK_ID, 1), null)
-  assert.equal(nextStackAfterRendererError(DEFAULT_MAP_STACK_ID, 2), 'osm')
-  assert.equal(nextStackAfterRendererError(DEFAULT_MAP_STACK_ID, 3), 'osm')
+  assert.equal(nextStackAfterRendererError(DEFAULT_MAP_STACK_ID, 2), 'openfreemap-positron')
+
+  // openfreemap-positron -> osm
+  assert.equal(nextStackAfterRendererError('openfreemap-positron', 1), null)
+  assert.equal(nextStackAfterRendererError('openfreemap-positron', 2), 'osm')
 
   assert.equal(nextStackAfterRendererError('osm', 1), null)
   assert.equal(nextStackAfterRendererError('osm', 2), FALLBACK_MAP_STACK_ID)
