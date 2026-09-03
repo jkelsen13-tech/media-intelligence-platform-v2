@@ -144,6 +144,7 @@ export function createCesiumEllipsoidRendererAdapter({
   getHostEl,
   coordinate,
   precisionClass,
+  getPrecisionClass,
   getSelectedKeys,
   onSelectRow,
   onStackIdChange,
@@ -167,6 +168,12 @@ export function createCesiumEllipsoidRendererAdapter({
   let Cesium = null
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
+
+  // Stage C: the recorded precision class can arrive AFTER mount (rows load
+  // asynchronously), so camera-state get/set must resolve it live at call
+  // time. Using the mount-time value here would drop the ~5 km city ceiling
+  // floor whenever the class was not yet available at mount.
+  const activePrecisionClass = () => getPrecisionClass?.() ?? precisionClass
 
   async function mount() {
     if (mounted) return
@@ -459,8 +466,8 @@ export function createCesiumEllipsoidRendererAdapter({
     if (!viewer || !Cesium) return null
     try {
       return serializeCameraState(
-        cameraStateFromGlobeCamera(Cesium.Math, viewer.camera, precisionClass),
-        precisionClass,
+        cameraStateFromGlobeCamera(Cesium.Math, viewer.camera, activePrecisionClass()),
+        activePrecisionClass(),
       )
     } catch {
       return null
@@ -473,7 +480,7 @@ export function createCesiumEllipsoidRendererAdapter({
   // restored height to the ~5 km city ceiling in meters — never finer.
   function setCameraState(serialized) {
     if (!viewer || !Cesium) return false
-    const parsed = parseCameraState(serialized, { precisionClass })
+    const parsed = parseCameraState(serialized, { precisionClass: activePrecisionClass() })
     if (!parsed) return false
     return applyCameraStateToGlobeViewer(Cesium, viewer, parsed)
   }
