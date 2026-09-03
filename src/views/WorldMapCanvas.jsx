@@ -128,6 +128,7 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
       getHostEl: () => hostRef.current,
       coordinate,
       precisionClass: first?.row?.precision_class,
+      getPrecisionClass: () => first?.row?.precision_class,
       getSelectedKeys: () => selectedKeys,
       onSelectRow,
       onStackIdChange: (next) => {
