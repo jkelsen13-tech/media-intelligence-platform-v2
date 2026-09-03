@@ -163,9 +163,9 @@ test('spec §12 state distinctions: existing helpers keep “empty/missing/failu
     const files = row.resolution.files ?? []
     assert.equal(files.length, 2)
     const viewText = readFileSync(new URL(`../${files[0]}`, import.meta.url), 'utf8')
-    assert.ok(viewText.includes(\"status: 'loading'\"), 'WorldView.jsx must contain initial status: loading')
+    assert.ok(viewText.includes("status: 'loading'"), 'WorldView.jsx must contain initial status: loading')
     const panelText = readFileSync(new URL(`../${files[1]}`, import.meta.url), 'utf8')
-    assert.ok(panelText.includes(\"status: 'loading'\"), 'RelationshipPanel must contain initial status: loading')
+    assert.ok(panelText.includes("status: 'loading'"), 'RelationshipPanel must contain initial status: loading')
   }
 
   // 9) stale/partial (stale_cached join kind)
