@@ -348,6 +348,32 @@ export function displayCoordinateText(geometry) {
   return positions.map((c) => `[${c[0]}, ${c[1]}]`).join('; ')
 }
 
+/**
+ * Bind plottable coordinates from display_geometry only.
+ * Empty / withheld rows stay empty — no city is invented.
+ */
+export function bindDisplayPoint(row) {
+  const decision = plotDecision(row)
+  if (!decision.plot) return null
+  const positions = collectPositions(decision.geometry)
+  if (positions.length !== 1) {
+    return {
+      plot: true,
+      count: positions.length,
+      coordinates: positions[0] ?? null,
+      precisionClass: row?.precision_class ?? null,
+      geometryStatus: row?.geometry_status ?? null,
+    }
+  }
+  return {
+    plot: true,
+    count: 1,
+    coordinates: positions[0],
+    precisionClass: row?.precision_class ?? null,
+    geometryStatus: row?.geometry_status ?? null,
+  }
+}
+
 export function inspectorTitle(row, selected) {
   const graphLabel =
     selected && !selected.fromSpatialProjection && typeof selected.label === 'string' && selected.label.trim()
@@ -533,9 +559,10 @@ export function inspectorAvailability(row, { plot } = {}) {
 }
 
 /**
- * Weather is not a column on spatial_projection_v1. This repo has no
- * authorized provenance-bearing weather read path (no vendor, no API key,
- * no NOAA/ingest table wired for World View). Always honest unavailable.
+ * V2-join weather: spatial_projection_v1 has no weather columns.
+ * Investigation-join surfaces stay honest-empty here. Event-time weather
+ * is a separate DISPLAY module (eventTimeWeather.js) that reads Open-Meteo
+ * ERA5 at the recorded valid range only.
  */
 export function weatherPanelState() {
   return Object.freeze({

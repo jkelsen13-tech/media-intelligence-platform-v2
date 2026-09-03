@@ -1,15 +1,24 @@
+// R4 World View launch spine (DISPLAY / client UI).
+// Spec: MIP_WORLD_VIEW_LAUNCH_v0.1_2026-09-03.
+//
+// Pattern pin: commit 880a672 (2026-08-26). TAKE pattern-level only,
+// reimplement here: cinematic pan-zoom/camera; feature picking returns the
+// MIP object then commitNewSubject; layered rendering + visible attribution;
+// render-governance / map-stack fallback; recorded vs delayed vs reconstructed
+// vs unavailable labels; person-identity overlays stay locked; MapLibre +
+// deck.gl 2D/2.5D. Do not clone the source globe. Do not ship 3D-tile
+// vendors, live vehicle/camera overlays, cockpit/HUD, or present-day weather
+// on a historical event.
+
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { geoMercator, geoPath, geoGraticule10 } from 'd3-geo'
-import { feature, mesh } from 'topojson-client'
-import worldAtlas from 'world-atlas/countries-110m.json'
 import GraphView from '../graph/GraphView'
 import TrustFooter from '../components/TrustFooter'
+import WorldMapCanvas from './WorldMapCanvas'
 import {
   loadSpatialProjection,
   loadWorldViewGraph,
   liveGraphNodes,
   plotDecision,
-  collectPositions,
   recordedTimestampsForRows,
   revisionAtTime,
   revisionCoverageAt,
@@ -20,7 +29,6 @@ import {
   confidenceTextDimension,
   normalizeEvidenceRefs,
   inspectorAvailability,
-  weatherPanelState,
   mayShowLocation,
   defaultStampIndex,
   autoSelectRow,
@@ -29,7 +37,6 @@ import {
   sourceNativeLocationLabel,
   displayCoordinateText,
   inspectorTitle,
-  fitExtentGeometry,
   spatialProjectionUnavailableCopy,
 } from '../lib/spatialProjection'
 import {
@@ -41,6 +48,14 @@ import {
   selectionStubFromInvestigation,
 } from '../lib/investigationContext'
 import { freshnessFromExistingMarkers } from '../lib/investigationJoinState'
+import { loadEventTimeWeather, unavailableWeather } from '../lib/eventTimeWeather'
+import {
+  freshnessCopy,
+  spatialFreshnessLabel,
+  temporalFreshnessLabel,
+  weatherFreshnessLabel,
+} from '../lib/worldViewFreshness'
+import { launchOverlayCatalog } from '../lib/worldViewPrivacyLock'
 import './worldview.css'
 
 const MODES = [
@@ -49,14 +64,7 @@ const MODES = [
   { key: 'split', label: 'Split' },
 ]
 
-const MAP_W = 960
-const MAP_H = 480
-
-const worldObjects = worldAtlas.objects ?? {}
-const LAND = worldObjects.land ? feature(worldAtlas, worldObjects.land) : null
-const BORDERS = worldObjects.countries
-  ? mesh(worldAtlas, worldObjects.countries, (a, b) => a !== b)
-  : null
+void launchOverlayCatalog()
 
 function formatWhen(iso) {
   if (!iso) return null
@@ -75,127 +83,38 @@ function Field({ label, value, empty = 'Unavailable' }) {
   )
 }
 
-function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyMessage }) {
-  const features = useMemo(() => {
-    return (rows ?? []).flatMap((row) => {
-      const decision = plotDecision(row)
-      if (!decision.plot) return []
-      const positions = collectPositions(decision.geometry)
-      const selected =
-        selectedKeys.has(String(row.mip_object_id)) || selectedKeys.has(String(row.subject_graph_node_id))
-      return [
-        {
-          row,
-          geometry: decision.geometry,
-          positions,
-          selected,
-          label: sourceNativeLocationLabel(row),
-          coords: displayCoordinateText(decision.geometry),
-        },
-      ]
-    })
-  }, [rows, selectedKeys])
-
-  const geometry = useMemo(() => {
-    const projection = geoMercator()
-    const positions = features.flatMap((f) => f.positions)
-    const extent = fitExtentGeometry(positions, features[0]?.row?.precision_class)
-    if (extent) {
-      projection.fitExtent(
-        [
-          [16, 16],
-          [MAP_W - 16, MAP_H - 16],
-        ],
-        { type: 'Feature', geometry: extent },
-      )
-    } else {
-      projection.translate([MAP_W / 2, MAP_H / 2]).scale(MAP_W / (2 * Math.PI))
-    }
-    const path = geoPath(projection)
-    return {
-      projection,
-      spherePath: path({ type: 'Sphere' }),
-      landPath: LAND ? path(LAND) : null,
-      bordersPath: BORDERS ? path(BORDERS) : null,
-      graticulePath: path(geoGraticule10()),
-      markers: features.flatMap((f) =>
-        f.positions.map((coordinate, i) => {
-          const point = projection(coordinate)
-          if (!point) return null
-          return { ...f, i, x: point[0], y: point[1] }
-        }),
-      ).filter(Boolean),
-    }
-  }, [features])
-
+function FreshnessPill({ state }) {
   return (
-    <div className="wv-map" role="img" aria-label="Spatial projection map. Only display_geometry from the live view is drawn.">
-      <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} className="wv-map-svg">
-        {geometry.spherePath && <path className="wv-map-sea" d={geometry.spherePath} />}
-        {geometry.graticulePath && <path className="wv-graticule" d={geometry.graticulePath} />}
-        {geometry.landPath && <path className="wv-map-land" d={geometry.landPath} />}
-        {geometry.bordersPath && <path className="wv-map-borders" d={geometry.bordersPath} />}
-        {geometry.markers.map((marker) => {
-          const id = `${marker.row.revision_id ?? marker.row.mip_object_id}-${marker.i}`
-          return (
-            <g
-              key={id}
-              className={`wv-feature${marker.selected ? ' is-selected' : ''}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => onSelectRow(marker.row)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  onSelectRow(marker.row)
-                }
-              }}
-            >
-              <circle cx={marker.x} cy={marker.y} r={7} />
-              <text className="wv-map-label" x={marker.x + 11} y={marker.y - 2}>
-                {marker.label || marker.row.precision_class || 'projected location'}
-              </text>
-              {marker.coords && (
-                <text className="wv-map-coords num" x={marker.x + 11} y={marker.y + 12}>
-                  {marker.coords} · {marker.row.precision_class} · {marker.row.geometry_status}
-                </text>
-              )}
-            </g>
-          )
-        })}
-      </svg>
-      {features.length === 0 && (
-        <div className="wv-map-empty">
-          <p>{emptyMessage}</p>
-          <p className="wv-map-empty-sub">No map pins are fabricated.</p>
-        </div>
-      )}
-    </div>
+    <span className={`wv-pill wv-pill-${state}`} data-freshness-state={state}>
+      {freshnessCopy(state)}
+    </span>
   )
 }
 
-function WeatherPanel() {
-  const weather = weatherPanelState()
+function WeatherPanel({ weather }) {
+  const state = weather ?? unavailableWeather('not_loaded')
+  const freshness = weatherFreshnessLabel(state)
   return (
-    <section className="wv-weather" aria-label="Weather">
+    <section className="wv-weather" aria-label="Weather" data-weather-status={state.status}>
       <header className="wv-section-head">
-        <h3>Weather</h3>
-        <span className="wv-pill wv-pill-empty">Unavailable</span>
+        <h3>Weather at event time</h3>
+        <FreshnessPill state={freshness} />
       </header>
-      <p className="wv-weather-copy">{weather.copy}</p>
+      <p className="wv-weather-copy">{state.copy}</p>
       <dl className="wv-weather-grid">
-        <Field label="Temperature" value={null} />
-        <Field label="Precipitation" value={null} />
-        <Field label="Wind speed" value={null} />
-        <Field label="Wind direction" value={null} />
-        <Field label="Provider" value={weather.provenance.provider} />
-        <Field label="Timestamp" value={weather.provenance.timestamp} />
-        <Field label="Resolution" value={weather.provenance.resolution} />
+        <Field label="Temperature" value={state.fields.temperature} empty="Not sourced" />
+        <Field label="Precipitation" value={state.fields.precipitation} empty="Not sourced" />
+        <Field label="Wind speed" value={state.fields.windSpeed} empty="Not sourced" />
+        <Field label="Wind direction" value={state.fields.windDirection} empty="Not sourced" />
+        <Field label="Provider" value={state.provenance.provider} />
+        <Field label="Timestamp" value={state.provenance.timestamp} />
+        <Field label="Resolution" value={state.provenance.resolution} />
         <Field
           label="Observation type"
-          value={weather.provenance.observationType}
-          empty="Unavailable (observed / estimated / forecast / reanalysis not sourced)"
+          value={state.provenance.observationType}
+          empty="Unavailable (observed / reanalysis / forecast not sourced)"
         />
+        <Field label="Model" value={state.provenance.model} empty="Not sourced" />
       </dl>
     </section>
   )
@@ -203,11 +122,12 @@ function WeatherPanel() {
 
 function TemporalIntelligenceBlock({ assessment }) {
   if (!assessment) return null
+  const freshness = temporalFreshnessLabel(assessment)
   return (
     <section className="wv-temporal" aria-label="Temporal Intelligence">
       <header className="wv-section-head">
         <h3>Temporal Intelligence</h3>
-        <span className="wv-pill wv-pill-empty">{assessment.panel}</span>
+        <FreshnessPill state={freshness} />
       </header>
       <p className="wv-temporal-copy">{assessment.copy}</p>
       {assessment.status === 'ok' && assessment.copy !== assessment.panel && (
@@ -217,7 +137,15 @@ function TemporalIntelligenceBlock({ assessment }) {
   )
 }
 
-function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssessment, investigationContext }) {
+function EventInspector({
+  loadStatus,
+  selected,
+  visibleRow,
+  atMs,
+  temporalAssessment,
+  investigationContext,
+  weather,
+}) {
   const coverage = visibleRow && Number.isFinite(atMs) ? revisionCoverageAt(visibleRow, atMs) : null
   const plot = visibleRow ? plotDecision(visibleRow) : { plot: false, reason: 'no_row', geometry: null }
   const availability = inspectorAvailability(visibleRow, { plot: plot.plot })
@@ -225,6 +153,7 @@ function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssess
   const confidence = visibleRow ? confidenceTextDimension(visibleRow) : null
   const refs = visibleRow ? normalizeEvidenceRefs(visibleRow.evidence_refs) : []
   const locationHidden = visibleRow && !mayShowLocation(visibleRow)
+  const spatialFreshness = spatialFreshnessLabel(visibleRow, { plot: plot.plot })
   const freshness = freshnessFromExistingMarkers({
     asOfTime: investigationContext?.as_of_time,
     revisionRow: visibleRow,
@@ -266,43 +195,40 @@ function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssess
     )
   } else {
     const nativeFields = sourceNativeTimeFields(visibleRow.source_native_time)
+    const whenFrom = formatWhen(visibleRow.valid_from_utc)
+    const whenTo = formatWhen(visibleRow.valid_to_utc)
+    const locationValue = locationHidden
+      ? null
+      : plot.plot
+        ? `${sourceNativeLocationLabel(visibleRow) || 'Recorded place'} · ${visibleRow.precision_class || 'unspecified'} · ${displayCoordinateText(plot.geometry)}`
+        : null
     body = (
       <>
         {availability.state !== 'present' && (
           <p className={`wv-callout wv-callout-${availability.state}`}>{availability.label}</p>
         )}
-        <h3 className="wv-inspector-title">{inspectorTitle(visibleRow, selected)}</h3>
+        <header className="wv-inspector-heading">
+          <h3 className="wv-inspector-title">{inspectorTitle(visibleRow, selected)}</h3>
+          <FreshnessPill state={spatialFreshness} />
+        </header>
         <dl className="wv-fields">
-          <Field label="Display hint" value={visibleRow.display_hint} />
-          <Field label="Object id" value={visibleRow.mip_object_id} />
-          <Field label="Graph node" value={visibleRow.subject_graph_node_id} />
-          <Field label="Object type" value={visibleRow.object_type} />
-          <Field label="Spatial role" value={visibleRow.spatial_role} />
-          <Field label="Relationship qualifier" value={visibleRow.relationship_qualifier} empty="No source relationship recorded" />
-          <Field label="Valid from (UTC)" value={formatWhen(visibleRow.valid_from_utc)} />
-          <Field label="Valid to (UTC)" value={formatWhen(visibleRow.valid_to_utc)} />
-          <Field label="Valid-time precision" value={visibleRow.valid_time_precision} />
-          <Field label="Precision class" value={visibleRow.precision_class} />
           <Field
-            label="Location (display_geometry only)"
-            value={
-              locationHidden
-                ? null
-                : plot.plot
-                  ? `${visibleRow.precision_class || 'unspecified'} · ${displayCoordinateText(plot.geometry)}`
-                  : null
-            }
+            label="When"
+            value={whenFrom && whenTo ? `${whenFrom} → ${whenTo}` : whenFrom || whenTo}
+            empty="Time not recorded"
+          />
+          <Field label="Valid-time precision" value={visibleRow.valid_time_precision} />
+          <Field
+            label="Location"
+            value={locationValue}
             empty={locationHidden ? 'Precise location withheld (private person)' : 'Location unavailable'}
           />
-          <Field label="Canonical place id" value={visibleRow.canonical_place_id} />
+          <Field label="Precision class" value={visibleRow.precision_class} />
           <Field label="Geometry status" value={visibleRow.geometry_status} />
-          <Field label="Review state" value={visibleRow.review_state} />
-          <Field label="Release state" value={visibleRow.release_state} />
-          <Field label="Review effective (UTC)" value={formatWhen(visibleRow.review_effective_at_utc)} />
-          <Field label="Release effective (UTC)" value={formatWhen(visibleRow.release_effective_at_utc)} />
-          <Field label="Uncertainty class" value={visibleRow.uncertainty_class} />
-          <Field label="Uncertainty note" value={visibleRow.uncertainty_note} />
-          <Field label="Confidence status" value={visibleRow.confidence_status} />
+          <Field label="Uncertainty" value={visibleRow.uncertainty_class} empty="Not recorded" />
+          <Field label="Uncertainty note" value={visibleRow.uncertainty_note} empty="Not recorded" />
+          <Field label="Review" value={visibleRow.review_state} />
+          <Field label="Release" value={visibleRow.release_state} />
         </dl>
 
         {confidence && (
@@ -322,56 +248,40 @@ function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssess
         </section>
 
         <section className="wv-evidence">
-          <h4>Source-native time (as recorded)</h4>
-          {nativeFields.length === 0 ? (
-            <p className="wv-empty">No source_native_time on this row.</p>
+          <h4>Provenance</h4>
+          {nativeFields.length === 0 && refs.length === 0 ? (
+            <p className="wv-empty">No source-native time or evidence_refs on this row.</p>
           ) : (
-            <dl className="wv-fields">
-              {nativeFields.map((f) =>
-                f.key === 'source_url' && f.value ? (
-                  <div className="wv-field" key={f.key}>
-                    <dt>{f.key}</dt>
-                    <dd>
-                      <a href={f.value} target="_blank" rel="noreferrer">
-                        {f.value}
-                      </a>
-                    </dd>
-                  </div>
-                ) : (
-                  <Field key={f.key} label={f.key} value={f.value} />
-                ),
+            <>
+              {nativeFields.length > 0 && (
+                <dl className="wv-fields">
+                  {nativeFields.map((f) =>
+                    f.key === 'source_url' && f.value ? (
+                      <div className="wv-field" key={f.key}>
+                        <dt>Source</dt>
+                        <dd>
+                          <a href={f.value} target="_blank" rel="noreferrer">
+                            {f.value}
+                          </a>
+                        </dd>
+                      </div>
+                    ) : (
+                      <Field key={f.key} label={f.key.replace(/_/g, ' ')} value={f.value} />
+                    ),
+                  )}
+                </dl>
               )}
-            </dl>
+              {refs.length > 0 && (
+                <ul>
+                  {refs.map((ref, i) => (
+                    <li key={i} className="num">
+                      {typeof ref === 'string' ? ref : JSON.stringify(ref)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
-        </section>
-
-        <section className="wv-evidence">
-          <h4>Evidence refs</h4>
-          {refs.length === 0 ? (
-            <p className="wv-empty">No evidence_refs on this row.</p>
-          ) : (
-            <ul>
-              {refs.map((ref, i) => (
-                <li key={i} className="num">
-                  {typeof ref === 'string' ? ref : JSON.stringify(ref)}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="wv-context">
-          <h4>Tags / context</h4>
-          <p className="wv-meta">
-            Only fields present on the projection row are shown. No topical tags are inferred.
-          </p>
-          <ul className="wv-tags">
-            {[visibleRow.object_type, visibleRow.spatial_role, visibleRow.precision_class, sourceNativeLocationLabel(visibleRow)]
-              .filter((t) => t && String(t).trim())
-              .map((t) => (
-                <li key={t}>{t}</li>
-              ))}
-          </ul>
         </section>
       </>
     )
@@ -380,7 +290,7 @@ function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssess
   return (
     <aside className="wv-inspector" aria-label="Selected-event inspector">
       <header className="wv-section-head">
-        <h2>Inspector</h2>
+        <h2>Event inspector</h2>
       </header>
       <section className="wv-ic" aria-label="Investigation context">
         <h4>Investigation context</h4>
@@ -413,6 +323,7 @@ function EventInspector({ loadStatus, selected, visibleRow, atMs, temporalAssess
       </section>
       <TemporalIntelligenceBlock assessment={temporalAssessment} />
       {body}
+      <WeatherPanel weather={weather} />
     </aside>
   )
 }
@@ -422,9 +333,9 @@ function TimelineScrubber({ stamps, index, onChange, disabledReason }) {
     return (
       <section className="wv-scrubber" data-filter-family="investigation" aria-label="Investigation filters">
         <header className="wv-section-head">
-          <h3>Investigation filters</h3>
+          <h3>Recorded time</h3>
         </header>
-        <p className="filter-family-label">Recorded time</p>
+        <p className="filter-family-label">Investigation filters</p>
         <p className="wv-empty">{disabledReason}</p>
       </section>
     )
@@ -433,10 +344,10 @@ function TimelineScrubber({ stamps, index, onChange, disabledReason }) {
   return (
     <section className="wv-scrubber" data-filter-family="investigation" aria-label="Investigation filters">
       <header className="wv-section-head">
-        <h3>Investigation filters</h3>
+        <h3>Recorded time</h3>
         <span className="wv-meta num">{current?.iso}</span>
       </header>
-      <p className="filter-family-label">Recorded time</p>
+      <p className="filter-family-label">Investigation filters</p>
       <p className="wv-meta">
         Recorded time inspects the current subject and writes as_of_time only. The canonical subject does not change.
         Scrubber snaps to timestamps recorded on the projection. Intermediate history is not interpolated.
@@ -482,6 +393,7 @@ export default function WorldView({
   })
   const [stampIndex, setStampIndex] = useState(0)
   const [temporalAssessment, setTemporalAssessment] = useState(null)
+  const [weather, setWeather] = useState(() => unavailableWeather('not_loaded'))
   const didAutoSelect = useRef(false)
 
   useEffect(() => {
@@ -524,7 +436,7 @@ export default function WorldView({
       return
     }
     if (selected?.fromSpatialProjection && node) {
-      onSelectProjection(node)
+      onSelectProjection(node, row)
     }
   }, [loadStatus, graphNodes, selected, onSelectProjection])
 
@@ -559,6 +471,16 @@ export default function WorldView({
       cancelled = true
     }
   }, [canonicalEventId])
+
+  useEffect(() => {
+    let cancelled = false
+    loadEventTimeWeather({ row: visibleRow, atMs }).then((result) => {
+      if (!cancelled) setWeather(result)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [visibleRow, atMs])
 
   const mapRows = useMemo(() => {
     if (loadStatus.status !== 'ok') return []
@@ -601,17 +523,25 @@ export default function WorldView({
   const graphUnavailable =
     worldGraph.status === 'unavailable' ||
     (demoGraphBlocked && worldGraph.status !== 'ok')
+  const activeTitle = inspectorTitle(visibleRow, selectedForMatch)
 
   return (
-    <div className="wv-view" {...investigationContextDomProps(investigationContext)}>
+    <div className="wv-view" data-wv-mode={mode} {...investigationContextDomProps(investigationContext)}>
       <header className="wv-banner">
         <div>
           <h2>World View</h2>
           <p>
-            Launch-minimum map of V2 <code>public.spatial_projection_v1</code>, including the confirmed
-            Pages client at <code>/media-intelligence-platform-v2/</code>. Geometry is drawn only from
-            {' '}<code>display_geometry</code>. Graph, Map, and Split share one selected object id.
+            World-scale spatial lens. Graph, Map, and Split share one selected subject.
+            Locations are drawn only from published <code>display_geometry</code>.
+            Zoom does not invent a finer precision class.
           </p>
+          {visibleRow && (
+            <p className="wv-active-event">
+              Active event · {activeTitle}
+              {visibleRow.precision_class ? ` · ${visibleRow.precision_class}` : ''}
+              {visibleRow.geometry_status ? ` · ${visibleRow.geometry_status}` : ''}
+            </p>
+          )}
         </div>
         <div className="wv-mode" role="tablist" aria-label="World View mode">
           {MODES.map((m) => (
@@ -631,43 +561,59 @@ export default function WorldView({
 
       {loadStatus.status === 'loading' && <p className="wv-meta">Loading spatial projection…</p>}
 
-      <div className={`wv-stage wv-stage-${mode}`}>
-        {showMap && (
-          <WorldMapCanvas
-            rows={mapRows}
-            selectedKeys={selectedKeys}
-            onSelectRow={handleMapSelect}
-            emptyMessage={emptyMessage}
-          />
-        )}
-        {showGraph && (
-          <div className="wv-graph">
-            {graphError && graph?.source !== 'supabase' && (
-              <p className="wv-empty-state">Knowledge Graph load failed: {graphError}</p>
-            )}
-            {graphUnavailable && (
-              <p className="wv-empty-state">
-                {spatialProjectionUnavailableCopy(worldGraph.reason, worldGraph.error)}
-                {' '}No demo relationships are drawn.
-              </p>
-            )}
-            {worldGraph.edgesUnavailable && (
-              <p className="wv-empty-state">
-                public.edges is unavailable ({worldGraph.edgesUnavailable}). Nodes may still render; no relationships are invented.
-              </p>
-            )}
-            {!graphUnavailable && worldGraph.status === 'ok' && (
-              <GraphView
-                nodes={worldGraph.nodes}
-                edges={worldGraph.edges}
-                onSelect={onSelectGraphNode}
-                panelOpen={false}
-                selectedId={graphSelectionId(selected)}
-                focusNodeId={graphSelectionId(selected)}
+      <div className={`wv-layout wv-layout-${mode}`}>
+        <div className="wv-main">
+          <div className={`wv-stage wv-stage-${mode}`}>
+            {showMap && (
+              <WorldMapCanvas
+                rows={mapRows}
+                selectedKeys={selectedKeys}
+                onSelectRow={handleMapSelect}
+                emptyMessage={emptyMessage}
               />
             )}
+            {showGraph && (
+              <div className="wv-graph">
+                {graphError && graph?.source !== 'supabase' && (
+                  <p className="wv-empty-state">Knowledge Graph load failed: {graphError}</p>
+                )}
+                {graphUnavailable && (
+                  <p className="wv-empty-state">
+                    {spatialProjectionUnavailableCopy(worldGraph.reason, worldGraph.error)}
+                    {' '}No demo relationships are drawn.
+                  </p>
+                )}
+                {worldGraph.edgesUnavailable && (
+                  <p className="wv-empty-state">
+                    public.edges is unavailable ({worldGraph.edgesUnavailable}). Nodes may still render; no relationships are invented.
+                  </p>
+                )}
+                {!graphUnavailable && worldGraph.status === 'ok' && (
+                  <GraphView
+                    nodes={worldGraph.nodes}
+                    edges={worldGraph.edges}
+                    onSelect={onSelectGraphNode}
+                    panelOpen={false}
+                    selectedId={graphSelectionId(selectedForMatch)}
+                    focusNodeId={graphSelectionId(selectedForMatch)}
+                  />
+                )}
+              </div>
+            )}
           </div>
-        )}
+          <TimelineScrubber
+            stamps={stamps}
+            index={stampIndex}
+            onChange={setStampIndex}
+            disabledReason={
+              loadStatus.status === 'empty'
+                ? 'No projection rows, so there is no recorded time to scrub.'
+                : selected
+                  ? 'No recorded timestamps on the matching projection rows.'
+                  : 'Select an object that has a spatial projection to scrub recorded time.'
+            }
+          />
+        </div>
         <EventInspector
           loadStatus={loadStatus}
           selected={selectedForMatch}
@@ -675,23 +621,9 @@ export default function WorldView({
           atMs={atMs}
           temporalAssessment={temporalAssessment}
           investigationContext={investigationContext}
+          weather={weather}
         />
       </div>
-
-      <TimelineScrubber
-        stamps={stamps}
-        index={stampIndex}
-        onChange={setStampIndex}
-        disabledReason={
-          loadStatus.status === 'empty'
-            ? 'No projection rows, so there is no recorded time to scrub.'
-            : selected
-              ? 'No recorded timestamps on the matching projection rows.'
-              : 'Select an object that has a spatial projection to scrub recorded time.'
-        }
-      />
-
-      <WeatherPanel />
 
       <TrustFooter
         left={

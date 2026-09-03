@@ -61,6 +61,33 @@
   background: rgba(var(--accent-rgb), 0.12);
 }
 
+.wv-active-event {
+  margin-top: 8px !important;
+  color: var(--text-body);
+  font-size: var(--fs-meta);
+}
+
+.wv-layout {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+  flex: 1;
+}
+
+.wv-layout-map,
+.wv-layout-graph,
+.wv-layout-split {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+}
+
+.wv-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
 .wv-stage {
   display: grid;
   gap: 12px;
@@ -70,11 +97,11 @@
 
 .wv-stage-map,
 .wv-stage-graph {
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .wv-stage-split {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(280px, 340px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .wv-map,
@@ -92,11 +119,66 @@
   inset: 0;
 }
 
+.wv-map-host {
+  position: absolute;
+  inset: 0;
+}
+
 .wv-map-svg {
   display: block;
   width: 100%;
   height: 100%;
   min-height: 360px;
+}
+
+.wv-map-gl .maplibregl-map {
+  position: absolute;
+  inset: 0;
+}
+
+.wv-map-attrib,
+.wv-map .maplibregl-ctrl-attrib {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-panel);
+}
+
+.wv-map-attrib {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  margin: 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.wv-inspector-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.wv-pill-live,
+.wv-pill-delayed,
+.wv-pill-reconstructed,
+.wv-pill-unavailable {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.wv-pill-reconstructed {
+  color: var(--text-secondary);
+}
+
+.wv-pill-delayed {
+  color: var(--status-amber-text);
+  border-color: var(--status-amber-border);
+}
+
+.wv-pill-unavailable {
+  color: var(--text-muted);
 }
 
 .wv-map-sea {
@@ -330,6 +412,9 @@
 }
 
 @media (max-width: 960px) {
+  .wv-layout-map,
+  .wv-layout-graph,
+  .wv-layout-split,
   .wv-stage-map,
   .wv-stage-graph,
   .wv-stage-split {
