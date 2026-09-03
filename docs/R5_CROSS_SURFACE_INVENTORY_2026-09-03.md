@@ -3,7 +3,7 @@
 ## Scope / stop conditions (evidence packaging only)
 This inventory is documentation and test evidence packaging only. It does **not** start the later R5 steps, and it does **not** change any product behavior.
 
-Base repo stopping point referenced by this package: `main @ 4d2b46ff1cdb0130dc248f5b2e12550a89c83d85` (PR #13 squash-merged as described in the owner’s R4 closeout).
+Base repo stopping point referenced by this package: `main @ 4d2b46ff1cdb0130dc248f5b2e12550a89c83d85` (PR #13 squash-merged as described in the owner closeout).
 
 ## Method (where this inventory is grounded)
 All object-family identity and join statements below name concrete code paths and contracts in `src/lib/` plus view entry points in `src/views/` / `src/panels/`. Where a join path from the governing spec is not wired in this repo today, it is marked explicitly as **join not present** (no implication it passes).
