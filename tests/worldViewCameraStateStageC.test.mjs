@@ -285,12 +285,31 @@ test('adapter wiring: both renderers and the dispatcher expose the camera contra
   assert.match(ADAPTER, /getCameraState:\s*\(\)\s*=>\s*impl\?\.getCameraState/)
   assert.match(ADAPTER, /setCameraState:\s*\(serialized\)\s*=>\s*impl\?\.setCameraState/)
   // MapLibre adapter restores via jumpTo with the precision-capped camera.
-  assert.match(ADAPTER, /mapCameraForCameraState\(parsed, precisionClass\)/)
+  assert.match(ADAPTER, /mapCameraForCameraState\(parsed, activePrecisionClass\(\)\)/)
   assert.match(ADAPTER, /map\.jumpTo/)
   // Globe adapter parses through the shared contract and applies via setView.
-  assert.match(GLOBE_ADAPTER, /parseCameraState\(serialized, \{ precisionClass \}\)/)
+  assert.match(GLOBE_ADAPTER, /parseCameraState\(serialized, \{ precisionClass: activePrecisionClass\(\) \}\)/)
   assert.match(GLOBE_ADAPTER, /applyCameraStateToGlobeViewer\(Cesium, viewer, parsed\)/)
-  assert.match(GLOBE_ADAPTER, /cameraStateFromGlobeCamera\(Cesium\.Math, viewer\.camera, precisionClass\)/)
+  assert.match(GLOBE_ADAPTER, /cameraStateFromGlobeCamera\(Cesium\.Math, viewer\.camera, activePrecisionClass\(\)\)/)
+})
+
+test('precision class is resolved live at call time, not stale from mount', () => {
+  // Rows load asynchronously, so the class may be unknown at adapter mount.
+  // Camera-state get/set must read it through the live getter or the ~5 km
+  // ceiling floor is silently dropped (found in the Stage C live walk: a
+  // 50 m restore was accepted before this fix).
+  assert.match(MAP_CANVAS, /getPrecisionClass: \(\) => first\?\.row\?\.precision_class/)
+  for (const src of [ADAPTER, GLOBE_ADAPTER]) {
+    assert.match(src, /getPrecisionClass,/)
+    assert.match(src, /const activePrecisionClass = \(\) => getPrecisionClass\?\.\(\) \?\? precisionClass/)
+    assert.match(src, /parseCameraState\(serialized, \{ precisionClass: activePrecisionClass\(\) \}\)/)
+  }
+  // Behavioral: the floor follows the class supplied at call time.
+  const lateCity = parseCameraState(
+    JSON.stringify({ version: 1, lon: -81.7, lat: 41.4, heightMeters: 50, headingDegrees: 0, pitchDegrees: -80, rollDegrees: 0 }),
+    { precisionClass: 'city' },
+  )
+  assert.equal(lateCity.heightMeters, heightMetersForPrecisionClass('city'))
 })
 
 test('Stage B protections are intact: base URL ordering and honest fatal fallback', () => {
