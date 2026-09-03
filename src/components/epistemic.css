@@ -635,7 +635,12 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  align-items: center;
   margin: 14px 0 12px;
+}
+
+.ep-tl-filters .filter-family-label {
+  width: 100%;
 }
 
 .ep-tl-pill {

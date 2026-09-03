@@ -447,7 +447,8 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
 
       {activeTab === 'timeline' && (
         <section id="timeline-panel" role="tabpanel" aria-labelledby="timeline-tab">
-          <div className="ep-tl-filters">
+          <div className="ep-tl-filters" data-filter-family="investigation" aria-label="Investigation filters">
+            <span className="filter-family-label">Investigation filters</span>
             <select
               className="ep-tl-pill"
               value={month ?? ''}

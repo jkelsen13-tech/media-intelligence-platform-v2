@@ -176,6 +176,10 @@
   padding: var(--card-pad-y) var(--card-pad-x);
 }
 
+.wv-scrubber .filter-family-label {
+  margin-bottom: 8px;
+}
+
 .wv-inspector {
   min-height: 360px;
   overflow: auto;

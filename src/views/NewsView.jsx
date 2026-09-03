@@ -24,6 +24,11 @@ import EpistemicBanner from '../components/EpistemicBanner'
 import SourceAttributionLine from '../components/SourceAttributionLine'
 import SkyBadge from '../panels/SkyBadge'
 import { buildSourceMetrics, enrichOutletsWithMetrics, sortOutletsBySourceMetric } from '../lib/sourceMetrics.js'
+import {
+  emptyDiscoveryFilters,
+  applyDiscoveryFilters,
+  discoveryFiltersAreActive,
+} from '../lib/discoveryFilters.js'
 
 // News Feed (Track B Step 4, addendum Screen 1): title block with the
 // browser-local last-visit count, epistemic banner, wired outlet/status
@@ -147,19 +152,15 @@ function PublisherSourceRecord({ article, region }) {
 //
 // variant: 'page' is the News Feed tab. 'drawer' is the R4.75 Step 3 Explore
 // overlay — same discovery system (search, chips, list, honest empty). Local
-// filters stay in this instance and never write Investigation Context.
+// discovery filters stay in this instance and never write Investigation
+// Context. They do not filter Graph / World View / Timeline / Arcs evidence.
 export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison, variant = 'page' }) {
   const isDrawer = variant === 'drawer'
   const [q, setQ] = useState('')
   const [debouncedQ, setDebouncedQ] = useState('')
-  const [outlet, setOutlet] = useState(null)
-  const [status, setStatus] = useState('all')
-  const [region, setRegion] = useState('all')
-  const [evidenceBasis, setEvidenceBasis] = useState('all')
-  const [topic, setTopic] = useState('all')
-  const [dateRange, setDateRange] = useState('all')
-  const [customDateStart, setCustomDateStart] = useState('')
-  const [customDateEnd, setCustomDateEnd] = useState('')
+  const [discovery, setDiscovery] = useState(() => emptyDiscoveryFilters())
+  const { outlet, status, region, evidenceBasis, topic, dateRange, customDateStart, customDateEnd } = discovery
+  const patchDiscovery = (patch) => setDiscovery((current) => applyDiscoveryFilters(current, patch))
   const [sourceOrder, setSourceOrder] = useState('corpus')
   const [outlets, setOutlets] = useState([])
   const [sourceMetricRows, setSourceMetricRows] = useState([])
@@ -360,14 +361,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   useEffect(() => {
     if (!focusArticleId) return
     setQ('')
-    setOutlet(null)
-    setStatus('all')
-    setRegion('all')
-    setEvidenceBasis('all')
-    setTopic('all')
-    setDateRange('all')
-    setCustomDateStart('')
-    setCustomDateEnd('')
+    setDiscovery(emptyDiscoveryFilters())
     expandArticle(focusArticleId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusArticleId])
@@ -691,7 +685,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     <div className="news-filter-row">
       <button
         className={`news-chip${outlet === null ? ' active' : ''}`}
-        onClick={() => setOutlet(null)}
+        onClick={() => patchDiscovery({ outlet: null })}
       >
         All outlets
       </button>
@@ -699,7 +693,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         <button
           key={item.name}
           className={`news-chip${outlet === item.name ? ' active' : ''}`}
-          onClick={() => setOutlet(item.name)}
+          onClick={() => patchDiscovery({ outlet: item.name })}
           title={`Volume: ${item.volume} article${item.volume === 1 ? '' : 's'} in the current filter · Earliest timestamp in recorded multi-outlet events: ${item.firstToReportCount}${item.country ? ` · publisher country: ${item.country}` : ''}${item.parentOwnership ? ` · ownership: ${item.parentOwnership}` : ''}`}
         >
           <span className="news-source-name">{item.name}</span>
@@ -716,7 +710,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         <button
           key={f.key}
           className={`news-chip${status === f.key ? ' active' : ''}`}
-          onClick={() => setStatus(f.key)}
+          onClick={() => patchDiscovery({ status: f.key })}
         >
           {f.label}
         </button>
@@ -725,35 +719,35 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   )
 
   const referenceFilters = (suffix = '') => (
-    <div className={`news-reference-filter-row${suffix}`} aria-label="Article filters">
+    <div className={`news-reference-filter-row${suffix}`} aria-label="Discovery filters">
       <label className="news-filter-select">
         <span>◷ Date</span>
-        <select value={dateRange} onChange={(event) => setDateRange(event.target.value)}>
+        <select value={dateRange} onChange={(event) => patchDiscovery({ dateRange: event.target.value })}>
           {DATE_FILTERS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
         </select>
       </label>
       {dateRange === 'custom' && (
         <div className="news-custom-date-range" aria-label="Custom publication date range">
-          <label>From <input type="date" value={customDateStart} onChange={(event) => setCustomDateStart(event.target.value)} /></label>
-          <label>To <input type="date" value={customDateEnd} onChange={(event) => setCustomDateEnd(event.target.value)} /></label>
+          <label>From <input type="date" value={customDateStart} onChange={(event) => patchDiscovery({ customDateStart: event.target.value })} /></label>
+          <label>To <input type="date" value={customDateEnd} onChange={(event) => patchDiscovery({ customDateEnd: event.target.value })} /></label>
         </div>
       )}
       <label className="news-filter-select">
         <span>◎ Region</span>
-        <select value={region} onChange={(event) => setRegion(event.target.value)}>
+        <select value={region} onChange={(event) => patchDiscovery({ region: event.target.value })}>
           <option value="all">All regions</option>
           {availableRegions.map((name) => <option key={name} value={name}>{name}</option>)}
         </select>
       </label>
       <label className="news-filter-select">
         <span>◈ Evidence</span>
-        <select value={evidenceBasis} onChange={(event) => setEvidenceBasis(event.target.value)}>
+        <select value={evidenceBasis} onChange={(event) => patchDiscovery({ evidenceBasis: event.target.value })}>
           {EVIDENCE_FILTERS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
         </select>
       </label>
       <label className="news-filter-select">
         <span>◇ Topic</span>
-        <select value={topic} onChange={(event) => setTopic(event.target.value)}>
+        <select value={topic} onChange={(event) => patchDiscovery({ topic: event.target.value })}>
           {TOPIC_FILTERS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
         </select>
       </label>
@@ -798,17 +792,22 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
             )}
           </span>
           <button className="news-filters-btn" onClick={() => setFiltersOpen(true)}>
-            Filters
+            Discovery filters
           </button>
         </div>
-        {(outlet !== null || status !== 'all' || region !== 'all' || evidenceBasis !== 'all' || topic !== 'all' || dateRange !== 'all') && (
+        <section className="discovery-filters" data-filter-family="discovery" aria-label="Discovery filters">
+          <h3 className="filter-family-label">Discovery filters</h3>
+          <p className="filter-family-note">
+            These chips scope the News / Explore feed. They do not hide evidence already attached to the selected subject.
+          </p>
+        {discoveryFiltersAreActive(discovery) && (
           <div className="news-filter-row news-active-filters">
-            {outlet !== null && <button className="news-chip active" title="Clear outlet filter" onClick={() => setOutlet(null)}>{outlet} ×</button>}
-            {status !== 'all' && <button className="news-chip active" title="Clear status filter" onClick={() => setStatus('all')}>{STATUS_FILTERS.find((f) => f.key === status)?.label} ×</button>}
-            {region !== 'all' && <button className="news-chip active" title="Clear region filter" onClick={() => setRegion('all')}>{region} ×</button>}
-            {evidenceBasis !== 'all' && <button className="news-chip active" title="Clear evidence filter" onClick={() => setEvidenceBasis('all')}>{EVIDENCE_FILTERS.find((item) => item.key === evidenceBasis)?.label} ×</button>}
-            {topic !== 'all' && <button className="news-chip active" title="Clear topic filter" onClick={() => setTopic('all')}>{TOPIC_FILTERS.find((item) => item.key === topic)?.label} ×</button>}
-            {dateRange !== 'all' && <button className="news-chip active" title="Clear date filter" onClick={() => { setDateRange('all'); setCustomDateStart(''); setCustomDateEnd('') }}>{DATE_FILTERS.find((item) => item.key === dateRange)?.label} ×</button>}
+            {outlet !== null && <button className="news-chip active" title="Clear outlet filter" onClick={() => patchDiscovery({ outlet: null })}>{outlet} ×</button>}
+            {status !== 'all' && <button className="news-chip active" title="Clear status filter" onClick={() => patchDiscovery({ status: 'all' })}>{STATUS_FILTERS.find((f) => f.key === status)?.label} ×</button>}
+            {region !== 'all' && <button className="news-chip active" title="Clear region filter" onClick={() => patchDiscovery({ region: 'all' })}>{region} ×</button>}
+            {evidenceBasis !== 'all' && <button className="news-chip active" title="Clear evidence filter" onClick={() => patchDiscovery({ evidenceBasis: 'all' })}>{EVIDENCE_FILTERS.find((item) => item.key === evidenceBasis)?.label} ×</button>}
+            {topic !== 'all' && <button className="news-chip active" title="Clear topic filter" onClick={() => patchDiscovery({ topic: 'all' })}>{TOPIC_FILTERS.find((item) => item.key === topic)?.label} ×</button>}
+            {dateRange !== 'all' && <button className="news-chip active" title="Clear date filter" onClick={() => patchDiscovery({ dateRange: 'all', customDateStart: '', customDateEnd: '' })}>{DATE_FILTERS.find((item) => item.key === dateRange)?.label} ×</button>}
           </div>
         )}
         <input
@@ -836,6 +835,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           {outletRow}
           {statusRow}
         </div>
+        </section>
       </div>
 
       {filtersOpen && (
@@ -843,14 +843,15 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           <div
             className="sheet filter-sheet"
             role="dialog"
-            aria-label="Article filters"
+            aria-label="Discovery filters"
+            data-filter-family="discovery"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sheet-head">
-              <h2>Filters</h2>
+              <h2>Discovery filters</h2>
               <button
                 className="sheet-close"
-                aria-label="Close filters"
+                aria-label="Close discovery filters"
                 onClick={() => setFiltersOpen(false)}
               >
                 ×

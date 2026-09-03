@@ -148,6 +148,8 @@ export default function App() {
   // chooses another node or clears focus. This makes the map an interaction
   // surface for the graph, rather than a detached visual overlay.
   const [activeLocationKey, setActiveLocationKey] = useState(null)
+  // Investigation view-slice only. Not News / Explore discovery.region.
+  // Changing these must not replace canonical_subject_id.
   const [graphRegion, setGraphRegion] = useState('all')
   const [focusExpansion, setFocusExpansion] = useState(0)
   // Step 9 (§8): focus stack. Each crumb is
@@ -834,7 +836,7 @@ export default function App() {
               </button>
             </div>
             <p className="sheet-body">
-              Browse the live feed. Search, filters, and preview stay local — they do
+              Browse the live feed. Search, discovery filters, and preview stay local — they do
               not change the current investigation. Selecting a result replaces it.
             </p>
             <NewsView
@@ -1020,31 +1022,38 @@ export default function App() {
                         </button>
                       ))}
                     </div>
-                    <label className="graph-region-filter">
-                      <span>Region</span>
-                      <select
-                        value={graphRegion}
-                        onChange={(event) => {
-                          clearPrimaryGraphOverlays()
-                          setGraphRegion(event.target.value)
-                        }}
-                      >
-                        {regionOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.label} ({option.count})
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <button
-                      type="button"
-                      className="graph-toolbar-btn"
-                      disabled={!canExpandFocus}
-                      title={canExpandFocus ? 'Include one more documented relationship level' : 'No additional documented focus level is available'}
-                      onClick={() => setFocusExpansion((depth) => Math.min(depth + 1, 2))}
+                    <div
+                      className="graph-investigation-filters"
+                      data-filter-family="investigation"
+                      aria-label="Investigation filters"
                     >
-                      Expand
-                    </button>
+                      <span className="filter-family-label">Investigation filters</span>
+                      <label className="graph-region-filter">
+                        <span>Region</span>
+                        <select
+                          value={graphRegion}
+                          onChange={(event) => {
+                            clearPrimaryGraphOverlays()
+                            setGraphRegion(event.target.value)
+                          }}
+                        >
+                          {regionOptions.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.label} ({option.count})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        className="graph-toolbar-btn"
+                        disabled={!canExpandFocus}
+                        title={canExpandFocus ? 'Include one more documented relationship level' : 'No additional documented focus level is available'}
+                        onClick={() => setFocusExpansion((depth) => Math.min(depth + 1, 2))}
+                      >
+                        Expand
+                      </button>
+                    </div>
                     <p className="graph-scope-status" aria-live="polite">{graphScopeLabel}</p>
                   </div>
                   {graphCoverage && (
