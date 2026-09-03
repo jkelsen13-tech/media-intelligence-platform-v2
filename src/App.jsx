@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import GraphView from './graph/GraphView'
 import Legend from './graph/Legend'
 import EdgeControls from './graph/EdgeControls'
@@ -35,6 +35,25 @@ import {
   graphNodeMatchingInvestigation,
 } from './lib/investigationContext'
 import { commitNewSubject } from './lib/newSubjectPropagation'
+import {
+  emptyDeepLinkSelection,
+  formatTimeQuery,
+  hydrateDeepLink,
+  isInvestigationDeepLink,
+  parseDeepLink,
+  serializeDeepLink,
+  applySelectionAgainstCatalog,
+} from './lib/deepLinks'
+import {
+  RECENT_INVESTIGATION_STORAGE_KEY,
+  commitNewSubjectRememberingRecent,
+  pushRecentInvestigation,
+  readRecentInvestigations,
+  restoreRecentInvestigation,
+  snapshotRecentInvestigation,
+  unauthenticatedRecentStorage,
+  writeRecentInvestigations,
+} from './lib/recentInvestigation'
 import InvestigationContextBar from './components/InvestigationContextBar'
 import {
   filterGraphRegion,
@@ -52,6 +71,49 @@ import { loadAccountUiFlag } from './lib/auth'
 
 // Mobile-first graph entry: the top N hubs by degree centrality.
 const HUB_LIST_SIZE = 30
+
+function placeKeyFromMention(row) {
+  return row?.placeId ?? (row?.place != null ? `${row.place}:${row.longitude}:${row.latitude}` : null)
+}
+
+function subObjectFromUi(selected, activeLocationKey) {
+  if (selected?.id != null || selected?.slug != null) {
+    return { kind: 'entity', id: String(selected.id ?? selected.slug) }
+  }
+  if (activeLocationKey) return { kind: 'place', id: String(activeLocationKey) }
+  return null
+}
+
+function readInitialDeepLink() {
+  if (typeof window === 'undefined') {
+    return {
+      view: 'news',
+      investigationContext: emptyInvestigationContext('news'),
+      linkSelection: emptyDeepLinkSelection(),
+      selectionFallbacks: [],
+    }
+  }
+  const hydrated = hydrateDeepLink(window.location.hash, {
+    currentIc: emptyInvestigationContext('news'),
+    catalog: null,
+  })
+  if (!hydrated.parsed.subjectId) {
+    return {
+      view: 'news',
+      investigationContext: emptyInvestigationContext('news'),
+      linkSelection: emptyDeepLinkSelection(),
+      selectionFallbacks: [],
+    }
+  }
+  return {
+    view: hydrated.investigationContext.active_view ?? hydrated.parsed.view ?? 'graph',
+    investigationContext: hydrated.investigationContext,
+    linkSelection: hydrated.selection,
+    selectionFallbacks: hydrated.fallbacks,
+  }
+}
+
+const INITIAL_DEEP_LINK = readInitialDeepLink()
 
 function useMediaQuery(query) {
   const [matches, setMatches] = useState(() =>
@@ -119,10 +181,18 @@ export default function App() {
   const [error, setError] = useState(null)
   const [selected, setSelected] = useState(null) // selected node data
   const [pinned, setPinned] = useState(false)
-  const [view, setView] = useState('news')
+  const [view, setView] = useState(INITIAL_DEEP_LINK.view)
   // R4.75 Step 1 — one shared Investigation Context. Tab switches update
   // active_view only. Explicit subject select replaces identity fields.
-  const [investigationContext, setInvestigationContext] = useState(() => emptyInvestigationContext('news'))
+  const [investigationContext, setInvestigationContext] = useState(INITIAL_DEEP_LINK.investigationContext)
+  // R4.75 Step 6 — hash deep-link selection + bounded recent stack.
+  const [linkSelection, setLinkSelection] = useState(INITIAL_DEEP_LINK.linkSelection)
+  const [selectionFallbacks, setSelectionFallbacks] = useState(INITIAL_DEEP_LINK.selectionFallbacks)
+  const [recentInvestigations, setRecentInvestigations] = useState(() =>
+    readRecentInvestigations(unauthenticatedRecentStorage()),
+  )
+  const recentRef = useRef(recentInvestigations)
+  const investigationContextRef = useRef(investigationContext)
   const [nodeQuery, setNodeQuery] = useState('')
   const [aboutOpen, setAboutOpen] = useState(false)
   // Track B nav restructure: the "More" tab opens a bottom sheet listing
@@ -227,6 +297,49 @@ export default function App() {
       .catch(() => setAccountUi(false))
   }, [])
 
+  useEffect(() => {
+    investigationContextRef.current = investigationContext
+  }, [investigationContext])
+
+  useEffect(() => {
+    recentRef.current = recentInvestigations
+    writeRecentInvestigations(unauthenticatedRecentStorage(), recentInvestigations)
+  }, [recentInvestigations])
+
+  const deepLinkCatalog = useMemo(() => {
+    if (!graph) return null
+    return {
+      entity: (graph.nodes ?? []).map((node) => node.id ?? node.slug).filter(Boolean),
+      place: (locationMentions ?? []).map(placeKeyFromMention).filter(Boolean),
+      claim: [],
+      source: [],
+    }
+  }, [graph, locationMentions])
+
+  const rememberPriorSubject = useCallback((priorIc, nextId) => {
+    if (!priorIc?.canonical_subject_id || nextId == null) return
+    if (String(priorIc.canonical_subject_id) === String(nextId)) return
+    const nextStack = pushRecentInvestigation(
+      recentRef.current,
+      snapshotRecentInvestigation(priorIc, subObjectFromUi(selected, activeLocationKey)),
+    )
+    recentRef.current = nextStack
+    setRecentInvestigations(nextStack)
+  }, [selected, activeLocationKey])
+
+  const commitNewSubjectFromApp = useCallback((ic, payload, options) => {
+    const result = commitNewSubjectRememberingRecent(
+      ic,
+      payload,
+      options,
+      recentRef.current,
+      subObjectFromUi(selected, activeLocationKey),
+    )
+    recentRef.current = result.recentInvestigations
+    setRecentInvestigations(result.recentInvestigations)
+    return result.investigationContext
+  }, [selected, activeLocationKey])
+
   // Step 9 (§8): tapping a node makes it focal — its depth-2 neighborhood
   // re-renders and the node is pushed onto the breadcrumb stack. Tapping
   // the current focal node again is a no-op (panel still opens).
@@ -270,11 +383,19 @@ export default function App() {
         setSelected(null)
         setPinned(false)
         setPolicyNode(data)
-        setInvestigationContext((ic) => applySubject(ic, subjectFromGraphNode(data)))
+        setInvestigationContext((ic) => {
+          const subject = subjectFromGraphNode(data)
+          rememberPriorSubject(ic, subject.canonical_subject_id)
+          return applySubject(ic, subject)
+        })
       } else {
         setPolicyNode(null)
         setSelected(data)
-        setInvestigationContext((ic) => applySubject(ic, subjectFromGraphNode(data)))
+        setInvestigationContext((ic) => {
+          const subject = subjectFromGraphNode(data)
+          rememberPriorSubject(ic, subject.canonical_subject_id)
+          return applySubject(ic, subject)
+        })
       }
       pushFocus(data)
     },
@@ -309,7 +430,11 @@ export default function App() {
         } else {
           setSelected(next)
           setPolicyNode(null)
-          setInvestigationContext((ic) => applySubject(ic, subjectFromGraphNode(next)))
+          setInvestigationContext((ic) => {
+            const subject = subjectFromGraphNode(next)
+            rememberPriorSubject(ic, subject.canonical_subject_id)
+            return applySubject(ic, subject)
+          })
         }
         pushFocus(next)
       }
@@ -381,9 +506,11 @@ export default function App() {
         node.fromSpatialProjection && graph?.source === 'supabase' && node.subject_graph_node_id
           ? graph.nodes.find((n) => (n.id ?? n.slug) === node.subject_graph_node_id) ?? node
           : node
-      setInvestigationContext((ic) =>
-        applySubject(ic, subjectFromWorldViewSelection({ node: seedNode, row })),
-      )
+      setInvestigationContext((ic) => {
+        const subject = subjectFromWorldViewSelection({ node: seedNode, row })
+        rememberPriorSubject(ic, subject.canonical_subject_id)
+        return applySubject(ic, subject)
+      })
       if (node.fromSpatialProjection) {
         const liveKey = node.subject_graph_node_id
         const live =
@@ -537,17 +664,15 @@ export default function App() {
         // so no stale focus path from a prior arc's exploration remains.
         const key = next.id ?? next.slug
         setFocusStack(jumpFocusStack('node', key, next.label ?? key))
-        setInvestigationContext((ic) => commitNewSubject(ic, next, { landingView: 'graph' }).investigationContext)
+        setInvestigationContext((ic) => commitNewSubjectFromApp(ic, next, { landingView: 'graph' }))
       } else if (nodeKey) {
         // Caller-supplied id only. Do not invent a live node or a type.
-        setInvestigationContext((ic) =>
-          commitNewSubject(ic, { id: nodeKey }, { landingView: 'graph' }).investigationContext,
-        )
+        setInvestigationContext((ic) => commitNewSubjectFromApp(ic, { id: nodeKey }, { landingView: 'graph' }))
       } else {
         setInvestigationContext((ic) => setInvestigationActiveView(ic, 'graph'))
       }
     },
-    [graph, resetJumpContext, clearInvalidNewSubjectSubSelections],
+    [graph, resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp],
   )
 
   const openArcInView = useCallback((arcKey) => {
@@ -556,9 +681,9 @@ export default function App() {
     setFocusArc(arcKey)
     setView('arcs')
     setInvestigationContext((ic) =>
-      commitNewSubject(ic, { type: 'arc', id: arcKey }, { landingView: 'arcs' }).investigationContext,
+      commitNewSubjectFromApp(ic, { type: 'arc', id: arcKey }, { landingView: 'arcs' }),
     )
-  }, [resetJumpContext, clearInvalidNewSubjectSubSelections])
+  }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
   const openArticleInNews = useCallback((articleId) => {
     resetJumpContext()
@@ -566,9 +691,9 @@ export default function App() {
     setFocusArticle(articleId)
     setView('news')
     setInvestigationContext((ic) =>
-      commitNewSubject(ic, { type: 'article', id: articleId }, { landingView: 'news' }).investigationContext,
+      commitNewSubjectFromApp(ic, { type: 'article', id: articleId }, { landingView: 'news' }),
     )
-  }, [resetJumpContext, clearInvalidNewSubjectSubSelections])
+  }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
   // Doc 05 pair 3/6 destination, now under the Package 1 item 2 navigation
   // contract: the jump target is resolved through lib/navigationContract.js.
@@ -592,10 +717,8 @@ export default function App() {
           parentEventId: resolved.scope === 'arc' ? resolved.arcId : null,
         }
       : { type: 'arc', id: resolved.arcId }
-    setInvestigationContext((ic) =>
-      commitNewSubject(ic, payload, { landingView: 'timeline' }).investigationContext,
-    )
-  }, [resetJumpContext, clearInvalidNewSubjectSubSelections])
+    setInvestigationContext((ic) => commitNewSubjectFromApp(ic, payload, { landingView: 'timeline' }))
+  }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
   // Doc 05 pair 5 destination: focus an event in Source Comparison.
   const openComparisonEvent = useCallback((eventId) => {
@@ -604,9 +727,9 @@ export default function App() {
     setFocusComparisonEvent(eventId)
     setView('compare')
     setInvestigationContext((ic) =>
-      commitNewSubject(ic, { type: 'event', id: eventId }, { landingView: 'compare' }).investigationContext,
+      commitNewSubjectFromApp(ic, { type: 'event', id: eventId }, { landingView: 'compare' }),
     )
-  }, [resetJumpContext, clearInvalidNewSubjectSubSelections])
+  }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
   // Graph node search: label substring match, top 8 suggestions.
   const nodeMatches = useMemo(() => {
@@ -627,7 +750,11 @@ export default function App() {
     setSelected(node)
     setNodeQuery('')
     pushFocus(node)
-    setInvestigationContext((ic) => applySubject(ic, subjectFromGraphNode(node)))
+    setInvestigationContext((ic) => {
+      const subject = subjectFromGraphNode(node)
+      rememberPriorSubject(ic, subject.canonical_subject_id)
+      return applySubject(ic, subject)
+    })
   }
 
   // --- Mobile graph entry: ranked hubs by degree centrality ---
@@ -677,8 +804,12 @@ export default function App() {
     setGraphScreen('all')
     setSelected(null)
     setPinned(false)
-    setInvestigationContext((ic) => applySubject(ic, subjectFromGraphNode(node)))
-  }, [])
+    setInvestigationContext((ic) => {
+      const subject = subjectFromGraphNode(node)
+      rememberPriorSubject(ic, subject.canonical_subject_id)
+      return applySubject(ic, subject)
+    })
+  }, [rememberPriorSubject])
 
   const focusedNodes = subgraph ? subgraph.nodes : graph?.nodes ?? []
   const focusedEdges = subgraph ? subgraph.edges : graph?.edges ?? []
@@ -722,16 +853,90 @@ export default function App() {
     setMoreOpen(false)
   }
 
+  const restoreRecentItem = useCallback((item) => {
+    const current = investigationContextRef.current
+    rememberPriorSubject(current, item?.canonical_subject_id)
+    resetJumpContext()
+    clearInvalidNewSubjectSubSelections()
+    const restored = restoreRecentInvestigation(item, {
+      currentIc: current,
+      catalog: deepLinkCatalog,
+    })
+    setInvestigationContext(restored.investigationContext)
+    setView(restored.investigationContext.active_view ?? item?.active_view ?? 'news')
+    setLinkSelection(restored.selection)
+    setSelectionFallbacks(restored.fallbacks)
+    if (restored.selection.place) setActiveLocationKey(restored.selection.place)
+    else setActiveLocationKey(null)
+  }, [rememberPriorSubject, resetJumpContext, clearInvalidNewSubjectSubSelections, deepLinkCatalog])
+
+  // Re-validate pending deep-link sub-selections once live catalogs exist.
+  useEffect(() => {
+    if (!deepLinkCatalog) return
+    const parsed = parseDeepLink(typeof window !== 'undefined' ? window.location.hash : '')
+    const incoming = parsed.subjectId ? parsed.selection : linkSelection
+    const parentId = parsed.subjectId ?? investigationContext.canonical_subject_id
+    const applied = applySelectionAgainstCatalog(incoming, deepLinkCatalog, parentId)
+    setLinkSelection(applied.selection)
+    setSelectionFallbacks(applied.fallbacks)
+    if (applied.selection.place) setActiveLocationKey(applied.selection.place)
+  }, [deepLinkCatalog])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const nextHash = serializeDeepLink(investigationContext, {
+      ...linkSelection,
+      entity: selected ? String(selected.id ?? selected.slug) : linkSelection.entity,
+      place: activeLocationKey ?? linkSelection.place,
+      time: formatTimeQuery(investigationContext.as_of_time, investigationContext.selected_time_range),
+    })
+    const desired = `${window.location.pathname}${window.location.search}${nextHash}`
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash || ''}`
+    if (desired === current) return
+    window.history.replaceState(null, '', desired)
+  }, [investigationContext, selected, activeLocationKey, linkSelection])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onHash = () => {
+      const hash = window.location.hash
+      if (!isInvestigationDeepLink(hash) && parseDeepLink(hash).subjectId == null) {
+        return
+      }
+      const current = investigationContextRef.current
+      const hydrated = hydrateDeepLink(hash, { currentIc: current, catalog: deepLinkCatalog })
+      if (hydrated.parsed.subjectId) {
+        rememberPriorSubject(current, hydrated.parsed.subjectId)
+      }
+      setInvestigationContext(hydrated.investigationContext)
+      if (hydrated.investigationContext.active_view) setView(hydrated.investigationContext.active_view)
+      setLinkSelection(hydrated.selection)
+      setSelectionFallbacks(hydrated.fallbacks)
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [deepLinkCatalog, rememberPriorSubject])
+
   // Returning to Graph restores a live matching node from IC. No node → no
-  // invented subject. Tab switch never clears IC.
+  // invented subject. Tab switch never clears IC. A valid entity sub-selection
+  // from the deep link is preferred; stale ids already fell back to parent.
   useEffect(() => {
     if (view !== 'graph' || !graph?.nodes?.length) return
+    if (linkSelection.entity) {
+      const entityNode = graph.nodes.find((node) => String(node.id ?? node.slug) === String(linkSelection.entity))
+      if (entityNode) {
+        const selectedKey = selected ? selected.id ?? selected.slug ?? selected.subject_graph_node_id : null
+        if (selectedKey && String(selectedKey) === String(entityNode.id ?? entityNode.slug)) return
+        setSelected(entityNode)
+        return
+      }
+    }
     const match = graphNodeMatchingInvestigation(graph.nodes, investigationContext)
     if (!match) return
     const selectedKey = selected ? selected.id ?? selected.slug ?? selected.subject_graph_node_id : null
     if (selectedKey && String(selectedKey) === String(match.id ?? match.slug)) return
     setSelected(match)
-  }, [view, graph, investigationContext, selected])
+  }, [view, graph, investigationContext, selected, linkSelection.entity])
 
   return (
     <div className="app">
@@ -867,7 +1072,13 @@ export default function App() {
 
       {accountOpen && accountUi && <AccountPanel onClose={() => setAccountOpen(false)} />}
 
-      <InvestigationContextBar investigationContext={investigationContext} />
+      <InvestigationContextBar
+        investigationContext={investigationContext}
+        recentInvestigations={recentInvestigations}
+        onRestoreRecent={restoreRecentItem}
+        selectionFallbacks={selectionFallbacks}
+        storageKey={RECENT_INVESTIGATION_STORAGE_KEY}
+      />
 
       <main className="app-main">
         {error && view === 'graph' && <div className="notice error">Failed to load graph: {error}</div>}
