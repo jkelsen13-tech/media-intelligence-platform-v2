@@ -76,7 +76,7 @@ test('discovery state is a named contract and does not grow Investigation Contex
   assert.deepEqual(empty, { ...EMPTY_DISCOVERY_FILTERS })
   assert.equal(discoveryFiltersAreActive(empty), false)
   assert.doesNotMatch(IC, /emptyDiscoveryFilters|DISCOVERY_FILTER|discoveryFilters/)
-  assert.doesNotMatch(DISC, /applySubject|resetJumpContext/)
+  assert.doesNotMatch(DISC, /applySubject\(|resetJumpContext\(/)
 })
 
 test('applying discovery filters does not change Cleveland or call applySubject', () => {

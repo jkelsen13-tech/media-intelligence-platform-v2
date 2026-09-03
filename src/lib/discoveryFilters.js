@@ -65,7 +65,7 @@ export function discoveryFiltersAreActive(filters) {
 
 /**
  * Apply a discovery patch beside an Investigation Context.
- * Returns the same IC reference. Does not call applySubject or resetJumpContext.
+ * Returns the same IC reference. Does not replace the subject or fire JUMP_CLEARS.
  */
 export function applyDiscoveryBesideInvestigation(ic, discovery, patch) {
   return {

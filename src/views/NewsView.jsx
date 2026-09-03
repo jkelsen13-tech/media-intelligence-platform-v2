@@ -152,8 +152,8 @@ function PublisherSourceRecord({ article, region }) {
 //
 // variant: 'page' is the News Feed tab. 'drawer' is the R4.75 Step 3 Explore
 // overlay — same discovery system (search, chips, list, honest empty). Local
-// discovery filters stay in this instance and never write Investigation
-// Context. They do not filter Graph / World View / Timeline / Arcs evidence.
+// discovery filters stay in this instance and never write Investigation Context.
+// They do not filter Graph / World View / Timeline / Arcs evidence.
 export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison, variant = 'page' }) {
   const isDrawer = variant === 'drawer'
   const [q, setQ] = useState('')
