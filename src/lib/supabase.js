@@ -8,6 +8,7 @@ import {
   demoArcEvents,
 } from '../data/demoData.js'
 import { canonicalizeTimelineEvents, remapTimelineEdges } from './timelineDedup.js'
+import { resolveV2SupabaseUrl } from './supabaseOrigin.js'
 
 // Sandbox safety: V2 only connects to the explicit environment target. When
 // either value is absent, makeClient() returns null and the application follows
@@ -15,6 +16,8 @@ import { canonicalizeTimelineEvents, remapTimelineEdges } from './timelineDedup.
 // Fail closed: leftover Manus / paused-original hosts must never be used.
 // Compare hashed project refs so the production bundle never contains those
 // leftover ids as contiguous literals (live JS host check).
+// World View allowlists the V2 API plus the confirmed Pages client origin.
+// makeClient still requires the env URL to be the V2 API (Trust wiring).
 const FORBIDDEN_SUPABASE_REF_HASHES = Object.freeze([-280454185, -97341801])
 
 function djb2(str) {
@@ -50,6 +53,7 @@ const anonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY
 function makeClient() {
   if (!url || !anonKey) return null
   if (isForbiddenSupabaseUrl(url)) return null
+  if (!resolveV2SupabaseUrl(url).ok) return null
   try {
     return createClient(url, anonKey)
   } catch {

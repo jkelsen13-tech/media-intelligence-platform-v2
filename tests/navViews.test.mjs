@@ -1,8 +1,6 @@
-// Track B nav restructure (2026-08-16): nav bar is 4 core tabs + "More";
-// Legal & Policy ('phase3') and Source Comparison ('compare') live inside
-// the More sheet. These tests lock the structure so a future edit cannot
-// silently re-add top-level beta tabs, resurrect the "(Beta)" suffixes, or
-// break the withhold posture (More hidden entirely when both flags off).
+// Track B nav restructure (2026-08-16): nav bar is core tabs + "More";
+// R4 adds World View as a fifth core tab. Legal & Policy ('phase3') and
+// Source Comparison ('compare') live inside the More sheet.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
@@ -15,33 +13,33 @@ import {
   isMoreViewKey,
 } from '../src/lib/navViews.js'
 
-test('both flags on: 5 tabs, More last, core order unchanged', () => {
+test('both flags on: 6 tabs, More last, core order unchanged including World View', () => {
   const nav = buildNavViews({ phase3Beta: true, sourceComparisonBeta: true })
   assert.deepEqual(
     nav.map((v) => v.key),
-    ['news', 'graph', 'timeline', 'arcs', 'more'],
+    ['news', 'graph', 'timeline', 'arcs', 'world', 'more'],
   )
-  assert.equal(nav.length, 5)
+  assert.equal(nav.length, 6)
 })
 
-test('both flags off: More hides entirely — 4 core tabs, no trace', () => {
+test('both flags off: More hides entirely — 5 core tabs including World View, no trace', () => {
   const nav = buildNavViews({ phase3Beta: false, sourceComparisonBeta: false })
   assert.deepEqual(
     nav.map((v) => v.key),
-    ['news', 'graph', 'timeline', 'arcs'],
+    ['news', 'graph', 'timeline', 'arcs', 'world'],
   )
   assert.equal(buildMoreEntries({ phase3Beta: false, sourceComparisonBeta: false }).length, 0)
 })
 
 test('single flag on: More still appears; sheet lists only the authorized surface', () => {
   const phase3Only = buildNavViews({ phase3Beta: true, sourceComparisonBeta: false })
-  assert.equal(phase3Only.length, 5)
+  assert.equal(phase3Only.length, 6)
   assert.deepEqual(
     buildMoreEntries({ phase3Beta: true, sourceComparisonBeta: false }).map((v) => v.key),
     ['phase3'],
   )
   const compareOnly = buildNavViews({ phase3Beta: false, sourceComparisonBeta: true })
-  assert.equal(compareOnly.length, 5)
+  assert.equal(compareOnly.length, 6)
   assert.deepEqual(
     buildMoreEntries({ phase3Beta: false, sourceComparisonBeta: true }).map((v) => v.key),
     ['compare'],
