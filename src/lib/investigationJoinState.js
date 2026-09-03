@@ -202,6 +202,27 @@ export function selectionFallbackDisclosure(fallback) {
   })
 }
 
+/**
+ * IC bar previously painted the same parent-fallback copy twice: once from
+ * `selectionFallbacks` and again from `shellJoinDisclosures` which re-wraps
+ * those fallbacks. Keep one line. Spatial `mip_object_id` as an entity
+ * sub-selection is honest parent-fallback — not a fail and not a new subject.
+ */
+export function visibleJoinDisclosures(selectionFallbacks = [], joinDisclosures = []) {
+  const seen = new Set()
+  for (const fallback of selectionFallbacks ?? []) {
+    seen.add(selectionFallbackCopy(fallback))
+  }
+  const out = []
+  for (const join of joinDisclosures ?? []) {
+    const copy = join?.copy
+    if (copy && seen.has(copy)) continue
+    if (copy) seen.add(copy)
+    out.push(join)
+  }
+  return out
+}
+
 export function invalidSelectionAgainstParent(selection, catalog, parentSubjectId) {
   const applied = applySelectionAgainstCatalog(selection, catalog, parentSubjectId)
   return {
