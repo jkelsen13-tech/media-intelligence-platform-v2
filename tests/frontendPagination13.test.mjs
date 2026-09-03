@@ -181,14 +181,16 @@ test('structure: frontend loaders use keyset pagination on every Doc 13 table', 
   const src = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8')
   // Site 1: composite-PK pagination for node_topics.
   assert.match(src, /keysetAllComposite\(client, 'node_topics', 'node_id, topic_id, confidence'/)
-  // loadArcs: all three arc tables.
-  assert.match(src, /keysetAll\(client, 'story_arcs', 'id, slug, category/)
+  // loadArcs: all three arc tables. title is never selected (V2 stub is id-only).
+  assert.match(src, /keysetAll\(client, 'story_arcs', STORY_ARCS_DISPLAY_COLS\)/)
+  assert.match(src, /const STORY_ARCS_DISPLAY_COLS =\s*'id, slug, category/)
   assert.doesNotMatch(src, /keysetAll\(client, 'story_arcs', 'id, slug, title/)
   assert.match(src, /keysetAll\(client, 'arc_events', 'id, arc_id, occurred_at'\)/)
   assert.match(src, /keysetAll\(client, 'arc_milestones_public', 'id, arc_id, status'\)/)
   // Site 3: timeline reads (event nodes, edges, labels, articles, story_arcs).
   assert.match(src, /keysetAll\(client, 'articles', 'id, title, summary, published_at, outlet, arc_id'\)/)
   assert.match(src, /keysetAll\(client, 'story_arcs', STORY_ARCS_ID_ONLY\)/)
+  assert.match(src, /readEdgesOrUnavailable\(client, 'id, source_id, target_id, type, weight, label, doc_strength'/)
   // Site 5: outlets read.
   assert.match(src, /keysetAll\(client, 'articles', 'id, outlet'/)
   // No raw unpaginated selects remain on the Doc 13 frontend tables inside

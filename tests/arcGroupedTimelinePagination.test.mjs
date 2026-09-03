@@ -147,7 +147,7 @@ test('structure: grouped loader keyset-paginates all eight reads', () => {
   // doc_strength added 2026-08-18 (Track B Step 3 item 4, read-path only):
   // the Screen 5 connector engine requires confirmed-grade strength before
   // any gap may be labeled "Source-supported causal link".
-  assert.match(src, /keysetAll\(supabase, 'edges', 'id, source_id, target_id, type, weight, label, doc_strength'/)
+  assert.match(src, /readEdgesOrUnavailable\(supabase, 'id, source_id, target_id, type, weight, label, doc_strength'/)
   assert.match(src, /keysetAll\(supabase, 'nodes', 'id, slug, label'\)/)
   // Expanded metadata supports both outlet counts and explicit, source-backed
   // News-record rows for articles assigned to an arc.
