@@ -384,7 +384,10 @@ export function createCesiumEllipsoidRendererAdapter({
     viewer.scene.screenSpaceCameraController.minimumZoomDistance = cam.minZoomDistanceMeters
 
     viewer.camera.flyTo({
-      duration: 1600,
+      // Cesium flyTo duration is SECONDS (not milliseconds). A value of 1600
+      // animated the subject fly-to over ~27 minutes, so a deep-link load
+      // never reached the city-class ceiling within a session.
+      duration: 1.6,
       destination: Cesium.Cartesian3.fromDegrees(cam.lon, cam.lat, cam.heightMeters),
       orientation: {
         heading: Cesium.Math.toRadians(cam.headingDegrees),
