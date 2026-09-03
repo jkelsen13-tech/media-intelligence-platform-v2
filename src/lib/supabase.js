@@ -16,7 +16,8 @@ import { resolveV2SupabaseUrl } from './supabaseOrigin.js'
 // Fail closed: leftover Manus / paused-original hosts must never be used.
 // Compare hashed project refs so the production bundle never contains those
 // leftover ids as contiguous literals (live JS host check).
-// World View additionally allowlists V2 only via resolveV2SupabaseUrl.
+// World View allowlists the V2 API plus the confirmed Pages client origin.
+// makeClient still requires the env URL to be the V2 API (Trust wiring).
 const FORBIDDEN_SUPABASE_REF_HASHES = Object.freeze([-280454185, -97341801])
 
 function djb2(str) {

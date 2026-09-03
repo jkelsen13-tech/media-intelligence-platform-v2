@@ -11,7 +11,10 @@ import { readFileSync } from 'node:fs'
 import {
   V2_SUPABASE_HOST,
   V2_SUPABASE_URL,
+  V2_CLIENT_PAGE_ORIGIN,
   resolveV2SupabaseUrl,
+  resolveV2ClientOrigin,
+  isConfirmedV2ClientPageOrigin,
   rejectNonV2Client,
   supabaseClientUrl,
 } from '../src/lib/supabaseOrigin.js'
@@ -21,6 +24,7 @@ import { loadSpatialProjection, loadWorldViewGraph } from '../src/lib/spatialPro
 const CLIENT = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8')
 const ORIGIN = readFileSync(new URL('../src/lib/supabaseOrigin.js', import.meta.url), 'utf8')
 const V2 = 'https://qikvmopbtijoebdqosyq.supabase.co'
+const PAGES = 'https://jkelsen13-tech.github.io/media-intelligence-platform-v2/'
 const LEFTOVER_REFS = ['yhbwnrtlqbjtcrrlpbge', 'niejaejtbxgakyrsntxm']
 
 function explodingClient(url) {
@@ -53,10 +57,10 @@ test('resolveV2SupabaseUrl: missing and empty fail closed', () => {
   assert.deepEqual(resolveV2SupabaseUrl('   '), { ok: false, url: null, reason: 'empty' })
 })
 
-test('resolveV2SupabaseUrl: GitHub Pages hosts are rejected', () => {
+test('resolveV2SupabaseUrl stays API-only — Pages is not a PostgREST endpoint', () => {
   for (const raw of [
     'https://jkelsen13-tech.github.io',
-    'https://jkelsen13-tech.github.io/media-intelligence-platform-v2/',
+    PAGES,
     'https://jkelsen13-tech.github.io/media-intelligence-platform-v2/index.html',
   ]) {
     const got = resolveV2SupabaseUrl(raw)
@@ -64,6 +68,17 @@ test('resolveV2SupabaseUrl: GitHub Pages hosts are rejected', () => {
     assert.equal(got.url, null, raw)
     assert.equal(got.reason, 'origin_not_v2', raw)
   }
+})
+
+test('confirmed Pages host is the V2 client origin and remaps to the V2 API', () => {
+  assert.equal(V2_CLIENT_PAGE_ORIGIN, 'https://jkelsen13-tech.github.io/media-intelligence-platform-v2')
+  assert.equal(isConfirmedV2ClientPageOrigin(PAGES), true)
+  assert.equal(isConfirmedV2ClientPageOrigin(`${PAGES}index.html`), true)
+  assert.equal(isConfirmedV2ClientPageOrigin('https://jkelsen13-tech.github.io'), false)
+  assert.equal(isConfirmedV2ClientPageOrigin('https://jkelsen13-tech.github.io/media-intelligence-platform/'), false)
+  assert.equal(isConfirmedV2ClientPageOrigin('https://example.github.io/media-intelligence-platform-v2/'), false)
+  assert.deepEqual(resolveV2ClientOrigin(PAGES), { ok: true, url: V2, reason: null })
+  assert.deepEqual(resolveV2ClientOrigin(V2), { ok: true, url: V2, reason: null })
 })
 
 test('resolveV2SupabaseUrl: leftover Manus, paused original, and any other supabase.co fail closed', () => {
@@ -113,12 +128,13 @@ test('supabase.js still does not embed leftover project refs as literals', () =>
   }
 })
 
-test('injected non-V2 clients never call .from() for spatial or World View graph', async () => {
+test('injected leftover / other supabase clients never call .from() for spatial or World View graph', async () => {
   const rejected = [
     `https://${LEFTOVER_REFS[0]}.supabase.co`,
     `https://${LEFTOVER_REFS[1]}.supabase.co`,
-    'https://jkelsen13-tech.github.io/media-intelligence-platform-v2/',
     'https://otherprojectref1234.supabase.co',
+    'https://jkelsen13-tech.github.io/',
+    'https://example.github.io/media-intelligence-platform-v2/',
   ]
   for (const url of rejected) {
     const client = explodingClient(url)
@@ -136,6 +152,11 @@ test('injected non-V2 clients never call .from() for spatial or World View graph
   }
 })
 
+test('injected confirmed Pages client origin is allowed (V2 client)', async () => {
+  assert.equal(rejectNonV2Client(explodingClient(PAGES)), null)
+  assert.equal(rejectNonV2Client(explodingClient(V2)), null)
+})
+
 test('default spatial/graph load without VITE_SUPABASE_URL fails closed and does not invent pins', async () => {
   const spatial = await loadSpatialProjection({ envUrl: undefined })
   const graph = await loadWorldViewGraph({ envUrl: '' })
@@ -146,10 +167,16 @@ test('default spatial/graph load without VITE_SUPABASE_URL fails closed and does
   assert.deepEqual(graph.edges, [])
 })
 
-test('non-V2 envUrl fails closed before any client fetch', async () => {
-  const spatial = await loadSpatialProjection({ envUrl: 'https://jkelsen13-tech.github.io' })
+test('non-V2 supabase envUrl fails closed before any client fetch', async () => {
+  const spatial = await loadSpatialProjection({ envUrl: `https://${LEFTOVER_REFS[0]}.supabase.co` })
   assert.equal(spatial.status, 'unavailable')
   assert.equal(spatial.reason, 'origin_not_v2')
+  assert.deepEqual(spatial.rows, [])
+})
+
+test('confirmed Pages envUrl is an allowed V2 client origin', async () => {
+  const spatial = await loadSpatialProjection({ envUrl: PAGES })
+  assert.notEqual(spatial.reason, 'origin_not_v2')
   assert.deepEqual(spatial.rows, [])
 })
 

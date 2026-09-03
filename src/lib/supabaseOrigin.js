@@ -1,19 +1,24 @@
 // Hard origin lock for the MIP browser client.
 //
-// World View and the account/supabase client talk ONLY to V2:
+// Supabase API origin is V2 only:
 //   https://qikvmopbtijoebdqosyq.supabase.co
 //
-// Missing, empty, or any other host (GitHub Pages github.io including
-// /media-intelligence-platform-v2/, Manus, the paused original, any other
-// supabase.co project, http, extra path/query) fails closed. The canonical
-// URL is returned on success so createClient never inherits a raw lookalike.
+// Confirmed live client page origin (Trust wiring #1, independently verified
+// 2026-09-03 — bundle asset talks to V2 once, leftover supabase hosts 0):
+//   https://jkelsen13-tech.github.io/media-intelligence-platform-v2/
+// World View treats that Pages host as the V2 client origin. It is not a
+// PostgREST endpoint; createClient still targets V2 only.
 //
-// Leftover host strings elsewhere in this tree are not an origin allowlist.
-// Workflow / Pages URL replacement is a separate Trust wiring concern.
+// Missing, empty, leftover Manus / paused-original / any other supabase.co
+// project, http, extra path/query, or any other github.io site fail closed.
 
 export const V2_SUPABASE_REF = 'qikvmopbtijoebdqosyq'
 export const V2_SUPABASE_HOST = `${V2_SUPABASE_REF}.supabase.co`
 export const V2_SUPABASE_URL = `https://${V2_SUPABASE_HOST}`
+
+export const V2_CLIENT_PAGE_HOST = 'jkelsen13-tech.github.io'
+export const V2_CLIENT_PAGE_PATH = '/media-intelligence-platform-v2'
+export const V2_CLIENT_PAGE_ORIGIN = `https://${V2_CLIENT_PAGE_HOST}${V2_CLIENT_PAGE_PATH}`
 
 export function readViteSupabaseUrl() {
   try {
@@ -68,6 +73,42 @@ export function resolveV2SupabaseUrl(raw) {
   return { ok: true, url: V2_SUPABASE_URL, reason: null }
 }
 
+/**
+ * Confirmed GitHub Pages client origin for this repo's V2 bundle.
+ * Path must be /media-intelligence-platform-v2 or a page under it.
+ */
+export function isConfirmedV2ClientPageOrigin(raw) {
+  if (typeof raw !== 'string') return false
+  let parsed
+  try {
+    parsed = new URL(raw.trim())
+  } catch {
+    return false
+  }
+  const hostname = String(parsed.hostname ?? '').toLowerCase()
+  const path = parsed.pathname.replace(/\/+$/, '') || '/'
+  const portOk = parsed.port === '' || parsed.port === '443'
+  const noUser = parsed.username === '' && parsed.password === ''
+  if (parsed.protocol !== 'https:' || hostname !== V2_CLIENT_PAGE_HOST || !portOk || !noUser) {
+    return false
+  }
+  return path === V2_CLIENT_PAGE_PATH || path.startsWith(`${V2_CLIENT_PAGE_PATH}/`)
+}
+
+/**
+ * World View client origin: V2 API or the confirmed Pages client host.
+ * Always returns the canonical V2 API URL on success so fetches never
+ * target github.io or a leftover supabase project.
+ */
+export function resolveV2ClientOrigin(raw) {
+  const api = resolveV2SupabaseUrl(raw)
+  if (api.ok || api.reason === 'missing' || api.reason === 'empty') return api
+  if (isConfirmedV2ClientPageOrigin(raw)) {
+    return { ok: true, url: V2_SUPABASE_URL, reason: null }
+  }
+  return { ok: false, url: null, reason: 'origin_not_v2' }
+}
+
 /** Best-effort URL on a supabase-js client or test fake. Null if unknown. */
 export function supabaseClientUrl(client) {
   if (!client || typeof client !== 'object') return null
@@ -92,6 +133,6 @@ export function supabaseClientUrl(client) {
 export function rejectNonV2Client(client) {
   const url = supabaseClientUrl(client)
   if (url == null) return null
-  const origin = resolveV2SupabaseUrl(url)
+  const origin = resolveV2ClientOrigin(url)
   return origin.ok ? null : 'origin_not_v2'
 }

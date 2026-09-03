@@ -13,7 +13,7 @@ import { keysetAll, supabase } from './supabase.js'
 import {
   readViteSupabaseUrl,
   rejectNonV2Client,
-  resolveV2SupabaseUrl,
+  resolveV2ClientOrigin,
 } from './supabaseOrigin.js'
 
 export const SPATIAL_PROJECTION_TABLE = 'spatial_projection_v1'
@@ -563,7 +563,7 @@ export function spatialProjectionUnavailableCopy(reason, error) {
     return 'World View is unavailable: VITE_SUPABASE_URL is missing or empty. This client talks only to V2 (https://qikvmopbtijoebdqosyq.supabase.co). No spatial fetch ran and no demo pins are drawn.'
   }
   if (reason === 'origin_not_v2') {
-    return 'World View is unavailable: VITE_SUPABASE_URL is not the V2 origin (https://qikvmopbtijoebdqosyq.supabase.co). GitHub Pages hosts (including /media-intelligence-platform-v2/), leftover Manus, the paused original, and any other supabase.co project are rejected. No spatial fetch ran and no demo pins are drawn.'
+    return 'World View is unavailable: the client origin is not V2 (https://qikvmopbtijoebdqosyq.supabase.co) or the confirmed Pages client (https://jkelsen13-tech.github.io/media-intelligence-platform-v2/). Leftover Manus, the paused original, and any other supabase.co project are rejected. No spatial fetch ran and no demo pins are drawn.'
   }
   if (error) return `Spatial projection unavailable: ${error} No location is inferred.`
   return `Spatial projection unavailable (${reason ?? 'client_not_configured'}). No location is inferred.`
@@ -582,7 +582,7 @@ function unavailableResult(reason, error = null) {
 function resolveWorldViewClient(options = {}) {
   const injected = Object.hasOwn(options, 'supabaseClient')
   if (!injected) {
-    const origin = resolveV2SupabaseUrl(options.envUrl ?? readViteSupabaseUrl())
+    const origin = resolveV2ClientOrigin(options.envUrl ?? readViteSupabaseUrl())
     if (!origin.ok) return { client: null, reason: origin.reason }
   }
   const client = injected ? options.supabaseClient : supabase

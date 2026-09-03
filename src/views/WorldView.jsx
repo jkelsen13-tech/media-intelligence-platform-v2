@@ -516,7 +516,8 @@ export default function WorldView({
         <div>
           <h2>World View</h2>
           <p>
-            Launch-minimum map of <code>public.spatial_projection_v1</code>. Geometry is drawn only from
+            Launch-minimum map of V2 <code>public.spatial_projection_v1</code>, including the confirmed
+            Pages client at <code>/media-intelligence-platform-v2/</code>. Geometry is drawn only from
             {' '}<code>display_geometry</code>. Graph, Map, and Split share one selected object id.
           </p>
         </div>

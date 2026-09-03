@@ -316,7 +316,8 @@ test('World View UI is Map / Graph / Split with inspector, recorded time, and no
 
 test('inspector stays empty when the projection is unavailable or empty', () => {
   assert.match(spatialProjectionUnavailableCopy('missing'), /VITE_SUPABASE_URL is missing/)
-  assert.match(spatialProjectionUnavailableCopy('origin_not_v2'), /not the V2 origin/)
+  assert.match(spatialProjectionUnavailableCopy('origin_not_v2'), /confirmed Pages client/)
+  assert.match(spatialProjectionUnavailableCopy('origin_not_v2'), /any other supabase\.co project are rejected/)
   assert.equal(inspectorAvailability(null).state, 'empty')
   const withheld = inspectorAvailability({
     ...LIVE_ROW,
