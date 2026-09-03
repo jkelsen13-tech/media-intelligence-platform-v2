@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs'
 import {
   isPostgrestSchemaGap,
   isPostgrestPermissionDenied,
+  isPostgrestNoRow,
   articlesUnavailableReason,
   loadGraph,
   loadArcs,
@@ -262,9 +263,11 @@ test('loadArticles: story_arcs.title is not selected; pending_review stays empty
     }
     return q
   }
-  const { articles, total } = await loadArticles({ supabaseClient: client })
+  const { articles, total, articlesUnavailable } = await loadArticles({ supabaseClient: client })
   assert.equal(articles.length, 0)
   assert.equal(total, 0)
+  assert.equal(articlesUnavailable, null)
+  assert.doesNotMatch(JSON.stringify({ articles, total }), /NASA Where|pending_review|e5a84674/)
   const articleSelect = selects.find((s) => s.table === 'articles')
   assert.ok(articleSelect, 'articles select ran')
   assert.doesNotMatch(articleSelect.cols, /story_arcs/)
@@ -384,8 +387,32 @@ test('News empty while pending_review is honest: eligibility gate is unchanged',
   assert.match(SRC, /query = query\.eq\('reader_state', 'eligible'\)/)
   assert.doesNotMatch(SRC, /\.update\([\s\S]*reader_state/)
   assert.doesNotMatch(SRC, /reader_state:\s*'eligible'/)
-  assert.match(NEWS, /No articles match/)
+  assert.match(NEWS, /No eligible articles to display/)
+  assert.match(NEWS, /Pending-review and withheld records remain retained/)
   assert.match(NEWS, /Pending-review and withheld intake records remain retained/)
+  assert.match(NEWS, /This article is not in the eligible reader set/)
+  assert.doesNotMatch(NEWS, /No articles match/)
+})
+
+test('loadArticleDetail: pending_review is a no-row miss, not displayed and not a red throw', async () => {
+  assert.equal(isPostgrestNoRow({ code: 'PGRST116', message: 'Cannot coerce the result to a single JSON object' }), true)
+  assert.equal(isPostgrestNoRow({ details: 'The result contains 0 rows' }), true)
+  assert.equal(isPostgrestNoRow({ message: 'not found' }), true)
+  assert.equal(isPostgrestNoRow(ARTICLES_500), false)
+  assert.equal(isPostgrestNoRow(ARTICLES_PERMISSION_DENIED), false)
+
+  const detail = await loadArticleDetail(NASA_PENDING.id, {
+    supabaseClient: fakeClient({
+      articles: [NASA_PENDING],
+      citations: [],
+      news_detail_public: [],
+    }),
+  })
+  assert.equal(detail.articleMissing, true)
+  assert.equal(detail.articlesUnavailable, null)
+  assert.equal(detail.id, undefined)
+  assert.equal(detail.title, undefined)
+  assert.doesNotMatch(JSON.stringify(detail), /NASA Where|pending_review/)
 })
 
 test('News paints permission-denied as an honest notice, not a red Failed to load articles', () => {

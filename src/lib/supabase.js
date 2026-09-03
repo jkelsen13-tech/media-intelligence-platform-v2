@@ -181,6 +181,20 @@ export function articlesUnavailableReason(error) {
   return null
 }
 
+// .single() on an eligible-only articles read (client filter or Trust RLS)
+// returns PGRST116 / 0 rows when the id is pending_review, withheld, or
+// absent. That is an honest empty miss — not a red exception and not a
+// reason to invent or display the withheld row.
+export function isPostgrestNoRow(error) {
+  if (!error) return false
+  if (String(error.code ?? '') === 'PGRST116') return true
+  const message = String(error.message ?? error.details ?? '')
+  if (/result contains 0 rows/i.test(message)) return true
+  if (/Cannot coerce the result to a single JSON object/i.test(message)) return true
+  if (/^not found$/i.test(message)) return true
+  return false
+}
+
 function emptyArticlesUnavailable(error) {
   return {
     articles: [],
@@ -1100,6 +1114,10 @@ export async function loadPublicAuthorNameMap(authorIds, { supabaseClient } = {}
 export async function loadArticles({ q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore, limit = 30, offset = 0, supabaseClient } = {}) {
   const client = supabaseClient ?? supabase
   if (!client) return { articles: [], total: 0, articlesUnavailable: null }
+  // Trust may GRANT SELECT + eligible-only RLS on public.articles. A future
+  // GRANT miss still fail-closes here (42501 → empty + permission_denied).
+  // A successful 0-row eligible read is honest empty, not an error. NASA
+  // pending_review stays withheld: never invent, never mutate reader_state.
   // Do not join story_arcs for title. Live V2 story_arcs is an id-only stub;
   // stub arcs are no-arc and arc_title stays null.
   let query = client
@@ -1143,6 +1161,7 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
       .from('articles')
       .select('id, title, url, summary, published_at, outlet, claims, monoculture, unattributed, author_id')
       .eq('id', id)
+      .eq('reader_state', 'eligible')
       .single(),
     client
       .from('citations')
@@ -1160,6 +1179,9 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
   if (artRes.error) {
     if (isPostgrestPermissionDenied(artRes.error)) {
       return { articlesUnavailable: articlesUnavailableReason(artRes.error) }
+    }
+    if (isPostgrestNoRow(artRes.error)) {
+      return { articleMissing: true, articlesUnavailable: null }
     }
     throw artRes.error
   }

@@ -168,6 +168,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const [graphLinks, setGraphLinks] = useState([])
   const [detailError, setDetailError] = useState(null)
   const [detailUnavailable, setDetailUnavailable] = useState(null)
+  const [detailMissing, setDetailMissing] = useState(false)
   // Location corroboration for the expanded article (null = none / table absent).
   const [sky, setSky] = useState(null)
   // Doc 05: cross-window keys for the expanded article. null = join found no
@@ -308,6 +309,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     setGraphLinks([])
     setDetailError(null)
     setDetailUnavailable(null)
+    setDetailMissing(false)
     setSky(null)
     setTimelineKey(null)
     setComparisonEvents([])
@@ -316,6 +318,11 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         if (d?.articlesUnavailable) {
           setDetail(null)
           setDetailUnavailable(d.articlesUnavailable)
+          return
+        }
+        if (d?.articleMissing || !d) {
+          setDetail(null)
+          setDetailMissing(true)
           return
         }
         setDetail(d)
@@ -543,8 +550,13 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const expandedDetail = (
     <div className="news-detail">
       {detailUnavailable && articleUnavailableNotice(detailUnavailable)}
+      {detailMissing && (
+        <div className="notice">
+          This article is not in the eligible reader set. Pending-review records are not displayed. No row is invented.
+        </div>
+      )}
       {detailError && <div className="notice error">{detailError}</div>}
-      {!detail && !detailError && !detailUnavailable && <div className="news-detail-loading">Loading detail…</div>}
+      {!detail && !detailError && !detailUnavailable && !detailMissing && <div className="news-detail-loading">Loading detail…</div>}
       {detail && (
         <>
           {graphLinks.length > 0 && (
@@ -859,7 +871,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       {articlesUnavailable && articleUnavailableNotice(articlesUnavailable)}
       {error && <div className="notice error">Failed to load articles: {error}</div>}
       {!loading && !error && !articlesUnavailable && articles.length === 0 && !focusedMissing && (
-        <div className="notice">No articles match. The ingestion pipeline runs every 24h.</div>
+        <div className="notice">
+          No eligible articles to display. Pending-review and withheld records remain retained. No rows are invented.
+        </div>
       )}
 
       <ol className="news-list">
@@ -898,8 +912,13 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       {focusedMissing && (
         <div className="news-detail">
           {detailUnavailable && articleUnavailableNotice(detailUnavailable)}
+          {detailMissing && (
+            <div className="notice">
+              This article is not in the eligible reader set. Pending-review records are not displayed. No row is invented.
+            </div>
+          )}
           {detailError && <div className="notice error">{detailError}</div>}
-          {!detail && !detailError && !detailUnavailable && <div className="news-detail-loading">Loading detail…</div>}
+          {!detail && !detailError && !detailUnavailable && !detailMissing && <div className="news-detail-loading">Loading detail…</div>}
           {detail && (
             <>
               <h3 className="news-focus-title">{detail.title}</h3>
