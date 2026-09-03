@@ -144,7 +144,12 @@ function PublisherSourceRecord({ article, region }) {
 
 // Doc 05 pairs 3 & 5: onOpenTimeline / onOpenComparison are optional — when a
 // destination is unavailable the corresponding chip simply never renders.
-export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison }) {
+//
+// variant: 'page' is the News Feed tab. 'drawer' is the R4.75 Step 3 Explore
+// overlay — same discovery system (search, chips, list, honest empty). Local
+// filters stay in this instance and never write Investigation Context.
+export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison, variant = 'page' }) {
+  const isDrawer = variant === 'drawer'
   const [q, setQ] = useState('')
   const [debouncedQ, setDebouncedQ] = useState('')
   const [outlet, setOutlet] = useState(null)
@@ -201,18 +206,20 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
 
   // Step 4 mount loads: corpus meta, the last-visit count, and the three
   // feed-wide join maps. Each is independent and failure-isolated.
+  // Drawer skip last-visit so opening Explore does not advance the page marker.
   useEffect(() => {
     loadCorpusMeta().then(setCorpusMeta).catch(() => {})
     loadArticleCitationMap().then(setCitationMap).catch(() => {})
     loadEventGrouping().then(setEventMap).catch(() => {})
     loadOutletRegions().then(setOutletRegions).catch(() => {})
+    if (isDrawer) return
     const prev = readThenAdvanceLastVisit(window.localStorage, Date.now())
     if (prev != null) {
       loadNewSinceCount(new Date(prev).toISOString())
         .then(setNewSinceCount)
         .catch(() => {})
     }
-  }, [])
+  }, [isDrawer])
 
   useEffect(() => {
     clearTimeout(debounceRef.current)
@@ -754,9 +761,11 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   )
 
   return (
-    <div className="news-view">
+    <div className={`news-view${isDrawer ? ' news-view-drawer' : ''}`}>
       {/* Addendum Screen 1 title block. Owner ruling #1: the count is
-          browser-local and says so; first visit / private mode → no line. */}
+          browser-local and says so; first visit / private mode → no line.
+          Drawer omits the page title — the Explore sheet already names it. */}
+      {!isDrawer && (
       <div className="news-title-block">
         <h2 className="news-title">
           News <span className="news-title-dot" aria-hidden="true" />
@@ -768,6 +777,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           </p>
         )}
       </div>
+      )}
 
       <EpistemicBanner>
         Missing evidence is recorded, not treated as contradiction.

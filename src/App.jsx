@@ -128,6 +128,10 @@ export default function App() {
   // Track B nav restructure: the "More" tab opens a bottom sheet listing
   // the flag-gated surfaces instead of switching views itself.
   const [moreOpen, setMoreOpen] = useState(false)
+  // R4.75 Step 3 hunch: exploreOpen beside moreOpen. Header button opens
+  // a sheet containing NewsView in drawer variant. Opening is NOT a view
+  // change — do not changeView('news'), do not applySubject.
+  const [exploreOpen, setExploreOpen] = useState(false)
   // Mobile graph entry: 'hubs' (ranked list) -> 'sub' (hub subgraph) / 'all'.
   const [graphScreen, setGraphScreen] = useState('hubs')
   // Track B Step 2 item 3: desktop defaults to the top hub's focused
@@ -408,6 +412,33 @@ export default function App() {
     setInvestigationContext((ic) => setInvestigationActiveView(ic, key))
   }, [])
 
+  // Opening Explore is NOT a view change. Do not call changeView('news').
+  const openExplore = useCallback(() => {
+    setMoreOpen(false)
+    setExploreOpen(true)
+  }, [])
+
+  const closeExplore = useCallback(() => {
+    setExploreOpen(false)
+  }, [])
+
+  // Explicit result select from the drawer: close overlay, then the existing
+  // News jump handler (applySubject). Browse / filter / preview / dismiss
+  // never reach this wrapper.
+  const closeExploreThen = useCallback((handler) => {
+    if (!handler) return undefined
+    return (...args) => {
+      setExploreOpen(false)
+      handler(...args)
+    }
+  }, [])
+
+  // One overlay at a time. Opening More via the existing nav onClick
+  // (setMoreOpen(true) — do not rewrite that seam) dismisses Explore.
+  useEffect(() => {
+    if (moreOpen) setExploreOpen(false)
+  }, [moreOpen])
+
   // One primary graph overlay at a time. A relationship panel, node/policy
   // inspector, relationship list, review panel, or topic browser never stacks
   // above another interactive surface and overloads the canvas.
@@ -444,23 +475,26 @@ export default function App() {
     setReviewStatusOpen(true)
   }, [reviewStatusOpen, clearPrimaryGraphOverlays])
 
-  // Escape closes the article / policy / relationship panel (§4.4 close
-  // affordance; item 5 extends it to the docked relationship panel).
+  // Escape closes Explore first (dismiss only — IC unchanged), then
+  // article / policy / relationship overlays (§4.4 close affordance).
   useEffect(() => {
-    if (!selected && !policyNode && !edgeEvidence && !edgeListOpen && !reviewStatusOpen && !topicsOpen) return
+    if (!exploreOpen && !selected && !policyNode && !edgeEvidence && !edgeListOpen && !reviewStatusOpen && !topicsOpen) return
     const onKey = (e) => {
-      if (e.key === 'Escape') {
-        handleClose()
-        closePolicyPanel()
-        setEdgeEvidence(null)
-        setEdgeListOpen(false)
-        setReviewStatusOpen(false)
-        setTopicsOpen(false)
+      if (e.key !== 'Escape') return
+      if (exploreOpen) {
+        setExploreOpen(false)
+        return
       }
+      handleClose()
+      closePolicyPanel()
+      setEdgeEvidence(null)
+      setEdgeListOpen(false)
+      setReviewStatusOpen(false)
+      setTopicsOpen(false)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selected, policyNode, edgeEvidence, edgeListOpen, reviewStatusOpen, topicsOpen, handleClose, closePolicyPanel])
+  }, [exploreOpen, selected, policyNode, edgeEvidence, edgeListOpen, reviewStatusOpen, topicsOpen, handleClose, closePolicyPanel])
 
   // --- Cross-view navigation ---
   // Package 1 item 1 (22_NOTE action 1): a cross-view jump REPLACES context.
@@ -698,6 +732,16 @@ export default function App() {
             </button>
           ))}
         </nav>
+        <button
+          type="button"
+          className="explore-btn"
+          aria-label="Explore / Change Topic"
+          aria-haspopup="dialog"
+          aria-expanded={exploreOpen}
+          onClick={openExplore}
+        >
+          Explore / Change Topic
+        </button>
         {/* Step 4: live corpus line. Falls back to the honest source label
             only while the corpus count is unknown — never a stale number. */}
         {corpusLine ? (
@@ -771,6 +815,35 @@ export default function App() {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {exploreOpen && (
+        <div className="sheet-backdrop" onClick={closeExplore}>
+          <div
+            className="sheet explore-sheet"
+            role="dialog"
+            aria-label="Explore / Change Topic"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sheet-head">
+              <h2>Explore / Change Topic</h2>
+              <button className="sheet-close" aria-label="Close" onClick={closeExplore}>
+                ×
+              </button>
+            </div>
+            <p className="sheet-body">
+              Browse the live feed. Search, filters, and preview stay local — they do
+              not change the current investigation. Selecting a result replaces it.
+            </p>
+            <NewsView
+              variant="drawer"
+              onOpenArc={closeExploreThen(openArcInView)}
+              onOpenNode={closeExploreThen(openNodeInGraph)}
+              onOpenTimeline={closeExploreThen(openEventInTimeline)}
+              onOpenComparison={sourceComparisonBeta ? closeExploreThen(openComparisonEvent) : undefined}
+            />
           </div>
         </div>
       )}
