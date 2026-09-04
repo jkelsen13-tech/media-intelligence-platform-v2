@@ -188,7 +188,9 @@ export function subjectEllipsoidCamera(coordinate, precisionClass) {
     headingDegrees: orient.headingDegrees,
     pitchDegrees: orient.pitchDegrees,
     rollDegrees: orient.rollDegrees,
-    minZoomDistanceMeters: minCameraDistanceFromCenterMetersForPrecisionClass(precisionClass),
+    // The globe controller's minimumZoomDistance is a HEIGHT in meters above
+    // the ellipsoid surface (not a distance from Earth center).
+    minZoomDistanceMeters: heightMetersForPrecisionClass(precisionClass),
   })
 }
 

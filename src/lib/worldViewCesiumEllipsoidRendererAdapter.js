@@ -13,8 +13,8 @@
 import {
   ELLIPSOID_GLOBE_STACK_ID,
   FALLBACK_MAP_STACK_ID,
+  heightMetersForPrecisionClass,
   mapStackById,
-  minCameraDistanceFromCenterMetersForPrecisionClass,
   subjectEllipsoidCamera,
 } from './worldViewMapStack.js'
 import {
@@ -288,8 +288,9 @@ export function createCesiumEllipsoidRendererAdapter({
     viewer.scene.screenSpaceCameraController.enableLook = true
 
     // Constrain "zoom in" so the camera can't reach fake finer precision.
+    // minimumZoomDistance is a height in meters above the ellipsoid surface.
     viewer.scene.screenSpaceCameraController.minimumZoomDistance =
-      minCameraDistanceFromCenterMetersForPrecisionClass(precisionClass)
+      heightMetersForPrecisionClass(precisionClass)
 
     // Picking: clicking a marker returns the original projection row reference.
     eventHandler = new Cesium.ScreenSpaceEventHandler(viewer.canvas)
