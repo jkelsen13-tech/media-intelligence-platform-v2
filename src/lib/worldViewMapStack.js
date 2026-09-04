@@ -171,7 +171,7 @@ export function heightMetersFromMapZoom(zoom, latDegrees) {
 export function mapZoomForHeightMeters(heightMeters, latDegrees, viewportWidthPx = DEFAULT_VIEWPORT_WIDTH_PX) {
   const height = Number(heightMeters)
   const lat = Number(latDegrees)
-  if (!Number.isFinite(lat) || !Number.isFinite(height) || height <= 0) return null
+  if (!Number.isFinite(height) || !Number.isFinite(lat) || height <= 0) return null
   const span = height / (TAN_HALF_FOVY * SCALEBAR_FRACTION)
   const cosLat = Math.cos((lat * Math.PI) / 180)
   if (cosLat <= 1e-6) return null // pole singularity in the Mercator bridge
