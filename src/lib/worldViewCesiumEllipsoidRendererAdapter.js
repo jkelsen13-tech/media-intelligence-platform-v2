@@ -567,7 +567,7 @@ export function createCesiumEllipsoidRendererAdapter({
           const h = updated[k]?.height
           results[i] = Number.isFinite(h) ? h : 0
         })
-      }
+      })
       return results
     } catch {
       return null
