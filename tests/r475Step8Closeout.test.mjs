@@ -300,6 +300,9 @@ test('Step 1–7 test files exist; R4.75 src stays DISPLAY-only; no R5 product i
     // Stage D (R4.9): bounded display-only terrain provider — renderer-vendor
     // module by design; guard scans still ban ion/token/R5 strings above.
     /\/src\/lib\/worldViewCesiumTerrariumTerrainProvider\.js$/,
+    // Stage D visual-continuity repair: truthful relief-shading material —
+    // renderer-vendor module by design; same bans apply.
+    /\/src\/lib\/worldViewCesiumTerrainReliefShading\.js$/,
   ]
   for (const file of srcFiles) {
     const text = readFileSync(file, 'utf8')
