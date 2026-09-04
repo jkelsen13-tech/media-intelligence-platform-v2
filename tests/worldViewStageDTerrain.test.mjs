@@ -400,7 +400,6 @@ test('fetch failures reject: 404, non-PNG, malformed, decode error, unapproved s
       decodeImageImpl: async () => {
         throw new Error('corrupt png')
       },
-      decodeImageImpl,
     }),
     /corrupt png/,
   )
