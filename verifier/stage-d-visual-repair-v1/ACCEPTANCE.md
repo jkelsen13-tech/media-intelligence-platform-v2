@@ -10,4 +10,4 @@ Measures whether the owner-visible terrain defect around Cleveland is diagnosed 
 5. TESTS: full suite green; new tests for the actual defect (fail-closed unknown headers, camera-floor no-regression, terrain-vs-ellipsoid renderer assertion where reliable); CI green.
 6. LIVE-ACCEPTANCE: post-deploy walk captures the 10 labeled evidence items from the prompt; plain statement whether before/after difference is visible to an ordinary user.
 7. DOCS: Stage D closeout addendum updated only after code+CI+deploy+live evidence pass; prior defect history preserved.
-8. SCOPE: no Stage E, navigation polish, assets, buildings, glTF, Supabase work, R5/R6, geoid re-encoding, object-storage mirroring, global-terrain expansion, Cesium ion, or paid-provider work.
+8. SCOPE: no Stage E, navigation polish, assets, buildings, glTF, Supabase work, R5/R6, geoid re-encoding, object-storage mirroring, global-terrain expansion, Cesium ion, paid providers. CDEM only if all licensing conditions verified from primary sources.
