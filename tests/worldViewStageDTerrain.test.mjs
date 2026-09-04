@@ -3,7 +3,10 @@
 // Covers the Stage D0 test plan:
 // - Terrarium decode vectors (incl. negative/bathymetric values)
 // - Tile-coordinate and orientation math
-// - Geographic coverage enforcement (fully-inside rule; no global parents)
+// - Geographic coverage enforcement (fully-inside rule; no global dataset fetches)
+// - Below-band ancestry served locally as the reference ellipsoid (quadtree
+//   renderability) and the definitive getTileDataAvailable policy the
+//   quadtree refinement gate requires
 // - Approved-source enforcement via the provenance header (fail closed)
 // - Zoom-cap behavior (levels 8..15 only)
 // - Missing, blocked, malformed, aborted, and non-PNG responses
@@ -32,6 +35,7 @@ import {
   resampleHeightmapBilinear,
   terrariumTileUrl,
   tileApproval,
+  tileXYForLongitudeLatitudeDegrees,
   tileFullyInsideCoverage,
   tileRectangleDegrees,
 } from '../src/lib/worldViewCesiumTerrariumTerrainProvider.js'
@@ -200,6 +204,26 @@ test('cleveland anchor tile contains the released coordinate at z15', () => {
   assert.ok(tileFullyInsideCoverage(rect))
 })
 
+test('position-to-tile lookup is the exact inverse of the tile rectangle', () => {
+  // Cleveland city center resolves to the live-observed tile 11/559/764
+  assert.deepEqual(tileXYForLongitudeLatitudeDegrees(-81.6944, 41.4993, 11), { x: 559, y: 764 })
+  // released anchor at the zoom cap, inside coverage
+  const a = tileXYForLongitudeLatitudeDegrees(-81.7, 41.4, 15)
+  const rectA = tileRectangleDegrees(a.x, a.y, 15)
+  assert.ok(rectA.west <= -81.7 && rectA.east >= -81.7)
+  assert.ok(rectA.south <= 41.4 && rectA.north >= 41.4)
+  // mid-Pacific is far outside the approved boundary
+  const p = tileXYForLongitudeLatitudeDegrees(-150, 0, 11)
+  assert.equal(tileFullyInsideCoverage(tileRectangleDegrees(p.x, p.y, 11)), false)
+  // poles and antimeridian stay inside the tile tree (clamped, never NaN)
+  for (const [lon, lat] of [[-180, 85.3], [180, -85.3], [0, 90], [0, -90], [-180, 0], [179.9999, 85.05112878]]) {
+    const t = tileXYForLongitudeLatitudeDegrees(lon, lat, 15)
+    const n = 2 ** 15
+    assert.ok(Number.isInteger(t.x) && t.x >= 0 && t.x < n, `${lon},${lat} x=${t.x}`)
+    assert.ok(Number.isInteger(t.y) && t.y >= 0 && t.y < n, `${lon},${lat} y=${t.y}`)
+  }
+})
+
 // ---- coverage enforcement ----
 
 test('coverage policy approves only fully-inside Ohio tiles at levels 8..15', () => {
@@ -227,18 +251,77 @@ test('coverage policy approves only fully-inside Ohio tiles at levels 8..15', ()
   assert.equal(tileApproval(0, 0, 16).reason, 'above-max-level')
 })
 
-test('unapproved tiles return synchronous undefined without any fetch', async () => {
+test('unapproved in-band and over-zoom tiles return synchronous undefined without any fetch', async () => {
   const Cesium = makeMockCesium()
   const { fetchImpl, decodeImageImpl, calls } = makeOkFetch()
   const { provider } = createTerrariumTerrainProvider(Cesium, { fetchImpl, decodeImageImpl })
   // outside coverage
   assert.equal(provider.callback(56, 105, 8), undefined)
-  // below min level (global parents are never requested)
-  assert.equal(provider.callback(0, 0, 0), undefined)
-  assert.equal(provider.callback(200, 90, 7), undefined)
   // above max level
   assert.equal(provider.callback(0, 0, 16), undefined)
   assert.equal(calls.length, 0)
+})
+
+test('below-band ancestry tiles serve the reference ellipsoid from memory without any fetch', async () => {
+  const Cesium = makeMockCesium()
+  const { fetchImpl, decodeImageImpl, calls } = makeOkFetch()
+  const { provider, getStatus } = createTerrariumTerrainProvider(Cesium, { fetchImpl, decodeImageImpl })
+  // Levels below the approved band are never requested from the dataset,
+  // but the quadtree needs renderable ancestry to descend through. The
+  // answer is the reference ellipsoid itself: an all-zero 65x65 heightmap
+  // generated locally (height zero === WGS84 ellipsoid surface).
+  for (const [x, y, level] of [
+    [0, 0, 0],
+    [200, 90, 7],
+    [35, 47, 7],
+  ]) {
+    const grid = provider.callback(x, y, level)
+    assert.ok(grid instanceof Float32Array, `level ${level}`)
+    assert.equal(grid.length, 65 * 65)
+    assert.ok(grid.every((h) => h === 0), 'ellipsoid ancestry must be exactly zero height')
+  }
+  // no network, no fetch accounting, no status flip
+  assert.equal(calls.length, 0)
+  assert.deepEqual(getStatus(), {
+    status: 'idle',
+    fetchAttempts: 0,
+    fetchSuccesses: 0,
+    fetchFailures: 0,
+    sourceRejections: 0,
+  })
+})
+
+test('provider publishes definitive tile availability so the quadtree can refine', () => {
+  const Cesium = makeMockCesium()
+  const { fetchImpl, decodeImageImpl } = makeOkFetch()
+  const { provider } = createTerrariumTerrainProvider(Cesium, { fetchImpl, decodeImageImpl })
+  // Regression: the stock provider answers undefined ("unknown"), and the
+  // engine's canRefine gate (GlobeSurfaceTileProvider) refuses to refine a
+  // dataless tile on an unknown answer — traversal stalls at the root and
+  // terrain never activates. Every answer must be a definitive boolean.
+  for (const level of [0, 1, 5, 7, 8, 11, 15, 16, 20]) {
+    for (const [x, y] of [
+      [0, 0],
+      [2 ** level - 1, 2 ** level - 1],
+    ]) {
+      const answer = provider.getTileDataAvailable(x, y, level)
+      assert.equal(typeof answer, 'boolean', `(${x}, ${y}, ${level}) -> ${answer}`)
+    }
+  }
+  // below the approved band: ellipsoid ancestry is always servable
+  assert.equal(provider.getTileDataAvailable(0, 0, 0), true)
+  assert.equal(provider.getTileDataAvailable(200, 90, 7), true)
+  // approved in-coverage tiles
+  assert.equal(provider.getTileDataAvailable(68, 96, 8), true)
+  assert.equal(provider.getTileDataAvailable(560, 764, 11), true)
+  // boundary straddler (x=67 spans west of the boundary) and far outside
+  assert.equal(provider.getTileDataAvailable(67, 96, 8), false)
+  assert.equal(provider.getTileDataAvailable(56, 105, 8), false)
+  // above the zoom cap the real level-15 parent is upsampled instead
+  assert.equal(provider.getTileDataAvailable(0, 0, 16), false)
+  // non-integer / negative levels are not servable
+  assert.equal(provider.getTileDataAvailable(0, 0, -1), false)
+  assert.equal(provider.getTileDataAvailable(0, 0, 8.5), false)
 })
 
 // ---- approved-source enforcement ----
@@ -246,6 +329,7 @@ test('unapproved tiles return synchronous undefined without any fetch', async ()
 test('source policy accepts US federal public-domain sources only and fails closed', () => {
   assert.deepEqual(APPROVED_TERRAIN_SOURCE_PREFIXES, [
     'ned/',
+    'ned13/',
     'ned_topobathy/',
     'srtm/',
     'gmted/',
@@ -254,6 +338,12 @@ test('source policy accepts US federal public-domain sources only and fails clos
   assert.equal(approvedSourcesFromHeader('ned/a.tif, srtm/b.tif').approved, true)
   assert.equal(approvedSourcesFromHeader('etopo1/ETOPO1_Bed_g.tif').approved, true)
   assert.equal(approvedSourcesFromHeader('ned_topobathy/ca.tif').approved, true)
+  assert.equal(approvedSourcesFromHeader('ned13/imgn42w082_13.tif').approved, true)
+  // exact provenance header observed live on the Cleveland tile
+  // (terrarium/11/559/764.png): NED 1/9" + NED 1/3" — all USGS 3DEP
+  const liveOhioHeader =
+    'ned/ned19_n41x50_w081x75_oh_north_2006.tif, ned/ned19_n41x75_w081x75_oh_north_2006.tif, ned13/imgn42w082_13.tif'
+  assert.equal(approvedSourcesFromHeader(liveOhioHeader).approved, true)
   // non-US / nationally licensed sources rejected
   for (const bad of ['cdem/x.tif', 'eudem/x.tif', 'linz/x.tif', 'kartverket/x.tif', 'arcticdem/x.tif', 'inegi/x.tif']) {
     assert.equal(approvedSourcesFromHeader(bad).approved, false, bad)
@@ -310,6 +400,7 @@ test('fetch failures reject: 404, non-PNG, malformed, decode error, unapproved s
       decodeImageImpl: async () => {
         throw new Error('corrupt png')
       },
+      decodeImageImpl,
     }),
     /corrupt png/,
   )
@@ -515,6 +606,10 @@ test('adapter and dispatcher expose terrain status + probe passthrough; canvas r
   assert.match(ADAPTER_SRC, /degradeGlobeToEllipsoid/)
   assert.match(ADAPTER_SRC, /getTerrainStatus/)
   assert.match(ADAPTER_SRC, /sampleTerrainHeights/)
+  // the sampler must consult the bounded availability policy before calling
+  // the engine sampling helper, which retries deferred (unserved) tiles
+  // indefinitely — an out-of-coverage sample would otherwise never resolve
+  assert.match(ADAPTER_SRC, /getTileDataAvailable\?\.\(tile\.x, tile\.y, level\) === true/)
   assert.match(DISPATCHER_SRC, /getTerrainStatus: \(\) => impl\?\.getTerrainStatus/)
   assert.match(DISPATCHER_SRC, /sampleTerrainHeights: \(pairs, level\) => impl\?\.sampleTerrainHeights/)
   assert.match(CANVAS_SRC, /TERRAIN_DISCLOSURE_TEXT/)
