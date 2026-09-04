@@ -12,13 +12,21 @@
 // - No ion or commercial-provider credentials, ever.
 // - Keyless public endpoint only (AWS Open Data registry: Mapzen Terrain
 //   Tiles, frozen v1.1, 2017).
-// - Coverage is technically bounded: tiles are fetched ONLY when they are
-//   fully inside APPROVED_TERRAIN_COVERAGE at levels [TERRAIN_MIN_ZOOM,
-//   TERRAIN_MAX_ZOOM]. Root/parent tiles outside the approved boundary are
-//   never requested; outside coverage the globe honestly remains the
-//   reference ellipsoid (callback returns undefined -> parent/ellipsoid
-//   render). Missing, failed, malformed, over-zoom, or unapproved tiles are
-//   never zero-filled or fabricated.
+// - Coverage is technically bounded: dataset tiles are fetched ONLY when
+//   they are fully inside APPROVED_TERRAIN_COVERAGE at levels
+//   [TERRAIN_MIN_ZOOM, TERRAIN_MAX_ZOOM]. Root/parent tiles outside the
+//   approved boundary are never requested from the dataset; outside
+//   coverage the globe honestly remains the reference ellipsoid. Below the
+//   approved band the quadtree still needs renderable ancestry to descend
+//   through, so levels 0..(MIN-1) are served from memory as all-zero
+//   heightmaps — height zero IS the WGS84 reference ellipsoid, the exact
+//   surface the engine's own ellipsoid provider renders; no network
+//   request and no dataset bytes are involved. Unapproved tiles inside the
+//   band (callback returns undefined) and known-absent tiles
+//   (getTileDataAvailable === false) render their nearest real ancestor —
+//   the ellipsoid below/beside the boundary, real level-15 data beyond the
+//   zoom cap. Missing, failed, malformed, over-zoom, or unapproved dataset
+//   tiles are never zero-filled or fabricated.
 // - Per-tile source provenance is enforced: the bucket exposes
 //   x-amz-meta-x-imagery-sources; only US federal public-domain sources
 //   (NED/3DEP, SRTM, GMTED2010, ETOPO1) are accepted. Any other or missing
@@ -47,7 +55,8 @@ export const TERRAIN_MAX_ZOOM = 15
 
 /** US federal public-domain sources approved for the development coverage. */
 export const APPROVED_TERRAIN_SOURCE_PREFIXES = Object.freeze([
-  'ned/', // USGS 3DEP / NED (incl. 1/3 and 1/9 arc-second)
+  'ned/', // USGS 3DEP / NED (1 arc-second and 1/9 arc-second products)
+  'ned13/', // USGS 3DEP / NED 1/3 arc-second (observed on live Ohio tiles)
   'ned_topobathy/', // USGS NED Topobathy
   'srtm/', // NASA/NGA SRTM via USGS
   'gmted/', // USGS GMTED2010
@@ -92,6 +101,24 @@ export function tileRectangleDegrees(x, y, level) {
   const north = slippyFractionToLatitudeDegrees(y / n)
   const south = slippyFractionToLatitudeDegrees((y + 1) / n)
   return { west, south, east, north }
+}
+
+/**
+ * Slippy tile x/y containing (lonDeg, latDeg) at the given level — the exact
+ * inverse of tileRectangleDegrees' containment rule. Latitude clamps to the
+ * web-mercator limit. Used to consult the bounded availability policy for an
+ * arbitrary position without issuing a request.
+ */
+export function tileXYForLongitudeLatitudeDegrees(lonDeg, latDeg, level) {
+  const n = 2 ** level
+  const x = Math.min(n - 1, Math.max(0, Math.floor(((lonDeg + 180) / 360) * n)))
+  const clampedLat = Math.max(-85.05112878, Math.min(85.05112878, latDeg))
+  const latRad = (clampedLat * Math.PI) / 180
+  const y = Math.min(
+    n - 1,
+    Math.max(0, Math.floor(((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n)),
+  )
+  return { x, y }
 }
 
 /** True only when the tile is FULLY inside the approved coverage boundary. */
@@ -266,12 +293,20 @@ export async function fetchTerrariumTileHeights({
  * must supply CustomHeightmapTerrainProvider and WebMercatorTilingScheme.
  *
  * Callback contract (matches the engine's documented behavior):
+ * - Float32Array (levels below the approved band) -> the reference
+ *   ellipsoid itself, generated in memory so the quadtree has renderable
+ *   ancestry to descend through; no request is made.
  * - synchronous undefined  -> the globe renders the parent tile (or the
- *   reference ellipsoid when no ancestor has data). Used for every tile
- *   outside the approved level band or coverage boundary; no request is made.
+ *   reference ellipsoid when no ancestor has data). Used for in-band tiles
+ *   outside the approved coverage boundary; no request is made.
  * - Promise<Float32Array>  -> approved tile data (65x65, row-major).
  * - rejected promise       -> tile request failed; the engine upsamples the
  *   real parent tile. Used for fetch/decode/source-policy failures.
+ *
+ * Availability contract: getTileDataAvailable is overridden to publish the
+ * bounded policy as definitive true/false answers (never undefined), which
+ * the quadtree's refinement gate requires in order to descend past tiles
+ * that have not loaded data.
  *
  * Status reporting: onStatusChange receives
  * { status: 'idle' | 'active' | 'unavailable', fetchAttempts, fetchSuccesses,
@@ -327,6 +362,16 @@ export function createTerrariumTerrainProvider(Cesium, options = {}) {
   }
 
   function callback(x, y, level) {
+    // Below the approved band the quadtree still needs renderable ancestry
+    // to descend through: the engine can only refine a tile that has loaded
+    // terrain data or a definitive availability answer. Serve the reference
+    // ellipsoid itself — an all-zero heightmap built in memory, identical to
+    // the surface the engine's ellipsoid provider renders. No network
+    // request, no dataset bytes, no fabricated terrain. A fresh buffer per
+    // call keeps ownership unambiguous across worker handoffs.
+    if (Number.isInteger(level) && level >= 0 && level < minLevel) {
+      return new Float32Array(TERRAIN_HEIGHTMAP_SIZE * TERRAIN_HEIGHTMAP_SIZE)
+    }
     const approval = tileApproval(x, y, level, coverage, minLevel, maxLevel)
     if (!approval.approved) {
       // Synchronous undefined: render the real parent tile / ellipsoid.
@@ -365,6 +410,23 @@ export function createTerrariumTerrainProvider(Cesium, options = {}) {
     }),
     credit,
   })
+
+  // The stock provider answers getTileDataAvailable with undefined
+  // ("unknown"). The quadtree's refinement gate treats an unknown answer
+  // for a dataless tile as "cannot safely refine", which stalls traversal
+  // at the root forever: no tile is ever requested and the surface never
+  // renders. Publish the exact bounded policy instead: true where this
+  // provider serves data (below-band ellipsoid ancestry and approved
+  // in-coverage tiles), false everywhere else. Tiles answered false are
+  // marked absent by the engine and upsample their nearest real ancestor —
+  // the ellipsoid below/beside the boundary, real level-15 data beyond the
+  // zoom cap — so every pixel still shows real geometry, never fabrication.
+  provider.getTileDataAvailable = (x, y, level) => {
+    if (!Number.isInteger(level) || level < 0) return false
+    if (level < minLevel) return true
+    if (level > maxLevel) return false
+    return tileFullyInsideCoverage(tileRectangleDegrees(x, y, level), coverage)
+  }
 
   return {
     provider,
