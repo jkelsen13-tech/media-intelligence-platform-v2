@@ -25,6 +25,7 @@ import {
 import {
   createTerrariumTerrainProvider,
   TERRAIN_CREDIT_TEXT,
+  tileXYForLongitudeLatitudeDegrees,
 } from './worldViewCesiumTerrariumTerrainProvider.js'
 
 // ---- Stage D: bounded display-only terrain ----
@@ -135,7 +136,7 @@ export function destroyCesiumResources({ eventHandler, viewer }) {
 // Examples:
 //   '/some-deploy-subpath/' -> '/some-deploy-subpath/cesium/'
 //   '/some-deploy-subpath'  -> '/some-deploy-subpath/cesium/'
-//   '/'                     -> '/cesium/'
+//   '/'                     -> '/cesium/' (root/local deployment)
 //   undefined / ''          -> '/cesium/' (root/local deployment)
 export function resolveCesiumBaseUrl(deploymentBase) {
   const raw = typeof deploymentBase === 'string' && deploymentBase.length > 0 ? deploymentBase : '/'
@@ -544,9 +545,30 @@ export function createCesiumEllipsoidRendererAdapter({
   async function sampleTerrainHeights(lonLatPairs, level = 11) {
     if (!viewer || !Cesium || !Array.isArray(lonLatPairs)) return null
     try {
-      const positions = lonLatPairs.map(([lon, lat]) => Cesium.Cartographic.fromDegrees(lon, lat))
-      const updated = await Cesium.sampleTerrain(viewer.terrainProvider, level, positions)
-      return updated.map((p) => (Number.isFinite(p.height) ? p.height : 0))
+      const providerRef = viewer.terrainProvider
+      const results = new Array(lonLatPairs.length).fill(0)
+      const servedIdx = []
+      const positions = []
+      lonLatPairs.forEach(([lon, lat], i) => {
+        // The bounded provider defers (synchronous undefined) every tile it
+        // does not serve, and the engine's sampling helper retries deferred
+        // tiles indefinitely — so only forward positions the provider
+        // definitively serves at this level. Every other position honestly
+        // samples the displayed surface there: the reference ellipsoid (0).
+        const tile = tileXYForLongitudeLatitudeDegrees(lon, lat, level)
+        if (providerRef?.getTileDataAvailable?.(tile.x, tile.y, level) === true) {
+          servedIdx.push(i)
+          positions.push(Cesium.Cartographic.fromDegrees(lon, lat))
+        }
+      })
+      if (positions.length > 0) {
+        const updated = await Cesium.sampleTerrain(providerRef, level, positions)
+        servedIdx.forEach((i, k) => {
+          const h = updated[k]?.height
+          results[i] = Number.isFinite(h) ? h : 0
+        })
+      }
+      return results
     } catch {
       return null
     }
