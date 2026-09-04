@@ -415,9 +415,9 @@ function createMapLibreWorldViewRendererAdapter({
   }
 
   // Stage C: restore a serialized camera state. FAIL-SAFE: invalid or
-  // unsupported state returns false and leaves the camera, the
-  // Investigation Context, and the route untouched. The precision-class
-  // zoom cap keeps restored views at or above the recorded ceiling.
+  // unsupported state returns false and leaves the camera, the Investigation
+  // Context, and the route untouched. The precision-class zoom cap keeps
+  // restored views at or above the recorded ceiling.
   function setCameraState(serialized) {
     if (!map) return false
     const parsed = parseCameraState(serialized, { precisionClass: activePrecisionClass() })
@@ -493,6 +493,8 @@ export function createWorldViewRendererAdapter(args) {
     flyToSubjectCamera: (opts) => impl?.flyToSubjectCamera?.(opts) ?? false,
     getCameraState: () => impl?.getCameraState?.() ?? null,
     setCameraState: (serialized) => impl?.setCameraState?.(serialized) ?? false,
+    getTerrainStatus: () => impl?.getTerrainStatus?.() ?? null,
+    sampleTerrainHeights: (pairs, level) => impl?.sampleTerrainHeights?.(pairs, level) ?? null,
     requestRender: () => impl?.requestRender?.(),
     destroy: () => impl?.destroy?.(),
   }
