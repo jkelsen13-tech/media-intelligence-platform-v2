@@ -311,9 +311,12 @@ export async function fetchTerrariumTileHeights({
  * Status reporting: onStatusChange receives
  * { status: 'idle' | 'active' | 'unavailable', fetchAttempts, fetchSuccesses,
  *   fetchFailures, sourceRejections } snapshots. 'unavailable' fires once,
- * when the approved source appears unreachable (every approved fetch failed,
- * at least maxFailuresBeforeUnavailable attempts) — the adapter degrades the
- * globe to the reference ellipsoid and reports it honestly.
+ * when the approved source appears unreachable (genuine fetch/decode
+ * failures reach maxFailuresBeforeUnavailable with no successes).
+ * Source-policy rejections fail closed per tile but never count toward
+ * that threshold — they are the boundary working as designed. On
+ * 'unavailable' the adapter degrades the globe to the reference ellipsoid
+ * and reports it honestly.
  */
 export function createTerrariumTerrainProvider(Cesium, options = {}) {
   const {
@@ -330,6 +333,10 @@ export function createTerrariumTerrainProvider(Cesium, options = {}) {
 
   let status = 'idle'
   let unavailableNotified = false
+  // Genuine fetch/decode failures only. Source-policy rejections are counted
+  // in counters.sourceRejections but excluded here: they are the boundary
+  // working as designed, not evidence that the approved source is down.
+  let genuineFailures = 0
   const counters = {
     fetchAttempts: 0,
     fetchSuccesses: 0,
@@ -349,10 +356,19 @@ export function createTerrariumTerrainProvider(Cesium, options = {}) {
 
   function noteFailure(err) {
     counters.fetchFailures += 1
-    if (err?.code === 'unapproved-source') counters.sourceRejections += 1
+    if (err?.code === 'unapproved-source') {
+      counters.sourceRejections += 1
+      // Fail-closed policy rejection (e.g. Canadian CDEM mixed into a Lake
+      // Erie-adjacent tile): the affected tile honestly upsamples its real
+      // parent. Never count it toward source unavailability — observed live,
+      // the first tiles on the Cleveland descent are exactly these boundary
+      // tiles, and tearing terrain down on them buried the approved core.
+      return
+    }
+    genuineFailures += 1
     if (
       !unavailableNotified &&
-      counters.fetchAttempts >= maxFailuresBeforeUnavailable &&
+      genuineFailures >= maxFailuresBeforeUnavailable &&
       counters.fetchSuccesses === 0
     ) {
       unavailableNotified = true
