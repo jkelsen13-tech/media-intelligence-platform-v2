@@ -44,7 +44,7 @@ export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 
   if (heightMeters === null) return null
   return makeCameraState(
     {
-      lon: lng,
+      lon: Number(lng),
       lat,
       heightMeters,
       headingDegrees: bearing,
@@ -55,7 +55,7 @@ export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 
   )
 }
 
-/** Convert a normalized camera state into 2D/2.5D map camera parameters. */
+/** Convert a normalized camera state into MapLibre camera parameters. */
 export function mapCameraForCameraState(cameraState, precisionClass) {
   if (!cameraState) return null
   const cap = maxZoomForPrecisionClass(precisionClass)
@@ -495,6 +495,11 @@ export function createWorldViewRendererAdapter(args) {
     setCameraState: (serialized) => impl?.setCameraState?.(serialized) ?? false,
     getTerrainStatus: () => impl?.getTerrainStatus?.() ?? null,
     sampleTerrainHeights: (pairs, level) => impl?.sampleTerrainHeights?.(pairs, level) ?? null,
+    // Stage D visual-continuity repair: relief shading is a globe-only
+    // treatment; the MapLibre fallback adapter has no globe material, so it
+    // no-ops through the optional call.
+    setReliefShadingEnabled: (enabled) => impl?.setReliefShadingEnabled?.(enabled) ?? false,
+    getReliefShadingEnabled: () => impl?.getReliefShadingEnabled?.() ?? false,
     requestRender: () => impl?.requestRender?.(),
     destroy: () => impl?.destroy?.(),
   }
