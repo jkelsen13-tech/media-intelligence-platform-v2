@@ -265,7 +265,7 @@ export function createCesiumEllipsoidRendererAdapter({
         terrainDegraded = degradeGlobeToEllipsoid(Cesium, viewer) || terrainDegraded
       }
       try {
-        onTerrainStatusChange?.(status)
+        onStatusChange?.(status)
       } catch {
         /* status reporting must never break rendering */
       }
