@@ -293,6 +293,18 @@ test('adapter wiring: both renderers and the dispatcher expose the camera contra
   assert.match(GLOBE_ADAPTER, /cameraStateFromGlobeCamera\(Cesium\.Math, viewer\.camera, activePrecisionClass\(\)\)/)
 })
 
+test('ceiling clamp: Cesium minimumZoomDistance is the meter ceiling above the surface', () => {
+  // Live-verified regression (Stage C walk): wiring minimumZoomDistance to
+  // Earth-radius + ceiling made the controller push any camera below ~6.41M m
+  // back out — the ~5 km city ceiling became unreachable and ceiling restores
+  // were bounced to planetary height. minimumZoomDistance is a HEIGHT in
+  // meters above the ellipsoid surface, not a distance from Earth center.
+  assert.match(GLOBE_ADAPTER, /minimumZoomDistance =\s*\n\s*heightMetersForPrecisionClass\(precisionClass\)/)
+  assert.doesNotMatch(GLOBE_ADAPTER, /minimumZoomDistance =\s*\n\s*minCameraDistanceFromCenterMetersForPrecisionClass/)
+  const cam = subjectEllipsoidCamera([-81.7, 41.4], 'city')
+  assert.ok(Math.abs(cam.minZoomDistanceMeters - heightMetersForPrecisionClass('city')) < 1e-6)
+})
+
 test('precision class is resolved live at call time, not stale from mount', () => {
   // Rows load asynchronously, so the class may be unknown at adapter mount.
   // Camera-state get/set must read it through the live getter or the ~5 km
