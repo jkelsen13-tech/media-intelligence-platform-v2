@@ -1,8 +1,8 @@
-# R4.9 Stage D closeout — bounded display-only terrain integration
+# Release 4.9 Stage D closeout — bounded display-only terrain integration
 
 **Status:** COMPLETE and live. Stage E not started. No Supabase mutation performed. No paid service, account, secret, token, bulk mirror, or purchase used.
 
-Program label is written `R4.9` in this file. G2 uncertainty levels live only in `docs/UNCERTAINTY_VOCABULARY.md`; this closeout does not redefine them.
+Vocabulary note: the milestone short label and the object-storage product name are written longhand throughout this file because the G2 vocabulary guard (`tests/golden/vocabulary_drift.test.mjs`) reserves those level tokens for the locked uncertainty vocabulary. G2 uncertainty levels live only in `docs/UNCERTAINTY_VOCABULARY.md`; this closeout does not redefine them. Where owner decision #5 names the storage product, the name is elided under the same guard; all owner decisions are carried verbatim in the Stage D0 provider decision memo (output deliverable, 2026-09-04).
 
 ---
 
@@ -31,13 +31,13 @@ Live backend project `qikvmopbtijoebdqosyq` was **not written** by this stage.
 
 ---
 
-## 2. Owner decisions honored (normative, carried verbatim from authorization)
+## 2. Owner decisions honored (normative; #5 elides the storage product name per the vocabulary note — verbatim set in the Stage D0 memo)
 
 1. Raw Mapzen Terrarium elevation may be used during development as **display-only, source-datum terrain**.
 2. Terrain must **never** become evidence, alter `precision_class`, supply an asserted event altitude, snap evidence to the surface, or strengthen geographic certainty.
 3. The approximately **34.1-meter Cleveland datum offset** is accepted for development because terrain remains display-only and the city camera floor is **34,641.016 meters**.
 4. The **frozen Mapzen/AWS v1.1 dataset** is accepted as a development source **without an SLA**.
-5. An approved, versioned, geoid-corrected **R2 mirror remains a launch-preparation decision** — not part of Stage D.
+5. An approved, versioned, geoid-corrected **object-storage mirror remains a launch-preparation decision** — not part of Stage D. *(Product name elided per the vocabulary note above; verbatim in the Stage D0 memo.)*
 6. **Cesium ion and paid terrain providers are not approved or required.**
 7. Stage D begins with **bounded Cleveland/Ohio coverage**. Access to the global Mapzen bucket is not approval to display or fetch globally licensed terrain.
 
@@ -72,7 +72,7 @@ Lake Erie-adjacent tiles inside the approved geographic boundary carry provenanc
 
 - Terrarium heights are **source-datum** (NAVD88 for US 3DEP/NED coverage). They are displayed **raw** under the display-only rule.
 - Cleveland offset: approx. **+34.1 m** vs the WGS84 ellipsoid (GEOID18 N = −34.111 m at 41.4 N, 81.7 W). Terrain never feeds the camera floor: the city-class floor is exactly **34,641.016151377546 m**, verified live post-repair.
-- Geoid-corrected re-encoding and the approved, versioned R2 mirror remain a **launch-preparation gate** (owner decision #5). No geoid re-encoding was performed in Stage D.
+- Geoid-corrected re-encoding and the approved, versioned object-storage mirror remain a **launch-preparation gate** (owner decision #5). No geoid re-encoding was performed in Stage D.
 - Sampled heights are display-only probe values; they are never written to canonical state. Live acceptance sample at Cleveland city center: **202.061 m** (source datum).
 
 ---
@@ -94,7 +94,7 @@ The definitive `getTileDataAvailable` override publishes the bounded policy as t
 
 ## 6. Frozen-dataset limitation
 
-Mapzen Terrain Tiles on AWS Open Data is **frozen v1.1 (2017)** with **no SLA** (owner decision #4). Consequences: tiles may be stale relative to current 3DEP; the bucket may change availability without notice. Failure handling is honest degradation (status `unavailable` + reference-ellipsoid rendering + UI disclosure), verified by failure drill §7. The launch-prep R2 mirror decision addresses this.
+Mapzen Terrain Tiles on AWS Open Data is **frozen v1.1 (2017)** with **no SLA** (owner decision #4). Consequences: tiles may be stale relative to current 3DEP; the bucket may change availability without notice. Failure handling is honest degradation (status `unavailable` + reference-ellipsoid rendering + UI disclosure), verified by failure drill §7. The launch-prep object-storage mirror decision (owner decision #5) addresses this.
 
 ---
 
@@ -137,7 +137,7 @@ CI on stopping SHA `9000b7e2`: golden regression suite SUCCESS; test-gated Pages
 ## 9. Remaining risks and deferred costs (launch preparation, not Stage D)
 
 1. **CDEM policy question** (§3): Lake Erie-adjacent tiles stay ellipsoid/parent-rendered until the owner broadens the licensed-source set or accepts the seam as-is.
-2. **Frozen dataset, no SLA** (§6): availability/staleness risk until the R2 mirror decision is executed.
+2. **Frozen dataset, no SLA** (§6): availability/staleness risk until the object-storage mirror decision is executed.
 3. **Datum**: source-datum display remains raw; geoid-corrected re-encoding deferred to the launch gate (owner decision #5).
 4. **Coverage**: bounded to `cleveland-ohio-dev-v1`. Any expansion is a new owner decision with its own source/licensing review.
 
@@ -145,4 +145,4 @@ CI on stopping SHA `9000b7e2`: golden regression suite SUCCESS; test-gated Pages
 
 ## 10. Stopping statement
 
-Stage D is complete and live at the stopping SHA above. **Stage E (3D buildings, glTF, asset registry, cross-surface 3D sync) is not started. Stage I mobile, R2 provisioning, geoid re-encoding, global licensing, Cesium ion, Supabase changes, and R5/R6 remain untouched.**
+Stage D is complete and live at the stopping SHA above. **Stage E (3D buildings, glTF, asset registry, cross-surface 3D sync) is not started. Stage I mobile, object-storage provisioning, geoid re-encoding, global licensing, Cesium ion, Supabase changes, and R5/R6 remain untouched.**
