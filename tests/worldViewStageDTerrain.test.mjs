@@ -8,6 +8,7 @@
 //   renderability) and the definitive getTileDataAvailable policy the
 //   quadtree refinement gate requires
 // - Approved-source enforcement via the provenance header (fail closed)
+// - Boundary source-policy rejections do not count toward source unavailability
 // - Zoom-cap behavior (levels 8..15 only)
 // - Missing, blocked, malformed, aborted, and non-PNG responses
 // - Resampling and edge behavior
@@ -532,6 +533,53 @@ test('unapproved-source tiles reject and count as source rejections', async () =
   const { provider, getStatus } = createTerrariumTerrainProvider(Cesium, { fetchImpl, decodeImageImpl })
   await assert.rejects(provider.callback(560, 764, 11), (err) => err.code === 'unapproved-source')
   assert.equal(getStatus().sourceRejections, 1)
+})
+
+test('boundary source-policy rejections never count toward source unavailability', async () => {
+  // Live-observed Cleveland descent pattern: the first tiles the quadtree
+  // requests are Lake Erie-adjacent z9/z10 tiles whose provenance mixes
+  // Canadian CDEM with US sources. They reject fail-closed (the boundary
+  // working as designed) while pure USGS 3DEP z11 tiles serve fine. The
+  // rejections must not trip the unavailability teardown.
+  const Cesium = makeMockCesium()
+  const statuses = []
+  const liveMixedFetch = async (url) => {
+    const isBoundaryTile = url.includes('/9/') || url.includes('/10/')
+    return {
+      ok: true,
+      status: 200,
+      headers: {
+        get: (k) =>
+          ({
+            'content-type': 'image/png',
+            'x-amz-meta-x-imagery-sources': isBoundaryTile
+              ? 'nrcan_cdem/cdem_dem_040H.tif, srtm/N41W082.tif'
+              : 'ned13/imgn42w082_13.tif',
+          })[k] ?? null,
+      },
+      arrayBuffer: async () => new Uint8Array([137, 80, 78, 71]).buffer,
+    }
+  }
+  const decodeImageImpl = async () => ({ width: 256, height: 256, data: makeGradientPngPixels() })
+  const { provider, getStatus, isUnavailable } = createTerrariumTerrainProvider(Cesium, {
+    fetchImpl: liveMixedFetch,
+    decodeImageImpl,
+    onStatusChange: (s) => statuses.push(s),
+    maxFailuresBeforeUnavailable: 3,
+  })
+  // more boundary rejections than the unavailability threshold...
+  await assert.rejects(provider.callback(139, 190, 9), (err) => err.code === 'unapproved-source')
+  await assert.rejects(provider.callback(139, 191, 9), (err) => err.code === 'unapproved-source')
+  await assert.rejects(provider.callback(278, 380, 10), (err) => err.code === 'unapproved-source')
+  await assert.rejects(provider.callback(279, 380, 10), (err) => err.code === 'unapproved-source')
+  assert.equal(getStatus().sourceRejections, 4)
+  assert.equal(isUnavailable(), false)
+  // ...then an approved tile succeeds: the source was reachable all along
+  const heights = await provider.callback(560, 764, 11)
+  assert.ok(heights instanceof Float32Array)
+  assert.equal(heights.length, 65 * 65)
+  assert.equal(getStatus().status, 'active')
+  assert.equal(statuses.filter((s) => s.status === 'unavailable').length, 0)
 })
 
 test('degradeGlobeToEllipsoid swaps terrain off without touching the camera', () => {
