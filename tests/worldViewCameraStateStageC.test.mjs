@@ -310,7 +310,10 @@ test('precision class is resolved live at call time, not stale from mount', () =
   // Camera-state get/set must read it through the live getter or the ~5 km
   // ceiling floor is silently dropped (found in the Stage C live walk: a
   // 50 m restore was accepted before this fix).
-  assert.match(MAP_CANVAS, /getPrecisionClass: \(\) => first\?\.row\?\.precision_class/)
+  assert.match(MAP_CANVAS, /getPrecisionClass: \(\) => firstRef\.current\?\.row\?\.precision_class/)
+  // The ref follows the latest render, so the getter is genuinely live even
+  // though the adapter effect only re-runs on stack changes.
+  assert.match(MAP_CANVAS, /firstRef\.current = first/)
   for (const src of [ADAPTER, GLOBE_ADAPTER]) {
     assert.match(src, /getPrecisionClass,/)
     assert.match(src, /const activePrecisionClass = \(\) => getPrecisionClass\?\.\(\) \?\? precisionClass/)

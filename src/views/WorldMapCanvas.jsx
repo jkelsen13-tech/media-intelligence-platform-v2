@@ -118,6 +118,13 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
   const features = useMemo(() => projectionMarkerRecords(rows, selectedKeys), [rows, selectedKeys])
   const first = features[0]
   const coordinate = first?.positions?.[0] ?? null
+  // Rows load asynchronously: the adapter effect below runs once per stack,
+  // so live getters must read through a ref that follows the latest render.
+  // A plain closure over `first` is frozen at mount time (undefined before
+  // rows arrive) and silently drops the ~5 km ceiling floor on camera-state
+  // restores — found in the Stage C live walk (50 m restore accepted).
+  const firstRef = useRef(first)
+  firstRef.current = first
 
   useEffect(() => {
     if (stackId === FALLBACK_MAP_STACK_ID) return undefined
@@ -128,7 +135,7 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
       getHostEl: () => hostRef.current,
       coordinate,
       precisionClass: first?.row?.precision_class,
-      getPrecisionClass: () => first?.row?.precision_class,
+      getPrecisionClass: () => firstRef.current?.row?.precision_class,
       getSelectedKeys: () => selectedKeys,
       onSelectRow,
       onStackIdChange: (next) => {
