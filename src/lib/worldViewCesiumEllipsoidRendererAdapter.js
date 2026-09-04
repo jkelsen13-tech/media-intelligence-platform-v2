@@ -27,6 +27,9 @@ import {
   TERRAIN_CREDIT_TEXT,
   tileXYForLongitudeLatitudeDegrees,
 } from './worldViewCesiumTerrariumTerrainProvider.js'
+import {
+  setGlobeReliefShading,
+} from './worldViewCesiumTerrainReliefShading.js'
 
 // ---- Stage D: bounded display-only terrain ----
 //
@@ -201,6 +204,12 @@ export function createCesiumEllipsoidRendererAdapter({
   // provider; `terrainDegraded` records the honest ellipsoid fallback.
   let terrainPlan = null
   let terrainDegraded = false
+  // Stage D visual-continuity repair: labeled relief shading derived only
+  // from the actual approved terrain heights (see
+  // worldViewCesiumTerrainReliefShading.js). Default ON — the repair exists
+  // because unshaded terrain is not visually legible at the enforced city
+  // camera floor. User-toggleable; never touches geometry or camera.
+  let reliefShadingEnabled = true
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
 
@@ -345,6 +354,14 @@ export function createCesiumEllipsoidRendererAdapter({
 
     // Request-only rendering governance: only redraw on camera/props changes.
     viewer.scene.requestRenderMode = true
+
+    // Stage D visual-continuity repair: apply the labeled relief shading
+    // (default ON). Derived only from actual approved terrain heights; the
+    // reference ellipsoid (height 0) stays untinted, so degraded or
+    // out-of-coverage areas honestly show plain imagery.
+    if (reliefShadingEnabled) {
+      setGlobeReliefShading(Cesium, viewer, true)
+    }
 
     // Enable orbit / free rotation / tilt / continuous zoom.
     viewer.scene.screenSpaceCameraController.enableRotate = true
@@ -527,6 +544,20 @@ export function createCesiumEllipsoidRendererAdapter({
     viewer?.scene?.requestRender?.()
   }
 
+  // Stage D visual-continuity repair: user-facing relief shading toggle.
+  // DISPLAY-only — swaps the globe material only; the terrain provider,
+  // geometry, camera, entities, and canonical state are untouched. Safe to
+  // call before mount: the preference applies when the viewer is created.
+  function setReliefShadingEnabled(enabled) {
+    reliefShadingEnabled = Boolean(enabled)
+    if (!viewer || !Cesium) return true
+    return setGlobeReliefShading(Cesium, viewer, reliefShadingEnabled)
+  }
+
+  function getReliefShadingEnabled() {
+    return reliefShadingEnabled
+  }
+
   // Stage D: terrain status snapshot for the honest-availability UI.
   // { status: 'idle' | 'active' | 'unavailable', fetchAttempts, ... }
   // 'idle' means no approved tile has been requested yet (e.g. planetary
@@ -621,6 +652,8 @@ export function createCesiumEllipsoidRendererAdapter({
     setCameraState,
     getTerrainStatus,
     sampleTerrainHeights,
+    setReliefShadingEnabled,
+    getReliefShadingEnabled,
     requestRender,
     destroy,
   }

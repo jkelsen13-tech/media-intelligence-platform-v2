@@ -331,6 +331,8 @@ test('src has no globe-vendor / 3D-tile strings; map pick goes through commitNew
     /\/src\/lib\/worldViewCesiumEllipsoidRendererAdapter\.js$/,
     // Stage D: MIP-owned bounded Terrarium terrain provider (adapter seam).
     /\/src\/lib\/worldViewCesiumTerrariumTerrainProvider\.js$/,
+    // Stage D visual-continuity repair: relief-shading material (adapter seam).
+    /\/src\/lib\/worldViewCesiumTerrainReliefShading\.js$/,
   ]
   for (const file of files) {
     const text = readFileSync(file, 'utf8')

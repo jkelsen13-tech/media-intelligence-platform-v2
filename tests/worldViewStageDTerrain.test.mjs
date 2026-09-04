@@ -327,7 +327,7 @@ test('provider publishes definitive tile availability so the quadtree can refine
 
 // ---- approved-source enforcement ----
 
-test('source policy accepts US federal public-domain sources only and fails closed', () => {
+test('source policy accepts approved public-domain / OGL-C sources only and fails closed', () => {
   assert.deepEqual(APPROVED_TERRAIN_SOURCE_PREFIXES, [
     'ned/',
     'ned13/',
@@ -335,6 +335,7 @@ test('source policy accepts US federal public-domain sources only and fails clos
     'srtm/',
     'gmted/',
     'etopo1/',
+    'nrcan_cdem/',
   ])
   assert.equal(approvedSourcesFromHeader('ned/a.tif, srtm/b.tif').approved, true)
   assert.equal(approvedSourcesFromHeader('etopo1/ETOPO1_Bed_g.tif').approved, true)
@@ -345,7 +346,21 @@ test('source policy accepts US federal public-domain sources only and fails clos
   const liveOhioHeader =
     'ned/ned19_n41x50_w081x75_oh_north_2006.tif, ned/ned19_n41x75_w081x75_oh_north_2006.tif, ned13/imgn42w082_13.tif'
   assert.equal(approvedSourcesFromHeader(liveOhioHeader).approved, true)
-  // non-US / nationally licensed sources rejected
+  // CDEM (NRCan) approved 2026-09-05 under the Stage D visual-continuity
+  // repair after primary-source verification of the Open Government
+  // Licence - Canada 2.0 (commercial use + redistribution permitted, no
+  // account/payment/token, attribution carried in the UI disclosure).
+  // Exact CDEM-mixed headers observed live on Lake Erie-adjacent tiles:
+  assert.equal(
+    approvedSourcesFromHeader('nrcan_cdem/cdem_dem_040H.tif, srtm/N41W082.tif, gmted/30N090W_20101117_gmted_mea075.tif').approved,
+    true,
+  )
+  assert.equal(
+    approvedSourcesFromHeader('nrcan_cdem/cdem_dem_040H.tif, nrcan_cdem/cdem_dem_040I.tif, srtm/N41W082.tif, gmted/30N090W_20101117_gmted_mea075.tif').approved,
+    true,
+  )
+  // unapproved / unknown sources still rejected fail-closed (the generic
+  // 'cdem/' prefix is NOT the approved NRCan namespace)
   for (const bad of ['cdem/x.tif', 'eudem/x.tif', 'linz/x.tif', 'kartverket/x.tif', 'arcticdem/x.tif', 'inegi/x.tif']) {
     assert.equal(approvedSourcesFromHeader(bad).approved, false, bad)
   }
@@ -538,9 +553,11 @@ test('unapproved-source tiles reject and count as source rejections', async () =
 test('boundary source-policy rejections never count toward source unavailability', async () => {
   // Live-observed Cleveland descent pattern: the first tiles the quadtree
   // requests are Lake Erie-adjacent z9/z10 tiles whose provenance mixes
-  // Canadian CDEM with US sources. They reject fail-closed (the boundary
-  // working as designed) while pure USGS 3DEP z11 tiles serve fine. The
-  // rejections must not trip the unavailability teardown.
+  // sources. Before the 2026-09-05 CDEM approval these rejected fail-closed;
+  // CDEM-mixed tiles are now approved (OGL-C verified), so this replay uses
+  // a genuinely unapproved source (eudem/) to pin the same fail-closed
+  // contract: boundary rejections must never trip the unavailability
+  // teardown while approved tiles keep serving.
   const Cesium = makeMockCesium()
   const statuses = []
   const liveMixedFetch = async (url) => {
@@ -553,7 +570,7 @@ test('boundary source-policy rejections never count toward source unavailability
           ({
             'content-type': 'image/png',
             'x-amz-meta-x-imagery-sources': isBoundaryTile
-              ? 'nrcan_cdem/cdem_dem_040H.tif, srtm/N41W082.tif'
+              ? 'eudem/eudem_dem_040H.tif, srtm/N41W082.tif'
               : 'ned13/imgn42w082_13.tif',
           })[k] ?? null,
       },

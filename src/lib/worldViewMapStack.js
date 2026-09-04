@@ -75,10 +75,21 @@ export function mapLibreStyleForStack(id) {
 // surface. Development coverage is bounded to the approved Cleveland/Ohio
 // boundary (enforced by the Stage D bounded terrain provider module).
 export const TERRAIN_DISCLOSURE_TEXT =
-  'Terrain (Cleveland/Ohio only): USGS 3DEP/SRTM/GMTED2010, NOAA ETOPO1 via Mapzen/AWS Terrain Tiles — display-only, source-datum (not WGS84-referenced), never evidence'
+  'Terrain (Cleveland/Ohio only): USGS 3DEP/SRTM/GMTED2010, NOAA ETOPO1, NRCan CDEM via Mapzen/AWS Terrain Tiles — display-only, source-datum (not WGS84-referenced), never evidence. Canada terrain data contains information licensed under the Open Government Licence – Canada'
 
 export const TERRAIN_UNAVAILABLE_TEXT =
   'Terrain unavailable — showing the reference ellipsoid'
+
+/**
+ * User-facing label for the optional relief-shading treatment (Stage D
+ * visual-continuity repair). The tint is derived only from the actual
+ * approved elevation values: untinted areas are the reference ellipsoid or
+ * have no approved data. The ramp is fixed and clamped 0-600 m source-datum
+ * (display-only); there is no vertical exaggeration.
+ */
+export const TERRAIN_RELIEF_TOGGLE_LABEL = 'Terrain relief shading'
+export const TERRAIN_RELIEF_LEGEND_TEXT =
+  'Relief shading: elevation tint from approved terrain sources (0–600 m source-datum, display-only); untinted areas are the reference ellipsoid or have no approved terrain'
 
 /** World-scale default — not a single-facility framing. */
 export function worldCamera() {

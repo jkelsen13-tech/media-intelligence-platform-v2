@@ -495,6 +495,11 @@ export function createWorldViewRendererAdapter(args) {
     setCameraState: (serialized) => impl?.setCameraState?.(serialized) ?? false,
     getTerrainStatus: () => impl?.getTerrainStatus?.() ?? null,
     sampleTerrainHeights: (pairs, level) => impl?.sampleTerrainHeights?.(pairs, level) ?? null,
+    // Stage D visual-continuity repair: relief shading is a globe-only
+    // treatment; the MapLibre fallback adapter has no globe material, so it
+    // no-ops through the optional call.
+    setReliefShadingEnabled: (enabled) => impl?.setReliefShadingEnabled?.(enabled) ?? false,
+    getReliefShadingEnabled: () => impl?.getReliefShadingEnabled?.() ?? false,
     requestRender: () => impl?.requestRender?.(),
     destroy: () => impl?.destroy?.(),
   }
