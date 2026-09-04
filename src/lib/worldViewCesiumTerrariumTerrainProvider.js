@@ -28,8 +28,10 @@
 //   zoom cap. Missing, failed, malformed, over-zoom, or unapproved dataset
 //   tiles are never zero-filled or fabricated.
 // - Per-tile source provenance is enforced: the bucket exposes
-//   x-amz-meta-x-imagery-sources; only US federal public-domain sources
-//   (NED/3DEP, SRTM, GMTED2010, ETOPO1) are accepted. Any other or missing
+//   x-amz-meta-x-imagery-sources; only approved sources (US federal
+//   public-domain: NED/3DEP, SRTM, GMTED2010, ETOPO1; plus NRCan CDEM under
+//   the Open Government Licence - Canada 2.0, approved 2026-09-05 after
+//   primary-source licence verification) are accepted. Any other or missing
 //   source header fails closed.
 
 // ---- Approved coverage and source policy (normative) ----
@@ -53,7 +55,18 @@ export const APPROVED_TERRAIN_COVERAGE = Object.freeze({
 export const TERRAIN_MIN_ZOOM = 8
 export const TERRAIN_MAX_ZOOM = 15
 
-/** US federal public-domain sources approved for the development coverage. */
+/**
+ * Sources approved for the development coverage. US federal public-domain
+ * sources plus Natural Resources Canada CDEM, approved 2026-09-05 under the
+ * Stage D visual-continuity repair after verifying every condition against
+ * the primary licence text (Open Government Licence - Canada 2.0,
+ * open.canada.ca/en/open-government-licence-canada): worldwide, royalty-free,
+ * perpetual use INCLUDING commercial purposes and redistribution; no payment,
+ * account, secret, token, or provider agreement required; the required
+ * attribution sentence is carried in TERRAIN_DISCLOSURE_TEXT
+ * (worldViewMapStack.js). CDEM heights stay source-datum (CGVD28/CGVD2013),
+ * display-only, and never evidentiary — identical rules to the US sources.
+ */
 export const APPROVED_TERRAIN_SOURCE_PREFIXES = Object.freeze([
   'ned/', // USGS 3DEP / NED (1 arc-second and 1/9 arc-second products)
   'ned13/', // USGS 3DEP / NED 1/3 arc-second (observed on live Ohio tiles)
@@ -61,6 +74,7 @@ export const APPROVED_TERRAIN_SOURCE_PREFIXES = Object.freeze([
   'srtm/', // NASA/NGA SRTM via USGS
   'gmted/', // USGS GMTED2010
   'etopo1/', // NOAA ETOPO1 bathymetry
+  'nrcan_cdem/', // NRCan CDEM, Open Government Licence - Canada 2.0 (verified 2026-09-05)
 ])
 
 export const TERRARIUM_TILE_BASE_URL = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium'
@@ -69,7 +83,7 @@ export const TERRAIN_HEIGHTMAP_SIZE = 65
 
 /** Required credit text shown on the renderer's credit surface. */
 export const TERRAIN_CREDIT_TEXT =
-  'Terrain: USGS 3DEP/SRTM/GMTED2010 · NOAA ETOPO1 · via Mapzen/AWS Terrain Tiles'
+  'Terrain: USGS 3DEP/SRTM/GMTED2010 · NOAA ETOPO1 · NRCan CDEM · via Mapzen/AWS Terrain Tiles'
 
 // UI-facing disclosure strings live in worldViewMapStack.js
 // (TERRAIN_DISCLOSURE_TEXT / TERRAIN_UNAVAILABLE_TEXT) so renderer-neutral
@@ -358,11 +372,12 @@ export function createTerrariumTerrainProvider(Cesium, options = {}) {
     counters.fetchFailures += 1
     if (err?.code === 'unapproved-source') {
       counters.sourceRejections += 1
-      // Fail-closed policy rejection (e.g. Canadian CDEM mixed into a Lake
-      // Erie-adjacent tile): the affected tile honestly upsamples its real
-      // parent. Never count it toward source unavailability — observed live,
-      // the first tiles on the Cleveland descent are exactly these boundary
-      // tiles, and tearing terrain down on them buried the approved core.
+      // Fail-closed policy rejection (e.g. an unapproved national dataset
+      // mixed into a boundary tile): the affected tile honestly upsamples
+      // its real parent. Never count it toward source unavailability —
+      // observed live, the first tiles on the Cleveland descent are exactly
+      // these boundary tiles, and tearing terrain down on them buried the
+      // approved core.
       return
     }
     genuineFailures += 1
