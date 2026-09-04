@@ -68,6 +68,18 @@ export function mapLibreStyleForStack(id) {
   return 'https://tiles.openfreemap.org/styles/positron'
 }
 
+// ---- Stage D: terrain disclosure strings (renderer-neutral, UI-safe) ----
+// These strings intentionally name no renderer vendor so they can be shown
+// by any surface. Terrain is display-only environmental context: it is never
+// evidence, never changes precision_class, and never snaps evidence to the
+// surface. Development coverage is bounded to the approved Cleveland/Ohio
+// boundary (enforced by the Stage D bounded terrain provider module).
+export const TERRAIN_DISCLOSURE_TEXT =
+  'Terrain (Cleveland/Ohio only): USGS 3DEP/SRTM/GMTED2010, NOAA ETOPO1 via Mapzen/AWS Terrain Tiles — display-only, source-datum (not WGS84-referenced), never evidence'
+
+export const TERRAIN_UNAVAILABLE_TEXT =
+  'Terrain unavailable — showing the reference ellipsoid'
+
 /** World-scale default — not a single-facility framing. */
 export function worldCamera() {
   return Object.freeze({

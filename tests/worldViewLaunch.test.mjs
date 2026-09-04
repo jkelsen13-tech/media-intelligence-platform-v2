@@ -329,6 +329,8 @@ test('src has no globe-vendor / 3D-tile strings; map pick goes through commitNew
   const allowedCesiumFiles = [
     /\/src\/lib\/worldViewRendererAdapter\.js$/,
     /\/src\/lib\/worldViewCesiumEllipsoidRendererAdapter\.js$/,
+    // Stage D: MIP-owned bounded Terrarium terrain provider (adapter seam).
+    /\/src\/lib\/worldViewCesiumTerrariumTerrainProvider\.js$/,
   ]
   for (const file of files) {
     const text = readFileSync(file, 'utf8')

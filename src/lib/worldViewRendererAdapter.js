@@ -493,6 +493,8 @@ export function createWorldViewRendererAdapter(args) {
     flyToSubjectCamera: (opts) => impl?.flyToSubjectCamera?.(opts) ?? false,
     getCameraState: () => impl?.getCameraState?.() ?? null,
     setCameraState: (serialized) => impl?.setCameraState?.(serialized) ?? false,
+    getTerrainStatus: () => impl?.getTerrainStatus?.() ?? null,
+    sampleTerrainHeights: (pairs, level) => impl?.sampleTerrainHeights?.(pairs, level) ?? null,
     requestRender: () => impl?.requestRender?.(),
     destroy: () => impl?.destroy?.(),
   }

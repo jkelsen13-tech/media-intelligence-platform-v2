@@ -7,7 +7,10 @@ import {
 } from '../lib/spatialProjection'
 import {
   DEFAULT_MAP_STACK_ID,
+  ELLIPSOID_GLOBE_STACK_ID,
   FALLBACK_MAP_STACK_ID,
+  TERRAIN_DISCLOSURE_TEXT,
+  TERRAIN_UNAVAILABLE_TEXT,
   mapStackById,
 } from '../lib/worldViewMapStack'
 import { createWorldViewRendererAdapter, projectionMarkerRecords } from '../lib/worldViewRendererAdapter'
@@ -114,6 +117,7 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
   const flewRef = useRef(false)
   const adapterRef = useRef(null)
   const [stackId, setStackId] = useState(DEFAULT_MAP_STACK_ID)
+  const [terrainStatus, setTerrainStatus] = useState(null)
   const stack = mapStackById(stackId)
   const features = useMemo(() => projectionMarkerRecords(rows, selectedKeys), [rows, selectedKeys])
   const first = features[0]
@@ -129,6 +133,7 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
   useEffect(() => {
     if (stackId === FALLBACK_MAP_STACK_ID) return undefined
     let cancelled = false
+    setTerrainStatus(null)
     adapterRef.current?.destroy?.()
     adapterRef.current = createWorldViewRendererAdapter({
       stackId,
@@ -141,6 +146,10 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
       onStackIdChange: (next) => {
         if (cancelled) return
         setStackId(next)
+      },
+      onTerrainStatusChange: (next) => {
+        if (cancelled) return
+        setTerrainStatus(next)
       },
       shouldFlyTo: () => !flewRef.current,
       markFlew: () => {
@@ -188,9 +197,21 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
       setCameraState: (serialized) => adapterRef.current?.setCameraState?.(serialized) ?? false,
     }
     window.__MIP_WORLD_VIEW_CAMERA_PROBE__ = probe
+    // Stage D acceptance probe (DISPLAY-only): terrain status + sampled
+    // display heights for the live walk. Never read by application code;
+    // sampled terrain values are never written to canonical state.
+    const terrainProbe = {
+      getTerrainStatus: () => adapterRef.current?.getTerrainStatus?.() ?? null,
+      sampleTerrainHeights: (pairs, level) =>
+        adapterRef.current?.sampleTerrainHeights?.(pairs, level) ?? null,
+    }
+    window.__MIP_WORLD_VIEW_TERRAIN_PROBE__ = terrainProbe
     return () => {
       if (window.__MIP_WORLD_VIEW_CAMERA_PROBE__ === probe) {
         delete window.__MIP_WORLD_VIEW_CAMERA_PROBE__
+      }
+      if (window.__MIP_WORLD_VIEW_TERRAIN_PROBE__ === terrainProbe) {
+        delete window.__MIP_WORLD_VIEW_TERRAIN_PROBE__
       }
     }
   }, [stackId])
@@ -215,6 +236,12 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
           <p>{emptyMessage}</p>
           <p className="wv-map-empty-sub">No map pins are fabricated.</p>
         </div>
+      )}
+      {stackId === ELLIPSOID_GLOBE_STACK_ID && (
+        <p className="wv-map-attrib" data-terrain-status={terrainStatus?.status ?? 'idle'}>
+          {TERRAIN_DISCLOSURE_TEXT}
+          {terrainStatus?.status === 'unavailable' ? ` — ${TERRAIN_UNAVAILABLE_TEXT}` : ''}
+        </p>
       )}
     </div>
   )

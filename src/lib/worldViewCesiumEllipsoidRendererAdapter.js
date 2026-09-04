@@ -22,6 +22,35 @@ import {
   parseCameraState,
   serializeCameraState,
 } from './worldViewCameraState.js'
+import {
+  createTerrariumTerrainProvider,
+  TERRAIN_CREDIT_TEXT,
+} from './worldViewCesiumTerrariumTerrainProvider.js'
+
+// ---- Stage D: bounded display-only terrain ----
+//
+// Terrain is attached through the MIP-owned Terrarium provider
+// (coverage- and source-bounded; see worldViewCesiumTerrariumTerrainProvider.js).
+// Terrain failure degrades the globe to the reference ellipsoid WITHOUT
+// tearing down the viewer, and is reported honestly through
+// onTerrainStatusChange. Fatal render failures still advance to the
+// MapLibre fallback exactly as in Stage B.
+
+/**
+ * Degrade terrain to the reference ellipsoid without touching the camera,
+ * entities, selection, or any canonical state. Returns true when the swap
+ * was applied. Exported for GPU-free contract tests.
+ */
+export function degradeGlobeToEllipsoid(Cesium, viewer) {
+  if (!Cesium || !viewer || viewer.isDestroyed?.()) return false
+  try {
+    viewer.scene.globe.terrainProvider = new Cesium.EllipsoidTerrainProvider({})
+    viewer.scene?.requestRender?.()
+    return true
+  } catch {
+    return false
+  }
+}
 
 // ---- Stage C: renderer-neutral camera-state contract (globe side) ----
 //
@@ -148,6 +177,7 @@ export function createCesiumEllipsoidRendererAdapter({
   getSelectedKeys,
   onSelectRow,
   onStackIdChange,
+  onTerrainStatusChange,
   shouldFlyTo,
   markFlew,
   initialFeatures,
@@ -166,6 +196,10 @@ export function createCesiumEllipsoidRendererAdapter({
   let currentOnSelectRow = onSelectRow
   let localCancelled = false
   let Cesium = null
+  // Stage D: bounded terrain state. `terrainPlan` holds the MIP-owned
+  // provider; `terrainDegraded` records the honest ellipsoid fallback.
+  let terrainPlan = null
+  let terrainDegraded = false
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
 
@@ -218,6 +252,36 @@ export function createCesiumEllipsoidRendererAdapter({
     const stack = mapStackById(stackId)
     const attributionText = stack?.attribution ?? '© OpenStreetMap contributors'
 
+    // Stage D: bounded display-only terrain. The provider enforces the
+    // approved Cleveland/Ohio coverage and approved-source policy itself;
+    // every failure mode renders real parent data or the ellipsoid — never
+    // fabricated terrain. If the provider cannot even be constructed, the
+    // globe still mounts on the reference ellipsoid and reports terrain as
+    // unavailable.
+    const handleTerrainStatus = (status) => {
+      if (cancelledNow()) return
+      if (status?.status === 'unavailable' && !terrainDegraded) {
+        terrainDegraded = degradeGlobeToEllipsoid(Cesium, viewer) || terrainDegraded
+      }
+      try {
+        onTerrainStatusChange?.(status)
+      } catch {
+        /* status reporting must never break rendering */
+      }
+    }
+    try {
+      terrainPlan = createTerrariumTerrainProvider(Cesium, {
+        credit: new Cesium.Credit(TERRAIN_CREDIT_TEXT),
+        onStatusChange: handleTerrainStatus,
+      })
+    } catch (terrainError) {
+      // eslint-disable-next-line no-console
+      console.error('Terrain provider unavailable; mounting on reference ellipsoid:', terrainError?.message ?? terrainError)
+      terrainPlan = null
+      terrainDegraded = true
+      handleTerrainStatus({ status: 'unavailable' })
+    }
+
     // Keyless open imagery.
     // Cesium >= 1.107 removed the Viewer `imageryProvider` option: passing it
     // only suppresses the default base layer and the provider is never added,
@@ -229,7 +293,7 @@ export function createCesiumEllipsoidRendererAdapter({
       maximumLevel: 19,
     })
 
-    // Minimal Viewer UI: no terrain, no 3D tiles.
+    // Minimal Viewer UI: bounded display-only terrain, no 3D tiles.
     try {
       viewer = new Cesium.Viewer(hostEl, {
         animation: false,
@@ -242,6 +306,7 @@ export function createCesiumEllipsoidRendererAdapter({
         infoBox: false,
         selectionIndicator: false,
         baseLayer: new Cesium.ImageryLayer(imageryProvider),
+        ...(terrainPlan ? { terrainProvider: terrainPlan.provider } : {}),
       })
     } catch (bootError) {
       // eslint-disable-next-line no-console
@@ -461,6 +526,32 @@ export function createCesiumEllipsoidRendererAdapter({
     viewer?.scene?.requestRender?.()
   }
 
+  // Stage D: terrain status snapshot for the honest-availability UI.
+  // { status: 'idle' | 'active' | 'unavailable', fetchAttempts, ... }
+  // 'idle' means no approved tile has been requested yet (e.g. planetary
+  // view) — the globe is correctly showing the reference ellipsoid outside
+  // the approved coverage.
+  function getTerrainStatus() {
+    if (terrainDegraded) return { status: 'unavailable', fetchAttempts: 0, fetchSuccesses: 0, fetchFailures: 0, sourceRejections: 0 }
+    return terrainPlan?.getStatus?.() ?? { status: 'unavailable', fetchAttempts: 0, fetchSuccesses: 0, fetchFailures: 0, sourceRejections: 0 }
+  }
+
+  // Stage D acceptance probe (DISPLAY-only): sample the ACTIVE terrain
+  // provider at a fixed level so the live walk can prove terrain is real
+  // inside the approved coverage and honestly absent outside it. Sampled
+  // heights are source-datum display values; they are never written to any
+  // canonical state.
+  async function sampleTerrainHeights(lonLatPairs, level = 11) {
+    if (!viewer || !Cesium || !Array.isArray(lonLatPairs)) return null
+    try {
+      const positions = lonLatPairs.map(([lon, lat]) => Cesium.Cartographic.fromDegrees(lon, lat))
+      const updated = await Cesium.sampleTerrain(viewer.terrainProvider, level, positions)
+      return updated.map((p) => (Number.isFinite(p.height) ? p.height : 0))
+    } catch {
+      return null
+    }
+  }
+
   // Stage C: serialize the live camera into the renderer-neutral contract.
   // Returns a JSON string (or null when no viewer/camera is available).
   function getCameraState() {
@@ -492,6 +583,8 @@ export function createCesiumEllipsoidRendererAdapter({
     viewer = null
     eventHandler = null
     entities = []
+    terrainPlan = null
+    terrainDegraded = false
     mounted = false
   }
 
@@ -504,6 +597,8 @@ export function createCesiumEllipsoidRendererAdapter({
     flyToSubjectCamera,
     getCameraState,
     setCameraState,
+    getTerrainStatus,
+    sampleTerrainHeights,
     requestRender,
     destroy,
   }
