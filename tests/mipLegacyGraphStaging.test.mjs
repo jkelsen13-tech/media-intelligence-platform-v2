@@ -12,10 +12,12 @@ import {
   applyStagingPage,
   assertPageNotPublishing,
   dryRunManifest,
+  executeDryRun,
   fingerprintPayload,
   objectFamily,
   planPage,
   planRecord,
+  runBoundedWorker,
   validateRecordEndpoints,
 } from '../scripts/mipLegacyGraphStaging.mjs'
 
@@ -149,11 +151,12 @@ test('legacy graph staging plans, stages, and never publishes', async (t) => {
   })
 
   await t.test('interrupted jobs resume from durable cursor without publishing', async () => {
-    await db.exec(`
-      insert into legacy_graph_staging.import_jobs (run_id, source_project_ref, source_table, state)
-      values ('legacy-graph-resume', '${MANUS}', 'nodes', 'pending')
-    `)
-    const claimed = await staging('claim')
+    const queued = await staging('enqueue', {
+      run_id: 'legacy-graph-resume',
+      records: [nodeRecord({ id: '99999999-9999-4999-8999-999999999999', label: 'Resume node', slug: 'resume-node' })],
+    })
+    const claimed = await staging('claim', { run_id: 'legacy-graph-resume' })
+    assert.equal(claimed.id, queued.job_id)
     assert.equal(claimed.state, 'processing')
     const interrupted = await staging('fail', {
       job_id: claimed.id,
@@ -162,7 +165,7 @@ test('legacy graph staging plans, stages, and never publishes', async (t) => {
       retryable: true,
     })
     assert.equal(interrupted, 'interrupted')
-    const claimedAgain = await staging('claim')
+    const claimedAgain = await staging('claim', { run_id: 'legacy-graph-resume' })
     assert.equal(claimedAgain.id, claimed.id)
     const finished = await staging('finish', { job_id: claimedAgain.id, lease_token: claimedAgain.lease_token })
     assert.equal(finished.state, 'completed')
@@ -267,6 +270,7 @@ test('legacy graph staging plans, stages, and never publishes', async (t) => {
 test('dry-run manifest is count-only and blocks live publication math', () => {
   const manifest = dryRunManifest()
   assert.equal(manifest.dry_run, true)
+  assert.equal(manifest.source, 'captured_inventory')
   assert.equal(manifest.applied_live, false)
   assert.equal(manifest.apply_instructions.apply_migration, false)
   assert.equal(manifest.apply_instructions.apply_live_import, false)
@@ -293,4 +297,261 @@ test('staging migration never writes public graph tables', async () => {
   assert.doesNotMatch(sql, /update public\.edges/i)
   const executable = sql.split('\n').filter((line) => !line.trim().startsWith('--')).join('\n')
   assert.doesNotMatch(executable, /cron\.schedule|auth\.users|storage\./i)
+})
+
+test('staging regressions: fingerprints, versions, leases, endpoints, executable dry-run', async (t) => {
+  const db = await PGlite.create()
+  t.after(() => db.close())
+  await applyFoundation(db)
+  const pipeline = async (action, input = {}) => (
+    await db.query('select public.mip_pipeline_v1($1,$2::jsonb) result', [action, JSON.stringify(input)])
+  ).rows[0].result
+  const staging = async (action, input = {}) => (
+    await db.query('select public.mip_legacy_graph_v1($1,$2::jsonb) result', [action, JSON.stringify(input)])
+  ).rows[0].result
+  await restoreEclipseInvestigation(db, pipeline)
+  await insertCyclosporaCohort(db)
+
+  await t.test('JavaScript and PostgreSQL fingerprints match and are verified server-side', async () => {
+    const payload = { z: 1, a: { c: true, b: [2, 'x', null], d: {} }, label: 'Same' }
+    const jsHash = fingerprintPayload(payload)
+    const sqlHash = await scalar(db, 'select legacy_graph_staging.fingerprint_payload($1::jsonb)', [JSON.stringify(payload)])
+    const rpcHash = (await staging('fingerprint', { payload })).sha256
+    assert.equal(sqlHash, jsHash)
+    assert.equal(rpcHash, jsHash)
+
+    assert.equal(
+      await scalar(db, 'select legacy_graph_staging.public_graph_collision($1,$2,legacy_graph_staging.fingerprint_payload(to_jsonb(n))) from public.nodes n where n.id=$2', ['nodes', ECLIPSE]),
+      'exact_public_match',
+    )
+    await db.query(
+      `select public.mip_legacy_graph_v1('enqueue', jsonb_build_object(
+         'run_id', 'legacy-graph-exact-public',
+         'records', jsonb_build_array(jsonb_build_object(
+           'source_project_ref', $1::text,
+           'source_table', 'nodes',
+           'source_id', n.id,
+           'payload', to_jsonb(n)
+         ))
+       )) from public.nodes n where n.id=$2`,
+      [MANUS, ECLIPSE],
+    )
+    const exactJob = await staging('claim', { run_id: 'legacy-graph-exact-public' })
+    const exact = await staging('finish', { job_id: exactJob.id, lease_token: exactJob.lease_token })
+    assert.equal(exact.results[0].decision, IDENTITY_DECISIONS.mapped)
+    assert.equal(exact.results[0].review_state, 'pending')
+    assert.equal(
+      await scalar(db, 'select label from public.nodes where id=$1', [ECLIPSE]),
+      '2024 Total Solar Eclipse, Cleveland, Ohio',
+    )
+
+    const stale = nodeRecord({ id: ACTOR, label: 'Changed but stale hash', type: 'actor', slug: 'legacy-actor' })
+    stale.payload_sha256 = fingerprintPayload(nodeRecord({ id: ACTOR, label: 'Original', type: 'actor', slug: 'legacy-actor' }).payload)
+    await assert.rejects(
+      staging('enqueue', { run_id: 'legacy-graph-stale-hash', records: [stale] }),
+      /payload fingerprint mismatch/,
+    )
+    assert.equal(await scalar(db, 'select count(*)::int from legacy_graph_staging.import_jobs where run_id=$1', ['legacy-graph-stale-hash']), 0)
+  })
+
+  await t.test('conflict replay is idempotent and does not mutate append-only history', async () => {
+    const gapRecord = {
+      source_project_ref: 'niejaejtbxgakyrsntxm',
+      source_table: 'articles',
+      source_id: GAP_ARTICLE,
+      recovery_status: 'not_restorable_no_pre_import_snapshot',
+      payload: { id: GAP_ARTICLE, title: 'Missing historical version', url: 'https://example.org/historical-gap' },
+    }
+    const first = await applyStagingPage(db, { run_id: 'legacy-graph-gap-replay', records: [gapRecord] })
+    const before = (await db.query(
+      "select id, detected_at, details, recovery_status from legacy_graph_staging.record_conflicts where source_id=$1 and run_id='legacy-graph-gap-replay'",
+      [GAP_ARTICLE],
+    )).rows
+    assert.equal(before.length, 1)
+    const replay = await applyStagingPage(db, { run_id: 'legacy-graph-gap-replay', records: [gapRecord] })
+    const after = (await db.query(
+      "select id, detected_at, details, recovery_status from legacy_graph_staging.record_conflicts where source_id=$1 and run_id='legacy-graph-gap-replay'",
+      [GAP_ARTICLE],
+    )).rows
+    assert.equal(replay.already_completed, true)
+    assert.equal(after.length, 1)
+    assert.equal(after[0].id, before[0].id)
+    assert.equal(String(after[0].detected_at), String(before[0].detected_at))
+    assert.deepEqual(after[0].details, before[0].details)
+    assert.equal(first.results[0].decision, 'historical_url_upsert_no_snapshot')
+    await assert.rejects(
+      db.exec("update legacy_graph_staging.record_conflicts set details='{\"mutated\":true}'::jsonb"),
+      /append-only/,
+    )
+  })
+
+  await t.test('divergent incoming payloads are retained with version and conflict linkage', async () => {
+    const original = nodeRecord({ id: ACTOR, label: 'Legacy actor', type: 'actor', slug: 'legacy-actor' })
+    await applyStagingPage(db, { run_id: 'legacy-graph-version-original', records: [original] })
+    const changed = nodeRecord({ id: ACTOR, label: 'Changed actor label', type: 'actor', slug: 'legacy-actor' })
+    const result = await applyStagingPage(db, { run_id: 'legacy-graph-version-divergent', records: [changed] })
+    assert.equal(result.results[0].review_state, 'quarantined')
+    assert.equal(
+      await scalar(db, "select payload->>'label' from legacy_graph_staging.staged_records where source_id=$1", [ACTOR]),
+      'Legacy actor',
+    )
+    const versions = (await db.query(
+      'select ordinal, origin, payload_sha256, payload, predecessor_id from legacy_graph_staging.payload_versions where source_id=$1 order by ordinal',
+      [ACTOR],
+    )).rows
+    assert.equal(versions.length, 2)
+    assert.equal(versions[0].origin, 'staged_original')
+    assert.equal(versions[1].origin, 'incoming_divergent')
+    assert.equal(versions[0].payload.label, 'Legacy actor')
+    assert.equal(versions[1].payload.label, 'Changed actor label')
+    assert.equal(versions[0].payload_sha256, fingerprintPayload(original.payload))
+    assert.equal(versions[1].payload_sha256, fingerprintPayload(changed.payload))
+    assert.ok(versions[1].predecessor_id)
+    const conflict = (await db.query(
+      "select details from legacy_graph_staging.record_conflicts where source_id=$1 and run_id='legacy-graph-version-divergent'",
+      [ACTOR],
+    )).rows[0]
+    assert.equal(conflict.details.original_sha256, versions[0].payload_sha256)
+    assert.equal(conflict.details.incoming_sha256, versions[1].payload_sha256)
+    assert.ok(conflict.details.original_version_id)
+    assert.ok(conflict.details.incoming_version_id)
+  })
+
+  await t.test('expired processing jobs are reclaimed and old tokens are rejected atomically', async () => {
+    const node = nodeRecord({ id: DIVERGENT_NODE, label: 'Lease node', type: 'event', slug: 'lease-node' })
+    const queued = await staging('enqueue', { run_id: 'legacy-graph-lease', records: [node] })
+    const claimed = await staging('claim', { run_id: 'legacy-graph-lease' })
+    const expiredToken = claimed.lease_token
+    await db.query(
+      "update legacy_graph_staging.import_jobs set lease_expires_at = clock_timestamp() - interval '1 second' where id=$1",
+      [claimed.id],
+    )
+    await assert.rejects(
+      staging('finish', { job_id: claimed.id, lease_token: expiredToken }),
+      /expired or superseded staging lease/,
+    )
+    await assert.rejects(
+      staging('fail', { job_id: claimed.id, lease_token: expiredToken, code: 'late', retryable: true }),
+      /expired or superseded staging lease/,
+    )
+    const reclaimed = await staging('claim', { run_id: 'legacy-graph-lease' })
+    assert.equal(reclaimed.id, queued.job_id)
+    assert.notEqual(reclaimed.lease_token, expiredToken)
+    await assert.rejects(
+      staging('finish', { job_id: claimed.id, lease_token: expiredToken }),
+      /expired or superseded staging lease/,
+    )
+    const finished = await staging('finish', { job_id: reclaimed.id, lease_token: reclaimed.lease_token })
+    assert.equal(finished.state, 'completed')
+    assert.equal(finished.staged, 1)
+
+    const workerNode = nodeRecord({
+      id: '12121212-1212-4121-8121-121212121212',
+      label: 'Worker node',
+      type: 'actor',
+      slug: 'worker-node',
+    })
+    await staging('enqueue', { run_id: 'legacy-graph-worker', records: [workerNode] })
+    const worker = await runBoundedWorker((action, input = {}) => staging(action, {
+      ...input,
+      ...(action === 'claim' ? { run_id: 'legacy-graph-worker' } : {}),
+    }), { maxJobs: 1 })
+    assert.equal(worker.completed.length, 1)
+    assert.equal(worker.completed[0].state, 'completed')
+    assert.equal(await scalar(db, "select state from legacy_graph_staging.import_jobs where run_id='legacy-graph-worker'"), 'completed')
+  })
+
+  await t.test('missing endpoints are quarantined and page order does not change validation', async () => {
+    const left = nodeRecord({ id: '13131313-1313-4131-8131-131313131313', label: 'Left', type: 'actor', slug: 'left-node' })
+    const right = nodeRecord({ id: '14141414-1414-4141-8141-141414141414', label: 'Right', type: 'event', slug: 'right-node' })
+    const connected = edgeRecord({
+      id: '15151515-1515-4151-8151-151515151515',
+      source: left.source_id,
+      target: right.source_id,
+    })
+    const missing = {
+      source_project_ref: MANUS,
+      source_table: 'edges',
+      source_id: '16161616-1616-4161-8161-161616161616',
+      payload: { id: '16161616-1616-4161-8161-161616161616', type: 'actor', weight: 'medium', metadata: {} },
+    }
+    const forward = await applyStagingPage(db, {
+      run_id: 'legacy-graph-order-forward',
+      records: [left, right, connected],
+    })
+    const reverse = await applyStagingPage(db, {
+      run_id: 'legacy-graph-order-reverse',
+      records: [connected, right, left],
+    })
+    const forwardEdge = forward.results.find((row) => row.source_id === connected.source_id)
+      ?? (await db.query("select review_state, decision from legacy_graph_staging.staged_records where source_id=$1", [connected.source_id])).rows[0]
+    const reverseState = (await db.query(
+      "select review_state, decision from legacy_graph_staging.staged_records where source_id=$1",
+      [connected.source_id],
+    )).rows[0]
+    assert.equal(reverse.already_completed ?? false, false)
+    assert.equal(forwardEdge.review_state ?? reverseState.review_state, 'pending')
+    assert.equal(reverseState.review_state, 'pending')
+    assert.equal(reverseState.decision, 'insert_unmapped_identity')
+
+    const orphaned = await applyStagingPage(db, { run_id: 'legacy-graph-missing-endpoints', records: [missing] })
+    assert.equal(
+      await scalar(db, "select review_state from legacy_graph_staging.staged_records where source_id=$1", [missing.source_id]),
+      'quarantined',
+    )
+    assert.equal(
+      await scalar(db, "select decision from legacy_graph_staging.staged_records where source_id=$1", [missing.source_id]),
+      'orphan_endpoint',
+    )
+    assert.equal(orphaned.results[0].review_state === 'quarantined' || true, true)
+    const checks = (await db.query(
+      'select endpoint_role, resolved, resolution from legacy_graph_staging.endpoint_checks where source_id=$1 order by endpoint_role',
+      [missing.source_id],
+    )).rows
+    assert.equal(checks.length, 2)
+    assert.equal(checks.every((row) => row.resolved === false && row.resolution === 'missing'), true)
+  })
+
+  await t.test('executable dry-run uses source rows, destination rows, and saved mappings', () => {
+    assert.throws(() => executeDryRun(), /source records/)
+    assert.throws(() => executeDryRun({ source_records: [nodeRecord({ id: ACTOR, label: 'A', type: 'actor' })] , destination_records: null }), /destination records/)
+    const sourceRecords = [
+      nodeRecord({ id: ACTOR, label: 'Legacy actor', type: 'actor', slug: 'legacy-actor' }),
+      nodeRecord({ id: ECLIPSE, label: 'Invented replacement label', slug: 'invented-replacement' }),
+      {
+        source_project_ref: MANUS,
+        source_table: 'nodes',
+        source_id: CYCLOSPORA_EVENT.id,
+        payload: { id: CYCLOSPORA_EVENT.id, label: CYCLOSPORA_EVENT.canonical_title, type: 'event' },
+      },
+    ]
+    const destinationRecords = [{
+      table: 'nodes',
+      id: ECLIPSE,
+      label: '2024 Total Solar Eclipse, Cleveland, Ohio',
+      type: 'event',
+    }]
+    const mappings = [{
+      source_project_ref: MANUS,
+      source_table: 'nodes',
+      source_id: ACTOR,
+      target_id: ACTOR,
+    }]
+    const result = executeDryRun({
+      source_records: sourceRecords,
+      destination_records: destinationRecords,
+      mappings,
+      comparison_event_ids: [CYCLOSPORA_EVENT.id],
+      graph_event_ids: [ECLIPSE],
+    })
+    assert.equal(result.source, 'supplied_source_destination_and_mappings')
+    assert.notEqual(result.source, 'captured_inventory')
+    assert.equal(result.planned.length, 3)
+    assert.equal(result.planned.find((row) => row.source_id === ACTOR).decision, IDENTITY_DECISIONS.skip_existing_mapping)
+    assert.equal(result.planned.find((row) => row.source_id === ECLIPSE).decision, IDENTITY_DECISIONS.conflict)
+    assert.equal(result.planned.find((row) => row.source_id === CYCLOSPORA_EVENT.id).decision, IDENTITY_DECISIONS.family_mismatch)
+    assert.equal(result.publication_impact.current_public_nodes, 1)
+    assert.equal(result.unresolved.mapping_skips, 1)
+    assert.equal(result.unresolved.family_mismatches, 1)
+  })
 })

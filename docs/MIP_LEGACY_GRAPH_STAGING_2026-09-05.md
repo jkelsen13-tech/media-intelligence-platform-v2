@@ -27,11 +27,14 @@ current public graph/news readbacks.
 Migration `20260905203600_mip_legacy_graph_private_staging` adds schema
 `legacy_graph_staging`:
 
-- resumable jobs with leases, interruption, and dead-letter
+- resumable jobs with leases, interruption, expired-lease reclaim, and dead-letter
+- server-side payload fingerprints that match `fingerprintPayload` in JavaScript
 - full original payloads plus source project/table/id, timestamps, and sha256
+- divergent incoming payloads retained as linked `payload_versions`
+- append-only conflicts that replay with `ON CONFLICT DO NOTHING`
 - pending / quarantined / gap-recorded review states only
 - collision and family-mismatch conflicts
-- endpoint/orphan checks that never rewrite relationship endpoints
+- order-independent endpoint/orphan checks that never rewrite relationship endpoints
 - server-only RPC `public.mip_legacy_graph_v1`
 
 `publish` is rejected. The migration contains no `INSERT`/`UPDATE` against
@@ -43,8 +46,13 @@ commands are dry-run and write no database:
 
 ```bash
 node scripts/mipLegacyGraphStaging.mjs manifest
+node scripts/mipLegacyGraphStaging.mjs dry-run page.json
 node scripts/mipLegacyGraphStaging.mjs plan page.json
 ```
+
+`manifest` prints the captured count inventory only. The executable dry-run is
+`dry-run` / `executeDryRun` and requires actual source records, destination
+records, and saved identity mappings.
 
 Live writes require a later reviewed apply of the migration plus a server
 service role. Collected payloads and credentials stay out of Git.

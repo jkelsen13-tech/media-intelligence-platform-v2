@@ -166,11 +166,16 @@ export function normalizeSourceRecord(record) {
   if (record.source_table === 'nodes' && family === SOURCE_COMPARISON_EVENT_FAMILY) {
     throw new Error('graph nodes cannot be labeled as Source Comparison events')
   }
+  const identityId = record.source_id ?? payload.id ?? null
+  const edgeSource = payload.endpoint_source_id ?? payload.source_node_id
+    ?? (payload.source_id && payload.source_id !== identityId ? payload.source_id : null)
+  const edgeTarget = payload.endpoint_target_id ?? payload.target_node_id
+    ?? (payload.target_id && payload.target_id !== identityId ? payload.target_id : null)
   const normalizedPayload = record.source_table === 'edges'
     ? {
       ...payload,
-      endpoint_source_id: payload.endpoint_source_id ?? payload.source_node_id ?? payload.source_id,
-      endpoint_target_id: payload.endpoint_target_id ?? payload.target_node_id ?? payload.target_id,
+      endpoint_source_id: edgeSource ?? null,
+      endpoint_target_id: edgeTarget ?? null,
       relationship_type: payload.relationship_type ?? payload.type ?? null,
     }
     : payload
@@ -326,6 +331,7 @@ export function dryRunManifest(inventory = LIVE_DRY_RUN, page = []) {
   return {
     dry_run: true,
     applied_live: false,
+    source: 'captured_inventory',
     inventory,
     dependency_groups: groups,
     unresolved: {
@@ -350,6 +356,77 @@ export function dryRunManifest(inventory = LIVE_DRY_RUN, page = []) {
       apply_migration: false,
       apply_live_import: false,
       next: 'ChatGPT reviews this PR and coordinates live application of the staging migration only. Graph publication remains a later reviewed step.',
+    },
+  }
+}
+
+function destinationPublicRows(destinationRecords = []) {
+  return destinationRecords.map((row) => ({
+    table: row.table ?? row.source_table ?? row.rel,
+    id: row.id ?? row.source_id,
+    ...row,
+  }))
+}
+
+function destinationPublicIds(destinationRecords = []) {
+  const ids = {}
+  for (const row of destinationPublicRows(destinationRecords)) {
+    if (!row.table || !row.id) continue
+    ids[row.table] = new Set(ids[row.table] ?? [])
+    ids[row.table].add(row.id)
+  }
+  return ids
+}
+
+export function executeDryRun({
+  source_records,
+  destination_records = [],
+  mappings = [],
+  conflicts = [],
+  comparison_event_ids = [],
+  graph_event_ids = [],
+} = {}) {
+  if (!Array.isArray(source_records) || source_records.length < 1) {
+    throw new Error('executable dry-run requires source records')
+  }
+  if (!Array.isArray(destination_records)) {
+    throw new Error('executable dry-run requires destination records')
+  }
+  if (!Array.isArray(mappings)) {
+    throw new Error('executable dry-run requires saved identity mappings')
+  }
+  const planned = planPage(source_records, {
+    publicRows: destinationPublicRows(destination_records),
+    publicIds: destinationPublicIds(destination_records),
+    existingMappings: mappings,
+    existingConflicts: conflicts,
+    comparisonEventIds: comparison_event_ids,
+    graphEventIds: graph_event_ids,
+  })
+  assertPageNotPublishing(planned)
+  const quarantined = planned.filter((row) => row.decision === IDENTITY_DECISIONS.conflict
+    || row.decision === IDENTITY_DECISIONS.family_mismatch
+    || row.decision === IDENTITY_DECISIONS.title_only
+    || row.endpoints?.orphan)
+  return {
+    dry_run: true,
+    applied_live: false,
+    source: 'supplied_source_destination_and_mappings',
+    planned,
+    decisions: planned.reduce((acc, row) => {
+      acc[row.decision] = (acc[row.decision] ?? 0) + 1
+      return acc
+    }, {}),
+    unresolved: {
+      page_quarantined: quarantined.length,
+      family_mismatches: planned.filter((row) => row.decision === IDENTITY_DECISIONS.family_mismatch).length,
+      mapping_skips: planned.filter((row) => row.decision === IDENTITY_DECISIONS.skip_existing_mapping).length,
+      orphans: planned.filter((row) => row.endpoints?.orphan).length,
+    },
+    publication_impact: {
+      current_public_nodes: (destinationPublicIds(destination_records).nodes ?? new Set()).size,
+      current_public_edges: (destinationPublicIds(destination_records).edges ?? new Set()).size,
+      copy_versus_publish: 'separate',
     },
   }
 }
@@ -380,9 +457,20 @@ export function enqueueSql(runId, records) {
   }
 }
 
+async function rpcOn(db, action, input = {}) {
+  return (await db.query(
+    'select public.mip_legacy_graph_v1($1,$2::jsonb) result',
+    [action, JSON.stringify(input)],
+  )).rows[0].result
+}
+
 export async function applyStagingPage(db, { run_id, records }) {
   const prepared = enqueueSql(run_id, records)
-  return (await db.query(prepared.sql, prepared.params)).rows[0].result
+  const queued = (await db.query(prepared.sql, prepared.params)).rows[0].result
+  if (queued.already_completed) return queued
+  const job = await rpcOn(db, 'claim', { run_id })
+  if (!job) throw new Error('no claimable staging job')
+  return rpcOn(db, 'finish', { job_id: job.id, lease_token: job.lease_token })
 }
 
 export function createStagingRpc({ url, key, fetchImpl = fetch }) {
@@ -408,7 +496,7 @@ export async function runBoundedWorker(rpc, { maxJobs = 10 } = {}) {
   }
   const report = { completed: [], failed: [], interrupted: [] }
   for (let i = 0; i < maxJobs; i += 1) {
-    const job = await rpc('claim')
+    const job = await rpc('claim', {})
     if (!job) break
     try {
       report.completed.push(await rpc('finish', { job_id: job.id, lease_token: job.lease_token }))
@@ -427,8 +515,24 @@ export async function runBoundedWorker(rpc, { maxJobs = 10 } = {}) {
 
 async function main() {
   const [command, file] = process.argv.slice(2)
+  if (command === 'dry-run' && file) {
+    const input = JSON.parse(await readFile(file, 'utf8'))
+    process.stdout.write(`${JSON.stringify(executeDryRun(input), null, 2)}\n`)
+    return
+  }
   if (command === 'plan' && file) {
     const input = JSON.parse(await readFile(file, 'utf8'))
+    if (input.source_records || input.destination_records || input.mappings) {
+      process.stdout.write(`${JSON.stringify(executeDryRun({
+        source_records: input.source_records ?? input.records ?? input,
+        destination_records: input.destination_records ?? [],
+        mappings: input.mappings ?? [],
+        conflicts: input.conflicts ?? [],
+        comparison_event_ids: input.comparison_event_ids ?? [],
+        graph_event_ids: input.graph_event_ids ?? [],
+      }), null, 2)}\n`)
+      return
+    }
     const planned = planPage(input.records ?? input)
     process.stdout.write(`${JSON.stringify({ dry_run: true, planned: planned.length, manifest: dryRunManifest(LIVE_DRY_RUN, planned) }, null, 2)}\n`)
     return
@@ -437,7 +541,7 @@ async function main() {
     process.stdout.write(`${JSON.stringify(dryRunManifest(), null, 2)}\n`)
     return
   }
-  throw new Error('usage: node scripts/mipLegacyGraphStaging.mjs plan <page.json>|manifest')
+  throw new Error('usage: node scripts/mipLegacyGraphStaging.mjs dry-run <page.json>|plan <page.json>|manifest')
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
