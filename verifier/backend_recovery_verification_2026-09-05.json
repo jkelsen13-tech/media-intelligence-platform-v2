@@ -1,0 +1,49 @@
+{
+  "snapshot_files_verified": 15,
+  "algorithms": [
+    {
+      "algorithm": "arc",
+      "passed": true,
+      "fixtures": [
+        {
+          "name": "actor-only-annual-award-contamination",
+          "passed": true,
+          "auto_approval": false
+        },
+        {
+          "name": "coherent-investigation-continuation-control",
+          "passed": true,
+          "auto_approval": false
+        },
+        {
+          "name": "lexically-diluted-war-continuation",
+          "passed": true,
+          "auto_approval": false
+        }
+      ]
+    },
+    {
+      "algorithm": "source_comparison",
+      "passed": true,
+      "fixtures": [
+        {
+          "name": "pochettino-contract-plus-iran-hormuz-style-article",
+          "passed": true,
+          "auto_approval": false
+        },
+        {
+          "name": "pochettino-fifa-iran-peer-majority",
+          "passed": true,
+          "auto_approval": false
+        },
+        {
+          "name": "actor-only-topic-void-profile-contamination",
+          "passed": true,
+          "auto_approval": false
+        }
+      ]
+    }
+  ],
+  "database_writes": 0,
+  "production_readiness": "not established by fixture tests"
+}

@@ -1,0 +1,122 @@
+[
+  {
+    "path": "verifier/recovered-functions/2026-09-05/niejaejtbxgakyrsntxm/graph-analysis-run/index.ts",
+    "sha256": "04904bcb42c7762c94888738460b548bc7014d2a9fefb6daea0784c5fba75b6c",
+    "project": "niejaejtbxgakyrsntxm",
+    "slug": "graph-analysis-run",
+    "version": 16,
+    "bundle_sha256": "46c022f3de7ee08426dbc18e4898fbb0daca154f64d9427384b0caa96945d622"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/niejaejtbxgakyrsntxm/graph-analysis-run/lib.js",
+    "sha256": "fd95d8beaf19f08b8dc99ed04e13dfa4e74f1e1901c9c6356ec36452bf97dd0e",
+    "project": "niejaejtbxgakyrsntxm",
+    "slug": "graph-analysis-run",
+    "version": 16,
+    "bundle_sha256": "46c022f3de7ee08426dbc18e4898fbb0daca154f64d9427384b0caa96945d622"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/ingest-rss/index.ts",
+    "sha256": "08e619cabdf845a36728e7af7791e72b723192654cfb64f95a472dc89d553afc",
+    "project": "yhbwnrtlqbjtcrrlpbge",
+    "slug": "ingest-rss",
+    "version": 8,
+    "bundle_sha256": "ace39d46b2b6970b57f01c76dae8480fe4e8c7a164fccf7868d4b2870ae6ddc2"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/ingest-rss/lib.js",
+    "sha256": "dcdda7a584f2e87c6688e905ce27d005ffd7909911c49fc399104aa275697ad9",
+    "project": "yhbwnrtlqbjtcrrlpbge",
+    "slug": "ingest-rss",
+    "version": 8,
+    "bundle_sha256": "ace39d46b2b6970b57f01c76dae8480fe4e8c7a164fccf7868d4b2870ae6ddc2"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/niejaejtbxgakyrsntxm/ingest-rss/index.ts",
+    "sha256": "b4ea4bbf15f97385126f55c1cc33eefbe34e372dc0f34cc3734df1507cce83d1",
+    "project": "niejaejtbxgakyrsntxm",
+    "slug": "ingest-rss",
+    "version": 41,
+    "bundle_sha256": "0f8be050ad11842269a7bf8ad0385f8b0f2db2ac196cd0420e59f37e40e45bee"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/niejaejtbxgakyrsntxm/source-comparison-run/index.ts",
+    "sha256": "a786dafbc8f54387f384400901117c0c534d8924b97f68cb2c859d1e5335b725",
+    "project": "niejaejtbxgakyrsntxm",
+    "slug": "source-comparison-run",
+    "version": 17,
+    "bundle_sha256": "85fee3d94d0494d630a2e460e8eff4de44b596fc7819eff58664689f0badbafa"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/niejaejtbxgakyrsntxm/source-comparison-run/lib.js",
+    "sha256": "0d852dc6879247a009f8ce4c2cf40f48560f198f5ccde25dcc43e297be7b5974",
+    "project": "niejaejtbxgakyrsntxm",
+    "slug": "source-comparison-run",
+    "version": 17,
+    "bundle_sha256": "85fee3d94d0494d630a2e460e8eff4de44b596fc7819eff58664689f0badbafa"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/niejaejtbxgakyrsntxm/source-comparison-run/loadedLanguageLexicon.json",
+    "sha256": "5a95f2ada22e311238378ba62b135fcfbedad85127036ae5a1b1395164144012",
+    "project": "niejaejtbxgakyrsntxm",
+    "slug": "source-comparison-run",
+    "version": 17,
+    "bundle_sha256": "85fee3d94d0494d630a2e460e8eff4de44b596fc7819eff58664689f0badbafa"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/niejaejtbxgakyrsntxm/batch-intake/index.ts",
+    "sha256": "3c5c353b77a20a551b58d5dc5843bb3ece59f0ebefe415bbaed614a3fb07fd01",
+    "project": "niejaejtbxgakyrsntxm",
+    "slug": "batch-intake",
+    "version": 14,
+    "bundle_sha256": "38fb688240b242b4d58338e78946c4ff501e578b1d4ca38a4078444eb3f80dc6"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/arc-membership-run/index.ts",
+    "sha256": "c26f6a4371e9afd3015c08b6072af30bc15c681184df972b66047a2ff6f346e1",
+    "project": "yhbwnrtlqbjtcrrlpbge",
+    "slug": "arc-membership-run",
+    "version": 5,
+    "bundle_sha256": "81b97c4315ae97b6d91180a83d5f1e0383ea891d0b1277d70e933fcd548feff3"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/arc-membership-run/lib.js",
+    "sha256": "eff2bcbd0fda3f702bc681e1b47828de9059cfc842ad4ef9d15ddd428e9167ba",
+    "project": "yhbwnrtlqbjtcrrlpbge",
+    "slug": "arc-membership-run",
+    "version": 5,
+    "bundle_sha256": "81b97c4315ae97b6d91180a83d5f1e0383ea891d0b1277d70e933fcd548feff3"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/arc-membership-run/auth.js",
+    "sha256": "5c04280c82c627169ceb19d3d139d4309ffba71a9b17beebe08ff96df5bc6397",
+    "project": "yhbwnrtlqbjtcrrlpbge",
+    "slug": "arc-membership-run",
+    "version": 5,
+    "bundle_sha256": "81b97c4315ae97b6d91180a83d5f1e0383ea891d0b1277d70e933fcd548feff3"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/source-comparison-run/index.ts",
+    "sha256": "cde127f894395dbcafed197e0678d5ea95d1c00db0d8b27e42fdae733cf160d9",
+    "project": "yhbwnrtlqbjtcrrlpbge",
+    "slug": "source-comparison-run",
+    "version": 9,
+    "bundle_sha256": "11596d5909d2b8f48b37699956f8a52566a7c90cfa6329e6f870c685b7db6c59"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/source-comparison-run/lib.js",
+    "sha256": "0c78a9ab7ff414289faf6b5bc78daefad355cb9e08146d7d02882c54acf8e151",
+    "project": "yhbwnrtlqbjtcrrlpbge",
+    "slug": "source-comparison-run",
+    "version": 9,
+    "bundle_sha256": "11596d5909d2b8f48b37699956f8a52566a7c90cfa6329e6f870c685b7db6c59"
+  },
+  {
+    "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/source-comparison-run/loadedLanguageLexicon.json",
+    "sha256": "45954bc43de3a13abaf4eeff1ebd350d9fd4c186638820f05908b62d3e9b01a7",
+    "project": "yhbwnrtlqbjtcrrlpbge",
+    "slug": "source-comparison-run",
+    "version": 9,
+    "bundle_sha256": "11596d5909d2b8f48b37699956f8a52566a7c90cfa6329e6f870c685b7db6c59"
+  }
+]
