@@ -192,7 +192,7 @@ export function losslessJsonNumber(value) {
   if (isExactJsonNumber(value)) return value.canonical
   if (typeof value === 'bigint') return canonicalNumberToken(value.toString())
   if (typeof value === 'number') {
-    if (!Number.isFinite(value)) return 'null'
+    if (!Number.isFinite(value)) throw new Error('non-finite staging number; acquire source JSON with parseJsonLossless')
     return JSON.stringify(value)
   }
   throw new Error('losslessJsonNumber requires a number, bigint, or exact JSON number')
@@ -351,7 +351,11 @@ export function parseJsonLossless(text) {
       skipWs()
       if (peek() !== ':') fail('expected colon')
       index += 1
-      result[key] = parseValue()
+      // JSON keys are data, including __proto__; assignment would invoke its
+      // inherited setter and silently omit that source field from the digest.
+      Object.defineProperty(result, key, {
+        value: parseValue(), enumerable: true, writable: true, configurable: true,
+      })
       skipWs()
       if (peek() === ',') {
         index += 1

@@ -24,10 +24,33 @@ import {
   planPage,
   planRecord,
   runBoundedWorker,
+  serializeStagingJson,
   validateRecordEndpoints,
 } from '../scripts/mipLegacyGraphStaging.mjs'
 
 const MANUS = 'yhbwnrtlqbjtcrrlpbge'
+
+test('lossless parser preserves special JSON keys and their exact numeric fingerprints', () => {
+  const raw = '{"metadata":{"__proto__":{"n":9007199254740993},"constructor":1,"prototype":2}}'
+  const payload = parseJsonLossless(raw)
+  assert.equal(Object.getPrototypeOf(payload.metadata), Object.prototype)
+  assert.equal(Object.hasOwn(payload.metadata, '__proto__'), true)
+  assert.equal(serializeStagingJson(payload), raw)
+  assert.notEqual(fingerprintPayload(payload), fingerprintPayload(parseJsonLossless(raw.replace('9007199254740993', '9007199254740992'))))
+  const duplicate = parseJsonLossless('{"__proto__":1,"__proto__":2}')
+  assert.equal(serializeStagingJson(duplicate), '{"__proto__":2}')
+})
+
+test('staging rejects non-finite numbers before emitting a successful plan or transport', () => {
+  for (const n of [Infinity, -Infinity, NaN]) {
+    assert.throws(() => serializeStagingJson({ metadata: { n } }), /non-finite staging number/)
+    assert.throws(() => executeDryRun({ source_records: [{
+      source_project_ref: MANUS, source_table: 'nodes', source_id: 'non-finite-fixture',
+      payload: { type: 'event', metadata: { n } },
+    }] }), /non-finite staging number/)
+  }
+  assert.equal(serializeStagingJson({ n: null }), '{"n":null}')
+})
 const ECLIPSE = 'acc55cb2-5ac2-4aed-be36-3f576d2bc443'
 const ACTOR = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
 const EDGE = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1'
