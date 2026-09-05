@@ -107,12 +107,18 @@ export async function applyEventScopedPublicArticleCounts(db) {
   await db.exec(eventScoped)
 }
 
+export async function applyPublicSurfaceTransfer(db) {
+  const surface = await readFile(new URL('../supabase/migrations/20260905174500_mip_public_surface_transfer.sql', import.meta.url), 'utf8')
+  await db.exec(surface)
+}
+
 export async function applyFoundation(db) {
   await db.exec(DESTINATION_FOUNDATION_SQL)
   const pipeline = await readFile(new URL('../supabase/migrations/20260905082406_evidence_pipeline_reliability.sql', import.meta.url), 'utf8')
   await db.exec(pipeline)
   await applyConsolidationDelta(db)
   await applyEventScopedPublicArticleCounts(db)
+  await applyPublicSurfaceTransfer(db)
 }
 
 export function restoreSourceRegisters() {

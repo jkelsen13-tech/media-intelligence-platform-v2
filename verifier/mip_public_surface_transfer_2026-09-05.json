@@ -1,0 +1,41 @@
+{
+  "date": "2026-09-05",
+  "repository_base": "8e83ec5be73c7e5a68b1cff40bc5196954c44388",
+  "destination": "qikvmopbtijoebdqosyq",
+  "source_manus": "yhbwnrtlqbjtcrrlpbge",
+  "source_original": "niejaejtbxgakyrsntxm",
+  "source_gate_a": "jfnzyvzthzqtczlxhjll",
+  "migration": "20260905174500_mip_public_surface_transfer",
+  "frontend_relations_transferred": [
+    "graph_coverage_public",
+    "policy_actors",
+    "policy_topics",
+    "topics",
+    "arc_milestones_public",
+    "arc_events",
+    "comparison_public",
+    "authors_public",
+    "citations",
+    "news_detail_public",
+    "sky_verifications"
+  ],
+  "remaining_frontend_dependencies_schema": [
+    "node_topics",
+    "node_location_mentions",
+    "explanations",
+    "p3_legal_case",
+    "p3_legal_case_evidence",
+    "p3_policy",
+    "p3_policy_track_event",
+    "events",
+    "event_articles",
+    "claims",
+    "article_claims"
+  ],
+  "notes": [
+    "Schema and private predicates only in this file. Live apply and cohort transfer are recorded after verification.",
+    "Graph-event and Source Comparison event families remain separate.",
+    "Manus collectors stay on Manus. Watermarks do not switch workers.",
+    "No project is retired by this revision."
+  ]
+}
