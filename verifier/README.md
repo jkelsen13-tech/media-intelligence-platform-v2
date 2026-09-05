@@ -479,3 +479,25 @@ Details: `stage-d-visual-repair-v1/ACCEPTANCE.md`. Run logs:
 `runs/run_2026-09-05T22-05Z_v1.md`, `runs/run_2026-09-05T23-55Z_v1.md`.
 Differs from prior version: first version for this goal; no schema, source,
 or canonical-state changes — display-only renderer repair.
+
+---
+
+## mip-legacy-graph-staging — private graph staging dry-run (2026-09-05)
+
+Private staging/reconciliation path for the legacy graph and evidence
+dependencies after the Original→Manus ledger completed (3,818 mappings,
+1,504 conflicts). Production `nodes`/`edges` remain publicly readable, so
+unreviewed graph rows are not inserted there. Read-only inventory: Manus
+949 nodes / 451 edges; production 1 node / 0 edges. Migration is additive
+and not applied live in this revision. Follow-up revision keeps the lease /
+stale-digest / version-retention fixes and closes remaining review gaps: exact
+edge payload preservation, JS/Postgres numeric fingerprint parity, transitive
+quarantine regardless of page order, dry-run mapping revalidation on apply, and
+final persisted `finish` results.
+Details: `docs/MIP_LEGACY_GRAPH_STAGING_2026-09-05.md`.
+Verifier: `mip_legacy_graph_staging_2026-09-05.json`.
+Probe: `scripts/reviewStagingRevisionProbe.mjs` (isolated PGlite only).
+Precision probe: `scripts/reviewStagingPrecisionProbe.mjs` — distinct jsonb
+integers beyond float64 must not share a fingerprint or replay as duplicates.
+End-to-end probe: `scripts/reviewEndToEndPrecision.mjs` — CLI file parse, plan
+reload, and apply must preserve or reject exact numeric tokens before success.

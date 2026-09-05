@@ -35,28 +35,27 @@
     "historical_url_upsert_no_snapshot": 752
   },
   "live_progress": {
-    "copied_mappings": 185,
-    "copied_conflicts": 0,
-    "complete": false,
+    "copied_mappings": 3818,
+    "copied_conflicts": 1504,
+    "complete": true,
     "tables_complete": [
+      "arc_events",
+      "articles",
       "citations",
-      "policies",
-      "policy_documents",
-      "story_arcs",
+      "edges",
+      "entities",
+      "events",
+      "nodes",
       "p3_legal_case",
       "p3_legal_case_evidence",
       "p3_policy",
-      "p3_policy_track_event"
-    ],
-    "tables_remaining": [
-      "articles",
-      "events",
-      "nodes",
-      "edges",
-      "entities",
+      "p3_policy_track_event",
+      "policies",
+      "policy_documents",
       "sources",
-      "arc_events"
-    ]
+      "story_arcs"
+    ],
+    "tables_remaining": []
   },
   "notes": [
     "Ledger lives on Manus only. Original has no mapping or conflict tables.",
@@ -65,6 +64,42 @@
     "Historical conflicts are the recorded 2026-08-20 non-restorable audit, not a reconstruction target.",
     "Native pg_dump is still unavailable: database hosts now resolve, but this workspace has no database password. Authorized route remains Supabase SQL/MCP.",
     "Manus collectors stay on Manus. Watermarks do not switch workers.",
-    "No project is retired by this revision."
-  ]
+    "No project is retired by this revision.",
+    "Completed via SQL/MCP after main 2c38d7e: 3,633 missing mappings and all 1,504 conflicts inserted without overwriting existing rows. Full-row fingerprints match source. Ledger completion is not corpus-transfer completion."
+  ],
+  "completion_verification": {
+    "repository_base": "2c38d7e",
+    "destination": "qikvmopbtijoebdqosyq",
+    "source": "yhbwnrtlqbjtcrrlpbge",
+    "operation": "complete_original_source_import_ledger",
+    "mappings_before": 185,
+    "mappings_after": 3818,
+    "mappings_inserted": 3633,
+    "conflicts_before": 0,
+    "conflicts_after": 1504,
+    "conflicts_inserted": 1504,
+    "full_row_fingerprints": [
+      {
+        "full_md5": "7d5fca40399b9813836c506045b01f06",
+        "kind": "mappings",
+        "n": 3818
+      },
+      {
+        "full_md5": "1ac593f207c1826bb9c58f8e3158bb2b",
+        "kind": "conflicts",
+        "n": 1504
+      }
+    ],
+    "source_unchanged_during_capture": true,
+    "all_existing_destination_rows_matched": true,
+    "transaction_pages": 23,
+    "verification": "Every copied row compared as to_jsonb(source) = to_jsonb(destination) within its page transaction; final full-row SQL fingerprints matched source.",
+    "authorization": "User authorized resuming backend consolidation after live Graph fixes.",
+    "limitations": [
+      "This copies Original-to-Manus historical mappings; it does not establish that corresponding data rows have been copied into production.",
+      "Conflicts preserved, not resolved. Historical missing versions were not reconstructed.",
+      "No corpus/graph data transfer, collector cutover, Auth/storage changes, project retirement, or publication changes."
+    ],
+    "next_risk": "Production nodes and edges currently have public SELECT policies USING (true). Importing raw legacy graph rows directly there would publish them. Stage privately before reviewed release."
+  }
 }
