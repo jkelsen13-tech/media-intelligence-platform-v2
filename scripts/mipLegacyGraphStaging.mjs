@@ -167,25 +167,19 @@ export function normalizeSourceRecord(record) {
     throw new Error('graph nodes cannot be labeled as Source Comparison events')
   }
   const identityId = record.source_id ?? payload.id ?? null
-  const edgeSource = payload.endpoint_source_id ?? payload.source_node_id
+  const edgeSource = record.endpoint_source_id ?? payload.endpoint_source_id ?? payload.source_node_id
     ?? (payload.source_id && payload.source_id !== identityId ? payload.source_id : null)
-  const edgeTarget = payload.endpoint_target_id ?? payload.target_node_id
+  const edgeTarget = record.endpoint_target_id ?? payload.endpoint_target_id ?? payload.target_node_id
     ?? (payload.target_id && payload.target_id !== identityId ? payload.target_id : null)
-  const normalizedPayload = record.source_table === 'edges'
-    ? {
-      ...payload,
-      endpoint_source_id: edgeSource ?? null,
-      endpoint_target_id: edgeTarget ?? null,
-      relationship_type: payload.relationship_type ?? payload.type ?? null,
-    }
-    : payload
+  const relationshipType = record.relationship_type ?? payload.relationship_type
+    ?? (record.source_table === 'edges' ? payload.type ?? null : null)
   return {
     source_project_ref: record.source_project_ref,
     source_table: record.source_table,
     source_id: record.source_id,
     object_family: family,
-    payload: normalizedPayload,
-    payload_sha256: record.payload_sha256 ?? fingerprintPayload(normalizedPayload),
+    payload,
+    payload_sha256: record.payload_sha256 ?? fingerprintPayload(payload),
     source_url: record.source_url ?? record.url ?? payload.url ?? null,
     source_imported_at: record.source_imported_at ?? payload.created_at ?? null,
     recovery_status: record.recovery_status ?? null,
@@ -196,9 +190,50 @@ export function normalizeSourceRecord(record) {
     canonical_title: record.canonical_title ?? payload.canonical_title,
     body_text: record.body_text ?? payload.body_text ?? payload.summary ?? payload.description,
     published_at: record.published_at ?? payload.published_at ?? payload.occurred_at,
-    endpoint_source_id: normalizedPayload.endpoint_source_id ?? null,
-    endpoint_target_id: normalizedPayload.endpoint_target_id ?? null,
-    relationship_type: normalizedPayload.relationship_type ?? null,
+    endpoint_source_id: edgeSource ?? null,
+    endpoint_target_id: edgeTarget ?? null,
+    relationship_type: relationshipType ?? null,
+    mapping: compactMapping(record.mapping, record),
+  }
+}
+
+function compactMapping(mapping, record) {
+  if (!mapping?.source_project_ref || !mapping.source_table || !mapping.source_id || !mapping.target_id) {
+    return null
+  }
+  if (
+    mapping.source_project_ref !== record.source_project_ref
+    || mapping.source_table !== record.source_table
+    || mapping.source_id !== record.source_id
+  ) {
+    return null
+  }
+  return {
+    source_project_ref: mapping.source_project_ref,
+    source_table: mapping.source_table,
+    source_id: mapping.source_id,
+    target_id: mapping.target_id,
+    source_url: mapping.source_url ?? null,
+  }
+}
+
+function resolvingDecision(decision) {
+  return decision === IDENTITY_DECISIONS.insert
+    || decision === IDENTITY_DECISIONS.mapped
+    || decision === IDENTITY_DECISIONS.skip_existing_mapping
+}
+
+export function inferPlanningContext(records = [], context = {}) {
+  const existingMappings = [...(context.existingMappings ?? context.mappings ?? [])]
+  for (const record of records) {
+    const mapping = compactMapping(record?.mapping, record ?? {})
+    if (mapping && !findExistingMapping(existingMappings, mapping)) {
+      existingMappings.push(mapping)
+    }
+  }
+  return {
+    ...context,
+    existingMappings,
   }
 }
 
@@ -292,18 +327,33 @@ export function planPage(records, context = {}) {
   if (!Array.isArray(records) || records.length < 1 || records.length > MAX_PAGE_SIZE) {
     throw new Error('page must contain 1-100 records')
   }
-  const planned = records.map((record) => planRecord(record, context))
-  const stagedIds = { ...(context.stagedIds ?? {}) }
-  for (const row of planned) {
-    if (row.decision === IDENTITY_DECISIONS.insert || row.decision === IDENTITY_DECISIONS.mapped || row.decision === IDENTITY_DECISIONS.skip_existing_mapping) {
-      stagedIds[row.source_table] = new Set(stagedIds[row.source_table] ?? [])
-      stagedIds[row.source_table].add(row.source_id)
+  const planning = inferPlanningContext(records, context)
+  const planned = records.map((record) => planRecord(record, planning))
+  const orphanIds = new Set()
+  let changed = true
+  let passes = 0
+  while (changed && passes < MAX_PAGE_SIZE + 2) {
+    changed = false
+    passes += 1
+    const stagedIds = { ...(planning.stagedIds ?? {}) }
+    for (const row of planned) {
+      if (resolvingDecision(row.decision) && !orphanIds.has(row.source_id)) {
+        stagedIds[row.source_table] = new Set(stagedIds[row.source_table] ?? [])
+        stagedIds[row.source_table].add(row.source_id)
+      }
+    }
+    for (const row of planned) {
+      const endpoints = validateRecordEndpoints(row, { ...planning, stagedIds })
+      row.endpoints = endpoints
+      const nowOrphan = Boolean(endpoints.orphan)
+      if (nowOrphan !== orphanIds.has(row.source_id)) {
+        changed = true
+        if (nowOrphan) orphanIds.add(row.source_id)
+        else orphanIds.delete(row.source_id)
+      }
     }
   }
-  return planned.map((row) => ({
-    ...row,
-    endpoints: validateRecordEndpoints(row, { ...context, stagedIds }),
-  }))
+  return planned
 }
 
 export function assertPageNotPublishing(page) {
@@ -431,15 +481,24 @@ export function executeDryRun({
   }
 }
 
-export function enqueueSql(runId, records) {
+export function enqueueSql(runId, records, context = {}) {
   if (typeof runId !== 'string' || !runId.trim() || runId.length > 120) throw new Error('run_id required')
-  const planned = planPage(records)
+  const planning = inferPlanningContext(records, context)
+  const planned = planPage(records, planning)
   assertPageNotPublishing(planned)
+  const mappings = planning.existingMappings.map((row) => ({
+    source_project_ref: row.source_project_ref,
+    source_table: row.source_table,
+    source_id: row.source_id,
+    target_id: row.target_id,
+    source_url: row.source_url ?? null,
+  }))
   return {
     planned,
     sql: 'select public.mip_legacy_graph_v1($1,$2::jsonb) result',
     params: ['enqueue', JSON.stringify({
       run_id: runId,
+      mappings,
       records: planned.map((row) => ({
         source_project_ref: row.source_project_ref,
         source_table: row.source_table,
@@ -449,9 +508,12 @@ export function enqueueSql(runId, records) {
         payload_sha256: row.payload_sha256,
         source_url: row.source_url,
         source_imported_at: row.source_imported_at,
-        proposed_target_id: row.proposed_target_id,
-        decision: row.decision,
+        proposed_target_id: row.mapping?.target_id ?? row.proposed_target_id,
         recovery_status: row.recovery_status,
+        mapping: row.mapping,
+        endpoint_source_id: row.endpoint_source_id,
+        endpoint_target_id: row.endpoint_target_id,
+        relationship_type: row.relationship_type,
       })),
     })],
   }
@@ -464,8 +526,8 @@ async function rpcOn(db, action, input = {}) {
   )).rows[0].result
 }
 
-export async function applyStagingPage(db, { run_id, records }) {
-  const prepared = enqueueSql(run_id, records)
+export async function applyStagingPage(db, { run_id, records, ...context }) {
+  const prepared = enqueueSql(run_id, records, context)
   const queued = (await db.query(prepared.sql, prepared.params)).rows[0].result
   if (queued.already_completed) return queued
   const job = await rpcOn(db, 'claim', { run_id })

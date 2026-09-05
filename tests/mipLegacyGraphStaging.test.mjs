@@ -319,6 +319,32 @@ test('staging regressions: fingerprints, versions, leases, endpoints, executable
     const rpcHash = (await staging('fingerprint', { payload })).sha256
     assert.equal(sqlHash, jsHash)
     assert.equal(rpcHash, jsHash)
+    for (const value of [0, 0.5, 1e-7, 1e-6, 1e20, 1e21, -1e-7, 1.5e-7]) {
+      const numeric = { z: value, a: { score: value } }
+      assert.equal(
+        await scalar(db, 'select legacy_graph_staging.fingerprint_payload($1::jsonb)', [JSON.stringify(numeric)]),
+        fingerprintPayload(numeric),
+        `fingerprint mismatch for ${value}`,
+      )
+      assert.equal(
+        (await staging('fingerprint', { payload: numeric })).sha256,
+        fingerprintPayload(numeric),
+      )
+    }
+    const small = {
+      source_project_ref: MANUS,
+      source_table: 'nodes',
+      source_id: '17171717-1717-4171-8171-171717171717',
+      payload: {
+        id: '17171717-1717-4171-8171-171717171717',
+        label: 'Small score',
+        type: 'event',
+        metadata: { score: 1e-7 },
+      },
+    }
+    const smallImport = await applyStagingPage(db, { run_id: 'legacy-graph-small-number', records: [small] })
+    assert.equal(smallImport.results[0].review_state, 'pending')
+    assert.equal(smallImport.results[0].decision, IDENTITY_DECISIONS.insert)
 
     assert.equal(
       await scalar(db, 'select legacy_graph_staging.public_graph_collision($1,$2,legacy_graph_staging.fingerprint_payload(to_jsonb(n))) from public.nodes n where n.id=$2', ['nodes', ECLIPSE]),
@@ -503,7 +529,9 @@ test('staging regressions: fingerprints, versions, leases, endpoints, executable
       await scalar(db, "select decision from legacy_graph_staging.staged_records where source_id=$1", [missing.source_id]),
       'orphan_endpoint',
     )
-    assert.equal(orphaned.results[0].review_state === 'quarantined' || true, true)
+    assert.equal(orphaned.results[0].review_state, 'quarantined')
+    assert.equal(orphaned.results[0].decision, 'orphan_endpoint')
+    assert.equal(orphaned.results[0].source_id, missing.source_id)
     const checks = (await db.query(
       'select endpoint_role, resolved, resolution from legacy_graph_staging.endpoint_checks where source_id=$1 order by endpoint_role',
       [missing.source_id],
@@ -553,5 +581,200 @@ test('staging regressions: fingerprints, versions, leases, endpoints, executable
     assert.equal(result.publication_impact.current_public_nodes, 1)
     assert.equal(result.unresolved.mapping_skips, 1)
     assert.equal(result.unresolved.family_mismatches, 1)
+  })
+
+  await t.test('exact public edges keep the submitted payload and map through applyStagingPage', async () => {
+    const pub = (await db.query('select to_jsonb(n) payload from public.nodes n where id=$1', [ECLIPSE])).rows[0].payload
+    const secondId = '18181818-1818-4181-8181-181818181818'
+    const edgeId = '19191919-1919-4191-8191-191919191919'
+    await db.query(
+      'insert into public.nodes select (jsonb_populate_record(null::public.nodes,$1::jsonb)).*',
+      [JSON.stringify({ ...pub, id: secondId, slug: 'review-second-node' })],
+    )
+    await db.query(
+      'insert into public.edges(id,source_id,target_id,type) values($1,$2,$3,$4)',
+      [edgeId, ECLIPSE, secondId, 'actor'],
+    )
+    const exactEdge = (await db.query('select to_jsonb(e) payload from public.edges e where id=$1', [edgeId])).rows[0].payload
+    const applied = await applyStagingPage(db, {
+      run_id: 'legacy-graph-exact-public-edge',
+      records: [{
+        source_project_ref: MANUS,
+        source_table: 'edges',
+        source_id: exactEdge.id,
+        payload: exactEdge,
+      }],
+    })
+    assert.equal(applied.results[0].decision, IDENTITY_DECISIONS.mapped)
+    assert.equal(applied.results[0].review_state, 'pending')
+    assert.equal(
+      await scalar(db, 'select payload = $1::jsonb from legacy_graph_staging.staged_records where source_id=$2', [
+        JSON.stringify(exactEdge),
+        exactEdge.id,
+      ]),
+      true,
+    )
+    assert.equal(
+      await scalar(db, "select payload ? 'endpoint_source_id' from legacy_graph_staging.staged_records where source_id=$1", [exactEdge.id]),
+      false,
+    )
+  })
+
+  await t.test('dry-run mapping context is revalidated on apply, not taken from client decision', async () => {
+    const source = nodeRecord({
+      id: '20202020-2020-4202-8202-202020202020',
+      label: 'Mapped node',
+      type: 'event',
+      slug: 'mapped-node',
+    })
+    const target = '21212121-2121-4212-8212-212121212121'
+    const mapping = {
+      source_project_ref: MANUS,
+      source_table: 'nodes',
+      source_id: source.source_id,
+      target_id: target,
+    }
+    const planned = executeDryRun({
+      source_records: [source],
+      destination_records: [],
+      mappings: [mapping],
+    })
+    assert.equal(planned.planned[0].decision, IDENTITY_DECISIONS.skip_existing_mapping)
+    assert.equal(planned.planned[0].proposed_target_id, target)
+    const applied = await applyStagingPage(db, {
+      run_id: 'legacy-graph-planned-mapping',
+      records: planned.planned,
+    })
+    assert.equal(applied.results[0].decision, IDENTITY_DECISIONS.skip_existing_mapping)
+    assert.equal(applied.results[0].proposed_target_id, target)
+    assert.equal(
+      await scalar(db, 'select decision from legacy_graph_staging.staged_records where source_id=$1', [source.source_id]),
+      IDENTITY_DECISIONS.skip_existing_mapping,
+    )
+    assert.equal(
+      await scalar(db, 'select proposed_target_id from legacy_graph_staging.staged_records where source_id=$1', [source.source_id]),
+      target,
+    )
+    const forged = nodeRecord({
+      id: '22222222-2222-4222-8222-222222222222',
+      label: 'Forged decision',
+      type: 'event',
+      slug: 'forged-decision',
+    })
+    forged.decision = IDENTITY_DECISIONS.skip_existing_mapping
+    forged.proposed_target_id = target
+    const ignored = await applyStagingPage(db, {
+      run_id: 'legacy-graph-forged-decision',
+      records: [forged],
+    })
+    assert.equal(ignored.results[0].decision, IDENTITY_DECISIONS.insert)
+    assert.equal(ignored.results[0].proposed_target_id, null)
+  })
+})
+
+test('dependency quarantine is transitive, order-independent, and visible in finish results', async (t) => {
+  async function freshDb() {
+    const db = await PGlite.create()
+    await applyFoundation(db)
+    const pipeline = async (action, input = {}) => (
+      await db.query('select public.mip_pipeline_v1($1,$2::jsonb) result', [action, JSON.stringify(input)])
+    ).rows[0].result
+    await restoreEclipseInvestigation(db, pipeline)
+    return db
+  }
+
+  const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
+  const rec = (table, n, payload) => ({
+    source_project_ref: MANUS,
+    source_table: table,
+    source_id: id(n),
+    payload: { id: id(n), ...payload },
+  })
+
+  for (const reversed of [false, true]) {
+    await t.test(`arc and membership both quarantine when order reversed=${reversed}`, async () => {
+      const db = await freshDb()
+      t.after(() => db.close())
+      const pub = (await db.query('select id from public.nodes limit 1')).rows[0]
+      const base = reversed ? 20 : 10
+      const arc = rec('story_arcs', base, { title: 'Arc with unavailable root', root_node_id: id(999) })
+      const link = rec('arc_events', base + 1, { arc_id: arc.source_id, node_id: pub.id })
+      const applied = await applyStagingPage(db, {
+        run_id: `legacy-graph-dep-${reversed}`,
+        records: reversed ? [link, arc] : [arc, link],
+      })
+      const stored = (await db.query(
+        'select source_table, decision, review_state from legacy_graph_staging.staged_records where source_id=any($1::uuid[]) order by source_table',
+        [[arc.source_id, link.source_id]],
+      )).rows
+      assert.equal(stored.length, 2)
+      assert.equal(stored.every((row) => row.decision === 'orphan_endpoint'), true)
+      assert.equal(stored.every((row) => row.review_state === 'quarantined'), true)
+      const reportedArc = applied.results.find((row) => row.source_id === arc.source_id)
+      const reportedLink = applied.results.find((row) => row.source_id === link.source_id)
+      assert.equal(reportedArc.decision, 'orphan_endpoint')
+      assert.equal(reportedArc.review_state, 'quarantined')
+      assert.equal(reportedLink.decision, 'orphan_endpoint')
+      assert.equal(reportedLink.review_state, 'quarantined')
+    })
+  }
+
+  await t.test('later pages revalidate dependents and restore only when the parent is actually available', async () => {
+    const missingParent = await freshDb()
+    t.after(() => missingParent.close())
+    const pub = (await missingParent.query('select id from public.nodes limit 1')).rows[0]
+    const arc = rec('story_arcs', 40, { title: 'Later quarantined arc', root_node_id: id(999) })
+    const link = rec('arc_events', 41, { arc_id: arc.source_id, node_id: pub.id })
+    const first = await applyStagingPage(missingParent, {
+      run_id: 'legacy-graph-later-page-membership',
+      records: [link],
+    })
+    assert.equal(first.results[0].decision, 'orphan_endpoint')
+    assert.equal(first.results[0].review_state, 'quarantined')
+    await applyStagingPage(missingParent, {
+      run_id: 'legacy-graph-later-page-arc',
+      records: [arc],
+    })
+    const afterMissing = (await missingParent.query(
+      'select source_table, decision, review_state from legacy_graph_staging.staged_records where source_id=any($1::uuid[]) order by source_table',
+      [[arc.source_id, link.source_id]],
+    )).rows
+    assert.equal(afterMissing.every((row) => row.decision === 'orphan_endpoint' && row.review_state === 'quarantined'), true)
+    const check = (await missingParent.query(
+      "select resolved, resolution from legacy_graph_staging.endpoint_checks where source_id=$1 and endpoint_role='arc'",
+      [link.source_id],
+    )).rows[0]
+    assert.equal(check.resolved, false)
+    assert.equal(check.resolution, 'missing')
+
+    const availableParent = await freshDb()
+    t.after(() => availableParent.close())
+    const validArc = rec('story_arcs', 50, { title: 'Later valid arc', root_node_id: ECLIPSE })
+    const validLink = rec('arc_events', 51, { arc_id: validArc.source_id, node_id: pub.id })
+    const orphanedFirst = await applyStagingPage(availableParent, {
+      run_id: 'legacy-graph-later-valid-membership',
+      records: [validLink],
+    })
+    assert.equal(orphanedFirst.results[0].review_state, 'quarantined')
+    const restored = await applyStagingPage(availableParent, {
+      run_id: 'legacy-graph-later-valid-arc',
+      records: [validArc],
+    })
+    assert.equal(restored.results[0].decision, IDENTITY_DECISIONS.insert)
+    assert.equal(restored.results[0].review_state, 'pending')
+    const afterValid = (await availableParent.query(
+      'select source_table, decision, review_state from legacy_graph_staging.staged_records where source_id=any($1::uuid[]) order by source_table',
+      [[validArc.source_id, validLink.source_id]],
+    )).rows
+    assert.deepEqual(afterValid, [
+      { source_table: 'arc_events', decision: IDENTITY_DECISIONS.insert, review_state: 'pending' },
+      { source_table: 'story_arcs', decision: IDENTITY_DECISIONS.insert, review_state: 'pending' },
+    ])
+    const restoredCheck = (await availableParent.query(
+      "select resolved, resolution from legacy_graph_staging.endpoint_checks where source_id=$1 and endpoint_role='arc'",
+      [validLink.source_id],
+    )).rows[0]
+    assert.equal(restoredCheck.resolved, true)
+    assert.equal(restoredCheck.resolution, 'story_arc')
   })
 })

@@ -28,13 +28,19 @@ Migration `20260905203600_mip_legacy_graph_private_staging` adds schema
 `legacy_graph_staging`:
 
 - resumable jobs with leases, interruption, expired-lease reclaim, and dead-letter
-- server-side payload fingerprints that match `fingerprintPayload` in JavaScript
-- full original payloads plus source project/table/id, timestamps, and sha256
+- server-side payload fingerprints that match `fingerprintPayload` in JavaScript,
+  including ECMAScript JSON number formatting (`1e-7`, `1e+21`)
+- exact source payloads stored and fingerprinted; derived relationship aliases
+  stay outside the payload
+- server-revalidated identity mappings from the supplied context and
+  `original_source_import_mappings`; client `decision` is not authoritative
 - divergent incoming payloads retained as linked `payload_versions`
 - append-only conflicts that replay with `ON CONFLICT DO NOTHING`
 - pending / quarantined / gap-recorded review states only
 - collision and family-mismatch conflicts
-- order-independent endpoint/orphan checks that never rewrite relationship endpoints
+- transitive, order-independent endpoint/orphan checks that never rewrite
+  relationship endpoints; later pages revalidate dependents
+- `finish` returns the final persisted state for every input row
 - server-only RPC `public.mip_legacy_graph_v1`
 
 `publish` is rejected. The migration contains no `INSERT`/`UPDATE` against
@@ -52,7 +58,11 @@ node scripts/mipLegacyGraphStaging.mjs plan page.json
 
 `manifest` prints the captured count inventory only. The executable dry-run is
 `dry-run` / `executeDryRun` and requires actual source records, destination
-records, and saved identity mappings.
+records, and saved identity mappings. Feeding `planned` records into
+`applyStagingPage` revalidates that same mapping context; a target ID without a
+matching mapping is not treated as `existing_import_mapping_skipped`.
+Isolated review reproductions live in `scripts/reviewStagingRevisionProbe.mjs`
+and must not be pointed at production.
 
 Live writes require a later reviewed apply of the migration plus a server
 service role. Collected payloads and credentials stay out of Git.

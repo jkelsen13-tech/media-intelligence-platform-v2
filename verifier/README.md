@@ -489,6 +489,11 @@ dependencies after the Original→Manus ledger completed (3,818 mappings,
 1,504 conflicts). Production `nodes`/`edges` remain publicly readable, so
 unreviewed graph rows are not inserted there. Read-only inventory: Manus
 949 nodes / 451 edges; production 1 node / 0 edges. Migration is additive
-and not applied live in this revision.
+and not applied live in this revision. Follow-up revision keeps the lease /
+stale-digest / version-retention fixes and closes remaining review gaps: exact
+edge payload preservation, JS/Postgres numeric fingerprint parity, transitive
+quarantine regardless of page order, dry-run mapping revalidation on apply, and
+final persisted `finish` results.
 Details: `docs/MIP_LEGACY_GRAPH_STAGING_2026-09-05.md`.
 Verifier: `mip_legacy_graph_staging_2026-09-05.json`.
+Probe: `scripts/reviewStagingRevisionProbe.mjs` (isolated PGlite only).

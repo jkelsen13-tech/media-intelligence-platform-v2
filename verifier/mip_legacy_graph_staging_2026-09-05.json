@@ -112,6 +112,7 @@
     "Graph nodes and Source Comparison events have 0 UUID overlaps and 665 title overlaps. Titles are not identity.",
     "Production currently publishes every node/edge row to anon/authenticated. Staging therefore never inserts those tables.",
     "Ledger completion is not corpus-transfer completion.",
-    "No source payloads or credentials are stored in this manifest."
+    "No source payloads or credentials are stored in this manifest.",
+    "Revision after 6d51024: exact edge payloads, ES numeric fingerprint parity, transitive endpoint quarantine, dry-run mapping revalidation, and final finish_job states."
   ]
 }
