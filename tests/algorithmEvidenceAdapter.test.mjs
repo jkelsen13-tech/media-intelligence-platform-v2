@@ -18,7 +18,7 @@ test('recorded release gates stay default-deny even when fixtures pass', () => {
   assert.equal(arcGate.auto_approval_enabled, false)
   assert.equal(arcGate.auto_approval_threshold, null)
   assert.equal(scGate.autoApprovalEnabled, false)
-  assert.equal(scGate.autoApprovalThreshold, null)
+  assert.equal(scGate.autoApprovalThreshold, undefined)
   const fixture = regressionActorOnlyArcContaminationFixture()
   const score = scoreArcCandidate({
     candidate: fixture.candidate,

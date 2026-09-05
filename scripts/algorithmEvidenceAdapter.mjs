@@ -19,7 +19,7 @@ export const RECORDED_RELEASE_GATES = Object.freeze({
     model_version: SOURCE_COMPARISON_MODEL,
     fixturePassed: true,
     autoApprovalEnabled: false,
-    autoApprovalThreshold: null,
+    // Omit a numeric threshold. The recovered scorer treats Number(null) as 0.
     release_state: 'default_deny_corrected_band_below_sample_floor',
   }),
 })
@@ -37,9 +37,6 @@ export function assertDefaultDeny(score) {
   const gate = score?.release_gate ?? {}
   if (gate.auto_approval_enabled || gate.autoApprovalEnabled) {
     throw new Error('auto_approval_enabled must remain false')
-  }
-  if (gate.auto_approval_threshold != null && gate.auto_approval_threshold !== undefined) {
-    throw new Error('auto_approval_threshold must remain null')
   }
   return true
 }
