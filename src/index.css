@@ -277,6 +277,7 @@ body {
 
 .graph-layout.inspector-overlay .ap-scrim {
   z-index: var(--graph-overlay-scrim);
+  background: transparent;
 }
 
 /* A configured live corpus may have articles before graph publication. Keep
@@ -3796,6 +3797,7 @@ body {
     position: absolute;
     inset: 0;
     z-index: var(--graph-overlay-scrim);
+    background: transparent;
   }
   .graph-layout.inspector-overlay .article-panel:not(.sheet-mode),
   .graph-layout.inspector-overlay .relationship-panel:not(.sheet-mode),

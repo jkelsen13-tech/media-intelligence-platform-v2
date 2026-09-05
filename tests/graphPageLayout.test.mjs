@@ -172,6 +172,8 @@ test('tablet overlay drawer paints above its backdrop, including ancestor stacki
   assert.match(INDEX_CSS, /--graph-overlay-scrim:\s*20/)
   assert.match(INDEX_CSS, /--graph-overlay-drawer:\s*30/)
   assert.match(INDEX_CSS, /\.graph-layout\.inspector-overlay \.ap-scrim \{[\s\S]*z-index:\s*var\(--graph-overlay-scrim\)/)
+  assert.match(INDEX_CSS, /\.graph-layout\.inspector-overlay \.ap-scrim \{[\s\S]*background:\s*transparent/)
+  assert.match(INDEX_CSS, /\.ap-scrim \{[\s\S]*background:\s*rgba\(0, 0, 0, 0\.55\)/)
   assert.match(INDEX_CSS, /\.graph-layout\.inspector-overlay \.article-panel:not\(\.sheet-mode\),[\s\S]*\.relationship-panel:not\(\.sheet-mode\),[\s\S]*\.policy-panel:not\(\.sheet-mode\) \{[\s\S]*z-index:\s*var\(--graph-overlay-drawer\)/)
   assert.match(INDEX_CSS, /\.ap-scrim \{[\s\S]*z-index:\s*65/)
   assert.match(INDEX_CSS, /\.article-panel\.sheet-mode \{[\s\S]*z-index:\s*70/)
