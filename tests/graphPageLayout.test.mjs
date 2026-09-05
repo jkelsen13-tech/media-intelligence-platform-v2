@@ -106,7 +106,7 @@ test('significant canvas size changes and layoutRevision refit the graph', () =>
 
 test('inspector and legend use overlay or collapse on tablet without changing phone graph semantics', () => {
   assert.equal(GRAPH_PHONE_QUERY, '(max-width: 767px)')
-  assert.equal(GRAPH_NARROW_CHROME_QUERY, '(max-width: 1180px)')
+  assert.equal(GRAPH_NARROW_CHROME_QUERY, '(max-width: 1200px)')
   assert.equal(
     graphInspectorPresentation({ selected: { id: 'n1' }, isMobile: false, isNarrowChrome: false }),
     'docked',
@@ -127,9 +127,13 @@ test('inspector and legend use overlay or collapse on tablet without changing ph
   assert.match(APP, /useMediaQuery\(GRAPH_NARROW_CHROME_QUERY\)/)
   assert.match(APP, /graphInspectorOverlay/)
   assert.match(APP, /inspector-overlay/)
-  assert.match(LEGEND, /max-width: 1180px/)
+  assert.match(LEGEND, /max-width: 1200px/)
   assert.doesNotMatch(APP, /isMobile = useMediaQuery\('\(max-width: 1180px\)'\)/)
-  assert.match(INDEX_CSS, /@media \(min-width: 768px\) and \(max-width: 1180px\)/)
+  assert.doesNotMatch(APP, /isMobile = useMediaQuery\('\(max-width: 1200px\)'\)/)
+  assert.match(INDEX_CSS, /@media \(min-width: 768px\) and \(max-width: 1200px\)/)
+  // 1180 CSS px is inside the tablet band. Chrome device-mode 1180x700
+  // reports visualViewport.width ≈ 1180.44, so max-width: 1180px misses.
+  assert.equal(graphInspectorPresentation({ selected: { id: 'n1' }, isMobile: false, isNarrowChrome: true }), 'drawer')
 })
 
 test('graph remains the primary workspace on short viewports', () => {

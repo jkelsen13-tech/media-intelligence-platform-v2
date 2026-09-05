@@ -3778,7 +3778,7 @@ body {
   .graph-coverage-metrics { grid-template-columns: 1fr; }
 }
 
-@media (min-width: 768px) and (max-width: 1180px) {
+@media (min-width: 768px) and (max-width: 1200px) {
   .graph-body {
     flex-direction: column;
     min-height: var(--graph-canvas-min);

@@ -5,7 +5,7 @@ import { NODE_TYPES, EDGE_TYPES, EDGE_WEIGHTS, RELIABILITY_MIN, RELIABILITY_MAX 
 // cover the graph on load; tapping the chip expands it back.
 function startsCollapsed() {
   if (typeof window === 'undefined' || !window.matchMedia) return false
-  return window.matchMedia('(max-width: 1180px)').matches
+  return window.matchMedia('(max-width: 1200px)').matches
 }
 
 // Map a cytoscape silhouette (theme.js NODE_TYPES[].shape) to the CSS

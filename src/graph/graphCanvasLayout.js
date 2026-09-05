@@ -4,7 +4,7 @@
 export const GRAPH_CANVAS_MIN_PX = 360
 export const GRAPH_CANVAS_MIN_SHORT_PX = 280
 export const GRAPH_FIT_RESIZE_THRESHOLD_PX = 32
-export const GRAPH_NARROW_CHROME_QUERY = '(max-width: 1180px)'
+export const GRAPH_NARROW_CHROME_QUERY = '(max-width: 1200px)'
 export const GRAPH_PHONE_QUERY = '(max-width: 767px)'
 
 // Overlay layers live inside `.graph-layout.inspector-overlay` (isolation).
