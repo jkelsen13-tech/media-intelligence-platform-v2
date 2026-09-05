@@ -120,7 +120,7 @@ export const PUBLIC_SURFACE_PUBLICATION_GATES =
   '20260905180142_mip_public_surface_publication_gates.sql'
 
 export const PUBLIC_SURFACE_AUTHENTICATED_REVIEW_REVOKE =
-  '20260905182000_mip_public_surface_authenticated_review_revoke.sql'
+  '20260905181254_mip_public_surface_authenticated_review_revoke.sql'
 
 export const COMBINED_PUBLIC_SURFACE_DRAFT =
   '20260905174500_mip_public_surface_transfer.sql'

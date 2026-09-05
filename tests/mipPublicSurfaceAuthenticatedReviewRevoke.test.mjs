@@ -210,6 +210,7 @@ test('upgrade from the current production-shaped schema then revokes authenticat
 
 test('authenticated review revoke migration drops blanket policies and does not invent roles', async () => {
   const sql = await readFile(new URL(`../supabase/migrations/${PUBLIC_SURFACE_AUTHENTICATED_REVIEW_REVOKE}`, import.meta.url), 'utf8')
+  assert.match(sql, /Production-recorded public-surface authenticated-review revoke/)
   assert.match(sql, /drop policy if exists events_authenticated_read/)
   assert.match(sql, /drop policy if exists claims_authenticated_read/)
   assert.match(sql, /drop policy if exists p3_policy_read/)

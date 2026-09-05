@@ -1,3 +1,8 @@
+-- Production-recorded public-surface authenticated-review revoke.
+-- Applied on qikvmopbtijoebdqosyq as 20260905181254 / mip_public_surface_authenticated_review_revoke.
+-- Restored verbatim from supabase_migrations.schema_migrations.statements.
+-- Do not replay this file on production; it is already recorded there.
+
 -- Close ordinary-authenticated access to private review bases transferred
 -- by the public-surface schema. Reader contracts stay on comparison_public,
 -- news_detail_public, and the other governed projections. Signing in does
