@@ -4,6 +4,7 @@ import Legend from './graph/Legend'
 import EdgeControls from './graph/EdgeControls'
 import GraphModePanel from './graph/GraphModePanel'
 import GraphCoverageNotice from './graph/GraphCoverageNotice'
+import { GRAPH_NARROW_CHROME_QUERY, graphInspectorPresentation } from './graph/graphCanvasLayout.js'
 import GeographyGlobe from './graph/GeographyGlobe'
 import RelationshipPanel from './panels/RelationshipPanel'
 import EdgeList from './graph/EdgeList'
@@ -297,6 +298,8 @@ export default function App() {
   const graphInspectorDismissedSubjectRef = useRef(null)
 
   const isMobile = useMediaQuery('(max-width: 767px)')
+  const isNarrowChrome = useMediaQuery(GRAPH_NARROW_CHROME_QUERY)
+  const [graphLayoutRevision, setGraphLayoutRevision] = useState(0)
 
   // Step 4: live-corpus header line (addendum carried-forward requirement)
   // replaces the machine-facing "data: supabase" label. Failure-isolated —
@@ -1085,6 +1088,15 @@ export default function App() {
   })
   const inspectorOccupied = view === 'graph' && !!(selected || policyNode || edgeEvidence) && !isMobile
   const hasNativeInspector = view === 'world'
+  const graphInspectorMode = graphInspectorPresentation({
+    selected,
+    policyNode,
+    edgeEvidence,
+    isMobile,
+    isNarrowChrome,
+  })
+  const graphInspectorOverlay = graphInspectorMode === 'drawer'
+  const graphInspectorDocked = graphInspectorMode === 'docked'
 
   return (
     <div className="app ws-app">
@@ -1098,6 +1110,7 @@ export default function App() {
         inspectorOccupied={inspectorOccupied}
         hasNativeInspector={hasNativeInspector}
         onChangeInvestigation={openExplore}
+        onChromeChange={() => setGraphLayoutRevision((n) => n + 1)}
         corpusLine={corpusLine}
         searchSlot={
           <WorkspaceSearch
@@ -1345,7 +1358,7 @@ export default function App() {
               </div>
             )}
             {graph && graph.nodes.length > 0 && !showHubList && (
-              <div className="graph-layout">
+              <div className={`graph-layout${graphInspectorOverlay ? ' inspector-overlay' : ''}`}>
                 {/* Track B Step 2 item 1: graph chrome in normal flow —
                     toolbar on top, controls rail beside the canvas stage.
                     Nothing floats over the canvas. */}
@@ -1495,6 +1508,7 @@ export default function App() {
                       coverage={graphCoverage}
                       shownNodeCount={displayNodes.length}
                       totalNodeCount={graphCoverage.publishedNodeCount ?? graph.nodes.length}
+                      onToggle={() => setGraphLayoutRevision((n) => n + 1)}
                     />
                   )}
                   <div className="graph-body">
@@ -1542,7 +1556,7 @@ export default function App() {
                         />
                       )}
                     </div>
-                    <div className="graph-stage">
+                    <div className="graph-stage" data-graph-stage="true">
                       {isMobile && (
                         <div className="graph-mobile-bar">
                           {focusStack.length === 0 && (
@@ -1561,7 +1575,8 @@ export default function App() {
                         nodes={displayNodes}
                         edges={displayEdges}
                         onSelect={handleSelect}
-                        panelOpen={!!(selected || policyNode || edgeEvidence) && !isMobile}
+                        panelOpen={graphInspectorDocked}
+                        layoutRevision={graphLayoutRevision}
                         controlsDimmed={isMobile && !!(selected || policyNode)}
                         isMobile={isMobile}
                         focusNodeId={isMobile && focal?.kind === 'node' ? focal.id : null}
@@ -1606,7 +1621,7 @@ export default function App() {
                     {/* Item 5: docked relationship panel — flex sibling of the
                         stage on desktop (canvas shrinks beside it, never
                         covered); bottom sheet on mobile with a scrim. */}
-                    {edgeEvidence && isMobile && (
+                    {edgeEvidence && (isMobile || graphInspectorOverlay) && (
                       <div className="ap-scrim" onClick={() => setEdgeEvidence(null)} aria-hidden="true" />
                     )}
                     {edgeEvidence && (
@@ -1627,7 +1642,7 @@ export default function App() {
                   </div>
                 </div>
                 {/* Mobile: scrim behind the bottom sheet (tap to close). */}
-                {selected && isMobile && (
+                {selected && (isMobile || graphInspectorOverlay) && (
                   <div className="ap-scrim" onClick={handleClose} aria-hidden="true" />
                 )}
                 {selected && (
@@ -1647,7 +1662,7 @@ export default function App() {
                   />
                 )}
                 {/* Step 10 (§7.4): policy consequence view. */}
-                {policyNode && isMobile && (
+                {policyNode && (isMobile || graphInspectorOverlay) && (
                   <div className="ap-scrim" onClick={closePolicyPanel} aria-hidden="true" />
                 )}
                 {policyNode && (

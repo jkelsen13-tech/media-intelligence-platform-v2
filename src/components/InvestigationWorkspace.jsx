@@ -98,6 +98,7 @@ export default function InvestigationWorkspace({
   inspectorOccupied = false,
   hasNativeInspector = false,
   onChangeInvestigation,
+  onChromeChange,
   details,
   children,
 }) {
@@ -129,7 +130,7 @@ export default function InvestigationWorkspace({
 
   return (
     <div
-      className={`workspace-app ws-shell${navCollapsed ? ' nav-collapsed ws-nav-collapsed' : ''}`}
+      className={`workspace-app ws-shell${navCollapsed ? ' nav-collapsed ws-nav-collapsed' : ''}${view === 'graph' ? ' ws-graph-primary' : ''}`}
       data-workspace="investigation"
     >
       <aside className="ws-nav" aria-label="Investigation views">
@@ -154,7 +155,10 @@ export default function InvestigationWorkspace({
             type="button"
             className="ws-collapse-btn"
             aria-label={navCollapsed ? 'Expand navigation' : 'Collapse navigation'}
-            onClick={() => setNavCollapsed((v) => !v)}
+            onClick={() => {
+              setNavCollapsed((v) => !v)
+              onChromeChange?.()
+            }}
           >
             {navCollapsed ? <CaretRight size={14} /> : <CaretLeft size={14} />}
             {!navCollapsed && <span>Follow the evidence.</span>}

@@ -780,6 +780,53 @@
   min-height: 100%;
 }
 
+.ws-app .graph-layout,
+.ws-app .graph-area {
+  min-height: 100%;
+}
+
+.ws-graph-primary .ws-canonical {
+  padding: 10px 20px 0;
+}
+
+.ws-graph-primary .ws-title {
+  font-size: 18px;
+}
+
+.ws-graph-primary .ws-description {
+  display: none;
+}
+
+.ws-graph-primary .ws-dimensions {
+  margin-top: 8px;
+}
+
+.ws-graph-primary .ws-dimension {
+  padding: 6px 10px;
+}
+
+.ws-graph-primary .ws-tabs {
+  padding: 6px 16px;
+}
+
+@media (max-height: 820px) {
+  .ws-graph-primary .ws-canonical {
+    padding: 8px 16px 0;
+  }
+
+  .ws-graph-primary .ws-canonical-head .ws-change-btn {
+    display: none;
+  }
+
+  .ws-graph-primary .ws-meta-row {
+    margin-top: 4px;
+  }
+
+  .ws-graph-primary .ws-dimension {
+    padding: 4px 8px;
+  }
+}
+
 .ap-sources-unavailable {
   margin: 0;
   color: var(--text-secondary);
