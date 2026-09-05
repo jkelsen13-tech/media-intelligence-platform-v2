@@ -1,0 +1,43 @@
+{
+  "date": "2026-09-05",
+  "base_commit": "b955fde0b58b4e0a37efe3384308701df58f66dc",
+  "project": "qikvmopbtijoebdqosyq",
+  "migration": "20260905182355_mip_nested_claim_publication_gates.sql",
+  "status": "Applied and verified live; repository publication blocked",
+  "changes": [
+    "Shared private reader_claim_surfaces enforces approved multi-outlet event, eligible active article, exact event membership, active projected claim, current verified-retained-source surface.",
+    "News and comparison nested payloads use the shared surface gate.",
+    "Nested evidence requires an admitted source; corrections require an eligible event member source.",
+    "Explanations enforce the existing published/ok/current D4 predicate and canonical claim association."
+  ],
+  "verification": {
+    "full_tests": {
+      "passed": 825,
+      "failed": 0
+    },
+    "new_tests": {
+      "passed": 8,
+      "failed": 0
+    },
+    "build": "passed; existing Vite warnings",
+    "live": {
+      "news": 3,
+      "claim_surfaces": 6,
+      "comparisons": 1,
+      "spatial": 1,
+      "role_checks": "anon/authenticated read-only transaction assertions passed; private table/view SELECT denied",
+      "migration_sql": "exact match to recorded statements"
+    },
+    "fixtures": "All synthetic records isolated; none written to production"
+  },
+  "limitations": [
+    "PGlite is not PostgreSQL 17 or a full Supabase catalog/Auth/PostgREST simulation; role assertions do not replace JWT API tests.",
+    "Existing security-definer-view and other advisor findings remain; no claim of a clean project-wide security audit.",
+    "Ledger remains 185/3818 mappings and 0/1504 conflicts; no collector cutover or project retirement."
+  ],
+  "publication_blockers": [
+    "GitHub create_tree returned 403 Resource not accessible by integration.",
+    "Native git push dry-run failed: could not read Username for https://github.com.",
+    "PR31 remains unchanged and unmerged; apply package to its branch, verify CI, then merge. Do not replay the live migration."
+  ]
+}
