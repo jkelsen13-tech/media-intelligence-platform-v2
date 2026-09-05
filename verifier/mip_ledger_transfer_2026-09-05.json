@@ -34,6 +34,30 @@
     "existing_import_mapping_skipped": 752,
     "historical_url_upsert_no_snapshot": 752
   },
+  "live_progress": {
+    "copied_mappings": 185,
+    "copied_conflicts": 0,
+    "complete": false,
+    "tables_complete": [
+      "citations",
+      "policies",
+      "policy_documents",
+      "story_arcs",
+      "p3_legal_case",
+      "p3_legal_case_evidence",
+      "p3_policy",
+      "p3_policy_track_event"
+    ],
+    "tables_remaining": [
+      "articles",
+      "events",
+      "nodes",
+      "edges",
+      "entities",
+      "sources",
+      "arc_events"
+    ]
+  },
   "notes": [
     "Ledger lives on Manus only. Original has no mapping or conflict tables.",
     "Article mappings are remapped (source_id != target_id). Identity is never inferred from titles.",
