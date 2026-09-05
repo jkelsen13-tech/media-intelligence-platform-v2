@@ -5,7 +5,17 @@
   "source_manus": "yhbwnrtlqbjtcrrlpbge",
   "source_original": "niejaejtbxgakyrsntxm",
   "source_gate_a": "jfnzyvzthzqtczlxhjll",
-  "migration": "20260905174500_mip_public_surface_transfer",
+  "migration": "20260905172453_mip_public_surface_transfer",
+  "production_recorded_chunks": [
+    "20260905172453_mip_public_surface_transfer",
+    "20260905172517_mip_public_surface_stub_reconcile",
+    "20260905172527_mip_public_surface_predicates",
+    "20260905172543_mip_public_surface_tables",
+    "20260905172558_mip_public_surface_topics_rls",
+    "20260905172611_mip_public_surface_views"
+  ],
+  "combined_draft_not_applied": "20260905174500_mip_public_surface_transfer",
+  "forward_publication_gates": "20260905183000_mip_public_surface_publication_gates",
   "frontend_relations_transferred": [
     "graph_coverage_public",
     "policy_actors",
@@ -61,9 +71,11 @@
     "publish_explanation"
   ],
   "notes": [
-    "Schema and private predicates were applied live. Cyclospora cohort readback was verified on production.",
+    "Schema and private predicates were applied live as six recorded chunks. The combined 20260905174500 draft was never applied on production and is now a no-op marker.",
+    "Cyclospora cohort readback was verified on production.",
     "Graph-event and Source Comparison event families remain separate.",
     "Manus collectors stay on Manus. Watermarks do not switch workers.",
-    "No project is retired by this revision."
+    "No project is retired by this revision.",
+    "Publication bypasses on citations, node_location_mentions, sky_verifications, and graph_coverage_public are closed by the later publication-gates migration."
   ]
 }

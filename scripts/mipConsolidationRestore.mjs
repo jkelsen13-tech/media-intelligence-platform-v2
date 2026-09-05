@@ -107,9 +107,34 @@ export async function applyEventScopedPublicArticleCounts(db) {
   await db.exec(eventScoped)
 }
 
+export const PUBLIC_SURFACE_TRANSFER_CHUNKS = [
+  '20260905172453_mip_public_surface_transfer.sql',
+  '20260905172517_mip_public_surface_stub_reconcile.sql',
+  '20260905172527_mip_public_surface_predicates.sql',
+  '20260905172543_mip_public_surface_tables.sql',
+  '20260905172558_mip_public_surface_topics_rls.sql',
+  '20260905172611_mip_public_surface_views.sql',
+]
+
+export const PUBLIC_SURFACE_PUBLICATION_GATES =
+  '20260905183000_mip_public_surface_publication_gates.sql'
+
+export const COMBINED_PUBLIC_SURFACE_DRAFT =
+  '20260905174500_mip_public_surface_transfer.sql'
+
+export async function applyMigrationFile(db, filename) {
+  const sql = await readFile(new URL(`../supabase/migrations/${filename}`, import.meta.url), 'utf8')
+  await db.exec(sql)
+}
+
 export async function applyPublicSurfaceTransfer(db) {
-  const surface = await readFile(new URL('../supabase/migrations/20260905174500_mip_public_surface_transfer.sql', import.meta.url), 'utf8')
-  await db.exec(surface)
+  for (const filename of PUBLIC_SURFACE_TRANSFER_CHUNKS) {
+    await applyMigrationFile(db, filename)
+  }
+}
+
+export async function applyPublicSurfacePublicationGates(db) {
+  await applyMigrationFile(db, PUBLIC_SURFACE_PUBLICATION_GATES)
 }
 
 export async function applyFoundation(db) {
@@ -119,6 +144,7 @@ export async function applyFoundation(db) {
   await applyConsolidationDelta(db)
   await applyEventScopedPublicArticleCounts(db)
   await applyPublicSurfaceTransfer(db)
+  await applyPublicSurfacePublicationGates(db)
 }
 
 export function restoreSourceRegisters() {

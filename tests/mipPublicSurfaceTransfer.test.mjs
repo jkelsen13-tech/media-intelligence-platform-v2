@@ -77,7 +77,7 @@ test('public-surface transfer restores frontend relations without leaking privat
     await assert.rejects(db.exec('select name, framing_profile from authors'), /permission denied/)
     await assert.rejects(db.exec('select * from mip_private.arc_has_approved_membership'), /permission denied|does not exist/)
     const coverage = (await db.query('select * from graph_coverage_public')).rows[0]
-    assert.equal(coverage.article_count, 4)
+    assert.equal(coverage.article_count, 3)
     assert.equal(coverage.published_node_count, 1)
     assert.equal(await scalar('select count(*)::int from topics'), 25)
     assert.equal(await scalar('select count(*)::int from arc_events'), 1)
