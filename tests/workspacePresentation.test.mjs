@@ -39,6 +39,7 @@ const TIMELINE = readFileSync(new URL('../src/views/TimelineView.jsx', import.me
 const ARCS = readFileSync(new URL('../src/views/ArcsView.jsx', import.meta.url), 'utf8')
 const COMPARE = readFileSync(new URL('../src/views/SourceComparisonView.jsx', import.meta.url), 'utf8')
 const WORLD = readFileSync(new URL('../src/views/WorldView.jsx', import.meta.url), 'utf8')
+const WV_CSS = readFileSync(new URL('../src/views/worldview.css', import.meta.url), 'utf8')
 const SHELL = readFileSync(new URL('../src/components/InvestigationWorkspace.jsx', import.meta.url), 'utf8')
 const CSS = readFileSync(new URL('../src/styles/workspace.css', import.meta.url), 'utf8')
 const TOKENS = readFileSync(new URL('../src/styles/tokens.css', import.meta.url), 'utf8')
@@ -218,6 +219,19 @@ test('workspace visual frame restores reviewed tokens and rail/inspector layout'
   assert.doesNotMatch(SHELL, /className="ws-logo"/)
   assert.match(APP, /hasNativeInspector=\{hasNativeInspector\}/)
   assert.match(APP, /view === 'world'/)
+  assert.match(SHELL, /sharedInspectorHidden/)
+  assert.match(SHELL, /inspectorOccupied \|\| hasNativeInspector/)
+})
+
+test('shared inspector grid collapses when Graph occupies the dock; World View inspector wraps', () => {
+  assert.match(SHELL, /sharedInspectorHidden \? ' has-native-inspector'/)
+  assert.match(CSS, /\.workspace-body\.has-native-inspector[\s\S]*grid-template-columns: minmax\(0, 1fr\)/)
+  assert.match(WV_CSS, /\.wv-inspector \{[\s\S]*min-width:\s*0/)
+  assert.match(WV_CSS, /overflow-wrap:\s*anywhere/)
+  assert.match(WV_CSS, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 286px\)/)
+  assert.match(WV_CSS, /\.wv-weather-grid \{[\s\S]*minmax\(0, 1fr\)/)
+  assert.doesNotMatch(WV_CSS, /minmax\(160px/)
+  assert.doesNotMatch(WV_CSS, /overflow-x:\s*hidden/)
 })
 
 test('raw backend errors stay behind disclosures; fail-closed copy is preserved', () => {

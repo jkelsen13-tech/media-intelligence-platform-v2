@@ -125,6 +125,7 @@ export default function InvestigationWorkspace({
 
   const ic = investigationContext
   const hasSubject = Boolean(ic?.canonical_subject_id)
+  const sharedInspectorHidden = inspectorOccupied || hasNativeInspector
 
   return (
     <div
@@ -253,9 +254,9 @@ export default function InvestigationWorkspace({
         </div>
       </div>
 
-      <div className={`workspace-body ws-body${hasNativeInspector ? ' has-native-inspector' : ''}`}>
+      <div className={`workspace-body ws-body${sharedInspectorHidden ? ' has-native-inspector' : ''}`}>
         <div className="ws-content">{children}</div>
-        {!inspectorOccupied && !hasNativeInspector && (
+        {!sharedInspectorHidden && (
           <aside className={`ws-inspector${inspectorOpen ? '' : ' collapsed'}`} aria-label="Investigation inspector">
             <button
               type="button"
