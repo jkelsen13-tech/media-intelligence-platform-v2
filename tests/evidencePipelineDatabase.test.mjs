@@ -87,6 +87,45 @@ test('database queue, exact evidence and append-only history contracts', async t
     assert.ok(rows.every(row=>row.review_state==='pending' && row.source_url && row.content_hash))
     assert.equal((await rpc('evidence',{event_node_id:event,after_time:rows.at(-1).created_at,after_id:rows.at(-1).id})).length,0)
   })
+  await t.test('candidate RPC rejects UTF-16 offsets and accepts Unicode code points', async () => {
+    const unicodeArticle = {
+      url: 'https://example.org/unicode-span',
+      title: 'Unicode span',
+      outlet: 'Example',
+      summary: '😀 NASA recorded Cleveland totality.',
+    }
+    await rpc('enqueue', { run_id: 'unicode-span', article: unicodeArticle })
+    const job = await rpc('claim')
+    const finished = await rpc('finish', { job_id: job.id, lease_token: job.lease_token })
+    const excerpt = 'NASA'
+    const accepted = await rpc('candidate', {
+      capture_id: finished.capture_id,
+      candidate_key: 'nasa-code-points',
+      candidate_kind: 'claim',
+      statement: 'NASA is named after a supplementary character.',
+      source_field: 'summary',
+      span_start: 2,
+      span_end: 6,
+      excerpt,
+      event_node_id: event,
+      extractor_version: 'test-v1',
+      remaining_uncertainty: 'Isolated Unicode offset contract.',
+    })
+    assert.ok(accepted)
+    await assert.rejects(rpc('candidate', {
+      capture_id: finished.capture_id,
+      candidate_key: 'nasa-utf16',
+      candidate_kind: 'claim',
+      statement: 'UTF-16 indexOf offset must not be accepted.',
+      source_field: 'summary',
+      span_start: 3,
+      span_end: 7,
+      excerpt,
+      event_node_id: event,
+      extractor_version: 'test-v1',
+      remaining_uncertainty: 'Isolated Unicode offset contract.',
+    }), /Unicode code points|span/)
+  })
   await t.test('transient failures back off and exhausted leases become dead letters', async () => {
     await rpc('enqueue',{run_id:'retry',article:{...a,url:'https://example.org/retry'}})
     let job=await rpc('claim')

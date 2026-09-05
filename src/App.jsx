@@ -20,6 +20,7 @@ import WorldView from './views/WorldView'
 import { loadPhase3BetaFlag } from './lib/phase3ReadPath'
 import { buildNavViews, buildMoreEntries, isMoreViewKey } from './lib/navViews'
 import { loadGraph, loadTopics, loadCorpusMeta, loadNodeLocations, loadGraphCoverage } from './lib/supabase'
+import { loadInvestigationSurface, surfaceJoinDisclosures } from './lib/investigationSurface'
 import { liveCorpusLabel } from './lib/newsFeedModel'
 import { computeHubs } from './lib/hubs'
 import { jumpFocusStack } from './lib/jumpReset'
@@ -301,6 +302,7 @@ export default function App() {
   // replaces the machine-facing "data: supabase" label. Failure-isolated —
   // a corpus-meta outage must never block the graph load.
   const [corpusMeta, setCorpusMeta] = useState(null)
+  const [investigationSurface, setInvestigationSurface] = useState(null)
   useEffect(() => {
     loadCorpusMeta().then(setCorpusMeta).catch(() => {})
   }, [])
@@ -992,9 +994,28 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash)
   }, [deepLinkCatalog, rememberPriorSubject])
 
+  useEffect(() => {
+    const subjectId = investigationContext.canonical_subject_id
+    if (!subjectId || investigationContext.canonical_subject_type !== 'event') {
+      setInvestigationSurface(null)
+      return
+    }
+    let cancelled = false
+    loadInvestigationSurface(subjectId)
+      .then((row) => {
+        if (!cancelled) setInvestigationSurface(row)
+      })
+      .catch(() => {
+        if (!cancelled) setInvestigationSurface(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [investigationContext.canonical_subject_id, investigationContext.canonical_subject_type])
+
   const joinDisclosures = useMemo(
-    () =>
-      shellJoinDisclosures({
+    () => [
+      ...shellJoinDisclosures({
         investigationContext,
         view,
         selectionFallbacks,
@@ -1002,7 +1023,12 @@ export default function App() {
         edgesUnavailable: graph?.edgesUnavailable ?? null,
         nodeCount: graph?.nodes?.length ?? null,
       }),
-    [investigationContext, view, selectionFallbacks, error, graph],
+      ...surfaceJoinDisclosures(investigationSurface, {
+        view,
+        subjectType: investigationContext.canonical_subject_type,
+      }),
+    ],
+    [investigationContext, view, selectionFallbacks, error, graph, investigationSurface],
   )
 
   // Returning to Graph restores a live matching node from IC. No node → no
