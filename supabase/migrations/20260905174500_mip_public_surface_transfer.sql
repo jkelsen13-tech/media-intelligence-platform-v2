@@ -8,6 +8,6 @@
 --   20260905172611_mip_public_surface_views
 -- Isolated restore loads those recorded files. Do not replay the former
 -- combined SQL, mark this version applied on production, or reset history.
--- Publication bypasses are closed by 20260905183000_mip_public_surface_publication_gates.
+-- Publication bypasses are closed by 20260905180142_mip_public_surface_publication_gates.
 
 select 1;

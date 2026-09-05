@@ -205,6 +205,7 @@ test('repository history matches recorded production chunks and does not replay 
   assert.doesNotMatch(combined, /create table if not exists public\.citations/i)
   assert.doesNotMatch(combined, /using \(true\)/)
   const gates = await readFile(new URL(`../supabase/migrations/${PUBLIC_SURFACE_PUBLICATION_GATES}`, import.meta.url), 'utf8')
+  assert.match(gates, /Production-recorded public-surface publication-gate correction/)
   assert.match(gates, /citations_public_read/)
   assert.match(gates, /reader_state = 'eligible'/)
   assert.match(gates, /revoke select on table public\.node_location_mentions/)

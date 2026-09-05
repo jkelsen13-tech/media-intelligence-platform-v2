@@ -117,7 +117,7 @@ export const PUBLIC_SURFACE_TRANSFER_CHUNKS = [
 ]
 
 export const PUBLIC_SURFACE_PUBLICATION_GATES =
-  '20260905183000_mip_public_surface_publication_gates.sql'
+  '20260905180142_mip_public_surface_publication_gates.sql'
 
 export const COMBINED_PUBLIC_SURFACE_DRAFT =
   '20260905174500_mip_public_surface_transfer.sql'

@@ -15,7 +15,7 @@
     "20260905172611_mip_public_surface_views"
   ],
   "combined_draft_not_applied": "20260905174500_mip_public_surface_transfer",
-  "forward_publication_gates": "20260905183000_mip_public_surface_publication_gates",
+  "forward_publication_gates": "20260905180142_mip_public_surface_publication_gates",
   "frontend_relations_transferred": [
     "graph_coverage_public",
     "policy_actors",

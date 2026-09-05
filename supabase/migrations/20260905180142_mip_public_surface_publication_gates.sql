@@ -1,13 +1,14 @@
+-- Production-recorded public-surface publication-gate correction.
+-- Applied on qikvmopbtijoebdqosyq as 20260905180142 / mip_public_surface_publication_gates.
+-- Restored verbatim from supabase_migrations.schema_migrations.statements.
+-- Do not replay this file on production; it is already recorded there.
+
 -- Close the public-surface publication bypass.
 -- Citations follow the established article eligibility contract.
 -- Geography and sky base tables return to the V2 revoke contract.
 -- graph_coverage_public counts only eligible+active articles.
 -- Does not invent approval states, auto-approve records, or open a second
 -- geographic publication path. Released geography remains spatial_projection_v1.
-
-begin;
-set local lock_timeout = '5s';
-set local statement_timeout = '30s';
 
 drop policy if exists citations_public_read on public.citations;
 create policy citations_public_read
@@ -77,5 +78,3 @@ grant select on public.graph_coverage_public to anon, authenticated, service_rol
 
 comment on view public.graph_coverage_public is
   'Anonymous aggregate coverage disclosure. Article and resolved-citation counts follow the eligible+active reader contract. Pending, withheld, and withdrawn records are excluded. Review-state candidate counts remain aggregates only.';
-
-commit;
