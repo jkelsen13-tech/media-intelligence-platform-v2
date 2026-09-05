@@ -1,0 +1,117 @@
+{
+  "date": "2026-09-05",
+  "repository_base": "2c38d7e4121c833d0c4e95f0a334e3644d5b5467",
+  "operation": "legacy_graph_private_staging_dry_run",
+  "applied_live": false,
+  "migration": "20260905203600_mip_legacy_graph_private_staging",
+  "destination": "qikvmopbtijoebdqosyq",
+  "source_manus": "yhbwnrtlqbjtcrrlpbge",
+  "source_original": "niejaejtbxgakyrsntxm",
+  "source_gate_a": "jfnzyvzthzqtczlxhjll",
+  "ledger": {
+    "mappings": 3818,
+    "conflicts": 1504,
+    "complete": true,
+    "note": "Original-to-Manus historical mappings. Not proof that corresponding rows exist in production."
+  },
+  "dependency_groups": {
+    "graph_core": { "nodes": 949, "edges": 451 },
+    "graph_evidence": { "sources": 366, "citations": 1274 },
+    "graph_arcs": { "story_arcs": 195, "arc_events": 93 },
+    "graph_entities": { "entities": 8856 },
+    "articles": { "articles": 29782 },
+    "source_comparison": { "events": 13008, "event_articles": 13586 },
+    "review": {
+      "arc_membership_candidates": 980,
+      "cross_surface_candidates": 21,
+      "explanations": 51,
+      "authors": 694
+    },
+    "phase3": {
+      "policies": 27,
+      "policy_documents": 50,
+      "policy_actors": 37,
+      "p3_legal_case": 1,
+      "p3_legal_case_evidence": 8,
+      "p3_policy": 15,
+      "p3_policy_track_event": 31
+    }
+  },
+  "original_counts": {
+    "nodes": 750,
+    "edges": 411,
+    "sources": 340,
+    "articles": 752,
+    "story_arcs": 49
+  },
+  "production_counts": {
+    "nodes": 1,
+    "edges": 0,
+    "sources": 0,
+    "citations": 0,
+    "articles": 4,
+    "eligible_articles": 3,
+    "events": 1,
+    "event_articles": 3,
+    "story_arcs": 0,
+    "news_detail_public": 3,
+    "comparison_public": 1,
+    "graph_coverage_public": 1,
+    "investigation_surface_public": 1,
+    "spatial_projection_v1": 1
+  },
+  "mapping_coverage": {
+    "nodes": { "mapped": 750, "remapped": 21, "unmapped_manus_native": 199 },
+    "edges": { "mapped": 411, "remapped": 0, "unmapped_manus_native": 40 },
+    "sources": { "mapped": 340, "remapped": 0 },
+    "articles": { "mapped": 752, "remapped": 752 },
+    "events": { "mapped": 347, "remapped": 0 }
+  },
+  "unresolved": {
+    "family_title_collisions": 665,
+    "family_uuid_collisions": 0,
+    "historical_gaps": 1504,
+    "unmapped_manus_nodes": 199,
+    "unmapped_manus_edges": 40,
+    "manus_orphans": {
+      "edge_source": 0,
+      "edge_target": 0,
+      "source_node": 0,
+      "citation_article": 0,
+      "citation_node": 0,
+      "arc_root": 0
+    }
+  },
+  "publication_impact": {
+    "current_public_nodes": 1,
+    "current_public_edges": 0,
+    "current_news_detail_public": 3,
+    "current_comparison_public": 1,
+    "if_inserted_into_public_nodes": 950,
+    "blocked_reason": "public.nodes and public.edges currently SELECT USING (true). Unreviewed legacy rows stay in private staging.",
+    "copy_versus_publish": "separate",
+    "preserved_production": {
+      "eclipse_node_id": "acc55cb2-5ac2-4aed-be36-3f576d2bc443",
+      "eclipse_on_manus": false,
+      "eclipse_in_ledger": false,
+      "cyclospora_event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "cyclospora_manus_native": true
+    }
+  },
+  "apply_instructions": {
+    "apply_migration": false,
+    "apply_live_import": false,
+    "collectors": "unchanged_off_for_this_phase",
+    "auth_storage": "unchanged",
+    "spatial_gates": "unchanged",
+    "project_retirement": "none",
+    "next": "ChatGPT reviews this PR and coordinates live application of the staging migration only. Graph publication remains a later reviewed step."
+  },
+  "notes": [
+    "Manus node/edge counts refreshed at 949/451, matching the prior snapshot.",
+    "Graph nodes and Source Comparison events have 0 UUID overlaps and 665 title overlaps. Titles are not identity.",
+    "Production currently publishes every node/edge row to anon/authenticated. Staging therefore never inserts those tables.",
+    "Ledger completion is not corpus-transfer completion.",
+    "No source payloads or credentials are stored in this manifest."
+  ]
+}

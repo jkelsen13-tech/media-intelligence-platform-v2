@@ -1,0 +1,634 @@
+-- Additive private staging for the legacy graph and its evidence
+-- dependencies. Copying is not publishing. This migration must not insert
+-- into public.nodes or public.edges, enable collectors, move Auth/storage,
+-- change spatial gates, or retire any project.
+--
+-- Not applied on production by this revision. ChatGPT coordinates live apply.
+begin;
+set local lock_timeout = '5s';
+set local statement_timeout = '30s';
+
+create schema legacy_graph_staging;
+revoke all on schema legacy_graph_staging from public, anon, authenticated;
+grant usage on schema legacy_graph_staging to service_role;
+alter default privileges in schema legacy_graph_staging revoke execute on functions from public;
+
+create function legacy_graph_staging.reject_mutation() returns trigger
+language plpgsql security invoker set search_path = '' as $$
+begin
+  raise exception 'legacy graph staging history is append-only';
+end $$;
+
+create function legacy_graph_staging.object_family(p_table text, p_payload jsonb) returns text
+language plpgsql immutable security invoker set search_path = '' as $$
+begin
+  if p_table = 'events' then return 'source_comparison_event'; end if;
+  if p_table = 'nodes' then
+    return case coalesce(p_payload->>'type', '')
+      when 'event' then 'graph_event'
+      when 'actor' then 'graph_actor'
+      when 'institution' then 'graph_institution'
+      when 'document' then 'graph_document'
+      when 'anomaly' then 'graph_anomaly'
+      when 'policy' then 'graph_policy'
+      else 'graph_node'
+    end;
+  end if;
+  if p_table = 'edges' then return 'graph_edge'; end if;
+  if p_table = 'sources' then return 'graph_source'; end if;
+  if p_table = 'citations' then return 'graph_citation'; end if;
+  if p_table = 'story_arcs' then return 'graph_arc'; end if;
+  if p_table = 'arc_events' then return 'graph_arc_event'; end if;
+  if p_table = 'entities' then return 'graph_entity'; end if;
+  if p_table = 'articles' then return 'article'; end if;
+  if p_table in ('arc_membership_candidates', 'cross_surface_candidates', 'explanations') then
+    return 'review_record';
+  end if;
+  return 'unclassified';
+end $$;
+
+create table legacy_graph_staging.import_jobs (
+  id uuid primary key default gen_random_uuid(),
+  run_id text not null check (char_length(btrim(run_id)) between 1 and 120),
+  source_project_ref text not null,
+  source_table text not null,
+  state text not null default 'pending'
+    check (state in ('pending', 'processing', 'interrupted', 'completed', 'dead_letter')),
+  page_size integer not null default 50 check (page_size between 1 and 100),
+  attempt_count integer not null default 0 check (attempt_count between 0 and 5),
+  cursor_after_id uuid,
+  processed_count integer not null default 0,
+  lease_token uuid,
+  lease_expires_at timestamptz,
+  available_at timestamptz not null default clock_timestamp(),
+  created_at timestamptz not null default clock_timestamp(),
+  unique (run_id, source_project_ref, source_table)
+);
+
+create table legacy_graph_staging.staged_records (
+  id uuid primary key default gen_random_uuid(),
+  job_id uuid references legacy_graph_staging.import_jobs(id),
+  source_project_ref text not null,
+  source_table text not null,
+  source_id uuid not null,
+  proposed_target_id uuid,
+  object_family text not null,
+  payload jsonb not null,
+  payload_sha256 text not null check (payload_sha256 ~ '^[0-9a-f]{64}$'),
+  source_url text,
+  source_imported_at timestamptz,
+  staged_at timestamptz not null default clock_timestamp(),
+  review_state text not null default 'pending'
+    check (review_state in ('pending', 'quarantined', 'gap_recorded')),
+  decision text not null,
+  unique (source_project_ref, source_table, source_id)
+);
+
+create table legacy_graph_staging.record_conflicts (
+  id uuid primary key default gen_random_uuid(),
+  source_project_ref text not null,
+  run_id text not null,
+  source_table text not null,
+  source_id uuid not null,
+  target_id uuid,
+  source_url text,
+  conflict_kind text not null,
+  recovery_status text not null,
+  affected_fields text[] not null default '{}',
+  details jsonb not null default '{}'::jsonb,
+  detected_at timestamptz not null default clock_timestamp(),
+  unique (source_project_ref, run_id, source_table, source_id, conflict_kind)
+);
+
+create table legacy_graph_staging.endpoint_checks (
+  id uuid primary key default gen_random_uuid(),
+  source_project_ref text not null,
+  source_table text not null,
+  source_id uuid not null,
+  endpoint_role text not null,
+  endpoint_id uuid not null,
+  resolved boolean not null,
+  resolution text not null,
+  checked_at timestamptz not null default clock_timestamp()
+);
+
+create table legacy_graph_staging.job_events (
+  id uuid primary key default gen_random_uuid(),
+  job_id uuid not null references legacy_graph_staging.import_jobs(id),
+  event_kind text not null,
+  detail jsonb not null default '{}'::jsonb,
+  recorded_at timestamptz not null default clock_timestamp()
+);
+
+create function legacy_graph_staging.family_collision(p_table text, p_id uuid) returns boolean
+language plpgsql stable security invoker set search_path = '' as $$
+begin
+  if p_table = 'nodes' and to_regclass('public.events') is not null then
+    return exists (select 1 from public.events e where e.id = p_id);
+  end if;
+  if p_table = 'events' and to_regclass('public.nodes') is not null then
+    return exists (select 1 from public.nodes n where n.id = p_id);
+  end if;
+  return false;
+end $$;
+
+create function legacy_graph_staging.public_graph_collision(p_table text, p_id uuid, p_fingerprint text)
+returns text
+language plpgsql stable security invoker set search_path = '' as $$
+declare existing jsonb;
+begin
+  if p_table = 'nodes' and to_regclass('public.nodes') is not null then
+    select to_jsonb(n) into existing from public.nodes n where n.id = p_id;
+  elsif p_table = 'edges' and to_regclass('public.edges') is not null then
+    select to_jsonb(e) into existing from public.edges e where e.id = p_id;
+  else
+    return null;
+  end if;
+  if existing is null then return null; end if;
+  if encode(sha256(convert_to(existing::text, 'utf8')), 'hex') = p_fingerprint then
+    return 'exact_public_match';
+  end if;
+  return 'divergent_public_row';
+end $$;
+
+create function legacy_graph_staging.record_conflict(
+  p_run text,
+  p_ref text,
+  p_table text,
+  p_source uuid,
+  p_target uuid,
+  p_url text,
+  p_kind text,
+  p_status text,
+  p_fields text[],
+  p_details jsonb
+) returns uuid
+language plpgsql security invoker set search_path = '' as $$
+declare result uuid;
+begin
+  insert into legacy_graph_staging.record_conflicts (
+    source_project_ref, run_id, source_table, source_id, target_id, source_url,
+    conflict_kind, recovery_status, affected_fields, details
+  ) values (
+    p_ref, p_run, p_table, p_source, p_target, p_url, p_kind, p_status,
+    coalesce(p_fields, '{}'), coalesce(p_details, '{}'::jsonb)
+  )
+  on conflict (source_project_ref, run_id, source_table, source_id, conflict_kind) do update
+    set details = excluded.details
+  returning id into result;
+  return result;
+end $$;
+
+create function legacy_graph_staging.stage_record(p_job uuid, p_run text, p_record jsonb)
+returns jsonb
+language plpgsql security invoker set search_path = '' as $$
+declare
+  rec jsonb := p_record;
+  src_table text;
+  src_ref text;
+  src_id uuid;
+  family text;
+  payload jsonb;
+  digest text;
+  existing legacy_graph_staging.staged_records%rowtype;
+  public_state text;
+  decision text;
+  review text := 'pending';
+  proposed uuid;
+begin
+  src_ref := rec->>'source_project_ref';
+  src_table := rec->>'source_table';
+  src_id := (rec->>'source_id')::uuid;
+  payload := rec->'payload';
+  digest := rec->>'payload_sha256';
+  proposed := nullif(rec->>'proposed_target_id', '')::uuid;
+  if src_ref is null or src_table is null or src_id is null or payload is null or digest !~ '^[0-9a-f]{64}$' then
+    raise exception 'staged record requires project, table, id, payload, and sha256';
+  end if;
+  if rec ? 'reader_state' or rec ? 'comparison_validation_state' or payload ? 'publish' then
+    raise exception 'staging cannot carry publication directives';
+  end if;
+  family := coalesce(nullif(rec->>'object_family', ''), legacy_graph_staging.object_family(src_table, payload));
+  if src_table = 'events' and family <> 'source_comparison_event' then
+    raise exception 'Source Comparison events cannot be labeled as graph objects';
+  end if;
+  if src_table = 'nodes' and family = 'source_comparison_event' then
+    raise exception 'graph nodes cannot be labeled as Source Comparison events';
+  end if;
+  if legacy_graph_staging.family_collision(src_table, src_id) then
+    decision := 'event_family_not_interchangeable';
+    review := 'quarantined';
+    perform legacy_graph_staging.record_conflict(
+      p_run, src_ref, src_table, src_id, src_id, rec->>'source_url',
+      'event_family_not_interchangeable', 'unresolved_family_collision',
+      array['id', 'object_family'],
+      jsonb_build_object('note', 'Graph and Source Comparison event IDs are not interchangeable.')
+    );
+  elsif coalesce(rec->>'recovery_status', '') = 'not_restorable_no_pre_import_snapshot' then
+    decision := 'historical_url_upsert_no_snapshot';
+    review := 'gap_recorded';
+    perform legacy_graph_staging.record_conflict(
+      p_run, src_ref, src_table, src_id, proposed, rec->>'source_url',
+      'historical_url_upsert_no_snapshot', 'not_restorable_no_pre_import_snapshot',
+      array['title', 'url', 'body_text'],
+      jsonb_build_object('note', 'Recorded historical gap. Missing versions are not invented.')
+    );
+  else
+    public_state := legacy_graph_staging.public_graph_collision(src_table, src_id, digest);
+    if public_state = 'divergent_public_row' then
+      decision := 'identical_id_divergent_content';
+      review := 'quarantined';
+      perform legacy_graph_staging.record_conflict(
+        p_run, src_ref, src_table, src_id, src_id, rec->>'source_url',
+        'identical_id_divergent_content', 'unresolved_id_collision',
+        array['title', 'url', 'body_text', 'published_at'],
+        jsonb_build_object('note', 'Current production row is preserved. Incoming payload is quarantined.')
+      );
+    elsif public_state = 'exact_public_match' then
+      decision := 'use_existing_mapping';
+      review := 'pending';
+      proposed := src_id;
+    else
+      decision := coalesce(nullif(rec->>'decision', ''), 'insert_unmapped_identity');
+      if decision not in (
+        'insert_unmapped_identity', 'use_existing_mapping', 'existing_import_mapping_skipped',
+        'conflict_recorded', 'title_collision_not_identity', 'event_family_not_interchangeable',
+        'historical_url_upsert_no_snapshot'
+      ) then
+        raise exception 'unsupported staging decision';
+      end if;
+      if decision in ('conflict_recorded', 'title_collision_not_identity', 'event_family_not_interchangeable') then
+        review := 'quarantined';
+      end if;
+    end if;
+  end if;
+
+  select * into existing
+  from legacy_graph_staging.staged_records
+  where source_project_ref = src_ref and source_table = src_table and source_id = src_id;
+  if found then
+    if existing.payload_sha256 = digest and existing.decision = decision then
+      return jsonb_build_object('id', existing.id, 'decision', existing.decision, 'review_state', existing.review_state, 'replayed', true);
+    end if;
+    review := 'quarantined';
+    decision := 'identical_id_divergent_content';
+    perform legacy_graph_staging.record_conflict(
+      p_run, src_ref, src_table, src_id, existing.proposed_target_id, rec->>'source_url',
+      'identical_id_divergent_content', 'unresolved_id_collision',
+      array['payload'],
+      jsonb_build_object('note', 'Existing staged payload is preserved. Divergent rerun is quarantined.')
+    );
+    update legacy_graph_staging.staged_records
+      set review_state = 'quarantined', decision = 'identical_id_divergent_content'
+      where id = existing.id;
+    return jsonb_build_object('id', existing.id, 'decision', decision, 'review_state', 'quarantined', 'replayed', false);
+  end if;
+
+  insert into legacy_graph_staging.staged_records (
+    job_id, source_project_ref, source_table, source_id, proposed_target_id,
+    object_family, payload, payload_sha256, source_url, source_imported_at,
+    review_state, decision
+  ) values (
+    p_job, src_ref, src_table, src_id, proposed, family, payload, digest,
+    rec->>'source_url', nullif(rec->>'source_imported_at', '')::timestamptz,
+    review, decision
+  ) returning id into existing.id;
+
+  return jsonb_build_object('id', existing.id, 'decision', decision, 'review_state', review, 'replayed', false);
+end $$;
+
+create function legacy_graph_staging.validate_endpoints(p_record jsonb) returns jsonb
+language plpgsql security invoker set search_path = '' as $$
+declare
+  src_table text := p_record->>'source_table';
+  src_ref text := p_record->>'source_project_ref';
+  src_id uuid := (p_record->>'source_id')::uuid;
+  payload jsonb := p_record->'payload';
+  checks jsonb := '[]'::jsonb;
+  endpoint uuid;
+  role text;
+  roles text[];
+  resolved boolean;
+  resolution text;
+begin
+  if src_table not in ('edges', 'sources', 'citations', 'story_arcs', 'arc_events') then
+    return jsonb_build_object('source_id', src_id, 'checks', checks, 'orphan', false);
+  end if;
+
+  roles := case src_table
+    when 'edges' then array['endpoint_source', 'endpoint_target']
+    when 'sources' then array['node']
+    when 'citations' then array['article', 'resolved_node']
+    when 'story_arcs' then array['root_node']
+    when 'arc_events' then array['arc']
+  end;
+  foreach role in array roles
+  loop
+    endpoint := case
+      when role = 'endpoint_source' then coalesce(payload->>'endpoint_source_id', payload->>'source_id')::uuid
+      when role = 'endpoint_target' then coalesce(payload->>'endpoint_target_id', payload->>'target_id')::uuid
+      when role = 'node' then (payload->>'node_id')::uuid
+      when role = 'article' then (payload->>'article_id')::uuid
+      when role = 'resolved_node' then nullif(payload->>'resolved_node_id', '')::uuid
+      when role = 'root_node' then nullif(payload->>'root_node_id', '')::uuid
+      when role = 'arc' then (payload->>'arc_id')::uuid
+    end;
+    if endpoint is null then
+      continue;
+    end if;
+    resolved := false;
+    resolution := 'missing';
+    if role in ('endpoint_source', 'endpoint_target', 'node', 'resolved_node', 'root_node') then
+      if exists (
+        select 1 from legacy_graph_staging.staged_records s
+        where s.source_project_ref = src_ref and s.source_table = 'nodes' and s.source_id = endpoint
+          and s.review_state = 'pending'
+      ) or exists (select 1 from public.nodes n where n.id = endpoint) then
+        resolved := true;
+        resolution := 'graph_node';
+      elsif exists (select 1 from public.events e where e.id = endpoint) then
+        resolved := false;
+        resolution := 'source_comparison_event_not_graph_node';
+      end if;
+    elsif role = 'article' then
+      if exists (
+        select 1 from legacy_graph_staging.staged_records s
+        where s.source_project_ref = src_ref and s.source_table = 'articles' and s.source_id = endpoint
+          and s.review_state <> 'quarantined'
+      ) or exists (select 1 from public.articles a where a.id = endpoint) then
+        resolved := true;
+        resolution := 'article';
+      end if;
+    elsif role = 'arc' then
+      if exists (
+        select 1 from legacy_graph_staging.staged_records s
+        where s.source_project_ref = src_ref and s.source_table = 'story_arcs' and s.source_id = endpoint
+          and s.review_state = 'pending'
+      ) or exists (select 1 from public.story_arcs a where a.id = endpoint) then
+        resolved := true;
+        resolution := 'story_arc';
+      end if;
+    end if;
+    insert into legacy_graph_staging.endpoint_checks (
+      source_project_ref, source_table, source_id, endpoint_role, endpoint_id, resolved, resolution
+    ) values (src_ref, src_table, src_id, role, endpoint, resolved, resolution);
+    checks := checks || jsonb_build_array(jsonb_build_object(
+      'role', role, 'endpoint_id', endpoint, 'resolved', resolved, 'resolution', resolution
+    ));
+    if not resolved then
+      update legacy_graph_staging.staged_records
+        set review_state = 'quarantined', decision = 'orphan_endpoint'
+        where source_project_ref = src_ref and source_table = src_table and source_id = src_id;
+      perform legacy_graph_staging.record_conflict(
+        coalesce(p_record->>'run_id', 'endpoint-validation'),
+        src_ref, src_table, src_id, endpoint, p_record->>'source_url',
+        'orphan_endpoint', 'unresolved_endpoint_dependency',
+        array[role],
+        jsonb_build_object('note', 'Relationship endpoints are not rewritten. Orphans stay private.')
+      );
+    end if;
+  end loop;
+
+  return jsonb_build_object(
+    'source_id', src_id,
+    'checks', checks,
+    'orphan', exists (
+      select 1 from jsonb_array_elements(checks) c where (c->>'resolved')::boolean = false
+    )
+  );
+end $$;
+
+create function legacy_graph_staging.enqueue(p_run_id text, p_records jsonb) returns jsonb
+language plpgsql security invoker set search_path = '' as $$
+declare
+  rec jsonb;
+  job legacy_graph_staging.import_jobs%rowtype;
+  staged jsonb := '[]'::jsonb;
+  item jsonb;
+  n integer := 0;
+begin
+  if p_run_id is null or btrim(p_run_id) = '' or char_length(p_run_id) > 120 then
+    raise exception 'run_id required';
+  end if;
+  if jsonb_typeof(p_records) <> 'array' or jsonb_array_length(p_records) < 1 or jsonb_array_length(p_records) > 100 then
+    raise exception 'page must contain 1-100 records';
+  end if;
+
+  insert into legacy_graph_staging.import_jobs (run_id, source_project_ref, source_table, page_size)
+  select
+    p_run_id,
+    first_row->>'source_project_ref',
+    first_row->>'source_table',
+    jsonb_array_length(p_records)
+  from jsonb_array_elements(p_records) as first_row
+  limit 1
+  on conflict (run_id, source_project_ref, source_table) do update
+    set page_size = excluded.page_size
+  returning * into job;
+
+  for rec in select value from jsonb_array_elements(p_records) as payload(value)
+  loop
+    item := legacy_graph_staging.stage_record(job.id, p_run_id, rec);
+    perform legacy_graph_staging.validate_endpoints(rec || jsonb_build_object('run_id', p_run_id));
+    staged := staged || jsonb_build_array(item);
+    n := n + 1;
+    update legacy_graph_staging.import_jobs
+      set cursor_after_id = (rec->>'source_id')::uuid, processed_count = processed_count + 1
+      where id = job.id;
+  end loop;
+
+  update legacy_graph_staging.import_jobs
+    set state = 'completed', lease_token = null, lease_expires_at = null
+    where id = job.id;
+  insert into legacy_graph_staging.job_events (job_id, event_kind, detail)
+  values (job.id, 'enqueue_completed', jsonb_build_object('count', n));
+
+  return jsonb_build_object('job_id', job.id, 'run_id', p_run_id, 'staged', n, 'results', staged);
+end $$;
+
+create function legacy_graph_staging.claim_job() returns jsonb
+language plpgsql security invoker set search_path = '' as $$
+declare job legacy_graph_staging.import_jobs%rowtype;
+begin
+  select * into job
+  from legacy_graph_staging.import_jobs
+  where state in ('pending', 'interrupted')
+    and available_at <= clock_timestamp()
+    and (lease_expires_at is null or lease_expires_at < clock_timestamp())
+  order by created_at
+  for update skip locked
+  limit 1;
+  if not found then return null; end if;
+  update legacy_graph_staging.import_jobs
+    set state = 'processing',
+        attempt_count = attempt_count + 1,
+        lease_token = gen_random_uuid(),
+        lease_expires_at = clock_timestamp() + interval '2 minutes'
+    where id = job.id
+    returning * into job;
+  insert into legacy_graph_staging.job_events (job_id, event_kind, detail)
+  values (job.id, 'claimed', jsonb_build_object('attempt', job.attempt_count));
+  return to_jsonb(job);
+end $$;
+
+create function legacy_graph_staging.finish_job(p_job uuid, p_token uuid) returns jsonb
+language plpgsql security invoker set search_path = '' as $$
+declare job legacy_graph_staging.import_jobs%rowtype;
+begin
+  select * into job from legacy_graph_staging.import_jobs where id = p_job;
+  if job.id is null or job.lease_token is distinct from p_token or job.state <> 'processing' then
+    raise exception 'invalid staging lease';
+  end if;
+  update legacy_graph_staging.import_jobs
+    set state = 'completed', lease_token = null, lease_expires_at = null
+    where id = p_job
+    returning * into job;
+  insert into legacy_graph_staging.job_events (job_id, event_kind, detail)
+  values (job.id, 'finished', jsonb_build_object('processed', job.processed_count));
+  return to_jsonb(job);
+end $$;
+
+create function legacy_graph_staging.fail_job(p_job uuid, p_token uuid, p_code text, p_retryable boolean) returns text
+language plpgsql security invoker set search_path = '' as $$
+declare job legacy_graph_staging.import_jobs%rowtype;
+  next_state text;
+begin
+  select * into job from legacy_graph_staging.import_jobs where id = p_job;
+  if job.id is null or job.lease_token is distinct from p_token then
+    raise exception 'invalid staging lease';
+  end if;
+  if p_retryable and job.attempt_count < 5 then
+    next_state := 'interrupted';
+    update legacy_graph_staging.import_jobs
+      set state = next_state,
+          lease_token = null,
+          lease_expires_at = null,
+          available_at = clock_timestamp()
+      where id = p_job;
+  else
+    next_state := 'dead_letter';
+    update legacy_graph_staging.import_jobs
+      set state = next_state, lease_token = null, lease_expires_at = null
+      where id = p_job;
+  end if;
+  insert into legacy_graph_staging.job_events (job_id, event_kind, detail)
+  values (p_job, 'failed', jsonb_build_object('code', p_code, 'state', next_state));
+  return next_state;
+end $$;
+
+create function legacy_graph_staging.status(p_run_id text) returns jsonb
+language plpgsql stable security invoker set search_path = '' as $$
+begin
+  return coalesce((
+    select jsonb_agg(jsonb_build_object('state', j.state, 'jobs', j.jobs))
+    from (
+      select state, count(*)::int as jobs
+      from legacy_graph_staging.import_jobs
+      where run_id = p_run_id
+      group by state
+    ) j
+  ), '[]'::jsonb);
+end $$;
+
+create function legacy_graph_staging.manifest() returns jsonb
+language plpgsql stable security invoker set search_path = '' as $$
+begin
+  return jsonb_build_object(
+    'staged', coalesce((
+      select jsonb_object_agg(source_table, n) from (
+        select source_table, count(*)::int as n from legacy_graph_staging.staged_records group by 1
+      ) s
+    ), '{}'::jsonb),
+    'review_states', coalesce((
+      select jsonb_object_agg(review_state, n) from (
+        select review_state, count(*)::int as n from legacy_graph_staging.staged_records group by 1
+      ) s
+    ), '{}'::jsonb),
+    'conflicts', coalesce((
+      select jsonb_object_agg(conflict_kind, n) from (
+        select conflict_kind, count(*)::int as n from legacy_graph_staging.record_conflicts group by 1
+      ) s
+    ), '{}'::jsonb),
+    'orphans', (select count(*)::int from legacy_graph_staging.endpoint_checks where not resolved),
+    'public_nodes', (select count(*)::int from public.nodes),
+    'public_edges', (select count(*)::int from public.edges)
+  );
+end $$;
+
+create function public.mip_legacy_graph_v1(p_action text, p_input jsonb default '{}'::jsonb) returns jsonb
+language plpgsql security invoker set search_path = '' as $$
+begin
+  case p_action
+    when 'enqueue' then
+      return legacy_graph_staging.enqueue(p_input->>'run_id', p_input->'records');
+    when 'claim' then
+      return legacy_graph_staging.claim_job();
+    when 'finish' then
+      return legacy_graph_staging.finish_job((p_input->>'job_id')::uuid, (p_input->>'lease_token')::uuid);
+    when 'fail' then
+      return to_jsonb(legacy_graph_staging.fail_job(
+        (p_input->>'job_id')::uuid,
+        (p_input->>'lease_token')::uuid,
+        p_input->>'code',
+        coalesce((p_input->>'retryable')::boolean, false)
+      ));
+    when 'status' then
+      return legacy_graph_staging.status(p_input->>'run_id');
+    when 'manifest' then
+      return legacy_graph_staging.manifest();
+    when 'endpoints' then
+      return legacy_graph_staging.validate_endpoints(p_input);
+    when 'publish' then
+      raise exception 'publication is not implemented in this phase';
+    else
+      raise exception 'unsupported legacy graph staging action';
+  end case;
+end $$;
+
+revoke all on function public.mip_legacy_graph_v1(text, jsonb) from public, anon, authenticated;
+grant execute on function public.mip_legacy_graph_v1(text, jsonb) to service_role;
+
+do $$
+declare t text;
+begin
+  foreach t in array array['import_jobs', 'staged_records', 'record_conflicts', 'endpoint_checks', 'job_events']
+  loop
+    execute format('alter table legacy_graph_staging.%I enable row level security', t);
+    execute format('revoke all on legacy_graph_staging.%I from public, anon, authenticated, service_role', t);
+    execute format('grant select, insert on legacy_graph_staging.%I to service_role', t);
+  end loop;
+  foreach t in array array['staged_records', 'record_conflicts', 'endpoint_checks', 'job_events']
+  loop
+    execute format(
+      'create trigger immutable_legacy_graph_staging before update or delete on legacy_graph_staging.%I for each row execute function legacy_graph_staging.reject_mutation()',
+      t
+    );
+    execute format(
+      'create trigger immutable_legacy_graph_staging_truncate before truncate on legacy_graph_staging.%I for each statement execute function legacy_graph_staging.reject_mutation()',
+      t
+    );
+  end loop;
+end $$;
+
+-- Jobs are resumable; only that table may be updated after insert.
+grant update on legacy_graph_staging.import_jobs to service_role;
+-- staged_records.review_state may move pending → quarantined during endpoint validation.
+grant update (review_state, decision) on legacy_graph_staging.staged_records to service_role;
+drop trigger if exists immutable_legacy_graph_staging on legacy_graph_staging.staged_records;
+drop trigger if exists immutable_legacy_graph_staging_truncate on legacy_graph_staging.staged_records;
+create trigger immutable_legacy_graph_staging_delete
+  before delete on legacy_graph_staging.staged_records
+  for each row execute function legacy_graph_staging.reject_mutation();
+create trigger immutable_legacy_graph_staging_no_truncate
+  before truncate on legacy_graph_staging.staged_records
+  for each statement execute function legacy_graph_staging.reject_mutation();
+
+revoke all on all functions in schema legacy_graph_staging from public, anon, authenticated;
+grant execute on all functions in schema legacy_graph_staging to service_role;
+grant usage, select on all sequences in schema legacy_graph_staging to service_role;
+
+comment on schema legacy_graph_staging is
+  'Private legacy-graph staging and reconciliation. Records stay pending or quarantined. No public graph publication.';
+comment on function public.mip_legacy_graph_v1(text, jsonb) is
+  'Server-only legacy graph staging RPC. publish is rejected. Never writes public.nodes or public.edges.';
+commit;
