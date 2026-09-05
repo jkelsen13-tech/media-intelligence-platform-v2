@@ -14,6 +14,7 @@ export function surfaceAvailability(row) {
       auto_approval_enabled: false,
     }
   }
+  const publicArticleCount = row.public_article_count == null ? null : Number(row.public_article_count)
   return {
     canonical_event_id: row.canonical_event_id ?? null,
     event_label: row.event_label ?? row.label ?? null,
@@ -21,8 +22,8 @@ export function surfaceAvailability(row) {
     occurred_at: row.occurred_at ?? null,
     has_released_geography: row.has_released_geography === true,
     spatial_revision_id: row.spatial_revision_id ?? null,
-    public_article: row.public_article_count > 0,
-    public_article_count: Number(row.public_article_count ?? 0),
+    public_article: publicArticleCount > 0,
+    public_article_count: publicArticleCount,
     reviewed_claims: row.reviewed_claim_count > 0,
     published_relationships: row.published_relationship_count > 0,
     auto_approval_enabled: row.auto_approval_enabled === true,
@@ -35,13 +36,17 @@ export function surfaceJoinDisclosures(row, { view = null, subjectType = 'event'
   const disclosures = []
   if (!surface.canonical_event_id) return []
   if (!surface.public_article) {
-    disclosures.push(classifyJoinState({
-      withheld: true,
-      reviewGated: true,
-      failureReason: 'source_article_pending_or_withheld',
+    const articleJoin = classifyJoinState({
+      availableCount: 0,
       view: 'news',
       subjectType: 'article',
-    }))
+    })
+    if (articleJoin) {
+      articleJoin.reason = surface.public_article_count == null
+        ? 'source_article_count_unavailable'
+        : 'source_article_none_public'
+      disclosures.push(articleJoin)
+    }
   }
   if (!surface.reviewed_claims) {
     disclosures.push(classifyJoinState({

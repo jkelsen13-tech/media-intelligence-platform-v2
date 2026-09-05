@@ -84,6 +84,120 @@ test('divergent content under one id and equal URLs with different ids are recor
   assert.equal(sameUrl.conflict.conflict_kind, 'equal_url_divergent_ids')
 })
 
+const EDGE_A = 'aaaaaaaa-0000-4000-8000-0000000000a1'
+const NODE_A = 'bbbbbbbb-0000-4000-8000-0000000000b1'
+const NODE_B = 'cccccccc-0000-4000-8000-0000000000c1'
+const NODE_C = 'dddddddd-0000-4000-8000-0000000000d1'
+const NODE_D = 'eeeeeeee-0000-4000-8000-0000000000e1'
+
+function edgeSource(overrides = {}) {
+  return {
+    source_project_ref: 'yhbwnrtlqbjtcrrlpbge',
+    source_table: 'edges',
+    source_id: EDGE_A,
+    source_node_id: NODE_A,
+    target_node_id: NODE_B,
+    relationship_type: 'caused',
+    label: 'caused',
+    ...overrides,
+  }
+}
+
+test('identical relationships with the same record id map without a conflict', () => {
+  const result = reconcileIdentity({
+    source: edgeSource(),
+    target: { id: EDGE_A, source_id: NODE_A, target_id: NODE_B, type: 'caused', label: 'caused' },
+  })
+  assert.equal(result.decision, IDENTITY_DECISIONS.mapped)
+  assert.equal(result.conflict, null)
+  assert.equal(result.mapping.source_id, EDGE_A)
+})
+
+test('changed source or target endpoints are recorded instead of treated as equivalent', () => {
+  const sourceChanged = reconcileIdentity({
+    source: edgeSource({ source_node_id: NODE_C }),
+    target: { id: EDGE_A, source_id: NODE_A, target_id: NODE_B, type: 'caused', label: 'caused' },
+  })
+  assert.equal(sourceChanged.decision, IDENTITY_DECISIONS.conflict)
+  assert.equal(sourceChanged.conflict.conflict_kind, 'incompatible_relationship_endpoints')
+  assert.equal(sourceChanged.mapping, null)
+
+  const targetChanged = reconcileIdentity({
+    source: edgeSource({ target_node_id: NODE_D }),
+    target: { id: EDGE_A, source_id: NODE_A, target_id: NODE_B, type: 'caused', label: 'caused' },
+  })
+  assert.equal(targetChanged.conflict.conflict_kind, 'incompatible_relationship_endpoints')
+})
+
+test('changed relationship type is recorded without a caller flag', () => {
+  const result = reconcileIdentity({
+    source: edgeSource({ relationship_type: 'supported' }),
+    target: { id: EDGE_A, source_id: NODE_A, target_id: NODE_B, type: 'caused', label: 'caused' },
+  })
+  assert.equal(result.decision, IDENTITY_DECISIONS.conflict)
+  assert.equal(result.conflict.conflict_kind, 'incompatible_relationship_endpoints')
+  assert.deepEqual(result.conflict.details.incoming_endpoints.relationshipType, 'supported')
+})
+
+test('record identity is not treated as the source-node endpoint', () => {
+  const result = reconcileIdentity({
+    source: edgeSource({
+      source_id: NODE_A,
+      source_node_id: NODE_B,
+      target_node_id: NODE_C,
+    }),
+    target: { id: NODE_A, source_id: NODE_A, target_id: NODE_C, type: 'caused', label: 'caused' },
+  })
+  assert.equal(result.conflict.conflict_kind, 'incompatible_relationship_endpoints')
+  assert.equal(result.conflict.details.incoming_endpoints.sourceEndpoint, NODE_B)
+  assert.equal(result.conflict.details.existing_endpoints.sourceEndpoint, NODE_A)
+})
+
+test('existing mappings with divergent relationship records are preserved and recorded', () => {
+  const mapping = {
+    source_project_ref: 'yhbwnrtlqbjtcrrlpbge',
+    source_table: 'edges',
+    source_id: EDGE_A,
+    target_id: EDGE_A,
+  }
+  const endpoints = reconcileIdentity({
+    source: edgeSource({ source_node_id: NODE_C }),
+    target: { id: EDGE_A, source_id: NODE_A, target_id: NODE_B, type: 'caused', label: 'caused' },
+    existingMappings: [mapping],
+  })
+  assert.equal(endpoints.decision, IDENTITY_DECISIONS.skip_existing_mapping)
+  assert.equal(endpoints.mapping.target_id, mapping.target_id)
+  assert.equal(endpoints.conflict.conflict_kind, 'existing_import_mapping_relationship_divergent')
+
+  const content = reconcileIdentity({
+    source: edgeSource({ label: 'Version A', title: 'Version A' }),
+    target: { id: EDGE_A, source_id: NODE_A, target_id: NODE_B, type: 'caused', label: 'Version B', title: 'Version B' },
+    existingMappings: [mapping],
+  })
+  assert.equal(content.mapping.target_id, mapping.target_id)
+  assert.equal(content.conflict.conflict_kind, 'existing_import_mapping_content_divergent')
+})
+
+test('graph and source-comparison identity stays partitioned even for matching UUID strings', () => {
+  const shared = 'acc55cb2-5ac2-4aed-be36-3f576d2bc443'
+  const result = reconcileIdentity({
+    source: {
+      source_project_ref: 'yhbwnrtlqbjtcrrlpbge',
+      source_table: 'events',
+      source_id: shared,
+      object_family: SOURCE_COMPARISON_EVENT_FAMILY,
+      title: '2024 Total Solar Eclipse, Cleveland, Ohio',
+    },
+    target: {
+      id: shared,
+      object_family: GRAPH_EVENT_FAMILY,
+      title: '2024 Total Solar Eclipse, Cleveland, Ohio',
+    },
+  })
+  assert.equal(result.decision, IDENTITY_DECISIONS.family_mismatch)
+  assert.equal(result.mapping, null)
+})
+
 test('isolated restore ledger preserves both recorded gap families', () => {
   const ledger = restoreIdentityLedger()
   assert.equal(ledger.preservedGaps.length, 1)

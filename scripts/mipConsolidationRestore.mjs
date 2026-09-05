@@ -73,6 +73,7 @@ export const RECORDED_GAPS = [
       source_project_ref: 'niejaejtbxgakyrsntxm',
       source_table: 'articles',
       source_id: '22222222-2222-4222-8222-222222222222',
+      title: 'Mapped',
       url: 'https://example.org/already-mapped',
     },
     target: { id: '33333333-3333-4333-8333-333333333333', title: 'Mapped', url: 'https://example.org/already-mapped' },
@@ -96,12 +97,22 @@ export const ECLIPSE_ARTICLE = {
   summary: 'NASA table of 2024-04-08 totality times including Cleveland, Ohio: partial 1:59 p.m. EDT, totality 3:13-3:17 p.m. EDT, maximum 3:15 p.m. EDT, partial ends 4:29 p.m. EDT.',
 }
 
+export async function applyConsolidationDelta(db) {
+  const delta = await readFile(new URL('../supabase/migrations/20260905151626_mip_consolidation_delta.sql', import.meta.url), 'utf8')
+  await db.exec(delta)
+}
+
+export async function applyEventScopedPublicArticleCounts(db) {
+  const eventScoped = await readFile(new URL('../supabase/migrations/20260905160001_event_scoped_public_article_counts.sql', import.meta.url), 'utf8')
+  await db.exec(eventScoped)
+}
+
 export async function applyFoundation(db) {
   await db.exec(DESTINATION_FOUNDATION_SQL)
   const pipeline = await readFile(new URL('../supabase/migrations/20260905082406_evidence_pipeline_reliability.sql', import.meta.url), 'utf8')
   await db.exec(pipeline)
-  const delta = await readFile(new URL('../supabase/migrations/20260905180000_mip_consolidation_delta.sql', import.meta.url), 'utf8')
-  await db.exec(delta)
+  await applyConsolidationDelta(db)
+  await applyEventScopedPublicArticleCounts(db)
 }
 
 export function restoreSourceRegisters() {

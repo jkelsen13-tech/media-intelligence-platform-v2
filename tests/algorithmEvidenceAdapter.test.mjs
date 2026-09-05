@@ -7,6 +7,8 @@ import {
   membershipDecisionToPromotion,
   candidateFromExactSource,
   assertDefaultDeny,
+  spanFromSource,
+  sliceCodePoints,
 } from '../scripts/algorithmEvidenceAdapter.mjs'
 import { scoreEclipseMembershipWithoutApproval } from '../scripts/mipConsolidationRestore.mjs'
 import { regressionActorOnlyArcContaminationFixture, regressionCoherentArcContinuationFixture } from '../verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/arc-membership-run/lib.js'
@@ -67,12 +69,38 @@ test('exact-source candidates require a retained excerpt', () => {
     remaining_uncertainty: 'Pending review.',
   })
   assert.equal(candidate.excerpt, 'Cleveland, Ohio')
-  assert.equal(text.slice(candidate.span_start, candidate.span_end), 'Cleveland, Ohio')
+  assert.equal(sliceCodePoints(text, candidate.span_start, candidate.span_end), 'Cleveland, Ohio')
   assert.throws(() => candidateFromExactSource({
     ...candidate,
     source_text: text,
     excerpt: 'Invented quotation',
   }), /not present/)
+})
+
+test('evidence spans use Unicode code points, not UTF-16 units', () => {
+  const beforeEmoji = '😀 NASA recorded Cleveland totality.'
+  const emojiBefore = spanFromSource(beforeEmoji, 'NASA')
+  assert.equal(emojiBefore.span_start, 2)
+  assert.equal(emojiBefore.span_end, 6)
+  assert.equal(sliceCodePoints(beforeEmoji, emojiBefore.span_start, emojiBefore.span_end), 'NASA')
+  assert.notEqual(beforeEmoji.indexOf('NASA'), emojiBefore.span_start)
+
+  const insideEmoji = 'Recorded Cleveland 😀 totality.'
+  const inside = spanFromSource(insideEmoji, 'Cleveland 😀 totality')
+  assert.equal(inside.span_start, 9)
+  assert.equal(inside.span_end, 29)
+  assert.equal(sliceCodePoints(insideEmoji, inside.span_start, inside.span_end), 'Cleveland 😀 totality')
+
+  const combining = 'e\u0301 NASA recorded Cleveland.'
+  const afterCombining = spanFromSource(combining, 'NASA')
+  assert.equal(afterCombining.span_start, 3)
+  assert.equal(sliceCodePoints(combining, afterCombining.span_start, afterCombining.span_end), 'NASA')
+
+  const ascii = 'NASA recorded Cleveland totality.'
+  const ordinary = spanFromSource(ascii, 'NASA')
+  assert.equal(ordinary.span_start, 0)
+  assert.equal(ordinary.span_end, 4)
+  assert.equal(sliceCodePoints(ascii, ordinary.span_start, ordinary.span_end), 'NASA')
 })
 
 test('eclipse membership helper never flips recorded gates', () => {

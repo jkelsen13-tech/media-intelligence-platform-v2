@@ -24,12 +24,26 @@ test('surface keeps pending articles and unpublished claims honest', () => {
   assert.equal(availability.auto_approval_enabled, false)
 })
 
-test('disclosures do not invent News rows or reviewed claims', () => {
+test('zero public memberships is an honest empty, not withheld private articles', () => {
   const disclosures = surfaceJoinDisclosures(ECLIPSE, { view: 'news', subjectType: 'event' })
-  assert.ok(disclosures.some((row) => row.kind === 'withheld'))
+  assert.equal(disclosures.some((row) => row.kind === 'withheld'), false)
+  assert.equal(disclosures.some((row) => row.reason === 'source_article_pending_or_withheld'), false)
+  assert.ok(disclosures.some((row) => row.kind === 'no_joined_data' && row.reason === 'source_article_none_public'))
   assert.ok(disclosures.some((row) => row.kind === 'insufficient_evidence'))
   assert.ok(disclosures.every((row) => row.invented !== true && row.inventedNewsRow !== true))
   assert.deepEqual(surfaceJoinDisclosures(null), [])
+})
+
+test('null article count is unavailable rather than proof of private articles', () => {
+  const disclosures = surfaceJoinDisclosures({ ...ECLIPSE, public_article_count: null }, { view: 'news' })
+  assert.equal(disclosures.some((row) => row.kind === 'withheld'), false)
+  assert.ok(disclosures.some((row) => row.reason === 'source_article_count_unavailable'))
+})
+
+test('governed public memberships do not emit an empty-article disclosure', () => {
+  const disclosures = surfaceJoinDisclosures({ ...ECLIPSE, public_article_count: 1 }, { view: 'news' })
+  assert.equal(disclosures.some((row) => row.reason === 'source_article_none_public'), false)
+  assert.equal(surfaceAvailability({ ...ECLIPSE, public_article_count: 1 }).public_article, true)
 })
 
 test('missing geography is disclosed only on World View', () => {

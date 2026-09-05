@@ -19,6 +19,55 @@ function sameText(left, right) {
   return norm(left).length > 0 && norm(left) === norm(right)
 }
 
+function isImportIdentityRecord(record) {
+  return Boolean(record?.source_project_ref || record?.source_table)
+}
+
+function relationshipTable(record, hint = null) {
+  return record?.source_table ?? hint ?? null
+}
+
+/**
+ * Canonical relationship endpoints and type. Record identity (`source_id` on
+ * an import source, `id` on a destination row) is never treated as the
+ * source-node endpoint. Node `type` is not a relationship type.
+ */
+export function relationshipFields(record, tableHint = null) {
+  if (!record) return null
+  const table = relationshipTable(record, tableHint)
+  const hasDedicatedEndpoints = record.endpoint_source_id != null
+    || record.endpoint_target_id != null
+    || record.source_node_id != null
+    || record.target_node_id != null
+    || record.relationship_type != null
+  const destinationEdge = !isImportIdentityRecord(record)
+    && (table === 'edges' || (record.id && record.source_id && record.target_id && record.type != null && tableHint === 'edges'))
+  if (table !== 'edges' && !hasDedicatedEndpoints && !destinationEdge) return null
+
+  if (isImportIdentityRecord(record)) {
+    return {
+      sourceEndpoint: record.endpoint_source_id ?? record.source_node_id ?? null,
+      targetEndpoint: record.endpoint_target_id ?? record.target_node_id ?? null,
+      relationshipType: record.relationship_type ?? (table === 'edges' ? record.type ?? null : null),
+    }
+  }
+
+  return {
+    sourceEndpoint: record.endpoint_source_id ?? record.source_node_id ?? record.source_id ?? null,
+    targetEndpoint: record.endpoint_target_id ?? record.target_node_id ?? record.target_id ?? null,
+    relationshipType: record.relationship_type ?? record.type ?? null,
+  }
+}
+
+export function relationshipFieldsConflict(source, target, tableHint = null) {
+  const left = relationshipFields(source, tableHint ?? source?.source_table)
+  const right = relationshipFields(target, tableHint ?? source?.source_table)
+  if (!left || !right) return false
+  return left.sourceEndpoint !== right.sourceEndpoint
+    || left.targetEndpoint !== right.targetEndpoint
+    || left.relationshipType !== right.relationshipType
+}
+
 export function mappingKey(row) {
   return `${row.source_project_ref}:${row.source_table}:${row.source_id}`
 }
@@ -38,6 +87,53 @@ export function contentFingerprint(record = {}) {
     body: norm(record.body_text ?? record.summary ?? record.description),
     published_at: record.published_at ?? record.occurred_at ?? null,
   })
+}
+
+function contentDiverges(source, target) {
+  if (!target) return false
+  return contentFingerprint(source) !== contentFingerprint(target)
+}
+
+function identityMatches(source, target) {
+  return Boolean(target && source.source_id === target.id)
+}
+
+function relationshipConflict(source, target, {
+  conflictKind = 'incompatible_relationship_endpoints',
+  recoveryStatus = 'unresolved_relationship_collision',
+  note = 'Relationship endpoints or type disagree. Record identity is unchanged and no endpoint is rewritten.',
+} = {}) {
+  const incoming = relationshipFields(source, source.source_table)
+  const existing = relationshipFields(target, source.source_table)
+  return {
+    conflict_kind: conflictKind,
+    recovery_status: recoveryStatus,
+    source_id: source.source_id,
+    target_id: target?.id ?? null,
+    source_url: source.url ?? null,
+    affected_fields: ['endpoint_source_id', 'endpoint_target_id', 'relationship_type'],
+    details: {
+      note,
+      incoming_endpoints: incoming,
+      existing_endpoints: existing,
+    },
+  }
+}
+
+function contentConflict(source, target, {
+  conflictKind = 'identical_id_divergent_content',
+  recoveryStatus = 'unresolved_id_collision',
+  note = 'Same identifier, divergent retained content. Both versions are kept.',
+} = {}) {
+  return {
+    conflict_kind: conflictKind,
+    recovery_status: recoveryStatus,
+    source_id: source.source_id,
+    target_id: target.id,
+    source_url: source.url ?? null,
+    affected_fields: ['title', 'url', 'body_text', 'published_at'],
+    details: { note },
+  }
 }
 
 /**
@@ -69,13 +165,36 @@ export function reconcileIdentity({ source, target = null, existingMappings = []
 
   const mapped = findExistingMapping(existingMappings, source)
   if (mapped) {
+    const preserved = { ...mapped }
+    if (target && relationshipFieldsConflict(source, target, source.source_table)) {
+      return {
+        decision: IDENTITY_DECISIONS.skip_existing_mapping,
+        mapping: preserved,
+        conflict: relationshipConflict(source, { ...target, id: target.id ?? mapped.target_id }, {
+          conflictKind: 'existing_import_mapping_relationship_divergent',
+          recoveryStatus: 'existing_mapping_preserved_relationship_divergent',
+          note: 'Existing import mapping is preserved. Divergent relationship endpoints or type are recorded, not overwritten.',
+        }),
+      }
+    }
+    if (target && contentDiverges(source, target)) {
+      return {
+        decision: IDENTITY_DECISIONS.skip_existing_mapping,
+        mapping: preserved,
+        conflict: contentConflict(source, { ...target, id: target.id ?? mapped.target_id }, {
+          conflictKind: 'existing_import_mapping_content_divergent',
+          recoveryStatus: 'existing_mapping_preserved_content_divergent',
+          note: 'Existing import mapping is preserved. Divergent retained content is recorded, not merged.',
+        }),
+      }
+    }
     const alreadyLogged = (existingConflicts ?? []).some((row) => (
       row.source_id === source.source_id
       && row.conflict_kind === 'existing_import_mapping_skipped'
     ))
     return {
       decision: IDENTITY_DECISIONS.skip_existing_mapping,
-      mapping: mapped,
+      mapping: preserved,
       conflict: alreadyLogged ? null : {
         conflict_kind: 'existing_import_mapping_skipped',
         recovery_status: 'not_applicable_existing_mapping',
@@ -104,19 +223,34 @@ export function reconcileIdentity({ source, target = null, existingMappings = []
     }
   }
 
-  if (target && source.source_id === target.id && contentFingerprint(source) !== contentFingerprint(target)) {
+  if (target && relationshipFieldsConflict(source, target, source.source_table)) {
+    return {
+      decision: IDENTITY_DECISIONS.conflict,
+      mapping: null,
+      conflict: relationshipConflict(source, target),
+    }
+  }
+
+  if (target?.relationship_endpoints_incompatible && !relationshipFields(source, source.source_table)) {
     return {
       decision: IDENTITY_DECISIONS.conflict,
       mapping: null,
       conflict: {
-        conflict_kind: 'identical_id_divergent_content',
-        recovery_status: 'unresolved_id_collision',
+        conflict_kind: 'incompatible_relationship_endpoints',
+        recovery_status: 'unresolved_relationship_collision',
         source_id: source.source_id,
-        target_id: target.id,
-        source_url: source.url ?? null,
-        affected_fields: ['title', 'url', 'body_text', 'published_at'],
-        details: { note: 'Same identifier, divergent retained content. Both versions are kept.' },
+        target_id: target.id ?? null,
+        affected_fields: ['endpoint_source_id', 'endpoint_target_id', 'relationship_type'],
+        details: { note: 'Relationship endpoints disagree. No endpoint is rewritten.' },
       },
+    }
+  }
+
+  if (identityMatches(source, target) && contentDiverges(source, target)) {
+    return {
+      decision: IDENTITY_DECISIONS.conflict,
+      mapping: null,
+      conflict: contentConflict(source, target),
     }
   }
 
@@ -154,22 +288,7 @@ export function reconcileIdentity({ source, target = null, existingMappings = []
     }
   }
 
-  if (target?.relationship_endpoints_incompatible) {
-    return {
-      decision: IDENTITY_DECISIONS.conflict,
-      mapping: null,
-      conflict: {
-        conflict_kind: 'incompatible_relationship_endpoints',
-        recovery_status: 'unresolved_relationship_collision',
-        source_id: source.source_id,
-        target_id: target.id ?? null,
-        affected_fields: ['source_id', 'target_id'],
-        details: { note: 'Relationship endpoints disagree. No endpoint is rewritten.' },
-      },
-    }
-  }
-
-  if (target && source.source_id === target.id && contentFingerprint(source) === contentFingerprint(target)) {
+  if (identityMatches(source, target) && !contentDiverges(source, target)) {
     return {
       decision: IDENTITY_DECISIONS.mapped,
       mapping: {

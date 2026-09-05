@@ -60,11 +60,28 @@ export function scoreComparisonCluster(event, members, releaseGate = recordedRel
   return score
 }
 
+function codePointIndexOf(haystack, needle) {
+  const hay = Array.from(haystack)
+  const nee = Array.from(needle)
+  if (nee.length === 0) return 0
+  outer: for (let i = 0; i <= hay.length - nee.length; i += 1) {
+    for (let j = 0; j < nee.length; j += 1) {
+      if (hay[i + j] !== nee[j]) continue outer
+    }
+    return i
+  }
+  return -1
+}
+
+export function sliceCodePoints(text, start, end) {
+  return Array.from(text).slice(start, end).join('')
+}
+
 export function spanFromSource(text, excerpt) {
   if (typeof text !== 'string' || typeof excerpt !== 'string' || !excerpt) {
     throw new Error('exact source excerpt required')
   }
-  const start = Array.from(text).join('').indexOf(excerpt)
+  const start = codePointIndexOf(text, excerpt)
   if (start < 0) throw new Error('excerpt is not present in the retained source field')
   return { source_field: null, span_start: start, span_end: start + Array.from(excerpt).length, excerpt }
 }
