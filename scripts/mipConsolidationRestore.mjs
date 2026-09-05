@@ -119,6 +119,9 @@ export const PUBLIC_SURFACE_TRANSFER_CHUNKS = [
 export const PUBLIC_SURFACE_PUBLICATION_GATES =
   '20260905180142_mip_public_surface_publication_gates.sql'
 
+export const PUBLIC_SURFACE_AUTHENTICATED_REVIEW_REVOKE =
+  '20260905182000_mip_public_surface_authenticated_review_revoke.sql'
+
 export const COMBINED_PUBLIC_SURFACE_DRAFT =
   '20260905174500_mip_public_surface_transfer.sql'
 
@@ -137,6 +140,10 @@ export async function applyPublicSurfacePublicationGates(db) {
   await applyMigrationFile(db, PUBLIC_SURFACE_PUBLICATION_GATES)
 }
 
+export async function applyPublicSurfaceAuthenticatedReviewRevoke(db) {
+  await applyMigrationFile(db, PUBLIC_SURFACE_AUTHENTICATED_REVIEW_REVOKE)
+}
+
 export async function applyFoundation(db) {
   await db.exec(DESTINATION_FOUNDATION_SQL)
   const pipeline = await readFile(new URL('../supabase/migrations/20260905082406_evidence_pipeline_reliability.sql', import.meta.url), 'utf8')
@@ -145,6 +152,7 @@ export async function applyFoundation(db) {
   await applyEventScopedPublicArticleCounts(db)
   await applyPublicSurfaceTransfer(db)
   await applyPublicSurfacePublicationGates(db)
+  await applyPublicSurfaceAuthenticatedReviewRevoke(db)
 }
 
 export function restoreSourceRegisters() {
