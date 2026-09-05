@@ -778,3 +778,114 @@ test('dependency quarantine is transitive, order-independent, and visible in fin
     assert.equal(restoredCheck.resolution, 'story_arc')
   })
 })
+
+test('distinct exact numbers keep distinct fingerprints and are not replayed as duplicates', async () => {
+  const db = await PGlite.create()
+  try {
+    await applyFoundation(db)
+    const rpcRaw = async (action, input) => (
+      await db.query('select public.mip_legacy_graph_v1($1,$2::jsonb) result', [action, input])
+    ).rows[0].result
+    const rpc = (action, input = {}) => rpcRaw(action, JSON.stringify(input))
+
+    const collision = (await db.query(`
+      select
+        '{"n":9007199254740992}'::jsonb = '{"n":9007199254740993}'::jsonb as payloads_equal,
+        legacy_graph_staging.fingerprint_payload('{"n":9007199254740992}')
+          = legacy_graph_staging.fingerprint_payload('{"n":9007199254740993}') as fingerprints_equal,
+        legacy_graph_staging.canonical_number('9007199254740992'::jsonb) as left_token,
+        legacy_graph_staging.canonical_number('9007199254740993'::jsonb) as right_token
+    `)).rows[0]
+    assert.equal(collision.payloads_equal, false)
+    assert.equal(collision.fingerprints_equal, false)
+    assert.equal(collision.left_token, '9007199254740992')
+    assert.equal(collision.right_token, '9007199254740993')
+
+    const decimals = (await db.query(`
+      select
+        legacy_graph_staging.fingerprint_payload('{"n":0.123456789012345678901234567890}')
+          = legacy_graph_staging.fingerprint_payload('{"n":0.123456789012345678901234567891}') as fingerprints_equal,
+        '{"n":0.123456789012345678901234567890}'::jsonb
+          = '{"n":0.123456789012345678901234567891}'::jsonb as payloads_equal
+    `)).rows[0]
+    assert.equal(decimals.payloads_equal, false)
+    assert.equal(decimals.fingerprints_equal, false)
+
+    for (const [jsValue, raw] of [[1e-7, '1e-7'], [1e21, '1e+21'], [0.5, '0.5']]) {
+      const fromJs = fingerprintPayload({ score: jsValue })
+      const fromSql = await scalar(db, 'select legacy_graph_staging.fingerprint_payload($1::jsonb)', [
+        `{"score":${raw}}`,
+      ])
+      assert.equal(fromSql, fromJs, `parity for ${raw}`)
+    }
+
+    const sourceId = '99999999-0000-4000-8000-000000000001'
+    const makeInput = (run, value) => JSON.stringify({
+      run_id: run,
+      records: [{
+        source_project_ref: MANUS,
+        source_table: 'nodes',
+        source_id: sourceId,
+        payload: {
+          id: sourceId,
+          label: 'Precision fixture',
+          type: 'event',
+          metadata: { n: 'RAW_NUMBER' },
+        },
+      }],
+    }).replace('"RAW_NUMBER"', value)
+
+    await rpcRaw('enqueue', makeInput('precision-a', '9007199254740992'))
+    const claimedA = await rpc('claim', { run_id: 'precision-a' })
+    const first = await rpc('finish', { job_id: claimedA.id, lease_token: claimedA.lease_token })
+    assert.equal(first.results[0].replayed, false)
+    assert.equal(first.results[0].review_state, 'pending')
+
+    await rpcRaw('enqueue', makeInput('precision-b', '9007199254740993'))
+    const claimedB = await rpc('claim', { run_id: 'precision-b' })
+    const second = await rpc('finish', { job_id: claimedB.id, lease_token: claimedB.lease_token })
+    assert.equal(second.results[0].replayed, false)
+    assert.equal(second.results[0].decision, 'identical_id_divergent_content')
+    assert.equal(second.results[0].review_state, 'quarantined')
+    assert.equal(second.results[0].payload_sha256, first.results[0].payload_sha256)
+    assert.notEqual(second.results[0].incoming_sha256, first.results[0].payload_sha256)
+    const versionHashes = (await db.query(
+      'select payload_sha256 from legacy_graph_staging.payload_versions where source_id=$1 order by ordinal',
+      [sourceId],
+    )).rows.map((row) => row.payload_sha256)
+    assert.equal(versionHashes.length, 2)
+    assert.notEqual(versionHashes[0], versionHashes[1])
+
+    const stored = (await db.query(`
+      select payload#>>'{metadata,n}' as exact_stored_number,
+        (select count(*)::int from legacy_graph_staging.payload_versions) as versions,
+        (select count(*)::int from legacy_graph_staging.record_conflicts) as conflicts
+      from legacy_graph_staging.staged_records
+      where source_id=$1
+    `, [sourceId])).rows[0]
+    assert.equal(stored.exact_stored_number, '9007199254740992')
+    assert.equal(stored.versions, 2)
+    assert.equal(stored.conflicts, 1)
+
+    const staleRecord = JSON.stringify({
+      run_id: 'precision-stale',
+      records: [{
+        source_project_ref: MANUS,
+        source_table: 'nodes',
+        source_id: sourceId,
+        payload_sha256: first.results[0].payload_sha256,
+        payload: { id: sourceId, label: 'Precision fixture', type: 'event', metadata: { n: 'RAW_NUMBER' } },
+      }],
+    }).replace('"RAW_NUMBER"', '9007199254740993')
+    await assert.rejects(
+      rpcRaw('enqueue', staleRecord),
+      /payload fingerprint mismatch/,
+    )
+    assert.equal(
+      await scalar(db, "select count(*)::int from legacy_graph_staging.import_jobs where run_id='precision-stale'"),
+      0,
+    )
+  } finally {
+    await db.close()
+  }
+})

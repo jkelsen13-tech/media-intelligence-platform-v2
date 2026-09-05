@@ -113,6 +113,7 @@
     "Production currently publishes every node/edge row to anon/authenticated. Staging therefore never inserts those tables.",
     "Ledger completion is not corpus-transfer completion.",
     "No source payloads or credentials are stored in this manifest.",
-    "Revision after 6d51024: exact edge payloads, ES numeric fingerprint parity, transitive endpoint quarantine, dry-run mapping revalidation, and final finish_job states."
+    "Revision after 6d51024: exact edge payloads, ES numeric fingerprint parity, transitive endpoint quarantine, dry-run mapping revalidation, and final finish_job states.",
+    "Revision after b6805bc: numeric fingerprints stay lossless for distinct jsonb integers/decimals (2^53 vs 2^53+1). ES tokens are used only when they round-trip. Replay requires raw jsonb equality."
   ]
 }

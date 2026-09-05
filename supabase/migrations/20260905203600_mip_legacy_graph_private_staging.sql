@@ -20,15 +20,15 @@ begin
 end $$;
 
 -- Canonical JSON matches scripts/mipLegacyGraphStaging.mjs stableStringify:
--- sorted object keys, no spaces, JSON string/boolean/null tokens, and
--- ECMAScript JSON number formatting (float8 + ToString, e.g. 1e-7, 1e+21).
-create function legacy_graph_staging.canonical_number(p_value jsonb) returns text
+-- sorted object keys, no spaces, JSON string/boolean/null tokens.
+-- Numbers use ECMAScript JSON formatting only when that token round-trips
+-- to the exact jsonb numeric. Distinct source numbers never share a hash.
+create function legacy_graph_staging.canonical_number_es(p_float double precision) returns text
 language plpgsql immutable security invoker set search_path = '' as $$
 declare
-  n double precision;
+  n double precision := p_float;
   raw text;
   sign_prefix text := '';
-  body text;
   digits text;
   exp_first integer;
   es_n integer;
@@ -38,11 +38,13 @@ declare
   epos integer;
   exp_s text;
 begin
-  if p_value is null or jsonb_typeof(p_value) <> 'number' then
-    raise exception 'canonical number requires a jsonb number';
+  if n is null or n <> n then
+    raise exception 'canonical number requires a finite value';
   end if;
-  n := (p_value #>> '{}')::double precision;
   if n = 0 then return '0'; end if;
+  if n = 'Infinity'::double precision or n = '-Infinity'::double precision then
+    raise exception 'canonical number requires a finite value';
+  end if;
   if n < 0 then
     sign_prefix := '-';
     n := -n;
@@ -98,6 +100,34 @@ begin
     return sign_prefix || digits || exp_s;
   end if;
   return sign_prefix || substr(digits, 1, 1) || '.' || substr(digits, 2) || exp_s;
+end $$;
+
+create function legacy_graph_staging.canonical_number(p_value jsonb) returns text
+language plpgsql immutable security invoker set search_path = '' as $$
+declare
+  original numeric;
+  n double precision;
+  rendered text;
+begin
+  if p_value is null or jsonb_typeof(p_value) <> 'number' then
+    raise exception 'canonical number requires a jsonb number';
+  end if;
+  original := (p_value #>> '{}')::numeric;
+  if original = 0 then return '0'; end if;
+  n := original::double precision;
+  if n = n and n is not null
+     and n <> 'Infinity'::double precision
+     and n <> '-Infinity'::double precision then
+    begin
+      rendered := legacy_graph_staging.canonical_number_es(n);
+      if rendered::numeric = original then
+        return rendered;
+      end if;
+    exception when others then
+      rendered := null;
+    end;
+  end if;
+  return btrim(original::text);
 end $$;
 
 create function legacy_graph_staging.canonical_json(p_value jsonb) returns text
@@ -370,13 +400,19 @@ begin
   return existing;
 end $$;
 
-create function legacy_graph_staging.public_graph_collision(p_table text, p_id uuid, p_fingerprint text)
+create function legacy_graph_staging.public_graph_collision(p_table text, p_id uuid, p_fingerprint text, p_payload jsonb default null)
 returns text
 language plpgsql stable security invoker set search_path = '' as $$
 declare existing jsonb := legacy_graph_staging.public_graph_row(p_table, p_id);
 begin
   if existing is null then return null; end if;
+  if p_payload is not null and existing = p_payload then
+    return 'exact_public_match';
+  end if;
   if legacy_graph_staging.fingerprint_payload(existing) = p_fingerprint then
+    if p_payload is not null and existing is distinct from p_payload then
+      return 'divergent_public_row';
+    end if;
     return 'exact_public_match';
   end if;
   return 'divergent_public_row';
@@ -510,7 +546,7 @@ begin
     );
   else
     public_row := legacy_graph_staging.public_graph_row(src_table, src_id);
-    public_state := legacy_graph_staging.public_graph_collision(src_table, src_id, digest);
+    public_state := legacy_graph_staging.public_graph_collision(src_table, src_id, digest, payload);
     if public_state = 'divergent_public_row' then
       decision := 'identical_id_divergent_content';
       review := 'quarantined';
@@ -532,7 +568,7 @@ begin
   from legacy_graph_staging.staged_records
   where source_project_ref = src_ref and source_table = src_table and source_id = src_id;
   if found then
-    if existing.payload_sha256 = digest then
+    if existing.payload = payload then
       return jsonb_build_object(
         'id', existing.id, 'source_id', existing.source_id, 'decision', existing.decision,
         'review_state', existing.review_state, 'replayed', true,
@@ -806,7 +842,9 @@ language sql stable security invoker set search_path = '' as $$
     'payload_sha256', s.payload_sha256,
     'proposed_target_id', s.proposed_target_id,
     'version_id', nullif(item->>'version_id', ''),
-    'conflict_id', nullif(item->>'conflict_id', '')
+    'conflict_id', nullif(item->>'conflict_id', ''),
+    'incoming_sha256', nullif(item->>'incoming_sha256', ''),
+    'incoming_version_id', nullif(item->>'incoming_version_id', '')
   ) order by page.ord), '[]'::jsonb)
   from jsonb_array_elements(coalesce(p_page, (
     select j.page from legacy_graph_staging.import_jobs j where j.id = p_job
@@ -1124,5 +1162,5 @@ comment on schema legacy_graph_staging is
 comment on function public.mip_legacy_graph_v1(text, jsonb) is
   'Server-only legacy graph staging RPC. publish is rejected. Never writes public.nodes or public.edges.';
 comment on function legacy_graph_staging.fingerprint_payload(jsonb) is
-  'SHA-256 of canonical JSON matching scripts/mipLegacyGraphStaging.mjs fingerprintPayload.';
+  'SHA-256 of canonical JSON matching scripts/mipLegacyGraphStaging.mjs fingerprintPayload. Distinct jsonb numbers never share a digest.';
 commit;

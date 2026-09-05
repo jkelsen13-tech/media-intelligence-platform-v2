@@ -497,3 +497,5 @@ final persisted `finish` results.
 Details: `docs/MIP_LEGACY_GRAPH_STAGING_2026-09-05.md`.
 Verifier: `mip_legacy_graph_staging_2026-09-05.json`.
 Probe: `scripts/reviewStagingRevisionProbe.mjs` (isolated PGlite only).
+Precision probe: `scripts/reviewStagingPrecisionProbe.mjs` — distinct jsonb
+integers beyond float64 must not share a fingerprint or replay as duplicates.

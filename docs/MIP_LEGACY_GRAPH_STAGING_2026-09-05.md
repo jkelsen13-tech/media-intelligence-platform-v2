@@ -29,7 +29,9 @@ Migration `20260905203600_mip_legacy_graph_private_staging` adds schema
 
 - resumable jobs with leases, interruption, expired-lease reclaim, and dead-letter
 - server-side payload fingerprints that match `fingerprintPayload` in JavaScript,
-  including ECMAScript JSON number formatting (`1e-7`, `1e+21`)
+  including ECMAScript JSON number formatting (`1e-7`, `1e+21`) when that token
+  round-trips to the exact jsonb numeric. Distinct source numbers never share a
+  digest; replay requires raw jsonb equality, not a lossy hash alone
 - exact source payloads stored and fingerprinted; derived relationship aliases
   stay outside the payload
 - server-revalidated identity mappings from the supplied context and

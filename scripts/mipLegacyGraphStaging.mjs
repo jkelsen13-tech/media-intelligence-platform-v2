@@ -117,10 +117,30 @@ export const LIVE_DRY_RUN = Object.freeze({
   }),
 })
 
+export function losslessJsonNumber(value) {
+  if (typeof value === 'bigint') return value.toString()
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return 'null'
+    return JSON.stringify(value)
+  }
+  throw new Error('losslessJsonNumber requires a number or bigint')
+}
+
 export function stableStringify(value) {
+  if (typeof value === 'bigint') return losslessJsonNumber(value)
   if (value === null || typeof value !== 'object') return JSON.stringify(value)
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`
   return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`
+}
+
+export function serializeStagingJson(value) {
+  if (typeof value === 'bigint') return losslessJsonNumber(value)
+  if (value === null || typeof value !== 'object') {
+    if (typeof value === 'number' && !Number.isFinite(value)) return 'null'
+    return JSON.stringify(value)
+  }
+  if (Array.isArray(value)) return `[${value.map(serializeStagingJson).join(',')}]`
+  return `{${Object.keys(value).filter((key) => value[key] !== undefined).map((key) => `${JSON.stringify(key)}:${serializeStagingJson(value[key])}`).join(',')}}`
 }
 
 export function fingerprintPayload(payload) {
@@ -496,7 +516,7 @@ export function enqueueSql(runId, records, context = {}) {
   return {
     planned,
     sql: 'select public.mip_legacy_graph_v1($1,$2::jsonb) result',
-    params: ['enqueue', JSON.stringify({
+    params: ['enqueue', serializeStagingJson({
       run_id: runId,
       mappings,
       records: planned.map((row) => ({
@@ -522,7 +542,7 @@ export function enqueueSql(runId, records, context = {}) {
 async function rpcOn(db, action, input = {}) {
   return (await db.query(
     'select public.mip_legacy_graph_v1($1,$2::jsonb) result',
-    [action, JSON.stringify(input)],
+    [action, serializeStagingJson(input)],
   )).rows[0].result
 }
 
@@ -543,7 +563,7 @@ export function createStagingRpc({ url, key, fetchImpl = fetch }) {
     const response = await fetchImpl(`${target}/rest/v1/rpc/${STAGING_RPC}`, {
       method: 'POST',
       headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_action: action, p_input: input }),
+      body: serializeStagingJson({ p_action: action, p_input: input }),
       signal: AbortSignal.timeout(25000),
     })
     const body = await response.json().catch(() => null)
