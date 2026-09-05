@@ -40,6 +40,7 @@ import RemainingUncertaintyBlock from '../components/RemainingUncertaintyBlock'
 import TrustFooter from '../components/TrustFooter'
 import GroupedTimelineView from './GroupedTimelineView'
 import { investigationContextDomProps } from '../lib/investigationContext'
+import { TIMELINE_SPACING_NOTE, timelinePresentationMode } from '../lib/workspacePresentation'
 import '../styles/timeline.css'
 
 // Track B Step 3 item 4 — the addendum's Screen 5 (Timeline), arc-scoped by
@@ -101,6 +102,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   const [timelineMode, setTimelineMode] = useState('flat')
   const [query, setQuery] = useState('')
   const [linkFilter, setLinkFilter] = useState('any')
+  const [presentation, setPresentation] = useState('chronology')
   const [page, setPage] = useState(0)
   const [pendingFocus, setPendingFocus] = useState(null)
   const [focusHighlight, setFocusHighlight] = useState(null)
@@ -342,7 +344,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   }
   const arcsUnavailableNotice = arcsUnavailable ? (
     <div className="notice">
-      Story arcs are unavailable ({arcsUnavailable}). Id-only stub rows are treated as no-arc; no titles are invented.
+      Some timeline context is unavailable. Recorded events remain visible. Story arcs are unavailable ({arcsUnavailable}). Id-only stub rows are treated as no-arc; no titles are invented.
     </div>
   ) : null
 
@@ -554,6 +556,27 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
               )}
               {((scopeIsGlobal && global) || (!scopeIsGlobal && detail)) && (
                 <>
+                  <div className="timeline-presentation">
+                    <div className="timeline-presentation-toggle" role="group" aria-label="Timeline presentation">
+                      <button
+                        type="button"
+                        className={timelinePresentationMode(presentation) === 'chronology' ? 'active' : ''}
+                        aria-pressed={presentation === 'chronology'}
+                        onClick={() => setPresentation('chronology')}
+                      >
+                        Chronology
+                      </button>
+                      <button
+                        type="button"
+                        className={timelinePresentationMode(presentation) === 'list' ? 'active' : ''}
+                        aria-pressed={presentation === 'list'}
+                        onClick={() => setPresentation('list')}
+                      >
+                        List
+                      </button>
+                    </div>
+                    <p className="timeline-spacing-note">{TIMELINE_SPACING_NOTE}</p>
+                  </div>
                   <p className="timeline-count" aria-live="polite">
                     {entries.length} timeline record{entries.length === 1 ? '' : 's'} · {graphEventCount} graph event{graphEventCount === 1 ? '' : 's'} · {articleRecordCount} News record{articleRecordCount === 1 ? '' : 's'}
                     {!scopeIsGlobal && entries.length !== arcEntries.length &&
@@ -566,6 +589,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
                   <ArcTimeline
                     entries={visibleEntries}
                     edges={scopeIsGlobal ? (global?.edges ?? []) : []}
+                    layout={presentation === 'list' ? 'list' : 'horizontal'}
                     loadArticle={loadArticleExcerpt}
                     registerRef={scopeIsGlobal ? registerRef : undefined}
                     focusKey={focusHighlight}

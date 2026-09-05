@@ -131,6 +131,18 @@ test('n=1 does not invent expected-range copy or numbers', () => {
   assert.ok(!Object.hasOwn(CLEVELAND_VALUE, 'truth_probability'))
 })
 
+test('hashing failure withholds with hash_unavailable and does not reject', async () => {
+  const view = await pinFetchedAssessment(CLEVELAND_VALUE, CLEVELAND_ASSESSMENT_KEY, {
+    hashFn: async () => {
+      throw new Error('digest unavailable')
+    },
+  })
+  assert.equal(view.status, 'unavailable')
+  assert.equal(view.reason, 'hash_unavailable')
+  assert.equal(view.copy, 'temporal assessment unavailable')
+  assert.equal(view.expectedRange, null)
+})
+
 test('SHA mismatch fail-closes to temporal assessment unavailable', async () => {
   const tampered = { ...CLEVELAND_VALUE, as_of_known_at: '2099-01-01' }
   const view = await pinFetchedAssessment(tampered, CLEVELAND_ASSESSMENT_KEY)

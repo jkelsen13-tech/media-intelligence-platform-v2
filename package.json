@@ -15,6 +15,7 @@
     "@deck.gl/core": "^9.1.12",
     "@deck.gl/layers": "^9.1.12",
     "@deck.gl/mapbox": "^9.1.12",
+    "@phosphor-icons/react": "^2.1.10",
     "@supabase/supabase-js": "^2.110.0",
     "cesium": "^1.145.0",
     "cytoscape": "^3.34.0",

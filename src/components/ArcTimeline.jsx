@@ -84,7 +84,15 @@ function TimelineEntry({ entry, article, expanded, onToggle }) {
   )
 }
 
-export default function ArcTimeline({ entries, edges = [], loadArticle, emptyText, registerRef, focusKey }) {
+export default function ArcTimeline({
+  entries,
+  edges = [],
+  loadArticle,
+  emptyText,
+  registerRef,
+  focusKey,
+  layout = 'vertical',
+}) {
   const list = Array.isArray(entries) ? entries.filter(Boolean) : []
   const [expandedKey, setExpandedKey] = useState(null)
   const [articles, setArticles] = useState(() => new Map())
@@ -120,8 +128,11 @@ export default function ArcTimeline({ entries, edges = [], loadArticle, emptyTex
     }
   }
 
+  const layoutClass =
+    layout === 'horizontal' ? ' ep-tl-chronology' : layout === 'list' ? ' ep-tl-list-alt' : ''
+
   return (
-    <ol className="ep-tl-list">
+    <ol className={`ep-tl-list${layoutClass}`} data-timeline-layout={layout}>
       {list.map((entry, i) => (
         <li
           key={entry.key ?? i}

@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MIP — Media Intelligence Platform</title>
     <script>
-      // 04_TRACK_B Step 1 flash fix: paint-time theme hint from the last
-      // resolved value, so repeat visits don't paint the dark backdrop while
-      // the flag fetch is in flight. Cosmetic only — src/lib/themeFlag.js
-      // re-resolves authoritatively before render and overwrites this.
+      // Owner-selected light presentation at boot. Cosmetic paint-time hint
+      // only — src/lib/themeFlag.js applies light before render.
       try {
-        if (localStorage.getItem('mip-theme') === 'light') {
-          document.documentElement.dataset.theme = 'light'
-        }
-      } catch (e) { /* no storage -> dark default, withhold posture */ }
+        document.documentElement.dataset.theme = 'light'
+        localStorage.setItem('mip-theme', 'light')
+      } catch (e) { /* storage blocked — dataset still set above when possible */ }
     </script>
   </head>
   <body>

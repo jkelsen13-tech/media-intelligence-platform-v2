@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { loadSourceComparisonView, E_LEVEL_NAMES } from '../lib/sourceComparisonReadPath.js'
 import { filterEventsByTitle } from '../lib/listFilters.js'
+import WorkspaceAvailability from '../components/WorkspaceAvailability'
 import './sourcecomparison.css'
 
 // Source Comparison (03_BACKLOG Item 1) — beta view behind
@@ -343,13 +344,17 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
   if (!view.enabled) {
     return (
       <div className="notice">
-        Source Comparison is currently unavailable.
+        <WorkspaceAvailability
+          kind="compare"
+          icon="compare"
+          details="Source Comparison is currently unavailable."
+        />
       </div>
     )
   }
 
   return (
-    <div className="sc-view">
+    <div className="sc-view sc-columns">
       <section className="sc-banner">
         <p className="sc-kicker">Evidence review</p>
         <h2>Source Comparison</h2>
@@ -370,11 +375,11 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
       )}
 
       {view.events.length === 0 ? (
-        <p className="sc-empty">
-          No validated comparison events are currently available. Candidate event clusters are withheld
-          until article membership has passed same-event review; no outlet, timing, claim, or omission
-          metric is shown before that gate is satisfied.
-        </p>
+        <WorkspaceAvailability
+          kind="compare"
+          icon="compare"
+          details="No validated comparison events are currently available. Candidate event clusters are withheld until article membership has passed same-event review; no outlet, timing, claim, or omission metric is shown before that gate is satisfied."
+        />
       ) : (
         <>
           <input
