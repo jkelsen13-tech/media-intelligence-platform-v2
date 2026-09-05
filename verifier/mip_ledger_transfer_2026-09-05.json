@@ -1,0 +1,46 @@
+{
+  "date": "2026-09-05",
+  "repository_base": "8e83ec5be73c7e5a68b1cff40bc5196954c44388",
+  "destination": "qikvmopbtijoebdqosyq",
+  "source_manus": "yhbwnrtlqbjtcrrlpbge",
+  "source_original": "niejaejtbxgakyrsntxm",
+  "source_gate_a": "jfnzyvzthzqtczlxhjll",
+  "transfer": "original_source_import_ledger",
+  "expected": {
+    "mappings": 3818,
+    "conflicts": 1504,
+    "mapping_sha256": "df2b375adf8864678847f4eaab5606cd57201e87ad1d0f308bd383fd4b9f3fc3",
+    "conflict_sha256": "0ac3d6d9083d8c9e1408a53e3c12db8fcc3d31b892f599b45aed95fed39efcb3",
+    "source_project_ref": "niejaejtbxgakyrsntxm"
+  },
+  "mapping_tables": {
+    "arc_events": 70,
+    "articles": 752,
+    "citations": 38,
+    "edges": 411,
+    "entities": 963,
+    "events": 347,
+    "nodes": 750,
+    "p3_legal_case": 1,
+    "p3_legal_case_evidence": 8,
+    "p3_policy": 6,
+    "p3_policy_track_event": 6,
+    "policies": 27,
+    "policy_documents": 50,
+    "sources": 340,
+    "story_arcs": 49
+  },
+  "conflict_kinds": {
+    "existing_import_mapping_skipped": 752,
+    "historical_url_upsert_no_snapshot": 752
+  },
+  "notes": [
+    "Ledger lives on Manus only. Original has no mapping or conflict tables.",
+    "Article mappings are remapped (source_id != target_id). Identity is never inferred from titles.",
+    "Cyclospora Source Comparison event 8e4f9812-0afa-4aad-ada8-6fb556da70d9 is Manus-native and is not in this ledger.",
+    "Historical conflicts are the recorded 2026-08-20 non-restorable audit, not a reconstruction target.",
+    "Native pg_dump is still unavailable: database hosts now resolve, but this workspace has no database password. Authorized route remains Supabase SQL/MCP.",
+    "Manus collectors stay on Manus. Watermarks do not switch workers.",
+    "No project is retired by this revision."
+  ]
+}
