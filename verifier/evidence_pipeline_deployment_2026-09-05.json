@@ -1,0 +1,40 @@
+{
+  "date": "2026-09-05",
+  "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+  "base": "da2fcd248018919e5d10407e7ce400b8b671f812",
+  "branch": "codex/evidence-pipeline-reliability",
+  "branch_uploaded": false,
+  "project": "qikvmopbtijoebdqosyq",
+  "migration": "20260905082406_evidence_pipeline_reliability",
+  "migration_sha256": "e4c5a47f57788b1ff73daf05d62f060eb1adeebdcba391f4384f72c0e70bdedd",
+  "applied": true,
+  "smoke_before": "passed_rolled_back",
+  "smoke_after": "passed_rolled_back",
+  "baseline_before": {
+    "nodes": "f75040ca01482501398024203bc2f1ef",
+    "config": "d24e783ad06844cdaa670220d8d33726",
+    "sources": "d751713988987e9331980363e24189ce",
+    "articles": "6cd45927f2965796788ba8e3dda89a37",
+    "projection": "1fd9bcc54ad5fa457bf9f68ce5c00d50",
+    "spatial_revisions": "422b51a24e21359853dd2c46e9acd95d",
+    "spatial_memberships": "632108e052d6c1813f04528e07ea11dd"
+  },
+  "baseline_after": {
+    "nodes": "f75040ca01482501398024203bc2f1ef",
+    "config": "d24e783ad06844cdaa670220d8d33726",
+    "sources": "d751713988987e9331980363e24189ce",
+    "articles": "6cd45927f2965796788ba8e3dda89a37",
+    "projection": "1fd9bcc54ad5fa457bf9f68ce5c00d50",
+    "spatial_revisions": "422b51a24e21359853dd2c46e9acd95d",
+    "spatial_memberships": "632108e052d6c1813f04528e07ea11dd"
+  },
+  "existing_state_unchanged": true,
+  "import_jobs": 0,
+  "evidence_candidates": 0,
+  "baseline_versions": 3,
+  "synthetic_articles": 0,
+  "new_security_warn_error_count": 0,
+  "github_write_error": "403 Resource not accessible by integration",
+  "public_ui_changed": false,
+  "scheduled_collection_enabled": false
+}
