@@ -63,8 +63,13 @@ node scripts/mipLegacyGraphStaging.mjs plan page.json
 records, and saved identity mappings. Feeding `planned` records into
 `applyStagingPage` revalidates that same mapping context; a target ID without a
 matching mapping is not treated as `existing_import_mapping_skipped`.
-Isolated review reproductions live in `scripts/reviewStagingRevisionProbe.mjs`
-and must not be pointed at production.
+CLI `dry-run` / `plan` parse and emit JSON with lossless number tokens. Planned
+rows also carry `payload_json` so a later `JSON.parse` of the plan can still
+apply the exact numeric payload. `JSON.parse` of a number token itself remains
+IEEE-754 and cannot recover `9007199254740993` from the Number value.
+Isolated review reproductions live in `scripts/reviewStagingRevisionProbe.mjs`,
+`scripts/reviewStagingPrecisionProbe.mjs`, and
+`scripts/reviewEndToEndPrecision.mjs` and must not be pointed at production.
 
 Live writes require a later reviewed apply of the migration plus a server
 service role. Collected payloads and credentials stay out of Git.

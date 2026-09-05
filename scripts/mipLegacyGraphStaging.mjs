@@ -117,30 +117,281 @@ export const LIVE_DRY_RUN = Object.freeze({
   }),
 })
 
+const EXACT_JSON_NUMBER = Symbol.for('mip.exactJsonNumber')
+
+export function parseDecimalToken(token) {
+  let text = String(token).trim()
+  let negative = false
+  if (text.startsWith('+')) text = text.slice(1)
+  if (text.startsWith('-')) {
+    negative = true
+    text = text.slice(1)
+  }
+  const match = /^(0|[1-9]\d*)(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/.exec(text)
+  if (!match) throw new Error(`unsupported JSON number token: ${token}`)
+  let digits = `${match[1]}${match[2] ?? ''}`
+  let exp = Number(match[3] ?? 0) - (match[2] ?? '').length
+  digits = digits.replace(/^0+/, '') || '0'
+  if (digits === '0') return { negative: false, digits: '0', exp: 0 }
+  while (digits.endsWith('0')) {
+    digits = digits.slice(0, -1)
+    exp += 1
+  }
+  return { negative, digits, exp }
+}
+
+export function decimalToPlainText(decimal) {
+  if (decimal.digits === '0') return '0'
+  const sign = decimal.negative ? '-' : ''
+  if (decimal.exp >= 0) return `${sign}${decimal.digits}${'0'.repeat(decimal.exp)}`
+  const split = decimal.digits.length + decimal.exp
+  if (split > 0) return `${sign}${decimal.digits.slice(0, split)}.${decimal.digits.slice(split)}`
+  return `${sign}0.${'0'.repeat(-split)}${decimal.digits}`
+}
+
+export function decimalsEqual(left, right) {
+  return left.negative === right.negative && left.digits === right.digits && left.exp === right.exp
+}
+
+export function canonicalNumberToken(token) {
+  const decimal = parseDecimalToken(token)
+  const asNumber = Number(`${decimal.negative ? '-' : ''}${decimal.digits}e${decimal.exp}`)
+  if (Number.isFinite(asNumber)) {
+    const es = JSON.stringify(asNumber)
+    try {
+      if (decimalsEqual(parseDecimalToken(es), decimal)) return es
+    } catch {
+      // Fall through to the exact decimal spelling.
+    }
+  }
+  return decimalToPlainText(decimal)
+}
+
+export class ExactJsonNumber {
+  constructor(token) {
+    this[EXACT_JSON_NUMBER] = true
+    this.token = String(token)
+    this.decimal = parseDecimalToken(this.token)
+    this.canonical = canonicalNumberToken(this.token)
+  }
+
+  toString() {
+    return this.canonical
+  }
+
+  toJSON() {
+    return this
+  }
+}
+
+export function isExactJsonNumber(value) {
+  return Boolean(value && typeof value === 'object' && value[EXACT_JSON_NUMBER])
+}
+
 export function losslessJsonNumber(value) {
-  if (typeof value === 'bigint') return value.toString()
+  if (isExactJsonNumber(value)) return value.canonical
+  if (typeof value === 'bigint') return canonicalNumberToken(value.toString())
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) return 'null'
     return JSON.stringify(value)
   }
-  throw new Error('losslessJsonNumber requires a number or bigint')
+  throw new Error('losslessJsonNumber requires a number, bigint, or exact JSON number')
+}
+
+function emitJsonValue(value, sortedKeys, indent, depth) {
+  if (isExactJsonNumber(value) || typeof value === 'bigint' || typeof value === 'number') {
+    return losslessJsonNumber(value)
+  }
+  if (value === null) return 'null'
+  if (typeof value === 'boolean') return value ? 'true' : 'false'
+  if (typeof value === 'string') return JSON.stringify(value)
+  if (typeof value !== 'object') return 'null'
+  const pad = indent ? indent.repeat(depth) : ''
+  const padIn = indent ? indent.repeat(depth + 1) : ''
+  const colon = indent ? ': ' : ':'
+  const eol = indent ? '\n' : ''
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '[]'
+    const parts = value.map((item) => emitJsonValue(item, sortedKeys, indent, depth + 1))
+    if (!indent) return `[${parts.join(',')}]`
+    return `[${eol}${parts.map((part) => `${padIn}${part}`).join(`,${eol}`)}${eol}${pad}]`
+  }
+  const keys = Object.keys(value).filter((key) => value[key] !== undefined)
+  if (sortedKeys) keys.sort()
+  if (keys.length === 0) return '{}'
+  const parts = keys.map((key) => `${JSON.stringify(key)}${colon}${emitJsonValue(value[key], sortedKeys, indent, depth + 1)}`)
+  if (!indent) return `{${parts.join(',')}}`
+  return `{${eol}${parts.map((part) => `${padIn}${part}`).join(`,${eol}`)}${eol}${pad}}`
 }
 
 export function stableStringify(value) {
-  if (typeof value === 'bigint') return losslessJsonNumber(value)
-  if (value === null || typeof value !== 'object') return JSON.stringify(value)
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`
-  return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`
+  return emitJsonValue(value, true, '', 0)
 }
 
 export function serializeStagingJson(value) {
-  if (typeof value === 'bigint') return losslessJsonNumber(value)
-  if (value === null || typeof value !== 'object') {
-    if (typeof value === 'number' && !Number.isFinite(value)) return 'null'
-    return JSON.stringify(value)
+  return emitJsonValue(value, false, '', 0)
+}
+
+export function stringifyJsonLossless(value, space = null) {
+  const indent = space == null ? '' : (typeof space === 'number' ? ' '.repeat(space) : String(space))
+  return emitJsonValue(value, false, indent, 0)
+}
+
+export function parseJsonLossless(text) {
+  const source = String(text)
+  let index = 0
+
+  function peek() {
+    return source[index]
   }
-  if (Array.isArray(value)) return `[${value.map(serializeStagingJson).join(',')}]`
-  return `{${Object.keys(value).filter((key) => value[key] !== undefined).map((key) => `${JSON.stringify(key)}:${serializeStagingJson(value[key])}`).join(',')}}`
+
+  function skipWs() {
+    while (index < source.length && /[ \t\r\n]/.test(source[index])) index += 1
+  }
+
+  function fail(message) {
+    throw new Error(`${message} at ${index}`)
+  }
+
+  function parseString() {
+    if (source[index] !== '"') fail('expected string')
+    index += 1
+    let result = ''
+    while (index < source.length) {
+      const char = source[index]
+      if (char === '"') {
+        index += 1
+        return result
+      }
+      if (char === '\\') {
+        const next = source[index + 1]
+        const escapes = { '"': '"', '\\': '\\', '/': '/', b: '\b', f: '\f', n: '\n', r: '\r', t: '\t' }
+        if (next === 'u') {
+          const hex = source.slice(index + 2, index + 6)
+          if (!/^[0-9a-fA-F]{4}$/.test(hex)) fail('invalid unicode escape')
+          result += String.fromCharCode(Number.parseInt(hex, 16))
+          index += 6
+          continue
+        }
+        if (!(next in escapes)) fail('invalid escape')
+        result += escapes[next]
+        index += 2
+        continue
+      }
+      if (char.charCodeAt(0) < 32) fail('unescaped control character')
+      result += char
+      index += 1
+    }
+    fail('unterminated string')
+  }
+
+  function parseNumber() {
+    const start = index
+    if (source[index] === '-') index += 1
+    if (source[index] === '0') index += 1
+    else if (/[1-9]/.test(source[index])) {
+      while (/[0-9]/.test(source[index])) index += 1
+    } else fail('invalid number')
+    if (source[index] === '.') {
+      index += 1
+      if (!/[0-9]/.test(source[index])) fail('invalid number fraction')
+      while (/[0-9]/.test(source[index])) index += 1
+    }
+    if (source[index] === 'e' || source[index] === 'E') {
+      index += 1
+      if (source[index] === '+' || source[index] === '-') index += 1
+      if (!/[0-9]/.test(source[index])) fail('invalid number exponent')
+      while (/[0-9]/.test(source[index])) index += 1
+    }
+    return new ExactJsonNumber(source.slice(start, index))
+  }
+
+  function parseLiteral(literal, value) {
+    if (source.slice(index, index + literal.length) !== literal) fail(`expected ${literal}`)
+    index += literal.length
+    return value
+  }
+
+  function parseArray() {
+    index += 1
+    skipWs()
+    const result = []
+    if (peek() === ']') {
+      index += 1
+      return result
+    }
+    while (index < source.length) {
+      result.push(parseValue())
+      skipWs()
+      if (peek() === ',') {
+        index += 1
+        skipWs()
+        continue
+      }
+      if (peek() === ']') {
+        index += 1
+        return result
+      }
+      fail('expected comma or end of array')
+    }
+    fail('unterminated array')
+  }
+
+  function parseObject() {
+    index += 1
+    skipWs()
+    const result = {}
+    if (peek() === '}') {
+      index += 1
+      return result
+    }
+    while (index < source.length) {
+      skipWs()
+      const key = parseString()
+      skipWs()
+      if (peek() !== ':') fail('expected colon')
+      index += 1
+      result[key] = parseValue()
+      skipWs()
+      if (peek() === ',') {
+        index += 1
+        skipWs()
+        continue
+      }
+      if (peek() === '}') {
+        index += 1
+        return result
+      }
+      fail('expected comma or end of object')
+    }
+    fail('unterminated object')
+  }
+
+  function parseValue() {
+    skipWs()
+    const char = peek()
+    if (char === '"') return parseString()
+    if (char === '{') return parseObject()
+    if (char === '[') return parseArray()
+    if (char === 't') return parseLiteral('true', true)
+    if (char === 'f') return parseLiteral('false', false)
+    if (char === 'n') return parseLiteral('null', null)
+    if (char === '-' || /[0-9]/.test(char)) return parseNumber()
+    fail('unexpected token')
+  }
+
+  const value = parseValue()
+  skipWs()
+  if (index !== source.length) fail('unexpected trailing content')
+  return value
+}
+
+export function hydrateStagingRecord(record) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) return record
+  if (typeof record.payload_json === 'string') {
+    return { ...record, payload: parseJsonLossless(record.payload_json) }
+  }
+  return record
 }
 
 export function fingerprintPayload(payload) {
@@ -172,48 +423,50 @@ export function objectFamily(sourceTable, payload = {}) {
 }
 
 export function normalizeSourceRecord(record) {
-  if (!record?.source_project_ref || !record.source_table || !record.source_id) {
+  const source = hydrateStagingRecord(record)
+  if (!source?.source_project_ref || !source.source_table || !source.source_id) {
     throw new Error('source identity requires project, table, and id')
   }
-  if (record.reader_state != null || record.comparison_validation_state != null || record.publish != null) {
+  if (source.reader_state != null || source.comparison_validation_state != null || source.publish != null) {
     throw new Error('staging cannot carry publication directives')
   }
-  const payload = record.payload ?? record
-  const family = record.object_family ?? objectFamily(record.source_table, payload)
-  if (record.source_table === 'events' && family !== SOURCE_COMPARISON_EVENT_FAMILY) {
+  const payload = source.payload ?? source
+  const family = source.object_family ?? objectFamily(source.source_table, payload)
+  if (source.source_table === 'events' && family !== SOURCE_COMPARISON_EVENT_FAMILY) {
     throw new Error('Source Comparison events cannot be labeled as graph objects')
   }
-  if (record.source_table === 'nodes' && family === SOURCE_COMPARISON_EVENT_FAMILY) {
+  if (source.source_table === 'nodes' && family === SOURCE_COMPARISON_EVENT_FAMILY) {
     throw new Error('graph nodes cannot be labeled as Source Comparison events')
   }
-  const identityId = record.source_id ?? payload.id ?? null
-  const edgeSource = record.endpoint_source_id ?? payload.endpoint_source_id ?? payload.source_node_id
+  const identityId = source.source_id ?? payload.id ?? null
+  const edgeSource = source.endpoint_source_id ?? payload.endpoint_source_id ?? payload.source_node_id
     ?? (payload.source_id && payload.source_id !== identityId ? payload.source_id : null)
-  const edgeTarget = record.endpoint_target_id ?? payload.endpoint_target_id ?? payload.target_node_id
+  const edgeTarget = source.endpoint_target_id ?? payload.endpoint_target_id ?? payload.target_node_id
     ?? (payload.target_id && payload.target_id !== identityId ? payload.target_id : null)
-  const relationshipType = record.relationship_type ?? payload.relationship_type
-    ?? (record.source_table === 'edges' ? payload.type ?? null : null)
+  const relationshipType = source.relationship_type ?? payload.relationship_type
+    ?? (source.source_table === 'edges' ? payload.type ?? null : null)
   return {
-    source_project_ref: record.source_project_ref,
-    source_table: record.source_table,
-    source_id: record.source_id,
+    source_project_ref: source.source_project_ref,
+    source_table: source.source_table,
+    source_id: source.source_id,
     object_family: family,
     payload,
-    payload_sha256: record.payload_sha256 ?? fingerprintPayload(payload),
-    source_url: record.source_url ?? record.url ?? payload.url ?? null,
-    source_imported_at: record.source_imported_at ?? payload.created_at ?? null,
-    recovery_status: record.recovery_status ?? null,
-    proposed_target_id: record.proposed_target_id ?? record.target_id ?? null,
-    title: record.title ?? payload.title ?? payload.label ?? payload.canonical_title ?? payload.headline,
-    url: record.url ?? payload.url,
-    label: record.label ?? payload.label,
-    canonical_title: record.canonical_title ?? payload.canonical_title,
-    body_text: record.body_text ?? payload.body_text ?? payload.summary ?? payload.description,
-    published_at: record.published_at ?? payload.published_at ?? payload.occurred_at,
+    payload_json: serializeStagingJson(payload),
+    payload_sha256: source.payload_sha256 ?? fingerprintPayload(payload),
+    source_url: source.source_url ?? source.url ?? payload.url ?? null,
+    source_imported_at: source.source_imported_at ?? payload.created_at ?? null,
+    recovery_status: source.recovery_status ?? null,
+    proposed_target_id: source.proposed_target_id ?? source.target_id ?? null,
+    title: source.title ?? payload.title ?? payload.label ?? payload.canonical_title ?? payload.headline,
+    url: source.url ?? payload.url,
+    label: source.label ?? payload.label,
+    canonical_title: source.canonical_title ?? payload.canonical_title,
+    body_text: source.body_text ?? payload.body_text ?? payload.summary ?? payload.description,
+    published_at: source.published_at ?? payload.published_at ?? payload.occurred_at,
     endpoint_source_id: edgeSource ?? null,
     endpoint_target_id: edgeTarget ?? null,
     relationship_type: relationshipType ?? null,
-    mapping: compactMapping(record.mapping, record),
+    mapping: compactMapping(source.mapping, source),
   }
 }
 
@@ -347,8 +600,9 @@ export function planPage(records, context = {}) {
   if (!Array.isArray(records) || records.length < 1 || records.length > MAX_PAGE_SIZE) {
     throw new Error('page must contain 1-100 records')
   }
-  const planning = inferPlanningContext(records, context)
-  const planned = records.map((record) => planRecord(record, planning))
+  const hydrated = records.map((record) => hydrateStagingRecord(record))
+  const planning = inferPlanningContext(hydrated, context)
+  const planned = hydrated.map((record) => planRecord(record, planning))
   const orphanIds = new Set()
   let changed = true
   let passes = 0
@@ -465,9 +719,11 @@ export function executeDryRun({
   if (!Array.isArray(mappings)) {
     throw new Error('executable dry-run requires saved identity mappings')
   }
-  const planned = planPage(source_records, {
-    publicRows: destinationPublicRows(destination_records),
-    publicIds: destinationPublicIds(destination_records),
+  const sources = source_records.map((record) => hydrateStagingRecord(record))
+  const destinations = destination_records.map((record) => hydrateStagingRecord(record))
+  const planned = planPage(sources, {
+    publicRows: destinationPublicRows(destinations),
+    publicIds: destinationPublicIds(destinations),
     existingMappings: mappings,
     existingConflicts: conflicts,
     comparisonEventIds: comparison_event_ids,
@@ -494,8 +750,8 @@ export function executeDryRun({
       orphans: planned.filter((row) => row.endpoints?.orphan).length,
     },
     publication_impact: {
-      current_public_nodes: (destinationPublicIds(destination_records).nodes ?? new Set()).size,
-      current_public_edges: (destinationPublicIds(destination_records).edges ?? new Set()).size,
+      current_public_nodes: (destinationPublicIds(destinations).nodes ?? new Set()).size,
+      current_public_edges: (destinationPublicIds(destinations).edges ?? new Set()).size,
       copy_versus_publish: 'separate',
     },
   }
@@ -503,8 +759,9 @@ export function executeDryRun({
 
 export function enqueueSql(runId, records, context = {}) {
   if (typeof runId !== 'string' || !runId.trim() || runId.length > 120) throw new Error('run_id required')
-  const planning = inferPlanningContext(records, context)
-  const planned = planPage(records, planning)
+  const hydrated = records.map((record) => hydrateStagingRecord(record))
+  const planning = inferPlanningContext(hydrated, context)
+  const planned = planPage(hydrated, planning)
   assertPageNotPublishing(planned)
   const mappings = planning.existingMappings.map((row) => ({
     source_project_ref: row.source_project_ref,
@@ -525,6 +782,7 @@ export function enqueueSql(runId, records, context = {}) {
         source_id: row.source_id,
         object_family: row.object_family,
         payload: row.payload,
+        payload_json: row.payload_json,
         payload_sha256: row.payload_sha256,
         source_url: row.source_url,
         source_imported_at: row.source_imported_at,
@@ -566,7 +824,8 @@ export function createStagingRpc({ url, key, fetchImpl = fetch }) {
       body: serializeStagingJson({ p_action: action, p_input: input }),
       signal: AbortSignal.timeout(25000),
     })
-    const body = await response.json().catch(() => null)
+    const text = await response.text().catch(() => '')
+    const body = text ? parseJsonLossless(text) : null
     if (!response.ok) throw Object.assign(new Error('staging operation failed'), { code: `http_${response.status}` })
     return body
   }
@@ -598,29 +857,29 @@ export async function runBoundedWorker(rpc, { maxJobs = 10 } = {}) {
 async function main() {
   const [command, file] = process.argv.slice(2)
   if (command === 'dry-run' && file) {
-    const input = JSON.parse(await readFile(file, 'utf8'))
-    process.stdout.write(`${JSON.stringify(executeDryRun(input), null, 2)}\n`)
+    const input = parseJsonLossless(await readFile(file, 'utf8'))
+    process.stdout.write(`${stringifyJsonLossless(executeDryRun(input), 2)}\n`)
     return
   }
   if (command === 'plan' && file) {
-    const input = JSON.parse(await readFile(file, 'utf8'))
+    const input = parseJsonLossless(await readFile(file, 'utf8'))
     if (input.source_records || input.destination_records || input.mappings) {
-      process.stdout.write(`${JSON.stringify(executeDryRun({
+      process.stdout.write(`${stringifyJsonLossless(executeDryRun({
         source_records: input.source_records ?? input.records ?? input,
         destination_records: input.destination_records ?? [],
         mappings: input.mappings ?? [],
         conflicts: input.conflicts ?? [],
         comparison_event_ids: input.comparison_event_ids ?? [],
         graph_event_ids: input.graph_event_ids ?? [],
-      }), null, 2)}\n`)
+      }), 2)}\n`)
       return
     }
     const planned = planPage(input.records ?? input)
-    process.stdout.write(`${JSON.stringify({ dry_run: true, planned: planned.length, manifest: dryRunManifest(LIVE_DRY_RUN, planned) }, null, 2)}\n`)
+    process.stdout.write(`${stringifyJsonLossless({ dry_run: true, planned: planned.length, manifest: dryRunManifest(LIVE_DRY_RUN, planned) }, 2)}\n`)
     return
   }
   if (command === 'manifest') {
-    process.stdout.write(`${JSON.stringify(dryRunManifest(), null, 2)}\n`)
+    process.stdout.write(`${stringifyJsonLossless(dryRunManifest(), 2)}\n`)
     return
   }
   throw new Error('usage: node scripts/mipLegacyGraphStaging.mjs dry-run <page.json>|plan <page.json>|manifest')

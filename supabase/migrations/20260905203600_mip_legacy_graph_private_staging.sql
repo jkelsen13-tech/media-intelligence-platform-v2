@@ -114,7 +114,11 @@ begin
   end if;
   original := (p_value #>> '{}')::numeric;
   if original = 0 then return '0'; end if;
-  n := original::double precision;
+  begin
+    n := original::double precision;
+  exception when others then
+    return btrim(original::text);
+  end;
   if n = n and n is not null
      and n <> 'Infinity'::double precision
      and n <> '-Infinity'::double precision then

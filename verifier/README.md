@@ -499,3 +499,5 @@ Verifier: `mip_legacy_graph_staging_2026-09-05.json`.
 Probe: `scripts/reviewStagingRevisionProbe.mjs` (isolated PGlite only).
 Precision probe: `scripts/reviewStagingPrecisionProbe.mjs` — distinct jsonb
 integers beyond float64 must not share a fingerprint or replay as duplicates.
+End-to-end probe: `scripts/reviewEndToEndPrecision.mjs` — CLI file parse, plan
+reload, and apply must preserve or reject exact numeric tokens before success.

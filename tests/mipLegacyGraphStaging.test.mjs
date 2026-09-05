@@ -1,6 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { execFileSync } from 'node:child_process'
 import { PGlite } from '@electric-sql/pglite'
 import { applyFoundation, restoreEclipseInvestigation } from '../scripts/mipConsolidationRestore.mjs'
 import { insertCyclosporaCohort, CYCLOSPORA_EVENT } from '../scripts/mipPublicSurfaceCohort.mjs'
@@ -11,10 +14,13 @@ import {
   STAGING_MIGRATION,
   applyStagingPage,
   assertPageNotPublishing,
+  canonicalNumberToken,
   dryRunManifest,
   executeDryRun,
   fingerprintPayload,
+  hydrateStagingRecord,
   objectFamily,
+  parseJsonLossless,
   planPage,
   planRecord,
   runBoundedWorker,
@@ -887,5 +893,88 @@ test('distinct exact numbers keep distinct fingerprints and are not replayed as 
     )
   } finally {
     await db.close()
+  }
+})
+
+test('CLI file-to-plan-to-import preserves exact numbers and reloads lossy JSON via payload_json', async () => {
+  const db = await PGlite.create()
+  const temp = await mkdtemp(join(tmpdir(), 'mip-staging-e2e-'))
+  try {
+    await applyFoundation(db)
+    const id = '99999999-0000-4000-8000-000000000087'
+    const writeSource = async (name, token) => {
+      const path = join(temp, name)
+      await writeFile(path, `{"source_records":[{"source_project_ref":"${MANUS}","source_table":"nodes","source_id":"${id}","payload":{"id":"${id}","type":"event","label":"CLI precision fixture","metadata":{"n":${token}}}}]}`)
+      return path
+    }
+    const dryRun = (path) => execFileSync(process.execPath, ['scripts/mipLegacyGraphStaging.mjs', 'dry-run', path], { encoding: 'utf8' })
+
+    const firstRaw = dryRun(await writeSource('a.json', '9007199254740992'))
+    const secondRaw = dryRun(await writeSource('b.json', '9007199254740993'))
+    const firstExact = parseJsonLossless(firstRaw)
+    const secondExact = parseJsonLossless(secondRaw)
+    assert.equal(String(firstExact.planned[0].payload.metadata.n), '9007199254740992')
+    assert.equal(String(secondExact.planned[0].payload.metadata.n), '9007199254740993')
+    assert.notEqual(firstExact.planned[0].payload_sha256, secondExact.planned[0].payload_sha256)
+    assert.match(firstExact.planned[0].payload_json, /9007199254740992/)
+    assert.match(secondExact.planned[0].payload_json, /9007199254740993/)
+
+    const firstLossy = JSON.parse(firstRaw)
+    const secondLossy = JSON.parse(secondRaw)
+    assert.equal(String(firstLossy.planned[0].payload.metadata.n), '9007199254740992')
+    assert.equal(String(secondLossy.planned[0].payload.metadata.n), '9007199254740992')
+    const firstApply = await applyStagingPage(db, { run_id: 'cli-precision-0', records: firstLossy.planned })
+    const secondApply = await applyStagingPage(db, { run_id: 'cli-precision-1', records: secondLossy.planned })
+    assert.equal(firstApply.results[0].replayed, false)
+    assert.equal(secondApply.results[0].replayed, false)
+    assert.equal(secondApply.results[0].decision, 'identical_id_divergent_content')
+    const stored = (await db.query(
+      `select payload#>>'{metadata,n}' as exact_stored_number,
+        (select count(*)::int from legacy_graph_staging.payload_versions where source_id=$1) as versions,
+        (select count(*)::int from legacy_graph_staging.record_conflicts where source_id=$1) as conflicts
+       from legacy_graph_staging.staged_records where source_id=$1`,
+      [id],
+    )).rows[0]
+    assert.equal(stored.exact_stored_number, '9007199254740992')
+    assert.equal(stored.versions, 2)
+    assert.equal(stored.conflicts, 1)
+
+    const decimalRaw = dryRun(await writeSource('decimal.json', '0.123456789012345678901234567891'))
+    const decimalExact = parseJsonLossless(decimalRaw)
+    assert.equal(String(decimalExact.planned[0].payload.metadata.n), '0.123456789012345678901234567891')
+    const hugeRaw = dryRun(await writeSource('huge.json', '1e400'))
+    const hugeExact = parseJsonLossless(hugeRaw)
+    assert.equal(String(hugeExact.planned[0].payload.metadata.n), canonicalNumberToken('1e400'))
+    assert.notEqual(hugeExact.planned[0].payload.metadata.n, null)
+    assert.equal(hugeExact.planned[0].decision, IDENTITY_DECISIONS.insert)
+
+    const planReload = hydrateStagingRecord(JSON.parse(secondRaw).planned[0])
+    assert.equal(String(planReload.payload.metadata.n), '9007199254740993')
+
+    const bigintId = '99999999-0000-4000-8000-000000000090'
+    const bigintOk = await applyStagingPage(db, {
+      run_id: 'bigint-21',
+      records: [{
+        source_project_ref: MANUS,
+        source_table: 'nodes',
+        source_id: bigintId,
+        payload: { id: bigintId, type: 'event', label: 'BigInt fixture', metadata: { n: 1000000000000000000000n } },
+      }],
+    })
+    assert.equal(bigintOk.results[0].review_state, 'pending')
+    const jsHash = fingerprintPayload({ n: 1000000000000000000000n })
+    const sqlHash = await scalar(db, 'select legacy_graph_staging.fingerprint_payload($1::jsonb)', ['{"n":1000000000000000000000}'])
+    assert.equal(jsHash, sqlHash)
+    assert.equal(canonicalNumberToken('1000000000000000000000'), '1e+21')
+
+    const stale = JSON.parse(secondRaw).planned[0]
+    stale.payload_sha256 = firstExact.planned[0].payload_sha256
+    await assert.rejects(
+      applyStagingPage(db, { run_id: 'cli-stale-hash', records: [stale] }),
+      /payload fingerprint mismatch/,
+    )
+  } finally {
+    await db.close()
+    await rm(temp, { recursive: true, force: true })
   }
 })
