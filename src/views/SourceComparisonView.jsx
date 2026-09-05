@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { loadSourceComparisonView, E_LEVEL_NAMES } from '../lib/sourceComparisonReadPath.js'
 import { filterEventsByTitle } from '../lib/listFilters.js'
 import WorkspaceAvailability from '../components/WorkspaceAvailability'
+import WorkspaceTechnicalDisclosure from '../components/WorkspaceTechnicalDisclosure'
 import './sourcecomparison.css'
 
 // Source Comparison (03_BACKLOG Item 1) — beta view behind
@@ -339,7 +340,15 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
     return () => clearTimeout(t)
   }, [highlightEventId, view])
 
-  if (error) return <div className="notice error">Source comparison view failed to load.</div>
+  if (error) {
+    return (
+      <WorkspaceAvailability
+        kind="compare"
+        icon="compare"
+        details="Source comparison view failed to load."
+      />
+    )
+  }
   if (view === null) return <div className="notice">Loading…</div>
   if (!view.enabled) {
     return (
@@ -371,7 +380,9 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
       </aside>
 
       {view.loadError && (
-        <div className="notice error">Comparison tables unreachable: {view.loadError}</div>
+        <WorkspaceTechnicalDisclosure banner="Comparison data is currently unavailable">
+          Comparison tables unreachable: {view.loadError}
+        </WorkspaceTechnicalDisclosure>
       )}
 
       {view.events.length === 0 ? (

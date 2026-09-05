@@ -2,6 +2,8 @@
 
 Frontend-only presentation change. Graph, Timeline, Arcs, Source Comparison, and World View now share one light investigation workspace. Main remains the publication review point; this document does not authorize a merge.
 
+Visual-fidelity follow-up (current branch): restore the reviewed cool blue-gray frame, 190px rail, 286px inspector below the tabs, flat evidence strip, and World View native-inspector-only body. Target captures live in `docs/visual-fidelity/`.
+
 ## Scope
 
 - Persistent left navigation on desktop, with a phone drawer (Escape, focus trap, focus restore).

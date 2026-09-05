@@ -40,7 +40,12 @@ import RemainingUncertaintyBlock from '../components/RemainingUncertaintyBlock'
 import TrustFooter from '../components/TrustFooter'
 import GroupedTimelineView from './GroupedTimelineView'
 import { investigationContextDomProps } from '../lib/investigationContext'
-import { TIMELINE_SPACING_NOTE, timelinePresentationMode } from '../lib/workspacePresentation'
+import {
+  CALM_TIMELINE_CONTEXT_UNAVAILABLE,
+  TIMELINE_SPACING_NOTE,
+  timelinePresentationMode,
+} from '../lib/workspacePresentation'
+import WorkspaceTechnicalDisclosure from '../components/WorkspaceTechnicalDisclosure'
 import '../styles/timeline.css'
 
 // Track B Step 3 item 4 — the addendum's Screen 5 (Timeline), arc-scoped by
@@ -330,8 +335,10 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
 
   if (arcsError) {
     return (
-      <div className="notice error" {...investigationContextDomProps(investigationContext)}>
-        Failed to load story arcs: {arcsError}
+      <div {...investigationContextDomProps(investigationContext)}>
+        <WorkspaceTechnicalDisclosure banner={CALM_TIMELINE_CONTEXT_UNAVAILABLE}>
+          Failed to load story arcs: {arcsError}
+        </WorkspaceTechnicalDisclosure>
       </div>
     )
   }
@@ -343,9 +350,9 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
     )
   }
   const arcsUnavailableNotice = arcsUnavailable ? (
-    <div className="notice">
-      Some timeline context is unavailable. Recorded events remain visible. Story arcs are unavailable ({arcsUnavailable}). Id-only stub rows are treated as no-arc; no titles are invented.
-    </div>
+    <WorkspaceTechnicalDisclosure banner={CALM_TIMELINE_CONTEXT_UNAVAILABLE}>
+      Story arcs are unavailable ({arcsUnavailable}). Id-only stub rows are treated as no-arc; no titles are invented.
+    </WorkspaceTechnicalDisclosure>
   ) : null
 
   const scopeIsGlobal = allEvents || !selected
@@ -393,12 +400,15 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   const connectionLabel = (key, labels) => labels?.get(key) ?? key
 
   return (
-    <div className="timeline-view" {...investigationContextDomProps(investigationContext)}>
+    <div
+      className={`timeline-view${presentation === 'chronology' ? ' workspace-chronology-chronology' : ''}`}
+      {...investigationContextDomProps(investigationContext)}
+    >
       {arcsUnavailableNotice}
       {global?.edgesUnavailable && (
-        <div className="notice">
+        <WorkspaceTechnicalDisclosure banner={CALM_TIMELINE_CONTEXT_UNAVAILABLE}>
           public.edges is unavailable ({global.edgesUnavailable}). No relationships are invented.
-        </div>
+        </WorkspaceTechnicalDisclosure>
       )}
       <div className="timeline-intro">
         <p className="ep-eyebrow">{SCREEN5_EYEBROW}</p>
@@ -543,13 +553,17 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
           ) : (
             <>
               {scopeIsGlobal && globalError && (
-                <div className="notice error">Failed to load timeline: {globalError}</div>
+                <WorkspaceTechnicalDisclosure banner={CALM_TIMELINE_CONTEXT_UNAVAILABLE}>
+                  Failed to load timeline: {globalError}
+                </WorkspaceTechnicalDisclosure>
               )}
               {scopeIsGlobal && !global && !globalError && (
                 <div className="notice">Loading timeline…</div>
               )}
               {!scopeIsGlobal && detailError && (
-                <div className="notice error">Failed to load arc timeline: {detailError}</div>
+                <WorkspaceTechnicalDisclosure banner={CALM_TIMELINE_CONTEXT_UNAVAILABLE}>
+                  Failed to load arc timeline: {detailError}
+                </WorkspaceTechnicalDisclosure>
               )}
               {!scopeIsGlobal && !detail && !detailError && (
                 <div className="notice">Loading arc timeline…</div>
@@ -654,11 +668,13 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
               </ul>
             )
           ) : connections?.edgesUnavailable ? (
-            <div className="notice">
+            <WorkspaceTechnicalDisclosure banner={CALM_TIMELINE_CONTEXT_UNAVAILABLE}>
               public.edges is unavailable ({connections.edgesUnavailable}). No relationships are invented.
-            </div>
+            </WorkspaceTechnicalDisclosure>
           ) : connectionsError ? (
-            <div className="notice error">Failed to load connections: {connectionsError}</div>
+            <WorkspaceTechnicalDisclosure banner={CALM_TIMELINE_CONTEXT_UNAVAILABLE}>
+              Failed to load connections: {connectionsError}
+            </WorkspaceTechnicalDisclosure>
           ) : !connections ? (
             <div className="notice">Loading connections…</div>
           ) : connections.edges.length === 0 ? (
@@ -715,7 +731,9 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
               )}
             </section>
           ) : detailError ? (
-            <div className="notice error">Failed to load arc detail: {detailError}</div>
+            <WorkspaceTechnicalDisclosure banner={CALM_TIMELINE_CONTEXT_UNAVAILABLE}>
+              Failed to load arc detail: {detailError}
+            </WorkspaceTechnicalDisclosure>
           ) : !detail ? (
             <div className="notice">Loading evidence…</div>
           ) : (

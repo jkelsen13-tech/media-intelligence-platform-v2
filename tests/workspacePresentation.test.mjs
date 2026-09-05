@@ -3,9 +3,14 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 import {
+  AVAILABILITY_DETAILS_LABEL,
+  CALM_RELATIONSHIP_UNAVAILABLE,
+  CALM_SOURCES_UNAVAILABLE,
+  CALM_TIMELINE_CONTEXT_UNAVAILABLE,
   EVIDENCE_UNRECORDED,
   LOCATION_UNRECORDED,
   NODE_EVIDENCE_UNRECORDED,
+  TECHNICAL_DETAILS_LABEL,
   TIME_UNRECORDED,
   TIMELINE_SPACING_NOTE,
   WORKSPACE_NAV_ITEMS,
@@ -33,6 +38,12 @@ const CESIUM = readFileSync(new URL('../src/lib/worldViewCesiumEllipsoidRenderer
 const TIMELINE = readFileSync(new URL('../src/views/TimelineView.jsx', import.meta.url), 'utf8')
 const ARCS = readFileSync(new URL('../src/views/ArcsView.jsx', import.meta.url), 'utf8')
 const COMPARE = readFileSync(new URL('../src/views/SourceComparisonView.jsx', import.meta.url), 'utf8')
+const WORLD = readFileSync(new URL('../src/views/WorldView.jsx', import.meta.url), 'utf8')
+const SHELL = readFileSync(new URL('../src/components/InvestigationWorkspace.jsx', import.meta.url), 'utf8')
+const CSS = readFileSync(new URL('../src/styles/workspace.css', import.meta.url), 'utf8')
+const TOKENS = readFileSync(new URL('../src/styles/tokens.css', import.meta.url), 'utf8')
+const ARTICLE = readFileSync(new URL('../src/panels/ArticlePanel.jsx', import.meta.url), 'utf8')
+const AVAIL = readFileSync(new URL('../src/components/WorkspaceAvailability.jsx', import.meta.url), 'utf8')
 
 const CANONICAL = Object.freeze({
   id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -181,4 +192,48 @@ test('phone drawer Escape dismisses and focus trap wraps', () => {
   const ev = { key: 'Tab', shiftKey: false, preventDefault() { calls.push('prevent') } }
   assert.equal(handleWorkspaceDrawerKeyDown(ev, { dialogEl }), true)
   assert.ok(calls.includes('first'))
+})
+
+test('workspace visual frame restores reviewed tokens and rail/inspector layout', () => {
+  assert.match(CSS, /--sidebar:\s*190px/)
+  assert.match(CSS, /--sidebar:\s*72px/)
+  assert.match(CSS, /--inspector:\s*286px|--inspector\)/)
+  assert.match(CSS, /grid-template-columns: var\(--sidebar\) minmax\(0, 1fr\)/)
+  assert.match(CSS, /grid-template-columns: minmax\(0, 1fr\) var\(--inspector\)/)
+  assert.match(CSS, /\.workspace-body\.has-native-inspector/)
+  assert.match(CSS, /grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/)
+  assert.match(CSS, /flex: 0 0 285px/)
+  assert.match(CSS, /#315dbe/)
+  assert.match(CSS, /#f6f8fb/)
+  assert.match(TOKENS, /--bg-page:\s*#f6f8fb/)
+  assert.match(TOKENS, /--text-primary:\s*#202c41/)
+  assert.match(TOKENS, /--cat-blue:\s*#315dbe/)
+  assert.match(TOKENS, /--card-radius:\s*8px/)
+  assert.match(SHELL, /workspace-app/)
+  assert.match(SHELL, /has-native-inspector/)
+  assert.match(SHELL, /ws-mobius/)
+  assert.match(SHELL, /mip-mobius-logo\.png/)
+  assert.match(SHELL, /import\.meta\.env\.BASE_URL/)
+  assert.match(SHELL, /Media Intelligence Platform/)
+  assert.doesNotMatch(SHELL, /className="ws-logo"/)
+  assert.match(APP, /hasNativeInspector=\{hasNativeInspector\}/)
+  assert.match(APP, /view === 'world'/)
+})
+
+test('raw backend errors stay behind disclosures; fail-closed copy is preserved', () => {
+  assert.equal(CALM_RELATIONSHIP_UNAVAILABLE, 'Relationship evidence is unavailable. The recorded event is shown.')
+  assert.equal(CALM_TIMELINE_CONTEXT_UNAVAILABLE, 'Some timeline context is unavailable. Recorded events remain visible.')
+  assert.equal(CALM_SOURCES_UNAVAILABLE, 'Node-level source records are unavailable.')
+  assert.equal(TECHNICAL_DETAILS_LABEL, 'Technical details')
+  assert.equal(AVAILABILITY_DETAILS_LABEL, 'Availability details')
+  assert.match(APP, /CALM_RELATIONSHIP_UNAVAILABLE/)
+  assert.match(APP, /public\.edges is unavailable/)
+  assert.match(APP, /no relationships are invented/)
+  assert.match(TIMELINE, /WorkspaceTechnicalDisclosure/)
+  assert.match(ARCS, /AVAILABILITY_DETAILS_LABEL|Availability details|WorkspaceAvailability/)
+  assert.match(AVAIL, /AVAILABILITY_DETAILS_LABEL/)
+  assert.match(COMPARE, /Comparison data is currently unavailable/)
+  assert.match(WORLD, /CALM_RELATIONSHIP_UNAVAILABLE/)
+  assert.match(ARTICLE, /Node-level source records are unavailable/)
+  assert.match(ARTICLE, /Failed to load sources: \{sourcesError\}/)
 })
