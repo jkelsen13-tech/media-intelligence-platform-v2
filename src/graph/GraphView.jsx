@@ -22,6 +22,7 @@ import {
   separateRegions,
   cardRegime,
 } from './cardRegions'
+import { shouldRefitGraph } from './graphCanvasLayout.js'
 
 cytoscape.use(fcose)
 
@@ -168,6 +169,9 @@ export default function GraphView({
   edges,
   onSelect,
   panelOpen,
+  // Bumps when workspace chrome changes size (coverage, nav width) so the
+  // canvas refits after the layout settles. Selection and filters are unchanged.
+  layoutRevision = 0,
   // Step 7: reliability threshold (1–4, 1 = show all) + hypothesis toggle.
   minReliability = 1,
   showInferred = false,
@@ -842,11 +846,29 @@ export default function GraphView({
     // §4.4: the article panel shrinks the canvas container (flex), so the
     // cytoscape instance must be told its size changed — otherwise it keeps
     // rendering at the stale extent and the graph looks covered/shifted.
+    let lastCanvasSize = null
+    let fitFromResizeTimer = null
     const resizeObserver =
       typeof ResizeObserver !== 'undefined'
-        ? new ResizeObserver(() => {
+        ? new ResizeObserver((entries) => {
             cy.resize()
             redrawGrid()
+            const rect = entries[0]?.contentRect
+            const nextSize = rect
+              ? { width: rect.width, height: rect.height }
+              : { width: cy.width(), height: cy.height() }
+            if (shouldRefitGraph(lastCanvasSize, nextSize)) {
+              clearTimeout(fitFromResizeTimer)
+              fitFromResizeTimer = setTimeout(() => {
+                if (cy.destroyed()) return
+                cy.resize()
+                cy.animate(
+                  { fit: { eles: cy.elements(), padding: 80 } },
+                  { duration: prefersReducedMotion() ? 0 : 300, easing: 'ease-out' },
+                )
+              }, 80)
+            }
+            lastCanvasSize = nextSize
           })
         : null
     resizeObserver?.observe(containerRef.current)
@@ -890,6 +912,7 @@ export default function GraphView({
       graphContainer.removeEventListener('wheel', onWheelZoom, { capture: true })
       clearTimeout(declutterTimer)
       clearTimeout(relaxTimer)
+      clearTimeout(fitFromResizeTimer)
       resizeObserver?.disconnect()
       cy.destroy()
       clearCards()
@@ -932,8 +955,9 @@ export default function GraphView({
     })
   }, [minReliability, showInferred, nodes, edges])
 
-  // Panel open/close: after the container settles at its new width, refit
-  // the graph into the remaining viewport so nothing sits under the panel.
+  // Panel open/close and workspace chrome changes: after the container
+  // settles, refit the graph into the remaining viewport so nothing sits
+  // under the inspector or outside a resized canvas.
   useEffect(() => {
     const cy = cyRef.current
     if (!cy || cy.destroyed()) return
@@ -945,7 +969,7 @@ export default function GraphView({
       )
     }, 60)
     return () => clearTimeout(timer)
-  }, [panelOpen])
+  }, [panelOpen, layoutRevision])
 
   // Tier 5: keyboard zoom. The canvas is tab-focusable; +/− zoom around the
   // viewport center and 0 fits the graph (the GraphViewControls +/−/Fit

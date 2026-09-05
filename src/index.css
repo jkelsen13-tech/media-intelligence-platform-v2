@@ -8,6 +8,8 @@ html,
 body,
 #root {
   height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
 }
 
 body {
@@ -256,10 +258,25 @@ body {
 /* ---------- Graph tab: canvas + slide-in article panel ---------- */
 
 .graph-layout {
+  --graph-canvas-min: 360px;
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
   min-width: 0;
+}
+
+/* Tablet drawer overlay: isolate so the backdrop and drawers share one
+   stacking context. Do not give .graph-area a z-index here — that would
+   trap the nested relationship drawer under the scrim. */
+.graph-layout.inspector-overlay {
+  isolation: isolate;
+  --graph-overlay-scrim: 20;
+  --graph-overlay-drawer: 30;
+}
+
+.graph-layout.inspector-overlay .ap-scrim {
+  z-index: var(--graph-overlay-scrim);
 }
 
 /* A configured live corpus may have articles before graph publication. Keep
@@ -344,8 +361,9 @@ body {
 
 .graph-body {
   display: flex;
-  flex: 1;
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: var(--graph-canvas-min);
+  min-width: 0;
 }
 
 .graph-rail {
@@ -363,7 +381,7 @@ body {
   position: relative;
   flex: 1;
   min-width: 0;
-  min-height: 0;
+  min-height: var(--graph-canvas-min);
 }
 
 /* C3: grid canvas sits under the (transparent) cytoscape layers and is
@@ -372,6 +390,8 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
+  min-height: var(--graph-canvas-min);
+  overflow: hidden;
 }
 
 .graph-grid {
@@ -2661,8 +2681,13 @@ body {
     flex: 1 1 100%;
   }
 
+  .graph-layout {
+    --graph-canvas-min: 280px;
+  }
+
   .graph-body {
     flex-direction: column;
+    min-height: 0;
   }
 
   .graph-rail {
@@ -2681,7 +2706,7 @@ body {
 
   .graph-stage {
     flex: 1;
-    min-height: 280px;
+    min-height: var(--graph-canvas-min);
   }
 
   /* The mobile graph may retain card elements through an asynchronous Cytoscape
@@ -3092,7 +3117,11 @@ body {
 }
 
 .graph-investigation-filters .filter-family-label {
-  width: 100%;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
 .graph-region-filter {
@@ -3374,6 +3403,9 @@ body {
   white-space: nowrap;
 }
 @media (max-width: 767px) {
+  .graph-investigation-filters .filter-family-label {
+    width: 100%;
+  }
   .graph-workspace-controls {
     align-items: flex-start;
     padding: 8px 10px;
@@ -3488,7 +3520,7 @@ body {
     min-width: min(100%, 260px);
   }
   .graph-stage {
-    min-height: 330px;
+    min-height: var(--graph-canvas-min);
   }
   .graph-cards .graph-card.mobile-active {
     width: min(260px, calc(100% - 28px));
@@ -3629,18 +3661,49 @@ body {
   .geography-globe-marker-label { font-size: 8px; }
 }
 
-/* Graph coverage disclosure: reader-facing accounting of stored graph states.
-   It is intentionally compact and avoids score-like visual treatment. */
+/* Graph coverage disclosure: compact by default, expandable on demand.
+   Reader-facing accounting of stored graph states — not a completeness score. */
 .graph-coverage-notice {
-  padding: 12px;
+  flex: 0 0 auto;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-inset);
+}
+.graph-coverage-details {
+  min-width: 0;
+}
+.graph-coverage-summary {
+  list-style: none;
+  cursor: pointer;
+}
+.graph-coverage-summary::-webkit-details-marker {
+  display: none;
+}
+.graph-coverage-summary::before {
+  content: '▸';
+  float: right;
+  margin-left: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.graph-coverage-details[open] .graph-coverage-summary::before {
+  content: '▾';
 }
 .graph-coverage-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  padding-right: 16px;
+}
+.graph-coverage-compact {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.graph-coverage-panel {
+  padding-top: 8px;
 }
 .graph-coverage-kicker {
   margin: 0 0 3px;
@@ -3706,10 +3769,66 @@ body {
   .graph-coverage-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 767px) {
-  .graph-coverage-notice { padding: 10px; }
+  .graph-coverage-notice { padding: 8px 10px; }
   .graph-coverage-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .graph-coverage-compact { font-size: 11px; }
   .graph-coverage-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 }
 @media (max-width: 420px) {
   .graph-coverage-metrics { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 768px) and (max-width: 1200px) {
+  .graph-body {
+    flex-direction: column;
+    min-height: var(--graph-canvas-min);
+  }
+  .graph-rail {
+    flex: 0 0 auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .graph-layout.inspector-overlay .ap-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: var(--graph-overlay-scrim);
+  }
+  .graph-layout.inspector-overlay .article-panel:not(.sheet-mode),
+  .graph-layout.inspector-overlay .relationship-panel:not(.sheet-mode),
+  .graph-layout.inspector-overlay .policy-panel:not(.sheet-mode) {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--graph-overlay-drawer);
+    width: min(360px, 86vw);
+    max-height: 100%;
+    box-shadow: -12px 0 32px rgb(32 44 65 / 16%);
+    pointer-events: auto;
+  }
+  .graph-layout.inspector-overlay .graph-view-controls {
+    right: auto;
+    left: calc(16px + env(safe-area-inset-left));
+  }
+}
+
+@media (max-height: 820px) {
+  .graph-layout {
+    --graph-canvas-min: 320px;
+  }
+  .graph-toolbar,
+  .graph-workspace-controls {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+}
+
+@media (max-height: 700px) {
+  .graph-layout {
+    --graph-canvas-min: 280px;
+  }
 }
