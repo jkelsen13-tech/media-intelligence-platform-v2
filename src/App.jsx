@@ -1622,7 +1622,12 @@ export default function App() {
                         stage on desktop (canvas shrinks beside it, never
                         covered); bottom sheet on mobile with a scrim. */}
                     {edgeEvidence && (isMobile || graphInspectorOverlay) && (
-                      <div className="ap-scrim" onClick={() => setEdgeEvidence(null)} aria-hidden="true" />
+                      <div
+                        className="ap-scrim"
+                        data-graph-overlay={graphInspectorOverlay ? 'scrim' : undefined}
+                        onClick={() => setEdgeEvidence(null)}
+                        aria-hidden="true"
+                      />
                     )}
                     {edgeEvidence && (
                       <RelationshipPanel
@@ -1643,7 +1648,12 @@ export default function App() {
                 </div>
                 {/* Mobile: scrim behind the bottom sheet (tap to close). */}
                 {selected && (isMobile || graphInspectorOverlay) && (
-                  <div className="ap-scrim" onClick={handleClose} aria-hidden="true" />
+                  <div
+                    className="ap-scrim"
+                    data-graph-overlay={graphInspectorOverlay ? 'scrim' : undefined}
+                    onClick={handleClose}
+                    aria-hidden="true"
+                  />
                 )}
                 {selected && (
                   <ArticlePanel
@@ -1663,7 +1673,12 @@ export default function App() {
                 )}
                 {/* Step 10 (§7.4): policy consequence view. */}
                 {policyNode && (isMobile || graphInspectorOverlay) && (
-                  <div className="ap-scrim" onClick={closePolicyPanel} aria-hidden="true" />
+                  <div
+                    className="ap-scrim"
+                    data-graph-overlay={graphInspectorOverlay ? 'scrim' : undefined}
+                    onClick={closePolicyPanel}
+                    aria-hidden="true"
+                  />
                 )}
                 {policyNode && (
                       <PolicyPanel

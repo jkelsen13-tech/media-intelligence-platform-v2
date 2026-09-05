@@ -7,11 +7,18 @@ import {
   GRAPH_CANVAS_MIN_SHORT_PX,
   GRAPH_FIT_RESIZE_THRESHOLD_PX,
   GRAPH_NARROW_CHROME_QUERY,
+  GRAPH_OVERLAY_DRAWER_Z,
+  GRAPH_OVERLAY_SCRIM_Z,
   GRAPH_PHONE_QUERY,
+  GRAPH_SHEET_DRAWER_Z,
+  GRAPH_SHEET_SCRIM_Z,
   compactCoverageSummary,
   formatCoverageMetric,
   graphInspectorPresentation,
+  layerPaintsAbove,
+  phoneSheetLayers,
   shouldRefitGraph,
+  tabletOverlayLayers,
 } from '../src/graph/graphCanvasLayout.js'
 
 const APP = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
@@ -21,6 +28,7 @@ const LEGEND = readFileSync(new URL('../src/graph/Legend.jsx', import.meta.url),
 const SHELL = readFileSync(new URL('../src/components/InvestigationWorkspace.jsx', import.meta.url), 'utf8')
 const INDEX_CSS = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
 const WORKSPACE_CSS = readFileSync(new URL('../src/styles/workspace.css', import.meta.url), 'utf8')
+const FIXTURE = readFileSync(new URL('../scripts/graph-layout-fixture.jsx', import.meta.url), 'utf8')
 
 const SAMPLE_COVERAGE = Object.freeze({
   articleCount: 1842,
@@ -131,6 +139,51 @@ test('graph remains the primary workspace on short viewports', () => {
   assert.match(INDEX_CSS, /@media \(max-height: 820px\)/)
   assert.match(INDEX_CSS, /@media \(max-height: 700px\)/)
   assert.match(INDEX_CSS, /html,[\s\S]*max-height: 100dvh/)
+})
+
+test('tablet overlay drawer paints above its backdrop, including ancestor stacking contexts', () => {
+  assert.ok(GRAPH_OVERLAY_DRAWER_Z > GRAPH_OVERLAY_SCRIM_Z)
+  assert.ok(GRAPH_SHEET_DRAWER_Z > GRAPH_SHEET_SCRIM_Z)
+
+  const overlay = tabletOverlayLayers()
+  assert.equal(layerPaintsAbove(overlay.drawer, overlay.scrim), true)
+
+  const phone = phoneSheetLayers()
+  assert.equal(layerPaintsAbove(phone.sheet, phone.scrim), true)
+
+  // The regression: a drawer at 30 loses to the global sheet scrim at 65
+  // when both compete in the root stacking context.
+  assert.equal(
+    layerPaintsAbove({ z: GRAPH_OVERLAY_DRAWER_Z, ancestors: [] }, { z: GRAPH_SHEET_SCRIM_Z, ancestors: [] }),
+    false,
+  )
+  // A nested relationship drawer trapped in .graph-area { z-index: 0 } would
+  // also lose to an overlay scrim at 20.
+  assert.equal(
+    layerPaintsAbove({ z: GRAPH_OVERLAY_DRAWER_Z, ancestors: [0] }, { z: GRAPH_OVERLAY_SCRIM_Z, ancestors: [] }),
+    false,
+  )
+
+  assert.match(INDEX_CSS, /\.graph-layout\.inspector-overlay \{[\s\S]*isolation:\s*isolate/)
+  assert.match(INDEX_CSS, /--graph-overlay-scrim:\s*20/)
+  assert.match(INDEX_CSS, /--graph-overlay-drawer:\s*30/)
+  assert.match(INDEX_CSS, /\.graph-layout\.inspector-overlay \.ap-scrim \{[\s\S]*z-index:\s*var\(--graph-overlay-scrim\)/)
+  assert.match(INDEX_CSS, /\.graph-layout\.inspector-overlay \.article-panel:not\(\.sheet-mode\),[\s\S]*\.relationship-panel:not\(\.sheet-mode\),[\s\S]*\.policy-panel:not\(\.sheet-mode\) \{[\s\S]*z-index:\s*var\(--graph-overlay-drawer\)/)
+  assert.match(INDEX_CSS, /\.ap-scrim \{[\s\S]*z-index:\s*65/)
+  assert.match(INDEX_CSS, /\.article-panel\.sheet-mode \{[\s\S]*z-index:\s*70/)
+  assert.doesNotMatch(INDEX_CSS, /\.graph-layout\.inspector-overlay[\s\S]{0,400}\.graph-area[^{]*\{[^}]*z-index/)
+  assert.match(APP, /data-graph-overlay=\{graphInspectorOverlay \? 'scrim' : undefined\}/)
+})
+
+test('layout fixture mounts the real overlay backdrop and inspector drawers', () => {
+  assert.match(FIXTURE, /className="ap-scrim"/)
+  assert.match(FIXTURE, /data-graph-overlay="scrim"/)
+  assert.match(FIXTURE, /inspector-overlay/)
+  assert.match(FIXTURE, /<ArticlePanel/)
+  assert.match(FIXTURE, /<RelationshipPanel/)
+  assert.match(FIXTURE, /<PolicyPanel/)
+  assert.match(FIXTURE, /onClick=\{\(\) => setSelected\(null\)\}/)
+  assert.match(FIXTURE, /onClose=\{\(\) => setSelected\(null\)\}/)
 })
 
 test('layout-only change does not invent graph data or alter relationship checks', () => {

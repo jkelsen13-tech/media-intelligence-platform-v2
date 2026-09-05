@@ -266,6 +266,19 @@ body {
   min-width: 0;
 }
 
+/* Tablet drawer overlay: isolate so the backdrop and drawers share one
+   stacking context. Do not give .graph-area a z-index here — that would
+   trap the nested relationship drawer under the scrim. */
+.graph-layout.inspector-overlay {
+  isolation: isolate;
+  --graph-overlay-scrim: 20;
+  --graph-overlay-drawer: 30;
+}
+
+.graph-layout.inspector-overlay .ap-scrim {
+  z-index: var(--graph-overlay-scrim);
+}
+
 /* A configured live corpus may have articles before graph publication. Keep
    that state explicit rather than substituting unrelated demonstration data. */
 .graph-empty-state {
@@ -3779,16 +3792,23 @@ body {
     border-right: none;
     border-bottom: 1px solid var(--border-color);
   }
+  .graph-layout.inspector-overlay .ap-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: var(--graph-overlay-scrim);
+  }
   .graph-layout.inspector-overlay .article-panel:not(.sheet-mode),
-  .graph-layout.inspector-overlay .relationship-panel:not(.sheet-mode) {
+  .graph-layout.inspector-overlay .relationship-panel:not(.sheet-mode),
+  .graph-layout.inspector-overlay .policy-panel:not(.sheet-mode) {
     position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
-    z-index: 30;
+    z-index: var(--graph-overlay-drawer);
     width: min(360px, 86vw);
     max-height: 100%;
     box-shadow: -12px 0 32px rgb(32 44 65 / 16%);
+    pointer-events: auto;
   }
   .graph-layout.inspector-overlay .graph-view-controls {
     right: auto;
