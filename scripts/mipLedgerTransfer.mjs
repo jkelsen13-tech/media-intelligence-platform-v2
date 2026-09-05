@@ -169,7 +169,10 @@ on conflict (source_project_ref, run_key, source_table, source_id, conflict_kind
 }
 
 function sqlJsonLiteral(value) {
-  return `$${'$'}json$${value}$${'$'}json$`
+  if (value.includes('$json$')) {
+    throw new Error('ledger page contains the dollar-quote terminator')
+  }
+  return `$json$${value}$json$`
 }
 
 export async function applyLedgerPage(db, { mappings = [], conflicts = [] } = {}) {
