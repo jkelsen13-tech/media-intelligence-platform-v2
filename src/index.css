@@ -259,6 +259,7 @@ body {
   display: flex;
   flex: 1;
   min-height: 0;
+  min-width: 0;
 }
 
 /* A configured live corpus may have articles before graph publication. Keep
