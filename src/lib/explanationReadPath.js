@@ -72,6 +72,9 @@ export async function loadExplanationReadView({ assertionId, assertionType, limi
   if (assertionType) query = query.eq('assertion_type', assertionType)
 
   const { data, error } = await query
-  if (error) throw error
+  // Private explanations are not an ordinary-user table. Permission
+  // denial and other fetch failures fail closed, matching the flag-off
+  // withhold posture, instead of treating a signed-in user as a reviewer.
+  if (error) return buildExplanationReadView([], { enabled: false })
   return buildExplanationReadView(data ?? [], { enabled: true })
 }

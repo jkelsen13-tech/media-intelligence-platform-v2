@@ -1,0 +1,76 @@
+{
+  "date": "2026-09-05",
+  "destination": "qikvmopbtijoebdqosyq",
+  "reviewed_commit": "7d981a883c7fcd399ccac0994c70c758fc2ff0be",
+  "preserved_recorded_migrations": [
+    "20260905172453_mip_public_surface_transfer",
+    "20260905172517_mip_public_surface_stub_reconcile",
+    "20260905172527_mip_public_surface_predicates",
+    "20260905172543_mip_public_surface_tables",
+    "20260905172558_mip_public_surface_topics_rls",
+    "20260905172611_mip_public_surface_views",
+    "20260905180142_mip_public_surface_publication_gates"
+  ],
+  "forward_corrective_migration": "20260905181254_mip_public_surface_authenticated_review_revoke",
+  "closed_tables": [
+    "events",
+    "claims",
+    "article_claims",
+    "event_articles",
+    "explanations",
+    "cross_surface_candidates",
+    "claim_evidence_links",
+    "claim_corrections",
+    "entities",
+    "p3_legal_case",
+    "p3_legal_case_evidence",
+    "p3_policy",
+    "p3_policy_track_event"
+  ],
+  "preserved_reader_contracts": [
+    "comparison_public",
+    "news_detail_public",
+    "graph_coverage_public",
+    "arc_milestones_public",
+    "authors_public",
+    "spatial_projection_v1"
+  ],
+  "frontend_adaptations": [
+    "Source Comparison already reads comparison_public only.",
+    "Phase 3 already fail-closes to empty lists when private tables are unreadable.",
+    "explanationReadPath now fail-closes on fetch/permission errors instead of treating a signed-in user as a reviewer."
+  ],
+  "post_change_live_state": {
+    "recorded_version": "20260905181254",
+    "private_table_policies": [],
+    "authenticated_select_events": false,
+    "authenticated_select_claims": false,
+    "authenticated_select_p3_policy": false,
+    "authenticated_select_explanations": false,
+    "anon_select_events": false,
+    "authenticated_select_comparison_public": true,
+    "anon_select_comparison_public": true,
+    "service_role_select_events": true,
+    "service_role_select_p3_policy": true,
+    "comparison_public": 1,
+    "news_detail_public": 3,
+    "graph_coverage_article_count": 3,
+    "pending_nasa": 1,
+    "combined_174500_recorded": false,
+    "gates_180142_recorded": true,
+    "live_set_role_authenticated_events": "permission denied for table events",
+    "live_set_role_authenticated_p3_policy": "permission denied for table p3_policy",
+    "live_set_role_authenticated_comparison_public": 1,
+    "live_set_role_authenticated_news_detail_public": 3
+  },
+  "pglite_and_jwt_limitations": [
+    "PGlite 0.5.8 is not PostgreSQL 17 and does not reproduce Supabase Auth, PostgREST, or production catalog/ACL defaults.",
+    "Isolated role tests use SET ROLE anon/authenticated/service_role, not JWT Data API sessions.",
+    "A safe ordinary-user JWT/Data API session was not available without creating users or using secrets. Live verification used catalog privileges plus SET ROLE authenticated through the SQL interface, and published comparison_public/news_detail_public readbacks. No production fixtures were inserted.",
+    "Adversarial pending/quarantined/draft rows exist only in isolated PGlite tests and were not written to production."
+  ],
+  "notes": [
+    "No new roles or approval states were invented. service_role remains the operator path.",
+    "Last verified ledger progress remains 185/3,818 mappings and 0/1,504 conflicts. Consolidation is not complete."
+  ]
+}

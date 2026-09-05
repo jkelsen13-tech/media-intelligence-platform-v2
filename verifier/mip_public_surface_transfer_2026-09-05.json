@@ -1,0 +1,81 @@
+{
+  "date": "2026-09-05",
+  "repository_base": "8e83ec5be73c7e5a68b1cff40bc5196954c44388",
+  "destination": "qikvmopbtijoebdqosyq",
+  "source_manus": "yhbwnrtlqbjtcrrlpbge",
+  "source_original": "niejaejtbxgakyrsntxm",
+  "source_gate_a": "jfnzyvzthzqtczlxhjll",
+  "migration": "20260905172453_mip_public_surface_transfer",
+  "production_recorded_chunks": [
+    "20260905172453_mip_public_surface_transfer",
+    "20260905172517_mip_public_surface_stub_reconcile",
+    "20260905172527_mip_public_surface_predicates",
+    "20260905172543_mip_public_surface_tables",
+    "20260905172558_mip_public_surface_topics_rls",
+    "20260905172611_mip_public_surface_views"
+  ],
+  "combined_draft_not_applied": "20260905174500_mip_public_surface_transfer",
+  "forward_publication_gates": "20260905180142_mip_public_surface_publication_gates",
+  "frontend_relations_transferred": [
+    "graph_coverage_public",
+    "policy_actors",
+    "policy_topics",
+    "topics",
+    "arc_milestones_public",
+    "arc_events",
+    "comparison_public",
+    "authors_public",
+    "citations",
+    "news_detail_public",
+    "sky_verifications"
+  ],
+  "remaining_frontend_dependencies_schema": [
+    "node_topics",
+    "node_location_mentions",
+    "explanations",
+    "p3_legal_case",
+    "p3_legal_case_evidence",
+    "p3_policy",
+    "p3_policy_track_event",
+    "events",
+    "event_articles",
+    "claims",
+    "article_claims"
+  ],
+  "remaining_frontend_dependencies_data": [
+    "policies",
+    "policy_actors",
+    "policy_topics",
+    "story_arcs",
+    "authors",
+    "citations",
+    "explanations",
+    "edges",
+    "sources",
+    "policy_documents",
+    "nodes",
+    "p3_legal_case",
+    "p3_legal_case_evidence",
+    "p3_policy",
+    "p3_policy_track_event"
+  ],
+  "remaining_manus_publication_functions": [
+    "article_arc_membership_is_approved",
+    "articles_source_status_propagate",
+    "attach_article_to_arc",
+    "explanations_publication_guard",
+    "invalidate_comparison_approval_on_membership_change",
+    "mip_approve_arc_membership_candidate",
+    "mip_project_approved_arc_membership",
+    "mip_retract_arc_membership_projection",
+    "publish_explanation"
+  ],
+  "notes": [
+    "Schema and private predicates were applied live as six recorded chunks. The combined 20260905174500 draft was never applied on production and is now a no-op marker.",
+    "Cyclospora cohort readback was verified on production.",
+    "Graph-event and Source Comparison event families remain separate.",
+    "Manus collectors stay on Manus. Watermarks do not switch workers.",
+    "No project is retired by this revision.",
+    "Publication bypasses on citations, node_location_mentions, sky_verifications, and graph_coverage_public are closed by the later publication-gates migration."
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "date": "2026-09-05",
+  "destination": "qikvmopbtijoebdqosyq",
+  "reviewed_commit": "a80403bc14edc6fbff8ba7b77b82cf671e22ff0a",
+  "production_recorded_chunks": [
+    "20260905172453_mip_public_surface_transfer",
+    "20260905172517_mip_public_surface_stub_reconcile",
+    "20260905172527_mip_public_surface_predicates",
+    "20260905172543_mip_public_surface_tables",
+    "20260905172558_mip_public_surface_topics_rls",
+    "20260905172611_mip_public_surface_views"
+  ],
+  "combined_draft_not_applied": "20260905174500_mip_public_surface_transfer",
+  "forward_corrective_migration": "20260905180142_mip_public_surface_publication_gates",
+  "pre_change_live_state": {
+    "citations": 0,
+    "node_location_mentions": 0,
+    "sky_verifications": 0,
+    "geographic_places": 1,
+    "articles": 4,
+    "eligible_active_articles": 3,
+    "comparison_public": 1,
+    "graph_coverage_article_count": 4,
+    "citations_public_read": "USING (true)",
+    "node_location_mentions_public_read": "USING (true)",
+    "sky_verifications_public_read": "USING (true)",
+    "combined_174500_recorded": false
+  },
+  "post_change_live_state": {
+    "citations": 0,
+    "node_location_mentions": 0,
+    "sky_verifications": 0,
+    "geographic_places": 1,
+    "articles": 4,
+    "eligible_active_articles": 3,
+    "pending_nasa": 1,
+    "comparison_public": 1,
+    "news_detail_public": 3,
+    "spatial_projection_v1": 1,
+    "graph_coverage_article_count": 3,
+    "citations_public_read": "EXISTS eligible+active article",
+    "node_location_mentions_public_read": "dropped; SELECT revoked from anon/authenticated/public",
+    "sky_verifications_public_read": "dropped; SELECT revoked from anon/authenticated/public",
+    "combined_174500_recorded": false,
+    "recorded_version": "20260905180142"
+  },
+  "exact_live_changes": [
+    "Replaced citations_public_read USING (true) with article eligibility for anon and authenticated.",
+    "Dropped node_location_mentions_public_read and sky_verifications_public_read.",
+    "Revoked SELECT on node_location_mentions and sky_verifications from anon, authenticated, and PUBLIC. service_role SELECT remains.",
+    "Rewrote graph_coverage_public so article_count and articles_with_published_node count only eligible+active articles. Live article_count changed 4 -> 3.",
+    "No application rows were inserted or deleted. citations, node_location_mentions, and sky_verifications remain empty.",
+    "Recorded schema_migrations row 20260905180142 / mip_public_surface_publication_gates. 20260905174500 remains unrecorded."
+  ],
+  "pglite_fixture_limitations": [
+    "PGlite 0.5.8 is not PostgreSQL 17 and does not reproduce Supabase Auth, PostgREST, or production catalog/ACL defaults.",
+    "DESTINATION_FOUNDATION_SQL creates simplified stubs and grants SELECT on geographic_places to anon/authenticated; production already revoked that path and keeps released geography on spatial_projection_v1.",
+    "The isolated fixture applies the evidence-pipeline, consolidation-delta, event-scoped counts, six recorded public-surface chunks, and the forward gates. It does not replay the full production history.",
+    "Role tests use SET ROLE anon/authenticated, not JWT-authenticated Data API sessions.",
+    "Table-owner FORCE ROW LEVEL SECURITY and default privileges are not fully modeled.",
+    "Adversarial citation, mention, and sky rows are inserted only in isolated PGlite tests and were not written to production."
+  ],
+  "security_advisor_notes": [
+    "node_location_mentions and sky_verifications now appear as RLS enabled with no policy. That is the intended V2 revoke contract: no public SELECT grant and no public read policy.",
+    "graph_coverage_public remains an owner-access (security_invoker = false) view. The view SQL now follows the disclosure contract instead of opening private bases.",
+    "Pre-existing advisor items (evidence_pipeline RLS-without-policy, other security_definer public views, vector in public, leaked-password protection) were not part of this scoped correction."
+  ],
+  "notes": [
+    "Repository history was reconciled to the six production-recorded chunks plus the recorded forward gates version. The former combined file is a no-op marker and must not be replayed or marked applied.",
+    "The forward gates reuse article eligibility and the V2 geography/sky revoke contract. No new approval states were invented.",
+    "Ordinary authenticated users use the same public predicates as anon.",
+    "Last verified ledger progress remains 185/3,818 mappings and 0/1,504 conflicts. Consolidation is not complete.",
+    "Authenticated USING (true) policies on private Source Comparison and P3 base tables were inspected and left unchanged; frontend Source Comparison already uses comparison_public."
+  ]
+}
