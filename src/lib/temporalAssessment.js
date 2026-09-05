@@ -144,13 +144,17 @@ export function temporalAssessmentViewFromValue(value, { key = null, sha256 = nu
   })
 }
 
-export async function pinFetchedAssessment(value, key) {
-  const text = encodePostgresJsonbText(value)
-  const digest = await sha256HexUtf8(text)
-  if (digest !== CLEVELAND_ASSESSMENT_COMPOSER_SHA256) {
-    return unavailableView('sha_mismatch', { key, sha256: digest })
+export async function pinFetchedAssessment(value, key, { hashFn } = {}) {
+  try {
+    const text = encodePostgresJsonbText(value)
+    const digest = await (hashFn ?? sha256HexUtf8)(text)
+    if (digest !== CLEVELAND_ASSESSMENT_COMPOSER_SHA256) {
+      return unavailableView('sha_mismatch', { key, sha256: digest })
+    }
+    return temporalAssessmentViewFromValue(value, { key, sha256: digest })
+  } catch {
+    return unavailableView('hash_unavailable', { key })
   }
-  return temporalAssessmentViewFromValue(value, { key, sha256: digest })
 }
 
 /**

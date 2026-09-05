@@ -51,24 +51,12 @@ export function cacheTheme(theme, storage) {
 }
 
 /**
- * Flag read + apply + cache. Returns the applied theme. Withhold posture:
- * any error or non-true value applies dark.
+ * Owner-selected light presentation at boot. Workspace chrome does not wait
+ * on pipeline_config.track_b_light_theme. resolveTheme() remains the
+ * withhold helper for any future flag read (exactly boolean true -> light).
  */
 export async function applyThemeFlag() {
-  let theme = 'dark'
-  try {
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('pipeline_config')
-        .select('value')
-        .eq('key', 'track_b_light_theme')
-        .maybeSingle()
-      if (!error) theme = resolveTheme(data?.value)
-    }
-  } catch {
-    theme = 'dark'
-  }
-  applyTheme(theme)
-  cacheTheme(theme)
-  return theme
+  applyTheme('light')
+  cacheTheme('light')
+  return 'light'
 }

@@ -292,7 +292,11 @@ function EventInspector({
       <header className="wv-section-head">
         <h2>Event inspector</h2>
       </header>
-      <section className="wv-ic" aria-label="Investigation context">
+      <TemporalIntelligenceBlock assessment={temporalAssessment} />
+      {body}
+      <WeatherPanel weather={weather} />
+      <details className="wv-ic" aria-label="Investigation context">
+        <summary>Provenance identifiers &amp; history</summary>
         <h4>Investigation context</h4>
         <dl className="wv-fields">
           <Field label="canonical_subject_type" value={investigationContext?.canonical_subject_type} empty="not recorded" />
@@ -320,10 +324,7 @@ function EventInspector({
             {freshness.summary}
           </p>
         )}
-      </section>
-      <TemporalIntelligenceBlock assessment={temporalAssessment} />
-      {body}
-      <WeatherPanel weather={weather} />
+      </details>
     </aside>
   )
 }

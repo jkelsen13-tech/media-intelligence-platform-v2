@@ -845,7 +845,16 @@ export async function loadTimeline({ supabaseClient } = {}) {
   if (nodesRes.error) throw nodesRes.error
   if (labelsRes.error) throw labelsRes.error
   if (articlesRes.error) throw articlesRes.error
-  if (arcsRes.error && !isPostgrestSchemaGap(arcsRes.error)) throw arcsRes.error
+  // Optional denied/missing arc metadata must not block an otherwise valid
+  // global timeline read. Schema-cache gaps and permission-denied stay
+  // empty; unexpected server errors still reject.
+  if (
+    arcsRes.error &&
+    !isPostgrestSchemaGap(arcsRes.error) &&
+    !isPostgrestPermissionDenied(arcsRes.error)
+  ) {
+    throw arcsRes.error
+  }
   const arcRows = arcsRes.error ? [] : arcsRes.data
   const { events, canonicalOf, suppressed } = canonicalizeTimelineEvents(nodesRes.data)
   const { articleIdBySuffix, arcTitleById } = buildTimelineCrossLinks(

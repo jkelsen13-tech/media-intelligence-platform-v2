@@ -19,6 +19,7 @@ import {
   pendingUncertainty,
 } from '../lib/policyArcModel'
 import { investigationContextDomProps } from '../lib/investigationContext'
+import WorkspaceAvailability from '../components/WorkspaceAvailability'
 
 // Story Arcs (concept doc §2.5): persistent longitudinal tracking through a
 // story's full consequence arc. Track B Step 3 item 2 rebuilt the detail
@@ -223,14 +224,20 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
   if (arcsUnavailable) {
     return (
       <div className="notice" {...investigationContextDomProps(investigationContext)}>
-        Story arcs are unavailable ({arcsUnavailable}). Id-only stub rows are treated as no-arc; no titles are invented.
+        <WorkspaceAvailability
+          kind="arcs"
+          details={`Story arcs are unavailable (${arcsUnavailable}). Id-only stub rows are treated as no-arc; no titles are invented.`}
+        />
       </div>
     )
   }
   if (arcs.length === 0) {
     return (
       <div className="notice" {...investigationContextDomProps(investigationContext)}>
-        No story arcs tracked yet.
+        <WorkspaceAvailability
+          kind="arcs"
+          details="No story arcs tracked yet."
+        />
       </div>
     )
   }
@@ -415,7 +422,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
                 ) : (
                   <ol className="ep-keydevs">
                     {detail.events.map((e, i) => (
-                      <li key={e.id} className="ep-keydev">
+                      <li key={e.id} className="ep-keydev arc-development-card">
                         <TypeIcon type={e.category} />
                         <div className="ep-keydev-body">
                           <div className="ep-keydev-toprow">

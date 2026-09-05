@@ -239,6 +239,26 @@ test('loadArcs: id-only stub rows are treated as no-arc', async () => {
   assert.match(result.arcsUnavailable, /id-only stub|no-arc/)
 })
 
+test('loadTimeline: permission denied on optional story_arcs does not throw', async () => {
+  const client = fakeClient(
+    { nodes: [LIVE_NODE], edges: [], articles: [], story_arcs: [] },
+    { errors: { story_arcs: { code: '42501', message: 'permission denied for table story_arcs' } } },
+  )
+  const out = await loadTimeline({ supabaseClient: client })
+  assert.ok(out.events.some((event) => event.id === LIVE_NODE.id))
+})
+
+test('loadTimeline: unexpected story_arcs server error still rejects', async () => {
+  const client = fakeClient(
+    { nodes: [LIVE_NODE], edges: [], articles: [], story_arcs: [] },
+    { errors: { story_arcs: ARTICLES_500 } },
+  )
+  await assert.rejects(
+    () => loadTimeline({ supabaseClient: client }),
+    (err) => err?.message === 'Internal Server Error' || err?.code === 'PGRST000',
+  )
+})
+
 test('loadTimeline: missing edges does not throw', async () => {
   const client = fakeClient(
     { nodes: [LIVE_NODE], edges: [], articles: [], story_arcs: [{ id: 'stub-1' }] },

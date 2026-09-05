@@ -71,6 +71,19 @@ import {
 } from './lib/graphWorkspaceModel'
 import AccountPanel from './panels/AccountPanel'
 import { loadAccountUiFlag } from './lib/auth'
+import InvestigationWorkspace, {
+  WorkspaceAccountButton,
+  WorkspaceInfoButton,
+  WorkspaceNavButton,
+  WorkspaceSearch,
+} from './components/InvestigationWorkspace'
+import {
+  WORKSPACE_NAV_ITEMS,
+  canonicalWorkspaceHeader,
+  graphInspectorDismissalAfter,
+  shouldRestoreGraphInspector,
+  workspaceEvidenceDimensions,
+} from './lib/workspacePresentation'
 
 // Nav structure lives in ./lib/navViews (Track B 6->5 restructure,
 // 2026-08-16): core tabs + "More". R4 adds World View as a fifth core tab.
@@ -277,6 +290,8 @@ export default function App() {
   const [focusTimelineEvent, setFocusTimelineEvent] = useState(null)
   const [focusTimelineArc, setFocusTimelineArc] = useState(null)
   const [focusComparisonEvent, setFocusComparisonEvent] = useState(null)
+  const [graphInspectorDismissed, setGraphInspectorDismissed] = useState(false)
+  const graphInspectorDismissedSubjectRef = useRef(null)
 
   const isMobile = useMediaQuery('(max-width: 767px)')
 
@@ -379,11 +394,21 @@ export default function App() {
     (data) => {
       // Edge taps and canvas taps clear the panel unless it is pinned.
       if (!data || data.source) {
-        if (!pinned) setSelected(null)
+        if (!pinned) {
+          setSelected(null)
+          const next = graphInspectorDismissalAfter({
+            action: 'dismiss',
+            canonicalSubjectId: investigationContextRef.current?.canonical_subject_id,
+          })
+          setGraphInspectorDismissed(next.dismissed)
+          graphInspectorDismissedSubjectRef.current = next.dismissedSubjectId
+        }
         return
       }
       // A node inspector is the one primary overlay. Lists, review panels,
       // topic browser, and prior relationship evidence close before it opens.
+      setGraphInspectorDismissed(false)
+      graphInspectorDismissedSubjectRef.current = null
       setEdgeEvidence(null)
       setEdgeListOpen(false)
       setReviewStatusOpen(false)
@@ -431,6 +456,8 @@ export default function App() {
       if (!graph) return
       const next = graph.nodes.find((n) => (n.id ?? n.slug) === nodeKey)
       if (next) {
+        setGraphInspectorDismissed(false)
+        graphInspectorDismissedSubjectRef.current = null
         setEdgeEvidence(null)
         setEdgeListOpen(false)
         setReviewStatusOpen(false)
@@ -502,6 +529,12 @@ export default function App() {
   const handleClose = useCallback(() => {
     setSelected(null)
     setPinned(false)
+    const next = graphInspectorDismissalAfter({
+      action: 'dismiss',
+      canonicalSubjectId: investigationContextRef.current?.canonical_subject_id,
+    })
+    setGraphInspectorDismissed(next.dismissed)
+    graphInspectorDismissedSubjectRef.current = next.dismissedSubjectId
   }, [])
 
   // World View Map / Graph / Split share App's selected-node seam
@@ -515,6 +548,8 @@ export default function App() {
       setPolicyNode(null)
       setActiveLocationKey(null)
       setPinned(false)
+      setGraphInspectorDismissed(false)
+      graphInspectorDismissedSubjectRef.current = null
       const seedNode =
         node.fromSpatialProjection && graph?.source === 'supabase' && node.subject_graph_node_id
           ? graph.nodes.find((n) => (n.id ?? n.slug) === node.subject_graph_node_id) ?? node
@@ -693,6 +728,8 @@ export default function App() {
       setGraphScreen('all')
       setView('graph')
       if (next) {
+        setGraphInspectorDismissed(false)
+        graphInspectorDismissedSubjectRef.current = null
         setSelected(next)
         // Reset — never append: the jump target becomes the new root crumb,
         // so no stale focus path from a prior arc's exploration remains.
@@ -781,6 +818,8 @@ export default function App() {
     setTopicsOpen(false)
     setPolicyNode(null)
     setActiveLocationKey(null)
+    setGraphInspectorDismissed(false)
+    graphInspectorDismissedSubjectRef.current = null
     setSelected(node)
     setNodeQuery('')
     pushFocus(node)
@@ -969,6 +1008,16 @@ export default function App() {
   // from the deep link is preferred; stale ids already fell back to parent.
   useEffect(() => {
     if (view !== 'graph' || !graph?.nodes?.length) return
+    const canRestore = shouldRestoreGraphInspector({
+      dismissed: graphInspectorDismissed,
+      dismissedSubjectId: graphInspectorDismissedSubjectRef.current,
+      canonicalSubjectId: investigationContext.canonical_subject_id,
+    })
+    if (!canRestore) return
+    if (graphInspectorDismissed) {
+      setGraphInspectorDismissed(false)
+      graphInspectorDismissedSubjectRef.current = null
+    }
     if (linkSelection.entity) {
       const entityNode = graph.nodes.find((node) => String(node.id ?? node.slug) === String(linkSelection.entity))
       if (entityNode) {
@@ -983,10 +1032,84 @@ export default function App() {
     const selectedKey = selected ? selected.id ?? selected.slug ?? selected.subject_graph_node_id : null
     if (selectedKey && String(selectedKey) === String(match.id ?? match.slug)) return
     setSelected(match)
-  }, [view, graph, investigationContext, selected, linkSelection.entity])
+  }, [view, graph, investigationContext, selected, linkSelection.entity, graphInspectorDismissed])
+
+  const canonicalNode = useMemo(
+    () => graphNodeMatchingInvestigation(graph?.nodes ?? [], investigationContext),
+    [graph, investigationContext],
+  )
+  const workspaceHeader = useMemo(
+    () =>
+      canonicalWorkspaceHeader({
+        investigationContext,
+        canonicalNode,
+        selectedChild: selected,
+      }),
+    [investigationContext, canonicalNode, selected],
+  )
+  const nodeDimensions = selected
+    ? workspaceEvidenceDimensions(selected, { forNode: true })
+    : null
+  const workspaceNavItems = WORKSPACE_NAV_ITEMS.filter((item) => {
+    if (item.key === 'phase3') return phase3Beta
+    if (item.key === 'compare') return sourceComparisonBeta
+    return true
+  })
+  const inspectorOccupied = view === 'graph' && !!(selected || policyNode || edgeEvidence) && !isMobile
 
   return (
-    <div className="app">
+    <div className="app ws-app">
+      <InvestigationWorkspace
+        view={view}
+        onChangeView={changeView}
+        investigationContext={investigationContext}
+        header={workspaceHeader}
+        nodeDimensions={nodeDimensions}
+        selectedChild={selected}
+        inspectorOccupied={inspectorOccupied}
+        onChangeInvestigation={openExplore}
+        corpusLine={corpusLine}
+        searchSlot={
+          <WorkspaceSearch
+            exploreBtnRef={exploreBtnRef}
+            exploreOpen={exploreOpen}
+            onOpenExplore={openExplore}
+            dialogId={EXPLORE_A11Y.dialogId}
+          />
+        }
+        accountSlot={
+          <WorkspaceAccountButton
+            enabled={accountUi}
+            onClick={() => (accountUi ? setAccountOpen(true) : setAboutOpen(true))}
+          />
+        }
+        infoSlot={<WorkspaceInfoButton onClick={() => setAboutOpen(true)} />}
+        leftNav={
+          <>
+            {workspaceNavItems.map((v) => (
+              <WorkspaceNavButton
+                key={v.key}
+                item={v}
+                active={v.key === 'more' ? moreActive : view === v.key}
+                onClick={() => (v.key === 'more' ? setMoreOpen(true) : changeView(v.key))}
+              />
+            ))}
+          </>
+        }
+        details={
+          <details className="ws-details">
+            <summary>Investigation details & recent history</summary>
+            <InvestigationContextBar
+              investigationContext={investigationContext}
+              recentInvestigations={recentInvestigations}
+              onRestoreRecent={restoreRecentItem}
+              selectionFallbacks={selectionFallbacks}
+              joinDisclosures={joinDisclosures}
+              storageKey={RECENT_INVESTIGATION_STORAGE_KEY}
+            />
+          </details>
+        }
+      >
       <header className="app-header">
         <h1>MIP</h1>
         <span className="subtitle">Media Intelligence Platform</span>
@@ -1004,7 +1127,6 @@ export default function App() {
         </nav>
         <button
           type="button"
-          ref={exploreBtnRef}
           className="explore-btn"
           aria-label="Explore / Change Topic"
           aria-haspopup="dialog"
@@ -1130,15 +1252,6 @@ export default function App() {
       )}
 
       {accountOpen && accountUi && <AccountPanel onClose={() => setAccountOpen(false)} />}
-
-      <InvestigationContextBar
-        investigationContext={investigationContext}
-        recentInvestigations={recentInvestigations}
-        onRestoreRecent={restoreRecentItem}
-        selectionFallbacks={selectionFallbacks}
-        joinDisclosures={joinDisclosures}
-        storageKey={RECENT_INVESTIGATION_STORAGE_KEY}
-      />
 
       <main className="app-main">
         {error && view === 'graph' && <div className="notice error">Failed to load graph: {error}</div>}
@@ -1557,6 +1670,7 @@ export default function App() {
           />
         )}
       </main>
+      </InvestigationWorkspace>
 
       <nav className="bottom-nav" aria-label="Primary">
         {navViews.map((v) => (

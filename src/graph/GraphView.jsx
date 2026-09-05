@@ -657,6 +657,7 @@ export default function GraphView({
     }
 
     const updateCards = () => {
+      if (cy.destroyed()) return
       const layer = cardsLayerRef.current
       if (!layer) return
       const z = cy.zoom()
@@ -714,6 +715,7 @@ export default function GraphView({
     // on pan/zoom, debounced, scoped to visible cards — focal-scoped at
     // max-zoom hub views where the visible set can still be hundreds.
     const runRelax = () => {
+      if (cy.destroyed()) return
       const z = cy.zoom()
       const { regime, relaxScope } = cardRegime(z)
       if (!focused || isMobile || regime !== 'cards' || relaxScope === 'none') return
@@ -888,9 +890,9 @@ export default function GraphView({
       graphContainer.removeEventListener('wheel', onWheelZoom, { capture: true })
       clearTimeout(declutterTimer)
       clearTimeout(relaxTimer)
-      clearCards()
       resizeObserver?.disconnect()
       cy.destroy()
+      clearCards()
     }
   }, [nodes, edges, onSelect, isMobile, focusNodeId])
 
