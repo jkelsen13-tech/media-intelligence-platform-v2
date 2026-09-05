@@ -406,7 +406,12 @@ export default function ArticlePanel({
 
       <section className="ap-section">
         <span className="ap-label">Node-level source records</span>
-        {sourcesError && <p className="ap-sources-error">Failed to load sources: {sourcesError}</p>}
+        {sourcesError && (
+          <details className="ap-sources-unavailable">
+            <summary>Node-level source records are unavailable.</summary>
+            <p className="ap-sources-error">Failed to load sources: {sourcesError}</p>
+          </details>
+        )}
         {!sources && !sourcesError && <p className="ap-muted">Loading sources…</p>}
         {sources && displaySources.length === 0 && (
           <p className="ap-muted">No node-level source records documented yet.</p>

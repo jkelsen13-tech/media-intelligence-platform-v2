@@ -78,12 +78,14 @@ import InvestigationWorkspace, {
   WorkspaceSearch,
 } from './components/InvestigationWorkspace'
 import {
+  CALM_RELATIONSHIP_UNAVAILABLE,
   WORKSPACE_NAV_ITEMS,
   canonicalWorkspaceHeader,
   graphInspectorDismissalAfter,
   shouldRestoreGraphInspector,
   workspaceEvidenceDimensions,
 } from './lib/workspacePresentation'
+import WorkspaceTechnicalDisclosure from './components/WorkspaceTechnicalDisclosure'
 
 // Nav structure lives in ./lib/navViews (Track B 6->5 restructure,
 // 2026-08-16): core tabs + "More". R4 adds World View as a fifth core tab.
@@ -1056,6 +1058,7 @@ export default function App() {
     return true
   })
   const inspectorOccupied = view === 'graph' && !!(selected || policyNode || edgeEvidence) && !isMobile
+  const hasNativeInspector = view === 'world'
 
   return (
     <div className="app ws-app">
@@ -1067,6 +1070,7 @@ export default function App() {
         nodeDimensions={nodeDimensions}
         selectedChild={selected}
         inspectorOccupied={inspectorOccupied}
+        hasNativeInspector={hasNativeInspector}
         onChangeInvestigation={openExplore}
         corpusLine={corpusLine}
         searchSlot={
@@ -1254,11 +1258,15 @@ export default function App() {
       {accountOpen && accountUi && <AccountPanel onClose={() => setAccountOpen(false)} />}
 
       <main className="app-main">
-        {error && view === 'graph' && <div className="notice error">Failed to load graph: {error}</div>}
+        {error && view === 'graph' && (
+          <WorkspaceTechnicalDisclosure banner={CALM_RELATIONSHIP_UNAVAILABLE}>
+            Graph load failed. {error}
+          </WorkspaceTechnicalDisclosure>
+        )}
         {graph?.edgesUnavailable && view === 'graph' && (
-          <div className="notice">
+          <WorkspaceTechnicalDisclosure banner={CALM_RELATIONSHIP_UNAVAILABLE}>
             public.edges is unavailable ({graph.edgesUnavailable}). Nodes may still render; no relationships are invented.
-          </div>
+          </WorkspaceTechnicalDisclosure>
         )}
 
         {view === 'news' && (

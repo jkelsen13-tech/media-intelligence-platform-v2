@@ -45,9 +45,34 @@ function NavIcon({ viewKey, size = 18 }) {
   return <Icon size={size} weight="regular" />
 }
 
+function MobiusMark() {
+  return (
+    <img
+      className="ws-mobius"
+      src={`${import.meta.env.BASE_URL}assets/mip-mobius-logo.png`}
+      width="33"
+      height="33"
+      alt=""
+      aria-hidden="true"
+    />
+  )
+}
+
+function BrandWordmark() {
+  return (
+    <span className="ws-brand-wordmark">
+      <span className="ws-brand-mip">MIP</span>
+      <span className="ws-brand-name">Media Intelligence Platform</span>
+    </span>
+  )
+}
+
 function EvidenceDimensionGrid({ dimensions, compact = false }) {
   return (
-    <div className={`ws-dimensions${compact ? ' ws-dimensions-compact' : ''}`} aria-label="Evidence dimensions">
+    <div
+      className={`workspace-evidence-strip ws-dimensions${compact ? ' ws-dimensions-compact' : ''}`}
+      aria-label="Evidence dimensions"
+    >
       {(dimensions ?? []).map((dim) => (
         <div key={dim.key} className={`ws-dimension ws-dimension-${dim.tone ?? 'unavailable'}`}>
           <span className="ws-dimension-label">{dim.label}</span>
@@ -71,6 +96,7 @@ export default function InvestigationWorkspace({
   accountSlot,
   infoSlot,
   inspectorOccupied = false,
+  hasNativeInspector = false,
   onChangeInvestigation,
   details,
   children,
@@ -101,7 +127,40 @@ export default function InvestigationWorkspace({
   const hasSubject = Boolean(ic?.canonical_subject_id)
 
   return (
-    <div className={`ws-shell${navCollapsed ? ' ws-nav-collapsed' : ''}`} data-workspace="investigation">
+    <div
+      className={`workspace-app ws-shell${navCollapsed ? ' nav-collapsed ws-nav-collapsed' : ''}`}
+      data-workspace="investigation"
+    >
+      <aside className="ws-nav" aria-label="Investigation views">
+        <div className="ws-nav-brand">
+          <MobiusMark />
+          {!navCollapsed && <BrandWordmark />}
+        </div>
+        <div className="ws-nav-links">{leftNav}</div>
+        <div className="ws-nav-active">
+          {!navCollapsed && (
+            <>
+              <p className="ws-nav-kicker">Active investigation</p>
+              <p className="ws-nav-subject">{header?.title}</p>
+              <p className="ws-nav-note">Your subject stays with you across views.</p>
+              <button type="button" className="ws-change-btn" onClick={onChangeInvestigation}>
+                Change investigation
+                <ArrowSquareOut size={14} />
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            className="ws-collapse-btn"
+            aria-label={navCollapsed ? 'Expand navigation' : 'Collapse navigation'}
+            onClick={() => setNavCollapsed((v) => !v)}
+          >
+            {navCollapsed ? <CaretRight size={14} /> : <CaretLeft size={14} />}
+            {!navCollapsed && <span>Follow the evidence.</span>}
+          </button>
+        </div>
+      </aside>
+
       <header className="ws-topbar">
         <button
           type="button"
@@ -113,10 +172,6 @@ export default function InvestigationWorkspace({
         >
           <List size={20} />
         </button>
-        <div className="ws-brand" aria-hidden={false}>
-          <span className="ws-logo">MIP</span>
-          <span className="ws-brand-name">Media Intelligence Platform</span>
-        </div>
         <div className="ws-search-wrap">
           {searchSlot}
         </div>
@@ -141,7 +196,7 @@ export default function InvestigationWorkspace({
             }
           >
             <div className="ws-drawer-head">
-              <span className="ws-logo">MIP</span>
+              <MobiusMark />
               <button type="button" className="ws-icon-btn" aria-label="Close navigation" onClick={closeDrawer}>
                 <X size={18} />
               </button>
@@ -153,86 +208,54 @@ export default function InvestigationWorkspace({
         </div>
       )}
 
-      <div className="ws-body">
-        <aside className="ws-nav" aria-label="Investigation views">
-          <div className="ws-nav-brand">
-            <span className="ws-logo">MIP</span>
-            {!navCollapsed && <span className="ws-brand-name">MIP</span>}
-          </div>
-          <div className="ws-nav-links">{leftNav}</div>
-          <div className="ws-nav-active">
-            {!navCollapsed && (
-              <>
-                <p className="ws-nav-kicker">Active investigation</p>
-                <p className="ws-nav-subject">{header?.title}</p>
-                <p className="ws-nav-note">Your subject stays with you across views.</p>
-                <button type="button" className="ws-change-btn" onClick={onChangeInvestigation}>
-                  Change investigation
-                  <ArrowSquareOut size={14} />
-                </button>
-              </>
-            )}
-            <button
-              type="button"
-              className="ws-collapse-btn"
-              aria-label={navCollapsed ? 'Expand navigation' : 'Collapse navigation'}
-              onClick={() => setNavCollapsed((v) => !v)}
-            >
-              {navCollapsed ? <CaretRight size={14} /> : <CaretLeft size={14} />}
-              {!navCollapsed && <span>Follow the evidence.</span>}
+      <div className="ws-workspace-head">
+        <section
+          className="ws-canonical"
+          aria-label="Investigation workspace"
+          {...investigationContextDomProps(ic)}
+        >
+          <div className="ws-canonical-head">
+            <div>
+              <p className="ws-eyebrow">{header?.eyebrow ?? 'Investigation workspace'}</p>
+              <h1 className="ws-title">{header?.title}</h1>
+              <p className="ws-meta-row">
+                <span>
+                  <MapPin size={14} /> {header?.location}
+                </span>
+                <span>
+                  <CalendarBlank size={14} /> {header?.when}
+                </span>
+              </p>
+              {header?.description && <p className="ws-description">{header.description}</p>}
+            </div>
+            <button type="button" className="ws-change-btn" onClick={onChangeInvestigation}>
+              Change investigation
+              <ArrowSquareOut size={14} />
             </button>
           </div>
-        </aside>
+          <EvidenceDimensionGrid dimensions={header?.dimensions} />
+        </section>
 
-        <div className="ws-main">
-          <section
-            className="ws-canonical"
-            aria-label="Investigation workspace"
-            {...investigationContextDomProps(ic)}
-          >
-            <div className="ws-canonical-head">
-              <div>
-                <p className="ws-eyebrow">{header?.eyebrow ?? 'Investigation workspace'}</p>
-                <h1 className="ws-title">{header?.title}</h1>
-                <p className="ws-meta-row">
-                  <span>
-                    <MapPin size={14} /> {header?.location}
-                  </span>
-                  <span>
-                    <CalendarBlank size={14} /> {header?.when}
-                  </span>
-                </p>
-                {header?.description && <p className="ws-description">{header.description}</p>}
-              </div>
-              <button type="button" className="ws-change-btn" onClick={onChangeInvestigation}>
-                Change investigation
-                <ArrowSquareOut size={14} />
-              </button>
-            </div>
-            <EvidenceDimensionGrid dimensions={header?.dimensions} />
-          </section>
-
-          <div className="ws-tabs" role="tablist" aria-label="Evidence views">
-            {WORKSPACE_TAB_VIEWS.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                role="tab"
-                aria-selected={view === tab.key}
-                className={`ws-tab${view === tab.key ? ' active' : ''}`}
-                onClick={() => onChangeView(tab.key)}
-              >
-                <NavIcon viewKey={tab.key} size={16} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="ws-content">{children}</div>
-          {details}
+        <div className="ws-tabs" role="tablist" aria-label="Evidence views">
+          {WORKSPACE_TAB_VIEWS.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={view === tab.key}
+              className={`ws-tab${view === tab.key ? ' active' : ''}`}
+              onClick={() => onChangeView(tab.key)}
+            >
+              <NavIcon viewKey={tab.key} size={16} />
+              {tab.label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {!inspectorOccupied && (
+      <div className={`workspace-body ws-body${hasNativeInspector ? ' has-native-inspector' : ''}`}>
+        <div className="ws-content">{children}</div>
+        {!inspectorOccupied && !hasNativeInspector && (
           <aside className={`ws-inspector${inspectorOpen ? '' : ' collapsed'}`} aria-label="Investigation inspector">
             <button
               type="button"
@@ -287,11 +310,25 @@ export default function InvestigationWorkspace({
                     {MISSING_EVIDENCE_GUIDANCE}
                   </p>
                 </section>
+                <details className="ws-provenance">
+                  <summary>Provenance identifiers &amp; history</summary>
+                  <dl className="ws-inspector-dl">
+                    <div>
+                      <dt>canonical_subject_id</dt>
+                      <dd className="ws-provenance-id">{ic?.canonical_subject_id ?? 'not recorded'}</dd>
+                    </div>
+                    <div>
+                      <dt>canonical_subject_type</dt>
+                      <dd>{ic?.canonical_subject_type ?? 'not recorded'}</dd>
+                    </div>
+                  </dl>
+                </details>
               </div>
             )}
           </aside>
         )}
       </div>
+      {details}
     </div>
   )
 }

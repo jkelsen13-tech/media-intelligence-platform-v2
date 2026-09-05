@@ -86,42 +86,44 @@
    Enabled ONLY when pipeline_config.track_b_light_theme is exactly true
    (src/lib/themeFlag.js sets data-theme="light" on <html>). Dark :root
    above stays the default; rollback = flag false. Values per Doc 04 Step 1:
-   warm off-white canvas, white reading surfaces, one structural blue,
+   cool white / blue-gray canvas, white reading surfaces, one structural blue,
    green/amber/red semantic status, purple+dashed for inferred, 1px neutral
    borders, 4–8px radius, ~85/10/5 neutral/blue/status budget. */
 [data-theme='light'] {
-  /* Surfaces */
-  --bg-page: #F7F7F4;
+  /* Surfaces — cool white / blue-gray canvas (workspace visual target). */
+  --bg-page: #f6f8fb;
   --bg-panel: #ffffff; /* white reading surfaces */
-  --bg-elevated: #f0f0ea; /* pale neutral-gray secondary */
-  --bg-inset: #f4f4ef;
-  --bg-selected: #dce9f7;
+  --bg-elevated: #f0f4fa;
+  --bg-inset: #f8fafc;
+  --bg-selected: #eaf0ff;
   --bg-panel-rgb: 255, 255, 255;
 
-  /* Borders — 1px neutral */
-  --border-color: #d9d9d2;
-  --border-strong: #b5b5aa;
+  /* Borders — 1px cool gray */
+  --border-color: #e1e7ef;
+  --border-strong: #becbdd;
 
-  /* Text — ink on paper */
-  --text-primary: #1a1a17;
-  --text-body: #3f3f3a;
-  --text-secondary: #5c5c55;
-  --text-muted: #6e6e65; /* 4.79:1 on canvas, 5.15:1 on white (AA) */
+  /* Text — compact cool ink */
+  --text-primary: #202c41;
+  --text-body: #39465b;
+  --text-secondary: #56657b;
+  --text-muted: #647187;
 
   /* Category hues — re-hued for light-bg contrast (>= 4.5:1 on white). */
-  --cat-blue: #156ebf; /* locked structural blue */
+  --cat-blue: #315dbe;
   --cat-amber: #925e06;
   --cat-green: #1e7f43;
   --cat-red: #c0392b;
   --cat-grey: #6e6e66;
 
   /* Accent + derivatives */
-  --accent: var(--cat-blue);
-  --accent-soft: #0d4f8c; /* darker derivative reads as "soft" on light bg */
-  --accent-rgb: 21, 110, 191;
+  --accent: #315dbe;
+  --accent-soft: #4a74c9;
+  --accent-rgb: 49, 93, 190;
   --flag-yellow: #a16207;
   --red-soft: #b3261e;
   --green-bright: #15803d;
+  --card-radius: 8px;
+  --view-pad-top: 16px;
 
   /* 04_TRACK_B Step 1 additions, light values */
   --cat-inferred: #7c3aed; /* purple — pair with dashed border */
@@ -129,7 +131,7 @@
   --cat-violet: #6d28d9;
   --cat-pink: #a21c6d;
   --cat-pink-border: #e0a5cb;
-  --focus-ring: #156ebf;
+  --focus-ring: #315dbe;
   --danger-text: #b3261e;
   --status-green-bg: #e5f3eb; --status-green-text: #1a6f3a; --status-green-border: #9ccdb2;
   --status-blue-bg: #e3eef9; --status-blue-text: #1259a6; --status-blue-border: #a9c8e8;
@@ -143,8 +145,8 @@
   --badge-causal-text: #9a3412; --badge-causal-bg: rgba(234, 88, 12, 0.12); --badge-causal-border: rgba(234, 88, 12, 0.35);
   --badge-sequence-text: #156ebf; --badge-sequence-bg: rgba(21, 110, 191, 0.1); --badge-sequence-border: rgba(21, 110, 191, 0.35);
 
-  /* Step 2 item 2: grid ink on the warm-gray canvas. */
-  --graph-grid: rgba(26, 26, 23, 0.08);
+  /* Step 2 item 2: grid ink on the cool canvas. */
+  --graph-grid: rgba(52, 76, 114, 0.045);
 }
 
 /* C5: one numeric language app-wide — the "92% DOCUMENTED" treatment

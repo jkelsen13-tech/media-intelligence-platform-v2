@@ -57,6 +57,8 @@ import {
 } from '../lib/worldViewFreshness'
 import { launchOverlayCatalog } from '../lib/worldViewPrivacyLock'
 import './worldview.css'
+import WorkspaceTechnicalDisclosure from '../components/WorkspaceTechnicalDisclosure'
+import { CALM_RELATIONSHIP_UNAVAILABLE } from '../lib/workspacePresentation'
 
 const MODES = [
   { key: 'map', label: 'Map' },
@@ -576,7 +578,9 @@ export default function WorldView({
             {showGraph && (
               <div className="wv-graph">
                 {graphError && graph?.source !== 'supabase' && (
-                  <p className="wv-empty-state">Knowledge Graph load failed: {graphError}</p>
+                  <WorkspaceTechnicalDisclosure banner={CALM_RELATIONSHIP_UNAVAILABLE}>
+                    Knowledge Graph load failed: {graphError}
+                  </WorkspaceTechnicalDisclosure>
                 )}
                 {graphUnavailable && (
                   <p className="wv-empty-state">
@@ -585,9 +589,9 @@ export default function WorldView({
                   </p>
                 )}
                 {worldGraph.edgesUnavailable && (
-                  <p className="wv-empty-state">
+                  <WorkspaceTechnicalDisclosure banner={CALM_RELATIONSHIP_UNAVAILABLE}>
                     public.edges is unavailable ({worldGraph.edgesUnavailable}). Nodes may still render; no relationships are invented.
-                  </p>
+                  </WorkspaceTechnicalDisclosure>
                 )}
                 {!graphUnavailable && worldGraph.status === 'ok' && (
                   <GraphView

@@ -9,6 +9,8 @@ import {
 } from '../lib/arcGroupedTimeline'
 import { EDGE_WEIGHTS, edgePlainLabel } from '../graph/theme'
 import '../styles/timeline.css'
+import WorkspaceTechnicalDisclosure from '../components/WorkspaceTechnicalDisclosure'
+import { CALM_TIMELINE_CONTEXT_UNAVAILABLE } from '../lib/workspacePresentation'
 
 // 04-ADD Track B Step 3 Addendum — Arc-Grouped Timeline. Renders BEHIND the
 // timeline_grouped_beta flag alongside the untouched flat view. Reuses the
@@ -255,12 +257,18 @@ export default function GroupedTimelineView({ onOpenArc, onOpenArticle, focusEve
     return () => clearTimeout(t)
   }, [pendingFocus, filtered])
 
-  if (error) return <div className="notice error">Failed to load grouped timeline: {error}</div>
+  if (error) {
+    return (
+      <WorkspaceTechnicalDisclosure banner={CALM_TIMELINE_CONTEXT_UNAVAILABLE}>
+        Failed to load grouped timeline: {error}
+      </WorkspaceTechnicalDisclosure>
+    )
+  }
   if (!data || !filtered) return <div className="notice">Loading grouped timeline…</div>
   const edgesUnavailableNotice = data.edgesUnavailable ? (
-    <div className="notice">
+    <WorkspaceTechnicalDisclosure banner={CALM_TIMELINE_CONTEXT_UNAVAILABLE}>
       public.edges is unavailable ({data.edgesUnavailable}). No relationships are invented.
-    </div>
+    </WorkspaceTechnicalDisclosure>
   ) : null
 
   const { counts } = data.grouped

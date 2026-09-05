@@ -20,6 +20,7 @@ import {
 } from '../lib/policyArcModel'
 import { investigationContextDomProps } from '../lib/investigationContext'
 import WorkspaceAvailability from '../components/WorkspaceAvailability'
+import WorkspaceTechnicalDisclosure from '../components/WorkspaceTechnicalDisclosure'
 
 // Story Arcs (concept doc §2.5): persistent longitudinal tracking through a
 // story's full consequence arc. Track B Step 3 item 2 rebuilt the detail
@@ -209,8 +210,11 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
 
   if (error) {
     return (
-      <div className="notice error" {...investigationContextDomProps(investigationContext)}>
-        Failed to load story arcs: {error}
+      <div {...investigationContextDomProps(investigationContext)}>
+        <WorkspaceAvailability
+          kind="arcs"
+          details={`Failed to load story arcs: ${error}`}
+        />
       </div>
     )
   }
@@ -371,7 +375,9 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
           </header>
 
           {detailError && (
-            <div className="notice error">Failed to load arc detail: {detailError}</div>
+            <WorkspaceTechnicalDisclosure banner="Arc detail is unavailable. The selected investigation is preserved.">
+              Failed to load arc detail: {detailError}
+            </WorkspaceTechnicalDisclosure>
           )}
           {!detail && !detailError && <div className="notice">Loading arc detail…</div>}
 

@@ -20,6 +20,14 @@ export const TIMELINE_SPACING_NOTE = 'Recorded order — spacing does not repres
 export const MISSING_EVIDENCE_GUIDANCE =
   'Missing evidence is not a contradiction. A geographic location or a chronological sequence does not establish causation.'
 
+export const CALM_RELATIONSHIP_UNAVAILABLE =
+  'Relationship evidence is unavailable. The recorded event is shown.'
+export const CALM_TIMELINE_CONTEXT_UNAVAILABLE =
+  'Some timeline context is unavailable. Recorded events remain visible.'
+export const CALM_SOURCES_UNAVAILABLE = 'Node-level source records are unavailable.'
+export const TECHNICAL_DETAILS_LABEL = 'Technical details'
+export const AVAILABILITY_DETAILS_LABEL = 'Availability details'
+
 export const WORKSPACE_TAB_VIEWS = Object.freeze([
   { key: 'graph', label: 'Graph' },
   { key: 'timeline', label: 'Timeline' },
