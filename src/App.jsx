@@ -1210,6 +1210,7 @@ export default function App({
         selectedChild={selected}
         inspectorOccupied={inspectorOccupied}
         hasNativeInspector={hasNativeInspector}
+        inspectorSelection={view === PRIVATE_INVESTIGATION_VIEW ? privateWorkspace.state.inspector : null}
         inspectorSlot={
           view === PRIVATE_INVESTIGATION_VIEW ? (
             <PrivateInvestigationInspector

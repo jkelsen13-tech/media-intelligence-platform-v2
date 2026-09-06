@@ -1,4 +1,6 @@
 .piw {
+  box-sizing: border-box;
+  width: 100%;
   min-width: 0;
   max-width: 920px;
   margin: 0 auto;
@@ -26,6 +28,29 @@
 
 .piw-catalog {
   flex-direction: column;
+}
+
+.piw-assignment-picker {
+  margin-bottom: 12px;
+  min-width: 0;
+}
+
+.piw-assignment-picker summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+  color: var(--cat-blue, #315dbe);
+}
+
+.piw-toolbar > *,
+.piw-catalog-item,
+.piw-card,
+.piw-pair,
+.piw-witness {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
 }
 
 .piw-catalog-item,
@@ -193,8 +218,7 @@
 }
 
 .piw-section-nav {
-  position: sticky;
-  top: 0;
+  position: static;
   z-index: 1;
   padding: 8px 0;
   background: var(--bg-page, #f6f8fb);
@@ -315,20 +339,23 @@
   }
 
   .piw-section-nav {
-    overflow-x: auto;
-    flex-wrap: nowrap;
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .piw-section-btn {
     flex: 0 0 auto;
+    min-width: 0;
+    white-space: normal;
   }
 
   .piw-review-filter {
-    overflow-x: auto;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
 
   .piw-review-filter .piw-section-btn {
-    flex: 0 0 auto;
+    flex: 1 1 160px;
+    max-width: 100%;
   }
 }

@@ -103,6 +103,7 @@ export default function InvestigationWorkspace({
   onChromeChange,
   details,
   inspectorSlot = null,
+  inspectorSelection = null,
   hideChangeInvestigation = false,
   changeInvestigationLabel = 'Change investigation',
   children,
@@ -113,6 +114,18 @@ export default function InvestigationWorkspace({
   const drawerRef = useRef(null)
   const drawerBtnRef = useRef(null)
   const drawerPrimed = useRef(false)
+  const inspectorRef = useRef(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || view !== 'investigations' || !inspectorSelection
+      || !window.matchMedia?.('(max-width: 767px)').matches) return
+    setInspectorOpen(true)
+    const frame = window.requestAnimationFrame(() => {
+      inspectorRef.current?.focus({ preventScroll: true })
+      inspectorRef.current?.scrollIntoView({ block: 'start' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [inspectorSelection, view])
 
   const closeDrawer = () => setDrawerOpen(false)
 
@@ -137,6 +150,7 @@ export default function InvestigationWorkspace({
     <div
       className={`workspace-app ws-shell${navCollapsed ? ' nav-collapsed ws-nav-collapsed' : ''}${view === 'graph' ? ' ws-graph-primary' : ''}`}
       data-workspace="investigation"
+      data-workspace-view={view}
     >
       <aside className="ws-nav" aria-label="Investigation views">
         <div className="ws-nav-brand">
@@ -230,6 +244,18 @@ export default function InvestigationWorkspace({
             <div>
               <p className="ws-eyebrow">{header?.eyebrow ?? 'Investigation workspace'}</p>
               <h1 className="ws-title">{header?.title}</h1>
+              {view === 'investigations' ? (
+                <details className="ws-private-context">
+                  <summary>Scope and saved version</summary>
+                  <p className="ws-meta-row">
+                    <span><MapPin size={14} /> {header?.location}</span>
+                    <span><CalendarBlank size={14} /> {header?.when}</span>
+                  </p>
+                  {header?.description && <p className="ws-description">{header.description}</p>}
+                  <EvidenceDimensionGrid dimensions={header?.dimensions} />
+                </details>
+              ) : (
+                <>
               <p className="ws-meta-row">
                 <span>
                   <MapPin size={14} /> {header?.location}
@@ -239,6 +265,8 @@ export default function InvestigationWorkspace({
                 </span>
               </p>
               {header?.description && <p className="ws-description">{header.description}</p>}
+                </>
+              )}
             </div>
             {!hideChangeInvestigation && (
             <button type="button" className="ws-change-btn" onClick={onChangeInvestigation}>
@@ -247,7 +275,7 @@ export default function InvestigationWorkspace({
             </button>
             )}
           </div>
-          <EvidenceDimensionGrid dimensions={header?.dimensions} />
+          {view !== 'investigations' && <EvidenceDimensionGrid dimensions={header?.dimensions} />}
         </section>
 
         <div className="ws-tabs" role="tablist" aria-label="Evidence views">
@@ -270,7 +298,7 @@ export default function InvestigationWorkspace({
       <div className={`workspace-body ws-body${sharedInspectorHidden ? ' has-native-inspector' : ''}`}>
         <div className="ws-content">{children}</div>
         {!sharedInspectorHidden && (
-          <aside className={`ws-inspector${inspectorOpen ? '' : ' collapsed'}`} aria-label="Investigation inspector">
+          <aside ref={inspectorRef} tabIndex={-1} className={`ws-inspector${inspectorOpen ? '' : ' collapsed'}`} aria-label="Investigation inspector">
             <button
               type="button"
               className="ws-inspector-toggle"
