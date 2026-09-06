@@ -89,6 +89,7 @@ export function emptyPrivateWorkspaceState() {
     activeSection: 'overview',
     loadingCatalog: false,
     loadingBundle: false,
+    loadingBefore: false,
   }
 }
 
@@ -127,6 +128,62 @@ export function reviewRequestKey(userId, payload) {
   return `review:${userId ?? ''}:${payload?.investigationId ?? ''}:${payload?.versionId ?? ''}:${payload?.receiptId ?? ''}`
 }
 
+export function historyRequestKey(userId, investigationId, displayedVersionId, beforeVersionId) {
+  return `history:${userId ?? ''}:${investigationId ?? ''}:${displayedVersionId ?? 'head'}:${beforeVersionId ?? ''}`
+}
+
+export function displayedScopeKey(userId, investigationId, versionId = null) {
+  return readRequestKey(userId, investigationId, versionId)
+}
+
+export function createKeyedRequestFamily() {
+  let epoch = 0
+  const generations = new Map()
+  return {
+    start(nextKey) {
+      const key = String(nextKey)
+      const generation = (generations.get(key) ?? 0) + 1
+      generations.set(key, generation)
+      return { epoch, key, generation }
+    },
+    invalidate() {
+      epoch += 1
+      generations.clear()
+      return epoch
+    },
+    isCurrent(token) {
+      return Boolean(token)
+        && token.epoch === epoch
+        && generations.get(token.key) === token.generation
+    },
+  }
+}
+
+export function bundleMatchesRequest(bundle, investigationId, versionId = null) {
+  if (!bundle || bundle.investigation_id !== investigationId || !bundle.version?.id) return false
+  if (versionId && bundle.version.id !== versionId) return false
+  return true
+}
+
+export function snapshotInputAtPosition(bundle, position) {
+  if (position == null || position === '') return null
+  const wanted = String(position)
+  return bundle?.observation?.snapshot?.inputs?.find((input) => String(input.position) === wanted) ?? null
+}
+
+export function snapshotAssessment(bundle, assessmentId) {
+  if (!assessmentId) return null
+  return bundle?.observation?.snapshot?.assessments?.find((assessment) => assessment.id === assessmentId) ?? null
+}
+
+export function canRevealPrivateRecords(status) {
+  return status === WORKSPACE_STATUS.ready || status === WORKSPACE_STATUS.loading
+}
+
+export function isAccessErrorCode(code) {
+  return code === 'authentication_required' || code === 'access_denied'
+}
+
 export function mergeCatalogItems(existing, incoming) {
   const seen = new Set((existing ?? []).map((item) => item.investigation_id))
   const next = (existing ?? []).slice()
@@ -160,19 +217,21 @@ export function statusFromSession({ sessionLoading, userId, state }) {
 }
 
 export function unavailableCopy(code) {
+  // Origin allowlists, contract names, and fixture policy live in the frontend
+  // integration note. This copy only describes the signed-in user's next step.
   if (code === 'origin_denied') {
-    return 'This browser origin is not allowed to read private investigations. The production function allows only the GitHub Pages site.'
+    return 'This browser origin is not allowed to read private investigations.'
   }
   if (code === 'not_configured') {
-    return 'The investigation workspace client is not configured in this session.'
+    return 'Private investigations are not available in this session.'
   }
   if (code === 'service_unavailable' || code === 'request_failed') {
-    return 'Private investigation records are unavailable right now. Retry the same request. No fixture records are substituted.'
+    return 'Private investigation records are unavailable right now. Retry the same request.'
   }
   if (code === 'invalid_request') {
     return 'The investigation request was rejected as invalid.'
   }
-  return 'Private investigation records are unavailable. No production sample is invented to fill this view.'
+  return 'Private investigation records are unavailable.'
 }
 
 export function captureReviewPayload({ investigationId, versionId, previousReceiptId, receiptId }) {

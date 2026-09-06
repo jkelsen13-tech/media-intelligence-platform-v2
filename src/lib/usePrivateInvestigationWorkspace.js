@@ -1,16 +1,35 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { investigationWorkspacePanels } from './investigationWorkspaceClient.js'
 import {
+  bundleMatchesRequest,
   captureReviewPayload,
   catalogRequestKey,
+  createKeyedRequestFamily,
   createRequestGate,
+  displayedScopeKey,
   emptyPrivateWorkspaceState,
+  historyRequestKey,
   mergeCatalogItems,
   readRequestKey,
   reviewRequestKey,
   statusFromSession,
   workspaceErrorCode,
 } from './investigationWorkspaceSession.js'
+
+function emptyPanelsState() {
+  return {
+    bundle: null,
+    panels: null,
+    beforeBundles: {},
+    inspector: null,
+    pendingReview: null,
+    reviewBusy: false,
+    reviewError: null,
+    reviewConflict: false,
+    loadingBundle: false,
+    loadingBefore: false,
+  }
+}
 
 export function usePrivateInvestigationWorkspace({
   userId = null,
@@ -25,37 +44,14 @@ export function usePrivateInvestigationWorkspace({
   const userRef = useRef(userId)
   const catalogGate = useRef(createRequestGate())
   const readGate = useRef(createRequestGate())
+  const historyFamily = useRef(createKeyedRequestFamily())
   const reviewGate = useRef(createRequestGate())
+  const displayedScopeRef = useRef(null)
   const mountedRef = useRef(true)
 
   useEffect(() => {
     stateRef.current = state
   }, [state])
-
-  const clearPrivateState = useCallback(() => {
-    catalogGate.current.invalidate()
-    readGate.current.invalidate()
-    reviewGate.current.invalidate()
-    const empty = emptyPrivateWorkspaceState()
-    stateRef.current = empty
-    if (mountedRef.current) setState(empty)
-  }, [])
-
-  useEffect(() => {
-    mountedRef.current = true
-    return () => {
-      mountedRef.current = false
-      catalogGate.current.invalidate()
-      readGate.current.invalidate()
-      reviewGate.current.invalidate()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (userRef.current === userId) return
-    userRef.current = userId
-    clearPrivateState()
-  }, [userId, clearPrivateState])
 
   const applyCatalog = useCallback((updater) => {
     setState((current) => {
@@ -64,6 +60,70 @@ export function usePrivateInvestigationWorkspace({
       return next
     })
   }, [])
+
+  const invalidateAllRequests = useCallback(() => {
+    catalogGate.current.invalidate()
+    readGate.current.invalidate()
+    historyFamily.current.invalidate()
+    reviewGate.current.invalidate()
+    displayedScopeRef.current = null
+  }, [])
+
+  const clearPrivateState = useCallback(() => {
+    invalidateAllRequests()
+    const empty = emptyPrivateWorkspaceState()
+    stateRef.current = empty
+    if (mountedRef.current) setState(empty)
+  }, [invalidateAllRequests])
+
+  const applyAccessFailure = useCallback((code, { investigationId } = {}) => {
+    if (code === 'authentication_required') {
+      invalidateAllRequests()
+      const next = {
+        ...emptyPrivateWorkspaceState(),
+        catalogError: code,
+        bundleError: code,
+      }
+      stateRef.current = next
+      if (mountedRef.current) setState(next)
+      return true
+    }
+    if (code === 'access_denied') {
+      readGate.current.invalidate()
+      historyFamily.current.invalidate()
+      reviewGate.current.invalidate()
+      displayedScopeRef.current = null
+      applyCatalog((current) => {
+        const deniedId = investigationId ?? current.selectedInvestigationId
+        return {
+          ...current,
+          catalog: deniedId
+            ? current.catalog.filter((item) => item.investigation_id !== deniedId)
+            : current.catalog,
+          selectedInvestigationId: deniedId,
+          selectedVersionId: null,
+          ...emptyPanelsState(),
+          bundleError: code,
+        }
+      })
+      return true
+    }
+    return false
+  }, [applyCatalog, invalidateAllRequests])
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      invalidateAllRequests()
+    }
+  }, [invalidateAllRequests])
+
+  useEffect(() => {
+    if (userRef.current === userId) return
+    userRef.current = userId
+    clearPrivateState()
+  }, [userId, clearPrivateState])
 
   const loadCatalog = useCallback(async ({ after = null, append = false, refresh = false } = {}) => {
     if (sessionLoading || !userId || !client) return
@@ -76,18 +136,26 @@ export function usePrivateInvestigationWorkspace({
       ...(refresh ? { nextAfter: null, hasMore: false } : {}),
     }))
     const result = await client.list(after ? { after, limit: 20 } : { limit: 20 })
-    if (!mountedRef.current || !catalogGate.current.isCurrent(token) || userRef.current !== userId) {
+    if (!mountedRef.current || userRef.current !== userId) {
       return { ignored: true }
     }
     const code = workspaceErrorCode(result.error)
+    if (code === 'authentication_required') {
+      applyAccessFailure(code)
+      return { ignored: false, error: code }
+    }
+    if (!catalogGate.current.isCurrent(token)) {
+      return { ignored: true }
+    }
+    if (code === 'access_denied') {
+      applyAccessFailure(code)
+      return { ignored: false, error: code }
+    }
     if (code) {
       applyCatalog((current) => ({
         ...current,
         loadingCatalog: false,
         catalogError: code,
-        ...(code === 'authentication_required' || code === 'access_denied'
-          ? { catalog: [], bundle: null, panels: null, beforeBundles: {}, pendingReview: null }
-          : {}),
       }))
       return { ignored: false, error: code }
     }
@@ -101,48 +169,95 @@ export function usePrivateInvestigationWorkspace({
       nextAfter: result.data?.next_after ?? null,
     }))
     return { ignored: false, data: result.data }
-  }, [applyCatalog, client, sessionLoading, userId])
+  }, [applyAccessFailure, applyCatalog, client, sessionLoading, userId])
 
-  const loadBundle = useCallback(async (investigationId, versionId = null, { asBefore = false } = {}) => {
+  const loadBundle = useCallback(async (investigationId, versionId = null, options = {}) => {
+    const {
+      asBefore = false,
+      preserveReviewConflict = false,
+    } = options
     if (sessionLoading || !userId || !client || !investigationId) return
-    const token = readGate.current.start(readRequestKey(userId, investigationId, versionId))
-    if (!asBefore) {
-      applyCatalog((current) => ({
-        ...current,
+    const current = stateRef.current
+    const displayedInvestigationId = asBefore ? current.selectedInvestigationId : investigationId
+    const displayedVersionId = asBefore ? current.selectedVersionId : versionId
+    let displayedToken = null
+    let historyToken = null
+
+    if (asBefore) {
+      historyToken = historyFamily.current.start(
+        historyRequestKey(userId, displayedInvestigationId, displayedVersionId, versionId),
+      )
+      applyCatalog((s) => ({ ...s, loadingBefore: true }))
+    } else {
+      const nextScope = displayedScopeKey(userId, investigationId, versionId)
+      if (displayedScopeRef.current !== nextScope) {
+        historyFamily.current.invalidate()
+        displayedScopeRef.current = nextScope
+      }
+      displayedToken = readGate.current.start(readRequestKey(userId, investigationId, versionId))
+      applyCatalog((s) => ({
+        ...s,
         selectedInvestigationId: investigationId,
         selectedVersionId: versionId,
         loadingBundle: true,
-        bundleError: null,
-        reviewConflict: false,
-        inspector: null,
+        bundleError: preserveReviewConflict ? s.bundleError : null,
+        reviewConflict: preserveReviewConflict ? s.reviewConflict : false,
+        reviewError: preserveReviewConflict ? s.reviewError : null,
+        inspector: preserveReviewConflict ? s.inspector : null,
+        beforeBundles: {},
+        loadingBefore: false,
       }))
     }
+
     const result = await client.read(investigationId, versionId)
     if (!mountedRef.current || userRef.current !== userId) return { ignored: true }
-    if (!asBefore && !readGate.current.isCurrent(token)) return { ignored: true }
+
     const code = workspaceErrorCode(result.error)
+    if (code === 'authentication_required') {
+      applyAccessFailure(code, { investigationId })
+      return { ignored: false, error: code }
+    }
+
+    if (asBefore) {
+      if (!historyFamily.current.isCurrent(historyToken)) return { ignored: true }
+    } else if (!readGate.current.isCurrent(displayedToken)) {
+      return { ignored: true }
+    }
+
+    if (code === 'access_denied') {
+      applyAccessFailure(code, { investigationId })
+      return { ignored: false, error: code }
+    }
     if (code) {
-      if (code === 'authentication_required') {
-        clearPrivateState()
-        applyCatalog((current) => ({ ...current, catalogError: code, bundleError: code }))
+      if (asBefore) {
+        applyCatalog((s) => ({ ...s, loadingBefore: false }))
         return { ignored: false, error: code }
       }
-      if (asBefore) return { ignored: false, error: code }
-      applyCatalog((current) => ({
-        ...current,
+      applyCatalog((s) => ({
+        ...s,
         loadingBundle: false,
         bundleError: code,
         bundle: null,
         panels: null,
-        ...(code === 'access_denied' ? { pendingReview: null, beforeBundles: {} } : {}),
       }))
       return { ignored: false, error: code }
     }
+
+    if (!bundleMatchesRequest(result.data, investigationId, versionId)) {
+      if (asBefore) {
+        applyCatalog((s) => ({ ...s, loadingBefore: false }))
+      }
+      return { ignored: true, error: 'identity_mismatch' }
+    }
+
     const mapped = investigationWorkspacePanels(result.data)
     if (!mapped) {
-      if (asBefore) return { ignored: false, error: 'unsupported_contract' }
-      applyCatalog((current) => ({
-        ...current,
+      if (asBefore) {
+        applyCatalog((s) => ({ ...s, loadingBefore: false }))
+        return { ignored: false, error: 'unsupported_contract' }
+      }
+      applyCatalog((s) => ({
+        ...s,
         loadingBundle: false,
         bundle: result.data,
         panels: null,
@@ -150,34 +265,39 @@ export function usePrivateInvestigationWorkspace({
       }))
       return { ignored: false, error: 'unsupported_contract' }
     }
+
     if (asBefore) {
-      applyCatalog((current) => ({
-        ...current,
-        beforeBundles: { ...current.beforeBundles, [result.data.version.id]: result.data },
+      applyCatalog((s) => ({
+        ...s,
+        loadingBefore: false,
+        beforeBundles: { ...s.beforeBundles, [result.data.version.id]: result.data },
       }))
       return { ignored: false, data: result.data }
     }
-    applyCatalog((current) => ({
-      ...current,
+
+    applyCatalog((s) => ({
+      ...s,
       loadingBundle: false,
       bundle: result.data,
       panels: mapped,
       bundleError: null,
       selectedInvestigationId: result.data.investigation_id,
       selectedVersionId: versionId,
+      reviewConflict: preserveReviewConflict ? s.reviewConflict : false,
+      reviewError: preserveReviewConflict ? s.reviewError : null,
     }))
     return { ignored: false, data: result.data }
-  }, [applyCatalog, clearPrivateState, client, sessionLoading, userId])
+  }, [applyAccessFailure, applyCatalog, client, sessionLoading, userId])
 
   useEffect(() => {
     if (sessionLoading) return
     if (!userId || !client) {
-      if (!sessionLoading) clearPrivateState()
+      clearPrivateState()
       return
     }
     if (!active) return
     loadCatalog({ refresh: true }).then((result) => {
-      if (result?.ignored) return
+      if (result?.ignored || result?.error) return
       const current = stateRef.current
       const seed = current.selectedInvestigationId
         ?? initialInvestigationId
@@ -189,29 +309,82 @@ export function usePrivateInvestigationWorkspace({
 
   const selectInvestigation = useCallback((investigationId) => {
     reviewGate.current.invalidate()
+    historyFamily.current.invalidate()
     applyCatalog((current) => ({
       ...current,
       pendingReview: null,
       reviewBusy: false,
       reviewError: null,
       reviewConflict: false,
+      bundle: null,
+      panels: null,
       beforeBundles: {},
       inspector: null,
+      selectedInvestigationId: investigationId,
+      selectedVersionId: null,
     }))
     return loadBundle(investigationId, null)
   }, [applyCatalog, loadBundle])
 
   const selectVersion = useCallback((investigationId, versionId) => {
     reviewGate.current.invalidate()
+    historyFamily.current.invalidate()
     applyCatalog((current) => ({
       ...current,
       pendingReview: null,
       reviewBusy: false,
       reviewError: null,
       reviewConflict: false,
+      bundle: null,
+      panels: null,
+      beforeBundles: {},
+      inspector: null,
     }))
     return loadBundle(investigationId, versionId)
   }, [applyCatalog, loadBundle])
+
+  const finishReviewRequest = useCallback(async (payload, result, token) => {
+    if (!mountedRef.current || userRef.current !== userId) {
+      return { ignored: true }
+    }
+    const code = workspaceErrorCode(result.error)
+    if (code === 'authentication_required') {
+      applyAccessFailure(code, { investigationId: payload.investigationId })
+      return { ignored: false, error: code }
+    }
+    if (!reviewGate.current.isCurrent(token)) {
+      return { ignored: true }
+    }
+    if (code === 'access_denied') {
+      applyAccessFailure(code, { investigationId: payload.investigationId })
+      return { ignored: false, error: code }
+    }
+    if (code === 'version_conflict') {
+      applyCatalog((s) => ({
+        ...s,
+        reviewBusy: false,
+        reviewError: code,
+        reviewConflict: true,
+        pendingReview: null,
+      }))
+      await loadBundle(payload.investigationId, null, { preserveReviewConflict: true })
+      return { ignored: false, error: code }
+    }
+    if (code) {
+      applyCatalog((s) => ({ ...s, reviewBusy: false, reviewError: code }))
+      return { ignored: false, error: code }
+    }
+    applyCatalog((s) => ({
+      ...s,
+      reviewBusy: false,
+      pendingReview: null,
+      reviewError: null,
+      reviewConflict: false,
+    }))
+    await loadBundle(payload.investigationId, stateRef.current.selectedVersionId)
+    await loadCatalog({ refresh: true })
+    return { ignored: false, data: result.data }
+  }, [applyAccessFailure, applyCatalog, loadBundle, loadCatalog, userId])
 
   const markReviewed = useCallback(async () => {
     const current = stateRef.current
@@ -226,26 +399,16 @@ export function usePrivateInvestigationWorkspace({
     })
     if (!payload) return
     const token = reviewGate.current.start(reviewRequestKey(userId, payload))
-    applyCatalog((s) => ({ ...s, pendingReview: payload, reviewBusy: true, reviewError: null, reviewConflict: false }))
+    applyCatalog((s) => ({
+      ...s,
+      pendingReview: payload,
+      reviewBusy: true,
+      reviewError: null,
+      reviewConflict: false,
+    }))
     const result = await client.markReviewed(payload)
-    if (!mountedRef.current || userRef.current !== userId || !reviewGate.current.isCurrent(token)) {
-      return { ignored: true }
-    }
-    const code = workspaceErrorCode(result.error)
-    if (code === 'version_conflict') {
-      applyCatalog((s) => ({ ...s, reviewBusy: false, reviewError: code, reviewConflict: true, pendingReview: null }))
-      await loadBundle(payload.investigationId, null)
-      return { ignored: false, error: code }
-    }
-    if (code) {
-      applyCatalog((s) => ({ ...s, reviewBusy: false, reviewError: code }))
-      return { ignored: false, error: code }
-    }
-    applyCatalog((s) => ({ ...s, reviewBusy: false, pendingReview: null, reviewError: null }))
-    await loadBundle(payload.investigationId, current.selectedVersionId)
-    await loadCatalog({ refresh: true })
-    return { ignored: false, data: result.data }
-  }, [applyCatalog, client, loadBundle, loadCatalog, randomUUID, userId])
+    return finishReviewRequest(payload, result, token)
+  }, [applyCatalog, client, finishReviewRequest, randomUUID, userId])
 
   const retryReview = useCallback(async () => {
     const current = stateRef.current
@@ -254,24 +417,8 @@ export function usePrivateInvestigationWorkspace({
     const token = reviewGate.current.start(reviewRequestKey(userId, payload))
     applyCatalog((s) => ({ ...s, reviewBusy: true, reviewError: null }))
     const result = await client.markReviewed(payload)
-    if (!mountedRef.current || userRef.current !== userId || !reviewGate.current.isCurrent(token)) {
-      return { ignored: true }
-    }
-    const code = workspaceErrorCode(result.error)
-    if (code === 'version_conflict') {
-      applyCatalog((s) => ({ ...s, reviewBusy: false, reviewError: code, reviewConflict: true, pendingReview: null }))
-      await loadBundle(payload.investigationId, null)
-      return { ignored: false, error: code }
-    }
-    if (code) {
-      applyCatalog((s) => ({ ...s, reviewBusy: false, reviewError: code }))
-      return { ignored: false, error: code }
-    }
-    applyCatalog((s) => ({ ...s, reviewBusy: false, pendingReview: null, reviewError: null }))
-    await loadBundle(payload.investigationId, current.selectedVersionId)
-    await loadCatalog({ refresh: true })
-    return { ignored: false, data: result.data }
-  }, [applyCatalog, client, loadBundle, loadCatalog, userId])
+    return finishReviewRequest(payload, result, token)
+  }, [applyCatalog, client, finishReviewRequest, userId])
 
   const openBeforeVersion = useCallback((versionId) => {
     const current = stateRef.current
@@ -301,8 +448,12 @@ export function usePrivateInvestigationWorkspace({
       loadCatalog,
       loadMore: () => loadCatalog({ after: state.nextAfter, append: true }),
       refresh: () => loadCatalog({ refresh: true }).then((result) => {
-        const id = stateRef.current.selectedInvestigationId
-        if (id) return loadBundle(id, stateRef.current.selectedVersionId)
+        const current = stateRef.current
+        if (current.selectedInvestigationId) {
+          return loadBundle(current.selectedInvestigationId, current.selectedVersionId, {
+            preserveReviewConflict: current.reviewConflict === true,
+          })
+        }
         return result
       }),
       selectInvestigation,

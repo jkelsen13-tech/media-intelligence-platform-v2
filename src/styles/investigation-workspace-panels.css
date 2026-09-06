@@ -200,6 +200,26 @@
   background: var(--bg-page, #f6f8fb);
 }
 
+.piw-history-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0 16px;
+}
+
+.piw-more {
+  margin: 8px 0 0;
+}
+
+.piw-more summary {
+  cursor: pointer;
+  color: var(--cat-blue, #315dbe);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
 @media (max-width: 767px) {
   .piw {
     padding: 12px 12px 24px;

@@ -202,8 +202,9 @@ test('signed-out and unassigned states stay honest', () => {
     },
     actions: readyWorkspace().actions,
   })
-  assert.match(empty, /No investigations assigned yet/)
-  assert.match(empty, /No sample cards are shown/)
+  assert.match(empty, /No investigations assigned to this account yet/)
+  assert.doesNotMatch(empty, /live backend/)
+  assert.doesNotMatch(empty, /No sample cards/)
 })
 
 test('empty sections do not claim disproof, completeness or zero uncertainty', () => {
@@ -367,7 +368,9 @@ test('unsupported contract and transport failure stay unavailable without fixtur
     },
     actions: readyWorkspace().actions,
   })
-  assert.match(unavailable, /No fixture records are substituted/)
+  assert.match(unavailable, /unavailable right now/)
+  assert.doesNotMatch(unavailable, /fixture records/)
+  assert.doesNotMatch(unavailable, /GitHub Pages/)
 })
 
 test('viewer markup has no review button; inspector shares version and review state', () => {
@@ -383,9 +386,10 @@ test('viewer markup has no review button; inspector shares version and review st
   assert.match(inspector, /Public graph view is unavailable/)
 })
 
-test('App mounts one session owner and never stores private workspace text', () => {
+test('App memoizes the production client and never stores private workspace text', () => {
   assert.match(APP, /usePrivateInvestigationWorkspace/)
   assert.match(APP, /createInvestigationWorkspaceClient/)
+  assert.match(APP, /useMemo\(\s*\(\)\s*=>\s*createInvestigationWorkspaceClient\(supabase\)/)
   assert.match(APP, /PrivateInvestigationWorkspace/)
   assert.match(APP, /useAuthSession/)
   assert.match(APP, /PRIVATE_INVESTIGATION_VIEW/)
@@ -415,4 +419,46 @@ test('private investigation header stays question-centered and does not invent c
   assert.equal(investigationWorkspacePanels({ contract_version: 'other' }), null)
   assert.equal(statusFromSession({ sessionLoading: true, userId: null, state: {} }), WORKSPACE_STATUS.session_loading)
   assert.equal(INVESTIGATION_WORKSPACE_CONTRACT, 'investigation-workspace-1')
+})
+
+test('toolbar and empty copy stay user-facing without deployment jargon', () => {
+  const html = renderWorkspace(readyWorkspace())
+  assert.match(html, /Only investigations assigned to this account appear/)
+  assert.doesNotMatch(html, /UUID paging/)
+  assert.doesNotMatch(html, /frozen catalog/)
+})
+
+test('history controls and evidence drilldown exist without hypothesis excerpts', () => {
+  const comparable = renderWorkspace(readyWorkspace())
+  assert.match(comparable, /data-action="open-compared-version"/)
+  assert.match(comparable, /data-action="inspect-compared-records"/)
+  assert.match(comparable, /data-action="inspect-evidence-change"/)
+  assert.match(comparable, /data-action="mark-reviewed"/)
+  assert.doesNotMatch(comparable, /Open the before version/)
+
+  const evidenceOnly = renderWorkspace(readyWorkspace(FIXTURE_BUNDLES.evidenceOnly))
+  assert.match(evidenceOnly, /data-action="open-compared-version"/)
+  assert.match(evidenceOnly, /data-action="inspect-evidence-change"/)
+  assert.match(evidenceOnly, /data-action="inspect-removed-record"/)
+  assert.match(evidenceOnly, /Position 9007199254740993/)
+  assert.doesNotMatch(evidenceOnly, /The commitment may remain unimplemented/)
+
+  const historical = renderWorkspace(readyWorkspace(FIXTURE_BUNDLES.historical, {
+    selectedVersionId: FIXTURE_BUNDLES.historical.version.id,
+  }))
+  assert.match(historical, /data-action="show-current-version"/)
+  assert.doesNotMatch(historical, /data-action="open-compared-version"/)
+})
+
+test('inspector masks leftover private bundle when access is denied', () => {
+  const inspector = renderToStaticMarkup(createElement(PrivateInvestigationInspector, {
+    workspace: {
+      ...readyWorkspace(),
+      status: WORKSPACE_STATUS.access_denied,
+    },
+    publicNode: null,
+  }))
+  assert.match(inspector, /This investigation is unavailable/)
+  assert.doesNotMatch(inspector, /Local visual fixture: what retained evidence/)
+  assert.doesNotMatch(inspector, /Revision 2 · current saved version/)
 })

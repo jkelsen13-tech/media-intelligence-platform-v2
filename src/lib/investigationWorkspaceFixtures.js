@@ -16,24 +16,32 @@ export const FIXTURE_IDS = Object.freeze({
   denied: '55555555-5555-4555-8555-555555555555',
   unsupported: '66666666-6666-4666-8666-666666666666',
   conflict: '77777777-7777-4777-8777-777777777777',
+  evidenceOnly: '88888888-8888-4888-8888-888888888888',
 })
 
 const POSITION = '9007199254740993'
+export const FIXTURE_POSITION = POSITION
+export const FIXTURE_VERSIONS = Object.freeze({
+  v1: '99999991-9999-4999-8999-999999999991',
+  v2: '99999992-9999-4999-8999-999999999992',
+  v3: '99999993-9999-4999-8999-999999999993',
+})
+export const FIXTURE_COMMITMENT_ID = 'bbbbbbb1-bbbb-4bbb-8bbb-bbbbbbbbbbb1'
 const UNICODE_SUMMARY = '💡 A report.'
 const LONG_BODY = `${'The retained source repeats this sentence for inspector overflow testing. '.repeat(8)}End of retained body.`
 const LONG_EXCERPT = LONG_BODY.slice(0, 120)
 
 const hypothesisId = 'aaaaaaa1-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
-const commitmentId = 'bbbbbbb1-bbbb-4bbb-8bbb-bbbbbbbbbbb1'
+const commitmentId = FIXTURE_COMMITMENT_ID
 const coverageId = 'ccccccc1-cccc-4ccc-8ccc-ccccccccccc1'
 const stageCommitment = 'ddddddd1-dddd-4ddd-8ddd-ddddddddddd1'
 const stageImpl = 'ddddddd2-dddd-4ddd-8ddd-ddddddddddd2'
 const stagePrereq = 'ddddddd3-dddd-4ddd-8ddd-ddddddddddd3'
 const assessmentId = 'eeeeeee1-eeee-4eee-8eee-eeeeeeeeeee1'
 const candidateId = 'fffffff1-ffff-4fff-8fff-fffffffffff1'
-const version1 = '99999991-9999-4999-8999-999999999991'
-const version2 = '99999992-9999-4999-8999-999999999992'
-const version3 = '99999993-9999-4999-8999-999999999993'
+const version1 = FIXTURE_VERSIONS.v1
+const version2 = FIXTURE_VERSIONS.v2
+const version3 = FIXTURE_VERSIONS.v3
 const observation1 = '88888881-8888-4888-8888-888888888881'
 const observation2 = '88888882-8888-4888-8888-888888888882'
 const receipt1 = '77777771-7777-4777-8777-777777777771'
@@ -223,6 +231,7 @@ function bundle({
   },
   state,
   changeReason = 'Synthetic local fixture revision.',
+  observationRecord,
 } = {}) {
   return {
     contract_version: INVESTIGATION_WORKSPACE_CONTRACT,
@@ -239,7 +248,7 @@ function bundle({
       change_reason: changeReason,
       recorded_at: '2026-09-06T07:30:00Z',
     },
-    observation: observation(observationId),
+    observation: observationRecord ?? observation(observationId),
     review,
     comparison,
     publicly_eligible: false,
@@ -369,6 +378,136 @@ export const FIXTURE_BUNDLES = Object.freeze({
     comparison: { mode: 'not_reviewed' },
     publicly_eligible: false,
   },
+  evidenceOnly: bundle({
+    investigationId: FIXTURE_IDS.evidenceOnly,
+    versionId: version2,
+    headVersionId: version2,
+    predecessorId: version1,
+    revision: 2,
+    observationId: observation2,
+    review: {
+      id: receipt1,
+      investigation_id: FIXTURE_IDS.evidenceOnly,
+      version_id: version1,
+      previous_receipt_id: null,
+      recorded_at: '2026-09-06T06:00:00Z',
+    },
+    comparison: {
+      mode: 'comparable',
+      before_version_id: version1,
+      before_observation_id: observation1,
+      after_version_id: version2,
+      after_observation_id: observation2,
+      evidence_changes: [
+        { kind: 'evidence_entered_observation', position: POSITION },
+      ],
+      definition_changes: {
+        hypotheses: { added: [], removed: [], updated: [] },
+        commitments: { added: [], removed: [commitmentId], updated: [] },
+        coverage: { added: [], removed: [], updated: [] },
+        question_changed: false,
+        scope_changed: false,
+        unresolved_questions_changed: false,
+      },
+    },
+    state: {
+      question: 'Local visual fixture: did evidence enter after a commitment was removed, with no hypothesis excerpts?',
+      scope_note: 'Evidence-only comparison fixture. Added observation input and a removed commitment without hypothesis excerpts.',
+      canonical_subject: { type: 'graph_node', id: eventId },
+      time_range: { from: '2018-01-01T00:00:00Z', to: null, meaning: 'Source/event context for the retained report.' },
+      unresolved_questions: ['Was the removed commitment observed outside this declared search?'],
+      coverage: [],
+      hypotheses: [],
+      commitments: [],
+    },
+  }),
+  evidenceOnlyBefore: bundle({
+    investigationId: FIXTURE_IDS.evidenceOnly,
+    versionId: version1,
+    headVersionId: version2,
+    predecessorId: null,
+    revision: 1,
+    observationId: observation1,
+    observationRecord: {
+      id: observation1,
+      contract_version: 'investigation-observation-1',
+      snapshot: {
+        scope_candidate_ids: [candidateId],
+        selected_assessment_ids: [],
+        coverage: 'complete_for_explicit_scope',
+        watch_keys: [`candidate:${candidateId}`],
+        candidates: [{ id: candidateId, event_node_id: eventId, statement: 'A report.' }],
+        assessments: [],
+        inputs: [],
+      },
+      publicly_eligible: false,
+    },
+    review: {
+      id: receipt1,
+      investigation_id: FIXTURE_IDS.evidenceOnly,
+      version_id: version1,
+      previous_receipt_id: null,
+      recorded_at: '2026-09-06T06:00:00Z',
+    },
+    comparison: {
+      mode: 'historical_before_review',
+      before_version_id: version1,
+      before_observation_id: observation1,
+      after_version_id: version2,
+      after_observation_id: observation2,
+      evidence_changes: null,
+      definition_changes: {
+        hypotheses: { added: [], removed: [], updated: [] },
+        commitments: { added: [], removed: [commitmentId], updated: [] },
+        coverage: { added: [], removed: [], updated: [] },
+        question_changed: false,
+        scope_changed: false,
+        unresolved_questions_changed: false,
+      },
+    },
+    state: {
+      question: 'Local visual fixture: did evidence enter after a commitment was removed, with no hypothesis excerpts?',
+      scope_note: 'Before-version fixture. The commitment has no hypothesis excerpts and no retained stage excerpts.',
+      canonical_subject: { type: 'graph_node', id: eventId },
+      time_range: { from: '2018-01-01T00:00:00Z', to: null, meaning: 'Source/event context for the retained report.' },
+      unresolved_questions: ['Was the removed commitment observed outside this declared search?'],
+      coverage: [{
+        id: coverageId,
+        label: 'Fixture collection before evidence entered',
+        status: 'limited',
+        source_classes: ['fixture'],
+        languages: ['en'],
+        regions: ['unspecified'],
+        from: '2018-01-01T00:00:00Z',
+        to: null,
+        retained_text: 'none',
+        search_status: 'not_run',
+        searched_at: null,
+        method: 'Declared fixture search. No automated retrieval is implied.',
+        limitations: ['Synthetic evidence only.', 'No independent coverage measurement.'],
+      }],
+      hypotheses: [],
+      commitments: [{
+        id: commitmentId,
+        actor: 'Synthetic institution',
+        statement: 'Collect the missing document.',
+        scope: 'Fixture only.',
+        conditions: ['Prerequisites unknown.'],
+        deadline_text: 'No retained deadline.',
+        success_criterion: 'Direct evidence of collection.',
+        remaining_uncertainty: 'No outcome evidence. An observed later event would not prove this commitment caused it.',
+        stages: [{
+          id: stageCommitment,
+          kind: 'commitment',
+          status: 'reported',
+          depends_on: [],
+          coverage_ids: [coverageId],
+          evidence: [],
+          note: 'Source reports a commitment; it does not prove an outcome.',
+        }],
+      }],
+    },
+  }),
 })
 
 function catalogItem(id, question, versionId, revision, role = 'reviewer') {
@@ -384,6 +523,22 @@ function catalogItem(id, question, versionId, revision, role = 'reviewer') {
 
 export function fixtureCatalog(scenario = 'populated') {
   if (scenario === 'empty' || scenario === 'signed-out') return { contract_version: INVESTIGATION_WORKSPACE_CONTRACT, items: [], has_more: false, next_after: null, publicly_eligible: false }
+  if (scenario === 'evidence-only') {
+    return {
+      contract_version: INVESTIGATION_WORKSPACE_CONTRACT,
+      items: [
+        catalogItem(
+          FIXTURE_IDS.evidenceOnly,
+          FIXTURE_BUNDLES.evidenceOnly.version.state.question,
+          version2,
+          2,
+        ),
+      ],
+      has_more: false,
+      next_after: null,
+      publicly_eligible: false,
+    }
+  }
   const items = [
     catalogItem(FIXTURE_IDS.comparable, FIXTURE_BUNDLES.comparable.version.state.question, version2, 2),
     catalogItem(FIXTURE_IDS.empty, FIXTURE_BUNDLES.empty.version.state.question, version1, 1, 'viewer'),
@@ -467,6 +622,10 @@ export function createLocalInvestigationWorkspaceClient({
         }
         return ok(FIXTURE_BUNDLES.comparable)
       }
+      if (investigationId === FIXTURE_IDS.evidenceOnly) {
+        if (versionId === version1) return ok(FIXTURE_BUNDLES.evidenceOnlyBefore)
+        return ok(FIXTURE_BUNDLES.evidenceOnly)
+      }
       return fail('access_denied')
     },
     async markReviewed(payload) {
@@ -496,7 +655,7 @@ export function previewAuthFor(mode) {
 export function readInvestigationWorkspacePreview(search, env = (typeof import.meta !== 'undefined' ? import.meta.env : {})) {
   if (env?.DEV !== true) return null
   const mode = new URLSearchParams(search ?? '').get('privateInvestigationFixture')
-  const allowed = ['populated', 'empty', 'signed-out', 'denied', 'historical', 'scope', 'conflict', 'unavailable', 'loading']
+  const allowed = ['populated', 'empty', 'signed-out', 'denied', 'historical', 'scope', 'conflict', 'unavailable', 'loading', 'evidence-only']
   if (!allowed.includes(mode)) return null
   return {
     mode,
@@ -513,8 +672,10 @@ export function readInvestigationWorkspacePreview(search, env = (typeof import.m
         ? FIXTURE_IDS.historical
         : mode === 'scope'
           ? FIXTURE_IDS.scope
-          : mode === 'empty'
-            ? null
-            : null,
+          : mode === 'evidence-only'
+            ? FIXTURE_IDS.evidenceOnly
+            : mode === 'empty'
+              ? null
+              : null,
   }
 }

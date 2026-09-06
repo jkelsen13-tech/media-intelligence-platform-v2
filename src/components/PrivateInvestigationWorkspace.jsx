@@ -7,13 +7,17 @@ import {
   STAGE_STATUS_COPY,
   WORKSPACE_STATUS,
   assessmentOutcomeCopy,
+  canRevealPrivateRecords,
   citationUnavailableCopy,
   definitionChangeSummary,
   evidenceChangeLabel,
+  isCurrentSavedVersion,
   newerCollectionNote,
   publicGraphUnavailableCopy,
   revisionLabel,
+  snapshotAssessment,
   snapshotCoverageCopy,
+  snapshotInputAtPosition,
   stageDepths,
   timeRangeCopy,
   unavailableCopy,
@@ -28,9 +32,11 @@ const RELATION_LABELS = {
   context: 'Recorded as context',
 }
 
-function StatusBanner({ children, tone = 'note' }) {
+const BEFORE_DISCLOSURE_LIMIT = 4
+
+function StatusBanner({ children, tone = 'note', ...rest }) {
   return (
-    <p className={`piw-banner piw-banner-${tone}`} role={tone === 'error' ? 'alert' : 'status'}>
+    <p className={`piw-banner piw-banner-${tone}`} role={tone === 'error' ? 'alert' : 'status'} {...rest}>
       {children}
     </p>
   )
@@ -52,7 +58,7 @@ function ExcerptBlock({ resolved, reference, onOpen }) {
         <span className="piw-excerpt-after">{resolved.after}</span>
       </blockquote>
       <figcaption>
-        <p>Position {reference.position} · {reference.source_field} · code points [{reference.span_start}, {reference.span_end})</p>
+        <p>Position {String(reference.position)} · {reference.source_field} · code points [{reference.span_start}, {reference.span_end})</p>
         <p>{RELATION_LABELS[reference.relation] ?? reference.relation}. {reference.note}</p>
         <p>Exact quotation checks source binding, not semantic truth.</p>
         {onOpen && (
@@ -89,8 +95,255 @@ function EvidenceList({ evidence, bundle, onOpenCitation, versionLabel }) {
   )
 }
 
+function BoundedRecords({ items, renderItem, label, initial = BEFORE_DISCLOSURE_LIMIT }) {
+  const list = items ?? []
+  if (list.length === 0) return <p className="piw-muted">No {label} recorded on this saved version.</p>
+  const visible = list.slice(0, initial)
+  const rest = list.slice(initial)
+  return (
+    <>
+      {visible.map(renderItem)}
+      {rest.length > 0 && (
+        <details className="piw-more">
+          <summary>Show {rest.length} more {label}</summary>
+          {rest.map(renderItem)}
+        </details>
+      )}
+    </>
+  )
+}
+
 function EmptySection({ kind }) {
   return <p className="piw-empty">{EMPTY_SECTION_COPY[kind]}</p>
+}
+
+function HypothesisRecord({ hypothesis, bundle, onOpenCitation }) {
+  return (
+    <article className="piw-card" data-record="hypothesis" data-record-id={hypothesis.id}>
+      <h3>{hypothesis.statement}</h3>
+      {hypothesis.assumptions?.length ? (
+        <>
+          <h4>Assumptions</h4>
+          <ul className="piw-list">{hypothesis.assumptions.map((item) => <li key={item}>{item}</li>)}</ul>
+        </>
+      ) : null}
+      <h4>Retained excerpts</h4>
+      <EvidenceList evidence={hypothesis.evidence} bundle={bundle} onOpenCitation={onOpenCitation} />
+      <RemainingUncertaintyBlock>{hypothesis.remaining_uncertainty}</RemainingUncertaintyBlock>
+    </article>
+  )
+}
+
+function CommitmentRecord({ commitment, bundle, onOpenCitation }) {
+  return (
+    <article className="piw-card" data-record="commitment" data-record-id={commitment.id}>
+      <h3>{commitment.statement}</h3>
+      <p>Actor: {commitment.actor}</p>
+      <p>Scope: {commitment.scope}</p>
+      <p>Deadline wording: {commitment.deadline_text}</p>
+      <p>Success criterion: {commitment.success_criterion}</p>
+      {commitment.conditions?.length ? (
+        <>
+          <h4>Conditions</h4>
+          <ul className="piw-list">{commitment.conditions.map((item) => <li key={item}>{item}</li>)}</ul>
+        </>
+      ) : null}
+      <RemainingUncertaintyBlock>{commitment.remaining_uncertainty}</RemainingUncertaintyBlock>
+      <h4>Stages</h4>
+      <ol className="piw-stages">
+        {stageDepths(commitment.stages).map((stage) => (
+          <li key={stage.id} style={{ '--piw-depth': stage.depth }} className="piw-stage">
+            <p>
+              <strong>{stage.kind}</strong>
+              {' · '}
+              {STAGE_STATUS_COPY[stage.status] ?? stage.status}
+            </p>
+            <p>{stage.note}</p>
+            {stage.depends_on?.length ? <p className="piw-muted">Depends on earlier stages in this commitment. Dependency is not inferred completion.</p> : null}
+            <EvidenceList evidence={stage.evidence} bundle={bundle} onOpenCitation={onOpenCitation} />
+          </li>
+        ))}
+      </ol>
+    </article>
+  )
+}
+
+function CoverageRecord({ row }) {
+  return (
+    <article className="piw-card" data-record="coverage" data-record-id={row.id}>
+      <h3>{row.label}</h3>
+      <p>Declaration status: {row.status}. Search: {SEARCH_STATUS_COPY[row.search_status] ?? row.search_status}</p>
+      <p>Source classes: {row.source_classes.join(', ') || 'none recorded'}</p>
+      <p>Languages: {row.languages.join(', ') || 'none recorded'}</p>
+      <p>Regions: {row.regions.join(', ') || 'none recorded'}</p>
+      <p>Period: {row.from ? formatWorkspaceDate(row.from) : 'unknown'} – {row.to ? formatWorkspaceDate(row.to) : 'unknown'}</p>
+      <p>Retained text: {row.retained_text}</p>
+      <p>Searched at: {row.searched_at ? formatWorkspaceDate(row.searched_at) : 'not recorded'}</p>
+      <p>Method: {row.method}</p>
+      <h4>Limitations</h4>
+      <ul className="piw-list">{row.limitations.map((item) => <li key={item}>{item}</li>)}</ul>
+    </article>
+  )
+}
+
+function BeforeStateRecords({ bundle, focus, onOpenCitation }) {
+  if (!bundle) {
+    return <p className="piw-muted">Compared records are not loaded yet.</p>
+  }
+  const state = bundle.version?.state ?? {}
+  const hypotheses = state.hypotheses ?? []
+  const commitments = state.commitments ?? []
+  const coverage = state.coverage ?? []
+  const orderedCommitments = focus?.group === 'commitments' && focus.id
+    ? [...commitments.filter((row) => row.id === focus.id), ...commitments.filter((row) => row.id !== focus.id)]
+    : commitments
+  const orderedCoverage = focus?.group === 'coverage' && focus.id
+    ? [...coverage.filter((row) => row.id === focus.id), ...coverage.filter((row) => row.id !== focus.id)]
+    : coverage
+  const orderedHypotheses = focus?.group === 'hypotheses' && focus.id
+    ? [...hypotheses.filter((row) => row.id === focus.id), ...hypotheses.filter((row) => row.id !== focus.id)]
+    : hypotheses
+  return (
+    <div className="piw-before" data-before-state="true">
+      <p className="piw-note">Before/after citations resolve against their own observation, not the displayed bundle.</p>
+      <h4>Hypotheses on the compared version</h4>
+      <BoundedRecords
+        items={orderedHypotheses}
+        label="hypotheses"
+        renderItem={(hypothesis) => (
+          <HypothesisRecord
+            key={hypothesis.id}
+            hypothesis={hypothesis}
+            bundle={bundle}
+            onOpenCitation={onOpenCitation}
+          />
+        )}
+      />
+      <h4>Commitments on the compared version</h4>
+      <BoundedRecords
+        items={orderedCommitments}
+        label="commitments"
+        renderItem={(commitment) => (
+          <CommitmentRecord
+            key={commitment.id}
+            commitment={commitment}
+            bundle={bundle}
+            onOpenCitation={onOpenCitation}
+          />
+        )}
+      />
+      <h4>Collection declarations on the compared version</h4>
+      <BoundedRecords
+        items={orderedCoverage}
+        label="collection declarations"
+        renderItem={(row) => <CoverageRecord key={row.id} row={row} />}
+      />
+    </div>
+  )
+}
+
+function InputRecordView({ input, position }) {
+  const payload = input?.capture?.payload ?? input?.record_version?.payload
+  return (
+    <div className="piw-card" data-record="input" data-position={position == null ? undefined : String(position)}>
+      <p className="piw-mono">Position {position == null ? 'not recorded' : String(position)}</p>
+      {input ? (
+        <>
+          <p>{payload?.title ?? 'Retained source identity'}</p>
+          <p className="piw-muted">
+            Published {input.capture?.published_at ? formatWorkspaceDate(input.capture.published_at) : 'unknown'}.
+            Recorded {input.capture?.recorded_at ? formatWorkspaceDate(input.capture.recorded_at) : 'unknown'}.
+          </p>
+          {payload?.summary ? <p>{payload.summary}</p> : null}
+        </>
+      ) : (
+        <p>{citationUnavailableCopy()}</p>
+      )}
+    </div>
+  )
+}
+
+function EvidenceChangeInspect({ change, currentBundle, beforeBundle, onOpenCitation }) {
+  const position = change.position == null ? null : String(change.position)
+  const currentInput = snapshotInputAtPosition(currentBundle, position)
+  const beforeInput = snapshotInputAtPosition(beforeBundle, position)
+  const afterAssessment = snapshotAssessment(currentBundle, change.assessment_id ?? change.after_assessment_id)
+  const beforeAssessment = snapshotAssessment(beforeBundle, change.assessment_id ?? change.before_assessment_id)
+  const currentCitations = citationsAtPosition(currentBundle, position)
+  const beforeCitations = citationsAtPosition(beforeBundle, position)
+  return (
+    <div data-evidence-change={change.kind}>
+      <p>{evidenceChangeLabel(change.kind)}</p>
+      {position != null && (
+        <>
+          <h4>Observation input at this position</h4>
+          <p className="piw-muted">Displayed version</p>
+          <InputRecordView input={currentInput} position={position} />
+          {beforeBundle && (
+            <>
+              <p className="piw-muted">Compared version</p>
+              <InputRecordView input={beforeInput} position={position} />
+            </>
+          )}
+        </>
+      )}
+      {(afterAssessment || beforeAssessment) && (
+        <>
+          <h4>Assessments from the matching snapshots</h4>
+          {beforeAssessment && (
+            <div className="piw-card">
+              <p className="piw-muted">Compared version</p>
+              <p>{assessmentOutcomeCopy(beforeAssessment.outcome)}</p>
+              <p>{beforeAssessment.rationale}</p>
+            </div>
+          )}
+          {afterAssessment && (
+            <div className="piw-card">
+              <p className="piw-muted">Displayed version</p>
+              <p>{assessmentOutcomeCopy(afterAssessment.outcome)}</p>
+              <p>{afterAssessment.rationale}</p>
+            </div>
+          )}
+        </>
+      )}
+      {currentCitations.length > 0 && (
+        <>
+          <h4>Citations on the displayed observation</h4>
+          <EvidenceList evidence={currentCitations} bundle={currentBundle} onOpenCitation={onOpenCitation} />
+        </>
+      )}
+      {beforeCitations.length > 0 && (
+        <>
+          <h4>Citations on the compared observation</h4>
+          <EvidenceList
+            evidence={beforeCitations}
+            bundle={beforeBundle}
+            onOpenCitation={onOpenCitation}
+            versionLabel="Compared version"
+          />
+        </>
+      )}
+    </div>
+  )
+}
+
+function citationsAtPosition(bundle, position) {
+  if (!bundle || position == null) return []
+  const wanted = String(position)
+  const refs = []
+  for (const hypothesis of bundle.version?.state?.hypotheses ?? []) {
+    for (const reference of hypothesis.evidence ?? []) {
+      if (String(reference.position) === wanted) refs.push(reference)
+    }
+  }
+  for (const commitment of bundle.version?.state?.commitments ?? []) {
+    for (const stage of commitment.stages ?? []) {
+      for (const reference of stage.evidence ?? []) {
+        if (String(reference.position) === wanted) refs.push(reference)
+      }
+    }
+  }
+  return refs
 }
 
 function OverviewSection({ panels, bundle, onOpenPublicGraphNode, publicNode }) {
@@ -159,7 +412,10 @@ function ChangedSection({
   reviewConflict,
   onMarkReviewed,
   onRetryReview,
-  onOpenBeforeVersion,
+  onSelectVersion,
+  onInspectComparedRecords,
+  onInspectEvidenceChange,
+  onInspectRemovedRecord,
   onOpenCitation,
 }) {
   const comparison = panels.comparison
@@ -167,6 +423,9 @@ function ChangedSection({
   const canReview = panels.canMarkReviewed && mode !== 'historical_before_review'
   const definitionRows = definitionChangeSummary(comparison?.definition_changes)
   const evidenceChanges = Array.isArray(comparison?.evidence_changes) ? comparison.evidence_changes : null
+  const beforeId = comparison?.before_version_id ?? null
+  const viewingHistorical = Boolean(bundle && !isCurrentSavedVersion(bundle))
+  const showRetry = Boolean(pendingReview && reviewError && !reviewConflict)
   return (
     <section className="piw-section" id="piw-changed" tabIndex={-1}>
       <h2>What Changed</h2>
@@ -178,6 +437,38 @@ function ChangedSection({
       )}
       {mode === 'historical_before_review' && (
         <p className="piw-note">This historical view cannot mark an earlier version reviewed.</p>
+      )}
+      {beforeId && (
+        <div className="piw-history-controls">
+          <p className="piw-note">A comparison baseline is recorded. Opening it does not mark anything reviewed.</p>
+          {viewingHistorical ? (
+            <button
+              type="button"
+              className="piw-btn"
+              data-action="show-current-version"
+              onClick={() => onSelectVersion?.(bundle.investigation_id, null)}
+            >
+              Show current saved version
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="piw-btn"
+              data-action="open-compared-version"
+              onClick={() => onSelectVersion?.(bundle.investigation_id, beforeId)}
+            >
+              Open the compared version
+            </button>
+          )}
+          <button
+            type="button"
+            className="piw-text-btn"
+            data-action="inspect-compared-records"
+            onClick={() => onInspectComparedRecords?.(beforeId)}
+          >
+            Inspect compared records here
+          </button>
+        </div>
       )}
       <h3>Evidence record changes</h3>
       {mode === 'scope_changed' && evidenceChanges == null && (
@@ -198,6 +489,14 @@ function ChangedSection({
               {change.kind === 'assessment_replaced' && (
                 <p>Before outcome {change.before_outcome}; after outcome {change.after_outcome}. Replacement is not proof of contradiction or confirmation.</p>
               )}
+              <button
+                type="button"
+                className="piw-text-btn"
+                data-action="inspect-evidence-change"
+                onClick={() => onInspectEvidenceChange?.(change)}
+              >
+                Inspect this evidence change
+              </button>
             </li>
           ))}
         </ul>
@@ -210,52 +509,58 @@ function ChangedSection({
           {definitionRows.map((row) => (
             <li key={`${row.group}:${row.action}:${row.id}`}>
               {row.group} {row.action}{row.id ? ` · ${row.id}` : ''}
-              {row.action === 'removed' && comparison.before_version_id && (
+              {row.action === 'removed' && beforeId && (
                 <button
                   type="button"
                   className="piw-text-btn"
-                  onClick={() => onOpenBeforeVersion?.(comparison.before_version_id)}
+                  data-action="inspect-removed-record"
+                  onClick={() => onInspectRemovedRecord?.(beforeId, { group: row.group, id: row.id })}
                 >
-                  Open the before version
+                  Inspect the removed record
                 </button>
               )}
             </li>
           ))}
         </ul>
       )}
-      {comparison?.before_version_id && beforeBundles[comparison.before_version_id] && (
-        <div className="piw-before">
-          <h3>Before-version excerpts</h3>
-          <p className="piw-note">Before/after citations resolve against their own observation, not the displayed bundle.</p>
-          {(beforeBundles[comparison.before_version_id].version?.state?.hypotheses ?? []).flatMap((hypothesis) => hypothesis.evidence ?? []).slice(0, 4).map((reference) => (
-            <ExcerptBlock
-              key={`before:${reference.position}:${reference.span_start}`}
-              resolved={resolveWorkspaceExcerpt(beforeBundles[comparison.before_version_id], reference)}
-              reference={reference}
-              onOpen={() => onOpenCitation?.(reference, beforeBundles[comparison.before_version_id])}
-            />
-          ))}
-        </div>
+      {beforeId && beforeBundles[beforeId] && (
+        <BeforeStateRecords
+          bundle={beforeBundles[beforeId]}
+          onOpenCitation={onOpenCitation}
+        />
       )}
       <h3>Review acknowledgement</h3>
       {canReview ? (
         <div className="piw-review">
           <p>Marking reviewed records that you have seen this displayed version. It does not happen on open, scroll, or fetch.</p>
-          <button
-            type="button"
-            className="piw-btn"
-            disabled={reviewBusy}
-            onClick={() => (pendingReview && reviewError && !reviewConflict ? onRetryReview?.() : onMarkReviewed?.())}
-          >
-            {reviewBusy ? 'Recording review…' : pendingReview && reviewError && !reviewConflict ? 'Retry the same review request' : 'Mark this displayed version reviewed'}
-          </button>
-          {pendingReview && reviewError && !reviewConflict && (
+          {showRetry ? (
+            <button
+              type="button"
+              className="piw-btn"
+              data-action="retry-review"
+              disabled={reviewBusy}
+              onClick={() => onRetryReview?.()}
+            >
+              {reviewBusy ? 'Recording review…' : 'Retry the same review request'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="piw-btn"
+              data-action="mark-reviewed"
+              disabled={reviewBusy}
+              onClick={() => onMarkReviewed?.()}
+            >
+              {reviewBusy ? 'Recording review…' : 'Mark this displayed version reviewed'}
+            </button>
+          )}
+          {showRetry && (
             <StatusBanner tone="error">
               The review request did not complete. Retry sends the same acknowledgement for version {pendingReview.versionId}, not a newer head.
             </StatusBanner>
           )}
           {reviewConflict && (
-            <StatusBanner tone="error">
+            <StatusBanner tone="error" data-review-conflict="true">
               The review baseline changed. Current records were reloaded. Mark reviewed again only if that is still your explicit decision. A newer head was not silently acknowledged.
             </StatusBanner>
           )}
@@ -284,17 +589,8 @@ function HypothesesSection({ panels, bundle, onOpenCitation }) {
       <p className="piw-note">Alternatives may coexist. Linked excerpts validate source binding, not that an explanation is true. No ranking or numeric confidence is added.</p>
       <ul className="piw-cards">
         {panels.hypotheses.map((hypothesis) => (
-          <li key={hypothesis.id} className="piw-card">
-            <h3>{hypothesis.statement}</h3>
-            <h4>Assumptions</h4>
-            <ul className="piw-list">{hypothesis.assumptions.map((item) => <li key={item}>{item}</li>)}</ul>
-            <h4>Retained excerpts</h4>
-            <EvidenceList evidence={hypothesis.evidence} bundle={bundle} onOpenCitation={onOpenCitation} />
-            <h4>Would strengthen</h4>
-            <ul className="piw-list">{hypothesis.would_strengthen.map((item) => <li key={item}>{item}</li>)}</ul>
-            <h4>Would weaken</h4>
-            <ul className="piw-list">{hypothesis.would_weaken.map((item) => <li key={item}>{item}</li>)}</ul>
-            <RemainingUncertaintyBlock>{hypothesis.remaining_uncertainty}</RemainingUncertaintyBlock>
+          <li key={hypothesis.id}>
+            <HypothesisRecord hypothesis={hypothesis} bundle={bundle} onOpenCitation={onOpenCitation} />
           </li>
         ))}
       </ul>
@@ -315,30 +611,8 @@ function CommitmentsSection({ panels, bundle, onOpenCitation }) {
       <p className="piw-note">Branches and unknown states are preserved. No follow-up found is not proof of no activity. An observed outcome is not proof of causality.</p>
       <ul className="piw-cards">
         {panels.commitments.map((commitment) => (
-          <li key={commitment.id} className="piw-card">
-            <h3>{commitment.statement}</h3>
-            <p>Actor: {commitment.actor}</p>
-            <p>Scope: {commitment.scope}</p>
-            <p>Deadline wording: {commitment.deadline_text}</p>
-            <p>Success criterion: {commitment.success_criterion}</p>
-            <h4>Conditions</h4>
-            <ul className="piw-list">{commitment.conditions.map((item) => <li key={item}>{item}</li>)}</ul>
-            <RemainingUncertaintyBlock>{commitment.remaining_uncertainty}</RemainingUncertaintyBlock>
-            <h4>Stages</h4>
-            <ol className="piw-stages">
-              {stageDepths(commitment.stages).map((stage) => (
-                <li key={stage.id} style={{ '--piw-depth': stage.depth }} className="piw-stage">
-                  <p>
-                    <strong>{stage.kind}</strong>
-                    {' · '}
-                    {STAGE_STATUS_COPY[stage.status] ?? stage.status}
-                  </p>
-                  <p>{stage.note}</p>
-                  {stage.depends_on?.length ? <p className="piw-muted">Depends on earlier stages in this commitment. Dependency is not inferred completion.</p> : null}
-                  <EvidenceList evidence={stage.evidence} bundle={bundle} onOpenCitation={onOpenCitation} />
-                </li>
-              ))}
-            </ol>
+          <li key={commitment.id}>
+            <CommitmentRecord commitment={commitment} bundle={bundle} onOpenCitation={onOpenCitation} />
           </li>
         ))}
       </ul>
@@ -359,18 +633,8 @@ function GapsSection({ panels }) {
       <p className="piw-note">Collection records are analyst declarations with explicit limits. Observation gaps are shown separately from conflicting evidence. A completed bounded search is not independently measured global coverage.</p>
       <ul className="piw-cards">
         {panels.coverage.map((row) => (
-          <li key={row.id} className="piw-card">
-            <h3>{row.label}</h3>
-            <p>Declaration status: {row.status}. Search: {SEARCH_STATUS_COPY[row.search_status] ?? row.search_status}</p>
-            <p>Source classes: {row.source_classes.join(', ') || 'none recorded'}</p>
-            <p>Languages: {row.languages.join(', ') || 'none recorded'}</p>
-            <p>Regions: {row.regions.join(', ') || 'none recorded'}</p>
-            <p>Period: {row.from ? formatWorkspaceDate(row.from) : 'unknown'} – {row.to ? formatWorkspaceDate(row.to) : 'unknown'}</p>
-            <p>Retained text: {row.retained_text}</p>
-            <p>Searched at: {row.searched_at ? formatWorkspaceDate(row.searched_at) : 'not recorded'}</p>
-            <p>Method: {row.method}</p>
-            <h4>Limitations</h4>
-            <ul className="piw-list">{row.limitations.map((item) => <li key={item}>{item}</li>)}</ul>
+          <li key={row.id}>
+            <CoverageRecord row={row} />
           </li>
         ))}
       </ul>
@@ -389,6 +653,32 @@ function GapsSection({ panels }) {
 export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode, publicNode }) {
   const { state, status } = workspace
   const inspector = state.inspector
+  const reveal = canRevealPrivateRecords(status) && state.bundle && state.panels
+  if (status === WORKSPACE_STATUS.access_denied) {
+    return (
+      <div className="piw-inspector">
+        <h2>Investigation inspector</h2>
+        <p>This investigation is unavailable. Access was denied. The view does not say whether that identifier exists.</p>
+      </div>
+    )
+  }
+  if (status === WORKSPACE_STATUS.signed_out || status === WORKSPACE_STATUS.authentication_required) {
+    return (
+      <div className="piw-inspector">
+        <h2>Investigation inspector</h2>
+        <p>Private investigation records stay hidden until you sign in. Signing in does not create an assignment.</p>
+      </div>
+    )
+  }
+  if (!reveal) {
+    return (
+      <div className="piw-inspector">
+        <h2>Investigation inspector</h2>
+        <p>Private investigation records are hidden until an authorized assignment is loaded.</p>
+      </div>
+    )
+  }
+  const beforeBundle = inspector?.versionId ? state.beforeBundles[inspector.versionId] : null
   return (
     <div className="piw-inspector">
       <h2>Investigation inspector</h2>
@@ -396,7 +686,7 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
       <dl className="ws-inspector-dl">
         <div>
           <dt>Displayed version</dt>
-          <dd>{state.bundle ? revisionLabel(state.bundle) : 'Not loaded'}</dd>
+          <dd>{revisionLabel(state.bundle)}</dd>
         </div>
         <div>
           <dt>Review</dt>
@@ -420,7 +710,27 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
           )}
         </section>
       )}
-      {status === WORKSPACE_STATUS.ready && state.panels?.canonicalSubject?.type === 'graph_node' && (
+      {inspector?.kind === 'before-state' && (
+        <section>
+          <h3>Compared version records</h3>
+          <BeforeStateRecords
+            bundle={beforeBundle}
+            focus={inspector.focus}
+            onOpenCitation={undefined}
+          />
+        </section>
+      )}
+      {inspector?.kind === 'evidence-change' && (
+        <section>
+          <h3>Evidence change</h3>
+          <EvidenceChangeInspect
+            change={inspector.change}
+            currentBundle={state.bundle}
+            beforeBundle={inspector.beforeVersionId ? state.beforeBundles[inspector.beforeVersionId] : null}
+          />
+        </section>
+      )}
+      {state.panels?.canonicalSubject?.type === 'graph_node' && (
         <section>
           <h3>Public graph</h3>
           {publicNode ? (
@@ -446,6 +756,7 @@ export default function PrivateInvestigationWorkspace({
   const { state, status, sessionLoading, actions } = workspace
   const panels = state.panels
   const bundle = state.bundle
+  const revealPrivate = canRevealPrivateRecords(status) && panels && bundle
 
   const openCitation = (reference, sourceBundle) => {
     const resolved = resolveWorkspaceExcerpt(sourceBundle, reference)
@@ -455,6 +766,23 @@ export default function PrivateInvestigationWorkspace({
       resolved,
       input: resolved?.input ?? null,
       versionId: sourceBundle?.version?.id ?? null,
+    })
+    actions.setActiveSection('changed')
+  }
+
+  const inspectComparedRecords = async (versionId, focus = null) => {
+    await actions.openBeforeVersion(versionId)
+    actions.setInspector({ kind: 'before-state', versionId, focus })
+    actions.setActiveSection('changed')
+  }
+
+  const inspectEvidenceChange = async (change) => {
+    const beforeId = panels?.comparison?.before_version_id ?? null
+    if (beforeId) await actions.openBeforeVersion(beforeId)
+    actions.setInspector({
+      kind: 'evidence-change',
+      change,
+      beforeVersionId: beforeId,
     })
     actions.setActiveSection('changed')
   }
@@ -471,7 +799,7 @@ export default function PrivateInvestigationWorkspace({
       <div className="piw-toolbar">
         <div>
           <p className="piw-kicker">Assigned investigations</p>
-          <p className="piw-muted">Only explicit, non-revoked assignments appear. UUID paging is not a frozen catalog.</p>
+          <p className="piw-muted">Only investigations assigned to this account appear. Refresh to load the current list.</p>
         </div>
         {status !== WORKSPACE_STATUS.signed_out && status !== WORKSPACE_STATUS.session_loading && (
           <button type="button" className="piw-btn" onClick={() => actions.refresh()}>
@@ -491,7 +819,7 @@ export default function PrivateInvestigationWorkspace({
           {accountUiAvailable ? (
             <button type="button" className="piw-btn" onClick={onSignIn}>Sign in</button>
           ) : (
-            <p className="piw-note">Account sign-in is not enabled in this deployment. No private records are requested.</p>
+            <p className="piw-note">Account sign-in is not enabled in this session. No private records are requested.</p>
           )}
         </div>
       ) : null}
@@ -502,8 +830,8 @@ export default function PrivateInvestigationWorkspace({
 
       {status === WORKSPACE_STATUS.empty ? (
         <div className="piw-empty-state">
-          <h2>No investigations assigned yet</h2>
-          <p>There is no saved investigation, observation, or assignment from this work in the live backend. No sample cards are shown.</p>
+          <h2>No investigations assigned to this account yet.</h2>
+          <p>This list only includes investigations assigned to the signed-in account.</p>
         </div>
       ) : null}
 
@@ -529,7 +857,7 @@ export default function PrivateInvestigationWorkspace({
         </div>
       ) : null}
 
-      {state.catalog.length > 0 && status !== WORKSPACE_STATUS.signed_out && (
+      {state.catalog.length > 0 && status !== WORKSPACE_STATUS.signed_out && status !== WORKSPACE_STATUS.authentication_required && (
         <div className="piw-catalog" aria-label="Assigned investigations">
           {state.catalog.map((item) => (
             <button
@@ -550,7 +878,7 @@ export default function PrivateInvestigationWorkspace({
         </div>
       )}
 
-      {panels && bundle && (
+      {revealPrivate && (
         <>
           <nav className="piw-section-nav" aria-label="Investigation sections">
             {INVESTIGATION_WORKSPACE_PANELS.map((panel) => (
@@ -580,7 +908,10 @@ export default function PrivateInvestigationWorkspace({
             reviewConflict={state.reviewConflict}
             onMarkReviewed={actions.markReviewed}
             onRetryReview={actions.retryReview}
-            onOpenBeforeVersion={actions.openBeforeVersion}
+            onSelectVersion={actions.selectVersion}
+            onInspectComparedRecords={inspectComparedRecords}
+            onInspectEvidenceChange={inspectEvidenceChange}
+            onInspectRemovedRecord={inspectComparedRecords}
             onOpenCitation={openCitation}
           />
           <HypothesesSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />

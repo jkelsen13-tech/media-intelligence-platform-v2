@@ -312,9 +312,13 @@ export default function App({
     }
   }, [privateInvestigationPreview, investigationWorkspaceClient, authSessionOverride])
   const auth = authSessionOverride ?? devPreview?.auth ?? liveAuth
+  const productionWorkspaceClient = useMemo(
+    () => createInvestigationWorkspaceClient(supabase),
+    [],
+  )
   const workspaceClient = investigationWorkspaceClient
     ?? devPreview?.client
-    ?? createInvestigationWorkspaceClient(supabase)
+    ?? productionWorkspaceClient
   const privateWorkspace = usePrivateInvestigationWorkspace({
     userId: auth.user?.id ?? null,
     sessionLoading: auth.loading === true,
