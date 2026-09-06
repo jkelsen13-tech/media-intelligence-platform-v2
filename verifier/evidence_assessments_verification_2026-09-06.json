@@ -1,0 +1,157 @@
+{
+  "verified_at": "2026-09-06",
+  "project_id": "qikvmopbtijoebdqosyq",
+  "repository_base": "320b3e09f926a165e9b41799be8645fac5073325",
+  "migration": "20260906051224_evidence_assessment_dependencies_v1",
+  "applied": true,
+  "reapply": false,
+  "tests": {
+    "focused_passed": 14,
+    "full_passed": 896,
+    "full_failed": 0,
+    "build": "passed",
+    "build_warnings": [
+      "node:crypto externalized in existing temporalAssessment.js",
+      "existing large frontend chunks"
+    ],
+    "live_rollback_canary": "passed under service_role with anon/authenticated denial; all fixture rows rolled back",
+    "simultaneous_multiconnection_tested": false,
+    "http_worker_tested": false
+  },
+  "content_checks": [
+    {
+      "before_hash": "b360b96a738d4d8502e7ebe8b8f28561",
+      "content_hash": "b360b96a738d4d8502e7ebe8b8f28561",
+      "relation": "public.articles",
+      "rows": 4,
+      "unchanged": true
+    },
+    {
+      "before_hash": "e1af6eb3a4ba7d4bfe72aaed9838170c",
+      "content_hash": "e1af6eb3a4ba7d4bfe72aaed9838170c",
+      "relation": "public.nodes",
+      "rows": 1,
+      "unchanged": true
+    },
+    {
+      "before_hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "content_hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "relation": "public.edges",
+      "rows": 0,
+      "unchanged": true
+    },
+    {
+      "before_hash": "edfce96c5b11a484ee72c617f8fc8a8b",
+      "content_hash": "edfce96c5b11a484ee72c617f8fc8a8b",
+      "relation": "public.pipeline_config",
+      "rows": 7,
+      "unchanged": true
+    },
+    {
+      "before_hash": "5bd81d1298fb509196ade36fcc147eda",
+      "content_hash": "5bd81d1298fb509196ade36fcc147eda",
+      "relation": "public.spatial_projection_v1",
+      "rows": 1,
+      "unchanged": true
+    },
+    {
+      "before_hash": "143c6529d0d0ae8227050a9ea01fb2f4",
+      "content_hash": "143c6529d0d0ae8227050a9ea01fb2f4",
+      "relation": "evidence_pipeline.article_captures",
+      "rows": 1,
+      "unchanged": true
+    },
+    {
+      "before_hash": "56d86d1de081f6b424a7bcebc64d7722",
+      "content_hash": "56d86d1de081f6b424a7bcebc64d7722",
+      "relation": "evidence_pipeline.record_versions",
+      "rows": 6,
+      "unchanged": true
+    },
+    {
+      "before_hash": "87b6245c0ca3da03497809b9ce5b469f",
+      "content_hash": "87b6245c0ca3da03497809b9ce5b469f",
+      "relation": "evidence_pipeline.evidence_candidates",
+      "rows": 3,
+      "unchanged": true
+    }
+  ],
+  "security_advisor_new": [
+    {
+      "cache_key": "rls_enabled_no_policy_evidence_pipeline_assessment_invalidations",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`evidence_pipeline.assessment_invalidations\\` has RLS enabled, but no policies exist",
+      "facing": "EXTERNAL",
+      "level": "INFO",
+      "metadata": {
+        "name": "assessment_invalidations",
+        "schema": "evidence_pipeline",
+        "type": "table"
+      },
+      "name": "rls_enabled_no_policy",
+      "observed_at": "2026-09-06T05:13:01.793Z",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy"
+    },
+    {
+      "cache_key": "rls_enabled_no_policy_evidence_pipeline_assessments",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`evidence_pipeline.assessments\\` has RLS enabled, but no policies exist",
+      "facing": "EXTERNAL",
+      "level": "INFO",
+      "metadata": {
+        "name": "assessments",
+        "schema": "evidence_pipeline",
+        "type": "table"
+      },
+      "name": "rls_enabled_no_policy",
+      "observed_at": "2026-09-06T05:13:01.793Z",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy"
+    },
+    {
+      "cache_key": "rls_enabled_no_policy_evidence_pipeline_dependency_runs",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`evidence_pipeline.dependency_runs\\` has RLS enabled, but no policies exist",
+      "facing": "EXTERNAL",
+      "level": "INFO",
+      "metadata": {
+        "name": "dependency_runs",
+        "schema": "evidence_pipeline",
+        "type": "table"
+      },
+      "name": "rls_enabled_no_policy",
+      "observed_at": "2026-09-06T05:13:01.793Z",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy"
+    }
+  ],
+  "operational_state": {
+    "retained_changes": 7,
+    "dependency_lookup_completed": 7,
+    "completed_dependency_runs": 7,
+    "new_candidate_search_pending": 7,
+    "assessments": 0,
+    "invalidations": 0,
+    "scheduled_worker": false,
+    "semantic_model_enabled": false,
+    "description": "Completed dependency scans found no existing assessments. This is not evidence of semantic analysis or new connection discovery."
+  },
+  "remaining": [
+    "GitHub registration through Cursor",
+    "Bounded new-candidate retrieval and durable coverage/results",
+    "Semantic verification and source independence benchmark",
+    "Additional producer and canonical identity/asset adapters",
+    "Committed historical observation snapshots",
+    "End-to-end ordinary and late-historical connections with compatible surface projections"
+  ]
+}
