@@ -458,38 +458,79 @@ function createMapLibreWorldViewRendererAdapter({
  *   ellipsoid-globe (Cesium) fails -> openfreemap-positron (MapLibre)
  *   MapLibre fails -> osm -> atlas-fallback (SVG atlas)
  */
-export function createWorldViewRendererAdapter(args) {
+export function createWorldViewRendererAdapter(args, {
+  loadGlobeAdapter = () => import('./worldViewCesiumEllipsoidRendererAdapter.js'),
+  createMapAdapter = createMapLibreWorldViewRendererAdapter,
+} = {}) {
   let impl = null
   let rendererKind = null
+  let mountPromise = null
+  let destroyed = false
+  let ready = false
+  let features = args?.initialFeatures ?? []
+  let selectedKeys = args?.getSelectedKeys?.() ?? new Set()
+  let onSelectRow = args?.onSelectRow
+  let reliefShadingEnabled
+  const cancelled = () => destroyed || Boolean(args?.isCancelled?.())
 
-  async function mount() {
-    if (impl) return
+  async function start() {
+    if (cancelled()) return
     const { stackId } = args ?? {}
+    const currentArgs = () => ({
+      ...args,
+      initialFeatures: features,
+      getSelectedKeys: () => selectedKeys,
+      onSelectRow,
+      isCancelled: cancelled,
+    })
 
     if (stackId === ELLIPSOID_GLOBE_STACK_ID) {
       try {
-        const mod = await import('./worldViewCesiumEllipsoidRendererAdapter.js')
+        const mod = await loadGlobeAdapter()
+        if (cancelled()) return
         rendererKind = 'ellipsoid-globe'
-        impl = mod.createCesiumEllipsoidRendererAdapter(args)
+        impl = mod.createCesiumEllipsoidRendererAdapter(currentArgs())
       } catch {
+        if (cancelled()) return
         rendererKind = 'maplibre-deck.gl'
-        onStackIdChange?.(nextMapStackOnFailure(stackId))
+        args?.onStackIdChange?.(nextMapStackOnFailure(stackId))
         return
       }
     } else {
       rendererKind = 'maplibre-deck.gl'
-      impl = createMapLibreWorldViewRendererAdapter(args)
+      impl = createMapAdapter(currentArgs())
     }
 
     await impl?.mount?.()
+    if (cancelled()) return
+    // Updates can arrive during either dynamic import or renderer startup.
+    // Replay the latest snapshot only once the renderer can accept layers.
+    ready = true
+    impl?.setOnSelectRow?.(onSelectRow)
+    if (reliefShadingEnabled !== undefined) impl?.setReliefShadingEnabled?.(reliefShadingEnabled)
+    await impl?.setFeatures?.(features, selectedKeys)
+  }
+
+  function mount() {
+    if (!mountPromise) mountPromise = start()
+    return mountPromise
   }
 
   return {
     getRendererKind: () => rendererKind ?? rendererKindForStackId(args?.stackId),
     getAttribution: () => impl?.getAttribution?.() ?? stackAttribution(args?.stackId),
     mount,
-    setFeatures: (nextFeatures, nextSelectedKeys) => impl?.setFeatures?.(nextFeatures, nextSelectedKeys),
-    setOnSelectRow: (nextOnSelectRow) => impl?.setOnSelectRow?.(nextOnSelectRow),
+    setFeatures: (nextFeatures, nextSelectedKeys = args?.getSelectedKeys?.()) => {
+      if (cancelled()) return
+      features = nextFeatures
+      selectedKeys = nextSelectedKeys ?? new Set()
+      if (ready) return impl?.setFeatures?.(features, selectedKeys)
+    },
+    setOnSelectRow: (nextOnSelectRow) => {
+      if (cancelled()) return
+      onSelectRow = nextOnSelectRow
+      if (ready) impl?.setOnSelectRow?.(onSelectRow)
+    },
     flyToSubjectCamera: (opts) => impl?.flyToSubjectCamera?.(opts) ?? false,
     getCameraState: () => impl?.getCameraState?.() ?? null,
     setCameraState: (serialized) => impl?.setCameraState?.(serialized) ?? false,
@@ -498,9 +539,19 @@ export function createWorldViewRendererAdapter(args) {
     // Stage D visual-continuity repair: relief shading is a globe-only
     // treatment; the MapLibre fallback adapter has no globe material, so it
     // no-ops through the optional call.
-    setReliefShadingEnabled: (enabled) => impl?.setReliefShadingEnabled?.(enabled) ?? false,
+    setReliefShadingEnabled: (enabled) => {
+      if (cancelled()) return false
+      reliefShadingEnabled = enabled
+      return ready ? impl?.setReliefShadingEnabled?.(enabled) ?? false : false
+    },
     getReliefShadingEnabled: () => impl?.getReliefShadingEnabled?.() ?? false,
     requestRender: () => impl?.requestRender?.(),
-    destroy: () => impl?.destroy?.(),
+    destroy: () => {
+      if (destroyed) return
+      destroyed = true
+      ready = false
+      impl?.destroy?.()
+      impl = null
+    },
   }
 }
