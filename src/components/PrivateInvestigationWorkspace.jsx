@@ -770,23 +770,6 @@ export default function PrivateInvestigationWorkspace({
     actions.setActiveSection('changed')
   }
 
-  const inspectComparedRecords = async (versionId, focus = null) => {
-    await actions.openBeforeVersion(versionId)
-    actions.setInspector({ kind: 'before-state', versionId, focus })
-    actions.setActiveSection('changed')
-  }
-
-  const inspectEvidenceChange = async (change) => {
-    const beforeId = panels?.comparison?.before_version_id ?? null
-    if (beforeId) await actions.openBeforeVersion(beforeId)
-    actions.setInspector({
-      kind: 'evidence-change',
-      change,
-      beforeVersionId: beforeId,
-    })
-    actions.setActiveSection('changed')
-  }
-
   const scrollTo = (id) => {
     actions.setActiveSection(id)
     const el = typeof document !== 'undefined' ? document.getElementById(`piw-${id}`) : null
@@ -909,9 +892,9 @@ export default function PrivateInvestigationWorkspace({
             onMarkReviewed={actions.markReviewed}
             onRetryReview={actions.retryReview}
             onSelectVersion={actions.selectVersion}
-            onInspectComparedRecords={inspectComparedRecords}
-            onInspectEvidenceChange={inspectEvidenceChange}
-            onInspectRemovedRecord={inspectComparedRecords}
+            onInspectComparedRecords={actions.inspectComparedRecords}
+            onInspectEvidenceChange={actions.inspectEvidenceChange}
+            onInspectRemovedRecord={actions.inspectComparedRecords}
             onOpenCitation={openCitation}
           />
           <HypothesesSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />

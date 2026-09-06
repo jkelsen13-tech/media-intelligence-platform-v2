@@ -47,6 +47,7 @@ export function usePrivateInvestigationWorkspace({
   const historyFamily = useRef(createKeyedRequestFamily())
   const reviewGate = useRef(createRequestGate())
   const displayedScopeRef = useRef(null)
+  const inspectEpochRef = useRef(0)
   const mountedRef = useRef(true)
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export function usePrivateInvestigationWorkspace({
     readGate.current.invalidate()
     historyFamily.current.invalidate()
     reviewGate.current.invalidate()
+    inspectEpochRef.current += 1
     displayedScopeRef.current = null
   }, [])
 
@@ -92,6 +94,7 @@ export function usePrivateInvestigationWorkspace({
       readGate.current.invalidate()
       historyFamily.current.invalidate()
       reviewGate.current.invalidate()
+      inspectEpochRef.current += 1
       displayedScopeRef.current = null
       applyCatalog((current) => {
         const deniedId = investigationId ?? current.selectedInvestigationId
@@ -179,7 +182,9 @@ export function usePrivateInvestigationWorkspace({
     if (sessionLoading || !userId || !client || !investigationId) return
     const current = stateRef.current
     const displayedInvestigationId = asBefore ? current.selectedInvestigationId : investigationId
-    const displayedVersionId = asBefore ? current.selectedVersionId : versionId
+    const displayedVersionId = asBefore
+      ? (current.bundle?.version?.id ?? null)
+      : versionId
     let displayedToken = null
     let historyToken = null
 
@@ -189,11 +194,9 @@ export function usePrivateInvestigationWorkspace({
       )
       applyCatalog((s) => ({ ...s, loadingBefore: true }))
     } else {
-      const nextScope = displayedScopeKey(userId, investigationId, versionId)
-      if (displayedScopeRef.current !== nextScope) {
-        historyFamily.current.invalidate()
-        displayedScopeRef.current = nextScope
-      }
+      inspectEpochRef.current += 1
+      historyFamily.current.invalidate()
+      displayedScopeRef.current = displayedScopeKey(userId, investigationId, versionId)
       displayedToken = readGate.current.start(readRequestKey(userId, investigationId, versionId))
       applyCatalog((s) => ({
         ...s,
@@ -310,6 +313,7 @@ export function usePrivateInvestigationWorkspace({
   const selectInvestigation = useCallback((investigationId) => {
     reviewGate.current.invalidate()
     historyFamily.current.invalidate()
+    inspectEpochRef.current += 1
     applyCatalog((current) => ({
       ...current,
       pendingReview: null,
@@ -329,6 +333,7 @@ export function usePrivateInvestigationWorkspace({
   const selectVersion = useCallback((investigationId, versionId) => {
     reviewGate.current.invalidate()
     historyFamily.current.invalidate()
+    inspectEpochRef.current += 1
     applyCatalog((current) => ({
       ...current,
       pendingReview: null,
@@ -426,6 +431,72 @@ export function usePrivateInvestigationWorkspace({
     return loadBundle(current.selectedInvestigationId, versionId, { asBefore: true })
   }, [loadBundle])
 
+  const beginInspectSession = useCallback(() => {
+    inspectEpochRef.current += 1
+    const current = stateRef.current
+    return {
+      epoch: inspectEpochRef.current,
+      userId: userRef.current,
+      investigationId: current.selectedInvestigationId,
+      displayedVersionId: current.bundle?.version?.id ?? null,
+    }
+  }, [])
+
+  const inspectSessionIsCurrent = useCallback((session) => {
+    if (!session || !mountedRef.current) return false
+    if (session.epoch !== inspectEpochRef.current) return false
+    if (userRef.current !== session.userId) return false
+    const current = stateRef.current
+    if (current.selectedInvestigationId !== session.investigationId) return false
+    if ((current.bundle?.version?.id ?? null) !== session.displayedVersionId) return false
+    return true
+  }, [])
+
+  const finishInspect = useCallback((session, inspector) => {
+    if (!inspectSessionIsCurrent(session)) return false
+    applyCatalog((current) => ({
+      ...current,
+      inspector,
+      activeSection: 'changed',
+    }))
+    return true
+  }, [applyCatalog, inspectSessionIsCurrent])
+
+  const inspectComparedRecords = useCallback(async (versionId, focus = null) => {
+    if (!versionId) return { ignored: true }
+    const session = beginInspectSession()
+    const result = await openBeforeVersion(versionId)
+    if (!result || result.ignored || result.error) return { ignored: true, error: result?.error }
+    if (!bundleMatchesRequest(result.data, session.investigationId, versionId)) {
+      return { ignored: true, error: 'identity_mismatch' }
+    }
+    if (!finishInspect(session, { kind: 'before-state', versionId, focus })) {
+      return { ignored: true }
+    }
+    return { ignored: false, data: result.data }
+  }, [beginInspectSession, finishInspect, openBeforeVersion])
+
+  const inspectEvidenceChange = useCallback(async (change) => {
+    if (!change) return { ignored: true }
+    const session = beginInspectSession()
+    const beforeId = stateRef.current.panels?.comparison?.before_version_id ?? null
+    if (beforeId) {
+      const result = await openBeforeVersion(beforeId)
+      if (!result || result.ignored || result.error) return { ignored: true, error: result?.error }
+      if (!bundleMatchesRequest(result.data, session.investigationId, beforeId)) {
+        return { ignored: true, error: 'identity_mismatch' }
+      }
+    }
+    if (!finishInspect(session, {
+      kind: 'evidence-change',
+      change,
+      beforeVersionId: beforeId,
+    })) {
+      return { ignored: true }
+    }
+    return { ignored: false }
+  }, [beginInspectSession, finishInspect, openBeforeVersion])
+
   const setInspector = useCallback((inspector) => {
     applyCatalog((current) => ({ ...current, inspector }))
   }, [applyCatalog])
@@ -461,6 +532,8 @@ export function usePrivateInvestigationWorkspace({
       markReviewed,
       retryReview,
       openBeforeVersion,
+      inspectComparedRecords,
+      inspectEvidenceChange,
       setInspector,
       setActiveSection,
       clearPrivateState,
