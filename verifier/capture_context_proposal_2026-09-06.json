@@ -1,0 +1,45 @@
+{
+  "contract": "capture-context-proposal-2",
+  "base_commit": "421dfaf5ed58c807ac8ae9351ae566b6780226a9",
+  "status": "offline implementation verified; not deployed",
+  "focused_tests": {
+    "passed": 20,
+    "failed": 0
+  },
+  "full_suite": {
+    "passed": 929,
+    "failed": 0
+  },
+  "build": "passed with existing browser externalization and chunk-size warnings",
+  "production_bundle_contains_new_proposal_module": false,
+  "baseline_SQL_changed": false,
+  "live_database_mutated": false,
+  "models_called": false,
+  "scheduler_enabled": false,
+  "public_projection_changed": false,
+  "real_corpus_replayed": false,
+  "precision": null,
+  "recall": null,
+  "semantic_accuracy": null,
+  "annotation_authority": "caller-supplied raw-span-bound references, not registry-verified",
+  "historical_knowledge_queries": "explicitly unsupported",
+  "coverage": "bounded admitted snapshot, maximum 100 records; not corpus scale",
+  "files": [
+    {
+      "repository_path": "scripts/captureContextProposal.mjs",
+      "sha256": "b0ac266b9253156c27611784af34639307069a5b2d84673e04e96495d123ab30"
+    },
+    {
+      "repository_path": "scripts/runCaptureContextProposal.mjs",
+      "sha256": "2d942ad7fca84d56f645bd71c3e6b0ffd0ca4fe6e7bee5e8e65f16d776986531"
+    },
+    {
+      "repository_path": "tests/captureContextProposal.test.mjs",
+      "sha256": "cd3fef1827a16f2295d5daab3262d687f0decf6847be40e01f191041a0b11e26"
+    },
+    {
+      "repository_path": "docs/CAPTURE_CONTEXT_PROPOSAL_2026-09-06.md",
+      "sha256": "f7565efe11c63fa594e1a00748dcb40f6301477ae459d61a546d74ebfb95fa66"
+    }
+  ]
+}
