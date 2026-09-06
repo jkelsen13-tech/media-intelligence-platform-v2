@@ -1,0 +1,107 @@
+{
+  "contract_version": "investigation-evidence-reviews-1",
+  "verified_at": "2026-09-06T12:16:01.933663+00:00",
+  "base_main": "be206d7c18f9f669ce42476401b4e41f50864150",
+  "project_id": "qikvmopbtijoebdqosyq",
+  "migration": "20260906121130_investigation_evidence_reviews_v1",
+  "edge_function": {
+    "name": "investigation-evidence-reviews",
+    "version": 1,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "id": "6880b1ce-b376-4ee2-80a2-dd2bc1876b80",
+    "ezbr_sha256": "6b86e0161b27e3d66266f196f69c7a9b1679a9dd97c26c86dd817d832f6d7c54",
+    "deployed_files_match": true
+  },
+  "sql_function_body_md5": {
+    "evidence_review_revision": "0a749a8fdbd2571340ccd6245d9b51d1",
+    "evidence_review_event": "ad3cb1615846306770deec5cc972902a",
+    "mip_investigation_evidence_reviews_v1": "7b6ec71d27c52398504e0a3227f08af6"
+  },
+  "checks": {
+    "full_tests": {
+      "passed": 1055,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 27875.620334
+    },
+    "focused_review_tests": 14,
+    "production_build": "passed",
+    "build_duration_seconds": 33.11,
+    "live_rollback_canary": "passed",
+    "sql_invoker_empty_search_path": "verified_all_three",
+    "anon_authenticated_rpc_execute": false,
+    "service_rpc_execute": true,
+    "prior_PR44_backend_files_unchanged": true,
+    "http": [
+      {
+        "case": "allowed_preflight",
+        "status": 204,
+        "passed": true
+      },
+      {
+        "case": "denied_origin",
+        "status": 403,
+        "passed": true
+      },
+      {
+        "case": "missing_bearer",
+        "status": 401,
+        "passed": true
+      },
+      {
+        "case": "anon_key_not_user_session",
+        "status": 401,
+        "passed": true
+      },
+      {
+        "case": "wrong_method",
+        "status": 405,
+        "passed": true
+      },
+      {
+        "case": "malformed_json",
+        "status": 400,
+        "passed": true
+      },
+      {
+        "case": "browser_rpc_denied",
+        "status": 401,
+        "passed": true
+      }
+    ]
+  },
+  "post_canary_counts": {
+    "investigations": 0,
+    "versions": 0,
+    "memberships": 0,
+    "reports": 0,
+    "observations": 0,
+    "review_receipts": 0,
+    "review_events": 0
+  },
+  "advisor_delta": {
+    "new_warnings": 0,
+    "new_errors": 0,
+    "information": [
+      "RLS enabled without browser policies on the deliberately private ledger",
+      "Unused newly created actor foreign-key index"
+    ]
+  },
+  "limitations": [
+    "Populated signed-in live UI verification needs a real assigned investigation; none created.",
+    "Decisions describe relevance for follow-up, not factual truth or source independence.",
+    "Review scope includes returned report targets only; report truncation and collection limits persist.",
+    "No frontend is mounted by this backend handoff. Cursor implements and tests the frontend."
+  ],
+  "file_hashes": {
+    "docs/INVESTIGATION_EVIDENCE_REVIEWS_BACKEND_2026-09-06.md": "1c4cc10d8206c28687ca091d38472161334e6fac5a953a7056aa2b66b41b463f",
+    "docs/INVESTIGATION_EVIDENCE_REVIEWS_FRONTEND_2026-09-06.md": "e5683cccfc9d24af78f1ba581867e64470aab57bb42716ea2f77986b742f8c20",
+    "src/lib/investigationEvidenceReviewsClient.js": "14c6a989b7bb243969831b9e9613b62cd052ea39f5787a699db782a2470588c5",
+    "supabase/functions/investigation-evidence-reviews/handler.mjs": "4dfde82551e33e4d23f894f2ae1876c0e7ba5e39a17243e212efa3497cb8af17",
+    "supabase/functions/investigation-evidence-reviews/index.ts": "2bfeec8bc76c4bb968108fdb1b2e82bd29d77ac11e7c3e97db29022a3c5d0ffb",
+    "supabase/migrations/20260906121130_investigation_evidence_reviews_v1.sql": "883bd5ea148b9b1d3d862f9e18ef5bd34066696b4ca857c27f22c5cfb65560df",
+    "supabase/tests/investigation_evidence_reviews_smoke.sql": "a4cc85d0ec263c56c3e4a4fc585127016a9bda0ce9278f7a93b518a5e3e56647",
+    "tests/investigationEvidenceReviews.test.mjs": "9d9d494d8cdd39a113294cc4f35affcfad292f3ea3c6f50a4613c948791055d0"
+  }
+}

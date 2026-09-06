@@ -83,6 +83,7 @@ import PrivateInvestigationWorkspace, {
   PrivateInvestigationInspector,
 } from './components/PrivateInvestigationWorkspace'
 import { createInvestigationEvidenceChecksClient } from './lib/investigationEvidenceChecksClient.js'
+import { createInvestigationEvidenceReviewsClient } from './lib/investigationEvidenceReviewsClient.js'
 import { createInvestigationWorkspaceClient } from './lib/investigationWorkspaceClient.js'
 import { usePrivateInvestigationWorkspace } from './lib/usePrivateInvestigationWorkspace.js'
 import {
@@ -210,6 +211,7 @@ function topicSubgraph(nodes, edges, memberIds) {
 export default function App({
   investigationWorkspaceClient = null,
   investigationEvidenceChecksClient = null,
+  investigationEvidenceReviewsClient = null,
   authSessionOverride = null,
   privateInvestigationPreview = null,
 } = {}) {
@@ -302,7 +304,7 @@ export default function App({
   const liveAuth = useAuthSession()
   const [devPreview, setDevPreview] = useState(privateInvestigationPreview)
   useEffect(() => {
-    if (privateInvestigationPreview || investigationWorkspaceClient || investigationEvidenceChecksClient || authSessionOverride) return undefined
+    if (privateInvestigationPreview || investigationWorkspaceClient || investigationEvidenceChecksClient || investigationEvidenceReviewsClient || authSessionOverride) return undefined
     if (!import.meta.env.DEV) return undefined
     let cancelled = false
     import('./lib/investigationWorkspaceFixtures.js').then((mod) => {
@@ -312,7 +314,7 @@ export default function App({
     return () => {
       cancelled = true
     }
-  }, [privateInvestigationPreview, investigationWorkspaceClient, investigationEvidenceChecksClient, authSessionOverride])
+  }, [privateInvestigationPreview, investigationWorkspaceClient, investigationEvidenceChecksClient, investigationEvidenceReviewsClient, authSessionOverride])
   const auth = authSessionOverride ?? devPreview?.auth ?? liveAuth
   const productionWorkspaceClient = useMemo(
     () => createInvestigationWorkspaceClient(supabase),
@@ -322,17 +324,25 @@ export default function App({
     () => createInvestigationEvidenceChecksClient(supabase),
     [],
   )
+  const productionReviewsClient = useMemo(
+    () => createInvestigationEvidenceReviewsClient(supabase),
+    [],
+  )
   const workspaceClient = investigationWorkspaceClient
     ?? devPreview?.client
     ?? productionWorkspaceClient
   const checksClient = investigationEvidenceChecksClient
     ?? devPreview?.checksClient
     ?? productionChecksClient
+  const reviewsClient = investigationEvidenceReviewsClient
+    ?? devPreview?.reviewsClient
+    ?? productionReviewsClient
   const privateWorkspace = usePrivateInvestigationWorkspace({
     userId: auth.user?.id ?? null,
     sessionLoading: auth.loading === true,
     client: workspaceClient,
     checksClient,
+    reviewsClient,
     active: view === PRIVATE_INVESTIGATION_VIEW,
     initialInvestigationId: devPreview?.initialInvestigationId ?? null,
   })

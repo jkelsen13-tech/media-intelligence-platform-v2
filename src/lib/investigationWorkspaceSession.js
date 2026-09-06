@@ -99,6 +99,20 @@ export function emptyPrivateWorkspaceState() {
     checksBusy: false,
     loadingChecks: false,
     pendingChecksRun: null,
+    reviews: null,
+    reviewsPanels: null,
+    reviewsError: null,
+    reviewsBusy: false,
+    loadingReviews: false,
+    pendingReviewDecision: null,
+    reviewsConflict: false,
+    decisionSavedNeedsRefresh: false,
+    reviewDrafts: {},
+    reviewFilter: 'attention',
+    reviewHistory: null,
+    loadingReviewHistory: false,
+    loadingOlderReviewHistory: false,
+    reviewHistoryError: null,
   }
 }
 

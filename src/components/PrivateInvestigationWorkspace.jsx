@@ -1,5 +1,21 @@
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
 import {
+  EVIDENCE_REVIEW_LABELS,
+} from '../lib/investigationEvidenceReviewsClient.js'
+import {
+  REVIEW_FILTER_ALL,
+  REVIEW_FILTER_ATTENTION,
+  buildSuggestedReviewDraft,
+  humanReviewStatusCopy,
+  reviewAuthorLabel,
+  reviewDecisionLabel,
+  reviewSubmissionBlockReason,
+  reviewTargetFromPanels,
+  reviewTargetKey,
+  reviewsUnavailableCopy,
+  targetMatchesFilter,
+} from '../lib/investigationEvidenceReviewUi.js'
+import {
   COMPARISON_MODE_COPY,
   EMPTY_SECTION_COPY,
   INVESTIGATION_WORKSPACE_PANELS,
@@ -123,6 +139,338 @@ function BoundedRecords({ items, renderItem, label, initial = BEFORE_DISCLOSURE_
 
 function EmptySection({ kind }) {
   return <p className="piw-empty">{EMPTY_SECTION_COPY[kind]}</p>
+}
+
+function ReviewProgressCard({ reviewsPanels, reviewsError, loadingReviews, decisionSavedNeedsRefresh, pendingDecision, reviewsBusy, reviewsConflict, onRetryRead, onRetryDecision }) {
+  if (!reviewsPanels && !reviewsError && !loadingReviews) return null
+  const summary = reviewsPanels?.summary
+  const showDecisionRetry = Boolean(pendingDecision && reviewsError && !reviewsConflict && !decisionSavedNeedsRefresh)
+  const showReadRetry = Boolean(reviewsError && !showDecisionRetry)
+  return (
+    <div className="piw-review-progress" data-review-progress="true">
+      <h3>Review progress for returned report targets</h3>
+      <p className="piw-note">
+        Counts cover only the targets returned in this saved evidence-check report. Never-reviewed items are already included in needs review; do not add those counts together.
+        Reviewing every returned target does not mean all retained evidence, the source corpus, or the web was reviewed. Human decisions do not remove scan limits, increase confidence, or mark the workspace review baseline.
+        Independence stays unknown. These are relevance decisions, not factual verdicts.
+      </p>
+      {loadingReviews ? <StatusBanner>Loading saved evidence reviews…</StatusBanner> : null}
+      {decisionSavedNeedsRefresh ? (
+        <StatusBanner tone="error" data-review-saved-refresh="true">
+          Decision saved; refresh to load current review state.
+        </StatusBanner>
+      ) : null}
+      {reviewsConflict ? (
+        <StatusBanner tone="error" data-review-decision-conflict="true">
+          {reviewsUnavailableCopy('version_conflict')}
+        </StatusBanner>
+      ) : null}
+      {reviewsError && !reviewsConflict ? (
+        <StatusBanner tone="error">{reviewsUnavailableCopy(reviewsError)}</StatusBanner>
+      ) : null}
+      {summary ? (
+        <ul className="piw-review-counts" data-review-scope="returned_report_targets_only">
+          <li>Returned targets: {summary.returned_targets}</li>
+          <li>Needs review: {summary.needs_review} (never reviewed: {summary.never_reviewed})</li>
+          <li>Retained for follow-up: {summary.relevant}</li>
+          <li>Dismissed for this investigation: {summary.not_relevant}</li>
+          <li>Disputed: {summary.disputed}</li>
+        </ul>
+      ) : reviewsError ? (
+        <p className="piw-note">Review progress is unavailable. This is not an unreviewed ledger of zero targets.</p>
+      ) : null}
+      {showDecisionRetry ? (
+        <button
+          type="button"
+          className="piw-btn"
+          data-action="retry-evidence-review-decision"
+          disabled={reviewsBusy}
+          onClick={() => onRetryDecision?.()}
+        >
+          {reviewsBusy ? 'Saving review decision…' : 'Retry the same review decision'}
+        </button>
+      ) : null}
+      {showReadRetry ? (
+        <button
+          type="button"
+          className="piw-btn"
+          data-action="retry-evidence-reviews"
+          data-retry-kind="read"
+          disabled={loadingReviews}
+          onClick={() => onRetryRead?.()}
+        >
+          {loadingReviews ? 'Loading saved evidence reviews…' : 'Retry loading review state'}
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
+function ReviewFilterBar({ summary, filter, onChange }) {
+  if (!summary) return null
+  const attention = Number(summary.needs_review ?? 0) + Number(summary.disputed ?? 0)
+  return (
+    <div className="piw-review-filter" role="group" aria-label="Evidence review filter">
+      <button
+        type="button"
+        className={`piw-section-btn${filter === REVIEW_FILTER_ATTENTION ? ' active' : ''}`}
+        data-action="review-filter-attention"
+        onClick={() => onChange?.(REVIEW_FILTER_ATTENTION)}
+      >
+        Needs review or disputed ({attention})
+      </button>
+      <button
+        type="button"
+        className={`piw-section-btn${filter === REVIEW_FILTER_ALL ? ' active' : ''}`}
+        data-action="review-filter-all"
+        onClick={() => onChange?.(REVIEW_FILTER_ALL)}
+      >
+        All returned targets ({summary.returned_targets})
+      </button>
+    </div>
+  )
+}
+
+function ReviewDecisionForm({
+  targetKind,
+  target,
+  machineTarget,
+  bundle,
+  canDecide,
+  draft,
+  pendingDecision,
+  reviewsBusy,
+  decisionSavedNeedsRefresh,
+  reviewsConflict,
+  onDraftChange,
+  onSave,
+  onOpenCitation,
+}) {
+  const reviewTarget = target
+  if (!reviewTarget && !canDecide) return null
+  const suggested = draft ?? buildSuggestedReviewDraft(targetKind, machineTarget, bundle)
+  const frozen = Boolean(
+    pendingDecision
+    && pendingDecision.target_kind === targetKind
+    && pendingDecision.target_id === (machineTarget?.id ?? reviewTarget?.target_id),
+  )
+  const blockReason = canDecide && !frozen ? reviewSubmissionBlockReason(suggested, targetKind) : null
+  const saveBlocked = Boolean(blockReason) || reviewsBusy || decisionSavedNeedsRefresh || frozen
+  return (
+    <div className="piw-review-form" data-review-target={`${targetKind}:${machineTarget?.id}`}>
+      <p data-human-review="true">{humanReviewStatusCopy(reviewTarget)}</p>
+      {reviewTarget?.latest_event?.rationale_preview ? (
+        <p className="piw-muted">Latest rationale preview: {reviewTarget.latest_event.rationale_preview}</p>
+      ) : null}
+      {!canDecide ? (
+        <p className="piw-muted">Viewer access can read this review state and history. Saving a decision is limited to reviewers.</p>
+      ) : (
+        <>
+          <p className="piw-note">
+            Save records a relevance decision for this returned target. It does not run on open, focus, navigation, checking a box, or marking the workspace reviewed.
+            Labels are not factual verdicts, verified relationships, or independent-source classifications.
+          </p>
+          <label className="piw-field">
+            Decision
+            <select
+              value={suggested.decision}
+              disabled={frozen || reviewsBusy || decisionSavedNeedsRefresh}
+              onChange={(event) => onDraftChange?.({ ...suggested, decision: event.target.value })}
+            >
+              {Object.entries(EVIDENCE_REVIEW_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="piw-field">
+            Rationale
+            <textarea
+              rows={3}
+              value={suggested.rationale}
+              disabled={frozen || reviewsBusy || decisionSavedNeedsRefresh}
+              onChange={(event) => onDraftChange?.({ ...suggested, rationale: event.target.value })}
+            />
+          </label>
+          <fieldset className="piw-evidence-pick" disabled={frozen || reviewsBusy || decisionSavedNeedsRefresh}>
+            <legend>Retained evidence references</legend>
+            <p className="piw-muted">Machine spans are suggestions. Inspect surrounding retained text before saving. Text references need a relation and a reviewer-confirmed note.</p>
+            {suggested.items.map((item, index) => (
+              <div key={item.id} className="piw-evidence-item">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={item.selected}
+                    onChange={(event) => {
+                      const items = suggested.items.map((row, rowIndex) => (
+                        rowIndex === index ? { ...row, selected: event.target.checked } : row
+                      ))
+                      onDraftChange?.({ ...suggested, items })
+                    }}
+                  />
+                  {item.kind === 'metadata'
+                    ? `Saved source status ${item.value} at position ${item.position}`
+                    : `Position ${item.position} · ${item.source_field} · “${item.excerpt}”`}
+                  {item.required ? ' (required input)' : ' (additional context)'}
+                </label>
+                {!item.resolvable ? (
+                  <p className="piw-note">This reference cannot be resolved against the matching saved observation.</p>
+                ) : item.kind === 'text' ? (
+                  <>
+                    <label className="piw-field">
+                      Relation
+                      <select
+                        value={item.relation}
+                        onChange={(event) => {
+                          const items = suggested.items.map((row, rowIndex) => (
+                            rowIndex === index ? { ...row, relation: event.target.value } : row
+                          ))
+                          onDraftChange?.({ ...suggested, items })
+                        }}
+                      >
+                        <option value="context">Recorded as context</option>
+                        <option value="supports">Recorded as supporting</option>
+                        <option value="contradicts">Recorded as contradicting</option>
+                      </select>
+                    </label>
+                    <label className="piw-field">
+                      Note
+                      <textarea
+                        rows={2}
+                        value={item.note}
+                        onChange={(event) => {
+                          const items = suggested.items.map((row, rowIndex) => (
+                            rowIndex === index ? { ...row, note: event.target.value } : row
+                          ))
+                          onDraftChange?.({ ...suggested, items })
+                        }}
+                      />
+                    </label>
+                    {onOpenCitation && item.resolvable ? (
+                      <button
+                        type="button"
+                        className="piw-text-btn"
+                        onClick={() => onOpenCitation({
+                          position: item.position,
+                          source_field: item.source_field,
+                          span_start: item.span_start,
+                          span_end: item.span_end,
+                          excerpt: item.excerpt,
+                          relation: item.relation,
+                          note: item.note || 'Inspect surrounding retained text.',
+                        }, bundle)}
+                      >
+                        Inspect surrounding retained text
+                      </button>
+                    ) : null}
+                  </>
+                ) : null}
+              </div>
+            ))}
+          </fieldset>
+          {blockReason ? <p className="piw-note" data-review-block="true">{blockReason}</p> : null}
+          {frozen ? (
+            <p className="piw-note">A decision request is in progress. Edits will not change the frozen payload.</p>
+          ) : null}
+          <button
+            type="button"
+            className="piw-btn"
+            data-action="save-evidence-review"
+            disabled={saveBlocked}
+            onClick={() => {
+              const next = draft ?? suggested
+              onDraftChange?.(next)
+              onSave?.(next)
+            }}
+          >
+            {reviewsBusy && frozen ? 'Saving review decision…' : 'Save decision'}
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+function ReviewHistoryPanel({
+  history,
+  loading,
+  loadingOlder,
+  error,
+  onLoadOlder,
+  onRetry,
+  onRefresh,
+  onOpenCitation,
+  bundle,
+}) {
+  return (
+    <section className="piw-review-history" data-review-history="true">
+      <h3>Decision history</h3>
+      <p className="piw-note">
+        History is pinned to accepted review revision {history?.at_revision ?? 'not loaded'} and does not mix later decisions into this page.
+        Browsing history does not mark the workspace reviewed or change the selected version.
+      </p>
+      {history?.refreshed ? (
+        <p className="piw-note" data-history-refreshed="true">
+          This history view was explicitly refreshed to review revision {history.at_revision}. Earlier pages from a previous revision are not mixed in.
+        </p>
+      ) : null}
+      {loading ? <StatusBanner>Loading decision history…</StatusBanner> : null}
+      {error ? (
+        <StatusBanner tone="error">
+          {reviewsUnavailableCopy(error)} History failure is not an empty decision list.
+        </StatusBanner>
+      ) : null}
+      {error ? (
+        <button type="button" className="piw-btn" data-action="retry-review-history" onClick={() => onRetry?.()}>
+          Retry loading decision history
+        </button>
+      ) : null}
+      {history?.events?.length ? (
+        <ol className="piw-stack">
+          {history.events.map((event) => (
+            <li key={event.id} className="piw-card" data-review-event={event.id}>
+              <p><strong>{reviewDecisionLabel(event.decision)}</strong> · {reviewAuthorLabel(event)} · revision {event.revision}</p>
+              <p>{event.rationale}</p>
+              <ul className="piw-list">
+                {(event.evidence ?? []).map((reference, index) => (
+                  <li key={`${event.id}:${index}`}>
+                    {reference.source_field === 'source_status' ? (
+                      <p>Saved source status {reference.value} at position {reference.position}.</p>
+                    ) : (
+                      <ExcerptBlock
+                        resolved={resolveWorkspaceExcerpt(bundle, reference)}
+                        reference={reference}
+                        onOpen={onOpenCitation ? () => onOpenCitation(reference, bundle) : undefined}
+                      />
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ol>
+      ) : !loading && !error ? (
+        <p className="piw-muted">No review events are recorded for this target at this pinned revision.</p>
+      ) : null}
+      <div className="piw-history-controls">
+        {history?.next_before_revision ? (
+          <button
+            type="button"
+            className="piw-btn"
+            data-action="load-older-review-history"
+            disabled={loadingOlder || loading}
+            onClick={() => onLoadOlder?.()}
+          >
+            {loadingOlder ? 'Loading older decisions…' : 'Load older decisions'}
+          </button>
+        ) : history?.events?.length ? (
+          <p className="piw-muted">No older decisions remain at this pinned revision.</p>
+        ) : null}
+        <button type="button" className="piw-text-btn" data-action="refresh-review-history" onClick={() => onRefresh?.()}>
+          Refresh history to the latest review revision
+        </button>
+      </div>
+    </section>
+  )
 }
 
 function HypothesisRecord({ hypothesis, bundle, onOpenCitation }) {
@@ -775,17 +1123,38 @@ function EvidenceChecksToolbar({
   )
 }
 
-function SourceLinksSection({ bundle, checksPanels, loadingChecks, onInspectPair, onOpenWitness }) {
+function SourceLinksSection({
+  bundle,
+  checksPanels,
+  loadingChecks,
+  reviewsPanels,
+  reviewFilter,
+  reviewDrafts,
+  canDecide,
+  pendingDecision,
+  reviewsBusy,
+  decisionSavedNeedsRefresh,
+  reviewsConflict,
+  onInspectPair,
+  onOpenWitness,
+  onDraftChange,
+  onSave,
+}) {
   const lineage = checksPanels?.lineage ?? []
   const coverage = checksPanels?.coverage
   const truncated = coverage && coverage.lineage_candidates_found > coverage.lineage_candidates_returned
+  const visible = lineage.filter((pair) => {
+    if (!reviewsPanels) return true
+    const target = reviewTargetFromPanels(reviewsPanels, 'source_link', pair.id)
+    return targetMatchesFilter(target ?? { decision: 'needs_review', latest_event: null }, reviewFilter)
+  })
   return (
     <section className="piw-section" id="piw-source-links" tabIndex={-1}>
       <h2>Source Links</h2>
       <p className="piw-note">
         These are candidate pairs from this saved observation. Source independence is unresolved and transmission direction is undetermined.
         Same article or URL indicates related captures, not necessarily syndication. Exact repeated text may be boilerplate or a common quotation.
-        No outlet is labeled independent.
+        No outlet is labeled independent. Human review decisions below are relevance decisions, not verified relationships or independent sources.
       </p>
       {loadingChecks && !checksPanels ? <p className="piw-muted">Loading source-link candidates…</p> : null}
       {checksPanels?.status === 'not_run' ? (
@@ -793,43 +1162,69 @@ function SourceLinksSection({ bundle, checksPanels, loadingChecks, onInspectPair
       ) : checksPanels?.status === 'saved' && lineage.length === 0 ? (
         <p className="piw-empty">No source-link candidates were found in this saved observation. That is not evidence that nothing happened, and it does not establish independence.</p>
       ) : lineage.length > 0 ? (
-        <ul className="piw-cards">
-          {lineage.map((pair) => (
-            <li key={pair.id} className="piw-card" data-source-link={pair.id}>
-              <p>Possible shared-source pair. Independence: unknown. Direction: undetermined.</p>
-              <ul className="piw-list">
-                {(pair.reasons ?? []).map((reason) => (
-                  <li key={reason}>{lineageReasonCopy(reason)}</li>
-                ))}
-              </ul>
-              <div className="piw-pair">
-                <SourceWitness
-                  bundle={bundle}
-                  reference={pair.left_excerpt}
-                  position={pair.left_position}
-                  label="First retained capture"
-                  onOpen={() => onOpenWitness?.(pair.left_excerpt, bundle)}
-                />
-                <SourceWitness
-                  bundle={bundle}
-                  reference={pair.right_excerpt}
-                  position={pair.right_position}
-                  label="Second retained capture"
-                  onOpen={() => onOpenWitness?.(pair.right_excerpt, bundle)}
-                />
-              </div>
-              <p className="piw-mono">Pair {pair.id}</p>
-              <button
-                type="button"
-                className="piw-text-btn"
-                data-action="inspect-source-link"
-                onClick={() => onInspectPair?.(pair)}
-              >
-                Open both sources in inspector
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          {reviewsPanels && visible.length === 0 ? (
+            <p className="piw-note">No source-link targets match this review filter. Use All returned targets to keep every original pair discoverable.</p>
+          ) : null}
+          <ul className="piw-cards">
+            {visible.map((pair) => {
+              const reviewTarget = reviewTargetFromPanels(reviewsPanels, 'source_link', pair.id)
+              return (
+                <li key={pair.id} className="piw-card" data-source-link={pair.id}>
+                  <p>Possible shared-source pair. Independence: unknown. Direction: undetermined.</p>
+                  <p className="piw-muted">Machine detection remains a candidate pair. It is not replaced by the human decision.</p>
+                  <ul className="piw-list">
+                    {(pair.reasons ?? []).map((reason) => (
+                      <li key={reason}>{lineageReasonCopy(reason)}</li>
+                    ))}
+                  </ul>
+                  <div className="piw-pair">
+                    <SourceWitness
+                      bundle={bundle}
+                      reference={pair.left_excerpt}
+                      position={pair.left_position}
+                      label="First retained capture"
+                      onOpen={() => onOpenWitness?.(pair.left_excerpt, bundle)}
+                    />
+                    <SourceWitness
+                      bundle={bundle}
+                      reference={pair.right_excerpt}
+                      position={pair.right_position}
+                      label="Second retained capture"
+                      onOpen={() => onOpenWitness?.(pair.right_excerpt, bundle)}
+                    />
+                  </div>
+                  <p className="piw-mono">Pair {pair.id}</p>
+                  {reviewsPanels ? (
+                    <ReviewDecisionForm
+                      targetKind="source_link"
+                      target={reviewTarget}
+                      machineTarget={pair}
+                      bundle={bundle}
+                      canDecide={canDecide}
+                      draft={reviewDrafts?.[reviewTargetKey('source_link', pair.id)]}
+                      pendingDecision={pendingDecision}
+                      reviewsBusy={reviewsBusy}
+                      decisionSavedNeedsRefresh={decisionSavedNeedsRefresh}
+                      reviewsConflict={reviewsConflict}
+                      onDraftChange={(next) => onDraftChange?.('source_link', pair.id, next)}
+                      onSave={(draft) => onSave?.('source_link', pair.id, draft)}
+                      onOpenCitation={onOpenWitness}
+                    />
+                  ) : null}
+                  <button
+                    type="button"
+                    className="piw-text-btn"
+                    data-action="inspect-source-link"
+                    onClick={() => onInspectPair?.(pair)}
+                  >
+                    Open both sources in inspector
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </>
       ) : null}
       {truncated ? (
         <p className="piw-note">
@@ -840,18 +1235,40 @@ function SourceLinksSection({ bundle, checksPanels, loadingChecks, onInspectPair
   )
 }
 
-function EvidenceChecksSection({ bundle, checksPanels, loadingChecks, onInspectCue, onOpenCitation }) {
+function EvidenceChecksSection({
+  bundle,
+  checksPanels,
+  loadingChecks,
+  reviewsPanels,
+  reviewFilter,
+  reviewDrafts,
+  canDecide,
+  pendingDecision,
+  reviewsBusy,
+  decisionSavedNeedsRefresh,
+  reviewsConflict,
+  onInspectCue,
+  onOpenCitation,
+  onDraftChange,
+  onSave,
+}) {
   const cues = checksPanels?.challenges ?? []
   const coverage = checksPanels?.coverage
   const truncated = coverage && coverage.challenge_cues_found > coverage.challenge_cues_returned
-  const textCues = cues.filter((cue) => cue.kind !== 'recorded_source_status')
-  const statusCues = cues.filter((cue) => cue.kind === 'recorded_source_status')
+  const visible = cues.filter((cue) => {
+    if (!reviewsPanels) return true
+    const target = reviewTargetFromPanels(reviewsPanels, 'evidence_cue', cue.id)
+    return targetMatchesFilter(target ?? { decision: 'needs_review', latest_event: null }, reviewFilter)
+  })
+  const textCues = visible.filter((cue) => cue.kind !== 'recorded_source_status')
+  const statusCues = visible.filter((cue) => cue.kind === 'recorded_source_status')
   return (
     <section className="piw-section" id="piw-evidence-checks" tabIndex={-1}>
       <h2>Evidence Checks</h2>
       <p className="piw-note">
         Correction or withdrawal language is a review cue. It may be negated, concern another event, or describe a different claim.
         It is not a contradiction, retraction verdict, confidence change, or changed commitment outcome.
+        Human review decisions below are relevance decisions, not those verdicts.
       </p>
       {loadingChecks && !checksPanels ? <p className="piw-muted">Loading evidence-check cues…</p> : null}
       {checksPanels?.status === 'not_run' ? (
@@ -860,20 +1277,42 @@ function EvidenceChecksSection({ bundle, checksPanels, loadingChecks, onInspectC
         <p className="piw-empty">No correction, withdrawal, or recorded source-status cues were found in this saved observation. That is not evidence that nothing happened.</p>
       ) : (
         <>
+          {reviewsPanels && visible.length === 0 ? (
+            <p className="piw-note">No evidence-check targets match this review filter. Use All returned targets to keep every original cue discoverable.</p>
+          ) : null}
           {textCues.length > 0 && (
             <>
               <h3>Correction and withdrawal language</h3>
               <ul className="piw-cards">
                 {textCues.map((cue) => {
                   const resolved = resolveWorkspaceExcerpt(bundle, cue.reference)
+                  const reviewTarget = reviewTargetFromPanels(reviewsPanels, 'evidence_cue', cue.id)
                   return (
                     <li key={cue.id} className="piw-card" data-cue-kind={cue.kind}>
                       <p>{challengeCueCopy(cue.kind)}</p>
+                      <p className="piw-muted">Machine detection remains a language cue. It is not replaced by the human decision.</p>
                       <ExcerptBlock
                         resolved={resolved}
                         reference={cue.reference ?? { position: cue.position, source_field: 'unknown', span_start: 0, span_end: 0, excerpt: '', relation: 'context', note: 'No retained excerpt is attached.' }}
                         onOpen={cue.reference ? () => onOpenCitation?.(cue.reference, bundle) : undefined}
                       />
+                      {reviewsPanels ? (
+                        <ReviewDecisionForm
+                          targetKind="evidence_cue"
+                          target={reviewTarget}
+                          machineTarget={cue}
+                          bundle={bundle}
+                          canDecide={canDecide}
+                          draft={reviewDrafts?.[reviewTargetKey('evidence_cue', cue.id)]}
+                          pendingDecision={pendingDecision}
+                          reviewsBusy={reviewsBusy}
+                          decisionSavedNeedsRefresh={decisionSavedNeedsRefresh}
+                          reviewsConflict={reviewsConflict}
+                          onDraftChange={(next) => onDraftChange?.('evidence_cue', cue.id, next)}
+                          onSave={(draft) => onSave?.('evidence_cue', cue.id, draft)}
+                          onOpenCitation={onOpenCitation}
+                        />
+                      ) : null}
                       <button
                         type="button"
                         className="piw-text-btn"
@@ -892,19 +1331,40 @@ function EvidenceChecksSection({ bundle, checksPanels, loadingChecks, onInspectC
             <>
               <h3>Recorded source-status notices</h3>
               <ul className="piw-cards">
-                {statusCues.map((cue) => (
-                  <li key={cue.id} className="piw-card" data-cue-kind="recorded_source_status">
-                    <MetadataNotice cue={cue} metadata={resolveWorkspaceMetadata(bundle, cue.metadata_reference)} />
-                    <button
-                      type="button"
-                      className="piw-text-btn"
-                      data-action="inspect-challenge-cue"
-                      onClick={() => onInspectCue?.(cue)}
-                    >
-                      Open this retained record version
-                    </button>
-                  </li>
-                ))}
+                {statusCues.map((cue) => {
+                  const reviewTarget = reviewTargetFromPanels(reviewsPanels, 'evidence_cue', cue.id)
+                  return (
+                    <li key={cue.id} className="piw-card" data-cue-kind="recorded_source_status">
+                      <MetadataNotice cue={cue} metadata={resolveWorkspaceMetadata(bundle, cue.metadata_reference)} />
+                      <p className="piw-muted">Machine detection remains a recorded source-status notice. It is not replaced by the human decision.</p>
+                      {reviewsPanels ? (
+                        <ReviewDecisionForm
+                          targetKind="evidence_cue"
+                          target={reviewTarget}
+                          machineTarget={cue}
+                          bundle={bundle}
+                          canDecide={canDecide}
+                          draft={reviewDrafts?.[reviewTargetKey('evidence_cue', cue.id)]}
+                          pendingDecision={pendingDecision}
+                          reviewsBusy={reviewsBusy}
+                          decisionSavedNeedsRefresh={decisionSavedNeedsRefresh}
+                          reviewsConflict={reviewsConflict}
+                          onDraftChange={(next) => onDraftChange?.('evidence_cue', cue.id, next)}
+                          onSave={(draft) => onSave?.('evidence_cue', cue.id, draft)}
+                          onOpenCitation={onOpenCitation}
+                        />
+                      ) : null}
+                      <button
+                        type="button"
+                        className="piw-text-btn"
+                        data-action="inspect-challenge-cue"
+                        onClick={() => onInspectCue?.(cue)}
+                      >
+                        Open this retained record version
+                      </button>
+                    </li>
+                  )
+                })}
               </ul>
             </>
           )}
@@ -919,7 +1379,7 @@ function EvidenceChecksSection({ bundle, checksPanels, loadingChecks, onInspectC
   )
 }
 
-function SearchCoverageSection({ checksPanels, loadingChecks }) {
+function SearchCoverageSection({ checksPanels, loadingChecks, reviewsPanels }) {
   const coverage = checksPanels?.coverage
   const limits = checksPanels?.limits
   const omittedPairPositions = coverage?.lineage_excluded_positions ?? []
@@ -936,6 +1396,7 @@ function SearchCoverageSection({ checksPanels, loadingChecks }) {
       <p className="piw-note">
         This receipt describes only the saved observation inputs that were checked. It is not the analyst-declared collection records in Evidence Gaps.
         External retrieval was not run. The cue vocabulary is English only. Language detection was not performed.
+        Human review of returned targets does not remove these limitations, increase confidence, or mark the workspace review baseline.
       </p>
       {loadingChecks && !checksPanels ? <p className="piw-muted">Loading the search-coverage receipt…</p> : null}
       {checksPanels?.status === 'not_run' ? (
@@ -954,6 +1415,11 @@ function SearchCoverageSection({ checksPanels, loadingChecks }) {
             <StatusBanner>
               Result lists are capped. Found-versus-shown counts do not mean the remaining saved inputs were not scanned.
             </StatusBanner>
+          ) : null}
+          {reviewsPanels?.summary ? (
+            <p className="piw-note">
+              Human review counts apply to the {reviewsPanels.summary.returned_targets} returned report targets only. They do not expand this scan or recast omitted-pair and capped-result notices.
+            </p>
           ) : null}
           <p>Saved inputs checked: {coverage.input_count}. Text fields searched: {coverage.text_fields_scanned}.</p>
           <p>Capture inputs in the pair scope: {coverage.lineage_scanned_positions?.length ?? 0}. Pairs compared: {coverage.pairs_compared}.</p>
@@ -1099,6 +1565,18 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
               label="Second retained capture"
             />
           </div>
+          {(state.reviewsPanels || state.reviewHistory || state.reviewHistoryError || state.loadingReviewHistory) ? (
+          <ReviewHistoryPanel
+            history={state.reviewHistory}
+            loading={state.loadingReviewHistory}
+            loadingOlder={state.loadingOlderReviewHistory}
+            error={state.reviewHistoryError}
+            onLoadOlder={workspace.actions?.loadOlderReviewHistory}
+            onRetry={workspace.actions?.retryReviewHistory}
+            onRefresh={workspace.actions?.refreshReviewHistory}
+            bundle={state.bundle}
+          />
+          ) : null}
         </section>
       )}
       {inspector?.kind === 'challenge-cue' && (
@@ -1118,6 +1596,18 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
               />
             </>
           )}
+          {(state.reviewsPanels || state.reviewHistory || state.reviewHistoryError || state.loadingReviewHistory) ? (
+          <ReviewHistoryPanel
+            history={state.reviewHistory}
+            loading={state.loadingReviewHistory}
+            loadingOlder={state.loadingOlderReviewHistory}
+            error={state.reviewHistoryError}
+            onLoadOlder={workspace.actions?.loadOlderReviewHistory}
+            onRetry={workspace.actions?.retryReviewHistory}
+            onRefresh={workspace.actions?.refreshReviewHistory}
+            bundle={state.bundle}
+          />
+          ) : null}
         </section>
       )}
       {state.panels?.canonicalSubject?.type === 'graph_node' && (
@@ -1161,24 +1651,27 @@ export default function PrivateInvestigationWorkspace({
   }
 
   const openSourceLink = (pair) => {
-    actions.setInspector({ kind: 'source-link', pair })
+    actions.inspectReviewTarget?.({ kind: 'source-link', pair })
+      ?? actions.setInspector({ kind: 'source-link', pair })
     actions.setActiveSection('source-links')
   }
 
   const openChallengeCue = (cue) => {
     if (cue?.kind === 'recorded_source_status') {
-      actions.setInspector({
+      const inspector = {
         kind: 'challenge-cue',
         cue,
         metadata: resolveWorkspaceMetadata(bundle, cue.metadata_reference),
-      })
+      }
+      actions.inspectReviewTarget?.(inspector) ?? actions.setInspector(inspector)
     } else {
-      actions.setInspector({
+      const inspector = {
         kind: 'challenge-cue',
         cue,
         resolved: resolveWorkspaceExcerpt(bundle, cue.reference),
         reference: cue.reference,
-      })
+      }
+      actions.inspectReviewTarget?.(inspector) ?? actions.setInspector(inspector)
     }
     actions.setActiveSection('evidence-checks')
   }
@@ -1323,23 +1816,62 @@ export default function PrivateInvestigationWorkspace({
             onRun={actions.runEvidenceChecks}
             onRetry={actions.retryChecks}
           />
+          <ReviewProgressCard
+            reviewsPanels={state.reviewsPanels}
+            reviewsError={state.reviewsError}
+            loadingReviews={state.loadingReviews}
+            decisionSavedNeedsRefresh={state.decisionSavedNeedsRefresh}
+            pendingDecision={state.pendingReviewDecision}
+            reviewsBusy={state.reviewsBusy}
+            reviewsConflict={state.reviewsConflict}
+            onRetryRead={actions.retryReviews}
+            onRetryDecision={actions.retryEvidenceReviewDecision}
+          />
+          {state.reviewsPanels ? (
+            <ReviewFilterBar
+              summary={state.reviewsPanels.summary}
+              filter={state.reviewFilter}
+              onChange={actions.setReviewFilter}
+            />
+          ) : null}
           <SourceLinksSection
             bundle={bundle}
             checksPanels={state.checksPanels}
             loadingChecks={state.loadingChecks}
+            reviewsPanels={state.reviewsPanels}
+            reviewFilter={state.reviewFilter}
+            reviewDrafts={state.reviewDrafts}
+            canDecide={state.reviewsPanels?.canDecide === true}
+            pendingDecision={state.pendingReviewDecision}
+            reviewsBusy={state.reviewsBusy}
+            decisionSavedNeedsRefresh={state.decisionSavedNeedsRefresh}
+            reviewsConflict={state.reviewsConflict}
             onInspectPair={openSourceLink}
             onOpenWitness={(reference, sourceBundle) => openCitation(reference, sourceBundle, 'source-links')}
+            onDraftChange={(kind, id, draft) => actions.updateReviewDraft?.(kind, id, draft)}
+            onSave={(kind, id, draft) => actions.saveEvidenceReview?.(kind, id, draft)}
           />
           <EvidenceChecksSection
             bundle={bundle}
             checksPanels={state.checksPanels}
             loadingChecks={state.loadingChecks}
+            reviewsPanels={state.reviewsPanels}
+            reviewFilter={state.reviewFilter}
+            reviewDrafts={state.reviewDrafts}
+            canDecide={state.reviewsPanels?.canDecide === true}
+            pendingDecision={state.pendingReviewDecision}
+            reviewsBusy={state.reviewsBusy}
+            decisionSavedNeedsRefresh={state.decisionSavedNeedsRefresh}
+            reviewsConflict={state.reviewsConflict}
             onInspectCue={openChallengeCue}
             onOpenCitation={(reference, sourceBundle) => openCitation(reference, sourceBundle, 'evidence-checks')}
+            onDraftChange={(kind, id, draft) => actions.updateReviewDraft?.(kind, id, draft)}
+            onSave={(kind, id, draft) => actions.saveEvidenceReview?.(kind, id, draft)}
           />
           <SearchCoverageSection
             checksPanels={state.checksPanels}
             loadingChecks={state.loadingChecks}
+            reviewsPanels={state.reviewsPanels}
           />
         </>
       )}
