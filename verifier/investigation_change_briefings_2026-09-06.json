@@ -1,0 +1,23 @@
+{
+  "contract_version": "investigation-observation-1",
+  "base_commit": "37b4e5c695a509ed605fe8c33e17557ee30f2818",
+  "target_project": "qikvmopbtijoebdqosyq",
+  "migration": "20260906071525_investigation_change_briefings_v1",
+  "deployment_status": "already_applied_and_live_rollback_canary_passed",
+  "tests": {"focused_passed": 15, "full_passed": 944, "failed": 0, "skipped": 0, "build": "passed_with_existing_large_chunk_warning"},
+  "live_after_rollback": {"candidates": 3, "assessments": 0, "evidence_changes": 7, "investigation_observations": 0},
+  "live_read_only_collection": {"selected_non_geography_candidates": 2, "retained_input_versions": 3, "assessments": 0, "publicly_eligible": false},
+  "live_privileges": {"anon_rpc_execute": false, "authenticated_rpc_execute": false, "service_role_rpc_execute": true},
+  "live_function_body_md5": {
+    "collect_investigation_snapshot": "d735d9baa00d52df574ec553909907e1",
+    "diff_investigation_snapshots": "9dead3e143ff2e6497dfbaf93c6903b0",
+    "mip_investigation_briefings_v1": "faada44241adf73b2f948268ac668150"
+  },
+  "limits": {"selected_candidates": 50, "assessment_closure": 200, "retained_input_versions": 2000, "snapshot_bytes": 4194304},
+  "advisor_delta": {"new_errors": 0, "new_warnings": 0, "new_info": ["rls_enabled_no_policy_evidence_pipeline_investigation_observations"]},
+  "semantic_model_enabled": false,
+  "scheduler_enabled": false,
+  "public_projection_changed": false,
+  "ui_changed": false,
+  "limitations": ["no real live assessments", "geography notifications unsupported", "no arbitrary as_of reconstruction", "no human review marker", "no question authoring or UI", "no multi-connection contention test", "collection completeness and semantic accuracy not established"]
+}
