@@ -158,7 +158,7 @@ test('graph disposal destroys the renderer before clearing cards', () => {
 })
 
 test('workspace tabs, chronology, honest unavailable, and phosphor are wired', () => {
-  assert.deepEqual(WORKSPACE_TAB_VIEWS.map((v) => v.key), ['graph', 'timeline', 'arcs', 'world', 'compare'])
+  assert.deepEqual(WORKSPACE_TAB_VIEWS.map((v) => v.key), ['graph', 'timeline', 'arcs', 'world', 'investigations', 'compare'])
   assert.ok(WORKSPACE_NAV_ITEMS.some((v) => v.key === 'news' && v.label === 'Feed'))
   assert.equal(timelinePresentationMode('list'), 'list')
   assert.equal(timelinePresentationMode('chronology'), 'chronology')

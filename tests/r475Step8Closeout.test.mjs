@@ -60,7 +60,7 @@ const CLEVELAND_ROW = Object.freeze({
   confidence: null,
 })
 
-const TAB_CYCLE = Object.freeze(['news', 'graph', 'timeline', 'arcs', 'world'])
+const TAB_CYCLE = Object.freeze(['news', 'graph', 'investigations', 'timeline', 'arcs', 'world'])
 
 const SECTION19_IDS = Object.freeze([
   '19-A',

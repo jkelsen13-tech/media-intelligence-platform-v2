@@ -72,7 +72,7 @@ const FIXTURE_B_NODE = Object.freeze({
   occurred_at: '2024-06-01T12:00:00+00',
 })
 
-const TAB_CYCLE = Object.freeze(['news', 'graph', 'timeline', 'arcs', 'world'])
+const TAB_CYCLE = Object.freeze(['news', 'graph', 'investigations', 'timeline', 'arcs', 'world'])
 
 function seedCleveland(activeView = 'world') {
   return applySubject(

@@ -16,6 +16,7 @@
 
 export const CORE_VIEWS = [
   { key: 'news', label: 'News Feed', shortLabel: 'News' },
+  { key: 'investigations', label: 'Investigations', shortLabel: 'Investigate' },
   { key: 'graph', label: 'Knowledge Graph', shortLabel: 'Graph' },
   { key: 'timeline', label: 'Causal Timeline', shortLabel: 'Timeline' },
   { key: 'arcs', label: 'Arcs & Collections', shortLabel: 'Arcs' },

@@ -54,7 +54,7 @@ const CLEVELAND_ROW = Object.freeze({
   valid_to_utc: '2024-04-08 20:29:00+00',
 })
 
-const TAB_CYCLE = Object.freeze(['news', 'graph', 'timeline', 'arcs', 'world'])
+const TAB_CYCLE = Object.freeze(['news', 'graph', 'investigations', 'timeline', 'arcs', 'world'])
 
 function seedCleveland(activeView = 'world') {
   return applySubject(
@@ -84,8 +84,10 @@ test('route shape is hash; slugs map to existing views', () => {
   assert.equal(DEEP_LINK_SLUG_TO_VIEW.arc, 'arcs')
   assert.equal(DEEP_LINK_SLUG_TO_VIEW.arcs, 'arcs')
   assert.equal(DEEP_LINK_SLUG_TO_VIEW.world, 'world')
+  assert.equal(DEEP_LINK_SLUG_TO_VIEW.investigations, 'investigations')
   assert.equal(VIEW_TO_DEEP_LINK_SLUG.compare, 'sources')
   assert.equal(VIEW_TO_DEEP_LINK_SLUG.arcs, 'arc')
+  assert.equal(VIEW_TO_DEEP_LINK_SLUG.investigations, 'investigations')
   assert.equal(isInvestigationDeepLink('#/event/abc/graph'), true)
   assert.equal(isInvestigationDeepLink('#error=access_denied'), false)
   assert.equal(isInvestigationDeepLink('#/'), false)

@@ -52,7 +52,7 @@ const CLEVELAND_NODE = Object.freeze({
   occurred_at: '2024-04-08T17:59:00+00',
 })
 
-const TAB_CYCLE = Object.freeze(['news', 'graph', 'timeline', 'arcs', 'world'])
+const TAB_CYCLE = Object.freeze(['news', 'graph', 'investigations', 'timeline', 'arcs', 'world'])
 
 test('empty Investigation Context has the contract fields and invents no subject', () => {
   const ic = emptyInvestigationContext('news')

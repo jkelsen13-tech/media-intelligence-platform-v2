@@ -33,11 +33,13 @@ export const WORKSPACE_TAB_VIEWS = Object.freeze([
   { key: 'timeline', label: 'Timeline' },
   { key: 'arcs', label: 'Arcs' },
   { key: 'world', label: 'World View' },
+  { key: 'investigations', label: 'Investigations' },
   { key: 'compare', label: 'Source Comparison' },
 ])
 
 export const WORKSPACE_NAV_ITEMS = Object.freeze([
   { key: 'news', label: 'Feed' },
+  { key: 'investigations', label: 'Investigations' },
   { key: 'graph', label: 'Graph' },
   { key: 'timeline', label: 'Timeline' },
   { key: 'arcs', label: 'Arcs' },

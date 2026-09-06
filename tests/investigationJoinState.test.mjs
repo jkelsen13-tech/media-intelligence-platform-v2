@@ -71,7 +71,7 @@ const CLEVELAND_ROW = Object.freeze({
   revision_known_at_utc: '2026-09-03 01:50:15+00',
 })
 
-const TAB_CYCLE = Object.freeze(['news', 'graph', 'timeline', 'arcs', 'world'])
+const TAB_CYCLE = Object.freeze(['news', 'graph', 'investigations', 'timeline', 'arcs', 'world'])
 
 const PARENT_CATALOG = Object.freeze({
   entity: Object.freeze([
