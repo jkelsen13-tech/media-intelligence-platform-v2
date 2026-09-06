@@ -320,36 +320,83 @@ export function mergeHistoryEvents(existing, incoming) {
   return next
 }
 
+const isRevision = value => typeof value === 'string' && /^(0|[1-9][0-9]{0,17})$/.test(value)
+const isUuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)
+
+function reviewEnvelopeMatches(data, input, bundle) {
+  return Boolean(input && bundle?.contract_version === 'investigation-workspace-1'
+    && data?.contract_version === 'investigation-evidence-reviews-1'
+    && data.investigation_id === input.investigation_id && data.investigation_id === bundle.investigation_id
+    && data.version_id === input.version_id && data.version_id === bundle.version?.id
+    && data.report_id === input.report_id && data.observation_id === bundle.observation?.id
+    && ['viewer', 'reviewer'].includes(data.access_role) && data.publicly_eligible === false && isRevision(data.revision))
+}
+
+function retainedReviewEventMatches(event, input, bundle, atRevision) {
+  if (!event || !isUuid(event.id) || event.report_id !== input.report_id
+    || event.target_kind !== input.target_kind || event.target_id !== input.target_id
+    || !Object.hasOwn(EVIDENCE_REVIEW_LABELS, event.decision)
+    || !isRevision(event.revision) || event.revision === '0' || BigInt(event.revision) > BigInt(atRevision)
+    || !(event.previous_event_id === null || (isUuid(event.previous_event_id) && event.previous_event_id !== event.id))
+    || typeof event.authored_by_you !== 'boolean' || typeof event.recorded_at !== 'string'
+    || !Number.isFinite(Date.parse(event.recorded_at))
+    || typeof event.rationale !== 'string' || !event.rationale.trim() || Array.from(event.rationale.trim()).length > 2000
+    || !Array.isArray(event.evidence) || event.evidence.length < 1 || event.evidence.length > 8) return false
+  return event.evidence.every(reference => {
+    if (!reference || typeof reference.position !== 'string') return false
+    if (reference.source_field === 'source_status') return Boolean(resolveWorkspaceMetadata(bundle, reference))
+    return ['title', 'summary', 'body_text', 'label'].includes(reference.source_field)
+      && ['supports', 'contradicts', 'context'].includes(reference.relation)
+      && typeof reference.note === 'string' && Boolean(reference.note.trim())
+      && Boolean(resolveWorkspaceExcerpt(bundle, reference))
+  })
+}
+
+// JSONB object key order is immaterial; array order and every retained value matter.
+function sameJson(left, right) {
+  if (left === right) return true
+  if (!left || !right || typeof left !== 'object' || typeof right !== 'object') return false
+  if (Array.isArray(left) !== Array.isArray(right)) return false
+  const keys = Object.keys(left)
+  return keys.length === Object.keys(right).length
+    && keys.every(key => Object.hasOwn(right, key) && sameJson(left[key], right[key]))
+}
+
 export function receiptMatchesDecision(payload, data, bundle) {
   return Boolean(
-    payload
+    reviewEnvelopeMatches(data, payload, bundle)
     && data?.mode === 'receipt'
-    && data.investigation_id === payload.investigation_id
-    && data.version_id === payload.version_id
-    && data.report_id === payload.report_id
-    && data.observation_id === bundle?.observation?.id
-    && data.publicly_eligible === false
+    && data.access_role === 'reviewer' && typeof data.replayed === 'boolean'
+    && retainedReviewEventMatches(data.event, payload, bundle, data.revision)
     && data.event?.id === payload.event_id
-    && data.event?.target_kind === payload.target_kind
-    && data.event?.target_id === payload.target_id
-    && data.event?.decision === payload.decision,
+    && data.event.authored_by_you === true
+    && data.event.previous_event_id === payload.previous_event_id
+    && data.event.decision === payload.decision
+    && data.event.rationale === payload.rationale
+    && sameJson(data.event.evidence, payload.evidence),
   )
 }
 
 export function historyMatchesRequest(data, input, bundle) {
-  return Boolean(
-    data?.mode === 'history'
-    && data.investigation_id === input.investigation_id
-    && data.version_id === input.version_id
-    && data.report_id === input.report_id
-    && data.observation_id === bundle?.observation?.id
+  if (!(reviewEnvelopeMatches(data, input, bundle) && data.mode === 'history'
     && data.target_kind === input.target_kind
     && data.target_id === input.target_id
     && data.revision === input.at_revision
-    && data.publicly_eligible === false
     && Array.isArray(data.events)
-    && data.events.length <= 20,
-  )
+    && data.events.length <= 20
+    && (input.before_revision === null || isRevision(input.before_revision)))) return false
+  let upper = input.before_revision === null ? BigInt(data.revision) + 1n : BigInt(input.before_revision)
+  if (upper > BigInt(data.revision) + 1n) return false
+  const seen = new Set()
+  for (const event of data.events) {
+    if (!retainedReviewEventMatches(event, input, bundle, data.revision)
+      || BigInt(event.revision) >= upper || seen.has(event.id)) return false
+    seen.add(event.id)
+    upper = BigInt(event.revision)
+  }
+  // The SQL cursor is the last returned revision only when a full page has more rows.
+  return data.next_before_revision === null || (data.events.length === 20
+    && data.next_before_revision === data.events.at(-1).revision)
 }
 
 export function freezeReviewDecisionPayload({
@@ -375,7 +422,7 @@ export function freezeReviewDecisionPayload({
     target_id: targetId,
     decision,
     rationale,
-    evidence,
+    evidence: Object.freeze(evidence.map(reference => Object.freeze({ ...reference }))),
   })
 }
 

@@ -1,13 +1,13 @@
 /* Investigation workspace shell — cool white canvas.
    Layout tokens restore the reviewed target frame:
-   190px rail (72px collapsed), 64px topbar to the right of the rail,
-   286px inspector below the view tabs. */
+   190px rail (72px collapsed), compact 48px desktop toolbar,
+   286px inspector beside the question and evidence on wide screens. */
 
 .workspace-app,
 .ws-shell {
   --sidebar: 190px;
   --inspector: 286px;
-  --topbar: 64px;
+  --topbar: 48px;
   --bg-page: #f6f8fb;
   --bg-panel: #fff;
   --bg-elevated: #f0f4fa;
@@ -39,6 +39,33 @@
 .workspace-app.nav-collapsed,
 .ws-shell.ws-nav-collapsed {
   --sidebar: 72px;
+}
+
+/* Owner's Graph / Timeline / Arcs / Comparison reference shares one tall
+   inspector. Native graph/globe inspectors keep ownership of their layout. */
+@media (min-width: 1280px) {
+  .ws-shell:not(:has(.ws-body.has-native-inspector)) {
+    grid-template-columns: var(--sidebar) minmax(0, 1fr) var(--inspector);
+  }
+
+  .ws-shell:not(:has(.ws-body.has-native-inspector)) > .ws-topbar {
+    grid-column: 2 / -1;
+  }
+
+  .ws-shell > .ws-body:not(.has-native-inspector) {
+    display: contents;
+  }
+
+  .ws-shell > .ws-body:not(.has-native-inspector) > .ws-content {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .ws-shell > .ws-body:not(.has-native-inspector) > .ws-inspector {
+    grid-column: 3;
+    grid-row: 2 / 4;
+    min-height: 0;
+  }
 }
 
 .app.ws-app {
@@ -320,7 +347,7 @@
 }
 
 .ws-canonical {
-  padding: 16px 20px 0;
+  padding: 12px 20px 0;
 }
 
 .ws-canonical-head {
@@ -331,7 +358,7 @@
 }
 
 .ws-title {
-  font-size: 22px;
+  font-size: 18px;
   line-height: 1.25;
   color: var(--text-primary);
 }
@@ -340,7 +367,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   color: var(--text-secondary);
   font-size: 13px;
 }
@@ -423,7 +450,7 @@
 .ws-tabs {
   display: flex;
   gap: 6px;
-  padding: 10px 16px;
+  padding: 7px 16px;
   overflow-x: auto;
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-panel);

@@ -441,6 +441,36 @@ test('review conflict explanation survives reload, then a new click retries one 
   assert.deepEqual(api.marks[2].payload, api.marks[1].payload)
 })
 
+test('mismatched review receipts preserve the exact acknowledgement for retry', async () => {
+  const api = createDeferredClient()
+  const { renderer, probe } = await mountWorkspace({ client: api.client, userId: FIXTURE_USER.id,
+    randomUUID: () => '11111111-1111-4111-8111-111111111103' })
+  await resolvePending(api.lists[0], ok(catalogFor(FIXTURE_IDS.comparable)))
+  await resolvePending(api.reads[0], ok(FIXTURE_BUNDLES.comparable))
+  await clickAction(renderer, 'mark-reviewed')
+  const payload = api.marks[0].payload
+  const receipt = { id: payload.receiptId, investigation_id: payload.investigationId,
+    version_id: payload.versionId, previous_receipt_id: payload.previousReceiptId,
+    recorded_at: '2026-09-06T12:00:00Z' }
+  const invalid = [null, { ...receipt, id: 'another-receipt' },
+    { ...receipt, investigation_id: FIXTURE_IDS.empty }, { ...receipt, version_id: 'another-version' },
+    { ...receipt, previous_receipt_id: 'another-baseline' }, { ...receipt, recorded_at: null }]
+  for (let index = 0; index < invalid.length; index++) {
+    await resolvePending(api.marks[index], ok(invalid[index]))
+    assert.equal(probe.current.state.reviewError, 'identity_mismatch')
+    assert.equal(probe.current.state.pendingReview, payload)
+    assert.equal(api.reads.length, 1, 'an invalid receipt must not refresh the review baseline')
+    await clickAction(renderer, 'retry-review')
+    assert.equal(api.marks[index + 1].payload, payload)
+  }
+  await resolvePending(api.marks.at(-1), ok(receipt))
+  assert.equal(probe.current.state.pendingReview, null)
+  assert.equal(api.reads.length, 2)
+  await resolvePending(api.reads[1], ok(FIXTURE_BUNDLES.comparable))
+  await resolvePending(api.lists[1], ok(catalogFor(FIXTURE_IDS.comparable)))
+  await act(async () => renderer.unmount())
+})
+
 test('evidence-only addition and removed commitment both open compared records', async () => {
   const { renderer, probe } = await mountWorkspace({
     client: createLocalInvestigationWorkspaceClient({ scenario: 'evidence-only' }),

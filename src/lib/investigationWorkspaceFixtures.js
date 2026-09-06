@@ -1264,10 +1264,9 @@ export function fixtureReviewHistory(checks, { atRevision = '1', beforeRevision 
       authoredByYou: revision === last,
     }))
   }
-  const start = beforeRevision == null ? 0 : events.findIndex((event) => event.revision === beforeRevision)
-  const sliceFrom = beforeRevision == null ? 0 : (start < 0 ? 0 : start)
-  const page = events.slice(sliceFrom, sliceFrom + 20)
-  const hasMore = events.length - sliceFrom > 20
+  const eligible = events.filter(event => beforeRevision == null || BigInt(event.revision) < BigInt(beforeRevision))
+  const page = eligible.slice(0, 20)
+  const hasMore = eligible.length > 20
   return {
     contract_version: 'investigation-evidence-reviews-1',
     investigation_id: checks.investigation_id,
@@ -1400,7 +1399,10 @@ export function createLocalInvestigationEvidenceReviewsClient({
           target_kind: item.target_kind,
           target_id: item.target_id,
           decision: input.decision,
-          latest_event: reviewEvent({ ...event, preview: true, rationale: input.rationale, evidence: input.evidence }),
+          latest_event: reviewEvent({ id: event.id, reportId: event.report_id, revision: event.revision,
+            targetKind: event.target_kind, targetId: event.target_id, previousEventId: event.previous_event_id,
+            decision: event.decision, authoredByYou: event.authored_by_you, recordedAt: event.recorded_at,
+            preview: true, rationale: event.rationale, evidence: event.evidence }),
         }
       })
       const nextOverview = {

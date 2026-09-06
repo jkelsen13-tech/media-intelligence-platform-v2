@@ -271,6 +271,16 @@ export function captureReviewPayload({ investigationId, versionId, previousRecei
   })
 }
 
+export function workspaceReviewReceiptMatches(payload, receipt) {
+  return Boolean(payload && receipt
+    && receipt.id === payload.receiptId
+    && receipt.investigation_id === payload.investigationId
+    && receipt.version_id === payload.versionId
+    && receipt.previous_receipt_id === payload.previousReceiptId
+    && typeof receipt.recorded_at === 'string'
+    && Number.isFinite(Date.parse(receipt.recorded_at)))
+}
+
 export function panelsFromBundle(bundle) {
   if (!bundle) return null
   const panels = investigationWorkspacePanels(bundle)

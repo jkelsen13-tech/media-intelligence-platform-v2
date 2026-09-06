@@ -24,6 +24,7 @@ import {
   createLocalInvestigationWorkspaceClient,
   deferred,
   fixtureCatalog,
+  fixtureReviewHistory,
   FIXTURE_BUNDLES,
   FIXTURE_CHECKS,
   FIXTURE_IDS,
@@ -303,6 +304,53 @@ function historyResponse(input, events = [], next = null) {
  target_id:input.target_id, events, next_before_revision:next }
 }
 
+function fullHistoryPage(input) {
+  const page = fixtureReviewHistory(FIXTURE_CHECKS.comparable, { atRevision: input.at_revision })
+  const cue = FIXTURE_CHECKS.comparable.report.result.challenge_cues.find(c => c.id === input.target_id)
+  const evidence = cue.metadata_reference ? [cue.metadata_reference]
+    : [{ ...cue.reference, relation: 'context', note: 'Exact fixture cue; relevance only.' }]
+  return historyResponse(input, page.events.map(event => ({ ...event, target_id: input.target_id, evidence })), page.next_before_revision)
+}
+
+test('mismatched receipt keeps the exact retry payload and never reports a confirmed save', async () => {
+  const { api, probe } = await readyComparable()
+  const cue = FIXTURE_CHECKS.comparable.report.result.challenge_cues[0]
+  await startAction(() => probe.current.actions.saveEvidenceReview('evidence_cue', cue.id, completeCueDraft()))
+  const payload = api.reviewDecides[0].input
+  const wrong = receiptFor(payload)
+  wrong.event = { ...wrong.event, rationale: 'Different decision rationale' }
+  await resolvePending(api.reviewDecides[0], ok(wrong))
+  assert.equal(probe.current.state.reviewsError, 'identity_mismatch')
+  assert.equal(probe.current.state.pendingReviewDecision, payload)
+  assert.equal(probe.current.state.decisionSavedNeedsRefresh, false)
+  assert.equal(api.reviewReads.length, 1)
+  await startAction(() => probe.current.actions.retryEvidenceReviewDecision())
+  assert.equal(api.reviewDecides[1].input, payload)
+  await resolvePending(api.reviewDecides[1], ok(receiptFor(payload)))
+  await resolvePending(api.reviewReads[1], ok(FIXTURE_REVIEWS.comparableDecided))
+  assert.equal(probe.current.state.pendingReviewDecision, null)
+  assert.equal(probe.current.state.reviewsError, null)
+})
+
+test('invalid older page preserves accepted history and offers a read retry', async () => {
+  const old = { ...FIXTURE_REVIEWS.comparableDecided, revision: '30' }
+  const { api, renderer, probe } = await readyComparable(createDeferredClients(), old)
+  await clickFirstAction(renderer, 'inspect-challenge-cue')
+  const page = fullHistoryPage(api.reviewHistories[0].input)
+  await resolvePending(api.reviewHistories[0], ok(page))
+  await startAction(() => probe.current.actions.loadOlderReviewHistory())
+  const older = api.reviewHistories[1]
+  // A duplicated boundary event must not be silently deduplicated into an apparently valid page.
+  await resolvePending(older, ok(historyResponse(older.input, [page.events.at(-1)])))
+  assert.equal(probe.current.state.reviewHistoryError, 'identity_mismatch')
+  assert.deepEqual(probe.current.state.reviewHistory.events, page.events)
+  assert.equal(probe.current.state.loadingOlderReviewHistory, false)
+  await startAction(() => probe.current.actions.retryReviewHistory())
+  assert.deepEqual(api.reviewHistories[2].input, older.input)
+  await resolvePending(api.reviewHistories[2], ok(historyResponse(older.input)))
+  assert.equal(probe.current.state.reviewHistoryError, null)
+})
+
 test('history refresh must not discard an in-flight decision receipt or retry identity', async () => {
  const {api,renderer,probe}=await readyComparable()
  const cue=FIXTURE_CHECKS.comparable.report.result.challenge_cues[0]
@@ -321,7 +369,7 @@ test('late older history page must not replace an explicitly refreshed history r
  const old={...FIXTURE_REVIEWS.comparableDecided,revision:'30'}
  const {api,renderer,probe}=await readyComparable(createDeferredClients(),old)
  await clickFirstAction(renderer,'inspect-challenge-cue')
- await resolvePending(api.reviewHistories[0],ok(historyResponse(api.reviewHistories[0].input,[], '20')))
+ await resolvePending(api.reviewHistories[0],ok(fullHistoryPage(api.reviewHistories[0].input)))
  await startAction(()=>probe.current.actions.loadOlderReviewHistory())
  const older=api.reviewHistories[1]
  await startAction(()=>probe.current.actions.refreshReviewHistory())
@@ -385,7 +433,7 @@ test('older history page arriving before a refresh still cannot replace the new 
   const old = { ...FIXTURE_REVIEWS.comparableDecided, revision: '30' }
   const { api, renderer, probe } = await readyComparable(createDeferredClients(), old)
   await clickFirstAction(renderer, 'inspect-challenge-cue')
-  await resolvePending(api.reviewHistories[0], ok(historyResponse(api.reviewHistories[0].input, [], '20')))
+  await resolvePending(api.reviewHistories[0], ok(fullHistoryPage(api.reviewHistories[0].input)))
   await startAction(() => probe.current.actions.loadOlderReviewHistory())
   const older = api.reviewHistories[1]
   await startAction(() => probe.current.actions.refreshReviewHistory())
@@ -463,4 +511,3 @@ test('review history refresh helpers keep save identity distinct from terminal a
     report_id: FIXTURE_CHECKS.comparable.report.id,
   }), false)
 })
-
