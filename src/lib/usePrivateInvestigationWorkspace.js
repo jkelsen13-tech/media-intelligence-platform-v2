@@ -212,16 +212,6 @@ export function usePrivateInvestigationWorkspace({
     return { ignored: false, data: checks }
   }, [applyCatalog])
 
-  const displayedBundleMatches = useCallback((bundle, investigationId, versionId, observationId) => {
-    const current = bundle ?? stateRef.current.bundle
-    return Boolean(
-      current
-      && current.investigation_id === investigationId
-      && current.version?.id === versionId
-      && current.observation?.id === observationId,
-    )
-  }, [])
-
   const readChecksForBundle = useCallback(async (bundle) => {
     if (sessionLoading || !userId || !checksClient || !bundle?.investigation_id || !bundle.version?.id || !bundle.observation?.id) {
       return { ignored: true }
@@ -262,10 +252,6 @@ export function usePrivateInvestigationWorkspace({
       }))
       return { ignored: false, error: code }
     }
-    const currentBundle = stateRef.current.bundle
-    if (!displayedBundleMatches(currentBundle, investigationId, versionId, observationId)) {
-      return { ignored: true, error: 'identity_mismatch' }
-    }
     if (
       result.data?.investigation_id !== investigationId
       || result.data?.version_id !== versionId
@@ -273,8 +259,22 @@ export function usePrivateInvestigationWorkspace({
     ) {
       return { ignored: true, error: 'identity_mismatch' }
     }
-    return publishChecks(currentBundle, result.data)
-  }, [applyAccessFailure, applyCatalog, checksClient, displayedBundleMatches, publishChecks, sessionLoading, userId])
+    const current = stateRef.current
+    if (current.selectedInvestigationId !== investigationId) {
+      return { ignored: true, error: 'identity_mismatch' }
+    }
+    if (
+      current.bundle
+      && (
+        current.bundle.investigation_id !== investigationId
+        || current.bundle.version?.id !== versionId
+        || current.bundle.observation?.id !== observationId
+      )
+    ) {
+      return { ignored: true, error: 'identity_mismatch' }
+    }
+    return publishChecks(current.bundle ?? bundle, result.data)
+  }, [applyAccessFailure, applyCatalog, checksClient, publishChecks, sessionLoading, userId])
 
   const loadBundle = useCallback(async (investigationId, versionId = null, options = {}) => {
     const {
@@ -574,10 +574,6 @@ export function usePrivateInvestigationWorkspace({
       }))
       return { ignored: false, error: code }
     }
-    const currentBundle = stateRef.current.bundle
-    if (!displayedBundleMatches(currentBundle, payload.investigationId, payload.versionId, payload.observationId)) {
-      return { ignored: true, error: 'identity_mismatch' }
-    }
     if (
       result.data?.investigation_id !== payload.investigationId
       || result.data?.version_id !== payload.versionId
@@ -585,8 +581,24 @@ export function usePrivateInvestigationWorkspace({
     ) {
       return { ignored: true, error: 'identity_mismatch' }
     }
-    return publishChecks(currentBundle, result.data)
-  }, [applyAccessFailure, applyCatalog, displayedBundleMatches, publishChecks, userId])
+    const current = stateRef.current
+    if (current.selectedInvestigationId !== payload.investigationId) {
+      return { ignored: true, error: 'identity_mismatch' }
+    }
+    if (
+      current.bundle
+      && (
+        current.bundle.investigation_id !== payload.investigationId
+        || current.bundle.version?.id !== payload.versionId
+        || current.bundle.observation?.id !== payload.observationId
+      )
+    ) {
+      return { ignored: true, error: 'identity_mismatch' }
+    }
+    const bundle = current.bundle
+    if (!bundle) return { ignored: true, error: 'identity_mismatch' }
+    return publishChecks(bundle, result.data)
+  }, [applyAccessFailure, applyCatalog, publishChecks, userId])
 
   const runEvidenceChecks = useCallback(async () => {
     const current = stateRef.current
