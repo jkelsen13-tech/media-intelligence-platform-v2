@@ -821,6 +821,16 @@ function partialChecksReport(bundle) {
   return report
 }
 
+function truncatedChecksReport(bundle) {
+  const report = populatedChecksReport(bundle)
+  report.id = 'e1e1e1e1-e1e1-41e1-81e1-e1e1e1e1e1e1'
+  report.result.completion = 'partial'
+  report.result.coverage.lineage_excluded_positions = []
+  report.result.coverage.challenge_cues_found = 201
+  report.result.coverage.challenge_cues_returned = 2
+  return report
+}
+
 export function fixtureEvidenceChecks(kind, bundle, accessRole) {
   const role = accessRole ?? bundle.access_role ?? 'reviewer'
   if (kind === 'not_run') {
@@ -835,9 +845,11 @@ export function fixtureEvidenceChecks(kind, bundle, accessRole) {
   }
   const report = kind === 'partial'
     ? partialChecksReport(bundle)
-    : kind === 'zero'
-      ? emptyChecksReport(bundle)
-      : populatedChecksReport(bundle)
+    : kind === 'truncated'
+      ? truncatedChecksReport(bundle)
+      : kind === 'zero'
+        ? emptyChecksReport(bundle)
+        : populatedChecksReport(bundle)
   return checksEnvelope({
     investigationId: bundle.investigation_id,
     versionId: bundle.version.id,
@@ -851,6 +863,7 @@ export function fixtureEvidenceChecks(kind, bundle, accessRole) {
 export const FIXTURE_CHECKS = Object.freeze({
   comparable: fixtureEvidenceChecks('saved', FIXTURE_BUNDLES.comparable),
   comparablePartial: fixtureEvidenceChecks('partial', FIXTURE_BUNDLES.comparable),
+  comparableTruncated: fixtureEvidenceChecks('truncated', FIXTURE_BUNDLES.comparable),
   viewer: fixtureEvidenceChecks('saved', FIXTURE_BUNDLES.viewer, 'viewer'),
   empty: fixtureEvidenceChecks('not_run', FIXTURE_BUNDLES.empty, 'viewer'),
   emptyZero: fixtureEvidenceChecks('zero', FIXTURE_BUNDLES.empty),
@@ -1054,7 +1067,9 @@ export function createLocalInvestigationEvidenceChecksClient({
         const historicalComparable = bundleFor(investigationId, versionId)
         return ok(fixtureEvidenceChecks('not_run', historicalComparable))
       }
-      return ok(scenario === 'partial' ? FIXTURE_CHECKS.comparablePartial : FIXTURE_CHECKS.comparable)
+      if (scenario === 'partial') return ok(FIXTURE_CHECKS.comparablePartial)
+      if (scenario === 'truncated') return ok(FIXTURE_CHECKS.comparableTruncated)
+      return ok(FIXTURE_CHECKS.comparable)
     }
     return fail('access_denied')
   }
@@ -1103,24 +1118,29 @@ export function previewAuthFor(mode) {
 export function readInvestigationWorkspacePreview(search, env = (typeof import.meta !== 'undefined' ? import.meta.env : {})) {
   if (env?.DEV !== true) return null
   const mode = new URLSearchParams(search ?? '').get('privateInvestigationFixture')
-  const allowed = ['populated', 'empty', 'signed-out', 'denied', 'historical', 'scope', 'conflict', 'unavailable', 'loading', 'evidence-only', 'partial']
+  const allowed = ['populated', 'empty', 'signed-out', 'denied', 'historical', 'scope', 'conflict', 'unavailable', 'loading', 'evidence-only', 'partial', 'truncated', 'checks-unavailable']
   if (!allowed.includes(mode)) return null
+  const populatedWorkspace = mode === 'denied' || mode === 'partial' || mode === 'truncated' || mode === 'checks-unavailable'
   return {
     mode,
     client: createLocalInvestigationWorkspaceClient({
-      scenario: mode === 'denied' ? 'populated' : mode === 'partial' ? 'populated' : mode,
+      scenario: populatedWorkspace ? 'populated' : mode,
       readResults: mode === 'denied'
         ? { [FIXTURE_IDS.comparable]: () => ({ data: null, error: { code: 'access_denied' } }) }
         : {},
     }),
     checksClient: createLocalInvestigationEvidenceChecksClient({
-      scenario: mode === 'denied' ? 'populated' : mode === 'partial' ? 'partial' : mode,
+      scenario: mode === 'denied' ? 'populated'
+        : mode === 'partial' ? 'partial'
+        : mode === 'truncated' ? 'truncated'
+        : mode === 'checks-unavailable' ? 'unavailable'
+        : mode,
       readResults: mode === 'denied'
         ? { [FIXTURE_IDS.comparable]: () => ({ data: null, error: { code: 'access_denied' } }) }
         : {},
     }),
     auth: previewAuthFor(mode),
-    initialInvestigationId: mode === 'denied' || mode === 'populated' || mode === 'conflict' || mode === 'partial'
+    initialInvestigationId: mode === 'denied' || mode === 'populated' || mode === 'conflict' || mode === 'partial' || mode === 'truncated' || mode === 'checks-unavailable'
       ? FIXTURE_IDS.comparable
       : mode === 'historical'
         ? FIXTURE_IDS.historical
