@@ -1,0 +1,37 @@
+{
+  "contract": "capture-diagnostic-collection-1",
+  "collection_sha256": "1c000406706d38b4aef687d0d55f57f24efb03c4542575e62d3df900635b5064",
+  "accepted": 20,
+  "body_repeats_summary": 17,
+  "first_wave_pairs": 45,
+  "final_pairs": 190,
+  "expected_pairs": 190,
+  "counts": {
+    "no_lexical_match": 148,
+    "retrieval_candidate": 42
+  },
+  "cross_wave_pairs": 100,
+  "cross_wave_candidates": 17,
+  "semantic_accuracy": null,
+  "precision": null,
+  "recall": null,
+  "interpretation": "Enumeration diagnostics on a purposive unadjudicated collection. Matches are proposals, not validated relationships or independent evidence.",
+  "rejected_count": 2,
+  "display_suffix_experiment": {
+    "contract": "terminal-continue-reading-1",
+    "baseline_candidates": 42,
+    "retained_candidates": 33,
+    "removed_count": 9,
+    "deployed": false
+  },
+  "source_snapshot_counts": {
+    "total_rows": 29848,
+    "two_gdelt_feeds": 24493,
+    "selected_six_rss_feeds": 4626,
+    "rss_body_equals_summary": 3855
+  },
+  "live_database_mutated": false,
+  "source_text_or_ids_included": false,
+  "held_out": false,
+  "independently_adjudicated": false
+}
