@@ -1109,6 +1109,368 @@ export function createLocalInvestigationEvidenceChecksClient({
   })
 }
 
+export const FIXTURE_REVIEW_EVENT_ID = 'b1b1b1b1-b1b1-41b1-81b1-b1b1b1b1b1b1'
+export const FIXTURE_REVIEW_EVENT_ID_2 = 'b2b2b2b2-b2b2-42b2-82b2-b2b2b2b2b2b2'
+
+function reviewEvent({
+  id,
+  reportId,
+  revision,
+  targetKind,
+  targetId,
+  previousEventId = null,
+  decision,
+  rationale,
+  evidence,
+  authoredByYou = true,
+  recordedAt = '2026-09-06T12:00:00Z',
+  preview = false,
+} = {}) {
+  const event = {
+    id,
+    report_id: reportId,
+    revision: String(revision),
+    target_kind: targetKind,
+    target_id: targetId,
+    previous_event_id: previousEventId,
+    decision,
+    authored_by_you: authoredByYou,
+    recorded_at: recordedAt,
+  }
+  if (preview) {
+    event.rationale_preview = String(rationale ?? '').slice(0, 240)
+    return event
+  }
+  return { ...event, rationale, evidence }
+}
+
+function overviewTargets(checks, decisions = {}) {
+  const items = []
+  for (const pair of checks.report?.result?.lineage_candidates ?? []) {
+    const decided = decisions[`source_link:${pair.id}`]
+    items.push({
+      target_kind: 'source_link',
+      target_id: pair.id,
+      decision: decided?.decision ?? 'needs_review',
+      latest_event: decided?.latest_event ?? null,
+    })
+  }
+  for (const cue of checks.report?.result?.challenge_cues ?? []) {
+    const decided = decisions[`evidence_cue:${cue.id}`]
+    items.push({
+      target_kind: 'evidence_cue',
+      target_id: cue.id,
+      decision: decided?.decision ?? 'needs_review',
+      latest_event: decided?.latest_event ?? null,
+    })
+  }
+  return items
+}
+
+function summaryFromTargets(targets) {
+  return {
+    returned_targets: targets.length,
+    never_reviewed: targets.filter((item) => item.latest_event == null).length,
+    needs_review: targets.filter((item) => item.decision === 'needs_review').length,
+    relevant: targets.filter((item) => item.decision === 'relevant').length,
+    not_relevant: targets.filter((item) => item.decision === 'not_relevant').length,
+    disputed: targets.filter((item) => item.decision === 'disputed').length,
+  }
+}
+
+export function fixtureEvidenceReviews(kind, bundle, checks, accessRole) {
+  const role = accessRole ?? checks.access_role ?? bundle.access_role ?? 'reviewer'
+  if (!checks?.report?.id) return null
+  const reportId = checks.report.id
+  let decisions = {}
+  let revision = '0'
+  if (kind === 'decided' || kind === 'history') {
+    const cue = checks.report.result.challenge_cues[0]
+    const evidence = cue.reference
+      ? [{ ...cue.reference, relation: 'context', note: 'Exact retained context; fixture only, no factual verdict.' }]
+      : [cue.metadata_reference]
+    const event = reviewEvent({
+      id: FIXTURE_REVIEW_EVENT_ID,
+      reportId,
+      revision: 1,
+      targetKind: 'evidence_cue',
+      targetId: cue.id,
+      decision: 'relevant',
+      rationale: 'Retain this cue for contextual follow-up. Fixture only.',
+      evidence,
+      preview: true,
+    })
+    decisions = { [`evidence_cue:${cue.id}`]: { decision: 'relevant', latest_event: event } }
+    revision = '1'
+  }
+  if (kind === 'reopened') {
+    const cue = checks.report.result.challenge_cues[0]
+    const event = reviewEvent({
+      id: FIXTURE_REVIEW_EVENT_ID_2,
+      reportId,
+      revision: 2,
+      targetKind: 'evidence_cue',
+      targetId: cue.id,
+      previousEventId: FIXTURE_REVIEW_EVENT_ID,
+      decision: 'needs_review',
+      rationale: 'Reopened for another look. Fixture only.',
+      evidence: [{ ...cue.reference, relation: 'context', note: 'Reopened with the same retained span.' }],
+      preview: true,
+    })
+    decisions = { [`evidence_cue:${cue.id}`]: { decision: 'needs_review', latest_event: event } }
+    revision = '2'
+  }
+  const targets = overviewTargets(checks, decisions)
+  return {
+    contract_version: 'investigation-evidence-reviews-1',
+    investigation_id: bundle.investigation_id,
+    version_id: bundle.version.id,
+    observation_id: bundle.observation.id,
+    report_id: reportId,
+    access_role: role,
+    publicly_eligible: false,
+    mode: 'overview',
+    revision,
+    targets,
+    summary: summaryFromTargets(targets),
+    coverage: checks.report.result.coverage,
+    review_scope: 'returned_report_targets_only',
+    independence: 'unknown',
+    assessment_effect: 'none',
+  }
+}
+
+function cueEvidence(checks) {
+  const cue = checks.report.result.challenge_cues[0]
+  return [{ ...cue.reference, relation: 'context', note: 'Exact retained context; fixture only, no factual verdict.' }]
+}
+
+export function fixtureReviewHistory(checks, { atRevision = '1', beforeRevision = null, pages = false } = {}) {
+  const cue = checks.report.result.challenge_cues[0]
+  const evidence = cueEvidence(checks)
+  const events = []
+  const last = Number(atRevision)
+  for (let revision = last; revision >= 1; revision -= 1) {
+    events.push(reviewEvent({
+      id: revision === 1 ? FIXTURE_REVIEW_EVENT_ID : `00000000-0000-4000-8000-${String(revision).padStart(12, '0')}`,
+      reportId: checks.report.id,
+      revision,
+      targetKind: 'evidence_cue',
+      targetId: cue.id,
+      previousEventId: revision === 1 ? null : (revision === 2 ? FIXTURE_REVIEW_EVENT_ID : `00000000-0000-4000-8000-${String(revision - 1).padStart(12, '0')}`),
+      decision: revision % 2 ? 'relevant' : 'disputed',
+      rationale: `Fixture history event ${revision}. Relevance only.`,
+      evidence,
+      authoredByYou: revision === last,
+    }))
+  }
+  const start = beforeRevision == null ? 0 : events.findIndex((event) => event.revision === beforeRevision)
+  const sliceFrom = beforeRevision == null ? 0 : (start < 0 ? 0 : start)
+  const page = events.slice(sliceFrom, sliceFrom + 20)
+  const hasMore = events.length - sliceFrom > 20
+  return {
+    contract_version: 'investigation-evidence-reviews-1',
+    investigation_id: checks.investigation_id,
+    version_id: checks.version_id,
+    observation_id: checks.observation_id,
+    report_id: checks.report.id,
+    access_role: checks.access_role,
+    publicly_eligible: false,
+    mode: 'history',
+    revision: String(atRevision),
+    target_kind: 'evidence_cue',
+    target_id: cue.id,
+    events: page,
+    next_before_revision: hasMore ? page[page.length - 1].revision : null,
+  }
+}
+
+export const FIXTURE_REVIEWS = Object.freeze({
+  comparable: fixtureEvidenceReviews('unread', FIXTURE_BUNDLES.comparable, FIXTURE_CHECKS.comparable),
+  comparableDecided: fixtureEvidenceReviews('decided', FIXTURE_BUNDLES.comparable, FIXTURE_CHECKS.comparable),
+  comparableReopened: fixtureEvidenceReviews('reopened', FIXTURE_BUNDLES.comparable, FIXTURE_CHECKS.comparable),
+  comparablePartial: fixtureEvidenceReviews('unread', FIXTURE_BUNDLES.comparable, FIXTURE_CHECKS.comparablePartial),
+  comparableTruncated: fixtureEvidenceReviews('unread', FIXTURE_BUNDLES.comparable, FIXTURE_CHECKS.comparableTruncated),
+  viewer: fixtureEvidenceReviews('unread', FIXTURE_BUNDLES.viewer, FIXTURE_CHECKS.viewer, 'viewer'),
+  scope: fixtureEvidenceReviews('unread', FIXTURE_BUNDLES.scope, FIXTURE_CHECKS.scope),
+})
+
+export function createLocalInvestigationEvidenceReviewsClient({
+  scenario = 'populated',
+  delayMs = 0,
+  pendingReads = {},
+  pendingDecides = {},
+  pendingHistories = {},
+  readResults = {},
+  decideResults = {},
+  historyResults = {},
+} = {}) {
+  const wait = awaiter(delayMs)
+  const fail = (code) => ({ data: null, error: { code } })
+  const ok = (data) => ({ data, error: null })
+  const ledgers = new Map()
+  const keyFor = (investigationId, versionId, reportId) => `${investigationId}:${versionId}:${reportId}`
+  const checksFor = (investigationId, versionId) => {
+    if (investigationId === FIXTURE_IDS.empty) return FIXTURE_CHECKS.empty
+    if (investigationId === FIXTURE_IDS.historical) return FIXTURE_CHECKS.historical
+    if (investigationId === FIXTURE_IDS.scope) return FIXTURE_CHECKS.scope
+    if (investigationId === FIXTURE_IDS.comparable || investigationId === FIXTURE_IDS.conflict) {
+      if (versionId === FIXTURE_VERSIONS.v1) return fixtureEvidenceChecks('not_run', FIXTURE_BUNDLES.comparable)
+      if (scenario === 'partial') return FIXTURE_CHECKS.comparablePartial
+      if (scenario === 'truncated') return FIXTURE_CHECKS.comparableTruncated
+      return FIXTURE_CHECKS.comparable
+    }
+    return null
+  }
+  const bundleFor = (investigationId, versionId) => {
+    if (investigationId === FIXTURE_IDS.scope) return FIXTURE_BUNDLES.scope
+    if (investigationId === FIXTURE_IDS.comparable || investigationId === FIXTURE_IDS.conflict) {
+      return versionId === FIXTURE_VERSIONS.v1 ? null : FIXTURE_BUNDLES.comparable
+    }
+    if (investigationId === FIXTURE_IDS.empty) return FIXTURE_BUNDLES.empty
+    return null
+  }
+  const defaultOverview = (investigationId, versionId, reportId) => {
+    const remembered = ledgers.get(keyFor(investigationId, versionId, reportId))
+    if (remembered?.overview) return ok(remembered.overview)
+    if (investigationId === FIXTURE_IDS.denied) return fail('access_denied')
+    const checks = checksFor(investigationId, versionId)
+    const bundle = bundleFor(investigationId, versionId)
+    if (!checks?.report?.id || checks.report.id !== reportId || !bundle) return fail('access_denied')
+    const kind = scenario === 'decided' ? 'decided' : scenario === 'reopened' ? 'reopened' : 'unread'
+    const role = investigationId === FIXTURE_IDS.empty ? 'viewer' : (bundle.access_role ?? 'reviewer')
+    return ok(fixtureEvidenceReviews(kind, bundle, checks, role === 'viewer' ? 'viewer' : role))
+  }
+  return Object.freeze({
+    async read(investigationId, versionId, reportId) {
+      await wait()
+      const pending = pendingReads[keyFor(investigationId, versionId, reportId)]
+      if (pending) return pending.promise
+      if (typeof readResults[investigationId] === 'function') {
+        return readResults[investigationId](investigationId, versionId, reportId)
+      }
+      if (scenario === 'unavailable' || scenario === 'reviews-unavailable') return fail('service_unavailable')
+      if (scenario === 'signed-out') return fail('authentication_required')
+      return defaultOverview(investigationId, versionId, reportId)
+    },
+    async decide(input) {
+      await wait()
+      const key = keyFor(input.investigation_id, input.version_id, input.report_id)
+      const pending = pendingDecides[key]
+      if (pending) return pending.promise
+      if (typeof decideResults[input.investigation_id] === 'function') {
+        return decideResults[input.investigation_id](input)
+      }
+      if (scenario === 'unavailable' || scenario === 'reviews-unavailable') return fail('service_unavailable')
+      if (scenario === 'conflict' || input.investigation_id === FIXTURE_IDS.conflict) return fail('version_conflict')
+      const current = defaultOverview(input.investigation_id, input.version_id, input.report_id)
+      if (current.error) return current
+      const overview = current.data
+      if (overview.access_role !== 'reviewer') return fail('access_denied')
+      const target = overview.targets.find((item) => item.target_kind === input.target_kind && item.target_id === input.target_id)
+      if (!target) return fail('invalid_request')
+      const ledger = ledgers.get(key) ?? { events: [], overview }
+      const existing = ledger.events.find((event) => event.id === input.event_id)
+      if (existing) {
+        return ok({
+          ...overview,
+          mode: 'receipt',
+          revision: overview.revision,
+          replayed: true,
+          event: existing,
+        })
+      }
+      const predecessor = target.latest_event?.id ?? null
+      if (predecessor !== (input.previous_event_id ?? null)) return fail('version_conflict')
+      const nextRevision = String(BigInt(overview.revision) + 1n)
+      const event = reviewEvent({
+        id: input.event_id,
+        reportId: input.report_id,
+        revision: nextRevision,
+        targetKind: input.target_kind,
+        targetId: input.target_id,
+        previousEventId: input.previous_event_id,
+        decision: input.decision,
+        rationale: input.rationale,
+        evidence: input.evidence,
+      })
+      const nextTargets = overview.targets.map((item) => {
+        if (item.target_kind !== input.target_kind || item.target_id !== input.target_id) return item
+        return {
+          target_kind: item.target_kind,
+          target_id: item.target_id,
+          decision: input.decision,
+          latest_event: reviewEvent({ ...event, preview: true, rationale: input.rationale, evidence: input.evidence }),
+        }
+      })
+      const nextOverview = {
+        ...overview,
+        revision: nextRevision,
+        targets: nextTargets,
+        summary: summaryFromTargets(nextTargets),
+      }
+      ledger.events.push(event)
+      ledger.overview = nextOverview
+      ledgers.set(key, ledger)
+      return ok({
+        ...overview,
+        mode: 'receipt',
+        revision: nextRevision,
+        replayed: false,
+        event,
+      })
+    },
+    async history(input) {
+      await wait()
+      const pending = pendingHistories[`${input.report_id}:${input.target_id}:${input.at_revision}:${input.before_revision}`]
+      if (pending) return pending.promise
+      if (typeof historyResults[input.investigation_id] === 'function') {
+        return historyResults[input.investigation_id](input)
+      }
+      if (scenario === 'unavailable' || scenario === 'reviews-unavailable') return fail('service_unavailable')
+      const checks = checksFor(input.investigation_id, input.version_id)
+      if (!checks?.report || checks.report.id !== input.report_id) return fail('access_denied')
+      const ledger = ledgers.get(keyFor(input.investigation_id, input.version_id, input.report_id))
+      const all = (ledger?.events ?? []).filter((event) => (
+        event.target_kind === input.target_kind
+        && event.target_id === input.target_id
+        && BigInt(event.revision) <= BigInt(input.at_revision)
+        && (input.before_revision == null || BigInt(event.revision) < BigInt(input.before_revision))
+      )).slice().sort((a, b) => (BigInt(a.revision) < BigInt(b.revision) ? 1 : -1))
+      const fallback = ledger
+        ? all
+        : ((scenario === 'decided' || scenario === 'history' || scenario === 'reopened') && input.target_kind === 'evidence_cue'
+          ? fixtureReviewHistory(checks, { atRevision: input.at_revision, beforeRevision: input.before_revision }).events.filter((event) => (
+            BigInt(event.revision) <= BigInt(input.at_revision)
+            && (input.before_revision == null || BigInt(event.revision) < BigInt(input.before_revision))
+          ))
+          : [])
+      const page = fallback.slice(0, 20)
+      return ok({
+        contract_version: 'investigation-evidence-reviews-1',
+        investigation_id: input.investigation_id,
+        version_id: input.version_id,
+        observation_id: checks.observation_id,
+        report_id: input.report_id,
+        access_role: checks.access_role,
+        publicly_eligible: false,
+        mode: 'history',
+        revision: input.at_revision,
+        target_kind: input.target_kind,
+        target_id: input.target_id,
+        events: page,
+        next_before_revision: fallback.length > 20 ? page[page.length - 1].revision : null,
+      })
+    },
+  })
+}
+
+function awaiter(delayMs) {
+  return async () => {
+    if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs))
+  }
+}
+
 export function previewAuthFor(mode) {
   if (mode === 'signed-out') return { session: null, user: null, loading: false }
   if (mode === 'loading') return { session: null, user: null, loading: true }
@@ -1118,9 +1480,16 @@ export function previewAuthFor(mode) {
 export function readInvestigationWorkspacePreview(search, env = (typeof import.meta !== 'undefined' ? import.meta.env : {})) {
   if (env?.DEV !== true) return null
   const mode = new URLSearchParams(search ?? '').get('privateInvestigationFixture')
-  const allowed = ['populated', 'empty', 'signed-out', 'denied', 'historical', 'scope', 'conflict', 'unavailable', 'loading', 'evidence-only', 'partial', 'truncated', 'checks-unavailable']
+  const allowed = ['populated', 'empty', 'signed-out', 'denied', 'historical', 'scope', 'conflict', 'unavailable', 'loading', 'evidence-only', 'partial', 'truncated', 'checks-unavailable', 'reviews-unavailable', 'reviews-decided']
   if (!allowed.includes(mode)) return null
-  const populatedWorkspace = mode === 'denied' || mode === 'partial' || mode === 'truncated' || mode === 'checks-unavailable'
+  const populatedWorkspace = mode === 'denied' || mode === 'partial' || mode === 'truncated' || mode === 'checks-unavailable' || mode === 'reviews-unavailable' || mode === 'reviews-decided'
+  const reviewsScenario = mode === 'reviews-unavailable' ? 'reviews-unavailable'
+    : mode === 'reviews-decided' ? 'decided'
+    : mode === 'denied' ? 'populated'
+    : mode === 'partial' ? 'partial'
+    : mode === 'truncated' ? 'truncated'
+    : mode === 'checks-unavailable' ? 'unavailable'
+    : mode
   return {
     mode,
     client: createLocalInvestigationWorkspaceClient({
@@ -1130,7 +1499,7 @@ export function readInvestigationWorkspacePreview(search, env = (typeof import.m
         : {},
     }),
     checksClient: createLocalInvestigationEvidenceChecksClient({
-      scenario: mode === 'denied' ? 'populated'
+      scenario: mode === 'denied' || mode === 'reviews-unavailable' || mode === 'reviews-decided' ? 'populated'
         : mode === 'partial' ? 'partial'
         : mode === 'truncated' ? 'truncated'
         : mode === 'checks-unavailable' ? 'unavailable'
@@ -1139,8 +1508,14 @@ export function readInvestigationWorkspacePreview(search, env = (typeof import.m
         ? { [FIXTURE_IDS.comparable]: () => ({ data: null, error: { code: 'access_denied' } }) }
         : {},
     }),
-    auth: previewAuthFor(mode),
-    initialInvestigationId: mode === 'denied' || mode === 'populated' || mode === 'conflict' || mode === 'partial' || mode === 'truncated' || mode === 'checks-unavailable'
+    reviewsClient: createLocalInvestigationEvidenceReviewsClient({
+      scenario: reviewsScenario,
+      readResults: mode === 'denied'
+        ? { [FIXTURE_IDS.comparable]: () => ({ data: null, error: { code: 'access_denied' } }) }
+        : {},
+    }),
+    auth: previewAuthFor(mode === 'reviews-unavailable' || mode === 'reviews-decided' ? 'populated' : mode),
+    initialInvestigationId: mode === 'denied' || mode === 'populated' || mode === 'conflict' || mode === 'partial' || mode === 'truncated' || mode === 'checks-unavailable' || mode === 'reviews-unavailable' || mode === 'reviews-decided'
       ? FIXTURE_IDS.comparable
       : mode === 'historical'
         ? FIXTURE_IDS.historical
