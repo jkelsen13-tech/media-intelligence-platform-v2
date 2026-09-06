@@ -1,0 +1,259 @@
+{
+  "contract_version": "investigation-workspace-1",
+  "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+  "base_commit": "2d46c7120704ebefa1c8662bf725029be7779695",
+  "verified_date": "2026-09-06",
+  "backend_status": "applied_and_verified",
+  "frontend_status": "data_client_implemented; five_section_UI_handoff_pending",
+  "target_project": "qikvmopbtijoebdqosyq",
+  "migration": "20260906075718_investigation_workspace_batch_v1",
+  "edge_function": {
+    "id": "15d67f39-7acd-49b9-bd98-e900033d8498",
+    "slug": "investigation-workspace",
+    "status": "ACTIVE",
+    "version": 1,
+    "verify_jwt": true,
+    "ezbr_sha256": "12ca7453392abfc9ebbe52217df401f961cfd6a961c4bdc45deeb3efb43a4fae",
+    "deployed_files_match_local_bytes": true
+  },
+  "tests": {
+    "focused": {
+      "passed": 25,
+      "failed": 0,
+      "skipped": 0,
+      "command": "node --test tests/investigationWorkspace.test.mjs"
+    },
+    "full": {
+      "passed": 969,
+      "failed": 0,
+      "skipped": 0,
+      "command": "npm test"
+    },
+    "build": {
+      "passed": true,
+      "command": "npm run build",
+      "warnings": [
+        "Existing large chunk warning."
+      ]
+    },
+    "last_change": "Client normalizes actual live gateway 401 to authentication_required; focused tests rerun after this correction. Full suite and build passed before this isolated correction."
+  },
+  "live_canary": {
+    "passed": true,
+    "scope": "Temporary five-section workspace, real SQL assignment/read/review, correction and historical comparison, viewer/revoked/browser denial; all fixtures and assignments rolled back."
+  },
+  "live_http": [
+    {
+      "allow_origin": "https://jkelsen13-tech.github.io",
+      "body": "",
+      "cache_control": "private, no-store",
+      "case": "preflight_allowed",
+      "expected": 204,
+      "passed": true,
+      "status": 204
+    },
+    {
+      "allow_origin": null,
+      "body": "{\"error\":{\"code\":\"origin_denied\"}}",
+      "cache_control": "private, no-store",
+      "case": "preflight_denied",
+      "expected": 403,
+      "passed": true,
+      "status": 403
+    },
+    {
+      "allow_origin": "*",
+      "body": "{\"code\":\"UNAUTHORIZED_NO_AUTH_HEADER\",\"message\":\"Missing authorization header\"}",
+      "cache_control": null,
+      "case": "no_token",
+      "expected": 401,
+      "passed": true,
+      "status": 401
+    },
+    {
+      "allow_origin": "*",
+      "body": "{\"code\":\"UNAUTHORIZED_INVALID_JWT_FORMAT\",\"message\":\"Invalid JWT\"}",
+      "cache_control": null,
+      "case": "invalid_token",
+      "expected": 401,
+      "passed": true,
+      "status": 401
+    },
+    {
+      "allow_origin": "https://jkelsen13-tech.github.io",
+      "body": "{\"error\":{\"code\":\"authentication_required\"}}",
+      "cache_control": "private, no-store",
+      "case": "public_anon_not_user",
+      "expected": 401,
+      "passed": true,
+      "status": 401
+    },
+    {
+      "allow_origin": "https://jkelsen13-tech.github.io",
+      "body": "{\"error\":{\"code\":\"invalid_request\"}}",
+      "cache_control": "private, no-store",
+      "case": "admin_action_rejected",
+      "expected": 400,
+      "passed": true,
+      "status": 400
+    }
+  ],
+  "post_verification": {
+    "counts": {
+      "access_events": 0,
+      "assessments": 0,
+      "candidates": 3,
+      "evidence_changes": 7,
+      "investigations": 0,
+      "memberships": 0,
+      "observations": 0,
+      "profiles": 1,
+      "reviews": 0,
+      "versions": 0
+    },
+    "functions": [
+      {
+        "body_md5": "59f77e61c7d129ad6d4fdaaa8ecc04aa",
+        "name": "public.mip_investigation_workspace_v1",
+        "security_definer": false,
+        "volatility": "v"
+      },
+      {
+        "body_md5": "9fd4458b19fffb209843077659d5590b",
+        "name": "evidence_pipeline.workspace_uuid",
+        "security_definer": false,
+        "volatility": "i"
+      },
+      {
+        "body_md5": "7660090601b0fef374dfe9ebb9cacf0a",
+        "name": "evidence_pipeline.workspace_texts",
+        "security_definer": false,
+        "volatility": "i"
+      },
+      {
+        "body_md5": "e895074e98c0cc9f1114a8c31a226ec4",
+        "name": "evidence_pipeline.workspace_text",
+        "security_definer": false,
+        "volatility": "i"
+      },
+      {
+        "body_md5": "9459e3a8d3c8592ee20c0400d965c816",
+        "name": "evidence_pipeline.workspace_read",
+        "security_definer": false,
+        "volatility": "s"
+      },
+      {
+        "body_md5": "3e287a462c1f412f64eb609d93afc54a",
+        "name": "evidence_pipeline.workspace_nullable_time",
+        "security_definer": false,
+        "volatility": "s"
+      },
+      {
+        "body_md5": "4b07cb12973850083985b0bc06e5152e",
+        "name": "evidence_pipeline.workspace_keys",
+        "security_definer": false,
+        "volatility": "i"
+      },
+      {
+        "body_md5": "3dd280d39fac77976c04207b7421d1e7",
+        "name": "evidence_pipeline.workspace_evidence",
+        "security_definer": false,
+        "volatility": "i"
+      },
+      {
+        "body_md5": "ef9b44266d53d6cb3c2238ba14633b0f",
+        "name": "evidence_pipeline.workspace_definition_diff",
+        "security_definer": false,
+        "volatility": "i"
+      },
+      {
+        "body_md5": "75b4cf234afa616e7099fc43b120ba12",
+        "name": "evidence_pipeline.workspace_choice",
+        "security_definer": false,
+        "volatility": "i"
+      },
+      {
+        "body_md5": "5fb1e7d4c55b2a603eef907f2e557da8",
+        "name": "evidence_pipeline.workspace_array",
+        "security_definer": false,
+        "volatility": "i"
+      },
+      {
+        "body_md5": "c58c7384dfe4f31d12258bbbc76b6231",
+        "name": "evidence_pipeline.workspace_validate_state",
+        "security_definer": false,
+        "volatility": "s"
+      }
+    ],
+    "rls": [
+      {
+        "enabled": true,
+        "table": "investigation_access_events"
+      },
+      {
+        "enabled": true,
+        "table": "investigation_memberships"
+      },
+      {
+        "enabled": true,
+        "table": "investigation_review_receipts"
+      },
+      {
+        "enabled": true,
+        "table": "investigation_versions"
+      },
+      {
+        "enabled": true,
+        "table": "investigations"
+      }
+    ],
+    "rpc_privileges": {
+      "anon": false,
+      "authenticated": false,
+      "service_role": true
+    }
+  },
+  "new_security_advisors": [
+    {
+      "level": "INFO",
+      "name": "rls_enabled_no_policy",
+      "object": "investigation_access_events",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "level": "INFO",
+      "name": "rls_enabled_no_policy",
+      "object": "investigation_memberships",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "level": "INFO",
+      "name": "rls_enabled_no_policy",
+      "object": "investigation_review_receipts",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "level": "INFO",
+      "name": "rls_enabled_no_policy",
+      "object": "investigation_versions",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "level": "INFO",
+      "name": "rls_enabled_no_policy",
+      "object": "investigations",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    }
+  ],
+  "new_security_warn_or_error": 0,
+  "function_bodies_match_tested_sql": 12,
+  "limits": [
+    "No persistent investigation/assessment/observation/assignment was created.",
+    "Real signed-in user positive live HTTP access was not exercised: no user session available. Local Auth-stub + real SQL end-to-end and live SQL canary passed.",
+    "Multi-connection lock contention not exercised in single-connection PGlite.",
+    "No five-section visible UI was deployed by this batch.",
+    "No semantic reassessment, disconfirming retrieval, source-independence algorithm, confidence calibration, publication, scheduler or model was enabled.",
+    "Geography candidates remain outside the saved-observation contract."
+  ],
+  "remaining_gate": "Implement frontend, review draft PR, user-authorized merge/deploy, inspect actual live UI and genuine assigned-user access."
+}

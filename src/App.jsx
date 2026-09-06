@@ -20,7 +20,7 @@ import SourceComparisonView from './views/SourceComparisonView'
 import WorldView from './views/WorldView'
 import { loadPhase3BetaFlag } from './lib/phase3ReadPath'
 import { buildNavViews, buildMoreEntries, isMoreViewKey } from './lib/navViews'
-import { loadGraph, loadTopics, loadCorpusMeta, loadNodeLocations, loadGraphCoverage, resolveEligibleArticleForNews } from './lib/supabase'
+import { loadGraph, loadTopics, loadCorpusMeta, loadNodeLocations, loadGraphCoverage, resolveEligibleArticleForNews, supabase } from './lib/supabase'
 import { loadInvestigationSurface, surfaceJoinDisclosures } from './lib/investigationSurface'
 import { liveCorpusLabel } from './lib/newsFeedModel'
 import { computeHubs } from './lib/hubs'
@@ -72,13 +72,22 @@ import {
   GRAPH_WORKSPACE_MODES,
 } from './lib/graphWorkspaceModel'
 import AccountPanel from './panels/AccountPanel'
-import { loadAccountUiFlag } from './lib/auth'
+import { loadAccountUiFlag, useAuthSession } from './lib/auth'
 import InvestigationWorkspace, {
   WorkspaceAccountButton,
   WorkspaceInfoButton,
   WorkspaceNavButton,
   WorkspaceSearch,
 } from './components/InvestigationWorkspace'
+import PrivateInvestigationWorkspace, {
+  PrivateInvestigationInspector,
+} from './components/PrivateInvestigationWorkspace'
+import { createInvestigationWorkspaceClient } from './lib/investigationWorkspaceClient.js'
+import { usePrivateInvestigationWorkspace } from './lib/usePrivateInvestigationWorkspace.js'
+import {
+  PRIVATE_INVESTIGATION_VIEW,
+  privateInvestigationHeader,
+} from './lib/investigationWorkspaceSession.js'
 import {
   CALM_RELATIONSHIP_UNAVAILABLE,
   WORKSPACE_NAV_ITEMS,
@@ -197,7 +206,11 @@ function topicSubgraph(nodes, edges, memberIds) {
   }
 }
 
-export default function App() {
+export default function App({
+  investigationWorkspaceClient = null,
+  authSessionOverride = null,
+  privateInvestigationPreview = null,
+} = {}) {
   const [graph, setGraph] = useState(null)
   // Aggregate coverage is optional: unavailable data omits the disclosure but
   // never changes the graph itself or implies a zero count.
@@ -284,6 +297,36 @@ export default function App() {
   // the entry point disappears without touching accounts or data.
   const [accountUi, setAccountUi] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const liveAuth = useAuthSession()
+  const [devPreview, setDevPreview] = useState(privateInvestigationPreview)
+  useEffect(() => {
+    if (privateInvestigationPreview || investigationWorkspaceClient || authSessionOverride) return undefined
+    if (!import.meta.env.DEV) return undefined
+    let cancelled = false
+    import('./lib/investigationWorkspaceFixtures.js').then((mod) => {
+      if (cancelled) return
+      setDevPreview(mod.readInvestigationWorkspacePreview(window.location.search))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [privateInvestigationPreview, investigationWorkspaceClient, authSessionOverride])
+  const auth = authSessionOverride ?? devPreview?.auth ?? liveAuth
+  const workspaceClient = investigationWorkspaceClient
+    ?? devPreview?.client
+    ?? createInvestigationWorkspaceClient(supabase)
+  const privateWorkspace = usePrivateInvestigationWorkspace({
+    userId: auth.user?.id ?? null,
+    sessionLoading: auth.loading === true,
+    client: workspaceClient,
+    active: view === PRIVATE_INVESTIGATION_VIEW,
+    initialInvestigationId: devPreview?.initialInvestigationId ?? null,
+  })
+  useEffect(() => {
+    if (!devPreview) return
+    setView(PRIVATE_INVESTIGATION_VIEW)
+    setInvestigationContext((ic) => setInvestigationActiveView(ic, PRIVATE_INVESTIGATION_VIEW))
+  }, [devPreview])
   // Cross-view focus: clicking an arc/article/node link in one view opens
   // the target in its own view.
   const [focusArc, setFocusArc] = useState(null)
@@ -1078,12 +1121,28 @@ export default function App() {
   )
   const workspaceHeader = useMemo(
     () =>
-      canonicalWorkspaceHeader({
-        investigationContext,
-        canonicalNode,
-        selectedChild: selected,
-      }),
-    [investigationContext, canonicalNode, selected],
+      view === PRIVATE_INVESTIGATION_VIEW
+        ? privateInvestigationHeader({
+            status: privateWorkspace.status,
+            panels: privateWorkspace.state.panels,
+            bundle: privateWorkspace.state.bundle,
+            userId: auth.user?.id ?? null,
+          })
+        : canonicalWorkspaceHeader({
+            investigationContext,
+            canonicalNode,
+            selectedChild: selected,
+          }),
+    [
+      view,
+      privateWorkspace.status,
+      privateWorkspace.state.panels,
+      privateWorkspace.state.bundle,
+      auth.user,
+      investigationContext,
+      canonicalNode,
+      selected,
+    ],
   )
   const nodeDimensions = selected
     ? workspaceEvidenceDimensions(selected, { forNode: true })
@@ -1093,6 +1152,17 @@ export default function App() {
     if (item.key === 'compare') return sourceComparisonBeta
     return true
   })
+  const publicInvestigationNode = useMemo(() => {
+    const subjectId = privateWorkspace.state.panels?.canonicalSubject?.id
+    if (!subjectId || !graph?.nodes?.length) return null
+    return graph.nodes.find((node) => String(node.id ?? node.slug) === String(subjectId)) ?? null
+  }, [graph, privateWorkspace.state.panels])
+  const openPrivatePublicGraphNode = useCallback((nodeId) => {
+    if (!nodeId || !graph?.nodes?.length) return
+    const match = graph.nodes.find((node) => String(node.id ?? node.slug) === String(nodeId))
+    if (!match) return
+    openNodeInGraph(match.id ?? match.slug)
+  }, [graph, openNodeInGraph])
   const inspectorOccupied = view === 'graph' && !!(selected || policyNode || edgeEvidence) && !isMobile
   const hasNativeInspector = view === 'world'
   const graphInspectorMode = graphInspectorPresentation({
@@ -1116,6 +1186,16 @@ export default function App() {
         selectedChild={selected}
         inspectorOccupied={inspectorOccupied}
         hasNativeInspector={hasNativeInspector}
+        inspectorSlot={
+          view === PRIVATE_INVESTIGATION_VIEW ? (
+            <PrivateInvestigationInspector
+              workspace={privateWorkspace}
+              publicNode={publicInvestigationNode}
+              onOpenPublicGraphNode={openPrivatePublicGraphNode}
+            />
+          ) : null
+        }
+        hideChangeInvestigation={view === PRIVATE_INVESTIGATION_VIEW}
         onChangeInvestigation={openExplore}
         onChromeChange={() => setGraphLayoutRevision((n) => n + 1)}
         corpusLine={corpusLine}
@@ -1727,6 +1807,15 @@ export default function App() {
             onOpenTimeline={openEventInTimeline}
             focusEventId={focusComparisonEvent}
             investigationContext={investigationContext}
+          />
+        )}
+        {view === PRIVATE_INVESTIGATION_VIEW && (
+          <PrivateInvestigationWorkspace
+            workspace={privateWorkspace}
+            accountUiAvailable={accountUi}
+            onSignIn={() => setAccountOpen(true)}
+            publicNode={publicInvestigationNode}
+            onOpenPublicGraphNode={openPrivatePublicGraphNode}
           />
         )}
         {view === 'world' && (

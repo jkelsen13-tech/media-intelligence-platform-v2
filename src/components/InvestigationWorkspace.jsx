@@ -5,6 +5,7 @@ import {
   CaretDown,
   CaretLeft,
   CaretRight,
+  ChatCenteredText,
   Clock,
   Columns,
   GitFork,
@@ -31,6 +32,7 @@ import '../styles/workspace.css'
 
 const NAV_ICONS = {
   news: Newspaper,
+  investigations: ChatCenteredText,
   graph: GitFork,
   timeline: Clock,
   arcs: Path,
@@ -100,6 +102,9 @@ export default function InvestigationWorkspace({
   onChangeInvestigation,
   onChromeChange,
   details,
+  inspectorSlot = null,
+  hideChangeInvestigation = false,
+  changeInvestigationLabel = 'Change investigation',
   children,
 }) {
   const [navCollapsed, setNavCollapsed] = useState(false)
@@ -145,10 +150,12 @@ export default function InvestigationWorkspace({
               <p className="ws-nav-kicker">Active investigation</p>
               <p className="ws-nav-subject">{header?.title}</p>
               <p className="ws-nav-note">Your subject stays with you across views.</p>
+              {!hideChangeInvestigation && (
               <button type="button" className="ws-change-btn" onClick={onChangeInvestigation}>
-                Change investigation
+                {changeInvestigationLabel}
                 <ArrowSquareOut size={14} />
               </button>
+              )}
             </>
           )}
           <button
@@ -233,10 +240,12 @@ export default function InvestigationWorkspace({
               </p>
               {header?.description && <p className="ws-description">{header.description}</p>}
             </div>
+            {!hideChangeInvestigation && (
             <button type="button" className="ws-change-btn" onClick={onChangeInvestigation}>
-              Change investigation
+              {changeInvestigationLabel}
               <ArrowSquareOut size={14} />
             </button>
+            )}
           </div>
           <EvidenceDimensionGrid dimensions={header?.dimensions} />
         </section>
@@ -273,6 +282,8 @@ export default function InvestigationWorkspace({
             </button>
             {inspectorOpen && (
               <div className="ws-inspector-body">
+                {inspectorSlot ?? (
+                <>
                 <h2>{header?.title}</h2>
                 <p className="ws-nav-note">The same investigation, in every view.</p>
                 {selectedChild?.label && (
@@ -328,6 +339,8 @@ export default function InvestigationWorkspace({
                     </div>
                   </dl>
                 </details>
+                </>
+                )}
               </div>
             )}
           </aside>

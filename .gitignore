@@ -58,3 +58,6 @@ verifier/llm_connectivity_probe*.json
 
 # Local rendered screenshots used during live desktop/mobile validation.
 verifier/live_validation/
+
+# node --test JSX compile output
+tests/.compiled/

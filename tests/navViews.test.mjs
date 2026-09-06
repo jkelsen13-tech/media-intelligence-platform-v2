@@ -17,29 +17,29 @@ test('both flags on: 6 tabs, More last, core order unchanged including World Vie
   const nav = buildNavViews({ phase3Beta: true, sourceComparisonBeta: true })
   assert.deepEqual(
     nav.map((v) => v.key),
-    ['news', 'graph', 'timeline', 'arcs', 'world', 'more'],
+    ['news', 'investigations', 'graph', 'timeline', 'arcs', 'world', 'more'],
   )
-  assert.equal(nav.length, 6)
+  assert.equal(nav.length, 7)
 })
 
 test('both flags off: More hides entirely — 5 core tabs including World View, no trace', () => {
   const nav = buildNavViews({ phase3Beta: false, sourceComparisonBeta: false })
   assert.deepEqual(
     nav.map((v) => v.key),
-    ['news', 'graph', 'timeline', 'arcs', 'world'],
+    ['news', 'investigations', 'graph', 'timeline', 'arcs', 'world'],
   )
   assert.equal(buildMoreEntries({ phase3Beta: false, sourceComparisonBeta: false }).length, 0)
 })
 
 test('single flag on: More still appears; sheet lists only the authorized surface', () => {
   const phase3Only = buildNavViews({ phase3Beta: true, sourceComparisonBeta: false })
-  assert.equal(phase3Only.length, 6)
+  assert.equal(phase3Only.length, 7)
   assert.deepEqual(
     buildMoreEntries({ phase3Beta: true, sourceComparisonBeta: false }).map((v) => v.key),
     ['phase3'],
   )
   const compareOnly = buildNavViews({ phase3Beta: false, sourceComparisonBeta: true })
-  assert.equal(compareOnly.length, 6)
+  assert.equal(compareOnly.length, 7)
   assert.deepEqual(
     buildMoreEntries({ phase3Beta: false, sourceComparisonBeta: true }).map((v) => v.key),
     ['compare'],
@@ -71,6 +71,7 @@ test('view keys for gated surfaces are unchanged (cross-jump stability)', () => 
   assert.ok(isMoreViewKey('compare'))
   assert.ok(!isMoreViewKey('news'))
   assert.ok(!isMoreViewKey('more'))
+  assert.ok(!isMoreViewKey('investigations'))
 })
 
 test('More member views never appear as top-level tabs', () => {
