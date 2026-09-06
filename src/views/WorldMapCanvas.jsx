@@ -16,6 +16,7 @@ import {
   mapStackById,
 } from '../lib/worldViewMapStack'
 import { createWorldViewRendererAdapter, projectionMarkerRecords } from '../lib/worldViewRendererAdapter'
+import { createCameraFraming } from '../lib/worldViewCameraFraming'
 
 const MAP_W = 960
 const MAP_H = 480
@@ -116,17 +117,19 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
 
 export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyMessage }) {
   const hostRef = useRef(null)
-  const flewRef = useRef(false)
+  const framingRef = useRef(null)
+  if (!framingRef.current) framingRef.current = createCameraFraming()
   const adapterRef = useRef(null)
   const [stackId, setStackId] = useState(DEFAULT_MAP_STACK_ID)
   const [terrainStatus, setTerrainStatus] = useState(null)
+  const [rendererReady, setRendererReady] = useState(false)
   // Stage D visual-continuity repair: labeled relief shading toggle
   // (default ON — the repair exists because unshaded terrain is not
   // visually legible at the enforced city camera floor). DISPLAY-only.
   const [reliefShadingOn, setReliefShadingOn] = useState(true)
   const stack = mapStackById(stackId)
   const features = useMemo(() => projectionMarkerRecords(rows, selectedKeys), [rows, selectedKeys])
-  const first = features[0]
+  const first = features.find((feature) => feature.selected)
   const coordinate = first?.positions?.[0] ?? null
   // Rows load asynchronously: the adapter effect below runs once per stack,
   // so live getters must read through a ref that follows the latest render.
@@ -139,9 +142,11 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
   useEffect(() => {
     if (stackId === FALLBACK_MAP_STACK_ID) return undefined
     let cancelled = false
+    setRendererReady(false)
     setTerrainStatus(null)
     adapterRef.current?.destroy?.()
-    adapterRef.current = createWorldViewRendererAdapter({
+    framingRef.current.resetRenderer()
+    const adapter = createWorldViewRendererAdapter({
       stackId,
       getHostEl: () => hostRef.current,
       coordinate,
@@ -157,17 +162,19 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
         if (cancelled) return
         setTerrainStatus(next)
       },
-      shouldFlyTo: () => !flewRef.current,
-      markFlew: () => {
-        flewRef.current = true
-      },
       initialFeatures: features,
       isCancelled: () => cancelled,
     })
-    void adapterRef.current.mount()
+    adapterRef.current = adapter
+    void adapter.mount().then(() => {
+      if (!cancelled) {
+        setRendererReady(true)
+        framingRef.current.apply(adapter)
+      }
+    })
     return () => {
       cancelled = true
-      adapterRef.current?.destroy?.()
+      adapter.destroy()
       adapterRef.current = null
     }
     // Reboot only when the stack changes. Layer updates happen in the next effect.
@@ -183,13 +190,10 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
 
   useEffect(() => {
     const adapter = adapterRef.current
-    if (!adapter || stackId === FALLBACK_MAP_STACK_ID || flewRef.current) return
-    const ok = adapter.flyToSubjectCamera({
-      nextCoordinate: coordinate,
-      nextPrecisionClass: first?.row?.precision_class,
-    })
-    if (ok) flewRef.current = true
-  }, [coordinate, first, stackId])
+    framingRef.current.select(features)
+    if (!adapter || stackId === FALLBACK_MAP_STACK_ID) return
+    framingRef.current.apply(adapter)
+  }, [features, stackId])
 
   // Stage D visual-continuity repair: forward the relief-shading preference
   // to the active adapter. The globe adapter applies it to the globe
@@ -246,6 +250,16 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
   }
 
   return (
+    <div className="wv-map-panel">
+      <div className="wv-camera-controls">
+        <button
+          type="button"
+          disabled={!first || !rendererReady}
+          onClick={() => framingRef.current.apply(adapterRef.current, { force: true })}
+        >
+          Return to selected location
+        </button>
+      </div>
     <div className="wv-map wv-map-gl" data-map-stack={stackId}>
       <div ref={hostRef} className="wv-map-host" />
       {features.length === 0 && (
@@ -273,6 +287,7 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
           {reliefShadingOn ? ` — ${TERRAIN_RELIEF_LEGEND_TEXT}` : ''}
         </p>
       )}
+    </div>
     </div>
   )
 }

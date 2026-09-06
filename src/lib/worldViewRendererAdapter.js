@@ -160,6 +160,7 @@ export function flyToSubject(map, coordinate, precisionClass) {
   if (!map) return false
   const cam = subjectCamera(coordinate, precisionClass)
   if (!cam) return false
+  map.setMaxZoom?.(maxZoomForPrecisionClass(precisionClass))
   map.flyTo({
     center: cam.center,
     zoom: cam.zoom,
@@ -531,7 +532,7 @@ export function createWorldViewRendererAdapter(args, {
       onSelectRow = nextOnSelectRow
       if (ready) impl?.setOnSelectRow?.(onSelectRow)
     },
-    flyToSubjectCamera: (opts) => impl?.flyToSubjectCamera?.(opts) ?? false,
+    flyToSubjectCamera: (opts) => ready && !cancelled() ? impl?.flyToSubjectCamera?.(opts) ?? false : false,
     getCameraState: () => impl?.getCameraState?.() ?? null,
     setCameraState: (serialized) => impl?.setCameraState?.(serialized) ?? false,
     getTerrainStatus: () => impl?.getTerrainStatus?.() ?? null,

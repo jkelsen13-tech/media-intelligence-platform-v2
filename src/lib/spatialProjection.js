@@ -211,6 +211,18 @@ export function collectPositions(geom, out = []) {
   return out
 }
 
+// Once a subject is selected, missing geography must not display another
+// subject's pins as a substitute. With no selection, retain the browse map.
+export function mapRowsForSelection(loadStatus, selected, visibleRow) {
+  if (loadStatus.status !== 'ok') return []
+  if (selected) {
+    return visibleRow && loadStatus.rows.includes(visibleRow)
+      && rowsMatchingSelection([visibleRow], selected).length > 0
+      && plotDecision(visibleRow).plot ? [visibleRow] : []
+  }
+  return loadStatus.rows.filter((row) => plotDecision(row).plot)
+}
+
 export function plotDecision(row) {
   if (!row) return { plot: false, reason: 'no_row', geometry: null }
   if (!mayShowLocation(row)) {

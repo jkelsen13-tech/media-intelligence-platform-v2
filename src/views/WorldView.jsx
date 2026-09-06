@@ -19,6 +19,7 @@ import {
   loadWorldViewGraph,
   liveGraphNodes,
   plotDecision,
+  mapRowsForSelection,
   recordedTimestampsForRows,
   revisionAtTime,
   revisionCoverageAt,
@@ -503,11 +504,7 @@ export default function WorldView({
   }, [visibleRow, atMs])
 
   const mapRows = useMemo(() => {
-    if (loadStatus.status !== 'ok') return []
-    if (selectedForMatch && selectedRows.length > 0) {
-      return visibleRow ? [visibleRow] : []
-    }
-    return loadStatus.rows.filter((row) => plotDecision(row).plot)
+    return mapRowsForSelection(loadStatus, selectedForMatch, visibleRow)
   }, [loadStatus, selectedForMatch, selectedRows, visibleRow])
 
   const selectedKeys = useMemo(() => {
