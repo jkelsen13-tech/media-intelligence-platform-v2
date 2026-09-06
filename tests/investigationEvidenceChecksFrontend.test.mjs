@@ -167,8 +167,8 @@ test('one saved report feeds source links, evidence checks and search coverage',
   assert.match(html, /data-action="inspect-source-link"/)
   assert.doesNotMatch(html, /data-action="run-evidence-checks"/)
   assert.doesNotMatch(html, /evidence verified/i)
-  assert.doesNotMatch(html, /independent outlet/i)
-  assert.doesNotMatch(html, /retraction verdict/)
+  assert.match(html, /No outlet is labeled independent/)
+  assert.match(html, /not a contradiction, retraction verdict/)
   assert.equal(investigationEvidenceCheckPanels(FIXTURE_BUNDLES.comparable, FIXTURE_CHECKS.comparable).reportId, FIXTURE_CHECKS_REPORT_ID)
 })
 
@@ -253,7 +253,7 @@ test('unsafe locators render as text and mapper rejects mismatched investigation
   assert.doesNotMatch(inspector, /href="javascript:/)
   assert.equal(safeWorkspaceHttpUrl('javascript:alert(1)'), null)
   assert.equal(safeWorkspaceHttpUrl('https://user:pass@example.org/x'), null)
-  assert.equal(safeWorkspaceHttpUrl('https://example.org/shared-capture'), 'https://example.org/shared-capture/')
+  assert.equal(safeWorkspaceHttpUrl('https://example.org/shared-capture'), 'https://example.org/shared-capture')
   assert.equal(
     investigationEvidenceCheckPanels(
       { ...FIXTURE_BUNDLES.comparable, observation: { ...FIXTURE_BUNDLES.comparable.observation, id: '00000000-0000-4000-8000-000000000000' } },

@@ -140,13 +140,14 @@ function treeText(renderer) {
   return textOf(renderer.toJSON())
 }
 
-function MountedWorkspace({ client, checksClient, userId, sessionLoading = false, active = true, probe }) {
+function MountedWorkspace({ client, checksClient, userId, sessionLoading = false, active = true, initialInvestigationId = null, probe }) {
   const workspace = usePrivateInvestigationWorkspace({
     client,
     checksClient,
     userId,
     sessionLoading,
     active,
+    initialInvestigationId,
   })
   probe.current = workspace
   return createElement(PrivateInvestigationWorkspace, {
@@ -167,6 +168,13 @@ async function mountWorkspace(props) {
 
 function findAction(renderer, action) {
   return renderer.root.findByProps({ 'data-action': action })
+}
+
+async function clickAction(renderer, action) {
+  await act(async () => {
+    void findAction(renderer, action).props.onClick()
+    await Promise.resolve()
+  })
 }
 
 async function clickFirstAction(renderer, action) {
@@ -445,6 +453,7 @@ test('local fixture run on a historical version does not change the review basel
     client: createLocalInvestigationWorkspaceClient({ scenario: 'historical' }),
     checksClient: createLocalInvestigationEvidenceChecksClient({ scenario: 'historical' }),
     userId: FIXTURE_USER.id,
+    initialInvestigationId: FIXTURE_IDS.historical,
   })
   for (let i = 0; i < 30 && probe.current.state.checksPanels?.status !== 'not_run'; i += 1) {
     await flushMicrotasks(2)
