@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { investigationEvidenceCheckPanels } from './investigationEvidenceChecksClient.js'
 import { investigationWorkspacePanels } from './investigationWorkspaceClient.js'
 import {
   bundleMatchesRequest,
   captureReviewPayload,
   catalogRequestKey,
+  checksRequestKey,
   createKeyedRequestFamily,
   createRequestGate,
   displayedScopeKey,
@@ -28,13 +30,33 @@ function emptyPanelsState() {
     reviewConflict: false,
     loadingBundle: false,
     loadingBefore: false,
+    checks: null,
+    checksPanels: null,
+    checksError: null,
+    checksBusy: false,
+    loadingChecks: false,
+    pendingChecksRun: null,
   }
+}
+
+function checksIdentityMatches(data, investigationId, versionId, observationId) {
+  return data?.investigation_id === investigationId
+    && data?.version_id === versionId
+    && data?.observation_id === observationId
+}
+
+function bundleMatchesChecksIdentity(bundle, investigationId, versionId, observationId) {
+  return Boolean(bundle)
+    && bundle.investigation_id === investigationId
+    && bundle.version?.id === versionId
+    && bundle.observation?.id === observationId
 }
 
 export function usePrivateInvestigationWorkspace({
   userId = null,
   sessionLoading = false,
   client = null,
+  checksClient = null,
   active = false,
   randomUUID = () => globalThis.crypto?.randomUUID?.(),
   initialInvestigationId = null,
@@ -46,6 +68,7 @@ export function usePrivateInvestigationWorkspace({
   const readGate = useRef(createRequestGate())
   const historyFamily = useRef(createKeyedRequestFamily())
   const reviewGate = useRef(createRequestGate())
+  const checksGate = useRef(createRequestGate())
   const displayedScopeRef = useRef(null)
   const inspectEpochRef = useRef(0)
   const mountedRef = useRef(true)
@@ -67,6 +90,7 @@ export function usePrivateInvestigationWorkspace({
     readGate.current.invalidate()
     historyFamily.current.invalidate()
     reviewGate.current.invalidate()
+    checksGate.current.invalidate()
     inspectEpochRef.current += 1
     displayedScopeRef.current = null
   }, [])
@@ -94,6 +118,7 @@ export function usePrivateInvestigationWorkspace({
       readGate.current.invalidate()
       historyFamily.current.invalidate()
       reviewGate.current.invalidate()
+      checksGate.current.invalidate()
       inspectEpochRef.current += 1
       displayedScopeRef.current = null
       applyCatalog((current) => {
@@ -174,6 +199,91 @@ export function usePrivateInvestigationWorkspace({
     return { ignored: false, data: result.data }
   }, [applyAccessFailure, applyCatalog, client, sessionLoading, userId])
 
+  const publishChecks = useCallback((bundle, checks, extra = {}) => {
+    const mapped = investigationEvidenceCheckPanels(bundle, checks)
+    if (!mapped) {
+      applyCatalog((s) => ({
+        ...s,
+        loadingChecks: false,
+        checksBusy: false,
+        checks: null,
+        checksPanels: null,
+        checksError: 'unsupported_contract',
+        pendingChecksRun: extra.clearPending === false ? s.pendingChecksRun : null,
+      }))
+      return { ignored: false, error: 'unsupported_contract' }
+    }
+    applyCatalog((s) => ({
+      ...s,
+      loadingChecks: false,
+      checksBusy: false,
+      checks,
+      checksPanels: mapped,
+      checksError: null,
+      pendingChecksRun: extra.clearPending === false ? s.pendingChecksRun : null,
+    }))
+    return { ignored: false, data: checks }
+  }, [applyCatalog])
+
+  const readChecksForBundle = useCallback(async (bundle) => {
+    if (sessionLoading || !userId || !checksClient || !bundle?.investigation_id || !bundle.version?.id || !bundle.observation?.id) {
+      return { ignored: true }
+    }
+    const investigationId = bundle.investigation_id
+    const versionId = bundle.version.id
+    const observationId = bundle.observation.id
+    const token = checksGate.current.start(checksRequestKey(userId, investigationId, versionId, observationId, 'read'))
+    applyCatalog((s) => ({
+      ...s,
+      loadingChecks: true,
+      checksBusy: false,
+      checksError: null,
+      checks: null,
+      checksPanels: null,
+      pendingChecksRun: null,
+    }))
+    const result = await checksClient.read(investigationId, versionId)
+    if (!mountedRef.current || userRef.current !== userId) return { ignored: true }
+    const code = workspaceErrorCode(result.error)
+    if (code === 'authentication_required') {
+      applyAccessFailure(code, { investigationId })
+      return { ignored: false, error: code }
+    }
+    if (!checksGate.current.isCurrent(token)) return { ignored: true }
+    if (code === 'access_denied') {
+      applyAccessFailure(code, { investigationId })
+      return { ignored: false, error: code }
+    }
+    if (code) {
+      applyCatalog((s) => ({
+        ...s,
+        loadingChecks: false,
+        checksBusy: false,
+        checksError: code,
+        checks: null,
+        checksPanels: null,
+      }))
+      return { ignored: false, error: code }
+    }
+    if (!checksIdentityMatches(result.data, investigationId, versionId, observationId)) {
+      applyCatalog((s) => ({
+        ...s,
+        loadingChecks: false,
+        checksBusy: false,
+        checks: null,
+        checksPanels: null,
+        checksError: 'identity_mismatch',
+        pendingChecksRun: null,
+      }))
+      return { ignored: false, error: 'identity_mismatch' }
+    }
+    const current = stateRef.current
+    const publishBundle = bundleMatchesChecksIdentity(current.bundle, investigationId, versionId, observationId)
+      ? current.bundle
+      : bundle
+    return publishChecks(publishBundle, result.data)
+  }, [applyAccessFailure, applyCatalog, checksClient, publishChecks, sessionLoading, userId])
+
   const loadBundle = useCallback(async (investigationId, versionId = null, options = {}) => {
     const {
       asBefore = false,
@@ -196,6 +306,7 @@ export function usePrivateInvestigationWorkspace({
     } else {
       inspectEpochRef.current += 1
       historyFamily.current.invalidate()
+      checksGate.current.invalidate()
       displayedScopeRef.current = displayedScopeKey(userId, investigationId, versionId)
       displayedToken = readGate.current.start(readRequestKey(userId, investigationId, versionId))
       applyCatalog((s) => ({
@@ -209,6 +320,12 @@ export function usePrivateInvestigationWorkspace({
         inspector: preserveReviewConflict ? s.inspector : null,
         beforeBundles: {},
         loadingBefore: false,
+        checks: null,
+        checksPanels: null,
+        checksError: null,
+        checksBusy: false,
+        loadingChecks: false,
+        pendingChecksRun: null,
       }))
     }
 
@@ -242,6 +359,10 @@ export function usePrivateInvestigationWorkspace({
         bundleError: code,
         bundle: null,
         panels: null,
+        checks: null,
+        checksPanels: null,
+        loadingChecks: false,
+        checksBusy: false,
       }))
       return { ignored: false, error: code }
     }
@@ -289,8 +410,9 @@ export function usePrivateInvestigationWorkspace({
       reviewConflict: preserveReviewConflict ? s.reviewConflict : false,
       reviewError: preserveReviewConflict ? s.reviewError : null,
     }))
+    await readChecksForBundle(result.data)
     return { ignored: false, data: result.data }
-  }, [applyAccessFailure, applyCatalog, client, sessionLoading, userId])
+  }, [applyAccessFailure, applyCatalog, client, readChecksForBundle, sessionLoading, userId])
 
   useEffect(() => {
     if (sessionLoading) return
@@ -313,6 +435,7 @@ export function usePrivateInvestigationWorkspace({
   const selectInvestigation = useCallback((investigationId) => {
     reviewGate.current.invalidate()
     historyFamily.current.invalidate()
+    checksGate.current.invalidate()
     inspectEpochRef.current += 1
     applyCatalog((current) => ({
       ...current,
@@ -326,6 +449,12 @@ export function usePrivateInvestigationWorkspace({
       inspector: null,
       selectedInvestigationId: investigationId,
       selectedVersionId: null,
+      checks: null,
+      checksPanels: null,
+      checksError: null,
+      checksBusy: false,
+      loadingChecks: false,
+      pendingChecksRun: null,
     }))
     return loadBundle(investigationId, null)
   }, [applyCatalog, loadBundle])
@@ -333,6 +462,7 @@ export function usePrivateInvestigationWorkspace({
   const selectVersion = useCallback((investigationId, versionId) => {
     reviewGate.current.invalidate()
     historyFamily.current.invalidate()
+    checksGate.current.invalidate()
     inspectEpochRef.current += 1
     applyCatalog((current) => ({
       ...current,
@@ -344,6 +474,12 @@ export function usePrivateInvestigationWorkspace({
       panels: null,
       beforeBundles: {},
       inspector: null,
+      checks: null,
+      checksPanels: null,
+      checksError: null,
+      checksBusy: false,
+      loadingChecks: false,
+      pendingChecksRun: null,
     }))
     return loadBundle(investigationId, versionId)
   }, [applyCatalog, loadBundle])
@@ -425,6 +561,95 @@ export function usePrivateInvestigationWorkspace({
     return finishReviewRequest(payload, result, token)
   }, [applyCatalog, client, finishReviewRequest, userId])
 
+  const finishChecksRequest = useCallback(async (payload, result, token) => {
+    if (!mountedRef.current || userRef.current !== userId) return { ignored: true }
+    const code = workspaceErrorCode(result.error)
+    if (code === 'authentication_required') {
+      applyAccessFailure(code, { investigationId: payload.investigationId })
+      return { ignored: false, error: code }
+    }
+    if (!checksGate.current.isCurrent(token)) return { ignored: true }
+    if (code === 'access_denied') {
+      applyAccessFailure(code, { investigationId: payload.investigationId })
+      return { ignored: false, error: code }
+    }
+    if (code) {
+      applyCatalog((s) => ({
+        ...s,
+        loadingChecks: false,
+        checksBusy: false,
+        checksError: code,
+      }))
+      return { ignored: false, error: code }
+    }
+    if (!checksIdentityMatches(result.data, payload.investigationId, payload.versionId, payload.observationId)) {
+      applyCatalog((s) => ({
+        ...s,
+        loadingChecks: false,
+        checksBusy: false,
+        checksError: 'identity_mismatch',
+      }))
+      return { ignored: false, error: 'identity_mismatch' }
+    }
+    const current = stateRef.current
+    const publishBundle = bundleMatchesChecksIdentity(
+      current.bundle,
+      payload.investigationId,
+      payload.versionId,
+      payload.observationId,
+    ) ? current.bundle : null
+    if (!publishBundle) {
+      applyCatalog((s) => ({
+        ...s,
+        loadingChecks: false,
+        checksBusy: false,
+        checksError: 'identity_mismatch',
+      }))
+      return { ignored: false, error: 'identity_mismatch' }
+    }
+    return publishChecks(publishBundle, result.data)
+  }, [applyAccessFailure, applyCatalog, publishChecks, userId])
+
+  const runEvidenceChecks = useCallback(async () => {
+    const current = stateRef.current
+    if (!checksClient || !userId || current.checksBusy || current.loadingChecks) return
+    if (current.pendingChecksRun) return
+    if (current.checksPanels?.canRun !== true) return
+    const bundle = current.bundle
+    if (!bundle?.investigation_id || !bundle.version?.id || !bundle.observation?.id) return
+    const payload = {
+      investigationId: bundle.investigation_id,
+      versionId: bundle.version.id,
+      observationId: bundle.observation.id,
+    }
+    const token = checksGate.current.start(
+      checksRequestKey(userId, payload.investigationId, payload.versionId, payload.observationId, 'run'),
+    )
+    applyCatalog((s) => ({
+      ...s,
+      checksBusy: true,
+      checksError: null,
+      pendingChecksRun: payload,
+    }))
+    const result = await checksClient.run(payload.investigationId, payload.versionId)
+    return finishChecksRequest(payload, result, token)
+  }, [applyCatalog, checksClient, finishChecksRequest, userId])
+
+  const retryChecks = useCallback(async () => {
+    const current = stateRef.current
+    if (!checksClient || !userId || current.checksBusy || current.loadingChecks) return
+    if (current.pendingChecksRun) {
+      const payload = current.pendingChecksRun
+      const token = checksGate.current.start(
+        checksRequestKey(userId, payload.investigationId, payload.versionId, payload.observationId, 'run'),
+      )
+      applyCatalog((s) => ({ ...s, checksBusy: true, checksError: null }))
+      const result = await checksClient.run(payload.investigationId, payload.versionId)
+      return finishChecksRequest(payload, result, token)
+    }
+    if (current.bundle) return readChecksForBundle(current.bundle)
+  }, [applyCatalog, checksClient, finishChecksRequest, readChecksForBundle, userId])
+
   const openBeforeVersion = useCallback((versionId) => {
     const current = stateRef.current
     if (!current.selectedInvestigationId || !versionId) return
@@ -498,6 +723,7 @@ export function usePrivateInvestigationWorkspace({
   }, [beginInspectSession, finishInspect, openBeforeVersion])
 
   const setInspector = useCallback((inspector) => {
+    inspectEpochRef.current += 1
     applyCatalog((current) => ({ ...current, inspector }))
   }, [applyCatalog])
 
@@ -531,6 +757,8 @@ export function usePrivateInvestigationWorkspace({
       selectVersion,
       markReviewed,
       retryReview,
+      runEvidenceChecks,
+      retryChecks,
       openBeforeVersion,
       inspectComparedRecords,
       inspectEvidenceChange,

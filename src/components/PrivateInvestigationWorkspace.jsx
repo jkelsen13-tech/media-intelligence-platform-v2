@@ -8,16 +8,22 @@ import {
   WORKSPACE_STATUS,
   assessmentOutcomeCopy,
   canRevealPrivateRecords,
+  challengeCueCopy,
+  checksUnavailableCopy,
   citationUnavailableCopy,
   definitionChangeSummary,
   evidenceChangeLabel,
   isCurrentSavedVersion,
+  lineageReasonCopy,
   newerCollectionNote,
   publicGraphUnavailableCopy,
+  resolveWorkspaceMetadata,
   revisionLabel,
+  safeWorkspaceHttpUrl,
   snapshotAssessment,
   snapshotCoverageCopy,
   snapshotInputAtPosition,
+  snapshotInputPayload,
   stageDepths,
   timeRangeCopy,
   unavailableCopy,
@@ -59,7 +65,9 @@ function ExcerptBlock({ resolved, reference, onOpen }) {
       </blockquote>
       <figcaption>
         <p>Position {String(reference.position)} · {reference.source_field} · code points [{reference.span_start}, {reference.span_end})</p>
-        <p>{RELATION_LABELS[reference.relation] ?? reference.relation}. {reference.note}</p>
+        {reference.relation || reference.note ? (
+          <p>{RELATION_LABELS[reference.relation] ?? reference.relation}{reference.note ? `. ${reference.note}` : ''}</p>
+        ) : null}
         <p>Exact quotation checks source binding, not semantic truth.</p>
         {onOpen && (
           <button type="button" className="piw-text-btn" onClick={onOpen}>
@@ -243,17 +251,28 @@ function BeforeStateRecords({ bundle, focus, onOpenCitation }) {
 }
 
 function InputRecordView({ input, position }) {
-  const payload = input?.capture?.payload ?? input?.record_version?.payload
+  const payload = snapshotInputPayload(input)
+  const safeUrl = safeWorkspaceHttpUrl(payload?.url)
   return (
     <div className="piw-card" data-record="input" data-position={position == null ? undefined : String(position)}>
       <p className="piw-mono">Position {position == null ? 'not recorded' : String(position)}</p>
       {input ? (
         <>
           <p>{payload?.title ?? 'Retained source identity'}</p>
+          {payload?.outlet ? <p className="piw-muted">{payload.outlet}</p> : null}
           <p className="piw-muted">
             Published {input.capture?.published_at ? formatWorkspaceDate(input.capture.published_at) : 'unknown'}.
             Recorded {input.capture?.recorded_at ? formatWorkspaceDate(input.capture.recorded_at) : 'unknown'}.
           </p>
+          {payload?.url ? (
+            safeUrl ? (
+              <p>
+                <a href={safeUrl} target="_blank" rel="noreferrer">{safeUrl}</a>
+              </p>
+            ) : (
+              <p className="piw-muted">Retained locator (not opened as a link): {payload.url}</p>
+            )
+          ) : null}
           {payload?.summary ? <p>{payload.summary}</p> : null}
         </>
       ) : (
@@ -650,6 +669,338 @@ function GapsSection({ panels }) {
   )
 }
 
+function MetadataNotice({ cue, metadata }) {
+  return (
+    <div className="piw-metadata" data-cue-kind="recorded_source_status">
+      <p>{challengeCueCopy('recorded_source_status')}</p>
+      <p>Recorded source status: {cue.metadata_reference?.value ?? 'not recorded'}.</p>
+      {metadata ? (
+        <p className="piw-muted">
+          Position {String(cue.metadata_reference.position)}
+          {metadata.recordVersionId ? ` · retained record ${metadata.recordVersionId}` : ''}
+          . This is the saved record version, not current live source text.
+        </p>
+      ) : (
+        <p className="piw-muted">{citationUnavailableCopy()}</p>
+      )}
+    </div>
+  )
+}
+
+function SourceWitness({ bundle, reference, position, onOpen, label }) {
+  const input = snapshotInputAtPosition(bundle, position)
+  const payload = snapshotInputPayload(input)
+  const resolved = reference ? resolveWorkspaceExcerpt(bundle, reference) : null
+  const safeUrl = safeWorkspaceHttpUrl(payload?.url)
+  return (
+    <div className="piw-witness">
+      {label ? <p className="piw-muted">{label}</p> : null}
+      <p>{payload?.title ?? 'Retained source identity'}</p>
+      {payload?.outlet ? <p className="piw-muted">{payload.outlet}</p> : null}
+      {payload?.url ? (
+        safeUrl ? (
+          <p><a href={safeUrl} target="_blank" rel="noreferrer">{safeUrl}</a></p>
+        ) : (
+          <p className="piw-muted">Retained locator (not opened as a link): {payload.url}</p>
+        )
+      ) : null}
+      {reference ? (
+        <ExcerptBlock resolved={resolved} reference={reference} onOpen={onOpen} />
+      ) : (
+        <p className="piw-muted">No retained text witness is attached to this side.</p>
+      )}
+    </div>
+  )
+}
+
+function EvidenceChecksToolbar({
+  bundle,
+  checksPanels,
+  loadingChecks,
+  checksBusy,
+  checksError,
+  pendingChecksRun,
+  onRun,
+  onRetry,
+}) {
+  const viewingHistorical = Boolean(bundle && !isCurrentSavedVersion(bundle))
+  const canRun = checksPanels?.canRun === true
+  const requestInFlight = Boolean(checksBusy || loadingChecks)
+  const showRunRetry = Boolean(checksError && pendingChecksRun)
+  const showReadRetry = Boolean(checksError && !pendingChecksRun)
+  const showRetry = showRunRetry || showReadRetry
+  return (
+    <div className="piw-checks-toolbar">
+      <h2>Evidence checks for this saved version</h2>
+      <p className="piw-note">
+        Source Links, Evidence Checks, and Search Coverage share one version-bound private report.
+        Reading, switching tabs, refreshing, opening the inspector, or rendering does not run checks.
+      </p>
+      {viewingHistorical ? (
+        <p className="piw-note" data-historical-checks="true">
+          This is a historical saved version. Inspecting or running checks here uses this displayed version only. It does not mark the investigation reviewed.
+        </p>
+      ) : null}
+      {loadingChecks ? <StatusBanner>Loading saved evidence checks…</StatusBanner> : null}
+      {checksError ? (
+        <StatusBanner tone="error">{checksUnavailableCopy(checksError)}</StatusBanner>
+      ) : null}
+      {showRetry ? (
+        <button
+          type="button"
+          className="piw-btn"
+          data-action="retry-evidence-checks"
+          data-retry-kind={showRunRetry ? 'run' : 'read'}
+          disabled={requestInFlight}
+          onClick={() => onRetry?.()}
+        >
+          {checksBusy ? 'Saving evidence checks…' : 'Retry the same evidence-check request'}
+        </button>
+      ) : canRun ? (
+        <button
+          type="button"
+          className="piw-btn"
+          data-action="run-evidence-checks"
+          disabled={requestInFlight}
+          onClick={() => onRun?.()}
+        >
+          {checksBusy ? 'Saving evidence checks…' : 'Run evidence checks'}
+        </button>
+      ) : checksPanels?.status === 'saved' ? (
+        <p className="piw-muted">A report is already saved for this version. Checks are not run again from this view.</p>
+      ) : checksPanels?.status === 'not_run' ? (
+        <p className="piw-muted">Viewer access can read a saved report. Running checks is limited to reviewers.</p>
+      ) : null}
+    </div>
+  )
+}
+
+function SourceLinksSection({ bundle, checksPanels, loadingChecks, onInspectPair, onOpenWitness }) {
+  const lineage = checksPanels?.lineage ?? []
+  const coverage = checksPanels?.coverage
+  const truncated = coverage && coverage.lineage_candidates_found > coverage.lineage_candidates_returned
+  return (
+    <section className="piw-section" id="piw-source-links" tabIndex={-1}>
+      <h2>Source Links</h2>
+      <p className="piw-note">
+        These are candidate pairs from this saved observation. Source independence is unresolved and transmission direction is undetermined.
+        Same article or URL indicates related captures, not necessarily syndication. Exact repeated text may be boilerplate or a common quotation.
+        No outlet is labeled independent.
+      </p>
+      {loadingChecks && !checksPanels ? <p className="piw-muted">Loading source-link candidates…</p> : null}
+      {checksPanels?.status === 'not_run' ? (
+        <p className="piw-empty">Checks have not been run for this saved version.</p>
+      ) : checksPanels?.status === 'saved' && lineage.length === 0 ? (
+        <p className="piw-empty">No source-link candidates were found in this saved observation. That is not evidence that nothing happened, and it does not establish independence.</p>
+      ) : lineage.length > 0 ? (
+        <ul className="piw-cards">
+          {lineage.map((pair) => (
+            <li key={pair.id} className="piw-card" data-source-link={pair.id}>
+              <p>Possible shared-source pair. Independence: unknown. Direction: undetermined.</p>
+              <ul className="piw-list">
+                {(pair.reasons ?? []).map((reason) => (
+                  <li key={reason}>{lineageReasonCopy(reason)}</li>
+                ))}
+              </ul>
+              <div className="piw-pair">
+                <SourceWitness
+                  bundle={bundle}
+                  reference={pair.left_excerpt}
+                  position={pair.left_position}
+                  label="First retained capture"
+                  onOpen={() => onOpenWitness?.(pair.left_excerpt, bundle)}
+                />
+                <SourceWitness
+                  bundle={bundle}
+                  reference={pair.right_excerpt}
+                  position={pair.right_position}
+                  label="Second retained capture"
+                  onOpen={() => onOpenWitness?.(pair.right_excerpt, bundle)}
+                />
+              </div>
+              <p className="piw-mono">Pair {pair.id}</p>
+              <button
+                type="button"
+                className="piw-text-btn"
+                data-action="inspect-source-link"
+                onClick={() => onInspectPair?.(pair)}
+              >
+                Open both sources in inspector
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {truncated ? (
+        <p className="piw-note">
+          {coverage.lineage_candidates_found} candidate pairs were found in the scanned scope; {coverage.lineage_candidates_returned} are shown. Truncation does not mean the remaining fields were not scanned.
+        </p>
+      ) : null}
+    </section>
+  )
+}
+
+function EvidenceChecksSection({ bundle, checksPanels, loadingChecks, onInspectCue, onOpenCitation }) {
+  const cues = checksPanels?.challenges ?? []
+  const coverage = checksPanels?.coverage
+  const truncated = coverage && coverage.challenge_cues_found > coverage.challenge_cues_returned
+  const textCues = cues.filter((cue) => cue.kind !== 'recorded_source_status')
+  const statusCues = cues.filter((cue) => cue.kind === 'recorded_source_status')
+  return (
+    <section className="piw-section" id="piw-evidence-checks" tabIndex={-1}>
+      <h2>Evidence Checks</h2>
+      <p className="piw-note">
+        Correction or withdrawal language is a review cue. It may be negated, concern another event, or describe a different claim.
+        It is not a contradiction, retraction verdict, confidence change, or changed commitment outcome.
+      </p>
+      {loadingChecks && !checksPanels ? <p className="piw-muted">Loading evidence-check cues…</p> : null}
+      {checksPanels?.status === 'not_run' ? (
+        <p className="piw-empty">Checks have not been run for this saved version.</p>
+      ) : checksPanels?.status === 'saved' && cues.length === 0 ? (
+        <p className="piw-empty">No correction, withdrawal, or recorded source-status cues were found in this saved observation. That is not evidence that nothing happened.</p>
+      ) : (
+        <>
+          {textCues.length > 0 && (
+            <>
+              <h3>Correction and withdrawal language</h3>
+              <ul className="piw-cards">
+                {textCues.map((cue) => {
+                  const resolved = resolveWorkspaceExcerpt(bundle, cue.reference)
+                  return (
+                    <li key={cue.id} className="piw-card" data-cue-kind={cue.kind}>
+                      <p>{challengeCueCopy(cue.kind)}</p>
+                      <ExcerptBlock
+                        resolved={resolved}
+                        reference={cue.reference ?? { position: cue.position, source_field: 'unknown', span_start: 0, span_end: 0, excerpt: '', relation: 'context', note: 'No retained excerpt is attached.' }}
+                        onOpen={cue.reference ? () => onOpenCitation?.(cue.reference, bundle) : undefined}
+                      />
+                      <button
+                        type="button"
+                        className="piw-text-btn"
+                        data-action="inspect-challenge-cue"
+                        onClick={() => onInspectCue?.(cue)}
+                      >
+                        Open exact saved reference
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </>
+          )}
+          {statusCues.length > 0 && (
+            <>
+              <h3>Recorded source-status notices</h3>
+              <ul className="piw-cards">
+                {statusCues.map((cue) => (
+                  <li key={cue.id} className="piw-card" data-cue-kind="recorded_source_status">
+                    <MetadataNotice cue={cue} metadata={resolveWorkspaceMetadata(bundle, cue.metadata_reference)} />
+                    <button
+                      type="button"
+                      className="piw-text-btn"
+                      data-action="inspect-challenge-cue"
+                      onClick={() => onInspectCue?.(cue)}
+                    >
+                      Open this retained record version
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </>
+      )}
+      {truncated ? (
+        <p className="piw-note">
+          {coverage.challenge_cues_found} cues were found in the scanned scope; {coverage.challenge_cues_returned} are shown. Truncation does not mean the remaining fields were not scanned.
+        </p>
+      ) : null}
+    </section>
+  )
+}
+
+function SearchCoverageSection({ checksPanels, loadingChecks }) {
+  const coverage = checksPanels?.coverage
+  const limits = checksPanels?.limits
+  const omittedPairPositions = coverage?.lineage_excluded_positions ?? []
+  const resultsCapped = Boolean(
+    coverage
+    && (
+      Number(coverage.lineage_candidates_found) > Number(coverage.lineage_candidates_returned)
+      || Number(coverage.challenge_cues_found) > Number(coverage.challenge_cues_returned)
+    ),
+  )
+  return (
+    <section className="piw-section" id="piw-search-coverage" tabIndex={-1}>
+      <h2>Search Coverage</h2>
+      <p className="piw-note">
+        This receipt describes only the saved observation inputs that were checked. It is not the analyst-declared collection records in Evidence Gaps.
+        External retrieval was not run. The cue vocabulary is English only. Language detection was not performed.
+      </p>
+      {loadingChecks && !checksPanels ? <p className="piw-muted">Loading the search-coverage receipt…</p> : null}
+      {checksPanels?.status === 'not_run' ? (
+        <p className="piw-empty">Checks have not been run for this saved version.</p>
+      ) : coverage ? (
+        <div className="piw-card" data-search-coverage="true">
+          <p className="piw-note">
+            Bounded checks completed for the supported saved inputs. Unsupported record kinds are listed separately. This receipt describes only this saved observation. It is not independently measured global coverage.
+          </p>
+          {omittedPairPositions.length > 0 ? (
+            <StatusBanner>
+              Pair comparison omitted some capture inputs. Those omitted pair inputs are not an incomplete scan of the remaining saved observation.
+            </StatusBanner>
+          ) : null}
+          {resultsCapped ? (
+            <StatusBanner>
+              Result lists are capped. Found-versus-shown counts do not mean the remaining saved inputs were not scanned.
+            </StatusBanner>
+          ) : null}
+          <p>Saved inputs checked: {coverage.input_count}. Text fields searched: {coverage.text_fields_scanned}.</p>
+          <p>Capture inputs in the pair scope: {coverage.lineage_scanned_positions?.length ?? 0}. Pairs compared: {coverage.pairs_compared}.</p>
+          <p>Source-link candidates found: {coverage.lineage_candidates_found}; shown: {coverage.lineage_candidates_returned}.</p>
+          <p>Evidence-check cues found: {coverage.challenge_cues_found}; shown: {coverage.challenge_cues_returned}.</p>
+          <p>External retrieval: not run. Semantic adjudication: not performed. Languages verified: no.</p>
+          {limits?.cue_language ? <p>Cue vocabulary: {limits.cue_language} only.</p> : null}
+          {coverage.missing_body_positions?.length ? (
+            <>
+              <h4>Missing bodies</h4>
+              <p className="piw-muted">Positions {coverage.missing_body_positions.join(', ')}. Presence of a title or summary does not establish full publisher text retention.</p>
+            </>
+          ) : (
+            <p className="piw-muted">No missing-body positions were recorded for supported inputs.</p>
+          )}
+          {coverage.unsupported_inputs?.length ? (
+            <>
+              <h4>Unsupported record types</h4>
+              <ul className="piw-list">
+                {coverage.unsupported_inputs.map((row) => (
+                  <li key={`${row.position}:${row.record_kind}`}>
+                    Position {row.position} · {row.record_kind} · {row.reason}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="piw-muted">No unsupported record types were listed.</p>
+          )}
+          {coverage.lineage_excluded_positions?.length ? (
+            <>
+              <h4>Explicit pair-scope exclusions</h4>
+              <p className="piw-muted">Capture positions omitted from pair comparison: {coverage.lineage_excluded_positions.join(', ')}.</p>
+            </>
+          ) : (
+            <p className="piw-muted">No capture positions were excluded from the pair scope.</p>
+          )}
+          <h4>Limitations</h4>
+          <ul className="piw-list">
+            {(checksPanels.limitations ?? []).map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
 export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode, publicNode }) {
   const { state, status } = workspace
   const inspector = state.inspector
@@ -682,7 +1033,7 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
   return (
     <div className="piw-inspector">
       <h2>Investigation inspector</h2>
-      <p className="ws-nav-note">The five sections share this saved version and review state.</p>
+      <p className="ws-nav-note">These private sections share this saved version and review state.</p>
       <dl className="ws-inspector-dl">
         <div>
           <dt>Displayed version</dt>
@@ -730,6 +1081,45 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
           />
         </section>
       )}
+      {inspector?.kind === 'source-link' && (
+        <section>
+          <h3>Possible shared-source pair</h3>
+          <p className="piw-note">Independence is unknown. Transmission direction is undetermined. Related captures are not labeled independent.</p>
+          <div className="piw-pair">
+            <SourceWitness
+              bundle={state.bundle}
+              reference={inspector.pair?.left_excerpt}
+              position={inspector.pair?.left_position}
+              label="First retained capture"
+            />
+            <SourceWitness
+              bundle={state.bundle}
+              reference={inspector.pair?.right_excerpt}
+              position={inspector.pair?.right_position}
+              label="Second retained capture"
+            />
+          </div>
+        </section>
+      )}
+      {inspector?.kind === 'challenge-cue' && (
+        <section>
+          <h3>Evidence-check cue</h3>
+          {inspector.cue?.kind === 'recorded_source_status' ? (
+            <MetadataNotice
+              cue={inspector.cue}
+              metadata={inspector.metadata ?? resolveWorkspaceMetadata(state.bundle, inspector.cue?.metadata_reference)}
+            />
+          ) : (
+            <>
+              <p>{challengeCueCopy(inspector.cue?.kind)}</p>
+              <ExcerptBlock
+                resolved={inspector.resolved}
+                reference={inspector.cue?.reference ?? inspector.reference}
+              />
+            </>
+          )}
+        </section>
+      )}
       {state.panels?.canonicalSubject?.type === 'graph_node' && (
         <section>
           <h3>Public graph</h3>
@@ -758,7 +1148,7 @@ export default function PrivateInvestigationWorkspace({
   const bundle = state.bundle
   const revealPrivate = canRevealPrivateRecords(status) && panels && bundle
 
-  const openCitation = (reference, sourceBundle) => {
+  const openCitation = (reference, sourceBundle, section = 'changed') => {
     const resolved = resolveWorkspaceExcerpt(sourceBundle, reference)
     actions.setInspector({
       kind: 'citation',
@@ -767,7 +1157,30 @@ export default function PrivateInvestigationWorkspace({
       input: resolved?.input ?? null,
       versionId: sourceBundle?.version?.id ?? null,
     })
-    actions.setActiveSection('changed')
+    actions.setActiveSection(section)
+  }
+
+  const openSourceLink = (pair) => {
+    actions.setInspector({ kind: 'source-link', pair })
+    actions.setActiveSection('source-links')
+  }
+
+  const openChallengeCue = (cue) => {
+    if (cue?.kind === 'recorded_source_status') {
+      actions.setInspector({
+        kind: 'challenge-cue',
+        cue,
+        metadata: resolveWorkspaceMetadata(bundle, cue.metadata_reference),
+      })
+    } else {
+      actions.setInspector({
+        kind: 'challenge-cue',
+        cue,
+        resolved: resolveWorkspaceExcerpt(bundle, cue.reference),
+        reference: cue.reference,
+      })
+    }
+    actions.setActiveSection('evidence-checks')
   }
 
   const scrollTo = (id) => {
@@ -900,6 +1313,34 @@ export default function PrivateInvestigationWorkspace({
           <HypothesesSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <CommitmentsSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <GapsSection panels={panels} />
+          <EvidenceChecksToolbar
+            bundle={bundle}
+            checksPanels={state.checksPanels}
+            loadingChecks={state.loadingChecks}
+            checksBusy={state.checksBusy}
+            checksError={state.checksError}
+            pendingChecksRun={state.pendingChecksRun}
+            onRun={actions.runEvidenceChecks}
+            onRetry={actions.retryChecks}
+          />
+          <SourceLinksSection
+            bundle={bundle}
+            checksPanels={state.checksPanels}
+            loadingChecks={state.loadingChecks}
+            onInspectPair={openSourceLink}
+            onOpenWitness={(reference, sourceBundle) => openCitation(reference, sourceBundle, 'source-links')}
+          />
+          <EvidenceChecksSection
+            bundle={bundle}
+            checksPanels={state.checksPanels}
+            loadingChecks={state.loadingChecks}
+            onInspectCue={openChallengeCue}
+            onOpenCitation={(reference, sourceBundle) => openCitation(reference, sourceBundle, 'evidence-checks')}
+          />
+          <SearchCoverageSection
+            checksPanels={state.checksPanels}
+            loadingChecks={state.loadingChecks}
+          />
         </>
       )}
     </div>

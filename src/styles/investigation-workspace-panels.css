@@ -208,6 +208,33 @@
   margin: 12px 0 16px;
 }
 
+.piw-checks-toolbar,
+.piw-pair,
+.piw-metadata,
+.piw-witness {
+  margin: 12px 0 16px;
+  padding: 12px;
+  border: 1px solid var(--border-color, #e1e7ef);
+  border-radius: 8px;
+  background: var(--bg-panel, #fff);
+}
+
+.piw-pair {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .piw-pair {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.piw-witness,
+.piw-metadata {
+  margin: 0;
+}
+
 .piw-more {
   margin: 8px 0 0;
 }

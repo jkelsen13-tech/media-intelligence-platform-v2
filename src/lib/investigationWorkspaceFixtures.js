@@ -86,7 +86,7 @@ function inputRecord() {
   }
 }
 
-function snapshot(selected = [assessmentId]) {
+function snapshot(selected = [assessmentId], extraInputs = []) {
   return {
     scope_candidate_ids: [candidateId],
     selected_assessment_ids: selected,
@@ -104,15 +104,104 @@ function snapshot(selected = [assessmentId]) {
         ordinal: POSITION,
       },
     ],
-    inputs: [inputRecord()],
+    inputs: [inputRecord(), ...extraInputs],
   }
 }
 
-function observation(id) {
+const SHARED_SOURCE_TEXT = 'A retained fixture report with enough exact text to propose a shared source without asserting source independence.'
+const UNICODE_CUE_TEXT = '🧬 uncorrected text. A correction was published.'
+const UNICODE_CUE_START = Array.from(UNICODE_CUE_TEXT.slice(0, UNICODE_CUE_TEXT.indexOf('correction'))).length
+const UNICODE_CUE_END = UNICODE_CUE_START + Array.from('correction').length
+
+function evidenceCheckInputs() {
+  const sharedCapture = (position, captureId) => ({
+    position: String(position),
+    queued_at: '2019-01-01T00:00:00Z',
+    capture: {
+      id: captureId,
+      article_id: 'a1a1a1a1-a1a1-41a1-81a1-a1a1a1a1a1a1',
+      payload: {
+        title: `Shared article capture ${position}`,
+        outlet: 'Fixture Outlet',
+        url: 'https://example.org/shared-capture',
+        summary: SHARED_SOURCE_TEXT,
+        body_text: SHARED_SOURCE_TEXT,
+      },
+      published_at: '2019-01-01T00:00:00Z',
+      recorded_at: '2019-01-01T00:00:00Z',
+    },
+    record_version: null,
+  })
+  return [
+    sharedCapture('1', 'c1c1c1c1-c1c1-41c1-81c1-c1c1c1c1c1c1'),
+    sharedCapture('2', 'c2c2c2c2-c2c2-42c2-82c2-c2c2c2c2c2c2'),
+    {
+      position: '3',
+      queued_at: '2019-01-01T00:00:00Z',
+      capture: {
+        id: 'c3c3c3c3-c3c3-43c3-83c3-c3c3c3c3c3c3',
+        article_id: 'a3a3a3a3-a3a3-43a3-83a3-a3a3a3a3a3a3',
+        payload: {
+          title: 'Correction notice fixture',
+          outlet: 'Fixture Desk',
+          url: 'https://example.org/correction-notice',
+          summary: UNICODE_CUE_TEXT,
+          body_text: 'The retained body mentions a correction in passing.',
+        },
+        published_at: '2019-02-02T00:00:00Z',
+        recorded_at: '2019-02-02T00:00:00Z',
+      },
+      record_version: null,
+    },
+    {
+      position: '4',
+      queued_at: '2019-01-01T00:00:00Z',
+      capture: null,
+      record_version: {
+        id: 'r4r4r4r4-r4r4-44r4-84r4-r4r4r4r4r4r4',
+        record_kind: 'article',
+        payload: {
+          title: 'Withdrawn fixture record',
+          outlet: 'Fixture Records',
+          source_status: 'withdrawn',
+        },
+      },
+    },
+    {
+      position: '5',
+      queued_at: '2019-01-01T00:00:00Z',
+      capture: null,
+      record_version: {
+        id: 'r5r5r5r5-r5r5-45r5-85r5-r5r5r5r5r5r5',
+        record_kind: 'graph_node',
+        payload: { label: 'Corrected fixture node.' },
+      },
+    },
+    {
+      position: '6',
+      queued_at: '2019-01-01T00:00:00Z',
+      capture: {
+        id: 'c6c6c6c6-c6c6-46c6-86c6-c6c6c6c6c6c6',
+        article_id: 'a6a6a6a6-a6a6-46a6-86a6-a6a6a6a6a6a6',
+        payload: {
+          title: 'Unsafe locator fixture',
+          outlet: 'Fixture Outlet',
+          url: 'javascript:alert(1)',
+          summary: 'This locator must render as text, not a link.',
+        },
+        published_at: '2019-03-03T00:00:00Z',
+        recorded_at: '2019-03-03T00:00:00Z',
+      },
+      record_version: null,
+    },
+  ]
+}
+
+function observation(id, extraInputs = []) {
   return {
     id,
     contract_version: 'investigation-observation-1',
-    snapshot: snapshot(),
+    snapshot: snapshot(undefined, extraInputs),
     publicly_eligible: false,
   }
 }
@@ -221,6 +310,7 @@ function bundle({
   revision = 2,
   observationId = observation2,
   accessRole = 'reviewer',
+  extraInputs = evidenceCheckInputs(),
   comparison,
   review = {
     id: receipt1,
@@ -248,7 +338,7 @@ function bundle({
       change_reason: changeReason,
       recorded_at: '2026-09-06T07:30:00Z',
     },
-    observation: observationRecord ?? observation(observationId),
+    observation: observationRecord ?? observation(observationId, extraInputs),
     review,
     comparison,
     publicly_eligible: false,
@@ -304,6 +394,7 @@ export const FIXTURE_BUNDLES = Object.freeze({
     predecessorId: null,
     revision: 1,
     observationId: observation1,
+    extraInputs: [],
     review: null,
     comparison: {
       mode: 'not_reviewed',
@@ -510,6 +601,277 @@ export const FIXTURE_BUNDLES = Object.freeze({
   }),
 })
 
+export const FIXTURE_SHARED_SOURCE_TEXT = SHARED_SOURCE_TEXT
+export const FIXTURE_UNICODE_CUE_TEXT = UNICODE_CUE_TEXT
+export const FIXTURE_UNICODE_CUE_SPAN = Object.freeze({ start: UNICODE_CUE_START, end: UNICODE_CUE_END })
+export const FIXTURE_CHECKS_REPORT_ID = 'd0d0d0d0-d0d0-40d0-80d0-d0d0d0d0d0d0'
+
+function excerptRef(position, sourceField, raw, start = 0, end = null) {
+  const points = Array.from(raw)
+  const spanEnd = end == null ? Math.min(160, points.length) : end
+  return {
+    position: String(position),
+    source_field: sourceField,
+    span_start: start,
+    span_end: spanEnd,
+    excerpt: points.slice(start, spanEnd).join(''),
+  }
+}
+
+function checksEnvelope({
+  investigationId,
+  versionId,
+  observationId,
+  accessRole = 'reviewer',
+  status = 'saved',
+  report = null,
+} = {}) {
+  return {
+    contract_version: 'investigation-evidence-checks-1',
+    investigation_id: investigationId,
+    version_id: versionId,
+    observation_id: observationId,
+    access_role: accessRole,
+    status,
+    report,
+    publicly_eligible: false,
+  }
+}
+
+function coverageBlock({
+  inputCount,
+  inputPositions,
+  captureCount,
+  textScanPositions,
+  textFieldsScanned,
+  metadataScanPositions = [],
+  unsupportedInputs = [],
+  missingBodyPositions = [],
+  lineageScannedPositions,
+  lineageExcludedPositions = [],
+  pairsCompared,
+  lineageFound,
+  lineageReturned,
+  cuesFound,
+  cuesReturned,
+} = {}) {
+  return {
+    scope: 'saved_observation_dependency_inputs',
+    scope_candidate_ids: [candidateId],
+    input_count: inputCount,
+    input_positions: inputPositions,
+    capture_count: captureCount,
+    text_scan_positions: textScanPositions,
+    text_fields_scanned: textFieldsScanned,
+    metadata_scan_positions: metadataScanPositions,
+    unsupported_inputs: unsupportedInputs,
+    missing_body_positions: missingBodyPositions,
+    lineage_scanned_positions: lineageScannedPositions,
+    lineage_excluded_positions: lineageExcludedPositions,
+    pairs_compared: pairsCompared,
+    lineage_candidates_found: lineageFound,
+    lineage_candidates_returned: lineageReturned,
+    challenge_cues_found: cuesFound,
+    challenge_cues_returned: cuesReturned,
+    external_retrieval: 'not_run',
+    languages_verified: false,
+    semantic_adjudication: 'not_performed',
+  }
+}
+
+const CHECK_LIMITS = Object.freeze({
+  lineage_capture_limit: 100,
+  results_per_section: 200,
+  identical_text_min_codepoints: 80,
+  text_matches_per_field_per_cue: 1,
+  cue_language: 'English',
+})
+
+const CHECK_LIMITATIONS = Object.freeze([
+  'Only retained inputs in this saved observation were searched; this is not the whole source collection or the web.',
+  'Matching text or URLs proposes a source relationship; independence and transmission direction remain unknown.',
+  'Correction and withdrawal words may concern another claim, be negated, or refer to a different event.',
+  'Source status describes this retained record version, not the current live source.',
+  'The cue vocabulary is English only. Language, geography and source-class coverage are not verified.',
+  'Empty results do not establish that a claim is true or that no follow-up occurred.',
+])
+
+function populatedChecksReport(bundle) {
+  const sharedExcerpt = excerptRef('1', 'body_text', SHARED_SOURCE_TEXT)
+  const sharedRight = excerptRef('2', 'body_text', SHARED_SOURCE_TEXT)
+  const cueExcerpt = excerptRef('3', 'summary', UNICODE_CUE_TEXT, UNICODE_CUE_START, UNICODE_CUE_END)
+  return {
+    id: FIXTURE_CHECKS_REPORT_ID,
+    investigation_id: bundle.investigation_id,
+    version_id: bundle.version.id,
+    algorithm_version: 'retained-evidence-checks-1',
+    recorded_at: '2026-09-06T09:00:00Z',
+    result: {
+      contract_version: 'investigation-evidence-checks-1',
+      algorithm_version: 'retained-evidence-checks-1',
+      completion: 'completed_bounded_checks',
+      lineage_candidates: [
+        {
+          id: 'pair:1:2',
+          status: 'needs_review',
+          independence: 'unknown',
+          direction: 'undetermined',
+          left_position: '1',
+          right_position: '2',
+          left_capture_id: 'c1c1c1c1-c1c1-41c1-81c1-c1c1c1c1c1c1',
+          right_capture_id: 'c2c2c2c2-c2c2-42c2-82c2-c2c2c2c2c2c2',
+          reasons: ['same_saved_article', 'same_retained_url', 'identical_retained_text'],
+          left_excerpt: sharedExcerpt,
+          right_excerpt: sharedRight,
+        },
+      ],
+      challenge_cues: [
+        {
+          id: 'cue:3:summary:correction_language',
+          kind: 'correction_language',
+          status: 'needs_review',
+          position: '3',
+          capture_id: 'c3c3c3c3-c3c3-43c3-83c3-c3c3c3c3c3c3',
+          record_version_id: null,
+          reference: cueExcerpt,
+          metadata_reference: null,
+        },
+        {
+          id: 'cue:4:source_status',
+          kind: 'recorded_source_status',
+          status: 'needs_review',
+          position: '4',
+          capture_id: null,
+          record_version_id: 'r4r4r4r4-r4r4-44r4-84r4-r4r4r4r4r4r4',
+          reference: null,
+          metadata_reference: { position: '4', source_field: 'source_status', value: 'withdrawn' },
+        },
+      ],
+      coverage: coverageBlock({
+        inputCount: 7,
+        inputPositions: ['1', '2', '3', '4', '5', '6', POSITION],
+        captureCount: 5,
+        textScanPositions: ['1', '2', '3', '4', '6', POSITION],
+        textFieldsScanned: 14,
+        metadataScanPositions: ['4'],
+        unsupportedInputs: [{ position: '5', record_kind: 'graph_node', reason: 'no_check_for_this_record_kind' }],
+        missingBodyPositions: ['4', '6', POSITION],
+        lineageScannedPositions: ['1', '2', '3', '6', POSITION],
+        lineageExcludedPositions: [],
+        pairsCompared: 10,
+        lineageFound: 1,
+        lineageReturned: 1,
+        cuesFound: 2,
+        cuesReturned: 2,
+      }),
+      limits: CHECK_LIMITS,
+      limitations: CHECK_LIMITATIONS,
+      publicly_eligible: false,
+    },
+  }
+}
+
+function emptyChecksReport(bundle) {
+  return {
+    id: 'e0e0e0e0-e0e0-40e0-80e0-e0e0e0e0e0e0',
+    investigation_id: bundle.investigation_id,
+    version_id: bundle.version.id,
+    algorithm_version: 'retained-evidence-checks-1',
+    recorded_at: '2026-09-06T09:05:00Z',
+    result: {
+      contract_version: 'investigation-evidence-checks-1',
+      algorithm_version: 'retained-evidence-checks-1',
+      completion: 'completed_bounded_checks',
+      lineage_candidates: [],
+      challenge_cues: [],
+      coverage: coverageBlock({
+        inputCount: bundle.observation?.snapshot?.inputs?.length ?? 0,
+        inputPositions: (bundle.observation?.snapshot?.inputs ?? []).map((input) => String(input.position)),
+        captureCount: (bundle.observation?.snapshot?.inputs ?? []).filter((input) => input.capture).length,
+        textScanPositions: (bundle.observation?.snapshot?.inputs ?? []).filter((input) => input.capture || input.record_version?.record_kind === 'article').map((input) => String(input.position)),
+        textFieldsScanned: 0,
+        metadataScanPositions: [],
+        unsupportedInputs: [],
+        missingBodyPositions: [],
+        lineageScannedPositions: [],
+        lineageExcludedPositions: [],
+        pairsCompared: 0,
+        lineageFound: 0,
+        lineageReturned: 0,
+        cuesFound: 0,
+        cuesReturned: 0,
+      }),
+      limits: CHECK_LIMITS,
+      limitations: CHECK_LIMITATIONS,
+      publicly_eligible: false,
+    },
+  }
+}
+
+function partialChecksReport(bundle) {
+  const report = populatedChecksReport(bundle)
+  report.id = 'f0f0f0f0-f0f0-40f0-80f0-f0f0f0f0f0f0'
+  report.result.completion = 'partial'
+  report.result.coverage.lineage_excluded_positions = ['101']
+  report.result.coverage.lineage_candidates_found = 250
+  report.result.coverage.lineage_candidates_returned = 1
+  report.result.coverage.challenge_cues_found = 220
+  report.result.coverage.challenge_cues_returned = 2
+  report.result.coverage.pairs_compared = 4950
+  return report
+}
+
+function truncatedChecksReport(bundle) {
+  const report = populatedChecksReport(bundle)
+  report.id = 'e1e1e1e1-e1e1-41e1-81e1-e1e1e1e1e1e1'
+  report.result.completion = 'partial'
+  report.result.coverage.lineage_excluded_positions = []
+  report.result.coverage.challenge_cues_found = 201
+  report.result.coverage.challenge_cues_returned = 2
+  return report
+}
+
+export function fixtureEvidenceChecks(kind, bundle, accessRole) {
+  const role = accessRole ?? bundle.access_role ?? 'reviewer'
+  if (kind === 'not_run') {
+    return checksEnvelope({
+      investigationId: bundle.investigation_id,
+      versionId: bundle.version.id,
+      observationId: bundle.observation.id,
+      accessRole: role,
+      status: 'not_run',
+      report: null,
+    })
+  }
+  const report = kind === 'partial'
+    ? partialChecksReport(bundle)
+    : kind === 'truncated'
+      ? truncatedChecksReport(bundle)
+      : kind === 'zero'
+        ? emptyChecksReport(bundle)
+        : populatedChecksReport(bundle)
+  return checksEnvelope({
+    investigationId: bundle.investigation_id,
+    versionId: bundle.version.id,
+    observationId: bundle.observation.id,
+    accessRole: role,
+    status: 'saved',
+    report,
+  })
+}
+
+export const FIXTURE_CHECKS = Object.freeze({
+  comparable: fixtureEvidenceChecks('saved', FIXTURE_BUNDLES.comparable),
+  comparablePartial: fixtureEvidenceChecks('partial', FIXTURE_BUNDLES.comparable),
+  comparableTruncated: fixtureEvidenceChecks('truncated', FIXTURE_BUNDLES.comparable),
+  viewer: fixtureEvidenceChecks('saved', FIXTURE_BUNDLES.viewer, 'viewer'),
+  empty: fixtureEvidenceChecks('not_run', FIXTURE_BUNDLES.empty, 'viewer'),
+  emptyZero: fixtureEvidenceChecks('zero', FIXTURE_BUNDLES.empty),
+  historical: fixtureEvidenceChecks('not_run', FIXTURE_BUNDLES.historical),
+  historicalZero: fixtureEvidenceChecks('zero', FIXTURE_BUNDLES.historical),
+  scope: fixtureEvidenceChecks('zero', FIXTURE_BUNDLES.scope),
+})
+
 function catalogItem(id, question, versionId, revision, role = 'reviewer') {
   return {
     investigation_id: id,
@@ -646,6 +1008,107 @@ export function createLocalInvestigationWorkspaceClient({
   })
 }
 
+export function createLocalInvestigationEvidenceChecksClient({
+  scenario = 'populated',
+  delayMs = 0,
+  pendingReads = {},
+  pendingRuns = {},
+  readResults = {},
+  runResults = {},
+} = {}) {
+  const wait = async () => {
+    if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs))
+  }
+  const fail = (code) => ({ data: null, error: { code } })
+  const ok = (data) => ({ data, error: null })
+  const saved = new Map()
+  const keyFor = (investigationId, versionId) => `${investigationId}:${versionId}`
+  const bundleFor = (investigationId, versionId) => {
+    if (investigationId === FIXTURE_IDS.empty) return FIXTURE_BUNDLES.empty
+    if (investigationId === FIXTURE_IDS.historical) return FIXTURE_BUNDLES.historical
+    if (investigationId === FIXTURE_IDS.scope) return FIXTURE_BUNDLES.scope
+    if (investigationId === FIXTURE_IDS.evidenceOnly) {
+      return versionId === FIXTURE_VERSIONS.v1 ? FIXTURE_BUNDLES.evidenceOnlyBefore : FIXTURE_BUNDLES.evidenceOnly
+    }
+    if (investigationId === FIXTURE_IDS.comparable || investigationId === FIXTURE_IDS.conflict) {
+      if (versionId === FIXTURE_VERSIONS.v1) {
+        return bundle({
+          investigationId,
+          versionId: version1,
+          headVersionId: version2,
+          predecessorId: null,
+          revision: 1,
+          observationId: observation1,
+          comparison: {
+            mode: 'historical_before_review',
+            before_version_id: version1,
+            before_observation_id: observation1,
+            after_version_id: version2,
+            after_observation_id: observation2,
+            evidence_changes: null,
+            definition_changes: comparableComparison.definition_changes,
+          },
+        })
+      }
+      return investigationId === FIXTURE_IDS.conflict ? FIXTURE_BUNDLES.comparable : FIXTURE_BUNDLES.comparable
+    }
+    return null
+  }
+  const defaultRead = (investigationId, versionId) => {
+    const remembered = saved.get(keyFor(investigationId, versionId))
+    if (remembered) return ok(remembered)
+    if (investigationId === FIXTURE_IDS.denied) return fail('access_denied')
+    if (investigationId === FIXTURE_IDS.empty) return ok(FIXTURE_CHECKS.empty)
+    if (investigationId === FIXTURE_IDS.historical) return ok(FIXTURE_CHECKS.historical)
+    if (investigationId === FIXTURE_IDS.scope) return ok(FIXTURE_CHECKS.scope)
+    if (investigationId === FIXTURE_IDS.evidenceOnly) return ok(fixtureEvidenceChecks('not_run', versionId === FIXTURE_VERSIONS.v1 ? FIXTURE_BUNDLES.evidenceOnlyBefore : FIXTURE_BUNDLES.evidenceOnly))
+    if (investigationId === FIXTURE_IDS.comparable || investigationId === FIXTURE_IDS.conflict) {
+      if (versionId === FIXTURE_VERSIONS.v1) {
+        const historicalComparable = bundleFor(investigationId, versionId)
+        return ok(fixtureEvidenceChecks('not_run', historicalComparable))
+      }
+      if (scenario === 'partial') return ok(FIXTURE_CHECKS.comparablePartial)
+      if (scenario === 'truncated') return ok(FIXTURE_CHECKS.comparableTruncated)
+      return ok(FIXTURE_CHECKS.comparable)
+    }
+    return fail('access_denied')
+  }
+  return Object.freeze({
+    async read(investigationId, versionId) {
+      await wait()
+      const pending = pendingReads[keyFor(investigationId, versionId)]
+      if (pending) return pending.promise
+      if (typeof readResults[investigationId] === 'function') {
+        return readResults[investigationId](investigationId, versionId)
+      }
+      if (scenario === 'unavailable') return fail('service_unavailable')
+      if (scenario === 'signed-out') return fail('authentication_required')
+      return defaultRead(investigationId, versionId)
+    },
+    async run(investigationId, versionId) {
+      await wait()
+      const pending = pendingRuns[keyFor(investigationId, versionId)]
+      if (pending) return pending.promise
+      if (typeof runResults[investigationId] === 'function') {
+        return runResults[investigationId](investigationId, versionId)
+      }
+      if (scenario === 'unavailable') return fail('service_unavailable')
+      if (scenario === 'signed-out') return fail('authentication_required')
+      if (investigationId === FIXTURE_IDS.denied) return fail('access_denied')
+      if (investigationId === FIXTURE_IDS.empty) return fail('access_denied')
+      const current = bundleFor(investigationId, versionId)
+      if (!current) return fail('access_denied')
+      const key = keyFor(investigationId, versionId)
+      if (!saved.has(key)) {
+        const existing = defaultRead(investigationId, versionId)
+        if (existing.data?.status === 'saved') saved.set(key, existing.data)
+        else saved.set(key, fixtureEvidenceChecks('zero', current, current.access_role))
+      }
+      return ok(saved.get(key))
+    },
+  })
+}
+
 export function previewAuthFor(mode) {
   if (mode === 'signed-out') return { session: null, user: null, loading: false }
   if (mode === 'loading') return { session: null, user: null, loading: true }
@@ -655,18 +1118,29 @@ export function previewAuthFor(mode) {
 export function readInvestigationWorkspacePreview(search, env = (typeof import.meta !== 'undefined' ? import.meta.env : {})) {
   if (env?.DEV !== true) return null
   const mode = new URLSearchParams(search ?? '').get('privateInvestigationFixture')
-  const allowed = ['populated', 'empty', 'signed-out', 'denied', 'historical', 'scope', 'conflict', 'unavailable', 'loading', 'evidence-only']
+  const allowed = ['populated', 'empty', 'signed-out', 'denied', 'historical', 'scope', 'conflict', 'unavailable', 'loading', 'evidence-only', 'partial', 'truncated', 'checks-unavailable']
   if (!allowed.includes(mode)) return null
+  const populatedWorkspace = mode === 'denied' || mode === 'partial' || mode === 'truncated' || mode === 'checks-unavailable'
   return {
     mode,
     client: createLocalInvestigationWorkspaceClient({
-      scenario: mode === 'denied' ? 'populated' : mode,
+      scenario: populatedWorkspace ? 'populated' : mode,
+      readResults: mode === 'denied'
+        ? { [FIXTURE_IDS.comparable]: () => ({ data: null, error: { code: 'access_denied' } }) }
+        : {},
+    }),
+    checksClient: createLocalInvestigationEvidenceChecksClient({
+      scenario: mode === 'denied' ? 'populated'
+        : mode === 'partial' ? 'partial'
+        : mode === 'truncated' ? 'truncated'
+        : mode === 'checks-unavailable' ? 'unavailable'
+        : mode,
       readResults: mode === 'denied'
         ? { [FIXTURE_IDS.comparable]: () => ({ data: null, error: { code: 'access_denied' } }) }
         : {},
     }),
     auth: previewAuthFor(mode),
-    initialInvestigationId: mode === 'denied' || mode === 'populated' || mode === 'conflict'
+    initialInvestigationId: mode === 'denied' || mode === 'populated' || mode === 'conflict' || mode === 'partial' || mode === 'truncated' || mode === 'checks-unavailable'
       ? FIXTURE_IDS.comparable
       : mode === 'historical'
         ? FIXTURE_IDS.historical

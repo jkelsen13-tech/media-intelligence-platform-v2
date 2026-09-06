@@ -1,0 +1,146 @@
+{
+  "verified_at": "2026-09-06T10:05:12.214595+00:00",
+  "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+  "base_main_commit": "c52c4c8369cbda47363363d4be8a8fedfe8603c4",
+  "project_id": "qikvmopbtijoebdqosyq",
+  "contract_version": "investigation-evidence-checks-1",
+  "algorithm_version": "retained-evidence-checks-1",
+  "migration": {
+    "version": "20260906100018",
+    "name": "investigation_evidence_checks_v1",
+    "applied": true,
+    "repo_path": "supabase/migrations/20260906100018_investigation_evidence_checks_v1.sql",
+    "live_function_bodies_match_local_md5": {
+      "evidence_check_build": "b4f9d13c190495b439d6699f6907ac65",
+      "evidence_check_excerpt": "9abe2723d9de1d86ad0c570c5002399b",
+      "evidence_check_inputs": "7e6113858a0fbc2aa6267b628ca813e1",
+      "mip_investigation_evidence_checks_v1": "b2d5a77f11d6655a6667a577a6586eff"
+    }
+  },
+  "edge_function": {
+    "name": "investigation-evidence-checks",
+    "id": "d4a33694-deac-461e-a751-04b8f9c5bfa2",
+    "version": 1,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "ezbr_sha256": "48f2dc387c1a0803aaba3f3371c258b60f4880e24d411a241f16d4972dfb6156",
+    "deployed_files_match_local": true
+  },
+  "tests": {
+    "full_suite": {
+      "passed": 1018,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 23803.644309
+    },
+    "focused": {
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    "build": {
+      "passed": true,
+      "duration_seconds": 32.55,
+      "existing_warnings": [
+        "Large Vite chunks",
+        "Existing temporalAssessment.js node:crypto externalization"
+      ]
+    },
+    "rollback_canary": "passed",
+    "local_near_4_mib_fixture_ms": 415
+  },
+  "live_http_checks": [
+    {
+      "name": "allowed_preflight",
+      "status": 204,
+      "passed": true
+    },
+    {
+      "name": "denied_origin",
+      "status": 403,
+      "passed": true
+    },
+    {
+      "name": "no_bearer",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "name": "anon_is_not_user",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "name": "read_only_method",
+      "status": 405,
+      "passed": true
+    },
+    {
+      "name": "malformed_json",
+      "status": 400,
+      "passed": true
+    },
+    {
+      "name": "direct_browser_rpc",
+      "status": 401,
+      "passed": true
+    }
+  ],
+  "post_canary_counts": {
+    "reports": 0,
+    "investigations": 0,
+    "versions": 0,
+    "observations": 0,
+    "memberships": 0,
+    "captures": 1,
+    "candidates": 3,
+    "assessments": 0,
+    "changes": 7
+  },
+  "private_boundary": {
+    "reports_rls": true,
+    "anon_rpc": false,
+    "authenticated_rpc": false,
+    "service_rpc": true,
+    "all_new_functions_security_invoker": true,
+    "all_new_search_paths_empty": true
+  },
+  "advisor_delta": {
+    "new_warnings": 0,
+    "new_errors": 0,
+    "expected_info": [
+      {
+        "kind": "rls_enabled_no_policy",
+        "reason": "Private service-only table; browser access intentionally denied.",
+        "reference": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+      },
+      {
+        "kind": "unused_index",
+        "count": 2,
+        "reason": "New foreign-key indexes on empty report table.",
+        "reference": "https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index"
+      }
+    ]
+  },
+  "ui_verification": {
+    "previous_pr43_live_signed_out_investigations": "verified",
+    "new_frontend_sections": "Cursor implementation pending",
+    "live_populated_signed_in": "not tested; no assigned investigation or user session available"
+  },
+  "limitations": [
+    "Checks search only retained dependency inputs in the saved observation.",
+    "No complete claim genealogy, independent-source adjudication, semantic contradiction classification, external retrieval or multilingual search.",
+    "Live rollback test is not a persistent real investigation.",
+    "Do not replay applied migration, blanket db push, migration repair, or Edge deployment from this handoff."
+  ],
+  "file_hashes": {
+    "supabase/migrations/20260906100018_investigation_evidence_checks_v1.sql": "cebe2b7c67d18c7c268e6b810e207eef4b112df023e8981c0e5010446944479a",
+    "supabase/tests/investigation_evidence_checks_smoke.sql": "f8d735fd9eef03866b42348b69f4a1acb7959b9923d1bb0ea1ac6e633b6ec628",
+    "supabase/functions/investigation-evidence-checks/index.ts": "f40c56a8eac98c4af6014d38d9423e4592556f2cf718049b0fabf051be5c8a1f",
+    "supabase/functions/investigation-evidence-checks/handler.mjs": "14c8d7d39d09b59498a76712086d26ac5a4c2086db7bd3f67c3d20ec1b26be10",
+    "src/lib/investigationEvidenceChecksClient.js": "3c2ed4ff0b1edbbabc4ae02bf367f45e86172fd91331c01540bacf0a115e8826",
+    "tests/investigationEvidenceChecks.test.mjs": "6e35dad632a64d67e6fdc77e74da65773d87dbd2c088c9e09461007671b47a34",
+    "docs/INVESTIGATION_EVIDENCE_CHECKS_BACKEND_2026-09-06.md": "9ffa1264ba93a731df0024ea175347f42eae5e19105c631ea91bc7098b0b4ab3",
+    "docs/INVESTIGATION_EVIDENCE_CHECKS_FRONTEND_2026-09-06.md": "48355b1c0156fbd392d53fa9a218e5b801e59fb923d11db133a3287802d1ac01"
+  }
+}

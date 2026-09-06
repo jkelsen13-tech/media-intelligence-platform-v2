@@ -11,6 +11,9 @@ export const INVESTIGATION_WORKSPACE_PANELS = Object.freeze([
   { id: 'hypotheses', label: 'Hypotheses' },
   { id: 'commitments', label: 'Commitments' },
   { id: 'gaps', label: 'Evidence Gaps' },
+  { id: 'source-links', label: 'Source Links' },
+  { id: 'evidence-checks', label: 'Evidence Checks' },
+  { id: 'search-coverage', label: 'Search Coverage' },
 ])
 
 export const WORKSPACE_STATUS = Object.freeze({
@@ -90,6 +93,12 @@ export function emptyPrivateWorkspaceState() {
     loadingCatalog: false,
     loadingBundle: false,
     loadingBefore: false,
+    checks: null,
+    checksPanels: null,
+    checksError: null,
+    checksBusy: false,
+    loadingChecks: false,
+    pendingChecksRun: null,
   }
 }
 
@@ -130,6 +139,10 @@ export function reviewRequestKey(userId, payload) {
 
 export function historyRequestKey(userId, investigationId, displayedVersionId, beforeVersionId) {
   return `history:${userId ?? ''}:${investigationId ?? ''}:${displayedVersionId ?? 'head'}:${beforeVersionId ?? ''}`
+}
+
+export function checksRequestKey(userId, investigationId, versionId, observationId, action = 'read') {
+  return `checks:${action}:${userId ?? ''}:${investigationId ?? ''}:${versionId ?? ''}:${observationId ?? ''}`
 }
 
 export function displayedScopeKey(userId, investigationId, versionId = null) {
@@ -418,4 +431,76 @@ export function snapshotCoverageCopy(snapshotCoverage) {
     return 'Observation coverage is complete for the explicit saved candidate scope and its retained dependencies. That is not real-world collection completeness.'
   }
   return 'Observation coverage is recorded as stated. It is not global media coverage.'
+}
+
+export const LINEAGE_REASON_COPY = Object.freeze({
+  same_saved_article: 'Both retained captures name the same saved article. Related captures are not necessarily syndication.',
+  same_retained_url: 'Both retained captures store the same URL. A shared URL is not proof of syndication or of independent outlets.',
+  identical_retained_text: 'The selected retained text is exactly equal across at least 80 characters. Exact repeated text may be boilerplate or a common quotation.',
+})
+
+export const CHALLENGE_CUE_COPY = Object.freeze({
+  correction_language: 'Correction language appears in this retained field. The word match needs contextual review. It is not a contradiction, retraction verdict, confidence change, or changed commitment outcome.',
+  withdrawal_language: 'Withdrawal or retraction language appears in this retained field. The word match needs contextual review. It is not a contradiction, retraction verdict, confidence change, or changed commitment outcome.',
+  recorded_source_status: 'This retained article record version records a source-status notice. That notice is not a live source lookup, a contradiction, or a changed commitment outcome.',
+})
+
+export function lineageReasonCopy(reason) {
+  return LINEAGE_REASON_COPY[reason] ?? 'This pair was proposed as a possible source relationship. Independence stays unknown.'
+}
+
+export function challengeCueCopy(kind) {
+  return CHALLENGE_CUE_COPY[kind] ?? 'This cue needs contextual review. It is not a verdict.'
+}
+
+export function checksUnavailableCopy(code) {
+  if (code === 'origin_denied') {
+    return 'This browser origin is not allowed to read private evidence checks.'
+  }
+  if (code === 'not_configured') {
+    return 'Private evidence checks are not available in this session.'
+  }
+  if (code === 'service_unavailable' || code === 'request_failed') {
+    return 'Private evidence checks are unavailable right now. Retry the same request.'
+  }
+  if (code === 'invalid_request') {
+    return 'The evidence-check request was rejected as invalid.'
+  }
+  if (code === 'version_conflict') {
+    return 'The evidence-check request conflicted with another write. The investigation was not marked reviewed. Retry only as an explicit action.'
+  }
+  if (code === 'unsupported_contract') {
+    return 'This evidence-check response could not be used. Field mappings are not guessed.'
+  }
+  if (code === 'identity_mismatch') {
+    return 'This evidence-check response did not match the displayed investigation version. It was not applied. Retry the same request.'
+  }
+  return 'Private evidence checks are unavailable.'
+}
+
+export function snapshotInputPayload(input) {
+  return input?.capture?.payload ?? input?.record_version?.payload ?? null
+}
+
+export function resolveWorkspaceMetadata(bundle, reference) {
+  if (!reference || reference.source_field !== 'source_status' || reference.value == null) return null
+  const input = snapshotInputAtPosition(bundle, reference.position)
+  const payload = input?.record_version?.payload
+  if (!payload || payload.source_status !== reference.value) return null
+  const kind = input.record_version?.record_kind
+  if (kind && kind !== 'article') return null
+  return { input, value: payload.source_status, recordVersionId: input.record_version?.id ?? null }
+}
+
+export function safeWorkspaceHttpUrl(raw) {
+  if (typeof raw !== 'string' || raw.length === 0 || raw.length > 2048) return null
+  if (!/^https?:\/\//i.test(raw) || /[\s\\]/.test(raw)) return null
+  try {
+    const url = new URL(raw)
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null
+    if (url.username || url.password) return null
+    return url.href
+  } catch {
+    return null
+  }
 }
