@@ -58,7 +58,7 @@ it improves measured quality and useful coverage at acceptable operating cost.
 ## Execution sequence
 
 1. Preserve a varied bounded real-evidence collection privately, with manifests
-   and source clocks. The one current V2 capture is insufficient. Do not publish
+   and source clocks. The one current v2 capture is insufficient. Do not publish
    legacy rows to obtain a test corpus. Do not invent excerpts for missing bodies.
 2. Run recovered lexical comparison and Arc scorers as baselines. Include the
    review's synthetic negation, quantity, paraphrase and near-copy probes as

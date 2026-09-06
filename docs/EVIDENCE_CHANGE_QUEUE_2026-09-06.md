@@ -2,11 +2,11 @@
 
 ## Applied state
 
-Applied and verified on V2 `qikvmopbtijoebdqosyq` on 6 September 2026.
+Applied and verified on v2 `qikvmopbtijoebdqosyq` on 6 September 2026.
 Migration: `20260906042413_evidence_change_queue_v1`.
 Repository base: `0b92f06d833300cdb9fbeaa3e9a2d89c10cb0f21` (PR #35).
 The file was created with the Supabase CLI and renamed to the version actually
-recorded by the live migration service. **Do not reapply it to V2.**
+recorded by the live migration service. **Do not reapply it to v2.**
 
 This implements durable change capture and delivery. It does not implement
 semantic discovery, assessment dependency storage, canonical asset mapping,
@@ -103,7 +103,7 @@ checkpoints; there is no heartbeat API in this slice.
   intentionally private tables, with no new WARN/ERROR findings. Existing
   advisor findings remain outside this change. [Advisor definition](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
 
-This is transport coverage of seven V2 retained inputs, not coverage of Manus's
+This is transport coverage of seven v2 retained inputs, not coverage of Manus's
 corpus or proof of fourteen useful connections. No retained evidence or public
 state was changed. Private graph staging remains installed with zero staged
 records. Direct writes to entities, source lineage, edges, claims, mappings,
