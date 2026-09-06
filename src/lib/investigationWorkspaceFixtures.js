@@ -1264,10 +1264,9 @@ export function fixtureReviewHistory(checks, { atRevision = '1', beforeRevision 
       authoredByYou: revision === last,
     }))
   }
-  const start = beforeRevision == null ? 0 : events.findIndex((event) => event.revision === beforeRevision)
-  const sliceFrom = beforeRevision == null ? 0 : (start < 0 ? 0 : start)
-  const page = events.slice(sliceFrom, sliceFrom + 20)
-  const hasMore = events.length - sliceFrom > 20
+  const eligible = events.filter(event => beforeRevision == null || BigInt(event.revision) < BigInt(beforeRevision))
+  const page = eligible.slice(0, 20)
+  const hasMore = eligible.length > 20
   return {
     contract_version: 'investigation-evidence-reviews-1',
     investigation_id: checks.investigation_id,

@@ -550,7 +550,7 @@ test('history pages do not mix and late pages cannot occupy a new inspector sele
     target_kind: 'source_link',
     target_id: pair.id,
     events: [],
-    next_before_revision: '0',
+    next_before_revision: null,
   }))
   assert.equal(probe.current.state.reviewHistory.target_id, pair.id)
   assert.equal(probe.current.state.reviewHistory.events.length, 0)
