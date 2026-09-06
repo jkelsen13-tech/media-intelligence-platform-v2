@@ -34,6 +34,7 @@ import {
   reviewRequestKey,
   statusFromSession,
   workspaceErrorCode,
+  workspaceReviewReceiptMatches,
 } from './investigationWorkspaceSession.js'
 
 function emptyPanelsState() {
@@ -694,6 +695,10 @@ export function usePrivateInvestigationWorkspace({
     if (code) {
       applyCatalog((s) => ({ ...s, reviewBusy: false, reviewError: code }))
       return { ignored: false, error: code }
+    }
+    if (!workspaceReviewReceiptMatches(payload, result.data)) {
+      applyCatalog((s) => ({ ...s, reviewBusy: false, reviewError: 'identity_mismatch' }))
+      return { ignored: false, error: 'identity_mismatch' }
     }
     applyCatalog((s) => ({
       ...s,

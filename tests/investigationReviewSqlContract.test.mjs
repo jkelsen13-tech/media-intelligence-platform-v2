@@ -6,6 +6,9 @@ import { PGlite } from '@electric-sql/pglite'
 import { historyMatchesRequest, receiptMatchesDecision } from '../src/lib/investigationEvidenceReviewUi.js'
 import { createEvidenceReviewsHandler } from '../supabase/functions/investigation-evidence-reviews/handler.mjs'
 import { createInvestigationEvidenceReviewsClient } from '../src/lib/investigationEvidenceReviewsClient.js'
+import { createWorkspaceHandler } from '../supabase/functions/investigation-workspace/handler.mjs'
+import { createInvestigationWorkspaceClient } from '../src/lib/investigationWorkspaceClient.js'
+import { workspaceReviewReceiptMatches } from '../src/lib/investigationWorkspaceSession.js'
 
 test('real SQL through authenticated transport satisfies browser history and receipt invariants', async t => {
   const db = await PGlite.create()
@@ -82,4 +85,39 @@ test('real SQL through authenticated transport satisfies browser history and rec
   assert.ok(events.every(event => BigInt(event.revision) <= 22n))
   assert.equal((await db.query('select count(*)::int n from evidence_pipeline.investigation_review_receipts')).rows[0].n, 0)
   assert.deepEqual(await workspace('read', { ...context, user_id: user }), bundle)
+
+  // Exercise real review markers through the same SQL -> HTTP -> browser path.
+  // Evidence decisions above never implicitly acknowledge an investigation.
+  const workspaceHandler = createWorkspaceHandler({ authenticate: async () => ({ id: user, is_anonymous: false }),
+    rpc: async (action, input) => {
+      try { return { data: await workspace(action, input) } }
+      catch (error) { return { error: { code: error.code } } }
+    } })
+  const workspaceClient = createInvestigationWorkspaceClient({ functions: { invoke: async (_name, options) => {
+    const response = await workspaceHandler(new Request('https://example.org/workspace', { method: 'POST',
+      headers: { authorization: 'Bearer fixture-session', 'content-type': 'application/json' }, body: JSON.stringify(options.body) }))
+    return response.ok ? { data: await response.json() } : { error: { context: response } }
+  } } })
+  const firstReview = { investigationId: context.investigation_id, versionId: context.version_id,
+    receiptId: randomUUID(), previousReceiptId: null }
+  const firstReceipt = await workspaceClient.markReviewed(firstReview)
+  assert.equal(firstReceipt.error, null)
+  assert.equal(workspaceReviewReceiptMatches(firstReview, firstReceipt.data), true)
+  const nextVersion = randomUUID()
+  await workspace('put', { ...context, version_id: nextVersion, previous_version_id: context.version_id,
+    observation_id: bundle.observation.id, state: { ...bundle.version.state, question: 'What remains unresolved in this fixture?' },
+    change_reason: 'New question wording must require explicit review.' })
+  const unreviewed = await workspaceClient.read(context.investigation_id)
+  assert.equal(unreviewed.data.review.version_id, context.version_id)
+  assert.equal(unreviewed.data.comparison.definition_changes.question_changed, true)
+  const secondReview = { ...firstReview, versionId: nextVersion, receiptId: randomUUID(), previousReceiptId: firstReview.receiptId }
+  const secondReceipt = await workspaceClient.markReviewed(secondReview)
+  assert.equal(workspaceReviewReceiptMatches(secondReview, secondReceipt.data), true)
+  const oldReplay = await workspaceClient.markReviewed(firstReview)
+  assert.equal(workspaceReviewReceiptMatches(firstReview, oldReplay.data), true)
+  assert.equal((await workspaceClient.read(context.investigation_id)).data.review.id, secondReview.receiptId,
+    'replaying an earlier exact receipt must not move the current review baseline backward')
+  const conflicting = await workspaceClient.markReviewed({ ...firstReview, versionId: nextVersion })
+  assert.equal(conflicting.error.code, 'version_conflict')
+  assert.equal((await db.query('select count(*)::int n from evidence_pipeline.investigation_review_receipts')).rows[0].n, 2)
 })
