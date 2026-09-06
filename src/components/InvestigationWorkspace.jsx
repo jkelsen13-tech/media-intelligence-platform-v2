@@ -29,6 +29,7 @@ import {
 } from '../lib/workspacePresentation'
 import { investigationContextDomProps } from '../lib/investigationContext'
 import '../styles/workspace.css'
+import WorkspaceScrollControl from './WorkspaceScrollControl'
 
 const NAV_ICONS = {
   news: Newspaper,
@@ -115,6 +116,7 @@ export default function InvestigationWorkspace({
   const drawerBtnRef = useRef(null)
   const drawerPrimed = useRef(false)
   const inspectorRef = useRef(null)
+  const shellRef = useRef(null)
 
   useEffect(() => {
     if (typeof window === 'undefined' || view !== 'investigations' || !inspectorSelection
@@ -148,6 +150,7 @@ export default function InvestigationWorkspace({
 
   return (
     <div
+      ref={shellRef}
       className={`workspace-app ws-shell${navCollapsed ? ' nav-collapsed ws-nav-collapsed' : ''}${view === 'graph' ? ' ws-graph-primary' : ''}`}
       data-workspace="investigation"
       data-workspace-view={view}
@@ -244,9 +247,9 @@ export default function InvestigationWorkspace({
             <div>
               <p className="ws-eyebrow">{header?.eyebrow ?? 'Investigation workspace'}</p>
               <h1 className="ws-title">{header?.title}</h1>
-              {view === 'investigations' ? (
+              {view === 'investigations' || view === 'world' ? (
                 <details className="ws-private-context">
-                  <summary>Scope and saved version</summary>
+                  <summary>{view === 'world' ? 'Subject details and evidence' : 'Scope and saved version'}</summary>
                   <p className="ws-meta-row">
                     <span><MapPin size={14} /> {header?.location}</span>
                     <span><CalendarBlank size={14} /> {header?.when}</span>
@@ -275,7 +278,7 @@ export default function InvestigationWorkspace({
             </button>
             )}
           </div>
-          {view !== 'investigations' && <EvidenceDimensionGrid dimensions={header?.dimensions} />}
+          {view !== 'investigations' && view !== 'world' && <EvidenceDimensionGrid dimensions={header?.dimensions} />}
         </section>
 
         <div className="ws-tabs" role="tablist" aria-label="Evidence views">
@@ -375,6 +378,7 @@ export default function InvestigationWorkspace({
         )}
       </div>
       {details}
+      {(view === 'world' || view === 'investigations') && <WorkspaceScrollControl targetRef={shellRef} />}
     </div>
   )
 }

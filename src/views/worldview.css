@@ -1,5 +1,7 @@
 /* R4 World View launch-minimum. Token-driven only; no command-center overlays. */
 
+.wv-touch-controls { display: none; }
+
 .wv-view {
   display: flex;
   flex-direction: column;
@@ -452,4 +454,44 @@
   .wv-stage-split {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+@media (max-width: 767px) {
+  .wv-view {
+    display: block;
+    overflow: visible;
+    padding: 12px;
+  }
+  .wv-view > * + * { margin-top: 12px; }
+  .wv-banner { padding: 14px; overflow-wrap: anywhere; }
+  .wv-layout, .wv-main, .wv-stage { flex: none; }
+  .wv-map, .wv-graph { min-height: 320px; }
+  .wv-graph { height: 360px; }
+  .wv-map-gl .wv-map-host { position: relative; height: 360px; }
+  .wv-map-gl .wv-map-empty { bottom: auto; height: 360px; box-sizing: border-box; }
+  .wv-map-gl .wv-map-attrib {
+    position: static;
+    padding: 8px;
+    border-radius: 0;
+    font-size: 11px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .wv-inspector { overflow: visible; }
+  .wv-touch-controls { display: block; }
+  .wv-touch-controls button {
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    background: var(--bg-panel);
+    color: var(--accent);
+    font: inherit;
+    cursor: pointer;
+  }
+  .wv-touch-controls p { margin: 6px 0 0; color: var(--text-secondary); }
+  .wv-stage:not(.wv-touch-active) :is(.wv-map-host, .wv-map-svg, .graph-canvas-wrap) {
+    pointer-events: none;
+  }
+  .wv-stage:not(.wv-touch-active) { touch-action: pan-y; }
 }

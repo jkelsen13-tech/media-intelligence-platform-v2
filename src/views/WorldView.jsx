@@ -389,6 +389,7 @@ export default function WorldView({
   onInvestigationAsOfTime,
 }) {
   const [mode, setMode] = useState('map')
+  const [touchInteraction, setTouchInteraction] = useState(false)
   const [loadStatus, setLoadStatus] = useState({
     status: 'loading',
     reason: null,
@@ -570,7 +571,7 @@ export default function WorldView({
               role="tab"
               aria-selected={mode === m.key}
               className={`wv-mode-btn${mode === m.key ? ' active' : ''}`}
-              onClick={() => setMode(m.key)}
+              onClick={() => { setMode(m.key); setTouchInteraction(false) }}
             >
               {m.label}
             </button>
@@ -582,7 +583,13 @@ export default function WorldView({
 
       <div className={`wv-layout wv-layout-${mode}`}>
         <div className="wv-main">
-          <div className={`wv-stage wv-stage-${mode}`}>
+          <div className="wv-touch-controls">
+            <button type="button" aria-pressed={touchInteraction} onClick={() => setTouchInteraction((active) => !active)}>
+              {touchInteraction ? 'Done — scroll page' : `Interact with ${mode === 'split' ? 'map and graph' : mode}`}
+            </button>
+            <p>{touchInteraction ? 'Drag to explore. Use Done or the side scroll control to continue down the page.' : 'Swipe anywhere on the map or graph to scroll the page.'}</p>
+          </div>
+          <div className={`wv-stage wv-stage-${mode}${touchInteraction ? ' wv-touch-active' : ''}`}>
             {showMap && (
               <WorldMapCanvas
                 rows={mapRows}

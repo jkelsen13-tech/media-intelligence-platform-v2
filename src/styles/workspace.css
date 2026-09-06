@@ -72,6 +72,43 @@
   margin-top: 8px;
 }
 
+.ws-page-scroll { display: none; }
+
+@media (max-width: 767px) {
+  .ws-page-scroll {
+    position: fixed;
+    z-index: 25;
+    right: env(safe-area-inset-right, 0px);
+    top: 45%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    width: 28px;
+    padding: 6px 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    background: var(--bg-panel);
+    color: var(--cat-blue);
+    box-shadow: 0 1px 5px #202c4126;
+  }
+  .ws-page-scroll input {
+    writing-mode: vertical-lr;
+    direction: ltr;
+    width: 28px;
+    height: 28dvh;
+    min-height: 100px;
+    margin: 4px 0;
+    accent-color: var(--cat-blue);
+    cursor: pointer;
+  }
+  .ws-shell:is([data-workspace-view='world'], [data-workspace-view='investigations']) {
+    padding-right: 30px;
+    box-sizing: border-box;
+    scrollbar-width: none;
+  }
+  .ws-shell:is([data-workspace-view='world'], [data-workspace-view='investigations'])::-webkit-scrollbar { width: 0; }
+}
+
 .ws-private-context summary {
   min-height: 44px;
   align-content: center;
@@ -965,45 +1002,45 @@
 
   /* Reading an investigation needs document flow, not the camera canvas's
      remaining-height viewport. Keep one scroll owner for header and evidence. */
-  .ws-shell[data-workspace-view='investigations'] {
+  .ws-shell:is([data-workspace-view='investigations'], [data-workspace-view='world']) {
     display: block;
     overflow-y: auto;
     overflow-x: hidden;
   }
 
-  .ws-shell[data-workspace-view='investigations'] .ws-body {
+  .ws-shell:is([data-workspace-view='investigations'], [data-workspace-view='world']) .ws-body {
     display: block;
     overflow: visible;
   }
 
-  .ws-shell[data-workspace-view='investigations'] .ws-content,
-  .ws-shell[data-workspace-view='investigations'] .app-main {
+  .ws-shell:is([data-workspace-view='investigations'], [data-workspace-view='world']) .ws-content,
+  .ws-shell:is([data-workspace-view='investigations'], [data-workspace-view='world']) .app-main {
     height: auto;
     overflow: visible;
     min-width: 0;
   }
 
-  .ws-shell[data-workspace-view='investigations'] .ws-inspector {
+  .ws-shell:is([data-workspace-view='investigations'], [data-workspace-view='world']) .ws-inspector {
     position: static;
     max-height: none;
   }
 
-  .ws-shell[data-workspace-view='investigations'] .ws-dimensions {
+  .ws-shell:is([data-workspace-view='investigations'], [data-workspace-view='world']) .ws-dimensions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     overflow: visible;
   }
 
-  .ws-shell[data-workspace-view='investigations'] .ws-dimension {
+  .ws-shell:is([data-workspace-view='investigations'], [data-workspace-view='world']) .ws-dimension {
     min-width: 0;
     border-bottom: 1px solid var(--border-color);
   }
 
-  .ws-shell[data-workspace-view='investigations'] .ws-canonical {
+  .ws-shell:is([data-workspace-view='investigations'], [data-workspace-view='world']) .ws-canonical {
     padding: 12px 16px 0;
   }
 
-  .ws-shell[data-workspace-view='investigations'] .ws-title {
+  .ws-shell:is([data-workspace-view='investigations'], [data-workspace-view='world']) .ws-title {
     font-size: 18px;
     overflow-wrap: anywhere;
   }
