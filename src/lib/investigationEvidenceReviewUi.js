@@ -389,3 +389,20 @@ export function inspectorOwnsReviewHistory(inspector, history) {
   }
   return false
 }
+
+export function reviewHistoryRefreshBlocked(state) {
+  return Boolean(state?.pendingReviewDecision || state?.reviewsBusy)
+}
+
+export function isTerminalReviewAccessError(code) {
+  return code === 'authentication_required' || code === 'access_denied'
+}
+
+export function reviewDecisionContextMatches(state, payload) {
+  if (!state || !payload) return false
+  if (state.selectedInvestigationId !== payload.investigation_id) return false
+  if (state.bundle?.version?.id !== payload.version_id) return false
+  if (!state.bundle?.observation?.id) return false
+  if (state.checks?.report?.id !== payload.report_id) return false
+  return true
+}

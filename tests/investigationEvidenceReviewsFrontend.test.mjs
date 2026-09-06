@@ -300,6 +300,31 @@ test('history inspector shows exact rationale and honest actor labels', () => {
   assert.match(html, / · You · /)
   assert.doesNotMatch(html, /Alice/)
   assert.match(html, /data-action="refresh-review-history"/)
+  assert.doesNotMatch(html, /data-action="refresh-review-history"[^>]*disabled/)
+})
+
+test('history refresh control is disabled while a decision is pending', () => {
+  const cue = FIXTURE_CHECKS.comparable.report.result.challenge_cues[0]
+  const html = renderToStaticMarkup(createElement(PrivateInvestigationInspector, {
+    workspace: readyWorkspace(FIXTURE_BUNDLES.comparable, {
+      inspector: { kind: 'challenge-cue', cue },
+      pendingReviewDecision: { event_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa01', target_kind: 'evidence_cue', target_id: cue.id },
+      reviewsBusy: true,
+      reviewHistory: {
+        target_kind: 'evidence_cue',
+        target_id: cue.id,
+        report_id: FIXTURE_CHECKS.comparable.report.id,
+        at_revision: '0',
+        next_before_revision: null,
+        events: [],
+        refreshed: false,
+      },
+    }),
+    publicNode: null,
+  }))
+  assert.match(html, /data-action="refresh-review-history"/)
+  assert.match(html, /data-action="refresh-review-history" disabled/)
+  assert.match(html, /unavailable while a review decision is being saved/)
 })
 
 test('history failure is not an empty ledger; older-page loading remains usable', () => {

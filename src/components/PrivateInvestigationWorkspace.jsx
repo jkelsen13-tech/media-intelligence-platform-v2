@@ -12,6 +12,7 @@ import {
   reviewSubmissionBlockReason,
   reviewTargetFromPanels,
   reviewTargetKey,
+  reviewHistoryRefreshBlocked,
   reviewsUnavailableCopy,
   targetMatchesFilter,
 } from '../lib/investigationEvidenceReviewUi.js'
@@ -395,6 +396,7 @@ function ReviewHistoryPanel({
   loading,
   loadingOlder,
   error,
+  refreshDisabled = false,
   onLoadOlder,
   onRetry,
   onRefresh,
@@ -465,7 +467,17 @@ function ReviewHistoryPanel({
         ) : history?.events?.length ? (
           <p className="piw-muted">No older decisions remain at this pinned revision.</p>
         ) : null}
-        <button type="button" className="piw-text-btn" data-action="refresh-review-history" onClick={() => onRefresh?.()}>
+        <button
+          type="button"
+          className="piw-text-btn"
+          data-action="refresh-review-history"
+          disabled={refreshDisabled}
+          title={refreshDisabled ? 'History refresh is unavailable while a review decision is being saved.' : undefined}
+          onClick={() => {
+            if (refreshDisabled) return
+            onRefresh?.()
+          }}
+        >
           Refresh history to the latest review revision
         </button>
       </div>
@@ -1571,6 +1583,7 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
             loading={state.loadingReviewHistory}
             loadingOlder={state.loadingOlderReviewHistory}
             error={state.reviewHistoryError}
+            refreshDisabled={reviewHistoryRefreshBlocked(state)}
             onLoadOlder={workspace.actions?.loadOlderReviewHistory}
             onRetry={workspace.actions?.retryReviewHistory}
             onRefresh={workspace.actions?.refreshReviewHistory}
@@ -1602,6 +1615,7 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
             loading={state.loadingReviewHistory}
             loadingOlder={state.loadingOlderReviewHistory}
             error={state.reviewHistoryError}
+            refreshDisabled={reviewHistoryRefreshBlocked(state)}
             onLoadOlder={workspace.actions?.loadOlderReviewHistory}
             onRetry={workspace.actions?.retryReviewHistory}
             onRefresh={workspace.actions?.refreshReviewHistory}

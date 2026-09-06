@@ -7,9 +7,12 @@ import {
   freezeReviewDecisionPayload,
   historyMatchesRequest,
   inspectorOwnsReviewHistory,
+  isTerminalReviewAccessError,
   mergeHistoryEvents,
   receiptMatchesDecision,
+  reviewDecisionContextMatches,
   reviewDecisionRequestKey,
+  reviewHistoryRefreshBlocked,
   reviewHistoryRequestKey,
   reviewSubmissionBlockReason,
   reviewsRequestKey,
@@ -94,6 +97,7 @@ export function usePrivateInvestigationWorkspace({
   const reviewGate = useRef(createRequestGate())
   const checksGate = useRef(createRequestGate())
   const reviewsGate = useRef(createRequestGate())
+  const reviewsDecideGate = useRef(createRequestGate())
   const reviewHistoryFamily = useRef(createKeyedRequestFamily())
   const displayedScopeRef = useRef(null)
   const inspectEpochRef = useRef(0)
@@ -118,6 +122,7 @@ export function usePrivateInvestigationWorkspace({
     reviewGate.current.invalidate()
     checksGate.current.invalidate()
     reviewsGate.current.invalidate()
+    reviewsDecideGate.current.invalidate()
     reviewHistoryFamily.current.invalidate()
     inspectEpochRef.current += 1
     displayedScopeRef.current = null
@@ -148,6 +153,7 @@ export function usePrivateInvestigationWorkspace({
       reviewGate.current.invalidate()
       checksGate.current.invalidate()
       reviewsGate.current.invalidate()
+      reviewsDecideGate.current.invalidate()
       reviewHistoryFamily.current.invalidate()
       inspectEpochRef.current += 1
       displayedScopeRef.current = null
@@ -230,29 +236,34 @@ export function usePrivateInvestigationWorkspace({
   }, [applyAccessFailure, applyCatalog, client, sessionLoading, userId])
 
   const publishReviews = useCallback((bundle, checks, reviews, extra = {}) => {
+    const keepPending = extra.clearPending === false
     const mapped = investigationEvidenceReviewPanels(bundle, checks, reviews)
     if (!mapped) {
       applyCatalog((s) => ({
         ...s,
-        loadingReviews: false,
-        reviewsBusy: extra.keepBusy === true ? s.reviewsBusy : false,
-        reviews: null,
-        reviewsPanels: null,
+        loadingReviews: extra.markLoading === false ? s.loadingReviews : false,
+        reviewsBusy: extra.keepBusy === true || keepPending ? s.reviewsBusy : false,
+        reviews: extra.replace === false ? s.reviews : null,
+        reviewsPanels: extra.replace === false ? s.reviewsPanels : null,
         reviewsError: 'unsupported_contract',
-        pendingReviewDecision: extra.clearPending === false ? s.pendingReviewDecision : null,
+        pendingReviewDecision: keepPending ? s.pendingReviewDecision : null,
         decisionSavedNeedsRefresh: extra.savedNeedsRefresh === true,
       }))
       return { ignored: false, error: 'unsupported_contract' }
     }
     applyCatalog((s) => ({
       ...s,
-      loadingReviews: false,
-      reviewsBusy: extra.keepBusy === true ? s.reviewsBusy : false,
+      loadingReviews: extra.markLoading === false ? s.loadingReviews : false,
+      reviewsBusy: extra.keepBusy === true || keepPending ? s.reviewsBusy : false,
       reviews,
       reviewsPanels: mapped,
       reviewsError: extra.keepError === true ? s.reviewsError : null,
-      pendingReviewDecision: extra.clearPending === false ? s.pendingReviewDecision : null,
-      decisionSavedNeedsRefresh: extra.savedNeedsRefresh === true ? false : s.decisionSavedNeedsRefresh && extra.keepSavedRefresh === true,
+      pendingReviewDecision: keepPending ? s.pendingReviewDecision : null,
+      decisionSavedNeedsRefresh: extra.savedNeedsRefresh === true
+        ? false
+        : extra.keepSavedRefresh === true
+          ? s.decisionSavedNeedsRefresh
+          : s.decisionSavedNeedsRefresh && extra.keepSavedRefresh === true,
       reviewsConflict: extra.keepConflict === true ? s.reviewsConflict : false,
       ...(extra.savedNeedsRefresh === true ? {} : extra.clearSavedRefresh === true ? { decisionSavedNeedsRefresh: false } : {}),
     }))
@@ -279,17 +290,23 @@ export function usePrivateInvestigationWorkspace({
     )
     applyCatalog((s) => ({
       ...s,
-      loadingReviews: true,
-      reviewsError: extra.preserveError ? s.reviewsError : null,
+      loadingReviews: extra.markLoading === false ? s.loadingReviews : true,
+      reviewsError: extra.preserveError || extra.markLoading === false ? s.reviewsError : null,
       ...(extra.replace === false ? {} : {
         reviews: null,
         reviewsPanels: null,
       }),
-      decisionSavedNeedsRefresh: extra.keepSavedRefresh === true ? s.decisionSavedNeedsRefresh : false,
+      decisionSavedNeedsRefresh: extra.keepSavedRefresh === true || extra.markLoading === false
+        ? s.decisionSavedNeedsRefresh
+        : false,
+      pendingReviewDecision: extra.clearPending === false ? s.pendingReviewDecision : s.pendingReviewDecision,
+      reviewsBusy: extra.keepBusy === true || extra.clearPending === false ? s.reviewsBusy : s.reviewsBusy,
     }))
     const result = await reviewsClient.read(investigationId, versionId, reportId)
     if (!mountedRef.current || userRef.current !== userId) return { ignored: true }
     const code = workspaceErrorCode(result.error)
+    const keepPending = extra.clearPending === false
+    const keepBusy = extra.keepBusy === true || keepPending
     if (code === 'authentication_required') {
       applyAccessFailure(code, { investigationId })
       return { ignored: false, error: code }
@@ -302,26 +319,34 @@ export function usePrivateInvestigationWorkspace({
     if (code) {
       applyCatalog((s) => ({
         ...s,
-        loadingReviews: false,
-        reviewsBusy: extra.keepBusy === true ? s.reviewsBusy : false,
+        loadingReviews: extra.markLoading === false ? s.loadingReviews : false,
+        reviewsBusy: keepBusy ? s.reviewsBusy : false,
         reviewsError: code,
         reviews: extra.replace === false ? s.reviews : null,
         reviewsPanels: extra.replace === false ? s.reviewsPanels : null,
-        decisionSavedNeedsRefresh: extra.savedNeedsRefresh === true,
-        pendingReviewDecision: extra.clearPending === false ? s.pendingReviewDecision : (extra.savedNeedsRefresh === true ? null : s.pendingReviewDecision),
+        decisionSavedNeedsRefresh: extra.savedNeedsRefresh === true
+          ? true
+          : extra.keepSavedRefresh === true
+            ? s.decisionSavedNeedsRefresh
+            : false,
+        pendingReviewDecision: keepPending || extra.savedNeedsRefresh !== true ? s.pendingReviewDecision : null,
       }))
       return { ignored: false, error: code }
     }
     if (!reviewsIdentityMatches(result.data, investigationId, versionId, observationId, reportId)) {
       applyCatalog((s) => ({
         ...s,
-        loadingReviews: false,
-        reviewsBusy: extra.keepBusy === true ? s.reviewsBusy : false,
+        loadingReviews: extra.markLoading === false ? s.loadingReviews : false,
+        reviewsBusy: keepBusy ? s.reviewsBusy : false,
         reviews: extra.replace === false ? s.reviews : null,
         reviewsPanels: extra.replace === false ? s.reviewsPanels : null,
         reviewsError: 'identity_mismatch',
-        decisionSavedNeedsRefresh: extra.savedNeedsRefresh === true,
-        pendingReviewDecision: extra.clearPending === false ? s.pendingReviewDecision : (extra.savedNeedsRefresh === true ? null : s.pendingReviewDecision),
+        decisionSavedNeedsRefresh: extra.savedNeedsRefresh === true
+          ? true
+          : extra.keepSavedRefresh === true
+            ? s.decisionSavedNeedsRefresh
+            : false,
+        pendingReviewDecision: keepPending || extra.savedNeedsRefresh !== true ? s.pendingReviewDecision : null,
       }))
       return { ignored: false, error: 'identity_mismatch' }
     }
@@ -450,6 +475,7 @@ export function usePrivateInvestigationWorkspace({
       historyFamily.current.invalidate()
       checksGate.current.invalidate()
       reviewsGate.current.invalidate()
+      reviewsDecideGate.current.invalidate()
       reviewHistoryFamily.current.invalidate()
       displayedScopeRef.current = displayedScopeKey(userId, investigationId, versionId)
       displayedToken = readGate.current.start(readRequestKey(userId, investigationId, versionId))
@@ -583,6 +609,7 @@ export function usePrivateInvestigationWorkspace({
     historyFamily.current.invalidate()
     checksGate.current.invalidate()
     reviewsGate.current.invalidate()
+    reviewsDecideGate.current.invalidate()
     reviewHistoryFamily.current.invalidate()
     inspectEpochRef.current += 1
     applyCatalog((current) => ({
@@ -613,6 +640,7 @@ export function usePrivateInvestigationWorkspace({
     historyFamily.current.invalidate()
     checksGate.current.invalidate()
     reviewsGate.current.invalidate()
+    reviewsDecideGate.current.invalidate()
     reviewHistoryFamily.current.invalidate()
     inspectEpochRef.current += 1
     applyCatalog((current) => ({
@@ -813,7 +841,7 @@ export function usePrivateInvestigationWorkspace({
       applyAccessFailure(code, { investigationId: payload.investigation_id })
       return { ignored: false, error: code }
     }
-    if (!reviewsGate.current.isCurrent(token)) return { ignored: true }
+    if (!reviewsDecideGate.current.isCurrent(token)) return { ignored: true }
     if (code === 'access_denied') {
       applyAccessFailure(code, { investigationId: payload.investigation_id })
       return { ignored: false, error: code }
@@ -886,6 +914,16 @@ export function usePrivateInvestigationWorkspace({
       clearPending: true,
       clearSavedRefresh: true,
     })
+    if (!mountedRef.current || userRef.current !== userId) {
+      return { ignored: true, receipt: result.data, refreshed }
+    }
+    if (isTerminalReviewAccessError(refreshed?.error)) {
+      return { ignored: false, error: refreshed.error, receipt: result.data, refreshed }
+    }
+    const latest = stateRef.current
+    if (!reviewDecisionContextMatches(latest, payload)) {
+      return { ignored: true, receipt: result.data, refreshed }
+    }
     if (refreshed?.error) {
       applyCatalog((s) => ({
         ...s,
@@ -928,7 +966,7 @@ export function usePrivateInvestigationWorkspace({
       evidence,
     })
     if (!payload) return
-    const token = reviewsGate.current.start(reviewDecisionRequestKey(userId, payload))
+    const token = reviewsDecideGate.current.start(reviewDecisionRequestKey(userId, payload))
     applyCatalog((s) => ({
       ...s,
       reviewDrafts: { ...s.reviewDrafts, [reviewTargetKey(targetKind, targetId)]: draft },
@@ -946,7 +984,7 @@ export function usePrivateInvestigationWorkspace({
     const payload = current.pendingReviewDecision
     if (!payload || !reviewsClient || !userId || current.reviewsBusy) return
     if (current.decisionSavedNeedsRefresh) return
-    const token = reviewsGate.current.start(reviewDecisionRequestKey(userId, payload))
+    const token = reviewsDecideGate.current.start(reviewDecisionRequestKey(userId, payload))
     applyCatalog((s) => ({ ...s, reviewsBusy: true, reviewsError: null }))
     const result = await reviewsClient.decide(payload)
     return finishDecisionRequest(payload, result, token)
@@ -1062,20 +1100,29 @@ export function usePrivateInvestigationWorkspace({
     }))
     const result = await reviewsClient.history(input)
     if (!mountedRef.current || userRef.current !== userId) return { ignored: true }
-    const code = workspaceErrorCode(result.error)
-    if (code === 'authentication_required') {
-      applyAccessFailure(code, { investigationId: input.investigation_id })
-      return { ignored: false, error: code }
-    }
     if (!inspectSessionIsCurrent(session) || !reviewHistoryFamily.current.isCurrent(token)) {
       return { ignored: true }
     }
+    const code = workspaceErrorCode(result.error)
     const current = stateRef.current
     if (!inspectorOwnsReviewHistory(current.inspector, {
       target_kind: input.target_kind,
       target_id: input.target_id,
     })) {
       return { ignored: true }
+    }
+    if (append) {
+      const existingHistory = current.reviewHistory
+      const canAppend = inspectorOwnsReviewHistory(current.inspector, existingHistory)
+        && existingHistory?.at_revision === input.at_revision
+        && existingHistory?.target_kind === input.target_kind
+        && existingHistory?.target_id === input.target_id
+        && existingHistory?.inspectorEpoch === session.epoch
+      if (!canAppend) return { ignored: true }
+    }
+    if (code === 'authentication_required') {
+      applyAccessFailure(code, { investigationId: input.investigation_id })
+      return { ignored: false, error: code }
     }
     if (code === 'access_denied') {
       applyAccessFailure(code, { investigationId: input.investigation_id })
@@ -1100,12 +1147,14 @@ export function usePrivateInvestigationWorkspace({
       return { ignored: false, error: 'identity_mismatch' }
     }
     applyCatalog((s) => {
-      const existing = append && inspectorOwnsReviewHistory(s.inspector, s.reviewHistory)
+      const canAppend = append
+        && inspectorOwnsReviewHistory(s.inspector, s.reviewHistory)
         && s.reviewHistory?.at_revision === input.at_revision
         && s.reviewHistory?.target_kind === input.target_kind
         && s.reviewHistory?.target_id === input.target_id
-        ? s.reviewHistory.events
-        : []
+        && s.reviewHistory?.inspectorEpoch === session.epoch
+      if (append && !canAppend) return s
+      const existing = canAppend ? s.reviewHistory.events : []
       return {
         ...s,
         loadingReviewHistory: false,
@@ -1247,20 +1296,28 @@ export function usePrivateInvestigationWorkspace({
     const bundle = current.bundle
     const checks = current.checks
     if (!inspector || !bundle || !checks || !reviewsClient) return
-    const session = {
-      epoch: inspectEpochRef.current,
-      userId: userRef.current,
-      investigationId: current.selectedInvestigationId,
-      displayedVersionId: bundle.version?.id ?? null,
-    }
-    if (!inspectSessionIsCurrent(session)) return
-    const refreshed = await readReviewsForAccepted(bundle, checks, { replace: true })
+    if (reviewHistoryRefreshBlocked(current)) return
+    const session = beginInspectSession()
+    if (!finishInspect(session, inspector)) return { ignored: true }
+    const refreshed = await readReviewsForAccepted(bundle, checks, {
+      replace: false,
+      clearPending: false,
+      markLoading: false,
+      keepBusy: true,
+      keepSavedRefresh: true,
+      preserveError: true,
+    })
+    if (!inspectSessionIsCurrent(session)) return { ignored: true }
+    if (isTerminalReviewAccessError(refreshed?.error)) return refreshed
     if (refreshed?.ignored || refreshed?.error) return refreshed
     const latest = stateRef.current
-    if (!inspectSessionIsCurrent(session) || !latest.reviewsPanels) return { ignored: true }
+    if (!latest.reviewsPanels || !latest.bundle || !latest.checks?.report?.id) return { ignored: true }
     const targetKind = inspector.kind === 'source-link' ? 'source_link' : inspector.kind === 'challenge-cue' ? 'evidence_cue' : null
     const targetId = inspector.kind === 'source-link' ? inspector.pair?.id : inspector.cue?.id
     if (!targetKind || !targetId) return
+    if (!inspectorOwnsReviewHistory(latest.inspector, { target_kind: targetKind, target_id: targetId })) {
+      return { ignored: true }
+    }
     const input = {
       investigation_id: latest.bundle.investigation_id,
       version_id: latest.bundle.version.id,
@@ -1271,7 +1328,7 @@ export function usePrivateInvestigationWorkspace({
       before_revision: null,
     }
     return loadReviewHistoryPage(session, input, { disclosedRefresh: true })
-  }, [inspectSessionIsCurrent, loadReviewHistoryPage, readReviewsForAccepted, reviewsClient])
+  }, [beginInspectSession, finishInspect, inspectSessionIsCurrent, loadReviewHistoryPage, readReviewsForAccepted, reviewsClient])
 
   const setInspector = useCallback((inspector) => {
     inspectEpochRef.current += 1
