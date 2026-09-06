@@ -472,6 +472,9 @@ export function checksUnavailableCopy(code) {
   if (code === 'unsupported_contract') {
     return 'This evidence-check response could not be used. Field mappings are not guessed.'
   }
+  if (code === 'identity_mismatch') {
+    return 'This evidence-check response did not match the displayed investigation version. It was not applied. Retry the same request.'
+  }
   return 'Private evidence checks are unavailable.'
 }
 

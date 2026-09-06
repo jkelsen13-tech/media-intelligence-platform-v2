@@ -725,7 +725,10 @@ function EvidenceChecksToolbar({
 }) {
   const viewingHistorical = Boolean(bundle && !isCurrentSavedVersion(bundle))
   const canRun = checksPanels?.canRun === true
-  const showRetry = Boolean(checksError && !checksBusy)
+  const requestInFlight = Boolean(checksBusy || loadingChecks)
+  const showRunRetry = Boolean(checksError && pendingChecksRun)
+  const showReadRetry = Boolean(checksError && !pendingChecksRun)
+  const showRetry = showRunRetry || showReadRetry
   return (
     <div className="piw-checks-toolbar">
       <h2>Evidence checks for this saved version</h2>
@@ -742,28 +745,27 @@ function EvidenceChecksToolbar({
       {checksError ? (
         <StatusBanner tone="error">{checksUnavailableCopy(checksError)}</StatusBanner>
       ) : null}
-      {canRun ? (
-        showRetry && pendingChecksRun ? (
-          <button
-            type="button"
-            className="piw-btn"
-            data-action="retry-evidence-checks"
-            disabled={checksBusy}
-            onClick={() => onRetry?.()}
-          >
-            {checksBusy ? 'Saving evidence checks…' : 'Retry the same evidence-check request'}
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="piw-btn"
-            data-action="run-evidence-checks"
-            disabled={checksBusy}
-            onClick={() => onRun?.()}
-          >
-            {checksBusy ? 'Saving evidence checks…' : 'Run evidence checks'}
-          </button>
-        )
+      {showRetry ? (
+        <button
+          type="button"
+          className="piw-btn"
+          data-action="retry-evidence-checks"
+          data-retry-kind={showRunRetry ? 'run' : 'read'}
+          disabled={requestInFlight}
+          onClick={() => onRetry?.()}
+        >
+          {checksBusy ? 'Saving evidence checks…' : 'Retry the same evidence-check request'}
+        </button>
+      ) : canRun ? (
+        <button
+          type="button"
+          className="piw-btn"
+          data-action="run-evidence-checks"
+          disabled={requestInFlight}
+          onClick={() => onRun?.()}
+        >
+          {checksBusy ? 'Saving evidence checks…' : 'Run evidence checks'}
+        </button>
       ) : checksPanels?.status === 'saved' ? (
         <p className="piw-muted">A report is already saved for this version. Checks are not run again from this view.</p>
       ) : checksPanels?.status === 'not_run' ? (
@@ -920,7 +922,14 @@ function EvidenceChecksSection({ bundle, checksPanels, loadingChecks, onInspectC
 function SearchCoverageSection({ checksPanels, loadingChecks }) {
   const coverage = checksPanels?.coverage
   const limits = checksPanels?.limits
-  const completion = checksPanels?.completion
+  const omittedPairPositions = coverage?.lineage_excluded_positions ?? []
+  const resultsCapped = Boolean(
+    coverage
+    && (
+      Number(coverage.lineage_candidates_found) > Number(coverage.lineage_candidates_returned)
+      || Number(coverage.challenge_cues_found) > Number(coverage.challenge_cues_returned)
+    ),
+  )
   return (
     <section className="piw-section" id="piw-search-coverage" tabIndex={-1}>
       <h2>Search Coverage</h2>
@@ -933,11 +942,19 @@ function SearchCoverageSection({ checksPanels, loadingChecks }) {
         <p className="piw-empty">Checks have not been run for this saved version.</p>
       ) : coverage ? (
         <div className="piw-card" data-search-coverage="true">
-          {completion === 'partial' ? (
-            <StatusBanner>These bounded checks were only partially scanned. Partial work is not measured completeness, and it is not a verified result.</StatusBanner>
-          ) : (
-            <p className="piw-note">Bounded checks completed for the supported saved inputs. Unsupported record kinds are listed separately. This is not independently measured global coverage.</p>
-          )}
+          <p className="piw-note">
+            Bounded checks completed for the supported saved inputs. Unsupported record kinds are listed separately. This receipt describes only this saved observation. It is not independently measured global coverage.
+          </p>
+          {omittedPairPositions.length > 0 ? (
+            <StatusBanner>
+              Pair comparison omitted some capture inputs. Those omitted pair inputs are not an incomplete scan of the remaining saved observation.
+            </StatusBanner>
+          ) : null}
+          {resultsCapped ? (
+            <StatusBanner>
+              Result lists are capped. Found-versus-shown counts do not mean the remaining saved inputs were not scanned.
+            </StatusBanner>
+          ) : null}
           <p>Saved inputs checked: {coverage.input_count}. Text fields searched: {coverage.text_fields_scanned}.</p>
           <p>Capture inputs in the pair scope: {coverage.lineage_scanned_positions?.length ?? 0}. Pairs compared: {coverage.pairs_compared}.</p>
           <p>Source-link candidates found: {coverage.lineage_candidates_found}; shown: {coverage.lineage_candidates_returned}.</p>

@@ -205,7 +205,9 @@ test('partial scan and truncated counts stay distinct from a completed zero repo
     checks: FIXTURE_CHECKS.comparablePartial,
     checksPanels: investigationEvidenceCheckPanels(FIXTURE_BUNDLES.comparable, FIXTURE_CHECKS.comparablePartial),
   }))
-  assert.match(html, /only partially scanned/)
+  assert.doesNotMatch(html, /only partially scanned/)
+  assert.match(html, /Pair comparison omitted some capture inputs/)
+  assert.match(html, /Result lists are capped/)
   assert.match(html, /250 candidate pairs were found/)
   assert.match(html, /220 cues were found/)
   assert.match(html, /Capture positions omitted from pair comparison: 101/)
