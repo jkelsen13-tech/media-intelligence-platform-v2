@@ -1399,7 +1399,10 @@ export function createLocalInvestigationEvidenceReviewsClient({
           target_kind: item.target_kind,
           target_id: item.target_id,
           decision: input.decision,
-          latest_event: reviewEvent({ ...event, preview: true, rationale: input.rationale, evidence: input.evidence }),
+          latest_event: reviewEvent({ id: event.id, reportId: event.report_id, revision: event.revision,
+            targetKind: event.target_kind, targetId: event.target_id, previousEventId: event.previous_event_id,
+            decision: event.decision, authoredByYou: event.authored_by_you, recordedAt: event.recorded_at,
+            preview: true, rationale: event.rationale, evidence: event.evidence }),
         }
       })
       const nextOverview = {

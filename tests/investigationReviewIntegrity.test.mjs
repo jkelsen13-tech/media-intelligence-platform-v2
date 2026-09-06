@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { historyMatchesRequest, receiptMatchesDecision, freezeReviewDecisionPayload } from '../src/lib/investigationEvidenceReviewUi.js'
-import { FIXTURE_BUNDLES, FIXTURE_CHECKS, fixtureReviewHistory } from '../src/lib/investigationWorkspaceFixtures.js'
+import { FIXTURE_BUNDLES, FIXTURE_CHECKS, fixtureReviewHistory, createLocalInvestigationEvidenceReviewsClient } from '../src/lib/investigationWorkspaceFixtures.js'
+import { investigationEvidenceReviewPanels } from '../src/lib/investigationEvidenceReviewsClient.js'
 
 const bundle = FIXTURE_BUNDLES.comparable
 const checks = FIXTURE_CHECKS.comparable
@@ -81,4 +82,21 @@ test('superseded receipts and JSONB key reordering retain exact submission meani
   d.replayed = true
   d.event.evidence = d.event.evidence.map(ref => Object.fromEntries(Object.entries(ref).reverse()))
   assert.equal(receiptMatchesDecision(payload(), d, bundle), true)
+})
+
+test('local fixture save returns a valid receipt and readable current overview', async () => {
+  const client = createLocalInvestigationEvidenceReviewsClient({ scenario: 'populated' })
+  const event = history().events[0]
+  const decision = { investigation_id: bundle.investigation_id, version_id: bundle.version.id, report_id: checks.report.id,
+    target_kind: event.target_kind, target_id: event.target_id, event_id: event.id, previous_event_id: null,
+    decision: event.decision, rationale: event.rationale, evidence: event.evidence }
+  const saved = await client.decide(decision)
+  assert.equal(receiptMatchesDecision(decision, saved.data, bundle), true)
+  const current = await client.read(bundle.investigation_id, bundle.version.id, checks.report.id)
+  const panels = investigationEvidenceReviewPanels(bundle, checks, current.data)
+  assert.ok(panels)
+  assert.equal(panels.summary.disputed, 1)
+  const target = panels.targets.find(target => target.target_id === decision.target_id)
+  assert.equal(target.latest_event.id, decision.event_id)
+  assert.equal(target.latest_event.report_id, decision.report_id)
 })
