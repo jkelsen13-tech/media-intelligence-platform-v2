@@ -1,0 +1,147 @@
+{
+  "applied": true,
+  "baseline_origin": "Content hashes compare with the preceding verified assessment deployment record committed in PR #38; current preflight queue status independently confirmed one capture, zero assessments, seven pending search notices.",
+  "content_checks": [
+    {
+      "baseline_hash": "b360b96a738d4d8502e7ebe8b8f28561",
+      "content_hash": "b360b96a738d4d8502e7ebe8b8f28561",
+      "relation": "public.articles",
+      "rows": 4,
+      "unchanged": true
+    },
+    {
+      "baseline_hash": "e1af6eb3a4ba7d4bfe72aaed9838170c",
+      "content_hash": "e1af6eb3a4ba7d4bfe72aaed9838170c",
+      "relation": "public.nodes",
+      "rows": 1,
+      "unchanged": true
+    },
+    {
+      "baseline_hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "content_hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "relation": "public.edges",
+      "rows": 0,
+      "unchanged": true
+    },
+    {
+      "baseline_hash": "edfce96c5b11a484ee72c617f8fc8a8b",
+      "content_hash": "edfce96c5b11a484ee72c617f8fc8a8b",
+      "relation": "public.pipeline_config",
+      "rows": 7,
+      "unchanged": true
+    },
+    {
+      "baseline_hash": "5bd81d1298fb509196ade36fcc147eda",
+      "content_hash": "5bd81d1298fb509196ade36fcc147eda",
+      "relation": "public.spatial_projection_v1",
+      "rows": 1,
+      "unchanged": true
+    },
+    {
+      "baseline_hash": "143c6529d0d0ae8227050a9ea01fb2f4",
+      "content_hash": "143c6529d0d0ae8227050a9ea01fb2f4",
+      "relation": "evidence_pipeline.article_captures",
+      "rows": 1,
+      "unchanged": true
+    },
+    {
+      "baseline_hash": "56d86d1de081f6b424a7bcebc64d7722",
+      "content_hash": "56d86d1de081f6b424a7bcebc64d7722",
+      "relation": "evidence_pipeline.record_versions",
+      "rows": 6,
+      "unchanged": true
+    },
+    {
+      "baseline_hash": "87b6245c0ca3da03497809b9ce5b469f",
+      "content_hash": "87b6245c0ca3da03497809b9ce5b469f",
+      "relation": "evidence_pipeline.evidence_candidates",
+      "rows": 3,
+      "unchanged": true
+    }
+  ],
+  "interpretation": "The one existing capture had no other retained captures to compare. The initial snapshot was correctly empty. Six record-version producer notices are unsupported by this capture-only contract and remain pending. Synthetic ordinary/historical retrieval passes do not establish real-corpus quality.",
+  "live_state": {
+    "completed_retrieval_runs": 1,
+    "dependency_lookup_completed": 7,
+    "new_candidate_search_completed": 1,
+    "new_candidate_search_pending": 6,
+    "retained_captures": 1,
+    "retrieval_pairs": 0,
+    "scheduler_enabled": false,
+    "semantic_assessments": 0
+  },
+  "migration": "20260906054356_evidence_capture_retrieval_v1",
+  "next_gate": "Varied private real-evidence collection with source clocks, lineage/identity context, development and held-out splits; compare lexical retrieval with semantic methods before scheduling or publication.",
+  "project_id": "qikvmopbtijoebdqosyq",
+  "reapply": false,
+  "repository_base": "cc97023bf5ce08f7c500df4e987cf2ef35811959",
+  "security_advisor_new": [
+    {
+      "cache_key": "rls_enabled_no_policy_evidence_pipeline_retrieval_pairs",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`evidence_pipeline.retrieval_pairs\\` has RLS enabled, but no policies exist",
+      "facing": "EXTERNAL",
+      "level": "INFO",
+      "metadata": {
+        "name": "retrieval_pairs",
+        "schema": "evidence_pipeline",
+        "type": "table"
+      },
+      "name": "rls_enabled_no_policy",
+      "observed_at": "2026-09-06T05:44:35.733Z",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy"
+    },
+    {
+      "cache_key": "rls_enabled_no_policy_evidence_pipeline_retrieval_run_items",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`evidence_pipeline.retrieval_run_items\\` has RLS enabled, but no policies exist",
+      "facing": "EXTERNAL",
+      "level": "INFO",
+      "metadata": {
+        "name": "retrieval_run_items",
+        "schema": "evidence_pipeline",
+        "type": "table"
+      },
+      "name": "rls_enabled_no_policy",
+      "observed_at": "2026-09-06T05:44:35.733Z",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy"
+    },
+    {
+      "cache_key": "rls_enabled_no_policy_evidence_pipeline_retrieval_runs",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`evidence_pipeline.retrieval_runs\\` has RLS enabled, but no policies exist",
+      "facing": "EXTERNAL",
+      "level": "INFO",
+      "metadata": {
+        "name": "retrieval_runs",
+        "schema": "evidence_pipeline",
+        "type": "table"
+      },
+      "name": "rls_enabled_no_policy",
+      "observed_at": "2026-09-06T05:44:35.733Z",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy"
+    }
+  ],
+  "tests": {
+    "build": "passed with existing node:crypto externalization and bundle-size warnings",
+    "failed": 0,
+    "focused_passed": 10,
+    "full_passed": 906,
+    "http_worker_tested": false,
+    "live_rollback_canary": "passed",
+    "simultaneous_multiconnection_tested": false
+  },
+  "verified_at": "2026-09-06"
+}
