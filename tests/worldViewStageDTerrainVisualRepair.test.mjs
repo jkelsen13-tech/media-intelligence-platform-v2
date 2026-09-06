@@ -234,8 +234,8 @@ test('adapter wires relief shading on by default and exposes the toggle', () => 
   assert.match(ADAPTER_SRC, /setGlobeReliefShading\(Cesium, viewer, true\)/)
   assert.match(ADAPTER_SRC, /function setReliefShadingEnabled\(enabled\)/)
   assert.match(ADAPTER_SRC, /function getReliefShadingEnabled\(\)/)
-  // dispatcher passthrough
-  assert.match(DISPATCHER_SRC, /setReliefShadingEnabled: \(enabled\) => impl\?\.setReliefShadingEnabled/)
+  // Setter forwarding (including changes during startup) is exercised through
+  // real calls in worldViewStartupLifecycle.test.mjs, not pinned to syntax.
   assert.match(DISPATCHER_SRC, /getReliefShadingEnabled: \(\) => impl\?\.getReliefShadingEnabled/)
   // canvas: labeled control + legend + probe passthrough
   assert.match(CANVAS_SRC, /TERRAIN_RELIEF_TOGGLE_LABEL/)

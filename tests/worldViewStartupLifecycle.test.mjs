@@ -52,6 +52,8 @@ for (const stackId of ['ellipsoid-globe', 'openfreemap-positron']) {
     assert.equal(calls[2][2], selected)
     calls[0][1](latest[0].row)
     assert.equal(selectedRows[0], latest[0].row, 'picking retains exact corrected evidence row')
+    adapter.setReliefShadingEnabled(true)
+    assert.deepEqual(calls.at(-1), ['shading', true], 'ready renderer receives subsequent toggle')
     adapter.setFeatures([], new Set())
     assert.deepEqual(calls.at(-1)[1], [], 'withdrawn geometry is removed after startup')
   })
