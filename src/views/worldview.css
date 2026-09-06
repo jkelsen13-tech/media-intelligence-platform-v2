@@ -2,6 +2,20 @@
 
 .wv-touch-controls { display: none; }
 
+.wv-map-panel { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; }
+.wv-map-panel > .wv-map { flex: 1; }
+.wv-camera-controls button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-panel);
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+.wv-camera-controls button:disabled { opacity: 0.6; cursor: default; }
+
 .wv-view {
   display: flex;
   flex-direction: column;
