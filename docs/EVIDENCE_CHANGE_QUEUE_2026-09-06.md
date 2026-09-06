@@ -2,11 +2,11 @@
 
 ## Applied state
 
-Applied and verified on V2 `qikvmopbtijoebdqosyq` on 6 September 2026.
+Applied and verified on v2 `qikvmopbtijoebdqosyq` on 6 September 2026.
 Migration: `20260906042413_evidence_change_queue_v1`.
 Repository base: `0b92f06d833300cdb9fbeaa3e9a2d89c10cb0f21` (PR #35).
 The file was created with the Supabase CLI and renamed to the version actually
-recorded by the live migration service. **Do not reapply it to V2.**
+recorded by the live migration service. **Do not reapply it to v2.**
 
 This implements durable change capture and delivery. It does not implement
 semantic discovery, assessment dependency storage, canonical asset mapping,
@@ -103,7 +103,7 @@ checkpoints; there is no heartbeat API in this slice.
   intentionally private tables, with no new WARN/ERROR findings. Existing
   advisor findings remain outside this change. [Advisor definition](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
 
-This is transport coverage of seven V2 retained inputs, not coverage of Manus's
+This is transport coverage of seven v2 retained inputs, not coverage of Manus's
 corpus or proof of fourteen useful connections. No retained evidence or public
 state was changed. Private graph staging remains installed with zero staged
 records. Direct writes to entities, source lineage, edges, claims, mappings,
@@ -113,7 +113,14 @@ those producer types requires a versioned contract and appropriate tests.
 
 ## Repository reconciliation and next step
 
-Cursor must first commit these exact files and reconcile current main. There
+Cursor must first commit these files and reconcile current main. The packaged
+docs used the live project nickname in the same shape as G2 review-status
+tokens. Those four mentions in this report and the evaluation contract were
+rewritten to lowercase `v2`, matching
+`docs/EVIDENCE_PIPELINE_FOUNDATION_2026-09-05.md`. SQL, tests, and verifier
+JSON are unchanged from the packaged SHA-256 values.
+
+There
 is a pre-existing staging timestamp discrepancy: repository
 `20260905203600_mip_legacy_graph_private_staging.sql` versus live migration
 `20260906034920_mip_legacy_graph_private_staging`. This report records the
