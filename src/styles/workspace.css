@@ -68,6 +68,17 @@
   }
 }
 
+.ws-private-context {
+  margin-top: 8px;
+}
+
+.ws-private-context summary {
+  min-height: 44px;
+  align-content: center;
+  color: var(--cat-blue);
+  cursor: pointer;
+}
+
 .app.ws-app {
   display: block;
   height: 100%;
@@ -950,5 +961,50 @@
   .ws-inspector.collapsed {
     width: 100%;
     max-height: none;
+  }
+
+  /* Reading an investigation needs document flow, not the camera canvas's
+     remaining-height viewport. Keep one scroll owner for header and evidence. */
+  .ws-shell[data-workspace-view='investigations'] {
+    display: block;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .ws-shell[data-workspace-view='investigations'] .ws-body {
+    display: block;
+    overflow: visible;
+  }
+
+  .ws-shell[data-workspace-view='investigations'] .ws-content,
+  .ws-shell[data-workspace-view='investigations'] .app-main {
+    height: auto;
+    overflow: visible;
+    min-width: 0;
+  }
+
+  .ws-shell[data-workspace-view='investigations'] .ws-inspector {
+    position: static;
+    max-height: none;
+  }
+
+  .ws-shell[data-workspace-view='investigations'] .ws-dimensions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .ws-shell[data-workspace-view='investigations'] .ws-dimension {
+    min-width: 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .ws-shell[data-workspace-view='investigations'] .ws-canonical {
+    padding: 12px 16px 0;
+  }
+
+  .ws-shell[data-workspace-view='investigations'] .ws-title {
+    font-size: 18px;
+    overflow-wrap: anywhere;
   }
 }

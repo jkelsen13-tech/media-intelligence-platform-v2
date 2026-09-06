@@ -1761,6 +1761,8 @@ export default function PrivateInvestigationWorkspace({
       ) : null}
 
       {state.catalog.length > 0 && status !== WORKSPACE_STATUS.signed_out && status !== WORKSPACE_STATUS.authentication_required && (
+        <details className="piw-assignment-picker" open={!revealPrivate}>
+          <summary>Choose investigation ({state.catalog.length})</summary>
         <div className="piw-catalog" aria-label="Assigned investigations">
           {state.catalog.map((item) => (
             <button
@@ -1779,6 +1781,7 @@ export default function PrivateInvestigationWorkspace({
             </button>
           )}
         </div>
+        </details>
       )}
 
       {revealPrivate && (
