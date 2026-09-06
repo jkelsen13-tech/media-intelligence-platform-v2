@@ -396,6 +396,20 @@ function projectionEventView(row) {
 }
 
 /**
+ * Comparison cards keep opaque article_key values as `articleId`.
+ * News detail is article-id keyed, so Open-in-News must carry the already
+ * public member URL and resolve it through an eligible articles row.
+ * A hashed key is never a News article id.
+ */
+export function newsNavigationFromComparisonSurface(surface) {
+  if (!surface) return null
+  const articleKey = surface.articleId ?? surface.article_key ?? null
+  const url = surface.url ?? surface.article_url ?? null
+  if (!articleKey && !url) return null
+  return { articleKey, url }
+}
+
+/**
  * Public comparison loader. It reads only `comparison_public`, a deliberately
  * narrow view with opaque keys and card-rendered fields. Base claims and the
  * operational pipeline_config table are never requested by the browser.

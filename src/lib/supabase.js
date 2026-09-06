@@ -755,6 +755,51 @@ export async function loadArticleTimelineKey(articleId) {
   }
 }
 
+// Opaque comparison keys are md5(article.id::text): 32 hex, no dashes.
+// Direct News / Timeline / Arc ids are UUIDs or demo slugs — never a raw hash.
+export function isComparisonArticleKey(value) {
+  return typeof value === 'string' && /^[0-9a-f]{32}$/i.test(value)
+}
+
+export function isDirectNewsArticleId(value) {
+  return typeof value === 'string' && value.length > 0 && !isComparisonArticleKey(value)
+}
+
+/**
+ * Comparison → News: resolve an Open-in-News target to an eligible public
+ * articles.id. The comparison card keeps its opaque article_key. The already
+ * public member URL is the join, matching loadArticleComparisonEvents in
+ * reverse. Pending-review and withheld rows stay hidden. Private tables are
+ * not queried.
+ */
+export async function resolveEligibleArticleForNews(target, { supabaseClient } = {}) {
+  if (target == null) return null
+  if (typeof target === 'string') {
+    return isDirectNewsArticleId(target) ? target : null
+  }
+
+  const url = target.url ?? target.article_url ?? null
+  const namedId = target.articleId ?? target.id ?? null
+  if (isDirectNewsArticleId(namedId) && !url) return namedId
+  if (!url) return isDirectNewsArticleId(namedId) ? namedId : null
+
+  const client = supabaseClient ?? supabase
+  if (!client) return isDirectNewsArticleId(namedId) ? namedId : null
+
+  try {
+    const { data, error } = await client
+      .from('articles')
+      .select('id')
+      .eq('url', url)
+      .eq('reader_state', 'eligible')
+      .maybeSingle()
+    if (error || !data?.id) return null
+    return data.id
+  } catch {
+    return null
+  }
+}
+
 // Doc 05 pair 5 (News → Source Comparison): comparison events covering an
 // article, via the existing narrow comparison_public projection only. The
 // projection is event-keyed and carries opaque article keys, so this helper

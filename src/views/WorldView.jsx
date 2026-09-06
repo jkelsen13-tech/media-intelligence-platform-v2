@@ -45,7 +45,10 @@ import {
 } from '../lib/temporalAssessment'
 import {
   investigationContextDomProps,
-  selectionStubFromInvestigation,
+  mayCommitWorldViewProjection,
+  releasedGeographyUnavailableCopy,
+  shouldAutoSelectWorldView,
+  worldViewSelectionForMatch,
 } from '../lib/investigationContext'
 import { freshnessFromExistingMarkers } from '../lib/investigationJoinState'
 import { loadEventTimeWeather, unavailableWeather } from '../lib/eventTimeWeather'
@@ -143,6 +146,7 @@ function EventInspector({
   loadStatus,
   selected,
   visibleRow,
+  hasMatchingGeography,
   atMs,
   temporalAssessment,
   investigationContext,
@@ -178,6 +182,12 @@ function EventInspector({
   } else if (!selected) {
     body = (
       <p className="wv-empty-state">No event selected. Choose a graph node or a projected location when one exists.</p>
+    )
+  } else if (!hasMatchingGeography) {
+    body = (
+      <p className="wv-empty-state" data-geography-unavailable="true">
+        {releasedGeographyUnavailableCopy()}
+      </p>
     )
   } else if (!visibleRow) {
     body = (
@@ -417,7 +427,7 @@ export default function WorldView({
     return worldGraph.nodes.length > 0 ? worldGraph.nodes : live
   }, [graph, worldGraph.nodes])
 
-  const selectedForMatch = selected ?? selectionStubFromInvestigation(investigationContext)
+  const selectedForMatch = worldViewSelectionForMatch(selected, investigationContext)
   const selectedRows = useMemo(
     () => rowsMatchingSelection(loadStatus.rows, selectedForMatch),
     [loadStatus.rows, selectedForMatch],
@@ -435,13 +445,19 @@ export default function WorldView({
     const node = graphNodeMatchingProjection(graphNodes, row)
     if (!didAutoSelect.current) {
       didAutoSelect.current = true
-      if (!selected) onSelectProjection(node ?? selectionStubFromProjection(row), row)
+      if (!shouldAutoSelectWorldView({ selected, investigationContext })) return
+      if (!mayCommitWorldViewProjection({ investigationContext, row, node })) return
+      onSelectProjection(node ?? selectionStubFromProjection(row), row)
       return
     }
-    if (selected?.fromSpatialProjection && node) {
+    if (
+      selected?.fromSpatialProjection &&
+      node &&
+      mayCommitWorldViewProjection({ investigationContext, row, node })
+    ) {
       onSelectProjection(node, row)
     }
-  }, [loadStatus, graphNodes, selected, onSelectProjection])
+  }, [loadStatus, graphNodes, selected, onSelectProjection, investigationContext])
 
   const atMs = stamps[stampIndex]?.ms ?? null
   const atIso = stamps[stampIndex]?.iso ?? null
@@ -510,7 +526,7 @@ export default function WorldView({
       : loadStatus.status === 'empty'
         ? 'No spatial projection rows. The map stays empty.'
         : selectedForMatch && selectedRows.length === 0
-          ? 'This selection has no spatial projection row.'
+          ? releasedGeographyUnavailableCopy()
           : selectedForMatch && !visibleRow
             ? 'No spatial state recorded at this time.'
             : 'No display_geometry available to plot.'
@@ -623,6 +639,7 @@ export default function WorldView({
           loadStatus={loadStatus}
           selected={selectedForMatch}
           visibleRow={visibleRow}
+          hasMatchingGeography={selectedRows.length > 0}
           atMs={atMs}
           temporalAssessment={temporalAssessment}
           investigationContext={investigationContext}
