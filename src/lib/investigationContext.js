@@ -191,3 +191,49 @@ export function selectionStubFromInvestigation(ic) {
     fromInvestigationContext: true,
   }
 }
+
+/**
+ * Initial World View auto-select is only for an empty investigation.
+ * An established subject — including an article with no released geography —
+ * must not be replaced by the unique live Cleveland row.
+ */
+export function shouldAutoSelectWorldView({ selected = null, investigationContext = null } = {}) {
+  if (selected) return false
+  if (investigationContext?.canonical_subject_id) return false
+  return true
+}
+
+/**
+ * Bind World View to the current investigation. A leftover graph/spatial
+ * pick from a prior subject does not override an established IC id.
+ */
+export function worldViewSelectionForMatch(selected, investigationContext) {
+  const stub = selectionStubFromInvestigation(investigationContext)
+  if (!stub) return selected ?? null
+  if (!selected) return stub
+  const selectedKeys = new Set(
+    [selected.id, selected.slug, selected.mip_object_id, selected.subject_graph_node_id]
+      .filter(Boolean)
+      .map(String),
+  )
+  if (selectedKeys.has(String(stub.id)) || selectedKeys.has(String(stub.subject_graph_node_id))) {
+    return selected
+  }
+  return stub
+}
+
+/** Automatic projection commit may proceed only when IC is empty or already this object. */
+export function mayCommitWorldViewProjection({ investigationContext = null, row = null, node = null } = {}) {
+  const id = investigationContext?.canonical_subject_id
+  if (!id) return true
+  const keys = new Set(
+    [row?.subject_graph_node_id, row?.mip_object_id, node?.subject_graph_node_id, node?.id, node?.slug]
+      .filter(Boolean)
+      .map(String),
+  )
+  return keys.has(String(id))
+}
+
+export function releasedGeographyUnavailableCopy() {
+  return 'Released geography is unavailable for this investigation. The selected subject is preserved. No location is invented.'
+}

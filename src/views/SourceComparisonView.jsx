@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { loadSourceComparisonView, E_LEVEL_NAMES } from '../lib/sourceComparisonReadPath.js'
+import { loadSourceComparisonView, newsNavigationFromComparisonSurface, E_LEVEL_NAMES } from '../lib/sourceComparisonReadPath.js'
 import { filterEventsByTitle } from '../lib/listFilters.js'
 import WorkspaceAvailability from '../components/WorkspaceAvailability'
 import WorkspaceTechnicalDisclosure from '../components/WorkspaceTechnicalDisclosure'
@@ -110,11 +110,11 @@ function SurfaceRow({ surface, onOpenArticle }) {
         {surface.url && (
           <a className="sc-src" href={surface.url} target="_blank" rel="noreferrer">Article ↗</a>
         )}
-        {surface.articleId && onOpenArticle && (
+        {(surface.articleId || surface.url) && onOpenArticle && (
           <button
             type="button"
             className="sc-src sc-xlink"
-            onClick={() => onOpenArticle(surface.articleId)}
+            onClick={() => onOpenArticle(newsNavigationFromComparisonSurface(surface))}
           >
             Open in News →
           </button>

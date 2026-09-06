@@ -20,7 +20,7 @@ import SourceComparisonView from './views/SourceComparisonView'
 import WorldView from './views/WorldView'
 import { loadPhase3BetaFlag } from './lib/phase3ReadPath'
 import { buildNavViews, buildMoreEntries, isMoreViewKey } from './lib/navViews'
-import { loadGraph, loadTopics, loadCorpusMeta, loadNodeLocations, loadGraphCoverage } from './lib/supabase'
+import { loadGraph, loadTopics, loadCorpusMeta, loadNodeLocations, loadGraphCoverage, resolveEligibleArticleForNews } from './lib/supabase'
 import { loadInvestigationSurface, surfaceJoinDisclosures } from './lib/investigationSurface'
 import { liveCorpusLabel } from './lib/newsFeedModel'
 import { computeHubs } from './lib/hubs'
@@ -763,14 +763,21 @@ export default function App() {
     )
   }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
-  const openArticleInNews = useCallback((articleId) => {
+  const openArticleInNews = useCallback((target) => {
     resetJumpContext()
     clearInvalidNewSubjectSubSelections()
-    setFocusArticle(articleId)
-    setView('news')
-    setInvestigationContext((ic) =>
-      commitNewSubjectFromApp(ic, { type: 'article', id: articleId }, { landingView: 'news' }),
-    )
+    const applyResolvedArticle = (articleId) => {
+      if (!articleId) return
+      setFocusArticle(articleId)
+      setView('news')
+      setInvestigationContext((ic) =>
+        commitNewSubjectFromApp(ic, { type: 'article', id: articleId }, { landingView: 'news' }),
+      )
+    }
+    // Direct News / Timeline / Arc ids pass through. Comparison cards pass
+    // an opaque article_key plus the public member URL; resolve that through
+    // an eligible articles row before loadArticleDetail runs.
+    void resolveEligibleArticleForNews(target).then(applyResolvedArticle)
   }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
   // Doc 05 pair 3/6 destination, now under the Package 1 item 2 navigation
