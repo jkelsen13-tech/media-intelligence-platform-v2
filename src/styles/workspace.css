@@ -950,11 +950,39 @@
   .ws-topbar {
     height: 56px;
     min-height: 56px;
+    gap: 4px;
+    padding-inline: 8px;
+  }
+
+  .ws-top-meta {
+    flex-shrink: 0;
+    gap: 0;
+  }
+
+  .ws-topbar :is(.ws-account-btn, .ws-icon-btn, .ws-menu-btn) {
+    flex: 0 0 44px;
+    width: 44px;
+    min-height: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .ws-search {
+    gap: 4px;
+    padding-inline: 4px;
+  }
+
+  .ws-search > svg {
+    display: none;
+  }
+
+  .ws-explore-btn {
+    padding-inline: 8px;
   }
 
   .ws-brand-name,
   .ws-corpus,
-  .ws-account-btn {
+  .ws-account-label {
     display: none;
   }
 

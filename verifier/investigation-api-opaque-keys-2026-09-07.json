@@ -126,8 +126,18 @@
       "cache": "no-store, private"
     }
   ],
-  "positive_signed_in_live_verified": false,
-  "production_records_written": 0,
+  "positive_signed_in_live_verified": true,
+  "production_records_written": 1,
   "previous_deployment_manifest": "verifier/investigation-api-2026-09-07.json",
-  "ezbr_sha256": "9ff9ea55734344a1b508b232ad0354a0d5df11954b23598c6dfaeb79a1a42adb"
+  "ezbr_sha256": "9ff9ea55734344a1b508b232ad0354a0d5df11954b23598c6dfaeb79a1a42adb",
+  "signed_in_verification": {
+    "date": "2026-09-07",
+    "workspace": "assigned_revision_1_loaded",
+    "retained_input": "exact_saved_NASA_summary_loaded",
+    "checks": "one_bounded_report_saved_and_database_verified",
+    "review_read": "zero_returned_targets_loaded",
+    "personal_review_acknowledgement_written": false,
+    "semantic_adjudication": "not_performed",
+    "nonempty_review_and_span_comparison": "not_exercised_in_production"
+  }
 }
