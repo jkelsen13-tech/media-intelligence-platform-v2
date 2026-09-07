@@ -2,6 +2,9 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFile,readdir} from 'node:fs/promises'
 import {PGlite} from '@electric-sql/pglite'
+import {createOperatorBackend, PIPELINE_TARGET} from '../scripts/operatorBackend.mjs'
+import {enqueueManifest, runWorker} from '../scripts/evidencePipeline.mjs'
+import {runCaptureRetrieval} from '../scripts/runCaptureRetrieval.mjs'
 
 test('bounded private capture retrieval',async t=>{
  const db=await PGlite.create();t.after(()=>db.close())
@@ -22,6 +25,39 @@ test('bounded private capture retrieval',async t=>{
   await db.query("update evidence_pipeline.change_jobs set available_at=clock_timestamp()-interval '100 years' where change_position=(select position from evidence_pipeline.evidence_changes where capture_id=$1)",[cap.capture_id])
   const j=await queue('claim',{route:'new_candidate_search'});assert.equal(j.change.capture_id,cap.capture_id);return j
  }
+ await t.test('composed operator transport connects intake, bounded retrieval and durable recovery',async()=>{
+  await db.exec('begin')
+  try {
+  let losePageResponse=false
+  const routes={mip_pipeline_v1:intake,mip_evidence_changes_v1:queue,mip_capture_retrieval_v1:retrieval}
+  const backend=createOperatorBackend({url:PIPELINE_TARGET,key:'test-only',fetchImpl:async(url,init)=>{
+   const name=new URL(url).pathname.split('/').at(-1),body=JSON.parse(init.body)
+   const value=await routes[name](body.p_action,body.p_input)
+   if(losePageResponse&&body.p_action==='page'){losePageResponse=false;throw new Error('lost committed response')}
+   return Response.json(value)
+  }})
+  await enqueueManifest(backend.intake,{run_id:'operator-test',articles:[1,2,3].map(n=>({url:`https://example.org/operator-${n}`,title:'Riverbridge wetlands monitoring',outlet:'Fixture'}))},{apply:true})
+  const imported=await runWorker(backend.intake,{maxJobs:3});assert.equal(imported.completed.length,3)
+  const leased=await claim(imported.completed[0])
+  const partial=await runCaptureRetrieval(backend,{mode:'start',job_id:leased.id,lease_token:leased.lease_token,maxPages:1,pageSize:1})
+  assert.equal(partial.state,'partial');assert.equal(partial.scanned,1)
+  losePageResponse=true
+  const recovered=await runCaptureRetrieval(backend,{mode:'resume',run_id:partial.run_id,lease_token:leased.lease_token})
+  assert.equal(recovered.state,'completed');assert.equal(recovered.scanned,2)
+  assert.equal(await scalar('select state from evidence_pipeline.change_jobs where id=$1',[leased.id]),'completed')
+  assert.equal(await scalar("select count(*)::int from evidence_pipeline.change_job_events where job_id=$1 and event='completed'",[leased.id]),1)
+  assert.equal((await runCaptureRetrieval(backend,{mode:'resume',run_id:partial.run_id})).pages,0)
+  assert.equal(await scalar('select count(*)::int from evidence_pipeline.assessments'),0)
+  assert.ok((await backend.retrieval('results',{run_id:partial.run_id})).every(row=>row.release_state==='private'))
+  assert.equal(await scalar("select count(*)::int from public.articles where reader_state<>'pending_review'"),0)
+  await enqueueManifest(backend.intake,{run_id:'operator-late',articles:[{url:'https://example.org/operator-late',title:'Riverbridge wetlands historical record',outlet:'Fixture',published_at:'1980-01-01T00:00:00Z'}]},{apply:true})
+  await runWorker(backend.intake,{maxJobs:1})
+  const refresh=await runCaptureRetrieval(backend,{mode:'refresh',job_id:leased.id,maxPages:1,pageSize:1})
+  assert.equal(refresh.state,'partial');assert.equal(refresh.targets,3);assert.notEqual(refresh.run_id,partial.run_id)
+  assert.equal((await runCaptureRetrieval(backend,{mode:'resume',run_id:refresh.run_id})).state,'completed')
+  assert.equal((await backend.retrieval('read',{run_id:partial.run_id})).targets.length,2)
+  } finally { await db.exec('rollback') }
+ })
  const a=await add('https://example.org/a','Riverbridge chemical discharge affected wetlands.'),b=await add('https://example.org/b','Riverbridge wetlands monitoring began.'),c=await add('https://example.org/c','Orchestra violin rehearsal continued.')
  let j,run;
  await t.test('lease checks, frozen manifest, bounded pages and exact retry',async()=>{
