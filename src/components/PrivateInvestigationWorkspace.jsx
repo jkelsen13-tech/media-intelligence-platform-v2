@@ -5,6 +5,7 @@ import { createInvestigationSourceSpansClient } from '../lib/investigationSource
 import { SourceSpanInspector } from './InvestigationSourceSpans.jsx'
 import InvestigationDefinitionRevisions from './InvestigationDefinitionRevisions.jsx'
 import InvestigationVersionNavigation from './InvestigationVersionNavigation.jsx'
+import { RetainedInputInspector } from './InvestigationRetainedInputs.jsx'
 import { supabase } from '../lib/supabase.js'
 
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
@@ -1567,6 +1568,7 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
         </section>
       )}
       {inspector?.kind === 'source-text-span' && <SourceSpanInspector bundle={state.bundle} selection={inspector.selection} />}
+      {inspector?.kind === 'retained-input' && <RetainedInputInspector bundle={state.bundle} selection={inspector.selection} />}
       {inspector?.kind === 'before-state' && (
         <section>
           <h3>Compared version records</h3>
@@ -1856,6 +1858,11 @@ export default function PrivateInvestigationWorkspace({
           <CommitmentsSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <GapsSection panels={panels} />
           <InvestigationSourceHistory key={`${bundle?.version?.id}:${bundle?.observation?.id}`} bundle={bundle}
+            onOpenInput={(selection, sourceBundle) => {
+              if (sourceBundle !== bundle) return
+              actions.setInspector({ kind: 'retained-input', selection })
+              actions.setActiveSection('source-history')
+            }}
             impactOptions={{ client: inputImpactClient, spansClient: sourceSpansClient, onAccessFailure: actions.rejectInputImpactAccess,
               onOpenSpan: (selection, sourceBundle) => {
                 if (sourceBundle !== bundle) return

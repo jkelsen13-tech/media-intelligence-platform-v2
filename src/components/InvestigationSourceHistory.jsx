@@ -3,6 +3,7 @@ import { savedSourceHistory, compareRetainedCaptures } from '../lib/investigatio
 import { RetainedInputDates, RetainedInputRecord, AssessmentSavedReasoning } from './InvestigationAssessmentTrail.jsx'
 import InvestigationInputImpact from './InvestigationInputImpact.jsx'
 import InvestigationSourceSpans from './InvestigationSourceSpans.jsx'
+import InvestigationRetainedInputs from './InvestigationRetainedInputs.jsx'
 
 const labels = { title: 'Title', summary: 'Summary', body_text: 'Body text', url: 'Source URL', outlet: 'Outlet', published_at: 'Publication value' }
 const states = { equal: 'Exact match', different: 'Values differ', left_only: 'Only in first capture', right_only: 'Only in second capture', not_recorded: 'Not recorded in either' }
@@ -104,17 +105,18 @@ function SourceDisclosure({ source, bundle, impactOptions }) {
   </details>
 }
 
-export default function InvestigationSourceHistory({ bundle, impactOptions }) {
+export default function InvestigationSourceHistory({ bundle, impactOptions, onOpenInput }) {
   const history = useMemo(() => savedSourceHistory(bundle), [bundle])
   const [limit, setLimit] = useState(10)
   return <section className="piw-section" id="piw-source-history" tabIndex={-1}>
     <h2>Source History</h2>
     <p className="piw-note">Compare exact captures retained in this saved observation, grouped only by their recorded article identity. The order is MIP input order, not publication or event chronology. Matching URLs, outlets, and text do not join different identities.</p>
+    <InvestigationRetainedInputs bundle={bundle} onOpenInput={onOpenInput} />
     {history.sources.length ? <>
       <p>{history.sources.length} retained source identit{history.sources.length === 1 ? 'y' : 'ies'} · {history.sources.filter(source => source.captures.length > 1).length} with multiple captures</p>
       {history.sources.slice(0, limit).map(source => <SourceDisclosure key={`${bundle?.version?.id}:${bundle?.observation?.id}:${source.articleId}`} source={source} bundle={bundle} impactOptions={impactOptions} />)}
       {history.sources.length > limit ? <button type="button" className="piw-section-btn" onClick={() => setLimit(n => n + 10)}>Show more sources ({history.sources.length - limit} remaining)</button> : null}
     </> : <p className="piw-empty">{history.available ? 'No capture with a recorded article identity is available in this observation. This does not establish an absence of source history.' : 'Saved observation unavailable. No current source history is substituted.'}</p>}
-    {history.excludedInputs ? <p className="piw-muted">{history.excludedInputs} input(s) are not grouped here, including record versions and captures without a usable identity or position. They remain available through their evidence trails.</p> : null}
+    {history.excludedInputs ? <p className="piw-muted">{history.excludedInputs} input(s) are not grouped here, including record versions and captures without a usable identity or position. Inputs with exact saved identities can be opened in the saved-input browser above.</p> : null}
   </section>
 }
