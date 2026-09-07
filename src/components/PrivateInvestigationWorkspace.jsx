@@ -1,3 +1,4 @@
+import AssessmentEvidenceTrail, { RetainedInputRecord, RetainedInputDates } from './InvestigationAssessmentTrail.jsx'
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
 import {
   EVIDENCE_REVIEW_LABELS,
@@ -512,6 +513,7 @@ function HypothesisRecord({ hypothesis, bundle, onOpenCitation }) {
               <p>{assessment.rationale}</p>
               {assessment.stale ? <p className="piw-note">This recorded assessment has a changed dependency. That is not a completed reassessment.</p> : null}
               <RemainingUncertaintyBlock>{assessment.remaining_uncertainty}</RemainingUncertaintyBlock>
+              <AssessmentEvidenceTrail key={`${bundle?.version?.id}:${assessment.id}`} bundle={bundle} assessmentId={assessment.id} />
             </> : <p className="piw-muted">The linked selected assessment is not available in this saved observation.</p>}
           </details>
         )
@@ -654,38 +656,6 @@ function BeforeStateRecords({ bundle, focus, onOpenCitation }) {
   )
 }
 
-function InputRecordView({ input, position }) {
-  const payload = snapshotInputPayload(input)
-  const safeUrl = safeWorkspaceHttpUrl(payload?.url)
-  return (
-    <div className="piw-card" data-record="input" data-position={position == null ? undefined : String(position)}>
-      <p className="piw-mono">Position {position == null ? 'not recorded' : String(position)}</p>
-      {input ? (
-        <>
-          <p>{payload?.title ?? 'Retained source identity'}</p>
-          {payload?.outlet ? <p className="piw-muted">{payload.outlet}</p> : null}
-          <p className="piw-muted">
-            Published {input.capture?.published_at ? formatWorkspaceDate(input.capture.published_at) : 'unknown'}.
-            Recorded {input.capture?.recorded_at ? formatWorkspaceDate(input.capture.recorded_at) : 'unknown'}.
-          </p>
-          {payload?.url ? (
-            safeUrl ? (
-              <p>
-                <a href={safeUrl} target="_blank" rel="noreferrer">{safeUrl}</a>
-              </p>
-            ) : (
-              <p className="piw-muted">Retained locator (not opened as a link): {payload.url}</p>
-            )
-          ) : null}
-          {payload?.summary ? <p>{payload.summary}</p> : null}
-        </>
-      ) : (
-        <p>{citationUnavailableCopy()}</p>
-      )}
-    </div>
-  )
-}
-
 function EvidenceChangeInspect({ change, currentBundle, beforeBundle, onOpenCitation }) {
   const position = change.position == null ? null : String(change.position)
   const currentInput = snapshotInputAtPosition(currentBundle, position)
@@ -701,11 +671,11 @@ function EvidenceChangeInspect({ change, currentBundle, beforeBundle, onOpenCita
         <>
           <h4>Observation input at this position</h4>
           <p className="piw-muted">Displayed version</p>
-          <InputRecordView input={currentInput} position={position} />
+          <RetainedInputRecord key={`after:${currentBundle?.version?.id}:${position}`} input={currentInput} position={position} bundle={currentBundle} />
           {beforeBundle && (
             <>
               <p className="piw-muted">Compared version</p>
-              <InputRecordView input={beforeInput} position={position} />
+              <RetainedInputRecord key={`before:${beforeBundle?.version?.id}:${position}`} input={beforeInput} position={position} bundle={beforeBundle} />
             </>
           )}
         </>
@@ -718,6 +688,7 @@ function EvidenceChangeInspect({ change, currentBundle, beforeBundle, onOpenCita
               <p className="piw-muted">Compared version</p>
               <p>{assessmentOutcomeCopy(beforeAssessment.outcome)}</p>
               <p>{beforeAssessment.rationale}</p>
+              <AssessmentEvidenceTrail key={`${beforeBundle?.version?.id}:${beforeAssessment.id}`} bundle={beforeBundle} assessmentId={beforeAssessment.id} />
             </div>
           )}
           {afterAssessment && (
@@ -725,6 +696,7 @@ function EvidenceChangeInspect({ change, currentBundle, beforeBundle, onOpenCita
               <p className="piw-muted">Displayed version</p>
               <p>{assessmentOutcomeCopy(afterAssessment.outcome)}</p>
               <p>{afterAssessment.rationale}</p>
+              <AssessmentEvidenceTrail key={`${currentBundle?.version?.id}:${afterAssessment.id}`} bundle={currentBundle} assessmentId={afterAssessment.id} />
             </div>
           )}
         </>
@@ -807,6 +779,7 @@ function OverviewSection({ panels, bundle, onOpenPublicGraphNode, publicNode }) 
                 <p className="piw-note">This recorded assessment has a changed dependency. That is not a completed reassessment.</p>
               ) : null}
               <RemainingUncertaintyBlock>{assessment.remaining_uncertainty}</RemainingUncertaintyBlock>
+              <AssessmentEvidenceTrail key={`${bundle?.version?.id}:${assessment.id}`} bundle={bundle} assessmentId={assessment.id} />
             </li>
           ))}
         </ul>
@@ -1574,13 +1547,7 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
         <section>
           <h3>Selected excerpt</h3>
           <ExcerptBlock resolved={inspector.resolved} reference={inspector.reference} />
-          {inspector.input?.capture && (
-            <p className="piw-muted">
-              Source identity retained in this observation.
-              Published {inspector.input.capture.published_at ? formatWorkspaceDate(inspector.input.capture.published_at) : 'unknown'}.
-              Recorded {inspector.input.capture.recorded_at ? formatWorkspaceDate(inspector.input.capture.recorded_at) : 'unknown'}.
-            </p>
-          )}
+          {inspector.input ? <RetainedInputDates input={inspector.input} /> : null}
         </section>
       )}
       {inspector?.kind === 'before-state' && (
