@@ -1,10 +1,13 @@
 // This browser adapter does not import or recompute the server projection.
 export function createInvestigationInputImpactClient(supabase) {
-  return { async read(investigationId, versionId, position) {
+  return { read: (investigationId, versionId, position) => readPrivateInvestigationFunction(supabase, 'investigation-input-impact', { investigation_id: investigationId, version_id: versionId, position }) }
+}
+
+export async function readPrivateInvestigationFunction(supabase, functionName, input) {
     if (!supabase?.functions?.invoke) return { error: { code: 'not_configured' }, data: null }
     try {
-      const result = await supabase.functions.invoke('investigation-input-impact', {
-        body: { action: 'read', input: { investigation_id: investigationId, version_id: versionId, position } },
+      const result = await supabase.functions.invoke(functionName, {
+        body: { action: 'read', input },
       })
       if (result.error) {
         let detail
@@ -15,7 +18,6 @@ export function createInvestigationInputImpactClient(supabase) {
       }
       return { data: result.data?.data ?? null, error: result.data?.error ?? null }
     } catch { return { data: null, error: { code: 'request_failed' } } }
-  } }
 }
 
 const uniqueArray = (value, max) => Array.isArray(value) && value.length <= max && new Set(value).size === value.length

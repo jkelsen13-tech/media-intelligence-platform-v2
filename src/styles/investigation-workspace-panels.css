@@ -449,6 +449,10 @@
 .piw-source-pair > * { min-width: 0; overflow-wrap: anywhere; }
 .piw-source-capture { padding: 0 12px 12px; background: var(--bg-secondary, #f7f9fc); border-radius: 6px; }
 .piw-source-fields { border-top: 1px solid var(--border-color, #e1e7ef); }
+.piw-source-spans { margin: 16px 0; padding: 12px; border: 1px solid var(--border-color, #e1e7ef); border-radius: 8px; }
+.piw-span-text { margin: 12px 0; line-height: 1.6; }
+.piw-span-text mark { background: #ffebb0; color: #513808; padding: 1px 0; }
+.piw-span-empty { border-inline-start: 2px solid #956419; margin-inline: 2px; }
 .piw-source-field { border-bottom: 1px solid var(--border-color, #e1e7ef); }
 .piw-source-field > .piw-source-pair { padding: 0 14px 14px; }
 .piw-source-field summary [data-field-status='different'] { color: #8a5416; }
