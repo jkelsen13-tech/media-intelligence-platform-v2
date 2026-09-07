@@ -388,3 +388,28 @@
     max-width: 100%;
   }
 }
+
+
+.piw-assessment-trail,
+.piw-input-dates {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.piw-input-dates > div {
+  margin: 8px 0;
+}
+
+.piw-input-dates dt {
+  color: var(--text-secondary, #667085);
+}
+
+.piw-input-dates dd {
+  margin: 2px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.piw-retained-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
