@@ -543,6 +543,10 @@ export function usePrivateInvestigationWorkspace({
     if (!bundleMatchesRequest(result.data, investigationId, versionId)) {
       if (asBefore) {
         applyCatalog((s) => ({ ...s, loadingBefore: false }))
+      } else {
+        // The requested version was not delivered. End loading without showing
+        // a substitute, and retain the requested ID so Retry reads it again.
+        applyCatalog((s) => ({ ...s, loadingBundle: false, bundle: null, panels: null, bundleError: 'identity_mismatch' }))
       }
       return { ignored: true, error: 'identity_mismatch' }
     }

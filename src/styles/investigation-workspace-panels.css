@@ -460,6 +460,15 @@
 .piw-definition-fields { padding: 0 12px 12px; }
 .piw-definition-stage { margin-top: 16px; padding-top: 8px; border-top: 2px solid var(--border-color, #e1e7ef); }
 .piw-definition-revisions dd { margin: 2px 0 12px; overflow-wrap: anywhere; }
+.piw-version-navigation { margin: 16px 0; padding: 16px; border: 1px solid var(--border-color, #e1e7ef); border-radius: 8px; }
+.piw-version-heading, .piw-version-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.piw-version-heading h2 { margin: 0; font-size: 16px; }
+.piw-version-label { padding: 5px 9px; border-radius: 5px; background: var(--bg-secondary, #edf3fe); font-size: 12px; }
+.piw-version-navigation p { margin: 10px 0; line-height: 1.5; }
+.piw-version-details { padding-top: 10px; border-top: 1px solid var(--border-color, #e1e7ef); }
+.piw-version-details summary { cursor: pointer; padding: 4px 0; }
+.piw-version-details dd { margin: 3px 0 10px; overflow-wrap: anywhere; font-size: 12px; }
+.piw-version-navigation button:disabled { opacity: .55; cursor: not-allowed; }
 .piw-span-text { margin: 12px 0; line-height: 1.6; }
 .piw-span-text mark { background: #ffebb0; color: #513808; padding: 1px 0; }
 .piw-span-empty { border-inline-start: 2px solid #956419; margin-inline: 2px; }

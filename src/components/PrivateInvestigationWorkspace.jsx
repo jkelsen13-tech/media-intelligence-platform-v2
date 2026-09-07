@@ -4,6 +4,7 @@ import { createInvestigationInputImpactClient } from '../lib/investigationInputI
 import { createInvestigationSourceSpansClient } from '../lib/investigationSourceSpansClient.js'
 import { SourceSpanInspector } from './InvestigationSourceSpans.jsx'
 import InvestigationDefinitionRevisions from './InvestigationDefinitionRevisions.jsx'
+import InvestigationVersionNavigation from './InvestigationVersionNavigation.jsx'
 import { supabase } from '../lib/supabase.js'
 
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
@@ -1815,6 +1816,7 @@ export default function PrivateInvestigationWorkspace({
 
       {revealPrivate && (
         <>
+          <InvestigationVersionNavigation bundle={bundle} state={state} onSelectVersion={actions.selectVersion} />
           <nav className="piw-section-nav" aria-label="Investigation sections">
             {INVESTIGATION_WORKSPACE_PANELS.map((panel) => (
               <button
