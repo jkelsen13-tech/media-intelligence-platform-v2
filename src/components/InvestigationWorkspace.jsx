@@ -438,9 +438,9 @@ export function WorkspaceSearch({
 
 export function WorkspaceAccountButton({ onClick, enabled }) {
   return (
-    <button type="button" className="ws-account-btn" aria-label="Account" onClick={onClick} disabled={!enabled && !onClick}>
+    <button type="button" className="ws-account-btn" aria-label="Account" title="Account / Sign in" onClick={onClick} disabled={!enabled && !onClick}>
       <User size={16} />
-      Account
+      <span className="ws-account-label">Account</span>
     </button>
   )
 }
