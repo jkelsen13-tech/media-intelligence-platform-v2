@@ -87,9 +87,22 @@ test('producer-scoped queue claims preserve the durable lease contract', async t
       }
     }
   })
+  await check('expiration recovery remains bounded to 100 matching jobs', async () => {
+    await db.exec("insert into public.nodes(type,label) select 'event','bounded-'||n from generate_series(1,101) n")
+    await db.exec("update evidence_pipeline.change_jobs set state='processing',attempt_count=1,lease_token=gen_random_uuid(),lease_expires_at=clock_timestamp()-interval '1 second' where route='new_candidate_search' and change_position in (select position from evidence_pipeline.evidence_changes where record_version_id is not null)")
+    const before=await scalar("select count(*)::int from evidence_pipeline.change_jobs where state='processing'")
+    assert.ok(before>100); assert.equal(await claim('record_version'),null)
+    assert.equal(await scalar("select count(*)::int from evidence_pipeline.change_jobs where state='processing'"),before-100)
+    assert.equal(await scalar("select count(*)::int from evidence_pipeline.change_job_events where event='lease_expired'"),100)
+  })
   await check('service role allowed; browser roles denied at function boundary', async () => {
     for(const role of ['anon','authenticated']) {
       assert.equal(await scalar("select has_function_privilege($1,'public.mip_evidence_change_claim_v1(text,text)','EXECUTE')",[role]),false)
+    }
+    for(const role of ['anon','authenticated']) {
+      await db.exec('set role '+role)
+      await rejects(() => claim(), /permission denied/)
+      await db.exec('reset role')
     }
     await db.exec('set role service_role')
     assert.ok((await claim()).change.capture_id)
