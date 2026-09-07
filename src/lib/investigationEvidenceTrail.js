@@ -5,17 +5,19 @@ export const exactInputPosition = value => typeof value === 'string' && /^[1-9]\
 
 export function savedAssessmentTrail(bundle, assessmentId) {
   const snapshot = bundle?.observation?.snapshot
-  const assessment = snapshot?.assessments?.find(row => row.id === assessmentId)
+  const assessments = new Map(snapshot?.assessments?.map(row => [row.id, row]) ?? [])
+  const assessment = assessments.get(assessmentId)
   if (!assessment) return null
+  const inputs = new Map(snapshot.inputs?.map(row => [row.position, row]) ?? [])
   const parents = unique(assessment.parent_ids)
   const ancestors = unique(assessment.ancestor_ids).filter(id => !parents.includes(id))
-  const link = (id, kind) => ({ id, kind, assessment: id === assessmentId ? null : snapshot.assessments.find(row => row.id === id) ?? null })
+  const link = (id, kind) => ({ id, kind, assessment: id === assessmentId ? null : assessments.get(id) ?? null })
   return {
     assessment,
     contextRecorded: Array.isArray(assessment.context_positions),
     inputs: unique(assessment.context_positions).map(position => ({
       position,
-      input: exactInputPosition(position) ? snapshot.inputs?.find(row => row.position === position) ?? null : null,
+      input: exactInputPosition(position) ? inputs.get(position) ?? null : null,
       explicitlyAdded: assessment.extra_positions?.includes(position) === true,
     })),
     dependenciesRecorded: Array.isArray(assessment.parent_ids) && Array.isArray(assessment.ancestor_ids),
