@@ -66,6 +66,7 @@ test('explicitly unconfigured public backend cannot escape to a configured globa
     const module = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString('base64')}`)
     for (const backend of [module.createPublicDataBackend(), module.createPublicDataBackend(null)]) {
       assert.ok(Object.isFrozen(backend))
+      assert.deepEqual(await backend.loadSourceComparisonView(), { enabled: false, events: [] })
       assert.equal((await backend.loadGraph()).source, 'demo')
       assert.equal(await backend.loadGraphCoverage(), null)
       assert.deepEqual(await backend.loadNodeLocations(), [])
@@ -148,6 +149,6 @@ test('App uses the shared composition root for all seven public workspace reads'
   const root = await readFile(new URL('../src/lib/mipBackend.js', import.meta.url), 'utf8')
   assert.match(root, /publicData: createPublicDataBackend\(supabase\)/)
   assert.match(root, /investigations: createInvestigationBackend\(supabase\)/)
-  for (const method of Object.keys(createPublicDataBackend()).filter(key => typeof createPublicDataBackend()[key] === 'function')) assert.ok(app.includes(`mipBackend.publicData.${method}(`), method)
+  for (const method of Object.keys(createPublicDataBackend()).filter(key => key !== 'loadSourceComparisonView' && typeof createPublicDataBackend()[key] === 'function')) assert.ok(app.includes(`mipBackend.publicData.${method}(`), method)
   assert.doesNotMatch(app, /import \{[^}]*\bloadGraph\b[^}]*\} from '\.\/lib\/supabase'/)
 })

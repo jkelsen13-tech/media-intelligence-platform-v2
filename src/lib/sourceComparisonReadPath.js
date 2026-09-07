@@ -1,10 +1,7 @@
 // Source Comparison (03_BACKLOG Item 1) read path — beta only.
 //
-// Gate: pipeline_config.source_comparison_beta must be exactly true. When the
-// flag is false (or unreadable) every fetch is skipped and the disabled view
-// is returned — same withhold posture as phase3ReadPath / 02B provenance_ui.
-// source_comparison_public is NOT consulted: public exposure is a separate
-// owner-authorized gate and this UI never enables it.
+// Public cards come only from comparison_public. The browser never reads
+// operational feature flags or private base claims to enable this view.
 //
 // Hard rules honored at the read seam:
 //   - no composite score is computed or served — dimensions stay separate;
@@ -415,7 +412,7 @@ export function newsNavigationFromComparisonSurface(surface) {
  * operational pipeline_config table are never requested by the browser.
  */
 export async function loadSourceComparisonView({ supabaseClient } = {}) {
-  const supabase = supabaseClient ?? (await import('./supabase.js')).supabase
+  const supabase = supabaseClient === undefined ? (await import('./supabase.js')).supabase : supabaseClient
   if (!supabase) return { enabled: false, events: [] }
   const projectionRes = await projectionAll(supabase)
   if (projectionRes.error) return { enabled: true, events: [], loadError: projectionRes.error.message }
