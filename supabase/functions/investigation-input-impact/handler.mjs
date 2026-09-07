@@ -22,7 +22,9 @@ async function bodyJson(request) {
   return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes))
 }
 
-export function createInputImpactHandler({ authenticate, rpc, allowedOrigins = ['https://jkelsen13-tech.github.io'] }) {
+// Configuration is trusted server code, never request data. Both read-only
+// projections share the exact same Auth, assignment, and version boundary.
+export function createAuthorizedWorkspaceReadHandler({ authenticate, rpc, allowedOrigins = ['https://jkelsen13-tech.github.io'], inputKeys, validateInput, project }) {
   const origins = new Set(allowedOrigins)
   return async request => {
     const origin = request.headers.get('origin')
@@ -41,14 +43,14 @@ export function createInputImpactHandler({ authenticate, rpc, allowedOrigins = [
     try { body = await bodyJson(request) }
     catch (e) { return error(e.message === 'request_too_large' ? 413 : 400, e.message === 'request_too_large' ? e.message : 'invalid_request') }
     if (!exact(body, ['action', 'input']) || body.action !== 'read'
-      || !exact(body.input, ['investigation_id', 'version_id', 'position'])
-      || !uuid(body.input.investigation_id) || !uuid(body.input.version_id) || !validPosition(body.input.position)) return error(400, 'invalid_request')
+      || !exact(body.input, ['investigation_id', 'version_id', ...inputKeys])
+      || !uuid(body.input.investigation_id) || !uuid(body.input.version_id) || !validateInput(body.input)) return error(400, 'invalid_request')
     try {
       const user = await authenticate(authorization)
       if (!uuid(user?.id) || user.is_anonymous === true) return error(401, 'authentication_required')
       // The existing SQL read checks current assignment and binds the version to
       // its investigation in one snapshot. No browser principal or record enters it.
-      const { investigation_id, version_id, position } = body.input
+      const { investigation_id, version_id } = body.input
       const result = await rpc('read', { investigation_id, version_id, user_id: user.id })
       if (result.error) return error(result.error.code === '42501' ? 403 : 503, result.error.code === '42501' ? 'access_denied' : 'service_unavailable')
       const bundle = result.data
@@ -56,7 +58,12 @@ export function createInputImpactHandler({ authenticate, rpc, allowedOrigins = [
         || bundle.version?.investigation_id !== investigation_id || !uuid(bundle.observation?.id)
         || bundle.version?.observation_id !== bundle.observation.id
         || !['viewer', 'reviewer'].includes(bundle.access_role)) return error(503, 'service_unavailable')
-      return reply(200, { data: retainedInputImpact(bundle, position) })
+      return reply(200, { data: project(bundle, body.input) })
     } catch (e) { return error(e.message === 'input_unavailable' ? 400 : 503, e.message === 'input_unavailable' ? 'input_unavailable' : 'service_unavailable') }
   }
+}
+
+export function createInputImpactHandler(options) {
+  return createAuthorizedWorkspaceReadHandler({ ...options, inputKeys: ['position'],
+    validateInput: input => validPosition(input.position), project: (bundle, input) => retainedInputImpact(bundle, input.position) })
 }

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { savedSourceHistory, compareRetainedCaptures } from '../lib/investigationSourceHistory.js'
 import { RetainedInputDates, RetainedInputRecord, AssessmentSavedReasoning } from './InvestigationAssessmentTrail.jsx'
 import InvestigationInputImpact from './InvestigationInputImpact.jsx'
+import InvestigationSourceSpans from './InvestigationSourceSpans.jsx'
 
 const labels = { title: 'Title', summary: 'Summary', body_text: 'Body text', url: 'Source URL', outlet: 'Outlet', published_at: 'Publication value' }
 const states = { equal: 'Exact match', different: 'Values differ', left_only: 'Only in first capture', right_only: 'Only in second capture', not_recorded: 'Not recorded in either' }
@@ -74,6 +75,8 @@ function SourceComparison({ source, bundle, impactOptions }) {
       </div>
       <h4>Retained field comparison</h4>
       <p className="piw-note">Exact values are compared without rewriting text. A difference is not automatically a correction, contradiction, or change in meaning. Missing text is not a deletion from the source.</p>
+      {impactOptions?.spansClient ? <InvestigationSourceSpans bundle={bundle} leftPosition={leftPosition} rightPosition={rightPosition}
+        client={impactOptions.spansClient} onAccessFailure={impactOptions.onAccessFailure} onOpenSpan={impactOptions.onOpenSpan} /> : null}
       <div className="piw-source-fields">{result.fields.map(row => <FieldComparison key={row.field} row={row} />)}</div>
       <h4>Assessment context ({result.assessments.length})</h4>
       <p className="piw-note">Selected assessments that saved either capture in their context, including inherited inputs. This does not establish support, source independence, or how a conclusion would change if a source were withdrawn.</p>

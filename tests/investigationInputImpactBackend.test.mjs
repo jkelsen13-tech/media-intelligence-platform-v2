@@ -6,6 +6,8 @@ import { PGlite } from '@electric-sql/pglite'
 import { retainedInputImpact, validPosition } from '../supabase/functions/investigation-input-impact/impact.mjs'
 import { createInputImpactHandler } from '../supabase/functions/investigation-input-impact/handler.mjs'
 import { createInvestigationInputImpactClient, inputImpactMatches } from '../src/lib/investigationInputImpactClient.js'
+import { createSourceSpansHandler } from '../supabase/functions/investigation-source-spans/handler.mjs'
+import { sourceSpansMatch } from '../src/lib/investigationSourceSpansClient.js'
 
 test('input lookup transport rejects unsafe requests and mismatched upstream identities without leaking errors', async () => {
   let calls = 0
@@ -73,10 +75,11 @@ test('authenticated input impact uses actual immutable SQL versions and never wr
   await ws('set_access', { investigation_id: investigation, user_id: user, access_role: 'viewer', reason: 'Fixture assignment.' })
   const readWs = v => ws('read', { investigation_id: investigation, version_id: v, user_id: user })
   let principal = { id: user }, rpcCalls = []
-  const handler = createInputImpactHandler({ authenticate: async () => principal, rpc: async (action, input) => {
+  const transport = { authenticate: async () => principal, rpc: async (action, input) => {
     rpcCalls.push({ action, input }); assert.equal(action, 'read')
     try { return { data: await ws(action, input) } } catch (e) { return { error: { code: e.code } } }
-  } })
+  } }
+  const handler = createInputImpactHandler(transport), spansHandler = createSourceSpansHandler(transport)
   const request = body => new Request('https://fixture.test', { method: 'POST', headers: { authorization: 'Bearer fixture', origin: 'https://jkelsen13-tech.github.io', 'content-type': 'application/json' }, body: JSON.stringify(body) })
   const client = createInvestigationInputImpactClient({ functions: { invoke: async (name, options) => {
     assert.equal(name, 'investigation-input-impact')
@@ -105,6 +108,16 @@ test('authenticated input impact uses actual immutable SQL versions and never wr
     assert.deepEqual(result.data.context_assessment_ids, [])
     assert.deepEqual(result.data.hypotheses, []); assert.deepEqual(result.data.stages, [])
     assert.equal(result.data.assessment_effect, 'none')
+    const spansInput = { investigation_id: investigation, version_id: nextVersion.id, left_position: position, right_position: latePosition }
+    const spansResponse = await spansHandler(request({ action: 'read', input: spansInput }))
+    assert.equal(spansResponse.status, 200)
+    const spans = (await spansResponse.json()).data
+    assert.equal(sourceSpansMatch(await readWs(nextVersion.id), position, latePosition, spans), true)
+    const changedSummary = spans.fields.find(row => row.field === 'summary')
+    assert.equal(changedSummary.status, 'different')
+    assert.equal(Array.from('💡 A corrected report.').slice(changedSummary.right.start, changedSummary.right.end).join(''), 'corrected ')
+    const historical = await spansHandler(request({ action: 'read', input: { ...spansInput, version_id: version.id } }))
+    assert.equal(historical.status, 400)
     assert.deepEqual(retainedInputImpact(await readWs(version.id), position), retainedInputImpact(baseline, position))
   })
   await t.test('unavailable context remains unresolved and repeated IDs do not inflate counts', () => {
@@ -133,5 +146,8 @@ test('authenticated input impact uses actual immutable SQL versions and never wr
     await ws('set_access', { investigation_id: investigation, user_id: user, access_role: 'revoked', reason: 'Fixture revoked.' })
     const result = await client.read(investigation, version.id, position)
     assert.equal(result.error.code, 'access_denied'); assert.equal(result.data, null)
+    const deniedSpans = await spansHandler(request({ action: 'read', input: { investigation_id: investigation, version_id: version.id, left_position: position, right_position: '1' } }))
+    assert.equal(deniedSpans.status, 403)
+    assert.deepEqual(await deniedSpans.json(), { error: { code: 'access_denied' } })
   })
 })

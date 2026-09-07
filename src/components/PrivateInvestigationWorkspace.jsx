@@ -1,6 +1,8 @@
 import AssessmentEvidenceTrail, { RetainedInputRecord, RetainedInputDates } from './InvestigationAssessmentTrail.jsx'
 import InvestigationSourceHistory from './InvestigationSourceHistory.jsx'
 import { createInvestigationInputImpactClient } from '../lib/investigationInputImpactClient.js'
+import { createInvestigationSourceSpansClient } from '../lib/investigationSourceSpansClient.js'
+import { SourceSpanInspector } from './InvestigationSourceSpans.jsx'
 import { supabase } from '../lib/supabase.js'
 
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
@@ -55,6 +57,7 @@ import { formatWorkspaceDate } from '../lib/workspacePresentation.js'
 import '../styles/investigation-workspace-panels.css'
 
 const defaultInputImpactClient = createInvestigationInputImpactClient(supabase)
+const defaultSourceSpansClient = createInvestigationSourceSpansClient(supabase)
 
 const RELATION_LABELS = {
   supports: 'Recorded as supporting',
@@ -1556,6 +1559,7 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
           {inspector.input ? <RetainedInputDates input={inspector.input} /> : null}
         </section>
       )}
+      {inspector?.kind === 'source-text-span' && <SourceSpanInspector bundle={state.bundle} selection={inspector.selection} />}
       {inspector?.kind === 'before-state' && (
         <section>
           <h3>Compared version records</h3>
@@ -1660,6 +1664,7 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
 export default function PrivateInvestigationWorkspace({
   workspace,
   inputImpactClient = defaultInputImpactClient,
+  sourceSpansClient = defaultSourceSpansClient,
   onSignIn,
   accountUiAvailable = false,
   onOpenPublicGraphNode,
@@ -1842,7 +1847,12 @@ export default function PrivateInvestigationWorkspace({
           <CommitmentsSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <GapsSection panels={panels} />
           <InvestigationSourceHistory key={`${bundle?.version?.id}:${bundle?.observation?.id}`} bundle={bundle}
-            impactOptions={{ client: inputImpactClient, onAccessFailure: actions.rejectInputImpactAccess,
+            impactOptions={{ client: inputImpactClient, spansClient: sourceSpansClient, onAccessFailure: actions.rejectInputImpactAccess,
+              onOpenSpan: (selection, sourceBundle) => {
+                if (sourceBundle !== bundle) return
+                actions.setInspector({ kind: 'source-text-span', selection })
+                actions.setActiveSection('source-history')
+              },
               onOpenCitation: (reference, sourceBundle) => openCitation(reference, sourceBundle, 'source-history') }} />
           <EvidenceChecksToolbar
             bundle={bundle}
