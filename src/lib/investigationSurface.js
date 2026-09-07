@@ -76,7 +76,7 @@ export function surfaceJoinDisclosures(row, { view = null, subjectType = 'event'
 }
 
 export async function loadInvestigationSurface(canonicalEventId, { supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client || !canonicalEventId) return null
   try {
     const { data, error } = await client

@@ -283,7 +283,7 @@ const STORY_ARCS_DISPLAY_COLS =
 // News Feed or Timeline with unrelated demonstration nodes and relationships.
 // Both paths return { nodes, edges, source } in the shape GraphView expects.
 export async function loadGraph({ supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) {
     return { nodes: demoNodes, edges: demoEdges, source: 'demo', edgesUnavailable: null }
   }
@@ -324,7 +324,7 @@ export async function loadGraph({ supabaseClient } = {}) {
 // reliability score. A missing projection is an honest no-disclosure state,
 // allowing older V2 database revisions to continue rendering the graph.
 export async function loadGraphCoverage({ supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return null
   try {
     const { data, error } = await client
@@ -351,7 +351,7 @@ export async function loadGraphCoverage({ supabaseClient } = {}) {
 // environments and offline builds usable, and failure remains isolated from
 // the graph itself.
 export async function loadNodeLocations({ supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return []
   try {
     const { data, error } = await keysetAll(
@@ -413,7 +413,7 @@ export async function loadPolicyDetail(policyNodeId) {
 // exist yet — feature-detect them and return null so the UI can hide the
 // Topics affordance instead of breaking.
 export async function loadTopics({ supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return null
   try {
     const [topicsRes, nodeTopicsRes] = await Promise.all([
@@ -783,7 +783,7 @@ export async function resolveEligibleArticleForNews(target, { supabaseClient } =
   if (isDirectNewsArticleId(namedId) && !url) return namedId
   if (!url) return isDirectNewsArticleId(namedId) ? namedId : null
 
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return isDirectNewsArticleId(namedId) ? namedId : null
 
   try {
@@ -945,7 +945,7 @@ export async function loadTimeline({ supabaseClient } = {}) {
 // live tokens (owner ruling: real relative age, absolute date past 24h —
 // a static corpus must never read as freshly updated).
 export async function loadCorpusMeta({ supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return { count: null, latestFetchedAt: null }
   const [countRes, latestRes] = await Promise.all([
     client.from('articles').select('id', { count: 'exact', head: true }).eq('reader_state', 'eligible'),
