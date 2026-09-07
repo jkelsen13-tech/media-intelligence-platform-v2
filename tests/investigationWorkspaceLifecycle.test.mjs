@@ -4,11 +4,11 @@ import { createHash } from 'node:crypto'
 import { readFileSync, mkdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createElement, useMemo } from 'react'
 import TestRenderer, { act } from 'react-test-renderer'
 
-import { createInvestigationWorkspaceClient } from '../src/lib/investigationWorkspaceClient.js'
+import { createInvestigationBackend } from '../src/lib/investigationBackend.js'
 import { usePrivateInvestigationWorkspace } from '../src/lib/usePrivateInvestigationWorkspace.js'
 import {
   WORKSPACE_STATUS,
@@ -48,7 +48,7 @@ await esbuild.build({
   }],
 })
 const { default: PrivateInvestigationWorkspace } = await import(
-  join(compiledDir, 'PrivateInvestigationWorkspace.lifecycle.mjs')
+  pathToFileURL(join(compiledDir, 'PrivateInvestigationWorkspace.lifecycle.mjs'))
 )
 
 const APP = readFileSync(join(repoRoot, 'src/App.jsx'), 'utf8')
@@ -199,8 +199,8 @@ test('supplied investigation workspace source checksums remain unchanged', () =>
   }
 })
 
-test('memoized production client does not restart catalog on unrelated rerenders', async () => {
-  assert.match(APP, /useMemo\(\s*\(\)\s*=>\s*createInvestigationWorkspaceClient\(supabase\)/)
+test('stable unified backend client does not restart catalog on unrelated rerenders', async () => {
+  assert.match(APP, /mipBackend\.investigations\.workspace/)
   const listCalls = []
   const listPending = deferred()
   const supabase = {
@@ -215,7 +215,7 @@ test('memoized production client does not restart catalog on unrelated rerenders
     },
   }
   function ProductionHarness({ tick }) {
-    const client = useMemo(() => createInvestigationWorkspaceClient(supabase), [])
+    const client = useMemo(() => createInvestigationBackend(supabase).workspace, [])
     const workspace = usePrivateInvestigationWorkspace({
       client,
       userId: FIXTURE_USER.id,

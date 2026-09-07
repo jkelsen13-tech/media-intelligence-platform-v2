@@ -1,13 +1,11 @@
 import AssessmentEvidenceTrail, { RetainedInputRecord, RetainedInputDates } from './InvestigationAssessmentTrail.jsx'
 import InvestigationSourceHistory from './InvestigationSourceHistory.jsx'
-import { createInvestigationInputImpactClient } from '../lib/investigationInputImpactClient.js'
-import { createInvestigationSourceSpansClient } from '../lib/investigationSourceSpansClient.js'
+import { mipBackend } from '../lib/mipBackend.js'
 import { SourceSpanInspector } from './InvestigationSourceSpans.jsx'
 import InvestigationDefinitionRevisions from './InvestigationDefinitionRevisions.jsx'
 import InvestigationVersionNavigation from './InvestigationVersionNavigation.jsx'
 import { RetainedInputInspector } from './InvestigationRetainedInputs.jsx'
 import InvestigationTextAvailability from './InvestigationTextAvailability.jsx'
-import { supabase } from '../lib/supabase.js'
 
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
 import {
@@ -60,8 +58,8 @@ import { resolveWorkspaceExcerpt } from '../lib/investigationWorkspaceClient.js'
 import { formatWorkspaceDate } from '../lib/workspacePresentation.js'
 import '../styles/investigation-workspace-panels.css'
 
-const defaultInputImpactClient = createInvestigationInputImpactClient(supabase)
-const defaultSourceSpansClient = createInvestigationSourceSpansClient(supabase)
+const defaultInputImpactClient = mipBackend.investigations.inputImpact
+const defaultSourceSpansClient = mipBackend.investigations.sourceSpans
 
 const RELATION_LABELS = {
   supports: 'Recorded as supporting',

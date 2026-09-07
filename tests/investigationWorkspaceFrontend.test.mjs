@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync, mkdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
@@ -57,7 +57,7 @@ await esbuild.build({
     },
   }],
 })
-const { default: PrivateInvestigationWorkspace, PrivateInvestigationInspector } = await import(join(compiledDir, 'PrivateInvestigationWorkspace.mjs'))
+const { default: PrivateInvestigationWorkspace, PrivateInvestigationInspector } = await import(pathToFileURL(join(compiledDir, 'PrivateInvestigationWorkspace.mjs')))
 
 const APP = readFileSync(join(repoRoot, 'src/App.jsx'), 'utf8')
 const CLIENT = readFileSync(join(repoRoot, 'src/lib/investigationWorkspaceClient.js'), 'utf8')
@@ -386,10 +386,9 @@ test('viewer markup has no review button; inspector shares version and review st
   assert.match(inspector, /Public graph view is unavailable/)
 })
 
-test('App memoizes the production client and never stores private workspace text', () => {
+test('App uses the shared production backend and never stores private workspace text', () => {
   assert.match(APP, /usePrivateInvestigationWorkspace/)
-  assert.match(APP, /createInvestigationWorkspaceClient/)
-  assert.match(APP, /useMemo\(\s*\(\)\s*=>\s*createInvestigationWorkspaceClient\(supabase\)/)
+  assert.match(APP, /mipBackend\.investigations\.workspace/)
   assert.match(APP, /PrivateInvestigationWorkspace/)
   assert.match(APP, /useAuthSession/)
   assert.match(APP, /PRIVATE_INVESTIGATION_VIEW/)
