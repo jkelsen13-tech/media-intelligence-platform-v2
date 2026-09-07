@@ -2,10 +2,10 @@
   "project_id": "qikvmopbtijoebdqosyq",
   "function": "investigation-api",
   "contract": "investigation-api-1",
-  "version": null,
-  "status": "PENDING_DEPLOYMENT",
+  "version": 2,
+  "status": "ACTIVE",
   "verify_jwt": true,
-  "deployed_files_exact_match": false,
+  "deployed_files_exact_match": true,
   "files": [
     {
       "path": "supabase/functions/investigation-api/index.ts",
@@ -44,8 +44,90 @@
       "sha256": "45b519ce29fc98e40dfd0d61168969d3c225dbb13630556734df743872e96448"
     }
   ],
-  "live_checks": [],
+  "live_checks": [
+    {
+      "route": "workspace",
+      "method": "OPTIONS",
+      "status": 204,
+      "body": "",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "workspace",
+      "method": "POST",
+      "status": 401,
+      "body": "{\"error\":{\"code\":\"authentication_required\"}}",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "checks",
+      "method": "OPTIONS",
+      "status": 204,
+      "body": "",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "checks",
+      "method": "POST",
+      "status": 401,
+      "body": "{\"error\":{\"code\":\"authentication_required\"}}",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "reviews",
+      "method": "OPTIONS",
+      "status": 204,
+      "body": "",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "reviews",
+      "method": "POST",
+      "status": 401,
+      "body": "{\"error\":{\"code\":\"authentication_required\"}}",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "input-impact",
+      "method": "OPTIONS",
+      "status": 204,
+      "body": "",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "input-impact",
+      "method": "POST",
+      "status": 401,
+      "body": "{\"error\":{\"code\":\"authentication_required\"}}",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "source-spans",
+      "method": "OPTIONS",
+      "status": 204,
+      "body": "",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "source-spans",
+      "method": "POST",
+      "status": 401,
+      "body": "{\"error\":{\"code\":\"authentication_required\"}}",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    }
+  ],
   "positive_signed_in_live_verified": false,
   "production_records_written": 0,
-  "previous_deployment_manifest": "verifier/investigation-api-2026-09-07.json"
+  "previous_deployment_manifest": "verifier/investigation-api-2026-09-07.json",
+  "ezbr_sha256": "9ff9ea55734344a1b508b232ad0354a0d5df11954b23598c6dfaeb79a1a42adb"
 }
