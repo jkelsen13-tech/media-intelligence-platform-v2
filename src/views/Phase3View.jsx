@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { loadPhase3BetaView } from '../lib/phase3ReadPath.js'
+import { mipBackend } from '../lib/mipBackend.js'
 import './phase3.css'
 
 // Phase 3 (02C) internal closed-beta view — legal cases + policy lifecycles.
@@ -213,17 +213,19 @@ function PolicyCard({ policy }) {
   )
 }
 
-export default function Phase3View() {
+export default function Phase3View({ backend = mipBackend.publicData.curated } = {}) {
   const [view, setView] = useState(null)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
-    loadPhase3BetaView()
+    setView(null)
+    setError(null)
+    backend.loadPhase3BetaView()
       .then((v) => { if (!cancelled) setView(v) })
       .catch((e) => { if (!cancelled) setError(e) })
     return () => { cancelled = true }
-  }, [])
+  }, [backend])
 
   if (error) return <div className="notice error">Legal &amp; Policy view failed to load.</div>
   if (view === null) return <div className="notice">Loading…</div>
@@ -248,7 +250,9 @@ export default function Phase3View() {
 
       <section>
         <h2 className="p3-section-title">Legal cases</h2>
-        {view.cases.length === 0 ? (
+        {view.casesUnavailable ? (
+          <p role="status">Legal case records are currently unavailable. Recorded absence has not been established.</p>
+        ) : view.cases.length === 0 ? (
           <p className="p3-track-empty">No curated legal cases yet.</p>
         ) : (
           view.cases.map((kase) => <CaseCard key={kase.id} kase={kase} />)
@@ -257,7 +261,9 @@ export default function Phase3View() {
 
       <section>
         <h2 className="p3-section-title">Policy change over time</h2>
-        {view.policies.length === 0 ? (
+        {view.policiesUnavailable ? (
+          <p role="status">Policy records are currently unavailable. Recorded absence has not been established.</p>
+        ) : view.policies.length === 0 ? (
           <p className="p3-track-empty">No curated policies yet.</p>
         ) : (
           view.policies.map((policy) => <PolicyCard key={policy.id} policy={policy} />)

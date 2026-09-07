@@ -18,7 +18,6 @@ import NewsView from './views/NewsView'
 import Phase3View from './views/Phase3View'
 import SourceComparisonView from './views/SourceComparisonView'
 import WorldView from './views/WorldView'
-import { loadPhase3BetaFlag } from './lib/phase3ReadPath'
 import { buildNavViews, buildMoreEntries, isMoreViewKey } from './lib/navViews'
 import { supabase } from './lib/supabase'
 import { surfaceJoinDisclosures } from './lib/investigationSurface'
@@ -376,7 +375,7 @@ export default function App({
         if (data && data.topics.length > 0) setTopicsData(data)
       })
       .catch(() => {})
-    loadPhase3BetaFlag()
+    mipBackend.publicData.curated.loadPhase3BetaFlag()
       .then((on) => setPhase3Beta(on === true))
       .catch(() => setPhase3Beta(false))
     loadAccountUiFlag()
