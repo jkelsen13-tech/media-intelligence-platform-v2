@@ -3,6 +3,7 @@ import InvestigationSourceHistory from './InvestigationSourceHistory.jsx'
 import { createInvestigationInputImpactClient } from '../lib/investigationInputImpactClient.js'
 import { createInvestigationSourceSpansClient } from '../lib/investigationSourceSpansClient.js'
 import { SourceSpanInspector } from './InvestigationSourceSpans.jsx'
+import InvestigationDefinitionRevisions from './InvestigationDefinitionRevisions.jsx'
 import { supabase } from '../lib/supabase.js'
 
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
@@ -811,6 +812,7 @@ function ChangedSection({
   panels,
   bundle,
   beforeBundles,
+  onLoadBeforeVersion,
   pendingReview,
   reviewBusy,
   reviewError,
@@ -928,11 +930,15 @@ function ChangedSection({
           ))}
         </ul>
       )}
+      <InvestigationDefinitionRevisions key={`${bundle.version.id}:${beforeId}:${bundle.review?.id}`} bundle={bundle} beforeBundle={beforeBundles[beforeId]}
+        onLoadBeforeVersion={onLoadBeforeVersion}
+        renderEvidence={(evidence, sourceBundle) => <EvidenceList evidence={evidence} bundle={sourceBundle} onOpenCitation={onOpenCitation}
+          versionLabel={sourceBundle.version.id === bundle.version.id ? 'Displayed version' : 'Compared version'} />} />
       {beforeId && beforeBundles[beforeId] && (
-        <BeforeStateRecords
+        <details className="piw-linked-record"><summary>All records on the compared version</summary><BeforeStateRecords
           bundle={beforeBundles[beforeId]}
           onOpenCitation={onOpenCitation}
-        />
+        /></details>
       )}
       <h3>Review acknowledgement</h3>
       {canReview ? (
@@ -1831,6 +1837,7 @@ export default function PrivateInvestigationWorkspace({
             panels={panels}
             bundle={bundle}
             beforeBundles={state.beforeBundles}
+            onLoadBeforeVersion={actions.openBeforeVersion}
             pendingReview={state.pendingReview}
             reviewBusy={state.reviewBusy}
             reviewError={state.reviewError}
