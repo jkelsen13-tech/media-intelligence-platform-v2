@@ -1,0 +1,143 @@
+{
+  "project_id": "qikvmopbtijoebdqosyq",
+  "function": "investigation-api",
+  "contract": "investigation-api-1",
+  "version": 2,
+  "status": "ACTIVE",
+  "verify_jwt": true,
+  "deployed_files_exact_match": true,
+  "files": [
+    {
+      "path": "supabase/functions/investigation-api/index.ts",
+      "sha256": "2a7b879c9547ef1f44254b6b697fd24ec4f160de992e5ea97ce5a3fed7f70e51"
+    },
+    {
+      "path": "supabase/functions/investigation-api/handler.mjs",
+      "sha256": "1db9d9f8585a3891d0852049acb22e88e95071e87cab2dacde85e9ce0e8ee2ba"
+    },
+    {
+      "path": "supabase/functions/investigation-workspace/handler.mjs",
+      "sha256": "6d3c5e311476fe850498c64c2c534464db2a0c600e4a84eca0dda8a48b6748cd"
+    },
+    {
+      "path": "supabase/functions/investigation-evidence-checks/handler.mjs",
+      "sha256": "14c8d7d39d09b59498a76712086d26ac5a4c2086db7bd3f67c3d20ec1b26be10"
+    },
+    {
+      "path": "supabase/functions/investigation-evidence-reviews/handler.mjs",
+      "sha256": "4dfde82551e33e4d23f894f2ae1876c0e7ba5e39a17243e212efa3497cb8af17"
+    },
+    {
+      "path": "supabase/functions/investigation-input-impact/handler.mjs",
+      "sha256": "88a96549f50262df502842abaac0a8407560e3cbc8b53de06cad6dce999ce0fb"
+    },
+    {
+      "path": "supabase/functions/investigation-input-impact/impact.mjs",
+      "sha256": "8034155757d8ebf702bb63220bd11a321df532d816ca1ddde82b3b9393dd19ce"
+    },
+    {
+      "path": "supabase/functions/investigation-source-spans/handler.mjs",
+      "sha256": "ccc93b3d85309a74fe777f9ceb34b9ad0c169dd83c495948cf750e7b47b2bf54"
+    },
+    {
+      "path": "supabase/functions/investigation-source-spans/spans.mjs",
+      "sha256": "45b519ce29fc98e40dfd0d61168969d3c225dbb13630556734df743872e96448"
+    }
+  ],
+  "live_checks": [
+    {
+      "route": "workspace",
+      "method": "OPTIONS",
+      "status": 204,
+      "body": "",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "workspace",
+      "method": "POST",
+      "status": 401,
+      "body": "{\"error\":{\"code\":\"authentication_required\"}}",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "checks",
+      "method": "OPTIONS",
+      "status": 204,
+      "body": "",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "checks",
+      "method": "POST",
+      "status": 401,
+      "body": "{\"error\":{\"code\":\"authentication_required\"}}",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "reviews",
+      "method": "OPTIONS",
+      "status": 204,
+      "body": "",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "reviews",
+      "method": "POST",
+      "status": 401,
+      "body": "{\"error\":{\"code\":\"authentication_required\"}}",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "input-impact",
+      "method": "OPTIONS",
+      "status": 204,
+      "body": "",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "input-impact",
+      "method": "POST",
+      "status": 401,
+      "body": "{\"error\":{\"code\":\"authentication_required\"}}",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "source-spans",
+      "method": "OPTIONS",
+      "status": 204,
+      "body": "",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    },
+    {
+      "route": "source-spans",
+      "method": "POST",
+      "status": 401,
+      "body": "{\"error\":{\"code\":\"authentication_required\"}}",
+      "backend": "investigation-api-1",
+      "cache": "no-store, private"
+    }
+  ],
+  "positive_signed_in_live_verified": true,
+  "production_records_written": 1,
+  "previous_deployment_manifest": "verifier/investigation-api-2026-09-07.json",
+  "ezbr_sha256": "9ff9ea55734344a1b508b232ad0354a0d5df11954b23598c6dfaeb79a1a42adb",
+  "signed_in_verification": {
+    "date": "2026-09-07",
+    "workspace": "assigned_revision_1_loaded",
+    "retained_input": "exact_saved_NASA_summary_loaded",
+    "checks": "one_bounded_report_saved_and_database_verified",
+    "review_read": "zero_returned_targets_loaded",
+    "personal_review_acknowledgement_written": false,
+    "semantic_adjudication": "not_performed",
+    "nonempty_review_and_span_comparison": "not_exercised_in_production"
+  }
+}

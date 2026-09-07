@@ -25,8 +25,8 @@ function fixture(overrides = {}) {
   return { handler, calls }
 }
 
-test('registered unified deployment matches the exact gateway and domain source files', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../verifier/investigation-api-2026-09-07.json', import.meta.url), 'utf8'))
+test('unified release manifest matches the exact gateway and preserved domain source files', async () => {
+  const manifest = JSON.parse(await readFile(new URL('../verifier/investigation-api-opaque-keys-2026-09-07.json', import.meta.url), 'utf8'))
   assert.equal(manifest.verify_jwt, true); assert.equal(manifest.files.length, 9)
   for (const entry of manifest.files) {
     const content = (await readFile(new URL('../' + entry.path, import.meta.url), 'utf8')).replace(/\r\n/g, '\n')
@@ -118,4 +118,46 @@ test('frontend composition uses only unified routes and never retries or falls b
   assert.equal((await backend.workspace.read(input.investigation_id)).error.code, 'authentication_required')
   assert.equal(calls.length, 6)
   assert.equal((await createInvestigationBackend(null).workspace.list()).error.code, 'not_configured')
+})
+
+test('opaque server RPC credentials never replace or remove the user Auth token', async () => {
+  const calls = [], userToken = 'Bearer user-session-jwt', serviceKey = 'sb_secret_server_fixture'
+  const transport = createInvestigationApiTransport({
+    url: 'https://qikvmopbtijoebdqosyq.supabase.co', anonKey: 'sb_publishable_fixture', serviceKey,
+    fetchImpl: async (url, init) => {
+      calls.push({ url, init })
+      if (url.endsWith('/auth/v1/user')) return new Response(JSON.stringify(FIXTURE_USER))
+      // Reject the exact wire format that failed in the hosted operator check.
+      if (new Headers(init.headers).has('authorization')) return new Response(JSON.stringify({ code: 'invalid_jwt' }), { status: 401 })
+      return new Response(JSON.stringify({ accepted: true }))
+    },
+  })
+  await transport.authenticate(userToken)
+  for (const rpc of [transport.workspaceRpc, transport.checksRpc, transport.reviewsRpc])
+    assert.deepEqual(await rpc('read', { p_user_id: FIXTURE_USER.id }), { data: { accepted: true } })
+  assert.equal(calls.length, 4)
+  assert.equal(calls[0].init.headers.Authorization, userToken)
+  assert.equal(calls[0].init.headers.apikey, 'sb_publishable_fixture')
+  for (const { url, init } of calls.slice(1)) {
+    assert.match(url, /^https:\/\/qikvmopbtijoebdqosyq\.supabase\.co\/rest\/v1\/rpc\//)
+    assert.equal(init.headers.apikey, serviceKey)
+    assert.equal(new Headers(init.headers).has('authorization'), false)
+    assert.equal(init.redirect, 'error')
+    assert.ok(init.signal instanceof AbortSignal)
+    assert.deepEqual(JSON.parse(init.body), { p_action: 'read', p_input: { p_user_id: FIXTURE_USER.id } })
+  }
+})
+
+test('legacy server JWT transport remains unchanged for all unified private RPCs', async () => {
+  const calls = [], serviceKey = 'legacy-server-jwt'
+  const transport = createInvestigationApiTransport({
+    url: 'https://qikvmopbtijoebdqosyq.supabase.co', anonKey: 'legacy-anon', serviceKey,
+    fetchImpl: async (url, init) => { calls.push({ url, init }); return new Response('{}') },
+  })
+  for (const rpc of [transport.workspaceRpc, transport.checksRpc, transport.reviewsRpc]) await rpc('read', {})
+  assert.equal(calls.length, 3)
+  for (const { init } of calls) {
+    assert.equal(init.headers.apikey, serviceKey)
+    assert.equal(init.headers.Authorization, 'Bearer ' + serviceKey)
+  }
 })
