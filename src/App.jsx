@@ -82,9 +82,7 @@ import InvestigationWorkspace, {
 import PrivateInvestigationWorkspace, {
   PrivateInvestigationInspector,
 } from './components/PrivateInvestigationWorkspace'
-import { createInvestigationEvidenceChecksClient } from './lib/investigationEvidenceChecksClient.js'
-import { createInvestigationEvidenceReviewsClient } from './lib/investigationEvidenceReviewsClient.js'
-import { createInvestigationWorkspaceClient } from './lib/investigationWorkspaceClient.js'
+import { mipBackend } from './lib/mipBackend.js'
 import { usePrivateInvestigationWorkspace } from './lib/usePrivateInvestigationWorkspace.js'
 import {
   PRIVATE_INVESTIGATION_VIEW,
@@ -316,27 +314,15 @@ export default function App({
     }
   }, [privateInvestigationPreview, investigationWorkspaceClient, investigationEvidenceChecksClient, investigationEvidenceReviewsClient, authSessionOverride])
   const auth = authSessionOverride ?? devPreview?.auth ?? liveAuth
-  const productionWorkspaceClient = useMemo(
-    () => createInvestigationWorkspaceClient(supabase),
-    [],
-  )
-  const productionChecksClient = useMemo(
-    () => createInvestigationEvidenceChecksClient(supabase),
-    [],
-  )
-  const productionReviewsClient = useMemo(
-    () => createInvestigationEvidenceReviewsClient(supabase),
-    [],
-  )
   const workspaceClient = investigationWorkspaceClient
     ?? devPreview?.client
-    ?? productionWorkspaceClient
+    ?? mipBackend.investigations.workspace
   const checksClient = investigationEvidenceChecksClient
     ?? devPreview?.checksClient
-    ?? productionChecksClient
+    ?? mipBackend.investigations.checks
   const reviewsClient = investigationEvidenceReviewsClient
     ?? devPreview?.reviewsClient
-    ?? productionReviewsClient
+    ?? mipBackend.investigations.reviews
   const privateWorkspace = usePrivateInvestigationWorkspace({
     userId: auth.user?.id ?? null,
     sessionLoading: auth.loading === true,

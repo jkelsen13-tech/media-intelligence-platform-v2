@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync, mkdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
@@ -56,7 +56,7 @@ await esbuild.build({
   }],
 })
 const { default: PrivateInvestigationWorkspace, PrivateInvestigationInspector } = await import(
-  join(compiledDir, 'PrivateInvestigationWorkspace.evidence-reviews.mjs')
+  pathToFileURL(join(compiledDir, 'PrivateInvestigationWorkspace.evidence-reviews.mjs'))
 )
 
 const APP = readFileSync(join(repoRoot, 'src/App.jsx'), 'utf8')
@@ -382,8 +382,8 @@ test('reopened needs-review is distinguishable and mapper rejects mismatched ide
   )
 })
 
-test('DEV preview stays off in production and App memoizes the reviews client', () => {
+test('DEV preview stays off in production and App uses the shared reviews client', () => {
   assert.equal(readInvestigationWorkspacePreview('?privateInvestigationFixture=populated', { DEV: false }), null)
-  assert.match(APP, /useMemo\(\s*\(\)\s*=>\s*createInvestigationEvidenceReviewsClient\(supabase\)/)
+  assert.match(APP, /mipBackend\.investigations\.reviews/)
   assert.match(APP, /reviewsClient/)
 })

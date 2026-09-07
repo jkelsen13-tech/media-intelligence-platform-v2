@@ -273,7 +273,7 @@ test('unsafe locators render as text and mapper rejects mismatched investigation
   )
 })
 
-test('signed-out workspace stays empty of fixture evidence and App memoizes both clients', () => {
+test('signed-out workspace stays empty of fixture evidence and App uses the shared checks client', () => {
   const signedOut = renderWorkspace({
     status: WORKSPACE_STATUS.signed_out,
     sessionLoading: false,
@@ -293,7 +293,7 @@ test('signed-out workspace stays empty of fixture evidence and App memoizes both
   assert.match(signedOut, /Sign in to read assigned investigations/)
   assert.doesNotMatch(signedOut, /Possible shared-source pair/)
   assert.doesNotMatch(signedOut, /Local visual fixture: what retained evidence/)
-  assert.match(APP, /useMemo\(\s*\(\)\s*=>\s*createInvestigationEvidenceChecksClient\(supabase\)/)
+  assert.match(APP, /mipBackend\.investigations\.checks/)
   assert.match(APP, /checksClient/)
   assert.equal(INVESTIGATION_WORKSPACE_PANELS.some((panel) => panel.id === 'source-links'), true)
   assert.match(lineageReasonCopy('identical_retained_text'), /boilerplate/)
