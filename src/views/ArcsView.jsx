@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { loadArcs, loadArcDetail, loadArcArticles, loadArticleExcerpt } from '../lib/supabase'
+import { mipBackend } from '../lib/mipBackend.js'
 import { filterArcs } from '../lib/listFilters'
 import { normalizeArcEvent, TIMELINE_CLOSING_FOOTNOTE } from '../lib/timelineScreenModel'
 import ArcEvidencePanel, { ArcOverviewStatus } from '../components/ArcEvidencePanel'
@@ -91,7 +91,7 @@ function evidenceStateLabel(confidence) {
   return labels[confidence] ?? 'Evidence state not recorded'
 }
 
-export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, investigationContext }) {
+export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, investigationContext, backend = mipBackend.publicData.chronology }) {
   const [arcs, setArcs] = useState(null)
   const [arcsUnavailable, setArcsUnavailable] = useState(null)
   const [error, setError] = useState(null)
@@ -118,7 +118,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
   }, [arcQuery])
 
   useEffect(() => {
-    loadArcs()
+    backend.loadArcs()
       .then((result) => {
         const rows = result.arcs ?? []
         setArcs(rows)
@@ -182,14 +182,14 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
     setDetail(null)
     setDetailError(null)
     const key = selected.id ?? selected.slug
-    loadArcDetail(key)
+    backend.loadArcDetail(key)
       .then((d) => {
         if (!cancelled) setDetail(d)
       })
       .catch((err) => {
         if (!cancelled) setDetailError(err.message)
       })
-    loadArcArticles(selected.id)
+    backend.loadArcArticles(selected.id)
       .then((rows) => {
         if (!cancelled) setArcArticles(rows)
       })
@@ -306,7 +306,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
               }}
             >
               {meta && <span className="arc-status-dot" style={{ background: meta.color }} />}
-              <span className="arc-list-title">{arc.title}</span>
+              <span className="arc-list-title">{arc.title || 'Untitled story arc'}</span>
               <span className="arc-list-object-kind">{displayKindLabel(arc)}</span>
               <span className="arc-list-meta" style={categoryStyle(arc.category)}>
                 {categoryLabel(arc.category)}
@@ -323,7 +323,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
               ← All story arcs
             </button>
             <p className="ep-eyebrow">{displayKindLabel(selected)}</p>
-            <h2 className="ep-report-title">{selected.title}</h2>
+            <h2 className="ep-report-title">{selected.title || 'Untitled story arc'}</h2>
             {statusMeta && (
               <div className="ep-statusline">
                 <span className="ep-statusline-dot" style={{ background: statusMeta.color }} />
@@ -484,7 +484,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
             <ArcTimeline
               entries={timelineEntries}
               edges={[]}
-              loadArticle={loadArticleExcerpt}
+              loadArticle={backend.loadArticleExcerpt}
               emptyText="No consequence events recorded yet for this arc."
             />
             </section>

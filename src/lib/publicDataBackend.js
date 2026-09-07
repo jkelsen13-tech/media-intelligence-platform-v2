@@ -6,6 +6,7 @@ import {
   loadCorpusMeta,
   resolveEligibleArticleForNews,
 } from './supabase.js'
+import { createChronologyBackend } from './chronologyBackend.js'
 import { createNewsBackend } from './newsBackend.js'
 import { loadInvestigationSurface } from './investigationSurface.js'
 
@@ -16,6 +17,7 @@ export function createPublicDataBackend(supabaseClient = null) {
   const options = Object.freeze({ supabaseClient })
   return Object.freeze({
     news: createNewsBackend(supabaseClient),
+    chronology: createChronologyBackend(supabaseClient),
     loadGraph: () => loadGraph(options),
     loadGraphCoverage: () => loadGraphCoverage(options),
     loadNodeLocations: () => loadNodeLocations(options),

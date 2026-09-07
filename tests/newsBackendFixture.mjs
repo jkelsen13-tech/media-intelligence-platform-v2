@@ -13,7 +13,8 @@ export function newsBackendFixture({ tables = {}, errors = {} } = {}) {
       const table = url.pathname.split('/').at(-1)
       calls.push({ table, params, request })
       const headers = { 'content-type': 'application/json' }
-      if (errors[table]) return new Response(JSON.stringify(errors[table]), { status: 403, headers })
+      const error = typeof errors[table] === 'function' ? errors[table](params) : errors[table]
+      if (error) return new Response(JSON.stringify(error), { status: 403, headers })
       let rows = [...(tables[table] ?? [])]
       for (const [key, value] of params) {
         const valuePart = value.slice(value.indexOf('.') + 1)
@@ -43,5 +44,5 @@ export function newsBackendFixture({ tables = {}, errors = {} } = {}) {
       return new Response(request.method === 'HEAD' ? null : JSON.stringify(single ? rows[0] : rows), { headers })
     } },
   })
-  return { backend: createNewsBackend(client), calls, setToken: value => { token = value } }
+  return { client, backend: createNewsBackend(client), calls, setToken: value => { token = value } }
 }

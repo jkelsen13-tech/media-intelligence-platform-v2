@@ -611,7 +611,7 @@ export function deriveArcStatus(events, milestones, dormantDays = 14) {
 const PUBLIC_DORMANT_ARC_DAYS = 14
 
 export async function loadArcs({ supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) {
     return {
       arcs: demoArcs.map((a) => ({
@@ -675,28 +675,29 @@ export async function loadArcs({ supabaseClient } = {}) {
 }
 
 // Milestones + consequence events for one arc.
-export async function loadArcDetail(arcKey) {
-  if (!supabase) {
+export async function loadArcDetail(arcKey, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (!client) {
     return {
       milestones: demoMilestones.filter((m) => m.arc_slug === arcKey),
       events: demoArcEvents.filter((e) => e.arc_slug === arcKey),
     }
   }
   const [milestonesRes, eventsRes] = await Promise.all([
-    supabase
-      .from('arc_milestones_public')
-      .select('id, title, status, notes, updated_at')
-      .eq('arc_id', arcKey)
-      .order('updated_at', { ascending: true }),
-    supabase
-      .from('arc_events')
-      .select('id, title, category, confidence, occurred_at, description')
-      .eq('arc_id', arcKey)
-      .order('occurred_at', { ascending: true, nullsFirst: false }),
+    keysetAll(client, 'arc_milestones_public', 'id, title, status, notes, updated_at', {
+      filter: (q) => q.eq('arc_id', arcKey),
+    }),
+    keysetAll(client, 'arc_events', 'id, title, category, confidence, occurred_at, description', {
+      filter: (q) => q.eq('arc_id', arcKey),
+    }),
   ])
   if (milestonesRes.error) throw milestonesRes.error
   if (eventsRes.error) throw eventsRes.error
-  return { milestones: milestonesRes.data, events: eventsRes.data }
+  // Paginate by stable identity, then restore the existing chronological order.
+  return {
+    milestones: resortRows(milestonesRes.data ?? [], 'updated_at', { ascending: true, nullsFirst: false }),
+    events: resortRows(eventsRes.data ?? [], 'occurred_at', { ascending: true, nullsFirst: false }),
+  }
 }
 
 // Doc 05 pairs 1–3 support: build the suffix → article-id map (8-hex art-
@@ -846,7 +847,7 @@ export async function loadArticleComparisonEvents(articleId, { supabaseClient } 
 // (institutions, anomalies, documents) resolve to a label, not a raw uuid.
 // Dedup: Tier 4 deterministic evt-/art- mirror rule — see lib/timelineDedup.js.
 export async function loadTimeline({ supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) {
     const demoEvents = demoNodes.filter((n) => n.type === 'event')
     const { events, canonicalOf, suppressed } = canonicalizeTimelineEvents(demoEvents)
@@ -1446,10 +1447,11 @@ export async function loadSkyVerificationForNode(nodeId) {
 
 // Articles attached to a story arc. Complete keyset read: the Timeline and
 // Evidence tab must not silently stop at 50 assigned News records.
-export async function loadArcArticles(arcId) {
-  if (!supabase || !arcId) return []
+export async function loadArcArticles(arcId, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (!client || !arcId) return []
   const result = await keysetAll(
-    supabase,
+    client,
     'articles',
     'id, title, summary, outlet, published_at, url, arc_id',
     { filter: (query) => query.eq('arc_id', arcId) },
@@ -1464,9 +1466,10 @@ export async function loadArcArticles(arcId) {
 // same record. Read-path only; both reads keyset-paginate (Doc 13).
 // Returns { edges, labels } with edges mapped to { id, source, target,
 // type, weight, label, doc_strength } — empty when the arc owns no nodes.
-export async function loadArcConnections(arcId) {
-  if (!supabase || !arcId) return { edges: [], labels: new Map(), edgesUnavailable: null }
-  const nodesRes = await keysetAll(supabase, 'nodes', 'id, slug, label', {
+export async function loadArcConnections(arcId, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (!client || !arcId) return { edges: [], labels: new Map(), edgesUnavailable: null }
+  const nodesRes = await keysetAll(client, 'nodes', 'id, slug, label', {
     filter: (q) => q.eq('arc_id', arcId),
   })
   if (nodesRes.error) throw nodesRes.error
@@ -1474,7 +1477,7 @@ export async function loadArcConnections(arcId) {
   const labels = new Map(nodeRows.map((n) => [n.id ?? n.slug, n.label]))
   if (nodeRows.length === 0) return { edges: [], labels, edgesUnavailable: null }
   const keys = nodeRows.map((n) => n.id ?? n.slug)
-  const edgesRead = await readEdgesOrUnavailable(supabase, 'id, source_id, target_id, type, weight, label, doc_strength', {
+  const edgesRead = await readEdgesOrUnavailable(client, 'id, source_id, target_id, type, weight, label, doc_strength', {
     filter: (q) => q.or(`source_id.in.(${keys.join(',')}),target_id.in.(${keys.join(',')})`),
   })
   const edgeRows = edgesRead.data ?? []
@@ -1484,7 +1487,7 @@ export async function loadArcConnections(arcId) {
     (k) => !labels.has(k),
   )
   if (missing.length > 0) {
-    const farRes = await keysetAll(supabase, 'nodes', 'id, slug, label', {
+    const farRes = await keysetAll(client, 'nodes', 'id, slug, label', {
       filter: (q) => q.in('id', missing),
     })
     if (farRes.error) throw farRes.error
@@ -1509,10 +1512,11 @@ export async function loadArcConnections(arcId) {
 // timeline entry's resolved article — summary, outlet, published_at. The
 // detail card quotes the excerpt ONLY when all attribution legs resolve
 // (timelineEngine entryDetailView). Null when absent/unreadable.
-export async function loadArticleExcerpt(articleId) {
-  if (!supabase || !articleId) return null
+export async function loadArticleExcerpt(articleId, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (!client || !articleId) return null
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('articles')
       .select('id, summary, outlet, published_at')
       .eq('id', articleId)

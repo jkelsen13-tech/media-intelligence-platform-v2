@@ -148,6 +148,6 @@ test('App uses the shared composition root for all seven public workspace reads'
   const root = await readFile(new URL('../src/lib/mipBackend.js', import.meta.url), 'utf8')
   assert.match(root, /publicData: createPublicDataBackend\(supabase\)/)
   assert.match(root, /investigations: createInvestigationBackend\(supabase\)/)
-  for (const method of Object.keys(createPublicDataBackend()).filter(key => key !== 'news')) assert.ok(app.includes(`mipBackend.publicData.${method}(`), method)
+  for (const method of Object.keys(createPublicDataBackend()).filter(key => typeof createPublicDataBackend()[key] === 'function')) assert.ok(app.includes(`mipBackend.publicData.${method}(`), method)
   assert.doesNotMatch(app, /import \{[^}]*\bloadGraph\b[^}]*\} from '\.\/lib\/supabase'/)
 })

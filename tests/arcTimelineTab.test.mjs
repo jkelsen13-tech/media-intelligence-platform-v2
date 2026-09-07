@@ -48,7 +48,7 @@ test('Timeline tab renders the shared ArcTimeline over normalizeArcEvent entries
   const render = view.slice(view.indexOf('<ArcTimeline'), view.indexOf('/>', view.indexOf('<ArcTimeline')))
   assert.ok(render.includes('entries={timelineEntries}'))
   assert.ok(render.includes('edges={[]}'), 'arc scope passes edges=[] by construction')
-  assert.ok(render.includes('loadArticle={loadArticleExcerpt}'))
+  assert.ok(render.includes('loadArticle={backend.loadArticleExcerpt}'))
   assert.ok(
     render.includes('emptyText="No consequence events recorded yet for this arc."'),
     'empty state matches Screen 5 arc scope',

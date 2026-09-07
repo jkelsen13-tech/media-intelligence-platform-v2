@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { mipBackend } from '../lib/mipBackend.js'
 import {
-  loadArcGroupedTimeline,
   filterGrouped,
   paginateSections,
   verifyExactlyOnce,
@@ -115,7 +115,7 @@ function EventCard({ evt, outbound, inbound, isCollapsed, onToggle, onOpenArticl
 // return-to-origin jump renders the richer grouped cards (with per-event
 // outlet counts) instead of the flat list. Additive: arcId null is the
 // original global behavior, untouched.
-export default function GroupedTimelineView({ onOpenArc, onOpenArticle, focusEventKey, arcId = null }) {
+export default function GroupedTimelineView({ onOpenArc, onOpenArticle, focusEventKey, arcId = null, backend = mipBackend.publicData.chronology }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [query, setQuery] = useState('')
@@ -133,7 +133,7 @@ export default function GroupedTimelineView({ onOpenArc, onOpenArticle, focusEve
   const loadStart = useRef(performance.now())
 
   useEffect(() => {
-    loadArcGroupedTimeline()
+    backend.loadArcGroupedTimeline()
       .then((d) => {
         // Real numbers, not placeholders (04-ADD evidence requirement).
         const loadMs = Math.round(performance.now() - loadStart.current)
