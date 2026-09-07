@@ -23,7 +23,7 @@ export function newsBackendFixture({ tables = {}, errors = {} } = {}) {
         if (value.startsWith('gte.')) rows = rows.filter(row => String(row[key]) >= valuePart)
         if (value.startsWith('lte.')) rows = rows.filter(row => String(row[key]) <= valuePart)
         if (value === 'not.is.null') rows = rows.filter(row => row[key] != null)
-        if (value.startsWith('in.')) rows = rows.filter(row => valuePart.slice(1, -1).split(',').includes(String(row[key])))
+        if (value.startsWith('in.')) rows = rows.filter(row => valuePart.slice(1, -1).split(',').map(v => v.replace(/^"|"$/g, '')).includes(String(row[key])))
         if (value.startsWith('like.')) rows = rows.filter(row => String(row[key]).endsWith(valuePart.replace(/[%*]/g, '')))
       }
       const count = rows.length

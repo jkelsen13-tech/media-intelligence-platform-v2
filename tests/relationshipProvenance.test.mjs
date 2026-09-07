@@ -204,3 +204,14 @@ test('empty input is safe', () => {
   assert.equal(v.axes.length, 0)
   assert.equal(v.independence, 'Unverified — source lineage not yet tracked')
 })
+
+test('empty archive containers do not assert an archived source exists', () => {
+  for (const archived_sources of [[], {}, null]) {
+    const view = buildRelationshipPanelView({ edge: SOURCED_EDGE, explanation: { ...SOURCED_EXPLANATION, archived_sources }, enabled: true })
+    const auth = view.axes.find(a => a.key === 'authentication')
+    assert.equal(auth.value, 'Not archived — authentication not yet available')
+    assert.equal(auth.tone, 'unavailable')
+  }
+  const view = buildRelationshipPanelView({ edge: SOURCED_EDGE, explanation: { ...SOURCED_EXPLANATION, archived_sources: [{ url: 'https://example.invalid/archive', captured_at: '2026-08-03' }] }, enabled: true })
+  assert.equal(view.axes.find(a => a.key === 'authentication').value, 'Archived source record present')
+})

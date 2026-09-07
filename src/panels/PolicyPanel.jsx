@@ -1,5 +1,5 @@
+import { mipBackend } from '../lib/mipBackend.js'
 import { useEffect, useMemo, useState } from 'react'
-import { loadPolicyDetail } from '../lib/supabase'
 import { INFERRED_CLAIMED_BY } from '../graph/theme'
 
 // Step 10 (§7.4): Policy Consequence view. Two-directional layout —
@@ -45,8 +45,9 @@ const CONSEQUENCE_TYPES = new Set([
 ])
 
 function reliabilityTier(rel) {
+  if (!['number', 'string'].includes(typeof rel) || String(rel).trim() === '') return null
   const n = Number(rel)
-  if (!Number.isFinite(n)) return null
+  if (!Number.isInteger(n) || n < 1 || n > 4) return null
   return `Tier ${n} of 4 (1 = highest)`
 }
 
@@ -210,7 +211,7 @@ function Track({ title, items, trackFilter, onNavigate, emptyText }) {
   )
 }
 
-export default function PolicyPanel({ node, nodes, edges, onNavigate, onClose, isMobile }) {
+export default function PolicyPanel({ node, nodes, edges, onNavigate, onClose, isMobile, backend = mipBackend.publicData.evidence }) {
   const [detail, setDetail] = useState(null)
   const [trackFilter, setTrackFilter] = useState('both')
 
@@ -219,7 +220,7 @@ export default function PolicyPanel({ node, nodes, edges, onNavigate, onClose, i
   useEffect(() => {
     let cancelled = false
     setDetail(null)
-    loadPolicyDetail(node.id)
+    backend.loadPolicyDetail(node.id)
       .then((d) => {
         if (!cancelled) setDetail(d)
       })
@@ -229,7 +230,7 @@ export default function PolicyPanel({ node, nodes, edges, onNavigate, onClose, i
     return () => {
       cancelled = true
     }
-  }, [node.id])
+  }, [node.id, backend])
 
   const { upstream, downstream } = useMemo(() => {
     const nodeById = new Map(nodes.map((n) => [n.id ?? n.slug, n]))

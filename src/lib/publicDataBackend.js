@@ -7,6 +7,7 @@ import {
   resolveEligibleArticleForNews,
 } from './supabase.js'
 import { loadSourceComparisonView } from './sourceComparisonReadPath.js'
+import { createEvidenceBackend } from './evidenceBackend.js'
 import { createChronologyBackend } from './chronologyBackend.js'
 import { createNewsBackend } from './newsBackend.js'
 import { loadInvestigationSurface } from './investigationSurface.js'
@@ -18,6 +19,7 @@ export function createPublicDataBackend(supabaseClient = null) {
   const options = Object.freeze({ supabaseClient })
   return Object.freeze({
     news: createNewsBackend(supabaseClient),
+    evidence: createEvidenceBackend(supabaseClient),
     chronology: createChronologyBackend(supabaseClient),
     loadSourceComparisonView: () => loadSourceComparisonView(options),
     loadGraph: () => loadGraph(options),

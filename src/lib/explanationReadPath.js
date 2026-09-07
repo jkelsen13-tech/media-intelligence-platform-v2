@@ -47,8 +47,8 @@ export function buildExplanationReadView(rows, { enabled } = {}) {
  *
  * @param {{ assertionId?: string, assertionType?: string, limit?: number }} opts
  */
-export async function loadExplanationReadView({ assertionId, assertionType, limit = 200 } = {}) {
-  const { supabase } = await import('./supabase.js')
+export async function loadExplanationReadView({ assertionId, assertionType, limit = 200, supabaseClient } = {}) {
+  const supabase = supabaseClient === undefined ? (await import('./supabase.js')).supabase : supabaseClient
   if (!supabase) return buildExplanationReadView([], { enabled: false })
 
   const { data: flagRow, error: flagError } = await supabase

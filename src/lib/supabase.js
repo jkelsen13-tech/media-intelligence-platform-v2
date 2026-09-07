@@ -376,11 +376,12 @@ export async function loadNodeLocations({ supabaseClient } = {}) {
 // panel can still render from graph edges alone. The consequence edges
 // themselves come from the already-loaded graph (they carry the evidence
 // columns selected in loadGraph).
-export async function loadPolicyDetail(policyNodeId) {
+export async function loadPolicyDetail(policyNodeId, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   const out = { policy: null, actors: [], topics: [] }
-  if (!supabase || !policyNodeId) return out
+  if (!client || !policyNodeId) return out
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('policies')
       .select(
         'id, name, jurisdiction, instrument_type, enacted_date, effective_date, status, source_url, full_text_url, external_id, metadata',
@@ -393,14 +394,14 @@ export async function loadPolicyDetail(policyNodeId) {
     return out
   }
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('policy_actors')
       .select('actor_id, role')
       .eq('policy_id', policyNodeId)
     if (!error) out.actors = data ?? []
   } catch {}
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('policy_topics')
       .select('topic_id')
       .eq('policy_id', policyNodeId)
@@ -435,14 +436,15 @@ export async function loadTopics({ supabaseClient } = {}) {
 // so the tag comes from the story arc the node belongs to (nodes.arc_id,
 // falling back to an arc rooted at this node). Returns null when the node
 // is in no arc — the panel then shows the neutral Unclassified tag.
-export async function loadNodeCategory(node) {
+export async function loadNodeCategory(node, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!node) return null
-  if (!supabase) {
+  if (!client) {
     const arc = demoArcs.find((a) => a.id === node.arc_id || a.slug === node.arc_id)
     return arc?.category ?? null
   }
   if (node.arc_id) {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('story_arcs')
       .select('category')
       .eq('id', node.arc_id)
@@ -454,7 +456,7 @@ export async function loadNodeCategory(node) {
     if (data?.category) return data.category
   }
   if (node.id) {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('story_arcs')
       .select('category')
       .eq('root_node_id', node.id)
@@ -472,20 +474,21 @@ export async function loadNodeCategory(node) {
 // category column and often have no rows in `sources` (sources attach to the
 // event nodes). When the panel's direct lookups come up empty, derive the
 // display category and source list from the node's connected EVENT nodes.
-export async function loadActorDerivation(eventNodeIds) {
+export async function loadActorDerivation(eventNodeIds, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   const out = { category: null, sources: [] }
-  if (!supabase) return out
+  if (!client) return out
   const ids = [...new Set((eventNodeIds ?? []).filter(Boolean))]
   if (ids.length === 0) return out
   try {
-    const { data: evNodes, error: evErr } = await supabase
+    const { data: evNodes, error: evErr } = await client
       .from('nodes')
       .select('id, arc_id')
       .in('id', ids)
     if (evErr) return out
     const arcIds = [...new Set((evNodes ?? []).map((n) => n.arc_id).filter(Boolean))]
     if (arcIds.length > 0) {
-      const { data: arcs } = await supabase
+      const { data: arcs } = await client
         .from('story_arcs')
         .select('category')
         .in('id', arcIds)
@@ -499,7 +502,7 @@ export async function loadActorDerivation(eventNodeIds) {
           return uy - ux || y[1] - x[1]
         })[0]?.[0] ?? null
     }
-    const { data: srcs } = await supabase
+    const { data: srcs } = await client
       .from('sources')
       .select('id, outlet, headline, url, published_at')
       .in('node_id', ids)
@@ -513,12 +516,13 @@ export async function loadActorDerivation(eventNodeIds) {
 }
 
 // Sources backing a single node (article panel source list).
-// nodeKey is the node uuid (supabase) or slug (demo data).
-export async function loadSources(nodeKey) {
-  if (!supabase) {
+// nodeKey is the node uuid (Supabase) or slug (demo data).
+export async function loadSources(nodeKey, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (!client) {
     return demoSources.filter((s) => s.node_slug === nodeKey)
   }
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('sources')
     .select('id, outlet, headline, url, published_at')
     .eq('node_id', nodeKey)
@@ -533,16 +537,17 @@ export async function loadSources(nodeKey) {
 // which), so both tables are probed. Ids that resolve nowhere are kept as
 // explicit unresolved entries — a dropped id would silently understate the
 // recorded sourcing, and fabrication is worse than an honest gap.
-export async function loadEdgeSources(sourceIds) {
+export async function loadEdgeSources(sourceIds, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   const ids = (sourceIds ?? []).filter(Boolean)
-  if (!supabase || ids.length === 0) return []
+  if (!client || ids.length === 0) return []
   const quoted = ids.map((id) => `"${id}"`).join(',')
   const [articlesRes, docsRes] = await Promise.all([
-    supabase
+    client
       .from('articles')
       .select('id, outlet, title, url, published_at')
       .filter('id', 'in', `(${quoted})`),
-    supabase
+    client
       .from('policy_documents')
       .select('id, title, url, source, published_at')
       .filter('id', 'in', `(${quoted})`),
@@ -1315,14 +1320,15 @@ export async function loadArticleGraphLinks(articleId, { supabaseClient } = {}) 
 
 // Articles backing a graph node: citations resolved to it, plus articles
 // attached to any arc rooted at this node.
-export async function loadNodeArticles(nodeId) {
-  if (!supabase || !nodeId) return []
+export async function loadNodeArticles(nodeId, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (!client || !nodeId) return []
   const [citRes, arcRes] = await Promise.all([
-    supabase
+    client
       .from('citations')
       .select('article_id')
       .eq('resolved_node_id', nodeId),
-    supabase.from('story_arcs').select('id').eq('root_node_id', nodeId),
+    client.from('story_arcs').select('id').eq('root_node_id', nodeId),
   ])
   if (citRes.error) throw citRes.error
   if (arcRes.error) throw arcRes.error
@@ -1330,7 +1336,7 @@ export async function loadNodeArticles(nodeId) {
   const ids = new Set((citRes.data ?? []).map((r) => r.article_id))
   const arcIds = (arcRes.data ?? []).map((r) => r.id)
   if (arcIds.length > 0) {
-    const { data: arcArts, error: aErr } = await supabase
+    const { data: arcArts, error: aErr } = await client
       .from('articles')
       .select('id')
       .in('arc_id', arcIds)
@@ -1339,7 +1345,7 @@ export async function loadNodeArticles(nodeId) {
   }
   if (ids.size === 0) return []
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('articles')
     .select('id, title, outlet, published_at, url')
     .in('id', [...ids])
@@ -1411,20 +1417,21 @@ export async function loadSkyVerification(articleId, { supabaseClient } = {}) {
 // Latest location corroboration across the articles backing a graph node
 // (citation-resolved + arc-attached), so the node panel can surface the
 // same badge and credibility boost.
-export async function loadSkyVerificationForNode(nodeId) {
-  if (!supabase || !nodeId) return null
-  if (!(await loadLocationCorroborationFlag())) return null // flag gate — fail closed
+export async function loadSkyVerificationForNode(nodeId, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (!client || !nodeId) return null
+  if (!(await loadLocationCorroborationFlag({ supabaseClient: client }))) return null // flag gate — fail closed
   try {
     const [citRes, arcRes] = await Promise.all([
-      supabase.from('citations').select('article_id').eq('resolved_node_id', nodeId),
-      supabase.from('story_arcs').select('id').eq('root_node_id', nodeId),
+      client.from('citations').select('article_id').eq('resolved_node_id', nodeId),
+      client.from('story_arcs').select('id').eq('root_node_id', nodeId),
     ])
     if (citRes.error) return null
     const ids = new Set((citRes.data ?? []).map((r) => r.article_id))
     if (!arcRes.error) {
       const arcIds = (arcRes.data ?? []).map((r) => r.id)
       if (arcIds.length > 0) {
-        const { data: arcArts, error } = await supabase
+        const { data: arcArts, error } = await client
           .from('articles')
           .select('id')
           .in('arc_id', arcIds)
@@ -1432,7 +1439,7 @@ export async function loadSkyVerificationForNode(nodeId) {
       }
     }
     if (ids.size === 0) return null
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('sky_verifications')
       .select(SKY_COLUMNS)
       .in('article_id', [...ids])
