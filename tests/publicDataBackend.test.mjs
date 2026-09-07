@@ -18,6 +18,8 @@ function fixture({ tables = {}, errors = {} } = {}) {
   let token = 'fixture-session-one'
   const client = createClient('https://public-backend.example.invalid', 'fixture-browser-key', {
     accessToken: async () => token,
+    // Node 20 has no native WebSocket. These HTTP reads must never open one.
+    realtime: { transport: class { constructor() { throw new Error('unexpected realtime connection') } } },
     global: { fetch: async (input, init) => {
       const request = new Request(input, init), url = new URL(request.url)
       const table = url.pathname.split('/').at(-1), params = url.searchParams
