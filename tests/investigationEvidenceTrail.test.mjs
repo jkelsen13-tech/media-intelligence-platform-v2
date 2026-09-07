@@ -137,7 +137,7 @@ test('private trails disappear when access is denied and unavailable bundles do 
   const bundle = fixture(), ws = workspace(bundle)
   ws.status = WORKSPACE_STATUS.access_denied
   const html = markup(Workspace, { workspace: ws }) + markup(Inspector, { workspace: ws })
-  assert.doesNotMatch(html, /Saved evidence trail|left reasoning/)
+  assert.doesNotMatch(html, /Saved evidence trail|left reasoning|Source History|Shared article capture/)
   assert.equal(savedAssessmentTrail(null, selectedId(bundle)), null)
   assert.match(markup(Trail, { bundle: null, assessmentId: selectedId(bundle) }), /trail unavailable/)
 })

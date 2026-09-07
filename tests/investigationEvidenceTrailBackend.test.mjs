@@ -4,6 +4,7 @@ import { readFile, readdir } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { PGlite } from '@electric-sql/pglite'
 import { savedAssessmentTrail, selectedContextUsers, retainedInputDates } from '../src/lib/investigationEvidenceTrail.js'
+import { savedSourceHistory, compareRetainedCaptures } from '../src/lib/investigationSourceHistory.js'
 
 test('real saved snapshots preserve a shared dependency diamond, exact positions and separate source dates', async t => {
   const db = await PGlite.create(); t.after(() => db.close())
@@ -61,6 +62,22 @@ test('real saved snapshots preserve a shared dependency diamond, exact positions
   await add('root', 'A changed report.')
   const replacement = await append(root.candidate, [], root.assessment)
   const second = await observe('observe', { observation_id: randomUUID(), candidate_ids: [selected.candidate], previous_observation_id: first.id })
+  await t.test('source history uses SQL article identity and isolates new captures from prior assessment context', () => {
+    const oldSource = savedSourceHistory(bundle).sources.find(row => row.articleId === root.capture.article_id)
+    const newBundle = { observation: second }
+    const newSource = savedSourceHistory(newBundle).sources.find(row => row.articleId === root.capture.article_id)
+    assert.equal(oldSource.captures.length, 1)
+    assert.equal(newSource.captures.length, 2)
+    const [earlier, later] = newSource.captures
+    const comparison = compareRetainedCaptures(newBundle, earlier.position, later.position)
+    assert.equal(comparison.fields.find(row => row.field === 'summary').left, 'A report.')
+    assert.equal(comparison.fields.find(row => row.field === 'summary').right, 'A changed report.')
+    assert.equal(comparison.fields.find(row => row.field === 'summary').status, 'different')
+    assert.deepEqual(comparison.assessments.map(row => [row.assessment.id, row.usesLeft, row.usesRight]), [[selected.assessment, true, false]])
+    assert.equal(comparison.assessments[0].assessment.stale, true)
+    assert.equal(compareRetainedCaptures(bundle, earlier.position, later.position), null)
+    assert.equal(savedSourceHistory(newBundle).sources.length, 4) // same outlet never groups different articles
+  })
   await t.test('later source changes and replacements do not rewrite the earlier observation', async () => {
     const saved = (await db.query('select snapshot from evidence_pipeline.investigation_observations where id=$1', [first.id])).rows[0].snapshot
     assert.deepEqual(saved, first.snapshot)

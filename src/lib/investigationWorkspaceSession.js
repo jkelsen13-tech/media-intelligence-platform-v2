@@ -11,6 +11,7 @@ export const INVESTIGATION_WORKSPACE_PANELS = Object.freeze([
   { id: 'hypotheses', label: 'Hypotheses' },
   { id: 'commitments', label: 'Commitments' },
   { id: 'gaps', label: 'Evidence Gaps' },
+  { id: 'source-history', label: 'Source History' },
   { id: 'source-links', label: 'Source Links' },
   { id: 'evidence-checks', label: 'Evidence Checks' },
   { id: 'search-coverage', label: 'Search Coverage' },
