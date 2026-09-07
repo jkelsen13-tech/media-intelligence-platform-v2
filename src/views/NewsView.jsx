@@ -1,19 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  loadArticles,
-  loadOutletDirectory,
-  loadArticleDetail,
-  loadArticleGraphLinks,
-  loadSkyVerification,
-  loadArticleTimelineKey,
-  loadArticleComparisonEvents,
-  loadCorpusMeta,
-  loadNewSinceCount,
-  loadArticleCitationMap,
-  loadEventGrouping,
-  loadOutletRegions,
-  loadFilteredSourceMetricRows,
-} from '../lib/supabase'
+import { mipBackend } from '../lib/mipBackend.js'
 import {
   PROVENANCE_LABELS,
   groupArticlesByEvent,
@@ -159,7 +145,7 @@ function PublisherSourceRecord({ article, region }) {
 // overlay — same discovery system (search, chips, list, honest empty). Local
 // discovery filters stay in this instance and never write Investigation Context.
 // They do not filter Graph / World View / Timeline / Arcs evidence.
-export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison, variant = 'page', investigationContext }) {
+export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison, variant = 'page', investigationContext, backend = mipBackend.publicData.news }) {
   const isDrawer = variant === 'drawer'
   const [q, setQ] = useState('')
   const [debouncedQ, setDebouncedQ] = useState('')
@@ -205,23 +191,25 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   // and a pending search never presents a stale count as current.
   const requestRef = useRef(0)
   const loadingMoreRef = useRef(false)
+  const detailRequestRef = useRef(0)
+  useEffect(() => () => { detailRequestRef.current += 1 }, [])
 
   useEffect(() => {
-    loadOutletDirectory().then(setOutlets).catch(() => {})
+    backend.loadOutletDirectory().then(setOutlets).catch(() => {})
   }, [])
 
   // Step 4 mount loads: corpus meta, the last-visit count, and the three
   // feed-wide join maps. Each is independent and failure-isolated.
   // Drawer skip last-visit so opening Explore does not advance the page marker.
   useEffect(() => {
-    loadCorpusMeta().then(setCorpusMeta).catch(() => {})
-    loadArticleCitationMap().then(setCitationMap).catch(() => {})
-    loadEventGrouping().then(setEventMap).catch(() => {})
-    loadOutletRegions().then(setOutletRegions).catch(() => {})
+    backend.loadCorpusMeta().then(setCorpusMeta).catch(() => {})
+    backend.loadArticleCitationMap().then(setCitationMap).catch(() => {})
+    backend.loadEventGrouping().then(setEventMap).catch(() => {})
+    backend.loadOutletRegions().then(setOutletRegions).catch(() => {})
     if (isDrawer) return
     const prev = readThenAdvanceLastVisit(window.localStorage, Date.now())
     if (prev != null) {
-      loadNewSinceCount(new Date(prev).toISOString())
+      backend.loadNewSinceCount(new Date(prev).toISOString())
         .then(setNewSinceCount)
         .catch(() => {})
     }
@@ -266,7 +254,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
 
   useEffect(() => {
     let cancelled = false
-    loadFilteredSourceMetricRows(sourceMetricContext)
+    backend.loadFilteredSourceMetricRows(sourceMetricContext)
       .then((rows) => { if (!cancelled) setSourceMetricRows(rows) })
       .catch(() => { if (!cancelled) setSourceMetricRows([]) })
     return () => { cancelled = true }
@@ -288,7 +276,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     setLoading(true)
     setError(null)
     setArticlesUnavailable(null)
-    loadArticles({
+    backend.loadArticles({
       q: debouncedQ,
       outlet,
       outlets: selectedRegionOutlets,
@@ -317,6 +305,8 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   }, [debouncedQ, outlet, status, evidenceBasis, selectedRegionOutlets, selectedTopicTerms, publicationBounds])
 
   const expandArticle = (id) => {
+    const seq = ++detailRequestRef.current
+    const isCurrent = () => seq === detailRequestRef.current
     setExpanded(id)
     setDetail(null)
     setGraphLinks([])
@@ -326,8 +316,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     setSky(null)
     setTimelineKey(null)
     setComparisonEvents([])
-    loadArticleDetail(id)
+    backend.loadArticleDetail(id)
       .then((d) => {
+        if (!isCurrent()) return
         if (d?.articlesUnavailable) {
           setDetail(null)
           setDetailUnavailable(d.articlesUnavailable)
@@ -340,24 +331,24 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         }
         setDetail(d)
       })
-      .catch((err) => setDetailError(err.message))
-    loadArticleGraphLinks(id)
-      .then(setGraphLinks)
+      .catch((err) => { if (isCurrent()) setDetailError(err.message) })
+    backend.loadArticleGraphLinks(id)
+      .then((value) => { if (isCurrent()) setGraphLinks(value) })
       .catch(() => {})
-    loadSkyVerification(id)
-      .then(setSky)
+    backend.loadSkyVerification(id)
+      .then((value) => { if (isCurrent()) setSky(value) })
       .catch(() => {})
     // Doc 05 pair 3: art- slug suffix ↔ article id prefix join, resolved at
     // read time. No matching timeline event node → no chip.
     if (onOpenTimeline) {
-      loadArticleTimelineKey(id)
-        .then(setTimelineKey)
+      backend.loadArticleTimelineKey(id)
+        .then((value) => { if (isCurrent()) setTimelineKey(value) })
         .catch(() => {})
     }
     // Doc 05 pair 5: event_articles + current article_claims FKs.
     if (onOpenComparison) {
-      loadArticleComparisonEvents(id)
-        .then(setComparisonEvents)
+      backend.loadArticleComparisonEvents(id)
+        .then((value) => { if (isCurrent()) setComparisonEvents(value) })
         .catch(() => {})
     }
   }
@@ -392,7 +383,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     if (loadingMoreRef.current) return
     loadingMoreRef.current = true
     const seq = requestRef.current
-    loadArticles({
+    backend.loadArticles({
       q: debouncedQ,
       outlet,
       outlets: selectedRegionOutlets,
@@ -423,6 +414,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
 
   const toggleExpand = (id) => {
     if (expanded === id) {
+      detailRequestRef.current += 1
       setExpanded(null)
       setDetail(null)
       setSky(null)

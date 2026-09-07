@@ -728,11 +728,12 @@ export function buildTimelineCrossLinks(allEventNodes, canonicalOf, articleRows,
 // its id's 8-hex prefix, IF an event node exists with a slug ending in that
 // suffix (art- node or its evt- twin — same dedup group key). Returns null
 // when no timeline event covers this article — the link then does not render.
-export async function loadArticleTimelineKey(articleId) {
-  if (!supabase || !articleId) return null
+export async function loadArticleTimelineKey(articleId, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (!client || !articleId) return null
   const prefix = String(articleId).slice(0, 8)
   try {
-    const { data: eventRows, error: eventError } = await supabase
+    const { data: eventRows, error: eventError } = await client
       .from('nodes')
       .select('id, slug')
       .eq('type', 'event')
@@ -743,7 +744,7 @@ export async function loadArticleTimelineKey(articleId) {
     // If no graph event mirror exists but the article already belongs to an
     // arc, return the explicit article-record key instead of withholding the
     // Timeline destination. This creates no event assertion.
-    const { data: article, error: articleError } = await supabase
+    const { data: article, error: articleError } = await client
       .from('articles')
       .select('id, arc_id')
       .eq('id', articleId)
@@ -806,7 +807,7 @@ export async function resolveEligibleArticleForNews(target, { supabaseClient } =
 // joins the already-public article URL to the projected member URL. Returns
 // [{ eventId, title }] (deduped); no matching projected event means no link.
 export async function loadArticleComparisonEvents(articleId, { supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client || !articleId) return []
   try {
     const { data: article, error: articleError } = await client
@@ -973,7 +974,7 @@ export async function loadCorpusMeta({ supabaseClient } = {}) {
 // Track B Step 4 (owner ruling #1): exact count of articles fetched after a
 // browser-local last-visit marker. Head-only exact-count request.
 export async function loadNewSinceCount(isoTs, { supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client || !isoTs) return null
   const { count, error } = await client
     .from('articles')
@@ -996,7 +997,7 @@ export async function loadNewSinceCount(isoTs, { supabaseClient } = {}) {
 // node, so the per-card Graph chip can open the graph AT that node rather
 // than implying a link it cannot navigate to.
 export async function loadArticleCitationMap({ supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return new Map()
   const { data, error } = await keysetAll(client, 'citations', 'id, article_id, cited_type, resolved_node_id')
   if (error) throw error
@@ -1019,7 +1020,7 @@ export async function loadArticleCitationMap({ supabaseClient } = {}) {
 // (Doc 13). Returns Map<articleId, { eventId, title }>; title null when the
 // event row is unreadable (honest degradation — group still renders).
 export async function loadEventGrouping({ supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return new Map()
   const [membersRes, eventsRes] = await Promise.all([
     keysetAllComposite(client, 'event_articles', 'event_id, article_id', { keyCols: ['event_id', 'article_id'] }),
@@ -1040,7 +1041,7 @@ export async function loadEventGrouping({ supabaseClient } = {}) {
 // from the outlets table; articles carry no region column. Bounded table,
 // keyset-paginated anyway per Doc 13 discipline.
 export async function loadOutletRegions({ supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return new Map()
   const { data, error } = await keysetAll(client, 'outlets', 'id, name, country')
   if (error) throw error
@@ -1071,7 +1072,7 @@ export async function loadOutlets({ supabaseClient } = {}) {
 // table supplies publisher-provided context only; it does not imply a platform
 // endorsement or a composite reliability score.
 export async function loadOutletDirectory({ supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return []
   const [articlesRes, outletsRes] = await Promise.all([
     keysetAll(client, 'articles', 'id, outlet', { filter: (q) => q.eq('reader_state', 'eligible').not('outlet', 'is', null) }),
@@ -1136,7 +1137,7 @@ function applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, top
 // context. It excludes a selected outlet intentionally: publisher selection is
 // an interaction target, not a condition that should zero every other vendor.
 export async function loadFilteredSourceMetricRows(filters = {}, { supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return []
   const { outlet: _selectedOutlet, ...contextFilters } = filters
   const { data, error } = await keysetAll(client, 'articles', 'id, outlet, published_at', {
@@ -1154,7 +1155,7 @@ export async function loadFilteredSourceMetricRows(filters = {}, { supabaseClien
 // the exact public byline that News renders. The private `authors` relation is
 // never joined by a browser query.
 export async function loadPublicAuthorNameMap(authorIds, { supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   const ids = [...new Set((authorIds ?? []).filter(Boolean))]
   if (!client || ids.length === 0) return new Map()
   const { data, error } = await client.from('authors_public').select('id, name').in('id', ids)
@@ -1166,7 +1167,7 @@ export async function loadPublicAuthorNameMap(authorIds, { supabaseClient } = {}
 // and `topicTerms` are optional working filters. Topic terms are explicitly
 // title/summary matches rather than a claim of a complete article taxonomy.
 export async function loadArticles({ q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore, limit = 30, offset = 0, supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return { articles: [], total: 0, articlesUnavailable: null }
   // Trust may GRANT SELECT + eligible-only RLS on public.articles. A future
   // GRANT miss still fail-closes here (42501 → empty + permission_denied).
@@ -1208,7 +1209,7 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
 
 // Full detail for one article: claims + provenance citations.
 export async function loadArticleDetail(id, { supabaseClient } = {}) {
-  const client = supabaseClient ?? supabase
+  const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return null
   const [artRes, citRes, newsDetailRes] = await Promise.all([
     client
@@ -1285,9 +1286,10 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
 // ---------- Cross-view graph integration ----------
 
 // Graph nodes an article is connected to via its resolved citations.
-export async function loadArticleGraphLinks(articleId) {
-  if (!supabase) return []
-  const { data: cits, error } = await supabase
+export async function loadArticleGraphLinks(articleId, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (!client) return []
+  const { data: cits, error } = await client
     .from('citations')
     .select('cited_entity, cited_type, resolved_node_id')
     .eq('article_id', articleId)
@@ -1295,7 +1297,7 @@ export async function loadArticleGraphLinks(articleId) {
   if (error) throw error
   if (!cits.length) return []
   const ids = [...new Set(cits.map((c) => c.resolved_node_id))]
-  const { data: nodes, error: nErr } = await supabase
+  const { data: nodes, error: nErr } = await client
     .from('nodes')
     .select('id, label, type')
     .in('id', ids)
@@ -1368,10 +1370,11 @@ export function resolveLocationCorroboration(flagValue) {
 }
 
 /** Flag read. Withhold posture: any error or non-true value gates the path. */
-export async function loadLocationCorroborationFlag() {
-  if (!supabase) return false
+export async function loadLocationCorroborationFlag({ supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (!client) return false
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('pipeline_config')
       .select('value')
       .eq('key', 'location_corroboration')
@@ -1386,11 +1389,12 @@ export async function loadLocationCorroborationFlag() {
 // Latest sky_verifications row (legacy table name) for one article. The table may be absent
 // (or simply have no rows — it's a native-companion feature): any error
 // feature-detects to null and the UI renders nothing.
-export async function loadSkyVerification(articleId) {
-  if (!supabase || !articleId) return null
-  if (!(await loadLocationCorroborationFlag())) return null // flag gate — fail closed
+export async function loadSkyVerification(articleId, { supabaseClient } = {}) {
+  const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (!client || !articleId) return null
+  if (!(await loadLocationCorroborationFlag({ supabaseClient: client }))) return null // flag gate — fail closed
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('sky_verifications')
       .select(SKY_COLUMNS)
       .eq('article_id', articleId)
