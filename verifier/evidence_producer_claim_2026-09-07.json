@@ -1,0 +1,45 @@
+{
+  "project_id": "qikvmopbtijoebdqosyq",
+  "migration": "20260907234007_evidence_change_producer_claim_v1",
+  "implementation_head": "c4d67197b2c67cd0d6f88b7c6970a1fad40240a1",
+  "ci_runs": [
+    34170663282,
+    34170661032
+  ],
+  "deployed_function_body_matches": true,
+  "security_invoker": true,
+  "empty_search_path": true,
+  "execute_roles": [
+    "postgres",
+    "service_role"
+  ],
+  "live_tests": [
+    "empty_capture_claim_no_mutation",
+    "record_version_lease_rolled_back",
+    "null_producer_rejected",
+    "anon_execute_denied",
+    "authenticated_execute_denied"
+  ],
+  "before": {
+    "jobs_hash": "cbf5a908a152034606aeaead014ae20b",
+    "events_hash": "2c497d2b237760e9ece01c60ead0248f",
+    "changes_hash": "1c90d94548747607da811183f3800076",
+    "legacy_claim_hash": "dc5589a3f5e02ab6d775a140c510b1c5",
+    "legacy_rpc_hash": "f2948e3efb48a0a9a0587522bcba5798"
+  },
+  "after": {
+    "jobs_hash": "cbf5a908a152034606aeaead014ae20b",
+    "events_hash": "2c497d2b237760e9ece01c60ead0248f",
+    "changes_hash": "1c90d94548747607da811183f3800076",
+    "legacy_claim_hash": "dc5589a3f5e02ab6d775a140c510b1c5",
+    "legacy_rpc_hash": "f2948e3efb48a0a9a0587522bcba5798"
+  },
+  "new_security_advisor_findings": 0,
+  "production_job_mutations_retained": 0,
+  "sequence_allocation_may_advance": true,
+  "scheduler_enabled": false,
+  "limitations": [
+    "No simultaneous multi-connection contention test",
+    "Hosted capture adapter not yet wired to new claim RPC"
+  ]
+}
