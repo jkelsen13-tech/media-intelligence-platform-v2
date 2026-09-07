@@ -35,7 +35,7 @@ for (const fn of ['loadSkyVerification', 'loadSkyVerificationForNode']) {
     assert.ok(start > -1, `${fn} not found in src/lib/supabase.js`)
     const nextExport = SUPABASE_LIB.indexOf('\nexport ', start + 1)
     const body = SUPABASE_LIB.slice(start, nextExport === -1 ? undefined : nextExport)
-    const gate = body.indexOf(fn === 'loadSkyVerification' ? 'loadLocationCorroborationFlag({ supabaseClient: client })' : 'loadLocationCorroborationFlag()')
+    const gate = body.indexOf('loadLocationCorroborationFlag({ supabaseClient: client })')
     assert.ok(gate > -1, `${fn} must call loadLocationCorroborationFlag()`)
     const read = body.indexOf(".from('sky_verifications')")
     assert.ok(read > -1, `${fn} no longer reads sky_verifications — update this guard`)

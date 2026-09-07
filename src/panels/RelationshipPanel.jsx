@@ -1,6 +1,5 @@
+import { mipBackend } from '../lib/mipBackend.js'
 import { useEffect, useMemo, useState } from 'react'
-import { loadExplanationReadView } from '../lib/explanationReadPath.js'
-import { loadEdgeSources } from '../lib/supabase.js'
 import { buildRelationshipPanelView } from '../lib/relationshipProvenance.js'
 import './relationship-panel.css'
 
@@ -13,7 +12,7 @@ import './relationship-panel.css'
 // G2 axes — with honest empty states everywhere data is missing: 'unverified'
 // / 'not yet available' are rendered as designed states, never as blank
 // space or fabricated confidence.
-export default function RelationshipPanel({ edge, sourceLabel, targetLabel, onClose, isMobile }) {
+export default function RelationshipPanel({ edge, sourceLabel, targetLabel, onClose, isMobile, backend = mipBackend.publicData.evidence }) {
   const [state, setState] = useState({ status: 'loading' })
   const edgeId = edge?.id
 
@@ -24,12 +23,13 @@ export default function RelationshipPanel({ edge, sourceLabel, targetLabel, onCl
       setState({ status: 'ready', enabled: false, explanation: null, sources: [] })
       return
     }
-    loadExplanationReadView({ assertionId: `edge:${edgeId}`, limit: 1 })
+    backend.loadExplanationReadView({ assertionId: `edge:${edgeId}`, limit: 1 })
       .then(async (view) => {
+        if (cancelled) return
         const explanation =
           view.eligible[0] ?? view.excluded[0]?.explanation ?? null
         const sources = explanation?.source_ids?.length
-          ? await loadEdgeSources(explanation.source_ids)
+          ? await backend.loadEdgeSources(explanation.source_ids)
           : []
         if (!cancelled) {
           setState({ status: 'ready', enabled: view.enabled, explanation, sources })
@@ -41,7 +41,7 @@ export default function RelationshipPanel({ edge, sourceLabel, targetLabel, onCl
     return () => {
       cancelled = true
     }
-  }, [edgeId])
+  }, [edgeId, backend])
 
   const view = useMemo(
     () =>

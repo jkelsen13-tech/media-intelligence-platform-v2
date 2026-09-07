@@ -160,9 +160,10 @@ export function buildRelationshipPanelView({ edge, explanation = null, sources =
   // 3. Authentication (A): archived source records only. Live rows carry an
   //    explicit 'missing' status — render that honestly.
   const archived = explanation?.archived_sources
+  const archiveEmpty = archived == null || (typeof archived === 'object' && Object.keys(archived).length === 0)
   const authValue = !explanation
     ? 'Not yet available — no provenance recorded'
-    : isExplicitMissing(archived) || archived == null
+    : isExplicitMissing(archived) || archiveEmpty
       ? 'Not archived — authentication not yet available'
       : 'Archived source record present'
   axes.push({

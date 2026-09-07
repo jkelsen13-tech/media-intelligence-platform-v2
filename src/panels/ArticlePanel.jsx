@@ -1,5 +1,5 @@
+import { mipBackend } from '../lib/mipBackend.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { loadSources, loadNodeArticles, loadNodeCategory, loadSkyVerificationForNode, loadActorDerivation } from '../lib/supabase'
 import { NODE_TYPES, EDGE_TYPES, CATEGORY_TYPES, edgePlainLabel } from '../graph/theme'
 import { buildNodeEvidenceAxes } from '../lib/nodeEvidence'
 import SkyBadge from './SkyBadge'
@@ -63,6 +63,7 @@ export default function ArticlePanel({
   onOpenArticle,
   onClose,
   isMobile,
+  backend = mipBackend.publicData.evidence,
 }) {
   const [sources, setSources] = useState(null)
   const [sourcesError, setSourcesError] = useState(null)
@@ -88,13 +89,13 @@ export default function ArticlePanel({
 
   useEffect(() => {
     setSelectedConnectionId(null)
-  }, [nodeKey])
+  }, [nodeKey, backend])
 
   useEffect(() => {
     let cancelled = false
     setSources(null)
     setSourcesError(null)
-    loadSources(nodeKey)
+    backend.loadSources(nodeKey)
       .then((rows) => {
         if (!cancelled) setSources(rows)
       })
@@ -104,7 +105,7 @@ export default function ArticlePanel({
     return () => {
       cancelled = true
     }
-  }, [nodeKey])
+  }, [nodeKey, backend])
 
   // Articles backing this node (citation-resolved + arc-attached).
   useEffect(() => {
@@ -114,7 +115,7 @@ export default function ArticlePanel({
       setBacking([])
       return
     }
-    loadNodeArticles(node.id)
+    backend.loadNodeArticles(node.id)
       .then((rows) => {
         if (!cancelled) setBacking(rows)
       })
@@ -124,14 +125,14 @@ export default function ArticlePanel({
     return () => {
       cancelled = true
     }
-  }, [node.id, isUuid])
+  }, [node.id, isUuid, backend])
 
   // Location corroboration backing this node (latest across its articles).
   useEffect(() => {
     let cancelled = false
     setSky(null)
     if (!isUuid) return
-    loadSkyVerificationForNode(node.id)
+    backend.loadSkyVerificationForNode(node.id)
       .then((v) => {
         if (!cancelled) setSky(v)
       })
@@ -139,13 +140,13 @@ export default function ArticlePanel({
     return () => {
       cancelled = true
     }
-  }, [node.id, isUuid])
+  }, [node.id, isUuid, backend])
 
   // Category tag: nodes have no category column; it comes from the arc.
   useEffect(() => {
     let cancelled = false
     setCategory(null)
-    loadNodeCategory(node)
+    backend.loadNodeCategory(node)
       .then((cat) => {
         if (!cancelled) setCategory(cat)
       })
@@ -154,7 +155,7 @@ export default function ArticlePanel({
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeKey])
+  }, [nodeKey, backend])
 
   // Derivation fallback (targeted patch): for non-event nodes with no direct
   // arc category and/or no sources of their own, derive both from connected
@@ -178,7 +179,7 @@ export default function ArticlePanel({
     const needsCategory = category == null
     const needsSources = sources != null && sources.length === 0
     if (node.type === 'event' || connectedEventIds.length === 0 || (!needsCategory && !needsSources)) return
-    loadActorDerivation(connectedEventIds)
+    backend.loadActorDerivation(connectedEventIds)
       .then((d) => {
         if (!cancelled) setDerived(d)
       })
@@ -186,7 +187,7 @@ export default function ArticlePanel({
     return () => {
       cancelled = true
     }
-  }, [node.type, category, sources, connectedEventIds])
+  }, [node.type, category, sources, connectedEventIds, backend])
 
   const connections = useMemo(() => {
     const nodeById = new Map(nodes.map((n) => [n.id ?? n.slug, n]))
