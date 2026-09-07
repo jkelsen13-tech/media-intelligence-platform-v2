@@ -1,0 +1,51 @@
+{
+  "project_id": "qikvmopbtijoebdqosyq",
+  "function": "investigation-api",
+  "contract": "investigation-api-1",
+  "version": null,
+  "status": "PENDING_DEPLOYMENT",
+  "verify_jwt": true,
+  "deployed_files_exact_match": false,
+  "files": [
+    {
+      "path": "supabase/functions/investigation-api/index.ts",
+      "sha256": "2a7b879c9547ef1f44254b6b697fd24ec4f160de992e5ea97ce5a3fed7f70e51"
+    },
+    {
+      "path": "supabase/functions/investigation-api/handler.mjs",
+      "sha256": "1db9d9f8585a3891d0852049acb22e88e95071e87cab2dacde85e9ce0e8ee2ba"
+    },
+    {
+      "path": "supabase/functions/investigation-workspace/handler.mjs",
+      "sha256": "6d3c5e311476fe850498c64c2c534464db2a0c600e4a84eca0dda8a48b6748cd"
+    },
+    {
+      "path": "supabase/functions/investigation-evidence-checks/handler.mjs",
+      "sha256": "14c8d7d39d09b59498a76712086d26ac5a4c2086db7bd3f67c3d20ec1b26be10"
+    },
+    {
+      "path": "supabase/functions/investigation-evidence-reviews/handler.mjs",
+      "sha256": "4dfde82551e33e4d23f894f2ae1876c0e7ba5e39a17243e212efa3497cb8af17"
+    },
+    {
+      "path": "supabase/functions/investigation-input-impact/handler.mjs",
+      "sha256": "88a96549f50262df502842abaac0a8407560e3cbc8b53de06cad6dce999ce0fb"
+    },
+    {
+      "path": "supabase/functions/investigation-input-impact/impact.mjs",
+      "sha256": "8034155757d8ebf702bb63220bd11a321df532d816ca1ddde82b3b9393dd19ce"
+    },
+    {
+      "path": "supabase/functions/investigation-source-spans/handler.mjs",
+      "sha256": "ccc93b3d85309a74fe777f9ceb34b9ad0c169dd83c495948cf750e7b47b2bf54"
+    },
+    {
+      "path": "supabase/functions/investigation-source-spans/spans.mjs",
+      "sha256": "45b519ce29fc98e40dfd0d61168969d3c225dbb13630556734df743872e96448"
+    }
+  ],
+  "live_checks": [],
+  "positive_signed_in_live_verified": false,
+  "production_records_written": 0,
+  "previous_deployment_manifest": "verifier/investigation-api-2026-09-07.json"
+}

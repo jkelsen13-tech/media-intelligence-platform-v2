@@ -43,8 +43,26 @@ export function createInvestigationApiHandler({ authenticate, workspaceRpc, chec
 }
 
 export function createInvestigationApiTransport(options) {
-  const workspace = createWorkspaceTransport(options)
+  const fetchImpl = options.fetchImpl ?? fetch
+  const rpcPaths = new Set([
+    'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/rpc/mip_investigation_workspace_v1',
+    'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/rpc/mip_investigation_evidence_checks_v1',
+    'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/rpc/mip_investigation_evidence_reviews_v1',
+  ])
+  const transportOptions = { ...options, fetchImpl: (url, init) => {
+    // Historical domain handlers remain unchanged. Strip only their invalid
+    // opaque-key bearer header on the three server RPCs, never user Auth headers.
+    if (rpcPaths.has(url) && options.serviceKey?.startsWith('sb_secret_')
+      && init?.headers?.apikey === options.serviceKey
+      && init.headers.Authorization === `Bearer ${options.serviceKey}`) {
+      const headers = { ...init.headers }
+      delete headers.Authorization
+      return fetchImpl(url, { ...init, headers })
+    }
+    return fetchImpl(url, init)
+  } }
+  const workspace = createWorkspaceTransport(transportOptions)
   return { authenticate: workspace.authenticate, workspaceRpc: workspace.rpc,
-    checksRpc: createEvidenceChecksTransport(options).rpc,
-    reviewsRpc: createEvidenceReviewsTransport(options).rpc }
+    checksRpc: createEvidenceChecksTransport(transportOptions).rpc,
+    reviewsRpc: createEvidenceReviewsTransport(transportOptions).rpc }
 }
