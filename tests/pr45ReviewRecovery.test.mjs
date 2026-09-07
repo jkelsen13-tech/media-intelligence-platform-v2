@@ -42,7 +42,7 @@ mkdirSync(compiledDir, { recursive: true })
 await esbuild.build({
   absWorkingDir: repoRoot,
   entryPoints: ['src/components/PrivateInvestigationWorkspace.jsx'],
-  outfile: join(compiledDir, 'PrivateInvestigationWorkspace.review-recovery.mjs'),
+  outfile: join(compiledDir, 'PrivateInvestigationWorkspace.review-decision-recovery.mjs'),
   bundle: true,
   format: 'esm',
   platform: 'node',
@@ -56,7 +56,7 @@ await esbuild.build({
   }],
 })
 const { default: PrivateInvestigationWorkspace, PrivateInvestigationInspector } = await import(
-  join(compiledDir, 'PrivateInvestigationWorkspace.review-recovery.mjs')
+  join(compiledDir, 'PrivateInvestigationWorkspace.review-decision-recovery.mjs')
 )
 
 function createDeferredClients() {
