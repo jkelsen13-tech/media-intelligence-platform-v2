@@ -66,6 +66,9 @@ test('explicitly unconfigured public backend cannot escape to a configured globa
     const module = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString('base64')}`)
     for (const backend of [module.createPublicDataBackend(), module.createPublicDataBackend(null)]) {
       assert.ok(Object.isFrozen(backend))
+      assert.equal((await backend.spatial.loadSpatialProjection()).reason, 'client_not_configured')
+      assert.equal((await backend.spatial.loadWorldViewGraph()).reason, 'client_not_configured')
+      assert.equal((await backend.spatial.loadTemporalAssessment('event-one')).reason, 'client_not_configured')
       assert.equal(await backend.curated.loadPhase3BetaFlag(), false)
       assert.deepEqual(await backend.curated.loadPhase3BetaView(), { enabled: false, cases: [], policies: [] })
       assert.deepEqual(await backend.evidence.loadSources('missing'), [])

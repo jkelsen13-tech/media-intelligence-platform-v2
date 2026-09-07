@@ -2,10 +2,10 @@ import { createClient } from '@supabase/supabase-js'
 import { createNewsBackend } from '../src/lib/newsBackend.js'
 
 // Synthetic HTTP fixture for the installed SDK. It is never a production seed.
-export function newsBackendFixture({ tables = {}, errors = {} } = {}) {
+export function newsBackendFixture({ tables = {}, errors = {}, url = 'https://news-backend.example.invalid' } = {}) {
   const calls = []
   let token = 'news-session-one'
-  const client = createClient('https://news-backend.example.invalid', 'fixture-browser-key', {
+  const client = createClient(url, 'fixture-browser-key', {
     accessToken: async () => token,
     realtime: { transport: class { constructor() { throw new Error('unexpected websocket') } } },
     global: { fetch: async (input, init) => {
