@@ -1,6 +1,10 @@
 import { supabase } from './supabase.js'
 import { createInvestigationBackend } from './investigationBackend.js'
+import { createPublicDataBackend } from './publicDataBackend.js'
 
 // Production backend composition root. Construction performs no requests.
-// Public/eligible projections will join through their own access contracts.
-export const mipBackend = Object.freeze({ investigations: createInvestigationBackend(supabase) })
+// Both domains share one configured client, retaining their access contracts.
+export const mipBackend = Object.freeze({
+  investigations: createInvestigationBackend(supabase),
+  publicData: createPublicDataBackend(supabase),
+})

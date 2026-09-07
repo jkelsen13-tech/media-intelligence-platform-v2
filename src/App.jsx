@@ -20,8 +20,8 @@ import SourceComparisonView from './views/SourceComparisonView'
 import WorldView from './views/WorldView'
 import { loadPhase3BetaFlag } from './lib/phase3ReadPath'
 import { buildNavViews, buildMoreEntries, isMoreViewKey } from './lib/navViews'
-import { loadGraph, loadTopics, loadCorpusMeta, loadNodeLocations, loadGraphCoverage, resolveEligibleArticleForNews, supabase } from './lib/supabase'
-import { loadInvestigationSurface, surfaceJoinDisclosures } from './lib/investigationSurface'
+import { supabase } from './lib/supabase'
+import { surfaceJoinDisclosures } from './lib/investigationSurface'
 import { liveCorpusLabel } from './lib/newsFeedModel'
 import { computeHubs } from './lib/hubs'
 import { jumpFocusStack } from './lib/jumpReset'
@@ -360,17 +360,17 @@ export default function App({
   const [corpusMeta, setCorpusMeta] = useState(null)
   const [investigationSurface, setInvestigationSurface] = useState(null)
   useEffect(() => {
-    loadCorpusMeta().then(setCorpusMeta).catch(() => {})
+    mipBackend.publicData.loadCorpusMeta().then(setCorpusMeta).catch(() => {})
   }, [])
   const corpusLine = liveCorpusLabel(corpusMeta?.count, corpusMeta?.latestFetchedAt, Date.now())
 
   // Canonical graph/event state loads once. Lens / tab changes must not
   // re-fetch the entire graph (Step 7 §14).
   useEffect(() => {
-    loadGraph().then(setGraph).catch((err) => setError(err.message))
-    loadGraphCoverage().then(setGraphCoverage).catch(() => setGraphCoverage(null))
-    loadNodeLocations().then(setLocationMentions).catch(() => setLocationMentions([]))
-    loadTopics()
+    mipBackend.publicData.loadGraph().then(setGraph).catch((err) => setError(err.message))
+    mipBackend.publicData.loadGraphCoverage().then(setGraphCoverage).catch(() => setGraphCoverage(null))
+    mipBackend.publicData.loadNodeLocations().then(setLocationMentions).catch(() => setLocationMentions([]))
+    mipBackend.publicData.loadTopics()
       .then((data) => {
         // Only expose the affordance when the tables exist AND carry data.
         if (data && data.topics.length > 0) setTopicsData(data)
@@ -830,7 +830,7 @@ export default function App({
     // Direct News / Timeline / Arc ids pass through. Comparison cards pass
     // an opaque article_key plus the public member URL; resolve that through
     // an eligible articles row before loadArticleDetail runs.
-    void resolveEligibleArticleForNews(target).then(applyResolvedArticle)
+    void mipBackend.publicData.resolveEligibleArticleForNews(target).then(applyResolvedArticle)
   }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
   // Doc 05 pair 3/6 destination, now under the Package 1 item 2 navigation
@@ -1064,7 +1064,7 @@ export default function App({
       return
     }
     let cancelled = false
-    loadInvestigationSurface(subjectId)
+    mipBackend.publicData.loadInvestigationSurface(subjectId)
       .then((row) => {
         if (!cancelled) setInvestigationSurface(row)
       })
