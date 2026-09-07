@@ -486,6 +486,7 @@ function ReviewHistoryPanel({
 }
 
 function HypothesisRecord({ hypothesis, bundle, onOpenCitation }) {
+  const selectedIds = bundle?.observation?.snapshot?.selected_assessment_ids ?? []
   return (
     <article className="piw-card" data-record="hypothesis" data-record-id={hypothesis.id}>
       <h3>{hypothesis.statement}</h3>
@@ -495,6 +496,26 @@ function HypothesisRecord({ hypothesis, bundle, onOpenCitation }) {
           <ul className="piw-list">{hypothesis.assumptions.map((item) => <li key={item}>{item}</li>)}</ul>
         </>
       ) : null}
+      <h4>What would strengthen this explanation</h4>
+      <ul className="piw-list">{hypothesis.would_strengthen?.map((item, index) => <li key={index}>{item}</li>)}</ul>
+      <h4>What would weaken this explanation</h4>
+      <ul className="piw-list">{hypothesis.would_weaken?.map((item, index) => <li key={index}>{item}</li>)}</ul>
+      <p className="piw-note">These are recorded criteria for evaluating the explanation; they do not mean that this evidence has been found.</p>
+      <h4>Linked assessments</h4>
+      {hypothesis.assessment_ids?.length ? hypothesis.assessment_ids.map((id, index) => {
+        const assessment = selectedIds.includes(id) ? snapshotAssessment(bundle, id) : null
+        return (
+          <details className="piw-linked-record" key={`${id}:${index}`}>
+            <summary>Assessment {index + 1} · {assessment ? 'View saved reasoning' : 'Unavailable on this saved version'}</summary>
+            {assessment ? <>
+              <p>{assessmentOutcomeCopy(assessment.outcome)}</p>
+              <p>{assessment.rationale}</p>
+              {assessment.stale ? <p className="piw-note">This recorded assessment has a changed dependency. That is not a completed reassessment.</p> : null}
+              <RemainingUncertaintyBlock>{assessment.remaining_uncertainty}</RemainingUncertaintyBlock>
+            </> : <p className="piw-muted">The linked selected assessment is not available in this saved observation.</p>}
+          </details>
+        )
+      }) : <p className="piw-muted">No assessments are linked to this explanation.</p>}
       <h4>Retained excerpts</h4>
       <EvidenceList evidence={hypothesis.evidence} bundle={bundle} onOpenCitation={onOpenCitation} />
       <RemainingUncertaintyBlock>{hypothesis.remaining_uncertainty}</RemainingUncertaintyBlock>
@@ -503,6 +524,8 @@ function HypothesisRecord({ hypothesis, bundle, onOpenCitation }) {
 }
 
 function CommitmentRecord({ commitment, bundle, onOpenCitation }) {
+  const stages = commitment.stages ?? []
+  const coverage = bundle?.version?.state?.coverage ?? []
   return (
     <article className="piw-card" data-record="commitment" data-record-id={commitment.id}>
       <h3>{commitment.statement}</h3>
@@ -519,15 +542,36 @@ function CommitmentRecord({ commitment, bundle, onOpenCitation }) {
       <RemainingUncertaintyBlock>{commitment.remaining_uncertainty}</RemainingUncertaintyBlock>
       <h4>Stages</h4>
       <ol className="piw-stages">
-        {stageDepths(commitment.stages).map((stage) => (
+        {stageDepths(stages).map((stage, stageIndex) => (
           <li key={stage.id} style={{ '--piw-depth': stage.depth }} className="piw-stage">
             <p>
-              <strong>{stage.kind}</strong>
+              <strong>Stage {stageIndex + 1} · {stage.kind}</strong>
               {' · '}
               {STAGE_STATUS_COPY[stage.status] ?? stage.status}
             </p>
             <p>{stage.note}</p>
-            {stage.depends_on?.length ? <p className="piw-muted">Depends on earlier stages in this commitment. Dependency is not inferred completion.</p> : null}
+            {stage.depends_on?.length ? <>
+              <h4>Depends on</h4>
+              <p className="piw-note">These links describe prerequisites, not proof that a stage completed.</p>
+              <ul className="piw-list">{stage.depends_on.map((id, index) => {
+                const dependencyIndex = stages.findIndex((item) => item.id === id)
+                const dependency = dependencyIndex >= 0 && dependencyIndex < stageIndex ? stages[dependencyIndex] : null
+                return <li key={`${id}:${index}`}>{dependency
+                  ? <>Stage {dependencyIndex + 1} · {dependency.kind} · {STAGE_STATUS_COPY[dependency.status] ?? dependency.status}<p>{dependency.note}</p></>
+                  : 'Linked prerequisite unavailable in this commitment on this saved version.'}</li>
+              })}</ul>
+            </> : null}
+            {stage.coverage_ids?.length ? <>
+              <h4>Linked collection records</h4>
+              <p className="piw-note">Search declarations apply only to their recorded scope. No follow-up found does not establish that nothing happened.</p>
+              {stage.coverage_ids.map((id, index) => {
+                const row = coverage.find((item) => item.id === id)
+                return <details className="piw-linked-record" key={`${id}:${index}`}>
+                  <summary>{row?.label ?? 'Collection record unavailable on this saved version'}</summary>
+                  {row ? <CoverageRecord row={row} /> : <p className="piw-muted">The linked collection record is not available in this saved version.</p>}
+                </details>
+              })}
+            </> : null}
             <EvidenceList evidence={stage.evidence} bundle={bundle} onOpenCitation={onOpenCitation} />
           </li>
         ))}
