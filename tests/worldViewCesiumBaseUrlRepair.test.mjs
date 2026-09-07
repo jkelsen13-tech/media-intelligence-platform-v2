@@ -125,9 +125,9 @@ test('subject fly-to duration is seconds-scale so the camera actually lands', ()
   // (a millisecond habit) animated the deep-link Cleveland fly-to over
   // ~27 minutes, so the camera never reached the city-class ceiling within
   // a session. Guard the unit: duration must be a small seconds-scale value.
-  const flyTo = CESIUM_ADAPTER.match(/camera\.flyTo\(\{[\s\S]*?\}\)/)
-  assert.ok(flyTo, 'flyTo call must exist')
-  const durationMatch = flyTo[0].match(/duration:\s*([0-9]+(?:\.[0-9]+)?)/)
+  const flyTo = CESIUM_ADAPTER.match(/return frameGlobeOnSubject\(Cesium, viewer, cam, ([0-9.]+)\)/)
+  assert.ok(flyTo, 'subject framing call must exist')
+  const durationMatch = flyTo
   assert.ok(durationMatch, 'flyTo must set an explicit duration')
   const seconds = Number(durationMatch[1])
   assert.ok(seconds > 0 && seconds <= 10, `flyTo duration must be seconds-scale (got ${seconds})`)

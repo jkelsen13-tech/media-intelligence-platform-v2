@@ -57,6 +57,24 @@ export function degradeGlobeToEllipsoid(Cesium, viewer) {
 }
 
 // ---- Stage C: renderer-neutral camera-state contract (globe side) ----
+
+// A subject coordinate is the look-at target, not the camera's ground
+// position. Placing an oblique camera directly above it looks beyond it.
+// Preserve the precision floor by converting vertical height to slant range.
+export function frameGlobeOnSubject(Cesium, viewer, cam, duration = 0) {
+  if (!Cesium || !viewer || !cam) return false
+  const pitch = Cesium.Math.toRadians(cam.pitchDegrees)
+  const range = cam.heightMeters / Math.max(Math.abs(Math.sin(pitch)), 0.01)
+  viewer.scene.screenSpaceCameraController.minimumZoomDistance = cam.minZoomDistanceMeters
+  viewer.camera.flyToBoundingSphere(
+    new Cesium.BoundingSphere(Cesium.Cartesian3.fromDegrees(cam.lon, cam.lat, 0), 0),
+    {
+      offset: new Cesium.HeadingPitchRange(Cesium.Math.toRadians(cam.headingDegrees), pitch, range),
+      duration,
+    },
+  )
+  return true
+}
 //
 // Camera state is serializable and renderer-neutral (degrees + meters, see
 // worldViewCameraState.js). It is DISPLAY-only: it never enters
@@ -434,15 +452,7 @@ export function createCesiumEllipsoidRendererAdapter({
     if (shouldFlyTo?.()) {
       const cam = subjectEllipsoidCamera(coordinate, precisionClass)
       if (cam) {
-        viewer.scene.screenSpaceCameraController.minimumZoomDistance = cam.minZoomDistanceMeters
-        viewer.camera.setView({
-          destination: Cesium.Cartesian3.fromDegrees(cam.lon, cam.lat, cam.heightMeters),
-          orientation: {
-            heading: Cesium.Math.toRadians(cam.headingDegrees),
-            pitch: Cesium.Math.toRadians(cam.pitchDegrees),
-            roll: Cesium.Math.toRadians(cam.rollDegrees),
-          },
-        })
+        frameGlobeOnSubject(Cesium, viewer, cam)
         viewer.scene.requestRender?.()
         markFlew?.()
       }
@@ -521,23 +531,9 @@ export function createCesiumEllipsoidRendererAdapter({
     const cam = subjectEllipsoidCamera(nextCoordinate, nextPrecisionClass)
     if (!cam) return false
 
-    viewer.scene.screenSpaceCameraController.minimumZoomDistance = cam.minZoomDistanceMeters
-
-    viewer.camera.flyTo({
-      // Cesium flyTo duration is SECONDS (not milliseconds). A value of 1600
-      // animated the subject fly-to over ~27 minutes, so a deep-link load
-      // never reached the city-class ceiling within a session.
-      duration: 1.6,
-      destination: Cesium.Cartesian3.fromDegrees(cam.lon, cam.lat, cam.heightMeters),
-      orientation: {
-        heading: Cesium.Math.toRadians(cam.headingDegrees),
-        pitch: Cesium.Math.toRadians(cam.pitchDegrees),
-        roll: Cesium.Math.toRadians(cam.rollDegrees),
-      },
-      essential: true,
-    })
-
-    return true
+    // Flight duration is in seconds. Saved free-camera restoration remains
+    // separate; only explicit subject framing uses this look-at target.
+    return frameGlobeOnSubject(Cesium, viewer, cam, 1.6)
   }
 
   function requestRender() {

@@ -9,6 +9,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { CLEVELAND_CANONICAL_EVENT_ID, CLEVELAND_ASSESSMENT_KEY } from '../src/lib/temporalAssessment.js'
 import {
@@ -319,7 +320,7 @@ test('#/event/<id>/world reconstructs Cleveland onto World View', () => {
 })
 
 test('src has no globe-vendor / 3D-tile strings; map pick goes through commitNewSubject', () => {
-  const files = collectSrcFiles(new URL('../src', import.meta.url).pathname)
+  const files = collectSrcFiles(fileURLToPath(new URL('../src', import.meta.url)))
   const bannedCesiumWord = /Cesium|cesium/
   const bannedIonAndProviders = /GEV\b|ion\.cesium|photorealistic 3d|google 3d tiles/i
   const bannedIonTokenStrings =
@@ -339,7 +340,7 @@ test('src has no globe-vendor / 3D-tile strings; map pick goes through commitNew
     assert.doesNotMatch(text, bannedIonTokenStrings, file)
     assert.doesNotMatch(text, bannedIonAndProviders, file)
 
-    const isAllowedCesiumFile = allowedCesiumFiles.some((re) => re.test(file))
+    const isAllowedCesiumFile = allowedCesiumFiles.some((re) => re.test(file.replaceAll('\\', '/')))
     if (!isAllowedCesiumFile) {
       assert.doesNotMatch(text, bannedCesiumWord, file)
     } else {

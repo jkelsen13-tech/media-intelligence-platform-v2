@@ -11,12 +11,11 @@
 // on a historical event.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { mipBackend } from '../lib/mipBackend.js'
 import GraphView from '../graph/GraphView'
 import TrustFooter from '../components/TrustFooter'
 import WorldMapCanvas from './WorldMapCanvas'
 import {
-  loadSpatialProjection,
-  loadWorldViewGraph,
   liveGraphNodes,
   plotDecision,
   mapRowsForSelection,
@@ -42,7 +41,6 @@ import {
 } from '../lib/spatialProjection'
 import {
   canonicalEventIdFromWorldView,
-  loadTemporalAssessment,
 } from '../lib/temporalAssessment'
 import {
   investigationContextDomProps,
@@ -52,7 +50,7 @@ import {
   worldViewSelectionForMatch,
 } from '../lib/investigationContext'
 import { freshnessFromExistingMarkers } from '../lib/investigationJoinState'
-import { loadEventTimeWeather, unavailableWeather } from '../lib/eventTimeWeather'
+import { unavailableWeather } from '../lib/eventTimeWeather'
 import {
   freshnessCopy,
   spatialFreshnessLabel,
@@ -388,6 +386,7 @@ export default function WorldView({
   onSelectGraphNode,
   investigationContext,
   onInvestigationAsOfTime,
+  backend = mipBackend.publicData.spatial,
 }) {
   const [mode, setMode] = useState('map')
   const [touchInteraction, setTouchInteraction] = useState(false)
@@ -413,16 +412,19 @@ export default function WorldView({
 
   useEffect(() => {
     let cancelled = false
-    loadSpatialProjection().then((result) => {
+    didAutoSelect.current = false
+    setLoadStatus({ status: 'loading', reason: null, rows: [], error: null, loadedAt: null })
+    setWorldGraph({ status: 'loading', nodes: [], edges: [], edgesUnavailable: null, error: null, reason: null })
+    backend.loadSpatialProjection().then((result) => {
       if (!cancelled) setLoadStatus(result)
     })
-    loadWorldViewGraph().then((result) => {
+    backend.loadWorldViewGraph().then((result) => {
       if (!cancelled) setWorldGraph(result)
     })
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [backend])
 
   const graphNodes = useMemo(() => {
     const live = liveGraphNodes(graph)
@@ -485,23 +487,25 @@ export default function WorldView({
       return
     }
     let cancelled = false
-    loadTemporalAssessment(canonicalEventId).then((view) => {
+    setTemporalAssessment(null)
+    backend.loadTemporalAssessment(canonicalEventId).then((view) => {
       if (!cancelled) setTemporalAssessment(view)
     })
     return () => {
       cancelled = true
     }
-  }, [canonicalEventId])
+  }, [canonicalEventId, backend])
 
   useEffect(() => {
     let cancelled = false
-    loadEventTimeWeather({ row: visibleRow, atMs }).then((result) => {
+    setWeather(unavailableWeather('not_loaded'))
+    backend.loadEventTimeWeather({ row: visibleRow, atMs }).then((result) => {
       if (!cancelled) setWeather(result)
     })
     return () => {
       cancelled = true
     }
-  }, [visibleRow, atMs])
+  }, [visibleRow, atMs, backend])
 
   const mapRows = useMemo(() => {
     return mapRowsForSelection(loadStatus, selectedForMatch, visibleRow)
