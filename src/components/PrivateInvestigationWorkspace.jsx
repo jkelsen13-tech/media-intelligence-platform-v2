@@ -6,6 +6,7 @@ import { SourceSpanInspector } from './InvestigationSourceSpans.jsx'
 import InvestigationDefinitionRevisions from './InvestigationDefinitionRevisions.jsx'
 import InvestigationVersionNavigation from './InvestigationVersionNavigation.jsx'
 import { RetainedInputInspector } from './InvestigationRetainedInputs.jsx'
+import InvestigationTextAvailability from './InvestigationTextAvailability.jsx'
 import { supabase } from '../lib/supabase.js'
 
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
@@ -1033,19 +1034,16 @@ function CommitmentsSection({ panels, bundle, onOpenCitation }) {
   )
 }
 
-function GapsSection({ panels }) {
-  if (!panels.coverage?.length) return (
-    <section className="piw-section" id="piw-gaps" tabIndex={-1}>
-      <h2>Evidence Gaps</h2>
-      <EmptySection kind="coverage" />
-    </section>
-  )
+function GapsSection({ panels, bundle, onOpenInput }) {
   return (
     <section className="piw-section" id="piw-gaps" tabIndex={-1}>
       <h2>Evidence Gaps</h2>
+      <InvestigationTextAvailability bundle={bundle} onOpenInput={onOpenInput} />
+      <h3>Collection declarations</h3>
       <p className="piw-note">Collection records are analyst declarations with explicit limits. Observation gaps are shown separately from conflicting evidence. A completed bounded search is not independently measured global coverage.</p>
+      {!panels.coverage?.length ? <EmptySection kind="coverage" /> : null}
       <ul className="piw-cards">
-        {panels.coverage.map((row) => (
+        {(panels.coverage ?? []).map((row) => (
           <li key={row.id}>
             <CoverageRecord row={row} />
           </li>
@@ -1856,7 +1854,10 @@ export default function PrivateInvestigationWorkspace({
           />
           <HypothesesSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <CommitmentsSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
-          <GapsSection panels={panels} />
+          <GapsSection panels={panels} bundle={bundle} onOpenInput={(selection, sourceBundle) => {
+            if (sourceBundle !== bundle) return
+            actions.setInspector({ kind: 'retained-input', selection })
+          }} />
           <InvestigationSourceHistory key={`${bundle?.version?.id}:${bundle?.observation?.id}`} bundle={bundle}
             onOpenInput={(selection, sourceBundle) => {
               if (sourceBundle !== bundle) return
