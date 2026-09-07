@@ -9,7 +9,7 @@ test('producer-scoped queue claims preserve the durable lease contract', async t
   for (const p of ['./changeQueueFixture.sql',
     '../supabase/migrations/20260905082406_evidence_pipeline_reliability.sql',
     '../supabase/migrations/20260906042413_evidence_change_queue_v1.sql',
-    '../supabase/proposals/evidence_change_producer_claim_v1.sql']) await db.exec(await read(p))
+    '../supabase/migrations/20260907234007_evidence_change_producer_claim_v1.sql']) await db.exec(await read(p))
   const scalar = async (sql, args = []) => Object.values((await db.query(sql, args)).rows[0])[0]
   const rpc = (action, input = {}) => scalar('select public.mip_evidence_changes_v1($1,$2::jsonb)', [action, JSON.stringify(input)])
   const claim = (producer = 'capture', route = 'new_candidate_search') =>

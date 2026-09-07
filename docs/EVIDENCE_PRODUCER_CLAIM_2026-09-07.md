@@ -11,8 +11,18 @@ The function is SECURITY INVOKER with empty search_path and EXECUTE granted only
 
 ## Validation
 
-Isolated PGlite tests cover producer and route validation; older unsupported jobs; exact completion retry; shared legacy claims; producer-scoped expiration; stale lease rejection; backoff and fifth-attempt exhaustion; and role grants. Real multi-connection contention remains a later worker integration gate.
+Isolated PGlite tests cover producer and route validation; older unsupported jobs; exact completion retry; shared legacy claims; producer-scoped expiration; stale lease rejection; backoff and fifth-attempt exhaustion; the 100-expiration bound, and actual service/browser role execution. Real multi-connection contention remains a later worker integration gate.
 
-Deployment pending CI. SQL is staged under supabase/proposals, then will be registered under the migration version returned by Supabase. This follows the owner's cloud-only workflow without creating local project files or inventing a migration timestamp. Do not replay historical migrations.
+Applied and verified on current v2 project `qikvmopbtijoebdqosyq` as migration `20260907234007_evidence_change_producer_claim_v1`. SQL was tested in GitHub CI before application, then registered under the actual version returned by Supabase. This follows the owner's cloud-only workflow without creating local project files or inventing a migration timestamp. Do not replay historical migrations.
 
 References: [Supabase function security](https://supabase.com/docs/guides/database/functions). The current changelog was checked; the logs endpoint, extension version and self-hosted gateway changes do not affect this additive function.
+
+## Live verification
+
+Both CI runs passed at implementation head `c4d67197b2c67cd0d6f88b7c6970a1fad40240a1`. The deployed function body exactly matches the tested SQL; SECURITY INVOKER, empty search_path, and service-only ACL were read back.
+
+A rollback-only live test under service_role confirmed that a capture claim returns null and changes no queue rows/events, while a record-version claim leases the expected producer. Null producer input is rejected. Real anon and authenticated role calls are denied. The record-version lease and event were rolled back; identity sequence allocation can leave a gap.
+
+Before/after hashes match for jobs, job events, evidence changes, and both legacy claim/API functions. Six unsupported new-candidate-search record-version jobs remain pending at attempt zero. No new security-advisor findings (86 existing notices unchanged). No scheduler, deployed Edge Function, browser code, evidence content or publication state changed.
+
+Next: integrate producer-scoped claiming into a bounded hosted capture-worker operation, with durable recovery and no automatic semantic or publication claims. This SQL API is callable server-side now; the existing hosted adapter still accepts explicit leased jobs only.
