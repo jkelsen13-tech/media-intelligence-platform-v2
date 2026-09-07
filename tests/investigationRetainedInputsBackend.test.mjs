@@ -4,6 +4,7 @@ import { readFile, readdir } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { PGlite } from '@electric-sql/pglite'
 import { retainedInputIndex, searchRetainedInputs, selectedRetainedInput } from '../src/lib/investigationRetainedInputs.js'
+import { retainedTextAvailability } from '../src/lib/investigationTextAvailability.js'
 
 test('actual saved observations expose capture and record-version search without later-state leakage or writes', async t => {
   const db = await PGlite.create(); t.after(() => db.close())
@@ -31,7 +32,7 @@ test('actual saved observations expose capture and record-version search without
   const readWs = versionId => ws('read', { user_id: user, investigation_id: investigation, version_id: versionId })
   const original = await readWs(version1.id)
   // Change the fixture's current article; the queue retains this as a record version.
-  await db.query("update public.articles set title='Later title needle', source_status='corrected' where url='https://example.org/retained-search'")
+  await db.query("update public.articles set title='Later title needle', summary=null, source_status='corrected' where url='https://example.org/retained-search'")
   const observation2 = await observe('observe', { observation_id: randomUUID(), previous_observation_id: observation1.id, candidate_ids: [candidate] })
   const version2 = await ws('put', { investigation_id: investigation, version_id: randomUUID(), previous_version_id: version1.id, observation_id: observation2.id, state, change_reason: 'Retained current-record update.' })
   const later = await readWs(version2.id), oldIndex = retainedInputIndex(original), index = retainedInputIndex(later)
@@ -40,6 +41,12 @@ test('actual saved observations expose capture and record-version search without
   assert.equal(captures.rows.length, 1); assert.equal(captures.rows[0].input.capture.payload.summary, '💡 Original retained text.')
   const records = searchRetainedInputs(index, 'Later title needle', 'record_version')
   assert.equal(records.rows.length, 1); assert.equal(records.rows[0].input.record_version.payload.source_status, 'corrected')
+  const beforeText = retainedTextAvailability(original), afterText = retainedTextAvailability(later)
+  assert.equal(beforeText.groups.find(g => g.kind === 'summary').rows.length, 2)
+  assert.equal(beforeText.groups.find(g => g.kind === 'title').rows.length, 0)
+  assert.equal(afterText.groups.find(g => g.kind === 'summary').rows.length, 2)
+  assert.equal(afterText.groups.find(g => g.kind === 'title').rows[0].position, records.rows[0].position)
+  assert.equal(afterText.groups.find(g => g.kind === 'body').rows.length, 0)
   assert.equal(searchRetainedInputs(oldIndex, 'Later title needle').rows.length, 0)
   const selection = { investigationId: investigation, versionId: version2.id, observationId: observation2.id, position: records.rows[0].position }
   assert.equal(selectedRetainedInput(later, selection).id, records.rows[0].id)
