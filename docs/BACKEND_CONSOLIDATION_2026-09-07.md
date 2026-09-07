@@ -4,7 +4,7 @@ The target is one coherent backend feeding the frontend through shared identitie
 
 ## Current architecture and this batch
 
-All five private investigation services already use the same V2 Supabase project, `qikvmopbtijoebdqosyq`. Their domain separation does not represent five independent databases. The fragmentation was at the API and frontend composition boundaries.
+All five private investigation services already use the same Supabase project, `qikvmopbtijoebdqosyq`. Their domain separation does not represent five independent databases. The fragmentation was at the API and frontend composition boundaries.
 
 The production frontend now imports `mipBackend` from `src/lib/mipBackend.js`. Its `investigations` interface supplies workspace, evidence checks, evidence reviews, input references and source spans. `App.jsx` and the investigation inspector use this shared composition. Existing injectable fixture clients remain available for tests; production construction makes no requests and captures no session token.
 
