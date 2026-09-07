@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { loadSourceComparisonView, newsNavigationFromComparisonSurface, E_LEVEL_NAMES } from '../lib/sourceComparisonReadPath.js'
+import { newsNavigationFromComparisonSurface, E_LEVEL_NAMES } from '../lib/sourceComparisonReadPath.js'
+import { mipBackend } from '../lib/mipBackend.js'
 import { filterEventsByTitle } from '../lib/listFilters.js'
 import WorkspaceAvailability from '../components/WorkspaceAvailability'
 import WorkspaceTechnicalDisclosure from '../components/WorkspaceTechnicalDisclosure'
 import './sourcecomparison.css'
 
-// Source Comparison (03_BACKLOG Item 1) — beta view behind
-// pipeline_config.source_comparison_beta (route-gated again in App.jsx).
-// Read-only against the Item 1 tables and the Phase 2 explanations store.
+// Source Comparison reads only the public comparison projection through
+// the shared backend root. Explanations arrive within that projection.
 //
 // Rendered rules:
 //   - no composite score anywhere — eight dimensions stay separate;
@@ -291,7 +291,7 @@ function EventCard({ event, onOpenArticle, onOpenArc, onOpenTimeline, focused, s
 // Doc 05 pairs 4–6: onOpenArticle / onOpenArc / onOpenTimeline are optional;
 // focusEventId scrolls + highlights a specific comparison event (pair 5's
 // destination).
-export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenTimeline, focusEventId, investigationContext }) {
+export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenTimeline, focusEventId, investigationContext, backend = mipBackend.publicData }) {
   const [view, setView] = useState(null)
   const [error, setError] = useState(null)
   const eventRefs = useRef(new Map())
@@ -310,11 +310,13 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
 
   useEffect(() => {
     let cancelled = false
-    loadSourceComparisonView()
+    setView(null)
+    setError(null)
+    backend.loadSourceComparisonView()
       .then((v) => { if (!cancelled) setView(v) })
       .catch((e) => { if (!cancelled) setError(e) })
     return () => { cancelled = true }
-  }, [])
+  }, [backend])
 
   const visibleEvents = useMemo(
     () => (view?.events ? filterEventsByTitle(view.events, debouncedEventQuery) : []),
