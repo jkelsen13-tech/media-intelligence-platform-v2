@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url'
 // Server/operator module. Never import into src/ or expose its key through Vite.
 import { createOperatorBackend } from './operatorBackend.mjs'
 export { PIPELINE_TARGET } from './operatorBackend.mjs'
-const TRANSIENT = new Set(['40001', '40P01', '53300', '57014', '08000', '08006', 'network_error', 'http_429', 'http_502', 'http_503', 'http_504'])
+const TRANSIENT = new Set(['40001', '40P01', '53300', '57014', '08000', '08006', 'network_error', 'invalid_response', 'http_429', 'http_502', 'http_503', 'http_504'])
 
 export function validateArticle(article) {
   if (!article || Array.isArray(article) || typeof article !== 'object') throw new Error('article must be an object')

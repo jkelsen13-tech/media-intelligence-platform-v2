@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createOperatorBackend, PIPELINE_TARGET } from '../scripts/operatorBackend.mjs'
 import { runCaptureRetrieval, runOperatorCommand } from '../scripts/runCaptureRetrieval.mjs'
+import { runWorker } from '../scripts/evidencePipeline.mjs'
 
 const id = n => `00000000-0000-0000-0000-${String(n).padStart(12, '0')}`
 const job_id = id(1), run_id = id(2), lease_token = id(3)
@@ -29,6 +30,18 @@ test('transport distinguishes malformed success from an empty claim and sanitize
   await assert.rejects(backend(new Response('secret html'))('claim'), { code: 'invalid_response' })
   await assert.rejects(backend(new Response('secret html', { status: 503 }))('claim'), { code: 'http_503' })
   await assert.rejects(backend(Response.json({ code: '23514', message: 'private text' }, { status: 400 }))('claim'), error => error.code === '23514' && !error.message.includes('private'))
+})
+
+test('unreadable intake completion responses retain the durable retry budget', async () => {
+  const backend = createOperatorBackend({ url: PIPELINE_TARGET, key: 'test', fetchImpl: async (_url, init) => {
+    const { p_action, p_input } = JSON.parse(init.body)
+    if (p_action === 'claim') return Response.json({ id: job_id, lease_token })
+    if (p_action === 'finish') return new Response('upstream response unavailable')
+    assert.equal(p_action, 'fail'); assert.equal(p_input.retryable, true); assert.equal(p_input.code, 'invalid_response')
+    return Response.json('retry_wait')
+  } })
+  const result = await runWorker(backend.intake, { maxJobs: 1 })
+  assert.equal(result.completed.length, 0); assert.equal(result.failed[0].state, 'retry_wait')
 })
 
 test('bounded runner pauses, resumes and reports only durable completion', async () => {
