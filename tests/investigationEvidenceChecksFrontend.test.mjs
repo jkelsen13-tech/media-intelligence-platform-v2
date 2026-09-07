@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync, mkdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
@@ -55,7 +55,7 @@ await esbuild.build({
   }],
 })
 const { default: PrivateInvestigationWorkspace, PrivateInvestigationInspector } = await import(
-  join(compiledDir, 'PrivateInvestigationWorkspace.evidence-checks.mjs')
+  pathToFileURL(join(compiledDir, 'PrivateInvestigationWorkspace.evidence-checks.mjs')).href
 )
 
 const APP = readFileSync(join(repoRoot, 'src/App.jsx'), 'utf8')

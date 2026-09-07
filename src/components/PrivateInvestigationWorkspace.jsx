@@ -1,4 +1,5 @@
 import AssessmentEvidenceTrail, { RetainedInputRecord, RetainedInputDates } from './InvestigationAssessmentTrail.jsx'
+import InvestigationSourceHistory from './InvestigationSourceHistory.jsx'
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
 import {
   EVIDENCE_REVIEW_LABELS,
@@ -1834,6 +1835,7 @@ export default function PrivateInvestigationWorkspace({
           <HypothesesSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <CommitmentsSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <GapsSection panels={panels} />
+          <InvestigationSourceHistory key={`${bundle?.version?.id}:${bundle?.observation?.id}`} bundle={bundle} />
           <EvidenceChecksToolbar
             bundle={bundle}
             checksPanels={state.checksPanels}
