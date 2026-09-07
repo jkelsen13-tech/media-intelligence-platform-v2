@@ -16,8 +16,8 @@ const arcDetailLoader = supabaseSource.slice(
 test('public Story Arc loaders use only arc_milestones_public for milestone data', () => {
   assert.match(arcsLoader, /'arc_milestones_public'/)
   assert.doesNotMatch(arcsLoader, /'arc_milestones'/)
-  assert.match(arcDetailLoader, /from\('arc_milestones_public'\)/)
-  assert.doesNotMatch(arcDetailLoader, /from\('arc_milestones'\)/)
+  assert.match(arcDetailLoader, /keysetAll\(client, 'arc_milestones_public'/)
+  assert.doesNotMatch(arcDetailLoader, /'arc_milestones'/)
 })
 
 test('public Arc status loaders retain the documented 14-day default without reading pipeline_config', () => {

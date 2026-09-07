@@ -220,7 +220,7 @@ test('flat and grouped timeline loaders retain arc-assigned News records as expl
   const grouped = src('src/lib/arcGroupedTimeline.js')
   assert.match(supa, /articleRecords: articlesRes\.data\.filter\(\(article\) => article\.arc_id\)/)
   assert.match(supa, /return `article-\$\{article\.id\}`/)
-  assert.match(supa, /export async function loadArcArticles\(arcId\)/)
+  assert.match(supa, /export async function loadArcArticles\(arcId,/)
   assert.match(supa, /'id, title, summary, outlet, published_at, url, arc_id'/)
   assert.ok(!/loadArcArticles[\s\S]{0,700}\.limit\(50\)/.test(supa), 'arc article loader must not retain a 50-row cap')
   assert.match(grouped, /record_kind: 'article_record'/)
@@ -242,10 +242,10 @@ test('both timeline loaders select doc_strength (read-path only)', () => {
     assert.ok(file.includes('doc_strength: e.doc_strength ?? null'), `${name} edge map passes strength`)
   }
   // New item-4 reads exist and are null-safe on the no-supabase path.
-  assert.match(supa, /export async function loadArcConnections\(arcId\)/)
-  assert.match(supa, /if \(!supabase \|\| !arcId\) return \{ edges: \[\], labels: new Map\(\), edgesUnavailable: null \}/)
-  assert.match(supa, /export async function loadArticleExcerpt\(articleId\)/)
-  assert.match(supa, /if \(!supabase \|\| !articleId\) return null/)
+  assert.match(supa, /export async function loadArcConnections\(arcId,/)
+  assert.match(supa, /if \(!client \|\| !arcId\) return \{ edges: \[\], labels: new Map\(\), edgesUnavailable: null \}/)
+  assert.match(supa, /export async function loadArticleExcerpt\(articleId,/)
+  assert.match(supa, /if \(!client \|\| !articleId\) return null/)
   // No writes anywhere in the new read functions.
   const arcConn = supa.slice(supa.indexOf('loadArcConnections'), supa.indexOf('loadArticleExcerpt'))
   assert.ok(!/\.(insert|update|delete|upsert)\(/.test(arcConn))

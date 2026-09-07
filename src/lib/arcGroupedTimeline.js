@@ -299,8 +299,9 @@ async function getClient() {
 
 // 04-ADD feature flag. Withhold posture, same as phase3_beta and
 // source_comparison_beta: unreadable/absent resolves false.
-export async function loadTimelineGroupedBetaFlag() {
-  const { supabase } = await getClient()
+export async function loadTimelineGroupedBetaFlag({ supabaseClient } = {}) {
+  const mod = await getClient()
+  const supabase = supabaseClient === undefined ? mod.supabase : supabaseClient
   if (!supabase) return false
   const { data, error } = await supabase
     .from('pipeline_config')
@@ -315,7 +316,7 @@ export async function loadTimelineGroupedBetaFlag() {
 // timeline and Arcs view already run; the flat view's loader is untouched.
 export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
   const mod = await getClient()
-  const supabase = supabaseClient ?? mod.supabase
+  const supabase = supabaseClient === undefined ? mod.supabase : supabaseClient
   const { deriveArcStatus, keysetAll, keysetAllComposite, resortRows, isPostgrestSchemaGap } = mod
   const { canonicalizeTimelineEvents, remapTimelineEdges } = await import('./timelineDedup.js')
 

@@ -1,13 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  loadArcs,
-  loadArcDetail,
-  loadArcArticles,
-  loadArcConnections,
-  loadArticleExcerpt,
-  loadTimeline,
-} from '../lib/supabase'
-import { loadTimelineGroupedBetaFlag } from '../lib/arcGroupedTimeline'
+import { mipBackend } from '../lib/mipBackend.js'
 import { edgePlainLabel } from '../graph/theme'
 import {
   SCREEN5_EYEBROW,
@@ -81,7 +73,7 @@ function TimelineTabIcon({ kind }) {
   return <svg viewBox="0 0 18 18" width="16" height="16" focusable="false"><circle cx="9" cy="9" r="6.2" {...common} /><path d="M9 5.5V9l2.5 1.8" {...common} /></svg>
 }
 
-export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, focusArcKey, investigationContext }) {
+export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, focusArcKey, investigationContext, backend = mipBackend.publicData.chronology }) {
   // --- arcs + scope -----------------------------------------------------------
   const [arcs, setArcs] = useState(null)
   const [arcsUnavailable, setArcsUnavailable] = useState(null)
@@ -114,7 +106,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   const itemRefs = useRef(new Map())
 
   useEffect(() => {
-    loadArcs()
+    backend.loadArcs()
       .then((result) => {
         const rows = result.arcs ?? []
         setArcs(rows)
@@ -124,7 +116,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
         else setAllEvents(true) // no arcs tracked — global is the only honest scope
       })
       .catch((err) => setArcsError(err.message))
-    loadTimelineGroupedBetaFlag()
+    backend.loadTimelineGroupedBetaFlag()
       .then((on) => setGroupedBeta(on === true))
       .catch(() => setGroupedBeta(false))
   }, [])
@@ -143,13 +135,13 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
     setArcArticles(null)
     setConnections(null)
     setConnectionsError(null)
-    loadArcDetail(selected.id ?? selected.slug)
+    backend.loadArcDetail(selected.id ?? selected.slug)
       .then((d) => !cancelled && setDetail(d))
       .catch((err) => !cancelled && setDetailError(err.message))
-    loadArcArticles(selected.id)
+    backend.loadArcArticles(selected.id)
       .then((rows) => !cancelled && setArcArticles(rows))
       .catch(() => !cancelled && setArcArticles([]))
-    loadArcConnections(selected.id)
+    backend.loadArcConnections(selected.id)
       .then((c) => !cancelled && setConnections(c))
       .catch((err) => !cancelled && setConnectionsError(err.message))
     return () => {
@@ -161,7 +153,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   useEffect(() => {
     if ((!allEvents && !focusEventKey) || globalData || globalError) return
     let cancelled = false
-    loadTimeline()
+    backend.loadTimeline()
       .then((d) => !cancelled && setGlobalData(d))
       .catch((err) => !cancelled && setGlobalError(err.message))
     return () => {
@@ -413,7 +405,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
       <div className="timeline-intro">
         <p className="ep-eyebrow">{SCREEN5_EYEBROW}</p>
         <h2 className="ep-report-title">
-          {scopeIsGlobal ? 'All events — global corpus' : selected.title}
+          {scopeIsGlobal ? 'All events — global corpus' : (selected.title || 'Untitled story arc')}
         </h2>
         <p>{SCREEN5_SUBTITLE}</p>
 
@@ -431,7 +423,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
             >
               {arcs.map((a) => (
                 <option key={a.slug} value={a.slug}>
-                  {a.title}
+                  {a.title || 'Untitled story arc'}
                 </option>
               ))}
             </select>
@@ -545,6 +537,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
 
           {timelineMode === 'grouped' && groupedBeta ? (
             <GroupedTimelineView
+              backend={backend}
               onOpenArc={onOpenArc}
               onOpenArticle={onOpenArticle}
               focusEventKey={focusEventKey}
@@ -604,7 +597,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
                     entries={visibleEntries}
                     edges={scopeIsGlobal ? (global?.edges ?? []) : []}
                     layout={presentation === 'list' ? 'list' : 'horizontal'}
-                    loadArticle={loadArticleExcerpt}
+                    loadArticle={backend.loadArticleExcerpt}
                     registerRef={scopeIsGlobal ? registerRef : undefined}
                     focusKey={focusHighlight}
                     emptyText={
