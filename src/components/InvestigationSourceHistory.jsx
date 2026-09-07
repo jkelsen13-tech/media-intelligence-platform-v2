@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { savedSourceHistory, compareRetainedCaptures } from '../lib/investigationSourceHistory.js'
 import { RetainedInputDates, RetainedInputRecord, AssessmentSavedReasoning } from './InvestigationAssessmentTrail.jsx'
+import InvestigationInputImpact from './InvestigationInputImpact.jsx'
 
 const labels = { title: 'Title', summary: 'Summary', body_text: 'Body text', url: 'Source URL', outlet: 'Outlet', published_at: 'Publication value' }
 const states = { equal: 'Exact match', different: 'Values differ', left_only: 'Only in first capture', right_only: 'Only in second capture', not_recorded: 'Not recorded in either' }
@@ -19,13 +20,14 @@ function TextValue({ value }) {
   </>
 }
 
-function CaptureChoice({ input, label, bundle }) {
+function CaptureChoice({ input, label, bundle, impactOptions }) {
   const [open, setOpen] = useState(false)
   return <div className="piw-source-capture">
     <h4>{label}</h4>
     <p>{input.capture.payload?.title || 'Untitled retained capture'}</p>
     <p className="piw-mono">Position {input.position}</p>
     <RetainedInputDates input={input} />
+    {impactOptions ? <InvestigationInputImpact key={input.position} bundle={bundle} position={input.position} {...impactOptions} /> : null}
     <details className="piw-linked-record" onToggle={event => {
       if (event.target === event.currentTarget) setOpen(event.currentTarget.open)
     }}><summary>Open exact retained record</summary>
@@ -47,7 +49,7 @@ function FieldComparison({ row }) {
   </details>
 }
 
-function SourceComparison({ source, bundle }) {
+function SourceComparison({ source, bundle, impactOptions }) {
   const captures = source.captures
   const [leftPosition, setLeft] = useState(captures.at(-2)?.position ?? captures[0].position)
   const [rightPosition, setRight] = useState(captures.at(-1).position)
@@ -55,7 +57,7 @@ function SourceComparison({ source, bundle }) {
   const result = useMemo(() => compareRetainedCaptures(bundle, leftPosition, rightPosition), [bundle, leftPosition, rightPosition])
   if (captures.length === 1) return <>
     <p className="piw-note">One capture is retained in this observation. An earlier or later version may exist outside this saved scope.</p>
-    <CaptureChoice input={captures[0]} label="Retained capture" bundle={bundle} />
+    <CaptureChoice input={captures[0]} label="Retained capture" bundle={bundle} impactOptions={impactOptions} />
   </>
   return <>
     <div className="piw-source-pair piw-source-selectors">
@@ -67,8 +69,8 @@ function SourceComparison({ source, bundle }) {
     </div>
     {!result ? <p className="piw-note" role="status">Choose two different captures of this retained source.</p> : <div key={`${leftPosition}:${rightPosition}`}>
       <div className="piw-source-pair">
-        <CaptureChoice input={result.left} label="First capture" bundle={bundle} />
-        <CaptureChoice input={result.right} label="Second capture" bundle={bundle} />
+        <CaptureChoice input={result.left} label="First capture" bundle={bundle} impactOptions={impactOptions} />
+        <CaptureChoice input={result.right} label="Second capture" bundle={bundle} impactOptions={impactOptions} />
       </div>
       <h4>Retained field comparison</h4>
       <p className="piw-note">Exact values are compared without rewriting text. A difference is not automatically a correction, contradiction, or change in meaning. Missing text is not a deletion from the source.</p>
@@ -86,7 +88,7 @@ function SourceComparison({ source, bundle }) {
   </>
 }
 
-function SourceDisclosure({ source, bundle }) {
+function SourceDisclosure({ source, bundle, impactOptions }) {
   const [open, setOpen] = useState(false)
   return <details className="piw-source-history-item" onToggle={event => {
     if (event.target === event.currentTarget) setOpen(event.currentTarget.open)
@@ -94,12 +96,12 @@ function SourceDisclosure({ source, bundle }) {
     <summary><strong>{source.captures.at(-1).capture.payload?.title || 'Untitled retained source'}</strong><span>{source.captures.length} retained capture{source.captures.length === 1 ? '' : 's'}</span></summary>
     {open ? <div className="piw-source-history-content">
       <p className="piw-mono">Retained article identity {source.articleId}</p>
-      <SourceComparison source={source} bundle={bundle} />
+      <SourceComparison source={source} bundle={bundle} impactOptions={impactOptions} />
     </div> : null}
   </details>
 }
 
-export default function InvestigationSourceHistory({ bundle }) {
+export default function InvestigationSourceHistory({ bundle, impactOptions }) {
   const history = useMemo(() => savedSourceHistory(bundle), [bundle])
   const [limit, setLimit] = useState(10)
   return <section className="piw-section" id="piw-source-history" tabIndex={-1}>
@@ -107,7 +109,7 @@ export default function InvestigationSourceHistory({ bundle }) {
     <p className="piw-note">Compare exact captures retained in this saved observation, grouped only by their recorded article identity. The order is MIP input order, not publication or event chronology. Matching URLs, outlets, and text do not join different identities.</p>
     {history.sources.length ? <>
       <p>{history.sources.length} retained source identit{history.sources.length === 1 ? 'y' : 'ies'} · {history.sources.filter(source => source.captures.length > 1).length} with multiple captures</p>
-      {history.sources.slice(0, limit).map(source => <SourceDisclosure key={`${bundle?.version?.id}:${bundle?.observation?.id}:${source.articleId}`} source={source} bundle={bundle} />)}
+      {history.sources.slice(0, limit).map(source => <SourceDisclosure key={`${bundle?.version?.id}:${bundle?.observation?.id}:${source.articleId}`} source={source} bundle={bundle} impactOptions={impactOptions} />)}
       {history.sources.length > limit ? <button type="button" className="piw-section-btn" onClick={() => setLimit(n => n + 10)}>Show more sources ({history.sources.length - limit} remaining)</button> : null}
     </> : <p className="piw-empty">{history.available ? 'No capture with a recorded article identity is available in this observation. This does not establish an absence of source history.' : 'Saved observation unavailable. No current source history is substituted.'}</p>}
     {history.excludedInputs ? <p className="piw-muted">{history.excludedInputs} input(s) are not grouped here, including record versions and captures without a usable identity or position. They remain available through their evidence trails.</p> : null}

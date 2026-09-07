@@ -1,5 +1,8 @@
 import AssessmentEvidenceTrail, { RetainedInputRecord, RetainedInputDates } from './InvestigationAssessmentTrail.jsx'
 import InvestigationSourceHistory from './InvestigationSourceHistory.jsx'
+import { createInvestigationInputImpactClient } from '../lib/investigationInputImpactClient.js'
+import { supabase } from '../lib/supabase.js'
+
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
 import {
   EVIDENCE_REVIEW_LABELS,
@@ -50,6 +53,8 @@ import {
 import { resolveWorkspaceExcerpt } from '../lib/investigationWorkspaceClient.js'
 import { formatWorkspaceDate } from '../lib/workspacePresentation.js'
 import '../styles/investigation-workspace-panels.css'
+
+const defaultInputImpactClient = createInvestigationInputImpactClient(supabase)
 
 const RELATION_LABELS = {
   supports: 'Recorded as supporting',
@@ -1654,6 +1659,7 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
 
 export default function PrivateInvestigationWorkspace({
   workspace,
+  inputImpactClient = defaultInputImpactClient,
   onSignIn,
   accountUiAvailable = false,
   onOpenPublicGraphNode,
@@ -1835,7 +1841,9 @@ export default function PrivateInvestigationWorkspace({
           <HypothesesSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <CommitmentsSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <GapsSection panels={panels} />
-          <InvestigationSourceHistory key={`${bundle?.version?.id}:${bundle?.observation?.id}`} bundle={bundle} />
+          <InvestigationSourceHistory key={`${bundle?.version?.id}:${bundle?.observation?.id}`} bundle={bundle}
+            impactOptions={{ client: inputImpactClient, onAccessFailure: actions.rejectInputImpactAccess,
+              onOpenCitation: (reference, sourceBundle) => openCitation(reference, sourceBundle, 'source-history') }} />
           <EvidenceChecksToolbar
             bundle={bundle}
             checksPanels={state.checksPanels}

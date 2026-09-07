@@ -1395,6 +1395,11 @@ export function usePrivateInvestigationWorkspace({
       setInspector,
       setActiveSection,
       clearPrivateState,
+      rejectInputImpactAccess: (code, bundle) => {
+        // Ignore terminal responses from a view/account that has since left.
+        if (stateRef.current.bundle !== bundle) return false
+        return applyAccessFailure(code, { investigationId: bundle.investigation_id })
+      },
     },
   }
 }
