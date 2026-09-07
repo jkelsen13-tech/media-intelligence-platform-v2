@@ -2,8 +2,9 @@ import { readFile } from 'node:fs/promises'
 import { pathToFileURL } from 'node:url'
 
 // Server/operator module. Never import into src/ or expose its key through Vite.
-export const PIPELINE_TARGET = 'https://qikvmopbtijoebdqosyq.supabase.co'
-const TRANSIENT = new Set(['40001', '40P01', '53300', '57014', '08000', '08006', 'network_error', 'http_429', 'http_502', 'http_503', 'http_504'])
+import { createOperatorBackend } from './operatorBackend.mjs'
+export { PIPELINE_TARGET } from './operatorBackend.mjs'
+const TRANSIENT = new Set(['40001', '40P01', '53300', '57014', '08000', '08006', 'network_error', 'invalid_response', 'http_429', 'http_502', 'http_503', 'http_504'])
 
 export function validateArticle(article) {
   if (!article || Array.isArray(article) || typeof article !== 'object') throw new Error('article must be an object')
@@ -18,28 +19,8 @@ export function validateArticle(article) {
   return article
 }
 
-export function createPipelineRpc({ url, key, fetchImpl = fetch }) {
-  if (url?.replace(/\/$/, '') !== PIPELINE_TARGET) throw new Error('pipeline target must be the current V2 project')
-  if (!key) throw new Error('MIP_PIPELINE_SERVICE_KEY is required in the server environment')
-  return async (action, input = {}) => {
-    let response
-    try {
-      response = await fetchImpl(`${PIPELINE_TARGET}/rest/v1/rpc/mip_pipeline_v1`, {
-        method: 'POST',
-        headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ p_action: action, p_input: input }),
-        signal: AbortSignal.timeout(25000),
-      })
-    } catch {
-      throw Object.assign(new Error('pipeline request failed'), { code: 'network_error' })
-    }
-    const body = await response.json().catch(() => null)
-    if (!response.ok) {
-      const code = /^[a-zA-Z0-9_]{1,80}$/.test(body?.code ?? '') ? body.code : `http_${response.status}`
-      throw Object.assign(new Error('pipeline operation failed'), { code })
-    }
-    return body
-  }
+export function createPipelineRpc(options) {
+  return createOperatorBackend(options).intake
 }
 
 export async function enqueueManifest(rpc, { run_id, articles }, { apply = false } = {}) {
