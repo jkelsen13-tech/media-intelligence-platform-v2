@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { loadExplanationReadView } from '../lib/explanationReadPath.js'
+import { mipBackend } from '../lib/mipBackend.js'
 import { reviewStatusBadge } from '../lib/explanationEligibility.js'
 import './review-status.css'
 
@@ -8,13 +8,15 @@ import './review-status.css'
 // when the flag is off the panel shows the disabled state, never data). Its one
 // job is to make review statuses visible with the mandated visual distinction:
 // 'Reviewed — human confirmed' vs 'Auto-verified — system confidence threshold'.
-export default function ReviewStatusPanel({ onClose }) {
+export default function ReviewStatusPanel({ onClose, backend = mipBackend.publicData.evidence }) {
   const [view, setView] = useState(null)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
-    loadExplanationReadView({ limit: 1000 })
+    setView(null)
+    setError(null)
+    backend.loadExplanationReadView({ limit: 1000 })
       .then((v) => {
         if (!cancelled) setView(v)
       })
@@ -24,7 +26,7 @@ export default function ReviewStatusPanel({ onClose }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [backend])
 
   // Group every fetched row (eligible + excluded) by review_status.
   const groups = new Map()

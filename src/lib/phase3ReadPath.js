@@ -77,8 +77,8 @@ export function buildPolicyView(policyRow, eventRows) {
 }
 
 /** Flag read. Returns exactly-true only when the DB value is boolean true. */
-export async function loadPhase3BetaFlag() {
-  const { supabase } = await import('./supabase.js')
+export async function loadPhase3BetaFlag({ supabaseClient } = {}) {
+  const supabase = supabaseClient === undefined ? (await import('./supabase.js')).supabase : supabaseClient
   if (!supabase) return false
   const { data, error } = await supabase
     .from('pipeline_config')
@@ -91,56 +91,46 @@ export async function loadPhase3BetaFlag() {
 
 /**
  * Beta view loader. Disabled flag -> { enabled: false } and no table reads.
- * p3 tables may be absent in older environments — failures degrade to empty
- * lists with the view still enabled (same feature-detection pattern as
- * loadPolicyDetail).
+ * Each section loads completely or reports unavailable. One failed section
+ * does not suppress the other, and failed reads are not described as empty.
  */
-export async function loadPhase3BetaView() {
-  const enabled = await loadPhase3BetaFlag()
+export async function loadPhase3BetaView({ supabaseClient } = {}) {
+  const enabled = await loadPhase3BetaFlag({ supabaseClient })
   if (!enabled) return { enabled: false, cases: [], policies: [] }
-  const { supabase } = await import('./supabase.js')
+  const mod = await import('./supabase.js')
+  const supabase = supabaseClient === undefined ? mod.supabase : supabaseClient
+  const { keysetAll, resortRows } = mod
 
   let cases = []
   let policies = []
+  let casesUnavailable = false
+  let policiesUnavailable = false
   try {
     const [casesRes, evidenceRes] = await Promise.all([
-      supabase
-        .from('p3_legal_case')
-        .select(
-          'id, title, case_status, verdict_or_disposition, charge_or_issue, deciding_body, appeal_status, involves_minor_or_private_person, sealed_or_expunged, authentication_completeness, remaining_uncertainty, review_status, reviewed_by, reviewed_at, correction_notice, created_at',
-        )
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('p3_legal_case_evidence')
-        .select(
-          'id, case_id, track, description, source_id, source_url, source_passage, method_version, authentication_state, remaining_uncertainty, review_status, reviewed_by, reviewed_at, correction_notice, created_at',
-        )
-        .order('created_at', { ascending: true }),
+      keysetAll(supabase, 'p3_legal_case', 'id, title, case_status, verdict_or_disposition, charge_or_issue, deciding_body, appeal_status, involves_minor_or_private_person, sealed_or_expunged, authentication_completeness, remaining_uncertainty, review_status, reviewed_by, reviewed_at, correction_notice, created_at'),
+      keysetAll(supabase, 'p3_legal_case_evidence', 'id, case_id, track, description, source_id, source_url, source_passage, method_version, authentication_state, remaining_uncertainty, review_status, reviewed_by, reviewed_at, correction_notice, created_at'),
     ])
     if (!casesRes.error && !evidenceRes.error) {
-      cases = (casesRes.data ?? []).map((c) =>
-        buildCaseView(c, (evidenceRes.data ?? []).filter((e) => e.case_id === c.id)),
+      const evidence = resortRows(evidenceRes.data ?? [], 'created_at', { ascending: true, nullsFirst: false })
+      cases = resortRows(casesRes.data ?? [], 'created_at', { ascending: true, nullsFirst: false }).map((c) =>
+        buildCaseView(c, evidence.filter((e) => e.case_id === c.id)),
       )
-    }
+    } else casesUnavailable = true
   } catch {
+    casesUnavailable = true
     cases = []
   }
   try {
     const [polRes, evRes] = await Promise.all([
-      supabase
-        .from('p3_policy')
-        .select('id, name, jurisdiction, instrument_type, description, review_status, reviewed_by, reviewed_at, correction_notice, created_at, agency, source_locator')
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('p3_policy_track_event')
-        .select('id, policy_id, track, state, event_date, source_id, source_passage, source_locator, method_version, remaining_uncertainty, missing_evidence, review_status, reviewed_by, reviewed_at, correction_notice, created_at')
-        .order('event_date', { ascending: true, nullsFirst: false }),
+      keysetAll(supabase, 'p3_policy', 'id, name, jurisdiction, instrument_type, description, review_status, reviewed_by, reviewed_at, correction_notice, created_at, agency, source_locator'),
+      keysetAll(supabase, 'p3_policy_track_event', 'id, policy_id, track, state, event_date, source_id, source_passage, source_locator, method_version, remaining_uncertainty, missing_evidence, review_status, reviewed_by, reviewed_at, correction_notice, created_at'),
     ])
     if (!polRes.error && !evRes.error) {
-      policies = (polRes.data ?? []).map((p) => buildPolicyView(p, evRes.data ?? []))
-    }
+      policies = resortRows(polRes.data ?? [], 'created_at', { ascending: true, nullsFirst: false }).map((p) => buildPolicyView(p, evRes.data ?? []))
+    } else policiesUnavailable = true
   } catch {
+    policiesUnavailable = true
     policies = []
   }
-  return { enabled: true, cases, policies }
+  return { enabled: true, cases, policies, casesUnavailable, policiesUnavailable }
 }
