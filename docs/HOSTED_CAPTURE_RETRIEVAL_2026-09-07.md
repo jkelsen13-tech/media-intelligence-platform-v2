@@ -4,7 +4,9 @@ The capture runner now has an additive server entry point, `capture-retrieval`, 
 
 ## Contract
 
-POST `https://qikvmopbtijoebdqosyq.supabase.co/functions/v1/capture-retrieval` from an authorized server, with JSON and its server-held service-role bearer token. Gateway JWT verification remains enabled and the handler additionally requires equality with its configured server key. Anonymous tokens, signed-in user tokens, browser-origin requests, arbitrary routes and query parameters are rejected. Never put this token or endpoint client in the public frontend.
+POST `https://qikvmopbtijoebdqosyq.supabase.co/functions/v1/capture-retrieval` from an authorized server, with JSON and its server-held credential. If the configured credential starts with `sb_secret_`, send it on `apikey`; for a legacy JWT credential, use `Authorization: Bearer <server key>`. Gateway JWT verification remains enabled: include a valid project JWT on `Authorization` when using an opaque `apikey`. Passing gateway verification alone does not grant operator access; the handler additionally requires exact equality with its configured server credential. Anonymous or signed-in user tokens alone, incorrect secret keys, browser-origin requests, arbitrary routes and query parameters are rejected. Never put the server credential or endpoint client in the public frontend.
+
+The deployed runtime can supply an opaque secret through `SUPABASE_SERVICE_ROLE_KEY`; the variable name is not a guarantee of JWT format. The adapter selects the header by actual credential format. Outbound database calls send opaque keys on `apikey` only, while preserving both headers for legacy JWTs. The Supabase administration tester may prefill a public key: replace its `apikey` with the server preset and supply a valid project JWT for the unchanged gateway check. No credential value should appear in test output or source.
 
 - `{"action":"status"}` reads intake and evidence-change queue summaries. It does not claim jobs.
 - `{"action":"retrieval","apply":true,"input":{"mode":"start","job_id":"<existing UUID>","lease_token":"<current lease UUID>"}}` processes one page for an explicitly selected leased capture job.
@@ -22,7 +24,7 @@ This hosts explicitly selected retrieval; it does not activate scheduling, claim
 
 ## Verification
 
-The GitHub regression workflow runs the existing runner and database tests plus six new hosted-handler tests covering authorization, request limits, read-only status, bounded execution, durable resume and sanitized failures. No local project files are needed. Live deployment and verification results are recorded in the accompanying pull request.
+The GitHub regression workflow runs the existing runner and database tests plus eight hosted-handler and transport tests covering authorization, request limits, read-only status, bounded execution, durable resume and sanitized failures. No local project files are needed. Live deployment and verification results are recorded in the accompanying pull request.
 
 References: [hosted limits](https://supabase.com/docs/guides/functions/limits), [function authorization](https://supabase.com/docs/guides/functions/auth-legacy-jwt), [shared function modules](https://supabase.com/docs/guides/functions/recursive-functions).
 

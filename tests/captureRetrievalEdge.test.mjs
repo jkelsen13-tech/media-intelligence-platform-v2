@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createCaptureRetrievalHandler } from '../supabase/functions/capture-retrieval/handler.mjs'
-import { PIPELINE_TARGET } from '../supabase/functions/_shared/operatorBackend.mjs'
+import { createOperatorBackend, PIPELINE_TARGET } from '../supabase/functions/_shared/operatorBackend.mjs'
 
 const id = n => `00000000-0000-0000-0000-${String(n).padStart(12, '0')}`
 const job_id = id(1), run_id = id(2), lease_token = id(3)
@@ -89,5 +89,39 @@ test('failed status and failed durable readback are sanitized failures, not empt
     const response = await handler(request(body))
     assert.equal(response.status, 502)
     assert.ok(!(await response.text()).includes('private'))
+  }
+})
+
+test('opaque server key is required independently of gateway JWT and still denies browser origin', async () => {
+  const f = fixture()
+  const opaqueKey = 'sb_secret_test_server_only'
+  const handler = createCaptureRetrievalHandler({ url: PIPELINE_TARGET, serviceKey: opaqueKey, makeBackend: () => f.backend })
+  for (const headers of [
+    {}, { Authorization: 'Bearer anon' }, { Authorization: 'Bearer user' },
+    { Authorization: 'Bearer ' + opaqueKey },
+    { apikey: 'sb_publishable_test' }, { apikey: 'sb_secret_wrong' },
+    { apikey: opaqueKey + ', sb_secret_wrong' },
+  ]) assert.equal((await handler(request({ action: 'status' }, headers))).status, 401)
+  assert.equal((await handler(request({ action: 'status' }, { apikey: opaqueKey, Origin: 'https://example.org' }))).status, 403)
+  assert.equal(f.calls.length, 0)
+  const response = await handler(request({ action: 'status' }, { apikey: opaqueKey, Authorization: 'Bearer gateway-verified-token' }))
+  assert.equal(response.status, 200)
+  assert.deepEqual(await response.json(), { intake: { pending: 2 }, changes: { pending: 3 } })
+  assert.deepEqual(f.calls, [['intake', 'status'], ['changes', 'status']])
+})
+
+test('operator transport sends opaque keys only as apikey and preserves legacy JWT transport', async () => {
+  for (const key of ['sb_secret_test_server_only', serviceKey]) {
+    const sent = []
+    const backend = createOperatorBackend({ url: PIPELINE_TARGET, key, fetchImpl: async (url, init) => {
+      sent.push({ url, init })
+      return new Response(JSON.stringify({ pending: 0 }), { status: 200 })
+    } })
+    assert.deepEqual(await backend.intake('status'), { pending: 0 })
+    assert.equal(sent[0].url, PIPELINE_TARGET + '/rest/v1/rpc/mip_pipeline_v1')
+    assert.equal(sent[0].init.headers.apikey, key)
+    assert.equal(sent[0].init.headers.Authorization, key.startsWith('sb_secret_') ? undefined : 'Bearer ' + key)
+    assert.deepEqual(JSON.parse(sent[0].init.body), { p_action: 'status', p_input: {} })
+    assert.equal(sent[0].init.redirect, 'error')
   }
 })

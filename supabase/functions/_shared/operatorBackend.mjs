@@ -17,7 +17,8 @@ export function createOperatorBackend({ url, key, fetchImpl = fetch }) {
     try {
       response = await fetchImpl(`${PIPELINE_TARGET}/rest/v1/rpc/${rpc}`, {
         method: 'POST', redirect: 'error',
-        headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        // Opaque secret keys are not JWTs and must not be sent as bearer tokens.
+        headers: { apikey: key, ...(key.startsWith('sb_secret_') ? {} : { Authorization: `Bearer ${key}` }), 'Content-Type': 'application/json' },
         body: JSON.stringify({ p_action: action, p_input: input }),
         signal: AbortSignal.timeout(25000),
       })

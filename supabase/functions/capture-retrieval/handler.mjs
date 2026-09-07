@@ -35,10 +35,14 @@ async function boundedJson(request) {
 
 export function createCaptureRetrievalHandler({ url, serviceKey, makeBackend = createOperatorBackend }) {
   return async request => {
-    // Gateway JWT verification is also enabled. Exact server-key equality prevents
-    // anon/user JWTs (including user-editable claims) from authorizing operator work.
+    // Gateway JWT verification stays enabled. Independently require the exact
+    // configured server credential: opaque secret keys use apikey, legacy JWTs
+    // use Authorization. A gateway-valid anon/user JWT alone cannot authorize work.
     if (url?.replace(/\/$/, '') !== PIPELINE_TARGET || typeof serviceKey !== 'string' || !serviceKey.trim()) return failure(503, 'server_unavailable')
-    if (request.headers.get('Authorization') !== `Bearer ${serviceKey}`) return failure(401, 'operator_authentication_required')
+    const authorized = serviceKey.startsWith('sb_secret_')
+      ? request.headers.get('apikey') === serviceKey
+      : request.headers.get('Authorization') === `Bearer ${serviceKey}`
+    if (!authorized) return failure(401, 'operator_authentication_required')
     if (request.headers.has('Origin')) return failure(403, 'browser_origin_denied')
     const parsed = new URL(request.url)
     if (!['/capture-retrieval', '/functions/v1/capture-retrieval'].includes(parsed.pathname) || parsed.search) return failure(404, 'route_not_found')
