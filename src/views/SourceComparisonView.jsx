@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { newsNavigationFromComparisonSurface, E_LEVEL_NAMES } from '../lib/sourceComparisonReadPath.js'
 import { mipBackend } from '../lib/mipBackend.js'
+import { comparisonInvestigationScope } from '../lib/comparisonInvestigationScope.js'
 import { filterEventsByTitle } from '../lib/listFilters.js'
 import WorkspaceAvailability from '../components/WorkspaceAvailability'
 import WorkspaceTechnicalDisclosure from '../components/WorkspaceTechnicalDisclosure'
@@ -318,19 +319,27 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
     return () => { cancelled = true }
   }, [backend])
 
+  const scope = useMemo(
+    () => comparisonInvestigationScope(view?.events ?? [], investigationContext, focusEventId),
+    [view, investigationContext, focusEventId],
+  )
+  useEffect(() => {
+    setEventQuery('')
+    setDebouncedEventQuery('')
+  }, [scope.key])
   const visibleEvents = useMemo(
-    () => (view?.events ? filterEventsByTitle(view.events, debouncedEventQuery) : []),
-    [view, debouncedEventQuery],
+    () => filterEventsByTitle(scope.events, debouncedEventQuery),
+    [scope.events, debouncedEventQuery],
   )
 
   // Jump focus, or Investigation Context restore after a tab switch.
   // Event subjects highlight only when a loaded row already matches.
   // No match → no invented event. Arc / article subjects do not become events.
-  const highlightEventId =
-    focusEventId ??
-    (investigationContext?.canonical_subject_type === 'event'
+  const highlightEventId = scope.events.find(event =>
+    event.id === (investigationContext?.canonical_subject_type === 'event'
       ? investigationContext.canonical_subject_id
-      : null)
+      : focusEventId),
+  )?.id ?? null
 
   useEffect(() => {
     if (!highlightEventId || !view?.events?.length) return
@@ -387,7 +396,12 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
         </WorkspaceTechnicalDisclosure>
       )}
 
-      {view.events.length === 0 ? (
+      {scope.scoped && !view.loadError && scope.events.length === 0 ? (
+        <section className="sc-empty" role="status">
+          <h3>No released comparison is linked to this investigation</h3>
+          <p>The selected subject is preserved. This public projection has no recorded comparison join for it; that does not establish an absence of reporting or a contradiction.</p>
+        </section>
+      ) : view.events.length === 0 ? (
         <WorkspaceAvailability
           kind="compare"
           icon="compare"
@@ -395,6 +409,7 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
         />
       ) : (
         <>
+          <p className="sc-meta">{scope.scoped ? 'Released comparisons linked to the selected investigation.' : 'Browsing all released comparison events.'}</p>
           <input
             className="news-search sc-search"
             type="search"
@@ -406,7 +421,7 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
           {visibleEvents.length === 0 ? (
             <p className="sc-empty">
               No events match “{debouncedEventQuery}”. Clear the search to see all{' '}
-              {view.events.length} comparison events.
+              {scope.events.length} comparison events in this scope.
             </p>
           ) : (
             visibleEvents.map((event) => (

@@ -59,3 +59,42 @@ test('replacing the comparison backend resets stale state and ignores obsolete s
     assert.doesNotMatch(text(renderer), /Compared event 2|Loading/)
   } finally { await act(async () => renderer.unmount()) }
 })
+
+test('active event never displays unrelated comparison coverage; stale focus cannot override it', async () => {
+  const f = comparisonBackendFixture({ tables: { comparison_public: [comparisonRow(1), comparisonRow(2)] } })
+  let renderer
+  const props = (id, extra = {}) => ({ backend: f.backend, investigationContext: { canonical_subject_type: 'event', canonical_subject_id: id }, ...extra })
+  await act(async () => { renderer = TestRenderer.create(React.createElement(View, props('unjoined-eclipse', { focusEventId: 'event-000001' }))) })
+  try {
+    assert.match(text(renderer), /No released comparison is linked/)
+    assert.doesNotMatch(text(renderer), /Compared event|Retained supporting passage|Open in News/)
+    await act(async () => renderer.update(React.createElement(View, props('event-000002', { focusEventId: 'event-000001' }))))
+    assert.match(text(renderer), /Compared event 2/)
+    assert.doesNotMatch(text(renderer), /Compared event 1/)
+    const search = renderer.root.findByProps({ 'aria-label': 'Search comparison events' })
+    await act(async () => { search.props.onChange({ target: { value: 'Compared event 1' } }); await new Promise(r => setTimeout(r, 380)) })
+    assert.doesNotMatch(text(renderer), /Retained supporting passage/)
+    await act(async () => renderer.update(React.createElement(View, props('event-000001'))))
+    assert.match(text(renderer), /Compared event 1/)
+    assert.doesNotMatch(text(renderer), /Compared event 2/)
+    assert.equal(renderer.root.findByProps({ 'aria-label': 'Search comparison events' }).props.value, '')
+  } finally { await act(async () => renderer.unmount()) }
+})
+
+test('unjoined context stays empty through asynchronous load; standalone browsing remains available', async () => {
+  const d = deferred(), backend = { loadSourceComparisonView: () => d.promise }; let renderer
+  await act(async () => { renderer = TestRenderer.create(React.createElement(View, { backend, investigationContext: { canonical_subject_type: 'event', canonical_subject_id: 'missing' } })) })
+  try {
+    assert.match(text(renderer), /Loading/)
+    const actual = await comparisonBackendFixture({ tables: { comparison_public: [comparisonRow(1)] } }).backend.loadSourceComparisonView()
+    await act(async () => d.resolve(actual))
+    assert.match(text(renderer), /No released comparison is linked/)
+    assert.doesNotMatch(text(renderer), /Compared event 1/)
+    await act(async () => renderer.update(React.createElement(View, { backend })))
+    assert.match(text(renderer), /Browsing all released comparison events/)
+    assert.match(text(renderer), /Compared event 1/)
+    await act(async () => renderer.update(React.createElement(View, { backend: { loadSourceComparisonView: async () => ({ enabled: true, events: [], loadError: 'offline' }) }, investigationContext: { canonical_subject_type: 'event', canonical_subject_id: 'missing' } })))
+    assert.match(text(renderer), /Comparison data is currently unavailable/)
+    assert.doesNotMatch(text(renderer), /No released comparison is linked/)
+  } finally { await act(async () => renderer.unmount()) }
+})
