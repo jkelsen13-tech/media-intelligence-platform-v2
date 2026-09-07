@@ -16,6 +16,35 @@
   color: var(--text-muted, #647187);
 }
 
+.piw-linked-record {
+  min-width: 0;
+  margin: 8px 0;
+  padding: 0 12px 8px;
+  border: 1px solid var(--border-color, #e1e7ef);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+
+.piw-linked-record > summary {
+  min-height: 44px;
+  align-content: center;
+  padding: 8px 0;
+  cursor: pointer;
+  color: var(--cat-blue, #315dbe);
+}
+
+.piw-linked-record > summary:focus-visible {
+  outline: 2px solid var(--cat-blue, #315dbe);
+  outline-offset: 2px;
+}
+
+.piw-linked-record > .piw-card {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
 .piw-toolbar,
 .piw-section-nav,
 .piw-catalog {
