@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/graph/GraphView.jsx'
       - 'src/graph/GraphModePanel.jsx'
+      - 'src/lib/graphWorkspaceModel.js'
       - 'src/graph/time-records.css'
       - 'verifier/runGraphTimeBrowser.mjs'
       - 'src/components/InvestigationWorkspace.jsx'

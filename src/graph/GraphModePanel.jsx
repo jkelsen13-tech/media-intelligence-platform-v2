@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { recordedGeography, recordedTime, summarizeGeography } from '../lib/graphWorkspaceModel.js'
+import { recordedGeography, recordedTime, summarizeGeography, GRAPH_TIME_GROUPS } from '../lib/graphWorkspaceModel.js'
 import GeographyGlobe from './GeographyGlobe.jsx'
 import './time-records.css'
 
@@ -121,25 +121,44 @@ export default function GraphModePanel({
           )}
         </div>
       ) : chronological.length > 0 ? (
-        <ol className="graph-mode-list graph-time-list" aria-label="Time-ordered graph records">
-          {chronological.map((row) => (
-            <li key={row.key}>
-              <button
-                type="button"
-                className="graph-time-record"
-                aria-label={`Open node evidence: ${row.label}`}
-                disabled={!row.key || !onSelectNode}
-                onClick={() => onSelectNode?.(row.key)}
-              >
-                <span className="graph-mode-secondary graph-time-date">
-                  {row.occurredAt ? `Recorded date: ${row.occurredAt.slice(0, 10)}` : 'No recorded date'}
-                </span>
-                <span className="graph-mode-primary">{row.label}</span>
-                <span className="graph-time-action">Open node evidence</span>
-              </button>
-            </li>
-          ))}
-        </ol>
+        <div className="graph-time-groups">
+          <p className="graph-time-note">
+            Date-only records and clocks without a time zone are listed separately.
+            Ordering uses the start of the recorded precision; overlapping times do not establish an exact sequence or causation.
+          </p>
+          {GRAPH_TIME_GROUPS.map((group) => {
+            const rows = chronological.filter((row) => row.date.kind === group.id)
+            if (!rows.length) return null
+            return (
+              <section key={group.id} className="graph-time-group" aria-label={group.label}>
+                <h3>{group.label} <span>({rows.length})</span></h3>
+                <ol className="graph-mode-list graph-time-list" aria-label={group.label}>
+                  {rows.map((row) => (
+                    <li key={row.key}>
+                      <button
+                        type="button"
+                        className="graph-time-record"
+                        aria-label={`Open node evidence: ${row.label}`}
+                        disabled={!row.key || !onSelectNode}
+                        onClick={() => onSelectNode?.(row.key)}
+                      >
+                        <span className="graph-mode-secondary graph-time-date">
+                          {row.date.kind === 'missing' ? 'No recorded date' : (
+                            <>Recorded date: {row.date.dateTime
+                              ? <time dateTime={row.date.dateTime} title={row.occurredAt}>{row.date.label}</time>
+                              : <span title={row.occurredAt}>{row.date.label}</span>}</>
+                          )}
+                        </span>
+                        <span className="graph-mode-primary">{row.label}</span>
+                        <span className="graph-time-action">Open node evidence</span>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )
+          })}
+        </div>
       ) : (
         <p className="graph-mode-empty">No nodes are available for a time-ordered view.</p>
       )}
