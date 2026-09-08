@@ -89,7 +89,8 @@
   gap: 12px;
   min-height: 0;
   min-width: 0;
-  flex: 1;
+  /* Keep the map, time controls and footer in non-overlapping document flow. */
+  flex: 1 0 auto;
 }
 
 .wv-layout-map,
@@ -110,7 +111,7 @@
   display: grid;
   gap: 12px;
   min-height: 0;
-  flex: 1;
+  flex: 1 0 auto;
 }
 
 .wv-stage-map,
@@ -289,6 +290,8 @@
 }
 
 .wv-inspector {
+  /* The map/time column sizes the row; long evidence scrolls within the inspector. */
+  contain: size;
   min-height: 360px;
   min-width: 0;
   overflow-y: auto;
@@ -491,7 +494,7 @@
     line-height: 1.4;
     overflow-wrap: anywhere;
   }
-  .wv-inspector { overflow: visible; }
+  .wv-inspector { contain: none; overflow: visible; }
   .wv-touch-controls { display: block; }
   .wv-touch-controls button {
     min-height: 44px;

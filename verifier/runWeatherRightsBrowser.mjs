@@ -60,6 +60,39 @@ try {
   await weather.getByText('Weather not sourced. No present-day value is substituted.', { exact: true }).waitFor()
   assert.equal(await weather.getAttribute('data-weather-status'), 'unavailable')
   assert.equal(await weather.locator('dd').filter({ hasText: /^Not sourced$/ }).count(), 5)
+  // A short desktop viewport used to shrink the grid below its children:
+  // inspector bottom 701px, layout bottom 622px, review footer top 650px.
+  // Test actual rendered boundaries, not particular CSS declarations.
+  for (const [width,height] of [[1440,740],[1024,768],[768,900],[390,844]]) {
+    await page.setViewportSize({width,height})
+    for (const mode of ['Split','Map']) {
+      await page.getByRole('tablist',{name:'World View mode',exact:true}).getByRole('tab',{name:mode,exact:true}).click()
+      await page.waitForFunction(expected=>document.querySelector('.wv-view')?.dataset.wvMode===expected,mode.toLowerCase())
+      const boxes=await page.evaluate(()=>{
+        const box=selector=>{
+          const r=document.querySelector(selector).getBoundingClientRect()
+          return {top:r.top,bottom:r.bottom,height:r.height}
+        }
+        return {layout:box('.wv-layout'),main:box('.wv-main'),stage:box('.wv-stage'),
+          inspector:box('.wv-inspector'),scrubber:box('.wv-scrubber'),footer:box('.wv-view > .ep-trust'),
+          surfaces:[...document.querySelectorAll('.wv-stage > .wv-map-panel, .wv-stage > .wv-graph')].map(e=>{
+            const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height}
+          })}
+      })
+      for (const child of [boxes.main,boxes.inspector]) {
+        assert.ok(child.top>=boxes.layout.top-1 && child.bottom<=boxes.layout.bottom+1,'World View row contains its columns '+width+' '+mode)
+      }
+      assert.ok(boxes.surfaces.length>0,'the rendered map/graph must be present')
+      for (const surface of boxes.surfaces) {
+        assert.ok(surface.height>=320,'map/graph keeps its reading area')
+        assert.ok(surface.top>=boxes.stage.top-1 && surface.bottom<=boxes.stage.bottom+1,'stage contains map/graph '+width+' '+mode)
+      }
+      assert.ok(boxes.scrubber.top>=boxes.stage.bottom-1,'time controls follow the map/graph '+width+' '+mode)
+      assert.ok(boxes.main.bottom>=boxes.scrubber.bottom-1,'main column contains time controls '+width+' '+mode)
+      assert.ok(boxes.footer.top>=boxes.layout.bottom-1,'review footer cannot cover inspector or map '+width+' '+mode)
+      console.log('MIP_WORLD_VIEW_FLOW_PASS='+JSON.stringify({width,height,mode,boxes}))
+    }
+  }
   for (const width of [320, 390, 1280]) {
     await page.setViewportSize({ width, height: width >= 1000 ? 1440 : 844 })
     await weather.evaluate(element => element.scrollIntoView({ block: 'center' }))
