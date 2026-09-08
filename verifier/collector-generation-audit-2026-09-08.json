@@ -1,0 +1,39 @@
+{
+  "observed_at": "2026-09-08T09:43:22Z",
+  "project": "qikvmopbtijoebdqosyq",
+  "repository_base": "c3273756494731835e765cdc39d0524f37a53aa7",
+  "mode": "read-only metadata; no queue claims or writes",
+  "result": {
+    "retained_changes": 9,
+    "jobs": 18,
+    "orphan_jobs": 0,
+    "duplicate_job_keys": 0,
+    "completed_without_history": 0,
+    "processing_without_lease": 0,
+    "state_counts": [
+      {
+        "jobs": 7,
+        "route": "dependency_lookup",
+        "state": "completed"
+      },
+      {
+        "jobs": 2,
+        "route": "dependency_lookup",
+        "state": "pending"
+      },
+      {
+        "jobs": 1,
+        "route": "new_candidate_search",
+        "state": "completed"
+      },
+      {
+        "jobs": 8,
+        "route": "new_candidate_search",
+        "state": "pending"
+      }
+    ]
+  },
+  "scope": "Structural survivor transport snapshot only; not proof of collector integration, durable semantic work or legacy retirement",
+  "collector_cutover_complete": false,
+  "single_backend_consolidation_complete": false
+}
