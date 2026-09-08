@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import cytoscape from 'cytoscape'
 import fcose from 'cytoscape-fcose'
 import { graphStylesheet } from './styles'
@@ -195,6 +195,12 @@ export default function GraphView({
   allNodes = null,
   focused = false,
 }) {
+  const [noticeDismissed, setNoticeDismissed] = useState(false)
+  useEffect(() => { setNoticeDismissed(false) }, [focusNodeId])
+  const dismissNotice = () => {
+    setNoticeDismissed(true)
+    containerRef.current?.focus({ preventScroll: true })
+  }
   const containerRef = useRef(null)
   const gridRef = useRef(null)
   const regionCanvasRef = useRef(null)
@@ -1027,7 +1033,13 @@ export default function GraphView({
   }, [focusNodeId, nodes, edges])
 
   return (
-    <div className="graph-canvas-wrap">
+    <div className="graph-canvas-wrap" onKeyDown={(event) => {
+      if (event.key === 'Escape' && isolatedFocusNode && !noticeDismissed) {
+        event.preventDefault()
+        event.stopPropagation()
+        dismissNotice()
+      }
+    }}>
       <canvas ref={gridRef} className="graph-grid" aria-hidden="true" />
       <canvas ref={regionCanvasRef} className="graph-regions" aria-hidden="true" />
       <div
@@ -1048,15 +1060,23 @@ export default function GraphView({
       >
         No documented connections ({disconnectedCount})
       </div>
-      {isolatedFocusNode && (
+      {isolatedFocusNode && !noticeDismissed && (
         <aside className="graph-isolated-reader" aria-live="polite" aria-label="Isolated node evidence state">
-          <strong>{isolatedFocusNode.label}</strong>
+          <div className="graph-isolated-header">
+            <strong>{isolatedFocusNode.label}</strong>
+            <button type="button" aria-label="Dismiss graph notice" onClick={dismissNotice}>×</button>
+          </div>
           <p>No documented relationships are recorded for this node.</p>
           <p>Attached articles and node-level source records remain available without inferring a connection.</p>
           <button type="button" onClick={() => onSelect?.(isolatedFocusNode)}>
             Open node evidence
           </button>
         </aside>
+      )}
+      {isolatedFocusNode && noticeDismissed && (
+        <button type="button" className="graph-notice-reopen" onClick={() => setNoticeDismissed(false)}>
+          Show node notice
+        </button>
       )}
       <GraphViewControls
         cyRef={cyRef}
