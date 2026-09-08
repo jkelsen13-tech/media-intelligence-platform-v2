@@ -21,3 +21,10 @@ export function versionNavigationBlocked(state = {}) {
   return Boolean(state.loadingBundle || state.reviewBusy || state.pendingReview || state.reviewsBusy || state.pendingReviewDecision
     || state.decisionSavedNeedsRefresh || state.checksBusy || state.pendingChecksRun)
 }
+
+/** Accept only an exact version reference; never infer from revision/date/title. */
+export function normalizeSavedVersionReference(value) {
+  if (typeof value !== 'string' || value.length > 80) return null
+  const normalized = value.trim().toLowerCase()
+  return uuid(normalized) ? normalized : null
+}

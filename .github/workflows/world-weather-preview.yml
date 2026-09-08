@@ -5,6 +5,10 @@ on:
     paths:
       - 'package.json'
       - 'package-lock.json'
+      - 'src/components/InvestigationVersionNavigation.jsx'
+      - 'src/lib/investigationVersionNavigation.js'
+      - 'src/styles/investigation-workspace-panels.css'
+      - 'verifier/runVersionReferenceBrowser.mjs'
       - 'src/lib/deepLinks.js'
       - 'src/lib/worldViewCameraFraming.js'
       - 'src/lib/worldViewRendererAdapter.js'
@@ -43,3 +47,7 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runWeatherRightsBrowser.mjs
+      - name: Verify exact-version reference form
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runVersionReferenceBrowser.mjs

@@ -493,3 +493,9 @@
   .piw-source-history-item > summary span,
   .piw-source-field > summary span { display: block; margin: 6px 0 0; }
 }
+
+.piw-version-reference { display: grid; gap: .65rem; max-width: 32rem; margin: 1rem 0; }
+.piw-version-reference label { font-weight: 600; }
+.piw-version-reference input { width: 100%; min-width: 0; box-sizing: border-box; font: inherit; padding: .65rem; border: 1px solid var(--border, #d1d5db); border-radius: .4rem; }
+.piw-version-reference button { justify-self: start; min-height: 44px; }
+.piw-version-reference [role="alert"] { margin: 0; }
