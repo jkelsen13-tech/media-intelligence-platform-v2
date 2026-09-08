@@ -17,6 +17,7 @@ import {
   applySelectionAgainstCatalog,
   emptyDeepLinkSelection,
   formatTimeQuery,
+  VIEW_TO_DEEP_LINK_SLUG,
 } from './deepLinks.js'
 
 export const RECENT_INVESTIGATION_CONTRACT = 'MIP_INVESTIGATION_CONTEXT_AND_GLOBAL_DISCOVERY_v0.1'
@@ -26,27 +27,39 @@ export const RECENT_INVESTIGATION_MAX = 8
 
 const SUB_OBJECT_KINDS = Object.freeze(['claim', 'entity', 'source', 'place'])
 
+// Bound the serialized input before parsing; never retain arbitrary object payloads.
+export const RECENT_INVESTIGATION_MAX_STORAGE_LENGTH = 32768
+
+function navigationString(value, max = 512) {
+  return typeof value === 'string' && value.length <= max && value.trim() !== ''
+    && ![...value].some(c => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)
+    ? value : null
+}
+
 export function snapshotRecentInvestigation(ic, subObject = null) {
-  if (!ic?.canonical_subject_id) return null
-  const kind = subObject?.kind
-  const subId = subObject?.id
+  const id = navigationString(ic?.canonical_subject_id)
+  if (!id) return null
+  const from = navigationString(ic?.selected_time_range?.from, 96)
+  const to = navigationString(ic?.selected_time_range?.to, 96)
+  const subId = navigationString(subObject?.id)
   return {
-    canonical_subject_id: ic.canonical_subject_id,
-    canonical_subject_type: ic.canonical_subject_type ?? null,
-    parent_event_id: ic.parent_event_id ?? null,
-    active_view: ic.active_view ?? 'news',
-    as_of_time: ic.as_of_time ?? null,
-    selected_time_range: ic.selected_time_range ?? null,
-    subObject:
-      kind && SUB_OBJECT_KINDS.includes(kind) && subId != null && String(subId).trim() !== ''
-        ? { kind, id: String(subId) }
-        : null,
+    canonical_subject_id: id,
+    canonical_subject_type: navigationString(ic.canonical_subject_type, 64),
+    parent_event_id: navigationString(ic.parent_event_id),
+    active_view: typeof ic.active_view === 'string' && Object.hasOwn(VIEW_TO_DEEP_LINK_SLUG, ic.active_view)
+      ? ic.active_view : 'news',
+    as_of_time: navigationString(ic.as_of_time, 96),
+    selected_time_range: from || to ? { from, to } : null,
+    subObject: SUB_OBJECT_KINDS.includes(subObject?.kind) && subId
+      ? { kind: subObject.kind, id: subId } : null,
   }
 }
 
 export function boundRecentInvestigationStack(stack, max = RECENT_INVESTIGATION_MAX) {
-  const limit = Number.isFinite(max) && max > 0 ? Math.floor(max) : RECENT_INVESTIGATION_MAX
-  return (stack ?? []).filter((item) => item?.canonical_subject_id).slice(0, limit)
+  const limit = Number.isFinite(max) && max >= 1
+    ? Math.min(Math.floor(max), RECENT_INVESTIGATION_MAX) : RECENT_INVESTIGATION_MAX
+  if (!Array.isArray(stack)) return []
+  return stack.slice(0, limit).map(sanitizeStoredItem).filter(Boolean)
 }
 
 /**
@@ -54,13 +67,15 @@ export function boundRecentInvestigationStack(stack, max = RECENT_INVESTIGATION_
  * never duplicated. Empty / title-only snapshots are ignored.
  */
 export function pushRecentInvestigation(stack, snapshot, max = RECENT_INVESTIGATION_MAX) {
-  if (!snapshot?.canonical_subject_id) return boundRecentInvestigationStack(stack, max)
-  const id = String(snapshot.canonical_subject_id)
-  const without = (stack ?? []).filter((item) => String(item.canonical_subject_id) !== id)
-  return boundRecentInvestigationStack([snapshot, ...without], max)
+  const safe = sanitizeStoredItem(snapshot)
+  if (!safe) return boundRecentInvestigationStack(stack, max)
+  const without = boundRecentInvestigationStack(stack, max)
+    .filter(item => item.canonical_subject_id !== safe.canonical_subject_id)
+  return boundRecentInvestigationStack([safe, ...without], max)
 }
 
 export function restoreRecentInvestigation(item, { currentIc, catalog } = {}) {
+  item = sanitizeStoredItem(item)
   const landingView = item?.active_view ?? 'news'
   const base = currentIc ?? emptyInvestigationContext(landingView)
   if (!item?.canonical_subject_id) {
@@ -115,29 +130,17 @@ export function commitNewSubjectRememberingRecent(ic, payload, options = {}, rec
 }
 
 function sanitizeStoredItem(item) {
-  if (!item || typeof item !== 'object') return null
-  const id = item.canonical_subject_id
-  if (id == null || String(id).trim() === '') return null
-  return snapshotRecentInvestigation(
-    {
-      canonical_subject_id: id,
-      canonical_subject_type: item.canonical_subject_type ?? null,
-      parent_event_id: item.parent_event_id ?? null,
-      active_view: item.active_view ?? 'news',
-      as_of_time: item.as_of_time ?? null,
-      selected_time_range: item.selected_time_range ?? null,
-    },
-    item.subObject ?? null,
-  )
+  if (!item || typeof item !== 'object' || Array.isArray(item)) return null
+  return snapshotRecentInvestigation(item, item.subObject)
 }
 
 export function readRecentInvestigations(storage) {
   try {
     const raw = storage?.getItem?.(RECENT_INVESTIGATION_STORAGE_KEY)
-    if (!raw) return []
+    if (typeof raw !== 'string' || !raw || raw.length > RECENT_INVESTIGATION_MAX_STORAGE_LENGTH) return []
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
-    return boundRecentInvestigationStack(parsed.map(sanitizeStoredItem).filter(Boolean))
+    return boundRecentInvestigationStack(parsed)
   } catch {
     return []
   }
@@ -145,6 +148,7 @@ export function readRecentInvestigations(storage) {
 
 export function writeRecentInvestigations(storage, stack) {
   try {
+    if (typeof storage?.setItem !== 'function') return false
     storage?.setItem?.(
       RECENT_INVESTIGATION_STORAGE_KEY,
       JSON.stringify(boundRecentInvestigationStack(stack)),

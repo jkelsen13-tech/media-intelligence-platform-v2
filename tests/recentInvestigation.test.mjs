@@ -266,3 +266,67 @@ test('Explore / News jump handlers still commit once and now remember recent', (
     assert.ok(!body.includes('applySubject('), `${handler} must not applySubject locally`)
   }
 })
+
+test('storage writes only bounded navigation fields, including nested ranges', () => {
+  const storage = memoryStorage()
+  const input = {canonical_subject_id: FIXTURE_B_ID, active_view: 'world',
+    title: 'private title', access_token: 'synthetic-credential',
+    selected_time_range: {from: '2024-04-08', to: null, private_note: 'private note'},
+    subObject: {kind: 'entity', id: FIXTURE_B_ID, payload: {private_note: 'private note'}}}
+  assert.equal(writeRecentInvestigations(storage, [input]), true)
+  const raw = storage.data[RECENT_INVESTIGATION_STORAGE_KEY]
+  assert.doesNotMatch(raw, /private|credential|payload|access_token|title/)
+  const [restored] = readRecentInvestigations(storage)
+  assert.deepEqual(restored.selected_time_range, {from: '2024-04-08', to: null})
+  assert.deepEqual(restored.subObject, {kind: 'entity', id: FIXTURE_B_ID})
+  assert.equal(input.selected_time_range.private_note, 'private note')
+})
+
+test('malformed persisted navigation is rejected without coercing object identities', () => {
+  const storage = memoryStorage()
+  for (const raw of ['{', 'null', '{}', ' '.repeat(32769), JSON.stringify([
+    {canonical_subject_id: {id: FIXTURE_B_ID}}, {canonical_subject_id: ['subject']},
+    {canonical_subject_id: 'x'.repeat(513)}, {canonical_subject_id: 'subject\u0000'},
+  ])]) {
+    storage.setItem(RECENT_INVESTIGATION_STORAGE_KEY, raw)
+    assert.deepEqual(readRecentInvestigations(storage), [])
+  }
+  const item = snapshotRecentInvestigation({canonical_subject_id: FIXTURE_B_ID,
+    active_view: 'constructor', canonical_subject_type: {}, parent_event_id: [],
+    as_of_time: {}, selected_time_range: {from: {}, to: '2024-04-08'}},
+    {kind: '__proto__', id: 'bad'})
+  assert.equal(item.active_view, 'news')
+  assert.equal(item.canonical_subject_type, null)
+  assert.equal(item.parent_event_id, null)
+  assert.equal(item.as_of_time, null)
+  assert.equal(item.subObject, null)
+  assert.deepEqual(item.selected_time_range, {from: null, to: '2024-04-08'})
+})
+
+test('eight-slot bound is enforced before inspecting entries, regardless of caller max', () => {
+  const stack = Array.from({length: 8}, (_, i) => ({canonical_subject_id: 'subject-' + i}))
+  Object.defineProperty(stack, 8, {get() { throw new Error('must not inspect ninth entry') }})
+  assert.equal(boundRecentInvestigationStack(stack, 100000).length, 8)
+  assert.deepEqual(boundRecentInvestigationStack({}), [])
+  assert.equal(boundRecentInvestigationStack(stack, 3).length, 3)
+  assert.equal(pushRecentInvestigation(stack, {canonical_subject_id: 'subject-4'})[0].canonical_subject_id, 'subject-4')
+})
+
+test('restore sanitizes direct input and preserves absence for invalid identity', () => {
+  const empty = emptyInvestigationContext()
+  const invalid = restoreRecentInvestigation({canonical_subject_id: {}}, {currentIc: empty})
+  assert.equal(invalid.committed, false)
+  assert.equal(invalid.investigationContext, empty)
+  const valid = restoreRecentInvestigation({canonical_subject_id: FIXTURE_B_ID,
+    active_view: 'graph', selected_time_range: {from: '2024-04-08', to: null, payload: 'omit'},
+    subObject: {kind: 'time', id: 'override'}}, {catalog: {claim:[],entity:[],source:[],place:[]}})
+  assert.equal(valid.committed, true)
+  assert.deepEqual(valid.investigationContext.selected_time_range, {from:'2024-04-08',to:null})
+  assert.equal(valid.selection.time, '2024-04-08..')
+})
+
+test('unavailable or throwing browser storage fails without breaking navigation', () => {
+  assert.equal(writeRecentInvestigations(null, []), false)
+  assert.equal(writeRecentInvestigations({setItem() {throw new Error('quota')}}, []), false)
+  assert.deepEqual(readRecentInvestigations({getItem() {throw new Error('blocked')}}), [])
+})

@@ -10,6 +10,7 @@ on:
       - 'src/styles/investigation-workspace-panels.css'
       - 'verifier/runVersionReferenceBrowser.mjs'
       - 'src/lib/deepLinks.js'
+      - 'src/lib/recentInvestigation.js'
       - 'src/lib/worldViewCameraFraming.js'
       - 'src/lib/worldViewRendererAdapter.js'
       - 'src/lib/worldViewCesiumEllipsoidRendererAdapter.js'

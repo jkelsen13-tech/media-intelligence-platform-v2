@@ -213,3 +213,8 @@ Package 04 preflight now rejects malformed/oversized path segments safely, treat
 ## Batch 87 — open an exact saved-version reference
 
 Saved version details now let an authorized reader open a referenced version within the same investigation, using existing exact-read and access checks. Pending operations block the form; invalid references do not become latest-version requests. See [scope, files and verification](EXACT_VERSION_REFERENCE_NAVIGATION_2026-09-08.md). Persistent shared presets and camera/time/authorized-layer restoration remain open.
+
+
+## Batch 88 — bounded recent navigation storage
+
+Existing recent history now reconstructs allowed navigation fields before storing or restoring, strips unknown nested payloads and bounds parsing/entry inspection. See [scope and verification](RECENT_NAVIGATION_STORAGE_2026-09-08.md). This is a persistence backfill for Package 04; complete private-version/camera/layer presets and the real held-out producer corpus remain open. No source activation or backend writes.
