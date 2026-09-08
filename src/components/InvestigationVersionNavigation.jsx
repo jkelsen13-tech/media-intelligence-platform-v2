@@ -1,5 +1,30 @@
-import { savedVersionNavigation, versionNavigationBlocked } from '../lib/investigationVersionNavigation.js'
+import { useId, useState } from 'react'
+import { savedVersionNavigation, versionNavigationBlocked, normalizeSavedVersionReference } from '../lib/investigationVersionNavigation.js'
 import { retainedDateLabel } from '../lib/investigationEvidenceTrail.js'
+
+function SavedVersionReferenceForm({ investigationId, blocked, onSelectVersion }) {
+  const inputId = useId()
+  const [reference, setReference] = useState('')
+  const [invalid, setInvalid] = useState(false)
+  const disabled = blocked || !onSelectVersion
+  const submit = event => {
+    event.preventDefault()
+    if (disabled) return
+    const versionId = normalizeSavedVersionReference(reference)
+    if (!versionId) { setInvalid(true); return }
+    setInvalid(false)
+    return onSelectVersion(investigationId, versionId)
+  }
+  return <form className="piw-version-reference" onSubmit={submit}>
+    <label htmlFor={inputId}>Saved-version reference</label>
+    <p id={inputId + '-help'} className="piw-note">Open an exact saved version of this investigation using its reference. Access is checked again; this does not mark it reviewed.</p>
+    <input id={inputId} type="text" value={reference} maxLength={80} autoComplete="off" spellCheck={false}
+      disabled={disabled} aria-invalid={invalid} aria-describedby={inputId + '-help' + (invalid ? ' ' + inputId + '-error' : '')}
+      onChange={event => { setReference(event.target.value); setInvalid(false) }} />
+    {invalid ? <p id={inputId + '-error'} role="alert">Enter a complete saved-version reference.</p> : null}
+    <button type="submit" className="piw-section-btn" disabled={disabled}>Open referenced version</button>
+  </form>
+}
 
 export default function InvestigationVersionNavigation({ bundle, state, onSelectVersion }) {
   const model = savedVersionNavigation(bundle)
@@ -20,6 +45,8 @@ export default function InvestigationVersionNavigation({ bundle, state, onSelect
       <p><strong>Recorded reason:</strong> {model.reason ?? 'Not recorded.'}</p>
       <p><strong>Version recorded:</strong> {model.recordedAt ? <time dateTime={model.recordedAt}>{retainedDateLabel(model.recordedAt)}</time> : 'Not recorded.'}</p>
       <p className="piw-note">Recording time describes this MIP version, not when a reported event happened. A later version is not proof of a stronger claim or completed reassessment.</p>
+      <SavedVersionReferenceForm key={model.investigationId + ':' + model.versionId}
+        investigationId={model.investigationId} blocked={blocked} onSelectVersion={onSelectVersion} />
       <dl><div><dt>Saved version</dt><dd>{model.versionId}</dd></div><div><dt>Saved observation</dt><dd>{bundle.observation.id}</dd></div></dl>
     </details>
   </section>

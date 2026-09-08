@@ -126,3 +126,44 @@ test('revocation clears private versions and a late predecessor read cannot reap
   assert.doesNotMatch(plain(q.tree), /Synthetic question at revision/)
   act(() => q.tree.unmount())
 })
+
+test('reference form validates exact IDs, keeps investigation scope and obeys pending gates', async () => {
+  const [first,,head] = versionNavigationFixture(), calls = []; let tree
+  const onSelectVersion = (...args) => calls.push(args)
+  act(() => { tree = TestRenderer.create(createElement(Navigation, {bundle:head,onSelectVersion})) })
+  const enter = value => act(() => tree.root.findByProps({className:'piw-version-reference'}).findByType('input').props.onChange({target:{value}}))
+  const submit = () => act(async () => { await tree.root.findByProps({className:'piw-version-reference'}).props.onSubmit({preventDefault(){}}) })
+  enter('revision 1'); await submit()
+  assert.match(plain(tree), /Enter a complete saved-version reference/)
+  assert.deepEqual(calls, [])
+  enter(first.version.id.toUpperCase()); await submit()
+  assert.deepEqual(calls, [[head.investigation_id, first.version.id]])
+  act(() => tree.update(createElement(Navigation, {bundle:head,state:{pendingReview:true},onSelectVersion})))
+  await submit(); assert.equal(calls.length, 1)
+  assert.equal(tree.root.findByProps({className:'piw-version-reference'}).findByType('input').props.disabled, true)
+  act(() => tree.update(createElement(Navigation, {bundle:first,onSelectVersion})))
+  assert.equal(tree.root.findByProps({className:'piw-version-reference'}).findByType('input').props.value, '', 'reference clears on exact version change')
+  act(() => tree.unmount())
+})
+test('reference form opens exact historical content through client, handler and workspace without writes', async () => {
+  const api = apiFixture(), p = await mount(api), first = api.versions[0]
+  act(() => p.tree.root.findByProps({className:'piw-version-reference'}).findByType('input').props.onChange({target:{value:first.version.id}}))
+  await act(async () => { await p.tree.root.findByProps({className:'piw-version-reference'}).props.onSubmit({preventDefault(){}}) })
+  assert.equal(p.current().state.bundle.version.id, first.version.id)
+  assert.match(plain(p.tree), /Synthetic question at revision 1/)
+  assert.equal(p.current().state.bundle.review.version_id, api.versions[1].version.id)
+  assert.equal(api.calls.filter(c => c.action === 'read').at(-1).input.version_id, first.version.id)
+  assert.equal(api.calls.some(c => !['list','read'].includes(c.action)), false)
+  act(() => p.tree.unmount())
+})
+test('reference mismatch retains the exact requested ID for retry without current-version substitution', async () => {
+  const api = apiFixture(), p = await mount(api), first = api.versions[0]
+  api.control.mismatch = true
+  act(() => p.tree.root.findByProps({className:'piw-version-reference'}).findByType('input').props.onChange({target:{value:first.version.id}}))
+  await act(async () => { await p.tree.root.findByProps({className:'piw-version-reference'}).props.onSubmit({preventDefault(){}}) })
+  assert.equal(p.current().state.bundle, null)
+  assert.equal(p.current().state.selectedVersionId, first.version.id)
+  api.control.mismatch = false; await click(p.tree, 'Retry')
+  assert.equal(p.current().state.bundle.version.id, first.version.id)
+  act(() => p.tree.unmount())
+})

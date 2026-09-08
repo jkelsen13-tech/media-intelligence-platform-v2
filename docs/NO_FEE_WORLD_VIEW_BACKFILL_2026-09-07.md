@@ -208,3 +208,8 @@ Package 01 now cancels an accepted subject flight when selected geometry disappe
 ## Batch 86 — safe shareable route boundary
 
 Package 04 preflight now rejects malformed/oversized path segments safely, treats inherited property names as unknown views, and drops ambiguous duplicate selections. Credential/private-text fields remain excluded from generated route state. See [scope and verification](SHAREABLE_ROUTE_BOUNDARY_2026-09-08.md). Exact private-version presets and authorized-layer persistence remain pending; this is a prerequisite backfill, not their completion.
+
+
+## Batch 87 — open an exact saved-version reference
+
+Saved version details now let an authorized reader open a referenced version within the same investigation, using existing exact-read and access checks. Pending operations block the form; invalid references do not become latest-version requests. See [scope, files and verification](EXACT_VERSION_REFERENCE_NAVIGATION_2026-09-08.md). Persistent shared presets and camera/time/authorized-layer restoration remain open.

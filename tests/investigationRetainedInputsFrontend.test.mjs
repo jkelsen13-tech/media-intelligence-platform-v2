@@ -22,7 +22,7 @@ function open(tree) {
 }
 function search(tree, query) {
   act(() => tree.root.findByProps({ type: 'search' }).props.onChange({ target: { value: query } }))
-  act(() => tree.root.findByType('form').props.onSubmit({ preventDefault() {} }))
+  act(() => tree.root.findByProps({className:'piw-input-search'}).props.onSubmit({ preventDefault() {} }))
 }
 const inspectButtons = tree => tree.root.findAllByType('button').filter(b => text(b) === 'Inspect retained input')
 
