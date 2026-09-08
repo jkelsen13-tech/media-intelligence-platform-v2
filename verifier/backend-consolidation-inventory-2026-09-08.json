@@ -1,0 +1,1683 @@
+{
+  "observedAt": "2026-09-08T08:20:00Z",
+  "timePrecision": "bounded inspection window 08:11–08:20 UTC",
+  "repositoryBase": "8e8f413cf3053743a0e9c0656864f47598ffa341",
+  "authoritativeProject": "qikvmopbtijoebdqosyq",
+  "gate": "INCOMPLETE",
+  "safeToRetire": [],
+  "projects": [
+    {
+      "project": "qikvmopbtijoebdqosyq",
+      "schemas": [
+        {
+          "views": 0,
+          "schema": "auth",
+          "tables": 23,
+          "rls_tables": 16
+        },
+        {
+          "views": 1,
+          "schema": "evidence_pipeline",
+          "tables": 26,
+          "rls_tables": 26
+        },
+        {
+          "views": 2,
+          "schema": "extensions",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "graphql",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "graphql_public",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "legacy_graph_staging",
+          "tables": 6,
+          "rls_tables": 6
+        },
+        {
+          "views": 1,
+          "schema": "mip_private",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 7,
+          "schema": "public",
+          "tables": 45,
+          "rls_tables": 45
+        },
+        {
+          "views": 0,
+          "schema": "realtime",
+          "tables": 3,
+          "rls_tables": 1
+        },
+        {
+          "views": 0,
+          "schema": "spatial",
+          "tables": 15,
+          "rls_tables": 15
+        },
+        {
+          "views": 0,
+          "schema": "storage",
+          "tables": 8,
+          "rls_tables": 8
+        },
+        {
+          "views": 0,
+          "schema": "supabase_migrations",
+          "tables": 1,
+          "rls_tables": 0
+        },
+        {
+          "views": 1,
+          "schema": "vault",
+          "tables": 1,
+          "rls_tables": 0
+        }
+      ],
+      "auth_users": 2,
+      "extensions": [
+        "pg_stat_statements",
+        "pgcrypto",
+        "plpgsql",
+        "supabase_vault",
+        "uuid-ossp",
+        "vector"
+      ],
+      "queue_tables": [
+        "evidence_pipeline.change_jobs",
+        "evidence_pipeline.import_jobs",
+        "evidence_pipeline.worker_evaluation_revocations",
+        "evidence_pipeline.worker_evaluations",
+        "legacy_graph_staging.import_jobs",
+        "public.ingest_sources",
+        "public.ingestion_sources"
+      ],
+      "storage_buckets": 0,
+      "storage_objects": 0,
+      "project_references": null,
+      "functions": [
+        {
+          "name": "spatial-runtime",
+          "version": 6,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "1f15a3947525158d4f6477b73d036b71ba614008652655a066f8400bc2638c50"
+        },
+        {
+          "name": "investigation-workspace",
+          "version": 1,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "12ca7453392abfc9ebbe52217df401f961cfd6a961c4bdc45deeb3efb43a4fae"
+        },
+        {
+          "name": "investigation-evidence-checks",
+          "version": 1,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "48f2dc387c1a0803aaba3f3371c258b60f4880e24d411a241f16d4972dfb6156"
+        },
+        {
+          "name": "investigation-evidence-reviews",
+          "version": 1,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "6b86e0161b27e3d66266f196f69c7a9b1679a9dd97c26c86dd817d832f6d7c54"
+        },
+        {
+          "name": "investigation-input-impact",
+          "version": 1,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "fef1d5135291d5daff81d6527bbdde88be379f1e67907ff381a08c569e2b4cab"
+        },
+        {
+          "name": "investigation-source-spans",
+          "version": 1,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "3946403b8ab63bed442a1c32ae0bff75344495e1ccc139b4df3f2a3a7c7486a9"
+        },
+        {
+          "name": "investigation-api",
+          "version": 2,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "9ff9ea55734344a1b508b232ad0354a0d5df11954b23598c6dfaeb79a1a42adb"
+        },
+        {
+          "name": "capture-retrieval",
+          "version": 5,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "7bd754cb9c979843c89a3bcfbfe95b4ab7fb93c19b4b9aa656fde798a2f86448"
+        }
+      ],
+      "migrations": [
+        {
+          "version": "20260831003136",
+          "name": "20260724_pipeline_config_prerequisite_verbatim"
+        },
+        {
+          "version": "20260831003148",
+          "name": "20260813_mip_profiles"
+        },
+        {
+          "version": "20260831003200",
+          "name": "20260813_scope_mip_signup_trigger"
+        },
+        {
+          "version": "20260831003228",
+          "name": "20260813_account_ui_flag"
+        },
+        {
+          "version": "20260902005636",
+          "name": "20260902_r3_public_spatial_projection_v017"
+        },
+        {
+          "version": "20260903050015",
+          "name": "articles_anon_authenticated_select_eligible"
+        },
+        {
+          "version": "20260905082406",
+          "name": "evidence_pipeline_reliability"
+        },
+        {
+          "version": "20260905151626",
+          "name": "mip_consolidation_delta"
+        },
+        {
+          "version": "20260905160001",
+          "name": "event_scoped_public_article_counts"
+        },
+        {
+          "version": "20260905172453",
+          "name": "mip_public_surface_transfer"
+        },
+        {
+          "version": "20260905172517",
+          "name": "mip_public_surface_stub_reconcile"
+        },
+        {
+          "version": "20260905172527",
+          "name": "mip_public_surface_predicates"
+        },
+        {
+          "version": "20260905172543",
+          "name": "mip_public_surface_tables"
+        },
+        {
+          "version": "20260905172558",
+          "name": "mip_public_surface_topics_rls"
+        },
+        {
+          "version": "20260905172611",
+          "name": "mip_public_surface_views"
+        },
+        {
+          "version": "20260905180142",
+          "name": "mip_public_surface_publication_gates"
+        },
+        {
+          "version": "20260905181254",
+          "name": "mip_public_surface_authenticated_review_revoke"
+        },
+        {
+          "version": "20260905182355",
+          "name": "mip_nested_claim_publication_gates"
+        },
+        {
+          "version": "20260906034920",
+          "name": "mip_legacy_graph_private_staging"
+        },
+        {
+          "version": "20260906042413",
+          "name": "evidence_change_queue_v1"
+        },
+        {
+          "version": "20260906051224",
+          "name": "evidence_assessment_dependencies_v1"
+        },
+        {
+          "version": "20260906054356",
+          "name": "evidence_capture_retrieval_v1"
+        },
+        {
+          "version": "20260906071525",
+          "name": "investigation_change_briefings_v1"
+        },
+        {
+          "version": "20260906075718",
+          "name": "investigation_workspace_batch_v1"
+        },
+        {
+          "version": "20260906100018",
+          "name": "investigation_evidence_checks_v1"
+        },
+        {
+          "version": "20260906121130",
+          "name": "investigation_evidence_reviews_v1"
+        },
+        {
+          "version": "20260907002409",
+          "name": "investigation_reference_integrity_v1"
+        },
+        {
+          "version": "20260907234007",
+          "name": "evidence_change_producer_claim_v1"
+        },
+        {
+          "version": "20260908002615",
+          "name": "evaluated_record_claim_v1"
+        },
+        {
+          "version": "20260908015040",
+          "name": "trigger_function_hardening_v1"
+        }
+      ],
+      "functionCatalog": [
+        {
+          "schema": "evidence_pipeline",
+          "functions": 42,
+          "definer_functions": 0,
+          "definer_without_config": 0,
+          "function_body_digest": "3d1b6ed765ef653e9d7dffdb54028bc0"
+        },
+        {
+          "schema": "legacy_graph_staging",
+          "functions": 27,
+          "definer_functions": 0,
+          "definer_without_config": 0,
+          "function_body_digest": "0a00cc70837af1a562fc5b0d7f7f6c22"
+        },
+        {
+          "schema": "mip_private",
+          "functions": 2,
+          "definer_functions": 2,
+          "definer_without_config": 0,
+          "function_body_digest": "06f5d08c099e0fbd49ae096041608e98"
+        },
+        {
+          "schema": "public",
+          "functions": 132,
+          "definer_functions": 4,
+          "definer_without_config": 0,
+          "function_body_digest": "538b791513289be0200cc3cb41f0cfa0"
+        },
+        {
+          "schema": "spatial",
+          "functions": 17,
+          "definer_functions": 17,
+          "definer_without_config": 0,
+          "function_body_digest": "2ca6d05760ac1af7c24670d780bd5b37"
+        }
+      ],
+      "schedulers": [],
+      "safeToRetire": false
+    },
+    {
+      "project": "yhbwnrtlqbjtcrrlpbge",
+      "schemas": [
+        {
+          "views": 0,
+          "schema": "auth",
+          "tables": 23,
+          "rls_tables": 16
+        },
+        {
+          "views": 0,
+          "schema": "cron",
+          "tables": 2,
+          "rls_tables": 2
+        },
+        {
+          "views": 2,
+          "schema": "extensions",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "graphql",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "graphql_public",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "mip_private",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "net",
+          "tables": 2,
+          "rls_tables": 0
+        },
+        {
+          "views": 12,
+          "schema": "public",
+          "tables": 82,
+          "rls_tables": 82
+        },
+        {
+          "views": 0,
+          "schema": "realtime",
+          "tables": 3,
+          "rls_tables": 1
+        },
+        {
+          "views": 0,
+          "schema": "spatial",
+          "tables": 15,
+          "rls_tables": 15
+        },
+        {
+          "views": 0,
+          "schema": "storage",
+          "tables": 8,
+          "rls_tables": 8
+        },
+        {
+          "views": 0,
+          "schema": "supabase_migrations",
+          "tables": 1,
+          "rls_tables": 0
+        },
+        {
+          "views": 1,
+          "schema": "vault",
+          "tables": 1,
+          "rls_tables": 0
+        }
+      ],
+      "auth_users": 0,
+      "extensions": [
+        "pg_cron",
+        "pg_net",
+        "pg_stat_statements",
+        "pg_trgm",
+        "pgcrypto",
+        "plpgsql",
+        "supabase_vault",
+        "uuid-ossp",
+        "vector"
+      ],
+      "queue_tables": [
+        "net.http_request_queue",
+        "public.author_profile_queue",
+        "public.ingest_sources",
+        "public.ingestion_checkpoints",
+        "public.ingestion_runs",
+        "public.ingestion_source_runs",
+        "public.ingestion_sources",
+        "public.ingestion_writer_credentials",
+        "public.source_comparison_enrichment_queue"
+      ],
+      "storage_buckets": 0,
+      "storage_objects": 0,
+      "project_references": null,
+      "functions": [
+        {
+          "name": "ingest-rss",
+          "version": 8,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "ace39d46b2b6970b57f01c76dae8480fe4e8c7a164fccf7868d4b2870ae6ddc2"
+        },
+        {
+          "name": "backfill-legacy",
+          "version": 9,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "5cd76641e068fb512c9d0815f9d35325a9806be11593829df1daf62f87de8f68"
+        },
+        {
+          "name": "import-original-source",
+          "version": 12,
+          "status": "ACTIVE",
+          "verify_jwt": false,
+          "bundle": "2c53ae3bf56d89f5f1196c204a9e3cdd7b225526fc581fe398c10bfe2ef3cf91"
+        },
+        {
+          "name": "source-comparison-run",
+          "version": 9,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "11596d5909d2b8f48b37699956f8a52566a7c90cfa6329e6f870c685b7db6c59"
+        },
+        {
+          "name": "arc-membership-run",
+          "version": 5,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "81b97c4315ae97b6d91180a83d5f1e0383ea891d0b1277d70e933fcd548feff3"
+        }
+      ],
+      "migrations": [
+        {
+          "version": "20260818110750",
+          "name": "mip_v2_base_schema"
+        },
+        {
+          "version": "20260818111142",
+          "name": "mip_v2_sandbox_baseline_compatibility_columns"
+        },
+        {
+          "version": "20260818111445",
+          "name": "mip_v2_sandbox_explanations_baseline"
+        },
+        {
+          "version": "20260818111742",
+          "name": "mip_v2_pre_p3_repository_migrations"
+        },
+        {
+          "version": "20260818111800",
+          "name": "mip_v2_sandbox_p3_baseline"
+        },
+        {
+          "version": "20260818111844",
+          "name": "mip_v2_sandbox_p3_pre_p2025_correction"
+        },
+        {
+          "version": "20260818111905",
+          "name": "mip_v2_post_p3_repository_migrations_retry_after_p2025_baseline_fix"
+        },
+        {
+          "version": "20260818112758",
+          "name": "mip_v2_sandbox_read_only_rls_remediation"
+        },
+        {
+          "version": "20260819045202",
+          "name": "geographic_graph_provenance"
+        },
+        {
+          "version": "20260819054904",
+          "name": "provenance_first_ingestion_pipeline"
+        },
+        {
+          "version": "20260819062517",
+          "name": "authenticated_ingestion_writer"
+        },
+        {
+          "version": "20260819063014",
+          "name": "authenticated_ingestion_writer_digest_schema_fix"
+        },
+        {
+          "version": "20260819065025",
+          "name": "authenticated_writer_citation_identity"
+        },
+        {
+          "version": "20260819082241",
+          "name": "gdelt_bigquery_discovery_source"
+        },
+        {
+          "version": "20260819180919",
+          "name": "candidate_owner_hold_review_state"
+        },
+        {
+          "version": "20260819204052",
+          "name": "isolated_arc_assignment_evidence_compatibility"
+        },
+        {
+          "version": "20260819230345",
+          "name": "candidate_path_and_metadata_only_repair"
+        },
+        {
+          "version": "20260820011142",
+          "name": "original_source_readonly_import_support"
+        },
+        {
+          "version": "20260820012130",
+          "name": "original_source_edge_sequence_compatibility"
+        },
+        {
+          "version": "20260820035645",
+          "name": "original_source_article_conflict_audit"
+        },
+        {
+          "version": "20260820051409",
+          "name": "20260820_v2_public_comparison_projection"
+        },
+        {
+          "version": "20260820052412",
+          "name": "v2_revoke_anonymous_base_table_reads"
+        },
+        {
+          "version": "20260820053158",
+          "name": "v2_public_authors_projection"
+        },
+        {
+          "version": "20260820055423",
+          "name": "v2_public_news_detail_projection"
+        },
+        {
+          "version": "20260820055610",
+          "name": "v2_public_arc_milestones_projection"
+        },
+        {
+          "version": "20260820061035",
+          "name": "v2_import_snapshot_stage_checkpoints"
+        },
+        {
+          "version": "20260820062842",
+          "name": "v2_backfill_imported_edge_metadata_references"
+        },
+        {
+          "version": "20260820065031",
+          "name": "v2_accelerate_public_news_search"
+        },
+        {
+          "version": "20260820071002",
+          "name": "v2_restore_imported_arc_roots"
+        },
+        {
+          "version": "20260820095148",
+          "name": "v2_claim_auditability_and_deterministic_promotion"
+        },
+        {
+          "version": "20260820095424",
+          "name": "v2_public_news_claim_auditability"
+        },
+        {
+          "version": "20260820095643",
+          "name": "v2_event_independent_public_claim_promotion"
+        },
+        {
+          "version": "20260821033342",
+          "name": "v2_source_comparison_membership_gate"
+        },
+        {
+          "version": "20260821033405",
+          "name": "v2_story_container_display_kind"
+        },
+        {
+          "version": "20260821033419",
+          "name": "v2_public_graph_coverage_projection"
+        },
+        {
+          "version": "20260821033433",
+          "name": "v2_news_feed_intake_gate"
+        },
+        {
+          "version": "20260821034107",
+          "name": "v2_source_comparison_membership_mutation_guard"
+        },
+        {
+          "version": "20260822052542",
+          "name": "v2_anonymous_read_policy_hardening"
+        },
+        {
+          "version": "20260823172539",
+          "name": "v2_source_comparison_membership_scoring"
+        },
+        {
+          "version": "20260823173714",
+          "name": "v2_source_comparison_membership_fingerprint_hash"
+        },
+        {
+          "version": "20260823173850",
+          "name": "v2_source_comparison_membership_fingerprint_hash_fix"
+        },
+        {
+          "version": "20260823182642",
+          "name": "v2_ingestion_recovery_and_arc_event_bridge"
+        },
+        {
+          "version": "20260823183052",
+          "name": "v2_ingestion_feed_timeout_budget"
+        },
+        {
+          "version": "20260823183408",
+          "name": "v2_ingestion_rotating_budget"
+        },
+        {
+          "version": "20260823200800",
+          "name": "v2_source_comparison_membership_202608235_release_policy"
+        },
+        {
+          "version": "20260823201610",
+          "name": "v2_ingestion_source_expansion_guardian_cbc"
+        },
+        {
+          "version": "20260823201835",
+          "name": "v2_entity_day_source_comparison_candidate_pilot"
+        },
+        {
+          "version": "20260823204059",
+          "name": "v2_arc_membership_scoring_default_deny"
+        },
+        {
+          "version": "20260823204140",
+          "name": "v2_arc_membership_candidate_seeding"
+        },
+        {
+          "version": "20260823212448",
+          "name": "20260823_v2_arc_membership_202608232_release_policy"
+        },
+        {
+          "version": "20260823213237",
+          "name": "20260823_v2_source_comparison_automatic_enrichment"
+        },
+        {
+          "version": "20260823220200",
+          "name": "gdelt_staged_bulk_ingestion"
+        },
+        {
+          "version": "20260823235145",
+          "name": "fix_gdelt_origination_uuid_component_key"
+        },
+        {
+          "version": "20260823235406",
+          "name": "complete_gdelt_origination_terminal_state"
+        },
+        {
+          "version": "20260824044020",
+          "name": "v2_arc_membership_post_approval_projection"
+        },
+        {
+          "version": "20260824044516",
+          "name": "v2_arc_projection_public_view_security"
+        },
+        {
+          "version": "20260825003543",
+          "name": "v2_arc_membership_append_only_provenance"
+        },
+        {
+          "version": "20260825021646",
+          "name": "v2_arc_runner_scoped_credential"
+        },
+        {
+          "version": "20260825194203",
+          "name": "timeline_v2_schema_contract"
+        },
+        {
+          "version": "20260826005542",
+          "name": "timeline_external_fetch_attempts_pilot_contract_20260826"
+        },
+        {
+          "version": "20260826021134",
+          "name": "timeline_external_fetch_attempt_attribution"
+        },
+        {
+          "version": "20260826023222",
+          "name": "timeline_v2_status_read_contract"
+        },
+        {
+          "version": "20260826024647",
+          "name": "timeline_v2_graph_identity_mapping_contract"
+        },
+        {
+          "version": "20260826024731",
+          "name": "timeline_v2_graph_identity_mapping_contract_hardening"
+        },
+        {
+          "version": "20260827014656",
+          "name": "v2_spatial_geography_read_hardening"
+        },
+        {
+          "version": "20260828214822",
+          "name": "20260828214700_mip_spatial_first_slice_schema_only_v04"
+        }
+      ],
+      "functionCatalog": [
+        {
+          "schema": "mip_private",
+          "functions": 3,
+          "definer_functions": 3,
+          "definer_without_config": 0,
+          "function_body_digest": "ea7d8fb98104b2f0ab5fd6702cdf572a"
+        },
+        {
+          "schema": "public",
+          "functions": 162,
+          "definer_functions": 29,
+          "definer_without_config": 0,
+          "function_body_digest": "76e9ce5d71eeba38f30ce72972620932"
+        },
+        {
+          "schema": "spatial",
+          "functions": 17,
+          "definer_functions": 17,
+          "definer_without_config": 0,
+          "function_body_digest": "f09343e410c69fdb3e421fa42b48f553"
+        }
+      ],
+      "schedulers": [
+        {
+          "jobid": 2,
+          "jobname": "mip-ingest-rss-hourly",
+          "schedule": "*/5 * * * *",
+          "active": true,
+          "project_refs": null,
+          "invokes_http": true,
+          "command_fingerprint": "1c3b44cb6a5ee472acc8d8fc5c61406c"
+        },
+        {
+          "jobid": 3,
+          "jobname": "mip-source-comparison-enrichment",
+          "schedule": "*/5 * * * *",
+          "active": true,
+          "project_refs": null,
+          "invokes_http": true,
+          "command_fingerprint": "4d97b65b5f45853d3a8438e7b9459eb9"
+        }
+      ],
+      "safeToRetire": false
+    },
+    {
+      "project": "niejaejtbxgakyrsntxm",
+      "schemas": [
+        {
+          "views": 0,
+          "schema": "auth",
+          "tables": 23,
+          "rls_tables": 16
+        },
+        {
+          "views": 0,
+          "schema": "cron",
+          "tables": 2,
+          "rls_tables": 2
+        },
+        {
+          "views": 2,
+          "schema": "extensions",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "graphql",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "graphql_public",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "net",
+          "tables": 2,
+          "rls_tables": 0
+        },
+        {
+          "views": 3,
+          "schema": "public",
+          "tables": 92,
+          "rls_tables": 92
+        },
+        {
+          "views": 0,
+          "schema": "realtime",
+          "tables": 10,
+          "rls_tables": 1
+        },
+        {
+          "views": 0,
+          "schema": "storage",
+          "tables": 8,
+          "rls_tables": 8
+        },
+        {
+          "views": 0,
+          "schema": "supabase_migrations",
+          "tables": 1,
+          "rls_tables": 0
+        },
+        {
+          "views": 1,
+          "schema": "vault",
+          "tables": 1,
+          "rls_tables": 0
+        }
+      ],
+      "auth_users": 3,
+      "extensions": [
+        "pg_cron",
+        "pg_graphql",
+        "pg_net",
+        "pg_stat_statements",
+        "pgcrypto",
+        "plpgsql",
+        "supabase_vault",
+        "uuid-ossp",
+        "vector"
+      ],
+      "queue_tables": [
+        "net.http_request_queue",
+        "public.author_profile_queue",
+        "public.ingest_sources"
+      ],
+      "storage_buckets": 1,
+      "storage_objects": 0,
+      "project_references": [
+        "niejaejtbxgakyrsntxm"
+      ],
+      "functions": [
+        {
+          "name": "ingest-rss",
+          "version": 41,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "0f8be050ad11842269a7bf8ad0385f8b0f2db2ac196cd0420e59f37e40e45bee"
+        },
+        {
+          "name": "debug-parse",
+          "version": 16,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "05e36eff041fd39a5f6ca8d13dd8c2515eced1c41175d7eda2d3b3e3120cac0b"
+        },
+        {
+          "name": "policy-ingest",
+          "version": 16,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "f18ec228daf35dd5001a436c1299a1229bab32fcc1657179bf44d0ef5c6143ef"
+        },
+        {
+          "name": "graph-analysis-run",
+          "version": 16,
+          "status": "ACTIVE",
+          "verify_jwt": true,
+          "bundle": "46c022f3de7ee08426dbc18e4898fbb0daca154f64d9427384b0caa96945d622"
+        },
+        {
+          "name": "source-comparison-run",
+          "version": 17,
+          "status": "ACTIVE",
+          "verify_jwt": false,
+          "bundle": "85fee3d94d0494d630a2e460e8eff4de44b596fc7819eff58664689f0badbafa"
+        },
+        {
+          "name": "batch-intake",
+          "version": 14,
+          "status": "ACTIVE",
+          "verify_jwt": false,
+          "bundle": "38fb688240b242b4d58338e78946c4ff501e578b1d4ca38a4078444eb3f80dc6"
+        }
+      ],
+      "migrations": [
+        {
+          "version": "20260723063328",
+          "name": "mip_knowledge_graph_schema_v2"
+        },
+        {
+          "version": "20260724034754",
+          "name": "mip_provenance_arc_assignment_layer"
+        },
+        {
+          "version": "20260724161124",
+          "name": "graph_arc_layout_fields"
+        },
+        {
+          "version": "20260724184020",
+          "name": "pass_a_data_correctness"
+        },
+        {
+          "version": "20260724193856",
+          "name": "arc_status_interface_milestone_states"
+        },
+        {
+          "version": "20260725122326",
+          "name": "entity_resolution_sanitization"
+        },
+        {
+          "version": "20260725130803",
+          "name": "backfill_reprocess_markers"
+        },
+        {
+          "version": "20260725144235",
+          "name": "article_entities_extraction_method_default"
+        },
+        {
+          "version": "20260725150852",
+          "name": "sky_verification_schema"
+        },
+        {
+          "version": "20260725151603",
+          "name": "node_typing"
+        },
+        {
+          "version": "20260725151637",
+          "name": "edge_typing"
+        },
+        {
+          "version": "20260725151706",
+          "name": "topics"
+        },
+        {
+          "version": "20260725160123",
+          "name": "policy_layer"
+        },
+        {
+          "version": "20260725161551",
+          "name": "policies_external_id_unique_fix"
+        },
+        {
+          "version": "20260726054310",
+          "name": "arc_backup_20260726"
+        },
+        {
+          "version": "20260726054403",
+          "name": "arc_fix_allowlist_working_tables"
+        },
+        {
+          "version": "20260726054524",
+          "name": "arc_fix_keep_rule_table"
+        },
+        {
+          "version": "20260726060639",
+          "name": "arc_fix_classify_function"
+        },
+        {
+          "version": "20260726084009",
+          "name": "arc_membership_fix_drop_temp_tables"
+        },
+        {
+          "version": "20260726103812",
+          "name": "tier2_entity_decode_functions"
+        },
+        {
+          "version": "20260726103934",
+          "name": "tier2_entity_decode_functions_fix"
+        },
+        {
+          "version": "20260726104014",
+          "name": "tier2_entity_decode_backups"
+        },
+        {
+          "version": "20260726112032",
+          "name": "tier2_entity_decode_r2"
+        },
+        {
+          "version": "20260726112135",
+          "name": "tier2_entity_decode_r2_backups"
+        },
+        {
+          "version": "20260726112640",
+          "name": "tier2_entity_decode_r2_punct_tails"
+        },
+        {
+          "version": "20260726135426",
+          "name": "decode_backup_20260726_r3"
+        },
+        {
+          "version": "20260726142835",
+          "name": "enable_rls_on_decode_backup_tables"
+        },
+        {
+          "version": "20260726154555",
+          "name": "backup_edges_and_add_sequence_type"
+        },
+        {
+          "version": "20260726190444",
+          "name": "tier3_causal_edge_evidence_guard"
+        },
+        {
+          "version": "20260726191759",
+          "name": "tier3_causal_edge_evidence_guard_hardened"
+        },
+        {
+          "version": "20260726193342",
+          "name": "tier3_causal_edge_evidence_guard_r2"
+        },
+        {
+          "version": "20260726193507",
+          "name": "tier3_causal_edge_evidence_guard_r3"
+        },
+        {
+          "version": "20260726193605",
+          "name": "tier3_causal_edge_evidence_guard_r4"
+        },
+        {
+          "version": "20260726203442",
+          "name": "tier3_causal_edge_guard_r5_amid_fix"
+        },
+        {
+          "version": "20260726212926",
+          "name": "secure_tier3_remediation_backup"
+        },
+        {
+          "version": "20260728015537",
+          "name": "tier6_iran_actor_dedup"
+        },
+        {
+          "version": "20260728142816",
+          "name": "explanations_schema"
+        },
+        {
+          "version": "20260728145132",
+          "name": "evidence_capture_columns"
+        },
+        {
+          "version": "20260729023113",
+          "name": "d4_d5_publication_guard_and_source_change_propagation"
+        },
+        {
+          "version": "20260729075130",
+          "name": "review_batch_20260729_checkpoint"
+        },
+        {
+          "version": "20260730030709",
+          "name": "d4_rejection_audit"
+        },
+        {
+          "version": "20260730150925",
+          "name": "d5_article_source_trigger"
+        },
+        {
+          "version": "20260731033351",
+          "name": "fix2_drop_authenticated_write_policies_edges_nodes"
+        },
+        {
+          "version": "20260731034359",
+          "name": "fix3_revoke_execute_apply_ingest_schedule"
+        },
+        {
+          "version": "20260803034814",
+          "name": "auto_verified_status_and_promotion_flag"
+        },
+        {
+          "version": "20260804071307",
+          "name": "phase3_policy_legal_schema"
+        },
+        {
+          "version": "20260804150915",
+          "name": "phase3_review_guard_hardening"
+        },
+        {
+          "version": "20260804153505",
+          "name": "graph_derived_tables"
+        },
+        {
+          "version": "20260804153619",
+          "name": "phase3_legal_case_evidence_source_url"
+        },
+        {
+          "version": "20260806161120",
+          "name": "20260806_source_comparison_primitives"
+        },
+        {
+          "version": "20260807051653",
+          "name": "20260807_ingestion_run_id"
+        },
+        {
+          "version": "20260807051730",
+          "name": "20260807_bias_incidents"
+        },
+        {
+          "version": "20260808044250",
+          "name": "enable_rls_on_7_backup_tables_deny_all_default"
+        },
+        {
+          "version": "20260808045429",
+          "name": "add_pre_ruling_tag_columns_to_articles"
+        },
+        {
+          "version": "20260809030711",
+          "name": "revoke_arc_fix_classify_public_execute"
+        },
+        {
+          "version": "20260809065301",
+          "name": "extend_explanations_assertion_type_check"
+        },
+        {
+          "version": "20260810155545",
+          "name": "ingest_rss_held_run_tags"
+        },
+        {
+          "version": "20260810163625",
+          "name": "canary_sweep_backup_20260809"
+        },
+        {
+          "version": "20260810181209",
+          "name": "tier3_causal_edge_guard_r6_weeks_months_after"
+        },
+        {
+          "version": "20260812030248",
+          "name": "20260813_atomic_arc_attach"
+        },
+        {
+          "version": "20260812050929",
+          "name": "add_p2025_track1_agency_and_source_locator"
+        },
+        {
+          "version": "20260812175607",
+          "name": "add_mip_profiles_table_with_rls"
+        },
+        {
+          "version": "20260812181852",
+          "name": "scope_mip_signup_trigger_by_app_metadata"
+        },
+        {
+          "version": "20260813040504",
+          "name": "add_account_ui_feature_flag"
+        },
+        {
+          "version": "20260813064937",
+          "name": "secure_duplicate_actor_label_monitor_invoker"
+        },
+        {
+          "version": "20260815051350",
+          "name": "20260815_track_b_light_theme_flag"
+        },
+        {
+          "version": "20260817040718",
+          "name": "article_lineage_assertions"
+        },
+        {
+          "version": "20260817040837",
+          "name": "article_lineage_assertions_revoke_truncate"
+        },
+        {
+          "version": "20260817041003",
+          "name": "article_lineage_assertions_reapply_after_rollback_drill"
+        },
+        {
+          "version": "20260817044631",
+          "name": "article_lineage_assertions_rls_allow_unreviewed_read"
+        },
+        {
+          "version": "20260817044700",
+          "name": "rls_policy_rollback_drill_revert"
+        },
+        {
+          "version": "20260817044717",
+          "name": "rls_policy_rollback_drill_reapply"
+        },
+        {
+          "version": "20260817071711",
+          "name": "lineage_graph_projection"
+        },
+        {
+          "version": "20260817071830",
+          "name": "lineage_graph_projection_revoke_defaults"
+        },
+        {
+          "version": "20260817071855",
+          "name": "lineage_graph_projection_rollback_drill"
+        },
+        {
+          "version": "20260817071912",
+          "name": "lineage_graph_projection_reapply_after_drill"
+        },
+        {
+          "version": "20260817182319",
+          "name": "add_location_corroboration_flag_default_false"
+        }
+      ],
+      "functionCatalog": [
+        {
+          "schema": "public",
+          "functions": 128,
+          "definer_functions": 5,
+          "definer_without_config": 2,
+          "function_body_digest": "a267f694051f3f595e182b97b3cc5823"
+        }
+      ],
+      "schedulers": [
+        {
+          "jobid": 2,
+          "jobname": "mip-ingest-rss-daily",
+          "schedule": "23 3 * * *",
+          "active": false,
+          "project_refs": [
+            "niejaejtbxgakyrsntxm"
+          ],
+          "invokes_http": true,
+          "command_fingerprint": "1118bafefc983d4a21cc0c940fb427ab"
+        },
+        {
+          "jobid": 3,
+          "jobname": "mip-backfill-legacy",
+          "schedule": "*/15 * * * *",
+          "active": false,
+          "project_refs": [
+            "niejaejtbxgakyrsntxm"
+          ],
+          "invokes_http": true,
+          "command_fingerprint": "2ea403d98f8275fdbfbd1fc21e102444"
+        }
+      ],
+      "safeToRetire": false
+    },
+    {
+      "project": "jfnzyvzthzqtczlxhjll",
+      "schemas": [
+        {
+          "views": 0,
+          "schema": "auth",
+          "tables": 23,
+          "rls_tables": 16
+        },
+        {
+          "views": 2,
+          "schema": "extensions",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "graphql",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "graphql_public",
+          "tables": 0,
+          "rls_tables": 0
+        },
+        {
+          "views": 0,
+          "schema": "public",
+          "tables": 13,
+          "rls_tables": 8
+        },
+        {
+          "views": 0,
+          "schema": "realtime",
+          "tables": 3,
+          "rls_tables": 1
+        },
+        {
+          "views": 0,
+          "schema": "spatial",
+          "tables": 15,
+          "rls_tables": 15
+        },
+        {
+          "views": 0,
+          "schema": "storage",
+          "tables": 8,
+          "rls_tables": 8
+        },
+        {
+          "views": 0,
+          "schema": "supabase_migrations",
+          "tables": 1,
+          "rls_tables": 0
+        },
+        {
+          "views": 1,
+          "schema": "vault",
+          "tables": 1,
+          "rls_tables": 0
+        }
+      ],
+      "auth_users": 0,
+      "extensions": [
+        "pg_stat_statements",
+        "pgcrypto",
+        "plpgsql",
+        "supabase_vault",
+        "uuid-ossp",
+        "vector"
+      ],
+      "queue_tables": null,
+      "storage_buckets": 0,
+      "storage_objects": 0,
+      "project_references": null,
+      "functions": [],
+      "migrations": [
+        {
+          "version": "20260901020934",
+          "name": "20260724_pipeline_config_prerequisite_verbatim"
+        },
+        {
+          "version": "20260901020953",
+          "name": "20260813_mip_profiles"
+        },
+        {
+          "version": "20260901021008",
+          "name": "20260813_scope_mip_signup_trigger"
+        },
+        {
+          "version": "20260901021019",
+          "name": "20260813_account_ui_flag"
+        },
+        {
+          "version": "20260901021231",
+          "name": "spatial_runtime_writer_addendum_v0_1_5"
+        }
+      ],
+      "functionCatalog": [
+        {
+          "schema": "public",
+          "functions": 116,
+          "definer_functions": 2,
+          "definer_without_config": 0,
+          "function_body_digest": "18eaf6f67b96a22a3d56a28accbc24bf"
+        },
+        {
+          "schema": "spatial",
+          "functions": 17,
+          "definer_functions": 17,
+          "definer_without_config": 0,
+          "function_body_digest": "cbeb8374547663f29e4ab37e5c4f1e13"
+        }
+      ],
+      "schedulers": [],
+      "safeToRetire": false
+    }
+  ],
+  "legacyFunctionDependencies": [
+    {
+      "project_id": "yhbwnrtlqbjtcrrlpbge",
+      "function_slug": "backfill-legacy",
+      "version": 9,
+      "files": [
+        "index.ts",
+        "lib.js"
+      ],
+      "env": [
+        "NER_API_URL",
+        "HF_API_TOKEN",
+        "NER_API_KEY",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "refs": [],
+      "tables": [
+        "pipeline_config",
+        "entities",
+        "article_entities",
+        "arc_milestones",
+        "nodes",
+        "edges",
+        "topics",
+        "node_topics",
+        "arc_membership_candidates",
+        "sources",
+        "arc_events",
+        "story_arcs",
+        "arc_entities",
+        "articles",
+        "citations",
+        "cross_surface_candidates",
+        "outlets"
+      ],
+      "rpc": []
+    },
+    {
+      "project_id": "yhbwnrtlqbjtcrrlpbge",
+      "function_slug": "import-original-source",
+      "version": 12,
+      "files": [
+        "index.ts"
+      ],
+      "env": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "refs": [],
+      "tables": [
+        "original_source_import_runs",
+        "original_source_import_credentials",
+        "articles",
+        "story_arcs"
+      ],
+      "rpc": []
+    },
+    {
+      "project_id": "yhbwnrtlqbjtcrrlpbge",
+      "function_slug": "source-comparison-run",
+      "version": 9,
+      "files": [
+        "index.ts",
+        "lib.js",
+        "loadedLanguageLexicon.json"
+      ],
+      "env": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "refs": [],
+      "tables": [
+        "original_source_import_credentials",
+        "explanations",
+        "claims",
+        "article_claims",
+        "source_comparison_membership_release_policy",
+        "events",
+        "source_comparison_enrichment_queue",
+        "pipeline_config"
+      ],
+      "rpc": [
+        "mip_source_comparison_schedule_authorized"
+      ]
+    },
+    {
+      "project_id": "yhbwnrtlqbjtcrrlpbge",
+      "function_slug": "arc-membership-run",
+      "version": 5,
+      "files": [
+        "index.ts",
+        "lib.js",
+        "auth.js"
+      ],
+      "env": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "refs": [],
+      "tables": [
+        "arc_membership_candidates",
+        "pipeline_config",
+        "arc_membership_release_policy",
+        "arc_membership_scores",
+        "arc_membership_audits",
+        "original_source_import_credentials"
+      ],
+      "rpc": [
+        "mip_approve_arc_membership_candidate"
+      ]
+    },
+    {
+      "project_id": "niejaejtbxgakyrsntxm",
+      "function_slug": "ingest-rss",
+      "version": 41,
+      "files": [
+        "index.ts"
+      ],
+      "env": [
+        "NER_API_URL",
+        "HF_API_TOKEN",
+        "NER_API_KEY",
+        "INGEST_RSS_RUN_KEY",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "refs": [],
+      "tables": [
+        "pipeline_config",
+        "entities",
+        "article_entities",
+        "arc_milestones",
+        "authors",
+        "author_profile_queue",
+        "nodes",
+        "edges",
+        "topics",
+        "node_topics",
+        "articles",
+        "story_arcs",
+        "sources",
+        "arc_events",
+        "arc_entities",
+        "outlets",
+        "ingest_sources",
+        "citations"
+      ],
+      "rpc": []
+    },
+    {
+      "project_id": "niejaejtbxgakyrsntxm",
+      "function_slug": "debug-parse",
+      "version": 16,
+      "files": [
+        "index.ts"
+      ],
+      "env": [],
+      "refs": [],
+      "tables": [],
+      "rpc": []
+    },
+    {
+      "project_id": "niejaejtbxgakyrsntxm",
+      "function_slug": "policy-ingest",
+      "version": 16,
+      "files": [
+        "index.ts"
+      ],
+      "env": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "refs": [],
+      "tables": [
+        "pipeline_config",
+        "nodes",
+        "entities",
+        "policies",
+        "policy_actors",
+        "edges",
+        "topics",
+        "policy_topics",
+        "policy_documents",
+        "articles",
+        "citations",
+        "article_entities"
+      ],
+      "rpc": []
+    },
+    {
+      "project_id": "niejaejtbxgakyrsntxm",
+      "function_slug": "graph-analysis-run",
+      "version": 16,
+      "files": [
+        "index.ts",
+        "lib.js"
+      ],
+      "env": [
+        "GRAPH_ANALYSIS_RUN_KEY",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "refs": [],
+      "tables": [
+        "graph_checkpoints",
+        "graph_layout_versions"
+      ],
+      "rpc": []
+    },
+    {
+      "project_id": "niejaejtbxgakyrsntxm",
+      "function_slug": "source-comparison-run",
+      "version": 17,
+      "files": [
+        "index.ts",
+        "lib.js",
+        "loadedLanguageLexicon.json"
+      ],
+      "env": [
+        "SOURCE_COMPARISON_PAGE_SIZE",
+        "SOURCE_COMPARISON_RUN_KEY",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "refs": [],
+      "tables": [
+        "pipeline_config",
+        "events",
+        "claims",
+        "explanations"
+      ],
+      "rpc": []
+    },
+    {
+      "project_id": "niejaejtbxgakyrsntxm",
+      "function_slug": "batch-intake",
+      "version": 14,
+      "files": [
+        "index.ts"
+      ],
+      "env": [
+        "BATCH_INTAKE_RUN_KEY",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "refs": [],
+      "tables": [
+        "articles",
+        "pipeline_config",
+        "outlets"
+      ],
+      "rpc": []
+    }
+  ],
+  "ledgerReadback": [
+    {
+      "project": "qikvmopbtijoebdqosyq",
+      "rows": [
+        {
+          "kind": "mappings",
+          "rows": 3818,
+          "full_row_digest": "38494338f18c9fb23888befc570cda0b"
+        },
+        {
+          "kind": "conflicts",
+          "rows": 1504,
+          "full_row_digest": "1ac593f207c1826bb9c58f8e3158bb2b"
+        }
+      ]
+    },
+    {
+      "project": "yhbwnrtlqbjtcrrlpbge",
+      "rows": [
+        {
+          "kind": "mappings",
+          "rows": 3818,
+          "full_row_digest": "38494338f18c9fb23888befc570cda0b"
+        },
+        {
+          "kind": "conflicts",
+          "rows": 1504,
+          "full_row_digest": "1ac593f207c1826bb9c58f8e3158bb2b"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Management listing covers four currently accessible projects; external or deleted backends remain unproven.",
+    "Catalog inventories and body digests are observations, not semantic parity proofs.",
+    "No credential values, user identities or source payloads were exported.",
+    "Cron success confirms SQL scheduling, not successful downstream ingestion.",
+    "No migrations, worker execution, deployment or legacy retirement performed."
+  ]
+}
