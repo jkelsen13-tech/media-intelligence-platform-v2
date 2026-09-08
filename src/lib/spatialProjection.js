@@ -311,10 +311,10 @@ export function defaultStampIndex(stamps, rows) {
 /** Shared time owns selection; array refreshes never choose a new time for the user. */
 export function worldViewRecordedTime(stamps, rows, requested) {
   const hasRequest = requested != null && requested !== ''
-  const dateScope = typeof requested === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(requested)
+  const dateScope = typeof requested === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(requested)
   if (hasRequest && !dateScope) {
     // Require an explicit offset: a local/ambiguous timestamp is not a recorded instant.
-    const ms = typeof requested === 'string' && /^\\d{4}-\\d{2}-\\d{2}T.*(?:Z|[+-]\\d{2}:\\d{2})$/i.test(requested)
+    const ms = typeof requested === 'string' && /^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/i.test(requested)
       ? Date.parse(requested) : NaN
     const index = Number.isFinite(ms) ? stamps.findIndex(s => s.ms === ms) : -1
     return { index: index < 0 ? null : index, atMs: Number.isFinite(ms) ? ms : null,
