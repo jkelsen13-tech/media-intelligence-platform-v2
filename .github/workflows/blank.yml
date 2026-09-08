@@ -99,3 +99,8 @@ jobs:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
           MIP_TIMELINE_BROWSER: webkit
         run: node verifier/runTimelineCompositionBrowser.mjs
+
+      - name: Verify live Graph Time evidence selection
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runGraphTimeBrowser.mjs

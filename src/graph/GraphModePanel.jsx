@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { recordedGeography, recordedTime, summarizeGeography } from '../lib/graphWorkspaceModel.js'
 import GeographyGlobe from './GeographyGlobe.jsx'
+import './time-records.css'
 
 function labelForPrecision(precision) {
   if (!precision) return 'Precision not recorded'
@@ -41,7 +42,7 @@ export default function GraphModePanel({
   }
 
   return (
-    <section className="graph-mode-panel" aria-live="polite" aria-label={isGeography ? 'Geography records' : 'Time records'}>
+    <section className={`graph-mode-panel${isGeography ? '' : ' graph-time-panel'}`} aria-live="polite" aria-label={isGeography ? 'Geography records' : 'Time records'}>
       <div className="graph-mode-panel-head">
         <div>
           <p className="graph-mode-eyebrow">Focused Graph</p>
@@ -120,13 +121,22 @@ export default function GraphModePanel({
           )}
         </div>
       ) : chronological.length > 0 ? (
-        <ol className="graph-mode-list">
+        <ol className="graph-mode-list graph-time-list" aria-label="Time-ordered graph records">
           {chronological.map((row) => (
             <li key={row.key}>
-              <span className="graph-mode-primary">{row.label}</span>
-              <span className="graph-mode-secondary">
-                {row.occurredAt ? `Recorded date: ${row.occurredAt.slice(0, 10)}` : 'No recorded date'}
-              </span>
+              <button
+                type="button"
+                className="graph-time-record"
+                aria-label={`Open node evidence: ${row.label}`}
+                disabled={!row.key || !onSelectNode}
+                onClick={() => onSelectNode?.(row.key)}
+              >
+                <span className="graph-mode-secondary graph-time-date">
+                  {row.occurredAt ? `Recorded date: ${row.occurredAt.slice(0, 10)}` : 'No recorded date'}
+                </span>
+                <span className="graph-mode-primary">{row.label}</span>
+                <span className="graph-time-action">Open node evidence</span>
+              </button>
             </li>
           ))}
         </ol>

@@ -300,6 +300,7 @@ export default function GraphView({
       })
     }
     const updateBandLabel = () => {
+      if (cy.destroyed()) return
       const el = bandLabelRef.current
       if (!el) return
       if (!runBand) {
@@ -343,6 +344,7 @@ export default function GraphView({
         fit: false,
       }
       cy.one('layoutstop', () => {
+        if (cy.destroyed()) return
         const bb = cy
           .nodes()
           .filter((n) => connectedIds.has(n.id()))
@@ -378,6 +380,7 @@ export default function GraphView({
     // --- C3: grid layer, synced to viewport changes ---
     const gridCanvas = gridRef.current
     const redrawGrid = () => {
+      if (cy.destroyed()) return
       if (gridCanvas) drawGrid(gridCanvas, cy)
     }
     cy.on('zoom pan resize', redrawGrid)
@@ -398,6 +401,7 @@ export default function GraphView({
     let mobileActiveNodeId = isMobile ? focusNodeId : null
 
     const applyLabels = () => {
+      if (cy.destroyed()) return
       const z = cy.zoom()
       cy.elements().removeClass('lbl')
       // Step 2b: cards engage only in FOCUSED views (owner-ruled adjustments
@@ -445,6 +449,7 @@ export default function GraphView({
     const restPositions = new Map() // id -> {x, y}
     const displaced = new Set() // ids currently pushed out
     const captureRest = () => {
+      if (cy.destroyed()) return
       restPositions.clear()
       cy.nodes().forEach((n) => {
         restPositions.set(n.id(), { ...n.position() })
@@ -464,6 +469,7 @@ export default function GraphView({
     }
 
     const declutter = () => {
+      if (cy.destroyed()) return
       const labeled = cy.nodes('.lbl')
       if (labeled.length === 0) return
       // Focal node: labeled node nearest the viewport center.
@@ -590,6 +596,7 @@ export default function GraphView({
     }
 
     const drawRegions = () => {
+      if (cy.destroyed()) return
       const canvas = regionCanvasRef.current
       const labelLayer = regionLabelLayerRef.current
       if (!canvas || !labelLayer) return
@@ -757,6 +764,7 @@ export default function GraphView({
     // zooms — so in focused views the separation pass runs at layout settle
     // regardless of the card regime (cards themselves stay zoom-gated).
     const runSettleSeparation = () => {
+      if (cy.destroyed()) return
       if (!focused || isMobile) return
       let scope = cy.nodes().toArray()
       if (scope.length > MAX_CARDS) {
@@ -773,6 +781,7 @@ export default function GraphView({
     }
 
     const updateOverlays = () => {
+      if (cy.destroyed()) return
       updateCards()
       drawRegions()
       applyLabels()
@@ -851,6 +860,7 @@ export default function GraphView({
     const resizeObserver =
       typeof ResizeObserver !== 'undefined'
         ? new ResizeObserver((entries) => {
+            if (cy.destroyed()) return
             cy.resize()
             redrawGrid()
             const rect = entries[0]?.contentRect
@@ -909,12 +919,18 @@ export default function GraphView({
     cyRef.current = cy
     return () => {
       resetLayoutRef.current = null
+      // Stop queued animation work before releasing the renderer. A layout
+      // completion already queued as a promise can still emit layoutstop;
+      // the drawing callbacks above therefore also reject destroyed instances.
+      cy.stop(true, false)
+      cy.elements().stop(true, false)
       graphContainer.removeEventListener('wheel', onWheelZoom, { capture: true })
       clearTimeout(declutterTimer)
       clearTimeout(relaxTimer)
       clearTimeout(fitFromResizeTimer)
       resizeObserver?.disconnect()
       cy.destroy()
+      if (cyRef.current === cy) cyRef.current = null
       clearCards()
     }
   }, [nodes, edges, onSelect, isMobile, focusNodeId])
@@ -962,6 +978,7 @@ export default function GraphView({
     const cy = cyRef.current
     if (!cy || cy.destroyed()) return
     const timer = setTimeout(() => {
+      if (cy.destroyed()) return
       cy.resize()
       cy.animate(
         { fit: { eles: cy.elements(), padding: 80 } },

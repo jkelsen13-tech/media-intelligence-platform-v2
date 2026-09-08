@@ -1,0 +1,50 @@
+/* Time mode uses the same evidence selection as Graph and Geography.
+   Record order is not a claim about elapsed time or causation. */
+.graph-mode-list.graph-time-list > li { padding: 0; }
+.graph-time-record {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.graph-time-record > span { min-width: 0; overflow-wrap: anywhere; }
+.graph-time-date { font-variant-numeric: tabular-nums; }
+.graph-time-action { color: var(--accent); font-size: 12px; }
+.graph-time-record:hover:not(:disabled) { background: var(--bg-inset); }
+.graph-time-record:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.graph-time-record:disabled { cursor: default; }
+@media (max-width: 1023px) {
+  .graph-time-record { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+}
+
+@media (max-width: 767px) {
+  /* Time mode is a reading surface. Give it page flow instead of sharing
+     the canvas's remaining-height slot with the large context inspector. */
+  .ws-shell[data-workspace-view='graph']:has(.graph-time-panel) {
+    display: block;
+    overflow-y: auto;
+  }
+  .ws-shell:has(.graph-time-panel) .ws-body { display: block; overflow: visible; }
+  .ws-shell:has(.graph-time-panel) :is(.ws-content, .app-main, .graph-layout, .graph-area, .graph-body, .graph-time-panel) {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    flex: none;
+  }
+  .ws-shell:has(.graph-time-panel) .ws-inspector {
+    position: static;
+    width: 100%;
+    max-height: none;
+  }
+  .graph-time-panel .graph-toolbar-btn { min-height: 44px; }
+}
