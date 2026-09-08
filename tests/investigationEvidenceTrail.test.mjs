@@ -181,7 +181,7 @@ test('impossible calendars and unsupported clocks never normalize into plausible
   for (const value of ['2023-02-29','1900-02-29','2024-02-30','2024-04-31',
     '2024-00-08','2024-13-08','2024-04-00','0000-01-01','2024-04-08T24:00:00Z',
     '2024-04-08T03:60:00Z','2024-04-08T03:04:60Z','2024-04-08T03:04:05+24:00',
-    '2024-04-08T03:04:05+01:60','04/08/2024','2024-04-08T03:04:05.1234567Z']) {
+    '2024-04-08T03:04:05+01:60','04/08/2024','2024-04-08\n','2024-04-08T03:04:05.1234567Z']) {
     assert.deepEqual(retainedDateDisplay(value),{label:'Unrecognized retained date',dateTime:null},value)
     assert.doesNotMatch(markup(RetainedInputDates,{input:{record_version:{recorded_at:value}}}),/<time/)
   }

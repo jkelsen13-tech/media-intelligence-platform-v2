@@ -55,7 +55,7 @@ export function retainedDateDisplay(value) {
   if (typeof value !== 'string' || !value) return { label: 'Not recorded', dateTime: null }
   const invalid = { label: 'Unrecognized retained date', dateTime: null }
   const match = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(\.\d{1,6})?)?(Z|[+-]\d{2}(?::?\d{2})?)?)?$/.exec(value)
-  if (!match) return invalid
+  if (!match || match[0] !== value) return invalid
   const [, year, month, day, hour, minute, second, fraction = '', zone] = match
   const y = Number(year), m = Number(month), d = Number(day)
   const leap = y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)
