@@ -10,7 +10,7 @@
 // vendors, live vehicle/camera overlays, cockpit/HUD, or present-day weather
 // on a historical event.
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { mipBackend } from '../lib/mipBackend.js'
 import GraphView from '../graph/GraphView'
 import TrustFooter from '../components/TrustFooter'
@@ -444,7 +444,7 @@ export default function WorldView({
     return worldGraph.nodes.length > 0 ? worldGraph.nodes : live
   }, [graph, worldGraph.nodes])
 
-  const selectedForMatch = worldViewSelectionForMatch(selected, investigationContext)
+  const selectedForMatch = useMemo(() => worldViewSelectionForMatch(selected, investigationContext), [selected, investigationContext])
   const selectedRows = useMemo(
     () => rowsMatchingSelection(loadStatus.rows, selectedForMatch),
     [loadStatus.rows, selectedForMatch],
@@ -538,10 +538,10 @@ export default function WorldView({
             ? 'No spatial state recorded at this time.'
             : 'No display_geometry available to plot.'
 
-  const handleMapSelect = (row) => {
+  const handleMapSelect = useCallback((row) => {
     const node = graphNodeMatchingProjection(graphNodes, row)
     onSelectProjection(node ?? selectionStubFromProjection(row), row)
-  }
+  }, [graphNodes, onSelectProjection])
 
   const showMap = mode === 'map' || mode === 'split'
   const showGraph = mode === 'graph' || mode === 'split'
