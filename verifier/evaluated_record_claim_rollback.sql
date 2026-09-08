@@ -17,6 +17,7 @@ begin
   values('rollback-test-only','test',kind,repeat('a',64),repeat('b',64),repeat('c',64),'rollback fixture; no retained qualification','automated rollback fixture',1,true,'{"producer_isolation":true,"bounded_work":true,"durable_recovery":true,"evidence_fidelity":true,"held_out_evaluation":true}','Synthetic contract fixture only; never valid production qualification') returning id into eid;
   begin perform public.mip_evaluated_record_claim_v1(eid,repeat('d',64),kind); raise exception 'wrong implementation accepted'; exception when others then if sqlerrm not like 'qualified evaluation required%' then raise; end if; end;
   begin perform public.mip_evaluated_record_claim_v1(eid,repeat('a',64),case when kind='article' then 'graph_node' else 'article' end); raise exception 'wrong kind accepted'; exception when others then if sqlerrm not like 'qualified evaluation required%' then raise; end if; end;
+  begin update evidence_pipeline.worker_evaluations set limitations='rewrite' where id=eid; raise exception 'immutable update accepted'; exception when others then if sqlerrm <> 'history is append-only' then raise; end if; end;
   j:=public.mip_evaluated_record_claim_v1(eid,repeat('a',64),kind);
   if j is null or j->'change'->>'record_version_id' is null or j->'change'->>'capture_id' is not null then raise exception 'expected matching record job'; end if;
   if not exists(select 1 from evidence_pipeline.record_versions v where v.id=(j->'change'->>'record_version_id')::uuid and v.record_kind=kind) then raise exception 'wrong record kind claimed'; end if;
@@ -25,6 +26,9 @@ begin
   perform public.mip_revoke_worker_evaluation_v1(eid,'rollback test');
   begin perform public.mip_evaluated_record_claim_v1(eid,repeat('a',64),kind); raise exception 'revoked evaluation accepted'; exception when others then if sqlerrm not like 'qualified evaluation required%' then raise; end if; end;
  end loop;
+ insert into evidence_pipeline.worker_evaluations(algorithm_key,algorithm_version,record_kind,implementation_sha256,dataset_sha256,report_sha256,report_ref,reviewer_ref,case_count,passed,acceptance_checks,limitations)
+ values('rollback-failed-only','test','article',repeat('a',64),repeat('b',64),repeat('c',64),'rollback fixture','rollback fixture',1,false,'{}','never valid production qualification') returning id into eid;
+ begin perform public.mip_evaluated_record_claim_v1(eid,repeat('a',64),'article'); raise exception 'failed evaluation accepted'; exception when others then if sqlerrm not like 'qualified evaluation required%' then raise; end if; end;
  if has_function_privilege('anon','public.mip_evaluated_record_claim_v1(uuid,text,text)','EXECUTE')
  or has_function_privilege('authenticated','public.mip_evaluated_record_claim_v1(uuid,text,text)','EXECUTE')
  or has_table_privilege('authenticated','evidence_pipeline.worker_evaluations','SELECT') then raise exception 'browser authority exposed'; end if;
