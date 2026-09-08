@@ -157,5 +157,10 @@ test('comparison displays retained publication and review precision without inve
     assert.match(text(renderer), /2026-08-06 00:00:00.123456 UTC\+05:30/)
     assert.match(text(renderer), /order not established from these records/)
     assert.doesNotMatch(text(renderer), /first reported by|same hour|Invalid Date/)
+    row.articles.forEach((article, index) => { article.published_at = '2026-08-05T12:00:00.00000' + (index + 1) + 'Z' })
+    const precise = comparisonBackendFixture({ tables: { comparison_public: [row] } })
+    await act(async () => renderer.update(React.createElement(View, { backend: precise.backend })))
+    assert.match(text(renderer), /<0.1h later/)
+    assert.doesNotMatch(text(renderer), /same hour/)
   } finally { await act(async () => renderer.unmount()) }
 })
