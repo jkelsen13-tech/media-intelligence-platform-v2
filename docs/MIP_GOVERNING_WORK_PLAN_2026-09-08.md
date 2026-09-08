@@ -27,3 +27,44 @@ Visual preferences must not recreate the viewer, move the camera, change time/se
 PR #117 merged the release-threshold guard and its regression coverage. Its Supabase deployment remains pending while the connector is unavailable; a fresh package comparison and JWT-preserving deployment/readback are still required. PR #118 addresses a concrete post-merge timestamp verifier race without removing assertions. The previous graph dismissal/selection/zoom and article-identity fixes are on main; the complete post-merge browser sequence must pass before the live verification checkpoint is closed.
 
 The intended surviving Supabase project remains `qikvmopbtijoebdqosyq`. Legacy projects `yhbwnrtlqbjtcrrlpbge`, `niejaejtbxgakyrsntxm`, and `jfnzyvzthzqtczlxhjll` still require reconciliation. No legacy project is currently proven SAFE TO RETIRE. SINGLE-BACKEND CONSOLIDATION COMPLETE must not be declared. VF-1 is planned, not yet implemented by this checkpoint.
+
+## Markets revision and current reconciliation
+
+The owner supplied MIP_Astra_Work_Plan_World_View_Visual_Fidelity_Markets_2026-09-08.pdf
+in the continuing implementation request. Its Markets addition is required
+initial-release work alongside the preserved campaigns/packages and Visual Fidelity.
+
+Markets must reuse retained reporting, canonical typed/dated identities,
+assessments, roots and publication rules. Deliver a dedicated workspace,
+reusable asset card, direct reporting/connected developments/broader context,
+and two-way supported event/asset discovery. Tickers are aliases, not IDs.
+Every essential relationship hop needs exact dated evidence; co-location,
+similar names and price movement cannot manufacture a relationship or cause.
+Corrections invalidate current dependents while preserving recorded history.
+
+MK-0 reconciles existing contracts and rights; MK-1 delivers the shared
+evidence slice independently of quotes; MK-2 adds only permission-cleared
+no-fee price displays; MK-3 verifies discovery in both directions; MK-4
+re-audits identity, historical behavior, privacy, failures and all surfaces.
+TradingView displays remain separate from numerical data and require actual
+site/symbol/privacy/attribution qualification. CoinMarketCap native data remains
+off pending account-specific commercial/history/retention rights and hard
+quota proof. No new subscription, trial, overage or paid fallback is authorized.
+No provider is enabled by this record. Stock and crypto end-to-end completion,
+including a supported indirect path, remain outstanding.
+
+Fresh reconciliation at main d3d0066010a7166ccdc546f6d0167e693a268801:
+Golden 34283862244 and Pages 34283862230 completed successfully, including
+postmerge live verification. Manus source-comparison-run is now v11 with JWT
+verification enabled; index.ts, lib.js and loadedLanguageLexicon.json exactly
+match the reviewed runtime-snapshots/source-comparison-run-v10 files.
+This supersedes the earlier pending-deployment statement above.
+Both Manus five-minute schedules remain active. Survivor queue counts are
+dependency_lookup completed 7/pending 2 and new_candidate_search completed
+1/pending 8. These transport counts do not certify semantic discovery.
+
+Draft PR #37 is historical: its migration, fixture, evaluation contract and
+verification receipt are already exact blobs on main; its report, smoke SQL
+and tests have newer main versions. Do not merge/reapply the old draft over
+current work. No legacy retirement or worker cutover is established here.
+See VISUAL_FIDELITY_VF1_2026-09-08.md for the current frontend batch.

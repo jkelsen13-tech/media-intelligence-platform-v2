@@ -238,10 +238,13 @@ test('adapter wires relief shading on by default and exposes the toggle', () => 
   // real calls in worldViewStartupLifecycle.test.mjs, not pinned to syntax.
   assert.match(DISPATCHER_SRC, /getReliefShadingEnabled: \(\) => impl\?\.getReliefShadingEnabled/)
   // canvas: labeled control + legend + probe passthrough
-  assert.match(CANVAS_SRC, /TERRAIN_RELIEF_TOGGLE_LABEL/)
+  const panel = readFileSync(new URL('../src/components/WorldViewVisualFidelityPanel.jsx', import.meta.url), 'utf8')
+  const profile = readFileSync(new URL('../src/lib/worldViewVisualFidelity.js', import.meta.url), 'utf8')
+  assert.match(profile, /Terrain relief shading/)
   assert.match(CANVAS_SRC, /TERRAIN_RELIEF_LEGEND_TEXT/)
   assert.match(CANVAS_SRC, /setReliefShadingEnabled/)
-  assert.match(CANVAS_SRC, /type="checkbox"/)
+  assert.match(panel, /type="checkbox"/)
+  assert.match(CANVAS_SRC, /setVisualFidelityProfile/)
   // label text is truthful about derivation and the clamped range
   assert.match(TERRAIN_RELIEF_TOGGLE_LABEL, /[Rr]elief/)
   assert.match(TERRAIN_RELIEF_LEGEND_TEXT, /elevation tint from approved terrain sources/)

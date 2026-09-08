@@ -1,3 +1,4 @@
+import { normalizeVisualFidelityProfile, visualFidelityCapabilities } from './worldViewVisualFidelity.js'
 // R4 World View — renderer adapter seam (MapLibre + deck.gl 2D/2.5D).
 //
 // This module is DISPLAY-only: it never rewrites Investigation Context,
@@ -480,6 +481,7 @@ export function createWorldViewRendererAdapter(args, {
   let selectedKeys = args?.getSelectedKeys?.() ?? new Set()
   let onSelectRow = args?.onSelectRow
   let reliefShadingEnabled
+  let visualFidelityProfile
   const cancelled = () => destroyed || Boolean(args?.isCancelled?.())
 
   async function start() {
@@ -517,6 +519,7 @@ export function createWorldViewRendererAdapter(args, {
     ready = true
     impl?.setOnSelectRow?.(onSelectRow)
     if (reliefShadingEnabled !== undefined) impl?.setReliefShadingEnabled?.(reliefShadingEnabled)
+    if (visualFidelityProfile) impl?.setVisualFidelityProfile?.(visualFidelityProfile)
     await impl?.setFeatures?.(features, selectedKeys)
   }
 
@@ -555,6 +558,14 @@ export function createWorldViewRendererAdapter(args, {
       return ready ? impl?.setReliefShadingEnabled?.(enabled) ?? false : false
     },
     getReliefShadingEnabled: () => impl?.getReliefShadingEnabled?.() ?? false,
+    setVisualFidelityProfile: (profile) => {
+      if (cancelled()) return false
+      visualFidelityProfile = normalizeVisualFidelityProfile(profile)
+      return ready ? impl?.setVisualFidelityProfile?.(visualFidelityProfile) ?? false : false
+    },
+    getVisualFidelityCapabilities: () => ready && !cancelled()
+      ? impl?.getVisualFidelityCapabilities?.() ?? visualFidelityCapabilities({ reason: 'Effects unavailable on this fallback renderer.' })
+      : visualFidelityCapabilities(),
     requestRender: () => impl?.requestRender?.(),
     destroy: () => {
       if (destroyed) return

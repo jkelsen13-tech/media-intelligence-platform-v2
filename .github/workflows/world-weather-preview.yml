@@ -85,6 +85,10 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runWeatherRightsBrowser.mjs
+      - name: Verify Visual Fidelity profile and fallback
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runVisualFidelityBrowser.mjs
       - name: Verify exact-version reference form
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser

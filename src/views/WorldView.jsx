@@ -15,6 +15,8 @@ import { mipBackend } from '../lib/mipBackend.js'
 import GraphView from '../graph/GraphView'
 import TrustFooter from '../components/TrustFooter'
 import WorldMapCanvas from './WorldMapCanvas'
+import WorldViewVisualFidelityPanel from '../components/WorldViewVisualFidelityPanel'
+import { defaultVisualFidelityProfile, reduceVisualFidelityProfile, visualFidelityCapabilities } from '../lib/worldViewVisualFidelity.js'
 import {
   liveGraphNodes,
   plotDecision,
@@ -399,6 +401,8 @@ export default function WorldView({
   backend = mipBackend.publicData.spatial,
 }) {
   const [mode, setMode] = useState('map')
+  const [visualFidelity, setVisualFidelity] = useState(defaultVisualFidelityProfile)
+  const [fidelityCapabilities, setFidelityCapabilities] = useState(visualFidelityCapabilities)
   const [touchInteraction, setTouchInteraction] = useState(false)
   const [loadStatus, setLoadStatus] = useState({
     status: 'loading',
@@ -585,6 +589,10 @@ export default function WorldView({
 
       <div className={`wv-layout wv-layout-${mode}`}>
         <div className="wv-main">
+          <WorldViewVisualFidelityPanel profile={visualFidelity}
+            capabilities={mode === 'graph' ? visualFidelityCapabilities({ reason: 'Map is hidden in Graph mode; preferences are retained.' }) : fidelityCapabilities}
+            onAction={action => setVisualFidelity(profile => reduceVisualFidelityProfile(profile, action,
+              mode === 'graph' ? visualFidelityCapabilities() : fidelityCapabilities))} />
           <div className="wv-touch-controls">
             <button type="button" aria-pressed={touchInteraction} onClick={() => setTouchInteraction((active) => !active)}>
               {touchInteraction ? 'Done — scroll page' : `Interact with ${mode === 'split' ? 'map and graph' : mode}`}
@@ -594,6 +602,8 @@ export default function WorldView({
           <div className={`wv-stage wv-stage-${mode}${touchInteraction ? ' wv-touch-active' : ''}`}>
             {showMap && (
               <WorldMapCanvas
+                visualFidelity={visualFidelity}
+                onVisualFidelityCapabilities={setFidelityCapabilities}
                 rows={mapRows}
                 selectedKeys={selectedKeys}
                 onSelectRow={handleMapSelect}
