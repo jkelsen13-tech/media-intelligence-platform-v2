@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import TestRenderer, { act } from 'react-test-renderer'
-import { savedAssessmentTrail, selectedContextUsers, retainedInputDates, retainedDateLabel } from '../src/lib/investigationEvidenceTrail.js'
+import { savedAssessmentTrail, selectedContextUsers, retainedInputDates, retainedDateLabel, retainedDateDisplay } from '../src/lib/investigationEvidenceTrail.js'
 import { FIXTURE_BUNDLES, FIXTURE_USER } from '../src/lib/investigationWorkspaceFixtures.js'
 import { investigationWorkspacePanels } from '../src/lib/investigationWorkspaceClient.js'
 import { WORKSPACE_STATUS } from '../src/lib/investigationWorkspaceSession.js'
@@ -76,9 +76,9 @@ test('input positions never round through numbers and selected context users exc
 test('dates use capture payload publication and capture time, never obsolete fields or queue time as a substitute', () => {
   const input = fixture().observation.snapshot.inputs[0]
   const html = markup(RetainedInputDates, { input })
-  assert.match(html, /2019-01-02 03:04:05.000 UTC/)
-  assert.match(html, /2020-02-03 04:05:06.000 UTC/)
-  assert.match(html, /2021-03-04 05:06:07.000 UTC/)
+  assert.match(html, /2019-01-02 03:04:05 UTC/)
+  assert.match(html, /2020-02-03 04:05:06 UTC/)
+  assert.match(html, /2021-03-04 05:06:07 UTC/)
   delete input.capture.payload.published_at
   delete input.capture.captured_at
   const dates = retainedInputDates(input)
@@ -140,4 +140,58 @@ test('private trails disappear when access is denied and unavailable bundles do 
   assert.doesNotMatch(html, /Saved evidence trail|left reasoning|Source History|Shared article capture/)
   assert.equal(savedAssessmentTrail(null, selectedId(bundle)), null)
   assert.match(markup(Trail, { bundle: null, assessmentId: selectedId(bundle) }), /trail unavailable/)
+})
+
+test('date-only source values retain day precision without inventing UTC midnight', () => {
+  assert.deepEqual(retainedDateDisplay('2024-04-08'), {label:'2024-04-08 (date only)',dateTime:'2024-04-08'})
+  const input={capture:{payload:{published_at:'2024-04-08'}}}
+  const before=structuredClone(input), html=markup(RetainedInputDates,{input})
+  assert.match(html, /datetime="2024-04-08"/i)
+  assert.match(html, /2024-04-08 \(date only\)/)
+  assert.doesNotMatch(html, /00:00|UTC/)
+  assert.deepEqual(input,before)
+})
+
+test('minute, second and microsecond precision survive display without padding or truncation', () => {
+  for (const clock of ['03:04','03:04:05','03:04:05.1','03:04:05.123456']) {
+    const value='2024-04-08T'+clock+'Z'
+    assert.deepEqual(retainedDateDisplay(value), {label:'2024-04-08 '+clock+' UTC',dateTime:value})
+  }
+})
+
+test('numeric source offsets stay explicit without shifting the recorded calendar day', () => {
+  assert.deepEqual(retainedDateDisplay('2024-04-08T00:15:00+0530'), {
+    label:'2024-04-08 00:15:00 UTC+05:30',dateTime:'2024-04-08T00:15:00+05:30'})
+  assert.equal(retainedDateLabel('2024-04-08T23:15:00-04:00'),'2024-04-08 23:15:00 UTC-04:00')
+  assert.deepEqual(retainedDateDisplay('2024-04-08 17:59:00.123456+00'), {
+    label:'2024-04-08 17:59:00.123456 UTC',dateTime:'2024-04-08T17:59:00.123456+00:00'})
+})
+
+test('unqualified local clocks are not promoted to UTC or machine-readable instants', () => {
+  const value='2024-04-08T03:04:05'
+  assert.deepEqual(retainedDateDisplay(value),{label:'2024-04-08 03:04:05 (time zone not recorded)',dateTime:null})
+  const html=markup(RetainedInputDates,{input:{record_version:{recorded_at:value}}})
+  assert.match(html,/time zone not recorded/)
+  assert.doesNotMatch(html,/<time|UTC/)
+  assert.deepEqual(retainedDateDisplay('2024-04-08T03:04:05-00:00'), {
+    label:'2024-04-08 03:04:05 UTC (local offset unknown)',dateTime:'2024-04-08T03:04:05Z'})
+})
+
+test('impossible calendars and unsupported clocks never normalize into plausible dates', () => {
+  for (const value of ['2023-02-29','1900-02-29','2024-02-30','2024-04-31',
+    '2024-00-08','2024-13-08','2024-04-00','0000-01-01','2024-04-08T24:00:00Z',
+    '2024-04-08T03:60:00Z','2024-04-08T03:04:60Z','2024-04-08T03:04:05+24:00',
+    '2024-04-08T03:04:05+01:60','04/08/2024','2024-04-08\n','2024-04-08T03:04:05.1234567Z']) {
+    assert.deepEqual(retainedDateDisplay(value),{label:'Unrecognized retained date',dateTime:null},value)
+    assert.doesNotMatch(markup(RetainedInputDates,{input:{record_version:{recorded_at:value}}}),/<time/)
+  }
+  assert.equal(retainedDateDisplay('2000-02-29').dateTime,'2000-02-29')
+  assert.equal(retainedDateDisplay('2024-02-29').dateTime,'2024-02-29')
+})
+
+test('empty retained dates remain absent and never borrow another recorded clock', () => {
+  for (const value of [null,undefined,'',0,{}]) assert.deepEqual(retainedDateDisplay(value),{label:'Not recorded',dateTime:null})
+  const html=markup(RetainedInputDates,{input:{capture:{payload:{},captured_at:'2024-04-08T03:04:05Z'}}})
+  assert.match(html,/<dt>Source publication<\/dt><dd>Not recorded<\/dd>/)
+  assert.match(html,/2024-04-08 03:04:05 UTC/)
 })

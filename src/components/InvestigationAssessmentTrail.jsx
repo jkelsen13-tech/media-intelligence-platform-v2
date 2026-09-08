@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
-import { savedAssessmentTrail, selectedContextUsers, retainedInputDates, retainedDateLabel } from '../lib/investigationEvidenceTrail.js'
+import { savedAssessmentTrail, selectedContextUsers, retainedInputDates, retainedDateDisplay } from '../lib/investigationEvidenceTrail.js'
 import { assessmentOutcomeCopy, safeWorkspaceHttpUrl, snapshotInputPayload } from '../lib/investigationWorkspaceSession.js'
 
 const PAGE_SIZE = 10
@@ -25,10 +25,13 @@ export function AssessmentSavedReasoning({ assessment }) {
 }
 
 export function RetainedInputDates({ input }) {
-  return <dl className="piw-input-dates">{retainedInputDates(input).map(({ label, value }) => <div key={label}>
-    <dt>{label}</dt><dd>{value && Number.isFinite(Date.parse(value))
-      ? <time dateTime={value} title={value}>{retainedDateLabel(value)}</time> : retainedDateLabel(value)}</dd>
-  </div>)}</dl>
+  return <dl className="piw-input-dates">{retainedInputDates(input).map(({ label, value }) => {
+    const display = retainedDateDisplay(value)
+    return <div key={label}>
+      <dt>{label}</dt><dd>{display.dateTime
+        ? <time dateTime={display.dateTime} title={value}>{display.label}</time> : display.label}</dd>
+    </div>
+  })}</dl>
 }
 
 export function RetainedInputRecord({ input, position, bundle }) {

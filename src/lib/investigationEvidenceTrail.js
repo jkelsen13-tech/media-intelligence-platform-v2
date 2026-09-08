@@ -49,8 +49,40 @@ export function retainedInputDates(input) {
   ]
 }
 
+// Display recorded precision directly. Date.parse would invent midnight/timezone
+// details and normalize some impossible calendar dates.
+export function retainedDateDisplay(value) {
+  if (typeof value !== 'string' || !value) return { label: 'Not recorded', dateTime: null }
+  const invalid = { label: 'Unrecognized retained date', dateTime: null }
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(\.\d{1,6})?)?(Z|[+-]\d{2}(?::?\d{2})?)?)?$/.exec(value)
+  if (!match || match[0] !== value) return invalid
+  const [, year, month, day, hour, minute, second, fraction = '', zone] = match
+  const y = Number(year), m = Number(month), d = Number(day)
+  const leap = y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  if (y < 1 || m < 1 || m > 12 || d < 1 || d > days[m - 1]) return invalid
+  const date = year + '-' + month + '-' + day
+  if (hour === undefined) return { label: date + ' (date only)', dateTime: date }
+  if (Number(hour) > 23 || Number(minute) > 59 || (second !== undefined && Number(second) > 59)) return invalid
+  const clock = hour + ':' + minute + (second === undefined ? '' : ':' + second + fraction)
+  if (!zone) return { label: date + ' ' + clock + ' (time zone not recorded)', dateTime: null }
+  let offset = zone
+  if (zone !== 'Z') {
+    const digits = zone.slice(1).replace(':', '')
+    const hours = digits.slice(0, 2), minutes = digits.slice(2) || '00'
+    if (Number(hours) > 23 || Number(minutes) > 59) return invalid
+    offset = zone[0] + hours + ':' + minutes
+  }
+  // Retain the explicitly unknown local offset while preserving the known UTC time.
+  if (offset === '-00:00') return {
+    label: date + ' ' + clock + ' UTC (local offset unknown)', dateTime: date + 'T' + clock + 'Z',
+  }
+  return {
+    label: date + ' ' + clock + (zone === 'Z' || offset === '+00:00' ? ' UTC' : ' UTC' + offset),
+    dateTime: date + 'T' + clock + offset,
+  }
+}
+
 export function retainedDateLabel(value) {
-  if (typeof value !== 'string' || !value) return 'Not recorded'
-  const timestamp = Date.parse(value)
-  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString().replace('T', ' ').replace('Z', ' UTC') : 'Unrecognized retained date'
+  return retainedDateDisplay(value).label
 }
