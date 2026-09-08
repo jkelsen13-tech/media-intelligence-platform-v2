@@ -3,7 +3,7 @@
 .graph-mode-list.graph-time-list > li { padding: 0; }
 .graph-time-record {
   display: grid;
-  grid-template-columns: 130px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(150px, 1fr) minmax(0, 2fr) auto;
   align-items: center;
   gap: 12px;
   width: 100%;
@@ -48,3 +48,8 @@
   }
   .graph-time-panel .graph-toolbar-btn { min-height: 44px; }
 }
+
+.graph-time-note { margin: 0 0 16px; color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+.graph-time-group + .graph-time-group { margin-top: 20px; }
+.graph-time-group h3 { margin: 0 0 8px; font-size: 13px; color: var(--text-primary); }
+.graph-time-group h3 span { color: var(--text-secondary); font-weight: normal; }

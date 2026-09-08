@@ -1,3 +1,4 @@
+import { retainedDateDisplay } from './investigationEvidenceTrail.js'
 import { REGION_META, regionOf } from '../graph/cardRegions.js'
 
 export const GRAPH_WORKSPACE_MODES = Object.freeze([
@@ -150,19 +151,58 @@ export function isMappableConfirmedLocation(row) {
   return isConfirmedLocation(row) && hasCoordinates(row)
 }
 
-// Time order preserves undated nodes as explicit unknowns rather than placing
-// them at an invented point on the chronology.
+// Keep incomparable clocks in separate groups. Ordering within a precision
+// interval is not established; an interval's start is only a display sort key.
+export const GRAPH_TIME_GROUPS = Object.freeze([
+  Object.freeze({ id: 'instant', label: 'Dates with a recorded time zone' }),
+  Object.freeze({ id: 'date', label: 'Calendar dates only' }),
+  Object.freeze({ id: 'local', label: 'Time zone not recorded' }),
+  Object.freeze({ id: 'invalid', label: 'Unrecognized dates' }),
+  Object.freeze({ id: 'missing', label: 'No recorded date' }),
+])
+
+function timeRecord(value) {
+  const display = retainedDateDisplay(value)
+  if (!value) return { ...display, label: 'No recorded date', kind: 'missing' }
+  if (!display.dateTime) return {
+    ...display,
+    kind: display.label === 'Unrecognized retained date' ? 'invalid' : 'local',
+  }
+  if (display.dateTime.length === 10) return { ...display, kind: 'date' }
+  const match = /^(.*T\d{2}:\d{2})(?::(\d{2})(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.exec(display.dateTime)
+  // Parse only the validated, explicitly qualified whole-second clock.
+  // Compare fractions separately so microseconds are never rounded to milliseconds.
+  return {
+    ...display,
+    kind: 'instant',
+    wholeSecond: Date.parse(match[1] + ':' + (match[2] ?? '00') + match[4]),
+    fraction: Number((match[3]?.slice(1) ?? '').padEnd(6, '0')),
+  }
+}
+
 export function recordedTime(nodes) {
+  const rank = new Map(GRAPH_TIME_GROUPS.map((group, index) => [group.id, index]))
   return [...(nodes ?? [])]
-    .map((node) => ({
-      key: nodeKey(node),
-      label: node.label ?? nodeKey(node),
-      occurredAt: text(node?.occurred_at),
-    }))
+    .map((node) => {
+      const occurredAt = text(node?.occurred_at)
+      return {
+        key: nodeKey(node),
+        label: node.label ?? nodeKey(node) ?? 'Unnamed record',
+        occurredAt,
+        date: timeRecord(occurredAt),
+      }
+    })
     .sort((a, b) => {
-      if (!a.occurredAt && !b.occurredAt) return a.label.localeCompare(b.label)
-      if (!a.occurredAt) return 1
-      if (!b.occurredAt) return -1
-      return a.occurredAt.localeCompare(b.occurredAt) || a.label.localeCompare(b.label)
+      const group = rank.get(a.date.kind) - rank.get(b.date.kind)
+      if (group) return group
+      if (a.date.kind === 'instant') {
+        const instant = a.date.wholeSecond - b.date.wholeSecond || a.date.fraction - b.date.fraction
+        if (instant) return instant
+      }
+      if (a.date.kind === 'date') {
+        const calendar = a.date.dateTime.localeCompare(b.date.dateTime)
+        if (calendar) return calendar
+      }
+      return a.label.localeCompare(b.label) || String(a.key ?? '').localeCompare(String(b.key ?? ''))
     })
 }

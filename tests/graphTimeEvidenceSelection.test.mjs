@@ -65,3 +65,29 @@ test('Time records without a usable identity or selection handler remain disable
     } finally { await act(async () => root?.unmount()) }
   }
 })
+
+test('Time rows expose full precision and keep unknown or invalid clocks out of time elements', async () => {
+  let root
+  const selected=[]
+  try {
+    await act(async()=>{root=TestRenderer.create(React.createElement(GraphModePanel,{
+      mode:'time', onSelectNode:id=>selected.push(id),
+      nodes:[
+        {id:'offset',label:'Offset',occurred_at:'2024-04-08T12:34:56.123456+02:00'},
+        {id:'day',label:'Day',occurred_at:'2024-04-08'},
+        {id:'local',label:'Local',occurred_at:'2024-04-08T12:34'},
+        {id:'invalid',label:'Invalid',occurred_at:'2024-02-30'},
+      ],
+    }))})
+    const times=root.root.findAllByType('time')
+    assert.deepEqual(times.map(t=>t.props.dateTime),['2024-04-08T12:34:56.123456+02:00','2024-04-08'])
+    assert.match(textOf(root.toJSON()),/12:34:56\.123456 UTC\+02:00/)
+    assert.match(textOf(root.toJSON()),/2024-04-08 \(date only\)/)
+    assert.match(textOf(root.toJSON()),/time zone not recorded/)
+    assert.match(textOf(root.toJSON()),/Unrecognized retained date/)
+    for (const row of root.root.findAllByProps({className:'graph-time-record'})) {
+      await act(async()=>row.props.onClick())
+    }
+    assert.deepEqual(selected,['offset','day','local','invalid'])
+  } finally {await act(async()=>root?.unmount())}
+})
