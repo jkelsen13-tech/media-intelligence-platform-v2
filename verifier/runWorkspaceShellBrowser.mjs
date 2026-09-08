@@ -41,6 +41,8 @@ try {
       assert.ok(before.x+before.width <= dock.x+1,'inspector does not cover evidence')
     }
     if (width<768) {
+      const searchBox = await page.getByRole('searchbox',{name:'Search timeline events',exact:true}).boundingBox()
+      assert.ok(searchBox && searchBox.height>=44 && searchBox.height<=60,'phone timeline search is touch-sized, not a tall flex spacer')
       assert.ok(before.height>=300,'phone retains full evidence reading flow')
       assert.ok(dock.y>=before.y+before.height-1,'phone inspector follows evidence')
     }

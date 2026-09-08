@@ -1,6 +1,6 @@
 # Shared workspace frame — design QA
 
-final result: passed
+final result: blocked
 
 This result applies to the bounded shared-frame increment in PR #92. It does
 not certify completion or pixel fidelity of the five-view destination.
@@ -40,7 +40,10 @@ not certify completion or pixel fidelity of the five-view destination.
    reading height, the inspector follows it, and Account/menu remain usable.
    Tablet search has room for its descriptive placeholder. Browser geometry
    assertions independently verify the phone flow and desktop/tablet space.
-   No unresolved P0/P1/P2 finding in this scoped increment.
+   A closer phone record capture subsequently exposed a 220px search field.
+3. P2 phone search: the horizontal flex basis became vertical when controls
+   stacked. Reset its flex basis and require a 44–60px field in browser checks.
+   Post-fix verification pending; this is the remaining QA blocker.
 
 ## Required fidelity surfaces
 - Typography: existing Inter/system sans and readable 12–13px control text,

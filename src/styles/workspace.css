@@ -1199,3 +1199,11 @@
     max-height: none;
   }
 }
+
+@media (max-width: 720px) {
+  .ws-shell .timeline-search {
+    flex: 0 0 auto;
+    min-height: 44px;
+    min-width: 0;
+  }
+}
