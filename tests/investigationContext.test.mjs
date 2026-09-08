@@ -171,8 +171,9 @@ test('JUMP_CLEARS does not include Investigation Context; tab nav must not reset
   assert.match(APP, /setInvestigationActiveView/)
   assert.match(
     APP,
-    /onClick=\{\(\) => \(v\.key === 'more' \? setMoreOpen\(true\) : changeView\(v\.key\)\)\}/,
+    /onClick=\{\(\) => \(v\.key === 'more' \? setMoreOpen\(true\) : navigateWorkspaceView\(v\.key\)\)\}/,
   )
+  assert.match(APP, /const navigateWorkspaceView = useCallback[\s\S]*view === PRIVATE_INVESTIGATION_VIEW[\s\S]*else \{\s*changeView\(key\)/)
   assert.match(APP, /const changeView = useCallback/)
   const changeIdx = APP.indexOf('const changeView = useCallback')
   const changeBody = APP.slice(changeIdx, APP.indexOf('}, [])', changeIdx) + 8)
