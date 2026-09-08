@@ -85,7 +85,9 @@ jobs:
       - name: Verify live shared workspace
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
-        run: node verifier/runWorkspaceShellBrowser.mjs
+        run: |
+          node verifier/runWorkspaceShellBrowser.mjs
+          MIP_BROWSER_ENGINE=webkit node verifier/runWorkspaceShellBrowser.mjs
       - name: Verify live weather and navigation boundaries
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
