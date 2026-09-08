@@ -1,3 +1,4 @@
+import { verifyRecordedTimestampCompatibility } from './recordedTimestampCompatibility.mjs'
 import { observeBackendBoundary } from './backendBoundary.mjs'
 // Runs only in an ephemeral GitHub Actions runner against the built application.
 // Uses the existing public read API. No login, database writes or provider fetches.
@@ -7,7 +8,7 @@ import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 
 const require = createRequire(process.env.MIP_BROWSER_PACKAGE + '/package.json')
-const { chromium } = require('playwright')
+const { chromium, webkit } = require('playwright')
 const origin = process.env.MIP_LIVE_SITE === '1' ? 'https://jkelsen13-tech.github.io' : 'http://127.0.0.1:4173'
 const server = process.env.MIP_LIVE_SITE === '1' ? null : spawn('npm', ['run', 'preview', '--', '--host', '127.0.0.1', '--port', '4173', '--strictPort'], { stdio: 'ignore' })
 let browser
@@ -20,6 +21,10 @@ try {
   }
   assert.ok(ready, 'built application preview must start')
   browser = await chromium.launch({ headless: true })
+  await verifyRecordedTimestampCompatibility(browser, origin, 'chromium')
+  const webkitBrowser = await webkit.launch({headless:true})
+  try { await verifyRecordedTimestampCompatibility(webkitBrowser, origin, 'webkit') }
+  finally { await webkitBrowser.close() }
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
   const verifyBackend = observeBackendBoundary(page)
   const restrictedRequests = []
