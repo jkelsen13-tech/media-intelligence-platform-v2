@@ -36,6 +36,7 @@ try {
     const dialog = page.getByRole('dialog',{name:'Explore / Change Topic',exact:true})
     const route = page.url()
     await search.focus()
+    assert.equal(await page.locator('.ws-search').evaluate(el=>getComputedStyle(el).outlineStyle),'solid','search focus remains visible')
     assert.equal(await dialog.count(),0,'search focus must not open Explore '+width)
     await search.click()
     assert.equal(await dialog.count(),0,'search click must not open Explore '+width)
