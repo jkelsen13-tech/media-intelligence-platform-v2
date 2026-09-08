@@ -327,6 +327,12 @@ test('restore sanitizes direct input and preserves absence for invalid identity'
 
 test('unavailable or throwing browser storage fails without breaking navigation', () => {
   assert.equal(writeRecentInvestigations(null, []), false)
+  // JSON escapes lone surrogates: check serialized size, not just input field lengths.
+  const expanded = Array.from({length:8}, () => ({
+    canonical_subject_id: '\\ud800'.repeat(512), parent_event_id: '\\ud800'.repeat(512),
+    subObject:{kind:'entity',id:'\\ud800'.repeat(512)},
+  }))
+  assert.equal(writeRecentInvestigations(memoryStorage(), expanded), false)
   assert.equal(writeRecentInvestigations({setItem() {throw new Error('quota')}}, []), false)
   assert.deepEqual(readRecentInvestigations({getItem() {throw new Error('blocked')}}), [])
 })

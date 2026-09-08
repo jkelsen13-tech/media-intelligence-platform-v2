@@ -149,10 +149,9 @@ export function readRecentInvestigations(storage) {
 export function writeRecentInvestigations(storage, stack) {
   try {
     if (typeof storage?.setItem !== 'function') return false
-    storage?.setItem?.(
-      RECENT_INVESTIGATION_STORAGE_KEY,
-      JSON.stringify(boundRecentInvestigationStack(stack)),
-    )
+    const serialized = JSON.stringify(boundRecentInvestigationStack(stack))
+    if (serialized.length > RECENT_INVESTIGATION_MAX_STORAGE_LENGTH) return false
+    storage.setItem(RECENT_INVESTIGATION_STORAGE_KEY, serialized)
     return true
   } catch {
     return false
