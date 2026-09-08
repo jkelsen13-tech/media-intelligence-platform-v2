@@ -80,7 +80,7 @@ test('canvas keeps a usable minimum height instead of collapsing under chrome', 
 })
 
 test('zoom controls stay inside the canvas wrap, not over coverage chrome', () => {
-  assert.match(GRAPH, /<div className="graph-canvas-wrap">/)
+  assert.match(GRAPH, /<div className="graph-canvas-wrap"(?:\s|>)/)
   assert.match(GRAPH, /<GraphViewControls/)
   assert.ok(GRAPH.indexOf('className="graph-canvas-wrap"') < GRAPH.indexOf('<GraphViewControls'))
   assert.match(INDEX_CSS, /\.graph-view-controls \{[\s\S]*position: absolute/)
