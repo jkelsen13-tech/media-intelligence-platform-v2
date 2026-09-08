@@ -50,7 +50,7 @@ function CategoryControl({ profile, category, capabilities, onAction }) {
               <p id={descriptionId}>
                 {!supported ? capability?.reason ?? 'Unavailable on this renderer.'
                   : active ? 'On' : remembered ? 'Off; your On preference is remembered.' : 'Off'}
-                {leaf === 'fxaa' ? ' Optional edge smoothing; may soften map labels. Off in all presets.' : ''}
+                {leaf === 'fxaa' ? ' Optional edge smoothing; may soften map labels. Off in Performance, Balanced and Maximum.' : ''}
                 {leaf === 'resolutionScale' ? ' Neutral 1.0×; supersampling is deferred.' : ''}
               </p>
             </div>
@@ -83,7 +83,7 @@ export default function WorldViewVisualFidelityPanel({ profile, capabilities, on
           </select>
         </label>
         <p>Performance adds no effects. Balanced and Maximum currently enable only approved terrain relief.
-          FXAA is available as an optional Custom setting. Other enhancements await verification. Cost estimates are relative, not frame-rate measurements.</p>
+          FXAA can be selected in Custom when supported. Other enhancements await verification. Cost estimates are relative, not frame-rate measurements.</p>
         {FIDELITY_CATEGORIES.map(category => <CategoryControl key={category.id} category={category}
           profile={profile} capabilities={capabilities} onAction={onAction} />)}
         {effective.reliefShading && <p>{TERRAIN_RELIEF_LEGEND_TEXT}</p>}
