@@ -1,4 +1,4 @@
-// Production UI, public backend reads; request failure injected only in this browser.
+// Production UI and live public reads. A synthetic arc and failed response exist only in this browser; never seed the database.
 import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
 import {spawn} from 'node:child_process'
@@ -15,6 +15,21 @@ try {
       const page=await browser.newPage({viewport:{width:1280,height:1000}})
       const errors=[];page.on('pageerror',e=>errors.push(e.message))
       let deny=true, inventory=null, arcId=null, calls=0
+      // The live public arc inventory is currently empty. Verify that baseline,
+      // then exercise the dormant source UI with an explicitly synthetic arc.
+      const arcResponses=[]
+      page.on('response',async response=>{
+        if(new URL(response.url()).pathname.endsWith('/rest/v1/story_arcs') && response.ok())
+          arcResponses.push(await response.json())
+      })
+      await page.goto(origin+'#/event/acc55cb2-5ac2-4aed-be36-3f576d2bc443/arcs')
+      for(let i=0;i<100 && !arcResponses.length;i++)await delay(100)
+      assert.ok(arcResponses.length,'live public arc read completed')
+      assert.deepEqual(arcResponses[0],[],'current public arc inventory is empty')
+      assert.equal(await page.locator('.ap-source').count(),0)
+      await page.route('**/rest/v1/story_arcs?**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{
+        id:'00000000-0000-4000-8000-000000000001',slug:'verification-only-arc',category:'unclassified',summary:'Synthetic browser verification only',started_at:'2024-04-08'
+      }])}))
       await page.route('**/rest/v1/articles?**',async route=>{
         const url=new URL(route.request().url())
         if(!url.searchParams.has('arc_id'))return route.continue()
@@ -24,7 +39,7 @@ try {
         inventory=await response.json()
         return route.fulfill({response})
       })
-      await page.goto(origin+'#/event/acc55cb2-5ac2-4aed-be36-3f576d2bc443/arcs')
+      await page.reload()
       await page.locator('.arcs-view').waitFor({timeout:60000})
       await page.locator('.arc-panel').getByRole('tab',{name:'Evidence',exact:true}).click()
       const panel=page.getByRole('tabpanel')
@@ -47,7 +62,7 @@ try {
         console.log('MIP_ARC_SOURCES_'+engine+'_'+width+'='+(await panel.screenshot({type:'jpeg',quality:65})).toString('base64'))
       }
       assert.deepEqual(errors,[])
-      console.log('MIP_ARC_SOURCES_PASS='+JSON.stringify({engine,live,injectedFailure:true,keyboardRetry:true,publicReadRecovered:true,records:inventory.length,arcId,widths:[1280,768,390,320]}))
+      console.log('MIP_ARC_SOURCES_PASS='+JSON.stringify({engine,live,injectedFailure:true,keyboardRetry:true,publicReadRecovered:true,syntheticArcOnly:true,liveBaselineEmpty:true,records:inventory.length,arcId,widths:[1280,768,390,320]}))
     } finally {await browser.close()}
   }
 } finally {server?.kill()}
