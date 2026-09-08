@@ -13,6 +13,8 @@ test('scrubbed instant and date-only or precise ranges survive independent share
     assert.equal(restored.as_of_time,ic.as_of_time)
     assert.deepEqual(restored.selected_time_range,range)
     assert.equal(restored.canonical_subject_id,ic.canonical_subject_id)
+    const offset={...ic,as_of_time:'2024-02-29T23:59:59.123456-04:00'}
+    assert.equal(hydrateDeepLink(serializeDeepLink(offset)).investigationContext.as_of_time,offset.as_of_time)
   }
 })
 
@@ -27,7 +29,7 @@ test('legacy time links keep their meaning and stale inspection parameters canno
 })
 
 test('duplicate, malformed and offset-free inspection instants cannot silently override scoped time',()=>{
-  for (const tail of ['at=bad','at=2024-04-08','at=2024-04-08T19:00:00','at=2030-01-01T00:00:00Z&at=2040-01-01T00:00:00Z']) {
+  for (const tail of ['at=2024-02-30T12:00:00Z','at=2024-04-08T24:00:00Z','at=bad','at=2024-04-08','at=2024-04-08T19:00:00','at=2030-01-01T00:00:00Z&at=2040-01-01T00:00:00Z']) {
     const restored=hydrateDeepLink('#/event/event-1/world?time=2024-04-08..&'+tail).investigationContext
     assert.equal(restored.as_of_time,'2024-04-08')
   }
