@@ -30,7 +30,7 @@ import {
   normalizeEvidenceRefs,
   inspectorAvailability,
   mayShowLocation,
-  defaultStampIndex,
+  worldViewRecordedTime,
   autoSelectRow,
   graphSelectionId,
   sourceNativeTimeFields,
@@ -340,7 +340,8 @@ function EventInspector({
   )
 }
 
-function TimelineScrubber({ stamps, index, onChange, disabledReason }) {
+function TimelineScrubber({ stamps, time, onChange, disabledReason }) {
+  const index = time.index
   if (!stamps.length) {
     return (
       <section className="wv-scrubber" data-filter-family="investigation" aria-label="Investigation filters">
@@ -352,28 +353,37 @@ function TimelineScrubber({ stamps, index, onChange, disabledReason }) {
       </section>
     )
   }
-  const current = stamps[index] ?? stamps[stamps.length - 1]
+  const current = index == null ? null : stamps[index]
   return (
     <section className="wv-scrubber" data-filter-family="investigation" aria-label="Investigation filters">
       <header className="wv-section-head">
         <h3>Recorded time</h3>
-        <span className="wv-meta num">{current?.iso}</span>
+        <span className="wv-meta num">{time.atIso}</span>
       </header>
       <p className="filter-family-label">Investigation filters</p>
       <p className="wv-meta">
         Recorded time inspects the current subject and writes as_of_time only. The canonical subject does not change.
         Scrubber snaps to timestamps recorded on the projection. Intermediate history is not interpolated.
       </p>
-      <input
+      {time.kind === 'date_scope' && <p className="wv-meta">Showing a recorded marker on the scoped UTC date. The shared date-only scope stays unchanged until you choose a time.</p>}
+      {index == null ? (
+        <label className="wv-meta">The selected time is not a recorded marker. No nearest marker is substituted.
+          <select aria-label="Choose a recorded time" value="" onChange={(e) => onChange(Number(e.target.value))}>
+            <option value="" disabled>Choose a recorded marker</option>
+            {stamps.map((stamp, i) => <option key={stamp.ms} value={i}>{stamp.iso}</option>)}
+          </select>
+        </label>
+      ) : <input
         type="range"
         min={0}
         max={stamps.length - 1}
         step={1}
         value={Math.min(index, stamps.length - 1)}
         onChange={(e) => onChange(Number(e.target.value))}
-        aria-valuetext={current?.iso}
-      />
-      <p className="wv-meta">Source field: {current?.key}</p>
+        aria-valuetext={time.atIso}
+        aria-label="Recorded time"
+      />}
+      {current && <p className="wv-meta">Source field: {current.key}</p>}
     </section>
   )
 }
@@ -405,7 +415,6 @@ export default function WorldView({
     error: null,
     reason: null,
   })
-  const [stampIndex, setStampIndex] = useState(0)
   const [temporalAssessment, setTemporalAssessment] = useState(null)
   const [weather, setWeather] = useState(() => unavailableWeather('not_loaded'))
   const didAutoSelect = useRef(false)
@@ -438,9 +447,7 @@ export default function WorldView({
   )
   const stamps = useMemo(() => recordedTimestampsForRows(selectedRows), [selectedRows])
 
-  useEffect(() => {
-    setStampIndex(defaultStampIndex(stamps, selectedRows))
-  }, [stamps, selectedRows])
+  const recordedTime = worldViewRecordedTime(stamps, selectedRows, investigationContext?.as_of_time)
 
   useEffect(() => {
     if (loadStatus.status !== 'ok' || loadStatus.rows.length === 0) return
@@ -463,16 +470,10 @@ export default function WorldView({
     }
   }, [loadStatus, graphNodes, selected, onSelectProjection, investigationContext])
 
-  const atMs = stamps[stampIndex]?.ms ?? null
-  const atIso = stamps[stampIndex]?.iso ?? null
-  useEffect(() => {
-    if (!onInvestigationAsOfTime) return
-    if (!investigationContext?.canonical_subject_id) return
-    onInvestigationAsOfTime(atIso)
-  }, [atIso, investigationContext?.canonical_subject_id, onInvestigationAsOfTime])
+  const atMs = recordedTime.atMs
   const visibleRow = Number.isFinite(atMs)
     ? revisionAtTime(selectedRows, atMs)
-    : selectedRows.length
+    : !recordedTime.hasRequest && selectedRows.length
       ? [...selectedRows].sort((a, b) => (a.revision_ordinal ?? 0) - (b.revision_ordinal ?? 0)).at(-1)
       : null
 
@@ -632,8 +633,11 @@ export default function WorldView({
           </div>
           <TimelineScrubber
             stamps={stamps}
-            index={stampIndex}
-            onChange={setStampIndex}
+            time={recordedTime}
+            onChange={(index) => {
+              const stamp = Number.isInteger(index) ? stamps[index] : null
+              if (stamp) onInvestigationAsOfTime?.(stamp.iso)
+            }}
             disabledReason={
               loadStatus.status === 'empty'
                 ? 'No projection rows, so there is no recorded time to scrub.'

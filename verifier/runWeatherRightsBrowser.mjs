@@ -60,6 +60,35 @@ try {
   await weather.getByText('Weather not sourced. No present-day value is substituted.', { exact: true }).waitFor()
   assert.equal(await weather.getAttribute('data-weather-status'), 'unavailable')
   assert.equal(await weather.locator('dd').filter({ hasText: /^Not sourced$/ }).count(), 5)
+  // Reproduce the live reset race: choosing End used to publish the new time
+  // and immediately reset it to the default through the projection-array effect.
+  const timeSlider=page.getByRole('slider',{name:'Recorded time',exact:true})
+  await timeSlider.press('End')
+  await page.waitForFunction(()=>{
+    const slider=document.querySelector('.wv-scrubber input[type="range"]')
+    return slider && slider.value===slider.max && slider.max!=='0'
+      && document.querySelector('.wv-view')?.getAttribute('data-as-of-time')===slider.getAttribute('aria-valuetext')
+  })
+  const chosenTime=await timeSlider.getAttribute('aria-valuetext')
+  const chosenRange=await page.locator('.wv-view').getAttribute('data-selected-time-range')
+  const evidenceTabs=page.getByRole('tablist',{name:'Evidence views',exact:true})
+  await evidenceTabs.getByRole('tab',{name:'Timeline',exact:true}).click()
+  await evidenceTabs.getByRole('tab',{name:'World View',exact:true}).click()
+  await page.waitForFunction(expected=>{
+    const slider=document.querySelector('.wv-scrubber input[type="range"]')
+    return slider && slider.getAttribute('aria-valuetext')===expected
+      && document.querySelector('.wv-view')?.getAttribute('data-as-of-time')===expected
+  },chosenTime)
+  assert.equal(await timeSlider.inputValue(),await timeSlider.getAttribute('max'),'remount restores the chosen marker')
+  await page.getByText('No spatial state recorded at this time.',{exact:true}).first().waitFor()
+  await page.reload()
+  await page.waitForFunction(expected=>document.querySelector('.wv-scrubber input[type="range"]')?.getAttribute('aria-valuetext')===expected,chosenTime)
+  assert.equal(await page.locator('.wv-view').getAttribute('data-as-of-time'),chosenTime)
+  assert.equal(await page.locator('.wv-view').getAttribute('data-selected-time-range'),chosenRange,'reload preserves the original scope independently')
+  await timeSlider.press('Home')
+  await inspector.getByText('coarsened_to_precision_class',{exact:true}).waitFor()
+  await weather.getByText('Weather not sourced. No present-day value is substituted.',{exact:true}).waitFor()
+  console.log('MIP_RECORDED_TIME_RETENTION_PASS='+JSON.stringify({explicitChoice:true,viewRoundTrip:true,reload:true,scopePreserved:true,outsideTimeUnplotted:true,homeRestoresRecordedGeometry:true}))
   // A short desktop viewport used to shrink the grid below its children:
   // inspector bottom 701px, layout bottom 622px, review footer top 650px.
   // Test actual rendered boundaries, not particular CSS declarations.
