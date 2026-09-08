@@ -1,6 +1,7 @@
 // R4 World View launch spine — event-time weather (DISPLAY only).
 //
-// Authorized path: Open-Meteo archive / ECMWF ERA5, free, no paid key.
+// Superseding 2026-09-07 no-fee plan: free hosted Open-Meteo requests disabled.
+// Pure ERA5 parsing helpers remain for legacy fixtures; they do not fetch.
 // Temperature, precipitation, wind speed, wind direction only.
 // Labeled reanalysis when that is what the archive returns.
 //
@@ -9,6 +10,7 @@
 // only; extra environmental layers are not requested.
 
 import { plotDecision, collectPositions, revisionCoverageAt } from './spatialProjection.js'
+import { weatherSourcePermission } from './weatherSourceRights.js'
 
 export const EVENT_TIME_WEATHER_PROVIDER = 'Open-Meteo'
 export const EVENT_TIME_WEATHER_MODEL = 'era5'
@@ -185,7 +187,7 @@ export function weatherFromArchivePayload(payload, atMs) {
   })
 }
 
-export async function loadEventTimeWeather({ row, atMs, nowMs = Date.now(), fetchImpl } = {}) {
+export async function loadEventTimeWeather({ row, atMs, nowMs = Date.now() } = {}) {
   const request = eventTimeWeatherRequest(row, atMs, nowMs)
   if (!request.ok) {
     const copy =
@@ -197,16 +199,10 @@ export async function loadEventTimeWeather({ row, atMs, nowMs = Date.now(), fetc
     return unavailableWeather(request.reason, copy)
   }
 
-  const url = buildArchiveUrl(request)
-  const fetchFn = fetchImpl ?? (typeof fetch === 'function' ? fetch : null)
-  if (!fetchFn) return unavailableWeather('fetch_unavailable')
+  const permission = weatherSourcePermission('open-meteo-archive-free-era5', 'display')
+  if (!permission.allowed) return unavailableWeather(permission.reason)
 
-  try {
-    const response = await fetchFn(url, { headers: { Accept: 'application/json' } })
-    if (!response?.ok) return unavailableWeather('fetch_failed')
-    const payload = await response.json()
-    return weatherFromArchivePayload(payload, request.atMs)
-  } catch {
-    return unavailableWeather('fetch_failed')
-  }
+  // A future source approval is not an adapter implementation. Enabling a
+  // reviewed replacement requires its own bounded adapter and regression tests.
+  return unavailableWeather('adapter_not_implemented')
 }

@@ -1,0 +1,38 @@
+name: World View weather preview
+
+on:
+  pull_request:
+    paths:
+      - 'src/lib/eventTimeWeather.js'
+      - 'src/lib/weatherSourceRights.js'
+      - 'src/views/WorldView.jsx'
+      - 'src/views/worldview.css'
+      - 'verifier/runWeatherRightsBrowser.mjs'
+      - '.github/workflows/world-weather-preview.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  weather-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      # Existing public client configuration; no user session or privileged key.
+      VITE_SUPABASE_URL: https://qikvmopbtijoebdqosyq.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_7EVSYlCWYiE6YL0bDBYr_w_iwB9tve_
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build
+      - name: Install isolated browser verifier
+        run: |
+          npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
+          node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Verify built weather panel on phone and desktop
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWeatherRightsBrowser.mjs
