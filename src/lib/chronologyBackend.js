@@ -16,3 +16,12 @@ export function createChronologyBackend(supabaseClient = null) {
     loadArcGroupedTimeline: () => loadArcGroupedTimeline(options),
   })
 }
+
+// Empty is meaningful only after a successful read of the public projection.
+// Both global and arc readers retain edgesUnavailable from the Data API seam.
+export function chronologyConnectionReadState(data, error = null) {
+  if (error || data?.edgesUnavailable) return 'unavailable'
+  if (data == null) return 'loading'
+  const edges = data.relationEdges ?? data.edges
+  return Array.isArray(edges) ? 'ready' : 'unavailable'
+}

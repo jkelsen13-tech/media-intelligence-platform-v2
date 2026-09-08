@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { build } from 'esbuild'
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
-import { createChronologyBackend } from '../src/lib/chronologyBackend.js'
+import { createChronologyBackend, chronologyConnectionReadState } from '../src/lib/chronologyBackend.js'
 import { newsBackendFixture } from './newsBackendFixture.mjs'
 
 const arcId = 'arc-one'
@@ -104,4 +104,38 @@ test('all chronology views use the shared interface including grouped and excerp
     else assert.match(src, /loadArticle=\{backend.loadArticleExcerpt\}/)
     if (name === 'TimelineView') assert.match(src, /<GroupedTimelineView\s+backend=\{backend\}/)
   }
+})
+
+
+test('connection availability distinguishes a successful empty projection from unknown reads', () => {
+  assert.equal(chronologyConnectionReadState(null), 'loading')
+  assert.equal(chronologyConnectionReadState(null, 'failed'), 'unavailable')
+  assert.equal(chronologyConnectionReadState({}), 'unavailable')
+  for (const key of ['edges', 'relationEdges']) {
+    assert.equal(chronologyConnectionReadState({ [key]: [] }), 'ready')
+    assert.equal(chronologyConnectionReadState({ [key]: [], edgesUnavailable: 'denied' }), 'unavailable')
+    assert.equal(chronologyConnectionReadState({ [key]: [{ id: 'stale' }] }, 'failed'), 'unavailable')
+  }
+})
+
+test('global and arc connection reads preserve denied, missing, recovered and empty states through the SDK', async () => {
+  const tables = { nodes: [{ id: 'event-one', slug: 'event-one', label: 'One', type: 'event', arc_id: arcId }] }
+  let unavailable = { code: '42501', message: 'relationships unavailable' }
+  const f = fixture({ tables, errors: { edges: () => unavailable } })
+  for (const code of ['42501', '42P01', 'PGRST205']) {
+    unavailable = { code, message: 'relationships unavailable' }
+    for (const read of [() => f.backend.loadTimeline(), () => f.backend.loadArcConnections(arcId)]) {
+      const result = await read()
+      assert.equal(chronologyConnectionReadState(result), 'unavailable')
+    }
+  }
+  unavailable = null
+  for (const read of [() => f.backend.loadTimeline(), () => f.backend.loadArcConnections(arcId)]) {
+    const result = await read()
+    assert.equal(chronologyConnectionReadState(result), 'ready')
+    assert.equal((result.relationEdges ?? result.edges).length, 0)
+  }
+  unavailable = { code: 'XX000', message: 'unexpected server failure' }
+  assert.equal(chronologyConnectionReadState(await f.backend.loadTimeline()), 'unavailable')
+  assert.equal(chronologyConnectionReadState(await f.backend.loadArcConnections(arcId)), 'unavailable')
 })

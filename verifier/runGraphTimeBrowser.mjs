@@ -4,10 +4,10 @@ import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 const { chromium, webkit } = createRequire(process.env.MIP_BROWSER_PACKAGE + '/package.json')('playwright')
-const origin='http://127.0.0.1:4173/media-intelligence-platform-v2/'
+const origin = process.env.MIP_LIVE_SITE === '1' ? 'https://jkelsen13-tech.github.io/media-intelligence-platform-v2/' : 'http://127.0.0.1:4173/media-intelligence-platform-v2/'
 const subject='acc55cb2-5ac2-4aed-be36-3f576d2bc443'
 const label='2024 Total Solar Eclipse, Cleveland, Ohio'
-const server=spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
+const server = process.env.MIP_LIVE_SITE === '1' ? null : spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
 let browser
 try {
   let ready=false
@@ -61,4 +61,4 @@ try {
     await browser.close()
     browser=null
   }
-}finally{await browser?.close();server.kill('SIGTERM')}
+}finally{await browser?.close();server?.kill('SIGTERM')}

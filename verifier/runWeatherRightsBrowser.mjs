@@ -7,8 +7,8 @@ import { setTimeout as delay } from 'node:timers/promises'
 
 const require = createRequire(process.env.MIP_BROWSER_PACKAGE + '/package.json')
 const { chromium } = require('playwright')
-const origin = 'http://127.0.0.1:4173'
-const server = spawn('npm', ['run', 'preview', '--', '--host', '127.0.0.1', '--port', '4173', '--strictPort'], { stdio: 'ignore' })
+const origin = process.env.MIP_LIVE_SITE === '1' ? 'https://jkelsen13-tech.github.io' : 'http://127.0.0.1:4173'
+const server = process.env.MIP_LIVE_SITE === '1' ? null : spawn('npm', ['run', 'preview', '--', '--host', '127.0.0.1', '--port', '4173', '--strictPort'], { stdio: 'ignore' })
 let browser
 try {
   let ready = false
@@ -105,5 +105,5 @@ try {
   console.log('MIP_WEATHER_PREVIEW_PASS=' + JSON.stringify({ widths: [320, 390, 1280], restrictedRequests: 0, loadedReleasedGeometry: true, pageErrors: 0 }))
 } finally {
   await browser?.close()
-  server.kill('SIGTERM')
+  server?.kill('SIGTERM')
 }
