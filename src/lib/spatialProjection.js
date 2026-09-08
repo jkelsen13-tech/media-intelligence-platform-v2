@@ -1,4 +1,4 @@
-import { parseInspectionInstant } from './inspectionTime.js'
+import { inspectionInstantMilliseconds } from './inspectionTime.js'
 // R4 World View launch-minimum — read path for public.spatial_projection_v1.
 //
 // Spatial is a projection of MIP knowledge, not a source of truth. This
@@ -333,7 +333,7 @@ export function worldViewRecordedTime(stamps, rows, requested) {
   const dateScope = typeof requested === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(requested)
   if (hasRequest && !dateScope) {
     // Require an explicit offset: a local/ambiguous timestamp is not a recorded instant.
-    const ms = parseInspectionInstant(requested) ? Date.parse(requested) : NaN
+    const ms = inspectionInstantMilliseconds(requested)
     const index = Number.isFinite(ms) ? stamps.findIndex(s => s.ms === ms) : -1
     return { index: index < 0 ? null : index, atMs: Number.isFinite(ms) ? ms : null,
       atIso: requested, kind: Number.isFinite(ms) ? 'selected' : 'unavailable', hasRequest }
