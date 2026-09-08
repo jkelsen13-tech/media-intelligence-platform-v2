@@ -34,10 +34,11 @@ export function comparisonPublicationTiming(articles) {
       if (first && row.first) {
         if (row === first) lagHours = 0
         else {
-          const low = Number(row.first.start - first.first.end) / 3600000000
-          const high = Number(row.first.end - first.first.start) / 3600000000
-          const rounded = Math.round(low * 10) / 10
-          if (rounded === Math.round(high * 10) / 10) lagHours = rounded
+          const low = row.first.start - first.first.end
+          const high = row.first.end - first.first.start
+          const roundTenth = micros => (micros + 180000000n) / 360000000n
+          const rounded = roundTenth(low)
+          if (rounded === roundTenth(high)) lagHours = Number(rounded) / 10
         }
       }
       return { outlet: row.outlet, firstPublishedAt: row.first?.value ?? null, lagHours }
