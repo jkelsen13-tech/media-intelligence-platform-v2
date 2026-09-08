@@ -3,6 +3,7 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'src/lib/investigationInputImpactClient.js'
       - 'src/lib/comparisonPublicationTiming.js'
       - 'src/views/SourceComparisonView.jsx'
       - 'src/views/sourcecomparison.css'

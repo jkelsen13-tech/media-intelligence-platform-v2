@@ -117,3 +117,20 @@ test('active access denial clears the whole workspace while a departed bundle ca
   assert.equal(current.status, 'access_denied')
   act(() => tree.unmount())
 })
+
+test('ambiguous assessments render unresolved context without arbitrary saved reasoning', async () => {
+  const bundle = fixture(), snapshot = bundle.observation.snapshot
+  snapshot.assessments[0].rationale = 'AMBIGUOUS_REASONING_MUST_NOT_RENDER'
+  snapshot.assessments.push(structuredClone(snapshot.assessments[0]))
+  const result = retainedInputImpact(bundle, position)
+  const client = { read: async () => ({ data: result }) }
+  let tree
+  act(() => { tree = TestRenderer.create(createElement(Impact, { bundle, position, client })) })
+  await act(async () => { await lookup(tree).props.onClick() })
+  assert.equal(tree.root.findAllByProps({ 'data-input-impact': position }).length, 1)
+  assert.match(plain(tree), /their use of this input is unresolved/)
+  assert.doesNotMatch(plain(tree), /AMBIGUOUS_REASONING_MUST_NOT_RENDER|do not match this saved version/)
+  // Direct citation content remains available even when an assessment identity is ambiguous.
+  assert.match(plain(tree), /direct citation/)
+  act(() => tree.unmount())
+})

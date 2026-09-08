@@ -2,6 +2,16 @@
 // Membership is recorded context, not support or a withdrawal reassessment.
 export const INPUT_IMPACT_CONTRACT = 'investigation-input-impact-1'
 export const validPosition = value => typeof value === 'string' && /^[1-9]\d{0,18}$/.test(value) && BigInt(value) <= 9223372036854775807n
+// Duplicate saved identities are unresolved, regardless of row order or payload.
+function unambiguousRows(rows, key) {
+  const result = new Map()
+  for (const row of rows) {
+    const id = row?.[key]
+    if (typeof id !== 'string' || !id.trim()) continue
+    result.set(id, result.has(id) ? null : row)
+  }
+  return result
+}
 const unique = values => [...new Set(values)]
 const citationIndices = (evidence, position) => evidence.flatMap((ref, index) => ref.position === position ? [index] : [])
 
@@ -10,8 +20,10 @@ export function retainedInputImpact(bundle, position) {
   const snapshot = bundle?.observation?.snapshot, state = bundle?.version?.state
   if (bundle?.contract_version !== 'investigation-workspace-1' || bundle.publicly_eligible !== false || !snapshot || !state)
     throw new Error('invalid_workspace')
-  if (!snapshot.inputs.some(input => input.position === position)) throw new Error('input_unavailable')
-  const byId = new Map(snapshot.assessments.map(row => [row.id, row]))
+  const inputs = unambiguousRows(snapshot.inputs, 'position')
+  if (!inputs.has(position)) throw new Error('input_unavailable')
+  if (!inputs.get(position)) throw new Error('ambiguous_input')
+  const byId = unambiguousRows(snapshot.assessments, 'id')
   const contextIds = [], unknownIds = []
   for (const id of unique(snapshot.selected_assessment_ids)) {
     const assessment = byId.get(id)

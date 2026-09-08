@@ -30,12 +30,17 @@ export function inputImpactMatches(bundle, position, data) {
     || data.observation_id !== bundle.observation?.id || data.position !== position
     || data.publicly_eligible !== false || data.assessment_effect !== 'none' || data.scope !== 'saved_references_only') return false
   const snapshot = bundle.observation.snapshot, state = bundle.version.state
-  if (!snapshot.inputs.some(input => input.position === position)
+  if (snapshot.inputs.filter(input => input.position === position).length !== 1
     || !uniqueArray(data.context_assessment_ids, 512) || !uniqueArray(data.unknown_context_assessment_ids, 512)
     || !Array.isArray(data.hypotheses) || data.hypotheses.length > 20
     || !Array.isArray(data.stages) || data.stages.length > 600) return false
-  const assessments = new Map(snapshot.assessments.map(row => [row.id, row]))
-  if (!data.context_assessment_ids.every(id => snapshot.selected_assessment_ids.includes(id) && assessments.get(id)?.context_positions?.includes(position))
+  const assessments = new Map()
+  for (const row of snapshot.assessments) {
+    const id = row?.id
+    if (typeof id !== 'string' || !id.trim()) continue
+    assessments.set(id, assessments.has(id) ? null : row)
+  }
+  if (!data.context_assessment_ids.every(id => snapshot.selected_assessment_ids.includes(id) && Array.isArray(assessments.get(id)?.context_positions) && assessments.get(id).context_positions.includes(position))
     || !data.unknown_context_assessment_ids.every(id => snapshot.selected_assessment_ids.includes(id) && !Array.isArray(assessments.get(id)?.context_positions))) return false
   const hypothesisIds = new Set(), stageIds = new Set()
   for (const row of data.hypotheses) {
