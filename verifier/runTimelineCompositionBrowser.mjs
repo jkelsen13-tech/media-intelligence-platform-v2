@@ -3,7 +3,9 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
-const { chromium } = createRequire(process.env.MIP_BROWSER_PACKAGE + '/package.json')('playwright')
+const browserEngine = process.env.MIP_TIMELINE_BROWSER || 'chromium'
+const engine = createRequire(process.env.MIP_BROWSER_PACKAGE + '/package.json')('playwright')[browserEngine]
+assert.ok(['chromium','webkit'].includes(browserEngine))
 const origin='http://127.0.0.1:4173/media-intelligence-platform-v2/'
 const server=spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
 let browser
@@ -11,7 +13,7 @@ try {
   let ready=false
   for(let i=0;i<40;i++){try{ready=(await fetch(origin)).ok}catch{};if(ready)break;await delay(250)}
   assert.ok(ready)
-  browser=await chromium.launch({headless:true})
+  browser=await engine.launch({headless:true})
   const page=await browser.newPage({viewport:{width:1280,height:900}})
   const errors=[]
   page.on('pageerror',e=>errors.push(e.message))
@@ -27,7 +29,7 @@ try {
   const methods=page.locator('.timeline-method-note')
   const summary=methods.locator('summary')
   for(const width of [1280,768,390,320]){
-    await page.setViewportSize({width,height:width>=768?900:844})
+    await page.setViewportSize({width,height:width===1280?760:width===1024?768:width===768?1024:844})
     await delay(600) // Let the existing selected-record smooth scroll finish.
     await page.evaluate(()=>{for(const s of document.querySelectorAll('.ws-shell,.ws-content,.app-main,.timeline-view'))s.scrollTop=0})
     assert.equal(await methods.getAttribute('open'),null)
@@ -101,5 +103,5 @@ try {
   }
   assert.equal(await methods.getAttribute('open'),null)
   assert.deepEqual(errors,[])
-  console.log('MIP_TIMELINE_COMPOSITION_PASS='+JSON.stringify({widths:[1280,768,390,320],scopeVisible:true,keyboardDisclosure:true,searchRoundTrip:true,presentation:true,evidenceTabs:true,subjectPreserved:true,pageErrors:0}))
+  console.log('MIP_TIMELINE_COMPOSITION_PASS='+JSON.stringify({browserEngine,listWidths:[1280,1024,768,390,320],listCardWidth:true,widths:[1280,768,390,320],scopeVisible:true,keyboardDisclosure:true,searchRoundTrip:true,presentation:true,evidenceTabs:true,subjectPreserved:true,pageErrors:0}))
 }finally{await browser?.close();server.kill('SIGTERM')}

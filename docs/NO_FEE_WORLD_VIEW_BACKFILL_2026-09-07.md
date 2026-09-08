@@ -248,3 +248,8 @@ Shared inspector collapse now releases its layout track; tablet evidence/inspect
 ## Batch 93 — Timeline hierarchy
 
 Compact explicit scope and a keyboard-accessible methods disclosure reduce repeated header space while preserving filters, record semantics and evidence navigation. See TIMELINE_COMPOSITION_2026-09-08.md. Graph and richer Timeline composition remain planned; no data/provider activation.
+
+
+## Batch 94 — iPad Timeline List repair
+
+Owner-reported List cards occupied the hidden 72px date track. List entries now use a single flexible column. Production-browser regressions cover five widths, open/collapsed inspector, content overflow, details and Chronology round trips, with WebKit coverage added for the iPad report. See design-qa.md and PR #94 for verification evidence. Continue the Graph/Timeline composition sequence after this repair; provider and rights holds remain unchanged.
