@@ -7,6 +7,7 @@ on:
       - 'src/styles/workspace.css'
       - 'verifier/runWorkspaceShellBrowser.mjs'
       - 'src/views/TimelineView.jsx'
+      - 'src/lib/chronologyBackend.js'
       - 'src/styles/timeline.css'
       - 'verifier/runTimelineCompositionBrowser.mjs'
       - 'package.json'
