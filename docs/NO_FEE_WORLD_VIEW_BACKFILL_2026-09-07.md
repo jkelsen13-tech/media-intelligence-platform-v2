@@ -156,3 +156,21 @@ Status means inspected scope at the baseline, not a blanket acceptance of a pack
 Use the full embedded owner prompt in the linked governing plan. Maintain exact version
 identity, immutable evidence, explicit uncertainty, no automatic reassessment/publication,
 default-deny sensitive overlays, no new fees and no project storage on the owner's device.
+
+
+## Following batch: shared point-context foundation
+
+The weather backfill (#79) merged as `e7f70fd87edc0077c14d3cb1738032f1e19ae4f6`.
+Node 22/24 full suites/builds, browser previews and live phone/desktop verification
+passed; live bundle `index-Cn7Yusn8.js` matched Pages. Phone Account, NASA revision 2
+and explicit unsourced weather were verified after deployment.
+
+[Retained point-context contract](RETAINED_POINT_CONTEXT_CONTRACT_2026-09-07.md)
+adds an offline, project-owned snapshot/receipt contract with synthetic tests. It
+preserves temporal precision, exact payload identity, origin uncertainty and rights
+review assertions without admitting evidence or authenticating those assertions.
+It is not a protected rights registry or a provider adapter.
+
+This advances the shared-context row above. Source-specific rights review, trusted
+registry/ledger integration, a bounded real weather example, held-out producer
+qualification, remaining package audits and maintenance are still open.
