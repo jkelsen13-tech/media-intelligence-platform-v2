@@ -420,7 +420,7 @@ export default function GraphView({
       // card; all surrounding nodes remain compact at every zoom.
       const cardMode = focused && !isMobile && z >= CARD_ZOOM_MIN
       if (isMobile) {
-        if (mobileActiveNodeId) {
+        if (mobileActiveNodeId && !focused) {
           const n = cy.getElementById(mobileActiveNodeId)
           if (n.nonempty()) n.addClass('lbl')
         }
@@ -447,6 +447,7 @@ export default function GraphView({
       manualLabels.add(evt.target.id())
       mobileActiveNodeId = evt.target.id()
       applyLabels()
+      updateCards()
     })
 
     // --- C4: radial label declutter ---
@@ -718,7 +719,7 @@ export default function GraphView({
           layer.appendChild(el)
         }
         const rp = n.renderedPosition()
-        const cardScale = isMobile ? 1 : Math.min(z, 1.6)
+        const cardScale = Math.min(z, isMobile ? 1 : 1.6)
         el.style.transform = `translate(${rp.x}px, ${rp.y}px) translate(-50%, -50%) scale(${cardScale})`
         el.classList.toggle('selected', n.selected())
         // Defensive mobile gate: only the declared focus node may remain
@@ -825,6 +826,13 @@ export default function GraphView({
       })
       cy.on('tap', (evt) => {
         if (evt.target === cy) {
+          // Clear transient graph selection, retaining the canonical investigation.
+          mobileActiveNodeId = null
+          manualLabels.clear()
+          cy.elements().unselect()
+          applyLabels()
+          updateCards()
+          setNoticeDismissed(true)
           if (onEdgeSelect) onEdgeSelect(null)
           onSelect(null)
         }

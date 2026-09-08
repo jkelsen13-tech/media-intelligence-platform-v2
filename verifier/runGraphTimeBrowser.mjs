@@ -31,6 +31,7 @@ try {
       assert.equal(await panel.evaluate(element => getComputedStyle(element).opacity),'1')
       console.log('MIP_GRAPH_INSPECTOR_VISIBLE='+JSON.stringify({engineName,viewport,close,heading}))
     }
+    const identityForGraph=()=>page.locator('.ws-canonical').getAttribute('data-canonical-subject-id')
     const errors=[]
     page.on('pageerror',e=>{errors.push(e.message);console.log('MIP_GRAPH_PAGE_ERROR='+e.stack)})
     for(const width of [1280,768,390,320]){
@@ -66,6 +67,40 @@ try {
       await notice.waitFor()
       assert.ok(await notice.getByRole('button',{name:'Open node evidence',exact:true}).isVisible())
       console.log('MIP_GRAPH_NOTICE_DISMISS_PASS='+JSON.stringify({engineName,width,closeButton:true,escape:true,reopen:true,subjectPreserved:true,closeBox,zoomBox}))
+      await dismiss.click()
+      const canvas=page.locator('.graph-canvas')
+      const cyState=()=>canvas.evaluate(el=>{
+        const cy=el._cyreg.cy
+        const node=cy.nodes().first()
+        return {zoom:cy.zoom(),labels:cy.nodes('.lbl').length,selected:cy.nodes(':selected').length,position:node.renderedPosition()}
+      })
+      const card=page.locator('.graph-card.mobile-active')
+      await card.waitFor()
+      const initial=await cyState()
+      assert.equal(initial.labels,0,'no duplicate canvas text under mobile card')
+      for(let i=0;i<7;i++){await page.getByRole('button',{name:'Zoom out',exact:true}).click();await page.waitForTimeout(180)}
+      await page.waitForTimeout(400)
+      const out=await cyState(),small=(await card.boundingBox()).width
+      assert.ok(out.zoom<initial.zoom,'minus zooms out')
+      for(let i=0;i<3;i++){await page.getByRole('button',{name:'Zoom in',exact:true}).click();await page.waitForTimeout(180)}
+      await page.waitForTimeout(400)
+      const zoomed=await cyState(),larger=(await card.boundingBox()).width
+      assert.ok(zoomed.zoom>out.zoom,'plus zooms in')
+      assert.ok(larger>small,'card grows when zooming in from overview')
+      assert.equal(zoomed.labels,0,'zoom does not restore duplicate text')
+      await canvas.click({position:{x:8,y:8}})
+      assert.equal(await card.count(),0,'empty canvas clears the title card')
+      assert.equal((await cyState()).selected,0)
+      assert.equal(await identityForGraph(),subject)
+      await page.getByRole('button',{name:'Fit',exact:true}).click()
+      await page.waitForTimeout(400)
+      assert.equal(await card.count(),0,'zoom and fit do not resurrect cleared card')
+      const position=(await cyState()).position
+      await canvas.click({position})
+      await page.getByRole('button',{name:'Close panel',exact:true}).click()
+      await card.waitFor()
+      assert.equal(await identityForGraph(),subject)
+      console.log('MIP_GRAPH_SELECTION_ZOOM_PASS='+JSON.stringify({engineName,width,backgroundClears:true,reselect:true,noDuplicateLabels:true,zoomDirection:true,subjectPreserved:true,small,larger}))
       }
       await modes.getByRole('tab',{name:'Time',exact:true}).click()
       const record=page.getByRole('button',{name:'Open node evidence: '+label,exact:true})
