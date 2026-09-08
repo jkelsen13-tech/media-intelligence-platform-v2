@@ -98,3 +98,50 @@ test('unjoined context stays empty through asynchronous load; standalone browsin
     assert.doesNotMatch(text(renderer), /No released comparison is linked/)
   } finally { await act(async () => renderer.unmount()) }
 })
+
+test('failed comparison reads never display absence claims or partial cards and retry within the current scope', async () => {
+  const actual = await comparisonBackendFixture({ tables: { comparison_public: [comparisonRow(1), comparisonRow(2)] } }).backend.loadSourceComparisonView()
+  const pending = deferred(); let calls = 0, renderer
+  const backend = { loadSourceComparisonView: () => ++calls === 1
+    ? Promise.resolve({ ...actual, loadError: 'unavailable' }) : pending.promise }
+  const props = id => ({ backend, investigationContext: { canonical_subject_type: 'event', canonical_subject_id: id } })
+  await act(async () => { renderer = TestRenderer.create(React.createElement(View, props('event-000001'))) })
+  try {
+    assert.match(text(renderer), /Comparison data is currently unavailable/)
+    assert.doesNotMatch(text(renderer), /No validated|No released|Compared event|Retained supporting passage/)
+    await act(async () => renderer.root.findByProps({ className: 'sc-retry' }).props.onClick())
+    assert.equal(calls, 2); assert.match(text(renderer), /Loading comparison/)
+    assert.doesNotMatch(text(renderer), /Retry comparison|No validated|Compared event/)
+    await act(async () => renderer.update(React.createElement(View, props('event-000002'))))
+    await act(async () => pending.resolve(actual))
+    assert.match(text(renderer), /Compared event 2/)
+    assert.doesNotMatch(text(renderer), /Compared event 1|unavailable|Retry comparison/)
+  } finally { await act(async () => renderer.unmount()) }
+})
+
+test('rejected and synchronous failed reads recover to confirmed empty state; obsolete retry cannot replace a new backend', async () => {
+  const pending = deferred(); let calls = 0, renderer
+  const backend = { loadSourceComparisonView: () => { calls++; if (calls === 1) throw new Error('offline'); return pending.promise } }
+  await act(async () => { renderer = TestRenderer.create(React.createElement(View, { backend })) })
+  try {
+    assert.match(text(renderer), /Retry comparison/)
+    assert.doesNotMatch(text(renderer), /No validated source comparison/)
+    await act(async () => renderer.root.findByProps({ className: 'sc-retry' }).props.onClick())
+    await act(async () => renderer.update(React.createElement(View, { backend: { loadSourceComparisonView: async () => ({ enabled: true, events: [] }) } })))
+    assert.match(text(renderer), /No validated source comparison yet/)
+    await act(async () => pending.reject(new Error('obsolete retry')))
+    assert.doesNotMatch(text(renderer), /Retry comparison|unavailable|obsolete/)
+    await act(async () => renderer.update(React.createElement(View, { backend: { loadSourceComparisonView: () => Promise.reject(null) } })))
+    assert.match(text(renderer), /Retry comparison/)
+    assert.doesNotMatch(text(renderer), /No validated source comparison/)
+  } finally { await act(async () => renderer.unmount()) }
+})
+
+test('an unconfigured comparison backend does not claim verified absence', async () => {
+  let renderer
+  await act(async () => { renderer = TestRenderer.create(React.createElement(View, { backend: { loadSourceComparisonView: async () => ({ enabled: false, events: [] }) } })) })
+  try {
+    assert.match(text(renderer), /service is not configured/)
+    assert.doesNotMatch(text(renderer), /No validated|No released|Retry comparison/)
+  } finally { await act(async () => renderer.unmount()) }
+})

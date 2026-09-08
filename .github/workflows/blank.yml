@@ -113,3 +113,8 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runArcSourcesBrowser.mjs
+
+      - name: Verify comparison failure and public recovery
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runComparisonRecoveryBrowser.mjs

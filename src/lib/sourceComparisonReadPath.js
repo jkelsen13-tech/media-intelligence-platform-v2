@@ -415,7 +415,7 @@ export async function loadSourceComparisonView({ supabaseClient } = {}) {
   const supabase = supabaseClient === undefined ? (await import('./supabase.js')).supabase : supabaseClient
   if (!supabase) return { enabled: false, events: [] }
   const projectionRes = await projectionAll(supabase)
-  if (projectionRes.error) return { enabled: true, events: [], loadError: projectionRes.error.message }
+  if (projectionRes.error) return { enabled: true, events: [], loadError: projectionRes.error.message || 'Comparison projection unavailable' }
   const events = (projectionRes.data ?? [])
     .map(projectionEventView)
     .filter((event) => event.outlets.length >= 2)
