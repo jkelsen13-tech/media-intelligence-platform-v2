@@ -1389,6 +1389,50 @@
   "legacyFunctionDependencies": [
     {
       "project_id": "yhbwnrtlqbjtcrrlpbge",
+      "function_slug": "ingest-rss",
+      "version": 8,
+      "files": [
+        "index.ts",
+        "lib.js"
+      ],
+      "env": [
+        "NER_API_URL",
+        "HF_API_TOKEN",
+        "NER_API_KEY",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "INGEST_RSS_RUN_KEY"
+      ],
+      "refs": [],
+      "tables": [
+        "pipeline_config",
+        "entities",
+        "article_entities",
+        "arc_milestones",
+        "authors",
+        "author_profile_queue",
+        "nodes",
+        "edges",
+        "topics",
+        "node_topics",
+        "arc_membership_candidates",
+        "sources",
+        "arc_events",
+        "story_arcs",
+        "arc_entities",
+        "articles",
+        "outlets",
+        "ingest_sources",
+        "ingestion_runs",
+        "citations",
+        "ingestion_source_runs"
+      ],
+      "rpc": [
+        "mip_ingest_rss_schedule_authorized"
+      ]
+    },
+    {
+      "project_id": "yhbwnrtlqbjtcrrlpbge",
       "function_slug": "backfill-legacy",
       "version": 9,
       "files": [

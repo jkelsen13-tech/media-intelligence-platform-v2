@@ -67,8 +67,14 @@ Manus cron jobs mip-ingest-rss-hourly and mip-source-comparison-enrichment are
 active every five minutes. Both showed 288 successful scheduler statements in the
 preceding 24 hours. Their commands use Vault-backed HTTP configuration. The
 strict URL-only lookup resolves mip_ingest_rss_project_url to Manus itself.
-No token or decrypted credential was emitted. SQL scheduling success does not
-establish HTTP delivery, successful processing, eligible publication or freshness.
+No token or decrypted credential was emitted. SQL scheduling success alone does not
+establish HTTP delivery or processing. A subsequent aggregate read found 4,233
+completed ingestion_runs (latest start 2026-09-08 08:20:04 UTC), 4,224 succeeded
+source runs (latest attempt 08:20:06 UTC), and eight succeeded enrichment queue
+records. These retained run states confirm ongoing legacy processing but do not
+certify source eligibility, published output or complete delta transfer.
+The survivor separately has ten pending change jobs (two dependency lookups and
+eight candidate searches); none were claimed or executed during reconciliation.
 
 Original deployed functions: ingest-rss, debug-parse, policy-ingest,
 graph-analysis-run, source-comparison-run and batch-intake. Two inactive schedules
@@ -78,7 +84,9 @@ and session-consumer reconciliation before any retirement claim.
 Cloud Run extraction remains an external dependency to reconcile:
 .github/workflows/deploy-cloud-run.yml targets mop-extraction/us-central1 using
 GCP_SA_KEY. Repository configuration is not proof of current cloud deployment,
-runtime environment, service callers or secret-manager state. No cloud credentials
+runtime environment, service callers or secret-manager state. The repository's
+workflow_dispatch run inventory returned zero runs; deployments outside that
+history remain unverified. No cloud credentials
 were read. Other collectors/evaluation hosts and manual operators remain open.
 
 ## 6. Runtime/configuration verification
