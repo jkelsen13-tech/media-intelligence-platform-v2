@@ -17,7 +17,7 @@ begin
  end loop;
  update evidence_pipeline.change_jobs set available_at=clock_timestamp()-interval '100 years'
  where change_position=(select position from evidence_pipeline.evidence_changes where capture_id=caps[2]);
- j:=public.mip_evidence_changes_v1('claim','{"route":"new_candidate_search"}');
+ j:=public.mip_evidence_change_claim_v1('new_candidate_search','capture');
  if j->'change'->>'capture_id' is distinct from caps[2]::text then raise exception 'unrelated search claimed'; end if;
  r:=public.mip_capture_retrieval_v1('start',jsonb_build_object('job_id',j->>'id','lease_token',j->>'lease_token'));
  if not (r->'targets' @> to_jsonb(array[caps[1]])) then raise exception 'ordinary input omitted for historical source'; end if;
