@@ -55,6 +55,27 @@ try {
     assert.ok(unoccluded, 'weather heading and last field must be unobscured at ' + width)
     console.log('MIP_WEATHER_VIEWPORT=' + JSON.stringify({ width, bounds, status: 'unavailable' }))
   }
+  // Exercise the existing DISPLAY-only acceptance seam in the built app.
+  // Public anonymous data only; never access auth state or alter evidence.
+  await page.waitForFunction(() => window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState())
+  const beforeRoute = page.url()
+  const savedCamera = await page.evaluate(() => window.__MIP_WORLD_VIEW_CAMERA_PROBE__.getCameraState())
+  const restored = {version: 1, lon: 10, lat: 40, heightMeters: 2000000,
+    headingDegrees: 0, pitchDegrees: -90, rollDegrees: 0}
+  await page.getByRole('button', {name: 'Return to selected location', exact: true}).click()
+  assert.equal(await page.evaluate(state => window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(JSON.stringify(state)), restored), true)
+  await delay(2000) // Longer than the 1.6-second subject flight.
+  const after = JSON.parse(await page.evaluate(() => window.__MIP_WORLD_VIEW_CAMERA_PROBE__.getCameraState()))
+  assert.ok(Math.abs(after.lon - restored.lon) < 0.001 && Math.abs(after.lat - restored.lat) < 0.001,
+    'older flight must not overwrite restored camera')
+  assert.equal(page.url(), beforeRoute, 'camera restore must preserve subject and time route')
+  assert.equal(await page.evaluate(state => window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(state), savedCamera), true)
+  await page.getByRole('button', {name: 'Return to selected location', exact: true}).click()
+  await delay(2000)
+  const map = page.locator('.wv-map-gl')
+  await map.scrollIntoViewIfNeeded()
+  console.log('MIP_CAMERA_SCREENSHOT=' + (await map.screenshot({type: 'jpeg', quality: 60})).toString('base64'))
+  console.log('MIP_CAMERA_RESTORE_PASS=' + JSON.stringify({routePreserved: true, restoredCameraRetained: true}))
   assert.deepEqual(restrictedRequests, [], 'no restricted hosted weather requests')
   assert.deepEqual(pageErrors, [], 'no uncaught application errors')
   console.log('MIP_WEATHER_PREVIEW_PASS=' + JSON.stringify({ widths: [320, 390, 1280], restrictedRequests: 0, loadedReleasedGeometry: true, pageErrors: 0 }))

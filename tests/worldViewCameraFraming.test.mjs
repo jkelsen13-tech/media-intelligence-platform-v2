@@ -35,7 +35,7 @@ test('missing or unrelated geometry never becomes a camera target', () => {
   assert.equal(selectedCameraTarget([feature('bad', [NaN, 0])]), null)
   const framing = createCameraFraming()
   let calls = 0
-  const adapter = { flyToSubjectCamera: () => { calls++; return true } }
+  const adapter = { flyToSubjectCamera: () => { calls++; return true }, cancelCameraFlight: () => true }
   framing.select([feature('a')])
   framing.apply(adapter)
   framing.select([])

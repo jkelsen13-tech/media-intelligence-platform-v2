@@ -198,3 +198,8 @@ The Browserslist candidate is held because the newly resolved Baseline mapping i
 ## Batch 84 — held-out evaluation diagnostics
 
 The offline record-candidate evaluator binds exact corpus/run identity, rejects declared group/input/time leakage, requires every held-out prediction, and reports retrieval, verifier errors, unresolved labels and abstention with explicit denominators. It does not qualify a worker. See [measurement scope and remaining real-corpus work](RECORD_CANDIDATE_EVALUATION_2026-09-08.md). The pending record jobs remain gated; a rights-cleared independently adjudicated corpus and comparative run are still required.
+
+
+## Batch 85 — cancel obsolete camera flights
+
+Package 01 now cancels an accepted subject flight when selected geometry disappears, and explicitly stops older flights before valid camera restoration. Ordinary refreshes preserve manual navigation; renderer startup/replacement gates remain. See [scope and verification](WORLD_VIEW_CAMERA_CANCELLATION_2026-09-08.md). No provider or rights activation; broader navigation/preset acceptance remains open.

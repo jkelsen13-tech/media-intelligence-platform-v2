@@ -156,6 +156,12 @@ export function stackAttribution(stackId) {
   return stack?.attribution ?? ''
 }
 
+export function cancelMapCameraFlight(map) {
+  if (typeof map?.stop !== 'function') return false
+  map.stop()
+  return true
+}
+
 export function flyToSubject(map, coordinate, precisionClass) {
   if (!map) return false
   const cam = subjectCamera(coordinate, precisionClass)
@@ -425,6 +431,7 @@ function createMapLibreWorldViewRendererAdapter({
     if (!parsed) return false
     const cam = mapCameraForCameraState(parsed, activePrecisionClass())
     if (!cam) return false
+    cancelMapCameraFlight(map)
     map.jumpTo({ center: cam.center, zoom: cam.zoom, bearing: cam.bearing, pitch: cam.pitch })
     requestRepaint(map)
     return true
@@ -445,6 +452,7 @@ function createMapLibreWorldViewRendererAdapter({
     setFeatures,
     setOnSelectRow,
     flyToSubjectCamera: flyToSubjectCamera,
+    cancelCameraFlight: () => cancelMapCameraFlight(map),
     getCameraState,
     setCameraState,
     requestRender,
@@ -533,6 +541,7 @@ export function createWorldViewRendererAdapter(args, {
       if (ready) impl?.setOnSelectRow?.(onSelectRow)
     },
     flyToSubjectCamera: (opts) => ready && !cancelled() ? impl?.flyToSubjectCamera?.(opts) ?? false : false,
+    cancelCameraFlight: () => ready && !cancelled() ? impl?.cancelCameraFlight?.() ?? false : false,
     getCameraState: () => impl?.getCameraState?.() ?? null,
     setCameraState: (serialized) => impl?.setCameraState?.(serialized) ?? false,
     getTerrainStatus: () => impl?.getTerrainStatus?.() ?? null,
