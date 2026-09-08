@@ -1,6 +1,6 @@
 /* Time mode uses the same evidence selection as Graph and Geography.
    Record order is not a claim about elapsed time or causation. */
-.graph-time-list li { padding: 0; }
+.graph-mode-list.graph-time-list > li { padding: 0; }
 .graph-time-record {
   display: grid;
   grid-template-columns: 130px minmax(0, 1fr) auto;
