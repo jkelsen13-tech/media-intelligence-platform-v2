@@ -132,3 +132,8 @@ deployed app must still be checked after merge and its bundle compared with Page
 Next ready: source-specific review for one bounded POWER/GHCNh example and a protected
 rights registry integration design; independent dependency/advisor maintenance may
 proceed. No weather activation or pending-job qualification is implied by this contract.
+
+
+## Contract 2 follow-up
+
+This document records the original contract-1 slice. New construction now uses [contract 2 with separate rights layers](SEPARATE_CONTEXT_RIGHTS_2026-09-08.md). Explicitly tagged contract-1 snapshots are not silently reinterpreted by comparison. No stored evidence is migrated.
