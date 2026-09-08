@@ -29,9 +29,8 @@ try {
       for(const width of [1280,768,390,320]){
         deny=true;rows=[]
         await page.setViewportSize({width,height:1000})
-        await page.goto(origin+'#/event/'+subject+'/sources')
-        // goto with the same hash need not reload; explicitly reload each case.
-        await page.reload()
+        if(width===1280)await page.goto(origin+'#/event/'+subject+'/sources',{waitUntil:'networkidle'})
+        else await page.reload({waitUntil:'networkidle'})
         const recovery=page.getByRole('region',{name:'Comparison recovery'})
         await recovery.waitFor({timeout:60000})
         assert.equal(await identity(),subject)
@@ -49,6 +48,7 @@ try {
         assert.equal(await page.locator('.sc-event').count(),expected.length)
         if(!expected.length)await page.getByRole('heading',{name:'No released comparison is linked to this investigation',exact:true}).waitFor()
         assert.equal(await page.locator('.sc-view').evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
+        await page.waitForLoadState('networkidle')
         if(width===1280)console.log('MIP_COMPARISON_RECOVERED_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
       }
       assert.deepEqual(errors,[])
