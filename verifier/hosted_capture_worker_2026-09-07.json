@@ -1,0 +1,58 @@
+{
+  "project_id": "qikvmopbtijoebdqosyq",
+  "function": "capture-retrieval",
+  "version": 5,
+  "status": "ACTIVE",
+  "verify_jwt": true,
+  "bundle_sha256": "7bd754cb9c979843c89a3bcfbfe95b4ab7fb93c19b4b9aa656fde798a2f86448",
+  "implementation_head": "62e182f79e5d770ff9f6a52ed7bae73b42729eab",
+  "tests": 1312,
+  "failures": 0,
+  "build_passed": true,
+  "files": [
+    "capture-retrieval/index.ts",
+    "capture-retrieval/handler.mjs",
+    "_shared/operatorBackend.mjs",
+    "_shared/captureRetrieval.mjs",
+    "_shared/nextCapture.mjs"
+  ],
+  "all_deployed_files_match": true,
+  "live_results": [
+    {
+      "request": "authorized run-next apply:true",
+      "status": 200,
+      "state": "no_ready_capture",
+      "pages": 0
+    },
+    {
+      "request": "authorized run-next apply:false",
+      "status": 400,
+      "error": "invalid_input"
+    },
+    {
+      "request": "invalid key without authorization header",
+      "status": 401,
+      "layer": "gateway",
+      "code": "UNAUTHORIZED_NO_AUTH_HEADER"
+    }
+  ],
+  "before": {
+    "jobs_hash": "cbf5a908a152034606aeaead014ae20b",
+    "events_hash": "2c497d2b237760e9ece01c60ead0248f",
+    "changes_hash": "1c90d94548747607da811183f3800076",
+    "runs_hash": "ebec766dab5876a31f0957566a8d5616"
+  },
+  "after": {
+    "jobs_hash": "cbf5a908a152034606aeaead014ae20b",
+    "events_hash": "2c497d2b237760e9ece01c60ead0248f",
+    "changes_hash": "1c90d94548747607da811183f3800076",
+    "runs_hash": "ebec766dab5876a31f0957566a8d5616"
+  },
+  "production_records_written": 0,
+  "scheduler_enabled": false,
+  "limitations": [
+    "Production has no ready capture; nonempty execution verified only with isolated PGlite integration",
+    "No simultaneous multi-connection contention test",
+    "Partial continuation needs a valid server-held lease; repeated expiry consumes five-attempt budget"
+  ]
+}

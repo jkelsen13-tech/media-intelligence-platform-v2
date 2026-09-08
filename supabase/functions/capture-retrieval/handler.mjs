@@ -1,6 +1,8 @@
 import { createOperatorBackend, PIPELINE_TARGET } from '../_shared/operatorBackend.mjs'
 import { runCaptureRetrieval, validateCaptureRetrieval } from '../_shared/captureRetrieval.mjs'
 
+import { runNextCapture, validateNextCapture } from '../_shared/nextCapture.mjs'
+
 const headers = {
   'Content-Type': 'application/json',
   'Cache-Control': 'private, no-store',
@@ -57,6 +59,17 @@ export function createCaptureRetrievalHandler({ url, serviceKey, makeBackend = c
         const [intake, changes] = await Promise.all([backend.intake('status'), backend.changes('status')])
         return reply(200, { intake, changes })
       } catch { return failure(502, 'status_unavailable') }
+    }
+    if (body.action === 'run-next') {
+      let options
+      try {
+        if (body.apply !== true || Object.keys(body).some(key => !['action', 'apply', 'input'].includes(key))) throw new Error('invalid_input')
+        options = validateNextCapture(body.input)
+      } catch { return failure(400, 'invalid_input') }
+      try {
+        const result = await runNextCapture(makeBackend({ url, key: serviceKey }), options)
+        return reply(result.state === 'indeterminate' ? 502 : 200, result)
+      } catch { return failure(502, 'worker_unavailable') }
     }
     if (body.action !== 'retrieval' || body.apply !== true || Object.keys(body).some(key => !['action', 'apply', 'input'].includes(key))) return failure(400, 'invalid_input')
     let input
