@@ -5,6 +5,7 @@ on:
     paths:
       - 'package.json'
       - 'package-lock.json'
+      - 'src/lib/deepLinks.js'
       - 'src/lib/worldViewCameraFraming.js'
       - 'src/lib/worldViewRendererAdapter.js'
       - 'src/lib/worldViewCesiumEllipsoidRendererAdapter.js'

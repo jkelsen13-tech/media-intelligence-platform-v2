@@ -203,3 +203,8 @@ The offline record-candidate evaluator binds exact corpus/run identity, rejects 
 ## Batch 85 — cancel obsolete camera flights
 
 Package 01 now cancels an accepted subject flight when selected geometry disappears, and explicitly stops older flights before valid camera restoration. Ordinary refreshes preserve manual navigation; renderer startup/replacement gates remain. See [scope and verification](WORLD_VIEW_CAMERA_CANCELLATION_2026-09-08.md). No provider or rights activation; broader navigation/preset acceptance remains open.
+
+
+## Batch 86 — safe shareable route boundary
+
+Package 04 preflight now rejects malformed/oversized path segments safely, treats inherited property names as unknown views, and drops ambiguous duplicate selections. Credential/private-text fields remain excluded from generated route state. See [scope and verification](SHAREABLE_ROUTE_BOUNDARY_2026-09-08.md). Exact private-version presets and authorized-layer persistence remain pending; this is a prerequisite backfill, not their completion.

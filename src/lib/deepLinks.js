@@ -51,6 +51,27 @@ export const VIEW_TO_DEEP_LINK_SLUG = Object.freeze({
 
 export const DEEP_LINK_SELECTION_KEYS = Object.freeze(['claim', 'entity', 'source', 'time', 'place'])
 
+const MAX_ROUTE_LENGTH = 8192
+
+function hasControlCharacters(value) {
+  return [...value].some(character => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127)
+}
+
+function decodeRouteSegment(value) {
+  if (!value) return null
+  try {
+    const decoded = decodeURIComponent(value)
+    return decoded.length <= 512 && decoded.trim() !== '' && !decoded.includes('/')
+      && !decoded.includes(String.fromCharCode(92)) && !hasControlCharacters(decoded) ? decoded : null
+  } catch {
+    return null
+  }
+}
+
+function ownView(table, key) {
+  return Object.hasOwn(table, key) ? table[key] : null
+}
+
 const DISPLAY_TEXT_QUERY_KEYS = Object.freeze(['title', 'label', 'name', 'q', 'text'])
 
 export function emptyDeepLinkSelection() {
@@ -131,26 +152,29 @@ function emptyParse() {
  * Never derives canonical_subject_id from display text.
  */
 export function parseDeepLink(input) {
-  if (input == null || String(input).trim() === '') return emptyParse()
+  if (typeof input !== 'string' || input.length > MAX_ROUTE_LENGTH || input.trim() === '') return emptyParse()
   const { path, search } = splitPathAndSearch(input)
   const parts = normalizeRoutePath(path).split('/').filter(Boolean)
-  if (parts[0] !== 'event') return emptyParse()
+  if (parts[0] !== 'event' || parts.length > 3) return emptyParse()
 
-  const subjectId = parts[1] && parts[1].trim() !== '' ? decodeURIComponent(parts[1]) : null
-  const viewSlug = parts[2] ? decodeURIComponent(parts[2]) : null
+  const subjectId = decodeRouteSegment(parts[1])
+  const viewSlug = decodeRouteSegment(parts[2])
+  if ((parts[1] && !subjectId) || (parts[2] && !viewSlug)) return emptyParse()
   const params = new URLSearchParams(search)
   const selection = emptyDeepLinkSelection()
   for (const key of DEEP_LINK_SELECTION_KEYS) {
-    const value = params.get(key)
-    selection[key] = value && value.trim() !== '' ? value : null
+    const values = params.getAll(key)
+    const value = values.length === 1 ? values[0] : null
+    selection[key] = value && value.length <= 1024 && value.trim() !== ''
+      && !hasControlCharacters(value) ? value : null
   }
   const ignoredDisplayText = DISPLAY_TEXT_QUERY_KEYS.some((key) => params.has(key))
-  const knownView = viewSlug ? DEEP_LINK_SLUG_TO_VIEW[viewSlug] ?? null : subjectId ? 'graph' : null
+  const knownView = viewSlug ? ownView(DEEP_LINK_SLUG_TO_VIEW, viewSlug) : subjectId ? 'graph' : null
   return {
     subjectId,
     viewSlug,
     view: knownView,
-    unknownView: Boolean(viewSlug && !DEEP_LINK_SLUG_TO_VIEW[viewSlug]),
+    unknownView: Boolean(viewSlug && !ownView(DEEP_LINK_SLUG_TO_VIEW, viewSlug)),
     selection,
     ignoredDisplayText,
   }
@@ -308,7 +332,7 @@ export function reconstructFromDeepLink(parsed, { currentIc, catalog } = {}) {
 export function serializeDeepLink(ic, selection = {}) {
   const id = ic?.canonical_subject_id
   if (!id) return '#/'
-  const slug = VIEW_TO_DEEP_LINK_SLUG[ic.active_view] ?? 'graph'
+  const slug = ownView(VIEW_TO_DEEP_LINK_SLUG, ic.active_view) ?? 'graph'
   const params = new URLSearchParams()
   const merged = { ...emptyDeepLinkSelection(), ...selection }
   if (!merged.time) {
