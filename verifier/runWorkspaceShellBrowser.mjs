@@ -48,6 +48,11 @@ try {
       assert.ok(Math.abs(before.x-dock.x)<2 && Math.abs(before.width-dock.width)<2,'tablet stacks inspector')
     }
     console.log('MIP_SHELL_OPEN_'+width+'='+(await page.screenshot({type:'jpeg',quality:75})).toString('base64'))
+    if (width<768) {
+      const record = page.locator('.timeline-view .ep-tl-card').first()
+      await record.scrollIntoViewIfNeeded()
+      console.log('MIP_SHELL_PHONE_RECORD_'+width+'='+(await page.screenshot({type:'jpeg',quality:75})).toString('base64'))
+    }
     await toggle.click()
     if (width>=1024) console.log('MIP_SHELL_COLLAPSED_'+width+'='+(await page.screenshot({type:'jpeg',quality:75})).toString('base64'))
     const after = await page.locator('.ws-content').boundingBox()

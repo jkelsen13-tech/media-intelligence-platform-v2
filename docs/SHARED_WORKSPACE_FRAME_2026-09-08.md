@@ -19,7 +19,9 @@ A production-build CI browser checks 320, 390, 768, 1024 and 1280px, captures
 each layout, checks reclaimed dock space, tablet stacking, Account opening,
 drawer Escape/focus return and canonical-subject preservation. Existing
 weather, camera, version-reference and retained-date verifiers remain required.
-Review screenshots and record final design QA before merging.
+Visual QA found and fixed phone evidence compression and tablet search crowding.
+Reading views now use one phone page scroll and optional corpus metadata yields
+to search below 1101px. See design-qa.md for the comparison and scoped result.
 
 This is a shared-frame increment, not completion of the five-view redesign.
 Graph/Timeline composition, other view refinements and supported-data
