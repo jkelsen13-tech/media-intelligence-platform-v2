@@ -286,9 +286,9 @@
 /* Reference-alignment pass: the blue outer field is intentionally outside this
    component. These rules build the white-card hierarchy inside the content area. */
 .sc-view { gap: 20px; max-width: 980px; margin: 0 auto; }
-.sc-banner { padding: 22px 24px; border-radius: 22px; box-shadow: 0 7px 18px rgb(22 52 92 / 7%); }
-.sc-banner h2 { font-size: clamp(1.45rem, 3vw, 2rem); letter-spacing: -0.02em; color: var(--text-primary); }
-.sc-banner p { font-size: 0.92rem; line-height: 1.55; max-width: 72ch; }
+.sc-banner { padding: 12px 16px; border-radius: 12px; }
+.sc-banner h2 { margin-bottom: 4px; font-size: 1rem; color: var(--text-primary); }
+.sc-banner p { font-size: 0.8rem; line-height: 1.45; max-width: 72ch; }
 .sc-event { padding: 22px 24px; border-radius: 22px; background: var(--bg-panel); box-shadow: 0 6px 16px rgb(22 52 92 / 6%); gap: 14px; }
 .sc-event-head { align-items: flex-start; }
 .sc-event-head h3 { font-size: clamp(1.1rem, 2.5vw, 1.42rem); line-height: 1.23; max-width: 42rem; }
@@ -304,20 +304,21 @@
 .sc-search { min-height: 44px; border-radius: 16px; }
 @media (max-width: 640px) {
   .sc-view { gap: 14px; }
-  .sc-banner, .sc-event { padding: 18px 16px; border-radius: 18px; }
+  .sc-event { padding: 18px 16px; border-radius: 18px; }
   .sc-event-head { flex-direction: column; gap: 7px; }
   .sc-claim { padding: 14px; border-radius: 15px; }
   .sc-xlinks { gap: 8px; }
   .sc-xlink-group { flex-wrap: wrap; gap: 8px; }
 }
 
-.sc-kicker, .sc-event-eyebrow { margin: 0 0 4px; color: var(--status-blue-text); font-size: 0.72rem; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; }
-.sc-subtitle { margin: -2px 0 8px; color: var(--text-body); font-size: 1.02rem; font-weight: 560; }
-.sc-banner-detail { margin: 0; color: var(--text-secondary); }
-.sc-evidence-notice { display: flex; align-items: center; min-height: 44px; padding: 11px 16px; border: 1px solid var(--status-blue-border); border-radius: 16px; background: var(--bg-inset); color: var(--status-blue-text); font-size: 0.88rem; line-height: 1.45; }
+.sc-event-eyebrow { margin: 0 0 4px; color: var(--status-blue-text); font-size: 0.72rem; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; }
+.sc-methods summary { min-height: 44px; align-content: center; cursor: pointer; color: var(--status-blue-text); font-size: 0.8rem; }
+.sc-methods summary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
+.sc-methods[open] { margin-bottom: 10px; }
+.sc-banner .sc-evidence-notice { border-left: 2px solid var(--status-blue-border); padding-left: 9px; color: var(--text-secondary); }
 .sc-event-state { display: flex; align-items: flex-end; flex-direction: column; gap: 7px; }
 .sc-event-state .sc-meta { border: 0; background: transparent; padding: 0; }
-@media (max-width: 640px) { .sc-event-state { align-items: flex-start; } .sc-evidence-notice { border-radius: 14px; padding: 10px 13px; } }
+@media (max-width: 640px) { .sc-event-state { align-items: flex-start; } }
 
 /* Reference alignment: event evidence summary and per-outlet source framing.
    These fields remain descriptive; none is a composite credibility score. */

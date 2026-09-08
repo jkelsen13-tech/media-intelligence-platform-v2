@@ -164,3 +164,38 @@ test('comparison displays retained publication and review precision without inve
     assert.doesNotMatch(text(renderer), /same hour/)
   } finally { await act(async () => renderer.unmount()) }
 })
+
+test('comparison methods are optional while scope and evidence limits remain outside the disclosure', async () => {
+  const f = comparisonBackendFixture({ tables: { comparison_public: [comparisonRow()] } }); let renderer
+  await act(async () => { renderer = TestRenderer.create(React.createElement(View, { backend: f.backend })) })
+  try {
+    const methods = renderer.root.findByProps({ className: 'sc-methods' })
+    assert.equal(methods.type, 'details'); assert.ok(!methods.props.open)
+    assert.equal(methods.findByType('summary').children.join(''), 'How to read this comparison')
+    assert.match(methods.findByType('p').children.join(''), /no composite score/)
+    assert.equal(methods.findAllByProps({ className: 'sc-scope' }).length, 0)
+    assert.equal(methods.findAllByProps({ className: 'sc-evidence-notice' }).length, 0)
+    assert.equal(renderer.root.findAllByProps({ className: 'sc-scope' }).length, 1)
+    assert.match(text(renderer), /Missing evidence is not a contradiction/)
+    assert.match(text(renderer), /Retained supporting passage/)
+  } finally { await act(async () => renderer.unmount()) }
+})
+
+test('comparison event bounds use retained date precision and explicit unknown states', async () => {
+  let renderer
+  try {
+    for (const [start, end, expected] of [
+      ['2026-08-03', '2026-08-04', '2026-08-03 (date only) → 2026-08-04 (date only)'],
+      ['2026-08-03T00:00:00.123456+05:30', null, '2026-08-03 00:00:00.123456 UTC+05:30'],
+      [null, '2026-08-04', 'Time not recorded → 2026-08-04 (date only)'],
+      ['2026-02-30', null, 'Unrecognized recorded date'],
+    ]) {
+      const row = comparisonRow(); row.occurred_at_start = start; row.occurred_at_end = end
+      const f = comparisonBackendFixture({ tables: { comparison_public: [row] } })
+      await act(async () => { const element = React.createElement(View, { backend: f.backend }); if (renderer) renderer.update(element); else renderer = TestRenderer.create(element) })
+      const state = renderer.root.findByProps({ className: 'sc-event-state' })
+      const label = state.findByProps({ className: 'sc-meta' }).children.join('')
+      assert.equal(label, 'Recorded event time: ' + expected)
+    }
+  } finally { if (renderer) await act(async () => renderer.unmount()) }
+})
