@@ -402,12 +402,20 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
           public.edges is unavailable ({global.edgesUnavailable}). No relationships are invented.
         </WorkspaceTechnicalDisclosure>
       )}
-      <div className="timeline-intro">
-        <p className="ep-eyebrow">{SCREEN5_EYEBROW}</p>
-        <h2 className="ep-report-title">
-          {scopeIsGlobal ? 'All events — global corpus' : (selected.title || 'Untitled story arc')}
-        </h2>
-        <p>{SCREEN5_SUBTITLE}</p>
+      <div className="timeline-intro timeline-workspace-intro">
+        <div className="timeline-heading-row">
+          <div>
+            <p className="timeline-scope-label">Timeline scope</p>
+            <h2 className="ep-report-title">
+              {scopeIsGlobal ? 'All events — global corpus' : (selected.title || 'Untitled story arc')}
+            </h2>
+          </div>
+          <details className="timeline-method-note">
+            <summary>About this timeline</summary>
+            <p className="ep-eyebrow">{SCREEN5_EYEBROW}</p>
+            <p>{SCREEN5_SUBTITLE}</p>
+          </details>
+        </div>
 
         <div className="ep-tl-scope">
           {!scopeIsGlobal || arcs.length > 0 ? (
@@ -428,6 +436,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
               ))}
             </select>
           ) : null}
+          {arcs.length > 0 && (
           <button
             type="button"
             className="ep-tl-scope-toggle"
@@ -435,6 +444,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
           >
             {scopeIsGlobal ? '← Back to the arc timeline' : 'All events (global corpus)'}
           </button>
+          )}
         </div>
 
         <EvidenceTabs

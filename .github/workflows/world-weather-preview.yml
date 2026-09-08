@@ -6,6 +6,9 @@ on:
       - 'src/components/InvestigationWorkspace.jsx'
       - 'src/styles/workspace.css'
       - 'verifier/runWorkspaceShellBrowser.mjs'
+      - 'src/views/TimelineView.jsx'
+      - 'src/styles/timeline.css'
+      - 'verifier/runTimelineCompositionBrowser.mjs'
       - 'package.json'
       - 'package-lock.json'
       - 'src/components/InvestigationVersionNavigation.jsx'
@@ -66,3 +69,7 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runWorkspaceShellBrowser.mjs
+      - name: Verify Timeline composition and controls
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runTimelineCompositionBrowser.mjs
