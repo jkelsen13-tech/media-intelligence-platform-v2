@@ -383,7 +383,7 @@ function TimelineScrubber({ stamps, time, onChange, disabledReason }) {
         aria-valuetext={time.atIso}
         aria-label="Recorded time"
       />}
-      <p className="wv-meta">Source field: {current?.key}</p>
+      {current && <p className="wv-meta">Source field: {current.key}</p>}
     </section>
   )
 }
