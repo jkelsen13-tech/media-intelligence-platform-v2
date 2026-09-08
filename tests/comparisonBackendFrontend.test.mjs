@@ -130,7 +130,7 @@ test('rejected and synchronous failed reads recover to confirmed empty state; ob
     await act(async () => renderer.update(React.createElement(View, { backend: { loadSourceComparisonView: async () => ({ enabled: true, events: [] }) } })))
     assert.match(text(renderer), /No validated source comparison yet/)
     await act(async () => pending.reject(new Error('obsolete retry')))
-    assert.doesNotMatch(text(renderer), /Retry comparison|unavailable|obsolete/)
+    assert.doesNotMatch(text(renderer), /Retry comparison|Comparison data is currently unavailable|obsolete/)
     await act(async () => renderer.update(React.createElement(View, { backend: { loadSourceComparisonView: () => Promise.reject(null) } })))
     assert.match(text(renderer), /Retry comparison/)
     assert.doesNotMatch(text(renderer), /No validated source comparison/)
