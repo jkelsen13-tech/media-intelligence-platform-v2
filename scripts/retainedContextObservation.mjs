@@ -97,6 +97,7 @@ export function createContextObservation(input, options = {}) {
   const from = utc(clocks.valid_from), to = utc(clocks.valid_to)
   const retrieved = utc(clocks.retrieved_at), recorded = utc(clocks.recorded_at)
   if (from >= to || to > retrieved || retrieved > recorded) fail('invalid_historical_clock_order')
+  if (utc(value.rights.reviewed_at) > recorded) fail('rights_review_after_recording')
   publication(clocks.published) // Never coerce day precision into a claimed publication instant.
 
   keys(geometry, ['type', 'coordinates', 'precision', 'resolution', 'method'], 'invalid_geometry_fields')

@@ -42,7 +42,8 @@ it is explicitly not a real source approval.
 
 Source identity includes provider, product, release, record ID and a declared upstream
 origin (or null). Rights assertions bind the same provider/product/release, plus a review
-ID, version and exact review time. An unknown review check or operation permission fails.
+ID, version and exact review time no later than snapshot recording. An unknown review
+check or operation permission fails.
 
 The snapshot retains original strings and values; it does not convert units, smooth,
 interpolate, round, geocode, infer heights or parse provider payloads. Payload hash is

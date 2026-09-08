@@ -142,6 +142,7 @@ test('rights approval assertion is bound to the exact provider, product and rele
   }
   rejected(x => { x.source.release = '' }, /source_exact_identity_required/)
   rejected(x => { x.rights.version = '' }, /rights_identity_required/)
+  rejected(x => { x.rights.reviewed_at = '2026-09-07T13:00:00Z' }, /rights_review_after_recording/)
 })
 
 test('point precision is explicit and never silently creates a station or finer coordinates', () => {
