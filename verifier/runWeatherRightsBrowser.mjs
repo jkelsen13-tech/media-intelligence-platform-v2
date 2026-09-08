@@ -66,7 +66,7 @@ try {
   await timeSlider.press('End')
   await page.waitForFunction(()=>{
     const slider=document.querySelector('.wv-scrubber input[type="range"]')
-    return slider?.value===slider?.max && slider.max!=='0'
+    return slider && slider.value===slider.max && slider.max!=='0'
       && document.querySelector('.wv-view')?.getAttribute('data-as-of-time')===slider.getAttribute('aria-valuetext')
   })
   const chosenTime=await timeSlider.getAttribute('aria-valuetext')
