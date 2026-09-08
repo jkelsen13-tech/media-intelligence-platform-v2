@@ -78,6 +78,8 @@ jobs:
       - run: npm run build
       - name: Confirm deployed release assets
         run: node verifier/waitForLiveBuild.mjs
+      - name: Verify spatial writer anonymous boundary
+        run: node verifier/checkSpatialRuntimeAnonymous.mjs
       - name: Install isolated browser verifier
         run: |
           npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0

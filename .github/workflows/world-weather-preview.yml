@@ -5,6 +5,7 @@ on:
     paths:
       - 'supabase/runtime-snapshots/spatial-runtime-v6/**'
       - 'tests/spatialRuntimeRegistration.test.mjs'
+      - 'verifier/checkSpatialRuntimeAnonymous.mjs'
       - 'src/graph/GraphView.jsx'
       - 'src/graph/GraphModePanel.jsx'
       - 'src/lib/graphWorkspaceModel.js'
@@ -58,6 +59,8 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run build
+      - name: Verify spatial writer anonymous boundary
+        run: node verifier/checkSpatialRuntimeAnonymous.mjs
       - name: Install isolated browser verifier
         run: |
           npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0

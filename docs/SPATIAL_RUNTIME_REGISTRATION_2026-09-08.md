@@ -73,3 +73,8 @@ alongside those backend prerequisites, without inventing released records.
 Current [Supabase changelog](https://supabase.com/changelog) and
 [function development guidance](https://supabase.com/docs/guides/functions/development-tips)
 were reviewed; no platform API or runtime dependency is changed.
+
+A bounded, credential-free live request also verifies anonymous denial (401) before
+merge and after Pages deployment. It sends no operation and cannot establish a
+successful signed-in write. The owner's-device network attempt was inconclusive;
+the ephemeral CI check provides the recorded HTTP result.
