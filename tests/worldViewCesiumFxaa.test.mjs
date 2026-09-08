@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { cesiumFxaaAvailable, setCesiumFxaa, cesiumFxaaState } from '../src/lib/worldViewCesiumFxaa.js'
+import { cesiumFxaaAvailable, setCesiumFxaa, cesiumFxaaState } from '../src/lib/worldViewCesiumEllipsoidRendererAdapter.js'
 import { createVisualFidelityEffect } from '../src/lib/worldViewVisualFidelity.js'
 
 test('FXAA reuses the built-in stage and requests frames only on an actual change', () => {
