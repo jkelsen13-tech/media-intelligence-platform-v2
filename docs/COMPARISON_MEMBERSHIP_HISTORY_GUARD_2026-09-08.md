@@ -39,3 +39,25 @@ The [final consolidation gate](BACKEND_CONSOLIDATION_FINAL_GATE_2026-09-08.md)
 remains INCOMPLETE. Missing collector tables, remaining write guards, immutable
 worker outputs, ingestion/history deltas and runtime cutover remain open.
 No legacy project is SAFE TO RETIRE. Legacy source projects are not modified.
+
+## Installed survivor verification
+
+Installed as migration 20260908104901; the stored SQL matches this repository
+migration exactly. All 1,456 tests and Node 22/24 builds passed before installation.
+
+The worker-role rollback check in supabase/tests/comparison_membership_history_rollback.sql
+verified duplicate-insert no-op behavior, deletion invalidation, prior approval/
+membership retention and exclusion from the actual comparison_public view.
+Its exception subtransaction rolls back successful verification writes and also
+rolls back unexpected failures. No test row or evidence change is committed;
+identity sequence gaps can remain.
+
+Before installation, after installation and after rollback, all three ordered
+full-row digests (events, memberships, public comparison) matched. One event and
+three memberships remain; history has zero rows after rollback. Catalog checks
+confirmed RLS, private browser denial, read-only worker history access, two history
+mutation guards and no direct execute grants on either trigger function.
+The receipt is verifier/comparison-membership-history-2026-09-08.json.
+
+This proves the installed bounded mutation guard. It does not certify external
+review writers, multi-connection collector scheduling or full backend consolidation.

@@ -8,7 +8,7 @@ const F = '00000000-0000-4000-8000-000000000002'
 const A = '00000000-0000-4000-8000-000000000011'
 const B = '00000000-0000-4000-8000-000000000012'
 const C = '00000000-0000-4000-8000-000000000013'
-const migration = await readFile(new URL('../supabase/migrations/20260908110000_comparison_membership_history_guard.sql', import.meta.url), 'utf8')
+const migration = await readFile(new URL('../supabase/migrations/20260908104901_comparison_membership_history_guard.sql', import.meta.url), 'utf8')
 async function fixture(t, legacy = false) {
   const db = await PGlite.create(); t.after(() => db.close())
   await db.exec(`
