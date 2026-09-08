@@ -344,6 +344,7 @@ export default function GraphView({
         fit: false,
       }
       cy.one('layoutstop', () => {
+        if (cy.destroyed()) return
         const bb = cy
           .nodes()
           .filter((n) => connectedIds.has(n.id()))
