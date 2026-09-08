@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { retainedInputImpact, validPosition } from '../supabase/functions/investigation-input-impact/impact.mjs'
 import { createInputImpactHandler } from '../supabase/functions/investigation-input-impact/handler.mjs'
 import { createInvestigationApiHandler } from '../supabase/functions/investigation-api/handler.mjs'
+import { inputImpactMatches } from '../src/lib/investigationInputImpactClient.js'
 import { selectedContextUsers } from '../src/lib/investigationEvidenceTrail.js'
 
 const investigation = '11111111-1111-4111-8111-111111111111'
@@ -26,6 +27,8 @@ test('duplicate assessment identities remain unknown in every row order and agre
     const result = retainedInputImpact(bundle, '1')
     assert.deepEqual(result.context_assessment_ids, ['b'])
     assert.deepEqual(result.unknown_context_assessment_ids, ['a'])
+    assert.equal(inputImpactMatches(bundle, '1', result), true)
+    assert.equal(inputImpactMatches(bundle, '1', { ...result, context_assessment_ids: ['a', 'b'], unknown_context_assessment_ids: [] }), false)
     assert.deepEqual(result.context_assessment_ids, selectedContextUsers(bundle, '1').map(row => row.id))
     assert.deepEqual(result.hypotheses, [{ id: 'h', citation_indices: [0], assessment_ids: ['b'] }])
     assert.equal(result.assessment_effect, 'none')
@@ -35,6 +38,10 @@ test('duplicate assessment identities remain unknown in every row order and agre
 })
 test('ambiguous selected inputs fail closed while unrelated duplicates and exact context positions stay isolated', () => {
   const bundle = fixture()
+  const valid = retainedInputImpact(bundle, '1')
+  const duplicated = structuredClone(bundle)
+  duplicated.observation.snapshot.inputs.push({ position: '1' })
+  assert.equal(inputImpactMatches(duplicated, '1', valid), false)
   bundle.observation.snapshot.inputs.push({ position: '2' }, { position: '2' })
   assert.deepEqual(retainedInputImpact(bundle, '1').context_assessment_ids, ['a', 'b'])
   assert.throws(() => retainedInputImpact(bundle, '2'), /ambiguous_input/)
