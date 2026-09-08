@@ -131,16 +131,21 @@ try {
       await page.close()
     }
     const fallback=await browser.newPage({viewport:{width:390,height:844}})
-    await fallback.route('**/cesium-globe-*.js',route=>route.abort())
+    await fallback.addInitScript(()=>{
+      const getContext=HTMLCanvasElement.prototype.getContext
+      HTMLCanvasElement.prototype.getContext=function(kind,...args){
+        return /webgl/i.test(kind) ? null : getContext.call(this,kind,...args)
+      }
+    })
     await fallback.goto(url)
-    await fallback.waitForFunction(()=>document.querySelector('[data-map-stack]')?.dataset.mapStack==='openfreemap-positron')
+    await fallback.waitForFunction(()=>document.querySelector('[data-map-stack]')?.dataset.mapStack==='atlas-fallback')
     const fallbackPanel=fallback.getByRole('region',{name:'Visual Fidelity',exact:true})
     await fallbackPanel.getByRole('button',{name:'Visual Fidelity settings',exact:true}).click()
     const fallbackRelief=fallbackPanel.getByRole('checkbox',{name:'Terrain relief shading',exact:true})
     assert.equal(await fallbackRelief.isChecked(),false)
     assert.equal(await fallbackRelief.isDisabled(),true)
     assert.equal(await fallback.evaluate(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getProfile().categories.terrain.reliefShading),true)
-    console.log('MIP_FIDELITY_FORCED_FALLBACK='+JSON.stringify({engine,failedImport:true,preferenceRetained:true,unavailable:true}))
+    console.log('MIP_FIDELITY_FORCED_FALLBACK='+JSON.stringify({engine,webglUnavailable:true,overviewFallback:true,preferenceRetained:true,unavailable:true}))
     await fallback.close()
     await browser.close();browser=null
   }
