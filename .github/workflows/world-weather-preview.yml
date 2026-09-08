@@ -11,6 +11,9 @@ on:
       - 'verifier/runVersionReferenceBrowser.mjs'
       - 'src/lib/deepLinks.js'
       - 'src/lib/recentInvestigation.js'
+      - 'src/lib/investigationEvidenceTrail.js'
+      - 'src/components/InvestigationAssessmentTrail.jsx'
+      - 'verifier/runRetainedDateBrowser.mjs'
       - 'src/lib/worldViewCameraFraming.js'
       - 'src/lib/worldViewRendererAdapter.js'
       - 'src/lib/worldViewCesiumEllipsoidRendererAdapter.js'
@@ -52,3 +55,7 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runVersionReferenceBrowser.mjs
+      - name: Verify retained date precision
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runRetainedDateBrowser.mjs
