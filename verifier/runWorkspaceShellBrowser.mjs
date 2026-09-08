@@ -5,8 +5,8 @@ import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 const require = createRequire(process.env.MIP_BROWSER_PACKAGE + '/package.json')
 const { chromium } = require('playwright')
-const origin = 'http://127.0.0.1:4173/media-intelligence-platform-v2/'
-const server = spawn('npm', ['run', 'preview', '--', '--host', '127.0.0.1', '--port', '4173', '--strictPort'], {stdio:'ignore'})
+const origin = process.env.MIP_LIVE_SITE === '1' ? 'https://jkelsen13-tech.github.io/media-intelligence-platform-v2/' : 'http://127.0.0.1:4173/media-intelligence-platform-v2/'
+const server = process.env.MIP_LIVE_SITE === '1' ? null : spawn('npm', ['run', 'preview', '--', '--host', '127.0.0.1', '--port', '4173', '--strictPort'], {stdio:'ignore'})
 let browser
 try {
   let ready = false
@@ -88,5 +88,5 @@ try {
   console.log('MIP_SHELL_PASS='+JSON.stringify({widths:[1280,1024,768,390,320],reclaimedDock:true,tabletStack:true,account:true,keyboard:true,subjectPreserved:true,pageErrors:0}))
 } finally {
   await browser?.close()
-  server.kill('SIGTERM')
+  server?.kill('SIGTERM')
 }

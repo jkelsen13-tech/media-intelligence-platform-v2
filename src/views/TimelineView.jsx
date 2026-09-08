@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { mipBackend } from '../lib/mipBackend.js'
+import { chronologyConnectionReadState } from '../lib/chronologyBackend.js'
 import { edgePlainLabel } from '../graph/theme'
 import {
   SCREEN5_EYEBROW,
@@ -90,6 +91,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   const [arcArticles, setArcArticles] = useState(null)
   const [connections, setConnections] = useState(null)
   const [connectionsError, setConnectionsError] = useState(null)
+  const [connectionAttempt, setConnectionAttempt] = useState(0)
 
   // --- global-scope data (lazy: read only after the explicit opt-in, or when a
   // cross-window focus request targets a global event) --------------------------
@@ -104,6 +106,8 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   const [pendingFocus, setPendingFocus] = useState(null)
   const [focusHighlight, setFocusHighlight] = useState(null)
   const itemRefs = useRef(new Map())
+  const globalConnectionState = chronologyConnectionReadState(globalData, globalError)
+  const effectiveLinkFilter = globalConnectionState === 'ready' ? linkFilter : 'any'
 
   useEffect(() => {
     backend.loadArcs()
@@ -133,21 +137,28 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
     setDetail(null)
     setDetailError(null)
     setArcArticles(null)
-    setConnections(null)
-    setConnectionsError(null)
     backend.loadArcDetail(selected.id ?? selected.slug)
       .then((d) => !cancelled && setDetail(d))
       .catch((err) => !cancelled && setDetailError(err.message))
     backend.loadArcArticles(selected.id)
       .then((rows) => !cancelled && setArcArticles(rows))
       .catch(() => !cancelled && setArcArticles([]))
-    backend.loadArcConnections(selected.id)
-      .then((c) => !cancelled && setConnections(c))
-      .catch((err) => !cancelled && setConnectionsError(err.message))
     return () => {
       cancelled = true
     }
   }, [selected, allEvents])
+
+  // Connection retries do not refetch or clear the arc's evidence records.
+  useEffect(() => {
+    if (!selected || allEvents) return
+    let cancelled = false
+    setConnections(null)
+    setConnectionsError(null)
+    backend.loadArcConnections(selected.id)
+      .then((result) => !cancelled && setConnections(result))
+      .catch((error) => !cancelled && setConnectionsError(error?.message || 'Connections unavailable'))
+    return () => { cancelled = true }
+  }, [selected, allEvents, connectionAttempt, backend])
 
   // Global-scope load: explicit opt-in or cross-window focus only.
   useEffect(() => {
@@ -155,11 +166,11 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
     let cancelled = false
     backend.loadTimeline()
       .then((d) => !cancelled && setGlobalData(d))
-      .catch((err) => !cancelled && setGlobalError(err.message))
+      .catch((err) => !cancelled && setGlobalError(err?.message || 'Timeline unavailable'))
     return () => {
       cancelled = true
     }
-  }, [allEvents, focusEventKey, globalData, globalError])
+  }, [allEvents, focusEventKey, globalData, globalError, backend])
 
   // Changing arc or scope returns to the Timeline tab with filters cleared.
   useEffect(() => {
@@ -213,7 +224,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
       }
       const links = linksByKey.get(entry.key)
       const all = links ? [...links.outbound, ...links.inbound] : []
-      switch (linkFilter) {
+      switch (effectiveLinkFilter) {
         case 'linked':
           return all.length > 0
         case 'causal':
@@ -235,7 +246,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
       suppressed: globalData.suppressed ?? 0,
       edgesUnavailable: globalData.edgesUnavailable ?? null,
     }
-  }, [globalData, query, linkFilter, month, type])
+  }, [globalData, query, effectiveLinkFilter, month, type])
 
   // Package 1 item 2 return-to-origin (Three-Screen Review named finding):
   // a jump that names its originating arc lands on THAT arc's timeline,
@@ -348,6 +359,19 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
   ) : null
 
   const scopeIsGlobal = allEvents || !selected
+  const connectionState = scopeIsGlobal
+    ? globalConnectionState
+    : chronologyConnectionReadState(connections, connectionsError)
+  const retryConnections = () => {
+    if (scopeIsGlobal) {
+      setGlobalData(null)
+      setGlobalError(null)
+    } else {
+      setConnections(null)
+      setConnectionsError(null)
+      setConnectionAttempt((attempt) => attempt + 1)
+    }
+  }
   const entries = scopeIsGlobal ? (global?.filtered ?? []) : arcEntries.filter((e) => entryMatchesFilters(e, { month, type }))
   const dateOptions = deriveDateOptions(scopeIsGlobal ? (global?.entries ?? []) : arcEntries)
   const typeOptions = deriveTypeOptions(scopeIsGlobal ? (global?.entries ?? []) : arcEntries)
@@ -397,10 +421,11 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
       {...investigationContextDomProps(investigationContext)}
     >
       {arcsUnavailableNotice}
-      {global?.edgesUnavailable && (
-        <WorkspaceTechnicalDisclosure banner={CALM_TIMELINE_CONTEXT_UNAVAILABLE}>
-          public.edges is unavailable ({global.edgesUnavailable}). No relationships are invented.
-        </WorkspaceTechnicalDisclosure>
+      {connectionState === 'unavailable' && (
+        <div className="notice" role="status">
+          <p>Connections are unavailable. Their absence has not been established.</p>
+          <button type="button" className="timeline-chip" onClick={retryConnections}>Retry connections</button>
+        </div>
       )}
       <div className="timeline-intro timeline-workspace-intro">
         <div className="timeline-heading-row">
@@ -508,8 +533,9 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
                   <button
                     key={f.id}
                     type="button"
-                    className={`timeline-chip${linkFilter === f.id ? ' active' : ''}`}
-                    aria-pressed={linkFilter === f.id}
+                    className={`timeline-chip${effectiveLinkFilter === f.id ? ' active' : ''}`}
+                    aria-pressed={effectiveLinkFilter === f.id}
+                    disabled={f.id !== 'any' && globalConnectionState !== 'ready'}
                     onClick={() => setLinkFilter(f.id)}
                   >
                     {f.label}
@@ -647,7 +673,9 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
       {activeTab === 'connections' && (
         <section id="timeline-connections-panel" role="tabpanel" aria-labelledby="connections-tab" className="ap-section">
           {scopeIsGlobal ? (
-            !global ? (
+            connectionState === 'unavailable' ? (
+              <p className="arc-empty">Connection results cannot be determined until the read succeeds.</p>
+            ) : connectionState === 'loading' ? (
               <div className="notice">Loading connections…</div>
             ) : globalConnectionEdges.length === 0 ? (
               <p className="arc-empty">
@@ -782,7 +810,7 @@ export default function TimelineView({ onOpenArc, onOpenArticle, focusEventKey, 
           onClick={() => setActiveTab('connections')}
         >
           Open Connections (
-          {connectionsError && !scopeIsGlobal ? 'count unavailable' : foot.connections})
+          {connectionState === 'ready' ? foot.connections : connectionState === 'loading' ? 'loading' : 'count unavailable'})
         </button>
       </div>
 

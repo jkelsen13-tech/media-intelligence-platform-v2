@@ -6,8 +6,8 @@ import { setTimeout as delay } from 'node:timers/promises'
 const browserEngine = process.env.MIP_TIMELINE_BROWSER || 'chromium'
 const engine = createRequire(process.env.MIP_BROWSER_PACKAGE + '/package.json')('playwright')[browserEngine]
 assert.ok(['chromium','webkit'].includes(browserEngine))
-const origin='http://127.0.0.1:4173/media-intelligence-platform-v2/'
-const server=spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
+const origin = process.env.MIP_LIVE_SITE === '1' ? 'https://jkelsen13-tech.github.io/media-intelligence-platform-v2/' : 'http://127.0.0.1:4173/media-intelligence-platform-v2/'
+const server = process.env.MIP_LIVE_SITE === '1' ? null : spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
 let browser
 try {
   let ready=false
@@ -102,6 +102,36 @@ try {
     assert.equal(await context(),subject)
   }
   assert.equal(await methods.getAttribute('open'),null)
+
+  // Synthetic outage over the real production build and installed SDK.
+  // Only this browser's read response is replaced; no backend data is changed.
+  await page.setViewportSize({width:1280,height:900})
+  const edgesRoute='https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/edges?*'
+  let denyEdges=true
+  await page.route(edgesRoute, route => denyEdges
+    ? route.fulfill({status:403,contentType:'application/json',body:JSON.stringify({code:'42501',message:'Synthetic relationship outage'})})
+    : route.continue())
+  await page.reload()
+  await page.getByText('Connections are unavailable. Their absence has not been established.',{exact:true}).waitFor()
+  await page.locator('.timeline-view .ep-tl-card').first().waitFor()
+  const links=page.getByRole('group',{name:'Filter by link type',exact:true})
+  for(const name of ['With links','Causal links','Sequence links','No links'])
+    assert.equal(await links.getByRole('button',{name,exact:true}).isDisabled(),true)
+  await page.getByRole('button',{name:/Open Connections.*count unavailable/}).click()
+  assert.equal(await page.getByText('No graph connections touch the events currently in view.',{exact:true}).count(),0)
+  await page.getByText('Connection results cannot be determined until the read succeeds.',{exact:true}).waitFor()
+  console.log('MIP_TIMELINE_UNAVAILABLE='+(await page.screenshot({type:'jpeg',quality:75})).toString('base64'))
+  assert.equal(await context(),subject)
+  denyEdges=false
+  await page.getByRole('button',{name:'Retry connections',exact:true}).click()
+  await page.waitForFunction(()=>!document.body.textContent.includes('Connections are unavailable. Their absence has not been established.'))
+  await page.getByRole('tablist',{name:'Timeline sections',exact:true}).getByRole('tab',{name:'Timeline',exact:true}).click()
+  await page.locator('.timeline-view .ep-tl-card').first().waitFor()
+  assert.equal(await links.getByRole('button',{name:'No links',exact:true}).isEnabled(),true)
+  assert.equal(await context(),subject)
+  await page.unroute(edgesRoute)
+  console.log('MIP_TIMELINE_CONNECTION_RECOVERY_PASS=true')
+
   assert.deepEqual(errors,[])
   console.log('MIP_TIMELINE_COMPOSITION_PASS='+JSON.stringify({browserEngine,listWidths:[1280,1024,768,390,320],listCardWidth:true,widths:[1280,768,390,320],scopeVisible:true,keyboardDisclosure:true,searchRoundTrip:true,presentation:true,evidenceTabs:true,subjectPreserved:true,pageErrors:0}))
-}finally{await browser?.close();server.kill('SIGTERM')}
+}finally{await browser?.close();server?.kill('SIGTERM')}
