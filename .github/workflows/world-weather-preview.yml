@@ -9,6 +9,7 @@ on:
       - 'src/graph/time-records.css'
       - 'verifier/runGraphTimeBrowser.mjs'
       - 'src/components/InvestigationWorkspace.jsx'
+      - 'src/lib/workspacePresentation.js'
       - 'src/styles/workspace.css'
       - 'verifier/runWorkspaceShellBrowser.mjs'
       - 'src/views/TimelineView.jsx'

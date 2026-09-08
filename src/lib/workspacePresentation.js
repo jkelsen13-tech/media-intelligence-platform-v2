@@ -8,6 +8,7 @@
 import { isPostgrestPermissionDenied, isPostgrestSchemaGap } from './supabase.js'
 import { buildNodeEvidenceAxes } from './nodeEvidence.js'
 import { applyTheme, cacheTheme } from './themeFlag.js'
+import { retainedDateDisplay } from './investigationEvidenceTrail.js'
 
 export const WORKSPACE_PRESENTATION = 'investigation_workspace_light_v1'
 
@@ -63,12 +64,9 @@ export function applyWorkspaceLightPresentation(root, storage) {
 }
 
 export function formatWorkspaceDate(iso) {
-  if (iso == null || String(iso).trim() === '') return TIME_UNRECORDED
-  const ms = Date.parse(iso)
-  if (!Number.isFinite(ms)) return TIME_UNRECORDED
-  const d = new Date(ms)
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()} · UTC`
+  if (typeof iso !== 'string' || iso.trim() === '') return TIME_UNRECORDED
+  const display = retainedDateDisplay(iso.trim())
+  return display.label === 'Unrecognized retained date' ? 'Unrecognized recorded date' : display.label
 }
 
 export function recordedLocationLabel(node, extras = {}) {
