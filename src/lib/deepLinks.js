@@ -58,15 +58,19 @@ function hasControlCharacters(value) {
   return [...value].some(character => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127)
 }
 
+function routeIdentity(value) {
+  return typeof value === 'string' && value.length <= 512 && value.trim() !== ''
+    && !value.includes('/') && !value.includes(String.fromCharCode(92))
+    && !hasControlCharacters(value) ? value : null
+}
+
+function routeSubjectType(value) {
+  return typeof value === 'string' && /^[a-z][a-z0-9_-]{0,63}$/i.test(value) ? value : null
+}
+
 function decodeRouteSegment(value) {
   if (!value) return null
-  try {
-    const decoded = decodeURIComponent(value)
-    return decoded.length <= 512 && decoded.trim() !== '' && !decoded.includes('/')
-      && !decoded.includes(String.fromCharCode(92)) && !hasControlCharacters(decoded) ? decoded : null
-  } catch {
-    return null
-  }
+  try { return routeIdentity(decodeURIComponent(value)) } catch { return null }
 }
 
 function ownView(table, key) {
@@ -170,10 +174,22 @@ export function parseDeepLink(input) {
     selection[key] = value && value.length <= 1024 && value.trim() !== ''
       && !hasControlCharacters(value) ? value : null
   }
+  // /event/ remains the legacy route envelope. Explicit metadata preserves
+  // non-event identity; malformed/duplicate type never defaults to an event.
+  const identity = {}
+  if (params.has('subject_type')) {
+    const values = params.getAll('subject_type')
+    identity.subjectType = values.length === 1 ? routeSubjectType(values[0]) : null
+  }
+  if (params.has('parent_event')) {
+    const values = params.getAll('parent_event')
+    identity.parentEventId = values.length === 1 ? routeIdentity(values[0]) : null
+  }
   const ignoredDisplayText = DISPLAY_TEXT_QUERY_KEYS.some((key) => params.has(key))
   const knownView = viewSlug ? ownView(DEEP_LINK_SLUG_TO_VIEW, viewSlug) : subjectId ? 'graph' : null
   return {
     subjectId,
+    ...identity,
     viewSlug,
     view: knownView,
     unknownView: Boolean(viewSlug && !ownView(DEEP_LINK_SLUG_TO_VIEW, viewSlug)),
@@ -312,8 +328,9 @@ export function reconstructFromDeepLink(parsed, { currentIc, catalog } = {}) {
   const inspectionInstant = parseInspectionInstant(parsed.selection?.at)
   if (inspectionInstant) timeFields.as_of_time = inspectionInstant
   const payload = {
-    canonical_subject_type: 'event',
+    canonical_subject_type: Object.hasOwn(parsed, 'subjectType') ? parsed.subjectType : 'event',
     canonical_subject_id: parsed.subjectId,
+    parent_event_id: parsed.parentEventId ?? null,
     ...timeFields,
   }
   const result = commitNewSubject(base, payload, { landingView })
@@ -346,6 +363,12 @@ export function serializeDeepLink(ic, selection = {}) {
   if (!id) return '#/'
   const slug = ownView(VIEW_TO_DEEP_LINK_SLUG, ic.active_view) ?? 'graph'
   const params = new URLSearchParams()
+  // Identity comes only from current context, never stale sub-selection state.
+  if (Object.hasOwn(ic, 'canonical_subject_type') && ic.canonical_subject_type !== 'event') {
+    params.set('subject_type', routeSubjectType(ic.canonical_subject_type) ?? '')
+  }
+  const parent = routeIdentity(ic.parent_event_id)
+  if (parent) params.set('parent_event', parent)
   const merged = { ...emptyDeepLinkSelection(), ...selection }
   if (!merged.time) {
     merged.time = formatTimeQuery(ic.as_of_time, ic.selected_time_range)
