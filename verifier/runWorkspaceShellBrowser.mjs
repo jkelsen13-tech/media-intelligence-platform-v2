@@ -25,7 +25,7 @@ try {
   const shell = page.locator('.ws-shell')
   const inspector = page.getByRole('complementary',{name:'Investigation inspector',exact:true})
   const toggle = inspector.getByRole('button',{name:'Investigation inspector',exact:true})
-  const context = () => page.locator('[data-investigation-context]').getAttribute('data-canonical-subject-id')
+  const context = () => page.locator('.ws-canonical[data-investigation-context]').getAttribute('data-canonical-subject-id')
   const subject = await context()
   for (const width of [1280,1024,768,390,320]) {
     await page.setViewportSize({width,height:width>=768?900:844})
