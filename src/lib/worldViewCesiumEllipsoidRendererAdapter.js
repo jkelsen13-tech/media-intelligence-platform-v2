@@ -651,6 +651,7 @@ export function createCesiumEllipsoidRendererAdapter({
 
   function destroy() {
     localCancelled = true
+    terrainPlan?.destroy?.()
     destroyCesiumResources({ eventHandler, viewer })
     viewer = null
     eventHandler = null

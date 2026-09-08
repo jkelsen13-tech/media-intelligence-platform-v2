@@ -73,3 +73,13 @@ request-volume qualification. VF-3/4/5 and all Markets/provider gates remain.
 Backend consolidation is incomplete: active Manus collectors, Auth, spatial
 history, external runtime and positive authorized journeys still need closure.
 No project is proven safe to retire. This batch makes no database writes.
+
+## Navigation lifecycle reconciliation
+
+WebKit diagnostics traced an intermittent navigation failure to the MIP terrain
+PNG decoder, not Cesium worker startup. Terrain requests previously outlived
+their viewer. Provider teardown now aborts its owned fetches and checks the
+abort signal before decoding late response bodies and accepting decoded data.
+Teardown does not count as source unavailability. A pending-body regression
+proves no late decode/status mutation or new callback work after destruction.
+Browser error assertions remain enforced; CI must validate the observed journey.
