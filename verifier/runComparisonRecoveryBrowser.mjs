@@ -1,4 +1,4 @@
-// Inject only a failed HTTP response. Recovery reads the real released projection.
+// Real projection recovery plus browser-only temporal fixtures; never seed production.
 import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
 import {spawn} from 'node:child_process'
@@ -68,7 +68,9 @@ try {
         assert.ok((await page.locator('.sc-view').innerText()).includes('order not established from these records'))
         assert.equal(await identity(),subject)
         assert.equal(await page.locator('.sc-view').evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
-        if(width===390)console.log('MIP_COMPARISON_DATE_FIXTURE_'+engine+'='+(await page.locator('.sc-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
+        const surface=page.locator('.sc-surface').first()
+        await surface.scrollIntoViewIfNeeded()
+        if(width===390)console.log('MIP_COMPARISON_DATE_FIXTURE_'+engine+'='+(await surface.screenshot({type:'jpeg',quality:65})).toString('base64'))
       }
       fixture.articles[0].published_at='2026-08-05T09:00:00-04:00'
       fixture.articles[1].published_at='2026-08-05T12:00:00Z'
