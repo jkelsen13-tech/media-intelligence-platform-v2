@@ -29,7 +29,7 @@ try {
       for(const width of [1280,768,390,320]){
         deny=true;rows=[]
         await page.setViewportSize({width,height:1000})
-        await page.goto(origin+'#/event/'+subject+'/compare')
+        await page.goto(origin+'#/event/'+subject+'/sources')
         // goto with the same hash need not reload; explicitly reload each case.
         await page.reload()
         const recovery=page.getByRole('region',{name:'Comparison recovery'})
