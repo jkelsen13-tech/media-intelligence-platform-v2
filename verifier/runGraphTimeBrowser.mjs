@@ -78,15 +78,15 @@ try {
       await card.waitFor()
       const initial=await cyState()
       assert.equal(initial.labels,0,'no duplicate canvas text under mobile card')
-      for(let i=0;i<7;i++)await page.getByRole('button',{name:'Zoom out',exact:true}).click()
+      for(let i=0;i<7;i++){await page.getByRole('button',{name:'Zoom out',exact:true}).click();await page.waitForTimeout(180)}
       await page.waitForTimeout(400)
       const out=await cyState(),small=(await card.boundingBox()).width
       assert.ok(out.zoom<initial.zoom,'minus zooms out')
-      for(let i=0;i<3;i++)await page.getByRole('button',{name:'Zoom in',exact:true}).click()
+      for(let i=0;i<3;i++){await page.getByRole('button',{name:'Zoom in',exact:true}).click();await page.waitForTimeout(180)}
       await page.waitForTimeout(400)
       const zoomed=await cyState(),larger=(await card.boundingBox()).width
       assert.ok(zoomed.zoom>out.zoom,'plus zooms in')
-      assert.ok(larger>=small,'card never shrinks when zooming in')
+      assert.ok(larger>small,'card grows when zooming in from overview')
       assert.equal(zoomed.labels,0,'zoom does not restore duplicate text')
       await canvas.click({position:{x:8,y:8}})
       assert.equal(await card.count(),0,'empty canvas clears the title card')
