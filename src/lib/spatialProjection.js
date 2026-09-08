@@ -307,6 +307,28 @@ export function defaultStampIndex(stamps, rows) {
   return fromIdx >= 0 ? fromIdx : 0
 }
 
+
+/** Shared time owns selection; array refreshes never choose a new time for the user. */
+export function worldViewRecordedTime(stamps, rows, requested) {
+  const hasRequest = requested != null && requested !== ''
+  const dateScope = typeof requested === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(requested)
+  if (hasRequest && !dateScope) {
+    // Require an explicit offset: a local/ambiguous timestamp is not a recorded instant.
+    const ms = typeof requested === 'string' && /^\\d{4}-\\d{2}-\\d{2}T.*(?:Z|[+-]\\d{2}:\\d{2})$/i.test(requested)
+      ? Date.parse(requested) : NaN
+    const index = Number.isFinite(ms) ? stamps.findIndex(s => s.ms === ms) : -1
+    return { index: index < 0 ? null : index, atMs: Number.isFinite(ms) ? ms : null,
+      atIso: requested, kind: Number.isFinite(ms) ? 'selected' : 'unavailable', hasRequest }
+  }
+  // A date-only scope is not midnight. Show a recorded marker on that UTC date
+  // without replacing the shared date with an invented precise selection.
+  const eligible = dateScope ? stamps.filter(s => s.iso.slice(0,10) === requested) : stamps
+  const marker = eligible[defaultStampIndex(eligible, rows)]
+  if (!marker) return { index: null, atMs: null, atIso: requested ?? null, kind: 'unavailable', hasRequest }
+  return { index: stamps.findIndex(s => s.ms === marker.ms), atMs: marker.ms, atIso: marker.iso,
+    kind: dateScope ? 'date_scope' : 'default', hasRequest }
+}
+
 export function latestProjectionRow(rows) {
   if (!rows?.length) return null
   return [...rows].sort((a, b) => (a.revision_ordinal ?? 0) - (b.revision_ordinal ?? 0)).at(-1)
