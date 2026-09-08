@@ -174,7 +174,7 @@ test('workspace tabs, chronology, honest unavailable, and phosphor are wired', (
   assert.match(CESIUM, /CESIUM_BASE_URL/)
   assert.match(APP, /<InvestigationWorkspace/)
   assert.match(APP, /<InvestigationContextBar/)
-  assert.match(APP, /onClick=\{\(\) => \(v\.key === 'more' \? setMoreOpen\(true\) : changeView\(v\.key\)\)\}/)
+  assert.match(APP, /onClick=\{\(\) => \(v\.key === 'more' \? setMoreOpen\(true\) : navigateWorkspaceView\(v\.key\)\)\}/)
   assert.match(APP, /onClick=\{openExplore\}/)
   assert.doesNotMatch(APP, /\.insert\(|\.upsert\(|\.delete\(|\.rpc\(/)
 })

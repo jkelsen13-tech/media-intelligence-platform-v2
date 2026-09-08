@@ -105,10 +105,10 @@ test('App shell has Explore / Change Topic and opening it is not a view change',
   assert.ok(!closeBody.includes('resetJumpContext'))
   assert.ok(!closeBody.includes('changeView('))
 
-  // Ordinary nav still uses changeView; Explore uses openExplore.
+  // Workspace navigation delegates ordinary tabs to changeView; Explore stays separate.
   assert.match(
     APP,
-    /onClick=\{\(\) => \(v\.key === 'more' \? setMoreOpen\(true\) : changeView\(v\.key\)\)\}/,
+    /onClick=\{\(\) => \(v\.key === 'more' \? setMoreOpen\(true\) : navigateWorkspaceView\(v\.key\)\)\}/,
   )
   assert.match(APP, /onClick=\{openExplore\}/)
 })

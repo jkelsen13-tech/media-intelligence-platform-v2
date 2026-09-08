@@ -36,6 +36,7 @@ import {
   graphNodeMatchingInvestigation,
 } from './lib/investigationContext'
 import { commitNewSubject } from './lib/newSubjectPropagation'
+import { privateWorkspacePublicNode, savedInvestigationHandoffVisible } from './lib/privateWorkspacePublicHandoff.js'
 import {
   emptyDeepLinkSelection,
   formatTimeQuery,
@@ -220,6 +221,7 @@ export default function App({
   const [selected, setSelected] = useState(null) // selected node data
   const [pinned, setPinned] = useState(false)
   const [view, setView] = useState(INITIAL_DEEP_LINK.view)
+  const [savedInvestigationHandoff, setSavedInvestigationHandoff] = useState(null)
   // R4.75 Step 1 — one shared Investigation Context. Tab switches update
   // active_view only. Explicit subject select replaces identity fields.
   const [investigationContext, setInvestigationContext] = useState(INITIAL_DEEP_LINK.investigationContext)
@@ -650,7 +652,8 @@ export default function App({
     setInvestigationContext((ic) => setInvestigationAsOfTime(ic, iso))
   }, [])
 
-  // Ordinary nav tab switch — MUST NOT JUMP_CLEARS or replace the subject.
+
+  // Ordinary public tab switches retain the existing subject.
   const changeView = useCallback((key) => {
     setView(key)
     setInvestigationContext((ic) => setInvestigationActiveView(ic, key))
@@ -988,7 +991,7 @@ export default function App({
   const moreActive = isMoreViewKey(view)
 
   const openFromMore = (key) => {
-    changeView(key)
+    navigateWorkspaceView(key)
     setMoreOpen(false)
   }
 
@@ -1172,6 +1175,42 @@ export default function App({
     if (!match) return
     openNodeInGraph(match.id ?? match.slug)
   }, [graph, openNodeInGraph])
+  // First handoff from a private question establishes only an exact public
+  // node identity. Later ordinary public tab changes retain that identity.
+  const navigateWorkspaceView = useCallback((key) => {
+    if (view === PRIVATE_INVESTIGATION_VIEW && ['graph','timeline','world'].includes(key)) {
+      const match = privateWorkspacePublicNode({
+        status: privateWorkspace.status, userId: auth.user?.id,
+        panels: privateWorkspace.state.panels, graph,
+      })
+      resetJumpContext()
+      clearInvalidNewSubjectSubSelections()
+      if (match) {
+        setGraphScreen('all')
+        setInvestigationContext((ic) => commitNewSubjectFromApp(ic, match, { landingView: key }))
+        setSavedInvestigationHandoff({
+          userId: auth.user.id,
+          investigationId: privateWorkspace.state.bundle?.investigation_id,
+          versionId: privateWorkspace.state.bundle?.version?.id,
+          subjectId: match.id,
+        })
+      } else {
+        // Do not leave a different prior public subject under this question.
+        setInvestigationContext(emptyInvestigationContext(key))
+        setSavedInvestigationHandoff(null)
+      }
+      setView(key)
+    } else {
+      changeView(key)
+    }
+  }, [changeView, view, privateWorkspace.status, privateWorkspace.state.panels, privateWorkspace.state.bundle,
+    auth.user, graph, resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
+
+  const showSavedInvestigationHandoff = savedInvestigationHandoffVisible({
+    binding: savedInvestigationHandoff, userId: auth.user?.id, status: privateWorkspace.status,
+    bundle: privateWorkspace.state.bundle, subjectId: investigationContext.canonical_subject_id, view,
+  })
+
   const inspectorOccupied = view === 'graph' && !!(selected || policyNode || edgeEvidence) && !isMobile
   const hasNativeInspector = view === 'world'
   const graphInspectorMode = graphInspectorPresentation({
@@ -1188,7 +1227,7 @@ export default function App({
     <div className="app ws-app">
       <InvestigationWorkspace
         view={view}
-        onChangeView={changeView}
+        onChangeView={navigateWorkspaceView}
         investigationContext={investigationContext}
         header={workspaceHeader}
         nodeDimensions={nodeDimensions}
@@ -1231,7 +1270,7 @@ export default function App({
                 key={v.key}
                 item={v}
                 active={v.key === 'more' ? moreActive : view === v.key}
-                onClick={() => (v.key === 'more' ? setMoreOpen(true) : changeView(v.key))}
+                onClick={() => (v.key === 'more' ? setMoreOpen(true) : navigateWorkspaceView(v.key))}
               />
             ))}
           </>
@@ -1259,7 +1298,7 @@ export default function App({
               key={v.key}
               className={`nav-tab${(v.key === 'more' ? moreActive : view === v.key) ? ' active' : ''}`}
               aria-current={(v.key === 'more' ? moreActive : view === v.key) ? 'page' : undefined}
-              onClick={() => (v.key === 'more' ? setMoreOpen(true) : changeView(v.key))}
+              onClick={() => (v.key === 'more' ? setMoreOpen(true) : navigateWorkspaceView(v.key))}
             >
               {v.label}
             </button>
@@ -1394,6 +1433,14 @@ export default function App({
       {accountOpen && accountUi && <AccountPanel onClose={() => setAccountOpen(false)} />}
 
       <main className="app-main">
+        {showSavedInvestigationHandoff && (
+          <section className="notice" aria-label="Saved investigation context">
+            <strong>{privateWorkspace.state.panels.question}</strong>
+            <p>Saved investigation revision {privateWorkspace.state.bundle.version.revision}.
+              {' '}This view shows current eligible public records; the saved evidence snapshot remains in Investigations.</p>
+            <button type="button" onClick={() => navigateWorkspaceView(PRIVATE_INVESTIGATION_VIEW)}>Return to saved investigation</button>
+          </section>
+        )}
         {error && view === 'graph' && (
           <WorkspaceTechnicalDisclosure banner={CALM_RELATIONSHIP_UNAVAILABLE}>
             Graph load failed. {error}
@@ -1848,7 +1895,7 @@ export default function App({
             key={v.key}
             className={`bottom-tab${(v.key === 'more' ? moreActive : view === v.key) ? ' active' : ''}`}
             aria-current={(v.key === 'more' ? moreActive : view === v.key) ? 'page' : undefined}
-            onClick={() => (v.key === 'more' ? setMoreOpen(true) : changeView(v.key))}
+            onClick={() => (v.key === 'more' ? setMoreOpen(true) : navigateWorkspaceView(v.key))}
           >
             {v.shortLabel}
           </button>
