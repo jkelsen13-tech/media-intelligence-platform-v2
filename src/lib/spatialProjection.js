@@ -164,51 +164,69 @@ export function geometryStatusWithheld(status) {
  * Parse only display_geometry. Never synthesize a Point from place ids,
  * names, or other columns.
  */
+// Validate the entire display payload before any renderer sees coordinates.
+// Do not coerce, clamp, repair rings, or keep a valid subset of an invalid shape.
+function validPosition(value) {
+  return Array.isArray(value) && value.length >= 2 && value.every(Number.isFinite)
+    && Math.abs(value[0]) <= 180 && Math.abs(value[1]) <= 90
+}
+
+function validLine(value, minimum = 2) {
+  return Array.isArray(value) && value.length >= minimum && value.every(validPosition)
+}
+
+function validPolygon(value) {
+  return Array.isArray(value) && value.length > 0 && value.every(ring =>
+    validLine(ring, 4) && ring[0].length === ring.at(-1).length
+      && ring[0].every((ordinate, i) => ordinate === ring.at(-1)[i]))
+}
+
+function validGeometry(geom, depth = 0) {
+  // Bound recursive collections, including cyclic in-memory objects.
+  if (!geom || typeof geom !== 'object' || Array.isArray(geom) || depth > 32) return false
+  const c = geom.coordinates
+  switch (geom.type) {
+    case 'Point': return validPosition(c)
+    case 'MultiPoint': return Array.isArray(c) && c.length > 0 && c.every(validPosition)
+    case 'LineString': return validLine(c)
+    case 'MultiLineString': return Array.isArray(c) && c.length > 0 && c.every(line => validLine(line))
+    case 'Polygon': return validPolygon(c)
+    case 'MultiPolygon': return Array.isArray(c) && c.length > 0 && c.every(validPolygon)
+    case 'GeometryCollection':
+      return Array.isArray(geom.geometries) && geom.geometries.length > 0
+        && geom.geometries.every(g => validGeometry(g, depth + 1))
+    default: return false
+  }
+}
+
 export function parseDisplayGeometry(value) {
   if (value == null || value === '') return null
   let geom = value
   if (typeof value === 'string') {
-    try {
-      geom = JSON.parse(value)
-    } catch {
-      return null
-    }
+    try { geom = JSON.parse(value) } catch { return null }
   }
-  if (typeof geom !== 'object') return null
-  if (geom.type === 'Feature' && geom.geometry) geom = geom.geometry
-  if (geom.type === 'FeatureCollection') {
-    const geometries = (geom.features ?? [])
-      .map((f) => f?.geometry)
-      .filter((g) => g && g.type)
-    if (geometries.length === 0) return null
-    return { type: 'GeometryCollection', geometries }
+  if (!geom || typeof geom !== 'object' || Array.isArray(geom)) return null
+  if (geom.type === 'Feature') geom = geom.geometry
+  else if (geom.type === 'FeatureCollection') {
+    if (!Array.isArray(geom.features) || geom.features.length === 0
+      || !geom.features.every(f => f?.type === 'Feature' && validGeometry(f.geometry))) return null
+    geom = { type: 'GeometryCollection', geometries: geom.features.map(f => f.geometry) }
   }
-  if (typeof geom.type !== 'string') return null
-  if (geom.type === 'GeometryCollection') {
-    return Array.isArray(geom.geometries) ? geom : null
-  }
-  if (geom.coordinates == null) return null
-  return geom
+  return validGeometry(geom) ? geom : null
 }
 
 export function collectPositions(geom, out = []) {
-  if (!geom) return out
-  const t = geom.type
-  if (t === 'Point') {
-    if (Array.isArray(geom.coordinates) && geom.coordinates.length >= 2) out.push(geom.coordinates)
-  } else if (t === 'MultiPoint' || t === 'LineString') {
-    for (const c of geom.coordinates ?? []) collectPositions({ type: 'Point', coordinates: c }, out)
-  } else if (t === 'MultiLineString' || t === 'Polygon') {
-    for (const ring of geom.coordinates ?? []) {
-      collectPositions({ type: 'LineString', coordinates: ring }, out)
+  const geometry = parseDisplayGeometry(geom)
+  if (!geometry) return out
+  const visit = g => {
+    if (g.type === 'GeometryCollection') { g.geometries.forEach(visit); return }
+    const walk = coordinates => {
+      if (typeof coordinates[0] === 'number') out.push(coordinates)
+      else coordinates.forEach(walk)
     }
-  } else if (t === 'MultiPolygon') {
-    for (const poly of geom.coordinates ?? []) {
-      collectPositions({ type: 'Polygon', coordinates: poly }, out)
-    }
-  } else if (t === 'GeometryCollection') {
-    for (const g of geom.geometries ?? []) collectPositions(g, out)
+    walk(g.coordinates)
   }
+  visit(geometry)
   return out
 }
 

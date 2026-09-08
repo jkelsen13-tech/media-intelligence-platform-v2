@@ -164,6 +164,37 @@ try {
   await map.scrollIntoViewIfNeeded()
   console.log('MIP_CAMERA_SCREENSHOT=' + (await map.screenshot({type: 'jpeg', quality: 60})).toString('base64'))
   console.log('MIP_CAMERA_RESTORE_PASS=' + JSON.stringify({routePreserved: true, restoredCameraRetained: true}))
+  // Corrupt only the response in this disposable browser; production rows stay untouched.
+  const spatialRoute = 'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/spatial_projection_v1?*'
+  let fixtureGeometry = {type:'Polygon',coordinates:{}}
+  let fixtureRows = 0
+  await page.route(spatialRoute, async route => {
+    const response = await route.fetch()
+    assert.equal(response.status(),200)
+    const rows = await response.json()
+    fixtureRows += rows.length
+    await route.fulfill({response,json:rows.map(row=>({...row,display_geometry:fixtureGeometry}))})
+  })
+  const subjectBeforeMalformed = await page.locator('.wv-view').getAttribute('data-canonical-subject-id')
+  for (const geometry of [{type:'Polygon',coordinates:{}},{type:'Point',coordinates:['invalid',95]}]) {
+    fixtureGeometry=geometry
+    await page.reload()
+    await inspector.getByText('Insufficient evidence to display a location',{exact:true}).waitFor()
+    await page.getByText('No display_geometry available to plot.',{exact:true}).first().waitFor()
+    assert.equal(await page.getByRole('button',{name:'Return to selected location',exact:true}).isDisabled(),true)
+    assert.equal(await page.locator('.wv-view').getAttribute('data-canonical-subject-id'),subjectBeforeMalformed)
+    assert.deepEqual(pageErrors,[],'malformed geometry must not crash the workspace')
+  }
+  assert.ok(fixtureRows>=2,'malformed checks must exercise loaded public rows')
+  console.log('MIP_MALFORMED_GEOMETRY_SCREENSHOT='+(await inspector.screenshot({type:'jpeg',quality:60})).toString('base64'))
+  await page.unroute(spatialRoute)
+  await page.reload()
+  await inspector.getByText('coarsened_to_precision_class',{exact:true}).waitFor()
+  await page.waitForFunction(()=>!document.querySelector('.wv-return-to-selected')?.disabled &&
+    document.querySelector('.wv-active-event')?.textContent.includes('Cleveland'))
+  assert.equal(await page.getByRole('button',{name:'Return to selected location',exact:true}).isEnabled(),true)
+  assert.equal(await page.locator('.wv-view').getAttribute('data-canonical-subject-id'),subjectBeforeMalformed)
+  console.log('MIP_GEOMETRY_BOUNDARY_PASS='+JSON.stringify({browserFixtureOnly:true,invalidShapeUnavailable:true,invalidCoordinatesUnavailable:true,subjectPreserved:true,realProjectionRecovered:true}))
   assert.deepEqual(restrictedRequests, [], 'no restricted hosted weather requests')
   console.log('MIP_BACKEND_BOUNDARY_PASS='+JSON.stringify(verifyBackend()))
   assert.deepEqual(pageErrors, [], 'no uncaught application errors')
