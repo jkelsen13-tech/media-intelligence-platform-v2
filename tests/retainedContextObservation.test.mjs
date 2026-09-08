@@ -4,6 +4,25 @@ import { createHash } from 'node:crypto'
 import { createContextObservation, compareContextObservations, contextOriginRelationship } from '../scripts/retainedContextObservation.mjs'
 
 // Entirely synthetic rights/data fixtures. They approve no real source or API.
+function rightsLayers() {
+  const confirmed = scope => ({
+    status:'confirmed', scope, reason:'Synthetic fixture, not real permission',
+    references:['fixture: invented rights reference'],
+    checks:{commercial_use:'confirmed',patent_license_compatibility:'confirmed',terms:'confirmed'},
+    permissions:{display:true,analysis:true,retain:true,cache:false,export:false,redistribute:false},
+    obligations:[{kind:'attribution',statement:'Synthetic fixture only',implementation_reference:'fixture: attribution text'}],
+  })
+  return {
+    software:{status:'not_applicable',scope:null,reason:'No imported software in this synthetic fixture',
+      references:['fixture: project-owned test'],checks:null,permissions:null,obligations:[]},
+    service:confirmed({provider:'fixture-provider',product:'fixture-api',release:'terms-1'}),
+    dataset:confirmed({provider:'fixture-provider',product:'fixture-hourly',release:'fixture-release-1'}),
+    upstream:[confirmed({provider:'fixture-origin-a',product:'fixture-upstream-product',release:'upstream-1'})],
+    upstream_inventory_complete:true,
+    request_limits:{max_requests:1,window_seconds:60,max_records_per_request:24,max_concurrency:1,reference:'fixture: bounded API terms'},
+  }
+}
+
 function fixture() {
   return {
     source: { provider: 'fixture-provider', product: 'fixture-hourly', release: 'fixture-release-1', record_id: 'fixture-point-day', upstream_origin: 'fixture-origin-a' },
@@ -27,6 +46,7 @@ function fixture() {
       no_fee: true,
       references: { software: ['fixture: no imported software'], data: ['fixture: invented test data'], service: ['fixture: no service'], notices: ['fixture: no upstream notices'] },
       attribution: ['Synthetic test fixture only'],
+      layers: rightsLayers(),
     },
   }
 }
@@ -161,9 +181,12 @@ test('shared upstream is not independent corroboration; different or missing key
   const left = createContextObservation(fixture()), other = fixture()
   other.source.provider = 'another-wrapper'
   other.rights.source.provider = 'another-wrapper'
+  other.rights.layers.service.scope.provider = 'another-wrapper'
+  other.rights.layers.dataset.scope.provider = 'another-wrapper'
   const right = createContextObservation(other)
   assert.equal(contextOriginRelationship(left, right).relationship, 'same_declared_upstream')
   other.source.upstream_origin = 'another-declared-origin'
+  other.rights.layers.upstream[0].scope.provider = 'another-declared-origin'
   assert.equal(contextOriginRelationship(left, createContextObservation(other)).relationship, 'independence_unknown')
   assert.equal(contextOriginRelationship(left, {}).independent_source_count, null)
 })
@@ -213,3 +236,87 @@ test('bounded contract rejects duplicate parameters, unknown fields and oversize
   assert.throws(() => createContextObservation(input), /plain_json_fields/)
   assert.throws(() => compareContextObservations(input, createContextObservation(fixture())), /invalid_context_snapshot/)
 })
+
+test('flat approval cannot substitute for separate API, dataset and upstream reviews', () => {
+  rejected(x => { delete x.rights.layers }, /invalid_rights_fields/)
+  for (const key of ['service','dataset']) {
+    for (const status of ['pending','unknown','blocked']) {
+      rejected(x => { x.rights.layers[key].status=status }, /rights_layer_incomplete/)
+    }
+  }
+  rejected(x => { x.rights.layers.upstream[0].status='pending' }, /rights_layer_incomplete/)
+  rejected(x => { x.rights.layers.dataset.status='not_applicable' }, /rights_layer_incomplete/)
+  rejected(x => { x.rights.layers.software.reason='' }, /layer_reason_required/)
+  rejected(x => { x.rights.layers.software.references=[] }, /layer_references_required/)
+})
+
+test('each active layer independently requires commercial, patent and terms review', () => {
+  for (const key of ['commercial_use','patent_license_compatibility','terms']) {
+    rejected(x => { x.rights.layers.dataset.checks[key]='pending' }, /layer_checks_incomplete/)
+    rejected(x => { x.rights.layers.service.checks[key]='pending' }, /layer_checks_incomplete/)
+    rejected(x => { x.rights.layers.upstream[0].checks[key]='pending' }, /layer_checks_incomplete/)
+  }
+})
+
+test('rights cannot authorize operations forbidden by a service or upstream layer', () => {
+  rejected(x => { x.rights.layers.service.permissions.retain=false }, /rights_permission_exceeds_layer/)
+  rejected(x => { x.rights.layers.upstream[0].permissions.analysis=false }, /rights_permission_exceeds_layer/)
+  rejected(x => { x.rights.permissions.export=true }, /rights_permission_exceeds_layer/)
+  rejected(x => { x.rights.layers.dataset.permissions.cache=null }, /layer_permission_unknown/)
+  const input=fixture()
+  input.rights.permissions.display=false
+  input.rights.layers.service.permissions.display=false
+  assert.equal(createContextObservation(input).rights.permissions.display,false)
+})
+
+test('dataset release and upstream provenance require exact, distinct declarations', () => {
+  rejected(x => { x.rights.layers.dataset.scope.release='another-release' }, /dataset_rights_scope_mismatch/)
+  rejected(x => { x.rights.layers.service.scope.provider='another-provider' }, /service_rights_provider_mismatch/)
+  rejected(x => { x.rights.layers.upstream[0].scope.provider='another-origin' }, /upstream_origin_rights_mismatch/)
+  rejected(x => { x.rights.layers.upstream[0].scope.release='' }, /exact_layer_scope_required/)
+  rejected(x => { x.rights.layers.upstream=[] }, /upstream_rights_required/)
+  rejected(x => { x.source.upstream_origin=null }, /upstream_rights_required/)
+  rejected(x => { x.rights.layers.upstream_inventory_complete=false }, /upstream_inventory_incomplete/)
+  rejected(x => { x.rights.layers.upstream.push(structuredClone(x.rights.layers.upstream[0])) }, /duplicate_upstream_rights/)
+})
+
+test('a confirmed API still needs bounded request limits and a terms reference', () => {
+  rejected(x => { x.rights.layers.request_limits=null }, /bounded_service_limits_required/)
+  for (const key of ['max_requests','window_seconds','max_records_per_request','max_concurrency']) {
+    for (const value of [null,0,-1,1.5,'1']) {
+      rejected(x => { x.rights.layers.request_limits[key]=value }, /service_limit_unknown_or_unbounded/)
+    }
+  }
+  rejected(x => { x.rights.layers.request_limits.reference='' }, /service_limit_reference_required/)
+  const input=fixture()
+  input.rights.layers.service=structuredClone(input.rights.layers.software)
+  input.rights.layers.request_limits=null
+  assert.equal(createContextObservation(input).rights.layers.service.status,'not_applicable')
+})
+
+test('acceptable attribution requires a retained implementation reference', () => {
+  const result=createContextObservation(fixture())
+  assert.equal(result.rights.layers.dataset.obligations[0].kind,'attribution')
+  rejected(x => { x.rights.layers.dataset.obligations[0].implementation_reference='' }, /unimplemented_layer_obligation/)
+  rejected(x => { x.rights.layers.dataset.obligations[0].kind='ignore' }, /unimplemented_layer_obligation/)
+  assert.throws(() => { result.rights.layers.dataset.obligations[0].statement='changed' },TypeError)
+})
+
+test('layer and request-limit changes alter rights identity without automatic reassessment', () => {
+  const before=createContextObservation(fixture()), input=fixture()
+  input.rights.layers.request_limits.max_records_per_request=12
+  input.rights.layers.upstream[0].scope.release='upstream-2'
+  const after=createContextObservation(input)
+  const report=compareContextObservations(before,after)
+  assert.equal(report.rights_changed,true)
+  assert.equal(report.payload_changed,false)
+  assert.equal(report.context_metadata_changed,false)
+  assert.equal(report.reassessment,'not_run')
+  assert.equal(after.authority,'operator_supplied_not_registry_or_ledger_verified')
+})
+
+test('contract 2 does not silently relabel a contract 1 snapshot', () => {
+  const current=createContextObservation(fixture())
+  assert.equal(current.contract,'retained-point-context-2')
+  assert.throws(() => compareContextObservations({...current,contract:'retained-point-context-1'},current),/context_contract_version_mismatch/)
+});

@@ -186,3 +186,10 @@ POWER remains pending separate API/service, selected product/release and upstrea
 ## Batch 82 — compatible build dependency patches
 
 PostCSS 8.5.28 and Nano ID 3.3.18 replace vulnerable versions within the existing dependency ranges. Exact MIT release licenses and notices are retained; only these two lock entries change. Source-map boundary and bounded generator regressions are added, and dependency changes now run the responsive built-app preview. See [scope, rights and remaining work](COMPATIBLE_BUILD_DEPENDENCY_PATCHES_2026-09-08.md). Browserslist plus browser-data packages and the coordinated Vite/plugin upgrade remain separate maintenance batches. POWER remains pending.
+
+
+## Batch 83 — separate rights layers and dependency hold
+
+The offline point-context contract now requires independent software/service/dataset/upstream review assertions, exact release binding, intersected operation permissions, bounded request-policy declarations and obligation implementation references. It remains operator-supplied context, not authenticated rights clearance or evidence. See [contract 2 and verification scope](SEPARATE_CONTEXT_RIGHTS_2026-09-08.md).
+
+The Browserslist candidate is held because the newly resolved Baseline mapping includes private-feed-derived data whose applicable upstream reuse terms have not been verified. No candidate lockfile is integrated. Existing dependency findings and POWER remain pending; independent work continues.

@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto'
+import { validateContextRightsLayers } from './contextRightsLayers.mjs'
 
 // Offline operator contract. Shape/identity checks are not source-rights adjudication,
 // authenticated registry approval, evidence admission or a trusted historical ledger.
-export const CONTEXT_CONTRACT = 'retained-point-context-1'
+export const CONTEXT_CONTRACT = 'retained-point-context-2'
 const CHECKS = ['commercial_use', 'redistribution_rights', 'required_attribution', 'patent_license_compatibility', 'service_terms']
 const OPERATIONS = ['display', 'analysis', 'retain', 'export', 'redistribute']
 const fail = code => { throw new Error(code) }
@@ -60,7 +61,7 @@ function publication(value) {
 }
 
 function rights(review, source) {
-  keys(review, ['id', 'version', 'reviewed_at', 'source', 'checks', 'permissions', 'no_fee', 'references', 'attribution'], 'invalid_rights_fields')
+  keys(review, ['id', 'version', 'reviewed_at', 'source', 'checks', 'permissions', 'no_fee', 'references', 'attribution', 'layers'], 'invalid_rights_fields')
   if (!token(review.id) || !token(review.version)) fail('rights_identity_required')
   utc(review.reviewed_at)
   keys(review.source, ['provider', 'product', 'release'], 'invalid_rights_source')
@@ -76,6 +77,7 @@ function rights(review, source) {
     if (!Array.isArray(review.references[key]) || review.references[key].length < 1 || review.references[key].length > 16 || !review.references[key].every(text)) fail('rights_reference_required')
   }
   if (!Array.isArray(review.attribution) || review.attribution.length > 16 || !review.attribution.every(text)) fail('invalid_attribution')
+  validateContextRightsLayers(review, source)
 }
 
 /**
@@ -149,6 +151,8 @@ export function compareContextObservations(beforeInput, afterInput) {
   // Revalidate the original input shape rather than trusting caller output hashes.
   const inputOf = value => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) fail('invalid_context_snapshot')
+    const contract = Object.getOwnPropertyDescriptor(value, 'contract')
+    if (contract && (!Object.hasOwn(contract, 'value') || contract.value !== CONTEXT_CONTRACT)) fail('context_contract_version_mismatch')
     return Object.fromEntries(['source', 'clocks', 'geometry', 'measurement_kind', 'measurements', 'payload', 'rights'].map(key => {
       const descriptor = Object.getOwnPropertyDescriptor(value, key)
       if (!descriptor || !Object.hasOwn(descriptor, 'value')) fail('invalid_context_snapshot')
