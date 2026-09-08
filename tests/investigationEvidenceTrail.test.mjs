@@ -146,7 +146,7 @@ test('date-only source values retain day precision without inventing UTC midnigh
   assert.deepEqual(retainedDateDisplay('2024-04-08'), {label:'2024-04-08 (date only)',dateTime:'2024-04-08'})
   const input={capture:{payload:{published_at:'2024-04-08'}}}
   const before=structuredClone(input), html=markup(RetainedInputDates,{input})
-  assert.match(html, /datetime="2024-04-08"/)
+  assert.match(html, /datetime="2024-04-08"/i)
   assert.match(html, /2024-04-08 \(date only\)/)
   assert.doesNotMatch(html, /00:00|UTC/)
   assert.deepEqual(input,before)

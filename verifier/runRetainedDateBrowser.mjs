@@ -20,12 +20,14 @@ createRoot(document.getElementById('root')).render(<div>{scenarios.map(([id,titl
   <section id={id} key={id}><h2>{title}</h2><RetainedInputDates input={input}/></section>)}</div>)
 `
 const compiled = await esbuild.build({stdin:{contents:entry,resolveDir:process.cwd(),loader:'jsx'},
-  bundle:true,write:false,format:'iife',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'}})
+  bundle:true,write:false,outdir:'preview-output',format:'iife',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"','import.meta.env':'{}'}})
 const css = await readFile('src/styles/investigation-workspace-panels.css','utf8')
+  + compiled.outputFiles.filter(file=>file.path.endsWith('.css')).map(file=>file.text).join('\n')
+const javascript = compiled.outputFiles.find(file=>file.path.endsWith('.js')).text
 const html = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font:16px system-ui;margin:16px;color:#172235;background:white}section{max-width:480px;margin-bottom:24px}*{box-sizing:border-box}' + css + '</style></head><body><main id="root"></main><p id="result" role="status"></p><script src="/preview.js"></script></body></html>'
 const server = createServer((req,res) => {
   res.setHeader('content-type', req.url === '/preview.js' ? 'text/javascript' : 'text/html')
-  res.end(req.url === '/preview.js' ? compiled.outputFiles[0].text : html)
+  res.end(req.url === '/preview.js' ? javascript : html)
 })
 await new Promise(resolve => server.listen(0,'127.0.0.1',resolve))
 let browser
