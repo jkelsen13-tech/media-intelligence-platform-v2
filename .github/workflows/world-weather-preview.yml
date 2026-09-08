@@ -3,6 +3,8 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'supabase/runtime-snapshots/spatial-runtime-v6/**'
+      - 'tests/spatialRuntimeRegistration.test.mjs'
       - 'src/graph/GraphView.jsx'
       - 'src/graph/GraphModePanel.jsx'
       - 'src/lib/graphWorkspaceModel.js'
