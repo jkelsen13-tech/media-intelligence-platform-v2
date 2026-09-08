@@ -44,16 +44,17 @@ test('spatial temporal reads retain the registered composer hash and reject alte
   assert.ok(f.calls.every(c => c.params.get('key') === `eq.${CLEVELAND_ASSESSMENT_KEY}`))
 })
 
-test('shared weather capability retains archive provenance and never borrows database credentials or present-day values', async () => {
+test('shared weather capability refuses restricted service terms without database credentials or present-day values', async () => {
   const f = spatialFixture(), originalFetch = globalThis.fetch, requests = []
   globalThis.fetch = async (url, init) => { requests.push(new Request(url, init)); return new Response(JSON.stringify({ hourly: { time: ['2024-04-08T18:00'], temperature_2m: [12], precipitation: [0], wind_speed_10m: [10], wind_direction_10m: [270] }, hourly_units: { temperature_2m: '°C' }, model: 'era5' }), { headers: { 'content-type': 'application/json' } }) }
   try {
     const result = await f.backend.loadEventTimeWeather({ row: spatialRow, atMs: Date.parse('2024-04-08T18:00:00Z'), fetchImpl: () => { throw Error('override must not run') } })
-    assert.equal(result.status, 'ok'); assert.equal(result.provenance.observationType, 'reanalysis'); assert.equal(result.provenance.provider, 'Open-Meteo')
-    assert.equal(new URL(requests[0].url).hostname, 'archive-api.open-meteo.com'); assert.equal(requests[0].headers.has('authorization'), false); assert.equal(requests[0].headers.has('apikey'), false)
+    assert.equal(result.status, 'unavailable'); assert.equal(result.reason, 'source_terms_incompatible')
+    assert.ok(Object.values(result.fields).every(value => value === null)); assert.ok(Object.values(result.provenance).every(value => value === null))
+    assert.equal(requests.length, 0)
     const now = Date.now(), today = { ...spatialRow, valid_from_utc: new Date(now - 1000).toISOString(), valid_to_utc: new Date(now + 1000).toISOString() }
     assert.equal((await f.backend.loadEventTimeWeather({ row: today, atMs: now })).reason, 'present_day_refused')
     assert.equal((await f.backend.loadEventTimeWeather({ row: spatialRow, atMs: 0 })).reason, 'time_not_in_valid_range')
-    assert.equal(requests.length, 1); assert.equal(f.calls.length, 0)
+    assert.equal(requests.length, 0); assert.equal(f.calls.length, 0)
   } finally { globalThis.fetch = originalFetch }
 })

@@ -35,8 +35,8 @@ try {
   assert.equal(await weather.getAttribute('data-weather-status'), 'unavailable')
   assert.equal(await weather.locator('dd').filter({ hasText: /^Not sourced$/ }).count(), 5)
   for (const width of [320, 390, 1280]) {
-    await page.setViewportSize({ width, height: 844 })
-    await weather.scrollIntoViewIfNeeded()
+    await page.setViewportSize({ width, height: width >= 1000 ? 1440 : 844 })
+    await weather.evaluate(element => element.scrollIntoView({ block: 'center' }))
     const bounds = await weather.boundingBox()
     assert.ok(bounds && bounds.width > 0 && bounds.x >= 0 && bounds.x + bounds.width <= width + 1, 'weather panel fits viewport ' + width)
     const overflow = await weather.evaluate(element => element.scrollWidth > element.clientWidth + 1)
@@ -44,6 +44,15 @@ try {
     // Public, anonymous weather panel only; encoded in logs for remote visual review.
     const screenshot = await weather.screenshot({ type: 'jpeg', quality: 65, animations: 'disabled' })
     console.log('MIP_WEATHER_SCREENSHOT_' + width + '=' + screenshot.toString('base64'))
+    const unoccluded = await weather.evaluate(element => {
+      return [element.querySelector('h3'), element.querySelector('dd:last-child')].every(item => {
+        if (!item) return false
+        const box = item.getBoundingClientRect()
+        const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)
+        return item === hit || item.contains(hit)
+      })
+    })
+    assert.ok(unoccluded, 'weather heading and last field must be unobscured at ' + width)
     console.log('MIP_WEATHER_VIEWPORT=' + JSON.stringify({ width, bounds, status: 'unavailable' }))
   }
   assert.deepEqual(restrictedRequests, [], 'no restricted hosted weather requests')

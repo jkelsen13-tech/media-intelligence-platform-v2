@@ -3,6 +3,8 @@
 Source: MIP_Astra_Extra_High_Work_Plan_No_Fee_World_View_2026-09-07.docx.
 The owner explicitly superseded the earlier work plan with this attachment.
 Text below preserves the document's paragraph order, including its execution prompt.
+Uncertainty definitions remain in [the single-source vocabulary](UNCERTAINTY_VOCABULARY.md).
+Product/release labels in the archived attachment do not redefine those levels.
 Formatting and tables have been flattened; the original DOCX remains the visual source.
 Historical status statements in the attachment are not current implementation claims.
 See [reconciliation and batch status](NO_FEE_WORLD_VIEW_BACKFILL_2026-09-07.md).
