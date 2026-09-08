@@ -1,0 +1,108 @@
+{
+  "project": "qikvmopbtijoebdqosyq",
+  "version": "20260908104901",
+  "migration_statement_exact_match": true,
+  "preflight": {
+    "events_digest": "ef76ca50d9953f59be6ae2bc1e4f07c2",
+    "members_digest": "757fe13495bc7cf988bf08540b29fa8f",
+    "public_digest": "4c1414a81c33b9b00ed7c1117c2199a1",
+    "events": 1,
+    "members": 3,
+    "worker_private_schema": true,
+    "existing_history": null,
+    "triggers": null
+  },
+  "after_install": {
+    "events_digest": "ef76ca50d9953f59be6ae2bc1e4f07c2",
+    "members_digest": "757fe13495bc7cf988bf08540b29fa8f",
+    "public_digest": "4c1414a81c33b9b00ed7c1117c2199a1",
+    "events": 1,
+    "members": 3,
+    "worker_private_schema": true,
+    "existing_history": "mip_private.comparison_membership_history",
+    "triggers": [
+      {
+        "name": "event_articles_invalidate_comparison_approval",
+        "definition": "CREATE TRIGGER event_articles_invalidate_comparison_approval AFTER INSERT OR DELETE OR UPDATE OF event_id, article_id ON public.event_articles FOR EACH ROW EXECUTE FUNCTION mip_private.guard_comparison_membership_change()"
+      },
+      {
+        "name": "event_articles_no_unreviewed_truncate",
+        "definition": "CREATE TRIGGER event_articles_no_unreviewed_truncate BEFORE TRUNCATE ON public.event_articles FOR EACH STATEMENT EXECUTE FUNCTION mip_private.reject_comparison_history_mutation()"
+      }
+    ]
+  },
+  "after_rollback_smoke": {
+    "events_digest": "ef76ca50d9953f59be6ae2bc1e4f07c2",
+    "members_digest": "757fe13495bc7cf988bf08540b29fa8f",
+    "public_digest": "4c1414a81c33b9b00ed7c1117c2199a1",
+    "events": 1,
+    "members": 3,
+    "worker_private_schema": true,
+    "existing_history": "mip_private.comparison_membership_history",
+    "triggers": [
+      {
+        "name": "event_articles_invalidate_comparison_approval",
+        "definition": "CREATE TRIGGER event_articles_invalidate_comparison_approval AFTER INSERT OR DELETE OR UPDATE OF event_id, article_id ON public.event_articles FOR EACH ROW EXECUTE FUNCTION mip_private.guard_comparison_membership_change()"
+      },
+      {
+        "name": "event_articles_no_unreviewed_truncate",
+        "definition": "CREATE TRIGGER event_articles_no_unreviewed_truncate BEFORE TRUNCATE ON public.event_articles FOR EACH STATEMENT EXECUTE FUNCTION mip_private.reject_comparison_history_mutation()"
+      }
+    ]
+  },
+  "security": {
+    "retained_history_rows": 0,
+    "history_rls": true,
+    "access": [
+      {
+        "read": false,
+        "role": "anon",
+        "write": false
+      },
+      {
+        "read": false,
+        "role": "authenticated",
+        "write": false
+      },
+      {
+        "read": true,
+        "role": "service_role",
+        "write": false
+      }
+    ],
+    "functions": [
+      {
+        "name": "guard_comparison_membership_change",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "anon_execute": false,
+        "worker_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "reject_comparison_history_mutation",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "anon_execute": false,
+        "worker_execute": false,
+        "authenticated_execute": false
+      }
+    ],
+    "history_guards": 2
+  },
+  "rollback_verification": {
+    "worker_role": true,
+    "duplicate_noop": true,
+    "delete_invalidates": true,
+    "prior_event_and_member_retained": true,
+    "public_comparison_withheld": true,
+    "committed_evidence_changes": false,
+    "identity_sequence_may_advance": true
+  },
+  "legacy_projects_modified": [],
+  "consolidation_complete": false
+}
