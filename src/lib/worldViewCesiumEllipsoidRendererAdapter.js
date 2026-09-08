@@ -32,6 +32,30 @@ import {
   setGlobeReliefShading,
 } from './worldViewCesiumTerrainReliefShading.js'
 
+// Public Cesium 1.145 API only. The viewer owns this built-in stage and disposes
+// it; MIP never allocates a duplicate pass, touches the camera or writes evidence.
+export function cesiumFxaaAvailable(viewer) {
+  return Boolean(viewer && !viewer.isDestroyed?.()
+    && typeof viewer.scene?.postProcessStages?.fxaa?.enabled === 'boolean')
+}
+export function setCesiumFxaa(viewer, enabled) {
+  if (typeof enabled !== 'boolean' || !cesiumFxaaAvailable(viewer)) return false
+  try {
+    const stage = viewer.scene.postProcessStages.fxaa
+    if (stage.enabled !== enabled) {
+      stage.enabled = enabled
+      if (stage.enabled !== enabled) return false
+      viewer.scene.requestRender?.()
+    }
+    return true
+  } catch { return false }
+}
+export function cesiumFxaaState(viewer) {
+  if (!cesiumFxaaAvailable(viewer)) return { enabled: false, ready: false }
+  const stage = viewer.scene.postProcessStages.fxaa
+  return { enabled: stage.enabled, ready: stage.ready === true }
+}
+
 // ---- Stage D: bounded display-only terrain ----
 //
 // Terrain is attached through the MIP-owned Terrarium provider
@@ -237,6 +261,8 @@ export function createCesiumEllipsoidRendererAdapter({
   // camera floor. User-toggleable; never touches geometry or camera.
   let reliefShadingEnabled = true
   const reliefApplication = createVisualFidelityEffect(enabled => setGlobeReliefShading(Cesium, viewer, enabled))
+
+  const fxaaApplication = createVisualFidelityEffect(enabled => setCesiumFxaa(viewer, enabled))
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
 
@@ -567,6 +593,8 @@ export function createCesiumEllipsoidRendererAdapter({
     const relief = Boolean(viewer?.scene?.globe && !viewer.isDestroyed?.()
       && Cesium?.Material && !terrainDegraded && terrainPlan && !reliefApplication.hasFailed())
     return visualFidelityCapabilities({ relief,
+      fxaa: cesiumFxaaAvailable(viewer) && !fxaaApplication.hasFailed(),
+      fxaaReason: fxaaApplication.hasFailed() ? 'FXAA could not be applied.' : 'FXAA unavailable on this renderer.',
       reason: reliefApplication.hasFailed() ? 'Relief could not be applied.'
         : terrainDegraded || !terrainPlan ? 'Approved terrain is unavailable.'
         : 'Globe renderer is not ready.' })
@@ -574,7 +602,9 @@ export function createCesiumEllipsoidRendererAdapter({
 
   function setVisualFidelityProfile(profile) {
     const effective = resolveVisualFidelityProfile(profile, getVisualFidelityCapabilities())
-    return setReliefShadingEnabled(effective.reliefShading)
+    const reliefApplied = setReliefShadingEnabled(effective.reliefShading)
+    const fxaaApplied = fxaaApplication.set(effective.fxaa)
+    return reliefApplied && fxaaApplied
   }
 
   // Stage D: terrain status snapshot for the honest-availability UI.
@@ -677,6 +707,7 @@ export function createCesiumEllipsoidRendererAdapter({
     getReliefShadingEnabled,
     setVisualFidelityProfile,
     getVisualFidelityCapabilities,
+    getVisualFidelityRenderState: () => ({ fxaa: cesiumFxaaState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }

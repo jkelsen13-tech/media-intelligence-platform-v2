@@ -26,7 +26,7 @@ Visual preferences must not recreate the viewer, move the camera, change time/se
 
 PR #117 merged the release-threshold guard and its regression coverage. Its Supabase deployment remains pending while the connector is unavailable; a fresh package comparison and JWT-preserving deployment/readback are still required. PR #118 addresses a concrete post-merge timestamp verifier race without removing assertions. The previous graph dismissal/selection/zoom and article-identity fixes are on main; the complete post-merge browser sequence must pass before the live verification checkpoint is closed.
 
-The intended surviving Supabase project remains `qikvmopbtijoebdqosyq`. Legacy projects `yhbwnrtlqbjtcrrlpbge`, `niejaejtbxgakyrsntxm`, and `jfnzyvzthzqtczlxhjll` still require reconciliation. No legacy project is currently proven SAFE TO RETIRE. SINGLE-BACKEND CONSOLIDATION COMPLETE must not be declared. VF-1 is planned, not yet implemented by this checkpoint.
+The intended surviving Supabase project remains `qikvmopbtijoebdqosyq`. Legacy projects `yhbwnrtlqbjtcrrlpbge`, `niejaejtbxgakyrsntxm`, and `jfnzyvzthzqtczlxhjll` still require reconciliation. No legacy project is currently proven SAFE TO RETIRE. SINGLE-BACKEND CONSOLIDATION COMPLETE must not be declared. VF-1 was planned at that historical checkpoint; it shipped in PR #119 as recorded below.
 
 ## Markets revision and current reconciliation
 
@@ -68,3 +68,16 @@ verification receipt are already exact blobs on main; its report, smoke SQL
 and tests have newer main versions. Do not merge/reapply the old draft over
 current work. No legacy retirement or worker cutover is established here.
 See VISUAL_FIDELITY_VF1_2026-09-08.md for the current frontend batch.
+
+## Current delivery checkpoint — VF-1 complete, VF-2 beginning
+
+PR #119 merged as 0db7ce100b8655a9425064cc7de0aed468fb4f63. Golden regression
+34288805037 and Pages 34288805191 passed, including the deployed UI checks.
+VF-1 session preferences, master/category memory and renderer fallbacks are live.
+The terrain lifecycle fix also passed preview and live recorded-time navigation.
+
+The next bounded VF-2 slice adds optional Custom FXAA through Cesium 1.145.0's
+existing post-process stage. FXAA stays OFF by default and in every named preset.
+This is not completion of lighting, atmosphere, resolution/refinement or VF-2.
+Representative physical-device measurements remain required before preset tuning.
+See VISUAL_FIDELITY_FXAA_2026-09-08.md and the current backend gate checkpoint.

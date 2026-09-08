@@ -127,3 +127,27 @@ test('effect application is idempotent and failures remain unavailable after neu
     assert.equal(failure.set(true),false,'no automatic repeated failing application')
   }
 })
+
+test('FXAA is optional, remembered, strictly normalized and outside every preset', () => {
+  const available = caps({ relief: true, fxaa: true })
+  let profile = reduce(defaults(), { type: 'category', category: 'imageQuality', enabled: true }, available)
+  profile = reduce(profile, { type: 'leaf', category: 'imageQuality', leaf: 'fxaa', enabled: true }, available)
+  assert.equal(resolve(profile, available).fxaa, true)
+  assert.equal(profile.preset, 'custom')
+  for (const action of [{ type: 'master', enabled: false }, { type: 'category', category: 'imageQuality', enabled: false }]) {
+    const off = reduce(profile, action, available)
+    assert.equal(off.categories.imageQuality.fxaa, true)
+    assert.equal(resolve(off, available).fxaa, false)
+    assert.deepEqual(reduce(off, { ...action, enabled: true }, available), profile)
+  }
+  assert.equal(resolve(profile, caps()).fxaa, false)
+  assert.equal(resolve(profile, available).fxaa, true)
+  for (const preset of ['performance', 'balanced', 'maximum']) {
+    assert.equal(resolve(reduce(profile, { type: 'preset', preset }, available), available).fxaa, false)
+  }
+  for (const bad of ['true', 1, {}, null]) {
+    const dirty = structuredClone(profile)
+    dirty.categories.imageQuality.fxaa = bad
+    assert.equal(resolve(dirty, available).fxaa, false)
+  }
+})

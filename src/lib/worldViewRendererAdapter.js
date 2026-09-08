@@ -566,6 +566,7 @@ export function createWorldViewRendererAdapter(args, {
     getVisualFidelityCapabilities: () => ready && !cancelled()
       ? impl?.getVisualFidelityCapabilities?.() ?? visualFidelityCapabilities({ reason: 'Effects unavailable on this fallback renderer.' })
       : visualFidelityCapabilities(),
+    getVisualFidelityRenderState: () => impl?.getVisualFidelityRenderState?.() ?? null,
     requestRender: () => impl?.requestRender?.(),
     destroy: () => {
       if (destroyed) return

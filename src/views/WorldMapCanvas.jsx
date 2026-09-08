@@ -233,6 +233,7 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
     }
     window.__MIP_WORLD_VIEW_TERRAIN_PROBE__ = terrainProbe
     const fidelityProbe = {
+      getRenderState: () => adapterRef.current?.getVisualFidelityRenderState?.() ?? null,
       getProfile: () => JSON.parse(JSON.stringify(fidelityRef.current)),
       getCapabilities: () => adapterRef.current?.getVisualFidelityCapabilities?.() ?? visualFidelityCapabilities(),
     }

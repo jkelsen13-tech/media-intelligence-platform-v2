@@ -48,9 +48,9 @@ export function normalizeVisualFidelityProfile(raw) {
     const output = next.categories[category.id]
     output.enabled = input?.enabled === true
     for (const leaf of category.leaves) {
-      // VF-1 approves only existing relief. Imported/future profiles cannot
+      // Only relief and opt-in FXAA are implemented. Imported/future profiles cannot
       // activate deferred effects or change refinement/resolution.
-      if (leaf === 'reliefShading') output[leaf] = input?.[leaf] === true
+      if (leaf === 'reliefShading' || leaf === 'fxaa') output[leaf] = input?.[leaf] === true
     }
   }
   // A stale preset label must never describe a different configuration.
@@ -61,11 +61,13 @@ export function normalizeVisualFidelityProfile(raw) {
   return next
 }
 
-export function visualFidelityCapabilities({ relief = false, reason = 'Map renderer is not ready.' } = {}) {
+export function visualFidelityCapabilities({ relief = false, fxaa = false, fxaaReason, reason = 'Map renderer is not ready.' } = {}) {
   return Object.fromEntries(Object.keys(FIDELITY_EFFECTS).map(leaf => [leaf,
     leaf === 'reliefShading'
       ? { status: relief ? 'supported' : 'unavailable', reason: relief ? null : reason }
-      : { status: 'deferred', reason: 'Not enabled in this release; verification is pending.' },
+      : leaf === 'fxaa'
+        ? { status: fxaa ? 'supported' : 'unavailable', reason: fxaa ? null : fxaaReason ?? reason }
+        : { status: 'deferred', reason: 'Not enabled in this release; verification is pending.' },
   ]))
 }
 
@@ -92,7 +94,7 @@ export function reduceVisualFidelityProfile(raw, action, capabilities) {
       next.categories[category.id].enabled = action.enabled
       next.preset = 'custom'
     } else if (action.type === 'leaf' && category.leaves.includes(action.leaf)
-      && action.leaf === 'reliefShading' && capabilities?.[action.leaf]?.status === 'supported') {
+      && ['reliefShading', 'fxaa'].includes(action.leaf) && capabilities?.[action.leaf]?.status === 'supported') {
       next.categories[category.id][action.leaf] = action.enabled
       next.preset = 'custom'
     }
