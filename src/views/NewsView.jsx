@@ -145,10 +145,10 @@ function PublisherSourceRecord({ article, region }) {
 // overlay — same discovery system (search, chips, list, honest empty). Local
 // discovery filters stay in this instance and never write Investigation Context.
 // They do not filter Graph / World View / Timeline / Arcs evidence.
-export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison, variant = 'page', investigationContext, backend = mipBackend.publicData.news }) {
+export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison, variant = 'page', initialSearch = '', investigationContext, backend = mipBackend.publicData.news }) {
   const isDrawer = variant === 'drawer'
-  const [q, setQ] = useState('')
-  const [debouncedQ, setDebouncedQ] = useState('')
+  const [q, setQ] = useState(initialSearch)
+  const [debouncedQ, setDebouncedQ] = useState(() => initialSearch.trim())
   const [discovery, setDiscovery] = useState(() => emptyDiscoveryFilters())
   const { outlet, status, region, evidenceBasis, topic, dateRange, customDateStart, customDateEnd } = discovery
   const patchDiscovery = (patch) => setDiscovery((current) => applyDiscoveryFilters(current, patch))

@@ -73,7 +73,9 @@ jobs:
       - name: Verify shared workspace layout and interactions
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
-        run: node verifier/runWorkspaceShellBrowser.mjs
+        run: |
+          node verifier/runWorkspaceShellBrowser.mjs
+          MIP_BROWSER_ENGINE=webkit node verifier/runWorkspaceShellBrowser.mjs
       - name: Verify Timeline composition and controls
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser

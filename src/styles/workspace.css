@@ -331,6 +331,11 @@
   font-size: 13px;
 }
 
+.ws-search:focus-within {
+  outline: 2px solid var(--cat-blue);
+  outline-offset: 2px;
+}
+
 .ws-search input:focus {
   outline: none;
 }

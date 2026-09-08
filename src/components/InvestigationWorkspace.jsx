@@ -411,17 +411,19 @@ export function WorkspaceSearch({
   exploreOpen,
   onOpenExplore,
   dialogId,
+  query = '',
+  onQueryChange,
 }) {
   return (
     <div className="ws-search">
       <MagnifyingGlass size={16} />
       <input
         type="search"
-        placeholder="Search events, claims, sources, places..."
-        aria-label="Search events, claims, sources, places..."
-        readOnly
-        onFocus={onOpenExplore}
-        onClick={onOpenExplore}
+        placeholder="Search headlines and article text..."
+        aria-label="Search headlines and article text"
+        title="Enter a search, then choose Explore"
+        value={query}
+        onChange={(event) => onQueryChange?.(event.target.value)}
       />
       <button
         type="button"
