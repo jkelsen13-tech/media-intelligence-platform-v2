@@ -63,7 +63,7 @@ try {
       assert.deepEqual(await profile(),beforeProfile,'master restores exact profile')
       assert.equal(await camera(),before,'master never moves camera')
       await delay(300)
-      const enhanced=await page.locator('.wv-map').screenshot({type:'jpeg',quality:65})
+      const enhanced=await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:65})
       page.off('request',countRequest)
       assert.equal(neutral.equals(enhanced),false,'relief changes canvas pixels at the same camera')
       console.log('MIP_FIDELITY_SAME_CAMERA='+JSON.stringify({engine,width,supported,requestsDuringToggle,camera:before,pixelsDiffer:!neutral.equals(enhanced)}))
