@@ -6,7 +6,11 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
   const page=await browser.newPage({viewport:{width:1280,height:900}})
   const verifyBackend=observeBackendBoundary(page)
   const errors=[]
-  page.on('pageerror',error=>errors.push(error.message))
+  page.on('pageerror',error=>{
+    errors.push(error.message)
+    console.log('MIP_TIMESTAMP_PAGE_ERROR='+JSON.stringify({engine,url:page.url(),message:error.message,stack:error.stack}))
+  })
+  page.on('requestfailed',request=>console.log('MIP_TIMESTAMP_REQUEST_FAILED='+JSON.stringify({engine,url:request.url(),error:request.failure()?.errorText})))
   const subject='acc55cb2-5ac2-4aed-be36-3f576d2bc443'
   const base=origin+'/media-intelligence-platform-v2/#/event/'+subject+'/world'
   const from='2024-04-08 17:59:00+00', to='2024-04-08 20:29:00+00'

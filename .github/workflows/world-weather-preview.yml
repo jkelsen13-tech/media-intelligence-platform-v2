@@ -3,6 +3,8 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'supabase/runtime-snapshots/source-comparison-run-v10/**'
+      - 'tests/comparisonReleaseThreshold.test.mjs'
       - 'src/lib/investigationInputImpactClient.js'
       - 'src/lib/comparisonPublicationTiming.js'
       - 'src/views/SourceComparisonView.jsx'

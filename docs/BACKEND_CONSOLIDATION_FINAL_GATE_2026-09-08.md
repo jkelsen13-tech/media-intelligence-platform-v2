@@ -195,3 +195,19 @@ Next independent batches can qualify the version-bound comparison output contrac
 reconcile operational schemas and preserve subsequent deltas while external/Auth
 prerequisites are resolved. Do not mistake the completed history-retention batch
 for completed backend consolidation or overall plan completion.
+
+## Subsequent reconciliation — PR #117
+
+The four-project inventory was refreshed; all four remain ACTIVE_HEALTHY.
+A complete source-comparison-run v9 readback confirmed the required Manus runtime.
+[Release-threshold hardening](COMPARISON_RELEASE_THRESHOLD_2026-09-08.md)
+fixes its missing-threshold coercion without enabling auto-approval. Both observed
+release policies remain disabled with null thresholds. The complete guarded
+runtime package is retained in GitHub; deployed version and exact readback are
+recorded on PR #117. The survivor still lacks the live comparison operational
+contracts; collector migration and all ten-part completion blockers above remain.
+
+Frontend PRs #115/#116 are merged in 40a4bc6b2c08a79ed78a805ce29df9685b5dfb36.
+Golden 34276775036 and Pages 34276775080 passed, including live article identity
+reload and mobile graph selection/zoom checks in Chromium/WebKit. These public
+UI results do not certify signed-in writes or legacy dependency closure.
