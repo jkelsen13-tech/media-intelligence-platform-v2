@@ -1171,3 +1171,31 @@
   .ws-drawer-nav .ws-nav-btn,
   .ws-drawer-head .ws-icon-btn { min-height: 44px; }
 }
+
+
+@media (max-width: 1100px) {
+  /* Preserve search space before optional corpus metadata. */
+  .ws-corpus { display: none; }
+}
+
+@media (max-width: 767px) {
+  /* Reading views use one page scroll. A tall header plus an open inspector
+     must not reduce evidence to a thin, independently scrolling strip. */
+  .ws-shell:is([data-workspace-view='news'], [data-workspace-view='timeline'], [data-workspace-view='arcs'], [data-workspace-view='compare']) {
+    display: block;
+    overflow-y: auto;
+  }
+  .ws-shell:is([data-workspace-view='news'], [data-workspace-view='timeline'], [data-workspace-view='arcs'], [data-workspace-view='compare']) .ws-body {
+    display: block;
+    overflow: visible;
+  }
+  .ws-shell:is([data-workspace-view='news'], [data-workspace-view='timeline'], [data-workspace-view='arcs'], [data-workspace-view='compare']) :is(.ws-content, .app-main) {
+    height: auto;
+    overflow: visible;
+  }
+  .ws-shell:is([data-workspace-view='news'], [data-workspace-view='timeline'], [data-workspace-view='arcs'], [data-workspace-view='compare']) .ws-inspector {
+    position: static;
+    width: 100%;
+    max-height: none;
+  }
+}

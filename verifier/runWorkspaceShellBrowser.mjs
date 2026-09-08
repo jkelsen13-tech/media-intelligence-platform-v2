@@ -30,6 +30,7 @@ try {
   for (const width of [1280,1024,768,390,320]) {
     await page.setViewportSize({width,height:width>=768?900:844})
     if (await toggle.getAttribute('aria-expanded') !== 'true') await toggle.click()
+    await shell.evaluate(el=>{el.scrollTop=0})
     const before = await page.locator('.ws-content').boundingBox()
     const dock = await inspector.boundingBox()
     const head = await page.locator('.ws-workspace-head').boundingBox()
@@ -39,11 +40,16 @@ try {
       assert.ok(Math.abs(dock.y-head.y)<2,'inspector aligns with header '+width)
       assert.ok(before.x+before.width <= dock.x+1,'inspector does not cover evidence')
     }
+    if (width<768) {
+      assert.ok(before.height>=300,'phone retains full evidence reading flow')
+      assert.ok(dock.y>=before.y+before.height-1,'phone inspector follows evidence')
+    }
     if (width===768) {
       assert.ok(Math.abs(before.x-dock.x)<2 && Math.abs(before.width-dock.width)<2,'tablet stacks inspector')
     }
     console.log('MIP_SHELL_OPEN_'+width+'='+(await page.screenshot({type:'jpeg',quality:75})).toString('base64'))
     await toggle.click()
+    if (width>=1024) console.log('MIP_SHELL_COLLAPSED_'+width+'='+(await page.screenshot({type:'jpeg',quality:75})).toString('base64'))
     const after = await page.locator('.ws-content').boundingBox()
     if (width>=1024) assert.ok(after.width-before.width>=230,'collapse must reclaim dock width '+width)
     if (width===768) assert.ok(after.height>before.height,'tablet collapse reclaims reading height')
@@ -53,6 +59,7 @@ try {
     await page.keyboard.press('Enter')
     assert.equal(await toggle.getAttribute('aria-expanded'),'true','keyboard reopens inspector')
     const account = page.getByRole('button',{name:'Account',exact:true})
+    await shell.evaluate(el=>{el.scrollTop=0})
     await account.click()
     await page.getByRole('heading',{name:'Account',exact:true}).waitFor()
     await page.getByRole('button',{name:'Close',exact:true}).click()
