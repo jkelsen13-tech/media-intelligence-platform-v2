@@ -18,6 +18,10 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
   try {
     for(const selected of [from,'2024-04-08 23:29:00+0530']) {
       await page.goto(base+'?time='+encodeURIComponent(scope)+'&at='+encodeURIComponent(selected))
+      // Hash navigation may return before React applies the new route.
+      await page.waitForFunction(expected =>
+        document.querySelector('.wv-view')?.getAttribute('data-as-of-time') === expected,
+        selected)
       const inspector=page.getByRole('complementary',{name:'Selected-event inspector'})
       await inspector.getByText('coarsened_to_precision_class',{exact:true}).waitFor({timeout:60000})
       const slider=page.getByRole('slider',{name:'Recorded time',exact:true})
