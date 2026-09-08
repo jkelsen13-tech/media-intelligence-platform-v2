@@ -181,3 +181,8 @@ qualification, remaining package audits and maintenance are still open.
 Five existing trigger functions now pin an empty search path; three definer triggers remove public/client EXECUTE grants. Exact-body PostgreSQL behavior tests pass; live bodies, attachments, evidence/job/profile data and access policies are preserved. Eight security warnings cleared without new findings. See [verification and remaining findings](TRIGGER_FUNCTION_HARDENING_2026-09-08.md).
 
 POWER remains pending separate API/service, selected product/release and upstream-source rights review. No activation, ingestion or production dependency is allowed before current authoritative verification of commercial use, attribution, retention/redistribution and limits. Acceptable attribution/NOTICE obligations will be recorded and implemented; incompatible or unresolved rights route to planned GHCNh or another compatible no-fee source. Continue independent work.
+
+
+## Batch 82 — compatible build dependency patches
+
+PostCSS 8.5.28 and Nano ID 3.3.18 replace vulnerable versions within the existing dependency ranges. Exact MIT release licenses and notices are retained; only these two lock entries change. Source-map boundary and bounded generator regressions are added, and dependency changes now run the responsive built-app preview. See [scope, rights and remaining work](COMPATIBLE_BUILD_DEPENDENCY_PATCHES_2026-09-08.md). Browserslist plus browser-data packages and the coordinated Vite/plugin upgrade remain separate maintenance batches. POWER remains pending.

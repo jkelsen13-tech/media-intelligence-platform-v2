@@ -3,6 +3,8 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'package.json'
+      - 'package-lock.json'
       - 'src/lib/eventTimeWeather.js'
       - 'src/lib/weatherSourceRights.js'
       - 'src/views/WorldView.jsx'
