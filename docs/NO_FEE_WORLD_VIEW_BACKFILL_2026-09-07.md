@@ -61,6 +61,31 @@ implement or activate a replacement adapter.
 - `.github/workflows/world-weather-preview.yml`: bounded ephemeral runner preview on relevant PRs.
 - This document and `docs/MIP_GOVERNING_WORK_PLAN_2026-09-07.md`.
 
+Additional verification paths updated after the first CI run:
+- `tests/spatialBackend.test.mjs`: zero provider/database calls through the shared backend.
+- `tests/r475Step8Closeout.test.mjs`: preserve historical closeout while referencing the superseding current weather test.
+- `tests/golden/vocabulary_drift.test.mjs`: one explicit archived owner-plan exception for release labels, with an assertion that it links to the unchanged vocabulary authority.
+
+### Owner clarification: stop only the uncertain component
+
+The owner subsequently directed: if commercial-use rights, redistribution rights,
+required attribution, patent/license compatibility, or service terms for any new
+dependency, dataset, model or API are uncertain, do not integrate or activate that
+component. Flag it for review and continue independent unaffected work.
+
+This applies before integration as well as activation. A provider's reputation, a
+free tier, a permissive wrapper license or a planned adapter is not approval.
+The NASA POWER and GHCNh records here contain review metadata only, not integrations.
+
+The CI-only Playwright 1.63.0 package and its pinned playwright-core dependency use
+Apache-2.0; its exact upstream LICENSE and package manifest were inspected. The license
+contains copyright and contributor patent grants subject to its stated conditions;
+this is not an assertion about all third-party patents. It is used unmodified as an
+isolated development tool, with its packaged notices retained, and is not bundled,
+relicensed or redistributed with the app. Browser installation uses the upstream
+Playwright installer in the ephemeral runner. No hosted browser subscription is used.
+Any later bundling, redistribution or different license combination requires its own review.
+
 ### Source, software and notices inventory for this batch
 
 | Item | Review / shipped effect |
