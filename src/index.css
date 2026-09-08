@@ -3063,7 +3063,7 @@ body {
   .graph-isolated-reader {
     left: 10px;
     bottom: 10px;
-    max-width: calc(100% - 20px);
+    max-width: calc(100% - 90px);
     padding: 9px 10px;
   }
 }
@@ -3833,4 +3833,15 @@ body {
   .graph-layout {
     --graph-canvas-min: 280px;
   }
+}
+
+/* Keep notice dismissal reachable beside the independent graph zoom controls. */
+.graph-isolated-header { display: flex; align-items: flex-start; gap: 8px; }
+.graph-isolated-header strong { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.graph-isolated-header button { flex: 0 0 44px; min-height: 44px; margin-top: 0; font-size: 22px; }
+.graph-notice-reopen {
+  position: absolute; left: 10px; bottom: 10px; z-index: 8;
+  max-width: calc(100% - 90px); min-height: 44px;
+  padding: 8px 12px; border: 1px solid var(--accent); border-radius: 7px;
+  background: var(--surface, #fff); color: var(--accent); font: inherit; cursor: pointer;
 }
