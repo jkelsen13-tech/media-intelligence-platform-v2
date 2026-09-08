@@ -1,3 +1,4 @@
+import { cesiumFxaaAvailable, setCesiumFxaa, cesiumFxaaState } from './worldViewCesiumFxaa.js'
 import { resolveVisualFidelityProfile, visualFidelityCapabilities, createVisualFidelityEffect } from './worldViewVisualFidelity.js'
 // R4 World View — ellipsoid globe renderer adapter (CesiumJS).
 //
@@ -237,6 +238,8 @@ export function createCesiumEllipsoidRendererAdapter({
   // camera floor. User-toggleable; never touches geometry or camera.
   let reliefShadingEnabled = true
   const reliefApplication = createVisualFidelityEffect(enabled => setGlobeReliefShading(Cesium, viewer, enabled))
+
+  const fxaaApplication = createVisualFidelityEffect(enabled => setCesiumFxaa(viewer, enabled))
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
 
@@ -567,6 +570,8 @@ export function createCesiumEllipsoidRendererAdapter({
     const relief = Boolean(viewer?.scene?.globe && !viewer.isDestroyed?.()
       && Cesium?.Material && !terrainDegraded && terrainPlan && !reliefApplication.hasFailed())
     return visualFidelityCapabilities({ relief,
+      fxaa: cesiumFxaaAvailable(viewer) && !fxaaApplication.hasFailed(),
+      fxaaReason: fxaaApplication.hasFailed() ? 'FXAA could not be applied.' : 'FXAA unavailable on this renderer.',
       reason: reliefApplication.hasFailed() ? 'Relief could not be applied.'
         : terrainDegraded || !terrainPlan ? 'Approved terrain is unavailable.'
         : 'Globe renderer is not ready.' })
@@ -574,7 +579,9 @@ export function createCesiumEllipsoidRendererAdapter({
 
   function setVisualFidelityProfile(profile) {
     const effective = resolveVisualFidelityProfile(profile, getVisualFidelityCapabilities())
-    return setReliefShadingEnabled(effective.reliefShading)
+    const reliefApplied = setReliefShadingEnabled(effective.reliefShading)
+    const fxaaApplied = fxaaApplication.set(effective.fxaa)
+    return reliefApplied && fxaaApplied
   }
 
   // Stage D: terrain status snapshot for the honest-availability UI.
@@ -677,6 +684,7 @@ export function createCesiumEllipsoidRendererAdapter({
     getReliefShadingEnabled,
     setVisualFidelityProfile,
     getVisualFidelityCapabilities,
+    getVisualFidelityRenderState: () => ({ fxaa: cesiumFxaaState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }

@@ -2,6 +2,8 @@
 
 This is the requested ten-part report, updated for PR #109 on 8 September 2026.
 The bounded collector-history transfer passed its production integrity checks.
+Current runtime reconciliation is recorded at the end of this report; the original
+PR #109 measurements below remain historical observations.
 The overall consolidation phase and work plan remain OPEN.
 Evidence: [catalog and transfer receipt](../verifier/backend-collector-retention-2026-09-08.json),
 [retention method](COLLECTOR_HISTORY_RETENTION_2026-09-08.md), and
@@ -16,7 +18,7 @@ ACTIVE_HEALTHY. Frontend VITE_SUPABASE_URL and the shared clients target it.
 It is not yet the sole production backend.
 Current functions: spatial-runtime v6, investigation-api v3,
 investigation-input-impact v2, capture-retrieval v5, and investigation-workspace,
-investigation-checks, investigation-reviews and investigation-source-spans v1.
+investigation-evidence-checks, investigation-evidence-reviews and investigation-source-spans v1.
 All eight have JWT verification enabled. Installed migration
 20260908180013_collector_history_retention adds private retained collector history.
 
@@ -211,3 +213,35 @@ Frontend PRs #115/#116 are merged in 40a4bc6b2c08a79ed78a805ce29df9685b5dfb36.
 Golden 34276775036 and Pages 34276775080 passed, including live article identity
 reload and mobile graph selection/zoom checks in Chromium/WebKit. These public
 UI results do not certify signed-in writes or legacy dependency closure.
+
+## Current checkpoint after PR #119
+
+At main 0db7ce100b8655a9425064cc7de0aed468fb4f63, all four projects remain
+ACTIVE_HEALTHY. Survivor's eight function versions and JWT settings are unchanged;
+the exact check/review endpoint names are investigation-evidence-checks and
+investigation-evidence-reviews.
+
+Manus comparison worker is **v11**, JWT verification enabled. All three current
+files exactly match supabase/runtime-snapshots/source-comparison-run-v10/
+(index.ts, lib.js, loadedLanguageLexicon.json). The directory name is a retained
+package lineage, not the deployed version. This supersedes the earlier v9/current
+source-divergence wording for that snapshot. The older supabase/functions entrypoint
+must still not be blindly deployed.
+
+Both Manus schedules remain active every five minutes. Policies
+sc-v2-membership-2026-08-23.4 and .5 still have auto_approval_enabled=false and
+auto_approval_threshold=null. No scheduler, policy, credential or database changed.
+
+Fresh source inspection confirms that v11 still completes every pending legacy
+comparison queue row after rebuild. The generation/acknowledgement race therefore
+remains a concrete cutover blocker; the threshold repair did not fix it. No current
+production loss is asserted. Immutable generation-bound output and acknowledgement
+qualification remains necessary before collector migration.
+
+PR #119's complete Pages run 34288805191 passed release-asset matching and live
+Chromium/WebKit verification, including recorded-time reloads, Visual Fidelity,
+mobile Graph selection/zoom and article identity reload. This closes that public
+UI checkpoint; it does not certify positive signed-in writes, collector semantic
+outputs, Auth migration, external GCP runtime or full historical parity.
+
+No legacy project is SAFE TO RETIRE. Overall consolidation remains INCOMPLETE.
