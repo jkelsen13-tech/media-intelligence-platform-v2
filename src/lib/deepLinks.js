@@ -49,7 +49,7 @@ export const VIEW_TO_DEEP_LINK_SLUG = Object.freeze({
   investigations: 'investigations',
 })
 
-export const DEEP_LINK_SELECTION_KEYS = Object.freeze(['claim', 'entity', 'source', 'time', 'place'])
+export const DEEP_LINK_SELECTION_KEYS = Object.freeze(['claim', 'entity', 'source', 'time', 'place', 'at'])
 
 const MAX_ROUTE_LENGTH = 8192
 
@@ -239,6 +239,13 @@ export function selectionIdIsValid(kind, id, catalog, parentSubjectId) {
  * catalog == null → keep ids pending (graph not loaded yet).
  * Invalid ids fall back to parent — they are dropped, not replaced.
  */
+
+// Optional exact inspection instant, independent of the investigation's time range.
+export function parseInspectionInstant(value) {
+  if (typeof value !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}T.*(?:Z|[+-]\\d{2}:\\d{2})$/i.test(value)) return null
+  return Number.isFinite(Date.parse(value)) ? value : null
+}
+
 export function applySelectionAgainstCatalog(selection, catalog, parentSubjectId) {
   const incoming = selection ?? emptyDeepLinkSelection()
   if (catalog == null) {
@@ -249,6 +256,12 @@ export function applySelectionAgainstCatalog(selection, catalog, parentSubjectId
   for (const key of DEEP_LINK_SELECTION_KEYS) {
     const value = incoming[key]
     if (value == null || String(value).trim() === '') continue
+    if (key === 'at') {
+      const instant = parseInspectionInstant(value)
+      if (instant) next.at = instant
+      else fallbacks.push({ kind: 'at', requestedId: value, reason: 'unparseable', action: 'parent_context' })
+      continue
+    }
     if (key === 'time') {
       const parsed = parseTimeQuery(value)
       if (parsed.as_of_time || parsed.selected_time_range) {
@@ -299,6 +312,8 @@ export function reconstructFromDeepLink(parsed, { currentIc, catalog } = {}) {
   }
 
   const timeFields = parseTimeQuery(parsed.selection?.time)
+  const inspectionInstant = parseInspectionInstant(parsed.selection?.at)
+  if (inspectionInstant) timeFields.as_of_time = inspectionInstant
   const payload = {
     canonical_subject_type: 'event',
     canonical_subject_id: parsed.subjectId,
@@ -338,6 +353,10 @@ export function serializeDeepLink(ic, selection = {}) {
   if (!merged.time) {
     merged.time = formatTimeQuery(ic.as_of_time, ic.selected_time_range)
   }
+  // Shared context is authoritative; never retain a stale at= from a prior selection.
+  const instant = parseInspectionInstant(ic.as_of_time)
+  if (instant && instant !== parseTimeQuery(merged.time).as_of_time) merged.at = instant
+  else delete merged.at
   for (const key of DEEP_LINK_SELECTION_KEYS) {
     const value = merged[key]
     if (value != null && String(value).trim() !== '') params.set(key, String(value))
