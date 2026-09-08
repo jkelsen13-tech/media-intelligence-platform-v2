@@ -118,7 +118,7 @@ try {
       await master.press('Space')
       const afterTerrain=await page.evaluate(()=>window.__MIP_WORLD_VIEW_TERRAIN_PROBE__.getTerrainStatus())
       for(const category of ['lighting','terrain','atmosphere','imageQuality','depthMaterials']){
-        const section=panel.locator('.wv-fidelity-category').filter({has:panel.locator('#wv-fidelity-'+category)})
+        const section=panel.locator('.wv-fidelity-category:has(#wv-fidelity-'+category+')')
         await section.scrollIntoViewIfNeeded()
         const last=section.locator('p').last()
         await last.scrollIntoViewIfNeeded()
