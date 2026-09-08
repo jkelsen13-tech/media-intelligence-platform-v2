@@ -193,3 +193,8 @@ PostCSS 8.5.28 and Nano ID 3.3.18 replace vulnerable versions within the existin
 The offline point-context contract now requires independent software/service/dataset/upstream review assertions, exact release binding, intersected operation permissions, bounded request-policy declarations and obligation implementation references. It remains operator-supplied context, not authenticated rights clearance or evidence. See [contract 2 and verification scope](SEPARATE_CONTEXT_RIGHTS_2026-09-08.md).
 
 The Browserslist candidate is held because the newly resolved Baseline mapping includes private-feed-derived data whose applicable upstream reuse terms have not been verified. No candidate lockfile is integrated. Existing dependency findings and POWER remain pending; independent work continues.
+
+
+## Batch 84 — held-out evaluation diagnostics
+
+The offline record-candidate evaluator binds exact corpus/run identity, rejects declared group/input/time leakage, requires every held-out prediction, and reports retrieval, verifier errors, unresolved labels and abstention with explicit denominators. It does not qualify a worker. See [measurement scope and remaining real-corpus work](RECORD_CANDIDATE_EVALUATION_2026-09-08.md). The pending record jobs remain gated; a rights-cleared independently adjudicated corpus and comparative run are still required.
