@@ -4,14 +4,12 @@ import { build } from 'esbuild'
 import React from 'react'
 import TestRenderer, { act } from 'react-test-renderer'
 import { fileURLToPath } from 'node:url'
-import { createChronologyBackend } from '../src/lib/chronologyBackend.js'
-import { newsBackendFixture } from './newsBackendFixture.mjs'
 
 const built = await build({
   entryPoints: [fileURLToPath(new URL('../src/graph/GraphModePanel.jsx', import.meta.url))],
   bundle: true, format: 'esm', platform: 'node', write: false, jsx: 'automatic',
   loader: { '.css': 'empty' },
-  packages: 'external',
+  external: ['react', 'react-dom', 'react/jsx-runtime'],
 })
 // A data URL cannot resolve external packages; supply the bundle through a
 // temporary module next to this test and always remove it after import.
