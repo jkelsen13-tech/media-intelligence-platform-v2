@@ -653,6 +653,12 @@ export default function App({
   }, [])
 
 
+  // Ordinary public tab switches retain the existing subject.
+  const changeView = useCallback((key) => {
+    setView(key)
+    setInvestigationContext((ic) => setInvestigationActiveView(ic, key))
+  }, [])
+
   // Opening Explore is NOT a view change. Do not call changeView('news').
   const openExplore = useCallback(() => {
     setMoreOpen(false)
@@ -985,7 +991,7 @@ export default function App({
   const moreActive = isMoreViewKey(view)
 
   const openFromMore = (key) => {
-    changeView(key)
+    navigateWorkspaceView(key)
     setMoreOpen(false)
   }
 
@@ -1171,7 +1177,7 @@ export default function App({
   }, [graph, openNodeInGraph])
   // First handoff from a private question establishes only an exact public
   // node identity. Later ordinary public tab changes retain that identity.
-  const changeView = useCallback((key) => {
+  const navigateWorkspaceView = useCallback((key) => {
     if (view === PRIVATE_INVESTIGATION_VIEW && ['graph','timeline','world'].includes(key)) {
       const match = privateWorkspacePublicNode({
         status: privateWorkspace.status, userId: auth.user?.id,
@@ -1193,11 +1199,11 @@ export default function App({
         setInvestigationContext(emptyInvestigationContext(key))
         setSavedInvestigationHandoff(null)
       }
+      setView(key)
     } else {
-      setInvestigationContext((ic) => setInvestigationActiveView(ic, key))
+      changeView(key)
     }
-    setView(key)
-  }, [view, privateWorkspace.status, privateWorkspace.state.panels, privateWorkspace.state.bundle,
+  }, [changeView, view, privateWorkspace.status, privateWorkspace.state.panels, privateWorkspace.state.bundle,
     auth.user, graph, resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
   const showSavedInvestigationHandoff = savedInvestigationHandoffVisible({
@@ -1221,7 +1227,7 @@ export default function App({
     <div className="app ws-app">
       <InvestigationWorkspace
         view={view}
-        onChangeView={changeView}
+        onChangeView={navigateWorkspaceView}
         investigationContext={investigationContext}
         header={workspaceHeader}
         nodeDimensions={nodeDimensions}
@@ -1264,7 +1270,7 @@ export default function App({
                 key={v.key}
                 item={v}
                 active={v.key === 'more' ? moreActive : view === v.key}
-                onClick={() => (v.key === 'more' ? setMoreOpen(true) : changeView(v.key))}
+                onClick={() => (v.key === 'more' ? setMoreOpen(true) : navigateWorkspaceView(v.key))}
               />
             ))}
           </>
@@ -1292,7 +1298,7 @@ export default function App({
               key={v.key}
               className={`nav-tab${(v.key === 'more' ? moreActive : view === v.key) ? ' active' : ''}`}
               aria-current={(v.key === 'more' ? moreActive : view === v.key) ? 'page' : undefined}
-              onClick={() => (v.key === 'more' ? setMoreOpen(true) : changeView(v.key))}
+              onClick={() => (v.key === 'more' ? setMoreOpen(true) : navigateWorkspaceView(v.key))}
             >
               {v.label}
             </button>
@@ -1432,7 +1438,7 @@ export default function App({
             <strong>{privateWorkspace.state.panels.question}</strong>
             <p>Saved investigation revision {privateWorkspace.state.bundle.version.revision}.
               {' '}This view shows current eligible public records; the saved evidence snapshot remains in Investigations.</p>
-            <button type="button" onClick={() => changeView(PRIVATE_INVESTIGATION_VIEW)}>Return to saved investigation</button>
+            <button type="button" onClick={() => navigateWorkspaceView(PRIVATE_INVESTIGATION_VIEW)}>Return to saved investigation</button>
           </section>
         )}
         {error && view === 'graph' && (
@@ -1889,7 +1895,7 @@ export default function App({
             key={v.key}
             className={`bottom-tab${(v.key === 'more' ? moreActive : view === v.key) ? ' active' : ''}`}
             aria-current={(v.key === 'more' ? moreActive : view === v.key) ? 'page' : undefined}
-            onClick={() => (v.key === 'more' ? setMoreOpen(true) : changeView(v.key))}
+            onClick={() => (v.key === 'more' ? setMoreOpen(true) : navigateWorkspaceView(v.key))}
           >
             {v.shortLabel}
           </button>

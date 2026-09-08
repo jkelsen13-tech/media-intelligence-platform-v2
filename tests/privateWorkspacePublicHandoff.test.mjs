@@ -16,7 +16,7 @@ test('private handoff resolves only the exact loaded public identity',()=>{
 })
 test('one public subject remains synchronized across Graph, Timeline and World View',()=>{
   const matched=privateWorkspacePublicNode(input)
-  let context=commitNewSubject(emptyInvestigationContext('investigations'),matched,{landingView:'graph'})
+  let context=commitNewSubject(emptyInvestigationContext('investigations'),matched,{landingView:'graph'}).investigationContext
   assert.equal(context.canonical_subject_id,node.id)
   assert.equal(context.canonical_subject_type,'event')
   for(const view of ['timeline','world','graph']) {

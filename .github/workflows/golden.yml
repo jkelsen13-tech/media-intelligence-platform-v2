@@ -8,13 +8,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
         with:
-          node-version: 20
+          node-version: ${{ matrix.node }}
       # G-ALG-0 added a real runtime dependency (graphology); the suite no
       # longer runs on zero node_modules, so npm ci is required first.
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - name: Dependency audit (triage report)
+        if: matrix.node == 24
+        continue-on-error: true
+        run: npm audit --json
