@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { PGlite } from '@electric-sql/pglite'
-const migration = await readFile(new URL('../supabase/proposals/collector_history_retention.sql', import.meta.url),'utf8')
+const migration = await readFile(new URL('../supabase/migrations/20260908180013_collector_history_retention.sql', import.meta.url),'utf8')
 const source='yhbwnrtlqbjtcrrlpbge', observed='2026-01-01T00:00:00Z'
 async function fixture(t) {
   const db=await PGlite.create(); t.after(()=>db.close())
