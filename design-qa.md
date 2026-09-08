@@ -1,28 +1,80 @@
-# Design QA — investigation workspace
+# Shared workspace frame — design QA
 
-Visual target: the light investigation-workspace captures (graph, timeline, arcs, source-comparison, world desktop; workspace/timeline phone; timeline tablet).
+final result: passed
 
-## Must match
+This result applies to the bounded shared-frame increment in PR #92. It does
+not certify completion or pixel fidelity of the five-view destination.
 
-- Light canvas, white reading surfaces, blue active tabs.
-- Desktop three-pane shell: collapsible left nav, canonical header, right inspector.
-- Phone: hamburger drawer, scrollable evidence dimensions, scrollable view tabs, inspector as a bottom sheet.
-- Canonical subject stays in the header when a child node is selected.
-- Missing location and missing evidence read "not recorded" (or the existing node-level "not yet recorded" copy). Never invent a place or a score.
-- Timeline chronology is recorded order. The spacing note must remain visible. List is an alternative, not a replacement of the connector engine.
-- Arcs and Source Comparison use honest unavailable cards when released data is absent.
-- World View keeps Map / Graph / Split and the live globe/map adapters.
+## Source and implementation evidence
+- Source visual truth: owner's Photo 2.jpg, attachment set
+  67BF1D8E-03DB-4BA4-AECC-7B91001AB59F, supplied in this conversation.
+  Reference inventory: docs/FRONTEND_DESTINATION_REFERENCES_2026-09-08.md.
+- Source dimensions: 590 × 1280 pixels, containing a letterboxed desktop
+  Timeline dashboard approximately 590 × 442. Original CSS size/density is
+  not recorded; compare app-region proportions, not phone chrome or exact pixels.
+- Implementation screenshots: GitHub Actions run 34187637353, job
+  101939075195, log markers MIP_SHELL_OPEN_1280/1024/768/390/320 and
+  MIP_SHELL_COLLAPSED_1280/1024. JPEG screenshots remain in ephemeral CI logs,
+  not the owner's filesystem. Final-revision checks are linked from PR #92.
+- Browser CSS sizes/pixels: 1280 × 900, 1024 × 900, 768 × 900,
+  390 × 844 and 320 × 844; deviceScaleFactor 1.
+- State: light Timeline, public NASA Cleveland event, shared inspector open
+  and collapsed. The reference depicts an illustrative Gulf Coast event.
+  Content/state differs deliberately: no illustrative percentages, source
+  counts, weather, images or timeline lanes are asserted as NASA evidence.
+- Full-view comparison: source and rendered desktop capture were opened
+  together. Compare the desktop app region only: the narrow left rail, shared
+  header, central canvas and right inspector have similar relative proportions.
+- Focused comparison: header/inspector labels and collapsed reopen control
+  inspected at native implementation resolution, alongside phone/tablet
+  captures. The low-resolution reference cannot establish exact font metrics.
 
-## Must not regress
+## Comparison history and fixes
+1. First rendered pass (run 34187434117) was blocked:
+   - P1 phone: header plus open sticky inspector compressed evidence into a
+     thin independent scrolling strip. Fixed reading views to use one page
+     scroll, with the inspector following the evidence.
+   - P2 tablet: optional corpus metadata reduced search to a tiny input.
+     Hide that optional topbar line at widths up to 1100px.
+2. Post-fix captures (run 34187637353): phone content now occupies its natural
+   reading height, the inspector follows it, and Account/menu remain usable.
+   Tablet search has room for its descriptive placeholder. Browser geometry
+   assertions independently verify the phone flow and desktop/tablet space.
+   A closer phone record capture subsequently exposed a 220px search field.
+3. P2 phone search: the horizontal flex basis became vertical when controls
+   stacked. Reset its flex basis and require a 44–60px field in browser checks.
+   Post-fix run 34188040365 (job 101940232513) passed the 44–60px assertion
+   and all existing browser checks. Phone captures show a normal search field.
+   No unresolved P0/P1/P2 findings remain in this scoped increment.
 
-- Explore / Change Topic still opens the existing drawer and does not call a view change.
-- Investigation Context identity fields survive ordinary tab switches.
-- Deep links, recent investigations, and new-subject commit stay on their existing seams.
-- Cesium base URL assignment-before-import and fatal MapLibre fallback stay intact.
-- No composite score, no mock arcs, no mock comparison metrics.
+## Required fidelity surfaces
+- Typography: existing Inter/system sans and readable 12–13px control text,
+  18–20px subject titles; wrapping retained for long subjects. No new font.
+- Spacing/layout: existing 190px desktop rail and 286px inspector; collapsed
+  inspector is 48px, returning 238px to evidence. At 768px the rail is 160px
+  and the shared inspector stacks below evidence. Compact shared header/tabs.
+- Colors/tokens: existing cool white surfaces, pale borders and blue selected
+  controls remain consistent with the reference direction. Visible focus
+  outlines added to shared navigation and inspector controls.
+- Assets: existing MIP logo and Phosphor icon family retained. The illustrative
+  event photograph and other mockup assets are intentionally not reproduced
+  for this different real event. No new dataset, model, API or dependency.
+- Copy/content: existing explicit missing evidence, location/time and
+  uncertainty wording preserved; no fabricated metrics or confidence status.
 
-## Out of scope
+## Interaction and error checks
+Production-build browser passed five widths, dock width reclamation, tablet
+stacking, phone document flow, keyboard reopening, Account opening, drawer
+Escape and focus return, and unchanged canonical subject. Zero page errors.
+Existing weather/camera, recent restoration, exact saved-version reference and
+retained-date verifiers passed, with zero restricted hosted-weather requests.
 
-- Backend flags, schema, RLS, ingest, or release writes.
-- New globe stages, terrain, or precision-class product work.
-- Account sync or multi-investigation tabs.
+## Implementation checklist
+- Shared-frame and responsive fixes complete for this increment.
+- Final-head CI, merge guard and post-deployment verification recorded in PR.
+- Continue the planned Graph/Timeline composition and other view batches.
+
+## Follow-up scope
+The mockup's denser evidence visualizations, supported imagery, source metrics
+and full shared inspector content remain planned work with their data/rights
+prerequisites. These are explicit destination gaps, not features shipped here.

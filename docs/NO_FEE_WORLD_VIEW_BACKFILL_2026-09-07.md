@@ -238,3 +238,8 @@ Saved assessment/input lookups now reject duplicate identities instead of choosi
 ## Owner frontend destination — 8 September 2026
 
 The five owner-supplied Graph, Timeline, Arcs, Source Comparison and World View screenshots now guide the frontend destination. See [visual direction and staged delivery](FRONTEND_DESTINATION_REFERENCES_2026-09-08.md). Finish the in-flight evidence-integrity batch, then align shared shell and view composition incrementally while preserving truthful evidence, version/access semantics and responsive Account access.
+
+
+## Batch 92 — shared frame implementation
+
+Shared inspector collapse now releases its layout track; tablet evidence/inspector stacking and compact header/tab spacing advance the owner reference direction. Production-build browser checks cover phone, tablet and desktop. See SHARED_WORKSPACE_FRAME_2026-09-08.md and design-qa.md for scoped verification; the five-view destination is not yet complete. Existing rights/provider holds remain unchanged.

@@ -154,6 +154,7 @@ export default function InvestigationWorkspace({
       className={`workspace-app ws-shell${navCollapsed ? ' nav-collapsed ws-nav-collapsed' : ''}${view === 'graph' ? ' ws-graph-primary' : ''}`}
       data-workspace="investigation"
       data-workspace-view={view}
+      data-inspector-state={sharedInspectorHidden ? 'native' : inspectorOpen ? 'open' : 'collapsed'}
     >
       <aside className="ws-nav" aria-label="Investigation views">
         <div className="ws-nav-brand">
@@ -244,7 +245,7 @@ export default function InvestigationWorkspace({
           {...investigationContextDomProps(ic)}
         >
           <div className="ws-canonical-head">
-            <div>
+            <div className="ws-canonical-copy">
               <p className="ws-eyebrow">{header?.eyebrow ?? 'Investigation workspace'}</p>
               <h1 className="ws-title">{header?.title}</h1>
               {view === 'investigations' || view === 'world' ? (
@@ -306,7 +307,10 @@ export default function InvestigationWorkspace({
               type="button"
               className="ws-inspector-toggle"
               aria-expanded={inspectorOpen}
-              onClick={() => setInspectorOpen((v) => !v)}
+              onClick={() => {
+                setInspectorOpen((v) => !v)
+                onChromeChange?.()
+              }}
             >
               Investigation inspector
               <CaretDown size={14} />

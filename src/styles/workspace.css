@@ -1073,3 +1073,137 @@
     overflow-wrap: anywhere;
   }
 }
+
+
+/* Shared frame refinement from the owner's September reference set.
+   Collapse changes the layout track, not only the visible panel width. */
+@media (min-width: 1024px) {
+  .ws-shell[data-inspector-state='collapsed'] {
+    --inspector: 48px;
+  }
+
+  .ws-shell:not(:has(.ws-body.has-native-inspector)) {
+    grid-template-columns: var(--sidebar) minmax(0, 1fr) var(--inspector);
+  }
+
+  .ws-shell:not(:has(.ws-body.has-native-inspector)) > .ws-topbar {
+    grid-column: 2 / -1;
+  }
+
+  .ws-shell > .ws-body:not(.has-native-inspector) {
+    display: contents;
+  }
+
+  .ws-shell > .ws-body:not(.has-native-inspector) > .ws-content {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .ws-shell > .ws-body:not(.has-native-inspector) > .ws-inspector {
+    grid-column: 3;
+    grid-row: 2 / 4;
+    min-height: 0;
+  }
+
+  .ws-inspector.collapsed .ws-inspector-toggle {
+    writing-mode: vertical-rl;
+    justify-content: flex-start;
+    min-height: 220px;
+    padding: 16px 12px;
+  }
+}
+
+.ws-canonical-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.ws-canonical-head > .ws-change-btn {
+  flex-shrink: 0;
+}
+
+.ws-canonical .ws-title {
+  overflow-wrap: anywhere;
+}
+
+.ws-topbar { gap: 12px; }
+.ws-canonical { padding: 12px 16px 0; }
+.ws-dimensions { margin-top: 12px; }
+.ws-dimension { padding: 8px 10px; }
+.ws-tabs { gap: 2px; padding: 6px 12px; }
+.ws-tab { font-size: 12px; padding: 7px 9px; }
+.ws-inspector-toggle { min-height: 44px; }
+.ws-inspector-body { padding: 0 14px 18px; }
+
+.ws-nav-btn:focus-visible,
+.ws-tab:focus-visible,
+.ws-inspector-toggle:focus-visible,
+.ws-collapse-btn:focus-visible {
+  outline: 2px solid var(--cat-blue);
+  outline-offset: -2px;
+}
+
+/* Tablet reading space: put the shared inspector below the evidence instead
+   of squeezing both into narrow side-by-side columns. Native canvases retain
+   their own inspector behavior. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .ws-shell { --sidebar: 160px; }
+  .ws-shell.ws-nav-collapsed { --sidebar: 72px; }
+  .ws-body:not(.has-native-inspector) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(180px, 1fr) auto;
+  }
+  .ws-body:not(.has-native-inspector) > .ws-inspector {
+    width: 100%;
+    max-height: 32dvh;
+    border-left: 0;
+    border-top: 1px solid var(--border-color);
+  }
+  .ws-inspector.collapsed { max-height: 44px; }
+  .ws-canonical-head { flex-wrap: wrap; gap: 8px; }
+  .ws-canonical-head > .ws-change-btn { margin-top: 0; }
+}
+
+@media (max-width: 767px) {
+  .ws-topbar { gap: 4px; }
+  .ws-tabs { padding-inline: 8px; }
+  .ws-tab { min-height: 44px; font-size: 13px; padding-inline: 10px; }
+  .ws-drawer-nav .ws-nav-btn,
+  .ws-drawer-head .ws-icon-btn { min-height: 44px; }
+}
+
+
+@media (max-width: 1100px) {
+  /* Preserve search space before optional corpus metadata. */
+  .ws-corpus { display: none; }
+}
+
+@media (max-width: 767px) {
+  /* Reading views use one page scroll. A tall header plus an open inspector
+     must not reduce evidence to a thin, independently scrolling strip. */
+  .ws-shell:is([data-workspace-view='news'], [data-workspace-view='timeline'], [data-workspace-view='arcs'], [data-workspace-view='compare']) {
+    display: block;
+    overflow-y: auto;
+  }
+  .ws-shell:is([data-workspace-view='news'], [data-workspace-view='timeline'], [data-workspace-view='arcs'], [data-workspace-view='compare']) .ws-body {
+    display: block;
+    overflow: visible;
+  }
+  .ws-shell:is([data-workspace-view='news'], [data-workspace-view='timeline'], [data-workspace-view='arcs'], [data-workspace-view='compare']) :is(.ws-content, .app-main) {
+    height: auto;
+    overflow: visible;
+  }
+  .ws-shell:is([data-workspace-view='news'], [data-workspace-view='timeline'], [data-workspace-view='arcs'], [data-workspace-view='compare']) .ws-inspector {
+    position: static;
+    width: 100%;
+    max-height: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .ws-shell .timeline-search {
+    flex: 0 0 auto;
+    min-height: 44px;
+    min-width: 0;
+  }
+}
