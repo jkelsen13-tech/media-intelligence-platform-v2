@@ -6,8 +6,10 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
   const page=await browser.newPage({viewport:{width:1280,height:900}})
   const verifyBackend=observeBackendBoundary(page)
   const errors=[]
+  const errorStacks=[]
   page.on('pageerror',error=>{
     errors.push(error.message)
+    errorStacks.push(error.stack ?? '')
     console.log('MIP_TIMESTAMP_PAGE_ERROR='+JSON.stringify({engine,url:page.url(),message:error.message,stack:error.stack}))
   })
   page.on('requestfailed',request=>console.log('MIP_TIMESTAMP_REQUEST_FAILED='+JSON.stringify({engine,url:request.url(),error:request.failure()?.errorText})))
@@ -44,6 +46,17 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
     await page.getByRole('combobox',{name:'Choose a recorded time',exact:true}).waitFor()
     await page.getByText('No spatial state recorded at this time.',{exact:true}).first().waitFor()
     assert.equal(await page.getByRole('button',{name:'Return to selected location',exact:true}).isDisabled(),true)
+    // Preserve assertions. Map intermittent bundled errors to actual public
+    // build code so future failures can be diagnosed without guessing symbols.
+    const locations=new Set(errorStacks.flatMap(stack=>stack.match(/https?:\/\/[^\s)]+\.js:\d+:\d+/g)??[]))
+    for(const location of locations){
+      const match=location.match(/^(.*\.js):(\d+):(\d+)$/)
+      if(!match || !match[1].startsWith(origin+'/media-intelligence-platform-v2/assets/'))continue
+      const source=await (await fetch(match[1])).text()
+      const line=source.split('\n')[Number(match[2])-1]??''
+      const column=Number(match[3])-1
+      console.log('MIP_TIMESTAMP_ERROR_SOURCE='+JSON.stringify({location,code:line.slice(Math.max(0,column-250),column+450)}))
+    }
     assert.deepEqual(errors,[])
     console.log('MIP_RECORDED_TIMESTAMP_COMPATIBILITY_PASS='+JSON.stringify({engine,sqlOffset:true,offsetEquivalent:true,
      viewRoundTrip:true,reload:true,sourceTextPreserved:true,scopePreserved:true,localTimeRejected:true,backend:verifyBackend()}))

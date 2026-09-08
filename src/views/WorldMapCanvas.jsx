@@ -11,11 +11,11 @@ import {
   FALLBACK_MAP_STACK_ID,
   TERRAIN_DISCLOSURE_TEXT,
   TERRAIN_RELIEF_LEGEND_TEXT,
-  TERRAIN_RELIEF_TOGGLE_LABEL,
   TERRAIN_UNAVAILABLE_TEXT,
   mapStackById,
 } from '../lib/worldViewMapStack'
 import { createWorldViewRendererAdapter, projectionMarkerRecords } from '../lib/worldViewRendererAdapter'
+import { visualFidelityCapabilities, resolveVisualFidelityProfile } from '../lib/worldViewVisualFidelity.js'
 import { createCameraFraming } from '../lib/worldViewCameraFraming'
 
 const MAP_W = 960
@@ -115,18 +115,17 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
   )
 }
 
-export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyMessage }) {
+export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyMessage, visualFidelity, onVisualFidelityCapabilities }) {
   const hostRef = useRef(null)
+  const fidelityRef = useRef(visualFidelity)
+  fidelityRef.current = visualFidelity
+
   const framingRef = useRef(null)
   if (!framingRef.current) framingRef.current = createCameraFraming()
   const adapterRef = useRef(null)
   const [stackId, setStackId] = useState(DEFAULT_MAP_STACK_ID)
   const [terrainStatus, setTerrainStatus] = useState(null)
   const [rendererReady, setRendererReady] = useState(false)
-  // Stage D visual-continuity repair: labeled relief shading toggle
-  // (default ON — the repair exists because unshaded terrain is not
-  // visually legible at the enforced city camera floor). DISPLAY-only.
-  const [reliefShadingOn, setReliefShadingOn] = useState(true)
   const stack = mapStackById(stackId)
   const features = useMemo(() => projectionMarkerRecords(rows, selectedKeys), [rows, selectedKeys])
   const first = features.find((feature) => feature.selected)
@@ -195,13 +194,19 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
     framingRef.current.apply(adapter)
   }, [features, stackId])
 
-  // Stage D visual-continuity repair: forward the relief-shading preference
-  // to the active adapter. The globe adapter applies it to the globe
-  // material only; the MapLibre fallback no-ops.
+  // Reapply current preferences after startup/remount and after terrain degradation.
+  // Capability updates contain metadata only, never renderer objects.
   useEffect(() => {
-    if (stackId === FALLBACK_MAP_STACK_ID) return
-    adapterRef.current?.setReliefShadingEnabled?.(reliefShadingOn)
-  }, [reliefShadingOn, stackId])
+    const adapter = adapterRef.current
+    adapter?.setVisualFidelityProfile?.(visualFidelity)
+    onVisualFidelityCapabilities?.(
+      stackId === FALLBACK_MAP_STACK_ID ? visualFidelityCapabilities({ reason: 'Effects unavailable on the overview map.' })
+        : adapter?.getVisualFidelityCapabilities?.() ?? visualFidelityCapabilities(),
+    )
+  }, [visualFidelity, stackId, rendererReady, terrainStatus, onVisualFidelityCapabilities])
+
+  const reliefShadingOn = resolveVisualFidelityProfile(visualFidelity,
+    rendererReady ? adapterRef.current?.getVisualFidelityCapabilities?.() : visualFidelityCapabilities()).reliefShading
 
   // Stage C acceptance probe (DISPLAY-only): exposes the renderer-neutral
   // camera-state contract of the active adapter so the live acceptance walk
@@ -227,7 +232,13 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
       getReliefShadingEnabled: () => adapterRef.current?.getReliefShadingEnabled?.() ?? false,
     }
     window.__MIP_WORLD_VIEW_TERRAIN_PROBE__ = terrainProbe
+    const fidelityProbe = {
+      getProfile: () => JSON.parse(JSON.stringify(fidelityRef.current)),
+      getCapabilities: () => adapterRef.current?.getVisualFidelityCapabilities?.() ?? visualFidelityCapabilities(),
+    }
+    window.__MIP_WORLD_VIEW_FIDELITY_PROBE__ = fidelityProbe
     return () => {
+      if (window.__MIP_WORLD_VIEW_FIDELITY_PROBE__ === fidelityProbe) delete window.__MIP_WORLD_VIEW_FIDELITY_PROBE__
       if (window.__MIP_WORLD_VIEW_CAMERA_PROBE__ === probe) {
         delete window.__MIP_WORLD_VIEW_CAMERA_PROBE__
       }
@@ -276,15 +287,7 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
       )}
       {stackId === ELLIPSOID_GLOBE_STACK_ID && (
         <p className="wv-map-attrib wv-map-relief-toggle">
-          <label>
-            <input
-              type="checkbox"
-              checked={reliefShadingOn}
-              onChange={(e) => setReliefShadingOn(e.target.checked)}
-            />
-            {TERRAIN_RELIEF_TOGGLE_LABEL}
-          </label>
-          {reliefShadingOn ? ` — ${TERRAIN_RELIEF_LEGEND_TEXT}` : ''}
+          {reliefShadingOn ? TERRAIN_RELIEF_LEGEND_TEXT : 'Terrain relief shading off'}
         </p>
       )}
     </div>

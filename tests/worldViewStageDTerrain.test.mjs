@@ -684,3 +684,36 @@ test('adapter and dispatcher expose terrain status + probe passthrough; canvas r
   assert.match(TERRAIN_DISCLOSURE_TEXT, /never evidence/)
   assert.match(TERRAIN_UNAVAILABLE_TEXT, /reference ellipsoid/)
 })
+
+test('terrain teardown aborts pending fetches and prevents late PNG decoding', async () => {
+  const Cesium = makeMockCesium()
+  let releaseBody
+  let requestSignal
+  let decodes = 0
+  const statuses = []
+  const terrain = createTerrariumTerrainProvider(Cesium, {
+    fetchImpl: async (_url, options) => {
+      requestSignal = options.signal
+      return {
+        ok: true,
+        headers: { get: key => key === 'content-type' ? 'image/png' : 'ned13/approved.tif' },
+        arrayBuffer: () => new Promise(resolve => { releaseBody = resolve }),
+      }
+    },
+    decodeImageImpl: async () => { decodes += 1; throw new Error('must not decode') },
+    onStatusChange: value => statuses.push(value),
+  })
+  const pending = terrain.provider.callback(560, 764, 11)
+  await Promise.resolve()
+  terrain.destroy()
+  terrain.destroy()
+  assert.equal(requestSignal.aborted, true)
+  releaseBody(new ArrayBuffer(4))
+  await assert.rejects(pending, { name: 'AbortError' })
+  assert.equal(decodes, 0)
+  assert.equal(terrain.provider.callback(560, 764, 11), undefined)
+  assert.equal(terrain.provider.callback(0, 0, 0), undefined)
+  assert.equal(terrain.getStatus().fetchFailures, 0, 'teardown is not provider failure')
+  assert.deepEqual(statuses, [])
+  assert.match(ADAPTER_SRC, /terrainPlan\?\.destroy\?\.\(\)/)
+})

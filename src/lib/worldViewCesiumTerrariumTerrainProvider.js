@@ -259,11 +259,13 @@ export async function fetchTerrariumTileHeights({
   baseUrl = TERRARIUM_TILE_BASE_URL,
   fetchImpl,
   decodeImageImpl = defaultDecodeImage,
+  signal,
 }) {
   const doFetch = fetchImpl ?? globalThis.fetch?.bind(globalThis)
   if (!doFetch) throw new Error('no fetch implementation available')
+  signal?.throwIfAborted()
   const url = terrariumTileUrl(baseUrl, z, x, y)
-  const res = await doFetch(url, { mode: 'cors', credentials: 'omit' })
+  const res = await doFetch(url, { mode: 'cors', credentials: 'omit', ...(signal ? { signal } : {}) })
   if (!res || !res.ok) {
     throw new Error(`terrain tile fetch failed (HTTP ${res?.status ?? 'no response'})`)
   }
@@ -282,7 +284,9 @@ export async function fetchTerrariumTileHeights({
     throw err
   }
   const buffer = await res.arrayBuffer()
+  signal?.throwIfAborted()
   const image = await decodeImageImpl(buffer)
+  signal?.throwIfAborted()
   if (
     !image ||
     image.width !== TERRARIUM_TILE_SIZE ||
@@ -345,6 +349,8 @@ export function createTerrariumTerrainProvider(Cesium, options = {}) {
     maxFailuresBeforeUnavailable = 6,
   } = options
 
+  const lifetime = new AbortController()
+  let disposed = false
   let status = 'idle'
   let unavailableNotified = false
   // Genuine fetch/decode failures only. Source-policy rejections are counted
@@ -369,6 +375,7 @@ export function createTerrariumTerrainProvider(Cesium, options = {}) {
   }
 
   function noteFailure(err) {
+    if (disposed) return
     counters.fetchFailures += 1
     if (err?.code === 'unapproved-source') {
       counters.sourceRejections += 1
@@ -393,6 +400,7 @@ export function createTerrariumTerrainProvider(Cesium, options = {}) {
   }
 
   function callback(x, y, level) {
+    if (disposed) return undefined
     // Below the approved band the quadtree still needs renderable ancestry
     // to descend through: the engine can only refine a tile that has loaded
     // terrain data or a definitive availability answer. Serve the reference
@@ -417,6 +425,7 @@ export function createTerrariumTerrainProvider(Cesium, options = {}) {
       baseUrl,
       fetchImpl,
       decodeImageImpl,
+      signal: lifetime.signal,
     }).then(({ heights }) => {
       counters.fetchSuccesses += 1
       if (status === 'idle') {
@@ -463,5 +472,12 @@ export function createTerrariumTerrainProvider(Cesium, options = {}) {
     provider,
     getStatus: snapshot,
     isUnavailable: () => status === 'unavailable',
+    // Viewer teardown owns network work too; never begin a PNG decode after
+    // the document/renderer that requested it has been abandoned.
+    destroy() {
+      if (disposed) return
+      disposed = true
+      lifetime.abort()
+    },
   }
 }

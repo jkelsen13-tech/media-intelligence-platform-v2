@@ -512,3 +512,21 @@
   }
   .wv-stage:not(.wv-touch-active) { touch-action: pan-y; }
 }
+
+/* Session-only graphics controls stay in document flow, outside the canvas. */
+.wv-fidelity { flex: 0 0 auto; min-width: 0; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--card-radius); background: var(--bg-panel); color: var(--text-body); font-size: var(--fs-meta); overflow-wrap: anywhere; }
+.wv-fidelity-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.wv-fidelity label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
+.wv-fidelity input { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--accent); }
+.wv-fidelity :is(button, select) { min-height: 44px; max-width: 100%; padding: 6px 10px; font: inherit; color: var(--text-primary); background: var(--bg-panel); border: 1px solid var(--border-strong); border-radius: 6px; }
+.wv-fidelity :is(button, select, input):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.wv-fidelity p { margin: 6px 0 10px; line-height: 1.45; color: var(--text-secondary); }
+.wv-fidelity-category { border-top: 1px solid var(--border-color); padding-top: 6px; }
+.wv-fidelity-leaf { padding-left: 12px; }
+.wv-fidelity-cost { display: inline-block; margin-left: 8px; color: var(--text-secondary); }
+.wv-fidelity-preset { flex-wrap: wrap; }
+.wv-map-gl .wv-map-relief-toggle { bottom: auto; top: 8px; max-width: calc(100% - 16px); }
+@media (max-width: 767px) {
+  .wv-fidelity-row { align-items: flex-start; }
+  .wv-fidelity-row > button { width: 100%; text-align: left; }
+}
