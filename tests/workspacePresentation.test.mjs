@@ -17,6 +17,7 @@ import {
   WORKSPACE_TAB_VIEWS,
   applyWorkspaceLightPresentation,
   canonicalWorkspaceHeader,
+  formatWorkspaceDate,
   graphInspectorDismissalAfter,
   handleWorkspaceDrawerKeyDown,
   isOptionalDeniedArcMetadata,
@@ -96,7 +97,7 @@ test('canonical header ignores a selected child and keeps missing location expli
   })
   assert.equal(header.title, 'Fixture event')
   assert.equal(header.location, LOCATION_UNRECORDED)
-  assert.equal(header.when, 'Apr 8, 2024 · UTC')
+  assert.equal(header.when, '2024-04-08 17:59:00 UTC')
   assert.equal(header.description, 'Recorded fixture summary.')
   assert.equal(header.selectedChildReplacedHeader, false)
   assert.notEqual(header.title, CHILD.label)
@@ -250,4 +251,30 @@ test('raw backend errors stay behind disclosures; fail-closed copy is preserved'
   assert.match(WORLD, /CALM_RELATIONSHIP_UNAVAILABLE/)
   assert.match(ARTICLE, /Node-level source records are unavailable/)
   assert.match(ARTICLE, /Failed to load sources: \{sourcesError\}/)
+})
+
+test('shared workspace dates preserve date-only and clock precision', () => {
+  assert.equal(formatWorkspaceDate('2024-04-08'),'2024-04-08 (date only)')
+  assert.equal(formatWorkspaceDate('2024-04-08T17:59Z'),'2024-04-08 17:59 UTC')
+  assert.equal(formatWorkspaceDate('2024-04-08T17:59:01.123456Z'),'2024-04-08 17:59:01.123456 UTC')
+})
+
+test('shared workspace dates retain source offset and calendar day', () => {
+  assert.equal(formatWorkspaceDate('2024-04-08T00:30:00+02:00'),'2024-04-08 00:30:00 UTC+02:00')
+  assert.equal(formatWorkspaceDate('2024-04-08T23:30:00-05:00'),'2024-04-08 23:30:00 UTC-05:00')
+  assert.equal(formatWorkspaceDate('2024-04-08T17:59'),'2024-04-08 17:59 (time zone not recorded)')
+})
+
+test('shared workspace dates distinguish malformed values from absent time', () => {
+  for (const value of ['2024-02-30','2024-04-08T24:00Z','not a date']) {
+    assert.equal(formatWorkspaceDate(value),'Unrecognized recorded date')
+  }
+  for (const value of [null,undefined,'','  ']) assert.equal(formatWorkspaceDate(value),TIME_UNRECORDED)
+})
+
+test('canonical date-only context cannot acquire UTC from a selected child', () => {
+  const node={...CANONICAL,occurred_at:'2024-04-08'}
+  const investigationContext=applySubject(emptyInvestigationContext('graph'),subjectFromGraphNode(node))
+  const header=canonicalWorkspaceHeader({investigationContext,canonicalNode:node,selectedChild:CHILD})
+  assert.equal(header.when,'2024-04-08 (date only)')
 })
