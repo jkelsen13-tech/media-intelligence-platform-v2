@@ -233,3 +233,8 @@ Saved evidence trail dates now preserve recorded calendar/clock precision and ex
 ## Batch 91 — unambiguous saved-trail identity
 
 Saved assessment/input lookups now reject duplicate identities instead of choosing first/last records; context membership requires exact array positions. See [invariant and limits](UNAMBIGUOUS_SAVED_TRAIL_2026-09-08.md). Ambiguity is unavailable, not asserted absence. This defensive reader change does not alter saved evidence or qualify a producer.
+
+
+## Owner frontend destination — 8 September 2026
+
+The five owner-supplied Graph, Timeline, Arcs, Source Comparison and World View screenshots now guide the frontend destination. See [visual direction and staged delivery](FRONTEND_DESTINATION_REFERENCES_2026-09-08.md). Finish the in-flight evidence-integrity batch, then align shared shell and view composition incrementally while preserving truthful evidence, version/access semantics and responsive Account access.
