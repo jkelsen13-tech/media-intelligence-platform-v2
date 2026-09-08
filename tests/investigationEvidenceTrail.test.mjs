@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import TestRenderer, { act } from 'react-test-renderer'
-import { savedAssessmentTrail, selectedContextUsers, retainedInputDates, retainedDateLabel, retainedDateDisplay } from '../src/lib/investigationEvidenceTrail.js'
+import { savedAssessmentTrail, selectedContextUsers, retainedInputDates, retainedDateLabel, retainedDateDisplay, exactInputPosition } from '../src/lib/investigationEvidenceTrail.js'
 import { FIXTURE_BUNDLES, FIXTURE_USER } from '../src/lib/investigationWorkspaceFixtures.js'
 import { investigationWorkspacePanels } from '../src/lib/investigationWorkspaceClient.js'
 import { WORKSPACE_STATUS } from '../src/lib/investigationWorkspaceSession.js'
@@ -194,4 +194,64 @@ test('empty retained dates remain absent and never borrow another recorded clock
   const html=markup(RetainedInputDates,{input:{capture:{payload:{},captured_at:'2024-04-08T03:04:05Z'}}})
   assert.match(html,/<dt>Source publication<\/dt><dd>Not recorded<\/dd>/)
   assert.match(html,/2024-04-08 03:04:05 UTC/)
+})
+
+test('duplicate selected assessment identities are unavailable regardless of order', () => {
+  const bundle=fixture(), snapshot=bundle.observation.snapshot, id=selectedId(bundle)
+  snapshot.assessments.push({...snapshot.assessments[0],rationale:'conflicting duplicate'})
+  for (let i=0;i<2;i++) {
+    assert.equal(savedAssessmentTrail(bundle,id),null)
+    assert.deepEqual(selectedContextUsers(bundle,position),[])
+    assert.match(markup(Trail,{bundle,assessmentId:id}),/Assessment trail unavailable/)
+    snapshot.assessments.reverse()
+  }
+})
+
+test('duplicate dependency and input identities never select arbitrary saved content', () => {
+  const bundle=fixture(), snapshot=bundle.observation.snapshot, id=selectedId(bundle)
+  snapshot.assessments.push({...snapshot.assessments.find(row=>row.id==='left'),rationale:'duplicate dependency'})
+  snapshot.inputs.push({...snapshot.inputs[0],capture:{payload:{title:'duplicate capture'}}})
+  for (let i=0;i<2;i++) {
+    const trail=savedAssessmentTrail(bundle,id)
+    assert.equal(trail.inputs[0].input,null)
+    assert.equal(trail.dependencies.find(row=>row.id==='left').assessment,null)
+    assert.equal(trail.dependencies.find(row=>row.id==='right').assessment.rationale,'right reasoning')
+    snapshot.assessments.reverse();snapshot.inputs.reverse()
+  }
+})
+
+test('context and extra-input membership require exact array positions, never substrings', () => {
+  const bundle=fixture(), assessment=bundle.observation.snapshot.assessments[0]
+  assessment.context_positions=position
+  assert.deepEqual(selectedContextUsers(bundle,position),[])
+  assert.equal(savedAssessmentTrail(bundle,assessment.id).contextRecorded,false)
+  assessment.context_positions=['1']
+  assessment.extra_positions='11'
+  assert.deepEqual(selectedContextUsers(bundle,'11'),[])
+  assert.equal(savedAssessmentTrail(bundle,assessment.id).inputs[0].explicitlyAdded,false)
+  assessment.extra_positions=['1']
+  assert.equal(savedAssessmentTrail(bundle,assessment.id).inputs[0].explicitlyAdded,true)
+  for (const value of ['1\n','01','1.0',1,' 1','1 ']) assert.equal(exactInputPosition(value),null)
+})
+
+test('malformed collections and null rows cannot crash saved-trail resolution', () => {
+  for (const assessments of [null,{},'invalid',[null,{}]]) {
+    const bundle={observation:{snapshot:{assessments,selected_assessment_ids:['missing']}}}
+    assert.equal(savedAssessmentTrail(bundle,'missing'),null)
+    assert.deepEqual(selectedContextUsers(bundle,'1'),[])
+  }
+  const bundle=fixture()
+  bundle.observation.snapshot.assessments.push(null,{})
+  bundle.observation.snapshot.inputs={}
+  const trail=savedAssessmentTrail(bundle,selectedId(bundle))
+  assert.equal(trail.inputs[0].input,null)
+  assert.equal(trail.dependencies.length,3)
+})
+
+test('identical duplicate rows remain ambiguous and the snapshot is not rewritten', () => {
+  const bundle=fixture(), snapshot=bundle.observation.snapshot, id=selectedId(bundle)
+  snapshot.inputs.push(structuredClone(snapshot.inputs[0]))
+  const before=structuredClone(bundle)
+  assert.equal(savedAssessmentTrail(bundle,id).inputs[0].input,null)
+  assert.deepEqual(bundle,before)
 })

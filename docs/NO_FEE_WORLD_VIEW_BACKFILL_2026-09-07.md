@@ -228,3 +228,13 @@ Campaign 1 can now compare complete baseline/candidate runs on the same held-out
 ## Batch 90 — retained evidence date precision
 
 Saved evidence trail dates now preserve recorded calendar/clock precision and explicit offsets, label date-only and unqualified values, and reject impossible calendars instead of normalizing them. See [invariant and supported display scope](RETAINED_EVIDENCE_DATE_PRECISION_2026-09-08.md). Raw snapshots and assessment/review semantics are unchanged; broader temporal adapters and real producer qualification remain open.
+
+
+## Batch 91 — unambiguous saved-trail identity
+
+Saved assessment/input lookups now reject duplicate identities instead of choosing first/last records; context membership requires exact array positions. See [invariant and limits](UNAMBIGUOUS_SAVED_TRAIL_2026-09-08.md). Ambiguity is unavailable, not asserted absence. This defensive reader change does not alter saved evidence or qualify a producer.
+
+
+## Owner frontend destination — 8 September 2026
+
+The five owner-supplied Graph, Timeline, Arcs, Source Comparison and World View screenshots now guide the frontend destination. See [visual direction and staged delivery](FRONTEND_DESTINATION_REFERENCES_2026-09-08.md). Finish the in-flight evidence-integrity batch, then align shared shell and view composition incrementally while preserving truthful evidence, version/access semantics and responsive Account access.

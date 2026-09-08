@@ -9,15 +9,16 @@ const {chromium} = createRequire(process.env.MIP_BROWSER_PACKAGE + '/package.jso
 const entry = `
 import React from 'react'
 import {createRoot} from 'react-dom/client'
-import {RetainedInputDates} from './src/components/InvestigationAssessmentTrail.jsx'
+import Trail, {RetainedInputDates} from './src/components/InvestigationAssessmentTrail.jsx'
 const scenarios = [
   ['day', 'Date-only publication', {capture:{payload:{published_at:'2024-04-08'}}}],
   ['microseconds', 'Recorded offset and precision', {capture:{payload:{published_at:'2024-04-08T00:15:00+05:30'},captured_at:'2024-04-08 17:59:00.123456+00'}}],
   ['unqualified', 'Time zone missing', {record_version:{recorded_at:'2024-04-08T03:04:05'}}],
   ['invalid', 'Invalid retained calendar', {record_version:{recorded_at:'2024-02-30T00:00:00Z'}}],
 ]
+const duplicateBundle={observation:{snapshot:{assessments:[{id:'duplicate'},{id:'duplicate'}]}}}
 createRoot(document.getElementById('root')).render(<div>{scenarios.map(([id,title,input]) =>
-  <section id={id} key={id}><h2>{title}</h2><RetainedInputDates input={input}/></section>)}</div>)
+  <section id={id} key={id}><h2>{title}</h2><RetainedInputDates input={input}/></section>)}<section id="ambiguous"><h2>Ambiguous saved assessment</h2><Trail bundle={duplicateBundle} assessmentId="duplicate"/></section></div>)
 `
 const compiled = await esbuild.build({stdin:{contents:entry,resolveDir:process.cwd(),loader:'jsx'},
   bundle:true,write:false,outdir:'preview-output',format:'iife',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"','import.meta.env':'{}'}})
@@ -44,6 +45,9 @@ try {
   await page.getByText('2024-04-08 00:15:00 UTC+05:30',{exact:true}).waitFor()
   await page.getByText('2024-04-08 03:04:05 (time zone not recorded)',{exact:true}).waitFor()
   await page.getByText('Unrecognized retained date',{exact:true}).waitFor()
+  await page.getByText('Assessment trail unavailable in this saved observation.',{exact:true}).waitFor()
+  assert.equal(await page.locator('#ambiguous details').count(),0)
+  console.log('MIP_AMBIGUOUS_TRAIL_PASS=' + JSON.stringify({duplicateUnavailable:true,noArbitraryRecord:true}))
   for (const width of [320,390,1280]) {
     await page.setViewportSize({width,height:1000})
     for (const section of await page.locator('section').all()) {

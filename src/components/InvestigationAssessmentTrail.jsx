@@ -57,7 +57,7 @@ export function RetainedInputRecord({ input, position, bundle }) {
         {users.length ? <PagedRecords rows={users} label="assessments">{(row, index) => <details className="piw-linked-record" key={row.id}>
           <summary>Selected assessment {index + 1} · View saved reasoning</summary>
           <AssessmentSavedReasoning assessment={row} />
-        </details>}</PagedRecords> : <p>No selected assessment records this input in its saved context.</p>}
+        </details>}</PagedRecords> : <p>No unambiguous selected assessment context link is available in this saved observation.</p>}
       </> : null}
     </> : <p>Input unavailable in this saved observation. No current record is substituted.</p>}
   </div>
