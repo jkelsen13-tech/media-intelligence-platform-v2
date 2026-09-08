@@ -105,7 +105,7 @@ grant update on evidence_pipeline.worker_evaluations to service_role;
 revoke all on function public.mip_evaluated_record_claim_v1(uuid,text,text),public.mip_revoke_worker_evaluation_v1(uuid,text) from public,anon,authenticated;
 grant execute on function public.mip_evaluated_record_claim_v1(uuid,text,text),public.mip_revoke_worker_evaluation_v1(uuid,text) to service_role;
 create or replace function public.mip_evidence_change_claim_v1(p_route text,p_producer text) returns jsonb
-language plpgsql security invoker set search_path='' as $
+language plpgsql security invoker set search_path='' as $$
 declare j evidence_pipeline.change_jobs; token uuid; old_token uuid;
 begin
   if p_route is null or p_route not in ('dependency_lookup','new_candidate_search') then raise exception 'invalid route'; end if;
@@ -143,7 +143,7 @@ begin
   values(j.id,j.attempt_count,'claimed',token);
   return to_jsonb(j)||jsonb_build_object('change',
     (select to_jsonb(c) from evidence_pipeline.evidence_changes c where c.position=j.change_position));
-end $;
+end $$;
 CREATE OR REPLACE FUNCTION evidence_pipeline.claim_change_job(p_route text)
  RETURNS jsonb
  LANGUAGE plpgsql
