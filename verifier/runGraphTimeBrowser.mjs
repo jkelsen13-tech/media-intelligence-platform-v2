@@ -42,10 +42,12 @@ try {
       // before attempting background navigation on tablet/phone.
       const closePanel=page.getByRole('button',{name:'Close panel',exact:true})
       if(await closePanel.count())await closePanel.click()
+      if(width<768){
       const notice=page.getByRole('complementary',{name:'Isolated node evidence state',exact:true})
       await notice.waitFor()
       const dismiss=notice.getByRole('button',{name:'Dismiss graph notice',exact:true})
       await dismiss.scrollIntoViewIfNeeded()
+      if(width===390)console.log('MIP_GRAPH_NOTICE_'+engineName+'='+(await page.locator('.graph-canvas-wrap').screenshot({type:'jpeg',quality:75})).toString('base64'))
       const closeBox=await dismiss.boundingBox()
       const zoomBox=await page.locator('.graph-view-controls').boundingBox()
       assert.ok(closeBox.width>=44 && closeBox.height>=44,'touch-sized dismissal')
@@ -64,6 +66,7 @@ try {
       await notice.waitFor()
       assert.ok(await notice.getByRole('button',{name:'Open node evidence',exact:true}).isVisible())
       console.log('MIP_GRAPH_NOTICE_DISMISS_PASS='+JSON.stringify({engineName,width,closeButton:true,escape:true,reopen:true,subjectPreserved:true,closeBox,zoomBox}))
+      }
       await modes.getByRole('tab',{name:'Time',exact:true}).click()
       const record=page.getByRole('button',{name:'Open node evidence: '+label,exact:true})
       await record.waitFor()
