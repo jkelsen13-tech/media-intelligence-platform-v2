@@ -3,6 +3,7 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'src/graph/GraphView.jsx'
       - 'src/graph/GraphModePanel.jsx'
       - 'src/graph/time-records.css'
       - 'verifier/runGraphTimeBrowser.mjs'

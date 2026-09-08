@@ -17,7 +17,7 @@ try {
     browser=await engine.launch({headless:true})
     const page=await browser.newPage()
     const errors=[]
-    page.on('pageerror',e=>errors.push(e.message))
+    page.on('pageerror',e=>{errors.push(e.message);console.log('MIP_GRAPH_PAGE_ERROR='+e.stack)})
     for(const width of [1280,768,390,320]){
       await page.setViewportSize({width,height:width>=768?900:844})
       await page.goto(origin+'#/event/'+subject+'/graph')
