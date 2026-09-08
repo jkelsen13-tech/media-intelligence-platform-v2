@@ -789,6 +789,12 @@
   border-radius: 8px;
 }
 
+/* List cards occupy the reading column after the date/spine are hidden.
+   Otherwise grid auto-placement puts the card in the narrow date track. */
+.timeline-view .ep-tl-list.ep-tl-list-alt .ep-tl-entry {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .timeline-view .ep-tl-list.ep-tl-list-alt .ep-tl-spine,
 .timeline-view .ep-tl-list.ep-tl-list-alt .ep-tl-date {
   display: none;

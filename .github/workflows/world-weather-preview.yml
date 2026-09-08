@@ -52,7 +52,7 @@ jobs:
       - name: Install isolated browser verifier
         run: |
           npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
-          node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium
+          node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
       - name: Verify built weather panel on phone and desktop
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
@@ -72,4 +72,10 @@ jobs:
       - name: Verify Timeline composition and controls
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runTimelineCompositionBrowser.mjs
+
+      - name: Verify Timeline List in WebKit
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+          MIP_TIMELINE_BROWSER: webkit
         run: node verifier/runTimelineCompositionBrowser.mjs
