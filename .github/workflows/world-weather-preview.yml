@@ -5,6 +5,10 @@ on:
     paths:
       - 'package.json'
       - 'package-lock.json'
+      - 'src/lib/worldViewCameraFraming.js'
+      - 'src/lib/worldViewRendererAdapter.js'
+      - 'src/lib/worldViewCesiumEllipsoidRendererAdapter.js'
+      - 'src/views/WorldMapCanvas.jsx'
       - 'src/lib/eventTimeWeather.js'
       - 'src/lib/weatherSourceRights.js'
       - 'src/views/WorldView.jsx'

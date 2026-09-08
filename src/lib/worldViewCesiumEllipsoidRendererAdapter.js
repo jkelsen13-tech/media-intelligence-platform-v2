@@ -99,9 +99,16 @@ export function cameraStateFromGlobeCamera(math, camera, precisionClass) {
   )
 }
 
+export function cancelGlobeCameraFlight(viewer) {
+  if (!viewer || viewer.isDestroyed?.() || typeof viewer.camera?.cancelFlight !== 'function') return false
+  viewer.camera.cancelFlight()
+  return true
+}
+
 /** Apply an already-normalized camera state to a live globe viewer. */
 export function applyCameraStateToGlobeViewer(Cesium, viewer, cameraState) {
   if (!Cesium || !viewer || !cameraState) return false
+  cancelGlobeCameraFlight(viewer)
   viewer.camera.setView({
     destination: Cesium.Cartesian3.fromDegrees(
       cameraState.lon,
@@ -644,6 +651,7 @@ export function createCesiumEllipsoidRendererAdapter({
     setFeatures,
     setOnSelectRow,
     flyToSubjectCamera,
+    cancelCameraFlight: () => cancelGlobeCameraFlight(viewer),
     getCameraState,
     setCameraState,
     getTerrainStatus,

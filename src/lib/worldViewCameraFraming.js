@@ -20,11 +20,16 @@ export function createCameraFraming() {
   return {
     select(features) {
       target = selectedCameraTarget(features)
-      if (!target) framedKey = null
     },
     resetRenderer() { framedKey = null },
     apply(adapter, { force = false } = {}) {
-      if (!target || (!force && target.key === framedKey)) return false
+      if (!target) {
+        // Clear only after the renderer accepts cancellation. A temporarily
+        // unavailable renderer must not lose the pending stop.
+        if (framedKey !== null && adapter?.cancelCameraFlight?.()) framedKey = null
+        return false
+      }
+      if (!force && target.key === framedKey) return false
       const accepted = adapter?.flyToSubjectCamera?.({
         nextCoordinate: target.coordinate,
         nextPrecisionClass: target.precisionClass,
