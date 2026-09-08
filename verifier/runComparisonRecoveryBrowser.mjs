@@ -133,7 +133,8 @@ try {
       assert.equal(await expanded.locator('h3').innerText(),articleTitle)
       console.log('MIP_ARTICLE_IDENTITY_RELOAD_PASS='+JSON.stringify({engine,live,articleId,articleTitle,typePreserved:true,articleReopened:true,viewRoundTrip:true}))
       console.log('MIP_ARTICLE_IDENTITY_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
-      await page.unrouteAll({behavior:'wait'})        assert.deepEqual(errors,[])
+      await page.unrouteAll({behavior:'wait'})
+      assert.deepEqual(errors,[])
       console.log('MIP_COMPARISON_RECOVERY_PASS='+JSON.stringify({engine,live,widths:[1280,768,390,320],keyboardRetry:true,subjectPreserved:true,realProjectionRecovery:true,backend:verifyBackend()}))
     } finally {await browser.close()}
   }
