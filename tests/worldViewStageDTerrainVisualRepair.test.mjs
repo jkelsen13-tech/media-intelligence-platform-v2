@@ -231,7 +231,8 @@ test('setGlobeReliefShading swaps only the globe material and requests a render'
 test('adapter wires relief shading on by default and exposes the toggle', () => {
   // default ON — the repair exists because unshaded terrain is illegible
   assert.match(ADAPTER_SRC, /let reliefShadingEnabled = true/)
-  assert.match(ADAPTER_SRC, /setGlobeReliefShading\(Cesium, viewer, true\)/)
+  assert.match(ADAPTER_SRC, /setGlobeReliefShading\(Cesium, viewer, enabled\)/)
+  assert.match(ADAPTER_SRC, /reliefApplication\.set\(true\)/)
   assert.match(ADAPTER_SRC, /function setReliefShadingEnabled\(enabled\)/)
   assert.match(ADAPTER_SRC, /function getReliefShadingEnabled\(\)/)
   // Setter forwarding (including changes during startup) is exercised through

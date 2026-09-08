@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  createVisualFidelityEffect,
   defaultVisualFidelityProfile as defaults, normalizeVisualFidelityProfile as normalize,
   reduceVisualFidelityProfile as reduce, resolveVisualFidelityProfile as resolve,
   visualFidelityCapabilities as caps, visualFidelityCategoryState as categoryState,
@@ -105,4 +106,24 @@ test('fallback adapter refuses unsupported effects even after mount',async()=>{
   assert.equal(adapter.setVisualFidelityProfile(defaults()),false)
   assert.equal(adapter.getVisualFidelityCapabilities().reliefShading.status,'unavailable')
   adapter.destroy()
+})
+
+test('effect application is idempotent and failures remain unavailable after neutral cleanup',()=>{
+  const calls=[]
+  const effect=createVisualFidelityEffect(enabled=>{calls.push(enabled);return true})
+  for(const value of [true,true,false,false,true]) assert.equal(effect.set(value),true)
+  assert.deepEqual(calls,[true,false,true])
+  assert.equal(effect.isEnabled(),true)
+  for(const mode of ['false','throw']){
+    const failure=createVisualFidelityEffect(enabled=>{
+      if(enabled){if(mode==='throw')throw new Error('render failure');return false}
+      return true
+    })
+    assert.equal(failure.set(true),false)
+    assert.equal(failure.hasFailed(),true)
+    assert.equal(failure.set(false),true,'neutral cleanup is still attempted')
+    assert.equal(failure.hasFailed(),true,'cleanup does not claim the failed effect is supported')
+    assert.equal(failure.isEnabled(),false)
+    assert.equal(failure.set(true),false,'no automatic repeated failing application')
+  }
 })

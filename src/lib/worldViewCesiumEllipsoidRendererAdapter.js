@@ -1,4 +1,4 @@
-import { resolveVisualFidelityProfile, visualFidelityCapabilities } from './worldViewVisualFidelity.js'
+import { resolveVisualFidelityProfile, visualFidelityCapabilities, createVisualFidelityEffect } from './worldViewVisualFidelity.js'
 // R4 World View — ellipsoid globe renderer adapter (CesiumJS).
 //
 // DISPLAY-only: this module never rewrites Investigation Context,
@@ -236,8 +236,7 @@ export function createCesiumEllipsoidRendererAdapter({
   // because unshaded terrain is not visually legible at the enforced city
   // camera floor. User-toggleable; never touches geometry or camera.
   let reliefShadingEnabled = true
-  let appliedReliefShading
-  let reliefApplicationFailed = false
+  const reliefApplication = createVisualFidelityEffect(enabled => setGlobeReliefShading(Cesium, viewer, enabled))
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
 
@@ -388,9 +387,7 @@ export function createCesiumEllipsoidRendererAdapter({
     // reference ellipsoid (height 0) stays untinted, so degraded or
     // out-of-coverage areas honestly show plain imagery.
     if (reliefShadingEnabled) {
-      const applied = setGlobeReliefShading(Cesium, viewer, true)
-      appliedReliefShading = applied ? true : undefined
-      reliefApplicationFailed = !applied
+      reliefApplication.set(true)
     }
 
     // Enable orbit / free rotation / tilt / continuous zoom.
@@ -559,22 +556,18 @@ export function createCesiumEllipsoidRendererAdapter({
   function setReliefShadingEnabled(enabled) {
     reliefShadingEnabled = Boolean(enabled)
     if (!viewer || !Cesium) return true
-    if (appliedReliefShading === reliefShadingEnabled) return true
-    const applied = setGlobeReliefShading(Cesium, viewer, reliefShadingEnabled)
-    if (applied) appliedReliefShading = reliefShadingEnabled
-    reliefApplicationFailed = !applied
-    return applied
+    return reliefApplication.set(reliefShadingEnabled)
   }
 
   function getReliefShadingEnabled() {
-    return Boolean(viewer && !viewer.isDestroyed?.() && appliedReliefShading === true)
+    return Boolean(viewer && !viewer.isDestroyed?.() && reliefApplication.isEnabled())
   }
 
   function getVisualFidelityCapabilities() {
     const relief = Boolean(viewer?.scene?.globe && !viewer.isDestroyed?.()
-      && Cesium?.Material && !terrainDegraded && terrainPlan && !reliefApplicationFailed)
+      && Cesium?.Material && !terrainDegraded && terrainPlan && !reliefApplication.hasFailed())
     return visualFidelityCapabilities({ relief,
-      reason: reliefApplicationFailed ? 'Relief could not be applied.'
+      reason: reliefApplication.hasFailed() ? 'Relief could not be applied.'
         : terrainDegraded || !terrainPlan ? 'Approved terrain is unavailable.'
         : 'Globe renderer is not ready.' })
   }
@@ -664,8 +657,6 @@ export function createCesiumEllipsoidRendererAdapter({
     entities = []
     terrainPlan = null
     terrainDegraded = false
-    appliedReliefShading = undefined
-    reliefApplicationFailed = false
     mounted = false
   }
 

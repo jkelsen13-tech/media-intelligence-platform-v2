@@ -109,3 +109,23 @@ export function visualFidelityCategoryState(profile, categoryId, capabilities) {
   return { checked: supported.length > 0 && active === supported.length,
     mixed: active > 0 && active < supported.length, unavailable: supported.length === 0 }
 }
+
+// One effect application boundary. Failure stays unavailable for this renderer;
+// successfully clearing a failed effect must not advertise it as available again.
+export function createVisualFidelityEffect(apply) {
+  let applied
+  let failed = false
+  return {
+    set(enabled) {
+      if (failed && enabled) return false
+      if (applied === enabled) return true
+      let accepted = false
+      try { accepted = apply(enabled) === true } catch {}
+      if (accepted) applied = enabled
+      else failed = true
+      return accepted
+    },
+    isEnabled: () => applied === true && !failed,
+    hasFailed: () => failed,
+  }
+}
