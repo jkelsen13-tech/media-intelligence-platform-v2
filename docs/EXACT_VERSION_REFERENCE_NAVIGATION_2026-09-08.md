@@ -22,6 +22,8 @@ camera/time/layer restoration and private link handling are not implemented here
 - src/styles/investigation-workspace-panels.css: bounded responsive form.
 - tests/investigationVersionNavigationFrontend.test.mjs: validation/pending gates,
   client-handler-hook exact historical read, unchanged review and mismatch retry.
+- tests/investigationRetainedInputsFrontend.test.mjs: scope the existing search
+  submit selector now that the workspace has a second form.
 - verifier/runVersionReferenceBrowser.mjs and existing preview workflow: ephemeral
   synthetic UI harness built from the production component at 320/390/1280px.
 - This document and the no-fee plan tracker.
