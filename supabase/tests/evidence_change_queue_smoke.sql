@@ -5,7 +5,7 @@ set local statement_timeout='15s';
 set local lock_timeout='3s';
 set local role service_role;
 do $$
-declare v uuid; j jsonb; receipt jsonb := '{"work_ref":"rollback-only-canary","coverage":"complete"}'; result text; intake_id jsonb; intake_job jsonb; cap jsonb;
+declare v uuid; evaluation uuid; j jsonb; receipt jsonb := '{"work_ref":"rollback-only-canary","coverage":"complete"}'; result text; intake_id jsonb; intake_job jsonb; cap jsonb;
 begin
   if exists(select 1 from evidence_pipeline.import_jobs where state in ('pending','processing','retry_wait')) then
     raise exception 'intake active; run canary during an idle intake window'; end if;
@@ -35,7 +35,12 @@ begin
   result:=public.mip_evidence_changes_v1('finish',jsonb_build_object('job_id',j->>'id','lease_token',j->>'lease_token','receipt',receipt));
   perform public.mip_evidence_changes_v1('finish',jsonb_build_object('job_id',j->>'id','lease_token',j->>'lease_token','receipt',receipt));
   if (select count(*) from evidence_pipeline.change_job_events where job_id=(j->>'id')::uuid and event='completed')<>1 then raise exception 'receipt duplicated'; end if;
-  j:=public.mip_evidence_changes_v1('claim','{"route":"new_candidate_search"}');
+  -- Synthetic qualification applies only inside this rollback fixture.
+  insert into evidence_pipeline.worker_evaluations(algorithm_key,algorithm_version,record_kind,implementation_sha256,dataset_sha256,report_sha256,report_ref,reviewer_ref,case_count,passed,acceptance_checks,limitations)
+  values('queue-rollback-fixture','test','graph_node',repeat('a',64),repeat('b',64),repeat('c',64),'rollback-only fixture','rollback canary',1,true,
+    '{"producer_isolation":true,"bounded_work":true,"durable_recovery":true,"evidence_fidelity":true,"held_out_evaluation":true}',
+    'Synthetic contract fixture; never a production worker qualification') returning id into evaluation;
+  j:=public.mip_evaluated_record_claim_v1(evaluation,repeat('a',64),'graph_node');
   if j->'change'->>'record_version_id' is distinct from v::text then raise exception 'claimed unrelated job'; end if;
   perform public.mip_evidence_changes_v1('fail',jsonb_build_object('job_id',j->>'id','lease_token',j->>'lease_token','code','smoke-stop','retryable',false));
 end $$;

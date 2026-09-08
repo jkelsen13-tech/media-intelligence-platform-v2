@@ -10,7 +10,7 @@ test('bounded private capture retrieval',async t=>{
  const db=await PGlite.create();t.after(()=>db.close())
  const read=p=>readFile(new URL(p,import.meta.url),'utf8')
  await db.exec(await read('./changeQueueFixture.sql'))
- for(const suffix of ['evidence_pipeline_reliability','evidence_change_queue_v1','evidence_assessment_dependencies_v1','evidence_capture_retrieval_v1']){
+ for(const suffix of ['evidence_pipeline_reliability','evidence_change_queue_v1','evidence_assessment_dependencies_v1','evidence_capture_retrieval_v1','evidence_change_producer_claim_v1','evaluated_record_claim_v1']){
   const files=await readdir(new URL('../supabase/migrations/',import.meta.url));const file=files.filter(x=>x.endsWith('_'+suffix+'.sql'));assert.equal(file.length,1)
   await db.exec(await read('../supabase/migrations/'+file[0]))
  }
@@ -23,7 +23,7 @@ test('bounded private capture retrieval',async t=>{
  }
  const claim=async cap=>{
   await db.query("update evidence_pipeline.change_jobs set available_at=clock_timestamp()-interval '100 years' where change_position=(select position from evidence_pipeline.evidence_changes where capture_id=$1)",[cap.capture_id])
-  const j=await queue('claim',{route:'new_candidate_search'});assert.equal(j.change.capture_id,cap.capture_id);return j
+  const j=await scalar("select public.mip_evidence_change_claim_v1('new_candidate_search','capture')");assert.equal(j.change.capture_id,cap.capture_id);return j
  }
  await t.test('composed operator transport connects intake, bounded retrieval and durable recovery',async()=>{
   await db.exec('begin')

@@ -115,4 +115,15 @@ test('durable evidence changes integrate with existing intake and history', asyn
     await assert.rejects(db.exec("update public.articles set reader_state='eligible'"),/permission denied/)
     await db.exec('reset role')
   })
+  await t.test('latest producer and evaluation gates preserve the deployment canary',async()=>{
+    for(const suffix of ['evidence_change_producer_claim_v1','evaluated_record_claim_v1']){
+      const matches=files.filter(p=>p.endsWith('_'+suffix+'.sql'));assert.equal(matches.length,1)
+      await db.exec(await read('../supabase/migrations/'+matches[0]))
+    }
+    await assert.rejects(rpc('claim',{route:'new_candidate_search'}),/producer-scoped/)
+    await assert.rejects(db.exec("select public.mip_evidence_change_claim_v1('new_candidate_search','record_version')"),/qualified evaluation required/)
+    await db.exec(await read('../supabase/tests/evidence_change_queue_smoke.sql'))
+    assert.equal(await scalar('select count(*)::int from evidence_pipeline.worker_evaluations'),0)
+  })
+
 })
