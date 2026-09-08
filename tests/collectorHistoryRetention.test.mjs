@@ -31,6 +31,7 @@ test('duplicate identities, invalid batches and partial failures cannot silently
   for(const rows of [[],{},null,[null],[{}],[{run_id:null}],[{run_id:'a'},{run_id:'a',state:'changed'}],Array.from({length:251},(_,i)=>({run_id:String(i)})),[{run_id:'large',notes:'x'.repeat(2097152)}]]) {
     await assert.rejects(retain(db,rows)); assert.equal(await count(db),0)
   }
+  for (const time of [null, '2999-01-01T00:00:00Z']) await assert.rejects(db.query('select mip_private.retain_collector_rows($1,$2,$3,$4::jsonb)',[source,'ingestion_runs',time,'[{"run_id":"a"}]']))
   await assert.rejects(retain(db,[{run_id:'a'}],'credentials'))
   await assert.rejects(retain(db,[{run_id:'a'}],'ingestion_runs','unknown-project'))
   await assert.rejects(retain(db,[{run_id:'valid'},{run_id:'x'.repeat(513)}]))
@@ -51,7 +52,9 @@ test('browser principals cannot read or import and worker/owner mutation paths c
   await db.exec('reset role')
   for(const sql of ["update mip_private.collector_row_versions set source_key=source_key",'delete from mip_private.collector_row_versions','truncate mip_private.collector_row_versions']) await assert.rejects(db.exec(sql),/collector_history_is_immutable/)
   const before=await count(db)
-  await assert.rejects(db.query("insert into mip_private.collector_row_versions(source_project,source_relation,source_key,payload_hash,payload,source_observed_at) values($1,'ingestion_runs','forged',repeat('0',64),'{\"run_id\":\"other\"}',$2)",[source,observed]),/check constraint/)
+  for (const [key,hash] of [['history',"repeat('0',64)"],['wrong-key','payload_hash']]) {
+    await assert.rejects(db.query("insert into mip_private.collector_row_versions(source_project,source_relation,source_key,payload_hash,payload,source_observed_at) select source_project,source_relation,$1,"+hash+",payload,source_observed_at from mip_private.collector_row_versions where source_key='history'",[key]),/check constraint/)
+  }
   assert.equal(await count(db),before)
   const fn=(await db.query("select prosecdef,proconfig from pg_proc where pronamespace='mip_private'::regnamespace and proname='retain_collector_rows'")).rows[0]
   assert.equal(fn.prosecdef,false); assert.ok(fn.proconfig.includes('search_path=""'))
