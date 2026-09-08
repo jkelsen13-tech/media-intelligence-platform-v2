@@ -179,6 +179,6 @@ begin
   values(j.id,j.attempt_count,'claimed',token);
   return to_jsonb(j)||jsonb_build_object('change',
     (select to_jsonb(c) from evidence_pipeline.evidence_changes c where c.position=j.change_position));
-end $function$
+end $function$;
 
 commit;
