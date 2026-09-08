@@ -242,6 +242,7 @@ export default function App({
   // a sheet containing NewsView in drawer variant. Opening is NOT a view
   // change — do not changeView('news'), do not applySubject.
   const [exploreOpen, setExploreOpen] = useState(false)
+  const [exploreQuery, setExploreQuery] = useState('')
   const exploreBtnRef = useRef(null)
   const exploreDialogRef = useRef(null)
   const exploreFocusPrimed = useRef(false)
@@ -1254,6 +1255,8 @@ export default function App({
             exploreOpen={exploreOpen}
             onOpenExplore={openExplore}
             dialogId={EXPLORE_A11Y.dialogId}
+            query={exploreQuery}
+            onQueryChange={setExploreQuery}
           />
         }
         accountSlot={
@@ -1421,6 +1424,7 @@ export default function App({
             </p>
             <NewsView
               variant="drawer"
+              initialSearch={exploreQuery}
               onOpenArc={closeExploreThen(openArcInView)}
               onOpenNode={closeExploreThen(openNodeInGraph)}
               onOpenTimeline={closeExploreThen(openEventInTimeline)}
