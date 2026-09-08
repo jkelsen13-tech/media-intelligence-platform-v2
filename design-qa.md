@@ -1,80 +1,57 @@
-# Shared workspace frame — design QA
+# Timeline composition — design QA
 
 final result: passed
 
-This result applies to the bounded shared-frame increment in PR #92. It does
-not certify completion or pixel fidelity of the five-view destination.
+Scoped result for PR #93's Timeline hierarchy increment. This is not completion
+or pixel-perfect certification of the owner's five-view destination.
+Previous shared-frame review remains available at
+415a9db3cea5a70f149ab1028db1880140d84d12:design-qa.md.
 
-## Source and implementation evidence
+## Visual evidence and comparison
 - Source visual truth: owner's Photo 2.jpg, attachment set
-  67BF1D8E-03DB-4BA4-AECC-7B91001AB59F, supplied in this conversation.
-  Reference inventory: docs/FRONTEND_DESTINATION_REFERENCES_2026-09-08.md.
-- Source dimensions: 590 × 1280 pixels, containing a letterboxed desktop
-  Timeline dashboard approximately 590 × 442. Original CSS size/density is
-  not recorded; compare app-region proportions, not phone chrome or exact pixels.
-- Implementation screenshots: GitHub Actions run 34187637353, job
-  101939075195, log markers MIP_SHELL_OPEN_1280/1024/768/390/320 and
-  MIP_SHELL_COLLAPSED_1280/1024. JPEG screenshots remain in ephemeral CI logs,
-  not the owner's filesystem. Final-revision checks are linked from PR #92.
-- Browser CSS sizes/pixels: 1280 × 900, 1024 × 900, 768 × 900,
-  390 × 844 and 320 × 844; deviceScaleFactor 1.
-- State: light Timeline, public NASA Cleveland event, shared inspector open
-  and collapsed. The reference depicts an illustrative Gulf Coast event.
-  Content/state differs deliberately: no illustrative percentages, source
-  counts, weather, images or timeline lanes are asserted as NASA evidence.
-- Full-view comparison: source and rendered desktop capture were opened
-  together. Compare the desktop app region only: the narrow left rail, shared
-  header, central canvas and right inspector have similar relative proportions.
-- Focused comparison: header/inspector labels and collapsed reopen control
-  inspected at native implementation resolution, alongside phone/tablet
-  captures. The low-resolution reference cannot establish exact font metrics.
+  67BF1D8E-03DB-4BA4-AECC-7B91001AB59F. The 590 × 1280 photo contains a
+  letterboxed desktop Timeline dashboard approximately 590 × 442. Exact
+  original CSS dimensions/density are unknown. Compare app proportions,
+  not the black letterbox or exact low-resolution font pixels.
+- Rendered implementation: Actions run 34188915393, job 101942762637,
+  markers MIP_TIMELINE_COMPACT_1280/768/390/320 and
+  MIP_TIMELINE_METHODS_1280/768/390/320.
+- CSS/pixel viewports: 1280 × 900, 768 × 900, 390 × 844, 320 × 844,
+  deviceScaleFactor 1. Screenshots retained in ephemeral CI logs.
+- State: light public NASA Cleveland Timeline, real loaded record, methods
+  closed/open. Source depicts an illustrative Gulf Coast event, with richer
+  metrics and lanes. This intentional content difference precludes exact
+  screenshot matching; the comparison concerns shared hierarchy/density.
+- Source and desktop capture opened together. Focused scope/disclosure
+  captures and phone/tablet renders inspected at native implementation size.
 
-## Comparison history and fixes
-1. First rendered pass (run 34187434117) was blocked:
-   - P1 phone: header plus open sticky inspector compressed evidence into a
-     thin independent scrolling strip. Fixed reading views to use one page
-     scroll, with the inspector following the evidence.
-   - P2 tablet: optional corpus metadata reduced search to a tiny input.
-     Hide that optional topbar line at widths up to 1100px.
-2. Post-fix captures (run 34187637353): phone content now occupies its natural
-   reading height, the inspector follows it, and Account/menu remain usable.
-   Tablet search has room for its descriptive placeholder. Browser geometry
-   assertions independently verify the phone flow and desktop/tablet space.
-   A closer phone record capture subsequently exposed a 220px search field.
-3. P2 phone search: the horizontal flex basis became vertical when controls
-   stacked. Reset its flex basis and require a 44–60px field in browser checks.
-   Post-fix run 34188040365 (job 101940232513) passed the 44–60px assertion
-   and all existing browser checks. Phone captures show a normal search field.
-   No unresolved P0/P1/P2 findings remain in this scoped increment.
+## Findings and fidelity surfaces
+No actionable P0/P1/P2 findings in this bounded increment.
+- Typography: existing fonts retained; 15px scope heading is subordinate to
+  the persistent investigation title; 11–12px context text remains readable.
+- Spacing/layout: compact scope/context row replaces the large duplicate
+  introduction. Four widths wrap without hiding scope or disclosure. Phone
+  document flow and tablet inspector stacking from batch 92 remain intact.
+- Color/tokens: existing cool surfaces, blue interaction color, borders and
+  keyboard focus treatment retained; no new colors or visual assets.
+- Asset quality: existing logo and icon family unchanged. No illustrative
+  event imagery or fabricated charts are introduced.
+- Copy/content: actual global/arc scope stays visible. Locked explanatory
+  copy remains verbatim in About this timeline. Missing-evidence guidance
+  and sequence-versus-causation wording remain available.
 
-## Required fidelity surfaces
-- Typography: existing Inter/system sans and readable 12–13px control text,
-  18–20px subject titles; wrapping retained for long subjects. No new font.
-- Spacing/layout: existing 190px desktop rail and 286px inspector; collapsed
-  inspector is 48px, returning 238px to evidence. At 768px the rail is 160px
-  and the shared inspector stacks below evidence. Compact shared header/tabs.
-- Colors/tokens: existing cool white surfaces, pale borders and blue selected
-  controls remain consistent with the reference direction. Visible focus
-  outlines added to shared navigation and inspector controls.
-- Assets: existing MIP logo and Phosphor icon family retained. The illustrative
-  event photograph and other mockup assets are intentionally not reproduced
-  for this different real event. No new dataset, model, API or dependency.
-- Copy/content: existing explicit missing evidence, location/time and
-  uncertainty wording preserved; no fabricated metrics or confidence status.
+## Verification and iteration record
+First implementation browser run passed without visual fixes:
+keyboard disclosure at four widths; real loaded records; search→empty→restore;
+Chronology/List; Connections/Evidence/Timeline tabs; unchanged canonical subject;
+zero page errors. Existing shell, recent navigation, saved-version, retained-date,
+weather and camera verifiers also passed, with zero restricted weather requests.
+Final head adds an explicit no-dead-arc-control assertion and this QA record;
+its checks and merge/deployment evidence are recorded on PR #93.
 
-## Interaction and error checks
-Production-build browser passed five widths, dock width reclamation, tablet
-stacking, phone document flow, keyboard reopening, Account opening, drawer
-Escape and focus return, and unchanged canonical subject. Zero page errors.
-Existing weather/camera, recent restoration, exact saved-version reference and
-retained-date verifiers passed, with zero restricted hosted-weather requests.
-
-## Implementation checklist
-- Shared-frame and responsive fixes complete for this increment.
-- Final-head CI, merge guard and post-deployment verification recorded in PR.
-- Continue the planned Graph/Timeline composition and other view batches.
-
-## Follow-up scope
-The mockup's denser evidence visualizations, supported imagery, source metrics
-and full shared inspector content remain planned work with their data/rights
-prerequisites. These are explicit destination gaps, not features shipped here.
+## Implementation checklist and follow-up
+- Complete this scoped hierarchy increment; final-head checks gate merge.
+- Verify live Timeline controls and earlier saved-investigation paths after deploy.
+- Continue Graph composition and richer Timeline visualization using supported
+  records. The reference's metrics, event imagery and lane design remain
+  destination work; no provider/data rights holds are waived.

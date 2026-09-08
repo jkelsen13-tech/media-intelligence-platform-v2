@@ -17,6 +17,9 @@ try {
   page.on('pageerror',e=>errors.push(e.message))
   await page.goto(origin+'#/event/acc55cb2-5ac2-4aed-be36-3f576d2bc443/timeline')
   await page.locator('.timeline-view .ep-tl-card').first().waitFor({timeout:60000})
+  if(await page.getByRole('combobox',{name:'Choose story arc',exact:true}).count()===0){
+    assert.equal(await page.getByRole('button',{name:'← Back to the arc timeline',exact:true}).count(),0,'no dead arc-return control without arc selection')
+  }
   const initialCount=await page.locator('.timeline-view .ep-tl-card').count()
   assert.ok(initialCount>0,'real public timeline records loaded')
   const context=()=>page.locator('.ws-canonical').getAttribute('data-canonical-subject-id')
