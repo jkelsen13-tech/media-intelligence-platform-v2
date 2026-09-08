@@ -164,7 +164,7 @@ test('D: inspector has date/time, city precision, provenance, G2 separate, no co
   assert.match(WORLD, /Event inspector/)
 })
 
-test('E: weather is ERA5 reanalysis at event time with provenance, or unavailable — never present-day', async () => {
+test('E: legacy ERA5 parsing preserves provenance; hosted fetching is disabled by the no-fee plan', async () => {
   assert.deepEqual([...WEATHER_HOURLY_VARIABLES], [
     'temperature_2m',
     'precipitation',
@@ -228,6 +228,7 @@ test('E: weather is ERA5 reanalysis at event time with provenance, or unavailabl
     },
   })
   assert.equal(failed.status, 'unavailable')
+  assert.equal(failed.reason, 'source_terms_incompatible')
   assert.equal(failed.fields.temperature, null)
   assert.match(failed.copy, /not sourced|unavailable/i)
 

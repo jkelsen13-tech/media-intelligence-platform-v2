@@ -111,6 +111,9 @@ test('no rival definition: level tokens appear only in G2 docs and golden suite 
   const allow = new Set([
     'UNCERTAINTY_VOCABULARY.md', 'UNCERTAINTY_LEGACY_MAPPING.md',
     'G2_DECISION_LOG.md', 'G2_FIXTURE_EXTENSION_PROPOSAL.md',
+    // Verbatim owner attachment uses product/release labels, not rival uncertainty definitions.
+    // Its header explicitly defers vocabulary definitions to the single-source document.
+    'MIP_GOVERNING_WORK_PLAN_2026-09-07.md',
   ])
   const docsDir = join(V.repoRoot, 'docs')
   const tokenRe = /\b(R1|R2|R3|R4|E1|E2|E3|E4|A1|A2|A3|A4|V0|V1|V2|V3|U0|U1|U2|U3|RT-causal|RT-sequence|RT-actor|RT-constrained_by)\b/
@@ -143,4 +146,10 @@ test('mutation proof: tampered fixture level order FAILS the sync test', () => {
     last = i
   }
   assert.equal(inOrder, false, 'tampered order was not detected — guard is toothless')
+})
+
+test('archived owner work plan preserves the shared vocabulary authority', () => {
+  const plan = readFileSync(join(V.repoRoot, 'docs/MIP_GOVERNING_WORK_PLAN_2026-09-07.md'), 'utf8')
+  assert.ok(plan.includes('Uncertainty definitions remain in [the single-source vocabulary](UNCERTAINTY_VOCABULARY.md).'))
+  assert.ok(plan.includes('Text below preserves the document'))
 })

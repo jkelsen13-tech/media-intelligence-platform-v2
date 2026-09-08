@@ -119,7 +119,8 @@ const WORLDVIEW_AK_TESTS = Object.freeze([
   'B: empty projection does not invent a city',
   'C: Graph / Map / Split keep one canonical id',
   'D: inspector has date/time, city precision, provenance, G2 separate, no composite score',
-  'E: weather is ERA5 reanalysis at event time',
+  // The 2026-09-07 owner plan supersedes the hosted route; historical closeout below stays verbatim.
+  'E: legacy ERA5 parsing preserves provenance; hosted fetching is disabled by the no-fee plan',
   'F: temporal DISPLAY is the shared assessment',
   'G: pan/zoom/scale-adaptive camera does not change precision class',
   'H: no private-person point/track/face',
