@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useArcArticleInventory } from '../lib/useArcArticleInventory.js'
 import { mipBackend } from '../lib/mipBackend.js'
 import { filterArcs } from '../lib/listFilters'
 import { normalizeArcEvent, TIMELINE_CLOSING_FOOTNOTE } from '../lib/timelineScreenModel'
@@ -98,7 +99,6 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
   const [selectedSlug, setSelectedSlug] = useState(null)
   const [detail, setDetail] = useState(null)
   const [detailError, setDetailError] = useState(null)
-  const [arcArticles, setArcArticles] = useState([])
   // Screen 4 tabs in the addendum's order: Overview / Timeline / Evidence.
   const [activeTab, setActiveTab] = useState('overview')
   // Mobile (<1024px): the list is full-width and selecting an arc pushes a
@@ -163,6 +163,9 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
     [arcs, selectedSlug],
   )
 
+  const articleInventory = useArcArticleInventory(backend, selected?.id)
+  const arcArticles = articleInventory.articles
+
   // Selecting a different arc returns to the Overview tab.
   useEffect(() => {
     setActiveTab('overview')
@@ -189,11 +192,6 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
       .catch((err) => {
         if (!cancelled) setDetailError(err.message)
       })
-    backend.loadArcArticles(selected.id)
-      .then((rows) => {
-        if (!cancelled) setArcArticles(rows)
-      })
-      .catch(() => {})
     return () => {
       cancelled = true
     }
@@ -383,7 +381,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
 
           {activeTab === 'overview' && detail && (
             <section id="arc-overview-panel" role="tabpanel" aria-labelledby="overview-tab">
-              <ArcOverviewStatus arc={selected} detail={detail} arcArticles={arcArticles} />
+              <ArcOverviewStatus arc={selected} detail={detail} arcArticles={arcArticles} sourceState={articleInventory.state} onRetrySources={articleInventory.retry} />
 
               <section className="ap-section">
                 <span className="ep-section-label">{selectedIsCollection ? 'Collection scope' : 'Policy lifecycle'}</span>
@@ -494,7 +492,7 @@ export default function ArcsView({ focusArcId, onOpenArticle, onOpenNode, invest
             <section id="arc-evidence-panel" role="tabpanel" aria-labelledby="evidence-tab">
             {/* Evidence is intentionally source-only: Arc age, coverage proxy,
                and milestone status are longitudinal context in Overview. */}
-            <ArcEvidencePanel arcArticles={arcArticles} onOpenArticle={onOpenArticle} />
+            <ArcEvidencePanel arcArticles={arcArticles} onOpenArticle={onOpenArticle} sourceState={articleInventory.state} onRetrySources={articleInventory.retry} />
             </section>
           )}
 

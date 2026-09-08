@@ -108,3 +108,8 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runGraphTimeBrowser.mjs
+
+      - name: Verify arc source failure and recovery
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runArcSourcesBrowser.mjs

@@ -9,6 +9,16 @@ export function createChronologyBackend(supabaseClient = null) {
     loadArcs: () => loadArcs(options),
     loadArcDetail: (id) => loadArcDetail(id, options),
     loadArcArticles: (id) => loadArcArticles(id, options),
+    // An unavailable client/read is not a successful empty source inventory.
+    loadArcArticleInventory: async (id) => {
+      if (!supabaseClient || !id) return { state: 'unavailable', articles: [] }
+      try {
+        const articles = await loadArcArticles(id, options)
+        return { state: 'ready', articles }
+      } catch {
+        return { state: 'unavailable', articles: [] }
+      }
+    },
     loadArcConnections: (id) => loadArcConnections(id, options),
     loadArticleExcerpt: (id) => loadArticleExcerpt(id, options),
     loadTimeline: () => loadTimeline(options),
