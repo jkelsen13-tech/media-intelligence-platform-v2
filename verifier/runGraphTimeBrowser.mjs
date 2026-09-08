@@ -23,13 +23,17 @@ try {
       await page.goto(origin+'#/event/'+subject+'/graph')
       const modes=page.getByRole('tablist',{name:'Focused Graph views',exact:true})
       await modes.getByRole('tab',{name:'Time',exact:true}).waitFor({timeout:60000})
+      // A subject deep link opens its inspector; dismiss that real overlay
+      // before attempting background navigation on tablet/phone.
+      const closePanel=page.getByRole('button',{name:'Close panel',exact:true})
+      if(await closePanel.count())await closePanel.click()
       await modes.getByRole('tab',{name:'Time',exact:true}).click()
       const record=page.getByRole('button',{name:'Open node evidence: '+label,exact:true})
       await record.waitFor()
       assert.equal(await record.getByText('Recorded date: 2024-04-08',{exact:true}).isVisible(),true)
       assert.equal(await page.locator('.ws-canonical').getAttribute('data-canonical-subject-id'),subject)
       const geometry=await record.evaluate(e=>({width:e.getBoundingClientRect().width,row:e.parentElement.getBoundingClientRect().width,height:e.getBoundingClientRect().height,client:e.clientWidth,scroll:e.scrollWidth}))
-      console.log('MIP_GRAPH_TIME_GEOMETRY='+JSON.stringify({engineName,width,...geometry}))
+      console.log('MIP_GRAPH_TIME_GEOMETRY='+JSON.stringify({engineName,viewportWidth:width,...geometry}))
       assert.ok(geometry.height>=44)
       assert.ok(geometry.width>=geometry.row-2,'full-width record '+JSON.stringify(geometry))
       assert.ok(geometry.scroll<=geometry.client+1,'no record overflow')
