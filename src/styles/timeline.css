@@ -337,3 +337,51 @@
   font-weight: 680;
   line-height: 1.25;
 }
+
+
+/* Compact view-level context below the persistent investigation header.
+   Scope remains visible even when explanatory copy is closed. */
+.timeline-workspace-intro .timeline-heading-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+}
+.timeline-workspace-intro .timeline-scope-label {
+  margin: 0 0 3px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.timeline-workspace-intro h2.ep-report-title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.timeline-method-note {
+  max-width: 360px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.timeline-method-note > summary {
+  cursor: pointer;
+  padding: 6px 0;
+  color: var(--cat-blue);
+}
+.timeline-method-note > summary:focus-visible {
+  outline: 2px solid var(--cat-blue);
+  outline-offset: 2px;
+}
+.timeline-workspace-intro .timeline-method-note p {
+  margin: 8px 0;
+  font-size: 12px;
+}
+.timeline-workspace-intro .ep-tl-scope:empty { display: none; }
+.timeline-workspace-intro .ep-tl-scope { margin: 8px 0; }
+@media (max-width: 767px) {
+  .timeline-workspace-intro .timeline-heading-row { gap: 4px 12px; }
+  .timeline-method-note > summary { min-height: 44px; align-content: center; }
+  .timeline-method-note { max-width: 100%; }
+}
