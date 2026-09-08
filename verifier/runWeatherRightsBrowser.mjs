@@ -26,7 +26,31 @@ try {
     if (new URL(request.url()).hostname.endsWith('open-meteo.com')) restrictedRequests.push(request.url())
   })
   page.on('pageerror', error => pageErrors.push(error.message))
+  // Seed only this disposable anonymous browser's navigation key.
+  await page.addInitScript(() => {
+    localStorage.setItem('mip.recentInvestigations.v1', JSON.stringify([{
+      canonical_subject_id: 'acc55cb2-5ac2-4aed-be36-3f576d2bc443',
+      canonical_subject_type: 'event', active_view: 'graph',
+      selected_time_range: {from:'2024-04-08',to:null,unexpected:'synthetic-extra'},
+      unexpected: 'synthetic-extra'
+    }]))
+  })
   await page.goto(origin + '/media-intelligence-platform-v2/#/event/acc55cb2-5ac2-4aed-be36-3f576d2bc443/world')
+  await page.getByText('Investigation details & recent history', {exact:true}).click()
+  const recent = page.getByRole('navigation', {name:'Recent investigations',exact:true})
+  await recent.getByRole('button').click()
+  await page.waitForFunction(() => {
+    const context = document.querySelector('[data-investigation-context]')
+    return context?.getAttribute('data-active-view') === 'graph'
+      && context.getAttribute('data-canonical-subject-id') === 'acc55cb2-5ac2-4aed-be36-3f576d2bc443'
+      && context.getAttribute('data-selected-time-range') === '2024-04-08..'
+  })
+  const storedRecent = await page.evaluate(() => localStorage.getItem('mip.recentInvestigations.v1'))
+  assert.doesNotMatch(storedRecent, /synthetic-extra|unexpected/)
+  await recent.scrollIntoViewIfNeeded()
+  console.log('MIP_RECENT_RESTORE_SCREENSHOT=' + (await recent.screenshot({type:'jpeg',quality:70})).toString('base64'))
+  console.log('MIP_RECENT_RESTORE_PASS=' + JSON.stringify({exactSubject:true,view:'graph',timePreserved:true,extraFieldsRemoved:true}))
+  await page.getByRole('tablist',{name:'Evidence views',exact:true}).getByRole('tab',{name:'World View',exact:true}).click()
   const inspector = page.getByRole('complementary', { name: 'Selected-event inspector' })
   // Prove we tested a loaded eligible event, not only an empty/error panel.
   await inspector.getByText('coarsened_to_precision_class', { exact: true }).waitFor({ timeout: 60000 })
