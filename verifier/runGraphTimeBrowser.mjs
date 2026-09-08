@@ -16,6 +16,21 @@ try {
   for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]){
     browser=await engine.launch({headless:true})
     const page=await browser.newPage()
+    const settledInspector = async () => {
+      const panel = page.getByRole('dialog',{name:'Article panel: '+label,exact:true})
+      await panel.waitFor()
+      await panel.evaluate(async element => {
+        await Promise.all(element.getAnimations({subtree:true}).map(animation => animation.finished.catch(()=>{})))
+      })
+      const viewport = page.viewportSize()
+      const close = await panel.getByRole('button',{name:'Close panel',exact:true}).boundingBox()
+      const heading = await panel.getByRole('heading',{name:label,exact:true}).boundingBox()
+      for (const [name,box] of [['close',close],['heading',heading]]) {
+        assert.ok(box && box.x>=-1 && box.y>=-1 && box.x+box.width<=viewport.width+1 && box.y+box.height<=viewport.height+1, name+' is visible within the viewport '+JSON.stringify(box))
+      }
+      assert.equal(await panel.evaluate(element => getComputedStyle(element).opacity),'1')
+      console.log('MIP_GRAPH_INSPECTOR_VISIBLE='+JSON.stringify({engineName,viewport,close,heading}))
+    }
     const errors=[]
     page.on('pageerror',e=>{errors.push(e.message);console.log('MIP_GRAPH_PAGE_ERROR='+e.stack)})
     for(const width of [1280,768,390,320]){
@@ -46,14 +61,14 @@ try {
       await record.focus()
       console.log('MIP_GRAPH_TIME_'+engineName+'_'+width+'='+(await page.screenshot({type:'jpeg',quality:75})).toString('base64'))
       await page.keyboard.press('Enter')
-      await page.getByRole('dialog',{name:'Article panel: '+label,exact:true}).waitFor()
+      await settledInspector()
       assert.equal(await modes.getByRole('tab',{name:'Relationships',exact:true}).getAttribute('aria-selected'),'true')
       assert.equal(await page.locator('.ws-canonical').getAttribute('data-canonical-subject-id'),subject)
       await page.getByRole('button',{name:'Close panel',exact:true}).click()
       await modes.getByRole('tab',{name:'Time',exact:true}).click()
       await record.waitFor()
       await record.click()
-      await page.getByRole('dialog',{name:'Article panel: '+label,exact:true}).waitFor()
+      await settledInspector()
       console.log('MIP_GRAPH_TIME_INSPECTOR_'+engineName+'_'+width+'='+(await page.screenshot({type:'jpeg',quality:75})).toString('base64'))
     }
     assert.deepEqual(errors,[])
