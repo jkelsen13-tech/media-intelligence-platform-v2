@@ -56,6 +56,43 @@ try {
   await presentation.getByRole('button',{name:'List',exact:true}).click()
   assert.equal(await presentation.getByRole('button',{name:'List',exact:true}).getAttribute('aria-pressed'),'true')
   await presentation.getByRole('button',{name:'Chronology',exact:true}).click()
+
+  // Regression: hidden date/spine tracks must not squeeze List cards to 72px.
+  for(const width of [1280,1024,768,390,320]){
+    await page.setViewportSize({width,height:width>=768?900:844})
+    for(const collapsed of [false,true]){
+      const inspector=page.locator('.ws-inspector-toggle')
+      if((await inspector.getAttribute('aria-expanded')==='false')!==collapsed)await inspector.click()
+      await presentation.getByRole('button',{name:'List',exact:true}).click()
+      const cards=page.locator('.timeline-view .ep-tl-list-alt .ep-tl-card')
+      await cards.first().waitFor()
+      const geometry=await cards.evaluateAll(nodes=>nodes.map(card=>{
+        const entry=card.parentElement
+        const c=card.getBoundingClientRect(),e=entry.getBoundingClientRect()
+        return {card:c.width,entry:e.width,left:c.left,right:c.right,entryLeft:e.left,entryRight:e.right,
+          client:card.clientWidth,scroll:card.scrollWidth}
+      }))
+      for(const g of geometry){
+        assert.ok(g.card>=g.entry-2,'List card fills available row '+JSON.stringify({width,collapsed,...g}))
+        assert.ok(g.left>=g.entryLeft-1&&g.right<=g.entryRight+1,'card fits row')
+        assert.ok(g.scroll<=g.client+1,'card contents do not overflow')
+      }
+      assert.equal(await context(),subject)
+      const toggle=cards.first().getByRole('button')
+      await toggle.click()
+      assert.equal(await toggle.getAttribute('aria-expanded'),'true')
+      assert.equal(await cards.first().locator('.ep-tdetail').isVisible(),true)
+      await toggle.click()
+      await cards.first().scrollIntoViewIfNeeded()
+      console.log('MIP_TIMELINE_LIST_'+width+'_'+(collapsed?'collapsed':'open')+'='+(await page.screenshot({type:'jpeg',quality:75})).toString('base64'))
+      console.log('MIP_TIMELINE_LIST_GEOMETRY='+JSON.stringify({width,collapsed,geometry}))
+      await presentation.getByRole('button',{name:'Chronology',exact:true}).click()
+      assert.equal(await page.locator('.timeline-view .ep-tl-chronology').count(),1)
+      const chronology=await page.locator('.timeline-view .ep-tl-chronology .ep-tl-card').first().boundingBox()
+      assert.ok(chronology.width>=280&&chronology.width<=290,'Chronology retains its card layout')
+    }
+  }
+
   const tabs=page.getByRole('tablist',{name:'Timeline sections',exact:true})
   for(const name of ['Connections','Evidence','Timeline']){
     await tabs.getByRole('tab',{name,exact:true}).click()
