@@ -30,6 +30,7 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
       assert.equal(await page.locator('.wv-view').getAttribute('data-selected-time-range'),scope)
       assert.equal(await page.locator('.wv-view').getAttribute('data-canonical-subject-id'),subject)
       assert.equal(await page.getByRole('button',{name:'Return to selected location',exact:true}).isEnabled(),true)
+      if (selected===from) console.log('MIP_SQL_TIME_SCREENSHOT_'+engine+'='+(await page.locator('.wv-scrubber').screenshot({type:'jpeg',quality:65})).toString('base64'))
     }
     await page.goto(base+'?time='+encodeURIComponent('2024-04-08 17:59:00'))
     await page.getByRole('combobox',{name:'Choose a recorded time',exact:true}).waitFor()
