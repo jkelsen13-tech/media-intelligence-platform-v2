@@ -45,7 +45,7 @@ try {
     const screenshot = await weather.screenshot({ type: 'jpeg', quality: 65, animations: 'disabled' })
     console.log('MIP_WEATHER_SCREENSHOT_' + width + '=' + screenshot.toString('base64'))
     const unoccluded = await weather.evaluate(element => {
-      return [element.querySelector('h3'), element.querySelector('dd:last-child')].every(item => {
+      return [element.querySelector('h3'), [...element.querySelectorAll('dd')].at(-1)].every(item => {
         if (!item) return false
         const box = item.getBoundingClientRect()
         const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)
