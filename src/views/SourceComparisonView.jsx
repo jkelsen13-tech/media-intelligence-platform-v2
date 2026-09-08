@@ -3,6 +3,7 @@ import { newsNavigationFromComparisonSurface, E_LEVEL_NAMES } from '../lib/sourc
 import { mipBackend } from '../lib/mipBackend.js'
 import { comparisonInvestigationScope } from '../lib/comparisonInvestigationScope.js'
 import { filterEventsByTitle } from '../lib/listFilters.js'
+import { formatWorkspaceDate } from '../lib/workspacePresentation.js'
 import WorkspaceAvailability from '../components/WorkspaceAvailability'
 import './sourcecomparison.css'
 
@@ -26,8 +27,7 @@ function StrengthChip({ level }) {
 
 function formatReviewedAt(value, statuses = []) {
   if (value) {
-    const date = new Date(value)
-    if (!Number.isNaN(date.valueOf())) return date.toLocaleDateString()
+    return formatWorkspaceDate(value)
   }
   const values = [...new Set((statuses ?? []).filter(Boolean))]
   if (values.length === 1) return values[0].replace(/_/g, ' ')
@@ -88,6 +88,7 @@ function ExplanationDetails({ explanation }) {
   return (
     <div className="sc-explanation">
       <p className="sc-ev-passage">{explanation.supporting_passage}</p>
+      {explanation.reviewed_at && <p className="sc-meta">Review recorded: {formatWorkspaceDate(explanation.reviewed_at)}</p>}
       <p className="sc-meta">Rule: {explanation.rule_version}</p>
       <p className="sc-meta">Provenance: {explanation.provenance_class} · Review: {explanation.review_status} · State: {explanation.state}</p>
       {explanation.remaining_uncertainty && (
@@ -105,7 +106,7 @@ function SurfaceRow({ surface, onOpenArticle }) {
       <header className="sc-surface-head">
         <span className="sc-outlet">{surface.outlet}</span>
         {surface.publishedAt && (
-          <span className="sc-meta">{new Date(surface.publishedAt).toLocaleString()}</span>
+          <span className="sc-meta">Source publication: {formatWorkspaceDate(surface.publishedAt)}</span>
         )}
         {surface.url && (
           <a className="sc-src" href={surface.url} target="_blank" rel="noreferrer">Article ↗</a>
@@ -227,7 +228,7 @@ function EventCard({ event, onOpenArticle, onOpenArc, onOpenTimeline, focused, s
       <div className="sc-event-evidence-bar">
         <span><strong>{event.evidenceTotals?.claims ?? 0}</strong> claim{event.evidenceTotals?.claims === 1 ? '' : 's'} extracted</span>
         <span><strong>{event.evidenceTotals?.primaryLinks ?? 0}</strong> primary evidence link{event.evidenceTotals?.primaryLinks === 1 ? '' : 's'}</span>
-        <span>Latest review: <strong>{formatReviewedAt(event.reviewedAt, event.reviewStatuses)}</strong></span>
+        <span>Review summary: <strong>{formatReviewedAt(event.reviewedAt, event.reviewStatuses)}</strong></span>
       </div>
       <p className="sc-lineage-status">Lineage status: canonical-URL duplicates are collapsed; wire, ownership, and editorial lineage are not yet verified.</p>
 
@@ -270,12 +271,15 @@ function EventCard({ event, onOpenArticle, onOpenArc, onOpenTimeline, focused, s
       </div>
       {!event.singleSource && (
         <p className="sc-meta">
-          Publication timing: first reported by {event.firstOutlet ?? 'unknown'}
-          {event.timing.filter((t) => t.outlet !== event.firstOutlet).map((t) => (
+          Recorded publication timing: {event.firstOutlet
+            ? `earliest in this ingested sample — ${event.firstOutlet}`
+            : 'order not established from these records.'}
+          {event.firstOutlet && event.timing.filter((t) => t.outlet !== event.firstOutlet).map((t) => (
             <span key={t.outlet} className="sc-timing">
-              {' '}· {t.outlet} {t.lagHours === null ? '(time unknown)' : t.lagHours === 0 ? '(same hour)' : `(+${t.lagHours}h)`}
+              {' '}· {t.outlet} {t.lagHours === null ? '(gap not comparable)' : t.lagHours === 0 ? '(<0.1h later)' : `(about +${t.lagHours}h)`}
             </span>
           ))}
+          {' '}This describes retained timestamps, not who first reported the event.
         </p>
       )}
 
