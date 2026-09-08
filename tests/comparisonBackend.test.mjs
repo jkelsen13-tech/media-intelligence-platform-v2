@@ -53,3 +53,11 @@ test('comparison page failure discards partial cards and remains distinct from a
   const one = comparisonRow(); one.articles = one.articles.slice(0, 1)
   assert.deepEqual((await comparisonBackendFixture({ tables: { comparison_public: [one] } }).backend.loadSourceComparisonView()).events, [])
 })
+
+test('projection errors without a message cannot become a successful empty read', async () => {
+  const f = comparisonBackendFixture({ errors: { comparison_public: () => ({ code: '42501', message: '' }) } })
+  const view = await f.backend.loadSourceComparisonView()
+  assert.deepEqual(view.events, [])
+  assert.equal(view.loadError, 'Comparison projection unavailable')
+  assert.deepEqual([...new Set(f.calls.map(c => c.table))], ['comparison_public'])
+})

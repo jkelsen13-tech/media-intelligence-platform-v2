@@ -466,3 +466,18 @@
   .sc-outlet-framing { padding: 11px 12px; }
   .sc-outlet-facts { padding: 10px 12px 12px; }
 }
+
+/* Recovery remains separate from confirmed empty coverage. */
+.sc-recovery { display: grid; gap: 12px; justify-items: start; min-width: 0; }
+.sc-recovery > [role="status"] { width: 100%; min-width: 0; }
+.sc-retry {
+  min-height: 44px;
+  padding: 9px 16px;
+  border: 1px solid var(--status-blue-border);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  color: var(--status-blue-text);
+  font: inherit;
+  cursor: pointer;
+}
+.sc-retry:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }

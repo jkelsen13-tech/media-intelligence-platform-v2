@@ -4,7 +4,6 @@ import { mipBackend } from '../lib/mipBackend.js'
 import { comparisonInvestigationScope } from '../lib/comparisonInvestigationScope.js'
 import { filterEventsByTitle } from '../lib/listFilters.js'
 import WorkspaceAvailability from '../components/WorkspaceAvailability'
-import WorkspaceTechnicalDisclosure from '../components/WorkspaceTechnicalDisclosure'
 import './sourcecomparison.css'
 
 // Source Comparison reads only the public comparison projection through
@@ -295,6 +294,7 @@ function EventCard({ event, onOpenArticle, onOpenArc, onOpenTimeline, focused, s
 export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenTimeline, focusEventId, investigationContext, backend = mipBackend.publicData }) {
   const [view, setView] = useState(null)
   const [error, setError] = useState(null)
+  const [attempt, setAttempt] = useState(0)
   const eventRefs = useRef(new Map())
   // Event title search (2026-08-10): same pattern as the News Feed search
   // bar — 350ms debounce, trimmed query, client-side substring filter over
@@ -313,11 +313,11 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
     let cancelled = false
     setView(null)
     setError(null)
-    backend.loadSourceComparisonView()
+    Promise.resolve().then(() => backend.loadSourceComparisonView())
       .then((v) => { if (!cancelled) setView(v) })
-      .catch((e) => { if (!cancelled) setError(e) })
+      .catch((e) => { if (!cancelled) setError(e || new Error('Comparison unavailable')) })
     return () => { cancelled = true }
-  }, [backend])
+  }, [backend, attempt])
 
   const scope = useMemo(
     () => comparisonInvestigationScope(view?.events ?? [], investigationContext, focusEventId),
@@ -351,25 +351,32 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
     return () => clearTimeout(t)
   }, [highlightEventId, view])
 
-  if (error) {
+  if (error || view?.loadError) {
+    return (
+      <section className="sc-recovery" aria-label="Comparison recovery">
+        <div role="status">
+          <WorkspaceAvailability
+            kind="compare"
+            icon="compare"
+            title="Comparison data is currently unavailable"
+            body="The comparison could not be loaded. This does not mean there is no coverage. Your selected investigation is preserved."
+          />
+        </div>
+        <button type="button" className="sc-retry" onClick={() => setAttempt(value => value + 1)}>
+          Retry comparison
+        </button>
+      </section>
+    )
+  }
+  if (view === null) return <div className="notice" role="status">Loading comparison…</div>
+  if (!view.enabled) {
     return (
       <WorkspaceAvailability
         kind="compare"
         icon="compare"
-        details="Source comparison view failed to load."
+        title="Source Comparison is currently unavailable"
+        body="The comparison service is not configured. Your selected investigation is preserved; coverage cannot be assessed from this state."
       />
-    )
-  }
-  if (view === null) return <div className="notice">Loading…</div>
-  if (!view.enabled) {
-    return (
-      <div className="notice">
-        <WorkspaceAvailability
-          kind="compare"
-          icon="compare"
-          details="Source Comparison is currently unavailable."
-        />
-      </div>
     )
   }
 
@@ -390,13 +397,7 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
         material ingested into this comparison.
       </aside>
 
-      {view.loadError && (
-        <WorkspaceTechnicalDisclosure banner="Comparison data is currently unavailable">
-          Comparison tables unreachable: {view.loadError}
-        </WorkspaceTechnicalDisclosure>
-      )}
-
-      {scope.scoped && !view.loadError && scope.events.length === 0 ? (
+      {scope.scoped && scope.events.length === 0 ? (
         <section className="sc-empty" role="status">
           <h3>No released comparison is linked to this investigation</h3>
           <p>The selected subject is preserved. This public projection has no recorded comparison join for it; that does not establish an absence of reporting or a contradiction.</p>
