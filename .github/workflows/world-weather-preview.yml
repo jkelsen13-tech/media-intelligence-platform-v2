@@ -3,6 +3,9 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'src/graph/GraphModePanel.jsx'
+      - 'src/graph/time-records.css'
+      - 'verifier/runGraphTimeBrowser.mjs'
       - 'src/components/InvestigationWorkspace.jsx'
       - 'src/styles/workspace.css'
       - 'verifier/runWorkspaceShellBrowser.mjs'
@@ -79,3 +82,8 @@ jobs:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
           MIP_TIMELINE_BROWSER: webkit
         run: node verifier/runTimelineCompositionBrowser.mjs
+
+      - name: Verify Graph Time evidence selection
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runGraphTimeBrowser.mjs
