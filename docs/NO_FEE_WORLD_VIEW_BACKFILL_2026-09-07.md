@@ -218,3 +218,8 @@ Saved version details now let an authorized reader open a referenced version wit
 ## Batch 88 — bounded recent navigation storage
 
 Existing recent history now reconstructs allowed navigation fields before storing or restoring, strips unknown nested payloads and bounds parsing/entry inspection. See [scope and verification](RECENT_NAVIGATION_STORAGE_2026-09-08.md). This is a persistence backfill for Package 04; complete private-version/camera/layer presets and the real held-out producer corpus remain open. No source activation or backend writes.
+
+
+## Batch 89 — paired baseline and counter-evidence diagnostics
+
+Campaign 1 can now compare complete baseline/candidate runs on the same held-out manifest, exposing label-specific coverage and case-paired retrieval/correctness gains and losses. See [contract and counterexamples](PAIRED_RECORD_CANDIDATE_DIAGNOSTICS_2026-09-08.md). Synthetic regressions demonstrate that improved aggregate recall can conceal loss of disconfirming evidence. No real-corpus performance, qualification or job execution is claimed; independent adjudication and representative real-corpus work remain open.
