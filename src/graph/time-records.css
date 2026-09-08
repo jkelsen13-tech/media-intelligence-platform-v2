@@ -26,3 +26,25 @@
 @media (max-width: 1023px) {
   .graph-time-record { grid-template-columns: minmax(0, 1fr); gap: 6px; }
 }
+
+@media (max-width: 767px) {
+  /* Time mode is a reading surface. Give it page flow instead of sharing
+     the canvas's remaining-height slot with the large context inspector. */
+  .ws-shell[data-workspace-view='graph']:has(.graph-time-panel) {
+    display: block;
+    overflow-y: auto;
+  }
+  .ws-shell:has(.graph-time-panel) .ws-body { display: block; overflow: visible; }
+  .ws-shell:has(.graph-time-panel) :is(.ws-content, .app-main, .graph-layout, .graph-area, .graph-body, .graph-time-panel) {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    flex: none;
+  }
+  .ws-shell:has(.graph-time-panel) .ws-inspector {
+    position: static;
+    width: 100%;
+    max-height: none;
+  }
+  .graph-time-panel .graph-toolbar-btn { min-height: 44px; }
+}

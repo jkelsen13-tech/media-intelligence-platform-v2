@@ -42,7 +42,7 @@ export default function GraphModePanel({
   }
 
   return (
-    <section className="graph-mode-panel" aria-live="polite" aria-label={isGeography ? 'Geography records' : 'Time records'}>
+    <section className={`graph-mode-panel${isGeography ? '' : ' graph-time-panel'}`} aria-live="polite" aria-label={isGeography ? 'Geography records' : 'Time records'}>
       <div className="graph-mode-panel-head">
         <div>
           <p className="graph-mode-eyebrow">Focused Graph</p>

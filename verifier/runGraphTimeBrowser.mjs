@@ -37,6 +37,12 @@ try {
       assert.ok(geometry.height>=44)
       assert.ok(geometry.width>=geometry.row-2,'full-width record '+JSON.stringify(geometry))
       assert.ok(geometry.scroll<=geometry.client+1,'no record overflow')
+      if(width<768){
+        const panel=await page.locator('.graph-time-panel').boundingBox()
+        assert.ok(panel.height>=geometry.height+80,'phone Time panel has reading height')
+        const inspector=await page.locator('.ws-inspector').boundingBox()
+        assert.ok(inspector.y>=panel.y+panel.height-1,'phone context follows Time records')
+      }
       await record.focus()
       console.log('MIP_GRAPH_TIME_'+engineName+'_'+width+'='+(await page.screenshot({type:'jpeg',quality:75})).toString('base64'))
       await page.keyboard.press('Enter')
