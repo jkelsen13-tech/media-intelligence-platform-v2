@@ -1,14 +1,30 @@
 // Read only the supplied saved observation. Context membership is not an
 // evidence relation, a source-origin judgment, or a counterfactual reassessment.
 const unique = values => [...new Set(Array.isArray(values) ? values.filter(v => typeof v === 'string') : [])]
-export const exactInputPosition = value => typeof value === 'string' && /^[1-9]\d*$/.test(value) ? value : null
+export const exactInputPosition = value => typeof value === 'string' && value.length > 0
+  && value[0] !== '0' && !/[^0-9]/.test(value) ? value : null
+
+// A duplicate identity is ambiguous even when the two payloads look alike.
+// Preserve unrelated unique rows; never choose the first or last duplicate.
+function unambiguousRows(rows, key, valid = value => typeof value === 'string' && value.trim() !== '') {
+  const result = new Map()
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const id = row?.[key]
+    if (!valid(id)) continue
+    result.set(id, result.has(id) ? null : row)
+  }
+  return result
+}
+const containsPosition = (values, position) => Array.isArray(values)
+  && exactInputPosition(position) !== null && values.some(value => value === position)
+
 
 export function savedAssessmentTrail(bundle, assessmentId) {
   const snapshot = bundle?.observation?.snapshot
-  const assessments = new Map(snapshot?.assessments?.map(row => [row.id, row]) ?? [])
+  const assessments = unambiguousRows(snapshot?.assessments, 'id')
   const assessment = assessments.get(assessmentId)
   if (!assessment) return null
-  const inputs = new Map(snapshot.inputs?.map(row => [row.position, row]) ?? [])
+  const inputs = unambiguousRows(snapshot.inputs, 'position', exactInputPosition)
   const parents = unique(assessment.parent_ids)
   const ancestors = unique(assessment.ancestor_ids).filter(id => !parents.includes(id))
   const link = (id, kind) => ({ id, kind, assessment: id === assessmentId ? null : assessments.get(id) ?? null })
@@ -18,7 +34,7 @@ export function savedAssessmentTrail(bundle, assessmentId) {
     inputs: unique(assessment.context_positions).map(position => ({
       position,
       input: exactInputPosition(position) ? inputs.get(position) ?? null : null,
-      explicitlyAdded: assessment.extra_positions?.includes(position) === true,
+      explicitlyAdded: containsPosition(assessment.extra_positions, position),
     })),
     dependenciesRecorded: Array.isArray(assessment.parent_ids) && Array.isArray(assessment.ancestor_ids),
     dependencies: [...parents.map(id => link(id, 'Direct dependency')), ...ancestors.map(id => link(id, 'Earlier dependency'))],
@@ -33,8 +49,9 @@ export function selectedContextUsers(bundle, position) {
   if (!exactInputPosition(position)) return []
   const snapshot = bundle?.observation?.snapshot
   const ids = unique(snapshot?.selected_assessment_ids)
-  return ids.map(id => snapshot?.assessments?.find(row => row.id === id))
-    .filter(row => row?.context_positions?.includes(position))
+  const assessments = unambiguousRows(snapshot?.assessments, 'id')
+  return ids.map(id => assessments.get(id))
+    .filter(row => row && containsPosition(row.context_positions, position))
 }
 
 export function retainedInputDates(input) {
