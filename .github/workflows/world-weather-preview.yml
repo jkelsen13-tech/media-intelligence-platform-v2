@@ -3,6 +3,9 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'src/components/InvestigationWorkspace.jsx'
+      - 'src/styles/workspace.css'
+      - 'verifier/runWorkspaceShellBrowser.mjs'
       - 'package.json'
       - 'package-lock.json'
       - 'src/components/InvestigationVersionNavigation.jsx'
@@ -59,3 +62,7 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runRetainedDateBrowser.mjs
+      - name: Verify shared workspace layout and interactions
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWorkspaceShellBrowser.mjs
