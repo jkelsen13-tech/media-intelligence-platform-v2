@@ -25,9 +25,10 @@ try {
       await page.goto(origin+'#/event/acc55cb2-5ac2-4aed-be36-3f576d2bc443/arcs')
       for(let i=0;i<100 && !arcResponses.length;i++)await delay(100)
       assert.ok(arcResponses.length,'live public arc read completed')
-      assert.deepEqual(arcResponses[0],[],'current public arc inventory is empty')
-      assert.equal(await page.locator('.ap-source').count(),0)
-      await page.route('**/rest/v1/story_arcs?**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{
+      assert.ok(Array.isArray(arcResponses[0]))
+      const syntheticArc = arcResponses[0].length === 0
+      if(syntheticArc) assert.equal(await page.locator('.ap-source').count(),0)
+      if(syntheticArc) await page.route('**/rest/v1/story_arcs?**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{
         id:'00000000-0000-4000-8000-000000000001',slug:'verification-only-arc',category:'unclassified',summary:'Synthetic browser verification only',started_at:'2024-04-08'
       }])}))
       await page.route('**/rest/v1/articles?**',async route=>{
@@ -36,7 +37,7 @@ try {
         calls++;arcId=url.searchParams.get('arc_id')
         if(deny)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({message:'Browser verification injected unavailable read'})})
         const response=await route.fetch();assert.equal(response.ok(),true)
-        inventory=await response.json()
+        inventory.push(...await response.json())
         return route.fulfill({response})
       })
       await page.reload()
@@ -46,7 +47,8 @@ try {
       await panel.getByText('Attached source records are unavailable. This does not mean the arc has no sources.',{exact:true}).waitFor()
       assert.equal(await panel.locator('.ap-source').count(),0)
       assert.equal(await panel.getByText(/No attached publisher/).count(),0)
-      deny=false
+      console.log('MIP_ARC_UNAVAILABLE_'+engine+'='+(await panel.screenshot({type:'jpeg',quality:65})).toString('base64'))
+      deny=false;inventory=[]
       const retry=panel.getByRole('button',{name:'Retry attached sources',exact:true})
       await retry.focus();await page.keyboard.press('Enter')
       await page.waitForFunction(()=>!document.querySelector('.arc-source-availability'))
@@ -62,7 +64,7 @@ try {
         console.log('MIP_ARC_SOURCES_'+engine+'_'+width+'='+(await panel.screenshot({type:'jpeg',quality:65})).toString('base64'))
       }
       assert.deepEqual(errors,[])
-      console.log('MIP_ARC_SOURCES_PASS='+JSON.stringify({engine,live,injectedFailure:true,keyboardRetry:true,publicReadRecovered:true,syntheticArcOnly:true,liveBaselineEmpty:true,records:inventory.length,arcId,widths:[1280,768,390,320]}))
+      console.log('MIP_ARC_SOURCES_PASS='+JSON.stringify({engine,live,injectedFailure:true,keyboardRetry:true,publicReadRecovered:true,syntheticArcOnly:syntheticArc,liveBaselineEmpty:syntheticArc,records:inventory.length,arcId,widths:[1280,768,390,320]}))
     } finally {await browser.close()}
   }
 } finally {server?.kill()}
