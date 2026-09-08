@@ -145,3 +145,17 @@ test('an unconfigured comparison backend does not claim verified absence', async
     assert.doesNotMatch(text(renderer), /No validated|No released|Retry comparison/)
   } finally { await act(async () => renderer.unmount()) }
 })
+
+test('comparison displays retained publication and review precision without inventing a first reporter', async () => {
+  const row = comparisonRow()
+  row.articles[0].published_at = '2026-08-05'
+  row.claims[0].surfaces[0].explanation.reviewed_at = '2026-08-06T00:00:00.123456+05:30'
+  const f = comparisonBackendFixture({ tables: { comparison_public: [row] } }); let renderer
+  await act(async () => { renderer = TestRenderer.create(React.createElement(View, { backend: f.backend })) })
+  try {
+    assert.match(text(renderer), /2026-08-05 \(date only\)/)
+    assert.match(text(renderer), /2026-08-06 00:00:00.123456 UTC\+05:30/)
+    assert.match(text(renderer), /order not established from these records/)
+    assert.doesNotMatch(text(renderer), /first reported by|same hour|Invalid Date/)
+  } finally { await act(async () => renderer.unmount()) }
+})

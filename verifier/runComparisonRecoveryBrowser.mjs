@@ -4,6 +4,7 @@ import {createRequire} from 'node:module'
 import {spawn} from 'node:child_process'
 import {setTimeout as delay} from 'node:timers/promises'
 import {observeBackendBoundary} from './backendBoundary.mjs'
+import {comparisonRow} from '../tests/comparisonBackendFixture.mjs'
 const {chromium,webkit}=createRequire(process.env.MIP_BROWSER_PACKAGE+'/package.json')('playwright')
 const live=process.env.MIP_LIVE_SITE==='1'
 const origin=live?'https://jkelsen13-tech.github.io/media-intelligence-platform-v2/':'http://127.0.0.1:4173/media-intelligence-platform-v2/'
@@ -17,9 +18,10 @@ try {
       const page=await browser.newPage({viewport:{width:1280,height:1000}})
       const verifyBackend=observeBackendBoundary(page), errors=[]
       page.on('pageerror',e=>errors.push(e.message))
-      let deny=true, rows=[], calls=0
+      let deny=true, rows=[], calls=0, fixture=null
       await page.route('**/rest/v1/comparison_public?**',async route=>{
         calls++
+        if(fixture)return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([fixture])})
         if(deny)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({message:'Browser-only unavailable read'})})
         const response=await route.fetch();assert.ok(response.ok())
         const data=await response.json();assert.ok(Array.isArray(data));rows.push(...data)
@@ -51,6 +53,38 @@ try {
         await page.waitForLoadState('networkidle')
         if(width===1280)console.log('MIP_COMPARISON_RECOVERED_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
       }
+      // Dormant date/claim UI uses a browser-only fixture; never write it to Supabase.
+      fixture=comparisonRow()
+      fixture.event_key=subject
+      fixture.canonical_title='Browser-only timestamp verification'
+      fixture.articles[0].published_at='2026-08-05'
+      fixture.claims[0].surfaces[0].explanation.reviewed_at='2026-08-06T00:00:00.123456+05:30'
+      await page.reload({waitUntil:'networkidle'})
+      await page.getByRole('heading',{name:fixture.canonical_title,exact:true}).waitFor()
+      for(const width of [1280,390,320]){
+        await page.setViewportSize({width,height:1000})
+        await page.getByText('Source publication: 2026-08-05 (date only)',{exact:true}).waitFor()
+        assert.ok((await page.locator('.sc-view').innerText()).includes('2026-08-06 00:00:00.123456 UTC+05:30'))
+        assert.ok((await page.locator('.sc-view').innerText()).includes('order not established from these records'))
+        assert.equal(await identity(),subject)
+        assert.equal(await page.locator('.sc-view').evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
+        if(width===390)console.log('MIP_COMPARISON_DATE_FIXTURE_'+engine+'='+(await page.locator('.sc-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
+      }
+      fixture.articles[0].published_at='2026-08-05T09:00:00-04:00'
+      fixture.articles[1].published_at='2026-08-05T12:00:00Z'
+      fixture.articles[2].published_at='2026-08-05T14:00:00Z'
+      await page.reload({waitUntil:'networkidle'})
+      await page.getByRole('heading',{name:fixture.canonical_title,exact:true}).waitFor()
+      const timing=await page.locator('.sc-view').innerText()
+      assert.ok(timing.includes('earliest in this ingested sample — Publisher B'))
+      assert.ok(timing.includes('Publisher A (about +1h)'))
+      assert.ok(timing.includes('Source publication: 2026-08-05 09:00:00 UTC-04:00'))
+      assert.ok(!timing.includes('(same hour)'))
+      fixture=null
+      await page.reload({waitUntil:'networkidle'})
+      await page.locator('.sc-view').waitFor()
+      assert.equal(await page.getByRole('heading',{name:'Browser-only timestamp verification',exact:true}).count(),0)
+      console.log('MIP_COMPARISON_TEMPORAL_PASS='+JSON.stringify({engine,live,browserFixtureOnly:true,dateOnly:true,offsetOrder:true,reviewMicroseconds:true,realProjectionRestored:true}))
       assert.deepEqual(errors,[])
       console.log('MIP_COMPARISON_RECOVERY_PASS='+JSON.stringify({engine,live,widths:[1280,768,390,320],keyboardRetry:true,subjectPreserved:true,realProjectionRecovery:true,backend:verifyBackend()}))
     } finally {await browser.close()}

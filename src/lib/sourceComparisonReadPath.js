@@ -1,3 +1,5 @@
+import { comparisonPublicationTiming, latestComparableReview } from './comparisonPublicationTiming.js'
+
 // Source Comparison (03_BACKLOG Item 1) read path — beta only.
 //
 // Public cards come only from comparison_public. The browser never reads
@@ -175,20 +177,7 @@ export function buildClaimView(claim, surfaces, ctx) {
 export function buildEventView(event, memberRows, ctx) {
   const articles = memberRows.map((m) => ctx.articlesById.get(m.article_id)).filter(Boolean)
   const outlets = [...new Set(articles.map((a) => a.outlet))]
-  const timing = outlets
-    .map((outlet) => {
-      const times = articles.filter((a) => a.outlet === outlet).map((a) => a.published_at).filter(Boolean).sort()
-      return { outlet, firstPublishedAt: times[0] ?? null }
-    })
-    .sort((a, b) => String(a.firstPublishedAt ?? '\uFFFF').localeCompare(String(b.firstPublishedAt ?? '\uFFFF')))
-  const first = timing.find((t) => t.firstPublishedAt) ?? null
-  const timingView = timing.map((t) => ({
-    ...t,
-    lagHours:
-      first && t.firstPublishedAt
-        ? Math.round(((new Date(t.firstPublishedAt) - new Date(first.firstPublishedAt)) / 3600000) * 10) / 10
-        : null,
-  }))
+  const { firstOutlet, timing } = comparisonPublicationTiming(articles)
   const outletCoverage = outlets.map((outlet) => {
     const rows = ctx.claimViews.flatMap((claim) =>
       claim.surfaces
@@ -202,11 +191,7 @@ export function buildEventView(event, memberRows, ctx) {
           reviewStatus: surface.reviewStatus ?? null,
         })),
     )
-    const latestReviewedAt = rows
-      .map((row) => row.reviewedAt)
-      .filter(Boolean)
-      .sort()
-      .at(-1) ?? null
+    const latestReviewedAt = latestComparableReview(rows.map(row => row.reviewedAt))
     const reviewStatuses = [...new Set(rows.map((row) => row.reviewStatus).filter(Boolean))]
     return {
       outlet,
@@ -219,7 +204,7 @@ export function buildEventView(event, memberRows, ctx) {
     }
   })
   const evidenceLinkCount = ctx.claimViews.reduce((total, claim) => total + claim.evidenceLinks.length, 0)
-  const reviewedAt = outletCoverage.map((coverage) => coverage.latestReviewedAt).filter(Boolean).sort().at(-1) ?? null
+  const reviewedAt = latestComparableReview(ctx.claimViews.flatMap(claim => claim.surfaces.map(surface => surface.reviewedAt)))
   const reviewStatuses = [...new Set(outletCoverage.flatMap((coverage) => coverage.reviewStatuses ?? []))]
   return {
     id: event.id,
@@ -229,8 +214,8 @@ export function buildEventView(event, memberRows, ctx) {
     status: event.status,
     outlets, // all of them, thin included — no gating
     singleSource: outlets.length <= 1,
-    firstOutlet: first?.outlet ?? null,
-    timing: timingView,
+    firstOutlet,
+    timing,
     claims: ctx.claimViews,
     outletCoverage,
     evidenceTotals: { claims: ctx.claimViews.length, primaryLinks: evidenceLinkCount, outlets: outlets.length },

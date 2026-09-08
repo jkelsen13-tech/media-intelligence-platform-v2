@@ -61,3 +61,14 @@ test('projection errors without a message cannot become a successful empty read'
   assert.equal(view.loadError, 'Comparison projection unavailable')
   assert.deepEqual([...new Set(f.calls.map(c => c.table))], ['comparison_public'])
 })
+
+test('public comparison projection preserves temporal meaning through the shared backend', async () => {
+  const row = comparisonRow()
+  row.articles[0].published_at = '2026-08-05T09:00:00-04:00'
+  row.articles[1].published_at = '2026-08-05T12:00:00Z'
+  row.articles[2].published_at = '2026-08-05T14:00:00Z'
+  const view = (await comparisonBackendFixture({ tables: { comparison_public: [row] } }).backend.loadSourceComparisonView()).events[0]
+  assert.equal(view.firstOutlet, 'Publisher B')
+  assert.equal(view.timing.find(t => t.outlet === 'Publisher A').lagHours, 1)
+  assert.equal(view.claims[0].surfaces[0].publishedAt, row.articles[0].published_at)
+})
