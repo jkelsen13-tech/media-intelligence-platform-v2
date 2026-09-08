@@ -219,8 +219,8 @@ function EventCard({ event, onOpenArticle, onOpenArc, onOpenTimeline, focused, s
         <div className="sc-event-state">
           <span className="sc-chip sc-chip-shared">{event.outlets.length} {event.outlets.length === 1 ? 'outlet' : 'outlets'} ingested</span>
           <span className="sc-meta">
-            {event.occurredAtStart}
-            {event.occurredAtEnd && event.occurredAtEnd !== event.occurredAtStart ? ` → ${event.occurredAtEnd}` : ''}
+            Recorded event time: {formatWorkspaceDate(event.occurredAtStart)}
+            {event.occurredAtEnd && event.occurredAtEnd !== event.occurredAtStart ? ` → ${formatWorkspaceDate(event.occurredAtEnd)}` : ''}
           </span>
         </div>
       </header>
@@ -386,20 +386,21 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
 
   return (
     <div className="sc-view sc-columns">
-      <section className="sc-banner">
-        <p className="sc-kicker">Evidence review</p>
+      <section className="sc-banner" aria-label="Comparison scope and methods">
         <h2>Source Comparison</h2>
-        <p className="sc-subtitle">How outlets cover the same event.</p>
-        <p className="sc-banner-detail">
-          Compare source-linked coverage claim by claim. Shared facts, unique claims, omissions,
-          loaded language, primary evidence, corrections, timing, and source quality stay separate;
-          no composite score is computed.
+        <p className="sc-scope">{scope.scoped ? 'Released comparisons linked to the selected investigation.' : 'Browsing all released comparison events.'}</p>
+        <details className="sc-methods">
+          <summary>How to read this comparison</summary>
+          <p>
+            Compare source-linked coverage claim by claim. Shared facts, unique claims, omissions,
+            loaded language, primary evidence, corrections, timing, and source quality stay separate;
+            no composite score is computed.
+          </p>
+        </details>
+        <p className="sc-evidence-notice">
+          Coverage describes ingested material. Missing evidence is not a contradiction.
         </p>
       </section>
-      <aside className="sc-evidence-notice">
-        Missing evidence is recorded, not treated as contradiction. Coverage labels describe only
-        material ingested into this comparison.
-      </aside>
 
       {scope.scoped && scope.events.length === 0 ? (
         <section className="sc-empty" role="status">
@@ -414,7 +415,6 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
         />
       ) : (
         <>
-          <p className="sc-meta">{scope.scoped ? 'Released comparisons linked to the selected investigation.' : 'Browsing all released comparison events.'}</p>
           <input
             className="news-search sc-search"
             type="search"

@@ -1,0 +1,227 @@
+{
+  "observed_date": "2026-09-08",
+  "kind": "read_only_catalog_metadata",
+  "survivor": "qikvmopbtijoebdqosyq",
+  "legacy": "yhbwnrtlqbjtcrrlpbge",
+  "worker_snapshot": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/source-comparison-run/index.ts",
+  "scope": "13 direct table dependencies of the recovered live v9 comparison worker; not its transitive dependency closure",
+  "source": [
+    {
+      "name": "article_claims",
+      "relkind": "r",
+      "rls": true,
+      "policies": 1,
+      "triggers": [
+        {
+          "name": "mip_v2_article_claim_auditability_before_write",
+          "function": "mip_v2_apply_article_claim_auditability"
+        }
+      ]
+    },
+    {
+      "name": "articles",
+      "relkind": "r",
+      "rls": true,
+      "policies": 2,
+      "triggers": [
+        {
+          "name": "articles_intercept_direct_arc_attachment",
+          "function": "mip_intercept_direct_arc_attachment"
+        },
+        {
+          "name": "articles_invalidate_arc_membership_approvals",
+          "function": "mip_invalidate_arc_membership_approvals"
+        },
+        {
+          "name": "articles_source_status_d5_propagate",
+          "function": "articles_source_status_propagate"
+        }
+      ]
+    },
+    {
+      "name": "claim_evidence_links",
+      "relkind": "r",
+      "rls": true,
+      "policies": 1,
+      "triggers": null
+    },
+    {
+      "name": "claims",
+      "relkind": "r",
+      "rls": true,
+      "policies": 1,
+      "triggers": null
+    },
+    {
+      "name": "event_articles",
+      "relkind": "r",
+      "rls": true,
+      "policies": 1,
+      "triggers": [
+        {
+          "name": "event_articles_invalidate_comparison_approval",
+          "function": "invalidate_comparison_approval_on_membership_change"
+        }
+      ]
+    },
+    {
+      "name": "events",
+      "relkind": "r",
+      "rls": true,
+      "policies": 1,
+      "triggers": [
+        {
+          "name": "events_queue_source_comparison_enrichment",
+          "function": "mip_queue_source_comparison_enrichment"
+        }
+      ]
+    },
+    {
+      "name": "explanations",
+      "relkind": "r",
+      "rls": true,
+      "policies": 1,
+      "triggers": [
+        {
+          "name": "explanations_publication_guard",
+          "function": "explanations_publication_guard"
+        }
+      ]
+    },
+    {
+      "name": "original_source_import_credentials",
+      "relkind": "r",
+      "rls": true,
+      "policies": 0,
+      "triggers": null
+    },
+    {
+      "name": "pipeline_config",
+      "relkind": "r",
+      "rls": true,
+      "policies": 1,
+      "triggers": null
+    },
+    {
+      "name": "source_comparison_enrichment_queue",
+      "relkind": "r",
+      "rls": true,
+      "policies": 0,
+      "triggers": null
+    },
+    {
+      "name": "source_comparison_membership_audits",
+      "relkind": "r",
+      "rls": true,
+      "policies": 0,
+      "triggers": null
+    },
+    {
+      "name": "source_comparison_membership_release_policy",
+      "relkind": "r",
+      "rls": true,
+      "policies": 0,
+      "triggers": null
+    },
+    {
+      "name": "source_comparison_membership_scores",
+      "relkind": "r",
+      "rls": true,
+      "policies": 0,
+      "triggers": null
+    }
+  ],
+  "survivor_tables": [
+    {
+      "name": "article_claims",
+      "relkind": "r",
+      "rls": true,
+      "policies": 0,
+      "triggers": null
+    },
+    {
+      "name": "articles",
+      "relkind": "r",
+      "rls": true,
+      "policies": 2,
+      "triggers": [
+        {
+          "name": "articles_intercept_direct_arc_attachment",
+          "function": "mip_intercept_direct_arc_attachment"
+        },
+        {
+          "name": "articles_invalidate_arc_membership_approvals",
+          "function": "mip_invalidate_arc_membership_approvals"
+        },
+        {
+          "name": "mip_pipeline_article_history",
+          "function": "evidence_pipeline.capture_version"
+        },
+        {
+          "name": "mip_pipeline_article_no_truncate",
+          "function": "evidence_pipeline.reject_history_mutation"
+        }
+      ]
+    },
+    {
+      "name": "claim_evidence_links",
+      "relkind": "r",
+      "rls": true,
+      "policies": 0,
+      "triggers": null
+    },
+    {
+      "name": "claims",
+      "relkind": "r",
+      "rls": true,
+      "policies": 0,
+      "triggers": null
+    },
+    {
+      "name": "event_articles",
+      "relkind": "r",
+      "rls": true,
+      "policies": 0,
+      "triggers": null
+    },
+    {
+      "name": "events",
+      "relkind": "r",
+      "rls": true,
+      "policies": 0,
+      "triggers": null
+    },
+    {
+      "name": "explanations",
+      "relkind": "r",
+      "rls": true,
+      "policies": 0,
+      "triggers": null
+    },
+    {
+      "name": "pipeline_config",
+      "relkind": "r",
+      "rls": true,
+      "policies": 1,
+      "triggers": [
+        {
+          "name": "mip_pipeline_temporal_history",
+          "function": "evidence_pipeline.capture_version"
+        },
+        {
+          "name": "mip_pipeline_temporal_no_truncate",
+          "function": "evidence_pipeline.reject_history_mutation"
+        }
+      ]
+    }
+  ],
+  "consolidation_complete": false,
+  "safe_to_retire": [],
+  "missing_on_survivor": [
+    "original_source_import_credentials",
+    "source_comparison_enrichment_queue",
+    "source_comparison_membership_audits",
+    "source_comparison_membership_release_policy",
+    "source_comparison_membership_scores"
+  ]
+}
