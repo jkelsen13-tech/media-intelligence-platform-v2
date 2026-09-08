@@ -1,0 +1,415 @@
+{
+  "observed_at": "2026-09-08T08:48:00Z",
+  "scope": "Bounded collector contract audit; not full consolidation proof",
+  "survivor": "qikvmopbtijoebdqosyq",
+  "legacy": "yhbwnrtlqbjtcrrlpbge",
+  "legacy_function": {
+    "slug": "source-comparison-run",
+    "version": 9,
+    "ezbr_sha256": "11596d5909d2b8f48b37699956f8a52566a7c90cfa6329e6f870c685b7db6c59",
+    "live_index_matches_recovered_snapshot": true,
+    "deployable_repository_index_matches_live": false
+  },
+  "source_contracts": [
+    {
+      "table_name": "author_profile_queue",
+      "rls": true,
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "author_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "queued_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "processed_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "author_profile_queue_author_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "author_profile_queue_author_id_key",
+          "type": "u",
+          "definition": "UNIQUE (author_id)"
+        },
+        {
+          "name": "author_profile_queue_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ],
+      "policies": [
+        {
+          "name": "public read author_profile_queue",
+          "check": null,
+          "roles": [
+            "public"
+          ],
+          "using": "true",
+          "command": "SELECT"
+        }
+      ],
+      "browser_grants": {
+        "anon_insert": true,
+        "anon_select": false,
+        "authenticated_insert": true,
+        "authenticated_select": true
+      },
+      "triggers": null
+    },
+    {
+      "table_name": "ingestion_runs",
+      "rls": true,
+      "columns": [
+        {
+          "name": "run_id",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "mode",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "state",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "source_window_start",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "source_window_end",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "algorithm_version",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "model_id",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "counters",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "ingestion_runs_mode_check",
+          "type": "c",
+          "definition": "CHECK ((mode = ANY (ARRAY['discover'::text, 'hydrate'::text, 'extract'::text, 'cross_surface'::text, 'backfill'::text])))"
+        },
+        {
+          "name": "ingestion_runs_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (run_id)"
+        },
+        {
+          "name": "ingestion_runs_state_check",
+          "type": "c",
+          "definition": "CHECK ((state = ANY (ARRAY['planned'::text, 'running'::text, 'completed'::text, 'completed_with_errors'::text, 'failed'::text, 'cancelled'::text])))"
+        }
+      ],
+      "policies": [
+        {
+          "name": "ingestion_runs_read",
+          "check": null,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "true",
+          "command": "SELECT"
+        }
+      ],
+      "browser_grants": {
+        "anon_insert": true,
+        "anon_select": false,
+        "authenticated_insert": true,
+        "authenticated_select": true
+      },
+      "triggers": null
+    },
+    {
+      "table_name": "ingestion_source_runs",
+      "rls": true,
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "run_id",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "ingest_source_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "outlet_name",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "feed_url",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "state",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "fetched_items",
+          "type": "integer",
+          "not_null": true
+        },
+        {
+          "name": "new_items",
+          "type": "integer",
+          "not_null": true
+        },
+        {
+          "name": "error_note",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "attempted_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "ingestion_source_runs_fetched_items_check",
+          "type": "c",
+          "definition": "CHECK ((fetched_items >= 0))"
+        },
+        {
+          "name": "ingestion_source_runs_ingest_source_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (ingest_source_id) REFERENCES ingest_sources(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "ingestion_source_runs_new_items_check",
+          "type": "c",
+          "definition": "CHECK ((new_items >= 0))"
+        },
+        {
+          "name": "ingestion_source_runs_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "ingestion_source_runs_run_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (run_id) REFERENCES ingestion_runs(run_id) ON DELETE CASCADE"
+        },
+        {
+          "name": "ingestion_source_runs_run_id_ingest_source_id_key",
+          "type": "u",
+          "definition": "UNIQUE (run_id, ingest_source_id)"
+        },
+        {
+          "name": "ingestion_source_runs_state_check",
+          "type": "c",
+          "definition": "CHECK ((state = ANY (ARRAY['succeeded'::text, 'failed'::text])))"
+        }
+      ],
+      "policies": null,
+      "browser_grants": {
+        "anon_insert": true,
+        "anon_select": true,
+        "authenticated_insert": true,
+        "authenticated_select": true
+      },
+      "triggers": null
+    },
+    {
+      "table_name": "original_source_import_credentials",
+      "rls": true,
+      "columns": [
+        {
+          "name": "credential_name",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "key_hash",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "not_null": true
+        },
+        {
+          "name": "rotated_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "original_source_import_credentials_credential_name_check",
+          "type": "c",
+          "definition": "CHECK ((credential_name = ANY (ARRAY['original-source-import'::text, 'arc-membership-run'::text])))"
+        },
+        {
+          "name": "original_source_import_credentials_key_hash_check",
+          "type": "c",
+          "definition": "CHECK ((length(key_hash) = 64))"
+        },
+        {
+          "name": "original_source_import_credentials_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (credential_name)"
+        }
+      ],
+      "policies": null,
+      "browser_grants": {
+        "anon_insert": false,
+        "anon_select": false,
+        "authenticated_insert": false,
+        "authenticated_select": false
+      },
+      "triggers": null
+    },
+    {
+      "table_name": "source_comparison_enrichment_queue",
+      "rls": true,
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "event_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "state",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "enqueued_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "processed_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "error_note",
+          "type": "text",
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "source_comparison_enrichment_queue_event_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "source_comparison_enrichment_queue_event_id_key",
+          "type": "u",
+          "definition": "UNIQUE (event_id)"
+        },
+        {
+          "name": "source_comparison_enrichment_queue_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "source_comparison_enrichment_queue_state_check",
+          "type": "c",
+          "definition": "CHECK ((state = ANY (ARRAY['pending'::text, 'succeeded'::text, 'failed'::text])))"
+        }
+      ],
+      "policies": null,
+      "browser_grants": {
+        "anon_insert": true,
+        "anon_select": true,
+        "authenticated_insert": true,
+        "authenticated_select": true
+      },
+      "triggers": null
+    }
+  ],
+  "survivor_matching_tables": [],
+  "queue_producer": {
+    "proname": "mip_queue_source_comparison_enrichment",
+    "arguments": "",
+    "prosecdef": true,
+    "proconfig": [
+      "search_path=public, pg_catalog"
+    ],
+    "definition": "CREATE OR REPLACE FUNCTION public.mip_queue_source_comparison_enrichment()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_catalog'\nAS $function$ begin if new.comparison_validation_state is distinct from old.comparison_validation_state then insert into public.source_comparison_enrichment_queue(event_id, state, enqueued_at, processed_at, error_note) values (new.id, 'pending', now(), null, null) on conflict (event_id) do update set state = 'pending', enqueued_at = excluded.enqueued_at, processed_at = null, error_note = null; end if; return new; end; $function$\n"
+  },
+  "cutover_ready": false,
+  "single_backend_consolidation_complete": false,
+  "legacy_safe_to_retire": false,
+  "blockers": [
+    "Five required worker tables absent on survivor",
+    "Deployable repository worker predates live scheduler and membership contract",
+    "Live scheduled acknowledgement marks all pending rows; late enqueues can be acknowledged without inclusion in completed projection",
+    "Producer uses one row per event and mutable transaction-time enqueued_at; no monotonic revision or lease",
+    "Security, publication gates, data/history deltas and external configuration remain to reconcile"
+  ]
+}
