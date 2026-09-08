@@ -2,6 +2,17 @@
 // attached source records belong in Evidence. Both exports use the same proxy
 // calculation and source list, avoiding duplicate status logic across tabs.
 
+export function ArcSourceAvailability({ state, onRetry }) {
+  return (
+    <div className="arc-source-availability" role="status">
+      <p className="arc-empty">{state === 'loading'
+        ? 'Loading attached source records…'
+        : 'Attached source records are unavailable. This does not mean the arc has no sources.'}</p>
+      {state !== 'loading' && onRetry && <button type="button" className="timeline-xlink" onClick={onRetry}>Retry attached sources</button>}
+    </div>
+  )
+}
+
 const GAP_SEGMENTS = 8
 const GAP_STALE_DAYS = 30
 
@@ -82,7 +93,7 @@ export function arcAgeDays(startedAt) {
 
 // Overview only: the status/proxy block describes the arc as a whole and
 // contains no attached source-card list.
-export function ArcOverviewStatus({ arc, detail, arcArticles }) {
+export function ArcOverviewStatus({ arc, detail, arcArticles, sourceState = 'ready', onRetrySources }) {
   const ageDays = arcAgeDays(arc?.started_at)
   const milestones = detail?.milestones ?? []
   return (
@@ -92,7 +103,9 @@ export function ArcOverviewStatus({ arc, detail, arcArticles }) {
         <div className="arc-age-bar"><div className="arc-age-fill" style={{ width: `${Math.min(100, ((ageDays ?? 0) / 365) * 100)}%` }} /></div>
         <span className="arc-age-label"><span className="num">{ageDays ?? '—'}</span> days</span>
       </div>
-      <CoverageGapBar articles={arcArticles} startedAt={arc?.started_at} />
+      {sourceState === 'ready'
+        ? <CoverageGapBar articles={arcArticles} startedAt={arc?.started_at} />
+        : <ArcSourceAvailability state={sourceState} onRetry={onRetrySources} />}
       {arc?.coverage_gap && (
         <div className="arc-coverage-gap">
           Coverage gap — real-world developments are outpacing recorded media coverage. The story may still be unfolding, and the coverage proxy is incomplete.
@@ -128,12 +141,18 @@ export function ArcOverviewStatus({ arc, detail, arcArticles }) {
 
 // Evidence only: attached publisher records. No lifecycle/status content is
 // repeated here, so the tab is unambiguously a source inventory.
-export default function ArcEvidencePanel({ arcArticles, onOpenArticle }) {
+export default function ArcEvidencePanel({ arcArticles, onOpenArticle, sourceState = 'ready', onRetrySources }) {
+  if (sourceState !== 'ready') {
+    return <section className="ap-section" aria-label="Attached source records">
+      <span className="ap-label">Attached source records</span>
+      <ArcSourceAvailability state={sourceState} onRetry={onRetrySources} />
+    </section>
+  }
   if (!arcArticles?.length) {
     return (
       <section className="ap-section" aria-label="Attached source records">
         <span className="ap-label">Attached source records</span>
-        <p className="arc-empty">No attached publisher records are stored for this arc.</p>
+        <p className="arc-empty">No attached publisher records are available in the public source inventory for this arc.</p>
       </section>
     )
   }

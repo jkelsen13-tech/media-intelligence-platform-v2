@@ -43,8 +43,8 @@ test('relationship canvas exposes the bounded geography overlay and ignores null
 test('Arc Overview contains status context while Evidence remains an attached source inventory', () => {
   assert.match(arcEvidence, /export function ArcOverviewStatus/)
   assert.match(arcEvidence, /Evidence only: attached publisher records/)
-  assert.match(arcs, /<ArcOverviewStatus arc={selected} detail={detail} arcArticles={arcArticles} \/>/)
-  assert.match(arcs, /<ArcEvidencePanel arcArticles={arcArticles} onOpenArticle={onOpenArticle} \/>/)
+  assert.match(arcs, /<ArcOverviewStatus arc={selected} detail={detail} arcArticles={arcArticles} sourceState={articleInventory.state} onRetrySources={articleInventory.retry} \/>/)
+  assert.match(arcs, /<ArcEvidencePanel arcArticles={arcArticles} onOpenArticle={onOpenArticle} sourceState={articleInventory.state} onRetrySources={articleInventory.retry} \/>/)
   assert.doesNotMatch(arcs, /Sources: \{outlets\.join/)
 })
 

@@ -3,6 +3,10 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'src/views/ArcsView.jsx'
+      - 'src/components/ArcEvidencePanel.jsx'
+      - 'src/lib/useArcArticleInventory.js'
+      - 'verifier/runArcSourcesBrowser.mjs'
       - 'supabase/runtime-snapshots/spatial-runtime-v6/**'
       - 'tests/spatialRuntimeRegistration.test.mjs'
       - 'verifier/checkSpatialRuntimeAnonymous.mjs'
@@ -98,3 +102,8 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runGraphTimeBrowser.mjs
+
+      - name: Verify arc source failure and recovery
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runArcSourcesBrowser.mjs
