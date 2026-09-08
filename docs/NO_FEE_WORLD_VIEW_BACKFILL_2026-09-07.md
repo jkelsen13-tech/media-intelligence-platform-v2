@@ -174,3 +174,10 @@ It is not a protected rights registry or a provider adapter.
 This advances the shared-context row above. Source-specific rights review, trusted
 registry/ledger integration, a bounded real weather example, held-out producer
 qualification, remaining package audits and maintenance are still open.
+
+
+## Batch 81 — independent trigger hardening
+
+Five existing trigger functions now pin an empty search path; three definer triggers remove public/client EXECUTE grants. Exact-body PostgreSQL behavior tests pass; live bodies, attachments, evidence/job/profile data and access policies are preserved. Eight security warnings cleared without new findings. See [verification and remaining findings](TRIGGER_FUNCTION_HARDENING_2026-09-08.md).
+
+POWER remains pending separate API/service, selected product/release and upstream-source rights review. No activation, ingestion or production dependency is allowed before current authoritative verification of commercial use, attribution, retention/redistribution and limits. Acceptable attribution/NOTICE obligations will be recorded and implemented; incompatible or unresolved rights route to planned GHCNh or another compatible no-fee source. Continue independent work.

@@ -10,7 +10,11 @@ The disposable PGlite fixture captures the five live function and trigger defini
 
 Trigger-returning functions are not ordinary application RPCs. Advisor wording does not establish a working remote exploit. This is defense-in-depth hardening of executable grants and name resolution. CI explicitly verifies that existing triggers continue firing for a role whose function EXECUTE privilege has been revoked. Auth tests use synthetic rows only; no real signup or email is sent.
 
-Validation and live migration receipt will be recorded here after completion. Remaining advisor findings stay separately triaged; this batch does not make the six owner-context views security-invoker or broaden base-table access.
+Branch CI run 34177867184 passed 1,344 tests and production builds on Node 22 and 24. Supabase applied migration `20260908015040_trigger_function_hardening_v1.sql`; its assigned history version is used verbatim in the repository. Live catalog queries confirmed all five empty search paths, original body fingerprints/owners/security modes/trigger definitions and enabled attachments, retained service_role execution, and denied anon/authenticated execution on all three definer triggers.
+
+Before/after fingerprints match for investigation versions, change jobs, articles, arc candidates, profiles, RLS policies and relation access configuration. The existing nine NASA/history/publication/qualification invariants also passed before deployment. Security advisors went from 72 INFO / 10 WARN / 6 ERROR to 72 INFO / 2 WARN / 6 ERROR, removing exactly eight targeted warnings with no new findings. Performance findings remain 100 INFO / 3 WARN. Vector schema placement, password protection and the six separately triaged owner-context views remain open.
+
+Runtime behavior was exercised in disposable PostgreSQL, not by creating real users or mutating production evidence. Final-commit CI and post-merge deployment/UI checks are release gates recorded on PR #81. Remaining advisor findings stay separately triaged; this batch does not make the six owner-context views security-invoker or broaden base-table access.
 
 ## Source review and independent work
 
