@@ -6,8 +6,8 @@ import { setTimeout as delay } from 'node:timers/promises'
 const browserEngine = process.env.MIP_TIMELINE_BROWSER || 'chromium'
 const engine = createRequire(process.env.MIP_BROWSER_PACKAGE + '/package.json')('playwright')[browserEngine]
 assert.ok(['chromium','webkit'].includes(browserEngine))
-const origin='http://127.0.0.1:4173/media-intelligence-platform-v2/'
-const server=spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
+const origin = process.env.MIP_LIVE_SITE === '1' ? 'https://jkelsen13-tech.github.io/media-intelligence-platform-v2/' : 'http://127.0.0.1:4173/media-intelligence-platform-v2/'
+const server = process.env.MIP_LIVE_SITE === '1' ? null : spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
 let browser
 try {
   let ready=false
@@ -134,4 +134,4 @@ try {
 
   assert.deepEqual(errors,[])
   console.log('MIP_TIMELINE_COMPOSITION_PASS='+JSON.stringify({browserEngine,listWidths:[1280,1024,768,390,320],listCardWidth:true,widths:[1280,768,390,320],scopeVisible:true,keyboardDisclosure:true,searchRoundTrip:true,presentation:true,evidenceTabs:true,subjectPreserved:true,pageErrors:0}))
-}finally{await browser?.close();server.kill('SIGTERM')}
+}finally{await browser?.close();server?.kill('SIGTERM')}

@@ -58,3 +58,44 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  verify-live:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    env:
+      VITE_SUPABASE_URL: https://qikvmopbtijoebdqosyq.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_7EVSYlCWYiE6YL0bDBYr_w_iwB9tve_
+      MIP_LIVE_SITE: '1'
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build
+      - name: Confirm deployed release assets
+        run: node verifier/waitForLiveBuild.mjs
+      - name: Install isolated browser verifier
+        run: |
+          npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
+          node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
+      - name: Verify live shared workspace
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWorkspaceShellBrowser.mjs
+      - name: Verify live weather and navigation boundaries
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWeatherRightsBrowser.mjs
+      - name: Verify live Timeline and recovery
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runTimelineCompositionBrowser.mjs
+      - name: Verify live Timeline in WebKit
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+          MIP_TIMELINE_BROWSER: webkit
+        run: node verifier/runTimelineCompositionBrowser.mjs
