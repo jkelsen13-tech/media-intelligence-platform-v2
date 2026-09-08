@@ -19,6 +19,7 @@ on:
       - 'src/lib/workspacePresentation.js'
       - 'src/styles/workspace.css'
       - 'verifier/runWorkspaceShellBrowser.mjs'
+      - 'verifier/backendBoundary.mjs'
       - 'src/views/TimelineView.jsx'
       - 'src/lib/chronologyBackend.js'
       - 'src/styles/timeline.css'

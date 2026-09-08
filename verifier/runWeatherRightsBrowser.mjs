@@ -1,3 +1,4 @@
+import { observeBackendBoundary } from './backendBoundary.mjs'
 // Runs only in an ephemeral GitHub Actions runner against the built application.
 // Uses the existing public read API. No login, database writes or provider fetches.
 import assert from 'node:assert/strict'
@@ -20,6 +21,7 @@ try {
   assert.ok(ready, 'built application preview must start')
   browser = await chromium.launch({ headless: true })
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
+  const verifyBackend = observeBackendBoundary(page)
   const restrictedRequests = []
   const pageErrors = []
   page.on('request', request => {
@@ -101,6 +103,7 @@ try {
   console.log('MIP_CAMERA_SCREENSHOT=' + (await map.screenshot({type: 'jpeg', quality: 60})).toString('base64'))
   console.log('MIP_CAMERA_RESTORE_PASS=' + JSON.stringify({routePreserved: true, restoredCameraRetained: true}))
   assert.deepEqual(restrictedRequests, [], 'no restricted hosted weather requests')
+  console.log('MIP_BACKEND_BOUNDARY_PASS='+JSON.stringify(verifyBackend()))
   assert.deepEqual(pageErrors, [], 'no uncaught application errors')
   console.log('MIP_WEATHER_PREVIEW_PASS=' + JSON.stringify({ widths: [320, 390, 1280], restrictedRequests: 0, loadedReleasedGeometry: true, pageErrors: 0 }))
 } finally {

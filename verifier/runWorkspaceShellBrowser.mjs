@@ -1,3 +1,4 @@
+import { observeBackendBoundary } from './backendBoundary.mjs'
 // Ephemeral CI browser against the production build. Public reads only.
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
@@ -19,6 +20,7 @@ try {
   assert.ok(ready)
   browser = await ({chromium,webkit})[engine].launch({headless:true})
   const page = await browser.newPage({viewport:{width:1280,height:900}})
+  const verifyBackend = observeBackendBoundary(page)
   const errors = []
   page.on('pageerror', e => errors.push(e.message))
   await page.goto(origin + '#/event/acc55cb2-5ac2-4aed-be36-3f576d2bc443/timeline')
@@ -123,6 +125,7 @@ try {
   assert.equal(navWidth,72)
   await page.getByRole('button',{name:'Expand navigation',exact:true}).click()
   assert.equal(await context(),subject)
+  console.log('MIP_BACKEND_BOUNDARY_PASS='+JSON.stringify(verifyBackend()))
   assert.deepEqual(errors,[])
   console.log('MIP_SHELL_PASS='+JSON.stringify({widths:[1280,1024,768,390,320],reclaimedDock:true,tabletStack:true,account:true,keyboard:true,subjectPreserved:true,pageErrors:0}))
 } finally {
