@@ -245,3 +245,30 @@ UI checkpoint; it does not certify positive signed-in writes, collector semantic
 outputs, Auth migration, external GCP runtime or full historical parity.
 
 No legacy project is SAFE TO RETIRE. Overall consolidation remains INCOMPLETE.
+
+
+## Spatial history checkpoint — PR #136, 9 September 2026
+
+The sandbox's 39 observed rows across all 15 spatial tables are now retained in
+survivor `mip_private.spatial_row_versions`, separately from its 19 live spatial
+rows. All 15 source/archive payload digests match before/after the transfer and
+28 internal reference checks have zero missing rows. Live spatial payloads are
+unchanged. See [the retention report](SPATIAL_HISTORY_RETENTION_2026-09-09.md) and
+[receipt](../verifier/spatial-history-retention-2026-09-09.json).
+
+This supersedes the earlier statement that no sandbox data was retained, within
+this exact observed scope. It does not establish live identity/authority mapping,
+external-parent coverage, spatial release/function parity or writer/caller proof.
+Eight FK definitions leave the spatial schema. Of 17 inspected spatial functions,
+16 definitions match and append_release_decision has different release semantics.
+No sandbox policy is promoted into survivor publication by this archive.
+
+Current frontend baseline before this batch is PR #135 / 3d69bbdb7db3a3e7a2ecdda51638cc71b757ed03.
+Its full postmerge browser checks passed; this batch's final checks are on PR #136.
+PR #135 separately retained collector history before 16:30 UTC (9,237 versions).
+Manus comparison runtime remains v13 with JWT verification and the reviewed v14
+package lineage; its generation/output/acknowledgement and cutover gaps remain.
+Additional MIP account access is owner-approved but provisioning remains pending
+supported Auth administration. Account details are kept out of this public report.
+Markets evidence/rights and physical-device rendering qualification remain open.
+No legacy project is SAFE TO RETIRE. The ten-part gate remains INCOMPLETE.
