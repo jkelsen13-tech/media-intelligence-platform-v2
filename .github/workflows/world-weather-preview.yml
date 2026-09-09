@@ -32,6 +32,7 @@ on:
       - 'src/lib/chronologyBackend.js'
       - 'src/styles/timeline.css'
       - 'verifier/runTimelineCompositionBrowser.mjs'
+      - 'verifier/runMapLibreSecurityBrowser.mjs'
       - 'package.json'
       - 'package-lock.json'
       - 'src/components/InvestigationVersionNavigation.jsx'
@@ -85,6 +86,10 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runWeatherRightsBrowser.mjs
+      - name: Verify MapLibre attribution security and actual fallback
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runMapLibreSecurityBrowser.mjs
       - name: Verify Visual Fidelity profile and fallback
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser

@@ -273,7 +273,11 @@ function createMapLibreWorldViewRendererAdapter({
     let ScatterplotLayer
     let TextLayer
     try {
-      maplibregl = (await import('maplibre-gl')).default
+      maplibregl = await import('maplibre-gl')
+      // MapLibre 6 is ESM-only. Vite bundles the worker's shared imports into
+      // a same-origin asset under the deployment base path.
+      const { default: workerUrl } = await import('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url')
+      maplibregl.setWorkerUrl(workerUrl)
       await import('maplibre-gl/dist/maplibre-gl.css')
       MapboxOverlay = (await import('@deck.gl/mapbox')).MapboxOverlay
       ;({ ScatterplotLayer, TextLayer } = await import('@deck.gl/layers'))
