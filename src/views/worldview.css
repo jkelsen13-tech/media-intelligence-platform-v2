@@ -530,3 +530,5 @@
   .wv-fidelity-row { align-items: flex-start; }
   .wv-fidelity-row > button { width: 100%; text-align: left; }
 }
+
+.wv-fidelity-resolution { flex-wrap: wrap; max-width: 100%; }

@@ -1,3 +1,4 @@
+import { createCesiumResolutionController, cesiumResolutionState } from './worldViewCesiumResolution.js'
 import { resolveVisualFidelityProfile, visualFidelityCapabilities, createVisualFidelityEffect } from './worldViewVisualFidelity.js'
 // R4 World View — ellipsoid globe renderer adapter (CesiumJS).
 //
@@ -274,6 +275,7 @@ export function createCesiumEllipsoidRendererAdapter({
   let reliefShadingEnabled = true
   const reliefApplication = createVisualFidelityEffect(enabled => setGlobeReliefShading(Cesium, viewer, enabled))
 
+  const resolutionApplication = createCesiumResolutionController(() => viewer)
   const fxaaApplication = createVisualFidelityEffect(enabled => setCesiumFxaa(viewer, enabled))
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
@@ -606,6 +608,8 @@ export function createCesiumEllipsoidRendererAdapter({
     const relief = Boolean(viewer?.scene?.globe && !viewer.isDestroyed?.()
       && Cesium?.Material && !terrainDegraded && terrainPlan && !reliefApplication.hasFailed())
     return visualFidelityCapabilities({ relief,
+      resolution: resolutionApplication.available(),
+      resolutionReason: resolutionApplication.hasFailed() ? 'Render resolution could not be applied.' : 'Render resolution unavailable on this renderer.',
       fxaa: cesiumFxaaAvailable(viewer) && !fxaaApplication.hasFailed(),
       fxaaReason: fxaaApplication.hasFailed() ? 'FXAA could not be applied.' : 'FXAA unavailable on this renderer.',
       reason: reliefApplication.hasFailed() ? 'Relief could not be applied.'
@@ -617,7 +621,8 @@ export function createCesiumEllipsoidRendererAdapter({
     const effective = resolveVisualFidelityProfile(profile, getVisualFidelityCapabilities())
     const reliefApplied = setReliefShadingEnabled(effective.reliefShading)
     const fxaaApplied = fxaaApplication.set(effective.fxaa)
-    return reliefApplied && fxaaApplied
+    const resolutionApplied = resolutionApplication.set(effective.resolutionScale)
+    return reliefApplied && fxaaApplied && resolutionApplied
   }
 
   // Stage D: terrain status snapshot for the honest-availability UI.
@@ -722,7 +727,7 @@ export function createCesiumEllipsoidRendererAdapter({
     getReliefShadingEnabled,
     setVisualFidelityProfile,
     getVisualFidelityCapabilities,
-    getVisualFidelityRenderState: () => ({ fxaa: cesiumFxaaState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
+    getVisualFidelityRenderState: () => ({ globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }
