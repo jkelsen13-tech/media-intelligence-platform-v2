@@ -3,6 +3,8 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'supabase/functions/_shared/captureRetrieval.mjs'
+      - 'tests/captureRetrievalGenerationReadback.test.mjs'
       - 'supabase/runtime-snapshots/source-comparison-run-v13/**'
       - 'supabase/qualification/membership-prepared/**'
       - 'supabase/runtime-snapshots/source-comparison-run-v10/**'

@@ -14,8 +14,34 @@ export function validateCaptureRetrieval(input) {
 
 function checkRun(run, expectedId, expectedJob) {
   if (!run || !uuid(run.id) || !uuid(run.job_id) || (expectedId && run.id !== expectedId) || (expectedJob && run.job_id !== expectedJob) || run.contract !== 'capture-lexical-1' || !Array.isArray(run.targets) || run.targets.length > 2000 || !Number.isInteger(run.next_index) || run.next_index < 0 || run.next_index > run.targets.length || typeof run.is_refresh !== 'boolean') throw fault('invalid_run')
+  if (!uuid(run.source_capture_id) || typeof run.snapshot_hash !== 'string' || !/^[0-9a-f]{64}$/.test(run.snapshot_hash) ||
+      run.targets.some((id, i) => !uuid(id) || id.toLowerCase() === run.source_capture_id.toLowerCase() ||
+        (i > 0 && run.targets[i - 1].toLowerCase() >= id.toLowerCase()))) throw fault('invalid_manifest')
   if (run.completed_at && (!Number.isFinite(Date.parse(run.completed_at)) || run.next_index !== run.targets.length)) throw fault('invalid_completion')
   return run
+}
+
+// Retain scalar values and a copied manifest: transport implementations must not
+// be able to mutate the observed generation through a shared object reference.
+// This compares database-issued hashes; it is not an authenticity proof.
+function observedRun(run) {
+  return {
+    id: run.id, job_id: run.job_id, source_capture_id: run.source_capture_id,
+    contract: run.contract, snapshot_hash: run.snapshot_hash,
+    targets: [...run.targets], is_refresh: run.is_refresh,
+    next_index: run.next_index, completed_at: run.completed_at,
+  }
+}
+
+function checkContinuity(run, observed) {
+  if (!observed) return
+  for (const key of ['id', 'job_id', 'source_capture_id', 'contract', 'snapshot_hash', 'is_refresh']) {
+    if (run[key] !== observed[key]) throw fault('run_generation_changed')
+  }
+  if (run.targets.length !== observed.targets.length ||
+      run.targets.some((id, i) => id !== observed.targets[i])) throw fault('run_generation_changed')
+  if (run.next_index < observed.next_index ||
+      (observed.completed_at && run.completed_at !== observed.completed_at)) throw fault('run_progress_regressed')
 }
 
 // Works only on an explicitly selected existing lease/run. It never claims an
@@ -26,8 +52,14 @@ export async function runCaptureRetrieval(backend, input) {
   let runId = options.run_id
   let pages = 0
   let errorCode
+  let observed
+  let invalidInitial = false
   try {
-    const run = checkRun(await backend.retrieval(mode === 'resume' ? 'read' : mode, mode === 'resume' ? { run_id: runId } : mode === 'refresh' ? { job_id } : { job_id, lease_token }), runId, job_id)
+    const response = await backend.retrieval(mode === 'resume' ? 'read' : mode, mode === 'resume' ? { run_id: runId } : mode === 'refresh' ? { job_id } : { job_id, lease_token })
+    let run
+    try { run = checkRun(response, runId, job_id) }
+    catch (error) { invalidInitial = true; throw error }
+    observed = observedRun(run)
     runId = run.id
     if (!run.completed_at) {
       if (!run.is_refresh && !lease_token) throw fault('lease_required')
@@ -46,6 +78,8 @@ export async function runCaptureRetrieval(backend, input) {
   if (runId) {
     try {
       const run = checkRun(await backend.retrieval('read', { run_id: runId }), runId, job_id)
+      if (invalidInitial) throw fault('invalid_initial_run')
+      checkContinuity(run, observed)
       return {
         state: run.completed_at ? 'completed' : errorCode ? 'indeterminate' : 'partial',
         job_id: run.job_id, run_id: run.id, pages,
