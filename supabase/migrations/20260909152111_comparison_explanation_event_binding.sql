@@ -98,7 +98,7 @@ select
                   and jsonb_typeof(x.archived_sources) = 'array'
                   and not jsonb_path_exists(x.archived_sources, '$[*] ? (@.status == "missing")')
                   and x.rule_version like 'sc-v2-event-projection|%'
-                  and x.assertion_id ~ ('^sc:claim_grouping:' || c.event_id::text || ':[0-9]+:' || ac.article_id::text || '
+                  and x.assertion_id ~ ('^sc:claim_grouping:' || c.event_id::text || ':[0-9]+:' || ac.article_id::text || '$')
                   and position(format('Surface claim "%s" grouped under canonical "%s"', ac.surface_text, c.canonical_text) in coalesce(x.supporting_passage, '')) = 1
                 order by x.recomputed_at desc nulls last, x.id
                 limit 1
