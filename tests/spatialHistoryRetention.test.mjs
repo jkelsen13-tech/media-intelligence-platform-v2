@@ -4,12 +4,14 @@ import { readFile } from 'node:fs/promises'
 import { PGlite } from '@electric-sql/pglite'
 
 const migration = await readFile(new URL('../supabase/migrations/20260909181233_spatial_history_retention.sql', import.meta.url), 'utf8')
+const parentMigration = await readFile(new URL('../supabase/retention-contracts/spatial_parent_retention.sql', import.meta.url), 'utf8')
 const source = 'jfnzyvzthzqtczlxhjll', observed = '2026-01-01T00:00:00Z'
 async function fixture(t) {
   const db = await PGlite.create(); t.after(() => db.close())
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls; create schema mip_private; grant usage on schema mip_private to anon, authenticated; create schema spatial; create table spatial.assertions(id text primary key, decision text);')
   await db.exec("insert into spatial.assertions values ('shared', 'survivor decision')")
   await db.exec(migration)
+  await db.exec(parentMigration)
   return db
 }
 const retain = (db, rows, relation = 'spatial.assertions', project = source, time = observed) =>
