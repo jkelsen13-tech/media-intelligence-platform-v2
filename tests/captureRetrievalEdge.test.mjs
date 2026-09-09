@@ -12,7 +12,7 @@ const request = (body, headers = {}, path = '/capture-retrieval', method = 'POST
 })
 const fixture = () => {
   const calls = []
-  let run = { id: run_id, job_id, contract: 'capture-lexical-1', targets: [id(4), id(5)], next_index: 0, is_refresh: false, completed_at: null }
+  let run = { id: run_id, job_id, contract: 'capture-lexical-1', source_capture_id: id(6), snapshot_hash: 'a'.repeat(64), targets: [id(4), id(5)], next_index: 0, is_refresh: false, completed_at: null }
   const backend = {
     intake: async action => { calls.push(['intake', action]); return { pending: 2 } },
     changes: async action => { calls.push(['changes', action]); return { pending: 3 } },

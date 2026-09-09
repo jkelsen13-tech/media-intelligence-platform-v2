@@ -6,7 +6,7 @@ import { runWorker } from '../scripts/evidencePipeline.mjs'
 
 const id = n => `00000000-0000-0000-0000-${String(n).padStart(12, '0')}`
 const job_id = id(1), run_id = id(2), lease_token = id(3)
-const base = () => ({ id: run_id, job_id, contract: 'capture-lexical-1', targets: [id(4), id(5)], next_index: 0, is_refresh: false, completed_at: null })
+const base = () => ({ id: run_id, job_id, contract: 'capture-lexical-1', source_capture_id: id(6), snapshot_hash: 'a'.repeat(64), targets: [id(4), id(5)], next_index: 0, is_refresh: false, completed_at: null })
 const done = run => ({ ...run, next_index: run.targets.length, completed_at: '2026-09-07T00:00:00Z' })
 
 test('operator facets share the pinned target, credentials and fixed RPC routes', async () => {
