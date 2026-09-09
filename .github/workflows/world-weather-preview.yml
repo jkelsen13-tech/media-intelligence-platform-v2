@@ -3,6 +3,9 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'supabase/migrations/*_comparison_explanation_event_binding.sql'
+      - 'tests/comparisonExplanationEventBinding.test.mjs'
+      - 'scripts/mipConsolidationRestore.mjs'
       - 'verifier/runDynamicAtmosphereBrowser.mjs'
       - 'src/lib/worldViewCesiumRefinement.js'
       - 'verifier/runTerrainRefinementBrowser.mjs'
