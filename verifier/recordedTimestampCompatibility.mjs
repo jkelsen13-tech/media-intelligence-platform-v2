@@ -5,24 +5,41 @@ import { observeBackendBoundary } from './backendBoundary.mjs'
 export async function verifyRecordedTimestampCompatibility(browser, origin, engine) {
   const page=await browser.newPage({viewport:{width:1280,height:900}})
   const verifyBackend=observeBackendBoundary(page)
+  let phase='initial navigation'
   const errors=[]
   const errorStacks=[]
   page.on('pageerror',error=>{
     errors.push(error.message)
     errorStacks.push(error.stack ?? '')
-    console.log('MIP_TIMESTAMP_PAGE_ERROR='+JSON.stringify({engine,url:page.url(),message:error.message,stack:error.stack}))
+    console.log('MIP_TIMESTAMP_PAGE_ERROR='+JSON.stringify({engine,phase,url:page.url(),message:error.message,stack:error.stack}))
   })
   page.on('requestfailed',request=>console.log('MIP_TIMESTAMP_REQUEST_FAILED='+JSON.stringify({engine,url:request.url(),error:request.failure()?.errorText})))
+  page.on('worker',worker=>console.log('MIP_TIMESTAMP_WORKER='+JSON.stringify({engine,phase,url:worker.url()})))
+  page.on('response',response=>{
+    if(response.request().resourceType()==='script')
+      console.log('MIP_TIMESTAMP_SCRIPT='+JSON.stringify({engine,phase,url:response.url(),status:response.status()}))
+  })
+  page.on('console',message=>{
+    if(message.type()==='error') console.log('MIP_TIMESTAMP_CONSOLE='+JSON.stringify({engine,phase,text:message.text(),location:message.location()}))
+  })
+  await page.addInitScript(()=>{
+    window.addEventListener('unhandledrejection',event=>{
+      console.error('MIP_IMPORT_REJECTION',JSON.stringify({message:event.reason?.message,stack:event.reason?.stack}))
+    })
+    window.addEventListener('vite:preloadError',event=>{
+      console.error('MIP_PRELOAD_ERROR',JSON.stringify({message:event.payload?.message,stack:event.payload?.stack}))
+    })
+  })
   const subject='acc55cb2-5ac2-4aed-be36-3f576d2bc443'
   const base=origin+'/media-intelligence-platform-v2/#/event/'+subject+'/world'
   const from='2024-04-08 17:59:00+00', to='2024-04-08 20:29:00+00'
   const scope=from+'..'+to
   // A retained timestamp inspection is qualified after its renderer is ready.
-  // Reloading a still-importing WebKit document can emit an import-abort error
-  // from the discarded document. Keep the page-error assertions intact.
+  // Keep page-error assertions intact while tracing the failing navigation phase.
   const mapReady=()=>page.waitForFunction(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState(),{},{timeout:60000})
   try {
     for(const selected of [from,'2024-04-08 23:29:00+0530']) {
+      phase='select '+selected
       await page.goto(base+'?time='+encodeURIComponent(scope)+'&at='+encodeURIComponent(selected))
       // Hash navigation may return before React applies the new route.
       await page.waitForFunction(expected =>
@@ -35,11 +52,14 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
       assert.equal(await page.locator('.wv-view').getAttribute('data-as-of-time'),selected)
       await mapReady()
       const tabs=page.getByRole('tablist',{name:'Evidence views',exact:true})
+      phase='open Timeline '+selected
       await tabs.getByRole('tab',{name:'Timeline',exact:true}).click()
       await page.waitForLoadState('networkidle',{timeout:30000})
+      phase='return World View '+selected
       await tabs.getByRole('tab',{name:'World View',exact:true}).click()
       await inspector.getByText('coarsened_to_precision_class',{exact:true}).waitFor()
       await mapReady()
+      phase='reload '+selected
       await page.reload()
       await inspector.getByText('coarsened_to_precision_class',{exact:true}).waitFor()
       await mapReady()
@@ -50,6 +70,7 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
       assert.equal(await page.getByRole('button',{name:'Return to selected location',exact:true}).isEnabled(),true)
       if (selected===from) console.log('MIP_SQL_TIME_SCREENSHOT_'+engine+'='+(await page.locator('.wv-scrubber').screenshot({type:'jpeg',quality:65})).toString('base64'))
     }
+    phase='invalid local time'
     await page.goto(base+'?time='+encodeURIComponent('2024-04-08 17:59:00'))
     await page.getByRole('combobox',{name:'Choose a recorded time',exact:true}).waitFor()
     await page.getByText('No spatial state recorded at this time.',{exact:true}).first().waitFor()
