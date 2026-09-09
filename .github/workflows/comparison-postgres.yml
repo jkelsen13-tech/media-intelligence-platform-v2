@@ -5,8 +5,7 @@ on:
       - 'supabase/qualification/comparison-generations/**'
       - 'verifier/comparisonPostgresConcurrency.py'
       - '.github/workflows/comparison-postgres.yml'
-  push:
-    branches: [main]
+  workflow_call:
   workflow_dispatch:
 permissions:
   contents: read
