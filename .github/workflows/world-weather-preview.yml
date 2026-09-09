@@ -71,7 +71,7 @@ permissions:
 jobs:
   weather-preview:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     env:
       # Existing public client configuration; no user session or privileged key.
       VITE_SUPABASE_URL: https://qikvmopbtijoebdqosyq.supabase.co

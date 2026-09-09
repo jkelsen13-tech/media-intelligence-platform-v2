@@ -100,3 +100,10 @@ no fetch interception, ignored error or production behavior change is introduced
 The earlier access-control errors are not claimed fixed. Response/allowed-origin
 and originating-document diagnostics are retained for any recurrence. Exact
 failed runs and fresh final qualification are recorded on the PR.
+
+The full preview in run 34359995561 passed every browser assertion through the
+final WebKit comparison recovery but exceeded the 12-minute job allowance.
+The full preview and full live jobs now allow 15 minutes; every required step and
+assertion remains intact, and the independent focused job retains eight minutes.
+This accommodates settled-readiness qualification and normal runner variability;
+it does not change product or provider execution limits.
