@@ -1,0 +1,1350 @@
+{
+  "scope": "bounded private spatial retention; not live semantic migration, publication approval, or retirement",
+  "source_project": "jfnzyvzthzqtczlxhjll",
+  "destination_project": "qikvmopbtijoebdqosyq",
+  "baseline_commit": "3d69bbdb7db3a3e7a2ecdda51638cc71b757ed03",
+  "migration": {
+    "version": "20260909181233",
+    "path": "supabase/migrations/20260909181233_spatial_history_retention.sql",
+    "recorded_sql_exact": true
+  },
+  "source_before": {
+    "observed_at": "2026-09-09 18:06:10.291719+00",
+    "relations": [
+      {
+        "row_count": "8",
+        "relation_name": "assertion_revisions",
+        "ordered_payload_sha256": "ff8c49cdc7726442b181c7124f478148b09dc0e1186a860084f0e01967897325"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "assertions",
+        "ordered_payload_sha256": "03af4549adc7dec6f6f6b38b6db3b12cfb7c0e22a9e9a7a55b4aa37fe1b937dc"
+      },
+      {
+        "row_count": "2",
+        "relation_name": "audience_scopes",
+        "ordered_payload_sha256": "6cc21b00057ad36aa6b14cfc41f73588a4415799e110b987f246ce6e0ad4ea3a"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "break_glass_audit",
+        "ordered_payload_sha256": "8cedf3ee6fa065b3d7b653977cf72ca3e90955371302a0be83f98d762cc9cf81"
+      },
+      {
+        "row_count": "3",
+        "relation_name": "evidence_artifact_registry",
+        "ordered_payload_sha256": "2a16b6d695e18e02b1c6892a29b694dcf1ea5636879b51cc8d8c70387fd374a4"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_condition_events",
+        "ordered_payload_sha256": "bb29eeb7cbac94db19b57aeeffdf18d9043b27c34fcb116e9ae5c618bd29f529"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_snapshots",
+        "ordered_payload_sha256": "1d063e2cd4ab4fffe686da443c9ab0e0ad719fd31be63f7130ccb44b8ef71048"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "geometry_snapshots",
+        "ordered_payload_sha256": "a1f834433462a6b61496471a6658a3cac9772fb4f2ca371b866ba0c4cf868076"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "graph_node_authority_snapshots",
+        "ordered_payload_sha256": "60f011b53980a8639b9e33c92cc258beb4de4d87de64f1147517b04027c7ac0b"
+      },
+      {
+        "row_count": "2",
+        "relation_name": "place_authority_snapshots",
+        "ordered_payload_sha256": "4ca880520a1a4256513eaf8f061d55289c6302ea81fccb7822a6975bf42ae171"
+      },
+      {
+        "row_count": "9",
+        "relation_name": "policy_artifacts",
+        "ordered_payload_sha256": "2824d799ac9a74550d444abb5bb31ab73576a46abe17b1e65b38c91512b00eb7"
+      },
+      {
+        "row_count": "4",
+        "relation_name": "release_decisions",
+        "ordered_payload_sha256": "a653d623d30ee09262c5b02cecfcbd77b165890af39ba99fb86448b6048a7429"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "review_decisions",
+        "ordered_payload_sha256": "afa5a8788e730bd762271b589718793e36584716181d0322ef16bc752fe86ccd"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "revision_evidence",
+        "ordered_payload_sha256": "b530de51cf821a2a6a93fb9ea117a17fd789fc3e8512c73c4ae10860f03b8b9f"
+      },
+      {
+        "row_count": "3",
+        "relation_name": "revision_lineage",
+        "ordered_payload_sha256": "38dde992c7d9efbe44647cbd710298fa77cdb51230e0b12a893ea837058c3b1d"
+      }
+    ]
+  },
+  "source_pre_transfer": {
+    "observed_at": "2026-09-09 18:12:54.679184+00",
+    "relations": [
+      {
+        "row_count": "8",
+        "relation_name": "assertion_revisions",
+        "ordered_payload_sha256": "ff8c49cdc7726442b181c7124f478148b09dc0e1186a860084f0e01967897325"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "assertions",
+        "ordered_payload_sha256": "03af4549adc7dec6f6f6b38b6db3b12cfb7c0e22a9e9a7a55b4aa37fe1b937dc"
+      },
+      {
+        "row_count": "2",
+        "relation_name": "audience_scopes",
+        "ordered_payload_sha256": "6cc21b00057ad36aa6b14cfc41f73588a4415799e110b987f246ce6e0ad4ea3a"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "break_glass_audit",
+        "ordered_payload_sha256": "8cedf3ee6fa065b3d7b653977cf72ca3e90955371302a0be83f98d762cc9cf81"
+      },
+      {
+        "row_count": "3",
+        "relation_name": "evidence_artifact_registry",
+        "ordered_payload_sha256": "2a16b6d695e18e02b1c6892a29b694dcf1ea5636879b51cc8d8c70387fd374a4"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_condition_events",
+        "ordered_payload_sha256": "bb29eeb7cbac94db19b57aeeffdf18d9043b27c34fcb116e9ae5c618bd29f529"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_snapshots",
+        "ordered_payload_sha256": "1d063e2cd4ab4fffe686da443c9ab0e0ad719fd31be63f7130ccb44b8ef71048"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "geometry_snapshots",
+        "ordered_payload_sha256": "a1f834433462a6b61496471a6658a3cac9772fb4f2ca371b866ba0c4cf868076"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "graph_node_authority_snapshots",
+        "ordered_payload_sha256": "60f011b53980a8639b9e33c92cc258beb4de4d87de64f1147517b04027c7ac0b"
+      },
+      {
+        "row_count": "2",
+        "relation_name": "place_authority_snapshots",
+        "ordered_payload_sha256": "4ca880520a1a4256513eaf8f061d55289c6302ea81fccb7822a6975bf42ae171"
+      },
+      {
+        "row_count": "9",
+        "relation_name": "policy_artifacts",
+        "ordered_payload_sha256": "2824d799ac9a74550d444abb5bb31ab73576a46abe17b1e65b38c91512b00eb7"
+      },
+      {
+        "row_count": "4",
+        "relation_name": "release_decisions",
+        "ordered_payload_sha256": "a653d623d30ee09262c5b02cecfcbd77b165890af39ba99fb86448b6048a7429"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "review_decisions",
+        "ordered_payload_sha256": "afa5a8788e730bd762271b589718793e36584716181d0322ef16bc752fe86ccd"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "revision_evidence",
+        "ordered_payload_sha256": "b530de51cf821a2a6a93fb9ea117a17fd789fc3e8512c73c4ae10860f03b8b9f"
+      },
+      {
+        "row_count": "3",
+        "relation_name": "revision_lineage",
+        "ordered_payload_sha256": "38dde992c7d9efbe44647cbd710298fa77cdb51230e0b12a893ea837058c3b1d"
+      }
+    ]
+  },
+  "capture": {
+    "observed_at": "2026-09-09 18:10:29.725906+00",
+    "row_count": 39,
+    "format": "raw PostgreSQL to_jsonb(row)::text, no JavaScript numeric conversion",
+    "atomicity": "one source query snapshot; source and destination observations are independent, not a distributed transaction"
+  },
+  "receipts": [
+    {
+      "inserted": 8,
+      "received": 8,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.assertion_revisions",
+      "already_retained": 0
+    },
+    {
+      "inserted": 1,
+      "received": 1,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.assertions",
+      "already_retained": 0
+    },
+    {
+      "inserted": 2,
+      "received": 2,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.audience_scopes",
+      "already_retained": 0
+    },
+    {
+      "inserted": 1,
+      "received": 1,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.break_glass_audit",
+      "already_retained": 0
+    },
+    {
+      "inserted": 3,
+      "received": 3,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.evidence_artifact_registry",
+      "already_retained": 0
+    },
+    {
+      "inserted": 1,
+      "received": 1,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.evidence_condition_events",
+      "already_retained": 0
+    },
+    {
+      "inserted": 1,
+      "received": 1,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.evidence_snapshots",
+      "already_retained": 0
+    },
+    {
+      "inserted": 1,
+      "received": 1,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.geometry_snapshots",
+      "already_retained": 0
+    },
+    {
+      "inserted": 1,
+      "received": 1,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.graph_node_authority_snapshots",
+      "already_retained": 0
+    },
+    {
+      "inserted": 2,
+      "received": 2,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.place_authority_snapshots",
+      "already_retained": 0
+    },
+    {
+      "inserted": 9,
+      "received": 9,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.policy_artifacts",
+      "already_retained": 0
+    },
+    {
+      "inserted": 4,
+      "received": 4,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.release_decisions",
+      "already_retained": 0
+    },
+    {
+      "inserted": 1,
+      "received": 1,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.review_decisions",
+      "already_retained": 0
+    },
+    {
+      "inserted": 1,
+      "received": 1,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.revision_evidence",
+      "already_retained": 0
+    },
+    {
+      "inserted": 3,
+      "received": 3,
+      "source_project": "jfnzyvzthzqtczlxhjll",
+      "source_relation": "spatial.revision_lineage",
+      "already_retained": 0
+    }
+  ],
+  "destination_after": {
+    "observed_at": "2026-09-09 18:13:33.07479+00",
+    "relations": [
+      {
+        "row_count": "8",
+        "relation_name": "assertion_revisions",
+        "ordered_payload_sha256": "ff8c49cdc7726442b181c7124f478148b09dc0e1186a860084f0e01967897325"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "assertions",
+        "ordered_payload_sha256": "03af4549adc7dec6f6f6b38b6db3b12cfb7c0e22a9e9a7a55b4aa37fe1b937dc"
+      },
+      {
+        "row_count": "2",
+        "relation_name": "audience_scopes",
+        "ordered_payload_sha256": "6cc21b00057ad36aa6b14cfc41f73588a4415799e110b987f246ce6e0ad4ea3a"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "break_glass_audit",
+        "ordered_payload_sha256": "8cedf3ee6fa065b3d7b653977cf72ca3e90955371302a0be83f98d762cc9cf81"
+      },
+      {
+        "row_count": "3",
+        "relation_name": "evidence_artifact_registry",
+        "ordered_payload_sha256": "2a16b6d695e18e02b1c6892a29b694dcf1ea5636879b51cc8d8c70387fd374a4"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_condition_events",
+        "ordered_payload_sha256": "bb29eeb7cbac94db19b57aeeffdf18d9043b27c34fcb116e9ae5c618bd29f529"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_snapshots",
+        "ordered_payload_sha256": "1d063e2cd4ab4fffe686da443c9ab0e0ad719fd31be63f7130ccb44b8ef71048"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "geometry_snapshots",
+        "ordered_payload_sha256": "a1f834433462a6b61496471a6658a3cac9772fb4f2ca371b866ba0c4cf868076"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "graph_node_authority_snapshots",
+        "ordered_payload_sha256": "60f011b53980a8639b9e33c92cc258beb4de4d87de64f1147517b04027c7ac0b"
+      },
+      {
+        "row_count": "2",
+        "relation_name": "place_authority_snapshots",
+        "ordered_payload_sha256": "4ca880520a1a4256513eaf8f061d55289c6302ea81fccb7822a6975bf42ae171"
+      },
+      {
+        "row_count": "9",
+        "relation_name": "policy_artifacts",
+        "ordered_payload_sha256": "2824d799ac9a74550d444abb5bb31ab73576a46abe17b1e65b38c91512b00eb7"
+      },
+      {
+        "row_count": "4",
+        "relation_name": "release_decisions",
+        "ordered_payload_sha256": "a653d623d30ee09262c5b02cecfcbd77b165890af39ba99fb86448b6048a7429"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "review_decisions",
+        "ordered_payload_sha256": "afa5a8788e730bd762271b589718793e36584716181d0322ef16bc752fe86ccd"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "revision_evidence",
+        "ordered_payload_sha256": "b530de51cf821a2a6a93fb9ea117a17fd789fc3e8512c73c4ae10860f03b8b9f"
+      },
+      {
+        "row_count": "3",
+        "relation_name": "revision_lineage",
+        "ordered_payload_sha256": "38dde992c7d9efbe44647cbd710298fa77cdb51230e0b12a893ea837058c3b1d"
+      }
+    ]
+  },
+  "source_after": {
+    "observed_at": "2026-09-09 18:13:31.644044+00",
+    "relations": [
+      {
+        "row_count": "8",
+        "relation_name": "assertion_revisions",
+        "ordered_payload_sha256": "ff8c49cdc7726442b181c7124f478148b09dc0e1186a860084f0e01967897325"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "assertions",
+        "ordered_payload_sha256": "03af4549adc7dec6f6f6b38b6db3b12cfb7c0e22a9e9a7a55b4aa37fe1b937dc"
+      },
+      {
+        "row_count": "2",
+        "relation_name": "audience_scopes",
+        "ordered_payload_sha256": "6cc21b00057ad36aa6b14cfc41f73588a4415799e110b987f246ce6e0ad4ea3a"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "break_glass_audit",
+        "ordered_payload_sha256": "8cedf3ee6fa065b3d7b653977cf72ca3e90955371302a0be83f98d762cc9cf81"
+      },
+      {
+        "row_count": "3",
+        "relation_name": "evidence_artifact_registry",
+        "ordered_payload_sha256": "2a16b6d695e18e02b1c6892a29b694dcf1ea5636879b51cc8d8c70387fd374a4"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_condition_events",
+        "ordered_payload_sha256": "bb29eeb7cbac94db19b57aeeffdf18d9043b27c34fcb116e9ae5c618bd29f529"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_snapshots",
+        "ordered_payload_sha256": "1d063e2cd4ab4fffe686da443c9ab0e0ad719fd31be63f7130ccb44b8ef71048"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "geometry_snapshots",
+        "ordered_payload_sha256": "a1f834433462a6b61496471a6658a3cac9772fb4f2ca371b866ba0c4cf868076"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "graph_node_authority_snapshots",
+        "ordered_payload_sha256": "60f011b53980a8639b9e33c92cc258beb4de4d87de64f1147517b04027c7ac0b"
+      },
+      {
+        "row_count": "2",
+        "relation_name": "place_authority_snapshots",
+        "ordered_payload_sha256": "4ca880520a1a4256513eaf8f061d55289c6302ea81fccb7822a6975bf42ae171"
+      },
+      {
+        "row_count": "9",
+        "relation_name": "policy_artifacts",
+        "ordered_payload_sha256": "2824d799ac9a74550d444abb5bb31ab73576a46abe17b1e65b38c91512b00eb7"
+      },
+      {
+        "row_count": "4",
+        "relation_name": "release_decisions",
+        "ordered_payload_sha256": "a653d623d30ee09262c5b02cecfcbd77b165890af39ba99fb86448b6048a7429"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "review_decisions",
+        "ordered_payload_sha256": "afa5a8788e730bd762271b589718793e36584716181d0322ef16bc752fe86ccd"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "revision_evidence",
+        "ordered_payload_sha256": "b530de51cf821a2a6a93fb9ea117a17fd789fc3e8512c73c4ae10860f03b8b9f"
+      },
+      {
+        "row_count": "3",
+        "relation_name": "revision_lineage",
+        "ordered_payload_sha256": "38dde992c7d9efbe44647cbd710298fa77cdb51230e0b12a893ea837058c3b1d"
+      }
+    ]
+  },
+  "survivor_live_before": {
+    "observed_at": "2026-09-09 18:06:11.239208+00",
+    "relations": [
+      {
+        "row_count": "1",
+        "relation_name": "assertion_revisions",
+        "ordered_payload_sha256": "d6989449136c0b8d0136fbc49dda0c5aaf73eb77c707ab81b69aa12719ff7630"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "assertions",
+        "ordered_payload_sha256": "6425d59dd9ed6aabcf02d56368430cc449425d895d7bf76fbe33cecb7a78cfc3"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "audience_scopes",
+        "ordered_payload_sha256": "54931f688b34746e2094e58166b1bc3b04029ba3230e0784f20f4a9a883f4c02"
+      },
+      {
+        "row_count": "0",
+        "relation_name": "break_glass_audit",
+        "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_artifact_registry",
+        "ordered_payload_sha256": "9bb029c9e2c1fcb73b632a7f84e1bf712394adb1bb71042708d35cda9dbb0a86"
+      },
+      {
+        "row_count": "0",
+        "relation_name": "evidence_condition_events",
+        "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_snapshots",
+        "ordered_payload_sha256": "e4736e8db26a3536e2298b1703b596e2c3ded7a0c64890cc04679f8c1f198890"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "geometry_snapshots",
+        "ordered_payload_sha256": "4ffa27cfae6858abc143118b30bd60d6c026b75ee547b61d4992e22b0a5a3957"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "graph_node_authority_snapshots",
+        "ordered_payload_sha256": "5e43138bacc76832250bc2190865c55f9aaa1bce797e7574a435e33e7b933f0f"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "place_authority_snapshots",
+        "ordered_payload_sha256": "3c62639cc8853f9a5b40ab93b47b4c3890bead2a4a22a1c6b2adc1b7c9da69d9"
+      },
+      {
+        "row_count": "8",
+        "relation_name": "policy_artifacts",
+        "ordered_payload_sha256": "2750bddf52c6c860285e2a5656d4407e9bd12b0d92ed4d58b962e0359c33b53d"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "release_decisions",
+        "ordered_payload_sha256": "7dee5210eddb5686661fec2733e45e439f6040c554a86b6ced2392c8b2767356"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "review_decisions",
+        "ordered_payload_sha256": "5a465248433bd3cd22bd629f31104d9daa61fdbf290376f2c3ae43b0fe5ba28a"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "revision_evidence",
+        "ordered_payload_sha256": "a8d888a1d32d53140e3f27e2b9eaece839113022f42c8f909e17b003267554eb"
+      },
+      {
+        "row_count": "0",
+        "relation_name": "revision_lineage",
+        "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    ]
+  },
+  "survivor_live_after": {
+    "observed_at": "2026-09-09 18:13:29.981467+00",
+    "relations": [
+      {
+        "row_count": "1",
+        "relation_name": "assertion_revisions",
+        "ordered_payload_sha256": "d6989449136c0b8d0136fbc49dda0c5aaf73eb77c707ab81b69aa12719ff7630"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "assertions",
+        "ordered_payload_sha256": "6425d59dd9ed6aabcf02d56368430cc449425d895d7bf76fbe33cecb7a78cfc3"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "audience_scopes",
+        "ordered_payload_sha256": "54931f688b34746e2094e58166b1bc3b04029ba3230e0784f20f4a9a883f4c02"
+      },
+      {
+        "row_count": "0",
+        "relation_name": "break_glass_audit",
+        "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_artifact_registry",
+        "ordered_payload_sha256": "9bb029c9e2c1fcb73b632a7f84e1bf712394adb1bb71042708d35cda9dbb0a86"
+      },
+      {
+        "row_count": "0",
+        "relation_name": "evidence_condition_events",
+        "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "evidence_snapshots",
+        "ordered_payload_sha256": "e4736e8db26a3536e2298b1703b596e2c3ded7a0c64890cc04679f8c1f198890"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "geometry_snapshots",
+        "ordered_payload_sha256": "4ffa27cfae6858abc143118b30bd60d6c026b75ee547b61d4992e22b0a5a3957"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "graph_node_authority_snapshots",
+        "ordered_payload_sha256": "5e43138bacc76832250bc2190865c55f9aaa1bce797e7574a435e33e7b933f0f"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "place_authority_snapshots",
+        "ordered_payload_sha256": "3c62639cc8853f9a5b40ab93b47b4c3890bead2a4a22a1c6b2adc1b7c9da69d9"
+      },
+      {
+        "row_count": "8",
+        "relation_name": "policy_artifacts",
+        "ordered_payload_sha256": "2750bddf52c6c860285e2a5656d4407e9bd12b0d92ed4d58b962e0359c33b53d"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "release_decisions",
+        "ordered_payload_sha256": "7dee5210eddb5686661fec2733e45e439f6040c554a86b6ced2392c8b2767356"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "review_decisions",
+        "ordered_payload_sha256": "5a465248433bd3cd22bd629f31104d9daa61fdbf290376f2c3ae43b0fe5ba28a"
+      },
+      {
+        "row_count": "1",
+        "relation_name": "revision_evidence",
+        "ordered_payload_sha256": "a8d888a1d32d53140e3f27e2b9eaece839113022f42c8f909e17b003267554eb"
+      },
+      {
+        "row_count": "0",
+        "relation_name": "revision_lineage",
+        "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    ]
+  },
+  "internal_reference_checks": {
+    "observed_at": "2026-09-09 18:13:35.537434+00",
+    "internal_reference_checks": [
+      {
+        "constraint_name": "assertion_revisions_graph_node_authority_snapshot_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "assertion_revisions_internal_geometry_snapshot_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "assertion_revisions_place_authority_snapshot_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "assertion_revisions_spatial_assertion_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "assertion_revisions_temporal_policy_artifact_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "assertions_scope_policy_artifact_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "audience_scopes_supersedes_audience_scope_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "break_glass_audit_related_intent_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "evidence_artifact_registry_source_node_authority_snapshot__fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "evidence_artifact_registry_validation_policy_artifact_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "evidence_condition_events_condition_policy_artifact_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "evidence_condition_events_evidence_snapshot_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "evidence_snapshots_capture_policy_artifact_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "evidence_snapshots_evidence_artifact_registry_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "evidence_snapshots_retention_policy_artifact_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "geometry_snapshots_compatibility_policy_artifact_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "geometry_snapshots_place_authority_snapshot_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "policy_artifacts_supersedes_policy_artifact_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "release_decisions_assertion_revision_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "release_decisions_audience_scope_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "release_decisions_predecessor_release_decision_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "release_decisions_release_policy_artifact_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "review_decisions_assertion_revision_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "review_decisions_review_policy_artifact_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "revision_evidence_assertion_revision_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "revision_evidence_evidence_snapshot_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "revision_lineage_from_revision_id_fkey",
+        "missing_references": "0"
+      },
+      {
+        "constraint_name": "revision_lineage_to_revision_id_fkey",
+        "missing_references": "0"
+      }
+    ]
+  },
+  "replay": {
+    "inserted": 0,
+    "received": 8,
+    "source_project": "jfnzyvzthzqtczlxhjll",
+    "source_relation": "spatial.assertion_revisions",
+    "already_retained": 8
+  },
+  "archive_boundary": {
+    "observed_at": "2026-09-09 18:13:37.91646+00",
+    "archived_versions": 39,
+    "rls": true,
+    "anon_read": false,
+    "authenticated_read": false,
+    "anon_import": false,
+    "authenticated_import": false,
+    "worker_read": true,
+    "worker_insert": true,
+    "worker_update": false,
+    "worker_delete": false,
+    "worker_truncate": false,
+    "triggers": [
+      {
+        "name": "spatial_history_no_mutation",
+        "enabled": "O",
+        "definition": "CREATE TRIGGER spatial_history_no_mutation BEFORE DELETE OR UPDATE ON mip_private.spatial_row_versions FOR EACH ROW EXECUTE FUNCTION mip_private.reject_spatial_history_mutation()"
+      },
+      {
+        "name": "spatial_history_no_truncate",
+        "enabled": "O",
+        "definition": "CREATE TRIGGER spatial_history_no_truncate BEFORE TRUNCATE ON mip_private.spatial_row_versions FOR EACH STATEMENT EXECUTE FUNCTION mip_private.reject_spatial_history_mutation()"
+      }
+    ],
+    "importer": {
+      "security_definer": false,
+      "config": [
+        "search_path=\"\""
+      ],
+      "body_exactly_matches_reviewed_contract": true
+    }
+  },
+  "advisors_delta": {
+    "added": [
+      {
+        "name": "rls_enabled_no_policy",
+        "level": "INFO",
+        "detail": "Table \\`mip_private.spatial_row_versions\\` has RLS enabled, but no policies exist",
+        "metadata": {
+          "name": "spatial_row_versions",
+          "type": "table",
+          "schema": "mip_private"
+        }
+      }
+    ],
+    "removed": []
+  },
+  "catalog_comparison": [
+    {
+      "relation": "assertion_revisions",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "assertions",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "audience_scopes",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "break_glass_audit",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "evidence_artifact_registry",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "evidence_condition_events",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "evidence_snapshots",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "geometry_snapshots",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "graph_node_authority_snapshots",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "place_authority_snapshots",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "policy_artifacts",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "release_decisions",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "review_decisions",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "revision_evidence",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    },
+    {
+      "relation": "revision_lineage",
+      "columns_equal": true,
+      "constraints_equal": true,
+      "table_acl_equal": true,
+      "source_rls": true,
+      "survivor_rls": true
+    }
+  ],
+  "external_parent_dependencies_not_transferred": [
+    {
+      "child_relation": "spatial.assertion_revisions",
+      "conname": "assertion_revisions_canonical_place_id_fkey",
+      "definition": "FOREIGN KEY (canonical_place_id) REFERENCES geographic_places(id) ON DELETE RESTRICT",
+      "parent_relation": "geographic_places"
+    },
+    {
+      "child_relation": "spatial.assertions",
+      "conname": "assertions_graph_node_id_fkey",
+      "definition": "FOREIGN KEY (graph_node_id) REFERENCES nodes(id) ON DELETE RESTRICT",
+      "parent_relation": "nodes"
+    },
+    {
+      "child_relation": "spatial.evidence_artifact_registry",
+      "conname": "evidence_artifact_registry_article_id_fkey",
+      "definition": "FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE RESTRICT",
+      "parent_relation": "articles"
+    },
+    {
+      "child_relation": "spatial.evidence_artifact_registry",
+      "conname": "evidence_artifact_registry_policy_document_id_fkey",
+      "definition": "FOREIGN KEY (policy_document_id) REFERENCES policy_documents(id) ON DELETE RESTRICT",
+      "parent_relation": "policy_documents"
+    },
+    {
+      "child_relation": "spatial.evidence_condition_events",
+      "conname": "evidence_condition_events_source_change_event_id_fkey",
+      "definition": "FOREIGN KEY (source_change_event_id) REFERENCES source_change_events(id) ON DELETE RESTRICT",
+      "parent_relation": "source_change_events"
+    },
+    {
+      "child_relation": "spatial.geometry_snapshots",
+      "conname": "geometry_snapshots_canonical_place_id_fkey",
+      "definition": "FOREIGN KEY (canonical_place_id) REFERENCES geographic_places(id) ON DELETE RESTRICT",
+      "parent_relation": "geographic_places"
+    },
+    {
+      "child_relation": "spatial.graph_node_authority_snapshots",
+      "conname": "graph_node_authority_snapshots_graph_node_id_fkey",
+      "definition": "FOREIGN KEY (graph_node_id) REFERENCES nodes(id) ON DELETE RESTRICT",
+      "parent_relation": "nodes"
+    },
+    {
+      "child_relation": "spatial.place_authority_snapshots",
+      "conname": "place_authority_snapshots_canonical_place_id_fkey",
+      "definition": "FOREIGN KEY (canonical_place_id) REFERENCES geographic_places(id) ON DELETE RESTRICT",
+      "parent_relation": "geographic_places"
+    }
+  ],
+  "runtime_contract_observation": {
+    "functions_inspected_per_project": 17,
+    "matching_function_definitions": 16,
+    "differing_function": "spatial.append_release_decision",
+    "difference": "Survivor accepts originating released decisions; sandbox Gate A rejects released and restricted. No function was changed or assumed interchangeable.",
+    "survivor": [
+      {
+        "schema_name": "spatial",
+        "proname": "append_assertion",
+        "identity_args": "p_graph_node_id uuid, p_relationship_scope_key text, p_scope_policy_artifact_id uuid, p_identity_payload jsonb, p_identity_canonical_text text, p_assertion_fingerprint text, p_run_id text",
+        "definition_sha256": "4f6fc4adff14d44758d5495eea46c4f4992329720c3f9b3620d966e5332d6b80",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_assertion_revision",
+        "identity_args": "p_assertion_id uuid, p_location_role text, p_relationship_qualifier text, p_canonical_place_id uuid, p_evidence_precision text, p_internal_geometry_snapshot_id uuid, p_valid_time_precision text, p_source_native_time jsonb, p_guard_start_utc timestamp with time zone, p_guard_end_utc timestamp with time zone, p_temporal_policy_artifact_id uuid, p_uncertainty_class text, p_uncertainty_note text, p_revision_payload jsonb, p_revision_canonical_text text, p_revision_fingerprint text, p_node_payload jsonb, p_node_canonical_text text, p_node_snapshot_hash text, p_place_payload jsonb, p_place_canonical_text text, p_place_snapshot_hash text, p_run_id text",
+        "definition_sha256": "988f2fd2de015f17117f0147dd106ac3432003872553a759fe2d4f6d57c4d470",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_audience_scope",
+        "identity_args": "p_audience_code text, p_audience_version text, p_canonical_capabilities jsonb, p_canonical_text text, p_content_hash text, p_effective_at timestamp with time zone, p_supersedes_audience_scope_id uuid, p_run_id text",
+        "definition_sha256": "65e125dbf267606d0ae28358200884ad5a00293445b603ab026a22ad8bf4f6a6",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_evidence_condition_event",
+        "identity_args": "p_evidence_snapshot_id uuid, p_condition text, p_source_change_event_id uuid, p_condition_policy_artifact_id uuid, p_reason_code text, p_observed_at timestamp with time zone, p_event_payload jsonb, p_event_canonical_text text, p_event_fingerprint text, p_run_id text",
+        "definition_sha256": "c9f8a280aa21f7f16172fa88698e2c44020da6610924a2fda10fb5e5f6262e0d",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_evidence_snapshot",
+        "identity_args": "p_registry_id uuid, p_source_field text, p_span_start integer, p_span_end integer, p_span_coordinate_system text, p_normalization_version text, p_encoding_version text, p_content_hash text, p_source_version_identifier text, p_source_acquired_at timestamp with time zone, p_capture_mode text, p_capture_policy_artifact_id uuid, p_retention_policy_artifact_id uuid, p_retention_classification text, p_access_scope text, p_immutable_capture_ref text, p_snapshot_payload jsonb, p_snapshot_canonical_text text, p_snapshot_fingerprint text, p_run_id text",
+        "definition_sha256": "b988b51e00873ce635cbe5579bb9e130ef811e162ec7ba5d6cd2d9e2ab840222",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_geometry_snapshot",
+        "identity_args": "p_representation_kind text, p_canonical_geojson jsonb, p_canonical_place_id uuid, p_place_payload jsonb, p_place_canonical_text text, p_place_snapshot_hash text, p_geometry_precision text, p_geometry_source_kind text, p_geometry_source_version text, p_compatibility_policy_artifact_id uuid, p_geometry_payload jsonb, p_geometry_canonical_text text, p_geometry_hash text, p_capture_basis text, p_run_id text",
+        "definition_sha256": "8d16641fd99cf0ab25df228183a35b7270e4f5b222a2164ba1a2bce727978fc6",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_policy_artifact",
+        "identity_args": "p_policy_family_code text, p_policy_version text, p_canonical_content jsonb, p_canonical_text text, p_content_hash text, p_effective_at timestamp with time zone, p_supersedes_policy_artifact_id uuid, p_run_id text",
+        "definition_sha256": "b8429fa4cad8bb267cc1752581f7c2b2470eb8a25d214b81df2a24ceddba11be",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_release_decision",
+        "identity_args": "p_revision_id uuid, p_audience_scope_id uuid, p_release_policy_artifact_id uuid, p_decision_disposition text, p_predecessor_release_decision_id uuid, p_decided_at timestamp with time zone, p_effective_at timestamp with time zone, p_reason_code text, p_decision_payload jsonb, p_decision_canonical_text text, p_decision_fingerprint text, p_run_id text",
+        "definition_sha256": "37c4ab8b524b8a7952345616df802a7ee10c6379c89dcac0c8fcd049886535cc",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_review_decision",
+        "identity_args": "p_revision_id uuid, p_support_disposition text, p_review_mode text, p_review_outcome_basis jsonb, p_review_policy_artifact_id uuid, p_effective_at timestamp with time zone, p_reason_code text, p_decision_payload jsonb, p_decision_canonical_text text, p_decision_fingerprint text, p_run_id text",
+        "definition_sha256": "913625d0dd8246e8c9c56a816f0f71c712e0f9b8f93e354b0f4ad977e2b9ef00",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_revision_evidence",
+        "identity_args": "p_revision_id uuid, p_evidence_snapshot_id uuid, p_evidence_role text, p_linkage_payload jsonb, p_linkage_canonical_text text, p_linkage_fingerprint text, p_run_id text",
+        "definition_sha256": "90c3134a2ed3f020e169583f3acc0a19e50eedc67f0b7ffbff4337714afd609e",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_revision_lineage",
+        "identity_args": "p_from_revision_id uuid, p_to_revision_id uuid, p_relationship_type text, p_lineage_payload jsonb, p_lineage_canonical_text text, p_lineage_fingerprint text, p_run_id text",
+        "definition_sha256": "c5a79fa28b40cc342bdcd03f3307520c759184828e3a444ca2b95370ebe263b2",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "register_evidence_artifact",
+        "identity_args": "p_artifact_type_code text, p_native_id uuid, p_stable_artifact_key text, p_validation_policy_artifact_id uuid, p_registry_payload jsonb, p_registry_canonical_text text, p_registry_fingerprint text, p_source_node_payload jsonb, p_source_node_canonical_text text, p_source_node_snapshot_hash text, p_source_graph_payload jsonb, p_source_graph_canonical_text text, p_source_graph_association_fingerprint text, p_run_id text",
+        "definition_sha256": "4fe938e34a927f5496aeeaee4fea1537abd0f0ae25d3dcee58b6e4cf90446e6b",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "reject_historical_mutation",
+        "identity_args": "",
+        "definition_sha256": "f3d444d6448b07c1dbbc24183c7612aa1c0e694d0a650d950060bb81b1219d1a",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "require_exact_fingerprint_payload",
+        "identity_args": "p_claimed jsonb, p_server jsonb, p_label text",
+        "definition_sha256": "33f00c85525377b4c7d3a153b789146f4fa48b9186bcf361795e3f55430938f0",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "require_policy_family",
+        "identity_args": "p_policy_id uuid, p_family text",
+        "definition_sha256": "05c92323cf05ea9689e6e98b7de22d6c958b7cd0e64c51d335ed06b7d66c6017",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "resolve_direct_wire_principal",
+        "identity_args": "p_run_id text",
+        "definition_sha256": "9983cfc57d6abb1b746857fc2f787306b288f6cc87a387097317f5a7ed55e1e4",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "verify_jcs_claim",
+        "identity_args": "p_payload jsonb, p_canonical_text text, p_claimed_hash text",
+        "definition_sha256": "c5ae419e485a0a2ac58b21e8dcef525ca5906f0bc8cf4c3c67dbbd2fa502ccdb",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner}"
+      }
+    ],
+    "sandbox": [
+      {
+        "schema_name": "spatial",
+        "proname": "append_assertion",
+        "identity_args": "p_graph_node_id uuid, p_relationship_scope_key text, p_scope_policy_artifact_id uuid, p_identity_payload jsonb, p_identity_canonical_text text, p_assertion_fingerprint text, p_run_id text",
+        "definition_sha256": "4f6fc4adff14d44758d5495eea46c4f4992329720c3f9b3620d966e5332d6b80",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_assertion_revision",
+        "identity_args": "p_assertion_id uuid, p_location_role text, p_relationship_qualifier text, p_canonical_place_id uuid, p_evidence_precision text, p_internal_geometry_snapshot_id uuid, p_valid_time_precision text, p_source_native_time jsonb, p_guard_start_utc timestamp with time zone, p_guard_end_utc timestamp with time zone, p_temporal_policy_artifact_id uuid, p_uncertainty_class text, p_uncertainty_note text, p_revision_payload jsonb, p_revision_canonical_text text, p_revision_fingerprint text, p_node_payload jsonb, p_node_canonical_text text, p_node_snapshot_hash text, p_place_payload jsonb, p_place_canonical_text text, p_place_snapshot_hash text, p_run_id text",
+        "definition_sha256": "988f2fd2de015f17117f0147dd106ac3432003872553a759fe2d4f6d57c4d470",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_audience_scope",
+        "identity_args": "p_audience_code text, p_audience_version text, p_canonical_capabilities jsonb, p_canonical_text text, p_content_hash text, p_effective_at timestamp with time zone, p_supersedes_audience_scope_id uuid, p_run_id text",
+        "definition_sha256": "65e125dbf267606d0ae28358200884ad5a00293445b603ab026a22ad8bf4f6a6",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_evidence_condition_event",
+        "identity_args": "p_evidence_snapshot_id uuid, p_condition text, p_source_change_event_id uuid, p_condition_policy_artifact_id uuid, p_reason_code text, p_observed_at timestamp with time zone, p_event_payload jsonb, p_event_canonical_text text, p_event_fingerprint text, p_run_id text",
+        "definition_sha256": "c9f8a280aa21f7f16172fa88698e2c44020da6610924a2fda10fb5e5f6262e0d",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_evidence_snapshot",
+        "identity_args": "p_registry_id uuid, p_source_field text, p_span_start integer, p_span_end integer, p_span_coordinate_system text, p_normalization_version text, p_encoding_version text, p_content_hash text, p_source_version_identifier text, p_source_acquired_at timestamp with time zone, p_capture_mode text, p_capture_policy_artifact_id uuid, p_retention_policy_artifact_id uuid, p_retention_classification text, p_access_scope text, p_immutable_capture_ref text, p_snapshot_payload jsonb, p_snapshot_canonical_text text, p_snapshot_fingerprint text, p_run_id text",
+        "definition_sha256": "b988b51e00873ce635cbe5579bb9e130ef811e162ec7ba5d6cd2d9e2ab840222",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_geometry_snapshot",
+        "identity_args": "p_representation_kind text, p_canonical_geojson jsonb, p_canonical_place_id uuid, p_place_payload jsonb, p_place_canonical_text text, p_place_snapshot_hash text, p_geometry_precision text, p_geometry_source_kind text, p_geometry_source_version text, p_compatibility_policy_artifact_id uuid, p_geometry_payload jsonb, p_geometry_canonical_text text, p_geometry_hash text, p_capture_basis text, p_run_id text",
+        "definition_sha256": "8d16641fd99cf0ab25df228183a35b7270e4f5b222a2164ba1a2bce727978fc6",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_policy_artifact",
+        "identity_args": "p_policy_family_code text, p_policy_version text, p_canonical_content jsonb, p_canonical_text text, p_content_hash text, p_effective_at timestamp with time zone, p_supersedes_policy_artifact_id uuid, p_run_id text",
+        "definition_sha256": "b8429fa4cad8bb267cc1752581f7c2b2470eb8a25d214b81df2a24ceddba11be",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_release_decision",
+        "identity_args": "p_revision_id uuid, p_audience_scope_id uuid, p_release_policy_artifact_id uuid, p_decision_disposition text, p_predecessor_release_decision_id uuid, p_decided_at timestamp with time zone, p_effective_at timestamp with time zone, p_reason_code text, p_decision_payload jsonb, p_decision_canonical_text text, p_decision_fingerprint text, p_run_id text",
+        "definition_sha256": "00c472e7d851216161940784a0c3a4992f2896605edb568cdad072c6b56eaf74",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_review_decision",
+        "identity_args": "p_revision_id uuid, p_support_disposition text, p_review_mode text, p_review_outcome_basis jsonb, p_review_policy_artifact_id uuid, p_effective_at timestamp with time zone, p_reason_code text, p_decision_payload jsonb, p_decision_canonical_text text, p_decision_fingerprint text, p_run_id text",
+        "definition_sha256": "913625d0dd8246e8c9c56a816f0f71c712e0f9b8f93e354b0f4ad977e2b9ef00",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_revision_evidence",
+        "identity_args": "p_revision_id uuid, p_evidence_snapshot_id uuid, p_evidence_role text, p_linkage_payload jsonb, p_linkage_canonical_text text, p_linkage_fingerprint text, p_run_id text",
+        "definition_sha256": "90c3134a2ed3f020e169583f3acc0a19e50eedc67f0b7ffbff4337714afd609e",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "append_revision_lineage",
+        "identity_args": "p_from_revision_id uuid, p_to_revision_id uuid, p_relationship_type text, p_lineage_payload jsonb, p_lineage_canonical_text text, p_lineage_fingerprint text, p_run_id text",
+        "definition_sha256": "c5a79fa28b40cc342bdcd03f3307520c759184828e3a444ca2b95370ebe263b2",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "register_evidence_artifact",
+        "identity_args": "p_artifact_type_code text, p_native_id uuid, p_stable_artifact_key text, p_validation_policy_artifact_id uuid, p_registry_payload jsonb, p_registry_canonical_text text, p_registry_fingerprint text, p_source_node_payload jsonb, p_source_node_canonical_text text, p_source_node_snapshot_hash text, p_source_graph_payload jsonb, p_source_graph_canonical_text text, p_source_graph_association_fingerprint text, p_run_id text",
+        "definition_sha256": "4fe938e34a927f5496aeeaee4fea1537abd0f0ae25d3dcee58b6e4cf90446e6b",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "reject_historical_mutation",
+        "identity_args": "",
+        "definition_sha256": "f3d444d6448b07c1dbbc24183c7612aa1c0e694d0a650d950060bb81b1219d1a",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "require_exact_fingerprint_payload",
+        "identity_args": "p_claimed jsonb, p_server jsonb, p_label text",
+        "definition_sha256": "33f00c85525377b4c7d3a153b789146f4fa48b9186bcf361795e3f55430938f0",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "require_policy_family",
+        "identity_args": "p_policy_id uuid, p_family text",
+        "definition_sha256": "05c92323cf05ea9689e6e98b7de22d6c958b7cd0e64c51d335ed06b7d66c6017",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "resolve_direct_wire_principal",
+        "identity_args": "p_run_id text",
+        "definition_sha256": "9983cfc57d6abb1b746857fc2f787306b288f6cc87a387097317f5a7ed55e1e4",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner}"
+      },
+      {
+        "schema_name": "spatial",
+        "proname": "verify_jcs_claim",
+        "identity_args": "p_payload jsonb, p_canonical_text text, p_claimed_hash text",
+        "definition_sha256": "c5ae419e485a0a2ac58b21e8dcef525ca5906f0bc8cf4c3c67dbbd2fa502ccdb",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "acl": "{spatial_owner=X/spatial_owner}"
+      }
+    ]
+  },
+  "validation": {
+    "initial_golden_run": 34387319102,
+    "node_versions": [
+      22,
+      24
+    ],
+    "tests": 1569,
+    "failed": 0,
+    "builds": "passed",
+    "dependency_audit_vulnerabilities": 0,
+    "final_head_and_live": "recorded on PR #136 after completion"
+  },
+  "limitations": [
+    "Archive preserves observed source payloads, not unobserved overwritten states or source authenticity.",
+    "Private payloads and principal references are absent from this public receipt.",
+    "External parent records, runtime consumers, writer authorization, spatial artifact/policy semantics and future deltas remain pending.",
+    "No Auth account, source row, schedule, public publication table, paid provider, or legacy project was changed."
+  ]
+}

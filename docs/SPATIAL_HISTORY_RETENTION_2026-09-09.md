@@ -6,7 +6,7 @@ the survivor held 19. Every table's ordered full-payload digest differed even
 though the inspected columns, constraints and table ACLs matched. Matching
 schemas do not establish matching historical authorities.
 
-This batch prepares a separate private archive, `mip_private.spatial_row_versions`,
+This batch installs a separate private archive, `mip_private.spatial_row_versions`,
 for exact sandbox-qualified snapshots. It never inserts into the live
 `spatial` tables, rewrites an actor or authority ID, imports an Auth identity,
 or interprets a sandbox review/release decision as survivor publication approval.
@@ -32,10 +32,29 @@ tamper-proof storage against database administrators.
 Isolated PGlite tests exercise revised and reused IDs, live-table isolation,
 exact geometry/large numbers/native time, malformed and partial batches,
 rollback, replay, browser denial with schema usage, worker/owner mutation,
-and direct hash/key/time forgery. Production transfer and parity evidence
-will be recorded after these checks pass. No production archive is claimed yet.
+and direct hash/key/time forgery. All 1,569 tests passed on Node 22 and 24, both builds passed and the audit reported
+zero vulnerabilities in initial Golden run 34387319102. Migration
+`20260909181233_spatial_history_retention` was applied; its recorded SQL
+exactly matches the tested contract. The Supabase-assigned migration version is
+used in the repository; no migration file was generated on the owner's device.
 
-This closes only a bounded retention prerequisite once verified. Operational
+At source observation 2026-09-09 18:10:29.725906+00, 39 complete rows were captured in
+one query and then retained as service_role in one destination transaction.
+All 15 ordered payload digests and counts match the source before and after
+transfer. All 28 internal foreign-key reference checks have zero missing rows.
+Eight external foreign-key definitions reference nodes, places, articles,
+policy documents and source changes outside this retention scope; those parents
+were not copied or inferred. Replaying eight assertion revisions inserted zero.
+The survivor's 19 live spatial rows have unchanged full-payload digests.
+
+Production grants/RLS and both enabled immutability triggers match the contract.
+The only advisor delta is an expected INFO for the intentionally closed private
+RLS table without policies. No browser policy is added merely to silence this
+notice. See the [exact receipt](../verifier/spatial-history-retention-2026-09-09.json)
+and [read-only inventory](../supabase/tests/spatial_history_inventory.sql).
+Final-head checks and deployment/live results are recorded on PR #136.
+
+This verifies a bounded retention prerequisite. Operational
 identity mapping, external/public parent dependencies, policy/function/trigger
 and deployment-artifact parity, positive spatial writer authorization, runtime
 callers, and subsequent deltas remain separate work. The sandbox's existing
@@ -46,3 +65,9 @@ Supabase changelog and current [function](https://supabase.com/docs/guides/datab
 and [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
 guidance were checked. No extension, client package, paid service, schedule,
 public API, frontend control or local file is added.
+
+A supplementary read-only function comparison found 16 of 17 inspected spatial
+function definitions equal. The differing append_release_decision permits
+originating released decisions on the survivor; the sandbox's Gate A rejects
+released/restricted decisions. Equal table schemas therefore do not make the
+projects' release contracts interchangeable. Neither function was changed.
