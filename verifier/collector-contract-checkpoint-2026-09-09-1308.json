@@ -1,0 +1,123 @@
+{
+  "observedOn": "2026-09-09",
+  "runtime": {
+    "project": "yhbwnrtlqbjtcrrlpbge",
+    "function": "source-comparison-run",
+    "version": 12,
+    "verify_jwt": true,
+    "bundle": "32a5a6dc412dca5c020b3dcc66f737771cf98f74a50ee017143c363f2a01f9ba",
+    "exactRepositoryPackage": "supabase/runtime-snapshots/source-comparison-run-v13/",
+    "files": [
+      "index.ts",
+      "lib.js",
+      "membershipFingerprint.js",
+      "loadedLanguageLexicon.json"
+    ],
+    "allContentsEqual": true
+  },
+  "manusCatalog": [
+    {
+      "observed_at": "2026-09-09 13:08:10.415445+00",
+      "schema": "public",
+      "name": "author_profile_queue",
+      "rls": true
+    },
+    {
+      "observed_at": "2026-09-09 13:08:10.415445+00",
+      "schema": "public",
+      "name": "ingestion_runs",
+      "rls": true
+    },
+    {
+      "observed_at": "2026-09-09 13:08:10.415445+00",
+      "schema": "public",
+      "name": "ingestion_source_runs",
+      "rls": true
+    },
+    {
+      "observed_at": "2026-09-09 13:08:10.415445+00",
+      "schema": "public",
+      "name": "original_source_import_credentials",
+      "rls": true
+    },
+    {
+      "observed_at": "2026-09-09 13:08:10.415445+00",
+      "schema": "public",
+      "name": "source_comparison_enrichment_queue",
+      "rls": true
+    }
+  ],
+  "survivorCatalog": [
+    {
+      "observed_at": "2026-09-09 13:08:12.348836+00",
+      "schema": "evidence_pipeline",
+      "name": "assessments",
+      "rls": true
+    },
+    {
+      "observed_at": "2026-09-09 13:08:12.348836+00",
+      "schema": "evidence_pipeline",
+      "name": "change_jobs",
+      "rls": true
+    },
+    {
+      "observed_at": "2026-09-09 13:08:12.348836+00",
+      "schema": "evidence_pipeline",
+      "name": "record_versions",
+      "rls": true
+    },
+    {
+      "observed_at": "2026-09-09 13:08:12.348836+00",
+      "schema": "evidence_pipeline",
+      "name": "retrieval_runs",
+      "rls": true
+    },
+    {
+      "observed_at": "2026-09-09 13:08:12.348836+00",
+      "schema": "mip_private",
+      "name": "collector_row_versions",
+      "rls": true
+    }
+  ],
+  "producer": [
+    {
+      "observed_at": "2026-09-09 13:08:13.915827+00",
+      "definition_hash": "88679e25721009ea4893870e2e3848957d8a1c99b4b456e0d110aaf69164ccb5"
+    }
+  ],
+  "policies": [
+    {
+      "observed_at": "2026-09-09 13:08:15.156921+00",
+      "model_version": "sc-v2-membership-2026-08-23.4",
+      "auto_approval_enabled": false,
+      "auto_approval_threshold": null
+    },
+    {
+      "observed_at": "2026-09-09 13:08:15.156921+00",
+      "model_version": "sc-v2-membership-2026-08-23.5",
+      "auto_approval_enabled": false,
+      "auto_approval_threshold": null
+    }
+  ],
+  "schedules": [
+    {
+      "observed_at": "2026-09-09 13:09:09.739458+00",
+      "jobname": "mip-ingest-rss-hourly",
+      "schedule": "*/5 * * * *",
+      "active": true
+    },
+    {
+      "observed_at": "2026-09-09 13:09:09.739458+00",
+      "jobname": "mip-source-comparison-enrichment",
+      "schedule": "*/5 * * * *",
+      "active": true
+    }
+  ],
+  "limits": [
+    "Read-only current-state checkpoint, not atomic cross-project evidence.",
+    "No source payloads or credential values read or copied in this audit.",
+    "No runtime, schema, queue, schedule, policy or local file changed.",
+    "Generation-bound semantic output and acknowledgement remain pending.",
+    "No legacy project is safe to retire."
+  ]
+}
