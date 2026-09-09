@@ -13,9 +13,11 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
     errorStacks.push(error.stack ?? '')
     console.log('MIP_TIMESTAMP_PAGE_ERROR='+JSON.stringify({engine,phase,url:page.url(),message:error.message,stack:error.stack}))
   })
-  page.on('requestfailed',request=>console.log('MIP_TIMESTAMP_REQUEST_FAILED='+JSON.stringify({engine,url:request.url(),error:request.failure()?.errorText})))
+  page.on('requestfailed',request=>console.log('MIP_TIMESTAMP_REQUEST_FAILED='+JSON.stringify({engine,phase,url:request.url(),resourceType:request.resourceType(),error:request.failure()?.errorText})))
   page.on('worker',worker=>console.log('MIP_TIMESTAMP_WORKER='+JSON.stringify({engine,phase,url:worker.url()})))
   page.on('response',response=>{
+    if(response.url().startsWith('https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/'))
+      console.log('MIP_TIMESTAMP_BACKEND_RESPONSE='+JSON.stringify({engine,phase,url:response.url(),status:response.status(),allowOrigin:response.headers()['access-control-allow-origin']??null}))
     if(response.request().resourceType()==='script')
       console.log('MIP_TIMESTAMP_SCRIPT='+JSON.stringify({engine,phase,url:response.url(),status:response.status()}))
   })
@@ -30,6 +32,8 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
       lifecycle=name
       trace(name,{persisted:event.persisted??null})
     })
+    // Observe the originating document without intercepting fetch or suppressing errors.
+    window.addEventListener('error',event=>trace('window-error',{message:event.message,filename:event.filename}))
     const NativeWorker=window.Worker
     window.Worker=class extends NativeWorker {
       constructor(url,options){

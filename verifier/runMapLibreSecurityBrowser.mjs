@@ -31,8 +31,10 @@ try {
       for(const injected of [false,true]){
         const page=await browser.newPage({viewport:{width,height:900},hasTouch:width===390})
         const verifyBackend=observeBackendBoundary(page)
-        const errors=[], workers=[], mapResponses=[], mapFailures=[]
+        const errors=[], workers=[], mapResponses=[], mapFailures=[], backendResponses=[], backendFailures=[]
         let styleResponses=0
+        page.on('response',r=>{if(r.url().startsWith('https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/'))backendResponses.push({url:r.url(),status:r.status(),allowOrigin:r.headers()['access-control-allow-origin']??null})})
+        page.on('requestfailed',r=>{if(r.url().startsWith('https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/'))backendFailures.push({url:r.url(),error:r.failure()?.errorText})})
         page.on('pageerror',e=>errors.push(e.stack||e.message))
         page.on('worker',w=>workers.push(w.url()))
         page.on('response',r=>{if(r.url().includes('tiles.openfreemap.org'))mapResponses.push({url:r.url(),status:r.status()})})
@@ -96,7 +98,7 @@ try {
         console.log('MIP_MAPLIBRE_PASS='+JSON.stringify({engine,width,injected,positiveControl:true,errors,workers,backend:verifyBackend(),attributionPreserved:true,cameraRestored:true}))
         console.log('MIP_MAPLIBRE_IMAGE_'+engine+'_'+width+'_'+injected+'='+(await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:65})).toString('base64'))
         } catch(error) {
-          console.log('MIP_MAPLIBRE_FAILURE='+JSON.stringify({engine,width,injected,url:page.url(),errors,workers,text:await page.locator('body').innerText()}))
+          console.log('MIP_MAPLIBRE_FAILURE='+JSON.stringify({engine,width,injected,url:page.url(),errors,workers,backendResponses,backendFailures,text:await page.locator('body').innerText()}))
           console.log('MIP_MAPLIBRE_FAILURE_IMAGE='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
           throw error
         } finally {await page.close()}

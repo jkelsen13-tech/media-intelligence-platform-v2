@@ -85,3 +85,13 @@ qualification remain separate.
 - https://github.com/advisories/GHSA-w5vr-8v7q-w6rv
 - https://github.com/browserslist/browserslist/releases/tag/4.28.9
 - https://github.com/web-platform-dx/baseline-browser-mapping/pull/137
+
+## Browser failure diagnostics
+
+The first qualification attempt failed on a WebKit public investigation read;
+the unchanged retry passed all map cases but failed on an edges read immediately
+before pagehide during timestamp reload. Neither incident is diagnosed as a
+backend or library fix. The verifier now retains HTTP status/allowed origin and
+originating-document lifecycle on failure. It does not intercept fetch, suppress
+page errors, relax assertions or alter production behavior. The PR retains both
+failed runs and requires fresh complete qualification before merge.
