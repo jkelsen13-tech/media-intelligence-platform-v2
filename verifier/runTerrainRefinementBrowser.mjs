@@ -127,6 +127,13 @@ try {
         const section=panel.locator('.wv-fidelity-category:has(#wv-fidelity-terrain)')
         await section.scrollIntoViewIfNeeded()
         console.log('MIP_REFINEMENT_CONTROL_'+engine+'_'+width+'='+(await section.screenshot({type:'jpeg',quality:70})).toString('base64'))
+        assert.deepEqual(failures,[],'approved terrain requests must complete without transport failure')
+        assert.ok(responses.every(response=>response.status===200),'approved terrain responses must succeed')
+        for(const sample of measurements) {
+          assert.equal(sample.terrain.status,'active')
+          assert.equal(sample.terrain.fetchFailures,0)
+          assert.equal(sample.terrain.sourceRejections,0)
+        }
         assert.deepEqual(errors,[])
         console.log('MIP_REFINEMENT_PASS='+JSON.stringify({engine,width,live,measurements,responses,failures,
           sameCamera:true,sameCanvas:true,remembered:true,remount:true,presetsNeutral:true,
