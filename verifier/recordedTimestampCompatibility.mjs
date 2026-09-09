@@ -102,10 +102,16 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
       const c=window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting
       return c?.sourceText===null && !c.available && !c.lightingEnabled
     })
+    await page.waitForFunction(()=>{
+      const leaf=document.querySelector('[data-fidelity-effect="sunLighting"]')
+      const input=leaf?.querySelector('input')
+      return leaf?.dataset.effectStatus==='unavailable' && input?.disabled && !input.checked
+    })
     assert.equal(await sun.isDisabled(),true);assert.equal(await sun.isChecked(),false)
     assert.equal(await page.locator('.wv-view').getAttribute('data-as-of-time'),'2024-04-08')
     await page.goto(base+'?at='+encodeURIComponent(precise))
     await clockReady(precise)
+    await page.waitForFunction(()=>document.querySelector('[data-fidelity-effect="sunLighting"] input')?.checked)
     assert.equal(await sun.isChecked(),true,'exact time restores remembered sunlight after date-only scope')
     console.log('MIP_RECORDED_LIGHTING_TIME_PASS='+JSON.stringify({engine,precise,sourcePrecisionRetained:true,
       dateOnlyUnavailable:true,exactTimeRecovery:true,state:await page.evaluate(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getRenderState().recordedLighting)}))
