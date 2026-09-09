@@ -27,6 +27,7 @@ try{
         await page.getByRole('complementary',{name:'Selected-event inspector'}).getByText('coarsened_to_precision_class',{exact:true}).waitFor({timeout:60000})
         const panel=page.getByRole('region',{name:'Visual Fidelity',exact:true})
         await panel.getByRole('button',{name:'Visual Fidelity settings',exact:true}).click()
+        for(const category of ['Lighting','Atmosphere'])await panel.getByRole('button',{name:'Show '+category+' settings',exact:true}).click()
         const checkbox=name=>panel.getByRole('checkbox',{name,exact:true})
         const dynamic=checkbox('Dynamic atmosphere lighting'),sun=checkbox('Sun lighting')
         const ground=checkbox('Ground atmosphere'),haze=checkbox('Distance haze / fog')
@@ -106,6 +107,7 @@ try{
         console.log('MIP_DYNAMIC_PASS='+JSON.stringify({engine,width,live,requests,elapsedMs:Date.now()-start,clock:after.recordedLighting,dependencies:true,remembered:true,remount:true,presetsOff:true,pixelsDiffer:true,backend:boundary()}))
       }catch(e){
         console.log('MIP_DYNAMIC_FAILURE='+JSON.stringify({engine,width,error:e.message,errors}))
+        console.log('MIP_DYNAMIC_FAILURE_IMAGE_'+engine+'_'+width+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
         throw e
       }finally{await page.close()}
     }
