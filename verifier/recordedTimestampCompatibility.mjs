@@ -17,6 +17,10 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
   const base=origin+'/media-intelligence-platform-v2/#/event/'+subject+'/world'
   const from='2024-04-08 17:59:00+00', to='2024-04-08 20:29:00+00'
   const scope=from+'..'+to
+  // A retained timestamp inspection is qualified after its renderer is ready.
+  // Reloading a still-importing WebKit document can emit an import-abort error
+  // from the discarded document. Keep the page-error assertions intact.
+  const mapReady=()=>page.waitForFunction(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState(),{},{timeout:60000})
   try {
     for(const selected of [from,'2024-04-08 23:29:00+0530']) {
       await page.goto(base+'?time='+encodeURIComponent(scope)+'&at='+encodeURIComponent(selected))
@@ -29,12 +33,16 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
       const slider=page.getByRole('slider',{name:'Recorded time',exact:true})
       assert.equal(await slider.inputValue(),'0')
       assert.equal(await page.locator('.wv-view').getAttribute('data-as-of-time'),selected)
+      await mapReady()
       const tabs=page.getByRole('tablist',{name:'Evidence views',exact:true})
       await tabs.getByRole('tab',{name:'Timeline',exact:true}).click()
+      await page.waitForLoadState('networkidle',{timeout:30000})
       await tabs.getByRole('tab',{name:'World View',exact:true}).click()
       await inspector.getByText('coarsened_to_precision_class',{exact:true}).waitFor()
+      await mapReady()
       await page.reload()
       await inspector.getByText('coarsened_to_precision_class',{exact:true}).waitFor()
+      await mapReady()
       assert.equal(await slider.inputValue(),'0')
       assert.equal(await page.locator('.wv-view').getAttribute('data-as-of-time'),selected)
       assert.equal(await page.locator('.wv-view').getAttribute('data-selected-time-range'),scope)
@@ -46,6 +54,7 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
     await page.getByRole('combobox',{name:'Choose a recorded time',exact:true}).waitFor()
     await page.getByText('No spatial state recorded at this time.',{exact:true}).first().waitFor()
     assert.equal(await page.getByRole('button',{name:'Return to selected location',exact:true}).isDisabled(),true)
+    await mapReady()
     // Preserve assertions. Map intermittent bundled errors to actual public
     // build code so future failures can be diagnosed without guessing symbols.
     const locations=new Set(errorStacks.flatMap(stack=>stack.match(/https?:\/\/[^\s)]+\.js:\d+:\d+/g)??[]))
