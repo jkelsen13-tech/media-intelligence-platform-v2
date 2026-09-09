@@ -42,7 +42,7 @@ function mock(data=corpus(),options={}) {
   return db
 }
 function request(body=mode,headers={authorization:'Bearer synthetic-service'}) {
-  return new Request('https://synthetic.invalid',{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify(body)})
+  return new Request('https://synthetic.invalid',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer synthetic-service',...headers},body:JSON.stringify(body)})
 }
 test('qualification rejects unauthorized, malformed and write-shaped requests before corpus reads',async()=>{
   for(const body of [null,{},[],{mode:'event_projection',dry_run:true},{mode:'membership_score',dry_run:false},
@@ -105,7 +105,9 @@ test('read failures remain failures and never return completion or payload detai
 })
 test('qualification package has no mutation calls and uses a pinned client behind JWT verification',()=>{
   const source=readFileSync(new URL('../supabase/qualification/membership-prepared/qualifier.js',import.meta.url),'utf8')
-  assert.doesNotMatch(source,/\.(insert|upsert|update|delete)\s*\(/)
+  // Hash.update is not a database write; exempt only this exact reviewed digest expression.
+  assert.equal(source.split("createHash('sha256').update(value).digest('hex')").length,2)
+  assert.doesNotMatch(source.replace("createHash('sha256').update(value).digest('hex')",''),/\.(insert|upsert|update|delete)\s*\(/)
   const entry=readFileSync(new URL('../supabase/qualification/membership-prepared/index.ts',import.meta.url),'utf8')
   assert.ok(entry.includes('@supabase/supabase-js@2.110.0'))
   const config=JSON.parse(readFileSync(new URL('../supabase/qualification/membership-prepared/deployment.json',import.meta.url),'utf8'))
