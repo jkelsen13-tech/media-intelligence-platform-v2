@@ -348,8 +348,10 @@ try {
       const sunProfile=await profile()
       for(const gate of [master,lightingGate]){
         await gate.uncheck()
+        await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting?.lightingEnabled===false)
         assert.equal((await renderState()).recordedLighting.lightingEnabled,false)
         await gate.check()
+        await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting?.lightingEnabled===true)
         assert.deepEqual(await profile(),sunProfile)
         assert.equal((await renderState()).recordedLighting.lightingEnabled,true)
       }
@@ -366,6 +368,7 @@ try {
       assert.deepEqual((await renderState()).recordedLighting,litClock,'remount restores source and frozen clock')
       for(const presetName of ['performance','maximum','balanced']){
         await preset.selectOption(presetName)
+        await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting?.lightingEnabled===false)
         assert.equal((await renderState()).recordedLighting.lightingEnabled,false)
         assert.equal((await renderState()).recordedLighting.sourceText,clockBefore.sourceText)
       }
