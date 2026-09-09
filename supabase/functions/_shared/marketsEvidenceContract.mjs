@@ -107,6 +107,7 @@ export function validateMarketEvidencePath(input) {
         || !Number.isSafeInteger(support.start) || !Number.isSafeInteger(support.end)
         || support.start < 0 || support.end <= support.start || !text(support.excerpt)
         || typeof capture[support.field] !== 'string'
+        || support.end > Array.from(capture[support.field]).length
         || Array.from(capture[support.field]).slice(support.start,support.end).join('') !== support.excerpt) return reject('invalid_or_unavailable_support')
       // Exact source dates/text are retained; date-only publication is never
       // converted to midnight or used to establish a relationship's validity.

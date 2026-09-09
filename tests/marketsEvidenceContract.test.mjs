@@ -136,3 +136,21 @@ test('source spans use PostgreSQL Unicode code points, not UTF-16 offsets',()=>{
   input.assessments[0].supports[0].start=3
   assert.equal(validateMarketEvidencePath(input).status,'unavailable')
 })
+
+test('exact spans reject clamped end offsets for ASCII and Unicode retained text',()=>{
+  for (const summary of ['Exact retained relationship support.', '🌐 Exact support.']) {
+    const input=fixture()
+    input.captures[0].summary=summary
+    const length=Array.from(summary).length
+    const support=input.assessments[0].supports[0]
+    Object.assign(support,{start:0,end:length,excerpt:summary})
+    assert.equal(validateMarketEvidencePath(input).status,'ok')
+    for (const end of [length+1,Number.MAX_SAFE_INTEGER]) {
+      support.end=end
+      assert.equal(Array.from(summary).slice(0,end).join(''),summary,
+        'counterexample: JavaScript silently clamps invalid end offsets')
+      assert.deepEqual(validateMarketEvidencePath(input),
+        {status:'unavailable',reason:'invalid_or_unavailable_support'})
+    }
+  }
+})
