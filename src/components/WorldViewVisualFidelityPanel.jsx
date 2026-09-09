@@ -56,7 +56,7 @@ function CategoryControl({ profile, category, capabilities, onAction, recordedTi
                 {leaf === 'resolutionScale' && supported ? `Rendering at ${effective[leaf].toFixed(2)}×. Remembered setting: ${profile.categories[category.id][leaf].toFixed(2)}×.`
                   : !supported ? capability?.reason ?? 'Unavailable on this renderer.'
                   : active ? 'On' : remembered ? 'Off; your On preference is remembered.' : 'Off'}
-                {leaf === 'sunLighting' ? ` Calculated sun lighting at the inspection timestamp${supported && recordedTimeInstant ? ': ' + recordedTimeInstant : ''}. Not observed sunlight, weather, or proof of event occurrence. Display clock uses milliseconds; source precision is retained. Off in every preset.` : ''}
+                {leaf === 'sunLighting' ? ` Calculated sun lighting at the inspection timestamp${supported && recordedTimeInstant ? ': ' + recordedTimeInstant : ''}. Most visible from space; day/night shading fades at close range. Not observed sunlight, weather, or proof of event occurrence. Display clock uses milliseconds; source precision is retained. Off in every preset.` : ''}
                 {leaf === 'groundAtmosphere' ? ' Stylized scattering over the globe, most visible from space. Not observed weather or recorded sunlight. Off in every preset.' : ''}
                 {leaf === 'distanceHaze' ? ' Stylized distance haze, most visible toward the horizon. Not observed weather. Source detail stays unchanged. Off in every preset.' : ''}
                 {leaf === 'fxaa' ? ' Optional edge smoothing; may soften map labels. Off in Performance, Balanced and Maximum.' : ''}
