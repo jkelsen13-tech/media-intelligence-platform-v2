@@ -111,7 +111,7 @@ test('globe imagery is passed as an explicit baseLayer ImageryLayer, not the rem
   // silently never added, leaving a black (imageless) ellipsoid with zero
   // tile requests. The adapter must construct an explicit ImageryLayer.
   assert.match(CESIUM_ADAPTER, /baseLayer: new Cesium\.ImageryLayer\(imageryProvider\)/)
-  const viewerCtor = CESIUM_ADAPTER.match(/new Cesium\.Viewer\(hostEl, \{[\s\S]*?\}\)/)
+  const viewerCtor = CESIUM_ADAPTER.match(/new Cesium\.Viewer\(ownedHost\.element, \{[\s\S]*?\}\)/)
   assert.ok(viewerCtor, 'Viewer construction must exist')
   assert.doesNotMatch(viewerCtor[0], /^\s*imageryProvider,$/m)
   // Keyless open imagery only.
