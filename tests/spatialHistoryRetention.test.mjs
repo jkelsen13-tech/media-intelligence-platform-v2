@@ -5,7 +5,7 @@ import { PGlite } from '@electric-sql/pglite'
 
 const migration = await readFile(new URL('../supabase/migrations/20260909181233_spatial_history_retention.sql', import.meta.url), 'utf8')
 const parentMigration = await readFile(new URL('../supabase/migrations/20260909190228_spatial_parent_retention.sql', import.meta.url), 'utf8')
-const ancestorPatch = await readFile(new URL('../supabase/retention-contracts/spatial_source_ancestor.sql', import.meta.url), 'utf8')
+const ancestorPatch = await readFile(new URL('../supabase/migrations/20260909191503_spatial_source_ancestor.sql', import.meta.url), 'utf8')
 const source = 'jfnzyvzthzqtczlxhjll', observed = '2026-01-01T00:00:00Z'
 async function fixture(t) {
   const db = await PGlite.create(); t.after(() => db.close())

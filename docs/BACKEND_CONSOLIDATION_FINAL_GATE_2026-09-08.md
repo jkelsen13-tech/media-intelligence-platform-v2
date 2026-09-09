@@ -276,18 +276,19 @@ No legacy project is SAFE TO RETIRE. The ten-part gate remains INCOMPLETE.
 
 ## Spatial parent checkpoint — PR #137, 9 September 2026
 
-The five externally referenced sandbox fixtures identified after PR #136 are now
-retained privately, bringing spatial_row_versions to 44 rows. All five parent
-payload digests match source observations; all eight declared spatial-to-parent
-FK checks have no missing archive records. The preceding 39 archived payloads
-and 19 live spatial rows remain unchanged. The new INSERT guard requires a
-matching reference from retained spatial history even for direct worker INSERT.
-No fixture is inserted into a live public/spatial table or treated as published
-provider content. See [the parent retention report](SPATIAL_PARENT_RETENTION_2026-09-09.md).
+Six referenced sandbox fixtures are retained privately, bringing the spatial
+archive to 45 versions. All six source/archive digests match; eight declared
+external FK checks and the typed source-record/node references have no missing
+records. The earlier 39 archived payloads and 19 live spatial rows are unchanged.
+The INSERT guard requires an existing archived reference; public.sources also
+requires the explicit source_record artifact type and source_record_id.
+The live registration function confirms this target mapping.
+No fixture is promoted into live content or publication.
+See [the retention report](SPATIAL_PARENT_RETENTION_2026-09-09.md).
 
-This closes the five-parent structural retention gap, not semantic provenance:
-source_change_events.source_id has no declared FK/verified producer contract here,
-and independently observed parents are not proof of an older as-of version.
-Authority/release semantics, artifact references, positive writer/caller proof,
-Auth provisioning, Markets rights/evidence, physical-device fidelity and collector
-cutover remain pending. No legacy backend is SAFE TO RETIRE.
+This closes observed fixture structural retention. Independently observed parents
+do not establish historical as-of versions; source-change producer/causal
+semantics and other artifact references remain unqualified. Authority/release
+semantics, positive writer/caller proof, Auth provisioning, Markets rights/evidence,
+physical-device fidelity and collector cutover remain pending.
+No legacy backend is SAFE TO RETIRE. Overall consolidation remains INCOMPLETE.

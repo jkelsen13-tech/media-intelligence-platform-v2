@@ -1,63 +1,70 @@
 # Spatial fixture parent retention — private structural closure
 
-PR #136 retained 39 sandbox spatial rows. Eight foreign-key definitions in those
-rows refer to five external parent records absent from the survivor: one article,
-place, node, policy document and source-change event.
+PR #136 retained 39 sandbox spatial rows. This batch retains six referenced
+verification fixtures privately: one article, place, node, policy document,
+source-change event and source record. The archive now contains 45 versions.
 
-Read-only inspection identifies these as verification fixtures: the article is
-pending_review, has no body or summary and uses a reserved .invalid URL; the node,
-place and policy document have fixture labels. A source label such as gao is
-retained as original metadata and is not treated as proof of genuine GAO content,
-authenticity, rights or publication eligibility. The spatial evidence snapshot
-uses governed_internal / internal_governance retention and an immutable artifact
-reference. No provider is activated or external content fetched.
+Eight inspected foreign-key mappings identify the first five parents. The
+source record is independently typed by evidence_artifact_registry:
+artifact_type_code=source_record and source_record_id. The live
+spatial.register_evidence_artifact function explicitly resolves that artifact
+type to public.sources and validates its node. The retained source record points
+to the already retained node; its arc_membership_candidate_id is null.
+The source-change event's untyped source_id also matches that record, but this
+equality alone does not certify the event's producer or causal/version semantics.
 
-The migration extends only the existing private spatial archive to
-these five qualified public relation names. A BEFORE INSERT trigger requires
-each parent ID to be referenced by an already retained sandbox spatial row
-through one of the eight inspected relation/field mappings. The guard applies
-to importer and direct INSERT, and uses invoker privileges with empty search_path.
-The expanded relation check is installed before its narrower predecessor is
-removed. Existing key/hash/time checks, RLS, browser denial and mutation guards
-remain intact. No live public/spatial row, publication decision, identity, role
-or schedule is changed.
+Fixture labels and reserved .invalid source URLs are preserved as original data.
+The article is pending_review with no body or summary. A policy source label
+such as gao is not evidence of genuine GAO content, authenticity, rights or
+publication eligibility. The spatial evidence uses governed_internal /
+internal_governance retention and an immutable artifact reference. No provider
+is activated or external content fetched.
 
-The reference guard establishes structural eligibility for retention only.
-A current parent observation is not silently treated as the parent version that
-existed when an older spatial snapshot was recorded. Every original payload,
-ID, precision and timestamp remains separate from its retention observation.
-Corrections append versions; replay does not overwrite prior observations.
+Two migrations extend only mip_private.spatial_row_versions and its importer:
+20260909190228_spatial_parent_retention and
+20260909191503_spatial_source_ancestor. A BEFORE INSERT trigger requires an
+existing archived spatial reference from the same source project. It enforces
+the eight relation/field mappings for the first five parent types and the
+explicit source_record type plus source_record_id for public.sources.
+Wrong-type registry rows and untyped event identifiers do not qualify a source.
+The guard applies to both importer and direct INSERT.
 
-Tests exercise all eight mappings, exact revised numeric/time values, replay,
-wrong relation/field, unrelated and self-asserted parents, direct INSERT bypass,
-batch rollback, existing spatial scope and unchanged security. PR #136's five
-adversarial tests also run against the upgraded contract.
+Both functions use invoker privileges and an empty search_path. Expanded
+relation checks are added before narrower predecessors are removed. Key,
+hash, finite observation time, bounded batch, RLS, browser denial and
+immutability constraints remain intact. No live public/spatial row,
+publication decision, identity, role or schedule is changed.
 
-Golden run 34392390463 passed 1,572 tests on Node 22 and 24, both builds,
-and a zero-vulnerability dependency audit. Migration 20260909190228
-was then applied; its recorded SQL exactly matches the tested contract.
-The repository uses the Supabase-assigned migration version; no local migration
-file was generated.
+Every complete source row is transferred as raw PostgreSQL JSONB text, preserving
+original values, numeric precision, IDs and timestamps. Observation time is
+separate from original event/publication time; current parent observations are
+not asserted to be older as-of versions. Corrections append; replay does not
+overwrite a prior observation. The captures are independent, not a distributed
+snapshot.
 
-All five complete parent rows were captured at 2026-09-09 19:00:32.468963+00
-as raw PostgreSQL JSONB text and retained in one service-role transaction.
-All five ordered payload digests/counts match the source before and after transfer.
-All eight declared spatial-to-parent reference checks now have zero missing rows.
-The archive has 44 rows, and replaying all five parents inserted zero. The earlier
-39 spatial payloads and the survivor's 19 live spatial rows remain unchanged.
-Source observation times are independent; this is not a distributed snapshot.
+The first five parents were observed at 2026-09-09 19:00:32.468963+00 and retained
+in one service-role transaction. The source record was observed at
+2026-09-09 19:10:45.764765+00 and retained after qualification of the typed guard.
+Six source/archive ordered payload counts and digests match at 19:15 UTC.
+Replay inserted zero. All eight external FK checks, the typed source-record
+reference and its node reference have zero missing archive records.
+The earlier 39 archived payloads, 19 live spatial rows and public Comparison
+contract/payload remain unchanged.
 
-Both original immutability triggers and the new reference trigger are enabled;
-the importer/trigger bodies exactly match the tested contract. Existing grants,
-non-relation constraints, RLS and security-advisor findings are unchanged.
+Golden run 34393406376 passed 1,573 tests on Node 22 and 24, both builds and a
+zero-vulnerability audit before the second migration was applied. Tests cover
+all mappings, type confusion, unrelated/self-asserted references, direct INSERT,
+exact values, replay, atomic failure and unchanged security. Both applied SQL
+bodies exactly match their tested contracts. Three archive triggers remain
+enabled, non-relation constraints and grants are unchanged, and security-advisor
+findings are unchanged. Existing global findings are not claimed resolved.
+Final-head preview and postmerge deployment/live evidence are recorded on PR #137.
+
 See the [exact receipt](../verifier/spatial-parent-retention-2026-09-09.json)
 and [read-only verification](../supabase/tests/spatial_parent_inventory.sql).
-Final-head checks and deployment/live verification are recorded on PR #137.
-There is an additional untyped source_change_events.source_id reference not
-covered by these eight FKs. Its producer/source-version contract remains
-unresolved; structural parent retention must not be described as complete
-semantic provenance, evidence admission, writer qualification or backend cutover.
-
-No local files are created. Auth provisioning, Markets rights/evidence, physical
-device qualification and collector reconciliation remain independently pending.
-No legacy backend is SAFE TO RETIRE.
+This closes the observed fixture structural retention checkpoint. It does not
+certify complete semantic/as-of provenance, evidence admission, publication,
+positive writer/caller behavior or backend cutover. Auth provisioning, Markets
+rights/evidence, physical-device qualification and collector reconciliation
+remain independently pending. No legacy backend is SAFE TO RETIRE.
+No local files are created.

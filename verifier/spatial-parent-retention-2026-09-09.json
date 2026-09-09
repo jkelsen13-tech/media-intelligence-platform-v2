@@ -1,5 +1,5 @@
 {
-  "scope": "private structural parent retention; not historical parent-version equivalence, semantic evidence admission or publication",
+  "scope": "Six observed sandbox fixture parents retained privately; structural references only.",
   "base_commit": "d3501e1a6b9f5dc39d9843333bfeee781840edaf",
   "source_project": "jfnzyvzthzqtczlxhjll",
   "destination_project": "qikvmopbtijoebdqosyq",
@@ -44,66 +44,80 @@
       }
     ]
   },
-  "source_after": {
-    "observed_at": "2026-09-09 19:03:33.117874+00",
-    "relations": [
-      {
-        "row_count": "1",
-        "source_relation": "public.articles",
-        "ordered_payload_sha256": "1fb9e0b3e2dd39d084cf70e482fa86148599f454633cad66bd10f1e5e96dce59"
-      },
-      {
-        "row_count": "1",
-        "source_relation": "public.geographic_places",
-        "ordered_payload_sha256": "c2661bf593ef5612e819e58c6d2f1e0d383d236647ae483d42cd28c62d7df212"
-      },
-      {
-        "row_count": "1",
-        "source_relation": "public.nodes",
-        "ordered_payload_sha256": "6ca26604e584fea05752ac384a7ef4d978f1056db41c64d96f45cddae42d71fe"
-      },
-      {
-        "row_count": "1",
-        "source_relation": "public.policy_documents",
-        "ordered_payload_sha256": "74e9c254464f1c25f3a8692b6f179847fd77da061f1f09091e3f099a8890922f"
-      },
-      {
-        "row_count": "1",
-        "source_relation": "public.source_change_events",
-        "ordered_payload_sha256": "2a97bb9791db1c9dcbee07624cbf60f81e210cb1d5428932c39a8d247fddf8fe"
-      }
-    ]
-  },
-  "archive_after": {
-    "observed_at": "2026-09-09 19:03:31.896013+00",
-    "relations": [
-      {
-        "row_count": "1",
-        "source_relation": "public.articles",
-        "ordered_payload_sha256": "1fb9e0b3e2dd39d084cf70e482fa86148599f454633cad66bd10f1e5e96dce59"
-      },
-      {
-        "row_count": "1",
-        "source_relation": "public.geographic_places",
-        "ordered_payload_sha256": "c2661bf593ef5612e819e58c6d2f1e0d383d236647ae483d42cd28c62d7df212"
-      },
-      {
-        "row_count": "1",
-        "source_relation": "public.nodes",
-        "ordered_payload_sha256": "6ca26604e584fea05752ac384a7ef4d978f1056db41c64d96f45cddae42d71fe"
-      },
-      {
-        "row_count": "1",
-        "source_relation": "public.policy_documents",
-        "ordered_payload_sha256": "74e9c254464f1c25f3a8692b6f179847fd77da061f1f09091e3f099a8890922f"
-      },
-      {
-        "row_count": "1",
-        "source_relation": "public.source_change_events",
-        "ordered_payload_sha256": "2a97bb9791db1c9dcbee07624cbf60f81e210cb1d5428932c39a8d247fddf8fe"
-      }
-    ]
-  },
+  "source_after": [
+    {
+      "observed_at": "2026-09-09 19:15:38.309858+00",
+      "relations": [
+        {
+          "row_count": "1",
+          "source_relation": "public.articles",
+          "ordered_payload_sha256": "1fb9e0b3e2dd39d084cf70e482fa86148599f454633cad66bd10f1e5e96dce59"
+        },
+        {
+          "row_count": "1",
+          "source_relation": "public.geographic_places",
+          "ordered_payload_sha256": "c2661bf593ef5612e819e58c6d2f1e0d383d236647ae483d42cd28c62d7df212"
+        },
+        {
+          "row_count": "1",
+          "source_relation": "public.nodes",
+          "ordered_payload_sha256": "6ca26604e584fea05752ac384a7ef4d978f1056db41c64d96f45cddae42d71fe"
+        },
+        {
+          "row_count": "1",
+          "source_relation": "public.policy_documents",
+          "ordered_payload_sha256": "74e9c254464f1c25f3a8692b6f179847fd77da061f1f09091e3f099a8890922f"
+        },
+        {
+          "row_count": "1",
+          "source_relation": "public.source_change_events",
+          "ordered_payload_sha256": "2a97bb9791db1c9dcbee07624cbf60f81e210cb1d5428932c39a8d247fddf8fe"
+        },
+        {
+          "row_count": "1",
+          "source_relation": "public.sources",
+          "ordered_payload_sha256": "de7cf0cd3921b8cd09feb653685f335d7cb968ae973931f05a2e4c10291a756d"
+        }
+      ]
+    }
+  ],
+  "archive_after": [
+    {
+      "observed_at": "2026-09-09 19:15:36.922619+00",
+      "relations": [
+        {
+          "row_count": "1",
+          "source_relation": "public.articles",
+          "ordered_payload_sha256": "1fb9e0b3e2dd39d084cf70e482fa86148599f454633cad66bd10f1e5e96dce59"
+        },
+        {
+          "row_count": "1",
+          "source_relation": "public.geographic_places",
+          "ordered_payload_sha256": "c2661bf593ef5612e819e58c6d2f1e0d383d236647ae483d42cd28c62d7df212"
+        },
+        {
+          "row_count": "1",
+          "source_relation": "public.nodes",
+          "ordered_payload_sha256": "6ca26604e584fea05752ac384a7ef4d978f1056db41c64d96f45cddae42d71fe"
+        },
+        {
+          "row_count": "1",
+          "source_relation": "public.policy_documents",
+          "ordered_payload_sha256": "74e9c254464f1c25f3a8692b6f179847fd77da061f1f09091e3f099a8890922f"
+        },
+        {
+          "row_count": "1",
+          "source_relation": "public.source_change_events",
+          "ordered_payload_sha256": "2a97bb9791db1c9dcbee07624cbf60f81e210cb1d5428932c39a8d247fddf8fe"
+        },
+        {
+          "row_count": "1",
+          "source_relation": "public.sources",
+          "ordered_payload_sha256": "de7cf0cd3921b8cd09feb653685f335d7cb968ae973931f05a2e4c10291a756d"
+        }
+      ]
+    }
+  ],
   "receipts": [
     {
       "inserted": 1,
@@ -319,86 +333,88 @@
       }
     ]
   },
-  "prior_spatial_archive_after": {
-    "observed_at": "2026-09-09 19:03:36.663166+00",
-    "relations": [
-      {
-        "row_count": "8",
-        "relation_name": "assertion_revisions",
-        "ordered_payload_sha256": "ff8c49cdc7726442b181c7124f478148b09dc0e1186a860084f0e01967897325"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "assertions",
-        "ordered_payload_sha256": "03af4549adc7dec6f6f6b38b6db3b12cfb7c0e22a9e9a7a55b4aa37fe1b937dc"
-      },
-      {
-        "row_count": "2",
-        "relation_name": "audience_scopes",
-        "ordered_payload_sha256": "6cc21b00057ad36aa6b14cfc41f73588a4415799e110b987f246ce6e0ad4ea3a"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "break_glass_audit",
-        "ordered_payload_sha256": "8cedf3ee6fa065b3d7b653977cf72ca3e90955371302a0be83f98d762cc9cf81"
-      },
-      {
-        "row_count": "3",
-        "relation_name": "evidence_artifact_registry",
-        "ordered_payload_sha256": "2a16b6d695e18e02b1c6892a29b694dcf1ea5636879b51cc8d8c70387fd374a4"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "evidence_condition_events",
-        "ordered_payload_sha256": "bb29eeb7cbac94db19b57aeeffdf18d9043b27c34fcb116e9ae5c618bd29f529"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "evidence_snapshots",
-        "ordered_payload_sha256": "1d063e2cd4ab4fffe686da443c9ab0e0ad719fd31be63f7130ccb44b8ef71048"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "geometry_snapshots",
-        "ordered_payload_sha256": "a1f834433462a6b61496471a6658a3cac9772fb4f2ca371b866ba0c4cf868076"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "graph_node_authority_snapshots",
-        "ordered_payload_sha256": "60f011b53980a8639b9e33c92cc258beb4de4d87de64f1147517b04027c7ac0b"
-      },
-      {
-        "row_count": "2",
-        "relation_name": "place_authority_snapshots",
-        "ordered_payload_sha256": "4ca880520a1a4256513eaf8f061d55289c6302ea81fccb7822a6975bf42ae171"
-      },
-      {
-        "row_count": "9",
-        "relation_name": "policy_artifacts",
-        "ordered_payload_sha256": "2824d799ac9a74550d444abb5bb31ab73576a46abe17b1e65b38c91512b00eb7"
-      },
-      {
-        "row_count": "4",
-        "relation_name": "release_decisions",
-        "ordered_payload_sha256": "a653d623d30ee09262c5b02cecfcbd77b165890af39ba99fb86448b6048a7429"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "review_decisions",
-        "ordered_payload_sha256": "afa5a8788e730bd762271b589718793e36584716181d0322ef16bc752fe86ccd"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "revision_evidence",
-        "ordered_payload_sha256": "b530de51cf821a2a6a93fb9ea117a17fd789fc3e8512c73c4ae10860f03b8b9f"
-      },
-      {
-        "row_count": "3",
-        "relation_name": "revision_lineage",
-        "ordered_payload_sha256": "38dde992c7d9efbe44647cbd710298fa77cdb51230e0b12a893ea837058c3b1d"
-      }
-    ]
-  },
+  "prior_spatial_archive_after": [
+    {
+      "observed_at": "2026-09-09 19:15:43.505557+00",
+      "relations": [
+        {
+          "row_count": "8",
+          "relation_name": "assertion_revisions",
+          "ordered_payload_sha256": "ff8c49cdc7726442b181c7124f478148b09dc0e1186a860084f0e01967897325"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "assertions",
+          "ordered_payload_sha256": "03af4549adc7dec6f6f6b38b6db3b12cfb7c0e22a9e9a7a55b4aa37fe1b937dc"
+        },
+        {
+          "row_count": "2",
+          "relation_name": "audience_scopes",
+          "ordered_payload_sha256": "6cc21b00057ad36aa6b14cfc41f73588a4415799e110b987f246ce6e0ad4ea3a"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "break_glass_audit",
+          "ordered_payload_sha256": "8cedf3ee6fa065b3d7b653977cf72ca3e90955371302a0be83f98d762cc9cf81"
+        },
+        {
+          "row_count": "3",
+          "relation_name": "evidence_artifact_registry",
+          "ordered_payload_sha256": "2a16b6d695e18e02b1c6892a29b694dcf1ea5636879b51cc8d8c70387fd374a4"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "evidence_condition_events",
+          "ordered_payload_sha256": "bb29eeb7cbac94db19b57aeeffdf18d9043b27c34fcb116e9ae5c618bd29f529"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "evidence_snapshots",
+          "ordered_payload_sha256": "1d063e2cd4ab4fffe686da443c9ab0e0ad719fd31be63f7130ccb44b8ef71048"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "geometry_snapshots",
+          "ordered_payload_sha256": "a1f834433462a6b61496471a6658a3cac9772fb4f2ca371b866ba0c4cf868076"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "graph_node_authority_snapshots",
+          "ordered_payload_sha256": "60f011b53980a8639b9e33c92cc258beb4de4d87de64f1147517b04027c7ac0b"
+        },
+        {
+          "row_count": "2",
+          "relation_name": "place_authority_snapshots",
+          "ordered_payload_sha256": "4ca880520a1a4256513eaf8f061d55289c6302ea81fccb7822a6975bf42ae171"
+        },
+        {
+          "row_count": "9",
+          "relation_name": "policy_artifacts",
+          "ordered_payload_sha256": "2824d799ac9a74550d444abb5bb31ab73576a46abe17b1e65b38c91512b00eb7"
+        },
+        {
+          "row_count": "4",
+          "relation_name": "release_decisions",
+          "ordered_payload_sha256": "a653d623d30ee09262c5b02cecfcbd77b165890af39ba99fb86448b6048a7429"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "review_decisions",
+          "ordered_payload_sha256": "afa5a8788e730bd762271b589718793e36584716181d0322ef16bc752fe86ccd"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "revision_evidence",
+          "ordered_payload_sha256": "b530de51cf821a2a6a93fb9ea117a17fd789fc3e8512c73c4ae10860f03b8b9f"
+        },
+        {
+          "row_count": "3",
+          "relation_name": "revision_lineage",
+          "ordered_payload_sha256": "38dde992c7d9efbe44647cbd710298fa77cdb51230e0b12a893ea837058c3b1d"
+        }
+      ]
+    }
+  ],
   "survivor_live_spatial_before": {
     "observed_at": "2026-09-09 18:06:11.239208+00",
     "relations": [
@@ -479,89 +495,91 @@
       }
     ]
   },
-  "survivor_live_spatial_after": {
-    "observed_at": "2026-09-09 19:03:38.998895+00",
-    "relations": [
-      {
-        "row_count": "1",
-        "relation_name": "assertion_revisions",
-        "ordered_payload_sha256": "d6989449136c0b8d0136fbc49dda0c5aaf73eb77c707ab81b69aa12719ff7630"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "assertions",
-        "ordered_payload_sha256": "6425d59dd9ed6aabcf02d56368430cc449425d895d7bf76fbe33cecb7a78cfc3"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "audience_scopes",
-        "ordered_payload_sha256": "54931f688b34746e2094e58166b1bc3b04029ba3230e0784f20f4a9a883f4c02"
-      },
-      {
-        "row_count": "0",
-        "relation_name": "break_glass_audit",
-        "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "evidence_artifact_registry",
-        "ordered_payload_sha256": "9bb029c9e2c1fcb73b632a7f84e1bf712394adb1bb71042708d35cda9dbb0a86"
-      },
-      {
-        "row_count": "0",
-        "relation_name": "evidence_condition_events",
-        "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "evidence_snapshots",
-        "ordered_payload_sha256": "e4736e8db26a3536e2298b1703b596e2c3ded7a0c64890cc04679f8c1f198890"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "geometry_snapshots",
-        "ordered_payload_sha256": "4ffa27cfae6858abc143118b30bd60d6c026b75ee547b61d4992e22b0a5a3957"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "graph_node_authority_snapshots",
-        "ordered_payload_sha256": "5e43138bacc76832250bc2190865c55f9aaa1bce797e7574a435e33e7b933f0f"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "place_authority_snapshots",
-        "ordered_payload_sha256": "3c62639cc8853f9a5b40ab93b47b4c3890bead2a4a22a1c6b2adc1b7c9da69d9"
-      },
-      {
-        "row_count": "8",
-        "relation_name": "policy_artifacts",
-        "ordered_payload_sha256": "2750bddf52c6c860285e2a5656d4407e9bd12b0d92ed4d58b962e0359c33b53d"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "release_decisions",
-        "ordered_payload_sha256": "7dee5210eddb5686661fec2733e45e439f6040c554a86b6ced2392c8b2767356"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "review_decisions",
-        "ordered_payload_sha256": "5a465248433bd3cd22bd629f31104d9daa61fdbf290376f2c3ae43b0fe5ba28a"
-      },
-      {
-        "row_count": "1",
-        "relation_name": "revision_evidence",
-        "ordered_payload_sha256": "a8d888a1d32d53140e3f27e2b9eaece839113022f42c8f909e17b003267554eb"
-      },
-      {
-        "row_count": "0",
-        "relation_name": "revision_lineage",
-        "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-      }
-    ]
-  },
+  "survivor_live_spatial_after": [
+    {
+      "observed_at": "2026-09-09 19:15:40.986441+00",
+      "relations": [
+        {
+          "row_count": "1",
+          "relation_name": "assertion_revisions",
+          "ordered_payload_sha256": "d6989449136c0b8d0136fbc49dda0c5aaf73eb77c707ab81b69aa12719ff7630"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "assertions",
+          "ordered_payload_sha256": "6425d59dd9ed6aabcf02d56368430cc449425d895d7bf76fbe33cecb7a78cfc3"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "audience_scopes",
+          "ordered_payload_sha256": "54931f688b34746e2094e58166b1bc3b04029ba3230e0784f20f4a9a883f4c02"
+        },
+        {
+          "row_count": "0",
+          "relation_name": "break_glass_audit",
+          "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "evidence_artifact_registry",
+          "ordered_payload_sha256": "9bb029c9e2c1fcb73b632a7f84e1bf712394adb1bb71042708d35cda9dbb0a86"
+        },
+        {
+          "row_count": "0",
+          "relation_name": "evidence_condition_events",
+          "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "evidence_snapshots",
+          "ordered_payload_sha256": "e4736e8db26a3536e2298b1703b596e2c3ded7a0c64890cc04679f8c1f198890"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "geometry_snapshots",
+          "ordered_payload_sha256": "4ffa27cfae6858abc143118b30bd60d6c026b75ee547b61d4992e22b0a5a3957"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "graph_node_authority_snapshots",
+          "ordered_payload_sha256": "5e43138bacc76832250bc2190865c55f9aaa1bce797e7574a435e33e7b933f0f"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "place_authority_snapshots",
+          "ordered_payload_sha256": "3c62639cc8853f9a5b40ab93b47b4c3890bead2a4a22a1c6b2adc1b7c9da69d9"
+        },
+        {
+          "row_count": "8",
+          "relation_name": "policy_artifacts",
+          "ordered_payload_sha256": "2750bddf52c6c860285e2a5656d4407e9bd12b0d92ed4d58b962e0359c33b53d"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "release_decisions",
+          "ordered_payload_sha256": "7dee5210eddb5686661fec2733e45e439f6040c554a86b6ced2392c8b2767356"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "review_decisions",
+          "ordered_payload_sha256": "5a465248433bd3cd22bd629f31104d9daa61fdbf290376f2c3ae43b0fe5ba28a"
+        },
+        {
+          "row_count": "1",
+          "relation_name": "revision_evidence",
+          "ordered_payload_sha256": "a8d888a1d32d53140e3f27e2b9eaece839113022f42c8f909e17b003267554eb"
+        },
+        {
+          "row_count": "0",
+          "relation_name": "revision_lineage",
+          "ordered_payload_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        }
+      ]
+    }
+  ],
   "security": {
-    "observed_at": "2026-09-09 19:03:40.763101+00",
-    "archived_versions": 44,
+    "observed_at": "2026-09-09 19:15:46.087919+00",
+    "archived_versions": 45,
     "rls": true,
     "anon_read": false,
     "authenticated_read": false,
@@ -605,22 +623,50 @@
     "advisors_unchanged": true
   },
   "qualification": {
-    "initial_golden_run": 34392390463,
+    "golden_run": 34393406376,
     "node_versions": [
       22,
       24
     ],
-    "tests": 1572,
-    "failed": 0,
-    "builds": "passed",
+    "tests_passed": 1573,
+    "builds_passed": true,
     "audit_vulnerabilities": 0,
-    "final_head_and_live": "recorded on PR #137"
+    "final_head_and_live_evidence": "PR #137"
   },
   "limitations": [
     "Source records carry verification fixture labels; source=gao is not evidence of genuine provider content or licensing.",
     "Private raw payloads, actor identities and source URLs are omitted from this public receipt.",
-    "The original untyped source_change_events.source_id and other semantic artifact/version references are not resolved by FK retention.",
+    "The source target is resolved independently through the typed registry mapping. Producer, causal and historical as-of semantics are not certified by this retention.",
     "No source fixture is inserted into a live public/spatial table or promoted to publication.",
     "No original record, Auth identity, schedule, provider or local file was changed or created; the private archive alone is extended."
-  ]
+  ],
+  "ancestor_migration": {
+    "version": "20260909191503",
+    "name": "spatial_source_ancestor",
+    "exact_tested_sql": true
+  },
+  "ancestor_capture": {
+    "observed_at": "2026-09-09 19:10:45.764765+00",
+    "row_count": 1,
+    "relation": "public.sources",
+    "payload_characters": 334,
+    "payload_sha256": "0a41a72c49caabbe91c89b77ed3415a00ec0f5fc00b7e035968c2d50606530c8"
+  },
+  "ancestor_replay": [
+    {
+      "receipt": {
+        "inserted": 0,
+        "received": 1,
+        "source_project": "jfnzyvzthzqtczlxhjll",
+        "source_relation": "public.sources",
+        "already_retained": 1
+      }
+    }
+  ],
+  "typed_reference_checks": {
+    "observed_at": "2026-09-09 19:16:14.774981+00",
+    "missing_typed_source": 0,
+    "missing_source_node": 0,
+    "source_candidate_references": 0
+  }
 }
