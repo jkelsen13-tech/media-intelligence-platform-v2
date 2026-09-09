@@ -1,0 +1,7 @@
+{
+  "function_name": "membership-qualification",
+  "project_id": "yhbwnrtlqbjtcrrlpbge",
+  "verify_jwt": true,
+  "scheduled": false,
+  "entrypoint": "index.ts"
+}
