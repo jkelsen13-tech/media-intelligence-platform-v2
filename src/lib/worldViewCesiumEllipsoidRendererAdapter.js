@@ -428,6 +428,8 @@ export function createCesiumEllipsoidRendererAdapter({
       onStackIdChange?.('openfreemap-positron')
     })
 
+    // The widget otherwise rewrites canAnimate on every data-source tick.
+    viewer.allowDataSourcesToSuspendAnimation = false
     recordedLighting.setTime(recordedTimeInstant ?? null)
 
     // Request-only rendering governance: only redraw on camera/props changes.
