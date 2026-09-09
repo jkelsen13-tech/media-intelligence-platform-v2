@@ -1,0 +1,26 @@
+name: Prepare MapLibre security lockfile
+on:
+  push:
+    branches: [fix/maplibre-attribution-security]
+    paths: [.github/workflows/prepare-maplibre-security.yml]
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - name: Resolve patched dependency without package scripts
+        run: npm install --package-lock-only --ignore-scripts --save-exact maplibre-gl@6.4.1
+      - name: Return generated manifests for review
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          for (const path of ['package.json','package-lock.json']) {
+            const bytes=readFileSync(path).toString('base64');
+            for(let i=0;i<bytes.length;i+=8000) console.log('MIP_MANIFEST '+path+' '+i+' '+bytes.slice(i,i+8000));
+          }
+          NODE
