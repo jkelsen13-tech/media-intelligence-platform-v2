@@ -23,7 +23,15 @@ export function mapLibreNoticeAssets(root=process.cwd()){
     if(!record||!allowed.has(record.license))throw new Error('Unreviewed MapLibre dependency license: '+path)
     const directory=resolve(root,path)
     const names=readdirSync(directory).filter(n=>/^(licen[cs]e|copying|notice)([.-]|$)/i.test(n))
-    if(!names.some(n=>/^(licen[cs]e|copying)([.-]|$)/i.test(n)))throw new Error('Missing MapLibre dependency license: '+path)
+    // This exact package embeds its full MIT grant in README, not LICENSE.
+    // Preserve the installed README, not a reconstructed or generic notice.
+    if(path==='node_modules/murmurhash-js'&&record.version==='1.0.0'){
+      const readme=readFileSync(resolve(directory,'README.md'),'utf8')
+      for(const required of ['## License (MIT)','Copyright (c) 2011 Gary Court',
+        'Permission is hereby granted, free of charge','The above copyright notice and this permission notice',
+        'THE SOFTWARE IS PROVIDED "AS IS"'])if(!readme.includes(required))throw new Error('Missing embedded MurmurHash license')
+      names.push('README.md')
+    }else if(!names.some(n=>/^(licen[cs]e|copying)([.-]|$)/i.test(n)))throw new Error('Missing MapLibre dependency license: '+path)
     const files=[]
     for(const name of names.sort()){
       const fileName='licenses/maplibre/'+path.replaceAll('node_modules/','')+'/'+name

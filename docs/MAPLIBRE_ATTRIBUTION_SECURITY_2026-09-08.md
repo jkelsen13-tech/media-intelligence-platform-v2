@@ -17,10 +17,14 @@ and reviewed before commit. Only MapLibre's dependency closure changes. New
 MapLibre geojson-vt (ISC), vt-pbf (MIT), mlt (MIT OR Apache-2.0), updated style-spec
 (ISC), point-geometry (ISC), unitbezier (BSD-2-Clause), vector-tile and pbf
 (BSD-3-Clause) remain permissively licensed. MapLibre retains BSD-3-Clause.
-Distributed license notices and package integrity metadata remain required.
+The build emits exact installed license/NOTICE files for the complete locked
+MapLibre runtime dependency closure under licenses/maplibre, with a version and
+integrity inventory. Missing or unreviewed notices fail the build. murmurhash-js
+1.0.0 embeds its MIT license in README.md; the complete installed README is
+preserved after checking its grant/copyright/disclaimer. This adds no runtime request.
 
 Permanent browser regression uses the actual built application in Chromium and
-WebKit at 1280/390px, also on the live page after release. Cesium import failure
+WebKit at 1280/390px, also on the live page after release. Cesium graphics-context failure
 is injected only in the disposable browser; MapLibre must mount, load the real
 style and start its same-origin bundled worker. Navigation and exact camera
 restoration preserve the canonical route; unsupported fidelity controls remain off.
@@ -42,3 +46,5 @@ Primary references:
 - https://github.com/maplibre/maplibre-gl-js/blob/v6.4.1/docs/guides/v5-to-v6-migration-guide.md
 - https://github.com/maplibre/maplibre-gl-js/blob/v6.4.1/docs/index.md#installation
 - https://github.com/maplibre/maplibre-gl-js/blob/v6.4.1/LICENSE.txt
+
+MurmurHash primary notice: https://github.com/mikolalysenko/murmurhash-js/blob/master/README.md
