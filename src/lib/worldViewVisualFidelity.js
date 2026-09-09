@@ -51,7 +51,7 @@ export function normalizeVisualFidelityProfile(raw) {
     output.enabled = input?.enabled === true
     for (const leaf of category.leaves) {
       // Only qualified effects survive import; resolution has a small fixed allowlist.
-      if (['reliefShading', 'fxaa', 'groundAtmosphere', 'distanceHaze', 'sunLighting'].includes(leaf)) output[leaf] = input?.[leaf] === true
+      if (['reliefShading', 'fxaa', 'groundAtmosphere', 'distanceHaze', 'sunLighting', 'dynamicAtmosphere'].includes(leaf)) output[leaf] = input?.[leaf] === true
       if (leaf === 'refinement') output[leaf] = typeof input?.[leaf] === 'string' && Object.hasOwn(TERRAIN_REFINEMENT, input[leaf]) ? input[leaf] : 'neutral'
       if (leaf === 'resolutionScale') output[leaf] = RESOLUTION_SCALES.includes(input?.[leaf]) ? input[leaf] : 1
     }
@@ -64,9 +64,11 @@ export function normalizeVisualFidelityProfile(raw) {
   return next
 }
 
-export function visualFidelityCapabilities({ refinement = false, refinementReason, sunLighting = false, sunLightingReason, relief = false, fxaa = false, fxaaReason, resolution = false, resolutionReason, groundAtmosphere = false, distanceHaze = false, atmosphereReason, reason = 'Map renderer is not ready.' } = {}) {
+export function visualFidelityCapabilities({ dynamicAtmosphere = false, dynamicAtmosphereReason, refinement = false, refinementReason, sunLighting = false, sunLightingReason, relief = false, fxaa = false, fxaaReason, resolution = false, resolutionReason, groundAtmosphere = false, distanceHaze = false, atmosphereReason, reason = 'Map renderer is not ready.' } = {}) {
   return Object.fromEntries(Object.keys(FIDELITY_EFFECTS).map(leaf => [leaf,
-    leaf === 'refinement'
+    leaf === 'dynamicAtmosphere'
+      ? { status: dynamicAtmosphere ? 'supported' : 'unavailable', reason: dynamicAtmosphere ? null : dynamicAtmosphereReason ?? reason }
+      : leaf === 'refinement'
       ? { status: refinement ? 'supported' : 'unavailable', reason: refinement ? null : refinementReason ?? reason }
       : leaf === 'sunLighting'
       ? { status: sunLighting ? 'supported' : 'unavailable', reason: sunLighting ? null : sunLightingReason ?? reason }
@@ -85,13 +87,16 @@ export function visualFidelityCapabilities({ refinement = false, refinementReaso
 
 export function resolveVisualFidelityProfile(raw, capabilities) {
   const profile = normalizeVisualFidelityProfile(raw)
-  return Object.fromEntries(FIDELITY_CATEGORIES.flatMap(category => category.leaves.map(leaf => [
+  const effective = Object.fromEntries(FIDELITY_CATEGORIES.flatMap(category => category.leaves.map(leaf => [
     leaf, leaf === 'resolutionScale'
       ? (profile.enabled && profile.categories[category.id].enabled && capabilities?.[leaf]?.status === 'supported' ? profile.categories[category.id][leaf] : 1)
       : leaf === 'refinement' ? (profile.enabled && profile.categories[category.id].enabled && capabilities?.[leaf]?.status === 'supported' ? profile.categories[category.id][leaf] : 'neutral')
       : Boolean(profile.enabled && profile.categories[category.id].enabled
         && profile.categories[category.id][leaf] === true && capabilities?.[leaf]?.status === 'supported'),
   ])))
+  effective.dynamicAtmosphere = effective.dynamicAtmosphere && effective.sunLighting
+    && (effective.groundAtmosphere || effective.distanceHaze)
+  return effective
 }
 
 export function reduceVisualFidelityProfile(raw, action, capabilities) {
@@ -116,7 +121,7 @@ export function reduceVisualFidelityProfile(raw, action, capabilities) {
       next.categories[category.id].enabled = action.enabled
       next.preset = 'custom'
     } else if (action.type === 'leaf' && category.leaves.includes(action.leaf)
-      && ['reliefShading', 'fxaa', 'groundAtmosphere', 'distanceHaze', 'sunLighting'].includes(action.leaf) && capabilities?.[action.leaf]?.status === 'supported') {
+      && ['reliefShading', 'fxaa', 'groundAtmosphere', 'distanceHaze', 'sunLighting', 'dynamicAtmosphere'].includes(action.leaf) && capabilities?.[action.leaf]?.status === 'supported') {
       next.categories[category.id][action.leaf] = action.enabled
       next.preset = 'custom'
     }

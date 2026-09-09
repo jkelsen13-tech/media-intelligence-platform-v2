@@ -154,3 +154,8 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runTerrainRefinementBrowser.mjs
+
+      - name: Qualify recorded dynamic atmosphere lighting
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runDynamicAtmosphereBrowser.mjs

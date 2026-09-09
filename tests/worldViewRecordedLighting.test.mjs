@@ -107,3 +107,73 @@ test('latest timestamp replays before effects after asynchronous mount; fallback
   await fallback.mount();assert.equal(fallback.setRecordedTimeInstant(first),false)
   fallback.destroy()
 })
+
+test('dynamic atmosphere requires frozen recorded lighting and a visible atmosphere effect',()=>{
+  const {viewer,controller,requests}=setup()
+  controller.setTime(first)
+  viewer.scene.globe.showGroundAtmosphere=true
+  assert.equal(controller.setDynamicAtmosphere(true),false)
+  controller.setLighting(true)
+  const clock=JulianDate.clone(viewer.clock.currentTime),camera=viewer.camera
+  assert.equal(controller.setDynamicAtmosphere(true),true)
+  assert.equal(controller.available(),true)
+  assert.equal(controller.state().dynamicAtmosphere,true)
+  const count=requests()
+  assert.equal(controller.setDynamicAtmosphere(true),true)
+  assert.equal(requests(),count)
+  assert.equal(controller.state().sourceText,first)
+  assert.ok(JulianDate.equals(viewer.clock.currentTime,clock))
+  assert.equal(viewer.camera,camera)
+  assert.equal(controller.state().sunDirectedAtmosphere,false)
+  for(const invalid of [1,'true',null,{},undefined])assert.equal(controller.setDynamicAtmosphere(invalid),false)
+  viewer.scene.globe.showGroundAtmosphere=false
+  assert.equal(controller.setDynamicAtmosphere(true),false)
+  assert.equal(controller.state().dynamicAtmosphere,false)
+  viewer.scene.fog={renderable:true}
+  assert.equal(controller.setDynamicAtmosphere(true),true)
+  controller.setTime('2024-04-08')
+  assert.equal(controller.state().dynamicAtmosphere,false)
+  assert.equal(controller.state().lightingEnabled,false)
+  assert.equal(controller.state().sourceText,null)
+})
+test('dynamic write rejection disables lighting and cannot be requalified by cleanup',()=>{
+  const {viewer,controller}=setup()
+  controller.setTime(first);controller.setLighting(true)
+  viewer.scene.globe.showGroundAtmosphere=true
+  Object.defineProperty(viewer.scene.globe,'dynamicAtmosphereLighting',{get:()=>false,set:()=>{}})
+  assert.equal(controller.setDynamicAtmosphere(true),false)
+  assert.equal(controller.available(),false)
+  assert.equal(viewer.scene.globe.enableLighting,false)
+  assert.equal(controller.setDynamicAtmosphere(false),true)
+  controller.setTime(first)
+  assert.equal(controller.available(),false)
+})
+test('dynamic profile gates never auto-enable dependencies and preserve the remembered choice',()=>{
+  const c=caps({sunLighting:true,dynamicAtmosphere:true,groundAtmosphere:true,distanceHaze:true})
+  let p=defaults()
+  const act=action=>{p=reduce(p,action,c)}
+  act({type:'category',category:'lighting',enabled:true})
+  act({type:'leaf',category:'lighting',leaf:'dynamicAtmosphere',enabled:true})
+  assert.equal(resolve(p,c).dynamicAtmosphere,false)
+  assert.equal(p.categories.lighting.sunLighting,false)
+  act({type:'leaf',category:'lighting',leaf:'sunLighting',enabled:true})
+  assert.equal(resolve(p,c).dynamicAtmosphere,false)
+  act({type:'category',category:'atmosphere',enabled:true})
+  act({type:'leaf',category:'atmosphere',leaf:'groundAtmosphere',enabled:true})
+  assert.equal(resolve(p,c).dynamicAtmosphere,true)
+  for(const action of [{type:'master',enabled:false},{type:'category',category:'lighting',enabled:false},
+    {type:'category',category:'atmosphere',enabled:false},
+    {type:'leaf',category:'lighting',leaf:'sunLighting',enabled:false},
+    {type:'leaf',category:'atmosphere',leaf:'groundAtmosphere',enabled:false}]){
+    const off=reduce(p,action,c)
+    assert.equal(resolve(off,c).dynamicAtmosphere,false)
+    assert.equal(off.categories.lighting.dynamicAtmosphere,true)
+    assert.deepEqual(reduce(off,{...action,enabled:true},c),p)
+  }
+  assert.equal(resolve(p,caps()).dynamicAtmosphere,false)
+  for(const preset of ['performance','balanced','maximum']){
+    const neutral=reduce(p,{type:'preset',preset},c)
+    assert.equal(neutral.categories.lighting.dynamicAtmosphere,false)
+    assert.equal(resolve(neutral,c).dynamicAtmosphere,false)
+  }
+})

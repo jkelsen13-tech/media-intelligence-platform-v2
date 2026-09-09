@@ -3,6 +3,7 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'verifier/runDynamicAtmosphereBrowser.mjs'
       - 'src/lib/worldViewCesiumRefinement.js'
       - 'verifier/runTerrainRefinementBrowser.mjs'
       - 'supabase/functions/_shared/captureRetrieval.mjs'
@@ -163,3 +164,8 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runTerrainRefinementBrowser.mjs
+
+      - name: Qualify recorded dynamic atmosphere lighting
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runDynamicAtmosphereBrowser.mjs
