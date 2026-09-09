@@ -99,6 +99,7 @@ try {
         assert.equal(await control.inputValue(),'neutral')
         await modes.getByRole('tab',{name:'Map',exact:true}).click()
         await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.refinement?.screenSpaceError===1)
+        await delay(1800) // complete the existing subject flight before checking the remounted camera
         await settle()
         assert.equal(await control.inputValue(),'fine')
         assert.equal((await profile()).categories.terrain.refinement,'fine')
