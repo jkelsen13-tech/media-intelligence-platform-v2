@@ -36,13 +36,20 @@ try {
         page.on('pageerror',e=>errors.push(e.message))
         page.on('worker',w=>workers.push(w.url()))
         page.on('response',r=>{if(r.url().includes('tiles.openfreemap.org/styles/positron')&&r.ok())styleResponses++})
-        // Fail Cesium import only. MapLibre must really mount; the SVG overview
-        // does not count as proof of the upgraded WebGL fallback.
-        await page.route('**/assets/cesium-globe-*.js',r=>r.abort())
+        // Reject contexts only on Cesium-owned canvases. Aborting its shared
+        // chunk can also abort the route module and would not test fallback.
+        await page.addInitScript(()=>{
+          const original=HTMLCanvasElement.prototype.getContext
+          HTMLCanvasElement.prototype.getContext=function(kind,...args){
+            if(/webgl/i.test(kind)&&this.closest('.cesium-widget'))return null
+            return original.call(this,kind,...args)
+          }
+        })
         if(injected)await page.route('https://tiles.openfreemap.org/styles/positron',r=>r.fulfill({
           json:{version:8,sources:{fixture:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,attribution:credit+payload}},
             layers:[{id:'fixture',type:'raster',source:'fixture'}]}
         }))
+        try {
         await page.goto(url)
         await page.getByRole('complementary',{name:'Selected-event inspector'}).getByText('coarsened_to_precision_class',{exact:true}).waitFor({timeout:60000})
         await page.waitForFunction(()=>document.querySelector('[data-map-stack]')?.dataset.mapStack==='openfreemap-positron'
@@ -81,7 +88,11 @@ try {
         assert.deepEqual(errors,[])
         console.log('MIP_MAPLIBRE_PASS='+JSON.stringify({engine,width,injected,positiveControl:true,errors,workers,backend:verifyBackend(),attributionPreserved:true,cameraRestored:true}))
         console.log('MIP_MAPLIBRE_IMAGE_'+engine+'_'+width+'_'+injected+'='+(await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:65})).toString('base64'))
-        await page.close()
+        } catch(error) {
+          console.log('MIP_MAPLIBRE_FAILURE='+JSON.stringify({engine,width,injected,url:page.url(),errors,workers,text:await page.locator('body').innerText()}))
+          console.log('MIP_MAPLIBRE_FAILURE_IMAGE='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+          throw error
+        } finally {await page.close()}
       }
     }
     await browser.close();browser=null
