@@ -37,6 +37,8 @@ export default defineConfig({
   ],
   base: '/media-intelligence-platform-v2/',
   build: {
+    // Preserve Vite 5's transform targets across the toolchain upgrade.
+    target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
     rollupOptions: {
       output: {
         // Keep MapLibre + deck.gl + luma.gl in one chunk so the WebGL
