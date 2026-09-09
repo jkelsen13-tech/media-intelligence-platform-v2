@@ -161,13 +161,17 @@ try {
       const resolution=panel.getByRole('combobox',{name:'Render resolution',exact:true})
       await imageQuality.check()
       assert.equal(await resolution.inputValue(),'1')
+      await delay(1800) // finish the preceding Map remount/subject flight
+      await page.waitForLoadState('networkidle',{timeout:30000})
+      await delay(1500) // allow queued terrain work to schedule after network idle
       await page.waitForLoadState('networkidle',{timeout:30000})
       const resolutionCamera=await camera()
       const resolutionCanvas=await page.locator('.wv-map-host canvas').first().elementHandle()
       const baseline=(await renderState()).resolution
       const resolutionSamples=[]
       let resolutionRequests=0
-      const countResolution=request=>{if(/terrarium|tile.openstreetmap.org/.test(request.url()))resolutionRequests++}
+      const resolutionRequestUrls=[]
+      const countResolution=request=>{if(/terrarium|tile.openstreetmap.org/.test(request.url())){resolutionRequests++;resolutionRequestUrls.push(request.url())}}
       page.on('request',countResolution)
       for(const scale of [0.75,1.25,1]){
         const start=Date.now()
@@ -189,6 +193,7 @@ try {
         console.log('MIP_RESOLUTION_IMAGE_'+engine+'_'+width+'_'+scale+'='+(await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:70})).toString('base64'))
       }
       page.off('request',countResolution)
+      console.log('MIP_RESOLUTION_REQUESTS='+JSON.stringify({engine,width,resolutionSamples,resolutionRequests,resolutionRequestUrls}))
       assert.equal(resolutionRequests,0,'settled resolution toggles must not fetch more terrain/imagery')
       await resolution.selectOption('1.25')
       const rememberedResolution=await profile()
