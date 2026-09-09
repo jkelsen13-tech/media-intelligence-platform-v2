@@ -12,9 +12,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@deck.gl/core": "^9.1.12",
-    "@deck.gl/layers": "^9.1.12",
-    "@deck.gl/mapbox": "^9.1.12",
+    "@deck.gl/core": "9.4.0",
+    "@deck.gl/layers": "9.4.0",
     "@phosphor-icons/react": "^2.1.10",
     "@supabase/supabase-js": "^2.110.0",
     "cesium": "^1.145.0",
@@ -26,11 +25,12 @@
     "graphology-components": "^1.5.4",
     "graphology-metrics": "^2.4.0",
     "graphology-shortest-path": "^2.1.0",
-    "maplibre-gl": "^4.7.1",
+    "maplibre-gl": "6.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "topojson-client": "^3.1.0",
-    "world-atlas": "^2.0.2"
+    "world-atlas": "^2.0.2",
+    "@deck.gl/maplibre": "9.4.0"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",

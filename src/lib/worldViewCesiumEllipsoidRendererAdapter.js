@@ -222,6 +222,17 @@ function isWebGLAvailable() {
   }
 }
 
+// A constructor may append DOM and then throw before returning a viewer.
+// Keep a removable owned subtree; late cleanup must never erase a successor.
+export function createCesiumOwnedHost(parent) {
+  const element = parent.ownerDocument.createElement('div')
+  element.className = 'wv-cesium-host'
+  element.style.width = '100%'
+  element.style.height = '100%'
+  parent.appendChild(element)
+  return { element, destroy: () => element.remove() }
+}
+
 export function createCesiumEllipsoidRendererAdapter({
   stackId,
   getHostEl,
@@ -244,6 +255,7 @@ export function createCesiumEllipsoidRendererAdapter({
   }
 
   let viewer = null
+  let ownedHost = null
   let eventHandler = null
   let entities = []
   let mounted = false
@@ -305,13 +317,6 @@ export function createCesiumEllipsoidRendererAdapter({
 
     if (cancelledNow()) return
 
-    // Clear host to avoid duplicate canvases if the adapter is rebooted.
-    try {
-      hostEl.innerHTML = ''
-    } catch {
-      /* ignore */
-    }
-
     const stack = mapStackById(stackId)
     const attributionText = stack?.attribution ?? '© OpenStreetMap contributors'
 
@@ -358,7 +363,8 @@ export function createCesiumEllipsoidRendererAdapter({
 
     // Minimal Viewer UI: bounded display-only terrain, no 3D tiles.
     try {
-      viewer = new Cesium.Viewer(hostEl, {
+      ownedHost = createCesiumOwnedHost(hostEl)
+      viewer = new Cesium.Viewer(ownedHost.element, {
         animation: false,
         timeline: false,
         baseLayerPicker: false,
@@ -375,6 +381,10 @@ export function createCesiumEllipsoidRendererAdapter({
       // eslint-disable-next-line no-console
       console.error('Cesium failed to boot; falling back to MapLibre:', bootError?.message ?? bootError)
       viewer = null
+      terrainPlan?.destroy?.()
+      terrainPlan = null
+      ownedHost?.destroy()
+      ownedHost = null
       if (!cancelledNow()) onStackIdChange?.('openfreemap-positron')
       return
     }
@@ -399,6 +409,9 @@ export function createCesiumEllipsoidRendererAdapter({
       console.error('Cesium render failure; falling back to MapLibre:', renderError?.message ?? renderError)
       if (cancelledNow() || !viewer) return
       destroyCesiumResources({ eventHandler, viewer })
+      terrainPlan?.destroy?.()
+      ownedHost?.destroy()
+      ownedHost = null
       viewer = null
       eventHandler = null
       entities = []
@@ -683,6 +696,8 @@ export function createCesiumEllipsoidRendererAdapter({
     localCancelled = true
     terrainPlan?.destroy?.()
     destroyCesiumResources({ eventHandler, viewer })
+    ownedHost?.destroy()
+    ownedHost = null
     viewer = null
     eventHandler = null
     entities = []

@@ -1,10 +1,17 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { mapLibreNoticeAssets } from './verifier/mapLibreNoticeAssets.mjs'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 export default defineConfig({
   plugins: [
     react(),
+    {
+      name: 'mip-maplibre-license-notices',
+      generateBundle() {
+        for (const asset of mapLibreNoticeAssets()) this.emitFile(asset)
+      },
+    },
     // Copy CesiumJS static assets (Workers + Assets) into the build output
     // so they are served under the GitHub Pages base path.
     viteStaticCopy({
