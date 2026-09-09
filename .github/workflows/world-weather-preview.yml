@@ -3,6 +3,8 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'supabase/runtime-snapshots/source-comparison-run-v14/**'
+      - 'tests/membershipScoreReadback.test.mjs'
       - 'supabase/migrations/*_comparison_explanation_event_binding.sql'
       - 'tests/comparisonExplanationEventBinding.test.mjs'
       - 'scripts/mipConsolidationRestore.mjs'
