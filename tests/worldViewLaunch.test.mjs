@@ -329,8 +329,8 @@ test('src has no globe-vendor / 3D-tile strings; map pick goes through commitNew
   const bannedPaidImageryKeyStrings = /api[_-]?key|apikey|accessToken\b|access[_-]?token/i
 
   const allowedCesiumFiles = [
-    // VF-2: adapter-owned frozen clock and calculated lighting; all provider/token bans still apply.
-    /\\/src\\/lib\\/worldViewCesiumRecordedLighting\\.js$/,
+    // VF-2: adapter-owned frozen clock and calculated lighting; provider/token bans still apply.
+    /\/src\/lib\/worldViewCesiumRecordedLighting\.js$/,
     // VF-2: public display-only atmosphere properties; provider/token bans still apply.
     /\/src\/lib\/worldViewCesiumAtmosphere\.js$/,
     // VF-2: bounded resolution is an adapter-owned display control; provider/token bans still apply.
