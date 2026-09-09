@@ -5,6 +5,7 @@ import { PGlite } from '@electric-sql/pglite'
 
 const base = await readFile(new URL('../supabase/migrations/20260909181233_spatial_history_retention.sql', import.meta.url), 'utf8')
 const patch = await readFile(new URL('../supabase/migrations/20260909190228_spatial_parent_retention.sql', import.meta.url), 'utf8')
+const ancestorPatch = await readFile(new URL('../supabase/retention-contracts/spatial_source_ancestor.sql', import.meta.url), 'utf8')
 const source = 'jfnzyvzthzqtczlxhjll', observed = '2026-01-01T00:00:00Z'
 const references = [
   {
@@ -53,6 +54,7 @@ async function fixture(t) {
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls; create schema mip_private;')
   await db.exec(base)
   await db.exec(patch)
+  await db.exec(ancestorPatch)
   await db.exec('set role service_role')
   return db
 }
@@ -107,4 +109,17 @@ test('parent retention preserves closed grants, enabled immutability guards and 
   assert.equal(guards.length,3); assert.ok(guards.every(r=>r.tgenabled==='O'))
   assert.equal((await retain(db,'spatial.policy_artifacts',[{id:'original-scope'}])).inserted,1)
   assert.equal((await db.query("select relrowsecurity from pg_class where oid='mip_private.spatial_row_versions'::regclass")).rows[0].relrowsecurity,true)
+})
+
+test('source_record ancestry requires the typed registry mapping rather than an untyped matching identifier', async t => {
+  const db = await fixture(t)
+  await retain(db,'spatial.evidence_artifact_registry',[{id:'wrong-kind',artifact_type_code:'article',source_record_id:'source'}])
+  await assert.rejects(retain(db,'public.sources',[{id:'source',node_id:'node'}]),/spatial_source_record_reference_required/)
+  await retain(db,'spatial.evidence_condition_events',[{id:'untyped',source_id:'source'}])
+  await assert.rejects(retain(db,'public.sources',[{id:'source',node_id:'node'}]),/spatial_source_record_reference_required/)
+  await retain(db,'spatial.evidence_artifact_registry',[{id:'typed',artifact_type_code:'source_record',source_record_id:'source',source_node_id:'node'}])
+  assert.equal((await retain(db,'public.sources',[{id:'source',node_id:'node',published_at:'2026-01-01'}])).inserted,1)
+  assert.equal((await retain(db,'public.sources',[{id:'source',node_id:'node',published_at:'2026-01-01'}])).already_retained,1)
+  await assert.rejects(retain(db,'public.sources',[{id:'different'}]),/spatial_source_record_reference_required/)
+  assert.equal(await count(db),1)
 })
