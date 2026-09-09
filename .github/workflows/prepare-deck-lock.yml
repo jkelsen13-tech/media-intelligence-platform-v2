@@ -16,5 +16,6 @@ jobs:
       - name: Resolve exact compatible release without scripts
         run: |
           node --input-type=module -e "import fs from 'node:fs'; const p=JSON.parse(fs.readFileSync('package.json')); delete p.dependencies['@deck.gl/mapbox']; for(const n of ['core','layers','maplibre']) p.dependencies['@deck.gl/'+n]='9.4.0'; fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
-          npm update --package-lock-only --ignore-scripts @deck.gl/core @deck.gl/layers @deck.gl/maplibre @luma.gl/core @luma.gl/engine @luma.gl/shadertools @luma.gl/webgl
+          node --input-type=module -e "import fs from 'node:fs'; const l=JSON.parse(fs.readFileSync('package-lock.json')); for(const p of Object.keys(l.packages)) if(p.startsWith('node_modules/@deck.gl/')||p.startsWith('node_modules/@luma.gl/')) delete l.packages[p]; l.packages[''].dependencies=JSON.parse(fs.readFileSync('package.json')).dependencies; fs.writeFileSync('package-lock.json',JSON.stringify(l,null,2)+'\n')"
+          npm install --package-lock-only --ignore-scripts
           node --input-type=module -e "import fs from 'node:fs'; for(const p of ['package.json','package-lock.json']) console.log('MANIFEST:'+p+':'+fs.readFileSync(p).toString('base64'))"
