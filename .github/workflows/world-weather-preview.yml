@@ -3,6 +3,8 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'supabase/migrations/*_spatial_parent_retention.sql'
+      - 'tests/spatialParentRetention.test.mjs'
       - 'supabase/migrations/*_spatial_history_retention.sql'
       - 'tests/spatialHistoryRetention.test.mjs'
       - 'supabase/runtime-snapshots/source-comparison-run-v14/**'
