@@ -50,7 +50,7 @@ function CategoryControl({ profile, category, capabilities, onAction, recordedTi
                   aria-describedby={descriptionId}
                   onChange={event => onAction({ type: 'resolution', value: Number(event.target.value) })}>
                   {RESOLUTION_SCALES.map(scale => <option key={scale} value={scale}>{scale.toFixed(2)}×{scale === 1 ? ' — Neutral' : scale < 1 ? ' — Lower cost' : ' — Supersampling'}</option>)}
-                </select> : <input type="checkbox" checked={active}
+                </select> : <input type="checkbox" checked={leaf === 'dynamicAtmosphere' && supported && profile.enabled && profile.categories[category.id].enabled ? remembered : active}
                   disabled={!supported || !profile.enabled || !profile.categories[category.id].enabled}
                   aria-describedby={descriptionId}
                   onChange={event => onAction({ type: 'leaf', category: category.id, leaf, enabled: event.target.checked })} />}
@@ -63,6 +63,7 @@ function CategoryControl({ profile, category, capabilities, onAction, recordedTi
                   : !supported ? capability?.reason ?? 'Unavailable on this renderer.'
                   : active ? 'On' : remembered ? 'Off; your On preference is remembered.' : 'Off'}
                 {leaf === 'refinement' ? ' Selects terrain level of detail within the approved source coverage and zoom limit. Fine may increase tile requests, memory and rendering cost; it does not add source detail or geographic precision. Every preset uses Neutral.' : ''}
+                {leaf === 'dynamicAtmosphere' ? ' Calculated atmosphere shading at the frozen inspection timestamp. Requires Sun lighting and either Ground atmosphere or Distance haze to be on. Off while a dependency is off; your choice is remembered. Not observed sunlight or weather. Off in every preset.' : ''}
                 {leaf === 'sunLighting' ? ` Calculated sun lighting at the inspection timestamp${supported && recordedTimeInstant ? ': ' + recordedTimeInstant : ''}. Most visible from space; day/night shading fades at close range. Not observed sunlight, weather, or proof of event occurrence. Display clock uses milliseconds; source precision is retained. Off in every preset.` : ''}
                 {leaf === 'groundAtmosphere' ? ' Stylized scattering over the globe, most visible from space. Not observed weather or recorded sunlight. Off in every preset.' : ''}
                 {leaf === 'distanceHaze' ? ' Stylized distance haze, most visible toward the horizon. Not observed weather. Source detail stays unchanged. Off in every preset.' : ''}
@@ -85,7 +86,7 @@ export default function WorldViewVisualFidelityPanel({ profile, capabilities, on
       <div className="wv-fidelity-row">
         <label><input type="checkbox" checked={profile.enabled}
           onChange={event => onAction({ type: 'master', enabled: event.target.checked })} />Photoreal</label>
-        <span>{[effective.refinement !== 'neutral' && `Terrain refinement: ${effective.refinement}`, effective.sunLighting && 'Calculated sun lighting on', effective.reliefShading && 'Terrain relief on', effective.fxaa && 'FXAA on', effective.groundAtmosphere && 'Ground atmosphere on', effective.distanceHaze && 'Distance haze on', effective.resolutionScale !== 1 && `Resolution ${effective.resolutionScale.toFixed(2)}×`].filter(Boolean).join(' · ') || 'No additional effects active'}</span>
+        <span>{[effective.dynamicAtmosphere && 'Dynamic atmosphere lighting on', effective.refinement !== 'neutral' && `Terrain refinement: ${effective.refinement}`, effective.sunLighting && 'Calculated sun lighting on', effective.reliefShading && 'Terrain relief on', effective.fxaa && 'FXAA on', effective.groundAtmosphere && 'Ground atmosphere on', effective.distanceHaze && 'Distance haze on', effective.resolutionScale !== 1 && `Resolution ${effective.resolutionScale.toFixed(2)}×`].filter(Boolean).join(' · ') || 'No additional effects active'}</span>
         <button type="button" aria-expanded={expanded} aria-controls="wv-fidelity-settings"
           onClick={() => setExpanded(value => !value)}>Visual Fidelity settings</button>
       </div>

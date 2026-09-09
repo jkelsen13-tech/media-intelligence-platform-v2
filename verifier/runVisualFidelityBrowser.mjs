@@ -103,7 +103,7 @@ try {
         await panel.getByRole('button',{name:'Show '+category+' settings',exact:true}).click()
       }
       const deferred=panel.locator('[data-effect-status="deferred"] input')
-      assert.equal(await deferred.count(),6)
+      assert.equal(await deferred.count(),5)
       for(const control of await deferred.all()){
         assert.equal(await control.isChecked(),false)
         assert.equal(await control.isDisabled(),true)

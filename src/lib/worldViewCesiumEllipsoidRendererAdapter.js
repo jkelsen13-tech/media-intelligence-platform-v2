@@ -624,6 +624,8 @@ export function createCesiumEllipsoidRendererAdapter({
     return visualFidelityCapabilities({ relief,
       refinement: refinementApplication.available(),
       refinementReason: refinementApplication.hasFailed() ? 'Terrain refinement could not be applied.' : 'Terrain refinement needs a ready globe and approved terrain.',
+      dynamicAtmosphere: recordedLighting.available(),
+      dynamicAtmosphereReason: 'Dynamic atmosphere needs an exact inspection timestamp and a ready, frozen globe clock.',
       sunLighting: recordedLighting.available(),
       sunLightingReason: 'Sun lighting needs an exact inspection timestamp and a ready, frozen globe clock. Date-only scopes do not supply an instant.',
       groundAtmosphere: atmosphereAvailable(viewer,'groundAtmosphere') && !groundAtmosphereApplication.hasFailed(),
@@ -648,7 +650,9 @@ export function createCesiumEllipsoidRendererAdapter({
     const resolutionApplied = resolutionApplication.set(effective.resolutionScale)
     const groundApplied = groundAtmosphereApplication.set(effective.groundAtmosphere)
     const hazeApplied = distanceHazeApplication.set(effective.distanceHaze)
-    return refinementApplied && sunlightApplied && reliefApplied && fxaaApplied && resolutionApplied && groundApplied && hazeApplied
+    const dynamicApplied = recordedLighting.setDynamicAtmosphere(effective.dynamicAtmosphere)
+    if (!dynamicApplied && recordedLighting.state().dynamicAtmosphere) onStackIdChange?.('openfreemap-positron')
+    return dynamicApplied && refinementApplied && sunlightApplied && reliefApplied && fxaaApplied && resolutionApplied && groundApplied && hazeApplied
   }
 
   // Stage D: terrain status snapshot for the honest-availability UI.

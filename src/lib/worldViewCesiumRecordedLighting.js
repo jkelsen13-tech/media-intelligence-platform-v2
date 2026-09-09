@@ -7,6 +7,7 @@ export function createRecordedLightingController(getCesium, getViewer) {
   let input = recordedDisplayTime(null)
   let clockApplied = false
   let failed = false
+  let dynamicApplied = false
   function currentMatches() {
     try {
       const C = getCesium(), v = getViewer()
@@ -20,7 +21,7 @@ export function createRecordedLightingController(getCesium, getViewer) {
   function available() {
     try { return input.available && clockApplied && !failed && currentMatches()
       && typeof getViewer()?.scene?.globe?.enableLighting === 'boolean'
-      && getViewer().scene.globe.dynamicAtmosphereLighting === false
+      && getViewer().scene.globe.dynamicAtmosphereLighting === dynamicApplied
       && getViewer().scene.globe.dynamicAtmosphereLightingFromSun === false
       && getViewer().scene.sun?.show !== true && getViewer().scene.moon?.show !== true }
     catch { return false }
@@ -40,6 +41,26 @@ export function createRecordedLightingController(getCesium, getViewer) {
       return !enabled || desired
     } catch { failed = true; return false }
   }
+  function setDynamicAtmosphere(enabled) {
+    if (typeof enabled !== 'boolean') return false
+    const v = getViewer(), globe = v?.scene?.globe
+    if (!v || v.isDestroyed?.() || typeof globe?.dynamicAtmosphereLighting !== 'boolean') return false
+    const desired = enabled && available() && globe.enableLighting === true
+      && (globe.showGroundAtmosphere === true || (v.scene.fog?.enabled === true && v.scene.fog.renderable === true))
+    try {
+      if (globe.dynamicAtmosphereLighting !== desired) {
+        globe.dynamicAtmosphereLighting = desired
+        v.scene.requestRender?.()
+      }
+      if (globe.dynamicAtmosphereLighting !== desired) {
+        failed = true
+        setLighting(false)
+        return false
+      }
+      dynamicApplied = desired
+      return !enabled || desired
+    } catch { failed = true; setLighting(false); return false }
+  }
   return {
     setTime(raw) {
       input = recordedDisplayTime(raw)
@@ -54,10 +75,13 @@ export function createRecordedLightingController(getCesium, getViewer) {
         const time = C.JulianDate.fromDate(new Date(input.atMs ?? NEUTRAL_MS))
         const changed = !C.JulianDate.equals(clock.currentTime, time)
         clock.currentTime = time
-        // These independent, unqualified effects must not inherit SDK defaults.
+        // Reset owned display effects when applying a clock; the profile replays next.
         if (v.scene.sun) v.scene.sun.show = false
         if (v.scene.moon) v.scene.moon.show = false
+        const hadDynamic = v.scene.globe.dynamicAtmosphereLighting === true
         v.scene.globe.dynamicAtmosphereLighting = false
+        dynamicApplied = false
+        if (hadDynamic) v.scene.requestRender?.()
         v.scene.globe.dynamicAtmosphereLightingFromSun = false
         clockApplied = currentMatches()
         if (changed) v.scene.requestRender?.()
@@ -66,6 +90,7 @@ export function createRecordedLightingController(getCesium, getViewer) {
       return clockApplied
     },
     setLighting,
+    setDynamicAtmosphere,
     available,
     state() {
       const v = getViewer()
