@@ -80,3 +80,27 @@ This audit does not authorize or perform legacy project deletion, scheduler
 disablement, credential rotation or worker redeployment. Neither backend
 consolidation nor collector cutover is complete. No legacy project is SAFE TO RETIRE.
 See the [final gate](BACKEND_CONSOLIDATION_FINAL_GATE_2026-09-08.md).
+
+## Follow-up: active version 11, 9 September 2026 UTC
+
+A subsequent read-only retrieval found source-comparison-run version 11 active
+with verify_jwt=true and bundle identifier
+0c393ce15730271e158d204b060ecbdd072d28d4aeee48fcb81ad85bf7b2e5a6.
+The earlier version-9 observation above remains historical evidence, not the
+current deployment identifier. The retrieved bundle contains index.ts, lib.js
+and loadedLanguageLexicon.json. Its external client import is
+https://esm.sh/@supabase/supabase-js@2; the complete deployment dependency contract
+must be qualified before survivor deployment.
+
+The active version still counts pending comparison queue rows, performs projection
+work and acknowledges every row currently pending. It does not fence that
+acknowledgement to the input generation processed. The newer deployed version
+therefore does not close the documented race. No historical loss is inferred.
+Membership release/approval behavior remains a separate constraint and must not be
+replaced by transport completion or caller-supplied approval flags.
+
+No source payloads, credential values, queue rows, schedules, functions or database
+schemas were changed by this recheck. The retrieved source was inspected in memory;
+no local files were created. The generation-bound durable output and conditional
+acknowledgement requirement, operational/history parity and final consolidation
+gate remain pending. No legacy backend is SAFE TO RETIRE.
