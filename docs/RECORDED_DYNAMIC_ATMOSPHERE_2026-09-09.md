@@ -63,3 +63,18 @@ comparison input/output contract, durable semantic output and transactional
 conditional acknowledgement before schedule cutover. This checkpoint changed no
 database, schedule, runtime, queue, policy or credential. No legacy backend is
 safe to retire.
+
+## Executable legacy timestamp counterexample
+
+The isolated collectorLegacyGenerationCounterexample test loads the exact
+recovered producer definition from a test-only fixture and a narrowed compatible
+schema. Two validation-state revisions in one transaction produce identical
+queue metadata because now() is transaction-stable. An event-ID plus enqueued_at
+conditional update then demonstrably acknowledges the newer revision using the
+older observation. This asserts an unsafe counterexample, not desired worker
+behavior. The fixture does not emulate the full publication/schema contract or
+execute the production worker. It rolls back and never contacts Supabase.
+
+Together with the existing survivor generation-isolation test, this distinguishes
+a demonstrated inadequate legacy fence from the immutable survivor transport
+foundation. It does not implement durable comparison output or certify cutover.
