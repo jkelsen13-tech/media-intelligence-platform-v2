@@ -39,7 +39,7 @@ function CategoryControl({ profile, category, capabilities, onAction }) {
           return (
             <div key={leaf} className="wv-fidelity-leaf" data-fidelity-effect={leaf}
               data-effect-status={capability?.status ?? 'unavailable'} data-effect-active={active}>
-              <label>
+              <label className={leaf === 'resolutionScale' ? 'wv-fidelity-resolution' : undefined}>
                 {leaf === 'resolutionScale' ? <select aria-label="Render resolution" value={effective[leaf]}
                   disabled={!supported || !profile.enabled || !profile.categories[category.id].enabled}
                   aria-describedby={descriptionId}
