@@ -272,3 +272,23 @@ Additional MIP account access is owner-approved but provisioning remains pending
 supported Auth administration. Account details are kept out of this public report.
 Markets evidence/rights and physical-device rendering qualification remain open.
 No legacy project is SAFE TO RETIRE. The ten-part gate remains INCOMPLETE.
+
+
+## Spatial parent checkpoint — PR #137, 9 September 2026
+
+Six referenced sandbox fixtures are retained privately, bringing the spatial
+archive to 45 versions. All six source/archive digests match; eight declared
+external FK checks and the typed source-record/node references have no missing
+records. The earlier 39 archived payloads and 19 live spatial rows are unchanged.
+The INSERT guard requires an existing archived reference; public.sources also
+requires the explicit source_record artifact type and source_record_id.
+The live registration function confirms this target mapping.
+No fixture is promoted into live content or publication.
+See [the retention report](SPATIAL_PARENT_RETENTION_2026-09-09.md).
+
+This closes observed fixture structural retention. Independently observed parents
+do not establish historical as-of versions; source-change producer/causal
+semantics and other artifact references remain unqualified. Authority/release
+semantics, positive writer/caller proof, Auth provisioning, Markets rights/evidence,
+physical-device fidelity and collector cutover remain pending.
+No legacy backend is SAFE TO RETIRE. Overall consolidation remains INCOMPLETE.
