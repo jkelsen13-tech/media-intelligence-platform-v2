@@ -102,7 +102,7 @@ try {
         await panel.getByRole('button',{name:'Show '+category+' settings',exact:true}).click()
       }
       const deferred=panel.locator('[data-effect-status="deferred"] input')
-      assert.equal(await deferred.count(),11)
+      assert.equal(await deferred.count(),10)
       for(const control of await deferred.all()){
         assert.equal(await control.isChecked(),false)
         assert.equal(await control.isDisabled(),true)
@@ -155,6 +155,61 @@ try {
       console.log('MIP_FXAA_ENHANCED_'+engine+'_'+width+'='+fxaaEnhanced.toString('base64'))
       await preset.selectOption('balanced')
       assert.equal((await renderState()).fxaa.enabled,false,'Balanced does not silently opt in')
+
+      // Bounded resolution: neutral defaults, actual framebuffer scale, same
+      // camera/canvas/route, no pixel-density multiplier, retained gates/remount.
+      const resolution=panel.getByRole('combobox',{name:'Render resolution',exact:true})
+      await imageQuality.check()
+      assert.equal(await resolution.inputValue(),'1')
+      await page.waitForLoadState('networkidle',{timeout:30000})
+      const resolutionCamera=await camera()
+      const resolutionCanvas=await page.locator('.wv-map-host canvas').first().elementHandle()
+      const baseline=(await renderState()).resolution
+      const resolutionSamples=[]
+      let resolutionRequests=0
+      const countResolution=request=>{if(/terrarium|tile.openstreetmap.org/.test(request.url()))resolutionRequests++}
+      page.on('request',countResolution)
+      for(const scale of [0.75,1.25,1]){
+        const start=Date.now()
+        await resolution.selectOption(String(scale))
+        await page.waitForFunction(expected=>{
+          const r=window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.resolution
+          return r?.scale===expected && Math.abs(r.width-Math.floor(r.cssWidth*expected))<=1
+            && Math.abs(r.height-Math.floor(r.cssHeight*expected))<=1
+        },scale)
+        await delay(350)
+        const state=(await renderState()).resolution
+        assert.equal(state.browserRecommended,true)
+        assert.equal(state.cssWidth,baseline.cssWidth);assert.equal(state.cssHeight,baseline.cssHeight)
+        assert.equal(await camera(),resolutionCamera)
+        assert.equal(await resolutionCanvas.evaluate(n=>n.isConnected),true)
+        assert.equal(page.url(),route)
+        assert.equal((await renderState()).requestRenderMode,true)
+        resolutionSamples.push({scale,...state,elapsedMs:Date.now()-start})
+        console.log('MIP_RESOLUTION_IMAGE_'+engine+'_'+width+'_'+scale+'='+(await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:70})).toString('base64'))
+      }
+      page.off('request',countResolution)
+      assert.equal(resolutionRequests,0,'settled resolution toggles must not fetch more terrain/imagery')
+      await resolution.selectOption('1.25')
+      const rememberedResolution=await profile()
+      for(const gate of [master,imageQuality]){
+        await gate.uncheck()
+        assert.equal((await renderState()).resolution.scale,1)
+        assert.equal(await resolution.inputValue(),'1')
+        await gate.check()
+        assert.deepEqual(await profile(),rememberedResolution)
+        assert.equal((await renderState()).resolution.scale,1.25)
+      }
+      await modes.getByRole('tab',{name:'Graph',exact:true}).click()
+      assert.equal(await resolution.isDisabled(),true)
+      assert.equal(await resolution.inputValue(),'1')
+      await modes.getByRole('tab',{name:'Map',exact:true}).click()
+      await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.resolution.scale===1.25)
+      assert.equal(await resolution.inputValue(),'1.25')
+      await preset.selectOption('balanced')
+      assert.equal((await renderState()).resolution.scale,1)
+      console.log('MIP_RESOLUTION_PASS='+JSON.stringify({engine,width,resolutionSamples,resolutionRequests,remembered:true,remount:true,routePreserved:page.url()===route}))
+
       assert.equal(page.url(),route,'all controls preserve canonical/time route')
       await panel.scrollIntoViewIfNeeded()
       const bounds=await panel.boundingBox()
@@ -196,6 +251,9 @@ try {
     const fallbackFxaa=fallbackPanel.getByRole('checkbox',{name:'FXAA',exact:true})
     assert.equal(await fallbackFxaa.isDisabled(),true)
     assert.equal(await fallbackFxaa.isChecked(),false)
+    const fallbackResolution=fallbackPanel.getByRole('combobox',{name:'Render resolution',exact:true})
+    assert.equal(await fallbackResolution.isDisabled(),true)
+    assert.equal(await fallbackResolution.inputValue(),'1')
     assert.equal(await fallback.evaluate(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getProfile().categories.terrain.reliefShading),true)
     console.log('MIP_FIDELITY_FORCED_FALLBACK='+JSON.stringify({engine,webglUnavailable:true,overviewFallback:true,preferenceRetained:true,unavailable:true}))
     await fallback.close()

@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import {
-  FIDELITY_CATEGORIES, FIDELITY_EFFECTS, FIDELITY_PRESETS,
+  RESOLUTION_SCALES, FIDELITY_CATEGORIES, FIDELITY_EFFECTS, FIDELITY_PRESETS,
   resolveVisualFidelityProfile, visualFidelityCategoryState,
 } from '../lib/worldViewVisualFidelity.js'
 import { TERRAIN_RELIEF_LEGEND_TEXT } from '../lib/worldViewMapStack.js'
@@ -33,25 +33,31 @@ function CategoryControl({ profile, category, capabilities, onAction }) {
           const effect = FIDELITY_EFFECTS[leaf]
           const capability = capabilities?.[leaf]
           const supported = capability?.status === 'supported'
-          const active = effective[leaf] === true
-          const remembered = profile.categories[category.id][leaf] === true
+          const active = leaf === 'resolutionScale' ? effective[leaf] !== 1 : effective[leaf] === true
+          const remembered = leaf === 'resolutionScale' ? profile.categories[category.id][leaf] !== 1 : profile.categories[category.id][leaf] === true
           const descriptionId = 'wv-fidelity-reason-' + leaf
           return (
             <div key={leaf} className="wv-fidelity-leaf" data-fidelity-effect={leaf}
               data-effect-status={capability?.status ?? 'unavailable'} data-effect-active={active}>
               <label>
-                <input type="checkbox" checked={active}
+                {leaf === 'resolutionScale' ? <select aria-label="Render resolution" value={effective[leaf]}
                   disabled={!supported || !profile.enabled || !profile.categories[category.id].enabled}
                   aria-describedby={descriptionId}
-                  onChange={event => onAction({ type: 'leaf', category: category.id, leaf, enabled: event.target.checked })} />
+                  onChange={event => onAction({ type: 'resolution', value: Number(event.target.value) })}>
+                  {RESOLUTION_SCALES.map(scale => <option key={scale} value={scale}>{scale.toFixed(2)}×{scale === 1 ? ' — Neutral' : scale < 1 ? ' — Lower cost' : ' — Supersampling'}</option>)}
+                </select> : <input type="checkbox" checked={active}
+                  disabled={!supported || !profile.enabled || !profile.categories[category.id].enabled}
+                  aria-describedby={descriptionId}
+                  onChange={event => onAction({ type: 'leaf', category: category.id, leaf, enabled: event.target.checked })} />}
                 {effect.label}
               </label>
               <span className="wv-fidelity-cost">{effect.cost} estimated cost</span>
               <p id={descriptionId}>
-                {!supported ? capability?.reason ?? 'Unavailable on this renderer.'
+                {leaf === 'resolutionScale' && supported ? `Rendering at ${effective[leaf].toFixed(2)}×. Remembered setting: ${profile.categories[category.id][leaf].toFixed(2)}×.`
+                  : !supported ? capability?.reason ?? 'Unavailable on this renderer.'
                   : active ? 'On' : remembered ? 'Off; your On preference is remembered.' : 'Off'}
                 {leaf === 'fxaa' ? ' Optional edge smoothing; may soften map labels. Off in Performance, Balanced and Maximum.' : ''}
-                {leaf === 'resolutionScale' ? ' Neutral 1.0×; supersampling is deferred.' : ''}
+                {leaf === 'resolutionScale' ? ' 0.75× renders fewer pixels and may soften labels; 1.25× uses about 56% more pixels. Source detail stays unchanged. Every preset uses 1.0×.' : ''}
               </p>
             </div>
           )
@@ -69,7 +75,7 @@ export default function WorldViewVisualFidelityPanel({ profile, capabilities, on
       <div className="wv-fidelity-row">
         <label><input type="checkbox" checked={profile.enabled}
           onChange={event => onAction({ type: 'master', enabled: event.target.checked })} />Photoreal</label>
-        <span>{[effective.reliefShading && 'Terrain relief on', effective.fxaa && 'FXAA on'].filter(Boolean).join(' · ') || 'No additional effects active'}</span>
+        <span>{[effective.reliefShading && 'Terrain relief on', effective.fxaa && 'FXAA on', effective.resolutionScale !== 1 && `Resolution ${effective.resolutionScale.toFixed(2)}×`].filter(Boolean).join(' · ') || 'No additional effects active'}</span>
         <button type="button" aria-expanded={expanded} aria-controls="wv-fidelity-settings"
           onClick={() => setExpanded(value => !value)}>Visual Fidelity settings</button>
       </div>
@@ -83,7 +89,7 @@ export default function WorldViewVisualFidelityPanel({ profile, capabilities, on
           </select>
         </label>
         <p>Performance adds no effects. Balanced and Maximum currently enable only approved terrain relief.
-          FXAA can be selected in Custom when supported. Other enhancements await verification. Cost estimates are relative, not frame-rate measurements.</p>
+          FXAA and bounded render resolution can be selected in Custom when supported. Other enhancements await verification. Cost estimates are relative, not frame-rate measurements.</p>
         {FIDELITY_CATEGORIES.map(category => <CategoryControl key={category.id} category={category}
           profile={profile} capabilities={capabilities} onAction={onAction} />)}
         {effective.reliefShading && <p>{TERRAIN_RELIEF_LEGEND_TEXT}</p>}

@@ -1,5 +1,6 @@
 // Display preferences only. No renderer objects, storage or evidence fields.
 export const VISUAL_FIDELITY_VERSION = 1
+export const RESOLUTION_SCALES = Object.freeze([0.75, 1, 1.25])
 export const FIDELITY_CATEGORIES = Object.freeze([
   { id: 'lighting', label: 'Lighting', leaves: ['sunLighting', 'dynamicAtmosphere', 'sunDirectedAtmosphere', 'terrainShadows'] },
   { id: 'terrain', label: 'Terrain', leaves: ['reliefShading', 'refinement'] },
@@ -48,9 +49,9 @@ export function normalizeVisualFidelityProfile(raw) {
     const output = next.categories[category.id]
     output.enabled = input?.enabled === true
     for (const leaf of category.leaves) {
-      // Only relief and opt-in FXAA are implemented. Imported/future profiles cannot
-      // activate deferred effects or change refinement/resolution.
+      // Only qualified effects survive import; resolution has a small fixed allowlist.
       if (leaf === 'reliefShading' || leaf === 'fxaa') output[leaf] = input?.[leaf] === true
+      if (leaf === 'resolutionScale') output[leaf] = RESOLUTION_SCALES.includes(input?.[leaf]) ? input[leaf] : 1
     }
   }
   // A stale preset label must never describe a different configuration.
@@ -61,20 +62,24 @@ export function normalizeVisualFidelityProfile(raw) {
   return next
 }
 
-export function visualFidelityCapabilities({ relief = false, fxaa = false, fxaaReason, reason = 'Map renderer is not ready.' } = {}) {
+export function visualFidelityCapabilities({ relief = false, fxaa = false, fxaaReason, resolution = false, resolutionReason, reason = 'Map renderer is not ready.' } = {}) {
   return Object.fromEntries(Object.keys(FIDELITY_EFFECTS).map(leaf => [leaf,
     leaf === 'reliefShading'
       ? { status: relief ? 'supported' : 'unavailable', reason: relief ? null : reason }
       : leaf === 'fxaa'
         ? { status: fxaa ? 'supported' : 'unavailable', reason: fxaa ? null : fxaaReason ?? reason }
-        : { status: 'deferred', reason: 'Not enabled in this release; verification is pending.' },
+        : leaf === 'resolutionScale'
+          ? { status: resolution ? 'supported' : 'unavailable', reason: resolution ? null : resolutionReason ?? reason }
+          : { status: 'deferred', reason: 'Not enabled in this release; verification is pending.' },
   ]))
 }
 
 export function resolveVisualFidelityProfile(raw, capabilities) {
   const profile = normalizeVisualFidelityProfile(raw)
   return Object.fromEntries(FIDELITY_CATEGORIES.flatMap(category => category.leaves.map(leaf => [
-    leaf, leaf === 'resolutionScale' ? 1 : leaf === 'refinement' ? 'neutral'
+    leaf, leaf === 'resolutionScale'
+      ? (profile.enabled && profile.categories[category.id].enabled && capabilities?.[leaf]?.status === 'supported' ? profile.categories[category.id][leaf] : 1)
+      : leaf === 'refinement' ? 'neutral'
       : Boolean(profile.enabled && profile.categories[category.id].enabled
         && profile.categories[category.id][leaf] === true && capabilities?.[leaf]?.status === 'supported'),
   ])))
@@ -87,6 +92,10 @@ export function reduceVisualFidelityProfile(raw, action, capabilities) {
   } else if (action?.type === 'preset' && FIDELITY_PRESETS.includes(action.preset)) {
     next.preset = action.preset
     if (action.preset !== 'custom') next.categories = categories(action.preset !== 'performance')
+  } else if (action?.type === 'resolution' && RESOLUTION_SCALES.includes(action.value)
+    && capabilities?.resolutionScale?.status === 'supported') {
+    next.categories.imageQuality.resolutionScale = action.value
+    next.preset = 'custom'
   } else {
     const category = FIDELITY_CATEGORIES.find(item => item.id === action?.category)
     if (!category || typeof action.enabled !== 'boolean') return next
@@ -107,7 +116,7 @@ export function visualFidelityCategoryState(profile, categoryId, capabilities) {
   if (!category) return { checked: false, mixed: false, unavailable: true }
   const supported = category.leaves.filter(leaf => capabilities?.[leaf]?.status === 'supported')
   const effective = resolveVisualFidelityProfile(profile, capabilities)
-  const active = supported.filter(leaf => effective[leaf] === true).length
+  const active = supported.filter(leaf => leaf === 'resolutionScale' ? effective[leaf] !== 1 : effective[leaf] === true).length
   return { checked: supported.length > 0 && active === supported.length,
     mixed: active > 0 && active < supported.length, unavailable: supported.length === 0 }
 }
