@@ -1,0 +1,20 @@
+name: Prepare MapLibre compatible deck lock
+on:
+  push:
+    branches: [fix/maplibre-attribution-security]
+    paths: [.github/workflows/prepare-deck-lock.yml]
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Resolve exact compatible release without scripts
+        run: |
+          npm pkg delete dependencies.@deck.gl/mapbox
+          npm install --package-lock-only --ignore-scripts --save-exact @deck.gl/core@9.4.0 @deck.gl/layers@9.4.0 @deck.gl/maplibre@9.4.0
+          node --input-type=module -e "import fs from 'node:fs'; for(const p of ['package.json','package-lock.json']) console.log('MANIFEST:'+p+':'+fs.readFileSync(p).toString('base64'))"
