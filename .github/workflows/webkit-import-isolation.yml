@@ -1,0 +1,42 @@
+name: WebKit import isolation
+on:
+  push:
+    branches: ['diagnostic/webkit-import-2026-09-09']
+permissions:
+  contents: read
+jobs:
+  timestamp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        application: ['12547a959f4f5e23bf1380e328a472e89aa96524', '262fe9625796d1a753646df0a7bf710f00311a96']
+    env:
+      VITE_SUPABASE_URL: https://qikvmopbtijoebdqosyq.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_7EVSYlCWYiE6YL0bDBYr_w_iwB9tve_
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          path: diagnostics
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ matrix.application }}
+          path: application
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+        working-directory: application
+      - run: npm run build
+        working-directory: application
+      - name: Install isolated WebKit
+        run: |
+          npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
+          node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps webkit
+      - name: Repeat exact timestamp journey
+        working-directory: application
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+          MIP_APPLICATION_SHA: ${{ matrix.application }}
+        run: node ../diagnostics/verifier/runTimestampIsolation.mjs
