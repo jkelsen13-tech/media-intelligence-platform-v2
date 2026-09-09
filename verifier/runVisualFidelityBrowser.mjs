@@ -245,10 +245,10 @@ try {
         await delay(1000)
         await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.globeTilesLoaded,{},{timeout:30000})
         await page.waitForLoadState('networkidle',{timeout:30000})
-        const fixedCamera=await camera()
         const fixedCanvas=await page.locator('.wv-map-host canvas').first().elementHandle()
         const policy=(await renderState()).atmosphere.fogPolicy
         const beforeImage=await page.locator('.wv-map-host').screenshot({type:'png'})
+        const fixedPose=(await renderState()).cameraPose
         let requests=0
         const counter=req=>{if(/terrarium|tile.openstreetmap.org/.test(req.url()))requests++}
         page.on('request',counter)
@@ -261,7 +261,7 @@ try {
         await delay(200)
         page.off('request',counter)
         assert.equal(beforeImage.equals(afterImage),false,effect+' changes actual pixels')
-        assert.equal(await camera(),fixedCamera)
+        assert.deepEqual((await renderState()).cameraPose,fixedPose,'effect preserves exact camera position and orientation vectors')
         assert.equal(await fixedCanvas.evaluate(node=>node.isConnected),true)
         assert.deepEqual((await renderState()).atmosphere.fogPolicy,policy)
         assert.equal((await renderState()).atmosphere.lightingEnabled,false)

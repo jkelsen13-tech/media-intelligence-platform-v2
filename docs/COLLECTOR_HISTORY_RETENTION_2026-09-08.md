@@ -83,3 +83,32 @@ Manus still has active ingestion/comparison schedules, so records after this
 cutoff and future changes require additional capture and operational migration.
 Keep the [ten-part final gate](BACKEND_CONSOLIDATION_FINAL_GATE_2026-09-08.md)
 OPEN until runtime, history, security and end-to-end dependency closure passes.
+
+## Bounded subsequent delta — 9 September 2026 UTC
+
+Retained 208 further immutable versions through the existing reviewed importer:
+104 ingestion runs started at or after 2026-09-08T17:50:00Z and before
+2026-09-09T02:45:00Z, plus 104 linked source-run records. The seven source-register
+rows were unchanged and already retained. The private archive now contains 8,907
+versions. Source observations were made at 03:04:37–03:04:40 UTC; the final source
+digest recheck was at 03:07:35 UTC.
+
+Captured, destination and source-after counts and ordered hashes match:
+ingestion_runs 8c64258f00b1e773dab4c4cba027eb8705af985aba1373e62a277394741803a0;
+ingestion_source_runs f6d3bf990c7e481dd00cfbacaba906ed488b2c8eb078183bb407a7ab58c322f5;
+ingest_sources f95f234cf5197a1f3e826323ad24196d96dcdd62a2b302e1b90180aa535649e9.
+
+Exact destination comparison used the manifest's relation/key/hash triples,
+not an aggregate over all historical versions. No retained source-run parent or
+source-register link was missing. Replaying 52 captured runs inserted zero rows.
+RLS, browser read/import denial, worker mutation denial and both immutable-history
+triggers remained in place. The deployed importer body matched the reviewed SQL.
+
+See [delta manifest and receipt](../verifier/backend-collector-delta-2026-09-09.json).
+It contains identifiers and hashes, not retained payloads. Payload JSON text was
+passed directly between connected databases without parsing payload numbers in
+JavaScript or writing local files. This is a bounded independently observed
+retention pass, not continuous replication or operational cutover. Later deltas,
+pre-window corrections, complete corpus/history parity and all final gate
+requirements remain pending. No worker, schedule, queue state, publication policy,
+credential or schema was changed; no legacy backend is SAFE TO RETIRE.

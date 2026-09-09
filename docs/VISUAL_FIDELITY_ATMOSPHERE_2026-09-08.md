@@ -29,7 +29,9 @@ Primary sources:
 https://github.com/CesiumGS/cesium/blob/1.145/packages/engine/Source/Scene/Globe.js
 https://github.com/CesiumGS/cesium/blob/1.145/packages/engine/Source/Scene/Fog.js
 
-No new dependency, data provider, fee, backend write or publication decision.
+The atmosphere controls add no dependency, data provider, fee, backend write or publication decision.
+The parallel collector-history retention described in COLLECTOR_HISTORY_RETENTION_2026-09-08.md
+uses the existing private importer and does not change operational behavior.
 Physical-device measurements and preset tuning remain pending. Sun-directed
 lighting, refinement, shadows/AO, sharpening and optional authorized persistence
 remain separate gates. Markets needs trusted typed asset/evidence integration;
