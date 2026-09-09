@@ -231,6 +231,18 @@ export function rendererPlanForStackId({ stackId, webglAvailable }) {
  * - destroy(): cleanup overlay + map
  * - fallback selection: handled internally via onStackIdChange requests
  */
+// MapLibre 6 can return a partially initialized Map when context creation
+// fails instead of throwing. Check the interleaved renderer prerequisite first.
+export function mapLibreWebGL2Available(ownerDocument) {
+  let gl
+  try { gl = ownerDocument?.createElement('canvas').getContext('webgl2') }
+  catch { return false }
+  if (!gl) return false
+  // Release this temporary capability probe; the real renderer owns its context.
+  try { gl.getExtension?.('WEBGL_lose_context')?.loseContext() } catch { /* best effort */ }
+  return true
+}
+
 function createMapLibreWorldViewRendererAdapter({
   stackId,
   getHostEl,
@@ -267,6 +279,10 @@ function createMapLibreWorldViewRendererAdapter({
 
     const hostEl = getHostEl?.()
     if (!hostEl) return
+    if (!mapLibreWebGL2Available(hostEl.ownerDocument)) {
+      if (!cancelledNow()) onStackIdChange?.(FALLBACK_MAP_STACK_ID)
+      return
+    }
 
     let maplibregl
     let MapLibreOverlay

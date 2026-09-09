@@ -64,3 +64,8 @@ their exact installed notices are emitted in the same inventory. WebGPU is not
 activated. The npm resolver validates peers without force/legacy-peer-deps.
 References: https://deck.gl/docs/api-reference/maplibre/overview and
 https://github.com/visgl/deck.gl/releases/tag/v9.4.0 .
+
+The full no-WebGL fidelity probe caught MapLibre 6 returning a partial Map
+instead of throwing on context failure. A WebGL2 capability check now selects
+the atlas fallback before construction when unavailable; its temporary context
+is released. The existing full no-WebGL browser assertions remain required.
