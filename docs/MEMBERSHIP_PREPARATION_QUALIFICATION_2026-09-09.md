@@ -1,48 +1,53 @@
-# Membership preparation qualification — not deployed
+# Complete prepared membership worker qualification
 
-The unchanged production v11 worker returned HTTP 546 in the authenticated
-membership dry run recorded on PR #125. This isolated candidate reduces repeated
-feature preparation without changing peer coverage, scoring weights, thresholds,
-anchor checks or approval decisions. It has no runtime caller or deployment entrypoint.
+Package: supabase/runtime-snapshots/source-comparison-run-v13.
+Base main: ac9941349462242c3fddce109287c9de7d25d097.
+This combines PR #125 complete observed-input fingerprints with PR #126 per-event
+feature preparation. The client is pinned to 2.110.0, also used by the isolated
+qualifier. Historical snapshots, evidence, scoring arithmetic, release policy,
+projection behavior and queue acknowledgement remain unchanged.
 
-Base: ac9941349462242c3fddce109287c9de7d25d097.
-The qualification lib starts from the exact live v11 lib retained in
-supabase/runtime-snapshots/source-comparison-run-v10/lib.js. The old snapshot remains
-unchanged. Changes are limited to per-invocation article feature preparation,
-prepared pair inputs and the scorer's local preparation map.
+## Verified isolated runtime
 
-Each observed member retains its position, including duplicate IDs. Token sets and
-parsed embeddings are prepared once per occurrence, then discarded with the call.
-No cache keyed by article ID can survive a correction. All directed peer comparisons
-remain; no member, large cluster or signal is truncated. Canonical anchor scoring
-remains unchanged. No confidence recalibration or semantic accuracy claim is made.
+Source worker remained ACTIVE v11 with JWT verification while membership-qualification
+v1 was deployed independently with JWT verification and no schedules. The exact
+four-file qualification package was read back byte for byte; bundle:
+f01a914a31de7f85a7414e86b9763dc5f9947205bd69f329a12c1bb7a4b75d49.
 
-Tests compare complete outputs against the exact baseline: existing counterexamples,
-invalid/missing thresholds, malformed/missing evidence, duplicate IDs, corrected
-objects, frozen inputs, seeded heterogeneous corpora and a synthetic 312-member
-cluster. Instrumentation checks 40 embedding preparations instead of 3,120 with
-all 1,560 directed pairs preserved. CI timing is diagnostic, not an Edge-runtime SLA.
+At 2026-09-09T05:16:04.856152Z, net requests 9452/9453 returned 401 for anonymous
+and public-JWT-only requests. Request 9454 rejected a write-shaped request with 400.
+Authenticated request 9455 returned 200: 160 candidates, 1,034 memberships, largest
+cluster 312, all 104,568 directed pairs; 88 rejected and 72 candidate clusters;
+zero auto-approval candidates; policies disabled with null threshold. Prepared
+scoring took 553.137279 ms wall time. Ordered complete-score digest:
+8a6c8e0a1914f4702517e570383b5720318081676f5e7b7619133952ad597982.
+The qualifier returns counts/digests, no article payload, member scores or secrets.
 
-Read-only preflight on 2026-09-09 confirms ACTIVE v11, verify_jwt=true,
-bundle 0c393ce15730271e158d204b060ecbdd072d28d4aeee48fcb81ad85bf7b2e5a6.
-At 05:01:22.072574Z both membership release policies still had fixture_passed=true,
-auto_approval_enabled=false and null threshold.
+Current-head unit/build and complete preview checks, merge review, full-worker
+deployment/dry-run equality and post-merge live checks are still required before
+calling the integrated release complete. The isolated result demonstrates this
+observed workload completed, not a universal CPU bound or an atomic retained read.
 
-## Remaining release gate
+## Invariants and scope
 
-This is an isolated qualification library, not a complete worker package. Before
-production use, combine with the exact reviewed current worker and PR #125 input
-fingerprint contract; qualify a bounded authenticated execution path on complete
-observed inputs. Node synthetic timings do not prove the HTTP 546 cause or resolution.
-The worker still needs a generation-bound durable output/acknowledgement contract;
-retries and overlapping producers must not mark unseen changes successful.
+All directed peer comparisons remain. Token sets/embeddings are prepared once per
+member occurrence and never cached across calls. Complete-output differential tests
+cover missing/malformed inputs, duplicate IDs, corrected data, frozen observations,
+all existing scorer counterexamples and heterogeneous synthetic corpora. Full input
+fingerprints distinguish changed event anchors, summaries, bodies, embeddings,
+timestamps and release inputs while keeping historical rows untouched. Fingerprints
+are digests of observed inputs, not retained captures or authenticity proofs.
 
-Supabase documents a 2-second CPU limit per request:
-https://supabase.com/docs/guides/functions/limits (checked 2026-09-09).
-No paid capacity, schedule, deployment, migration, retained payload, publication,
-credentials or browser access changes are part of this candidate.
+The prior HTTP 546 was observed on the unchanged worker, not this package. Synthetic
+speedups do not prove its sole root cause. The complete package still needs live
+authenticated qualification and persistence remains governed by existing append-only
+history/release contracts. No publication or auto-approval gate is enabled.
 
-Independent work remains pending: recorded-time renderer adapter before sunlight,
-polar terrain qualification, Markets canonical identity and trusted publication/
-rights integration, physical-device measurement and full backend consolidation.
-No legacy backend is safe to retire. No files were created on the owner's device.
+The known broad pending-queue acknowledgement race is separate and remains pending.
+Collector cutover requires immutable generations, durable generation-bound outputs,
+conditional acknowledgement, retry/interleaving tests and operational/history parity.
+This scorer change neither fixes nor newly introduces that race.
+
+Recorded-time lighting adapters, polar coverage, Markets trusted identity/rights/
+publication integration, physical-device measurement and backend consolidation remain
+pending. No legacy backend is safe to retire. No local files were created.
