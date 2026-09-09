@@ -97,7 +97,7 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
     await panel.getByRole('checkbox',{name:'Lighting effects',exact:true}).check()
     await sun.check()
     await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting?.lightingEnabled)
-    await page.goto(base+'?at=2024-04-08')
+    await page.goto(base+'?time=2024-04-08')
     await page.waitForFunction(()=>{
       const c=window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting
       return c?.sourceText===null && !c.available && !c.lightingEnabled
