@@ -86,6 +86,12 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
       await inspector.getByText('coarsened_to_precision_class',{exact:true}).waitFor()
       await mapReady()
       await clockReady(selected)
+      // The retained-time reload contract starts from a settled view. A camera
+      // exists before terrain workers and background projection reads finish;
+      // cancelling those during reload can emit old-document WebKit errors.
+      // Wait on actual readiness, with every page-error assertion still intact.
+      await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.globeTilesLoaded,{},{timeout:60000})
+      await page.waitForLoadState('networkidle',{timeout:30000})
       phase='reload '+selected
       await page.reload()
       await inspector.getByText('coarsened_to_precision_class',{exact:true}).waitFor()

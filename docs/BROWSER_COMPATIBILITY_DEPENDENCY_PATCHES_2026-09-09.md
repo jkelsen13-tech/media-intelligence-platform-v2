@@ -86,12 +86,17 @@ qualification remain separate.
 - https://github.com/browserslist/browserslist/releases/tag/4.28.9
 - https://github.com/web-platform-dx/baseline-browser-mapping/pull/137
 
-## Browser failure diagnostics
+## Browser qualification readiness
 
-The first qualification attempt failed on a WebKit public investigation read;
-the unchanged retry passed all map cases but failed on an edges read immediately
-before pagehide during timestamp reload. Neither incident is diagnosed as a
-backend or library fix. The verifier now retains HTTP status/allowed origin and
-originating-document lifecycle on failure. It does not intercept fetch, suppress
-page errors, relax assertions or alter production behavior. The PR retains both
-failed runs and requires fresh complete qualification before merge.
+The first two attempts recorded WebKit access-control read errors. A subsequent
+instrumented attempt proved the separate module error came from the old
+incrementallyBuildTerrainPicker worker after beforeunload and before pagehide;
+the new document then loaded successfully. The retained-timestamp verifier had
+only waited for a camera/frozen clock, which can exist while terrain workers and
+background reads are still pending. It now waits for globeTilesLoaded and network
+idle before its deliberate reload. This qualifies retention from a settled view,
+not arbitrary interruption of loading. All page-error assertions remain intact;
+no fetch interception, ignored error or production behavior change is introduced.
+The earlier access-control errors are not claimed fixed. Response/allowed-origin
+and originating-document diagnostics are retained for any recurrence. Exact
+failed runs and fresh final qualification are recorded on the PR.
