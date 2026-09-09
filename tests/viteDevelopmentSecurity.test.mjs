@@ -4,6 +4,7 @@ import { mkdtemp, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createServer } from 'vite'
+import { get } from 'node:http'
 
 test('Vite serves allowed development pages while blocking untrusted origins, hosts and private files', async () => {
   const root = await mkdtemp(join(tmpdir(), 'mip-vite-security-'))
@@ -25,7 +26,15 @@ test('Vite serves allowed development pages while blocking untrusted origins, ho
     assert.match(await allowed.text(), /MIP isolated security fixture/)
     const crossOrigin = await fetch(base, { headers: { Origin: 'https://untrusted.example' } })
     assert.equal(crossOrigin.headers.get('access-control-allow-origin'), null)
-    const foreignHost = await fetch(base, { headers: { Host: 'untrusted.example' } })
+    // Use HTTP directly: fetch may replace the caller's Host header.
+    const foreignHost = await new Promise((resolve, reject) => {
+      const request = get(base, { headers: { Host: 'untrusted.example' } }, response => {
+        response.resume()
+        response.on('end', () => resolve({ status: response.statusCode, sentHost: request.getHeader('host') }))
+      })
+      request.on('error', reject)
+    })
+    assert.equal(foreignHost.sentHost, 'untrusted.example')
     assert.equal(foreignHost.status, 403)
     const privateFile = await fetch(base + '/.env')
     assert.equal(privateFile.status, 403)
