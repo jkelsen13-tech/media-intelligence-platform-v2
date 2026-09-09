@@ -23,6 +23,13 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
     if(message.type()==='error') console.log('MIP_TIMESTAMP_CONSOLE='+JSON.stringify({engine,phase,text:message.text(),location:message.location()}))
   })
   await page.addInitScript(()=>{
+    const NativeWorker=window.Worker
+    window.Worker=class extends NativeWorker {
+      constructor(url,options){
+        super(url,options)
+        this.addEventListener('error',event=>console.error('MIP_WORKER_IMPORT_ERROR',JSON.stringify({url:String(url),message:event.message,filename:event.filename,line:event.lineno})))
+      }
+    }
     window.addEventListener('unhandledrejection',event=>{
       console.error('MIP_IMPORT_REJECTION',JSON.stringify({message:event.reason?.message,stack:event.reason?.stack}))
     })

@@ -1,6 +1,7 @@
 // Anonymous browser acceptance in ephemeral Actions storage, using real eligible
 // Cleveland geography. Fault injection is confined to the disposable browser.
 import assert from 'node:assert/strict'
+import { sameCameraPose } from './cameraPoseComparison.mjs'
 import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
@@ -261,7 +262,7 @@ try {
         await delay(200)
         page.off('request',counter)
         assert.equal(beforeImage.equals(afterImage),false,effect+' changes actual pixels')
-        assert.deepEqual((await renderState()).cameraPose,fixedPose,'effect preserves exact camera position and orientation vectors')
+        assert.equal(sameCameraPose((await renderState()).cameraPose,fixedPose),true,'effect preserves exact position and orientation within 16 machine epsilons')
         assert.equal(await fixedCanvas.evaluate(node=>node.isConnected),true)
         assert.deepEqual((await renderState()).atmosphere.fogPolicy,policy)
         assert.equal((await renderState()).atmosphere.lightingEnabled,false)

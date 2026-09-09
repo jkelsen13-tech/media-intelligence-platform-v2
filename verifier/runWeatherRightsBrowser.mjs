@@ -23,7 +23,12 @@ try {
   browser = await chromium.launch({ headless: true })
   await verifyRecordedTimestampCompatibility(browser, origin, 'chromium')
   const webkitBrowser = await webkit.launch({headless:true})
-  try { await verifyRecordedTimestampCompatibility(webkitBrowser, origin, 'webkit') }
+  try {
+    for(let repetition=0;repetition<3;repetition++) {
+      console.log('MIP_WEBKIT_TIMESTAMP_REPETITION='+repetition)
+      await verifyRecordedTimestampCompatibility(webkitBrowser, origin, 'webkit')
+    }
+  }
   finally { await webkitBrowser.close() }
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
   const verifyBackend = observeBackendBoundary(page)
