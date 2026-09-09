@@ -1,0 +1,24 @@
+name: Settled MapLibre live evidence
+on:
+  push:
+    branches: [verify/settled-maplibre-live-evidence]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - name: Install isolated browser verifier
+        run: |
+          npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
+          node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
+      - name: Capture settled live renderer and network evidence
+        env:
+          MIP_LIVE_SITE: '1'
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runMapLibreSecurityBrowser.mjs

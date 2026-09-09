@@ -31,10 +31,12 @@ try {
       for(const injected of [false,true]){
         const page=await browser.newPage({viewport:{width,height:900},hasTouch:width===390})
         const verifyBackend=observeBackendBoundary(page)
-        const errors=[], workers=[]
+        const errors=[], workers=[], mapResponses=[], mapFailures=[]
         let styleResponses=0
         page.on('pageerror',e=>errors.push(e.stack||e.message))
         page.on('worker',w=>workers.push(w.url()))
+        page.on('response',r=>{if(r.url().includes('tiles.openfreemap.org'))mapResponses.push({url:r.url(),status:r.status()})})
+        page.on('requestfailed',r=>{if(r.url().includes('tiles.openfreemap.org'))mapFailures.push({url:r.url(),error:r.failure()?.errorText})})
         page.on('response',r=>{if(r.url().includes('tiles.openfreemap.org/styles/positron')&&r.ok())styleResponses++})
         // Reject contexts only on Cesium-owned canvases. Aborting its shared
         // chunk can also abort the route module and would not test fallback.
@@ -86,6 +88,10 @@ try {
         const relief=panel.getByRole('checkbox',{name:'Terrain relief shading',exact:true})
         assert.equal(await relief.isDisabled(),true)
         assert.equal(await relief.isChecked(),false)
+        // Capture after tile requests settle and the browser has rendered them.
+        await page.waitForLoadState('networkidle',{timeout:30000})
+        await delay(1000)
+        console.log('MIP_MAPLIBRE_NETWORK='+JSON.stringify({engine,width,injected,mapResponses,mapFailures}))
         assert.deepEqual(errors,[])
         console.log('MIP_MAPLIBRE_PASS='+JSON.stringify({engine,width,injected,positiveControl:true,errors,workers,backend:verifyBackend(),attributionPreserved:true,cameraRestored:true}))
         console.log('MIP_MAPLIBRE_IMAGE_'+engine+'_'+width+'_'+injected+'='+(await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:65})).toString('base64'))
