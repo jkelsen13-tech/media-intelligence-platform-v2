@@ -163,7 +163,7 @@ try {
       assert.equal(await resolution.inputValue(),'1')
       await delay(1800) // finish the preceding Map remount/subject flight
       await page.waitForLoadState('networkidle',{timeout:30000})
-      await delay(1500) // allow queued terrain work to schedule after network idle
+      await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.globeTilesLoaded,{},{timeout:30000})
       await page.waitForLoadState('networkidle',{timeout:30000})
       const resolutionCamera=await camera()
       const resolutionCanvas=await page.locator('.wv-map-host canvas').first().elementHandle()
@@ -181,6 +181,7 @@ try {
           return r?.scale===expected && Math.abs(r.width-Math.floor(r.cssWidth*expected))<=1
             && Math.abs(r.height-Math.floor(r.cssHeight*expected))<=1
         },scale)
+        await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.globeTilesLoaded,{},{timeout:30000})
         await delay(350)
         const state=(await renderState()).resolution
         assert.equal(state.browserRecommended,true)
@@ -189,7 +190,7 @@ try {
         assert.equal(await resolutionCanvas.evaluate(n=>n.isConnected),true)
         assert.equal(page.url(),route)
         assert.equal((await renderState()).requestRenderMode,true)
-        resolutionSamples.push({scale,...state,elapsedMs:Date.now()-start})
+        resolutionSamples.push({scale,...state,requestsSoFar:resolutionRequests,elapsedMs:Date.now()-start})
         console.log('MIP_RESOLUTION_IMAGE_'+engine+'_'+width+'_'+scale+'='+(await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:70})).toString('base64'))
       }
       page.off('request',countResolution)

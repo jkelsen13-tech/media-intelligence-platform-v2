@@ -727,7 +727,7 @@ export function createCesiumEllipsoidRendererAdapter({
     getReliefShadingEnabled,
     setVisualFidelityProfile,
     getVisualFidelityCapabilities,
-    getVisualFidelityRenderState: () => ({ fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
+    getVisualFidelityRenderState: () => ({ globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }
