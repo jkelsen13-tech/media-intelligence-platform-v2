@@ -15,6 +15,6 @@ jobs:
           node-version: 22
       - name: Resolve exact compatible release without scripts
         run: |
-          npm pkg delete dependencies.@deck.gl/mapbox
-          npm install --package-lock-only --ignore-scripts --save-exact @deck.gl/core@9.4.0 @deck.gl/layers@9.4.0 @deck.gl/maplibre@9.4.0
+          node --input-type=module -e "import fs from 'node:fs'; const p=JSON.parse(fs.readFileSync('package.json')); delete p.dependencies['@deck.gl/mapbox']; for(const n of ['core','layers','maplibre']) p.dependencies['@deck.gl/'+n]='9.4.0'; fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          npm update --package-lock-only --ignore-scripts @deck.gl/core @deck.gl/layers @deck.gl/maplibre @luma.gl/core @luma.gl/engine @luma.gl/shadertools @luma.gl/webgl
           node --input-type=module -e "import fs from 'node:fs'; for(const p of ['package.json','package-lock.json']) console.log('MANIFEST:'+p+':'+fs.readFileSync(p).toString('base64'))"
