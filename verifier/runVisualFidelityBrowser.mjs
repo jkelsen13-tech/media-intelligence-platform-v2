@@ -212,6 +212,16 @@ try {
       await modes.getByRole('tab',{name:'Map',exact:true}).click()
       await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.resolution.scale===1.25)
       assert.equal(await resolution.inputValue(),'1.25')
+      await page.locator('.wv-map-host').scrollIntoViewIfNeeded()
+      await delay(1800)
+      await page.waitForFunction(()=>{
+        const r=window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()
+        const t=window.__MIP_WORLD_VIEW_TERRAIN_PROBE__?.getTerrainStatus()
+        return r?.globeTilesLoaded && r.resolution.scale===1.25 && t?.status==='active' && t.fetchSuccesses>0
+      },{},{timeout:30000})
+      await page.waitForLoadState('networkidle',{timeout:30000})
+      console.log('MIP_RESOLUTION_REMOUNT_IMAGE_'+engine+'_'+width+'='+(await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:70})).toString('base64'))
+      console.log('MIP_RESOLUTION_REMOUNT_PASS='+JSON.stringify({engine,width,state:await renderState(),terrain:await page.evaluate(()=>window.__MIP_WORLD_VIEW_TERRAIN_PROBE__.getTerrainStatus())}))
       await preset.selectOption('balanced')
       assert.equal((await renderState()).resolution.scale,1)
       console.log('MIP_RESOLUTION_PASS='+JSON.stringify({engine,width,resolutionSamples,resolutionRequests,remembered:true,remount:true,routePreserved:page.url()===route}))
