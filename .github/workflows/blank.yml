@@ -15,10 +15,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  comparison-concurrency:
+    uses: ./.github/workflows/comparison-postgres.yml
+    permissions:
+      contents: read
+
   # G1 deployment gate: the golden regression suite must pass before any
   # deploy. A reintroduced known-bad relationship, classification,
   # sanitization, duplicate, fallback, or cleanup failure blocks the site.
   test:
+    needs: comparison-concurrency
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1

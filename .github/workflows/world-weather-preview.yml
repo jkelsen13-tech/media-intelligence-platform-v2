@@ -3,6 +3,8 @@ name: World View weather preview
 on:
   pull_request:
     paths:
+      - 'verifier/comparisonPostgresConcurrency.py'
+      - '.github/workflows/comparison-postgres.yml'
       - 'supabase/qualification/comparison-generations/**'
       - 'tests/comparisonGenerationTransaction.test.mjs'
       - 'supabase/runtime-snapshots/source-comparison-run-v16/**'

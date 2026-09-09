@@ -1,0 +1,33 @@
+name: Comparison PostgreSQL concurrency
+on:
+  pull_request:
+    paths:
+      - 'supabase/qualification/comparison-generations/**'
+      - 'verifier/comparisonPostgresConcurrency.py'
+      - '.github/workflows/comparison-postgres.yml'
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  concurrent-transactions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: mip-disposable-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Qualify independent PostgreSQL connections
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+        run: python3 -B verifier/comparisonPostgresConcurrency.py
