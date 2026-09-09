@@ -3,7 +3,9 @@
 // caller-authored flags/objects must never be accepted as publication decisions.
 export const MARKET_CONTRACT_VERSION = 'mip-markets-evidence-v1'
 const MAX = 200
-const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+// Retained PostgreSQL UUID text is canonical lowercase. Reject alternate spellings
+// so string-keyed cycle/duplicate checks cannot treat one identity as two.
+const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const text = value => typeof value === 'string' && value.trim().length > 0
 const id = value => typeof value === 'string' && ID.test(value)
 function reject(reason) { return { status: 'unavailable', reason } }

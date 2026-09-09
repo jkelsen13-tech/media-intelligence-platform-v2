@@ -154,3 +154,23 @@ test('exact spans reject clamped end offsets for ASCII and Unicode retained text
     }
   }
 })
+
+test('alternate UUID case cannot evade canonical identity cycle or duplicate checks',()=>{
+  const lower='abcdef00-0000-4000-8000-000000000001', upper=lower.toUpperCase()
+  assert.equal(lower,upper.toLowerCase(),'counterexample names the same UUID')
+  const asset=fixture().asset
+  asset.id=upper
+  assert.deepEqual(validateMarketAsset(asset,at),{status:'unavailable',reason:'invalid_identity'})
+  const cycle=fixture()
+  cycle.asset.id=lower
+  cycle.eventId=upper
+  Object.assign(cycle.hops[0],{from:lower,to:upper})
+  Object.assign(cycle.assessments[0],{from:lower,to:upper})
+  assert.equal(validateMarketEvidencePath(cycle).status,'unavailable','same identity cannot be its own target via case')
+  const duplicate=fixture()
+  duplicate.captures[0].id=lower
+  duplicate.assessments[0].supports[0].captureId=lower
+  assert.equal(validateMarketEvidencePath(duplicate).status,'ok')
+  duplicate.captures.push({...duplicate.captures[0],id:upper})
+  assert.deepEqual(validateMarketEvidencePath(duplicate),{status:'unavailable',reason:'invalid_retained_records'})
+})
