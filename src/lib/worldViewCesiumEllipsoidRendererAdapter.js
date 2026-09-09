@@ -1,3 +1,4 @@
+import { createCesiumRefinementController } from './worldViewCesiumRefinement.js'
 import { createRecordedLightingController } from './worldViewCesiumRecordedLighting.js'
 import { atmosphereAvailable, setAtmosphereEffect, atmosphereState } from './worldViewCesiumAtmosphere.js'
 import { createCesiumResolutionController, cesiumResolutionState } from './worldViewCesiumResolution.js'
@@ -278,6 +279,7 @@ export function createCesiumEllipsoidRendererAdapter({
   let reliefShadingEnabled = true
   const reliefApplication = createVisualFidelityEffect(enabled => setGlobeReliefShading(Cesium, viewer, enabled))
 
+  const refinementApplication = createCesiumRefinementController(() => viewer, () => !terrainDegraded && Boolean(terrainPlan))
   const recordedLighting = createRecordedLightingController(() => Cesium, () => viewer)
   const groundAtmosphereApplication = createVisualFidelityEffect(enabled => setAtmosphereEffect(viewer, 'groundAtmosphere', enabled))
   const distanceHazeApplication = createVisualFidelityEffect(enabled => setAtmosphereEffect(viewer, 'distanceHaze', enabled))
@@ -620,6 +622,8 @@ export function createCesiumEllipsoidRendererAdapter({
     const relief = Boolean(viewer?.scene?.globe && !viewer.isDestroyed?.()
       && Cesium?.Material && !terrainDegraded && terrainPlan && !reliefApplication.hasFailed())
     return visualFidelityCapabilities({ relief,
+      refinement: refinementApplication.available(),
+      refinementReason: refinementApplication.hasFailed() ? 'Terrain refinement could not be applied.' : 'Terrain refinement needs a ready globe and approved terrain.',
       sunLighting: recordedLighting.available(),
       sunLightingReason: 'Sun lighting needs an exact inspection timestamp and a ready, frozen globe clock. Date-only scopes do not supply an instant.',
       groundAtmosphere: atmosphereAvailable(viewer,'groundAtmosphere') && !groundAtmosphereApplication.hasFailed(),
@@ -640,10 +644,11 @@ export function createCesiumEllipsoidRendererAdapter({
     if (!sunlightApplied && recordedLighting.state().lightingEnabled) onStackIdChange?.('openfreemap-positron')
     const reliefApplied = setReliefShadingEnabled(effective.reliefShading)
     const fxaaApplied = fxaaApplication.set(effective.fxaa)
+    const refinementApplied = refinementApplication.set(effective.refinement)
     const resolutionApplied = resolutionApplication.set(effective.resolutionScale)
     const groundApplied = groundAtmosphereApplication.set(effective.groundAtmosphere)
     const hazeApplied = distanceHazeApplication.set(effective.distanceHaze)
-    return sunlightApplied && reliefApplied && fxaaApplied && resolutionApplied && groundApplied && hazeApplied
+    return refinementApplied && sunlightApplied && reliefApplied && fxaaApplied && resolutionApplied && groundApplied && hazeApplied
   }
 
   // Stage D: terrain status snapshot for the honest-availability UI.
@@ -749,7 +754,7 @@ export function createCesiumEllipsoidRendererAdapter({
     setVisualFidelityProfile,
     setRecordedTimeInstant: value => recordedLighting.setTime(value),
     getVisualFidelityCapabilities,
-    getVisualFidelityRenderState: () => ({ recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
+    getVisualFidelityRenderState: () => ({ refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }

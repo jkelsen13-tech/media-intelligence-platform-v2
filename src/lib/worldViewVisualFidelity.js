@@ -1,5 +1,6 @@
 // Display preferences only. No renderer objects, storage or evidence fields.
 export const VISUAL_FIDELITY_VERSION = 1
+export const TERRAIN_REFINEMENT = Object.freeze({ coarse: 4, neutral: 2, fine: 1 })
 export const RESOLUTION_SCALES = Object.freeze([0.75, 1, 1.25])
 export const FIDELITY_CATEGORIES = Object.freeze([
   { id: 'lighting', label: 'Lighting', leaves: ['sunLighting', 'dynamicAtmosphere', 'sunDirectedAtmosphere', 'terrainShadows'] },
@@ -51,6 +52,7 @@ export function normalizeVisualFidelityProfile(raw) {
     for (const leaf of category.leaves) {
       // Only qualified effects survive import; resolution has a small fixed allowlist.
       if (['reliefShading', 'fxaa', 'groundAtmosphere', 'distanceHaze', 'sunLighting'].includes(leaf)) output[leaf] = input?.[leaf] === true
+      if (leaf === 'refinement') output[leaf] = typeof input?.[leaf] === 'string' && Object.hasOwn(TERRAIN_REFINEMENT, input[leaf]) ? input[leaf] : 'neutral'
       if (leaf === 'resolutionScale') output[leaf] = RESOLUTION_SCALES.includes(input?.[leaf]) ? input[leaf] : 1
     }
   }
@@ -62,9 +64,11 @@ export function normalizeVisualFidelityProfile(raw) {
   return next
 }
 
-export function visualFidelityCapabilities({ sunLighting = false, sunLightingReason, relief = false, fxaa = false, fxaaReason, resolution = false, resolutionReason, groundAtmosphere = false, distanceHaze = false, atmosphereReason, reason = 'Map renderer is not ready.' } = {}) {
+export function visualFidelityCapabilities({ refinement = false, refinementReason, sunLighting = false, sunLightingReason, relief = false, fxaa = false, fxaaReason, resolution = false, resolutionReason, groundAtmosphere = false, distanceHaze = false, atmosphereReason, reason = 'Map renderer is not ready.' } = {}) {
   return Object.fromEntries(Object.keys(FIDELITY_EFFECTS).map(leaf => [leaf,
-    leaf === 'sunLighting'
+    leaf === 'refinement'
+      ? { status: refinement ? 'supported' : 'unavailable', reason: refinement ? null : refinementReason ?? reason }
+      : leaf === 'sunLighting'
       ? { status: sunLighting ? 'supported' : 'unavailable', reason: sunLighting ? null : sunLightingReason ?? reason }
       : leaf === 'reliefShading'
       ? { status: relief ? 'supported' : 'unavailable', reason: relief ? null : reason }
@@ -84,7 +88,7 @@ export function resolveVisualFidelityProfile(raw, capabilities) {
   return Object.fromEntries(FIDELITY_CATEGORIES.flatMap(category => category.leaves.map(leaf => [
     leaf, leaf === 'resolutionScale'
       ? (profile.enabled && profile.categories[category.id].enabled && capabilities?.[leaf]?.status === 'supported' ? profile.categories[category.id][leaf] : 1)
-      : leaf === 'refinement' ? 'neutral'
+      : leaf === 'refinement' ? (profile.enabled && profile.categories[category.id].enabled && capabilities?.[leaf]?.status === 'supported' ? profile.categories[category.id][leaf] : 'neutral')
       : Boolean(profile.enabled && profile.categories[category.id].enabled
         && profile.categories[category.id][leaf] === true && capabilities?.[leaf]?.status === 'supported'),
   ])))
@@ -97,6 +101,10 @@ export function reduceVisualFidelityProfile(raw, action, capabilities) {
   } else if (action?.type === 'preset' && FIDELITY_PRESETS.includes(action.preset)) {
     next.preset = action.preset
     if (action.preset !== 'custom') next.categories = categories(action.preset !== 'performance')
+  } else if (action?.type === 'refinement' && typeof action.value === 'string' && Object.hasOwn(TERRAIN_REFINEMENT, action.value)
+    && capabilities?.refinement?.status === 'supported') {
+    next.categories.terrain.refinement = action.value
+    next.preset = 'custom'
   } else if (action?.type === 'resolution' && RESOLUTION_SCALES.includes(action.value)
     && capabilities?.resolutionScale?.status === 'supported') {
     next.categories.imageQuality.resolutionScale = action.value
@@ -121,7 +129,7 @@ export function visualFidelityCategoryState(profile, categoryId, capabilities) {
   if (!category) return { checked: false, mixed: false, unavailable: true }
   const supported = category.leaves.filter(leaf => capabilities?.[leaf]?.status === 'supported')
   const effective = resolveVisualFidelityProfile(profile, capabilities)
-  const active = supported.filter(leaf => leaf === 'resolutionScale' ? effective[leaf] !== 1 : effective[leaf] === true).length
+  const active = supported.filter(leaf => leaf === 'resolutionScale' ? effective[leaf] !== 1 : leaf === 'refinement' ? effective[leaf] !== 'neutral' : effective[leaf] === true).length
   return { checked: supported.length > 0 && active === supported.length,
     mixed: active > 0 && active < supported.length, unavailable: supported.length === 0 }
 }

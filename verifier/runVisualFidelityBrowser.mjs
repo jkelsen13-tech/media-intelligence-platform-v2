@@ -103,7 +103,7 @@ try {
         await panel.getByRole('button',{name:'Show '+category+' settings',exact:true}).click()
       }
       const deferred=panel.locator('[data-effect-status="deferred"] input')
-      assert.equal(await deferred.count(),7)
+      assert.equal(await deferred.count(),6)
       for(const control of await deferred.all()){
         assert.equal(await control.isChecked(),false)
         assert.equal(await control.isDisabled(),true)
@@ -423,6 +423,9 @@ try {
     const fallbackFxaa=fallbackPanel.getByRole('checkbox',{name:'FXAA',exact:true})
     assert.equal(await fallbackFxaa.isDisabled(),true)
     assert.equal(await fallbackFxaa.isChecked(),false)
+    const fallbackRefinement=fallbackPanel.getByRole('combobox',{name:'Terrain refinement',exact:true})
+    assert.equal(await fallbackRefinement.isDisabled(),true)
+    assert.equal(await fallbackRefinement.inputValue(),'neutral')
     const fallbackResolution=fallbackPanel.getByRole('combobox',{name:'Render resolution',exact:true})
     assert.equal(await fallbackResolution.isDisabled(),true)
     assert.equal(await fallbackResolution.inputValue(),'1')

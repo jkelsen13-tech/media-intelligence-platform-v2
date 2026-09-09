@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import {
-  RESOLUTION_SCALES, FIDELITY_CATEGORIES, FIDELITY_EFFECTS, FIDELITY_PRESETS,
+  TERRAIN_REFINEMENT, RESOLUTION_SCALES, FIDELITY_CATEGORIES, FIDELITY_EFFECTS, FIDELITY_PRESETS,
   resolveVisualFidelityProfile, visualFidelityCategoryState,
 } from '../lib/worldViewVisualFidelity.js'
 import { TERRAIN_RELIEF_LEGEND_TEXT } from '../lib/worldViewMapStack.js'
@@ -33,14 +33,19 @@ function CategoryControl({ profile, category, capabilities, onAction, recordedTi
           const effect = FIDELITY_EFFECTS[leaf]
           const capability = capabilities?.[leaf]
           const supported = capability?.status === 'supported'
-          const active = leaf === 'resolutionScale' ? effective[leaf] !== 1 : effective[leaf] === true
-          const remembered = leaf === 'resolutionScale' ? profile.categories[category.id][leaf] !== 1 : profile.categories[category.id][leaf] === true
+          const active = leaf === 'resolutionScale' ? effective[leaf] !== 1 : leaf === 'refinement' ? effective[leaf] !== 'neutral' : effective[leaf] === true
+          const remembered = leaf === 'resolutionScale' ? profile.categories[category.id][leaf] !== 1 : leaf === 'refinement' ? profile.categories[category.id][leaf] !== 'neutral' : profile.categories[category.id][leaf] === true
           const descriptionId = 'wv-fidelity-reason-' + leaf
           return (
             <div key={leaf} className="wv-fidelity-leaf" data-fidelity-effect={leaf}
               data-effect-status={capability?.status ?? 'unavailable'} data-effect-active={active}>
-              <label className={leaf === 'resolutionScale' ? 'wv-fidelity-resolution' : undefined}>
-                {leaf === 'resolutionScale' ? <select aria-label="Render resolution" value={effective[leaf]}
+              <label className={['resolutionScale', 'refinement'].includes(leaf) ? 'wv-fidelity-resolution' : undefined}>
+                {leaf === 'refinement' ? <select aria-label="Terrain refinement" value={effective[leaf]}
+                  disabled={!supported || !profile.enabled || !profile.categories[category.id].enabled}
+                  aria-describedby={descriptionId}
+                  onChange={event => onAction({ type: 'refinement', value: event.target.value })}>
+                  {Object.keys(TERRAIN_REFINEMENT).map(mode => <option key={mode} value={mode}>{mode === 'coarse' ? 'Coarse — Lower detail' : mode === 'fine' ? 'Fine — More requests possible' : 'Neutral — Default detail'}</option>)}
+                </select> : leaf === 'resolutionScale' ? <select aria-label="Render resolution" value={effective[leaf]}
                   disabled={!supported || !profile.enabled || !profile.categories[category.id].enabled}
                   aria-describedby={descriptionId}
                   onChange={event => onAction({ type: 'resolution', value: Number(event.target.value) })}>
@@ -53,9 +58,11 @@ function CategoryControl({ profile, category, capabilities, onAction, recordedTi
               </label>
               <span className="wv-fidelity-cost">{effect.cost} estimated cost</span>
               <p id={descriptionId}>
-                {leaf === 'resolutionScale' && supported ? `Rendering at ${effective[leaf].toFixed(2)}×. Remembered setting: ${profile.categories[category.id][leaf].toFixed(2)}×.`
+                {leaf === 'refinement' && supported ? `Applied: ${effective[leaf]}. Remembered setting: ${profile.categories[category.id][leaf]}.`
+                  : leaf === 'resolutionScale' && supported ? `Rendering at ${effective[leaf].toFixed(2)}×. Remembered setting: ${profile.categories[category.id][leaf].toFixed(2)}×.`
                   : !supported ? capability?.reason ?? 'Unavailable on this renderer.'
                   : active ? 'On' : remembered ? 'Off; your On preference is remembered.' : 'Off'}
+                {leaf === 'refinement' ? ' Selects terrain level of detail within the approved source coverage and zoom limit. Fine may increase tile requests, memory and rendering cost; it does not add source detail or geographic precision. Every preset uses Neutral.' : ''}
                 {leaf === 'sunLighting' ? ` Calculated sun lighting at the inspection timestamp${supported && recordedTimeInstant ? ': ' + recordedTimeInstant : ''}. Most visible from space; day/night shading fades at close range. Not observed sunlight, weather, or proof of event occurrence. Display clock uses milliseconds; source precision is retained. Off in every preset.` : ''}
                 {leaf === 'groundAtmosphere' ? ' Stylized scattering over the globe, most visible from space. Not observed weather or recorded sunlight. Off in every preset.' : ''}
                 {leaf === 'distanceHaze' ? ' Stylized distance haze, most visible toward the horizon. Not observed weather. Source detail stays unchanged. Off in every preset.' : ''}
@@ -78,7 +85,7 @@ export default function WorldViewVisualFidelityPanel({ profile, capabilities, on
       <div className="wv-fidelity-row">
         <label><input type="checkbox" checked={profile.enabled}
           onChange={event => onAction({ type: 'master', enabled: event.target.checked })} />Photoreal</label>
-        <span>{[effective.sunLighting && 'Calculated sun lighting on', effective.reliefShading && 'Terrain relief on', effective.fxaa && 'FXAA on', effective.groundAtmosphere && 'Ground atmosphere on', effective.distanceHaze && 'Distance haze on', effective.resolutionScale !== 1 && `Resolution ${effective.resolutionScale.toFixed(2)}×`].filter(Boolean).join(' · ') || 'No additional effects active'}</span>
+        <span>{[effective.refinement !== 'neutral' && `Terrain refinement: ${effective.refinement}`, effective.sunLighting && 'Calculated sun lighting on', effective.reliefShading && 'Terrain relief on', effective.fxaa && 'FXAA on', effective.groundAtmosphere && 'Ground atmosphere on', effective.distanceHaze && 'Distance haze on', effective.resolutionScale !== 1 && `Resolution ${effective.resolutionScale.toFixed(2)}×`].filter(Boolean).join(' · ') || 'No additional effects active'}</span>
         <button type="button" aria-expanded={expanded} aria-controls="wv-fidelity-settings"
           onClick={() => setExpanded(value => !value)}>Visual Fidelity settings</button>
       </div>
@@ -92,7 +99,7 @@ export default function WorldViewVisualFidelityPanel({ profile, capabilities, on
           </select>
         </label>
         <p>Performance adds no effects. Balanced and Maximum currently enable only approved terrain relief.
-          Calculated sun lighting, FXAA, bounded render resolution and atmosphere effects can be selected in Custom when supported. Other enhancements await verification. Cost estimates are relative, not frame-rate measurements.</p>
+          Calculated sun lighting, FXAA, bounded terrain refinement, render resolution and atmosphere effects can be selected in Custom when supported. Other enhancements await verification. Cost estimates are relative, not frame-rate measurements.</p>
         {FIDELITY_CATEGORIES.map(category => <CategoryControl key={category.id} category={category}
           profile={profile} capabilities={capabilities} onAction={onAction} recordedTimeInstant={recordedTimeInstant} />)}
         {effective.reliefShading && <p>{TERRAIN_RELIEF_LEGEND_TEXT}</p>}
