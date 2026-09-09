@@ -129,7 +129,9 @@ test('dynamic atmosphere requires frozen recorded lighting and a visible atmosph
   viewer.scene.globe.showGroundAtmosphere=false
   assert.equal(controller.setDynamicAtmosphere(true),false)
   assert.equal(controller.state().dynamicAtmosphere,false)
-  viewer.scene.fog={renderable:true}
+  viewer.scene.fog={enabled:false,renderable:true}
+  assert.equal(controller.setDynamicAtmosphere(true),false,'renderable alone cannot qualify disabled fog')
+  viewer.scene.fog.enabled=true
   assert.equal(controller.setDynamicAtmosphere(true),true)
   controller.setTime('2024-04-08')
   assert.equal(controller.state().dynamicAtmosphere,false)

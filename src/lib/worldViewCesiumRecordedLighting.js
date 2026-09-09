@@ -46,7 +46,7 @@ export function createRecordedLightingController(getCesium, getViewer) {
     const v = getViewer(), globe = v?.scene?.globe
     if (!v || v.isDestroyed?.() || typeof globe?.dynamicAtmosphereLighting !== 'boolean') return false
     const desired = enabled && available() && globe.enableLighting === true
-      && (globe.showGroundAtmosphere === true || v.scene.fog?.renderable === true)
+      && (globe.showGroundAtmosphere === true || (v.scene.fog?.enabled === true && v.scene.fog.renderable === true))
     try {
       if (globe.dynamicAtmosphereLighting !== desired) {
         globe.dynamicAtmosphereLighting = desired
