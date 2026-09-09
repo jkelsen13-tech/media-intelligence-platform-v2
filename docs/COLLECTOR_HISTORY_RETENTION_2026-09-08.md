@@ -112,3 +112,24 @@ retention pass, not continuous replication or operational cutover. Later deltas,
 pre-window corrections, complete corpus/history parity and all final gate
 requirements remain pending. No worker, schedule, queue state, publication policy,
 credential or schema was changed; no legacy backend is SAFE TO RETIRE.
+
+## Second bounded delta — 9 September 2026 UTC
+
+Retained 228 additional versions: 114 completed ingestion runs started at or
+after 02:45 UTC and before 12:15 UTC, and their 114 succeeded source-run rows.
+All had completion timestamps. Seven unchanged register rows were already
+retained. The archive now contains 9,135 versions. Import batches contained
+at most 57 rows, with original PostgreSQL JSONB text passed directly between
+connectors; no payload numbers were reserialized and no local files were made.
+
+The exact 235-entry relation/key/hash manifest matches the source-before and
+source-after counts and digests. Missing retained parent/source links: zero.
+A 57-run service-role replay inserted zero. The importer body matches the
+reviewed migration; RLS, browser denial and both immutability triggers passed
+again. See [second delta receipt](../verifier/backend-collector-delta-2026-09-09-1215.json)
+for observation times, exact hashes and limitations.
+
+This is independently timed retention, not continuous replication, complete
+history parity or worker cutover. Later runs and pre-window corrections remain
+pending. Queue acknowledgement, schedules, publication decisions and legacy
+retirement were not changed.

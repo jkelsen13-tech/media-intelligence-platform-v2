@@ -23,11 +23,19 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
     if(message.type()==='error') console.log('MIP_TIMESTAMP_CONSOLE='+JSON.stringify({engine,phase,text:message.text(),location:message.location()}))
   })
   await page.addInitScript(()=>{
+    const documentId=String(performance.timeOrigin)
+    let lifecycle='active'
+    const trace=(event,details={})=>console.error('MIP_WORKER_LIFECYCLE',JSON.stringify({event,documentId,lifecycle,url:location.href,...details}))
+    for(const name of ['beforeunload','pagehide','pageshow'])window.addEventListener(name,event=>{
+      lifecycle=name
+      trace(name,{persisted:event.persisted??null})
+    })
     const NativeWorker=window.Worker
     window.Worker=class extends NativeWorker {
       constructor(url,options){
         super(url,options)
-        this.addEventListener('error',event=>console.error('MIP_WORKER_IMPORT_ERROR',JSON.stringify({url:String(url),message:event.message,filename:event.filename,line:event.lineno})))
+        trace('worker-created',{workerUrl:String(url)})
+        this.addEventListener('error',event=>console.error('MIP_WORKER_IMPORT_ERROR',JSON.stringify({documentId,lifecycle,documentUrl:location.href,url:String(url),message:event.message,filename:event.filename,line:event.lineno})))
       }
     }
     window.addEventListener('unhandledrejection',event=>{
