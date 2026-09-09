@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'supabase/runtime-snapshots/source-comparison-run-v10/**'
+      - 'supabase/runtime-snapshots/source-comparison-run-v12/**'
+      - 'tests/comparisonInputFingerprint.test.mjs'
       - 'tests/comparisonReleaseThreshold.test.mjs'
       - 'src/lib/investigationInputImpactClient.js'
       - 'src/lib/comparisonPublicationTiming.js'
