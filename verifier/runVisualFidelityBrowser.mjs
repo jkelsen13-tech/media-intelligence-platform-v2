@@ -300,24 +300,26 @@ try {
 
       // Calculated lighting uses the recorded instant; shader qualification is
       // planetary because Cesium intentionally fades day/night shading nearby.
+      // An equatorial axis-aligned pose avoids cumulative unit-vector rounding;
+      // position equality and the existing 16-epsilon orientation bound remain.
       const sun=panel.getByRole('checkbox',{name:'Sun lighting',exact:true})
       const lightingGate=panel.getByRole('checkbox',{name:'Lighting effects',exact:true})
       assert.equal(await sun.isChecked(),false)
       assert.equal(await sun.isDisabled(),true,'lighting category starts off')
       await lightingGate.check()
       const sunLocal=await camera()
-      const sunPlanet=JSON.stringify({...JSON.parse(sunLocal),heightMeters:25000000,pitchDegrees:-90,rollDegrees:0})
+      const sunPlanet=JSON.stringify({...JSON.parse(sunLocal),lon:0,lat:0,headingDegrees:0,heightMeters:25000000,pitchDegrees:-90,rollDegrees:0})
       assert.equal(await page.evaluate(value=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(value),sunPlanet),true)
       await page.locator('.wv-map-host').scrollIntoViewIfNeeded()
       await delay(1000)
       await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.globeTilesLoaded,{},{timeout:30000})
       await page.waitForLoadState('networkidle',{timeout:30000})
-      const sunCamera=(await renderState()).cameraPose
       const sunCanvas=await page.locator('.wv-map-host canvas').first().elementHandle()
       const clockBefore=(await renderState()).recordedLighting
       assert.equal(clockBefore.available,true)
       assert.equal(clockBefore.frozen,true)
       const sunNeutral=await page.locator('.wv-map-host').screenshot({type:'png'})
+      const sunCamera=(await renderState()).cameraPose
       let sunRequests=0
       const sunCounter=req=>{if(/terrarium|tile.openstreetmap.org/.test(req.url()))sunRequests++}
       page.on('request',sunCounter)
