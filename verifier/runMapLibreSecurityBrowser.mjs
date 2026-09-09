@@ -54,6 +54,7 @@ try {
         await page.getByRole('complementary',{name:'Selected-event inspector'}).getByText('coarsened_to_precision_class',{exact:true}).waitFor({timeout:60000})
         await page.waitForFunction(()=>document.querySelector('[data-map-stack]')?.dataset.mapStack==='openfreemap-positron'
           && window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState())
+        assert.equal(await page.locator('.cesium-widget-errorPanel').count(),0,'failed viewer DOM must be gone')
         await page.locator('.maplibregl-ctrl-attrib').waitFor()
         await page.waitForFunction(()=>document.querySelector('.maplibregl-ctrl-attrib')?.textContent.includes('OpenStreetMap'))
         await delay(2000)

@@ -48,3 +48,9 @@ Primary references:
 - https://github.com/maplibre/maplibre-gl-js/blob/v6.4.1/LICENSE.txt
 
 MurmurHash primary notice: https://github.com/mikolalysenko/murmurhash-js/blob/master/README.md
+
+The actual context-failure probe exposed a pre-existing Cesium constructor-cleanup
+bug: its raw error modal survived over the working fallback and blocked clicks.
+Each viewer now owns a removable child host, cleaned even when construction throws.
+Late/repeated disposal removes only that host and cannot erase a successor renderer.
+A lifecycle unit test and actual browser pointer/navigation assertions cover it.
