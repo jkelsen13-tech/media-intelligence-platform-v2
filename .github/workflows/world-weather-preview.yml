@@ -82,14 +82,14 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
           node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
-      - name: Verify built weather panel on phone and desktop
-        env:
-          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
-        run: node verifier/runWeatherRightsBrowser.mjs
       - name: Verify MapLibre attribution security and actual fallback
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runMapLibreSecurityBrowser.mjs
+      - name: Verify built weather panel on phone and desktop
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWeatherRightsBrowser.mjs
       - name: Verify Visual Fidelity profile and fallback
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser

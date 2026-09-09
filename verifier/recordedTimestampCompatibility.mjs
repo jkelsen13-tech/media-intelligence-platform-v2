@@ -60,5 +60,9 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
     assert.deepEqual(errors,[])
     console.log('MIP_RECORDED_TIMESTAMP_COMPATIBILITY_PASS='+JSON.stringify({engine,sqlOffset:true,offsetEquivalent:true,
      viewRoundTrip:true,reload:true,sourceTextPreserved:true,scopePreserved:true,localTimeRejected:true,backend:verifyBackend()}))
+  } catch(error) {
+    console.log('MIP_TIMESTAMP_FAILURE_STATE='+JSON.stringify({engine,url:page.url(),state:await page.locator('.wv-view').evaluate(el=>({attributes:[...el.attributes].map(a=>[a.name,a.value]),text:el.innerText})).catch(()=>null),errors}))
+    console.log('MIP_TIMESTAMP_FAILURE_IMAGE_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+    throw error
   } finally {await page.close()}
 }
