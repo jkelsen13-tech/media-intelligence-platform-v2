@@ -50,7 +50,7 @@ export function normalizeVisualFidelityProfile(raw) {
     output.enabled = input?.enabled === true
     for (const leaf of category.leaves) {
       // Only qualified effects survive import; resolution has a small fixed allowlist.
-      if (leaf === 'reliefShading' || leaf === 'fxaa') output[leaf] = input?.[leaf] === true
+      if (['reliefShading', 'fxaa', 'groundAtmosphere', 'distanceHaze'].includes(leaf)) output[leaf] = input?.[leaf] === true
       if (leaf === 'resolutionScale') output[leaf] = RESOLUTION_SCALES.includes(input?.[leaf]) ? input[leaf] : 1
     }
   }
@@ -62,7 +62,7 @@ export function normalizeVisualFidelityProfile(raw) {
   return next
 }
 
-export function visualFidelityCapabilities({ relief = false, fxaa = false, fxaaReason, resolution = false, resolutionReason, reason = 'Map renderer is not ready.' } = {}) {
+export function visualFidelityCapabilities({ relief = false, fxaa = false, fxaaReason, resolution = false, resolutionReason, groundAtmosphere = false, distanceHaze = false, atmosphereReason, reason = 'Map renderer is not ready.' } = {}) {
   return Object.fromEntries(Object.keys(FIDELITY_EFFECTS).map(leaf => [leaf,
     leaf === 'reliefShading'
       ? { status: relief ? 'supported' : 'unavailable', reason: relief ? null : reason }
@@ -70,6 +70,9 @@ export function visualFidelityCapabilities({ relief = false, fxaa = false, fxaaR
         ? { status: fxaa ? 'supported' : 'unavailable', reason: fxaa ? null : fxaaReason ?? reason }
         : leaf === 'resolutionScale'
           ? { status: resolution ? 'supported' : 'unavailable', reason: resolution ? null : resolutionReason ?? reason }
+          : ['groundAtmosphere','distanceHaze'].includes(leaf)
+            ? { status: (leaf === 'groundAtmosphere' ? groundAtmosphere : distanceHaze) ? 'supported' : 'unavailable',
+              reason: (leaf === 'groundAtmosphere' ? groundAtmosphere : distanceHaze) ? null : atmosphereReason ?? reason }
           : { status: 'deferred', reason: 'Not enabled in this release; verification is pending.' },
   ]))
 }
@@ -103,7 +106,7 @@ export function reduceVisualFidelityProfile(raw, action, capabilities) {
       next.categories[category.id].enabled = action.enabled
       next.preset = 'custom'
     } else if (action.type === 'leaf' && category.leaves.includes(action.leaf)
-      && ['reliefShading', 'fxaa'].includes(action.leaf) && capabilities?.[action.leaf]?.status === 'supported') {
+      && ['reliefShading', 'fxaa', 'groundAtmosphere', 'distanceHaze'].includes(action.leaf) && capabilities?.[action.leaf]?.status === 'supported') {
       next.categories[category.id][action.leaf] = action.enabled
       next.preset = 'custom'
     }

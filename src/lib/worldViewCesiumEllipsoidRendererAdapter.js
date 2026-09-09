@@ -1,3 +1,4 @@
+import { atmosphereAvailable, setAtmosphereEffect, atmosphereState } from './worldViewCesiumAtmosphere.js'
 import { createCesiumResolutionController, cesiumResolutionState } from './worldViewCesiumResolution.js'
 import { resolveVisualFidelityProfile, visualFidelityCapabilities, createVisualFidelityEffect } from './worldViewVisualFidelity.js'
 // R4 World View — ellipsoid globe renderer adapter (CesiumJS).
@@ -275,6 +276,8 @@ export function createCesiumEllipsoidRendererAdapter({
   let reliefShadingEnabled = true
   const reliefApplication = createVisualFidelityEffect(enabled => setGlobeReliefShading(Cesium, viewer, enabled))
 
+  const groundAtmosphereApplication = createVisualFidelityEffect(enabled => setAtmosphereEffect(viewer, 'groundAtmosphere', enabled))
+  const distanceHazeApplication = createVisualFidelityEffect(enabled => setAtmosphereEffect(viewer, 'distanceHaze', enabled))
   const resolutionApplication = createCesiumResolutionController(() => viewer)
   const fxaaApplication = createVisualFidelityEffect(enabled => setCesiumFxaa(viewer, enabled))
 
@@ -608,6 +611,9 @@ export function createCesiumEllipsoidRendererAdapter({
     const relief = Boolean(viewer?.scene?.globe && !viewer.isDestroyed?.()
       && Cesium?.Material && !terrainDegraded && terrainPlan && !reliefApplication.hasFailed())
     return visualFidelityCapabilities({ relief,
+      groundAtmosphere: atmosphereAvailable(viewer,'groundAtmosphere') && !groundAtmosphereApplication.hasFailed(),
+      distanceHaze: atmosphereAvailable(viewer,'distanceHaze') && !distanceHazeApplication.hasFailed(),
+      atmosphereReason: 'Atmosphere display is unavailable on this renderer or could not be applied.',
       resolution: resolutionApplication.available(),
       resolutionReason: resolutionApplication.hasFailed() ? 'Render resolution could not be applied.' : 'Render resolution unavailable on this renderer.',
       fxaa: cesiumFxaaAvailable(viewer) && !fxaaApplication.hasFailed(),
@@ -622,7 +628,9 @@ export function createCesiumEllipsoidRendererAdapter({
     const reliefApplied = setReliefShadingEnabled(effective.reliefShading)
     const fxaaApplied = fxaaApplication.set(effective.fxaa)
     const resolutionApplied = resolutionApplication.set(effective.resolutionScale)
-    return reliefApplied && fxaaApplied && resolutionApplied
+    const groundApplied = groundAtmosphereApplication.set(effective.groundAtmosphere)
+    const hazeApplied = distanceHazeApplication.set(effective.distanceHaze)
+    return reliefApplied && fxaaApplied && resolutionApplied && groundApplied && hazeApplied
   }
 
   // Stage D: terrain status snapshot for the honest-availability UI.
@@ -727,7 +735,7 @@ export function createCesiumEllipsoidRendererAdapter({
     getReliefShadingEnabled,
     setVisualFidelityProfile,
     getVisualFidelityCapabilities,
-    getVisualFidelityRenderState: () => ({ globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
+    getVisualFidelityRenderState: () => ({ cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }
