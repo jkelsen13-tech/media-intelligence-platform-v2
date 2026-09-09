@@ -39,8 +39,8 @@ test('atmosphere touches only public display booleans; culling, light, camera, t
   for(const effect of effects)assert.equal(atmosphereState(viewer)[effect],false)
   assert.equal(setAtmosphereEffect(viewer,'distanceHaze','true'),false)
 })
-test('unqualified lighting, disabled fog, missing APIs and rejected writes never advertise a supported effect',()=>{
-  for(const v of [null,{}, {isDestroyed:()=>true}, {scene:{globe:{enableLighting:true,showGroundAtmosphere:true}}}])
+test('missing lighting API, disabled fog, missing APIs and rejected writes never advertise a supported effect',()=>{
+  for(const v of [null,{}, {isDestroyed:()=>true}, {scene:{globe:{showGroundAtmosphere:true}}}])
     for(const effect of effects)assert.equal(atmosphereAvailable(v,effect),false)
   const viewer={scene:{globe:{enableLighting:false},fog:{enabled:false,renderable:false}}}
   assert.equal(atmosphereAvailable(viewer,'distanceHaze'),false)

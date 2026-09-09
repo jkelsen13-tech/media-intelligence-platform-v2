@@ -5,7 +5,7 @@ import {
 } from '../lib/worldViewVisualFidelity.js'
 import { TERRAIN_RELIEF_LEGEND_TEXT } from '../lib/worldViewMapStack.js'
 
-function CategoryControl({ profile, category, capabilities, onAction }) {
+function CategoryControl({ profile, category, capabilities, onAction, recordedTimeInstant }) {
   const [expanded, setExpanded] = useState(category.id === 'terrain')
   const checkbox = useRef(null)
   const state = visualFidelityCategoryState(profile, category.id, capabilities)
@@ -56,6 +56,7 @@ function CategoryControl({ profile, category, capabilities, onAction }) {
                 {leaf === 'resolutionScale' && supported ? `Rendering at ${effective[leaf].toFixed(2)}×. Remembered setting: ${profile.categories[category.id][leaf].toFixed(2)}×.`
                   : !supported ? capability?.reason ?? 'Unavailable on this renderer.'
                   : active ? 'On' : remembered ? 'Off; your On preference is remembered.' : 'Off'}
+                {leaf === 'sunLighting' ? ` Calculated sun lighting at the inspection timestamp${supported && recordedTimeInstant ? ': ' + recordedTimeInstant : ''}. Not observed sunlight, weather, or proof of event occurrence. Display clock uses milliseconds; source precision is retained. Off in every preset.` : ''}
                 {leaf === 'groundAtmosphere' ? ' Stylized scattering over the globe, most visible from space. Not observed weather or recorded sunlight. Off in every preset.' : ''}
                 {leaf === 'distanceHaze' ? ' Stylized distance haze, most visible toward the horizon. Not observed weather. Source detail stays unchanged. Off in every preset.' : ''}
                 {leaf === 'fxaa' ? ' Optional edge smoothing; may soften map labels. Off in Performance, Balanced and Maximum.' : ''}
@@ -69,7 +70,7 @@ function CategoryControl({ profile, category, capabilities, onAction }) {
   )
 }
 
-export default function WorldViewVisualFidelityPanel({ profile, capabilities, onAction }) {
+export default function WorldViewVisualFidelityPanel({ profile, capabilities, onAction, recordedTimeInstant }) {
   const [expanded, setExpanded] = useState(false)
   const effective = resolveVisualFidelityProfile(profile, capabilities)
   return (
@@ -77,7 +78,7 @@ export default function WorldViewVisualFidelityPanel({ profile, capabilities, on
       <div className="wv-fidelity-row">
         <label><input type="checkbox" checked={profile.enabled}
           onChange={event => onAction({ type: 'master', enabled: event.target.checked })} />Photoreal</label>
-        <span>{[effective.reliefShading && 'Terrain relief on', effective.fxaa && 'FXAA on', effective.groundAtmosphere && 'Ground atmosphere on', effective.distanceHaze && 'Distance haze on', effective.resolutionScale !== 1 && `Resolution ${effective.resolutionScale.toFixed(2)}×`].filter(Boolean).join(' · ') || 'No additional effects active'}</span>
+        <span>{[effective.sunLighting && 'Calculated sun lighting on', effective.reliefShading && 'Terrain relief on', effective.fxaa && 'FXAA on', effective.groundAtmosphere && 'Ground atmosphere on', effective.distanceHaze && 'Distance haze on', effective.resolutionScale !== 1 && `Resolution ${effective.resolutionScale.toFixed(2)}×`].filter(Boolean).join(' · ') || 'No additional effects active'}</span>
         <button type="button" aria-expanded={expanded} aria-controls="wv-fidelity-settings"
           onClick={() => setExpanded(value => !value)}>Visual Fidelity settings</button>
       </div>
@@ -91,9 +92,9 @@ export default function WorldViewVisualFidelityPanel({ profile, capabilities, on
           </select>
         </label>
         <p>Performance adds no effects. Balanced and Maximum currently enable only approved terrain relief.
-          FXAA, bounded render resolution and atmosphere effects can be selected in Custom when supported. Other enhancements await verification. Cost estimates are relative, not frame-rate measurements.</p>
+          Calculated sun lighting, FXAA, bounded render resolution and atmosphere effects can be selected in Custom when supported. Other enhancements await verification. Cost estimates are relative, not frame-rate measurements.</p>
         {FIDELITY_CATEGORIES.map(category => <CategoryControl key={category.id} category={category}
-          profile={profile} capabilities={capabilities} onAction={onAction} />)}
+          profile={profile} capabilities={capabilities} onAction={onAction} recordedTimeInstant={recordedTimeInstant} />)}
         {effective.reliefShading && <p>{TERRAIN_RELIEF_LEGEND_TEXT}</p>}
       </div>
     </section>

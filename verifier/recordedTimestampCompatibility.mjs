@@ -44,6 +44,12 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
   // A retained timestamp inspection is qualified after its renderer is ready.
   // Keep page-error assertions intact while tracing the failing navigation phase.
   const mapReady=()=>page.waitForFunction(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState(),{},{timeout:60000})
+  const clockReady=async expected=>{
+    await page.waitForFunction(value=>{
+      const c=window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting
+      return c?.sourceText===value && c.applied && c.frozen && c.available
+    },expected,{timeout:60000})
+  }
   try {
     for(const selected of [from,'2024-04-08 23:29:00+0530']) {
       phase='select '+selected
@@ -58,6 +64,7 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
       assert.equal(await slider.inputValue(),'0')
       assert.equal(await page.locator('.wv-view').getAttribute('data-as-of-time'),selected)
       await mapReady()
+      await clockReady(selected)
       const tabs=page.getByRole('tablist',{name:'Evidence views',exact:true})
       phase='open Timeline '+selected
       await tabs.getByRole('tab',{name:'Timeline',exact:true}).click()
@@ -66,10 +73,12 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
       await tabs.getByRole('tab',{name:'World View',exact:true}).click()
       await inspector.getByText('coarsened_to_precision_class',{exact:true}).waitFor()
       await mapReady()
+      await clockReady(selected)
       phase='reload '+selected
       await page.reload()
       await inspector.getByText('coarsened_to_precision_class',{exact:true}).waitFor()
       await mapReady()
+      await clockReady(selected)
       assert.equal(await slider.inputValue(),'0')
       assert.equal(await page.locator('.wv-view').getAttribute('data-as-of-time'),selected)
       assert.equal(await page.locator('.wv-view').getAttribute('data-selected-time-range'),scope)
@@ -77,12 +86,38 @@ export async function verifyRecordedTimestampCompatibility(browser, origin, engi
       assert.equal(await page.getByRole('button',{name:'Return to selected location',exact:true}).isEnabled(),true)
       if (selected===from) console.log('MIP_SQL_TIME_SCREENSHOT_'+engine+'='+(await page.locator('.wv-scrubber').screenshot({type:'jpeg',quality:65})).toString('base64'))
     }
+    phase='precise time then date scope'
+    const precise='2024-04-08 18:00:00.123456+00'
+    await page.goto(base+'?at='+encodeURIComponent(precise))
+    await clockReady(precise)
+    const panel=page.getByRole('region',{name:'Visual Fidelity',exact:true})
+    await panel.getByRole('button',{name:'Visual Fidelity settings',exact:true}).click()
+    await panel.getByRole('button',{name:'Show Lighting settings',exact:true}).click()
+    const sun=panel.getByRole('checkbox',{name:'Sun lighting',exact:true})
+    await panel.getByRole('checkbox',{name:'Lighting effects',exact:true}).check()
+    await sun.check()
+    await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting?.lightingEnabled)
+    await page.goto(base+'?at=2024-04-08')
+    await page.waitForFunction(()=>{
+      const c=window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting
+      return c?.sourceText===null && !c.available && !c.lightingEnabled
+    })
+    assert.equal(await sun.isDisabled(),true);assert.equal(await sun.isChecked(),false)
+    assert.equal(await page.locator('.wv-view').getAttribute('data-as-of-time'),'2024-04-08')
+    await page.goto(base+'?at='+encodeURIComponent(precise))
+    await clockReady(precise)
+    assert.equal(await sun.isChecked(),true,'exact time restores remembered sunlight after date-only scope')
+    console.log('MIP_RECORDED_LIGHTING_TIME_PASS='+JSON.stringify({engine,precise,sourcePrecisionRetained:true,
+      dateOnlyUnavailable:true,exactTimeRecovery:true,state:await page.evaluate(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getRenderState().recordedLighting)}))
     phase='invalid local time'
     await page.goto(base+'?time='+encodeURIComponent('2024-04-08 17:59:00'))
     await page.getByRole('combobox',{name:'Choose a recorded time',exact:true}).waitFor()
     await page.getByText('No spatial state recorded at this time.',{exact:true}).first().waitFor()
     assert.equal(await page.getByRole('button',{name:'Return to selected location',exact:true}).isDisabled(),true)
     await mapReady()
+    const invalidClock=await page.evaluate(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getRenderState().recordedLighting)
+    assert.equal(invalidClock.available,false);assert.equal(invalidClock.sourceText,null)
+    assert.equal(invalidClock.lightingEnabled,false)
     // Preserve assertions. Map intermittent bundled errors to actual public
     // build code so future failures can be diagnosed without guessing symbols.
     const locations=new Set(errorStacks.flatMap(stack=>stack.match(/https?:\/\/[^\s)]+\.js:\d+:\d+/g)??[]))

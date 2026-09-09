@@ -590,6 +590,7 @@ export default function WorldView({
       <div className={`wv-layout wv-layout-${mode}`}>
         <div className="wv-main">
           <WorldViewVisualFidelityPanel profile={visualFidelity}
+            recordedTimeInstant={['selected', 'default'].includes(recordedTime.kind) ? recordedTime.atIso : null}
             capabilities={mode === 'graph' ? visualFidelityCapabilities({ reason: 'Map is hidden in Graph mode; preferences are retained.' }) : fidelityCapabilities}
             onAction={action => setVisualFidelity(profile => reduceVisualFidelityProfile(profile, action,
               mode === 'graph' ? visualFidelityCapabilities() : fidelityCapabilities))} />
@@ -602,6 +603,7 @@ export default function WorldView({
           <div className={`wv-stage wv-stage-${mode}${touchInteraction ? ' wv-touch-active' : ''}`}>
             {showMap && (
               <WorldMapCanvas
+                recordedTimeInstant={['selected', 'default'].includes(recordedTime.kind) ? recordedTime.atIso : null}
                 visualFidelity={visualFidelity}
                 onVisualFidelityCapabilities={setFidelityCapabilities}
                 rows={mapRows}

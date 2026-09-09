@@ -4,7 +4,7 @@ const EFFECTS = ['groundAtmosphere', 'distanceHaze']
 export function atmosphereAvailable(viewer, effect) {
   try {
     if (!EFFECTS.includes(effect) || !viewer || viewer.isDestroyed?.()
-      || viewer.scene?.globe?.enableLighting !== false) return false
+      || typeof viewer.scene?.globe?.enableLighting !== 'boolean') return false
     return effect === 'groundAtmosphere'
       ? typeof viewer.scene.globe.showGroundAtmosphere === 'boolean'
       : viewer.scene.fog?.enabled === true && typeof viewer.scene.fog.renderable === 'boolean'

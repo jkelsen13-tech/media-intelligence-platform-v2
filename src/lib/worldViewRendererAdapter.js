@@ -502,6 +502,7 @@ export function createWorldViewRendererAdapter(args, {
   let onSelectRow = args?.onSelectRow
   let reliefShadingEnabled
   let visualFidelityProfile
+  let recordedTimeInstant = args?.recordedTimeInstant ?? null
   const cancelled = () => destroyed || Boolean(args?.isCancelled?.())
 
   async function start() {
@@ -510,6 +511,7 @@ export function createWorldViewRendererAdapter(args, {
     const currentArgs = () => ({
       ...args,
       initialFeatures: features,
+      recordedTimeInstant,
       getSelectedKeys: () => selectedKeys,
       onSelectRow,
       isCancelled: cancelled,
@@ -539,6 +541,7 @@ export function createWorldViewRendererAdapter(args, {
     ready = true
     impl?.setOnSelectRow?.(onSelectRow)
     if (reliefShadingEnabled !== undefined) impl?.setReliefShadingEnabled?.(reliefShadingEnabled)
+    impl?.setRecordedTimeInstant?.(recordedTimeInstant)
     if (visualFidelityProfile) impl?.setVisualFidelityProfile?.(visualFidelityProfile)
     await impl?.setFeatures?.(features, selectedKeys)
   }
@@ -582,6 +585,11 @@ export function createWorldViewRendererAdapter(args, {
       if (cancelled()) return false
       visualFidelityProfile = normalizeVisualFidelityProfile(profile)
       return ready ? impl?.setVisualFidelityProfile?.(visualFidelityProfile) ?? false : false
+    },
+    setRecordedTimeInstant: (value) => {
+      if (cancelled()) return false
+      recordedTimeInstant = typeof value === 'string' ? value : null
+      return ready ? impl?.setRecordedTimeInstant?.(recordedTimeInstant) ?? false : false
     },
     getVisualFidelityCapabilities: () => ready && !cancelled()
       ? impl?.getVisualFidelityCapabilities?.() ?? visualFidelityCapabilities({ reason: 'Effects unavailable on this fallback renderer.' })

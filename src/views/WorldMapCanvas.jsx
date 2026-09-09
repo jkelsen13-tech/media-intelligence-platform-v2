@@ -115,7 +115,7 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
   )
 }
 
-export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyMessage, visualFidelity, onVisualFidelityCapabilities }) {
+export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyMessage, recordedTimeInstant, visualFidelity, onVisualFidelityCapabilities }) {
   const hostRef = useRef(null)
   const fidelityRef = useRef(visualFidelity)
   fidelityRef.current = visualFidelity
@@ -162,6 +162,7 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
         setTerrainStatus(next)
       },
       initialFeatures: features,
+      recordedTimeInstant,
       isCancelled: () => cancelled,
     })
     adapterRef.current = adapter
@@ -198,12 +199,13 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
   // Capability updates contain metadata only, never renderer objects.
   useEffect(() => {
     const adapter = adapterRef.current
+    adapter?.setRecordedTimeInstant?.(recordedTimeInstant)
     adapter?.setVisualFidelityProfile?.(visualFidelity)
     onVisualFidelityCapabilities?.(
       stackId === FALLBACK_MAP_STACK_ID ? visualFidelityCapabilities({ reason: 'Effects unavailable on the overview map.' })
         : adapter?.getVisualFidelityCapabilities?.() ?? visualFidelityCapabilities(),
     )
-  }, [visualFidelity, stackId, rendererReady, terrainStatus, onVisualFidelityCapabilities])
+  }, [recordedTimeInstant, visualFidelity, stackId, rendererReady, terrainStatus, onVisualFidelityCapabilities])
 
   const reliefShadingOn = resolveVisualFidelityProfile(visualFidelity,
     rendererReady ? adapterRef.current?.getVisualFidelityCapabilities?.() : visualFidelityCapabilities()).reliefShading
