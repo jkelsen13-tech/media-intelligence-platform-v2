@@ -32,6 +32,7 @@ on:
       - 'src/lib/chronologyBackend.js'
       - 'src/styles/timeline.css'
       - 'verifier/runTimelineCompositionBrowser.mjs'
+      - 'verifier/runMapLibreSecurityBrowser.mjs'
       - 'package.json'
       - 'package-lock.json'
       - 'src/components/InvestigationVersionNavigation.jsx'
@@ -81,6 +82,10 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
           node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
+      - name: Verify MapLibre attribution security and actual fallback
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runMapLibreSecurityBrowser.mjs
       - name: Verify built weather panel on phone and desktop
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
