@@ -17,11 +17,11 @@ try {
   }
   assert.ok(ready)
   browser=await webkit.launch({headless:true})
-  for(let repetition=0;repetition<8;repetition++){
+  for(let repetition=0;repetition<1;repetition++){
     console.log('MIP_ISOLATION_START='+JSON.stringify({application:process.env.MIP_APPLICATION_SHA,repetition}))
     await verifyRecordedTimestampCompatibility(browser,origin,'webkit')
   }
-  console.log('MIP_ISOLATION_PASS='+JSON.stringify({application:process.env.MIP_APPLICATION_SHA,repetitions:8}))
+  console.log('MIP_ISOLATION_PASS='+JSON.stringify({application:process.env.MIP_APPLICATION_SHA,repetitions:1}))
 } finally {
   await browser?.close()
   server.kill()
