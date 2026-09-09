@@ -1,3 +1,4 @@
+import { createRecordedLightingController } from './worldViewCesiumRecordedLighting.js'
 import { atmosphereAvailable, setAtmosphereEffect, atmosphereState } from './worldViewCesiumAtmosphere.js'
 import { createCesiumResolutionController, cesiumResolutionState } from './worldViewCesiumResolution.js'
 import { resolveVisualFidelityProfile, visualFidelityCapabilities, createVisualFidelityEffect } from './worldViewVisualFidelity.js'
@@ -248,6 +249,7 @@ export function createCesiumEllipsoidRendererAdapter({
   shouldFlyTo,
   markFlew,
   initialFeatures,
+  recordedTimeInstant,
   isCancelled,
 }) {
   // Ensure this adapter is only used for the ellipsoid globe stack id.
@@ -276,6 +278,7 @@ export function createCesiumEllipsoidRendererAdapter({
   let reliefShadingEnabled = true
   const reliefApplication = createVisualFidelityEffect(enabled => setGlobeReliefShading(Cesium, viewer, enabled))
 
+  const recordedLighting = createRecordedLightingController(() => Cesium, () => viewer)
   const groundAtmosphereApplication = createVisualFidelityEffect(enabled => setAtmosphereEffect(viewer, 'groundAtmosphere', enabled))
   const distanceHazeApplication = createVisualFidelityEffect(enabled => setAtmosphereEffect(viewer, 'distanceHaze', enabled))
   const resolutionApplication = createCesiumResolutionController(() => viewer)
@@ -371,6 +374,8 @@ export function createCesiumEllipsoidRendererAdapter({
       ownedHost = createCesiumOwnedHost(hostEl)
       viewer = new Cesium.Viewer(ownedHost.element, {
         animation: false,
+        shouldAnimate: false,
+        automaticallyTrackDataSourceClocks: false,
         timeline: false,
         baseLayerPicker: false,
         geocoder: false,
@@ -422,6 +427,10 @@ export function createCesiumEllipsoidRendererAdapter({
       entities = []
       onStackIdChange?.('openfreemap-positron')
     })
+
+    // The widget otherwise rewrites canAnimate on every data-source tick.
+    viewer.allowDataSourcesToSuspendAnimation = false
+    recordedLighting.setTime(recordedTimeInstant ?? null)
 
     // Request-only rendering governance: only redraw on camera/props changes.
     viewer.scene.requestRenderMode = true
@@ -611,6 +620,8 @@ export function createCesiumEllipsoidRendererAdapter({
     const relief = Boolean(viewer?.scene?.globe && !viewer.isDestroyed?.()
       && Cesium?.Material && !terrainDegraded && terrainPlan && !reliefApplication.hasFailed())
     return visualFidelityCapabilities({ relief,
+      sunLighting: recordedLighting.available(),
+      sunLightingReason: 'Sun lighting needs an exact inspection timestamp and a ready, frozen globe clock. Date-only scopes do not supply an instant.',
       groundAtmosphere: atmosphereAvailable(viewer,'groundAtmosphere') && !groundAtmosphereApplication.hasFailed(),
       distanceHaze: atmosphereAvailable(viewer,'distanceHaze') && !distanceHazeApplication.hasFailed(),
       atmosphereReason: 'Atmosphere display is unavailable on this renderer or could not be applied.',
@@ -625,12 +636,14 @@ export function createCesiumEllipsoidRendererAdapter({
 
   function setVisualFidelityProfile(profile) {
     const effective = resolveVisualFidelityProfile(profile, getVisualFidelityCapabilities())
+    const sunlightApplied = recordedLighting.setLighting(effective.sunLighting)
+    if (!sunlightApplied && recordedLighting.state().lightingEnabled) onStackIdChange?.('openfreemap-positron')
     const reliefApplied = setReliefShadingEnabled(effective.reliefShading)
     const fxaaApplied = fxaaApplication.set(effective.fxaa)
     const resolutionApplied = resolutionApplication.set(effective.resolutionScale)
     const groundApplied = groundAtmosphereApplication.set(effective.groundAtmosphere)
     const hazeApplied = distanceHazeApplication.set(effective.distanceHaze)
-    return reliefApplied && fxaaApplied && resolutionApplied && groundApplied && hazeApplied
+    return sunlightApplied && reliefApplied && fxaaApplied && resolutionApplied && groundApplied && hazeApplied
   }
 
   // Stage D: terrain status snapshot for the honest-availability UI.
@@ -734,8 +747,9 @@ export function createCesiumEllipsoidRendererAdapter({
     setReliefShadingEnabled,
     getReliefShadingEnabled,
     setVisualFidelityProfile,
+    setRecordedTimeInstant: value => recordedLighting.setTime(value),
     getVisualFidelityCapabilities,
-    getVisualFidelityRenderState: () => ({ cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
+    getVisualFidelityRenderState: () => ({ recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }

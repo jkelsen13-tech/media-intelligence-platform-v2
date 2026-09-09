@@ -103,7 +103,7 @@ try {
         await panel.getByRole('button',{name:'Show '+category+' settings',exact:true}).click()
       }
       const deferred=panel.locator('[data-effect-status="deferred"] input')
-      assert.equal(await deferred.count(),8)
+      assert.equal(await deferred.count(),7)
       for(const control of await deferred.all()){
         assert.equal(await control.isChecked(),false)
         assert.equal(await control.isDisabled(),true)
@@ -297,6 +297,83 @@ try {
       for(const effect of Object.keys(atmosphereControls))assert.equal((await renderState()).atmosphere[effect],false)
       console.log('MIP_ATMOSPHERE_MEMORY_PASS='+JSON.stringify({engine,width,master:true,category:true,remount:true,presetNeutral:true}))
 
+
+      // Calculated lighting uses the recorded instant; shader qualification is
+      // planetary because Cesium intentionally fades day/night shading nearby.
+      // An equatorial axis-aligned pose avoids cumulative unit-vector rounding;
+      // position equality and the existing 16-epsilon orientation bound remain.
+      const sun=panel.getByRole('checkbox',{name:'Sun lighting',exact:true})
+      const lightingGate=panel.getByRole('checkbox',{name:'Lighting effects',exact:true})
+      assert.equal(await sun.isChecked(),false)
+      assert.equal(await sun.isDisabled(),true,'lighting category starts off')
+      await lightingGate.check()
+      const sunLocal=await camera()
+      const sunPlanet=JSON.stringify({...JSON.parse(sunLocal),lon:0,lat:0,headingDegrees:0,heightMeters:25000000,pitchDegrees:-90,rollDegrees:0})
+      assert.equal(await page.evaluate(value=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(value),sunPlanet),true)
+      await page.locator('.wv-map-host').scrollIntoViewIfNeeded()
+      await delay(1000)
+      await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.globeTilesLoaded,{},{timeout:30000})
+      await page.waitForLoadState('networkidle',{timeout:30000})
+      const sunCanvas=await page.locator('.wv-map-host canvas').first().elementHandle()
+      const clockBefore=(await renderState()).recordedLighting
+      assert.equal(clockBefore.available,true)
+      assert.equal(clockBefore.frozen,true)
+      const sunNeutral=await page.locator('.wv-map-host').screenshot({type:'png'})
+      const sunCamera=(await renderState()).cameraPose
+      let sunRequests=0
+      const sunCounter=req=>{if(/terrarium|tile.openstreetmap.org/.test(req.url()))sunRequests++}
+      page.on('request',sunCounter)
+      const sunStart=Date.now()
+      await sun.check()
+      await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting?.lightingEnabled)
+      await delay(500)
+      const sunOn=await page.locator('.wv-map-host').screenshot({type:'png'})
+      console.log('MIP_RECORDED_SUN_CAMERA='+JSON.stringify({engine,width,before:sunCamera,after:(await renderState()).cameraPose,
+        clock:(await renderState()).recordedLighting,requests:sunRequests,route:page.url()}))
+      console.log('MIP_RECORDED_SUN_NEUTRAL_'+engine+'_'+width+'='+sunNeutral.toString('base64'))
+      console.log('MIP_RECORDED_SUN_ON_'+engine+'_'+width+'='+sunOn.toString('base64'))
+      assert.equal(sunNeutral.equals(sunOn),false,'sun lighting changes actual globe pixels')
+      assert.equal(sameCameraPose((await renderState()).cameraPose,sunCamera),true)
+      assert.equal(await sunCanvas.evaluate(n=>n.isConnected),true)
+      const litClock=(await renderState()).recordedLighting
+      assert.deepEqual({...litClock,lightingEnabled:false},clockBefore)
+      assert.equal(litClock.dynamicAtmosphere,false)
+      assert.equal(litClock.sunDirectedAtmosphere,false)
+      // Existing atmosphere switches remain independent with lighting active.
+      await atmosphereGate.check()
+      for(const control of Object.values(atmosphereControls))await control.check()
+      for(const effect of Object.keys(atmosphereControls))assert.equal((await renderState()).atmosphere[effect],true)
+      for(const control of Object.values(atmosphereControls))await control.uncheck()
+      assert.equal((await renderState()).recordedLighting.lightingEnabled,true)
+      const sunProfile=await profile()
+      for(const gate of [master,lightingGate]){
+        await gate.uncheck()
+        await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting?.lightingEnabled===false)
+        assert.equal((await renderState()).recordedLighting.lightingEnabled,false)
+        await gate.check()
+        await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting?.lightingEnabled===true)
+        assert.deepEqual(await profile(),sunProfile)
+        assert.equal((await renderState()).recordedLighting.lightingEnabled,true)
+      }
+      page.off('request',sunCounter)
+      console.log('MIP_RECORDED_SUN_PASS='+JSON.stringify({engine,width,clock:litClock,sameCamera:true,sameCanvas:true,
+        pixelsDiffer:true,requests:sunRequests,elapsedMs:Date.now()-sunStart}))
+      assert.equal(sunRequests,0,'settled light toggles add no terrain or imagery requests')
+      console.log('MIP_RECORDED_SUN_NEUTRAL_'+engine+'_'+width+'='+sunNeutral.toString('base64'))
+      console.log('MIP_RECORDED_SUN_ON_'+engine+'_'+width+'='+sunOn.toString('base64'))
+      await modes.getByRole('tab',{name:'Graph',exact:true}).click()
+      assert.equal(await sun.isDisabled(),true);assert.equal(await sun.isChecked(),false)
+      await modes.getByRole('tab',{name:'Map',exact:true}).click()
+      await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting?.lightingEnabled)
+      assert.deepEqual((await renderState()).recordedLighting,litClock,'remount restores source and frozen clock')
+      for(const presetName of ['performance','maximum','balanced']){
+        await preset.selectOption(presetName)
+        await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting?.lightingEnabled===false)
+        assert.equal((await renderState()).recordedLighting.lightingEnabled,false)
+        assert.equal((await renderState()).recordedLighting.sourceText,clockBefore.sourceText)
+      }
+      console.log('MIP_RECORDED_SUN_MEMORY_PASS='+JSON.stringify({engine,width,master:true,category:true,remount:true,presetsNeutral:true}))
+
       assert.equal(page.url(),route,'all controls preserve canonical/time route')
       await panel.scrollIntoViewIfNeeded()
       const bounds=await panel.boundingBox()
@@ -340,6 +417,9 @@ try {
       const control=fallbackPanel.getByRole('checkbox',{name,exact:true})
       assert.equal(await control.isChecked(),false);assert.equal(await control.isDisabled(),true)
     }
+    await fallbackPanel.getByRole('button',{name:'Show Lighting settings',exact:true}).click()
+    const fallbackSun=fallbackPanel.getByRole('checkbox',{name:'Sun lighting',exact:true})
+    assert.equal(await fallbackSun.isDisabled(),true);assert.equal(await fallbackSun.isChecked(),false)
     const fallbackFxaa=fallbackPanel.getByRole('checkbox',{name:'FXAA',exact:true})
     assert.equal(await fallbackFxaa.isDisabled(),true)
     assert.equal(await fallbackFxaa.isChecked(),false)
