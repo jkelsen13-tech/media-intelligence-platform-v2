@@ -1,0 +1,19 @@
+name: Prepare Vite 7 lockfile
+on:
+  push:
+    branches: [prep/vite7-security-20260909]
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - run: npm install --save-dev --save-exact vite@7.3.6 @vitejs/plugin-react@4.7.0 vite-plugin-static-copy@3.4.0 --package-lock-only --ignore-scripts --no-audit --no-fund
+      - run: node -e "const fs=require('node:fs'); for(const f of ['package.json','package-lock.json']) console.log('MIP_PREP_'+f+'='+fs.readFileSync(f).toString('base64'))"
