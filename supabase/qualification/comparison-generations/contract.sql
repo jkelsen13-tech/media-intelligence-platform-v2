@@ -16,11 +16,15 @@ create table comparison_qualification.generations (
 );
 create table comparison_qualification.jobs (
   generation_id uuid primary key references comparison_qualification.generations(id),
-  state text not null default 'pending' check(state in ('pending','processing','completed')),
+  state text not null default 'pending' check(state in ('pending','processing','completed','failed')),
   lease_token uuid,
   lease_expires_at timestamptz,
-  attempt integer not null default 0 check(attempt>=0),
-  check((state='processing')=(lease_token is not null and lease_expires_at is not null))
+  attempt integer not null default 0 check(attempt between 0 and 3),
+  available_at timestamptz not null default clock_timestamp() check(isfinite(available_at)),
+  failure_code text check(failure_code='lease_attempts_exhausted'),
+  check((state='failed')=(failure_code is not null)),
+  check((state='processing' and lease_token is not null and lease_expires_at is not null and isfinite(lease_expires_at))
+    or (state<>'processing' and lease_token is null and lease_expires_at is null))
 );
 create table comparison_qualification.outputs (
   generation_id uuid primary key references comparison_qualification.generations(id),
@@ -73,8 +77,20 @@ create function comparison_qualification.claim() returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare j comparison_qualification.jobs; token uuid;
 begin
+  -- Exhausted leases are terminal even when another pending generation is selected.
+  -- SKIP LOCKED avoids blocking independent workers; the holder reconciles its own row.
+  with exhausted as (
+    select generation_id from comparison_qualification.jobs
+    where state='processing' and attempt=3 and lease_expires_at<=clock_timestamp()
+    for update skip locked
+  )
+  update comparison_qualification.jobs q set state='failed',
+    lease_token=null,lease_expires_at=null,failure_code='lease_attempts_exhausted'
+    from exhausted e where q.generation_id=e.generation_id;
   select * into j from comparison_qualification.jobs
-  where state='pending' or (state='processing' and lease_expires_at<=clock_timestamp())
+  where (state='pending' and available_at<=clock_timestamp())
+    or (state='processing' and attempt<3
+      and lease_expires_at + interval '30 seconds' * power(2,attempt-1)<=clock_timestamp())
   order by generation_id limit 1 for update skip locked;
   if not found then return null; end if;
   token:=gen_random_uuid();

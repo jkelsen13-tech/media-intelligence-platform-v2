@@ -70,7 +70,7 @@ test('stale leases, foreign input bindings and conflicting replays cannot acknow
   for(const changed of [{input_hash:'foreign'},{implementation_ref:'foreign'},{lease_token:null}]){
     await assert.rejects(complete(db,{...old,...changed},{claims:[]}))
   }
-  await db.exec("reset role;update comparison_qualification.jobs set lease_expires_at=clock_timestamp()-interval '1 second';set role service_role")
+  await db.exec("reset role;update comparison_qualification.jobs set lease_expires_at=clock_timestamp()-interval '31 seconds';set role service_role")
   await assert.rejects(complete(db,old,{claims:[]}),/expired/)
   const current=await claim(db)
   assert.notEqual(current.lease_token,old.lease_token)
@@ -117,4 +117,47 @@ test('browser roles and direct worker mutations cannot bypass the API; retained 
   }
   const functions=(await db.query("select proconfig from pg_proc where pronamespace='comparison_qualification'::regnamespace")).rows
   assert.ok(functions.every(f=>f.proconfig.includes('search_path=""')))
+})
+
+test('crashed leases back off, exhaust after three attempts and never acknowledge retained input',async t=>{
+  const db=await fixture(t), id=await enqueue(db,inputs()), first=await claim(db)
+  await db.exec("reset role;update comparison_qualification.jobs set lease_expires_at=clock_timestamp()-interval '1 second';set role service_role")
+  assert.equal(await claim(db),null,'expired first attempt must wait for backoff')
+  await assert.rejects(complete(db,first,{claims:[]}),/expired/)
+  const sibling=await enqueue(db,{independent:true},'independent-source'), other=await claim(db)
+  assert.equal(other.generation_id,sibling,'backoff cannot block unrelated work')
+  assert.equal(await complete(db,other,{claims:[]}),'completed')
+  async function age(seconds){
+    await db.exec('reset role')
+    await db.query("update comparison_qualification.jobs set lease_expires_at=clock_timestamp()-make_interval(secs=>$1) where generation_id=$2",[seconds,id])
+    await db.exec('set role service_role')
+  }
+  await age(31);const second=await claim(db)
+  assert.equal(second.generation_id,id);assert.notEqual(second.lease_token,first.lease_token)
+  await age(31);assert.equal(await claim(db),null,'second backoff is sixty seconds')
+  await age(61);const third=await claim(db)
+  assert.notEqual(third.lease_token,second.lease_token)
+  await age(1)
+  assert.equal(await claim(db),null,'exhausted generation must not get a fourth attempt')
+  const row=(await db.query('select state,attempt,lease_token,lease_expires_at,failure_code from comparison_qualification.jobs where generation_id=$1',[id])).rows[0]
+  assert.deepEqual(row,{state:'failed',attempt:3,lease_token:null,lease_expires_at:null,failure_code:'lease_attempts_exhausted'})
+  for(const lease of [first,second,third]) await assert.rejects(complete(db,lease,{claims:[]}),/lease/)
+  assert.equal(await enqueue(db,inputs()),id,'enqueue replay cannot reset the attempt budget')
+  assert.equal(await claim(db),null)
+  assert.equal((await db.query('select count(*)::int n from comparison_qualification.outputs where generation_id=$1',[id])).rows[0].n,0)
+  assert.equal((await db.query('select input_payload::text value from comparison_qualification.generations where id=$1',[id])).rows[0].value,first.input_text)
+  const late=await enqueue(db,{correction:true})
+  assert.equal((await claim(db)).generation_id,late)
+})
+
+test('job state constraints reject partial leases and terminal failure forgery',async t=>{
+  const db=await fixture(t);await enqueue(db,inputs())
+  await db.exec('reset role')
+  for(const assignment of [
+    "lease_token=gen_random_uuid()",
+    "lease_expires_at=clock_timestamp()",
+    "state='failed'",
+    "failure_code='lease_attempts_exhausted'",
+    "attempt=4"
+  ]) await assert.rejects(db.exec('update comparison_qualification.jobs set '+assignment),/check constraint/)
 })
