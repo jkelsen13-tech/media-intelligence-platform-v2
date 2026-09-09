@@ -102,7 +102,7 @@ try {
         await panel.getByRole('button',{name:'Show '+category+' settings',exact:true}).click()
       }
       const deferred=panel.locator('[data-effect-status="deferred"] input')
-      assert.equal(await deferred.count(),10)
+      assert.equal(await deferred.count(),8)
       for(const control of await deferred.all()){
         assert.equal(await control.isChecked(),false)
         assert.equal(await control.isDisabled(),true)
@@ -226,6 +226,76 @@ try {
       assert.equal((await renderState()).resolution.scale,1)
       console.log('MIP_RESOLUTION_PASS='+JSON.stringify({engine,width,resolutionSamples,resolutionRequests,remembered:true,remount:true,routePreserved:page.url()===route}))
 
+
+      // Atmosphere uses public display switches only. The high camera is a
+      // disposable verifier view, never a change made by a fidelity control.
+      const atmosphereGate=panel.getByRole('checkbox',{name:'Atmosphere effects',exact:true})
+      await atmosphereGate.check()
+      const atmosphereControls={
+        groundAtmosphere:panel.getByRole('checkbox',{name:'Ground atmosphere',exact:true}),
+        distanceHaze:panel.getByRole('checkbox',{name:'Distance haze / fog',exact:true}),
+      }
+      const localCamera=await camera()
+      for(const [effect,control] of Object.entries(atmosphereControls)){
+        assert.equal(await control.isChecked(),false,'atmosphere defaults off')
+        const target=effect==='groundAtmosphere'
+          ? JSON.stringify({...JSON.parse(localCamera),heightMeters:12000000,pitchDegrees:-90,rollDegrees:0}) : localCamera
+        assert.equal(await page.evaluate(value=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(value),target),true)
+        await page.locator('.wv-map-host').scrollIntoViewIfNeeded()
+        await delay(1000)
+        await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.globeTilesLoaded,{},{timeout:30000})
+        await page.waitForLoadState('networkidle',{timeout:30000})
+        const fixedCamera=await camera()
+        const fixedCanvas=await page.locator('.wv-map-host canvas').first().elementHandle()
+        const policy=(await renderState()).atmosphere.fogPolicy
+        const beforeImage=await page.locator('.wv-map-host').screenshot({type:'png'})
+        let requests=0
+        const counter=req=>{if(/terrarium|tile.openstreetmap.org/.test(req.url()))requests++}
+        page.on('request',counter)
+        const start=Date.now()
+        await control.check()
+        await page.waitForFunction(name=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.atmosphere[name]===true,effect)
+        await delay(400)
+        const afterImage=await page.locator('.wv-map-host').screenshot({type:'png'})
+        await control.uncheck()
+        await delay(200)
+        page.off('request',counter)
+        assert.equal(beforeImage.equals(afterImage),false,effect+' changes actual pixels')
+        assert.equal(await camera(),fixedCamera)
+        assert.equal(await fixedCanvas.evaluate(node=>node.isConnected),true)
+        assert.deepEqual((await renderState()).atmosphere.fogPolicy,policy)
+        assert.equal((await renderState()).atmosphere.lightingEnabled,false)
+        assert.equal((await renderState()).requestRenderMode,true)
+        assert.equal(page.url(),route)
+        console.log('MIP_ATMOSPHERE_PASS='+JSON.stringify({engine,width,effect,requests,elapsedMs:Date.now()-start,policy,sameCamera:true,pixelsDiffer:true}))
+        assert.equal(requests,0,'settled atmosphere toggles preserve terrain/imagery requests')
+        console.log('MIP_ATMOSPHERE_NEUTRAL_'+engine+'_'+width+'_'+effect+'='+beforeImage.toString('base64'))
+        console.log('MIP_ATMOSPHERE_ON_'+engine+'_'+width+'_'+effect+'='+afterImage.toString('base64'))
+      }
+      for(const control of Object.values(atmosphereControls))await control.check()
+      const rememberedAtmosphere=await profile()
+      for(const gate of [master,atmosphereGate]){
+        await gate.uncheck()
+        for(const effect of Object.keys(atmosphereControls))assert.equal((await renderState()).atmosphere[effect],false)
+        await gate.check()
+        assert.deepEqual(await profile(),rememberedAtmosphere)
+        for(const effect of Object.keys(atmosphereControls))assert.equal((await renderState()).atmosphere[effect],true)
+      }
+      await modes.getByRole('tab',{name:'Graph',exact:true}).click()
+      for(const control of Object.values(atmosphereControls)){assert.equal(await control.isDisabled(),true);assert.equal(await control.isChecked(),false)}
+      await modes.getByRole('tab',{name:'Map',exact:true}).click()
+      await page.locator('.wv-map-host').scrollIntoViewIfNeeded()
+      await delay(1800)
+      await page.waitForFunction(()=>{
+        const s=window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()
+        const t=window.__MIP_WORLD_VIEW_TERRAIN_PROBE__?.getTerrainStatus()
+        return s?.globeTilesLoaded && s.atmosphere.groundAtmosphere && s.atmosphere.distanceHaze && t?.status==='active' && t.fetchSuccesses>0
+      },{},{timeout:30000})
+      console.log('MIP_ATMOSPHERE_REMOUNT_'+engine+'_'+width+'='+(await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:70})).toString('base64'))
+      await preset.selectOption('balanced')
+      for(const effect of Object.keys(atmosphereControls))assert.equal((await renderState()).atmosphere[effect],false)
+      console.log('MIP_ATMOSPHERE_MEMORY_PASS='+JSON.stringify({engine,width,master:true,category:true,remount:true,presetNeutral:true}))
+
       assert.equal(page.url(),route,'all controls preserve canonical/time route')
       await panel.scrollIntoViewIfNeeded()
       const bounds=await panel.boundingBox()
@@ -264,6 +334,11 @@ try {
     assert.equal(await fallbackRelief.isChecked(),false)
     assert.equal(await fallbackRelief.isDisabled(),true)
     await fallbackPanel.getByRole('button',{name:'Show Image Quality settings',exact:true}).click()
+    await fallbackPanel.getByRole('button',{name:'Show Atmosphere settings',exact:true}).click()
+    for(const name of ['Ground atmosphere','Distance haze / fog']){
+      const control=fallbackPanel.getByRole('checkbox',{name,exact:true})
+      assert.equal(await control.isChecked(),false);assert.equal(await control.isDisabled(),true)
+    }
     const fallbackFxaa=fallbackPanel.getByRole('checkbox',{name:'FXAA',exact:true})
     assert.equal(await fallbackFxaa.isDisabled(),true)
     assert.equal(await fallbackFxaa.isChecked(),false)
