@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "observedDate": "2026-09-09",
+  "scope": "existing development-only browser compatibility toolchain; no provider or MIP evidence dataset activation",
+  "baseCommit": "064ca55be1870b1366ed88b9293401e25629227a",
+  "preparation": {
+    "runId": 34356845362,
+    "jobId": 102483578672,
+    "commit": "5f484134013f575dd5076e3a237ee24952b922da",
+    "command": "npm update browserslist baseline-browser-mapping --package-lock-only --ignore-scripts --no-audit --no-fund",
+    "rootManifestUnchanged": true,
+    "localFilesCreated": false,
+    "workflowIncludedInFinalTree": false
+  },
+  "packages": [
+    {
+      "name": "baseline-browser-mapping",
+      "from": "2.10.40",
+      "to": "2.11.21",
+      "dev": true,
+      "license": "Apache-2.0",
+      "repository": {
+        "url": "git+https://github.com/web-platform-dx/baseline-browser-mapping.git",
+        "type": "git"
+      },
+      "tarball": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.21.tgz",
+      "integrity": "sha512-uh8vpY/1/YyFkunIDFH/12p7/7VdPKA1hejMVEbdkEaWnUz0Hesvx5EbiU6XxjyHZIOju+ZMbQJkRh+es3/spQ==",
+      "registryAndLockIntegrityVerified": true,
+      "notices": [
+        "docs/licenses/build-tools/baseline-browser-mapping-2.11.21-LICENSE.txt"
+      ],
+      "modifiedByMIP": false
+    },
+    {
+      "name": "browserslist",
+      "from": "4.28.4",
+      "to": "4.28.9",
+      "dev": true,
+      "license": "MIT",
+      "repository": {
+        "url": "git+https://github.com/browserslist/browserslist.git",
+        "type": "git"
+      },
+      "tarball": "https://registry.npmjs.org/browserslist/-/browserslist-4.28.9.tgz",
+      "integrity": "sha512-EWazOblFYUvlGZcfGhPUPmYh3nikUxBVb+y9MJun5f3hBi812X+8MSQTujLBtgK3cf51fJWbWfOjyeO954d+Eg==",
+      "registryAndLockIntegrityVerified": true,
+      "notices": [
+        "docs/licenses/build-tools/browserslist-4.28.9-LICENSE"
+      ],
+      "modifiedByMIP": false
+    },
+    {
+      "name": "caniuse-lite",
+      "from": "1.0.30001800",
+      "to": "1.0.30001810",
+      "dev": true,
+      "license": "CC-BY-4.0",
+      "repository": {
+        "url": "git+https://github.com/browserslist/caniuse-lite.git",
+        "type": "git"
+      },
+      "tarball": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001810.tgz",
+      "integrity": "sha512-TITQPUkaz+aVk5GL6NhOdwk1aEaNTSDPsGFWrTuhKGtjTF70jL/Oht2W4c6rXUe5fu7Ie19VIahAXHIIiWWNeg==",
+      "registryAndLockIntegrityVerified": true,
+      "notices": [
+        "docs/licenses/build-tools/caniuse-lite-1.0.30001810-LICENSE"
+      ],
+      "modifiedByMIP": false
+    },
+    {
+      "name": "electron-to-chromium",
+      "from": "1.5.383",
+      "to": "1.5.425",
+      "dev": true,
+      "license": "ISC",
+      "repository": {
+        "url": "git+https://github.com/Kilian/electron-to-chromium.git",
+        "type": "git"
+      },
+      "tarball": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.425.tgz",
+      "integrity": "sha512-QvPtl41EUOnuT1HBvMKgxXRIaHNcagBPs50u7VULzhZXaGfqTbZyE16LQsctZ/RQHlGu+FOWeDTR4mY6YbeF1g==",
+      "registryAndLockIntegrityVerified": true,
+      "notices": [
+        "docs/licenses/build-tools/electron-to-chromium-1.5.425-LICENSE"
+      ],
+      "modifiedByMIP": false
+    },
+    {
+      "name": "node-releases",
+      "from": "2.0.50",
+      "to": "2.0.55",
+      "dev": true,
+      "license": "MIT",
+      "repository": {
+        "url": "git+https://github.com/chicoxyzzy/node-releases.git",
+        "type": "git"
+      },
+      "tarball": "https://registry.npmjs.org/node-releases/-/node-releases-2.0.55.tgz",
+      "integrity": "sha512-mIrE/Cw9y+9Au6dS5vDKDhQza9YvG6w+ZrS6X+ZzA7yFW/soAeaups4Qzn1bL6g5FVy8WtP79+0j82oPIbqRjQ==",
+      "registryAndLockIntegrityVerified": true,
+      "notices": [
+        "docs/licenses/build-tools/node-releases-2.0.55-LICENSE"
+      ],
+      "modifiedByMIP": false
+    },
+    {
+      "name": "update-browserslist-db",
+      "from": "1.2.3",
+      "to": "1.3.2",
+      "dev": true,
+      "license": "MIT",
+      "repository": {
+        "url": "git+https://github.com/browserslist/update-db.git",
+        "type": "git"
+      },
+      "tarball": "https://registry.npmjs.org/update-browserslist-db/-/update-browserslist-db-1.3.2.tgz",
+      "integrity": "sha512-UQ+MSxlhRm1bzjhU+DcuXfjFO1FzNtqhK5+9Yvlp90ItDLk5vT932A0rFu619nf7RVS+Y/VeaUW1jaRDqZ8VJw==",
+      "registryAndLockIntegrityVerified": true,
+      "notices": [
+        "docs/licenses/build-tools/update-browserslist-db-1.3.2-LICENSE"
+      ],
+      "modifiedByMIP": false
+    }
+  ],
+  "unchanged": {
+    "rootManifest": true,
+    "productionPackageRecords": true,
+    "otherLockRecords": true,
+    "frontendSource": true,
+    "backendRuntime": true,
+    "publicationPolicies": true
+  },
+  "pending": [
+    "Exact-head test/build/audit/preview results and exact merged commit deployment/live closeout are recorded on the PR.",
+    "Vite/esbuild require separate coordinated migration; no full audit-clean claim."
+  ]
+}
