@@ -326,6 +326,10 @@ try {
       await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.recordedLighting?.lightingEnabled)
       await delay(500)
       const sunOn=await page.locator('.wv-map-host').screenshot({type:'png'})
+      console.log('MIP_RECORDED_SUN_CAMERA='+JSON.stringify({engine,width,before:sunCamera,after:(await renderState()).cameraPose,
+        clock:(await renderState()).recordedLighting,requests:sunRequests,route:page.url()}))
+      console.log('MIP_RECORDED_SUN_NEUTRAL_'+engine+'_'+width+'='+sunNeutral.toString('base64'))
+      console.log('MIP_RECORDED_SUN_ON_'+engine+'_'+width+'='+sunOn.toString('base64'))
       assert.equal(sunNeutral.equals(sunOn),false,'sun lighting changes actual globe pixels')
       assert.equal(sameCameraPose((await renderState()).cameraPose,sunCamera),true)
       assert.equal(await sunCanvas.evaluate(n=>n.isConnected),true)
