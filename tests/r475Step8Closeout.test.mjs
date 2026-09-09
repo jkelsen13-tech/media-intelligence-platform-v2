@@ -296,6 +296,8 @@ test('Step 1–7 test files exist; R4.75 src stays DISPLAY-only; no R5 product i
   const bannedIonAndProviders = /ion\.cesium|photorealistic 3d|google 3d tiles/i
   const bannedIonTokenStrings = /Ion\.defaultAccessToken|defaultAccessToken\s*=|ion\s*access\s*token/i
   const allowedCesiumFiles = [
+    // VF-2: adapter-owned frozen clock and calculated lighting; all provider/token bans still apply.
+    /\\/src\\/lib\\/worldViewCesiumRecordedLighting\\.js$/,
     // VF-2: public display-only atmosphere properties; provider/token bans still apply.
     /\/src\/lib\/worldViewCesiumAtmosphere\.js$/,
     // VF-2: bounded resolution is an adapter-owned display control; provider/token bans still apply.
