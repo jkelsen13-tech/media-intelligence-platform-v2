@@ -1,0 +1,117 @@
+{
+  "project": "qikvmopbtijoebdqosyq",
+  "preparedFrom": "b1e71f1fdd4c98bdaf98119f63f9e2a64b2b5104",
+  "qualifiedHead": "74da1d85b4e09fc83277a0bfabfd00acfac345f0",
+  "preparation": {
+    "commit": "7cef94443e70263c9921b3f69b9d4821e8376a5c",
+    "run": 34369658290,
+    "job": 102527296338,
+    "cli": "2.117.0",
+    "generatedFilename": "20260909152111_comparison_explanation_event_binding.sql"
+  },
+  "migration": {
+    "version": "20260909153133",
+    "name": "comparison_explanation_event_binding",
+    "recordedSqlExactlyMatches": true,
+    "repositoryFilename": "20260909153133_comparison_explanation_event_binding.sql"
+  },
+  "before": {
+    "observed_at": "2026-09-09 15:31:28.409616+00",
+    "view_contract": {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "owner": "postgres",
+      "options": [
+        "security_barrier=true",
+        "security_invoker=false"
+      ],
+      "definition_sha256": "9b4d46e270de0481ea844144ce848deae1bfd12c1034909677ce91fcce240dc5"
+    },
+    "explanations": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "claims": {
+      "rows": 4,
+      "sha256": "686e43d55a927e6c53d220d367af2f82f173680991df5c4d78963fdf1236e846"
+    },
+    "article_claims": {
+      "rows": 6,
+      "sha256": "ef0c282557fdbd02e0cf95f308e80b872da52728eb3ec61914480a4068ba83cc"
+    },
+    "public_payload": {
+      "rows": 1,
+      "sha256": "8aec730f6291cc75ba4460defc2b58bca7b6cf09951c5d651f2263c0ad5349bf"
+    }
+  },
+  "after": {
+    "observed_at": "2026-09-09 15:31:52.366642+00",
+    "view_contract": {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "owner": "postgres",
+      "options": [
+        "security_barrier=true",
+        "security_invoker=false"
+      ],
+      "definition_sha256": "aad5637333ea9619a65c27d4f8c441db541d1485482bc41e837f8ba78f28bf63"
+    },
+    "explanations": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "claims": {
+      "rows": 4,
+      "sha256": "686e43d55a927e6c53d220d367af2f82f173680991df5c4d78963fdf1236e846"
+    },
+    "article_claims": {
+      "rows": 6,
+      "sha256": "ef0c282557fdbd02e0cf95f308e80b872da52728eb3ec61914480a4068ba83cc"
+    },
+    "public_payload": {
+      "rows": 1,
+      "sha256": "8aec730f6291cc75ba4460defc2b58bca7b6cf09951c5d651f2263c0ad5349bf"
+    }
+  },
+  "securityAdvisors": [
+    {
+      "name": "auth_leaked_password_protection",
+      "level": "WARN",
+      "count": 1
+    },
+    {
+      "name": "extension_in_public",
+      "level": "WARN",
+      "count": 1
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "level": "INFO",
+      "count": 74
+    },
+    {
+      "name": "security_definer_view",
+      "level": "ERROR",
+      "count": 6
+    }
+  ],
+  "securityAdvisorsUnchanged": true,
+  "productionReaderCounts": {
+    "anon": 1,
+    "authenticated": 1
+  },
+  "qualification": {
+    "tests": 1559,
+    "node": [
+      22,
+      24
+    ],
+    "goldenRun": 34370415388,
+    "auditVulnerabilities": 0,
+    "syntheticRowsOnlyInCI": true
+  },
+  "limits": [
+    "No historical production misattribution asserted; published explanation matches were zero.",
+    "Event binding is not immutable worker-generation or complete semantic-output binding.",
+    "No production evidence or history DML, grants, worker, schedule or provider changes.",
+    "Overall consolidation remains incomplete; no legacy backend is safe to retire."
+  ]
+}

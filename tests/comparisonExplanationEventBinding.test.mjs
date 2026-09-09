@@ -12,7 +12,7 @@ test('comparison explanations cannot cross event identity despite matching artic
   await applyFoundation(db)
   await insertCyclosporaCohort(db)
   const read = name => readFile(new URL('../supabase/migrations/' + name, import.meta.url), 'utf8')
-  const forward = await read('20260909152111_comparison_explanation_event_binding.sql')
+  const forward = await read('20260909153133_comparison_explanation_event_binding.sql')
   const article = CYCLOSPORA_ARTICLES[0].id
   const claim = (await db.query('select c.*,ac.surface_text from claims c join article_claims ac on ac.claim_id=c.id where ac.article_id=$1 limit 1',[article])).rows[0]
   const foreign = (await db.query("insert into events(canonical_title,comparison_validation_state) values ('Separate synthetic event','approved') returning id")).rows[0].id
