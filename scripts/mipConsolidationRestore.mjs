@@ -155,6 +155,7 @@ export async function applyFoundation(db) {
   await applyPublicSurfaceAuthenticatedReviewRevoke(db)
   await db.exec(await readFile(new URL('../supabase/migrations/20260905182355_mip_nested_claim_publication_gates.sql', import.meta.url), 'utf8'))
   await applyMigrationFile(db, '20260905203600_mip_legacy_graph_private_staging.sql')
+  await applyMigrationFile(db, '20260909152111_comparison_explanation_event_binding.sql')
 }
 
 export function restoreSourceRegisters() {
