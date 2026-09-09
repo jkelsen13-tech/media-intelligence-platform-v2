@@ -133,3 +133,33 @@ This is independently timed retention, not continuous replication, complete
 history parity or worker cutover. Later runs and pre-window corrections remain
 pending. Queue acknowledgement, schedules, publication decisions and legacy
 retirement were not changed.
+
+## Third bounded delta and full-scope recheck — 9 September 2026 UTC
+
+Retained 102 new versions: 51 completed ingestion runs started at or after
+12:15 UTC and before 16:30 UTC, and 51 linked source-run records with completion
+timestamps. Seven unchanged register rows were already retained. The archive
+now contains 9,237 versions. Each batch contained at most 51 rows; PostgreSQL
+JSONB text went directly between connectors without parsing/reserializing payload
+numbers or creating local files.
+
+The exact 109-entry relation/key/hash manifest matches source-before,
+destination and source-after digests. A 51-run service-role replay inserted zero
+rows. Missing parent/source links and keys with multiple retained versions: zero.
+RLS, browser read/import denial, worker mutation denial and both immutable-history
+triggers remain intact. The importer body exactly matches its reviewed migration.
+The public comparison view, permissions and retained/public-payload hashes were
+unchanged after transfer.
+
+This pass also compared the entire current source scope before 16:30 UTC with
+retained rows: 4,625 ingestion runs, 4,605 source runs and seven register rows.
+Counts and ordered SHA-256 digests matched before/after transfer. Thus no current
+pre-window difference was found in this bounded scope; this does not certify
+historical states overwritten before observation or intermediate reverted edits.
+See [third delta and full-scope receipt](../verifier/backend-collector-delta-2026-09-09-1630.json)
+and [reproducible read-only checks](../supabase/tests/collector_history_1630_inventory.sql).
+
+Observations are independently timed, not a cross-database atomic snapshot.
+Later/future deltas, other relations, runtime/identity/rights dependency closure
+and operational cutover remain pending. No worker, schedule, queue acknowledgement,
+publication decision, credential, schema or legacy retirement was changed.
