@@ -269,7 +269,7 @@ function createMapLibreWorldViewRendererAdapter({
     if (!hostEl) return
 
     let maplibregl
-    let MapboxOverlay
+    let MapLibreOverlay
     let ScatterplotLayer
     let TextLayer
     try {
@@ -279,7 +279,7 @@ function createMapLibreWorldViewRendererAdapter({
       const { default: workerUrl } = await import('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url')
       maplibregl.setWorkerUrl(workerUrl)
       await import('maplibre-gl/dist/maplibre-gl.css')
-      MapboxOverlay = (await import('@deck.gl/mapbox')).MapboxOverlay
+      MapLibreOverlay = (await import('@deck.gl/maplibre')).MapLibreOverlay
       ;({ ScatterplotLayer, TextLayer } = await import('@deck.gl/layers'))
     } catch {
       if (!cancelledNow()) onStackIdChange?.(FALLBACK_MAP_STACK_ID)
@@ -331,7 +331,7 @@ function createMapLibreWorldViewRendererAdapter({
       'bottom-right',
     )
 
-    localOverlay = new MapboxOverlay({
+    localOverlay = new MapLibreOverlay({
       interleaved: true,
       layers: deckProjectionLayers(
         { ScatterplotLayer, TextLayer },

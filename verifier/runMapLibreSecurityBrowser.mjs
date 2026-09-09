@@ -33,7 +33,7 @@ try {
         const verifyBackend=observeBackendBoundary(page)
         const errors=[], workers=[]
         let styleResponses=0
-        page.on('pageerror',e=>errors.push(e.message))
+        page.on('pageerror',e=>errors.push(e.stack||e.message))
         page.on('worker',w=>workers.push(w.url()))
         page.on('response',r=>{if(r.url().includes('tiles.openfreemap.org/styles/positron')&&r.ok())styleResponses++})
         // Reject contexts only on Cesium-owned canvases. Aborting its shared

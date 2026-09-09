@@ -16,7 +16,7 @@ export function mapLibreNoticeAssets(root=process.cwd()){
       p=p.includes('/node_modules/')?p.slice(0,p.lastIndexOf('/node_modules/')):''
     }
   }
-  function visit(path){
+  function visit(path, descend=true){
     if(visited.has(path))return
     visited.add(path)
     const record=packages[path]
@@ -39,9 +39,11 @@ export function mapLibreNoticeAssets(root=process.cwd()){
       files.push(fileName)
     }
     inventory.push({path,version:record.version,license:record.license,integrity:record.integrity,files})
-    for(const name of Object.keys(record.dependencies??{}).sort())visit(dependency(path,name))
+    if(descend)for(const name of Object.keys(record.dependencies??{}).sort())visit(dependency(path,name))
   }
   visit('node_modules/maplibre-gl')
+  // Exact notices for every added/updated deck.gl compatibility package.
+  for(const path of ["node_modules/@deck.gl/core","node_modules/@deck.gl/layers","node_modules/@luma.gl/core","node_modules/@luma.gl/engine","node_modules/@luma.gl/shadertools","node_modules/@luma.gl/webgl","node_modules/mjolnir.js","node_modules/@deck.gl/maplibre","node_modules/@luma.gl/gpgpu","node_modules/@luma.gl/webgpu","node_modules/@webgpu/types"])visit(path,false)
   assets.push({type:'asset',fileName:'licenses/maplibre/inventory.json',source:JSON.stringify(inventory,null,2)+'\n'})
   return assets
 }
