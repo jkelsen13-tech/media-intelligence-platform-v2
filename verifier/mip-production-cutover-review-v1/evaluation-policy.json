@@ -1,0 +1,129 @@
+{
+  "contract": "mip-semantic-evaluation-policy-proposal-1",
+  "status": "proposed_not_approved",
+  "qualification": "not_assessed",
+  "authority": "Owner must freeze this policy and the evaluation split before any final held-out measurement. This file is not fitted to observed held-out performance and contains no operating thresholds.",
+  "intended_operating_scope": {
+    "in_scope": [
+      "event membership for approved multi-outlet comparison inputs",
+      "claim grouping and surface binding to the exact event and article identity",
+      "source lineage versus independent corroboration",
+      "correction, retraction and withdrawn support",
+      "as-known-then versus current reconstruction",
+      "collection-aware abstention when evidence is insufficient"
+    ],
+    "out_of_scope_until_separate_freeze": [
+      "Markets price/quote accuracy",
+      "World View photorealism or physical-device rendering",
+      "publication eligibility",
+      "automatic membership approval"
+    ]
+  },
+  "error_categories": {
+    "false_merge": "Distinct events or identities treated as one.",
+    "false_split": "One event or claim treated as unrelated.",
+    "wrong_relation_type": "Sequence, allegation, or co-location promoted to a stronger relation.",
+    "source_lineage_error": "Copy/syndication treated as independent, or independent sources treated as copies.",
+    "identity_substitution": "Ticker, title, comparison event key, graph UUID or outlet name used as a different identity family.",
+    "temporal_leakage": "Evidence first observed later used in an as-known-then result.",
+    "stale_current": "Withdrawn or corrected support still presented as current.",
+    "unsupported_confidence": "A numeric or verbal confidence not licensed by retained evidence and coverage.",
+    "retrieval_miss": "Relevant retained evidence not retrieved.",
+    "false_retrieval": "Irrelevant material retrieved and treated as support."
+  },
+  "critical_error_rules": {
+    "any_of_these_is_critical": [
+      "false_merge of distinct real-world events after human adjudication",
+      "published current claim that is withdrawn or retracted in retained source history",
+      "identity_substitution that would attach evidence to the wrong actor, asset or place",
+      "temporal_leakage into an as-known-then reconstruction",
+      "treating implementation-agent labels or model agreement as independent ground truth"
+    ],
+    "critical_error_threshold": null,
+    "rule": "Owner freezes the allowed critical-error count and whether a single critical error blocks release. This proposal recommends blocking release eligibility on any adjudicated critical error in the frozen held-out set. That recommendation is not an approved threshold."
+  },
+  "measures": {
+    "retrieval_recall": "retrieved relevant / resolved relevant. Unresolved labels are excluded from the relevant denominator.",
+    "retrieval_precision": "retrieved relevant / retrieved resolved. Retrieved unresolved labels are counted separately and excluded from this denominator.",
+    "verifier_accuracy": "correct decisions / resolved non-abstaining decisions.",
+    "resolved_decision_coverage": "resolved non-abstaining decisions / resolved labels.",
+    "useful_population_coverage": "correct decisions / entire held-out population, including unresolved and abstentions.",
+    "abstention_rate": "abstentions / held-out population.",
+    "unresolved_population": "unresolved labels / held-out population.",
+    "thresholds": {
+      "retrieval_recall": null,
+      "retrieval_precision": null,
+      "verifier_accuracy": null,
+      "resolved_decision_coverage": null,
+      "useful_population_coverage": null,
+      "abstention_rate": null
+    },
+    "reporting_rule": "Every ratio retains numerator and denominator. An empty denominator is null, not zero. Unresolved cases remain in coverage. Do not drop hard cases to improve apparent accuracy."
+  },
+  "sample_requirements": {
+    "minimum_cases": null,
+    "required_coverage_matrix": [
+      "event membership: shared actor in distinct episodes; true paraphrase; broad topic versus one occurrence",
+      "claims: negation; 12 versus 120; attribution; modality; changed date/unit; correction versus contradiction",
+      "source lineage: exact copy; appended paragraph; wire attribution; partial reuse of one claim",
+      "retractions: corrected number; entity split; withdrawn support",
+      "historical discovery: late old document; new alias; dated supplier relation",
+      "surface consistency: event-to-News identity; Comparison explanation bound to its event"
+    ],
+    "rule": "Choose sample size from required coverage and error bounds after owner freeze. Do not invent a universal N here and do not back-solve N from a desired score."
+  },
+  "uncertainty_methodology": {
+    "vocabulary": "docs/UNCERTAINTY_VOCABULARY.md",
+    "dimensions": [
+      "source reliability",
+      "evidence strength",
+      "authentication",
+      "relationship type",
+      "review status",
+      "remaining uncertainty"
+    ],
+    "rules": [
+      "Missing evidence is not contradicting evidence.",
+      "Nothing found in a bounded search is a bounded observation, not proof of absence.",
+      "Numeric confidence requires calibration against independently adjudicated held-out labels.",
+      "Implementation-agent scores and model-model agreement are not calibration labels."
+    ]
+  },
+  "leakage_protection": {
+    "split_contract": "record-candidate-corpus-1",
+    "grouping_keys": ["event_groups", "arc_groups", "origin_groups", "duplicate_groups", "input_sha256"],
+    "temporal_rule": "development_until is strictly before heldout_from. Development observations cannot be after the development boundary; held-out observations cannot be before the held-out boundary.",
+    "near_duplicate_rule": "Declared duplicate groups and exact input hashes cannot cross partitions. The manifest cannot authenticate undisclosed near duplicates; residual leakage is a review limitation until owner-adjudicated duplicate discovery is complete.",
+    "source_family_rule": "Origin groups partition source families. Do not put the same retained source family on both sides of the freeze."
+  },
+  "reference_label_protocol": {
+    "ground_truth": "independently adjudicated, source-grounded human labels accepted by the owner",
+    "not_ground_truth": [
+      "implementation-agent labels",
+      "model agreement",
+      "queue acknowledgement",
+      "membership scores",
+      "auto-approval eligibility flags"
+    ],
+    "human_adjudication_requires": [
+      "exact retained capture/history version identifiers",
+      "the as-of boundary being judged",
+      "source excerpts that exist in retained rights-cleared text; no invented bodies",
+      "the proposed relation or membership decision and its error category",
+      "a written rationale hashed into the adjudication record",
+      "an unresolved option that is first-class, not a discarded leftover"
+    ],
+    "recommended_arrangement": {
+      "primary": "one human adjudicator per case using the retained source, not the model output",
+      "critical_cases": "second independent human adjudicator; disagreement stays unresolved until owner decision",
+      "owner": "accepts or rejects the adjudicated set as the reference-label freeze; this remains a separate owner decision",
+      "blinding": "adjudicators do not see model decisions or implementation-agent scores on first pass"
+    }
+  },
+  "distinctions": {
+    "internal_candidate_generation": "A worker may emit a generation-bound output.",
+    "operational_correctness": "Lease, acknowledgement, selection, withdrawal and correlation behave as specified.",
+    "semantic_qualification": "Adjudicated held-out measures under a frozen policy.",
+    "release_eligibility": "Owner decision after semantic qualification, publication/rights gates and cutover evidence. Not implied by the first three."
+  }
+}

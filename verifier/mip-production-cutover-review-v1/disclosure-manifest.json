@@ -1,0 +1,263 @@
+{
+  "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
+  "disclosure_status": "proposed_not_transmitted",
+  "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
+  "review_packet_commit": "60914115f22009722c0cb47cb81ddea206a38620",
+  "review_packet_commit_resolution": "Stamp the git commit that contains the hashed_files tree. Do not mix hashes from a different commit.",
+  "mixed_candidate_rule": "If any hashed file differs from this manifest, the packet is not the frozen candidate.",
+  "hashed_files": [
+    {
+      "path": "docs/COMPARISON_CAPABILITY_SEPARATION_2026-09-10.md",
+      "sha256": "4c3fba968c7b834a32e1c2908cb141a918d83a32d9e7e9a711d7052afde7a3b3",
+      "bytes": 5633
+    },
+    {
+      "path": "docs/COMPARISON_GENERATION_TRANSACTION_2026-09-09.md",
+      "sha256": "cb283d5435a7051f51f68b3efb459ac9451ad46598e2d237b79a398a734e550f",
+      "bytes": 4094
+    },
+    {
+      "path": "docs/COMPARISON_POSTGRES_CONCURRENCY_2026-09-09.md",
+      "sha256": "4f80a0c01c05c0ffd682f4c582bba7841ab93f7cad9dbd2e7c7c442b9dfc364d",
+      "bytes": 2225
+    },
+    {
+      "path": "docs/COMPARISON_SELECTION_2026-09-10.md",
+      "sha256": "effc1ae5fad3c4fbcee3940023427e78690bdb37f81c640ba12dacad59add06b",
+      "bytes": 3446
+    },
+    {
+      "path": "docs/COMPARISON_SOURCE_SNAPSHOT_2026-09-09.md",
+      "sha256": "d2b972919c10bb81f2537dca87b7189cc7b600cd98c413d7b96f029d545cca6f",
+      "bytes": 3581
+    },
+    {
+      "path": "docs/COMPARISON_RELEASE_THRESHOLD_2026-09-08.md",
+      "sha256": "7a747b21ee16fe7851c33a56bddd446ec9fe8224fcf591c3e3ac637bd451e6a9",
+      "bytes": 2368
+    },
+    {
+      "path": "docs/EVIDENCE_DISCOVERY_EVALUATION_V1.md",
+      "sha256": "9516eb22d41d7fbc00fff69a83cb634dbe25ab91ea821883c2b4af276321e37d",
+      "bytes": 6771
+    },
+    {
+      "path": "docs/MIP_CUTOVER_STAGING_PROPOSAL_2026-09-10.md",
+      "sha256": "4970490d8cb7284c436c74d81b064203c21677e1fc085387a1ec890b6e3dff3e",
+      "bytes": 4399
+    },
+    {
+      "path": "docs/MIP_PRODUCTION_CUTOVER_REVIEW_PACKET_2026-09-10.md",
+      "sha256": "de2dec8b0d56f26a873e515274788404bb06e027b47c24ce6ad164567caad563",
+      "bytes": 6104
+    },
+    {
+      "path": "docs/MIP_SEMANTIC_EVALUATION_POLICY_PROPOSAL_2026-09-10.md",
+      "sha256": "edd0b8c3681c5b2ca3db118559da9bc7a03dfd6c0355c175ae668d2f57acfdec",
+      "bytes": 7657
+    },
+    {
+      "path": "docs/RECORD_CANDIDATE_EVALUATION_2026-09-08.md",
+      "sha256": "f2f034a401a4129faadd4f77a8469354607c18d991f7d96630c4bd9e0e748680",
+      "bytes": 4086
+    },
+    {
+      "path": "docs/UNCERTAINTY_VOCABULARY.md",
+      "sha256": "22aa0128fc45c8aa563a05c7cf89c619f0dd3eee215f2c321cd038f0dee3c47a",
+      "bytes": 16623
+    },
+    {
+      "path": "package.json",
+      "sha256": "2575ce3f1b097d576b9e3da0306c85f1e3acbc76c64f912968558ef32ec4f7a0",
+      "bytes": 1329
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "1f12bc7e116a262d7cfad8693fea9e271cb0e409d8ca3993a9737b42f24fe255",
+      "bytes": 118411
+    },
+    {
+      "path": "scripts/buildCutoverReviewPacket.mjs",
+      "sha256": "1f02254bf1e0032c0a5fb015e812eca7fe19d9eec1917127af2b287854d3e34a",
+      "bytes": 6720
+    },
+    {
+      "path": "scripts/evaluateRecordCandidates.mjs",
+      "sha256": "e43c390ce3e1b9727f11a7e0eb08dd2809d5d3290fd98a1801b37fed0b00624e",
+      "bytes": 8383
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/capability.sql",
+      "sha256": "69e6544cb304c5e510a678da75e5e9a0ba6bda9f7da753ca4ee5ac144e14eff6",
+      "bytes": 34380
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/contract.sql",
+      "sha256": "650a70f5dd8d5acacc74b73cd225d1c1755e822062e0ba88648e5a9e43715776",
+      "bytes": 12529
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/selection.sql",
+      "sha256": "a910c8da881593c4e2d5689c6acbac0d81882531f4b1fb78589008254a416e81",
+      "bytes": 4975
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/source-fixture.sql",
+      "sha256": "80b165977c67f92a107ceb8fc9fb46c53ef880d816d08789cce96c59de45a805",
+      "bytes": 1883
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/source-snapshot.sql",
+      "sha256": "7bef311c9f551f88ca6bbb51f57b71593c64017e0931d9db4c275885c42dc968",
+      "bytes": 2795
+    },
+    {
+      "path": "supabase/qualification/membership-prepared/deployment.json",
+      "sha256": "03d0a27004ee570e70b8a5f9b405085767cd03d9e31fd90e8b9fd8af8579dc8f",
+      "bytes": 162
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/articleInputReadback.js",
+      "sha256": "ebd5e6a4969d679b7801a6180897ad1bcabdcd08af61af9bc1fec8ea02cf2be8",
+      "bytes": 830
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/index.ts",
+      "sha256": "3e274d14499194cc2f89b88b9fe0f14a721d311eca6c874e4d7dde40c28602b8",
+      "bytes": 22152
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/lib.js",
+      "sha256": "1c3cc8b6148097417bf4b47b0425ee637062796b657310ad0d42eb96d3021c89",
+      "bytes": 46876
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/loadedLanguageLexicon.json",
+      "sha256": "45954bc43de3a13abaf4eeff1ebd350d9fd4c186638820f05908b62d3e9b01a7",
+      "bytes": 1920
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/membershipFingerprint.js",
+      "sha256": "9869fe113aefa062855e55122ee02678a709ae149a5e0f3a10be25843d8fbcc0",
+      "bytes": 2751
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/membershipScoreReadback.js",
+      "sha256": "f3ccd1a51a6a01ed7669bc92e017f61ce09c7b64070d73086251c91a8636e6b8",
+      "bytes": 1946
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/projectionConfig.js",
+      "sha256": "7454052144d13ad1067f5cce77b97767339c4c261a052f001162d4cf4979a893",
+      "bytes": 796
+    },
+    {
+      "path": "tests/comparisonCapabilitySeparation.test.mjs",
+      "sha256": "be33e651c8f618707de60acc66e663d6aaf746831d1d635c8c5fa732692e5bf6",
+      "bytes": 15757
+    },
+    {
+      "path": "tests/comparisonGenerationTransaction.test.mjs",
+      "sha256": "f66b6e8eca431c564a8d006c98cb1bcb1e9811c1b51ff05ef22c4c9ca685d44f",
+      "bytes": 16304
+    },
+    {
+      "path": "tests/comparisonSelection.test.mjs",
+      "sha256": "bf9dbff39f30d47feb67b3cca3e23078ab102d416903bc10d23373d47edc8918",
+      "bytes": 6468
+    },
+    {
+      "path": "tests/comparisonSourceSnapshot.test.mjs",
+      "sha256": "72132d551bef6c4d829714dfb134e14d3e0df8f05f663a45a741761112c1db28",
+      "bytes": 5979
+    },
+    {
+      "path": "tests/cutoverReviewPacket.test.mjs",
+      "sha256": "0bb38bbf1e24ba4b16d3c18c5f8171297c04cbed48d838037593d110f665e840",
+      "bytes": 4912
+    },
+    {
+      "path": "tests/recordCandidateEvaluation.test.mjs",
+      "sha256": "13ca62a28073141c993011885065feb1afc8984721471418123245a63b841d41",
+      "bytes": 5729
+    },
+    {
+      "path": "verifier/comparisonPostgresConcurrency.py",
+      "sha256": "b74ee42533583e5550f1ff09b63d4267df5f18d353b06c380363820d68c161f2",
+      "bytes": 21526
+    },
+    {
+      "path": ".github/workflows/comparison-postgres.yml",
+      "sha256": "6b4b5772e5cec681723339eebc9566e4db57782760544ee76af911ecb2196770",
+      "bytes": 950
+    },
+    {
+      "path": ".github/workflows/deploy-cloud-run.yml",
+      "sha256": "2f01b077c304e28efa820d46fe589ca7b4d29af7af633bb0fa5a360513665040",
+      "bytes": 1213
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/README.md",
+      "sha256": "1e15dd0be4a46b335365e202a7ef4286d24f908064dd6e3409fbb45c3e9c0f94",
+      "bytes": 3056
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/verification-history.json",
+      "sha256": "017628fe257727cf85febe094a6f30fdb72a83a8562c88df90df05c54ca8f304",
+      "bytes": 2240
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/REVIEW_RESULT.json",
+      "sha256": "5b6e20cde110838453e0139a0195d70564d89f94a9cded2e0bb69a95c71a1ae3",
+      "bytes": 1694
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/OWNER_ACCEPTANCE.json",
+      "sha256": "408d377bdd691d0d49e13e5f580aa2c43fb6cd551e3bae8daddf3da0ba861253",
+      "bytes": 620
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/evaluation-policy.json",
+      "sha256": "7dbf83d21ea736430e07663753bcd55341fd6bfd3d754c8305b010c7cc7b598d",
+      "bytes": 7948
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/runtime-inventory.json",
+      "sha256": "26a6c43d713df427d9eb231122898ad0387bcf2d282af707159fd306f4dec0b4",
+      "bytes": 8184
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/runtime-permission-proposal.json",
+      "sha256": "242f6891255cbb5e135252a6d89171a07f9756c189183948411b2124ffb5de87",
+      "bytes": 4518
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/rpc-signatures.json",
+      "sha256": "dca018698d673dbd49641949ca2a139e3bf8269e777336ac7816e916c4257fd2",
+      "bytes": 5563
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/remaining-dependencies.json",
+      "sha256": "af49e483e80662c2d2be4414b30fbcd8f2adbd1b1594aa5fbcef8024a35e2964",
+      "bytes": 3829
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/known-limitations.json",
+      "sha256": "3d100ad1349fcc6e78baf55a70a77373531a8e587779fdf4ee469a2a00284628",
+      "bytes": 2519
+    }
+  ],
+  "excluded": [
+    "credentials, tokens, Vault secret values, JWT/session contents",
+    "auth.users emails and auth.sessions IP/user-agent/refresh-token material",
+    "private investigation records and raw production source payloads",
+    "live Edge Function source bodies (hashes/metadata only)",
+    "cron.job command text",
+    "tests/golden fixtures and other uncleared third-party article bodies",
+    "the 10 September 2026 owner decision brief body (NOT RECOVERED)",
+    "MIP_PIPELINE_SERVICE_KEY / GCP_SA_KEY values (names only)"
+  ],
+  "rights_check": "GitHub reports this repository as public. Existing repository presence does not establish disclosure rights. Included paths are MIP implementation, qualification, or operator documentation in the GitHub repository. No live payloads, Auth records, or uncleared third-party bodies were added. Redaction is by omission of whole classes, not by rewriting test assertions.",
+  "independent_reviewer_access": "Owner supplies this packet. This implementation agent does not contact Grok or transmit material.",
+  "secret_free": true
+}
