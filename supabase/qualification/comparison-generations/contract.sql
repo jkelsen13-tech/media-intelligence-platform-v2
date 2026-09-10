@@ -158,7 +158,7 @@ end $$;
 -- Production classification and recovery policy still require integration review.
 create function comparison_qualification.fail(
   p_generation uuid,p_token uuid,p_input_hash text,p_implementation text
-) returns text language plpgsql security definer set search_path='' as $
+) returns text language plpgsql security definer set search_path='' as $$
 declare j comparison_qualification.jobs; g comparison_qualification.generations;
   prior comparison_qualification.failure_reports;
 begin
@@ -183,7 +183,7 @@ begin
   update comparison_qualification.jobs set state='failed',failure_code='worker_reported_failure',
     lease_token=null,lease_expires_at=null where generation_id=p_generation;
   return 'failed';
-end $;
+end $$;
 
 alter table comparison_qualification.failure_reports enable row level security;
 alter table comparison_qualification.generations enable row level security;
