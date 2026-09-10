@@ -197,14 +197,14 @@
       "bytes": 1213
     },
     {
-      "path": "verifier/mip-production-cutover-review-v1/verification-history.json",
-      "sha256": "017628fe257727cf85febe094a6f30fdb72a83a8562c88df90df05c54ca8f304",
-      "bytes": 2240
-    },
-    {
       "path": "verifier/mip-production-cutover-review-v1/README.md",
       "sha256": "1e15dd0be4a46b335365e202a7ef4286d24f908064dd6e3409fbb45c3e9c0f94",
       "bytes": 3056
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/verification-history.json",
+      "sha256": "017628fe257727cf85febe094a6f30fdb72a83a8562c88df90df05c54ca8f304",
+      "bytes": 2240
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/REVIEW_RESULT.json",
