@@ -203,7 +203,7 @@ class ConcurrentContract(unittest.TestCase):
         self.blocked(self.b,self.a)
         retry=self.session()
         retry.start(failure(job))
-        self.blocked(retry,self.a)
+        self.blocked(retry,self.b)
         self.a.execute("commit;")
         with self.assertRaisesRegex(RuntimeError,"invalid or expired comparison lease"):
             self.b.finish()
