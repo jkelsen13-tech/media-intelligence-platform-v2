@@ -52,6 +52,8 @@ export const DISCLOSED_PATHS=[
   'verifier/comparisonPostgresConcurrency.py',
   '.github/workflows/comparison-postgres.yml',
   '.github/workflows/deploy-cloud-run.yml',
+  `${packetDir}/README.md`,
+  `${packetDir}/verification-history.json`,
   `${packetDir}/REVIEW_RESULT.json`,
   `${packetDir}/OWNER_ACCEPTANCE.json`,
   `${packetDir}/evaluation-policy.json`,
@@ -95,7 +97,7 @@ export function buildManifest({reviewPacketCommit=null}={}){
     mixed_candidate_rule:'If any hashed file differs from this manifest, the packet is not the frozen candidate.',
     hashed_files,
     excluded:EXCLUDED_FROM_PACKET,
-    rights_check:'Included paths are already in the private GitHub repository as MIP implementation, qualification, or operator documentation. No live payloads, Auth records, or uncleared third-party bodies were added. Redaction is by omission of whole classes, not by rewriting test assertions.',
+    rights_check:'GitHub reports this repository as public. Existing repository presence does not establish disclosure rights. Included paths are MIP implementation, qualification, or operator documentation in the GitHub repository. No live payloads, Auth records, or uncleared third-party bodies were added. Redaction is by omission of whole classes, not by rewriting test assertions.',
     independent_reviewer_access:'Owner supplies this packet. This implementation agent does not contact Grok or transmit material.',
     secret_free:true
   }

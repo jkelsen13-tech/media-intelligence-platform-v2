@@ -20,7 +20,8 @@
       "evidence_class": "supplied_implementation_agent_result_when_ci_runs",
       "local_this_run": "NOT_TESTED",
       "ci_run_34446067879_on_3b810b5": "Lock wait observed. After commit, head was withdrawn and released count was 0. The waiter session then raised BrokenPipeError during reset-role cleanup because ON_ERROR_STOP had already exited psql. That is a harness defect on candidate 3b810b5, not a completed review.",
-      "detail": "verifier/comparisonPostgresConcurrency.py refuses to run unless GITHUB_ACTIONS=true and MIP_DISPOSABLE_POSTGRES=comparison-qualification. The waiter session must not be reused after the expected failure."
+      "detail": "verifier/comparisonPostgresConcurrency.py refuses to run unless GITHUB_ACTIONS=true and MIP_DISPOSABLE_POSTGRES=comparison-qualification. The waiter session must not be reused after the expected failure.",
+      "corrected_ci": "14/14 passed on e0d240b05b245be551d70c5c2f4a2b9c517e8ae5; see verification-history.json and final PR receipt for later candidate reruns. Independent review still pending."
     },
     {
       "id": "semantic_held_out",

@@ -7,6 +7,8 @@
 
 This is the proposed disclosure packet for the owner to supply to a separate Grok technical-review track. This implementation agent does not transmit it.
 
+Start with `verifier/mip-production-cutover-review-v1/README.md` for the final exact-candidate receipt and `verification-history.json` for superseded versus current evidence. GitHub reports the repository as public; disclosure rights require owner review.
+
 ## Frozen candidates (do not mix)
 
 | Candidate | Commit | Meaning |
@@ -21,7 +23,7 @@ If a file’s bytes differ from the manifest, it is a different candidate. Candi
 | Class | What it is | In this packet |
 |---|---|---|
 | Artifact inspection | Reading checked-in source/docs | Qualification SQL, v16 snapshot, workflows, this packet |
-| Independently reproduced this run | Fresh live metadata this agent collected | Project status, Edge Function version/`verify_jwt`/`ezbr_sha256`, cron active flags, Auth **counts**, qualification schema **absent** |
+| Implementation-agent live inventory | Fresh live metadata the packet-preparation agent collected; not independent reviewer reproduction | Project status, Edge Function version/`verify_jwt`/`ezbr_sha256`, cron active flags, Auth **counts**, qualification schema **absent** |
 | Supplied implementation-agent results | Tests this agent ran in disposable PGlite | `tests/comparisonCapabilitySeparation.test.mjs` and sibling qualification tests when CI/local Node runs them |
 | Missing evidence / NOT TESTED / BLOCKED | Unperformed or excluded | See `known-limitations.json` |
 

@@ -2,7 +2,7 @@
   "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
   "disclosure_status": "proposed_not_transmitted",
   "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
-  "review_packet_commit": "6d3199d78038ad02177d4e29fdf24d1c5cd356cb",
+  "review_packet_commit": null,
   "review_packet_commit_resolution": "Stamp the git commit that contains the hashed_files tree. Do not mix hashes from a different commit.",
   "mixed_candidate_rule": "If any hashed file differs from this manifest, the packet is not the frozen candidate.",
   "hashed_files": [
@@ -48,8 +48,8 @@
     },
     {
       "path": "docs/MIP_PRODUCTION_CUTOVER_REVIEW_PACKET_2026-09-10.md",
-      "sha256": "706363e0c72f270492e4427289fb83475deb9586e59b185ae85675da27216e6f",
-      "bytes": 5788
+      "sha256": "de2dec8b0d56f26a873e515274788404bb06e027b47c24ce6ad164567caad563",
+      "bytes": 6104
     },
     {
       "path": "docs/MIP_SEMANTIC_EVALUATION_POLICY_PROPOSAL_2026-09-10.md",
@@ -78,8 +78,8 @@
     },
     {
       "path": "scripts/buildCutoverReviewPacket.mjs",
-      "sha256": "d26c3b1487937a260bc006f4b1ae74177360c0f72c98e4c7cde184a5fb78c6b5",
-      "bytes": 6558
+      "sha256": "1f02254bf1e0032c0a5fb015e812eca7fe19d9eec1917127af2b287854d3e34a",
+      "bytes": 6720
     },
     {
       "path": "scripts/evaluateRecordCandidates.mjs",
@@ -197,6 +197,16 @@
       "bytes": 1213
     },
     {
+      "path": "verifier/mip-production-cutover-review-v1/verification-history.json",
+      "sha256": "017628fe257727cf85febe094a6f30fdb72a83a8562c88df90df05c54ca8f304",
+      "bytes": 2240
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/README.md",
+      "sha256": "1e15dd0be4a46b335365e202a7ef4286d24f908064dd6e3409fbb45c3e9c0f94",
+      "bytes": 3056
+    },
+    {
       "path": "verifier/mip-production-cutover-review-v1/REVIEW_RESULT.json",
       "sha256": "5b6e20cde110838453e0139a0195d70564d89f94a9cded2e0bb69a95c71a1ae3",
       "bytes": 1694
@@ -233,8 +243,8 @@
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/known-limitations.json",
-      "sha256": "f0b84fd18858a748700ad3f0be722e7060122a8a40c9defcd185ad443aeaefd4",
-      "bytes": 2323
+      "sha256": "3d100ad1349fcc6e78baf55a70a77373531a8e587779fdf4ee469a2a00284628",
+      "bytes": 2519
     }
   ],
   "excluded": [
@@ -247,7 +257,7 @@
     "the 10 September 2026 owner decision brief body (NOT RECOVERED)",
     "MIP_PIPELINE_SERVICE_KEY / GCP_SA_KEY values (names only)"
   ],
-  "rights_check": "Included paths are already in the private GitHub repository as MIP implementation, qualification, or operator documentation. No live payloads, Auth records, or uncleared third-party bodies were added. Redaction is by omission of whole classes, not by rewriting test assertions.",
+  "rights_check": "GitHub reports this repository as public. Existing repository presence does not establish disclosure rights. Included paths are MIP implementation, qualification, or operator documentation in the GitHub repository. No live payloads, Auth records, or uncleared third-party bodies were added. Redaction is by omission of whole classes, not by rewriting test assertions.",
   "independent_reviewer_access": "Owner supplies this packet. This implementation agent does not contact Grok or transmit material.",
   "secret_free": true
 }
