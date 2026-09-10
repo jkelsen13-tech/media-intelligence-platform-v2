@@ -286,6 +286,56 @@ class ConcurrentContract(unittest.TestCase):
         self.assertEqual(self.admin("select count(*) from comparison_qualification.generations"),"0")
         self.assertEqual(self.admin("select count(*) from comparison_qualification.jobs"),"0")
 
+
+    def selection_fixture(self):
+        self.admin(Path("supabase/qualification/comparison-generations/selection.sql").read_text())
+        self.a.execute(enqueue())
+        job=self.claim(self.a)
+        self.a.execute(completion(job))
+        out=json.loads(self.admin("select row_to_json(o) from comparison_qualification.outputs o"))
+        return out
+
+    def selection_sql(self, action, output, predecessor=None):
+        previous=quoted(predecessor) if predecessor else "null"
+        generation=quoted(output["generation_id"]) if output else "null"
+        digest=quoted(output["output_hash"]) if output else "null"
+        return ("select comparison_qualification.select_output("+quoted(action)+",'synthetic',"+
+                previous+","+generation+","+digest+",'{}');")
+
+    def test_selection_rechecks_predecessor_after_concurrent_commit(self):
+        output=self.selection_fixture()
+        first=str(uuid.uuid4())
+        self.a.execute("begin;")
+        self.a.execute(self.selection_sql(first,output))
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.selection_history"),"0")
+        self.b.start(self.selection_sql(str(uuid.uuid4()),output))
+        self.blocked(self.b,self.a)
+        self.a.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"stale selection predecessor"):
+            self.b.finish()
+        self.assertEqual(self.admin("select selection_id from comparison_qualification.selection_heads"),first)
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.selection_history"),"1")
+
+    def test_selection_rollback_and_concurrent_retry_preserve_withdrawal(self):
+        output=self.selection_fixture()
+        first=str(uuid.uuid4())
+        self.a.execute("begin;")
+        self.a.execute(self.selection_sql(first,output))
+        self.b.start(self.selection_sql(first,output))
+        self.blocked(self.b,self.a)
+        self.a.execute("rollback;")
+        self.assertEqual(self.b.finish(),first)
+        withdrawn=str(uuid.uuid4())
+        self.a.execute("begin;")
+        self.a.execute(self.selection_sql(withdrawn,None,first))
+        self.b.start(self.selection_sql(first,output))
+        self.blocked(self.b,self.a)
+        self.a.execute("commit;")
+        self.assertEqual(self.b.finish(),first)
+        self.assertEqual(self.admin("select selection_id from comparison_qualification.selection_heads"),withdrawn)
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.selection_history"),"2")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.outputs"),"1")
+
 if __name__ == "__main__":
     run("postgres","create role anon;create role authenticated;create role service_role bypassrls;")
     print("MIP_PG_VERSION="+run("postgres","select version();"),flush=True)
