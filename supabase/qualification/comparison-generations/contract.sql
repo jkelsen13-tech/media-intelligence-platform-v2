@@ -21,7 +21,7 @@ create table comparison_qualification.jobs (
   lease_expires_at timestamptz,
   attempt integer not null default 0 check(attempt between 0 and 3),
   available_at timestamptz not null default clock_timestamp() check(isfinite(available_at)),
-  failure_code text check(failure_code='lease_attempts_exhausted'),
+  failure_code text check(failure_code in ('lease_attempts_exhausted','worker_reported_failure')),
   check((state='failed')=(failure_code is not null)),
   check((state='processing' and lease_token is not null and lease_expires_at is not null and isfinite(lease_expires_at))
     or (state<>'processing' and lease_token is null and lease_expires_at is null))
@@ -36,6 +36,18 @@ create table comparison_qualification.outputs (
   completed_at timestamptz not null default clock_timestamp() check(isfinite(completed_at))
 );
 
+-- A terminal worker report is operational history, never evidence or publication.
+-- No free-form error payload is retained by this boundary.
+create table comparison_qualification.failure_reports (
+  generation_id uuid primary key references comparison_qualification.generations(id),
+  input_hash text not null,
+  implementation_ref text not null,
+  lease_token uuid not null,
+  attempt integer not null check(attempt between 1 and 3),
+  failure_code text not null check(failure_code='worker_reported_failure'),
+  reported_at timestamptz not null default clock_timestamp() check(isfinite(reported_at))
+);
+
 create function comparison_qualification.reject_rewrite() returns trigger
 language plpgsql security invoker set search_path='' as $$
 begin raise exception 'immutable comparison generation history'; end $$;
@@ -48,6 +60,11 @@ for each statement execute function comparison_qualification.reject_rewrite();
 create trigger no_output_truncate before truncate on comparison_qualification.outputs
 for each statement execute function comparison_qualification.reject_rewrite();
 create trigger no_job_truncate before truncate on comparison_qualification.jobs
+for each statement execute function comparison_qualification.reject_rewrite();
+
+create trigger immutable_failure_report before update or delete on comparison_qualification.failure_reports
+for each row execute function comparison_qualification.reject_rewrite();
+create trigger no_failure_report_truncate before truncate on comparison_qualification.failure_reports
 for each statement execute function comparison_qualification.reject_rewrite();
 
 -- Each observation is retained separately. Identity is not event time or a commit-order watermark.
@@ -137,6 +154,38 @@ begin
   return 'completed';
 end $$;
 
+-- Qualification policy: explicit failure is terminal, with no automatic retry/reset.
+-- Production classification and recovery policy still require integration review.
+create function comparison_qualification.fail(
+  p_generation uuid,p_token uuid,p_input_hash text,p_implementation text
+) returns text language plpgsql security definer set search_path='' as $
+declare j comparison_qualification.jobs; g comparison_qualification.generations;
+  prior comparison_qualification.failure_reports;
+begin
+  if p_token is null then raise exception 'invalid comparison failure token'; end if;
+  select * into j from comparison_qualification.jobs where generation_id=p_generation for update;
+  if not found then raise exception 'unknown comparison generation'; end if;
+  select * into strict g from comparison_qualification.generations where id=p_generation;
+  if p_input_hash is distinct from g.input_hash or p_implementation is distinct from g.implementation_ref then
+    raise exception 'comparison input binding mismatch';
+  end if;
+  if j.state='failed' and j.failure_code='worker_reported_failure' then
+    select * into strict prior from comparison_qualification.failure_reports where generation_id=p_generation;
+    if prior.lease_token=p_token and prior.input_hash=p_input_hash
+      and prior.implementation_ref=p_implementation then return 'failed'; end if;
+    raise exception 'comparison failure conflict';
+  end if;
+  if j.state<>'processing' or j.lease_token is distinct from p_token or j.lease_expires_at<=clock_timestamp() then
+    raise exception 'invalid or expired comparison lease';
+  end if;
+  insert into comparison_qualification.failure_reports(generation_id,input_hash,implementation_ref,lease_token,attempt,failure_code)
+    values(p_generation,p_input_hash,p_implementation,p_token,j.attempt,'worker_reported_failure');
+  update comparison_qualification.jobs set state='failed',failure_code='worker_reported_failure',
+    lease_token=null,lease_expires_at=null where generation_id=p_generation;
+  return 'failed';
+end $;
+
+alter table comparison_qualification.failure_reports enable row level security;
 alter table comparison_qualification.generations enable row level security;
 alter table comparison_qualification.jobs enable row level security;
 alter table comparison_qualification.outputs enable row level security;
@@ -146,5 +195,6 @@ grant usage on schema comparison_qualification to service_role;
 grant select on all tables in schema comparison_qualification to service_role;
 grant execute on function comparison_qualification.enqueue(text,jsonb,text,timestamptz),
   comparison_qualification.claim(),
+  comparison_qualification.fail(uuid,uuid,text,text),
   comparison_qualification.complete(uuid,uuid,text,text,jsonb) to service_role;
 commit;

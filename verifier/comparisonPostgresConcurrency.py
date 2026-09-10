@@ -36,6 +36,10 @@ def completion(job, output='{"claims":[]}'):
             job["implementation_ref"], output]
     return "select comparison_qualification.complete(" + ",".join(map(quoted,args)) + "::jsonb);"
 
+def failure(job):
+    args = [job["generation_id"], job["lease_token"], job["input_hash"], job["implementation_ref"]]
+    return "select comparison_qualification.fail(" + ",".join(map(quoted,args)) + ");"
+
 class Session:
     def __init__(self, database):
         self.process = subprocess.Popen(BASE + ["-d",database], stdin=subprocess.PIPE,
@@ -187,6 +191,53 @@ class ConcurrentContract(unittest.TestCase):
         self.assertEqual(self.admin("select state||':'||attempt||':'||failure_code from comparison_qualification.jobs where generation_id="+quoted(first)),
                          "failed:3:lease_attempts_exhausted")
         self.assertEqual(self.admin("select count(*) from comparison_qualification.outputs"),"0")
+
+    def test_failure_commit_blocks_completion_and_exact_report_converges(self):
+        self.a.execute(enqueue())
+        job=self.claim(self.a)
+        self.a.execute("begin;")
+        self.assertEqual(self.a.execute(failure(job)),"failed")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.failure_reports"),"0")
+        self.assertEqual(self.admin("select state from comparison_qualification.jobs"),"processing")
+        self.b.start(completion(job))
+        self.blocked(self.b,self.a)
+        retry=self.session()
+        retry.start(failure(job))
+        self.blocked(retry,self.a)
+        self.a.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"invalid or expired comparison lease"):
+            self.b.finish()
+        self.assertEqual(retry.finish(),"failed")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.failure_reports"),"1")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.outputs"),"0")
+        self.assertEqual(self.admin("select state from comparison_qualification.jobs"),"failed")
+
+    def test_completion_commit_rejects_waiting_failure(self):
+        self.a.execute(enqueue())
+        job=self.claim(self.a)
+        self.a.execute("begin;")
+        self.a.execute(completion(job))
+        self.b.start(failure(job))
+        self.blocked(self.b,self.a)
+        self.a.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"invalid or expired comparison lease"):
+            self.b.finish()
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.failure_reports"),"0")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.outputs"),"1")
+        self.assertEqual(self.admin("select state from comparison_qualification.jobs"),"completed")
+
+    def test_failure_rollback_allows_waiting_completion(self):
+        self.a.execute(enqueue())
+        job=self.claim(self.a)
+        self.a.execute("begin;")
+        self.a.execute(failure(job))
+        self.b.start(completion(job))
+        self.blocked(self.b,self.a)
+        self.a.execute("rollback;")
+        self.assertEqual(self.b.finish(),"completed")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.failure_reports"),"0")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.outputs"),"1")
+        self.assertEqual(self.admin("select state from comparison_qualification.jobs"),"completed")
 
 if __name__ == "__main__":
     run("postgres","create role anon;create role authenticated;create role service_role bypassrls;")

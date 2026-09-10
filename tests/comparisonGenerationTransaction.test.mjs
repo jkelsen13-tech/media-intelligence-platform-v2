@@ -106,7 +106,7 @@ test('browser roles and direct worker mutations cannot bypass the API; retained 
   const roles=(await db.query("select r,has_schema_privilege(r,'comparison_qualification','usage') usage,has_function_privilege(r,'comparison_qualification.claim()','execute') callable from unnest(array['anon','authenticated']) r")).rows
   assert.ok(roles.every(x=>!x.usage&&!x.callable))
   const tables=(await db.query("select c.relname,c.relrowsecurity,has_table_privilege('service_role',c.oid,'insert') ins,has_table_privilege('service_role',c.oid,'update') upd,has_table_privilege('service_role',c.oid,'delete') del from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='comparison_qualification' and c.relkind='r'")).rows
-  assert.equal(tables.length,3);assert.ok(tables.every(x=>x.relrowsecurity&&!x.ins&&!x.upd&&!x.del))
+  assert.equal(tables.length,4);assert.ok(tables.every(x=>x.relrowsecurity&&!x.ins&&!x.upd&&!x.del))
   await enqueue(db,inputs());const j=await claim(db);await complete(db,j,{claims:[]})
   await assert.rejects(db.exec("update comparison_qualification.jobs set state='completed'"),/permission denied/)
   await assert.rejects(db.exec("delete from comparison_qualification.outputs"),/permission denied/)
@@ -160,4 +160,78 @@ test('job state constraints reject partial leases and terminal failure forgery',
     "failure_code='lease_attempts_exhausted'",
     "attempt=4"
   ]) await assert.rejects(db.exec('update comparison_qualification.jobs set '+assignment),/check constraint/)
+})
+
+const fail=(db,j)=>db.query('select comparison_qualification.fail($1,$2,$3,$4) state',
+  [j.generation_id,j.lease_token,j.input_hash,j.implementation_ref]).then(r=>r.rows[0].state)
+
+test('explicit failure is retained atomically, replay is stable and independent generations continue',async t=>{
+  const db=await fixture(t), id=await enqueue(db,inputs()), j=await claim(db)
+  const sibling=await enqueue(db,{independent:true})
+  assert.equal(await fail(db,j),'failed')
+  const before=(await db.query('select * from comparison_qualification.failure_reports')).rows
+  assert.equal(before.length,1)
+  assert.equal(before[0].generation_id,id)
+  assert.equal(before[0].input_hash,j.input_hash)
+  assert.equal(before[0].implementation_ref,j.implementation_ref)
+  assert.equal(before[0].lease_token,j.lease_token)
+  assert.equal(before[0].attempt,1)
+  assert.equal(before[0].failure_code,'worker_reported_failure')
+  assert.equal(await fail(db,j),'failed')
+  assert.deepEqual((await db.query('select * from comparison_qualification.failure_reports')).rows,before)
+  assert.equal(await enqueue(db,inputs()),id)
+  await assert.rejects(complete(db,j,{claims:[]}),/lease/)
+  assert.equal((await db.query('select count(*)::int n from comparison_qualification.outputs')).rows[0].n,0)
+  const other=await claim(db);assert.equal(other.generation_id,sibling)
+  assert.equal(await complete(db,other,{claims:[]}),'completed')
+  assert.equal(await claim(db),null)
+})
+
+test('failure rejects foreign bindings, expired or replaced leases, completed jobs and failure conflicts',async t=>{
+  const db=await fixture(t);await enqueue(db,inputs());const old=await claim(db)
+  for(const changed of [{input_hash:null},{implementation_ref:'foreign'},{lease_token:null},{generation_id:'00000000-0000-0000-0000-000000000000'}]){
+    await assert.rejects(fail(db,{...old,...changed}))
+  }
+  await db.exec("reset role;update comparison_qualification.jobs set lease_expires_at=clock_timestamp()-interval '31 seconds';set role service_role")
+  await assert.rejects(fail(db,old),/lease/)
+  const current=await claim(db)
+  await assert.rejects(fail(db,old),/lease/)
+  assert.equal(await fail(db,current),'failed')
+  await assert.rejects(fail(db,old),/conflict/)
+  await enqueue(db,{other:true});const other=await claim(db)
+  await complete(db,other,{claims:[]})
+  await assert.rejects(fail(db,other),/lease/)
+  assert.equal((await db.query('select count(*)::int n from comparison_qualification.failure_reports')).rows[0].n,1)
+})
+
+test('failure rollback retains active lease and leaves no durable report',async t=>{
+  const db=await fixture(t);await enqueue(db,inputs());const j=await claim(db)
+  await db.exec(`reset role;
+    create function comparison_qualification.fixture_fail_report() returns trigger language plpgsql as $$
+    begin if new.state='failed' then raise exception 'injected report failure';end if;return new;end $$;
+    create trigger fixture_failure before update on comparison_qualification.jobs
+      for each row execute function comparison_qualification.fixture_fail_report();
+    set role service_role;`)
+  await assert.rejects(fail(db,j),/injected report failure/)
+  assert.equal((await db.query('select count(*)::int n from comparison_qualification.failure_reports')).rows[0].n,0)
+  assert.equal((await state(db))[0].lease_token,j.lease_token)
+  assert.equal((await state(db))[0].state,'processing')
+  await db.exec('reset role;drop trigger fixture_failure on comparison_qualification.jobs;set role service_role')
+  assert.equal(await complete(db,j,{claims:[]}),'completed')
+})
+
+test('failure report API denies browser access and immutable history denies worker and owner rewrites',async t=>{
+  const db=await fixture(t);await enqueue(db,inputs());const j=await claim(db);await fail(db,j)
+  for(const role of ['anon','authenticated']){
+    await db.exec('reset role;set role '+role)
+    await assert.rejects(fail(db,j),/permission denied/)
+    await assert.rejects(db.exec('select * from comparison_qualification.failure_reports'),/permission denied/)
+  }
+  await db.exec('reset role;set role service_role')
+  await assert.rejects(db.exec('delete from comparison_qualification.failure_reports'),/permission denied/)
+  await db.exec('reset role')
+  for(const action of ["update comparison_qualification.failure_reports set attempt=2",
+    'delete from comparison_qualification.failure_reports','truncate comparison_qualification.failure_reports']){
+    await assert.rejects(db.exec(action),/immutable/)
+  }
 })
