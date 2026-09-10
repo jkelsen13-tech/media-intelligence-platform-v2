@@ -239,6 +239,53 @@ class ConcurrentContract(unittest.TestCase):
         self.assertEqual(self.admin("select count(*) from comparison_qualification.outputs"),"1")
         self.assertEqual(self.admin("select state from comparison_qualification.jobs"),"completed")
 
+    def source_fixture(self):
+        self.admin(Path("supabase/qualification/comparison-generations/source-fixture.sql").read_text())
+        self.admin(Path("supabase/qualification/comparison-generations/source-snapshot.sql").read_text())
+
+    def test_source_capture_keeps_one_snapshot_during_committed_multi_table_correction(self):
+        self.source_fixture()
+        # Fixture-only view barrier forces the capture to pause after its snapshot starts.
+        self.admin("""alter table public.events rename to source_events;
+          create function public.fixture_pause() returns boolean language plpgsql as $$
+          begin perform pg_advisory_xact_lock(987123); return true; end $$;
+          create view public.events as select * from public.source_events where public.fixture_pause();""")
+        self.a.execute("select pg_advisory_lock(987123);")
+        self.b.start("select comparison_qualification.capture_source('{}','qualification:source-snapshot');")
+        self.blocked(self.b,self.a)
+        self.admin("""begin;
+          update public.source_events set canonical_title='Corrected event';
+          update public.articles set summary='Corrected article';
+          update public.event_articles set membership_method='revised';
+          update public.pipeline_config set value='0.7';
+          commit;""")
+        self.a.execute("select pg_advisory_unlock(987123);")
+        first=self.b.finish()
+        old=json.loads(self.admin("select input_payload from comparison_qualification.generations where id="+quoted(first)))
+        self.assertEqual(old["eventInputs"][0]["event"]["canonical_title"],"Council water funding")
+        self.assertEqual(old["eventInputs"][0]["members"][0]["article"]["summary"],"Council approves water infrastructure funding")
+        self.assertEqual(old["eventInputs"][0]["members"][0]["membership"]["membership_method"],"reviewed")
+        self.assertEqual(old["configRows"][0]["value"],0.6)
+        later=self.b.execute("select comparison_qualification.capture_source('{}','qualification:source-snapshot');")
+        new=json.loads(self.admin("select input_payload from comparison_qualification.generations where id="+quoted(later)))
+        self.assertNotEqual(first,later)
+        self.assertEqual(new["eventInputs"][0]["event"]["canonical_title"],"Corrected event")
+        self.assertEqual(new["eventInputs"][0]["members"][0]["article"]["summary"],"Corrected article")
+        self.assertEqual(new["eventInputs"][0]["members"][0]["membership"]["membership_method"],"revised")
+        self.assertEqual(new["configRows"][0]["value"],0.7)
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.jobs where state='pending'"),"2")
+        self.assertEqual(json.loads(self.admin("select input_payload from comparison_qualification.generations where id="+quoted(first))),old)
+
+    def test_source_capture_retention_and_queue_rollback_are_invisible_to_observer(self):
+        self.source_fixture()
+        self.a.execute("begin;")
+        self.a.execute("select comparison_qualification.capture_source('{}','qualification:source-snapshot');")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.generations"),"0")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.jobs"),"0")
+        self.a.execute("rollback;")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.generations"),"0")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.jobs"),"0")
+
 if __name__ == "__main__":
     run("postgres","create role anon;create role authenticated;create role service_role bypassrls;")
     print("MIP_PG_VERSION="+run("postgres","select version();"),flush=True)
