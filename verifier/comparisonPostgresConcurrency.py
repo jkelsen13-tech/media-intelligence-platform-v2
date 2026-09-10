@@ -54,6 +54,8 @@ class Session:
         self.pid = int(self.execute("select pg_backend_pid();"))
         self.execute("set role service_role;")
     def start(self, sql):
+        if self.process.poll() is not None:
+            raise RuntimeError("psql session already exited")
         self.marker = "done_" + uuid.uuid4().hex
         self.process.stdin.write(sql + "\n\\echo " + self.marker + "\n")
         self.process.stdin.flush()
@@ -370,8 +372,7 @@ class ConcurrentContract(unittest.TestCase):
         self.assertEqual(self.admin("select h.state from comparison_qualification.publication_heads p join comparison_qualification.publication_history h on h.id=p.publication_id"),"withdrawn")
         self.assertEqual(self.admin("select count(*) from comparison_qualification.publication_history where state='released'"),"0")
         self.admin("update comparison_qualification.operating_gates set publication_release_enabled=false;")
-        self.a.execute("reset role;set role service_role;")
-        self.b.execute("reset role;set role service_role;")
+        # ON_ERROR_STOP closes the waiter after the expected failure; do not reuse session b.
 
 if __name__ == "__main__":
     run("postgres","create role anon;create role authenticated;create role service_role bypassrls;")

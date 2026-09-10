@@ -12,9 +12,9 @@ This is the proposed disclosure packet for the owner to supply to a separate Gro
 | Candidate | Commit | Meaning |
 |---|---|---|
 | Operational baseline | `1dc317200b7a928fad85d06b43351b60e2a50d92` | `main` after PR #146. GitHub `main` still pointed here when this packet was prepared. |
-| Review packet tree | SHA-256 list in `verifier/mip-production-cutover-review-v1/disclosure-manifest.json` | Isolated capability work plus secret-free docs/JSON. `review_packet_commit` is stamped to the git commit that contains this tree. |
+| Review packet tree | SHA-256 list in `verifier/mip-production-cutover-review-v1/disclosure-manifest.json` | Isolated capability work plus secret-free docs/JSON. `review_packet_commit` is stamped to the git commit that contains this tree. A later stamp supersedes an earlier one; do not mix hashes across stamps. |
 
-If a file’s bytes differ from the manifest, it is a different candidate. Live inventory in `runtime-inventory.json` is dated evidence from this run, not from the baseline commit’s wall-clock.
+If a file’s bytes differ from the manifest, it is a different candidate. Candidate `3b810b538e409ad023e66deb83299d6092462636` is superseded by the current stamp after the native-concurrency waiter-session cleanup fix. Live inventory in `runtime-inventory.json` is dated evidence from this run, not from the baseline commit’s wall-clock.
 
 ## Evidence classes (reviewer must keep them distinct)
 

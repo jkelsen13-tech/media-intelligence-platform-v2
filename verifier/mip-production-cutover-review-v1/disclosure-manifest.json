@@ -2,7 +2,7 @@
   "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
   "disclosure_status": "proposed_not_transmitted",
   "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
-  "review_packet_commit": "3b810b538e409ad023e66deb83299d6092462636",
+  "review_packet_commit": null,
   "review_packet_commit_resolution": "Stamp the git commit that contains the hashed_files tree. Do not mix hashes from a different commit.",
   "mixed_candidate_rule": "If any hashed file differs from this manifest, the packet is not the frozen candidate.",
   "hashed_files": [
@@ -48,8 +48,8 @@
     },
     {
       "path": "docs/MIP_PRODUCTION_CUTOVER_REVIEW_PACKET_2026-09-10.md",
-      "sha256": "fb5cf14a6c6595c57f8c92252df9881845661c7c84afc29f1d8278cf2659967b",
-      "bytes": 5569
+      "sha256": "706363e0c72f270492e4427289fb83475deb9586e59b185ae85675da27216e6f",
+      "bytes": 5788
     },
     {
       "path": "docs/MIP_SEMANTIC_EVALUATION_POLICY_PROPOSAL_2026-09-10.md",
@@ -183,8 +183,8 @@
     },
     {
       "path": "verifier/comparisonPostgresConcurrency.py",
-      "sha256": "b6da6167bf92e4a48e6bb1c6ededbdd22e0abbdce892a54e47f9dbfc4e8b07b8",
-      "bytes": 21446
+      "sha256": "b74ee42533583e5550f1ff09b63d4267df5f18d353b06c380363820d68c161f2",
+      "bytes": 21526
     },
     {
       "path": ".github/workflows/comparison-postgres.yml",
@@ -233,8 +233,8 @@
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/known-limitations.json",
-      "sha256": "2adf1bd5dd2ef594547039c015bc5634db4f0857a21a30b80ce5f9eb1de58074",
-      "bytes": 1945
+      "sha256": "f0b84fd18858a748700ad3f0be722e7060122a8a40c9defcd185ad443aeaefd4",
+      "bytes": 2323
     }
   ],
   "excluded": [
