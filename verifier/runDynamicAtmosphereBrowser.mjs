@@ -59,10 +59,37 @@ try{
         let requests=0
         const count=r=>{if(/terrarium|tile.openstreetmap.org/.test(r.url()))requests++}
         page.on('request',count)
+
+        // Checkbox actions scroll the phone viewport away from the globe.
+        // Restore the viewport before waiting for the request-render scene to settle.
+        // A different PNG is insufficient: a blank globe also differs from the baseline.
+        async function captureVisibleGlobe(label){
+          await page.locator('.wv-map-host').scrollIntoViewIfNeeded()
+          await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getRenderState().globeTilesLoaded,{},{timeout:30000})
+          await delay(500)
+          const png=await page.locator('.wv-map-host').screenshot({type:'png'})
+          const coverage=await page.evaluate(async data=>{
+            const img=new Image();img.src=data;await img.decode()
+            const canvas=document.createElement('canvas');canvas.width=img.width;canvas.height=img.height
+            const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0)
+            const x=Math.floor(img.width*0.40),y=Math.floor(img.height*0.30)
+            const w=Math.floor(img.width*0.20),h=Math.floor(img.height*0.40)
+            const pixels=ctx.getImageData(x,y,w,h).data
+            let visible=0
+            for(let i=0;i<pixels.length;i+=4){
+              const max=Math.max(pixels[i],pixels[i+1],pixels[i+2]),min=Math.min(pixels[i],pixels[i+1],pixels[i+2])
+              if(max>50&&max-min>10)visible++
+            }
+            return visible/(w*h)
+          },'data:image/png;base64,'+png.toString('base64'))
+          console.log('MIP_DYNAMIC_GLOBE_COVERAGE='+JSON.stringify({engine,width,live,label,coverage}))
+          assert.ok(coverage>0.10,label+' must contain the visible globe, not only stars or UI')
+          return png
+        }
         const start=Date.now()
-        const off=await page.locator('.wv-map-host').screenshot({type:'png'})
+        const off=await captureVisibleGlobe('off')
         await dynamic.check();await delay(500)
-        const after=await state(),on=await page.locator('.wv-map-host').screenshot({type:'png'})
+        const on=await captureVisibleGlobe('on'),after=await state()
         assert.equal(off.equals(on),false,'dynamic atmosphere must change actual pixels at the qualification pose')
         assert.equal(after.recordedLighting.dynamicAtmosphere,true)
         assert.deepEqual({...after.recordedLighting,dynamicAtmosphere:false},before.recordedLighting)
