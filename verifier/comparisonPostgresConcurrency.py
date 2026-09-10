@@ -336,6 +336,43 @@ class ConcurrentContract(unittest.TestCase):
         self.assertEqual(self.admin("select count(*) from comparison_qualification.selection_history"),"2")
         self.assertEqual(self.admin("select count(*) from comparison_qualification.outputs"),"1")
 
+    def capability_fixture(self):
+        output=self.selection_fixture()
+        self.admin(Path("supabase/qualification/comparison-generations/capability.sql").read_text())
+        return output
+
+    def test_bound_release_rechecks_head_after_concurrent_withdrawal(self):
+        output=self.capability_fixture()
+        self.admin("select comparison_qualification.bind_runtime('isolated-runtime-1','qual_selector','selector_select');")
+        self.admin("select comparison_qualification.bind_runtime('isolated-runtime-1','qual_publisher','publisher_propose');")
+        self.admin("select comparison_qualification.bind_runtime('isolated-runtime-1','qual_publisher','publisher_release');")
+        selector=self.admin("select comparison_qualification.issue_session('qual_selector','isolated-runtime-1','2999-01-01');")
+        publisher=self.admin("select comparison_qualification.issue_session('qual_publisher','isolated-runtime-1','2999-01-01');")
+        self.a.execute("reset role;set role qual_selector;")
+        first=str(uuid.uuid4())
+        self.a.execute("select comparison_qualification.selector_select("+quoted(str(uuid.uuid4()))+","+quoted(selector)+
+                       ",'isolated-runtime-1',"+quoted(first)+",'synthetic',null,"+quoted(output["generation_id"])+
+                       ","+quoted(output["output_hash"])+",'{}');")
+        self.b.execute("reset role;set role qual_publisher;")
+        self.b.execute("select comparison_qualification.publisher_propose("+quoted(str(uuid.uuid4()))+","+quoted(publisher)+
+                       ",'isolated-runtime-1','synthetic');")
+        self.admin("update comparison_qualification.operating_gates set publication_release_enabled=true;")
+        self.a.execute("begin;")
+        withdraw=str(uuid.uuid4())
+        self.a.execute("select comparison_qualification.selector_select("+quoted(str(uuid.uuid4()))+","+quoted(selector)+
+                       ",'isolated-runtime-1',"+quoted(withdraw)+",'synthetic',"+quoted(first)+",null,null,'{}');")
+        self.b.start("select comparison_qualification.publisher_release("+quoted(str(uuid.uuid4()))+","+quoted(publisher)+
+                     ",'isolated-runtime-1','synthetic');")
+        self.blocked(self.b,self.a)
+        self.a.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"unbound publication selection"):
+            self.b.finish()
+        self.assertEqual(self.admin("select h.state from comparison_qualification.publication_heads p join comparison_qualification.publication_history h on h.id=p.publication_id"),"withdrawn")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.publication_history where state='released'"),"0")
+        self.admin("update comparison_qualification.operating_gates set publication_release_enabled=false;")
+        self.a.execute("reset role;set role service_role;")
+        self.b.execute("reset role;set role service_role;")
+
 if __name__ == "__main__":
     run("postgres","create role anon;create role authenticated;create role service_role bypassrls;")
     print("MIP_PG_VERSION="+run("postgres","select version();"),flush=True)
