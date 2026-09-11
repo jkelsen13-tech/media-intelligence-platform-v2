@@ -1,0 +1,271 @@
+{
+  "schema": "MIP_PR151_INDEPENDENT_NATIVE_POSTGRES_REVIEW_v1",
+  "evidence_class": "INDEPENDENT_REVIEWER_EXECUTION_ACCESS_BLOCKED",
+  "production_cutover": "ON_HOLD",
+  "review_gate": "ISOLATED_TRANSACTIONAL_INTERFACE_VERIFICATION",
+  "owner_acceptance": "NOT_SUBMITTED",
+  "recorded_at_utc": "2026-09-11T21:43:33Z",
+  "reviewer_identity": {
+    "distinct_from_implementation_run": true,
+    "excluded_implementation_run": "codex-root-post-review-reconciliation-20260911",
+    "cursor_bcid": "bc-01a09268-4963-7ccc-887c-79556bb880d0",
+    "cursor_agent_name": "Pr 151 postgresql verification",
+    "model": "cursor-grok-4.6-xhigh",
+    "model_public_name": "Cursor Grok 4.6",
+    "agent_url": "https://cursor.com/agents/bc-01a09268-4963-7ccc-887c-79556bb880d0",
+    "source": "mobile",
+    "github_cli_login": "cursor",
+    "github_mcp_get_me_login": "jkelsen13-tech",
+    "personal_contact_omitted": true
+  },
+  "github_trigger": {
+    "fresh_run_initiated": false,
+    "initiated_by_reviewer": false,
+    "initiated_by_owner": false,
+    "trigger_actor": null,
+    "attempted_actor_login": "cursor",
+    "event": null
+  },
+  "candidate": {
+    "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+    "pr": 151,
+    "branch": "codex/post-review-reconciliation-20260911",
+    "head": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26",
+    "tree": "b81e3d75be73205f69bcefc1681203050552ec07",
+    "head_matches_expected": true,
+    "tree_matches_expected": true,
+    "manifest_path": "verifier/mip-production-cutover-review-v1/disclosure-manifest-post-review.json",
+    "manifest_sha256": "061f21964ee084257e1b3effcaa0b5c4f9057b4034ecda235bd6b918dcdebf59",
+    "manifest_bytes": 14560,
+    "manifest_sha256_matches_expected": true,
+    "hashed_files_in_manifest": 68
+  },
+  "held_prs_unmerged": {
+    "pr149": {"number": 149, "draft": true, "state": "OPEN", "merged": false, "head": "6c716619d3b312682dba2c4c8211936f7f911895"},
+    "pr150": {"number": 150, "draft": true, "state": "OPEN", "merged": false, "head": "b04d13980475892c921e52643599811b451a09c3"},
+    "pr151": {"number": 151, "draft": true, "state": "OPEN", "merged": false, "head": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26"}
+  },
+  "authorized_file_hashes": [
+    {"path": ".github/workflows/comparison-postgres.yml", "bytes": 1751, "sha256": "96c288466b8b252b87158631f549e6ba0e015bbf90aba06e8bb6784af484a347", "git_blob": "dfac22454785cd74c4a35a5f9ced3744b2d4886f", "manifest_match": true},
+    {"path": "verifier/comparisonPostgresConcurrency.py", "bytes": 21526, "sha256": "b74ee42533583e5550f1ff09b63d4267df5f18d353b06c380363820d68c161f2", "git_blob": "815902d79aa8986a54d33de1f4b9432eca181278", "manifest_match": true},
+    {"path": "verifier/pr149AuthorityOrdering.py", "bytes": 11441, "sha256": "eed39690e7a474841ede2b5be52bbc525efa84134419c4b05a40794aca406690", "git_blob": "2bf8fa85fe654d6e97e41e27410ec506b5f1977d", "manifest_match": true},
+    {"path": "verifier/candidateInterfacesPostgres.py", "bytes": 10475, "sha256": "350b87d35fdc08ec305a7909d8311f3eec894f573d150bbd1e82cb9914ef8306", "git_blob": "63bbdd65cd25906383b2ee62c4592acb71fff54a", "manifest_match": true},
+    {"path": "verifier/pr149-authority-baseline.sql", "bytes": 45844, "sha256": "a3785a59fff944d0ee1fd6af0974e85de1f7efa9686c9ac677317d018bd2c711", "git_blob": "cf3ad7270e31f717535dbcb21160725662a489ff", "manifest_match": true},
+    {"path": "supabase/qualification/comparison-generations/contract.sql", "bytes": 12529, "sha256": "650a70f5dd8d5acacc74b73cd225d1c1755e822062e0ba88648e5a9e43715776", "git_blob": "5a58066fdf10c68c0c22f112de46c06548d5708e", "manifest_match": true},
+    {"path": "supabase/qualification/comparison-generations/selection.sql", "bytes": 4975, "sha256": "a910c8da881593c4e2d5689c6acbac0d81882531f4b1fb78589008254a416e81", "git_blob": "e5b2fdbe236db31e273ef3939f3d3ed36be3b0c6", "manifest_match": true},
+    {"path": "supabase/qualification/comparison-generations/capability.sql", "bytes": 48088, "sha256": "27a3c6dbe1344932d6a64a7016abf143ea992f1d0a4fed8541a953f45137c282", "git_blob": "07777c1463dba6b20de37ed08d4fe4aefd70da1d", "manifest_match": true},
+    {"path": "supabase/qualification/comparison-generations/source-fixture.sql", "bytes": 1883, "sha256": "80b165977c67f92a107ceb8fc9fb46c53ef880d816d08789cce96c59de45a805", "git_blob": "d78c5d0edcc3f5271d3e9b15b0f4a3d989cabdcf", "manifest_match": true},
+    {"path": "supabase/qualification/comparison-generations/source-snapshot.sql", "bytes": 2795, "sha256": "7bef311c9f551f88ca6bbb51f57b71593c64017e0931d9db4c275885c42dc968", "git_blob": "401078a9921f90259904d95745708134b6c2bda8", "manifest_match": true},
+    {"path": "supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql", "bytes": 5907, "sha256": "cb4c245c04bd7e69722a7866ea94515d953f98ac8d4972837b835d6b0835c3b5", "git_blob": "136204c77c0e18bce2592493db4765cdeb4c9d1b", "manifest_match": true},
+    {"path": "supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql", "bytes": 10652, "sha256": "63f9b3ca34730c86029b446172496151849079b304ac45a0e4459a98af75790e", "git_blob": "f5a9fba65d3b5bac782afd511f94c46e7e9e6315", "manifest_match": true},
+    {"path": "verifier/post-review-2026-09-11/README.md", "bytes": 10645, "sha256": "6ebde590d5515eaf48fb8176833960c979235a72dc48bfe21e494ac769362223", "git_blob": "7acbcf00049b507f8eb10b8e433726d57a37eade", "manifest_match": true},
+    {"path": "verifier/mip-production-cutover-review-v1/disclosure-manifest-post-review.json", "bytes": 14560, "sha256": "061f21964ee084257e1b3effcaa0b5c4f9057b4034ecda235bd6b918dcdebf59", "git_blob": "f67d50f8c63484a097e98399232f6f1acc5cb51d", "manifest_match": true}
+  ],
+  "hash_mismatches": [],
+  "execution": {
+    "status": "BLOCKED",
+    "reason": "github_actions_write_not_granted_to_reviewer_token",
+    "workflow_name": "Comparison PostgreSQL concurrency",
+    "workflow_path": ".github/workflows/comparison-postgres.yml",
+    "workflow_id": 354430544,
+    "run_id": null,
+    "run_attempt": null,
+    "job_id": null,
+    "job_name": "concurrent-transactions",
+    "checkout_sha": null,
+    "checkout_tree": null,
+    "postgres_image_declared_in_workflow": "postgres:17.6",
+    "postgres_image_digest": null,
+    "observed_isolation_level": null,
+    "isolation_note": "Authorized sources never SET transaction isolation. PostgreSQL 17 default is typically read committed. Not a witness from this execution.",
+    "github_actions_env_observed": null,
+    "mip_disposable_postgres_guard_source": "comparisonPostgresConcurrency.py exits unless GITHUB_ACTIONS==true and MIP_DISPOSABLE_POSTGRES==comparison-qualification",
+    "guard_spoofed": false,
+    "local_execution_attempted": false,
+    "production_credentials_used": false,
+    "prior_implementation_run_not_substituted": {
+      "run_id": 34606754290,
+      "job_id": 103286951825,
+      "event": "pull_request",
+      "run_attempt": 1,
+      "actor": "jkelsen13-tech",
+      "triggering_actor": "jkelsen13-tech",
+      "head_sha": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26",
+      "logs_retrieved_by_this_reviewer": false,
+      "used_as_independent_evidence": false
+    }
+  },
+  "dispatch_attempts": [
+    {"method": "gh workflow run --ref SHA", "ref": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26", "http_status": 403, "error": "Resource not accessible by integration"},
+    {"method": "gh workflow run --ref branch", "ref": "codex/post-review-reconciliation-20260911", "http_status": 403, "error": "Resource not accessible by integration"},
+    {"method": "POST actions/workflows/comparison-postgres.yml/dispatches", "ref": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26", "http_status": 403, "error": "Resource not accessible by integration"},
+    {"method": "gh run rerun --job", "run_id": 34606754290, "job_id": 103286951825, "http_status": 403, "error": "job cannot be rerun / Resource not accessible by integration"},
+    {"method": "gh run rerun", "run_id": 34606754290, "http_status": 403, "error": "run cannot be rerun; Resource not accessible by integration"}
+  ],
+  "token_limitation": {
+    "accepted_github_permissions_header": "contents=read",
+    "actions_write": false,
+    "workflow_dispatch": false,
+    "job_rerun": false
+  },
+  "owner_action_required": {
+    "summary": "Owner with Actions write must start one fresh native execution at the exact SHA, then provide the run URL to this reviewer.",
+    "do_not": [
+      "merge PRs 149, 150, or 151",
+      "edit workflows or the frozen implementation",
+      "dispatch against main",
+      "grant production secrets",
+      "spoof GITHUB_ACTIONS outside Actions"
+    ],
+    "option_a_preferred": {
+      "type": "workflow_dispatch",
+      "command": "gh workflow run comparison-postgres.yml --repo jkelsen13-tech/media-intelligence-platform-v2 --ref ddbbbd6dc878dcb38ea0904b6ee58895853b6c26",
+      "ui": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/workflows/comparison-postgres.yml",
+      "required_head_sha": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26",
+      "branch_name_insufficient": true
+    },
+    "option_b": {
+      "type": "rerun_exact_candidate_job",
+      "run_url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34606754290",
+      "job_name": "concurrent-transactions",
+      "required_new_attempt": 2
+    },
+    "default_branch_workflow_trap": {
+      "path": ".github/workflows/comparison-postgres.yml",
+      "main_git_blob": "21661ce14631fb299c348b9ecbd86728b0cb8a9e",
+      "main_bytes": 950,
+      "main_sha256": "6b4b5772e5cec681723339eebc9566e4db57782760544ee76af911ecb2196770",
+      "main_invocations": ["python3 -B verifier/comparisonPostgresConcurrency.py"],
+      "candidate_git_blob": "dfac22454785cd74c4a35a5f9ced3744b2d4886f",
+      "candidate_bytes": 1751,
+      "candidate_sha256": "96c288466b8b252b87158631f549e6ba0e015bbf90aba06e8bb6784af484a347",
+      "candidate_invocations": [
+        "python3 -B verifier/comparisonPostgresConcurrency.py",
+        "python3 -B verifier/pr149AuthorityOrdering.py --baseline",
+        "python3 -B verifier/pr149AuthorityOrdering.py",
+        "python3 -B verifier/candidateInterfacesPostgres.py"
+      ],
+      "warning": "Dispatching the default-branch workflow file would omit the authority and interface suites."
+    }
+  },
+  "suites": {
+    "original_native": {
+      "invocation": "python3 -B verifier/comparisonPostgresConcurrency.py",
+      "status": "NOT_RUN",
+      "source_inventory_tests": 14,
+      "source_inventory_skips": 0,
+      "claimed_expected_pass": 14,
+      "observed_pass": null,
+      "observed_fail": null,
+      "observed_skip": null,
+      "lock_witnesses_observed": null,
+      "tests": [
+        {"name": "test_duplicate_enqueue_waits_and_converges", "result": "NOT_RUN", "source_lock_wait": true},
+        {"name": "test_claim_skips_locked_generation_and_rollback_preserves_budget", "result": "NOT_RUN", "source_lock_wait": false},
+        {"name": "test_completion_visibility_and_concurrent_exact_retry", "result": "NOT_RUN", "source_lock_wait": true},
+        {"name": "test_rolled_back_completion_has_no_visible_output_or_acknowledgement", "result": "NOT_RUN", "source_lock_wait": true},
+        {"name": "test_stale_completion_rechecks_committed_replacement_lease", "result": "NOT_RUN", "source_lock_wait": true},
+        {"name": "test_locked_exhausted_row_does_not_block_independent_work", "result": "NOT_RUN", "source_lock_wait": false},
+        {"name": "test_failure_commit_blocks_completion_and_exact_report_converges", "result": "NOT_RUN", "source_lock_wait": true},
+        {"name": "test_completion_commit_rejects_waiting_failure", "result": "NOT_RUN", "source_lock_wait": true},
+        {"name": "test_failure_rollback_allows_waiting_completion", "result": "NOT_RUN", "source_lock_wait": true},
+        {"name": "test_source_capture_keeps_one_snapshot_during_committed_multi_table_correction", "result": "NOT_RUN", "source_lock_wait": true},
+        {"name": "test_source_capture_retention_and_queue_rollback_are_invisible_to_observer", "result": "NOT_RUN", "source_lock_wait": false},
+        {"name": "test_selection_rechecks_predecessor_after_concurrent_commit", "result": "NOT_RUN", "source_lock_wait": true},
+        {"name": "test_selection_rollback_and_concurrent_retry_preserve_withdrawal", "result": "NOT_RUN", "source_lock_wait": true},
+        {"name": "test_bound_release_rechecks_head_after_concurrent_withdrawal", "result": "NOT_RUN", "source_lock_wait": true}
+      ]
+    },
+    "frozen_baseline": {
+      "invocation": "python3 -B verifier/pr149AuthorityOrdering.py --baseline",
+      "status": "NOT_RUN",
+      "source_inventory_tests": 7,
+      "source_inventory_intentional_skips": 4,
+      "claimed_expected_pass": 3,
+      "claimed_expected_skips": 4,
+      "observed_pass": null,
+      "observed_fail": null,
+      "observed_skip": null,
+      "lock_witnesses_observed": null,
+      "baseline_success_means_defects_reproduced_not_secure": true,
+      "tests": [
+        {"name": "test_completion_paused_after_initial_authorization_then_revoke_commits", "result": "NOT_RUN", "baseline_mode": "counterexample_completion_after_revoke"},
+        {"name": "test_cross_runtime_claim_and_completion_replay", "result": "NOT_RUN", "baseline_mode": "counterexample_foreign_replay"},
+        {"name": "test_outstanding_lease_is_not_permission_after_revocation", "result": "NOT_RUN", "baseline_mode": "same_as_corrected"},
+        {"name": "test_completion_acceptance_first_delays_revocation_until_commit", "result": "NOT_RUN", "baseline_mode": "intentional_skip"},
+        {"name": "test_concurrent_identical_claim_retry_converges_without_second_lease", "result": "NOT_RUN", "baseline_mode": "intentional_skip"},
+        {"name": "test_concurrent_foreign_claim_waits_then_denies_without_consuming_work", "result": "NOT_RUN", "baseline_mode": "intentional_skip"},
+        {"name": "test_producer_retry_receipt_owner_and_new_session_same_owner", "result": "NOT_RUN", "baseline_mode": "intentional_skip"}
+      ]
+    },
+    "corrected_authority": {
+      "invocation": "python3 -B verifier/pr149AuthorityOrdering.py",
+      "status": "NOT_RUN",
+      "source_inventory_tests": 7,
+      "source_inventory_skips": 0,
+      "claimed_expected_pass": 7,
+      "claimed_expected_skips": 0,
+      "observed_pass": null,
+      "observed_fail": null,
+      "observed_skip": null,
+      "lock_witnesses_observed": null
+    },
+    "candidate_interfaces": {
+      "invocation": "python3 -B verifier/candidateInterfacesPostgres.py",
+      "status": "NOT_RUN",
+      "source_inventory_tests": 6,
+      "source_inventory_skips": 0,
+      "claimed_expected_pass": 6,
+      "claimed_expected_skips": 0,
+      "observed_pass": null,
+      "observed_fail": null,
+      "observed_skip": null,
+      "lock_witnesses_observed": null,
+      "implementation_authored": true,
+      "tests": [
+        "test_completion_paused_after_initial_authorization_then_revoke_commits",
+        "test_cross_runtime_claim_and_completion_replay",
+        "test_outstanding_lease_is_not_permission_after_revocation",
+        "test_completion_acceptance_first_delays_revocation_until_commit",
+        "test_concurrent_identical_claim_retry_converges_without_second_lease",
+        "test_concurrent_foreign_claim_waits_then_denies_without_consuming_work"
+      ]
+    }
+  },
+  "coverage_limitations": [
+    "Independent execution of implementation-authored tests is not independent proof of complete coverage",
+    "Transaction isolation is never set or asserted",
+    "Original suite uses service_role; interface suite revokes service_role only in the disposable database",
+    "mip_cutover_authority.worker_fail is defined in 002_candidate_interfaces.sql but never invoked by candidateInterfacesPostgres.py",
+    "Interface suite has no producer-retry ownership scenario equivalent to the seventh authority test",
+    "Native suites do not execute worker.js or Node/browser tests",
+    "No source-scoped fair queue, durable restart recovery, JWT/external identity, production RLS, collector parity, publication eligibility, or held-out semantics",
+    "Advisory locks 987123 and 987149 are synthetic pause fixtures",
+    "Default-branch workflow would silently omit authority and interface suites"
+  ],
+  "remain_open_unless_separately_evidenced": [
+    "source/evaluation revocation serialization beyond isolated qualification RPCs",
+    "queue fairness",
+    "durable restart recovery",
+    "external identity/custody",
+    "production permissions",
+    "collector parity",
+    "publication eligibility",
+    "held-out semantics",
+    "F1/F3/F6 production gaps"
+  ],
+  "conclusions": {
+    "native_transactional_interface_behavior": "BLOCKED_NOT_OBSERVED",
+    "overall_production_readiness": "ON_HOLD_NOT_APPROVED"
+  },
+  "scope": {
+    "frozen_implementation_modified": false,
+    "workflows_modified": false,
+    "prior_findings_modified": false,
+    "owner_acceptance_modified": false,
+    "migrations_inspected": false,
+    "node_browser_suites_run": false,
+    "unrelated_workflow_logs_retrieved": false,
+    "results_branch_only": true
+  }
+}
