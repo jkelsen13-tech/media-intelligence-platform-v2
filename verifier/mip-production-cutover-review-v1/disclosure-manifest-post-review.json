@@ -8,13 +8,13 @@
   "hashed_files": [
     {
       "path": "verifier/candidateInterfacesPostgres.py",
-      "sha256": "b9e6f9bae52e6bd0b4128110baf11710c4a0357cc4ffcbfbb8a5f03f2dd3e2cc",
-      "bytes": 9935
+      "sha256": "350b87d35fdc08ec305a7909d8311f3eec894f573d150bbd1e82cb9914ef8306",
+      "bytes": 10475
     },
     {
       "path": "verifier/post-review-2026-09-11/disclosure-dependencies.proposed.json",
-      "sha256": "1d5b90682ef59d72f88d0f5048705321886ba03fb124a8ae0beb63296b3a33b8",
-      "bytes": 22374
+      "sha256": "1da940fda28689cc94d6658441515fe993fb2303e4679d4a96549a3ce2edc8e0",
+      "bytes": 23246
     },
     {
       "path": "tests/postReviewEvidence.test.mjs",
@@ -38,8 +38,8 @@
     },
     {
       "path": "verifier/post-review-2026-09-11/README.md",
-      "sha256": "a5cd0d7eec213fd7c7877baeeaed1b1a6a20f68c75634ecba9ff7b45eca5d2a7",
-      "bytes": 9951
+      "sha256": "6ebde590d5515eaf48fb8176833960c979235a72dc48bfe21e494ac769362223",
+      "bytes": 10645
     },
     {
       "path": "docs/COMPARISON_CAPABILITY_SEPARATION_2026-09-10.md",

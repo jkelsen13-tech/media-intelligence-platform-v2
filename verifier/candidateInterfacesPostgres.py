@@ -135,7 +135,9 @@ class CandidateInterfaces(unittest.TestCase):
         retry=json.loads(self.b.finish())
         self.assertEqual(retry["generation_id"],first["generation_id"])
         self.assertIsNone(retry["lease_token"])
-        self.assertEqual(self.admin("select count(*) from comparison_qualification.request_runs"),"1")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.request_runs"),"2")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.request_runs where rpc_name='worker_claim'"),"1")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.request_runs where rpc_name='producer_enqueue'"),"1")
         self.assertEqual(self.admin("select attempt from comparison_qualification.jobs"),"1")
     def test_concurrent_foreign_claim_waits_then_denies_without_consuming_work(self):
         sa,sb=self.fixture()
@@ -147,6 +149,8 @@ class CandidateInterfaces(unittest.TestCase):
         self.a.execute("commit;")
         with self.assertRaisesRegex(RuntimeError,"mip_request_replay_owner"):
             self.b.finish()
-        self.assertEqual(self.admin("select count(*) from comparison_qualification.request_runs"),"1")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.request_runs"),"2")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.request_runs where rpc_name='worker_claim'"),"1")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.request_runs where rpc_name='producer_enqueue'"),"1")
 
 if __name__ == '__main__': unittest.main(verbosity=2)

@@ -531,7 +531,8 @@
       ],
       "directory_membership_must_match": true,
       "disclosure_authorized": false,
-      "if_not_approved": "BLOCKED_NOT_TESTED; do not read this directory"
+      "if_not_approved": "BLOCKED_NOT_TESTED; do not read this directory",
+      "additional_directory_listing_consumer": "tests/mipCutoverAuthorityDesign.test.mjs"
     },
     "native_authority": {
       "files": [
@@ -550,6 +551,23 @@
     "node": {
       "installation": "npm ci with package.json and package-lock.json; transitive package integrity is bound by lockfile. No npm lifecycle execution outside approved scope.",
       "existing_packet": "61-file manifest plus this explicitly approved supplement; expanding a suite requires a new dependency audit."
+    },
+    "candidate_interface_extension": {
+      "status": "PROPOSED_NOT_DISCLOSED",
+      "files": [
+        "verifier/candidateInterfacesPostgres.py",
+        "supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql",
+        "supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql",
+        "tests/comparisonGenerationCandidate.test.mjs",
+        "supabase/functions/source-comparison-generation-candidate/worker.js",
+        "supabase/runtime-snapshots/source-comparison-run-v16/lib.js",
+        "supabase/runtime-snapshots/source-comparison-run-v16/projectionConfig.js"
+      ],
+      "inherits": [
+        "native_authority",
+        "node"
+      ],
+      "note": "This extension is not part of PR #150's historical authorization."
     }
   },
   "automatic_disclosure": false
