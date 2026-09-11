@@ -54,7 +54,7 @@ test('evaluation policy thresholds are null and not fitted',()=>{
 
 test('disclosure manifest matches hashed files; hashes are 64 hex; packet is secret-free',()=>{
   const built=buildManifest({reviewPacketCommit:null})
-  const committed=JSON.parse(readFileSync(join(packet,'disclosure-manifest.json'),'utf8'))
+  const committed=JSON.parse(readFileSync(join(packet,'disclosure-manifest-post-review.json'),'utf8'))
   assert.equal(committed.packet_id,PACKET_ID)
   assert.equal(committed.disclosure_status,'proposed_not_transmitted')
   assert.equal(committed.operational_baseline_commit,OPERATIONAL_BASELINE_COMMIT)

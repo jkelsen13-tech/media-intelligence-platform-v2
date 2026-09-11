@@ -14,6 +14,13 @@ export const PACKET_ID='MIP_PRODUCTION_CUTOVER_REVIEW_v1'
 // Secret-free disclosure set. Manifest itself is excluded from hashed_files so a
 // later freeze commit can stamp review_packet_commit without invalidating hashes.
 export const DISCLOSED_PATHS=[
+  'verifier/candidateInterfacesPostgres.py',
+  'verifier/post-review-2026-09-11/disclosure-dependencies.proposed.json',
+  'tests/postReviewEvidence.test.mjs',
+  'supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql',
+  'supabase/functions/source-comparison-generation-candidate/worker.js',
+  'tests/comparisonGenerationCandidate.test.mjs',
+  'verifier/post-review-2026-09-11/README.md',
   'docs/COMPARISON_CAPABILITY_SEPARATION_2026-09-10.md',
   'docs/COMPARISON_GENERATION_TRANSACTION_2026-09-09.md',
   'docs/COMPARISON_POSTGRES_CONCURRENCY_2026-09-09.md',
@@ -103,6 +110,8 @@ export function buildManifest({reviewPacketCommit=null}={}){
   }
   return {
     packet_id:PACKET_ID,
+    supplement_version:2,
+    historical_manifest_sha256:'04d28b676f15bd63acf5e96d01622d1f9d06aa4f79d68b7b6dae42e3b63f858f',
     disclosure_status:'proposed_not_transmitted',
     operational_baseline_commit:OPERATIONAL_BASELINE_COMMIT,
     review_packet_commit:reviewPacketCommit,
@@ -136,7 +145,7 @@ export function assertPacketHygiene(files=DISCLOSED_PATHS){
 }
 
 export function writeManifest(manifest){
-  const dest=join(repoRoot,packetDir,'disclosure-manifest.json')
+  const dest=join(repoRoot,packetDir,'disclosure-manifest-post-review.json')
   writeFileSync(dest,JSON.stringify(manifest,null,2)+'\n')
   return dest
 }
