@@ -61,5 +61,20 @@
   "finalization": "Frozen PR #147 candidate 47075711ff78393ac3b1690ddbffca615e8f20ce was independently reviewed as BLOCKED (verifier/independent-cutover-review-v1/; Grok files are byte-preserved). This packet directory is the disclosure slot for the next engineering candidate after F1–F8 reconciliation; do not treat Grok’s BLOCKED outcome as a stamp of this later HEAD. Final exact-head rerun receipt belongs in the new candidate PR body; do not represent earlier runs as execution of later commits.",
   "logs": "GitHub Actions job URLs, retained remotely; raw logs and screenshots are NOT part of the disclosure set. They can contain public article text. Owner must review any additional disclosure.",
   "independent_review": "PERFORMED_FOR_FROZEN_47075711_BLOCKED_NOT_THIS_HEAD",
-  "owner_acceptance": "PENDING"
+  "owner_acceptance": "PENDING",
+  "pr149_authority_probe": {
+    "head": "6c06555df75c7bfd727bf737a0ec3b3c47ecf5af",
+    "original_candidate": "543e423928ecb1134c0981ed8d708f1b9ae25608",
+    "run": 34560139932,
+    "job": 103140991935,
+    "original_native_tests": 14,
+    "probe_invocation_tests": 17,
+    "duplicate_original_tests_in_probe": 14,
+    "authority_scenarios": 3,
+    "revocation_and_replay_defects": "CONFIRMED",
+    "regression_run": 34560139947,
+    "regression_status": "FAILED_STALE_MANIFEST_AFTER_REPRODUCTION_WORKFLOW_ADDITION; not final verification",
+    "correction_run": "codex-root-pr149-authority-543e423-20260911",
+    "final_receipt": "PR149 exact frozen candidate receipt after final checks; this historical probe is not final-head verification"
+  }
 }

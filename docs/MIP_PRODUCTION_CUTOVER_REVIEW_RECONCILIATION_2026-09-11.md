@@ -18,6 +18,8 @@ Grok review bytes (unchanged; do not edit):
 | `MIP_PRODUCTION_CUTOVER_REVIEW_v1.json` | `a869298baa7125a65a818decb6d2fbcef0ff72badde7c5f447714815fe2b26ba` |
 | `README.md` | `d4da264472f0cbe4c277c9b7976879e480f1039e13fce2a99c8c1a8ea7b2c855` |
 
+**Current correction addendum:** [PR149 authority ordering](PR149_AUTHORITY_ORDERING_2026-09-11.md). Source candidate `543e423` had confirmed executing-transaction revocation and cross-runtime replay defects; prior closure language below describes earlier scope only. F1/F3/F6 production requirements remain OPEN.
+
 ## F1–F8 dispositions
 
 ### F1 — HIGH — Proposed runtime choices vs owner `mip_*` identities
@@ -108,7 +110,7 @@ Grok review bytes (unchanged; do not edit):
 
 ## What remains owner-gated or for independent re-review
 
-This candidate closes the independently reproduced **engineering** defects F4 and F5 (scheduler + missing principal revoke), the isolated F6 producer/closure gaps, F3 documentation/tests, F1 design package (not provisioned), F7 documentation/allowlist completeness, and F8 grant hygiene. It does **not** make production cutover ready.
+The earlier reconciliation supplied partial isolated corrections. It did not close F4/F5 executing-transaction ordering or replay ownership; see the new reproduced counterexamples and correction addendum. F1 production APIs/runtime authority remain OPEN (stubs only); F3 worker integration remains OPEN (documentation only); F6 publication eligibility remains OPEN (fingerprints are not predicates). F7 evidence and F8 isolated grant hygiene do not authorize production.
 
 Still required from the owner (not invented here):
 

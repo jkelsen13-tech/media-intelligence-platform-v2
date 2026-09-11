@@ -3,6 +3,7 @@ Correction author run: codex-root-pr149-authority-543e423-20260911.
 --baseline uses an immutable copy of candidate 543e423's SQL and asserts its defects.
 """
 import sys
+import hashlib
 import json
 import unittest
 import uuid
@@ -10,18 +11,20 @@ from pathlib import Path
 import comparisonPostgresConcurrency as h
 BASELINE = "--baseline" in sys.argv
 if BASELINE: sys.argv.remove("--baseline")
-C = h.ConcurrentContract
 q = h.quoted
 class AuthorityOrdering(unittest.TestCase):
-    setUp=C.setUp
-    cleanup=C.cleanup
-    session=C.session
-    admin=C.admin
-    blocked=C.blocked
+    setUp=h.ConcurrentContract.setUp
+    cleanup=h.ConcurrentContract.cleanup
+    session=h.ConcurrentContract.session
+    admin=h.ConcurrentContract.admin
+    blocked=h.ConcurrentContract.blocked
     def fixture(self):
         self.admin(Path("supabase/qualification/comparison-generations/selection.sql").read_text())
         path="verifier/pr149-authority-baseline.sql" if BASELINE else "supabase/qualification/comparison-generations/capability.sql"
-        self.admin(Path(path).read_text())
+        raw=Path(path).read_bytes()
+        if BASELINE:
+            self.assertEqual(hashlib.sha256(raw).hexdigest(),"a3785a59fff944d0ee1fd6af0974e85de1f7efa9686c9ac677317d018bd2c711")
+        self.admin(raw.decode("utf-8"))
         result=[]
         for runtime in ("runtime-a","runtime-b"):
             for rpc in ("worker_claim","worker_complete"):
@@ -105,6 +108,71 @@ class AuthorityOrdering(unittest.TestCase):
             self.a.execute(self.complete_sql(str(uuid.uuid4()),sa,"runtime-a",job))
         self.assertEqual(self.admin("select state from comparison_qualification.jobs"),"processing")
         self.assertEqual(self.admin("select count(*) from comparison_qualification.outputs"),"0")
+
+    @unittest.skipIf(BASELINE,"ordering fence exists only in corrected contract")
+    def test_completion_acceptance_first_delays_revocation_until_commit(self):
+        sa,sb=self.fixture()
+        job=json.loads(self.a.execute(self.claim_sql(str(uuid.uuid4()),sa,"runtime-a")))
+        self.a.execute("begin;")
+        self.assertEqual(self.a.execute(self.complete_sql(str(uuid.uuid4()),sa,"runtime-a",job)),"completed")
+        revoker=self.session()
+        revoker.execute("reset role;")
+        revoker.start(self.revoke_sql())
+        self.blocked(revoker,self.a)
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.outputs"),"0")
+        self.a.execute("commit;")
+        self.assertEqual(revoker.finish(),"revoked")
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.outputs"),"1")
+        with self.assertRaisesRegex(RuntimeError,"mip_authz_revoked"):
+            self.a.execute(self.complete_sql(str(uuid.uuid4()),sa,"runtime-a",job))
+    @unittest.skipIf(BASELINE,"new request serialization")
+    def test_concurrent_identical_claim_retry_converges_without_second_lease(self):
+        sa,sb=self.fixture()
+        request=str(uuid.uuid4())
+        self.a.execute("begin;")
+        first=json.loads(self.a.execute(self.claim_sql(request,sa,"runtime-a")))
+        self.b.start(self.claim_sql(request,sa,"runtime-a"))
+        self.blocked(self.b,self.a)
+        self.a.execute("commit;")
+        retry=json.loads(self.b.finish())
+        self.assertEqual(retry["generation_id"],first["generation_id"])
+        self.assertIsNone(retry["lease_token"])
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.request_runs"),"1")
+        self.assertEqual(self.admin("select attempt from comparison_qualification.jobs"),"1")
+    @unittest.skipIf(BASELINE,"cross-runtime first-use race")
+    def test_concurrent_foreign_claim_waits_then_denies_without_consuming_work(self):
+        sa,sb=self.fixture()
+        request=str(uuid.uuid4())
+        self.a.execute("begin;")
+        self.a.execute(self.claim_sql(request,sa,"runtime-a"))
+        self.b.start(self.claim_sql(request,sb,"runtime-b"))
+        self.blocked(self.b,self.a)
+        self.a.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"mip_request_replay_owner"):
+            self.b.finish()
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.request_runs"),"1")
+    @unittest.skipIf(BASELINE,"producer ownership regression")
+    def test_producer_retry_receipt_owner_and_new_session_same_owner(self):
+        sa,sb=self.fixture()
+        sessions=[]
+        for runtime in ("runtime-a","runtime-b"):
+            self.admin("select comparison_qualification.bind_runtime("+q(runtime)+",'qual_comparison_producer','producer_enqueue');")
+            self.admin("select comparison_qualification.bind_source_scope("+q(runtime)+",'synthetic');")
+            self.admin("select comparison_qualification.bind_evaluated_implementation("+q(runtime)+",'qualification:concurrent');")
+            sessions.append(self.admin("select comparison_qualification.issue_session('qual_comparison_producer',"+q(runtime)+",'2999-01-01');"))
+        self.a.execute("reset role;set role qual_comparison_producer;")
+        self.b.execute("reset role;set role qual_comparison_producer;")
+        request=str(uuid.uuid4())
+        def sql(session,runtime):
+            return "select comparison_qualification.producer_enqueue("+q(request)+","+q(session)+","+q(runtime)+",'synthetic','{}','qualification:concurrent','2026-01-01');"
+        first=self.a.execute(sql(sessions[0],"runtime-a"))
+        self.assertEqual(self.a.execute(sql(sessions[0],"runtime-a")),first)
+        new_session=self.admin("select comparison_qualification.issue_session('qual_comparison_producer','runtime-a','2999-01-01');")
+        self.assertEqual(self.a.execute(sql(new_session,"runtime-a")),first)
+        with self.assertRaisesRegex(RuntimeError,"mip_request_replay_owner"):
+            self.b.execute(sql(sessions[1],"runtime-b"))
+        self.assertEqual(self.admin("select count(*) from comparison_qualification.request_runs where rpc_name='producer_enqueue'"),"1")
+
 if __name__=="__main__":
     print("MIP_AUTHORITY_MODE="+("frozen-543e423-counterexample" if BASELINE else "corrected-contract"),flush=True)
     unittest.main(verbosity=2)

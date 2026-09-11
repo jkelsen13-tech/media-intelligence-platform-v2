@@ -2,7 +2,7 @@
   "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
   "disclosure_status": "proposed_not_transmitted",
   "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
-  "review_packet_commit": "2d9ab3c8185dfe8971281810d7c5782b3639144a",
+  "review_packet_commit": null,
   "review_packet_commit_resolution": "Stamp the git commit that contains the hashed_files tree. Do not mix hashes from a different commit.",
   "mixed_candidate_rule": "If any hashed file differs from this manifest, the packet is not the frozen candidate.",
   "hashed_files": [
@@ -53,8 +53,8 @@
     },
     {
       "path": "docs/MIP_PRODUCTION_CUTOVER_REVIEW_RECONCILIATION_2026-09-11.md",
-      "sha256": "2b9c44ff4a846de54f8cee280177feea25c694df4ae3d513f57f51f2a8060deb",
-      "bytes": 12053
+      "sha256": "6a8ecb5001a5f8758e39be27609292092a86ce73b23c64cc3ee5c8c0e17b79c0",
+      "bytes": 12504
     },
     {
       "path": "docs/MIP_SEMANTIC_EVALUATION_POLICY_PROPOSAL_2026-09-10.md",
@@ -88,8 +88,8 @@
     },
     {
       "path": "scripts/buildCutoverReviewPacket.mjs",
-      "sha256": "9c5d24026cc1173ca0b3cc7726e0d2180a7ebb8557499773e99c09432c6d6cf5",
-      "bytes": 7391
+      "sha256": "9213f2377672da24df680715eaf8b9bafdf363c0d24ee6f579f93ede25a01bde",
+      "bytes": 7523
     },
     {
       "path": "scripts/evaluateRecordCandidates.mjs",
@@ -98,8 +98,8 @@
     },
     {
       "path": "supabase/qualification/comparison-generations/capability.sql",
-      "sha256": "a3785a59fff944d0ee1fd6af0974e85de1f7efa9686c9ac677317d018bd2c711",
-      "bytes": 45844
+      "sha256": "37b8d420a53853ccd9ea1418548acac6035c4297b16bcdfcf0bd06ba506bb65f",
+      "bytes": 48085
     },
     {
       "path": "supabase/qualification/comparison-generations/contract.sql",
@@ -217,9 +217,24 @@
       "bytes": 21526
     },
     {
+      "path": "verifier/pr149AuthorityOrdering.py",
+      "sha256": "eed39690e7a474841ede2b5be52bbc525efa84134419c4b05a40794aca406690",
+      "bytes": 11441
+    },
+    {
+      "path": "verifier/pr149-authority-baseline.sql",
+      "sha256": "a3785a59fff944d0ee1fd6af0974e85de1f7efa9686c9ac677317d018bd2c711",
+      "bytes": 45844
+    },
+    {
+      "path": "docs/PR149_AUTHORITY_ORDERING_2026-09-11.md",
+      "sha256": "b5e8cf4559847ac1c4d845a57e7ae3cae9c40cc8a1cbe58d51cef5e8050011b9",
+      "bytes": 8220
+    },
+    {
       "path": ".github/workflows/comparison-postgres.yml",
-      "sha256": "6b4b5772e5cec681723339eebc9566e4db57782760544ee76af911ecb2196770",
-      "bytes": 950
+      "sha256": "90aab783adea1acb8912f5e8e5f855544d2887dfeb4c2ebceb538146c9956d70",
+      "bytes": 1357
     },
     {
       "path": ".github/workflows/deploy-cloud-run.yml",
@@ -228,13 +243,13 @@
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/README.md",
-      "sha256": "1e15dd0be4a46b335365e202a7ef4286d24f908064dd6e3409fbb45c3e9c0f94",
-      "bytes": 3056
+      "sha256": "1d52b3294a031593ef513ec872343a0eed69dfc0d5d4b752c3beb239da53014c",
+      "bytes": 3592
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/verification-history.json",
-      "sha256": "0e122b683d95edc248b7338b4c3a3fb77bca8a6cfd52d2b5afda7ba2964bbcb6",
-      "bytes": 2997
+      "sha256": "b768fc8fb3e1c8653c7d40838c8b9fad68df415979096e4bcb94393a985ab06e",
+      "bytes": 3746
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/REVIEW_RESULT.json",
@@ -268,8 +283,8 @@
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/remaining-dependencies.json",
-      "sha256": "9ebbcb1f830ad22cc2a8e87bb5a5a0d5a49954bbb5894c8126c39d9bc599458f",
-      "bytes": 4726
+      "sha256": "f9b658a9cff8577311c88f67ad6bbf94862285ad47776eb3e477abda5341d0c3",
+      "bytes": 5255
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/known-limitations.json",
@@ -293,8 +308,8 @@
     },
     {
       "path": "verifier/mip-production-cutover-review-reconciliation-2026-09-11.json",
-      "sha256": "9517710d76b81ae6c148a10e3ea5b1201efd918551c87f641bfabf828f428370",
-      "bytes": 5729
+      "sha256": "e489762122a969077bf6911e9a569501ed6c45407e584dec2fb945b39e6ab0b7",
+      "bytes": 6552
     }
   ],
   "excluded": [

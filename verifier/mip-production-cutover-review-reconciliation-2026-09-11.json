@@ -26,7 +26,8 @@
       "classification": "CONFIRMED",
       "kind": "design_gap_missing_production_package",
       "correction": "supabase/qualification/mip-cutover-authority/ isolated EXECUTE-only mip_* design; not a migration; not deployed; qual_* not renamed",
-      "regression": "tests/mipCutoverAuthorityDesign.test.mjs"
+      "regression": "tests/mipCutoverAuthorityDesign.test.mjs",
+      "production_status": "OPEN_ENGINEERING_NOT_IMPLEMENTED"
     },
     "F2": {
       "grok_severity": "HIGH",
@@ -42,7 +43,8 @@
       "kind": "architecture_split",
       "correction": "docs/MUTABLE_V16_IS_NOT_QUALIFIED_ARCHITECTURE_2026-09-11.md; v16 not rewritten into qualification worker",
       "regression": "tests/mutableV16IsNotQualifiedArchitecture.test.mjs",
-      "v15_vs_v16_bytes": "NOT_TESTED"
+      "v15_vs_v16_bytes": "NOT_TESTED",
+      "production_status": "OPEN_ENGINEERING_NOT_IMPLEMENTED"
     },
     "F4": {
       "grok_severity": "MEDIUM",
@@ -54,7 +56,8 @@
         "producer_enqueue_changed_args_returned_first_generation_id": true
       },
       "correction": "request_runs.argument_hash; mip_request_replay_conflict",
-      "regression": "tests/comparisonCapabilitySeparation.test.mjs"
+      "regression": "tests/comparisonCapabilitySeparation.test.mjs",
+      "replay_ownership": "CONFIRMED_CROSS_RUNTIME_ON_543e423; corrected owner/runtime matching; final CI receipt pending"
     },
     "F5": {
       "grok_severity": "MEDIUM",
@@ -69,7 +72,8 @@
         "complete_after_claim_binding_revoke": "completed"
       },
       "correction": "scheduler_claim raises mip_scheduler_not_a_worker; revoke_principal",
-      "regression": "tests/comparisonCapabilitySeparation.test.mjs"
+      "regression": "tests/comparisonCapabilitySeparation.test.mjs",
+      "executing_completion_ordering": "CONFIRMED_POST_INITIAL_AUTH_REVOCATION_RACE_ON_543e423; final locked authority fence; final CI receipt pending"
     },
     "F6": {
       "grok_severity": "MEDIUM",
@@ -80,7 +84,8 @@
       },
       "correction": "bind_source_scope; bind_evaluated_implementation; publication_dependency_hash includes named survivor-closure fingerprints with absence explicit",
       "regression": "tests/comparisonCapabilitySeparation.test.mjs",
-      "not_claimed": "isolated hash is not live mip_private.reader_claim_surfaces eligibility"
+      "not_claimed": "isolated hash is not live mip_private.reader_claim_surfaces eligibility",
+      "production_status": "OPEN_ENGINEERING_NOT_IMPLEMENTED"
     },
     "F7": {
       "grok_severity": "LOW",
@@ -97,7 +102,11 @@
         "anon_diagnose_execute_without_schema_usage": "CONFIRMED_DEAD_GRANT"
       },
       "correction": "revoke diagnose/bound_code EXECUTE from anon and authenticated in isolated SQL only",
-      "not_done": ["enable JWT", "redeploy Cloud Run", "change production credentials"],
+      "not_done": [
+        "enable JWT",
+        "redeploy Cloud Run",
+        "change production credentials"
+      ],
       "regression": "tests/comparisonCapabilitySeparation.test.mjs"
     }
   },
@@ -117,5 +126,13 @@
     "any shadow/canary, credential provision, schedule change, publication, or cutover"
   ],
   "native_postgres_14_tests": "NOT_TESTED_this_run_ci_guard_unchanged",
-  "live_writes": "none"
+  "live_writes": "none",
+  "current_correction": {
+    "author_run": "codex-root-pr149-authority-543e423-20260911",
+    "independent_reviewer": false,
+    "source_candidate": "543e423928ecb1134c0981ed8d708f1b9ae25608",
+    "report": "docs/PR149_AUTHORITY_ORDERING_2026-09-11.md",
+    "reproduction_run": 34560139932,
+    "new_review": "PENDING"
+  }
 }

@@ -1,3 +1,9 @@
+# PR #149 current correction handoff
+
+Start with [authority ordering and replay report](../../docs/PR149_AUTHORITY_ORDERING_2026-09-11.md) and the final verification receipt in [PR #149](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/149). F1/F3/F6 production requirements remain OPEN. Correction author run: `codex-root-pr149-authority-543e423-20260911`; subsequent reviewer must be separate. Draft/unmerged; cutover ON HOLD.
+
+The earlier PR #147 handoff below is historical, not this candidate's verification.
+
 # PR #147 disclosure-review handoff
 
 Production cutover remains **ON HOLD**. This draft is not to be merged. Independent review and owner acceptance remain pending; passing CI grants neither.

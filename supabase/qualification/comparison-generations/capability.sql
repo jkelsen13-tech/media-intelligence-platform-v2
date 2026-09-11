@@ -156,16 +156,40 @@ begin
   if code<>'ok' then perform comparison_qualification.deny(code); end if;
 end $$;
 
+
+-- Final acceptance fence. Initial authorization intentionally takes no row locks:
+-- revocation may commit while work is executing. Final acceptance then rejects it.
+-- Once these locks are held, revocation waits for transaction commit/rollback.
+create function comparison_qualification.require_bound_final(
+  p_principal text,p_rpc text,p_session_id uuid,p_runtime_id text
+) returns void language plpgsql security definer set search_path='' as $
+begin
+  perform 1 from comparison_qualification.runtime_bindings
+    where runtime_id=p_runtime_id and principal=p_principal order by rpc_name for share;
+  perform 1 from comparison_qualification.principal_sessions
+    where session_id=p_session_id for share;
+  perform comparison_qualification.require_bound(p_principal,p_rpc,p_session_id,p_runtime_id);
+end $;
+
 create function comparison_qualification.argument_digest(p_args jsonb)
 returns text language sql immutable as $$
   select encode(sha256(convert_to(coalesce(p_args,'{}'::jsonb)::text,'UTF8')),'hex');
 $$;
 
-create function comparison_qualification.replay(p_request uuid,p_rpc text,p_argument_hash text)
+create function comparison_qualification.replay(p_request uuid,p_rpc text,p_argument_hash text,p_principal text,p_runtime text,p_session uuid)
 returns comparison_qualification.request_runs language plpgsql security definer set search_path='' as $$
 declare existing comparison_qualification.request_runs;
 begin
+  -- Serialize matching requests, including first-use races. Hash collisions only
+  -- cause extra waiting; identity and argument comparisons remain exact.
+  perform pg_advisory_xact_lock(hashtextextended(p_request::text||':'||p_rpc,149));
   select * into existing from comparison_qualification.request_runs where request_id=p_request and rpc_name=p_rpc;
+  if existing.request_id is not null then
+    if existing.principal is distinct from p_principal or existing.runtime_id is distinct from p_runtime then
+      raise exception using errcode='42501', message='mip_request_replay_owner';
+    end if;
+    perform comparison_qualification.require_bound_final(p_principal,p_rpc,p_session,p_runtime);
+  end if;
   if existing.request_id is not null and existing.argument_hash is distinct from p_argument_hash then
     raise exception using errcode='22023', message='mip_request_replay_conflict';
   end if;
@@ -174,9 +198,10 @@ end $$;
 
 create function comparison_qualification.record_run(
   p_request uuid,p_rpc text,p_principal text,p_runtime text,p_generation uuid,p_selection uuid,
-  p_publication uuid,p_outcome text,p_code text,p_argument_hash text
+  p_publication uuid,p_outcome text,p_code text,p_argument_hash text,p_session uuid
 ) returns void language plpgsql security definer set search_path='' as $$
 begin
+  perform comparison_qualification.require_bound_final(p_principal,p_rpc,p_session,p_runtime);
   insert into comparison_qualification.request_runs(
     request_id,rpc_name,principal,runtime_id,generation_id,selection_id,publication_id,outcome,diagnostic_code,argument_hash)
   values(p_request,p_rpc,p_principal,p_runtime,p_generation,p_selection,p_publication,p_outcome,p_code,p_argument_hash);
@@ -225,10 +250,12 @@ begin
 end $$;
 
 -- Per-RPC revoke_binding unbinds one RPC. Principal-wide revoke stops every bound
--- RPC for that runtime principal, including in-flight worker_complete.
+-- RPC for that runtime principal. Executing transactions serialize at final acceptance.
 create function comparison_qualification.revoke_principal(p_runtime text,p_principal text) returns text
-language plpgsql security definer set search_path='' as $$
+language plpgsql security definer set search_path='' as $
 begin
+  perform 1 from comparison_qualification.runtime_bindings
+    where runtime_id=p_runtime and principal=p_principal order by rpc_name for update;
   update comparison_qualification.runtime_bindings
     set revoked_at=coalesce(revoked_at,clock_timestamp())
     where runtime_id=p_runtime and principal=p_principal and revoked_at is null;
@@ -316,10 +343,10 @@ begin
   perform comparison_qualification.require_evaluated_implementation(p_runtime,p_implementation);
   v_hash:=comparison_qualification.argument_digest(jsonb_build_object(
     'source',p_source,'payload',p_payload,'implementation',p_implementation,'observed',p_observed));
-  existing:=comparison_qualification.replay(p_request,'producer_enqueue',v_hash);
+  existing:=comparison_qualification.replay(p_request,'producer_enqueue',v_hash,'qual_comparison_producer',p_runtime,p_session);
   if existing.request_id is not null then return existing.generation_id; end if;
   v:=comparison_qualification.enqueue(p_source,p_payload,p_implementation,p_observed);
-  perform comparison_qualification.record_run(p_request,'producer_enqueue','qual_comparison_producer',p_runtime,v,null,null,'completed','mip_request_accepted',v_hash);
+  perform comparison_qualification.record_run(p_request,'producer_enqueue','qual_comparison_producer',p_runtime,v,null,null,'completed','mip_request_accepted',v_hash,p_session);
   return v;
 end $$;
 
@@ -343,7 +370,7 @@ declare existing comparison_qualification.request_runs; claimed jsonb; v uuid; v
 begin
   perform comparison_qualification.require_bound('qual_comparison_worker','worker_claim',p_session,p_runtime);
   v_hash:=comparison_qualification.argument_digest('{}'::jsonb);
-  existing:=comparison_qualification.replay(p_request,'worker_claim',v_hash);
+  existing:=comparison_qualification.replay(p_request,'worker_claim',v_hash,'qual_comparison_worker',p_runtime,p_session);
   if existing.request_id is not null then
     if existing.outcome='no_ready_work' then return null; end if;
     return comparison_qualification.claim_payload(existing.generation_id,true,'mip_request_replay_omits_token');
@@ -351,10 +378,10 @@ begin
   claimed:=comparison_qualification.claim();
   v:=claimed->>'generation_id';
   if claimed is null then
-    perform comparison_qualification.record_run(p_request,'worker_claim','qual_comparison_worker',p_runtime,null,null,null,'no_ready_work','mip_request_accepted',v_hash);
+    perform comparison_qualification.record_run(p_request,'worker_claim','qual_comparison_worker',p_runtime,null,null,null,'no_ready_work','mip_request_accepted',v_hash,p_session);
     return null;
   end if;
-  perform comparison_qualification.record_run(p_request,'worker_claim','qual_comparison_worker',p_runtime,v,null,null,'lease_issued','mip_request_accepted',v_hash);
+  perform comparison_qualification.record_run(p_request,'worker_claim','qual_comparison_worker',p_runtime,v,null,null,'lease_issued','mip_request_accepted',v_hash,p_session);
   return claimed||jsonb_build_object('diagnostic_code','mip_request_accepted');
 end $$;
 
@@ -374,10 +401,10 @@ begin
   perform comparison_qualification.require_bound('qual_comparison_worker','worker_complete',p_session,p_runtime);
   v_hash:=comparison_qualification.argument_digest(jsonb_build_object(
     'generation_id',p_generation,'input_hash',p_input_hash,'implementation',p_implementation,'output',p_output));
-  existing:=comparison_qualification.replay(p_request,'worker_complete',v_hash);
+  existing:=comparison_qualification.replay(p_request,'worker_complete',v_hash,'qual_comparison_worker',p_runtime,p_session);
   if existing.request_id is not null then return existing.outcome; end if;
   state:=comparison_qualification.complete(p_generation,p_token,p_input_hash,p_implementation,p_output);
-  perform comparison_qualification.record_run(p_request,'worker_complete','qual_comparison_worker',p_runtime,p_generation,null,null,'completed','mip_request_accepted',v_hash);
+  perform comparison_qualification.record_run(p_request,'worker_complete','qual_comparison_worker',p_runtime,p_generation,null,null,'completed','mip_request_accepted',v_hash,p_session);
   return state;
 end $$;
 
@@ -389,10 +416,10 @@ begin
   perform comparison_qualification.require_bound('qual_comparison_worker','worker_fail',p_session,p_runtime);
   v_hash:=comparison_qualification.argument_digest(jsonb_build_object(
     'generation_id',p_generation,'input_hash',p_input_hash,'implementation',p_implementation));
-  existing:=comparison_qualification.replay(p_request,'worker_fail',v_hash);
+  existing:=comparison_qualification.replay(p_request,'worker_fail',v_hash,'qual_comparison_worker',p_runtime,p_session);
   if existing.request_id is not null then return existing.outcome; end if;
   state:=comparison_qualification.fail(p_generation,p_token,p_input_hash,p_implementation);
-  perform comparison_qualification.record_run(p_request,'worker_fail','qual_comparison_worker',p_runtime,p_generation,null,null,'failed','mip_request_accepted',v_hash);
+  perform comparison_qualification.record_run(p_request,'worker_fail','qual_comparison_worker',p_runtime,p_generation,null,null,'failed','mip_request_accepted',v_hash,p_session);
   return state;
 end $$;
 
@@ -503,12 +530,12 @@ begin
   v_hash:=comparison_qualification.argument_digest(jsonb_build_object(
     'action',p_action,'source',p_source,'expected',p_expected,'generation_id',p_generation,
     'output_hash',p_output_hash,'context',p_context));
-  existing:=comparison_qualification.replay(p_request,'selector_select',v_hash);
+  existing:=comparison_qualification.replay(p_request,'selector_select',v_hash,'qual_selector',p_runtime,p_session);
   if existing.request_id is not null then return existing.selection_id; end if;
   selected:=comparison_qualification.select_output(p_action,p_source,p_expected,p_generation,p_output_hash,p_context);
   pub:=comparison_qualification.follow_publication(p_source,selected);
   outcome:=case when p_generation is null then 'withdrawn' else 'selected' end;
-  perform comparison_qualification.record_run(p_request,'selector_select','qual_selector',p_runtime,p_generation,selected,pub,outcome,'mip_request_accepted',v_hash);
+  perform comparison_qualification.record_run(p_request,'selector_select','qual_selector',p_runtime,p_generation,selected,pub,outcome,'mip_request_accepted',v_hash,p_session);
   return selected;
 end $$;
 
@@ -519,7 +546,7 @@ declare existing comparison_qualification.request_runs; cur comparison_qualifica
 begin
   perform comparison_qualification.require_bound('qual_publisher','publisher_propose',p_session,p_runtime);
   v_hash:=comparison_qualification.argument_digest(jsonb_build_object('source',p_source));
-  existing:=comparison_qualification.replay(p_request,'publisher_propose',v_hash);
+  existing:=comparison_qualification.replay(p_request,'publisher_propose',v_hash,'qual_publisher',p_runtime,p_session);
   if existing.request_id is not null then return existing.publication_id; end if;
   select publication_id into head from comparison_qualification.publication_heads where source_project=p_source for update;
   if head is null then raise exception 'unbound publication selection'; end if;
@@ -532,7 +559,7 @@ begin
   values(p_source,cur.selection_id,cur.generation_id,cur.output_hash,cur.input_hash,cur.implementation_ref,cur.dependency_hash,'proposed')
   returning id into pub;
   update comparison_qualification.publication_heads set publication_id=pub where source_project=p_source;
-  perform comparison_qualification.record_run(p_request,'publisher_propose','qual_publisher',p_runtime,cur.generation_id,cur.selection_id,pub,'proposed','mip_request_accepted',v_hash);
+  perform comparison_qualification.record_run(p_request,'publisher_propose','qual_publisher',p_runtime,cur.generation_id,cur.selection_id,pub,'proposed','mip_request_accepted',v_hash,p_session);
   return pub;
 end $$;
 
@@ -543,7 +570,7 @@ declare existing comparison_qualification.request_runs; cur comparison_qualifica
 begin
   perform comparison_qualification.require_bound('qual_publisher','publisher_release',p_session,p_runtime);
   v_hash:=comparison_qualification.argument_digest(jsonb_build_object('source',p_source));
-  existing:=comparison_qualification.replay(p_request,'publisher_release',v_hash);
+  existing:=comparison_qualification.replay(p_request,'publisher_release',v_hash,'qual_publisher',p_runtime,p_session);
   if existing.request_id is not null then return existing.outcome; end if;
   -- Re-check the gate after the head lock so a concurrent withdrawal or owner-fixture
   -- disable is observed. Checking the gate before the lock is not sufficient.
@@ -562,7 +589,7 @@ begin
   values(p_source,cur.selection_id,cur.generation_id,cur.output_hash,cur.input_hash,cur.implementation_ref,cur.dependency_hash,'released')
   returning id into pub;
   update comparison_qualification.publication_heads set publication_id=pub where source_project=p_source;
-  perform comparison_qualification.record_run(p_request,'publisher_release','qual_publisher',p_runtime,cur.generation_id,cur.selection_id,pub,'released','mip_request_accepted',v_hash);
+  perform comparison_qualification.record_run(p_request,'publisher_release','qual_publisher',p_runtime,cur.generation_id,cur.selection_id,pub,'released','mip_request_accepted',v_hash,p_session);
   return 'released';
 end $$;
 
@@ -584,7 +611,7 @@ declare existing comparison_qualification.request_runs; n int; v_hash text;
 begin
   perform comparison_qualification.require_bound('qual_comparison_producer','retain_parity',p_session,p_runtime);
   v_hash:=comparison_qualification.argument_digest(jsonb_build_object('archive',p_archive,'source',p_source));
-  existing:=comparison_qualification.replay(p_request,'retain_parity',v_hash);
+  existing:=comparison_qualification.replay(p_request,'retain_parity',v_hash,'qual_comparison_producer',p_runtime,p_session);
   if existing.request_id is not null then
     select count(*)::int into n from comparison_qualification.retained_parity
       where archive_namespace=p_archive and source_project=p_source;
@@ -610,7 +637,7 @@ begin
   ) then
     null; -- pending remains pending; the insert copied the live state rather than acknowledging it
   end if;
-  perform comparison_qualification.record_run(p_request,'retain_parity','qual_comparison_producer',p_runtime,null,null,null,'parity_retained','mip_parity_pending_not_acknowledged',v_hash);
+  perform comparison_qualification.record_run(p_request,'retain_parity','qual_comparison_producer',p_runtime,null,null,null,'parity_retained','mip_parity_pending_not_acknowledged',v_hash,p_session);
   return n;
 end $$;
 
@@ -692,9 +719,10 @@ grant usage on schema comparison_qualification to qual_public_reader,qual_compar
 revoke all on function comparison_qualification.deny(text),
   comparison_qualification.bound_code(text,text,uuid,text),
   comparison_qualification.require_bound(text,text,uuid,text),
+  comparison_qualification.require_bound_final(text,text,uuid,text),
   comparison_qualification.argument_digest(jsonb),
-  comparison_qualification.replay(uuid,text,text),
-  comparison_qualification.record_run(uuid,text,text,text,uuid,uuid,uuid,text,text,text),
+  comparison_qualification.replay(uuid,text,text,text,text,uuid),
+  comparison_qualification.record_run(uuid,text,text,text,uuid,uuid,uuid,text,text,text,uuid),
   comparison_qualification.issue_session(text,text,timestamptz),
   comparison_qualification.revoke_session(uuid),
   comparison_qualification.bind_runtime(text,text,text),

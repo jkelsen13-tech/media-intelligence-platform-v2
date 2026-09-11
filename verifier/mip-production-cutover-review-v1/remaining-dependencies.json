@@ -79,17 +79,28 @@
     {
       "area": "external_runtime_inventory",
       "status": "this_run_reproduced_metadata",
-      "not_tested": ["GitHub Pages current bundle", "Cloud Run mop-extraction current service state", "live v15 vs repo v16 bytes"]
+      "not_tested": [
+        "GitHub Pages current bundle",
+        "Cloud Run mop-extraction current service state",
+        "live v15 vs repo v16 bytes"
+      ]
     },
     {
       "area": "backlog_history_parity",
       "status": "isolated_retain_parity_copies_pending_as_pending",
       "live_manus_this_run": {
-        "source_comparison_enrichment_queue": {"succeeded": 8},
+        "source_comparison_enrichment_queue": {
+          "succeeded": 8
+        },
         "ingestion_runs_count": 4786,
         "payloads": "EXCLUDED"
       },
       "notes": "Current Manus comparison queue has no pending rows. Historical ingestion_runs were not copied. retain_parity is not live acknowledgement."
     }
-  ]
+  ],
+  "production_engineering_obligations": {
+    "F1": "OPEN: authorization stubs are not implemented producer/worker/publisher behavior or real verified workload identity binding.",
+    "F3": "OPEN: generation-safe real worker integration, conditional acknowledgement, recovery and parity; documentation is not integration.",
+    "F6": "OPEN: survivor publication eligibility, complete rights/privacy dependency evaluation and revocation; fingerprints are not eligibility."
+  }
 }
