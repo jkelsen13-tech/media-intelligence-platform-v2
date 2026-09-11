@@ -250,3 +250,9 @@ These are **not** closed by this native-test program even after a future PASS:
 - Proposed 101-file migration supplement was not inspected or treated as disclosed.
 
 Recorded at `2026-09-11T21:43:33Z`.
+
+## Watch log
+
+| UTC | Fresh native run | Notes |
+|---|---|---|
+| 2026-09-11T22:02:07Z | none | Re-checked public Actions list. Newest Comparison PostgreSQL concurrency run for SHA `ddbbbd6…` remains `34606754290` `pull_request` **attempt 1**. No `workflow_dispatch`. Attempt 1 was not substituted. PRs #149/#150/#151/#152 still draft/unmerged. Blocker stands. |

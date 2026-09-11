@@ -5,6 +5,18 @@
   "review_gate": "ISOLATED_TRANSACTIONAL_INTERFACE_VERIFICATION",
   "owner_acceptance": "NOT_SUBMITTED",
   "recorded_at_utc": "2026-09-11T21:43:33Z",
+  "last_watch_utc": "2026-09-11T22:02:07Z",
+  "watch_checks": [
+    {
+      "utc": "2026-09-11T22:02:07Z",
+      "fresh_workflow_dispatch": false,
+      "run_34606754290_attempt": 1,
+      "fresh_native_run_found": false,
+      "prior_attempt_1_substituted": false,
+      "blocker_still_stands": true,
+      "held_prs_still_unmerged": [149, 150, 151, 152]
+    }
+  ],
   "reviewer_identity": {
     "distinct_from_implementation_run": true,
     "excluded_implementation_run": "codex-root-post-review-reconciliation-20260911",
