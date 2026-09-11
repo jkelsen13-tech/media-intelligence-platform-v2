@@ -306,7 +306,7 @@ test('scheduler_claim cannot take a worker lease; the worker still claims the on
   assert.equal((await db.query("select state from comparison_qualification.jobs where generation_id=$1",[generation])).rows[0].state,'processing')
 })
 
-test('revoke_binding of worker_claim is per-RPC; revoke_principal blocks in-flight worker_complete',async t=>{
+test('revoke_binding of worker_claim is per-RPC; revoke_principal rejects new completion of an outstanding lease',async t=>{
   const db=await fixture(t)
   await bind(db,'qual_comparison_producer','producer_enqueue')
   await bind(db,'qual_comparison_worker','worker_claim')

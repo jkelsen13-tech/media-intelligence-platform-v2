@@ -4,6 +4,8 @@ on:
     paths:
       - 'supabase/qualification/comparison-generations/**'
       - 'verifier/comparisonPostgresConcurrency.py'
+      - 'verifier/pr149AuthorityOrdering.py'
+      - 'verifier/pr149-authority-baseline.sql'
       - '.github/workflows/comparison-postgres.yml'
   workflow_call:
   workflow_dispatch:

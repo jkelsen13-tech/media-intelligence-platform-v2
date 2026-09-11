@@ -1,0 +1,556 @@
+{
+  "version": 2,
+  "status": "PROPOSED_OWNER_DISCLOSURE_REVIEW_REQUIRED",
+  "historical_manifest": {
+    "candidate": "6c716619d3b312682dba2c4c8211936f7f911895",
+    "path": "verifier/mip-production-cutover-review-v1/disclosure-manifest.json",
+    "sha256": "04d28b676f15bd63acf5e96d01622d1f9d06aa4f79d68b7b6dae42e3b63f858f",
+    "unchanged": true
+  },
+  "deviation": {
+    "reviewer_run": "bc-01a08f0e-3fb8-78c0-bd37-deba2549320f",
+    "reported_access": "supabase/migrations/ directory listing and file contents",
+    "cause": [
+      "tests/cutoverReviewPacket.test.mjs",
+      "tests/mutableV16IsNotQualifiedArchitecture.test.mjs"
+    ],
+    "classification": "CONFIRMED_REVIEW_PROCESS_SCOPE_DEVIATION",
+    "evidence_limit": "Source confirms the full-directory reads; no independent filesystem audit of the reviewer environment was available."
+  },
+  "dependencies": {
+    "migration_absence_checks": {
+      "purpose": "Preserve existing assertions that qualification roles, schemas and gates are absent from all production migration files.",
+      "candidate": "6c716619d3b312682dba2c4c8211936f7f911895",
+      "directory": "supabase/migrations/",
+      "files": [
+        {
+          "path": "supabase/migrations/20260723_panel_arcs_ingestion.sql",
+          "git_blob": "2338ef7ea608dfbe1951dae3eb46729d8690ea18",
+          "bytes": 3904
+        },
+        {
+          "path": "supabase/migrations/20260724_provenance_arc_layer.sql",
+          "git_blob": "59047b6f00a8d9da927de6b08be6f05a94a466fa",
+          "bytes": 6173
+        },
+        {
+          "path": "supabase/migrations/20260725_graph_arc_layout.sql",
+          "git_blob": "49c9b2cebd30ea3185231dfaec4414384c366e78",
+          "bytes": 811
+        },
+        {
+          "path": "supabase/migrations/20260726_pass_a_data_correctness.sql",
+          "git_blob": "20be0a5157e3555b18bde839645a54569787d03c",
+          "bytes": 2596
+        },
+        {
+          "path": "supabase/migrations/20260727_arc_status_interface.sql",
+          "git_blob": "38845aa5aac309bd06fb5aa74a21426d315dae5a",
+          "bytes": 832
+        },
+        {
+          "path": "supabase/migrations/20260728_entity_resolution_sanitization.sql",
+          "git_blob": "b451f252e6aa7e124c05020dcfe99a9f44ceeddb",
+          "bytes": 8714
+        },
+        {
+          "path": "supabase/migrations/20260729_backfill_reprocess_markers.sql",
+          "git_blob": "e0fafa6dbe2e358aa283b22b8622db795240ab7b",
+          "bytes": 542
+        },
+        {
+          "path": "supabase/migrations/20260729_sky_verification.sql",
+          "git_blob": "32492713870f5f2f620d644d34acb0f351f07620",
+          "bytes": 2331
+        },
+        {
+          "path": "supabase/migrations/20260730_edge_typing.sql",
+          "git_blob": "266fb28cd3f7e40e020220da848131f7ff3fba97",
+          "bytes": 5605
+        },
+        {
+          "path": "supabase/migrations/20260730_node_typing.sql",
+          "git_blob": "e4b897d288ea2aaa5169c33700e5ba9628d9df64",
+          "bytes": 776
+        },
+        {
+          "path": "supabase/migrations/20260730_topics.sql",
+          "git_blob": "0603fa5c3a0f58ce49bfec6039dfc7b9fb1d48b8",
+          "bytes": 3527
+        },
+        {
+          "path": "supabase/migrations/20260731_policy_layer.sql",
+          "git_blob": "4faee74799b03cbe0f0bc4ca26acc92d5863e6ae",
+          "bytes": 5420
+        },
+        {
+          "path": "supabase/migrations/20260801_tier2_entity_decode_r2.sql",
+          "git_blob": "d9b9c8f92b29382a833171e4f1c1f38cfa7241ec",
+          "bytes": 3221
+        },
+        {
+          "path": "supabase/migrations/20260802_tier3_causal_edge_guard.sql",
+          "git_blob": "09c66e1e274a3b07c6ca86b7590cd949ee49cbad",
+          "bytes": 6755
+        },
+        {
+          "path": "supabase/migrations/20260803_tier3_causal_edge_guard_r5_amid_fix.sql",
+          "git_blob": "7b8b3f00b87ff962b51e9586922c3c524dc77442",
+          "bytes": 1748
+        },
+        {
+          "path": "supabase/migrations/20260804_graph_derived_tables.sql",
+          "git_blob": "9cc7a0f112fdff766db14489fac0e525f0334e7f",
+          "bytes": 2852
+        },
+        {
+          "path": "supabase/migrations/20260804_secure_tier3_remediation_backup.sql",
+          "git_blob": "4feff4f91a828bb246bd7883b8c7b260cc397d8f",
+          "bytes": 1149
+        },
+        {
+          "path": "supabase/migrations/20260805_tier6_iran_actor_dedup.sql",
+          "git_blob": "be6c3d41fb3b86aa3dc92bde206fa3a4507629cd",
+          "bytes": 2764
+        },
+        {
+          "path": "supabase/migrations/20260806_d4_d5_enforcement.sql",
+          "git_blob": "e0d1740a64b758faff268d52aca250e0c280c32f",
+          "bytes": 3225
+        },
+        {
+          "path": "supabase/migrations/20260806_source_comparison_primitives.sql",
+          "git_blob": "66567bb6a57107b090f33cbb8361a9384c9aa789",
+          "bytes": 6867
+        },
+        {
+          "path": "supabase/migrations/20260807_bias_incidents.sql",
+          "git_blob": "1bdec7bfd61742f3b60e5a151b1c0ce1c2f7b215",
+          "bytes": 2660
+        },
+        {
+          "path": "supabase/migrations/20260807_d4_rejection_audit.sql",
+          "git_blob": "79562fca33bf88f98e5d50a98039b65e2d40eec9",
+          "bytes": 3078
+        },
+        {
+          "path": "supabase/migrations/20260807_ingestion_run_id.sql",
+          "git_blob": "37bdd81ad1c4ab8b3a0364c2d7648bb3886bbe48",
+          "bytes": 790
+        },
+        {
+          "path": "supabase/migrations/20260808_d5_article_source_trigger.sql",
+          "git_blob": "4b3a87cef3672637ef40c76e7fa00d5cc54cd00b",
+          "bytes": 5627
+        },
+        {
+          "path": "supabase/migrations/20260809_extend_explanations_assertion_type_check.sql",
+          "git_blob": "543aa44d9b74cbf942ed7cf8b632c5909faff24d",
+          "bytes": 1815
+        },
+        {
+          "path": "supabase/migrations/20260810_ingest_rss_held_run_tags.sql",
+          "git_blob": "309cc8649ebfd6edd0e5bdb2dcf3b1420f17df92",
+          "bytes": 517
+        },
+        {
+          "path": "supabase/migrations/20260810_tier3_causal_edge_guard_r6_weeks_months_after.sql",
+          "git_blob": "8ce831f9f39522ebfd62ce9bfae94b31a7adf50f",
+          "bytes": 1778
+        },
+        {
+          "path": "supabase/migrations/20260812_p2025_track1_agency_source_locator.sql",
+          "git_blob": "d66596a0b7fc8230fd563fa4f01bc55c09594c9c",
+          "bytes": 2565
+        },
+        {
+          "path": "supabase/migrations/20260813_account_ui_flag.sql",
+          "git_blob": "f5908afeebcad1344df5b218bd5006ffbae88685",
+          "bytes": 518
+        },
+        {
+          "path": "supabase/migrations/20260813_atomic_arc_attach.sql",
+          "git_blob": "3ff55bf40d58dc9687b1f7190c21fc8c25b43c44",
+          "bytes": 5329
+        },
+        {
+          "path": "supabase/migrations/20260813_mip_profiles.sql",
+          "git_blob": "f3872741bfaa655ed53750111fd218d56c2a3c58",
+          "bytes": 1327
+        },
+        {
+          "path": "supabase/migrations/20260813_scope_mip_signup_trigger.sql",
+          "git_blob": "f2becdbb843c66d9731961174176e3e85dcaaa00",
+          "bytes": 723
+        },
+        {
+          "path": "supabase/migrations/20260813_secure_monitor_view_invoker.sql",
+          "git_blob": "3ee56940c20388c51cb5f160e1d13ba542f2da28",
+          "bytes": 1088
+        },
+        {
+          "path": "supabase/migrations/20260815_track_b_light_theme_flag.sql",
+          "git_blob": "c6534729013df5d65c33d4372221d12839826ec0",
+          "bytes": 640
+        },
+        {
+          "path": "supabase/migrations/20260817_location_corroboration_flag.sql",
+          "git_blob": "9fad9e655c5141f4bd2bef3c5bf4363f261f0a86",
+          "bytes": 873
+        },
+        {
+          "path": "supabase/migrations/20260819_arc_assignment_evidence_compatibility.sql",
+          "git_blob": "f7afc87392155ba8135401dc0865d3881b280e52",
+          "bytes": 922
+        },
+        {
+          "path": "supabase/migrations/20260819_authenticated_ingestion_writer.sql",
+          "git_blob": "6b3e34a0f865aa9ead2a330484d7e72cf910f2a9",
+          "bytes": 9448
+        },
+        {
+          "path": "supabase/migrations/20260819_authenticated_ingestion_writer_digest_schema_fix.sql",
+          "git_blob": "93567ca171694d401560e21a2d72e851363016cf",
+          "bytes": 925
+        },
+        {
+          "path": "supabase/migrations/20260819_authenticated_writer_citation_identity.sql",
+          "git_blob": "7e97dcc9e35597d9c2b258003d6293f78a1d7c3c",
+          "bytes": 538
+        },
+        {
+          "path": "supabase/migrations/20260819_candidate_owner_hold_review_state.sql",
+          "git_blob": "19f847c88a099f3b49c37c3df0b8ce2d2abb4235",
+          "bytes": 710
+        },
+        {
+          "path": "supabase/migrations/20260819_candidate_path_and_metadata_only_repair.sql",
+          "git_blob": "c1e024391f08db74820632092f543daf08e60876",
+          "bytes": 3355
+        },
+        {
+          "path": "supabase/migrations/20260819_gdelt_bigquery_discovery_source.sql",
+          "git_blob": "0e7f7f49b462bb043274e3e3aa94404fe2f7cf01",
+          "bytes": 1947
+        },
+        {
+          "path": "supabase/migrations/20260819_geographic_graph_provenance.sql",
+          "git_blob": "15a40090c16bc5f6d59b259c961ef51e04cb5db9",
+          "bytes": 4474
+        },
+        {
+          "path": "supabase/migrations/20260819_provenance_first_ingestion_pipeline.sql",
+          "git_blob": "11e9b6b91acf04a13004aa0d990a18a2a6af6b20",
+          "bytes": 6839
+        },
+        {
+          "path": "supabase/migrations/20260820_original_source_article_conflict_audit.sql",
+          "git_blob": "05cc812de85cd9b5a108fd956399cf1dda83880f",
+          "bytes": 2938
+        },
+        {
+          "path": "supabase/migrations/20260820_original_source_edge_sequence_compatibility.sql",
+          "git_blob": "9032396e5f4bd09e15428f490fb2d5212bd60ffe",
+          "bytes": 610
+        },
+        {
+          "path": "supabase/migrations/20260820_original_source_readonly_import.sql",
+          "git_blob": "5d0835fe118cadf9ff77a3381cad6f85b67fc808",
+          "bytes": 4477
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_accelerate_public_news_search.sql",
+          "git_blob": "c3aaf5560ab51b9a8830e1d83c20cb8d6e7f4a34",
+          "bytes": 772
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_backfill_imported_edge_metadata_references.sql",
+          "git_blob": "edce6d70f07be772e17cee1484c7f1118d6cd612",
+          "bytes": 1687
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_claim_auditability_and_deterministic_promotion.sql",
+          "git_blob": "173f1db772f49f4166add6eb44b52b0656d35bb8",
+          "bytes": 12363
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_event_independent_public_claim_promotion.sql",
+          "git_blob": "29d8913008520114799b05d999cce7a9b07571ce",
+          "bytes": 6022
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_import_snapshot_stage_checkpoints.sql",
+          "git_blob": "e42b9870429dc80dcb21028ab0be47e569145ac6",
+          "bytes": 1214
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_public_arc_milestones_projection.sql",
+          "git_blob": "3c3fbc8dcf289d515154c9fe7a9e3f88a9c8b025",
+          "bytes": 504
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_public_authors_projection.sql",
+          "git_blob": "549e056600940a61607df98006f536ad36a24745",
+          "bytes": 430
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_public_comparison_projection.sql",
+          "git_blob": "d401971f8bf8a37a4e064fa99500724045721f74",
+          "bytes": 5495
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_public_news_claim_auditability.sql",
+          "git_blob": "b0e7cb042e20b73655f7337f3c4ebae0a1901a1c",
+          "bytes": 1433
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_public_news_detail_projection.sql",
+          "git_blob": "aa12c7d1391e8fb53bcd64a6167cefcd20406e34",
+          "bytes": 1575
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_restore_imported_arc_roots.sql",
+          "git_blob": "78ee2accb5add7ea4162e13f8b0b0581529d7009",
+          "bytes": 5140
+        },
+        {
+          "path": "supabase/migrations/20260820_v2_revoke_anonymous_base_table_reads.sql",
+          "git_blob": "038072b1b567388df7936d8a5ca7b5647b308fe4",
+          "bytes": 1943
+        },
+        {
+          "path": "supabase/migrations/20260821_v2_news_feed_intake_gate.sql",
+          "git_blob": "517dfe78b8c0b4dd4ddd0604983338caef920f53",
+          "bytes": 3761
+        },
+        {
+          "path": "supabase/migrations/20260821_v2_public_graph_coverage_projection.sql",
+          "git_blob": "9f7bd10c187cfe0013c9d2fa80aaa6da56921c33",
+          "bytes": 1842
+        },
+        {
+          "path": "supabase/migrations/20260821_v2_source_comparison_membership_gate.sql",
+          "git_blob": "146802b5a0734cec996d1747e24da04ea7b8d3be",
+          "bytes": 6980
+        },
+        {
+          "path": "supabase/migrations/20260821_v2_source_comparison_membership_mutation_guard.sql",
+          "git_blob": "9592048a690d4a3cfc03f878bb7b30dc988aba89",
+          "bytes": 2056
+        },
+        {
+          "path": "supabase/migrations/20260821_v2_story_container_display_kind.sql",
+          "git_blob": "d7a4cb0e03974849543834e71640b161d54357d4",
+          "bytes": 1262
+        },
+        {
+          "path": "supabase/migrations/20260822_v2_anonymous_read_policy_hardening.sql",
+          "git_blob": "d428f31bdc05d727f10b33d28c2e90232ea51f83",
+          "bytes": 3644
+        },
+        {
+          "path": "supabase/migrations/20260823_gdelt_origination_terminal_state.sql",
+          "git_blob": "e3d6979e204c56983ef6e878193fac3d06920ac0",
+          "bytes": 9415
+        },
+        {
+          "path": "supabase/migrations/20260823_gdelt_staged_bulk_ingestion.sql",
+          "git_blob": "4b0f67138433eb40e15a0d35e913eb22296964e9",
+          "bytes": 32271
+        },
+        {
+          "path": "supabase/migrations/20260826024647_timeline_v2_graph_identity_mapping_contract.sql",
+          "git_blob": "7f57764ec615129f9c340392eda0a45d1f0edc3f",
+          "bytes": 30544
+        },
+        {
+          "path": "supabase/migrations/20260826024731_timeline_v2_graph_identity_mapping_contract_hardening.sql",
+          "git_blob": "9e5154b01f0be02c3d5e83b38a299e4954eddb93",
+          "bytes": 6016
+        },
+        {
+          "path": "supabase/migrations/20260826203500_v2_spatial_geography_read_hardening.sql",
+          "git_blob": "f7df5359d12118d2e4b39cd562e2d8db85c54e02",
+          "bytes": 1090
+        },
+        {
+          "path": "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql",
+          "git_blob": "e7beb22b9a4dd2e38076b5554c7f5b4e6e0e4e77",
+          "bytes": 27775
+        },
+        {
+          "path": "supabase/migrations/20260905151626_mip_consolidation_delta.sql",
+          "git_blob": "4942baa3200ac15ccfd6651fcde2c7b99cda1a08",
+          "bytes": 14940
+        },
+        {
+          "path": "supabase/migrations/20260905160001_event_scoped_public_article_counts.sql",
+          "git_blob": "dca7dd5c171bd08f1f6dc6d7c294019041155841",
+          "bytes": 4147
+        },
+        {
+          "path": "supabase/migrations/20260905172453_mip_public_surface_transfer.sql",
+          "git_blob": "f23e485d1be5cf4b19830fe5aefd22c731cbdc1e",
+          "bytes": 1117
+        },
+        {
+          "path": "supabase/migrations/20260905172517_mip_public_surface_stub_reconcile.sql",
+          "git_blob": "d38493704fec633f0db0bc38815fcd3d466b46e8",
+          "bytes": 7045
+        },
+        {
+          "path": "supabase/migrations/20260905172527_mip_public_surface_predicates.sql",
+          "git_blob": "b46b7a62252f0f6355736ee0c68a51503131bf8d",
+          "bytes": 4809
+        },
+        {
+          "path": "supabase/migrations/20260905172543_mip_public_surface_tables.sql",
+          "git_blob": "39666b575463cb1d385058b59587a98cc925b44c",
+          "bytes": 11916
+        },
+        {
+          "path": "supabase/migrations/20260905172558_mip_public_surface_topics_rls.sql",
+          "git_blob": "4d3bfcedc0f1872650459f672d154830a84660be",
+          "bytes": 10081
+        },
+        {
+          "path": "supabase/migrations/20260905172611_mip_public_surface_views.sql",
+          "git_blob": "8ab54da9b5e4db98638494bd19c04380437f423a",
+          "bytes": 7851
+        },
+        {
+          "path": "supabase/migrations/20260905174500_mip_public_surface_transfer.sql",
+          "git_blob": "129f99480c3e6102ee403068b2920e3d747f40aa",
+          "bytes": 688
+        },
+        {
+          "path": "supabase/migrations/20260905180142_mip_public_surface_publication_gates.sql",
+          "git_blob": "1d6bc850f229d1b624a3e23511f619efb5587d55",
+          "bytes": 3382
+        },
+        {
+          "path": "supabase/migrations/20260905181254_mip_public_surface_authenticated_review_revoke.sql",
+          "git_blob": "2db2bd8d646128746448064cb64828f95df177fa",
+          "bytes": 2128
+        },
+        {
+          "path": "supabase/migrations/20260905182355_mip_nested_claim_publication_gates.sql",
+          "git_blob": "f287b4023da45072284b1688cca4e929c76bb74a",
+          "bytes": 10473
+        },
+        {
+          "path": "supabase/migrations/20260905203600_mip_legacy_graph_private_staging.sql",
+          "git_blob": "e0b3c0e928c5d1001713368118f653d79254d4e8",
+          "bytes": 47162
+        },
+        {
+          "path": "supabase/migrations/20260906042413_evidence_change_queue_v1.sql",
+          "git_blob": "1b93f947f5351097e629adc718659a1125fdfe1f",
+          "bytes": 13635
+        },
+        {
+          "path": "supabase/migrations/20260906051224_evidence_assessment_dependencies_v1.sql",
+          "git_blob": "d6092de9540550c4d126c91494cfe3374f02a721",
+          "bytes": 20620
+        },
+        {
+          "path": "supabase/migrations/20260906054356_evidence_capture_retrieval_v1.sql",
+          "git_blob": "ca0bf579935eab91de35fe3fc6a86762a35015ce",
+          "bytes": 12731
+        },
+        {
+          "path": "supabase/migrations/20260906071525_investigation_change_briefings_v1.sql",
+          "git_blob": "78b1bdce25432ef7e8194a764c585e7836ef943e",
+          "bytes": 13249
+        },
+        {
+          "path": "supabase/migrations/20260906075718_investigation_workspace_batch_v1.sql",
+          "git_blob": "1eaf8bac441fee856f7f3e1b6723662d0408dcad",
+          "bytes": 34259
+        },
+        {
+          "path": "supabase/migrations/20260906100018_investigation_evidence_checks_v1.sql",
+          "git_blob": "cd107ebf4884aac89c511f70169eadbe8dc52f3c",
+          "bytes": 15347
+        },
+        {
+          "path": "supabase/migrations/20260906121130_investigation_evidence_reviews_v1.sql",
+          "git_blob": "7dfb4deda49a53babe9c216e1d82f83fcc0b84c8",
+          "bytes": 15027
+        },
+        {
+          "path": "supabase/migrations/20260907002409_investigation_reference_integrity_v1.sql",
+          "git_blob": "8927e3609a3972c1374e84bfcce1f133e6d4efdb",
+          "bytes": 10039
+        },
+        {
+          "path": "supabase/migrations/20260907234007_evidence_change_producer_claim_v1.sql",
+          "git_blob": "54df7ade7bac07e09dae9179f52b1789e01604b5",
+          "bytes": 3298
+        },
+        {
+          "path": "supabase/migrations/20260908002615_evaluated_record_claim_v1.sql",
+          "git_blob": "9291fcec4ef7ccc9c8656dec62e8d38f4e42e8a6",
+          "bytes": 12458
+        },
+        {
+          "path": "supabase/migrations/20260908015040_trigger_function_hardening_v1.sql",
+          "git_blob": "7ee0bfddd286d9c5a637bd1223eb53e83fea067a",
+          "bytes": 2079
+        },
+        {
+          "path": "supabase/migrations/20260908104901_comparison_membership_history_guard.sql",
+          "git_blob": "877e012a0ac4caf2b59f624e336584fc361af9a1",
+          "bytes": 4175
+        },
+        {
+          "path": "supabase/migrations/20260908180013_collector_history_retention.sql",
+          "git_blob": "c7eb4a526c783302bfe9630e1d0beca5589f18e0",
+          "bytes": 4992
+        },
+        {
+          "path": "supabase/migrations/20260909153133_comparison_explanation_event_binding.sql",
+          "git_blob": "909b61260c9403f3ef38eea56df47d563e79bc91",
+          "bytes": 6961
+        },
+        {
+          "path": "supabase/migrations/20260909181233_spatial_history_retention.sql",
+          "git_blob": "d7bd7b1518ada60af5c5d925ce1c0909a5c44d91",
+          "bytes": 5589
+        },
+        {
+          "path": "supabase/migrations/20260909190228_spatial_parent_retention.sql",
+          "git_blob": "5b7939dc5f1cba9c349e0fd220c0af118ed64680",
+          "bytes": 6002
+        },
+        {
+          "path": "supabase/migrations/20260909191503_spatial_source_ancestor.sql",
+          "git_blob": "1e6323cb449f7a1cc8996837054758d18f11efd9",
+          "bytes": 5903
+        }
+      ],
+      "directory_membership_must_match": true,
+      "disclosure_authorized": false,
+      "if_not_approved": "BLOCKED_NOT_TESTED; do not read this directory"
+    },
+    "native_authority": {
+      "files": [
+        "verifier/comparisonPostgresConcurrency.py",
+        "verifier/pr149AuthorityOrdering.py",
+        "verifier/pr149-authority-baseline.sql",
+        "supabase/qualification/comparison-generations/contract.sql",
+        "supabase/qualification/comparison-generations/selection.sql",
+        "supabase/qualification/comparison-generations/capability.sql",
+        "supabase/qualification/comparison-generations/source-fixture.sql",
+        "supabase/qualification/comparison-generations/source-snapshot.sql"
+      ],
+      "environment": "GitHub Actions ubuntu runner, Python stdlib, psql, disposable postgres:17.6 service",
+      "production_access_required": false
+    },
+    "node": {
+      "installation": "npm ci with package.json and package-lock.json; transitive package integrity is bound by lockfile. No npm lifecycle execution outside approved scope.",
+      "existing_packet": "61-file manifest plus this explicitly approved supplement; expanding a suite requires a new dependency audit."
+    }
+  },
+  "automatic_disclosure": false
+}

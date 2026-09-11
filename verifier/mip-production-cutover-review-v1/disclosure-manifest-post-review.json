@@ -1,0 +1,310 @@
+{
+  "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
+  "disclosure_status": "proposed_not_transmitted",
+  "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
+  "review_packet_commit": null,
+  "review_packet_commit_resolution": "Stamp the git commit that contains the hashed_files tree. Do not mix hashes from a different commit.",
+  "mixed_candidate_rule": "If any hashed file differs from this manifest, the packet is not the frozen candidate.",
+  "hashed_files": [
+    {
+      "path": "verifier/post-review-2026-09-11/disclosure-dependencies.proposed.json",
+      "sha256": "1d5b90682ef59d72f88d0f5048705321886ba03fb124a8ae0beb63296b3a33b8",
+      "bytes": 22374
+    },
+    {
+      "path": "tests/postReviewEvidence.test.mjs",
+      "sha256": "6fecba82e61a003235ccd3d9f0c2e3fe4456a7cdd95d09ee15d5ba59a75b6237",
+      "bytes": 1830
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql",
+      "sha256": "63f9b3ca34730c86029b446172496151849079b304ac45a0e4459a98af75790e",
+      "bytes": 10652
+    },
+    {
+      "path": "supabase/functions/source-comparison-generation-candidate/worker.js",
+      "sha256": "afd9c3f326c3ce44d69a8c168ae99c977140ea5f072fa468154473bcc7609e4f",
+      "bytes": 2551
+    },
+    {
+      "path": "tests/comparisonGenerationCandidate.test.mjs",
+      "sha256": "c88e0313b7022acfef435b2fbd3b508bc068b311abf7103e0d9d76b5ae07914c",
+      "bytes": 8387
+    },
+    {
+      "path": "verifier/post-review-2026-09-11/README.md",
+      "sha256": "7a016569484b79c26c7608d7d4a97faf1ba6016920aec0b3ae0177a485e1126b",
+      "bytes": 9120
+    },
+    {
+      "path": "docs/COMPARISON_CAPABILITY_SEPARATION_2026-09-10.md",
+      "sha256": "97b5a4cd849d004b86c4a0ca1f7348afcff30a2eddc38876a55282fd59ae0a49",
+      "bytes": 7497
+    },
+    {
+      "path": "docs/COMPARISON_GENERATION_TRANSACTION_2026-09-09.md",
+      "sha256": "cb283d5435a7051f51f68b3efb459ac9451ad46598e2d237b79a398a734e550f",
+      "bytes": 4094
+    },
+    {
+      "path": "docs/COMPARISON_POSTGRES_CONCURRENCY_2026-09-09.md",
+      "sha256": "83933ef418e7a3a1f1cb038a4364b144522f4c8d0a489986c4375f5c468e6936",
+      "bytes": 2314
+    },
+    {
+      "path": "docs/COMPARISON_SELECTION_2026-09-10.md",
+      "sha256": "effc1ae5fad3c4fbcee3940023427e78690bdb37f81c640ba12dacad59add06b",
+      "bytes": 3446
+    },
+    {
+      "path": "docs/COMPARISON_SOURCE_SNAPSHOT_2026-09-09.md",
+      "sha256": "d2b972919c10bb81f2537dca87b7189cc7b600cd98c413d7b96f029d545cca6f",
+      "bytes": 3581
+    },
+    {
+      "path": "docs/COMPARISON_RELEASE_THRESHOLD_2026-09-08.md",
+      "sha256": "7a747b21ee16fe7851c33a56bddd446ec9fe8224fcf591c3e3ac637bd451e6a9",
+      "bytes": 2368
+    },
+    {
+      "path": "docs/EVIDENCE_DISCOVERY_EVALUATION_V1.md",
+      "sha256": "9516eb22d41d7fbc00fff69a83cb634dbe25ab91ea821883c2b4af276321e37d",
+      "bytes": 6771
+    },
+    {
+      "path": "docs/MIP_CUTOVER_STAGING_PROPOSAL_2026-09-10.md",
+      "sha256": "4970490d8cb7284c436c74d81b064203c21677e1fc085387a1ec890b6e3dff3e",
+      "bytes": 4399
+    },
+    {
+      "path": "docs/MIP_PRODUCTION_CUTOVER_REVIEW_PACKET_2026-09-10.md",
+      "sha256": "de2dec8b0d56f26a873e515274788404bb06e027b47c24ce6ad164567caad563",
+      "bytes": 6104
+    },
+    {
+      "path": "docs/MIP_PRODUCTION_CUTOVER_REVIEW_RECONCILIATION_2026-09-11.md",
+      "sha256": "6a8ecb5001a5f8758e39be27609292092a86ce73b23c64cc3ee5c8c0e17b79c0",
+      "bytes": 12504
+    },
+    {
+      "path": "docs/MIP_SEMANTIC_EVALUATION_POLICY_PROPOSAL_2026-09-10.md",
+      "sha256": "edd0b8c3681c5b2ca3db118559da9bc7a03dfd6c0355c175ae668d2f57acfdec",
+      "bytes": 7657
+    },
+    {
+      "path": "docs/MUTABLE_V16_IS_NOT_QUALIFIED_ARCHITECTURE_2026-09-11.md",
+      "sha256": "fd55ebbb789ec313c46915dff71f98ffca0ec0ce268fca7cfaaa96b82b8d517a",
+      "bytes": 1975
+    },
+    {
+      "path": "docs/RECORD_CANDIDATE_EVALUATION_2026-09-08.md",
+      "sha256": "f2f034a401a4129faadd4f77a8469354607c18d991f7d96630c4bd9e0e748680",
+      "bytes": 4086
+    },
+    {
+      "path": "docs/UNCERTAINTY_VOCABULARY.md",
+      "sha256": "22aa0128fc45c8aa563a05c7cf89c619f0dd3eee215f2c321cd038f0dee3c47a",
+      "bytes": 16623
+    },
+    {
+      "path": "package.json",
+      "sha256": "2575ce3f1b097d576b9e3da0306c85f1e3acbc76c64f912968558ef32ec4f7a0",
+      "bytes": 1329
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "1f12bc7e116a262d7cfad8693fea9e271cb0e409d8ca3993a9737b42f24fe255",
+      "bytes": 118411
+    },
+    {
+      "path": "scripts/buildCutoverReviewPacket.mjs",
+      "sha256": "4f9f9f28527432b88b4cabdc722d7d5583791052b66b51c702ade5b31c4f4706",
+      "bytes": 8023
+    },
+    {
+      "path": "scripts/evaluateRecordCandidates.mjs",
+      "sha256": "e43c390ce3e1b9727f11a7e0eb08dd2809d5d3290fd98a1801b37fed0b00624e",
+      "bytes": 8383
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/capability.sql",
+      "sha256": "27a3c6dbe1344932d6a64a7016abf143ea992f1d0a4fed8541a953f45137c282",
+      "bytes": 48088
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/contract.sql",
+      "sha256": "650a70f5dd8d5acacc74b73cd225d1c1755e822062e0ba88648e5a9e43715776",
+      "bytes": 12529
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/selection.sql",
+      "sha256": "a910c8da881593c4e2d5689c6acbac0d81882531f4b1fb78589008254a416e81",
+      "bytes": 4975
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/source-fixture.sql",
+      "sha256": "80b165977c67f92a107ceb8fc9fb46c53ef880d816d08789cce96c59de45a805",
+      "bytes": 1883
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/source-snapshot.sql",
+      "sha256": "7bef311c9f551f88ca6bbb51f57b71593c64017e0931d9db4c275885c42dc968",
+      "bytes": 2795
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql",
+      "sha256": "cb4c245c04bd7e69722a7866ea94515d953f98ac8d4972837b835d6b0835c3b5",
+      "bytes": 5907
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/README.md",
+      "sha256": "8c6bd34d212824ee92a5bd4e70ebdd0d841e89a2770dc9c7833c10a13d23811a",
+      "bytes": 1073
+    },
+    {
+      "path": "supabase/qualification/membership-prepared/deployment.json",
+      "sha256": "03d0a27004ee570e70b8a5f9b405085767cd03d9e31fd90e8b9fd8af8579dc8f",
+      "bytes": 162
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/articleInputReadback.js",
+      "sha256": "ebd5e6a4969d679b7801a6180897ad1bcabdcd08af61af9bc1fec8ea02cf2be8",
+      "bytes": 830
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/index.ts",
+      "sha256": "3e274d14499194cc2f89b88b9fe0f14a721d311eca6c874e4d7dde40c28602b8",
+      "bytes": 22152
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/lib.js",
+      "sha256": "1c3cc8b6148097417bf4b47b0425ee637062796b657310ad0d42eb96d3021c89",
+      "bytes": 46876
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/loadedLanguageLexicon.json",
+      "sha256": "45954bc43de3a13abaf4eeff1ebd350d9fd4c186638820f05908b62d3e9b01a7",
+      "bytes": 1920
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/membershipFingerprint.js",
+      "sha256": "9869fe113aefa062855e55122ee02678a709ae149a5e0f3a10be25843d8fbcc0",
+      "bytes": 2751
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/membershipScoreReadback.js",
+      "sha256": "f3ccd1a51a6a01ed7669bc92e017f61ce09c7b64070d73086251c91a8636e6b8",
+      "bytes": 1946
+    },
+    {
+      "path": "supabase/runtime-snapshots/source-comparison-run-v16/projectionConfig.js",
+      "sha256": "7454052144d13ad1067f5cce77b97767339c4c261a052f001162d4cf4979a893",
+      "bytes": 796
+    },
+    {
+      "path": "tests/comparisonCapabilitySeparation.test.mjs",
+      "sha256": "45a4d897714055de660cbb9961927e08b21f8df5207df2fa56dd059c15f442cd",
+      "bytes": 28011
+    },
+    {
+      "path": "tests/comparisonGenerationTransaction.test.mjs",
+      "sha256": "f66b6e8eca431c564a8d006c98cb1bcb1e9811c1b51ff05ef22c4c9ca685d44f",
+      "bytes": 16304
+    },
+    {
+      "path": "tests/comparisonSelection.test.mjs",
+      "sha256": "bf9dbff39f30d47feb67b3cca3e23078ab102d416903bc10d23373d47edc8918",
+      "bytes": 6468
+    },
+    {
+      "path": "tests/comparisonSourceSnapshot.test.mjs",
+      "sha256": "72132d551bef6c4d829714dfb134e14d3e0df8f05f663a45a741761112c1db28",
+      "bytes": 5979
+    },
+    {
+      "path": "tests/cutoverReviewPacket.test.mjs",
+      "sha256": "ccb2c40da0b977d8a5cbede4b3c067226a1e9b76a5dc71121d7f78a1262db367",
+      "bytes": 6590
+    },
+    {
+      "path": "tests/mipCutoverAuthorityDesign.test.mjs",
+      "sha256": "6fa331c6000f32eb27a601572d123d02a249cb24d1e62395be554b1ab32bb09c",
+      "bytes": 3632
+    },
+    {
+      "path": "tests/mutableV16IsNotQualifiedArchitecture.test.mjs",
+      "sha256": "70fe5601c86293e3dd78e81ceca7e9a2fa51e9be4b70eae2ba1680d66a873ca0",
+      "bytes": 2256
+    },
+    {
+      "path": "tests/recordCandidateEvaluation.test.mjs",
+      "sha256": "13ca62a28073141c993011885065feb1afc8984721471418123245a63b841d41",
+      "bytes": 5729
+    },
+    {
+      "path": "verifier/comparisonPostgresConcurrency.py",
+      "sha256": "b74ee42533583e5550f1ff09b63d4267df5f18d353b06c380363820d68c161f2",
+      "bytes": 21526
+    },
+    {
+      "path": "verifier/pr149AuthorityOrdering.py",
+      "sha256": "eed39690e7a474841ede2b5be52bbc525efa84134419c4b05a40794aca406690",
+      "bytes": 11441
+    },
+    {
+      "path": "verifier/pr149-authority-baseline.sql",
+      "sha256": "a3785a59fff944d0ee1fd6af0974e85de1f7efa9686c9ac677317d018bd2c711",
+      "bytes": 45844
+    },
+    {
+      "path": "docs/PR149_AUTHORITY_ORDERING_2026-09-11.md",
+      "sha256": "b5e8cf4559847ac1c4d845a57e7ae3cae9c40cc8a1cbe58d51cef5e8050011b9",
+      "bytes": 8220
+    },
+    {
+      "path": ".github/workflows/comparison-postgres.yml",
+      "sha256": "ddef4df4b435183f5d6ee417c90c2fd2cac02ab8c158b0c57326f06119bbc8a6",
+      "bytes": 1450
+    },
+    {
+      "path": ".github/workflows/deploy-cloud-run.yml",
+      "sha256": "2f01b077c304e28efa820d46fe589ca7b4d29af7af633bb0fa5a360513665040",
+      "bytes": 1213
+    },
+    {
+      "path": "verifier/independent-cutover-review-v1/README.md",
+      "sha256": "d4da264472f0cbe4c277c9b7976879e480f1039e13fce2a99c8c1a8ea7b2c855",
+      "bytes": 550
+    },
+    {
+      "path": "verifier/independent-cutover-review-v1/MIP_PRODUCTION_CUTOVER_REVIEW_v1.md",
+      "sha256": "3bedb192385a8c47f44efb00e650eb5242b296b938ab5a140c6f4c09d36937d9",
+      "bytes": 22863
+    },
+    {
+      "path": "verifier/independent-cutover-review-v1/MIP_PRODUCTION_CUTOVER_REVIEW_v1.json",
+      "sha256": "a869298baa7125a65a818decb6d2fbcef0ff72badde7c5f447714815fe2b26ba",
+      "bytes": 40273
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-reconciliation-2026-09-11.json",
+      "sha256": "e489762122a969077bf6911e9a569501ed6c45407e584dec2fb945b39e6ab0b7",
+      "bytes": 6552
+    }
+  ],
+  "excluded": [
+    "credentials, tokens, Vault secret values, JWT/session contents",
+    "auth.users emails and auth.sessions IP/user-agent/refresh-token material",
+    "private investigation records and raw production source payloads",
+    "live Edge Function source bodies (hashes/metadata only)",
+    "cron.job command text",
+    "tests/golden fixtures and other uncleared third-party article bodies",
+    "the 10 September 2026 owner decision brief body (NOT RECOVERED)",
+    "MIP_PIPELINE_SERVICE_KEY / GCP_SA_KEY values (names only)"
+  ],
+  "rights_check": "GitHub reports this repository as public. Existing repository presence does not establish disclosure rights. Included paths are MIP implementation, qualification, or operator documentation in the GitHub repository. No live payloads, Auth records, or uncleared third-party bodies were added. Redaction is by omission of whole classes, not by rewriting test assertions.",
+  "independent_reviewer_access": "Owner supplies this packet. This implementation agent does not contact Grok or transmit material.",
+  "secret_free": true,
+  "supplement_version": 2,
+  "historical_manifest_sha256": "04d28b676f15bd63acf5e96d01622d1f9d06aa4f79d68b7b6dae42e3b63f858f"
+}
