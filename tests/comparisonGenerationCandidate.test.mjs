@@ -17,7 +17,7 @@ async function fixture(t){
    await db.exec(await read(root+'mip-cutover-authority/'+file))
  const sessions={}
  for(const runtime of ['runtime-a','runtime-b']){
-  await db.query('insert into mip_cutover_authority.runtime_config values($1,$2,$3,$4)',[runtime,'source',implementation,JSON.stringify({})])
+  await db.query('insert into mip_cutover_authority.runtime_config values($1,$2,$3,$4)',[runtime,'source',implementation,JSON.stringify({entries:[]})])
   await db.query('select comparison_qualification.bind_source_scope($1,$2)',[runtime,'source'])
   await db.query('select comparison_qualification.bind_evaluated_implementation($1,$2)',[runtime,implementation])
   sessions[runtime]={}

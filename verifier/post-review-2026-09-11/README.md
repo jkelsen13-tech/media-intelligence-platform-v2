@@ -43,3 +43,6 @@ F2 OPEN: no semantic thresholds, minimum counts, splits, labels or adjudication 
 
 ## Verification
 See the exact candidate's GitHub checks and final implementation verification receipt. New tests are implementation-agent evidence only. No independent native reproduction, production trial, live deployment, live regression test or held-out semantic evaluation is claimed by this batch. Prior failures and historical review artifacts remain intact.
+
+### Preserved first implementation failure
+Candidate `961a6884b6e4eb869123edf606cbaca4a4b58c6f`, regression run 34606263099, Node 22 job 103285311122: 1632 tests, 1628 pass, 4 fail. Three integration cases terminated before completion because fixture lexicon `{}` lacked the `entries` array required by the unchanged semantic library. The fourth failure caught missing template-expanded packet paths in the generated manifest. Corrected fixture to `{entries:[]}` and regenerated the full manifest from the complete disclosure list. Assertions unchanged. Existing native run 34606262927 passed 14 original + 7 corrected; frozen baseline 3 pass/4 intentional skips. These results belong only to that superseded candidate. New candidate-interface native scenarios are separately added, with the original authority harness unchanged.

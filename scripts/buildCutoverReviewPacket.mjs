@@ -14,6 +14,7 @@ export const PACKET_ID='MIP_PRODUCTION_CUTOVER_REVIEW_v1'
 // Secret-free disclosure set. Manifest itself is excluded from hashed_files so a
 // later freeze commit can stamp review_packet_commit without invalidating hashes.
 export const DISCLOSED_PATHS=[
+  'verifier/candidateInterfacesPostgres.py',
   'verifier/post-review-2026-09-11/disclosure-dependencies.proposed.json',
   'tests/postReviewEvidence.test.mjs',
   'supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql',

@@ -5,6 +5,8 @@ on:
       - 'supabase/qualification/comparison-generations/**'
       - 'verifier/comparisonPostgresConcurrency.py'
       - 'verifier/pr149AuthorityOrdering.py'
+      - 'verifier/candidateInterfacesPostgres.py'
+      - 'supabase/qualification/mip-cutover-authority/**'
       - 'verifier/pr149-authority-baseline.sql'
       - '.github/workflows/comparison-postgres.yml'
   workflow_call:
@@ -43,3 +45,8 @@ jobs:
         env:
           MIP_DISPOSABLE_POSTGRES: comparison-qualification
         run: python3 -B verifier/pr149AuthorityOrdering.py
+
+      - name: Verify isolated mip candidate interfaces
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+        run: python3 -B verifier/candidateInterfacesPostgres.py
