@@ -2,7 +2,7 @@
   "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
   "disclosure_status": "proposed_not_transmitted",
   "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
-  "review_packet_commit": null,
+  "review_packet_commit": "392907a4c079c3b01fa633a92b7350055372f22c",
   "review_packet_commit_resolution": "Stamp the git commit that contains the hashed_files tree. Do not mix hashes from a different commit.",
   "mixed_candidate_rule": "If any hashed file differs from this manifest, the packet is not the frozen candidate.",
   "hashed_files": [
