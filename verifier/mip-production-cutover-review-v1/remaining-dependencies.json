@@ -2,6 +2,8 @@
   "production_cutover": "ON_HOLD",
   "agent_completed_this_packet": [
     "Isolated capability-separation RPCs, grants, RLS, request_runs, publication follow, retain_parity, diagnosis, revocation tests",
+    "F4 argument-bound request replay; F5 scheduler_claim no longer leases; revoke_principal; F6 server-bound source/implementation and publication closure fingerprints",
+    "Isolated mip_* EXECUTE-only design package (not deployed); v16 vs qualified-generation architecture split tests",
     "Secret-free review packet, disclosure manifest builder, evaluation-policy proposal with null thresholds",
     "Independently reproduced live inventory (hashes, cron active flags, Auth counts, qualification schema absent)",
     "Staged isolated / proposed shadow-canary / cutover / rollback text"
@@ -9,7 +11,7 @@
   "agent_remaining_authorized_without_new_owner_permission": [
     "Keep qualification SQL out of migrations and live projects",
     "Keep publication and membership auto-approval disabled",
-    "Do not contact Grok or transmit the packet"
+    "Do not merge PR #147, provision credentials, or transmit Grok’s review as owner acceptance"
   ],
   "agent_cannot_complete_without_owner_decision": [
     {
@@ -33,6 +35,10 @@
       "need": "Any shadow/canary, credential provisioning, schedule change, publication, or cutover requires a later prompt"
     },
     {
+      "id": "re-review-reconciled-candidate",
+      "need": "Independent review of this engineering-reconciliation HEAD. Grok’s BLOCKED review applies to frozen 47075711 only and is preserved unchanged."
+    },
+    {
       "id": "owner-acceptance",
       "need": "Separate owner acceptance of MIP_PRODUCTION_CUTOVER_REVIEW_v1 after independent review writes a non-null outcome"
     }
@@ -40,8 +46,8 @@
   "technical_dependencies_still_open": [
     {
       "area": "production_dependency_publication_contract",
-      "status": "isolated_proposal_only",
-      "notes": "publication_history.dependency_hash is sha256 of input/output/implementation/context. Live survivor public predicates remain authoritative. No live publication rows were written."
+      "status": "isolated_proposal_extended_not_live",
+      "notes": "publication_history.dependency_hash now includes generation identity plus fingerprints of named survivor-closure relations (events, membership, articles, claims/surfaces, explanations, evidence links, corrections, nodes, edges/arcs, mip_private.reader_claim_surfaces). Absence is explicit. Isolated fixture mutation fails publisher_release. Live survivor public predicates remain authoritative. No live publication rows were written. Isolated qualification is still not survivor publication eligibility."
     },
     {
       "area": "withdrawal_revocation_integration",

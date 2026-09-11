@@ -15,6 +15,8 @@ async function fixture(t){
   const db=await PGlite.create();t.after(()=>db.close())
   await db.exec('create role anon;create role authenticated;create role service_role bypassrls;')
   await db.exec(contract);await db.exec(selection);await db.exec(capability)
+  await db.query('select comparison_qualification.bind_source_scope($1,$2)',[runtime,'source'])
+  await db.query('select comparison_qualification.bind_evaluated_implementation($1,$2)',[runtime,'fixture'])
   return db
 }
 async function session(db,principal){
@@ -243,4 +245,177 @@ test('parity retain copies pending jobs as pending; browser roles stay denied; d
   assert.equal(ambient.execute_worker_complete,false)
   await db.exec('reset role')
   await assert.rejects(db.exec('delete from comparison_qualification.request_runs'),/immutable/)
+})
+
+test('request-id replay acknowledges only identical arguments; changed output or payload conflicts',async t=>{
+  const db=await fixture(t)
+  await bind(db,'qual_comparison_producer','producer_enqueue')
+  await bind(db,'qual_comparison_worker','worker_claim')
+  await bind(db,'qual_comparison_worker','worker_complete')
+  const producer=await session(db,'qual_comparison_producer')
+  const worker=await session(db,'qual_comparison_worker')
+  const enqueueRequest=randomUUID()
+  const first=(await asRole(db,'qual_comparison_producer',
+    'select comparison_qualification.producer_enqueue($1,$2,$3,$4,$5::jsonb,$6,$7::timestamptz) id',
+    [enqueueRequest,producer,runtime,'source','{"payload":"A"}','fixture','2026-01-01'])).rows[0].id
+  const same=(await asRole(db,'qual_comparison_producer',
+    'select comparison_qualification.producer_enqueue($1,$2,$3,$4,$5::jsonb,$6,$7::timestamptz) id',
+    [enqueueRequest,producer,runtime,'source','{"payload":"A"}','fixture','2026-01-01'])).rows[0].id
+  assert.equal(same,first)
+  await assert.rejects(asRole(db,'qual_comparison_producer',
+    'select comparison_qualification.producer_enqueue($1,$2,$3,$4,$5::jsonb,$6,$7::timestamptz)',
+    [enqueueRequest,producer,runtime,'source','{"payload":"B"}','fixture','2026-01-01']),
+    /mip_request_replay_conflict/)
+  const claimed=(await asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_claim($1,$2,$3) j',[randomUUID(),worker,runtime])).rows[0].j
+  const completeRequest=randomUUID()
+  const firstComplete=(await asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_complete($1,$2,$3,$4,$5,$6,$7,$8::jsonb) state',
+    [completeRequest,worker,runtime,claimed.generation_id,claimed.lease_token,claimed.input_hash,claimed.implementation_ref,'{"claims":["A"]}'])).rows[0].state
+  assert.equal(firstComplete,'completed')
+  const replaySame=(await asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_complete($1,$2,$3,$4,$5,$6,$7,$8::jsonb) state',
+    [completeRequest,worker,runtime,claimed.generation_id,claimed.lease_token,claimed.input_hash,claimed.implementation_ref,'{"claims":["A"]}'])).rows[0].state
+  assert.equal(replaySame,'completed')
+  await assert.rejects(asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_complete($1,$2,$3,$4,$5,$6,$7,$8::jsonb)',
+    [completeRequest,worker,runtime,claimed.generation_id,claimed.lease_token,claimed.input_hash,claimed.implementation_ref,'{"claims":["B"]}']),
+    /mip_request_replay_conflict/)
+  const durable=(await db.query('select output_payload from comparison_qualification.outputs where generation_id=$1',[claimed.generation_id])).rows[0].output_payload
+  assert.deepEqual(durable,{claims:['A']})
+})
+
+test('scheduler_claim cannot take a worker lease; the worker still claims the only ready generation',async t=>{
+  const db=await fixture(t)
+  await bind(db,'qual_comparison_producer','producer_enqueue')
+  await bind(db,'qual_comparison_worker','worker_claim')
+  await bind(db,'qual_comparison_scheduler','scheduler_claim')
+  const producer=await session(db,'qual_comparison_producer')
+  const worker=await session(db,'qual_comparison_worker')
+  const scheduler=await session(db,'qual_comparison_scheduler')
+  const generation=(await asRole(db,'qual_comparison_producer',
+    'select comparison_qualification.producer_enqueue($1,$2,$3,$4,$5::jsonb,$6,$7::timestamptz) id',
+    [randomUUID(),producer,runtime,'source','{"only":1}','fixture','2026-01-01'])).rows[0].id
+  await assert.rejects(asRole(db,'qual_comparison_scheduler',
+    'select comparison_qualification.scheduler_claim($1,$2,$3)',[randomUUID(),scheduler,runtime]),
+    /mip_scheduler_not_a_worker/)
+  const claimed=(await asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_claim($1,$2,$3) j',[randomUUID(),worker,runtime])).rows[0].j
+  assert.equal(claimed.generation_id,generation)
+  assert.ok(claimed.lease_token)
+  assert.equal((await db.query("select state from comparison_qualification.jobs where generation_id=$1",[generation])).rows[0].state,'processing')
+})
+
+test('revoke_binding of worker_claim is per-RPC; revoke_principal blocks in-flight worker_complete',async t=>{
+  const db=await fixture(t)
+  await bind(db,'qual_comparison_producer','producer_enqueue')
+  await bind(db,'qual_comparison_worker','worker_claim')
+  await bind(db,'qual_comparison_worker','worker_complete')
+  const producer=await session(db,'qual_comparison_producer')
+  const worker=await session(db,'qual_comparison_worker')
+  await asRole(db,'qual_comparison_producer',
+    'select comparison_qualification.producer_enqueue($1,$2,$3,$4,$5::jsonb,$6,$7::timestamptz)',
+    [randomUUID(),producer,runtime,'source','{"v":1}','fixture','2026-01-01'])
+  const claimed=(await asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_claim($1,$2,$3) j',[randomUUID(),worker,runtime])).rows[0].j
+  await db.query("select comparison_qualification.revoke_binding($1,'qual_comparison_worker','worker_claim')",[runtime])
+  await assert.rejects(asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_claim($1,$2,$3)',[randomUUID(),worker,runtime]),/mip_authz_revoked_principal/)
+  const afterClaimRevoke=(await asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_complete($1,$2,$3,$4,$5,$6,$7,$8::jsonb) state',
+    [randomUUID(),worker,runtime,claimed.generation_id,claimed.lease_token,claimed.input_hash,claimed.implementation_ref,'{"claims":[]}'])).rows[0].state
+  assert.equal(afterClaimRevoke,'completed','per-RPC unbind of worker_claim does not cancel worker_complete')
+  await asRole(db,'qual_comparison_producer',
+    'select comparison_qualification.producer_enqueue($1,$2,$3,$4,$5::jsonb,$6,$7::timestamptz)',
+    [randomUUID(),producer,runtime,'source','{"v":2}','fixture','2026-01-01'])
+  await db.query("select comparison_qualification.bind_runtime($1,'qual_comparison_worker','worker_claim')",[runtime])
+  const second=(await asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_claim($1,$2,$3) j',[randomUUID(),worker,runtime])).rows[0].j
+  await db.query("select comparison_qualification.revoke_principal($1,'qual_comparison_worker')",[runtime])
+  const diagnosis=(await asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.diagnose_bound_call($1,$2,$3,$4) j',
+    ['worker_complete','qual_comparison_worker',worker,runtime])).rows[0].j
+  assert.equal(diagnosis.code,'mip_authz_revoked_session')
+  await assert.rejects(asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_complete($1,$2,$3,$4,$5,$6,$7,$8::jsonb)',
+    [randomUUID(),worker,runtime,second.generation_id,second.lease_token,second.input_hash,second.implementation_ref,'{"claims":[]}']),
+    /mip_authz_revoked_session/)
+  await db.exec('set role service_role')
+  const ambient=(await db.query('select comparison_qualification.complete($1,$2,$3,$4,$5::jsonb) state',
+    [second.generation_id,second.lease_token,second.input_hash,second.implementation_ref,'{"claims":[]}'])).rows[0].state
+  await db.exec('reset role')
+  assert.equal(ambient,'completed','ambient service_role APIs ignore principal revocation')
+})
+
+test('producer_enqueue rejects caller-invented source and unevaluated implementation',async t=>{
+  const db=await fixture(t)
+  await bind(db,'qual_comparison_producer','producer_enqueue')
+  const producer=await session(db,'qual_comparison_producer')
+  await assert.rejects(asRole(db,'qual_comparison_producer',
+    'select comparison_qualification.producer_enqueue($1,$2,$3,$4,$5::jsonb,$6,$7::timestamptz)',
+    [randomUUID(),producer,runtime,'attacker-source','{"v":1}','fixture','2026-01-01']),
+    /mip_source_not_in_scope/)
+  await assert.rejects(asRole(db,'qual_comparison_producer',
+    'select comparison_qualification.producer_enqueue($1,$2,$3,$4,$5::jsonb,$6,$7::timestamptz)',
+    [randomUUID(),producer,runtime,'source','{"v":1}','attacker-impl','2026-01-01']),
+    /mip_implementation_not_evaluated/)
+  assert.equal((await db.query('select count(*)::int n from comparison_qualification.generations')).rows[0].n,0)
+})
+
+test('publication release re-checks survivor-shaped closure; fixture mutation fails closed',async t=>{
+  const db=await fixture(t)
+  const sourceFixture=await readFile(new URL(root+'source-fixture.sql',import.meta.url),'utf8')
+  await db.exec(sourceFixture)
+  const closure=(await db.query('select comparison_qualification.publication_closure_relations() r')).rows[0].r
+  assert.match(closure,/public\.events:[0-9a-f]{64}/)
+  assert.match(closure,/mip_private\.reader_claim_surfaces:absent/)
+  assert.match(closure,/public\.arcs:absent/)
+  await bind(db,'qual_comparison_producer','producer_enqueue')
+  await bind(db,'qual_comparison_worker','worker_claim')
+  await bind(db,'qual_comparison_worker','worker_complete')
+  await bind(db,'qual_selector','selector_select')
+  await bind(db,'qual_publisher','publisher_propose')
+  await bind(db,'qual_publisher','publisher_release')
+  const producer=await session(db,'qual_comparison_producer')
+  const worker=await session(db,'qual_comparison_worker')
+  const selector=await session(db,'qual_selector')
+  const publisher=await session(db,'qual_publisher')
+  await asRole(db,'qual_comparison_producer',
+    'select comparison_qualification.producer_enqueue($1,$2,$3,$4,$5::jsonb,$6,$7::timestamptz)',
+    [randomUUID(),producer,runtime,'source','{"v":1}','fixture','2026-01-01'])
+  const claimed=(await asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_claim($1,$2,$3) j',[randomUUID(),worker,runtime])).rows[0].j
+  await asRole(db,'qual_comparison_worker',
+    'select comparison_qualification.worker_complete($1,$2,$3,$4,$5,$6,$7,$8::jsonb)',
+    [randomUUID(),worker,runtime,claimed.generation_id,claimed.lease_token,claimed.input_hash,claimed.implementation_ref,'{"claims":[]}'])
+  const out=(await db.query('select generation_id,output_hash from comparison_qualification.outputs')).rows[0]
+  const first=randomUUID()
+  await asRole(db,'qual_selector',
+    'select comparison_qualification.selector_select($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)',
+    [randomUUID(),selector,runtime,first,'source',null,out.generation_id,out.output_hash,'{}'])
+  const stored=(await db.query('select dependency_hash from comparison_qualification.publication_history')).rows[0].dependency_hash
+  const recomputed=(await db.query(
+    'select comparison_qualification.publication_dependency_hash($1,$2) h',[out.generation_id,first])).rows[0].h
+  assert.equal(stored,recomputed)
+  await asRole(db,'qual_publisher',
+    'select comparison_qualification.publisher_propose($1,$2,$3,$4)',[randomUUID(),publisher,runtime,'source'])
+  await db.exec("update public.articles set summary='Tampered after follow'")
+  await db.exec('update comparison_qualification.operating_gates set publication_release_enabled=true')
+  await assert.rejects(asRole(db,'qual_publisher',
+    'select comparison_qualification.publisher_release($1,$2,$3,$4)',[randomUUID(),publisher,runtime,'source']),
+    /mip_publication_closure_mismatch/)
+  assert.equal((await db.query("select count(*)::int n from comparison_qualification.publication_history where state='released'")).rows[0].n,0)
+  await db.exec('update comparison_qualification.operating_gates set publication_release_enabled=false')
+})
+
+test('anon execute on diagnose helpers is not granted; browser still lacks schema usage',async t=>{
+  const db=await fixture(t)
+  const priv=(await db.query(`select
+    has_function_privilege('anon','comparison_qualification.diagnose_authorization(text)','execute') anon_exec,
+    has_schema_privilege('anon','comparison_qualification','usage') anon_usage,
+    has_function_privilege('qual_comparison_worker','comparison_qualification.diagnose_authorization(text)','execute') worker_exec
+  `)).rows[0]
+  assert.equal(priv.anon_exec,false)
+  assert.equal(priv.anon_usage,false)
+  assert.equal(priv.worker_exec,true)
 })

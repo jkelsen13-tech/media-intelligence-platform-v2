@@ -18,12 +18,14 @@ Existing `enqueue` / `claim` / `complete` / `fail` / `select_output` remain **un
 | `qual_public_reader` | none (RLS: `publication_history` / heads with `state='released'` only) |
 | `qual_comparison_producer` | `producer_enqueue`, `retain_parity` |
 | `qual_comparison_worker` | `worker_claim`, `worker_complete`, `worker_fail` |
-| `qual_comparison_scheduler` | `scheduler_claim` (cannot complete or fail) |
+| `qual_comparison_scheduler` | `scheduler_claim` (bound check only; raises `mip_scheduler_not_a_worker` and never calls `claim()`) |
 | `qual_selector` | `selector_select` |
 | `qual_publisher` | `publisher_propose`, `publisher_release` |
 | `qual_membership_scorer` | `membership_auto_approve` (denied by default gate; no release path) |
 
-Owner/superuser fixtures, **not** granted to those roles: `issue_session`, `revoke_session`, `bind_runtime`, `revoke_binding`. Production must not treat these as operator self-service.
+Owner/superuser fixtures, **not** granted to those roles: `issue_session`, `revoke_session`, `bind_runtime`, `revoke_binding`, `revoke_principal`, `bind_source_scope`, `revoke_source_scope`, `bind_evaluated_implementation`, `revoke_evaluated_implementation`. Production must not treat these as operator self-service.
+
+`producer_enqueue` requires a server-bound source in `runtime_source_scope` and an evaluated implementation in `evaluated_implementations` for that runtime. Caller-invented source or implementation names are `mip_source_not_in_scope` / `mip_implementation_not_evaluated`. Unbound ambient `enqueue()` remains the demonstrated `service_role` hole and is unchanged.
 
 There is **no** `publisher_withdraw` RPC. Withdrawal is `selector_select` with a null generation, which calls `follow_publication`: `withdrawn`, or `revoked` if the prior publication head was `released`.
 
@@ -45,7 +47,8 @@ Flipping a gate in qualification is an **owner-fixture test**, not production pu
 - `runtime_bindings`: `(runtime_id, principal, rpc_name)` with `revoked_at`.
 - `principal_sessions`: isolated table with `revoked_at` and `expires_at`. Live `auth.sessions` on all four projects has **no** `revoked` column (has `not_after`). Mapping live Auth to this contract is an unresolved owner decision.
 - Bound RPCs take `p_runtime`, `p_session`, and (for mutating work) `p_request`.
-- Replay of `worker_claim` / `scheduler_claim` omits `lease_token` (`mip_request_replay_omits_token`). `request_runs` never stores lease tokens.
+- Replay of `worker_claim` omits `lease_token` (`mip_request_replay_omits_token`). `request_runs` never stores lease tokens. Replay of mutating RPCs requires the same `argument_hash`; a changed payload, implementation, or output raises `mip_request_replay_conflict` and does not acknowledge the new arguments. Identical arguments remain idempotent.
+- `revoke_binding` unbinds one RPC. `revoke_principal` revokes every binding and session for that runtime principal so in-flight `worker_complete` fails. Bound session revoke still blocks `worker_complete`. Unbound `service_role.complete` still ignores those tables.
 
 ## Authorization-failure diagnosis
 
@@ -64,6 +67,8 @@ Flipping a gate in qualification is an **owner-fixture test**, not production pu
 | `mip_authz_revoked_principal` | binding `revoked_at` set |
 | `ok` | binding+session would pass |
 
+Related non-`mip_authz_*` contract codes (raised by the target RPCs, not `diagnose_bound_call`): `mip_request_replay_conflict`, `mip_scheduler_not_a_worker`, `mip_source_not_in_scope`, `mip_implementation_not_evaluated`, `mip_publication_closure_mismatch`.
+
 Missing GRANT EXECUTE on the **target** RPC is a catalog `permission denied`, not an `mip_authz_*` code. Tests assert that distinction.
 
 `effective_authority()` is `diagnose_authorization('effective_authority')`.
@@ -72,7 +77,7 @@ Missing GRANT EXECUTE on the **target** RPC is a catalog `permission denied`, no
 
 - `selector_select` writes selection then `follow_publication` (`unpublished` for a generation; `withdrawn`/`revoked` for a null generation).
 - `publisher_propose` requires an `unpublished` or `proposed` head with a generation.
-- `publisher_release` inserts `released` only if the locked head is still `proposed` and the gate is true.
+- `publisher_release` inserts `released` only if the locked head is still `proposed`, the gate is true, **and** `dependency_hash` still matches `publication_dependency_hash` (generation identity plus the named survivor-closure relation fingerprints, with absence recorded explicitly). Isolated fixture flips are not production publication authorization. Live `mip_private.reader_claim_surfaces` remaining absent is not treated as equivalent to the survivor gate.
 - Native CI test: concurrent withdrawal vs release; waiter observes the lock; result is `unbound publication selection`, head `withdrawn`, zero `released` rows; gate restored false. Locally **NOT TESTED**.
 - `retain_parity` copies hashes and job state. Pending remains pending. This is not live Manus acknowledgement. Live Manus `source_comparison_enrichment_queue` this run: 8 `succeeded` rows, no pending.
 
@@ -83,3 +88,5 @@ Missing GRANT EXECUTE on the **target** RPC is a catalog `permission denied`, no
 - Does not enable publication or membership auto-approval in any live project.
 - Does not bind Cloud Run, pg_cron, or Edge Function identities.
 - Does not replace live `auth.users` / `auth.sessions`.
+- Does not make the disclosed v16 mutable rebuild equivalent to this generation contract.
+- Does not install `mip_*` identities; those remain a separate unqualified design under `supabase/qualification/mip-cutover-authority/`.

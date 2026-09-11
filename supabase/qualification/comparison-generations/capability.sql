@@ -53,6 +53,7 @@ create table comparison_qualification.request_runs (
     'lease_issued','no_ready_work','completed','failed','selected','withdrawn',
     'proposed','released','parity_retained','replayed')),
   diagnostic_code text not null,
+  argument_hash text not null check(argument_hash ~ '^[0-9a-f]{64}$'),
   observed_at timestamptz not null default clock_timestamp() check(isfinite(observed_at)),
   primary key(request_id,rpc_name)
 );
@@ -85,6 +86,23 @@ create table comparison_qualification.retained_parity (
   retained_at timestamptz not null default clock_timestamp() check(isfinite(retained_at)),
   primary key(archive_namespace,generation_id),
   check(job_state in ('pending','processing','completed','failed'))
+);
+-- Owner-bound producer identity. Callers cannot invent a source or implementation.
+create table comparison_qualification.runtime_source_scope (
+  runtime_id text not null check(length(runtime_id) between 1 and 100),
+  source text not null check(length(source) between 1 and 100),
+  granted_at timestamptz not null default clock_timestamp() check(isfinite(granted_at)),
+  revoked_at timestamptz,
+  primary key(runtime_id,source),
+  check(revoked_at is null or (isfinite(revoked_at) and revoked_at>=granted_at))
+);
+create table comparison_qualification.evaluated_implementations (
+  runtime_id text not null check(length(runtime_id) between 1 and 100),
+  implementation text not null check(length(implementation) between 1 and 300),
+  granted_at timestamptz not null default clock_timestamp() check(isfinite(granted_at)),
+  revoked_at timestamptz,
+  primary key(runtime_id,implementation),
+  check(revoked_at is null or (isfinite(revoked_at) and revoked_at>=granted_at))
 );
 
 create trigger immutable_request_runs before update or delete on comparison_qualification.request_runs
@@ -138,22 +156,30 @@ begin
   if code<>'ok' then perform comparison_qualification.deny(code); end if;
 end $$;
 
-create function comparison_qualification.replay(p_request uuid,p_rpc text)
+create function comparison_qualification.argument_digest(p_args jsonb)
+returns text language sql immutable as $$
+  select encode(sha256(convert_to(coalesce(p_args,'{}'::jsonb)::text,'UTF8')),'hex');
+$$;
+
+create function comparison_qualification.replay(p_request uuid,p_rpc text,p_argument_hash text)
 returns comparison_qualification.request_runs language plpgsql security definer set search_path='' as $$
 declare existing comparison_qualification.request_runs;
 begin
   select * into existing from comparison_qualification.request_runs where request_id=p_request and rpc_name=p_rpc;
+  if existing.request_id is not null and existing.argument_hash is distinct from p_argument_hash then
+    raise exception using errcode='22023', message='mip_request_replay_conflict';
+  end if;
   return existing;
 end $$;
 
 create function comparison_qualification.record_run(
   p_request uuid,p_rpc text,p_principal text,p_runtime text,p_generation uuid,p_selection uuid,
-  p_publication uuid,p_outcome text,p_code text
+  p_publication uuid,p_outcome text,p_code text,p_argument_hash text
 ) returns void language plpgsql security definer set search_path='' as $$
 begin
   insert into comparison_qualification.request_runs(
-    request_id,rpc_name,principal,runtime_id,generation_id,selection_id,publication_id,outcome,diagnostic_code)
-  values(p_request,p_rpc,p_principal,p_runtime,p_generation,p_selection,p_publication,p_outcome,p_code);
+    request_id,rpc_name,principal,runtime_id,generation_id,selection_id,publication_id,outcome,diagnostic_code,argument_hash)
+  values(p_request,p_rpc,p_principal,p_runtime,p_generation,p_selection,p_publication,p_outcome,p_code,p_argument_hash);
 end $$;
 
 -- Owner/admin APIs. No grant to capability principals. Superuser test fixtures may call them.
@@ -198,16 +224,102 @@ begin
   return 'revoked';
 end $$;
 
+-- Per-RPC revoke_binding unbinds one RPC. Principal-wide revoke stops every bound
+-- RPC for that runtime principal, including in-flight worker_complete.
+create function comparison_qualification.revoke_principal(p_runtime text,p_principal text) returns text
+language plpgsql security definer set search_path='' as $$
+begin
+  update comparison_qualification.runtime_bindings
+    set revoked_at=coalesce(revoked_at,clock_timestamp())
+    where runtime_id=p_runtime and principal=p_principal and revoked_at is null;
+  update comparison_qualification.principal_sessions
+    set revoked_at=coalesce(revoked_at,clock_timestamp())
+    where runtime_id=p_runtime and principal=p_principal and revoked_at is null;
+  return 'revoked';
+end $$;
+
+create function comparison_qualification.bind_source_scope(p_runtime text,p_source text) returns text
+language plpgsql security definer set search_path='' as $$
+begin
+  if p_runtime is null or p_source is null or length(p_runtime) not between 1 and 100
+    or length(p_source) not between 1 and 100 then
+    perform comparison_qualification.deny('mip_source_not_in_scope');
+  end if;
+  insert into comparison_qualification.runtime_source_scope(runtime_id,source)
+  values(p_runtime,p_source)
+  on conflict(runtime_id,source) do update set revoked_at=null,granted_at=clock_timestamp();
+  return 'bound';
+end $$;
+
+create function comparison_qualification.revoke_source_scope(p_runtime text,p_source text) returns text
+language plpgsql security definer set search_path='' as $$
+begin
+  update comparison_qualification.runtime_source_scope
+    set revoked_at=coalesce(revoked_at,clock_timestamp())
+    where runtime_id=p_runtime and source=p_source;
+  if not found then perform comparison_qualification.deny('mip_source_not_in_scope'); end if;
+  return 'revoked';
+end $$;
+
+create function comparison_qualification.bind_evaluated_implementation(p_runtime text,p_implementation text) returns text
+language plpgsql security definer set search_path='' as $$
+begin
+  if p_runtime is null or p_implementation is null or length(p_runtime) not between 1 and 100
+    or length(p_implementation) not between 1 and 300 then
+    perform comparison_qualification.deny('mip_implementation_not_evaluated');
+  end if;
+  insert into comparison_qualification.evaluated_implementations(runtime_id,implementation)
+  values(p_runtime,p_implementation)
+  on conflict(runtime_id,implementation) do update set revoked_at=null,granted_at=clock_timestamp();
+  return 'bound';
+end $$;
+
+create function comparison_qualification.revoke_evaluated_implementation(p_runtime text,p_implementation text) returns text
+language plpgsql security definer set search_path='' as $$
+begin
+  update comparison_qualification.evaluated_implementations
+    set revoked_at=coalesce(revoked_at,clock_timestamp())
+    where runtime_id=p_runtime and implementation=p_implementation;
+  if not found then perform comparison_qualification.deny('mip_implementation_not_evaluated'); end if;
+  return 'revoked';
+end $$;
+
+create function comparison_qualification.require_source_scope(p_runtime text,p_source text) returns void
+language plpgsql security definer set search_path='' as $$
+begin
+  if not exists (
+    select 1 from comparison_qualification.runtime_source_scope s
+    where s.runtime_id=p_runtime and s.source=p_source and s.revoked_at is null
+  ) then
+    perform comparison_qualification.deny('mip_source_not_in_scope');
+  end if;
+end $$;
+
+create function comparison_qualification.require_evaluated_implementation(p_runtime text,p_implementation text) returns void
+language plpgsql security definer set search_path='' as $$
+begin
+  if not exists (
+    select 1 from comparison_qualification.evaluated_implementations i
+    where i.runtime_id=p_runtime and i.implementation=p_implementation and i.revoked_at is null
+  ) then
+    perform comparison_qualification.deny('mip_implementation_not_evaluated');
+  end if;
+end $$;
+
 create function comparison_qualification.producer_enqueue(
   p_request uuid,p_session uuid,p_runtime text,p_source text,p_payload jsonb,p_implementation text,p_observed timestamptz
 ) returns uuid language plpgsql security definer set search_path='' as $$
-declare existing comparison_qualification.request_runs; v uuid;
+declare existing comparison_qualification.request_runs; v uuid; v_hash text;
 begin
   perform comparison_qualification.require_bound('qual_comparison_producer','producer_enqueue',p_session,p_runtime);
-  existing:=comparison_qualification.replay(p_request,'producer_enqueue');
+  perform comparison_qualification.require_source_scope(p_runtime,p_source);
+  perform comparison_qualification.require_evaluated_implementation(p_runtime,p_implementation);
+  v_hash:=comparison_qualification.argument_digest(jsonb_build_object(
+    'source',p_source,'payload',p_payload,'implementation',p_implementation,'observed',p_observed));
+  existing:=comparison_qualification.replay(p_request,'producer_enqueue',v_hash);
   if existing.request_id is not null then return existing.generation_id; end if;
   v:=comparison_qualification.enqueue(p_source,p_payload,p_implementation,p_observed);
-  perform comparison_qualification.record_run(p_request,'producer_enqueue','qual_comparison_producer',p_runtime,v,null,null,'completed','mip_request_accepted');
+  perform comparison_qualification.record_run(p_request,'producer_enqueue','qual_comparison_producer',p_runtime,v,null,null,'completed','mip_request_accepted',v_hash);
   return v;
 end $$;
 
@@ -227,10 +339,11 @@ end $$;
 
 create function comparison_qualification.worker_claim(p_request uuid,p_session uuid,p_runtime text)
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare existing comparison_qualification.request_runs; claimed jsonb; v uuid;
+declare existing comparison_qualification.request_runs; claimed jsonb; v uuid; v_hash text;
 begin
   perform comparison_qualification.require_bound('qual_comparison_worker','worker_claim',p_session,p_runtime);
-  existing:=comparison_qualification.replay(p_request,'worker_claim');
+  v_hash:=comparison_qualification.argument_digest('{}'::jsonb);
+  existing:=comparison_qualification.replay(p_request,'worker_claim',v_hash);
   if existing.request_id is not null then
     if existing.outcome='no_ready_work' then return null; end if;
     return comparison_qualification.claim_payload(existing.generation_id,true,'mip_request_replay_omits_token');
@@ -238,57 +351,116 @@ begin
   claimed:=comparison_qualification.claim();
   v:=claimed->>'generation_id';
   if claimed is null then
-    perform comparison_qualification.record_run(p_request,'worker_claim','qual_comparison_worker',p_runtime,null,null,null,'no_ready_work','mip_request_accepted');
+    perform comparison_qualification.record_run(p_request,'worker_claim','qual_comparison_worker',p_runtime,null,null,null,'no_ready_work','mip_request_accepted',v_hash);
     return null;
   end if;
-  perform comparison_qualification.record_run(p_request,'worker_claim','qual_comparison_worker',p_runtime,v,null,null,'lease_issued','mip_request_accepted');
+  perform comparison_qualification.record_run(p_request,'worker_claim','qual_comparison_worker',p_runtime,v,null,null,'lease_issued','mip_request_accepted',v_hash);
   return claimed||jsonb_build_object('diagnostic_code','mip_request_accepted');
 end $$;
 
 create function comparison_qualification.scheduler_claim(p_request uuid,p_session uuid,p_runtime text)
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare existing comparison_qualification.request_runs; claimed jsonb; v uuid;
 begin
   perform comparison_qualification.require_bound('qual_comparison_scheduler','scheduler_claim',p_session,p_runtime);
-  existing:=comparison_qualification.replay(p_request,'scheduler_claim');
-  if existing.request_id is not null then
-    if existing.outcome='no_ready_work' then return null; end if;
-    return comparison_qualification.claim_payload(existing.generation_id,true,'mip_request_replay_omits_token');
-  end if;
-  claimed:=comparison_qualification.claim();
-  v:=claimed->>'generation_id';
-  if claimed is null then
-    perform comparison_qualification.record_run(p_request,'scheduler_claim','qual_comparison_scheduler',p_runtime,null,null,null,'no_ready_work','mip_request_accepted');
-    return null;
-  end if;
-  perform comparison_qualification.record_run(p_request,'scheduler_claim','qual_comparison_scheduler',p_runtime,v,null,null,'lease_issued','mip_request_accepted');
-  return claimed||jsonb_build_object('diagnostic_code','mip_request_accepted');
+  -- Scheduler is not a comparison worker. Sharing claim() would strand worker leases.
+  raise exception using errcode='P0001', message='mip_scheduler_not_a_worker';
 end $$;
 
 create function comparison_qualification.worker_complete(
   p_request uuid,p_session uuid,p_runtime text,p_generation uuid,p_token uuid,p_input_hash text,p_implementation text,p_output jsonb
 ) returns text language plpgsql security definer set search_path='' as $$
-declare existing comparison_qualification.request_runs; state text;
+declare existing comparison_qualification.request_runs; state text; v_hash text;
 begin
   perform comparison_qualification.require_bound('qual_comparison_worker','worker_complete',p_session,p_runtime);
-  existing:=comparison_qualification.replay(p_request,'worker_complete');
+  v_hash:=comparison_qualification.argument_digest(jsonb_build_object(
+    'generation_id',p_generation,'input_hash',p_input_hash,'implementation',p_implementation,'output',p_output));
+  existing:=comparison_qualification.replay(p_request,'worker_complete',v_hash);
   if existing.request_id is not null then return existing.outcome; end if;
   state:=comparison_qualification.complete(p_generation,p_token,p_input_hash,p_implementation,p_output);
-  perform comparison_qualification.record_run(p_request,'worker_complete','qual_comparison_worker',p_runtime,p_generation,null,null,'completed','mip_request_accepted');
+  perform comparison_qualification.record_run(p_request,'worker_complete','qual_comparison_worker',p_runtime,p_generation,null,null,'completed','mip_request_accepted',v_hash);
   return state;
 end $$;
 
 create function comparison_qualification.worker_fail(
   p_request uuid,p_session uuid,p_runtime text,p_generation uuid,p_token uuid,p_input_hash text,p_implementation text
 ) returns text language plpgsql security definer set search_path='' as $$
-declare existing comparison_qualification.request_runs; state text;
+declare existing comparison_qualification.request_runs; state text; v_hash text;
 begin
   perform comparison_qualification.require_bound('qual_comparison_worker','worker_fail',p_session,p_runtime);
-  existing:=comparison_qualification.replay(p_request,'worker_fail');
+  v_hash:=comparison_qualification.argument_digest(jsonb_build_object(
+    'generation_id',p_generation,'input_hash',p_input_hash,'implementation',p_implementation));
+  existing:=comparison_qualification.replay(p_request,'worker_fail',v_hash);
   if existing.request_id is not null then return existing.outcome; end if;
   state:=comparison_qualification.fail(p_generation,p_token,p_input_hash,p_implementation);
-  perform comparison_qualification.record_run(p_request,'worker_fail','qual_comparison_worker',p_runtime,p_generation,null,null,'failed','mip_request_accepted');
+  perform comparison_qualification.record_run(p_request,'worker_fail','qual_comparison_worker',p_runtime,p_generation,null,null,'failed','mip_request_accepted',v_hash);
   return state;
+end $$;
+
+-- Fingerprint named survivor-closure relations. Absence is explicit; presence is
+-- the current row digest. Names are from docs/COMPARISON_SELECTION_2026-09-10.md
+-- and supabase/migrations/20260905182355_mip_nested_claim_publication_gates.sql.
+-- This is not a live grant, not publication authorization, and not a substitute
+-- for mip_private.reader_claim_surfaces when that relation is absent.
+create function comparison_qualification.relation_fingerprint(p_name text)
+returns text language plpgsql stable security definer set search_path='' as $$
+declare rel regclass; payload text;
+begin
+  rel:=to_regclass(p_name);
+  if rel is null then return p_name||':absent'; end if;
+  execute format(
+    'select coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),''[]''::jsonb)::text from %s as t',
+    rel) into payload;
+  return p_name||':'||encode(sha256(convert_to(payload,'UTF8')),'hex');
+end $$;
+
+create function comparison_qualification.publication_closure_relations()
+returns text language sql stable security definer set search_path='' as $$
+  select concat_ws('|',
+    comparison_qualification.relation_fingerprint('public.events'),
+    comparison_qualification.relation_fingerprint('public.event_articles'),
+    comparison_qualification.relation_fingerprint('public.articles'),
+    comparison_qualification.relation_fingerprint('public.claims'),
+    comparison_qualification.relation_fingerprint('public.explanations'),
+    comparison_qualification.relation_fingerprint('public.article_claims'),
+    comparison_qualification.relation_fingerprint('public.claim_evidence_links'),
+    comparison_qualification.relation_fingerprint('public.claim_corrections'),
+    comparison_qualification.relation_fingerprint('public.nodes'),
+    comparison_qualification.relation_fingerprint('public.edges'),
+    comparison_qualification.relation_fingerprint('public.arcs'),
+    comparison_qualification.relation_fingerprint('mip_private.reader_claim_surfaces')
+  );
+$$;
+
+-- Copied from 20260905182355_mip_nested_claim_publication_gates.sql, not invented.
+create function comparison_qualification.survivor_reader_predicate_fingerprint()
+returns text language sql immutable as $$
+  select 'reader_claim_surfaces:ac.is_current=true;ac.auditability_state=verified_retained_source;c.status=active;c.rule_version=sc-v2-event-projection;e.comparison_validation_state=approved;e.status<>timeline_only;a.reader_state=eligible;a.source_status=active;distinct_eligible_active_outlets>=2';
+$$;
+
+create function comparison_qualification.publication_dependency_hash(p_generation uuid,p_selection uuid)
+returns text language plpgsql stable security definer set search_path='' as $$
+declare gen comparison_qualification.generations; outp comparison_qualification.outputs;
+  sel comparison_qualification.selection_history; preimage text;
+begin
+  select * into strict sel from comparison_qualification.selection_history where id=p_selection;
+  if p_generation is null then
+    preimage:='withdrawal:'||sel.context_hash||':'||
+      comparison_qualification.survivor_reader_predicate_fingerprint()||':'||
+      comparison_qualification.publication_closure_relations();
+    return encode(sha256(convert_to(preimage,'UTF8')),'hex');
+  end if;
+  select * into strict gen from comparison_qualification.generations where id=p_generation;
+  select * into strict outp from comparison_qualification.outputs where generation_id=p_generation;
+  preimage:=jsonb_build_object(
+    'input_hash',gen.input_hash,
+    'output_hash',outp.output_hash,
+    'implementation_ref',gen.implementation_ref,
+    'source_project',gen.source_project,
+    'context_hash',sel.context_hash,
+    'survivor_reader_predicates',comparison_qualification.survivor_reader_predicate_fingerprint(),
+    'relations',comparison_qualification.publication_closure_relations()
+  )::text;
+  return encode(sha256(convert_to(preimage,'UTF8')),'hex');
 end $$;
 
 create function comparison_qualification.follow_publication(p_source text,p_selection uuid)
@@ -302,14 +474,16 @@ begin
   if head is not null then select * into prior from comparison_qualification.publication_history where id=head; end if;
   if sel.generation_id is null then
     st:=case when prior.state='released' then 'revoked' else 'withdrawn' end;
-    dep:=encode(sha256(convert_to(coalesce(prior.dependency_hash,'')||':'||sel.context_hash||':withdrawn','UTF8')),'hex');
+    dep:=encode(sha256(convert_to(
+      coalesce(prior.dependency_hash,'')||':'||
+      comparison_qualification.publication_dependency_hash(null,p_selection),'UTF8')),'hex');
     insert into comparison_qualification.publication_history(
       source_project,selection_id,generation_id,output_hash,input_hash,implementation_ref,dependency_hash,state)
     values(p_source,p_selection,null,null,null,null,dep,st) returning id into pub;
   else
     select * into strict outp from comparison_qualification.outputs where generation_id=sel.generation_id;
     select * into strict gen from comparison_qualification.generations where id=sel.generation_id;
-    dep:=encode(sha256(convert_to(gen.input_hash||':'||outp.output_hash||':'||gen.implementation_ref||':'||sel.context_hash,'UTF8')),'hex');
+    dep:=comparison_qualification.publication_dependency_hash(sel.generation_id,p_selection);
     insert into comparison_qualification.publication_history(
       source_project,selection_id,generation_id,output_hash,input_hash,implementation_ref,dependency_hash,state)
     values(p_source,p_selection,sel.generation_id,outp.output_hash,gen.input_hash,gen.implementation_ref,dep,'unpublished')
@@ -323,25 +497,29 @@ create function comparison_qualification.selector_select(
   p_request uuid,p_session uuid,p_runtime text,p_action uuid,p_source text,p_expected uuid,
   p_generation uuid,p_output_hash text,p_context jsonb
 ) returns uuid language plpgsql security definer set search_path='' as $$
-declare existing comparison_qualification.request_runs; selected uuid; pub uuid; outcome text;
+declare existing comparison_qualification.request_runs; selected uuid; pub uuid; outcome text; v_hash text;
 begin
   perform comparison_qualification.require_bound('qual_selector','selector_select',p_session,p_runtime);
-  existing:=comparison_qualification.replay(p_request,'selector_select');
+  v_hash:=comparison_qualification.argument_digest(jsonb_build_object(
+    'action',p_action,'source',p_source,'expected',p_expected,'generation_id',p_generation,
+    'output_hash',p_output_hash,'context',p_context));
+  existing:=comparison_qualification.replay(p_request,'selector_select',v_hash);
   if existing.request_id is not null then return existing.selection_id; end if;
   selected:=comparison_qualification.select_output(p_action,p_source,p_expected,p_generation,p_output_hash,p_context);
   pub:=comparison_qualification.follow_publication(p_source,selected);
   outcome:=case when p_generation is null then 'withdrawn' else 'selected' end;
-  perform comparison_qualification.record_run(p_request,'selector_select','qual_selector',p_runtime,p_generation,selected,pub,outcome,'mip_request_accepted');
+  perform comparison_qualification.record_run(p_request,'selector_select','qual_selector',p_runtime,p_generation,selected,pub,outcome,'mip_request_accepted',v_hash);
   return selected;
 end $$;
 
 create function comparison_qualification.publisher_propose(p_request uuid,p_session uuid,p_runtime text,p_source text)
 returns uuid language plpgsql security definer set search_path='' as $$
 declare existing comparison_qualification.request_runs; cur comparison_qualification.publication_history;
-  head uuid; pub uuid;
+  head uuid; pub uuid; v_hash text;
 begin
   perform comparison_qualification.require_bound('qual_publisher','publisher_propose',p_session,p_runtime);
-  existing:=comparison_qualification.replay(p_request,'publisher_propose');
+  v_hash:=comparison_qualification.argument_digest(jsonb_build_object('source',p_source));
+  existing:=comparison_qualification.replay(p_request,'publisher_propose',v_hash);
   if existing.request_id is not null then return existing.publication_id; end if;
   select publication_id into head from comparison_qualification.publication_heads where source_project=p_source for update;
   if head is null then raise exception 'unbound publication selection'; end if;
@@ -354,17 +532,18 @@ begin
   values(p_source,cur.selection_id,cur.generation_id,cur.output_hash,cur.input_hash,cur.implementation_ref,cur.dependency_hash,'proposed')
   returning id into pub;
   update comparison_qualification.publication_heads set publication_id=pub where source_project=p_source;
-  perform comparison_qualification.record_run(p_request,'publisher_propose','qual_publisher',p_runtime,cur.generation_id,cur.selection_id,pub,'proposed','mip_request_accepted');
+  perform comparison_qualification.record_run(p_request,'publisher_propose','qual_publisher',p_runtime,cur.generation_id,cur.selection_id,pub,'proposed','mip_request_accepted',v_hash);
   return pub;
 end $$;
 
 create function comparison_qualification.publisher_release(p_request uuid,p_session uuid,p_runtime text,p_source text)
 returns text language plpgsql security definer set search_path='' as $$
 declare existing comparison_qualification.request_runs; cur comparison_qualification.publication_history;
-  enabled boolean; head uuid; pub uuid;
+  enabled boolean; head uuid; pub uuid; v_hash text;
 begin
   perform comparison_qualification.require_bound('qual_publisher','publisher_release',p_session,p_runtime);
-  existing:=comparison_qualification.replay(p_request,'publisher_release');
+  v_hash:=comparison_qualification.argument_digest(jsonb_build_object('source',p_source));
+  existing:=comparison_qualification.replay(p_request,'publisher_release',v_hash);
   if existing.request_id is not null then return existing.outcome; end if;
   -- Re-check the gate after the head lock so a concurrent withdrawal or owner-fixture
   -- disable is observed. Checking the gate before the lock is not sufficient.
@@ -374,12 +553,16 @@ begin
   select publication_release_enabled into strict enabled from comparison_qualification.operating_gates where id;
   if not enabled then perform comparison_qualification.deny('mip_publication_disabled'); end if;
   if cur.state<>'proposed' or cur.generation_id is null then raise exception 'unbound publication selection'; end if;
+  if cur.dependency_hash is distinct from
+    comparison_qualification.publication_dependency_hash(cur.generation_id,cur.selection_id) then
+    raise exception 'mip_publication_closure_mismatch';
+  end if;
   insert into comparison_qualification.publication_history(
     source_project,selection_id,generation_id,output_hash,input_hash,implementation_ref,dependency_hash,state)
   values(p_source,cur.selection_id,cur.generation_id,cur.output_hash,cur.input_hash,cur.implementation_ref,cur.dependency_hash,'released')
   returning id into pub;
   update comparison_qualification.publication_heads set publication_id=pub where source_project=p_source;
-  perform comparison_qualification.record_run(p_request,'publisher_release','qual_publisher',p_runtime,cur.generation_id,cur.selection_id,pub,'released','mip_request_accepted');
+  perform comparison_qualification.record_run(p_request,'publisher_release','qual_publisher',p_runtime,cur.generation_id,cur.selection_id,pub,'released','mip_request_accepted',v_hash);
   return 'released';
 end $$;
 
@@ -397,10 +580,11 @@ end $$;
 create function comparison_qualification.retain_parity(
   p_request uuid,p_session uuid,p_runtime text,p_archive text,p_source text
 ) returns integer language plpgsql security definer set search_path='' as $$
-declare existing comparison_qualification.request_runs; n int;
+declare existing comparison_qualification.request_runs; n int; v_hash text;
 begin
   perform comparison_qualification.require_bound('qual_comparison_producer','retain_parity',p_session,p_runtime);
-  existing:=comparison_qualification.replay(p_request,'retain_parity');
+  v_hash:=comparison_qualification.argument_digest(jsonb_build_object('archive',p_archive,'source',p_source));
+  existing:=comparison_qualification.replay(p_request,'retain_parity',v_hash);
   if existing.request_id is not null then
     select count(*)::int into n from comparison_qualification.retained_parity
       where archive_namespace=p_archive and source_project=p_source;
@@ -426,7 +610,7 @@ begin
   ) then
     null; -- pending remains pending; the insert copied the live state rather than acknowledging it
   end if;
-  perform comparison_qualification.record_run(p_request,'retain_parity','qual_comparison_producer',p_runtime,null,null,null,'parity_retained','mip_parity_pending_not_acknowledged');
+  perform comparison_qualification.record_run(p_request,'retain_parity','qual_comparison_producer',p_runtime,null,null,null,'parity_retained','mip_parity_pending_not_acknowledged',v_hash);
   return n;
 end $$;
 
@@ -477,6 +661,8 @@ alter table comparison_qualification.request_runs enable row level security;
 alter table comparison_qualification.publication_history enable row level security;
 alter table comparison_qualification.publication_heads enable row level security;
 alter table comparison_qualification.retained_parity enable row level security;
+alter table comparison_qualification.runtime_source_scope enable row level security;
+alter table comparison_qualification.evaluated_implementations enable row level security;
 
 create policy reader_released_history on comparison_qualification.publication_history
   for select to qual_public_reader using (state='released');
@@ -488,13 +674,15 @@ create policy reader_released_heads on comparison_qualification.publication_head
 revoke all on comparison_qualification.operating_gates,comparison_qualification.runtime_bindings,
   comparison_qualification.principal_sessions,comparison_qualification.request_runs,
   comparison_qualification.publication_history,comparison_qualification.publication_heads,
-  comparison_qualification.retained_parity from public,anon,authenticated,service_role,
+  comparison_qualification.retained_parity,comparison_qualification.runtime_source_scope,
+  comparison_qualification.evaluated_implementations from public,anon,authenticated,service_role,
   qual_public_reader,qual_comparison_producer,qual_comparison_worker,qual_comparison_scheduler,
   qual_selector,qual_publisher,qual_membership_scorer;
 grant select on comparison_qualification.operating_gates,comparison_qualification.runtime_bindings,
   comparison_qualification.principal_sessions,comparison_qualification.request_runs,
   comparison_qualification.publication_history,comparison_qualification.publication_heads,
-  comparison_qualification.retained_parity to service_role;
+  comparison_qualification.retained_parity,comparison_qualification.runtime_source_scope,
+  comparison_qualification.evaluated_implementations to service_role;
 grant select on comparison_qualification.publication_history,comparison_qualification.publication_heads
   to qual_public_reader;
 
@@ -504,12 +692,24 @@ grant usage on schema comparison_qualification to qual_public_reader,qual_compar
 revoke all on function comparison_qualification.deny(text),
   comparison_qualification.bound_code(text,text,uuid,text),
   comparison_qualification.require_bound(text,text,uuid,text),
-  comparison_qualification.replay(uuid,text),
-  comparison_qualification.record_run(uuid,text,text,text,uuid,uuid,uuid,text,text),
+  comparison_qualification.argument_digest(jsonb),
+  comparison_qualification.replay(uuid,text,text),
+  comparison_qualification.record_run(uuid,text,text,text,uuid,uuid,uuid,text,text,text),
   comparison_qualification.issue_session(text,text,timestamptz),
   comparison_qualification.revoke_session(uuid),
   comparison_qualification.bind_runtime(text,text,text),
   comparison_qualification.revoke_binding(text,text,text),
+  comparison_qualification.revoke_principal(text,text),
+  comparison_qualification.bind_source_scope(text,text),
+  comparison_qualification.revoke_source_scope(text,text),
+  comparison_qualification.bind_evaluated_implementation(text,text),
+  comparison_qualification.revoke_evaluated_implementation(text,text),
+  comparison_qualification.require_source_scope(text,text),
+  comparison_qualification.require_evaluated_implementation(text,text),
+  comparison_qualification.relation_fingerprint(text),
+  comparison_qualification.publication_closure_relations(),
+  comparison_qualification.survivor_reader_predicate_fingerprint(),
+  comparison_qualification.publication_dependency_hash(uuid,uuid),
   comparison_qualification.producer_enqueue(uuid,uuid,text,text,jsonb,text,timestamptz),
   comparison_qualification.claim_payload(uuid,boolean,text),
   comparison_qualification.worker_claim(uuid,uuid,text),
@@ -538,10 +738,11 @@ grant execute on function comparison_qualification.selector_select(uuid,uuid,tex
 grant execute on function comparison_qualification.publisher_propose(uuid,uuid,text,text),
   comparison_qualification.publisher_release(uuid,uuid,text,text) to qual_publisher;
 grant execute on function comparison_qualification.membership_auto_approve(uuid,uuid,text,text) to qual_membership_scorer;
+-- Diagnose helpers are not a browser oracle. Schema USAGE is still withheld from anon.
 grant execute on function comparison_qualification.bound_code(text,text,uuid,text),
   comparison_qualification.diagnose_authorization(text),
   comparison_qualification.diagnose_bound_call(text,text,uuid,text),
-  comparison_qualification.effective_authority() to anon,authenticated,service_role,qual_public_reader,
+  comparison_qualification.effective_authority() to service_role,qual_public_reader,
   qual_comparison_producer,qual_comparison_worker,qual_comparison_scheduler,qual_selector,qual_publisher,
   qual_membership_scorer;
 commit;

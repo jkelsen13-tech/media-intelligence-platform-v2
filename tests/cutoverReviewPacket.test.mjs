@@ -90,6 +90,10 @@ test('capability SQL stays out of migrations and default publication stays off',
   assert.match(capability,/mip_publication_disabled/)
   assert.match(capability,/mip_membership_auto_approval_disabled/)
   assert.match(capability,/diagnose_bound_call/)
+  assert.match(capability,/mip_request_replay_conflict/)
+  assert.match(capability,/mip_scheduler_not_a_worker/)
+  assert.match(capability,/mip_publication_closure_mismatch/)
+  assert.match(capability,/revoke_principal/)
   assert.doesNotMatch(capability,/grant execute[^\n]+publisher_release[^\n]+service_role/)
   const migrations=readdirSync(join(repoRoot,'supabase/migrations'))
   for(const name of migrations){
@@ -98,4 +102,24 @@ test('capability SQL stays out of migrations and default publication stays off',
     assert.doesNotMatch(sql,/publisher_release_enabled/)
   }
   assert.ok(DISCLOSED_PATHS.includes('supabase/qualification/comparison-generations/capability.sql'))
+})
+
+test('independent Grok review bytes are preserved and disclosed separately from REVIEW_RESULT',()=>{
+  const grok=join(repoRoot,'verifier/independent-cutover-review-v1')
+  assert.equal(sha256File('verifier/independent-cutover-review-v1/MIP_PRODUCTION_CUTOVER_REVIEW_v1.md'),
+    '3bedb192385a8c47f44efb00e650eb5242b296b938ab5a140c6f4c09d36937d9')
+  assert.equal(sha256File('verifier/independent-cutover-review-v1/MIP_PRODUCTION_CUTOVER_REVIEW_v1.json'),
+    'a869298baa7125a65a818decb6d2fbcef0ff72badde7c5f447714815fe2b26ba')
+  assert.equal(sha256File('verifier/independent-cutover-review-v1/README.md'),
+    'd4da264472f0cbe4c277c9b7976879e480f1039e13fce2a99c8c1a8ea7b2c855')
+  const result=JSON.parse(readFileSync(join(packet,'REVIEW_RESULT.json'),'utf8'))
+  assert.equal(result.status,'PACKET_PREPARED_REVIEW_NOT_PERFORMED')
+  assert.equal(result.independent_review.result,null)
+  assert.ok(DISCLOSED_PATHS.includes('verifier/independent-cutover-review-v1/MIP_PRODUCTION_CUTOVER_REVIEW_v1.md'))
+  assert.ok(DISCLOSED_PATHS.includes('docs/MIP_PRODUCTION_CUTOVER_REVIEW_RECONCILIATION_2026-09-11.md'))
+  const recon=JSON.parse(readFileSync(join(repoRoot,'verifier/mip-production-cutover-review-reconciliation-2026-09-11.json'),'utf8'))
+  assert.equal(recon.production_cutover,'ON_HOLD')
+  assert.equal(recon.pr_147.merged,false)
+  assert.equal(recon.findings.F4.classification,'CONFIRMED')
+  assert.equal(recon.findings.F2.correction,null)
 })

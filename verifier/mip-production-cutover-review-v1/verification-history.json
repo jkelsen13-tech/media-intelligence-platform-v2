@@ -50,10 +50,16 @@
         "full_pass_markers": 118
       },
       "correction": "Removed reset-role reuse of exited waiter; added explicit exited-session guard. Lock, rejection, withdrawn-head and zero-released assertions retained. No production change."
+    },
+    {
+      "status": "INDEPENDENT_REVIEW_BLOCKED_NOT_THIS_HEAD",
+      "head": "47075711ff78393ac3b1690ddbffca615e8f20ce",
+      "evidence": "verifier/independent-cutover-review-v1/",
+      "detail": "Separate Grok review of the frozen PR #147 candidate. Outcome BLOCKED. Files are preserved byte-for-byte as adversarial evidence. This record is a pointer, not a rewrite of that review into REVIEW_RESULT.json."
     }
   ],
-  "finalization": "This history precedes the final documentation/hash commit. Final exact-head rerun receipt belongs in PR #147 body and owner handoff; do not represent earlier runs as execution of later commits.",
+  "finalization": "Frozen PR #147 candidate 47075711ff78393ac3b1690ddbffca615e8f20ce was independently reviewed as BLOCKED (verifier/independent-cutover-review-v1/; Grok files are byte-preserved). This packet directory is the disclosure slot for the next engineering candidate after F1–F8 reconciliation; do not treat Grok’s BLOCKED outcome as a stamp of this later HEAD. Final exact-head rerun receipt belongs in the new candidate PR body; do not represent earlier runs as execution of later commits.",
   "logs": "GitHub Actions job URLs, retained remotely; raw logs and screenshots are NOT part of the disclosure set. They can contain public article text. Owner must review any additional disclosure.",
-  "independent_review": "PENDING",
+  "independent_review": "PERFORMED_FOR_FROZEN_47075711_BLOCKED_NOT_THIS_HEAD",
   "owner_acceptance": "PENDING"
 }

@@ -23,7 +23,9 @@ export const DISCLOSED_PATHS=[
   'docs/EVIDENCE_DISCOVERY_EVALUATION_V1.md',
   'docs/MIP_CUTOVER_STAGING_PROPOSAL_2026-09-10.md',
   'docs/MIP_PRODUCTION_CUTOVER_REVIEW_PACKET_2026-09-10.md',
+  'docs/MIP_PRODUCTION_CUTOVER_REVIEW_RECONCILIATION_2026-09-11.md',
   'docs/MIP_SEMANTIC_EVALUATION_POLICY_PROPOSAL_2026-09-10.md',
+  'docs/MUTABLE_V16_IS_NOT_QUALIFIED_ARCHITECTURE_2026-09-11.md',
   'docs/RECORD_CANDIDATE_EVALUATION_2026-09-08.md',
   'docs/UNCERTAINTY_VOCABULARY.md',
   'package.json',
@@ -35,6 +37,8 @@ export const DISCLOSED_PATHS=[
   'supabase/qualification/comparison-generations/selection.sql',
   'supabase/qualification/comparison-generations/source-fixture.sql',
   'supabase/qualification/comparison-generations/source-snapshot.sql',
+  'supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql',
+  'supabase/qualification/mip-cutover-authority/README.md',
   'supabase/qualification/membership-prepared/deployment.json',
   'supabase/runtime-snapshots/source-comparison-run-v16/articleInputReadback.js',
   'supabase/runtime-snapshots/source-comparison-run-v16/index.ts',
@@ -48,6 +52,8 @@ export const DISCLOSED_PATHS=[
   'tests/comparisonSelection.test.mjs',
   'tests/comparisonSourceSnapshot.test.mjs',
   'tests/cutoverReviewPacket.test.mjs',
+  'tests/mipCutoverAuthorityDesign.test.mjs',
+  'tests/mutableV16IsNotQualifiedArchitecture.test.mjs',
   'tests/recordCandidateEvaluation.test.mjs',
   'verifier/comparisonPostgresConcurrency.py',
   '.github/workflows/comparison-postgres.yml',
@@ -61,7 +67,11 @@ export const DISCLOSED_PATHS=[
   `${packetDir}/runtime-permission-proposal.json`,
   `${packetDir}/rpc-signatures.json`,
   `${packetDir}/remaining-dependencies.json`,
-  `${packetDir}/known-limitations.json`
+  `${packetDir}/known-limitations.json`,
+  'verifier/independent-cutover-review-v1/README.md',
+  'verifier/independent-cutover-review-v1/MIP_PRODUCTION_CUTOVER_REVIEW_v1.md',
+  'verifier/independent-cutover-review-v1/MIP_PRODUCTION_CUTOVER_REVIEW_v1.json',
+  'verifier/mip-production-cutover-review-reconciliation-2026-09-11.json'
 ]
 
 export const EXCLUDED_FROM_PACKET=[

@@ -1,0 +1,121 @@
+{
+  "document": "MIP_PRODUCTION_CUTOVER_REVIEW_RECONCILIATION_2026-09-11",
+  "companion_markdown": "docs/MIP_PRODUCTION_CUTOVER_REVIEW_RECONCILIATION_2026-09-11.md",
+  "independent_review_preserved_unchanged": {
+    "path": "verifier/independent-cutover-review-v1/",
+    "outcome_recorded_by_grok": "BLOCKED",
+    "not_ground_truth": true,
+    "sha256": {
+      "MIP_PRODUCTION_CUTOVER_REVIEW_v1.md": "3bedb192385a8c47f44efb00e650eb5242b296b938ab5a140c6f4c09d36937d9",
+      "MIP_PRODUCTION_CUTOVER_REVIEW_v1.json": "a869298baa7125a65a818decb6d2fbcef0ff72badde7c5f447714815fe2b26ba",
+      "README.md": "d4da264472f0cbe4c277c9b7976879e480f1039e13fce2a99c8c1a8ea7b2c855"
+    }
+  },
+  "production_cutover": "ON_HOLD",
+  "pr_147": {
+    "merged": false,
+    "draft": true,
+    "frozen_head": "47075711ff78393ac3b1690ddbffca615e8f20ce",
+    "this_change_does_not_merge_it": true
+  },
+  "frozen_capability_sql_git_blob": "624dfb13f95013ff138147a77b5da9e06dedb8f2",
+  "frozen_capability_sql_sha256": "69e6544cb304c5e510a678da75e5e9a0ba6bda9f7da753ca4ee5ac144e14eff6",
+  "findings": {
+    "F1": {
+      "grok_severity": "HIGH",
+      "classification": "CONFIRMED",
+      "kind": "design_gap_missing_production_package",
+      "correction": "supabase/qualification/mip-cutover-authority/ isolated EXECUTE-only mip_* design; not a migration; not deployed; qual_* not renamed",
+      "regression": "tests/mipCutoverAuthorityDesign.test.mjs"
+    },
+    "F2": {
+      "grok_severity": "HIGH",
+      "classification": "CONFIRMED",
+      "kind": "missing_evidence",
+      "correction": null,
+      "regression": "tests/cutoverReviewPacket.test.mjs; tests/recordCandidateEvaluation.test.mjs",
+      "owner_gated": true
+    },
+    "F3": {
+      "grok_severity": "HIGH",
+      "classification": "CONFIRMED",
+      "kind": "architecture_split",
+      "correction": "docs/MUTABLE_V16_IS_NOT_QUALIFIED_ARCHITECTURE_2026-09-11.md; v16 not rewritten into qualification worker",
+      "regression": "tests/mutableV16IsNotQualifiedArchitecture.test.mjs",
+      "v15_vs_v16_bytes": "NOT_TESTED"
+    },
+    "F4": {
+      "grok_severity": "MEDIUM",
+      "classification": "CONFIRMED",
+      "kind": "engineering_defect",
+      "independent_reproduction": {
+        "worker_complete_changed_output_acked_completed": true,
+        "durable_output_remained_A": true,
+        "producer_enqueue_changed_args_returned_first_generation_id": true
+      },
+      "correction": "request_runs.argument_hash; mip_request_replay_conflict",
+      "regression": "tests/comparisonCapabilitySeparation.test.mjs"
+    },
+    "F5": {
+      "grok_severity": "MEDIUM",
+      "classification": "PARTIALLY_CONFIRMED",
+      "kind": {
+        "scheduler_shares_claim": "CONFIRMED",
+        "per_rpc_revoke_binding_of_worker_claim_allows_complete": "CONFIRMED_AS_PER_RPC_UNBIND_NOT_AUTOMATICALLY_A_DEFECT",
+        "missing_principal_wide_revoke": "CONFIRMED"
+      },
+      "independent_reproduction": {
+        "single_pending_scheduler_lease_stranded_worker": true,
+        "complete_after_claim_binding_revoke": "completed"
+      },
+      "correction": "scheduler_claim raises mip_scheduler_not_a_worker; revoke_principal",
+      "regression": "tests/comparisonCapabilitySeparation.test.mjs"
+    },
+    "F6": {
+      "grok_severity": "MEDIUM",
+      "classification": "CONFIRMED",
+      "kind": "isolated_gap_not_live_publication",
+      "independent_reproduction": {
+        "attacker_source_and_implementation_accepted": true
+      },
+      "correction": "bind_source_scope; bind_evaluated_implementation; publication_dependency_hash includes named survivor-closure fingerprints with absence explicit",
+      "regression": "tests/comparisonCapabilitySeparation.test.mjs",
+      "not_claimed": "isolated hash is not live mip_private.reader_claim_surfaces eligibility"
+    },
+    "F7": {
+      "grok_severity": "LOW",
+      "classification": "CONFIRMED",
+      "kind": "packet_completeness",
+      "correction": "concurrency doc states 14 tests; new candidate allowlist includes independent review and this reconciliation; REVIEW_RESULT remains PACKET_PREPARED_REVIEW_NOT_PERFORMED",
+      "regression": "scripts/buildCutoverReviewPacket.mjs; tests/cutoverReviewPacket.test.mjs"
+    },
+    "F8": {
+      "grok_severity": "LOW",
+      "classification": "PARTIALLY_CONFIRMED",
+      "kind": {
+        "verify_jwt_and_cloud_run_flags": "reconciliation_not_authorization_to_flip",
+        "anon_diagnose_execute_without_schema_usage": "CONFIRMED_DEAD_GRANT"
+      },
+      "correction": "revoke diagnose/bound_code EXECUTE from anon and authenticated in isolated SQL only",
+      "not_done": ["enable JWT", "redeploy Cloud Run", "change production credentials"],
+      "regression": "tests/comparisonCapabilitySeparation.test.mjs"
+    }
+  },
+  "semantic_policy": {
+    "thresholds_invented": false,
+    "labels_invented": false,
+    "owner_gated": true
+  },
+  "remaining_owner_decisions": [
+    "freeze evaluation policy, split, adjudicators, corpus before held-out scoring",
+    "choose mip_* workload credentials versus remaining on service_role (chosen still null); provisioning is a later prompt",
+    "authorize independent re-review of this HEAD (prior Grok review bound 47075711 only)",
+    "optional hash-only live Manus v15 versus repo v16 compare",
+    "Auth session mapping (not_after versus isolated revoked_at)",
+    "whether verify_jwt=false functions stay until a later auth proposal",
+    "owner acceptance after a non-null independent outcome on the designated candidate",
+    "any shadow/canary, credential provision, schedule change, publication, or cutover"
+  ],
+  "native_postgres_14_tests": "NOT_TESTED_this_run_ci_guard_unchanged",
+  "live_writes": "none"
+}

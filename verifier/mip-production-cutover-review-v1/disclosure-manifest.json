@@ -2,14 +2,14 @@
   "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
   "disclosure_status": "proposed_not_transmitted",
   "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
-  "review_packet_commit": "60914115f22009722c0cb47cb81ddea206a38620",
+  "review_packet_commit": null,
   "review_packet_commit_resolution": "Stamp the git commit that contains the hashed_files tree. Do not mix hashes from a different commit.",
   "mixed_candidate_rule": "If any hashed file differs from this manifest, the packet is not the frozen candidate.",
   "hashed_files": [
     {
       "path": "docs/COMPARISON_CAPABILITY_SEPARATION_2026-09-10.md",
-      "sha256": "4c3fba968c7b834a32e1c2908cb141a918d83a32d9e7e9a711d7052afde7a3b3",
-      "bytes": 5633
+      "sha256": "97b5a4cd849d004b86c4a0ca1f7348afcff30a2eddc38876a55282fd59ae0a49",
+      "bytes": 7497
     },
     {
       "path": "docs/COMPARISON_GENERATION_TRANSACTION_2026-09-09.md",
@@ -18,8 +18,8 @@
     },
     {
       "path": "docs/COMPARISON_POSTGRES_CONCURRENCY_2026-09-09.md",
-      "sha256": "4f80a0c01c05c0ffd682f4c582bba7841ab93f7cad9dbd2e7c7c442b9dfc364d",
-      "bytes": 2225
+      "sha256": "83933ef418e7a3a1f1cb038a4364b144522f4c8d0a489986c4375f5c468e6936",
+      "bytes": 2314
     },
     {
       "path": "docs/COMPARISON_SELECTION_2026-09-10.md",
@@ -52,9 +52,19 @@
       "bytes": 6104
     },
     {
+      "path": "docs/MIP_PRODUCTION_CUTOVER_REVIEW_RECONCILIATION_2026-09-11.md",
+      "sha256": "2b9c44ff4a846de54f8cee280177feea25c694df4ae3d513f57f51f2a8060deb",
+      "bytes": 12053
+    },
+    {
       "path": "docs/MIP_SEMANTIC_EVALUATION_POLICY_PROPOSAL_2026-09-10.md",
       "sha256": "edd0b8c3681c5b2ca3db118559da9bc7a03dfd6c0355c175ae668d2f57acfdec",
       "bytes": 7657
+    },
+    {
+      "path": "docs/MUTABLE_V16_IS_NOT_QUALIFIED_ARCHITECTURE_2026-09-11.md",
+      "sha256": "fd55ebbb789ec313c46915dff71f98ffca0ec0ce268fca7cfaaa96b82b8d517a",
+      "bytes": 1975
     },
     {
       "path": "docs/RECORD_CANDIDATE_EVALUATION_2026-09-08.md",
@@ -78,8 +88,8 @@
     },
     {
       "path": "scripts/buildCutoverReviewPacket.mjs",
-      "sha256": "1f02254bf1e0032c0a5fb015e812eca7fe19d9eec1917127af2b287854d3e34a",
-      "bytes": 6720
+      "sha256": "9c5d24026cc1173ca0b3cc7726e0d2180a7ebb8557499773e99c09432c6d6cf5",
+      "bytes": 7391
     },
     {
       "path": "scripts/evaluateRecordCandidates.mjs",
@@ -88,8 +98,8 @@
     },
     {
       "path": "supabase/qualification/comparison-generations/capability.sql",
-      "sha256": "69e6544cb304c5e510a678da75e5e9a0ba6bda9f7da753ca4ee5ac144e14eff6",
-      "bytes": 34380
+      "sha256": "a3785a59fff944d0ee1fd6af0974e85de1f7efa9686c9ac677317d018bd2c711",
+      "bytes": 45844
     },
     {
       "path": "supabase/qualification/comparison-generations/contract.sql",
@@ -110,6 +120,16 @@
       "path": "supabase/qualification/comparison-generations/source-snapshot.sql",
       "sha256": "7bef311c9f551f88ca6bbb51f57b71593c64017e0931d9db4c275885c42dc968",
       "bytes": 2795
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql",
+      "sha256": "cb4c245c04bd7e69722a7866ea94515d953f98ac8d4972837b835d6b0835c3b5",
+      "bytes": 5907
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/README.md",
+      "sha256": "8c6bd34d212824ee92a5bd4e70ebdd0d841e89a2770dc9c7833c10a13d23811a",
+      "bytes": 1073
     },
     {
       "path": "supabase/qualification/membership-prepared/deployment.json",
@@ -153,8 +173,8 @@
     },
     {
       "path": "tests/comparisonCapabilitySeparation.test.mjs",
-      "sha256": "be33e651c8f618707de60acc66e663d6aaf746831d1d635c8c5fa732692e5bf6",
-      "bytes": 15757
+      "sha256": "0e70ec075cbf84eb35fad0141a9126aad927a992dda745977e9d3599e4866af8",
+      "bytes": 27997
     },
     {
       "path": "tests/comparisonGenerationTransaction.test.mjs",
@@ -173,8 +193,18 @@
     },
     {
       "path": "tests/cutoverReviewPacket.test.mjs",
-      "sha256": "0bb38bbf1e24ba4b16d3c18c5f8171297c04cbed48d838037593d110f665e840",
-      "bytes": 4912
+      "sha256": "76c73301722cb1e7dd771d2aefba4fd0600f561940527f9e844bb97123138579",
+      "bytes": 6578
+    },
+    {
+      "path": "tests/mipCutoverAuthorityDesign.test.mjs",
+      "sha256": "6fa331c6000f32eb27a601572d123d02a249cb24d1e62395be554b1ab32bb09c",
+      "bytes": 3632
+    },
+    {
+      "path": "tests/mutableV16IsNotQualifiedArchitecture.test.mjs",
+      "sha256": "70fe5601c86293e3dd78e81ceca7e9a2fa51e9be4b70eae2ba1680d66a873ca0",
+      "bytes": 2256
     },
     {
       "path": "tests/recordCandidateEvaluation.test.mjs",
@@ -203,8 +233,8 @@
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/verification-history.json",
-      "sha256": "017628fe257727cf85febe094a6f30fdb72a83a8562c88df90df05c54ca8f304",
-      "bytes": 2240
+      "sha256": "0e122b683d95edc248b7338b4c3a3fb77bca8a6cfd52d2b5afda7ba2964bbcb6",
+      "bytes": 2997
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/REVIEW_RESULT.json",
@@ -233,18 +263,38 @@
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/rpc-signatures.json",
-      "sha256": "dca018698d673dbd49641949ca2a139e3bf8269e777336ac7816e916c4257fd2",
-      "bytes": 5563
+      "sha256": "6279e2f560e6eaeb6f7e6ca2fb80b29d1a769e31bd27fcecb634033352847bdf",
+      "bytes": 6927
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/remaining-dependencies.json",
-      "sha256": "af49e483e80662c2d2be4414b30fbcd8f2adbd1b1594aa5fbcef8024a35e2964",
-      "bytes": 3829
+      "sha256": "9ebbcb1f830ad22cc2a8e87bb5a5a0d5a49954bbb5894c8126c39d9bc599458f",
+      "bytes": 4726
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/known-limitations.json",
       "sha256": "3d100ad1349fcc6e78baf55a70a77373531a8e587779fdf4ee469a2a00284628",
       "bytes": 2519
+    },
+    {
+      "path": "verifier/independent-cutover-review-v1/README.md",
+      "sha256": "d4da264472f0cbe4c277c9b7976879e480f1039e13fce2a99c8c1a8ea7b2c855",
+      "bytes": 550
+    },
+    {
+      "path": "verifier/independent-cutover-review-v1/MIP_PRODUCTION_CUTOVER_REVIEW_v1.md",
+      "sha256": "3bedb192385a8c47f44efb00e650eb5242b296b938ab5a140c6f4c09d36937d9",
+      "bytes": 22863
+    },
+    {
+      "path": "verifier/independent-cutover-review-v1/MIP_PRODUCTION_CUTOVER_REVIEW_v1.json",
+      "sha256": "a869298baa7125a65a818decb6d2fbcef0ff72badde7c5f447714815fe2b26ba",
+      "bytes": 40273
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-reconciliation-2026-09-11.json",
+      "sha256": "9517710d76b81ae6c148a10e3ea5b1201efd918551c87f641bfabf828f428370",
+      "bytes": 5729
     }
   ],
   "excluded": [
