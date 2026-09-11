@@ -1,0 +1,45 @@
+{
+  "review_limitations": [
+    {
+      "id": "owner_decision_brief_body",
+      "evidence_class": "missing_evidence",
+      "detail": "The 10 September 2026 OWNER DECISION BRIEF is acknowledged by the owner prompt but was not recovered from GitHub or this repository. Capability separation in this packet is reconstructed from prior operator docs plus the prompt. That reconstruction is labeled as such."
+    },
+    {
+      "id": "live_function_source_excluded",
+      "evidence_class": "excluded_necessary_for_byte_compare",
+      "detail": "Live Edge Function bodies were not downloaded. Reviewers can inspect repo snapshot v16 and live ezbr_sha256 values. Byte equality of Manus v15 vs repo v16 is NOT TESTED."
+    },
+    {
+      "id": "auth_and_payloads_excluded",
+      "evidence_class": "excluded",
+      "detail": "Auth emails, session IP/user-agent/refresh-token material, Vault values, and production source payloads are omitted. Identity-merge conclusions are BLOCKED."
+    },
+    {
+      "id": "native_postgres_concurrency",
+      "evidence_class": "supplied_implementation_agent_result_when_ci_runs",
+      "local_this_run": "NOT_TESTED",
+      "ci_run_34446067879_on_3b810b5": "Lock wait observed. After commit, head was withdrawn and released count was 0. The waiter session then raised BrokenPipeError during reset-role cleanup because ON_ERROR_STOP had already exited psql. That is a harness defect on candidate 3b810b5, not a completed review.",
+      "detail": "verifier/comparisonPostgresConcurrency.py refuses to run unless GITHUB_ACTIONS=true and MIP_DISPOSABLE_POSTGRES=comparison-qualification. The waiter session must not be reused after the expected failure.",
+      "corrected_ci": "14/14 passed on e0d240b05b245be551d70c5c2f4a2b9c517e8ae5; see verification-history.json and final PR receipt for later candidate reruns. Independent review still pending."
+    },
+    {
+      "id": "semantic_held_out",
+      "evidence_class": "missing_evidence",
+      "detail": "No frozen split, no owner-accepted labels, no held-out scores. Qualification is not_assessed. Thresholds are null and not fitted."
+    },
+    {
+      "id": "independent_review",
+      "evidence_class": "not_performed",
+      "detail": "Grok was not contacted. REVIEW_RESULT outcome/pass/fail remain null."
+    }
+  ],
+  "evidence_classes_used_in_packet": [
+    "artifact_inspection",
+    "independently_reproduced_this_run",
+    "supplied_implementation_agent_result",
+    "missing_evidence",
+    "NOT_TESTED",
+    "BLOCKED"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1_OWNER_ACCEPTANCE",
+  "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
+  "status": "NOT_SUBMITTED",
+  "accepted": null,
+  "rejected": null,
+  "accepted_at": null,
+  "accepted_by": null,
+  "independent_review_outcome_seen": null,
+  "production_cutover_authorized": false,
+  "shadow_canary_authorized": false,
+  "publication_authorized": false,
+  "membership_auto_approval_authorized": false,
+  "notes": [
+    "Owner acceptance is a separate document from independent technical review.",
+    "Packet preparation is not acceptance.",
+    "Do not prepopulate accepted=true."
+  ]
+}
