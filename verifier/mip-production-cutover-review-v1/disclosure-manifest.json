@@ -2,7 +2,7 @@
   "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
   "disclosure_status": "proposed_not_transmitted",
   "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
-  "review_packet_commit": "271ce55e62676ba81e55984d2163c4c394d71e01",
+  "review_packet_commit": null,
   "review_packet_commit_resolution": "Stamp the git commit that contains the hashed_files tree. Do not mix hashes from a different commit.",
   "mixed_candidate_rule": "If any hashed file differs from this manifest, the packet is not the frozen candidate.",
   "hashed_files": [
@@ -98,8 +98,8 @@
     },
     {
       "path": "supabase/qualification/comparison-generations/capability.sql",
-      "sha256": "37b8d420a53853ccd9ea1418548acac6035c4297b16bcdfcf0bd06ba506bb65f",
-      "bytes": 48085
+      "sha256": "27a3c6dbe1344932d6a64a7016abf143ea992f1d0a4fed8541a953f45137c282",
+      "bytes": 48088
     },
     {
       "path": "supabase/qualification/comparison-generations/contract.sql",
@@ -248,8 +248,8 @@
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/verification-history.json",
-      "sha256": "b768fc8fb3e1c8653c7d40838c8b9fad68df415979096e4bcb94393a985ab06e",
-      "bytes": 3746
+      "sha256": "e13ffa6782392925744aba5e1686fbea98f93ac67f6267647463fc4f1f24a66d",
+      "bytes": 4210
     },
     {
       "path": "verifier/mip-production-cutover-review-v1/REVIEW_RESULT.json",

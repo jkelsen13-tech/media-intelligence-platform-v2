@@ -76,5 +76,13 @@
     "regression_status": "FAILED_STALE_MANIFEST_AFTER_REPRODUCTION_WORKFLOW_ADDITION; not final verification",
     "correction_run": "codex-root-pr149-authority-543e423-20260911",
     "final_receipt": "PR149 exact frozen candidate receipt after final checks; this historical probe is not final-head verification"
+  },
+  "pr149_failed_correction": {
+    "head": "6f3fe82665a588f8b52081135c6c244008b13038",
+    "run": 34560448602,
+    "job": 103141905531,
+    "status": "FAILED_SQL_PARSE",
+    "cause": "JavaScript replacement collapsed SQL dollar delimiters in two inserted functions. Capability fixture failed to load; new authority steps were skipped. Not a verified candidate.",
+    "correction": "Restore dollar delimiters only; assertions and disposable guards unchanged."
   }
 }

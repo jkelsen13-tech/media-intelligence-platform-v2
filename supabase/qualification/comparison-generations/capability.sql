@@ -162,14 +162,14 @@ end $$;
 -- Once these locks are held, revocation waits for transaction commit/rollback.
 create function comparison_qualification.require_bound_final(
   p_principal text,p_rpc text,p_session_id uuid,p_runtime_id text
-) returns void language plpgsql security definer set search_path='' as $
+) returns void language plpgsql security definer set search_path='' as $$
 begin
   perform 1 from comparison_qualification.runtime_bindings
     where runtime_id=p_runtime_id and principal=p_principal order by rpc_name for share;
   perform 1 from comparison_qualification.principal_sessions
     where session_id=p_session_id for share;
   perform comparison_qualification.require_bound(p_principal,p_rpc,p_session_id,p_runtime_id);
-end $;
+end $$;
 
 create function comparison_qualification.argument_digest(p_args jsonb)
 returns text language sql immutable as $$
@@ -252,7 +252,7 @@ end $$;
 -- Per-RPC revoke_binding unbinds one RPC. Principal-wide revoke stops every bound
 -- RPC for that runtime principal. Executing transactions serialize at final acceptance.
 create function comparison_qualification.revoke_principal(p_runtime text,p_principal text) returns text
-language plpgsql security definer set search_path='' as $
+language plpgsql security definer set search_path='' as $$
 begin
   perform 1 from comparison_qualification.runtime_bindings
     where runtime_id=p_runtime and principal=p_principal order by rpc_name for update;
