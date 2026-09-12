@@ -1,4 +1,6 @@
 import test from 'node:test'
+import {comparisonProjectionConfig} from '../../supabase/runtime-snapshots/source-comparison-run-v16/projectionConfig.js'
+import {runner,fakeDatabase} from './runtimeParity.mjs'
 import assert from 'node:assert/strict'
 import {randomUUID,createHash} from 'node:crypto'
 import {fork} from 'node:child_process'
@@ -282,4 +284,83 @@ for(const first of ['release','mutation'])test('publication '+first+' first fenc
   assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'0')
   assert.equal(await f.admin('select count(*) from mip_cutover_authority.approved_payloads'),'0')
  }
+})
+
+test('frozen v15/v16 handler and retained worker compute the same exact deduplicated synthetic projection',async t=>{
+ const f=await fixture(t),legacy=await runner()
+ const tables=JSON.parse(await f.admin("select jsonb_build_object('events',(select jsonb_agg(to_jsonb(e)) from public.events e),'articles',(select jsonb_agg(to_jsonb(a)) from public.articles a),'event_articles',(select jsonb_agg(to_jsonb(m)) from public.event_articles m),'pipeline_config',(select jsonb_agg(to_jsonb(c)) from public.pipeline_config c))"))
+ const db=fakeDatabase(tables)
+ const prepared=await legacy.buildEventInputs(db)
+ assert.equal(prepared.inputs.length,1)
+ // Both paths use the same frozen lexicon and existing config; no F2 values invented.
+ const lexicon=JSON.parse(await readFile(new URL('../../supabase/runtime-snapshots/source-comparison-run-v16/loadedLanguageLexicon.json',import.meta.url),'utf8'))
+ await f.admin('update mip_cutover_authority.runtime_config set lexicon='+q(lexicon))
+ await f.capture();assert.equal((await childRun(f,f.session)).state,'completed')
+ const actual=JSON.parse(await f.admin('select output_payload from comparison_qualification.outputs')).projection
+ const result=await legacy.rebuildProjection(db,comparisonProjectionConfig(tables.pipeline_config),false)
+ assert.ok(!result.error)
+ assert.deepEqual(tables.claims.map(({id,...r})=>r),actual.claims.map(({claim_key,...r})=>r))
+ assert.deepEqual(tables.article_claims.map(r=>({article_id:r.article_id,surface_text:r.surface_text,extraction_confidence:r.extraction_confidence})),actual.article_claims.map(r=>({article_id:r.article_id,surface_text:r.surface_text,extraction_confidence:r.extraction_confidence})))
+ assert.deepEqual(tables.explanations.map(({id,recomputed_at,...r})=>r),actual.explanations)
+ assert.equal(await f.admin("select count(*) from comparison_qualification.jobs where state='completed'"),'1')
+})
+test('frozen scheduled runner acknowledges a newly arrived pending row; generation reconciliation leaves later delta pending',async t=>{
+ const f=await fixture(t),legacy=await runner()
+ const tables=JSON.parse(await f.admin("select jsonb_build_object('events',(select jsonb_agg(to_jsonb(e)) from public.events e),'articles',(select jsonb_agg(to_jsonb(a)) from public.articles a),'event_articles',(select jsonb_agg(to_jsonb(m)) from public.event_articles m),'pipeline_config',(select jsonb_agg(to_jsonb(c)) from public.pipeline_config c))"))
+ const early=randomUUID(),late=randomUUID()
+ tables.source_comparison_enrichment_queue=[{id:early,state:'pending'}]
+ let added=false
+ const db=fakeDatabase(tables,{afterRead:table=>{if(table==='articles'&&!added){added=true;tables.source_comparison_enrichment_queue.push({id:late,state:'pending'})}}})
+ legacy.setClient(db)
+ const response=await legacy.invoke(new Request('https://isolated.invalid',{method:'POST',headers:{authorization:'Bearer synthetic-fixture','content-type':'application/json'},body:JSON.stringify({trigger:'pg_cron'})}))
+ assert.equal(response.status,200)
+ assert.deepEqual(tables.source_comparison_enrichment_queue.map(r=>[r.id,r.state]),[[early,'succeeded'],[late,'succeeded']])
+ await f.admin('select mip_identity.capture_backlog()')
+ await f.producerRpc('capture_delta',[randomUUID(),f.producer,'runtime-a'])
+ await f.admin("update public.articles set title='Synthetic later delta' where id=(select id from public.articles order by id limit 1)")
+ assert.equal((await childRun(f,f.session)).state,'completed')
+ const rows=await f.producerRpc('reconciliation',[f.producer,'runtime-a'])
+ assert.ok(rows.filter(r=>r.kind==='backlog').every(r=>r.acknowledged))
+ assert.ok(rows.filter(r=>r.kind==='delta').every(r=>!r.acknowledged&&r.generation_id===null))
+})
+test('frozen mutable rebuild can delete old output before failure; retained worker failure preserves prior generation',async t=>{
+ const f=await fixture(t),legacy=await runner()
+ const tables=JSON.parse(await f.admin("select jsonb_build_object('events',(select jsonb_agg(to_jsonb(e)) from public.events e),'articles',(select jsonb_agg(to_jsonb(a)) from public.articles a),'event_articles',(select jsonb_agg(to_jsonb(m)) from public.event_articles m),'pipeline_config',(select jsonb_agg(to_jsonb(c)) from public.pipeline_config c))"))
+ const old=randomUUID();tables.claims=[{id:old,rule_version:'sc-v2-event-projection'}]
+ tables.article_claims=[{id:randomUUID(),claim_id:old}];tables.claim_evidence_links=[];tables.explanations=[]
+ const db=fakeDatabase(tables,{failInsert:'article_claims'})
+ const result=await legacy.rebuildProjection(db,comparisonProjectionConfig(tables.pipeline_config),false)
+ assert.match(result.error,/article_claims insert failed/)
+ assert.ok(!tables.claims.some(r=>r.id===old));assert.equal(tables.article_claims.length,0)
+ await f.capture();assert.equal((await childRun(f,f.session)).state,'completed')
+ await f.admin("update public.pipeline_config set value='\"invalid\"'::jsonb")
+ await f.capture();assert.equal((await childRun(f,await f.issue())).state,'failed')
+ assert.equal(await f.admin('select count(*) from comparison_qualification.outputs'),'1')
+ assert.equal(await f.admin("select count(*) from comparison_qualification.jobs where state='failed'"),'1')
+})
+
+for(const entity of ['source','implementation'])test(entity+' revocation after process loss retains work and requires fresh approved mapping',async t=>{
+ const f=await fixture(t);await f.capture()
+ const killed=await childRun(f,f.session,{killAfter:'worker_complete'})
+ const key=killed.keys.find(k=>k.startsWith('worker_complete:')&&!k.endsWith(':receipt'))
+ const revoke=entity==='source'?"select comparison_qualification.revoke_source_scope('runtime-a','source')":"select comparison_qualification.revoke_evaluated_implementation('runtime-a','isolated-event-projection-candidate')"
+ await f.admin(revoke)
+ await assert.rejects(f.journal(f.session).get(key),/mip_identity_mapping_revoked/)
+ await assert.rejects(f.issue(),/mip_identity_mapping_revoked/)
+ assert.equal(await f.admin('select count(*) from comparison_qualification.outputs'),'1')
+ const bind=entity==='source'?"select comparison_qualification.bind_source_scope('runtime-a','source')":"select comparison_qualification.bind_evaluated_implementation('runtime-a','isolated-event-projection-candidate')"
+ await f.admin(bind)
+ await assert.rejects(f.issue(),/mip_identity_mapping_revoked/)
+})
+test('identity expiry while completion waits rolls back output acknowledgement and receipt',async t=>{
+ const f=await fixture(t);await f.capture();const j=await claim(f)
+ const block=f.admin("begin;set application_name='mip_expiry_holder';select 1 from comparison_qualification.jobs where generation_id="+q(j.generation_id)+" for update;select pg_sleep(4);commit;")
+ await sleeping(f,'mip_expiry_holder')
+ const session=await f.issue('runtime-a',workerRole,{token:f.token('runtime-a',workerRole,{exp:Math.floor(Date.now()/1000)+2})})
+ const attempt=f.rpc('worker_complete',[randomUUID(),session,'runtime-a',j.generation_id,j.lease_token,j.input_hash,j.implementation_ref,{}])
+ const denied=assert.rejects(attempt,/mip_identity_expired|mip_session_expired|mip_session_invalid/)
+ await block;await denied
+ assert.equal(await f.admin('select count(*) from comparison_qualification.outputs'),'0')
+ assert.equal(await f.admin("select count(*) from comparison_qualification.request_runs where rpc_name='worker_complete'"),'0')
+ assert.equal(await f.admin('select state from comparison_qualification.jobs'),'processing')
 })

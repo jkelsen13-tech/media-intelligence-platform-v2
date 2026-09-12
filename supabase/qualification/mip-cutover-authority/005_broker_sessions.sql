@@ -217,6 +217,26 @@ begin
  return result;
 end $$;
 
+
+-- Scope/evaluation revocation retires the associated workload mapping as well.
+-- Fresh scope, evaluation, mapping approval and session are required for restoration.
+create function mip_identity.retire_runtime_mapping() returns trigger
+language plpgsql security definer set search_path='' as $$
+begin
+ if tg_op='DELETE' or (tg_op='UPDATE' and old.revoked_at is null and new.revoked_at is not null) then
+ update mip_identity.mapping_heads set active=false where runtime=old.runtime_id and active;
+ end if;
+ return null;
+end $$;
+create trigger external_scope_fence before insert or update or delete or truncate on comparison_qualification.runtime_source_scope
+ for each statement execute function mip_identity.serialize_change();
+create trigger external_evaluation_fence before insert or update or delete or truncate on comparison_qualification.evaluated_implementations
+ for each statement execute function mip_identity.serialize_change();
+create trigger external_scope_retirement after update or delete on comparison_qualification.runtime_source_scope
+ for each row execute function mip_identity.retire_runtime_mapping();
+create trigger external_evaluation_retirement after update or delete on comparison_qualification.evaluated_implementations
+ for each row execute function mip_identity.retire_runtime_mapping();
+
 -- All storage is held by a separate NOLOGIN owner and FORCE RLS applies.
 do $ownership$
 declare rec record;t text;
@@ -248,6 +268,8 @@ create policy scoped_queue_kernel on mip_cutover_authority.source_turns to mip_k
 -- SELECT FOR SHARE/UPDATE requires UPDATE privilege even if no update is performed.
 grant update on mip_identity.fence to mip_identity_owner_v2;
 create policy fence_lock on mip_identity.fence for update to mip_identity_owner_v2 using(true) with check(true);
+grant update(active) on mip_identity.mapping_heads to mip_identity_owner_v2;
+create policy identity_retirement on mip_identity.mapping_heads for update to mip_identity_owner_v2 using(true) with check(true);
 grant insert on mip_identity.retired_authority to mip_identity_owner_v2;
 create policy retired_append on mip_identity.retired_authority for insert to mip_identity_owner_v2 with check(true);
 grant insert on mip_identity.sessions to mip_identity_owner_v2;
