@@ -33,4 +33,5 @@ jobs:
       - name: Broker, encrypted remote journal and real process-restart regressions
         env:
           MIP_DISPOSABLE_POSTGRES: comparison-qualification
+          MIP_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
         run: node --test verifier/integrated/*.test.mjs

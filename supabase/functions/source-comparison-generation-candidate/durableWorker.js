@@ -1,6 +1,6 @@
 // Isolated host adapter. journal MUST be a remote, access-controlled durable store.
 // No filesystem, browser storage, credentials, or provider client is created here.
-import {runGenerationWorker} from './worker.js'
+import {runGenerationWorker} from './workerV2.js'
 
 const allowed=new Set(['worker_claim','worker_complete','worker_fail'])
 function immutable(value){return JSON.parse(JSON.stringify(value))}

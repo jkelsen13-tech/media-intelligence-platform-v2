@@ -1,4 +1,5 @@
 import test from 'node:test'
+import {restartRemoteStore} from './remoteStoreRestart.mjs'
 import {comparisonProjectionConfig} from '../../supabase/runtime-snapshots/source-comparison-run-v16/projectionConfig.js'
 import {runner,fakeDatabase} from './runtimeParity.mjs'
 import assert from 'node:assert/strict'
@@ -404,4 +405,31 @@ test('collector rejects generation capture for a different configured source ato
  assert.equal(await f.admin('select count(*) from comparison_qualification.generations'),'0')
  assert.equal(await f.admin('select count(*) from mip_identity.generation_changes'),'0')
  assert.ok(Number(await f.admin('select count(*) from mip_identity.source_changes'))>0)
+})
+
+test('finite-source fairness bounds successful claims while every eligible source remains busy',async t=>{
+ const f=await fixture(t),sources=['source','second','third']
+ for(const source of sources){
+  if(source!=='source')await f.admin('select comparison_qualification.bind_source_scope(\'runtime-a\','+q(source)+')')
+  for(let i=0;i<4;i++)await f.admin('select comparison_qualification.enqueue('+q(source)+", '{}','isolated-event-projection-candidate',clock_timestamp())")
+ }
+ const observed=[]
+ for(let i=0;i<9;i++)observed.push((await claim(f)).source_project)
+ for(let i=0;i<observed.length;i+=3)assert.deepEqual([...new Set(observed.slice(i,i+3))].sort(),[...sources].sort())
+ // Bound is successful serialized claims for finite unlocked eligible sources.
+ // No wall-clock, locked-row, infinite-arrival or cross-runtime starvation claim.
+})
+
+test('remote PostgreSQL service restart preserves committed encrypted journal and exact completion recovery',async t=>{
+ const f=await fixture(t);await f.capture()
+ const killed=await childRun(f,f.session,{killAfter:'worker_complete'})
+ const key=killed.keys.find(k=>k.startsWith('worker_complete:')&&!k.endsWith(':receipt'))
+ const before=await f.admin('select md5(envelope::text) from mip_identity.journal where entry_key='+q(key))
+ assert.equal(await f.admin('show synchronous_commit'),'on')
+ assert.equal(await f.admin('show fsync'),'on')
+ await restartRemoteStore()
+ assert.ok(await f.admin('select md5(envelope::text) from mip_identity.journal where entry_key='+q(key))===before)
+ assert.equal((await childRun(f,await f.issue(),{key})).state,'completed')
+ assert.equal(await f.admin('select count(*) from comparison_qualification.outputs'),'1')
+ assert.equal(await f.admin("select count(*) from comparison_qualification.request_runs where rpc_name='worker_complete'"),'1')
 })
