@@ -68,8 +68,47 @@ class Extension(unittest.TestCase):
         self.assertEqual(self.admin("select attempt from comparison_qualification.jobs"),"1")
         self.assertEqual(self.admin("select count(*) from mip_cutover_authority.source_turns"),"1")
 
+    def publication_fixture(self):
+        sa,sb=self.fixture()
+        job=json.loads(self.a.execute(self.claim_sql(str(uuid.uuid4()),sa,"runtime-a")))
+        self.a.execute(self.complete_sql(str(uuid.uuid4()),sa,"runtime-a",job))
+        self.admin(Path("supabase/qualification/mip-cutover-authority/004_publication_staging.sql").read_text())
+        dep=self.admin("""insert into mip_cutover_authority.dependency_versions
+          (dependency_key,source,children,record_hash,privacy_eligible,rights_eligible,retained_evidence,
+           correction_current,explanation_eligible,publication_eligible,state,valid_until,predicate_version)
+          values('root','source','{}',repeat('a',64),true,true,true,true,true,true,'current','2999-01-01','synthetic')
+          returning id;""")
+        self.admin("insert into mip_cutover_authority.dependency_heads values('root',"+q(dep)+");")
+        approved=self.admin("insert into mip_cutover_authority.approved_payloads(source,generation_id,payload,payload_hash,dependency_versions,owner_approval_ref) values('source',"+q(job["generation_id"])+",'{}',encode(sha256(convert_to('{}','UTF8')),'hex'),array["+q(dep)+"::uuid],'synthetic-only') returning id;")
+        self.a.execute("reset role;")
+        self.b.execute("reset role;")
+        return approved
+    def test_publication_selection_first_serializes_dependency_revocation(self):
+        approved=self.publication_fixture()
+        self.a.execute("begin;")
+        self.a.execute("select mip_cutover_authority.select_approved_payload("+q(approved)+");")
+        self.b.start("delete from mip_cutover_authority.dependency_heads where dependency_key='root';")
+        self.blocked(self.b,self.a)
+        self.assertEqual(self.admin("select count(*) from mip_cutover_authority.publication_selections"),"0")
+        self.a.execute("commit;")
+        self.b.finish()
+        with self.assertRaisesRegex(RuntimeError,"dependency_ineligible"):
+            self.a.execute("select mip_cutover_authority.select_approved_payload("+q(approved)+");")
+        self.assertEqual(self.admin("select count(*) from mip_cutover_authority.publication_selections"),"1")
+    def test_dependency_revocation_first_rolls_back_publication_selection(self):
+        approved=self.publication_fixture()
+        self.b.execute("begin;delete from mip_cutover_authority.dependency_heads where dependency_key='root';")
+        self.a.start("select mip_cutover_authority.select_approved_payload("+q(approved)+");")
+        self.blocked(self.a,self.b)
+        self.b.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"dependency_ineligible"):
+            self.a.finish()
+        self.assertEqual(self.admin("select count(*) from mip_cutover_authority.publication_selections"),"0")
+
 if __name__=="__main__":
     h.run("postgres","create role anon;create role authenticated;create role service_role bypassrls;")
     print("MIP_EXTENSION_PG_VERSION="+h.run("postgres","select version();"),flush=True)
     print("MIP_EXTENSION_ISOLATION="+h.run("postgres","show default_transaction_isolation;"),flush=True)
-    unittest.main(verbosity=2)
+    suite=unittest.defaultTestLoader.loadTestsFromTestCase(Extension)
+    result=unittest.TextTestRunner(verbosity=2).run(suite)
+    raise SystemExit(0 if result.wasSuccessful() else 1)

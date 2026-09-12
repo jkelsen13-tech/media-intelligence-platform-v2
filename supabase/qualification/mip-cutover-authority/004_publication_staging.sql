@@ -68,6 +68,10 @@ begin
  -- Stronger serialization than per-dependency locking: one isolated global fence.
  perform 1 from mip_cutover_authority.publication_fence where id for share;
  select * into strict approved from mip_cutover_authority.approved_payloads where id=p_approved;
+ if not exists(select 1 from comparison_qualification.generations g
+   where g.id=approved.generation_id and g.source_project=approved.source) then
+  raise exception 'mip_publication_source_mismatch';
+ end if;
  for dep in
   with recursive closure(key) as (
    select v.dependency_key from mip_cutover_authority.dependency_versions v
