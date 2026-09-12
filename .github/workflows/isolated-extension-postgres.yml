@@ -1,0 +1,33 @@
+name: Isolated authority extension concurrency
+on:
+  pull_request:
+    paths:
+      - 'supabase/qualification/mip-cutover-authority/003_scoped_queue.sql'
+      - 'supabase/qualification/mip-cutover-authority/004_publication_staging.sql'
+      - 'verifier/isolatedExtensionPostgres.py'
+      - '.github/workflows/isolated-extension-postgres.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  extension:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: mip-disposable-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: New scope and recovery transaction regressions
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+        run: python3 -B verifier/isolatedExtensionPostgres.py
