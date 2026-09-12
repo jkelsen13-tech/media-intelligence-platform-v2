@@ -11,8 +11,9 @@ export async function fixture(t){
  const admin=sql=>raw(db,sql)
  for(const f of ['contract.sql','selection.sql','capability.sql','source-fixture.sql','source-snapshot.sql'])
   await admin(await readFile(new URL('../../supabase/qualification/comparison-generations/'+f,import.meta.url),'utf8'))
- for(const f of ['001_execute_only_identities.sql','002_candidate_interfaces.sql','003_scoped_queue.sql','004_publication_staging.sql','005_broker_sessions.sql'])
-  await admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/'+f,import.meta.url),'utf8'))
+ for(const f of ['001_execute_only_identities.sql','002_candidate_interfaces.sql','003_scoped_queue.sql','004_publication_staging.sql','005_broker_sessions.sql','006_collector_reconciliation.sql'])
+  await admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/'+f,import.meta.url),'utf8')).catch(e=>{throw Error('mip_install_'+f+':'+e.message)})
+ await admin("insert into mip_identity.collector_config values(true,'source')")
  const {privateKey,publicKey}=generateKeyPairSync('rsa',{modulusLength:2048})
  const keyRevision=randomUUID(),issuer='https://isolated.invalid',audience='isolated-broker'
  await admin("insert into mip_identity.key_versions values("+q(keyRevision)+","+q(issuer)+",'synthetic',"+q(publicKey.export({format:'jwk'}))+",'2000-01-01','2999-01-01','synthetic-owner-fixture');insert into mip_identity.key_heads values("+q(issuer)+",'synthetic',"+q(keyRevision)+",true);")
