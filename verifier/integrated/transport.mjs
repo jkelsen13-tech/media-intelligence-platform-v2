@@ -29,7 +29,7 @@ export function transport(database,role){
  if(!/^[a-z_0-9]+$/.test(role))throw Error('mip_role_invalid')
  return async(name,args)=>{
   if(!names.has(name))throw Error('mip_rpc_invalid')
-  const result=await raw(database,'set session authorization '+role+';select to_jsonb(mip_identity.'+name+'('+args.map(quote).join(',')+'));')
+  const result=await raw(database,'set session authorization '+role+';select to_jsonb(mip_identity.'+name+'('+args.map(quote).join(',')+'));').catch(e=>{throw Error(e.message+'_'+name)})
   return result?JSON.parse(result):null
  }
 }

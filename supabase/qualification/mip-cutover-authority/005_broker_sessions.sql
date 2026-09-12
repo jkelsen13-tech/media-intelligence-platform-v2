@@ -253,6 +253,9 @@ grant execute on function mip_identity.worker_claim(uuid,uuid,text),
  mip_identity.worker_complete(uuid,uuid,text,uuid,uuid,text,text,jsonb),
  mip_identity.worker_fail(uuid,uuid,text,uuid,uuid,text,text) to mip_comparison_worker_v1;
 grant execute on function mip_identity.producer_enqueue(uuid,uuid,text,jsonb,timestamptz) to mip_comparison_producer_v1;
+alter schema mip_identity owner to mip_cutover_schema_owner_v1;
+alter schema comparison_qualification owner to mip_cutover_schema_owner_v1;
+alter schema mip_cutover_authority owner to mip_cutover_schema_owner_v1;
 -- Remove the old direct entrypoints from the intended external worker boundary.
 revoke execute on function mip_cutover_authority.worker_claim(uuid,uuid,text),
  mip_cutover_authority.worker_complete(uuid,uuid,text,uuid,uuid,text,text,jsonb),
