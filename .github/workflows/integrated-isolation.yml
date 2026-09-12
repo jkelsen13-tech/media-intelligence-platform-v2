@@ -1,0 +1,36 @@
+name: Integrated isolated candidate
+on:
+  pull_request:
+    paths:
+      - 'supabase/qualification/mip-cutover-authority/**'
+      - 'supabase/functions/source-comparison-generation-candidate/**'
+      - 'verifier/integrated/**'
+      - '.github/workflows/integrated-isolation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  integrated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: mip-disposable-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - name: Broker, encrypted remote journal and real process-restart regressions
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+        run: node --test verifier/integrated/*.test.mjs
