@@ -1,9 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {randomUUID} from 'node:crypto'
+import {randomUUID,createHash} from 'node:crypto'
 import {fork} from 'node:child_process'
+import {readFile} from 'node:fs/promises'
 import {fixture,workerRole,producerRole} from './fixture.mjs'
-import {raw,quote as q,guard} from './transport.mjs'
+import {raw,quote as q,guard,transport} from './transport.mjs'
 import {issueWorkloadSession} from '../../supabase/qualification/mip-cutover-authority/brokerSession.js'
 guard()
 await raw('postgres',"alter system set log_min_error_statement='panic';alter system set log_min_messages='panic';alter system set log_statement='none';select pg_reload_conf();")
@@ -134,4 +135,152 @@ test('rolled-back source edits leave no delta; truncate and worker self-produced
  assert.equal(await f.admin('select count(*) from mip_identity.source_changes'),before)
  await assert.rejects(f.admin('truncate public.articles'),/mip_database_denied/)
  await assert.rejects(raw(f.db,"set session authorization "+workerRole+";insert into mip_identity.source_changes(source,relation_name,row_key,kind,transaction_id) values('source','fake','fake','delta','fake')"),/mip_database_denied/)
+})
+
+async function observedWait(f,label){
+ for(let i=0;i<100;i++){
+  if(await f.admin("select exists(select 1 from pg_stat_activity where application_name="+q(label)+" and cardinality(pg_blocking_pids(pid))>0)")==='t')return
+  await new Promise(r=>setTimeout(r,20))
+ }
+ throw Error('mip_expected_lock_not_observed')
+}
+async function sleeping(f,label){
+ for(let i=0;i<100;i++){
+  if(await f.admin("select exists(select 1 from pg_stat_activity where application_name="+q(label)+" and wait_event='PgSleep')")==='t')return
+  await new Promise(r=>setTimeout(r,20))
+ }
+ throw Error('mip_barrier_not_reached')
+}
+for(const entity of ['key','mapping'])for(const first of ['acceptance','revocation'])test(entity+' '+first+' first serializes sensitive acceptance',async t=>{
+ const f=await fixture(t);await f.capture();const j=await claim(f)
+ const args=[randomUUID(),f.session,'runtime-a',j.generation_id,j.lease_token,j.input_hash,j.implementation_ref,{}].map(q).join(',')
+ const completeSQL='select mip_identity.worker_complete('+args+');'
+ const revokeSQL=entity==='key'?'update mip_identity.key_heads set active=false;':"update mip_identity.mapping_heads set active=false where runtime='runtime-a' and principal="+q(workerRole)+";"
+ if(first==='acceptance'){
+  const accepting=f.admin("begin;set application_name='mip_accept';set local role "+workerRole+";"+completeSQL+"select pg_sleep(2);commit;")
+  await sleeping(f,'mip_accept')
+  const revoking=f.admin("set application_name='mip_revoke';"+revokeSQL)
+  await observedWait(f,'mip_revoke')
+  assert.equal(await f.admin('select count(*) from comparison_qualification.outputs'),'0')
+  await accepting;await revoking
+  assert.equal(await f.admin('select count(*) from comparison_qualification.outputs'),'1')
+ }else{
+  const revoking=f.admin("begin;set application_name='mip_revoke';"+revokeSQL+"select pg_sleep(2);commit;")
+  await sleeping(f,'mip_revoke')
+  const accepting=f.admin("set application_name='mip_accept';set session authorization "+workerRole+";"+completeSQL)
+  // Attach the rejection handler immediately; the result contains only a redacted code.
+  const denied=assert.rejects(accepting,/mip_identity_(key|mapping)_revoked/)
+  await observedWait(f,'mip_accept')
+  await revoking;await denied
+  assert.equal(await f.admin('select count(*) from comparison_qualification.outputs'),'0')
+  assert.equal(await f.admin("select count(*) from comparison_qualification.request_runs where rpc_name='worker_complete'"),'0')
+  assert.equal(await f.admin('select state from comparison_qualification.jobs'),'processing')
+ }
+})
+test('retired key/mapping revisions cannot be restored and old sessions cannot follow a replacement mapping',async t=>{
+ const f=await fixture(t)
+ await f.admin("update mip_identity.mapping_heads set active=false where runtime='runtime-a' and principal="+q(workerRole))
+ await assert.rejects(f.admin("update mip_identity.mapping_heads set active=true where runtime='runtime-a' and principal="+q(workerRole)),/mip_identity_fresh_revision_required/)
+ const revision=randomUUID()
+ await f.admin('insert into mip_identity.mapping_versions select '+q(revision)+",runtime,principal,issuer,audience,subject,key_revision,max_lifetime_seconds,'synthetic-fresh-approval' from mip_identity.mapping_versions where revision="+q(f.mappings['runtime-a'+workerRole])+";update mip_identity.mapping_heads set revision="+q(revision)+",active=true where runtime='runtime-a' and principal="+q(workerRole))
+ await assert.rejects(claim(f),/mip_identity_stale_revision/)
+ assert.ok(await f.issue())
+ await f.admin('update mip_identity.key_heads set active=false')
+ await assert.rejects(f.admin('update mip_identity.key_heads set active=true'),/mip_identity_fresh_revision_required/)
+})
+test('finite eligible sources receive turns despite an out-of-scope backlog and busy source',async t=>{
+ const f=await fixture(t)
+ await f.admin("select comparison_qualification.bind_source_scope('runtime-a','second')")
+ for(let i=0;i<6;i++)await f.admin("select comparison_qualification.enqueue('source','{}','isolated-event-projection-candidate',clock_timestamp())")
+ await f.admin("select comparison_qualification.enqueue('second','{}','isolated-event-projection-candidate',clock_timestamp());select comparison_qualification.enqueue('foreign','{}','isolated-event-projection-candidate',clock_timestamp());")
+ const first=await claim(f),second=await claim(f)
+ assert.equal(first.source_project,'source');assert.equal(second.source_project,'second')
+ assert.equal(await f.admin("select j.state from comparison_qualification.jobs j join comparison_qualification.generations g on g.id=j.generation_id where g.source_project='foreign'"),'pending')
+})
+
+const publisherRole='mip_projection_publisher_v1'
+async function publicationFixture(t){
+ const f=await fixture(t)
+ await f.admin("alter table public.articles add column reader_state text;alter table public.articles add column source_status text;update public.articles set reader_state='eligible',source_status='active';")
+ // Structural relationship fixtures. These do not claim production policy approval.
+ for(const name of ['claims','article_claims','claim_evidence_links','claim_corrections','explanations','story_arcs','nodes'])
+  await f.admin('create table public.'+name+'(id uuid primary key,payload jsonb not null);')
+ await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/007_survivor_release.sql',import.meta.url),'utf8'))
+ await f.admin('select mip_identity.install_survivor_fences()')
+ const mr=randomUUID()
+ await f.admin('insert into mip_identity.mapping_versions select '+q(mr)+",runtime,"+q(publisherRole)+",issuer,audience,runtime||':"+publisherRole+"',key_revision,max_lifetime_seconds,'synthetic-publication-owner' from mip_identity.mapping_versions where revision="+q(f.mappings['runtime-a'+workerRole])+";insert into mip_identity.mapping_heads values('runtime-a',"+q(publisherRole)+","+q(mr)+",true);")
+ await f.capture();assert.equal((await childRun(f,f.session)).state,'completed')
+ const data=JSON.parse(await f.admin("select jsonb_build_object('generation',g.id,'input',g.input_payload,'input_hash',g.input_hash,'output',o.output_payload,'output_hash',o.output_hash) from comparison_qualification.generations g join comparison_qualification.outputs o on o.generation_id=g.id"))
+ const evidence=data.output.projection.article_claims.map(ac=>{
+  const a=data.input.eventInputs.flatMap(e=>e.members).find(m=>m.article.id===ac.article_id).article
+  const field=['title','summary','body_text'].find(k=>typeof a[k]==='string'&&a[k].includes(ac.surface_text))
+  assert.ok(field,'synthetic surface must be retained exactly')
+  return {article_id:ac.article_id,claim_key:ac.claim_key,field,excerpt:ac.surface_text,field_hash:createHash('sha256').update(a[field]).digest('hex'),auditability_state:'verified_retained_source'}
+ })
+ const explanations=data.output.projection.explanations.map(x=>({...x,review_status:'published',falsification_condition:'Synthetic fixture: contradictory retained source invalidates this statement.',archived_sources:evidence.map(e=>({status:'retained',field_hash:e.field_hash}))}))
+ async function review(overrides={}){
+  const context=JSON.parse(await f.admin('select mip_identity.survivor_context()'))
+  const r={revision:randomUUID(),generation_id:data.generation,input_hash:data.input_hash,output_hash:data.output_hash,privacy_status:'eligible',rights_status:'eligible',evidence,explanations,relationship_context:context,valid_until:'2999-01-01',policy_ref:'synthetic-owner-policy-not-production',authorization_ref:'synthetic-explicit-review',...overrides}
+  await f.admin('insert into mip_identity.publication_reviews('+Object.keys(r).join(',')+') values('+Object.values(r).map(q).join(',')+');insert into mip_identity.publication_review_heads values('+[data.generation,r.revision,true].map(q).join(',')+') on conflict(generation_id) do update set revision=excluded.revision,active=true;')
+  return r.revision
+ }
+ const session=await f.issue('runtime-a',publisherRole),rpc=transport(f.db,publisherRole)
+ return {...f,data,evidence,explanations,review,publisher:session,pub:rpc,stage:r=>rpc('stage_review',[session,'runtime-a',r]),release:(r,request=randomUUID())=>rpc('release_isolated',[request,session,'runtime-a',r])}
+}
+test('authoritative synthetic review stages immutable payload and releases only into private isolated receipt',async t=>{
+ const f=await publicationFixture(t),revision=await f.review(),request=randomUUID()
+ assert.equal(await f.release(revision,request),'isolated_released')
+ assert.equal(await f.release(revision,request),'isolated_released')
+ assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'1')
+ assert.equal(await f.admin("select count(*) from comparison_qualification.outputs where output_payload#>>'{projection,explanations,0,review_status}'='awaiting_review'"),'1')
+ assert.equal(await f.admin("select count(*) from mip_cutover_authority.approved_payloads where payload#>>'{projection,explanations,0,review_status}'='published'"),'1')
+ await assert.rejects(f.admin('select mip_identity.release_public()'),/mip_public_release_disabled/)
+ for(const sql of ['select * from mip_identity.publication_reviews','select * from mip_identity.private_releases',"select mip_identity.stage_review(gen_random_uuid(),'runtime-a',gen_random_uuid())","insert into mip_identity.publication_review_heads values(gen_random_uuid(),gen_random_uuid(),true)"])
+  await assert.rejects(raw(f.db,'set session authorization '+workerRole+';'+sql),/mip_database_denied/)
+ for(const role of ['anon','authenticated','service_role'])
+  await assert.rejects(raw(f.db,'set session authorization '+role+';select * from mip_identity.private_releases'),/mip_database_denied/)
+})
+test('missing privacy, rights, evidence, review and expired authority all fail closed',async t=>{
+ const f=await publicationFixture(t)
+ for(const overrides of [{privacy_status:'unknown'},{rights_status:'ineligible'},{evidence:[]},{explanations:[]},{valid_until:'2000-01-01'},{evidence:f.evidence.map(e=>({...e,field_hash:'wrong'}))},{explanations:f.explanations.map(x=>({...x,falsification_condition:'missing: review'}))}]){
+  const r=await f.review(overrides)
+  await assert.rejects(f.release(r),/mip_publication_/)
+ }
+ assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'0')
+ assert.equal(await f.admin('select count(*) from mip_cutover_authority.approved_payloads'),'0')
+})
+test('source/topology/relationship mutations invalidate staging; rollback leaves prior authorization intact',async t=>{
+ const f=await publicationFixture(t),r=await f.review()
+ await f.stage(r)
+ await f.admin("begin;insert into public.nodes values(gen_random_uuid(),'{\"synthetic\":true}');rollback;")
+ assert.equal(await f.release(r),'isolated_released')
+ await f.admin("insert into public.nodes values(gen_random_uuid(),'{\"synthetic\":true}')")
+ await assert.rejects(f.release(r),/mip_publication_stale_source/)
+ assert.ok(Number(await f.admin("select count(*) from mip_cutover_authority.dependency_heads h join mip_cutover_authority.dependency_versions v on v.id=h.version_id where v.state='revoked'"))>0)
+ const fresh=await f.review()
+ assert.equal(await f.release(fresh),'isolated_released')
+ await assert.rejects(f.admin('update mip_identity.publication_review_heads set revision='+q(r)),/mip_identity_fresh_revision_required/)
+ await f.admin('delete from public.event_articles where ctid=(select ctid from public.event_articles limit 1)')
+ await assert.rejects(f.release(fresh),/mip_publication_stale_source/)
+})
+for(const first of ['release','mutation'])test('publication '+first+' first fences retained relationship mutation',async t=>{
+ const f=await publicationFixture(t),r=await f.review()
+ const releaseSQL='set local role '+publisherRole+';select mip_identity.release_isolated('+[randomUUID(),f.publisher,'runtime-a',r].map(q).join(',')+');'
+ const changeSQL="insert into public.story_arcs values(gen_random_uuid(),'{\"synthetic\":true}');"
+ if(first==='release'){
+  const releasing=f.admin("begin;set application_name='mip_release';"+releaseSQL+"select pg_sleep(2);commit;")
+  await sleeping(f,'mip_release')
+  const mutating=f.admin("set application_name='mip_mutation';"+changeSQL)
+  await observedWait(f,'mip_mutation');await releasing;await mutating
+  assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'1')
+  await assert.rejects(f.release(r),/mip_publication_stale_source/)
+ }else{
+  const mutating=f.admin("begin;set application_name='mip_mutation';"+changeSQL+"select pg_sleep(2);commit;")
+  await sleeping(f,'mip_mutation')
+  const releasing=f.admin("begin;set application_name='mip_release';"+releaseSQL+'commit;')
+  const denied=assert.rejects(releasing,/mip_publication_stale_source/)
+  await observedWait(f,'mip_release');await mutating;await denied
+  assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'0')
+  assert.equal(await f.admin('select count(*) from mip_cutover_authority.approved_payloads'),'0')
+ }
 })

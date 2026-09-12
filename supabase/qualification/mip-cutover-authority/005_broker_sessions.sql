@@ -35,6 +35,19 @@ create table mip_identity.mapping_heads(
  runtime text not null,principal text not null,revision uuid not null references mip_identity.mapping_versions,
  active boolean not null,primary key(runtime,principal)
 );
+create table mip_identity.retired_authority(kind text not null,revision uuid not null,primary key(kind,revision));
+create function mip_identity.guard_revision_reuse() returns trigger
+language plpgsql security definer set search_path='' as $$
+begin
+ if tg_op='DELETE' or (tg_op='UPDATE' and (new.revision is distinct from old.revision or (old.active and not new.active))) then
+ insert into mip_identity.retired_authority values(tg_table_name,old.revision) on conflict do nothing;
+ end if;
+ if tg_op<>'DELETE' and new.active and exists(select 1 from mip_identity.retired_authority where kind=tg_table_name and revision=new.revision) then
+ raise exception 'mip_identity_fresh_revision_required';end if;
+ if tg_op='DELETE' then return old;end if;return new;
+end $$;
+create trigger mapping_revision_reuse before insert or update or delete on mip_identity.mapping_heads for each row execute function mip_identity.guard_revision_reuse();
+create trigger key_revision_reuse before insert or update or delete on mip_identity.key_heads for each row execute function mip_identity.guard_revision_reuse();
 create table mip_identity.sessions(
  session_id uuid primary key references comparison_qualification.principal_sessions,
  request_id uuid not null unique,token_hash text not null unique,
@@ -58,7 +71,7 @@ create trigger key_fence before insert or update or delete or truncate on mip_id
 do $immutable$
 declare t text;
 begin
- foreach t in array array['key_versions','mapping_versions','sessions','journal'] loop
+ foreach t in array array['key_versions','mapping_versions','sessions','journal','retired_authority'] loop
  execute format('create trigger immutable before update or delete on mip_identity.%I for each row execute function comparison_qualification.reject_rewrite()',t);
  execute format('create trigger no_truncate before truncate on mip_identity.%I for each statement execute function comparison_qualification.reject_rewrite()',t);
  end loop;
@@ -122,6 +135,7 @@ begin
  return s.session_id;end if;
  sid:=comparison_qualification.issue_session(p_principal,p_runtime,to_timestamp(p_exp));
  insert into mip_identity.sessions values(sid,p_request,p_token_hash,p_mapping,p_key,to_timestamp(p_exp),digest);
+ perform mip_identity.current_mapping(p_runtime,p_principal);
  return sid;
 end $$;
 create function mip_identity.authorize(p_session uuid,p_runtime text,p_principal text)
@@ -168,27 +182,39 @@ end $$;
 -- Wrappers require external authority before all sensitive reads or writes.
 create function mip_identity.worker_claim(p_request uuid,p_session uuid,p_runtime text) returns jsonb
 language plpgsql security definer set search_path='' as $$
+declare result jsonb;
 begin
  perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_worker_v1');
- return mip_cutover_authority.worker_claim(p_request,p_session,p_runtime);
+ result:=mip_cutover_authority.worker_claim(p_request,p_session,p_runtime);
+ perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_worker_v1');
+ return result;
 end $$;
 create function mip_identity.worker_complete(p_request uuid,p_session uuid,p_runtime text,p_generation uuid,p_token uuid,p_input_hash text,p_implementation text,p_output jsonb)
 returns text language plpgsql security definer set search_path='' as $$
+declare result text;
 begin
  perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_worker_v1');
- return mip_cutover_authority.worker_complete(p_request,p_session,p_runtime,p_generation,p_token,p_input_hash,p_implementation,p_output);
+ result:=mip_cutover_authority.worker_complete(p_request,p_session,p_runtime,p_generation,p_token,p_input_hash,p_implementation,p_output);
+ perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_worker_v1');
+ return result;
 end $$;
 create function mip_identity.worker_fail(p_request uuid,p_session uuid,p_runtime text,p_generation uuid,p_token uuid,p_input_hash text,p_implementation text)
 returns text language plpgsql security definer set search_path='' as $$
+declare result text;
 begin
  perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_worker_v1');
- return mip_cutover_authority.worker_fail(p_request,p_session,p_runtime,p_generation,p_token,p_input_hash,p_implementation);
+ result:=mip_cutover_authority.worker_fail(p_request,p_session,p_runtime,p_generation,p_token,p_input_hash,p_implementation);
+ perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_worker_v1');
+ return result;
 end $$;
 create function mip_identity.producer_enqueue(p_request uuid,p_session uuid,p_runtime text,p_payload jsonb,p_observed timestamptz) returns uuid
 language plpgsql security definer set search_path='' as $$
+declare result uuid;
 begin
  perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_producer_v1');
- return mip_cutover_authority.producer_enqueue(p_request,p_session,p_runtime,p_payload,p_observed);
+ result:=mip_cutover_authority.producer_enqueue(p_request,p_session,p_runtime,p_payload,p_observed);
+ perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_producer_v1');
+ return result;
 end $$;
 
 -- All storage is held by a separate NOLOGIN owner and FORCE RLS applies.
@@ -210,7 +236,7 @@ begin
  execute format('alter table mip_identity.%I force row level security',rec.tablename);
  execute format('revoke all on mip_identity.%I from public,anon,authenticated,service_role',rec.tablename);
  end loop;
- foreach t in array array['fence','key_versions','key_heads','mapping_versions','mapping_heads','sessions'] loop
+ foreach t in array array['fence','key_versions','key_heads','mapping_versions','mapping_heads','sessions','retired_authority'] loop
  execute format('grant select on mip_identity.%I to mip_identity_owner_v2',t);
  execute format('create policy identity_read on mip_identity.%I for select to mip_identity_owner_v2 using(true)',t);
  end loop;
@@ -222,6 +248,8 @@ create policy scoped_queue_kernel on mip_cutover_authority.source_turns to mip_k
 -- SELECT FOR SHARE/UPDATE requires UPDATE privilege even if no update is performed.
 grant update on mip_identity.fence to mip_identity_owner_v2;
 create policy fence_lock on mip_identity.fence for update to mip_identity_owner_v2 using(true) with check(true);
+grant insert on mip_identity.retired_authority to mip_identity_owner_v2;
+create policy retired_append on mip_identity.retired_authority for insert to mip_identity_owner_v2 with check(true);
 grant insert on mip_identity.sessions to mip_identity_owner_v2;
 create policy identity_issue on mip_identity.sessions for insert to mip_identity_owner_v2 with check(true);
 grant usage on schema comparison_qualification to mip_identity_owner_v2;

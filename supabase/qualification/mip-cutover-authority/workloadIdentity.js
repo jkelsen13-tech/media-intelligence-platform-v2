@@ -30,7 +30,7 @@ export function verifyWorkloadIdentity({token,policy,now}){
  if(mappings.length!==1)deny()
  const m=mappings[0]
  if(typeof m.runtime!=='string'||!m.runtime||
-   !['mip_comparison_producer_v1','mip_comparison_worker_v1'].includes(m.principal)||
+   !['mip_comparison_producer_v1','mip_comparison_worker_v1','mip_projection_publisher_v1'].includes(m.principal)||
    typeof m.authorizationRevision!=='string'||!m.authorizationRevision)deny()
  // Token role/runtime/user_metadata claims cannot grant authority.
  // Final session issue MUST recheck this mapping revision and key under DB locks.

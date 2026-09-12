@@ -24,7 +24,7 @@ export function raw(database,sql){
   child.stdin.end(sql)
  })
 }
-const names=new Set(['configuration','issue','journal_runtime','journal_put','journal_get','worker_claim','worker_complete','worker_fail','producer_enqueue','capture_delta','reconciliation'])
+const names=new Set(['configuration','issue','journal_runtime','journal_put','journal_get','worker_claim','worker_complete','worker_fail','producer_enqueue','capture_delta','reconciliation','stage_review','release_isolated','release_public'])
 export function transport(database,role){
  if(!/^[a-z_0-9]+$/.test(role))throw Error('mip_role_invalid')
  return async(name,args)=>{
