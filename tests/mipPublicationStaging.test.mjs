@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
-import {fixture} from './comparisonGenerationCandidate.test.mjs'
+import {fixture} from './isolatedCandidateFixture.mjs'
 async function pub(t){
  const f=await fixture(t,{extension:true});const id=await f.capture();await f.worker()
  await f.db.exec(await readFile(new URL('../supabase/qualification/mip-cutover-authority/004_publication_staging.sql',import.meta.url),'utf8'))

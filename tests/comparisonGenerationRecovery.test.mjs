@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {randomUUID,createHash} from 'node:crypto'
-import {fixture} from './comparisonGenerationCandidate.test.mjs'
+import {fixture} from './isolatedCandidateFixture.mjs'
 import {durableWorkerRpc,recoverGenerationRequest,runDurableGenerationWorker} from '../supabase/functions/source-comparison-generation-candidate/durableWorker.js'
 const implementation='isolated-event-projection-candidate'
 const hash=s=>createHash('sha256').update(s).digest('hex')
