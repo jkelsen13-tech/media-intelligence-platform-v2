@@ -32,6 +32,8 @@ begin
  if a is not distinct from b then return null;end if;
  k:=coalesce(a,b)->>tg_argv[0];
  if tg_nargs>1 then k:=k||':'||(coalesce(a,b)->>tg_argv[1]);end if;
+ -- Composite/unknown topology keys retain exact before/after content even without id.
+ if k is null then k:=encode(sha256(convert_to(coalesce(a,b)::text,'UTF8')),'hex');end if;
  insert into mip_identity.source_changes(source,relation_name,row_key,before_row,after_row,kind,transaction_id)
  values(src,tg_table_schema||'.'||tg_table_name,k,b,a,'delta',pg_current_xact_id()::text);
  return null;

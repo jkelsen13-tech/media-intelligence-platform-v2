@@ -27,7 +27,8 @@ create table mip_identity.private_releases(
 );
 create function mip_identity.survivor_relations() returns text[] language sql immutable set search_path='' as $$
  select array['events','articles','event_articles','pipeline_config','claims','article_claims',
- 'claim_evidence_links','claim_corrections','explanations','story_arcs','nodes'];
+ 'claim_evidence_links','claim_corrections','explanations','story_arcs','nodes',
+ 'edges','arc_events','arc_milestones','arc_membership_candidates'];
 $$;
 create function mip_identity.survivor_context() returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -84,7 +85,7 @@ create trigger publication_review_retirement before insert or update or delete o
 create function mip_identity.validate_review(p_revision uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare rev mip_identity.publication_reviews;g comparison_qualification.generations;o comparison_qualification.outputs;pc jsonb;
- current_input jsonb;event_input jsonb;member jsonb;ac jsonb;ev jsonb;x jsonb;original jsonb;article jsonb;field text;valid boolean;
+ current_input jsonb;event_input jsonb;member jsonb;ac jsonb;ev jsonb;x jsonb;original jsonb;article jsonb;field text;valid boolean;links jsonb:='[]';corrections jsonb:='[]';target jsonb;relation jsonb;source_claim jsonb;
 begin
  perform 1 from mip_identity.collector_fence where id for share;
  perform 1 from mip_cutover_authority.publication_fence where id for share;
@@ -96,8 +97,8 @@ begin
  select * into strict o from comparison_qualification.outputs where generation_id=g.id;
  if rev.input_hash is distinct from g.input_hash or rev.output_hash is distinct from o.output_hash then raise exception 'mip_publication_binding';end if;
  current_input:=comparison_qualification.source_snapshot(g.input_payload->'lexicon',g.implementation_ref);
- if current_input-'snapshot_metadata' is distinct from g.input_payload-'snapshot_metadata'
- or mip_identity.survivor_context() is distinct from rev.relationship_context then raise exception 'mip_publication_stale_source';end if;
+ if (current_input-'snapshot_metadata') is distinct from (g.input_payload-'snapshot_metadata') then raise exception 'mip_publication_stale_source_input';end if;
+ if mip_identity.survivor_context() is distinct from rev.relationship_context then raise exception 'mip_publication_stale_source_context';end if;
  if jsonb_typeof(g.input_payload->'eventInputs') is distinct from 'array'
  or jsonb_array_length(g.input_payload->'eventInputs')=0 then raise exception 'mip_publication_missing_input';end if;
  for event_input in select value from jsonb_array_elements(g.input_payload->'eventInputs') loop
@@ -145,7 +146,7 @@ begin
  then raise exception 'mip_publication_explanation_missing';end if;
  for x in select value from jsonb_array_elements(rev.explanations) loop
  select value into original from jsonb_array_elements(o.output_payload#>'{projection,explanations}') where value->>'assertion_id'=x->>'assertion_id';
- if not found or x->>'review_status' is distinct from 'published' or x->>'state' is distinct from 'ok'
+ if not found or x->>'assertion_type' is distinct from 'claim_grouping' or x->>'rule_version' not like 'sc-v2-event-projection|%' or nullif(btrim(x->>'supporting_passage'),'') is null or x->>'review_status' is distinct from 'published' or x->>'state' is distinct from 'ok'
  or x->'is_current' is distinct from 'true'::jsonb or x->>'rule_version' is distinct from original->>'rule_version'
  or x->>'supporting_passage' is distinct from original->>'supporting_passage'
  or nullif(btrim(x->>'falsification_condition'),'') is null or btrim(x->>'falsification_condition') ilike 'missing:%'
@@ -155,7 +156,33 @@ begin
  if ev->>'status' is distinct from 'retained' or not exists(select 1 from jsonb_array_elements(rev.evidence) e where e.value->>'field_hash'=ev->>'field_hash')
  then raise exception 'mip_publication_archive_missing';end if;
  end loop;end loop;
- return jsonb_set(o.output_payload,'{projection,explanations}',rev.explanations);
+
+ -- Bind existing evidence links/corrections by exact event and canonical claim.
+ -- Ambiguous/missing bindings fail closed; no worker attestation or URL synthesis.
+ for relation in select value from jsonb_array_elements(rev.relationship_context->'claim_evidence_links') loop
+ select value into source_claim from jsonb_array_elements(rev.relationship_context->'claims') where value->>'id'=relation->>'claim_id';
+ select value into target from jsonb_array_elements(o.output_payload#>'{projection,claims}')
+ where value->>'event_id'=source_claim->>'event_id' and value->>'canonical_text'=source_claim->>'canonical_text';
+ if target is null or source_claim->>'status' is distinct from 'active' or source_claim->>'rule_version' is distinct from 'sc-v2-event-projection'
+ or not exists(select 1 from jsonb_array_elements(rev.evidence) e where e.value->>'claim_key'=target->>'claim_key' and e.value->>'article_id'=relation->>'linked_from_article_id')
+ or nullif(relation->>'evidence_url','') is null then raise exception 'mip_publication_link_ineligible';end if;
+ links:=links||jsonb_build_array(relation||jsonb_build_object('claim_key',target->>'claim_key'));
+ end loop;
+ for relation in select value from jsonb_array_elements(rev.relationship_context->'claim_corrections') loop
+ select value into source_claim from jsonb_array_elements(rev.relationship_context->'claims') where value->>'id'=relation->>'claim_id';
+ select value into target from jsonb_array_elements(o.output_payload#>'{projection,claims}')
+ where value->>'event_id'=source_claim->>'event_id' and value->>'canonical_text'=source_claim->>'canonical_text';
+ if target is null or source_claim->>'status' is distinct from 'active'
+ or not exists(select 1 from jsonb_array_elements(g.input_payload->'eventInputs') e
+ cross join lateral jsonb_array_elements(e.value->'members') m where e.value#>>'{event,id}'=target->>'event_id'
+ and m.value#>>'{article,id}'=relation->>'correcting_article_id' and m.value#>>'{article,reader_state}'='eligible'
+ and m.value#>>'{article,source_status}'='active')
+ or nullif(btrim(relation->>'correction_text'),'') is null then raise exception 'mip_publication_correction_ineligible';end if;
+ corrections:=corrections||jsonb_build_array(relation||jsonb_build_object('claim_key',target->>'claim_key'));
+ end loop;
+ return jsonb_set(o.output_payload,'{projection,explanations}',rev.explanations)
+ ||jsonb_build_object('evidence_links',links,'corrections',corrections,'review_revision',rev.revision);
+
 end $$;
 create function mip_identity.stage_review(p_session uuid,p_runtime text,p_revision uuid) returns uuid
 language plpgsql security definer set search_path='' as $$

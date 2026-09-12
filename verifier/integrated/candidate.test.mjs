@@ -203,7 +203,7 @@ async function publicationFixture(t){
  const f=await fixture(t)
  await f.admin("alter table public.articles add column reader_state text;alter table public.articles add column source_status text;update public.articles set reader_state='eligible',source_status='active';")
  // Structural relationship fixtures. These do not claim production policy approval.
- for(const name of ['claims','article_claims','claim_evidence_links','claim_corrections','explanations','story_arcs','nodes'])
+ for(const name of ['claims','article_claims','claim_evidence_links','claim_corrections','explanations','story_arcs','nodes','edges','arc_events','arc_milestones','arc_membership_candidates'])
   await f.admin('create table public.'+name+'(id uuid primary key,payload jsonb not null);')
  await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/007_survivor_release.sql',import.meta.url),'utf8'))
  await f.admin('select mip_identity.install_survivor_fences()')
@@ -219,9 +219,8 @@ async function publicationFixture(t){
  })
  const explanations=data.output.projection.explanations.map(x=>({...x,review_status:'published',falsification_condition:'Synthetic fixture: contradictory retained source invalidates this statement.',archived_sources:evidence.map(e=>({status:'retained',field_hash:e.field_hash}))}))
  async function review(overrides={}){
-  const context=JSON.parse(await f.admin('select mip_identity.survivor_context()'))
-  const r={revision:randomUUID(),generation_id:data.generation,input_hash:data.input_hash,output_hash:data.output_hash,privacy_status:'eligible',rights_status:'eligible',evidence,explanations,relationship_context:context,valid_until:'2999-01-01',policy_ref:'synthetic-owner-policy-not-production',authorization_ref:'synthetic-explicit-review',...overrides}
-  await f.admin('insert into mip_identity.publication_reviews('+Object.keys(r).join(',')+') values('+Object.values(r).map(q).join(',')+');insert into mip_identity.publication_review_heads values('+[data.generation,r.revision,true].map(q).join(',')+') on conflict(generation_id) do update set revision=excluded.revision,active=true;')
+  const r={revision:randomUUID(),generation_id:data.generation,input_hash:data.input_hash,output_hash:data.output_hash,privacy_status:'eligible',rights_status:'eligible',evidence,explanations,relationship_context:null,valid_until:'2999-01-01',policy_ref:'synthetic-owner-policy-not-production',authorization_ref:'synthetic-explicit-review',...overrides}
+  await f.admin('insert into mip_identity.publication_reviews('+Object.keys(r).join(',')+') values('+Object.entries(r).map(([key,value])=>key==='relationship_context'?'mip_identity.survivor_context()':q(value)).join(',')+');insert into mip_identity.publication_review_heads values('+[data.generation,r.revision,true].map(q).join(',')+') on conflict(generation_id) do update set revision=excluded.revision,active=true;')
   return r.revision
  }
  const session=await f.issue('runtime-a',publisherRole),rpc=transport(f.db,publisherRole)
