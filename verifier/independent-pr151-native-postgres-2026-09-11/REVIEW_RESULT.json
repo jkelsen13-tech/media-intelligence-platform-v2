@@ -1,11 +1,21 @@
 {
   "schema": "MIP_PR151_INDEPENDENT_NATIVE_POSTGRES_REVIEW_v1",
-  "evidence_class": "INDEPENDENT_REVIEWER_EXECUTION_ACCESS_BLOCKED",
+  "evidence_class": "INDEPENDENT_REVIEWER_OWNER_INITIATED_NATIVE_ATTEMPT3_INSPECTED",
   "production_cutover": "ON_HOLD",
   "review_gate": "ISOLATED_TRANSACTIONAL_INTERFACE_VERIFICATION",
   "owner_acceptance": "NOT_SUBMITTED",
   "recorded_at_utc": "2026-09-11T21:43:33Z",
-  "last_watch_utc": "2026-09-12T04:45:54Z",
+  "inspected_at_utc": "2026-09-12T05:06:12Z",
+  "last_watch_utc": "2026-09-12T05:06:12Z",
+  "prior_access_blocked_record": {
+    "preserved": true,
+    "original_evidence_class": "INDEPENDENT_REVIEWER_EXECUTION_ACCESS_BLOCKED",
+    "original_recorded_at_utc": "2026-09-11T21:43:33Z",
+    "watches_through_utc": "2026-09-12T04:45:54Z",
+    "native_suites_then": "NOT_RUN",
+    "reviewer_dispatch_and_rerun": "HTTP 403 Resource not accessible by integration",
+    "attempt_1_not_used": true
+  },
   "watch_checks": [
     {
       "utc": "2026-09-11T22:02:07Z",
@@ -14,7 +24,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-11T22:17:51Z",
@@ -23,7 +38,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-11T22:33:25Z",
@@ -32,7 +52,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-11T22:49:17Z",
@@ -41,7 +66,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-11T23:04:59Z",
@@ -50,7 +80,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-11T23:20:27Z",
@@ -59,7 +94,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-11T23:36:01Z",
@@ -68,7 +108,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-11T23:51:36Z",
@@ -77,7 +122,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T00:07:19Z",
@@ -86,7 +136,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T00:22:48Z",
@@ -95,7 +150,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T00:38:16Z",
@@ -104,7 +164,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T00:53:44Z",
@@ -113,7 +178,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T01:09:15Z",
@@ -122,7 +192,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T01:24:43Z",
@@ -131,7 +206,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T01:40:09Z",
@@ -140,7 +220,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T01:55:38Z",
@@ -149,7 +234,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T02:11:09Z",
@@ -158,7 +248,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T02:26:34Z",
@@ -167,7 +262,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T02:42:03Z",
@@ -176,7 +276,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T02:57:28Z",
@@ -185,7 +290,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T03:12:54Z",
@@ -194,7 +304,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T03:28:21Z",
@@ -203,7 +318,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T03:43:47Z",
@@ -212,7 +332,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T03:59:16Z",
@@ -221,7 +346,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T04:14:43Z",
@@ -230,7 +360,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T04:30:15Z",
@@ -239,7 +374,12 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
     },
     {
       "utc": "2026-09-12T04:45:54Z",
@@ -248,7 +388,32 @@
       "fresh_native_run_found": false,
       "prior_attempt_1_substituted": false,
       "blocker_still_stands": true,
-      "held_prs_still_unmerged": [149, 150, 151, 152]
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ]
+    },
+    {
+      "utc": "2026-09-12T05:06:12Z",
+      "fresh_workflow_dispatch": false,
+      "run_34606754290_attempt": 3,
+      "fresh_native_run_found": true,
+      "inspected_attempt": 3,
+      "inspected_job_id": 103501954636,
+      "prior_attempt_1_substituted": false,
+      "prior_attempt_2_substituted": false,
+      "blocker_still_stands": false,
+      "access_blocker_preserved_as_history": true,
+      "held_prs_still_unmerged": [
+        149,
+        150,
+        151,
+        152
+      ],
+      "owner_triggering_actor": "jkelsen13-tech",
+      "event": "pull_request"
     }
   ],
   "reviewer_identity": {
@@ -262,15 +427,22 @@
     "source": "mobile",
     "github_cli_login": "cursor",
     "github_mcp_get_me_login": "jkelsen13-tech",
-    "personal_contact_omitted": true
+    "github_mcp_note": "Owner-linked MCP identity. Used only for read APIs. Not used to claim this reviewer initiated the Actions rerun.",
+    "personal_contact_omitted": true,
+    "role": "separate_reviewer_supervising_and_assessing_owner_initiated_execution"
   },
   "github_trigger": {
-    "fresh_run_initiated": false,
+    "fresh_run_initiated": true,
     "initiated_by_reviewer": false,
-    "initiated_by_owner": false,
-    "trigger_actor": null,
+    "initiated_by_owner": true,
+    "trigger_actor": "jkelsen13-tech",
+    "run_actor": "jkelsen13-tech",
     "attempted_actor_login": "cursor",
-    "event": null
+    "event": "pull_request",
+    "mechanism": "rerun_of_existing_run_34606754290",
+    "option": "B",
+    "inspected_run_attempt": 3,
+    "note": "Owner initiated a fresh attempt of the existing native workflow. This reviewer did not dispatch or rerun. Attempt 1 (implementation CI) was not used. Attempt 2 exists as an earlier owner rerun and was not used as this requested fresh execution."
   },
   "candidate": {
     "repository": "jkelsen13-tech/media-intelligence-platform-v2",
@@ -287,48 +459,227 @@
     "hashed_files_in_manifest": 68
   },
   "held_prs_unmerged": {
-    "pr149": {"number": 149, "draft": true, "state": "OPEN", "merged": false, "head": "6c716619d3b312682dba2c4c8211936f7f911895"},
-    "pr150": {"number": 150, "draft": true, "state": "OPEN", "merged": false, "head": "b04d13980475892c921e52643599811b451a09c3"},
-    "pr151": {"number": 151, "draft": true, "state": "OPEN", "merged": false, "head": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26"}
+    "pr149": {
+      "number": 149,
+      "draft": true,
+      "state": "OPEN",
+      "merged": false,
+      "head": "6c716619d3b312682dba2c4c8211936f7f911895"
+    },
+    "pr150": {
+      "number": 150,
+      "draft": true,
+      "state": "OPEN",
+      "merged": false,
+      "head": "b04d13980475892c921e52643599811b451a09c3"
+    },
+    "pr151": {
+      "number": 151,
+      "draft": true,
+      "state": "OPEN",
+      "merged": false,
+      "head": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26"
+    }
   },
   "authorized_file_hashes": [
-    {"path": ".github/workflows/comparison-postgres.yml", "bytes": 1751, "sha256": "96c288466b8b252b87158631f549e6ba0e015bbf90aba06e8bb6784af484a347", "git_blob": "dfac22454785cd74c4a35a5f9ced3744b2d4886f", "manifest_match": true},
-    {"path": "verifier/comparisonPostgresConcurrency.py", "bytes": 21526, "sha256": "b74ee42533583e5550f1ff09b63d4267df5f18d353b06c380363820d68c161f2", "git_blob": "815902d79aa8986a54d33de1f4b9432eca181278", "manifest_match": true},
-    {"path": "verifier/pr149AuthorityOrdering.py", "bytes": 11441, "sha256": "eed39690e7a474841ede2b5be52bbc525efa84134419c4b05a40794aca406690", "git_blob": "2bf8fa85fe654d6e97e41e27410ec506b5f1977d", "manifest_match": true},
-    {"path": "verifier/candidateInterfacesPostgres.py", "bytes": 10475, "sha256": "350b87d35fdc08ec305a7909d8311f3eec894f573d150bbd1e82cb9914ef8306", "git_blob": "63bbdd65cd25906383b2ee62c4592acb71fff54a", "manifest_match": true},
-    {"path": "verifier/pr149-authority-baseline.sql", "bytes": 45844, "sha256": "a3785a59fff944d0ee1fd6af0974e85de1f7efa9686c9ac677317d018bd2c711", "git_blob": "cf3ad7270e31f717535dbcb21160725662a489ff", "manifest_match": true},
-    {"path": "supabase/qualification/comparison-generations/contract.sql", "bytes": 12529, "sha256": "650a70f5dd8d5acacc74b73cd225d1c1755e822062e0ba88648e5a9e43715776", "git_blob": "5a58066fdf10c68c0c22f112de46c06548d5708e", "manifest_match": true},
-    {"path": "supabase/qualification/comparison-generations/selection.sql", "bytes": 4975, "sha256": "a910c8da881593c4e2d5689c6acbac0d81882531f4b1fb78589008254a416e81", "git_blob": "e5b2fdbe236db31e273ef3939f3d3ed36be3b0c6", "manifest_match": true},
-    {"path": "supabase/qualification/comparison-generations/capability.sql", "bytes": 48088, "sha256": "27a3c6dbe1344932d6a64a7016abf143ea992f1d0a4fed8541a953f45137c282", "git_blob": "07777c1463dba6b20de37ed08d4fe4aefd70da1d", "manifest_match": true},
-    {"path": "supabase/qualification/comparison-generations/source-fixture.sql", "bytes": 1883, "sha256": "80b165977c67f92a107ceb8fc9fb46c53ef880d816d08789cce96c59de45a805", "git_blob": "d78c5d0edcc3f5271d3e9b15b0f4a3d989cabdcf", "manifest_match": true},
-    {"path": "supabase/qualification/comparison-generations/source-snapshot.sql", "bytes": 2795, "sha256": "7bef311c9f551f88ca6bbb51f57b71593c64017e0931d9db4c275885c42dc968", "git_blob": "401078a9921f90259904d95745708134b6c2bda8", "manifest_match": true},
-    {"path": "supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql", "bytes": 5907, "sha256": "cb4c245c04bd7e69722a7866ea94515d953f98ac8d4972837b835d6b0835c3b5", "git_blob": "136204c77c0e18bce2592493db4765cdeb4c9d1b", "manifest_match": true},
-    {"path": "supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql", "bytes": 10652, "sha256": "63f9b3ca34730c86029b446172496151849079b304ac45a0e4459a98af75790e", "git_blob": "f5a9fba65d3b5bac782afd511f94c46e7e9e6315", "manifest_match": true},
-    {"path": "verifier/post-review-2026-09-11/README.md", "bytes": 10645, "sha256": "6ebde590d5515eaf48fb8176833960c979235a72dc48bfe21e494ac769362223", "git_blob": "7acbcf00049b507f8eb10b8e433726d57a37eade", "manifest_match": true},
-    {"path": "verifier/mip-production-cutover-review-v1/disclosure-manifest-post-review.json", "bytes": 14560, "sha256": "061f21964ee084257e1b3effcaa0b5c4f9057b4034ecda235bd6b918dcdebf59", "git_blob": "f67d50f8c63484a097e98399232f6f1acc5cb51d", "manifest_match": true}
+    {
+      "path": ".github/workflows/comparison-postgres.yml",
+      "bytes": 1751,
+      "sha256": "96c288466b8b252b87158631f549e6ba0e015bbf90aba06e8bb6784af484a347",
+      "git_blob": "dfac22454785cd74c4a35a5f9ced3744b2d4886f",
+      "manifest_match": true
+    },
+    {
+      "path": "verifier/comparisonPostgresConcurrency.py",
+      "bytes": 21526,
+      "sha256": "b74ee42533583e5550f1ff09b63d4267df5f18d353b06c380363820d68c161f2",
+      "git_blob": "815902d79aa8986a54d33de1f4b9432eca181278",
+      "manifest_match": true
+    },
+    {
+      "path": "verifier/pr149AuthorityOrdering.py",
+      "bytes": 11441,
+      "sha256": "eed39690e7a474841ede2b5be52bbc525efa84134419c4b05a40794aca406690",
+      "git_blob": "2bf8fa85fe654d6e97e41e27410ec506b5f1977d",
+      "manifest_match": true
+    },
+    {
+      "path": "verifier/candidateInterfacesPostgres.py",
+      "bytes": 10475,
+      "sha256": "350b87d35fdc08ec305a7909d8311f3eec894f573d150bbd1e82cb9914ef8306",
+      "git_blob": "63bbdd65cd25906383b2ee62c4592acb71fff54a",
+      "manifest_match": true
+    },
+    {
+      "path": "verifier/pr149-authority-baseline.sql",
+      "bytes": 45844,
+      "sha256": "a3785a59fff944d0ee1fd6af0974e85de1f7efa9686c9ac677317d018bd2c711",
+      "git_blob": "cf3ad7270e31f717535dbcb21160725662a489ff",
+      "manifest_match": true
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/contract.sql",
+      "bytes": 12529,
+      "sha256": "650a70f5dd8d5acacc74b73cd225d1c1755e822062e0ba88648e5a9e43715776",
+      "git_blob": "5a58066fdf10c68c0c22f112de46c06548d5708e",
+      "manifest_match": true
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/selection.sql",
+      "bytes": 4975,
+      "sha256": "a910c8da881593c4e2d5689c6acbac0d81882531f4b1fb78589008254a416e81",
+      "git_blob": "e5b2fdbe236db31e273ef3939f3d3ed36be3b0c6",
+      "manifest_match": true
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/capability.sql",
+      "bytes": 48088,
+      "sha256": "27a3c6dbe1344932d6a64a7016abf143ea992f1d0a4fed8541a953f45137c282",
+      "git_blob": "07777c1463dba6b20de37ed08d4fe4aefd70da1d",
+      "manifest_match": true
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/source-fixture.sql",
+      "bytes": 1883,
+      "sha256": "80b165977c67f92a107ceb8fc9fb46c53ef880d816d08789cce96c59de45a805",
+      "git_blob": "d78c5d0edcc3f5271d3e9b15b0f4a3d989cabdcf",
+      "manifest_match": true
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/source-snapshot.sql",
+      "bytes": 2795,
+      "sha256": "7bef311c9f551f88ca6bbb51f57b71593c64017e0931d9db4c275885c42dc968",
+      "git_blob": "401078a9921f90259904d95745708134b6c2bda8",
+      "manifest_match": true
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql",
+      "bytes": 5907,
+      "sha256": "cb4c245c04bd7e69722a7866ea94515d953f98ac8d4972837b835d6b0835c3b5",
+      "git_blob": "136204c77c0e18bce2592493db4765cdeb4c9d1b",
+      "manifest_match": true
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql",
+      "bytes": 10652,
+      "sha256": "63f9b3ca34730c86029b446172496151849079b304ac45a0e4459a98af75790e",
+      "git_blob": "f5a9fba65d3b5bac782afd511f94c46e7e9e6315",
+      "manifest_match": true
+    },
+    {
+      "path": "verifier/post-review-2026-09-11/README.md",
+      "bytes": 10645,
+      "sha256": "6ebde590d5515eaf48fb8176833960c979235a72dc48bfe21e494ac769362223",
+      "git_blob": "7acbcf00049b507f8eb10b8e433726d57a37eade",
+      "manifest_match": true
+    },
+    {
+      "path": "verifier/mip-production-cutover-review-v1/disclosure-manifest-post-review.json",
+      "bytes": 14560,
+      "sha256": "061f21964ee084257e1b3effcaa0b5c4f9057b4034ecda235bd6b918dcdebf59",
+      "git_blob": "f67d50f8c63484a097e98399232f6f1acc5cb51d",
+      "manifest_match": true
+    }
   ],
   "hash_mismatches": [],
+  "attempts_of_run_34606754290": [
+    {
+      "attempt": 1,
+      "job_id": 103286951825,
+      "started_at": "2026-09-11T13:51:57Z",
+      "completed_at": "2026-09-11T13:52:38Z",
+      "conclusion": "success",
+      "used_as_independent_evidence": false,
+      "logs_retrieved_for_this_review": false,
+      "reason": "implementation-authored CI; not the requested fresh independent execution"
+    },
+    {
+      "attempt": 2,
+      "job_id": 103501796072,
+      "started_at": "2026-09-12T05:01:04Z",
+      "completed_at": "2026-09-12T05:01:45Z",
+      "conclusion": "success",
+      "triggering_actor": "jkelsen13-tech",
+      "used_as_independent_evidence": false,
+      "logs_retrieved_for_this_review": false,
+      "reason": "earlier owner rerun; this review inspects the later requested attempt 3 only"
+    },
+    {
+      "attempt": 3,
+      "job_id": 103501954636,
+      "job_url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34606754290/job/103501954636",
+      "started_at": "2026-09-12T05:02:23Z",
+      "completed_at": "2026-09-12T05:03:05Z",
+      "run_started_at": "2026-09-12T05:02:19Z",
+      "updated_at": "2026-09-12T05:03:06Z",
+      "conclusion": "success",
+      "status": "completed",
+      "triggering_actor": "jkelsen13-tech",
+      "actor": "jkelsen13-tech",
+      "event": "pull_request",
+      "head_branch": "codex/post-review-reconciliation-20260911",
+      "run_head_sha": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26",
+      "used_as_independent_evidence": true,
+      "logs_retrieved_for_this_review": true,
+      "log_command": "gh run view 34606754290 -R jkelsen13-tech/media-intelligence-platform-v2 --job 103501954636 --log --attempt 3",
+      "log_access": "granted",
+      "artifacts": {
+        "run_level_total_count": 0,
+        "attempt_specific_endpoint": "404 Not Found"
+      }
+    }
+  ],
   "execution": {
-    "status": "BLOCKED",
-    "reason": "github_actions_write_not_granted_to_reviewer_token",
+    "status": "OBSERVED",
     "workflow_name": "Comparison PostgreSQL concurrency",
     "workflow_path": ".github/workflows/comparison-postgres.yml",
     "workflow_id": 354430544,
-    "run_id": null,
-    "run_attempt": null,
-    "job_id": null,
+    "run_id": 34606754290,
+    "run_url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34606754290",
+    "run_attempt": 3,
+    "job_id": 103501954636,
     "job_name": "concurrent-transactions",
-    "checkout_sha": null,
-    "checkout_tree": null,
+    "job_url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34606754290/job/103501954636",
+    "runner_name": "GitHub Actions 1000004464",
+    "runner_os": "Ubuntu 24.04.5 LTS",
+    "runner_image": "ubuntu-24.04",
+    "runner_image_version": "20260907.300.1",
+    "actions_checkout": "actions/checkout@v7.0.1",
+    "actions_checkout_sha": "3d3c42e5aac5ba805825da76410c181273ba90b1",
+    "run_head_sha": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26",
+    "checkout_sha": "b7bccc24ce8987d1db50c24575ff67e01b24611c",
+    "checkout_ref": "refs/remotes/pull/151/merge",
+    "checkout_subject": "Merge ddbbbd6dc878dcb38ea0904b6ee58895853b6c26 into 6c716619d3b312682dba2c4c8211936f7f911895",
+    "checkout_parents": [
+      "6c716619d3b312682dba2c4c8211936f7f911895",
+      "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26"
+    ],
+    "checkout_tree": "b81e3d75be73205f69bcefc1681203050552ec07",
+    "checkout_tree_equals_expected_candidate_tree": true,
+    "checkout_sha_differs_from_candidate_head": true,
+    "checkout_sha_difference_explained": "GitHub pull_request jobs check out the synthetic merge ref pull/151/merge. Tree matches the frozen candidate.",
     "postgres_image_declared_in_workflow": "postgres:17.6",
-    "postgres_image_digest": null,
+    "postgres_image_digest": "sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929",
+    "postgres_version_log": "PostgreSQL 17.6 (Debian 17.6-2.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
     "observed_isolation_level": null,
-    "isolation_note": "Authorized sources never SET transaction isolation. PostgreSQL 17 default is typically read committed. Not a witness from this execution.",
-    "github_actions_env_observed": null,
+    "isolation_note": "Authorized sources never SET transaction isolation. Attempt 3 logs contain no isolation/SET TRANSACTION witness. PostgreSQL 17 default is typically read committed; that is not a witness from this execution.",
+    "github_actions_env_observed": {
+      "docker_service_create_included_GITHUB_ACTIONS_true": true,
+      "python_step_env_block_printed_GITHUB_ACTIONS": false,
+      "python_step_env_block_printed_MIP_DISPOSABLE_POSTGRES": "comparison-qualification",
+      "four_harnesses_completed": true,
+      "guard_implication": "Harnesses exit unless GITHUB_ACTIONS==true and MIP_DISPOSABLE_POSTGRES==comparison-qualification. They ran to completion."
+    },
     "mip_disposable_postgres_guard_source": "comparisonPostgresConcurrency.py exits unless GITHUB_ACTIONS==true and MIP_DISPOSABLE_POSTGRES==comparison-qualification",
     "guard_spoofed": false,
     "local_execution_attempted": false,
     "production_credentials_used": false,
+    "job_conclusion": "success",
+    "unittest_fail_lines": 0,
+    "resourcewarning_lines": 264,
+    "resourcewarnings_failed_job": false,
+    "artifacts_uploaded": false,
+    "four_authorized_invocations_ran": true,
     "prior_implementation_run_not_substituted": {
       "run_id": 34606754290,
       "job_id": 103286951825,
@@ -342,20 +693,49 @@
     }
   },
   "dispatch_attempts": [
-    {"method": "gh workflow run --ref SHA", "ref": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26", "http_status": 403, "error": "Resource not accessible by integration"},
-    {"method": "gh workflow run --ref branch", "ref": "codex/post-review-reconciliation-20260911", "http_status": 403, "error": "Resource not accessible by integration"},
-    {"method": "POST actions/workflows/comparison-postgres.yml/dispatches", "ref": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26", "http_status": 403, "error": "Resource not accessible by integration"},
-    {"method": "gh run rerun --job", "run_id": 34606754290, "job_id": 103286951825, "http_status": 403, "error": "job cannot be rerun / Resource not accessible by integration"},
-    {"method": "gh run rerun", "run_id": 34606754290, "http_status": 403, "error": "run cannot be rerun; Resource not accessible by integration"}
+    {
+      "method": "gh workflow run --ref SHA",
+      "ref": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26",
+      "http_status": 403,
+      "error": "Resource not accessible by integration"
+    },
+    {
+      "method": "gh workflow run --ref branch",
+      "ref": "codex/post-review-reconciliation-20260911",
+      "http_status": 403,
+      "error": "Resource not accessible by integration"
+    },
+    {
+      "method": "POST actions/workflows/comparison-postgres.yml/dispatches",
+      "ref": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26",
+      "http_status": 403,
+      "error": "Resource not accessible by integration"
+    },
+    {
+      "method": "gh run rerun --job",
+      "run_id": 34606754290,
+      "job_id": 103286951825,
+      "http_status": 403,
+      "error": "job cannot be rerun / Resource not accessible by integration"
+    },
+    {
+      "method": "gh run rerun",
+      "run_id": 34606754290,
+      "http_status": 403,
+      "error": "run cannot be rerun; Resource not accessible by integration"
+    }
   ],
   "token_limitation": {
     "accepted_github_permissions_header": "contents=read",
     "actions_write": false,
     "workflow_dispatch": false,
-    "job_rerun": false
+    "job_rerun": false,
+    "job_log_read_for_attempt_3": true,
+    "note": "Reviewer still cannot dispatch or rerun. Owner initiated attempt 3. Reviewer was able to read attempt 3 logs with gh as login cursor."
   },
   "owner_action_required": {
-    "summary": "Owner with Actions write must start one fresh native execution at the exact SHA, then provide the run URL to this reviewer.",
+    "status": "FULFILLED_FOR_THIS_NATIVE_GATE",
+    "summary": "Owner initiated a fresh attempt of run 34606754290. This review inspected attempt 3. No further native rerun is requested for this gate.",
     "do_not": [
       "merge PRs 149, 150, or 151",
       "edit workflows or the frozen implementation",
@@ -363,25 +743,21 @@
       "grant production secrets",
       "spoof GITHUB_ACTIONS outside Actions"
     ],
-    "option_a_preferred": {
-      "type": "workflow_dispatch",
-      "command": "gh workflow run comparison-postgres.yml --repo jkelsen13-tech/media-intelligence-platform-v2 --ref ddbbbd6dc878dcb38ea0904b6ee58895853b6c26",
-      "ui": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/workflows/comparison-postgres.yml",
-      "required_head_sha": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26",
-      "branch_name_insufficient": true
-    },
-    "option_b": {
+    "option_b_observed": {
       "type": "rerun_exact_candidate_job",
       "run_url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34606754290",
       "job_name": "concurrent-transactions",
-      "required_new_attempt": 2
+      "requested_new_attempt_at_least": 2,
+      "inspected_attempt": 3
     },
     "default_branch_workflow_trap": {
       "path": ".github/workflows/comparison-postgres.yml",
       "main_git_blob": "21661ce14631fb299c348b9ecbd86728b0cb8a9e",
       "main_bytes": 950,
       "main_sha256": "6b4b5772e5cec681723339eebc9566e4db57782760544ee76af911ecb2196770",
-      "main_invocations": ["python3 -B verifier/comparisonPostgresConcurrency.py"],
+      "main_invocations": [
+        "python3 -B verifier/comparisonPostgresConcurrency.py"
+      ],
       "candidate_git_blob": "dfac22454785cd74c4a35a5f9ced3744b2d4886f",
       "candidate_bytes": 1751,
       "candidate_sha256": "96c288466b8b252b87158631f549e6ba0e015bbf90aba06e8bb6784af484a347",
@@ -397,86 +773,393 @@
   "suites": {
     "original_native": {
       "invocation": "python3 -B verifier/comparisonPostgresConcurrency.py",
-      "status": "NOT_RUN",
+      "step_name": "Qualify independent PostgreSQL connections",
+      "status": "OBSERVED_OK",
+      "unittest_summary": "Ran 14 tests in 6.766s",
+      "unittest_footer": "OK",
       "source_inventory_tests": 14,
       "source_inventory_skips": 0,
       "claimed_expected_pass": 14,
-      "observed_pass": null,
-      "observed_fail": null,
-      "observed_skip": null,
-      "lock_witnesses_observed": null,
+      "observed_pass": 14,
+      "observed_fail": 0,
+      "observed_skip": 0,
+      "lock_witnesses_observed": 13,
+      "lock_witnesses": [
+        {
+          "blocked": 81,
+          "holder": 80,
+          "preceding_test": "test_bound_release_rechecks_head_after_concurrent_withdrawal"
+        },
+        {
+          "blocked": 106,
+          "holder": 105,
+          "preceding_test": "test_completion_commit_rejects_waiting_failure"
+        },
+        {
+          "blocked": 115,
+          "holder": 114,
+          "preceding_test": "test_completion_visibility_and_concurrent_exact_retry"
+        },
+        {
+          "blocked": 125,
+          "holder": 124,
+          "preceding_test": "test_duplicate_enqueue_waits_and_converges"
+        },
+        {
+          "blocked": 134,
+          "holder": 133,
+          "preceding_test": "test_failure_commit_blocks_completion_and_exact_report_converges"
+        },
+        {
+          "blocked": 138,
+          "holder": 134,
+          "preceding_test": "test_failure_commit_blocks_completion_and_exact_report_converges"
+        },
+        {
+          "blocked": 155,
+          "holder": 154,
+          "preceding_test": "test_failure_rollback_allows_waiting_completion"
+        },
+        {
+          "blocked": 173,
+          "holder": 172,
+          "preceding_test": "test_rolled_back_completion_has_no_visible_output_or_acknowledgement"
+        },
+        {
+          "blocked": 181,
+          "holder": 180,
+          "preceding_test": "test_selection_rechecks_predecessor_after_concurrent_commit"
+        },
+        {
+          "blocked": 192,
+          "holder": 191,
+          "preceding_test": "test_selection_rollback_and_concurrent_retry_preserve_withdrawal"
+        },
+        {
+          "blocked": 192,
+          "holder": 191,
+          "preceding_test": "test_selection_rollback_and_concurrent_retry_preserve_withdrawal",
+          "duplicate_line": true
+        },
+        {
+          "blocked": 204,
+          "holder": 203,
+          "preceding_test": "test_source_capture_keeps_one_snapshot_during_committed_multi_table_correction"
+        },
+        {
+          "blocked": 229,
+          "holder": 228,
+          "preceding_test": "test_stale_completion_rechecks_committed_replacement_lease"
+        }
+      ],
       "tests": [
-        {"name": "test_duplicate_enqueue_waits_and_converges", "result": "NOT_RUN", "source_lock_wait": true},
-        {"name": "test_claim_skips_locked_generation_and_rollback_preserves_budget", "result": "NOT_RUN", "source_lock_wait": false},
-        {"name": "test_completion_visibility_and_concurrent_exact_retry", "result": "NOT_RUN", "source_lock_wait": true},
-        {"name": "test_rolled_back_completion_has_no_visible_output_or_acknowledgement", "result": "NOT_RUN", "source_lock_wait": true},
-        {"name": "test_stale_completion_rechecks_committed_replacement_lease", "result": "NOT_RUN", "source_lock_wait": true},
-        {"name": "test_locked_exhausted_row_does_not_block_independent_work", "result": "NOT_RUN", "source_lock_wait": false},
-        {"name": "test_failure_commit_blocks_completion_and_exact_report_converges", "result": "NOT_RUN", "source_lock_wait": true},
-        {"name": "test_completion_commit_rejects_waiting_failure", "result": "NOT_RUN", "source_lock_wait": true},
-        {"name": "test_failure_rollback_allows_waiting_completion", "result": "NOT_RUN", "source_lock_wait": true},
-        {"name": "test_source_capture_keeps_one_snapshot_during_committed_multi_table_correction", "result": "NOT_RUN", "source_lock_wait": true},
-        {"name": "test_source_capture_retention_and_queue_rollback_are_invisible_to_observer", "result": "NOT_RUN", "source_lock_wait": false},
-        {"name": "test_selection_rechecks_predecessor_after_concurrent_commit", "result": "NOT_RUN", "source_lock_wait": true},
-        {"name": "test_selection_rollback_and_concurrent_retry_preserve_withdrawal", "result": "NOT_RUN", "source_lock_wait": true},
-        {"name": "test_bound_release_rechecks_head_after_concurrent_withdrawal", "result": "NOT_RUN", "source_lock_wait": true}
+        {
+          "name": "test_duplicate_enqueue_waits_and_converges",
+          "result": "ok",
+          "source_lock_wait": true,
+          "lock_witness_in_log": true
+        },
+        {
+          "name": "test_claim_skips_locked_generation_and_rollback_preserves_budget",
+          "result": "ok",
+          "source_lock_wait": false,
+          "lock_witness_in_log": false
+        },
+        {
+          "name": "test_completion_visibility_and_concurrent_exact_retry",
+          "result": "ok",
+          "source_lock_wait": true,
+          "lock_witness_in_log": true
+        },
+        {
+          "name": "test_rolled_back_completion_has_no_visible_output_or_acknowledgement",
+          "result": "ok",
+          "source_lock_wait": true,
+          "lock_witness_in_log": true
+        },
+        {
+          "name": "test_stale_completion_rechecks_committed_replacement_lease",
+          "result": "ok",
+          "source_lock_wait": true,
+          "lock_witness_in_log": true
+        },
+        {
+          "name": "test_locked_exhausted_row_does_not_block_independent_work",
+          "result": "ok",
+          "source_lock_wait": false,
+          "lock_witness_in_log": false
+        },
+        {
+          "name": "test_failure_commit_blocks_completion_and_exact_report_converges",
+          "result": "ok",
+          "source_lock_wait": true,
+          "lock_witness_in_log": true,
+          "lock_witness_count": 2
+        },
+        {
+          "name": "test_completion_commit_rejects_waiting_failure",
+          "result": "ok",
+          "source_lock_wait": true,
+          "lock_witness_in_log": true
+        },
+        {
+          "name": "test_failure_rollback_allows_waiting_completion",
+          "result": "ok",
+          "source_lock_wait": true,
+          "lock_witness_in_log": true
+        },
+        {
+          "name": "test_source_capture_keeps_one_snapshot_during_committed_multi_table_correction",
+          "result": "ok",
+          "source_lock_wait": true,
+          "lock_witness_in_log": true
+        },
+        {
+          "name": "test_source_capture_retention_and_queue_rollback_are_invisible_to_observer",
+          "result": "ok",
+          "source_lock_wait": false,
+          "lock_witness_in_log": false
+        },
+        {
+          "name": "test_selection_rechecks_predecessor_after_concurrent_commit",
+          "result": "ok",
+          "source_lock_wait": true,
+          "lock_witness_in_log": true
+        },
+        {
+          "name": "test_selection_rollback_and_concurrent_retry_preserve_withdrawal",
+          "result": "ok",
+          "source_lock_wait": true,
+          "lock_witness_in_log": true,
+          "lock_witness_count": 2
+        },
+        {
+          "name": "test_bound_release_rechecks_head_after_concurrent_withdrawal",
+          "result": "ok",
+          "source_lock_wait": true,
+          "lock_witness_in_log": true
+        }
       ]
     },
     "frozen_baseline": {
       "invocation": "python3 -B verifier/pr149AuthorityOrdering.py --baseline",
-      "status": "NOT_RUN",
+      "step_name": "Reproduce frozen PR149 authority counterexamples",
+      "status": "OBSERVED_OK_SKIPPED_4",
+      "mode_log": "MIP_AUTHORITY_MODE=frozen-543e423-counterexample",
+      "unittest_summary": "Ran 7 tests in 2.459s",
+      "unittest_footer": "OK (skipped=4)",
       "source_inventory_tests": 7,
       "source_inventory_intentional_skips": 4,
       "claimed_expected_pass": 3,
       "claimed_expected_skips": 4,
-      "observed_pass": null,
-      "observed_fail": null,
-      "observed_skip": null,
-      "lock_witnesses_observed": null,
+      "observed_pass": 3,
+      "observed_fail": 0,
+      "observed_skip": 4,
+      "lock_witnesses_observed": 1,
       "baseline_success_means_defects_reproduced_not_secure": true,
+      "markers": [
+        "MIP_AUTHORITY_REVOKE_COMMITTED_WHILE_COMPLETION_BLOCKED",
+        "MIP_COUNTEREXAMPLE_REVOCATION_AFTER_INITIAL_AUTH=confirmed",
+        "MIP_COUNTEREXAMPLE_REPLAY_RETAINED_INPUT=confirmed",
+        "MIP_COUNTEREXAMPLE_REPLAY_SUCCESS_WITHOUT_TOKEN=confirmed"
+      ],
       "tests": [
-        {"name": "test_completion_paused_after_initial_authorization_then_revoke_commits", "result": "NOT_RUN", "baseline_mode": "counterexample_completion_after_revoke"},
-        {"name": "test_cross_runtime_claim_and_completion_replay", "result": "NOT_RUN", "baseline_mode": "counterexample_foreign_replay"},
-        {"name": "test_outstanding_lease_is_not_permission_after_revocation", "result": "NOT_RUN", "baseline_mode": "same_as_corrected"},
-        {"name": "test_completion_acceptance_first_delays_revocation_until_commit", "result": "NOT_RUN", "baseline_mode": "intentional_skip"},
-        {"name": "test_concurrent_identical_claim_retry_converges_without_second_lease", "result": "NOT_RUN", "baseline_mode": "intentional_skip"},
-        {"name": "test_concurrent_foreign_claim_waits_then_denies_without_consuming_work", "result": "NOT_RUN", "baseline_mode": "intentional_skip"},
-        {"name": "test_producer_retry_receipt_owner_and_new_session_same_owner", "result": "NOT_RUN", "baseline_mode": "intentional_skip"}
+        {
+          "name": "test_completion_paused_after_initial_authorization_then_revoke_commits",
+          "result": "ok",
+          "baseline_mode": "counterexample_completion_after_revoke",
+          "markers": [
+            "MIP_AUTHORITY_REVOKE_COMMITTED_WHILE_COMPLETION_BLOCKED",
+            "MIP_COUNTEREXAMPLE_REVOCATION_AFTER_INITIAL_AUTH=confirmed"
+          ],
+          "lock_witness": {
+            "blocked": 237,
+            "holder": 236
+          }
+        },
+        {
+          "name": "test_cross_runtime_claim_and_completion_replay",
+          "result": "ok",
+          "baseline_mode": "counterexample_foreign_replay",
+          "markers": [
+            "MIP_COUNTEREXAMPLE_REPLAY_RETAINED_INPUT=confirmed",
+            "MIP_COUNTEREXAMPLE_REPLAY_SUCCESS_WITHOUT_TOKEN=confirmed"
+          ]
+        },
+        {
+          "name": "test_outstanding_lease_is_not_permission_after_revocation",
+          "result": "ok",
+          "baseline_mode": "same_as_corrected"
+        },
+        {
+          "name": "test_completion_acceptance_first_delays_revocation_until_commit",
+          "result": "skipped",
+          "baseline_mode": "intentional_skip",
+          "skip_reason": "ordering fence exists only in corrected contract"
+        },
+        {
+          "name": "test_concurrent_identical_claim_retry_converges_without_second_lease",
+          "result": "skipped",
+          "baseline_mode": "intentional_skip",
+          "skip_reason": "new request serialization"
+        },
+        {
+          "name": "test_concurrent_foreign_claim_waits_then_denies_without_consuming_work",
+          "result": "skipped",
+          "baseline_mode": "intentional_skip",
+          "skip_reason": "cross-runtime first-use race"
+        },
+        {
+          "name": "test_producer_retry_receipt_owner_and_new_session_same_owner",
+          "result": "skipped",
+          "baseline_mode": "intentional_skip",
+          "skip_reason": "producer ownership regression"
+        }
       ]
     },
     "corrected_authority": {
       "invocation": "python3 -B verifier/pr149AuthorityOrdering.py",
-      "status": "NOT_RUN",
+      "step_name": "Verify corrected PR149 authority ordering and replay",
+      "status": "OBSERVED_OK",
+      "mode_log": "MIP_AUTHORITY_MODE=corrected-contract",
+      "unittest_summary": "Ran 7 tests in 5.672s",
+      "unittest_footer": "OK",
       "source_inventory_tests": 7,
       "source_inventory_skips": 0,
       "claimed_expected_pass": 7,
       "claimed_expected_skips": 0,
-      "observed_pass": null,
-      "observed_fail": null,
-      "observed_skip": null,
-      "lock_witnesses_observed": null
+      "observed_pass": 7,
+      "observed_fail": 0,
+      "observed_skip": 0,
+      "lock_witnesses_observed": 4,
+      "markers": [
+        "MIP_AUTHORITY_REVOKE_COMMITTED_WHILE_COMPLETION_BLOCKED"
+      ],
+      "tests": [
+        {
+          "name": "test_completion_acceptance_first_delays_revocation_until_commit",
+          "result": "ok",
+          "lock_witness": {
+            "blocked": 306,
+            "holder": 296
+          }
+        },
+        {
+          "name": "test_completion_paused_after_initial_authorization_then_revoke_commits",
+          "result": "ok",
+          "lock_witness": {
+            "blocked": 314,
+            "holder": 313
+          },
+          "markers": [
+            "MIP_AUTHORITY_REVOKE_COMMITTED_WHILE_COMPLETION_BLOCKED"
+          ]
+        },
+        {
+          "name": "test_concurrent_foreign_claim_waits_then_denies_without_consuming_work",
+          "result": "ok",
+          "lock_witness": {
+            "blocked": 335,
+            "holder": 334
+          }
+        },
+        {
+          "name": "test_concurrent_identical_claim_retry_converges_without_second_lease",
+          "result": "ok",
+          "lock_witness": {
+            "blocked": 350,
+            "holder": 349
+          }
+        },
+        {
+          "name": "test_cross_runtime_claim_and_completion_replay",
+          "result": "ok"
+        },
+        {
+          "name": "test_outstanding_lease_is_not_permission_after_revocation",
+          "result": "ok"
+        },
+        {
+          "name": "test_producer_retry_receipt_owner_and_new_session_same_owner",
+          "result": "ok"
+        }
+      ]
     },
     "candidate_interfaces": {
       "invocation": "python3 -B verifier/candidateInterfacesPostgres.py",
-      "status": "NOT_RUN",
+      "step_name": "Verify isolated mip candidate interfaces",
+      "status": "OBSERVED_OK",
+      "unittest_summary": "Ran 6 tests in 8.034s",
+      "unittest_footer": "OK",
       "source_inventory_tests": 6,
       "source_inventory_skips": 0,
       "claimed_expected_pass": 6,
       "claimed_expected_skips": 0,
-      "observed_pass": null,
-      "observed_fail": null,
-      "observed_skip": null,
-      "lock_witnesses_observed": null,
+      "observed_pass": 6,
+      "observed_fail": 0,
+      "observed_skip": 0,
+      "lock_witnesses_observed": 4,
       "implementation_authored": true,
+      "markers": [
+        "MIP_AUTHORITY_REVOKE_COMMITTED_WHILE_COMPLETION_BLOCKED"
+      ],
       "tests": [
-        "test_completion_paused_after_initial_authorization_then_revoke_commits",
-        "test_cross_runtime_claim_and_completion_replay",
-        "test_outstanding_lease_is_not_permission_after_revocation",
-        "test_completion_acceptance_first_delays_revocation_until_commit",
-        "test_concurrent_identical_claim_retry_converges_without_second_lease",
-        "test_concurrent_foreign_claim_waits_then_denies_without_consuming_work"
+        {
+          "name": "test_completion_acceptance_first_delays_revocation_until_commit",
+          "result": "ok",
+          "lock_witness": {
+            "blocked": 451,
+            "holder": 428
+          }
+        },
+        {
+          "name": "test_completion_paused_after_initial_authorization_then_revoke_commits",
+          "result": "ok",
+          "lock_witness": {
+            "blocked": 459,
+            "holder": 458
+          },
+          "markers": [
+            "MIP_AUTHORITY_REVOKE_COMMITTED_WHILE_COMPLETION_BLOCKED"
+          ]
+        },
+        {
+          "name": "test_concurrent_foreign_claim_waits_then_denies_without_consuming_work",
+          "result": "ok",
+          "lock_witness": {
+            "blocked": 493,
+            "holder": 492
+          }
+        },
+        {
+          "name": "test_concurrent_identical_claim_retry_converges_without_second_lease",
+          "result": "ok",
+          "lock_witness": {
+            "blocked": 531,
+            "holder": 530
+          }
+        },
+        {
+          "name": "test_cross_runtime_claim_and_completion_replay",
+          "result": "ok"
+        },
+        {
+          "name": "test_outstanding_lease_is_not_permission_after_revocation",
+          "result": "ok"
+        }
       ]
     }
+  },
+  "postgres_sql_raise_in_container_logs": {
+    "failed_the_job": false,
+    "note": "Stop-containers postgres logs contain PL/pgSQL RAISE ERROR lines produced while tests asserted denials. These are not unittest FAIL lines.",
+    "messages": [
+      "unbound publication selection",
+      "invalid or expired comparison lease",
+      "stale selection predecessor",
+      "mip_authz_revoked_session",
+      "mip_request_replay_owner"
+    ]
   },
   "coverage_limitations": [
     "Independent execution of implementation-authored tests is not independent proof of complete coverage",
@@ -501,8 +1184,10 @@
     "F1/F3/F6 production gaps"
   ],
   "conclusions": {
-    "native_transactional_interface_behavior": "BLOCKED_NOT_OBSERVED",
-    "overall_production_readiness": "ON_HOLD_NOT_APPROVED"
+    "native_transactional_interface_behavior": "OBSERVED_PASS_OF_FOUR_AUTHORIZED_SUITES",
+    "native_transactional_interface_behavior_bound": "This is independent inspection of owner-initiated attempt 3 of the implementation-authored native workflow at the expected candidate tree. It is not production approval, semantic qualification, or proof of complete coverage.",
+    "overall_production_readiness": "ON_HOLD_NOT_APPROVED",
+    "f1_f3_f6_and_semantic_qualification": "OPEN"
   },
   "scope": {
     "frozen_implementation_modified": false,
@@ -512,6 +1197,9 @@
     "migrations_inspected": false,
     "node_browser_suites_run": false,
     "unrelated_workflow_logs_retrieved": false,
-    "results_branch_only": true
+    "results_branch_only": true,
+    "attempt_1_logs_retrieved": false,
+    "attempt_2_logs_retrieved": false,
+    "attempt_3_logs_retrieved": true
   }
 }
