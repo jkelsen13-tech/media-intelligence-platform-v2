@@ -91,7 +91,7 @@ begin
  insert into mip_identity.collector_runs values(p_request,p_runtime,g);
  perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_producer_v1');
  return g;
-end $;
+end $$;
 create function mip_identity.reconciliation(p_session uuid,p_runtime text) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare src text;result jsonb;
@@ -111,7 +111,7 @@ begin
  left join comparison_qualification.outputs o on o.generation_id=g.id where c.source=src;
  perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_producer_v1');
  return result;
-end $;
+end $$;
 do $permissions$
 declare t text;r record;
 begin
