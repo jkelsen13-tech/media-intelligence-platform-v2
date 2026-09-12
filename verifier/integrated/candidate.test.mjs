@@ -222,7 +222,7 @@ async function publicationFixture(t){
   assert.ok(field,'synthetic surface must be retained exactly')
   return {article_id:ac.article_id,claim_key:ac.claim_key,field,excerpt:ac.surface_text,field_hash:createHash('sha256').update(a[field]).digest('hex'),auditability_state:'verified_retained_source'}
  })
- const explanations=data.output.projection.explanations.map(x=>({...x,review_status:'published',falsification_condition:'Synthetic fixture: contradictory retained source invalidates this statement.',archived_sources:evidence.map(e=>({status:'retained',field_hash:e.field_hash}))}))
+ const explanations=data.output.projection.explanations.map(x=>({...x,review_status:'published',falsification_condition:'Synthetic fixture: contradictory retained source invalidates this statement.',archived_sources:evidence.map(e=>({status:'retained',field_hash:e.field_hash,article_id:e.article_id}))}))
  async function review(overrides={}){
   const r={revision:randomUUID(),generation_id:data.generation,input_hash:data.input_hash,output_hash:data.output_hash,policy_revision:policy,privacy_status:'eligible',rights_status:'eligible',evidence,explanations,relationship_context:null,valid_until:'2999-01-01',policy_ref:'synthetic-owner-policy-not-production',authorization_ref:'synthetic-explicit-review',...overrides}
   await f.admin('insert into mip_identity.publication_reviews('+Object.keys(r).join(',')+') values('+Object.entries(r).map(([key,value])=>key==='relationship_context'?'mip_identity.survivor_context()':q(value)).join(',')+');insert into mip_identity.publication_review_heads values('+[data.generation,r.revision,true].map(q).join(',')+') on conflict(generation_id) do update set revision=excluded.revision,active=true;')
@@ -317,6 +317,15 @@ test('retained evidence links and corrections require admitted same-event source
  const badLink=await f.review()
  await assert.rejects(f.release(badLink),/mip_publication_link_ineligible/)
  assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'1')
+})
+
+test('fresh review cannot override withdrawn topology or a missing source fence',async t=>{
+ const f=await publicationFixture(t)
+ await f.admin("alter table public.nodes add column state text;insert into public.nodes values(gen_random_uuid(),'{}','withdrawn')")
+ const r=await f.review()
+ await assert.rejects(f.release(r),/mip_publication_dependency_ineligible/)
+ await f.admin("delete from public.nodes;alter table public.nodes disable trigger survivor_mutation_lock")
+ await assert.rejects(f.review(),/mip_survivor_relation_or_fence_missing/)
 })
 
 test('frozen v15/v16 handler and retained worker compute the same exact deduplicated synthetic projection',async t=>{

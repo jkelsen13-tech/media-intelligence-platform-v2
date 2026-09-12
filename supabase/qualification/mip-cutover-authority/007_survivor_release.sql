@@ -170,10 +170,26 @@ begin
  or jsonb_typeof(x->'archived_sources') is distinct from 'array' or jsonb_array_length(x->'archived_sources')=0
  then raise exception 'mip_publication_explanation_ineligible';end if;
  for ev in select value from jsonb_array_elements(x->'archived_sources') loop
- if ev->>'status' is distinct from 'retained' or not exists(select 1 from jsonb_array_elements(rev.evidence) e where e.value->>'field_hash'=ev->>'field_hash')
+ if ev->>'status' is distinct from 'retained' or not exists(select 1 from jsonb_array_elements(rev.evidence) e where e.value->>'field_hash'=ev->>'field_hash' and e.value->>'article_id'=ev->>'article_id')
  then raise exception 'mip_publication_archive_missing';end if;
- end loop;end loop;
+ end loop;
+ if not exists(select 1 from jsonb_array_elements(o.output_payload#>'{projection,claims}') c
+ join lateral jsonb_array_elements(o.output_payload#>'{projection,article_claims}') a on a.value->>'claim_key'=c.value->>'claim_key'
+ where x->>'assertion_id' ~ ('^sc:claim_grouping:'||(c.value->>'event_id')||':[0-9]+:'||(a.value->>'article_id')||'$')
+ and position(format('Surface claim "%s" grouped under canonical "%s"',a.value->>'surface_text',c.value->>'canonical_text') in (x->>'supporting_passage'))=1
+ and exists(select 1 from jsonb_array_elements(x->'archived_sources') z where z.value->>'article_id'=a.value->>'article_id'))
+ then raise exception 'mip_publication_explanation_binding';end if;
+ end loop;
 
+ -- A fresh review cannot relabel an explicitly withdrawn/revoked dependency current.
+ for relation in select value from jsonb_each(rev.relationship_context) loop
+ for ev in select value from jsonb_array_elements(relation) loop
+ if ev->>'state' in ('withdrawn','revoked') or ev->>'status' in ('withdrawn','revoked')
+ or ev->'privacy_eligible'='false'::jsonb or ev->'rights_eligible'='false'::jsonb
+ or (ev ? 'reader_state' and ev->>'reader_state' is distinct from 'eligible')
+ or (ev ? 'source_status' and ev->>'source_status' is distinct from 'active')
+ then raise exception 'mip_publication_dependency_ineligible';end if;
+ end loop;end loop;
  -- Bind existing evidence links/corrections by exact event and canonical claim.
  -- Ambiguous/missing bindings fail closed; no worker attestation or URL synthesis.
  for relation in select value from jsonb_array_elements(rev.relationship_context->'claim_evidence_links') loop
