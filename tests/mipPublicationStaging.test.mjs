@@ -38,3 +38,11 @@ test('publication release and worker access remain disabled',async t=>{
  finally{await f.db.exec('reset role')}
  await assert.rejects(f.db.query("select mip_cutover_authority.publisher_release(gen_random_uuid(),gen_random_uuid(),'runtime-a','source')"),/not_provisioned/)
 })
+
+for(const [label,state,until] of [['withdrawn','withdrawn','2999-01-01'],['revoked','revoked','2999-01-01'],['stale','current','2000-01-01']])test('publication denies '+label+' dependency even with matching version approval',async t=>{
+ const f=await pub(t)
+ const next=(await f.db.query("insert into mip_cutover_authority.dependency_versions(dependency_key,source,children,record_hash,privacy_eligible,rights_eligible,retained_evidence,correction_current,explanation_eligible,publication_eligible,state,valid_until,predicate_version) select dependency_key,source,children,record_hash,privacy_eligible,rights_eligible,retained_evidence,correction_current,explanation_eligible,publication_eligible,$2,$3,predicate_version from mip_cutover_authority.dependency_versions where id=$1 returning id",[f.child,state,until])).rows[0].id
+ await f.db.query("update mip_cutover_authority.dependency_heads set version_id=$1 where dependency_key='child'",[next])
+ const approved=(await f.db.query("insert into mip_cutover_authority.approved_payloads(source,generation_id,payload,payload_hash,dependency_versions,owner_approval_ref) select source,generation_id,payload,payload_hash,$1,owner_approval_ref from mip_cutover_authority.approved_payloads where id=$2 returning id",[[f.root,next],f.approved])).rows[0].id
+ await assert.rejects(f.db.query('select mip_cutover_authority.select_approved_payload($1)',[approved]),/dependency_ineligible/)
+})
