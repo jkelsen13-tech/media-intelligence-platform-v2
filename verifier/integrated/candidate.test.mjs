@@ -4,7 +4,7 @@ import {comparisonProjectionConfig} from '../../supabase/runtime-snapshots/sourc
 import {runner,fakeDatabase} from './runtimeParity.mjs'
 import assert from 'node:assert/strict'
 import {randomUUID,createHash} from 'node:crypto'
-import {fork} from 'node:child_process'
+import {isolatedWorker} from './isolatedContainer.mjs'
 import {readFile} from 'node:fs/promises'
 import {fixture,workerRole,producerRole} from './fixture.mjs'
 import {raw,quote as q,guard,transport} from './transport.mjs'
@@ -60,13 +60,13 @@ test('encrypted PostgreSQL journal is exact-content, runtime-scoped and committe
  await assert.rejects(j.get(key),/mip_identity_mapping_revoked/)
 })
 async function childRun(f,session,{killAfter,key}={}){
- const child=fork(new URL('./workerProcess.mjs',import.meta.url),[],{silent:true,env:{}})
+ const child=isolatedWorker()
  // No broker/database credentials, journal key, or service-role client is passed.
  const journal=f.journal(session),keys=[]
  return new Promise((resolve,reject)=>{
   let killed=false,finished=false
   child.stdout.resume();child.stderr.resume()
-  const timer=setTimeout(()=>{child.kill('SIGKILL');reject(Error('mip_child_timeout'))},30000)
+  const timer=setTimeout(()=>{child.kill('SIGKILL');reject(Error('mip_child_timeout'))},45000)
   child.on('message',async m=>{
    if(m.done){finished=true;clearTimeout(timer);child.kill();resolve({state:m.state,keys});return}
    try{

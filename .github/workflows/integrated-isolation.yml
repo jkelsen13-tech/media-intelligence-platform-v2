@@ -30,6 +30,8 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: 24
+      - name: Pull isolated worker image on hosted runner only
+        run: docker pull node:24-alpine
       - name: Broker, encrypted remote journal and real process-restart regressions
         env:
           MIP_DISPOSABLE_POSTGRES: comparison-qualification
