@@ -136,6 +136,7 @@ begin
  sid:=comparison_qualification.issue_session(p_principal,p_runtime,to_timestamp(p_exp));
  insert into mip_identity.sessions values(sid,p_request,p_token_hash,p_mapping,p_key,to_timestamp(p_exp),digest);
  perform mip_identity.current_mapping(p_runtime,p_principal);
+ if p_exp<=extract(epoch from clock_timestamp()) then raise exception 'mip_identity_expired';end if;
  return sid;
 end $$;
 create function mip_identity.authorize(p_session uuid,p_runtime text,p_principal text)
@@ -169,16 +170,18 @@ begin
  if p_key is null or length(p_key) not between 1 and 300 or p_envelope is null then raise exception 'mip_journal_bad_key';end if;
  insert into mip_identity.journal(runtime,entry_key,envelope) values(r,p_key,p_envelope) on conflict do nothing;
  select envelope into strict v from mip_identity.journal where runtime=r and entry_key=p_key;
+ perform mip_identity.journal_runtime(p_session);
  return v;
-end $$;
+end $;
 create function mip_identity.journal_get(p_session uuid,p_key text) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare r text;v jsonb;
 begin
  r:=mip_identity.journal_runtime(p_session);
  select envelope into v from mip_identity.journal where runtime=r and entry_key=p_key;
+ perform mip_identity.journal_runtime(p_session);
  return v;
-end $$;
+end $;
 -- Wrappers require external authority before all sensitive reads or writes.
 create function mip_identity.worker_claim(p_request uuid,p_session uuid,p_runtime text) returns jsonb
 language plpgsql security definer set search_path='' as $$

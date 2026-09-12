@@ -153,11 +153,11 @@ async function sleeping(f,label){
  }
  throw Error('mip_barrier_not_reached')
 }
-for(const entity of ['key','mapping'])for(const first of ['acceptance','revocation'])test(entity+' '+first+' first serializes sensitive acceptance',async t=>{
+for(const entity of ['key','mapping','source','implementation'])for(const first of ['acceptance','revocation'])test(entity+' '+first+' first serializes sensitive acceptance',async t=>{
  const f=await fixture(t);await f.capture();const j=await claim(f)
  const args=[randomUUID(),f.session,'runtime-a',j.generation_id,j.lease_token,j.input_hash,j.implementation_ref,{}].map(q).join(',')
  const completeSQL='select mip_identity.worker_complete('+args+');'
- const revokeSQL=entity==='key'?'update mip_identity.key_heads set active=false;':"update mip_identity.mapping_heads set active=false where runtime='runtime-a' and principal="+q(workerRole)+";"
+ const revokeSQL=entity==='source'?"select comparison_qualification.revoke_source_scope('runtime-a','source');":entity==='implementation'?"select comparison_qualification.revoke_evaluated_implementation('runtime-a','isolated-event-projection-candidate');":entity==='key'?'update mip_identity.key_heads set active=false;':"update mip_identity.mapping_heads set active=false where runtime='runtime-a' and principal="+q(workerRole)+";"
  if(first==='acceptance'){
   const accepting=f.admin("begin;set application_name='mip_accept';set local role "+workerRole+";"+completeSQL+"select pg_sleep(2);commit;")
   await sleeping(f,'mip_accept')
@@ -209,6 +209,8 @@ async function publicationFixture(t){
   await f.admin('create table public.'+name+'(id uuid primary key,payload jsonb not null);')
  await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/007_survivor_release.sql',import.meta.url),'utf8'))
  await f.admin('select mip_identity.install_survivor_fences()')
+ const policy=randomUUID()
+ await f.admin('insert into mip_identity.publication_policy_versions values('+q(policy)+",'synthetic-privacy-policy','synthetic-rights-policy','synthetic-publication-policy','survivor-reader-v1','synthetic-policy-owner');insert into mip_identity.publication_policy_heads values(true,"+q(policy)+",true);")
  const mr=randomUUID()
  await f.admin('insert into mip_identity.mapping_versions select '+q(mr)+",runtime,"+q(publisherRole)+",issuer,audience,runtime||':"+publisherRole+"',key_revision,max_lifetime_seconds,'synthetic-publication-owner' from mip_identity.mapping_versions where revision="+q(f.mappings['runtime-a'+workerRole])+";insert into mip_identity.mapping_heads values('runtime-a',"+q(publisherRole)+","+q(mr)+",true);")
  await f.capture();assert.equal((await childRun(f,f.session)).state,'completed')
@@ -221,12 +223,12 @@ async function publicationFixture(t){
  })
  const explanations=data.output.projection.explanations.map(x=>({...x,review_status:'published',falsification_condition:'Synthetic fixture: contradictory retained source invalidates this statement.',archived_sources:evidence.map(e=>({status:'retained',field_hash:e.field_hash}))}))
  async function review(overrides={}){
-  const r={revision:randomUUID(),generation_id:data.generation,input_hash:data.input_hash,output_hash:data.output_hash,privacy_status:'eligible',rights_status:'eligible',evidence,explanations,relationship_context:null,valid_until:'2999-01-01',policy_ref:'synthetic-owner-policy-not-production',authorization_ref:'synthetic-explicit-review',...overrides}
+  const r={revision:randomUUID(),generation_id:data.generation,input_hash:data.input_hash,output_hash:data.output_hash,policy_revision:policy,privacy_status:'eligible',rights_status:'eligible',evidence,explanations,relationship_context:null,valid_until:'2999-01-01',policy_ref:'synthetic-owner-policy-not-production',authorization_ref:'synthetic-explicit-review',...overrides}
   await f.admin('insert into mip_identity.publication_reviews('+Object.keys(r).join(',')+') values('+Object.entries(r).map(([key,value])=>key==='relationship_context'?'mip_identity.survivor_context()':q(value)).join(',')+');insert into mip_identity.publication_review_heads values('+[data.generation,r.revision,true].map(q).join(',')+') on conflict(generation_id) do update set revision=excluded.revision,active=true;')
   return r.revision
  }
  const session=await f.issue('runtime-a',publisherRole),rpc=transport(f.db,publisherRole)
- return {...f,data,evidence,explanations,review,publisher:session,pub:rpc,stage:r=>rpc('stage_review',[session,'runtime-a',r]),release:(r,request=randomUUID())=>rpc('release_isolated',[request,session,'runtime-a',r])}
+ return {...f,data,policy,evidence,explanations,review,publisher:session,pub:rpc,stage:r=>rpc('stage_review',[session,'runtime-a',r]),release:(r,request=randomUUID())=>rpc('release_isolated',[request,session,'runtime-a',r])}
 }
 test('authoritative synthetic review stages immutable payload and releases only into private isolated receipt',async t=>{
  const f=await publicationFixture(t),revision=await f.review(),request=randomUUID()
@@ -284,6 +286,36 @@ for(const first of ['release','mutation'])test('publication '+first+' first fenc
   assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'0')
   assert.equal(await f.admin('select count(*) from mip_cutover_authority.approved_payloads'),'0')
  }
+})
+
+test('current policy revision is required; withdrawal cannot resurrect old review or payload',async t=>{
+ const f=await publicationFixture(t),r=await f.review()
+ await f.stage(r)
+ await f.admin('update mip_identity.publication_policy_heads set active=false')
+ await assert.rejects(f.release(r),/mip_publication_policy_revoked/)
+ await assert.rejects(f.admin('update mip_identity.publication_policy_heads set active=true'),/mip_identity_fresh_revision_required/)
+ const freshPolicy=randomUUID()
+ await f.admin('insert into mip_identity.publication_policy_versions select '+q(freshPolicy)+",privacy_rule_ref,rights_rule_ref,publication_rule_ref,adapter_ref,'synthetic-new-policy-approval' from mip_identity.publication_policy_versions where revision="+q(f.policy)+";update mip_identity.publication_policy_heads set revision="+q(freshPolicy)+",active=true;")
+ await assert.rejects(f.release(r),/mip_publication_policy_revoked/)
+ const newReview=await f.review({policy_revision:freshPolicy})
+ assert.equal(await f.release(newReview),'isolated_released')
+ assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'1')
+})
+
+test('retained evidence links and corrections require admitted same-event sources and remain in approved payload',async t=>{
+ const f=await publicationFixture(t),c=f.data.output.projection.claims[0],e=f.evidence[0],id=randomUUID(),link=randomUUID(),correction=randomUUID()
+ await f.admin("alter table public.claims add column event_id text,add column canonical_text text,add column status text,add column rule_version text;alter table public.claim_evidence_links add column claim_id text,add column linked_from_article_id text,add column evidence_url text;alter table public.claim_corrections add column claim_id text,add column correcting_article_id text,add column correction_text text;")
+ await f.admin("insert into public.claims values("+[id,{},c.event_id,c.canonical_text,'active','sc-v2-event-projection'].map(q).join(',')+");insert into public.claim_evidence_links values("+[link,{},id,e.article_id,'https://isolated.invalid/retained'].map(q).join(',')+");insert into public.claim_corrections values("+[correction,{},id,e.article_id,'Synthetic explicit correction'].map(q).join(',')+");")
+ const r=await f.review();assert.equal(await f.release(r),'isolated_released')
+ assert.equal(await f.admin("select jsonb_array_length(payload->'corrections') from mip_cutover_authority.approved_payloads"),'1')
+ assert.equal(await f.admin("select jsonb_array_length(payload->'evidence_links') from mip_cutover_authority.approved_payloads"),'1')
+ await f.admin('update public.claim_corrections set correcting_article_id='+q(randomUUID()))
+ const badCorrection=await f.review()
+ await assert.rejects(f.release(badCorrection),/mip_publication_correction_ineligible/)
+ await f.admin('update public.claim_corrections set correcting_article_id='+q(e.article_id)+';update public.claim_evidence_links set linked_from_article_id='+q(randomUUID()))
+ const badLink=await f.review()
+ await assert.rejects(f.release(badLink),/mip_publication_link_ineligible/)
+ assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'1')
 })
 
 test('frozen v15/v16 handler and retained worker compute the same exact deduplicated synthetic projection',async t=>{
@@ -358,9 +390,18 @@ test('identity expiry while completion waits rolls back output acknowledgement a
  await sleeping(f,'mip_expiry_holder')
  const session=await f.issue('runtime-a',workerRole,{token:f.token('runtime-a',workerRole,{exp:Math.floor(Date.now()/1000)+2})})
  const attempt=f.rpc('worker_complete',[randomUUID(),session,'runtime-a',j.generation_id,j.lease_token,j.input_hash,j.implementation_ref,{}])
- const denied=assert.rejects(attempt,/mip_identity_expired|mip_session_expired|mip_session_invalid/)
+ const denied=assert.rejects(attempt,/mip_identity_expired|mip_session_expired|mip_session_invalid|mip_authz_stale_session/)
  await block;await denied
  assert.equal(await f.admin('select count(*) from comparison_qualification.outputs'),'0')
  assert.equal(await f.admin("select count(*) from comparison_qualification.request_runs where rpc_name='worker_complete'"),'0')
  assert.equal(await f.admin('select state from comparison_qualification.jobs'),'processing')
+})
+
+test('collector rejects generation capture for a different configured source atomically',async t=>{
+ const f=await fixture(t);await f.admin('select mip_identity.capture_backlog()')
+ await f.admin("select comparison_qualification.bind_source_scope('runtime-a','different');update mip_cutover_authority.runtime_config set source='different' where runtime_id='runtime-a';")
+ await assert.rejects(f.producerRpc('capture_delta',[randomUUID(),f.producer,'runtime-a']),/mip_collector_source_mismatch/)
+ assert.equal(await f.admin('select count(*) from comparison_qualification.generations'),'0')
+ assert.equal(await f.admin('select count(*) from mip_identity.generation_changes'),'0')
+ assert.ok(Number(await f.admin('select count(*) from mip_identity.source_changes'))>0)
 })

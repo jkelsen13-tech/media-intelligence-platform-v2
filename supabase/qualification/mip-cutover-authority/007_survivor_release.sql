@@ -4,9 +4,24 @@ do $$begin if not exists(select 1 from pg_roles where rolname='mip_publication_o
  create role mip_publication_owner_v2 nologin nosuperuser nobypassrls;end if;end $$;
 alter table mip_identity.mapping_versions drop constraint mapping_versions_principal_check;
 alter table mip_identity.mapping_versions add check(principal in ('mip_comparison_worker_v1','mip_comparison_producer_v1','mip_projection_publisher_v1'));
+create table mip_identity.publication_policy_versions(
+ revision uuid primary key,privacy_rule_ref text not null check(length(privacy_rule_ref)>0),
+ rights_rule_ref text not null check(length(rights_rule_ref)>0),
+ publication_rule_ref text not null check(length(publication_rule_ref)>0),
+ adapter_ref text not null check(adapter_ref='survivor-reader-v1'),
+ approval_ref text not null check(length(approval_ref)>0)
+);
+create table mip_identity.publication_policy_heads(
+ id boolean primary key check(id),revision uuid not null references mip_identity.publication_policy_versions,active boolean not null
+);
+create trigger policy_fence before insert or update or delete or truncate on mip_identity.publication_policy_heads
+ for each statement execute function mip_cutover_authority.fence_publication_write();
+create trigger policy_retirement before insert or update or delete on mip_identity.publication_policy_heads
+ for each row execute function mip_identity.guard_revision_reuse();
 create table mip_identity.publication_reviews(
  revision uuid primary key,generation_id uuid not null references comparison_qualification.outputs(generation_id),
  input_hash text not null,output_hash text not null,
+ policy_revision uuid not null references mip_identity.publication_policy_versions,
  privacy_status text not null check(privacy_status in ('eligible','ineligible','unknown')),
  rights_status text not null check(rights_status in ('eligible','ineligible','unknown')),
  evidence jsonb not null,explanations jsonb not null,relationship_context jsonb not null,
@@ -93,6 +108,8 @@ begin
  and h.generation_id=r.generation_id and h.active where r.revision=p_revision;
  if not found or rev.valid_until<=clock_timestamp() or rev.privacy_status<>'eligible' or rev.rights_status<>'eligible' then
  raise exception 'mip_publication_authority_missing';end if;
+ if not exists(select 1 from mip_identity.publication_policy_heads h join mip_identity.publication_policy_versions v on v.revision=h.revision
+ where h.id and h.active and h.revision=rev.policy_revision and v.adapter_ref='survivor-reader-v1') then raise exception 'mip_publication_policy_revoked';end if;
  select * into strict g from comparison_qualification.generations where id=rev.generation_id;
  select * into strict o from comparison_qualification.outputs where generation_id=g.id;
  if rev.input_hash is distinct from g.input_hash or rev.output_hash is distinct from o.output_hash then raise exception 'mip_publication_binding';end if;
@@ -199,7 +216,8 @@ begin
  perform comparison_qualification.require_evaluated_implementation(p_runtime,g.implementation_ref);
  select approved_payload_id into prior from mip_identity.review_stages where review_revision=p_revision;
  if found then
- perform mip_cutover_authority.check_publication_payload(prior);return prior;end if;
+ perform mip_cutover_authority.check_publication_payload(prior);
+ perform mip_identity.authorize(p_session,p_runtime,'mip_projection_publisher_v1');return prior;end if;
  -- Conservatively include every row in the retained relationship context, a superset
  -- of the transitive graph. Relationship insertion/deletion is therefore covered too.
  for relation in select * from jsonb_each(rev.relationship_context) loop
@@ -235,6 +253,8 @@ begin
  select * into prior from mip_identity.private_releases where request_id=p_request;
  if found then
  if prior.runtime is distinct from p_runtime or prior.review_revision is distinct from p_revision then raise exception 'mip_publication_replay_conflict';end if;
+ perform mip_identity.validate_review(p_revision);
+ perform mip_identity.authorize(p_session,p_runtime,'mip_projection_publisher_v1');
  return 'isolated_released';end if;
  insert into mip_identity.private_releases(request_id,runtime,review_revision,approved_payload_id,payload_hash)
  values(p_request,p_runtime,p_revision,approved,comparison_qualification.argument_digest(payload));
@@ -248,14 +268,14 @@ begin raise exception 'mip_public_release_disabled';end $$;
 do $permissions$
 declare t text;r record;
 begin
- foreach t in array array['publication_reviews','publication_review_heads','review_stages','private_releases'] loop
+ foreach t in array array['publication_policy_versions','publication_policy_heads','publication_reviews','publication_review_heads','review_stages','private_releases'] loop
  execute format('alter table mip_identity.%I owner to mip_cutover_schema_owner_v1',t);
  execute format('alter table mip_identity.%I enable row level security',t);
  execute format('alter table mip_identity.%I force row level security',t);
  execute format('revoke all on mip_identity.%I from public,anon,authenticated,service_role',t);
  execute format('grant select on mip_identity.%I to mip_publication_owner_v2',t);
  execute format('create policy publication_owner on mip_identity.%I to mip_publication_owner_v2 using(true) with check(true)',t);
- if t<>'publication_review_heads' then
+ if t not in ('publication_review_heads','publication_policy_heads') then
  execute format('create trigger immutable before update or delete on mip_identity.%I for each row execute function comparison_qualification.reject_rewrite()',t);
  execute format('create trigger no_truncate before truncate on mip_identity.%I for each statement execute function comparison_qualification.reject_rewrite()',t);
  end if;end loop;

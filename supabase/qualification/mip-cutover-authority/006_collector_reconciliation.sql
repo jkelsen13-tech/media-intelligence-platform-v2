@@ -73,6 +73,8 @@ declare prior mip_identity.collector_runs;g uuid;src text;
 begin
  perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_producer_v1');
  perform 1 from mip_identity.collector_fence where id for update;
+ select source into strict src from mip_identity.collector_config where id;
+ perform comparison_qualification.require_source_scope(p_runtime,src);
  select * into prior from mip_identity.collector_runs where request_id=p_request;
  if found then
  if prior.runtime is distinct from p_runtime then raise exception 'mip_collector_replay_owner';end if;
@@ -81,13 +83,15 @@ begin
  perform comparison_qualification.require_source_scope(p_runtime,src);
  if exists(select 1 from mip_identity.source_changes c where c.source=src and not exists(select 1 from mip_identity.generation_changes g where g.change_id=c.id)) then
  g:=mip_identity.producer_enqueue(p_request,p_session,p_runtime,'{}',null);
+ if not exists(select 1 from comparison_qualification.generations where id=g and source_project=src) then raise exception 'mip_collector_source_mismatch';end if;
  insert into mip_identity.generation_changes
  select c.id,g from mip_identity.source_changes c where c.source=src
  and not exists(select 1 from mip_identity.generation_changes x where x.change_id=c.id);
  end if;
  insert into mip_identity.collector_runs values(p_request,p_runtime,g);
+ perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_producer_v1');
  return g;
-end $$;
+end $;
 create function mip_identity.reconciliation(p_session uuid,p_runtime text) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare src text;result jsonb;
@@ -105,8 +109,9 @@ begin
  left join comparison_qualification.generations g on g.id=x.generation_id
  left join comparison_qualification.jobs j on j.generation_id=g.id
  left join comparison_qualification.outputs o on o.generation_id=g.id where c.source=src;
+ perform mip_identity.authorize(p_session,p_runtime,'mip_comparison_producer_v1');
  return result;
-end $$;
+end $;
 do $permissions$
 declare t text;r record;
 begin
