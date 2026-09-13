@@ -39,6 +39,43 @@ jobs:
           MIP_DISPOSABLE_POSTGRES: comparison-qualification
           MIP_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
         run: node --test verifier/integrated/*.test.mjs
+      - name: Require same-candidate Golden and native regression success
+        if: github.event_name == 'pull_request'
+        env:
+          MIP_PERMISSION_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 -I -B - <<'PY'
+          import json,os,time,urllib.request,sys
+          with open('verifier/integrated/realPermissionActivation.json') as f:
+              activation=json.load(f)
+          if activation['status']!='authorized_single_batch':
+              print('MIP_PERMISSION_REGRESSION_GATE_INACTIVE')
+              sys.exit(0)
+          head=os.environ['MIP_PERMISSION_HEAD']
+          required={'Golden regression suite','Comparison PostgreSQL concurrency','Isolated authority extension concurrency'}
+          url='https://api.github.com/repos/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs?head_sha='+head+'&event=pull_request&per_page=100'
+          for attempt in range(24):
+              try:
+                  request=urllib.request.Request(url,headers={'Accept':'application/vnd.github+json','User-Agent':'MIP-bounded-regression-gate'})
+                  with urllib.request.urlopen(request,timeout=15) as response:
+                      runs=json.load(response)['workflow_runs']
+              except Exception:
+                  print('MIP_PERMISSION_REGRESSION_GATE_READ_FAILED')
+                  sys.exit(1)
+              selected={}
+              for run in runs:
+                  if run['name'] in required and run['head_sha']==head and (run['name'] not in selected or run['id']>selected[run['name']]['id']):
+                      selected[run['name']]=run
+              if any(r['status']=='completed' and r['conclusion']!='success' for r in selected.values()):
+                  print('MIP_PERMISSION_REGRESSION_GATE_DENIED')
+                  sys.exit(1)
+              if set(selected)==required and all(r['status']=='completed' and r['conclusion']=='success' for r in selected.values()):
+                  print('MIP_PERMISSION_REGRESSION_GATE_PASS '+json.dumps({'head':head,'runs':{n:r['id'] for n,r in selected.items()}},sort_keys=True))
+                  sys.exit(0)
+              time.sleep(15)
+          print('MIP_PERMISSION_REGRESSION_GATE_TIMEOUT')
+          sys.exit(1)
+          PY
       - name: Bounded owner-admitted permission component
         if: github.event_name == 'pull_request'
         env:
