@@ -1,0 +1,1396 @@
+{
+  "schema": "mip-bounded-material-reconciliation-v1",
+  "baseline": "8d3e1efa96b2066334ab4ca5ace7ce3ff7b9e78d",
+  "observed_utc": "2026-09-13T02:15:50Z",
+  "scope": "Exactly 11 distinct IDs and 15 selected membership edges designated by owner; not launch corpus or rights approval",
+  "rows": [
+    {
+      "article_id": "46dedf23-f7e0-4f88-b783-c4470d044e10",
+      "url": "https://www.aspenpublicradio.org/2026-08-19/how-indias-blocking-of-a-film-exposing-real-life-police-abuses-backfired",
+      "outlet": "aspenpublicradio.org",
+      "legacy": {
+        "id": "46dedf23-f7e0-4f88-b783-c4470d044e10",
+        "url": "https://www.aspenpublicradio.org/2026-08-19/how-indias-blocking-of-a-film-exposing-real-life-police-abuses-backfired",
+        "outlet": "aspenpublicradio.org",
+        "present": true,
+        "row_hash": "157038a15774eedbbd427d4609adf5b2451744db0cb49aa43ea8cd5bd2359d61",
+        "fetched_at": "2026-08-19T10:40:21.030046+00:00",
+        "body_present": true,
+        "published_at": "2026-08-19T10:45:00+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": false,
+        "content_fields_hash": "1a45555f07856b8cc6ce6c923d012745b711525cc443217133092cd2a5897c9e",
+        "reader_exclusion_reason": null
+      },
+      "survivor": {
+        "id": "46dedf23-f7e0-4f88-b783-c4470d044e10",
+        "url": null,
+        "outlet": null,
+        "present": false,
+        "row_hash": null,
+        "fetched_at": null,
+        "body_present": false,
+        "published_at": null,
+        "reader_state": null,
+        "source_status": null,
+        "summary_present": false,
+        "content_fields_hash": null,
+        "reader_exclusion_reason": null
+      },
+      "observed_inventory_event_ids": [
+        "3c1a5778-7fd1-4c6f-9f3f-f3a7d40531f8"
+      ],
+      "inventory_edges_present_in_legacy": [
+        "3c1a5778-7fd1-4c6f-9f3f-f3a7d40531f8"
+      ],
+      "inventory_edges_present_in_survivor": [],
+      "mapping_records": [],
+      "survivor_retained_versions": [],
+      "resolution": "Absent current survivor ID and exact-URL match; absent inspected retention/staging receipts; migration completion unproven, deletion not inferred.",
+      "content_fields_equal": null,
+      "legacy_row_unchanged_since_inventory": true,
+      "permission_result": {
+        "allowed": false,
+        "reason": "no_verified_material_operation_audience_permission",
+        "retention_obligation": "unresolved; existing history preserved, no new body copy"
+      }
+    },
+    {
+      "article_id": "a87de488-a58f-4959-9823-cfb982071ab1",
+      "url": "https://www.wcsufm.org/latest-from-npr/2026-08-19/how-indias-blocking-of-a-film-exposing-real-life-police-abuses-backfired",
+      "outlet": "wcsufm.org",
+      "legacy": {
+        "id": "a87de488-a58f-4959-9823-cfb982071ab1",
+        "url": "https://www.wcsufm.org/latest-from-npr/2026-08-19/how-indias-blocking-of-a-film-exposing-real-life-police-abuses-backfired",
+        "outlet": "wcsufm.org",
+        "present": true,
+        "row_hash": "fd40ff8abfca8c5e750b84d07a3534457363d44e27ae870806b525b82561f802",
+        "fetched_at": "2026-08-19T10:40:21.030046+00:00",
+        "body_present": true,
+        "published_at": "2026-08-19T10:45:00+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": false,
+        "content_fields_hash": "715a104c53a0cb39195169e98bcae22a838ea9704cd1a035d9e14b7d9273dd45",
+        "reader_exclusion_reason": null
+      },
+      "survivor": {
+        "id": "a87de488-a58f-4959-9823-cfb982071ab1",
+        "url": null,
+        "outlet": null,
+        "present": false,
+        "row_hash": null,
+        "fetched_at": null,
+        "body_present": false,
+        "published_at": null,
+        "reader_state": null,
+        "source_status": null,
+        "summary_present": false,
+        "content_fields_hash": null,
+        "reader_exclusion_reason": null
+      },
+      "observed_inventory_event_ids": [
+        "3c1a5778-7fd1-4c6f-9f3f-f3a7d40531f8"
+      ],
+      "inventory_edges_present_in_legacy": [
+        "3c1a5778-7fd1-4c6f-9f3f-f3a7d40531f8"
+      ],
+      "inventory_edges_present_in_survivor": [],
+      "mapping_records": [],
+      "survivor_retained_versions": [],
+      "resolution": "Absent current survivor ID and exact-URL match; absent inspected retention/staging receipts; migration completion unproven, deletion not inferred.",
+      "content_fields_equal": null,
+      "legacy_row_unchanged_since_inventory": true,
+      "permission_result": {
+        "allowed": false,
+        "reason": "no_verified_material_operation_audience_permission",
+        "retention_obligation": "unresolved; existing history preserved, no new body copy"
+      }
+    },
+    {
+      "article_id": "575d4113-cbae-49af-94fc-e2858310ec4c",
+      "url": "https://www.foxnews.com/health/michigan-reports-deaths-rare-parasite-outbreak-sickened-more-than-11000",
+      "outlet": "Fox News",
+      "legacy": {
+        "id": "575d4113-cbae-49af-94fc-e2858310ec4c",
+        "url": "https://www.foxnews.com/health/michigan-reports-deaths-rare-parasite-outbreak-sickened-more-than-11000",
+        "outlet": "Fox News",
+        "present": true,
+        "row_hash": "3730136aeb3b608f549b6e16d41aeb9b64437b89084e2269d273a57ef14bfc60",
+        "fetched_at": "2026-08-03T18:20:14.361218+00:00",
+        "body_present": true,
+        "published_at": "2026-08-03T17:56:32+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "81e8bc7e1f9760b9883c55791e8931fb4829834cb47bb2697b29d75cf641e03f",
+        "reader_exclusion_reason": null
+      },
+      "survivor": {
+        "id": "575d4113-cbae-49af-94fc-e2858310ec4c",
+        "url": "https://www.foxnews.com/health/michigan-reports-deaths-rare-parasite-outbreak-sickened-more-than-11000",
+        "outlet": "Fox News",
+        "present": true,
+        "row_hash": "f88dae7474703cf0b8d690177595a4e7efced8977ba8aed0ebecaec0fc5e29f9",
+        "fetched_at": "2026-08-03T18:20:14.361218+00:00",
+        "body_present": false,
+        "published_at": "2026-08-03T17:56:32+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "6b753d98eef38d4aa912fba7346cd732813e914c201011c9aa4a665bb6d909d2",
+        "reader_exclusion_reason": null
+      },
+      "observed_inventory_event_ids": [
+        "8e4f9812-0afa-4aad-ada8-6fb556da70d9"
+      ],
+      "inventory_edges_present_in_legacy": [
+        "8e4f9812-0afa-4aad-ada8-6fb556da70d9"
+      ],
+      "inventory_edges_present_in_survivor": [
+        "8e4f9812-0afa-4aad-ada8-6fb556da70d9"
+      ],
+      "mapping_records": [
+        {
+          "source_id": "b0e8fc12-2914-4fb9-8007-ab77385bc66d",
+          "target_id": "575d4113-cbae-49af-94fc-e2858310ec4c",
+          "source_url": "https://www.foxnews.com/health/michigan-reports-deaths-rare-parasite-outbreak-sickened-more-than-11000",
+          "imported_at": "2026-08-20T01:15:40.656052+00:00",
+          "source_table": "articles",
+          "source_project_ref": "niejaejtbxgakyrsntxm"
+        }
+      ],
+      "survivor_retained_versions": [
+        {
+          "id": "5b0935ef-6924-4d86-ad9a-c55cff5609ae",
+          "key": "575d4113-cbae-49af-94fc-e2858310ec4c",
+          "hash": "ed49868fc860abbb4d71668d7df5df0c223a285f825263553f1a4aab941fd3ab",
+          "kind": "article",
+          "ordinal": 1,
+          "operation": "insert",
+          "recorded_at": "2026-09-05T17:26:49.945874+00:00"
+        }
+      ],
+      "resolution": "Shared current ID; survivor lacks body present in legacy; no full-content equivalence.",
+      "content_fields_equal": false,
+      "legacy_row_unchanged_since_inventory": true,
+      "permission_result": {
+        "allowed": false,
+        "reason": "no_verified_material_operation_audience_permission",
+        "retention_obligation": "unresolved; existing history preserved, no new body copy"
+      }
+    },
+    {
+      "article_id": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+      "url": "https://www.nytimes.com/2026/08/03/well/eat/cyclospora-deaths-michigan.html",
+      "outlet": "New York Times",
+      "legacy": {
+        "id": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+        "url": "https://www.nytimes.com/2026/08/03/well/eat/cyclospora-deaths-michigan.html",
+        "outlet": "New York Times",
+        "present": true,
+        "row_hash": "b4f1f108a0374068297c55e823bb9d2eb115fb6b5d8971e4cc5651ea2de5392a",
+        "fetched_at": "2026-08-03T18:51:57.206813+00:00",
+        "body_present": true,
+        "published_at": "2026-08-03T16:55:49+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "7a78ee3f4b27ffb26ebb46c97ecb52c8fad26035d75125eab62f76dcd68ab1a7",
+        "reader_exclusion_reason": null
+      },
+      "survivor": {
+        "id": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+        "url": "https://www.nytimes.com/2026/08/03/well/eat/cyclospora-deaths-michigan.html",
+        "outlet": "New York Times",
+        "present": true,
+        "row_hash": "d9c0fa4a48d0ba03d31db5204376cea3d8575add506d9d23c3e96fd78358a81b",
+        "fetched_at": "2026-08-03T18:51:57.206813+00:00",
+        "body_present": false,
+        "published_at": "2026-08-03T16:55:49+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "47a8abf2fefc5284ef9a89e42f5b82bedc9e205e02bf175ec4fbb26f92864f99",
+        "reader_exclusion_reason": null
+      },
+      "observed_inventory_event_ids": [
+        "8e4f9812-0afa-4aad-ada8-6fb556da70d9"
+      ],
+      "inventory_edges_present_in_legacy": [
+        "8e4f9812-0afa-4aad-ada8-6fb556da70d9"
+      ],
+      "inventory_edges_present_in_survivor": [
+        "8e4f9812-0afa-4aad-ada8-6fb556da70d9"
+      ],
+      "mapping_records": [
+        {
+          "source_id": "ac3e3e8a-85bb-4a99-b472-7689ef8e960e",
+          "target_id": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+          "source_url": "https://www.nytimes.com/2026/08/03/well/eat/cyclospora-deaths-michigan.html",
+          "imported_at": "2026-08-20T01:15:39.211872+00:00",
+          "source_table": "articles",
+          "source_project_ref": "niejaejtbxgakyrsntxm"
+        }
+      ],
+      "survivor_retained_versions": [
+        {
+          "id": "ce2f65d8-ee10-4abd-a951-308059ec232e",
+          "key": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+          "hash": "cf4568480284f468c3f09eec7aa3b926a5fd25360b0b46e5738d26fc3b7cc077",
+          "kind": "article",
+          "ordinal": 1,
+          "operation": "insert",
+          "recorded_at": "2026-09-05T17:26:49.948005+00:00"
+        }
+      ],
+      "resolution": "Shared current ID; survivor lacks body present in legacy; no full-content equivalence.",
+      "content_fields_equal": false,
+      "legacy_row_unchanged_since_inventory": true,
+      "permission_result": {
+        "allowed": false,
+        "reason": "no_verified_material_operation_audience_permission",
+        "retention_obligation": "unresolved; existing history preserved, no new body copy"
+      }
+    },
+    {
+      "article_id": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+      "url": "https://www.aljazeera.com/news/2026/8/3/us-announces-first-two-deaths-from-cyclospora-outbreak?traffic_source=rss",
+      "outlet": "Al Jazeera",
+      "legacy": {
+        "id": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+        "url": "https://www.aljazeera.com/news/2026/8/3/us-announces-first-two-deaths-from-cyclospora-outbreak?traffic_source=rss",
+        "outlet": "Al Jazeera",
+        "present": true,
+        "row_hash": "39c79bf2914168a93b4bf3c49ae967e6d875e91e37217c4b28fc33045a193fa4",
+        "fetched_at": "2026-08-03T18:51:54.279201+00:00",
+        "body_present": true,
+        "published_at": "2026-08-03T18:35:09+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "8bc100704b16de90557335adce61619586614ad902b6a4f736611542ba16d2b2",
+        "reader_exclusion_reason": null
+      },
+      "survivor": {
+        "id": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+        "url": "https://www.aljazeera.com/news/2026/8/3/us-announces-first-two-deaths-from-cyclospora-outbreak?traffic_source=rss",
+        "outlet": "Al Jazeera",
+        "present": true,
+        "row_hash": "0077092ef162070d7a8699ea3e0e3481f1ac02b7969bb814d3e20f51aba5151c",
+        "fetched_at": "2026-08-03T18:51:54.279201+00:00",
+        "body_present": false,
+        "published_at": "2026-08-03T18:35:09+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "03562a69d90b53219ca7aca175af7a53fc4fa0f2483b3d5fcd61dbf2de00724f",
+        "reader_exclusion_reason": null
+      },
+      "observed_inventory_event_ids": [
+        "8e4f9812-0afa-4aad-ada8-6fb556da70d9"
+      ],
+      "inventory_edges_present_in_legacy": [
+        "8e4f9812-0afa-4aad-ada8-6fb556da70d9"
+      ],
+      "inventory_edges_present_in_survivor": [
+        "8e4f9812-0afa-4aad-ada8-6fb556da70d9"
+      ],
+      "mapping_records": [
+        {
+          "source_id": "f507adba-9ea0-4a18-b795-ac9472f8ad28",
+          "target_id": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+          "source_url": "https://www.aljazeera.com/news/2026/8/3/us-announces-first-two-deaths-from-cyclospora-outbreak?traffic_source=rss",
+          "imported_at": "2026-08-20T01:16:05.004993+00:00",
+          "source_table": "articles",
+          "source_project_ref": "niejaejtbxgakyrsntxm"
+        }
+      ],
+      "survivor_retained_versions": [
+        {
+          "id": "acc75b13-f7a2-458e-bb46-dd2aee694350",
+          "key": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+          "hash": "fb2be8b36f7dc42b2c01769fd377ce887c71611dec42ae5687b71e63415c582b",
+          "kind": "article",
+          "ordinal": 1,
+          "operation": "insert",
+          "recorded_at": "2026-09-05T17:26:49.948493+00:00"
+        }
+      ],
+      "resolution": "Shared current ID; survivor lacks body present in legacy; no full-content equivalence.",
+      "content_fields_equal": false,
+      "legacy_row_unchanged_since_inventory": true,
+      "permission_result": {
+        "allowed": false,
+        "reason": "no_verified_material_operation_audience_permission",
+        "retention_obligation": "unresolved; existing history preserved, no new body copy"
+      }
+    },
+    {
+      "article_id": "042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29",
+      "url": "https://www.aljazeera.com/news/2026/7/23/trump-says-saudi-nuclear-pact-hinges-on-kingdom-joining-abraham-accords?traffic_source=rss",
+      "outlet": "Al Jazeera",
+      "legacy": {
+        "id": "042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29",
+        "url": "https://www.aljazeera.com/news/2026/7/23/trump-says-saudi-nuclear-pact-hinges-on-kingdom-joining-abraham-accords?traffic_source=rss",
+        "outlet": "Al Jazeera",
+        "present": true,
+        "row_hash": "aa2081ac52deeb33eb01b014c62b26362e3b52bae14cfb85e65c520a5f8283d3",
+        "fetched_at": "2026-07-23T18:17:06.4643+00:00",
+        "body_present": false,
+        "published_at": "2026-07-23T14:57:42+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "12a7bbf262ee3996e720d76d7ac07ba676ba57e1ef007415c5be7e575913ddd6",
+        "reader_exclusion_reason": null
+      },
+      "survivor": {
+        "id": "042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29",
+        "url": null,
+        "outlet": null,
+        "present": false,
+        "row_hash": null,
+        "fetched_at": null,
+        "body_present": false,
+        "published_at": null,
+        "reader_state": null,
+        "source_status": null,
+        "summary_present": false,
+        "content_fields_hash": null,
+        "reader_exclusion_reason": null
+      },
+      "observed_inventory_event_ids": [
+        "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "edccd286-6e04-428d-9317-a76f79394d25"
+      ],
+      "inventory_edges_present_in_legacy": [
+        "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "edccd286-6e04-428d-9317-a76f79394d25"
+      ],
+      "inventory_edges_present_in_survivor": [],
+      "mapping_records": [
+        {
+          "source_id": "92063ca3-3f84-4f71-9915-8653f380ec4e",
+          "target_id": "042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29",
+          "source_url": "https://www.aljazeera.com/news/2026/7/23/trump-says-saudi-nuclear-pact-hinges-on-kingdom-joining-abraham-accords?traffic_source=rss",
+          "imported_at": "2026-08-20T01:15:29.236378+00:00",
+          "source_table": "articles",
+          "source_project_ref": "niejaejtbxgakyrsntxm"
+        }
+      ],
+      "survivor_retained_versions": [],
+      "resolution": "Absent current survivor ID and exact-URL match; absent inspected retention/staging receipts; migration completion unproven, deletion not inferred.",
+      "content_fields_equal": null,
+      "legacy_row_unchanged_since_inventory": true,
+      "permission_result": {
+        "allowed": false,
+        "reason": "no_verified_material_operation_audience_permission",
+        "retention_obligation": "unresolved; existing history preserved, no new body copy"
+      }
+    },
+    {
+      "article_id": "1cb6e00c-7bae-4172-ade2-1a0ea7688c15",
+      "url": "https://timesofindia.indiatimes.com/india/trump-says-saudi-nuclear-deal-hinges-on-kingdom-joining-abraham-accords-with-israel/articleshow/132581365.cms",
+      "outlet": "Times of India",
+      "legacy": {
+        "id": "1cb6e00c-7bae-4172-ade2-1a0ea7688c15",
+        "url": "https://timesofindia.indiatimes.com/india/trump-says-saudi-nuclear-deal-hinges-on-kingdom-joining-abraham-accords-with-israel/articleshow/132581365.cms",
+        "outlet": "Times of India",
+        "present": true,
+        "row_hash": "c3ce5cb7e63f33223e4e32ea490a7fa13ee8b88d4422c6963995a4efd4b9abcc",
+        "fetched_at": "2026-07-23T18:17:08.16309+00:00",
+        "body_present": false,
+        "published_at": "2026-07-23T12:29:56+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "d30ebee962346130b92a41a86aed2902b4ac2a031ad1be75d789e61e0bf9236c",
+        "reader_exclusion_reason": null
+      },
+      "survivor": {
+        "id": "1cb6e00c-7bae-4172-ade2-1a0ea7688c15",
+        "url": null,
+        "outlet": null,
+        "present": false,
+        "row_hash": null,
+        "fetched_at": null,
+        "body_present": false,
+        "published_at": null,
+        "reader_state": null,
+        "source_status": null,
+        "summary_present": false,
+        "content_fields_hash": null,
+        "reader_exclusion_reason": null
+      },
+      "observed_inventory_event_ids": [
+        "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "edccd286-6e04-428d-9317-a76f79394d25"
+      ],
+      "inventory_edges_present_in_legacy": [
+        "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "edccd286-6e04-428d-9317-a76f79394d25"
+      ],
+      "inventory_edges_present_in_survivor": [],
+      "mapping_records": [
+        {
+          "source_id": "5fe86a0d-2f8f-45ba-982d-f62a28e3a573",
+          "target_id": "1cb6e00c-7bae-4172-ade2-1a0ea7688c15",
+          "source_url": "https://timesofindia.indiatimes.com/india/trump-says-saudi-nuclear-deal-hinges-on-kingdom-joining-abraham-accords-with-israel/articleshow/132581365.cms",
+          "imported_at": "2026-08-20T01:15:10.387615+00:00",
+          "source_table": "articles",
+          "source_project_ref": "niejaejtbxgakyrsntxm"
+        }
+      ],
+      "survivor_retained_versions": [],
+      "resolution": "Absent current survivor ID and exact-URL match; absent inspected retention/staging receipts; migration completion unproven, deletion not inferred.",
+      "content_fields_equal": null,
+      "legacy_row_unchanged_since_inventory": true,
+      "permission_result": {
+        "allowed": false,
+        "reason": "no_verified_material_operation_audience_permission",
+        "retention_obligation": "unresolved; existing history preserved, no new body copy"
+      }
+    },
+    {
+      "article_id": "96fbd272-9d0d-4a13-8cb0-374b62e1cd2a",
+      "url": "https://www.aljazeera.com/video/newsfeed/2026/7/23/us-saudi-nuclear-deal-hinges-on-normalisation-with-israel?traffic_source=rss",
+      "outlet": "Al Jazeera",
+      "legacy": {
+        "id": "96fbd272-9d0d-4a13-8cb0-374b62e1cd2a",
+        "url": "https://www.aljazeera.com/video/newsfeed/2026/7/23/us-saudi-nuclear-deal-hinges-on-normalisation-with-israel?traffic_source=rss",
+        "outlet": "Al Jazeera",
+        "present": true,
+        "row_hash": "e024d00dffeef8338ec31ba86a9d035985a0f14964b972d6ab4bb0d491009517",
+        "fetched_at": "2026-07-24T00:17:02.789415+00:00",
+        "body_present": false,
+        "published_at": "2026-07-23T21:41:25+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "be99e44b5f3a3f6c05acd7a1b370a39d1bafdbf3f3afdd0c6fd79c1eda38c045",
+        "reader_exclusion_reason": null
+      },
+      "survivor": {
+        "id": "96fbd272-9d0d-4a13-8cb0-374b62e1cd2a",
+        "url": null,
+        "outlet": null,
+        "present": false,
+        "row_hash": null,
+        "fetched_at": null,
+        "body_present": false,
+        "published_at": null,
+        "reader_state": null,
+        "source_status": null,
+        "summary_present": false,
+        "content_fields_hash": null,
+        "reader_exclusion_reason": null
+      },
+      "observed_inventory_event_ids": [
+        "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "edccd286-6e04-428d-9317-a76f79394d25"
+      ],
+      "inventory_edges_present_in_legacy": [
+        "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "edccd286-6e04-428d-9317-a76f79394d25"
+      ],
+      "inventory_edges_present_in_survivor": [],
+      "mapping_records": [
+        {
+          "source_id": "c5e4d709-5d41-40ee-935e-b58ce0d4df35",
+          "target_id": "96fbd272-9d0d-4a13-8cb0-374b62e1cd2a",
+          "source_url": "https://www.aljazeera.com/video/newsfeed/2026/7/23/us-saudi-nuclear-deal-hinges-on-normalisation-with-israel?traffic_source=rss",
+          "imported_at": "2026-08-20T01:15:48.735888+00:00",
+          "source_table": "articles",
+          "source_project_ref": "niejaejtbxgakyrsntxm"
+        }
+      ],
+      "survivor_retained_versions": [],
+      "resolution": "Absent current survivor ID and exact-URL match; absent inspected retention/staging receipts; migration completion unproven, deletion not inferred.",
+      "content_fields_equal": null,
+      "legacy_row_unchanged_since_inventory": true,
+      "permission_result": {
+        "allowed": false,
+        "reason": "no_verified_material_operation_audience_permission",
+        "retention_obligation": "unresolved; existing history preserved, no new body copy"
+      }
+    },
+    {
+      "article_id": "9d424bd0-1d82-4aaf-9ae1-de7776be5672",
+      "url": "https://www.aljazeera.com/video/newsfeed/2026/7/24/what-are-the-abraham-accords-3?traffic_source=rss",
+      "outlet": "Al Jazeera",
+      "legacy": {
+        "id": "9d424bd0-1d82-4aaf-9ae1-de7776be5672",
+        "url": "https://www.aljazeera.com/video/newsfeed/2026/7/24/what-are-the-abraham-accords-3?traffic_source=rss",
+        "outlet": "Al Jazeera",
+        "present": true,
+        "row_hash": "f24b35f6ff5af1f54b3d3d80c69bdb1c3990cd843b5b62d15560269846631df0",
+        "fetched_at": "2026-07-24T04:18:19.067333+00:00",
+        "body_present": true,
+        "published_at": "2026-07-24T03:08:49+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "54c5510cbb6f3bc1c3554187ee3edd0548f5ffd2f52d43696b362862380df8e2",
+        "reader_exclusion_reason": null
+      },
+      "survivor": {
+        "id": "9d424bd0-1d82-4aaf-9ae1-de7776be5672",
+        "url": null,
+        "outlet": null,
+        "present": false,
+        "row_hash": null,
+        "fetched_at": null,
+        "body_present": false,
+        "published_at": null,
+        "reader_state": null,
+        "source_status": null,
+        "summary_present": false,
+        "content_fields_hash": null,
+        "reader_exclusion_reason": null
+      },
+      "observed_inventory_event_ids": [
+        "a4a7e528-eb72-47e3-8855-47d36f802074"
+      ],
+      "inventory_edges_present_in_legacy": [
+        "a4a7e528-eb72-47e3-8855-47d36f802074"
+      ],
+      "inventory_edges_present_in_survivor": [],
+      "mapping_records": [
+        {
+          "source_id": "37149541-ca6c-4ced-b754-0612ba68eb3a",
+          "target_id": "9d424bd0-1d82-4aaf-9ae1-de7776be5672",
+          "source_url": "https://www.aljazeera.com/video/newsfeed/2026/7/24/what-are-the-abraham-accords-3?traffic_source=rss",
+          "imported_at": "2026-08-20T01:14:55.806776+00:00",
+          "source_table": "articles",
+          "source_project_ref": "niejaejtbxgakyrsntxm"
+        }
+      ],
+      "survivor_retained_versions": [],
+      "resolution": "Absent current survivor ID and exact-URL match; absent inspected retention/staging receipts; migration completion unproven, deletion not inferred.",
+      "content_fields_equal": null,
+      "legacy_row_unchanged_since_inventory": true,
+      "permission_result": {
+        "allowed": false,
+        "reason": "no_verified_material_operation_audience_permission",
+        "retention_obligation": "unresolved; existing history preserved, no new body copy"
+      }
+    },
+    {
+      "article_id": "b7729d14-2d26-4bca-a425-fb4020504a69",
+      "url": "https://www.bbc.co.uk/news/articles/cwye71yq8wwo?at_medium=RSS&amp;at_campaign=rss",
+      "outlet": "BBC",
+      "legacy": {
+        "id": "b7729d14-2d26-4bca-a425-fb4020504a69",
+        "url": "https://www.bbc.co.uk/news/articles/cwye71yq8wwo?at_medium=RSS&amp;at_campaign=rss",
+        "outlet": "BBC",
+        "present": true,
+        "row_hash": "86e49ecce4263fd7096bebe82eb9d7972956afc29714a17305e7b6f53a7954b2",
+        "fetched_at": "2026-07-23T18:17:06.199742+00:00",
+        "body_present": false,
+        "published_at": "2026-07-23T17:58:02+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "733e597c582079c91107fad9263cc90b985f088798b221029eeec32e9ea901ad",
+        "reader_exclusion_reason": null
+      },
+      "survivor": {
+        "id": "b7729d14-2d26-4bca-a425-fb4020504a69",
+        "url": null,
+        "outlet": null,
+        "present": false,
+        "row_hash": null,
+        "fetched_at": null,
+        "body_present": false,
+        "published_at": null,
+        "reader_state": null,
+        "source_status": null,
+        "summary_present": false,
+        "content_fields_hash": null,
+        "reader_exclusion_reason": null
+      },
+      "observed_inventory_event_ids": [
+        "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "edccd286-6e04-428d-9317-a76f79394d25"
+      ],
+      "inventory_edges_present_in_legacy": [
+        "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "edccd286-6e04-428d-9317-a76f79394d25"
+      ],
+      "inventory_edges_present_in_survivor": [],
+      "mapping_records": [
+        {
+          "source_id": "fc135895-1b88-472e-a790-073bff0a69c3",
+          "target_id": "b7729d14-2d26-4bca-a425-fb4020504a69",
+          "source_url": "https://www.bbc.co.uk/news/articles/cwye71yq8wwo?at_medium=RSS&amp;at_campaign=rss",
+          "imported_at": "2026-08-20T01:16:07.92088+00:00",
+          "source_table": "articles",
+          "source_project_ref": "niejaejtbxgakyrsntxm"
+        }
+      ],
+      "survivor_retained_versions": [],
+      "resolution": "Absent current survivor ID and exact-URL match; absent inspected retention/staging receipts; migration completion unproven, deletion not inferred.",
+      "content_fields_equal": null,
+      "legacy_row_unchanged_since_inventory": true,
+      "permission_result": {
+        "allowed": false,
+        "reason": "no_verified_material_operation_audience_permission",
+        "retention_obligation": "unresolved; existing history preserved, no new body copy"
+      }
+    },
+    {
+      "article_id": "17661244-b441-4e94-8c72-c8454329cf55",
+      "url": "https://www.scmp.com/news/us/diplomacy/article/3361652/trump-throws-newly-signed-saudi-nuclear-deal-doubt-israel-recognition-demand?utm_source=rss_feed",
+      "outlet": "South China Morning Post",
+      "legacy": {
+        "id": "17661244-b441-4e94-8c72-c8454329cf55",
+        "url": "https://www.scmp.com/news/us/diplomacy/article/3361652/trump-throws-newly-signed-saudi-nuclear-deal-doubt-israel-recognition-demand?utm_source=rss_feed",
+        "outlet": "South China Morning Post",
+        "present": true,
+        "row_hash": "3831203f61f9cc9f4ccfbd420ca1e774081ff83778de5af98ed652c5bcd90fdc",
+        "fetched_at": "2026-07-24T00:17:04.277601+00:00",
+        "body_present": false,
+        "published_at": "2026-07-23T22:01:11+00:00",
+        "reader_state": "eligible",
+        "source_status": "active",
+        "summary_present": true,
+        "content_fields_hash": "655a108e61e8b35ad79e733f3f1c8b6380b51836f34ca0218b2cc7a81bec93a4",
+        "reader_exclusion_reason": null
+      },
+      "survivor": {
+        "id": "17661244-b441-4e94-8c72-c8454329cf55",
+        "url": null,
+        "outlet": null,
+        "present": false,
+        "row_hash": null,
+        "fetched_at": null,
+        "body_present": false,
+        "published_at": null,
+        "reader_state": null,
+        "source_status": null,
+        "summary_present": false,
+        "content_fields_hash": null,
+        "reader_exclusion_reason": null
+      },
+      "observed_inventory_event_ids": [
+        "edccd286-6e04-428d-9317-a76f79394d25"
+      ],
+      "inventory_edges_present_in_legacy": [
+        "edccd286-6e04-428d-9317-a76f79394d25"
+      ],
+      "inventory_edges_present_in_survivor": [],
+      "mapping_records": [
+        {
+          "source_id": "9ad54583-7a53-4ceb-8463-e5f2181b4ef5",
+          "target_id": "17661244-b441-4e94-8c72-c8454329cf55",
+          "source_url": "https://www.scmp.com/news/us/diplomacy/article/3361652/trump-throws-newly-signed-saudi-nuclear-deal-doubt-israel-recognition-demand?utm_source=rss_feed",
+          "imported_at": "2026-08-20T01:15:32.103164+00:00",
+          "source_table": "articles",
+          "source_project_ref": "niejaejtbxgakyrsntxm"
+        }
+      ],
+      "survivor_retained_versions": [],
+      "resolution": "Absent current survivor ID and exact-URL match; absent inspected retention/staging receipts; migration completion unproven, deletion not inferred.",
+      "content_fields_equal": null,
+      "legacy_row_unchanged_since_inventory": true,
+      "permission_result": {
+        "allowed": false,
+        "reason": "no_verified_material_operation_audience_permission",
+        "retention_obligation": "unresolved; existing history preserved, no new body copy"
+      }
+    }
+  ],
+  "legacy_events": [
+    {
+      "id": "3c1a5778-7fd1-4c6f-9f3f-f3a7d40531f8",
+      "status": "candidate",
+      "validation": "approved",
+      "all_outlets": 2,
+      "member_count": 2,
+      "rule_version": "ingest-entity-day-source-comparison-candidate-v1",
+      "reader_outlets": 2
+    },
+    {
+      "id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "status": "candidate",
+      "validation": "approved",
+      "all_outlets": 3,
+      "member_count": 3,
+      "rule_version": "original-readonly-import|8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "reader_outlets": 3
+    },
+    {
+      "id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+      "status": "candidate",
+      "validation": "approved",
+      "all_outlets": 3,
+      "member_count": 5,
+      "rule_version": "ingest-arc-source-comparison-v1",
+      "reader_outlets": 3
+    },
+    {
+      "id": "edccd286-6e04-428d-9317-a76f79394d25",
+      "status": "candidate",
+      "validation": "approved",
+      "all_outlets": 4,
+      "member_count": 5,
+      "rule_version": "ingest-entity-day-source-comparison-candidate-v1",
+      "reader_outlets": 4
+    }
+  ],
+  "survivor_events": [
+    {
+      "id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "status": "candidate",
+      "validation": "approved",
+      "all_outlets": 3,
+      "member_count": 3,
+      "rule_version": "original-readonly-import|8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "reader_outlets": 3
+    }
+  ],
+  "other_linked_events": [
+    {
+      "id": "1b3c5240-ac77-430a-a423-162b4af20e89",
+      "status": "candidate",
+      "comparison_validation_state": "pending_review",
+      "members": 312,
+      "outlets": 23
+    },
+    {
+      "id": "38d57899-90c0-48b6-8df8-4dd9164d6e7a",
+      "status": "timeline_only",
+      "comparison_validation_state": "pending_review",
+      "members": 1,
+      "outlets": 1
+    },
+    {
+      "id": "3b12b559-0e32-49b6-ae2b-ba89e7f4b38b",
+      "status": "timeline_only",
+      "comparison_validation_state": "pending_review",
+      "members": 1,
+      "outlets": 1
+    },
+    {
+      "id": "3c1a5778-7fd1-4c6f-9f3f-f3a7d40531f8",
+      "status": "candidate",
+      "comparison_validation_state": "approved",
+      "members": 2,
+      "outlets": 2
+    },
+    {
+      "id": "5e6c906a-699a-4a6a-ad6e-192dfb1cb72c",
+      "status": "timeline_only",
+      "comparison_validation_state": "pending_review",
+      "members": 1,
+      "outlets": 1
+    },
+    {
+      "id": "5ea1b01b-1270-415a-bd32-dba49f1cef54",
+      "status": "timeline_only",
+      "comparison_validation_state": "pending_review",
+      "members": 1,
+      "outlets": 1
+    },
+    {
+      "id": "6e4d9499-0cfc-4bc4-8a54-aff2452f827f",
+      "status": "timeline_only",
+      "comparison_validation_state": "pending_review",
+      "members": 1,
+      "outlets": 1
+    },
+    {
+      "id": "73ed8c53-af21-415a-9948-3390fc8b8dfc",
+      "status": "timeline_only",
+      "comparison_validation_state": "pending_review",
+      "members": 1,
+      "outlets": 1
+    },
+    {
+      "id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "status": "candidate",
+      "comparison_validation_state": "approved",
+      "members": 3,
+      "outlets": 3
+    },
+    {
+      "id": "975da53b-2109-45b8-b125-41e5fda7f800",
+      "status": "candidate",
+      "comparison_validation_state": "pending_review",
+      "members": 19,
+      "outlets": 7
+    },
+    {
+      "id": "9ab8e6ba-1833-4e0d-bd86-feb4f71a4cd2",
+      "status": "timeline_only",
+      "comparison_validation_state": "pending_review",
+      "members": 1,
+      "outlets": 1
+    },
+    {
+      "id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+      "status": "candidate",
+      "comparison_validation_state": "approved",
+      "members": 5,
+      "outlets": 3
+    },
+    {
+      "id": "b2ea7679-dab7-4b43-b691-6ced2c4a79ed",
+      "status": "timeline_only",
+      "comparison_validation_state": "pending_review",
+      "members": 1,
+      "outlets": 1
+    },
+    {
+      "id": "b7f06b21-5465-4d59-99ed-4c4a253bfbb4",
+      "status": "timeline_only",
+      "comparison_validation_state": "pending_review",
+      "members": 1,
+      "outlets": 1
+    },
+    {
+      "id": "e3f2c3f8-0bc7-4d69-99b1-1e7b57931c03",
+      "status": "timeline_only",
+      "comparison_validation_state": "pending_review",
+      "members": 1,
+      "outlets": 1
+    },
+    {
+      "id": "edccd286-6e04-428d-9317-a76f79394d25",
+      "status": "candidate",
+      "comparison_validation_state": "approved",
+      "members": 5,
+      "outlets": 4
+    },
+    {
+      "id": "f756cbae-de26-4e5e-9213-e2b9fd04c836",
+      "status": "timeline_only",
+      "comparison_validation_state": "pending_review",
+      "members": 1,
+      "outlets": 1
+    }
+  ],
+  "membership_metadata": {
+    "legacy": [
+      {
+        "event_id": "1b3c5240-ac77-430a-a423-162b4af20e89",
+        "article_id": "042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29",
+        "created_at": "2026-08-09T06:54:13.871123+00:00",
+        "membership_method": "entity_overlap"
+      },
+      {
+        "event_id": "1b3c5240-ac77-430a-a423-162b4af20e89",
+        "article_id": "17661244-b441-4e94-8c72-c8454329cf55",
+        "created_at": "2026-08-09T06:54:13.871123+00:00",
+        "membership_method": "entity_overlap"
+      },
+      {
+        "event_id": "1b3c5240-ac77-430a-a423-162b4af20e89",
+        "article_id": "1cb6e00c-7bae-4172-ade2-1a0ea7688c15",
+        "created_at": "2026-08-09T06:54:13.871123+00:00",
+        "membership_method": "entity_overlap"
+      },
+      {
+        "event_id": "1b3c5240-ac77-430a-a423-162b4af20e89",
+        "article_id": "96fbd272-9d0d-4a13-8cb0-374b62e1cd2a",
+        "created_at": "2026-08-09T06:54:13.871123+00:00",
+        "membership_method": "entity_overlap"
+      },
+      {
+        "event_id": "1b3c5240-ac77-430a-a423-162b4af20e89",
+        "article_id": "9d424bd0-1d82-4aaf-9ae1-de7776be5672",
+        "created_at": "2026-08-09T06:54:13.871123+00:00",
+        "membership_method": "embedding_cluster"
+      },
+      {
+        "event_id": "1b3c5240-ac77-430a-a423-162b4af20e89",
+        "article_id": "b7729d14-2d26-4bca-a425-fb4020504a69",
+        "created_at": "2026-08-09T06:54:13.871123+00:00",
+        "membership_method": "entity_overlap"
+      },
+      {
+        "event_id": "38d57899-90c0-48b6-8df8-4dd9164d6e7a",
+        "article_id": "042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29",
+        "created_at": "2026-08-19T20:13:25.3614+00:00",
+        "membership_method": "chronological_article"
+      },
+      {
+        "event_id": "3b12b559-0e32-49b6-ae2b-ba89e7f4b38b",
+        "article_id": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+        "created_at": "2026-08-19T20:13:25.3614+00:00",
+        "membership_method": "chronological_article"
+      },
+      {
+        "event_id": "3c1a5778-7fd1-4c6f-9f3f-f3a7d40531f8",
+        "article_id": "46dedf23-f7e0-4f88-b783-c4470d044e10",
+        "created_at": "2026-08-23T20:18:35.41596+00:00",
+        "membership_method": "entity_day_candidate_seed"
+      },
+      {
+        "event_id": "3c1a5778-7fd1-4c6f-9f3f-f3a7d40531f8",
+        "article_id": "a87de488-a58f-4959-9823-cfb982071ab1",
+        "created_at": "2026-08-23T20:18:35.41596+00:00",
+        "membership_method": "entity_day_candidate_seed"
+      },
+      {
+        "event_id": "5e6c906a-699a-4a6a-ad6e-192dfb1cb72c",
+        "article_id": "1cb6e00c-7bae-4172-ade2-1a0ea7688c15",
+        "created_at": "2026-08-19T20:13:25.3614+00:00",
+        "membership_method": "chronological_article"
+      },
+      {
+        "event_id": "5ea1b01b-1270-415a-bd32-dba49f1cef54",
+        "article_id": "17661244-b441-4e94-8c72-c8454329cf55",
+        "created_at": "2026-08-19T20:13:25.3614+00:00",
+        "membership_method": "chronological_article"
+      },
+      {
+        "event_id": "6e4d9499-0cfc-4bc4-8a54-aff2452f827f",
+        "article_id": "b7729d14-2d26-4bca-a425-fb4020504a69",
+        "created_at": "2026-08-19T20:13:25.3614+00:00",
+        "membership_method": "chronological_article"
+      },
+      {
+        "event_id": "73ed8c53-af21-415a-9948-3390fc8b8dfc",
+        "article_id": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+        "created_at": "2026-08-19T20:13:25.3614+00:00",
+        "membership_method": "chronological_article"
+      },
+      {
+        "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+        "article_id": "575d4113-cbae-49af-94fc-e2858310ec4c",
+        "created_at": "2026-08-09T06:54:13.871123+00:00",
+        "membership_method": "embedding_cluster"
+      },
+      {
+        "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+        "article_id": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+        "created_at": "2026-08-09T06:54:13.871123+00:00",
+        "membership_method": "embedding_cluster"
+      },
+      {
+        "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+        "article_id": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+        "created_at": "2026-08-09T06:54:13.871123+00:00",
+        "membership_method": "embedding_cluster"
+      },
+      {
+        "event_id": "975da53b-2109-45b8-b125-41e5fda7f800",
+        "article_id": "17661244-b441-4e94-8c72-c8454329cf55",
+        "created_at": "2026-08-23T18:35:21.460853+00:00",
+        "membership_method": "entity_overlap"
+      },
+      {
+        "event_id": "9ab8e6ba-1833-4e0d-bd86-feb4f71a4cd2",
+        "article_id": "9d424bd0-1d82-4aaf-9ae1-de7776be5672",
+        "created_at": "2026-08-19T20:13:25.3614+00:00",
+        "membership_method": "chronological_article"
+      },
+      {
+        "event_id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "article_id": "042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29",
+        "created_at": "2026-08-23T18:35:21.460853+00:00",
+        "membership_method": "entity_overlap"
+      },
+      {
+        "event_id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "article_id": "1cb6e00c-7bae-4172-ade2-1a0ea7688c15",
+        "created_at": "2026-08-23T18:35:21.460853+00:00",
+        "membership_method": "entity_overlap"
+      },
+      {
+        "event_id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "article_id": "96fbd272-9d0d-4a13-8cb0-374b62e1cd2a",
+        "created_at": "2026-08-23T18:35:21.460853+00:00",
+        "membership_method": "entity_overlap"
+      },
+      {
+        "event_id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "article_id": "9d424bd0-1d82-4aaf-9ae1-de7776be5672",
+        "created_at": "2026-08-23T18:35:21.460853+00:00",
+        "membership_method": "entity_overlap"
+      },
+      {
+        "event_id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+        "article_id": "b7729d14-2d26-4bca-a425-fb4020504a69",
+        "created_at": "2026-08-23T18:35:21.460853+00:00",
+        "membership_method": "entity_overlap"
+      },
+      {
+        "event_id": "b2ea7679-dab7-4b43-b691-6ced2c4a79ed",
+        "article_id": "a87de488-a58f-4959-9823-cfb982071ab1",
+        "created_at": "2026-08-19T20:13:25.3614+00:00",
+        "membership_method": "chronological_article"
+      },
+      {
+        "event_id": "b7f06b21-5465-4d59-99ed-4c4a253bfbb4",
+        "article_id": "575d4113-cbae-49af-94fc-e2858310ec4c",
+        "created_at": "2026-08-19T20:13:25.3614+00:00",
+        "membership_method": "chronological_article"
+      },
+      {
+        "event_id": "e3f2c3f8-0bc7-4d69-99b1-1e7b57931c03",
+        "article_id": "96fbd272-9d0d-4a13-8cb0-374b62e1cd2a",
+        "created_at": "2026-08-19T20:13:25.3614+00:00",
+        "membership_method": "chronological_article"
+      },
+      {
+        "event_id": "edccd286-6e04-428d-9317-a76f79394d25",
+        "article_id": "042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29",
+        "created_at": "2026-08-23T20:18:35.41596+00:00",
+        "membership_method": "entity_day_candidate_seed"
+      },
+      {
+        "event_id": "edccd286-6e04-428d-9317-a76f79394d25",
+        "article_id": "17661244-b441-4e94-8c72-c8454329cf55",
+        "created_at": "2026-08-23T20:18:35.41596+00:00",
+        "membership_method": "entity_day_candidate_seed"
+      },
+      {
+        "event_id": "edccd286-6e04-428d-9317-a76f79394d25",
+        "article_id": "1cb6e00c-7bae-4172-ade2-1a0ea7688c15",
+        "created_at": "2026-08-23T20:18:35.41596+00:00",
+        "membership_method": "entity_day_candidate_seed"
+      },
+      {
+        "event_id": "edccd286-6e04-428d-9317-a76f79394d25",
+        "article_id": "96fbd272-9d0d-4a13-8cb0-374b62e1cd2a",
+        "created_at": "2026-08-23T20:18:35.41596+00:00",
+        "membership_method": "entity_day_candidate_seed"
+      },
+      {
+        "event_id": "edccd286-6e04-428d-9317-a76f79394d25",
+        "article_id": "b7729d14-2d26-4bca-a425-fb4020504a69",
+        "created_at": "2026-08-23T20:18:35.41596+00:00",
+        "membership_method": "entity_day_candidate_seed"
+      },
+      {
+        "event_id": "f756cbae-de26-4e5e-9213-e2b9fd04c836",
+        "article_id": "46dedf23-f7e0-4f88-b783-c4470d044e10",
+        "created_at": "2026-08-19T20:13:25.3614+00:00",
+        "membership_method": "chronological_article"
+      }
+    ],
+    "survivor": [
+      {
+        "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+        "article_id": "575d4113-cbae-49af-94fc-e2858310ec4c",
+        "created_at": "2026-09-05T17:26:49.934279+00:00",
+        "membership_method": "embedding_cluster"
+      },
+      {
+        "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+        "article_id": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+        "created_at": "2026-09-05T17:26:49.934279+00:00",
+        "membership_method": "embedding_cluster"
+      },
+      {
+        "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+        "article_id": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+        "created_at": "2026-09-05T17:26:49.934279+00:00",
+        "membership_method": "embedding_cluster"
+      }
+    ]
+  },
+  "retention": [
+    {
+      "audit": {
+        "guards": [
+          {
+            "table": "articles",
+            "enabled": "O",
+            "trigger": "articles_intercept_direct_arc_attachment",
+            "definition": "CREATE OR REPLACE FUNCTION public.mip_intercept_direct_arc_attachment()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare v_approved_candidate uuid := nullif(current_setting('app.arc_membership_approval_candidate_id', true), '')::uuid;\nbegin\n  if new.arc_id is distinct from old.arc_id and new.arc_id is not null then\n    if v_approved_candidate is not null and exists (select 1 from public.arc_membership_candidates c where c.id = v_approved_candidate and c.article_id = new.id and c.arc_id = new.arc_id and c.state = 'approved') then\n      return new;\n    end if;\n    insert into public.arc_membership_candidates(article_id, arc_id, generation_method, generation_evidence, state)\n    values (new.id, new.arc_id, 'direct_attachment_intercept_v1', jsonb_build_object('prior_arc_id', old.arc_id, 'intercepted_at', now()), 'pending')\n    on conflict (article_id, arc_id) do update set state = 'pending', invalidated_at = null, generation_evidence = public.arc_membership_candidates.generation_evidence || excluded.generation_evidence;\n    new.arc_id := old.arc_id;\n    new.arc_assignment_evidence := coalesce(new.arc_assignment_evidence, '{}'::jsonb) || jsonb_build_object('membership_gate', 'staged_pending_score');\n  end if;\n  return new;\nend; $function$\n"
+          },
+          {
+            "table": "articles",
+            "enabled": "O",
+            "trigger": "articles_invalidate_arc_membership_approvals",
+            "definition": "CREATE OR REPLACE FUNCTION public.mip_invalidate_arc_membership_approvals()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare v_exempt uuid := nullif(current_setting('app.arc_membership_approval_candidate_id', true), '')::uuid;\n  v_old_arc uuid := case when tg_op = 'INSERT' then null else old.arc_id end;\n  v_new_arc uuid := case when tg_op = 'DELETE' then null else new.arc_id end;\nbegin\n  update public.arc_membership_candidates c set state = 'invalidated', invalidated_at = now()\n  where c.state = 'approved' and c.id is distinct from v_exempt and c.arc_id in (v_old_arc, v_new_arc);\n  return coalesce(new, old);\nend; $function$\n"
+          },
+          {
+            "table": "articles",
+            "enabled": "O",
+            "trigger": "mip_pipeline_article_history",
+            "definition": "CREATE OR REPLACE FUNCTION evidence_pipeline.capture_version()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\ndeclare before_row jsonb; after_row jsonb; k text; kind text := TG_ARGV[0];\nbegin\n  if TG_OP <> 'INSERT' then before_row := to_jsonb(OLD); end if;\n  if TG_OP <> 'DELETE' then after_row := to_jsonb(NEW); end if;\n  if kind='temporal_assessment' then\n    k := coalesce(after_row->>'key',before_row->>'key');\n    if k not like 'temporal.assessment.%' and coalesce(before_row->>'key','') not like 'temporal.assessment.%' then return null; end if;\n    if TG_OP='UPDATE' and before_row->>'key' is distinct from after_row->>'key' then\n      raise exception 'temporal assessment keys are immutable; insert a new key';\n    end if;\n  else\n    k := coalesce(after_row->>'id',before_row->>'id');\n    if TG_OP='UPDATE' and before_row->>'id' is distinct from after_row->>'id' then\n      raise exception 'versioned record identity is immutable';\n    end if;\n  end if;\n  -- Embeddings are recomputable, and would dominate retained history size.\n  before_row := before_row - 'embedding'; after_row := after_row - 'embedding';\n  if TG_OP='UPDATE' and before_row is not distinct from after_row then return null; end if;\n  perform pg_advisory_xact_lock(hashtextextended('mip-version:' || kind || ':' || k,0));\n  if before_row is not null and not exists(select 1 from evidence_pipeline.record_versions where record_kind=kind and record_key=k) then\n    perform evidence_pipeline.append_version(kind,k,'baseline',before_row,'first_observed_before_change');\n  end if;\n  perform evidence_pipeline.append_version(kind,k,lower(TG_OP),coalesce(after_row,before_row),\n    coalesce(nullif(current_setting('mip.change_reason',true),''),'direct_database_change'));\n  return null;\nend $function$\n"
+          },
+          {
+            "table": "articles",
+            "enabled": "O",
+            "trigger": "mip_pipeline_article_no_truncate",
+            "definition": "CREATE OR REPLACE FUNCTION evidence_pipeline.reject_history_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nbegin raise exception 'history is append-only'; end $function$\n"
+          }
+        ],
+        "captures": null,
+        "versions": [
+          {
+            "id": "5b0935ef-6924-4d86-ad9a-c55cff5609ae",
+            "key": "575d4113-cbae-49af-94fc-e2858310ec4c",
+            "hash": "ed49868fc860abbb4d71668d7df5df0c223a285f825263553f1a4aab941fd3ab",
+            "kind": "article",
+            "ordinal": 1,
+            "operation": "insert",
+            "recorded_at": "2026-09-05T17:26:49.945874+00:00"
+          },
+          {
+            "id": "ce2f65d8-ee10-4abd-a951-308059ec232e",
+            "key": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+            "hash": "cf4568480284f468c3f09eec7aa3b926a5fd25360b0b46e5738d26fc3b7cc077",
+            "kind": "article",
+            "ordinal": 1,
+            "operation": "insert",
+            "recorded_at": "2026-09-05T17:26:49.948005+00:00"
+          },
+          {
+            "id": "acc75b13-f7a2-458e-bb46-dd2aee694350",
+            "key": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+            "hash": "fb2be8b36f7dc42b2c01769fd377ce887c71611dec42ae5687b71e63415c582b",
+            "kind": "article",
+            "ordinal": 1,
+            "operation": "insert",
+            "recorded_at": "2026-09-05T17:26:49.948493+00:00"
+          }
+        ],
+        "retention": null,
+        "other_relations": [
+          {
+            "table": "job_events",
+            "schema": "legacy_graph_staging"
+          },
+          {
+            "table": "import_jobs",
+            "schema": "legacy_graph_staging"
+          },
+          {
+            "table": "staged_records",
+            "schema": "legacy_graph_staging"
+          },
+          {
+            "table": "record_conflicts",
+            "schema": "legacy_graph_staging"
+          },
+          {
+            "table": "payload_versions",
+            "schema": "legacy_graph_staging"
+          },
+          {
+            "table": "endpoint_checks",
+            "schema": "legacy_graph_staging"
+          }
+        ]
+      }
+    }
+  ],
+  "staging": [
+    {
+      "staging": {
+        "staged": null,
+        "conflicts": null
+      }
+    }
+  ],
+  "alternate_identity": [
+    {
+      "alternate": {
+        "alternate_current": [
+          {
+            "id": "575d4113-cbae-49af-94fc-e2858310ec4c",
+            "url": "https://www.foxnews.com/health/michigan-reports-deaths-rare-parasite-outbreak-sickened-more-than-11000",
+            "reader_state": "eligible",
+            "source_status": "active"
+          },
+          {
+            "id": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+            "url": "https://www.nytimes.com/2026/08/03/well/eat/cyclospora-deaths-michigan.html",
+            "reader_state": "eligible",
+            "source_status": "active"
+          },
+          {
+            "id": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+            "url": "https://www.aljazeera.com/news/2026/8/3/us-announces-first-two-deaths-from-cyclospora-outbreak?traffic_source=rss",
+            "reader_state": "eligible",
+            "source_status": "active"
+          }
+        ],
+        "staging_by_origin": null,
+        "versions_by_origin": null
+      }
+    }
+  ],
+  "queries": {
+    "both_projects": "with ids as (select unnest(array['46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55']::uuid[]) id)\nselect jsonb_build_object(\n'articles',(select jsonb_agg(jsonb_build_object('id',i.id,'present',a.id is not null,'url',a.url,'outlet',a.outlet,'reader_state',a.reader_state,'reader_exclusion_reason',a.reader_exclusion_reason,'source_status',a.source_status,'published_at',a.published_at,'fetched_at',a.fetched_at,'row_hash',case when a.id is not null then encode(sha256(convert_to(to_jsonb(a)::text,'UTF8')),'hex') end,'content_fields_hash',case when a.id is not null then encode(sha256(convert_to(jsonb_build_object('title',a.title,'summary',a.summary,'body_text',a.body_text)::text,'UTF8')),'hex') end,'body_present',a.body_text is not null,'summary_present',a.summary is not null)) from ids i left join public.articles a on a.id=i.id),\n'memberships',(select jsonb_agg(to_jsonb(ea)) from public.event_articles ea where ea.article_id in ('46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55')),\n'events',(select jsonb_agg(jsonb_build_object('id',e.id,'status',e.status,'validation',e.comparison_validation_state,'rule_version',e.rule_version,'member_count',(select count(*) from event_articles ea where ea.event_id=e.id),'all_outlets',(select count(distinct nullif(btrim(a.outlet),'')) from event_articles ea join articles a on a.id=ea.article_id where ea.event_id=e.id),'reader_outlets',(select count(distinct a.outlet) from event_articles ea join articles a on a.id=ea.article_id where ea.event_id=e.id and a.reader_state='eligible' and a.source_status='active'))) from public.events e where e.id in ('3c1a5778-7fd1-4c6f-9f3f-f3a7d40531f8','8e4f9812-0afa-4aad-ada8-6fb556da70d9','a4a7e528-eb72-47e3-8855-47d36f802074','edccd286-6e04-428d-9317-a76f79394d25')),\n'mappings',(select jsonb_agg(to_jsonb(m)) from public.original_source_import_mappings m where m.source_id in ('46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55') or m.target_id in ('46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55')),\n'explanation_metadata',(select jsonb_agg(jsonb_build_object('id',x.id,'assertion_id',x.assertion_id,'version',x.version,'current',x.is_current,'source_ids',x.source_ids,'status',x.review_status,'state',x.state,'archive_count',case when jsonb_typeof(x.archived_sources)='array' then jsonb_array_length(x.archived_sources) end)) from public.explanations x where x.source_ids && array['46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55']::uuid[])\n) as reconciliation;",
+    "survivor_receipts": "select jsonb_build_object(\n'captures',(select jsonb_agg(jsonb_build_object('id',id,'article_id',article_id,'hash',content_hash,'captured_at',captured_at,'review_state',review_state)) from evidence_pipeline.article_captures where article_id in ('46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55')),\n'versions',(select jsonb_agg(jsonb_build_object('id',id,'kind',record_kind,'key',record_key,'ordinal',ordinal,'operation',operation,'recorded_at',recorded_at,'hash',encode(sha256(convert_to(payload::text,'UTF8')),'hex'))) from evidence_pipeline.record_versions where record_key=any(array['46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55']::text[])),\n'retention',(select jsonb_agg(jsonb_build_object('source_project',source_project,'relation',source_relation,'key',source_key,'hash',payload_hash,'observed',source_observed_at,'retained',retained_at)) from mip_private.collector_row_versions where source_key=any(array['46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55']::text[])),\n'other_relations',(select jsonb_agg(jsonb_build_object('schema',table_schema,'table',table_name)) from information_schema.tables where table_schema='legacy_graph_staging'),\n'guards',(select jsonb_agg(jsonb_build_object('table',c.relname,'trigger',t.tgname,'enabled',t.tgenabled,'definition',pg_get_functiondef(t.tgfoid))) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in ('explanations','articles') and not t.tgisinternal)\n) as audit;",
+    "survivor_staging": "select jsonb_build_object('staged',(select jsonb_agg(jsonb_build_object('id',id,'source_project',source_project_ref,'source_id',source_id,'target_id',proposed_target_id,'table',source_table,'hash',payload_sha256,'staged_at',staged_at,'review_state',review_state,'decision',decision)) from legacy_graph_staging.staged_records where source_id in ('46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55') or proposed_target_id in ('46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55')),\n'conflicts',(select jsonb_agg(jsonb_build_object('id',id,'source_id',source_id,'target_id',target_id,'kind',conflict_kind,'status',recovery_status)) from legacy_graph_staging.record_conflicts where source_id in ('46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55') or target_id in ('46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55'))) as staging;",
+    "survivor_alternate_identity": "select jsonb_build_object('alternate_current',(select jsonb_agg(jsonb_build_object('id',id,'url',url,'reader_state',reader_state,'source_status',source_status)) from public.articles where url in ('https://www.aspenpublicradio.org/2026-08-19/how-indias-blocking-of-a-film-exposing-real-life-police-abuses-backfired','https://www.wcsufm.org/latest-from-npr/2026-08-19/how-indias-blocking-of-a-film-exposing-real-life-police-abuses-backfired','https://www.foxnews.com/health/michigan-reports-deaths-rare-parasite-outbreak-sickened-more-than-11000','https://www.nytimes.com/2026/08/03/well/eat/cyclospora-deaths-michigan.html','https://www.aljazeera.com/news/2026/8/3/us-announces-first-two-deaths-from-cyclospora-outbreak?traffic_source=rss','https://www.aljazeera.com/news/2026/7/23/trump-says-saudi-nuclear-pact-hinges-on-kingdom-joining-abraham-accords?traffic_source=rss','https://timesofindia.indiatimes.com/india/trump-says-saudi-nuclear-deal-hinges-on-kingdom-joining-abraham-accords-with-israel/articleshow/132581365.cms','https://www.aljazeera.com/video/newsfeed/2026/7/23/us-saudi-nuclear-deal-hinges-on-normalisation-with-israel?traffic_source=rss','https://www.aljazeera.com/video/newsfeed/2026/7/24/what-are-the-abraham-accords-3?traffic_source=rss','https://www.bbc.co.uk/news/articles/cwye71yq8wwo?at_medium=RSS&amp;at_campaign=rss','https://www.scmp.com/news/us/diplomacy/article/3361652/trump-throws-newly-signed-saudi-nuclear-deal-doubt-israel-recognition-demand?utm_source=rss_feed')),\n'staging_by_origin',(select jsonb_agg(jsonb_build_object('id',id,'source_id',source_id,'target_id',proposed_target_id,'hash',payload_sha256,'state',review_state,'decision',decision)) from legacy_graph_staging.staged_records where source_url in ('https://www.aspenpublicradio.org/2026-08-19/how-indias-blocking-of-a-film-exposing-real-life-police-abuses-backfired','https://www.wcsufm.org/latest-from-npr/2026-08-19/how-indias-blocking-of-a-film-exposing-real-life-police-abuses-backfired','https://www.foxnews.com/health/michigan-reports-deaths-rare-parasite-outbreak-sickened-more-than-11000','https://www.nytimes.com/2026/08/03/well/eat/cyclospora-deaths-michigan.html','https://www.aljazeera.com/news/2026/8/3/us-announces-first-two-deaths-from-cyclospora-outbreak?traffic_source=rss','https://www.aljazeera.com/news/2026/7/23/trump-says-saudi-nuclear-pact-hinges-on-kingdom-joining-abraham-accords?traffic_source=rss','https://timesofindia.indiatimes.com/india/trump-says-saudi-nuclear-deal-hinges-on-kingdom-joining-abraham-accords-with-israel/articleshow/132581365.cms','https://www.aljazeera.com/video/newsfeed/2026/7/23/us-saudi-nuclear-deal-hinges-on-normalisation-with-israel?traffic_source=rss','https://www.aljazeera.com/video/newsfeed/2026/7/24/what-are-the-abraham-accords-3?traffic_source=rss','https://www.bbc.co.uk/news/articles/cwye71yq8wwo?at_medium=RSS&amp;at_campaign=rss','https://www.scmp.com/news/us/diplomacy/article/3361652/trump-throws-newly-signed-saudi-nuclear-deal-doubt-israel-recognition-demand?utm_source=rss_feed') or source_id in ('37149541-ca6c-4ced-b754-0612ba68eb3a','5fe86a0d-2f8f-45ba-982d-f62a28e3a573','92063ca3-3f84-4f71-9915-8653f380ec4e','9ad54583-7a53-4ceb-8463-e5f2181b4ef5','ac3e3e8a-85bb-4a99-b472-7689ef8e960e','b0e8fc12-2914-4fb9-8007-ab77385bc66d','c5e4d709-5d41-40ee-935e-b58ce0d4df35','f507adba-9ea0-4a18-b795-ac9472f8ad28','fc135895-1b88-472e-a790-073bff0a69c3')),\n'versions_by_origin',(select jsonb_agg(jsonb_build_object('id',id,'source_id',source_id,'hash',payload_sha256,'ordinal',ordinal)) from legacy_graph_staging.payload_versions where source_id in ('37149541-ca6c-4ced-b754-0612ba68eb3a','5fe86a0d-2f8f-45ba-982d-f62a28e3a573','92063ca3-3f84-4f71-9915-8653f380ec4e','9ad54583-7a53-4ceb-8463-e5f2181b4ef5','ac3e3e8a-85bb-4a99-b472-7689ef8e960e','b0e8fc12-2914-4fb9-8007-ab77385bc66d','c5e4d709-5d41-40ee-935e-b58ce0d4df35','f507adba-9ea0-4a18-b795-ac9472f8ad28','fc135895-1b88-472e-a790-073bff0a69c3'))) as alternate;",
+    "legacy_linked_event_filters": "select e.id,e.status,e.comparison_validation_state,count(*) as members,count(distinct nullif(btrim(a.outlet),'')) as outlets from public.events e join public.event_articles ea on ea.event_id=e.id join public.articles a on a.id=ea.article_id where e.id in (select event_id from public.event_articles where article_id in ('46dedf23-f7e0-4f88-b783-c4470d044e10','a87de488-a58f-4959-9823-cfb982071ab1','575d4113-cbae-49af-94fc-e2858310ec4c','7b40ed41-39ad-42e0-baae-da888a77caf4','cc68af15-2f7a-4d40-b689-cd95a9ee7830','042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29','1cb6e00c-7bae-4172-ade2-1a0ea7688c15','96fbd272-9d0d-4a13-8cb0-374b62e1cd2a','9d424bd0-1d82-4aaf-9ae1-de7776be5672','b7729d14-2d26-4bca-a425-fb4020504a69','17661244-b441-4e94-8c72-c8454329cf55')) group by e.id,e.status,e.comparison_validation_state order by e.id;"
+  },
+  "rights": "All unsupported operations denied; no article text in this evidence.",
+  "historical_transfer_receipt": {
+    "path": "verifier/mip_public_surface_transfer_2026-09-05.json",
+    "ref": "8d3e1efa96b2066334ab4ca5ace7ce3ff7b9e78d",
+    "content": {
+      "date": "2026-09-05",
+      "repository_base": "8e83ec5be73c7e5a68b1cff40bc5196954c44388",
+      "destination": "qikvmopbtijoebdqosyq",
+      "source_manus": "yhbwnrtlqbjtcrrlpbge",
+      "source_original": "niejaejtbxgakyrsntxm",
+      "source_gate_a": "jfnzyvzthzqtczlxhjll",
+      "migration": "20260905172453_mip_public_surface_transfer",
+      "production_recorded_chunks": [
+        "20260905172453_mip_public_surface_transfer",
+        "20260905172517_mip_public_surface_stub_reconcile",
+        "20260905172527_mip_public_surface_predicates",
+        "20260905172543_mip_public_surface_tables",
+        "20260905172558_mip_public_surface_topics_rls",
+        "20260905172611_mip_public_surface_views"
+      ],
+      "combined_draft_not_applied": "20260905174500_mip_public_surface_transfer",
+      "forward_publication_gates": "20260905180142_mip_public_surface_publication_gates",
+      "frontend_relations_transferred": [
+        "graph_coverage_public",
+        "policy_actors",
+        "policy_topics",
+        "topics",
+        "arc_milestones_public",
+        "arc_events",
+        "comparison_public",
+        "authors_public",
+        "citations",
+        "news_detail_public",
+        "sky_verifications"
+      ],
+      "remaining_frontend_dependencies_schema": [
+        "node_topics",
+        "node_location_mentions",
+        "explanations",
+        "p3_legal_case",
+        "p3_legal_case_evidence",
+        "p3_policy",
+        "p3_policy_track_event",
+        "events",
+        "event_articles",
+        "claims",
+        "article_claims"
+      ],
+      "remaining_frontend_dependencies_data": [
+        "policies",
+        "policy_actors",
+        "policy_topics",
+        "story_arcs",
+        "authors",
+        "citations",
+        "explanations",
+        "edges",
+        "sources",
+        "policy_documents",
+        "nodes",
+        "p3_legal_case",
+        "p3_legal_case_evidence",
+        "p3_policy",
+        "p3_policy_track_event"
+      ],
+      "remaining_manus_publication_functions": [
+        "article_arc_membership_is_approved",
+        "articles_source_status_propagate",
+        "attach_article_to_arc",
+        "explanations_publication_guard",
+        "invalidate_comparison_approval_on_membership_change",
+        "mip_approve_arc_membership_candidate",
+        "mip_project_approved_arc_membership",
+        "mip_retract_arc_membership_projection",
+        "publish_explanation"
+      ],
+      "notes": [
+        "Schema and private predicates were applied live as six recorded chunks. The combined 20260905174500 draft was never applied on production and is now a no-op marker.",
+        "Cyclospora cohort readback was verified on production.",
+        "Graph-event and Source Comparison event families remain separate.",
+        "Manus collectors stay on Manus. Watermarks do not switch workers.",
+        "No project is retired by this revision.",
+        "Publication bypasses on citations, node_location_mentions, sky_verifications, and graph_coverage_public are closed by the later publication-gates migration."
+      ]
+    }
+  },
+  "legacy_enforcement": {
+    "query": "select p.proname,pg_get_functiondef(p.oid) as definition from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('publish_explanation','mark_source_change','explanations_publication_guard','articles_source_status_propagate')",
+    "functions": [
+      {
+        "proname": "articles_source_status_propagate",
+        "definition": "CREATE OR REPLACE FUNCTION public.articles_source_status_propagate()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\nbegin\n  NEW.source_status_changed_at := now();\n  perform public.mark_source_change(\n    NEW.id,\n    NEW.source_status,\n    coalesce(nullif(current_setting('mip.source_actor', true), ''), 'system:auto-trigger'),\n    NEW.source_status_note\n  );\n  return NEW;\nend;\n$function$\n"
+      },
+      {
+        "proname": "explanations_publication_guard",
+        "definition": "CREATE OR REPLACE FUNCTION public.explanations_publication_guard()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nbegin\n  if NEW.review_status = 'published' then\n    if NEW.state is distinct from 'ok'\n       or NEW.supporting_passage is null\n       or length(btrim(NEW.supporting_passage)) = 0\n       or NEW.falsification_condition is null\n       or NEW.falsification_condition ilike 'missing:%' then\n      raise exception 'D4 publication block: assertion % cannot be published (requires state=ok, a supporting passage, and a recorded falsification condition)', NEW.assertion_id;\n    end if;\n  end if;\n  return NEW;\nend;\n$function$\n"
+      },
+      {
+        "proname": "mark_source_change",
+        "definition": "CREATE OR REPLACE FUNCTION public.mark_source_change(p_source_id uuid, p_change_type text, p_actor text DEFAULT 'system'::text, p_note text DEFAULT NULL::text)\n RETURNS integer\n LANGUAGE plpgsql\nAS $function$\ndeclare\n  v_new_state text;\n  v_linked    text[];\n  v_mutated   text[];\n  v_skipped   text[];\nbegin\n  if p_change_type not in ('corrected','withdrawn') then\n    raise exception 'mark_source_change: change_type must be corrected or withdrawn, got %', p_change_type;\n  end if;\n  v_new_state := 'source_' || p_change_type;\n\n  -- all linked current assertions (audit universe)\n  select coalesce(array_agg(assertion_id), '{}') into v_linked\n    from public.explanations\n   where is_current and p_source_id = any(source_ids);\n\n  -- skipped: linked but withdrawn (Q1-a; intentionally preserved)\n  select coalesce(array_agg(assertion_id), '{}') into v_skipped\n    from public.explanations\n   where is_current and p_source_id = any(source_ids)\n     and review_status = 'withdrawn';\n\n  -- mutated: linked, current, not withdrawn\n  with u as (\n    update public.explanations e\n       set review_status = 'awaiting_review',\n           state = v_new_state,\n           correction_history = coalesce(correction_history, '[]'::jsonb) || jsonb_build_object(\n             'changed_by', p_actor,\n             'changed_at', now(),\n             'reason', 'source ' || p_change_type || '; renewed human review required per D5',\n             'source_id', p_source_id::text\n           )\n     where e.is_current\n       and p_source_id = any(e.source_ids)\n       and e.review_status is distinct from 'withdrawn'\n    returning e.assertion_id\n  )\n  select coalesce(array_agg(assertion_id), '{}') into v_mutated from u;\n\n  insert into public.source_change_events (\n    source_id, change_type,\n    affected_assertion_ids,\n    linked_assertion_ids, mutated_assertion_ids, skipped_withdrawn_assertion_ids,\n    linked_count, mutated_count, skipped_withdrawn_count,\n    actor, note\n  ) values (\n    p_source_id, p_change_type,\n    v_mutated,\n    v_linked, v_mutated, v_skipped,\n    coalesce(array_length(v_linked,1),0),\n    coalesce(array_length(v_mutated,1),0),\n    coalesce(array_length(v_skipped,1),0),\n    p_actor, p_note\n  );\n\n  return coalesce(array_length(v_mutated,1),0);\nend;\n$function$\n"
+      },
+      {
+        "proname": "publish_explanation",
+        "definition": "CREATE OR REPLACE FUNCTION public.publish_explanation(p_explanation_id uuid, p_actor text DEFAULT 'system'::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\ndeclare\n  r public.explanations%rowtype;\n  v_rule text;\nbegin\n  select * into r from public.explanations where id = p_explanation_id for update;\n\n  if not found or not r.is_current then\n    insert into public.publication_rejection_audit\n      (assertion_id, explanation_id, prior_review_status, rejecting_rule, state_at_attempt, actor)\n    values\n      (coalesce(r.assertion_id, 'unknown:' || p_explanation_id::text),\n       p_explanation_id,\n       r.review_status,\n       'not_found_or_not_current',\n       r.state,\n       p_actor);\n    return jsonb_build_object('ok', false, 'rule', 'not_found_or_not_current',\n      'assertion_id', coalesce(r.assertion_id, 'unknown:' || p_explanation_id::text));\n  end if;\n\n  if r.review_status = 'published' then\n    return jsonb_build_object('ok', false, 'rule', 'already_published', 'assertion_id', r.assertion_id);\n  end if;\n\n  -- D4 predicate, same order as explanations_publication_guard\n  if r.state is distinct from 'ok' then\n    v_rule := 'state_not_ok';\n  elsif r.supporting_passage is null or length(btrim(r.supporting_passage)) = 0 then\n    v_rule := 'missing_supporting_passage';\n  elsif r.falsification_condition is null or r.falsification_condition ilike 'missing:%' then\n    v_rule := 'missing_falsification_condition';\n  else\n    v_rule := null;\n  end if;\n\n  if v_rule is not null then\n    insert into public.publication_rejection_audit\n      (assertion_id, explanation_id, prior_review_status, rejecting_rule, state_at_attempt, actor)\n    values\n      (r.assertion_id, r.id, r.review_status, v_rule, r.state, p_actor);\n    return jsonb_build_object('ok', false, 'rule', v_rule, 'assertion_id', r.assertion_id);\n  end if;\n\n  update public.explanations\n     set review_status = 'published', reviewed_at = now()\n   where id = r.id;\n\n  return jsonb_build_object('ok', true, 'assertion_id', r.assertion_id);\nend;\n$function$\n"
+      }
+    ]
+  },
+  "observation_limits": "Separate read-only queries on each project, not a globally atomic snapshot. IDs/edges/hashes are metadata; no article bodies copied.",
+  "verification": {
+    "tested_commit": "370c1308875d10d5a6296bc2e7ba345684fedf54",
+    "integrated": {
+      "run": 34732997295,
+      "job": 103659167321,
+      "tests": 51,
+      "pass": 51,
+      "fail": 0,
+      "new_d4_d5_tests": 9
+    },
+    "golden": {
+      "run": 34732997316,
+      "node22": {
+        "job": 103659167389,
+        "tests": 1663,
+        "pass": 1663,
+        "build": "PASS"
+      },
+      "node24": {
+        "job": 103659167445,
+        "tests": 1663,
+        "pass": 1663,
+        "build": "PASS"
+      }
+    },
+    "native": {
+      "run": 34732997176,
+      "job": 103659166776,
+      "original": 14,
+      "preserved_baseline_counterexamples": 7,
+      "corrected_authority": 7,
+      "candidate_interfaces": 6
+    },
+    "extension": {
+      "run": 34732997140,
+      "job": 103659166861,
+      "tests": 8,
+      "pass": 8
+    },
+    "earlier_attempts": [
+      {
+        "commit": "66a73e6558c9bce0746bdc7dff1ecee61e9072fc",
+        "run": 34732575814,
+        "pass": 42,
+        "fail": 6,
+        "reason": "Fixture name collision between retained evidence array and operation-evidence helper; new mechanism tests had not reached assertions."
+      },
+      {
+        "commit": "a6673124ea812d51743b1e3e5d7ad3f19760ca29",
+        "run": 34732736978,
+        "pass": 43,
+        "fail": 8,
+        "reason": "Autonomous connection used a loopback authentication boundary unsuitable for a non-superuser dblink; referenced schema owner also lacked scoped schema usage. Fixed without broadening worker privileges."
+      }
+    ],
+    "actual_real_material_qualification": "NOT_RUN_ADMISSION_PENDING",
+    "independent_review": "NOT_STARTED",
+    "production": "ON_HOLD"
+  }
+}
