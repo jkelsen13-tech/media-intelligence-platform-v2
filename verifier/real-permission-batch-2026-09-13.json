@@ -53,5 +53,77 @@
   "rights_evidence_observation": "Not reached in this batch; previous proposal references preserved.",
   "disposition": "No further retrieval after failed selection check. No durable material ingestion; no material files/public content artifacts created. Qualification closed without success.",
   "production_cutover": "ON_HOLD",
-  "coherent_review_boundary": false
+  "coherent_review_boundary": false,
+  "final_executable_commit": "f9e059c5779cbb933afa244435cf9dee64a85d86",
+  "final_regressions": {
+    "integrated": {
+      "run": 34736156727,
+      "job": 103667854418,
+      "tests": 53,
+      "pass": 53,
+      "capture": "NOT_ACTIVATED"
+    },
+    "golden": {
+      "run": 34736156731,
+      "tests_per_node": 1663,
+      "node_versions": [
+        22,
+        24
+      ],
+      "builds": "PASS"
+    },
+    "native": {
+      "run": 34736156725,
+      "original": 14,
+      "baseline_mode": {
+        "tests": 7,
+        "skipped": 4,
+        "preserved_counterexamples": 3
+      },
+      "corrected_authority": 7,
+      "candidate_interfaces": 6
+    },
+    "extension": {
+      "run": 34736156720,
+      "tests": 8,
+      "pass": 8
+    }
+  },
+  "pr_states": [
+    {
+      "pr": 149,
+      "head": "6c716619d3b312682dba2c4c8211936f7f911895",
+      "draft": true,
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "pr": 150,
+      "head": "b04d13980475892c921e52643599811b451a09c3",
+      "draft": true,
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "pr": 151,
+      "head": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26",
+      "draft": true,
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "pr": 152,
+      "head": "1d3d5c891216c7e889006429fad49331dd5f3ffe",
+      "draft": true,
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "pr": 153,
+      "head": "f9e059c5779cbb933afa244435cf9dee64a85d86",
+      "draft": true,
+      "merged": false,
+      "state": "open"
+    }
+  ]
 }
