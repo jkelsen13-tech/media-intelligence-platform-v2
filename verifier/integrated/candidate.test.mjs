@@ -535,3 +535,81 @@ for(const first of ['release','revocation'])test('operation '+first+' first seri
   assert.equal(await f.admin('select count(*) from mip_identity.review_operation_bindings'),'0')
  }
 })
+
+async function factualFixture(t){
+ const f=await operationFixture(t)
+ await f.admin("alter table public.explanations add column assertion_id text,add column version int not null default 1,add column is_current boolean not null default true,add column source_ids uuid[] not null default '{}',add column review_status text not null default 'awaiting_review',add column state text not null default 'ok',add column supporting_passage text,add column falsification_condition text,add column archived_sources jsonb,add column rule_version text;")
+ await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/009_factual_enforcement.sql',import.meta.url),'utf8'))
+ // Disposable remote connection is outside worker scope. Never print connection strings.
+ const auditRole='mip_audit_'+randomUUID().replaceAll('-',''),password=randomUUID()
+ await f.admin('create role '+auditRole+' login password '+q(password)+';grant usage on schema mip_factual to '+auditRole+';grant insert on mip_factual.rejection_audit to '+auditRole+';create policy audit_sink on mip_factual.rejection_audit for insert to '+auditRole+' with check(true);')
+ await f.admin('insert into mip_factual.audit_connection values(true,'+q('host=127.0.0.1 port=5432 dbname='+f.db+' user='+auditRole+' password='+password+' connect_timeout=3 options=-csynchronous_commit=on')+');')
+ const explanationIds=[]
+ for(const x of f.explanations){
+  const id=randomUUID()
+  await f.admin('insert into public.explanations(id,payload,assertion_id,source_ids,supporting_passage,falsification_condition,archived_sources,rule_version) values('+[id,{},x.assertion_id].map(q).join(',')+',array['+[...new Set(f.evidence.map(e=>e.article_id))].map(q).join(',')+']::uuid[],'+[x.supporting_passage,x.falsification_condition,x.archived_sources,x.rule_version].map(q).join(',')+');')
+  explanationIds.push(id)
+ }
+ const approve=id=>raw(f.db,'set session authorization mip_factual_reviewer_v3;select mip_factual.review_publish('+q(id)+", 'synthetic-explicit-human-review-fixture');")
+ return {...f,explanationIds,approve}
+}
+test('D4 database rejects publication and autonomous audit survives full outer rollback without sensitive content',async t=>{
+ const f=await factualFixture(t),id=f.explanationIds[0]
+ await f.admin('update public.explanations set supporting_passage=null where id='+q(id))
+ await assert.rejects(f.admin("begin;insert into public.nodes values(gen_random_uuid(),'{\"rollback_marker\":true}');update public.explanations set review_status='published' where id="+q(id)+';commit;'),/mip_factual_rejected_provenance/)
+ assert.equal(await f.admin('select count(*) from mip_factual.rejection_audit'),'1')
+ assert.equal(await f.admin("select count(*) from public.nodes where payload ? 'rollback_marker'"),'0')
+ const audit=JSON.parse(await f.admin('select to_jsonb(a) from mip_factual.rejection_audit a'))
+ assert.equal(audit.explanation_id,id);assert.equal(audit.rule,'provenance')
+ assert.deepEqual(Object.keys(audit).sort(),['id','explanation_id','assertion_digest','attempted_transition','rule','recorded_at'].sort())
+ assert.equal(await f.admin("select count(*) from public.explanations where review_status='published'"),'0')
+})
+test('D4 requires separate human review, rejects provenance bypass and independently filters malformed published rows',async t=>{
+ const f=await factualFixture(t),id=f.explanationIds[0]
+ await assert.rejects(f.admin("update public.explanations set review_status='published' where id="+q(id)),/mip_factual_rejected_human_review/)
+ await f.approve(id)
+ assert.equal(await f.admin('select count(*) from mip_factual.reader_explanations where id='+q(id)),'1')
+ // Trusted fixture corrupts a row while only the write guard is disabled, proving independent reader exclusion.
+ await f.admin("alter table public.explanations disable trigger factual_publication_guard;update public.explanations set supporting_passage=null where id="+q(id)+";alter table public.explanations enable trigger factual_publication_guard;")
+ assert.equal(await f.admin('select count(*) from mip_factual.reader_explanations where id='+q(id)),'0')
+})
+for(const kind of ['corrected','withdrawn'])test('D5 '+kind+' source preserves history, renews review, skips withdrawn and leaves unrelated assertions unchanged',async t=>{
+ const f=await factualFixture(t),id=f.explanationIds[0],source=f.evidence[0].article_id
+ await f.approve(id)
+ const other=randomUUID(),withdrawn=randomUUID()
+ await f.admin('insert into public.explanations(id,payload,assertion_id,review_status) values('+q(other)+",'{}','synthetic-unrelated','awaiting_review');insert into public.explanations(id,payload,assertion_id,source_ids,review_status) values("+q(withdrawn)+",'{}','synthetic-already-withdrawn',array["+q(source)+"]::uuid[],'withdrawn');")
+ const before=await f.admin('select to_jsonb(e) from public.explanations e where id='+q(other))
+ const old=await f.admin('select to_jsonb(e) from public.explanations e where id='+q(id))
+ await f.admin('update public.articles set source_status='+q(kind)+' where id='+q(source))
+ const fresh=JSON.parse(await f.admin('select to_jsonb(e) from public.explanations e join mip_factual.source_change_links l on l.new_explanation_id=e.id where l.prior_explanation_id='+q(id)))
+ assert.equal(fresh.review_status,'awaiting_review');assert.equal(fresh.state,'source_'+kind);assert.equal(fresh.version,2)
+ assert.equal(await f.admin('select to_jsonb(e) from public.explanations e where id='+q(other)),before)
+ assert.equal(await f.admin('select count(*) from mip_factual.explanation_history where row_data='+q(JSON.parse(old))),'1')
+ assert.equal(await f.admin('select count(*) from mip_factual.source_changes where '+q(withdrawn)+'=any(skipped_withdrawn_ids)'),'1')
+ assert.equal(await f.admin('select count(*) from mip_factual.reader_explanations where id in ('+[id,fresh.id].map(q).join(',')+')'),'0')
+ await f.admin("update public.articles set source_status='active' where id="+q(source))
+ await assert.rejects(f.admin("update public.explanations set review_status='published',state='ok' where id="+q(fresh.id)),/mip_factual_rejected_human_review/)
+ await assert.rejects(f.approve(id),/mip_factual_fresh_version_required/)
+ await f.approve(fresh.id)
+ assert.equal(await f.admin('select count(*) from mip_factual.reader_explanations where id='+q(fresh.id)),'1')
+})
+test('D4 audit unavailability denies publication; audit and reviewer APIs reject worker and broad-role writes',async t=>{
+ const f=await factualFixture(t),id=f.explanationIds[0]
+ for(const role of [workerRole,producerRole,publisherRole,'anon','authenticated','service_role']){
+  for(const sql of ['select * from mip_factual.audit_connection','select * from mip_factual.rejection_audit',"select mip_factual.review_publish("+q(id)+",'forged')","update public.explanations set review_status='published'"])
+   await assert.rejects(raw(f.db,'set session authorization '+role+';'+sql),/mip_database_denied/)
+ }
+ await f.admin("update mip_factual.audit_connection set connection_string='host=127.0.0.1 port=1 connect_timeout=1'")
+ await assert.rejects(f.admin("update public.explanations set review_status='published' where id="+q(id)),/mip_audit_unavailable/)
+ assert.equal(await f.admin("select count(*) from public.explanations where review_status='published'"),'0')
+})
+test('D4 D5 integrates with operation-gated staging and disabled public release',async t=>{
+ const f=await factualFixture(t);await f.seed()
+ await assert.rejects(f.release(await f.review()),/mip_factual_release_ineligible/)
+ for(const id of f.explanationIds)await f.approve(id)
+ assert.equal(await f.release(await f.review()),'isolated_released')
+ await f.admin("update public.articles set source_status='corrected' where id="+q(f.evidence[0].article_id))
+ assert.equal(await f.admin('select count(*) from mip_factual.reader_explanations'),'0')
+ await assert.rejects(f.release(await f.review()),/mip_publication_|mip_factual_|mip_operation_/)
+ await assert.rejects(f.admin('select mip_identity.release_public()'),/mip_public_release_disabled/)
+})
