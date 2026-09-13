@@ -22,8 +22,8 @@ create table mip_hypothesis.revisions(
  unique(investigation_id,revision),
  unique(investigation_id,request_id),
  foreign key(investigation_id,predecessor_id) references mip_hypothesis.revisions(investigation_id,id),
- check(assessment->>'release_state'='private'),
- check(assessment->>'contract_version'='mip_hypothesis_assessment_v1')
+ check(assessment->>'release_state' is not distinct from 'private'),
+ check(assessment->>'contract_version' is not distinct from 'mip_hypothesis_assessment_v1')
 );
 alter table mip_hypothesis.revisions enable row level security;
 alter table mip_hypothesis.revisions force row level security;
@@ -40,6 +40,7 @@ returns jsonb language plpgsql security definer set search_path='' as $$
 declare old mip_hypothesis.revisions; head mip_hypothesis.revisions; access text; result jsonb; new_id uuid;
  args jsonb; n bigint; cutoff timestamptz; acquired timestamptz; item jsonb;
 begin
+ if current_setting('transaction_isolation')<>'read committed' then raise exception using errcode='25001',message='hypothesis requires read committed';end if;
  if p_user is null or p_investigation is null or p_request is null then
   raise exception using errcode='22023',message='missing assessment identity'; end if;
  -- Same fence used by the existing membership set_access RPC.
@@ -91,6 +92,7 @@ create function mip_hypothesis.read_history(p_user uuid,p_investigation uuid) re
 language plpgsql security definer set search_path='' as $$
 declare access text; result jsonb;
 begin
+ if current_setting('transaction_isolation')<>'read committed' then raise exception using errcode='25001',message='hypothesis requires read committed';end if;
  perform pg_advisory_xact_lock(hashtextextended('mip-workspace-access:'||p_investigation::text||':'||p_user::text,0));
  select access_role into access from evidence_pipeline.investigation_memberships
   where investigation_id=p_investigation and user_id=p_user;
