@@ -460,7 +460,7 @@ async function operationFixture(t){
 test('operation adapter denies actual/unbound records and synthetic review flags without evidence',async t=>{
  const f=await operationFixture(t),r=await f.review()
  assert.equal((await f.check(f.scopes[0])).reason,'missing_operation_evidence')
- await assert.rejects(f.release(r),/mip_operation_denied:missing_operation_evidence/)
+ await assert.rejects(f.release(r),/mip_operation_denied_missing_operation_evidence/)
  assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'0')
  assert.equal(await f.admin('select count(*) from mip_cutover_authority.approved_payloads'),'0')
  await f.evidence(f.scopes[0],{synthetic:false,authority_adapter:'unverified-source-register'})
@@ -506,7 +506,7 @@ test('permission withdrawal requires fresh decision and review; retired revision
  const f=await operationFixture(t);await f.seed();const r=await f.review();await f.stage(r)
  const s=f.scopes[0],old=(await f.check(s)).revision
  await f.admin('update mip_identity.operation_evidence_heads set active=false where scope='+q(s))
- await assert.rejects(f.release(r),/mip_operation_denied:revoked_operation_evidence/)
+ await assert.rejects(f.release(r),/mip_operation_denied_revoked_operation_evidence/)
  await assert.rejects(f.admin('update mip_identity.operation_evidence_heads set active=true where scope='+q(s)),/mip_identity_fresh_revision_required/)
  await f.evidence(s)
  await assert.rejects(f.release(r),/mip_operation_fresh_review_required/)
@@ -523,12 +523,12 @@ for(const first of ['release','revocation'])test('operation '+first+' first seri
   const revoking=f.admin("set application_name='mip_op_revoke';"+revokingSQL)
   await observedWait(f,'mip_op_revoke');await releasing;await revoking
   assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'1')
-  await assert.rejects(f.release(r),/mip_operation_denied:revoked_operation_evidence/)
+  await assert.rejects(f.release(r),/mip_operation_denied_revoked_operation_evidence/)
  }else{
   const revoking=f.admin("begin;set application_name='mip_op_revoke';"+revokingSQL+"select pg_sleep(2);commit;")
   await sleeping(f,'mip_op_revoke')
   const releasing=f.admin("begin;set application_name='mip_op_release';"+releasingSQL+"commit;")
-  const denied=assert.rejects(releasing,/mip_operation_denied:revoked_operation_evidence/)
+  const denied=assert.rejects(releasing,/mip_operation_denied_revoked_operation_evidence/)
   await observedWait(f,'mip_op_release');await revoking;await denied
   assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'0')
   assert.equal(await f.admin('select count(*) from mip_cutover_authority.approved_payloads'),'0')

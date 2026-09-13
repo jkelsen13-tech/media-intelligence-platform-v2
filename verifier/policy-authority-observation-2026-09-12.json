@@ -1,0 +1,624 @@
+{
+  "schema": "mip-policy-authority-observation-v1",
+  "observed_on": "2026-09-12",
+  "repository_baseline": "1c0b0c141a794e7e0c518444909c1c4c05d61ea8",
+  "status": "READ_ONLY_OBSERVATION_NOT_PERMISSION_OR_CUTOVER_APPROVAL",
+  "decision_owner": {
+    "designation": "MIP platform owner",
+    "source": "Owner instruction in this conversation: MIP — AUTHORITATIVE PRIVACY/RIGHTS SOURCES AND DECISION OWNER",
+    "scope": [
+      "internal privacy/publication policy",
+      "source admission",
+      "exceptions",
+      "eventual release authorization"
+    ],
+    "database_principal": null,
+    "external_identity_attestation": null,
+    "approval_signature": null,
+    "software_agent_authority": "Codex implements and recommends; Grok independently evaluates; neither approves eligibility or substitutes agreement for permission evidence"
+  },
+  "governing_files": [
+    {
+      "path": "docs/00_INDEX.md",
+      "ref": "1c0b0c141a794e7e0c518444909c1c4c05d61ea8"
+    },
+    {
+      "path": "docs/MIP_GOVERNING_WORK_PLAN_2026-09-08.md",
+      "ref": "1c0b0c141a794e7e0c518444909c1c4c05d61ea8"
+    },
+    {
+      "path": "docs/PHASE_2_D4_D5_DECISIONS.md",
+      "ref": "1c0b0c141a794e7e0c518444909c1c4c05d61ea8"
+    },
+    {
+      "path": "docs/PRIVATE_PUBLIC_HANDOFF_2026-09-08.md",
+      "ref": "1c0b0c141a794e7e0c518444909c1c4c05d61ea8"
+    },
+    {
+      "path": "docs/SEPARATE_CONTEXT_RIGHTS_2026-09-08.md",
+      "ref": "1c0b0c141a794e7e0c518444909c1c4c05d61ea8"
+    }
+  ],
+  "scope": {
+    "description": "Observed candidate comparison input selection, not a newly approved whole-platform cutover scope.",
+    "survivor_project": "qikvmopbtijoebdqosyq",
+    "legacy_project": "yhbwnrtlqbjtcrrlpbge",
+    "survivor_events": 1,
+    "survivor_articles": 3,
+    "legacy_events": 4,
+    "legacy_distinct_articles": 11,
+    "legacy_event_article_edges": 15,
+    "selection_reference": "supabase/qualification/comparison-generations/source-snapshot.sql at baseline",
+    "parity": "NOT EQUIVALENT; legacy-only materials not admitted by this observation",
+    "hash_caveat": "Full-row hashes are project-local observed versions, not original publisher content fingerprints; cross-project hash differences alone do not establish content changes."
+  },
+  "survivor_materials": [
+    {
+      "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "article_id": "575d4113-cbae-49af-94fc-e2858310ec4c",
+      "outlet": "Fox News",
+      "url": "https://www.foxnews.com/health/michigan-reports-deaths-rare-parasite-outbreak-sickened-more-than-11000",
+      "published_at": "2026-08-03 17:56:32+00",
+      "reader_state": "eligible",
+      "source_status": "active",
+      "retained_row_sha256": "f88dae7474703cf0b8d690177595a4e7efced8977ba8aed0ebecaec0fc5e29f9"
+    },
+    {
+      "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "article_id": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+      "outlet": "New York Times",
+      "url": "https://www.nytimes.com/2026/08/03/well/eat/cyclospora-deaths-michigan.html",
+      "published_at": "2026-08-03 16:55:49+00",
+      "reader_state": "eligible",
+      "source_status": "active",
+      "retained_row_sha256": "d9c0fa4a48d0ba03d31db5204376cea3d8575add506d9d23c3e96fd78358a81b"
+    },
+    {
+      "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "article_id": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+      "outlet": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2026/8/3/us-announces-first-two-deaths-from-cyclospora-outbreak?traffic_source=rss",
+      "published_at": "2026-08-03 18:35:09+00",
+      "reader_state": "eligible",
+      "source_status": "active",
+      "retained_row_sha256": "0077092ef162070d7a8699ea3e0e3481f1ac02b7969bb814d3e20f51aba5151c"
+    }
+  ],
+  "legacy_material_edges": [
+    {
+      "event_id": "3c1a5778-7fd1-4c6f-9f3f-f3a7d40531f8",
+      "article_id": "46dedf23-f7e0-4f88-b783-c4470d044e10",
+      "outlet": "aspenpublicradio.org",
+      "url": "https://www.aspenpublicradio.org/2026-08-19/how-indias-blocking-of-a-film-exposing-real-life-police-abuses-backfired",
+      "published_at": "2026-08-19 10:45:00+00",
+      "retained_row_sha256": "157038a15774eedbbd427d4609adf5b2451744db0cb49aa43ea8cd5bd2359d61"
+    },
+    {
+      "event_id": "3c1a5778-7fd1-4c6f-9f3f-f3a7d40531f8",
+      "article_id": "a87de488-a58f-4959-9823-cfb982071ab1",
+      "outlet": "wcsufm.org",
+      "url": "https://www.wcsufm.org/latest-from-npr/2026-08-19/how-indias-blocking-of-a-film-exposing-real-life-police-abuses-backfired",
+      "published_at": "2026-08-19 10:45:00+00",
+      "retained_row_sha256": "fd40ff8abfca8c5e750b84d07a3534457363d44e27ae870806b525b82561f802"
+    },
+    {
+      "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "article_id": "575d4113-cbae-49af-94fc-e2858310ec4c",
+      "outlet": "Fox News",
+      "url": "https://www.foxnews.com/health/michigan-reports-deaths-rare-parasite-outbreak-sickened-more-than-11000",
+      "published_at": "2026-08-03 17:56:32+00",
+      "retained_row_sha256": "3730136aeb3b608f549b6e16d41aeb9b64437b89084e2269d273a57ef14bfc60"
+    },
+    {
+      "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "article_id": "7b40ed41-39ad-42e0-baae-da888a77caf4",
+      "outlet": "New York Times",
+      "url": "https://www.nytimes.com/2026/08/03/well/eat/cyclospora-deaths-michigan.html",
+      "published_at": "2026-08-03 16:55:49+00",
+      "retained_row_sha256": "b4f1f108a0374068297c55e823bb9d2eb115fb6b5d8971e4cc5651ea2de5392a"
+    },
+    {
+      "event_id": "8e4f9812-0afa-4aad-ada8-6fb556da70d9",
+      "article_id": "cc68af15-2f7a-4d40-b689-cd95a9ee7830",
+      "outlet": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2026/8/3/us-announces-first-two-deaths-from-cyclospora-outbreak?traffic_source=rss",
+      "published_at": "2026-08-03 18:35:09+00",
+      "retained_row_sha256": "39c79bf2914168a93b4bf3c49ae967e6d875e91e37217c4b28fc33045a193fa4"
+    },
+    {
+      "event_id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+      "article_id": "042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29",
+      "outlet": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2026/7/23/trump-says-saudi-nuclear-pact-hinges-on-kingdom-joining-abraham-accords?traffic_source=rss",
+      "published_at": "2026-07-23 14:57:42+00",
+      "retained_row_sha256": "aa2081ac52deeb33eb01b014c62b26362e3b52bae14cfb85e65c520a5f8283d3"
+    },
+    {
+      "event_id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+      "article_id": "1cb6e00c-7bae-4172-ade2-1a0ea7688c15",
+      "outlet": "Times of India",
+      "url": "https://timesofindia.indiatimes.com/india/trump-says-saudi-nuclear-deal-hinges-on-kingdom-joining-abraham-accords-with-israel/articleshow/132581365.cms",
+      "published_at": "2026-07-23 12:29:56+00",
+      "retained_row_sha256": "c3ce5cb7e63f33223e4e32ea490a7fa13ee8b88d4422c6963995a4efd4b9abcc"
+    },
+    {
+      "event_id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+      "article_id": "96fbd272-9d0d-4a13-8cb0-374b62e1cd2a",
+      "outlet": "Al Jazeera",
+      "url": "https://www.aljazeera.com/video/newsfeed/2026/7/23/us-saudi-nuclear-deal-hinges-on-normalisation-with-israel?traffic_source=rss",
+      "published_at": "2026-07-23 21:41:25+00",
+      "retained_row_sha256": "e024d00dffeef8338ec31ba86a9d035985a0f14964b972d6ab4bb0d491009517"
+    },
+    {
+      "event_id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+      "article_id": "9d424bd0-1d82-4aaf-9ae1-de7776be5672",
+      "outlet": "Al Jazeera",
+      "url": "https://www.aljazeera.com/video/newsfeed/2026/7/24/what-are-the-abraham-accords-3?traffic_source=rss",
+      "published_at": "2026-07-24 03:08:49+00",
+      "retained_row_sha256": "f24b35f6ff5af1f54b3d3d80c69bdb1c3990cd843b5b62d15560269846631df0"
+    },
+    {
+      "event_id": "a4a7e528-eb72-47e3-8855-47d36f802074",
+      "article_id": "b7729d14-2d26-4bca-a425-fb4020504a69",
+      "outlet": "BBC",
+      "url": "https://www.bbc.co.uk/news/articles/cwye71yq8wwo?at_medium=RSS&amp;at_campaign=rss",
+      "published_at": "2026-07-23 17:58:02+00",
+      "retained_row_sha256": "86e49ecce4263fd7096bebe82eb9d7972956afc29714a17305e7b6f53a7954b2"
+    },
+    {
+      "event_id": "edccd286-6e04-428d-9317-a76f79394d25",
+      "article_id": "042cbab5-20d9-4cc1-bd7f-e25f8e9a6f29",
+      "outlet": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2026/7/23/trump-says-saudi-nuclear-pact-hinges-on-kingdom-joining-abraham-accords?traffic_source=rss",
+      "published_at": "2026-07-23 14:57:42+00",
+      "retained_row_sha256": "aa2081ac52deeb33eb01b014c62b26362e3b52bae14cfb85e65c520a5f8283d3"
+    },
+    {
+      "event_id": "edccd286-6e04-428d-9317-a76f79394d25",
+      "article_id": "17661244-b441-4e94-8c72-c8454329cf55",
+      "outlet": "South China Morning Post",
+      "url": "https://www.scmp.com/news/us/diplomacy/article/3361652/trump-throws-newly-signed-saudi-nuclear-deal-doubt-israel-recognition-demand?utm_source=rss_feed",
+      "published_at": "2026-07-23 22:01:11+00",
+      "retained_row_sha256": "3831203f61f9cc9f4ccfbd420ca1e774081ff83778de5af98ed652c5bcd90fdc"
+    },
+    {
+      "event_id": "edccd286-6e04-428d-9317-a76f79394d25",
+      "article_id": "1cb6e00c-7bae-4172-ade2-1a0ea7688c15",
+      "outlet": "Times of India",
+      "url": "https://timesofindia.indiatimes.com/india/trump-says-saudi-nuclear-deal-hinges-on-kingdom-joining-abraham-accords-with-israel/articleshow/132581365.cms",
+      "published_at": "2026-07-23 12:29:56+00",
+      "retained_row_sha256": "c3ce5cb7e63f33223e4e32ea490a7fa13ee8b88d4422c6963995a4efd4b9abcc"
+    },
+    {
+      "event_id": "edccd286-6e04-428d-9317-a76f79394d25",
+      "article_id": "96fbd272-9d0d-4a13-8cb0-374b62e1cd2a",
+      "outlet": "Al Jazeera",
+      "url": "https://www.aljazeera.com/video/newsfeed/2026/7/23/us-saudi-nuclear-deal-hinges-on-normalisation-with-israel?traffic_source=rss",
+      "published_at": "2026-07-23 21:41:25+00",
+      "retained_row_sha256": "e024d00dffeef8338ec31ba86a9d035985a0f14964b972d6ab4bb0d491009517"
+    },
+    {
+      "event_id": "edccd286-6e04-428d-9317-a76f79394d25",
+      "article_id": "b7729d14-2d26-4bca-a425-fb4020504a69",
+      "outlet": "BBC",
+      "url": "https://www.bbc.co.uk/news/articles/cwye71yq8wwo?at_medium=RSS&amp;at_campaign=rss",
+      "published_at": "2026-07-23 17:58:02+00",
+      "retained_row_sha256": "86e49ecce4263fd7096bebe82eb9d7972956afc29714a17305e7b6f53a7954b2"
+    }
+  ],
+  "inspected_ingestion_sources": [
+    {
+      "source_key": "bbc-news-rss",
+      "label": "BBC News RSS",
+      "source_url": "https://feeds.bbci.co.uk/news/rss.xml",
+      "source_type": "rss",
+      "active": false,
+      "allow_body_fetch": false,
+      "collection_enabled": false
+    },
+    {
+      "source_key": "doj-press-release-rss",
+      "label": "U.S. Department of Justice Press Releases RSS",
+      "source_url": "https://www.justice.gov/news/rss?type=press_release&m=1",
+      "source_type": "official_feed",
+      "active": false,
+      "allow_body_fetch": false,
+      "collection_enabled": false
+    },
+    {
+      "source_key": "gdelt-ap-original-url-discovery",
+      "label": "GDELT DOC 2.0 — AP News original-URL discovery",
+      "source_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=domainis%3Aapnews.com",
+      "source_type": "gdelt_doc_api",
+      "active": false,
+      "allow_body_fetch": false,
+      "collection_enabled": false
+    },
+    {
+      "source_key": "gdelt-bigquery-gkg-discovery",
+      "label": "GDELT BigQuery GKG original-URL discovery",
+      "source_url": "bigquery://gdelt-bq.gdeltv2.gkg_partitioned",
+      "source_type": "gdelt_bigquery",
+      "active": false,
+      "allow_body_fetch": false,
+      "collection_enabled": false
+    },
+    {
+      "source_key": "gdelt-public-news-discovery",
+      "label": "GDELT DOC 2.0 public-news discovery",
+      "source_url": "https://api.gdeltproject.org/api/v2/doc/doc",
+      "source_type": "gdelt_doc_api",
+      "active": false,
+      "allow_body_fetch": false,
+      "collection_enabled": false
+    },
+    {
+      "source_key": "gdelt-reuters-original-url-discovery",
+      "label": "GDELT DOC 2.0 — Reuters original-URL discovery",
+      "source_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=domainis%3Areuters.com",
+      "source_type": "gdelt_doc_api",
+      "active": false,
+      "allow_body_fetch": false,
+      "collection_enabled": false
+    },
+    {
+      "source_key": "npr-news-rss",
+      "label": "NPR News RSS",
+      "source_url": "https://feeds.npr.org/1001/rss.xml",
+      "source_type": "rss",
+      "active": false,
+      "allow_body_fetch": false,
+      "collection_enabled": false
+    }
+  ],
+  "spatial_policy_artifacts": [
+    {
+      "id": "e02aeeeb-d151-453f-b083-23cc6b8a468b",
+      "policy_family_code": "assertion_scope_key",
+      "policy_version": "v1",
+      "canonical_content": {
+        "scope": "public_event_spatial",
+        "version": "v1",
+        "policy_family": "assertion_scope_key",
+        "subject_requirement": "public.nodes.type=event",
+        "relationship_scope_key": "event_city_location",
+        "admitted_assertion_kind": "event_spatial_relationship"
+      },
+      "effective_at": "2026-09-03 01:25:08+00",
+      "supersedes_policy_artifact_id": null,
+      "created_by_principal_ref": "db_role:spatial_writer_runtime;run:4af51a5c-ea9b-42f3-8fa7-90f4d64161e0",
+      "owner_approval_receipt_verified": false
+    },
+    {
+      "id": "158892bb-8af6-4ce9-836e-8c841130018c",
+      "policy_family_code": "evidence_artifact_validation",
+      "policy_version": "v1",
+      "canonical_content": {
+        "scope": "internal_governance",
+        "version": "v1",
+        "policy_family": "evidence_artifact_validation",
+        "stable_key_patterns": [
+          "article:{uuid}",
+          "policy_document:{uuid}",
+          "source_record:{uuid}"
+        ],
+        "allowed_artifact_types": [
+          "article",
+          "policy_document",
+          "source_record"
+        ],
+        "native_row_requirement": "existing_public_table_row"
+      },
+      "effective_at": "2026-09-03 01:25:08+00",
+      "supersedes_policy_artifact_id": null,
+      "created_by_principal_ref": "db_role:spatial_writer_runtime;run:4a37fd6e-94ca-4cd6-9ef3-d4dc371a06c2",
+      "owner_approval_receipt_verified": false
+    },
+    {
+      "id": "23375bc9-47c0-494f-82cd-1cfea74918e8",
+      "policy_family_code": "evidence_capture",
+      "policy_version": "v0.2.3-r3-step3c-hosted-verification",
+      "canonical_content": {
+        "stage": "R3-Step3C",
+        "project": "qikvmopbtijoebdqosyq",
+        "purpose": "hosted spatial-runtime deployment verification row (single committed evidence record; never publicly projected)",
+        "evidence_of": "hosted TLS + runtime-role execution path proof",
+        "artifact_type": "deployment_verification",
+        "runtime_version": "0.2.3"
+      },
+      "effective_at": "2026-09-01 07:20:00+00",
+      "supersedes_policy_artifact_id": null,
+      "created_by_principal_ref": "db_role:spatial_writer_runtime;run:e7ff81ec-35f1-413a-8b0d-646345295e06",
+      "owner_approval_receipt_verified": false
+    },
+    {
+      "id": "1b660d9c-1687-406c-b837-82a6f41a8751",
+      "policy_family_code": "evidence_retention",
+      "policy_version": "v1",
+      "canonical_content": {
+        "scope": "internal_governance",
+        "version": "v1",
+        "retention": "governed_internal_indefinite_until_superseded",
+        "policy_family": "evidence_retention",
+        "allowed_classifications": [
+          "governed_internal",
+          "reference_only"
+        ],
+        "public_content_exposure": false
+      },
+      "effective_at": "2026-09-03 01:25:08+00",
+      "supersedes_policy_artifact_id": null,
+      "created_by_principal_ref": "db_role:spatial_writer_runtime;run:c158b050-c617-4bd0-ac01-d60bee1345e7",
+      "owner_approval_receipt_verified": false
+    },
+    {
+      "id": "1a6e31fc-8272-42ce-8291-5587a94b6eae",
+      "policy_family_code": "geometry_compatibility",
+      "policy_version": "v1",
+      "canonical_content": {
+        "crs": "EPSG:4326",
+        "version": "v1",
+        "policy_family": "geometry_compatibility",
+        "geometry_scope": "internal",
+        "public_precision_cap": "city",
+        "allowed_representation_kinds_for_v1_projection": [
+          "point",
+          "representative_point"
+        ]
+      },
+      "effective_at": "2026-09-03 01:25:08+00",
+      "supersedes_policy_artifact_id": null,
+      "created_by_principal_ref": "db_role:spatial_writer_runtime;run:e1d9e63e-ae16-49af-9539-929a6c795e69",
+      "owner_approval_receipt_verified": false
+    },
+    {
+      "id": "c84321d4-3d76-43e4-a8f5-b34d1aaf76b8",
+      "policy_family_code": "release_disclosure",
+      "policy_version": "v1",
+      "canonical_content": {
+        "scope": "public",
+        "version": "v1",
+        "geometry": {
+          "public_precision_cap": "city",
+          "forbidden_raw_exposure": true
+        },
+        "prohibited": [
+          "private_person_location",
+          "movement_history",
+          "internal_review_or_verification_records"
+        ],
+        "policy_family": "release_disclosure",
+        "release_requirement": "exactly_one_in_effect_released_decision_for_public_scope",
+        "event_subject_requirement": "public.nodes.type=event and pinned authority snapshot type=event",
+        "effective_review_requirement": "exactly_one_in_effect_operative_review_decision"
+      },
+      "effective_at": "2026-09-03 00:45:07+00",
+      "supersedes_policy_artifact_id": null,
+      "created_by_principal_ref": "db_role:spatial_writer_runtime;run:e8865b67-a8d8-43ca-8ac1-e26f22c91035",
+      "owner_approval_receipt_verified": false
+    },
+    {
+      "id": "25a37bcb-7141-401f-850a-c3cf888aa7df",
+      "policy_family_code": "review_authorization",
+      "policy_version": "v1",
+      "canonical_content": {
+        "scope": "internal_governance",
+        "version": "v1",
+        "policy_family": "review_authorization",
+        "gate_a_human_review": false,
+        "required_for_operative": [
+          "finite_valid_time_guard",
+          "primary_support_with_immutable_capture_ref"
+        ],
+        "allowed_review_modes_for_operative": [
+          "deterministic_verification"
+        ],
+        "support_disposition_for_projection": "operative"
+      },
+      "effective_at": "2026-09-03 01:25:08+00",
+      "supersedes_policy_artifact_id": null,
+      "created_by_principal_ref": "db_role:spatial_writer_runtime;run:82bc566f-5ddc-4b9a-ad78-39eec52df1a9",
+      "owner_approval_receipt_verified": false
+    },
+    {
+      "id": "8ef108dc-dee5-4985-ba05-48b030ac80d4",
+      "policy_family_code": "temporal_interval",
+      "policy_version": "v1",
+      "canonical_content": {
+        "version": "v1",
+        "policy_family": "temporal_interval",
+        "timezone_basis": "source_stated_local_converted_to_utc_guards",
+        "source_native_time_verbatim": true,
+        "valid_time_precision_allowed": [
+          "approximate",
+          "day",
+          "exact_timestamp",
+          "month",
+          "range",
+          "unknown",
+          "year"
+        ],
+        "finite_guard_required_for_operative": true
+      },
+      "effective_at": "2026-09-03 01:25:08+00",
+      "supersedes_policy_artifact_id": null,
+      "created_by_principal_ref": "db_role:spatial_writer_runtime;run:eacd8f56-88a2-474a-952c-100756859ac2",
+      "owner_approval_receipt_verified": false
+    }
+  ],
+  "current_backend_gate_observations": {
+    "guards": [
+      {
+        "table": "articles",
+        "enabled": "O",
+        "trigger": "articles_intercept_direct_arc_attachment"
+      },
+      {
+        "table": "articles",
+        "enabled": "O",
+        "trigger": "articles_invalidate_arc_membership_approvals"
+      },
+      {
+        "table": "articles",
+        "enabled": "O",
+        "trigger": "mip_pipeline_article_history"
+      },
+      {
+        "table": "articles",
+        "enabled": "O",
+        "trigger": "mip_pipeline_article_no_truncate"
+      }
+    ],
+    "private_rls": [
+      {
+        "rls": true,
+        "force": false,
+        "table": "investigation_access_events"
+      },
+      {
+        "rls": true,
+        "force": false,
+        "table": "investigation_evidence_check_reports"
+      },
+      {
+        "rls": true,
+        "force": false,
+        "table": "investigation_evidence_review_events"
+      },
+      {
+        "rls": true,
+        "force": false,
+        "table": "investigation_memberships"
+      },
+      {
+        "rls": true,
+        "force": false,
+        "table": "investigation_observations"
+      },
+      {
+        "rls": true,
+        "force": false,
+        "table": "investigation_review_receipts"
+      },
+      {
+        "rls": true,
+        "force": false,
+        "table": "investigation_versions"
+      },
+      {
+        "rls": true,
+        "force": false,
+        "table": "investigations"
+      }
+    ],
+    "reader_views": [
+      {
+        "name": "spatial_projection_v1",
+        "schema": "public",
+        "definition": " WITH in_effect_scopes AS (\n         SELECT s.id,\n            s.audience_code,\n            s.audience_version,\n            s.canonical_capabilities,\n            s.canonicalization_version,\n            s.content_hash_algorithm,\n            s.content_hash,\n            s.effective_at,\n            s.supersedes_audience_scope_id,\n            s.created_by_principal_ref,\n            s.created_at\n           FROM spatial.audience_scopes s\n          WHERE (s.effective_at <= now())\n        ), public_scopes AS (\n         SELECT s.id\n           FROM in_effect_scopes s\n          WHERE ((s.audience_code = 'public'::text) AND (NOT (EXISTS ( SELECT 1\n                   FROM in_effect_scopes newer\n                  WHERE (newer.supersedes_audience_scope_id = s.id)))))\n        ), public_scope_head AS (\n         SELECT\n                CASE\n                    WHEN (count(*) = 1) THEN (min((public_scopes.id)::text))::uuid\n                    ELSE NULL::uuid\n                END AS id\n           FROM public_scopes\n        ), current_revision AS (\n         SELECT r_1.id,\n            r_1.spatial_assertion_id,\n            r_1.revision_ordinal,\n            r_1.graph_node_authority_snapshot_id,\n            r_1.location_role,\n            r_1.relationship_qualifier,\n            r_1.canonical_place_id,\n            r_1.place_authority_snapshot_id,\n            r_1.evidence_precision,\n            r_1.internal_geometry_snapshot_id,\n            r_1.valid_time_precision,\n            r_1.source_native_time,\n            r_1.guard_start_utc,\n            r_1.guard_end_utc,\n            r_1.temporal_policy_artifact_id,\n            r_1.uncertainty_class,\n            r_1.uncertainty_note,\n            r_1.revision_fingerprint,\n            r_1.created_by_principal_ref,\n            r_1.created_at,\n            row_number() OVER (PARTITION BY r_1.spatial_assertion_id ORDER BY r_1.revision_ordinal DESC) AS rn\n           FROM spatial.assertion_revisions r_1\n        ), in_effect_review AS (\n         SELECT d.id,\n            d.assertion_revision_id,\n            d.support_disposition,\n            d.review_mode,\n            d.review_outcome_basis,\n            d.review_policy_artifact_id,\n            d.reviewed_by_principal_ref,\n            d.effective_at,\n            d.reason_code,\n            d.decision_fingerprint,\n            d.created_at\n           FROM spatial.review_decisions d\n          WHERE (d.effective_at <= now())\n        ), review_heads AS (\n         SELECT d.assertion_revision_id,\n            d.id,\n            d.support_disposition,\n            d.effective_at\n           FROM in_effect_review d\n          WHERE (NOT (EXISTS ( SELECT 1\n                   FROM in_effect_review n\n                  WHERE ((n.assertion_revision_id = d.assertion_revision_id) AND (ROW(n.effective_at, n.created_at) > ROW(d.effective_at, d.created_at))))))\n        ), review_head AS (\n         SELECT review_heads.assertion_revision_id,\n                CASE\n                    WHEN (count(*) = 1) THEN min(review_heads.support_disposition)\n                    ELSE NULL::text\n                END AS disposition,\n                CASE\n                    WHEN (count(*) = 1) THEN min(review_heads.effective_at)\n                    ELSE NULL::timestamp with time zone\n                END AS effective_at\n           FROM review_heads\n          GROUP BY review_heads.assertion_revision_id\n        ), in_effect_release AS (\n         SELECT d.id,\n            d.assertion_revision_id,\n            d.audience_scope_id,\n            d.release_policy_artifact_id,\n            d.decision_disposition,\n            d.predecessor_release_decision_id,\n            d.decided_by_principal_ref,\n            d.decided_at,\n            d.effective_at,\n            d.reason_code,\n            d.decision_fingerprint,\n            d.created_at\n           FROM spatial.release_decisions d\n          WHERE (d.effective_at <= now())\n        ), release_heads AS (\n         SELECT d.assertion_revision_id,\n            d.audience_scope_id,\n            d.id,\n            d.decision_disposition,\n            d.effective_at\n           FROM in_effect_release d\n          WHERE (NOT (EXISTS ( SELECT 1\n                   FROM in_effect_release n\n                  WHERE ((n.predecessor_release_decision_id = d.id) AND (n.assertion_revision_id = d.assertion_revision_id) AND (n.audience_scope_id = d.audience_scope_id)))))\n        ), release_head AS (\n         SELECT release_heads.assertion_revision_id,\n            release_heads.audience_scope_id,\n                CASE\n                    WHEN (count(*) = 1) THEN min(release_heads.decision_disposition)\n                    ELSE NULL::text\n                END AS disposition,\n                CASE\n                    WHEN (count(*) = 1) THEN min(release_heads.effective_at)\n                    ELSE NULL::timestamp with time zone\n                END AS effective_at\n           FROM release_heads\n          GROUP BY release_heads.assertion_revision_id, release_heads.audience_scope_id\n        )\n SELECT 'spatial_projection_v1'::text AS projection_contract_version,\n    a.id AS mip_object_id,\n    a.assertion_kind AS object_type,\n    a.graph_node_id AS subject_graph_node_id,\n    g.snapshot_hash AS subject_snapshot_hash,\n    r.id AS revision_id,\n    r.revision_ordinal,\n    sup.to_revision_id AS superseded_by_revision_id,\n    r.location_role AS spatial_role,\n    r.relationship_qualifier,\n    r.canonical_place_id,\n    p.snapshot_hash AS place_snapshot_hash,\n    r.evidence_precision AS precision_class,\n    r.valid_time_precision,\n    r.source_native_time,\n    r.guard_start_utc AS valid_from_utc,\n    r.guard_end_utc AS valid_to_utc,\n    r.created_at AS revision_known_at_utc,\n    rh.effective_at AS review_effective_at_utc,\n    rl.effective_at AS release_effective_at_utc,\n    rh.disposition AS review_state,\n    rl.disposition AS release_state,\n    r.uncertainty_class,\n    r.uncertainty_note,\n    NULL::text AS confidence,\n    'unsupported_by_governed_model'::text AS confidence_status,\n        CASE r.location_role\n            WHEN 'event'::text THEN 'event_location'::text\n            WHEN 'facility'::text THEN 'facility_location'::text\n            WHEN 'jurisdiction'::text THEN 'jurisdiction_area'::text\n            WHEN 'context'::text THEN 'context_location'::text\n            WHEN 'publisher'::text THEN 'publisher_location'::text\n            ELSE NULL::text\n        END AS display_hint,\n        CASE\n            WHEN (gs.id IS NULL) THEN NULL::jsonb\n            WHEN (gs.representation_kind <> ALL (ARRAY['point'::text, 'representative_point'::text])) THEN NULL::jsonb\n            WHEN (gs.canonical_geojson IS NULL) THEN NULL::jsonb\n            WHEN ((gs.canonical_geojson ->> 'type'::text) <> 'Point'::text) THEN NULL::jsonb\n            ELSE jsonb_build_object('type', 'Point', 'coordinates', jsonb_build_array((floor(((((gs.canonical_geojson -> 'coordinates'::text) ->> 0))::numeric / grid.step)) * grid.step), (floor(((((gs.canonical_geojson -> 'coordinates'::text) ->> 1))::numeric / grid.step)) * grid.step)))\n        END AS display_geometry,\n        CASE\n            WHEN (gs.id IS NULL) THEN 'absent_no_geometry_referenced'::text\n            WHEN (gs.representation_kind <> ALL (ARRAY['point'::text, 'representative_point'::text])) THEN 'omitted_unsupported_representation'::text\n            WHEN ((gs.canonical_geojson IS NULL) OR ((gs.canonical_geojson ->> 'type'::text) <> 'Point'::text)) THEN 'omitted_unsupported_representation'::text\n            ELSE 'coarsened_to_precision_class'::text\n        END AS geometry_status,\n    COALESCE(ev.evidence_refs, '[]'::jsonb) AS evidence_refs\n   FROM (((((((((((spatial.assertions a\n     JOIN nodes subj ON (((subj.id = a.graph_node_id) AND (subj.type = 'event'::text))))\n     JOIN current_revision r ON (((r.spatial_assertion_id = a.id) AND (r.rn = 1))))\n     JOIN spatial.graph_node_authority_snapshots g ON (((g.id = r.graph_node_authority_snapshot_id) AND ((g.node_payload ->> 'type'::text) = 'event'::text))))\n     JOIN review_head rh ON (((rh.assertion_revision_id = r.id) AND (rh.disposition = 'operative'::text))))\n     JOIN release_head rl ON (((rl.assertion_revision_id = r.id) AND (rl.disposition = 'released'::text))))\n     JOIN public_scope_head ph ON ((ph.id = rl.audience_scope_id)))\n     LEFT JOIN spatial.place_authority_snapshots p ON ((p.id = r.place_authority_snapshot_id)))\n     LEFT JOIN spatial.geometry_snapshots gs ON ((gs.id = r.internal_geometry_snapshot_id)))\n     LEFT JOIN LATERAL ( SELECT jsonb_agg(jsonb_build_object('evidence_snapshot_id', re.evidence_snapshot_id, 'evidence_role', re.evidence_role) ORDER BY re.evidence_role, re.evidence_snapshot_id) AS evidence_refs\n           FROM spatial.revision_evidence re\n          WHERE (re.assertion_revision_id = r.id)) ev ON (true))\n     JOIN LATERAL ( SELECT\n                CASE r.evidence_precision\n                    WHEN 'country'::text THEN 1.0\n                    WHEN 'region'::text THEN 0.5\n                    WHEN 'city'::text THEN 0.1\n                    ELSE NULL::numeric\n                END AS step) grid ON ((grid.step IS NOT NULL)))\n     LEFT JOIN LATERAL ( SELECT l.to_revision_id\n           FROM spatial.revision_lineage l\n          WHERE ((l.from_revision_id = r.id) AND (l.relationship_type = ANY (ARRAY['supersedes'::text, 'corrects'::text])))\n          ORDER BY l.created_at DESC\n         LIMIT 1) sup ON (true))\n  WHERE ((a.assertion_kind = 'event_spatial_relationship'::text) AND (r.evidence_precision = ANY (ARRAY['country'::text, 'region'::text, 'city'::text])));"
+      },
+      {
+        "name": "comparison_public",
+        "schema": "public",
+        "definition": " SELECT md5((id)::text) AS event_key,\n    canonical_title,\n    occurred_at_start,\n    occurred_at_end,\n    COALESCE(( SELECT jsonb_agg(article_row.article ORDER BY article_row.published_at, article_row.article_key) AS jsonb_agg\n           FROM ( SELECT a.published_at,\n                    md5((a.id)::text) AS article_key,\n                    jsonb_build_object('article_key', md5((a.id)::text), 'outlet', a.outlet, 'article_url', a.url, 'published_at', a.published_at, 'arc_slug', arc.slug, 'arc_title', arc.title, 'timeline_key', timeline.timeline_key, 'has_extracted_claim', (EXISTS ( SELECT 1\n                           FROM (article_claims existing_surface\n                             JOIN claims existing_claim ON ((existing_claim.id = existing_surface.claim_id)))\n                          WHERE ((existing_surface.article_id = a.id) AND (existing_surface.is_current = true) AND (existing_claim.event_id = e.id) AND (EXISTS ( SELECT 1\n                                   FROM mip_private.reader_claim_surfaces rs\n                                  WHERE (rs.id = existing_surface.id))) AND (existing_claim.status = 'active'::text) AND (existing_claim.rule_version = 'sc-v2-event-projection'::text))))) AS article\n                   FROM (((event_articles ea\n                     JOIN articles a ON ((a.id = ea.article_id)))\n                     LEFT JOIN story_arcs arc ON ((arc.id = a.arc_id)))\n                     LEFT JOIN LATERAL ( SELECT \"right\"(n.slug, 8) AS timeline_key\n                           FROM nodes n\n                          WHERE ((n.type = 'event'::text) AND (n.arc_id = a.arc_id))\n                          ORDER BY (n.slug ~~ 'evt-%'::text) DESC, n.slug\n                         LIMIT 1) timeline ON (true))\n                  WHERE ((ea.event_id = e.id) AND (a.reader_state = 'eligible'::text) AND (a.source_status = 'active'::text))) article_row), '[]'::jsonb) AS articles,\n    COALESCE(( SELECT jsonb_agg(claim_row.claim ORDER BY claim_row.canonical_text) AS jsonb_agg\n           FROM ( SELECT c.canonical_text,\n                    jsonb_build_object('claim_key', md5((c.id)::text), 'canonical_text', c.canonical_text, 'thin_extraction', c.thin_extraction, 'surfaces', COALESCE(( SELECT jsonb_agg(surface_row.surface ORDER BY surface_row.published_at, surface_row.article_key) AS jsonb_agg\n                           FROM ( SELECT a.published_at,\n                                    md5((a.id)::text) AS article_key,\n                                    jsonb_build_object('article_key', md5((a.id)::text), 'surface_text', ac.surface_text, 'loaded_language', ac.loaded_language, 'explanation', explanation.explanation) AS surface\n                                   FROM ((article_claims ac\n                                     JOIN articles a ON ((a.id = ac.article_id)))\n                                     LEFT JOIN LATERAL ( SELECT jsonb_build_object('supporting_passage', x.supporting_passage, 'rule_version', x.rule_version, 'provenance_class', x.provenance_class, 'reviewed_at', x.reviewed_at, 'review_status', x.review_status, 'state', x.state, 'remaining_uncertainty', x.remaining_uncertainty) AS explanation\n   FROM explanations x\n  WHERE ((x.assertion_type = 'claim_grouping'::text) AND (x.is_current = true) AND (x.review_status = 'published'::text) AND (x.state = 'ok'::text) AND (NULLIF(btrim(x.supporting_passage), ''::text) IS NOT NULL) AND (NULLIF(btrim(x.falsification_condition), ''::text) IS NOT NULL) AND (btrim(x.falsification_condition) !~~* 'missing:%'::text) AND (jsonb_typeof(x.archived_sources) = 'array'::text) AND (NOT jsonb_path_exists(x.archived_sources, '$[*]?(@.\"status\" == \"missing\")'::jsonpath)) AND (x.rule_version ~~ 'sc-v2-event-projection|%'::text) AND (x.assertion_id ~ (((('^sc:claim_grouping:'::text || (c.event_id)::text) || ':[0-9]+:'::text) || (ac.article_id)::text) || '$'::text)) AND (POSITION((format('Surface claim \"%s\" grouped under canonical \"%s\"'::text, ac.surface_text, c.canonical_text)) IN (COALESCE(x.supporting_passage, ''::text))) = 1))\n  ORDER BY x.recomputed_at DESC NULLS LAST, x.id\n LIMIT 1) explanation ON (true))\n                                  WHERE ((ac.claim_id = c.id) AND (ac.is_current = true) AND (EXISTS ( SELECT 1\n   FROM mip_private.reader_claim_surfaces rs\n  WHERE (rs.id = ac.id))) AND (a.reader_state = 'eligible'::text) AND (a.source_status = 'active'::text))) surface_row), '[]'::jsonb), 'evidence_links', COALESCE(( SELECT jsonb_agg(jsonb_build_object('evidence_url', cel.evidence_url, 'evidence_type', cel.evidence_type) ORDER BY cel.evidence_type, cel.evidence_url) AS jsonb_agg\n                           FROM claim_evidence_links cel\n                          WHERE ((cel.claim_id = c.id) AND (EXISTS ( SELECT 1\n                                   FROM mip_private.reader_claim_surfaces rs\n                                  WHERE ((rs.claim_id = c.id) AND (rs.article_id = cel.linked_from_article_id)))))), '[]'::jsonb), 'corrections', COALESCE(( SELECT jsonb_agg(jsonb_build_object('correction_text', cc.correction_text, 'occurred_at', cc.occurred_at) ORDER BY cc.occurred_at) AS jsonb_agg\n                           FROM claim_corrections cc\n                          WHERE ((cc.claim_id = c.id) AND (EXISTS ( SELECT 1\n                                   FROM (articles ca\n                                     JOIN event_articles cea ON ((cea.article_id = ca.id)))\n                                  WHERE ((ca.id = cc.correcting_article_id) AND (cea.event_id = c.event_id) AND (ca.reader_state = 'eligible'::text) AND (ca.source_status = 'active'::text)))))), '[]'::jsonb)) AS claim\n                   FROM claims c\n                  WHERE ((c.event_id = e.id) AND (c.status = 'active'::text) AND (c.rule_version = 'sc-v2-event-projection'::text) AND (EXISTS ( SELECT 1\n                           FROM mip_private.reader_claim_surfaces rs\n                          WHERE (rs.claim_id = c.id))))) claim_row), '[]'::jsonb) AS claims\n   FROM events e\n  WHERE ((status <> 'timeline_only'::text) AND (comparison_validation_state = 'approved'::text) AND (EXISTS ( SELECT 1\n           FROM (event_articles ea\n             JOIN articles a ON ((a.id = ea.article_id)))\n          WHERE ((ea.event_id = e.id) AND (a.reader_state = 'eligible'::text) AND (a.source_status = 'active'::text))\n          GROUP BY ea.event_id\n         HAVING (count(DISTINCT a.outlet) >= 2))));"
+      },
+      {
+        "name": "reader_claim_surfaces",
+        "schema": "mip_private",
+        "definition": " SELECT ac.id,\n    ac.claim_id,\n    ac.article_id\n   FROM ((((article_claims ac\n     JOIN claims c ON ((c.id = ac.claim_id)))\n     JOIN events e ON ((e.id = c.event_id)))\n     JOIN articles a ON ((a.id = ac.article_id)))\n     JOIN event_articles ea ON (((ea.event_id = e.id) AND (ea.article_id = a.id))))\n  WHERE ((ac.is_current = true) AND (ac.auditability_state = 'verified_retained_source'::text) AND (c.status = 'active'::text) AND (c.rule_version = 'sc-v2-event-projection'::text) AND (e.comparison_validation_state = 'approved'::text) AND (e.status <> 'timeline_only'::text) AND (a.reader_state = 'eligible'::text) AND (a.source_status = 'active'::text) AND (( SELECT count(DISTINCT member.outlet) AS count\n           FROM (event_articles membership\n             JOIN articles member ON ((member.id = membership.article_id)))\n          WHERE ((membership.event_id = e.id) AND (member.reader_state = 'eligible'::text) AND (member.source_status = 'active'::text))) >= 2));"
+      }
+    ]
+  },
+  "permission_dimensions": {
+    "operations": [
+      "ingestion",
+      "retention",
+      "analysis",
+      "excerpt_display",
+      "full_content_display",
+      "redistribution",
+      "external_model_disclosure"
+    ],
+    "audiences": [
+      "isolated_internal_review",
+      "public",
+      "external_model_provider"
+    ],
+    "default": "DENY unsupported operation; audiences are technical query dimensions, not approvals or new policy classifications",
+    "actual_positive_grants_seeded": 0
+  },
+  "terms_observations": [
+    {
+      "publisher": "Fox News",
+      "url": "https://www.foxnews.com/terms-of-use",
+      "version": "Last revised 2025-08-27",
+      "result": "Exact MIP reuse permission not established",
+      "approval_record": null
+    },
+    {
+      "publisher": "Al Jazeera",
+      "url": "https://terms.aljazeera.net/",
+      "version": null,
+      "sections": [
+        "6",
+        "7"
+      ],
+      "result": "Personal/noncommercial scope and permission restrictions; exact MIP operations not cleared; effective date unverified",
+      "approval_record": null
+    },
+    {
+      "publisher": "The New York Times",
+      "url": "https://help.nytimes.com/hc/en-us/articles/115014893428-Terms-of-Service",
+      "version": null,
+      "result": "Official page retrieval failed; no proxy text used as authority",
+      "approval_record": null
+    },
+    {
+      "publisher": "BBC",
+      "url": "https://www.bbc.co.uk/usingthebbc/terms/",
+      "version": null,
+      "archive_reference": "https://downloads.bbc.co.uk/usingthebbc/bbc_terms_of_use_31March2022english.pdf",
+      "result": "Current terms retrieval blocked; 2022 archive not established as applicable 2026 product version",
+      "approval_record": null
+    },
+    {
+      "publisher": "Times of India",
+      "url": "https://timesofindia.indiatimes.com/rss_index.cms",
+      "additional_reference": "https://timesofindia.indiatimes.com/rss.cms",
+      "version": null,
+      "result": "RSS product restrictions inspected; exact MIP reuse permission and applicable dated version unverified",
+      "approval_record": null
+    },
+    {
+      "publisher": "South China Morning Post",
+      "url": "https://www.scmp.com/terms-conditions",
+      "version": "Last updated 2026-03-12",
+      "sections": [
+        "3.2.1",
+        "3.2.2",
+        "3.3"
+      ],
+      "result": "Automated extraction and AI-related uses require particular attention to express permission; exact rights and upstream chain not cleared",
+      "approval_record": null
+    },
+    {
+      "publisher": "Aspen Public Radio / WCSU-FM",
+      "urls": [
+        "https://www.aspenpublicradio.org/terms-of-use",
+        "https://www.wcsufm.org/terms-of-use",
+        "https://www.npr.org/about-npr/179876898/terms-of-use"
+      ],
+      "version": null,
+      "result": "Primary terms retrieval unavailable; local/upstream syndication permission chain unverified; URL path alone does not establish rights or independent reporting",
+      "approval_record": null
+    }
+  ],
+  "limits": [
+    "No article body or full publisher terms copied into this artifact.",
+    "No ingestion/public-reader flag is treated as legal permission.",
+    "No external publisher permission, consent, authoritative classification or review approval invented.",
+    "No production database writes or local project-file storage.",
+    "No actual adapter qualification; only synthetic positive mechanism tests.",
+    "Metadata inventory is bounded to inspected projects/relations, not proof no other permission evidence exists."
+  ]
+}

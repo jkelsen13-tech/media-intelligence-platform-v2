@@ -82,10 +82,10 @@ begin
  'material_version',comparison_qualification.argument_digest(member),'operation',op,'audience','isolated_internal_review','domain',domain);
  checked:=mip_identity.operation_check(scope);
  if checked->'allowed' is distinct from 'true'::jsonb then
- raise exception 'mip_operation_denied:%',checked->>'reason' using detail=checked::text;end if;
+ raise exception 'mip_operation_denied_%',checked->>'reason' using detail=checked::text;end if;
  revisions:=array_append(revisions,(checked->>'revision')::uuid);
  end loop;end loop;end loop;
- if cardinality(revisions)=0 then raise exception 'mip_operation_denied:missing_material_closure';end if;
+ if cardinality(revisions)=0 then raise exception 'mip_operation_denied_missing_material_closure';end if;
  select array_agg(distinct r order by r) into revisions from unnest(revisions) r;
  select decision_revisions into prior from mip_identity.review_operation_bindings where review_revision=p_revision;
  if found and prior is distinct from revisions then raise exception 'mip_operation_fresh_review_required';end if;
