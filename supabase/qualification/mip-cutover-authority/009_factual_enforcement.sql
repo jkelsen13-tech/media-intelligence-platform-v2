@@ -97,7 +97,7 @@ create function mip_factual.review_publish(p_id uuid,p_approval text) returns vo
 language plpgsql security definer set search_path='' as $$
 declare x public.explanations;
 begin
- perform 1 from mip_identity.collector_fence where id for share;
+ perform 1 from mip_identity.collector_fence where id for update;
  perform 1 from mip_cutover_authority.publication_fence where id for update;
  select * into strict x from public.explanations where id=p_id for update;
  if not x.is_current or x.review_status='withdrawn' then raise exception 'mip_factual_fresh_version_required';end if;
@@ -198,6 +198,7 @@ alter view mip_factual.reader_explanations owner to mip_factual_owner_v3;
 grant usage on schema mip_factual to mip_factual_reviewer_v3,mip_publication_owner_v2;
 grant execute on function mip_factual.review_publish(uuid,text) to mip_factual_reviewer_v3;
 grant select on mip_factual.reader_explanations to mip_publication_owner_v2;
+grant execute on function mip_factual.source_hash(uuid[]),mip_factual.record_hash(jsonb) to mip_publication_owner_v2;
 alter function mip_identity.validate_review(uuid) owner to mip_publication_owner_v2;
 revoke all on function mip_identity.validate_review(uuid) from public,anon,authenticated,service_role;
 commit;

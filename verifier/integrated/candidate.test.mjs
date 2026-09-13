@@ -544,14 +544,14 @@ async function factualFixture(t){
  const auditRole='mip_audit_'+randomUUID().replaceAll('-',''),password=randomUUID()
  await f.admin('create role '+auditRole+' login password '+q(password)+';grant usage on schema mip_factual to '+auditRole+';grant insert on mip_factual.rejection_audit to '+auditRole+';create policy audit_sink on mip_factual.rejection_audit for insert to '+auditRole+' with check(true);')
  await f.admin('insert into mip_factual.audit_connection values(true,'+q('host=127.0.0.1 port=5432 dbname='+f.db+' user='+auditRole+' password='+password+' connect_timeout=3 options=-csynchronous_commit=on')+');')
- const explanationIds=[]
+ const explanationIds=[],sourceIds=[...new Set(f.data.input.eventInputs.flatMap(e=>e.members.map(m=>m.article.id)))]
  for(const x of f.explanations){
   const id=randomUUID()
-  await f.admin('insert into public.explanations(id,payload,assertion_id,source_ids,supporting_passage,falsification_condition,archived_sources,rule_version) values('+[id,{},x.assertion_id].map(q).join(',')+',array['+[...new Set(f.evidence.map(e=>e.article_id))].map(q).join(',')+']::uuid[],'+[x.supporting_passage,x.falsification_condition,x.archived_sources,x.rule_version].map(q).join(',')+');')
+  await f.admin('insert into public.explanations(id,payload,assertion_id,source_ids,supporting_passage,falsification_condition,archived_sources,rule_version) values('+[id,{},x.assertion_id].map(q).join(',')+',array['+sourceIds.map(q).join(',')+']::uuid[],'+[x.supporting_passage,x.falsification_condition,x.archived_sources,x.rule_version].map(q).join(',')+');')
   explanationIds.push(id)
  }
  const approve=id=>raw(f.db,'set session authorization mip_factual_reviewer_v3;select mip_factual.review_publish('+q(id)+", 'synthetic-explicit-human-review-fixture');")
- return {...f,explanationIds,approve}
+ return {...f,explanationIds,sourceIds,approve}
 }
 test('D4 database rejects publication and autonomous audit survives full outer rollback without sensitive content',async t=>{
  const f=await factualFixture(t),id=f.explanationIds[0]
@@ -574,7 +574,7 @@ test('D4 requires separate human review, rejects provenance bypass and independe
  assert.equal(await f.admin('select count(*) from mip_factual.reader_explanations where id='+q(id)),'0')
 })
 for(const kind of ['corrected','withdrawn'])test('D5 '+kind+' source preserves history, renews review, skips withdrawn and leaves unrelated assertions unchanged',async t=>{
- const f=await factualFixture(t),id=f.explanationIds[0],source=f.evidence[0].article_id
+ const f=await factualFixture(t),id=f.explanationIds[0],source=f.sourceIds[0]
  await f.approve(id)
  const other=randomUUID(),withdrawn=randomUUID()
  await f.admin('insert into public.explanations(id,payload,assertion_id,review_status) values('+q(other)+",'{}','synthetic-unrelated','awaiting_review');insert into public.explanations(id,payload,assertion_id,source_ids,review_status) values("+q(withdrawn)+",'{}','synthetic-already-withdrawn',array["+q(source)+"]::uuid[],'withdrawn');")
@@ -608,8 +608,38 @@ test('D4 D5 integrates with operation-gated staging and disabled public release'
  await assert.rejects(f.release(await f.review()),/mip_factual_release_ineligible/)
  for(const id of f.explanationIds)await f.approve(id)
  assert.equal(await f.release(await f.review()),'isolated_released')
- await f.admin("update public.articles set source_status='corrected' where id="+q(f.evidence[0].article_id))
+ await f.admin("update public.articles set source_status='corrected' where id="+q(f.sourceIds[0]))
  assert.equal(await f.admin('select count(*) from mip_factual.reader_explanations'),'0')
  await assert.rejects(f.release(await f.review()),/mip_publication_|mip_factual_|mip_operation_/)
  await assert.rejects(f.admin('select mip_identity.release_public()'),/mip_public_release_disabled/)
+})
+
+for(const first of ['review','source'])test('D5 '+first+' first serializes human publication and corrected-source propagation',async t=>{
+ const f=await factualFixture(t),id=f.explanationIds[0],source=f.sourceIds[0]
+ const reviewSQL='set local role mip_factual_reviewer_v3;select mip_factual.review_publish('+q(id)+",'synthetic-race-review');"
+ const sourceSQL="update public.articles set source_status='corrected' where id="+q(source)+';'
+ if(first==='review'){
+  const reviewing=f.admin("begin;set application_name='mip_factual_review';"+reviewSQL+"select pg_sleep(2);commit;")
+  await sleeping(f,'mip_factual_review')
+  const changing=f.admin("set application_name='mip_factual_source';"+sourceSQL)
+  await observedWait(f,'mip_factual_source');await reviewing;await changing
+  assert.equal(await f.admin('select count(*) from mip_factual.reader_explanations'),'0')
+  assert.equal(await f.admin('select count(*) from mip_factual.source_changes'),'1')
+ }else{
+  const changing=f.admin("begin;set application_name='mip_factual_source';"+sourceSQL+"select pg_sleep(2);commit;")
+  await sleeping(f,'mip_factual_source')
+  const reviewing=f.admin("begin;set application_name='mip_factual_review';"+reviewSQL+"commit;")
+  const denied=assert.rejects(reviewing,/mip_factual_fresh_version_required/)
+  await observedWait(f,'mip_factual_review');await changing;await denied
+  assert.equal(await f.admin('select count(*) from mip_factual.reader_explanations'),'0')
+ }
+})
+test('D5 rolled-back source change leaves source, assertions and source-change audit unchanged',async t=>{
+ const f=await factualFixture(t),id=f.explanationIds[0],source=f.sourceIds[0]
+ await f.approve(id)
+ const before=await f.admin('select to_jsonb(e) from public.explanations e where id='+q(id))
+ await f.admin("begin;update public.articles set source_status='withdrawn' where id="+q(source)+";rollback;")
+ assert.equal(await f.admin('select to_jsonb(e) from public.explanations e where id='+q(id)),before)
+ assert.equal(await f.admin('select count(*) from mip_factual.source_changes'),'0')
+ assert.equal(await f.admin('select count(*) from mip_factual.reader_explanations where id='+q(id)),'1')
 })
