@@ -647,7 +647,11 @@ test('D5 rolled-back source change leaves source, assertions and source-change a
 test('permission parser mechanism is synthetic and never retrieves real material in ordinary CI',async()=>{
  const {execFile}=await import('node:child_process')
  const result=await new Promise((resolve,reject)=>execFile('python3',['-I','-B','verifier/integrated/captureCcSection.py','--self-test'],{maxBuffer:4096},(err,out)=>err?reject(Error('synthetic_parser_failed')):resolve(JSON.parse(out))))
- assert.deepEqual(result,{synthetic_parser_tests:3,pass:3})
+ assert.equal(result.synthetic_parser_tests,27)
+ assert.equal(result.pass,27)
+ assert.equal(result.legacy_reproduced,true)
+ assert.equal(result.legacy_error,'selection_section_marker_detected')
+ assert.equal(result.network_requests,0)
 })
 test('real permission reader denies synthetic substitution and protects its authoritative records',async t=>{
  const f=await fixture(t)
@@ -658,7 +662,7 @@ test('real permission reader denies synthetic substitution and protects its auth
  const read=()=>f.admin('select mip_identity.operation_check('+q(scope)+')').then(JSON.parse)
  assert.equal((await read()).reason,'missing_capture_binding')
  // Explicitly synthetic metadata. These records cannot qualify the real material.
- await f.admin('insert into mip_identity.real_permission_captures values('+[batch,'runtime-a',material,scope.source_version,scope.material_version,1,'https://creativecommons.org/licenses/by/4.0/legalcode.en','heading-range-dom-text-v1','2026-01-01','1'.repeat(64),'2'.repeat(64)].map(q).join(',')+');insert into mip_identity.real_batch_states values('+q(batch)+",false,'bound');")
+ await f.admin('insert into mip_identity.real_permission_captures values('+[batch,'runtime-a',material,scope.source_version,scope.material_version,1,'https://creativecommons.org/licenses/by/4.0/legalcode.en','heading-range-dom-text-v2','2026-01-01','1'.repeat(64),'2'.repeat(64)].map(q).join(',')+');insert into mip_identity.real_batch_states values('+q(batch)+",false,'bound');")
  for(const [kind,url] of [['policies','https://creativecommons.org/policies/'],['terms','https://creativecommons.org/terms/'],['cc0','https://creativecommons.org/publicdomain/zero/1.0/legalcode.en']]){
   assert.equal((await read()).reason,'missing_primary_evidence')
   await f.admin('insert into mip_identity.real_permission_documents values('+[batch,kind,url,'3'.repeat(64),'4'.repeat(64),'2026-01-01',null].map(q).join(',')+');')

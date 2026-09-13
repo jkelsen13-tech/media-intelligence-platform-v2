@@ -7,7 +7,7 @@ create table mip_identity.real_permission_captures(
  capture_receipt_hash text not null,admission_record_hash text not null,
  check(source_url='https://creativecommons.org/licenses/by/4.0/legalcode.en'),
  check(material_ref='https://creativecommons.org/licenses/by/4.0/legalcode.en#section-1-definitions'),
- check(source_version='4.0-English-Section-1'),check(selection_method='heading-range-dom-text-v1')
+ check(source_version='4.0-English-Section-1'),check(selection_method='heading-range-dom-text-v2')
 );
 create table mip_identity.real_permission_documents(
  batch_id text not null references mip_identity.real_permission_captures,

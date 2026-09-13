@@ -5,16 +5,20 @@ def fail(code): raise RuntimeError(code)
 def digest(b): return hashlib.sha256(b).hexdigest()
 def norm(s): return re.sub(r'\s+',' ',unicodedata.normalize('NFC',s).replace('\xa0',' ')).strip()
 class Node:
- def __init__(self,tag='',attrs=()): self.tag=tag;self.attrs=dict(attrs);self.children=[]
+ def __init__(self,tag='',attrs=()): self.tag=tag;self.attrs=dict(attrs);self.children=[];self.parent=None;self.closed=False;self.bad_close=False
  def text(self): return ''.join(x if isinstance(x,str) else x.text() for x in self.children)
 class Tree(HTMLParser):
  def __init__(self): super().__init__(convert_charrefs=True);self.root=Node();self.stack=[self.root]
  def handle_starttag(self,t,a):
-  n=Node(t,a);self.stack[-1].children.append(n)
+  n=Node(t,a);n.parent=self.stack[-1];self.stack[-1].children.append(n)
   if t not in ('area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'): self.stack.append(n)
+  else:n.closed=True
  def handle_endtag(self,t):
   for i in range(len(self.stack)-1,0,-1):
-   if self.stack[i].tag==t: self.stack=self.stack[:i];return
+   if self.stack[i].tag==t:
+    self.stack[i].closed=True
+    if i!=len(self.stack)-1:self.stack[i].bad_close=True
+    self.stack=self.stack[:i];return
  def handle_data(self,d): self.stack[-1].children.append(d)
 def nodes(n):
  yield n
@@ -22,40 +26,67 @@ def nodes(n):
   if isinstance(c,Node): yield from nodes(c)
 def tree(s):
  p=Tree();p.feed(s);p.close();return p.root
+def excluded(n):
+ while n is not None:
+  tokens=set((n.attrs.get('class','')+' '+n.attrs.get('id','')).lower().split())
+  if n.tag in ('nav','header','footer') or n.attrs.get('role')=='navigation' or tokens.intersection({'toc','table-of-contents','table_of_contents'}):return True
+  n=n.parent
+ return False
+def below(n,ancestor):
+ while n is not None:
+  if n is ancestor:return True
+  n=n.parent
+ return False
 def extract(s):
  root=tree(s);allnodes=list(nodes(root))
  titles=[norm(n.text()) for n in allnodes if n.tag=='title']
- if len(titles)!=1 or 'Attribution 4.0 International' not in titles[0]: fail('material_title_mismatch')
- heads=[n for n in allnodes if n.tag in ('h1','h2','h3','h4','h5','h6')]
- start=[n for n in heads if re.fullmatch(r'Section\s+1\s*[.\-–—:]?\s*Definitions\.?',norm(n.text()),re.I)]
- end=[n for n in heads if re.fullmatch(r'Section\s+2\s*[.\-–—:]?\s*Scope\.?',norm(n.text()),re.I)]
- if len(start)!=1 or len(end)!=1: fail('selection_boundary_mismatch')
- active=False;finished=False;parts=[];forbidden=False
+ if len(titles)!=1 or 'Attribution 4.0 International' not in titles[0]:fail('material_title_mismatch')
+ heads=[n for n in allnodes if n.tag in ('h1','h2','h3','h4','h5','h6') and not excluded(n)]
+ patterns=[r'Section\s+1\s*[.\-–—:]\s*Definitions\.?',r'Section\s+2\s*[.\-–—:]\s*Scope\.?']
+ bounds=[]
+ for number,pattern in enumerate(patterns,1):
+  candidates=[n for n in heads if re.match(r'Section\s+'+str(number)+r'\b',norm(n.text()),re.I)]
+  if not candidates:fail('selection_missing_section_'+str(number))
+  if len(candidates)!=1:fail('selection_duplicate_heading')
+  if not re.fullmatch(pattern,norm(candidates[0].text()),re.I):fail('selection_malformed_heading')
+  bounds.append(candidates[0])
+ start,end=bounds
+ i,j=allnodes.index(start),allnodes.index(end)
+ if i>=j:fail('selection_boundary_order')
+ if start.tag!=end.tag:fail('selection_heading_level_mismatch')
+ selected_nodes=allnodes[i:j]
+ if any(n in heads and n is not start for n in selected_nodes):fail('selection_unexpected_heading')
+ lists=[n for n in selected_nodes if n.tag=='ol' and not any(below(n,p) and p is not n and p.tag=='ol' for p in selected_nodes)]
+ if len(lists)!=1:fail('selection_definition_structure')
+ definitions=lists[0]
+ children=[n for n in definitions.children if isinstance(n,Node)]
+ if len(children)!=11 or any(n.tag!='li' for n in children) or any(isinstance(n,str) and norm(n) for n in definitions.children):fail('selection_definition_count')
+ allowed={'h1','h2','h3','h4','h5','h6','div','section','article','main','ol','ul','li','p','a','span','strong','em','b','i','u','sup','sub','br','abbr','cite','code','small'}
+ if any(n.tag not in allowed or excluded(n) for n in selected_nodes):fail('selection_forbidden_element')
+ if any(n.bad_close or not n.closed for n in selected_nodes if n.tag!='br'):fail('selection_malformed_structure')
+ # Actual heading nodes delimit the traversal. Cross-references, URL and @ text
+ # have no boundary semantics. No strings from beyond end are retained.
+ active=False;finished=False;parts=[]
  def walk(n):
-  nonlocal active,finished,forbidden
-  if n is start[0]: active=True
-  if n is end[0]:
-   if not active: fail('selection_boundary_order')
-   active=False;finished=True;return
-  if active and n.tag in ('nav','header','footer','script','style','img','svg','form','address'): forbidden=True
-  if n.tag in ('script','style','nav','header','footer'): return
-  block=n.tag in ('h1','h2','h3','h4','p','li','ol','ul','div','br')
+  nonlocal active,finished
+  if n is start:active=True
+  if n is end:active=False;finished=True;return
+  block=n.tag in ('h1','h2','h3','h4','h5','h6','p','li','ol','ul','div','section','br')
   if active and block:parts.append('\n')
   for c in n.children:
-   if isinstance(c,Node): walk(c)
-   elif active:parts.append(c)
+   if isinstance(c,Node):walk(c)
+   elif active:
+    if norm(c) and not (below(n,start) or below(n,definitions)):fail('selection_unexpected_text')
+    parts.append(c)
   if active and block:parts.append('\n')
  walk(root)
- if not finished or forbidden: fail('selection_forbidden_or_unterminated')
+ if not finished:fail('selection_unterminated')
  raw=''.join(parts);selected=norm(raw)
  if not selected:fail('selection_empty')
- if re.search(r'Section\s+2\b',selected):fail('selection_section_marker_detected')
- if '@' in selected:fail('selection_contact_marker_detected')
- if re.search(r'https?://',selected):fail('selection_url_marker_detected')
- return selected,{'method':'heading-range-dom-text-v1','start':'Section 1: Definitions','end_exclusive':'Section 2: Scope','normalization':'HTML entities decoded; block boundaries to whitespace; NFC; NBSP to space; whitespace collapsed; trimmed; UTF-8, no trailing newline; generated list markers omitted','raw_selected_text_sha256':digest(raw.encode()),'bytes':len(selected.encode()),'sha256':digest(selected.encode()),'forbidden_elements':False}
+ return selected,{'method':'heading-range-dom-text-v2','start':'Section 1: Definitions','end_exclusive':'Section 2: Scope','definition_count':11,'normalization':'HTML entities decoded; block boundaries to whitespace; NFC; NBSP to space; whitespace collapsed; trimmed; UTF-8, no trailing newline; generated list markers omitted','raw_selected_text_sha256':digest(raw.encode()),'bytes':len(selected.encode()),'sha256':digest(selected.encode()),'forbidden_elements':False}
 def fetch(url):
- # At most two network attempts per exact page, only transient retrieval/parsing.
- for attempt in range(2):
+ # Exactly one request per designated page in the newly authorized retry.
+ for attempt in range(1):
   try:
    req=urllib.request.Request(url,headers={'User-Agent':'MIP-isolated-permission-qualification/1.0','Accept':'text/html'})
    with urllib.request.urlopen(req,timeout=25) as r:
@@ -67,17 +98,12 @@ def fetch(url):
     return text,{'url':url,'final_url':final,'observed_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'document_sha256':digest(b),'bytes':len(b),'network_attempts':attempt+1}
   except RuntimeError:raise
   except Exception:
-   if attempt==1:fail('retrieval_failed')
+   fail('retrieval_failed')
 def main():
  if len(sys.argv)>1 and sys.argv[1]=='--self-test':
-  sample='<title>Attribution 4.0 International</title><nav>outside</nav><h3>Section 1 – Definitions.</h3><ol><li>synthetic definition</li></ol><h3>Section 2 – Scope.</h3><p>outside</p>'
-  text,meta=extract(sample)
-  if 'outside' in text:fail('synthetic_extraction_failure')
-  for bad in [sample.replace('Section 2','Section 3'),sample.replace('<ol>','<img><ol>')]:
-   try:extract(bad)
-   except RuntimeError:continue
-   fail('synthetic_extraction_failure')
-  print(json.dumps({'synthetic_parser_tests':3,'pass':3}));return
+  import runpy,pathlib
+  result=runpy.run_path(str(pathlib.Path(__file__).with_name('parserRegression.py')))['run'](extract)
+  print(json.dumps(result));return
  source='https://creativecommons.org/licenses/by/4.0/legalcode.en'
  html,receipt=fetch(source);selected,selection=extract(html);del html
  evidence=[]
@@ -98,5 +124,5 @@ def main():
 if __name__=='__main__':
  try:main()
  except Exception as e:
-  allowed={'material_title_mismatch','selection_boundary_mismatch','selection_boundary_order','selection_forbidden_or_unterminated','selection_discrepancy','selection_empty','selection_section_marker_detected','selection_contact_marker_detected','selection_url_marker_detected','unexpected_redirect','response_limit','retrieval_failed','rights_evidence_discrepancy','synthetic_extraction_failure'}
+  allowed={'selection_missing_section_1','selection_missing_section_2','selection_duplicate_heading','selection_malformed_heading','selection_heading_level_mismatch','selection_unexpected_heading','selection_definition_structure','selection_definition_count','selection_forbidden_element','selection_malformed_structure','selection_unexpected_text','selection_unterminated','material_title_mismatch','selection_boundary_mismatch','selection_boundary_order','selection_forbidden_or_unterminated','selection_discrepancy','selection_empty','selection_section_marker_detected','selection_contact_marker_detected','selection_url_marker_detected','unexpected_redirect','response_limit','retrieval_failed','rights_evidence_discrepancy','synthetic_extraction_failure'}
   print(json.dumps({'error':str(e) if str(e) in allowed else 'capture_failed'}));sys.exit(1)
