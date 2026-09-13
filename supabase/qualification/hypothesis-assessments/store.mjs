@@ -22,6 +22,10 @@ export function createHypothesisStore(query) {
     [verifiedUserId,investigationId,workspaceVersionId,sourceProject,requestId,predecessorId,JSON.stringify(assessment)])
    return result.rows[0].value
   },
+  async boundHistory({verifiedUserId,investigationId}) {
+   const result=await query('select mip_hypothesis.read_bound_history($1::uuid,$2::uuid) as value',[verifiedUserId,investigationId])
+   return result.rows[0].value
+  },
   async history({verifiedUserId,investigationId}) {
    const result=await query('select mip_hypothesis.read_history($1::uuid,$2::uuid) as value',[verifiedUserId,investigationId])
    return result.rows[0].value

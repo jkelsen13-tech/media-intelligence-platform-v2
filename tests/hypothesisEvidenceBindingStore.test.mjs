@@ -4,6 +4,7 @@ import {readFile,readdir} from 'node:fs/promises'
 import {randomUUID,createHash} from 'node:crypto'
 import {PGlite} from '@electric-sql/pglite'
 import {hypothesisFixture} from './hypothesisAssessmentFixture.mjs'
+import {createHypothesisHandler} from '../supabase/qualification/hypothesis-assessments/handler.mjs'
 import {createHypothesisStore} from '../supabase/qualification/hypothesis-assessments/store.mjs'
 import {bindHypothesisEvidence} from '../supabase/qualification/hypothesis-assessments/evidenceBinding.mjs'
 const hash=s=>createHash('sha256').update(s).digest('hex')
@@ -104,6 +105,21 @@ test('hypothesis binding uses real workspace tables and existing operation-check
   assert.equal(receipt.length,1);assert.equal(receipt[0].permissions.length,6)
   assert.doesNotMatch(JSON.stringify(receipt),/meeting record|😀 B/)
  })
+ await t.test('historical transport verifies identity and reads only currently permitted bound revisions',async()=>{
+  await db.exec(await read('supabase/qualification/hypothesis-assessments/004_bound_history.sql'))
+  const handler=createHypothesisHandler({authenticate:async()=>({id:user,is_anonymous:false}),store:boundStore,
+   sourceProject:base.source_project,allowedOrigins:['https://example.org']})
+  await db.exec('set role mip_hypothesis_gateway')
+  await assert.rejects(boundStore.history({verifiedUserId:user,investigationId:iid}),/permission denied/)
+  const response=await handler(new Request('https://example.org/hypothesis',{method:'POST',headers:{
+   authorization:'Bearer synthetic-test-only','content-type':'application/json',origin:'https://example.org'},
+   body:JSON.stringify({action:'history',input:{investigation_id:iid}})}))
+  assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'private, no-store')
+  const payload=await response.json()
+  assert.deepEqual(payload.data.entries[0].assessment,boundFirst.assessment)
+  assert.equal(payload.data.historical_commit_visibility_qualified,false)
+  await db.exec('reset role')
+ })
  await t.test('outer rollback removes assessment and acceptance receipt together',async()=>{
   const next=structuredClone(boundRequest)
   Object.assign(next.assessment,{id:'pending-next',revision:2,predecessor_id:boundFirst.assessment.id,revision_trigger:'methodology',revision_effect:'unchanged'})
@@ -125,11 +141,25 @@ test('hypothesis binding uses real workspace tables and existing operation-check
   const recovered=await boundStore.appendBound(boundRequest)
   assert.deepEqual(recovered.assessment,boundFirst.assessment)
   assert.equal(recovered.current_context,false);assert.equal(recovered.reassessment_pending,true)
+  const history=await boundStore.boundHistory({verifiedUserId:user,investigationId:iid})
+  assert.equal(history.entries[0].current_context,false)
+  assert.equal(history.entries[0].reassessment_pending,true)
+  assert.deepEqual(history.entries[0].assessment,boundFirst.assessment)
   const next=structuredClone(boundRequest)
   Object.assign(next.assessment,{id:'pending-next',revision:2,predecessor_id:boundFirst.assessment.id,revision_trigger:'correction',revision_effect:'less_certain'})
   next.predecessorId=boundFirst.assessment.id;next.requestId=randomUUID()
   await assert.rejects(boundStore.appendBound(next),/context changed/)
   assert.equal((await db.query('select count(*)::int n from mip_hypothesis.revisions')).rows[0].n,1)
+ })
+ await t.test('new permission revision cannot automatically restore an old assessment display',async()=>{
+  const old=(await db.query("select * from mip_identity.operation_evidence_versions where scope->>'operation'='analysis' and scope->>'domain'='rights'")).rows[0]
+  const replacement=randomUUID()
+  await db.query("insert into mip_identity.operation_evidence_versions select $1,scope,authority_adapter,source_ref,source_version,source_hash,evidence_ref,approval_owner_ref,approval_record_ref,approval_status,disposition,effective_at,expires_at,conditions,synthetic from mip_identity.operation_evidence_versions where revision=$2",[replacement,old.revision])
+  await db.query('update mip_identity.operation_evidence_heads set revision=$1 where revision=$2',[replacement,old.revision])
+  const history=await boundStore.boundHistory({verifiedUserId:user,investigationId:iid})
+  assert.equal(history.entries[0].status,'withheld')
+  assert.equal(history.entries[0].reason,'permission_binding_changed_fresh_review_required')
+  assert.equal(Object.hasOwn(history.entries[0],'assessment'),false)
  })
  await t.test('repeatable-read cannot reuse an older membership snapshot',async()=>{
   await db.exec('begin isolation level repeatable read')
@@ -140,6 +170,9 @@ test('hypothesis binding uses real workspace tables and existing operation-check
   await db.query("update mip_identity.operation_evidence_heads set active=false where scope->>'domain'='privacy'")
   await db.exec('set role mip_hypothesis_gateway')
   await assert.rejects(getExcerpt({position:r.evidence[0].input_position,span:r.evidence[0].source_span,sourceProject:base.source_project}),/operation denied/)
+  const history=await boundStore.boundHistory({verifiedUserId:user,investigationId:iid})
+  assert.equal(history.entries[0].status,'withheld')
+  assert.equal(Object.hasOwn(history.entries[0],'assessment'),false)
   await db.exec('reset role')
   await workspace('set_access',{investigation_id:iid,user_id:user,access_role:'revoked',reason:'Synthetic negative test.'})
   await db.exec('set role mip_hypothesis_gateway')

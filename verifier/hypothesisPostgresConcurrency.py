@@ -87,6 +87,7 @@ class Hypothesis(unittest.TestCase):
                     "insert into mip_identity.operation_evidence_heads values("+js(scope)+","+q(revision)+",true);")
         h.run(db,"".join(statements))
         h.run(db,Path("supabase/qualification/hypothesis-assessments/003_bound_acceptance.sql").read_text())
+        h.run(db,Path("supabase/qualification/hypothesis-assessments/004_bound_history.sql").read_text())
         cls.request=str(uuid.uuid4())
 
     @classmethod
@@ -167,6 +168,23 @@ class Hypothesis(unittest.TestCase):
         self.admin(self.revoke())
         with self.assertRaisesRegex(RuntimeError,"operation denied"):self.session().execute(self.append())
         self.assertEqual(self.counts(),"1:1")
+    def history(self):
+        return "select mip_hypothesis.read_bound_history("+q(self.user)+","+q(self.iid)+");"
+    def test_history_read_first_serializes_permission_revocation(self):
+        self.a.execute(self.append())
+        self.a.execute("begin;")
+        first=json.loads(self.a.execute(self.history()))
+        self.assertEqual(first["entries"][0]["status"],"available")
+        self.b.execute("reset role;");self.b.start(self.revoke());self.blocked(self.b,self.a)
+        self.a.execute("commit;");self.b.finish()
+        denied=json.loads(self.a.execute(self.history()))["entries"][0]
+        self.assertEqual(denied["status"],"withheld");self.assertNotIn("assessment",denied)
+    def test_revocation_first_withholds_saved_reasoning(self):
+        self.a.execute(self.append());self.b.execute("reset role;begin;"+self.revoke())
+        self.a.start(self.history());self.blocked(self.a,self.b)
+        self.b.execute("commit;")
+        denied=json.loads(self.a.finish())["entries"][0]
+        self.assertEqual(denied["status"],"withheld");self.assertNotIn("assessment",denied)
     def test_gateway_cannot_write_approve_or_use_unbound_primitive(self):
         for sql in ["select * from mip_hypothesis.revisions;","update mip_identity.operation_evidence_heads set active=true;",
             "select mip_hypothesis.append_revision("+",".join(map(q,[self.user,self.iid,self.request]))+",null,"+js(self.assessment)+");"]:

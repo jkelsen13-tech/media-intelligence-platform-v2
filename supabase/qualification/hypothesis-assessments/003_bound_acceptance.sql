@@ -5,6 +5,13 @@ grant select on evidence_pipeline.investigations,evidence_pipeline.change_subjec
 create policy hypothesis_head_reader on evidence_pipeline.investigations for select to mip_hypothesis_owner using(true);
 grant references on evidence_pipeline.investigation_versions,evidence_pipeline.investigation_observations to mip_hypothesis_owner;
 grant usage on schema mip_cutover_authority to mip_hypothesis_owner;
+-- change_subjects is SECURITY INVOKER. Its owner receives only the columns it actually reads.
+grant select(position,capture_id,record_version_id) on evidence_pipeline.evidence_changes to mip_hypothesis_owner;
+grant select(id,article_id) on evidence_pipeline.article_captures to mip_hypothesis_owner;
+grant select(id,record_kind,record_key) on evidence_pipeline.record_versions to mip_hypothesis_owner;
+create policy hypothesis_change_reader on evidence_pipeline.evidence_changes for select to mip_hypothesis_owner using(true);
+create policy hypothesis_capture_identity_reader on evidence_pipeline.article_captures for select to mip_hypothesis_owner using(true);
+create policy hypothesis_record_identity_reader on evidence_pipeline.record_versions for select to mip_hypothesis_owner using(true);
 set role mip_hypothesis_owner;
 create table mip_hypothesis.acceptance_bindings(
  revision_id uuid primary key references mip_hypothesis.revisions(id),
