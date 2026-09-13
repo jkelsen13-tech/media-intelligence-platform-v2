@@ -620,5 +620,162 @@
     "No production database writes or local project-file storage.",
     "No actual adapter qualification; only synthetic positive mechanism tests.",
     "Metadata inventory is bounded to inspected projects/relations, not proof no other permission evidence exists."
-  ]
+  ],
+  "followup_catalog": {
+    "project_id": "qikvmopbtijoebdqosyq",
+    "query": "select jsonb_build_object(\n 'ingest_sources',(select jsonb_agg(to_jsonb(s)) from public.ingest_sources s),\n 'investigation_policies',(select jsonb_agg(jsonb_build_object('table',tablename,'policy',policyname,'command',cmd,'roles',roles,'using',qual,'check',with_check)) from pg_policies where schemaname='evidence_pipeline' and tablename in ('investigations','investigation_memberships','investigation_evidence_review_events','investigation_observations')),\n 'd4_d5_objects',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'name',p.proname,'identity_arguments',pg_get_function_identity_arguments(p.oid))) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname not in ('pg_catalog','information_schema') and p.proname in ('publish_explanation','mark_source_change')),\n 'rejection_audit',(select to_regclass('public.publication_rejection_audit')::text)\n) as inventory;",
+    "result": [
+      {
+        "inventory": {
+          "d4_d5_objects": null,
+          "ingest_sources": [
+            {
+              "id": "9fa46234-3ad5-43c4-b34a-b198d411782b",
+              "enabled": false,
+              "added_at": "2026-09-05T15:16:26.72364+00:00",
+              "feed_url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+              "outlet_id": "cf138ed9-2068-4c4b-86c3-b2e52afa077c",
+              "collection_enabled": false
+            },
+            {
+              "id": "e4fb4ef4-4769-401f-847d-dbd1dd3bcaf5",
+              "enabled": false,
+              "added_at": "2026-09-05T15:16:26.72364+00:00",
+              "feed_url": "https://www.theguardian.com/world/rss",
+              "outlet_id": "a04002c2-d79e-4d49-923f-d9605c2a804e",
+              "collection_enabled": false
+            },
+            {
+              "id": "a87e0de8-4850-4060-936c-3802447a1e8e",
+              "enabled": false,
+              "added_at": "2026-09-05T15:16:26.72364+00:00",
+              "feed_url": "https://www.aljazeera.com/xml/rss/all.xml",
+              "outlet_id": "0ef2244f-03f4-4b00-81ad-7364da2b01d7",
+              "collection_enabled": false
+            },
+            {
+              "id": "945b1e8f-37ff-4ef6-bebb-829b848041ee",
+              "enabled": false,
+              "added_at": "2026-09-05T15:16:26.72364+00:00",
+              "feed_url": "http://rss.cnn.com/rss/edition.rss",
+              "outlet_id": "bd19e457-ddb2-427c-97df-089633e7e47c",
+              "collection_enabled": false
+            },
+            {
+              "id": "5237d1b9-93ce-44aa-8547-2d1f2248f66f",
+              "enabled": false,
+              "added_at": "2026-09-05T15:16:26.72364+00:00",
+              "feed_url": "https://moxie.foxnews.com/google-publisher/latest.xml",
+              "outlet_id": "1009471b-21ac-4d47-96fd-986a84207040",
+              "collection_enabled": false
+            },
+            {
+              "id": "625a2152-4588-4594-9b82-8af6c487520c",
+              "enabled": false,
+              "added_at": "2026-09-05T15:16:26.72364+00:00",
+              "feed_url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+              "outlet_id": "fe01dee5-eef2-45c0-a4a3-01dc12801517",
+              "collection_enabled": false
+            },
+            {
+              "id": "0e7bebd9-5eee-475f-842c-6f41be144a56",
+              "enabled": false,
+              "added_at": "2026-09-05T15:16:26.72364+00:00",
+              "feed_url": "https://www.cbc.ca/webfeed/rss/rss-world",
+              "outlet_id": "30bfae26-90a9-4acf-8e2d-7e1d36d0eed4",
+              "collection_enabled": false
+            }
+          ],
+          "rejection_audit": null,
+          "investigation_policies": null
+        }
+      }
+    ]
+  },
+  "verification": {
+    "tested_commit": "13651b34eb2d0e3ad48a7b27ef19623a154d5712",
+    "status": "PASS_ISOLATED_ONLY_NOT_ACTUAL_POLICY_QUALIFICATION",
+    "integrated": {
+      "run": 34731662405,
+      "job": 103655447174,
+      "tests": 42,
+      "passed": 42,
+      "failed": 0,
+      "new_tests": 7
+    },
+    "golden": {
+      "run": 34731662430,
+      "jobs": [
+        {
+          "node": 22,
+          "job": 103655447389,
+          "tests": 1663,
+          "passed": 1663,
+          "build": "PASS"
+        },
+        {
+          "node": 24,
+          "job": 103655447461,
+          "tests": 1663,
+          "passed": 1663,
+          "build": "PASS"
+        }
+      ]
+    },
+    "native": {
+      "run": 34731662394,
+      "job": 103655447134,
+      "original_concurrency": 14,
+      "preserved_baseline_counterexample_tests": 7,
+      "corrected_authority": 7,
+      "candidate_interfaces": 6,
+      "conclusion": "success"
+    },
+    "extension": {
+      "run": 34731662424,
+      "job": 103655447292,
+      "tests": 8,
+      "conclusion": "success"
+    },
+    "earlier_attempt": {
+      "commit": "86eeb95adf1b87ed1422c6cebb074903ff61ce79",
+      "run": 34731510351,
+      "job": 103655030952,
+      "passed": 38,
+      "failed": 4,
+      "reason": "Error-code delimiters were removed by safe transport. Denial reason tokens now use underscores; assertions retain specific denial reasons."
+    },
+    "independent_review_requested": false,
+    "coherent_review_boundary": false,
+    "frozen_pr_heads": [
+      {
+        "number": 149,
+        "draft": true,
+        "state": "open",
+        "merged": false,
+        "head": "6c716619d3b312682dba2c4c8211936f7f911895"
+      },
+      {
+        "number": 150,
+        "draft": true,
+        "state": "open",
+        "merged": false,
+        "head": "b04d13980475892c921e52643599811b451a09c3"
+      },
+      {
+        "number": 151,
+        "draft": true,
+        "state": "open",
+        "merged": false,
+        "head": "ddbbbd6dc878dcb38ea0904b6ee58895853b6c26"
+      },
+      {
+        "number": 152,
+        "draft": true,
+        "state": "open",
+        "merged": false,
+        "head": "1d3d5c891216c7e889006429fad49331dd5f3ffe"
+      }
+    ]
+  }
 }
