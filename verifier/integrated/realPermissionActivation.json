@@ -1,0 +1,16 @@
+{
+  "status": "closed_selection_check_failed",
+  "proposal": "cc-by-4-en-legalcode-text-only",
+  "attempt": 2,
+  "max_attempts": 3,
+  "commit_subject": null,
+  "expected_material_sha256": null,
+  "retries": "Only explicit bounded corrective commits; refuse Actions reruns; close after completion.",
+  "prior_attempt": {
+    "commit": "a2489a11ffc9a78073ac8320cb64e17f7e2c2f36",
+    "run": 34735698788,
+    "result": "activation_failed_before_capture",
+    "material_captured": false
+  },
+  "disposition": "No further source retrieval. Selection safety check denied before durable ingestion; no positive qualification."
+}

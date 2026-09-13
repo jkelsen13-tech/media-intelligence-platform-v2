@@ -1,0 +1,47 @@
+name: Integrated isolated candidate
+on:
+  pull_request:
+    paths:
+      - 'supabase/qualification/mip-cutover-authority/**'
+      - 'supabase/functions/source-comparison-generation-candidate/**'
+      - 'verifier/integrated/**'
+      - '.github/workflows/integrated-isolation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  integrated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: mip-disposable-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - name: Pull isolated worker image on hosted runner only
+        run: docker pull node:24-alpine
+      - name: Broker, encrypted remote journal and real process-restart regressions
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+          MIP_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
+        run: node --test verifier/integrated/*.test.mjs
+      - name: Bounded owner-admitted permission component
+        if: github.event_name == 'pull_request'
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+          MIP_PERMISSION_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: node verifier/integrated/realPermissionBatch.mjs
