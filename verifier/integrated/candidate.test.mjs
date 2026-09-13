@@ -442,3 +442,96 @@ test('remote PostgreSQL service restart preserves committed encrypted journal an
  assert.equal(await f.admin('select count(*) from comparison_qualification.outputs'),'1')
  assert.equal(await f.admin("select count(*) from comparison_qualification.request_runs where rpc_name='worker_complete'"),'1')
 })
+
+async function operationFixture(t){
+ const f=await publicationFixture(t)
+ await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/008_operation_evidence.sql',import.meta.url),'utf8'))
+ // Exactly retained PostgreSQL JSONB digest; no JS numeric/string round-trip for source hashes.
+ const scopes=JSON.parse(await f.admin("select jsonb_agg(distinct jsonb_build_object('source_project',g.source_project,'material_ref','article:'||(m.value#>>'{article,id}'),'material_version',comparison_qualification.argument_digest(m.value->'article'),'operation',op,'audience','isolated_internal_review','domain',d)) from comparison_qualification.generations g cross join lateral jsonb_array_elements(g.input_payload->'eventInputs') e cross join lateral jsonb_array_elements(e.value->'members') m cross join unnest(array['retention','analysis','excerpt_display']) op cross join unnest(array['rights','privacy']) d where g.id="+q(f.data.generation)))
+ const check=s=>f.admin('select mip_identity.operation_check('+q(s)+')').then(JSON.parse)
+ async function evidence(scope,override={}){
+  const row={revision:randomUUID(),scope,authority_adapter:'synthetic-fixture-v1',source_ref:'synthetic://policy',source_version:'synthetic-v1',source_hash:'a'.repeat(64),evidence_ref:'synthetic://receipt',approval_owner_ref:'synthetic-fixture-owner',approval_record_ref:'synthetic://approval',approval_status:'recorded',disposition:'allow',effective_at:'2000-01-01',expires_at:'2999-01-01',conditions:[],synthetic:true,...override}
+  await f.admin('insert into mip_identity.operation_evidence_versions('+Object.keys(row).join(',')+') values('+Object.values(row).map(q).join(',')+');insert into mip_identity.operation_evidence_heads values('+[scope,row.revision,true].map(q).join(',')+') on conflict(scope) do update set revision=excluded.revision,active=true;')
+  return row.revision
+ }
+ const seed=async()=>{for(const s of scopes) await evidence(s)}
+ return {...f,scopes,check,evidence,seed}
+}
+test('operation adapter denies actual/unbound records and synthetic review flags without evidence',async t=>{
+ const f=await operationFixture(t),r=await f.review()
+ assert.equal((await f.check(f.scopes[0])).reason,'missing_operation_evidence')
+ await assert.rejects(f.release(r),/mip_operation_denied:missing_operation_evidence/)
+ assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'0')
+ assert.equal(await f.admin('select count(*) from mip_cutover_authority.approved_payloads'),'0')
+ await f.evidence(f.scopes[0],{synthetic:false,authority_adapter:'unverified-source-register'})
+ assert.equal((await f.check(f.scopes[0])).reason,'authoritative_adapter_unbound')
+})
+test('rights and privacy permissions do not transfer between seven operations, audiences, versions or projects',async t=>{
+ const f=await operationFixture(t),base={...f.scopes[0],operation:'ingestion',domain:'rights'}
+ await f.evidence(base)
+ assert.equal((await f.check(base)).reason,'synthetic_mechanism_only')
+ for(const op of ['retention','analysis','excerpt_display','full_content_display','redistribution','external_model_disclosure'])
+  assert.equal((await f.check({...base,operation:op})).allowed,false)
+ for(const delta of [{domain:'privacy'},{audience:'public'},{material_version:'stale'},{source_project:'cross-runtime-source'},{material_ref:'article:other'}])
+  assert.equal((await f.check({...base,...delta})).allowed,false)
+})
+test('operation adapter gives inspectable reasons for unsupported, expired, conflicting and conditional evidence',async t=>{
+ const f=await operationFixture(t),s=f.scopes[0]
+ for(const [override,reason] of [
+  [{approval_status:'proposed'},'approval_proposed'],[{approval_status:'missing'},'approval_missing'],
+  [{approval_status:'conflicting'},'approval_conflicting'],[{disposition:'unknown'},'permission_unknown'],
+  [{disposition:'conflicting'},'permission_conflicting'],[{disposition:'withdrawn'},'permission_withdrawn'],
+  [{disposition:'deny'},'permission_deny'],[{expires_at:'2001-01-01'},'permission_expired'],
+  [{effective_at:'2998-01-01'},'permission_not_effective'],[{source_hash:'url-is-not-a-hash'},'unsupported_evidence_reference'],
+  [{approval_record_ref:''},'unsupported_evidence_reference'],
+  [{conditions:[{status:'pending',evidence_ref:'synthetic://attribution'}]},'unfulfilled_permission_condition'],
+  [{conditions:[{status:'verified'}]},'unfulfilled_permission_condition']
+ ]){
+  await f.evidence(s,override);assert.equal((await f.check(s)).reason,reason)
+ }
+})
+test('synthetic operation closure stages privately; workers and broad roles cannot attest permission state',async t=>{
+ const f=await operationFixture(t);await f.seed();const r=await f.review()
+ assert.equal(await f.release(r),'isolated_released')
+ assert.equal(await f.admin('select count(*) from mip_identity.review_operation_bindings'),'1')
+ await assert.rejects(f.admin('select mip_identity.release_public()'),/mip_public_release_disabled/)
+ for(const role of [workerRole,producerRole,publisherRole,'anon','authenticated','service_role']){
+  for(const sql of ["update mip_identity.operation_evidence_heads set active=true","select * from mip_identity.operation_evidence_versions","select mip_identity.operation_check('{}')"])
+   await assert.rejects(raw(f.db,'set session authorization '+role+';'+sql),/mip_database_denied/)
+ }
+ assert.equal(await f.admin("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_identity' and c.relname like '%operation%' and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity)"),'0')
+ await assert.rejects(f.admin("update mip_identity.operation_evidence_versions set disposition='deny'"),/mip_|immutable|append/i)
+})
+test('permission withdrawal requires fresh decision and review; retired revisions and old payload cannot resurrect',async t=>{
+ const f=await operationFixture(t);await f.seed();const r=await f.review();await f.stage(r)
+ const s=f.scopes[0],old=(await f.check(s)).revision
+ await f.admin('update mip_identity.operation_evidence_heads set active=false where scope='+q(s))
+ await assert.rejects(f.release(r),/mip_operation_denied:revoked_operation_evidence/)
+ await assert.rejects(f.admin('update mip_identity.operation_evidence_heads set active=true where scope='+q(s)),/mip_identity_fresh_revision_required/)
+ await f.evidence(s)
+ await assert.rejects(f.release(r),/mip_operation_fresh_review_required/)
+ await assert.rejects(f.admin('update mip_identity.operation_evidence_heads set revision='+q(old)+' where scope='+q(s)),/mip_identity_fresh_revision_required/)
+ assert.equal(await f.release(await f.review()),'isolated_released')
+})
+for(const first of ['release','revocation'])test('operation '+first+' first serializes permission revocation with private release',async t=>{
+ const f=await operationFixture(t);await f.seed();const r=await f.review()
+ const releasingSQL='set local role '+publisherRole+';select mip_identity.release_isolated('+[randomUUID(),f.publisher,'runtime-a',r].map(q).join(',')+');'
+ const revokingSQL='update mip_identity.operation_evidence_heads set active=false where scope='+q(f.scopes[0])+';'
+ if(first==='release'){
+  const releasing=f.admin("begin;set application_name='mip_op_release';"+releasingSQL+"select pg_sleep(2);commit;")
+  await sleeping(f,'mip_op_release')
+  const revoking=f.admin("set application_name='mip_op_revoke';"+revokingSQL)
+  await observedWait(f,'mip_op_revoke');await releasing;await revoking
+  assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'1')
+  await assert.rejects(f.release(r),/mip_operation_denied:revoked_operation_evidence/)
+ }else{
+  const revoking=f.admin("begin;set application_name='mip_op_revoke';"+revokingSQL+"select pg_sleep(2);commit;")
+  await sleeping(f,'mip_op_revoke')
+  const releasing=f.admin("begin;set application_name='mip_op_release';"+releasingSQL+"commit;")
+  const denied=assert.rejects(releasing,/mip_operation_denied:revoked_operation_evidence/)
+  await observedWait(f,'mip_op_release');await revoking;await denied
+  assert.equal(await f.admin('select count(*) from mip_identity.private_releases'),'0')
+  assert.equal(await f.admin('select count(*) from mip_cutover_authority.approved_payloads'),'0')
+  assert.equal(await f.admin('select count(*) from mip_identity.review_operation_bindings'),'0')
+ }
+})
