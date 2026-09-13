@@ -73,3 +73,24 @@ Main risks: continuing Manus delta; unknown external consumers; original Auth an
 Coherent independent-review boundary **not reached**. No new independent review has been commissioned. F1/F3/F6 isolated implementations and completed CC evidence are preserved; live runtime/Auth/caller closure, complete migration/recovery and operational parity remain open. No claim of SAFE TO RETIRE or production readiness.
 
 All additions are remote GitHub code and sanitized metadata/evidence. No repository clone, project-file download, local file write, article capture, live database write, worker invocation or schedule change was performed. This work creates no protected-data export or restore copy. PRs #149–#153 remain unmerged.
+
+## Supplemental configuration observation
+
+Migration-version inventories contain 66 entries in Manus, 36 in survivor, 77 in original and five in spatial sandbox. Ordered version digests are in the supplemental evidence; neither migration names nor counts prove SQL/behavior equivalence. Branch listings found no separate preview project: the original's default main record points back to the same project.
+
+The current spatial function catalog again has 17 functions on each side: 16 exact definition digests match; `append_release_decision` differs. Its release semantics remain an explicit blocker, separate from the 45-row archive match.
+
+The repository's `src/lib/supabaseOrigin.js` and Pages workflow reference the survivor. `src/lib/supabase.js` reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. These are configuration references, not proof of deployed environment values or caller closure. Secret values were not inventoried.
+
+[Supplemental metadata](../verifier/backend-consolidation-2026-09-13/configuration-observations.json).
+
+## Hosted verification
+
+Tested engineering commit: `8403f9a5a644dfb0dcecad115de0d9971b3aac69`. [Sanitized verification](../verifier/backend-consolidation-2026-09-13/verification.json).
+
+- [Golden run 34774946441](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34774946441): 1,675/1,675 on Node 22 and Node 24; both builds passed. Includes 12 new collector/closed-batch regressions.
+- [Integrated run 34774946449](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34774946449): 53/53. Closed batch emitted MIP_PERMISSION_BATCH_NOT_ACTIVATED; no material retrieval.
+- [Native run 34774946407](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34774946407): original 14, corrected authority seven, interfaces six; baseline seven discovered with four intentional skips and three preserved counterexamples.
+- [Extension run 34774946412](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34774946412): eight passed.
+
+The following evidence checkpoint changes documentation/JSON evidence only; executable files, test inputs, closed activation and all frozen manifests remain at the tested engineering tree. These are implementation-authored regressions, not independent review or live verification.

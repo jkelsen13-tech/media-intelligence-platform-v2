@@ -22,7 +22,17 @@
         "../../../scripts/collectorRetentionReconciliation.mjs",
         "../../../tests/collectorRetentionReconciliation.test.mjs"
       ],
-      "remaining": "Inventory is not completeness; R2-R9 remain."
+      "remaining": "Inventory is not completeness; R2-R9 remain.",
+      "validation": {
+        "testedCommit": "8403f9a5a644dfb0dcecad115de0d9971b3aac69",
+        "tests": 12,
+        "goldenEachNode": 1675,
+        "nodes": [
+          22,
+          24
+        ],
+        "independentReview": false
+      }
     },
     {
       "id": "R2",
