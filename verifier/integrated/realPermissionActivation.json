@@ -1,0 +1,9 @@
+{
+  "status": "authorized_single_batch",
+  "proposal": "cc-by-4-en-legalcode-text-only",
+  "attempt": 1,
+  "max_attempts": 3,
+  "commit_subject": "Run bounded CC Definitions admission batch v1 attempt 1",
+  "expected_material_sha256": null,
+  "retries": "Only explicit bounded corrective commits; refuse Actions reruns; close after completion."
+}

@@ -37,3 +37,9 @@ jobs:
           MIP_DISPOSABLE_POSTGRES: comparison-qualification
           MIP_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
         run: node --test verifier/integrated/*.test.mjs
+      - name: Bounded owner-admitted permission component
+        if: github.event_name == 'pull_request'
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+          MIP_PERMISSION_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: node verifier/integrated/realPermissionBatch.mjs
