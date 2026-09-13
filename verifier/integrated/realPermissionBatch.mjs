@@ -26,7 +26,7 @@ async function main(){
  const activation=JSON.parse(await readFile(new URL('./realPermissionActivation.json',import.meta.url),'utf8'))
  const head=process.env.MIP_PERMISSION_HEAD||''
  if(!/^[0-9a-f]{40}$/.test(head)){console.log('MIP_PERMISSION_BATCH_NOT_ACTIVATED');return}
- const subject=(await pipe('git',['show','-s','--format=%s',head])).trim()
+ const subject=(await pipe('git',['show','-s','--format=%s',head]).catch(()=>error('activation_head_unavailable'))).trim()
  if(activation.status!=='authorized_single_batch'||subject!==activation.commit_subject){console.log('MIP_PERMISSION_BATCH_NOT_ACTIVATED');return}
  check(process.env.GITHUB_RUN_ATTEMPT==='1'&&activation.attempt>=1&&activation.attempt<=3,'bounded_attempt_required')
  const cleanup=[];let f,captured,bytes,report={schema:'mip-real-permission-verification-v1',batch,head,activation_attempt:activation.attempt,positive:[],negative_tests:[],actual_publisher_revocations:0}
@@ -124,4 +124,4 @@ async function main(){
   console.log('MIP_PERMISSION_EVIDENCE '+JSON.stringify(report))
  }
 }
-main().catch(()=>{console.log('MIP_PERMISSION_BATCH_FAIL_CLOSED');process.exitCode=1})
+main().catch(e=>{console.log('MIP_PERMISSION_BATCH_FAIL_CLOSED '+(/^[a-z][a-z_0-9]{1,180}$/.test(e.message)?e.message:'activation_failed_sanitized'));process.exitCode=1})
