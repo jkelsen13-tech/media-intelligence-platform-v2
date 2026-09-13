@@ -3,6 +3,8 @@ grant select,update on mip_cutover_authority.publication_fence to mip_hypothesis
 create policy hypothesis_fence_owner on mip_cutover_authority.publication_fence to mip_hypothesis_owner using(true) with check(true);
 grant select on evidence_pipeline.investigations,evidence_pipeline.change_subjects to mip_hypothesis_owner;
 create policy hypothesis_head_reader on evidence_pipeline.investigations for select to mip_hypothesis_owner using(true);
+grant references on evidence_pipeline.investigation_versions,evidence_pipeline.investigation_observations to mip_hypothesis_owner;
+grant usage on schema mip_cutover_authority to mip_hypothesis_owner;
 set role mip_hypothesis_owner;
 create table mip_hypothesis.acceptance_bindings(
  revision_id uuid primary key references mip_hypothesis.revisions(id),

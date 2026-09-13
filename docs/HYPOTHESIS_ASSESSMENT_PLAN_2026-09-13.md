@@ -83,3 +83,10 @@ Preparation returns **prepared_requires_atomic_acceptance**, never a committed a
 An exact retry with current authority and permissions recovers the original immutable result. It reports current_context=false and reassessment_pending=true when the watched context or permission receipt has changed; it does not relabel historical completion as a fresh assessment. New requests against stale context fail. Revision and receipt both disappear on an outer rollback. The gateway loses access to the unbound append primitive and has no direct receipt/table writes.
 
 These tests exercise the actual retained workspace pipeline and synthetic permission fixtures. They do not yet prove native multi-session race ordering, process termination, a durable reassessment worker, method-authority invalidation, authenticated frontend delivery or historical commit visibility. Those remain finite H5–H7 requirements. No real publisher permissions, CC material, numerical methodology, production principal or release authority is added.
+
+
+## Native verification continuation
+
+`verifier/hypothesisPostgresConcurrency.py` and its dedicated read-only-permission GitHub workflow qualify the isolated 001–003 path using PostgreSQL 17.6, real separate sessions, observed database lock waits and disposable-client process kills. The fixture loads the existing workspace pipeline and the unchanged operation checker/write-fence definitions. Permissions and material are explicitly synthetic; the fixed service is loopback-only in GitHub CI. No material fetch, deployment or production credential is used.
+
+Coverage includes concurrent identical requests, competing predecessors, both source-correction and permission-revocation orderings, current membership, rollback, pre-commit process loss, post-commit receipt recovery, fresh-authority retry and narrow grants. Native verification is pending until its candidate run passes; it does not establish the still-missing F3 hypothesis reassessment worker or production Auth transport.
