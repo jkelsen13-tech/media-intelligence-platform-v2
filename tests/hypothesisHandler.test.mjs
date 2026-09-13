@@ -31,7 +31,7 @@ test('hypothesis transport binds append source configuration and forbids review/
  const {request,calls}=fixture()
  assert.equal((await request({action:'append',input})).status,200)
  assert.equal(calls[1][1].sourceProject,'synthetic-handler');assert.equal(calls[1][1].verifiedUserId,id)
- for(const change of [{release_state:'public'},{review_state:'approved'},{question_id:id}]){
+ for(const change of [{release_state:'public'},{review_state:'approved'},{review_state:'reviewed'},{question_id:id}]){
   const altered=structuredClone(input);Object.assign(altered.assessment,change)
   const {request,calls}=fixture()
   assert.equal((await request({action:'append',input:altered})).status,400);assert.equal(calls.length,0)

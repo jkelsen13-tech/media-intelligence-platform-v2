@@ -21,7 +21,7 @@ function valid(body) {
  if(!keys||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k))||!uuid(input.investigation_id))return false
  if(body.action==='history')return true
  return uuid(input.workspace_version_id)&&uuid(input.request_id)&&(input.predecessor_id===null||uuid(input.predecessor_id))
-  &&validateHypothesisAssessment(input.assessment).valid
+  &&validateHypothesisAssessment(input.assessment).valid&&input.assessment.review_state==='unreviewed'
   &&input.assessment.question_id===input.investigation_id&&input.assessment.predecessor_id===input.predecessor_id
 }
 export function createHypothesisHandler({authenticate,store,sourceProject,allowedOrigins}) {

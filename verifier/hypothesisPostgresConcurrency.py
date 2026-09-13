@@ -116,6 +116,13 @@ class Hypothesis(unittest.TestCase):
         return "update mip_identity.operation_evidence_heads set active=false where scope->>'domain'='privacy';"
     def change(self):
         return "update public.articles set source_status='corrected',summary='A corrected synthetic record.' where url='https://example.org/hypothesis-native-synthetic';"
+    def test_favored_allegation_without_support_is_rejected(self):
+        assessment=copy.deepcopy(self.assessment)
+        assessment["comparison"].update(state="better_supported",favored_ids=["influence"])
+        assessment["arguments"][0]["relation"]="reports_allegation"
+        with self.assertRaisesRegex(RuntimeError,"requires a supporting argument"):
+            self.a.execute(self.append(assessment=assessment))
+        self.assertEqual(self.counts(),"0:0")
     def test_exact_concurrent_retry_one_atomic_receipt(self):
         self.a.execute("begin;")
         result=self.a.execute(self.append())

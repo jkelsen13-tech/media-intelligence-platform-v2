@@ -105,6 +105,14 @@ test('hypothesis binding uses real workspace tables and existing operation-check
   assert.equal(receipt.length,1);assert.equal(receipt[0].permissions.length,6)
   assert.doesNotMatch(JSON.stringify(receipt),/meeting record|😀 B/)
  })
+ await t.test('atomic acceptance cannot favor an allegation without a supporting argument',async()=>{
+  const next=structuredClone(boundRequest)
+  next.requestId=randomUUID()
+  next.assessment.comparison.state='better_supported';next.assessment.comparison.favored_ids=['influence']
+  next.assessment.arguments[0].relation='reports_allegation'
+  await assert.rejects(boundStore.appendBound(next),/requires a supporting argument/)
+  assert.equal((await db.query('select count(*)::int n from mip_hypothesis.revisions')).rows[0].n,1)
+ })
  await t.test('historical transport verifies identity and reads only currently permitted bound revisions',async()=>{
   await db.exec(await read('supabase/qualification/hypothesis-assessments/004_bound_history.sql'))
   const handler=createHypothesisHandler({authenticate:async()=>({id:user,is_anonymous:false}),store:boundStore,

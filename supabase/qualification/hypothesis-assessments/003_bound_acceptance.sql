@@ -73,6 +73,11 @@ begin
  if prior.id is null and not current_context then raise exception using errcode='40001',message='hypothesis context changed; reassessment required';end if;
  if p_assessment->>'question' is distinct from b->'version'->'state'->>'question' then
   raise exception using errcode='22023',message='hypothesis question binding mismatch';end if;
+ if p_assessment->'comparison'->>'state'='better_supported' and exists(
+  select 1 from jsonb_array_elements_text(p_assessment->'comparison'->'favored_ids') favored
+  where not exists(select 1 from jsonb_array_elements(p_assessment->'arguments') a
+   where a->>'hypothesis_id'=favored.value and a->>'relation'='supports' and jsonb_array_length(a->'evidence_ids')>0)
+ ) then raise exception using errcode='22023',message='favored hypothesis requires a supporting argument';end if;
  for e in select value from jsonb_array_elements(p_assessment->'evidence') loop
   if (select count(*) from jsonb_array_elements(b->'observation'->'snapshot'->'inputs') x where x->>'position'=e->>'input_position')<>1 then
    raise exception using errcode='22023',message='hypothesis input binding mismatch';end if;
