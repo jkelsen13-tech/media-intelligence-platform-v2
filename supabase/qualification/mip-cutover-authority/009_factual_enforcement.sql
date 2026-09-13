@@ -195,7 +195,7 @@ create policy factual_rows on public.explanations to mip_factual_owner_v3 using(
 create policy publication_rows on public.explanations for select to mip_publication_owner_v2 using(true);
 grant execute on function comparison_qualification.argument_digest(jsonb) to mip_factual_owner_v3;
 alter view mip_factual.reader_explanations owner to mip_factual_owner_v3;
-grant usage on schema mip_factual to mip_factual_reviewer_v3,mip_publication_owner_v2;
+grant usage on schema mip_factual to mip_factual_reviewer_v3,mip_publication_owner_v2,mip_cutover_schema_owner_v1;
 grant execute on function mip_factual.review_publish(uuid,text) to mip_factual_reviewer_v3;
 grant select on mip_factual.reader_explanations to mip_publication_owner_v2;
 grant execute on function mip_factual.source_hash(uuid[]),mip_factual.record_hash(jsonb) to mip_publication_owner_v2;

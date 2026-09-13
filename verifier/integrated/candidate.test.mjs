@@ -543,7 +543,7 @@ async function factualFixture(t){
  // Disposable remote connection is outside worker scope. Never print connection strings.
  const auditRole='mip_audit_'+randomUUID().replaceAll('-',''),password=randomUUID()
  await f.admin('create role '+auditRole+' login password '+q(password)+';grant usage on schema mip_factual to '+auditRole+';grant insert on mip_factual.rejection_audit to '+auditRole+';create policy audit_sink on mip_factual.rejection_audit for insert to '+auditRole+' with check(true);')
- await f.admin('insert into mip_factual.audit_connection values(true,'+q('host=127.0.0.1 port=5432 dbname='+f.db+' user='+auditRole+' password='+password+' connect_timeout=3 options=-csynchronous_commit=on')+');')
+ await f.admin('insert into mip_factual.audit_connection values(true,'+q('host=postgres port=5432 dbname='+f.db+' user='+auditRole+' password='+password+' connect_timeout=3 options=-csynchronous_commit=on')+');')
  const explanationIds=[],sourceIds=[...new Set(f.data.input.eventInputs.flatMap(e=>e.members.map(m=>m.article.id)))]
  for(const x of f.explanations){
   const id=randomUUID()
