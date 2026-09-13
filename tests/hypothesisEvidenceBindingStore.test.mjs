@@ -4,6 +4,7 @@ import {readFile,readdir} from 'node:fs/promises'
 import {randomUUID,createHash} from 'node:crypto'
 import {PGlite} from '@electric-sql/pglite'
 import {hypothesisFixture} from './hypothesisAssessmentFixture.mjs'
+import {createHypothesisStore} from '../supabase/qualification/hypothesis-assessments/store.mjs'
 import {bindHypothesisEvidence} from '../supabase/qualification/hypothesis-assessments/evidenceBinding.mjs'
 const hash=s=>createHash('sha256').update(s).digest('hex')
 test('hypothesis binding uses real workspace tables and existing operation-check implementation with synthetic permission records',async t=>{
@@ -60,6 +61,8 @@ test('hypothesis binding uses real workspace tables and existing operation-check
   await assert.rejects(binding(outsider),/read denied/)
   await db.exec('reset role')
  })
+ const boundStore=createHypothesisStore((...args)=>db.query(...args))
+ let boundRequest,boundFirst
  const getExcerpt=async({position,span,sourceProject})=>(await db.query('select mip_hypothesis.retained_excerpt($1,$2,$3,$4,$5,$6,$7,$8,$9) r',
   [user,iid,vid,position,sourceProject,span.source_field,span.start,span.end,span.excerpt_sha256])).rows[0].r
  await t.test('missing permission prevents database passage disclosure',async()=>{
@@ -85,6 +88,48 @@ test('hypothesis binding uses real workspace tables and existing operation-check
   assert.equal(response.excerpt,'😀 B')
   await assert.rejects(getExcerpt({position:r.evidence[0].input_position,span:r.evidence[0].source_span,sourceProject:'cc-definition-batch-v1'}),/source scope unavailable/)
   await db.exec('reset role')
+ })
+
+ await t.test('bound acceptance persists revision and metadata receipt atomically and closes primitive gateway bypass',async()=>{
+  await db.exec(await read('supabase/qualification/hypothesis-assessments/003_bound_acceptance.sql'))
+  boundRequest={verifiedUserId:user,investigationId:iid,workspaceVersionId:vid,sourceProject:base.source_project,
+   requestId:randomUUID(),predecessorId:null,assessment:r}
+  await db.exec('set role mip_hypothesis_gateway')
+  await assert.rejects(boundStore.append(boundRequest),/permission denied/)
+  boundFirst=await boundStore.appendBound(boundRequest)
+  assert.equal(boundFirst.current_context,true);assert.equal(boundFirst.publication_allowed,false)
+  assert.deepEqual(await boundStore.appendBound(boundRequest),boundFirst)
+  await db.exec('reset role')
+  const receipt=(await db.query('select metadata from mip_hypothesis.acceptance_bindings where revision_id=$1',[boundFirst.assessment.id])).rows[0].metadata
+  assert.equal(receipt.length,1);assert.equal(receipt[0].permissions.length,6)
+  assert.doesNotMatch(JSON.stringify(receipt),/meeting record|😀 B/)
+ })
+ await t.test('outer rollback removes assessment and acceptance receipt together',async()=>{
+  const next=structuredClone(boundRequest)
+  Object.assign(next.assessment,{id:'pending-next',revision:2,predecessor_id:boundFirst.assessment.id,revision_trigger:'methodology',revision_effect:'unchanged'})
+  next.predecessorId=boundFirst.assessment.id;next.requestId=randomUUID()
+  await db.exec('begin')
+  const result=await boundStore.appendBound(next)
+  await db.exec('rollback')
+  assert.equal((await db.query('select count(*)::int n from mip_hypothesis.revisions where id=$1',[result.assessment.id])).rows[0].n,0)
+  assert.equal((await db.query('select count(*)::int n from mip_hypothesis.acceptance_bindings where revision_id=$1',[result.assessment.id])).rows[0].n,0)
+ })
+ await t.test('out-of-scope source does not invalidate the saved question; changed watched source requires reassessment',async()=>{
+  async function captureAgain(url,summary) {
+   await intake('enqueue',{run_id:'hypothesis-change-synthetic',article:{url,title:'Synthetic source change',summary,outlet:'Synthetic',published_at:'2026-08-01'}})
+   const j=await intake('claim');return intake('finish',{job_id:j.id,lease_token:j.lease_token})
+  }
+  await captureAgain('https://example.org/unrelated-hypothesis-source','Unrelated synthetic record.')
+  assert.equal((await boundStore.appendBound(boundRequest)).current_context,true)
+  await captureAgain('https://example.org/hypothesis-synthetic','A corrected synthetic meeting record.')
+  const recovered=await boundStore.appendBound(boundRequest)
+  assert.deepEqual(recovered.assessment,boundFirst.assessment)
+  assert.equal(recovered.current_context,false);assert.equal(recovered.reassessment_pending,true)
+  const next=structuredClone(boundRequest)
+  Object.assign(next.assessment,{id:'pending-next',revision:2,predecessor_id:boundFirst.assessment.id,revision_trigger:'correction',revision_effect:'less_certain'})
+  next.predecessorId=boundFirst.assessment.id;next.requestId=randomUUID()
+  await assert.rejects(boundStore.appendBound(next),/context changed/)
+  assert.equal((await db.query('select count(*)::int n from mip_hypothesis.revisions')).rows[0].n,1)
  })
  await t.test('repeatable-read cannot reuse an older membership snapshot',async()=>{
   await db.exec('begin isolation level repeatable read')
