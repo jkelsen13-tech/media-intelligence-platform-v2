@@ -1,0 +1,191 @@
+{
+  "baseline": "cc48e4ba37af89264f7dc308cc82956e9ef80701",
+  "statusVocabulary": [
+    "implemented_and_tested",
+    "implemented_but_not_independently_reviewed",
+    "not_implemented",
+    "blocked_on_specific_owner_decision",
+    "blocked_on_external_access"
+  ],
+  "classification": "A safe consolidation/retirement; B coherent candidate review; C public-launch/later only where no A/B dependency exists. No requirement removed; production authorization remains separate.",
+  "requirements": [
+    {
+      "id": "R1",
+      "classes": [
+        "A",
+        "B"
+      ],
+      "status": "implemented_but_not_independently_reviewed",
+      "requirement": "Current connected-backend metadata inventory and bounded collector/spatial digest reconciliation",
+      "evidence": [
+        "observations.json",
+        "../../../scripts/collectorRetentionReconciliation.mjs",
+        "../../../tests/collectorRetentionReconciliation.test.mjs"
+      ],
+      "remaining": "Inventory is not completeness; R2-R9 remain."
+    },
+    {
+      "id": "R2",
+      "classes": [
+        "A",
+        "B"
+      ],
+      "status": "not_implemented",
+      "requirement": "Whole-backend identity/version disposition and exact final delta, including original backup tables and Manus extraction/graph history",
+      "evidence": [
+        "observations.json"
+      ],
+      "dependsOn": [
+        "R1",
+        "R3"
+      ],
+      "remaining": "985 runs plus 985 source-run records after retained range at 18:27:16 UTC; no new transfer authorized. Original backup versions and full article/graph/operational tables need private manifests, relation-by-relation disposition and causality; no deletion inferred."
+    },
+    {
+      "id": "R3",
+      "classes": [
+        "A"
+      ],
+      "status": "blocked_on_specific_owner_decision",
+      "requirement": "Protected remote export custody, restore rehearsal and rollback evidence",
+      "evidence": [
+        "../../../scripts/mipConsolidationRestore.mjs"
+      ],
+      "decision": "D1",
+      "remaining": "Existing fixture restore is not whole-backend recovery. Need approved existing private remote destination, authorized readers, encryption custody, permitted retention duration and export scope; no public GitHub artifacts or local files."
+    },
+    {
+      "id": "R4",
+      "classes": [
+        "A",
+        "B"
+      ],
+      "status": "blocked_on_external_access",
+      "requirement": "Auth and external caller/runtime closure",
+      "evidence": [
+        "observations.json",
+        "../../../.github/workflows/deploy-cloud-run.yml",
+        "../../../src/lib/mipBackend.js"
+      ],
+      "decision": "D2",
+      "remaining": "Private account mapping, redirects/providers/SMTP/session policy, deployed app endpoint/config references, Cloud Run revisions/IAM/secret references and callers not accessible through present connectors."
+    },
+    {
+      "id": "R5",
+      "classes": [
+        "A",
+        "B"
+      ],
+      "status": "implemented_but_not_independently_reviewed",
+      "requirement": "F1 isolated executable broker/session and least privilege",
+      "evidence": [
+        "../../../docs/ISOLATED_BROKER_DURABLE_SURVIVOR_2026-09-12.md"
+      ],
+      "decision": "D3",
+      "remaining": "Synthetic identity/container proof exists. Exact production runtime, issuer/audience/subject, broker/journal/audit custody and rotation/lifetimes require owner decision after R4 metadata. No production credential or deployment requested in this commit."
+    },
+    {
+      "id": "R6",
+      "classes": [
+        "A",
+        "B"
+      ],
+      "status": "implemented_but_not_independently_reviewed",
+      "requirement": "F3 durable worker restart, source queue fairness and collector change-to-generation receipts",
+      "evidence": [
+        "../../../verifier/integrated/candidate.test.mjs",
+        "../../../verifier/integrated/remoteStoreRestart.mjs",
+        "../../../verifier/integrated/runtimeParity.mjs"
+      ],
+      "dependsOn": [
+        "R2",
+        "R4"
+      ],
+      "remaining": "Isolated behavior proven previously; current operational backlog/external scheduling/recovery equivalence not closed. Unsafe legacy blanket acknowledgement must not be replicated."
+    },
+    {
+      "id": "R7",
+      "classes": [
+        "A",
+        "B"
+      ],
+      "status": "implemented_but_not_independently_reviewed",
+      "requirement": "F6 fail-closed rights/privacy reader, dependency fencing and D4/D5 durability",
+      "evidence": [
+        "../../../docs/MATERIAL_RECONCILIATION_D4_D5_2026-09-13.md",
+        "../../../verifier/real-permission-retry-2026-09-13.json"
+      ],
+      "remaining": "CC bounded permission component complete; unsupported historical operations remain denied. Live source-path coverage and production audit transport not demonstrated. This record supersedes old CC-admission-pending descriptions, not governing policy."
+    },
+    {
+      "id": "R8",
+      "classes": [
+        "A"
+      ],
+      "status": "blocked_on_external_access",
+      "requirement": "Storage configuration, all external endpoints/callers, schedules, secrets custody and migration history recovery",
+      "evidence": [
+        "observations.json"
+      ],
+      "decision": "D2",
+      "remaining": "Zero observed objects is not proof of unused bucket/endpoints. Manus has two active five-minute jobs and six Edge Functions; original has two inactive jobs and six functions. External schedulers/config and restore behavior remain unknown."
+    },
+    {
+      "id": "R9",
+      "classes": [
+        "A"
+      ],
+      "status": "blocked_on_external_access",
+      "requirement": "Project-specific billing effect and separately authorized retirement",
+      "evidence": [
+        "https://supabase.com/docs/guides/platform/billing-on-supabase",
+        "https://supabase.com/docs/guides/platform/free-project-pausing"
+      ],
+      "decision": "D4",
+      "remaining": "Pro organization confirmed. Compute sizes/add-ons, credits, invoice cycle and final action consequence unverified. Oct 3 is target, not observed renewal date."
+    },
+    {
+      "id": "R10",
+      "classes": [
+        "B"
+      ],
+      "status": "not_implemented",
+      "requirement": "Coherent candidate freeze and targeted independent review of remaining package",
+      "dependsOn": [
+        "R2",
+        "R4",
+        "R5",
+        "R6",
+        "R7"
+      ],
+      "remaining": "No broad independent review commissioned. Prior PR151 review and frozen manifests preserved; new implementation tests are not independent review."
+    },
+    {
+      "id": "R11",
+      "classes": [
+        "A"
+      ],
+      "status": "blocked_on_specific_owner_decision",
+      "requirement": "Production-shaped verification, final write fence, cutover/rollback and retirement",
+      "dependsOn": [
+        "R2",
+        "R3",
+        "R4",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "decision": "D5",
+      "remaining": "Cutover hold persists. Exact restricted trial plan follows runtime/custody evidence; no live writes, invocation or schedule changes are authorized now."
+    },
+    {
+      "id": "R12",
+      "classes": [
+        "C"
+      ],
+      "status": "blocked_on_specific_owner_decision",
+      "requirement": "F2 semantic qualification, new publisher/spatial admission, public release and new provider/Markets features",
+      "remaining": "No thresholds, labels, sample minima or source permissions invented. Classification applies to new promotion only: if an existing required consolidation behavior depends on a semantic decision it remains A/B and must be surfaced, never waived. Existing World View, D4/D5 and privacy restrictions remain A/B safeguards."
+    }
+  ]
+}
