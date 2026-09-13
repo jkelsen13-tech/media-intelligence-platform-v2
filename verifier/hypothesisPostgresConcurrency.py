@@ -88,6 +88,7 @@ class Hypothesis(unittest.TestCase):
         h.run(db,"".join(statements))
         h.run(db,Path("supabase/qualification/hypothesis-assessments/003_bound_acceptance.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/004_bound_history.sql").read_text())
+        h.run(db,Path("supabase/qualification/hypothesis-assessments/005_reassessment_causes.sql").read_text())
         cls.request=str(uuid.uuid4())
 
     @classmethod
@@ -192,6 +193,63 @@ class Hypothesis(unittest.TestCase):
         self.b.execute("commit;")
         denied=json.loads(self.a.finish())["entries"][0]
         self.assertEqual(denied["status"],"withheld");self.assertNotIn("assessment",denied)
+    def backlog(self):
+        return "select mip_hypothesis.reassessment_backlog("+q(self.user)+","+q(self.iid)+");"
+    def reconcile(self):
+        return "select mip_hypothesis.reconcile_reassessment_causes("+q(self.user)+","+q(self.iid)+");"
+    def test_source_change_and_pending_cause_commit_together(self):
+        self.a.execute(self.append())
+        self.b.execute("reset role;begin;"+self.change())
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_causes"),"0")
+        self.b.execute("commit;")
+        result=json.loads(self.a.execute(self.backlog()))
+        self.assertEqual(len(result["causes"]),1)
+        self.assertEqual(result["causes"][0]["kind"],"retained_source_change")
+        self.assertFalse(result["completed_reassessment"])
+        self.assertNotIn("corrected synthetic",json.dumps(result))
+    def test_source_change_rollback_leaves_no_pending_cause(self):
+        self.a.execute(self.append())
+        self.b.execute("reset role;begin;"+self.change())
+        self.b.execute("rollback;")
+        self.assertEqual(json.loads(self.a.execute(self.backlog()))["causes"],[])
+        self.assertTrue(json.loads(self.a.execute(self.history()))["entries"][0]["current_context"])
+    def test_missing_notification_reconciliation_recovers_exact_old_position_once(self):
+        self.a.execute(self.append())
+        # Explicit fixture-only loss of the ledger notification; source/change history remains retained.
+        self.admin("alter table evidence_pipeline.evidence_changes disable trigger hypothesis_reassessment_source;")
+        self.admin(self.change())
+        self.admin("alter table evidence_pipeline.evidence_changes enable trigger hypothesis_reassessment_source;")
+        self.assertEqual(json.loads(self.a.execute(self.backlog()))["causes"],[])
+        first=json.loads(self.a.execute(self.reconcile()))
+        self.assertEqual(len(first["causes"]),1)
+        self.assertEqual(first["coverage"],"current_head_watch_scope_at_reconciliation")
+        again=json.loads(self.a.execute(self.reconcile()))
+        self.assertEqual(again["causes"],first["causes"])
+        position=first["causes"][0]["change_position"]
+        self.assertEqual(self.admin("select count(*) from evidence_pipeline.evidence_changes where position="+q(position)),"1")
+    def test_permission_revocation_records_each_affected_operation_without_body_text(self):
+        self.a.execute(self.append());self.admin(self.revoke())
+        result=json.loads(self.a.execute(self.backlog()))
+        causes=result["causes"]
+        self.assertEqual(len(causes),3)
+        self.assertEqual({c["detail"]["operation"] for c in causes},{"retention","analysis","excerpt_display"})
+        self.assertEqual({c["detail"]["domain"] for c in causes},{"privacy"})
+        self.assertNotIn("meeting record",json.dumps(result))
+    def test_pending_reassessment_survives_client_restart_without_resolving_itself(self):
+        self.a.execute(self.append());self.admin(self.change())
+        first=json.loads(self.a.execute(self.backlog()))
+        self.a.process.kill();self.a.process.wait(timeout=5)
+        after=json.loads(self.b.execute(self.backlog()))
+        self.assertEqual(after,first)
+        self.assertTrue(all(c["state"]=="pending_explicit_reconciliation" for c in after["causes"]))
+        self.assertEqual(self.counts(),"1:1")
+    def test_unauthorized_cause_write_and_mutation_are_rejected(self):
+        self.a.execute(self.append());self.admin(self.change())
+        with self.assertRaisesRegex(RuntimeError,"permission denied"):
+            self.b.execute("select mip_hypothesis.discover_reassessment_causes("+q(self.iid)+");")
+        with self.assertRaisesRegex(RuntimeError,"append-only"):
+            self.admin("delete from mip_hypothesis.reassessment_causes;")
+        self.assertEqual(len(json.loads(self.a.execute(self.backlog()))["causes"]),1)
     def test_gateway_cannot_write_approve_or_use_unbound_primitive(self):
         for sql in ["select * from mip_hypothesis.revisions;","update mip_identity.operation_evidence_heads set active=true;",
             "select mip_hypothesis.append_revision("+",".join(map(q,[self.user,self.iid,self.request]))+",null,"+js(self.assessment)+");"]:

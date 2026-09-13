@@ -93,6 +93,7 @@ test('hypothesis binding uses real workspace tables and existing operation-check
 
  await t.test('bound acceptance persists revision and metadata receipt atomically and closes primitive gateway bypass',async()=>{
   await db.exec(await read('supabase/qualification/hypothesis-assessments/003_bound_acceptance.sql'))
+  await db.exec(await read('supabase/qualification/hypothesis-assessments/005_reassessment_causes.sql'))
   boundRequest={verifiedUserId:user,investigationId:iid,workspaceVersionId:vid,sourceProject:base.source_project,
    requestId:randomUUID(),predecessorId:null,assessment:r}
   await db.exec('set role mip_hypothesis_gateway')
@@ -146,6 +147,11 @@ test('hypothesis binding uses real workspace tables and existing operation-check
   await captureAgain('https://example.org/unrelated-hypothesis-source','Unrelated synthetic record.')
   assert.equal((await boundStore.appendBound(boundRequest)).current_context,true)
   await captureAgain('https://example.org/hypothesis-synthetic','A corrected synthetic meeting record.')
+  const backlog=(await db.query('select mip_hypothesis.reassessment_backlog($1,$2) r',[user,iid])).rows[0].r
+  assert.equal(backlog.causes.length,1)
+  assert.equal(backlog.causes[0].kind,'retained_source_change')
+  assert.equal(backlog.completed_reassessment,false)
+  assert.doesNotMatch(JSON.stringify(backlog),/corrected synthetic meeting record|meeting record/)
   const recovered=await boundStore.appendBound(boundRequest)
   assert.deepEqual(recovered.assessment,boundFirst.assessment)
   assert.equal(recovered.current_context,false);assert.equal(recovered.reassessment_pending,true)
@@ -159,6 +165,19 @@ test('hypothesis binding uses real workspace tables and existing operation-check
   await assert.rejects(boundStore.appendBound(next),/context changed/)
   assert.equal((await db.query('select count(*)::int n from mip_hypothesis.revisions')).rows[0].n,1)
  })
+ await t.test('reassessment backlog is append-only and exact reconciliation preserves cause identity',async()=>{
+  const first=(await db.query('select mip_hypothesis.reassessment_backlog($1,$2) r',[user,iid])).rows[0].r
+  const later=(await db.query('select mip_hypothesis.reconcile_reassessment_causes($1,$2) r',[user,iid])).rows[0].r
+  assert.deepEqual(later.causes,first.causes)
+  assert.equal(later.coverage,'current_head_watch_scope_at_reconciliation')
+  assert.equal(later.completed_reassessment,false)
+  await assert.rejects(db.query('delete from mip_hypothesis.reassessment_causes'),/append-only/)
+  await assert.rejects(db.query('select mip_hypothesis.reassessment_backlog($1,$2)',[outsider,iid]),/backlog denied/)
+  await db.exec('set role mip_hypothesis_gateway')
+  await assert.rejects(db.query('insert into mip_hypothesis.reassessment_causes default values'),/permission denied/)
+  await assert.rejects(db.query('select mip_hypothesis.discover_reassessment_causes($1)',[iid]),/permission denied/)
+  await db.exec('reset role')
+ })
  await t.test('new permission revision cannot automatically restore an old assessment display',async()=>{
   const old=(await db.query("select * from mip_identity.operation_evidence_versions where scope->>'operation'='analysis' and scope->>'domain'='rights'")).rows[0]
   const replacement=randomUUID()
@@ -167,6 +186,9 @@ test('hypothesis binding uses real workspace tables and existing operation-check
   const history=await boundStore.boundHistory({verifiedUserId:user,investigationId:iid})
   assert.equal(history.entries[0].status,'withheld')
   assert.equal(history.entries[0].reason,'permission_binding_changed_fresh_review_required')
+  const backlog=(await db.query('select mip_hypothesis.reassessment_backlog($1,$2) r',[user,iid])).rows[0].r
+  assert.equal(backlog.causes.filter(c=>c.kind==='permission_changed').length,1)
+  assert.equal(backlog.causes.find(c=>c.kind==='permission_changed').detail.observed_permission_revision,replacement)
   assert.equal(Object.hasOwn(history.entries[0],'assessment'),false)
  })
  await t.test('repeatable-read cannot reuse an older membership snapshot',async()=>{
