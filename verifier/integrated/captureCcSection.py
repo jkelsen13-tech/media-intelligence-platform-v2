@@ -48,7 +48,10 @@ def extract(s):
  walk(root)
  if not finished or forbidden: fail('selection_forbidden_or_unterminated')
  raw=''.join(parts);selected=norm(raw)
- if not selected or re.search(r'Section\s+2\b|@|https?://',selected): fail('selection_discrepancy')
+ if not selected:fail('selection_empty')
+ if re.search(r'Section\s+2\b',selected):fail('selection_section_marker_detected')
+ if '@' in selected:fail('selection_contact_marker_detected')
+ if re.search(r'https?://',selected):fail('selection_url_marker_detected')
  return selected,{'method':'heading-range-dom-text-v1','start':'Section 1: Definitions','end_exclusive':'Section 2: Scope','normalization':'HTML entities decoded; block boundaries to whitespace; NFC; NBSP to space; whitespace collapsed; trimmed; UTF-8, no trailing newline; generated list markers omitted','raw_selected_text_sha256':digest(raw.encode()),'bytes':len(selected.encode()),'sha256':digest(selected.encode()),'forbidden_elements':False}
 def fetch(url):
  # At most two network attempts per exact page, only transient retrieval/parsing.
@@ -95,5 +98,5 @@ def main():
 if __name__=='__main__':
  try:main()
  except Exception as e:
-  allowed={'material_title_mismatch','selection_boundary_mismatch','selection_boundary_order','selection_forbidden_or_unterminated','selection_discrepancy','unexpected_redirect','response_limit','retrieval_failed','rights_evidence_discrepancy','synthetic_extraction_failure'}
+  allowed={'material_title_mismatch','selection_boundary_mismatch','selection_boundary_order','selection_forbidden_or_unterminated','selection_discrepancy','selection_empty','selection_section_marker_detected','selection_contact_marker_detected','selection_url_marker_detected','unexpected_redirect','response_limit','retrieval_failed','rights_evidence_discrepancy','synthetic_extraction_failure'}
   print(json.dumps({'error':str(e) if str(e) in allowed else 'capture_failed'}));sys.exit(1)

@@ -16,7 +16,7 @@ function pipe(command,args){
   c.on('close',code=>{
    if(!code)return resolve(out)
    let safe='capture_or_boundary_failed'
-   try{const e=JSON.parse(out).error;if(/^(material_title_mismatch|selection_boundary_mismatch|selection_boundary_order|selection_forbidden_or_unterminated|selection_discrepancy|unexpected_redirect|response_limit|retrieval_failed|rights_evidence_discrepancy|synthetic_extraction_failure|capture_failed)$/.test(e))safe=e}catch{}
+   try{const e=JSON.parse(out).error;if(/^(material_title_mismatch|selection_boundary_mismatch|selection_boundary_order|selection_forbidden_or_unterminated|selection_discrepancy|selection_empty|selection_section_marker_detected|selection_contact_marker_detected|selection_url_marker_detected|unexpected_redirect|response_limit|retrieval_failed|rights_evidence_discrepancy|synthetic_extraction_failure|capture_failed)$/.test(e))safe=e}catch{}
    reject(Error(safe))
   })
  })

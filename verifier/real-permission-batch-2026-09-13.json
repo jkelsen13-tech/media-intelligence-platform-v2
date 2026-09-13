@@ -1,0 +1,57 @@
+{
+  "schema": "mip-real-permission-batch-outcome-v1",
+  "owner_admission_record": "verifier/real-permission-admission-2026-09-13.json",
+  "baseline": "cfa5a7f704bdc1c112feb53e9e91172630aa342a",
+  "attempts": [
+    {
+      "code": "a2489a11ffc9a78073ac8320cb64e17f7e2c2f36",
+      "run": 34735698788,
+      "job": 103666613090,
+      "status": "activation_failed_before_capture",
+      "fix": "Fetch two commit levels in disposable hosted checkout so the PR head activation commit is available.",
+      "integrated_regressions": {
+        "tests": 51,
+        "pass": 51,
+        "fail": 0
+      }
+    },
+    {
+      "code": "014b5aa2e56d6b711febf8c062cb3d3891d0a154",
+      "run": 34735898738,
+      "job": 103667156199,
+      "schema": "mip-real-permission-verification-v1",
+      "batch": "cc-definition-batch-v1",
+      "head": "014b5aa2e56d6b711febf8c062cb3d3891d0a154",
+      "activation_attempt": 2,
+      "positive": [],
+      "negative_tests": [],
+      "actual_publisher_revocations": 0,
+      "parser": {
+        "synthetic_parser_tests": 3,
+        "pass": 3
+      },
+      "status": "FAIL_CLOSED",
+      "error_code": "selection_discrepancy",
+      "cleanup": {
+        "disposable_database_absent": true,
+        "material_files_written": false,
+        "public_content_artifacts_created": false,
+        "transient_process_memory": "released_on_process_exit",
+        "physical_secure_erasure_claimed": false
+      }
+    }
+  ],
+  "outcome": "NOT_QUALIFIED_SELECTION_CHECK_FAILED",
+  "material_identifier": {
+    "url": "https://creativecommons.org/licenses/by/4.0/legalcode.en",
+    "named_version": "4.0 English",
+    "intended_selection": "Section 1: Definitions, text only",
+    "captured_hash": null,
+    "captured_byte_count": null,
+    "reason": "Parser exited before emitting a capture receipt; no identifier invented."
+  },
+  "rights_evidence_observation": "Not reached in this batch; previous proposal references preserved.",
+  "disposition": "No further retrieval after failed selection check. No durable material ingestion; no material files/public content artifacts created. Qualification closed without success.",
+  "production_cutover": "ON_HOLD",
+  "coherent_review_boundary": false
+}

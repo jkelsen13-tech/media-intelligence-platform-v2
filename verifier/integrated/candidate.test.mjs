@@ -643,3 +643,41 @@ test('D5 rolled-back source change leaves source, assertions and source-change a
  assert.equal(await f.admin('select count(*) from mip_factual.source_changes'),'0')
  assert.equal(await f.admin('select count(*) from mip_factual.reader_explanations where id='+q(id)),'1')
 })
+
+test('permission parser mechanism is synthetic and never retrieves real material in ordinary CI',async()=>{
+ const {execFile}=await import('node:child_process')
+ const result=await new Promise((resolve,reject)=>execFile('python3',['-I','-B','verifier/integrated/captureCcSection.py','--self-test'],{maxBuffer:4096},(err,out)=>err?reject(Error('synthetic_parser_failed')):resolve(JSON.parse(out))))
+ assert.deepEqual(result,{synthetic_parser_tests:3,pass:3})
+})
+test('real permission reader denies synthetic substitution and protects its authoritative records',async t=>{
+ const f=await fixture(t)
+ for(const name of ['007_survivor_release.sql','008_operation_evidence.sql','010_real_permission_reader.sql'])
+  await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/'+name,import.meta.url),'utf8'))
+ const batch='cc-definition-batch-v1',revision=randomUUID(),material='https://creativecommons.org/licenses/by/4.0/legalcode.en#section-1-definitions'
+ const scope={source_project:batch,material_ref:material,material_version:'0'.repeat(64),source_version:'4.0-English-Section-1',domain:'rights',operation:'analysis',audience:'isolated_internal_review'}
+ const read=()=>f.admin('select mip_identity.operation_check('+q(scope)+')').then(JSON.parse)
+ assert.equal((await read()).reason,'missing_capture_binding')
+ // Explicitly synthetic metadata. These records cannot qualify the real material.
+ await f.admin('insert into mip_identity.real_permission_captures values('+[batch,'runtime-a',material,scope.source_version,scope.material_version,1,'https://creativecommons.org/licenses/by/4.0/legalcode.en','heading-range-dom-text-v1','2026-01-01','1'.repeat(64),'2'.repeat(64)].map(q).join(',')+');insert into mip_identity.real_batch_states values('+q(batch)+",false,'bound');")
+ for(const [kind,url] of [['policies','https://creativecommons.org/policies/'],['terms','https://creativecommons.org/terms/'],['cc0','https://creativecommons.org/publicdomain/zero/1.0/legalcode.en']]){
+  assert.equal((await read()).reason,'missing_primary_evidence')
+  await f.admin('insert into mip_identity.real_permission_documents values('+[batch,kind,url,'3'.repeat(64),'4'.repeat(64),'2026-01-01',null].map(q).join(',')+');')
+ }
+ assert.equal((await read()).reason,'internal_admission_inactive')
+ await f.admin('insert into mip_identity.real_admission_versions values('+[revision,batch,'synthetic-not-owner-approval','2'.repeat(64),'synthetic-fixture'].map(q).join(',')+",array['analysis'],'isolated_internal_review','Section 1: Definitions, text only',true);insert into mip_identity.real_admission_heads values("+[batch,revision,true].map(q).join(',')+');')
+ assert.equal((await read()).reason,'internal_authorization_unbound')
+ for(const state of ['missing','conflicting','unbound']){
+  await f.admin('update mip_identity.real_batch_states set evidence_binding='+q(state))
+  assert.equal((await read()).reason,'evidence_'+state)
+ }
+ await f.admin("update mip_identity.real_batch_states set evidence_binding='bound';update mip_identity.real_admission_heads set active=false;")
+ assert.equal((await read()).reason,'internal_admission_inactive')
+ await assert.rejects(f.admin('update mip_identity.real_admission_heads set active=true'),/mip_identity_fresh_revision_required/)
+ await assert.rejects(f.admin("update mip_identity.real_permission_documents set document_hash=repeat('5',64)"),/mip_/)
+ for(const role of [workerRole,producerRole,'service_role','mip_projection_publisher_v1']){
+  for(const sql of ['select * from mip_identity.real_admission_versions','update mip_identity.real_admission_heads set active=true'])
+   await assert.rejects(raw(f.db,'set session authorization '+role+';'+sql),/mip_database_denied_42501/)
+ }
+ assert.equal(await f.admin("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_identity' and c.relname like 'real_%' and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity)"),'0')
+ assert.equal(await f.admin("select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='mip_identity' and p.proname in ('operation_check','check_admitted_material') and (r.rolsuper or r.rolbypassrls or r.rolcanlogin)"),'0')
+})
