@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "request_id": "pr161-208e160-independent-1",
+  "candidate_commit": "208e160684407e5856ad04209cbe45ba8e05b865",
+  "base_commit": "67e7a962b07ceaec75e06442ef770843d126e3ae",
+  "packet_commit": "0d457d1aa50cbd7372306f7c7c7c219493a18302",
+  "packet_path": "verifier/independent-pr161/request.json",
+  "packet_sha256": "1653c9df84222478fe512686c3eab994fe945148c23f17e0ada842dfe55270e5",
+  "packet_bytes": 1747767,
+  "agent_id": "bc-208e1606-8440-4e58-96ad-04209cbe45ba",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "reserved_before_launch",
+  "maximum_initial_posts": 1,
+  "scope": "Only one fresh PR161 registered boundary integration review; no recovery/retry."
+}
