@@ -191,13 +191,16 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    await comparison.getByText('Earlier synthetic reasoning: the meeting alone does not distinguish the explanations.',{exact:true}).waitFor()
    await comparison.getByText('Later synthetic reasoning: the alternatives still remain difficult to distinguish.',{exact:true}).waitFor()
    await comparison.getByText('Omitted from the selected revision; prior history remains retained.',{exact:true}).waitFor()
+   const notes=comparison.getByText('Version details and interpretation',{exact:true})
+   await notes.click()
    assert.ok((await comparison.innerText()).includes('does not mean deleted from MIP'))
-   assert.ok((await comparison.innerText()).includes('not proof of historical commit visibility'))
+   assert.ok((await comparison.innerText()).includes('verified historical-time view remains unavailable'))
+   await notes.click()
    assert.ok((await comparison.innerText()).includes('synthetic-contract-only-v2'))
    assert.equal(await comparison.evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false)
    if(width===390){
-    await comparison.getByRole('heading',{name:'Assessment and comparison',exact:true}).scrollIntoViewIfNeeded()
+    await comparison.locator('.piw-revision-diff-group').first().evaluate(el=>el.scrollIntoView({block:'start'}))
     console.log('MIP_SYNTHETIC_REVISION_COMPARISON_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
    }
    await page.evaluate(()=>window.comparisonSynthetic.mode='permission')

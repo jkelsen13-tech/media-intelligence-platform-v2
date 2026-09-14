@@ -58,7 +58,7 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
  const resolved=entry?causes.filter(c=>c.revision_id===entry.revision_id&&c.state==='reassessment_recorded'):[]
  const pendingCount=causes.filter(c=>c.state==='pending_explicit_reconciliation').length
  const permissionChanged=related.some(c=>c.kind==='permission_changed')
- return<section className="piw-stack" aria-label="Hypothesis assessment history">
+ return<section className="piw-stack piw-hypothesis-history" aria-label="Hypothesis assessment history">
   <header className="piw-card"><h2>Hypothesis assessment history</h2>
    <p>These are saved revisions. Changes awaiting reassessment do not replace their conclusions.</p>
    {pendingCount?<p>{pendingCount} retained change causes remain pending across these revisions.</p>:null}
@@ -72,7 +72,7 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
    onAccessFailure={code=>{setState({client,scope,status:'unavailable'});accessFailure.current?.(code)}}/>:null}
   <HypothesisGenerationLedger onRecover={canReconcile&&typeof client?.recoverGeneration==='function'?prior=>setRecovery({scope,client,prior}):undefined} key={'generations:'+scope} client={client} investigationId={investigationId} userScopeKey={userScopeKey}
    onAccessFailure={code=>{setState({client,scope,status:'unavailable'});accessFailure.current?.(code)}}/>
-  {entry?<div className="piw-card"><label htmlFor={selectId}>Saved assessment revision</label>
+  {entry?<div className="piw-card piw-hypothesis-revision-select"><label htmlFor={selectId}>Saved assessment revision</label>
    <select id={selectId} value={entry.revision_id} onChange={e=>setSelected(e.target.value)}>
     {entries.map(e=><option key={e.revision_id} value={e.revision_id}>Revision {e.revision}{e.status==='withheld'?' — unavailable':''}</option>)}
    </select>

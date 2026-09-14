@@ -79,7 +79,7 @@ test('collapsed comparison excludes prior private reasoning until explicitly exp
  assert.doesNotMatch(content(tree),/Earlier synthetic reasoning|Later synthetic reasoning|synthetic-omitted-version/)
  expand(tree)
  assert.match(content(tree),/Earlier synthetic reasoning/);assert.match(content(tree),/Later synthetic reasoning/)
- assert.match(content(tree),/does not mean deleted/);assert.match(content(tree),/not proof of historical commit visibility/)
+ assert.match(content(tree),/does not mean deleted/);assert.match(content(tree),/verified historical-time view remains unavailable/)
  assert.doesNotMatch(content(tree),/50%|not_estimated/)
  act(()=>tree.unmount())
 })

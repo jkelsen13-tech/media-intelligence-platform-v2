@@ -29,3 +29,6 @@ Exact-candidate CI results must be observed before these changes are reported ve
 Trustworthy historical commit visibility and production-shaped provider/runtime/Auth verification remain open. The internal client-handler-store-worker path passed synthetically at 18a0a0c; actual provider identity, custody and live deployment remain separately gated. F2/approved assessment methodology remains owner-gated. A saved diff is not the full semantic engine or the coherent independent-review boundary.
 
 PR153 remains draft/unmerged. Production cutover remains ON HOLD. No production changes, credentials, schedules, publication, CC retrieval, source admission, external disclosure, local project-file storage or history rewriting.
+
+
+Browser checkpoint c7ae71def6d9e0fc7f9b2c6002e00793627ecdc2 passed run34809078187 on both engines/four widths. Direct inspection of its phone screenshots found that explanation notes preceded the values and the surrounding history controls used native default styling. The follow-up places secondary interpretation under its own disclosure after the changes and uses the existing theme and touch-target sizes for history controls. Scope/permission/omission assertions remain intact; the final visual candidate requires its own run.
