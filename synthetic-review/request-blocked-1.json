@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "mip-supervised-synthetic-owner-blocker-20260914",
+  "synthetic": true,
+  "scope": "Synthetic controller routing test only; not a real policy decision",
+  "production_authority": false,
+  "requirement": "Return eligible if and only if numeric score is at least the owner's approved threshold. The owner-approved threshold is required to determine correctness; it is not present in this packet and the controller/reviewer has no authority to invent it.",
+  "source": {
+    "language": "javascript",
+    "filename": "fictionalScore.js",
+    "text": "export function eligible(score) { return score >= 70; }\n"
+  },
+  "review_instruction": "Independently assess only the supplied evidence. Preserve any unresolved owner-policy dependency. Do not invent or approve a threshold."
+}
