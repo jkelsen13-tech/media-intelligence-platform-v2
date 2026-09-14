@@ -103,6 +103,18 @@ test('isolated hypothesis generation authority, retained computation and restart
   const history=(await client.history(v.iid)).data,backlog=(await client.backlog(v.iid)).data
   assert.ok(hypothesisHistoryView(history,backlog,v.iid))
   const saved=history.entries[0]
+  const observationRequest={investigation_id:v.iid,request_id:randomUUID()}
+  const captureObservation=await client.captureObservation(observationRequest)
+  assert.equal(captureObservation.error,null)
+  const observed=await client.readObservation(v.iid,observationRequest.request_id)
+  assert.equal(observed.error,null);assert.equal(observed.data.committed_readback,true)
+  assert.deepEqual(observed.data.entries[0].assessment,saved.assessment)
+  assert.equal(observed.data.arbitrary_time_qualified,false)
+  assert.deepEqual((await client.captureObservation(observationRequest)).data,captureObservation.data)
+  const beforeObservationInjection=queries
+  assert.equal((await send('capture_observation',{...observationRequest,revision_ids:[saved.revision_id]})).error.code,'invalid_request')
+  assert.equal(queries,beforeObservationInjection)
+
   assert.equal(saved.assessment.review_state,'unreviewed')
   const ack={investigation_id:v.iid,request_id:randomUUID(),revision_id:saved.revision_id,previous_receipt_id:null}
   dropReview=true
@@ -118,6 +130,8 @@ test('isolated hypothesis generation authority, retained computation and restart
   const withheld=(await client.history(v.iid)).data.entries[0]
   assert.equal(withheld.status,'withheld');assert.equal(Object.hasOwn(withheld,'assessment'),false)
   assert.equal((await client.acknowledgeReview(ack)).error.code,'access_denied')
+  const oldObserved=(await client.readObservation(v.iid,observationRequest.request_id)).data.entries[0]
+  assert.equal(oldObserved.status,'withheld');assert.equal(Object.hasOwn(oldObserved,'assessment'),false)
   assert.equal((await client.reviewHistory(v.iid)).data.entries[0].target_status,'withheld')
   await v.revokeAccess()
   assert.equal((await client.reviewHistory(v.iid)).error.code,'access_denied')
@@ -144,7 +158,11 @@ test('isolated hypothesis generation authority, retained computation and restart
   const v=await f.investigation()
   assert.equal(await f.admin("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_hypothesis' and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity)"),'0')
   assert.equal(await f.admin("select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='mip_hypothesis' and (r.rolsuper or r.rolbypassrls or r.rolcanlogin)"),'0')
-  for(const sql of ["select * from mip_hypothesis.review_acknowledgements",
+  for(const sql of ["select * from mip_hypothesis.history_observations","select * from mip_hypothesis.revision_transactions",
+   "update mip_hypothesis.observation_epoch set enabled=true",
+   'select mip_hypothesis.capture_history_observation('+[v.user,v.iid,randomUUID()].map(q).join(',')+')',
+   'select mip_hypothesis.read_history_observation('+[v.user,v.iid,randomUUID()].map(q).join(',')+')',
+   "select * from mip_hypothesis.review_acknowledgements",
    'select mip_hypothesis.acknowledge_review('+[v.user,v.iid,randomUUID(),randomUUID()].map(q).join(',')+',null)',
    'select mip_hypothesis.review_history('+[v.user,v.iid].map(q).join(',')+')',
    "select * from mip_hypothesis.generations","select * from mip_hypothesis.generation_outputs","update mip_hypothesis.method_heads set active=true",

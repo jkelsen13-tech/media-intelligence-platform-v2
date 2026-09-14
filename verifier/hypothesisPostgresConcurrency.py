@@ -96,6 +96,8 @@ class Hypothesis(unittest.TestCase):
         h.run(db,Path("supabase/qualification/hypothesis-assessments/007_human_reconsideration.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/008_authoring_reads.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/014_review_acknowledgements.sql").read_text())
+        h.run(db,Path("supabase/qualification/hypothesis-assessments/015_committed_observations.sql").read_text())
+        h.run(db,"update mip_hypothesis.observation_epoch set enabled=true where id")
         cls.request=str(uuid.uuid4())
 
     @classmethod
@@ -124,6 +126,94 @@ class Hypothesis(unittest.TestCase):
         return "update mip_identity.operation_evidence_heads set active=false where scope->>'domain'='privacy';"
     def change(self):
         return "update public.articles set source_status='corrected',summary='A corrected synthetic record.' where url='https://example.org/hypothesis-native-synthetic';"
+    def observe(self,request=None,user=None):
+        return "select mip_hypothesis.capture_history_observation("+",".join(map(q,[user or self.user,self.iid,request or self.request]))+");"
+    def observed(self,request=None,user=None):
+        return "select mip_hypothesis.read_history_observation("+",".join(map(q,[user or self.user,self.iid,request or self.request]))+");"
+    def observation_count(self):
+        return self.admin("select count(*) from mip_hypothesis.history_observations")
+    def test_observation_waits_for_commit_and_binds_exact_noncontent_references(self):
+        self.a.execute("begin;");self.a.execute(self.append())
+        self.b.start(self.observe());self.blocked(self.b,self.a)
+        self.assertEqual(self.observation_count(),"0")
+        self.a.execute("commit;")
+        receipt=json.loads(self.b.finish())
+        self.assertEqual(receipt["revision_count"],1)
+        saved=json.loads(self.a.execute(self.observed()))
+        self.assertTrue(saved["committed_readback"]);self.assertFalse(saved["arbitrary_time_qualified"])
+        self.assertEqual(saved["entries"][0]["revision"],1)
+        text=self.admin("select reference_text from mip_hypothesis.history_observations")
+        self.assertEqual(hashlib.sha256(text.encode()).hexdigest(),receipt["reference_hash"])
+        self.assertEqual(set(json.loads(text)[0]),{"revision_id","revision","observed_status"})
+    def test_observation_excludes_rolled_back_acceptance(self):
+        self.a.execute("begin;");self.a.execute(self.append())
+        self.b.start(self.observe());self.blocked(self.b,self.a);self.a.execute("rollback;")
+        self.assertEqual(json.loads(self.b.finish())["revision_count"],0)
+        self.assertEqual(json.loads(self.a.execute(self.observed()))["entries"],[])
+    def test_observation_rejects_own_uncommitted_subtransaction_revision(self):
+        self.a.execute("begin;savepoint synthetic;");self.a.execute(self.append())
+        with self.assertRaisesRegex(RuntimeError,"committed revision provenance unavailable"):self.a.execute(self.observe())
+        self.assertEqual(self.counts(),"0:0");self.assertEqual(self.observation_count(),"0")
+    def test_observation_itself_requires_commit_before_readback(self):
+        self.a.execute(self.append());self.a.execute("begin;");self.a.execute(self.observe())
+        with self.assertRaisesRegex(RuntimeError,"requires committed readback"):self.a.execute(self.observed())
+        self.assertEqual(self.observation_count(),"0")
+        self.b.execute(self.observe())
+        self.assertTrue(json.loads(self.b.execute(self.observed()))["committed_readback"])
+    def test_observation_prefix_and_exact_retry_do_not_absorb_later_revisions(self):
+        self.prepare_completion()
+        receipt=json.loads(self.a.execute(self.observe()))
+        self.a.execute(self.complete())
+        saved=json.loads(self.a.execute(self.observed()))
+        self.assertEqual(len(saved["entries"]),1);self.assertEqual(saved["entries"][0]["revision"],1)
+        self.assertEqual(json.loads(self.a.execute(self.observe())),receipt)
+        later=json.loads(self.a.execute(self.observe(request=str(uuid.uuid4()))))
+        self.assertEqual(later["revision_count"],2);self.assertNotEqual(later["reference_hash"],receipt["reference_hash"])
+    def test_observation_current_permissions_still_withhold_prior_reasoning(self):
+        self.a.execute(self.append());self.a.execute(self.observe());self.admin(self.revoke())
+        item=json.loads(self.a.execute(self.observed()))["entries"][0]
+        self.assertEqual(item["observed_status"],"available");self.assertEqual(item["status"],"withheld")
+        self.assertNotIn("assessment",item)
+        newer=str(uuid.uuid4());self.a.execute(self.observe(request=newer))
+        item=json.loads(self.a.execute(self.observed(request=newer)))["entries"][0]
+        self.assertEqual(item["reason"],"withheld_at_observation");self.assertNotIn("assessment",item)
+    def test_observation_is_user_scoped_and_rechecks_membership_on_retry_and_read(self):
+        self.a.execute(self.append());self.a.execute(self.observe())
+        other=str(uuid.uuid4());self.admin("insert into public.mip_profiles values("+q(other)+")")
+        scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,"user_id":other,"access_role":"reviewer","reason":"Synthetic."})
+        with self.assertRaisesRegex(RuntimeError,"observation unavailable"):self.session().execute(self.observed(user=other))
+        with self.assertRaisesRegex(RuntimeError,"retry conflict"):self.session().execute(self.observe(user=other))
+        scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,"user_id":self.user,"access_role":"revoked","reason":"Synthetic."})
+        for query in [self.observe(),self.observed()]:
+            with self.assertRaisesRegex(RuntimeError,"read denied"):self.session().execute(query)
+    def test_observation_missing_legacy_provenance_is_not_backfilled(self):
+        self.admin("alter table mip_hypothesis.revisions disable trigger revision_transaction")
+        self.a.execute(self.append())
+        self.admin("alter table mip_hypothesis.revisions enable trigger revision_transaction")
+        with self.assertRaisesRegex(RuntimeError,"committed revision provenance unavailable"):self.b.execute(self.observe())
+        self.assertEqual(self.observation_count(),"0")
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.revision_transactions"),"0")
+        self.assertEqual(self.counts(),"1:1")
+    def test_observation_disabled_or_changed_epoch_fails_closed(self):
+        self.a.execute(self.append());self.a.execute(self.observe())
+        self.admin("update mip_hypothesis.observation_epoch set enabled=false")
+        for query in [self.observe(),self.observed()]:
+            with self.assertRaisesRegex(RuntimeError,"observations disabled"):self.session().execute(query)
+        self.admin("update mip_hypothesis.observation_epoch set enabled=true,epoch=gen_random_uuid()")
+        with self.assertRaisesRegex(RuntimeError,"observation unavailable"):self.session().execute(self.observed())
+        with self.assertRaisesRegex(RuntimeError,"committed revision provenance unavailable"):self.session().execute(self.observe(request=str(uuid.uuid4())))
+    def test_observation_tables_immutable_and_gateway_has_no_direct_authority(self):
+        self.a.execute(self.append());self.a.execute(self.observe())
+        for table in ["history_observations","revision_transactions"]:
+            with self.assertRaisesRegex(RuntimeError,"append-only"):self.admin("delete from mip_hypothesis."+table)
+            with self.assertRaisesRegex(RuntimeError,"permission denied"):self.session().execute("select * from mip_hypothesis."+table)
+        with self.assertRaisesRegex(RuntimeError,"permission denied"):self.session().execute("update mip_hypothesis.observation_epoch set enabled=true")
+        self.assertEqual(self.observation_count(),"1")
+    def test_observation_rejects_old_isolation_and_missing_fence(self):
+        with self.assertRaisesRegex(RuntimeError,"requires read committed"):self.a.execute("begin isolation level repeatable read;"+self.observe())
+        self.admin("delete from mip_cutover_authority.publication_fence")
+        for query in [self.observe(),self.observed()]:
+            with self.assertRaisesRegex(RuntimeError,"fence unavailable"):self.session().execute(query)
     def test_favored_allegation_without_support_is_rejected(self):
         assessment=copy.deepcopy(self.assessment)
         assessment["comparison"].update(state="better_supported",favored_ids=["influence"])

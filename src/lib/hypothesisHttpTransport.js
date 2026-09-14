@@ -1,5 +1,5 @@
 // Explicit configuration only. No default endpoint, token storage, automatic retry or production activation.
-const actions=new Set(['history','backlog','reconcile','generation_backlog','review_history','acknowledge_review',
+const actions=new Set(['capture_observation','read_observation','history','backlog','reconcile','generation_backlog','review_history','acknowledge_review',
  'recover_generation','capture_generation','authoring_context','authoring_span','request_reassessment','request_detail','append','complete'])
 const errors=new Set(['authentication_required','access_denied','version_conflict','invalid_request','origin_denied',
  'service_unavailable','generation_not_configured'])
