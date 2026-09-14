@@ -1,3 +1,4 @@
+import {continuityCases} from './continuityCases.mjs'
 import {bootstrapCases} from './bootstrapCases.mjs'
 import {pgoutputCases} from './pgoutputCases.mjs'
 import {createSupabaseHypothesisAuthenticator} from '../../supabase/qualification/hypothesis-assessments/supabaseAuthenticator.mjs'
@@ -52,6 +53,7 @@ test('isolated hypothesis generation authority, retained computation and restart
  const f=await setup(t)
  await t.test('consistent exported snapshot bootstrap isolation',async t=>bootstrapCases(t,f,v=>runDurableHypothesisWorker(options(f,v))))
  await t.test('actual pgoutput metadata-to-durable-recorder isolation',async t=>pgoutputCases(t,f,v=>runDurableHypothesisWorker(options(f,v))))
+ await t.test('source-captured contiguous metadata coverage isolation',async t=>continuityCases(t,f,v=>runDurableHypothesisWorker(options(f,v))))
  await t.test('configured synthetic client-handler-store-worker-review path uses native gateway transactions',async()=>{
   const v=await f.investigation()
   const provider=syntheticAuthProvider(v.user),acceptedToken=provider.token()
