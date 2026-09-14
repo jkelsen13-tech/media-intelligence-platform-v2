@@ -1,0 +1,96 @@
+{
+  "schema": "mip_pr172_isolated_evidence_v1",
+  "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+  "pr": 172,
+  "head": "e973a2a4fa413c452e8ab48800587a248be3eb4f",
+  "tree": "a076e67b4a7c2d338d405a88cb5a3ce41e4de0b6",
+  "merge_sha": "5e7922185d3b6bc1175e527079c68287ed01917a",
+  "base": "406512127399e63e117f2a8e0b089f97579bd0d9",
+  "draft": true,
+  "outcome": "research_only_FAIL_for_boundary_admission",
+  "qualification": {
+    "source_authority": false,
+    "user_history": false,
+    "historical_time": false,
+    "publication": false,
+    "production_runtime_admission": false
+  },
+  "checks": [
+    {
+      "workflow": "Hypothesis durable worker isolation",
+      "run": 34871695602,
+      "job": 104068884848,
+      "status": "success",
+      "tests": 115,
+      "pass": 115,
+      "fail": 0,
+      "duration_ms": 777593.812463,
+      "coverage": "Native SQL023 and seven saved-boundary groups; includes strict response and stalled-event-loop receipt tests."
+    },
+    {
+      "workflow": "Golden regression suite",
+      "run": 34871695591,
+      "job": 104068884920,
+      "node": 22,
+      "status": "success",
+      "tests": 1909,
+      "pass": 1909,
+      "fail": 0,
+      "build_seconds": 23.99
+    },
+    {
+      "workflow": "Golden regression suite",
+      "run": 34871695591,
+      "job": 104068885194,
+      "node": 24,
+      "status": "success",
+      "tests": 1909,
+      "pass": 1909,
+      "fail": 0,
+      "build_seconds": 18.82
+    },
+    {
+      "workflow": "Hypothesis PostgreSQL concurrency",
+      "run": 34871695583,
+      "job": 104068885149,
+      "status": "success",
+      "tests": 94,
+      "duration_seconds": 50.112,
+      "coverage": "Generic suite DOES NOT install SQL023."
+    }
+  ],
+  "preserved_failures": [
+    {
+      "head": "8b2a29ee88907751a16c4de8ca4fae0ae6f0badb",
+      "run": 34865775126,
+      "reason": "Inherited session expired; independent boundary review also FAIL",
+      "log": "native-initial-34865775126.log"
+    },
+    {
+      "head": "551bda27d5817d0be89fe1c46bfa1ad0462beb8b",
+      "run": 34869573362,
+      "reason": "SQL42601 after dollar delimiter interpolation defect",
+      "log": "native-rejected-sql-34869573362.log"
+    },
+    {
+      "head": "f26c59bd5a34bcb0c1b1aefdc6b7476920f0bb1b",
+      "run": 34869847462,
+      "tests": 115,
+      "pass": 110,
+      "fail": 5,
+      "reason": "Material wait targeted custody PID, not consumer; short JWT expired before admission. Independent resource/transport/response review FAIL.",
+      "log": "native-f26c-failed-34869847462.log"
+    }
+  ],
+  "remaining_blockers": [
+    "Underlying full investigation history materializes before prefix filtering and returned-data bounds.",
+    "Issuer transport cancellation/timeouts are not independently enforced; final cleanup may await a noncooperative adapter indefinitely.",
+    "Immutable full-payload permits have no implemented quota/cleanup/retention policy.",
+    "Monotonic receipt deadline cannot prevent or retract transport transmission during synchronous event-loop stalls.",
+    "Real provider/custody/runtime/source-recovery admission remains absent; savepoint replay is same PID/xid, same sealed payload/expiry/delivery identity only."
+  ],
+  "no_live_changes": true,
+  "no_deployments": true,
+  "no_merges": true,
+  "no_local_project_files": true
+}
