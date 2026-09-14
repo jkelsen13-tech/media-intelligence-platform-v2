@@ -121,7 +121,7 @@ export async function incarnationCases(t,f,staged){
    if(scope.source!==envelope.source||!approved.has(scope.digest))throw Error('synthetic_custody_not_admitted')
    if(scope.operation==='register'&&registrationDigest(scope.envelope)!==scope.digest)throw Error('synthetic_recovery_not_admitted')
    const held=await hold(f.db,'select pg_advisory_xact_lock(hashtextextended('+q('custody:'+envelope.source)+',0));'+
-    'select 1 from mip_identity.mapping_heads where runtime='+q(runtime)+' for share;select 1 from mip_identity.key_heads for share;')
+    'select 1 from mip_identity.fence where id for share;select 1 from mip_identity.mapping_heads where runtime='+q(runtime)+' for share;select 1 from mip_identity.key_heads for share;')
    try{
     const index=n=>'registration-sequence:'+envelope.source+':'+n
     const tx={
