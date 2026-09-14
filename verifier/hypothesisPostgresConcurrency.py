@@ -423,6 +423,52 @@ class Hypothesis(unittest.TestCase):
         self.assertEqual(replay["assessment"],first["assessment"]);self.assertTrue(replay["reassessment_pending"])
         self.assertEqual(self.completion_counts(),"2:2:1:"+str(len(self.pending)))
         self.assertTrue(any(c["state"]=="pending_explicit_reconciliation" for c in json.loads(self.a.execute(self.backlog()))["causes"]))
+    def test_narrowed_workspace_preserves_inherited_completion_permission_closure(self):
+        self.prepare_completion();second=json.loads(self.a.execute(self.complete()))
+        prior=json.loads(self.admin("select closure_bindings from mip_hypothesis.reassessment_completion_receipts where revision_id="+q(second["assessment"]["id"])))
+        scalar(self.database,"mip_pipeline_v1","enqueue",{"run_id":"hypothesis-narrow-synthetic","article":{
+            "url":"https://example.org/hypothesis-narrow-synthetic","title":"Synthetic separate record",
+            "summary":"A 😀 B meeting record.","outlet":"Synthetic","published_at":"2026-08-01"}})
+        job=scalar(self.database,"mip_pipeline_v1","claim",{})
+        capture=scalar(self.database,"mip_pipeline_v1","finish",{"job_id":job["id"],"lease_token":job["lease_token"]})
+        candidate=scalar(self.database,"mip_pipeline_v1","candidate",{"capture_id":capture["capture_id"],
+            "candidate_key":"synthetic-narrow","candidate_kind":"claim","statement":"A 😀 B meeting record.",
+            "source_field":"summary","span_start":0,"span_end":21,"excerpt":"A 😀 B meeting record.",
+            "extractor_version":"synthetic","remaining_uncertainty":"Synthetic mechanism only."})
+        context=scalar(self.database,"mip_assessments_v1","context",{"candidate_id":candidate})
+        scalar(self.database,"mip_assessments_v1","append",{"candidate_id":candidate,"algorithm_key":"synthetic","algorithm_version":"v1",
+            "outcome":"insufficient_evidence","rationale":"Synthetic.","remaining_uncertainty":"Synthetic.",
+            "context_positions":context["context_positions"]})
+        obs=scalar(self.database,"mip_investigation_briefings_v1","observe",{"observation_id":str(uuid.uuid4()),
+            "previous_observation_id":self.new_binding["observation"]["id"],"candidate_ids":[candidate]})
+        version=str(uuid.uuid4())
+        scalar(self.database,"mip_investigation_workspace_v1","put",{"investigation_id":self.iid,"version_id":version,
+            "previous_version_id":self.new_version,"observation_id":obs["id"],"state":self.state,
+            "change_reason":"Synthetic scope narrowing; retain prior dependency accountability."})
+        binding=self.grant_observed_fixture_operations(version)
+        entry=next(i for i in binding["observation"]["snapshot"]["inputs"] if "capture" in i)
+        assessment=copy.deepcopy(self.completion_assessment)
+        cutoff=self.admin("""select to_char(clock_timestamp() at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"')""")
+        assessment.update(revision=3,predecessor_id=second["assessment"]["id"],knowledge_cutoff=cutoff,completed_at=cutoff,
+            revision_trigger="new_evidence",revision_reason="Synthetic narrowed scope.")
+        assessment["evidence"][0].update(input_position=entry["position"],material_version=entry["capture"]["id"],
+            acquired_at=entry["capture"]["captured_at"],published_at=entry["capture"]["payload"].get("published_at"))
+        pending=[c for c in json.loads(self.a.execute(self.reconcile()))["causes"] if c["state"]=="pending_explicit_reconciliation"]
+        assessment["reassessment_causes"]=[{"cause_id":c["cause_id"],"reason":"Synthetic scope change considered."} for c in pending]
+        result=json.loads(self.a.execute("select mip_hypothesis.complete_reassessment("+",".join(map(q,[
+            self.user,self.iid,version,self.source,str(uuid.uuid4()),second["assessment"]["id"]]))+","+js(assessment)+");"))
+        current=json.loads(self.admin("select closure_bindings from mip_hypothesis.reassessment_completion_receipts where revision_id="+q(result["assessment"]["id"])))
+        scopes=lambda bindings:{json.dumps(p["scope"],sort_keys=True) for b in bindings for p in b["permissions"]}
+        self.assertTrue(scopes(prior).issubset(scopes(current)))
+        new_positions={i["position"] for i in binding["observation"]["snapshot"]["inputs"]}
+        inherited=next(p["scope"] for b in prior if b["input_position"] not in new_positions
+            for p in b["permissions"] if p["operation"]=="analysis" and p["domain"]=="privacy" and p["scope"]["material_ref"].startswith("record_version:"))
+        self.admin("update mip_identity.operation_evidence_heads set active=false where scope="+js(inherited))
+        history=json.loads(self.a.execute(self.history()))["entries"][-1]
+        self.assertEqual(history["status"],"withheld");self.assertNotIn("assessment",history)
+        self.assertTrue(any(c["revision_id"]==result["assessment"]["id"] and c["kind"]=="permission_changed" and c["state"]=="pending_explicit_reconciliation"
+            for c in json.loads(self.a.execute(self.backlog()))["causes"]))
+
     def test_completion_receipts_and_resolutions_are_not_worker_writable_or_mutable(self):
         self.prepare_completion();self.a.execute(self.complete())
         for table in ["reassessment_completion_receipts","reassessment_resolutions"]:

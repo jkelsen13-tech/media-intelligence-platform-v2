@@ -86,7 +86,7 @@ create function mip_hypothesis.validate_reassessment_closure(p_user uuid,p_inves
  p_source_project text,p_causes uuid[]) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare v evidence_pipeline.investigation_versions; o evidence_pipeline.investigation_observations;
- c mip_hypothesis.reassessment_causes; b mip_hypothesis.acceptance_bindings; e jsonb; checked jsonb; receipts jsonb; bindings jsonb:='[]';
+ c mip_hypothesis.reassessment_causes; b mip_hypothesis.acceptance_bindings; e jsonb; prior jsonb; checked jsonb; receipts jsonb; bindings jsonb:='[]';
 begin
  select * into strict v from evidence_pipeline.investigation_versions where id=p_version and investigation_id=p_investigation;
  select * into strict o from evidence_pipeline.investigation_observations where id=v.observation_id;
@@ -99,6 +99,14 @@ begin
   if c.investigation_id<>p_investigation then raise exception using errcode='42501',message='reassessment cause scope denied';end if;
   select * into strict b from mip_hypothesis.acceptance_bindings where revision_id=c.revision_id;
   if b.source_project is distinct from p_source_project then raise exception using errcode='42501',message='reassessment source scope denied';end if;
+  -- Preserve the complete prior completion closure even when the workspace scope narrows.
+  for prior in select x.value from mip_hypothesis.reassessment_completion_receipts r
+   cross join lateral jsonb_array_elements(r.closure_bindings) x where r.revision_id=c.revision_id loop
+   receipts:=mip_hypothesis.require_observed_operations(p_user,p_investigation,
+    (prior->>'workspace_version_id')::uuid,p_source_project,prior->>'input_position');
+   bindings:=bindings||jsonb_build_array(jsonb_build_object('workspace_version_id',prior->>'workspace_version_id',
+    'input_position',prior->>'input_position','permissions',receipts));
+  end loop;
   -- Current authority over previously used material is required; old acceptance is not continuing permission.
   for e in select value from jsonb_array_elements(b.metadata) loop
    receipts:=mip_hypothesis.require_observed_operations(p_user,p_investigation,b.workspace_version_id,p_source_project,e->>'input_position');
@@ -125,6 +133,9 @@ begin
    end if;
   end if;
  end loop;
+ -- Canonical unique bindings keep exact retries stable without multiplying inherited references.
+ select coalesce(jsonb_agg(v order by v::text),'[]'::jsonb) into bindings
+  from (select distinct value v from jsonb_array_elements(bindings)) unique_bindings;
  return bindings;
 end $$;
 
