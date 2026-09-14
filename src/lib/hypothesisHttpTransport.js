@@ -2,7 +2,7 @@
 const actions=new Set(['list_observations','capture_observation','read_observation','history','backlog','reconcile','generation_backlog','review_history','acknowledge_review',
  'recover_generation','capture_generation','authoring_context','authoring_span','request_reassessment','request_detail','append','complete'])
 const errors=new Set(['authentication_required','access_denied','version_conflict','invalid_request','origin_denied',
- 'service_unavailable','generation_not_configured'])
+ 'service_unavailable','generation_not_configured','observations_not_configured'])
 const failure=code=>({data:null,error:{code}})
 async function boundedResponse(response,maximum,signal){
  if(!response.body?.getReader)throw Error('invalid_response')

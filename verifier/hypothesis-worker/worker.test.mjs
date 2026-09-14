@@ -63,7 +63,7 @@ test('isolated hypothesis generation authority, retained computation and restart
   const store=createHypothesisStore(query)
   // Real SDK/verifier against an in-process signed synthetic provider; no production attestation.
   const authenticate=createSupabaseHypothesisAuthenticator(provider.configuration)
-  const handler=createHypothesisHandler({authenticate,store,sourceProject:v.source,
+  const handler=createHypothesisHandler({authenticate,store,sourceProject:v.source,observationEpoch:f.observationEpoch,
    allowedOrigins:['https://mip-synthetic.invalid'],generationTarget:{runtimeId:v.runtime,methodRevision:v.method}})
   const send=async(action,input,{origin='https://mip-synthetic.invalid'}={})=>{
    const response=await handler(new Request('https://mip-synthetic.invalid/hypotheses',{method:'POST',
@@ -126,6 +126,8 @@ test('isolated hypothesis generation authority, retained computation and restart
   const beforeObservationInjection=queries
   assert.equal((await send('capture_observation',{...observationRequest,revision_ids:[saved.revision_id]})).error.code,'invalid_request')
   assert.equal(queries,beforeObservationInjection)
+  assert.equal((await send('capture_observation',{...observationRequest,expected_epoch:f.observationEpoch})).error.code,'invalid_request')
+  assert.equal(queries,beforeObservationInjection)
 
   assert.equal(saved.assessment.review_state,'unreviewed')
   const ack={investigation_id:v.iid,request_id:randomUUID(),revision_id:saved.revision_id,previous_receipt_id:null}
@@ -170,7 +172,7 @@ test('isolated hypothesis generation authority, retained computation and restart
   const v=await f.investigation()
   assert.equal(await f.admin("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_hypothesis' and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity)"),'0')
   assert.equal(await f.admin("select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='mip_hypothesis' and (r.rolsuper or r.rolbypassrls or r.rolcanlogin)"),'0')
-  for(const sql of ['select mip_hypothesis.list_history_observations('+[v.user,v.iid].map(q).join(',')+')',"select * from mip_hypothesis.history_observations","select * from mip_hypothesis.revision_transactions",
+  for(const sql of ['select mip_hypothesis.read_history_observation('+[v.user,v.iid,randomUUID(),f.observationEpoch].map(q).join(',')+')','select mip_hypothesis.list_history_observations('+[v.user,v.iid].map(q).join(',')+')',"select * from mip_hypothesis.history_observations","select * from mip_hypothesis.revision_transactions",
    "update mip_hypothesis.observation_epoch set enabled=true",
    'select mip_hypothesis.capture_history_observation('+[v.user,v.iid,randomUUID()].map(q).join(',')+')',
    'select mip_hypothesis.read_history_observation('+[v.user,v.iid,randomUUID()].map(q).join(',')+')',

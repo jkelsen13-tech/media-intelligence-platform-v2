@@ -98,7 +98,9 @@ class Hypothesis(unittest.TestCase):
         h.run(db,Path("supabase/qualification/hypothesis-assessments/014_review_acknowledgements.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/015_committed_observations.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/016_observation_delivery.sql").read_text())
+        h.run(db,Path("supabase/qualification/hypothesis-assessments/017_external_observation_epoch.sql").read_text())
         h.run(db,"update mip_hypothesis.observation_epoch set enabled=true where id")
+        cls.expected_epoch=h.run(db,"select epoch from mip_hypothesis.observation_epoch where id")
         cls.request=str(uuid.uuid4())
 
     @classmethod
@@ -128,13 +130,66 @@ class Hypothesis(unittest.TestCase):
     def change(self):
         return "update public.articles set source_status='corrected',summary='A corrected synthetic record.' where url='https://example.org/hypothesis-native-synthetic';"
     def observe(self,request=None,user=None):
-        return "select mip_hypothesis.capture_history_observation("+",".join(map(q,[user or self.user,self.iid,request or self.request]))+");"
+        return "select mip_hypothesis.capture_history_observation("+",".join(map(q,[user or self.user,self.iid,request or self.request,self.expected_epoch]))+");"
     def observed(self,request=None,user=None):
-        return "select mip_hypothesis.read_history_observation("+",".join(map(q,[user or self.user,self.iid,request or self.request]))+");"
+        return "select mip_hypothesis.read_history_observation("+",".join(map(q,[user or self.user,self.iid,request or self.request,self.expected_epoch]))+");"
     def observation_count(self):
         return self.admin("select count(*) from mip_hypothesis.history_observations")
     def observation_list(self,user=None):
-        return "select mip_hypothesis.list_history_observations("+",".join(map(q,[user or self.user,self.iid]))+");"
+        return "select mip_hypothesis.list_history_observations("+",".join(map(q,[user or self.user,self.iid,self.expected_epoch]))+");"
+
+    def test_external_observation_epoch_mismatch_and_null_deny_all_gateway_paths(self):
+        self.a.execute(self.append());self.a.execute(self.observe())
+        queries=[self.observe(request=str(uuid.uuid4())),self.observed(),self.observation_list()]
+        for query in queries:
+            for supplied in [q(str(uuid.uuid4())),"null"]:
+                with self.assertRaisesRegex(RuntimeError,"epoch mismatch"):
+                    self.session().execute(query.replace(q(self.expected_epoch)+");",supplied+");"))
+        self.assertEqual(self.observation_count(),"1")
+    def test_unpinned_observation_functions_are_not_gateway_capabilities(self):
+        self.a.execute(self.append());self.a.execute(self.observe())
+        for name,args in [("capture_history_observation",[self.user,self.iid,str(uuid.uuid4())]),
+                          ("read_history_observation",[self.user,self.iid,self.request]),
+                          ("list_history_observations",[self.user,self.iid])]:
+            with self.assertRaisesRegex(RuntimeError,"permission denied"):
+                self.session().execute("select mip_hypothesis."+name+"("+",".join(map(q,args))+");")
+    def test_epoch_change_waits_for_observation_then_new_requests_reject_old_pin(self):
+        self.a.execute(self.append());self.a.execute("begin;");self.a.execute(self.observe())
+        self.b.execute("reset role;");self.b.start("update mip_hypothesis.observation_epoch set epoch=gen_random_uuid();")
+        self.blocked(self.b,self.a);self.a.execute("commit;");self.b.finish()
+        with self.assertRaisesRegex(RuntimeError,"epoch mismatch"):self.session().execute(self.observed())
+        self.assertEqual(self.observation_count(),"1")
+    def test_rotated_epoch_first_blocks_waiting_old_pin_without_receipt(self):
+        self.a.execute(self.append())
+        self.b.execute("reset role;begin;update mip_hypothesis.observation_epoch set epoch=gen_random_uuid();")
+        self.a.start(self.observe());self.blocked(self.a,self.b);self.b.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"epoch mismatch"):self.a.finish()
+        self.assertEqual(self.observation_count(),"0")
+    def test_prepared_logical_restore_refuses_copied_enabled_epoch(self):
+        self.a.execute(self.append());receipt=json.loads(self.a.execute(self.observe()))
+        # Dump through the disposable server's matching client. Contents remain in remote process memory.
+        containers=subprocess.run(["docker","ps","--filter","ancestor=postgres:17.6","--format","{{.ID}}"],
+            check=True,capture_output=True,text=True,timeout=15).stdout.split()
+        self.assertEqual(len(containers),1)
+        dump=subprocess.run(["docker","exec",containers[0],"pg_dump","-U","postgres","--no-comments","--clean","--if-exists",self.database],
+            check=True,capture_output=True,text=True,timeout=25).stdout
+        restored="mip_hypothesis_restore_"+uuid.uuid4().hex
+        h.run("postgres","create database "+restored)
+        try:
+            subprocess.run(["docker","exec","-i",containers[0],"psql","-X","-q","-v","ON_ERROR_STOP=1","-U","postgres","-d",restored],
+                input=dump,check=True,capture_output=True,text=True,timeout=25)
+            self.assertEqual(h.run(restored,"select epoch from mip_hypothesis.observation_epoch where id"),self.expected_epoch)
+            self.assertEqual(h.run(restored,"select enabled from mip_hypothesis.observation_epoch where id"),"t")
+            next_pin=str(uuid.uuid4()) # Synthetic prepared-restore configuration, outside restored DB.
+            for query in [self.observe(request=str(uuid.uuid4())),self.observed(),self.observation_list()]:
+                with self.assertRaisesRegex(RuntimeError,"epoch mismatch"):
+                    h.run(restored,"set role mip_hypothesis_gateway;"+query.replace(q(self.expected_epoch)+");",q(next_pin)+");"))
+            self.assertEqual(h.run(restored,"select count(*) from mip_hypothesis.history_observations"),"1")
+            self.assertEqual(json.loads(h.run(restored,"select receipt from mip_hypothesis.history_observations")),receipt)
+            # A copied marker alone is not automatic restore detection; do not claim otherwise.
+        finally:
+            h.run("postgres","drop database "+restored)
+
     def test_observation_list_recovers_committed_receipt_after_client_restart(self):
         self.a.execute(self.append());receipt=json.loads(self.a.execute(self.observe()))
         self.a.process.kill();self.a.process.wait(timeout=5)
@@ -225,6 +280,7 @@ class Hypothesis(unittest.TestCase):
         for query in [self.observe(),self.observed()]:
             with self.assertRaisesRegex(RuntimeError,"observations disabled"):self.session().execute(query)
         self.admin("update mip_hypothesis.observation_epoch set enabled=true,epoch=gen_random_uuid()")
+        self.expected_epoch=self.admin("select epoch from mip_hypothesis.observation_epoch where id") # Explicit synthetic server reconfiguration for prior provenance tests.
         with self.assertRaisesRegex(RuntimeError,"observation unavailable"):self.session().execute(self.observed())
         with self.assertRaisesRegex(RuntimeError,"committed revision provenance unavailable"):self.session().execute(self.observe(request=str(uuid.uuid4())))
     def test_observation_tables_immutable_and_gateway_has_no_direct_authority(self):
