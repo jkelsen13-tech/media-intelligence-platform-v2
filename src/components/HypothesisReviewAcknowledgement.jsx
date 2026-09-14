@@ -14,9 +14,11 @@ export default function HypothesisReviewAcknowledgement({client,investigationId,
   Promise.resolve().then(()=>client.reviewHistory(investigationId)).then(result=>{
    if(epoch.current!==current||scopeRef.current!==scope||clientRef.current!==client)return
    const view=result?.error?null:reviewHistoryView(result?.data,investigationId)
-   const consistent=view&&(!confirmed.current||view.entries.some(e=>sameReviewReceipt(e.receipt,confirmed.current)))
+   const targetWithheld=view?.entries.some(e=>e.receipt.revision_id===revisionId&&e.target_status==='withheld')
+   const consistent=view&&!targetWithheld&&(!confirmed.current||view.entries.some(e=>sameReviewReceipt(e.receipt,confirmed.current)))
    setState(consistent?{scope,client,status:'ready',view}:{scope,client,status:'unavailable'})
-   if(['access_denied','authentication_required'].includes(result?.error?.code))onAccessFailure?.(result.error.code)
+   if(targetWithheld)onAccessFailure?.('access_denied')
+   else if(['access_denied','authentication_required'].includes(result?.error?.code))onAccessFailure?.(result.error.code)
   }).catch(()=>{if(epoch.current===current&&scopeRef.current===scope&&clientRef.current===client)setState({scope,client,status:'unavailable'})})
   return()=>{epoch.current++}
  },[client,scope,refresh,supported,userScopeKey,investigationId])

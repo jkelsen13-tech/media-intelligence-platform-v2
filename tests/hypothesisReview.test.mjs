@@ -122,3 +122,12 @@ test('simultaneous clicks cannot create two review requests',async()=>{
  act(()=>{click();click()});assert.equal(calls.length,1)
  act(()=>tree.unmount());await act(async()=>resolve({data:receipt(input)}))
 })
+
+test('fresh review read withholding the selected target clears the parent access context',async()=>{
+ let tree,failures=[]
+ const response=history([receipt()]);response.entries[0].target_status='withheld'
+ const client={reviewHistory:async()=>({data:response}),acknowledgeReview:async()=>{throw Error('must not write')}}
+ await act(async()=>{tree=TestRenderer.create(createElement(Panel,{...props(client),onAccessFailure:code=>failures.push(code)}))})
+ assert.deepEqual(failures,['access_denied']);assert.doesNotMatch(content(tree),/You marked revision/)
+ assert.equal(button(tree,'Mark revision 1 reviewed'),undefined);act(()=>tree.unmount())
+})

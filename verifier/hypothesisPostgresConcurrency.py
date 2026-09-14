@@ -758,6 +758,7 @@ process.stdout.write(JSON.stringify(buildComposerSubmission(context,draft,crypto
         self.first=json.loads(self.b.execute(self.append()))
         self.admin("delete from mip_cutover_authority.publication_fence;")
         with self.assertRaisesRegex(RuntimeError,"fence unavailable"):self.session().execute(self.review_ack())
+        with self.assertRaisesRegex(RuntimeError,"fence unavailable"):self.session().execute(self.review_history_sql())
 
 
     def test_source_change_after_review_keeps_receipt_and_requires_reassessment(self):

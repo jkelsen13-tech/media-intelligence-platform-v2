@@ -80,6 +80,9 @@ create function mip_hypothesis.review_history(p_user uuid,p_investigation uuid)
  returns jsonb language plpgsql security definer set search_path='' as $$
 declare history jsonb; entries jsonb; latest uuid;
 begin
+ if current_setting('transaction_isolation')<>'read committed' then raise exception using errcode='25001',message='hypothesis requires read committed';end if;
+ perform 1 from mip_cutover_authority.publication_fence where id for share;
+ if not found then raise exception using errcode='55000',message='hypothesis fence unavailable';end if;
  history:=mip_hypothesis.read_bound_history(p_user,p_investigation);
  select coalesce(jsonb_agg(jsonb_build_object('receipt',r.receipt,'target_status',
   case when exists(select 1 from jsonb_array_elements(history->'entries') e

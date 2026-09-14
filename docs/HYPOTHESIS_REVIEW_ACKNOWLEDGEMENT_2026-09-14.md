@@ -25,3 +25,6 @@ Native PostgreSQL additions cover explicit/non-mutating behavior, concurrent ide
 All native and browser data are synthetic. The browser receipt fixture is in memory and is not durability evidence; native PostgreSQL/process-loss tests provide that separate evidence. No live Auth, provider, source retrieval, credential, schedule, deployment or publication is introduced. CC remains closed 3/3. Production cutover stays ON HOLD.
 
 Technical reference: PostgreSQL [row security](https://www.postgresql.org/docs/17/ddl-rowsecurity.html) requires FORCE RLS to subject a normal owner to policies; table-wide mutation guards are separate from RLS. Existing isolated ownership and immutability controls are retained.
+
+
+Initial checkpoint ad3ca70b532a94f5f1f884bac4b46eba42a2eb32 passed native PostgreSQL 69/69 (run 34807394235/job 103861838434) and the expanded browser workflow (34807394219). A follow-up adds parent-context clearing when a fresh own-review read reports the selected target withheld, and extends the missing-fence guard to the review reader. These additions require their own exact-candidate regression results; the earlier PASS remains scoped to the earlier code.
