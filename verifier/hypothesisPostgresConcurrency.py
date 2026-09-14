@@ -439,8 +439,11 @@ class Hypothesis(unittest.TestCase):
         scalar(self.database,"mip_assessments_v1","append",{"candidate_id":candidate,"algorithm_key":"synthetic","algorithm_version":"v1",
             "outcome":"insufficient_evidence","rationale":"Synthetic.","remaining_uncertainty":"Synthetic.",
             "context_positions":context["context_positions"]})
-        obs=scalar(self.database,"mip_investigation_briefings_v1","observe",{"observation_id":str(uuid.uuid4()),
-            "previous_observation_id":self.new_binding["observation"]["id"],"candidate_ids":[candidate]})
+        # A changed candidate scope requires a fresh baseline, never a fabricated comparable observation.
+        with self.assertRaisesRegex(RuntimeError,"comparison scope mismatch"):
+            scalar(self.database,"mip_investigation_briefings_v1","observe",{"observation_id":str(uuid.uuid4()),
+                "previous_observation_id":self.new_binding["observation"]["id"],"candidate_ids":[candidate]})
+        obs=scalar(self.database,"mip_investigation_briefings_v1","observe",{"observation_id":str(uuid.uuid4()),"candidate_ids":[candidate]})
         version=str(uuid.uuid4())
         scalar(self.database,"mip_investigation_workspace_v1","put",{"investigation_id":self.iid,"version_id":version,
             "previous_version_id":self.new_version,"observation_id":obs["id"],"state":self.state,
