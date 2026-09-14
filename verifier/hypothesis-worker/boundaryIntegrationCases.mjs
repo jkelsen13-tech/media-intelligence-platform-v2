@@ -1,3 +1,4 @@
+import {createIncarnationBoundTransport} from '../../supabase/qualification/hypothesis-assessments/sourceIncarnation.mjs'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {randomUUID,randomBytes,createHash} from 'node:crypto'
@@ -12,8 +13,8 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
  await f.admin(await readFile(new URL('../../supabase/qualification/hypothesis-assessments/022_registered_stream_boundaries.sql',import.meta.url),'utf8'))
  const revisionRelation=await f.admin("select 'mip_hypothesis.revision_transactions'::regclass::oid::text")
  const markerRelation=await f.admin("select 'mip_temporal.registered_stream_markers'::regclass::oid::text")
- async function configured(t,{incarnationMismatch=false,contractMismatch=false}={}){
-  const b=await staged(t),incarnationId=randomUUID()
+ async function configured(t,{incarnationMismatch=false,contractMismatch=false,paged=false}={}){
+  const b=await staged(t,{paged}),incarnationId=randomUUID()
   await f.admin('insert into mip_temporal.source_incarnations select '+[b.bindingId,incarnationMismatch?randomUUID():incarnationId].map(q).join(',')+
    ",c.system_identifier::text,d.oid,pg_postmaster_start_time(),'synthetic-v2-registration' from pg_control_system() c cross join pg_database d where d.datname=current_database();")
   const filter="(binding_id = '"+b.bindingId+"'::uuid)"
@@ -149,9 +150,15 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
   assert.equal(await b.checkpointCount(),'1')
  })
  await t.test('missing bootstrap or mutated custody readback prevents source permits and slot advancement',async t=>{
-  const b=await configured(t),issue=await b.issue(),c=await b.capture(issue.marker_id),j=b.journal()
+  const b=await configured(t,{paged:true}),issue=await b.issue(),c=await b.capture(issue.marker_id),j=b.journal()
   await assert.rejects(()=>b.consume(c,{journal:{putOnce:j.putOnce,get:async k=>k.startsWith('bootstrap-v1:')?null:j.get(k)}}))
   await assert.rejects(()=>b.consume(c,{journal:{putOnce:j.putOnce,get:async k=>k.startsWith('boundary-delivery-v2:')?null:j.get(k)}}))
+  assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
+  let lost=false
+  await assert.rejects(()=>b.consume(c,{journal:{
+   get:async k=>lost&&k.startsWith('bootstrap-v1:')?null:j.get(k),
+   putOnce:async(k,v)=>{const saved=await j.putOnce(k,v);if(k.startsWith('boundary-delivery-v2:'))lost=true;return saved}
+  }}))
   assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
   await b.consume(c)
  })
@@ -184,6 +191,39 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
   await assert.rejects(()=>b.consume(c),/mip_temporal_binding_denied/)
   assert.equal(await b.checkpointCount(),'1')
  })
+ await t.test('source revocation locks first and custody-bound advance denies without a checkpoint',async t=>{
+  const b=await configured(t),issue=await b.issue(),c=await b.capture(issue.marker_id);let request
+  await assert.rejects(()=>b.consume(c,{transport:{prepare:b.api.prepare,advance:async p=>{request=p;throw Error('hold')}}}),/hold/)
+  const held=await hold(f.db,b.revokeSql);let finished=false
+  const pending=b.api.advance(request);pending.catch(()=>{})
+  try{
+   await blocked(f,held.pid);await held.finish(true);finished=true
+   await assert.rejects(pending,/mip_temporal_binding_denied/)
+   assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
+  }finally{if(!finished)await held.finish(false)}
+ })
+ await t.test('custody-bound source advancement holds revocation fence until committed',async t=>{
+  const b=await configured(t),issue=await b.issue(),c=await b.capture(issue.marker_id)
+  let held,release,entered
+  const gate=new Promise(r=>release=r),ready=new Promise(r=>entered=r)
+  const api=b.makeApi(b.registration,async(name,args)=>{
+   if(name!=='advance_boundary_incarnation')return b.call(name,args)
+   held=await hold(f.db,'select mip_temporal.'+name+'('+args.map(q).join(',')+');','mip_temporal_ack_gateway')
+   entered();await gate;await held.finish(true)
+   // Read back the receipt produced by the exact already-authorized held gateway call.
+   // No identity or endpoint is reconstructed by this fault-injection adapter.
+   return JSON.parse(await f.admin('select receipt from mip_temporal.stream_checkpoints where capture_id='+q(c.id)))
+  })
+  const completion=b.consume(c,{transport:api});completion.catch(()=>{})
+  await ready
+  const revoke=f.admin(b.revokeSql);revoke.catch(()=>{})
+  await blocked(f,held.pid);release()
+  // After the source transaction commits, the still-held custody exclusion fences revocation
+  // until the exact source receipt has been read back and the wrapper returns.
+  await completion;await revoke
+  assert.equal(await b.confirmed(),c.end_lsn);assert.equal(await b.checkpointCount(),'1')
+  await assert.rejects(()=>b.consume(c),/mip_temporal_binding_denied/)
+ })
  await t.test('slot loss leaves retained delivery and source records, with no fabricated recovery',async t=>{
   const b=await configured(t),issue=await b.issue(),c=await b.capture(issue.marker_id)
   await assert.rejects(()=>b.consume(c,{transport:{prepare:b.api.prepare,advance:async()=>{throw Error('hold')}}}),/hold/)
@@ -200,10 +240,39 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
   await assert.rejects(()=>wrongContract.issue(),/mip_boundary_contract_denied/)
   assert.ok(wrongContract.calls.includes('issue_boundary_marker'))
  })
+ await t.test('registered v2 binding cannot downgrade into any legacy gateway or private implementation',async t=>{
+  const b=await configured(t),issue=await b.issue(),c=await b.capture(issue.marker_id);let request
+  await assert.rejects(()=>b.consume(c,{transport:{prepare:b.api.prepare,advance:async p=>{request=p;throw Error('hold')}}}),/hold/)
+  await f.admin('alter publication '+b.pub+' set table mip_hypothesis.revision_transactions(revision_id,epoch,creator_xid);')
+  await assert.rejects(()=>b.capture(issue.marker_id,b.before,c.id),/mip_boundary_publication_denied/)
+  const oldCall=(role,name,args)=>f.admin('set session authorization '+role+';select mip_temporal.'+name+'('+args.map(q).join(',')+');')
+  await assert.rejects(()=>oldCall('mip_temporal_recorder','capture_incarnation',[b.session(),b.bindingId,b.incarnationId,b.before,randomUUID()]),/mip_boundary_v1_fallback_denied/)
+  await assert.rejects(()=>oldCall('mip_temporal_recorder','prepare_incarnation',[b.session(),c.id,b.incarnationId,randomUUID(),b.context.source_id,b.context.stream_epoch,c.end_lsn,c.bootstrap_hash,c.frame_hash,'a'.repeat(64)]),/mip_boundary_v1_fallback_denied/)
+  await assert.rejects(()=>oldCall('mip_temporal_ack_gateway','advance_incarnation',[b.session(),request.request,b.incarnationId]),/mip_boundary_v1_fallback_denied/)
+  for(const role of ['anon','authenticated','service_role','mip_temporal_recorder','mip_temporal_ack_gateway','mip_comparison_worker_v1','mip_comparison_producer_v1'])
+   for(const signature of ['mip_temporal.capture_revision_incarnation_impl(uuid,uuid,uuid,pg_lsn,uuid)','mip_temporal.prepare_revision_incarnation_impl(uuid,uuid,uuid,uuid,uuid,uuid,pg_lsn,text,text,text)','mip_temporal.advance_revision_incarnation_impl(uuid,uuid,uuid)'])
+    assert.equal(await f.admin('select has_function_privilege('+[role,signature,'EXECUTE'].map(q).join(',')+')'),'f')
+  assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
+ })
+ await t.test('legitimate v1 still succeeds and replays through guarded compatibility entrypoints after 022',async t=>{
+  const b=await staged(t),incarnationId=randomUUID()
+  await f.admin('insert into mip_temporal.source_incarnations select '+[b.bindingId,incarnationId].map(q).join(',')+
+   ",c.system_identifier::text,d.oid,pg_postmaster_start_time(),'synthetic-legacy-after-022' from pg_control_system() c cross join pg_database d where d.datname=current_database();")
+  const api=createIncarnationBoundTransport({incarnationId,call:async(name,args)=>{
+   const role=name==='advance_incarnation'?'mip_temporal_ack_gateway':'mip_temporal_recorder'
+   const result=await f.admin('set session authorization '+role+';select mip_temporal.'+name+'('+args.map(q).join(',')+');')
+   return name==='prepare_incarnation'?result:JSON.parse(result)
+  }})
+  await b.produce()
+  const c=await api.capture({session:b.session(),bindingId:b.bindingId,before:b.before,request:randomUUID()})
+  await b.consume(c,{prepare:api.prepare,advance:api.advance});await b.refresh()
+  await b.consume(c,{prepare:api.prepare,advance:api.advance})
+  assert.equal(await b.confirmed(),c.end_lsn);assert.equal(await b.checkpointCount(),'1')
+ })
  await t.test('v1 publication contract and direct native/table privilege exclusions are preserved',async t=>{
   const b=await configured(t)
   await assert.rejects(()=>b.capture(randomUUID()),/mip_registration_custody_required/)
-  await assert.rejects(()=>f.admin('set session authorization mip_temporal_recorder;select mip_temporal.capture_incarnation('+[b.session(),b.bindingId,b.incarnationId,b.before,randomUUID()].map(q).join(',')+');'),/mip_coverage_publication_denied/)
+  await assert.rejects(()=>f.admin('set session authorization mip_temporal_recorder;select mip_temporal.capture_incarnation('+[b.session(),b.bindingId,b.incarnationId,b.before,randomUUID()].map(q).join(',')+');'),/mip_boundary_v1_fallback_denied/)
   for(const role of ['mip_temporal_recorder','mip_temporal_ack_gateway','mip_comparison_worker_v1','service_role']){
    await assert.rejects(()=>f.admin('set session authorization '+role+';insert into mip_temporal.registered_stream_markers values('+[randomUUID(),b.bindingId,f.observationEpoch,'1'].map(q).join(',')+');'),/mip_database_denied_42501/)
    await assert.rejects(()=>f.admin('set session authorization '+role+';update mip_temporal.boundary_stream_configs set contract_digest='+q('a'.repeat(64))+';'),/mip_database_denied_42501/)

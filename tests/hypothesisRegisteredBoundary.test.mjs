@@ -73,6 +73,12 @@ test('full retained bootstrap and typed marker delivery precede prepare; adapter
  },advance:async p=>({state:'slot_advance_observed',request_id:p.request,end_lsn:'0/3FC',capture_id:captureId,
   covered_from:'0/1',covered_through:'0/3FC',frame_hash:c.frame_hash,kind:'marker',target_marker:marker,
   contract_digest:reg.contractDigest,historical_time_qualified:false})}
+ let loseBasis=false,calledPrepare=false
+ await assert.rejects(()=>consumeBoundaryCapture({capture:c,registration:reg,observationEpoch:epoch,revisionRelation:'41',markerRelation:'42',session,
+  journal:{get:async k=>loseBasis&&k.startsWith('bootstrap-v1:')?null:j.get(k),
+   putOnce:async(k,v)=>{const r=await j.putOnce(k,v);if(k.startsWith('boundary-delivery-v2:'))loseBasis=true;return r}},
+  transport:{prepare:async()=>{calledPrepare=true},advance:transport.advance}}))
+ assert.equal(calledPrepare,false)
  const result=await consumeBoundaryCapture({capture:c,registration:reg,observationEpoch:epoch,revisionRelation:'41',markerRelation:'42',session,
   journal:{get:j.get,putOnce:async(k,v)=>{const r=await j.putOnce(k,v);if(v.capture)v.capture.end_lsn='F/FFF';return r}},transport})
  assert.equal(result.covered_through,'0/3FC');assert.equal(prepared.end,'0/3FC')

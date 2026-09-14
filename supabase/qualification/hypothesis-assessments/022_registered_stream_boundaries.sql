@@ -231,7 +231,7 @@ begin
  update mip_temporal.stream_heads set last_lsn=c.end_lsn,last_capture=c.id where binding_id=c.binding_id;
  if k.kind='marker' then delete from mip_temporal.boundary_pending where binding_id=c.binding_id and request_id=k.target_request;end if;
  return result;
-end $;
+end $$;
 do $owners$
 declare r record;
 begin
@@ -254,4 +254,49 @@ begin
   execute format('create trigger immutable_table before truncate on mip_temporal.%I for each statement execute function mip_hypothesis.reject_mutation()',t);
  end loop;
 end $immutable$;
+-- Registered v2 bindings cannot fall back to v1 after a publication downgrade.
+-- Keep original v1 implementations intact under private names; guard their public compatibility interfaces.
+alter function mip_temporal.capture_incarnation(uuid,uuid,uuid,pg_lsn,uuid) rename to capture_revision_incarnation_impl;
+alter function mip_temporal.prepare_incarnation(uuid,uuid,uuid,uuid,uuid,uuid,pg_lsn,text,text,text) rename to prepare_revision_incarnation_impl;
+alter function mip_temporal.advance_incarnation(uuid,uuid,uuid) rename to advance_revision_incarnation_impl;
+revoke all on function mip_temporal.capture_revision_incarnation_impl(uuid,uuid,uuid,pg_lsn,uuid),
+ mip_temporal.prepare_revision_incarnation_impl(uuid,uuid,uuid,uuid,uuid,uuid,pg_lsn,text,text,text),
+ mip_temporal.advance_revision_incarnation_impl(uuid,uuid,uuid)
+ from public,anon,authenticated,service_role,mip_temporal_recorder,mip_temporal_ack_gateway,mip_comparison_worker_v1,mip_comparison_producer_v1;
+create function mip_temporal.capture_incarnation(p_session uuid,p_binding uuid,p_expected uuid,p_before pg_lsn,p_request uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+begin
+ perform mip_temporal.require_incarnation(p_session,p_binding,p_expected);
+ if exists(select 1 from mip_temporal.boundary_stream_configs where binding_id=p_binding) then raise exception 'mip_boundary_v1_fallback_denied';end if;
+ return mip_temporal.capture_revision_incarnation_impl(p_session,p_binding,p_expected,p_before,p_request);
+end $$;
+create function mip_temporal.prepare_incarnation(p_session uuid,p_capture uuid,p_expected uuid,p_request uuid,p_source uuid,p_stream uuid,
+ p_end pg_lsn,p_bootstrap text,p_frames text,p_delivery text)
+returns uuid language plpgsql security definer set search_path='' as $$
+declare binding uuid;
+begin
+ select binding_id into binding from mip_temporal.stream_captures where id=p_capture;
+ perform mip_temporal.require_incarnation(p_session,binding,p_expected);
+ if exists(select 1 from mip_temporal.boundary_stream_configs where binding_id=binding) then raise exception 'mip_boundary_v1_fallback_denied';end if;
+ return mip_temporal.prepare_revision_incarnation_impl(p_session,p_capture,p_expected,p_request,p_source,p_stream,p_end,p_bootstrap,p_frames,p_delivery);
+end $$;
+create function mip_temporal.advance_incarnation(p_session uuid,p_request uuid,p_expected uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare binding uuid;
+begin
+ select c.binding_id into binding from mip_temporal.covered_permits p join mip_temporal.stream_captures c on c.id=p.capture_id where p.request_id=p_request;
+ perform mip_temporal.require_incarnation(p_session,binding,p_expected);
+ if exists(select 1 from mip_temporal.boundary_stream_configs where binding_id=binding) then raise exception 'mip_boundary_v1_fallback_denied';end if;
+ return mip_temporal.advance_revision_incarnation_impl(p_session,p_request,p_expected);
+end $$;
+alter function mip_temporal.capture_incarnation(uuid,uuid,uuid,pg_lsn,uuid) owner to mip_temporal_advance_owner;
+alter function mip_temporal.prepare_incarnation(uuid,uuid,uuid,uuid,uuid,uuid,pg_lsn,text,text,text) owner to mip_temporal_advance_owner;
+alter function mip_temporal.advance_incarnation(uuid,uuid,uuid) owner to mip_temporal_advance_owner;
+revoke all on function mip_temporal.capture_incarnation(uuid,uuid,uuid,pg_lsn,uuid),
+ mip_temporal.prepare_incarnation(uuid,uuid,uuid,uuid,uuid,uuid,pg_lsn,text,text,text),
+ mip_temporal.advance_incarnation(uuid,uuid,uuid) from public,anon,authenticated,service_role;
+grant execute on function mip_temporal.capture_incarnation(uuid,uuid,uuid,pg_lsn,uuid),
+ mip_temporal.prepare_incarnation(uuid,uuid,uuid,uuid,uuid,uuid,pg_lsn,text,text,text) to mip_temporal_recorder;
+grant execute on function mip_temporal.advance_incarnation(uuid,uuid,uuid) to mip_temporal_ack_gateway;
+
 commit;

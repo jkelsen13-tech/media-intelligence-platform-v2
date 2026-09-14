@@ -47,17 +47,23 @@ export async function consumeBoundaryCapture({capture,registration,observationEp
  const exact=JSON.stringify(envelope),digest=hash(exact),key='boundary-delivery-v2:'+reg.bindingId+':'+c.id
  const requestHash=hash(JSON.stringify(['mip-boundary-permit-v2',reg.bindingId,reg.contractDigest,c.id,digest]))
  const request=requestHash.slice(0,8)+'-'+requestHash.slice(8,12)+'-8'+requestHash.slice(13,16)+'-a'+requestHash.slice(17,20)+'-'+requestHash.slice(20,32)
- const baseline=await validateBootstrapCoverage({context:scope,observationEpoch,journal,revisionIds:ids})
- if(baseline.overlap||position(commit)<position(baseline.consistent_lsn)||
- hash(JSON.stringify(await journal.get(bootstrapKey(scope))))!==c.bootstrap_hash)deny()
+ const requireBasis=async()=>{
+  const baseline=await validateBootstrapCoverage({context:scope,observationEpoch,journal,revisionIds:ids})
+  if(baseline.overlap||position(commit)<position(baseline.consistent_lsn)||
+  hash(JSON.stringify(await journal.get(bootstrapKey(scope))))!==c.bootstrap_hash)deny()
+ }
+ await requireBasis()
  const put=await journal.putOnce(key,JSON.parse(exact))
  if(put?.committed!==true||JSON.stringify(await journal.get(key))!==exact)throw Error('mip_boundary_delivery_not_durable')
  let receipt
  const acknowledge=async()=>{
+  await requireBasis()
   if(JSON.stringify(await journal.get(key))!==exact)throw Error('mip_boundary_delivery_not_durable')
   const prepared=await transport.prepare({session,bindingId:reg.bindingId,source,stream,request,end:c.end_lsn,hash:digest,
    capture:c.id,bootstrap:c.bootstrap_hash,frames:c.frame_hash,target:c.target_marker})
   if(prepared!==request)deny()
+  await requireBasis()
+  if(JSON.stringify(await journal.get(key))!==exact)throw Error('mip_boundary_delivery_not_durable')
   const result=await transport.advance({session,request})
   if(result?.state!=='slot_advance_observed'||result.request_id!==request||result.end_lsn!==c.end_lsn||
    result.capture_id!==c.id||result.covered_from!==c.before_lsn||result.covered_through!==c.end_lsn||
