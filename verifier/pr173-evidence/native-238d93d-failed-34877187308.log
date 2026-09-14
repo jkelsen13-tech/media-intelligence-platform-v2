@@ -1,0 +1,1002 @@
+﻿2026-09-14T17:50:48.1450660Z Current runner version: '2.337.0'
+2026-09-14T17:50:48.1475289Z ##[group]Runner Image Provisioner
+2026-09-14T17:50:48.1476274Z Hosted Compute Agent
+2026-09-14T17:50:48.1476902Z Version: 20260828.587
+2026-09-14T17:50:48.1477586Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-14T17:50:48.1478463Z Build Date: 2026-08-28T16:44:25Z
+2026-09-14T17:50:48.1479179Z Worker ID: {9f9c19c8-b70d-429f-9c99-955f9a05af33}
+2026-09-14T17:50:48.1479968Z Azure Region: westus
+2026-09-14T17:50:48.1480580Z ##[endgroup]
+2026-09-14T17:50:48.1482002Z ##[group]Operating System
+2026-09-14T17:50:48.1482821Z Ubuntu
+2026-09-14T17:50:48.1483577Z 24.04.5
+2026-09-14T17:50:48.1484165Z LTS
+2026-09-14T17:50:48.1484707Z ##[endgroup]
+2026-09-14T17:50:48.1485310Z ##[group]Runner Image
+2026-09-14T17:50:48.1485982Z Image: ubuntu-24.04
+2026-09-14T17:50:48.1486568Z Version: 20260907.300.1
+2026-09-14T17:50:48.1487893Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-14T17:50:48.1489537Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+2026-09-14T17:50:48.1490583Z ##[endgroup]
+2026-09-14T17:50:48.1491749Z ##[group]GITHUB_TOKEN Permissions
+2026-09-14T17:50:48.1493970Z Contents: read
+2026-09-14T17:50:48.1494611Z Metadata: read
+2026-09-14T17:50:48.1495238Z ##[endgroup]
+2026-09-14T17:50:48.1497462Z Secret source: Actions
+2026-09-14T17:50:48.1498448Z Cache mode: write
+2026-09-14T17:50:48.1499265Z Prepare workflow directory
+2026-09-14T17:50:48.1989832Z Prepare all required actions
+2026-09-14T17:50:48.2037453Z Getting action download info
+2026-09-14T17:50:48.5555494Z Download action repository 'actions/checkout@v7.0.1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-09-14T17:50:48.6682845Z Download action repository 'actions/setup-node@v7.0.0' (SHA:820762786026740c76f36085b0efc47a31fe5020)
+2026-09-14T17:50:48.8610159Z Complete job name: worker
+2026-09-14T17:50:48.9139844Z ##[group]Checking docker version
+2026-09-14T17:50:48.9152998Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-09-14T17:50:49.0404250Z '1.48'
+2026-09-14T17:50:49.0421829Z Docker daemon API version: '1.48'
+2026-09-14T17:50:49.0422635Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-09-14T17:50:49.0585974Z '1.48'
+2026-09-14T17:50:49.0598873Z Docker client API version: '1.48'
+2026-09-14T17:50:49.0605339Z ##[endgroup]
+2026-09-14T17:50:49.0608235Z ##[group]Clean up resources from previous jobs
+2026-09-14T17:50:49.0613891Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=5c6b9e"
+2026-09-14T17:50:49.0765148Z ##[command]/usr/bin/docker network prune --force --filter "label=5c6b9e"
+2026-09-14T17:50:49.0897740Z ##[endgroup]
+2026-09-14T17:50:49.0898292Z ##[group]Create local container network
+2026-09-14T17:50:49.0908975Z ##[command]/usr/bin/docker network create --label 5c6b9e github_network_2199c03891954800a06ba82eefa5f1d9
+2026-09-14T17:50:49.1441000Z 2348573eaccfb4fb12ab519ef0a95cc89a0c750e94620bdb7863a7933fee842f
+2026-09-14T17:50:49.1462038Z ##[endgroup]
+2026-09-14T17:50:49.1487371Z ##[group]Starting postgres service container
+2026-09-14T17:50:49.1509298Z ##[command]/usr/bin/docker pull postgres:17.6
+2026-09-14T17:50:50.0435871Z 17.6: Pulling from library/postgres
+2026-09-14T17:50:50.3122491Z d7ecded7702a: Pulling fs layer
+2026-09-14T17:50:50.3124217Z d95a46ea6a60: Pulling fs layer
+2026-09-14T17:50:50.3125329Z df684e12be42: Pulling fs layer
+2026-09-14T17:50:50.3126223Z baf316c053aa: Pulling fs layer
+2026-09-14T17:50:50.3127245Z b3ec056f36c4: Pulling fs layer
+2026-09-14T17:50:50.3128192Z f9f6c3699755: Pulling fs layer
+2026-09-14T17:50:50.3129131Z 30854ed26966: Pulling fs layer
+2026-09-14T17:50:50.3129761Z 639bc10553ca: Pulling fs layer
+2026-09-14T17:50:50.3130366Z 5d95d2afb8ab: Pulling fs layer
+2026-09-14T17:50:50.3130825Z 0424836d8a95: Pulling fs layer
+2026-09-14T17:50:50.3131290Z 4b0b164c9bcd: Pulling fs layer
+2026-09-14T17:50:50.3131817Z 36e0cf935aa6: Pulling fs layer
+2026-09-14T17:50:50.3132309Z 36b8b7af114e: Pulling fs layer
+2026-09-14T17:50:50.3133158Z 5df7a8bf57f1: Pulling fs layer
+2026-09-14T17:50:50.3134228Z baf316c053aa: Waiting
+2026-09-14T17:50:50.3134753Z b3ec056f36c4: Waiting
+2026-09-14T17:50:50.3135176Z f9f6c3699755: Waiting
+2026-09-14T17:50:50.3135536Z 30854ed26966: Waiting
+2026-09-14T17:50:50.3135803Z 639bc10553ca: Waiting
+2026-09-14T17:50:50.3136072Z 5d95d2afb8ab: Waiting
+2026-09-14T17:50:50.3136324Z 36b8b7af114e: Waiting
+2026-09-14T17:50:50.3136568Z 0424836d8a95: Waiting
+2026-09-14T17:50:50.3136843Z 5df7a8bf57f1: Waiting
+2026-09-14T17:50:50.3137130Z 4b0b164c9bcd: Waiting
+2026-09-14T17:50:50.3137394Z 36e0cf935aa6: Waiting
+2026-09-14T17:50:50.5343870Z d95a46ea6a60: Download complete
+2026-09-14T17:50:50.5562443Z df684e12be42: Verifying Checksum
+2026-09-14T17:50:50.5563883Z df684e12be42: Download complete
+2026-09-14T17:50:50.6454047Z d7ecded7702a: Verifying Checksum
+2026-09-14T17:50:50.7741174Z d7ecded7702a: Download complete
+2026-09-14T17:50:50.7742693Z baf316c053aa: Verifying Checksum
+2026-09-14T17:50:50.7744167Z baf316c053aa: Download complete
+2026-09-14T17:50:50.8130456Z b3ec056f36c4: Verifying Checksum
+2026-09-14T17:50:50.8133120Z b3ec056f36c4: Download complete
+2026-09-14T17:50:50.8807418Z f9f6c3699755: Verifying Checksum
+2026-09-14T17:50:50.8810760Z f9f6c3699755: Download complete
+2026-09-14T17:50:50.9885640Z 30854ed26966: Download complete
+2026-09-14T17:50:51.0294724Z 639bc10553ca: Verifying Checksum
+2026-09-14T17:50:51.0296772Z 639bc10553ca: Download complete
+2026-09-14T17:50:51.2128565Z 0424836d8a95: Download complete
+2026-09-14T17:50:51.2470462Z 4b0b164c9bcd: Verifying Checksum
+2026-09-14T17:50:51.2474730Z 4b0b164c9bcd: Download complete
+2026-09-14T17:50:51.4243866Z 36e0cf935aa6: Verifying Checksum
+2026-09-14T17:50:51.4255641Z 36e0cf935aa6: Download complete
+2026-09-14T17:50:51.4718633Z 36b8b7af114e: Verifying Checksum
+2026-09-14T17:50:51.4719209Z 36b8b7af114e: Download complete
+2026-09-14T17:50:51.5165400Z 5d95d2afb8ab: Verifying Checksum
+2026-09-14T17:50:51.5165843Z 5d95d2afb8ab: Download complete
+2026-09-14T17:50:51.6440014Z 5df7a8bf57f1: Verifying Checksum
+2026-09-14T17:50:51.6442829Z 5df7a8bf57f1: Download complete
+2026-09-14T17:50:51.7788368Z d7ecded7702a: Pull complete
+2026-09-14T17:50:54.5282970Z d95a46ea6a60: Pull complete
+2026-09-14T17:50:54.7136042Z df684e12be42: Pull complete
+2026-09-14T17:50:54.7549065Z baf316c053aa: Pull complete
+2026-09-14T17:50:55.0618485Z b3ec056f36c4: Pull complete
+2026-09-14T17:50:55.1471066Z f9f6c3699755: Pull complete
+2026-09-14T17:50:55.1559227Z 30854ed26966: Pull complete
+2026-09-14T17:50:55.1669587Z 639bc10553ca: Pull complete
+2026-09-14T17:50:58.2234564Z 5d95d2afb8ab: Pull complete
+2026-09-14T17:50:58.2392628Z 0424836d8a95: Pull complete
+2026-09-14T17:50:58.2480170Z 4b0b164c9bcd: Pull complete
+2026-09-14T17:50:58.2571169Z 36e0cf935aa6: Pull complete
+2026-09-14T17:50:58.2680435Z 36b8b7af114e: Pull complete
+2026-09-14T17:50:58.2769518Z 5df7a8bf57f1: Pull complete
+2026-09-14T17:50:58.2816381Z Digest: sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+2026-09-14T17:50:58.2833332Z Status: Downloaded newer image for postgres:17.6
+2026-09-14T17:50:58.2859333Z docker.io/library/postgres:17.6
+2026-09-14T17:50:58.2937410Z ##[command]/usr/bin/docker create --name b3140408e7a745a49aac4023e15ee48d_postgres176_c1f67b --label 5c6b9e --network github_network_2199c03891954800a06ba82eefa5f1d9 --network-alias postgres -p 5432:5432 --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10 -e "POSTGRES_PASSWORD=mip-disposable-ci-only" -e GITHUB_ACTIONS=true -e CI=true postgres:17.6
+2026-09-14T17:50:58.3198628Z edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:50:58.3218998Z ##[command]/usr/bin/docker start edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:50:58.5437093Z edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:50:58.5455708Z ##[command]/usr/bin/docker ps --all --filter id=edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-09-14T17:50:58.5597425Z edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91 Up Less than a second (health: starting)
+2026-09-14T17:50:58.5615905Z ##[command]/usr/bin/docker port edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:50:58.5748352Z 5432/tcp -> 0.0.0.0:5432
+2026-09-14T17:50:58.5749264Z 5432/tcp -> [::]:5432
+2026-09-14T17:50:58.5797186Z ##[endgroup]
+2026-09-14T17:50:58.5805901Z ##[group]Waiting for all services to be ready
+2026-09-14T17:50:58.5819242Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:50:58.5955526Z starting
+2026-09-14T17:50:58.5979550Z postgres service is starting, waiting 2 seconds before checking again.
+2026-09-14T17:51:00.5972604Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:51:00.6099560Z starting
+2026-09-14T17:51:00.6111626Z postgres service is starting, waiting 3 seconds before checking again.
+2026-09-14T17:51:04.2454572Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:51:04.2583483Z healthy
+2026-09-14T17:51:04.2599771Z postgres service is healthy.
+2026-09-14T17:51:04.2600237Z ##[endgroup]
+2026-09-14T17:51:04.2971623Z ##[group]Run actions/checkout@v7.0.1
+2026-09-14T17:51:04.2972221Z with:
+2026-09-14T17:51:04.2972514Z   repository: jkelsen13-tech/media-intelligence-platform-v2
+2026-09-14T17:51:04.2975599Z   token: ***
+2026-09-14T17:51:04.2975814Z   ssh-strict: true
+2026-09-14T17:51:04.2976016Z   ssh-user: git
+2026-09-14T17:51:04.2976225Z   persist-credentials: true
+2026-09-14T17:51:04.2976457Z   clean: true
+2026-09-14T17:51:04.2976669Z   sparse-checkout-cone-mode: true
+2026-09-14T17:51:04.2976926Z   fetch-depth: 1
+2026-09-14T17:51:04.2977126Z   fetch-tags: false
+2026-09-14T17:51:04.2977326Z   show-progress: true
+2026-09-14T17:51:04.2977523Z   lfs: false
+2026-09-14T17:51:04.2977702Z   submodules: false
+2026-09-14T17:51:04.2977902Z   set-safe-directory: true
+2026-09-14T17:51:04.2978140Z   allow-unsafe-pr-checkout: false
+2026-09-14T17:51:04.2978721Z ##[endgroup]
+2026-09-14T17:51:04.4002948Z Syncing repository: jkelsen13-tech/media-intelligence-platform-v2
+2026-09-14T17:51:04.4005587Z ##[group]Getting Git version info
+2026-09-14T17:51:04.4006501Z Working directory is '/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2'
+2026-09-14T17:51:04.4007749Z [command]/usr/bin/git version
+2026-09-14T17:51:04.4083714Z git version 2.55.0
+2026-09-14T17:51:04.4108666Z ##[endgroup]
+2026-09-14T17:51:04.4121890Z Temporarily overriding HOME='/home/runner/work/_temp/6972c40d-c304-4913-b296-0e968bc008e1' before making global git config changes
+2026-09-14T17:51:04.4123591Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-14T17:51:04.4130976Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2
+2026-09-14T17:51:04.4184973Z Deleting the contents of '/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2'
+2026-09-14T17:51:04.4188047Z ##[group]Determining repository object format
+2026-09-14T17:51:04.4189580Z ##[endgroup]
+2026-09-14T17:51:04.4190270Z ##[group]Initializing the repository
+2026-09-14T17:51:04.4194883Z [command]/usr/bin/git init /home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2
+2026-09-14T17:51:04.4324516Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-14T17:51:04.4325512Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-14T17:51:04.4326592Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-14T17:51:04.4327692Z hint: call:
+2026-09-14T17:51:04.4328289Z hint:
+2026-09-14T17:51:04.4329055Z hint: 	git config --global init.defaultBranch <name>
+2026-09-14T17:51:04.4329808Z hint:
+2026-09-14T17:51:04.4330487Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-14T17:51:04.4331508Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-14T17:51:04.4332290Z hint:
+2026-09-14T17:51:04.4332746Z hint: 	git branch -m <name>
+2026-09-14T17:51:04.4333637Z hint:
+2026-09-14T17:51:04.4334362Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-14T17:51:04.4335829Z Initialized empty Git repository in /home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git/
+2026-09-14T17:51:04.4339987Z [command]/usr/bin/git remote add origin https://github.com/jkelsen13-tech/media-intelligence-platform-v2
+2026-09-14T17:51:04.4397382Z ##[endgroup]
+2026-09-14T17:51:04.4398073Z ##[group]Disabling automatic garbage collection
+2026-09-14T17:51:04.4412175Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-14T17:51:04.4441410Z ##[endgroup]
+2026-09-14T17:51:04.4442403Z ##[group]Setting up auth
+2026-09-14T17:51:04.4442938Z Removing SSH command configuration
+2026-09-14T17:51:04.4448272Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-14T17:51:04.4483809Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-14T17:51:04.4922006Z Removing HTTP extra header
+2026-09-14T17:51:04.4927674Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-14T17:51:04.4964483Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-14T17:51:04.5186415Z Removing includeIf entries pointing to credentials config files
+2026-09-14T17:51:04.5191638Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-14T17:51:04.5232962Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-14T17:51:04.5461380Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-e5a951ff-8a31-412b-95fa-3030a85c673b.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-14T17:51:04.5503146Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git.path /home/runner/work/_temp/git-credentials-e5a951ff-8a31-412b-95fa-3030a85c673b.config
+2026-09-14T17:51:04.5536554Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-e5a951ff-8a31-412b-95fa-3030a85c673b.config
+2026-09-14T17:51:04.5574705Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-e5a951ff-8a31-412b-95fa-3030a85c673b.config
+2026-09-14T17:51:04.5611339Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-e5a951ff-8a31-412b-95fa-3030a85c673b.config
+2026-09-14T17:51:04.5642441Z ##[endgroup]
+2026-09-14T17:51:04.5643106Z ##[group]Fetching the repository
+2026-09-14T17:51:04.5651027Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +23d118dc6db3b7b11a31c9f673c3ce9270edfbff:refs/remotes/pull/173/merge
+2026-09-14T17:51:05.5874534Z From https://github.com/jkelsen13-tech/media-intelligence-platform-v2
+2026-09-14T17:51:05.5875465Z  * [new ref]         23d118dc6db3b7b11a31c9f673c3ce9270edfbff -> pull/173/merge
+2026-09-14T17:51:05.5899723Z ##[endgroup]
+2026-09-14T17:51:05.5900356Z ##[group]Determining the checkout info
+2026-09-14T17:51:05.5900947Z ##[endgroup]
+2026-09-14T17:51:05.5901228Z [command]/usr/bin/git sparse-checkout disable
+2026-09-14T17:51:05.5945481Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-14T17:51:05.5976313Z ##[group]Checking out the ref
+2026-09-14T17:51:05.5999806Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/173/merge
+2026-09-14T17:51:05.7301032Z Note: switching to 'refs/remotes/pull/173/merge'.
+2026-09-14T17:51:05.7301541Z 
+2026-09-14T17:51:05.7301899Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-09-14T17:51:05.7302740Z changes and commit them, and you can discard any commits you make in this
+2026-09-14T17:51:05.7303815Z state without impacting any branches by switching back to a branch.
+2026-09-14T17:51:05.7304345Z 
+2026-09-14T17:51:05.7304682Z If you want to create a new branch to retain commits you create, you may
+2026-09-14T17:51:05.7305247Z do so (now or later) by using -c with the switch command. Example:
+2026-09-14T17:51:05.7305541Z 
+2026-09-14T17:51:05.7305664Z   git switch -c <new-branch-name>
+2026-09-14T17:51:05.7305854Z 
+2026-09-14T17:51:05.7305967Z Or undo this operation with:
+2026-09-14T17:51:05.7306146Z 
+2026-09-14T17:51:05.7306239Z   git switch -
+2026-09-14T17:51:05.7306387Z 
+2026-09-14T17:51:05.7306630Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-09-14T17:51:05.7306995Z 
+2026-09-14T17:51:05.7307633Z HEAD is now at 23d118d Merge 238d93d02a000f3f721679bfbd6e166aa36a8eab into e973a2a4fa413c452e8ab48800587a248be3eb4f
+2026-09-14T17:51:05.7320078Z ##[endgroup]
+2026-09-14T17:51:05.7368617Z [command]/usr/bin/git log -1 --format=%H
+2026-09-14T17:51:05.7397522Z 23d118dc6db3b7b11a31c9f673c3ce9270edfbff
+2026-09-14T17:51:05.7647959Z ##[group]Run actions/setup-node@v7.0.0
+2026-09-14T17:51:05.7648263Z with:
+2026-09-14T17:51:05.7648453Z   node-version: 24
+2026-09-14T17:51:05.7648683Z   check-latest: false
+2026-09-14T17:51:05.7651023Z   token: ***
+2026-09-14T17:51:05.7651237Z   package-manager-cache: true
+2026-09-14T17:51:05.7651483Z ##[endgroup]
+2026-09-14T17:51:05.8927111Z Found in cache @ /opt/hostedtoolcache/node/24.20.0/x64
+2026-09-14T17:51:05.8931389Z ##[group]Environment details
+2026-09-14T17:51:06.3460781Z node: v24.20.0
+2026-09-14T17:51:06.3461038Z npm: 11.19.0
+2026-09-14T17:51:06.3461272Z yarn: 1.22.22
+2026-09-14T17:51:06.3462157Z ##[endgroup]
+2026-09-14T17:51:06.3585142Z ##[group]Run npm ci --ignore-scripts --no-audit
+2026-09-14T17:51:06.3585567Z [36;1mnpm ci --ignore-scripts --no-audit[0m
+2026-09-14T17:51:06.3636867Z shell: /usr/bin/bash -e {0}
+2026-09-14T17:51:06.3637142Z ##[endgroup]
+2026-09-14T17:51:16.8201117Z 
+2026-09-14T17:51:16.8210697Z added 206 packages in 10s
+2026-09-14T17:51:16.8211258Z 
+2026-09-14T17:51:16.8211940Z 17 packages are looking for funding
+2026-09-14T17:51:16.8212520Z   run `npm fund` for details
+2026-09-14T17:51:16.8955118Z ##[group]Run docker pull node:24-alpine
+2026-09-14T17:51:16.8955507Z [36;1mdocker pull node:24-alpine[0m
+2026-09-14T17:51:16.8992600Z shell: /usr/bin/bash -e {0}
+2026-09-14T17:51:16.8992848Z ##[endgroup]
+2026-09-14T17:51:17.8015145Z 24-alpine: Pulling from library/node
+2026-09-14T17:51:18.0760841Z 55afa1ecc21d: Already exists
+2026-09-14T17:51:18.0777146Z bc66c3ef2ea3: Pulling fs layer
+2026-09-14T17:51:18.0778518Z e2c9c68d0d93: Pulling fs layer
+2026-09-14T17:51:18.0780484Z c45bfe2a2e42: Pulling fs layer
+2026-09-14T17:51:18.2927033Z c45bfe2a2e42: Verifying Checksum
+2026-09-14T17:51:18.2927511Z c45bfe2a2e42: Download complete
+2026-09-14T17:51:18.3082085Z e2c9c68d0d93: Verifying Checksum
+2026-09-14T17:51:18.3082722Z e2c9c68d0d93: Download complete
+2026-09-14T17:51:18.4606913Z bc66c3ef2ea3: Verifying Checksum
+2026-09-14T17:51:18.4607460Z bc66c3ef2ea3: Download complete
+2026-09-14T17:51:20.3731689Z bc66c3ef2ea3: Pull complete
+2026-09-14T17:51:20.4175251Z e2c9c68d0d93: Pull complete
+2026-09-14T17:51:20.4369171Z c45bfe2a2e42: Pull complete
+2026-09-14T17:51:20.4407528Z Digest: sha256:50c8e8ca1d27439048670df5883f32d57cf81cff6233222c893fd0d9884cbd81
+2026-09-14T17:51:20.4420224Z Status: Downloaded newer image for node:24-alpine
+2026-09-14T17:51:20.4426486Z docker.io/library/node:24-alpine
+2026-09-14T17:51:20.4507634Z ##[group]Run node verifier/hypothesis-worker/prepareLogical.mjs
+2026-09-14T17:51:20.4508153Z [36;1mnode verifier/hypothesis-worker/prepareLogical.mjs[0m
+2026-09-14T17:51:20.4544828Z shell: /usr/bin/bash -e {0}
+2026-09-14T17:51:20.4545088Z env:
+2026-09-14T17:51:20.4545334Z   MIP_DISPOSABLE_POSTGRES: comparison-qualification
+2026-09-14T17:51:20.4545853Z   MIP_POSTGRES_SERVICE_ID: edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:51:20.4546320Z ##[endgroup]
+2026-09-14T17:51:21.1721397Z MIP_DISPOSABLE_METADATA_DECODING_READY
+2026-09-14T17:51:21.1809241Z ##[group]Run node --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs
+2026-09-14T17:51:21.1810319Z [36;1mnode --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs[0m
+2026-09-14T17:51:21.1865440Z shell: /usr/bin/bash -e {0}
+2026-09-14T17:51:21.1865869Z env:
+2026-09-14T17:51:21.1866289Z   MIP_DISPOSABLE_POSTGRES: comparison-qualification
+2026-09-14T17:51:21.1867180Z   MIP_POSTGRES_SERVICE_ID: edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:51:21.1867984Z ##[endgroup]
+2026-09-14T17:51:23.4718789Z ▶ synthetic commit recorder uses existing encrypted remote journal and actual isolated process restart
+2026-09-14T17:51:23.4720247Z   ✔ exact replay succeeds; changed metadata cannot replace retained commit (415.55058ms)
+2026-09-14T17:51:23.7167317Z   ✔ comparison worker cannot read recorder runtime; recorder has no producer enqueue capability (245.061052ms)
+2026-09-14T17:51:24.6737146Z   ✔ process killed after put resumes exact retained metadata with fresh session (957.430625ms)
+2026-09-14T17:51:25.6942328Z   ✔ process killed after get resumes exact retained metadata with fresh session (1020.380935ms)
+2026-09-14T17:51:26.8145329Z   ✔ process killed after ack resumes exact retained metadata with fresh session (1119.544571ms)
+2026-09-14T17:51:27.0148272Z   ✔ revoked current mapping prevents replay acknowledgement and preserves stranded record (199.933767ms)
+2026-09-14T17:51:27.0663539Z ✔ synthetic commit recorder uses existing encrypted remote journal and actual isolated process restart (5789.233411ms)
+2026-09-14T17:51:35.2495575Z ▶ isolated hypothesis generation authority, retained computation and restart package
+2026-09-14T17:51:35.2496658Z   ▶ consistent exported snapshot bootstrap isolation
+2026-09-14T17:51:35.2498022Z     ✔ exported native snapshot excludes a commit made while its imported reader waits; stream includes it exactly (1.635606ms)
+2026-09-14T17:51:35.4096286Z     ✔ missing bootstrap denies actual stream acknowledgement without moving the slot (159.133573ms)
+2026-09-14T17:51:36.5462278Z     ✔ exact durable bootstrap gates actual fenced native advancement and survives exporter closure (1137.198243ms)
+2026-09-14T17:51:36.5830361Z     ✔ closed export cannot be imported as a fresh snapshot or used to fabricate a new observation (36.991751ms)
+2026-09-14T17:51:36.6235055Z   ✔ consistent exported snapshot bootstrap isolation (5579.660196ms)
+2026-09-14T17:51:40.0072987Z   ▶ actual pgoutput metadata-to-durable-recorder isolation
+2026-09-14T17:51:40.0074889Z     ✔ source acknowledgement roles cannot self-grant permits, mutate bindings or inherit replication ownership (3187.30841ms)
+2026-09-14T17:51:42.7724190Z     ✔ source acknowledgement rejects an uncommitted permit even in a privileged multi-role test transaction (2764.83152ms)
+2026-09-14T17:51:45.8833078Z     ✔ slot advancement survives SQL rollback; committed permit remains and exact retry reconciles lost receipt (3110.685593ms)
+2026-09-14T17:51:48.8886481Z     ✔ acknowledgement locks first: actual advancement completes and source revocation waits (3004.816211ms)
+2026-09-14T17:51:51.7722487Z     ✔ source revocation commits first: waiting acknowledgement denies without advancing or deleting its permit (2883.773592ms)
+2026-09-14T17:51:53.8730745Z     ✔ actual pgoutput contains exact revision metadata and no assessment/source body fields (39.156005ms)
+2026-09-14T17:51:53.9499496Z     ✔ incomplete native delivery leaves slot position unchanged and makes no acknowledgement (76.559004ms)
+2026-09-14T17:51:55.3522906Z     ✔ actual slot advancement follows durable exact metadata; lost acknowledgement replays without changing evidence (1402.115084ms)
+2026-09-14T17:51:57.5142397Z     ✔ revoked recorder mapping denies a new native delivery and retains unacknowledged source work (2162.24878ms)
+2026-09-14T17:51:57.5524204Z   ✔ actual pgoutput metadata-to-durable-recorder isolation (20930.855225ms)
+2026-09-14T17:52:05.3307339Z   ▶ source-captured contiguous metadata coverage isolation
+2026-09-14T17:52:05.3309011Z     ✔ source captures only the next native transaction and chains exact reconciled revision IDs (7682.984763ms)
+2026-09-14T17:52:09.9928281Z     ✔ source permit rejects a skipped transaction even with genuine later native metadata (4662.16729ms)
+2026-09-14T17:52:14.5346884Z     ✔ rolled-back coverage receipt recovers native advancement with committed capture and fresh session (4541.399482ms)
+2026-09-14T17:52:19.8957570Z     ✔ slot movement outside the protocol denies progress and preserves the captured transaction (5360.977808ms)
+2026-09-14T17:52:23.2994558Z     ✔ slot loss denies recovery without deleting source captures or fabricating continuity (3403.338045ms)
+2026-09-14T17:52:26.7726366Z     ✔ publication expansion and revoked source authority fail closed before new capture (3473.019589ms)
+2026-09-14T17:52:27.6296645Z     ✔ current interface removes unbound advancement and denies direct coverage writes (856.808276ms)
+2026-09-14T17:52:33.4927961Z     ✔ paged native snapshot excludes between-page commits and its complete manifest gates covered stream advancement (5864.092161ms)
+2026-09-14T17:52:38.8675759Z     ▶ native source incarnation registration isolation
+2026-09-14T17:52:38.8676596Z       ✔ explicit registration permits covered completion and fresh-session exact receipt replay (5323.244761ms)
+2026-09-14T17:52:44.0569953Z       ✔ missing or mismatched external pin denies capture, preparation and receipt replay (5189.216717ms)
+2026-09-14T17:52:46.2111226Z       ✔ simulated cluster, database-object and startup mismatches deny native capture without rewriting history (2154.329898ms)
+2026-09-14T17:52:47.3109115Z       ✔ registration is immutable and gateways cannot inspect control data or bypass the incarnation interface (1099.404315ms)
+2026-09-14T17:52:50.8847354Z       ✔ incarnation-bound advancement locks first and source revocation waits (3573.629668ms)
+2026-09-14T17:52:54.4519533Z       ✔ source revocation locks first and incarnation-bound advancement rejects without a checkpoint (3566.435593ms)
+2026-09-14T17:53:03.2219339Z       ✔ external encrypted custody gates the actual incarnation capture, prepare and advance flow (8769.9553ms)
+2026-09-14T17:53:08.0117363Z       ✔ actual database clone preserves source records but cannot reuse the original configured source binding (4790.059142ms)
+2026-09-14T17:53:12.5761750Z       ✔ actual database server restart preserves durable work but denies old incarnation acceptance after fresh authentication (4564.470023ms)
+2026-09-14T17:53:12.5763495Z     ✔ native source incarnation registration isolation (39082.751163ms)
+2026-09-14T17:53:20.9863680Z     ▶ registered v2 marker authority integration
+2026-09-14T17:53:20.9865116Z       ✔ authorized marker closes empty revision interval through custody and actual narrow gateways (8273.216117ms)
+2026-09-14T17:53:32.9474851Z       ✔ actual open revision across consumed marker commits later and is captured before next marker (11960.841378ms)
+2026-09-14T17:53:39.9899749Z       ✔ rollback of authorized issuer or open revision never manufactures marker or revision coverage (7042.604254ms)
+2026-09-14T17:53:54.2075414Z       ✔ intervening transactions cannot be skipped or relabelled as marker (14217.56949ms)
+2026-09-14T17:54:03.3966753Z       ✔ binding-filtered concurrent streams never consume another binding marker (9188.640127ms)
+2026-09-14T17:54:08.8465251Z       ✔ lost source responses reuse exact issue and capture rather than launching new identities (5449.509381ms)
+2026-09-14T17:54:16.7222264Z       ✔ lost prepare and advance responses replay exact retained permits and checkpoints (7875.458109ms)
+2026-09-14T17:54:36.3019796Z       ✔ missing bootstrap or mutated custody readback prevents source permits and slot advancement (19579.626524ms)
+2026-09-14T17:54:42.4404415Z       ✔ rolled-back SQL receipt after native advance recovers exact retained capture and permit (6138.295264ms)
+2026-09-14T17:54:47.6151306Z       ✔ changed publication filter, stale registration and wrong incarnation fail closed (5174.49713ms)
+2026-09-14T17:54:54.1998728Z       ✔ revoked source cannot issue, capture, prepare or replay an advanced result (6584.643964ms)
+2026-09-14T17:54:58.5464707Z       ✔ source revocation locks first and custody-bound advance denies without a checkpoint (4346.359052ms)
+2026-09-14T17:55:04.2750339Z       ✔ custody-bound source advancement holds revocation fence until committed (5728.63804ms)
+2026-09-14T17:55:09.3675997Z       ✔ slot loss leaves retained delivery and source records, with no fabricated recovery (5092.092258ms)
+2026-09-14T17:55:19.6240872Z       ✔ slot recreation or external native advancement cannot inherit registered coverage (10256.637446ms)
+2026-09-14T17:55:28.2708677Z       ✔ source mapping revocation fences issuance, capture and prepared advancement (8645.930429ms)
+2026-09-14T17:55:32.1027367Z       ✔ custody envelope pins are forwarded unchanged and independently rejected by source registration (3831.960112ms)
+2026-09-14T17:55:37.4260462Z       ✔ registered v2 binding cannot downgrade into any legacy gateway or private implementation (5323.149192ms)
+2026-09-14T17:55:42.1132231Z       ✔ legitimate v1 still succeeds and replays through guarded compatibility entrypoints after 022 (4687.121104ms)
+2026-09-14T17:55:44.2386598Z       ✔ v1 publication contract and direct native/table privilege exclusions are preserved (2124.594522ms)
+2026-09-14T17:56:11.0086041Z       ✔ internal retained prefix verifies actual native deliveries without granting application history authority (26769.603004ms)
+2026-09-14T17:56:43.0040672Z       ✔ internal prefix rejects missing swapped omitted or corrupt retained basis and scope (31995.506538ms)
+2026-09-14T17:57:06.3707897Z       ✔ retained integrity cannot substitute source revocation or current journal admission (23367.880644ms)
+2026-09-14T17:57:30.3277531Z       ✔ sealed SQL intersects prefix before gateway delivery; direct gateway cannot escape into later same-investigation history (23896.74135ms)
+2026-09-14T17:57:55.1260186Z       ✔ selected reader does not evaluate unrelated revision bindings and enforces selected cardinality (24798.268847ms)
+2026-09-14T17:57:59.6068028Z Native saved-boundary failure: permit metadata has no payload; concurrent user quota and expiry-only cleanup remain table-blind Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:57:59.6069611Z     at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:57:59.6070764Z     at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:57:59.6071568Z     at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:57:59.6072155Z   code: '22023'
+2026-09-14T17:57:59.6072600Z }
+2026-09-14T17:57:59.6558038Z       ✖ permit metadata has no payload; concurrent user quota and expiry-only cleanup remain table-blind (4524.462713ms)
+2026-09-14T17:58:04.1307494Z Native saved-boundary failure: global quota serializes the final slot and cleanup skips locked expired rows Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:58:04.1312980Z     at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:58:04.1314931Z     at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:58:04.1315733Z     at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:58:04.1316329Z   code: '22023'
+2026-09-14T17:58:04.1316541Z }
+2026-09-14T17:58:04.1788004Z       ✖ global quota serializes the final slot and cleanup skips locked expired rows (4527.600701ms)
+2026-09-14T17:58:08.6578880Z Native saved-boundary failure: selected permission closures method freshness byte limits digest and pre-quota waits fail closed Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:58:08.6581810Z     at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:58:08.6584008Z     at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:58:08.6584812Z     at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:58:08.6585486Z   code: '22023'
+2026-09-14T17:58:08.6585811Z }
+2026-09-14T17:58:08.7033214Z       ✖ selected permission closures method freshness byte limits digest and pre-quota waits fail closed (4523.091683ms)
+2026-09-14T17:58:13.1944449Z Native saved-boundary failure: verified Auth is inside admission; alternate valid member/investigation and caller identity fields cannot impersonate Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:58:13.1946959Z     at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:58:13.1948204Z     at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:58:13.1948780Z     at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:58:13.1949210Z   code: '22023'
+2026-09-14T17:58:13.1949505Z }
+2026-09-14T17:58:13.2383645Z       ✖ verified Auth is inside admission; alternate valid member/investigation and caller identity fields cannot impersonate (4535.859509ms)
+2026-09-14T17:58:14.5085812Z       ✔ permit scope is immutable; direct roles are disjoint; native owner RLS search_path and exact callable signatures are checked (1270.647826ms)
+2026-09-14T17:58:18.9954799Z Native saved-boundary failure: same-transaction savepoint replay returns identical sealed payload without new receipt identity; new transaction and changed request deny Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:58:18.9958056Z     at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:58:18.9959755Z     at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:58:18.9960750Z     at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:58:18.9962880Z   code: '22023'
+2026-09-14T17:58:18.9963428Z }
+2026-09-14T17:58:19.0397947Z       ✖ same-transaction savepoint replay returns identical sealed payload without new receipt identity; new transaction and changed request deny (4530.362968ms)
+2026-09-14T17:58:23.4935542Z Native saved-boundary failure: source/member revocation before admission deny; material revocation during delivery waits until snapshot completes Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:58:23.4938520Z     at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:58:23.4940204Z     at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:58:23.4941334Z     at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:58:23.4942300Z   code: '22023'
+2026-09-14T17:58:23.4942866Z }
+2026-09-14T17:58:23.5374746Z       ✖ source/member revocation before admission deny; material revocation during delivery waits until snapshot completes (4497.530212ms)
+2026-09-14T17:58:28.0421181Z Native saved-boundary failure: cooperative material/session expiry rolls back; expired JWT denies before admission Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:58:28.0424070Z     at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:58:28.0425168Z     at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:58:28.0425813Z     at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:58:28.0426356Z   code: '22023'
+2026-09-14T17:58:28.0426696Z }
+2026-09-14T17:58:28.0865337Z       ✖ cooperative material/session expiry rolls back; expired JWT denies before admission (4548.734058ms)
+2026-09-14T17:58:32.5671961Z Native saved-boundary failure: hung delivery expires aborts and rolls back; malformed response keys never deliver; native field mutations deny Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:58:32.5675342Z     at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:58:32.5676280Z     at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:58:32.5676755Z     at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:58:32.5677140Z   code: '22023'
+2026-09-14T17:58:32.5677343Z }
+2026-09-14T17:58:32.6081649Z       ✖ hung delivery expires aborts and rolls back; malformed response keys never deliver; native field mutations deny (4523.247013ms)
+2026-09-14T17:58:32.6084624Z     ✖ registered v2 marker authority integration (320032.49993ms)
+2026-09-14T17:58:32.6089323Z   ✖ source-captured contiguous metadata coverage isolation (395055.88676ms)
+2026-09-14T17:58:33.6996122Z   ▶ native marker boundary proof without source activation
+2026-09-14T17:58:33.6997414Z     ✔ unrelated WAL and empty peek never prove coverage; committed native marker does (843.660003ms)
+2026-09-14T17:58:34.7210533Z     ✖ open actual revision transaction survives consuming a later marker and decodes after commit (1021.262175ms)
+2026-09-14T17:58:35.7799285Z     ✖ rolled-back actual revision and rolled-back marker produce no published transaction (1058.937174ms)
+2026-09-14T17:58:36.8083483Z     ✖ intervening revision must be retained before requested marker and cannot decode as marker (1027.973998ms)
+2026-09-14T17:58:37.1928031Z     ✔ fixture exact publication and no gateway marker grants; native source integration stays closed (384.892244ms)
+2026-09-14T17:58:37.8844657Z     ✔ slot loss does not erase retained proof or grant source-recovery authority (691.248781ms)
+2026-09-14T17:58:38.2782838Z     ✔ revoked journal mapping blocks retention; source WAL remains unacknowledged (393.154341ms)
+2026-09-14T17:58:38.2788846Z   ✖ native marker boundary proof without source activation (5667.697499ms)
+2026-09-14T17:58:39.1942768Z   ✖ configured synthetic client-handler-store-worker-review path uses native gateway transactions (915.74891ms)
+2026-09-14T17:58:40.0961812Z   ✖ atomic real retained-input capture; no caller source body or input hash accepted (901.714051ms)
+2026-09-14T17:58:41.0182075Z   ✖ separate worker table/function ownership, FORCE RLS and no escalation (921.26923ms)
+2026-09-14T17:58:41.9310302Z   ✖ closed CC source scope and missing permission never enter generation (913.467089ms)
+2026-09-14T17:58:42.8334366Z   ✖ wrong audience/subject/runtime, expired identity and cross-runtime session denied (901.796182ms)
+2026-09-14T17:58:43.7305838Z   ✖ revoked mapping and stale replacement cannot reuse a retained generation (897.007968ms)
+2026-09-14T17:58:44.6296806Z   ✖ source and evaluated-implementation revocation during processing strand work (899.464953ms)
+2026-09-14T17:58:45.5329952Z   ✖ revoked reviewer membership denies completion and retains processing (902.927332ms)
+2026-09-14T17:58:46.4572449Z   ✖ revoked method denies completion and cannot be reactivated under old revision (923.901815ms)
+2026-09-14T17:58:47.3649575Z   ✖ ineligible and out-of-runtime work cannot obstruct eligible investigation (907.655253ms)
+2026-09-14T17:58:48.2688382Z   ✖ rotating investigation selection advances an eligible later investigation (903.293618ms)
+2026-09-14T17:58:49.1784730Z   ✖ database independently rejects output source, method, rating, review and argument escalation (909.55887ms)
+2026-09-14T17:58:50.0768123Z   ✖ permission acceptance first: output/revision/ack/receipt commit, revocation waits (898.214802ms)
+2026-09-14T17:58:50.9920186Z   ✖ permission revocation first: output/revision/ack/receipt all reject (914.782152ms)
+2026-09-14T17:58:51.9094421Z   ✖ source correction during processing rejects stale retained generation (917.134478ms)
+2026-09-14T17:58:52.8146930Z   ✖ exact completion retry requires current authority and identical output (905.453745ms)
+2026-09-14T17:58:53.7204055Z   ✖ worker method mismatch is explicitly failed without invented assessment (905.674636ms)
+2026-09-14T17:58:54.6231572Z   ✖ expired lease does not requeue, force-cancel or accept completion (902.637374ms)
+2026-09-14T17:58:55.5309017Z   ✖ real container computes over retained spans with no broad credentials or network (907.397756ms)
+2026-09-14T17:58:56.4465018Z   ✖ actual termination/restart before_complete_commit recovers exact durable completion (914.181882ms)
+2026-09-14T17:58:57.3485748Z   ✖ actual termination/restart after_complete_commit recovers exact durable completion (903.221293ms)
+2026-09-14T17:58:58.2414244Z   ✖ actual lost claim response preserves stranded work; fresh process cannot invent lease (892.659502ms)
+2026-09-14T17:58:59.1513061Z   ✖ encrypted remote exact-content journal, scoped runtime, no plaintext and protocol separation (909.221749ms)
+2026-09-14T17:59:00.0557875Z   ✖ generated reassessment resolves exact human causes atomically and stays unreviewed/private (904.384548ms)
+2026-09-14T17:59:00.9721949Z   ✖ unselected retained input permissions still protect generated history and create causes (916.187736ms)
+2026-09-14T17:59:01.9234455Z   ✖ private operational ledger binds exact generation records and never returns lease secrets or source text (950.805269ms)
+2026-09-14T17:59:02.8283207Z   ✖ expired session cannot commit an idle receipt after waiting on a permission fence (905.530592ms)
+2026-09-14T17:59:03.7275467Z   ✖ capture acknowledgement can be recovered after the generation has completed (899.236773ms)
+2026-09-14T17:59:04.6193762Z   ✖ method replacement retains a distinct pending cause and explicit new-version reassessment (891.65041ms)
+2026-09-14T17:59:05.5166522Z   ✖ rolled-back method removal leaves no cause; committed removal retains cause and unrelated history (896.948325ms)
+2026-09-14T17:59:06.4119431Z   ✖ fresh-generation recovery preserves expired attempt and commits exact linked retry (894.899302ms)
+2026-09-14T17:59:07.3178559Z   ✖ recovery refuses wrong owner, scope, completed job and revoked input permission (905.996399ms)
+2026-09-14T17:59:08.2146495Z   ✖ recovery is atomic on rollback and inaccessible to the worker role (896.657475ms)
+2026-09-14T17:59:09.1179621Z   ✖ revoked signing key denies claim and completion despite an outstanding lease (903.304183ms)
+2026-09-14T17:59:09.1836773Z ✖ isolated hypothesis generation authority, retained computation and restart package (462009.722342ms)
+2026-09-14T17:59:09.1987361Z ℹ tests 119
+2026-09-14T17:59:09.1987825Z ℹ suites 0
+2026-09-14T17:59:09.1988127Z ℹ pass 70
+2026-09-14T17:59:09.1988482Z ℹ fail 49
+2026-09-14T17:59:09.1988863Z ℹ cancelled 0
+2026-09-14T17:59:09.1989253Z ℹ skipped 0
+2026-09-14T17:59:09.1989600Z ℹ todo 0
+2026-09-14T17:59:09.1990033Z ℹ duration_ms 467973.952726
+2026-09-14T17:59:09.2072720Z 
+2026-09-14T17:59:09.2075919Z ✖ failing tests:
+2026-09-14T17:59:09.2076179Z 
+2026-09-14T17:59:09.2076844Z test at verifier/hypothesis-worker/savedBoundaryHistoryCases.mjs:57:33
+2026-09-14T17:59:09.2078588Z ✖ permit metadata has no payload; concurrent user quota and expiry-only cleanup remain table-blind (4524.462713ms)
+2026-09-14T17:59:09.2080455Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2082249Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2083600Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2084233Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2084703Z     code: '22023'
+2026-09-14T17:59:09.2084943Z   }
+2026-09-14T17:59:09.2085066Z 
+2026-09-14T17:59:09.2085426Z test at verifier/hypothesis-worker/savedBoundaryHistoryCases.mjs:57:33
+2026-09-14T17:59:09.2086562Z ✖ global quota serializes the final slot and cleanup skips locked expired rows (4527.600701ms)
+2026-09-14T17:59:09.2087292Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2088633Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2089740Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2090202Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2090574Z     code: '22023'
+2026-09-14T17:59:09.2090813Z   }
+2026-09-14T17:59:09.2090990Z 
+2026-09-14T17:59:09.2091476Z test at verifier/hypothesis-worker/savedBoundaryHistoryCases.mjs:57:33
+2026-09-14T17:59:09.2092378Z ✖ selected permission closures method freshness byte limits digest and pre-quota waits fail closed (4523.091683ms)
+2026-09-14T17:59:09.2093085Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2094408Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2095251Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2095758Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2096177Z     code: '22023'
+2026-09-14T17:59:09.2096376Z   }
+2026-09-14T17:59:09.2096494Z 
+2026-09-14T17:59:09.2096825Z test at verifier/hypothesis-worker/savedBoundaryHistoryCases.mjs:57:33
+2026-09-14T17:59:09.2097869Z ✖ verified Auth is inside admission; alternate valid member/investigation and caller identity fields cannot impersonate (4535.859509ms)
+2026-09-14T17:59:09.2098719Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2099730Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2100574Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2101052Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2101445Z     code: '22023'
+2026-09-14T17:59:09.2101660Z   }
+2026-09-14T17:59:09.2101758Z 
+2026-09-14T17:59:09.2102078Z test at verifier/hypothesis-worker/savedBoundaryHistoryCases.mjs:57:33
+2026-09-14T17:59:09.2103455Z ✖ same-transaction savepoint replay returns identical sealed payload without new receipt identity; new transaction and changed request deny (4530.362968ms)
+2026-09-14T17:59:09.2104377Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2105355Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2106369Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2107203Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2107799Z     code: '22023'
+2026-09-14T17:59:09.2108057Z   }
+2026-09-14T17:59:09.2108161Z 
+2026-09-14T17:59:09.2108510Z test at verifier/hypothesis-worker/savedBoundaryHistoryCases.mjs:57:33
+2026-09-14T17:59:09.2109882Z ✖ source/member revocation before admission deny; material revocation during delivery waits until snapshot completes (4497.530212ms)
+2026-09-14T17:59:09.2110658Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2111582Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2112338Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2112768Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2113139Z     code: '22023'
+2026-09-14T17:59:09.2113646Z   }
+2026-09-14T17:59:09.2113769Z 
+2026-09-14T17:59:09.2114211Z test at verifier/hypothesis-worker/savedBoundaryHistoryCases.mjs:57:33
+2026-09-14T17:59:09.2115001Z ✖ cooperative material/session expiry rolls back; expired JWT denies before admission (4548.734058ms)
+2026-09-14T17:59:09.2115659Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2116586Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2117333Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2117761Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2118204Z     code: '22023'
+2026-09-14T17:59:09.2118396Z   }
+2026-09-14T17:59:09.2118489Z 
+2026-09-14T17:59:09.2118775Z test at verifier/hypothesis-worker/savedBoundaryHistoryCases.mjs:57:33
+2026-09-14T17:59:09.2119674Z ✖ hung delivery expires aborts and rolls back; malformed response keys never deliver; native field mutations deny (4523.247013ms)
+2026-09-14T17:59:09.2120397Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2121310Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2122056Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2122483Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2122838Z     code: '22023'
+2026-09-14T17:59:09.2123021Z   }
+2026-09-14T17:59:09.2123115Z 
+2026-09-14T17:59:09.2123658Z test at verifier/hypothesis-worker/markerBoundaryCases.mjs:53:10
+2026-09-14T17:59:09.2124470Z ✖ open actual revision transaction survives consuming a later marker and decodes after commit (1021.262175ms)
+2026-09-14T17:59:09.2125150Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2126071Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2126816Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2127251Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2127642Z     code: '22023'
+2026-09-14T17:59:09.2127827Z   }
+2026-09-14T17:59:09.2127923Z 
+2026-09-14T17:59:09.2128178Z test at verifier/hypothesis-worker/markerBoundaryCases.mjs:72:10
+2026-09-14T17:59:09.2128928Z ✖ rolled-back actual revision and rolled-back marker produce no published transaction (1058.937174ms)
+2026-09-14T17:59:09.2129581Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2130490Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2131231Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2131692Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2132051Z     code: '22023'
+2026-09-14T17:59:09.2132239Z   }
+2026-09-14T17:59:09.2132482Z 
+2026-09-14T17:59:09.2132735Z test at verifier/hypothesis-worker/markerBoundaryCases.mjs:81:10
+2026-09-14T17:59:09.2133741Z ✖ intervening revision must be retained before requested marker and cannot decode as marker (1027.973998ms)
+2026-09-14T17:59:09.2134410Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2135349Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2136122Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2136544Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2137146Z     code: '22023'
+2026-09-14T17:59:09.2137452Z   }
+2026-09-14T17:59:09.2137616Z 
+2026-09-14T17:59:09.2138188Z test at verifier/hypothesis-worker/worker.test.mjs:73:10
+2026-09-14T17:59:09.2139670Z ✖ configured synthetic client-handler-store-worker-review path uses native gateway transactions (915.74891ms)
+2026-09-14T17:59:09.2140859Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2141994Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2142906Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2143913Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2144461Z     code: '22023'
+2026-09-14T17:59:09.2144776Z   }
+2026-09-14T17:59:09.2144945Z 
+2026-09-14T17:59:09.2145235Z test at verifier/hypothesis-worker/worker.test.mjs:178:10
+2026-09-14T17:59:09.2146152Z ✖ atomic real retained-input capture; no caller source body or input hash accepted (901.714051ms)
+2026-09-14T17:59:09.2146933Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2147983Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2148904Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2149420Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2149946Z     code: '22023'
+2026-09-14T17:59:09.2150254Z   }
+2026-09-14T17:59:09.2162526Z 
+2026-09-14T17:59:09.2162824Z test at verifier/hypothesis-worker/worker.test.mjs:193:10
+2026-09-14T17:59:09.2163870Z ✖ separate worker table/function ownership, FORCE RLS and no escalation (921.26923ms)
+2026-09-14T17:59:09.2164636Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2165608Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2166391Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2166867Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2167243Z     code: '22023'
+2026-09-14T17:59:09.2167435Z   }
+2026-09-14T17:59:09.2167536Z 
+2026-09-14T17:59:09.2167767Z test at verifier/hypothesis-worker/worker.test.mjs:210:10
+2026-09-14T17:59:09.2168425Z ✖ closed CC source scope and missing permission never enter generation (913.467089ms)
+2026-09-14T17:59:09.2169037Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2169982Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2170746Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2171197Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2171572Z     code: '22023'
+2026-09-14T17:59:09.2171765Z   }
+2026-09-14T17:59:09.2171861Z 
+2026-09-14T17:59:09.2172088Z test at verifier/hypothesis-worker/worker.test.mjs:218:10
+2026-09-14T17:59:09.2172999Z ✖ wrong audience/subject/runtime, expired identity and cross-runtime session denied (901.796182ms)
+2026-09-14T17:59:09.2174165Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2175130Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2175902Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2176340Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2176711Z     code: '22023'
+2026-09-14T17:59:09.2176898Z   }
+2026-09-14T17:59:09.2176997Z 
+2026-09-14T17:59:09.2177373Z test at verifier/hypothesis-worker/worker.test.mjs:230:10
+2026-09-14T17:59:09.2178067Z ✖ revoked mapping and stale replacement cannot reuse a retained generation (897.007968ms)
+2026-09-14T17:59:09.2178684Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2179628Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2180398Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2180833Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2181196Z     code: '22023'
+2026-09-14T17:59:09.2181384Z   }
+2026-09-14T17:59:09.2181475Z 
+2026-09-14T17:59:09.2181698Z test at verifier/hypothesis-worker/worker.test.mjs:241:10
+2026-09-14T17:59:09.2182376Z ✖ source and evaluated-implementation revocation during processing strand work (899.464953ms)
+2026-09-14T17:59:09.2183016Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2184288Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2185079Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2185516Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2185884Z     code: '22023'
+2026-09-14T17:59:09.2186074Z   }
+2026-09-14T17:59:09.2186168Z 
+2026-09-14T17:59:09.2186390Z test at verifier/hypothesis-worker/worker.test.mjs:250:10
+2026-09-14T17:59:09.2187039Z ✖ revoked reviewer membership denies completion and retains processing (902.927332ms)
+2026-09-14T17:59:09.2187637Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2188561Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2189335Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2189778Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2190156Z     code: '22023'
+2026-09-14T17:59:09.2190346Z   }
+2026-09-14T17:59:09.2190444Z 
+2026-09-14T17:59:09.2190662Z test at verifier/hypothesis-worker/worker.test.mjs:256:10
+2026-09-14T17:59:09.2191337Z ✖ revoked method denies completion and cannot be reactivated under old revision (923.901815ms)
+2026-09-14T17:59:09.2191962Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2192901Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2193945Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2194398Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2194786Z     code: '22023'
+2026-09-14T17:59:09.2194977Z   }
+2026-09-14T17:59:09.2195073Z 
+2026-09-14T17:59:09.2195299Z test at verifier/hypothesis-worker/worker.test.mjs:263:10
+2026-09-14T17:59:09.2196135Z ✖ ineligible and out-of-runtime work cannot obstruct eligible investigation (907.655253ms)
+2026-09-14T17:59:09.2196761Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2197691Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2198459Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2198902Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2199278Z     code: '22023'
+2026-09-14T17:59:09.2199466Z   }
+2026-09-14T17:59:09.2199562Z 
+2026-09-14T17:59:09.2199784Z test at verifier/hypothesis-worker/worker.test.mjs:275:10
+2026-09-14T17:59:09.2200568Z ✖ rotating investigation selection advances an eligible later investigation (903.293618ms)
+2026-09-14T17:59:09.2201207Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2202150Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2202915Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2203567Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2203950Z     code: '22023'
+2026-09-14T17:59:09.2204140Z   }
+2026-09-14T17:59:09.2204235Z 
+2026-09-14T17:59:09.2204451Z test at verifier/hypothesis-worker/worker.test.mjs:284:10
+2026-09-14T17:59:09.2205211Z ✖ database independently rejects output source, method, rating, review and argument escalation (909.55887ms)
+2026-09-14T17:59:09.2205903Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2206836Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2207604Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2208033Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2208424Z     code: '22023'
+2026-09-14T17:59:09.2208610Z   }
+2026-09-14T17:59:09.2208706Z 
+2026-09-14T17:59:09.2208921Z test at verifier/hypothesis-worker/worker.test.mjs:300:10
+2026-09-14T17:59:09.2209649Z ✖ permission acceptance first: output/revision/ack/receipt commit, revocation waits (898.214802ms)
+2026-09-14T17:59:09.2210300Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2211223Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2211984Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2212417Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2212781Z     code: '22023'
+2026-09-14T17:59:09.2212970Z   }
+2026-09-14T17:59:09.2213067Z 
+2026-09-14T17:59:09.2213512Z test at verifier/hypothesis-worker/worker.test.mjs:310:10
+2026-09-14T17:59:09.2214176Z ✖ permission revocation first: output/revision/ack/receipt all reject (914.782152ms)
+2026-09-14T17:59:09.2214803Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2215747Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2216515Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2216948Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2217316Z     code: '22023'
+2026-09-14T17:59:09.2217507Z   }
+2026-09-14T17:59:09.2217605Z 
+2026-09-14T17:59:09.2217829Z test at verifier/hypothesis-worker/worker.test.mjs:318:10
+2026-09-14T17:59:09.2218463Z ✖ source correction during processing rejects stale retained generation (917.134478ms)
+2026-09-14T17:59:09.2219209Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2220132Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2220892Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2221315Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2221675Z     code: '22023'
+2026-09-14T17:59:09.2221859Z   }
+2026-09-14T17:59:09.2221955Z 
+2026-09-14T17:59:09.2222169Z test at verifier/hypothesis-worker/worker.test.mjs:324:10
+2026-09-14T17:59:09.2222807Z ✖ exact completion retry requires current authority and identical output (905.453745ms)
+2026-09-14T17:59:09.2223847Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2224804Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2225572Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2226000Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2226363Z     code: '22023'
+2026-09-14T17:59:09.2226545Z   }
+2026-09-14T17:59:09.2226638Z 
+2026-09-14T17:59:09.2226858Z test at verifier/hypothesis-worker/worker.test.mjs:336:10
+2026-09-14T17:59:09.2227518Z ✖ worker method mismatch is explicitly failed without invented assessment (905.674636ms)
+2026-09-14T17:59:09.2228122Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2229054Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2229809Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2230237Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2230609Z     code: '22023'
+2026-09-14T17:59:09.2230789Z   }
+2026-09-14T17:59:09.2230885Z 
+2026-09-14T17:59:09.2231105Z test at verifier/hypothesis-worker/worker.test.mjs:341:10
+2026-09-14T17:59:09.2231714Z ✖ expired lease does not requeue, force-cancel or accept completion (902.637374ms)
+2026-09-14T17:59:09.2232289Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2233462Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2234288Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2234723Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2235090Z     code: '22023'
+2026-09-14T17:59:09.2235271Z   }
+2026-09-14T17:59:09.2235374Z 
+2026-09-14T17:59:09.2235592Z test at verifier/hypothesis-worker/worker.test.mjs:348:10
+2026-09-14T17:59:09.2236304Z ✖ real container computes over retained spans with no broad credentials or network (907.397756ms)
+2026-09-14T17:59:09.2236977Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2237914Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2238673Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2239103Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2239471Z     code: '22023'
+2026-09-14T17:59:09.2239653Z   }
+2026-09-14T17:59:09.2239746Z 
+2026-09-14T17:59:09.2239963Z test at verifier/hypothesis-worker/worker.test.mjs:356:80
+2026-09-14T17:59:09.2240676Z ✖ actual termination/restart before_complete_commit recovers exact durable completion (914.181882ms)
+2026-09-14T17:59:09.2241334Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2242410Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2243175Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2243746Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2244126Z     code: '22023'
+2026-09-14T17:59:09.2244309Z   }
+2026-09-14T17:59:09.2244400Z 
+2026-09-14T17:59:09.2244617Z test at verifier/hypothesis-worker/worker.test.mjs:356:80
+2026-09-14T17:59:09.2245326Z ✖ actual termination/restart after_complete_commit recovers exact durable completion (903.221293ms)
+2026-09-14T17:59:09.2246098Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2247034Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2247797Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2248226Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2248588Z     code: '22023'
+2026-09-14T17:59:09.2248771Z   }
+2026-09-14T17:59:09.2248873Z 
+2026-09-14T17:59:09.2249091Z test at verifier/hypothesis-worker/worker.test.mjs:365:10
+2026-09-14T17:59:09.2249806Z ✖ actual lost claim response preserves stranded work; fresh process cannot invent lease (892.659502ms)
+2026-09-14T17:59:09.2250464Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2251393Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2252160Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2252592Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2252960Z     code: '22023'
+2026-09-14T17:59:09.2253145Z   }
+2026-09-14T17:59:09.2253482Z 
+2026-09-14T17:59:09.2253820Z test at verifier/hypothesis-worker/worker.test.mjs:375:10
+2026-09-14T17:59:09.2254607Z ✖ encrypted remote exact-content journal, scoped runtime, no plaintext and protocol separation (909.221749ms)
+2026-09-14T17:59:09.2255306Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2256237Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2257001Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2257434Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2257814Z     code: '22023'
+2026-09-14T17:59:09.2258047Z   }
+2026-09-14T17:59:09.2258147Z 
+2026-09-14T17:59:09.2258364Z test at verifier/hypothesis-worker/worker.test.mjs:384:10
+2026-09-14T17:59:09.2259107Z ✖ generated reassessment resolves exact human causes atomically and stays unreviewed/private (904.384548ms)
+2026-09-14T17:59:09.2259789Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2260712Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2261471Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2261897Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2262264Z     code: '22023'
+2026-09-14T17:59:09.2262447Z   }
+2026-09-14T17:59:09.2262540Z 
+2026-09-14T17:59:09.2262758Z test at verifier/hypothesis-worker/worker.test.mjs:397:10
+2026-09-14T17:59:09.2263763Z ✖ unselected retained input permissions still protect generated history and create causes (916.187736ms)
+2026-09-14T17:59:09.2264450Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2265590Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2266353Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2266777Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2267143Z     code: '22023'
+2026-09-14T17:59:09.2267326Z   }
+2026-09-14T17:59:09.2267423Z 
+2026-09-14T17:59:09.2267645Z test at verifier/hypothesis-worker/worker.test.mjs:405:10
+2026-09-14T17:59:09.2268472Z ✖ private operational ledger binds exact generation records and never returns lease secrets or source text (950.805269ms)
+2026-09-14T17:59:09.2269351Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2270284Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2271055Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2271493Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2271859Z     code: '22023'
+2026-09-14T17:59:09.2272047Z   }
+2026-09-14T17:59:09.2272143Z 
+2026-09-14T17:59:09.2272358Z test at verifier/hypothesis-worker/worker.test.mjs:416:10
+2026-09-14T17:59:09.2273048Z ✖ expired session cannot commit an idle receipt after waiting on a permission fence (905.530592ms)
+2026-09-14T17:59:09.2273992Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2274931Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2275694Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2276126Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2276498Z     code: '22023'
+2026-09-14T17:59:09.2276685Z   }
+2026-09-14T17:59:09.2276776Z 
+2026-09-14T17:59:09.2276996Z test at verifier/hypothesis-worker/worker.test.mjs:428:10
+2026-09-14T17:59:09.2277669Z ✖ capture acknowledgement can be recovered after the generation has completed (899.236773ms)
+2026-09-14T17:59:09.2278290Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2279208Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2279955Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2280383Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2280749Z     code: '22023'
+2026-09-14T17:59:09.2280931Z   }
+2026-09-14T17:59:09.2281023Z 
+2026-09-14T17:59:09.2281239Z test at verifier/hypothesis-worker/worker.test.mjs:435:10
+2026-09-14T17:59:09.2281981Z ✖ method replacement retains a distinct pending cause and explicit new-version reassessment (891.65041ms)
+2026-09-14T17:59:09.2282649Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2283693Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2284448Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2284882Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2285249Z     code: '22023'
+2026-09-14T17:59:09.2285431Z   }
+2026-09-14T17:59:09.2285526Z 
+2026-09-14T17:59:09.2285738Z test at verifier/hypothesis-worker/worker.test.mjs:457:10
+2026-09-14T17:59:09.2286515Z ✖ rolled-back method removal leaves no cause; committed removal retains cause and unrelated history (896.948325ms)
+2026-09-14T17:59:09.2287207Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2288300Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2289060Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2289493Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2289858Z     code: '22023'
+2026-09-14T17:59:09.2290049Z   }
+2026-09-14T17:59:09.2290141Z 
+2026-09-14T17:59:09.2290360Z test at verifier/hypothesis-worker/worker.test.mjs:474:10
+2026-09-14T17:59:09.2291068Z ✖ fresh-generation recovery preserves expired attempt and commits exact linked retry (894.899302ms)
+2026-09-14T17:59:09.2291843Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2292782Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2293677Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2294109Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2294471Z     code: '22023'
+2026-09-14T17:59:09.2294658Z   }
+2026-09-14T17:59:09.2294753Z 
+2026-09-14T17:59:09.2294967Z test at verifier/hypothesis-worker/worker.test.mjs:503:10
+2026-09-14T17:59:09.2295662Z ✖ recovery refuses wrong owner, scope, completed job and revoked input permission (905.996399ms)
+2026-09-14T17:59:09.2296289Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2297207Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2297968Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2298403Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2298772Z     code: '22023'
+2026-09-14T17:59:09.2298952Z   }
+2026-09-14T17:59:09.2299042Z 
+2026-09-14T17:59:09.2299261Z test at verifier/hypothesis-worker/worker.test.mjs:519:10
+2026-09-14T17:59:09.2299870Z ✖ recovery is atomic on rollback and inaccessible to the worker role (896.657475ms)
+2026-09-14T17:59:09.2300447Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2301364Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2302117Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2302546Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2302909Z     code: '22023'
+2026-09-14T17:59:09.2303101Z   }
+2026-09-14T17:59:09.2303191Z 
+2026-09-14T17:59:09.2303714Z test at verifier/hypothesis-worker/worker.test.mjs:533:10
+2026-09-14T17:59:09.2304397Z ✖ revoked signing key denies claim and completion despite an outstanding lease (903.304183ms)
+2026-09-14T17:59:09.2305037Z   Error: mip_database_denied_22023_via_mip_hypothesis_reassessment_change_trigger
+2026-09-14T17:59:09.2305970Z       at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T17:59:09.2306735Z       at ChildProcess.emit (node:events:514:28)
+2026-09-14T17:59:09.2307166Z       at ChildProcess._handle.onexit (node:internal/child_process:295:12) {
+2026-09-14T17:59:09.2307535Z     code: '22023'
+2026-09-14T17:59:09.2307720Z   }
+2026-09-14T17:59:09.2317861Z ##[error]Process completed with exit code 1.
+2026-09-14T17:59:09.2432592Z Post job cleanup.
+2026-09-14T17:59:09.3294501Z [command]/usr/bin/git version
+2026-09-14T17:59:09.3349972Z git version 2.55.0
+2026-09-14T17:59:09.3388973Z Temporarily overriding HOME='/home/runner/work/_temp/0e9dbce7-6336-4893-ba76-0492ca675ec0' before making global git config changes
+2026-09-14T17:59:09.3390841Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-14T17:59:09.3395238Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2
+2026-09-14T17:59:09.3429912Z Removing SSH command configuration
+2026-09-14T17:59:09.3437060Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-14T17:59:09.3475107Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-14T17:59:09.3722576Z Removing HTTP extra header
+2026-09-14T17:59:09.3728452Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-14T17:59:09.3773899Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-14T17:59:09.4028783Z Removing includeIf entries pointing to credentials config files
+2026-09-14T17:59:09.4037692Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-14T17:59:09.4074026Z includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git.path
+2026-09-14T17:59:09.4075942Z includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git/worktrees/*.path
+2026-09-14T17:59:09.4077353Z includeif.gitdir:/github/workspace/.git.path
+2026-09-14T17:59:09.4078426Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-09-14T17:59:09.4083662Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git.path
+2026-09-14T17:59:09.4110241Z /home/runner/work/_temp/git-credentials-e5a951ff-8a31-412b-95fa-3030a85c673b.config
+2026-09-14T17:59:09.4145858Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-e5a951ff\-8a31\-412b\-95fa\-3030a85c673b\.config
+2026-09-14T17:59:09.4181230Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git/worktrees/*.path
+2026-09-14T17:59:09.4217713Z /home/runner/work/_temp/git-credentials-e5a951ff-8a31-412b-95fa-3030a85c673b.config
+2026-09-14T17:59:09.4233099Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-e5a951ff\-8a31\-412b\-95fa\-3030a85c673b\.config
+2026-09-14T17:59:09.4302212Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-09-14T17:59:09.4341277Z /github/runner_temp/git-credentials-e5a951ff-8a31-412b-95fa-3030a85c673b.config
+2026-09-14T17:59:09.4349352Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-e5a951ff\-8a31\-412b\-95fa\-3030a85c673b\.config
+2026-09-14T17:59:09.4397183Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-09-14T17:59:09.4430088Z /github/runner_temp/git-credentials-e5a951ff-8a31-412b-95fa-3030a85c673b.config
+2026-09-14T17:59:09.4442913Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-e5a951ff\-8a31\-412b\-95fa\-3030a85c673b\.config
+2026-09-14T17:59:09.4487594Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-14T17:59:09.4739941Z Removing credentials config '/home/runner/work/_temp/git-credentials-e5a951ff-8a31-412b-95fa-3030a85c673b.config'
+2026-09-14T17:59:09.4856569Z Print service container logs: b3140408e7a745a49aac4023e15ee48d_postgres176_c1f67b
+2026-09-14T17:59:09.4860919Z ##[command]/usr/bin/docker logs --details edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:59:09.4995064Z  initdb: warning: enabling "trust" authentication for local connections
+2026-09-14T17:59:09.4996425Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-09-14T17:59:09.4998125Z  2026-09-14 17:50:59.409 UTC [1] LOG:  starting PostgreSQL 17.6 (Debian 17.6-2.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-14T17:59:09.4999382Z  2026-09-14 17:50:59.409 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-09-14T17:59:09.4999946Z  2026-09-14 17:50:59.409 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-09-14T17:59:09.5000544Z  2026-09-14 17:50:59.410 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-14T17:59:09.5001171Z  2026-09-14 17:50:59.413 UTC [62] LOG:  database system was shut down at 2026-09-14 17:50:59 UTC
+2026-09-14T17:59:09.5001705Z  2026-09-14 17:50:59.417 UTC [1] LOG:  database system is ready to accept connections
+2026-09-14T17:59:09.5002174Z  2026-09-14 17:51:20.595 UTC [1] LOG:  received fast shutdown request
+2026-09-14T17:59:09.5002601Z  2026-09-14 17:51:20.596 UTC [1] LOG:  aborting any active transactions
+2026-09-14T17:59:09.5003178Z  2026-09-14 17:51:20.598 UTC [1] LOG:  background worker "logical replication launcher" (PID 65) exited with exit code 1
+2026-09-14T17:59:09.5004022Z  2026-09-14 17:51:20.599 UTC [60] LOG:  shutting down
+2026-09-14T17:59:09.5004423Z  2026-09-14 17:51:20.600 UTC [60] LOG:  checkpoint starting: shutdown immediate
+2026-09-14T17:59:09.5005524Z  2026-09-14 17:51:20.602 UTC [60] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/14ED868, redo lsn=0/14ED868
+2026-09-14T17:59:09.5006625Z  2026-09-14 17:51:20.606 UTC [1] LOG:  database system is shut down
+2026-09-14T17:59:09.5007132Z  The files belonging to this database system will be owned by user "postgres".
+2026-09-14T17:59:09.5007547Z  This user must also own the server process.
+2026-09-14T17:59:09.5007816Z  
+2026-09-14T17:59:09.5008084Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-09-14T17:59:09.5008787Z  The default database encoding has accordingly been set to "UTF8".
+2026-09-14T17:59:09.5009221Z  The default text search configuration will be set to "english".
+2026-09-14T17:59:09.5009553Z  
+2026-09-14T17:59:09.5009866Z  Data page checksums are disabled.
+2026-09-14T17:59:09.5010111Z  
+2026-09-14T17:59:09.5010457Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-09-14T17:59:09.5011166Z  creating subdirectories ... ok
+2026-09-14T17:59:09.5011718Z  selecting dynamic shared memory implementation ... posix
+2026-09-14T17:59:09.5012171Z  selecting default "max_connections" ... 100
+2026-09-14T17:59:09.5012477Z  selecting default "shared_buffers" ... 128MB
+2026-09-14T17:59:09.5012768Z  selecting default time zone ... Etc/UTC
+2026-09-14T17:59:09.5013053Z  creating configuration files ... ok
+2026-09-14T17:59:09.5013582Z  running bootstrap script ... ok
+2026-09-14T17:59:09.5013884Z  performing post-bootstrap initialization ... ok
+2026-09-14T17:59:09.5014189Z  syncing data to disk ... ok
+2026-09-14T17:59:09.5014410Z  
+2026-09-14T17:59:09.5014570Z  
+2026-09-14T17:59:09.5014795Z  Success. You can now start the database server using:
+2026-09-14T17:59:09.5015098Z  
+2026-09-14T17:59:09.5015330Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-09-14T17:59:09.5015630Z  
+2026-09-14T17:59:09.5016538Z  waiting for server to start....2026-09-14 17:50:59.166 UTC [48] LOG:  starting PostgreSQL 17.6 (Debian 17.6-2.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-14T17:59:09.5017651Z  2026-09-14 17:50:59.167 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-14T17:59:09.5018232Z  2026-09-14 17:50:59.169 UTC [51] LOG:  database system was shut down at 2026-09-14 17:50:59 UTC
+2026-09-14T17:59:09.5018752Z  2026-09-14 17:50:59.173 UTC [48] LOG:  database system is ready to accept connections
+2026-09-14T17:59:09.5019131Z   done
+2026-09-14T17:59:09.5019310Z  server started
+2026-09-14T17:59:09.5019498Z  
+2026-09-14T17:59:09.5019813Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-09-14T17:59:09.5020203Z  
+2026-09-14T17:59:09.5020461Z  2026-09-14 17:50:59.284 UTC [48] LOG:  received fast shutdown request
+2026-09-14T17:59:09.5020997Z  waiting for server to shut down....2026-09-14 17:50:59.284 UTC [48] LOG:  aborting any active transactions
+2026-09-14T17:59:09.5021699Z  2026-09-14 17:50:59.286 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-09-14T17:59:09.5022246Z  2026-09-14 17:50:59.287 UTC [49] LOG:  shutting down
+2026-09-14T17:59:09.5022634Z  2026-09-14 17:50:59.287 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-09-14T17:59:09.5024508Z  2026-09-14 17:50:59.289 UTC [49] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/14ED7B8, redo lsn=0/14ED7B8
+2026-09-14T17:59:09.5025679Z  2026-09-14 17:50:59.293 UTC [48] LOG:  database system is shut down
+2026-09-14T17:59:09.5026011Z   done
+2026-09-14T17:59:09.5026189Z  server stopped
+2026-09-14T17:59:09.5026380Z  
+2026-09-14T17:59:09.5026610Z  PostgreSQL init process complete; ready for start up.
+2026-09-14T17:59:09.5026913Z  
+2026-09-14T17:59:09.5027074Z  
+2026-09-14T17:59:09.5027396Z  PostgreSQL Database directory appears to contain a database; Skipping initialization
+2026-09-14T17:59:09.5027831Z  
+2026-09-14T17:59:09.5028377Z  2026-09-14 17:51:20.858 UTC [1] LOG:  starting PostgreSQL 17.6 (Debian 17.6-2.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-14T17:59:09.5029094Z  2026-09-14 17:51:20.858 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-09-14T17:59:09.5029572Z  2026-09-14 17:51:20.858 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-09-14T17:59:09.5030096Z  2026-09-14 17:51:20.859 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-14T17:59:09.5030671Z  2026-09-14 17:51:20.861 UTC [29] LOG:  database system was shut down at 2026-09-14 17:51:20 UTC
+2026-09-14T17:59:09.5031189Z  2026-09-14 17:51:20.865 UTC [1] LOG:  database system is ready to accept connections
+2026-09-14T17:59:09.5031668Z  2026-09-14 17:51:21.318 UTC [1] LOG:  received SIGHUP, reloading configuration files
+2026-09-14T17:59:09.5032192Z  2026-09-14 17:51:21.319 UTC [1] LOG:  parameter "log_min_error_statement" changed to "panic"
+2026-09-14T17:59:09.5032588Z  
+2026-09-14T17:59:09.5032909Z  PostgreSQL Database directory appears to contain a database; Skipping initialization
+2026-09-14T17:59:09.5033534Z  
+2026-09-14T17:59:09.5038878Z Stop and remove container: b3140408e7a745a49aac4023e15ee48d_postgres176_c1f67b
+2026-09-14T17:59:09.5043873Z ##[command]/usr/bin/docker rm --force edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:59:09.7419610Z edc26e236df1064eb90e0c71b8f83391c0e0b2b9a7223eee1eda20b839aaad91
+2026-09-14T17:59:09.7450319Z Remove container network: github_network_2199c03891954800a06ba82eefa5f1d9
+2026-09-14T17:59:09.7456247Z ##[command]/usr/bin/docker network rm github_network_2199c03891954800a06ba82eefa5f1d9
+2026-09-14T17:59:09.8339804Z github_network_2199c03891954800a06ba82eefa5f1d9
+2026-09-14T17:59:09.8474800Z Cleaning up orphan processes
