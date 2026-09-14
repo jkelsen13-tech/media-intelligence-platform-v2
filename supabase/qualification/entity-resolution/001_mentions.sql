@@ -155,6 +155,7 @@ end $$;
 -- One grouped validator for every operation. Extra fields are only for admitting
 -- a new physical mention; existing mention rows always lock BEFORE any fields.
 create function mip_mentions.check_mentions(s uuid,ids uuid[],p mip_mentions.policy,extra_fields uuid[] default '{}'::uuid[],new_literal text default null) returns jsonb language plpgsql set search_path='' as $$
+<<mention_check>>
 declare fields uuid[];requested_count integer;actual_count integer;field_count integer;largest bigint;total_bytes bigint;span_bytes bigint;locked_count integer;allowed_count integer;invalid boolean;validated jsonb;
 begin
  if ids is null or extra_fields is null or array_position(ids,null) is not null or array_position(extra_fields,null) is not null or
@@ -163,29 +164,29 @@ begin
  select count(*) into actual_count from mip_mentions.mentions where scope=s and id=any(ids);
  if requested_count<>actual_count then raise exception 'mention unavailable';end if;
  perform 1 from mip_mentions.mentions where scope=s and id=any(ids) order by id for share;
- select coalesce(array_agg(distinct field_id order by field_id),'{}'::uuid[]) into fields
+ select coalesce(array_agg(distinct field_id order by field_id),'{}'::uuid[]) into mention_check.fields
  from(select field_id from mip_mentions.mentions where scope=s and id=any(ids)
       union select unnest(extra_fields))all_fields;
- if cardinality(fields)>p.max_fields then raise exception 'operation field budget exceeded';end if;
+ if cardinality(mention_check.fields)>p.max_fields then raise exception 'operation field budget exceeded';end if;
  -- The authorization count is from the EXACT locked row set and statement
  -- snapshot, never a subsequent query that could include an unlocked new grant.
  with locked as materialized(
   select field_id,allowed from mip_mentions.field_access
-  where scope=s and field_id=any(fields) order by field_id for share)
+  where scope=s and field_id=any(mention_check.fields) order by field_id for share)
  select count(*),count(*) filter(where allowed) into locked_count,allowed_count from locked;
- if locked_count<>cardinality(fields) or allowed_count<>cardinality(fields)
+ if locked_count<>cardinality(mention_check.fields) or allowed_count<>cardinality(mention_check.fields)
  then raise exception 'source unavailable';end if;
  -- Admission sizes are checked as one aggregate BEFORE hashing/UTF8 decoding.
  select count(*),coalesce(max(octet_length(raw)),0),coalesce(sum(octet_length(raw)),0)
- into field_count,largest,total_bytes from mip_mentions.fields where scope=s and id=any(fields);
- if field_count<>cardinality(fields) or largest>p.max_field_bytes then raise exception 'source integrity unavailable';end if;
+ into field_count,largest,total_bytes from mip_mentions.fields source_fields where source_fields.scope=check_mentions.s and source_fields.id=any(mention_check.fields);
+ if field_count<>cardinality(mention_check.fields) or largest>p.max_field_bytes then raise exception 'source integrity unavailable';end if;
  select coalesce(sum(octet_length(literal)),0) into span_bytes from mip_mentions.mentions where scope=s and id=any(ids);
  if total_bytes+span_bytes+coalesce(octet_length(new_literal),0)>p.max_total_bytes then raise exception 'operation byte budget exceeded';end if;
  -- MATERIALIZED decodes and hashes each distinct source field once, not one
  -- roundtrip/query/hash per mention. Both fields and spans are checked in bulk.
  with checked as materialized(
   select id,source_version,field_version,field_hash,convert_from(raw,'UTF8') txt,
-   encode(sha256(raw),'hex') actual_hash from mip_mentions.fields where scope=s and id=any(fields))
+   encode(sha256(raw),'hex') actual_hash from mip_mentions.fields source_fields where source_fields.scope=check_mentions.s and source_fields.id=any(mention_check.fields))
  select exists(
   select 1 from checked where field_hash<>actual_hash
   union all
