@@ -1,3 +1,4 @@
+import {savedBoundaryHistoryCases} from './savedBoundaryHistoryCases.mjs'
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {quote as q} from '../integrated/transport.mjs'
@@ -56,4 +57,5 @@ export async function savedBoundaryPrefixCases(t,f,configured,relations){
   await f.admin('update mip_identity.mapping_heads set active=false where runtime='+q(b.runtime))
   await assert.rejects(()=>verifyRetainedBoundaryPrefix(options))
  })
+ await savedBoundaryHistoryCases(t,f,prepared)
 }

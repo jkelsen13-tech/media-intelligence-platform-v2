@@ -220,7 +220,9 @@ test('isolated hypothesis generation authority, retained computation and restart
   for(const override of [{aud:'wrong'},{sub:'wrong'},{exp:0}])
    await assert.rejects(f.issue(v.runtime,workerRole,{token:f.token(v.runtime,workerRole,override)}),/mip_workload_identity_denied/)
   await assert.rejects(f.issue(v.runtime,workerRole,{token:f.token('runtime-b')}),/mip_workload_identity_denied/)
-  await assert.rejects(f.claim(f.session,v.runtime),/mip_identity_stale_revision/)
+  // Isolate wrong-runtime semantics from the age of the suite-start session.
+  const otherRuntimeSession=await f.issue('runtime-a')
+  await assert.rejects(f.claim(otherRuntimeSession,v.runtime),/mip_identity_stale_revision/)
   const token=f.token(v.runtime),request=randomUUID()
   await f.issue(v.runtime,workerRole,{token,request})
   await assert.rejects(f.issue(v.runtime,workerRole,{token}),/mip_identity_token_replay/)
