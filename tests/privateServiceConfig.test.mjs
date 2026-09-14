@@ -36,3 +36,35 @@ test('malformed or unsafe URLs fail even if accidentally present in policy', () 
     {VITE_HYPOTHESIS_ENDPOINT:value,VITE_PRIVATE_MARKETS_ENDPOINT:value},
     {hypothesisEndpoint:[value],privateMarketsEndpoint:[value]}),closed,String(value))
 })
+
+test('poisoned inherited includes cannot approve an empty production policy', () => {
+  const original = Object.getOwnPropertyDescriptor(Array.prototype, 'includes')
+  let calls = 0, result
+  try {
+    Object.defineProperty(Array.prototype, 'includes', {configurable:true, writable:true,
+      value:() => { calls++; return true }})
+    result = resolvePrivateServiceConfig({VITE_HYPOTHESIS_ENDPOINT:hypothesis,VITE_PRIVATE_MARKETS_ENDPOINT:markets})
+  } finally { Object.defineProperty(Array.prototype, 'includes', original) }
+  assert.deepEqual(result, closed)
+  assert.equal(calls, 0)
+})
+test('approval uses own data entries, not inherited policy fields, sparse slots or accessors', () => {
+  const env = {VITE_HYPOTHESIS_ENDPOINT:hypothesis}
+  assert.deepEqual(resolvePrivateServiceConfig(env,Object.create(policy)),closed)
+  const sparse = new Array(1)
+  const inherited = Object.create(Array.prototype)
+  Object.defineProperty(inherited,'0',{value:hypothesis})
+  Object.setPrototypeOf(sparse,inherited)
+  assert.deepEqual(resolvePrivateServiceConfig(env,{hypothesisEndpoint:sparse}),closed)
+  let calls = 0
+  const accessorPolicy = Object.defineProperty({},'hypothesisEndpoint',{get(){calls++;return [hypothesis]}})
+  const accessorEntry = Object.defineProperty(new Array(1),'0',{get(){calls++;return hypothesis}})
+  assert.deepEqual(resolvePrivateServiceConfig(env,accessorPolicy),closed)
+  assert.deepEqual(resolvePrivateServiceConfig(env,{hypothesisEndpoint:accessorEntry}),closed)
+  assert.deepEqual(resolvePrivateServiceConfig(Object.create(env),policy),closed)
+  assert.equal(calls,0)
+  const approved = [hypothesis]
+  approved.includes = () => {throw Error('must not call approval methods')}
+  assert.deepEqual(resolvePrivateServiceConfig(env,{hypothesisEndpoint:approved}),
+    {hypothesisEndpoint:hypothesis,privateMarketsEndpoint:null})
+})
