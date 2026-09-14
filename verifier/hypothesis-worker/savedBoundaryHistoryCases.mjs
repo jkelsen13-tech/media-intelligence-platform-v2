@@ -325,27 +325,16 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   }
  })
 
- await nativeCase('admitted permit lease expiry aborts and rolls back',async t=>{
-  // Fresh authority: this proves the admitted permit lease, not material/session expiry or revocation.
-  const x=await context(t);let observedSignal;let pid;let enteredAt;let failure
+ await nativeCase('admitted permit lease expiry aborts and rolls back; malformed response keys never deliver; native field mutations deny',async t=>{
+  // Fresh authority: admitted permit lease expiry, not material/session expiry or revocation.
+  const x=await context(t);let signalSeen,pid,enteredAt,failure
   try{await x.reader({withTransaction:transaction(f.db,v=>pid=v)})(x.request,async(_,signal)=>{
-   enteredAt=performance.now();observedSignal=signal;await new Promise(()=>{})
+   enteredAt=performance.now();signalSeen=signal;await new Promise(()=>{})
   })}catch(error){failure=error}
   assert.ok(enteredAt!==undefined,'admitted permit callback must enter; caught: '+(failure?.message??'no error'))
   assert.match(failure?.message??'',/^mip_boundary_delivery_aborted$/)
   // The reader separately requires remaining_ms <= 10000; this observation allows scheduling lag.
-  assert.ok(observedSignal?.aborted);assert.ok(performance.now()-enteredAt<=12000)
-  assert.equal(await f.admin('select count(*) from pg_stat_activity where pid='+pid),'0')
-  assert.equal(await f.admin('select consumed from mip_temporal.boundary_history_permits where id='+q(x.permit().permit_id)),'f')
- })
-
- await nativeCase('hung delivery expires aborts and rolls back; malformed response keys never deliver; native field mutations deny',async t=>{
-  const x=await context(t);let signalSeen,pid
-  const started=Date.now()
-  await assert.rejects(()=>x.reader({withTransaction:transaction(f.db,v=>pid=v)})(x.request,async(_,signal)=>{
-   signalSeen=signal;await new Promise(()=>{})
-  }),/mip_boundary_delivery_aborted/)
-  assert.ok(signalSeen.aborted);assert.ok(Date.now()-started<30000)
+  assert.ok(signalSeen?.aborted);assert.ok(performance.now()-enteredAt<=12000)
   assert.equal(await f.admin('select count(*) from pg_stat_activity where pid='+pid),'0')
   assert.equal(await f.admin('select consumed from mip_temporal.boundary_history_permits where id='+q(x.permit().permit_id)),'f')
   await assert.rejects(()=>transaction(f.db)(query=>query(consumeSql,[x.permit().permit_id,x.permit().request_id]),new AbortController().signal))
