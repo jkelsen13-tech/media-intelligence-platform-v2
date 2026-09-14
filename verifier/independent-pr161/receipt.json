@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "request_id": "pr161-208e160-independent-1",
+  "candidate_commit": "208e160684407e5856ad04209cbe45ba8e05b865",
+  "base_commit": "67e7a962b07ceaec75e06442ef770843d126e3ae",
+  "packet_sha256": "1653c9df84222478fe512686c3eab994fe945148c23f17e0ada842dfe55270e5",
+  "agent_id": "bc-208e1606-8440-4e58-96ad-04209cbe45ba",
+  "pinned_run_id": "run-c3975cac-9ae5-4a47-8352-cfa24fdf16e2",
+  "provider_status": "FINISHED",
+  "reviewer_outcome": null,
+  "controller_acceptance": "BLOCKED",
+  "validation_errors": [
+    "Result is narrative handoff text, not required JSON review",
+    "Provider text explicitly says full inspection and JSON emission incomplete"
+  ],
+  "result": {
+    "commit": "9ffb1d287f10978e6f58ff636944e92c2076b84a",
+    "path": "verifier/independent-pr161/result.txt",
+    "sha256": "cc82c5332b3b5bd6baa7c0d4a2f039849938c6052751b6d59f9a0d3da27d7a1e",
+    "bytes": 19609,
+    "exact_provider_result": true,
+    "status": "FINISHED"
+  },
+  "provider": {
+    "commit": "c8b2a2676c25cd81b9545a67eb6733770eeb7f04",
+    "path": "verifier/independent-pr161/result.provider.json"
+  },
+  "recovery_authorized": false,
+  "reviewer_text_unchanged": true,
+  "production_authorized": false,
+  "approval_granted": false,
+  "no_local_files": true
+}
