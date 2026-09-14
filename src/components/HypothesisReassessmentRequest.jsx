@@ -27,7 +27,7 @@ export default function HypothesisReassessmentRequest({client,investigationId,re
   }catch{if(alive.current&&active.current.client===context.client&&active.current.scopeKey===context.scopeKey)setStatus('uncertain')}
   finally{inFlight.current=false}
  }
- return <section className="piw-card" aria-label="Request reassessment"><h3>Request reassessment</h3>
+ return <section className="piw-card piw-hypothesis-reassessment" aria-label="Request reassessment"><h3>Request reassessment</h3>
   <p>Record a concern for explicit reconsideration. This does not approve a method, change the saved conclusion or authorize publication.</p>
   <form onSubmit={submit}>
    <label htmlFor={id+'-trigger'}>Reason for reconsideration</label>

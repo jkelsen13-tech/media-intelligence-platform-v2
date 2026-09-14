@@ -327,6 +327,13 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    const appHistory=page.getByRole('region',{name:'Hypothesis assessment history',exact:true})
    await appHistory.getByText('Later synthetic reasoning: the alternatives still remain difficult to distinguish.',{exact:true}).waitFor()
    assert.ok(appCalls.includes('history'));assert.ok(appCalls.includes('backlog'))
+   const appReason=appHistory.getByLabel('Reason for reconsideration',{exact:true})
+   await appReason.selectOption('methodology')
+   assert.equal(await appReason.inputValue(),'methodology')
+   await appReason.focus();await page.keyboard.press('ArrowUp')
+   assert.equal(await appReason.inputValue(),'shared_origin')
+   assert.ok((await appReason.boundingBox()).height>=44)
+   await appHistory.getByLabel('What needs reconsideration, and why?',{exact:true}).fill('Synthetic concern only; no request is submitted.')
    await appHistory.scrollIntoViewIfNeeded()
    assert.equal(await appHistory.isVisible(),true)
    const appLayout=await appHistory.evaluate(el=>({width:el.clientWidth,scroll:el.scrollWidth,
@@ -335,7 +342,7 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
      right:n.getBoundingClientRect().right,display:getComputedStyle(n).display,minWidth:getComputedStyle(n).minWidth,
      whiteSpace:getComputedStyle(n).whiteSpace,grid:getComputedStyle(n).gridTemplateColumns,position:getComputedStyle(n).position})).slice(0,20)}))
    if(appLayout.scroll>appLayout.width+1){
-    console.log('MIP_SYNTHETIC_NORMAL_APP_LAYOUT_FAILURE='+JSON.stringify({engine,width,...appLayout}))
+    console.log('MIP_SYNTHETIC_NORMAL_APP_LAYOUT_FAILURE='+JSON.stringify({engine,viewportWidth:width,...appLayout}))
     console.log('MIP_SYNTHETIC_NORMAL_APP_LAYOUT_FAILURE_IMAGE_'+engine+'='+(await page.screenshot({type:'jpeg',quality:70})).toString('base64'))
    }
    assert.equal(appLayout.scroll>appLayout.width+1,false)
