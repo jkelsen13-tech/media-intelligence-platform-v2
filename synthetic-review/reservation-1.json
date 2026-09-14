@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "stage": "owner_supervised",
+  "synthetic": true,
+  "request_commit": "98c5a49ec46d46bdbe2e05db1e0e7aba79d5daf8",
+  "request_path": "synthetic-review/request.json",
+  "packet_sha256": "0c615e0e07872ad4a5ec081f1a536cadcfd12a0107ba4c32830ca587d8aef384",
+  "provider": "Cursor",
+  "agent_id": "bc-28411385-8707-4eb5-832a-65a5c9bc37c2",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "high"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "attached_repositories": [],
+  "mcp_servers": [],
+  "autoCreatePR": false,
+  "status": "reserved_not_yet_launched",
+  "implementation_thread": "01a0941a-32aa-7ae0-9415-b4ae5f875abd",
+  "approval_authority": false
+}
