@@ -1,3 +1,4 @@
+import {syntheticAppIsolation} from '../verifier/hypothesis-browser/appIsolation.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {mkdirSync} from 'node:fs'
@@ -17,25 +18,8 @@ mkdirSync(root+'tests/.compiled',{recursive:true})
 const require=createRequire(import.meta.url),esbuild=createRequire(require.resolve('vite/package.json'))('esbuild')
 await esbuild.build({absWorkingDir:root,entryPoints:['src/App.jsx'],outfile:output,
  bundle:true,format:'esm',platform:'node',jsx:'automatic',external:['react','react/jsx-runtime'],
- define:{'import.meta.env':'({DEV:false})'},loader:{'.css':'empty'},
- plugins:[{name:'isolate-unrelated-public-surfaces',setup(build){
-  build.onResolve({filter:/^\.\/(graph|panels|views)\//},args=>{
-   if(!args.importer.endsWith('/src/App.jsx') || /\.js$/.test(args.path))return
-   return {path:args.path,namespace:'public-view'}
-  })
-  build.onLoad({filter:/.*/,namespace:'public-view'},()=>({contents:'export default function UnrelatedPublicView(){return null}'}))
-  build.onResolve({filter:/\/lib\/(auth|supabase|mipBackend)(\.js)?$/},args=>{
-   if(!args.importer.endsWith('/src/App.jsx'))return
-   return {path:args.path,namespace:'synthetic-services'}
-  })
-  build.onLoad({filter:/.*/,namespace:'synthetic-services'},args=>({contents:
-   args.path.includes('mipBackend') ? `export const mipBackend={investigations:{},publicData:{
-    loadCorpusMeta:async()=>null,loadGraph:async()=>({nodes:[],edges:[],source:'synthetic'}),
-    loadGraphCoverage:async()=>null,loadNodeLocations:async()=>[],loadTopics:async()=>null,
-    curated:{loadPhase3BetaFlag:async()=>false},loadInvestigationSurface:async()=>null}}` :
-   args.path.includes('supabase') ? 'export const supabase=null' :
-   'export const loadAccountUiFlag=async()=>false;export function useAuthSession(){return {loading:false,user:null,session:null}}'}))
- }}]})
+ define:{'import.meta.env':'{"DEV":false,"BASE_URL":"/"}'},loader:{'.css':'empty'},
+ plugins:[syntheticAppIsolation]})
 globalThis.window={location:{hash:'',search:'',pathname:'/'},history:{replaceState(){}},
  matchMedia:()=>({matches:false,addEventListener(){},removeEventListener(){}}),
  addEventListener(){},removeEventListener(){}}
