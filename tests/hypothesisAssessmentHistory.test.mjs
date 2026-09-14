@@ -110,7 +110,7 @@ test('resolved causes link to the saved reassessment and do not remain pending',
  assert.doesNotMatch(content(tree),/await explicit reassessment|causes remain pending/)
  act(()=>tree.root.findAllByType('button').find(b=>b.children.join('')==='Open reassessment revision 2').props.onClick())
  assert.match(content(tree),/Later synthetic assessment/)
- const details=tree.root.findByType('details')
+ const details=tree.root.findAllByType('details').find(d=>d.props.className==='piw-linked-record')
  act(()=>{const node={open:true};details.props.onToggle({target:node,currentTarget:node})})
  assert.match(content(tree),/Synthetic saved consideration/)
  assert.match(content(tree),/separate from review approval and publication eligibility/)
@@ -136,4 +136,18 @@ test('resolving a permission cause does not restore withheld prior assessment te
  assert.doesNotMatch(content(tree),/Original synthetic assessment/)
  assert.match(content(tree),/does not approve publication or restore/)
  act(()=>tree.unmount())
+})
+
+test('history comparison clears on refresh denial and logout',async()=>{
+ const f=fixture();let denied=false,tree
+ const client={...f.client,history:async()=>denied?{error:{code:'access_denied'}}:{data:f.history}}
+ await act(async()=>{tree=TestRenderer.create(createElement(Panel,props(client)))})
+ const comparison=tree.root.findAllByType('details').find(d=>d.findAllByType('summary').some(s=>s.children.join('').startsWith('Inspect changes')))
+ act(()=>{const node={open:true};comparison.props.onToggle({target:node,currentTarget:node})})
+ assert.match(content(tree),/Original synthetic assessment/)
+ denied=true
+ await act(async()=>tree.root.findAllByType('button').find(b=>b.children.join('')==='Refresh assessment history').props.onClick())
+ assert.doesNotMatch(content(tree),/Original synthetic assessment|Later synthetic assessment/)
+ await act(async()=>tree.update(createElement(Panel,{...props(client),userScopeKey:null})))
+ assert.equal(tree.toJSON(),null);act(()=>tree.unmount())
 })

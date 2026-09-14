@@ -1,4 +1,5 @@
 import {useEffect,useState,useId,useRef} from 'react'
+import HypothesisRevisionComparison from './HypothesisRevisionComparison.jsx'
 import HypothesisReviewAcknowledgement from './HypothesisReviewAcknowledgement.jsx'
 import HypothesisGenerationLedger from './HypothesisGenerationLedger.jsx'
 import HypothesisAssessmentComposer from './HypothesisAssessmentComposer.jsx'
@@ -84,6 +85,7 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
     <p>A saved reassessment does not approve publication or restore this older assessment’s permissions.</p>
    </div>:null}
   </div>:<p>No completed hypothesis assessments are saved.</p>}
+  {entry?<HypothesisRevisionComparison key={'comparison:'+scope+entry.revision_id} view={current.view} revisionId={entry.revision_id}/>:null}
   {canReconcile&&entry&&entry.revision_id===entries.at(-1)?.revision_id&&typeof client?.requestReassessment==='function'?
    <HypothesisReassessmentRequest key={scope+entry.revision_id} client={client} investigationId={investigationId}
     revisionId={entry.revision_id} scopeKey={scope} onRecorded={reload}/>:null}

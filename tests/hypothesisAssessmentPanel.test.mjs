@@ -34,3 +34,9 @@ test('invalid saved records fail closed without revealing unvalidated allegation
  const html=renderToStaticMarkup(createElement(Panel,{assessment:r}))
  assert.match(html,/assessment unavailable/);assert.doesNotMatch(html,/fictional contract/)
 })
+
+test('unqualified historical display mode cannot claim committed availability',()=>{
+ const html=renderToStaticMarkup(createElement(Panel,{assessment:hypothesisFixture(),historyMode:'as_known_then'}))
+ assert.match(html,/commit visibility is not qualified/)
+ assert.doesNotMatch(html,/available by the requested time|fictional contract/)
+})

@@ -13,6 +13,7 @@ function Notes({title,items}) {
 }
 export default function HypothesisAssessmentPanel({assessment,dependencyChanged=false,historyMode='saved_observation'}) {
   const [open,setOpen]=useState(false)
+  if(historyMode==='as_known_then') return <p>Historical assessment unavailable: commit visibility is not qualified.</p>
   if(!validateHypothesisAssessment(assessment).valid) return <p>Hypothesis assessment unavailable: the saved record is incomplete or unsupported.</p>
   const r=assessment, evidence=new Map(r.evidence.map(e=>[e.id,e]))
   return <section className="piw-card piw-hypothesis-assessment">
@@ -24,8 +25,7 @@ export default function HypothesisAssessmentPanel({assessment,dependencyChanged=
     <p><strong>Main limitation:</strong> {r.comparison.main_limitation}</p>
     <p>Evidence included through: {date(r.knowledge_cutoff)}</p>
     <p>Assessment completed: {date(r.completed_at)} · Revision {r.revision}</p>
-    <p>{historyMode==='as_known_then'?'As known then: this is a completed assessment available by the requested time.':
-      historyMode==='reconstructed_now'?'Reconstructed now: later-acquired evidence may inform this assessment.':'Saved observation: no current evidence is substituted.'}</p>
+    <p>{historyMode==='reconstructed_now'?'Reconstructed now: later-acquired evidence may inform this assessment.':'Saved observation: no current evidence is substituted.'}</p>
     <p>Saved review state: {r.review_state.replaceAll('_',' ')} · Private; publication disabled.</p>
     {dependencyChanged?<p role="status">A dependency changed. Reassessment is pending; this is still the saved assessment.</p>:null}
     <details className="piw-linked-record" onToggle={event=>{if(event.target===event.currentTarget)setOpen(event.currentTarget.open)}}>

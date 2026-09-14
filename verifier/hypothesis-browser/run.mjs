@@ -182,12 +182,41 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    if(width===390)console.log('MIP_SYNTHETIC_REVIEW_ACK_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
    await page.evaluate(()=>window.renderSyntheticComposer(null))
    await panel.waitFor({state:'detached'})
+   await page.evaluate(()=>window.renderSyntheticComparison())
+   const comparison=page.getByRole('region',{name:'Compare saved hypothesis revisions'})
+   await comparison.waitFor()
+   assert.equal((await comparison.innerText()).includes('Earlier synthetic reasoning'),false)
+   const compareSummary=comparison.getByText('Inspect changes from revision 1',{exact:true})
+   await compareSummary.focus();await page.keyboard.press('Enter')
+   await comparison.getByText('Earlier synthetic reasoning: the meeting alone does not distinguish the explanations.',{exact:true}).waitFor()
+   await comparison.getByText('Later synthetic reasoning: the alternatives still remain difficult to distinguish.',{exact:true}).waitFor()
+   await comparison.getByText('Omitted from the selected revision; prior history remains retained.',{exact:true}).waitFor()
+   assert.ok((await comparison.innerText()).includes('does not mean deleted from MIP'))
+   assert.ok((await comparison.innerText()).includes('not proof of historical commit visibility'))
+   assert.ok((await comparison.innerText()).includes('synthetic-contract-only-v2'))
+   assert.equal(await comparison.evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false)
+   if(width===390){
+    await comparison.getByRole('heading',{name:'Assessment and comparison',exact:true}).scrollIntoViewIfNeeded()
+    console.log('MIP_SYNTHETIC_REVISION_COMPARISON_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+   }
+   await page.evaluate(()=>window.comparisonSynthetic.mode='permission')
+   await page.getByRole('button',{name:'Refresh assessment history',exact:true}).click()
+   await page.getByText('Comparison unavailable: both linked revisions need current permission and a consistent saved history.',{exact:true}).waitFor()
+   assert.equal(await page.getByText('Earlier synthetic reasoning: the meeting alone does not distinguish the explanations.',{exact:true}).count(),0)
+   await page.evaluate(()=>window.comparisonSynthetic.mode='denied')
+   await page.getByRole('button',{name:'Refresh assessment history',exact:true}).click()
+   await page.getByText('Assessment history is unavailable.',{exact:true}).waitFor()
+   assert.equal(await page.getByText('Later synthetic reasoning: the alternatives still remain difficult to distinguish.',{exact:true}).count(),0)
+   await page.evaluate(()=>window.renderSyntheticComparison(null))
+   await page.getByRole('region',{name:'Hypothesis assessment history'}).waitFor({state:'detached'})
+
 
 
   }
   assert.deepEqual(requests,[]);assert.deepEqual(errors,[])
   console.log('MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS='+JSON.stringify({engine,widths:[1280,768,390,320],
-   keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
+   savedRevisionComparison:true,comparisonPermissionRaceCleared:true,comparisonNoSourceDeletionClaim:true,keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
    noAutomaticRetry:true,deniedRecordsCleared:true,logoutCleared:true,networkRequests:0,
    explicitReviewAcknowledgement:true,reviewExactRetry:true,reviewReadbackRequired:true,assessmentUnchangedByReview:true,composerExactUnicodeSpan:true,hashMismatchDenied:true,linkedReasoning:true,lostAcknowledgementExactRetry:true,syntheticReceiptOnly:true,savedRevisionReachableByScrolling:true,savedAssessmentDisclosure:true,separateMissingEstimates:true,sourceClocks:true,pendingReassessment:true,systemFontFallback:true,scope:'synthetic_ledger_saved_assessment_and_composer',productionQualified:false}))
  }finally{await browser.close()}
