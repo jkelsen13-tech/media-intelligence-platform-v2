@@ -55,8 +55,8 @@ begin
  expected_filter:=format('(binding_id = %L::uuid)',p_binding);
  expected_digest:=encode(sha256(convert_to('mip-boundary-contract-v2|'||p_binding::text||'|'||s.publication_name::text||'|'||
   c.revision_relation::text||'|'||c.marker_relation::text||'|'||expected_filter,'UTF8')),'hex');
- if expected_digest<>c.contract_digest or c.revision_relation<>'mip_hypothesis.revision_transactions'::regclass::oid
- or c.marker_relation<>'mip_temporal.registered_stream_markers'::regclass::oid
+ if expected_digest<>c.contract_digest or c.revision_relation is distinct from (select r.oid from pg_catalog.pg_class r join pg_catalog.pg_namespace n on n.oid=r.relnamespace where n.nspname='mip_hypothesis' and r.relname='revision_transactions')
+ or c.marker_relation is distinct from (select r.oid from pg_catalog.pg_class r join pg_catalog.pg_namespace n on n.oid=r.relnamespace where n.nspname='mip_temporal' and r.relname='registered_stream_markers')
  or not exists(select 1 from pg_catalog.pg_publication where pubname=s.publication_name and pubinsert
   and not pubupdate and not pubdelete and not pubtruncate and not puballtables and not pubviaroot)
  or (select count(*) from pg_catalog.pg_publication_tables where pubname=s.publication_name)<>2
