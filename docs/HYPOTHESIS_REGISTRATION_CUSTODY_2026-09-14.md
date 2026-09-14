@@ -15,3 +15,21 @@ A ledger stored beside the source, or a pin restored together with that ledger, 
 Remaining: select an authorized independent custodian and storage domain, bind authenticated issuer and recovery evidence to the envelope, implement/prove a multi-process authority adapter and durable journal, integrate the real adapter with the deployed recorder, run actual separate-store source restart/clone/restore fault tests, and obtain independent review. Historical qualification remains false. This does not authorize publication, production changes, paid services, source fetches, or any local-device project files.
 
 Sources inspected: [Supabase backup behavior](https://supabase.com/docs/guides/platform/backups) and [current changelog](https://supabase.com/changelog), including physical-restore credential behavior. No Supabase API/schema change is made by this slice.
+
+## PR157 review correction
+
+The independent recovery report at 8cfa664c81b5621970bea53df9e96dc92c58f534/verifier/independent-pr157/recovery-1-result.json says PASS but contains seven findings and two blockers. Controller acceptance is BLOCKED. This inconsistent report is preserved verbatim and is not clean independent approval.
+
+F1: the filesystem fixture now reads head, envelope and request state from uncached durable bytes. A fault test appends a newer durable registration after authority entry while preserving the original envelope body; stale callback-local head caching would wrongly accept idempotent retain. A separate test changes durable envelope bytes under the retained digest and proves idempotent retain rejects without appending.
+
+F2: the chain is source-scoped, not permanently stream-scoped. Recovery may establish a new stream epoch with a new binding/incarnation and authority-admitted envelope. A new independently configured expectedHead and transport are required; old transport and old-stream input fail. This correction tests and documents the existing behavior rather than silently imposing old.stream equality. The fixture's authority admission does not authenticate a real recovery issuer.
+
+F3: fresh review evidence must include complete Golden logs with named filesystem tests and zero skipped gated tests, the native worker log, package.json's test graph, workflow files, and all referenced native transport/journal/SQL dependencies at the frozen candidate. Check conclusions alone are insufficient.
+
+F4: both native transports now share a direct nativeCall dispatcher that forwards the exact wrapper-supplied argument array. The positive custody envelope explicitly equals the registered incarnation. A separate encrypted-journal fixture retains a deliberately mismatched envelope and reaches actual PostgreSQL rejection at capture, preparation, advancement and receipt replay; it never silently substitutes register()'s ID.
+
+F5/F7: changed readback on idempotent retain is now exercised. Capture request continuity remains in native capture/permit checks; the v1 wrapper binds preparation and advancement. No killed-process custody, independent physical storage, authenticated recovery issuer, distributed locking or real custodian is claimed. Trusted-adapter duties remain unresolved deployment obligations, not properties proved by this fixture.
+
+F6: sourceIncarnation v1 behavior is unchanged. prepare_incarnation SQL derives the binding from the retained capture; its signature has no binding argument. The custody wrapper additionally checks caller binding/source/stream before delegation. Broader v2 integration is a separate candidate and requires separate evidence.
+
+No application or SQL changes, production activation, migration, local-device files, merge or deployment occur in this correction.
