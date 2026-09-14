@@ -108,7 +108,7 @@ begin
   if new.identity_version_id is null or new.identity_version_id::text is distinct from expected_identity then raise exception 'mip_market_companion_version_required';end if;
   select * into strict identity_record from evidence_pipeline.record_versions where id=new.identity_version_id;
   if identity_record.record_kind<>'graph_node' or identity_record.operation='delete'
-   or identity_record.record_key is distinct from case when s.payload->>'type'='equity' then s.payload#>>'{metadata,issuer_id}' else s.payload#>>'{metadata,network_id}' end
+   or identity_record.record_key is distinct from (case when s.payload->>'type'='equity' then s.payload#>>'{metadata,issuer_id}' else s.payload#>>'{metadata,network_id}' end)
    or(case when s.payload->>'type'='equity' then identity_record.payload->>'type' not in('actor','institution') else identity_record.payload->>'type'<>'network' end)
    or exists(select 1 from evidence_pipeline.record_versions v where v.record_kind='graph_node' and v.record_key=identity_record.record_key and v.ordinal>identity_record.ordinal)
    then raise exception 'mip_market_companion_binding';end if;
