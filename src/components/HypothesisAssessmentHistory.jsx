@@ -1,4 +1,4 @@
-import {useEffect,useState,useId,useRef} from 'react'
+import {useEffect,useState,useId,useRef,useCallback} from 'react'
 import HypothesisObservations from './HypothesisObservations.jsx'
 import HypothesisRevisionComparison from './HypothesisRevisionComparison.jsx'
 import HypothesisReviewAcknowledgement from './HypothesisReviewAcknowledgement.jsx'
@@ -13,7 +13,12 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
  const selectId=useId(),operationEpoch=useRef(0)
  const scope=JSON.stringify([userScopeKey,investigationId,workspaceVersionId,refresh])
  const scopeRef=useRef(scope);scopeRef.current=scope
+ const clientRef=useRef(client);clientRef.current=client
  const accessFailure=useRef(onAccessFailure);accessFailure.current=onAccessFailure
+ const invalidateAccess=useCallback(code=>{
+  if(scopeRef.current!==scope||clientRef.current!==client)return
+  setState({client,scope,status:'unavailable'});accessFailure.current?.(code)
+ },[client,scope])
  useEffect(()=>{
   operationEpoch.current++
   let current=true
@@ -80,18 +85,18 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
     {entries.map(e=><option key={e.revision_id} value={e.revision_id}>Revision {e.revision}{e.status==='withheld'?' — unavailable':''}</option>)}
    </select>
    {related.length?<div role="status"><p>{related.length} recorded change{related.length===1?'':'s'} await explicit reassessment.</p>
-    <ul>{related.map(c=><li key={c.cause_id}>{labels[c.kind]}{c.change_position?' · retained change '+c.change_position:''}{c.kind==='human_reconsideration'&&c.detail?.request_id&&typeof client?.requestDetail==='function'?<ReassessmentRequestDetail key={scope+c.cause_id} client={client} investigationId={investigationId} cause={c} scopeKey={scope}/>:null}</li>)}</ul>
+    <ul>{related.map(c=><li key={c.cause_id}>{labels[c.kind]}{c.change_position?' · retained change '+c.change_position:''}{c.kind==='human_reconsideration'&&c.detail?.request_id&&typeof client?.requestDetail==='function'?<ReassessmentRequestDetail key={scope+c.cause_id} client={client} investigationId={investigationId} cause={c} scopeKey={scope} onAccessFailure={invalidateAccess}/>:null}</li>)}</ul>
    </div>:null}
    {resolved.length?<div><p>{resolved.length} recorded change{resolved.length===1?'':'s'} {resolved.length===1?'has':'have'} a saved reassessment.</p>
     <ul>{resolved.map(c=><li key={c.cause_id}>{labels[c.kind]} · <button type="button"
-      onClick={()=>setSelected(c.resolution_revision_id)}>Open reassessment revision {entries.find(e=>e.revision_id===c.resolution_revision_id)?.revision}</button>{c.kind==='human_reconsideration'&&c.detail?.request_id&&typeof client?.requestDetail==='function'?<ReassessmentRequestDetail key={scope+c.cause_id} client={client} investigationId={investigationId} cause={c} scopeKey={scope}/>:null}</li>)}</ul>
+      onClick={()=>setSelected(c.resolution_revision_id)}>Open reassessment revision {entries.find(e=>e.revision_id===c.resolution_revision_id)?.revision}</button>{c.kind==='human_reconsideration'&&c.detail?.request_id&&typeof client?.requestDetail==='function'?<ReassessmentRequestDetail key={scope+c.cause_id} client={client} investigationId={investigationId} cause={c} scopeKey={scope} onAccessFailure={invalidateAccess}/>:null}</li>)}</ul>
     <p>A saved reassessment does not approve publication or restore this older assessment’s permissions.</p>
    </div>:null}
   </div>:<p>No completed hypothesis assessments are saved.</p>}
   {entry?<HypothesisRevisionComparison key={'comparison:'+scope+entry.revision_id} view={current.view} revisionId={entry.revision_id}/>:null}
   {canReconcile&&entry&&entry.revision_id===entries.at(-1)?.revision_id&&typeof client?.requestReassessment==='function'?
    <HypothesisReassessmentRequest key={scope+entry.revision_id} client={client} investigationId={investigationId}
-    revisionId={entry.revision_id} scopeKey={scope} onRecorded={reload}/>:null}
+    revisionId={entry.revision_id} scopeKey={scope} onRecorded={reload} onAccessFailure={invalidateAccess}/>:null}
   {entry&&entry.status==='available'&&!permissionChanged?<HypothesisReviewAcknowledgement key={'review:'+scope+entry.revision_id} client={client}
    investigationId={investigationId} revisionId={entry.revision_id} revision={entry.revision} userScopeKey={userScopeKey} canReview={canReconcile}
    onAccessFailure={code=>{setState({client,scope,status:'unavailable'});accessFailure.current?.(code)}}/>:null}
