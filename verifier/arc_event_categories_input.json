@@ -1,4 +1,0 @@
-{
-  "project_id": "yhbwnrtlqbjtcrrlpbge",
-  "query": "SELECT DISTINCT category FROM public.arc_events ORDER BY category LIMIT 100;"
-}
