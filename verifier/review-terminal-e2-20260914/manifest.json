@@ -1,0 +1,51 @@
+{
+  "schema": "mip-review-terminal-rejection-evidence-v1",
+  "candidate": "e2f4e0369ca577c11b0c8e809fb3bd782a344fc6",
+  "base": "b838ac43601ec905b95524b9c15437e6f1b23d7d",
+  "test_merge": "c05c68b395fb1c0f31910162870b35daf4f5ec00",
+  "identical_tree": "b6734af86c7c80e64ca3b86259b562d30e5969ac",
+  "changed_files": [
+    "verifier/review-handoff/terminal-output.test.mjs",
+    "verifier/review-handoff/TERMINAL-OUTPUT-REGRESSION.md"
+  ],
+  "unchanged_core": [
+    "controller.mjs",
+    "protocol.mjs",
+    "validation.mjs",
+    "fixtures.mjs"
+  ],
+  "logs": [
+    {
+      "file": "synthetic-job-103963989585.log",
+      "run": 34840463298,
+      "job": 103963989585,
+      "sha256": "82c6b213a1f01b6f4705a0ac9f59a4a04f43610270fe694cccc411709f8fdcd7",
+      "tests": 146,
+      "pass": 146,
+      "fail": 0
+    },
+    {
+      "file": "golden-node22-job-103963989849.log",
+      "run": 34840463232,
+      "job": 103963989849,
+      "sha256": "f7b7978908cc45a2a87f3bf53bbdb97205388d4f2f9a5ad3c83d81b37a5a8a4b",
+      "tests": 1782,
+      "pass": 1782,
+      "fail": 0,
+      "build": "success"
+    },
+    {
+      "file": "golden-node24-job-103963989505.log",
+      "run": 34840463232,
+      "job": 103963989505,
+      "sha256": "e9429adc8544ee3e93c4880edbca333cf2ae78689de80d9be6ea0d10065952eb",
+      "tests": 1782,
+      "pass": 1782,
+      "fail": 0,
+      "build": "success"
+    }
+  ],
+  "digest_definition": "Exact UTF-8 connector-decoded log text SHA256 including BOM if present, not ZIP digest",
+  "scope": "10 new pure-synthetic cases across existing accept/receive, each delivered twice; zero result-store effects/accepted decisions. No actual review content, verdict extraction, normalization, context cap, real provider/callback/publisher, retry or production.",
+  "independent_acceptance": "not_inherited_from_base"
+}
