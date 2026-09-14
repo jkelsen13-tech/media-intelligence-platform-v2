@@ -6,7 +6,7 @@ const check=(ok,message)=>{if(!ok)throw Error(message)};
 const sha256=s=>createHash('sha256').update(s).digest('hex');
 export function prepare({candidate,path,bytes,model='grok-4.6',effort='high'}) {
  check(/^[0-9a-f]{40}$/.test(candidate),'frozen commit required');
- check(path==='synthetic-review/request.json','synthetic fixture path required');
+ check(/^synthetic-review\/request(?:-correction-\d+|-blocked-\d+)?\.json$/.test(path),'synthetic fixture path required');
  check(typeof bytes==='string'&&Buffer.byteLength(bytes)<=16384,'bounded packet required');
  const packet=JSON.parse(bytes);
  check(packet.synthetic===true&&packet.production_authority===false,'synthetic authority required');
