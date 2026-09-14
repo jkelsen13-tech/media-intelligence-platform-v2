@@ -1,3 +1,4 @@
+import {hypothesisEndpoint,integratedHypothesisPayload} from '../../tests/privateMarketsHypothesisFixture.mjs'
 import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
 import {readFile} from 'node:fs/promises'
@@ -16,7 +17,7 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
  const browser=await launcher.launch({headless:true})
  try{
   const page=await browser.newPage(),outside=[],errors=[],calls=[]
-  let mode='ready'
+  let mode='ready',hypothesisDenied=false,hypothesisCalls=[]
   // Actual handler/reader/mapper; synthetic verified-Auth and database row fixture.
   // This is not native SQL, provider authentication, or production rights qualification.
   const handler=createPrivateMarketsHandler({allowedOrigins:[marketsOrigin],sourceProject:'synthetic-only',
@@ -35,6 +36,13 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    if(url===marketsOrigin+'/'&&request.isNavigationRequest()&&request.frame()===page.mainFrame())
     return route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic private Markets</title><div id="root"></div>'})
    if(url===marketsOrigin+'/assets/mip-mobius-logo.png')return route.fulfill({status:204,body:''})
+   if(url===hypothesisEndpoint){
+    const headers=request.headers(),body=request.postDataJSON()
+    assert.equal(headers.authorization,'Bearer synthetic-markets-current');assert.equal(headers.cookie,undefined);assert.equal(headers.referer,undefined)
+    assert.equal(body.input.investigation_id,marketScope.investigation);hypothesisCalls.push(body.action)
+    return route.fulfill({status:hypothesisDenied?403:200,contentType:'application/json',
+     body:JSON.stringify(hypothesisDenied?{error:{code:'access_denied'}}:{data:integratedHypothesisPayload(body.action)})})
+   }
    if(url===marketsEndpoint){
     const headers=request.headers();assert.equal(headers.cookie,undefined);assert.equal(headers.referer,undefined)
     const input=request.postDataJSON();calls.push(input)
@@ -105,8 +113,51 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
     assert.equal(await page.getByRole('heading',{name:'Synthetic cryptoasset',exact:true}).count(),0)
    }
   }
+
+  // Both actual clients mounted together; no public surface or live endpoint.
+  await page.setViewportSize({width:390,height:1000})
+  for(const denialFamily of ['hypothesis','markets']){
+   mode='ready';hypothesisDenied=false
+   await page.evaluate(()=>window.renderMarketsApp({signedOut:true,hypotheses:true}))
+   await page.getByRole('heading',{name:'Sign in to read assigned investigations',exact:true}).waitFor()
+   await page.evaluate(()=>window.renderMarketsApp({hypotheses:true}))
+   const h=page.getByRole('region',{name:'Hypothesis assessment history',exact:true})
+   await h.getByText('Later synthetic reasoning: the alternatives still remain difficult to distinguish.',{exact:true}).waitFor()
+   await page.getByRole('button',{name:'Open private Markets evidence',exact:true}).click()
+   const m=page.getByRole('region',{name:'Private Markets workspace',exact:true})
+   await m.getByRole('button',{name:'Read private evidence paths',exact:true}).click()
+   await m.getByRole('heading',{name:'Synthetic cryptoasset',exact:true}).waitFor()
+   await h.getByLabel('Reason for reconsideration',{exact:true}).selectOption('methodology')
+   await h.getByText('Selected reason: Method or reasoning needs reconsideration',{exact:true}).waitFor()
+   for(const [name,view] of [['history',h],['markets',m]]){
+    await view.scrollIntoViewIfNeeded();assert.equal(await view.isVisible(),true)
+    const layout=await view.evaluate(el=>({width:el.clientWidth,scroll:el.scrollWidth}))
+    if(layout.scroll>layout.width+1)console.log('MIP_DUAL_LAYOUT_FAILURE='+JSON.stringify({engine,name,...layout}))
+    assert.equal(layout.scroll>layout.width+1,false,'dual '+name+' overflow')
+    if(denialFamily==='hypothesis')console.log('MIP_DUAL_'+name+'_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+   }
+   if(denialFamily==='hypothesis'){hypothesisDenied=true;await h.getByRole('button',{name:'Refresh assessment history',exact:true}).click()}
+   else {mode='denied';await m.getByRole('button',{name:'Read private evidence paths',exact:true}).click()}
+   await page.getByRole('heading',{name:'This investigation is unavailable',exact:true}).waitFor()
+   assert.equal(await h.count(),0);assert.equal(await m.count(),0)
+  }
+  mode='ready';hypothesisDenied=false
+  await page.evaluate(()=>window.renderMarketsApp({signedOut:true,hypotheses:true}))
+  await page.getByRole('heading',{name:'Sign in to read assigned investigations',exact:true}).waitFor()
+  await page.evaluate(()=>window.renderMarketsApp({hypotheses:true,expiresAt:Math.floor(Date.now()/1000)+4}))
+  await page.getByRole('region',{name:'Hypothesis assessment history',exact:true}).getByText('Later synthetic reasoning: the alternatives still remain difficult to distinguish.',{exact:true}).waitFor()
+  await page.getByRole('button',{name:'Open private Markets evidence',exact:true}).click()
+  await page.getByRole('button',{name:'Read private evidence paths',exact:true}).click()
+  await page.getByRole('heading',{name:'Synthetic cryptoasset',exact:true}).waitFor()
+  const expiryCalls=calls.length+hypothesisCalls.length
+  await page.getByRole('heading',{name:'Sign in to read assigned investigations',exact:true}).waitFor()
+  assert.equal(calls.length+hypothesisCalls.length,expiryCalls)
+  assert.equal(await page.getByRole('region',{name:'Hypothesis assessment history',exact:true}).count(),0)
+  assert.equal(await page.getByRole('region',{name:'Private Markets workspace',exact:true}).count(),0)
+  assert.equal(await page.evaluate(()=>/Later synthetic reasoning|Synthetic equity|synthetic-markets/.test(location.href+JSON.stringify({...localStorage}))),false)
+
   assert.deepEqual(outside,[]);assert.deepEqual(errors,[])
-  console.log('MIP_PRIVATE_MARKETS_BROWSER_PASS='+JSON.stringify({engine,widths:[1280,768,390,320],normalApp:true,defaultEndpointClosed:true,
+  console.log('MIP_PRIVATE_MARKETS_BROWSER_PASS='+JSON.stringify({engine,widths:[1280,768,390,320],normalApp:true,defaultEndpointClosed:true,dualClientCoPresence390:true,dualCurrentDenialBothDirections:true,dualRealExpiryCleared:true,
    realClientHandlerReaderMapper:true,syntheticAuthAndDatabase:true,nativeSQLQualified:false,equityAndCrypto:true,indirectPath:true,twoWayNavigation:true,
    exactScopeObservationAndTime:true,emptyNoInventedCard:true,mismatchCleared:true,currentDenialCleared:true,logoutCleared:true,displayedSessionExpiryCleared:true,keyboard:true,
    horizontalOverflow:false,privateRouteOrStorageLeak:false,externalPageRequests:0,publicSurfacesIsolated:true,brandBitmapExcluded:true,productionQualified:false}))

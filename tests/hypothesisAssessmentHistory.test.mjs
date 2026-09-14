@@ -151,3 +151,107 @@ test('history comparison clears on refresh denial and logout',async()=>{
  await act(async()=>tree.update(createElement(Panel,{...props(client),userScopeKey:null})))
  assert.equal(tree.toJSON(),null);act(()=>tree.unmount())
 })
+
+function humanRequestFixture(){
+ const f=fixture()
+ f.backlog.causes=[{cause_id:'synthetic-human-cause',revision_id:'synthetic-assessment-2',
+  kind:'human_reconsideration',state:'pending_explicit_reconciliation',
+  detail:{request_id:'synthetic-human-request',trigger:'methodology'}}]
+ return f
+}
+function withheldDetail(){
+ return {data:{contract_version:'mip_hypothesis_request_detail_v1',investigation_id:'synthetic-question',
+  request_id:'synthetic-human-request',cause_id:'synthetic-human-cause',revision_id:'synthetic-assessment-2',
+  trigger:'methodology',publication_allowed:false,is_approval:false,status:'withheld',
+  withheld_reason:'current_evidence_permission_required'}}
+}
+function revealComparison(tree){
+ const comparison=tree.root.findAllByType('details').find(d=>d.findAllByType('summary').some(s=>s.children.join('').startsWith('Inspect changes')))
+ act(()=>{const node={open:true};comparison.props.onToggle({target:node,currentTarget:node})})
+ assert.match(content(tree),/Original synthetic assessment/)
+ assert.match(content(tree),/Later synthetic assessment/)
+}
+async function startHumanAction(tree,kind){
+ if(kind==='request'){
+  await act(async()=>tree.root.findByType('textarea').props.onChange({target:{value:'Synthetic concern.'}}))
+  act(()=>{void tree.root.findByType('form').props.onSubmit({preventDefault(){}})})
+ }else act(()=>{void tree.root.findAllByType('button').find(b=>b.children.join('')==='Inspect reassessment request').props.onClick()})
+}
+for(const kind of ['request','detail'])for(const code of ['authentication_required','access_denied'])
+ test('human '+kind+' '+code+' clears parent private assessment and open comparison',async()=>{
+  const f=humanRequestFixture(),failures=[];let resolve,tree
+  const method=kind==='request'?'requestReassessment':'requestDetail'
+  const client={...f.client,[method]:()=>new Promise(r=>resolve=r)}
+  await act(async()=>{tree=TestRenderer.create(createElement(Panel,{...props(client),onAccessFailure:c=>failures.push(c)}))})
+  revealComparison(tree);await startHumanAction(tree,kind)
+  await act(async()=>resolve({error:{code}}))
+  assert.doesNotMatch(content(tree),/Original synthetic assessment|Later synthetic assessment|Synthetic concern/)
+  assert.match(content(tree),/Assessment history is unavailable/)
+  assert.deepEqual(failures,[code]);act(()=>tree.unmount())
+ })
+test('validated request-detail permission withholding clears parent but unsupported/cross-scope responses do not revoke it',async()=>{
+ for(const change of [null,r=>r.data.investigation_id='other',r=>r.data.withheld_reason='unsupported',r=>r.data.publication_allowed=true]){
+  const f=humanRequestFixture(),failures=[];let resolve,tree
+  const client={...f.client,requestDetail:()=>new Promise(r=>resolve=r)}
+  await act(async()=>{tree=TestRenderer.create(createElement(Panel,{...props(client),onAccessFailure:c=>failures.push(c)}))})
+  revealComparison(tree);await startHumanAction(tree,'detail')
+  const response=withheldDetail();if(change)change(response)
+  await act(async()=>resolve(response))
+  if(change){assert.match(content(tree),/Later synthetic assessment/);assert.deepEqual(failures,[])}
+  else{assert.doesNotMatch(content(tree),/Original synthetic assessment|Later synthetic assessment/);assert.deepEqual(failures,['access_denied'])}
+  act(()=>tree.unmount())
+ }
+})
+for(const kind of ['request','detail'])for(const replacement of ['client','scope','unmount'])
+ test('late human '+kind+' denial after '+replacement+' cannot clear replacement context',async()=>{
+  const f=humanRequestFixture(),failures=[];let resolve,tree
+  const method=kind==='request'?'requestReassessment':'requestDetail'
+  const client={...f.client,[method]:()=>new Promise(r=>resolve=r)}
+  const baseProps={...props(client),onAccessFailure:c=>failures.push(c)}
+  await act(async()=>{tree=TestRenderer.create(createElement(Panel,baseProps))})
+  revealComparison(tree);await startHumanAction(tree,kind)
+  const nextProps=replacement==='client'?{...baseProps,client:{...f.client}}:{...baseProps,userScopeKey:'replacement-user'}
+  if(replacement==='unmount'){
+   act(()=>tree.unmount())
+   await act(async()=>{tree=TestRenderer.create(createElement(Panel,nextProps))})
+  }else await act(async()=>tree.update(createElement(Panel,nextProps)))
+  assert.match(content(tree),/Later synthetic assessment/)
+  await act(async()=>resolve({error:{code:'access_denied'}}))
+  assert.match(content(tree),/Later synthetic assessment/)
+  assert.deepEqual(failures,[]);act(()=>tree.unmount())
+ })
+test('ambiguous human request response preserves parent and exact retry identity',async()=>{
+ const f=humanRequestFixture(),failures=[],calls=[];let tree
+ const client={...f.client,requestReassessment:async input=>{calls.push(structuredClone(input));return{error:{code:'request_failed'}}}}
+ await act(async()=>{tree=TestRenderer.create(createElement(Panel,{...props(client),onAccessFailure:c=>failures.push(c)}))})
+ revealComparison(tree)
+ await startHumanAction(tree,'request');await act(async()=>{})
+ assert.match(content(tree),/Recording is unconfirmed/);assert.match(content(tree),/Later synthetic assessment/)
+ await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}))
+ assert.equal(calls.length,2);assert.deepEqual(calls[0],calls[1]);assert.deepEqual(failures,[])
+ act(()=>tree.unmount())
+})
+
+test('resolved human request detail denial clears the older selected assessment',async()=>{
+ const f=completedFixture(),failures=[];let resolve,tree
+ Object.assign(f.backlog.causes[0],{kind:'human_reconsideration',detail:{request_id:'synthetic-human-request',trigger:'methodology'}})
+ const client={...f.client,requestDetail:()=>new Promise(r=>resolve=r)}
+ await act(async()=>{tree=TestRenderer.create(createElement(Panel,{...props(client),onAccessFailure:c=>failures.push(c)}))})
+ act(()=>tree.root.findByType('select').props.onChange({target:{value:'synthetic-assessment-1'}}))
+ assert.match(content(tree),/Original synthetic assessment/);assert.match(content(tree),/saved reassessment/)
+ await startHumanAction(tree,'detail')
+ await act(async()=>resolve({error:{code:'access_denied'}}))
+ assert.doesNotMatch(content(tree),/Original synthetic assessment|Later synthetic assessment/)
+ assert.deepEqual(failures,['access_denied']);act(()=>tree.unmount())
+})
+for(const replacement of ['client','scope'])test('late validated permission withholding after '+replacement+' cannot revoke replacement history',async()=>{
+ const f=humanRequestFixture(),failures=[];let resolve,tree
+ const client={...f.client,requestDetail:()=>new Promise(r=>resolve=r)}
+ const baseProps={...props(client),onAccessFailure:c=>failures.push(c)}
+ await act(async()=>{tree=TestRenderer.create(createElement(Panel,baseProps))})
+ await startHumanAction(tree,'detail')
+ await act(async()=>tree.update(createElement(Panel,replacement==='client'?{...baseProps,client:{...f.client}}:{...baseProps,userScopeKey:'replacement-user'})))
+ await act(async()=>resolve(withheldDetail()))
+ assert.match(content(tree),/Later synthetic assessment/);assert.deepEqual(failures,[])
+ act(()=>tree.unmount())
+})
