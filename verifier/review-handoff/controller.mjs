@@ -7,11 +7,15 @@ const digest=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex');
 const text=v=>typeof v==='string'&&v.length>0&&v.length<=4000;
 export function requestKey(request) {return digest(request)}
 export function validateRequest(q) {
- obj(q,'version synthetic request candidate packet implementer reviewer model requirements controller');
+ obj(q,'version synthetic request candidate packet implementer reviewer model requirements requirementLayers controller');
  check(q.version===1&&q.synthetic===true,'real_activation_disabled');
  check(id(q.request)&&sha(q.candidate)&&sha(q.controller)&&/^[a-f0-9]{64}$/.test(q.packet),'binding');
  check(id(q.implementer)&&id(q.reviewer)&&q.implementer!==q.reviewer&&id(q.model),'independence');
- check(Array.isArray(q.requirements)&&q.requirements.length>0&&q.requirements.every(id)&&new Set(q.requirements).size===q.requirements.length,'requirements');
+ check(Array.isArray(q.requirements)&&q.requirements.length>=3&&q.requirements.every(id)&&new Set(q.requirements).size===q.requirements.length,'requirements');
+ check(q.requirementLayers&&Object.getPrototypeOf(q.requirementLayers)===Object.prototype,'requirement_layers');
+ check(Object.keys(q.requirementLayers).sort().join('|')===q.requirements.slice().sort().join('|'),'requirement_layer_binding');
+ check(q.requirements.every(k=>['frontend','backend','cross_layer'].includes(q.requirementLayers[k])),'requirement_layer');
+ check(['frontend','backend','cross_layer'].every(layer=>Object.values(q.requirementLayers).includes(layer)),'full_stack_required');
 }
 export function validateReport(q,r) {
  validateRequest(q);
