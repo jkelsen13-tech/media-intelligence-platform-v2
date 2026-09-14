@@ -9,7 +9,7 @@ test('private Markets shared graph retained reader',async t=>{
  // Strengthen the intentionally small existing fixture with catalog-relevant graph constraints.
  // The survivor currently has no edges_type_check; do not pretend the old migration is its schema.
  await f.admin("alter table public.nodes add constraint nodes_type_check check(type in('event','actor','institution','document','anomaly','policy','topic'));"+
-  "alter table public.edges add column source_id uuid not null references public.nodes(id),add column target_id uuid not null references public.nodes(id),add column type text not null,add column metadata jsonb not null default '{}',add column private_unused text;"+
+  "alter table public.edges add column source_id uuid not null references public.nodes(id),add column target_id uuid not null references public.nodes(id),add column type text not null,add column metadata jsonb not null default '{}';"+
   "alter table public.edges add check(source_id<>target_id);create index market_fixture_edge_source on public.edges(source_id);create index market_fixture_edge_target on public.edges(target_id);"+
   "alter table public.edges alter column payload set default '{}';"+
   "create table if not exists public.citations(id uuid primary key,article_id uuid references public.articles(id),resolved_node_id uuid references public.nodes(id));"+
@@ -22,20 +22,21 @@ test('private Markets shared graph retained reader',async t=>{
  const original=await f.investigation()
  const nodes={equity:randomUUID(),crypto:randomUUID(),issuer:randomUUID(),supplier:randomUUID(),network:randomUUID(),event:randomUUID()}
  const alias=(symbol,namespace)=>[{symbol,namespace,valid_from:'2026-01-01T00:00:00Z',valid_to:null}]
- for(const [name,id] of Object.entries(nodes)){
+ const latest=(kind,id)=>f.admin('select id from evidence_pipeline.record_versions where record_kind='+q(kind)+' and record_key='+q(id)+' order by ordinal desc limit 1')
+ for(const name of ['issuer','supplier','network','event','equity','crypto']){const id=nodes[name]
   const type={equity:'equity',crypto:'cryptoasset',issuer:'actor',supplier:'institution',network:'network',event:'event'}[name]
-  const metadata=name==='equity'?{issuer_id:nodes.issuer,aliases:alias('SYN','TEST:VENUE')}:
-   name==='crypto'?{network_id:nodes.network,asset_identifier:'synthetic-token',aliases:alias('SYN','TEST:NETWORK')}:{}
+  const metadata=name==='equity'?{issuer_id:nodes.issuer,issuer_version_id:await latest('graph_node',nodes.issuer),valid_from:'2026-01-01',valid_to:null,aliases:alias('SYN','TEST:VENUE')}:
+   name==='crypto'?{network_id:nodes.network,network_version_id:await latest('graph_node',nodes.network),valid_from:'2026-01-01',valid_to:null,asset_identifier:'synthetic-token',aliases:alias('SYN','TEST:NETWORK')}:{}
   await f.admin('insert into public.nodes(id,type,label,metadata,private_candidate) values('+[id,type,'Synthetic private '+name,metadata,true].map(q).join(',')+')')
  }
- const latest=(kind,id)=>f.admin('select id from evidence_pipeline.record_versions where record_kind='+q(kind)+' and record_key='+q(id)+' order by ordinal desc limit 1')
+
  const candidates=[]
  for(const [from,to,kind] of [['equity','issuer','ownership'],['issuer','supplier','supply'],['supplier','event','direct_reporting'],['equity','event','direct_reporting'],['crypto','network','protocol_dependency'],['network','event','operation']]){
   const edge=randomUUID(),cid=randomUUID()
   await f.admin('insert into public.edges(id,source_id,target_id,type,private_candidate) values('+[edge,nodes[from],nodes[to],kind,true].map(q).join(',')+')')
   const versions=await Promise.all([latest('graph_node',nodes[from]),latest('graph_node',nodes[to]),latest('graph_edge',edge)])
-  await f.admin('insert into evidence_pipeline.evidence_candidates(id,capture_id,candidate_key,candidate_kind,statement,source_field,span_start,span_end,excerpt,extractor_version,remaining_uncertainty,typed_edge_id,subject_version_id,object_version_id,edge_version_id,relationship_kind,valid_from) values('+
-   [cid,original.entry.capture.id,cid,'typed_graph_relationship','Synthetic typed evidence','summary',0,21,'A 😀 B meeting record.','synthetic-markets-v1','Synthetic mechanism only.',edge,...versions,kind,'2026-01-01'].map(q).join(',')+')')
+  await f.admin('insert into evidence_pipeline.evidence_candidates(id,capture_id,candidate_key,candidate_kind,statement,source_field,span_start,span_end,excerpt,extractor_version,remaining_uncertainty,typed_edge_id,subject_version_id,object_version_id,edge_version_id,identity_version_id,relationship_kind,valid_from) values('+
+   [cid,original.entry.capture.id,cid,'typed_graph_relationship','Synthetic typed evidence','summary',0,21,'A 😀 B meeting record.','synthetic-markets-v1','Synthetic mechanism only.',edge,...versions,from==='equity'?await latest('graph_node',nodes.issuer):from==='crypto'?await latest('graph_node',nodes.network):null,kind,'2026-01-01'].map(q).join(',')+')')
   const context=JSON.parse(await f.admin('select evidence_pipeline.assessment_context('+q(cid)+')'))
   const input={candidate_id:cid,algorithm_key:'synthetic-market',algorithm_version:'v1',outcome:'supported',rationale:'Synthetic mechanism.',remaining_uncertainty:'Not real-world evidence.',context_positions:context.context_positions}
   await f.pub('mip_assessments_v1','append',input);candidates.push({cid,edge,versions,input})

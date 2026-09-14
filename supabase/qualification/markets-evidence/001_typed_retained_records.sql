@@ -49,6 +49,7 @@ alter table evidence_pipeline.evidence_candidates
  add column subject_version_id uuid references evidence_pipeline.record_versions(id),
  add column object_version_id uuid references evidence_pipeline.record_versions(id),
  add column edge_version_id uuid references evidence_pipeline.record_versions(id),
+ add column identity_version_id uuid references evidence_pipeline.record_versions(id),
  add column relationship_kind text,
  add column valid_from timestamptz,
  add column valid_to timestamptz;
@@ -57,14 +58,15 @@ alter table evidence_pipeline.evidence_candidates add constraint typed_candidate
  and relationship_kind in('direct_reporting','ownership','operation','supply','regulation','financing','protocol_dependency')
  and valid_from is not null and isfinite(valid_from) and (valid_to is null or(isfinite(valid_to) and valid_to>valid_from))
  and event_node_id is null and related_node_id is null and place_id is null and spatial_revision_id is null)
- or(candidate_kind<>'typed_graph_relationship' and typed_edge_id is null and subject_version_id is null and object_version_id is null and edge_version_id is null and relationship_kind is null and valid_from is null and valid_to is null));
+ or(candidate_kind<>'typed_graph_relationship' and typed_edge_id is null and subject_version_id is null and object_version_id is null and edge_version_id is null and identity_version_id is null and relationship_kind is null and valid_from is null and valid_to is null));
 create index market_candidate_edge on evidence_pipeline.evidence_candidates(typed_edge_id);
 create index market_candidate_subject_version on evidence_pipeline.evidence_candidates(subject_version_id);
 create index market_candidate_object_version on evidence_pipeline.evidence_candidates(object_version_id);
+create index market_candidate_identity_version on evidence_pipeline.evidence_candidates(identity_version_id);
 create index market_candidate_edge_version on evidence_pipeline.evidence_candidates(edge_version_id);
 create function mip_markets.guard_candidate() returns trigger language plpgsql set search_path='' as $$
 declare s evidence_pipeline.record_versions;o evidence_pipeline.record_versions;e evidence_pipeline.record_versions;c evidence_pipeline.article_captures;
- edge public.edges;latest uuid;
+ edge public.edges;identity_record evidence_pipeline.record_versions;expected_identity text;
 begin
  if new.candidate_kind<>'typed_graph_relationship' then return new;end if;
  perform 1 from mip_cutover_authority.publication_fence where id for share;
@@ -82,6 +84,16 @@ begin
  if exists(select 1 from evidence_pipeline.record_versions v where (v.record_kind,v.record_key) in((s.record_kind,s.record_key),(o.record_kind,o.record_key),(e.record_kind,e.record_key))
  and v.ordinal>case when v.record_kind=e.record_kind and v.record_key=e.record_key then e.ordinal when v.record_key=s.record_key then s.ordinal else o.ordinal end)
  then raise exception 'mip_market_stale_identity';end if;
+ if s.payload->>'type' in('equity','cryptoasset') then
+  expected_identity:=case when s.payload->>'type'='equity' then s.payload#>>'{metadata,issuer_version_id}' else s.payload#>>'{metadata,network_version_id}' end;
+  if new.identity_version_id is null or new.identity_version_id::text is distinct from expected_identity then raise exception 'mip_market_companion_version_required';end if;
+  select * into strict identity_record from evidence_pipeline.record_versions where id=new.identity_version_id;
+  if identity_record.record_kind<>'graph_node' or identity_record.operation='delete'
+   or identity_record.record_key is distinct from case when s.payload->>'type'='equity' then s.payload#>>'{metadata,issuer_id}' else s.payload#>>'{metadata,network_id}' end
+   or(case when s.payload->>'type'='equity' then identity_record.payload->>'type' not in('actor','institution') else identity_record.payload->>'type'<>'network' end)
+   or exists(select 1 from evidence_pipeline.record_versions v where v.record_kind='graph_node' and v.record_key=identity_record.record_key and v.ordinal>identity_record.ordinal)
+   then raise exception 'mip_market_companion_binding';end if;
+ elsif new.identity_version_id is not null then raise exception 'mip_market_unexpected_companion';end if;
  select * into strict c from evidence_pipeline.article_captures where id=new.capture_id;
  if new.span_end>char_length(c.payload->>new.source_field) or substring(c.payload->>new.source_field from new.span_start+1 for new.span_end-new.span_start) is distinct from new.excerpt then raise exception 'mip_market_exact_span';end if;
  return new;
@@ -93,8 +105,8 @@ declare c evidence_pipeline.evidence_candidates;positions bigint[];
 begin
  select * into strict c from evidence_pipeline.evidence_candidates where id=p_candidate;
  if c.candidate_kind='typed_graph_relationship' then
-  select array_agg(position order by position) into positions from evidence_pipeline.evidence_changes where record_version_id in(c.subject_version_id,c.object_version_id,c.edge_version_id);
-  if cardinality(positions)<>3 then raise exception 'mip_market_missing_retained_change';end if;
+  select array_agg(position order by position) into positions from evidence_pipeline.evidence_changes where record_version_id in(c.subject_version_id,c.object_version_id,c.edge_version_id,c.identity_version_id);
+  if cardinality(positions)<>(select count(distinct x) from unnest(array[c.subject_version_id,c.object_version_id,c.edge_version_id,c.identity_version_id])x where x is not null) then raise exception 'mip_market_missing_retained_change';end if;
   select array_agg(distinct x order by x) into p_extra from unnest(p_extra||positions)x;
  end if;
  return evidence_pipeline.assessment_context_before_markets(p_candidate,p_parents,p_extra);

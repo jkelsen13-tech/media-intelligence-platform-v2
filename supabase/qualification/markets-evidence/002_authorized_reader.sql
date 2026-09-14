@@ -16,7 +16,7 @@ create function mip_markets.read_private(p_user uuid,p_investigation uuid,p_vers
 language plpgsql security definer set search_path='' as $$
 declare binding jsonb;path record;c evidence_pipeline.evidence_candidates;a jsonb;cap evidence_pipeline.article_captures;
  v evidence_pipeline.record_versions;material uuid;input jsonb;position text;op text;domain text;checked jsonb;
- asset jsonb;aliases jsonb:='[]';alias jsonb;paths jsonb:='[]';hops jsonb;support jsonb;cid uuid;nodes uuid[];ids uuid[];current_id uuid;
+ asset jsonb;asset_version uuid;companion evidence_pipeline.record_versions;aliases jsonb:='[]';alias jsonb;paths jsonb:='[]';hops jsonb;support jsonb;cid uuid;nodes uuid[];ids uuid[];current_id uuid;
 begin
  if p_asset is null and p_event is null or p_at is null or not isfinite(p_at) then raise exception 'mip_market_bounded_identity_required';end if;
  perform 1 from mip_cutover_authority.publication_fence where id for share;
@@ -46,7 +46,7 @@ begin
    if a is null or a->>'outcome'<>'supported' or a->'stale'<>'false'::jsonb or jsonb_array_length(a->'superseded_by')<>0 then raise exception 'mip_market_assessment_unavailable';end if;
    -- Every retained object must already belong to this exact workspace observation.
    -- Sorted UUID iteration provides deterministic material lock/check order.
-   for material in select x from unnest(array[c.subject_version_id,c.object_version_id,c.edge_version_id,c.capture_id])x order by x loop
+   for material in select x from unnest(array[c.subject_version_id,c.object_version_id,c.edge_version_id,c.capture_id,c.identity_version_id])x where x is not null order by x loop
     select value into input from jsonb_array_elements(binding->'observation'->'snapshot'->'inputs')
      where coalesce(value->'capture'->>'id',value->'record_version'->>'id')=material::text;
     if input is null then raise exception 'mip_market_material_not_in_workspace';end if;
@@ -58,13 +58,18 @@ begin
    end loop;
    select * into strict v from evidence_pipeline.record_versions where id=c.subject_version_id;
    if v.record_key=path.asset_id::text then
-    asset:=v.payload;
+    asset:=v.payload;asset_version:=v.id;
+    select * into strict companion from evidence_pipeline.record_versions where id=c.identity_version_id;
     if asset->>'type'='equity' then
-     if not exists(select 1 from public.nodes where id=(asset#>>'{metadata,issuer_id}')::uuid and type in('actor','institution')) then raise exception 'mip_market_issuer_required';end if;
+     if companion.record_key is distinct from asset#>>'{metadata,issuer_id}' or companion.payload->>'type' not in('actor','institution') then raise exception 'mip_market_issuer_required';end if;
     elsif asset->>'type'='cryptoasset' then
-     if not exists(select 1 from public.nodes where id=(asset#>>'{metadata,network_id}')::uuid and type='network')
+     if companion.record_key is distinct from asset#>>'{metadata,network_id}' or companion.payload->>'type'<>'network'
       or nullif(btrim(asset#>>'{metadata,asset_identifier}'),'') is null then raise exception 'mip_market_network_required';end if;
     else raise exception 'mip_market_asset_type';end if;
+    if asset#>>'{metadata,valid_from}' is null or not isfinite((asset#>>'{metadata,valid_from}')::timestamptz)
+     or p_at<(asset#>>'{metadata,valid_from}')::timestamptz or(asset#>>'{metadata,valid_to}' is not null and
+     (not isfinite((asset#>>'{metadata,valid_to}')::timestamptz) or p_at>=(asset#>>'{metadata,valid_to}')::timestamptz))
+     then raise exception 'mip_market_identity_not_valid';end if;
     if jsonb_typeof(asset#>'{metadata,aliases}') is distinct from 'array' or jsonb_array_length(asset#>'{metadata,aliases}')>32 then raise exception 'mip_market_aliases_required';end if;
     aliases:='[]';
     for alias in select value from jsonb_array_elements(asset#>'{metadata,aliases}') loop
@@ -84,7 +89,7 @@ begin
     'capture_id',cap.id,'article_id',cap.article_id,'support',support));
   end loop;
   if asset is null then raise exception 'mip_market_asset_unavailable';end if;
-  paths:=paths||jsonb_build_array(jsonb_build_object('asset_id',path.asset_id,'asset_kind',asset->>'type','name',asset->>'label',
+  paths:=paths||jsonb_build_array(jsonb_build_object('asset_id',path.asset_id,'asset_version_id',asset_version,'asset_kind',asset->>'type','name',asset->>'label',
    'aliases',aliases,'event_id',path.endpoint,'hops',hops,'relation',case when jsonb_array_length(hops)=1 and hops->0->>'relationship'='direct_reporting' then 'direct_reporting' else 'connected_development' end));
  end loop;
  return jsonb_build_object('contract_version','mip_markets_private_qualification_v1','investigation_id',p_investigation,'workspace_version_id',p_version,
