@@ -340,7 +340,7 @@ export default function App({
     initialInvestigationId: devPreview?.initialInvestigationId ?? null,
   })
   // Explicit private selection ends URL-owned navigation; passive retained
-  // bundles must never substitute for a newly entered public event URL.
+  // bundles must never override a newly entered public event URL.
   const selectPrivateEntry = (action, args) => {
     workspaceEntryRef.current = publicWorkspaceEntry(null)
     return action(...args)
