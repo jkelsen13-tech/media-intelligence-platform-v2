@@ -82,3 +82,14 @@ test('request reason is fetched explicitly and withheld responses never reveal s
   act(()=>tree.unmount())
  }
 })
+
+test('rapid duplicate submissions share one in-flight request',async()=>{
+ let calls=0,resolve,sent,tree
+ const client={requestReassessment:i=>{calls++;sent=i;return new Promise(r=>resolve=r)}}
+ await act(async()=>{tree=TestRenderer.create(createElement(Panel,props(client)))})
+ await enter(tree)
+ act(()=>{const send=tree.root.findByType('form').props.onSubmit;send({preventDefault(){}});send({preventDefault(){}})})
+ assert.equal(calls,1)
+ await act(async()=>resolve({data:receipt(sent)}))
+ act(()=>tree.unmount())
+})

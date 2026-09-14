@@ -520,6 +520,7 @@ class Hypothesis(unittest.TestCase):
         self.a.start(self.complete());self.blocked(self.a,self.b);self.b.execute("commit;")
         with self.assertRaisesRegex(RuntimeError,"pending cause set changed"):self.a.finish()
         self.assertEqual(self.completion_counts(),"1:1:0:0")
+        self.a=self.session() # ON_ERROR_STOP closed the rejected client; recover with a fresh client.
         self.completion_assessment["reassessment_causes"].append({"cause_id":request["cause_id"],"reason":"Synthetic human concern explicitly considered."})
         result=json.loads(self.a.execute(self.complete()))
         self.assertEqual(result["assessment"]["review_state"],"unreviewed");self.assertFalse(result["publication_allowed"])
@@ -544,7 +545,7 @@ class Hypothesis(unittest.TestCase):
     def test_human_request_needs_existing_target_and_valid_explicit_category(self):
         with self.assertRaisesRegex(RuntimeError,"target changed"):self.a.execute(self.human_request(revision=str(uuid.uuid4())))
         self.first=json.loads(self.b.execute(self.append()))
-        for trigger,reason in [("approve_publication","Synthetic."),("methodology"," "),("shared_origin","x"*2001)]:
+        for trigger,reason in [("approve_publication","Synthetic."),("methodology"," "),("methodology","\t\n"),("shared_origin","x"*2001)]:
             with self.assertRaisesRegex(RuntimeError,"invalid reassessment request"):
                 self.session().execute(self.human_request(trigger=trigger,reason=reason))
         self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_requests"),"0")

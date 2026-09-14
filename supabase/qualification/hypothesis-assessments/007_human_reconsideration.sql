@@ -10,7 +10,7 @@ create table mip_hypothesis.reassessment_requests(
  cause_id uuid not null unique references mip_hypothesis.reassessment_causes(id),
  requested_by uuid not null,
  trigger_kind text not null check(trigger_kind in('contradiction','shared_origin','methodology')),
- reason text not null check(length(btrim(reason)) between 1 and 2000),
+ reason text not null check(length(btrim(reason)) between 1 and 2000 and reason ~ '[^[:space:]]'),
  recorded_at timestamptz not null default clock_timestamp(),
  primary key(investigation_id,request_id),
  foreign key(investigation_id,revision_id) references mip_hypothesis.revisions(investigation_id,id)
@@ -30,7 +30,7 @@ declare access text; head uuid; cause uuid; receipt mip_hypothesis.reassessment_
 begin
  if current_setting('transaction_isolation')<>'read committed' then raise exception using errcode='25001',message='hypothesis requires read committed';end if;
  if p_request is null or p_revision is null or p_trigger is null or p_trigger not in('contradiction','shared_origin','methodology')
-  or p_reason is null or length(btrim(p_reason)) not between 1 and 2000 then
+  or p_reason is null or length(btrim(p_reason)) not between 1 and 2000 or p_reason !~ '[^[:space:]]' then
   raise exception using errcode='22023',message='invalid reassessment request';end if;
  perform 1 from mip_cutover_authority.publication_fence where id for share;
  if not found then raise exception using errcode='55000',message='hypothesis fence unavailable';end if;

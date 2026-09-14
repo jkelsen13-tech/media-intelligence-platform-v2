@@ -4,12 +4,14 @@ const text=x=>typeof x==='string'&&x.trim().length>0
 export default function HypothesisReassessmentRequest({client,investigationId,revisionId,scopeKey,onRecorded}) {
  const id=useId(),[trigger,setTrigger]=useState('contradiction'),[reason,setReason]=useState(''),[attempt,setAttempt]=useState(null),[status,setStatus]=useState('idle')
  const alive=useRef(true);useEffect(()=>{alive.current=true;return()=>{alive.current=false}},[])
+ const attemptRef=useRef(null),inFlight=useRef(false)
  const active=useRef({});active.current={client,scopeKey}
  async function submit(event) {
   event.preventDefault()
-  if(status==='sending'||typeof client?.requestReassessment!=='function')return
-  const input=attempt??{investigation_id:investigationId,revision_id:revisionId,request_id:globalThis.crypto.randomUUID(),trigger,reason}
-  const context=active.current;setAttempt(input);setStatus('sending')
+  if(inFlight.current||typeof client?.requestReassessment!=='function')return
+  if(!attemptRef.current&&typeof globalThis.crypto?.randomUUID!=='function'){setStatus('uncertain');return}
+  const input=attemptRef.current??{investigation_id:investigationId,revision_id:revisionId,request_id:globalThis.crypto.randomUUID(),trigger,reason}
+  const context=active.current;attemptRef.current=input;inFlight.current=true;setAttempt(input);setStatus('sending')
   try {
    const result=await client.requestReassessment(input)
    if(!alive.current||active.current.client!==context.client||active.current.scopeKey!==context.scopeKey)return
@@ -19,6 +21,7 @@ export default function HypothesisReassessmentRequest({client,investigationId,re
      r.completed_reassessment!==false||r.publication_allowed!==false){setStatus('uncertain');return}
    setStatus('recorded');onRecorded?.()
   }catch{if(alive.current&&active.current.client===context.client&&active.current.scopeKey===context.scopeKey)setStatus('uncertain')}
+  finally{inFlight.current=false}
  }
  return <section className="piw-card" aria-label="Request reassessment"><h3>Request reassessment</h3>
   <p>Record a concern for explicit reconsideration. This does not approve a method, change the saved conclusion or authorize publication.</p>
