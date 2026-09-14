@@ -143,6 +143,11 @@
       "path": "supabase/qualification/hypothesis-assessments/registrationCustody.mjs",
       "blob_sha": "89fa1a4dbcffd444ee3155c8a81bc456094fc17a",
       "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/supabase/qualification/hypothesis-assessments/registrationCustody.mjs"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/019_stream_continuity.sql",
+      "blob_sha": "fc63962ba3d2277b5020a436040e5fa93af6b0bb",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/supabase/qualification/hypothesis-assessments/019_stream_continuity.sql"
     }
   ],
   "limitations": [
