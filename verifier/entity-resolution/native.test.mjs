@@ -47,7 +47,9 @@ async function held(statement,principal='mention_alice'){
  child.stdout.on('data',chunk=>{out+=chunk;if(out.includes('MENTION_HOLD'))readyResolve()})
  child.stderr.on('data',chunk=>{err+=chunk})
  child.on('error',readyReject)
- child.stdin.write(as(principal,'begin; '+statement)+'\n\\echo MENTION_HOLD\n')
+ // psql meta-commands run even with an unterminated query buffer. Terminate
+ // the supplied SQL BEFORE the marker, including callers without a semicolon.
+ child.stdin.write(as(principal,'begin; '+statement)+'\n;\n\\echo MENTION_HOLD\n')
  const timer=setTimeout(()=>{child.kill();readyReject(new Error('holder barrier timeout'))},10000)
  try{await ready}finally{clearTimeout(timer)}
  return {async release(commit=true){child.stdin.end((commit?'commit;':'rollback;')+'\n\\q\n');const result=await done;assert.equal(result.code,0,result.err)}}
@@ -234,6 +236,7 @@ test('native immutable mention and scoped resolution replacement',async t=>{
   assert.deepEqual(JSON.parse(user(query(first.cursor))),second)
  })
  await t.test('absent access row cannot be admitted by an unlocked concurrent grant',async()=>{
+  try{
   sql(access(f3,null));denied('select mip_mentions.read_mention('+q(s)+','+q(ms)+')',/source unavailable/)
   // A held admin grant serializes at policy head; B observes only committed grant.
   await blocked(access(f3,true),'select mip_mentions.read_mention('+q(s)+','+q(ms)+')',{holderPrincipal:'mention_admin'})
@@ -244,6 +247,7 @@ test('native immutable mention and scoped resolution replacement',async t=>{
   assert.equal(sql('select count(*) from mip_mentions.mentions where scope='+q(s)+' and id='+q(id(85))),'0')
   sql(access(f3,true))
   assert.equal(sql("select position('with locked as materialized' in prosrc)>0 and position('from locked' in prosrc)>0 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_mentions' and p.proname='check_mentions'"),'t')
+  }finally{sql(access(f3,true))}
  })
  await t.test('mixed admin/user operations serialize in both orders without field/member inversion',async()=>{
   const adminA=membership('mention_alice',true)+access(fid,true)+activate(1)
@@ -278,11 +282,13 @@ test('native immutable mention and scoped resolution replacement',async t=>{
   user(decision(id(36),6,id(34),'accepted',id(13)))
  })
  await t.test('conflicting evidence revocation denies accepted attribution and retries',()=>{
+  try{
   sql(access(f2,false))
   assert.equal(JSON.parse(user(read())).mention.literal,'Sam')
   denied(actor(id(36)),/source unavailable/);denied(decision(id(36),6,id(34),'accepted',id(13)),/source unavailable/)
   assert.equal(sql('select count(*) from mip_mentions.decisions'),'6')
   sql(access(f2,true))
+  }finally{sql(access(f2,true))}
  })
  for(const [label,field] of [['support',f3],['conflict',f2]]){
   await t.test('sequential '+label+' revocation withholds entire candidate page',()=>{
