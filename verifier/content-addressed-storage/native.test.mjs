@@ -11,6 +11,11 @@ const envelopePolicy={policy_version:1,max_raw:1048576,max_encoded:1048576,max_p
 const provenance={source_version:'synthetic-v1',acquired_at:'2026-09-14T00:00:00Z',rights_ref:'synthetic-only',privacy_ref:'synthetic-only'}
 const q=x=>x===null?'null':Buffer.isBuffer(x)?"decode('"+x.toString('hex')+"','hex')":typeof x==='number'?String(x):"'"+(typeof x==='object'?JSON.stringify(x):x).replaceAll("'","''")+"'"
 async function sql(s){const r=await exec('psql',['-X','-v','ON_ERROR_STOP=1','-At','-h','127.0.0.1','-U','postgres','-d','mip_cas_test','-c',s],{env:{...process.env,PGPASSWORD:'mip-disposable-ci-only'},timeout:10000,maxBuffer:4*1024*1024});return r.stdout.trim().split('\n').filter(x=>x&&!['SET','RESET','BEGIN','COMMIT','ROLLBACK'].includes(x)).at(-1)}
+const hashBytes=raw=>createHash('sha256').update(raw).digest('hex')
+// Explicit owner-only fixture seeding, never part of gateway/codec transport.
+async function seedCapture(scope,raw,p=provenance){
+ await sql("insert into mip_cas.source_identities values("+q(randomUUID())+","+q(scope)+","+q(p.source_version)+","+q(hashBytes(raw))+","+raw.length+","+q(p.acquired_at)+") on conflict do nothing")
+}
 const names=new Set(['admit','bind','locate','read','put','index_put','transition','rehydrate','complete','cleanup'])
 function callAs(role){return async(name,args)=>{assert(names.has(name));const result=await sql('set session authorization '+role+';select mip_cas.'+name+'('+args.map(q).join(',')+')');return result?JSON.parse(result):null}}
 test('content addressed tier qualification: native PostgreSQL, synthetic principals only',async t=>{
@@ -20,6 +25,9 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
  await sql("create role cas_alice login;create role cas_bob login;create role cas_codec login;grant mip_cas_gateway to cas_alice,cas_bob;grant mip_cas_codec_verifier to cas_codec;insert into mip_cas.principals values('cas_alice',"+q(alice)+"),('cas_bob',"+q(bob)+");insert into mip_cas.access values("+q(alice)+","+q(i)+",clock_timestamp()+interval '1 hour'),("+q(bob)+","+q(other)+",clock_timestamp()+interval '1 hour')")
  await sql("insert into mip_cas.source_permissions values("+q(i)+",'synthetic-v1','synthetic-only','synthetic-only',clock_timestamp()+interval '1 hour'),("+q(i)+",'synthetic-v2','synthetic-only','synthetic-only',clock_timestamp()+interval '1 hour'),("+q(other)+",'synthetic-v1','synthetic-only','synthetic-only',clock_timestamp()+interval '1 hour')")
  const a=callAs('cas_alice'),b=callAs('cas_bob'),codecAuthority=createCodecVerifier({call:callAs('cas_codec'),policy}),store=createStore({call:a,investigation:i,provenance,codecAuthority,policy}),value={text:'Exact Unicode 🧭 and whitespace\n  retained',n:1}
+ await seedCapture(i,Buffer.from(JSON.stringify(value)))
+ await seedCapture(other,Buffer.from(JSON.stringify(value)))
+ await seedCapture(i,Buffer.from(JSON.stringify({...value,n:2})))
  await t.test('lossless canonical roundtrip and putOnce/get exact retry',async()=>{
   assert.deepEqual(await store.putOnce('revision:1',value),{committed:true})
   assert.deepEqual(await store.get('revision:1'),value)
@@ -76,6 +84,8 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   await store.indexPut('revision:1',meta.hash,2,{summary:'Restored locator'})
  })
  await t.test('exact citation joins retained identity/version and verified byte span, never latest or similar',async()=>{
+  await seedCapture(i,Buffer.from(JSON.stringify({passage:'Original retained passage'})))
+  await seedCapture(i,Buffer.from(JSON.stringify({passage:'A similar but changed passage'})),{...provenance,source_version:'synthetic-v2'})
   await store.putOnce('source-old',{passage:'Original retained passage'})
   const newer=createStore({call:a,investigation:i,provenance:{...provenance,source_version:'synthetic-v2'},codecAuthority,policy})
   await newer.putOnce('source-latest',{passage:'A similar but changed passage'})
@@ -108,6 +118,7 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   const raw=Buffer.from(JSON.stringify({poison:'target'})),wrong=encodeCanonical(Buffer.from('poisoned'),'gzip-v1',policy)
   await assert.rejects(b('put',[other,'poison',raw,'gzip-v1',wrong.encoded,provenance]),/mip_cas_codec_gateway_denied/)
   await assert.rejects(b('admit',[raw,'gzip-v1',wrong.encoded]),/permission denied/)
+  await seedCapture(i,raw)
   await codecAuthority.admit(raw)
   const receipt=await a('bind',[i,'poison-proof',raw,provenance])
   assert.deepEqual(await store.get('poison-proof'),{poison:'target'})
@@ -117,6 +128,7 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   for(const p of [{...provenance,extra:'x'},{...provenance,rights_ref:7},{...provenance,acquired_at:'yesterday'},{...provenance,privacy_ref:''}])await assert.rejects(a('bind',[i,'bad-provenance',raw,p]),/mip_cas_provenance_invalid/)
  })
  await t.test('tier CAS races, cold read, authorized rehydration and exact replay',async()=>{
+  await seedCapture(i,Buffer.from(JSON.stringify({unique:'tier'})))
   await store.putOnce('tier-object',{unique:'tier'})
   const race=await Promise.allSettled([store.transition('tier-object',1,'cold'),store.transition('tier-object',1,'warm')])
   assert.equal(race.filter(x=>x.status==='fulfilled').length,1)
@@ -137,6 +149,8 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   await assert.rejects(store.get('tier-object'),/canonical_unavailable/)
   const oldJob=await sql('select id from mip_cas.jobs where ref_id='+q(m.ref_id)+" and state='completed'")
   await assert.rejects(store.completeRehydration('tier-object',oldJob),/mip_cas_completed_job_stale/)
+  const prior=JSON.parse(await sql('select json_build_object(\'request\',request_id,\'version\',expected_version) from mip_cas.jobs where id='+q(oldJob)))
+  await assert.rejects(store.requestRehydration('tier-object',prior.request,prior.version),/mip_cas_completed_job_stale/)
   // Two existing completed jobs plus fourteen pending jobs reaches the per-principal ceiling.
   let last
   for(let n=0;n<14;n++)last=await store.requestRehydration('tier-object',randomUUID(),m.version)
@@ -149,6 +163,7 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
  })
  await t.test('SQL admission location and codec are policy driven while unknown JS codecs fail closed',async()=>{
   const raw=Buffer.from('Future codec synthetic representation')
+  await seedCapture(i,raw)
   const result=await sql("begin;insert into mip_cas.policies select 3,max_raw,max_encoded,max_objects,max_total,max_refs,max_jobs,max_page,array['test-remote-provider'],array['future-lossless-v2'],tiers,qualification,'test-remote-provider','warm' from mip_cas.policies where version=1;update mip_cas.active_policy set version=3;set session authorization cas_codec;select mip_cas.admit("+q(raw)+",'future-lossless-v2',"+q(raw)+");reset session authorization;set session authorization cas_alice;select mip_cas.bind("+q(i)+",'future-codec',"+q(raw)+","+q(provenance)+");select mip_cas.read("+q(i)+",'future-codec','canonical');rollback")
   const retained=JSON.parse(result)
   assert.equal(retained.location,'test-remote-provider');assert.equal(retained.tier,'warm')
@@ -159,9 +174,116 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   assert.equal(await sql('select version from mip_cas.active_policy'),'1')
   await assert.rejects(a('admit',[raw,'future-lossless-v2',raw]),/permission denied/)
  })
+ await t.test('source capture authority binds exact bytes and acquired time, never caller labels',async()=>{
+  const raw=Buffer.from('trusted source capture'),wrong=Buffer.from('falsely attributed bytes')
+  await seedCapture(i,raw)
+  const before=await sql('select count(*) from mip_cas.refs')
+  await assert.rejects(a('put',[i,'forged-bytes',wrong,'identity-v1',wrong,provenance]),/mip_cas_source_rights_unverified/)
+  await assert.rejects(a('put',[i,'forged-time',raw,'identity-v1',raw,{...provenance,acquired_at:'2026-09-13T00:00:00Z'}]),/mip_cas_source_rights_unverified/)
+  assert.equal(await sql('select count(*) from mip_cas.refs'),before)
+  await assert.rejects(sql("update mip_cas.source_identities set acquired_at=acquired_at-interval '1 day'"),/mip_cas_immutable/)
+  await assert.rejects(sql("set session authorization cas_alice;insert into mip_cas.source_identities values("+q(randomUUID())+","+q(i)+",'forged',"+q(hashBytes(raw))+","+raw.length+","+q(provenance.acquired_at)+")"),/permission denied/)
+  const receipt=await a('put',[i,'trusted-capture',raw,'identity-v1',raw,provenance])
+  assert.equal(receipt.source_identity_qualified,false);assert.equal(receipt.temporal_provenance_qualified,false)
+  await assert.rejects(a('bind',[i,'trusted-capture',raw,{...provenance,acquired_at:'2026-09-13T00:00:00Z'}]),/mip_cas_source_rights_unverified/)
+  // A correction is a new trusted identity, not replacement of the prior source version.
+  const corrected={...provenance,source_version:'synthetic-v2'}
+  await seedCapture(i,wrong,corrected)
+  await assert.rejects(a('put',[i,'stale-label',wrong,'identity-v1',wrong,provenance]),/mip_cas_source_rights_unverified/)
+  await a('put',[i,'corrected-capture',wrong,'identity-v1',wrong,corrected])
+  assert.equal((await a('read',[i,'trusted-capture','canonical'])).hash,hashBytes(raw))
+ })
+ await t.test('separate admission then policy change refuses new binds and existing admit/bind retries',async()=>{
+  const raw=Buffer.from('separately admitted policy race'),old=Buffer.from(JSON.stringify(value))
+  await seedCapture(i,raw);await codecAuthority.admit(raw)
+  const before=await sql('select count(*) from mip_cas.refs'),oldRef=await store.metadata('revision:1')
+  for(const [version,field] of [[4,'codecs'],[5,'locations'],[6,'tiers']]){
+   await sql("insert into mip_cas.policies select "+version+",max_raw,max_encoded,max_objects,max_total,max_refs,max_jobs,max_page,"+(field==='locations'?"array['policy-other-location']":"locations")+","+(field==='codecs'?"array['identity-v1']":"codecs")+","+(field==='tiers'?"array['warm']":"tiers")+",qualification,"+(field==='locations'?"'policy-other-location'":"initial_location")+","+(field==='tiers'?"'warm'":"initial_tier")+" from mip_cas.policies where version=1;update mip_cas.active_policy set version="+version)
+   try{
+    await assert.rejects(a('bind',[i,'policy-race-new',raw,provenance]),/mip_cas_bind_representation_unverified/)
+    await assert.rejects(a('bind',[i,'revision:1',old,provenance]),/mip_cas_bind_representation_unverified/)
+    const e=encodeCanonical(raw,'gzip-v1',policy)
+    await assert.rejects(callAs('cas_codec')('admit',[raw,e.codec,e.encoded]),field==='codecs'?/mip_cas_invalid/:/mip_cas_representation_unverified/)
+    assert.equal(await sql('select count(*) from mip_cas.refs'),before)
+   }finally{await sql('update mip_cas.active_policy set version=1')}
+  }
+  assert.equal((await store.metadata('revision:1')).ref_id,oldRef.ref_id)
+  assert.equal(await sql("select count(*) from mip_cas.refs where logical_key='policy-race-new'"),'0')
+ })
+ await t.test('archived cross-scope dedup and existing bind retries require custodian',async()=>{
+  for(const tier of ['cold','deep_archive']){
+   const raw=Buffer.from('archive-bind-'+tier),key='archive-'+tier
+   await seedCapture(i,raw);await seedCapture(other,raw);await codecAuthority.admit(raw)
+   await a('bind',[i,key,raw,provenance]);await a('transition',[i,key,1,tier])
+   const before=await sql('select count(*) from mip_cas.refs')
+   await assert.rejects(b('bind',[other,key,raw,provenance]),/mip_cas_shared_tier_custodian_required/)
+   await assert.rejects(a('bind',[i,key,raw,provenance]),/mip_cas_shared_tier_custodian_required/)
+   assert.equal(await sql('select count(*) from mip_cas.refs'),before)
+   const j=await a('rehydrate',[i,key,randomUUID(),2]);await a('complete',[i,key,j.job_id])
+   await b('bind',[other,key,raw,provenance])
+   await assert.rejects(a('transition',[i,key,3,tier]),/mip_cas_shared_tier_custodian_required/)
+  }
+ })
+ await t.test('two-session bind versus demotion holds representation lock through reference commit',async()=>{
+  // Return the promise inside an object so awaiting the barrier does not await transaction completion.
+  async function start(name,statement){
+   const pending=sql("begin;set application_name="+q(name)+";"+statement+";select pg_sleep(2);commit")
+   for(let n=0;n<100;n++){
+    if(await sql("select count(*) from pg_stat_activity where application_name="+q(name)+" and wait_event='PgSleep'")==='1')return {pending}
+    await new Promise(resolve=>setTimeout(resolve,10))
+   }
+   await pending;throw Error('race_barrier_not_observed')
+  }
+  for(const first of ['bind','demote']){
+   const raw=Buffer.from('race-'+first),key='race-'+first
+   await seedCapture(i,raw);await seedCapture(other,raw);await codecAuthority.admit(raw);await a('bind',[i,key,raw,provenance])
+   const bind="set session authorization cas_bob;select mip_cas.bind("+[other,key,raw,provenance].map(q).join(',')+")"
+   const demote="set session authorization cas_alice;select mip_cas.transition("+[i,key,1,'cold'].map(q).join(',')+")"
+   const barrier=await start('cas-race-'+first,first==='bind'?bind:demote)
+   const loser=first==='bind'?a('transition',[i,key,1,'cold']):b('bind',[other,key,raw,provenance])
+   const results=await Promise.allSettled([barrier.pending,loser])
+   assert.equal(results[0].status,'fulfilled');assert.equal(results[1].status,'rejected')
+   assert.match(String(results[1].reason),/mip_cas_shared_tier_custodian_required/)
+   const state=JSON.parse(await sql("select json_build_object('tier',s.tier,'scopes',count(distinct r.investigation)) from mip_cas.representations s join mip_cas.refs r on r.hash=s.hash where s.hash="+q(hashBytes(raw))+" group by s.tier"))
+   assert.deepEqual(state,first==='bind'?{tier:'hot',scopes:2}:{tier:'cold',scopes:1})
+  }
+ })
+ await t.test('revoked old scope cannot strand principal quota; bounded cleanup is principal-global',async()=>{
+  await sql("insert into mip_cas.access values("+q(alice)+","+q(other)+",clock_timestamp()+interval '1 hour')")
+  const raw=Buffer.from('authorized B archive'),key='authorized-b-archive'
+  await seedCapture(other,raw);await codecAuthority.admit(raw);await a('bind',[other,key,raw,provenance]);await a('transition',[other,key,1,'cold'])
+  const old=await store.metadata('tier-object')
+  await sql("update mip_cas.jobs set expires_at=clock_timestamp()-interval '1 second' where user_id="+q(alice))
+  // More than one cleanup batch, all in A. No caller gains evidence or metadata access to A.
+  for(let n=0;n<20;n++)await sql("insert into mip_cas.jobs values("+[randomUUID(),old.ref_id,alice,randomUUID()].map(q).join(',')+",clock_timestamp()-interval '1 second',"+old.version+",'pending')")
+  await sql('delete from mip_cas.access where user_id='+q(alice)+' and investigation='+q(i))
+  try{
+   await assert.rejects(a('cleanup',[i]),/mip_cas_denied/)
+   const fresh=await a('rehydrate',[other,key,randomUUID(),2])
+   assert.equal(fresh.state,'pending')
+   const refs=await sql('select count(*) from mip_cas.refs'),events=await sql('select count(*) from mip_cas.events')
+   const results=await Promise.all([a('cleanup',[other]),a('rehydrate',[other,key,randomUUID(),2])])
+   assert.equal(results[0],16);assert.equal(results[1].state,'pending')
+   assert.equal(await sql('select count(*) from mip_cas.refs'),refs);assert.equal(await sql('select count(*) from mip_cas.events'),events)
+   assert.equal(await sql("select count(*) from mip_cas.jobs where user_id="+q(alice)+" and expires_at<=clock_timestamp()"),'6')
+   assert.equal(await a('cleanup',[other]),6)
+   const active=Number(await sql("select count(*) from mip_cas.jobs where user_id="+q(alice)+" and expires_at>clock_timestamp()"))
+   for(let n=active;n<15;n++)await a('rehydrate',[other,key,randomUUID(),2])
+   const race=await Promise.allSettled([a('rehydrate',[other,key,randomUUID(),2]),a('rehydrate',[other,key,randomUUID(),2])])
+   assert.equal(race.filter(x=>x.status==='fulfilled').length,1)
+   assert.match(String(race.find(x=>x.status==='rejected').reason),/mip_cas_job_quota/)
+  }finally{
+   await sql("insert into mip_cas.access values("+q(alice)+","+q(i)+",clock_timestamp()+interval '1 hour')")
+   await sql("update mip_cas.jobs set expires_at=clock_timestamp()-interval '1 second' where user_id="+q(alice))
+   while(await a('cleanup',[other])){}
+  }
+ })
  await t.test('reference quota and immutable identity/history',async()=>{
   const existing=Number(await sql('select count(*) from mip_cas.refs where investigation='+q(i)))
-  for(let n=0;n<128-existing;n++)await store.putOnce('quota-'+n,value)
+  for(let n=0;n<127-existing;n++)await store.putOnce('quota-'+n,value)
+  const finalSlot=await Promise.allSettled([store.putOnce('ref-last-a',value),store.putOnce('ref-last-b',value)])
+  assert.equal(finalSlot.filter(x=>x.status==='fulfilled').length,1)
+  assert.match(String(finalSlot.find(x=>x.status==='rejected').reason),/mip_cas_ref_quota/)
   await assert.rejects(store.putOnce('over-quota',value),/mip_cas_ref_quota/)
   await assert.rejects(sql('update mip_cas.refs set hash=hash'),/mip_cas_immutable/)
   await assert.rejects(sql('delete from mip_cas.objects'),/mip_cas_immutable/)
@@ -174,6 +296,9 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   assert.equal(await sql("select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace cross join lateral aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where n.nspname='mip_cas' and a.grantee=0"),'0')
   assert.equal(await sql("select has_function_privilege('cas_alice','mip_cas.admit(bytea,text,bytea)','EXECUTE')"),'f')
   assert.equal(await sql("select has_function_privilege('cas_codec','mip_cas.read(uuid,text,text)','EXECUTE')"),'f')
+  for(const name of ['refs_hash_scope','events_hash_version','jobs_user_expiry'])assert.equal(await sql("select count(*) from pg_indexes where schemaname='mip_cas' and indexname="+q(name)),'1')
+  // Access-path structural coverage uses catalog below; tiny fixtures do not establish production planner choices.
+  assert.equal(await sql("select indexdef like '%(hash, investigation)%' from pg_indexes where schemaname='mip_cas' and indexname='refs_hash_scope'"),'t')
   assert.equal(await sql("select count(*) from pg_roles where rolname in('mip_cas_owner','mip_cas_gateway','mip_cas_codec_verifier') and (rolcanlogin or rolsuper or rolbypassrls or rolcreaterole or rolcreatedb)"),'0')
  })
  await t.test('unknown policy/location/codec/representation and stale cursors fail closed',async()=>{
@@ -197,7 +322,7 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
  await t.test('transport mutation denies locator, codec receipts and read policy substitution',async()=>{
   const page=await store.locate('summary','Restored',{limit:1})
   for(const mutate of [
-   r=>({...r,locator_only:false}),r=>({...r,factual_support_qualified:true}),r=>({...r,publication_allowed:true}),
+   r=>({...r,locator_only:false}),r=>({...r,factual_support_qualified:true}),r=>({...r,publication_allowed:true}),r=>({...r,source_identity_qualified:true}),r=>({...r,temporal_provenance_qualified:true}),
    r=>({...r,policy_version:999}),r=>({...r,extra:'payload'}),r=>({...r,candidates:[...r.candidates,...r.candidates]}),
    r=>({...r,candidates:r.candidates.map(c=>({...c,encoded:'payload'}))}),
    r=>({...r,candidates:r.candidates.map(c=>({...c,canonical_hash:'invalid'}))}),
@@ -213,7 +338,7 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
    await assert.rejects(bad.admit(raw),/codec_receipt/)
   }
   const native=await a('read',[i,'revision:1','canonical'])
-  for(const mutate of [r=>({...r,policy_version:999}),r=>({...r,max_raw:NaN}),r=>({...r,max_encoded:0}),r=>({...r,max_page:'50'}),r=>({...r,publication_allowed:true})]){
+  for(const mutate of [r=>({...r,policy_version:999}),r=>({...r,max_raw:NaN}),r=>({...r,max_encoded:0}),r=>({...r,max_page:'50'}),r=>({...r,publication_allowed:true}),r=>({...r,source_identity_qualified:true}),r=>({...r,temporal_provenance_qualified:true})]){
    const bad=createStore({call:async()=>mutate({...native}),investigation:i,provenance,policy})
    await assert.rejects(bad.get('revision:1'),/storage_policy_changed|read_contract_invalid/)
   }
@@ -225,8 +350,8 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
  })
  await t.test('write receipts, generic allowed locations and logical keys are validated',async()=>{
   const native=await a('read',[i,'revision:1','canonical'])
-  const receipt={ref_id:native.ref_id,hash:native.hash,committed:true,production_qualified:false}
-  for(const mutate of [r=>({...r,extra:true}),r=>({...r,ref_id:randomUUID()}),r=>({...r,committed:false}),r=>({...r,production_qualified:true}),r=>({...r,hash:'0'.repeat(64)})]){
+  const receipt={ref_id:native.ref_id,hash:native.hash,committed:true,production_qualified:false,source_identity_qualified:false,temporal_provenance_qualified:false}
+  for(const mutate of [r=>({...r,extra:true}),r=>({...r,ref_id:randomUUID()}),r=>({...r,committed:false}),r=>({...r,production_qualified:true}),r=>({...r,source_identity_qualified:true}),r=>({...r,temporal_provenance_qualified:true}),r=>({...r,hash:'0'.repeat(64)})]){
    const bad=createStore({call:async action=>action==='read'?native:mutate({...receipt}),investigation:i,provenance,policy})
    await assert.rejects(bad.putOnce('revision:1',value),/readback_mismatch/)
   }
@@ -256,6 +381,14 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
    assert.throws(()=>createCodecVerifier({call:async()=>receipt,policy:changed}),/codec_policy_unavailable/)
  })
  await t.test('object-count and aggregate-byte quotas are enforced atomically',async()=>{
+  await sql("insert into mip_cas.policies select 7,max_raw,max_encoded,(select count(*)+1 from mip_cas.objects),max_total,max_refs,max_jobs,max_page,locations,codecs,tiers,qualification,initial_location,initial_tier from mip_cas.policies where version=1;update mip_cas.active_policy set version=7")
+  try{
+   const c=callAs('cas_codec')
+   const candidates=[Buffer.from('object-final-a'),Buffer.from('object-final-b')]
+   const race=await Promise.allSettled(candidates.map(raw=>c('admit',[raw,'identity-v1',raw])))
+   assert.equal(race.filter(x=>x.status==='fulfilled').length,1)
+   assert.match(String(race.find(x=>x.status==='rejected').reason),/mip_cas_object_quota/)
+  }finally{await sql('update mip_cas.active_policy set version=1')}
   const before=await sql('select count(*) from mip_cas.objects')
   await assert.rejects(sql("do $quota$declare n integer;b bytea;begin for n in 1..257 loop b:=convert_to('object-quota-'||n,'UTF8');perform mip_cas.admit(b,'identity-v1',b);end loop;end$quota$"),/mip_cas_object_quota/)
   assert.equal(await sql('select count(*) from mip_cas.objects'),before)

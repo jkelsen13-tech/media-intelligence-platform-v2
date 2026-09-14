@@ -47,13 +47,13 @@ export function createCodecVerifier({call,policy}){
   return Object.freeze({...r})
  }})
 }
-const baseFields=['ref_id','hash','raw_size','provenance','tier','version','policy_version','location','max_raw','max_encoded','max_page','allowed_locations','allowed_codecs','allowed_tiers','production_qualified','publication_allowed','rights_qualified','codec_qualified']
+const baseFields=['ref_id','hash','raw_size','provenance','tier','version','policy_version','location','max_raw','max_encoded','max_page','allowed_locations','allowed_codecs','allowed_tiers','production_qualified','publication_allowed','rights_qualified','codec_qualified','source_identity_qualified','temporal_provenance_qualified']
 function validateRead(r,level,configured){
  if(!r||r.policy_version!==configured.policyVersion||r.max_raw!==configured.maxRaw||r.max_encoded!==configured.maxEncoded||r.max_page!==configured.maxPage||JSON.stringify(r.allowed_locations)!==JSON.stringify(configured.allowedLocations)||JSON.stringify(r.allowed_codecs)!==JSON.stringify(configured.allowedCodecs)||JSON.stringify(r.allowed_tiers)!==JSON.stringify(configured.allowedTiers))throw Error('storage_policy_changed')
  const fields=[...baseFields]
  if(level==='index')fields.push('index','index_is_evidence')
  if(level==='canonical'){fields.push('state');if(r.state==='canonical_encoded')fields.push('codec','encoded_hash','encoded')}
- if(!exact(r,fields)||!uuid(r.ref_id)||!hash(r.hash)||!positive(r.raw_size)||r.raw_size>configured.maxRaw||!positive(r.version)||!configured.allowedTiers.includes(r.tier)||!configured.allowedLocations.includes(r.location)||['production_qualified','publication_allowed','rights_qualified','codec_qualified'].some(k=>r[k]!==false))throw Error('read_contract_invalid')
+ if(!exact(r,fields)||!uuid(r.ref_id)||!hash(r.hash)||!positive(r.raw_size)||r.raw_size>configured.maxRaw||!positive(r.version)||!configured.allowedTiers.includes(r.tier)||!configured.allowedLocations.includes(r.location)||['production_qualified','publication_allowed','rights_qualified','codec_qualified','source_identity_qualified','temporal_provenance_qualified'].some(k=>r[k]!==false))throw Error('read_contract_invalid')
  if(!exact(r.provenance,['source_version','acquired_at','rights_ref','privacy_ref'])||Object.values(r.provenance).some(v=>typeof v!=='string'||!v.length||v.length>512)||!Number.isFinite(Date.parse(r.provenance.acquired_at)))throw Error('read_provenance_invalid')
  if(level==='index'&&r.index_is_evidence!==false)throw Error('read_contract_invalid')
  if(level==='canonical'&&!['rehydration_required','canonical_encoded'].includes(r.state))throw Error('read_contract_invalid')
@@ -72,7 +72,7 @@ export function createStore({call,investigation,provenance,codecAuthority=null,p
    const cursorValid=c=>exact(c,['last_ref','query_hash','policy_version','index_epoch'])&&uuid(c.last_ref)&&c.query_hash===queryHash&&c.policy_version===configured.policyVersion&&Number.isSafeInteger(c.index_epoch)&&c.index_epoch>=0
    if(after!==null&&!cursorValid(after))throw Error('locator_cursor_invalid')
    const r=await call('locate',[investigation,field,needle,after,limit])
-   if(!exact(r,['candidates','next_cursor','policy_version','query_hash','index_epoch','locator_only','factual_support_qualified','publication_allowed'])||r.policy_version!==configured.policyVersion||r.query_hash!==queryHash||!Number.isSafeInteger(r.index_epoch)||r.index_epoch<0||r.locator_only!==true||r.factual_support_qualified!==false||r.publication_allowed!==false||!Array.isArray(r.candidates)||r.candidates.length>limit)throw Error('locator_contract_invalid')
+   if(!exact(r,['candidates','next_cursor','policy_version','query_hash','index_epoch','locator_only','factual_support_qualified','publication_allowed','source_identity_qualified','temporal_provenance_qualified'])||r.policy_version!==configured.policyVersion||r.query_hash!==queryHash||!Number.isSafeInteger(r.index_epoch)||r.index_epoch<0||r.locator_only!==true||r.factual_support_qualified!==false||r.publication_allowed!==false||r.source_identity_qualified!==false||r.temporal_provenance_qualified!==false||!Array.isArray(r.candidates)||r.candidates.length>limit)throw Error('locator_contract_invalid')
    let previous=after?.last_ref??''
    for(const c of r.candidates){
     if(!exact(c,['ref_id','canonical_hash','source_version'])||!uuid(c.ref_id)||c.ref_id<=previous||!hash(c.canonical_hash)||typeof c.source_version!=='string'||!c.source_version.length||c.source_version.length>512)throw Error('locator_candidate_invalid')
@@ -90,7 +90,7 @@ export function createStore({call,investigation,provenance,codecAuthority=null,p
    if(codecAuthority){await codecAuthority.admit(bytes);receipt=await call('bind',[investigation,key,bytes,provenance])}
    else receipt=await call('put',[investigation,key,e.raw,e.codec,e.encoded,provenance])
    const retained=await read(key,'canonical'),actual=decodeCanonical(retained)
-   if(!exact(receipt,['ref_id','hash','committed','production_qualified'])||!uuid(receipt.ref_id)||receipt.ref_id!==retained.ref_id||!actual.equals(bytes)||receipt.hash!==e.hash||receipt.committed!==true||receipt.production_qualified!==false)throw Error('readback_mismatch')
+   if(!exact(receipt,['ref_id','hash','committed','production_qualified','source_identity_qualified','temporal_provenance_qualified'])||!uuid(receipt.ref_id)||receipt.ref_id!==retained.ref_id||!actual.equals(bytes)||receipt.hash!==e.hash||receipt.committed!==true||receipt.production_qualified!==false||receipt.source_identity_qualified!==false||receipt.temporal_provenance_qualified!==false)throw Error('readback_mismatch')
    return {committed:true}
   },
   async get(key){return JSON.parse(decodeCanonical(await read(key,'canonical')).toString('utf8'))},
@@ -103,7 +103,7 @@ export function createStore({call,investigation,provenance,codecAuthority=null,p
    if(citation.end_byte>raw.length)throw Error('citation_span_bounds')
    const span=raw.subarray(citation.start_byte,citation.end_byte)
    if(digest(span)!==citation.span_hash)throw Error('citation_span_hash')
-   return {bytes:span,canonical_hash:record.hash,ref_id:record.ref_id,source_version:citation.source_version,exact_canonical_span_verified:true,claim_truth_qualified:false,publication_allowed:false}
+   return {bytes:span,canonical_hash:record.hash,ref_id:record.ref_id,source_version:citation.source_version,exact_canonical_span_verified:true,claim_truth_qualified:false,publication_allowed:false,source_identity_qualified:false,temporal_provenance_qualified:false}
   },
   async requestRehydration(key,request,version){
    logicalKey(key)
