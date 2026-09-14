@@ -40,7 +40,7 @@ async function exact(tx,e){
 export async function retainRegistration({envelope,withAuthority}={}){
  const e=registrationEnvelope(envelope),digest=registrationDigest(e)
  if(typeof withAuthority!=='function')deny()
- return withAuthority(Object.freeze({...scope(e),operation:'register',digest}),async tx=>{
+ return withAuthority(Object.freeze({...scope(e),operation:'register',digest,envelope:e}),async tx=>{
   const head=await tx.head(e.source)
   if(head===digest){await exact(tx,e);return digest}
   if((head??'')!==e.previous)deny()
