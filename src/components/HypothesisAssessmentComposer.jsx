@@ -30,7 +30,7 @@ export default function HypothesisAssessmentComposer({client,investigationId,wor
  if(!open)return <button type="button" className="piw-btn" onClick={()=>setOpen(true)}>Write a hypothesis assessment</button>
  const current=state?.client===client&&state.scope===scope?state:null
  if(!current||current.status==='loading')return <p role="status">Loading retained authoring context…</p>
- if(current.status==='unavailable')return <section className="piw-card"><p role="status">Authoring is unavailable. Current reviewer access and a current retained observation are required.</p><button type="button" onClick={()=>setOpen(false)}>Close authoring</button></section>
+ if(current.status==='unavailable')return <section className="piw-card piw-hypothesis-composer"><p role="status">Authoring is unavailable. Current reviewer access and a current retained observation are required.</p><button type="button" onClick={()=>setOpen(false)}>Close authoring</button></section>
  return <ComposerForm key={scope} client={client} context={current.context} onSaved={onSaved}
   recoveryPrior={recoveryPrior} onClose={()=>{setOpen(false);onRecoveryClose?.()}} onAccessFailure={code=>{setState({client,scope,status:'unavailable'});onAccessFailure?.(code)}}/>
 }
@@ -79,19 +79,19 @@ export function ComposerForm({client,context,onSaved,onClose,onAccessFailure,rec
   }catch{if(active.current)setStatus('uncertain')}
   finally{saving.current=false}
  }
- if(status==='uncertain')return <section className="piw-card"><p role="status">Saving is unconfirmed. The request is frozen; retry it to recover the same result. Current authority and identical arguments are still required.</p><button type="button" onClick={save}>{['captureGeneration','recoverGeneration'].includes(attempt.current?.action)?'Retry the same generation request':'Retry the same assessment'}</button><button type="button" onClick={onClose}>Close and inspect saved history</button></section>
+ if(status==='uncertain')return <section className="piw-card piw-hypothesis-composer"><p role="status">Saving is unconfirmed. The request is frozen; retry it to recover the same result. Current authority and identical arguments are still required.</p><button type="button" onClick={save}>{['captureGeneration','recoverGeneration'].includes(attempt.current?.action)?'Retry the same generation request':'Retry the same assessment'}</button><button type="button" onClick={onClose}>Close and inspect saved history</button></section>
  if(status==='queued')return <p role="status">Retained-input work requested. Inspect worker attempts for completion or explicit recovery; no assessment is approved or published.</p>
  if(status==='saving')return <p role="status">{['captureGeneration','recoverGeneration'].includes(attempt.current?.action)?'Capturing retained-input work…':'Saving the immutable assessment…'}</p>
  if(status==='saved')return <p role="status">Assessment saved privately. Human review and publication eligibility remain separate.</p>
  const selected=context.materials.find(m=>m.input_position===pick.position),field=selected?.fields.find(f=>f.name===pick.field)
- return <section className="piw-stack" aria-label="Compose hypothesis assessment"><header className="piw-card"><h2>{context.question}</h2>
+ return <section className="piw-stack piw-hypothesis-composer" aria-label="Compose hypothesis assessment"><header className="piw-card"><h2>{context.question}</h2>
   <p>Write a saved assessment from this retained observation. Human entry and a separately configured worker are distinct paths. Source, acquisition and assessment times remain distinct.</p>
   <p>Likelihood, confidence, evidence quality and relevance remain separate. Estimation controls are unavailable until an approved method is configured.</p>
   <button type="button" onClick={onClose}>Close authoring</button></header>
   {recoveryPrior?<p role="status">Prepare new work linked to prior generation {recoveryPrior}. Select the current definitions and retained passages. The original attempt stays retained; current authority and eligibility are rechecked.</p>:null}
   {error?<p role="alert">{error}</p>:null}
   <form onSubmit={save} className="piw-stack">
-   <section className="piw-card"><h3>Competing explanations</h3>
+   <section className="piw-card piw-hypothesis-composer"><h3>Competing explanations</h3>
     {draft.hypotheses.map((h,index)=><fieldset key={h.id}><legend>Explanation {index+1}</legend>
      <TextField label={'Definition of explanation '+(index+1)} value={h.definition} onChange={definition=>updateRow('hypotheses',h.id,{definition})} required/>
      <MissingRating label="Likelihood" value={h.likelihood} onChange={likelihood=>updateRow('hypotheses',h.id,{likelihood})}/>
@@ -103,7 +103,7 @@ export function ComposerForm({client,context,onSaved,onClose,onAccessFailure,rec
     <label className="piw-field">Relationship among explanations<select value={draft.hypothesis_relationship} onChange={e=>change('hypothesis_relationship',e.target.value)}>
      <option value="not_established">Not established</option><option value="overlapping">May overlap</option><option value="mutually_exclusive">Mutually exclusive</option></select></label>
    </section>
-   <section className="piw-card"><h3>Retained evidence</h3><p>Only explicitly opened, permission-checked passages can be linked. Retention does not establish support or independent corroboration.</p>
+   <section className="piw-card piw-hypothesis-composer"><h3>Retained evidence</h3><p>Only explicitly opened, permission-checked passages can be linked. Retention does not establish support or independent corroboration.</p>
     <label className="piw-field">Retained material<select value={pick.position} onChange={e=>choose({position:e.target.value,field:'',start:0,end:0})}>
      <option value="">Choose retained material</option>{context.materials.map(m=><option key={m.input_position} value={m.input_position} disabled={m.permission_state!=='checked_current'}>
       Position {m.input_position}{m.permission_state==='blocked'?' — required permissions unavailable':''}</option>)}</select></label>
@@ -124,7 +124,7 @@ export function ComposerForm({client,context,onSaved,onClose,onAccessFailure,rec
      <button type="button" onClick={()=>{setDraft(r=>({...r,evidence:r.evidence.filter(x=>x.id!==e.id),arguments:r.arguments.map(a=>({...a,evidence_ids:a.evidence_ids.filter(x=>x!==e.id)}))}));setPreviews(p=>{const next={...p};delete next[e.id];return next})}}>Remove evidence link</button>
     </fieldset>)}
    </section>
-   <section className="piw-card"><h3>Evidence and reasoning</h3>
+   <section className="piw-card piw-hypothesis-composer"><h3>Evidence and reasoning</h3>
     {draft.arguments.map((a,index)=><fieldset key={a.id}><legend>Argument {index+1}</legend>
      <label className="piw-field">Explanation<select value={a.hypothesis_id} onChange={e=>updateRow('arguments',a.id,{hypothesis_id:e.target.value})}>
       {draft.hypotheses.map((h,i)=><option key={h.id} value={h.id}>Explanation {i+1}</option>)}</select></label>
@@ -139,7 +139,7 @@ export function ComposerForm({client,context,onSaved,onClose,onAccessFailure,rec
     </fieldset>)}
     <button type="button" onClick={()=>change('arguments',[...draft.arguments,newArgument(id(),draft.hypotheses[0].id)])}>Add argument</button>
    </section>
-   <section className="piw-card"><h3>Current assessment</h3>
+   <section className="piw-card piw-hypothesis-composer"><h3>Current assessment</h3>
     <label className="piw-field">Comparison<select required value={draft.comparison.state} onChange={e=>change('comparison',{...draft.comparison,state:e.target.value,favored_ids:[]})}>
      <option value="">Choose the recorded comparison</option>{Object.entries(COMPARISON_COPY).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
     {draft.comparison.state==='better_supported'?draft.hypotheses.map((h,i)=><label key={h.id}><input type="checkbox" checked={draft.comparison.favored_ids.includes(h.id)}
@@ -150,7 +150,7 @@ export function ComposerForm({client,context,onSaved,onClose,onAccessFailure,rec
     {[['assumptions','Assumptions'],['gaps','Counterevidence, contradictions and gaps'],['change_tests','What would change this assessment?']].map(([key,label])=>
      <TextField key={key} label={label+' (one item per line)'} value={draft[key].join('\n')} onChange={value=>change(key,value.split('\n'))}/>)}
    </section>
-   <section className="piw-card"><h3>Revision record</h3><p>Human argument entry · No model used · Private and unreviewed.</p>
+   <section className="piw-card piw-hypothesis-composer"><h3>Revision record</h3><p>Human argument entry · No model used · Private and unreviewed.</p>
     {context.head?<><label className="piw-field">Main reason for revision<select required value={draft.revision_trigger} onChange={e=>change('revision_trigger',e.target.value)}>
      <option value="">Choose revision cause</option>{Object.entries(triggerNames).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
      <label className="piw-field">Result of reconsideration<select required value={draft.revision_effect} onChange={e=>change('revision_effect',e.target.value)}>

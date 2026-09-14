@@ -1,6 +1,8 @@
 // Synthetic UI only. No backend, credentials, source text or production route.
 import React from 'react'
 import {createRoot} from 'react-dom/client'
+import Composer from '../../src/components/HypothesisAssessmentComposer.jsx'
+import {syntheticAuthoringContext} from '../../tests/hypothesisComposerFixture.mjs'
 import Panel from '../../src/components/HypothesisAssessmentPanel.jsx'
 import {hypothesisFixture} from '../../tests/hypothesisAssessmentFixture.mjs'
 import Ledger from '../../src/components/HypothesisGenerationLedger.jsx'
@@ -21,3 +23,34 @@ window.renderSynthetic=(scope='synthetic-reviewer')=>root.render(<main className
  investigationId={id(1)} userScopeKey={scope} onRecover={id=>window.synthetic.recoveries.push(id)}/></main>)
 window.renderSyntheticAssessment=()=>root.render(<main className="piw" style={{height:"100dvh",overflowY:"auto"}}><Panel assessment={hypothesisFixture()} dependencyChanged={true}/></main>)
 window.renderSynthetic()
+
+// Explicit synthetic receipt transport; not a server, Auth session or durable database.
+const composerContext=syntheticAuthoringContext(),syntheticPassage='Synthetic meeting 🧭.'
+composerContext.materials[0].fields[0].length=Array.from(syntheticPassage).length
+window.composerSynthetic={contextReads:0,spanReads:0,submissions:[],commits:0,mode:'lost_ack',saved:null}
+const composerClient={
+ authoringContext:async()=>{window.composerSynthetic.contextReads++;return{data:structuredClone(composerContext)}},
+ authoringSpan:async input=>{
+  window.composerSynthetic.spanReads++
+  const m=composerContext.materials[0],excerpt=Array.from(syntheticPassage).slice(input.start,input.end).join('')
+  const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(excerpt))
+  return{data:{contract_version:'mip_hypothesis_authoring_span_v1',...input,
+   observation_id:composerContext.observation_id,publication_allowed:false,
+   material_version:m.material_version,material_hash:m.material_hash,
+   acquired_at:m.acquired_at,published_at:m.published_at,event_time:m.event_time,excerpt,
+   excerpt_sha256:window.composerSynthetic.mode==='bad_hash'?'0'.repeat(64):Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('')}}
+ },
+ append:async input=>{
+  const state=window.composerSynthetic;state.submissions.push(structuredClone(input))
+  if(!state.saved){state.commits++;state.saved={publication_allowed:false,workspace_version_id:composerContext.workspace_version_id,
+   observation_id:composerContext.observation_id,current_context:true,reassessment_pending:false,
+   assessment:{...structuredClone(input.assessment),id:id(80),completed_at:'2026-09-13T12:01:00Z'}}}
+  if(state.mode==='lost_ack'&&state.submissions.length===1)return{error:{code:'request_failed'}}
+  return{data:structuredClone(state.saved)}
+ }
+}
+window.renderSyntheticComposer=(scope='synthetic-reviewer')=>root.render(<main className="piw" style={{height:'100dvh',overflowY:'auto'}}>
+ <Composer client={composerClient} investigationId={composerContext.investigation_id}
+ workspaceVersionId={composerContext.workspace_version_id} userScopeKey={scope}/></main>)
+window.inspectSyntheticSaved=()=>root.render(<main className="piw" style={{height:'100dvh',overflowY:'auto'}}>
+ <Panel assessment={window.composerSynthetic.saved?.assessment}/></main>)

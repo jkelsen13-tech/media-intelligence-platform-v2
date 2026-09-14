@@ -12,11 +12,17 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
  const browser=await launcher.launch({headless:true})
  try{
   const page=await browser.newPage(),requests=[],errors=[]
-  await page.route('**/*',route=>{requests.push(route.request().url());return route.abort()})
+  // Intercept a reserved synthetic origin to provide a secure WebCrypto context.
+  // This document is fulfilled in-process; it never reaches DNS or a server.
+  await page.route('**/*',route=>{
+   if(route.request().url()==='https://mip-synthetic.invalid/'&&route.request().isNavigationRequest()&&route.request().frame()===page.mainFrame())
+    return route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic hypothesis inspection</title><div id="root"></div>'})
+   requests.push(route.request().url());return route.abort()
+  })
   page.on('pageerror',e=>errors.push(e.message))
   for(const width of [1280,768,390,320]){
    await page.setViewportSize({width,height:1000})
-   await page.setContent('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic hypothesis worker inspection</title><div id="root"></div>')
+   await page.goto('https://mip-synthetic.invalid/')
    await page.addStyleTag({content:css})
    await page.addScriptTag({content:bundle.outputFiles[0].text})
    const region=page.getByRole('region',{name:'Hypothesis worker attempts'})
@@ -75,12 +81,68 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    if(width===390)console.log('MIP_SYNTHETIC_SAVED_ASSESSMENT_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
    await disclosure.focus();await page.keyboard.press('Enter')
    await panel.getByRole('heading',{name:'Saved revision record',exact:true}).waitFor({state:'detached'})
+   await page.evaluate(()=>window.renderSyntheticComposer())
+   assert.equal(await page.evaluate(()=>window.composerSynthetic.contextReads),0)
+   await page.getByRole('button',{name:'Write a hypothesis assessment',exact:true}).click()
+   const compose=page.getByRole('region',{name:'Compose hypothesis assessment'})
+   await compose.waitFor()
+   await compose.getByLabel('Definition of explanation 1',{exact:true}).fill('Synthetic explanation A.')
+   await compose.getByLabel('Definition of explanation 2',{exact:true}).fill('Synthetic explanation B.')
+   await compose.getByLabel('Retained material',{exact:true}).selectOption('9007199254740993')
+   await compose.getByLabel('Retained text field',{exact:true}).selectOption('summary')
+   await page.evaluate(()=>window.composerSynthetic.mode='bad_hash')
+   await compose.getByRole('button',{name:'Open retained passage',exact:true}).click()
+   await compose.getByRole('alert').waitFor()
+   assert.equal(await compose.getByRole('button',{name:'Link this passage',exact:true}).count(),0)
+   await page.evaluate(()=>window.composerSynthetic.mode='lost_ack')
+   await compose.getByRole('button',{name:'Open retained passage',exact:true}).click()
+   await compose.getByRole('button',{name:'Link this passage',exact:true}).click()
+   await compose.getByLabel('What evidence 1 documents, within its limits',{exact:true}).fill('Synthetic passage records a meeting, not its purpose.')
+   await compose.getByRole('button',{name:'Add argument',exact:true}).click()
+   await compose.getByLabel('How the evidence relates',{exact:true}).selectOption('compatible')
+   await compose.getByLabel('Evidence 1',{exact:true}).check()
+   await compose.getByLabel('Inferential connection for argument 1',{exact:true}).fill('The synthetic meeting fits either explanation.')
+   await compose.getByLabel('Limitations of argument 1',{exact:true}).fill('The synthetic discussion is unknown.')
+   await compose.getByLabel('Comparison',{exact:true}).selectOption('difficult_to_distinguish')
+   await compose.getByLabel('Saved comparison rationale',{exact:true}).fill('Synthetic alternatives remain difficult to distinguish.')
+   await compose.getByLabel('Main limitation',{exact:true}).fill('Synthetic evaluation record is absent.')
+   await compose.getByLabel('Reason for this saved revision',{exact:true}).fill('Synthetic initial human entry.')
+   assert.equal(await compose.evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
+   const saveButton=compose.getByRole('button',{name:'Save private assessment',exact:true})
+   assert.ok((await saveButton.boundingBox()).height>=44)
+   if(width===390){await compose.getByRole('heading',{name:'Competing explanations',exact:true}).scrollIntoViewIfNeeded();console.log('MIP_SYNTHETIC_COMPOSER_FORM_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))}
+   await saveButton.click()
+   const retry=page.getByRole('button',{name:'Retry the same assessment',exact:true})
+   await retry.waitFor()
+   assert.equal(await compose.count(),0)
+   assert.equal(await page.getByText('Assessment saved privately. Human review and publication eligibility remain separate.',{exact:true}).count(),0)
+   await retry.focus();await page.keyboard.press('Enter')
+   await page.getByText('Assessment saved privately. Human review and publication eligibility remain separate.',{exact:true}).waitFor()
+   const state=await page.evaluate(()=>window.composerSynthetic)
+   assert.equal(state.contextReads,1);assert.equal(state.spanReads,2);assert.equal(state.submissions.length,2)
+   assert.equal(state.commits,1);assert.deepEqual(state.submissions[0],state.submissions[1])
+   const saved=state.saved.assessment
+   assert.equal(saved.review_state,'unreviewed');assert.equal(saved.release_state,'private')
+   assert.equal(saved.evidence[0].input_position,'9007199254740993')
+   assert.equal(saved.evidence[0].source_span.end,Array.from('Synthetic meeting 🧭.').length)
+   assert.ok(!JSON.stringify(state.submissions).includes('Synthetic meeting 🧭.'))
+   assert.equal(saved.arguments[0].relation,'compatible')
+   assert.equal(saved.arguments[0].evidence_ids[0],saved.evidence[0].id)
+   assert.equal(saved.comparison.confidence.kind,'not_estimated')
+   await page.evaluate(()=>window.inspectSyntheticSaved())
+   await panel.getByText('Synthetic alternatives remain difficult to distinguish.',{exact:true}).waitFor()
+   await panel.locator('summary').click()
+   await panel.getByText('Synthetic passage records a meeting, not its purpose.',{exact:false}).waitFor()
+   if(width===390)console.log('MIP_SYNTHETIC_COMPOSER_SAVED_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+   await page.evaluate(()=>window.renderSyntheticComposer(null))
+   await panel.waitFor({state:'detached'})
+
 
   }
   assert.deepEqual(requests,[]);assert.deepEqual(errors,[])
   console.log('MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS='+JSON.stringify({engine,widths:[1280,768,390,320],
    keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
    noAutomaticRetry:true,deniedRecordsCleared:true,logoutCleared:true,networkRequests:0,
-   savedRevisionReachableByScrolling:true,savedAssessmentDisclosure:true,separateMissingEstimates:true,sourceClocks:true,pendingReassessment:true,systemFontFallback:true,scope:'synthetic_generation_ledger_and_saved_assessment',productionQualified:false}))
+   composerExactUnicodeSpan:true,hashMismatchDenied:true,linkedReasoning:true,lostAcknowledgementExactRetry:true,syntheticReceiptOnly:true,savedRevisionReachableByScrolling:true,savedAssessmentDisclosure:true,separateMissingEstimates:true,sourceClocks:true,pendingReassessment:true,systemFontFallback:true,scope:'synthetic_ledger_saved_assessment_and_composer',productionQualified:false}))
  }finally{await browser.close()}
 }

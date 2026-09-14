@@ -13,3 +13,10 @@ Initial ledger-only run: PASS in Chromium and WebKit at dfb3830dfabe46f918d705f3
 
 
 At 79ba9c7903c75fa38bf3f1684d54b6e4dbdfdbc1, run 34804453987/job 103853442823 passed the stated assertions in both engines. Screenshot inspection nevertheless found a fixture limitation: importing the application height constraints without its scroll host clipped the rendered tail. That PASS remains limited to its actual assertions. The next harness explicitly supplies a bounded scrolling host, scrolls the final revision heading into the viewport and asserts its bounds, and records viewport screenshots rather than clipped full-element images. This does not claim full application-shell qualification.
+
+
+## Human authoring interaction continuation
+
+The browser now opens the actual composer, selects an exact synthetic Unicode passage, rejects a mismatched digest, links that passage to a bounded argument, completes a private assessment, simulates a lost acknowledgement and retries identical arguments. The synthetic receipt fixture counts one accepted request and returns the same saved result. This exercises browser behavior only; the in-memory fixture is not durable-store, Auth or database evidence. Existing native acceptance/restart suites remain required independently. It then displays the saved argument via the actual panel and clears it on logout.
+
+A reserved https://mip-synthetic.invalid/ document is fulfilled entirely by Playwright interception to provide a secure WebCrypto context. No DNS/server request is made for it; any other page request is aborted and fails the test. Only synthetic text appears in screenshots. Composer controls use existing workspace tokens, bounded fieldsets and 44px controls. The introducing candidate requires exact-head hosted verification. No live route, credentials, material admission, model method or approval is added.

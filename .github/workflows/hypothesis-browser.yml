@@ -8,6 +8,7 @@ on:
       - 'src/styles/tokens.css'
       - 'src/index.css'
       - 'tests/hypothesisAssessmentFixture.mjs'
+      - 'tests/hypothesisComposerFixture.mjs'
       - 'verifier/hypothesis-browser/**'
       - '.github/workflows/hypothesis-browser.yml'
 permissions:
