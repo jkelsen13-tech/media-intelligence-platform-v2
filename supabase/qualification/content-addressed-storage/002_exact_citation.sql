@@ -108,7 +108,7 @@ begin
  if jsonb_array_length(h->'entries')<>1 then raise exception 'citation_assessment_denied';end if;
  entry:=h->'entries'->0;
  if entry->>'revision_id'<>r::text or entry->>'status'<>'available' then raise exception 'citation_assessment_denied';end if;
- if eid is null or length(eid) not between 1 and 256 or (select count(*) from jsonb_array_elements(entry->'assessment'->'evidence') e where e->>'id'=eid)<>1 then raise exception 'citation_evidence_ambiguous';end if;
+ if eid is null or length(eid) not between 1 and 256 or (select count(*) from jsonb_array_elements(entry->'assessment'->'evidence') as evidence_rows(evidence_value) where evidence_rows.evidence_value->>'id'=eid)<>1 then raise exception 'citation_evidence_ambiguous';end if;
  select value into strict e from jsonb_array_elements(entry->'assessment'->'evidence') where value->>'id'=eid;
  return jsonb_build_object('evidence',e,'workspace_version',(entry->>'workspace_version_id')::uuid);
 end$$;
