@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "request_id": "pr155-c6dd9ed-independent-1",
+  "candidate_commit": "c6dd9ed689f51d90c54f9319a9ea3fa92f389fbd",
+  "base_commit": "4b111348ec9ce2dda0ea71fef26c6497dd990d64",
+  "packet_commit": "aaa1cd19aace885019c50e1b9156834caa6ddb73",
+  "packet_path": "verifier/independent-pr155/request.json",
+  "packet_sha256": "7b75ec730943ef2ec2c1ac2a3924e667024cb40e0da8e02d349949513fb087a5",
+  "packet_bytes": 131700,
+  "agent_id": "bc-c6dd9ed6-89f5-4d90-854f-9319a9ea3fa9",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "reserved_before_launch"
+}
