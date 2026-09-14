@@ -108,7 +108,7 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    await compose.getByLabel('Main limitation',{exact:true}).fill('Synthetic evaluation record is absent.')
    await compose.getByLabel('Reason for this saved revision',{exact:true}).fill('Synthetic initial human entry.')
    const overflow=await compose.evaluate(el=>({overflow:el.scrollWidth>el.clientWidth+1,width:el.clientWidth,scroll:el.scrollWidth,
-    elements:[...el.querySelectorAll('*')].filter(n=>n.scrollWidth>n.clientWidth+1||n.getBoundingClientRect().right>el.getBoundingClientRect().right+1).map(n=>({tag:n.tagName,classes:n.className,width:n.getBoundingClientRect().width,right:n.getBoundingClientRect().right,scroll:n.scrollWidth,client:n.clientWidth,overflow:getComputedStyle(n).overflow})).slice(0,12)}))
+    elements:[...el.querySelectorAll('*')].filter(n=>n.scrollWidth>n.clientWidth+1||n.getBoundingClientRect().right>el.getBoundingClientRect().right+1).map(n=>({tag:n.tagName,label:n.tagName==='LABEL'?n.firstChild?.textContent:null,classes:n.className,width:n.getBoundingClientRect().width,right:n.getBoundingClientRect().right,scroll:n.scrollWidth,client:n.clientWidth,overflow:getComputedStyle(n).overflow})).slice(0,12)}))
    if(overflow.overflow)console.log('MIP_SYNTHETIC_COMPOSER_LAYOUT_FAILURE='+JSON.stringify({engine,width,...overflow}))
    assert.equal(overflow.overflow,false)
    const saveButton=compose.getByRole('button',{name:'Save private assessment',exact:true})

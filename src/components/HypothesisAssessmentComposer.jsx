@@ -7,7 +7,7 @@ const triggerNames={new_evidence:'New evidence',correction:'Source correction',w
 const causeNames={method_changed:'Evaluated method changed',retained_source_change:'Retained source changed',retained_assessment_change:'Retained assessment changed',workspace_changed:'Investigation changed',permission_changed:'Permission changed',human_reconsideration:'Human reconsideration requested'}
 function TextField({label,value,onChange,required=false}) {
  const id=useId()
- return <label className="piw-field" htmlFor={id}>{label}<textarea id={id} value={value} rows={3} maxLength={4000} required={required} onChange={e=>onChange(e.target.value)}/></label>
+ return <label className="piw-field" htmlFor={id}><span>{label}</span><textarea id={id} value={value} rows={3} maxLength={4000} required={required} onChange={e=>onChange(e.target.value)}/></label>
 }
 function MissingRating({label,value,onChange}) {return <fieldset className="piw-card"><legend>{label} — not estimated</legend><TextField label={'Why '+label.toLowerCase()+' is not estimated'} value={value.reason} onChange={reason=>onChange({kind:'not_estimated',reason})} required/></fieldset>}
 const id=()=>globalThis.crypto.randomUUID()

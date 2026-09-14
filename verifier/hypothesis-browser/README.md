@@ -26,3 +26,6 @@ Failed authoring attempts remain preserved: 43f0e510c8d24fb8008fe4b09f3bbe33f003
 
 
 At ed55ca6e21772abe428acd78b5795112a61833f2, browser run 34805444223/job 103856314097 still failed WebKit: composer client width 366px versus scroll width 492px, with no child border box beyond the container. The next correction constrains native select text overflow and expands diagnostics to internal scroll widths. The no-overflow test is unchanged; no assertion is waived and no full browser PASS is claimed for this failed attempt.
+
+
+At 4c8a8708676af4c285532c6434a3d0efecccc7cf, run 34805622366/job 103856824666 still failed WebKit. Expanded geometry located internal overflow on a 340px label (479px scroll width), while its child control boxes fit. The ineffective select text-overflow rule is removed. TextField label text now has an explicit shrinkable span instead of an anonymous grid item; exact associated labels and the no-overflow assertion remain. The failed runs remain unchanged.
