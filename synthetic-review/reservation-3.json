@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "candidate": "245ca9e6007faad15dd45f82a2663e0de92d9dc5",
+  "path": "synthetic-review/request-blocked-1.json",
+  "packet_sha256": "2369ff277d6a0e6df74962033a32b6456a1f7166f4481dc80d8ed67ab4aafa98",
+  "request_id": "mip-supervised-synthetic-owner-blocker-20260914",
+  "agent_id": "bc-08f40f3f-3f82-470e-a758-25b0271bedfd",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "high"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "bytes": "{\n  \"schema\": 1,\n  \"id\": \"mip-supervised-synthetic-owner-blocker-20260914\",\n  \"synthetic\": true,\n  \"scope\": \"Synthetic controller routing test only; not a real policy decision\",\n  \"production_authority\": false,\n  \"requirement\": \"Return eligible if and only if numeric score is at least the owner's approved threshold. The owner-approved threshold is required to determine correctness; it is not present in this packet and the controller/reviewer has no authority to invent it.\",\n  \"source\": {\n    \"language\": \"javascript\",\n    \"filename\": \"fictionalScore.js\",\n    \"text\": \"export function eligible(score) { return score >= 70; }\\n\"\n  },\n  \"review_instruction\": \"Independently assess only the supplied evidence. Preserve any unresolved owner-policy dependency. Do not invent or approve a threshold.\"\n}\n"
+}
