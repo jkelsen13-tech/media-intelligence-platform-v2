@@ -1,0 +1,98 @@
+{
+  "schema": "mip.synthetic.qualification-evidence.v1",
+  "candidate": "c94a476af0240c9422887cc0e1d06411a466962a",
+  "candidate_tree": "232d7207dca75b72bf9e141fe35f8587f247e4c5",
+  "base": "b4db7071048440ecbc6f9919b0d9ed1e6ce20a93",
+  "pull_request": 169,
+  "independent_review": "pending; separately routed by parent",
+  "scope": "Optional L4 follow-up to strict PASS PR163; no production SQL or reader semantics changes",
+  "review_source": {
+    "commit": "320be4ebc697bd13fccc03d3ccb516c4c834120d",
+    "path": "verifier/independent-pr163/result.json",
+    "outcome": "PASS",
+    "limitation": "L4 optional named >32 path coverage"
+  },
+  "files": [
+    "verifier/hypothesis-worker/marketsCases.mjs",
+    ".github/workflows/hypothesis-worker.yml",
+    "verifier/hypothesis-worker/MARKETS_PATH_BUDGET.md"
+  ],
+  "test_checkout": {
+    "commit": "ca6ae9091f38d51d4745f14a709ed33c932f1a90",
+    "tree": "232d7207dca75b72bf9e141fe35f8587f247e4c5",
+    "candidate_tree_equal": true
+  },
+  "runs": [
+    {
+      "run": 34841202992,
+      "job": 103966358207,
+      "name": "Native",
+      "pass": 87,
+      "fail": 0,
+      "skip": 0,
+      "named_new_test": "thirty-four eligible paths from fifteen observed candidates deny without a partial result",
+      "duration_ms": 36276.09651
+    },
+    {
+      "run": 34841203114,
+      "job": 103966359094,
+      "name": "Golden Node22",
+      "pass": 1904,
+      "fail": 0,
+      "skip": 0,
+      "build_seconds": 25.5
+    },
+    {
+      "run": 34841203114,
+      "job": 103966359289,
+      "name": "Golden Node24",
+      "pass": 1904,
+      "fail": 0,
+      "skip": 0,
+      "build_seconds": 22.73
+    },
+    {
+      "run": 34841202953,
+      "job": 103966359595,
+      "name": "SQL concurrency",
+      "pass": 94,
+      "fail": 0,
+      "seconds": 51.351
+    }
+  ],
+  "logs": [
+    {
+      "path": "verifier/pr169-path-budget-c94/golden-node22.log",
+      "git_blob_sha": "f67a09a6474c99f71003d399b2d50e755048f13c",
+      "bytes": 790542
+    },
+    {
+      "path": "verifier/pr169-path-budget-c94/golden-node24.log",
+      "git_blob_sha": "0b7b020f9374d54d3b2ff39b24d521180685b581",
+      "bytes": 267226
+    },
+    {
+      "path": "verifier/pr169-path-budget-c94/native.log",
+      "git_blob_sha": "695608696f36d45e56e33ab5d4dece207aefb1ed",
+      "bytes": 47326
+    },
+    {
+      "path": "verifier/pr169-path-budget-c94/sql-concurrency.log",
+      "git_blob_sha": "8494c7d6ea509c83ad86306648fe26c2fa62a824",
+      "bytes": 237076
+    }
+  ],
+  "diagnostics": [
+    {
+      "type": "initial_wrong_pr_base",
+      "detail": "PR initially targeted main1dc317200b7a928fad85d06b43351b60e2a50d92 despite correct candidate parentb4. Retargeted to verified frozen PR163 branch without source rewrite. Original runs preserved. All four completed logs identify ca6ae909 checkout whose tree matches candidate exactly."
+    }
+  ],
+  "failed_runs_observed": [],
+  "qualification_limits": [
+    "Disposable synthetic PostgreSQL only; operation authority and assessment method are fixtures, not real-world approvals.",
+    "No provider, rights, clock, production, migration, merge, deployment or UI authorization.",
+    "historical_time_qualified remains false; no as-known-then completion.",
+    "Independent acceptance pending."
+  ]
+}
