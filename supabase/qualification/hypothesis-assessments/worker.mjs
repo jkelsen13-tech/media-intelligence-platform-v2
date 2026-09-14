@@ -69,7 +69,12 @@ export async function runDurableHypothesisWorker({rpc,journal,runtime,session,me
   output=assessmentFromEvaluation(inputs,await method.evaluate(clone(inputs)))
  } catch {
   const request=requestId()
-  try {const receipt=await call('worker_fail',{...base,p_request:request});return {state:receipt.state,generation:job.generation_id}}
+  try {
+   const receipt=await call('worker_fail',{...base,p_request:request})
+   if(receipt?.state!=='failed'||receipt.generation_id!==job.generation_id||receipt.retained_for_reconciliation!==true)
+    throw Error('mip_hypothesis_failure_receipt')
+   return {state:'failed',generation:job.generation_id}
+  }
   catch {return {state:'failure_ambiguous',generation:job.generation_id,recovery_key:'worker_fail:'+request}}
  }
  const request=requestId()

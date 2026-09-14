@@ -57,7 +57,7 @@ test('bad retained byte hash fails computation without invoking method',async()=
   method:{...g.method,evaluate:()=>{evaluated=true}},
   journal:{putOnce:async()=>({committed:true}),get:async()=>null}, // Synthetic RPC-order unit stub; durable proof is native CI.
   rpc:async name=>name==='worker_claim'?{generation_id:g.generation_id,lease_token:'synthetic-token',input_text:input,input_hash:'0'.repeat(64),
-   method_revision:g.method.revision,implementation_ref:g.method.implementation}:(failed=true,{state:'failed'})})
+   method_revision:g.method.revision,implementation_ref:g.method.implementation}:(failed=true,{state:'failed',generation_id:g.generation_id,retained_for_reconciliation:true})})
  assert.equal(evaluated,false);assert.equal(failed,true);assert.equal(result.state,'failed')
 })
 test('journal commit failure prevents RPC and leaves an explicit ambiguous claim',async()=>{
@@ -68,3 +68,25 @@ test('journal commit failure prevents RPC and leaves an explicit ambiguous claim
  assert.equal(called,false);assert.equal(result.state,'claim_ambiguous')
  assert.ok(result.recovery_key.startsWith('worker_claim:'))
 })
+
+test('failure acknowledgement must bind generation and preserve stranded work',async()=>{
+ for(const receipt of [
+  {state:'failed',generation_id:randomUUID(),retained_for_reconciliation:true},
+  {state:'failed'},
+  {state:'failed',retained_for_reconciliation:false},
+  {state:'completed',retained_for_reconciliation:true}
+ ]) {
+  const g=generation(),saved=new Map();let evaluated=false;
+  if(!Object.hasOwn(receipt,'generation_id'))receipt.generation_id=g.generation_id;
+  const result=await runDurableHypothesisWorker({runtime:'synthetic',session:'synthetic-session',requestId:randomUUID,sha256:sha,
+   method:{...g.method,evaluate:()=>{evaluated=true}},
+   journal:{putOnce:async(k,v)=>saved.set(k,v),get:async k=>saved.get(k)},
+   rpc:async name=>name==='worker_claim'?{generation_id:g.generation_id,lease_token:'synthetic-token',
+    input_text:JSON.stringify(g),input_hash:'0'.repeat(64),method_revision:g.method.revision,implementation_ref:g.method.implementation}:receipt});
+  assert.equal(evaluated,false);
+  assert.equal(result.state,'failure_ambiguous');
+  assert.equal(result.generation,g.generation_id);
+  assert.ok(result.recovery_key.startsWith('worker_fail:'));
+  assert.ok(saved.has('hypothesis-v1:'+result.recovery_key));
+ }
+});
