@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
+import {createHypothesisHttpTransport} from '../../src/lib/hypothesisHttpTransport.js'
 import {createHypothesisHandler} from '../../supabase/qualification/hypothesis-assessments/handler.mjs'
 import {createHypothesisStore} from '../../supabase/qualification/hypothesis-assessments/store.mjs'
 import {createHypothesisAssessmentClient,hypothesisHistoryView} from '../../src/lib/hypothesisAssessmentClient.js'
@@ -69,7 +70,17 @@ test('isolated hypothesis generation authority, retained computation and restart
    if(dropReview&&action==='acknowledge_review'&&response.ok){dropReview=false;throw Error('synthetic_lost_acknowledgement')}
    return result
   }
-  const client=createHypothesisAssessmentClient(send)
+  const http=createHypothesisHttpTransport({endpoint:'https://mip-synthetic.invalid/hypotheses',getAccessToken:async()=>token,
+   fetchImpl:async(url,options)=>{
+    const request=new Request(url,{...options,headers:{...options.headers,origin:'https://mip-synthetic.invalid'}})
+    const response=await handler(request)
+    assert.equal(response.headers.get('cache-control'),'private, no-store')
+    if(dropReview&&JSON.parse(options.body).action==='acknowledge_review'&&response.ok){
+     dropReview=false;throw Error('synthetic_lost_acknowledgement')
+    }
+    return response
+   }})
+  const client=createHypothesisAssessmentClient(http)
   let before=queries
   token='synthetic-untrusted'
   assert.equal((await client.history(v.iid)).error.code,'authentication_required')
@@ -111,6 +122,8 @@ test('isolated hypothesis generation authority, retained computation and restart
   await v.revokeAccess()
   assert.equal((await client.reviewHistory(v.iid)).error.code,'access_denied')
   assert.equal(await counts(f,v),'1:1:1')
+  http.dispose()
+  assert.equal((await client.history(v.iid)).error.code,'authentication_required')
  })
  await t.test('atomic real retained-input capture; no caller source body or input hash accepted',async()=>{
   const v=await f.investigation(),request=randomUUID(),g=await v.captureGeneration({request})

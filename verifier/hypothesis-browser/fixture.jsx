@@ -1,6 +1,8 @@
 // Synthetic UI only. No backend, credentials, source text or production route.
 import React from 'react'
 import {createRoot} from 'react-dom/client'
+import {createHypothesisHttpTransport} from '../../src/lib/hypothesisHttpTransport.js'
+import {createHypothesisAssessmentClient} from '../../src/lib/hypothesisAssessmentClient.js'
 import History from '../../src/components/HypothesisAssessmentHistory.jsx'
 import {syntheticComparisonHistory} from '../../tests/hypothesisComparisonFixture.mjs'
 import Review from '../../src/components/HypothesisReviewAcknowledgement.jsx'
@@ -77,15 +79,9 @@ const reviewClient={
 
 const comparisonRecords=syntheticComparisonHistory()
 window.comparisonSynthetic={mode:'ready',reads:0}
-const comparisonClient={
- history:async()=>{window.comparisonSynthetic.reads++;return window.comparisonSynthetic.mode==='denied'?{error:{code:'access_denied'}}:{data:structuredClone(comparisonRecords.history)}},
- backlog:async()=>{
-  const data=structuredClone(comparisonRecords.backlog)
-  if(window.comparisonSynthetic.mode==='permission')data.causes.push({cause_id:'synthetic-permission-race',
-   revision_id:'synthetic-assessment-1',kind:'permission_changed',state:'pending_explicit_reconciliation'})
-  return{data}
- }
-}
-window.renderSyntheticComparison=(scope='synthetic-reviewer')=>root.render(<main className="piw" style={{height:'100dvh',overflowY:'auto'}}>
+const comparisonTransport=createHypothesisHttpTransport({endpoint:'https://mip-synthetic.invalid/hypotheses',
+ getAccessToken:async()=> 'synthetic-browser-token'})
+const comparisonClient=createHypothesisAssessmentClient(comparisonTransport)
+window.renderSyntheticComparison=(scope='synthetic-reviewer')=>{if(!scope)comparisonTransport.dispose();return root.render(<main className="piw" style={{height:'100dvh',overflowY:'auto'}}>
  <History client={comparisonClient} investigationId={comparisonRecords.history.investigation_id}
-  workspaceVersionId="synthetic-workspace" userScopeKey={scope}/></main>)
+  workspaceVersionId="synthetic-workspace" userScopeKey={scope}/></main>)}

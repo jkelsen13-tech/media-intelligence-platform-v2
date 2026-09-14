@@ -1,3 +1,4 @@
+import {syntheticComparisonHistory} from '../../tests/hypothesisComparisonFixture.mjs'
 import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
 import {readFile} from 'node:fs/promises'
@@ -11,16 +12,36 @@ const css=(await Promise.all(['src/styles/tokens.css','src/index.css','src/style
 for(const [engine,launcher] of Object.entries({chromium,webkit})){
  const browser=await launcher.launch({headless:true})
  try{
-  const page=await browser.newPage(),requests=[],errors=[]
+  const page=await browser.newPage(),requests=[],errors=[],internalRequests=[]
+  let comparisonMode='ready'
   // Intercept a reserved synthetic origin to provide a secure WebCrypto context.
   // This document is fulfilled in-process; it never reaches DNS or a server.
-  await page.route('**/*',route=>{
+  await page.route('**/*',async route=>{
    if(route.request().url()==='https://mip-synthetic.invalid/'&&route.request().isNavigationRequest()&&route.request().frame()===page.mainFrame())
     return route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic hypothesis inspection</title><div id="root"></div>'})
+   if(route.request().url()==='https://mip-synthetic.invalid/hypotheses'){
+    const request=route.request(),body=request.postDataJSON()
+    assert.equal(request.method(),'POST')
+    assert.equal(request.headers()['authorization'],'Bearer synthetic-browser-token')
+    assert.equal(request.headers()['referer'],undefined)
+    assert.equal(request.headers()['cookie'],undefined)
+    internalRequests.push(body.action)
+    const f=syntheticComparisonHistory()
+    let status=200,result
+    if(comparisonMode==='denied'){status=403;result={error:{code:'access_denied'}}}
+    else if(body.action==='history')result={data:f.history}
+    else if(body.action==='backlog'){
+     if(comparisonMode==='permission')f.backlog.causes.push({cause_id:'synthetic-permission-race',
+      revision_id:'synthetic-assessment-1',kind:'permission_changed',state:'pending_explicit_reconciliation'})
+     result={data:f.backlog}
+    }else{status=503;result={error:{code:'service_unavailable'}}}
+    return route.fulfill({status,contentType:'application/json',headers:{'cache-control':'private, no-store'},body:JSON.stringify(result)})
+   }
    requests.push(route.request().url());return route.abort()
   })
   page.on('pageerror',e=>errors.push(e.message))
   for(const width of [1280,768,390,320]){
+   comparisonMode='ready'
    await page.setViewportSize({width,height:1000})
    await page.goto('https://mip-synthetic.invalid/')
    await page.addStyleTag({content:css})
@@ -203,11 +224,11 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
     await comparison.locator('.piw-revision-diff-group').first().evaluate(el=>el.scrollIntoView({block:'start'}))
     console.log('MIP_SYNTHETIC_REVISION_COMPARISON_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
    }
-   await page.evaluate(()=>window.comparisonSynthetic.mode='permission')
+   comparisonMode='permission'
    await page.getByRole('button',{name:'Refresh assessment history',exact:true}).click()
    await page.getByText('Comparison unavailable: both linked revisions need current permission and a consistent saved history.',{exact:true}).waitFor()
    assert.equal(await page.getByText('Earlier synthetic reasoning: the meeting alone does not distinguish the explanations.',{exact:true}).count(),0)
-   await page.evaluate(()=>window.comparisonSynthetic.mode='denied')
+   comparisonMode='denied'
    await page.getByRole('button',{name:'Refresh assessment history',exact:true}).click()
    await page.getByText('Assessment history is unavailable.',{exact:true}).waitFor()
    assert.equal(await page.getByText('Later synthetic reasoning: the alternatives still remain difficult to distinguish.',{exact:true}).count(),0)
@@ -218,8 +239,10 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
 
   }
   assert.deepEqual(requests,[]);assert.deepEqual(errors,[])
+  assert.ok(internalRequests.filter(x=>x==='history').length>=12)
+  assert.ok(internalRequests.filter(x=>x==='backlog').length>=12)
   console.log('MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS='+JSON.stringify({engine,widths:[1280,768,390,320],
-   savedRevisionComparison:true,comparisonPermissionRaceCleared:true,comparisonNoSourceDeletionClaim:true,keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
+   configuredBrowserHttp:true,interceptedSyntheticHttpOnly:true,savedRevisionComparison:true,comparisonPermissionRaceCleared:true,comparisonNoSourceDeletionClaim:true,keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
    noAutomaticRetry:true,deniedRecordsCleared:true,logoutCleared:true,networkRequests:0,
    explicitReviewAcknowledgement:true,reviewExactRetry:true,reviewReadbackRequired:true,assessmentUnchangedByReview:true,composerExactUnicodeSpan:true,hashMismatchDenied:true,linkedReasoning:true,lostAcknowledgementExactRetry:true,syntheticReceiptOnly:true,savedRevisionReachableByScrolling:true,savedAssessmentDisclosure:true,separateMissingEstimates:true,sourceClocks:true,pendingReassessment:true,systemFontFallback:true,scope:'synthetic_ledger_saved_assessment_and_composer',productionQualified:false}))
  }finally{await browser.close()}
