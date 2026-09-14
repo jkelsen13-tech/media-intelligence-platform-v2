@@ -1,3 +1,4 @@
+import {FIXTURE_IDS,FIXTURE_VERSIONS} from '../src/lib/investigationWorkspaceFixtures.js'
 import {hypothesisEndpoint,integratedHypothesisPayload} from './privateMarketsHypothesisFixture.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -30,10 +31,11 @@ function harness({query,mode=()=> 'ready'}={}){
   authenticate:async bearer=>{assert.match(bearer,/^Bearer synthetic-/);return{id:marketsAuth().user.id}},
   query:async(sql,args,options)=>{
    assert.equal(sql,PRIVATE_MARKETS_SQL);assert.equal(args[0],marketsAuth().user.id)
-   assert.deepEqual(args.slice(1,4),[marketScope.investigation,marketScope.workspace,'synthetic-only'])
+   assert.ok([FIXTURE_IDS.comparable,FIXTURE_IDS.scope].includes(args[1]));assert.ok(Object.values(FIXTURE_VERSIONS).includes(args[2]));assert.equal(args[3],'synthetic-only')
    if(query)return query(sql,args,options)
    if(mode()==='denied')throw Object.assign(Error('synthetic'),{code:'42501'})
    const data=marketsResult({asset_id:args[4],event_id:args[5],at:args[6]})
+   data.investigation_id=args[1];data.workspace_version_id=args[2];data.observation_id=args[2]===FIXTURE_VERSIONS.v1?'88888881-8888-4888-8888-888888888881':marketScope.observation
    if(mode()==='empty')data.paths=[]
    if(mode()==='wrong_observation')data.observation_id='00000000-0000-4000-8000-000000000099'
    if(mode()==='wrong_version')for(const p of data.paths){p.asset_version_id=p.aliases_version_id=p.hops[0].subject_version_id=p.hops[0].subject.version_id='00000000-0000-4000-8000-000000000099'}
@@ -128,5 +130,37 @@ test('actual displayed session expiry clears both App clients without additional
   await act(async()=>{tree=TestRenderer.create(createElement(App,p))});await openRead(tree);assertBoth(tree)
   const count=n.calls.length;await act(async()=>{await new Promise(r=>setTimeout(r,3200))})
   assert.equal(n.calls.length,count);noPrivate(tree);assert.match(content(tree),/Sign in to read assigned investigations/)
+ }finally{act(()=>tree?.unmount());globalThis.fetch=original}
+})
+
+for(const replacement of ['investigation','version'])for(const family of ['hypothesis','markets'])for(const late of ['success','denial'])
+ test('dual App '+replacement+' action preserves replacement scope after old '+family+' '+late,async()=>{
+ const original=globalThis.fetch,n=network();globalThis.fetch=n.fetch;let tree,release,oldSignal,held=false
+ try{
+  await act(async()=>{tree=TestRenderer.create(createElement(App,props()))});await openRead(tree);assertBoth(tree)
+  const initial=workspace(tree).state.bundle
+  n.setHook(({family:f,action,options,normal})=>{
+   if(!held&&f===family&&(f==='markets'||action==='history')){
+    held=true;oldSignal=options.signal
+    const oldResponse=normal() // Snapshot actual old request before scope changes; never regenerate replacement data.
+    return new Promise(r=>release=async()=>r(late==='denial'?denial():await oldResponse))
+   }return normal()
+  })
+  await act(async()=>family==='markets'?read(tree):button(tree,'Refresh assessment history').props.onClick())
+  assert.equal(typeof release,'function')
+  await act(async()=>replacement==='investigation'
+   ?workspace(tree).actions.selectInvestigation(FIXTURE_IDS.scope)
+   :workspace(tree).actions.selectVersion(FIXTURE_IDS.comparable,FIXTURE_VERSIONS.v1))
+  const next=workspace(tree).state.bundle;assert.ok(next);assert.notEqual(next,initial)
+  assert.equal(next.investigation_id,replacement==='investigation'?FIXTURE_IDS.scope:FIXTURE_IDS.comparable)
+  assert.equal(next.version.id,replacement==='investigation'?FIXTURE_VERSIONS.v3:FIXTURE_VERSIONS.v1)
+  if(family==='markets')assert.equal(oldSignal.aborted,true)
+  // Same-session hypothesis client may survive navigation; component lifecycle must ignore its old completion.
+  await openRead(tree);assertBoth(tree)
+  const expectedObservation=next.observation.id
+  await act(async()=>release());assertBoth(tree)
+  assert.equal(workspace(tree).state.bundle,next)
+  assert.equal(workspace(tree).state.bundle.observation.id,expectedObservation)
+  assert.ok(content(tree).includes(expectedObservation));assert.doesNotMatch(content(tree),/This investigation is unavailable/)
  }finally{act(()=>tree?.unmount());globalThis.fetch=original}
 })
