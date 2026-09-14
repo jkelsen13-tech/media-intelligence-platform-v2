@@ -61,10 +61,11 @@ export async function retainMarkerBoundary({frames,relationId,observationEpoch,m
  const hex=frames.map(v=>v.toString('hex'))
  const envelope={schema:'mip_marker_delivery_proof_v1',source_id:source,stream_epoch:stream,boundary,
   frame_hash:createHash('sha256').update(hex.join('\n')).digest('hex'),frames:hex,authority_integrated:false}
+ const fixedEnd=boundary.end_lsn
  const key='marker-proof-v1:'+source+':'+stream+':'+markerId,exact=JSON.stringify(envelope)
  const receipt=await journal.putOnce(key,envelope)
  if(receipt?.committed!==true||JSON.stringify(await journal.get(key))!==exact)throw Error('mip_marker_boundary_not_durable')
  // This proof intentionally has no acknowledge/advance capability.
- return {state:'durable_marker_boundary_proof',key,end_lsn:boundary.end_lsn,
+ return {state:'durable_marker_boundary_proof',key,end_lsn:fixedEnd,
   authority_integrated:false,historical_time_qualified:false}
 }

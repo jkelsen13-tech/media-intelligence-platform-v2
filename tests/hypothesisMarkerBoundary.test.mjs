@@ -56,3 +56,15 @@ test('caller mutation during custody cannot change retained source or native tra
  assert.equal((await j.get(result.key)).source_id,context.source_id)
  assert.equal((await j.get(result.key)).frames[0][0],'4')
 })
+
+test('custody adapter mutation cannot alter the returned endpoint after retaining original bytes',async()=>{
+ const j=journal()
+ let adapterObject
+ const result=await retainMarkerBoundary({...options,context,frames:markerFrames(),journal:{
+  putOnce:async(k,v)=>{adapterObject=v;const receipt=await j.putOnce(k,v);v.boundary.end_lsn='F/FFFFFF';return receipt},
+  get:async k=>{adapterObject.boundary.end_lsn='E/EEEEEE';return j.get(k)}
+ }})
+ const retained=await j.get(result.key)
+ assert.equal(result.end_lsn,retained.boundary.end_lsn)
+ assert.equal(result.end_lsn,'0/3FC')
+})
