@@ -107,7 +107,10 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    await compose.getByLabel('Saved comparison rationale',{exact:true}).fill('Synthetic alternatives remain difficult to distinguish.')
    await compose.getByLabel('Main limitation',{exact:true}).fill('Synthetic evaluation record is absent.')
    await compose.getByLabel('Reason for this saved revision',{exact:true}).fill('Synthetic initial human entry.')
-   assert.equal(await compose.evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
+   const overflow=await compose.evaluate(el=>({overflow:el.scrollWidth>el.clientWidth+1,width:el.clientWidth,scroll:el.scrollWidth,
+    elements:[...el.querySelectorAll('*')].filter(n=>n.getBoundingClientRect().right>el.getBoundingClientRect().right+1).map(n=>({tag:n.tagName,classes:n.className,width:n.getBoundingClientRect().width,right:n.getBoundingClientRect().right})).slice(0,12)}))
+   if(overflow.overflow)console.log('MIP_SYNTHETIC_COMPOSER_LAYOUT_FAILURE='+JSON.stringify({engine,width,...overflow}))
+   assert.equal(overflow.overflow,false)
    const saveButton=compose.getByRole('button',{name:'Save private assessment',exact:true})
    assert.ok((await saveButton.boundingBox()).height>=44)
    if(width===390){await compose.getByRole('heading',{name:'Competing explanations',exact:true}).scrollIntoViewIfNeeded();console.log('MIP_SYNTHETIC_COMPOSER_FORM_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))}
