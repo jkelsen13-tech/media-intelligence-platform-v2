@@ -36,6 +36,7 @@ function harness({query,mode=()=> 'ready'}={}){
    if(mode()==='empty')data.paths=[]
    if(mode()==='wrong_observation')data.observation_id='00000000-0000-4000-8000-000000000099'
    if(mode()==='wrong_version')for(const p of data.paths){p.asset_version_id=p.aliases_version_id=p.hops[0].subject_version_id=p.hops[0].subject.version_id='00000000-0000-4000-8000-000000000099'}
+   if(mode()==='wrong_event_version')for(const p of data.paths){const h=p.hops.at(-1);h.object_version_id=h.object.version_id='00000000-0000-4000-8000-000000000099'}
    return {rows:[{value:data}]}
   }})
  return{calls,fetch:async(url,options)=>{
@@ -69,13 +70,14 @@ test('normal App private Markets uses shared typed records in both directions wi
  }finally{act(()=>tree?.unmount());globalThis.fetch=original}
 })
 test('current canonical Markets denial removes the entire private bundle; empty and mismatched observations never retain asset cards',async()=>{
- for(const mode of ['denied','empty','wrong_observation','wrong_version']){
+ for(const mode of ['denied','empty','wrong_observation','wrong_version','wrong_event_version']){
   const original=globalThis.fetch;let currentMode='ready',tree
   const h=harness({mode:()=>currentMode});globalThis.fetch=h.fetch
   try{
    await act(async()=>{tree=TestRenderer.create(createElement(App,{privateInvestigationPreview:marketsPreview(),authSessionOverride:marketsAuth(),privateMarketsEndpoint:marketsEndpoint}))})
    await openRead(tree);assert.match(content(tree),/Synthetic equity instrument/)
    if(mode==='wrong_version')await act(async()=>button(tree,'Explore this asset’s events').props.onClick())
+   if(mode==='wrong_event_version')await act(async()=>button(tree,'Explore this event’s assets: Synthetic retained event').props.onClick())
    currentMode=mode
    await act(async()=>read(tree))
    assert.doesNotMatch(content(tree),/Synthetic equity instrument|Synthetic cryptoasset/)
@@ -122,5 +124,18 @@ test('invalid valid-time drafts clear prior results without a request and expire
   const expired=marketsAuth();expired.session.expires_at=1
   await act(async()=>tree.update(createElement(App,{...p,authSessionOverride:expired})));await openRead(tree)
   assert.equal(h.calls.length,count);assert.doesNotMatch(content(tree),/Synthetic equity instrument/)
+ }finally{act(()=>tree?.unmount());globalThis.fetch=original}
+})
+
+test('real session expiry timer clears already displayed private Markets without another request',async()=>{
+ const original=globalThis.fetch,h=harness();globalThis.fetch=h.fetch;let tree
+ try{
+  const auth=marketsAuth();auth.session.expires_at=Math.floor(Date.now()/1000)+3
+  await act(async()=>{tree=TestRenderer.create(createElement(App,{privateInvestigationPreview:marketsPreview(),authSessionOverride:auth,privateMarketsEndpoint:marketsEndpoint}))})
+  await openRead(tree);assert.match(content(tree),/Synthetic equity instrument/)
+  const calls=h.calls.length
+  await act(async()=>{await new Promise(resolve=>setTimeout(resolve,3200))})
+  assert.equal(h.calls.length,calls);assert.doesNotMatch(content(tree),/Synthetic equity instrument|Synthetic cryptoasset/)
+  assert.match(content(tree),/Sign in to read assigned investigations/)
  }finally{act(()=>tree?.unmount());globalThis.fetch=original}
 })

@@ -92,11 +92,23 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    if(width===390)console.log('MIP_PRIVATE_MARKETS_DENIAL_'+engine+'='+(await page.screenshot({type:'jpeg',quality:70})).toString('base64'))
    await page.evaluate(()=>window.renderMarketsApp({signedOut:true}))
    await page.getByRole('heading',{name:'Sign in to read assigned investigations',exact:true}).waitFor()
+   if(width===390){
+    mode='ready'
+    await page.evaluate(()=>window.renderMarketsApp({expiresAt:Math.floor(Date.now()/1000)+3}))
+    await page.locator('[data-workspace-status="ready"]').waitFor()
+    await page.getByRole('button',{name:'Open private Markets evidence',exact:true}).click()
+    await page.getByRole('button',{name:'Read private evidence paths',exact:true}).click()
+    await page.getByRole('heading',{name:'Synthetic cryptoasset',exact:true}).waitFor()
+    const beforeExpiry=calls.length
+    await page.getByRole('heading',{name:'Sign in to read assigned investigations',exact:true}).waitFor()
+    assert.equal(calls.length,beforeExpiry)
+    assert.equal(await page.getByRole('heading',{name:'Synthetic cryptoasset',exact:true}).count(),0)
+   }
   }
   assert.deepEqual(outside,[]);assert.deepEqual(errors,[])
   console.log('MIP_PRIVATE_MARKETS_BROWSER_PASS='+JSON.stringify({engine,widths:[1280,768,390,320],normalApp:true,defaultEndpointClosed:true,
    realClientHandlerReaderMapper:true,syntheticAuthAndDatabase:true,nativeSQLQualified:false,equityAndCrypto:true,indirectPath:true,twoWayNavigation:true,
-   exactScopeObservationAndTime:true,emptyNoInventedCard:true,mismatchCleared:true,currentDenialCleared:true,logoutCleared:true,keyboard:true,
+   exactScopeObservationAndTime:true,emptyNoInventedCard:true,mismatchCleared:true,currentDenialCleared:true,logoutCleared:true,displayedSessionExpiryCleared:true,keyboard:true,
    horizontalOverflow:false,privateRouteOrStorageLeak:false,externalPageRequests:0,publicSurfacesIsolated:true,brandBitmapExcluded:true,productionQualified:false}))
  }finally{await browser.close()}
 }
