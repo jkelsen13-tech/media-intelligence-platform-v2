@@ -40,3 +40,51 @@ test('unqualified historical display mode cannot claim committed availability',(
  assert.match(html,/commit visibility is not qualified/)
  assert.doesNotMatch(html,/available by the requested time|fictional contract/)
 })
+
+test('existing relationships have readable labels and preserve retained meanings',()=>{
+ const cases=[
+  ['supports','Supports','supports this explanation'],
+  ['weakens','Weakens','weakens this explanation'],
+  ['compatible','Ambiguous','does not clearly distinguish it from alternatives'],
+  ['context','Context','does not claim support or opposition'],
+  ['reports_allegation','Reports allegation','does not independently substantiate it'],
+ ]
+ for(const [relation,label,explanation] of cases){
+  const record=hypothesisFixture();record.arguments[0].relation=relation
+  const before=structuredClone(record)
+  let tree;act(()=>{tree=TestRenderer.create(createElement(Panel,{assessment:record}))})
+  const details=tree.root.findByType('details')
+  act(()=>{const node={open:true};details.props.onToggle({target:node,currentTarget:node})})
+  assert.ok(tree.root.findAllByType('h5').some(node=>node.children.join('')===label),relation)
+  assert.ok(JSON.stringify(tree.toJSON()).includes(explanation),relation)
+  assert.deepEqual(record,before)
+  act(()=>tree.unmount())
+ }
+})
+test('hypothesis relationship explanations do not invent a missing estimate',()=>{
+ const cases=[
+  ['overlapping','more than one may contribute'],
+  ['mutually_exclusive','These explanations are recorded as mutually exclusive: no more than one can be true.'],
+  ['not_established','has not been established'],
+ ]
+ for(const [relationship,copy] of cases){
+  const record=hypothesisFixture();record.hypothesis_relationship=relationship
+  const before=structuredClone(record)
+  let tree;act(()=>{tree=TestRenderer.create(createElement(Panel,{assessment:record}))})
+  const details=tree.root.findByType('details')
+  act(()=>{const node={open:true};details.props.onToggle({target:node,currentTarget:node})})
+  const output=JSON.stringify(tree.toJSON())
+  assert.ok(output.includes(copy));assert.ok(output.includes('Not enough basis to estimate'))
+  assert.doesNotMatch(output,/50%|80%/)
+  assert.deepEqual(record,before)
+  act(()=>tree.unmount())
+ }
+})
+test('Why disclosure retains native summary semantics and stale is a pending saved state',()=>{
+ const record=hypothesisFixture()
+ const html=renderToStaticMarkup(createElement(Panel,{assessment:record,dependencyChanged:true}))
+ assert.match(html,/<details[^>]*><summary>Why\? Evidence, reasoning, alternatives, and assessment history<\/summary>/)
+ assert.match(html,/Stale — reassessment pending/)
+ assert.match(html,/this is still the saved assessment/)
+ assert.doesNotMatch(renderToStaticMarkup(createElement(Panel,{assessment:record})),/Stale — reassessment pending/)
+})
