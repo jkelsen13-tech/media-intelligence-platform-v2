@@ -123,7 +123,7 @@ begin
  if found then
   if old.request_arguments is distinct from args then raise exception 'mip_hypothesis_generation_retry_conflict';end if;
   perform mip_hypothesis.require_generation(old,false);
-  return jsonb_build_object('generation_id',old.id,'input_hash',old.input_hash,'publication_allowed',false);
+  return jsonb_build_object('generation_id',old.id,'request_id',p_request,'investigation_id',p_investigation,'workspace_version_id',p_version,'method_revision',old.method_revision,'input_hash',old.input_hash,'publication_allowed',false);
  end if;
  select coalesce(array_agg((c->>'cause_id')::uuid order by (c->>'cause_id')::uuid),'{}'::uuid[]) into causes
   from jsonb_array_elements(context->'backlog'->'causes') c where c->>'state'='pending_explicit_reconciliation';
@@ -163,7 +163,7 @@ begin
  values(gid,p_request,p_user,p_investigation,p_version,(context->>'observation_id')::uuid,
   predecessor,p_runtime,p_source_project,m.implementation,m.revision,mapping.revision,mapping.key_revision,args,inputs,mip_hypothesis.digest(inputs),closure,causes);
  insert into mip_hypothesis.generation_jobs values(gid,'pending',null,null,null);
- return jsonb_build_object('generation_id',gid,'input_hash',mip_hypothesis.digest(inputs),'publication_allowed',false);
+ return jsonb_build_object('generation_id',gid,'request_id',p_request,'investigation_id',p_investigation,'workspace_version_id',p_version,'method_revision',m.revision,'input_hash',mip_hypothesis.digest(inputs),'publication_allowed',false);
 end $$;
 create function mip_hypothesis.require_generation(g mip_hypothesis.generations,p_completed boolean) returns void
 language plpgsql security definer set search_path='' as $$

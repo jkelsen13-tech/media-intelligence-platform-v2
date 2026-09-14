@@ -7,12 +7,14 @@ export function createHypothesisAssessmentClient(transport) {
    const result=await transport(action,input)
    if(result?.error) {
     const code=result.error.code
-    return{data:null,error:{code:['authentication_required','access_denied','version_conflict','invalid_request','origin_denied','service_unavailable'].includes(code)?code:'request_failed'}}
+    return{data:null,error:{code:['authentication_required','access_denied','version_conflict','invalid_request','origin_denied','service_unavailable','generation_not_configured'].includes(code)?code:'request_failed'}}
    }
    return{data:result?.data??null,error:null}
   }catch{return{data:null,error:{code:'request_failed'}}}
  }
  return Object.freeze({
+  captureGeneration:input=>call('capture_generation',input),
+  generationBacklog:investigationId=>call('generation_backlog',{investigation_id:investigationId}),
   authoringContext:(investigationId,workspaceVersionId)=>call('authoring_context',{investigation_id:investigationId,workspace_version_id:workspaceVersionId}),
   authoringSpan:input=>call('authoring_span',input),
   history:investigationId=>call('history',{investigation_id:investigationId}),

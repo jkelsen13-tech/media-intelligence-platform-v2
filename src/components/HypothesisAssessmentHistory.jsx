@@ -1,4 +1,5 @@
 import {useEffect,useState,useId,useRef} from 'react'
+import HypothesisGenerationLedger from './HypothesisGenerationLedger.jsx'
 import HypothesisAssessmentComposer from './HypothesisAssessmentComposer.jsx'
 import HypothesisReassessmentRequest,{ReassessmentRequestDetail} from './HypothesisReassessmentRequest.jsx'
 import HypothesisAssessmentPanel from './HypothesisAssessmentPanel.jsx'
@@ -66,6 +67,8 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
   {canReconcile&&typeof client?.authoringContext==='function'?<HypothesisAssessmentComposer key={scope} client={client}
    investigationId={investigationId} workspaceVersionId={workspaceVersionId} userScopeKey={userScopeKey} onSaved={reload}
    onAccessFailure={code=>{setState({client,scope,status:'unavailable'});accessFailure.current?.(code)}}/>:null}
+  <HypothesisGenerationLedger key={'generations:'+scope} client={client} investigationId={investigationId} userScopeKey={userScopeKey}
+   onAccessFailure={code=>{setState({client,scope,status:'unavailable'});accessFailure.current?.(code)}}/>
   {entry?<div className="piw-card"><label htmlFor={selectId}>Saved assessment revision</label>
    <select id={selectId} value={entry.revision_id} onChange={e=>setSelected(e.target.value)}>
     {entries.map(e=><option key={e.revision_id} value={e.revision_id}>Revision {e.revision}{e.status==='withheld'?' — unavailable':''}</option>)}

@@ -259,6 +259,17 @@ test('isolated hypothesis generation authority, retained computation and restart
   assert.equal(history.entries[0].status,'withheld')
   assert.ok((await f.gateway('reassessment_backlog',[v.user,v.iid])).causes.some(c=>c.kind==='permission_changed'))
  })
+ await t.test('private operational ledger binds exact generation records and never returns lease secrets or source text',async()=>{
+  const v=await f.investigation(),g=await v.captureGeneration();const j=await claim(f,v)
+  const ledger=await f.gateway('generation_backlog',[v.user,v.iid])
+  assert.equal(ledger.entries.length,1);assert.equal(ledger.entries[0].generation_id,g.generation_id)
+  assert.equal(ledger.entries[0].state,'processing');assert.equal(ledger.current_authority_qualified,false)
+  assert.equal(ledger.automatic_retry,false)
+  assert.ok(!JSON.stringify(ledger).includes(j.lease_token),'lease secret excluded')
+  assert.ok(!JSON.stringify(ledger).includes('😀 B'),'source text excluded')
+  await v.revokeAccess()
+  await assert.rejects(f.gateway('generation_backlog',[v.user,v.iid]),/mip_database_denied_42501/)
+ })
  await t.test('revoked signing key denies claim and completion despite an outstanding lease',async()=>{
   const v=await f.investigation();await v.captureGeneration();const j=await claim(f,v)
   await f.admin('update mip_identity.key_heads set active=false')
