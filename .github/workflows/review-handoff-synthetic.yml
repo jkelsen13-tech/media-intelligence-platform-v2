@@ -19,4 +19,4 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: verifier/review-handoff
-      - run: node --test verifier/review-handoff/protocol.test.mjs
+      - run: node --test verifier/review-handoff/*.test.mjs
