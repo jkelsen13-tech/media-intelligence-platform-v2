@@ -93,6 +93,50 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   await assert.rejects(()=>f.admin('set session authorization mip_boundary_history_gateway;update mip_temporal.boundary_history_permits set revision_ids=array['+q(later)+'::uuid]'))
   await assert.rejects(()=>f.admin('set session authorization mip_boundary_history_gateway;select mip_temporal.consume_boundary_history_permit('+[x.permit().permit_id,x.permit().request_id].map(q).join(',')+')'))
  })
+ await t.test('selected reader does not evaluate unrelated revision bindings and enforces selected cardinality',async t=>{
+  const x=await context(t),later=randomUUID()
+  await f.admin('insert into mip_hypothesis.revisions select '+q(later)+',investigation_id,'+q(randomUUID())+
+   ",author_id,id,revision+1,request_arguments,assessment||jsonb_build_object('id',"+q(later)+",'revision',revision+1,'predecessor_id',id),clock_timestamp() from mip_hypothesis.revisions where id="+q(x.revisions[0])+
+   ";insert into mip_hypothesis.acceptance_bindings select (jsonb_populate_record(null::mip_hypothesis.acceptance_bindings,to_jsonb(b)||jsonb_build_object('revision_id',"+q(later)+",'metadata',jsonb_build_object('poison','unselected')))).* from mip_hypothesis.acceptance_bindings b where revision_id="+q(x.revisions[0]))
+  // The old whole-investigation reader evaluates the deliberately invalid unselected metadata.
+  await assert.rejects(()=>f.gateway('read_bound_history',[x.identity.user,x.identity.iid]))
+  let payload
+  await x.reader()(x.request,v=>{payload=v})
+  assert.deepEqual(payload.entries.map(e=>e.revision_id),[x.revisions[0]])
+  const ids=JSON.parse(await f.admin("with added as (insert into mip_hypothesis.revisions select gen_random_uuid(),r.investigation_id,gen_random_uuid(),r.author_id,r.id,r.revision+n,r.request_arguments,r.assessment,clock_timestamp() from mip_hypothesis.revisions r cross join generate_series(2,130) n where r.id="+q(x.revisions[0])+" returning id) select jsonb_agg(id) from added"))
+  await assert.rejects(()=>f.admin('set session authorization mip_hypothesis_owner;select mip_hypothesis.read_selected_bound_history('+[x.identity.user,x.identity.iid].map(q).join(',')+',array['+ids.map(q).join(',')+']::uuid[])'))
+  for(const role of ['mip_boundary_history_gateway','mip_boundary_proof_issuer','mip_boundary_permit_cleanup'])
+   await assert.rejects(()=>f.admin('set session authorization '+role+';select mip_hypothesis.read_selected_bound_history('+[x.identity.user,x.identity.iid].map(q).join(',')+',array['+q(x.revisions[0])+']::uuid[])'))
+ })
+
+ await t.test('permit metadata has no payload; concurrent user quota and expiry-only cleanup remain table-blind',async t=>{
+  const x=await context(t)
+  await x.reader()(x.request,()=>{})
+  const id=x.permit().permit_id
+  const row=JSON.parse(await f.admin('select to_jsonb(p) from mip_temporal.boundary_history_permits p where id='+q(id)))
+  assert.equal(Object.hasOwn(row,'payload'),false)
+  assert.match(row.payload_digest,/^[0-9a-f]{64}$/)
+  assert.ok(row.payload_bytes>0);assert.ok(row.payload_entries>0)
+  const copySql=(count,age=false)=>"insert into mip_temporal.boundary_history_permits select (jsonb_populate_record(null::mip_temporal.boundary_history_permits,to_jsonb(p)||jsonb_build_object('id',gen_random_uuid(),'request_id',gen_random_uuid(),'created_at',clock_timestamp()"+(age?"-interval '20 seconds'":"")+",'expires_at',clock_timestamp()"+(age?"-interval '10 seconds'":"+interval '9 seconds'")+",'consumed',false))).* from mip_temporal.boundary_history_permits p cross join generate_series(1,"+count+") n where p.id="+q(id)
+  await f.admin('set session authorization mip_temporal_advance_owner;'+copySql(30))
+  const races=await Promise.allSettled([1,2].map(()=>f.admin('set session authorization mip_temporal_advance_owner;'+copySql(1))))
+  assert.equal(races.filter(r=>r.status==='fulfilled').length,1)
+  assert.equal(await f.admin('select count(*) from mip_temporal.boundary_history_permits where user_id='+q(x.identity.user)),'32')
+  // Direct deletion of a fresh permit is denied even to the metadata owner.
+  await assert.rejects(()=>f.admin('set session authorization mip_temporal_advance_owner;delete from mip_temporal.boundary_history_permits where id='+q(id)))
+  for(const role of ['mip_boundary_history_gateway','mip_boundary_proof_issuer','mip_boundary_permit_cleanup']){
+   await assert.rejects(()=>f.admin('set session authorization '+role+';select * from mip_temporal.boundary_history_permits'))
+   if(role!=='mip_boundary_permit_cleanup')
+    await assert.rejects(()=>f.admin('set session authorization '+role+';select mip_temporal.cleanup_boundary_history_permits()'))
+  }
+  // Wait for natural expiry, then invoke the bounded custodian entrypoint.
+  await new Promise(resolve=>setTimeout(resolve,10500))
+  const removed=Number(await f.admin('set session authorization mip_boundary_permit_cleanup;select mip_temporal.cleanup_boundary_history_permits()'))
+  assert.ok(removed>0&&removed<=256)
+  assert.equal(await f.admin('select count(*) from mip_temporal.boundary_history_permits where user_id='+q(x.identity.user)),'0')
+  assert.equal(await f.admin("select rolcanlogin or rolbypassrls or rolsuper from pg_roles where rolname='mip_boundary_permit_cleanup'"),'f')
+ })
+
  await t.test('verified Auth is inside admission; alternate valid member/investigation and caller identity fields cannot impersonate',async t=>{
   const x=await context(t),other=await f.investigation();let delivered=false
   for(const request of [
