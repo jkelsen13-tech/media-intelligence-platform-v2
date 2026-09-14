@@ -45,6 +45,12 @@ export async function sourceFenceCases(t,f,{journal,runtime,session,observationE
   assert.equal(await f.admin("select count(*) from pg_roles where rolname in ('mip_temporal_registry_owner','mip_temporal_advance_owner','mip_temporal_recorder','mip_temporal_ack_gateway') and (rolcanlogin or rolsuper or rolbypassrls or rolcreaterole or rolcreatedb)"),'0')
   assert.equal(await f.admin("select pg_has_role('mip_temporal_ack_gateway','mip_temporal_advance_owner','MEMBER')"),'f')
   assert.equal(await f.admin("select rolreplication from pg_roles where rolname='mip_temporal_ack_gateway'"),'f')
+  const saved=JSON.parse(await f.admin('select to_jsonb(p) from mip_temporal.advance_permits p where request_id='+q(b.request.request)))
+  const p={session,bindingId:b.bindingId,source:b.context.source_id,stream:b.context.stream_epoch,request:b.request.request,end:b.position.end_lsn,hash:saved.delivery_hash}
+  await assert.rejects(()=>f.admin('set session authorization mip_temporal_ack_gateway;'+b.prepareSql(p)),/mip_database_denied_42501/)
+  await assert.rejects(()=>f.admin('set session authorization mip_temporal_recorder;delete from mip_temporal.advance_permits where request_id='+q(b.request.request)),/mip_database_denied_42501/)
+  await assert.rejects(()=>f.admin("set session authorization mip_temporal_ack_gateway;insert into mip_temporal.advance_receipts values("+q(b.request.request)+",'{}')"),/mip_database_denied_42501/)
+  assert.equal(await f.admin("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_temporal' and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity)"),'0')
   const before=await b.confirmed()
   await assert.rejects(()=>b.options.advance({...b.request,session:f.session}))
   await assert.rejects(()=>b.options.advance({...b.request,session:null}))

@@ -25,6 +25,7 @@ export async function pgoutputCases(t,f,runWorker){
  try {
   const relationId=await f.admin("select 'mip_hypothesis.revision_transactions'::regclass::oid::text")
   const context={source_id:randomUUID(),stream_epoch:randomUUID()},observationEpoch=f.observationEpoch
+  let lastAcknowledgement
   const boundary=await nativeAckBoundary(f,{journal,context,slot,runtime,session,observationEpoch})
   const peek=async()=>JSON.parse(await f.admin("select coalesce(jsonb_agg(encode(data,'hex') order by sequence),'[]') from pg_logical_slot_peek_binary_changes("+
    q(slot)+",null,null,'proto_version','1','publication_names',"+q(pub)+",'binary','false','streaming','false','messages','false') with ordinality as changes(lsn,xid,data,sequence);")).map(x=>Buffer.from(x,'hex'))
@@ -53,7 +54,7 @@ export async function pgoutputCases(t,f,runWorker){
      const envelope=commitEnvelope(context,c.input)
      assert.deepEqual(await journal.get(commitJournalKey(envelope)),envelope)
     }
-    await boundary.fenced(position)
+    lastAcknowledgement=await boundary.fenced(position)
     acks++;if(lose){lose=false;throw Error('synthetic_lost_source_ack')}
    }
    const run=()=>recordPgoutputBatch({frames,relationId,observationEpoch,context,journal,acknowledge})
@@ -67,6 +68,7 @@ export async function pgoutputCases(t,f,runWorker){
    const nextFrames=await peek();assert.equal(decodeRevisionCommits(nextFrames,{relationId,observationEpoch}).length,1)
    const before=await confirmed();let ack=false
    await f.admin('update mip_identity.mapping_heads set active=false where runtime='+q(runtime))
+   await assert.rejects(()=>boundary.options.advance({session,request:lastAcknowledgement.request_id}),/mip_identity_mapping_revoked/)
    await assert.rejects(()=>recordPgoutputBatch({frames:nextFrames,relationId,observationEpoch,context,journal,acknowledge:async()=>{ack=true}}))
    assert.equal(ack,false);assert.equal(await confirmed(),before)
    assert.equal(decodeRevisionCommits(await peek(),{relationId,observationEpoch}).length,1)
