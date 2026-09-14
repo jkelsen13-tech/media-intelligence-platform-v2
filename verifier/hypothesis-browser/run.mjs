@@ -1,3 +1,4 @@
+import {syntheticAppIsolation} from './appIsolation.mjs'
 import {createHash} from 'node:crypto'
 import {syntheticObservation} from '../../tests/hypothesisObservationFixture.mjs'
 import {syntheticComparisonHistory} from '../../tests/hypothesisComparisonFixture.mjs'
@@ -8,13 +9,15 @@ const require=createRequire(import.meta.url)
 const {build}=createRequire(require.resolve('vite/package.json'))('esbuild')
 const {chromium,webkit}=createRequire(process.env.MIP_BROWSER_PACKAGE+'/package.json')('playwright')
 const bundle=await build({entryPoints:['verifier/hypothesis-browser/fixture.jsx'],bundle:true,write:false,
- format:'iife',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'}})
+ // Native WebCrypto is required below; leave Node-only fallback unreachable, as Vite does.
+ format:'iife',external:['node:crypto'],platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"','import.meta.env':'{"DEV":false,"BASE_URL":"/"}'},loader:{'.css':'empty'},plugins:[syntheticAppIsolation]})
 // Actual application styles; remote font import omitted, system fallback only.
-const css=(await Promise.all(['src/styles/tokens.css','src/index.css','src/styles/investigation-workspace-panels.css'].map(p=>readFile(p,'utf8')))).map(s=>s.split('\n').filter(line=>!line.startsWith('@import ')).join('\n')).join('\n')
+const css=(await Promise.all(['src/styles/tokens.css','src/styles/workspace.css','src/index.css','src/styles/investigation-workspace-panels.css'].map(p=>readFile(p,'utf8')))).map(s=>s.split('\n').filter(line=>!line.startsWith('@import ')).join('\n')).join('\n')
 for(const [engine,launcher] of Object.entries({chromium,webkit})){
  const browser=await launcher.launch({headless:true})
  try{
   const page=await browser.newPage(),requests=[],errors=[],internalRequests=[]
+  let appDenied=false,appCalls=[]
   let comparisonMode='ready',observation=null,observationCalls=[],observationDenied=false
   const sha=s=>createHash('sha256').update(s).digest('hex')
   // Intercept a reserved synthetic origin to provide a secure WebCrypto context.
@@ -22,6 +25,23 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
   await page.route('**/*',async route=>{
    if(route.request().url()==='https://mip-synthetic.invalid/'&&route.request().isNavigationRequest()&&route.request().frame()===page.mainFrame())
     return route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic hypothesis inspection</title><div id="root"></div>'})
+   if(route.request().url()==='https://mip-synthetic.invalid/assets/mip-mobius-logo.png')
+    return route.fulfill({status:204,body:''}) // Brand bitmap excluded from synthetic layout qualification.
+   if(route.request().url()==='https://mip-synthetic.invalid/app-hypotheses'){
+    const request=route.request(),body=request.postDataJSON()
+    assert.equal(request.method(),'POST');assert.equal(request.headers()['authorization'],'Bearer synthetic-app-browser-token')
+    assert.equal(request.headers()['cookie'],undefined);assert.equal(request.headers()['referer'],undefined)
+    assert.equal(body.input.investigation_id,'11111111-1111-4111-8111-111111111111')
+    appCalls.push(body.action)
+    const f=syntheticComparisonHistory()
+    f.history.investigation_id=body.input.investigation_id;f.backlog.investigation_id=body.input.investigation_id
+    for(const entry of f.history.entries)entry.assessment.question_id=body.input.investigation_id
+    assert.ok(['history','backlog','review_history'].includes(body.action))
+    const reviewHistory={contract_version:'mip_hypothesis_review_history_v1',investigation_id:body.input.investigation_id,
+     entries:[],latest_receipt_id:null,current_user_only:true,is_approval:false,resolves_reassessment:false,publication_allowed:false}
+    return route.fulfill({status:appDenied?403:200,contentType:'application/json',headers:{'cache-control':'private, no-store'},
+     body:JSON.stringify(appDenied?{error:{code:'access_denied'}}:{data:body.action==='history'?f.history:body.action==='backlog'?f.backlog:reviewHistory})})
+   }
    if(route.request().url()==='https://mip-synthetic.invalid/hypotheses'){
     const request=route.request(),body=request.postDataJSON()
     assert.equal(request.method(),'POST')
@@ -69,6 +89,7 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    comparisonMode='ready';observation=null;observationCalls=[];observationDenied=false
    await page.setViewportSize({width,height:1000})
    await page.goto('https://mip-synthetic.invalid/')
+   assert.equal(await page.evaluate(()=>!!globalThis.crypto?.subtle),true)
    await page.addStyleTag({content:css})
    await page.addScriptTag({content:bundle.outputFiles[0].text})
    const region=page.getByRole('region',{name:'Hypothesis worker attempts'})
@@ -298,15 +319,52 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    await page.evaluate(()=>window.renderSyntheticObservations(null))
    await observations.waitFor({state:'detached'})
 
-
-
+   appDenied=false;appCalls=[]
+   await page.evaluate(()=>window.renderSyntheticApp(false))
+   await page.locator('[data-workspace-status="ready"]').waitFor()
+   assert.equal(appCalls.length,0,'normal App default endpoint stays closed')
+   await page.evaluate(()=>window.renderSyntheticApp(true))
+   const appHistory=page.getByRole('region',{name:'Hypothesis assessment history',exact:true})
+   await appHistory.getByText('Later synthetic reasoning: the alternatives still remain difficult to distinguish.',{exact:true}).waitFor()
+   assert.ok(appCalls.includes('history'));assert.ok(appCalls.includes('backlog'))
+   const appReason=appHistory.getByLabel('Reason for reconsideration',{exact:true})
+   await appReason.selectOption('methodology')
+   assert.equal(await appReason.inputValue(),'methodology')
+   await appHistory.getByText('Selected reason: Method or reasoning needs reconsideration',{exact:true}).waitFor()
+   assert.equal(await appHistory.evaluate(el=>el.scrollWidth>el.clientWidth+1),false,'longest reason must not overflow the history panel')
+   await appReason.focus();await page.keyboard.press('ArrowUp')
+   assert.equal(await appReason.inputValue(),'shared_origin')
+   assert.ok((await appReason.boundingBox()).height>=44)
+   await appHistory.getByLabel('What needs reconsideration, and why?',{exact:true}).fill('Synthetic concern only; no request is submitted.')
+   await appHistory.scrollIntoViewIfNeeded()
+   assert.equal(await appHistory.isVisible(),true)
+   const appLayout=await appHistory.evaluate(el=>({width:el.clientWidth,scroll:el.scrollWidth,
+    elements:[el,...el.querySelectorAll('*')].filter(n=>n.scrollWidth>n.clientWidth+1||n.getBoundingClientRect().right>el.getBoundingClientRect().right+1).map(n=>({
+     tag:n.tagName,classes:n.className,text:n.textContent?.slice(0,100),width:n.clientWidth,scroll:n.scrollWidth,
+     right:n.getBoundingClientRect().right,display:getComputedStyle(n).display,minWidth:getComputedStyle(n).minWidth,
+     whiteSpace:getComputedStyle(n).whiteSpace,grid:getComputedStyle(n).gridTemplateColumns,position:getComputedStyle(n).position})).slice(0,20)}))
+   if(appLayout.scroll>appLayout.width+1){
+    console.log('MIP_SYNTHETIC_NORMAL_APP_LAYOUT_FAILURE='+JSON.stringify({engine,viewportWidth:width,...appLayout}))
+    console.log('MIP_SYNTHETIC_NORMAL_APP_LAYOUT_FAILURE_IMAGE_'+engine+'='+(await page.screenshot({type:'jpeg',quality:70})).toString('base64'))
+   }
+   assert.equal(appLayout.scroll>appLayout.width+1,false)
+   if(width===390)console.log('MIP_SYNTHETIC_NORMAL_APP_HISTORY_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+   appDenied=true
+   await appHistory.getByRole('button',{name:'Refresh assessment history',exact:true}).click()
+   await page.getByRole('heading',{name:'This investigation is unavailable',exact:true}).waitFor()
+   await appHistory.waitFor({state:'detached'})
+   assert.equal(await page.locator('#piw-hypotheses').count(),0)
+   if(width===390)console.log('MIP_SYNTHETIC_NORMAL_APP_DENIAL_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+   await page.evaluate(()=>window.renderSyntheticApp(true,true))
+   await page.getByRole('heading',{name:'Sign in to read assigned investigations',exact:true}).waitFor()
+   assert.equal(await appHistory.count(),0)
 
   }
   assert.deepEqual(requests,[]);assert.deepEqual(errors,[])
   assert.ok(internalRequests.filter(x=>x==='history').length>=12)
   assert.ok(internalRequests.filter(x=>x==='backlog').length>=12)
   console.log('MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS='+JSON.stringify({engine,widths:[1280,768,390,320],
-   committedObservationReadback:true,observationExactRetry:true,observationRestartRecovery:true,observationCurrentDenialCleared:true,configuredBrowserHttp:true,interceptedSyntheticHttpOnly:true,savedRevisionComparison:true,comparisonPermissionRaceCleared:true,comparisonNoSourceDeletionClaim:true,keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
+   normalAppConfiguredHistoryVisible:true,normalAppDefaultClosed:true,normalAppDenialCleared:true,normalAppLogoutCleared:true,publicSurfacesIsolated:true,brandBitmapExcluded:true,committedObservationReadback:true,observationExactRetry:true,observationRestartRecovery:true,observationCurrentDenialCleared:true,configuredBrowserHttp:true,interceptedSyntheticHttpOnly:true,savedRevisionComparison:true,comparisonPermissionRaceCleared:true,comparisonNoSourceDeletionClaim:true,keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
    noAutomaticRetry:true,deniedRecordsCleared:true,logoutCleared:true,networkRequests:0,
    explicitReviewAcknowledgement:true,reviewExactRetry:true,reviewReadbackRequired:true,assessmentUnchangedByReview:true,composerExactUnicodeSpan:true,hashMismatchDenied:true,linkedReasoning:true,lostAcknowledgementExactRetry:true,syntheticReceiptOnly:true,savedRevisionReachableByScrolling:true,savedAssessmentDisclosure:true,separateMissingEstimates:true,sourceClocks:true,pendingReassessment:true,systemFontFallback:true,scope:'synthetic_ledger_saved_assessment_and_composer',productionQualified:false}))
  }finally{await browser.close()}

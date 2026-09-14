@@ -621,3 +621,24 @@
 .piw-market-card blockquote { margin: 12px 0; padding-inline-start: 12px; border-inline-start: 2px solid var(--border-strong); white-space: pre-wrap; overflow-wrap: anywhere; }
 .piw-market-card summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
 .piw-market-card li { min-width: 0; }
+
+/* The reassessment form also appears inside the normal App's narrow reading
+   column. Bound controls to that column, not their longest option's intrinsic
+   width. Keep the full label/options in the native accessible control. */
+.piw-hypothesis-reassessment { font-size: 13px; line-height: 1.5; }
+.piw-hypothesis-reassessment h3 { font-size: 16px; margin: 0 0 12px; }
+.piw-hypothesis-reassessment p { margin: 8px 0; }
+.piw-hypothesis-reassessment form { min-width: 0; }
+.piw-hypothesis-reassessment label { display: block; margin: 12px 0 6px; }
+.piw-hypothesis-reassessment :is(select,textarea,button) { box-sizing: border-box; min-width: 0; max-width: 100%; min-height: 44px; padding: 8px 12px; font: inherit; border: 1px solid var(--border-color); border-radius: 6px; }
+.piw-hypothesis-reassessment :is(select,textarea) { display: block; width: 100%; color: var(--text-primary); background: var(--bg-inset); }
+.piw-hypothesis-reassessment textarea { resize: vertical; }
+.piw-hypothesis-reassessment button { white-space: normal; color: var(--cat-blue); background: var(--bg-selected); cursor: pointer; }
+.piw-hypothesis-reassessment button:disabled { opacity: .6; cursor: not-allowed; }
+.piw-hypothesis-reassessment :is(select,textarea,button):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.piw-hypothesis-reassessment select {
+ appearance: none; overflow: hidden; text-overflow: ellipsis; padding-inline-end: 32px;
+ background-image: linear-gradient(45deg, transparent 50%, var(--text-primary) 50%), linear-gradient(135deg, var(--text-primary) 50%, transparent 50%);
+ background-position: right 16px center, right 11px center;
+ background-size: 5px 5px; background-repeat: no-repeat;
+}

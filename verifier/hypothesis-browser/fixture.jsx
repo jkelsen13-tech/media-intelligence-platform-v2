@@ -1,3 +1,5 @@
+import App from '../../src/App.jsx'
+import {readInvestigationWorkspacePreview,FIXTURE_USER} from '../../src/lib/investigationWorkspaceFixtures.js'
 import Observations from '../../src/components/HypothesisObservations.jsx'
 // Synthetic UI only. No backend, credentials, source text or production route.
 import React from 'react'
@@ -97,3 +99,11 @@ window.renderSyntheticObservations=(scope='synthetic-reviewer')=>{
   <Observations client={client} investigationId={id(1)} userScopeKey={scope}
    onAccessFailure={code=>window.observationSynthetic.denials.push(code)}/></main>)
 }
+
+// Explicit synthetic props only; production App defaults remain unchanged.
+const appPreview=readInvestigationWorkspacePreview('?privateInvestigationFixture=populated',{DEV:true})
+window.renderSyntheticApp=(configured=true,signedOut=false)=>root.render(<App
+ privateInvestigationPreview={appPreview}
+ hypothesisEndpoint={configured?'https://mip-synthetic.invalid/app-hypotheses':null}
+ authSessionOverride={signedOut?{loading:false,user:null,session:null}:{loading:false,user:FIXTURE_USER,
+ session:{user:FIXTURE_USER,access_token:'synthetic-app-browser-token',expires_at:Math.floor(Date.now()/1000)+3600}}}/>)
