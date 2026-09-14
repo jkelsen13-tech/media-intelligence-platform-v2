@@ -134,7 +134,7 @@ begin
   end if;
  end loop;
  -- Canonical unique bindings keep exact retries stable without multiplying inherited references.
- select coalesce(jsonb_agg(v order by v::text),'[]'::jsonb) into bindings
+ select coalesce(jsonb_agg(unique_bindings.v order by unique_bindings.v::text),'[]'::jsonb) into bindings
   from (select distinct value v from jsonb_array_elements(bindings)) unique_bindings;
  return bindings;
 end $$;
