@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'supabase/qualification/hypothesis-assessments/**'
+      - 'supabase/qualification/markets-evidence/**'
+      - 'supabase/functions/_shared/marketsEvidenceContract.mjs'
       - 'supabase/qualification/mip-cutover-authority/**'
       - 'supabase/functions/source-comparison-generation-candidate/**'
       - 'src/lib/hypothesisAssessment*.js'
