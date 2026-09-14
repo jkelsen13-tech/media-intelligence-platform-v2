@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "recovery_request_id": "pr157-eb0d7ac-recovery-1",
+  "reservation_commit": "6845079944a041a45f46bf56c2aa914f2fe25786",
+  "original_request_id": "pr157-eb0d7ac-independent-1",
+  "original_run_id": "run-a9f26c91-1a00-474e-8dad-777fb1e5691e",
+  "packet_sha256": "167c819ea1e147eb45db06520f67be78baa93b1993991cf4035f88abfe1d71fa",
+  "provider_preflight": {
+    "preflight": {
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "id": "run-a9f26c91-1a00-474e-8dad-777fb1e5691e",
+            "agentId": "bc-eb0d7acf-9050-4b4a-81bf-bdc9b3d3f04e",
+            "status": "FINISHED",
+            "createdAt": "2026-09-14T10:26:31.619Z",
+            "updatedAt": "2026-09-14T10:30:12.478Z",
+            "durationMs": 220293
+          }
+        ]
+      }
+    },
+    "post_started_at": "2026-09-14T10:34:50.189Z"
+  },
+  "provider_create_run": {
+    "continuation": {
+      "status": 201,
+      "body": {
+        "run": {
+          "id": "run-9fca25dc-5e65-441b-823e-d77a85814119",
+          "agentId": "bc-eb0d7acf-9050-4b4a-81bf-bdc9b3d3f04e",
+          "status": "CREATING",
+          "createdAt": "2026-09-14T10:34:50.945Z",
+          "updatedAt": "2026-09-14T10:34:50.945Z"
+        }
+      }
+    }
+  },
+  "continuation_count": 1,
+  "unchanged_packet": true,
+  "no_local_files": true
+}
