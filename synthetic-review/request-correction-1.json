@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "id": "mip-supervised-synthetic-boundary-20260914-correction-1",
+  "synthetic": true,
+  "scope": "synthetic mechanism only; no MIP project source or real material",
+  "production_authority": false,
+  "requirement": "For numeric age, eligible if and only if age >= 18.",
+  "source": {
+    "language": "javascript",
+    "filename": "fictionalEligibility.js",
+    "text": "export function eligible(age) { return age >= 18; }\n"
+  },
+  "review_instruction": "Independently inspect the source against the requirement. Do not trust implementer assertions. Return PASS, FAIL or BLOCKED; identify a concrete counterexample if a defect exists. Do not correct the source. This synthetic review cannot approve MIP or production.",
+  "remediation": {
+    "finding_id": "AGE_EQ_18_EXCLUDED",
+    "prior_candidate": "98c5a49ec46d46bdbe2e05db1e0e7aba79d5daf8",
+    "result_commit": "10da84f1a629cf5e479e21af7d2bc8992a6bf043",
+    "result_path": "synthetic-review/result-1.json"
+  }
+}
