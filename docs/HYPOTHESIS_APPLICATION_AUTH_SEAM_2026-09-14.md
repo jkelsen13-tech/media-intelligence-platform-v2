@@ -1,0 +1,11 @@
+# Optional hypothesis application/Auth seam — 2026-09-14
+
+App now accepts an optional hypothesisEndpoint prop and passes the resulting current-session client into the existing private workspace. The default remains null. No URL, provider, permission, production identity or credential is supplied or enabled.
+
+useHypothesisSessionClient requires the private view to be active, Auth loading to be complete, matching session/UI user identity, a nonempty access token and an unexpired session. These browser checks prevent accidental credential mixing; they do not authenticate a database principal. The existing server handler must independently verify the token and current assignments.
+
+Each endpoint/account/token/expiry/view transition produces a new binding. Old requests are aborted and old clients reject new calls. Descriptor checks suppress results during render-to-effect races, before cleanup runs. An expiry timer removes the client without waiting for another request or provider event. Effect-owned transports are created again on effect setup and disposed on cleanup. No automatic request, refresh, retry, browser storage or subscription to a new provider is introduced. Token refresh conservatively invalidates the previous client; ambiguous writes require current-authority server receipt recovery or explicitly recorded exact retry, never automatic resubmission.
+
+Six synthetic hook tests cover default denial, mismatched account and expiry, request credentials, logout with pending fetch, token/account replacement, endpoint/view changes and expiry without an Auth event. Existing native HTTP/store and worker tests remain required. Tests use synthetic tokens and in-process fetch only. No production-shaped Auth verification is claimed.
+
+Remaining production decisions: the approved endpoint/provider and account mapping, owner-selected workload/custody boundaries and separately authorized bounded trial. Existing Auth provider event ordering and intended-host behavior require verification; this UI seam does not certify them. Semantic methods/F2, actual material admission, historical/restore qualification, independent review and production release remain separate gates. Cutover stays ON HOLD; CC remains closed3/3; project files stay remote.

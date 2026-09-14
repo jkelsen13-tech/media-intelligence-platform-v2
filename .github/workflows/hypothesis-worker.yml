@@ -1,0 +1,50 @@
+name: Hypothesis durable worker isolation
+on:
+  pull_request:
+    paths:
+      - 'supabase/qualification/hypothesis-assessments/**'
+      - 'supabase/qualification/mip-cutover-authority/**'
+      - 'supabase/functions/source-comparison-generation-candidate/**'
+      - 'src/lib/hypothesisAssessment*.js'
+      - 'verifier/hypothesis-worker/**'
+      - 'tests/hypothesisAuthProviderFixture.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/hypothesis-worker.yml'
+permissions:
+  contents: read
+jobs:
+  worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: mip-disposable-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - name: Install locked verifier dependencies without package scripts
+        run: npm ci --ignore-scripts --no-audit
+      - name: Pull isolated worker runtime
+        run: docker pull node:24-alpine
+      - name: Enable metadata decoding in the existing disposable service
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+          MIP_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
+        run: node verifier/hypothesis-worker/prepareLogical.mjs
+      - name: Synthetic native authority and actual worker restart tests
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+          MIP_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
+        run: node --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs

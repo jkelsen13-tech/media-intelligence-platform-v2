@@ -1,0 +1,39 @@
+{
+  "record_type": "actual_owner_instruction",
+  "record_id": "cc-by-4-en-legalcode-text-only-admission-v1",
+  "source": "Owner message in this conversation: MIP — APPROVE BOUNDED REAL-MATERIAL PERMISSION TEST",
+  "proposal_id": "cc-by-4-en-legalcode-text-only",
+  "owner_designation": "MIP platform owner",
+  "signature": null,
+  "production_principal": null,
+  "credential": null,
+  "source_url": "https://creativecommons.org/licenses/by/4.0/legalcode.en",
+  "material_version": "4.0 English",
+  "selection": "Section 1: Definitions, text only",
+  "operations": [
+    "ingestion",
+    "retention",
+    "analysis",
+    "excerpt_display"
+  ],
+  "audience": "isolated_internal_review",
+  "processing": "existing GitHub-hosted disposable environment; one qualification batch",
+  "privacy_approval": "limited to the normative definitions section and isolated internal testing",
+  "rights_evidence": [
+    "https://creativecommons.org/policies/",
+    "https://creativecommons.org/terms/",
+    "https://creativecommons.org/publicdomain/zero/1.0/legalcode.en"
+  ],
+  "effective_date": null,
+  "actual_instruction_excerpt": "I approve proposal cc-by-4-en-legalcode-text-only for the limited source-admission, privacy and processing scope below.",
+  "scope_constraints": [
+    "Transient page retrieval/parsing solely to extract Section 1",
+    "Exclude navigation, logos, images, branding assets, contact details and other sections",
+    "Stop on material discrepancy",
+    "No material text in public repository, logs, artifacts or external-model requests",
+    "Remove transient copies when the batch completes",
+    "No public/full-content display, redistribution, historical publisher rights, spatial admission or F2 qualification",
+    "No production credentials, changes, schedules, cutover or local project storage"
+  ],
+  "approval_interpretation": "Actual bounded admission/privacy authorization, separate from publisher rights. No signature, identity attestation or effective date inferred."
+}

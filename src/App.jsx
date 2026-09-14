@@ -1,3 +1,4 @@
+import {useHypothesisSessionClient} from './lib/useHypothesisSessionClient.js'
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import GraphView from './graph/GraphView'
 import Legend from './graph/Legend'
@@ -211,6 +212,7 @@ export default function App({
   investigationEvidenceChecksClient = null,
   investigationEvidenceReviewsClient = null,
   authSessionOverride = null,
+  hypothesisEndpoint = null,
   privateInvestigationPreview = null,
 } = {}) {
   const [graph, setGraph] = useState(null)
@@ -316,6 +318,7 @@ export default function App({
     }
   }, [privateInvestigationPreview, investigationWorkspaceClient, investigationEvidenceChecksClient, investigationEvidenceReviewsClient, authSessionOverride])
   const auth = authSessionOverride ?? devPreview?.auth ?? liveAuth
+  const hypothesisClient = useHypothesisSessionClient({endpoint:hypothesisEndpoint,auth,active:view===PRIVATE_INVESTIGATION_VIEW})
   const workspaceClient = investigationWorkspaceClient
     ?? devPreview?.client
     ?? mipBackend.investigations.workspace
@@ -1240,6 +1243,7 @@ export default function App({
           view === PRIVATE_INVESTIGATION_VIEW ? (
             <PrivateInvestigationInspector
               workspace={privateWorkspace}
+            hypothesisClient={hypothesisClient}
               publicNode={publicInvestigationNode}
               onOpenPublicGraphNode={openPrivatePublicGraphNode}
             />
