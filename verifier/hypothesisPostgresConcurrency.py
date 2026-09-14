@@ -515,6 +515,28 @@ class Hypothesis(unittest.TestCase):
         scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,"user_id":self.user,"access_role":"viewer","reason":"Synthetic."})
         with self.assertRaisesRegex(RuntimeError,"request denied"):self.session().execute(self.human_request())
         self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_requests"),"1")
+    def test_human_request_completes_without_fabricated_source_or_workspace_changes(self):
+        self.first=json.loads(self.a.execute(self.append()));self.new_version=self.vid
+        baseline=self.admin("select (select count(*) from evidence_pipeline.evidence_changes)||':'||"+
+            "(select count(*) from evidence_pipeline.assessments)||':'||(select count(*) from evidence_pipeline.investigation_versions)")
+        self.grant_observed_fixture_operations(self.vid)
+        receipt=json.loads(self.a.execute(self.human_request()))
+        self.completion_assessment=copy.deepcopy(self.assessment)
+        cutoff=self.admin("""select to_char(clock_timestamp() at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"')""")
+        self.completion_assessment.update(revision=2,predecessor_id=self.first["assessment"]["id"],knowledge_cutoff=cutoff,completed_at=cutoff,
+            revision_trigger="methodology",revision_effect="unchanged",revision_reason="Synthetic reconsideration; same retained inputs.",
+            reassessment_causes=[{"cause_id":receipt["cause_id"],"reason":"Synthetic concern considered; no method qualification or changed evidence asserted."}])
+        self.completion_request=str(uuid.uuid4())
+        result=json.loads(self.a.execute(self.complete()))
+        self.assertTrue(result["completed_reassessment"]);self.assertFalse(result["publication_allowed"])
+        self.assertEqual(result["assessment"]["evidence"],self.first["assessment"]["evidence"])
+        self.assertEqual(self.admin("select (select count(*) from evidence_pipeline.evidence_changes)||':'||"+
+            "(select count(*) from evidence_pipeline.assessments)||':'||(select count(*) from evidence_pipeline.investigation_versions)"),baseline)
+        causes=json.loads(self.a.execute(self.backlog()))["causes"]
+        self.assertEqual(len(causes),1);self.assertEqual(causes[0]["kind"],"human_reconsideration")
+        self.assertEqual(causes[0]["state"],"reassessment_recorded")
+        self.assertEqual(json.loads(self.b.execute(self.complete()))["completion_receipt"],result["completion_receipt"])
+
     def test_human_request_first_blocks_completion_with_old_cause_set(self):
         self.prepare_completion();self.b.execute("begin;");request=json.loads(self.b.execute(self.human_request()))
         self.a.start(self.complete());self.blocked(self.a,self.b);self.b.execute("commit;")
