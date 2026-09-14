@@ -1,8 +1,9 @@
+import {restartRemoteStore} from '../integrated/remoteStoreRestart.mjs'
 // Native incarnation guards in the disposable database; registrations and mismatches are synthetic.
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {readFile} from 'node:fs/promises'
-import {quote as q} from '../integrated/transport.mjs'
+import {quote as q,raw,guard} from '../integrated/transport.mjs'
 import {hold,blocked} from './fixture.mjs'
 import {createIncarnationBoundTransport} from '../../supabase/qualification/hypothesis-assessments/sourceIncarnation.mjs'
 export async function incarnationCases(t,f,staged){
@@ -98,4 +99,54 @@ export async function incarnationCases(t,f,staged){
    assert.equal(await f.admin('select count(*) from mip_temporal.covered_permits where request_id='+q(request.request)),'1')
   }finally{if(!finished)await held.finish(false)}
  })
+ await t.test('actual database clone preserves source records but cannot reuse the original configured source binding',async t=>{
+  guard()
+  if(!/^mip_integrated_[0-9a-f]{32}$/.test(f.db))throw Error('mip_disposable_database_required')
+  const {b,id,request,c}=await prepared(t)
+  const clone='mip_integrated_'+randomUUID().replaceAll('-','')
+  // Database template copy stays inside this workflow's disposable service. Never force-disconnect a source.
+  await raw('postgres','create database '+clone+' template '+f.db+';')
+  try{
+   const metadata=await f.admin('select jsonb_build_object('+[
+    q('registration'),'(select to_jsonb(r) from mip_temporal.source_incarnations r where binding_id='+q(b.bindingId)+')',
+    q('capture_hash'),'(select frame_hash from mip_temporal.stream_captures where id='+q(c.id)+')',
+    q('permit_count'),'(select count(*) from mip_temporal.covered_permits where request_id='+q(request.request)+')'].join(',')+');')
+   const copied=await raw(clone,'select jsonb_build_object('+[
+    q('registration'),'(select to_jsonb(r) from mip_temporal.source_incarnations r where binding_id='+q(b.bindingId)+')',
+    q('capture_hash'),'(select frame_hash from mip_temporal.stream_captures where id='+q(c.id)+')',
+    q('permit_count'),'(select count(*) from mip_temporal.covered_permits where request_id='+q(request.request)+')'].join(',')+');')
+   assert.deepEqual(JSON.parse(copied),JSON.parse(metadata))
+   const originalOid=await raw('postgres','select oid::text from pg_database where datname='+q(f.db))
+   const cloneOid=await raw('postgres','select oid::text from pg_database where datname='+q(clone))
+   assert.notEqual(cloneOid,originalOid)
+   await assert.rejects(()=>raw(clone,'set session authorization mip_temporal_ack_gateway;select mip_temporal.advance_incarnation('+
+    [request.session,request.request,id].map(q).join(',')+');'),/mip_temporal_binding_denied/)
+   assert.equal(await raw(clone,'select count(*) from mip_temporal.stream_checkpoints where capture_id='+q(c.id)),'0')
+   assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
+   // Original source remains usable; clone rejection is not deletion, cancellation or global revocation.
+   await b.consume(c,{prepare:transport(id).prepare,advance:transport(id).advance})
+   assert.equal(await b.checkpointCount(),'1')
+  }finally{
+   await raw('postgres','drop database '+clone+';')
+  }
+ })
+ await t.test('actual database server restart preserves durable work but denies old incarnation acceptance after fresh authentication',async t=>{
+  const {b,id,api,request,c}=await prepared(t)
+  const before=await f.admin('select pg_postmaster_start_time()::text')
+  const registration=await f.admin('select to_jsonb(r) from mip_temporal.source_incarnations r where binding_id='+q(b.bindingId))
+  const captureBefore=await f.admin('select frame_hash from mip_temporal.stream_captures where id='+q(c.id))
+  await restartRemoteStore()
+  const after=await f.admin('select pg_postmaster_start_time()::text')
+  assert.notEqual(after,before)
+  assert.equal(await f.admin('select to_jsonb(r) from mip_temporal.source_incarnations r where binding_id='+q(b.bindingId)),registration)
+  assert.equal(await f.admin('select frame_hash from mip_temporal.stream_captures where id='+q(c.id)),captureBefore)
+  assert.equal(await f.admin('select count(*) from mip_temporal.covered_permits where request_id='+q(request.request)),'1')
+  await b.refresh()
+  await assert.rejects(()=>api.advance({...request,session:b.session()}),/mip_source_native_identity_changed/)
+  await assert.rejects(()=>api.capture({session:b.session(),bindingId:b.bindingId,before:b.before,request:randomUUID()}),/mip_source_native_identity_changed/)
+  assert.equal(await b.checkpointCount(),'0')
+  assert.equal(await f.admin('select incarnation_id::text from mip_temporal.source_incarnations where binding_id='+q(b.bindingId)),id)
+  assert.equal(await f.admin('select count(*) from mip_temporal.advance_receipts where request_id='+q(request.request)),'0')
+ })
+
 }
