@@ -135,6 +135,7 @@ begin
  if not(s.location=any(p.locations)) or not(s.codec=any(p.codecs)) or not(s.tier=any(p.tiers)) then raise exception 'mip_cas_representation_unverified';end if;
  select * into o from mip_cas.objects where hash=r.hash;
  if not found then raise exception 'mip_cas_object_unavailable';end if;
+ if o.raw_size>p.max_raw or octet_length(s.encoded)>p.max_encoded then raise exception 'mip_cas_representation_unverified';end if;
  result:=jsonb_build_object('ref_id',r.id,'hash',r.hash,'raw_size',o.raw_size,'provenance',r.provenance,'tier',s.tier,'version',s.version,'policy_version',p.version,'location',s.location,'max_raw',p.max_raw,'max_encoded',p.max_encoded,'max_page',p.max_page,'allowed_locations',p.locations,'allowed_codecs',p.codecs,'allowed_tiers',p.tiers,'production_qualified',false,'publication_allowed',false,'rights_qualified',false,'codec_qualified',false,'source_identity_qualified',false,'temporal_provenance_qualified',false);
  if level_name='metadata' then return result;end if;
  if level_name='index' then
@@ -171,6 +172,7 @@ begin
  select * into strict r from mip_cas.refs where investigation=i and logical_key=k;
  perform mip_cas.check_source(i,r.provenance,r.hash);
  select * into s from mip_cas.representations where hash=r.hash for update;
+ if not found or not(s.codec=any(p.codecs)) or not(s.location=any(p.locations)) or not(s.tier=any(p.tiers)) or octet_length(s.encoded)>p.max_encoded or not exists(select 1 from mip_cas.objects where hash=r.hash and raw_size<=p.max_raw) then raise exception 'mip_cas_representation_unverified';end if;
  if expected is null or s.version<>expected or s.tier=target then raise exception 'mip_cas_transition_conflict';end if;
  -- Physical representation is global, but a user may not change availability for another scope.
  if exists(select 1 from mip_cas.refs where hash=r.hash and investigation<>i) then raise exception 'mip_cas_shared_tier_custodian_required';end if;
@@ -189,14 +191,20 @@ begin
  select * into j from mip_cas.jobs where user_id=u and request_id=request;
  if found then
   if j.ref_id<>r.id or j.expected_version<>expected or j.expires_at<=clock_timestamp() then raise exception 'mip_cas_replay';end if;
+  if j.state='pending' then
+   select * into s from mip_cas.representations where hash=r.hash for share;
+   if not found or not(s.codec=any(p.codecs)) or not(s.location=any(p.locations)) or not(s.tier=any(p.tiers)) or octet_length(s.encoded)>p.max_encoded or not exists(select 1 from mip_cas.objects where hash=r.hash and raw_size<=p.max_raw) then raise exception 'mip_cas_representation_unverified';end if;
+   if s.version<>j.expected_version or s.tier not in('cold','deep_archive') then raise exception 'mip_cas_transition_conflict';end if;
+  end if;
   if j.state='completed' then
-   perform 1 from mip_cas.representations where hash=r.hash and version=j.expected_version+1 and tier='warm' and codec=any(p.codecs) and location=any(p.locations) and tier=any(p.tiers) and octet_length(encoded)<=p.max_encoded for share;
+   perform 1 from mip_cas.representations where hash=r.hash and version=j.expected_version+1 and tier='warm' and codec=any(p.codecs) and location=any(p.locations) and tier=any(p.tiers) and octet_length(encoded)<=p.max_encoded and exists(select 1 from mip_cas.objects o where o.hash=r.hash and o.raw_size<=p.max_raw) for share;
    if not found then raise exception 'mip_cas_completed_job_stale';end if;
   end if;
   return jsonb_build_object('job_id',j.id,'state',j.state);
  end if;
  if (select count(*) from mip_cas.jobs where user_id=u and expires_at>clock_timestamp())>=p.max_jobs then raise exception 'mip_cas_job_quota';end if;
  select * into s from mip_cas.representations where hash=r.hash for update;
+ if not found or not(s.codec=any(p.codecs)) or not(s.location=any(p.locations)) or not(s.tier=any(p.tiers)) or octet_length(s.encoded)>p.max_encoded or not exists(select 1 from mip_cas.objects where hash=r.hash and raw_size<=p.max_raw) then raise exception 'mip_cas_representation_unverified';end if;
  if expected is null or s.version<>expected or s.tier not in('cold','deep_archive') then raise exception 'mip_cas_transition_conflict';end if;
  insert into mip_cas.jobs values(gen_random_uuid(),r.id,u,request,clock_timestamp()+interval '30 seconds',expected,'pending') returning * into j;
  return jsonb_build_object('job_id',j.id,'state',j.state);
@@ -210,7 +218,7 @@ begin
  select * into j from mip_cas.jobs where id=job for update;
  if not found or j.ref_id<>r.id or j.user_id<>u or j.expires_at<=clock_timestamp() then raise exception 'mip_cas_job_denied';end if;
  if j.state='completed' then
-  perform 1 from mip_cas.representations where hash=r.hash and version=j.expected_version+1 and tier='warm' and codec=any(p.codecs) and location=any(p.locations) and tier=any(p.tiers) and octet_length(encoded)<=p.max_encoded for share;
+  perform 1 from mip_cas.representations where hash=r.hash and version=j.expected_version+1 and tier='warm' and codec=any(p.codecs) and location=any(p.locations) and tier=any(p.tiers) and octet_length(encoded)<=p.max_encoded and exists(select 1 from mip_cas.objects o where o.hash=r.hash and o.raw_size<=p.max_raw) for share;
   if not found then raise exception 'mip_cas_completed_job_stale';end if;
   return;
  end if;
