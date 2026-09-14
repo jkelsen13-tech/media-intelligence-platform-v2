@@ -274,6 +274,11 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    await observations.getByRole('heading',{name:'What explains the fictional contract award?',exact:true}).waitFor()
    assert.equal(await observations.evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false)
+   const revisionControl=observations.getByRole('combobox',{name:'Revision in this view',exact:true})
+   assert.equal(await revisionControl.evaluate(el=>getComputedStyle(el).appearance),'none')
+   assert.ok((await revisionControl.boundingBox()).height>=44)
+   await revisionControl.focus();await page.keyboard.press('ArrowUp')
+   assert.equal(await revisionControl.inputValue(),observation.view.entries[0].revision_id)
    if(width===390)console.log('MIP_SYNTHETIC_OBSERVATION_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
    // Recreate the component and transport; the simulated remote store persists.
    await page.evaluate(()=>window.renderSyntheticObservations(null))

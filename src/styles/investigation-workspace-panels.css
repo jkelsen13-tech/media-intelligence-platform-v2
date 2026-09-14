@@ -593,3 +593,10 @@
 .piw-hypothesis-observations > ul { margin: 12px 0; padding-inline-start: 20px; }
 .piw-hypothesis-observations summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
 .piw-hypothesis-observations :is(button,select,summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.piw-hypothesis-observations select {
+ appearance: none; overflow: hidden; text-overflow: ellipsis; padding-inline-end: 32px;
+ background-image: linear-gradient(45deg, transparent 50%, var(--text-primary) 50%), linear-gradient(135deg, var(--text-primary) 50%, transparent 50%);
+ background-position: right 16px center, right 11px center;
+ background-size: 5px 5px; background-repeat: no-repeat;
+}

@@ -82,7 +82,7 @@ export default function HypothesisObservations({client,investigationId,userScope
   {view?<div>
    <h4>Verified saved view</h4>
    <p>Observed between {retainedDateDisplay(view.receipt.observation_started_at).label} and {retainedDateDisplay(view.receipt.observation_finished_at).label}.</p>
-   <p>Only the {view.entries.length} revisions in this recorded view are shown. Later revisions are not added to it.</p>
+   <p>This view contains {view.entries.length} completed revision{view.entries.length===1?'':'s'}. Later revisions are not added to it.</p>
    {entry?<label>Revision in this view
     <select value={entry.revision_id} onChange={e=>setSelected(e.target.value)}>{view.entries.map(e=><option key={e.revision_id} value={e.revision_id}>Revision {e.revision}{e.status==='withheld'?' — unavailable':''}</option>)}</select>
    </label>:<p>No completed revisions were present in this recorded view.</p>}
