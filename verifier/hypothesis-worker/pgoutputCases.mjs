@@ -18,6 +18,9 @@ export async function pgoutputCases(t,f,runWorker){
   keyProvider:r=>{if(r!==runtime)throw Error('mip_wrong_runtime');return material}})
  const pub='synthetic_revision_metadata',slot='synthetic_revision_'+randomUUID().replaceAll('-','')
  await f.admin('create publication '+pub+' for table mip_hypothesis.revision_transactions (revision_id,epoch,creator_xid) with (publish='+q('insert')+');')
+ // Run additional fixture generations before opening the original exact-one-revision stream.
+ await sourceFenceCases(t,f,{journal,runtime,session,observationEpoch:f.observationEpoch,
+  relationId:await f.admin("select 'mip_hypothesis.revision_transactions'::regclass::oid::text"),pub,runWorker})
  await f.admin('select slot_name from pg_create_logical_replication_slot('+q(slot)+','+q('pgoutput')+');')
  try {
   const relationId=await f.admin("select 'mip_hypothesis.revision_transactions'::regclass::oid::text")
@@ -59,7 +62,6 @@ export async function pgoutputCases(t,f,runWorker){
    assert.equal((await run()).historical_time_qualified,false);assert.equal(acks,2)
    assert.equal((await peek()).length,0)
   })
-  await sourceFenceCases(t,f,{journal,runtime,session,observationEpoch,relationId,pub,runWorker})
   await t.test('revoked recorder mapping denies a new native delivery and retains unacknowledged source work',async()=>{
    const next=await f.investigation();await next.captureGeneration();await runWorker(next)
    const nextFrames=await peek();assert.equal(decodeRevisionCommits(nextFrames,{relationId,observationEpoch}).length,1)

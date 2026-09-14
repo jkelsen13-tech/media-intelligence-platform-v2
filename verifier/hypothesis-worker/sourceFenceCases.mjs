@@ -46,6 +46,8 @@ export async function sourceFenceCases(t,f,{journal,runtime,session,observationE
   assert.equal(await f.admin("select pg_has_role('mip_temporal_ack_gateway','mip_temporal_advance_owner','MEMBER')"),'f')
   assert.equal(await f.admin("select rolreplication from pg_roles where rolname='mip_temporal_ack_gateway'"),'f')
   const before=await b.confirmed()
+  await assert.rejects(()=>b.options.advance({...b.request,session:f.session}))
+  await assert.rejects(()=>b.options.advance({...b.request,session:null}))
   await assert.rejects(()=>f.admin('set session authorization mip_temporal_ack_gateway;select pg_replication_slot_advance('+q(b.slot)+','+q(b.position.end_lsn)+');'))
   await assert.rejects(()=>f.admin('set session authorization mip_temporal_recorder;'+b.revokeSql))
   await assert.rejects(()=>f.admin('set session authorization mip_comparison_worker_v1;'+b.advanceSql(b.request)))
