@@ -1,3 +1,4 @@
+import {nativeAckBoundary,sourceFenceCases} from './sourceFenceCases.mjs'
 // Native pgoutput over actual synthetic hypothesis revisions. No production source or body export.
 import assert from 'node:assert/strict'
 import {randomUUID,randomBytes} from 'node:crypto'
@@ -21,6 +22,7 @@ export async function pgoutputCases(t,f,runWorker){
  try {
   const relationId=await f.admin("select 'mip_hypothesis.revision_transactions'::regclass::oid::text")
   const context={source_id:randomUUID(),stream_epoch:randomUUID()},observationEpoch=f.observationEpoch
+  const boundary=await nativeAckBoundary(f,{journal,context,slot,runtime,session,observationEpoch})
   const peek=async()=>JSON.parse(await f.admin("select coalesce(jsonb_agg(encode(data,'hex') order by sequence),'[]') from pg_logical_slot_peek_binary_changes("+
    q(slot)+",null,null,'proto_version','1','publication_names',"+q(pub)+",'binary','false','streaming','false','messages','false') with ordinality as changes(lsn,xid,data,sequence);")).map(x=>Buffer.from(x,'hex'))
   const confirmed=()=>f.admin('select confirmed_flush_lsn::text from pg_replication_slots where slot_name='+q(slot))
@@ -48,7 +50,7 @@ export async function pgoutputCases(t,f,runWorker){
      const envelope=commitEnvelope(context,c.input)
      assert.deepEqual(await journal.get(commitJournalKey(envelope)),envelope)
     }
-    await f.admin('select end_lsn from pg_replication_slot_advance('+q(slot)+','+q(position.end_lsn)+'::pg_lsn);')
+    await boundary.fenced(position)
     acks++;if(lose){lose=false;throw Error('synthetic_lost_source_ack')}
    }
    const run=()=>recordPgoutputBatch({frames,relationId,observationEpoch,context,journal,acknowledge})
@@ -57,6 +59,7 @@ export async function pgoutputCases(t,f,runWorker){
    assert.equal((await run()).historical_time_qualified,false);assert.equal(acks,2)
    assert.equal((await peek()).length,0)
   })
+  await sourceFenceCases(t,f,{journal,runtime,session,observationEpoch,relationId,pub,runWorker})
   await t.test('revoked recorder mapping denies a new native delivery and retains unacknowledged source work',async()=>{
    const next=await f.investigation();await next.captureGeneration();await runWorker(next)
    const nextFrames=await peek();assert.equal(decodeRevisionCommits(nextFrames,{relationId,observationEpoch}).length,1)
