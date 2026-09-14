@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "kind": "implementation_ci_evidence_not_independent_approval",
+  "candidate": "21bd6370bfb1b983a51c81d6e0990d864f24af29",
+  "base": "eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6",
+  "candidate_tree": "4f9bab79410a3a0a2945033b59e6684af6630de9",
+  "native_checkout": "adb417cfff4ed1b9fdae980fff222a23638b28ae",
+  "native_checkout_tree": "4f9bab79410a3a0a2945033b59e6684af6630de9",
+  "native_same_tree": true,
+  "independent_review_acceptance": "BLOCKED",
+  "original_inconsistent_review": "8cfa664c81b5621970bea53df9e96dc92c58f534/verifier/independent-pr157/recovery-1-result.json",
+  "runs": [
+    {
+      "id": 34835158050,
+      "job": 103947197950,
+      "node": 22,
+      "tests": 1903,
+      "pass": 1903,
+      "fail": 0,
+      "skipped": 0,
+      "build": "success",
+      "log": "golden-node22.log"
+    },
+    {
+      "id": 34835158050,
+      "job": 103947197554,
+      "node": 24,
+      "tests": 1903,
+      "pass": 1903,
+      "fail": 0,
+      "skipped": 0,
+      "build": "success",
+      "log": "golden-node24.log"
+    },
+    {
+      "id": 34835180243,
+      "job": 103947267441,
+      "node": 24,
+      "tests": 77,
+      "pass": 77,
+      "fail": 0,
+      "skipped": 0,
+      "log": "native-worker.log"
+    }
+  ],
+  "test_graph": {
+    "golden": "package.json scripts.test = node --test $(find tests -type f -name '*.test.mjs' | sort); GITHUB_ACTIONS=true in hosted workflow",
+    "native": "hypothesis-worker.yml → verifier/hypothesis-worker/*.test.mjs → worker.test.mjs → continuityCases.mjs → incarnationCases.mjs"
+  },
+  "new_named_tests": [
+    "uncached durable head detects an extra registration written after authority entry",
+    "idempotent retain rejects changed durable envelope readback without another append",
+    "authorized stream rotation requires a new envelope pin and rejects old stream inputs",
+    "custody envelope incarnation is forwarded unchanged and native mismatch rejects capture, prepare, advance and replay"
+  ],
+  "dependency_refs": [
+    {
+      "path": "package.json",
+      "blob_sha": "1bba418b9204f69df7ade003d9d3e19679a5434f",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/package.json"
+    },
+    {
+      "path": ".github/workflows/golden.yml",
+      "blob_sha": "d94e68d2dd486943e3614228b8c6a0ea9da3006b",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/.github/workflows/golden.yml"
+    },
+    {
+      "path": ".github/workflows/hypothesis-worker.yml",
+      "blob_sha": "d0ae30396d5919327eb66b42396658a654fbd792",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/.github/workflows/hypothesis-worker.yml"
+    },
+    {
+      "path": "tests/hypothesisRegistrationCustody.test.mjs",
+      "blob_sha": "e42c051ad37bca6875f3af810a7df686db6f3d4e",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/tests/hypothesisRegistrationCustody.test.mjs"
+    },
+    {
+      "path": "docs/HYPOTHESIS_REGISTRATION_CUSTODY_2026-09-14.md",
+      "blob_sha": "08773ff309e69fd267c7b96338af43282d22d9bf",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/docs/HYPOTHESIS_REGISTRATION_CUSTODY_2026-09-14.md"
+    },
+    {
+      "path": "verifier/hypothesis-worker/incarnationCases.mjs",
+      "blob_sha": "e8c7a05e2c967a2010214813f2c3134ade9dffca",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/verifier/hypothesis-worker/incarnationCases.mjs"
+    },
+    {
+      "path": "verifier/hypothesis-worker/worker.test.mjs",
+      "blob_sha": "b1eababbd4e99e6c904e8cc153fc4d28a695eebe",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/verifier/hypothesis-worker/worker.test.mjs"
+    },
+    {
+      "path": "verifier/hypothesis-worker/continuityCases.mjs",
+      "blob_sha": "01625e110f953bca4525d43063e27c950ff9c009",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/verifier/hypothesis-worker/continuityCases.mjs"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/brokerSession.js",
+      "blob_sha": "df3fcdd68329def50acad24a17ca7ca7dffaed4b",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/supabase/qualification/mip-cutover-authority/brokerSession.js"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/workloadIdentity.js",
+      "blob_sha": "3e08f8c9d32a38caae341ed02e0997597a7a8452",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/supabase/qualification/mip-cutover-authority/workloadIdentity.js"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/005_broker_sessions.sql",
+      "blob_sha": "f78288fbabba40407cd206521b43faa0278f674a",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/supabase/qualification/mip-cutover-authority/005_broker_sessions.sql"
+    },
+    {
+      "path": "verifier/integrated/transport.mjs",
+      "blob_sha": "16a8c475154400bb9f01c8bedf71d8ff6f7cb8d9",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/verifier/integrated/transport.mjs"
+    },
+    {
+      "path": "verifier/hypothesis-worker/fixture.mjs",
+      "blob_sha": "6d58c445a9a787868e8c6c2987a5fd0518f9e77d",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/verifier/hypothesis-worker/fixture.mjs"
+    },
+    {
+      "path": "verifier/integrated/fixture.mjs",
+      "blob_sha": "957fe4a446330f7309c6e9403229b9f19b17799f",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/verifier/integrated/fixture.mjs"
+    },
+    {
+      "path": "verifier/integrated/remoteStoreRestart.mjs",
+      "blob_sha": "a8181f63dd139bf4fd6edcfd4e609542347aacf7",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/verifier/integrated/remoteStoreRestart.mjs"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/020_native_source_incarnation.sql",
+      "blob_sha": "2c7d311db5ceb129f77382431feac090b42b6858",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/supabase/qualification/hypothesis-assessments/020_native_source_incarnation.sql"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/sourceIncarnation.mjs",
+      "blob_sha": "76b6aa7a5ba0d589c43c0904c81e37d6377b1199",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/supabase/qualification/hypothesis-assessments/sourceIncarnation.mjs"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/registrationCustody.mjs",
+      "blob_sha": "89fa1a4dbcffd444ee3155c8a81bc456094fc17a",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/21bd6370bfb1b983a51c81d6e0990d864f24af29/supabase/qualification/hypothesis-assessments/registrationCustody.mjs"
+    }
+  ],
+  "limitations": [
+    "References index candidate bytes; a reviewer must receive contents of all dependencies needed for its claims.",
+    "All test environments are synthetic GitHub-hosted; PostgreSQL custody fixture shares physical restore domain with source.",
+    "No killed-process custody reconstruction, distributed authority, independent physical custodian, authenticated recovery issuer or production certification.",
+    "PASS/FAIL/BLOCKED review semantics remain independent from implementation CI success. Original inconsistent review remains BLOCKED at controller acceptance."
+  ]
+}
