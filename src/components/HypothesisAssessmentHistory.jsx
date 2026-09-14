@@ -1,7 +1,7 @@
 import {useEffect,useState,useId,useRef} from 'react'
 import HypothesisAssessmentPanel from './HypothesisAssessmentPanel.jsx'
 import {hypothesisHistoryView} from '../lib/hypothesisAssessmentClient.js'
-const labels={retained_source_change:'Retained source changed',workspace_changed:'Investigation definition changed',permission_changed:'Permission requires fresh review'}
+const labels={retained_assessment_change:'Retained assessment or method changed',retained_source_change:'Retained source changed',workspace_changed:'Investigation definition changed',permission_changed:'Permission requires fresh review'}
 export default function HypothesisAssessmentHistory({client,investigationId,userScopeKey,workspaceVersionId,canReconcile=false,onAccessFailure}) {
  const [refresh,setRefresh]=useState(0),[selected,setSelected]=useState(null),[state,setState]=useState(null)
  const selectId=useId(),operationEpoch=useRef(0)

@@ -40,7 +40,7 @@ export function hypothesisHistoryView(history,backlog,investigationId) {
  const causes=new Set()
  for(const c of backlog.causes) {
   if(typeof c?.cause_id!=='string'||!c.cause_id||causes.has(c.cause_id)||!ids.has(c.revision_id)||
-   !['retained_source_change','workspace_changed','permission_changed'].includes(c.kind)||
+   !['retained_source_change','retained_assessment_change','workspace_changed','permission_changed'].includes(c.kind)||
    c.state!=='pending_explicit_reconciliation')return null
   causes.add(c.cause_id)
  }

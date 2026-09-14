@@ -195,6 +195,17 @@ test('hypothesis binding uses real workspace tables and existing operation-check
   assert.equal(after.data.completed_reassessment,false)
   await db.exec('reset role')
  })
+ await t.test('retained assessment revisions create exact pending causes without changing source bytes',async()=>{
+  const before=(await db.query('select count(*)::int n from evidence_pipeline.evidence_changes')).rows[0].n
+  const context=await assess('context',{candidate_id:candidate})
+  const changed=await assess('append',{candidate_id:candidate,algorithm_key:'synthetic',algorithm_version:'v2',
+   outcome:'insufficient_evidence',rationale:'Synthetic method revision.',remaining_uncertainty:'Synthetic.',
+   context_positions:context.context_positions})
+  const backlog=await boundStore.backlog({verifiedUserId:user,investigationId:iid})
+  assert.equal((await db.query('select count(*)::int n from evidence_pipeline.evidence_changes')).rows[0].n,before)
+  assert.equal(backlog.causes.filter(c=>c.kind==='retained_assessment_change').length,1)
+  assert.equal(backlog.causes.find(c=>c.kind==='retained_assessment_change').related_version_id,changed)
+ })
  await t.test('new permission revision cannot automatically restore an old assessment display',async()=>{
   const old=(await db.query("select * from mip_identity.operation_evidence_versions where scope->>'operation'='analysis' and scope->>'domain'='rights'")).rows[0]
   const replacement=randomUUID()

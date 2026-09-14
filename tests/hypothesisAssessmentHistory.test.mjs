@@ -56,7 +56,7 @@ test('history panel selects immutable revisions without claiming a verified time
  act(()=>tree.unmount())
 })
 test('pending changes stay separate; permission changes suppress saved text',async()=>{
- for(const kind of ['retained_source_change','permission_changed']){
+ for(const kind of ['retained_source_change','retained_assessment_change','permission_changed']){
   const f=fixture();f.backlog.causes=[{cause_id:'c',revision_id:'synthetic-assessment-2',kind,change_position:'9007199254740993',state:'pending_explicit_reconciliation'}]
   let tree;await act(async()=>{tree=TestRenderer.create(createElement(Panel,props(f.client)))})
   assert.match(content(tree),/await explicit reassessment/)

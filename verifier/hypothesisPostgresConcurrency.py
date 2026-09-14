@@ -40,6 +40,8 @@ class Hypothesis(unittest.TestCase):
             "source_field":"summary","span_start":0,"span_end":21,"excerpt":"A 😀 B meeting record.",
             "extractor_version":"synthetic","remaining_uncertainty":"Synthetic mechanism only."})
         context = scalar(db,"mip_assessments_v1","context",{"candidate_id":candidate})
+        cls.candidate=candidate
+        cls.assessment_context=context
         scalar(db,"mip_assessments_v1","append",{"candidate_id":candidate,"algorithm_key":"synthetic","algorithm_version":"v1",
             "outcome":"insufficient_evidence","rationale":"Synthetic.","remaining_uncertainty":"Synthetic.",
             "context_positions":context["context_positions"]})
@@ -193,6 +195,36 @@ class Hypothesis(unittest.TestCase):
         self.b.execute("commit;")
         denied=json.loads(self.a.finish())["entries"][0]
         self.assertEqual(denied["status"],"withheld");self.assertNotIn("assessment",denied)
+    def method_change(self):
+        return rpc("mip_assessments_v1","append",{"candidate_id":self.candidate,"algorithm_key":"synthetic","algorithm_version":"v2",
+            "outcome":"insufficient_evidence","rationale":"Synthetic method revision.","remaining_uncertainty":"Synthetic.",
+            "context_positions":self.assessment_context["context_positions"]})
+    def test_retained_assessment_acceptance_first(self):
+        self.ordering(self.method_change(),"accept","context changed")
+        causes=json.loads(self.a.execute(self.backlog()))["causes"]
+        self.assertEqual(len(causes),1)
+        self.assertEqual(causes[0]["kind"],"retained_assessment_change")
+        self.assertFalse(json.loads(self.a.execute(self.history()))["entries"][0]["current_context"])
+    def test_retained_assessment_revision_first(self):
+        self.ordering(self.method_change(),"revoke","context changed")
+    def test_retained_assessment_revision_rollback_preserves_context(self):
+        self.a.execute(self.append())
+        self.b.execute("reset role;begin;"+self.method_change())
+        self.a.start(self.history());self.blocked(self.a,self.b)
+        self.b.execute("rollback;")
+        self.assertTrue(json.loads(self.a.finish())["entries"][0]["current_context"])
+        self.assertEqual(json.loads(self.a.execute(self.backlog()))["causes"],[])
+    def test_retained_method_change_has_exact_receipt_without_new_source_capture(self):
+        self.a.execute(self.append())
+        before=self.admin("select count(*) from evidence_pipeline.evidence_changes")
+        changed=json.loads(self.admin(self.method_change()))
+        self.assertEqual(self.admin("select count(*) from evidence_pipeline.evidence_changes"),before)
+        result=json.loads(self.a.execute(self.reconcile()))
+        cause=result["causes"][0]
+        self.assertEqual(cause["related_version_id"],changed)
+        self.assertEqual(cause["kind"],"retained_assessment_change")
+        self.assertFalse(result["completed_reassessment"])
+        self.assertNotIn("Synthetic method revision",json.dumps(result))
     def backlog(self):
         return "select mip_hypothesis.reassessment_backlog("+q(self.user)+","+q(self.iid)+");"
     def reconcile(self):

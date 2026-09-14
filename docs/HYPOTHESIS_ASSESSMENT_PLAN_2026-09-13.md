@@ -122,3 +122,10 @@ The scoped hypothesis client now reaches history, backlog and explicit reconcile
 The control rejects cross-question, malformed, public or unsupported temporal responses. It clears private text on refresh, account/workspace/client changes, logout and denied access, and ignores late responses from a previous scope. A permission-change cause suppresses the affected saved text even if two separately fetched responses straddle revocation. Older unresolved causes remain visible across revisions. It explicitly describes retained revisions without claiming as-known-then commit visibility. No body copies or persistent browser cache are created by this client.
 
 At 26c9bd03f2ca4a7a1846b1bb2a42105994823a1d the durable-ledger Golden jobs and native suite passed. The UI continuation requires its own exact-head regression run. The complete author/reviewer workflow, evaluated generation/worker integration, atomic cause-resolution receipts and verified temporal views remain required; this continuation is not the coherent independent-review boundary.
+
+
+## Retained assessment dependency closure
+
+Source bytes are not the only changing input. The acceptance context and pending ledger now also compare retained assessment IDs for the candidates already present in the saved observation's assessment/dependency closure. A new assessment/method version on one of those candidates invalidates the old context even when evidence-change positions are unchanged. Its exact new assessment ID is retained as a pending cause; no rationale text is copied. Both acceptance-first and revision-first native cases, rollback and unchanged-source evidence are tested.
+
+This detects recorded changes to the existing assessment closure. It does not invent method approval or claim that a new method is qualified. Explicit external method-authority revocation, shared-origin/contradiction signals not represented by a retained change, F3 generation handoff and atomic completion/resolution remain open. Unrelated candidates outside the saved closure do not become authority for the question.

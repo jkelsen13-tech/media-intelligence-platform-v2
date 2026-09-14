@@ -12,6 +12,8 @@ grant select(id,record_kind,record_key) on evidence_pipeline.record_versions to 
 create policy hypothesis_change_reader on evidence_pipeline.evidence_changes for select to mip_hypothesis_owner using(true);
 create policy hypothesis_capture_identity_reader on evidence_pipeline.article_captures for select to mip_hypothesis_owner using(true);
 create policy hypothesis_record_identity_reader on evidence_pipeline.record_versions for select to mip_hypothesis_owner using(true);
+grant select(id,candidate_id) on evidence_pipeline.assessments to mip_hypothesis_owner;
+create policy hypothesis_assessment_identity_reader on evidence_pipeline.assessments for select to mip_hypothesis_owner using(true);
 set role mip_hypothesis_owner;
 create table mip_hypothesis.acceptance_bindings(
  revision_id uuid primary key references mip_hypothesis.revisions(id),
@@ -45,6 +47,14 @@ language sql stable security definer set search_path='' as $$
   join evidence_pipeline.change_subjects s on s.watch_key=k.value
   where o.id=p_observation and not exists(
    select 1 from jsonb_array_elements(o.snapshot->'inputs') i where i->>'position'=s.position::text
+  )
+ )
+ and not exists(
+  select 1 from evidence_pipeline.investigation_observations o
+  cross join lateral jsonb_array_elements(o.snapshot->'assessments') saved
+  join evidence_pipeline.assessments current_assessment on current_assessment.candidate_id=(saved->>'candidate_id')::uuid
+  where o.id=p_observation and not exists(
+   select 1 from jsonb_array_elements(o.snapshot->'assessments') retained where retained->>'id'=current_assessment.id::text
   )
  )
 $$;

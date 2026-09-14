@@ -7,7 +7,7 @@ create table mip_hypothesis.reassessment_causes(
  investigation_id uuid not null,
  revision_id uuid not null references mip_hypothesis.revisions(id),
  cause_key text not null,
- kind text not null check(kind in('retained_source_change','workspace_changed','permission_changed')),
+ kind text not null check(kind in('retained_source_change','retained_assessment_change','workspace_changed','permission_changed')),
  change_position bigint references evidence_pipeline.evidence_changes(position),
  related_version_id uuid,
  detail jsonb not null check(jsonb_typeof(detail)='object'),
@@ -46,6 +46,14 @@ begin
  from jsonb_array_elements_text(o.snapshot->'watch_keys') k
  join evidence_pipeline.change_subjects s on s.watch_key=k.value
  where not exists(select 1 from jsonb_array_elements(o.snapshot->'inputs') i where i->>'position'=s.position::text)
+ on conflict(revision_id,cause_key) do nothing;
+ insert into mip_hypothesis.reassessment_causes(investigation_id,revision_id,cause_key,kind,related_version_id,detail)
+ select distinct p_investigation,r.id,'assessment:'||a.id::text,'retained_assessment_change',a.id,
+  jsonb_build_object('observation_id',o.id,'retained_candidate_id',a.candidate_id,'assessment_version_id',a.id,
+   'classification','requires_method_and_reasoning_review')
+ from jsonb_array_elements(o.snapshot->'assessments') saved
+ join evidence_pipeline.assessments a on a.candidate_id=(saved->>'candidate_id')::uuid
+ where not exists(select 1 from jsonb_array_elements(o.snapshot->'assessments') retained where retained->>'id'=a.id::text)
  on conflict(revision_id,cause_key) do nothing;
  select current_version_id into head from evidence_pipeline.investigations where id=p_investigation;
  if head is distinct from b.workspace_version_id then
@@ -91,6 +99,14 @@ begin
    where not exists(select 1 from mip_hypothesis.revisions newer where newer.investigation_id=r.investigation_id and newer.revision>r.revision)
     and exists(select 1 from evidence_pipeline.change_subjects s
       where s.position=new.position and o.snapshot->'watch_keys' ? s.watch_key)
+  loop perform mip_hypothesis.discover_reassessment_causes(iid);end loop;
+ elsif tg_table_schema='evidence_pipeline' and tg_table_name='assessments' then
+  for iid in
+   select distinct r.investigation_id from mip_hypothesis.revisions r
+   join mip_hypothesis.acceptance_bindings b on b.revision_id=r.id
+   join evidence_pipeline.investigation_observations o on o.id=b.observation_id
+   where not exists(select 1 from mip_hypothesis.revisions newer where newer.investigation_id=r.investigation_id and newer.revision>r.revision)
+    and exists(select 1 from jsonb_array_elements(o.snapshot->'assessments') a where a->>'candidate_id'=new.candidate_id::text)
   loop perform mip_hypothesis.discover_reassessment_causes(iid);end loop;
  elsif tg_table_schema='evidence_pipeline' and tg_table_name='investigations' then
   if old.current_version_id is distinct from new.current_version_id then
@@ -154,4 +170,9 @@ create trigger hypothesis_reassessment_source after insert on evidence_pipeline.
 create trigger hypothesis_reassessment_workspace after update on evidence_pipeline.investigations
  for each row execute function mip_hypothesis.reassessment_change_trigger();
 create trigger hypothesis_reassessment_permission after insert or update or delete on mip_identity.operation_evidence_heads
+ for each row execute function mip_hypothesis.reassessment_change_trigger();
+
+create trigger hypothesis_assessment_fence before insert or update or delete or truncate on evidence_pipeline.assessments
+ for each statement execute function mip_hypothesis.source_change_fence();
+create trigger hypothesis_reassessment_assessment after insert on evidence_pipeline.assessments
  for each row execute function mip_hypothesis.reassessment_change_trigger();
