@@ -1,3 +1,4 @@
+import {marketInstant} from '../../functions/_shared/marketsEvidenceContract.mjs'
 // Trusted server seam only; no default endpoint/identity, browser credentials or publication.
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export function createPrivateMarketsReader({authenticate,sourceProject,query}={}){
@@ -9,7 +10,7 @@ export function createPrivateMarketsReader({authenticate,sourceProject,query}={}
    const frozen=Object.freeze({...input})
    if(![frozen.investigation_id,frozen.workspace_version_id].every(v=>typeof v==='string'&&uuid.test(v))||
     ![frozen.asset_id,frozen.event_id].every(v=>v===null||(typeof v==='string'&&uuid.test(v)))||
-    (!frozen.asset_id&&!frozen.event_id)||typeof frozen.at!=='string')return {error:{code:'invalid_request'}}
+    (!frozen.asset_id&&!frozen.event_id)||(typeof frozen.at!=='string'||marketInstant(frozen.at)===null||!/^(?:\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(frozen.at)))return {error:{code:'invalid_request'}}
    const user=await authenticate(request)
    if(!user||typeof user.id!=='string'||!uuid.test(user.id))return {error:{code:'authentication_required'}}
    const result=await query('select mip_markets.read_private($1::uuid,$2::uuid,$3::uuid,$4::text,$5::uuid,$6::uuid,$7::timestamptz) as value',

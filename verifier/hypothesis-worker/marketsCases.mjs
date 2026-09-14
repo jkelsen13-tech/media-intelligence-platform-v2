@@ -15,7 +15,7 @@ export async function marketsCases(t,f){
   "grant select on public.nodes,public.edges to anon,authenticated;alter table public.nodes enable row level security;alter table public.edges enable row level security;"+
   "create policy market_fixture_legacy_nodes on public.nodes for select to anon,authenticated using(true);create policy market_fixture_legacy_edges on public.edges for select to anon,authenticated using(true);")
  for(const name of ['001_typed_retained_records.sql','002_authorized_reader.sql'])
-  await f.admin(await readFile(new URL('../../supabase/qualification/markets-evidence/'+name,import.meta.url),'utf8'))
+  await f.admin(await readFile(new URL('../../supabase/qualification/markets-evidence/'+name,import.meta.url),'utf8')).catch(e=>{throw Error(name+': '+e.message)})
  const baseCounts=await f.admin('select published_node_count||\':\'||documented_relationship_count from public.graph_coverage_public')
  const original=await f.investigation()
  const nodes={equity:randomUUID(),crypto:randomUUID(),issuer:randomUUID(),supplier:randomUUID(),network:randomUUID(),event:randomUUID()}

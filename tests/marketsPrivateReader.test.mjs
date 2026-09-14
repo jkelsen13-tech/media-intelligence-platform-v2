@@ -26,3 +26,12 @@ test('storage error details and private material are withheld from the server se
  assert.deepEqual(await reader.read({},input()),{data:null,error:{code:'access_denied'}})
  assert.throws(()=>createPrivateMarketsReader({authenticate:()=>{},sourceProject:'cc-definition-batch-v1',query:()=>{}}),/unconfigured/)
 })
+
+test('dated identity request rejects relative, ambiguous and finer than PostgreSQL timestamps before auth or SQL',async()=>{
+ let auth=0,sql=0;const reader=createPrivateMarketsReader({authenticate:async()=>{auth++;return {id}},sourceProject:'synthetic',query:async()=>{sql++;return {rows:[{value:{}}]}}})
+ for(const at of ['now','today','2026-06-01','2026-06-01T00:00:00','2026-02-30T00:00:00Z','2026-06-01T00:00:00.1234567Z','infinity'])
+  assert.equal((await reader.read({},{...input(),at})).error.code,'invalid_request')
+ assert.equal(auth,0);assert.equal(sql,0)
+ await reader.read({},{...input(),at:'2026-06-01T00:00:00.123456+05:30'})
+ assert.equal(auth,1);assert.equal(sql,1)
+})
