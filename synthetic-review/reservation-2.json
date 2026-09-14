@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "candidate": "f0df651313b74ebc285de03b57fbe7d247359f8a",
+  "path": "synthetic-review/request-correction-1.json",
+  "packet_sha256": "21c0d665df4ec18735ab982c477e8e9989cf3821c9917bd165476933dbb6d64d",
+  "request_id": "mip-supervised-synthetic-boundary-20260914-correction-1",
+  "agent_id": "bc-eea7e698-8d6c-458d-afc6-549521330edb",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "high"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "bytes": "{\n  \"schema\": 1,\n  \"id\": \"mip-supervised-synthetic-boundary-20260914-correction-1\",\n  \"synthetic\": true,\n  \"scope\": \"synthetic mechanism only; no MIP project source or real material\",\n  \"production_authority\": false,\n  \"requirement\": \"For numeric age, eligible if and only if age >= 18.\",\n  \"source\": {\n    \"language\": \"javascript\",\n    \"filename\": \"fictionalEligibility.js\",\n    \"text\": \"export function eligible(age) { return age >= 18; }\\n\"\n  },\n  \"review_instruction\": \"Independently inspect the source against the requirement. Do not trust implementer assertions. Return PASS, FAIL or BLOCKED; identify a concrete counterexample if a defect exists. Do not correct the source. This synthetic review cannot approve MIP or production.\",\n  \"remediation\": {\n    \"finding_id\": \"AGE_EQ_18_EXCLUDED\",\n    \"prior_candidate\": \"98c5a49ec46d46bdbe2e05db1e0e7aba79d5daf8\",\n    \"result_commit\": \"10da84f1a629cf5e479e21af7d2bc8992a6bf043\",\n    \"result_path\": \"synthetic-review/result-1.json\"\n  }\n}\n"
+}
