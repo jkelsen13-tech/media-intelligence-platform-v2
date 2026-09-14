@@ -110,6 +110,34 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    const overflow=await compose.evaluate(el=>({overflow:el.scrollWidth>el.clientWidth+1,width:el.clientWidth,scroll:el.scrollWidth,
     elements:[...el.querySelectorAll('*')].filter(n=>n.scrollWidth>n.clientWidth+1||n.getBoundingClientRect().right>el.getBoundingClientRect().right+1).map(n=>({tag:n.tagName,label:n.tagName==='LABEL'?n.firstChild?.textContent:null,classes:n.className,width:n.getBoundingClientRect().width,right:n.getBoundingClientRect().right,scroll:n.scrollWidth,client:n.clientWidth,overflow:getComputedStyle(n).overflow})).slice(0,12)}))
    if(overflow.overflow)console.log('MIP_SYNTHETIC_COMPOSER_LAYOUT_FAILURE='+JSON.stringify({engine,width,...overflow}))
+   if(overflow.overflow){
+    await compose.getByLabel('Comparison',{exact:true}).scrollIntoViewIfNeeded()
+    console.log('MIP_SYNTHETIC_COMPOSER_OVERFLOW_IMAGE_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+    const trials=await compose.evaluate(el=>{
+     const select=el.querySelector('select[aria-label="Comparison"]'),label=select.closest('label')
+     const measure=()=>({form:el.scrollWidth,label:label.scrollWidth,select:select.scrollWidth,client:select.clientWidth,
+      appearance:getComputedStyle(select).appearance})
+     const baseline=measure(),results=[]
+     for(const [name,target,styles] of [
+      ['appearance_none',select,{appearance:'none'}],
+      ['select_clip',select,{overflow:'hidden'}],
+      ['appearance_and_clip',select,{appearance:'none',overflow:'hidden'}],
+      ['select_inline_block',select,{display:'inline-block'}],
+      ['label_inline_block',label,{display:'inline-block'}],
+      ['label_flex',label,{display:'flex',flexDirection:'column',minWidth:'0'}],
+      ['select_size_containment',select,{contain:'inline-size'}],
+     ]){
+      const old=target.getAttribute('style');Object.assign(target.style,styles);results.push({name,...measure()})
+      if(old===null)target.removeAttribute('style');else target.setAttribute('style',old)
+     }
+     const optionText=[...select.options].map(o=>o.textContent)
+     for(const o of select.options)o.textContent='Synthetic option'
+     results.push({name:'short_option_text_diagnostic_only',...measure()})
+     ;[...select.options].forEach((o,i)=>o.textContent=optionText[i])
+     return{baseline,results}
+    })
+    console.log('MIP_SYNTHETIC_COMPOSER_LAYOUT_TRIALS='+JSON.stringify({engine,viewport:width,...trials}))
+   }
    assert.equal(overflow.overflow,false)
    const saveButton=compose.getByRole('button',{name:'Save private assessment',exact:true})
    assert.ok((await saveButton.boundingBox()).height>=44)
