@@ -295,4 +295,42 @@ test('isolated hypothesis generation authority, retained computation and restart
   await assert.rejects(f.rpc('worker_complete',completeArgs(v,j,output(j))),/mip_identity_key_revoked/)
   assert.equal(await counts(f,v),'0:0:0')
  })
+ await t.test('method replacement retains a distinct pending cause and explicit new-version reassessment',async()=>{
+  const v=await f.investigation();await v.captureGeneration();
+  const j=await claim(f,v);await f.rpc('worker_complete',completeArgs(v,j,output(j)));
+  const next=randomUUID();
+  await f.admin('insert into mip_hypothesis.method_versions values('+[next,v.implementation,'none','synthetic_mechanism_only','synthetic-method-replacement',{}].map(q).join(',')+',clock_timestamp());update mip_hypothesis.method_heads set revision='+q(next)+' where implementation='+q(v.implementation));
+  const backlog=await f.gateway('reassessment_backlog',[v.user,v.iid]);
+  const causes=backlog.causes.filter(c=>c.kind==='method_changed');
+  assert.equal(causes.length,1);assert.equal(causes[0].state,'pending_explicit_reconciliation');
+  assert.equal(causes[0].detail.accepted_method_revision,v.method);
+  assert.equal(causes[0].detail.observed_method_revision,next);
+  const history=await f.gateway('read_bound_history',[v.user,v.iid]);
+  assert.equal(history.entries[0].reassessment_pending,true);
+  await f.gateway('reconcile_reassessment_causes',[v.user,v.iid]);
+  assert.equal((await f.gateway('reassessment_backlog',[v.user,v.iid])).causes.filter(c=>c.kind==='method_changed').length,1);
+  const g=await v.captureGeneration({method:next});
+  const newer=await claim(f,v);assert.equal(newer.generation_id,g.generation_id);
+  await f.rpc('worker_complete',completeArgs(v,newer,output(newer)));
+  assert.equal(await counts(f,v),'2:2:2');
+  const finished=await f.gateway('reassessment_backlog',[v.user,v.iid]);
+  assert.equal(finished.causes.filter(c=>c.kind==='method_changed').length,1);
+  assert.notEqual(finished.causes.find(c=>c.kind==='method_changed').state,'pending_explicit_reconciliation');
+ });
+ await t.test('rolled-back method removal leaves no cause; committed removal retains cause and unrelated history',async()=>{
+  const v=await f.investigation(),other=await f.investigation();
+  for(const item of [v,other]){await item.captureGeneration();const j=await claim(f,item);await f.rpc('worker_complete',completeArgs(item,j,output(j)))}
+  const prior=await f.gateway('read_bound_history',[other.user,other.iid]);
+  const removal='delete from mip_hypothesis.method_heads where implementation='+q(v.implementation);
+  const held=await hold(f.db,removal);await held.finish(false);
+  assert.equal((await f.gateway('reassessment_backlog',[v.user,v.iid])).causes.filter(c=>c.kind==='method_changed').length,0);
+  await f.admin(removal);
+  const causes=(await f.gateway('reassessment_backlog',[v.user,v.iid])).causes.filter(c=>c.kind==='method_changed');
+  assert.equal(causes.length,1);assert.equal(causes[0].detail.observed_method_revision,null);
+  assert.equal(causes[0].detail.observed_active,false);
+  assert.deepEqual(await f.gateway('read_bound_history',[other.user,other.iid]),prior);
+  assert.equal(await counts(f,v),'1:1:1');
+  await assert.rejects(v.captureGeneration(),/mip_hypothesis_method_unavailable/);
+ });
+
 })

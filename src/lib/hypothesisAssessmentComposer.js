@@ -19,7 +19,7 @@ export function validAuthoringContext(c,investigationId,workspaceVersionId) {
  return b?.contract_version==='mip_hypothesis_reassessment_backlog_v2'&&b.investigation_id===investigationId&&b.publication_allowed===false&&
   b.completed_reassessment===false&&b.is_completion_receipt===false&&Array.isArray(b.causes)&&unique(b.causes.map(x=>x?.cause_id))&&
   b.causes.every(x=>text(x?.cause_id)&&text(x.revision_id)&&['pending_explicit_reconciliation','reassessment_recorded'].includes(x.state)&&
-   ['retained_source_change','retained_assessment_change','workspace_changed','permission_changed','human_reconsideration'].includes(x.kind))
+   ['retained_source_change','retained_assessment_change','workspace_changed','permission_changed','human_reconsideration','method_changed'].includes(x.kind))
 }
 export function newHypothesis(id) {return{id,definition:'',likelihood:missingEstimate(),confidence:missingEstimate()}}
 export function newArgument(id,hypothesisId) {return{id,hypothesis_id:hypothesisId,relation:'context',evidence_ids:[],inference:'',limitation:'',relevance:missingEstimate()}}
