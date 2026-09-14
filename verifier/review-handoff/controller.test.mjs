@@ -30,16 +30,16 @@ for(const [name,mutate] of [
  ['external evidence URL',({r})=>r.coverage[0].references=['https://example.com']],
  ['unsupported FAIL',({r})=>r.outcome='FAIL'],
  ['unsupported BLOCKED',({r})=>r.outcome='BLOCKED'],
- ['unknown blocker category',({r})=>r.blockers=[{kind:'please_approve',requirement:'r1',detail:'x'}]],
+ ['unknown blocker category',({r})=>r.blockers=[{kind:'please_approve',requirement:'frontend_behavior',detail:'x'}]],
  ['unknown finding fields',({r})=>r.findings=[{id:'f1',command:'rm -rf'}]]
 ])test(name,()=>{const f=fixture();mutate(f);assert.throws(()=>validateReport(f.q,f.r))});
 test('FAIL preserves actionable findings and proposes remediation',()=>{
  const {q,r}=fixture();r.outcome='FAIL';r.coverage[0].status='FAIL';
- r.findings=[{id:'f1',requirement:'r1',severity:'high',summary:'Synthetic defect',evidence:r.coverage[0].references,remediation:'Create a corrected candidate'}];
+ r.findings=[{id:'f1',requirement:'frontend_behavior',severity:'high',summary:'Synthetic defect',evidence:r.coverage[0].references,remediation:'Create a corrected candidate'}];
  assert.equal(validateReport(q,r).proposedAction,'remediate_new_candidate');
 });
 for(const kind of ['engineering','missing_evidence','owner_decision','permission','disclosure','production','spending'])test('route blocker '+kind,()=>{
- const {q,r}=fixture();r.outcome='BLOCKED';r.coverage[0].status='BLOCKED';r.blockers=[{kind,requirement:'r1',detail:'Synthetic blocker'}];
+ const {q,r}=fixture();r.outcome='BLOCKED';r.coverage[0].status='BLOCKED';r.blockers=[{kind,requirement:'frontend_behavior',detail:'Synthetic blocker'}];
  assert.equal(validateReport(q,r).proposedAction,['engineering','missing_evidence'].includes(kind)?'continue_other_authorized_work':'owner_required');
 });
 test('concurrent reservation creates one request',async()=>{const {q}=fixture(),s=memoryStore();const a=await Promise.all([reserve(s,q),reserve(s,q)]);assert.equal(a.filter(x=>x.created).length,1);assert.equal(s.rows.size,1)});
