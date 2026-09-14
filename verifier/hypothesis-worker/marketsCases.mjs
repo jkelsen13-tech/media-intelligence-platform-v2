@@ -56,6 +56,7 @@ export async function marketsCases(t,f){
  const sql=(over={})=>'select mip_markets.read_private('+[over.user??original.user,over.iid??original.iid,over.version??version,over.source??original.source,
   Object.hasOwn(over,'asset')?over.asset:nodes.equity,Object.hasOwn(over,'event')?over.event:nodes.event,over.at??'2026-06-01'].map(q).join(',')+');'
  const read=async over=>JSON.parse(await f.admin('set session authorization mip_hypothesis_gateway;'+sql(over)))
+ const restoreAuthority=()=>f.admin("do $$declare h mip_identity.operation_evidence_heads;r uuid;begin for h in select * from mip_identity.operation_evidence_heads where not active and scope->>'material_ref'='"+original.permissionScope.material_ref+"' loop r:=gen_random_uuid();insert into mip_identity.operation_evidence_versions select (jsonb_populate_record(null::mip_identity.operation_evidence_versions,to_jsonb(v)||jsonb_build_object('revision',r))).* from mip_identity.operation_evidence_versions v where v.revision=h.revision;update mip_identity.operation_evidence_heads set revision=r,active=true where scope=h.scope;end loop;end $$")
  await t.test('shared canonical equity crypto and indirect paths discover in both directions',async()=>{
   const equity=await read(),crypto=await read({asset:nodes.crypto}),reverse=await read({asset:null})
   assert.equal(equity.paths.length,2);assert.ok(equity.paths.some(p=>p.hops.length===3));assert.ok(equity.paths.some(p=>p.relation==='direct_reporting'))
@@ -85,15 +86,31 @@ export async function marketsCases(t,f){
    await assert.rejects(()=>f.admin('insert into evidence_pipeline.evidence_candidates select (jsonb_populate_record(null::evidence_pipeline.evidence_candidates,'+q(changed)+')).*'))
   }
  })
- await t.test('permission revocation before reader denies; rollback restores unchanged evidence',async()=>{
+ await t.test('permission revocation before reader denies; fresh authority revision restores fixture access',async()=>{
   const held=await hold(f.db,original.revokeSql);const pending=read();pending.catch(()=>{})
   try{await blocked(f,held.pid);await held.finish(true);await assert.rejects(pending,/mip_market_operation_denied/)}
   catch(e){throw e}
-  await f.admin("do $declare h mip_identity.operation_evidence_heads;r uuid;begin for h in select * from mip_identity.operation_evidence_heads where not active and scope->>'material_ref'='"+original.permissionScope.material_ref+"' loop r:=gen_random_uuid();insert into mip_identity.operation_evidence_versions select (jsonb_populate_record(null::mip_identity.operation_evidence_versions,to_jsonb(v)||jsonb_build_object('revision',r))).* from mip_identity.operation_evidence_versions v where v.revision=h.revision;update mip_identity.operation_evidence_heads set revision=r,active=true where scope=h.scope;end loop;end $")
+  await restoreAuthority()
+ })
+ await t.test('source update holds the reader fence and rollback preserves exact retained records',async()=>{
+  const first=candidates[0],before=await f.admin('select count(*) from evidence_pipeline.record_versions where record_kind=\'graph_node\' and record_key='+q(nodes.supplier))
+  const held=await hold(f.db,'update public.nodes set label=\'Synthetic corrected supplier\' where id='+q(nodes.supplier))
+  const pending=read();pending.catch(()=>{})
+  await blocked(f,held.pid);await held.finish(false)
+  assert.equal((await pending).paths.length,2)
+  assert.equal(await f.admin('select count(*) from evidence_pipeline.record_versions where record_kind=\'graph_node\' and record_key='+q(nodes.supplier)),before)
  })
  await t.test('reader holds authority through transaction; revocation waits',async()=>{
   const held=await hold(f.db,sql(),'mip_hypothesis_gateway'),pending=f.admin(original.revokeSql);pending.catch(()=>{})
   await blocked(f,held.pid);await held.finish(true);await pending
   await assert.rejects(()=>read(),/mip_market_operation_denied/)
+ })
+ await t.test('committed source correction immediately invalidates the dependent indirect path',async()=>{
+  await restoreAuthority()
+  const oldVersion=await latest('graph_node',nodes.supplier)
+  await f.admin('update public.nodes set label=\'Synthetic corrected supplier\' where id='+q(nodes.supplier))
+  await assert.rejects(()=>read(),/mip_market_assessment_unavailable/)
+  assert.equal(await f.admin('select count(*) from evidence_pipeline.record_versions where id='+q(oldVersion)),'1')
+  assert.notEqual(await latest('graph_node',nodes.supplier),oldVersion)
  })
 }
