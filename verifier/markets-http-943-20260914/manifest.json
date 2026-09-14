@@ -1,0 +1,71 @@
+{
+  "schema": "mip-markets-http-evidence-v1",
+  "candidate": "9432b88dd14c1e4f730ae910f9d2ee844b37fe53",
+  "base": "b4db7071048440ecbc6f9919b0d9ed1e6ce20a93",
+  "test_merge": "de710e548b13b522dbaf9f2b0857b6389d74f682",
+  "identical_tree": "cbc472a74618fd622066f0d2e27c66148127a32a",
+  "status": "synthetic_mechanism_checks_pass_independent_review_pending",
+  "changed_files": [
+    "src/lib/privateMarketsContract.js",
+    "src/lib/privateMarketsIO.js",
+    "src/lib/privateMarketsHttpTransport.js",
+    "src/lib/privateMarketsClient.js",
+    "supabase/qualification/markets-evidence/store.mjs",
+    "supabase/qualification/markets-evidence/handler.mjs",
+    "tests/privateMarketsTransportFixture.mjs",
+    "tests/privateMarketsTransport.test.mjs",
+    "tests/marketsPrivateReader.test.mjs",
+    "verifier/hypothesis-worker/marketsCases.mjs",
+    "docs/MARKETS_PRIVATE_HTTP_QUALIFICATION_2026-09-14.md"
+  ],
+  "direct_dependencies": [
+    "supabase/qualification/markets-evidence/001_typed_retained_records.sql",
+    "supabase/qualification/markets-evidence/002_authorized_reader.sql",
+    "supabase/functions/_shared/marketsEvidenceContract.mjs",
+    "verifier/hypothesis-worker/fixture.mjs",
+    "verifier/hypothesis-worker/worker.test.mjs",
+    "verifier/integrated/transport.mjs",
+    ".github/workflows/hypothesis-worker.yml",
+    ".github/workflows/golden.yml"
+  ],
+  "base_dependency_manifest": {
+    "commit": "380ef2ddad1f9b35c1ab30ac270b2d85cfa6901b",
+    "path": "verifier/markets-private-b4-20260914/manifest.json"
+  },
+  "logs": [
+    {
+      "file": "native-job-103958361411.log",
+      "run": 34838692616,
+      "job": 103958361411,
+      "sha256": "ec7558fe1a6e9eaa3148a7fb704f8544a3df796c18931c5aca933b673e52ada3",
+      "tests": 87,
+      "pass": 87,
+      "fail": 0
+    },
+    {
+      "file": "golden-node22-job-103958361838.log",
+      "run": 34838692623,
+      "job": 103958361838,
+      "sha256": "680856f1305b14682a50d8c092029017faef96284556bf9ce81678d1a694e31f",
+      "tests": 1916,
+      "pass": 1916,
+      "fail": 0,
+      "build": "success"
+    }
+  ],
+  "digest_definition": "SHA-256 exact UTF-8 connector-decoded log text, preserving BOM if present; not ZIP digest",
+  "retained_failed_run": {
+    "candidate": "520dbcb74b74fbf2dc81fe1c87f3187f964ef9e9",
+    "run": 34838633795,
+    "job": 103958171203,
+    "reason": "Stale native HTTP result503instead409 due to diagnostic context suffix; corrected by943 closed classifier."
+  },
+  "limitations": [
+    "No deployed endpoint/default URL/public tab/SQL or grant changes",
+    "Verified authentication is synthetic token mapping in native tests, not provider JWT/session verification",
+    "Native actual handler and prepared gateway execute with existing synthetic admin-created rights, no real material/provider/browser network",
+    "Browser CORS enforcement and actual remote credential binding not qualified",
+    "Driver query cancellation is cooperative; late result is suppressed if adapter ignores abort",
+    "All base private/publication/root-lineage/real-rights/production exposure/scale/zero-path asset gaps remain"
+  ]
+}
