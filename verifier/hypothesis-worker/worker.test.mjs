@@ -1,3 +1,5 @@
+import {createSupabaseHypothesisAuthenticator} from '../../supabase/qualification/hypothesis-assessments/supabaseAuthenticator.mjs'
+import {syntheticAuthProvider} from '../../tests/hypothesisAuthProviderFixture.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
@@ -48,7 +50,8 @@ test('isolated hypothesis generation authority, retained computation and restart
  const f=await setup(t)
  await t.test('configured synthetic client-handler-store-worker-review path uses native gateway transactions',async()=>{
   const v=await f.investigation()
-  let queries=0,token='synthetic-owner',dropReview=false
+  const provider=syntheticAuthProvider(v.user),acceptedToken=provider.token()
+  let queries=0,token=acceptedToken,dropReview=false
   const query=async(sql,values)=>{
    // SQL comes exclusively from createHypothesisStore, never request JSON.
    assert.match(sql,/^select mip_hypothesis\.[a-z_]+\(/)
@@ -58,8 +61,8 @@ test('isolated hypothesis generation authority, retained computation and restart
    return {rows:[{value:JSON.parse(result)}]}
   }
   const store=createHypothesisStore(query)
-  // Explicit synthetic Auth boundary, not a provider JWT/production identity qualification.
-  const authenticate=async authorization=>authorization==='Bearer synthetic-owner'?{id:v.user,is_anonymous:false}:null
+  // Real SDK/verifier against an in-process signed synthetic provider; no production attestation.
+  const authenticate=createSupabaseHypothesisAuthenticator(provider.configuration)
   const handler=createHypothesisHandler({authenticate,store,sourceProject:v.source,
    allowedOrigins:['https://mip-synthetic.invalid'],generationTarget:{runtimeId:v.runtime,methodRevision:v.method}})
   const send=async(action,input,{origin='https://mip-synthetic.invalid'}={})=>{
@@ -86,10 +89,13 @@ test('isolated hypothesis generation authority, retained computation and restart
   token='synthetic-untrusted'
   assert.equal((await client.history(v.iid)).error.code,'authentication_required')
   assert.equal(queries,before)
-  token='synthetic-owner'
+  token=acceptedToken
   assert.equal((await send('history',{investigation_id:v.iid,user_id:v.user})).error.code,'invalid_request')
   assert.equal((await send('history',{investigation_id:v.iid},{origin:'https://other.invalid'})).error.code,'origin_denied')
   assert.equal(queries,before)
+  provider.state.revoked=true
+  assert.equal((await client.history(v.iid)).error.code,'authentication_required');assert.equal(queries,before)
+  provider.state.revoked=false // Synthetic provider case only.
   const empty=await client.history(v.iid);assert.deepEqual(empty.data.entries,[])
   assert.equal((await client.authoringContext(v.iid,v.vid)).error,null)
   const span=await client.authoringSpan({investigation_id:v.iid,workspace_version_id:v.vid,
