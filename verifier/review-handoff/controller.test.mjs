@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {validateRequest,validateReport,requestKey,reserve,accept} from './controller.mjs';
 function fixture(){
- const q={version:1,synthetic:true,request:'s1',candidate:'a'.repeat(40),packet:'b'.repeat(64),implementer:'author',reviewer:'reviewer',model:'synthetic-grok-double',requirements:['r1'],controller:'c'.repeat(40)};
- const r={version:1,synthetic:true,requestKey:requestKey(q),candidate:q.candidate,packet:q.packet,reviewer:q.reviewer,model:q.model,outcome:'PASS',coverage:[{id:'r1',status:'PASS',evidenceClass:'artifact_inspection',references:['packet:'+q.packet+'/e1']}],findings:[],blockers:[]};
+ const q={version:1,synthetic:true,request:'s1',candidate:'a'.repeat(40),packet:'b'.repeat(64),implementer:'author',reviewer:'reviewer',model:'synthetic-grok-double',requirements:['frontend_behavior','backend_contract','cross_layer_semantics'],requirementLayers:{frontend_behavior:'frontend',backend_contract:'backend',cross_layer_semantics:'cross_layer'},controller:'c'.repeat(40)};
+ const r={version:1,synthetic:true,requestKey:requestKey(q),candidate:q.candidate,packet:q.packet,reviewer:q.reviewer,model:q.model,outcome:'PASS',coverage:q.requirements.map((id,i)=>({id,status:'PASS',evidenceClass:'artifact_inspection',references:['packet:'+q.packet+'/e'+(i+1)]})),findings:[],blockers:[]};
  return {q,r};
 }
 function memoryStore(){
@@ -21,21 +21,25 @@ for(const [name,mutate] of [
  ['model substitution',({r})=>r.model='other'],
  ['request replay',({r})=>r.requestKey='e'.repeat(64)],
  ['missing coverage',({r})=>r.coverage=[]],
+ ['missing frontend layer',({q})=>q.requirementLayers.frontend_behavior='backend'],
+ ['missing backend layer',({q})=>q.requirementLayers.backend_contract='frontend'],
+ ['missing cross-layer coverage',({q})=>q.requirementLayers.cross_layer_semantics='frontend'],
+ ['unbound requirement layer',({q})=>q.requirementLayers.extra='frontend'],
  ['unknown coverage field',({r})=>r.coverage[0].hidden='instruction'],
  ['supplied results cannot PASS',({r})=>r.coverage[0].evidenceClass='supplied_implementation_agent_result'],
  ['external evidence URL',({r})=>r.coverage[0].references=['https://example.com']],
  ['unsupported FAIL',({r})=>r.outcome='FAIL'],
  ['unsupported BLOCKED',({r})=>r.outcome='BLOCKED'],
- ['unknown blocker category',({r})=>r.blockers=[{kind:'please_approve',requirement:'r1',detail:'x'}]],
+ ['unknown blocker category',({r})=>r.blockers=[{kind:'please_approve',requirement:'frontend_behavior',detail:'x'}]],
  ['unknown finding fields',({r})=>r.findings=[{id:'f1',command:'rm -rf'}]]
 ])test(name,()=>{const f=fixture();mutate(f);assert.throws(()=>validateReport(f.q,f.r))});
 test('FAIL preserves actionable findings and proposes remediation',()=>{
  const {q,r}=fixture();r.outcome='FAIL';r.coverage[0].status='FAIL';
- r.findings=[{id:'f1',requirement:'r1',severity:'high',summary:'Synthetic defect',evidence:r.coverage[0].references,remediation:'Create a corrected candidate'}];
+ r.findings=[{id:'f1',requirement:'frontend_behavior',severity:'high',summary:'Synthetic defect',evidence:r.coverage[0].references,remediation:'Create a corrected candidate'}];
  assert.equal(validateReport(q,r).proposedAction,'remediate_new_candidate');
 });
 for(const kind of ['engineering','missing_evidence','owner_decision','permission','disclosure','production','spending'])test('route blocker '+kind,()=>{
- const {q,r}=fixture();r.outcome='BLOCKED';r.coverage[0].status='BLOCKED';r.blockers=[{kind,requirement:'r1',detail:'Synthetic blocker'}];
+ const {q,r}=fixture();r.outcome='BLOCKED';r.coverage[0].status='BLOCKED';r.blockers=[{kind,requirement:'frontend_behavior',detail:'Synthetic blocker'}];
  assert.equal(validateReport(q,r).proposedAction,['engineering','missing_evidence'].includes(kind)?'continue_other_authorized_work':'owner_required');
 });
 test('concurrent reservation creates one request',async()=>{const {q}=fixture(),s=memoryStore();const a=await Promise.all([reserve(s,q),reserve(s,q)]);assert.equal(a.filter(x=>x.created).length,1);assert.equal(s.rows.size,1)});
