@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "request_id": "pr164-50cb0bc-independent-1",
+  "candidate_commit": "50cb0bc0f3883c1454fa6489b249bcfc51787385",
+  "base_commit": "220be5e69014316232c5c9ee85e5501b8f734c42",
+  "packet_commit": "db2ce891f70aa5f5f470b564c462e3170dbb5d26",
+  "packet_path": "verifier/independent-pr164/request.json",
+  "packet_sha256": "18a33c45ac101b9e706f3382da60bb6fbee1d22f1cc753b1d5b50d5596f82e7c",
+  "packet_bytes": 2029730,
+  "agent_id": "bc-50cb0bc0-f388-4c14-94fa-6489b249bcfc",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "reserved_before_launch",
+  "maximum_initial_posts": 1,
+  "scope": "Exactly one fresh PR164 App composition review; no retry/recovery."
+}
