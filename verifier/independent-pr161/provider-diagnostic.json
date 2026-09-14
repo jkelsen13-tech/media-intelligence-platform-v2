@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "agent_id": "bc-208e1606-8440-4e58-96ad-04209cbe45ba",
+  "pinned_run_id": "run-c3975cac-9ae5-4a47-8352-cfa24fdf16e2",
+  "run_metadata": {
+    "status": 200,
+    "body": {
+      "items": [
+        {
+          "id": "run-c3975cac-9ae5-4a47-8352-cfa24fdf16e2",
+          "agentId": "bc-208e1606-8440-4e58-96ad-04209cbe45ba",
+          "status": "FINISHED",
+          "createdAt": "2026-09-14T11:41:29.371Z",
+          "updatedAt": "2026-09-14T11:44:11.296Z",
+          "durationMs": 160947
+        }
+      ]
+    }
+  },
+  "usage_response": {
+    "status": 200,
+    "body": {
+      "totalUsage": {
+        "inputTokens": 840896,
+        "outputTokens": 11063,
+        "cacheWriteTokens": 0,
+        "cacheReadTokens": 512,
+        "totalTokens": 852471
+      },
+      "cost": {
+        "rawCostCents": 37.2667,
+        "chargedCents": 37.2667
+      },
+      "runs": [
+        {
+          "id": "run-c3975cac-9ae5-4a47-8352-cfa24fdf16e2",
+          "usageUuid": "1cf67d33-21cf-5ab1-9a1d-6fd453b38b2a",
+          "usage": {
+            "inputTokens": 840896,
+            "outputTokens": 11063,
+            "cacheWriteTokens": 0,
+            "cacheReadTokens": 512,
+            "totalTokens": 852471
+          },
+          "cost": {
+            "rawCostCents": 37.2667,
+            "chargedCents": 37.2667
+          }
+        }
+      ]
+    }
+  },
+  "packet_bytes": 1747767,
+  "full_prompt_bytes": 1752994,
+  "artifact_class": "72candidate+2base sources;4complete logs;metadata;strict outputtemplate",
+  "facts": [
+    "Pinned GET and list-runs expose no stop/finish reason, truncation/context-compaction flag or user-message history.",
+    "List-runs contains one run. Controller sent one initial POST and no continuation.",
+    "Official API usage endpoint exposed per-run aggregate token usage; this is not a single context-window measurement.",
+    "Narrative claims a handoff request and incomplete work. Claims do not establish actual second owner/controller message or filesystem actions."
+  ],
+  "inference": "Context compaction is plausible but not proven by available metadata.",
+  "documented_context_limit": null,
+  "api_documentation": "https://cursor.com/docs-static/cloud-agents-openapi.yaml",
+  "review_acceptance": "BLOCKED",
+  "no_retry": true
+}
