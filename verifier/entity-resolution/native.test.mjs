@@ -208,15 +208,30 @@ test('native immutable mention and scoped resolution replacement',async t=>{
   assert.deepEqual(body,{uses_validated:true,no_source_decode:true,no_source_query:true})
   sql(activate(1))
  })
- await t.test('cursor malformed keys, identities and revoked anchor cannot bypass access',()=>{
-  const first=JSON.parse(user('select mip_mentions.candidate_page('+q(s)+','+q(m)+',1);'))
-  for(const cursor of [{...first.cursor,extra:true},{...first.cursor,after_candidate:id(999)},{...first.cursor,after_candidate:'bad'},[],null]){
-   if(cursor===null)continue
-   denied('select mip_mentions.candidate_page('+q(s)+','+q(m)+',1,'+q(JSON.stringify(cursor))+'::jsonb)',/cursor binding denied|invalid input syntax/)
-  }
+ await t.test('cursor malformed keys, identities and anchor-only revocation cannot bypass access',()=>{
+  const target=id(82) // Source fid; anchor alone cites f3, later rows cite fid only.
+  user(candidate(id(94),a,1,null,[ms],[],1,target))
+  user(candidate(id(95),b,1,null,[m2],[],2,target))
+  user(candidate(id(96),a,2,id(94),[m2],[],1,target))
+  const query=cursor=>'select mip_mentions.candidate_page('+q(s)+','+q(target)+',1'+
+   (cursor===undefined?'':','+q(JSON.stringify(cursor))+'::jsonb')+');'
+  const first=JSON.parse(user(query()))
+  assert.equal(first.cursor.after_candidate,id(94))
+  for(const cursor of [{...first.cursor,extra:true},{...first.cursor,after_candidate:id(999)},{...first.cursor,after_candidate:'bad'},[]])
+   denied(query(cursor),/cursor binding denied|invalid input syntax/)
+  const second=JSON.parse(user(query(first.cursor)))
+  assert.equal(second.items[0].candidate_id,id(95))
+  assert.equal(second.cursor.after_candidate,id(95))
   sql(access(f3,false))
-  denied('select mip_mentions.candidate_page('+q(s)+','+q(m)+',1,'+q(JSON.stringify(first.cursor))+'::jsonb)',/source unavailable/)
+  assert.equal(JSON.parse(user('select mip_mentions.read_mention('+q(s)+','+q(target)+')')).mention.literal,'to ')
+  assert.equal(JSON.parse(user('select mip_mentions.read_mention('+q(s)+','+q(m2)+')')).mention.literal,'Sam')
+  const tail=JSON.parse(user(query(second.cursor)))
+  assert.equal(tail.items[0].candidate_id,id(96));assert.equal(tail.cursor,null)
+  // Target, next candidate 95 and lookahead 96 use only readable fid.
+  // Only anchor 94 uses revoked f3: removing anchor validation would pass.
+  denied(query(first.cursor),/source unavailable/)
   sql(access(f3,true))
+  assert.deepEqual(JSON.parse(user(query(first.cursor))),second)
  })
  await t.test('absent access row cannot be admitted by an unlocked concurrent grant',async()=>{
   sql(access(f3,null));denied('select mip_mentions.read_mention('+q(s)+','+q(ms)+')',/source unavailable/)
