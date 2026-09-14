@@ -1,0 +1,543 @@
+{
+  "schema": "mip-dual-private-ui-engineering-evidence-v1",
+  "candidate": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+  "tree": "759d9835470f1125af032b20d2b33798ebf37fc7",
+  "base": "945c44e34941e2383a7cb36a4c7ea2b19c14f8fa",
+  "carried_hypothesis_candidate": "50cb0bc0f3883c1454fa6489b249bcfc51787385",
+  "carried_159": "220be5e69014316232c5c9ee85e5501b8f734c42",
+  "common_ancestor": "eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6",
+  "pr": 170,
+  "test_merge": "08f08608eba69a0559b0a4632c047cc75cce623f",
+  "test_merge_tree": "759d9835470f1125af032b20d2b33798ebf37fc7",
+  "independent_acceptance": "PENDING_NOT_SELF_APPROVED",
+  "production_activation": false,
+  "implementation_scope": "All ten164-versus-common-ancestor paths carried, including159 access-loss fixes. Only App hypothesis prop placement and scoped CSS combine with168. Both endpoints remain null by default. No backend/helper/auth/SQL/publication/production changes.",
+  "checks": {
+    "push_golden": {
+      "run": 34844738759,
+      "jobs": [
+        {
+          "id": 103977825761,
+          "node": 22,
+          "tests": 1958,
+          "pass": 1958,
+          "fail": 0,
+          "skip": 0,
+          "build_seconds": 18.49
+        },
+        {
+          "id": 103977825925,
+          "node": 24,
+          "tests": 1958,
+          "pass": 1958,
+          "fail": 0,
+          "skip": 0,
+          "build_seconds": 22.57,
+          "dependency_audit": "0 vulnerabilities"
+        }
+      ]
+    },
+    "pr_golden": {
+      "run": 34844743441,
+      "jobs": [
+        103977839686,
+        103977840002
+      ],
+      "status": "success"
+    },
+    "markets_browser": {
+      "run": 34844743417,
+      "job": 103977840010,
+      "status": "success",
+      "engines": [
+        "chromium",
+        "webkit"
+      ],
+      "baseline_widths": [
+        1280,
+        768,
+        390,
+        320
+      ],
+      "combined_width": 390,
+      "external_requests": 0
+    },
+    "hypothesis_browser": {
+      "run": 34844743732,
+      "job": 103977842106,
+      "status": "success",
+      "engines": [
+        "chromium",
+        "webkit"
+      ],
+      "widths": [
+        1280,
+        768,
+        390,
+        320
+      ]
+    },
+    "worldview": {
+      "run": 34844743491,
+      "jobs": [
+        103977840889,
+        103977841266
+      ],
+      "status": "IN_PROGRESS_AT_RECORDING",
+      "distinct_public_readonly_workflow": true
+    }
+  },
+  "checkout": {
+    "both_touched_browser_workflows_sha": "3d3c42e5aac5ba805825da76410c181273ba90b1",
+    "persist_credentials": false,
+    "contents": "read"
+  },
+  "named_dual_tests": [
+    "ok 1274 - dual actual App clients coexist and optional endpoints are independently default closed",
+    "ok 1275 - current hypothesis denial clears both App views and late other-client success cannot revive scope",
+    "ok 1276 - current markets denial clears both App views and late other-client success cannot revive scope",
+    "ok 1277 - dual clients ignore old-session hypothesis success without clearing or reviving replacement scope",
+    "ok 1278 - dual clients ignore old-session hypothesis denial without clearing or reviving replacement scope",
+    "ok 1279 - dual clients ignore old-session markets success without clearing or reviving replacement scope",
+    "ok 1280 - dual clients ignore old-session markets denial without clearing or reviving replacement scope",
+    "ok 1281 - malformed hypothesis 403 does not authoritatively revoke the other App view",
+    "ok 1282 - malformed markets 403 does not authoritatively revoke the other App view",
+    "ok 1283 - actual displayed session expiry clears both App clients without additional requests",
+    "ok 1284 - dual App investigation action preserves replacement scope after old hypothesis success",
+    "ok 1285 - dual App investigation action preserves replacement scope after old hypothesis denial",
+    "ok 1286 - dual App investigation action preserves replacement scope after old markets success",
+    "ok 1287 - dual App investigation action preserves replacement scope after old markets denial",
+    "ok 1288 - dual App version action preserves replacement scope after old hypothesis success",
+    "ok 1289 - dual App version action preserves replacement scope after old hypothesis denial",
+    "ok 1290 - dual App version action preserves replacement scope after old markets success",
+    "ok 1291 - dual App version action preserves replacement scope after old markets denial"
+  ],
+  "test_graph": {
+    "package_script": "node --test $(find tests -type f -name '*.test.mjs' | sort)",
+    "steps": [
+      "npm ci",
+      "npm test",
+      "npm run build"
+    ],
+    "node_composition": "tests/privateMarketsHypothesisComposition.test.mjs -> actual App + both actual clients -> typed hypothesis HTTP fixture / real Markets handler-reader-mapper with explicit synthetic auth and DB rows",
+    "browser": "verifier/markets-browser/run.mjs -> actual App with both endpoints and real clients -> synthetic HTTP routing; unrelated public views isolated",
+    "source_transfer_regressions": "tests/hypothesisAssessmentHistory.test.mjs + tests/appHypothesisComposition.test.mjs retained from164 including159; no skips",
+    "native_sql": "NOT qualified by this frontend integration"
+  },
+  "artifacts": [
+    {
+      "path": "verifier/pr170-integration-evidence/golden-node22.log",
+      "git_blob_sha": "6a4030d9186157bd7fcfa9d8701b21804cec30e6"
+    },
+    {
+      "path": "verifier/pr170-integration-evidence/golden-node24.log",
+      "git_blob_sha": "fa352943223d93fbc0c01e88d44936f1f66231b2"
+    },
+    {
+      "path": "verifier/pr170-integration-evidence/markets-browser.log",
+      "git_blob_sha": "d4d21c5a4496a62694f4ca73795d678f8fe12898"
+    },
+    {
+      "path": "verifier/pr170-integration-evidence/hypothesis-browser.log",
+      "git_blob_sha": "49599ae29084f3fca5a88cb3a4fceca240240d16"
+    },
+    {
+      "path": "verifier/pr170-integration-evidence/history-chromium.jpg",
+      "git_blob_sha": "3ca163f2ac993737ae27d408431b52d8753660da"
+    },
+    {
+      "path": "verifier/pr170-integration-evidence/markets-chromium.jpg",
+      "git_blob_sha": "62c4c75057ec04efd25692af04b5a58933a61b0b"
+    },
+    {
+      "path": "verifier/pr170-integration-evidence/history-webkit.jpg",
+      "git_blob_sha": "0e747c1d879cd8b8db17153bc0e0c68df9ca8bee"
+    },
+    {
+      "path": "verifier/pr170-integration-evidence/markets-webkit.jpg",
+      "git_blob_sha": "c7a4b5323dc97058d80104a758c709e2ad310ab6"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".github/workflows/hypothesis-browser.yml",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "1794f0a8c9c097fa26be7875359cf96a548ecdb1",
+      "bytes": 1494,
+      "role": "candidate_change"
+    },
+    {
+      "path": "src/App.jsx",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "b6fdb8e53dc105063d8a1cb6e7fb0fed2c0b83fc",
+      "bytes": 80490,
+      "role": "candidate_change"
+    },
+    {
+      "path": "src/components/HypothesisAssessmentHistory.jsx",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "cec5350d89e62a930a147c74c22a77f73122e6de",
+      "bytes": 9826,
+      "role": "candidate_change"
+    },
+    {
+      "path": "src/components/HypothesisReassessmentRequest.jsx",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "64cb6fc1fdf8e200bdca7ac92761c9e04bda3fc8",
+      "bytes": 5963,
+      "role": "candidate_change"
+    },
+    {
+      "path": "src/styles/investigation-workspace-panels.css",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "a903c428c8255ea2843eaa8eb708e072b9cdaa23",
+      "bytes": 23249,
+      "role": "candidate_change"
+    },
+    {
+      "path": "tests/appHypothesisComposition.test.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "57e3a6e4394cdc8e6361343b86f5be4ca6d13ad7",
+      "bytes": 6698,
+      "role": "candidate_change"
+    },
+    {
+      "path": "tests/hypothesisAssessmentHistory.test.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "ccd55cd165a484191c74f296720ea788bc3b1de3",
+      "bytes": 18167,
+      "role": "candidate_change"
+    },
+    {
+      "path": "verifier/hypothesis-browser/appIsolation.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "7c03ab5035a2c27fb672b8584ea3d9ecf902e485",
+      "bytes": 1360,
+      "role": "candidate_change"
+    },
+    {
+      "path": "verifier/hypothesis-browser/fixture.jsx",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "81ccc5a137c16b6b3ade82da4a318e6f09ce047d",
+      "bytes": 8383,
+      "role": "candidate_change"
+    },
+    {
+      "path": "verifier/hypothesis-browser/run.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "a7b031058ebe70751837210cb89884b6797dd1ac",
+      "bytes": 30381,
+      "role": "candidate_change"
+    },
+    {
+      "path": "tests/privateMarketsHypothesisFixture.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "532129fa12f4bc16dc3f5a88c356f55c5a7a9c26",
+      "bytes": 988,
+      "role": "candidate_change"
+    },
+    {
+      "path": "tests/privateMarketsHypothesisComposition.test.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "66712e5bd47992fcb4d8c342b8363fedc9a1f0dd",
+      "bytes": 13539,
+      "role": "candidate_change"
+    },
+    {
+      "path": "verifier/markets-browser/fixture.jsx",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "035a68367625ad4e9650a1360f892cf18a3a55da",
+      "bytes": 892,
+      "role": "candidate_change"
+    },
+    {
+      "path": "verifier/markets-browser/run.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "8540e82a2519d8286acd6347ab98a1ad9cf0784b",
+      "bytes": 14589,
+      "role": "candidate_change"
+    },
+    {
+      "path": ".github/workflows/markets-browser.yml",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "6e36d2005b7cf740765b7f1d64fa74f76bd02e8b",
+      "bytes": 1546,
+      "role": "candidate_change"
+    },
+    {
+      "path": "src/components/PrivateInvestigationWorkspace.jsx",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "9ece9b71806a7e496949cba1ab861fbabe86eef4",
+      "bytes": 86218,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/components/PrivateMarketsWorkspace.jsx",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "cdbe5908ee4b556c9ca4e45267ea3c97e6cf604f",
+      "bytes": 6077,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/components/PrivateMarketAssetCard.jsx",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "f6982cd0e4a0fad2d4c267a829646b01cc1da56f",
+      "bytes": 2723,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/usePrivateMarketsRead.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "398cb9c5c21e1575231fc78271bdc0ff204b1fbd",
+      "bytes": 3025,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "tests/privateMarketsWorkspaceFixture.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "7a30576a03504dc53f9d347c27d9390bd99e620d",
+      "bytes": 3498,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "tests/privateMarketsWorkspace.test.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "9fa606da61b7eccfdd013a7fd4394831e88cdbeb",
+      "bytes": 11317,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "verifier/markets-browser/isolatedPublicSurfaces.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "7c03ab5035a2c27fb672b8584ea3d9ecf902e485",
+      "bytes": 1360,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "docs/MARKETS_PRIVATE_UI_QUALIFICATION_2026-09-14.md",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "8e0153ec2066534b21704e06f606424289d0ea51",
+      "bytes": 2943,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "package.json",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "1bba418b9204f69df7ade003d9d3e19679a5434f",
+      "bytes": 1329,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "package-lock.json",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "b5d44ec6e0a21f931cb2d43884010025ee89889c",
+      "bytes": 118411,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": ".github/workflows/golden.yml",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "d94e68d2dd486943e3614228b8c6a0ea9da3006b",
+      "bytes": 696,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/privateMarketsClient.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "e4647592c826ee0ab76a39402f32cc87a8cd9f2f",
+      "bytes": 2254,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/privateMarketsContract.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "d96cdae536b4eccd397e4ec3e94bd0c69132c907",
+      "bytes": 8364,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/privateMarketsHttpTransport.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "de172fa349d65ff29e5feab0a45462103880579b",
+      "bytes": 4226,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/privateMarketsIO.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "51d75a990ec5dfd260bcfb5cb17b33a063f203e9",
+      "bytes": 891,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/usePrivateInvestigationWorkspace.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "b1302965cd0ca044780b32d942e9cbae00cfa30a",
+      "bytes": 53939,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/investigationWorkspaceClient.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "dabbd4ab7ac88472ec069f1d5d63bdad31fab604",
+      "bytes": 3694,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/investigationWorkspaceFixtures.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "f8a10d0bca0dbe991e02b3de55d392c330fc77f9",
+      "bytes": 59173,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/investigationInputImpactClient.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "3910954e5f783ec917923a52cedd641404b78732",
+      "bytes": 4058,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "supabase/functions/_shared/marketsEvidenceContract.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "e0c0ff9939f9291adfed24568b0ead4fc487fc84",
+      "bytes": 9120,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "supabase/qualification/markets-evidence/001_typed_retained_records.sql",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "8192fdf275351dd424e00de4ce31cd5bd3ae86db",
+      "bytes": 12616,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "supabase/qualification/markets-evidence/002_authorized_reader.sql",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "994033925bee5e3a0d242fe1bce83fd8b95746f0",
+      "bytes": 12791,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "supabase/qualification/markets-evidence/handler.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "ef67a03de64a250d409823c94f748935379a4bfc",
+      "bytes": 3972,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "supabase/qualification/markets-evidence/store.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "b9a14114a86438ecdaaa1d5e2cf5415741600629",
+      "bytes": 2349,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "tests/privateMarketsTransportFixture.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "2be7779a9237f782d8c5b71df7c14766fb240da0",
+      "bytes": 1723,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "tests/privateMarketsTransport.test.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "c6dc9be21f60960a9257a584c20b1920e0aaaaa1",
+      "bytes": 8827,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "tests/marketsEvidenceContract.test.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "473c34521af012b8705f8af2441f845360dd083f",
+      "bytes": 9378,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "tests/marketsPrivateReader.test.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "64a1cedd0f7de6c6932c24a885554152127260de",
+      "bytes": 3079,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "verifier/hypothesis-worker/marketsCases.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "e24a75b954bf1a8284de35bbbb8f84195a928734",
+      "bytes": 17533,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/useHypothesisSessionClient.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "9c7d6712d90d71c9ee171b1969db9fb73551c845",
+      "bytes": 2200,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/hypothesisHttpTransport.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "348b620705286ec0645dc9615ac2a5d7b1fec7c4",
+      "bytes": 4759,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/hypothesisAssessmentClient.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "4751c87c6b7ab5e54d4a22ba7080b6a93945a549",
+      "bytes": 5629,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "tests/hypothesisComparisonFixture.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "fe2e69d5fde1f1df3c7b40a255660c0a2cb5314a",
+      "bytes": 2011,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "tests/hypothesisAssessmentFixture.mjs",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "da57f4423665ac422a28ec500b939440e782387e",
+      "bytes": 2142,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/components/HypothesisReviewAcknowledgement.jsx",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "eb97e98fe66e1ae7e52d17396d19f1ab5376a74b",
+      "bytes": 5600,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/components/HypothesisObservations.jsx",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "cb0e71014ff2fa09d610195202923b4ec0075cd9",
+      "bytes": 6778,
+      "role": "inspection_dependency"
+    },
+    {
+      "path": "src/lib/investigationWorkspaceSession.js",
+      "commit": "e2fbf0b950bf9ba77006ec6274c42ce3c1595b41",
+      "git_blob_sha": "0533629ba09334b05803bb30cee22b94c643f133",
+      "bytes": 22172,
+      "role": "inspection_dependency"
+    }
+  ],
+  "earlier_preserved_evidence": {
+    "candidate": "ad65a649a78c8b419cb593261b2875474b7f5d0b",
+    "golden_run": 34844575279,
+    "markets_run": 34844594650,
+    "hypothesis_run": 34844594640,
+    "note": "Original Actions runs remain unchanged. No test or browser failures observed in this integration; no evidence deleted or replaced."
+  },
+  "limitations": [
+    "Independent review pending; frozen164/165 review limitations not converted to approval by integration.",
+    "Both endpoint defaults remain null. No provider-auth/nativeSQL/fullrights/liveproduction qualification.",
+    "Typed hypothesis responses are synthetic fixtures, not execution of its backend. Markets executes actual handler/reader/mapper against explicit synthetic auth/database adapter.",
+    "No public Markets discovery/registry, broader-context completion, source-root/full attribution/rights or as-known-then history qualification.",
+    "Browser public views isolated, not full-public-App/physical-device visual qualification.",
+    "Same-session hypothesis transport can survive workspace replacement; component guards must ignore old completions, not assumed cancellation. Markets disposal and old-session AbortSignal asserted.",
+    "No merges, review launch, new permissions, local project files, production credentials, deployment or activation."
+  ]
+}
