@@ -200,15 +200,20 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   assert.equal(stale.entries[0].status,'available');assert.equal(stale.entries[0].current_context,false);assert.equal(stale.entries[0].reassessment_pending,true)
   // Exact serialized final payload boundary: allowed at 1 MiB, denied at 1 MiB + 1.
   await f.admin("begin;alter table mip_hypothesis.revisions disable trigger immutable_rows;do $bytes$ declare base_bytes integer;begin select octet_length(mip_temporal.boundary_history_payload("+args+")::text) into base_bytes;update mip_hypothesis.revisions set assessment=jsonb_set(assessment,'{question}',to_jsonb((assessment->>'question')||repeat('x',1048576-base_bytes))) where id="+q(target)+";if octet_length(mip_temporal.boundary_history_payload("+args+")::text)<>1048576 then raise exception 'payload_boundary_not_exact';end if;update mip_hypothesis.revisions set assessment=jsonb_set(assessment,'{question}',to_jsonb((assessment->>'question')||'x')) where id="+q(target)+";begin perform mip_temporal.boundary_history_payload("+args+");raise exception 'expected_byte_denial_missing';exception when others then if sqlerrm<>'mip_boundary_payload_limit' then raise;end if;end;end $bytes$;rollback")
-  // Synthetic custodian fault between committed issuance and consumption: fingerprint tampering.
+  // Disposable administrator fault injection, not a production-authorized transition.
+  // Alter actual selected payload after issuance and restore the immutable row in finally.
+  const originalQuestion=await f.admin("select assessment->>'question' from mip_hypothesis.revisions where id="+q(target))
+  const changeQuestion=question=>f.admin("begin;alter table mip_hypothesis.revisions disable trigger immutable_rows;update mip_hypothesis.revisions set assessment=jsonb_set(assessment,'{question}',to_jsonb("+q(question)+"::text)) where id="+q(target)+";alter table mip_hypothesis.revisions enable trigger immutable_rows;commit")
   let changed=false
   const alteredAuthority={withPermit:(request,challenge,signal,consume)=>x.authority.withPermit(request,challenge,signal,async permit=>{
-   await f.admin("begin;alter table mip_temporal.boundary_history_permits disable trigger immutable_rows;update mip_temporal.boundary_history_permits set payload_digest=repeat('f',64) where id="+q(permit.permit_id)+";alter table mip_temporal.boundary_history_permits enable trigger immutable_rows;commit")
-   changed=true;return consume(permit)
+   await changeQuestion(originalQuestion+' Synthetic post-issue mutation.')
+   changed=true
+   try{return await consume(permit)}finally{await changeQuestion(originalQuestion)}
   })}
   let delivered=false
   await assert.rejects(()=>x.reader({authority:alteredAuthority})(x.request,()=>{delivered=true}))
   assert.equal(changed,true);assert.equal(delivered,false)
+  assert.equal(await f.admin("select assessment->>'question' from mip_hypothesis.revisions where id="+q(target)),originalQuestion)
   // Hold membership precheck before quota: cleanup must complete while issuance is demonstrably waiting.
   const held=await hold(f.db,'select pg_advisory_xact_lock(hashtextextended('+q('mip-workspace-access:'+x.identity.iid+':'+x.identity.user)+',0))')
   const claim={...x.claim(),request_id:randomUUID(),auth_until:new Date(Date.now()+60000).toISOString()}
