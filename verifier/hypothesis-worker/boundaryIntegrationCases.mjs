@@ -149,6 +149,22 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
   assert.equal(await f.admin('select count(*) from mip_temporal.boundary_issues where request_id='+q(request)),'1')
   assert.equal(await b.checkpointCount(),'1')
  })
+ await t.test('lost prepare and advance responses replay exact retained permits and checkpoints',async t=>{
+  const b=await configured(t),issue=await b.issue(),c=await b.capture(issue.marker_id)
+  let losePrepare=true,loseAdvance=true
+  const api=b.makeApi(b.registration,async(name,args)=>{
+   const result=await b.call(name,args)
+   if(name==='prepare_boundary_incarnation'&&losePrepare){losePrepare=false;throw Error('lost_prepare')}
+   if(name==='advance_boundary_incarnation'&&loseAdvance){loseAdvance=false;throw Error('lost_advance')}
+   return result
+  })
+  await assert.rejects(()=>b.consume(c,{transport:api}),/lost_prepare/)
+  assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
+  await assert.rejects(()=>b.consume(c,{transport:api}),/lost_advance/)
+  assert.equal(await b.confirmed(),c.end_lsn);assert.equal(await b.checkpointCount(),'1')
+  await b.refreshAll();await b.consume(c,{transport:api})
+  assert.equal(await b.checkpointCount(),'1')
+ })
  await t.test('missing bootstrap or mutated custody readback prevents source permits and slot advancement',async t=>{
   const b=await configured(t,{paged:true}),issue=await b.issue(),c=await b.capture(issue.marker_id),j=b.journal()
   await assert.rejects(()=>b.consume(c,{journal:{putOnce:j.putOnce,get:async k=>k.startsWith('bootstrap-v1:')?null:j.get(k)}}))
@@ -158,6 +174,12 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
   await assert.rejects(()=>b.consume(c,{journal:{
    get:async k=>lost&&k.startsWith('bootstrap-v1:')?null:j.get(k),
    putOnce:async(k,v)=>{const saved=await j.putOnce(k,v);if(k.startsWith('boundary-delivery-v2:'))lost=true;return saved}
+  }}))
+  assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
+  let corrupt=false
+  await assert.rejects(()=>b.consume(c,{journal:{
+   get:async k=>{const v=await j.get(k);if(corrupt&&k.includes(':page:')&&v?.bootstrap?.rows?.length){v.bootstrap.rows[0].revision_id=randomUUID()}return v},
+   putOnce:async(k,v)=>{const saved=await j.putOnce(k,v);if(k.startsWith('boundary-delivery-v2:'))corrupt=true;return saved}
   }}))
   assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
   await b.consume(c)
@@ -231,6 +253,32 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
   await assert.rejects(()=>b.consume(c),/mip_temporal_slot_denied/)
   assert.equal(await b.checkpointCount(),'0')
   assert.equal(await f.admin('select count(*) from mip_temporal.stream_captures where id='+q(c.id)),'1')
+ })
+ await t.test('slot recreation or external native advancement cannot inherit registered coverage',async t=>{
+  for(const fault of ['recreate','advance']){
+   const b=await configured(t),issue=await b.issue(),c=await b.capture(issue.marker_id)
+   if(fault==='recreate'){
+    await f.admin('select pg_drop_replication_slot('+q(b.slot)+');select slot_name from pg_create_logical_replication_slot('+[b.slot,'pgoutput'].map(q).join(',')+');')
+   }else{
+    await b.produce()
+    const later=await f.admin('select pg_current_wal_lsn()::text')
+    await f.admin('select end_lsn from pg_replication_slot_advance('+[b.slot,later].map(q).join(',')+');')
+   }
+   await assert.rejects(()=>b.capture(issue.marker_id,b.before,c.id),/mip_coverage_position_gap/)
+   await assert.rejects(()=>b.consume(c),/mip_coverage_position_gap/)
+   assert.equal(await b.checkpointCount(),'0')
+  }
+ })
+ await t.test('source mapping revocation fences issuance, capture and prepared advancement',async t=>{
+  for(const prepared of [false,true]){
+   const b=await configured(t),issue=await b.issue(),c=await b.capture(issue.marker_id);let request
+   if(prepared)await assert.rejects(()=>b.consume(c,{transport:{prepare:b.api.prepare,advance:async p=>{request=p;throw Error('hold')}}}),/hold/)
+   await f.admin('update mip_identity.mapping_heads set active=false where runtime='+q(b.runtime))
+   await assert.rejects(()=>b.issue(),/mip_identity_mapping_revoked/)
+   await assert.rejects(()=>b.capture(issue.marker_id,b.before,c.id),/mip_identity_mapping_revoked/)
+   if(prepared)await assert.rejects(()=>b.api.advance(request),/mip_identity_mapping_revoked/)
+   assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
+  }
  })
  await t.test('custody envelope pins are forwarded unchanged and independently rejected by source registration',async t=>{
   const wrongIncarnation=await configured(t,{incarnationMismatch:true})
