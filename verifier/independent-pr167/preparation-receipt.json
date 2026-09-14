@@ -1,0 +1,79 @@
+{
+  "status": "prepared_only_not_launched",
+  "candidate": "e2f4e0369ca577c11b0c8e809fb3bd782a344fc6",
+  "base": "b838ac43601ec905b95524b9c15437e6f1b23d7d",
+  "packet_commit": "fbd96bda380105e4d20dd57dc997d4e3f281d520",
+  "packet_path": "verifier/independent-pr167/prepared-request.json",
+  "packet_bytes": 129426,
+  "packet_sha256": "9f0ff45328e7ce508737efe4cb909fdf76fced0dfc945efdd66d401a9d5721ae",
+  "errors": [],
+  "inventory": [
+    {
+      "path": "verifier/review-handoff/terminal-output.test.mjs",
+      "bytes": 2417,
+      "blob_sha": "3b3d53e19c6b6700a55489a8e6aa75862e9208f8"
+    },
+    {
+      "path": "verifier/review-handoff/TERMINAL-OUTPUT-REGRESSION.md",
+      "bytes": 2058,
+      "blob_sha": "40eff323f43a821bbcaceac19e1f00f17bea5764"
+    },
+    {
+      "path": "verifier/review-handoff/controller.mjs",
+      "bytes": 3433,
+      "blob_sha": "6583cf97776b2df7329fffb75bc2b4f3eb34813b"
+    },
+    {
+      "path": "verifier/review-handoff/protocol.mjs",
+      "bytes": 2828,
+      "blob_sha": "5429eb0b4f8875248058b483451558a93de87c01"
+    },
+    {
+      "path": "verifier/review-handoff/validation.mjs",
+      "bytes": 6014,
+      "blob_sha": "686f8c1a3f39bab569c15da8ef363e2b6bdb6d8e"
+    },
+    {
+      "path": "verifier/review-handoff/fixtures.mjs",
+      "bytes": 3310,
+      "blob_sha": "5ad71e5f8e477733aca14b76f0c8d258364f7f8b"
+    },
+    {
+      "path": "verifier/review-handoff/adversarial.test.mjs",
+      "bytes": 10056,
+      "blob_sha": "515ae43237e5b1f37aa9f5bfe6453949a079173c"
+    },
+    {
+      "path": "verifier/review-handoff/controller.test.mjs",
+      "bytes": 4677,
+      "blob_sha": "c5c7b9403a2f6d6af1b791e201721de10de34b96"
+    },
+    {
+      "path": "verifier/review-handoff/protocol.test.mjs",
+      "bytes": 3571,
+      "blob_sha": "6ae0719ed8837ae84bce2d3d9a35a95754fcd444"
+    },
+    {
+      "path": "verifier/review-handoff/regression.test.mjs",
+      "bytes": 2884,
+      "blob_sha": "3d1722e5d2109b5e1e0a091b4bb56ca79f340996"
+    },
+    {
+      "path": "verifier/review-terminal-e2-20260914/manifest.json",
+      "bytes": 1827,
+      "blob_sha": "d867fe948a1b5d68fe3570e7a82ae728a2bf2a5f"
+    },
+    {
+      "path": "verifier/review-terminal-e2-20260914/synthetic-job-103963989585.log",
+      "bytes": 66364,
+      "blob_sha": "4016addd7d744fa10136942f2f467032d65d54e6"
+    }
+  ],
+  "exact_readback": true,
+  "full_synthetic_log_matches_actual_CI": true,
+  "output_schema": "Existing strict seven-requirement contract unchanged; requirements scoped to new synthetic regression candidate.",
+  "launch_authorized": false,
+  "agent_reserved": false,
+  "no_local_files": true,
+  "historical_import_note": "regression.test.mjs imports two historical baseline bodies outside allowed inventory; not disclosed or certified. New terminal tests/current implementation dependency closure is included."
+}
