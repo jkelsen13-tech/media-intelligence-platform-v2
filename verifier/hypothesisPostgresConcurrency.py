@@ -94,6 +94,7 @@ class Hypothesis(unittest.TestCase):
         h.run(db,Path("supabase/qualification/hypothesis-assessments/005_reassessment_causes.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/006_reassessment_completion.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/007_human_reconsideration.sql").read_text())
+        h.run(db,Path("supabase/qualification/hypothesis-assessments/008_authoring_reads.sql").read_text())
         cls.request=str(uuid.uuid4())
 
     @classmethod
@@ -571,6 +572,80 @@ class Hypothesis(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,"invalid reassessment request"):
                 self.session().execute(self.human_request(trigger=trigger,reason=reason))
         self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_requests"),"0")
+
+    def composer_context(self,user=None,version=None,source=None):
+        return "select mip_hypothesis.authoring_context("+",".join(map(q,[user or self.user,self.iid,version or self.vid,source or self.source]))+");"
+    def composer_span(self,start=2,end=5,field="summary",position=None):
+        return "select mip_hypothesis.authoring_span("+",".join(map(q,[self.user,self.iid,self.vid,self.source,
+            position or self.assessment["evidence"][0]["input_position"],field]))+","+str(start)+","+str(end)+");"
+    def test_composer_context_is_read_only_and_contains_no_passage_or_invented_method(self):
+        context=json.loads(self.a.execute(self.composer_context()))
+        self.assertEqual(context["recording_method"],"human-argument-entry-v1");self.assertEqual(context["model_version"],"none")
+        self.assertEqual(context["estimation_methods"],[]);self.assertFalse(context["publication_allowed"])
+        self.assertIsNone(context["head"]);self.assertNotIn("A 😀 B meeting record.",json.dumps(context,ensure_ascii=False))
+        self.assertEqual(self.counts(),"0:0")
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_causes"),"0")
+    def test_composer_retained_unicode_span_has_exact_native_hash_and_identity(self):
+        result=json.loads(self.a.execute(self.composer_span()))
+        self.assertEqual(result["excerpt"],"😀 B")
+        self.assertEqual(result["excerpt_sha256"],hashlib.sha256("😀 B".encode()).hexdigest())
+        self.assertEqual(result["material_version"],self.assessment["evidence"][0]["material_version"])
+        self.assertEqual(result["input_position"],self.assessment["evidence"][0]["input_position"])
+        self.assertEqual(result["workspace_version_id"],self.vid);self.assertFalse(result["publication_allowed"])
+    def test_composer_permission_denial_returns_no_fields_or_passage(self):
+        self.admin(self.revoke())
+        context=json.loads(self.a.execute(self.composer_context()))
+        self.assertTrue(all(m["permission_state"]=="blocked" and m["fields"]==[] for m in context["materials"]))
+        with self.assertRaisesRegex(RuntimeError,"operation denied"):self.b.execute(self.composer_span())
+        self.assertEqual(self.counts(),"0:0")
+    def test_composer_read_first_serializes_permission_revocation(self):
+        self.a.execute("begin;");self.assertEqual(json.loads(self.a.execute(self.composer_span()))["excerpt"],"😀 B")
+        self.b.execute("reset role;");self.b.start(self.revoke());self.blocked(self.b,self.a);self.a.execute("commit;");self.b.finish()
+        with self.assertRaisesRegex(RuntimeError,"operation denied"):self.session().execute(self.composer_span())
+    def test_composer_revocation_first_prevents_passage_disclosure(self):
+        self.b.execute("reset role;begin;"+self.revoke());self.a.start(self.composer_span());self.blocked(self.a,self.b);self.b.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"operation denied"):self.a.finish()
+    def test_composer_rejects_stale_workspace_and_viewer_authoring(self):
+        self.admin(self.change())
+        with self.assertRaisesRegex(RuntimeError,"current retained authoring observation required"):self.a.execute(self.composer_context())
+        scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,"user_id":self.user,"access_role":"viewer","reason":"Synthetic."})
+        with self.assertRaisesRegex(RuntimeError,"authoring denied"):self.b.execute(self.composer_context())
+    def test_composer_span_scope_and_bounds_cannot_expand_authorized_selection(self):
+        for start,end,field in [(-1,5,"summary"),(2,2003,"summary"),(2,99,"summary"),(0,1,"unsupported")]:
+            with self.assertRaisesRegex(RuntimeError,"invalid bounded authoring span|span out of bounds"):
+                self.session().execute(self.composer_span(start=start,end=end,field=field))
+        with self.assertRaisesRegex(RuntimeError,"retained identity missing or ambiguous"):self.session().execute(self.composer_span(position="999999999999999999"))
+        with self.assertRaisesRegex(RuntimeError,"source scope unavailable"):self.session().execute(self.composer_context(source="cc-definition-batch-v1"))
+    def test_composer_reads_do_not_preserve_authority_for_later_acceptance(self):
+        self.a.execute(self.composer_context());self.a.execute(self.composer_span());self.admin(self.revoke())
+        with self.assertRaisesRegex(RuntimeError,"operation denied"):self.b.execute(self.append())
+        self.assertEqual(self.counts(),"0:0")
+    def test_frontend_composer_binds_native_reads_through_initial_and_reassessment_acceptance(self):
+        self.grant_observed_fixture_operations(self.vid)
+        def build():
+            context=json.loads(self.a.execute(self.composer_context()))
+            span=json.loads(self.a.execute(self.composer_span()))
+            code="""import {verifyComposerSpan,buildComposerSubmission} from './src/lib/hypothesisAssessmentComposer.js';
+import {fillSyntheticComposer} from './tests/hypothesisComposerFixture.mjs';
+let raw='';for await(const c of process.stdin)raw+=c;const {context,span}=JSON.parse(raw);
+const input={input_position:span.input_position,source_field:span.source_field,start:span.start,end:span.end};
+const e=await verifyComposerSpan(context,input,span,crypto.randomUUID());
+const draft=fillSyntheticComposer(context,e);
+process.stdout.write(JSON.stringify(buildComposerSubmission(context,draft,crypto.randomUUID())));"""
+            result=subprocess.run(["node","--input-type=module","-e",code],input=json.dumps({"context":context,"span":span}),
+                check=True,capture_output=True,text=True)
+            return json.loads(result.stdout)
+        first=build()
+        self.first=json.loads(self.a.execute(self.append(request=first["input"]["request_id"],assessment=first["input"]["assessment"])))
+        self.a.execute(self.human_request(request=str(uuid.uuid4())))
+        second=build();self.assertEqual(second["action"],"complete")
+        i=second["input"]
+        completed=json.loads(self.a.execute("select mip_hypothesis.complete_reassessment("+",".join(map(q,[
+            self.user,self.iid,self.vid,self.source,i["request_id"],i["predecessor_id"]]))+","+js(i["assessment"])+");"))
+        self.assertTrue(completed["completed_reassessment"]);self.assertFalse(completed["publication_allowed"])
+        self.assertEqual(completed["assessment"]["review_state"],"unreviewed")
+        self.assertEqual(completed["assessment"]["comparison"]["confidence"]["kind"],"not_estimated")
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.revisions"),"2")
 
     def test_gateway_cannot_write_approve_or_use_unbound_primitive(self):
         for sql in ["select * from mip_hypothesis.revisions;","update mip_identity.operation_evidence_heads set active=true;",

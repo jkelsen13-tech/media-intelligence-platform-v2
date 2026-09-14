@@ -1,4 +1,5 @@
 import {useEffect,useState,useId,useRef} from 'react'
+import HypothesisAssessmentComposer from './HypothesisAssessmentComposer.jsx'
 import HypothesisReassessmentRequest,{ReassessmentRequestDetail} from './HypothesisReassessmentRequest.jsx'
 import HypothesisAssessmentPanel from './HypothesisAssessmentPanel.jsx'
 import {hypothesisHistoryView} from '../lib/hypothesisAssessmentClient.js'
@@ -62,6 +63,9 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
    {canReconcile&&typeof client?.reconcile==='function'?<button type="button" onClick={reconcile}>Check for missed changes</button>:null}
    <p>Retained revisions are available here. A verified “as known then” time view is not available yet.</p>
   </header>
+  {canReconcile&&typeof client?.authoringContext==='function'?<HypothesisAssessmentComposer key={scope} client={client}
+   investigationId={investigationId} workspaceVersionId={workspaceVersionId} userScopeKey={userScopeKey} onSaved={reload}
+   onAccessFailure={code=>{setState({client,scope,status:'unavailable'});accessFailure.current?.(code)}}/>:null}
   {entry?<div className="piw-card"><label htmlFor={selectId}>Saved assessment revision</label>
    <select id={selectId} value={entry.revision_id} onChange={e=>setSelected(e.target.value)}>
     {entries.map(e=><option key={e.revision_id} value={e.revision_id}>Revision {e.revision}{e.status==='withheld'?' — unavailable':''}</option>)}

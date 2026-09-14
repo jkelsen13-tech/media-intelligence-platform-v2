@@ -4,6 +4,14 @@ import {validateHypothesisAssessment} from '../../../src/lib/hypothesisAssessmen
 export function createHypothesisStore(query) {
  if(typeof query!=='function') throw new TypeError('query required')
  return Object.freeze({
+  async authoringContext({verifiedUserId,investigationId,workspaceVersionId,sourceProject}) {
+   const result=await query('select mip_hypothesis.authoring_context($1::uuid,$2::uuid,$3::uuid,$4::text) as value',
+    [verifiedUserId,investigationId,workspaceVersionId,sourceProject]);return result.rows[0].value
+  },
+  async authoringSpan({verifiedUserId,investigationId,workspaceVersionId,sourceProject,inputPosition,sourceField,start,end}) {
+   const result=await query('select mip_hypothesis.authoring_span($1::uuid,$2::uuid,$3::uuid,$4::text,$5::text,$6::text,$7::integer,$8::integer) as value',
+    [verifiedUserId,investigationId,workspaceVersionId,sourceProject,inputPosition,sourceField,start,end]);return result.rows[0].value
+  },
   async requestReassessment({verifiedUserId,investigationId,requestId,revisionId,trigger,reason}) {
    const result=await query('select mip_hypothesis.request_reassessment($1::uuid,$2::uuid,$3::uuid,$4::uuid,$5::text,$6::text) as value',
     [verifiedUserId,investigationId,requestId,revisionId,trigger,reason])
