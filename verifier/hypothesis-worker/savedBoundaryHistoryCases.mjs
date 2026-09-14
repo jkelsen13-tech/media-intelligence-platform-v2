@@ -98,14 +98,12 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
  })
  await nativeCase('selected reader does not evaluate unrelated revision bindings and enforces selected cardinality',async t=>{
   const x=await context(t),later=randomUUID()
-  await f.admin('insert into mip_hypothesis.revisions select '+q(later)+',investigation_id,'+q(randomUUID())+
+  const poisonSql='insert into mip_hypothesis.revisions select '+q(later)+',investigation_id,'+q(randomUUID())+
    ",author_id,id,revision+1,request_arguments,assessment||jsonb_build_object('id',"+q(later)+",'revision',revision+1,'predecessor_id',id),clock_timestamp() from mip_hypothesis.revisions where id="+q(x.revisions[0])+
-   ";insert into mip_hypothesis.acceptance_bindings select (jsonb_populate_record(null::mip_hypothesis.acceptance_bindings,to_jsonb(b)||jsonb_build_object('revision_id',"+q(later)+",'metadata',jsonb_build_object('poison','unselected')))).* from mip_hypothesis.acceptance_bindings b where revision_id="+q(x.revisions[0]))
-  // The old whole-investigation reader evaluates the deliberately invalid unselected metadata.
-  await assert.rejects(()=>f.gateway('read_bound_history',[x.identity.user,x.identity.iid]))
-  let payload
-  await x.reader()(x.request,v=>{payload=v})
-  assert.deepEqual(payload.entries.map(e=>e.revision_id),[x.revisions[0]])
+   ";insert into mip_hypothesis.acceptance_bindings select (jsonb_populate_record(null::mip_hypothesis.acceptance_bindings,to_jsonb(b)||jsonb_build_object('revision_id',"+q(later)+",'metadata',jsonb_build_object('poison','unselected')))).* from mip_hypothesis.acceptance_bindings b where revision_id="+q(x.revisions[0])
+  // Both reader assertions execute against the same poisoned transaction, then all fault rows roll back.
+  await f.admin('begin;'+poisonSql+";do $poison$ declare denied boolean:=false;h jsonb;begin begin perform mip_hypothesis.read_bound_history("+[x.identity.user,x.identity.iid].map(q).join(',')+");exception when invalid_parameter_value then denied:=true;end;if not denied then raise exception 'whole_reader_expected_denial_missing';end if;h:=mip_temporal.boundary_history_payload("+[x.identity.user,x.identity.iid].map(q).join(',')+",array["+q(x.revisions[0])+"]::uuid[]);if jsonb_array_length(h->'entries')<>1 or h->'entries'->0->>'revision_id'<>"+q(x.revisions[0])+" then raise exception 'selected_reader_probe_failed';end if;end $poison$;rollback")
+  assert.equal(await f.admin('select (select count(*) from mip_hypothesis.revisions where id='+q(later)+')+(select count(*) from mip_hypothesis.acceptance_bindings where revision_id='+q(later)+')'),'0')
   // Roll back the 129-row cardinality fixture so later source bootstraps are unchanged.
   await f.admin("begin;do $probe$ declare ids uuid[];begin with added as (insert into mip_hypothesis.revisions select gen_random_uuid(),r.investigation_id,gen_random_uuid(),r.author_id,r.id,r.revision+n,r.request_arguments,r.assessment,clock_timestamp() from mip_hypothesis.revisions r cross join generate_series(2,130) n where r.id="+q(x.revisions[0])+" returning id) select array_agg(id) into ids from added;begin perform mip_hypothesis.read_selected_bound_history("+[x.identity.user,x.identity.iid].map(q).join(',')+",ids);raise exception 'expected_cardinality_denial_missing';exception when others then if sqlerrm<>'mip_boundary_payload_limit' then raise;end if;end;end $probe$;rollback")
   for(const role of ['mip_boundary_history_gateway','mip_boundary_proof_issuer','mip_boundary_permit_cleanup'])
