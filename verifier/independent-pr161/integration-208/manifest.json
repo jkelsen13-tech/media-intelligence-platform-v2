@@ -1,0 +1,981 @@
+{
+  "schema": "mip_independent_review_evidence_manifest_v1",
+  "not_a_controller_dispatch": true,
+  "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+  "pull_request": 161,
+  "candidate_sha": "208e160684407e5856ad04209cbe45ba8e05b865",
+  "candidate_tree_sha": "8de1fcaaea442107247b25f1528d82359675071c",
+  "base_sha": "67e7a962b07ceaec75e06442ef770843d126e3ae",
+  "test_merge_sha": "1a2c46d36084c2380d8c3d42ace77d9ad1d9c0d5",
+  "test_merge_tree_sha": "8de1fcaaea442107247b25f1528d82359675071c",
+  "tree_equality_verified": true,
+  "production_authorized": false,
+  "historical_time_qualified": false,
+  "independent_review_status": "NOT_DISPATCHED",
+  "implementation_claim": "Hosted synthetic native integration qualified; independent review and real activation remain blocked pending authority/custody admission.",
+  "changed_files": [
+    {
+      "path": "docs/HYPOTHESIS_REGISTERED_BOUNDARIES_2026-09-14.md",
+      "git_blob_sha": "3262605b6e5c9dc56b9fd15e973c64aee19d5c9d",
+      "size": 3725
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/022_registered_stream_boundaries.sql",
+      "git_blob_sha": "3f5249798fb1991688b8a9a5c3c76e8ba6adefe0",
+      "size": 23928
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/boundaryRegistrationCustody.mjs",
+      "git_blob_sha": "273e94570994ef52152c0c89e4a23bf443d2d5e5",
+      "size": 5227
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/coveredBoundaryConsumer.mjs",
+      "git_blob_sha": "4413644cdd842247d5019b10d7b1544b0dd7d41d",
+      "size": 6244
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/registeredMarkerDecoder.mjs",
+      "git_blob_sha": "7a5206d845995cc77710c5432a67303401bf271b",
+      "size": 3319
+    },
+    {
+      "path": "tests/hypothesisRegisteredBoundary.test.mjs",
+      "git_blob_sha": "3d75a41bbbae57979670060eeef5e483ef53cade",
+      "size": 7523
+    },
+    {
+      "path": "verifier/hypothesis-worker/boundaryIntegrationCases.mjs",
+      "git_blob_sha": "9c8cabe3beb64b4ac39d231b89798e0db0efe489",
+      "size": 28434
+    },
+    {
+      "path": "verifier/hypothesis-worker/continuityCases.mjs",
+      "git_blob_sha": "b40e83244ec523861cb36b5f5e4805a3f0a18dad",
+      "size": 15347
+    },
+    {
+      "path": "verifier/hypothesis-worker/worker.test.mjs",
+      "git_blob_sha": "a256c8ef3537e2e97965a5b8ac56504efb95da91",
+      "size": 41231
+    }
+  ],
+  "dependency_inventory": [
+    {
+      "path": ".github/workflows/golden.yml",
+      "git_blob_sha": "d94e68d2dd486943e3614228b8c6a0ea9da3006b",
+      "size": 696,
+      "changed_in_candidate": false
+    },
+    {
+      "path": ".github/workflows/hypothesis-browser.yml",
+      "git_blob_sha": "863f578cf850403686574faf453f9e6e55ac8813",
+      "size": 1167,
+      "changed_in_candidate": false
+    },
+    {
+      "path": ".github/workflows/hypothesis-postgres.yml",
+      "git_blob_sha": "e0fab94b51b7798be5a937e4cffa0a27312da4ab",
+      "size": 1071,
+      "changed_in_candidate": false
+    },
+    {
+      "path": ".github/workflows/hypothesis-worker.yml",
+      "git_blob_sha": "d0ae30396d5919327eb66b42396658a654fbd792",
+      "size": 1823,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "package-lock.json",
+      "git_blob_sha": "b5d44ec6e0a21f931cb2d43884010025ee89889c",
+      "size": 118411,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "package.json",
+      "git_blob_sha": "1bba418b9204f69df7ade003d9d3e19679a5434f",
+      "size": 1329,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql",
+      "git_blob_sha": "e7beb22b9a4dd2e38076b5554c7f5b4e6e0e4e77",
+      "size": 27775,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/migrations/20260906042413_evidence_change_queue_v1.sql",
+      "git_blob_sha": "1b93f947f5351097e629adc718659a1125fdfe1f",
+      "size": 13635,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/migrations/20260906051224_evidence_assessment_dependencies_v1.sql",
+      "git_blob_sha": "d6092de9540550c4d126c91494cfe3374f02a721",
+      "size": 20620,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/migrations/20260906071525_investigation_change_briefings_v1.sql",
+      "git_blob_sha": "78b1bdce25432ef7e8194a764c585e7836ef943e",
+      "size": 13249,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/migrations/20260906075718_investigation_workspace_batch_v1.sql",
+      "git_blob_sha": "1eaf8bac441fee856f7f3e1b6723662d0408dcad",
+      "size": 34259,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/001_revision_store.sql",
+      "git_blob_sha": "6218ce921561821dc8f2e624f7fa4697785d3faf",
+      "size": 7430,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/002_retained_observation_reader.sql",
+      "git_blob_sha": "a118cc404f39d37bb382012eaa4b945814da44ac",
+      "size": 9301,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/003_bound_acceptance.sql",
+      "git_blob_sha": "036320a9c837ec9c139297bac18c88a0af857f99",
+      "size": 10686,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/004_bound_history.sql",
+      "git_blob_sha": "8fbcf8686327f7ab74485436135d3fd540617bd5",
+      "size": 4202,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/005_reassessment_causes.sql",
+      "git_blob_sha": "908e72584d14f937292d554c8a9e0a497034be0b",
+      "size": 13407,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/006_reassessment_completion.sql",
+      "git_blob_sha": "e86b7da084beb9ae0fb723d00153e66a20b21bc3",
+      "size": 22516,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/007_human_reconsideration.sql",
+      "git_blob_sha": "5ae00ef13ce49c29884503b2cb5501bdc442be42",
+      "size": 6532,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/008_authoring_reads.sql",
+      "git_blob_sha": "510ba8865e209b93b926e26a7e1eee32d3bf3f83",
+      "size": 7620,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/009_generation_worker.sql",
+      "git_blob_sha": "6c95c0f2b0bacd709c62ecc714bad6600b675c95",
+      "size": 39384,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/010_generation_ledger.sql",
+      "git_blob_sha": "69a177e1ee875ce167d4b78aaf31099c8b98fecc",
+      "size": 1972,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/011_method_change_signals.sql",
+      "git_blob_sha": "8777e2bb814c8e67e96ff8d84e3d5970ababb382",
+      "size": 3579,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/012_generation_recovery.sql",
+      "git_blob_sha": "477f774648d900c8bf04633df8661c25ec7a6f2b",
+      "size": 4844,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/013_recovery_lineage.sql",
+      "git_blob_sha": "2c79e5c2225c8b6ecd58dc1139d7080717bed260",
+      "size": 1615,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/014_review_acknowledgements.sql",
+      "git_blob_sha": "a733bc58255cce6b89aac4cc2dac2a99fb2ff430",
+      "size": 7539,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/015_committed_observations.sql",
+      "git_blob_sha": "984a51f370d4e41a58008ee61e387706b06f5dac",
+      "size": 9853,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/016_observation_delivery.sql",
+      "git_blob_sha": "5365db95cc0ac133990d35cbe41c5acd576c5e68",
+      "size": 4621,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/017_external_observation_epoch.sql",
+      "git_blob_sha": "9b2fb4b297d1598d4315e26d8e2d9a66951b43cc",
+      "size": 3154,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/018_source_acknowledgement.sql",
+      "git_blob_sha": "cdca3e96f8858b51787f6d2b97e8553d89fb9181",
+      "size": 10160,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/019_stream_continuity.sql",
+      "git_blob_sha": "fc63962ba3d2277b5020a436040e5fa93af6b0bb",
+      "size": 12388,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/020_native_source_incarnation.sql",
+      "git_blob_sha": "2c7d311db5ceb129f77382431feac090b42b6858",
+      "size": 5368,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/021_stream_boundary_proof.sql",
+      "git_blob_sha": "0d515a4372cb10978934b3fca476206f926d5b9d",
+      "size": 1214,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/022_registered_stream_boundaries.sql",
+      "git_blob_sha": "3f5249798fb1991688b8a9a5c3c76e8ba6adefe0",
+      "size": 23928,
+      "changed_in_candidate": true
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/boundaryRegistrationCustody.mjs",
+      "git_blob_sha": "273e94570994ef52152c0c89e4a23bf443d2d5e5",
+      "size": 5227,
+      "changed_in_candidate": true
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/commitRecorder.mjs",
+      "git_blob_sha": "a65038124343ad88d1d628313cdf6d87fe5ef8f5",
+      "size": 3491,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/coveredBoundaryConsumer.mjs",
+      "git_blob_sha": "4413644cdd842247d5019b10d7b1544b0dd7d41d",
+      "size": 6244,
+      "changed_in_candidate": true
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/coveredRevisionConsumer.mjs",
+      "git_blob_sha": "fb3d79dd833c868e6f25a67cb18c4b7a38aadaf0",
+      "size": 4138,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/evidenceBinding.mjs",
+      "git_blob_sha": "67151f5d5fd12cfc5e51cc906aa64156a34b9197",
+      "size": 6955,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/fencedAcknowledgement.mjs",
+      "git_blob_sha": "abd9b2114320601971331bce3696d6fa3f2556b2",
+      "size": 2355,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/handler.mjs",
+      "git_blob_sha": "f0e1a378efe628c926420e8cab5111e1b25e5158",
+      "size": 10942,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/pgoutputBoundaryRecorder.mjs",
+      "git_blob_sha": "4de44933d87bf61874d690520d65bff23dae0e4a",
+      "size": 4420,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/pgoutputRecorder.mjs",
+      "git_blob_sha": "e1f50b19a2e0bd60a3347975d971d866821989f5",
+      "size": 4839,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/registeredMarkerDecoder.mjs",
+      "git_blob_sha": "7a5206d845995cc77710c5432a67303401bf271b",
+      "size": 3319,
+      "changed_in_candidate": true
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/registrationCustody.mjs",
+      "git_blob_sha": "89fa1a4dbcffd444ee3155c8a81bc456094fc17a",
+      "size": 4315,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/sourceIncarnation.mjs",
+      "git_blob_sha": "76b6aa7a5ba0d589c43c0904c81e37d6377b1199",
+      "size": 1205,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/store.mjs",
+      "git_blob_sha": "c8d9515f3e7859415a520a0a8cdf518ec032a109",
+      "size": 7363,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/supabaseAuthenticator.mjs",
+      "git_blob_sha": "127d4e8db7a73f35d4eebe2657a43eaae02b2175",
+      "size": 5116,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/temporalBootstrap.mjs",
+      "git_blob_sha": "d742a733edcee5a324c699d369e235be3126cdcf",
+      "size": 9257,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/worker.mjs",
+      "git_blob_sha": "dd93fb7add5b9e8ebebdcaeba299aad31e7fd4c3",
+      "size": 6665,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql",
+      "git_blob_sha": "136204c77c0e18bce2592493db4765cdeb4c9d1b",
+      "size": 5907,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql",
+      "git_blob_sha": "f5a9fba65d3b5bac782afd511f94c46e7e9e6315",
+      "size": 10652,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/003_scoped_queue.sql",
+      "git_blob_sha": "209bf4bd6ec405d8d9e8bc751f989631c47a137b",
+      "size": 5671,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/004_publication_staging.sql",
+      "git_blob_sha": "38379113e73d5fea1f3a3dba8647f374ed2733fe",
+      "size": 7305,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/005_broker_sessions.sql",
+      "git_blob_sha": "f78288fbabba40407cd206521b43faa0278f674a",
+      "size": 21777,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/006_collector_reconciliation.sql",
+      "git_blob_sha": "3c812ca1ff0535a950aa96a21424394c651e7dbc",
+      "size": 11853,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/007_survivor_release.sql",
+      "git_blob_sha": "5fe9bebb669c35a3b3474cab5b7bc8a18d60a8f7",
+      "size": 27142,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/008_operation_evidence.sql",
+      "git_blob_sha": "a1c9f2fb236e7069e80c5a1cfe6b58274c537ee6",
+      "size": 8487,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/009_factual_enforcement.sql",
+      "git_blob_sha": "60e6198c3ad389c335dfe56024153a187f30f0a4",
+      "size": 13954,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/010_real_permission_reader.sql",
+      "git_blob_sha": "80f869c417706b5bf6a714e15da5809e599c2811",
+      "size": 8190,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/README.md",
+      "git_blob_sha": "74b57a7e3d5ed03acd91a4175e0f49cc55534679",
+      "size": 1073,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/brokerSession.js",
+      "git_blob_sha": "df3fcdd68329def50acad24a17ca7ca7dffaed4b",
+      "size": 2618,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/workloadIdentity.js",
+      "git_blob_sha": "3e08f8c9d32a38caae341ed02e0997597a7a8452",
+      "size": 2665,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/changeQueueFixture.sql",
+      "git_blob_sha": "235f92e0ce285cbf5426444b06b576a39adb1e38",
+      "size": 1962,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisAssessment.test.mjs",
+      "git_blob_sha": "0dbc535f310a81fa34e0c6036ae07fe83bdd1538",
+      "size": 5449,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisAssessmentFixture.mjs",
+      "git_blob_sha": "da57f4423665ac422a28ec500b939440e782387e",
+      "size": 2142,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisAssessmentHistory.test.mjs",
+      "git_blob_sha": "7705b024fcb463ea01e3795b5db41ae2d9822cee",
+      "size": 11061,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisAssessmentPanel.test.mjs",
+      "git_blob_sha": "9a8101d097f9fee9727b60accea3dfd452802728",
+      "size": 2847,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisAuthProvider.test.mjs",
+      "git_blob_sha": "c8ed3641eb0efda85cbdcee789e71c48e59241bf",
+      "size": 4399,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisAuthProviderFixture.mjs",
+      "git_blob_sha": "b62050509dd50e370e957cee65c4fa86a17d9442",
+      "size": 1922,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisCommitRecorder.test.mjs",
+      "git_blob_sha": "86cea19f446cb5e8db1dcab21347d74492d3b2d5",
+      "size": 2761,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisComparisonFixture.mjs",
+      "git_blob_sha": "fe2e69d5fde1f1df3c7b40a255660c0a2cb5314a",
+      "size": 2011,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisComposer.test.mjs",
+      "git_blob_sha": "93d62f16a96577abf28b2f7354ef0a05c955d03f",
+      "size": 11776,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisComposerFixture.mjs",
+      "git_blob_sha": "dfbbb4b2effefc0d54fea6503101a1fe1d6b32f2",
+      "size": 2250,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisEvidenceBinding.test.mjs",
+      "git_blob_sha": "65b2425b7c4c32b6f07069f02b17edf1cd99dcfc",
+      "size": 7173,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisEvidenceBindingStore.test.mjs",
+      "git_blob_sha": "1c56dc07c7becd4429c6736cfad0c818b00f4384",
+      "size": 19849,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisFencedAcknowledgement.test.mjs",
+      "git_blob_sha": "756456dac8875fdd08c46d3d2edea05c6e6dd03f",
+      "size": 2761,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisGenerationControls.test.mjs",
+      "git_blob_sha": "ba5bd272b77ff75effef78465d4415241ed08573",
+      "size": 16302,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisGenerationWorker.test.mjs",
+      "git_blob_sha": "ca33afe7d178cae56ed94cc2dc6dd00ccf30350d",
+      "size": 6220,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisHandler.test.mjs",
+      "git_blob_sha": "ea4ce9d21649301d6f979897cc4bd1e71f869ef0",
+      "size": 4614,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisHttpTransport.test.mjs",
+      "git_blob_sha": "e09624293ca0128e4ef75e37a2dd9eeed45db449",
+      "size": 7329,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisHumanRequest.test.mjs",
+      "git_blob_sha": "497309509915c5e7e8ff4bce668c8becc6cb6039",
+      "size": 7269,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisMarkerBoundary.test.mjs",
+      "git_blob_sha": "2526939082aab359a60045e546b9defc12b9ee30",
+      "size": 4216,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisMethodSignals.test.mjs",
+      "git_blob_sha": "45495c3603a4ada9d5d957a56875a43095814402",
+      "size": 1586,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisObservationEpoch.test.mjs",
+      "git_blob_sha": "eb2318461c3eab9b9ebc26804e33c5ac3699044d",
+      "size": 2647,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisObservationFixture.mjs",
+      "git_blob_sha": "95dc588c8b046c209d480b61733b50b9ea103687",
+      "size": 1620,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisObservations.test.mjs",
+      "git_blob_sha": "67fb6a600847848ba11708f170f580cd55567da0",
+      "size": 9364,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisPagedBootstrap.test.mjs",
+      "git_blob_sha": "2887382c276549018fecce8ff6f9011dd398ea78",
+      "size": 5292,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisPgoutputFixture.mjs",
+      "git_blob_sha": "0b644ffcf65f747f01e586040cb63f68d18399ac",
+      "size": 1055,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisPgoutputRecorder.test.mjs",
+      "git_blob_sha": "65188befd601bf5d780f2511899e4b7fcb809be1",
+      "size": 2844,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisReassessment.test.mjs",
+      "git_blob_sha": "32e6febd5f82b41184d202ada7482965610482ea",
+      "size": 4505,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisRegisteredBoundary.test.mjs",
+      "git_blob_sha": "3d75a41bbbae57979670060eeef5e483ef53cade",
+      "size": 7523,
+      "changed_in_candidate": true
+    },
+    {
+      "path": "tests/hypothesisRegistrationCustody.test.mjs",
+      "git_blob_sha": "ab409a790234f66aa2a4baa197bced0b4a1c9fea",
+      "size": 8376,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisReview.test.mjs",
+      "git_blob_sha": "bc63f6c0ef09d0dd1e1543ceb5c26bb0a70eb27a",
+      "size": 10264,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisRevisionComparison.test.mjs",
+      "git_blob_sha": "833301c9528fcb29fc616de363fb42257e7ae69d",
+      "size": 7082,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisRevisionStore.test.mjs",
+      "git_blob_sha": "a671d2f4119b2e9675288ea5055346a2b8776bbc",
+      "size": 6058,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisSessionClient.test.mjs",
+      "git_blob_sha": "d16cff06948cebeb8d20598c1e8f2f083434a8d2",
+      "size": 5630,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisSourceIncarnation.test.mjs",
+      "git_blob_sha": "c69dacb3bc54766dc1b262df1cf09d424bb7d163",
+      "size": 2383,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisStreamContinuity.test.mjs",
+      "git_blob_sha": "22cf1caa6a08c86f0924bcc76f2c18f6682b8554",
+      "size": 5961,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "tests/hypothesisTemporalBootstrap.test.mjs",
+      "git_blob_sha": "8abee43615e4527bb1b8d075ff68bd4f45b3ebe9",
+      "size": 3690,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/bootstrapCases.mjs",
+      "git_blob_sha": "5ee3f2c806a8f1ebb0ed69f342377f18134a4796",
+      "size": 6331,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/boundaryIntegrationCases.mjs",
+      "git_blob_sha": "9c8cabe3beb64b4ac39d231b89798e0db0efe489",
+      "size": 28434,
+      "changed_in_candidate": true
+    },
+    {
+      "path": "verifier/hypothesis-worker/commitContainer.mjs",
+      "git_blob_sha": "be9a3c23a1a2582e0342f43f0751a04415f8b441",
+      "size": 1863,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/commitIsolated.mjs",
+      "git_blob_sha": "1354f95d4efb700b70ca49c67b6d07a7e5ee5706",
+      "size": 985,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/commitRecorder.test.mjs",
+      "git_blob_sha": "48b0393cb9c634202ededb6489b7062c1338642c",
+      "size": 5774,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/continuityCases.mjs",
+      "git_blob_sha": "b40e83244ec523861cb36b5f5e4805a3f0a18dad",
+      "size": 15347,
+      "changed_in_candidate": true
+    },
+    {
+      "path": "verifier/hypothesis-worker/fixture.mjs",
+      "git_blob_sha": "6d58c445a9a787868e8c6c2987a5fd0518f9e77d",
+      "size": 13372,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/incarnationCases.mjs",
+      "git_blob_sha": "3497c66bef8d440a0b51a03b3debe82495bbfde5",
+      "size": 16756,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/isolatedContainer.mjs",
+      "git_blob_sha": "e0ca67324568d090e7c5c4ab93acc1864f84e632",
+      "size": 2223,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/markerBoundaryCases.mjs",
+      "git_blob_sha": "8fe15ff44cf450449e0f6f337926fbfd8557983c",
+      "size": 9377,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/pgoutputCases.mjs",
+      "git_blob_sha": "92092faa2a0966e1b12cf9a791b29338392958ac",
+      "size": 6324,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/prepareLogical.mjs",
+      "git_blob_sha": "e1800b220a18d708cab2197b983952cee99e80d5",
+      "size": 469,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/snapshotExporter.mjs",
+      "git_blob_sha": "0fd1db482e9957cfc8c31ee4a0f6b47138f31d26",
+      "size": 2176,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/snapshotReader.mjs",
+      "git_blob_sha": "c34749595a9363eed67b31471a58efde82e54fd2",
+      "size": 3278,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/sourceFenceCases.mjs",
+      "git_blob_sha": "1713b7592cfb774703d991da31a96788c1d07978",
+      "size": 8834,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/syntheticMethod.mjs",
+      "git_blob_sha": "6bdb413227d4958433830243e5fc7ecf6969298b",
+      "size": 1412,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/hypothesis-worker/worker.test.mjs",
+      "git_blob_sha": "a256c8ef3537e2e97965a5b8ac56504efb95da91",
+      "size": 41231,
+      "changed_in_candidate": true
+    },
+    {
+      "path": "verifier/hypothesis-worker/workerIsolated.mjs",
+      "git_blob_sha": "881e4e9d4097dab577849bb15ad3f2de36973a8f",
+      "size": 2118,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/candidate.test.mjs",
+      "git_blob_sha": "925529c3fc1c8eba8d2402d5649266a1a8e301ae",
+      "size": 61807,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/captureCcSection.py",
+      "git_blob_sha": "b3caefd480404d02b6bbe7a29a1b99b50c3d5d8a",
+      "size": 8433,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/fixture.mjs",
+      "git_blob_sha": "957fe4a446330f7309c6e9403229b9f19b17799f",
+      "size": 4351,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/isolatedContainer.mjs",
+      "git_blob_sha": "a7a881411483c5f06ceef8058da2a224f8ddf8d0",
+      "size": 1943,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/legacySelectionParser.py",
+      "git_blob_sha": "c4c92b889da067c4a86fb1267ae9487dad04bd20",
+      "size": 3469,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/parserRegression.py",
+      "git_blob_sha": "52fb6e6d2a9fe36e033703a8c58e95d59f1e0317",
+      "size": 4845,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/realPermissionActivation.json",
+      "git_blob_sha": "6b8f0ab7ff8749af36a634da1ce8355dbef3e0b5",
+      "size": 1032,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/realPermissionBatch.mjs",
+      "git_blob_sha": "d07559a5fb88efceef19d4696081568818cdec10",
+      "size": 12131,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/remoteStoreRestart.mjs",
+      "git_blob_sha": "a8181f63dd139bf4fd6edcfd4e609542347aacf7",
+      "size": 690,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/runtimeParity.mjs",
+      "git_blob_sha": "32cbf689b04170a2a1023d3ac86a3a8d1c9e148f",
+      "size": 2790,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/transport.mjs",
+      "git_blob_sha": "16a8c475154400bb9f01c8bedf71d8ff6f7cb8d9",
+      "size": 2431,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/workerIsolated.mjs",
+      "git_blob_sha": "52588495e699640b6f744a01cd0775926b25e52a",
+      "size": 1925,
+      "changed_in_candidate": false
+    },
+    {
+      "path": "verifier/integrated/workerProcess.mjs",
+      "git_blob_sha": "037e285f179c8e1cba537c3637e3c2106f609625",
+      "size": 1219,
+      "changed_in_candidate": false
+    }
+  ],
+  "installed_sql_order": {
+    "setup": "verifier/hypothesis-worker/fixture.mjs installs hypothesis 001 through018 after its broker/schema prerequisites",
+    "continuity": "continuityCases installs019; incarnationCases installs020",
+    "registered_integration": "boundaryIntegrationCases installs022 and runs actual issue/capture/prepare/advance",
+    "proof_baseline": "worker.test invokes markerBoundaryCases after the registered integration; it installs021 for distinct proof-only tests. 021 is a retained candidate dependency/baseline, not an SQL prerequisite of022."
+  },
+  "evidence": [
+    {
+      "path": "verifier/independent-pr161/integration-208/candidate-tree.json",
+      "git_blob_sha": "8dc613bb8e6ed8cbe9f3984fb2e09fbbe7ee1a55",
+      "size": 514285
+    },
+    {
+      "path": "verifier/independent-pr161/integration-208/failure-native-590.log",
+      "git_blob_sha": "29b937a98c88a50eb4879933a17c5b25263b07b5",
+      "size": 57467
+    },
+    {
+      "path": "verifier/independent-pr161/integration-208/golden-node22.log",
+      "git_blob_sha": "ec5322a8d78607a04c2535b9e6e3f40f83f33c6e",
+      "size": 792096
+    },
+    {
+      "path": "verifier/independent-pr161/integration-208/golden-node24.log",
+      "git_blob_sha": "d8f1d4bdcec2daffa1aa29c41f2a569843873832",
+      "size": 267762
+    },
+    {
+      "path": "verifier/independent-pr161/integration-208/native-worker.log",
+      "git_blob_sha": "4e987e8abb76fd327fbae9d8e1de90e3177d6b9d",
+      "size": 49994
+    },
+    {
+      "path": "verifier/independent-pr161/integration-208/sql-concurrency.log",
+      "git_blob_sha": "ff4cd19fad9b8d59addd0dc01a5ac4077ac0cc67",
+      "size": 236953
+    },
+    {
+      "path": "verifier/independent-pr161/integration-208/timeout-native-f0.log",
+      "git_blob_sha": "b3d59bbd89e983e33c7d0acdf2c8d0ab1307df8a",
+      "size": 48683
+    }
+  ],
+  "runs": [
+    {
+      "workflow": "Hypothesis durable worker isolation",
+      "run_id": 34837865074,
+      "job_id": 103955746984,
+      "tests": 105,
+      "pass": 105,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "workflow": "Golden regression suite",
+      "node": 22,
+      "run_id": 34837865030,
+      "job_id": 103955747281,
+      "tests": 1908,
+      "pass": 1908,
+      "fail": 0,
+      "skipped": 0,
+      "build_seconds": 19.32
+    },
+    {
+      "workflow": "Golden regression suite",
+      "node": 24,
+      "run_id": 34837865030,
+      "job_id": 103955746874,
+      "tests": 1908,
+      "pass": 1908,
+      "fail": 0,
+      "skipped": 0,
+      "build_seconds": 22.04
+    },
+    {
+      "workflow": "Hypothesis PostgreSQL concurrency",
+      "run_id": 34837864827,
+      "job_id": 103955746370,
+      "tests": 94,
+      "outcome": "OK",
+      "seconds": 51.329
+    }
+  ],
+  "failure_disposition": [
+    {
+      "sha": "247db5c6239b526e8da9bfcb8a6f0e8254d94472",
+      "run_id": 34835149114,
+      "job_id": 103947170451,
+      "cause": "Initial022 SQL dollar delimiter generation defect; fixed before subsequent native execution."
+    },
+    {
+      "sha": "727dd6e1a9bd3dc7d69bef984cf678a1352d9b47",
+      "run_id": 34835705408,
+      "job_id": 103948908188,
+      "cause": "Catalog regclass name resolution required schema USAGE; replaced with catalog OID lookup, no new grant."
+    },
+    {
+      "sha": "727dd6e1a9bd3dc7d69bef984cf678a1352d9b47",
+      "run_id": 34835701381,
+      "jobs": [
+        103948896499,
+        103948896713
+      ],
+      "cause": "Document reserved uppercase vocabulary token; text corrected without weakening tests."
+    },
+    {
+      "sha": "f0b6bf3032b50add1eab64b67492bfb2766af6fd",
+      "run_id": 34836101950,
+      "job_id": 103950167538,
+      "cause": "Wrong expected blocker PID caused reverse-lock test failure; missing cleanup leaked held transaction and produced cascading lock timeouts. Workflow eventually timed out; no implementation-requested cancellation."
+    },
+    {
+      "sha": "384c21d06d6c459e48462cc60420899be8c3dfcf",
+      "run_id": 34836535621,
+      "job_id": 103951531343,
+      "cause": "Same pre-diagnostic reverse-lock orchestration retained; not used as qualification."
+    },
+    {
+      "sha": "590c925c41bd70f1587ca32aa93adfddad5e6b77",
+      "run_id": 34836982974,
+      "job_id": 103952918076,
+      "tests": 105,
+      "pass": 99,
+      "fail": 6,
+      "leaf_failures": 3,
+      "cause": "Cleanup fixed cascade. Exact failures: expected wrong source PID instead of outer custody blocker; two tests expected digit-containing error truncated by existing sanitizer.208 observes exact active custody PID and renames only own SQL error."
+    }
+  ],
+  "limitations": [
+    "Synthetic fixtures share one physical PostgreSQL restore domain; no physically independent custody is established.",
+    "Full readback is not a distributed transaction. Admitted journal requires crash durability, append-only retention and exclusion under its declared failure/revocation model.",
+    "No production deployment, provisioning, scheduler/housekeeping cadence, operational retention SLA or live source credentials have been configured.",
+    "No historical wall-clock qualification follows from a committed marker WAL endpoint.",
+    "Independent Cursor review and reconciliation of parent-managed prior audit changes remain outstanding."
+  ]
+}
