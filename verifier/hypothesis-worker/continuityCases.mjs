@@ -13,7 +13,7 @@ import {consumeSourceCapture} from '../../supabase/qualification/hypothesis-asse
 import {decodeRevisionCommits} from '../../supabase/qualification/hypothesis-assessments/pgoutputRecorder.mjs'
 import {nativeAckBoundary} from './sourceFenceCases.mjs'
 import {exportSnapshot} from './snapshotExporter.mjs'
-export async function continuityCases(t,f,runWorker){
+export async function continuityCases(t,f,runWorker,onReady){
  // Earlier 018 regressions remain a preserved baseline. This final installed interface removes its bypass grants.
  await f.admin(await readFile(new URL('../../supabase/qualification/hypothesis-assessments/019_stream_continuity.sql',import.meta.url),'utf8'))
  const relationId=await f.admin("select 'mip_hypothesis.revision_transactions'::regclass::oid::text")
@@ -186,5 +186,6 @@ export async function continuityCases(t,f,runWorker){
  })
 
  await t.test('native source incarnation registration isolation',async t=>incarnationCases(t,f,staged))
+ if(onReady)await t.test('registered v2 marker authority integration',async t=>onReady(t,staged))
 
 }
