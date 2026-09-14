@@ -231,3 +231,27 @@ test('ambiguous human request response preserves parent and exact retry identity
  assert.equal(calls.length,2);assert.deepEqual(calls[0],calls[1]);assert.deepEqual(failures,[])
  act(()=>tree.unmount())
 })
+
+test('resolved human request detail denial clears the older selected assessment',async()=>{
+ const f=completedFixture(),failures=[];let resolve,tree
+ Object.assign(f.backlog.causes[0],{kind:'human_reconsideration',detail:{request_id:'synthetic-human-request',trigger:'methodology'}})
+ const client={...f.client,requestDetail:()=>new Promise(r=>resolve=r)}
+ await act(async()=>{tree=TestRenderer.create(createElement(Panel,{...props(client),onAccessFailure:c=>failures.push(c)}))})
+ act(()=>tree.root.findByType('select').props.onChange({target:{value:'synthetic-assessment-1'}}))
+ assert.match(content(tree),/Original synthetic assessment/);assert.match(content(tree),/saved reassessment/)
+ await startHumanAction(tree,'detail')
+ await act(async()=>resolve({error:{code:'access_denied'}}))
+ assert.doesNotMatch(content(tree),/Original synthetic assessment|Later synthetic assessment/)
+ assert.deepEqual(failures,['access_denied']);act(()=>tree.unmount())
+})
+for(const replacement of ['client','scope'])test('late validated permission withholding after '+replacement+' cannot revoke replacement history',async()=>{
+ const f=humanRequestFixture(),failures=[];let resolve,tree
+ const client={...f.client,requestDetail:()=>new Promise(r=>resolve=r)}
+ const baseProps={...props(client),onAccessFailure:c=>failures.push(c)}
+ await act(async()=>{tree=TestRenderer.create(createElement(Panel,baseProps))})
+ await startHumanAction(tree,'detail')
+ await act(async()=>tree.update(createElement(Panel,replacement==='client'?{...baseProps,client:{...f.client}}:{...baseProps,userScopeKey:'replacement-user'})))
+ await act(async()=>resolve(withheldDetail()))
+ assert.match(content(tree),/Later synthetic assessment/);assert.deepEqual(failures,[])
+ act(()=>tree.unmount())
+})
