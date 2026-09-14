@@ -14,8 +14,12 @@ export async function marketsCases(t,f){
   "create table if not exists public.cross_surface_candidates(id uuid primary key,candidate_type text,review_state text);"+
   "grant select on public.nodes,public.edges to anon,authenticated;alter table public.nodes enable row level security;alter table public.edges enable row level security;"+
   "create policy market_fixture_legacy_nodes on public.nodes for select to anon,authenticated using(true);create policy market_fixture_legacy_edges on public.edges for select to anon,authenticated using(true);")
- for(const name of ['001_typed_retained_records.sql','002_authorized_reader.sql'])
-  await f.admin(await readFile(new URL('../../supabase/qualification/markets-evidence/'+name,import.meta.url),'utf8')).catch(e=>{throw Error(name+': '+e.message)})
+ for(const name of ['001_typed_retained_records.sql','002_authorized_reader.sql']){
+  // Static installer diagnostics only, before synthetic private rows exist. Never log data-query errors.
+  const source=(await readFile(new URL('../../supabase/qualification/markets-evidence/'+name,import.meta.url),'utf8')).replace(/^begin;$/m,'').replace(/^commit;$/m,'')
+  const diagnostic=await f.admin("create function pg_temp.install_market() returns text language plpgsql as $install$ begin execute "+q(source)+";return 'ok';exception when others then return sqlstate||':'||sqlerrm;end $install$;select pg_temp.install_market();")
+  assert.equal(diagnostic,'ok',name+' static installation: '+diagnostic)
+ }
  const baseCounts=await f.admin('select published_node_count||\':\'||documented_relationship_count from public.graph_coverage_public')
  const original=await f.investigation()
  const nodes={equity:randomUUID(),crypto:randomUUID(),issuer:randomUUID(),supplier:randomUUID(),network:randomUUID(),event:randomUUID()}
