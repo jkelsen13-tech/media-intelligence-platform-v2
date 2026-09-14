@@ -6,6 +6,19 @@ export const COMPARISON_COPY = Object.freeze({
   difficult_to_distinguish: 'The reviewed evidence does not clearly distinguish these explanations.',
   insufficient_to_rank: 'There is insufficient evidence to rank these explanations.',
 })
+// Presentation only: these labels do not change retained relationship values or calculate support.
+export const EVIDENCE_RELATIONSHIP_COPY = Object.freeze({
+  supports: Object.freeze({label:'Supports', explanation:'The saved argument explains how this evidence supports this explanation.'}),
+  weakens: Object.freeze({label:'Weakens', explanation:'The saved argument explains how this evidence weakens this explanation.'}),
+  compatible: Object.freeze({label:'Ambiguous', explanation:'This evidence fits this explanation but does not clearly distinguish it from alternatives.'}),
+  context: Object.freeze({label:'Context', explanation:'This evidence supplies background; this relationship does not claim support or opposition.'}),
+  reports_allegation: Object.freeze({label:'Reports allegation', explanation:'This source reports an allegation; reporting it does not independently substantiate it.'}),
+})
+export const HYPOTHESIS_RELATIONSHIP_COPY = Object.freeze({
+  overlapping:'These explanations can overlap: more than one may contribute.',
+  mutually_exclusive:'These explanations are recorded as mutually exclusive: no more than one can be true.',
+  not_established:'Whether these explanations can overlap has not been established.',
+})
 const text = x => typeof x === 'string' && x.trim().length > 0
 const list = x => Array.isArray(x)
 const unique = xs => new Set(xs).size === xs.length

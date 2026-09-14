@@ -1,21 +1,23 @@
-name: Synthetic hypothesis interface
+name: Synthetic private Markets interface
 on:
   pull_request:
     paths:
       - 'src/App.jsx'
-      - 'src/components/PrivateInvestigationWorkspace.jsx'
-      - 'src/lib/useHypothesisSessionClient.js'
-      - 'src/lib/usePrivateInvestigationWorkspace.js'
-      - 'tests/appHypothesisComposition.test.mjs'
       - 'src/components/Hypothesis*.jsx'
       - 'src/lib/hypothesis*.js'
+      - 'src/lib/useHypothesisSessionClient.js'
+      - 'src/components/PrivateInvestigationWorkspace.jsx'
+      - 'src/components/PrivateMarket*.jsx'
+      - 'src/lib/privateMarkets*.js'
+      - 'src/lib/usePrivateMarketsRead.js'
       - 'src/styles/investigation-workspace-panels.css'
+      - 'src/styles/workspace.css'
       - 'src/styles/tokens.css'
       - 'src/index.css'
-      - 'tests/hypothesisAssessmentFixture.mjs'
-      - 'tests/hypothesisComposerFixture.mjs'
-      - 'verifier/hypothesis-browser/**'
-      - '.github/workflows/hypothesis-browser.yml'
+      - 'supabase/qualification/markets-evidence/**'
+      - 'tests/privateMarkets*.mjs'
+      - 'verifier/markets-browser/**'
+      - '.github/workflows/markets-browser.yml'
 permissions:
   contents: read
 jobs:
@@ -34,7 +36,7 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
           node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
-      - name: Synthetic interface with all page network requests blocked
+      - name: Synthetic private Markets with all outside page requests blocked
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
-        run: node verifier/hypothesis-browser/run.mjs
+        run: node verifier/markets-browser/run.mjs

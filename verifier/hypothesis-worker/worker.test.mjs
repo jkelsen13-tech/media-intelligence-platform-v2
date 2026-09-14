@@ -1,3 +1,4 @@
+import {marketsCases} from './marketsCases.mjs'
 import {continuityCases} from './continuityCases.mjs'
 import {bootstrapCases} from './bootstrapCases.mjs'
 import {pgoutputCases} from './pgoutputCases.mjs'
@@ -512,6 +513,7 @@ test('isolated hypothesis generation authority, retained computation and restart
   assert.equal(r.prior_state,'failed');
   assert.equal(await f.admin('select state from mip_hypothesis.generation_jobs where generation_id='+q(original.generation_id)),'failed');
  });
+ await t.test('private Markets shared graph retained reader',t=>marketsCases(t,f))
  await t.test('revoked signing key denies claim and completion despite an outstanding lease',async()=>{
   const v=await f.investigation();await v.captureGeneration();const j=await claim(f,v)
   await f.admin('update mip_identity.key_heads set active=false')
