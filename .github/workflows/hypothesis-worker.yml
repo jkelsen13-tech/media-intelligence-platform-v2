@@ -38,6 +38,11 @@ jobs:
         run: npm ci --ignore-scripts --no-audit
       - name: Pull isolated worker runtime
         run: docker pull node:24-alpine
+      - name: Enable metadata decoding in the existing disposable service
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+          MIP_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
+        run: node verifier/hypothesis-worker/prepareLogical.mjs
       - name: Synthetic native authority and actual worker restart tests
         env:
           MIP_DISPOSABLE_POSTGRES: comparison-qualification
