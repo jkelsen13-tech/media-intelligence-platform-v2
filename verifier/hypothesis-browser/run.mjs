@@ -55,7 +55,7 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    const panel=page.locator('.piw-hypothesis-assessment')
    await panel.getByRole('heading',{name:'What explains the fictional contract award?',exact:true}).waitFor()
    await panel.getByText('Inferred assessment, not an established finding.',{exact:true}).waitFor()
-   await panel.getByText('Review: unreviewed · Private; publication disabled.',{exact:true}).waitFor()
+   await panel.getByText('Saved review state: unreviewed · Private; publication disabled.',{exact:true}).waitFor()
    assert.equal(await panel.getByRole('heading',{name:'Saved revision record',exact:true}).count(),0)
    const disclosure=panel.locator('summary')
    await disclosure.focus();await page.keyboard.press('Enter')
@@ -165,6 +165,21 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    await panel.locator('summary').click()
    await panel.getByText('Synthetic passage records a meeting, not its purpose.',{exact:false}).waitFor()
    if(width===390)console.log('MIP_SYNTHETIC_COMPOSER_SAVED_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+   const review=page.getByRole('region',{name:'Your hypothesis review acknowledgement'})
+   await review.getByRole('button',{name:'Mark revision 1 reviewed',exact:true}).waitFor()
+   assert.equal(await page.evaluate(()=>window.reviewSynthetic.submissions.length),0)
+   await review.getByRole('button',{name:'Mark revision 1 reviewed',exact:true}).click()
+   const retryReview=review.getByRole('button',{name:'Retry the same review acknowledgement',exact:true})
+   await retryReview.waitFor()
+   await retryReview.focus();await page.keyboard.press('Enter')
+   await review.getByText(/You marked revision 1 reviewed at/).waitFor()
+   const reviewed=await page.evaluate(()=>window.reviewSynthetic)
+   assert.equal(reviewed.receipts.length,1);assert.equal(reviewed.submissions.length,2)
+   assert.deepEqual(reviewed.submissions[0],reviewed.submissions[1])
+   assert.deepEqual(await page.evaluate(()=>window.composerSynthetic.saved.assessment),saved)
+   assert.equal(await review.getByRole('button',{name:'Mark revision 1 reviewed',exact:true}).count(),0)
+   assert.equal(await review.evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
+   if(width===390)console.log('MIP_SYNTHETIC_REVIEW_ACK_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
    await page.evaluate(()=>window.renderSyntheticComposer(null))
    await panel.waitFor({state:'detached'})
 
@@ -174,6 +189,6 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
   console.log('MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS='+JSON.stringify({engine,widths:[1280,768,390,320],
    keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
    noAutomaticRetry:true,deniedRecordsCleared:true,logoutCleared:true,networkRequests:0,
-   composerExactUnicodeSpan:true,hashMismatchDenied:true,linkedReasoning:true,lostAcknowledgementExactRetry:true,syntheticReceiptOnly:true,savedRevisionReachableByScrolling:true,savedAssessmentDisclosure:true,separateMissingEstimates:true,sourceClocks:true,pendingReassessment:true,systemFontFallback:true,scope:'synthetic_ledger_saved_assessment_and_composer',productionQualified:false}))
+   explicitReviewAcknowledgement:true,reviewExactRetry:true,reviewReadbackRequired:true,assessmentUnchangedByReview:true,composerExactUnicodeSpan:true,hashMismatchDenied:true,linkedReasoning:true,lostAcknowledgementExactRetry:true,syntheticReceiptOnly:true,savedRevisionReachableByScrolling:true,savedAssessmentDisclosure:true,separateMissingEstimates:true,sourceClocks:true,pendingReassessment:true,systemFontFallback:true,scope:'synthetic_ledger_saved_assessment_and_composer',productionQualified:false}))
  }finally{await browser.close()}
 }

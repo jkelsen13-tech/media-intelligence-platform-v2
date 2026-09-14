@@ -26,7 +26,7 @@ export default function HypothesisAssessmentPanel({assessment,dependencyChanged=
     <p>Assessment completed: {date(r.completed_at)} · Revision {r.revision}</p>
     <p>{historyMode==='as_known_then'?'As known then: this is a completed assessment available by the requested time.':
       historyMode==='reconstructed_now'?'Reconstructed now: later-acquired evidence may inform this assessment.':'Saved observation: no current evidence is substituted.'}</p>
-    <p>Review: {r.review_state.replaceAll('_',' ')} · Private; publication disabled.</p>
+    <p>Saved review state: {r.review_state.replaceAll('_',' ')} · Private; publication disabled.</p>
     {dependencyChanged?<p role="status">A dependency changed. Reassessment is pending; this is still the saved assessment.</p>:null}
     <details className="piw-linked-record" onToggle={event=>{if(event.target===event.currentTarget)setOpen(event.currentTarget.open)}}>
       <summary>Evidence, reasoning, alternatives, and assessment history</summary>

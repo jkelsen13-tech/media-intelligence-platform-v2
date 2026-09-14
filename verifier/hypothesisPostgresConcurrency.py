@@ -95,6 +95,7 @@ class Hypothesis(unittest.TestCase):
         h.run(db,Path("supabase/qualification/hypothesis-assessments/006_reassessment_completion.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/007_human_reconsideration.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/008_authoring_reads.sql").read_text())
+        h.run(db,Path("supabase/qualification/hypothesis-assessments/014_review_acknowledgements.sql").read_text())
         cls.request=str(uuid.uuid4())
 
     @classmethod
@@ -654,6 +655,120 @@ process.stdout.write(JSON.stringify(buildComposerSubmission(context,draft,crypto
         self.assertEqual(self.admin("select pg_has_role('mip_hypothesis_gateway','mip_hypothesis_owner','MEMBER')"),"f")
         self.assertEqual(self.admin("select rolcanlogin or rolbypassrls or rolsuper or rolcreaterole from pg_roles where rolname='mip_hypothesis_gateway'"),"f")
         self.assertEqual(self.counts(),"0:0")
+
+    def review_ack(self,revision=None,request=None,previous=None,user=None):
+        return "select mip_hypothesis.acknowledge_review("+",".join(map(q,[user or self.user,self.iid,
+            request or self.request,revision or self.first["assessment"]["id"]]))+","+(q(previous) if previous else "null")+");"
+    def review_history_sql(self,user=None):
+        return "select mip_hypothesis.review_history("+q(user or self.user)+","+q(self.iid)+");"
+    def review_count(self):
+        return self.admin("select count(*) from mip_hypothesis.review_acknowledgements")
+    def test_review_ack_is_explicit_and_preserves_assessment_and_pending_causes(self):
+        self.first=json.loads(self.a.execute(self.append()))
+        before=self.first["assessment"]
+        self.a.execute(self.human_request())
+        pending=json.loads(self.a.execute(self.backlog()))
+        self.assertEqual(json.loads(self.a.execute(self.review_history_sql()))["entries"],[])
+        self.assertEqual(self.review_count(),"0")
+        receipt=json.loads(self.a.execute(self.review_ack()))
+        self.assertFalse(receipt["is_approval"]);self.assertFalse(receipt["publication_allowed"]);self.assertFalse(receipt["resolves_reassessment"])
+        self.assertEqual(receipt["review_scope"],"version_acknowledgement_only")
+        self.assertEqual(receipt["receipt_sequence"],"1")
+        self.assertEqual(json.loads(self.a.execute(self.history()))["entries"][0]["assessment"],before)
+        self.assertEqual(json.loads(self.a.execute(self.backlog())),pending)
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_resolutions"),"0")
+    def test_review_exact_concurrent_retry_commits_one_receipt(self):
+        self.first=json.loads(self.a.execute(self.append()))
+        self.a.execute("begin;");first=self.a.execute(self.review_ack())
+        self.b.start(self.review_ack());self.blocked(self.b,self.a);self.assertEqual(self.review_count(),"0")
+        self.a.execute("commit;");self.assertEqual(self.b.finish(),first);self.assertEqual(self.review_count(),"1")
+    def test_review_concurrent_different_requests_require_expected_baseline(self):
+        self.first=json.loads(self.a.execute(self.append()))
+        self.a.execute("begin;");self.a.execute(self.review_ack())
+        self.b.start(self.review_ack(request=str(uuid.uuid4())));self.blocked(self.b,self.a);self.a.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"predecessor changed"):self.b.finish()
+        self.assertEqual(self.review_count(),"1")
+    def test_review_can_ack_visible_old_version_without_covering_newer_version(self):
+        self.prepare_completion()
+        second=json.loads(self.a.execute(self.complete()))
+        old=json.loads(self.a.execute(self.review_ack()))
+        history=json.loads(self.a.execute(self.review_history_sql()))
+        self.assertEqual(len(history["entries"]),1)
+        self.assertEqual(history["entries"][0]["receipt"]["revision"],1)
+        self.assertEqual(history["latest_receipt_id"],old["request_id"])
+        next_request=str(uuid.uuid4())
+        newer=json.loads(self.a.execute(self.review_ack(revision=second["assessment"]["id"],request=next_request,previous=old["request_id"])))
+        self.assertEqual(newer["receipt_sequence"],"2")
+        self.assertEqual(json.loads(self.a.execute(self.review_ack())),old)
+        with self.assertRaisesRegex(RuntimeError,"cannot move backward"):
+            self.b.execute(self.review_ack(request=str(uuid.uuid4()),previous=next_request))
+        self.assertEqual(self.review_count(),"2")
+    def test_review_retry_rejects_changed_arguments_and_cross_reviewer_reuse(self):
+        self.first=json.loads(self.a.execute(self.append()));self.a.execute(self.review_ack())
+        with self.assertRaisesRegex(RuntimeError,"retry conflict"):
+            self.b.execute(self.review_ack(previous=str(uuid.uuid4())))
+        other=str(uuid.uuid4());self.admin("insert into public.mip_profiles values("+q(other)+")")
+        scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,"user_id":other,"access_role":"reviewer","reason":"Synthetic."})
+        self.assertEqual(json.loads(self.session().execute(self.review_history_sql(user=other)))["entries"],[])
+        with self.assertRaisesRegex(RuntimeError,"retry conflict"):self.session().execute(self.review_ack(user=other))
+        self.assertEqual(self.review_count(),"1")
+    def test_review_viewer_cannot_write_and_revoked_member_cannot_read(self):
+        self.first=json.loads(self.a.execute(self.append()))
+        scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,"user_id":self.user,"access_role":"viewer","reason":"Synthetic."})
+        with self.assertRaisesRegex(RuntimeError,"acknowledgement denied"):self.a.execute(self.review_ack())
+        self.assertEqual(json.loads(self.b.execute(self.review_history_sql()))["entries"],[])
+        scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,"user_id":self.user,"access_role":"revoked","reason":"Synthetic."})
+        with self.assertRaisesRegex(RuntimeError,"read denied"):self.session().execute(self.review_history_sql())
+        self.assertEqual(self.review_count(),"0")
+    def test_review_acceptance_first_serializes_permission_revocation(self):
+        self.first=json.loads(self.a.execute(self.append()))
+        self.a.execute("begin;");self.a.execute(self.review_ack())
+        self.b.execute("reset role;");self.b.start(self.revoke());self.blocked(self.b,self.a)
+        self.a.execute("commit;");self.b.finish()
+        self.assertEqual(self.review_count(),"1")
+        with self.assertRaisesRegex(RuntimeError,"review target unavailable"):self.session().execute(self.review_ack())
+        history=json.loads(self.a.execute(self.review_history_sql()))
+        self.assertEqual(history["entries"][0]["target_status"],"withheld")
+        self.assertNotIn('"assessment":',json.dumps(history));self.assertTrue(history["current_user_only"])
+    def test_review_revocation_first_denies_without_receipt(self):
+        self.first=json.loads(self.a.execute(self.append()))
+        self.b.execute("reset role;begin;"+self.revoke())
+        self.a.start(self.review_ack());self.blocked(self.a,self.b);self.b.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"review target unavailable"):self.a.finish()
+        self.assertEqual(self.review_count(),"0")
+    def test_review_process_loss_before_commit_rolls_back_and_after_commit_replays(self):
+        self.first=json.loads(self.a.execute(self.append()))
+        self.a.execute("begin;");self.a.execute(self.review_ack());self.assertEqual(self.review_count(),"0")
+        self.a.process.kill();self.a.process.wait(timeout=5)
+        receipt=json.loads(self.b.execute(self.review_ack()))
+        self.b.process.kill();self.b.process.wait(timeout=5)
+        self.assertEqual(json.loads(self.session().execute(self.review_ack())),receipt)
+        self.assertEqual(self.review_count(),"1")
+    def test_review_storage_is_append_only_and_gateway_has_no_table_access(self):
+        self.first=json.loads(self.a.execute(self.append()));self.a.execute(self.review_ack())
+        for statement in ["select * from mip_hypothesis.review_acknowledgements;","insert into mip_hypothesis.review_acknowledgements default values;"]:
+            with self.assertRaisesRegex(RuntimeError,"permission denied"):self.session().execute(statement)
+        for statement in ["delete from mip_hypothesis.review_acknowledgements;","update mip_hypothesis.review_acknowledgements set revision=99;","truncate mip_hypothesis.review_acknowledgements;"]:
+            with self.assertRaisesRegex(RuntimeError,"append-only"):self.admin(statement)
+        self.assertEqual(self.admin("select relrowsecurity and relforcerowsecurity from pg_class where oid='mip_hypothesis.review_acknowledgements'::regclass"),"t")
+        self.assertEqual(self.review_count(),"1")
+    def test_review_missing_target_and_missing_fence_fail_closed(self):
+        with self.assertRaisesRegex(RuntimeError,"review target unavailable"):
+            self.a.execute(self.review_ack(revision=str(uuid.uuid4())))
+        self.first=json.loads(self.b.execute(self.append()))
+        self.admin("delete from mip_cutover_authority.publication_fence;")
+        with self.assertRaisesRegex(RuntimeError,"fence unavailable"):self.session().execute(self.review_ack())
+
+
+    def test_source_change_after_review_keeps_receipt_and_requires_reassessment(self):
+        self.first=json.loads(self.a.execute(self.append()));receipt=json.loads(self.a.execute(self.review_ack()))
+        self.admin(self.change())
+        causes=json.loads(self.a.execute(self.backlog()))["causes"]
+        self.assertTrue(any(c["kind"]=="retained_source_change" and c["state"]=="pending_explicit_reconciliation" for c in causes))
+        self.assertEqual(json.loads(self.a.execute(self.review_history_sql()))["entries"][0]["receipt"],receipt)
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_resolutions"),"0")
+        self.assertEqual(self.first["assessment"]["review_state"],"unreviewed")
+
 if __name__=="__main__":
     print("MIP_HYPOTHESIS_PG_VERSION="+h.run("postgres","select version();"),flush=True)
     print("MIP_HYPOTHESIS_FIXTURES=synthetic_only;CC_closed;no_live_access",flush=True)

@@ -60,7 +60,10 @@ test('isolated hypothesis generation authority, retained computation and restart
   const v=await f.investigation()
   assert.equal(await f.admin("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_hypothesis' and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity)"),'0')
   assert.equal(await f.admin("select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='mip_hypothesis' and (r.rolsuper or r.rolbypassrls or r.rolcanlogin)"),'0')
-  for(const sql of ["select * from mip_hypothesis.generations","select * from mip_hypothesis.generation_outputs","update mip_hypothesis.method_heads set active=true",
+  for(const sql of ["select * from mip_hypothesis.review_acknowledgements",
+   'select mip_hypothesis.acknowledge_review('+[v.user,v.iid,randomUUID(),randomUUID()].map(q).join(',')+',null)',
+   'select mip_hypothesis.review_history('+[v.user,v.iid].map(q).join(',')+')',
+   "select * from mip_hypothesis.generations","select * from mip_hypothesis.generation_outputs","update mip_hypothesis.method_heads set active=true",
    "set role service_role","set role mip_hypothesis_owner","set role mip_identity_broker_v2","select * from mip_identity.sessions",
    'select mip_hypothesis.capture_generation('+[v.user,v.iid,v.vid,v.source,randomUUID(),v.runtime,v.method,v.spec].map(q).join(',')+')'])
    await assert.rejects(raw(f.db,'set session authorization '+workerRole+';'+sql),/mip_database_denied/)

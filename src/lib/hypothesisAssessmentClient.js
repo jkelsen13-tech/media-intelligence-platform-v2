@@ -13,6 +13,8 @@ export function createHypothesisAssessmentClient(transport) {
   }catch{return{data:null,error:{code:'request_failed'}}}
  }
  return Object.freeze({
+  acknowledgeReview:input=>call('acknowledge_review',input),
+  reviewHistory:investigationId=>call('review_history',{investigation_id:investigationId}),
   recoverGeneration:input=>call('recover_generation',input),
   captureGeneration:input=>call('capture_generation',input),
   generationBacklog:investigationId=>call('generation_backlog',{investigation_id:investigationId}),

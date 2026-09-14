@@ -1,4 +1,5 @@
 import {useEffect,useState,useId,useRef} from 'react'
+import HypothesisReviewAcknowledgement from './HypothesisReviewAcknowledgement.jsx'
 import HypothesisGenerationLedger from './HypothesisGenerationLedger.jsx'
 import HypothesisAssessmentComposer from './HypothesisAssessmentComposer.jsx'
 import HypothesisReassessmentRequest,{ReassessmentRequestDetail} from './HypothesisReassessmentRequest.jsx'
@@ -86,6 +87,9 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
   {canReconcile&&entry&&entry.revision_id===entries.at(-1)?.revision_id&&typeof client?.requestReassessment==='function'?
    <HypothesisReassessmentRequest key={scope+entry.revision_id} client={client} investigationId={investigationId}
     revisionId={entry.revision_id} scopeKey={scope} onRecorded={reload}/>:null}
+  {entry&&entry.status==='available'&&!permissionChanged?<HypothesisReviewAcknowledgement key={'review:'+scope+entry.revision_id} client={client}
+   investigationId={investigationId} revisionId={entry.revision_id} revision={entry.revision} userScopeKey={userScopeKey} canReview={canReconcile}
+   onAccessFailure={code=>{setState({client,scope,status:'unavailable'});accessFailure.current?.(code)}}/>:null}
   {entry?(entry.status==='withheld'||permissionChanged?<p role="status">This saved assessment is withheld until its evidence permissions and review requirements are satisfied.</p>:
    <HypothesisAssessmentPanel key={entry.revision_id} assessment={entry.assessment}
     dependencyChanged={entry.reassessment_pending||related.length>0}/>):null}

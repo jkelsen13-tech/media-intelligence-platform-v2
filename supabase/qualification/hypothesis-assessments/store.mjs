@@ -4,6 +4,13 @@ import {validateHypothesisAssessment} from '../../../src/lib/hypothesisAssessmen
 export function createHypothesisStore(query) {
  if(typeof query!=='function') throw new TypeError('query required')
  return Object.freeze({
+  async acknowledgeReview({verifiedUserId,investigationId,requestId,revisionId,previousReceiptId}) {
+   const result=await query('select mip_hypothesis.acknowledge_review($1::uuid,$2::uuid,$3::uuid,$4::uuid,$5::uuid) as value',
+    [verifiedUserId,investigationId,requestId,revisionId,previousReceiptId]);return result.rows[0].value
+  },
+  async reviewHistory({verifiedUserId,investigationId}) {
+   const result=await query('select mip_hypothesis.review_history($1::uuid,$2::uuid) as value',[verifiedUserId,investigationId]);return result.rows[0].value
+  },
   async recoverGeneration({verifiedUserId,investigationId,workspaceVersionId,sourceProject,requestId,runtimeId,methodRevision,priorGenerationId,spec}) {
    const result=await query('select mip_hypothesis.recover_generation($1::uuid,$2::uuid,$3::uuid,$4::text,$5::uuid,$6::text,$7::uuid,$8::uuid,$9::jsonb) as value',
     [verifiedUserId,investigationId,workspaceVersionId,sourceProject,requestId,runtimeId,methodRevision,priorGenerationId,JSON.stringify(spec)]);return result.rows[0].value

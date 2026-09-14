@@ -545,3 +545,7 @@
 .piw-hypothesis-composer button:disabled { opacity: .6; cursor: not-allowed; }
 .piw-hypothesis-composer :is(button,select,textarea,input):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .piw-hypothesis-composer blockquote { margin: 12px 0; padding: 12px; border-inline-start: 2px solid var(--border-strong); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.piw-hypothesis-review { font-size: 13px; line-height: 1.5; }
+.piw-hypothesis-review p { margin: 8px 0; }
+.piw-hypothesis-review h3 { font-size: 15px; margin-bottom: 12px; }

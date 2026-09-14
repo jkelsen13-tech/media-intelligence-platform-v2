@@ -1,6 +1,7 @@
 // Synthetic UI only. No backend, credentials, source text or production route.
 import React from 'react'
 import {createRoot} from 'react-dom/client'
+import Review from '../../src/components/HypothesisReviewAcknowledgement.jsx'
 import Composer from '../../src/components/HypothesisAssessmentComposer.jsx'
 import {syntheticAuthoringContext} from '../../tests/hypothesisComposerFixture.mjs'
 import Panel from '../../src/components/HypothesisAssessmentPanel.jsx'
@@ -53,4 +54,21 @@ window.renderSyntheticComposer=(scope='synthetic-reviewer')=>root.render(<main c
  <Composer client={composerClient} investigationId={composerContext.investigation_id}
  workspaceVersionId={composerContext.workspace_version_id} userScopeKey={scope}/></main>)
 window.inspectSyntheticSaved=()=>root.render(<main className="piw" style={{height:'100dvh',overflowY:'auto'}}>
- <Panel assessment={window.composerSynthetic.saved?.assessment}/></main>)
+ <Panel assessment={window.composerSynthetic.saved?.assessment}/>
+ <Review client={reviewClient} investigationId={composerContext.investigation_id} revisionId={window.composerSynthetic.saved?.assessment.id}
+ revision={1} userScopeKey="synthetic-reviewer" canReview={true}/></main>)
+
+window.reviewSynthetic={submissions:[],receipts:[]}
+const reviewClient={
+ reviewHistory:async()=>({data:{contract_version:'mip_hypothesis_review_history_v1',investigation_id:composerContext.investigation_id,
+  entries:window.reviewSynthetic.receipts.map(receipt=>({receipt,target_status:'available'})),
+  latest_receipt_id:window.reviewSynthetic.receipts.at(-1)?.request_id??null,current_user_only:true,
+  is_approval:false,resolves_reassessment:false,publication_allowed:false}}),
+ acknowledgeReview:async input=>{
+  const state=window.reviewSynthetic;state.submissions.push(structuredClone(input))
+  if(!state.receipts.length)state.receipts.push({contract_version:'mip_hypothesis_review_receipt_v1',
+   ...input,revision:1,receipt_sequence:'1',recorded_at:'2026-09-14T12:00:00.123456Z',
+   review_scope:'version_acknowledgement_only',is_approval:false,resolves_reassessment:false,publication_allowed:false})
+  return state.submissions.length===1?{error:{code:'request_failed'}}:{data:structuredClone(state.receipts[0])}
+ }
+}
