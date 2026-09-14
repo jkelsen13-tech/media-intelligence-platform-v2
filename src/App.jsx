@@ -1243,7 +1243,6 @@ export default function App({
           view === PRIVATE_INVESTIGATION_VIEW ? (
             <PrivateInvestigationInspector
               workspace={privateWorkspace}
-            hypothesisClient={hypothesisClient}
               publicNode={publicInvestigationNode}
               onOpenPublicGraphNode={openPrivatePublicGraphNode}
             />
@@ -1877,6 +1876,7 @@ export default function App({
         {view === PRIVATE_INVESTIGATION_VIEW && (
           <PrivateInvestigationWorkspace
             workspace={privateWorkspace}
+            hypothesisClient={hypothesisClient}
             accountUiAvailable={accountUi}
             onSignIn={() => setAccountOpen(true)}
             publicNode={publicInvestigationNode}
