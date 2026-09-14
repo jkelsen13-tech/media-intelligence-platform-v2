@@ -68,6 +68,9 @@ export async function marketsCases(t,f){
   assert.deepEqual(new Set(reverse.paths.map(p=>p.asset_id)),new Set([nodes.equity,nodes.crypto]))
   assert.equal(equity.publication_allowed,false);assert.equal(equity.historical_time_qualified,false)
   assert.equal(equity.paths[0].hops[0].support.excerpt,'A 😀 B meeting record.')
+  assert.equal(equity.paths[0].identity_companion.id,nodes.issuer);assert.ok(equity.paths[0].identity_companion.version_id)
+  assert.equal(crypto.paths[0].identity_companion.id,nodes.network);assert.equal(crypto.paths[0].asset_identifier,'synthetic-token')
+  for(const p of equity.paths)for(let i=1;i<p.hops.length;i++)assert.equal(p.hops[i-1].object.version_id,p.hops[i].subject.version_id)
  })
  await t.test('private graph bytes and counts do not leak through permissive raw reads or known definer aggregate',async()=>{
   for(const role of ['anon','authenticated']){
@@ -89,6 +92,18 @@ export async function marketsCases(t,f){
    const changed={...row,...override,id:randomUUID(),candidate_key:randomUUID()}
    await assert.rejects(()=>f.admin('insert into evidence_pipeline.evidence_candidates select (jsonb_populate_record(null::evidence_pipeline.evidence_candidates,'+q(changed)+')).*'))
   }
+ })
+ await t.test('high branching retained candidate set fails before recursive discovery or assessment reads',async()=>{
+  const row=JSON.parse(await f.admin('select to_jsonb(c) from evidence_pipeline.evidence_candidates c where id='+q(candidates[0].cid)))
+  let inserts='begin;'
+  // Parallel evidence candidates on existing graph identities multiply path combinations.
+  // They are transaction-local and rolled back by the expected fail-closed read.
+  for(let n=0;n<11;n++){
+   const changed={...row,id:randomUUID(),candidate_key:randomUUID()}
+   inserts+='insert into evidence_pipeline.evidence_candidates select (jsonb_populate_record(null::evidence_pipeline.evidence_candidates,'+q(changed)+')).*;'
+  }
+  await assert.rejects(()=>f.admin(inserts+'set local role mip_hypothesis_gateway;'+sql()),/mip_market_candidate_budget/)
+  assert.equal((await read()).paths.length,2)
  })
  await t.test('permission revocation before reader denies; fresh authority revision restores fixture access',async()=>{
   const held=await hold(f.db,original.revokeSql);const pending=read();pending.catch(()=>{})

@@ -24,6 +24,9 @@ begin
  if p_source is null or btrim(p_source)='' or p_source='cc-definition-batch-v1' then raise exception 'mip_market_source_denied';end if;
  select array_agg(coalesce(value->'capture'->>'id',value->'record_version'->>'id')::uuid) into retained_ids
  from jsonb_array_elements(binding->'observation'->'snapshot'->'inputs');
+ if (p_asset is not null and not exists(select 1 from evidence_pipeline.record_versions where id=any(retained_ids) and record_kind='graph_node' and record_key=p_asset::text and payload->>'type' in('equity','cryptoasset')))
+ or(p_event is not null and not exists(select 1 from evidence_pipeline.record_versions where id=any(retained_ids) and record_kind='graph_node' and record_key=p_event::text and payload->>'type'='event'))
+ then raise exception 'mip_market_identity_not_in_workspace';end if;
  select coalesce(array_agg(id order by id),'{}') into candidate_ids from(
   select cand.id from evidence_pipeline.evidence_candidates cand
   where cand.candidate_kind='typed_graph_relationship' and cand.capture_id=any(retained_ids)
@@ -109,7 +112,7 @@ begin
    'identity_companion',asset_companion,'asset_identifier',asset#>>'{metadata,asset_identifier}','valid_from',asset#>>'{metadata,valid_from}','valid_to',asset#>>'{metadata,valid_to}','aliases_version_id',asset_version,'aliases',aliases,'event_id',path.endpoint,'hops',hops,'relation',case when jsonb_array_length(hops)=1 and hops->0->>'relationship'='direct_reporting' then 'direct_reporting' else 'connected_development' end));
  end loop;
  return jsonb_build_object('contract_version','mip_markets_private_qualification_v1','investigation_id',p_investigation,'workspace_version_id',p_version,
- 'asset_id',p_asset,'event_id',p_event,'at',p_at,'paths',paths,'publication_allowed',false,'historical_time_qualified',false,'broader_context',jsonb_build_array(),
+ 'observation_id',binding->'observation'->>'id','asset_id',p_asset,'event_id',p_event,'at',p_at,'paths',paths,'publication_allowed',false,'historical_time_qualified',false,'broader_context',jsonb_build_array(),
  'coverage','bounded_explicit_typed_paths_only','source_root_lineage_qualified',false);
 end $$;
 alter function mip_markets.read_private(uuid,uuid,uuid,text,uuid,uuid,timestamptz) owner to mip_hypothesis_owner;
