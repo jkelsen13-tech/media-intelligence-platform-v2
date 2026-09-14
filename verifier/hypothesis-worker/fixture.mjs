@@ -31,7 +31,7 @@ export async function setup(t) {
   if(paths.length!==1)throw Error('mip_fixture_migration_ambiguous')
   await f.admin(await read('supabase/migrations/'+paths[0])).catch(e=>{throw Error('mip_fixture_install_'+suffix+'_'+e.message)})
  }
- for(const name of ['001_revision_store.sql','002_retained_observation_reader.sql','003_bound_acceptance.sql','004_bound_history.sql','005_reassessment_causes.sql','006_reassessment_completion.sql','007_human_reconsideration.sql','008_authoring_reads.sql','009_generation_worker.sql','010_generation_ledger.sql','011_method_change_signals.sql'])
+ for(const name of ['001_revision_store.sql','002_retained_observation_reader.sql','003_bound_acceptance.sql','004_bound_history.sql','005_reassessment_causes.sql','006_reassessment_completion.sql','007_human_reconsideration.sql','008_authoring_reads.sql','009_generation_worker.sql','010_generation_ledger.sql','011_method_change_signals.sql','012_generation_recovery.sql'])
   await f.admin(await read('supabase/qualification/hypothesis-assessments/'+name)).catch(e=>{throw Error('mip_fixture_install_'+name+'_'+e.message)})
  await f.admin('insert into mip_hypothesis.method_versions values('+[method,implementation,'none','synthetic_mechanism_only','synthetic-fixture-method-only',{}].map(q).join(',')+',clock_timestamp());insert into mip_hypothesis.method_heads values('+[implementation,method,true].map(q).join(',')+');')
  for(const runtime of ['runtime-a','runtime-b']) {

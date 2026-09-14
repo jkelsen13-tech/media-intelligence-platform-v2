@@ -327,6 +327,58 @@ test('isolated hypothesis generation authority, retained computation and restart
   await assert.rejects(v.captureGeneration(),/mip_hypothesis_method_unavailable/);
  });
 
+
+ await t.test('fresh-generation recovery preserves expired attempt and commits exact linked retry',async()=>{
+  const v=await f.investigation(),original=await v.captureGeneration(),j=await claim(f,v),request=randomUUID();
+  const args=[v.user,v.iid,v.vid,v.source,request,v.runtime,v.method,original.generation_id,v.spec];
+  await assert.rejects(f.gateway('recover_generation',args),/mip_hypothesis_recovery_not_stranded/);
+  await f.admin("update mip_hypothesis.generation_jobs set lease_expires_at=clock_timestamp()-interval '1 second' where generation_id="+q(original.generation_id));
+  const recovered=await f.gateway('recover_generation',args);
+  assert.notEqual(recovered.generation_id,original.generation_id);
+  assert.equal(recovered.prior_generation_id,original.generation_id);
+  assert.equal(recovered.prior_retained,true);assert.equal(recovered.force_cancellation,false);assert.equal(recovered.automatic_retry,false);
+  assert.deepEqual(await f.gateway('recover_generation',args),recovered);
+  assert.equal(await f.admin('select state from mip_hypothesis.generation_jobs where generation_id='+q(original.generation_id)),'processing');
+  const changed=[...args];changed[4]=randomUUID();
+  await assert.rejects(f.gateway('recover_generation',changed),/mip_hypothesis_recovery_conflict/);
+  await assert.rejects(f.rpc('worker_complete',completeArgs(v,j,output(j))),/mip_hypothesis_lease_unavailable/);
+  const next=await claim(f,v);assert.equal(next.generation_id,recovered.generation_id);
+  await f.rpc('worker_complete',completeArgs(v,next,output(next)));
+  assert.deepEqual(await f.gateway('recover_generation',args),recovered);
+  assert.equal(await counts(f,v),'1:1:1');
+  await v.revokeAccess();
+  await assert.rejects(f.gateway('recover_generation',args));
+ });
+ await t.test('recovery refuses wrong owner, scope, completed job and revoked input permission',async()=>{
+  const v=await f.investigation(),original=await v.captureGeneration(),j=await claim(f,v);
+  const args=[v.user,v.iid,v.vid,v.source,randomUUID(),v.runtime,v.method,original.generation_id,v.spec];
+  const wrong=[...args];wrong[0]=randomUUID();
+  await assert.rejects(f.gateway('recover_generation',wrong),/mip_hypothesis_recovery_owner_scope/);
+  const scope=[...args];scope[3]='synthetic-other-source';
+  await assert.rejects(f.gateway('recover_generation',scope));
+  await f.rpc('worker_complete',completeArgs(v,j,output(j)));
+  await assert.rejects(f.gateway('recover_generation',args),/mip_hypothesis_recovery_not_stranded/);
+  assert.equal(await f.admin('select count(*) from mip_hypothesis.generation_recoveries where prior_generation_id='+q(original.generation_id)),'0');
+  const blockedV=await f.investigation(),blockedG=await blockedV.captureGeneration();await claim(f,blockedV);
+  await f.admin("update mip_hypothesis.generation_jobs set lease_expires_at=clock_timestamp()-interval '1 second' where generation_id="+q(blockedG.generation_id));
+  await f.admin(blockedV.revokeSql);
+  await assert.rejects(f.gateway('recover_generation',[blockedV.user,blockedV.iid,blockedV.vid,blockedV.source,randomUUID(),blockedV.runtime,blockedV.method,blockedG.generation_id,blockedV.spec]));
+  assert.equal(await f.admin('select count(*) from mip_hypothesis.generation_recoveries where prior_generation_id='+q(blockedG.generation_id)),'0');
+ });
+ await t.test('recovery is atomic on rollback and inaccessible to the worker role',async()=>{
+  const v=await f.investigation(),original=await v.captureGeneration(),j=await claim(f,v);
+  const failure=completeArgs(v,j,output(j));delete failure.p_output;
+  await f.rpc('worker_fail',failure);
+  const args=[v.user,v.iid,v.vid,v.source,randomUUID(),v.runtime,v.method,original.generation_id,v.spec];
+  await assert.rejects(f.call(workerRole,'recover_generation',args));
+  const held=await hold(f.db,'select mip_hypothesis.recover_generation('+args.map(q).join(',')+')','mip_hypothesis_gateway');
+  await held.finish(false);
+  assert.equal(await f.admin('select count(*) from mip_hypothesis.generation_recoveries where prior_generation_id='+q(original.generation_id)),'0');
+  assert.equal(await f.admin('select count(*) from mip_hypothesis.generations where request_id='+q(args[4])),'0');
+  const r=await f.gateway('recover_generation',args);
+  assert.equal(r.prior_state,'failed');
+  assert.equal(await f.admin('select state from mip_hypothesis.generation_jobs where generation_id='+q(original.generation_id)),'failed');
+ });
  await t.test('revoked signing key denies claim and completion despite an outstanding lease',async()=>{
   const v=await f.investigation();await v.captureGeneration();const j=await claim(f,v)
   await f.admin('update mip_identity.key_heads set active=false')
