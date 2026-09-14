@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "request_id": "pr165-9432b88-independent-1",
+  "candidate_commit": "9432b88dd14c1e4f730ae910f9d2ee844b37fe53",
+  "base_commit": "b4db7071048440ecbc6f9919b0d9ed1e6ce20a93",
+  "packet_commit": "0d7e6f74d2479043f7ad7f616fb9ec0ccec49f8c",
+  "packet_path": "verifier/independent-pr165/request.json",
+  "packet_sha256": "36f5261b95dd25d4f2963e2147d9f86db3d4c3ec122db08967332fa151493d41",
+  "packet_bytes": 1603249,
+  "agent_id": "bc-9432b88d-d14c-4e4f-b30a-e910f9d2ee84",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "completed_with_blocked_acceptance",
+  "maximum_initial_posts": 1,
+  "scope": "Exactly one fresh PR165 private HTTP-boundary review; no retry/recovery.",
+  "pinned_run_id": "run-cc764777-8f53-40ac-abad-b8738037dc62",
+  "provider_status": "FINISHED",
+  "reviewer_declared_outcome": "BLOCKED in JSON fragment following prose",
+  "controller_acceptance": "BLOCKED",
+  "validation_errors": [
+    "Response is prose plus JSON, not exact plain JSON contract.",
+    "JSON fragment omits schema/request/candidate/base/packet bindings, requirement strings and summary; changes blocker fields and limitations shape.",
+    "Reviewer reports required packet unavailable; this report is not independent proof of transport loss or any filesystem inspection."
+  ],
+  "result": {
+    "commit": "cb24fbc967f2fcce29105680600414aa3a64e14b",
+    "path": "verifier/independent-pr165/result.txt",
+    "sha256": "cacea08351198ec3e3c2bf4ce331113847467902ef14b537ecc8c47f5db0ec69",
+    "bytes": 5570,
+    "exact_provider_result": true
+  },
+  "provider": {
+    "commit": "cffa7c96ed0e33694b61c2b9baac2d7969ce2c56",
+    "path": "verifier/independent-pr165/result.provider.json"
+  },
+  "reviewer_text_unchanged": true,
+  "retry_authorized": false,
+  "production_authorized": false,
+  "approval_granted": false
+}
