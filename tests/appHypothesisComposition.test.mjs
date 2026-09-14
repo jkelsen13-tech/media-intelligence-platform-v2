@@ -59,7 +59,7 @@ test('normal App routes configured synthetic history through workspace; current 
  globalThis.fetch=async(url,options)=>{
   assert.equal(url,endpoint);assert.equal(options.headers.Authorization,'Bearer synthetic-current')
   const {action,input}=JSON.parse(options.body);calls.push(action);assert.equal(input.investigation_id,FIXTURE_IDS.comparable)
-  return deny?new Response('{}',{status:403}):response(payload(action))
+  return deny?new Response(JSON.stringify({error:{code:'access_denied'}}),{status:403,headers:{'content-type':'application/json'}}):response(payload(action))
  }
  try{
   const p={privateInvestigationPreview:preview(),authSessionOverride:auth('synthetic-current')}
@@ -77,7 +77,7 @@ test('normal App routes configured synthetic history through workspace; current 
   assert.equal(workspace().state.inspector,null)
  }finally{act(()=>tree?.unmount());globalThis.fetch=original}
 })
-test('normal App superseded credential response cannot repopulate or deny current private view; logout clears it',async()=>{
+for(const lateKind of ['success','denial']) test('normal App ignores superseded '+lateKind+' and logout clears current private history',async()=>{
  const original=globalThis.fetch;let tree,release,oldSignal
  globalThis.fetch=async(url,options)=>{
   assert.equal(url,endpoint);const {action}=JSON.parse(options.body)
@@ -92,7 +92,8 @@ test('normal App superseded credential response cannot repopulate or deny curren
   assert.equal(typeof release,'function','normal App must actually issue history through the transport')
   await act(async()=>tree.update(createElement(App,{...p,authSessionOverride:auth('synthetic-new')})))
   assert.equal(oldSignal.aborted,true);assert.match(text(tree),/Current synthetic App assessment/)
-  await act(async()=>release(response(payload('history','Superseded private text'))))
+  await act(async()=>release(lateKind==='success'?response(payload('history','Superseded private text')):
+   new Response(JSON.stringify({error:{code:'access_denied'}}),{status:403,headers:{'content-type':'application/json'}})))
   assert.doesNotMatch(text(tree),/Superseded private text/);assert.match(text(tree),/Current synthetic App assessment/)
   await act(async()=>tree.update(createElement(App,{...p,authSessionOverride:{loading:false,user:null,session:null}})))
   assert.doesNotMatch(text(tree),/Current synthetic App assessment|Superseded private text/)
