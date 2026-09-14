@@ -11,12 +11,13 @@ import {encryptedRemoteJournal} from '../../supabase/qualification/mip-cutover-a
 import {createCustodyBoundTransport,retainRegistration,registrationDigest} from '../../supabase/qualification/hypothesis-assessments/registrationCustody.mjs'
 export async function incarnationCases(t,f,staged){
  await f.admin(await readFile(new URL('../../supabase/qualification/hypothesis-assessments/020_native_source_incarnation.sql',import.meta.url),'utf8'))
- const transport=id=>createIncarnationBoundTransport({incarnationId:id,call:async(name,args)=>{
+ const nativeCall=async(name,args)=>{
   if(!['capture_incarnation','prepare_incarnation','advance_incarnation'].includes(name))throw Error('synthetic_rpc_denied')
   const role=name==='advance_incarnation'?'mip_temporal_ack_gateway':'mip_temporal_recorder'
   const result=await f.admin('set session authorization '+role+';select mip_temporal.'+name+'('+args.map(q).join(',')+');')
   return name==='prepare_incarnation'?result:JSON.parse(result)
- }})
+ }
+ const transport=id=>createIncarnationBoundTransport({incarnationId:id,call:nativeCall})
  const register=async(b,{field}={})=>{
   const id=randomUUID()
   await f.admin('insert into mip_temporal.source_incarnations select '+q(b.bindingId)+','+q(id)+','+
@@ -103,8 +104,7 @@ export async function incarnationCases(t,f,staged){
   }finally{if(!finished)await held.finish(false)}
  })
 
- await t.test('external encrypted custody gates the actual incarnation capture, prepare and advance flow',async t=>{
-  const b=await staged(t),incarnationId=await register(b)
+ const custodian=async(b,incarnationId,{injectCrash=true}={})=>{
   const runtime='synthetic-registration-custody-'+randomUUID(),mapping=randomUUID()
   await f.admin('insert into mip_identity.mapping_versions select '+q(mapping)+','+q(runtime)+
    ',principal,issuer,audience,'+q(runtime+':'+producerRole)+',key_revision,max_lifetime_seconds,approval_ref from mip_identity.mapping_versions where revision='+
@@ -115,7 +115,7 @@ export async function incarnationCases(t,f,staged){
   const envelope={version:1,sequence:1,previous:'',source:b.context.source_id,stream:b.context.stream_epoch,
    bindingId:b.bindingId,incarnationId,recoveryEvidence:'a'.repeat(64)}
   const approved=new Set([registrationDigest(envelope)])
-  let failAfterEnvelope=true
+  let failAfterEnvelope=injectCrash
   // Test custodian: separate authenticated runtime/key, but same physical PostgreSQL restore domain.
   // Advisory exclusion is shared by this adapter's calls; mapping/key row locks fence real revocation.
   const withAuthority=async(scope,fn)=>{
@@ -144,15 +144,18 @@ export async function incarnationCases(t,f,staged){
     return await fn(tx)
    }finally{await held.finish(true)}
   }
+  return {envelope,journal,withAuthority,approved}
+ }
+
+ await t.test('external encrypted custody gates the actual incarnation capture, prepare and advance flow',async t=>{
+  const b=await staged(t),incarnationId=await register(b)
+  const {envelope,journal,withAuthority,approved}=await custodian(b,incarnationId)
   await assert.rejects(()=>retainRegistration({envelope,withAuthority}),/synthetic_after_envelope_before_index/)
   assert.deepEqual(await journal.get('registration:'+registrationDigest(envelope)),envelope)
   assert.equal(await journal.get('registration-sequence:'+envelope.source+':1'),null)
   await retainRegistration({envelope,withAuthority})
-  const baseApi=transport(incarnationId)
-  const call=(name,args)=>name==='capture_incarnation'?baseApi.capture({session:args[0],bindingId:args[1],before:args[3],request:args[4]}):
-   name==='prepare_incarnation'?baseApi.prepare({session:args[0],capture:args[1],request:args[3],source:args[4],stream:args[5],end:args[6],bootstrap:args[7],frames:args[8],hash:args[9],bindingId:b.bindingId}):
-   baseApi.advance({session:args[0],request:args[1]})
-  const api=createCustodyBoundTransport({envelope,expectedHead:registrationDigest(envelope),withAuthority,call})
+  assert.equal(envelope.incarnationId,incarnationId)
+  const api=createCustodyBoundTransport({envelope,expectedHead:registrationDigest(envelope),withAuthority,call:nativeCall})
   await b.produce();const c=await capture(b,api)
   let request
   await assert.rejects(()=>b.consume(c,{prepare:api.prepare,advance:async p=>{request=p;throw Error('synthetic_custody_hold')}}),/synthetic_custody_hold/)
@@ -167,6 +170,30 @@ export async function incarnationCases(t,f,staged){
   assert.equal(await b.checkpointCount(),'1')
   // Source records remain unchanged; the external admission head alone closes the old path.
   assert.equal(await f.admin('select incarnation_id::text from mip_temporal.source_incarnations where binding_id='+q(b.bindingId)),incarnationId)
+ })
+
+ await t.test('custody envelope incarnation is forwarded unchanged and native mismatch rejects capture, prepare, advance and replay',async t=>{
+  const b=await staged(t),actual=await register(b),wrong=randomUUID(),good=transport(actual)
+  const {envelope,withAuthority}=await custodian(b,wrong,{injectCrash:false})
+  assert.notEqual(envelope.incarnationId,actual)
+  await retainRegistration({envelope,withAuthority})
+  const api=createCustodyBoundTransport({envelope,expectedHead:registrationDigest(envelope),withAuthority,call:nativeCall})
+  await b.produce()
+  await assert.rejects(()=>capture(b,api),/mip_source_incarnation_denied/)
+  const c=await capture(b,good);let attempt
+  await assert.rejects(()=>b.consume(c,{prepare:async p=>{attempt=p;return api.prepare(p)},advance:api.advance}),/mip_source_incarnation_denied/)
+  assert.ok(attempt)
+  // The failed prepare durably bound this request to the wrong envelope before
+  // native rejection. Prepare it through the correctly pinned source transport
+  // to reach advance's native incarnation check, rather than an absent permit.
+  await good.prepare(attempt)
+  const request={session:attempt.session,request:attempt.request}
+  await assert.rejects(()=>api.advance(request),/mip_source_incarnation_denied/)
+  assert.equal(await b.checkpointCount(),'0');assert.equal(await b.confirmed(),b.before)
+  await good.advance(request)
+  await assert.rejects(()=>api.advance(request),/mip_source_incarnation_denied/)
+  assert.equal(await b.checkpointCount(),'1')
+  assert.equal(await f.admin('select incarnation_id::text from mip_temporal.source_incarnations where binding_id='+q(b.bindingId)),actual)
  })
 
  await t.test('actual database clone preserves source records but cannot reuse the original configured source binding',async t=>{
