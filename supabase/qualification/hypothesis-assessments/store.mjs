@@ -4,6 +4,10 @@ import {validateHypothesisAssessment} from '../../../src/lib/hypothesisAssessmen
 export function createHypothesisStore(query) {
  if(typeof query!=='function') throw new TypeError('query required')
  return Object.freeze({
+  async listObservations({verifiedUserId,investigationId}) {
+   const result=await query('select mip_hypothesis.list_history_observations($1::uuid,$2::uuid) as value',[verifiedUserId,investigationId]);
+   return result.rows[0].value
+  },
   async captureObservation({verifiedUserId,investigationId,requestId}) {
    const result=await query('select mip_hypothesis.capture_history_observation($1::uuid,$2::uuid,$3::uuid) as value',
     [verifiedUserId,investigationId,requestId]);return result.rows[0].value

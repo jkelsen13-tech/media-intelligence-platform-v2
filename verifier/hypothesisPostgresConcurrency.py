@@ -97,6 +97,7 @@ class Hypothesis(unittest.TestCase):
         h.run(db,Path("supabase/qualification/hypothesis-assessments/008_authoring_reads.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/014_review_acknowledgements.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/015_committed_observations.sql").read_text())
+        h.run(db,Path("supabase/qualification/hypothesis-assessments/016_observation_delivery.sql").read_text())
         h.run(db,"update mip_hypothesis.observation_epoch set enabled=true where id")
         cls.request=str(uuid.uuid4())
 
@@ -132,6 +133,30 @@ class Hypothesis(unittest.TestCase):
         return "select mip_hypothesis.read_history_observation("+",".join(map(q,[user or self.user,self.iid,request or self.request]))+");"
     def observation_count(self):
         return self.admin("select count(*) from mip_hypothesis.history_observations")
+    def observation_list(self,user=None):
+        return "select mip_hypothesis.list_history_observations("+",".join(map(q,[user or self.user,self.iid]))+");"
+    def test_observation_list_recovers_committed_receipt_after_client_restart(self):
+        self.a.execute(self.append());receipt=json.loads(self.a.execute(self.observe()))
+        self.a.process.kill();self.a.process.wait(timeout=5)
+        listing=json.loads(self.b.execute(self.observation_list()))
+        self.assertEqual(listing["receipts"],[receipt]);self.assertTrue(listing["current_user_only"])
+        saved=json.loads(self.b.execute(self.observed()))
+        self.assertEqual(saved["contract_version"],"mip_hypothesis_observed_history_v2")
+        self.assertEqual(hashlib.sha256(saved["reference_text"].encode()).hexdigest(),receipt["reference_hash"])
+        self.assertNotIn("assessment",json.loads(saved["reference_text"])[0])
+    def test_observation_list_refuses_own_uncommitted_receipt(self):
+        self.a.execute("begin;");self.a.execute(self.observe())
+        with self.assertRaisesRegex(RuntimeError,"requires committed readback"):self.a.execute(self.observation_list())
+        self.assertEqual(json.loads(self.b.execute(self.observation_list()))["receipts"],[])
+    def test_observation_list_is_private_and_obeys_current_epoch_and_access(self):
+        self.a.execute(self.observe())
+        other=str(uuid.uuid4());self.admin("insert into public.mip_profiles values("+q(other)+")")
+        scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,"user_id":other,"access_role":"viewer","reason":"Synthetic."})
+        self.assertEqual(json.loads(self.b.execute(self.observation_list(user=other)))["receipts"],[])
+        scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,"user_id":self.user,"access_role":"revoked","reason":"Synthetic."})
+        with self.assertRaisesRegex(RuntimeError,"read denied"):self.session().execute(self.observation_list())
+        self.admin("update mip_hypothesis.observation_epoch set enabled=false")
+        with self.assertRaisesRegex(RuntimeError,"observations disabled"):self.session().execute(self.observation_list(user=other))
     def test_observation_waits_for_commit_and_binds_exact_noncontent_references(self):
         self.a.execute("begin;");self.a.execute(self.append())
         self.b.start(self.observe());self.blocked(self.b,self.a)

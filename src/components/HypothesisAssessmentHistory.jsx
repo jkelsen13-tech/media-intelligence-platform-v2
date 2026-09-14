@@ -1,4 +1,5 @@
 import {useEffect,useState,useId,useRef} from 'react'
+import HypothesisObservations from './HypothesisObservations.jsx'
 import HypothesisRevisionComparison from './HypothesisRevisionComparison.jsx'
 import HypothesisReviewAcknowledgement from './HypothesisReviewAcknowledgement.jsx'
 import HypothesisGenerationLedger from './HypothesisGenerationLedger.jsx'
@@ -66,6 +67,8 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
    {canReconcile&&typeof client?.reconcile==='function'?<button type="button" onClick={reconcile}>Check for missed changes</button>:null}
    <p>Retained revisions are available here. A verified “as known then” time view is not available yet.</p>
   </header>
+  <HypothesisObservations key={'observations:'+scope} client={client} investigationId={investigationId} userScopeKey={userScopeKey}
+   onAccessFailure={code=>{setState({client,scope,status:'unavailable'});accessFailure.current?.(code)}}/>
   {canReconcile&&typeof client?.authoringContext==='function'?<HypothesisAssessmentComposer key={scope+(recovery?.scope===scope&&recovery.client===client?recovery.prior:'')} client={client}
    investigationId={investigationId} workspaceVersionId={workspaceVersionId} userScopeKey={userScopeKey} onSaved={reload}
    recoveryPrior={recovery?.scope===scope&&recovery.client===client?recovery.prior:null} onRecoveryClose={()=>setRecovery(null)}

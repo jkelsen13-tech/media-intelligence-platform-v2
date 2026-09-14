@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {createHypothesisHttpTransport} from '../../src/lib/hypothesisHttpTransport.js'
+import {observedHistoryView,observationListView} from '../../src/lib/hypothesisObservations.js'
 import {createHypothesisHandler} from '../../supabase/qualification/hypothesis-assessments/handler.mjs'
 import {createHypothesisStore} from '../../supabase/qualification/hypothesis-assessments/store.mjs'
 import {createHypothesisAssessmentClient,hypothesisHistoryView} from '../../src/lib/hypothesisAssessmentClient.js'
@@ -108,6 +109,11 @@ test('isolated hypothesis generation authority, retained computation and restart
   assert.equal(captureObservation.error,null)
   const observed=await client.readObservation(v.iid,observationRequest.request_id)
   assert.equal(observed.error,null);assert.equal(observed.data.committed_readback,true)
+  const recoveredList=await client.listObservations(v.iid)
+  assert.ok(observationListView(recoveredList.data,v.iid))
+  assert.deepEqual(recoveredList.data.receipts,[captureObservation.data])
+  assert.ok(await observedHistoryView(observed.data,v.iid,observationRequest.request_id,captureObservation.data,f.sha))
+
   assert.deepEqual(observed.data.entries[0].assessment,saved.assessment)
   assert.equal(observed.data.arbitrary_time_qualified,false)
   assert.deepEqual((await client.captureObservation(observationRequest)).data,captureObservation.data)
@@ -158,7 +164,7 @@ test('isolated hypothesis generation authority, retained computation and restart
   const v=await f.investigation()
   assert.equal(await f.admin("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_hypothesis' and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity)"),'0')
   assert.equal(await f.admin("select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='mip_hypothesis' and (r.rolsuper or r.rolbypassrls or r.rolcanlogin)"),'0')
-  for(const sql of ["select * from mip_hypothesis.history_observations","select * from mip_hypothesis.revision_transactions",
+  for(const sql of ['select mip_hypothesis.list_history_observations('+[v.user,v.iid].map(q).join(',')+')',"select * from mip_hypothesis.history_observations","select * from mip_hypothesis.revision_transactions",
    "update mip_hypothesis.observation_epoch set enabled=true",
    'select mip_hypothesis.capture_history_observation('+[v.user,v.iid,randomUUID()].map(q).join(',')+')',
    'select mip_hypothesis.read_history_observation('+[v.user,v.iid,randomUUID()].map(q).join(',')+')',

@@ -1,3 +1,4 @@
+import Observations from '../../src/components/HypothesisObservations.jsx'
 // Synthetic UI only. No backend, credentials, source text or production route.
 import React from 'react'
 import {createRoot} from 'react-dom/client'
@@ -85,3 +86,14 @@ const comparisonClient=createHypothesisAssessmentClient(comparisonTransport)
 window.renderSyntheticComparison=(scope='synthetic-reviewer')=>{if(!scope)comparisonTransport.dispose();return root.render(<main className="piw" style={{height:'100dvh',overflowY:'auto'}}>
  <History client={comparisonClient} investigationId={comparisonRecords.history.investigation_id}
   workspaceVersionId="synthetic-workspace" userScopeKey={scope}/></main>)}
+
+let observationTransport
+window.observationSynthetic={denials:[]}
+window.renderSyntheticObservations=(scope='synthetic-reviewer')=>{
+ observationTransport?.dispose()
+ observationTransport=createHypothesisHttpTransport({endpoint:'https://mip-synthetic.invalid/observations',getAccessToken:async()=> 'synthetic-browser-token'})
+ const client=createHypothesisAssessmentClient(observationTransport)
+ return root.render(<main className="piw" style={{height:'100dvh',overflowY:'auto'}}>
+  <Observations client={client} investigationId={id(1)} userScopeKey={scope}
+   onAccessFailure={code=>window.observationSynthetic.denials.push(code)}/></main>)
+}

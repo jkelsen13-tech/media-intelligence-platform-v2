@@ -1,3 +1,5 @@
+import {createHash} from 'node:crypto'
+import {syntheticObservation} from '../../tests/hypothesisObservationFixture.mjs'
 import {syntheticComparisonHistory} from '../../tests/hypothesisComparisonFixture.mjs'
 import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
@@ -13,7 +15,8 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
  const browser=await launcher.launch({headless:true})
  try{
   const page=await browser.newPage(),requests=[],errors=[],internalRequests=[]
-  let comparisonMode='ready'
+  let comparisonMode='ready',observation=null,observationCalls=[],observationDenied=false
+  const sha=s=>createHash('sha256').update(s).digest('hex')
   // Intercept a reserved synthetic origin to provide a secure WebCrypto context.
   // This document is fulfilled in-process; it never reaches DNS or a server.
   await page.route('**/*',async route=>{
@@ -37,11 +40,33 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
     }else{status=503;result={error:{code:'service_unavailable'}}}
     return route.fulfill({status,contentType:'application/json',headers:{'cache-control':'private, no-store'},body:JSON.stringify(result)})
    }
+
+   if(route.request().url()==='https://mip-synthetic.invalid/observations'){
+    const request=route.request(),body=request.postDataJSON()
+    assert.equal(request.method(),'POST');assert.equal(request.headers()['authorization'],'Bearer synthetic-browser-token')
+    assert.equal(request.headers()['cookie'],undefined);assert.equal(request.headers()['referer'],undefined)
+    observationCalls.push(body)
+    let result
+    if(body.action==='capture_observation'){
+     if(!observation){observation=syntheticObservation(sha,body.input.request_id);return route.abort()}
+     assert.equal(body.input.request_id,observation.receipt.observation_id)
+     result={data:observation.receipt}
+    }else if(body.action==='list_observations')result={data:observation.list}
+    else if(body.action==='read_observation'){
+     assert.equal(body.input.observation_id,observation.receipt.observation_id)
+     const data=structuredClone(observation.view)
+     if(observationDenied)data.entries[0]={revision_id:data.entries[0].revision_id,revision:1,status:'withheld',
+      observed_status:'available',reason:'current_permission_or_binding_denied'}
+     result={data}
+    }else throw Error('unexpected synthetic observation action')
+    return route.fulfill({status:200,contentType:'application/json',headers:{'cache-control':'private, no-store'},body:JSON.stringify(result)})
+   }
+
    requests.push(route.request().url());return route.abort()
   })
   page.on('pageerror',e=>errors.push(e.message))
   for(const width of [1280,768,390,320]){
-   comparisonMode='ready'
+   comparisonMode='ready';observation=null;observationCalls=[];observationDenied=false
    await page.setViewportSize({width,height:1000})
    await page.goto('https://mip-synthetic.invalid/')
    await page.addStyleTag({content:css})
@@ -235,6 +260,40 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    await page.evaluate(()=>window.renderSyntheticComparison(null))
    await page.getByRole('region',{name:'Hypothesis assessment history'}).waitFor({state:'detached'})
 
+   await page.evaluate(()=>window.renderSyntheticObservations())
+   const observations=page.getByRole('region',{name:'Saved revision views'})
+   await observations.waitFor();assert.equal(observationCalls.length,0)
+   const captureView=observations.getByRole('button',{name:'Record current revision view',exact:true})
+   assert.ok((await captureView.boundingBox()).height>=44)
+   await captureView.focus();await page.keyboard.press('Enter')
+   await observations.getByRole('alert').waitFor()
+   assert.equal(observationCalls.length,1)
+   await observations.getByRole('button',{name:'Retry the same saved view',exact:true}).click()
+   await observations.getByRole('heading',{name:'Verified saved view',exact:true}).waitFor()
+   assert.deepEqual(observationCalls[0],observationCalls[1]);assert.equal(observationCalls[2].action,'read_observation')
+   await observations.getByRole('heading',{name:'What explains the fictional contract award?',exact:true}).waitFor()
+   assert.equal(await observations.evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false)
+   if(width===390)console.log('MIP_SYNTHETIC_OBSERVATION_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+   // Recreate the component and transport; the simulated remote store persists.
+   await page.evaluate(()=>window.renderSyntheticObservations(null))
+   await observations.waitFor({state:'detached'})
+   await page.evaluate(()=>window.renderSyntheticObservations())
+   await observations.waitFor();assert.equal(observationCalls.length,3)
+   await observations.getByRole('button',{name:'Inspect saved views',exact:true}).click()
+   await observations.getByRole('button',{name:'Open saved view 1',exact:true}).click()
+   await observations.getByRole('heading',{name:'Verified saved view',exact:true}).waitFor()
+   assert.equal(observationCalls.filter(c=>c.action==='capture_observation').length,2)
+   observationDenied=true
+   await observations.getByRole('button',{name:'Inspect saved views',exact:true}).click()
+   await observations.getByRole('button',{name:'Open saved view 1',exact:true}).click()
+   await observations.getByText('A verified saved view is unavailable under the current configuration or access.',{exact:true}).waitFor()
+   assert.equal(await observations.getByText('What explains the fictional contract award?',{exact:true}).count(),0)
+   assert.deepEqual(await page.evaluate(()=>window.observationSynthetic.denials),['access_denied'])
+   await page.evaluate(()=>window.renderSyntheticObservations(null))
+   await observations.waitFor({state:'detached'})
+
+
 
 
   }
@@ -242,7 +301,7 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
   assert.ok(internalRequests.filter(x=>x==='history').length>=12)
   assert.ok(internalRequests.filter(x=>x==='backlog').length>=12)
   console.log('MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS='+JSON.stringify({engine,widths:[1280,768,390,320],
-   configuredBrowserHttp:true,interceptedSyntheticHttpOnly:true,savedRevisionComparison:true,comparisonPermissionRaceCleared:true,comparisonNoSourceDeletionClaim:true,keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
+   committedObservationReadback:true,observationExactRetry:true,observationRestartRecovery:true,observationCurrentDenialCleared:true,configuredBrowserHttp:true,interceptedSyntheticHttpOnly:true,savedRevisionComparison:true,comparisonPermissionRaceCleared:true,comparisonNoSourceDeletionClaim:true,keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
    noAutomaticRetry:true,deniedRecordsCleared:true,logoutCleared:true,networkRequests:0,
    explicitReviewAcknowledgement:true,reviewExactRetry:true,reviewReadbackRequired:true,assessmentUnchangedByReview:true,composerExactUnicodeSpan:true,hashMismatchDenied:true,linkedReasoning:true,lostAcknowledgementExactRetry:true,syntheticReceiptOnly:true,savedRevisionReachableByScrolling:true,savedAssessmentDisclosure:true,separateMissingEstimates:true,sourceClocks:true,pendingReassessment:true,systemFontFallback:true,scope:'synthetic_ledger_saved_assessment_and_composer',productionQualified:false}))
  }finally{await browser.close()}
