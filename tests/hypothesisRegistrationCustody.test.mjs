@@ -45,7 +45,7 @@ async function fixture(t){
   tx.readRequest=async request=>(await load()).find(r=>r.kind==='request'&&r.request===request)?.scope
   return fn(tx)
  })
- return {withAuthority,revoke:()=>exclusive(()=>{authorized=false}),load,
+ return {snapshot:()=>readFile(file,'utf8'),restore:async bytes=>{const f=await open(file,'w');try{await f.writeFile(bytes);await f.sync()}finally{await f.close()}},withAuthority,revoke:()=>exclusive(()=>{authorized=false}),load,
   transport:(envelope=e(),call=async()=>true)=>createCustodyBoundTransport({envelope,expectedHead:registrationDigest(envelope),withAuthority,call})}
 }
 test('envelopes reject missing, malformed, accessors, extra fields and automatic source pins',()=>{
@@ -107,11 +107,16 @@ test('authority excludes revocation through source completion and freezes inputs
  assert.equal(actual.args.at(-1),id(6))
  await assert.rejects(()=>tr.capture(capture()),/revoked/)
 })
-test('co-restoring ledger and its pin remains undetectable: no external antirollback claim',gate,async t=>{
+test('actual ledger rollback is denied by retained newer envelope; co-restored pin cannot be detected',gate,async t=>{
  const f=await fixture(t);await retainRegistration({envelope:e(),withAuthority:f.withAuthority})
- // An independently retained newer head refuses the old ledger at construction.
+ const oldBytes=await f.snapshot()
  const newer={...e(),sequence:2,previous:registrationDigest(e()),bindingId:id(8),incarnationId:id(9)}
- assert.throws(()=>createCustodyBoundTransport({envelope:e(),expectedHead:registrationDigest(newer),withAuthority:f.withAuthority,call:async()=>true}),/custody/)
- // If that separate pin is ALSO restored, this primitive cannot detect the rollback.
+ await retainRegistration({envelope:newer,withAuthority:f.withAuthority})
+ const pinned=f.transport(newer)
+ const newCapture={...capture(),bindingId:id(8)}
+ assert.equal(await pinned.capture(newCapture),true)
+ await f.restore(oldBytes)
+ await assert.rejects(()=>pinned.capture(newCapture),/custody/)
+ // If the separately held expected envelope/head is ALSO rolled back, acceptance is possible.
  assert.equal(await f.transport(e()).capture(capture()),true)
 })
