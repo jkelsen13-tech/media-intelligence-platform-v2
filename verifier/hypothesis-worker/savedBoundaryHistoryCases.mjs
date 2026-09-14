@@ -1,20 +1,23 @@
+import {syntheticAuthProvider} from '../../tests/hypothesisAuthProviderFixture.mjs'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {spawn} from 'node:child_process'
 import {randomUUID} from 'node:crypto'
 import {quote as q,guard} from '../integrated/transport.mjs'
-import {hold,blocked} from './fixture.mjs'
-import {deliverSavedBoundaryHistory} from '../../supabase/qualification/hypothesis-assessments/savedBoundaryHistory.mjs'
+import {blocked} from './fixture.mjs'
+import {createSavedBoundaryReader,createBoundaryProofAuthority} from '../../supabase/qualification/hypothesis-assessments/savedBoundaryHistory.mjs'
 
 // One actual authenticated PostgreSQL backend and transaction for all coordinator queries.
 // This adapter is fixed to disposable GitHub CI; no user DSN, production credential or network target.
 function transaction(db,onPid=()=>{}){
- return async run=>{
+ return async(run,signal)=>{
   guard()
   const child=spawn('psql',['-X','-qAt','-v','ON_ERROR_STOP=1','-h','127.0.0.1','-p','5432','-U','postgres','-d',db],
    {env:{PATH:process.env.PATH,PGPASSWORD:'mip-disposable-ci-only',PGOPTIONS:'-c statement_timeout=20000 -c lock_timeout=15000'},stdio:['pipe','pipe','pipe']})
   let buffer='',pending=null,failed=false
   const fail=()=>{failed=true;if(pending){pending.reject(Error('mip_boundary_native_query_failed'));pending=null}}
+  const abort=()=>{fail();child.kill()}
+  signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort()
   child.on('error',fail);child.on('exit',fail);child.stdin.on('error',fail)
   child.stderr.on('data',x=>{if(String(x).includes('ERROR'))fail()})
   child.stdout.on('data',data=>{
@@ -35,88 +38,172 @@ function transaction(db,onPid=()=>{}){
    const pid=Number(await line('set session authorization mip_boundary_history_gateway;begin;select pg_backend_pid()'))
    onPid(pid)
    const result=await run(async(sql,args)=>{
-    if(!sql.startsWith('select mip_temporal.read_boundary_history('))throw Error('mip_test_query_denied')
-    const value=JSON.parse(await line('select mip_temporal.read_boundary_history('+args.map(q).join(',')+')'))
+    if(sql.startsWith('set local ')||['savepoint probe','rollback to savepoint probe'].includes(sql)){
+     await line(sql+";select 'OK'");return {rows:[]}
+    }
+    const name=sql.match(/^select mip_temporal\.(boundary_history_challenge|consume_boundary_history_permit)\(/)?.[1]
+    if(!name)throw Error('mip_test_query_denied')
+    const value=JSON.parse(await line('select mip_temporal.'+name+'('+args.map(q).join(',')+')'))
     return {rows:[{value}]}
    })
    await line("commit;select 'COMMITTED'")
    return result
   }catch(error){child.stdin.write('rollback;\n');throw error}
-  finally{child.stdin.end();child.kill()}
+  finally{signal?.removeEventListener('abort',abort);child.stdin.end();child.kill()}
  }
 }
+
 export async function savedBoundaryHistoryCases(t,f,prepared){
  await f.admin(await readFile(new URL('../../supabase/qualification/hypothesis-assessments/023_saved_boundary_history.sql',import.meta.url),'utf8'))
+ const consumeSql='select mip_temporal.consume_boundary_history_permit($1::uuid,$2::uuid) as value'
+ const challengeSql='select mip_temporal.boundary_history_challenge($1::uuid) as value'
+ const receipt=p=>({schema:'mip_saved_boundary_delivery_receipt_v2',delivery_id:p.permit_id,delivered:true,historical_time_qualified:false,publication_allowed:false})
  async function context(t){
   const x=await prepared(t)
-  const identity=JSON.parse(await f.admin('select jsonb_build_object(\'user\',author_id,\'iid\',investigation_id) from mip_hypothesis.revisions where id='+q(x.revisions[0])))
-  const options={prefix:x.options,session:x.b.session(),verifiedUserId:identity.user,investigationId:identity.iid,
-   withAuthority:x.b.withAuthority,withTransaction:transaction(f.db)}
-  const args=[x.b.session(),x.b.bindingId,x.b.incarnationId,x.b.contractDigest,x.b.registration.source,x.b.registration.stream,
-   f.observationEpoch,x.last.id,x.last.target_marker,identity.user,identity.iid]
-  const statement='select mip_temporal.read_boundary_history('+args.map(q).join(',')+')'
-  return {...x,identity,options,args,statement}
- }
- await t.test('combined native source and current permission delivery excludes later revisions and source-wide metadata',async t=>{
-  const x=await context(t);await x.b.produce()
-  let response
-  const receipt=await deliverSavedBoundaryHistory({...x.options,deliver:async value=>{response=value}})
-  assert.equal(receipt.delivered,true);assert.ok(response.entries.some(e=>e.revision_id===x.revisions[0]))
-  assert.ok(response.entries.every(e=>e.assessment?.question_id===x.identity.iid||e.status==='withheld'))
-  assert.equal(response.temporal_scope,'saved_boundary_current_permission')
-  assert.equal(Object.hasOwn(response,'revision_ids'),false)
-  for(const k of ['source_authority_qualified','user_history_qualified','historical_time_qualified','publication_allowed'])assert.equal(response[k],false)
- })
- await t.test('combined reader denies wrong native incarnation source stream and terminal; public and existing workers have no gateway grant',async t=>{
-  const x=await context(t)
-  for(const index of [2,4,5,6,7,8,9]){
-   const args=[...x.args];args[index]=randomUUID()
-   await assert.rejects(()=>f.admin('set session authorization mip_boundary_history_gateway;select mip_temporal.read_boundary_history('+args.map(q).join(',')+')'))
+  const identity=JSON.parse(await f.admin("select jsonb_build_object('user',author_id,'iid',investigation_id) from mip_hypothesis.revisions where id="+q(x.revisions[0])))
+  const provider=syntheticAuthProvider(identity.user)
+  let observedClaim,observedPermit
+  const issue=async(session,claim)=>{
+   observedClaim=structuredClone(claim)
+   const p=JSON.parse(await f.admin('set session authorization mip_boundary_proof_issuer;select mip_temporal.issue_boundary_history_permit('+[session,claim].map(q).join(',')+')'))
+   observedPermit=p;return p
   }
-  for(const role of ['anon','authenticated','service_role','mip_temporal_recorder','mip_temporal_ack_gateway','mip_comparison_worker_v1'])
-   await assert.rejects(()=>f.admin('set session authorization '+role+';'+x.statement))
-  let delivered=false
-  await x.b.replaceCustody()
-  await assert.rejects(()=>deliverSavedBoundaryHistory({...x.options,deliver:()=>{delivered=true}}))
-  assert.equal(delivered,false)
+  const authority=createBoundaryProofAuthority({authConfiguration:provider.configuration,registration:x.b.registration,
+   observationEpoch:f.observationEpoch,...x.options,journal:x.b.journal(),withAuthority:x.b.withAuthority,issuePermit:issue,sourceSession:x.b.session})
+  const request={authorization:'Bearer '+provider.token(),investigationId:identity.iid,captureIds:x.options.captureIds,
+   terminalCapture:x.options.terminalCapture,targetMarker:x.options.targetMarker}
+  return {...x,identity,provider,authority,request,claim:()=>observedClaim,permit:()=>observedPermit,
+   reader:extra=>createSavedBoundaryReader({authority,withTransaction:transaction(f.db),...extra})}
+ }
+ await t.test('sealed SQL intersects prefix before gateway delivery; direct gateway cannot escape into later same-investigation history',async t=>{
+  const x=await context(t),later=randomUUID()
+  // Native fixture fault: exact accepted row/binding copy representing a later revision,
+  // deliberately committed after the saved marker. No semantic-generation claim.
+  await f.admin('insert into mip_hypothesis.revisions select '+q(later)+',investigation_id,'+q(randomUUID())+
+   ",author_id,id,revision+1,request_arguments,assessment||jsonb_build_object('id',"+q(later)+",'revision',revision+1,'predecessor_id',id),clock_timestamp() from mip_hypothesis.revisions where id="+q(x.revisions[0])+
+   ";insert into mip_hypothesis.acceptance_bindings select (jsonb_populate_record(null::mip_hypothesis.acceptance_bindings,to_jsonb(b)||jsonb_build_object('revision_id',"+q(later)+'))).* from mip_hypothesis.acceptance_bindings b where revision_id='+q(x.revisions[0])+';')
+  assert.ok((await f.gateway('read_bound_history',[x.identity.user,x.identity.iid])).entries.some(e=>e.revision_id===later))
+  let payload
+  await x.reader()(x.request,value=>{payload=value})
+  assert.ok(payload.entries.some(e=>e.revision_id===x.revisions[0]));assert.ok(!payload.entries.some(e=>e.revision_id===later))
+  assert.equal(Object.hasOwn(payload,'revision_ids'),false)
+  for(const k of ['source_authority_qualified','user_history_qualified','historical_time_qualified','publication_allowed'])assert.equal(payload[k],false)
+  await assert.rejects(()=>f.admin('set session authorization mip_boundary_history_gateway;select mip_temporal.read_boundary_history('+x.revisions.map(q).join(',')+')'))
+  await assert.rejects(()=>f.admin('set session authorization mip_boundary_history_gateway;select mip_hypothesis.read_bound_history('+[x.identity.user,x.identity.iid].map(q).join(',')+')'))
+  await assert.rejects(()=>f.admin('set session authorization mip_boundary_history_gateway;update mip_temporal.boundary_history_permits set revision_ids=array['+q(later)+'::uuid]'))
+  await assert.rejects(()=>f.admin('set session authorization mip_boundary_history_gateway;select mip_temporal.consume_boundary_history_permit('+[x.permit().permit_id,x.permit().request_id].map(q).join(',')+')'))
  })
- await t.test('source and membership revoke-first prevent delivery; revoked material stays withheld',async t=>{
+ await t.test('verified Auth is inside admission; alternate valid member/investigation and caller identity fields cannot impersonate',async t=>{
+  const x=await context(t),other=await f.investigation();let delivered=false
+  for(const request of [
+   {...x.request,verifiedUserId:other.user},
+   {...x.request,authorization:'Bearer '+x.provider.token({sub:other.user})},
+   {...x.request,investigationId:other.iid},
+   {...x.request,authorization:'Bearer '+x.provider.token({exp:0})},
+  ])await assert.rejects(()=>x.reader()(request,()=>{delivered=true}))
+  x.provider.state.userOverride={id:other.user,aud:'authenticated',role:'authenticated',is_anonymous:false}
+  await assert.rejects(()=>x.reader()(x.request,()=>{delivered=true}));assert.equal(delivered,false)
+  x.provider.state.userOverride=null
+  await x.reader()(x.request,()=>{delivered=true});assert.equal(delivered,true)
+ })
+ await t.test('permit scope is immutable; direct roles are disjoint; native owner RLS search_path and exact callable signatures are checked',async t=>{
+  const roles=['anon','authenticated','service_role','mip_hypothesis_gateway','mip_temporal_recorder','mip_temporal_ack_gateway','mip_comparison_worker_v1','mip_boundary_proof_issuer','mip_boundary_history_gateway']
+  const signatures={issue:'mip_temporal.issue_boundary_history_permit(uuid,jsonb)',consume:'mip_temporal.consume_boundary_history_permit(uuid,uuid)',payload:'mip_temporal.boundary_history_payload(uuid,uuid,uuid[])'}
+  for(const role of roles)for(const [kind,signature] of Object.entries(signatures))
+   assert.equal(await f.admin('select has_function_privilege('+[role,signature,'EXECUTE'].map(q).join(',')+')'),
+    ((kind==='issue'&&role==='mip_boundary_proof_issuer')||(kind==='consume'&&role==='mip_boundary_history_gateway'))?'t':'f')
+  for(const a of ['mip_boundary_proof_issuer','mip_boundary_history_gateway'])for(const b of ['mip_boundary_proof_issuer','mip_boundary_history_gateway','mip_temporal_advance_owner'])
+   if(a!==b)assert.equal(await f.admin('select pg_has_role('+[a,b,'MEMBER'].map(q).join(',')+')'),'f')
+  const catalog=JSON.parse(await f.admin("select jsonb_agg(jsonb_build_object('name',p.proname,'owner',r.rolname,'definer',p.prosecdef,'config',p.proconfig)) from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='mip_temporal' and p.proname in('issue_boundary_history_permit','consume_boundary_history_permit','boundary_history_payload')"))
+  assert.equal(catalog.length,3)
+  for(const p of catalog){assert.equal(p.owner,'mip_temporal_advance_owner');assert.equal(p.definer,true);assert.deepEqual(p.config,['search_path=""'])}
+  assert.equal(await f.admin("select relrowsecurity and relforcerowsecurity from pg_class where oid='mip_temporal.boundary_history_permits'::regclass"),'t')
+  assert.equal(await f.admin("select to_regprocedure('mip_temporal.read_boundary_history(uuid,uuid,uuid,text,uuid,uuid,uuid,uuid,uuid,uuid,uuid)') is null"),'t')
+ })
+ await t.test('same-transaction savepoint replay returns identical sealed payload without new receipt identity; new transaction and changed request deny',async t=>{
+  const x=await context(t),signal=new AbortController().signal;let permit
+  await transaction(f.db)(async query=>{
+   const challenge=(await query(challengeSql,[randomUUID()])).rows[0].value
+   await x.authority.withPermit(x.request,challenge,signal,async p=>{
+    permit=p;await query('savepoint probe',[])
+    const first=(await query(consumeSql,[p.permit_id,p.request_id])).rows[0].value
+    await query('rollback to savepoint probe',[])
+    const again=(await query(consumeSql,[p.permit_id,p.request_id])).rows[0].value
+    assert.deepEqual(again.payload,first.payload);assert.equal(again.expires_at,first.expires_at)
+    assert.equal(again.permit_id,first.permit_id);assert.ok(again.remaining_ms<=first.remaining_ms)
+    return receipt(p)
+   })
+  },signal)
+  assert.equal(await f.admin('select count(*) from mip_temporal.boundary_history_permits where id='+q(permit.permit_id)+' and consumed'),'1')
+  for(const request of [permit.request_id,randomUUID()])
+   await assert.rejects(()=>transaction(f.db)(q1=>q1(consumeSql,[permit.permit_id,request]),signal))
+ })
+ await t.test('source/member revocation before admission deny; material revocation during delivery waits until snapshot completes',async t=>{
   for(const fault of ['source','membership','material']){
    const x=await context(t)
    if(fault==='source')await f.admin(x.b.revokeSql)
    if(fault==='membership')await f.pub('mip_investigation_workspace_v1','set_access',{investigation_id:x.identity.iid,user_id:x.identity.user,access_role:'revoked',reason:'Synthetic.'})
-   if(fault==='material')await f.admin("update mip_identity.operation_evidence_heads set active=false where scope->>'material_version' in (select e->>'material_hash' from mip_hypothesis.acceptance_bindings b cross join lateral jsonb_array_elements(b.metadata) e where b.revision_id="+q(x.revisions[0])+")")
-   let response
-   const run=()=>deliverSavedBoundaryHistory({...x.options,deliver:v=>{response=v}})
-   if(fault==='material'){await run();assert.equal(response.entries.find(e=>e.revision_id===x.revisions[0]).status,'withheld');assert.equal(JSON.stringify(response).includes('Synthetic explanation A.'),false)}
-   else {await assert.rejects(run);assert.equal(response,undefined)}
-  }
- })
- await t.test('reader holds source and membership fences through awaited delivery on same native backend',async t=>{
-  for(const fault of ['source','membership']){
-   const x=await context(t);let ready,release,pid
+   if(fault!=='material'){await assert.rejects(()=>x.reader()(x.request,()=>{throw Error('unexpected_delivery')}));continue}
+   let ready,release,pid
    const entered=new Promise(r=>ready=r),gate=new Promise(r=>release=r)
-   const read=deliverSavedBoundaryHistory({...x.options,withTransaction:transaction(f.db,v=>pid=v),deliver:async()=>{ready();await gate}})
-   let timer,revoke
-   try{
-    await Promise.race([entered,read.then(()=>{throw Error('delivery_not_entered')}),
-     new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('mip_delivery_readiness_timeout')),30000)})])
-    clearTimeout(timer)
-    revoke=fault==='source'?f.admin(x.b.revokeSql):f.pub('mip_investigation_workspace_v1','set_access',{investigation_id:x.identity.iid,user_id:x.identity.user,access_role:'revoked',reason:'Synthetic.'})
-    revoke.catch(()=>{})
-    await blocked(f,fault==='source'?x.b.custodyPid():pid)
-   }finally{clearTimeout(timer);release();await Promise.all([read,...(revoke?[revoke]:[])])}
-   await assert.rejects(()=>deliverSavedBoundaryHistory({...x.options,deliver:()=>{throw Error('unexpected_delivery')}}))
+   const read=x.reader({withTransaction:transaction(f.db,v=>pid=v)})(x.request,async()=>{ready();await gate})
+   await Promise.race([entered,read.then(()=>{throw Error('delivery_missing')})])
+   const revoke=f.admin("update mip_identity.operation_evidence_heads set active=false where scope->>'material_version' in (select e->>'material_hash' from mip_hypothesis.acceptance_bindings b cross join lateral jsonb_array_elements(b.metadata) e where b.revision_id="+q(x.revisions[0])+")");revoke.catch(()=>{})
+   try{await blocked(f,x.b.custodyPid()??pid)}finally{release();await Promise.all([read,revoke])}
+   let next
+   await x.reader()(x.request,v=>{next=v})
+   assert.equal(next.entries.find(e=>e.revision_id===x.revisions[0]).status,'withheld')
   }
  })
- await t.test('native identity drift and terminal receipt loss deny combined delivery',async t=>{
-  for(const fault of ['identity','receipt']){
-   const x=await context(t)
-   // Disposable fault injection: emulate stale cloned native registration or missing retained terminal.
-   if(fault==='identity')await f.admin("alter table mip_temporal.source_incarnations disable trigger immutable_rows;update mip_temporal.source_incarnations set postmaster_started_at=postmaster_started_at-interval '1 second' where binding_id="+q(x.b.bindingId)+";alter table mip_temporal.source_incarnations enable trigger immutable_rows;")
-   else await f.admin('alter table mip_temporal.stream_checkpoints disable trigger immutable_rows;delete from mip_temporal.stream_checkpoints where capture_id='+q(x.last.id)+';alter table mip_temporal.stream_checkpoints enable trigger immutable_rows;')
-   let delivered=false
-   await assert.rejects(()=>deliverSavedBoundaryHistory({...x.options,deliver:()=>{delivered=true}}));assert.equal(delivered,false)
+
+ await t.test('natural material, source session and verified JWT expiry cap delivery and force rollback',async t=>{
+  for(const fault of ['material','session','jwt']){
+   const x=await context(t);let restore;let observedSignal;let pid
+   if(fault==='material'){
+    const revisions=await f.admin("select jsonb_agg(jsonb_build_object('revision',v.revision,'expires_at',v.expires_at)) from mip_identity.operation_evidence_versions v where revision in (select (p->>'revision')::uuid from mip_hypothesis.acceptance_bindings b cross join lateral jsonb_array_elements(b.metadata) e cross join lateral jsonb_array_elements(e->'permissions') p where b.revision_id="+q(x.revisions[0])+")")
+    restore="alter table mip_identity.operation_evidence_versions disable trigger immutable;update mip_identity.operation_evidence_versions v set expires_at=r.expires_at from jsonb_to_recordset("+q(JSON.parse(revisions))+"::jsonb) r(revision uuid,expires_at timestamptz) where v.revision=r.revision;alter table mip_identity.operation_evidence_versions enable trigger immutable"
+    await f.admin("alter table mip_identity.operation_evidence_versions disable trigger immutable;update mip_identity.operation_evidence_versions set expires_at=clock_timestamp()+interval '5 seconds' where revision in (select (p->>'revision')::uuid from mip_hypothesis.acceptance_bindings b cross join lateral jsonb_array_elements(b.metadata) e cross join lateral jsonb_array_elements(e->'permissions') p where b.revision_id="+q(x.revisions[0])+");alter table mip_identity.operation_evidence_versions enable trigger immutable")
+   }
+   if(fault==='session'){
+    const original=await f.admin('select expires_at from mip_identity.sessions where session_id='+q(x.b.session()))
+    restore='alter table mip_identity.sessions disable trigger user;update mip_identity.sessions set expires_at='+q(original)+' where session_id='+q(x.b.session())+';alter table mip_identity.sessions enable trigger user'
+    await f.admin("alter table mip_identity.sessions disable trigger user;update mip_identity.sessions set expires_at=clock_timestamp()+interval '5 seconds' where session_id="+q(x.b.session())+";alter table mip_identity.sessions enable trigger user")
+   }
+   if(fault==='jwt')x.request.authorization='Bearer '+x.provider.token({exp:Math.floor(Date.now()/1000)+5})
+   try{
+    const start=Date.now()
+    await assert.rejects(()=>x.reader({withTransaction:transaction(f.db,v=>pid=v)})(x.request,async(_,signal)=>{
+     observedSignal=signal;await new Promise(()=>{})
+    }),/mip_boundary_delivery_aborted/)
+    assert.ok(observedSignal?.aborted);assert.ok(Date.now()-start<8000)
+    assert.equal(await f.admin('select count(*) from pg_stat_activity where pid='+pid),'0')
+   }finally{if(restore)await f.admin(restore)}
   }
+ })
+
+ await t.test('hung delivery expires aborts and rolls back; malformed response keys never deliver; native field mutations deny',async t=>{
+  const x=await context(t);let signalSeen,pid
+  const started=Date.now()
+  await assert.rejects(()=>x.reader({withTransaction:transaction(f.db,v=>pid=v)})(x.request,async(_,signal)=>{
+   signalSeen=signal;await new Promise(()=>{})
+  }),/mip_boundary_delivery_aborted/)
+  assert.ok(signalSeen.aborted);assert.ok(Date.now()-started<30000)
+  assert.equal(await f.admin('select count(*) from pg_stat_activity where pid='+pid),'0')
+  assert.equal(await f.admin('select consumed from mip_temporal.boundary_history_permits where id='+q(x.permit().permit_id)),'f')
+  await assert.rejects(()=>transaction(f.db)(query=>query(consumeSql,[x.permit().permit_id,x.permit().request_id]),new AbortController().signal))
+  for(const field of ['envelope','payload','entry']){
+   const decorated=async(run,signal)=>transaction(f.db)(query=>run(async(sql,args)=>{
+    const r=await query(sql,args)
+    if(sql===consumeSql){const e=r.rows[0].value;if(field==='envelope')e.unexpected=true;else if(field==='payload')e.payload.unexpected=true;else e.payload.entries[0].unexpected=true}
+    return r
+   }),signal)
+   await assert.rejects(()=>x.reader({withTransaction:decorated})(x.request,()=>{throw Error('unexpected_delivery')}))
+  }
+  const claim={...x.claim(),auth_until:new Date(Date.now()+60000).toISOString()},session=x.b.session()
+  for(const key of ['binding_id','incarnation_id','contract_digest','source_id','stream_epoch','observation_epoch','terminal_capture','target_marker','covered_through','user_id','investigation_id']){
+   const bad={...claim,request_id:randomUUID(),[key]:key==='covered_through'?'0/0':randomUUID()}
+   await assert.rejects(()=>f.admin('set session authorization mip_boundary_proof_issuer;select mip_temporal.issue_boundary_history_permit('+[session,bad].map(q).join(',')+')'))
+  }
+  await assert.rejects(()=>f.admin('set session authorization mip_boundary_proof_issuer;select mip_temporal.issue_boundary_history_permit('+[randomUUID(),{...claim,request_id:randomUUID()}].map(q).join(',')+')'))
  })
 }
