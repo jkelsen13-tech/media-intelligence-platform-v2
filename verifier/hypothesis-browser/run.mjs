@@ -9,7 +9,8 @@ const require=createRequire(import.meta.url)
 const {build}=createRequire(require.resolve('vite/package.json'))('esbuild')
 const {chromium,webkit}=createRequire(process.env.MIP_BROWSER_PACKAGE+'/package.json')('playwright')
 const bundle=await build({entryPoints:['verifier/hypothesis-browser/fixture.jsx'],bundle:true,write:false,
- format:'iife',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"','import.meta.env':'{"DEV":false,"BASE_URL":"/"}'},loader:{'.css':'empty'},plugins:[syntheticAppIsolation]})
+ // Native WebCrypto is required below; leave Node-only fallback unreachable, as Vite does.
+ format:'iife',external:['node:crypto'],platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"','import.meta.env':'{"DEV":false,"BASE_URL":"/"}'},loader:{'.css':'empty'},plugins:[syntheticAppIsolation]})
 // Actual application styles; remote font import omitted, system fallback only.
 const css=(await Promise.all(['src/styles/tokens.css','src/styles/workspace.css','src/index.css','src/styles/investigation-workspace-panels.css'].map(p=>readFile(p,'utf8')))).map(s=>s.split('\n').filter(line=>!line.startsWith('@import ')).join('\n')).join('\n')
 for(const [engine,launcher] of Object.entries({chromium,webkit})){
@@ -86,6 +87,7 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    comparisonMode='ready';observation=null;observationCalls=[];observationDenied=false
    await page.setViewportSize({width,height:1000})
    await page.goto('https://mip-synthetic.invalid/')
+   assert.equal(await page.evaluate(()=>!!globalThis.crypto?.subtle),true)
    await page.addStyleTag({content:css})
    await page.addScriptTag({content:bundle.outputFiles[0].text})
    const region=page.getByRole('region',{name:'Hypothesis worker attempts'})
