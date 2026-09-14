@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "request_id": "pr158-b838ac4-independent-1",
+  "candidate_commit": "b838ac43601ec905b95524b9c15437e6f1b23d7d",
+  "base_commit": "c6dd9ed689f51d90c54f9319a9ea3fa92f389fbd",
+  "packet_commit": "1eb1e044d1a77049139f14312e7fae9bcd354f72",
+  "packet_path": "verifier/independent-pr158/request.json",
+  "packet_sha256": "1301d3c5eed72a02fa722fb722258d761980d1bbf5b29271408a07775c9bfd31",
+  "packet_bytes": 257830,
+  "agent_id": "bc-b838ac43-601e-4905-b955-24b9c15437e6",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "terminal_preserved",
+  "run_id": "run-0c7d56d4-1964-41fa-8be4-19cd266417fe",
+  "provider_status": "FINISHED",
+  "outcome": "PASS",
+  "evidence_class": "artifact_inspection",
+  "coverage_count": 10,
+  "prior_findings_resolved": 6,
+  "result_commit": "3570197dfe627e735f68db94b2d077717d647b8b",
+  "result_path": "verifier/independent-pr158/result.json",
+  "result_sha256": "3beafb9683766331b6c49ff5c1b07d664c87c795581fb95c013ed64bea33e2aa",
+  "result_bytes": 28717,
+  "exact_github_readback_matches_provider_result": true,
+  "provider_envelope_commit": "0938108a37590890894efa5716524691710c5e82",
+  "reviewer_executed_tests": false,
+  "disposition": "PASS for bounded synthetic controller association/integrity only; no product/runtime certification or activation.",
+  "approve": false,
+  "merge": false,
+  "production_authority": false,
+  "local_files_created": false
+}
