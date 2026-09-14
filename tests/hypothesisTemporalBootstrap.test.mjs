@@ -35,3 +35,21 @@ test('stream gate denies missing baseline, pre-baseline commits and overlap befo
  await assert.rejects(()=>recordBootstrappedPgoutputBatch(options))
  assert.equal(writes,0)
 })
+
+test('bootstrap canonicalizes provider field order and replays through the stream gate without weakening exact readback',async()=>{
+ const v=input();v.rows[0].revision_id='22222222-2222-4222-8222-222222222222'
+ const reversed={rows:v.rows.map(r=>({creator_xid:r.creator_xid,transaction_epoch:r.transaction_epoch,revision_id:r.revision_id})),
+ snapshot_id:v.snapshot_id,consistent_lsn:v.consistent_lsn}
+ const reorderedContext={stream_epoch:epoch,source_id:epoch}
+ const entries=new Map()
+ const journal={putOnce:async(k,value)=>{
+  const text=JSON.stringify(value);if(entries.has(k)&&entries.get(k)!==text)throw Error('synthetic_conflict')
+  entries.set(k,text);return {committed:true}
+ },get:async k=>entries.has(k)?JSON.parse(entries.get(k)):null}
+ const first=await recordBootstrap({...base,input:reversed,context:reorderedContext,journal})
+ const second=await recordBootstrap({...base,input:v,journal})
+ assert.equal(first.hash,second.hash)
+ let ack=0
+ const result=await recordBootstrappedPgoutputBatch({...base,frames:frames(),relationId:'42',journal,acknowledge:async()=>{ack++}})
+ assert.equal(ack,1);assert.equal(result.historical_time_qualified,false)
+})

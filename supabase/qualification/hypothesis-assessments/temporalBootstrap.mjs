@@ -27,9 +27,9 @@ export function bootstrapEnvelope({context,observationEpoch,input}){
     !/^[1-9][0-9]{0,19}$/.test(row.creator_xid)||BigInt(row.creator_xid)>18446744073709551615n)deny()
    provenance=row.transaction_epoch===observationEpoch?'recorded_transaction':'foreign_transaction_epoch'
   }
-  return {...row,provenance}
+  return {revision_id:row.revision_id,transaction_epoch:row.transaction_epoch,creator_xid:row.creator_xid,provenance}
  }).sort((a,b)=>a.revision_id<b.revision_id?-1:a.revision_id>b.revision_id?1:0)
- return {schema:'mip_revision_bootstrap_v1',...context,observation_epoch:observationEpoch,
+ return {schema:'mip_revision_bootstrap_v1',source_id:context.source_id,stream_epoch:context.stream_epoch,observation_epoch:observationEpoch,
   consistent_lsn:input.consistent_lsn,snapshot_id:input.snapshot_id,rows,
   availability:'visible_in_exported_bootstrap_snapshot',historical_time_qualified:false}
 }
