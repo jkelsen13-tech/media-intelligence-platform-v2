@@ -169,8 +169,9 @@ create policy owner_only on mip_temporal.boundary_history_permits to mip_tempora
 revoke all on mip_temporal.boundary_history_permits from public,anon,authenticated,service_role,mip_boundary_history_gateway,mip_boundary_proof_issuer,mip_boundary_permit_cleanup;
 create index boundary_history_permits_expiry on mip_temporal.boundary_history_permits(expires_at,id);
 create index boundary_history_permits_user on mip_temporal.boundary_history_permits(user_id);
--- Lock order: quota advisory lock precedes source/permission locks for issuance.
--- Consume does not take quota lock. Cleanup skips locked permits, never waits for a reader.
+-- Lock order: issuance source/permission locks precede final quota reservation.
+-- Consume takes permit-row then source locks, never quota. Cleanup takes quota and
+-- SKIP LOCKED expired rows, never source locks or a blocking row lock.
 create function mip_temporal.cleanup_boundary_history_permits() returns integer
 language plpgsql security definer set search_path='' as $cleanup$
 declare removed integer;
@@ -229,8 +230,6 @@ begin
    'source_id','stream_epoch','observation_epoch','terminal_capture','target_marker','covered_through',
    'user_id','investigation_id','revision_ids','auth_until']) or p_claim->>'schema'<>'mip_boundary_identity_proof_v1'
  then raise exception 'mip_boundary_claim_denied';end if;
- -- Serialized cleanup/quota precedes every source and permission lock.
- perform mip_temporal.cleanup_boundary_history_permits();
  v:=mip_temporal.check_boundary_stream(p_session,(p_claim->>'binding_id')::uuid,
   (p_claim->>'incarnation_id')::uuid,p_claim->>'contract_digest');
  if v.source_id is distinct from (p_claim->>'source_id')::uuid or v.stream_epoch is distinct from (p_claim->>'stream_epoch')::uuid
@@ -252,6 +251,10 @@ begin
  -- Native session authority is checked again after all permission waits.
  perform mip_temporal.check_boundary_stream(p_session,v.id,(p_claim->>'incarnation_id')::uuid,p_claim->>'contract_digest');
  lease_until:=least(auth_until,clock_timestamp()+interval '10 seconds',mip_identity.boundary_session_expiry(p_session),mip_hypothesis.boundary_payload_expiry(sealed_payload));
+ if lease_until<=clock_timestamp() then raise exception 'mip_boundary_auth_expired';end if;
+ -- Acquire the global quota lock only after potentially slow source/permission work.
+ -- Cleanup skips rows held by consumers; the short quota section ends at transaction completion.
+ perform mip_temporal.cleanup_boundary_history_permits();
  if lease_until<=clock_timestamp() then raise exception 'mip_boundary_auth_expired';end if;
  insert into mip_temporal.boundary_history_permits(request_id,backend_pid,transaction_id,source_session,binding_id,
   incarnation_id,contract_digest,source_id,stream_epoch,observation_epoch,terminal_capture,target_marker,covered_through,

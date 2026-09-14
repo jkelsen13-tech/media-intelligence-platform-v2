@@ -54,6 +54,9 @@ function transaction(db,onPid=()=>{}){
 }
 
 export async function savedBoundaryHistoryCases(t,f,prepared){
+ const nativeCase=(name,run)=>t.test(name,async sub=>{
+  try{return await run(sub)}catch(error){console.error('Native saved-boundary failure: '+name,error);throw error}
+ })
  await f.admin(await readFile(new URL('../../supabase/qualification/hypothesis-assessments/023_saved_boundary_history.sql',import.meta.url),'utf8'))
  const consumeSql='select mip_temporal.consume_boundary_history_permit($1::uuid,$2::uuid) as value'
  const challengeSql='select mip_temporal.boundary_history_challenge($1::uuid) as value'
@@ -75,7 +78,7 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   return {...x,identity,provider,authority,request,claim:()=>observedClaim,permit:()=>observedPermit,
    reader:extra=>createSavedBoundaryReader({authority,withTransaction:transaction(f.db),...extra})}
  }
- await t.test('sealed SQL intersects prefix before gateway delivery; direct gateway cannot escape into later same-investigation history',async t=>{
+ await nativeCase('sealed SQL intersects prefix before gateway delivery; direct gateway cannot escape into later same-investigation history',async t=>{
   const x=await context(t),later=randomUUID()
   // Native fixture fault: exact accepted row/binding copy representing a later revision,
   // deliberately committed after the saved marker. No semantic-generation claim.
@@ -93,7 +96,7 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   await assert.rejects(()=>f.admin('set session authorization mip_boundary_history_gateway;update mip_temporal.boundary_history_permits set revision_ids=array['+q(later)+'::uuid]'))
   await assert.rejects(()=>f.admin('set session authorization mip_boundary_history_gateway;select mip_temporal.consume_boundary_history_permit('+[x.permit().permit_id,x.permit().request_id].map(q).join(',')+')'))
  })
- await t.test('selected reader does not evaluate unrelated revision bindings and enforces selected cardinality',async t=>{
+ await nativeCase('selected reader does not evaluate unrelated revision bindings and enforces selected cardinality',async t=>{
   const x=await context(t),later=randomUUID()
   await f.admin('insert into mip_hypothesis.revisions select '+q(later)+',investigation_id,'+q(randomUUID())+
    ",author_id,id,revision+1,request_arguments,assessment||jsonb_build_object('id',"+q(later)+",'revision',revision+1,'predecessor_id',id),clock_timestamp() from mip_hypothesis.revisions where id="+q(x.revisions[0])+
@@ -103,13 +106,13 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   let payload
   await x.reader()(x.request,v=>{payload=v})
   assert.deepEqual(payload.entries.map(e=>e.revision_id),[x.revisions[0]])
-  const ids=JSON.parse(await f.admin("with added as (insert into mip_hypothesis.revisions select gen_random_uuid(),r.investigation_id,gen_random_uuid(),r.author_id,r.id,r.revision+n,r.request_arguments,r.assessment,clock_timestamp() from mip_hypothesis.revisions r cross join generate_series(2,130) n where r.id="+q(x.revisions[0])+" returning id) select jsonb_agg(id) from added"))
-  await assert.rejects(()=>f.admin('set session authorization mip_hypothesis_owner;select mip_hypothesis.read_selected_bound_history('+[x.identity.user,x.identity.iid].map(q).join(',')+',array['+ids.map(q).join(',')+']::uuid[])'))
+  // Roll back the 129-row cardinality fixture so later source bootstraps are unchanged.
+  await f.admin("begin;do $probe$ declare ids uuid[];begin with added as (insert into mip_hypothesis.revisions select gen_random_uuid(),r.investigation_id,gen_random_uuid(),r.author_id,r.id,r.revision+n,r.request_arguments,r.assessment,clock_timestamp() from mip_hypothesis.revisions r cross join generate_series(2,130) n where r.id="+q(x.revisions[0])+" returning id) select array_agg(id) into ids from added;begin perform mip_hypothesis.read_selected_bound_history("+[x.identity.user,x.identity.iid].map(q).join(',')+",ids);raise exception 'expected_cardinality_denial_missing';exception when others then if sqlerrm<>'mip_boundary_payload_limit' then raise;end if;end;end $probe$;rollback")
   for(const role of ['mip_boundary_history_gateway','mip_boundary_proof_issuer','mip_boundary_permit_cleanup'])
    await assert.rejects(()=>f.admin('set session authorization '+role+';select mip_hypothesis.read_selected_bound_history('+[x.identity.user,x.identity.iid].map(q).join(',')+',array['+q(x.revisions[0])+']::uuid[])'))
  })
 
- await t.test('permit metadata has no payload; concurrent user quota and expiry-only cleanup remain table-blind',async t=>{
+ await nativeCase('permit metadata has no payload; concurrent user quota and expiry-only cleanup remain table-blind',async t=>{
   const x=await context(t)
   await x.reader()(x.request,()=>{})
   const id=x.permit().permit_id
@@ -117,7 +120,7 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   assert.equal(Object.hasOwn(row,'payload'),false)
   assert.match(row.payload_digest,/^[0-9a-f]{64}$/)
   assert.ok(row.payload_bytes>0);assert.ok(row.payload_entries>0)
-  const copySql=(count,age=false)=>"insert into mip_temporal.boundary_history_permits select (jsonb_populate_record(null::mip_temporal.boundary_history_permits,to_jsonb(p)||jsonb_build_object('id',gen_random_uuid(),'request_id',gen_random_uuid(),'created_at',clock_timestamp()"+(age?"-interval '20 seconds'":"")+",'expires_at',clock_timestamp()"+(age?"-interval '10 seconds'":"+interval '9 seconds'")+",'consumed',false))).* from mip_temporal.boundary_history_permits p cross join generate_series(1,"+count+") n where p.id="+q(id)
+  const copySql=(count,age=false)=>"insert into mip_temporal.boundary_history_permits select (jsonb_populate_record(null::mip_temporal.boundary_history_permits,to_jsonb(p)||jsonb_build_object('id',gen_random_uuid(),'request_id',gen_random_uuid(),'created_at',clock_timestamp()"+(age?"-interval '20 seconds'":"")+",'expires_at',clock_timestamp()"+(age?"-interval '11 seconds'":"+interval '9 seconds'")+",'consumed',false))).* from mip_temporal.boundary_history_permits p cross join generate_series(1,"+count+") n where p.id="+q(id)
   await f.admin('set session authorization mip_temporal_advance_owner;'+copySql(30))
   const races=await Promise.allSettled([1,2].map(()=>f.admin('set session authorization mip_temporal_advance_owner;'+copySql(1))))
   assert.equal(races.filter(r=>r.status==='fulfilled').length,1)
@@ -137,11 +140,11 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   assert.equal(await f.admin("select rolcanlogin or rolbypassrls or rolsuper from pg_roles where rolname='mip_boundary_permit_cleanup'"),'f')
  })
 
- await t.test('global quota serializes the final slot and cleanup skips locked expired rows',async t=>{
+ await nativeCase('global quota serializes the final slot and cleanup skips locked expired rows',async t=>{
   const x=await context(t)
   await x.reader()(x.request,()=>{})
   const seed=x.permit().permit_id,seedRow=JSON.parse(await f.admin('select to_jsonb(p) from mip_temporal.boundary_history_permits p where id='+q(seed)))
-  const clone=(count,fresh=false)=>"insert into mip_temporal.boundary_history_permits select (jsonb_populate_record(null::mip_temporal.boundary_history_permits,to_jsonb(p)||jsonb_build_object('id',gen_random_uuid(),'request_id',gen_random_uuid(),'user_id',gen_random_uuid(),'investigation_id',gen_random_uuid(),'created_at',clock_timestamp()"+(fresh?"":"-interval '20 seconds'")+",'expires_at',clock_timestamp()"+(fresh?"+interval '9 seconds'":"-interval '10 seconds'")+",'consumed',true))).* from jsonb_populate_record(null::mip_temporal.boundary_history_permits,"+q(seedRow)+"::jsonb) p cross join generate_series(1,"+count+") n"
+  const clone=(count,fresh=false)=>"insert into mip_temporal.boundary_history_permits select (jsonb_populate_record(null::mip_temporal.boundary_history_permits,to_jsonb(p)||jsonb_build_object('id',gen_random_uuid(),'request_id',gen_random_uuid(),'user_id',gen_random_uuid(),'investigation_id',gen_random_uuid(),'created_at',clock_timestamp()"+(fresh?"":"-interval '20 seconds'")+",'expires_at',clock_timestamp()"+(fresh?"+interval '9 seconds'":"-interval '11 seconds'")+",'consumed',true))).* from jsonb_populate_record(null::mip_temporal.boundary_history_permits,"+q(seedRow)+"::jsonb) p cross join generate_series(1,"+count+") n"
   const maximal={...seedRow,id:randomUUID(),request_id:randomUUID(),user_id:randomUUID(),investigation_id:randomUUID(),revision_ids:Array.from({length:512},()=>randomUUID())}
   await f.admin("set session authorization mip_temporal_advance_owner;insert into mip_temporal.boundary_history_permits select (jsonb_populate_record(null::mip_temporal.boundary_history_permits,"+q(maximal)+"::jsonb||jsonb_build_object('created_at',clock_timestamp(),'expires_at',clock_timestamp()+interval '9 seconds'))).*")
   const maximalSize=JSON.parse(await f.admin("select jsonb_build_object('count',cardinality(revision_ids),'bytes',octet_length(to_jsonb(p)::text)) from mip_temporal.boundary_history_permits p where id="+q(maximal.id)))
@@ -181,7 +184,46 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   }
  })
 
- await t.test('verified Auth is inside admission; alternate valid member/investigation and caller identity fields cannot impersonate',async t=>{
+ await nativeCase('selected permission closures method freshness byte limits digest and pre-quota waits fail closed',async t=>{
+  const x=await context(t);await x.reader()(x.request,()=>{})
+  const target=x.revisions[0],args=[x.identity.user,x.identity.iid].map(q).join(',')+',array['+q(target)+']::uuid[]'
+  const selected='select mip_hypothesis.read_selected_bound_history('+args+')'
+  const readFault=async sql=>JSON.parse(await f.admin('begin;'+sql+';set role mip_hypothesis_owner;'+selected+';reset role;rollback'))
+  const reassessed=await readFault('insert into mip_hypothesis.reassessment_completion_receipts(investigation_id,request_id,revision_id,cause_ids,closure_bindings) values('+[x.identity.iid,randomUUID(),target].map(q).join(',')+',array['+q(randomUUID())+"::uuid],'[]'::jsonb)")
+  assert.equal(reassessed.entries[0].status,'withheld');assert.equal(Object.hasOwn(reassessed.entries[0],'assessment'),false)
+  const generationId=await f.admin('select generation_id from mip_hypothesis.generation_outputs where assessment_revision_id='+q(target))
+  assert.match(generationId,/^[0-9a-f-]{36}$/)
+  const generated=await readFault("alter table mip_hypothesis.generations disable trigger immutable_rows;update mip_hypothesis.generations set closure_bindings=jsonb_build_array(jsonb_build_object('workspace_version_id',workspace_version_id,'input_position','missing-fixture-input','permissions','[]'::jsonb)) where id="+q(generationId))
+  assert.equal(generated.entries[0].status,'withheld');assert.equal(Object.hasOwn(generated.entries[0],'assessment'),false)
+  const methodSql='update mip_hypothesis.method_heads set active=false where revision=(select method_revision from mip_hypothesis.generations where id='+q(generationId)+')'
+  const stale=await readFault(methodSql)
+  assert.equal(stale.entries[0].status,'available');assert.equal(stale.entries[0].current_context,false);assert.equal(stale.entries[0].reassessment_pending,true)
+  // Exact serialized final payload boundary: allowed at 1 MiB, denied at 1 MiB + 1.
+  await f.admin("begin;alter table mip_hypothesis.revisions disable trigger immutable_rows;do $bytes$ declare base_bytes integer;begin select octet_length(mip_temporal.boundary_history_payload("+args+")::text) into base_bytes;update mip_hypothesis.revisions set assessment=jsonb_set(assessment,'{question}',to_jsonb((assessment->>'question')||repeat('x',1048576-base_bytes))) where id="+q(target)+";if octet_length(mip_temporal.boundary_history_payload("+args+")::text)<>1048576 then raise exception 'payload_boundary_not_exact';end if;update mip_hypothesis.revisions set assessment=jsonb_set(assessment,'{question}',to_jsonb((assessment->>'question')||'x')) where id="+q(target)+";begin perform mip_temporal.boundary_history_payload("+args+");raise exception 'expected_byte_denial_missing';exception when others then if sqlerrm<>'mip_boundary_payload_limit' then raise;end if;end;end $bytes$;rollback")
+  // Synthetic custodian fault between committed issuance and consumption: fingerprint tampering.
+  let changed=false
+  const alteredAuthority={withPermit:(request,challenge,signal,consume)=>x.authority.withPermit(request,challenge,signal,async permit=>{
+   await f.admin("begin;alter table mip_temporal.boundary_history_permits disable trigger immutable_rows;update mip_temporal.boundary_history_permits set payload_digest=repeat('f',64) where id="+q(permit.permit_id)+";alter table mip_temporal.boundary_history_permits enable trigger immutable_rows;commit")
+   changed=true;return consume(permit)
+  })}
+  let delivered=false
+  await assert.rejects(()=>x.reader({authority:alteredAuthority})(x.request,()=>{delivered=true}))
+  assert.equal(changed,true);assert.equal(delivered,false)
+  // Hold membership precheck before quota: cleanup must complete while issuance is demonstrably waiting.
+  const held=await hold(f.db,'select pg_advisory_xact_lock(hashtextextended('+q('mip-workspace-access:'+x.identity.iid+':'+x.identity.user)+',0))')
+  const claim={...x.claim(),request_id:randomUUID(),auth_until:new Date(Date.now()+60000).toISOString()}
+  const issuing=f.admin('set session authorization mip_boundary_proof_issuer;select mip_temporal.issue_boundary_history_permit('+[x.b.session(),claim].map(q).join(',')+')')
+  issuing.catch(()=>{})
+  let timer
+  try{
+   await blocked(f,held.pid)
+   await Promise.race([f.admin('set session authorization mip_boundary_permit_cleanup;select mip_temporal.cleanup_boundary_history_permits()'),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('prequota_cleanup_blocked')),3000)})])
+   assert.equal(await f.admin('select pg_try_advisory_xact_lock(74190231,172)'),'t')
+  }finally{clearTimeout(timer);await held.finish(true)}
+  assert.equal(JSON.parse(await issuing).schema,'mip_boundary_permit_v1')
+ })
+
+ await nativeCase('verified Auth is inside admission; alternate valid member/investigation and caller identity fields cannot impersonate',async t=>{
   const x=await context(t),other=await f.investigation();let delivered=false
   for(const request of [
    {...x.request,verifiedUserId:other.user},
@@ -194,7 +236,7 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   x.provider.state.userOverride=null
   await x.reader()(x.request,()=>{delivered=true});assert.equal(delivered,true)
  })
- await t.test('permit scope is immutable; direct roles are disjoint; native owner RLS search_path and exact callable signatures are checked',async t=>{
+ await nativeCase('permit scope is immutable; direct roles are disjoint; native owner RLS search_path and exact callable signatures are checked',async t=>{
   const roles=['anon','authenticated','service_role','mip_hypothesis_gateway','mip_temporal_recorder','mip_temporal_ack_gateway','mip_comparison_worker_v1','mip_boundary_proof_issuer','mip_boundary_history_gateway']
   const signatures={issue:'mip_temporal.issue_boundary_history_permit(uuid,jsonb)',consume:'mip_temporal.consume_boundary_history_permit(uuid,uuid)',payload:'mip_temporal.boundary_history_payload(uuid,uuid,uuid[])'}
   for(const role of roles)for(const [kind,signature] of Object.entries(signatures))
@@ -208,7 +250,7 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   assert.equal(await f.admin("select relrowsecurity and relforcerowsecurity from pg_class where oid='mip_temporal.boundary_history_permits'::regclass"),'t')
   assert.equal(await f.admin("select to_regprocedure('mip_temporal.read_boundary_history(uuid,uuid,uuid,text,uuid,uuid,uuid,uuid,uuid,uuid,uuid)') is null"),'t')
  })
- await t.test('same-transaction savepoint replay returns identical sealed payload without new receipt identity; new transaction and changed request deny',async t=>{
+ await nativeCase('same-transaction savepoint replay returns identical sealed payload without new receipt identity; new transaction and changed request deny',async t=>{
   const x=await context(t),signal=new AbortController().signal;let permit
   await transaction(f.db)(async query=>{
    const challenge=(await query(challengeSql,[randomUUID()])).rows[0].value
@@ -226,7 +268,7 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   for(const request of [permit.request_id,randomUUID()])
    await assert.rejects(()=>transaction(f.db)(q1=>q1(consumeSql,[permit.permit_id,request]),signal))
  })
- await t.test('source/member revocation before admission deny; material revocation during delivery waits until snapshot completes',async t=>{
+ await nativeCase('source/member revocation before admission deny; material revocation during delivery waits until snapshot completes',async t=>{
   for(const fault of ['source','membership','material']){
    const x=await context(t)
    if(fault==='source')await f.admin(x.b.revokeSql)
@@ -244,7 +286,7 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   }
  })
 
- await t.test('cooperative material/session expiry rolls back; expired JWT denies before admission',async t=>{
+ await nativeCase('cooperative material/session expiry rolls back; expired JWT denies before admission',async t=>{
   for(const fault of ['material','session','jwt']){
    const x=await context(t);let restore;let observedSignal;let pid
    if(fault==='material'){
@@ -275,7 +317,7 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   }
  })
 
- await t.test('hung delivery expires aborts and rolls back; malformed response keys never deliver; native field mutations deny',async t=>{
+ await nativeCase('hung delivery expires aborts and rolls back; malformed response keys never deliver; native field mutations deny',async t=>{
   const x=await context(t);let signalSeen,pid
   const started=Date.now()
   await assert.rejects(()=>x.reader({withTransaction:transaction(f.db,v=>pid=v)})(x.request,async(_,signal)=>{
