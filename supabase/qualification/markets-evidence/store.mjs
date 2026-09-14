@@ -1,21 +1,30 @@
-import {marketInstant} from '../../functions/_shared/marketsEvidenceContract.mjs'
-// Trusted server seam only; no default endpoint/identity, browser credentials or publication.
-const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+import {snapshotPrivateMarketsRequest,marketUUID,privateMarketsFailure as failure} from '../../../src/lib/privateMarketsContract.js'
+export const PRIVATE_MARKETS_SQL='select mip_markets.read_private($1::uuid,$2::uuid,$3::uuid,$4::text,$5::uuid,$6::uuid,$7::timestamptz) as value'
+function databaseError(error){
+ if(error?.code==='42501')return 'access_denied'
+ if(['22023','22P02','22007','22008'].includes(error?.code))return 'invalid_request'
+ // Exact trusted database messages only; never return arbitrary diagnostics.
+ const code=error?.code==='P0001'?String(error?.message??'').split('_via_')[0]:null
+ if(['mip_market_candidate_budget','mip_market_path_budget'].includes(code))return 'scope_too_large'
+ if(['mip_market_assessment_unavailable','mip_market_asset_unavailable','mip_market_identity_not_valid','mip_market_alias_invalid','mip_market_aliases_required'].includes(code))return 'evidence_unavailable'
+ if(['mip_market_identity_not_in_workspace','mip_market_source_denied','mip_market_material_not_in_workspace','mip_market_operation_denied'].includes(code))return 'access_denied'
+ return 'service_unavailable'
+}
+// Trusted server seam only: no endpoint, session storage or provider credentials.
 export function createPrivateMarketsReader({authenticate,sourceProject,query}={}){
  if(typeof authenticate!=='function'||typeof query!=='function'||typeof sourceProject!=='string'||!sourceProject.trim()||sourceProject==='cc-definition-batch-v1')throw Error('mip_markets_unconfigured')
  const source=sourceProject
  return Object.freeze({read:async(request,input)=>{
+  const frozen=snapshotPrivateMarketsRequest(input)
+  if(!frozen)return failure('invalid_request')
+  let user
+  try{user=await authenticate(request)}catch{return failure('service_unavailable')}
+  if(request?.signal?.aborted)return failure('request_cancelled')
+  if(!user||!marketUUID(user.id)||user.is_anonymous===true)return failure('authentication_required')
   try{
-   if(!input||Object.getPrototypeOf(input)!==Object.prototype||Object.keys(input).sort().join('|')!=='asset_id|at|event_id|investigation_id|workspace_version_id')return {error:{code:'invalid_request'}}
-   const frozen=Object.freeze({...input})
-   if(![frozen.investigation_id,frozen.workspace_version_id].every(v=>typeof v==='string'&&uuid.test(v))||
-    ![frozen.asset_id,frozen.event_id].every(v=>v===null||(typeof v==='string'&&uuid.test(v)))||
-    (!frozen.asset_id&&!frozen.event_id)||(typeof frozen.at!=='string'||marketInstant(frozen.at)===null||!/^(?:\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(frozen.at)))return {error:{code:'invalid_request'}}
-   const user=await authenticate(request)
-   if(!user||typeof user.id!=='string'||!uuid.test(user.id))return {error:{code:'authentication_required'}}
-   const result=await query('select mip_markets.read_private($1::uuid,$2::uuid,$3::uuid,$4::text,$5::uuid,$6::uuid,$7::timestamptz) as value',
-    [user.id,frozen.investigation_id,frozen.workspace_version_id,source,frozen.asset_id,frozen.event_id,frozen.at])
+   const result=await query(PRIVATE_MARKETS_SQL,[user.id,frozen.investigation_id,frozen.workspace_version_id,source,frozen.asset_id,frozen.event_id,frozen.at],{signal:request?.signal})
+   if(request?.signal?.aborted)return failure('request_cancelled')
    return {data:result.rows[0].value,error:null}
-  }catch{return {data:null,error:{code:'access_denied'}}}
+  }catch(error){return failure(request?.signal?.aborted?'request_cancelled':databaseError(error))}
  }})
 }

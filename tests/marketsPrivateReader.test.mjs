@@ -23,7 +23,7 @@ test('private market arguments are captured before authentication awaits and una
 })
 test('storage error details and private material are withheld from the server seam response',async()=>{
  const reader=createPrivateMarketsReader({authenticate:async()=>({id}),sourceProject:'synthetic-source',query:async()=>{throw Error('synthetic private database detail')}})
- assert.deepEqual(await reader.read({},input()),{data:null,error:{code:'access_denied'}})
+ assert.deepEqual(await reader.read({},input()),{data:null,error:{code:'service_unavailable'}})
  assert.throws(()=>createPrivateMarketsReader({authenticate:()=>{},sourceProject:'cc-definition-batch-v1',query:()=>{}}),/unconfigured/)
 })
 
