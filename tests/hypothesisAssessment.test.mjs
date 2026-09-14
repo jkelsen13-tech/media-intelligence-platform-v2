@@ -50,11 +50,12 @@ test('methodology revision and unchanged/less-certain outcomes remain explicit',
   assert.equal(validate(r).valid,true)
  }
 })
-test('as-known-then selects completed historical version; reconstruction selects its retained replacement',()=>{
+test('unqualified historical time refuses selection; reconstruction selects its retained replacement',()=>{
  const a=f(),b=f();Object.assign(b,{id:'next',revision:2,predecessor_id:a.id,completed_at:'2026-09-14T00:00:00Z',
   knowledge_cutoff:'2026-09-14T00:00:00Z',revision_trigger:'new_evidence',revision_effect:'unchanged'})
  const before=structuredClone([a,b]),opts={questionId:a.question_id}
- assert.equal(select([a,b],{...opts,mode:'as_known_then',asOf:'2026-09-13T12:00:00Z'}).record.id,a.id)
+ assert.deepEqual(select([a,b],{...opts,mode:'as_known_then',asOf:'2026-09-13T12:00:00Z'}),
+  {record:null,reason:'historical_commit_visibility_unqualified'})
  assert.equal(select([a,b],{...opts,mode:'reconstructed_now'}).record.id,b.id)
  assert.equal(select([a,b],{...opts,mode:'as_known_then',asOf:'2026-09-13T10:00:00Z'}).record,null)
  assert.deepEqual([a,b],before)
@@ -70,4 +71,14 @@ test('publication and review stay independent of recorded qualitative confidence
  const r=f();r.comparison.confidence={kind:'qualitative',label:'Moderate',reason:'Synthetic display case.',method_ref:'synthetic-only'}
  assert.equal(validate(r).valid,true);assert.equal(r.release_state,'private');assert.equal(r.review_state,'unreviewed')
  r.release_state='public';assert.equal(validate(r).valid,false)
+})
+
+test('row timestamps and caller-supplied visibility flags cannot qualify historical selection',()=>{
+ const a=f();a.committed_at=a.completed_at;a.historical_commit_visibility_qualified=true
+ for(const records of [[],[a]]) for(const asOf of ['2026-09-13T12:00:00Z','2999-01-01T00:00:00Z']){
+  assert.deepEqual(select(records,{questionId:a.question_id,mode:'as_known_then',asOf,
+   historical_commit_visibility_qualified:true}),{record:null,reason:'historical_commit_visibility_unqualified'})
+ }
+ assert.deepEqual(select([a],{questionId:a.question_id,mode:'as_known_then',asOf:'invalid'}),
+  {record:null,reason:'invalid_history_time'})
 })

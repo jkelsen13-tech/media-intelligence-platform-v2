@@ -73,9 +73,12 @@ export function ratingCopy(r) {
   return r?.kind==='qualitative' ? r.label : 'Not enough basis to estimate'
 }
 // Selection from an already authorized retained response, never from current mutable evidence.
+// A transaction-assigned completion timestamp does not establish committed visibility.
 export function selectHypothesisVersion(records,{questionId,mode,asOf}={}) {
   if (!list(records) || !['as_known_then','reconstructed_now'].includes(mode))
     return {record:null,reason:'invalid_history_request'}
+  if (mode==='as_known_then') return {record:null,reason:assessmentInstant(asOf)===null?
+    'invalid_history_time':'historical_commit_visibility_unqualified'}
   const scoped=records.filter(r=>r?.question_id===questionId)
   if (scoped.some(r=>!validateHypothesisAssessment(r).valid) || !unique(scoped.map(r=>r.id)) ||
       !unique(scoped.map(r=>r.revision))) return {record:null,reason:'ambiguous_history'}
@@ -83,9 +86,5 @@ export function selectHypothesisVersion(records,{questionId,mode,asOf}={}) {
   if (scoped.some((r,i)=>r.revision!==i+1 || (i>0 && (r.predecessor_id!==scoped[i-1].id ||
       assessmentInstant(r.completed_at)<assessmentInstant(scoped[i-1].completed_at)))))
     return {record:null,reason:'incomplete_or_inconsistent_history'}
-  const boundary=mode==='as_known_then'?assessmentInstant(asOf):null
-  if (mode==='as_known_then' && boundary===null) return {record:null,reason:'invalid_history_time'}
-  const eligible=scoped.filter(r=>boundary===null || assessmentInstant(r.completed_at)<=boundary)
-  eligible.sort((a,b)=>a.revision-b.revision)
-  return {record:eligible.at(-1)??null,reason:eligible.length?null:'no_completed_assessment',mode}
+  return {record:scoped.at(-1)??null,reason:scoped.length?null:'no_completed_assessment',mode}
 }

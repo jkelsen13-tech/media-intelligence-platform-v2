@@ -185,6 +185,32 @@ class Hypothesis(unittest.TestCase):
         self.assertEqual(self.counts(),"1:1")
     def history(self):
         return "select mip_hypothesis.read_bound_history("+q(self.user)+","+q(self.iid)+");"
+    def test_completed_timestamp_precedes_commit_and_cannot_qualify_historical_visibility(self):
+        self.a.execute("begin;")
+        self.a.execute(self.append())
+        # Writer can see its own row, but another connection cannot yet see it.
+        writer=json.loads(self.a.execute(self.history()))
+        completed=writer["entries"][0]["completed_at"]
+        self.assertEqual(self.counts(),"0:0")
+        boundary=self.admin("""select to_char(clock_timestamp() at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"')""")
+        self.assertEqual(self.admin("select "+q(completed)+"::timestamptz<="+q(boundary)+"::timestamptz"),"t")
+        self.a.execute("commit;")
+        reader=json.loads(self.b.execute(self.history()))
+        self.assertEqual(self.counts(),"1:1")
+        self.assertEqual(reader["entries"][0]["completed_at"],completed)
+        self.assertEqual(reader["temporal_scope"],"retained_versions_only")
+        self.assertFalse(reader["historical_commit_visibility_qualified"])
+        # Boundary was observed before commit, even though completed_at <= boundary.
+        # No invented commit timestamp or wall-clock proof is returned.
+        self.assertNotIn("committed_at",reader["entries"][0])
+    def test_rolled_back_completion_timestamp_is_not_a_historical_record(self):
+        self.a.execute("begin;")
+        self.a.execute(self.append())
+        self.assertEqual(len(json.loads(self.a.execute(self.history()))["entries"]),1)
+        self.a.execute("rollback;")
+        history=json.loads(self.b.execute(self.history()))
+        self.assertEqual(history["entries"],[])
+        self.assertFalse(history["historical_commit_visibility_qualified"])
     def test_history_read_first_serializes_permission_revocation(self):
         self.a.execute(self.append())
         self.a.execute("begin;")
