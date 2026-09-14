@@ -20,9 +20,9 @@ export default function HypothesisGenerationLedger({client,investigationId,userS
  }
  if(!userScopeKey||typeof client?.generationBacklog!=='function')return null
  const current=state?.scope===scope&&state.client===client?state:null
- return <section className="piw-card" aria-label="Hypothesis worker attempts"><h3>Hypothesis worker attempts</h3>
+ return <section className="piw-card piw-generation-ledger" aria-label="Hypothesis worker attempts"><h3>Hypothesis worker attempts</h3>
   <p>These retained job records show requested work and saved completions. They do not establish current authority, review approval or publication eligibility.</p>
-  <button type="button" disabled={current?.status==='loading'} onClick={load}>{current?'Refresh worker attempts':'Inspect worker attempts'}</button>
+  <button className="piw-btn" type="button" disabled={current?.status==='loading'} onClick={load}>{current?'Refresh worker attempts':'Inspect worker attempts'}</button>
   {current?.status==='loading'?<p role="status">Loading retained worker attempts…</p>:null}
   {current?.status==='unavailable'?<p role="status">Worker attempts are unavailable under the current access context.</p>:null}
   {current?.status==='ready'?current.entries.length?<ul>{current.entries.map(e=><li key={e.generation_id}>
@@ -32,7 +32,7 @@ export default function HypothesisGenerationLedger({client,investigationId,userS
    {e.recovery_prior_generation_id?<p>Fresh recovery of retained generation {e.recovery_prior_generation_id}.</p>:null}
    {e.recovery_generation_id?<p>Linked fresh generation {e.recovery_generation_id}. This prior attempt remains retained.</p>:null}
    {e.block_reason?<p>Current authority or retained context was unavailable at selection. Reconciliation remains explicit.</p>:null}
-   {typeof onRecover==='function'&&!e.recovery_generation_id&&(e.state==='failed'||(e.state==='processing'&&e.lease_expired))?<button type="button" onClick={()=>onRecover(e.generation_id)}>Prepare fresh-generation recovery</button>:null}
+   {typeof onRecover==='function'&&!e.recovery_generation_id&&(e.state==='failed'||(e.state==='processing'&&e.lease_expired))?<button className="piw-btn" type="button" onClick={()=>onRecover(e.generation_id)}>Prepare fresh-generation recovery</button>:null}
    {e.completed_revision_id?<p>Saved assessment revision {e.completed_revision_id}. Refresh assessment history to inspect it.</p>:null}
   </li>)}</ul>:<p>No retained worker attempts were returned.</p>:null}
   <p>There is no automatic retry or force cancellation. A processing record alone does not prove that a worker is still running.</p>

@@ -1,6 +1,8 @@
 // Synthetic UI only. No backend, credentials, source text or production route.
 import React from 'react'
 import {createRoot} from 'react-dom/client'
+import Panel from '../../src/components/HypothesisAssessmentPanel.jsx'
+import {hypothesisFixture} from '../../tests/hypothesisAssessmentFixture.mjs'
 import Ledger from '../../src/components/HypothesisGenerationLedger.jsx'
 const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0')
 const row=(n,state,extra={})=>({generation_id:id(n),request_id:id(n+10),workspace_version_id:id(3),
@@ -17,4 +19,5 @@ const client={generationBacklog:async()=>{window.synthetic.calls++;if(window.syn
 const root=createRoot(document.getElementById('root'))
 window.renderSynthetic=(scope='synthetic-reviewer')=>root.render(<main className="piw"><Ledger client={client}
  investigationId={id(1)} userScopeKey={scope} onRecover={id=>window.synthetic.recoveries.push(id)}/></main>)
+window.renderSyntheticAssessment=()=>root.render(<main className="piw"><Panel assessment={hypothesisFixture()} dependencyChanged={true}/></main>)
 window.renderSynthetic()

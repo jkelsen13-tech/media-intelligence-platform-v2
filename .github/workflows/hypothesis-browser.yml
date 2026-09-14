@@ -5,6 +5,9 @@ on:
       - 'src/components/Hypothesis*.jsx'
       - 'src/lib/hypothesis*.js'
       - 'src/styles/investigation-workspace-panels.css'
+      - 'src/styles/tokens.css'
+      - 'src/index.css'
+      - 'tests/hypothesisAssessmentFixture.mjs'
       - 'verifier/hypothesis-browser/**'
       - '.github/workflows/hypothesis-browser.yml'
 permissions:

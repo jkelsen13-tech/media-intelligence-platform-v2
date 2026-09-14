@@ -6,7 +6,8 @@ const {build}=createRequire(require.resolve('vite/package.json'))('esbuild')
 const {chromium,webkit}=createRequire(process.env.MIP_BROWSER_PACKAGE+'/package.json')('playwright')
 const bundle=await build({entryPoints:['verifier/hypothesis-browser/fixture.jsx'],bundle:true,write:false,
  format:'iife',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'}})
-const css=await readFile('src/styles/investigation-workspace-panels.css','utf8')
+// Actual application styles; remote font import omitted, system fallback only.
+const css=(await Promise.all(['src/styles/tokens.css','src/index.css','src/styles/investigation-workspace-panels.css'].map(p=>readFile(p,'utf8')))).map(s=>s.split('\n').filter(line=>!line.startsWith('@import ')).join('\n')).join('\n')
 for(const [engine,launcher] of Object.entries({chromium,webkit})){
  const browser=await launcher.launch({headless:true})
  try{
@@ -30,6 +31,7 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    assert.ok((await region.innerText()).includes('Fresh recovery of retained generation'))
    const recover=region.getByRole('button',{name:'Prepare fresh-generation recovery',exact:true})
    assert.equal(await recover.count(),1)
+   assert.ok((await recover.boundingBox()).height>=44)
    await recover.focus();await page.keyboard.press('Enter')
    assert.deepEqual(await page.evaluate(()=>window.synthetic.recoveries),['00000000-0000-4000-8000-000000000023'])
    assert.equal(await page.evaluate(()=>window.synthetic.calls),1)
@@ -43,11 +45,36 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    assert.equal(await recover.count(),0)
    await page.evaluate(()=>window.renderSynthetic(null))
    await region.waitFor({state:'detached'})
+   await page.evaluate(()=>window.renderSyntheticAssessment())
+   const panel=page.locator('.piw-hypothesis-assessment')
+   await panel.getByRole('heading',{name:'What explains the fictional contract award?',exact:true}).waitFor()
+   await panel.getByText('Inferred assessment, not an established finding.',{exact:true}).waitFor()
+   await panel.getByText('Review: unreviewed · Private; publication disabled.',{exact:true}).waitFor()
+   assert.equal(await panel.getByRole('heading',{name:'Saved revision record',exact:true}).count(),0)
+   const disclosure=panel.locator('summary')
+   await disclosure.focus();await page.keyboard.press('Enter')
+   await panel.getByRole('heading',{name:'Saved revision record',exact:true}).waitFor()
+   assert.equal(await panel.getByRole('heading',{name:'Improper influence affected the award.',exact:true}).count(),1)
+   assert.equal(await panel.getByRole('heading',{name:'A legitimate selection process determined the award.',exact:true}).count(),1)
+   const visible=await panel.innerText()
+   assert.ok(visible.includes('Source publication: 2026-09-12 (date only)'))
+   assert.ok(visible.includes('2026-09-13 10:00:00.123456 UTC'))
+   assert.ok(visible.includes('Shared origins are not independent corroboration.'))
+   assert.ok(visible.includes('A dependency changed. Reassessment is pending'))
+   for(const title of ['Likelihood','Confidence in this likelihood assessment','Diagnostic relevance','Evidence quality','Overall assessment confidence'])
+    assert.ok(visible.includes(title))
+   assert.ok(!visible.includes('50%'))
+   assert.equal(await panel.evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false)
+   if(width===390)console.log('MIP_SYNTHETIC_SAVED_ASSESSMENT_'+engine+'='+(await panel.screenshot({type:'jpeg',quality:65})).toString('base64'))
+   await disclosure.focus();await page.keyboard.press('Enter')
+   await panel.getByRole('heading',{name:'Saved revision record',exact:true}).waitFor({state:'detached'})
+
   }
   assert.deepEqual(requests,[]);assert.deepEqual(errors,[])
   console.log('MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS='+JSON.stringify({engine,widths:[1280,768,390,320],
    keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
    noAutomaticRetry:true,deniedRecordsCleared:true,logoutCleared:true,networkRequests:0,
-   scope:'synthetic_generation_ledger_only',productionQualified:false}))
+   savedAssessmentDisclosure:true,separateMissingEstimates:true,sourceClocks:true,pendingReassessment:true,systemFontFallback:true,scope:'synthetic_generation_ledger_and_saved_assessment',productionQualified:false}))
  }finally{await browser.close()}
 }

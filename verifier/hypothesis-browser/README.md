@@ -7,3 +7,6 @@ Chromium and WebKit exercise keyboard inspection and recovery preparation at 128
 Run in the existing remote disposable environment after npm ci and installing the repository's pinned browser-verifier version: MIP_BROWSER_PACKAGE=/remote/disposable/mip-browser node verifier/hypothesis-browser/run.mjs. The workflow uses contents:read only and no secrets.
 
 Verification is pending for the introducing candidate. Prior 518beb031324ccc02b63dd3a5e66f3e3098f2ddf integrated run 34803605181 passed; its separate World View run 34803605187 remained running at observation. No frozen prior result is changed.
+
+
+Initial ledger-only run: PASS in Chromium and WebKit at dfb3830dfabe46f918d705f307c871e35523a87b, run 34804238540/job 103852806079; all four widths and zero page network requests. Screenshot inspection exposed default browser button styling. The continuation uses existing workspace button styles and text spacing and checks a 44px recovery control. It also exercises saved alternatives, separate missing estimates, microsecond clocks and pending reassessment. Actual application CSS is loaded with remote font imports omitted: system-font fallback qualification only. New exact-candidate verification remains required.
