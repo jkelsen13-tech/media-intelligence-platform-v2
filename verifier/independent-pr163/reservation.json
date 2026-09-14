@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "request_id": "pr163-b4db707-independent-1",
+  "candidate_commit": "b4db7071048440ecbc6f9919b0d9ed1e6ce20a93",
+  "base_commit": "eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6",
+  "packet_commit": "67bb51240d9831f14823368d833fb7885efc7bb4",
+  "packet_path": "verifier/independent-pr163/request.json",
+  "packet_sha256": "98436165f3cfdb80ef48fe2af34d890db678d3f6fd5db8c94d217c49c1af7406",
+  "packet_bytes": 1536515,
+  "agent_id": "bc-b4db7071-0484-40ec-bc6f-9919b0d9ed1e",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "reserved_before_launch",
+  "maximum_initial_posts": 1,
+  "scope": "Only fresh PR163 private backend prerequisite; no other reviews/recovery authorized"
+}
