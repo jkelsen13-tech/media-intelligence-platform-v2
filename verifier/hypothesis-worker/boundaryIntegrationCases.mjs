@@ -245,25 +245,41 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
  })
  await t.test('custody-bound source advancement holds revocation fence until committed',async t=>{
   const b=await configured(t),issue=await b.issue(),c=await b.capture(issue.marker_id)
-  let held,release,entered
+  let held,release,entered,timer,revoke
   const gate=new Promise(r=>release=r),ready=new Promise(r=>entered=r)
   const api=b.makeApi(b.registration,async(name,args)=>{
    if(name!=='advance_boundary_incarnation')return b.call(name,args)
    held=await hold(f.db,'select mip_temporal.'+name+'('+args.map(q).join(',')+');','mip_temporal_ack_gateway')
-   entered();await gate;await held.finish(true)
+   entered()
+   const commit=await gate
+   await held.finish(commit)
+   if(!commit)throw Error('synthetic_advance_orchestration_aborted')
    // Read back the receipt produced by the exact already-authorized held gateway call.
    // No identity or endpoint is reconstructed by this fault-injection adapter.
    return JSON.parse(await f.admin('select receipt from mip_temporal.stream_checkpoints where capture_id='+q(c.id)))
   })
-  const completion=b.consume(c,{transport:api});completion.catch(()=>{})
-  await ready
-  const revoke=f.admin(b.revokeSql);revoke.catch(()=>{})
-  await blocked(f,held.pid);release()
-  // After the source transaction commits, the still-held custody exclusion fences revocation
-  // until the exact source receipt has been read back and the wrapper returns.
-  await completion;await revoke
-  assert.equal(await b.confirmed(),c.end_lsn);assert.equal(await b.checkpointCount(),'1')
-  await assert.rejects(()=>b.consume(c),/mip_temporal_binding_denied/)
+  const completion=b.consume(c,{transport:api})
+  // Surface early source/consumer failure, rather than waiting forever for an unreachable signal.
+  const premature=completion.then(()=>{throw Error('synthetic_advance_signal_missing')})
+  premature.catch(()=>{})
+  try{
+   await Promise.race([ready,premature,new Promise((_,reject)=>{
+    timer=setTimeout(()=>reject(Error('synthetic_advance_signal_timeout')),30000)
+   })])
+   clearTimeout(timer)
+   revoke=f.admin(b.revokeSql);revoke.catch(()=>{})
+   await blocked(f,held.pid)
+   release(true)
+   // Custody exclusion fences revocation until the exact source receipt is read back.
+   await completion;await revoke
+   assert.equal(await b.confirmed(),c.end_lsn);assert.equal(await b.checkpointCount(),'1')
+   await assert.rejects(()=>b.consume(c),/mip_temporal_binding_denied/)
+  }finally{
+   clearTimeout(timer)
+   // If readiness or observed blocking failed, roll back the held source transaction.
+   release(false)
+   await Promise.allSettled([completion,...(revoke?[revoke]:[])])
+  }
  })
  await t.test('slot loss leaves retained delivery and source records, with no fabricated recovery',async t=>{
   const b=await configured(t),issue=await b.issue(),c=await b.capture(issue.marker_id)
