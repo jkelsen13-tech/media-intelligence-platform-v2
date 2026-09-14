@@ -4,7 +4,7 @@ function databaseError(error){
  if(error?.code==='42501')return 'access_denied'
  if(['22023','22P02','22007','22008'].includes(error?.code))return 'invalid_request'
  // Exact trusted database messages only; never return arbitrary diagnostics.
- const code=String(error?.message??'').match(/^(mip_market_[a-z_]+)(?:$|_via_)/)?.[1]
+ const code=error?.code==='P0001'?String(error?.message??'').split('_via_')[0]:null
  if(['mip_market_candidate_budget','mip_market_path_budget'].includes(code))return 'scope_too_large'
  if(['mip_market_assessment_unavailable','mip_market_asset_unavailable','mip_market_identity_not_valid','mip_market_alias_invalid','mip_market_aliases_required'].includes(code))return 'evidence_unavailable'
  if(['mip_market_identity_not_in_workspace','mip_market_source_denied','mip_market_material_not_in_workspace','mip_market_operation_denied'].includes(code))return 'access_denied'

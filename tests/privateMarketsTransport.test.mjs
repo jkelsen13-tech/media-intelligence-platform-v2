@@ -79,3 +79,10 @@ test('transport cancels over-budget response streams and rejects redirects',asyn
  const other=createPrivateMarketsHttpTransport({endpoint,getAccessToken:async()=>'synthetic',fetchImpl:async()=>{const r=new Response('{}',{headers:{'content-type':'application/json'}});Object.defineProperty(r,'redirected',{value:true});return r}})
  assert.equal((await other(input())).error.code,'invalid_response');other.dispose()
 })
+
+test('client disposal resolves an adapter that never settles and aborted calls do not dispatch',async()=>{
+ let calls=0;const c=createPrivateMarketsClient({transport:()=>{calls++;return new Promise(()=>{})}})
+ const p=c.read(input(),{expectedObservationId:id(5)});c.dispose();assert.equal((await p).error.code,'request_cancelled');assert.equal(calls,1)
+ const controller=new AbortController();controller.abort();const other=createPrivateMarketsClient({transport:()=>{calls++}})
+ assert.equal((await other.read(input(),{expectedObservationId:id(5),signal:controller.signal})).error.code,'request_cancelled');assert.equal(calls,1)
+})

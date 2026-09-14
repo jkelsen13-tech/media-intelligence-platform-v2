@@ -9,18 +9,20 @@ export function createPrivateMarketsClient({transport=null}={}){
    if(disposed)return failure('request_cancelled')
    pending?.abort();const turn=++sequence,controller=new AbortController();pending=controller
    const abort=()=>controller.abort();external?.addEventListener('abort',abort,{once:true});if(external?.aborted)abort()
+   let cancel
+   const cancelled=new Promise(resolve=>{cancel=()=>resolve(failure('request_cancelled'));controller.signal.addEventListener('abort',cancel,{once:true});if(controller.signal.aborted)cancel()})
    const frozen=snapshotPrivateMarketsRequest(input),observation=expectedObservationId
    try{
     if(!frozen||!marketUUID(observation))return failure('invalid_request')
     if(!transport)return failure('not_configured')
     if(controller.signal.aborted)return failure('request_cancelled')
-    const result=await transport(frozen,{signal:controller.signal})
+    const result=await Promise.race([transport(frozen,{signal:controller.signal}),cancelled])
     if(disposed||sequence!==turn||controller.signal.aborted)return failure('request_cancelled')
     if(result?.error)return failure(privateMarketsErrors.has(result.error.code)?result.error.code:'service_unavailable')
     const data=mapPrivateMarketsResult(result?.data,frozen,{expectedObservationId:observation})
     return data?{data,error:null}:failure('invalid_response')
    }catch{return failure(disposed||sequence!==turn||controller.signal.aborted?'request_cancelled':'service_unavailable')}
-   finally{external?.removeEventListener('abort',abort);if(sequence===turn)pending=null}
+   finally{controller.signal.removeEventListener('abort',cancel);external?.removeEventListener('abort',abort);if(sequence===turn)pending=null}
   },
   dispose:()=>{disposed=true;sequence++;pending?.abort();pending=null;transport?.dispose?.()}
  })
