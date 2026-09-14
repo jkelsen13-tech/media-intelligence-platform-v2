@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "request_id": "pr157-eb0d7ac-independent-1",
+  "candidate_commit": "eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6",
+  "packet_sha256": "167c819ea1e147eb45db06520f67be78baa93b1993991cf4035f88abfe1d71fa",
+  "agent_id": "bc-eb0d7acf-9050-4b4a-81bf-bdc9b3d3f04e",
+  "run_id": "run-a9f26c91-1a00-474e-8dad-777fb1e5691e",
+  "provider_status": "FINISHED",
+  "reviewer_outcome": null,
+  "controller_delivery_status": "BLOCKED",
+  "blocker": {
+    "kind": "missing_provider_result",
+    "detail": "Authenticated GET run and run-scoped terminal SSE result both omit final review text. No complete PASS/FAIL/BLOCKED reviewer report is available. FINISHED is not PASS."
+  },
+  "provider_evidence_commit": "4e1e6e037636fdbc70a79dd6c9a69cbb0885aaeb",
+  "provider_evidence_path": "verifier/independent-pr157/terminal-omitted-result.provider.json",
+  "result_digest": null,
+  "validation": "No reviewer verdict fabricated, inferred from reasoning, or parsed from intermediate events.",
+  "new_run_launched": false,
+  "owner_decision_required": false,
+  "next_step": "Reconcile original provider run; a further completion run, if separately instructed, must be recorded as a continuation and must not replace this original provider evidence.",
+  "approve": false,
+  "merge": false,
+  "production_authority": false,
+  "local_files_created": false
+}
