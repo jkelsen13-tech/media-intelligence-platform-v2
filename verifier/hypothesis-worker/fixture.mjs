@@ -24,11 +24,12 @@ export async function setup(t) {
   await f.admin('create table public.'+name+'(id uuid primary key,payload jsonb not null)')
  for(const name of ['007_survivor_release.sql','008_operation_evidence.sql'])
   await f.admin(await read('supabase/qualification/mip-cutover-authority/'+name))
+ await f.admin("update public.articles set url='https://example.invalid/broker-fixture/'||id::text where url is null")
  const migrations=await readdir(new URL('supabase/migrations/',base))
  for(const suffix of ['evidence_pipeline_reliability','evidence_change_queue_v1','evidence_assessment_dependencies_v1','investigation_change_briefings_v1','investigation_workspace_batch_v1']) {
   const paths=migrations.filter(x=>x.endsWith('_'+suffix+'.sql'))
   if(paths.length!==1)throw Error('mip_fixture_migration_ambiguous')
-  await f.admin(await read('supabase/migrations/'+paths[0]))
+  await f.admin(await read('supabase/migrations/'+paths[0])).catch(e=>{throw Error('mip_fixture_install_'+suffix+'_'+e.message)})
  }
  for(const name of ['001_revision_store.sql','002_retained_observation_reader.sql','003_bound_acceptance.sql','004_bound_history.sql','005_reassessment_causes.sql','006_reassessment_completion.sql','007_human_reconsideration.sql','008_authoring_reads.sql','009_generation_worker.sql'])
   await f.admin(await read('supabase/qualification/hypothesis-assessments/'+name)).catch(e=>{throw Error('mip_fixture_install_'+name+'_'+e.message)})

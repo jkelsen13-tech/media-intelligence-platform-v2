@@ -239,7 +239,7 @@ create function mip_hypothesis.validate_worker_output(g mip_hypothesis.generatio
 language plpgsql security definer set search_path='' as $$
 declare x jsonb; s jsonb; c jsonb:=a->'comparison'; hids text[]; eids text[]; n integer; head jsonb:=g.inputs->'context'->'head';
 begin
- if jsonb_typeof(a) is distinct from 'object' or not a ?& array['id','contract_version','question_id','question','method_version','model_version',
+ if jsonb_typeof(a) is distinct from 'object' or octet_length(a::text)>2097152 or not a ?& array['id','contract_version','question_id','question','method_version','model_version',
   'revision','predecessor_id','knowledge_cutoff','completed_at','release_state','review_state','hypotheses','hypothesis_relationship','evidence',
   'arguments','comparison','assumptions','gaps','change_tests','revision_reason','revision_trigger','revision_effect']
   or exists(select 1 from jsonb_object_keys(a) k where k not in('id','contract_version','question_id','question','method_version','model_version',
@@ -265,7 +265,7 @@ begin
  if jsonb_array_length(a->'evidence')<>jsonb_array_length(g.inputs->'spans') then raise exception 'mip_hypothesis_output_evidence';end if;
  for x in select value from jsonb_array_elements(a->'evidence') loop
   select value into s from jsonb_array_elements(g.inputs->'spans') z where z->>'id'=x->>'id';
-  if not found or x->>'input_position' is distinct from s->>'input_position' or x->>'material_version' is distinct from s->>'material_version'
+  if not found or jsonb_typeof(x->'id') is distinct from 'string' or jsonb_typeof(x->'input_position') is distinct from 'string' or x->>'input_position' is distinct from s->>'input_position' or x->>'material_version' is distinct from s->>'material_version'
    or x->'source_span' is distinct from s->'source_span' or x->'acquired_at' is distinct from s->'acquired_at'
    or x->'published_at' is distinct from s->'published_at' or x->'event_time' is distinct from s->'event_time'
    or x->'origin_group' is distinct from 'null'::jsonb or jsonb_typeof(x->'documented_claim') is distinct from 'string'
@@ -276,10 +276,11 @@ begin
  select array_agg(x->>'id'),count(distinct x->>'id') into eids,n from jsonb_array_elements(a->'evidence') x;
  if n<>jsonb_array_length(a->'evidence') then raise exception 'mip_hypothesis_output_evidence';end if;
  for x in select value from jsonb_array_elements(a->'arguments') loop
-  if jsonb_typeof(x) is distinct from 'object' or nullif(btrim(x->>'id'),'') is null
+  if jsonb_typeof(x) is distinct from 'object' or jsonb_typeof(x->'id') is distinct from 'string' or jsonb_typeof(x->'hypothesis_id') is distinct from 'string' or nullif(btrim(x->>'id'),'') is null
    or (x->>'hypothesis_id'=any(hids)) is distinct from true
    or x->>'relation' is null or x->>'relation' not in('reports_allegation','supports','weakens','compatible','context')
    or jsonb_typeof(x->'evidence_ids') is distinct from 'array' or jsonb_array_length(x->'evidence_ids')=0
+   or exists(select 1 from jsonb_array_elements(x->'evidence_ids') e where jsonb_typeof(e)<>'string')
    or exists(select 1 from jsonb_array_elements_text(x->'evidence_ids') e where (e=any(eids)) is distinct from true)
    or (select count(distinct e) from jsonb_array_elements_text(x->'evidence_ids') e)<>jsonb_array_length(x->'evidence_ids')
    or jsonb_typeof(x->'inference') is distinct from 'string' or nullif(btrim(x->>'inference'),'') is null
@@ -293,6 +294,7 @@ begin
   or jsonb_typeof(c->'rationale') is distinct from 'string' or nullif(btrim(c->>'rationale'),'') is null
   or jsonb_typeof(c->'main_limitation') is distinct from 'string' or nullif(btrim(c->>'main_limitation'),'') is null
   or not mip_hypothesis.worker_rating(c->'confidence') or jsonb_typeof(c->'favored_ids') is distinct from 'array'
+  or exists(select 1 from jsonb_array_elements(c->'favored_ids') e where jsonb_typeof(e)<>'string')
   or exists(select 1 from jsonb_array_elements_text(c->'favored_ids') e where (e=any(hids)) is distinct from true)
   or (select count(distinct e) from jsonb_array_elements_text(c->'favored_ids') e)<>jsonb_array_length(c->'favored_ids')
   or (case when c->>'state'='better_supported' then jsonb_array_length(c->'favored_ids') not between 1 and cardinality(hids)-1
