@@ -36,9 +36,11 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
     const f=syntheticComparisonHistory()
     f.history.investigation_id=body.input.investigation_id;f.backlog.investigation_id=body.input.investigation_id
     for(const entry of f.history.entries)entry.assessment.question_id=body.input.investigation_id
-    assert.ok(['history','backlog'].includes(body.action))
+    assert.ok(['history','backlog','review_history'].includes(body.action))
+    const reviewHistory={contract_version:'mip_hypothesis_review_history_v1',investigation_id:body.input.investigation_id,
+     entries:[],latest_receipt_id:null,current_user_only:true,is_approval:false,resolves_reassessment:false,publication_allowed:false}
     return route.fulfill({status:appDenied?403:200,contentType:'application/json',headers:{'cache-control':'private, no-store'},
-     body:JSON.stringify(appDenied?{error:{code:'access_denied'}}:{data:body.action==='history'?f.history:f.backlog})})
+     body:JSON.stringify(appDenied?{error:{code:'access_denied'}}:{data:body.action==='history'?f.history:body.action==='backlog'?f.backlog:reviewHistory})})
    }
    if(route.request().url()==='https://mip-synthetic.invalid/hypotheses'){
     const request=route.request(),body=request.postDataJSON()

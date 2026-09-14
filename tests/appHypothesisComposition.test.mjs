@@ -29,6 +29,9 @@ const auth=token=>({loading:false,user:FIXTURE_USER,session:{user:FIXTURE_USER,a
 const preview=()=>readInvestigationWorkspacePreview('?privateInvestigationFixture=populated',{DEV:true})
 const response=data=>new Response(JSON.stringify({data}),{headers:{'content-type':'application/json'}})
 function payload(action,label='Synthetic App history is visible'){
+ assert.ok(['history','backlog','review_history'].includes(action))
+ if(action==='review_history')return {contract_version:'mip_hypothesis_review_history_v1',investigation_id:FIXTURE_IDS.comparable,
+ entries:[],latest_receipt_id:null,current_user_only:true,is_approval:false,resolves_reassessment:false,publication_allowed:false}
  if(action==='backlog')return {contract_version:'mip_hypothesis_reassessment_backlog_v1',investigation_id:FIXTURE_IDS.comparable,
  publication_allowed:false,completed_reassessment:false,coverage:'retained_causes_only',causes:[]}
  const assessment=hypothesisFixture();assessment.question_id=FIXTURE_IDS.comparable;assessment.comparison.rationale=label
