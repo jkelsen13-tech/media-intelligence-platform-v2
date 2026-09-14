@@ -27,7 +27,7 @@ test('only exact independently approved service destinations are returned', () =
 })
 test('malformed or unsafe URLs fail even if accidentally present in policy', () => {
   const invalid = [null,42,{},'', ' '+hypothesis, hypothesis+' ', hypothesis+'/', hypothesis+'?token=x',
-    hypothesis+'#x', hypothesis.replace('https:','http:'), hypothesis.replace('https:','javascript:'),
+    hypothesis+'#x', hypothesis+'?', hypothesis+'#', hypothesis+'?#', hypothesis.replace('https:','http:'), hypothesis.replace('https:','javascript:'),
     hypothesis.replace('https://','https://user:password@'), hypothesis.replace('.co/','.co:444/'),
     hypothesis.replace('qikvmopbtijoebdqosyq','other-project'), hypothesis.replace('/functions/v1/','/rest/v1/'),
     origin+'/functions/v1/../synthetic-hypothesis', origin+'/functions/v1/%73ynthetic-hypothesis',

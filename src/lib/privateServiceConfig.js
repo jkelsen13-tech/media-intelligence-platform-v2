@@ -18,7 +18,7 @@ function explicitlyApproved(raw, approved) {
   return false
 }
 function endpoint(raw, approved) {
-  if (!explicitlyApproved(raw, approved)) return null
+  if (!explicitlyApproved(raw, approved) || /[?#]/.test(raw)) return null
   try {
     const url = new URL(raw)
     if (url.href !== raw || url.origin !== V2_SUPABASE_URL || url.protocol !== 'https:' ||
