@@ -1,3 +1,4 @@
+import {incarnationCases} from './incarnationCases.mjs'
 import {readSnapshotPages} from './snapshotReader.mjs'
 // Actual source capture/coverage in the existing disposable service, synthetic revisions only.
 import assert from 'node:assert/strict'
@@ -183,5 +184,7 @@ export async function continuityCases(t,f,runWorker){
   assert.equal(await b.confirmed(),c.end_lsn);assert.equal(await b.checkpointCount(),'1')
   await assert.rejects(()=>readSnapshotPages(f.db,b.snapshotId,async fetchPage=>{await fetchPage(1)}),/mip_snapshot_read_failed/)
  })
+
+ await t.test('native source incarnation registration isolation',async t=>incarnationCases(t,f,staged))
 
 }
