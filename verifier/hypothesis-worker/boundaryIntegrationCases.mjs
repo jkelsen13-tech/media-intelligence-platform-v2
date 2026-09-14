@@ -182,6 +182,25 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
    putOnce:async(k,v)=>{const saved=await j.putOnce(k,v);if(k.startsWith('boundary-delivery-v2:'))corrupt=true;return saved}
   }}))
   assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
+  for(const fault of ['missing','corrupt']){
+   let afterPrepare=false,advanced=false
+   await assert.rejects(()=>b.consume(c,{journal:{
+    get:async k=>{
+     const value=await j.get(k)
+     if(afterPrepare&&k.startsWith('bootstrap-v1:')){
+      if(fault==='missing')return null
+      if(k.includes(':page:')&&value?.bootstrap?.rows?.length)value.bootstrap.rows[0].revision_id=randomUUID()
+     }
+     return value
+    },putOnce:j.putOnce
+   },transport:{
+    prepare:async p=>{const result=await b.api.prepare(p);afterPrepare=true;return result},
+    advance:async p=>{advanced=true;return b.api.advance(p)}
+   }}))
+   assert.equal(afterPrepare,true);assert.equal(advanced,false)
+   assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
+   assert.equal(await f.admin('select count(*) from mip_temporal.covered_permits where capture_id='+q(c.id)),'1')
+  }
   await b.consume(c)
  })
  await t.test('rolled-back SQL receipt after native advance recovers exact retained capture and permit',async t=>{

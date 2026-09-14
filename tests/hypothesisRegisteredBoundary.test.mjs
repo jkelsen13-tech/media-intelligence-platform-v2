@@ -79,6 +79,12 @@ test('full retained bootstrap and typed marker delivery precede prepare; adapter
    putOnce:async(k,v)=>{const r=await j.putOnce(k,v);if(k.startsWith('boundary-delivery-v2:'))loseBasis=true;return r}},
   transport:{prepare:async()=>{calledPrepare=true},advance:transport.advance}}))
  assert.equal(calledPrepare,false)
+ let afterPrepare=false,advancedAfterLoss=false
+ await assert.rejects(()=>consumeBoundaryCapture({capture:c,registration:reg,observationEpoch:epoch,revisionRelation:'41',markerRelation:'42',session,
+  journal:{get:async k=>afterPrepare&&k.startsWith('bootstrap-v1:')?null:j.get(k),putOnce:j.putOnce},
+  transport:{prepare:async p=>{const r=await transport.prepare(p);afterPrepare=true;return r},
+   advance:async p=>{advancedAfterLoss=true;return transport.advance(p)}}}))
+ assert.equal(afterPrepare,true);assert.equal(advancedAfterLoss,false)
  const result=await consumeBoundaryCapture({capture:c,registration:reg,observationEpoch:epoch,revisionRelation:'41',markerRelation:'42',session,
   journal:{get:j.get,putOnce:async(k,v)=>{const r=await j.putOnce(k,v);if(v.capture)v.capture.end_lsn='F/FFF';return r}},transport})
  assert.equal(result.covered_through,'0/3FC');assert.equal(prepared.end,'0/3FC')
