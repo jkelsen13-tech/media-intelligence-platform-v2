@@ -106,7 +106,7 @@ test('resolved causes link to the saved reassessment and do not remain pending',
  const f=completedFixture();let tree
  await act(async()=>{tree=TestRenderer.create(createElement(Panel,props(f.client)))})
  act(()=>tree.root.findByType('select').props.onChange({target:{value:'synthetic-assessment-1'}}))
- assert.match(content(tree),/has a saved reassessment/)
+ assert.equal(tree.root.findAllByType('p').some(p=>p.children.join('')==='1 recorded change has a saved reassessment.'),true)
  assert.doesNotMatch(content(tree),/await explicit reassessment|causes remain pending/)
  act(()=>tree.root.findAllByType('button').find(b=>b.children.join('')==='Open reassessment revision 2').props.onClick())
  assert.match(content(tree),/Later synthetic assessment/)
