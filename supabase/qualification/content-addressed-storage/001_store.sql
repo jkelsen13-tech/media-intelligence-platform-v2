@@ -24,7 +24,7 @@ begin
 end$$;
 create table mip_cas.principals(login name primary key,user_id uuid not null);
 create table mip_cas.access(user_id uuid not null,investigation uuid not null,expires_at timestamptz not null,primary key(user_id,investigation));
-create table mip_cas.source_identities(capture_id uuid primary key,investigation uuid not null,source_version text not null,canonical_hash text not null check(canonical_hash~'^[0-9a-f]{64}$'),raw_size integer not null check(raw_size>0),acquired_at timestamptz not null check(isfinite(acquired_at)),unique(investigation,source_version,canonical_hash,acquired_at));
+create table mip_cas.source_identities(capture_id uuid primary key,investigation uuid not null,source_version text not null,canonical_hash text not null check(canonical_hash~'^[0-9a-f]{64}$'),raw_size integer not null check(raw_size>0),acquired_at timestamptz not null check(isfinite(acquired_at)),unique(investigation,source_version));
 create table mip_cas.source_permissions(investigation uuid not null,source_version text not null,rights_ref text not null,privacy_ref text not null,expires_at timestamptz not null,primary key(investigation,source_version));
 create table mip_cas.objects(hash text primary key check(hash~'^[0-9a-f]{64}$'),raw_size integer not null check(raw_size>0),created_at timestamptz not null default clock_timestamp());
 create table mip_cas.representations(hash text primary key references mip_cas.objects,codec text not null check(codec ~ '^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$'),encoded bytea not null check(octet_length(encoded)>0),location text not null check(location ~ '^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$'),encoded_hash text not null check(encoded_hash~'^[0-9a-f]{64}$'),tier text not null check(tier in('hot','warm','cold','deep_archive')),version bigint not null default 1,changed_at timestamptz not null default clock_timestamp());
@@ -190,7 +190,7 @@ begin
  if found then
   if j.ref_id<>r.id or j.expected_version<>expected or j.expires_at<=clock_timestamp() then raise exception 'mip_cas_replay';end if;
   if j.state='completed' then
-   perform 1 from mip_cas.representations where hash=r.hash and version=j.expected_version+1 and tier='warm' for share;
+   perform 1 from mip_cas.representations where hash=r.hash and version=j.expected_version+1 and tier='warm' and codec=any(p.codecs) and location=any(p.locations) and tier=any(p.tiers) and octet_length(encoded)<=p.max_encoded for share;
    if not found then raise exception 'mip_cas_completed_job_stale';end if;
   end if;
   return jsonb_build_object('job_id',j.id,'state',j.state);
@@ -202,15 +202,16 @@ begin
  return jsonb_build_object('job_id',j.id,'state',j.state);
 end$$;
 create function mip_cas.complete(i uuid,k text,job uuid) returns void language plpgsql security definer set search_path='' as $$
-declare u uuid;r mip_cas.refs;j mip_cas.jobs;
+declare u uuid;r mip_cas.refs;j mip_cas.jobs;p mip_cas.policies;
 begin
- u:=mip_cas.authorize(i);
+ u:=mip_cas.authorize(i);p:=mip_cas.policy();
  select * into strict r from mip_cas.refs where investigation=i and logical_key=k;
  perform mip_cas.check_source(i,r.provenance,r.hash);
  select * into j from mip_cas.jobs where id=job for update;
  if not found or j.ref_id<>r.id or j.user_id<>u or j.expires_at<=clock_timestamp() then raise exception 'mip_cas_job_denied';end if;
  if j.state='completed' then
-  if not exists(select 1 from mip_cas.representations where hash=r.hash and version=j.expected_version+1 and tier='warm') then raise exception 'mip_cas_completed_job_stale';end if;
+  perform 1 from mip_cas.representations where hash=r.hash and version=j.expected_version+1 and tier='warm' and codec=any(p.codecs) and location=any(p.locations) and tier=any(p.tiers) and octet_length(encoded)<=p.max_encoded for share;
+  if not found then raise exception 'mip_cas_completed_job_stale';end if;
   return;
  end if;
  perform mip_cas.transition(i,k,j.expected_version,'warm');
@@ -221,8 +222,8 @@ declare u uuid;n integer;p mip_cas.policies;
 begin
  u:=mip_cas.authorize(i);p:=mip_cas.policy();
  perform pg_advisory_xact_lock(hashtextextended('mip-cas-job:'||u::text,0));
- -- Policy max_jobs also bounds one operational cleanup batch; no evidence rows are deleted.
- with expired as(select id from mip_cas.jobs where user_id=u and expires_at<=clock_timestamp() order by expires_at,id limit p.max_jobs for update)
+ -- Policy max_jobs bounds one operational cleanup batch, with an independent hard ceiling of 1000; no evidence rows are deleted.
+ with expired as(select id from mip_cas.jobs where user_id=u and expires_at<=clock_timestamp() order by expires_at,id limit least(p.max_jobs,1000) for update)
  delete from mip_cas.jobs j using expired e where j.id=e.id;
  get diagnostics n=row_count;
  return n;

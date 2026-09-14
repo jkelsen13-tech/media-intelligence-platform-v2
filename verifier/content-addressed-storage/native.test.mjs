@@ -9,12 +9,14 @@ const exec=promisify(execFile),i='00000000-0000-4000-8000-000000000001',other='0
 const policy={policyVersion:1,maxRaw:1048576,maxEncoded:1048576,maxPage:50,allowedLocations:['disposable_postgres'],allowedCodecs:['identity-v1','gzip-v1'],allowedTiers:['hot','warm','cold','deep_archive']}
 const envelopePolicy={policy_version:1,max_raw:1048576,max_encoded:1048576,max_page:50,allowed_locations:policy.allowedLocations,allowed_codecs:policy.allowedCodecs,allowed_tiers:policy.allowedTiers}
 const provenance={source_version:'synthetic-v1',acquired_at:'2026-09-14T00:00:00Z',rights_ref:'synthetic-only',privacy_ref:'synthetic-only'}
+const fixtureProvenance=provenance
 const q=x=>x===null?'null':Buffer.isBuffer(x)?"decode('"+x.toString('hex')+"','hex')":typeof x==='number'?String(x):"'"+(typeof x==='object'?JSON.stringify(x):x).replaceAll("'","''")+"'"
 async function sql(s){const r=await exec('psql',['-X','-v','ON_ERROR_STOP=1','-At','-h','127.0.0.1','-U','postgres','-d','mip_cas_test','-c',s],{env:{...process.env,PGPASSWORD:'mip-disposable-ci-only'},timeout:10000,maxBuffer:4*1024*1024});return r.stdout.trim().split('\n').filter(x=>x&&!['SET','RESET','BEGIN','COMMIT','ROLLBACK'].includes(x)).at(-1)}
 const hashBytes=raw=>createHash('sha256').update(raw).digest('hex')
 // Explicit owner-only fixture seeding, never part of gateway/codec transport.
 async function seedCapture(scope,raw,p=provenance){
- await sql("insert into mip_cas.source_identities values("+q(randomUUID())+","+q(scope)+","+q(p.source_version)+","+q(hashBytes(raw))+","+raw.length+","+q(p.acquired_at)+") on conflict do nothing")
+ await sql("insert into mip_cas.source_identities values("+q(randomUUID())+","+q(scope)+","+q(p.source_version)+","+q(hashBytes(raw))+","+raw.length+","+q(p.acquired_at)+")")
+ await sql("insert into mip_cas.source_permissions values("+q(scope)+","+q(p.source_version)+","+q(p.rights_ref)+","+q(p.privacy_ref)+",clock_timestamp()+interval '1 hour') on conflict do nothing")
 }
 const names=new Set(['admit','bind','locate','read','put','index_put','transition','rehydrate','complete','cleanup'])
 function callAs(role){return async(name,args)=>{assert(names.has(name));const result=await sql('set session authorization '+role+';select mip_cas.'+name+'('+args.map(q).join(',')+')');return result?JSON.parse(result):null}}
@@ -27,12 +29,13 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
  const a=callAs('cas_alice'),b=callAs('cas_bob'),codecAuthority=createCodecVerifier({call:callAs('cas_codec'),policy}),store=createStore({call:a,investigation:i,provenance,codecAuthority,policy}),value={text:'Exact Unicode 🧭 and whitespace\n  retained',n:1}
  await seedCapture(i,Buffer.from(JSON.stringify(value)))
  await seedCapture(other,Buffer.from(JSON.stringify(value)))
- await seedCapture(i,Buffer.from(JSON.stringify({...value,n:2})))
+ await seedCapture(i,Buffer.from(JSON.stringify({...value,n:2})),{...provenance,source_version:'synthetic-v2'})
  await t.test('lossless canonical roundtrip and putOnce/get exact retry',async()=>{
   assert.deepEqual(await store.putOnce('revision:1',value),{committed:true})
   assert.deepEqual(await store.get('revision:1'),value)
   await store.putOnce('revision:1',value)
-  await assert.rejects(store.putOnce('revision:1',{...value,n:2}),/mip_cas_retry_conflict/)
+  const conflicting=createStore({call:a,investigation:i,provenance:{...provenance,source_version:'synthetic-v2'},codecAuthority,policy})
+  await assert.rejects(conflicting.putOnce('revision:1',{...value,n:2}),/mip_cas_retry_conflict/)
   for(const codec of ['identity-v1','gzip-v1']){
    const e=encodeCanonical(Buffer.from('canonical 🧭'),codec,policy)
    assert.deepEqual(decodeCanonical({state:'canonical_encoded',...envelopePolicy,...e,encoded:e.encoded.toString('base64'),raw_size:e.raw.length}),e.raw)
@@ -84,17 +87,19 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   await store.indexPut('revision:1',meta.hash,2,{summary:'Restored locator'})
  })
  await t.test('exact citation joins retained identity/version and verified byte span, never latest or similar',async()=>{
-  await seedCapture(i,Buffer.from(JSON.stringify({passage:'Original retained passage'})))
-  await seedCapture(i,Buffer.from(JSON.stringify({passage:'A similar but changed passage'})),{...provenance,source_version:'synthetic-v2'})
+  const provenance={...fixtureProvenance,source_version:'citation-old-v1'}
+  const store=createStore({call:a,investigation:i,provenance,codecAuthority,policy})
+  await seedCapture(i,Buffer.from(JSON.stringify({passage:'Original retained passage'})),provenance)
+  await seedCapture(i,Buffer.from(JSON.stringify({passage:'A similar but changed passage'})),{...provenance,source_version:'citation-new-v1'})
   await store.putOnce('source-old',{passage:'Original retained passage'})
-  const newer=createStore({call:a,investigation:i,provenance:{...provenance,source_version:'synthetic-v2'},codecAuthority,policy})
+  const newer=createStore({call:a,investigation:i,provenance:{...provenance,source_version:'citation-new-v1'},codecAuthority,policy})
   await newer.putOnce('source-latest',{passage:'A similar but changed passage'})
   const meta=await store.metadata('source-old'),raw=await store.factualEvidence('source-old')
   const start=12,end=20,span=raw.subarray(start,end)
-  const c={logical_key:'source-old',ref_id:meta.ref_id,canonical_hash:meta.hash,source_version:'synthetic-v1',start_byte:start,end_byte:end,span_hash:createHash('sha256').update(span).digest('hex')}
+  const c={logical_key:'source-old',ref_id:meta.ref_id,canonical_hash:meta.hash,source_version:'citation-old-v1',start_byte:start,end_byte:end,span_hash:createHash('sha256').update(span).digest('hex')}
   const result=await store.resolveCitation(c);assert.deepEqual(result.bytes,span);assert.equal(result.claim_truth_qualified,false)
   await assert.rejects(store.resolveCitation({...c,logical_key:'source-latest'}),/citation_identity_mismatch/)
-  await assert.rejects(store.resolveCitation({...c,source_version:'synthetic-v2'}),/citation_identity_mismatch/)
+  await assert.rejects(store.resolveCitation({...c,source_version:'citation-new-v1'}),/citation_identity_mismatch/)
   await assert.rejects(store.resolveCitation({...c,span_hash:'0'.repeat(64)}),/citation_span_hash/)
   await assert.rejects(store.resolveCitation({...c,end_byte:999999}),/citation_span_bounds/)
   await assert.rejects(store.resolveCitation({...c,start_byte:-1}),/citation_invalid/)
@@ -115,10 +120,12 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   await assert.rejects(a('put',[i,'bad-identity',bytes,'identity-v1',Buffer.from('different'),provenance]),/mip_cas_codec_gateway_denied/)
  })
  await t.test('separate codec admission prevents cross-investigation first writer poisoning',async()=>{
+  const provenance={...fixtureProvenance,source_version:'poison-proof-v1'}
+  const store=createStore({call:a,investigation:i,provenance,codecAuthority,policy})
   const raw=Buffer.from(JSON.stringify({poison:'target'})),wrong=encodeCanonical(Buffer.from('poisoned'),'gzip-v1',policy)
   await assert.rejects(b('put',[other,'poison',raw,'gzip-v1',wrong.encoded,provenance]),/mip_cas_codec_gateway_denied/)
   await assert.rejects(b('admit',[raw,'gzip-v1',wrong.encoded]),/permission denied/)
-  await seedCapture(i,raw)
+  await seedCapture(i,raw,provenance)
   await codecAuthority.admit(raw)
   const receipt=await a('bind',[i,'poison-proof',raw,provenance])
   assert.deepEqual(await store.get('poison-proof'),{poison:'target'})
@@ -128,7 +135,9 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   for(const p of [{...provenance,extra:'x'},{...provenance,rights_ref:7},{...provenance,acquired_at:'yesterday'},{...provenance,privacy_ref:''}])await assert.rejects(a('bind',[i,'bad-provenance',raw,p]),/mip_cas_provenance_invalid/)
  })
  await t.test('tier CAS races, cold read, authorized rehydration and exact replay',async()=>{
-  await seedCapture(i,Buffer.from(JSON.stringify({unique:'tier'})))
+  const provenance={...fixtureProvenance,source_version:'tier-object-v1'}
+  const store=createStore({call:a,investigation:i,provenance,codecAuthority,policy})
+  await seedCapture(i,Buffer.from(JSON.stringify({unique:'tier'})),provenance)
   await store.putOnce('tier-object',{unique:'tier'})
   const race=await Promise.allSettled([store.transition('tier-object',1,'cold'),store.transition('tier-object',1,'warm')])
   assert.equal(race.filter(x=>x.status==='fulfilled').length,1)
@@ -141,6 +150,13 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   await store.completeRehydration('tier-object',j.job_id)
   await store.completeRehydration('tier-object',j.job_id)
   assert.deepEqual(await store.get('tier-object'),{unique:'tier'})
+  for(const [version,field] of [[8,'codecs'],[9,'locations'],[10,'tiers'],[11,'encoded']]){
+   await sql("insert into mip_cas.policies select "+version+",max_raw,"+(field==='encoded'?"1":"max_encoded")+",max_objects,max_total,max_refs,max_jobs,max_page,"+(field==='locations'?"array['replay-other-location']":"locations")+","+(field==='codecs'?"array['identity-v1']":"codecs")+","+(field==='tiers'?"array['hot']":"tiers")+",qualification,"+(field==='locations'?"'replay-other-location'":"initial_location")+",initial_tier from mip_cas.policies where version=1;update mip_cas.active_policy set version="+version)
+   try{
+    await assert.rejects(a('rehydrate',[i,'tier-object',request,m.version]),/mip_cas_completed_job_stale/)
+    await assert.rejects(a('complete',[i,'tier-object',j.job_id]),/mip_cas_completed_job_stale/)
+   }finally{await sql('update mip_cas.active_policy set version=1')}
+  }
   assert.equal((await store.metadata('tier-object')).hash,m.hash)
   assert.equal(await sql('select count(*) from mip_cas.events where hash='+q(m.hash)),String(m.version))
  })
@@ -162,8 +178,9 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   assert.equal(await sql('select count(*) from mip_cas.jobs'),'0')
  })
  await t.test('SQL admission location and codec are policy driven while unknown JS codecs fail closed',async()=>{
+  const provenance={...fixtureProvenance,source_version:'future-codec-v1'}
   const raw=Buffer.from('Future codec synthetic representation')
-  await seedCapture(i,raw)
+  await seedCapture(i,raw,provenance)
   const result=await sql("begin;insert into mip_cas.policies select 3,max_raw,max_encoded,max_objects,max_total,max_refs,max_jobs,max_page,array['test-remote-provider'],array['future-lossless-v2'],tiers,qualification,'test-remote-provider','warm' from mip_cas.policies where version=1;update mip_cas.active_policy set version=3;set session authorization cas_codec;select mip_cas.admit("+q(raw)+",'future-lossless-v2',"+q(raw)+");reset session authorization;set session authorization cas_alice;select mip_cas.bind("+q(i)+",'future-codec',"+q(raw)+","+q(provenance)+");select mip_cas.read("+q(i)+",'future-codec','canonical');rollback")
   const retained=JSON.parse(result)
   assert.equal(retained.location,'test-remote-provider');assert.equal(retained.tier,'warm')
@@ -175,8 +192,11 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   await assert.rejects(a('admit',[raw,'future-lossless-v2',raw]),/permission denied/)
  })
  await t.test('source capture authority binds exact bytes and acquired time, never caller labels',async()=>{
+  const provenance={...fixtureProvenance,source_version:'trusted-capture-v1'}
   const raw=Buffer.from('trusted source capture'),wrong=Buffer.from('falsely attributed bytes')
-  await seedCapture(i,raw)
+  await seedCapture(i,raw,provenance)
+  await assert.rejects(seedCapture(i,wrong,provenance),/duplicate key/)
+  await assert.rejects(seedCapture(i,raw,{...provenance,acquired_at:'2026-09-13T00:00:00Z'}),/duplicate key/)
   const before=await sql('select count(*) from mip_cas.refs')
   await assert.rejects(a('put',[i,'forged-bytes',wrong,'identity-v1',wrong,provenance]),/mip_cas_source_rights_unverified/)
   await assert.rejects(a('put',[i,'forged-time',raw,'identity-v1',raw,{...provenance,acquired_at:'2026-09-13T00:00:00Z'}]),/mip_cas_source_rights_unverified/)
@@ -187,21 +207,22 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   assert.equal(receipt.source_identity_qualified,false);assert.equal(receipt.temporal_provenance_qualified,false)
   await assert.rejects(a('bind',[i,'trusted-capture',raw,{...provenance,acquired_at:'2026-09-13T00:00:00Z'}]),/mip_cas_source_rights_unverified/)
   // A correction is a new trusted identity, not replacement of the prior source version.
-  const corrected={...provenance,source_version:'synthetic-v2'}
+  const corrected={...provenance,source_version:'corrected-capture-v1'}
   await seedCapture(i,wrong,corrected)
   await assert.rejects(a('put',[i,'stale-label',wrong,'identity-v1',wrong,provenance]),/mip_cas_source_rights_unverified/)
   await a('put',[i,'corrected-capture',wrong,'identity-v1',wrong,corrected])
   assert.equal((await a('read',[i,'trusted-capture','canonical'])).hash,hashBytes(raw))
  })
  await t.test('separate admission then policy change refuses new binds and existing admit/bind retries',async()=>{
+  const provenance={...fixtureProvenance,source_version:'policy-race-v1'}
   const raw=Buffer.from('separately admitted policy race'),old=Buffer.from(JSON.stringify(value))
-  await seedCapture(i,raw);await codecAuthority.admit(raw)
+  await seedCapture(i,raw,provenance);await codecAuthority.admit(raw)
   const before=await sql('select count(*) from mip_cas.refs'),oldRef=await store.metadata('revision:1')
   for(const [version,field] of [[4,'codecs'],[5,'locations'],[6,'tiers']]){
    await sql("insert into mip_cas.policies select "+version+",max_raw,max_encoded,max_objects,max_total,max_refs,max_jobs,max_page,"+(field==='locations'?"array['policy-other-location']":"locations")+","+(field==='codecs'?"array['identity-v1']":"codecs")+","+(field==='tiers'?"array['warm']":"tiers")+",qualification,"+(field==='locations'?"'policy-other-location'":"initial_location")+","+(field==='tiers'?"'warm'":"initial_tier")+" from mip_cas.policies where version=1;update mip_cas.active_policy set version="+version)
    try{
     await assert.rejects(a('bind',[i,'policy-race-new',raw,provenance]),/mip_cas_bind_representation_unverified/)
-    await assert.rejects(a('bind',[i,'revision:1',old,provenance]),/mip_cas_bind_representation_unverified/)
+    await assert.rejects(a('bind',[i,'revision:1',old,fixtureProvenance]),/mip_cas_bind_representation_unverified/)
     const e=encodeCanonical(raw,'gzip-v1',policy)
     await assert.rejects(callAs('cas_codec')('admit',[raw,e.codec,e.encoded]),field==='codecs'?/mip_cas_invalid/:/mip_cas_representation_unverified/)
     assert.equal(await sql('select count(*) from mip_cas.refs'),before)
@@ -212,8 +233,8 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
  })
  await t.test('archived cross-scope dedup and existing bind retries require custodian',async()=>{
   for(const tier of ['cold','deep_archive']){
-   const raw=Buffer.from('archive-bind-'+tier),key='archive-'+tier
-   await seedCapture(i,raw);await seedCapture(other,raw);await codecAuthority.admit(raw)
+   const raw=Buffer.from('archive-bind-'+tier),key='archive-'+tier,provenance={...fixtureProvenance,source_version:'archive-'+tier+'-v1'}
+   await seedCapture(i,raw,provenance);await seedCapture(other,raw,provenance);await codecAuthority.admit(raw)
    await a('bind',[i,key,raw,provenance]);await a('transition',[i,key,1,tier])
    const before=await sql('select count(*) from mip_cas.refs')
    await assert.rejects(b('bind',[other,key,raw,provenance]),/mip_cas_shared_tier_custodian_required/)
@@ -235,8 +256,8 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
    await pending;throw Error('race_barrier_not_observed')
   }
   for(const first of ['bind','demote']){
-   const raw=Buffer.from('race-'+first),key='race-'+first
-   await seedCapture(i,raw);await seedCapture(other,raw);await codecAuthority.admit(raw);await a('bind',[i,key,raw,provenance])
+   const raw=Buffer.from('race-'+first),key='race-'+first,provenance={...fixtureProvenance,source_version:'race-'+first+'-v1'}
+   await seedCapture(i,raw,provenance);await seedCapture(other,raw,provenance);await codecAuthority.admit(raw);await a('bind',[i,key,raw,provenance])
    const bind="set session authorization cas_bob;select mip_cas.bind("+[other,key,raw,provenance].map(q).join(',')+")"
    const demote="set session authorization cas_alice;select mip_cas.transition("+[i,key,1,'cold'].map(q).join(',')+")"
    const barrier=await start('cas-race-'+first,first==='bind'?bind:demote)
@@ -249,9 +270,10 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   }
  })
  await t.test('revoked old scope cannot strand principal quota; bounded cleanup is principal-global',async()=>{
+  const provenance={...fixtureProvenance,source_version:'authorized-b-archive-v1'}
   await sql("insert into mip_cas.access values("+q(alice)+","+q(other)+",clock_timestamp()+interval '1 hour')")
   const raw=Buffer.from('authorized B archive'),key='authorized-b-archive'
-  await seedCapture(other,raw);await codecAuthority.admit(raw);await a('bind',[other,key,raw,provenance]);await a('transition',[other,key,1,'cold'])
+  await seedCapture(other,raw,provenance);await codecAuthority.admit(raw);await a('bind',[other,key,raw,provenance]);await a('transition',[other,key,1,'cold'])
   const old=await store.metadata('tier-object')
   await sql("update mip_cas.jobs set expires_at=clock_timestamp()-interval '1 second' where user_id="+q(alice))
   // More than one cleanup batch, all in A. No caller gains evidence or metadata access to A.
@@ -277,6 +299,13 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
    await sql("update mip_cas.jobs set expires_at=clock_timestamp()-interval '1 second' where user_id="+q(alice))
    while(await a('cleanup',[other])){}
   }
+ })
+ await t.test('cleanup hard safety ceiling remains bounded under oversized owner policy',async()=>{
+  const ref=await store.metadata('tier-object')
+  const result=await sql("begin;insert into mip_cas.policies select 12,max_raw,max_encoded,max_objects,max_total,max_refs,2147483647,max_page,locations,codecs,tiers,qualification,initial_location,initial_tier from mip_cas.policies where version=1;update mip_cas.active_policy set version=12;insert into mip_cas.jobs select gen_random_uuid(),"+q(ref.ref_id)+","+q(alice)+",gen_random_uuid(),clock_timestamp()-interval '1 second',"+ref.version+",'pending' from generate_series(1,1002);set session authorization cas_alice;select mip_cas.cleanup("+q(i)+");rollback")
+  assert.equal(result,'1000')
+  assert.equal(await sql('select version from mip_cas.active_policy'),'1')
+  assert.equal(await sql('select count(*) from mip_cas.jobs'),'0')
  })
  await t.test('reference quota and immutable identity/history',async()=>{
   const existing=Number(await sql('select count(*) from mip_cas.refs where investigation='+q(i)))
