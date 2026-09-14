@@ -188,7 +188,7 @@ create function mip_temporal.guard_history_permit_insert() returns trigger
 language plpgsql set search_path='' as $quota$
 begin
  perform pg_advisory_xact_lock(74190231,172);
- if octet_length(to_jsonb(new)::text)>16384 or
+ if octet_length(to_jsonb(new)::text)>32768 or
   (select count(*) from mip_temporal.boundary_history_permits)>=1024 or
   (select count(*) from mip_temporal.boundary_history_permits where user_id=new.user_id)>=32
  then raise exception 'mip_boundary_permit_quota';end if;

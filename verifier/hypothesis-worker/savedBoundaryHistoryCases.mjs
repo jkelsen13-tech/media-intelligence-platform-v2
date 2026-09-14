@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises'
 import {spawn} from 'node:child_process'
 import {randomUUID} from 'node:crypto'
 import {quote as q,guard} from '../integrated/transport.mjs'
-import {blocked} from './fixture.mjs'
+import {blocked,hold} from './fixture.mjs'
 import {createSavedBoundaryReader,createBoundaryProofAuthority} from '../../supabase/qualification/hypothesis-assessments/savedBoundaryHistory.mjs'
 
 // One actual authenticated PostgreSQL backend and transaction for all coordinator queries.
@@ -135,6 +135,46 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   assert.ok(removed>0&&removed<=256)
   assert.equal(await f.admin('select count(*) from mip_temporal.boundary_history_permits where user_id='+q(x.identity.user)),'0')
   assert.equal(await f.admin("select rolcanlogin or rolbypassrls or rolsuper from pg_roles where rolname='mip_boundary_permit_cleanup'"),'f')
+ })
+
+ await t.test('global quota serializes the final slot and cleanup skips locked expired rows',async t=>{
+  const x=await context(t)
+  await x.reader()(x.request,()=>{})
+  const seed=x.permit().permit_id,seedRow=JSON.parse(await f.admin('select to_jsonb(p) from mip_temporal.boundary_history_permits p where id='+q(seed)))
+  const clone=(count,fresh=false)=>"insert into mip_temporal.boundary_history_permits select (jsonb_populate_record(null::mip_temporal.boundary_history_permits,to_jsonb(p)||jsonb_build_object('id',gen_random_uuid(),'request_id',gen_random_uuid(),'user_id',gen_random_uuid(),'investigation_id',gen_random_uuid(),'created_at',clock_timestamp()"+(fresh?"":"-interval '20 seconds'")+",'expires_at',clock_timestamp()"+(fresh?"+interval '9 seconds'":"-interval '10 seconds'")+",'consumed',true))).* from jsonb_populate_record(null::mip_temporal.boundary_history_permits,"+q(seedRow)+"::jsonb) p cross join generate_series(1,"+count+") n"
+  const count=Number(await f.admin('select count(*) from mip_temporal.boundary_history_permits'))
+  assert.ok(count<1023)
+  // Every copied fixture row goes through the real enforcing INSERT trigger and has a distinct user/scope.
+  await f.admin('set session authorization mip_temporal_advance_owner;'+clone(1023-count))
+  const outcomes=await Promise.allSettled([1,2].map(()=>f.admin('set session authorization mip_temporal_advance_owner;'+clone(1))))
+  assert.equal(outcomes.filter(r=>r.status==='fulfilled').length,1)
+  assert.equal(await f.admin('select count(*) from mip_temporal.boundary_history_permits'),'1024')
+  const lockedId=await f.admin('select id from mip_temporal.boundary_history_permits where expires_at<=clock_timestamp() order by expires_at,id limit 1')
+  const locked=await hold(f.db,'select id from mip_temporal.boundary_history_permits where id='+q(lockedId)+' for update','mip_temporal_advance_owner')
+  try{
+   const removed=Number(await f.admin('set session authorization mip_boundary_permit_cleanup;select mip_temporal.cleanup_boundary_history_permits()'))
+   assert.equal(removed,256)
+   assert.equal(await f.admin('select count(*) from mip_temporal.boundary_history_permits where id='+q(lockedId)),'1')
+  }finally{await locked.finish(true)}
+  for(let n=0;n<4;n++)await f.admin('set session authorization mip_boundary_permit_cleanup;select mip_temporal.cleanup_boundary_history_permits()')
+  assert.equal(await f.admin('select count(*) from mip_temporal.boundary_history_permits where id='+q(lockedId)),'0')
+  // Make a fresh consumed row after cleanup, then prove consumed is not permission for early erasure.
+  await f.admin('set session authorization mip_temporal_advance_owner;'+clone(1,true))
+  const fresh=await f.admin('select id from mip_temporal.boundary_history_permits where id<>'+q(seed)+' and expires_at>clock_timestamp() order by created_at desc limit 1')
+  assert.match(fresh,/^[0-9a-f-]{36}$/)
+  await assert.rejects(()=>f.admin('set session authorization mip_temporal_advance_owner;delete from mip_temporal.boundary_history_permits where id='+q(fresh)))
+  await f.admin('set session authorization mip_boundary_permit_cleanup;select mip_temporal.cleanup_boundary_history_permits()')
+  assert.equal(await f.admin('select consumed from mip_temporal.boundary_history_permits where id='+q(fresh)),'t')
+  const catalog=JSON.parse(await f.admin("select jsonb_agg(jsonb_build_object('name',p.proname,'owner',r.rolname,'definer',p.prosecdef,'config',p.proconfig)) from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='mip_temporal' and p.proname in('cleanup_boundary_history_permits','guard_history_permit_insert')"))
+  assert.equal(catalog.length,2)
+  for(const p of catalog){
+   assert.equal(p.owner,'mip_temporal_advance_owner');assert.deepEqual(p.config,['search_path=""'])
+   assert.equal(p.definer,p.name==='cleanup_boundary_history_permits')
+  }
+  for(const role of ['anon','authenticated','service_role','mip_boundary_history_gateway','mip_boundary_proof_issuer','mip_boundary_permit_cleanup']){
+   assert.equal(await f.admin('select has_function_privilege('+[role,'mip_temporal.cleanup_boundary_history_permits()','EXECUTE'].map(q).join(',')+')'),role==='mip_boundary_permit_cleanup'?'t':'f')
+   assert.equal(await f.admin('select has_function_privilege('+[role,'mip_temporal.guard_history_permit_insert()','EXECUTE'].map(q).join(',')+')'),'f')
+  }
  })
 
  await t.test('verified Auth is inside admission; alternate valid member/investigation and caller identity fields cannot impersonate',async t=>{
