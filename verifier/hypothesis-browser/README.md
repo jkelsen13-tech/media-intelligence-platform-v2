@@ -23,3 +23,6 @@ A reserved https://mip-synthetic.invalid/ document is fulfilled entirely by Play
 
 
 Failed authoring attempts remain preserved: 43f0e510c8d24fb8008fe4b09f3bbe33f003f6a0, run 34805104132/job 103855344783, exact accessible select label unavailable; fixed with explicit selector names at 7135cf96a14137c9e024b71a734840b129f6c76d. At that correction, run 34805254138/job 103855775263 completed the Chromium authoring flow but failed the narrow WebKit horizontal-overflow assertion. The continuation uses explicit zero-minimum grid tracks and bounded fieldsets, retaining the no-overflow assertion and logging only synthetic geometry on failure. Neither failed full browser run is reclassified as PASS.
+
+
+At ed55ca6e21772abe428acd78b5795112a61833f2, browser run 34805444223/job 103856314097 still failed WebKit: composer client width 366px versus scroll width 492px, with no child border box beyond the container. The next correction constrains native select text overflow and expands diagnostics to internal scroll widths. The no-overflow test is unchanged; no assertion is waived and no full browser PASS is claimed for this failed attempt.

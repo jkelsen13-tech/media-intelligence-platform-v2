@@ -540,3 +540,5 @@
 .piw-hypothesis-composer > form,
 .piw-hypothesis-composer .piw-field { grid-template-columns: minmax(0, 1fr); }
 .piw-hypothesis-composer fieldset { inline-size: 100%; max-inline-size: 100%; }
+
+.piw-hypothesis-composer select { overflow: hidden; text-overflow: ellipsis; }
