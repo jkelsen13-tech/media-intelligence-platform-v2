@@ -4,11 +4,11 @@ const require = (v, code) => {if(!v) throw Error(code)};
 export function validate(packet, files, authority, result, origin) {
  require(/^[a-f0-9]{40}$/.test(packet.candidate),'candidate_not_frozen');
  require(packet.synthetic===true,'real_transport_not_configured');
- require(authority?.candidate===packet.candidate && authority.disclosure===packet.disclosure && JSON.stringify(authority.files)===JSON.stringify(packet.files),'disclosure_unbound');
+ require(authority?.candidate===packet.candidate && authority.disclosure===packet.disclosure && JSON.stringify(authority.files)===JSON.stringify(packet.files) && JSON.stringify(authority.requirements)===JSON.stringify(packet.requirements) && JSON.stringify(authority.requirementLayers)===JSON.stringify(packet.requirementLayers),'disclosure_unbound');
  require(Array.isArray(packet.files) && packet.files.length>0 && packet.files.length===files.size,'file_set');
  const seen=new Set();
  for(const f of packet.files) {
-  require(typeof f.path==='string' && /^(docs|tests|src|verifier)\/[a-zA-Z0-9_./-]+$/.test(f.path) && !f.path.split('/').some(p=>!p || p==='..' || p==='.' || p.startsWith('.')) && !f.path.endsWith('/AGENTS.md') && !seen.has(f.path),'unsafe_path');
+  require(typeof f.path==='string' && /^(docs|tests|src|verifier|supabase\/(functions|migrations|qualification))\/[a-zA-Z0-9_./-]+$/.test(f.path) && !f.path.split('/').some(p=>!p || p==='..' || p==='.' || p.startsWith('.')) && !f.path.endsWith('/AGENTS.md') && !seen.has(f.path),'unsafe_path');
   seen.add(f.path);const bytes=files.get(f.path);
   require(Buffer.isBuffer(bytes) && bytes.length===f.bytes && hash(bytes)===f.sha256,'file_binding');
  }
@@ -17,7 +17,11 @@ export function validate(packet, files, authority, result, origin) {
  require(result.packet===digest && result.candidate===packet.candidate && result.request===packet.request && result.synthetic===true,'result_binding');
  require(result.reviewer===origin.reviewer && result.reviewer!==packet.implementer && result.model===origin.model,'self_or_wrong_reviewer');
  require(['PASS','FAIL','BLOCKED'].includes(result.outcome),'outcome');
- require(Array.isArray(packet.requirements) && packet.requirements.length>0 && new Set(packet.requirements).size===packet.requirements.length,'requirements');
+ require(Array.isArray(packet.requirements) && packet.requirements.length>=3 && new Set(packet.requirements).size===packet.requirements.length,'requirements');
+ require(packet.requirementLayers && Object.getPrototypeOf(packet.requirementLayers)===Object.prototype,'requirement_layers');
+ require(Object.keys(packet.requirementLayers).sort().join('|')===packet.requirements.slice().sort().join('|'),'requirement_layer_binding');
+ require(packet.requirements.every(k=>['frontend','backend','cross_layer'].includes(packet.requirementLayers[k])),'requirement_layer');
+ require(['frontend','backend','cross_layer'].every(layer=>Object.values(packet.requirementLayers).includes(layer)),'full_stack_required');
  require(Array.isArray(result.coverage) && result.coverage.length===packet.requirements.length && new Set(result.coverage.map(c=>c.id)).size===packet.requirements.length,'coverage');
  for(const c of result.coverage) {
   require(packet.requirements.includes(c.id) && ['PASS','FAIL','BLOCKED','NOT_TESTED'].includes(c.status),'coverage');
