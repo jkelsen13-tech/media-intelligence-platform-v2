@@ -37,7 +37,7 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    assert.equal(await page.evaluate(()=>window.synthetic.calls),1)
    assert.equal(await region.evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false)
-   if(width===390)console.log('MIP_SYNTHETIC_WORKER_LEDGER_'+engine+'='+(await region.screenshot({type:'jpeg',quality:65})).toString('base64'))
+   if(width===390)console.log('MIP_SYNTHETIC_WORKER_LEDGER_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
    await page.evaluate(()=>window.synthetic.mode='denied')
    await region.getByRole('button',{name:'Refresh worker attempts',exact:true}).click()
    await region.getByText('Worker attempts are unavailable under the current access context.',{exact:true}).waitFor()
@@ -66,7 +66,13 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    assert.ok(!visible.includes('50%'))
    assert.equal(await panel.evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false)
-   if(width===390)console.log('MIP_SYNTHETIC_SAVED_ASSESSMENT_'+engine+'='+(await panel.screenshot({type:'jpeg',quality:65})).toString('base64'))
+   const revision=panel.getByRole('heading',{name:'Saved revision record',exact:true})
+   await revision.scrollIntoViewIfNeeded()
+   const box=await revision.boundingBox()
+   assert.ok(box.y>=0&&box.y+box.height<=1000)
+   if(width===390)console.log('MIP_SYNTHETIC_SAVED_REVISION_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+   await panel.getByRole('heading',{name:'What explains the fictional contract award?',exact:true}).scrollIntoViewIfNeeded()
+   if(width===390)console.log('MIP_SYNTHETIC_SAVED_ASSESSMENT_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
    await disclosure.focus();await page.keyboard.press('Enter')
    await panel.getByRole('heading',{name:'Saved revision record',exact:true}).waitFor({state:'detached'})
 
@@ -75,6 +81,6 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
   console.log('MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS='+JSON.stringify({engine,widths:[1280,768,390,320],
    keyboardInspection:true,reciprocalRecoveryLinks:true,onlyUnlinkedFailureRecoverable:true,
    noAutomaticRetry:true,deniedRecordsCleared:true,logoutCleared:true,networkRequests:0,
-   savedAssessmentDisclosure:true,separateMissingEstimates:true,sourceClocks:true,pendingReassessment:true,systemFontFallback:true,scope:'synthetic_generation_ledger_and_saved_assessment',productionQualified:false}))
+   savedRevisionReachableByScrolling:true,savedAssessmentDisclosure:true,separateMissingEstimates:true,sourceClocks:true,pendingReassessment:true,systemFontFallback:true,scope:'synthetic_generation_ledger_and_saved_assessment',productionQualified:false}))
  }finally{await browser.close()}
 }

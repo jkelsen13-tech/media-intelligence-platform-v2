@@ -17,7 +17,7 @@ window.synthetic={calls:0,recoveries:[],mode:'ready'}
 const client={generationBacklog:async()=>{window.synthetic.calls++;if(window.synthetic.mode==='denied')return{error:{code:'access_denied'}}
  return{data:structuredClone(data)}}}
 const root=createRoot(document.getElementById('root'))
-window.renderSynthetic=(scope='synthetic-reviewer')=>root.render(<main className="piw"><Ledger client={client}
+window.renderSynthetic=(scope='synthetic-reviewer')=>root.render(<main className="piw" style={{height:"100dvh",overflowY:"auto"}}><Ledger client={client}
  investigationId={id(1)} userScopeKey={scope} onRecover={id=>window.synthetic.recoveries.push(id)}/></main>)
-window.renderSyntheticAssessment=()=>root.render(<main className="piw"><Panel assessment={hypothesisFixture()} dependencyChanged={true}/></main>)
+window.renderSyntheticAssessment=()=>root.render(<main className="piw" style={{height:"100dvh",overflowY:"auto"}}><Panel assessment={hypothesisFixture()} dependencyChanged={true}/></main>)
 window.renderSynthetic()
