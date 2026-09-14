@@ -16,10 +16,10 @@ async function boundedJson(request) {
 function valid(body) {
  if(!object(body)||Object.keys(body).some(k=>!['action','input'].includes(k))||!object(body.input))return false
  const input=body.input
- const keys=body.action==='history'?['investigation_id']:body.action==='append'
+ const keys=['history','backlog','reconcile'].includes(body.action)?['investigation_id']:body.action==='append'
   ?['investigation_id','workspace_version_id','request_id','predecessor_id','assessment']:null
  if(!keys||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k))||!uuid(input.investigation_id))return false
- if(body.action==='history')return true
+ if(['history','backlog','reconcile'].includes(body.action))return true
  return uuid(input.workspace_version_id)&&uuid(input.request_id)&&(input.predecessor_id===null||uuid(input.predecessor_id))
   &&validateHypothesisAssessment(input.assessment).valid&&input.assessment.review_state==='unreviewed'
   &&input.assessment.question_id===input.investigation_id&&input.assessment.predecessor_id===input.predecessor_id
@@ -52,7 +52,7 @@ export function createHypothesisHandler({authenticate,store,sourceProject,allowe
    const user=await authenticate(authorization)
    if(!user||!uuid(user.id)||user.is_anonymous===true)return reply(401,{error:{code:'authentication_required'}})
    const i=body.input,scope={verifiedUserId:user.id,investigationId:i.investigation_id}
-   const data=body.action==='history'?await store.boundHistory(scope):await store.appendBound({...scope,
+   const data=body.action==='history'?await store.boundHistory(scope):body.action==='backlog'?await store.backlog(scope):body.action==='reconcile'?await store.reconcile(scope):await store.appendBound({...scope,
     workspaceVersionId:i.workspace_version_id,sourceProject,requestId:i.request_id,predecessorId:i.predecessor_id,assessment:i.assessment})
    return reply(200,{data})
   }catch(e){

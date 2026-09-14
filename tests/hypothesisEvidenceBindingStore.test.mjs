@@ -4,6 +4,7 @@ import {readFile,readdir} from 'node:fs/promises'
 import {randomUUID,createHash} from 'node:crypto'
 import {PGlite} from '@electric-sql/pglite'
 import {hypothesisFixture} from './hypothesisAssessmentFixture.mjs'
+import {createHypothesisAssessmentClient} from '../src/lib/hypothesisAssessmentClient.js'
 import {createHypothesisHandler} from '../supabase/qualification/hypothesis-assessments/handler.mjs'
 import {createHypothesisStore} from '../supabase/qualification/hypothesis-assessments/store.mjs'
 import {bindHypothesisEvidence} from '../supabase/qualification/hypothesis-assessments/evidenceBinding.mjs'
@@ -176,6 +177,22 @@ test('hypothesis binding uses real workspace tables and existing operation-check
   await db.exec('set role mip_hypothesis_gateway')
   await assert.rejects(db.query('insert into mip_hypothesis.reassessment_causes default values'),/permission denied/)
   await assert.rejects(db.query('select mip_hypothesis.discover_reassessment_causes($1)',[iid]),/permission denied/)
+  await db.exec('reset role')
+ })
+ await t.test('reassessment client reaches the authenticated handler and scoped durable store',async()=>{
+  const handler=createHypothesisHandler({authenticate:async()=>({id:user,is_anonymous:false}),store:boundStore,
+   sourceProject:base.source_project,allowedOrigins:['https://example.org']})
+  const client=createHypothesisAssessmentClient(async(action,input)=>{
+   const response=await handler(new Request('https://example.org/hypothesis',{method:'POST',headers:{
+    authorization:'Bearer synthetic-test-only','content-type':'application/json',origin:'https://example.org'},
+    body:JSON.stringify({action,input})}))
+   return response.json()
+  })
+  await db.exec('set role mip_hypothesis_gateway')
+  const before=await client.backlog(iid),after=await client.reconcile(iid)
+  assert.equal(before.error,null);assert.equal(after.error,null)
+  assert.deepEqual(after.data.causes,before.data.causes)
+  assert.equal(after.data.completed_reassessment,false)
   await db.exec('reset role')
  })
  await t.test('new permission revision cannot automatically restore an old assessment display',async()=>{

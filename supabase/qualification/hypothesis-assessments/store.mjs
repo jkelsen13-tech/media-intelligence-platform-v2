@@ -26,6 +26,14 @@ export function createHypothesisStore(query) {
    const result=await query('select mip_hypothesis.read_bound_history($1::uuid,$2::uuid) as value',[verifiedUserId,investigationId])
    return result.rows[0].value
   },
+  async backlog({verifiedUserId,investigationId}) {
+   const result=await query('select mip_hypothesis.reassessment_backlog($1::uuid,$2::uuid) as value',[verifiedUserId,investigationId])
+   return result.rows[0].value
+  },
+  async reconcile({verifiedUserId,investigationId}) {
+   const result=await query('select mip_hypothesis.reconcile_reassessment_causes($1::uuid,$2::uuid) as value',[verifiedUserId,investigationId])
+   return result.rows[0].value
+  },
   async history({verifiedUserId,investigationId}) {
    const result=await query('select mip_hypothesis.read_history($1::uuid,$2::uuid) as value',[verifiedUserId,investigationId])
    return result.rows[0].value
