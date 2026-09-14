@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "recovery_request_id": "pr159-220be5e-recovery-1",
+  "request_id": "pr159-220be5e-independent-1",
+  "candidate_commit": "220be5e69014316232c5c9ee85e5501b8f734c42",
+  "packet_sha256": "18bb46f0581df30fb59d089e31c75ebf0a83c30ecd0d35bc33e9df10e285aded",
+  "agent_id": "bc-220be5e6-9014-4162-b2c5-c9ee85e5501b",
+  "original_run_id": "run-8443bfee-8ced-4ece-abdb-e4f54510d179",
+  "recovery_run_id": "run-818106aa-f504-4324-a230-926b9d7277d5",
+  "provider_status": "FINISHED",
+  "reviewer_outcome_verbatim": "PASS",
+  "outcome_consistency_resolved": true,
+  "findings_count": 0,
+  "blockers_count": 0,
+  "coverage_count": 6,
+  "prior_observations_count": 2,
+  "controller_acceptance": "BLOCKED",
+  "controller_reason": "Required coverage evidence_refs/explanation fields replaced by criteria/evidence in all six rows; original evidence_ref strings also reformatted rather than exact retained. Controller does not manufacture replacement reviewer fields.",
+  "schema_issues": [
+    {
+      "row": 1,
+      "missing_required_fields": [
+        "evidence_refs",
+        "explanation"
+      ],
+      "actual_fields": [
+        "id",
+        "requirement",
+        "status",
+        "criteria",
+        "evidence"
+      ]
+    },
+    {
+      "row": 2,
+      "missing_required_fields": [
+        "evidence_refs",
+        "explanation"
+      ],
+      "actual_fields": [
+        "id",
+        "requirement",
+        "status",
+        "criteria",
+        "evidence"
+      ]
+    },
+    {
+      "row": 3,
+      "missing_required_fields": [
+        "evidence_refs",
+        "explanation"
+      ],
+      "actual_fields": [
+        "id",
+        "requirement",
+        "status",
+        "criteria",
+        "evidence"
+      ]
+    },
+    {
+      "row": 4,
+      "missing_required_fields": [
+        "evidence_refs",
+        "explanation"
+      ],
+      "actual_fields": [
+        "id",
+        "requirement",
+        "status",
+        "criteria",
+        "evidence"
+      ]
+    },
+    {
+      "row": 5,
+      "missing_required_fields": [
+        "evidence_refs",
+        "explanation"
+      ],
+      "actual_fields": [
+        "id",
+        "requirement",
+        "status",
+        "criteria",
+        "evidence"
+      ]
+    },
+    {
+      "row": 6,
+      "missing_required_fields": [
+        "evidence_refs",
+        "explanation"
+      ],
+      "actual_fields": [
+        "id",
+        "requirement",
+        "status",
+        "criteria",
+        "evidence"
+      ]
+    }
+  ],
+  "prior_observation_preservation": [
+    {
+      "id": "browser-pass-json-omits-new-reconsideration-denial-matrix",
+      "description_exact": true,
+      "counterexample_exact": true,
+      "remediation_exact": true,
+      "evidence_refs_exact": false
+    },
+    {
+      "id": "some-denial-combinatorics-rely-on-shared-inspect-guards-not-dedicated-cases",
+      "description_exact": true,
+      "counterexample_exact": true,
+      "remediation_exact": true,
+      "evidence_refs_exact": false
+    }
+  ],
+  "accepted_review_outcome": null,
+  "verbatim_result_commit": "51d5d726da4686dcdba04c1fdd0466b522bdc7da",
+  "verbatim_result_path": "verifier/independent-pr159/recovery-1-result.txt",
+  "extracted_json_commit": "155f31bddd9274a13fba7b52f817b67ca022b797",
+  "extracted_json_path": "verifier/independent-pr159/recovery-1-result.json",
+  "extraction": "Only outer ```json and ``` fence removed; all JSON content unchanged.",
+  "provider_commit": "adfd9466e0edeada4ad07306ac44e49c4db4266f",
+  "hashes": [
+    {
+      "kind": "raw",
+      "bytes": 16944,
+      "sha256": "aab2b16804fca1c653f39550f5e9cb57b8ecfdf0980452a4b42633ff2f985b68"
+    },
+    {
+      "kind": "json",
+      "bytes": 16932,
+      "sha256": "21e1ed35072dcd83523a8ddca1f0f261b601f4ab16c8072e7a2977aa100e39da"
+    }
+  ],
+  "exact_github_readback_matches_provider_result": true,
+  "extracted_json_exact_readback": true,
+  "original_result_preserved": "d5d993d9c36d49b8d9e0655fd83cd0eba11cdae2",
+  "evidence_class": "artifact_inspection",
+  "reviewer_executed_tests": false,
+  "disposition": "Deliver full reconciliation and precise remaining schema blocker. No further recovery run authorized.",
+  "approve": false,
+  "merge": false,
+  "production_authority": false,
+  "local_files_created": false
+}
