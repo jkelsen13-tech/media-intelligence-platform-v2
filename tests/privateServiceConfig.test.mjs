@@ -68,3 +68,16 @@ test('approval uses own data entries, not inherited policy fields, sparse slots 
   assert.deepEqual(resolvePrivateServiceConfig(env,{hypothesisEndpoint:approved}),
     {hypothesisEndpoint:hypothesis,privateMarketsEndpoint:null})
 })
+
+test('configuration boot does not require Object.hasOwn on declared older browser targets', () => {
+  const original = Object.getOwnPropertyDescriptor(Object, 'hasOwn')
+  let result
+  try {
+    Object.defineProperty(Object, 'hasOwn', {configurable:true,writable:true,value:undefined})
+    result = resolvePrivateServiceConfig({VITE_HYPOTHESIS_ENDPOINT:hypothesis,VITE_PRIVATE_MARKETS_ENDPOINT:markets})
+  } finally {
+    if (original) Object.defineProperty(Object, 'hasOwn', original)
+    else delete Object.hasOwn
+  }
+  assert.deepEqual(result,closed)
+})

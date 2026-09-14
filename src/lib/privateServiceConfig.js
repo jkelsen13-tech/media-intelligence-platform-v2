@@ -6,7 +6,7 @@ import { V2_SUPABASE_URL } from './supabaseOrigin.js'
 function ownData(object, key) {
   if (object === null || typeof object !== 'object') return undefined
   const descriptor = Object.getOwnPropertyDescriptor(object, key)
-  return descriptor && Object.hasOwn(descriptor, 'value') ? descriptor.value : undefined
+  return descriptor && Object.getOwnPropertyDescriptor(descriptor, 'value') ? descriptor.value : undefined
 }
 function explicitlyApproved(raw, approved) {
   if (typeof raw !== 'string' || !Array.isArray(approved)) return false
