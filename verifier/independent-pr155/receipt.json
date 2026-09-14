@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "request_id": "pr155-c6dd9ed-independent-1",
+  "candidate_commit": "c6dd9ed689f51d90c54f9319a9ea3fa92f389fbd",
+  "base_commit": "4b111348ec9ce2dda0ea71fef26c6497dd990d64",
+  "packet_sha256": "7b75ec730943ef2ec2c1ac2a3924e667024cb40e0da8e02d349949513fb087a5",
+  "agent_id": "bc-c6dd9ed6-89f5-4d90-854f-9319a9ea3fa9",
+  "run_id": "run-7002b40a-7a00-4dfc-8485-cac80629a76c",
+  "provider_status": "FINISHED",
+  "outcome": "FAIL",
+  "result_commit": "18b6d63285821d816ae26d5d184b068fd5aabb5e",
+  "result_path": "verifier/independent-pr155/result.json",
+  "result_sha256": "1e00c34cfe96290372628c381c522b11a0452f1ebea532297ac116a1e3231766",
+  "result_bytes": 19716,
+  "exact_github_readback_matches_provider_result": true,
+  "provider_envelope_commit": "b050517025b7c1a7ab01563518a0b4822bd938cb",
+  "controller_checks": {
+    "request_candidate_packet_bindings": true,
+    "coverage_count": 7,
+    "findings_count": 6,
+    "blockers_count": 0
+  },
+  "reviewer_evidence_class": "artifact_inspection",
+  "reviewer_executed_tests": false,
+  "disposition": "Engineering triage and remediation on a new candidate; preserve this FAIL and frozen request.",
+  "implementation_task": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "approve": false,
+  "merge": false,
+  "production_authority": false,
+  "local_files_created": false
+}
