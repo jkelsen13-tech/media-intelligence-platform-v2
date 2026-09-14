@@ -18,7 +18,9 @@ export function raw(database,sql){
     const code=err.match(/ERROR:\s+(?:[0-9A-Z]{5}:\s+)?(mip_[a-z_]+)/)?.[1]
     const object=err.match(/permission denied for (?:table|schema|function) ([a-z_0-9]+)/)?.[1]
     const contexts=[...err.matchAll(/(?:PL\/pgSQL|SQL) function ([a-z_0-9.]+)/g)].map(x=>x[1]).filter(x=>/^(mip_|comparison_)/.test(x)).slice(0,5).join('_').replaceAll('.','_')
-    reject(Error((code??'mip_database_denied_'+state+(object?'_'+object:''))+(contexts?'_via_'+contexts:'')))
+    const failure=Error((code??'mip_database_denied_'+state+(object?'_'+object:''))+(contexts?'_via_'+contexts:''))
+    failure.code=state // Preserve only PostgreSQL SQLSTATE for the trusted handler; no query/payload text.
+    reject(failure)
    }
    else resolve(out.trim())
   })

@@ -1,6 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
+import {createHypothesisHandler} from '../../supabase/qualification/hypothesis-assessments/handler.mjs'
+import {createHypothesisStore} from '../../supabase/qualification/hypothesis-assessments/store.mjs'
+import {createHypothesisAssessmentClient,hypothesisHistoryView} from '../../src/lib/hypothesisAssessmentClient.js'
 import {setup,hold,blocked,q,raw,workerRole} from './fixture.mjs'
 import {isolatedWorker} from './isolatedContainer.mjs'
 import {syntheticEvaluation} from './syntheticMethod.mjs'
@@ -41,6 +44,74 @@ async function childRun(f,v,{key,crash}={}) {
 }
 test('isolated hypothesis generation authority, retained computation and restart package',async t=>{
  const f=await setup(t)
+ await t.test('configured synthetic client-handler-store-worker-review path uses native gateway transactions',async()=>{
+  const v=await f.investigation()
+  let queries=0,token='synthetic-owner',dropReview=false
+  const query=async(sql,values)=>{
+   // SQL comes exclusively from createHypothesisStore, never request JSON.
+   assert.match(sql,/^select mip_hypothesis\.[a-z_]+\(/)
+   queries++
+   const result=await raw(f.db,'set session authorization mip_hypothesis_gateway;prepare mip_transport as '+sql+
+    ';execute mip_transport('+values.map(q).join(',')+');')
+   return {rows:[{value:JSON.parse(result)}]}
+  }
+  const store=createHypothesisStore(query)
+  // Explicit synthetic Auth boundary, not a provider JWT/production identity qualification.
+  const authenticate=async authorization=>authorization==='Bearer synthetic-owner'?{id:v.user,is_anonymous:false}:null
+  const handler=createHypothesisHandler({authenticate,store,sourceProject:v.source,
+   allowedOrigins:['https://mip-synthetic.invalid'],generationTarget:{runtimeId:v.runtime,methodRevision:v.method}})
+  const send=async(action,input,{origin='https://mip-synthetic.invalid'}={})=>{
+   const response=await handler(new Request('https://mip-synthetic.invalid/hypotheses',{method:'POST',
+    headers:{authorization:'Bearer '+token,origin,'content-type':'application/json'},
+    body:JSON.stringify({action,input})}))
+   assert.equal(response.headers.get('cache-control'),'private, no-store')
+   const result=await response.json()
+   if(dropReview&&action==='acknowledge_review'&&response.ok){dropReview=false;throw Error('synthetic_lost_acknowledgement')}
+   return result
+  }
+  const client=createHypothesisAssessmentClient(send)
+  let before=queries
+  token='synthetic-untrusted'
+  assert.equal((await client.history(v.iid)).error.code,'authentication_required')
+  assert.equal(queries,before)
+  token='synthetic-owner'
+  assert.equal((await send('history',{investigation_id:v.iid,user_id:v.user})).error.code,'invalid_request')
+  assert.equal((await send('history',{investigation_id:v.iid},{origin:'https://other.invalid'})).error.code,'origin_denied')
+  assert.equal(queries,before)
+  const empty=await client.history(v.iid);assert.deepEqual(empty.data.entries,[])
+  assert.equal((await client.authoringContext(v.iid,v.vid)).error,null)
+  const span=await client.authoringSpan({investigation_id:v.iid,workspace_version_id:v.vid,
+   input_position:v.entry.position,source_field:'summary',start:2,end:5})
+  assert.equal(span.error,null)
+  const input={investigation_id:v.iid,workspace_version_id:v.vid,request_id:randomUUID(),spec:v.spec}
+  const capture=await client.captureGeneration(input);assert.equal(capture.error,null)
+  assert.deepEqual((await client.captureGeneration(input)).data,capture.data)
+  assert.equal((await client.generationBacklog(v.iid)).data.entries.length,1)
+  assert.equal((await runDurableHypothesisWorker(options(f,v))).state,'completed')
+  assert.equal(await counts(f,v),'1:1:1')
+  const history=(await client.history(v.iid)).data,backlog=(await client.backlog(v.iid)).data
+  assert.ok(hypothesisHistoryView(history,backlog,v.iid))
+  const saved=history.entries[0]
+  assert.equal(saved.assessment.review_state,'unreviewed')
+  const ack={investigation_id:v.iid,request_id:randomUUID(),revision_id:saved.revision_id,previous_receipt_id:null}
+  dropReview=true
+  assert.equal((await client.acknowledgeReview(ack)).error.code,'request_failed')
+  const receipt=await client.acknowledgeReview(ack);assert.equal(receipt.error,null)
+  const reviews=(await client.reviewHistory(v.iid)).data
+  assert.equal(reviews.entries.length,1)
+  assert.deepEqual(reviews.entries[0].receipt,receipt.data)
+  assert.equal(receipt.data.is_approval,false);assert.equal(receipt.data.publication_allowed,false)
+  assert.deepEqual((await client.history(v.iid)).data.entries[0].assessment,saved.assessment)
+  assert.equal((await client.history(randomUUID())).error.code,'access_denied')
+  await f.admin(v.revokeSql)
+  const withheld=(await client.history(v.iid)).data.entries[0]
+  assert.equal(withheld.status,'withheld');assert.equal(Object.hasOwn(withheld,'assessment'),false)
+  assert.equal((await client.acknowledgeReview(ack)).error.code,'access_denied')
+  assert.equal((await client.reviewHistory(v.iid)).data.entries[0].target_status,'withheld')
+  await v.revokeAccess()
+  assert.equal((await client.reviewHistory(v.iid)).error.code,'access_denied')
+  assert.equal(await counts(f,v),'1:1:1')
+ })
  await t.test('atomic real retained-input capture; no caller source body or input hash accepted',async()=>{
   const v=await f.investigation(),request=randomUUID(),g=await v.captureGeneration({request})
   const replay=await v.captureGeneration({request})
