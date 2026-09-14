@@ -13,6 +13,7 @@ alter table mip_temporal.source_incarnations force row level security;
 create policy registry on mip_temporal.source_incarnations to mip_temporal_registry_owner using(true) with check(true);
 reset role;
 -- Only the existing NOLOGIN registry owner can inspect this control-data function.
+revoke execute on function pg_catalog.pg_control_system() from public,anon,authenticated,service_role,mip_temporal_recorder,mip_temporal_ack_gateway,mip_comparison_worker_v1;
 grant execute on function pg_catalog.pg_control_system() to mip_temporal_registry_owner;
 set role mip_temporal_registry_owner;
 create function mip_temporal.require_incarnation(p_session uuid,p_binding uuid,p_expected uuid) returns void
