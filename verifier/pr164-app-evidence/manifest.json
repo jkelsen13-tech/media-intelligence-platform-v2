@@ -1,0 +1,265 @@
+{
+  "schema": "mip_pr164_synthetic_app_evidence_v1",
+  "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385",
+  "candidate_tree": "35a38143739e8d987e37c50383b7f432b2c13160",
+  "base_sha": "220be5e69014316232c5c9ee85e5501b8f734c42",
+  "pull_request": 164,
+  "test_merge_sha": "06056413ee4301701b58e577e8cd14b34a30fea0",
+  "test_merge_tree_matches_candidate": true,
+  "independent_review": "NOT_REQUESTED_BY_IMPLEMENTER; parent coordinates separate fresh Cursor gate",
+  "production_activation": false,
+  "tests": {
+    "golden": {
+      "run": 34838579263,
+      "job_node22": 103957999640,
+      "job_node24": 103957999939,
+      "per_job": {
+        "tests": 1918,
+        "pass": 1918,
+        "fail": 0,
+        "skipped": 0,
+        "build": "success"
+      },
+      "named_composition_tests": [
+        "normal App routes configured synthetic history through workspace; current denial clears private bundle",
+        "normal App ignores superseded success and logout clears current private history",
+        "normal App ignores superseded denial and logout clears current private history"
+      ]
+    },
+    "browser": {
+      "run": 34838583455,
+      "job": 103958011523,
+      "engines": [
+        "chromium",
+        "webkit"
+      ],
+      "widths": [
+        1280,
+        768,
+        390,
+        320
+      ],
+      "external_page_requests": 0,
+      "actual_private_composition": true,
+      "public_views_data_auth": "synthetic isolation",
+      "brand_bitmap": "excluded (reserved synthetic204)",
+      "system_fonts": true,
+      "assertions": [
+        "default endpoint closed",
+        "configured history visible",
+        "canonical current access denial removes history/private view",
+        "logout cleared",
+        "longest reason no overflow with full selected reason adjacent",
+        "native keyboard selection and44px controls",
+        "original preexisting browser checks retained"
+      ]
+    }
+  },
+  "original_failure": {
+    "candidate_sha": "86fe4d95e1393b99e4e8fbb23d3845ca4c2a8ad4",
+    "run": 34838245602,
+    "job": 103956942805,
+    "viewport_width": 320,
+    "history_client_width": 266,
+    "history_scroll_width": 293,
+    "select_width": 278,
+    "form_width": 240,
+    "log": "original-overflow.log",
+    "screenshot": "original-overflow-chromium320.jpg",
+    "note": "Original diagnostic JSON width overwritten by panel width; screenshot is320px; final harness distinguishes viewportWidth."
+  },
+  "evidence_files": [
+    "original-overflow.log",
+    "original-overflow-chromium320.jpg",
+    "browser-success.log",
+    "chromium390-history.jpg",
+    "chromium390-denial.jpg",
+    "webkit390-history.jpg",
+    "webkit390-denial.jpg",
+    "golden-node22.log",
+    "golden-node24.log"
+  ],
+  "dependency_index": [
+    {
+      "path": "src/App.jsx",
+      "git_blob_sha": "2d9349da75565d9b487871b95580e212c2bf89fc",
+      "size_bytes": 80359,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/components/PrivateInvestigationWorkspace.jsx",
+      "git_blob_sha": "69a4eac8ce57e27dbedbd2e50e9d424babeaa3e6",
+      "size_bytes": 85969,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/components/InvestigationWorkspace.jsx",
+      "git_blob_sha": "e545a9e33c269742e179392c3fcb427949ed2f73",
+      "size_bytes": 14950,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/components/HypothesisAssessmentHistory.jsx",
+      "git_blob_sha": "cec5350d89e62a930a147c74c22a77f73122e6de",
+      "size_bytes": 9826,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/components/HypothesisReassessmentRequest.jsx",
+      "git_blob_sha": "64cb6fc1fdf8e200bdca7ac92761c9e04bda3fc8",
+      "size_bytes": 5963,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/components/HypothesisReviewAcknowledgement.jsx",
+      "git_blob_sha": "eb97e98fe66e1ae7e52d17396d19f1ab5376a74b",
+      "size_bytes": 5600,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/components/HypothesisAssessmentPanel.jsx",
+      "git_blob_sha": "6c6f90fe33d8b74a1345f22fe496d24e8b3efcd1",
+      "size_bytes": 5131,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/lib/useHypothesisSessionClient.js",
+      "git_blob_sha": "9c7d6712d90d71c9ee171b1969db9fb73551c845",
+      "size_bytes": 2200,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/lib/hypothesisHttpTransport.js",
+      "git_blob_sha": "348b620705286ec0645dc9615ac2a5d7b1fec7c4",
+      "size_bytes": 4759,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/lib/hypothesisAssessmentClient.js",
+      "git_blob_sha": "4751c87c6b7ab5e54d4a22ba7080b6a93945a549",
+      "size_bytes": 5629,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/lib/usePrivateInvestigationWorkspace.js",
+      "git_blob_sha": "b1302965cd0ca044780b32d942e9cbae00cfa30a",
+      "size_bytes": 53939,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/lib/investigationWorkspaceSession.js",
+      "git_blob_sha": "0533629ba09334b05803bb30cee22b94c643f133",
+      "size_bytes": 22172,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/lib/investigationWorkspaceClient.js",
+      "git_blob_sha": "dabbd4ab7ac88472ec069f1d5d63bdad31fab604",
+      "size_bytes": 3694,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/lib/investigationWorkspaceFixtures.js",
+      "git_blob_sha": "f8a10d0bca0dbe991e02b3de55d392c330fc77f9",
+      "size_bytes": 59173,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/styles/investigation-workspace-panels.css",
+      "git_blob_sha": "894fb2d3e59c7ed6095e9a7b5f56015dd7acccf3",
+      "size_bytes": 21462,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/styles/workspace.css",
+      "git_blob_sha": "533386c35e0c2fa64a1180a1b2086dcfcd67c038",
+      "size_bytes": 24011,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/index.css",
+      "git_blob_sha": "8c5f1aa682794c0dc02f4df33af79e57da46e14c",
+      "size_bytes": 77294,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "src/styles/tokens.css",
+      "git_blob_sha": "33b92134644fadd3f39dfffefad9bb963d7032b3",
+      "size_bytes": 6460,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "tests/appHypothesisComposition.test.mjs",
+      "git_blob_sha": "57e3a6e4394cdc8e6361343b86f5be4ca6d13ad7",
+      "size_bytes": 6698,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "tests/hypothesisAssessmentHistory.test.mjs",
+      "git_blob_sha": "ccd55cd165a484191c74f296720ea788bc3b1de3",
+      "size_bytes": 18167,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "tests/hypothesisAssessmentFixture.mjs",
+      "git_blob_sha": "da57f4423665ac422a28ec500b939440e782387e",
+      "size_bytes": 2142,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "tests/hypothesisComparisonFixture.mjs",
+      "git_blob_sha": "fe2e69d5fde1f1df3c7b40a255660c0a2cb5314a",
+      "size_bytes": 2011,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "verifier/hypothesis-browser/appIsolation.mjs",
+      "git_blob_sha": "7c03ab5035a2c27fb672b8584ea3d9ecf902e485",
+      "size_bytes": 1360,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "verifier/hypothesis-browser/fixture.jsx",
+      "git_blob_sha": "81ccc5a137c16b6b3ade82da4a318e6f09ce047d",
+      "size_bytes": 8383,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "verifier/hypothesis-browser/run.mjs",
+      "git_blob_sha": "a7b031058ebe70751837210cb89884b6797dd1ac",
+      "size_bytes": 30381,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": ".github/workflows/hypothesis-browser.yml",
+      "git_blob_sha": "026b0248717e9f2d2f05ae34366d6cfe566f3a73",
+      "size_bytes": 1400,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": ".github/workflows/golden.yml",
+      "git_blob_sha": "d94e68d2dd486943e3614228b8c6a0ea9da3006b",
+      "size_bytes": 696,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "package.json",
+      "git_blob_sha": "1bba418b9204f69df7ade003d9d3e19679a5434f",
+      "size_bytes": 1329,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    },
+    {
+      "path": "package-lock.json",
+      "git_blob_sha": "b5d44ec6e0a21f931cb2d43884010025ee89889c",
+      "size_bytes": 118411,
+      "candidate_sha": "50cb0bc0f3883c1454fa6489b249bcfc51787385"
+    }
+  ],
+  "test_graph": "npm test enumerates all tests/**/*.test.mjs; composition test imports actual App bundled via esbuild with syntheticAppIsolation; browser workflow npm ci then existing pinned Playwright chromium/webkit, run.mjs bundles actual fixture/App and loads actual CSS. No live servers/credentials.",
+  "limitations": [
+    "Not an independent audit or permission to approve,merge,deploy,activate.",
+    "No production endpoints/credentials or live backend authorization evidence.",
+    "Public views/data/auth, logo and font delivery are excluded; not full visual-fidelity acceptance.",
+    "No complete Markets frontend integration or broader backend qualification claimed."
+  ]
+}
