@@ -15,6 +15,8 @@ export async function savedBoundaryPrefixCases(t,f,configured,relations){
   const {b,revisions,options,last}=await prepared(t),before=await b.confirmed()
   const result=await verifyRetainedBoundaryPrefix(options)
   assert.equal(result.covered_through,last.end_lsn)
+  assert.ok(b.capturedIds.length>0,'native exported bootstrap must contain pre-existing revisions')
+  for(const id of b.capturedIds)assert.ok(result.revision_ids.includes(id),'bootstrap member absent from verified prefix')
   for(const id of revisions)assert.ok(result.revision_ids.includes(id))
   assert.equal(result.proof_integrity_verified,true)
   for(const key of ['source_authority_qualified','user_history_qualified','historical_time_qualified'])assert.equal(result[key],false)
