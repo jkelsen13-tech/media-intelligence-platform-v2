@@ -167,10 +167,14 @@ export async function exactCitationCases(t,f,context){
    "update mip_cas.access set expires_at=clock_timestamp()-interval '1 second' where investigation="+q(i),
    "update mip_cas.source_permissions set expires_at=clock_timestamp()-interval '1 second' where source_version="+q(pp.source_version),
    "update mip_cas.source_permissions set expires_at=clock_timestamp()-interval '1 second' where source_version="+q(fp.source_version),
-   "update mip_identity.operation_evidence_heads set active=false where scope->>'source_version'="+q(e.material_version)+" and scope->>'domain'='privacy'",
-   "delete from evidence_pipeline.investigation_memberships where investigation_id="+q(i)+" and user_id="+q(x.identity.user)
+   "update mip_identity.operation_evidence_heads set active=false where scope->>'source_version'="+q(e.material_version)+" and scope->>'domain'='privacy'"
   ]
   for(const fault of faults)await assert.rejects(()=>f.admin('begin;'+fault+';set session authorization '+reader+';select mip_citation.read('+[i,revision,eid].map(q).join(',')+');rollback'),/mip_cas_denied|mip_cas_source_rights_unverified|hypothesis.*read.*denied|citation_assessment_denied/)
+  // Membership is retained for audit/review FKs; revoke through the existing public access API.
+  const revoke="select public.mip_investigation_workspace_v1('set_access',"+q({investigation_id:i,user_id:x.identity.user,access_role:'revoked',reason:'Synthetic rollback-only citation access probe.'})+"::jsonb)"
+  await assert.rejects(()=>f.admin('begin;'+revoke+';set session authorization '+reader+';select mip_citation.read('+[i,revision,eid].map(q).join(',')+');rollback'),error=>
+   error.code==='42501'&&error.message==='mip_database_denied_42501_via_mip_hypothesis_read_selected_bound_history_mip_citation_checked_evidence_mip_citation_derive_mip_citation_read')
+  assert.equal(await f.admin('select count(*) from evidence_pipeline.investigation_memberships where investigation_id='+q(i)+' and user_id='+q(x.identity.user)),'1')
   assert.equal((await adapter.read(revision,eid)).passage,result.passage)
  })
  await t.test('cold/deep parent or field must rehydrate exact versions; indexes never substitute',async()=>{
