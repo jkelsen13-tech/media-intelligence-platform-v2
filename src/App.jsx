@@ -213,6 +213,7 @@ export default function App({
   investigationEvidenceReviewsClient = null,
   authSessionOverride = null,
   hypothesisEndpoint = null,
+  privateMarketsEndpoint = null,
   privateInvestigationPreview = null,
 } = {}) {
   const [graph, setGraph] = useState(null)
@@ -1877,6 +1878,8 @@ export default function App({
         {view === PRIVATE_INVESTIGATION_VIEW && (
           <PrivateInvestigationWorkspace
             workspace={privateWorkspace}
+            privateMarketsEndpoint={privateMarketsEndpoint}
+            privateMarketsAuth={auth}
             accountUiAvailable={accountUi}
             onSignIn={() => setAccountOpen(true)}
             publicNode={publicInvestigationNode}

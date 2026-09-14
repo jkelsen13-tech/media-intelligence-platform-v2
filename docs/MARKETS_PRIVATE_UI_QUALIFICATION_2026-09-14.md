@@ -1,0 +1,13 @@
+# Contextual private Markets interface qualification
+
+Based on frozen PR1659432b88dd14c1e4f730ae910f9d2ee844b37fe53. This is a separate opt-in contextual pane inside the assigned private investigation workspace, not a public Markets tab or complete initial-release MK-1/MK-3. The endpoint remains null by default and no request starts until explicit read. No deployed handler, provider, production rights or new credential is configured.
+
+The same exact-version asset card renders both event-to-assets and asset-to-events results. Navigation reuses the strict retained path identities under the same investigation/workspace/observation and explicit valid-time filter. A generic saved graph subject is only a query target, never proof it is an event; the reader validates its type. Tickers remain namespaced dated aliases. Every returned path retains all essential typed hops, endpoint versions, candidates/assessments, capture/material hashes, Unicode excerpt spans and separate source publication/capture clocks. The card does not compute confidence, causality or source independence.
+
+Each active read owns a disposable strict client and authenticated HTTPS transport. Auth descriptor, bundle, query, time or view replacement hides old data synchronously and disposes the retired client. Expiry/current authoritative authentication or access denial clears the guarded private workspace; late retired successes/denials cannot repopulate or clear current data. Other sanitized failures clear Markets results without inventing permission conclusions. No private navigation/payload is sent to global Investigation Context, public routes or recent/local storage.
+
+Empty paths cannot produce a standalone asset card or invented directory. Broader context is explicitly unavailable, not proven absent. Source-root lineage, full attribution/rights metadata, historical knowledge-time and publication remain unqualified. No quotes/TradingView/CoinMarketCap are added.
+
+Hosted verification uses actual App/private workspace/client/handler/reader/mapper, with synthetic bearer authentication and typed database rows. It is NOT actual provider authentication, native SQL or real-source qualification. Existing native PR165 coverage is a separate dependency, not replaced by this browser fixture. Unrelated public views/data/auth and static branding/font delivery are isolated. Chromium/WebKit checks are scoped to synthetic private Markets.
+
+PR164's separate hypothesis App wiring/form styling is deliberately NOT included or overwritten. Eventual release integration must reconcile independently reviewed PR164/165/this candidate. No independent acceptance, merge/deployment or Markets completion is claimed here.
