@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "request_id": "pr163-b4db707-independent-1",
+  "candidate_commit": "b4db7071048440ecbc6f9919b0d9ed1e6ce20a93",
+  "base_commit": "eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6",
+  "packet_commit": "67bb51240d9831f14823368d833fb7885efc7bb4",
+  "packet_path": "verifier/independent-pr163/request.json",
+  "packet_sha256": "98436165f3cfdb80ef48fe2af34d890db678d3f6fd5db8c94d217c49c1af7406",
+  "packet_bytes": 1536515,
+  "agent_id": "bc-b4db7071-0484-40ec-bc6f-9919b0d9ed1e",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "completed",
+  "maximum_initial_posts": 1,
+  "scope": "Artifact inspection of PR163 private Markets backend prerequisite only: 7 changed files, 22 primary dependencies, 27 transitive installed fixture SQL files, base worker.test.mjs, native job 103953874477 log, Golden22 job 103953874336 log, Golden24 job 103953874824 metadata, implementation-evidence manifest, and tree proof b72932f631c09fcd907513f323bfdec775fff864. Not Markets/frontend certification, authenticated HTTP/browser qualification, production/public release, or real rights/assets/source-root independence.",
+  "pinned_run_id": "run-c5eefa6a-84b1-4217-9738-7a210e4d12ee",
+  "provider_status": "FINISHED",
+  "reviewer_outcome": "PASS",
+  "controller_acceptance": "PASS",
+  "validation_errors": [],
+  "evidence_class": "artifact_inspection",
+  "result": {
+    "commit": "320be4ebc697bd13fccc03d3ccb516c4c834120d",
+    "path": "verifier/independent-pr163/result.json",
+    "bytes": 19249,
+    "sha256": "6adf25261b98188f7b6f02cc28b75f4558bd400a19fb34d7bc102d61ba0b3497",
+    "exact_provider_result": true
+  },
+  "provider": {
+    "commit": "fb27dbaba92342f6de9f51639d0f93d6c9bf4ccb",
+    "path": "verifier/independent-pr163/result.provider.json"
+  },
+  "verification": [
+    "Exact output schema, seven frozen requirement strings, commit/request/packet bindings; allPASS findings[]blockers[]; four conforming limitations.",
+    "Golden22 named TAP1001-1004 and nine native Markets test names checked against packet.",
+    "Full provider result equals GitHub readback, unchanged."
+  ],
+  "limitations": [
+    {
+      "id": "L1",
+      "description": "Native Markets tests call mip_markets.read_private over direct SQL as mip_hypothesis_gateway with admin-inserted operation_evidence rows; unit tests stub authenticate and query. No authenticated HTTP or browser adapter is in the packet.",
+      "evidence_refs": [
+        "verifier/hypothesis-worker/marketsCases.mjs:const read=async over=>JSON.parse(await f.admin('set session authorization mip_hypothesis_gateway;'+sql(over)))",
+        "tests/marketsPrivateReader.test.mjs:createPrivateMarketsReader({authenticate,sourceProject,query})",
+        "verifier/markets-private-b4-20260914/manifest.json:Native Markets tests invoke trusted SQL gateway directly"
+      ],
+      "rationale": "R3 and R6 require the seam and named tests that exist; R7 forbids treating this fixture as HTTP/browser qualification. The gap is disclosed scope, not missing required backend behavior.",
+      "original_observation": null
+    },
+    {
+      "id": "L2",
+      "description": "Golden24 evidence is job metadata only (test (24) id 103953874824 conclusion success, npm test step success). No Node 24 TAP body is in the packet.",
+      "evidence_refs": [
+        "packet evidence_limits: Complete native/Golden22 logs match actual CI; Golden24 metadata only",
+        "check_jobs_summary run 34837282461 job 103953874824 test (24) success",
+        "golden-node22-job-103953874336.log:ok 1001–ok 1004; # pass 1904"
+      ],
+      "rationale": "The packet’s evidence_limits specify Golden24 metadata only. Required unit names are in the complete Golden22 log; native SQL tests are in the complete native log. This is not an essential missing dependency.",
+      "original_observation": null
+    },
+    {
+      "id": "L3",
+      "description": "schema.sql still has unrestricted public-read policies; 20260905180142 graph_coverage_public still counts all nodes/edges; mip_identity.survivor_context still jsonb_agg entire public.nodes/edges as a non-public definer; service_role is BYPASSRLS with SELECT on nodes. None of those are the native leak-test roles. 001 is labeled isolated qualification, not a production migration. Dynamic SQL/functions remain outside the view inventory.",
+      "evidence_refs": [
+        "supabase/schema.sql:create policy public read nodes/edges for select using (true)",
+        "supabase/migrations/20260905180142_mip_public_surface_publication_gates.sql:published_node_count from public.nodes without private_candidate filter",
+        "supabase/qualification/mip-cutover-authority/007_survivor_release.sql:survivor_context; execute revoked from public,anon,authenticated,service_role",
+        "tests/changeQueueFixture.sql:grant select on public.nodes to service_role",
+        "docs/MARKETS_PRIVATE_RETAINED_QUALIFICATION_2026-09-14.md:Production installation remains BLOCKED; dynamic SQL/functions and production surfaces still require review"
+      ],
+      "rationale": "R4 was scored on the actual native installed grants after the 27 transitive fixture files plus 001/002, where anon/authenticated leak tests passed. Using unapplied production files or privileged definers to claim a public leak, or using the incomplete inventory to claim production safety, would violate R7. Optional observation only.",
+      "original_observation": null
+    },
+    {
+      "id": "L4",
+      "description": "mip_market_path_budget (32 paths) is implemented with LIMIT 33 plus exception but has no dedicated named native test; saturation that is named-tested is the 16-candidate budget. hypothesis-worker.yml path filters omit supabase/qualification/markets-evidence/**; this candidate still ran native CI because verifier/hypothesis-worker/** changed.",
+      "evidence_refs": [
+        "supabase/qualification/markets-evidence/002_authorized_reader.sql:if jsonb_array_length(paths)>=32 then raise exception mip_market_path_budget",
+        "verifier/hypothesis-worker/marketsCases.mjs:high branching observed candidate set fails before recursive discovery",
+        "native-job-103953874477.log:2026-09-14T11:18:52.4485158Z high branching",
+        " .github/workflows/hypothesis-worker.yml:on.pull_request.paths"
+      ],
+      "rationale": "R5’s required fail-closed resource bound is demonstrated at the documented 16-candidate cap; R6’s required named correction/revocation/rollback/lock tests exist and passed. An extra path-budget case and workflow-path completeness are not unmet required rows.",
+      "original_observation": null
+    }
+  ],
+  "no_independent_runtime_execution": true,
+  "no_local_files": true,
+  "retry_authorized": false,
+  "approval_granted": false,
+  "production_authorized": false
+}
