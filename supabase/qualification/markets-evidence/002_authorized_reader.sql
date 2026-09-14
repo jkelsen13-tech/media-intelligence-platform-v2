@@ -86,7 +86,7 @@ begin
    hops:=hops||jsonb_build_array(jsonb_build_object('edge_id',c.typed_edge_id,'edge_version_id',c.edge_version_id,
     'subject_version_id',c.subject_version_id,'object_version_id',c.object_version_id,'candidate_id',c.id,'assessment_id',a->>'id',
     'relationship',c.relationship_kind,'valid_from',c.valid_from,'valid_to',c.valid_to,'uncertainty',a->>'remaining_uncertainty',
-    'capture_id',cap.id,'article_id',cap.article_id,'support',support));
+    'capture_id',cap.id,'article_id',cap.article_id,'captured_at',cap.captured_at,'published_at',cap.payload->'published_at','source_url',cap.payload->'url','capture_payload_hash',cap.content_hash,'support',support));
   end loop;
   if asset is null then raise exception 'mip_market_asset_unavailable';end if;
   paths:=paths||jsonb_build_array(jsonb_build_object('asset_id',path.asset_id,'asset_version_id',asset_version,'asset_kind',asset->>'type','name',asset->>'label',
@@ -94,7 +94,7 @@ begin
  end loop;
  return jsonb_build_object('contract_version','mip_markets_private_qualification_v1','investigation_id',p_investigation,'workspace_version_id',p_version,
  'at',p_at,'paths',paths,'publication_allowed',false,'historical_time_qualified',false,'broader_context',jsonb_build_array(),
- 'coverage','bounded_explicit_typed_paths_only');
+ 'coverage','bounded_explicit_typed_paths_only','source_root_lineage_qualified',false);
 end $$;
 alter function mip_markets.read_private(uuid,uuid,uuid,text,uuid,uuid,timestamptz) owner to mip_hypothesis_owner;
 revoke all on function mip_markets.read_private(uuid,uuid,uuid,text,uuid,uuid,timestamptz) from public,anon,authenticated,service_role;
