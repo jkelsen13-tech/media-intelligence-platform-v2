@@ -61,13 +61,14 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
  const consumeSql='select mip_temporal.consume_boundary_history_permit($1::uuid,$2::uuid) as value'
  const challengeSql='select mip_temporal.boundary_history_challenge($1::uuid) as value'
  const receipt=p=>({schema:'mip_saved_boundary_delivery_receipt_v2',delivery_id:p.permit_id,delivered:true,historical_time_qualified:false,publication_allowed:false})
- async function context(t){
+ async function context(t,{beforeIssue=async()=>{}}={}){
   const x=await prepared(t)
   const identity=JSON.parse(await f.admin("select jsonb_build_object('user',author_id,'iid',investigation_id) from mip_hypothesis.revisions where id="+q(x.revisions[0])))
   const provider=syntheticAuthProvider(identity.user)
   let observedClaim,observedPermit
   const issue=async(session,claim)=>{
    observedClaim=structuredClone(claim)
+   await beforeIssue()
    const p=JSON.parse(await f.admin('set session authorization mip_boundary_proof_issuer;select mip_temporal.issue_boundary_history_permit('+[session,claim].map(q).join(',')+')'))
    observedPermit=p;return p
   }
@@ -289,18 +290,19 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   }
  })
 
- await nativeCase('cooperative material/session expiry rolls back; expired JWT denies before admission',async t=>{
+ await nativeCase('expired session denies and expired material is withheld; admitted cooperative expiry rolls back',async t=>{
   for(const fault of ['material','session','jwt']){
-   const x=await context(t);let restore;let observedSignal;let pid
+   let arm=async()=>{}
+   const x=await context(t,{beforeIssue:()=>arm()});let restore;let expireSql;let observedSignal;let pid;let enteredAt
    if(fault==='material'){
     const revisions=await f.admin("select jsonb_agg(jsonb_build_object('revision',v.revision,'expires_at',v.expires_at)) from mip_identity.operation_evidence_versions v where revision in (select (p->>'revision')::uuid from mip_hypothesis.acceptance_bindings b cross join lateral jsonb_array_elements(b.metadata) e cross join lateral jsonb_array_elements(e->'permissions') p where b.revision_id="+q(x.revisions[0])+")")
     restore="alter table mip_identity.operation_evidence_versions disable trigger immutable;update mip_identity.operation_evidence_versions v set expires_at=r.expires_at from jsonb_to_recordset("+q(JSON.parse(revisions))+"::jsonb) r(revision uuid,expires_at timestamptz) where v.revision=r.revision;alter table mip_identity.operation_evidence_versions enable trigger immutable"
-    await f.admin("alter table mip_identity.operation_evidence_versions disable trigger immutable;update mip_identity.operation_evidence_versions set expires_at=clock_timestamp()+interval '5 seconds' where revision in (select (p->>'revision')::uuid from mip_hypothesis.acceptance_bindings b cross join lateral jsonb_array_elements(b.metadata) e cross join lateral jsonb_array_elements(e->'permissions') p where b.revision_id="+q(x.revisions[0])+");alter table mip_identity.operation_evidence_versions enable trigger immutable")
+    expireSql="alter table mip_identity.operation_evidence_versions disable trigger immutable;update mip_identity.operation_evidence_versions set expires_at=clock_timestamp()+interval 'EXPIRY_INTERVAL' where revision in (select (p->>'revision')::uuid from mip_hypothesis.acceptance_bindings b cross join lateral jsonb_array_elements(b.metadata) e cross join lateral jsonb_array_elements(e->'permissions') p where b.revision_id="+q(x.revisions[0])+");alter table mip_identity.operation_evidence_versions enable trigger immutable"
    }
    if(fault==='session'){
     const original=await f.admin('select expires_at from mip_identity.sessions where session_id='+q(x.b.session()))
     restore='alter table mip_identity.sessions disable trigger user;update mip_identity.sessions set expires_at='+q(original)+' where session_id='+q(x.b.session())+';alter table mip_identity.sessions enable trigger user'
-    await f.admin("alter table mip_identity.sessions disable trigger user;update mip_identity.sessions set expires_at=clock_timestamp()+interval '5 seconds' where session_id="+q(x.b.session())+";alter table mip_identity.sessions enable trigger user")
+    expireSql="alter table mip_identity.sessions disable trigger user;update mip_identity.sessions set expires_at=clock_timestamp()+interval 'EXPIRY_INTERVAL' where session_id="+q(x.b.session())+";alter table mip_identity.sessions enable trigger user"
    }
    if(fault==='jwt'){
     x.request.authorization='Bearer '+x.provider.token({exp:0})
@@ -310,11 +312,28 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
     continue
    }
    try{
-    const start=Date.now()
-    await assert.rejects(()=>x.reader({withTransaction:transaction(f.db,v=>pid=v)})(x.request,async(_,signal)=>{
-     observedSignal=signal;await new Promise(()=>{})
-    }),/mip_boundary_delivery_aborted/)
-    assert.ok(observedSignal?.aborted);assert.ok(Date.now()-start<8000)
+    // Disposable administrator fault is armed after Auth/custody/prefix verification.
+    // Expired session authority denies the envelope; expired material is withheld.
+    // Neither is the admitted delivery-expiry phase.
+    arm=()=>f.admin(expireSql.replace('EXPIRY_INTERVAL','-1 second'))
+    if(fault==='session'){
+     let prematureDelivery=false
+     await assert.rejects(()=>x.reader()(x.request,()=>{prematureDelivery=true}))
+     assert.equal(prematureDelivery,false);assert.equal(x.permit(),undefined)
+    }else{
+     let withheld
+     await x.reader()(x.request,payload=>{withheld=payload.entries.find(e=>e.revision_id===x.revisions[0])})
+     assert.equal(withheld?.status,'withheld');assert.equal(Object.hasOwn(withheld,'assessment'),false)
+    }
+    // Nine seconds remains within the unchanged ten-second maximum lease.
+    arm=()=>f.admin(expireSql.replace('EXPIRY_INTERVAL','9 seconds'))
+    let failure
+    try{await x.reader({withTransaction:transaction(f.db,v=>pid=v)})(x.request,async(_,signal)=>{
+     enteredAt=performance.now();observedSignal=signal;await new Promise(()=>{})
+    })}catch(error){failure=error}
+    assert.ok(enteredAt!==undefined,'delivery callback must enter before testing its expiry')
+    assert.match(failure?.message??'',/^mip_boundary_delivery_aborted$/)
+    assert.ok(observedSignal?.aborted);assert.ok(performance.now()-enteredAt<10000)
     assert.equal(await f.admin('select count(*) from pg_stat_activity where pid='+pid),'0')
    }finally{if(restore)await f.admin(restore)}
   }
