@@ -93,16 +93,19 @@ export async function marketsCases(t,f){
    await assert.rejects(()=>f.admin('insert into evidence_pipeline.evidence_candidates select (jsonb_populate_record(null::evidence_pipeline.evidence_candidates,'+q(changed)+')).*'))
   }
  })
- await t.test('high branching retained candidate set fails before recursive discovery or assessment reads',async()=>{
+ await t.test('high branching observed candidate set fails before recursive discovery or assessment reads',async()=>{
   const row=JSON.parse(await f.admin('select to_jsonb(c) from evidence_pipeline.evidence_candidates c where id='+q(candidates[0].cid)))
-  let inserts='begin;'
-  // Parallel evidence candidates on existing graph identities multiply path combinations.
-  // They are transaction-local and rolled back by the expected fail-closed read.
+  const denseIds=candidates.map(x=>x.cid)
   for(let n=0;n<11;n++){
-   const changed={...row,id:randomUUID(),candidate_key:randomUUID()}
-   inserts+='insert into evidence_pipeline.evidence_candidates select (jsonb_populate_record(null::evidence_pipeline.evidence_candidates,'+q(changed)+')).*;'
+   const changed={...row,id:randomUUID(),candidate_key:randomUUID()};denseIds.push(changed.id)
+   await f.admin('insert into evidence_pipeline.evidence_candidates select (jsonb_populate_record(null::evidence_pipeline.evidence_candidates,'+q(changed)+')).*')
   }
-  await assert.rejects(()=>f.admin(inserts+'set local role mip_hypothesis_gateway;'+sql()),/mip_market_candidate_budget/)
+  // Newly recorded candidates never enter an older frozen workspace observation.
+  assert.equal((await read()).paths.length,2)
+  const denseObservation=await f.pub('mip_investigation_briefings_v1','observe',{observation_id:randomUUID(),candidate_ids:denseIds})
+  const denseVersion=randomUUID()
+  await f.pub('mip_investigation_workspace_v1','put',{investigation_id:original.iid,version_id:denseVersion,previous_version_id:version,observation_id:denseObservation.id,state,change_reason:'Synthetic branching budget.'})
+  await assert.rejects(()=>read({version:denseVersion}),/mip_market_candidate_budget/)
   assert.equal((await read()).paths.length,2)
  })
  await t.test('permission revocation before reader denies; fresh authority revision restores fixture access',async()=>{

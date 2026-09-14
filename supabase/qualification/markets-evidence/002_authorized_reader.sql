@@ -16,7 +16,7 @@ create function mip_markets.read_private(p_user uuid,p_investigation uuid,p_vers
 language plpgsql security definer set search_path='' as $$
 declare binding jsonb;path record;c evidence_pipeline.evidence_candidates;a jsonb;cap evidence_pipeline.article_captures;
  v evidence_pipeline.record_versions;material uuid;input jsonb;input_position text;op text;domain text;checked jsonb;
- asset jsonb;asset_version uuid;asset_companion jsonb;subject_node jsonb;object_node jsonb;companion evidence_pipeline.record_versions;aliases jsonb:='[]';alias_item jsonb;paths jsonb:='[]';hops jsonb;support jsonb;cid uuid;retained_ids uuid[];candidate_ids uuid[];
+ asset jsonb;asset_version uuid;asset_companion jsonb;subject_node jsonb;object_node jsonb;companion evidence_pipeline.record_versions;aliases jsonb:='[]';alias_item jsonb;paths jsonb:='[]';hops jsonb;support jsonb;cid uuid;retained_ids uuid[];candidate_ids uuid[];scoped_ids uuid[];
 begin
  if p_asset is null and p_event is null or p_at is null or not isfinite(p_at) then raise exception 'mip_market_bounded_identity_required';end if;
  perform 1 from mip_cutover_authority.publication_fence where id for share;
@@ -27,9 +27,10 @@ begin
  if (p_asset is not null and not exists(select 1 from evidence_pipeline.record_versions where id=any(retained_ids) and record_kind='graph_node' and record_key=p_asset::text and payload->>'type' in('equity','cryptoasset')))
  or(p_event is not null and not exists(select 1 from evidence_pipeline.record_versions where id=any(retained_ids) and record_kind='graph_node' and record_key=p_event::text and payload->>'type'='event'))
  then raise exception 'mip_market_identity_not_in_workspace';end if;
+ select scope_candidate_ids into strict scoped_ids from evidence_pipeline.investigation_observations where id=(binding->'observation'->>'id')::uuid;
  select coalesce(array_agg(id order by id),'{}') into candidate_ids from(
   select cand.id from evidence_pipeline.evidence_candidates cand
-  where cand.candidate_kind='typed_graph_relationship' and cand.capture_id=any(retained_ids)
+  where cand.id=any(scoped_ids) and cand.candidate_kind='typed_graph_relationship' and cand.capture_id=any(retained_ids)
    and cand.subject_version_id=any(retained_ids) and cand.object_version_id=any(retained_ids) and cand.edge_version_id=any(retained_ids)
    and(cand.identity_version_id is null or cand.identity_version_id=any(retained_ids))
    and cand.valid_from<=p_at and(cand.valid_to is null or p_at<cand.valid_to)
