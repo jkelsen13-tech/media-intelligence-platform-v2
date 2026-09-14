@@ -1,0 +1,566 @@
+﻿2026-09-14T15:59:47.5013313Z Current runner version: '2.337.0'
+2026-09-14T15:59:47.5038406Z ##[group]Runner Image Provisioner
+2026-09-14T15:59:47.5039365Z Hosted Compute Agent
+2026-09-14T15:59:47.5040313Z Version: 20260828.587
+2026-09-14T15:59:47.5041025Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-14T15:59:47.5041865Z Build Date: 2026-08-28T16:44:25Z
+2026-09-14T15:59:47.5042579Z Worker ID: {bf4c06e0-18cd-463a-92a3-e483ffd6cd25}
+2026-09-14T15:59:47.5043391Z Azure Region: northcentralus
+2026-09-14T15:59:47.5044013Z ##[endgroup]
+2026-09-14T15:59:47.5045574Z ##[group]Operating System
+2026-09-14T15:59:47.5046285Z Ubuntu
+2026-09-14T15:59:47.5046812Z 24.04.5
+2026-09-14T15:59:47.5047462Z LTS
+2026-09-14T15:59:47.5047975Z ##[endgroup]
+2026-09-14T15:59:47.5048517Z ##[group]Runner Image
+2026-09-14T15:59:47.5049270Z Image: ubuntu-24.04
+2026-09-14T15:59:47.5050182Z Version: 20260907.300.1
+2026-09-14T15:59:47.5051548Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-14T15:59:47.5053091Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+2026-09-14T15:59:47.5054213Z ##[endgroup]
+2026-09-14T15:59:47.5055290Z ##[group]GITHUB_TOKEN Permissions
+2026-09-14T15:59:47.5057285Z Contents: read
+2026-09-14T15:59:47.5057907Z Metadata: read
+2026-09-14T15:59:47.5058608Z ##[endgroup]
+2026-09-14T15:59:47.5061029Z Secret source: Actions
+2026-09-14T15:59:47.5062153Z Cache mode: write
+2026-09-14T15:59:47.5062879Z Prepare workflow directory
+2026-09-14T15:59:47.5695553Z Prepare all required actions
+2026-09-14T15:59:47.5769717Z Getting action download info
+2026-09-14T15:59:47.7986360Z Download action repository 'actions/checkout@v7.0.1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-09-14T15:59:47.9162078Z Download action repository 'actions/setup-node@v7.0.0' (SHA:820762786026740c76f36085b0efc47a31fe5020)
+2026-09-14T15:59:48.1641832Z Complete job name: worker
+2026-09-14T15:59:48.2162061Z ##[group]Checking docker version
+2026-09-14T15:59:48.2175429Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-09-14T15:59:48.3193859Z '1.48'
+2026-09-14T15:59:48.3210500Z Docker daemon API version: '1.48'
+2026-09-14T15:59:48.3211461Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-09-14T15:59:48.3371946Z '1.48'
+2026-09-14T15:59:48.3383640Z Docker client API version: '1.48'
+2026-09-14T15:59:48.3388888Z ##[endgroup]
+2026-09-14T15:59:48.3392303Z ##[group]Clean up resources from previous jobs
+2026-09-14T15:59:48.3398139Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=6ec4f9"
+2026-09-14T15:59:48.3541240Z ##[command]/usr/bin/docker network prune --force --filter "label=6ec4f9"
+2026-09-14T15:59:48.3676337Z ##[endgroup]
+2026-09-14T15:59:48.3676882Z ##[group]Create local container network
+2026-09-14T15:59:48.3686615Z ##[command]/usr/bin/docker network create --label 6ec4f9 github_network_5ce58533da27480285f6a1782ebca5fc
+2026-09-14T15:59:48.4223616Z 56defb925926a15081f88e3ddf40cfc640ed28e75e12c0aa6abf9a109c8b5b86
+2026-09-14T15:59:48.4244399Z ##[endgroup]
+2026-09-14T15:59:48.4268510Z ##[group]Starting postgres service container
+2026-09-14T15:59:48.4290501Z ##[command]/usr/bin/docker pull postgres:17.6
+2026-09-14T15:59:48.8601154Z 17.6: Pulling from library/postgres
+2026-09-14T15:59:48.9762903Z d7ecded7702a: Pulling fs layer
+2026-09-14T15:59:48.9764492Z d95a46ea6a60: Pulling fs layer
+2026-09-14T15:59:48.9765989Z df684e12be42: Pulling fs layer
+2026-09-14T15:59:48.9767091Z baf316c053aa: Pulling fs layer
+2026-09-14T15:59:48.9767938Z b3ec056f36c4: Pulling fs layer
+2026-09-14T15:59:48.9768924Z f9f6c3699755: Pulling fs layer
+2026-09-14T15:59:48.9770092Z 30854ed26966: Pulling fs layer
+2026-09-14T15:59:48.9771340Z 639bc10553ca: Pulling fs layer
+2026-09-14T15:59:48.9772245Z 5d95d2afb8ab: Pulling fs layer
+2026-09-14T15:59:48.9773147Z 0424836d8a95: Pulling fs layer
+2026-09-14T15:59:48.9773887Z 4b0b164c9bcd: Pulling fs layer
+2026-09-14T15:59:48.9774676Z 36e0cf935aa6: Pulling fs layer
+2026-09-14T15:59:48.9775464Z 36b8b7af114e: Pulling fs layer
+2026-09-14T15:59:48.9776604Z 5df7a8bf57f1: Pulling fs layer
+2026-09-14T15:59:48.9777391Z baf316c053aa: Waiting
+2026-09-14T15:59:48.9778080Z b3ec056f36c4: Waiting
+2026-09-14T15:59:48.9778758Z f9f6c3699755: Waiting
+2026-09-14T15:59:48.9779429Z 30854ed26966: Waiting
+2026-09-14T15:59:48.9780447Z 639bc10553ca: Waiting
+2026-09-14T15:59:48.9781139Z 5d95d2afb8ab: Waiting
+2026-09-14T15:59:48.9781880Z 0424836d8a95: Waiting
+2026-09-14T15:59:48.9782793Z 4b0b164c9bcd: Waiting
+2026-09-14T15:59:48.9783708Z 36e0cf935aa6: Waiting
+2026-09-14T15:59:48.9784793Z 36b8b7af114e: Waiting
+2026-09-14T15:59:48.9785727Z 5df7a8bf57f1: Waiting
+2026-09-14T15:59:49.0646992Z d95a46ea6a60: Download complete
+2026-09-14T15:59:49.1015413Z df684e12be42: Verifying Checksum
+2026-09-14T15:59:49.1024998Z df684e12be42: Download complete
+2026-09-14T15:59:49.1534924Z baf316c053aa: Verifying Checksum
+2026-09-14T15:59:49.1538157Z baf316c053aa: Download complete
+2026-09-14T15:59:49.1756504Z d7ecded7702a: Verifying Checksum
+2026-09-14T15:59:49.1758573Z d7ecded7702a: Download complete
+2026-09-14T15:59:49.2143551Z b3ec056f36c4: Verifying Checksum
+2026-09-14T15:59:49.2145487Z b3ec056f36c4: Download complete
+2026-09-14T15:59:49.2489421Z 30854ed26966: Verifying Checksum
+2026-09-14T15:59:49.2493303Z 30854ed26966: Download complete
+2026-09-14T15:59:49.2524576Z f9f6c3699755: Verifying Checksum
+2026-09-14T15:59:49.2526500Z f9f6c3699755: Download complete
+2026-09-14T15:59:49.2866054Z 639bc10553ca: Verifying Checksum
+2026-09-14T15:59:49.2867982Z 639bc10553ca: Download complete
+2026-09-14T15:59:49.3448210Z 0424836d8a95: Verifying Checksum
+2026-09-14T15:59:49.3451973Z 0424836d8a95: Download complete
+2026-09-14T15:59:49.3692054Z 4b0b164c9bcd: Verifying Checksum
+2026-09-14T15:59:49.3699683Z 4b0b164c9bcd: Download complete
+2026-09-14T15:59:49.4196354Z 36e0cf935aa6: Download complete
+2026-09-14T15:59:49.4652892Z 36b8b7af114e: Download complete
+2026-09-14T15:59:49.4946373Z 5df7a8bf57f1: Verifying Checksum
+2026-09-14T15:59:49.4947737Z 5df7a8bf57f1: Download complete
+2026-09-14T15:59:49.7717761Z 5d95d2afb8ab: Verifying Checksum
+2026-09-14T15:59:49.7718444Z 5d95d2afb8ab: Download complete
+2026-09-14T15:59:50.3278770Z d7ecded7702a: Pull complete
+2026-09-14T15:59:53.0866138Z d95a46ea6a60: Pull complete
+2026-09-14T15:59:53.2655394Z df684e12be42: Pull complete
+2026-09-14T15:59:53.3115314Z baf316c053aa: Pull complete
+2026-09-14T15:59:53.6262281Z b3ec056f36c4: Pull complete
+2026-09-14T15:59:53.7134921Z f9f6c3699755: Pull complete
+2026-09-14T15:59:53.7234109Z 30854ed26966: Pull complete
+2026-09-14T15:59:53.7365771Z 639bc10553ca: Pull complete
+2026-09-14T15:59:56.7898283Z 5d95d2afb8ab: Pull complete
+2026-09-14T15:59:56.8039730Z 0424836d8a95: Pull complete
+2026-09-14T15:59:56.8348047Z 4b0b164c9bcd: Pull complete
+2026-09-14T15:59:56.8442034Z 36e0cf935aa6: Pull complete
+2026-09-14T15:59:56.8541920Z 36b8b7af114e: Pull complete
+2026-09-14T15:59:56.8635678Z 5df7a8bf57f1: Pull complete
+2026-09-14T15:59:56.8674520Z Digest: sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+2026-09-14T15:59:56.8686159Z Status: Downloaded newer image for postgres:17.6
+2026-09-14T15:59:56.8709408Z docker.io/library/postgres:17.6
+2026-09-14T15:59:56.8775725Z ##[command]/usr/bin/docker create --name bd480e12d6c84dcfaf5925424eca9264_postgres176_60a9c8 --label 6ec4f9 --network github_network_5ce58533da27480285f6a1782ebca5fc --network-alias postgres -p 5432:5432 --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10 -e "POSTGRES_PASSWORD=mip-disposable-ci-only" -e GITHUB_ACTIONS=true -e CI=true postgres:17.6
+2026-09-14T15:59:56.9042344Z 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T15:59:56.9065420Z ##[command]/usr/bin/docker start 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T15:59:57.1420785Z 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T15:59:57.1443408Z ##[command]/usr/bin/docker ps --all --filter id=1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-09-14T15:59:57.1592298Z 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604 Up Less than a second (health: starting)
+2026-09-14T15:59:57.1615159Z ##[command]/usr/bin/docker port 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T15:59:57.1767411Z 5432/tcp -> 0.0.0.0:5432
+2026-09-14T15:59:57.1768097Z 5432/tcp -> [::]:5432
+2026-09-14T15:59:57.1817439Z ##[endgroup]
+2026-09-14T15:59:57.1826247Z ##[group]Waiting for all services to be ready
+2026-09-14T15:59:57.1840457Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T15:59:57.2038897Z starting
+2026-09-14T15:59:57.2074002Z postgres service is starting, waiting 2 seconds before checking again.
+2026-09-14T15:59:59.2079406Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T15:59:59.2223226Z starting
+2026-09-14T15:59:59.2237726Z postgres service is starting, waiting 4 seconds before checking again.
+2026-09-14T16:00:03.5751231Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T16:00:03.5882226Z healthy
+2026-09-14T16:00:03.5901402Z postgres service is healthy.
+2026-09-14T16:00:03.5902039Z ##[endgroup]
+2026-09-14T16:00:03.6271926Z ##[group]Run actions/checkout@v7.0.1
+2026-09-14T16:00:03.6272508Z with:
+2026-09-14T16:00:03.6272810Z   repository: jkelsen13-tech/media-intelligence-platform-v2
+2026-09-14T16:00:03.6275771Z   token: ***
+2026-09-14T16:00:03.6275980Z   ssh-strict: true
+2026-09-14T16:00:03.6276243Z   ssh-user: git
+2026-09-14T16:00:03.6276457Z   persist-credentials: true
+2026-09-14T16:00:03.6276692Z   clean: true
+2026-09-14T16:00:03.6276898Z   sparse-checkout-cone-mode: true
+2026-09-14T16:00:03.6277159Z   fetch-depth: 1
+2026-09-14T16:00:03.6277351Z   fetch-tags: false
+2026-09-14T16:00:03.6277550Z   show-progress: true
+2026-09-14T16:00:03.6277748Z   lfs: false
+2026-09-14T16:00:03.6277928Z   submodules: false
+2026-09-14T16:00:03.6278127Z   set-safe-directory: true
+2026-09-14T16:00:03.6278366Z   allow-unsafe-pr-checkout: false
+2026-09-14T16:00:03.6278819Z ##[endgroup]
+2026-09-14T16:00:03.7317738Z Syncing repository: jkelsen13-tech/media-intelligence-platform-v2
+2026-09-14T16:00:03.7319850Z ##[group]Getting Git version info
+2026-09-14T16:00:03.7320784Z Working directory is '/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2'
+2026-09-14T16:00:03.7322129Z [command]/usr/bin/git version
+2026-09-14T16:00:03.7398397Z git version 2.55.0
+2026-09-14T16:00:03.7420994Z ##[endgroup]
+2026-09-14T16:00:03.7434868Z Temporarily overriding HOME='/home/runner/work/_temp/e5c0450b-7fd1-492a-a8fb-cbc0ac3c9d60' before making global git config changes
+2026-09-14T16:00:03.7436530Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-14T16:00:03.7443152Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2
+2026-09-14T16:00:03.7495915Z Deleting the contents of '/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2'
+2026-09-14T16:00:03.7499802Z ##[group]Determining repository object format
+2026-09-14T16:00:03.7501756Z ##[endgroup]
+2026-09-14T16:00:03.7502646Z ##[group]Initializing the repository
+2026-09-14T16:00:03.7507636Z [command]/usr/bin/git init /home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2
+2026-09-14T16:00:03.7625955Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-14T16:00:03.7627232Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-14T16:00:03.7628313Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-14T16:00:03.7629729Z hint: call:
+2026-09-14T16:00:03.7630223Z hint:
+2026-09-14T16:00:03.7630936Z hint: 	git config --global init.defaultBranch <name>
+2026-09-14T16:00:03.7631683Z hint:
+2026-09-14T16:00:03.7632404Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-14T16:00:03.7633568Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-14T16:00:03.7634797Z hint:
+2026-09-14T16:00:03.7635887Z hint: 	git branch -m <name>
+2026-09-14T16:00:03.7636687Z hint:
+2026-09-14T16:00:03.7637643Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-14T16:00:03.7639446Z Initialized empty Git repository in /home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git/
+2026-09-14T16:00:03.7644941Z [command]/usr/bin/git remote add origin https://github.com/jkelsen13-tech/media-intelligence-platform-v2
+2026-09-14T16:00:03.7700173Z ##[endgroup]
+2026-09-14T16:00:03.7701203Z ##[group]Disabling automatic garbage collection
+2026-09-14T16:00:03.7704652Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-14T16:00:03.7743211Z ##[endgroup]
+2026-09-14T16:00:03.7744118Z ##[group]Setting up auth
+2026-09-14T16:00:03.7744770Z Removing SSH command configuration
+2026-09-14T16:00:03.7751449Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-14T16:00:03.7796866Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-14T16:00:03.8211191Z Removing HTTP extra header
+2026-09-14T16:00:03.8216332Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-14T16:00:03.8254319Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-14T16:00:03.8481189Z Removing includeIf entries pointing to credentials config files
+2026-09-14T16:00:03.8487247Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-14T16:00:03.8524249Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-14T16:00:03.8761362Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-eeed9814-7477-4e5b-a78c-43fa8922715f.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-14T16:00:03.8803432Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git.path /home/runner/work/_temp/git-credentials-eeed9814-7477-4e5b-a78c-43fa8922715f.config
+2026-09-14T16:00:03.8840772Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-eeed9814-7477-4e5b-a78c-43fa8922715f.config
+2026-09-14T16:00:03.8879905Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-eeed9814-7477-4e5b-a78c-43fa8922715f.config
+2026-09-14T16:00:03.8917477Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-eeed9814-7477-4e5b-a78c-43fa8922715f.config
+2026-09-14T16:00:03.8949401Z ##[endgroup]
+2026-09-14T16:00:03.8950375Z ##[group]Fetching the repository
+2026-09-14T16:00:03.8957803Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +2a23357fb12cc9c74a142a269d2438700165cc3e:refs/remotes/pull/172/merge
+2026-09-14T16:00:04.9294751Z From https://github.com/jkelsen13-tech/media-intelligence-platform-v2
+2026-09-14T16:00:04.9304819Z  * [new ref]         2a23357fb12cc9c74a142a269d2438700165cc3e -> pull/172/merge
+2026-09-14T16:00:04.9315677Z ##[endgroup]
+2026-09-14T16:00:04.9316286Z ##[group]Determining the checkout info
+2026-09-14T16:00:04.9316962Z ##[endgroup]
+2026-09-14T16:00:04.9317463Z [command]/usr/bin/git sparse-checkout disable
+2026-09-14T16:00:04.9361474Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-14T16:00:04.9394013Z ##[group]Checking out the ref
+2026-09-14T16:00:04.9399017Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/172/merge
+2026-09-14T16:00:05.0722382Z Note: switching to 'refs/remotes/pull/172/merge'.
+2026-09-14T16:00:05.0722898Z 
+2026-09-14T16:00:05.0723519Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-09-14T16:00:05.0724141Z changes and commit them, and you can discard any commits you make in this
+2026-09-14T16:00:05.0724815Z state without impacting any branches by switching back to a branch.
+2026-09-14T16:00:05.0725201Z 
+2026-09-14T16:00:05.0725598Z If you want to create a new branch to retain commits you create, you may
+2026-09-14T16:00:05.0726140Z do so (now or later) by using -c with the switch command. Example:
+2026-09-14T16:00:05.0726500Z 
+2026-09-14T16:00:05.0726832Z   git switch -c <new-branch-name>
+2026-09-14T16:00:05.0727037Z 
+2026-09-14T16:00:05.0727198Z Or undo this operation with:
+2026-09-14T16:00:05.0727399Z 
+2026-09-14T16:00:05.0727504Z   git switch -
+2026-09-14T16:00:05.0727658Z 
+2026-09-14T16:00:05.0727942Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-09-14T16:00:05.0728352Z 
+2026-09-14T16:00:05.0729183Z HEAD is now at 2a23357 Merge 8b2a29ee88907751a16c4de8ca4fae0ae6f0badb into 406512127399e63e117f2a8e0b089f97579bd0d9
+2026-09-14T16:00:05.0737545Z ##[endgroup]
+2026-09-14T16:00:05.0788240Z [command]/usr/bin/git log -1 --format=%H
+2026-09-14T16:00:05.0817396Z 2a23357fb12cc9c74a142a269d2438700165cc3e
+2026-09-14T16:00:05.1073215Z ##[group]Run actions/setup-node@v7.0.0
+2026-09-14T16:00:05.1073523Z with:
+2026-09-14T16:00:05.1073724Z   node-version: 24
+2026-09-14T16:00:05.1073955Z   check-latest: false
+2026-09-14T16:00:05.1076657Z   token: ***
+2026-09-14T16:00:05.1076873Z   package-manager-cache: true
+2026-09-14T16:00:05.1077118Z ##[endgroup]
+2026-09-14T16:00:05.2393347Z Found in cache @ /opt/hostedtoolcache/node/24.20.0/x64
+2026-09-14T16:00:05.2395953Z ##[group]Environment details
+2026-09-14T16:00:05.6712722Z node: v24.20.0
+2026-09-14T16:00:05.6713025Z npm: 11.19.0
+2026-09-14T16:00:05.6713412Z yarn: 1.22.22
+2026-09-14T16:00:05.6714899Z ##[endgroup]
+2026-09-14T16:00:05.6843924Z ##[group]Run npm ci --ignore-scripts --no-audit
+2026-09-14T16:00:05.6844355Z [36;1mnpm ci --ignore-scripts --no-audit[0m
+2026-09-14T16:00:05.6894771Z shell: /usr/bin/bash -e {0}
+2026-09-14T16:00:05.6895048Z ##[endgroup]
+2026-09-14T16:00:15.6301912Z 
+2026-09-14T16:00:15.6312477Z added 206 packages in 10s
+2026-09-14T16:00:15.6313417Z 
+2026-09-14T16:00:15.6313985Z 17 packages are looking for funding
+2026-09-14T16:00:15.6314524Z   run `npm fund` for details
+2026-09-14T16:00:15.6946673Z ##[group]Run docker pull node:24-alpine
+2026-09-14T16:00:15.6947082Z [36;1mdocker pull node:24-alpine[0m
+2026-09-14T16:00:15.6984928Z shell: /usr/bin/bash -e {0}
+2026-09-14T16:00:15.6985185Z ##[endgroup]
+2026-09-14T16:00:16.1645906Z 24-alpine: Pulling from library/node
+2026-09-14T16:00:16.2996806Z 55afa1ecc21d: Already exists
+2026-09-14T16:00:16.3014084Z bc66c3ef2ea3: Pulling fs layer
+2026-09-14T16:00:16.3016630Z e2c9c68d0d93: Pulling fs layer
+2026-09-14T16:00:16.3017643Z c45bfe2a2e42: Pulling fs layer
+2026-09-14T16:00:16.4130988Z e2c9c68d0d93: Verifying Checksum
+2026-09-14T16:00:16.4131885Z e2c9c68d0d93: Download complete
+2026-09-14T16:00:16.5267829Z c45bfe2a2e42: Verifying Checksum
+2026-09-14T16:00:16.5269218Z c45bfe2a2e42: Download complete
+2026-09-14T16:00:16.5713951Z bc66c3ef2ea3: Verifying Checksum
+2026-09-14T16:00:16.5714627Z bc66c3ef2ea3: Download complete
+2026-09-14T16:00:18.9152369Z bc66c3ef2ea3: Pull complete
+2026-09-14T16:00:18.9751316Z e2c9c68d0d93: Pull complete
+2026-09-14T16:00:18.9853420Z c45bfe2a2e42: Pull complete
+2026-09-14T16:00:18.9918106Z Digest: sha256:50c8e8ca1d27439048670df5883f32d57cf81cff6233222c893fd0d9884cbd81
+2026-09-14T16:00:18.9930549Z Status: Downloaded newer image for node:24-alpine
+2026-09-14T16:00:18.9947543Z docker.io/library/node:24-alpine
+2026-09-14T16:00:19.0027420Z ##[group]Run node verifier/hypothesis-worker/prepareLogical.mjs
+2026-09-14T16:00:19.0027936Z [36;1mnode verifier/hypothesis-worker/prepareLogical.mjs[0m
+2026-09-14T16:00:19.0064539Z shell: /usr/bin/bash -e {0}
+2026-09-14T16:00:19.0064793Z env:
+2026-09-14T16:00:19.0065035Z   MIP_DISPOSABLE_POSTGRES: comparison-qualification
+2026-09-14T16:00:19.0065531Z   MIP_POSTGRES_SERVICE_ID: 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T16:00:19.0065976Z ##[endgroup]
+2026-09-14T16:00:19.7875665Z MIP_DISPOSABLE_METADATA_DECODING_READY
+2026-09-14T16:00:19.7966912Z ##[group]Run node --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs
+2026-09-14T16:00:19.7967981Z [36;1mnode --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs[0m
+2026-09-14T16:00:19.8023267Z shell: /usr/bin/bash -e {0}
+2026-09-14T16:00:19.8023693Z env:
+2026-09-14T16:00:19.8024122Z   MIP_DISPOSABLE_POSTGRES: comparison-qualification
+2026-09-14T16:00:19.8024996Z   MIP_POSTGRES_SERVICE_ID: 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T16:00:19.8025794Z ##[endgroup]
+2026-09-14T16:00:22.0345044Z ▶ synthetic commit recorder uses existing encrypted remote journal and actual isolated process restart
+2026-09-14T16:00:22.0346429Z   ✔ exact replay succeeds; changed metadata cannot replace retained commit (418.737099ms)
+2026-09-14T16:00:22.2805124Z   ✔ comparison worker cannot read recorder runtime; recorder has no producer enqueue capability (246.37576ms)
+2026-09-14T16:00:23.2614455Z   ✔ process killed after put resumes exact retained metadata with fresh session (981.131204ms)
+2026-09-14T16:00:24.2966973Z   ✔ process killed after get resumes exact retained metadata with fresh session (1034.443516ms)
+2026-09-14T16:00:25.4364437Z   ✔ process killed after ack resumes exact retained metadata with fresh session (1140.006486ms)
+2026-09-14T16:00:25.6347212Z   ✔ revoked current mapping prevents replay acknowledgement and preserves stranded record (198.08069ms)
+2026-09-14T16:00:25.6861442Z ✔ synthetic commit recorder uses existing encrypted remote journal and actual isolated process restart (5788.026706ms)
+2026-09-14T16:00:33.9467088Z ▶ isolated hypothesis generation authority, retained computation and restart package
+2026-09-14T16:00:33.9468176Z   ▶ consistent exported snapshot bootstrap isolation
+2026-09-14T16:00:33.9469857Z     ✔ exported native snapshot excludes a commit made while its imported reader waits; stream includes it exactly (1.736362ms)
+2026-09-14T16:00:34.1090027Z     ✔ missing bootstrap denies actual stream acknowledgement without moving the slot (161.718025ms)
+2026-09-14T16:00:35.2482412Z     ✔ exact durable bootstrap gates actual fenced native advancement and survives exporter closure (1139.355649ms)
+2026-09-14T16:00:35.2867953Z     ✔ closed export cannot be imported as a fresh snapshot or used to fabricate a new observation (38.573156ms)
+2026-09-14T16:00:35.3271383Z   ✔ consistent exported snapshot bootstrap isolation (5614.505663ms)
+2026-09-14T16:00:38.7146514Z   ▶ actual pgoutput metadata-to-durable-recorder isolation
+2026-09-14T16:00:38.7148515Z     ✔ source acknowledgement roles cannot self-grant permits, mutate bindings or inherit replication ownership (3188.200603ms)
+2026-09-14T16:00:41.5302671Z     ✔ source acknowledgement rejects an uncommitted permit even in a privileged multi-role test transaction (2815.561944ms)
+2026-09-14T16:00:44.6474445Z     ✔ slot advancement survives SQL rollback; committed permit remains and exact retry reconciles lost receipt (3116.851516ms)
+2026-09-14T16:00:47.6738151Z     ✔ acknowledgement locks first: actual advancement completes and source revocation waits (3025.902585ms)
+2026-09-14T16:00:50.6017099Z     ✔ source revocation commits first: waiting acknowledgement denies without advancing or deleting its permit (2927.997263ms)
+2026-09-14T16:00:52.7463900Z     ✔ actual pgoutput contains exact revision metadata and no assessment/source body fields (39.71674ms)
+2026-09-14T16:00:52.8235410Z     ✔ incomplete native delivery leaves slot position unchanged and makes no acknowledgement (76.663079ms)
+2026-09-14T16:00:54.2483391Z     ✔ actual slot advancement follows durable exact metadata; lost acknowledgement replays without changing evidence (1425.056043ms)
+2026-09-14T16:00:56.4434162Z     ✔ revoked recorder mapping denies a new native delivery and retains unacknowledged source work (2195.040261ms)
+2026-09-14T16:00:56.4824532Z   ✔ actual pgoutput metadata-to-durable-recorder isolation (21157.000477ms)
+2026-09-14T16:01:04.2993702Z   ▶ source-captured contiguous metadata coverage isolation
+2026-09-14T16:01:04.2994881Z     ✔ source captures only the next native transaction and chains exact reconciled revision IDs (7723.41782ms)
+2026-09-14T16:01:08.9947908Z     ✔ source permit rejects a skipped transaction even with genuine later native metadata (4695.400827ms)
+2026-09-14T16:01:13.5596642Z     ✔ rolled-back coverage receipt recovers native advancement with committed capture and fresh session (4564.133367ms)
+2026-09-14T16:01:19.0007569Z     ✔ slot movement outside the protocol denies progress and preserves the captured transaction (5441.221102ms)
+2026-09-14T16:01:22.4317592Z     ✔ slot loss denies recovery without deleting source captures or fabricating continuity (3430.832129ms)
+2026-09-14T16:01:25.9138865Z     ✔ publication expansion and revoked source authority fail closed before new capture (3481.808287ms)
+2026-09-14T16:01:26.7888538Z     ✔ current interface removes unbound advancement and denies direct coverage writes (874.552496ms)
+2026-09-14T16:01:32.7129043Z     ✔ paged native snapshot excludes between-page commits and its complete manifest gates covered stream advancement (5925.402134ms)
+2026-09-14T16:01:38.1236583Z     ▶ native source incarnation registration isolation
+2026-09-14T16:01:38.1238363Z       ✔ explicit registration permits covered completion and fresh-session exact receipt replay (5360.443095ms)
+2026-09-14T16:01:43.3205013Z       ✔ missing or mismatched external pin denies capture, preparation and receipt replay (5196.174975ms)
+2026-09-14T16:01:45.4720124Z       ✔ simulated cluster, database-object and startup mismatches deny native capture without rewriting history (2152.001192ms)
+2026-09-14T16:01:46.5785446Z       ✔ registration is immutable and gateways cannot inspect control data or bypass the incarnation interface (1106.277274ms)
+2026-09-14T16:01:50.1121069Z       ✔ incarnation-bound advancement locks first and source revocation waits (3533.247422ms)
+2026-09-14T16:01:53.6767122Z       ✔ source revocation locks first and incarnation-bound advancement rejects without a checkpoint (3564.427433ms)
+2026-09-14T16:02:02.5287097Z       ✔ external encrypted custody gates the actual incarnation capture, prepare and advance flow (8851.673431ms)
+2026-09-14T16:02:07.3600088Z       ✔ actual database clone preserves source records but cannot reuse the original configured source binding (4831.50523ms)
+2026-09-14T16:02:11.9201672Z       ✔ actual database server restart preserves durable work but denies old incarnation acceptance after fresh authentication (4560.791099ms)
+2026-09-14T16:02:11.9205113Z     ✔ native source incarnation registration isolation (39206.900073ms)
+2026-09-14T16:02:20.4014945Z     ▶ registered v2 marker authority integration
+2026-09-14T16:02:20.4016311Z       ✔ authorized marker closes empty revision interval through custody and actual narrow gateways (8344.153553ms)
+2026-09-14T16:02:32.8065296Z       ✔ actual open revision across consumed marker commits later and is captured before next marker (12405.054282ms)
+2026-09-14T16:02:40.1183639Z       ✔ rollback of authorized issuer or open revision never manufactures marker or revision coverage (7311.511766ms)
+2026-09-14T16:02:54.4656698Z       ✔ intervening transactions cannot be skipped or relabelled as marker (14347.156213ms)
+2026-09-14T16:03:03.7107616Z       ✔ binding-filtered concurrent streams never consume another binding marker (9244.642985ms)
+2026-09-14T16:03:09.1576476Z       ✔ lost source responses reuse exact issue and capture rather than launching new identities (5446.913ms)
+2026-09-14T16:03:17.0456127Z       ✔ lost prepare and advance responses replay exact retained permits and checkpoints (7887.414912ms)
+2026-09-14T16:03:36.8362003Z       ✔ missing bootstrap or mutated custody readback prevents source permits and slot advancement (19790.649639ms)
+2026-09-14T16:03:43.1107774Z       ✔ rolled-back SQL receipt after native advance recovers exact retained capture and permit (6274.366688ms)
+2026-09-14T16:03:48.3921503Z       ✔ changed publication filter, stale registration and wrong incarnation fail closed (5280.971557ms)
+2026-09-14T16:03:55.0794820Z       ✔ revoked source cannot issue, capture, prepare or replay an advanced result (6687.210509ms)
+2026-09-14T16:03:59.5576798Z       ✔ source revocation locks first and custody-bound advance denies without a checkpoint (4477.864708ms)
+2026-09-14T16:04:05.4022019Z       ✔ custody-bound source advancement holds revocation fence until committed (5844.315158ms)
+2026-09-14T16:04:10.5961923Z       ✔ slot loss leaves retained delivery and source records, with no fabricated recovery (5193.935102ms)
+2026-09-14T16:04:20.9785235Z       ✔ slot recreation or external native advancement cannot inherit registered coverage (10381.708324ms)
+2026-09-14T16:04:29.7478787Z       ✔ source mapping revocation fences issuance, capture and prepared advancement (8769.384731ms)
+2026-09-14T16:04:33.6617877Z       ✔ custody envelope pins are forwarded unchanged and independently rejected by source registration (3913.373409ms)
+2026-09-14T16:04:39.0558001Z       ✔ registered v2 binding cannot downgrade into any legacy gateway or private implementation (5394.442133ms)
+2026-09-14T16:04:43.8062337Z       ✔ legitimate v1 still succeeds and replays through guarded compatibility entrypoints after 022 (4750.36754ms)
+2026-09-14T16:04:45.9433283Z       ✔ v1 publication contract and direct native/table privilege exclusions are preserved (2136.066352ms)
+2026-09-14T16:05:13.0594482Z       ✔ internal retained prefix verifies actual native deliveries without granting application history authority (27115.721247ms)
+2026-09-14T16:05:45.3586769Z       ✔ internal prefix rejects missing swapped omitted or corrupt retained basis and scope (32299.532958ms)
+2026-09-14T16:06:08.7302210Z       ✔ retained integrity cannot substitute source revocation or current journal admission (23373.551201ms)
+2026-09-14T16:06:34.2143976Z       ✔ combined native source and current permission delivery excludes later revisions and source-wide metadata (25438.579882ms)
+2026-09-14T16:06:56.1705304Z       ✔ combined reader denies wrong native incarnation source stream and terminal; public and existing workers have no gateway grant (21956.369719ms)
+2026-09-14T16:08:09.7604450Z       ✔ source and membership revoke-first prevent delivery; revoked material stays withheld (73590.123983ms)
+2026-09-14T16:09:08.5660221Z       ✔ reader holds source and membership fences through awaited delivery on same native backend (58805.315363ms)
+2026-09-14T16:10:00.4118593Z       ✔ native identity drift and terminal receipt loss deny combined delivery (51847.334224ms)
+2026-09-14T16:10:00.4120811Z     ✔ registered v2 marker authority integration (468491.901446ms)
+2026-09-14T16:10:00.4121992Z   ✔ source-captured contiguous metadata coverage isolation (543929.742459ms)
+2026-09-14T16:10:01.5018626Z   ▶ native marker boundary proof without source activation
+2026-09-14T16:10:01.5019444Z     ✔ unrelated WAL and empty peek never prove coverage; committed native marker does (842.242399ms)
+2026-09-14T16:10:04.1234949Z     ✔ open actual revision transaction survives consuming a later marker and decodes after commit (2621.520919ms)
+2026-09-14T16:10:06.3307627Z     ✔ rolled-back actual revision and rolled-back marker produce no published transaction (2206.671639ms)
+2026-09-14T16:10:09.2504701Z     ✔ intervening revision must be retained before requested marker and cannot decode as marker (2919.617514ms)
+2026-09-14T16:10:09.6406797Z     ✔ fixture exact publication and no gateway marker grants; native source integration stays closed (389.931903ms)
+2026-09-14T16:10:10.3319937Z     ✔ slot loss does not erase retained proof or grant source-recovery authority (691.014309ms)
+2026-09-14T16:10:10.7218797Z     ✔ revoked journal mapping blocks retention; source WAL remains unacknowledged (389.753408ms)
+2026-09-14T16:10:10.7220750Z   ✔ native marker boundary proof without source activation (10307.763812ms)
+2026-09-14T16:10:14.1528267Z   ✔ configured synthetic client-handler-store-worker-review path uses native gateway transactions (3431.008798ms)
+2026-09-14T16:10:16.0356186Z   ✔ atomic real retained-input capture; no caller source body or input hash accepted (1881.919551ms)
+2026-09-14T16:10:18.2734029Z   ✔ separate worker table/function ownership, FORCE RLS and no escalation (2237.639342ms)
+2026-09-14T16:10:19.9358573Z   ✔ closed CC source scope and missing permission never enter generation (1662.269803ms)
+2026-09-14T16:10:21.6392173Z   ✖ wrong audience/subject/runtime, expired identity and cross-runtime session denied (1698.884042ms)
+2026-09-14T16:10:23.4188420Z   ✔ revoked mapping and stale replacement cannot reuse a retained generation (1783.138461ms)
+2026-09-14T16:10:26.8617177Z   ✔ source and evaluated-implementation revocation during processing strand work (3443.713597ms)
+2026-09-14T16:10:28.5693241Z   ✔ revoked reviewer membership denies completion and retains processing (1707.038504ms)
+2026-09-14T16:10:30.3834393Z   ✔ revoked method denies completion and cannot be reactivated under old revision (1814.247957ms)
+2026-09-14T16:10:33.6698643Z   ✔ ineligible and out-of-runtime work cannot obstruct eligible investigation (3285.897289ms)
+2026-09-14T16:10:36.9218504Z   ✔ rotating investigation selection advances an eligible later investigation (3252.12472ms)
+2026-09-14T16:10:39.4604135Z   ✔ database independently rejects output source, method, rating, review and argument escalation (2538.135858ms)
+2026-09-14T16:10:41.3240100Z   ✔ permission acceptance first: output/revision/ack/receipt commit, revocation waits (1863.664965ms)
+2026-09-14T16:10:43.1083427Z   ✔ permission revocation first: output/revision/ack/receipt all reject (1782.322878ms)
+2026-09-14T16:10:44.8055601Z   ✔ source correction during processing rejects stale retained generation (1697.967999ms)
+2026-09-14T16:10:46.8563499Z   ✔ exact completion retry requires current authority and identical output (2051.590817ms)
+2026-09-14T16:10:48.9021015Z   ✔ worker method mismatch is explicitly failed without invented assessment (2044.808084ms)
+2026-09-14T16:10:50.6739045Z   ✔ expired lease does not requeue, force-cancel or accept completion (1772.232353ms)
+2026-09-14T16:10:52.9278797Z   ✔ real container computes over retained spans with no broad credentials or network (2253.948008ms)
+2026-09-14T16:10:55.7154256Z   ✔ actual termination/restart before_complete_commit recovers exact durable completion (2785.739495ms)
+2026-09-14T16:10:58.5058850Z   ✔ actual termination/restart after_complete_commit recovers exact durable completion (2788.436352ms)
+2026-09-14T16:11:01.0456339Z   ✔ actual lost claim response preserves stranded work; fresh process cannot invent lease (2542.397955ms)
+2026-09-14T16:11:04.3660184Z   ✔ encrypted remote exact-content journal, scoped runtime, no plaintext and protocol separation (3320.201759ms)
+2026-09-14T16:11:06.4771168Z   ✔ generated reassessment resolves exact human causes atomically and stays unreviewed/private (2110.734178ms)
+2026-09-14T16:11:08.2625064Z   ✔ unselected retained input permissions still protect generated history and create causes (1785.643666ms)
+2026-09-14T16:11:09.9786856Z   ✔ private operational ledger binds exact generation records and never returns lease secrets or source text (1715.851417ms)
+2026-09-14T16:11:14.1637288Z   ✔ expired session cannot commit an idle receipt after waiting on a permission fence (4185.112369ms)
+2026-09-14T16:11:15.9062987Z   ✔ capture acknowledgement can be recovered after the generation has completed (1741.777362ms)
+2026-09-14T16:11:18.2520388Z   ✔ method replacement retains a distinct pending cause and explicit new-version reassessment (2344.794732ms)
+2026-09-14T16:11:22.1558290Z   ✔ rolled-back method removal leaves no cause; committed removal retains cause and unrelated history (3904.323845ms)
+2026-09-14T16:11:24.6451807Z   ✔ fresh-generation recovery preserves expired attempt and commits exact linked retry (2489.271382ms)
+2026-09-14T16:11:28.2380288Z   ✔ recovery refuses wrong owner, scope, completed job and revoked input permission (3592.843884ms)
+2026-09-14T16:11:30.2259347Z   ✔ recovery is atomic on rollback and inaccessible to the worker role (1987.360603ms)
+2026-09-14T16:11:31.9910786Z   ✔ revoked signing key denies claim and completion despite an outstanding lease (1765.295454ms)
+2026-09-14T16:11:32.0590202Z ✖ isolated hypothesis generation authority, retained computation and restart package (666263.743509ms)
+2026-09-14T16:11:32.0738946Z ℹ tests 113
+2026-09-14T16:11:32.0740751Z ℹ suites 0
+2026-09-14T16:11:32.0741522Z ℹ pass 111
+2026-09-14T16:11:32.0741946Z ℹ fail 2
+2026-09-14T16:11:32.0742241Z ℹ cancelled 0
+2026-09-14T16:11:32.0742578Z ℹ skipped 0
+2026-09-14T16:11:32.0742977Z ℹ todo 0
+2026-09-14T16:11:32.0743431Z ℹ duration_ms 672229.809518
+2026-09-14T16:11:32.0753468Z 
+2026-09-14T16:11:32.0754063Z ✖ failing tests:
+2026-09-14T16:11:32.0754317Z 
+2026-09-14T16:11:32.0754777Z test at verifier/hypothesis-worker/worker.test.mjs:218:10
+2026-09-14T16:11:32.0756182Z ✖ wrong audience/subject/runtime, expired identity and cross-runtime session denied (1698.884042ms)
+2026-09-14T16:11:32.0757325Z   AssertionError [ERR_ASSERTION]: The input did not match the regular expression /mip_identity_stale_revision/. Input:
+2026-09-14T16:11:32.0758071Z   
+2026-09-14T16:11:32.0758753Z   'Error: mip_identity_expired_via_mip_identity_authorize_mip_hypothesis_worker_session_mip_hypothesis_worker_claim'
+2026-09-14T16:11:32.0759466Z   
+2026-09-14T16:11:32.0760895Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-09-14T16:11:32.0762291Z       at async TestContext.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/hypothesis-worker/worker.test.mjs:223:3)
+2026-09-14T16:11:32.0763469Z       at async Test.run (node:internal/test_runner/test:1404:7)
+2026-09-14T16:11:32.0765310Z       at async TestContext.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/hypothesis-worker/worker.test.mjs:218:2)
+2026-09-14T16:11:32.0766504Z       at async Test.run (node:internal/test_runner/test:1404:7)
+2026-09-14T16:11:32.0767214Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-09-14T16:11:32.0767727Z     generatedMessage: true,
+2026-09-14T16:11:32.0767979Z     code: 'ERR_ASSERTION',
+2026-09-14T16:11:32.0768558Z     actual: Error: mip_identity_expired_via_mip_identity_authorize_mip_hypothesis_worker_session_mip_hypothesis_worker_claim
+2026-09-14T16:11:32.0769946Z         at ChildProcess.<anonymous> (file:///home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/verifier/integrated/transport.mjs:21:19)
+2026-09-14T16:11:32.0771010Z         at ChildProcess.emit (node:events:514:28)
+2026-09-14T16:11:32.0771605Z         at ChildProcess._handle.onexit (node:internal/child_process:295:12),
+2026-09-14T16:11:32.0772306Z     expected: /mip_identity_stale_revision/,
+2026-09-14T16:11:32.0772749Z     operator: 'rejects',
+2026-09-14T16:11:32.0773195Z     diff: 'simple'
+2026-09-14T16:11:32.0773584Z   }
+2026-09-14T16:11:32.0827107Z ##[error]Process completed with exit code 1.
+2026-09-14T16:11:32.0962574Z Post job cleanup.
+2026-09-14T16:11:32.1838516Z [command]/usr/bin/git version
+2026-09-14T16:11:32.1901410Z git version 2.55.0
+2026-09-14T16:11:32.1941509Z Temporarily overriding HOME='/home/runner/work/_temp/f019b503-d072-488b-a139-809352944d8f' before making global git config changes
+2026-09-14T16:11:32.1943368Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-14T16:11:32.1947143Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2
+2026-09-14T16:11:32.1983195Z Removing SSH command configuration
+2026-09-14T16:11:32.1990276Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-14T16:11:32.2028734Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-14T16:11:32.2294343Z Removing HTTP extra header
+2026-09-14T16:11:32.2300245Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-14T16:11:32.2355492Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-14T16:11:32.2632579Z Removing includeIf entries pointing to credentials config files
+2026-09-14T16:11:32.2640883Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-14T16:11:32.2678891Z includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git.path
+2026-09-14T16:11:32.2680767Z includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git/worktrees/*.path
+2026-09-14T16:11:32.2681677Z includeif.gitdir:/github/workspace/.git.path
+2026-09-14T16:11:32.2682293Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-09-14T16:11:32.2688626Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git.path
+2026-09-14T16:11:32.2717638Z /home/runner/work/_temp/git-credentials-eeed9814-7477-4e5b-a78c-43fa8922715f.config
+2026-09-14T16:11:32.2731516Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-eeed9814\-7477\-4e5b\-a78c\-43fa8922715f\.config
+2026-09-14T16:11:32.2776187Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git/worktrees/*.path
+2026-09-14T16:11:32.2819750Z /home/runner/work/_temp/git-credentials-eeed9814-7477-4e5b-a78c-43fa8922715f.config
+2026-09-14T16:11:32.2827184Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/media-intelligence-platform-v2/media-intelligence-platform-v2/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-eeed9814\-7477\-4e5b\-a78c\-43fa8922715f\.config
+2026-09-14T16:11:32.2881896Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-09-14T16:11:32.2912138Z /github/runner_temp/git-credentials-eeed9814-7477-4e5b-a78c-43fa8922715f.config
+2026-09-14T16:11:32.2920610Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-eeed9814\-7477\-4e5b\-a78c\-43fa8922715f\.config
+2026-09-14T16:11:32.2956616Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-09-14T16:11:32.2984345Z /github/runner_temp/git-credentials-eeed9814-7477-4e5b-a78c-43fa8922715f.config
+2026-09-14T16:11:32.2995216Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-eeed9814\-7477\-4e5b\-a78c\-43fa8922715f\.config
+2026-09-14T16:11:32.3033797Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-14T16:11:32.3259375Z Removing credentials config '/home/runner/work/_temp/git-credentials-eeed9814-7477-4e5b-a78c-43fa8922715f.config'
+2026-09-14T16:11:32.3378220Z Print service container logs: bd480e12d6c84dcfaf5925424eca9264_postgres176_60a9c8
+2026-09-14T16:11:32.3383577Z ##[command]/usr/bin/docker logs --details 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T16:11:32.3513725Z  The files belonging to this database system will be owned by user "postgres".
+2026-09-14T16:11:32.3515675Z  initdb: warning: enabling "trust" authentication for local connections
+2026-09-14T16:11:32.3516517Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-09-14T16:11:32.3517481Z  2026-09-14 15:59:58.008 UTC [1] LOG:  starting PostgreSQL 17.6 (Debian 17.6-2.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-14T16:11:32.3518229Z  2026-09-14 15:59:58.009 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-09-14T16:11:32.3518762Z  2026-09-14 15:59:58.009 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-09-14T16:11:32.3519277Z  2026-09-14 15:59:58.010 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-14T16:11:32.3520181Z  2026-09-14 15:59:58.012 UTC [62] LOG:  database system was shut down at 2026-09-14 15:59:57 UTC
+2026-09-14T16:11:32.3520691Z  2026-09-14 15:59:58.016 UTC [1] LOG:  database system is ready to accept connections
+2026-09-14T16:11:32.3521133Z  2026-09-14 16:00:19.187 UTC [1] LOG:  received fast shutdown request
+2026-09-14T16:11:32.3521536Z  2026-09-14 16:00:19.187 UTC [1] LOG:  aborting any active transactions
+2026-09-14T16:11:32.3522127Z  2026-09-14 16:00:19.190 UTC [1] LOG:  background worker "logical replication launcher" (PID 65) exited with exit code 1
+2026-09-14T16:11:32.3522655Z  2026-09-14 16:00:19.191 UTC [60] LOG:  shutting down
+2026-09-14T16:11:32.3523038Z  2026-09-14 16:00:19.192 UTC [60] LOG:  checkpoint starting: shutdown immediate
+2026-09-14T16:11:32.3524090Z  2026-09-14 16:00:19.194 UTC [60] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/14ED868, redo lsn=0/14ED868
+2026-09-14T16:11:32.3525733Z  2026-09-14 16:00:19.199 UTC [1] LOG:  database system is shut down
+2026-09-14T16:11:32.3526878Z  2026-09-14 16:00:19.474 UTC [1] LOG:  starting PostgreSQL 17.6 (Debian 17.6-2.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-14T16:11:32.3528078Z  2026-09-14 16:00:19.474 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-09-14T16:11:32.3528866Z  2026-09-14 16:00:19.474 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-09-14T16:11:32.3529833Z  2026-09-14 16:00:19.475 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-14T16:11:32.3530402Z  2026-09-14 16:00:19.478 UTC [29] LOG:  database system was shut down at 2026-09-14 16:00:19 UTC
+2026-09-14T16:11:32.3530917Z  2026-09-14 16:00:19.482 UTC [1] LOG:  database system is ready to accept connections
+2026-09-14T16:11:32.3531386Z  2026-09-14 16:00:19.939 UTC [1] LOG:  received SIGHUP, reloading configuration files
+2026-09-14T16:11:32.3531902Z  2026-09-14 16:00:19.940 UTC [1] LOG:  parameter "log_min_error_statement" changed to "panic"
+2026-09-14T16:11:32.3532346Z  This user must also own the server process.
+2026-09-14T16:11:32.3532619Z  
+2026-09-14T16:11:32.3532887Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-09-14T16:11:32.3533322Z  The default database encoding has accordingly been set to "UTF8".
+2026-09-14T16:11:32.3533738Z  The default text search configuration will be set to "english".
+2026-09-14T16:11:32.3534055Z  
+2026-09-14T16:11:32.3534307Z  Data page checksums are disabled.
+2026-09-14T16:11:32.3534542Z  
+2026-09-14T16:11:32.3534838Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-09-14T16:11:32.3535459Z  creating subdirectories ... ok
+2026-09-14T16:11:32.3535945Z  selecting dynamic shared memory implementation ... posix
+2026-09-14T16:11:32.3536315Z  selecting default "max_connections" ... 100
+2026-09-14T16:11:32.3536613Z  selecting default "shared_buffers" ... 128MB
+2026-09-14T16:11:32.3536899Z  selecting default time zone ... Etc/UTC
+2026-09-14T16:11:32.3537171Z  creating configuration files ... ok
+2026-09-14T16:11:32.3537436Z  running bootstrap script ... ok
+2026-09-14T16:11:32.3537726Z  performing post-bootstrap initialization ... ok
+2026-09-14T16:11:32.3538034Z  syncing data to disk ... ok
+2026-09-14T16:11:32.3538256Z  
+2026-09-14T16:11:32.3538416Z  
+2026-09-14T16:11:32.3538637Z  Success. You can now start the database server using:
+2026-09-14T16:11:32.3538925Z  
+2026-09-14T16:11:32.3539154Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-09-14T16:11:32.3539708Z  
+2026-09-14T16:11:32.3540498Z  waiting for server to start....2026-09-14 15:59:57.770 UTC [48] LOG:  starting PostgreSQL 17.6 (Debian 17.6-2.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-14T16:11:32.3541380Z  2026-09-14 15:59:57.771 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-14T16:11:32.3541940Z  2026-09-14 15:59:57.773 UTC [51] LOG:  database system was shut down at 2026-09-14 15:59:57 UTC
+2026-09-14T16:11:32.3542445Z  2026-09-14 15:59:57.777 UTC [48] LOG:  database system is ready to accept connections
+2026-09-14T16:11:32.3542861Z   done
+2026-09-14T16:11:32.3543054Z  server started
+2026-09-14T16:11:32.3543240Z  
+2026-09-14T16:11:32.3543552Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-09-14T16:11:32.3543940Z  
+2026-09-14T16:11:32.3544186Z  2026-09-14 15:59:57.889 UTC [48] LOG:  received fast shutdown request
+2026-09-14T16:11:32.3544711Z  waiting for server to shut down....2026-09-14 15:59:57.889 UTC [48] LOG:  aborting any active transactions
+2026-09-14T16:11:32.3545421Z  2026-09-14 15:59:57.891 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-09-14T16:11:32.3545964Z  2026-09-14 15:59:57.892 UTC [49] LOG:  shutting down
+2026-09-14T16:11:32.3546343Z  2026-09-14 15:59:57.892 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-09-14T16:11:32.3547390Z  2026-09-14 15:59:57.894 UTC [49] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/14ED7B8, redo lsn=0/14ED7B8
+2026-09-14T16:11:32.3548407Z  2026-09-14 15:59:57.898 UTC [48] LOG:  database system is shut down
+2026-09-14T16:11:32.3548727Z   done
+2026-09-14T16:11:32.3548900Z  server stopped
+2026-09-14T16:11:32.3549083Z  
+2026-09-14T16:11:32.3549307Z  PostgreSQL init process complete; ready for start up.
+2026-09-14T16:11:32.3549865Z  
+2026-09-14T16:11:32.3550030Z  
+2026-09-14T16:11:32.3550349Z  PostgreSQL Database directory appears to contain a database; Skipping initialization
+2026-09-14T16:11:32.3550769Z  
+2026-09-14T16:11:32.3550924Z  
+2026-09-14T16:11:32.3551234Z  PostgreSQL Database directory appears to contain a database; Skipping initialization
+2026-09-14T16:11:32.3551650Z  
+2026-09-14T16:11:32.3557380Z Stop and remove container: bd480e12d6c84dcfaf5925424eca9264_postgres176_60a9c8
+2026-09-14T16:11:32.3562875Z ##[command]/usr/bin/docker rm --force 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T16:11:32.6090841Z 1d9022eb8879fed42c7cb1ac76b3870e7085552cda63ec4b2872909d0c53b604
+2026-09-14T16:11:32.6113972Z Remove container network: github_network_5ce58533da27480285f6a1782ebca5fc
+2026-09-14T16:11:32.6118347Z ##[command]/usr/bin/docker network rm github_network_5ce58533da27480285f6a1782ebca5fc
+2026-09-14T16:11:32.7264600Z github_network_5ce58533da27480285f6a1782ebca5fc
+2026-09-14T16:11:32.7334806Z Cleaning up orphan processes
