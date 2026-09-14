@@ -46,7 +46,7 @@ begin
   perform mip_hypothesis.capture_generation(p_user,p_investigation,p_version,p_source_project,p_request,p_runtime,p_method,p_spec);
   return old.receipt;
  end if;
- if job.state<>'failed' and not(job.state='processing' and job.lease_expires_at<=clock_timestamp()) then
+ if not(job.state='failed' or (job.state='processing' and job.lease_expires_at is not null and job.lease_expires_at<=clock_timestamp())) then
   raise exception 'mip_hypothesis_recovery_not_stranded';end if;
  -- Prevent attaching a pre-existing ordinary capture to this recovery request.
  if exists(select 1 from mip_hypothesis.generations where request_id=p_request) then

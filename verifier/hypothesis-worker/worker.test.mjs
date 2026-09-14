@@ -332,6 +332,8 @@ test('isolated hypothesis generation authority, retained computation and restart
   const v=await f.investigation(),original=await v.captureGeneration(),j=await claim(f,v),request=randomUUID();
   const args=[v.user,v.iid,v.vid,v.source,request,v.runtime,v.method,original.generation_id,v.spec];
   await assert.rejects(f.gateway('recover_generation',args),/mip_hypothesis_recovery_not_stranded/);
+  await f.admin('update mip_hypothesis.generation_jobs set lease_expires_at=null where generation_id='+q(original.generation_id));
+  await assert.rejects(f.gateway('recover_generation',args),/mip_hypothesis_recovery_not_stranded/);
   await f.admin("update mip_hypothesis.generation_jobs set lease_expires_at=clock_timestamp()-interval '1 second' where generation_id="+q(original.generation_id));
   const recovered=await f.gateway('recover_generation',args);
   assert.notEqual(recovered.generation_id,original.generation_id);
