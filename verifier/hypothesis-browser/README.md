@@ -29,3 +29,6 @@ At ed55ca6e21772abe428acd78b5795112a61833f2, browser run 34805444223/job 1038563
 
 
 At 4c8a8708676af4c285532c6434a3d0efecccc7cf, run 34805622366/job 103856824666 still failed WebKit. Expanded geometry located internal overflow on a 340px label (479px scroll width), while its child control boxes fit. The ineffective select text-overflow rule is removed. TextField label text now has an explicit shrinkable span instead of an anonymous grid item; exact associated labels and the no-overflow assertion remain. The failed runs remain unchanged.
+
+
+At 767753a482baf5f889ed9f7033a9d480776d387f, run 34805793344/job 103857312041 identified the same overflow specifically on the Comparison label containing a native select, not the TextField labels. The next change removes grid layout from composer labels and uses normal block flow for their controls. Accessible names, exact receipt checks and horizontal-overflow assertions are retained. This narrows the layout correction from the prior hypotheses; failed evidence remains failed.

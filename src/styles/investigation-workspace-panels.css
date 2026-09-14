@@ -543,3 +543,7 @@
 
 
 .piw-hypothesis-composer .piw-field > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+
+/* Keep native selects out of label grid layout in WebKit. */
+.piw-hypothesis-composer .piw-field { display: block; }
+.piw-hypothesis-composer .piw-field > :is(textarea, select) { display: block; margin-top: 6px; }
