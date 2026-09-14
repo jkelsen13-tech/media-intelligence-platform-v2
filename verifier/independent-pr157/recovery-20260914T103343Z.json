@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "request_id": "pr157-eb0d7ac-independent-1",
+  "observation": {
+    "observed_at": "2026-09-14T10:33:43.410Z",
+    "agent": {
+      "status": 200,
+      "body": {
+        "id": "bc-eb0d7acf-9050-4b4a-81bf-bdc9b3d3f04e",
+        "name": "PR157 eb0d7ac independent synthetic custody review",
+        "status": "IDLE",
+        "env": {
+          "type": "cloud"
+        },
+        "repos": [],
+        "workOnCurrentBranch": false,
+        "autoCreatePR": false,
+        "openAsCursorGithubApp": false,
+        "skipReviewerRequest": false,
+        "url": "https://cursor.com/agents/bc-eb0d7acf-9050-4b4a-81bf-bdc9b3d3f04e",
+        "createdAt": "2026-09-14T10:26:31.619Z",
+        "updatedAt": "2026-09-14T10:30:13.031Z",
+        "latestRunId": "run-a9f26c91-1a00-474e-8dad-777fb1e5691e"
+      }
+    },
+    "run": {
+      "status": 200,
+      "body": {
+        "id": "run-a9f26c91-1a00-474e-8dad-777fb1e5691e",
+        "agentId": "bc-eb0d7acf-9050-4b4a-81bf-bdc9b3d3f04e",
+        "status": "FINISHED",
+        "createdAt": "2026-09-14T10:26:31.619Z",
+        "updatedAt": "2026-09-14T10:30:12.478Z",
+        "durationMs": 220293
+      }
+    }
+  },
+  "controller_delivery_status": "BLOCKED",
+  "reviewer_outcome": null,
+  "reason": "Pinned run remains FINISHED with no result field. Agent is IDLE and latestRunId remains pinned initial run. Earlier run-scoped SSE terminal result also omitted text.",
+  "earlier_terminal_evidence_commit": "4e1e6e037636fdbc70a79dd6c9a69cbb0885aaeb",
+  "earlier_delivery_blocked_commit": "a43139abb7c6d0d04322573ed11331de39c99407",
+  "no_new_run": true,
+  "no_local_files": true
+}
