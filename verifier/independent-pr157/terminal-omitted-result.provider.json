@@ -1,0 +1,38 @@
+{
+  "get_run": {
+    "status": 200,
+    "body": {
+      "id": "run-a9f26c91-1a00-474e-8dad-777fb1e5691e",
+      "agentId": "bc-eb0d7acf-9050-4b4a-81bf-bdc9b3d3f04e",
+      "status": "FINISHED",
+      "createdAt": "2026-09-14T10:26:31.619Z",
+      "updatedAt": "2026-09-14T10:30:12.478Z",
+      "durationMs": 220293
+    }
+  },
+  "stream_terminal_evidence": {
+    "status": 200,
+    "counts": {
+      "status": 2,
+      "interaction_update": 3113,
+      "thinking": 1554,
+      "result": 1,
+      "done": 1
+    },
+    "results": [
+      {
+        "event": "result",
+        "data": {
+          "runId": "run-a9f26c91-1a00-474e-8dad-777fb1e5691e",
+          "status": "FINISHED",
+          "durationMs": 220293
+        }
+      },
+      {
+        "event": "done",
+        "data": {}
+      }
+    ]
+  },
+  "note": "No reviewer result text returned by either GET run or terminal stream result. Event counts only; thinking and intermediate interaction contents are excluded."
+}
