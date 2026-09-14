@@ -126,7 +126,7 @@ export async function exactCitationCases(t,f,context){
   const patch="alter table mip_hypothesis.revisions disable trigger immutable_rows;alter table mip_hypothesis.acceptance_bindings disable trigger immutable_rows;"+
    "update mip_hypothesis.revisions set assessment=jsonb_set(assessment,'{evidence,0,source_span}',"+q({source_field:e.source_span.source_field,start:0,end:1,excerpt_sha256:sha(Buffer.from('A'))})+"::jsonb) where id="+q(revision)+";"+
    "update mip_hypothesis.acceptance_bindings set metadata=jsonb_set(jsonb_set(metadata,'{0,start}','0'),'{0,end}','1') where revision_id="+q(revision)
-  const ascii=JSON.parse(await f.admin('begin;'+patch+';select mip_citation.derive('+[i,revision,eid,fid].map(q).join(',')+');rollback'))
+  const ascii=JSON.parse(await f.admin('begin;'+patch+';set session authorization '+reader+';select mip_citation.preview('+[i,revision,eid,fid].map(q).join(',')+');rollback')).identity
   assert.equal(ascii.byte_start,0);assert.equal(ascii.byte_end,1);assert.equal(ascii.span_hash,sha(Buffer.from('A')))
   assert.deepEqual(await call('read',[i,revision,eid]),baseline)
  })

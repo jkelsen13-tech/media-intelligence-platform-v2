@@ -38,7 +38,7 @@ create table mip_citation.binding_requests(
  foreign key(investigation,assessment_revision,evidence_id) references mip_citation.bindings(investigation,assessment_revision,evidence_id)
 );
 create index binding_requests_revision on mip_citation.binding_requests(investigation,assessment_revision,evidence_id,user_id,request_id);
-create function mip_citation.immutable() returns trigger language plpgsql set search_path='' as $$begin raise exception 'citation_immutable';end$$;
+create function mip_citation.immutable() returns trigger language plpgsql set search_path='' as $$begin raise exception 'mip_citation_immutable';end$$;
 -- Investigation-leading keys support future partitioning; no global admission scan or insert mutex.
 create index fields_material_field on mip_citation.fields(investigation,material_version,source_field,id);
 create index bindings_field_revision on mip_citation.bindings(investigation,field_id,assessment_revision,evidence_id);
@@ -56,20 +56,20 @@ create function mip_citation.plan(i uuid,w uuid,pos text,f text,parent_key text)
 language plpgsql security definer set search_path='' as $$
 declare o jsonb;inp jsonb;rec jsonb;raw text;parent mip_cas.refs;parent_bytes bytea;field_bytes bytea;h text;fh text;derived text;capture uuid;
 begin
- if f is null or f not in('title','summary','body_text') or pos is null or length(pos) not between 1 and 256 then raise exception 'citation_field_invalid';end if;
+ if f is null or f not in('title','summary','body_text') or pos is null or length(pos) not between 1 and 256 then raise exception 'mip_citation_field_invalid';end if;
  select ob.snapshot into strict o from evidence_pipeline.investigation_versions v join evidence_pipeline.investigation_observations ob on ob.id=v.observation_id where v.id=w and v.investigation_id=i;
- if (select count(*) from jsonb_array_elements(o->'inputs') x where x->>'position'=pos)<>1 then raise exception 'citation_input_ambiguous';end if;
+ if (select count(*) from jsonb_array_elements(o->'inputs') x where x->>'position'=pos)<>1 then raise exception 'mip_citation_input_ambiguous';end if;
  select value into strict inp from jsonb_array_elements(o->'inputs') where value->>'position'=pos;
- if (inp->'capture' is null or inp->'capture'='null'::jsonb)=(inp->'record_version' is null or inp->'record_version'='null'::jsonb) then raise exception 'citation_input_ambiguous';end if;
+ if (inp->'capture' is null or inp->'capture'='null'::jsonb)=(inp->'record_version' is null or inp->'record_version'='null'::jsonb) then raise exception 'mip_citation_input_ambiguous';end if;
  rec:=case when inp->'capture' is not null and inp->'capture'<>'null'::jsonb then inp->'capture' else inp->'record_version' end;
- if jsonb_typeof(rec->'payload'->f) is distinct from 'string' then raise exception 'citation_field_missing';end if;
+ if jsonb_typeof(rec->'payload'->f) is distinct from 'string' then raise exception 'mip_citation_field_missing';end if;
  raw:=rec->'payload'->>f;parent_bytes:=convert_to(rec::text,'UTF8');field_bytes:=convert_to(raw,'UTF8');
- if octet_length(parent_bytes) not between 1 and 1048576 or octet_length(field_bytes) not between 1 and 1048576 then raise exception 'citation_size';end if;
+ if octet_length(parent_bytes) not between 1 and 1048576 or octet_length(field_bytes) not between 1 and 1048576 then raise exception 'mip_citation_size';end if;
  h:=encode(public.digest(parent_bytes,'sha256'),'hex');fh:=encode(public.digest(field_bytes,'sha256'),'hex');
  select * into strict parent from mip_cas.refs where investigation=i and logical_key=parent_key;
- if parent.hash<>h or parent.provenance->>'source_version'<>rec->>'id' or (parent.provenance->>'acquired_at')::timestamptz is distinct from coalesce(rec->>'captured_at',rec->>'recorded_at')::timestamptz then raise exception 'citation_parent_identity';end if;
+ if parent.hash<>h or parent.provenance->>'source_version'<>rec->>'id' or (parent.provenance->>'acquired_at')::timestamptz is distinct from coalesce(rec->>'captured_at',rec->>'recorded_at')::timestamptz then raise exception 'mip_citation_parent_identity';end if;
  perform mip_cas.check_source(i,parent.provenance,parent.hash);
- if not exists(select 1 from mip_cas.objects where hash=h and raw_size=octet_length(parent_bytes)) then raise exception 'citation_parent_identity';end if;
+ if not exists(select 1 from mip_cas.objects where hash=h and raw_size=octet_length(parent_bytes)) then raise exception 'mip_citation_parent_identity';end if;
  derived:=encode(public.digest(convert_to(jsonb_build_array('mip-citation-field-source-v1','utf8_field_bytes_v1',i,parent.id,parent.provenance->>'source_version',h,rec->>'id',f,fh)::text,'UTF8'),'sha256'),'hex');
  capture:=(substr(derived,1,8)||'-'||substr(derived,9,4)||'-'||substr(derived,13,4)||'-'||substr(derived,17,4)||'-'||substr(derived,21,12))::uuid;
  return jsonb_build_object('investigation',i,'workspace_version',w,'input_position',pos,'material_version',rec->>'id','source_field',f,
@@ -87,14 +87,14 @@ begin
  select * into strict r from mip_cas.refs where investigation=i and logical_key=field_key;
  if r.id=(p->>'parent_ref_id')::uuid or r.hash<>p->>'field_hash' or r.provenance->>'source_version'<>p->>'field_source_version' or r.provenance->>'acquired_at'<>p->>'acquired_at'
  or not exists(select 1 from mip_cas.source_identities where investigation=i and source_version=p->>'field_source_version' and capture_id=(p->>'field_capture_id')::uuid and canonical_hash=r.hash and raw_size=(p->>'field_size')::integer)
- or not exists(select 1 from mip_cas.objects where hash=r.hash and raw_size=(p->>'field_size')::integer) then raise exception 'citation_field_identity';end if;
+ or not exists(select 1 from mip_cas.objects where hash=r.hash and raw_size=(p->>'field_size')::integer) then raise exception 'mip_citation_field_identity';end if;
  perform mip_cas.check_source(i,r.provenance,r.hash);
  expected:=(p-'field_base64')||jsonb_build_object('field_logical_key',field_key,'field_ref_id',r.id);
  insert into mip_citation.fields(investigation,workspace_version,input_position,material_version,source_field,identity)
  values(i,w,pos,(p->>'material_version')::uuid,f,expected)
  on conflict(investigation,workspace_version,input_position,source_field) do nothing;
  select id,identity into strict fid,prior from mip_citation.fields where investigation=i and workspace_version=w and input_position=pos and source_field=f;
- if prior is distinct from expected then raise exception 'citation_registration_conflict';end if;
+ if prior is distinct from expected then raise exception 'mip_citation_registration_conflict';end if;
  return fid;
 end$$;
 
@@ -105,10 +105,10 @@ declare u uuid;h jsonb;e jsonb;entry jsonb;
 begin
  u:=mip_cas.authorize(i);
  h:=mip_hypothesis.read_selected_bound_history(u,i,array[r]);
- if jsonb_array_length(h->'entries')<>1 then raise exception 'citation_assessment_denied';end if;
+ if jsonb_array_length(h->'entries')<>1 then raise exception 'mip_citation_assessment_denied';end if;
  entry:=h->'entries'->0;
- if entry->>'revision_id'<>r::text or entry->>'status'<>'available' then raise exception 'citation_assessment_denied';end if;
- if eid is null or length(eid) not between 1 and 256 or (select count(*) from jsonb_array_elements(entry->'assessment'->'evidence') as evidence_rows(evidence_value) where evidence_rows.evidence_value->>'id'=eid)<>1 then raise exception 'citation_evidence_ambiguous';end if;
+ if entry->>'revision_id'<>r::text or entry->>'status'<>'available' then raise exception 'mip_citation_assessment_denied';end if;
+ if eid is null or length(eid) not between 1 and 256 or (select count(*) from jsonb_array_elements(entry->'assessment'->'evidence') as evidence_rows(evidence_value) where evidence_rows.evidence_value->>'id'=eid)<>1 then raise exception 'mip_citation_evidence_ambiguous';end if;
  select value into strict e from jsonb_array_elements(entry->'assessment'->'evidence') where value->>'id'=eid;
  return jsonb_build_object('evidence',e,'workspace_version',(entry->>'workspace_version_id')::uuid);
 end$$;
@@ -118,21 +118,21 @@ declare checked jsonb;e jsonb;m mip_citation.fields;p jsonb;raw text;bytes bytea
 begin
  checked:=mip_citation.checked_evidence(i,r,eid);e:=checked->'evidence';
  select * into strict m from mip_citation.fields where id=fid and investigation=i;
- if m.workspace_version<>(checked->>'workspace_version')::uuid or m.input_position is distinct from e->>'input_position' or m.material_version::text is distinct from e->>'material_version' or m.source_field is distinct from e->'source_span'->>'source_field' then raise exception 'citation_mapping_mismatch';end if;
+ if m.workspace_version<>(checked->>'workspace_version')::uuid or m.input_position is distinct from e->>'input_position' or m.material_version::text is distinct from e->>'material_version' or m.source_field is distinct from e->'source_span'->>'source_field' then raise exception 'mip_citation_mapping_mismatch';end if;
  p:=mip_citation.plan(i,m.workspace_version,m.input_position,m.source_field,m.identity->>'parent_logical_key');
- if m.identity-(array['field_logical_key','field_ref_id']) is distinct from p-'field_base64' then raise exception 'citation_mapping_tampered';end if;
+ if m.identity-(array['field_logical_key','field_ref_id']) is distinct from p-'field_base64' then raise exception 'mip_citation_mapping_tampered';end if;
  parent_read:=mip_cas.read(i,m.identity->>'parent_logical_key','canonical');
  field_read:=mip_cas.read(i,m.identity->>'field_logical_key','canonical');
- if parent_read->>'state'<>'canonical_encoded' or field_read->>'state'<>'canonical_encoded' then raise exception 'citation_rehydration_required';end if;
+ if parent_read->>'state'<>'canonical_encoded' or field_read->>'state'<>'canonical_encoded' then raise exception 'mip_citation_rehydration_required';end if;
  if parent_read->>'ref_id'<>p->>'parent_ref_id' or parent_read->>'hash'<>p->>'parent_canonical_hash' or parent_read->'provenance'->>'source_version'<>p->>'parent_source_version'
- or field_read->>'ref_id'<>m.identity->>'field_ref_id' or field_read->>'hash'<>p->>'field_hash' or field_read->'provenance'->>'source_version'<>p->>'field_source_version' then raise exception 'citation_storage_identity';end if;
+ or field_read->>'ref_id'<>m.identity->>'field_ref_id' or field_read->>'hash'<>p->>'field_hash' or field_read->'provenance'->>'source_version'<>p->>'field_source_version' then raise exception 'mip_citation_storage_identity';end if;
  bytes:=decode(p->>'field_base64','base64');raw:=convert_from(bytes,'UTF8');
- if jsonb_typeof(e->'source_span') is distinct from 'object' or (select count(*) from jsonb_object_keys(e->'source_span'))<>4 or not(e->'source_span' ?& array['source_field','start','end','excerpt_sha256']) or jsonb_typeof(e->'source_span'->'start') is distinct from 'number' or jsonb_typeof(e->'source_span'->'end') is distinct from 'number' or e->'source_span'->>'start' !~ '^[0-9]+$' or e->'source_span'->>'end' !~ '^[0-9]+$' then raise exception 'citation_span_units';end if;
+ if jsonb_typeof(e->'source_span') is distinct from 'object' or (select count(*) from jsonb_object_keys(e->'source_span'))<>4 or not(e->'source_span' ?& array['source_field','start','end','excerpt_sha256']) or jsonb_typeof(e->'source_span'->'start') is distinct from 'number' or jsonb_typeof(e->'source_span'->'end') is distinct from 'number' or e->'source_span'->>'start' !~ '^[0-9]+$' or e->'source_span'->>'end' !~ '^[0-9]+$' then raise exception 'mip_citation_span_units';end if;
  a:=(e->'source_span'->>'start')::integer;b:=(e->'source_span'->>'end')::integer;
- if a<0 or b<=a or b>char_length(raw) or b-a>2000 then raise exception 'citation_span_bounds';end if;
+ if a<0 or b<=a or b>char_length(raw) or b-a>2000 then raise exception 'mip_citation_span_bounds';end if;
  ba:=octet_length(convert_to(substring(raw from 1 for a),'UTF8'));bb:=octet_length(convert_to(substring(raw from 1 for b),'UTF8'));
  span:=substring(bytes from ba+1 for bb-ba);
- if encode(public.digest(span,'sha256'),'hex') is distinct from e->'source_span'->>'excerpt_sha256' then raise exception 'citation_excerpt_hash';end if;
+ if encode(public.digest(span,'sha256'),'hex') is distinct from e->'source_span'->>'excerpt_sha256' then raise exception 'mip_citation_excerpt_hash';end if;
  return jsonb_build_object('investigation',i,'assessment_revision',r,'evidence_id',eid,'field_id',fid,'input_position',e->>'input_position','material_version',e->>'material_version','source_field',m.source_field,
   'start_code_point',a,'end_code_point',b,'byte_start',ba,'byte_end',bb,'span_hash',e->'source_span'->>'excerpt_sha256','mapping',m.identity);
 end$$;
@@ -151,20 +151,20 @@ language plpgsql security definer set search_path='' as $$
 declare identity_value jsonb;prior jsonb;u uuid;receipt mip_citation.binding_requests;
 begin
  u:=mip_cas.authorize(i);
- if request is null then raise exception 'citation_request_required';end if;
+ if request is null then raise exception 'mip_citation_request_required';end if;
  -- Per-user/request serialization only; no global insert lock or registry scan.
  perform pg_advisory_xact_lock(hashtextextended('citation-bind-request:'||i::text||':'||u::text||':'||request::text,0));
  select * into receipt from mip_citation.binding_requests where investigation=i and user_id=u and request_id=request;
- if found and (receipt.assessment_revision is distinct from r or receipt.evidence_id is distinct from eid or receipt.field_id is distinct from fid) then raise exception 'citation_request_conflict';end if;
+ if found and (receipt.assessment_revision is distinct from r or receipt.evidence_id is distinct from eid or receipt.field_id is distinct from fid) then raise exception 'mip_citation_request_conflict';end if;
  identity_value:=mip_citation.derive(i,r,eid,fid);
  if receipt.request_id is not null then
-  if receipt.identity is distinct from identity_value then raise exception 'citation_request_conflict';end if;
+  if receipt.identity is distinct from identity_value then raise exception 'mip_citation_request_conflict';end if;
   return jsonb_build_object('request_id',request,'identity',receipt.identity);
  end if;
  insert into mip_citation.bindings values(i,r,eid,fid,identity_value)
  on conflict(investigation,assessment_revision,evidence_id) do nothing;
  select identity into strict prior from mip_citation.bindings where investigation=i and assessment_revision=r and evidence_id=eid;
- if prior is distinct from identity_value then raise exception 'citation_binding_conflict';end if;
+ if prior is distinct from identity_value then raise exception 'mip_citation_binding_conflict';end if;
  insert into mip_citation.binding_requests values(i,u,request,r,eid,fid,identity_value);
  return jsonb_build_object('request_id',request,'identity',identity_value);
 end$$;
@@ -175,7 +175,7 @@ begin
  perform mip_cas.authorize(i);
  select * into strict b from mip_citation.bindings where investigation=i and assessment_revision=r and evidence_id=eid;
  current_identity:=mip_citation.derive(i,r,eid,b.field_id);
- if b.identity is distinct from current_identity then raise exception 'citation_binding_tampered';end if;
+ if b.identity is distinct from current_identity then raise exception 'mip_citation_binding_tampered';end if;
  return jsonb_build_object('identity',current_identity,
   'parent',mip_cas.read(i,current_identity->'mapping'->>'parent_logical_key','canonical'),
   'field',mip_cas.read(i,current_identity->'mapping'->>'field_logical_key','canonical'),
