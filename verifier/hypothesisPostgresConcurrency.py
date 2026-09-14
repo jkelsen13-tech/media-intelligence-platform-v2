@@ -93,6 +93,7 @@ class Hypothesis(unittest.TestCase):
         h.run(db,Path("supabase/qualification/hypothesis-assessments/004_bound_history.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/005_reassessment_causes.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/006_reassessment_completion.sql").read_text())
+        h.run(db,Path("supabase/qualification/hypothesis-assessments/007_human_reconsideration.sql").read_text())
         cls.request=str(uuid.uuid4())
 
     @classmethod
@@ -479,6 +480,74 @@ class Hypothesis(unittest.TestCase):
                 self.session().execute("insert into mip_hypothesis."+table+" default values;")
             with self.assertRaisesRegex(RuntimeError,"append-only"):
                 self.admin("delete from mip_hypothesis."+table+";")
+
+    def human_request(self,request=None,revision=None,user=None,reason="Synthetic concern; not a finding.",trigger="methodology"):
+        return "select mip_hypothesis.request_reassessment("+",".join(map(q,[user or self.user,self.iid,request or self.request,
+            revision or self.first["assessment"]["id"],trigger,reason]))+");"
+    def request_detail(self,request=None):
+        return "select mip_hypothesis.read_reassessment_request("+",".join(map(q,[self.user,self.iid,request or self.request]))+");"
+    def test_human_request_exact_concurrency_commits_receipt_and_cause_together(self):
+        self.first=json.loads(self.a.execute(self.append()));self.a.execute("begin;")
+        receipt=json.loads(self.a.execute(self.human_request()))
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_requests"),"0")
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_causes"),"0")
+        self.b.start(self.human_request());self.blocked(self.b,self.a);self.a.execute("commit;")
+        self.assertEqual(json.loads(self.b.finish()),receipt)
+        self.assertFalse(receipt["completed_reassessment"]);self.assertFalse(receipt["publication_allowed"])
+        self.assertNotIn("Synthetic concern",json.dumps(receipt))
+        backlog=json.loads(self.a.execute(self.backlog()))
+        self.assertEqual(len(backlog["causes"]),1);self.assertNotIn("Synthetic concern",json.dumps(backlog))
+        self.assertEqual(json.loads(self.a.execute(self.request_detail()))["reason"],"Synthetic concern; not a finding.")
+    def test_human_request_rollback_and_restart_preserve_exact_semantics(self):
+        self.first=json.loads(self.a.execute(self.append()));self.a.execute("begin;");self.a.execute(self.human_request());self.a.execute("rollback;")
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_requests"),"0")
+        self.assertEqual(len(json.loads(self.b.execute(self.backlog()))["causes"]),0)
+        result=json.loads(self.a.execute(self.human_request()))
+        self.a.process.kill();self.a.process.wait(timeout=5)
+        self.assertEqual(json.loads(self.b.execute(self.human_request())),result)
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_requests"),"1")
+    def test_human_request_retry_rechecks_identity_arguments_and_membership(self):
+        self.first=json.loads(self.a.execute(self.append()));self.a.execute(self.human_request())
+        with self.assertRaisesRegex(RuntimeError,"retry conflict"):self.b.execute(self.human_request(reason="Changed synthetic reason."))
+        other=str(uuid.uuid4());self.admin("insert into public.mip_profiles values("+q(other)+")")
+        scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,"user_id":other,"access_role":"reviewer","reason":"Synthetic."})
+        with self.assertRaisesRegex(RuntimeError,"retry conflict"):self.session().execute(self.human_request(user=other))
+        scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,"user_id":self.user,"access_role":"viewer","reason":"Synthetic."})
+        with self.assertRaisesRegex(RuntimeError,"request denied"):self.session().execute(self.human_request())
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_requests"),"1")
+    def test_human_request_first_blocks_completion_with_old_cause_set(self):
+        self.prepare_completion();self.b.execute("begin;");request=json.loads(self.b.execute(self.human_request()))
+        self.a.start(self.complete());self.blocked(self.a,self.b);self.b.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"pending cause set changed"):self.a.finish()
+        self.assertEqual(self.completion_counts(),"1:1:0:0")
+        self.completion_assessment["reassessment_causes"].append({"cause_id":request["cause_id"],"reason":"Synthetic human concern explicitly considered."})
+        result=json.loads(self.a.execute(self.complete()))
+        self.assertEqual(result["assessment"]["review_state"],"unreviewed");self.assertFalse(result["publication_allowed"])
+        self.assertTrue(all(c["state"]=="reassessment_recorded" for c in json.loads(self.a.execute(self.backlog()))["causes"]))
+        self.assertEqual(json.loads(self.b.execute(self.human_request())),request)
+    def test_completion_first_rejects_human_request_for_replaced_revision(self):
+        self.prepare_completion();self.a.execute("begin;");self.a.execute(self.complete())
+        self.b.start(self.human_request());self.blocked(self.b,self.a);self.a.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"target changed"):self.b.finish()
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_requests"),"0")
+    def test_human_reason_is_withheld_after_evidence_permission_revocation(self):
+        self.first=json.loads(self.a.execute(self.append()));self.a.execute(self.human_request())
+        self.admin(self.revoke())
+        result=json.loads(self.a.execute(self.request_detail()))
+        self.assertEqual(result["status"],"withheld");self.assertNotIn("reason",result)
+        self.assertFalse(result["is_approval"]);self.assertNotIn("Synthetic concern",json.dumps(result))
+    def test_human_requests_have_no_worker_write_or_mutation_path(self):
+        self.first=json.loads(self.a.execute(self.append()));self.a.execute(self.human_request())
+        with self.assertRaisesRegex(RuntimeError,"permission denied"):self.b.execute("select * from mip_hypothesis.reassessment_requests;")
+        with self.assertRaisesRegex(RuntimeError,"permission denied"):self.session().execute("insert into mip_hypothesis.reassessment_requests default values;")
+        with self.assertRaisesRegex(RuntimeError,"append-only"):self.admin("delete from mip_hypothesis.reassessment_requests;")
+    def test_human_request_needs_existing_target_and_valid_explicit_category(self):
+        with self.assertRaisesRegex(RuntimeError,"target changed"):self.a.execute(self.human_request(revision=str(uuid.uuid4())))
+        self.first=json.loads(self.b.execute(self.append()))
+        for trigger,reason in [("approve_publication","Synthetic."),("methodology"," "),("shared_origin","x"*2001)]:
+            with self.assertRaisesRegex(RuntimeError,"invalid reassessment request"):
+                self.session().execute(self.human_request(trigger=trigger,reason=reason))
+        self.assertEqual(self.admin("select count(*) from mip_hypothesis.reassessment_requests"),"0")
 
     def test_gateway_cannot_write_approve_or_use_unbound_primitive(self):
         for sql in ["select * from mip_hypothesis.revisions;","update mip_identity.operation_evidence_heads set active=true;",

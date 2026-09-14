@@ -18,6 +18,8 @@ export function createHypothesisAssessmentClient(transport) {
   reconcile:investigationId=>call('reconcile',{investigation_id:investigationId}),
   append:input=>call('append',input),
   complete:input=>call('complete',input),
+  requestReassessment:input=>call('request_reassessment',input),
+  requestDetail:(investigationId,requestId)=>call('request_detail',{investigation_id:investigationId,request_id:requestId}),
  })
 }
 export function hypothesisHistoryView(history,backlog,investigationId) {
@@ -43,8 +45,9 @@ export function hypothesisHistoryView(history,backlog,investigationId) {
  const causes=new Set()
  for(const c of backlog.causes) {
   if(typeof c?.cause_id!=='string'||!c.cause_id||causes.has(c.cause_id)||!ids.has(c.revision_id)||
-   !['retained_source_change','retained_assessment_change','workspace_changed','permission_changed'].includes(c.kind)||
+   !['retained_source_change','retained_assessment_change','workspace_changed','permission_changed','human_reconsideration'].includes(c.kind)||
    (c.state!=='pending_explicit_reconciliation'&&!(backlogV2&&c.state==='reassessment_recorded'&&ids.has(c.resolution_revision_id))))return null
+  if(c.kind==='human_reconsideration'&&(!c.detail||typeof c.detail.request_id!=='string'||!c.detail.request_id||!['contradiction','shared_origin','methodology'].includes(c.detail.trigger)))return null
   causes.add(c.cause_id)
  }
  if(backlogV2) {

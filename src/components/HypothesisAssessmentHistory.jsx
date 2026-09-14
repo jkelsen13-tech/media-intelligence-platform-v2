@@ -1,7 +1,8 @@
 import {useEffect,useState,useId,useRef} from 'react'
+import HypothesisReassessmentRequest,{ReassessmentRequestDetail} from './HypothesisReassessmentRequest.jsx'
 import HypothesisAssessmentPanel from './HypothesisAssessmentPanel.jsx'
 import {hypothesisHistoryView} from '../lib/hypothesisAssessmentClient.js'
-const labels={retained_assessment_change:'Retained assessment or method changed',retained_source_change:'Retained source changed',workspace_changed:'Investigation definition changed',permission_changed:'Permission requires fresh review'}
+const labels={human_reconsideration:'Human reconsideration requested',retained_assessment_change:'Retained assessment or method changed',retained_source_change:'Retained source changed',workspace_changed:'Investigation definition changed',permission_changed:'Permission requires fresh review'}
 export default function HypothesisAssessmentHistory({client,investigationId,userScopeKey,workspaceVersionId,canReconcile=false,onAccessFailure}) {
  const [refresh,setRefresh]=useState(0),[selected,setSelected]=useState(null),[state,setState]=useState(null)
  const selectId=useId(),operationEpoch=useRef(0)
@@ -66,14 +67,17 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
     {entries.map(e=><option key={e.revision_id} value={e.revision_id}>Revision {e.revision}{e.status==='withheld'?' — unavailable':''}</option>)}
    </select>
    {related.length?<div role="status"><p>{related.length} recorded change{related.length===1?'':'s'} await explicit reassessment.</p>
-    <ul>{related.map(c=><li key={c.cause_id}>{labels[c.kind]}{c.change_position?' · retained change '+c.change_position:''}</li>)}</ul>
+    <ul>{related.map(c=><li key={c.cause_id}>{labels[c.kind]}{c.change_position?' · retained change '+c.change_position:''}{c.kind==='human_reconsideration'&&c.detail?.request_id&&typeof client?.requestDetail==='function'?<ReassessmentRequestDetail key={scope+c.cause_id} client={client} investigationId={investigationId} cause={c} scopeKey={scope}/>:null}</li>)}</ul>
    </div>:null}
    {resolved.length?<div><p>{resolved.length} recorded change{resolved.length===1?'':'s'} {resolved.length===1?'has':'have'} a saved reassessment.</p>
     <ul>{resolved.map(c=><li key={c.cause_id}>{labels[c.kind]} · <button type="button"
-      onClick={()=>setSelected(c.resolution_revision_id)}>Open reassessment revision {entries.find(e=>e.revision_id===c.resolution_revision_id)?.revision}</button></li>)}</ul>
+      onClick={()=>setSelected(c.resolution_revision_id)}>Open reassessment revision {entries.find(e=>e.revision_id===c.resolution_revision_id)?.revision}</button>{c.kind==='human_reconsideration'&&c.detail?.request_id&&typeof client?.requestDetail==='function'?<ReassessmentRequestDetail key={scope+c.cause_id} client={client} investigationId={investigationId} cause={c} scopeKey={scope}/>:null}</li>)}</ul>
     <p>A saved reassessment does not approve publication or restore this older assessment’s permissions.</p>
    </div>:null}
   </div>:<p>No completed hypothesis assessments are saved.</p>}
+  {canReconcile&&entry&&entry.revision_id===entries.at(-1)?.revision_id&&typeof client?.requestReassessment==='function'?
+   <HypothesisReassessmentRequest key={scope+entry.revision_id} client={client} investigationId={investigationId}
+    revisionId={entry.revision_id} scopeKey={scope} onRecorded={reload}/>:null}
   {entry?(entry.status==='withheld'||permissionChanged?<p role="status">This saved assessment is withheld until its evidence permissions and review requirements are satisfied.</p>:
    <HypothesisAssessmentPanel key={entry.revision_id} assessment={entry.assessment}
     dependencyChanged={entry.reassessment_pending||related.length>0}/>):null}

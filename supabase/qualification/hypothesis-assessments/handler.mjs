@@ -16,10 +16,12 @@ async function boundedJson(request) {
 function valid(body) {
  if(!object(body)||Object.keys(body).some(k=>!['action','input'].includes(k))||!object(body.input))return false
  const input=body.input
- const keys=['history','backlog','reconcile'].includes(body.action)?['investigation_id']:['append','complete'].includes(body.action)
+ const keys=['history','backlog','reconcile'].includes(body.action)?['investigation_id']:body.action==='request_reassessment'?['investigation_id','request_id','revision_id','trigger','reason']:body.action==='request_detail'?['investigation_id','request_id']:['append','complete'].includes(body.action)
   ?['investigation_id','workspace_version_id','request_id','predecessor_id','assessment']:null
  if(!keys||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k))||!uuid(input.investigation_id))return false
  if(['history','backlog','reconcile'].includes(body.action))return true
+ if(body.action==='request_detail')return uuid(input.request_id)
+ if(body.action==='request_reassessment')return uuid(input.request_id)&&uuid(input.revision_id)&&['contradiction','shared_origin','methodology'].includes(input.trigger)&&typeof input.reason==='string'&&input.reason.trim().length>0&&Array.from(input.reason.trim()).length<=2000
  return uuid(input.workspace_version_id)&&uuid(input.request_id)&&(input.predecessor_id===null||uuid(input.predecessor_id))
   &&validateHypothesisAssessment(input.assessment).valid&&input.assessment.review_state==='unreviewed'
   &&(body.action==='complete'?Boolean(input.assessment.reassessment_causes?.length):!Object.hasOwn(input.assessment,'reassessment_causes'))
@@ -53,7 +55,7 @@ export function createHypothesisHandler({authenticate,store,sourceProject,allowe
    const user=await authenticate(authorization)
    if(!user||!uuid(user.id)||user.is_anonymous===true)return reply(401,{error:{code:'authentication_required'}})
    const i=body.input,scope={verifiedUserId:user.id,investigationId:i.investigation_id}
-   const data=body.action==='history'?await store.boundHistory(scope):body.action==='backlog'?await store.backlog(scope):body.action==='reconcile'?await store.reconcile(scope):await (body.action==='complete'?store.complete.bind(store):store.appendBound.bind(store))({...scope,
+   const data=body.action==='request_detail'?await store.requestDetail({...scope,requestId:i.request_id}):body.action==='request_reassessment'?await store.requestReassessment({...scope,requestId:i.request_id,revisionId:i.revision_id,trigger:i.trigger,reason:i.reason}):body.action==='history'?await store.boundHistory(scope):body.action==='backlog'?await store.backlog(scope):body.action==='reconcile'?await store.reconcile(scope):await (body.action==='complete'?store.complete.bind(store):store.appendBound.bind(store))({...scope,
     workspaceVersionId:i.workspace_version_id,sourceProject,requestId:i.request_id,predecessorId:i.predecessor_id,assessment:i.assessment})
    return reply(200,{data})
   }catch(e){

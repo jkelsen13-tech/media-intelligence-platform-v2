@@ -4,6 +4,16 @@ import {validateHypothesisAssessment} from '../../../src/lib/hypothesisAssessmen
 export function createHypothesisStore(query) {
  if(typeof query!=='function') throw new TypeError('query required')
  return Object.freeze({
+  async requestReassessment({verifiedUserId,investigationId,requestId,revisionId,trigger,reason}) {
+   const result=await query('select mip_hypothesis.request_reassessment($1::uuid,$2::uuid,$3::uuid,$4::uuid,$5::text,$6::text) as value',
+    [verifiedUserId,investigationId,requestId,revisionId,trigger,reason])
+   return result.rows[0].value
+  },
+  async requestDetail({verifiedUserId,investigationId,requestId}) {
+   const result=await query('select mip_hypothesis.read_reassessment_request($1::uuid,$2::uuid,$3::uuid) as value',
+    [verifiedUserId,investigationId,requestId])
+   return result.rows[0].value
+  },
   async append({verifiedUserId,investigationId,requestId,predecessorId,assessment}) {
    const validation=validateHypothesisAssessment(assessment)
    if(!validation.valid) throw new Error(validation.reason)
