@@ -5,6 +5,8 @@ import copy
 import hashlib
 import json
 import subprocess
+import time
+import re
 import unittest
 import uuid
 from pathlib import Path
@@ -16,6 +18,22 @@ def rpc(name, action, value):
     return "select public." + name + "(" + q(action) + "," + js(value) + ");"
 def scalar(db, name, action, value):
     return json.loads(h.run(db, rpc(name, action, value)))
+
+def prepare_temporal_decoding():
+    # h already rejects any non-GitHub or non-disposable environment.
+    containers=subprocess.run(["docker","ps","--filter","ancestor=postgres:17.6","--format","{{.ID}}"],
+        check=True,capture_output=True,text=True,timeout=15).stdout.split()
+    if len(containers)!=1:raise RuntimeError("disposable PostgreSQL container unavailable")
+    h.run("postgres","alter system set wal_level='logical';")
+    subprocess.run(["docker","restart",containers[0]],check=True,capture_output=True,text=True,timeout=30)
+    for _ in range(60):
+        try:
+            if h.run("postgres","show wal_level")=="logical":return
+        except RuntimeError:
+            pass
+        time.sleep(0.25)
+    raise RuntimeError("disposable logical decoding unavailable")
+
 class Hypothesis(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -137,6 +155,67 @@ class Hypothesis(unittest.TestCase):
         return self.admin("select count(*) from mip_hypothesis.history_observations")
     def observation_list(self,user=None):
         return "select mip_hypothesis.list_history_observations("+",".join(map(q,[user or self.user,self.iid,self.expected_epoch]))+");"
+
+
+    def temporal_slot(self):
+        slot="mip_temporal_"+uuid.uuid4().hex
+        self.admin("select * from pg_create_logical_replication_slot("+q(slot)+",'test_decoding')")
+        self.addCleanup(lambda:self.admin("select pg_drop_replication_slot("+q(slot)+")"))
+        return slot
+    def temporal_rows_sql(self,slot,consume=False):
+        fn="pg_logical_slot_get_changes" if consume else "pg_logical_slot_peek_changes"
+        return "select coalesce(json_agg(row_to_json(c)),'[]'::json) from "+fn+"("+q(slot)+",null,null,'include-timestamp','1','skip-empty-xacts','1') c;"
+    def temporal_rows(self,slot,consume=False):
+        return json.loads(self.admin(self.temporal_rows_sql(slot,consume)))
+    def temporal_revision_rows(self,rows):
+        return [r for r in rows if r["data"].startswith("table mip_hypothesis.revision_transactions: INSERT:")]
+    def test_temporal_stream_excludes_open_and_rolled_back_assessments(self):
+        slot=self.temporal_slot()
+        self.a.execute("begin;");self.a.execute(self.append())
+        self.assertEqual(len(self.temporal_revision_rows(self.temporal_rows(slot))),0)
+        self.a.execute("rollback;")
+        self.assertEqual(len(self.temporal_revision_rows(self.temporal_rows(slot))),0)
+        receipt=json.loads(self.b.execute(self.append()))
+        rows=self.temporal_rows(slot);revisions=self.temporal_revision_rows(rows)
+        self.assertEqual(len(revisions),1);self.assertTrue(receipt["assessment"]["id"] in revisions[0]["data"])
+        commits=[r for r in rows if r["data"].startswith("COMMIT ")]
+        self.assertEqual(len(commits),1);self.assertEqual(str(commits[0]["xid"]),str(revisions[0]["xid"]))
+        self.assertTrue(re.fullmatch(r"COMMIT [0-9]+ \(at .+\)",commits[0]["data"]) is not None)
+    def test_temporal_stream_orders_commits_not_transaction_allocation(self):
+        other_iid,other_vid=str(uuid.uuid4()),str(uuid.uuid4())
+        scalar(self.database,"mip_investigation_workspace_v1","put",{"investigation_id":other_iid,"version_id":other_vid,
+            "previous_version_id":None,"observation_id":self.observation,"state":self.state,"change_reason":"Synthetic second investigation."})
+        scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":other_iid,
+            "user_id":self.user,"access_role":"reviewer","reason":"Synthetic."})
+        slot=self.temporal_slot()
+        self.a.execute("begin;");first=json.loads(self.a.execute(self.append()))
+        earlier_xid=int(self.a.execute("select pg_current_xact_id()::text;"))
+        other=copy.deepcopy(self.assessment);other["question_id"]=other_iid
+        query=self.append(request=str(uuid.uuid4()),assessment=other).replace(q(self.iid)+",",q(other_iid)+",",1).replace(q(self.vid)+",",q(other_vid)+",",1)
+        second=json.loads(self.b.execute(query))
+        self.a.execute("commit;")
+        rows=self.temporal_rows(slot);revisions=self.temporal_revision_rows(rows)
+        self.assertEqual(len(revisions),2)
+        self.assertTrue(second["assessment"]["id"] in revisions[0]["data"])
+        self.assertTrue(first["assessment"]["id"] in revisions[1]["data"])
+        self.assertGreater(int(revisions[0]["xid"]),earlier_xid)
+        self.assertEqual(int(revisions[1]["xid"]),earlier_xid)
+        commits=[r for r in rows if r["data"].startswith("COMMIT ")]
+        self.assertEqual([r["xid"] for r in commits],[r["xid"] for r in revisions])
+    def test_temporal_stream_replays_after_consumer_loss_until_acknowledged(self):
+        slot=self.temporal_slot();self.a.execute(self.append())
+        consumer=h.Session(self.database);self.sessions.append(consumer)
+        first=json.loads(consumer.execute("reset role;"+self.temporal_rows_sql(slot)))
+        self.assertEqual(len(self.temporal_revision_rows(first)),1)
+        consumer.process.kill();consumer.process.wait(timeout=5)
+        digest=lambda rows:hashlib.sha256(json.dumps(rows,sort_keys=True).encode()).hexdigest()
+        self.assertEqual(digest(self.temporal_rows(slot)),digest(first))
+        self.assertEqual(digest(self.temporal_rows(slot,consume=True)),digest(first))
+        self.assertEqual(len(self.temporal_rows(slot)),0)
+    def test_temporal_stream_without_bootstrap_does_not_recover_old_history(self):
+        self.a.execute(self.append());slot=self.temporal_slot()
+        self.assertEqual(self.counts(),"1:1")
+        self.assertEqual(len(self.temporal_revision_rows(self.temporal_rows(slot))),0)
 
     def test_external_observation_epoch_mismatch_and_null_deny_all_gateway_paths(self):
         self.a.execute(self.append());self.a.execute(self.observe())
@@ -968,6 +1047,7 @@ process.stdout.write(JSON.stringify(buildComposerSubmission(context,draft,crypto
         self.assertEqual(self.first["assessment"]["review_state"],"unreviewed")
 
 if __name__=="__main__":
+    prepare_temporal_decoding()
     print("MIP_HYPOTHESIS_PG_VERSION="+h.run("postgres","select version();"),flush=True)
     print("MIP_HYPOTHESIS_FIXTURES=synthetic_only;CC_closed;no_live_access",flush=True)
     result=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Hypothesis))
