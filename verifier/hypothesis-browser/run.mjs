@@ -330,6 +330,7 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    const appReason=appHistory.getByLabel('Reason for reconsideration',{exact:true})
    await appReason.selectOption('methodology')
    assert.equal(await appReason.inputValue(),'methodology')
+   await appHistory.getByText('Selected reason: Method or reasoning needs reconsideration',{exact:true}).waitFor()
    await appReason.focus();await page.keyboard.press('ArrowUp')
    assert.equal(await appReason.inputValue(),'shared_origin')
    assert.ok((await appReason.boundingBox()).height>=44)

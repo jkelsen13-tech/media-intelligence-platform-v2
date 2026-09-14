@@ -31,9 +31,10 @@ export default function HypothesisReassessmentRequest({client,investigationId,re
   <p>Record a concern for explicit reconsideration. This does not approve a method, change the saved conclusion or authorize publication.</p>
   <form onSubmit={submit}>
    <label htmlFor={id+'-trigger'}>Reason for reconsideration</label>
-   <select id={id+'-trigger'} value={trigger} disabled={!!attempt} onChange={e=>setTrigger(e.target.value)}>
+   <select id={id+'-trigger'} aria-describedby={id+'-trigger-description'} value={trigger} disabled={!!attempt} onChange={e=>setTrigger(e.target.value)}>
     {Object.entries(triggers).map(([value,label])=><option key={value} value={value}>{label}</option>)}
    </select>
+   <p id={id+'-trigger-description'}>Selected reason: {triggers[trigger]}</p>
    <label htmlFor={id+'-reason'}>What needs reconsideration, and why?</label>
    <textarea id={id+'-reason'} value={reason} maxLength={2000} required disabled={!!attempt}
     onChange={e=>setReason(e.target.value)} />
