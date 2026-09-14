@@ -77,8 +77,13 @@ export async function setup(t) {
   const entry=binding.observation.snapshot.inputs.find(x=>x.capture)
   const permissionScope={source_project:source,material_ref:'capture:'+entry.capture.id,material_version:entry.capture.source_version_hash,
    source_version:entry.capture.id,audience:'isolated_internal_review'}
-  for(const operation of ['retention','analysis','excerpt_display'])for(const domain of ['rights','privacy']) {
-   const scope={...permissionScope,operation,domain},revision=randomUUID()
+  // Explicit synthetic receipts for every exact retained input; a selected span is not the permission closure.
+  const materialScopes=binding.observation.snapshot.inputs.map(input=>{
+   const kind=Object.hasOwn(input,'capture')?'capture':'record_version',rec=input[kind]
+   return {source_project:source,material_ref:kind+':'+rec.id,material_version:rec.source_version_hash,source_version:rec.id,audience:'isolated_internal_review'}
+  })
+  for(const materialScope of materialScopes)for(const operation of ['retention','analysis','excerpt_display'])for(const domain of ['rights','privacy']) {
+   const scope={...materialScope,operation,domain},revision=randomUUID()
    await f.admin('insert into mip_identity.operation_evidence_versions values('+[
     revision,scope,'synthetic-fixture-v1','synthetic-policy','v1',sha('synthetic policy'),'synthetic-evidence','synthetic-owner','synthetic-approval',
     'recorded','allow','2000-01-01','2999-01-01',[],true].map(q).join(',')+');insert into mip_identity.operation_evidence_heads values('+[scope,revision,true].map(q).join(',')+');')
