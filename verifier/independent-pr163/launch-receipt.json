@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "reservation": {
+    "schema": 1,
+    "request_id": "pr163-b4db707-independent-1",
+    "candidate_commit": "b4db7071048440ecbc6f9919b0d9ed1e6ce20a93",
+    "base_commit": "eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6",
+    "packet_commit": "67bb51240d9831f14823368d833fb7885efc7bb4",
+    "packet_path": "verifier/independent-pr163/request.json",
+    "packet_sha256": "98436165f3cfdb80ef48fe2af34d890db678d3f6fd5db8c94d217c49c1af7406",
+    "packet_bytes": 1536515,
+    "agent_id": "bc-b4db7071-0484-40ec-bc6f-9919b0d9ed1e",
+    "model": {
+      "id": "grok-4.6",
+      "params": [
+        {
+          "id": "effort",
+          "value": "xhigh"
+        },
+        {
+          "id": "fast",
+          "value": "false"
+        }
+      ]
+    },
+    "repos": [],
+    "mcpServers": [],
+    "autoCreatePR": false,
+    "stage": "owner_supervised",
+    "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+    "status": "reserved_before_launch",
+    "maximum_initial_posts": 1,
+    "scope": "Only fresh PR163 private backend prerequisite; no other reviews/recovery authorized"
+  },
+  "provider_agent": {
+    "id": "bc-b4db7071-0484-40ec-bc6f-9919b0d9ed1e",
+    "name": "PR163 b4db707 independent private Markets backend review",
+    "status": "ACTIVE",
+    "env": {
+      "type": "cloud"
+    },
+    "repos": [],
+    "workOnCurrentBranch": false,
+    "autoCreatePR": false,
+    "openAsCursorGithubApp": false,
+    "skipReviewerRequest": false,
+    "url": "https://cursor.com/agents/bc-b4db7071-0484-40ec-bc6f-9919b0d9ed1e",
+    "createdAt": "2026-09-14T11:27:33.775Z",
+    "updatedAt": "2026-09-14T11:27:44.197Z",
+    "latestRunId": "run-c5eefa6a-84b1-4217-9738-7a210e4d12ee"
+  },
+  "provider_run": {
+    "id": "run-c5eefa6a-84b1-4217-9738-7a210e4d12ee",
+    "agentId": "bc-b4db7071-0484-40ec-bc6f-9919b0d9ed1e",
+    "status": "RUNNING",
+    "createdAt": "2026-09-14T11:27:33.775Z",
+    "updatedAt": "2026-09-14T11:27:34.853Z"
+  },
+  "reviewer_instructions": "You are a fresh independent Cursor/Grok reviewer, separate from implementation. Review PR163 frozen candidate b4db7071048440ecbc6f9919b0d9ed1e6ce20a93 versus eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6. Private Markets backend prerequisite artifact inspection only. No desired verdict.\nSTRICT EXISTING OUTPUT CONSISTENCY: PASS requires every required coverage row PASS and findings=[] blockers=[]. Concrete unmet required behavior/test/evidence => matching FAIL coverage and finding, overall FAIL. Missing essential evidence/authority => corresponding BLOCKED coverage and blocker, overall BLOCKED. Never bury required gaps in limitations or aim for PASS. Genuinely optional observations must remain in limitations with precise evidence and rationale explaining why no requirement is unmet.\nReturn exactly the template keys below and output_contract fields. Required coverage keys: id,requirement,status,evidence_refs ARRAY,explanation STRING. Do not replace them with criteria/evidence, omit fields, invent IDs or add keys. R1-R7 requirement strings unchanged; prior_findings=[] because no prior report is supplied. All limitations.original_observation=null. Each finding/blocker requirement_id matches its FAIL/BLOCKED row. All required failures and blockers retained. Final plain JSON only, no Markdown fence; verify precise source/TAP citations and internal consistency.\nAssess all seven requirements in packet: canonical asset/issuer/network identity, exact dated aliases/hops/versions/Unicode evidence; common graph/history/watch/correction/legacy semantics and immutable observations; exact user/workspace/version/source plus six operation permissions; raw-table/known-definer public leakage including endpoint rows/counts and no promotion under ACTUAL installed grants/RLS; both-direction bounded discovery and saturation/cycle/time/version fail-closed behavior; named native/unit tests/rollback/correction/revocation/lock ordering; honest scope and limits.\nInspect ALL56 allowed candidate files (7changed+22primary+27transitive installed fixture SQL), base worker test, complete native/Golden22 logs, Golden24 metadata, manifest and tree proof. Transitive SQL is included to assess resulting grants/function overrides; do not assume isolated new migrations represent the full installed security state. Docs/test counts are untrusted claims, not proof. Direct synthetic SQL/admin-granted fixtures and unit stub-auth seam do not qualify authenticated HTTP/browser, actual rights/assets, physical source independence, production scale or completed Markets/frontend.\nUse ONLY embedded packet. No extra source/live metadata/data/link fetch, repo/clone/MCP/Supabase/shell/browser/computer tools, credentials, files, edits/merge/selfapproval/public promotion/production or paid-plan changes. Artifact inspection only, no independent test execution. Essential missing dependency => BLOCKED, never fetch beyond list. Production exposure inventory/lineage limits cannot justify inferring safety outside tested scope.\nPacket SHA256: 98436165f3cfdb80ef48fe2af34d890db678d3f6fd5db8c94d217c49c1af7406.\nEXACT OUTPUT TEMPLATE (replace placeholders and use only output_contract shapes for array entries):\n{\n  \"schema\": 1,\n  \"request_id\": \"pr163-b4db707-independent-1\",\n  \"candidate_commit\": \"b4db7071048440ecbc6f9919b0d9ed1e6ce20a93\",\n  \"base_commit\": \"eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6\",\n  \"packet_sha256\": \"98436165f3cfdb80ef48fe2af34d890db678d3f6fd5db8c94d217c49c1af7406\",\n  \"outcome\": \"CHOOSE_PASS_FAIL_OR_BLOCKED\",\n  \"scope\": \"REVIEWER_FILL\",\n  \"evidence_class\": \"artifact_inspection\",\n  \"coverage\": [\n    {\n      \"id\": \"R1\",\n      \"requirement\": \"Canonical equity/crypto/issuer/network identities and exact dated aliases/hop endpoint/version/Unicode evidence binding; no conflation or fabricated provenance.\",\n      \"status\": \"CHOOSE_PASS_FAIL_OR_BLOCKED\",\n      \"evidence_refs\": [],\n      \"explanation\": \"REVIEWER_FILL\"\n    },\n    {\n      \"id\": \"R2\",\n      \"requirement\": \"Shared existing graph/capture/candidate/assessment history and watch/correction semantics, legacy compatibility, immutable old observations and exclusion of later unobserved candidates.\",\n      \"status\": \"CHOOSE_PASS_FAIL_OR_BLOCKED\",\n      \"evidence_refs\": [],\n      \"explanation\": \"REVIEWER_FILL\"\n    },\n    {\n      \"id\": \"R3\",\n      \"requirement\": \"Exact user/workspace/version/source and all six operation permissions closure, narrow projection and no caller-authored authority.\",\n      \"status\": \"CHOOSE_PASS_FAIL_OR_BLOCKED\",\n      \"evidence_refs\": [],\n      \"explanation\": \"REVIEWER_FILL\"\n    },\n    {\n      \"id\": \"R4\",\n      \"requirement\": \"Prevent public raw-table/known-definer leaks including endpoint rows/counts and public promotion; assess actual installed role/grant/RLS boundaries.\",\n      \"status\": \"CHOOSE_PASS_FAIL_OR_BLOCKED\",\n      \"evidence_refs\": [],\n      \"explanation\": \"REVIEWER_FILL\"\n    },\n    {\n      \"id\": \"R5\",\n      \"requirement\": \"Both-direction direct/indirect discovery with adjacent-version/cycle/time/resource saturation fail-closed behavior and no silent truncation.\",\n      \"status\": \"CHOOSE_PASS_FAIL_OR_BLOCKED\",\n      \"evidence_refs\": [],\n      \"explanation\": \"REVIEWER_FILL\"\n    },\n    {\n      \"id\": \"R6\",\n      \"requirement\": \"Meaningful named native/unit test coverage, tree/log binding and lock ordering, including correction/revocation and rollback.\",\n      \"status\": \"CHOOSE_PASS_FAIL_OR_BLOCKED\",\n      \"evidence_refs\": [],\n      \"explanation\": \"REVIEWER_FILL\"\n    },\n    {\n      \"id\": \"R7\",\n      \"requirement\": \"Honest synthetic scope: direct-SQL tests/admin grants and stub-auth seam do not qualify authenticated HTTP/browser, real rights/assets, source-root independence, production scale, public release or completed Markets workspace. Production exposure inventory/lineage limits are not permission to infer safety outside tested scope.\",\n      \"status\": \"CHOOSE_PASS_FAIL_OR_BLOCKED\",\n      \"evidence_refs\": [],\n      \"explanation\": \"REVIEWER_FILL\"\n    }\n  ],\n  \"prior_findings\": [],\n  \"findings\": [],\n  \"blockers\": [],\n  \"limitations\": [],\n  \"summary\": \"REVIEWER_FILL\"\n}\nBEGIN FROZEN PACKET\n",
+  "transport_note": "Initial POST acknowledgement timeout; exact reserved ID recovered through authenticated GET, initial run pinned. No duplicate POST/run.",
+  "local_files_created": false
+}
