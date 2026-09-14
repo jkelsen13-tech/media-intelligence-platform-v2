@@ -113,7 +113,7 @@ begin
    or jsonb_typeof(x->'id') is distinct from 'string' or jsonb_typeof(x->'definition') is distinct from 'string' then
    raise exception 'mip_hypothesis_generation_spec';end if;
  end loop;
- if (select count(distinct x->>'id') from jsonb_array_elements(p_spec->'hypotheses') x)<>jsonb_array_length(p_spec->'hypotheses') then
+ if (select count(distinct element_value->>'id') from jsonb_array_elements(p_spec->'hypotheses') element_value)<>jsonb_array_length(p_spec->'hypotheses') then
   raise exception 'mip_hypothesis_generation_spec';end if;
  context:=mip_hypothesis.authoring_context(p_user,p_investigation,p_version,p_source_project);
  args:=jsonb_build_object('user',p_user,'investigation',p_investigation,'version',p_version,'source',p_source_project,
@@ -147,7 +147,7 @@ begin
   spans:=spans||jsonb_build_array(s||jsonb_build_object('id',x->>'id','source_span',
    jsonb_build_object('source_field',x->>'source_field','start',x->'start','end',x->'end','excerpt_sha256',s->'excerpt_sha256')));
  end loop;
- if (select count(distinct x->>'id') from jsonb_array_elements(spans) x)<>jsonb_array_length(spans) then raise exception 'mip_hypothesis_generation_span';end if;
+ if (select count(distinct element_value->>'id') from jsonb_array_elements(spans) element_value)<>jsonb_array_length(spans) then raise exception 'mip_hypothesis_generation_span';end if;
  for x in select value from jsonb_array_elements(context->'backlog'->'causes') c
   where c->>'state'='pending_explicit_reconciliation' and c->>'kind'='human_reconsideration' loop
   s:=mip_hypothesis.read_reassessment_request(p_user,p_investigation,(x->'detail'->>'request_id')::uuid);
@@ -256,12 +256,12 @@ begin
   or a->>'hypothesis_relationship' is distinct from g.inputs->>'hypothesis_relationship'
   or jsonb_typeof(a->'hypotheses') is distinct from 'array' or jsonb_typeof(a->'evidence') is distinct from 'array'
   or jsonb_typeof(a->'arguments') is distinct from 'array' then raise exception 'mip_hypothesis_output_binding';end if;
- if (select coalesce(jsonb_agg(x-'likelihood'-'confidence'),'[]'::jsonb) from jsonb_array_elements(a->'hypotheses') x)
+ if (select coalesce(jsonb_agg(element_value-'likelihood'-'confidence'),'[]'::jsonb) from jsonb_array_elements(a->'hypotheses') element_value)
    is distinct from g.inputs->'hypotheses' then raise exception 'mip_hypothesis_output_hypotheses';end if;
  for x in select value from jsonb_array_elements(a->'hypotheses') loop
   if not mip_hypothesis.worker_rating(x->'likelihood') or not mip_hypothesis.worker_rating(x->'confidence') then raise exception 'mip_hypothesis_estimation_not_qualified';end if;
  end loop;
- select array_agg(x->>'id') into hids from jsonb_array_elements(a->'hypotheses') x;
+ select array_agg(element_value->>'id') into hids from jsonb_array_elements(a->'hypotheses') element_value;
  if jsonb_array_length(a->'evidence')<>jsonb_array_length(g.inputs->'spans') then raise exception 'mip_hypothesis_output_evidence';end if;
  for x in select value from jsonb_array_elements(a->'evidence') loop
   select value into s from jsonb_array_elements(g.inputs->'spans') z where z->>'id'=x->>'id';
@@ -273,7 +273,7 @@ begin
    or exists(select 1 from jsonb_object_keys(x) k where k not in('id','input_position','material_version','source_span','acquired_at','published_at','event_time','origin_group','documented_claim','quality'))
    then raise exception 'mip_hypothesis_output_evidence';end if;
  end loop;
- select array_agg(x->>'id'),count(distinct x->>'id') into eids,n from jsonb_array_elements(a->'evidence') x;
+ select array_agg(element_value->>'id'),count(distinct element_value->>'id') into eids,n from jsonb_array_elements(a->'evidence') element_value;
  if n<>jsonb_array_length(a->'evidence') then raise exception 'mip_hypothesis_output_evidence';end if;
  for x in select value from jsonb_array_elements(a->'arguments') loop
   if jsonb_typeof(x) is distinct from 'object' or jsonb_typeof(x->'id') is distinct from 'string' or jsonb_typeof(x->'hypothesis_id') is distinct from 'string' or nullif(btrim(x->>'id'),'') is null
@@ -289,7 +289,7 @@ begin
    or exists(select 1 from jsonb_object_keys(x) k where k not in('id','hypothesis_id','relation','evidence_ids','inference','limitation','relevance'))
   then raise exception 'mip_hypothesis_output_argument';end if;
  end loop;
- if (select count(distinct x->>'id') from jsonb_array_elements(a->'arguments') x)<>jsonb_array_length(a->'arguments') then raise exception 'mip_hypothesis_output_argument';end if;
+ if (select count(distinct element_value->>'id') from jsonb_array_elements(a->'arguments') element_value)<>jsonb_array_length(a->'arguments') then raise exception 'mip_hypothesis_output_argument';end if;
  if jsonb_typeof(c) is distinct from 'object' or c->>'state' is null or c->>'state' not in('better_supported','difficult_to_distinguish','insufficient_to_rank')
   or jsonb_typeof(c->'rationale') is distinct from 'string' or nullif(btrim(c->>'rationale'),'') is null
   or jsonb_typeof(c->'main_limitation') is distinct from 'string' or nullif(btrim(c->>'main_limitation'),'') is null
@@ -302,7 +302,7 @@ begin
   or exists(select 1 from jsonb_object_keys(c) k where k not in('state','rationale','main_limitation','confidence','favored_ids'))
  then raise exception 'mip_hypothesis_output_comparison';end if;
  for s in select a->k from unnest(array['assumptions','gaps','change_tests']) k loop
-  if jsonb_typeof(s) is distinct from 'array' or exists(select 1 from jsonb_array_elements(s) x where jsonb_typeof(x)<>'string' or btrim(x#>>'{}')='') then raise exception 'mip_hypothesis_output_reasoning';end if;
+  if jsonb_typeof(s) is distinct from 'array' or exists(select 1 from jsonb_array_elements(s) element_value where jsonb_typeof(element_value)<>'string' or btrim(element_value#>>'{}')='') then raise exception 'mip_hypothesis_output_reasoning';end if;
  end loop;
  if jsonb_typeof(a->'revision_reason') is distinct from 'string' or nullif(btrim(a->>'revision_reason'),'') is null
   or a->>'revision_trigger' is null or a->>'revision_effect' is null
