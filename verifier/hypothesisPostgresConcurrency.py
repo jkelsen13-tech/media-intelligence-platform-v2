@@ -373,6 +373,14 @@ class Hypothesis(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,"permission denied"):
             self.b.execute(sql.replace("append_bound_revision(","append_bound_revision_v1("))
         self.assertEqual(self.completion_counts(),"1:1:0:0")
+    def test_plain_append_cannot_reopen_completed_question_without_recorded_cause(self):
+        self.prepare_completion();result=json.loads(self.a.execute(self.complete()))
+        plain=copy.deepcopy(self.completion_assessment);del plain["reassessment_causes"]
+        plain.update(revision=3,predecessor_id=result["assessment"]["id"])
+        sql="select mip_hypothesis.append_bound_revision("+",".join(map(q,[self.user,self.iid,self.new_version,self.source,
+            str(uuid.uuid4()),result["assessment"]["id"]]))+","+js(plain)+");"
+        with self.assertRaisesRegex(RuntimeError,"explicit reassessment completion required"):self.b.execute(sql)
+        self.assertEqual(self.completion_counts(),"2:2:1:"+str(len(self.pending)))
     def test_completion_process_loss_before_commit_recovers_pending_work(self):
         self.prepare_completion();self.a.execute("begin;");self.a.execute(self.complete())
         self.a.process.kill();self.a.process.wait(timeout=5)

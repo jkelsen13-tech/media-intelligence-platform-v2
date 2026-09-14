@@ -93,3 +93,47 @@ test('missed-change reconciliation is explicit and cannot mark assessment comple
  assert.equal(reconciles,1);assert.match(content(tree),/Later synthetic assessment/)
  act(()=>tree.unmount())
 })
+
+function completedFixture() {
+ const f=fixture(),cause='synthetic-completed-cause'
+ f.history.entries[1].assessment.reassessment_causes=[{cause_id:cause,reason:'Synthetic saved consideration of this change.'}]
+ Object.assign(f.backlog,{contract_version:'mip_hypothesis_reassessment_backlog_v2',is_completion_receipt:false,
+  causes:[{cause_id:cause,revision_id:'synthetic-assessment-1',kind:'retained_source_change',state:'reassessment_recorded',
+   resolution_revision_id:'synthetic-assessment-2'}]})
+ return f
+}
+test('resolved causes link to the saved reassessment and do not remain pending',async()=>{
+ const f=completedFixture();let tree
+ await act(async()=>{tree=TestRenderer.create(createElement(Panel,props(f.client)))})
+ act(()=>tree.root.findByType('select').props.onChange({target:{value:'synthetic-assessment-1'}}))
+ assert.match(content(tree),/has a saved reassessment/)
+ assert.doesNotMatch(content(tree),/await explicit reassessment|causes remain pending/)
+ act(()=>tree.root.findAllByType('button').find(b=>b.children.join('')==='Open reassessment revision 2').props.onClick())
+ assert.match(content(tree),/Later synthetic assessment/)
+ const details=tree.root.findByType('details')
+ act(()=>{const node={open:true};details.props.onToggle({target:node,currentTarget:node})})
+ assert.match(content(tree),/Synthetic saved consideration/)
+ assert.match(content(tree),/separate from review approval and publication eligibility/)
+ act(()=>tree.unmount())
+})
+test('history and resolution snapshots must agree before completed assessment text is revealed',()=>{
+ for(const change of [f=>f.backlog.causes[0].state='pending_explicit_reconciliation',
+  f=>f.backlog.causes[0].resolution_revision_id='synthetic-assessment-1',
+  f=>f.history.entries[1].assessment.reassessment_causes[0].cause_id='different',
+  f=>f.backlog.contract_version='mip_hypothesis_reassessment_backlog_v1']){
+  const f=completedFixture();change(f)
+  assert.equal(hypothesisHistoryView(f.history,f.backlog,'synthetic-question'),null)
+ }
+})
+test('resolving a permission cause does not restore withheld prior assessment text',async()=>{
+ const f=completedFixture()
+ f.backlog.causes[0].kind='permission_changed'
+ Object.assign(f.history.entries[0],{status:'withheld',reason:'permission_binding_changed_fresh_review_required'})
+ delete f.history.entries[0].assessment
+ let tree;await act(async()=>{tree=TestRenderer.create(createElement(Panel,props(f.client)))})
+ act(()=>tree.root.findByType('select').props.onChange({target:{value:'synthetic-assessment-1'}}))
+ assert.match(content(tree),/saved assessment is withheld/)
+ assert.doesNotMatch(content(tree),/Original synthetic assessment/)
+ assert.match(content(tree),/does not approve publication or restore/)
+ act(()=>tree.unmount())
+})

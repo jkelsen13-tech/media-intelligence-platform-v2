@@ -53,6 +53,10 @@ export default function HypothesisAssessmentPanel({assessment,dependencyChanged=
         <Notes title="Assumptions" items={r.assumptions}/>
         <Notes title="What weakens or limits this assessment?" items={r.gaps}/>
         <Notes title="What would change this assessment?" items={r.change_tests}/>
+        {r.reassessment_causes?.length?<section><h4>How pending changes were considered</h4>
+          <ul>{r.reassessment_causes.map(c=><li key={c.cause_id}><p>{c.reason}</p><p>Retained cause: {c.cause_id}</p></li>)}</ul>
+          <p>This saved consideration is separate from review approval and publication eligibility.</p>
+        </section>:null}
         <h4>Saved revision record</h4>
         <p>Cause: {r.revision_trigger.replaceAll('_',' ')} · Result: {r.revision_effect.replaceAll('_',' ')}</p>
         <p>{r.revision_reason}</p>

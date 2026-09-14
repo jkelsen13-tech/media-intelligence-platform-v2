@@ -47,11 +47,11 @@ The same existing permission/source fence orders revocation against sensitive ac
 
 Completion rechecks permissions across the retained observation/dependency closure and previously accepted material. It stores exact non-content permission bindings in the receipt. Reauthorization must use a fresh permission revision for a permission-change cause; the software cannot fabricate that authorization. Unsupported prior material remains blocked rather than being silently omitted.
 
-The new assessment, acceptance binding, cause resolutions and receipt commit or roll back together. Plain append cannot bypass pending work or carry acknowledgement annotations. Exact completion retries recheck current identity, arguments and permission closure; later causes remain pending and are not absorbed into the old receipt. Changed permission bindings require a fresh bound assessment. Completed payload history also checks the full retained permission closure, including inputs not quoted in the final assessment.
+The new assessment, acceptance binding, cause resolutions and receipt commit or roll back together. Plain append is limited to initial acceptance and exact retry; every later revision requires explicit recorded reassessment work. It cannot bypass pending work or carry acknowledgement annotations. Explicit manual/method-change requests are still required for the complete authoring workflow. Exact completion retries recheck current identity, arguments and permission closure; later causes remain pending and are not absorbed into the old receipt. Changed permission bindings require a fresh bound assessment. Completed payload history also checks the full retained permission closure, including inputs not quoted in the final assessment.
 
 Cause explanations are retained in the new private assessment, not copied into public/sanitized receipt metadata. Completion remains unreviewed and publication_allowed=false. Resolving technical reassessment work is not human review approval, factual-publication eligibility, a semantic qualification result or restored publication.
 
-A backlog response is not a completion receipt. Protocol v2 preserves original causes and identifies resolutions separately; old pending rows do not disappear. The frontend must distinguish those states before consuming v2.
+A backlog response is not a completion receipt. Protocol v2 preserves original causes and identifies resolutions separately; old pending rows do not disappear. The frontend distinguishes those states and rejects inconsistent history/resolution snapshots before consuming v2.
 
 ## Frontend and transport
 
@@ -59,7 +59,7 @@ The isolated handler accepts exact input keys, uses verified non-anonymous Auth 
 
 PrivateInvestigationWorkspace mounts the history control only when a hypothesis client is explicitly supplied. The default is unconfigured. The client creates no persistent browser cache. History rejects cross-question/public/malformed responses; account, workspace and client changes, logout, denied access and late responses clear or withhold private text. Permission causes suppress affected text even when separately fetched history and backlog straddle revocation.
 
-Scoring controls, author/reviewer completion and resolved-cause display remain to be finished. Existing World View, private workspace safeguards, D4/D5, provenance and temporal regressions remain required.
+Backlog v2 controls now distinguish pending causes from recorded resolutions, link to the completing revision and reveal its saved cause explanations only through permission-checked assessment history. Cross-request history/backlog snapshots must agree; an old protocol response cannot claim a newer completion. Resolving a permission cause does not restore withheld prior text. Scoring controls and author/reviewer completion remain to be finished. Existing World View, private workspace safeguards, D4/D5, provenance and temporal regressions remain required.
 
 ## Verification and preserved checkpoints
 
@@ -80,3 +80,5 @@ CC stays closed at 3/3 with no activation subject. Tested activation 0da8b5a0a4f
 Numerical methodology/F2 and production issuer/subject/runtime, custody/rotation and deployment remain owner-gated. The current isolated work does not require inventing those choices. Continue independent engineering rather than repeatedly asking for unknown historical permissions.
 
 This feature is not an October 3 retirement prerequisite without an actual existing-backend dependency. The separate consolidation records and owner/access proposals at d9ccc76a2001c0cef16a8977c21f18030911a570 remain authoritative for that work. A coherent feature review package and safe backend retirement have distinct gates; neither is declared complete here.
+
+The first 006 native run at 15a66014a8a3e99a8a87de18ddb03ce6e3fd2543 passed 36/37 cases and failed one diagnostic-order assertion: an old observation was rejected for workspace lineage before missing source change. Validation now uses deterministic cause-kind ordering; the missing-source assertion is retained. That failed run remains failed historical evidence. Golden tests/builds passed at that checkpoint. The continuation adds a plain-append bypass regression and resolved-history interaction tests; its own exact-head verification remains required.

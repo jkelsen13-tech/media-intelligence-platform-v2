@@ -40,7 +40,7 @@ revoke execute on function mip_hypothesis.append_bound_revision_v1(uuid,uuid,uui
 create function mip_hypothesis.append_bound_revision(p_user uuid,p_investigation uuid,p_version uuid,p_source_project text,
  p_request uuid,p_predecessor uuid,p_assessment jsonb) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare b jsonb;
+declare b jsonb; head uuid;
 begin
  if current_setting('transaction_isolation')<>'read committed' then raise exception using errcode='25001',message='hypothesis requires read committed';end if;
  perform 1 from mip_cutover_authority.publication_fence where id for share;
@@ -50,8 +50,10 @@ begin
  perform pg_advisory_xact_lock(hashtextextended('mip-hypothesis-question:'||p_investigation::text,0));
  if p_assessment ? 'reassessment_causes' then raise exception using errcode='22023',message='explicit reassessment completion required';end if;
  if not exists(select 1 from mip_hypothesis.revisions where investigation_id=p_investigation and request_id=p_request) then
+  select id into head from mip_hypothesis.revisions where investigation_id=p_investigation order by revision desc limit 1;
+  if head is distinct from p_predecessor then raise exception using errcode='40001',message='hypothesis predecessor changed';end if;
   perform mip_hypothesis.discover_reassessment_causes(p_investigation);
-  if exists(select 1 from mip_hypothesis.reassessment_causes c where c.investigation_id=p_investigation
+  if head is not null or exists(select 1 from mip_hypothesis.reassessment_causes c where c.investigation_id=p_investigation
     and not exists(select 1 from mip_hypothesis.reassessment_resolutions x where x.cause_id=c.id)) then
    raise exception using errcode='40001',message='hypothesis context changed; explicit reassessment completion required';
   end if;
@@ -93,7 +95,7 @@ begin
   receipts:=mip_hypothesis.require_observed_operations(p_user,p_investigation,p_version,p_source_project,e->>'position');
   bindings:=bindings||jsonb_build_array(jsonb_build_object('workspace_version_id',p_version,'input_position',e->>'position','permissions',receipts));
  end loop;
- for c in select * from mip_hypothesis.reassessment_causes where id=any(p_causes) order by id loop
+ for c in select * from mip_hypothesis.reassessment_causes where id=any(p_causes) order by case kind when 'retained_source_change' then 0 when 'retained_assessment_change' then 1 when 'workspace_changed' then 2 else 3 end,id loop
   if c.investigation_id<>p_investigation then raise exception using errcode='42501',message='reassessment cause scope denied';end if;
   select * into strict b from mip_hypothesis.acceptance_bindings where revision_id=c.revision_id;
   if b.source_project is distinct from p_source_project then raise exception using errcode='42501',message='reassessment source scope denied';end if;

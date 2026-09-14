@@ -49,12 +49,14 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
  if(!current||['loading','reconciling'].includes(current.status))return<section className="piw-card" aria-label="Hypothesis assessment history"><p role="status">{current?.status==='reconciling'?'Checking retained changes…':'Loading assessment history…'}</p></section>
  if(current.status!=='ready')return<section className="piw-card"><h2>Hypothesis assessment history</h2><p role="status">Assessment history is unavailable.</p><button type="button" onClick={reload}>Retry assessment history</button></section>
  const {entries,causes}=current.view,entry=entries.find(e=>e.revision_id===selected)??entries.at(-1)
- const related=entry?causes.filter(c=>c.revision_id===entry.revision_id):[]
+ const related=entry?causes.filter(c=>c.revision_id===entry.revision_id&&c.state==='pending_explicit_reconciliation'):[]
+ const resolved=entry?causes.filter(c=>c.revision_id===entry.revision_id&&c.state==='reassessment_recorded'):[]
+ const pendingCount=causes.filter(c=>c.state==='pending_explicit_reconciliation').length
  const permissionChanged=related.some(c=>c.kind==='permission_changed')
  return<section className="piw-stack" aria-label="Hypothesis assessment history">
   <header className="piw-card"><h2>Hypothesis assessment history</h2>
    <p>These are saved revisions. Changes awaiting reassessment do not replace their conclusions.</p>
-   {causes.length?<p>{causes.length} retained change causes remain pending across these revisions.</p>:null}
+   {pendingCount?<p>{pendingCount} retained change causes remain pending across these revisions.</p>:null}
    <button type="button" onClick={reload}>Refresh assessment history</button>
    {canReconcile&&typeof client?.reconcile==='function'?<button type="button" onClick={reconcile}>Check for missed changes</button>:null}
    <p>Retained revisions are available here. A verified “as known then” time view is not available yet.</p>
@@ -65,6 +67,11 @@ export default function HypothesisAssessmentHistory({client,investigationId,user
    </select>
    {related.length?<div role="status"><p>{related.length} recorded change{related.length===1?'':'s'} await explicit reassessment.</p>
     <ul>{related.map(c=><li key={c.cause_id}>{labels[c.kind]}{c.change_position?' · retained change '+c.change_position:''}</li>)}</ul>
+   </div>:null}
+   {resolved.length?<div><p>{resolved.length} recorded change{resolved.length===1?'':'s'} {resolved.length===1?'has':'have'} a saved reassessment.</p>
+    <ul>{resolved.map(c=><li key={c.cause_id}>{labels[c.kind]} · <button type="button"
+      onClick={()=>setSelected(c.resolution_revision_id)}>Open reassessment revision {entries.find(e=>e.revision_id===c.resolution_revision_id)?.revision}</button></li>)}</ul>
+    <p>A saved reassessment does not approve publication or restore this older assessment’s permissions.</p>
    </div>:null}
   </div>:<p>No completed hypothesis assessments are saved.</p>}
   {entry?(entry.status==='withheld'||permissionChanged?<p role="status">This saved assessment is withheld until its evidence permissions and review requirements are satisfied.</p>:
