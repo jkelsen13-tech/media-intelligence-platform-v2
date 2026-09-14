@@ -1,11 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {validateRequest,validateReport,requestKey,reserve,accept} from './controller.mjs';
-function fixture(){
- const q={version:1,synthetic:true,request:'s1',candidate:'a'.repeat(40),packet:'b'.repeat(64),implementer:'author',reviewer:'reviewer',model:'synthetic-grok-double',requirements:['frontend_behavior','backend_contract','cross_layer_semantics'],requirementLayers:{frontend_behavior:'frontend',backend_contract:'backend',cross_layer_semantics:'cross_layer'},controller:'c'.repeat(40)};
- const r={version:1,synthetic:true,requestKey:requestKey(q),candidate:q.candidate,packet:q.packet,reviewer:q.reviewer,model:q.model,outcome:'PASS',coverage:q.requirements.map((id,i)=>({id,status:'PASS',evidenceClass:'artifact_inspection',references:['packet:'+q.packet+'/e'+(i+1)]})),findings:[],blockers:[]};
- return {q,r};
-}
+import {controllerFixture as fixture} from './fixtures.mjs';
 function memoryStore(){
  const rows=new Map();return {rows,get:async k=>rows.get(k),create:async(k,v)=>{if(rows.has(k))throw Error('exists');rows.set(k,v)}};
 }
@@ -48,4 +44,4 @@ test('unreserved result rejected',async()=>{const {q,r}=fixture();await assert.r
 test('claimed real origin rejected',async()=>{const {q,r}=fixture(),s=memoryStore();await reserve(s,q);await assert.rejects(accept(s,q,r,{verified:true}),/real_transport_disabled/)});
 test('concurrent exact result and recovery preserve delivery key',async()=>{const {q,r}=fixture(),s=memoryStore();await reserve(s,q);const [a,b]=await Promise.all([accept(s,q,r,transport),accept(s,q,r,transport)]);assert.equal(a.deliveryKey,b.deliveryKey);assert.equal(s.rows.size,2)});
 test('ambiguous create acknowledgement recovered by exact durable bytes',async()=>{const {q,r}=fixture(),s=memoryStore(),create=s.create;s.create=async(k,v)=>{await create(k,v);throw Error('connection lost')};await reserve(s,q);const a=await accept(s,q,r,transport);assert.ok(a.deliveryKey);assert.equal(s.rows.size,2)});
-test('conflicting result cannot replace retained evidence',async()=>{const {q,r}=fixture(),s=memoryStore();await reserve(s,q);await accept(s,q,r,transport);r.coverage[0].references.push('packet:'+q.packet+'/e2');await assert.rejects(accept(s,q,r,transport),/result_conflict/)});
+test('conflicting result cannot replace retained evidence',async()=>{const {q,r}=fixture(),s=memoryStore();await reserve(s,q);await accept(s,q,r,transport);r.coverage[0].evidenceClass='independently_reproduced_this_run';await assert.rejects(accept(s,q,r,transport),/result_conflict/)});
