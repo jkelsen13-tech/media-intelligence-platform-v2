@@ -135,4 +135,65 @@ export async function marketsCases(t,f){
   assert.equal(await f.admin('select count(*) from evidence_pipeline.record_versions where id='+q(oldVersion)),'1')
   assert.notEqual(await latest('graph_node',nodes.supplier),oldVersion)
  })
+ await t.test('thirty-four eligible paths from fifteen observed candidates deny without a partial result',async()=>{
+  // Nine-node DAG: eight chain edges plus seven skip-one edges; every path has at most eight hops.
+  const fixture=await f.investigation(),chain=Array.from({length:9},()=>randomUUID()),issuer=randomUUID()
+  await f.admin('insert into public.nodes(id,type,label,metadata,private_candidate) values('+[issuer,'actor','Synthetic budget issuer',{},true].map(q).join(',')+')')
+  const issuerVersion=await latest('graph_node',issuer)
+  for(let n=0;n<chain.length;n++){
+   const metadata=n===0?{issuer_id:issuer,issuer_version_id:issuerVersion,valid_from:'2026-01-01',valid_to:null,aliases:alias('BUDGET','TEST:VENUE')}:{}
+   await f.admin('insert into public.nodes(id,type,label,metadata,private_candidate) values('+[chain[n],n===0?'equity':n===8?'event':'institution','Synthetic budget node '+n,metadata,true].map(q).join(',')+')')
+  }
+  const pairs=[];for(let n=0;n<8;n++)pairs.push([n,n+1]);for(let n=0;n<7;n++)pairs.push([n,n+2])
+  const typed=[]
+  for(const [from,to]of pairs){
+   const edge=randomUUID(),cid=randomUUID(),kind=to===8?'direct_reporting':'supply'
+   await f.admin('insert into public.edges(id,source_id,target_id,type,private_candidate) values('+[edge,chain[from],chain[to],kind,true].map(q).join(',')+')')
+   const versions=await Promise.all([latest('graph_node',chain[from]),latest('graph_node',chain[to]),latest('graph_edge',edge)])
+   await f.admin('insert into evidence_pipeline.evidence_candidates(id,capture_id,candidate_key,candidate_kind,statement,source_field,span_start,span_end,excerpt,extractor_version,remaining_uncertainty,typed_edge_id,subject_version_id,object_version_id,edge_version_id,identity_version_id,relationship_kind,valid_from) values('+
+    [cid,fixture.entry.capture.id,cid,'typed_graph_relationship','Synthetic budget evidence','summary',0,21,'A 😀 B meeting record.','synthetic-markets-v1','Synthetic mechanism only.',edge,...versions,from===0?issuerVersion:null,kind,'2026-01-01'].map(q).join(',')+')')
+   const context=JSON.parse(await f.admin('select evidence_pipeline.assessment_context('+q(cid)+')'))
+   await f.pub('mip_assessments_v1','append',{candidate_id:cid,algorithm_key:'synthetic-market',algorithm_version:'v1',outcome:'supported',
+    rationale:'Synthetic mechanism.',remaining_uncertainty:'Not real-world evidence.',context_positions:context.context_positions})
+   typed.push({cid,from,to})
+  }
+  async function observe(selected,previous){
+   const observation=await f.pub('mip_investigation_briefings_v1','observe',{observation_id:randomUUID(),candidate_ids:selected.map(x=>x.cid)}),vid=randomUUID()
+   await f.pub('mip_investigation_workspace_v1','put',{investigation_id:fixture.iid,version_id:vid,previous_version_id:previous,observation_id:observation.id,state,change_reason:'Synthetic path budget qualification.'})
+   const bundle=JSON.parse(await f.admin('select mip_hypothesis.observation_binding('+[fixture.user,fixture.iid,vid].map(q).join(',')+')'))
+   for(const input of bundle.observation.snapshot.inputs){
+    const kind=input.capture?'capture':'record_version',rec=input[kind]
+    for(const operation of ['retention','analysis','excerpt_display'])for(const domain of ['rights','privacy']){
+     const scope={source_project:fixture.source,material_ref:kind+':'+rec.id,material_version:rec.source_version_hash,source_version:rec.id,audience:'isolated_internal_review',operation,domain}
+     if(await f.admin('select count(*) from mip_identity.operation_evidence_heads where scope='+q(scope))!=='0')continue
+     const revision=randomUUID()
+     await f.admin('insert into mip_identity.operation_evidence_versions values('+[revision,scope,'synthetic-fixture-v1','synthetic-policy','v1',f.sha('policy'),'synthetic-evidence','synthetic-owner','synthetic-approval','recorded','allow','2000-01-01','2999-01-01',[],true].map(q).join(',')+');insert into mip_identity.operation_evidence_heads values('+[scope,revision,true].map(q).join(',')+')')
+    }
+   }
+   return {vid,observation}
+  }
+  const control=await observe(typed.filter(x=>!(x.from===0&&x.to===2)),fixture.vid),saturated=await observe(typed,control.vid)
+  // Independently count the actual retained, dated, version-compatible eligible SQL graph.
+  const count=async entry=>JSON.parse(await f.admin('with recursive retained as ('+
+   'select coalesce(value->\'capture\'->>\'id\',value->\'record_version\'->>\'id\')::uuid id from evidence_pipeline.investigation_observations o,'+
+   'lateral jsonb_array_elements(o.snapshot->\'inputs\') value where o.id='+q(entry.observation.id)+'), eligible as ('+
+   'select c.id,e.source_id,e.target_id,c.subject_version_id,c.object_version_id from evidence_pipeline.evidence_candidates c join public.edges e on e.id=c.typed_edge_id '+
+   'where c.id=any((select scope_candidate_ids from evidence_pipeline.investigation_observations where id='+q(entry.observation.id)+')::uuid[]) '+
+   "and c.candidate_kind='typed_graph_relationship' and c.capture_id in(select id from retained) and c.subject_version_id in(select id from retained) "+
+   'and c.object_version_id in(select id from retained) and c.edge_version_id in(select id from retained) and(c.identity_version_id is null or c.identity_version_id in(select id from retained)) '+
+   "and c.valid_from<='2026-06-01'::timestamptz and(c.valid_to is null or '2026-06-01'::timestamptz<c.valid_to)), walk as ("+
+   'select e.target_id endpoint,e.object_version_id endpoint_version,array[e.source_id,e.target_id] nodes,1 hops from eligible e where e.source_id='+q(chain[0])+
+   ' union all select e.target_id,e.object_version_id,w.nodes||e.target_id,w.hops+1 from walk w join eligible e on e.source_id=w.endpoint and e.subject_version_id=w.endpoint_version '+
+   'where w.hops<8 and not e.target_id=any(w.nodes)) select jsonb_build_object(\'candidates\',(select count(*) from eligible),\'paths\',count(*),\'max_hops\',max(hops)) from walk where endpoint='+q(chain[8])))
+  assert.deepEqual(await count(control),{candidates:14,paths:21,max_hops:8})
+  assert.deepEqual(await count(saturated),{candidates:15,paths:34,max_hops:8})
+  const readVersion=async vid=>JSON.parse(await f.admin('set session authorization mip_hypothesis_gateway;select mip_markets.read_private('+
+   [fixture.user,fixture.iid,vid,fixture.source,chain[0],chain[8],'2026-06-01'].map(q).join(',')+');'))
+  assert.equal((await readVersion(control.vid)).paths.length,21)
+  let partial
+  await assert.rejects(async()=>{partial=await readVersion(saturated.vid)},/mip_market_path_budget/)
+  assert.equal(partial,undefined)
+  assert.equal((await readVersion(control.vid)).paths.length,21)
+ })
+
 }
