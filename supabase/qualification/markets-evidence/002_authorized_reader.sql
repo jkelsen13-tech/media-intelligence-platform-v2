@@ -16,7 +16,7 @@ create function mip_markets.read_private(p_user uuid,p_investigation uuid,p_vers
 language plpgsql security definer set search_path='' as $$
 declare binding jsonb;path record;c evidence_pipeline.evidence_candidates;a jsonb;cap evidence_pipeline.article_captures;
  v evidence_pipeline.record_versions;material uuid;input jsonb;position text;op text;domain text;checked jsonb;
- asset jsonb;asset_version uuid;companion evidence_pipeline.record_versions;aliases jsonb:='[]';alias jsonb;paths jsonb:='[]';hops jsonb;support jsonb;cid uuid;nodes uuid[];ids uuid[];current_id uuid;
+ asset jsonb;asset_version uuid;companion evidence_pipeline.record_versions;aliases jsonb:='[]';alias jsonb;paths jsonb:='[]';hops jsonb;support jsonb;cid uuid;
 begin
  if p_asset is null and p_event is null or p_at is null or not isfinite(p_at) then raise exception 'mip_market_bounded_identity_required';end if;
  perform 1 from mip_cutover_authority.publication_fence where id for share;
@@ -24,8 +24,8 @@ begin
  if p_source is null or btrim(p_source)='' or p_source='cc-definition-batch-v1' then raise exception 'mip_market_source_denied';end if;
  -- Same shared edge identities in both discovery directions. No alternate graph.
  for path in with recursive eligible as(
-  select c.id,e.source_id,e.target_id from evidence_pipeline.evidence_candidates c join public.edges e on e.id=c.typed_edge_id
-  where c.candidate_kind='typed_graph_relationship' and c.valid_from<=p_at and(c.valid_to is null or p_at<c.valid_to)
+  select cand.id,e.source_id,e.target_id from evidence_pipeline.evidence_candidates cand join public.edges e on e.id=cand.typed_edge_id
+  where cand.candidate_kind='typed_graph_relationship' and cand.valid_from<=p_at and(cand.valid_to is null or p_at<cand.valid_to)
  ), walk as(
   select n.id asset_id,e.target_id endpoint,array[n.id,e.target_id] nodes,array[e.id] candidates
   from public.nodes n join eligible e on e.source_id=n.id

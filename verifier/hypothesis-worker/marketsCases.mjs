@@ -1,11 +1,9 @@
 // Hosted disposable PostgreSQL only. No real assets/materials or production authority.
-import test from 'node:test'
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {readFile} from 'node:fs/promises'
-import {setup,hold,blocked,q} from './fixture.mjs'
-test('private Markets shared graph retained reader',async t=>{
- const f=await setup(t)
+import {hold,blocked,q} from './fixture.mjs'
+export async function marketsCases(t,f){
  // Strengthen the intentionally small existing fixture with catalog-relevant graph constraints.
  // The survivor currently has no edges_type_check; do not pretend the old migration is its schema.
  await f.admin("alter table public.nodes add constraint nodes_type_check check(type in('event','actor','institution','document','anomaly','policy','topic'));"+
@@ -91,11 +89,11 @@ test('private Markets shared graph retained reader',async t=>{
   const held=await hold(f.db,original.revokeSql);const pending=read();pending.catch(()=>{})
   try{await blocked(f,held.pid);await held.finish(true);await assert.rejects(pending,/mip_market_operation_denied/)}
   catch(e){throw e}
-  await f.admin("do $declare h mip_identity.operation_evidence_heads;r uuid;begin for h in select * from mip_identity.operation_evidence_heads where not active loop r:=gen_random_uuid();insert into mip_identity.operation_evidence_versions select (jsonb_populate_record(null::mip_identity.operation_evidence_versions,to_jsonb(v)||jsonb_build_object('revision',r))).* from mip_identity.operation_evidence_versions v where v.revision=h.revision;update mip_identity.operation_evidence_heads set revision=r,active=true where scope=h.scope;end loop;end $")
+  await f.admin("do $declare h mip_identity.operation_evidence_heads;r uuid;begin for h in select * from mip_identity.operation_evidence_heads where not active and scope->>'material_ref'='"+original.permissionScope.material_ref+"' loop r:=gen_random_uuid();insert into mip_identity.operation_evidence_versions select (jsonb_populate_record(null::mip_identity.operation_evidence_versions,to_jsonb(v)||jsonb_build_object('revision',r))).* from mip_identity.operation_evidence_versions v where v.revision=h.revision;update mip_identity.operation_evidence_heads set revision=r,active=true where scope=h.scope;end loop;end $")
  })
  await t.test('reader holds authority through transaction; revocation waits',async()=>{
   const held=await hold(f.db,sql(),'mip_hypothesis_gateway'),pending=f.admin(original.revokeSql);pending.catch(()=>{})
   await blocked(f,held.pid);await held.finish(true);await pending
   await assert.rejects(()=>read(),/mip_market_operation_denied/)
  })
-})
+}
