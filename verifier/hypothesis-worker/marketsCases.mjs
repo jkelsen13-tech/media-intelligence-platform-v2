@@ -3,6 +3,9 @@ import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {readFile} from 'node:fs/promises'
 import {hold,blocked,q} from './fixture.mjs'
+import {createPrivateMarketsHandler} from '../../supabase/qualification/markets-evidence/handler.mjs'
+import {PRIVATE_MARKETS_SQL} from '../../supabase/qualification/markets-evidence/store.mjs'
+import {createPrivateMarketsClient} from '../../src/lib/privateMarketsClient.js'
 export async function marketsCases(t,f){
  // Strengthen the intentionally small existing fixture with catalog-relevant graph constraints.
  // The survivor currently has no edges_type_check; do not pretend the old migration is its schema.
@@ -61,6 +64,28 @@ export async function marketsCases(t,f){
   Object.hasOwn(over,'asset')?over.asset:nodes.equity,Object.hasOwn(over,'event')?over.event:nodes.event,over.at??'2026-06-01'].map(q).join(',')+');'
  const read=async over=>JSON.parse(await f.admin('set session authorization mip_hypothesis_gateway;'+sql(over)))
  const restoreAuthority=()=>f.admin("do $$declare h mip_identity.operation_evidence_heads;r uuid;begin for h in select * from mip_identity.operation_evidence_heads where not active and scope->>'material_ref'='"+original.permissionScope.material_ref+"' loop r:=gen_random_uuid();insert into mip_identity.operation_evidence_versions select (jsonb_populate_record(null::mip_identity.operation_evidence_versions,to_jsonb(v)||jsonb_build_object('revision',r))).* from mip_identity.operation_evidence_versions v where v.revision=h.revision;update mip_identity.operation_evidence_heads set revision=r,active=true where scope=h.scope;end loop;end $$")
+ // Actual handler -> reader -> PostgreSQL prepared query; verified Auth is a synthetic seam only.
+ let httpQueries=0
+ const handler=createPrivateMarketsHandler({allowedOrigins:['https://synthetic.invalid'],sourceProject:original.source,
+  authenticate:async authorization=>authorization==='Bearer synthetic-verified-only'?{id:original.user,is_anonymous:false}:null,
+  query:async(statement,args)=>{
+   httpQueries++;assert.equal(statement,PRIVATE_MARKETS_SQL);assert.equal(args[0],original.user);assert.equal(args[3],original.source)
+   const value=JSON.parse(await f.admin('set session authorization mip_hypothesis_gateway;prepare private_market_read(uuid,uuid,uuid,text,uuid,uuid,timestamptz) as '+statement+';execute private_market_read('+args.map(q).join(',')+');'))
+   return {rows:[{value}]}
+  }})
+ const httpInput=()=>({investigation_id:original.iid,workspace_version_id:version,asset_id:nodes.equity,event_id:nodes.event,at:'2026-06-01T00:00:00.123456Z'})
+ const httpRead=(input=httpInput(),authorization='Bearer synthetic-verified-only')=>handler(new Request('https://synthetic.invalid/markets',{method:'POST',headers:{origin:'https://synthetic.invalid',authorization,'content-type':'application/json'},body:JSON.stringify(input)}))
+ await t.test('private authenticated Request Response handler reaches native prepared SQL gateway and narrow client mapper',async()=>{
+  const client=createPrivateMarketsClient({transport:async input=>{const response=await httpRead(input);return response.json()}})
+  const response=await client.read(httpInput(),{expectedObservationId:observed.id})
+  assert.equal(response.error,null);assert.equal(response.data.paths.length,2);assert.equal(response.data.at,httpInput().at)
+  assert.equal(response.data.source_root_lineage_qualified,false);assert.equal(response.data.publication_allowed,false)
+  client.dispose()
+  const before=httpQueries
+  assert.equal((await httpRead(httpInput(),'Bearer forged')).status,401)
+  assert.equal((await httpRead({...httpInput(),user_id:original.user})).status,400)
+  assert.equal(httpQueries,before)
+ })
  await t.test('shared canonical equity crypto and indirect paths discover in both directions',async()=>{
   const equity=await read(),crypto=await read({asset:nodes.crypto}),reverse=await read({asset:null})
   assert.equal(equity.paths.length,2);assert.ok(equity.paths.some(p=>p.hops.length===3));assert.ok(equity.paths.some(p=>p.relation==='direct_reporting'))
@@ -112,6 +137,7 @@ export async function marketsCases(t,f){
   const held=await hold(f.db,original.revokeSql);const pending=read();pending.catch(()=>{})
   try{await blocked(f,held.pid);await held.finish(true);await assert.rejects(pending,/mip_market_operation_denied/)}
   catch(e){throw e}
+  const denied=await httpRead();assert.equal(denied.status,403);assert.deepEqual(await denied.json(),{error:{code:'access_denied'}})
   await restoreAuthority()
  })
  await t.test('source update holds the reader fence and rollback preserves exact retained records',async()=>{
@@ -132,6 +158,7 @@ export async function marketsCases(t,f){
   const oldVersion=await latest('graph_node',nodes.supplier)
   await f.admin('update public.nodes set label=\'Synthetic corrected supplier\' where id='+q(nodes.supplier))
   await assert.rejects(()=>read(),/mip_market_assessment_unavailable/)
+  const unavailable=await httpRead();assert.equal(unavailable.status,409);assert.deepEqual(await unavailable.json(),{error:{code:'evidence_unavailable'}})
   assert.equal(await f.admin('select count(*) from evidence_pipeline.record_versions where id='+q(oldVersion)),'1')
   assert.notEqual(await latest('graph_node',nodes.supplier),oldVersion)
  })
