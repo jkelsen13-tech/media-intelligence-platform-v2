@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "request_id": "pr165-9432b88-independent-1",
+  "candidate_commit": "9432b88dd14c1e4f730ae910f9d2ee844b37fe53",
+  "base_commit": "b4db7071048440ecbc6f9919b0d9ed1e6ce20a93",
+  "packet_commit": "0d7e6f74d2479043f7ad7f616fb9ec0ccec49f8c",
+  "packet_path": "verifier/independent-pr165/request.json",
+  "packet_sha256": "36f5261b95dd25d4f2963e2147d9f86db3d4c3ec122db08967332fa151493d41",
+  "packet_bytes": 1603249,
+  "agent_id": "bc-9432b88d-d14c-4e4f-b30a-e910f9d2ee84",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "reserved_before_launch",
+  "maximum_initial_posts": 1,
+  "scope": "Exactly one fresh PR165 private HTTP-boundary review; no retry/recovery."
+}
