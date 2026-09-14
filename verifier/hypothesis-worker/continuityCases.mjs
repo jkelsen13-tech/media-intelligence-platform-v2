@@ -1,3 +1,4 @@
+import {readSnapshotPages} from './snapshotReader.mjs'
 // Actual source capture/coverage in the existing disposable service, synthetic revisions only.
 import assert from 'node:assert/strict'
 import {randomUUID,randomBytes} from 'node:crypto'
@@ -6,7 +7,7 @@ import {quote as q,transport} from '../integrated/transport.mjs'
 import {producerRole} from '../integrated/fixture.mjs'
 import {hold} from './fixture.mjs'
 import {encryptedRemoteJournal} from '../../supabase/qualification/mip-cutover-authority/brokerSession.js'
-import {recordBootstrap} from '../../supabase/qualification/hypothesis-assessments/temporalBootstrap.mjs'
+import {recordBootstrap,recordPagedBootstrap,bootstrapPageKey} from '../../supabase/qualification/hypothesis-assessments/temporalBootstrap.mjs'
 import {consumeSourceCapture} from '../../supabase/qualification/hypothesis-assessments/coveredRevisionConsumer.mjs'
 import {decodeRevisionCommits} from '../../supabase/qualification/hypothesis-assessments/pgoutputRecorder.mjs'
 import {nativeAckBoundary} from './sourceFenceCases.mjs'
@@ -15,7 +16,7 @@ export async function continuityCases(t,f,runWorker){
  // Earlier 018 regressions remain a preserved baseline. This final installed interface removes its bypass grants.
  await f.admin(await readFile(new URL('../../supabase/qualification/hypothesis-assessments/019_stream_continuity.sql',import.meta.url),'utf8'))
  const relationId=await f.admin("select 'mip_hypothesis.revision_transactions'::regclass::oid::text")
- async function staged(t){
+ async function staged(t,{paged=false,onFirstPage}={}){
   const runtime='synthetic-coverage-'+randomUUID(),mapping=randomUUID(),material={version:'synthetic-coverage-v1',key:randomBytes(32)}
   await f.admin('insert into mip_identity.mapping_versions select '+q(mapping)+','+q(runtime)+
    ',principal,issuer,audience,'+q(runtime+':'+producerRole)+',key_revision,max_lifetime_seconds,approval_ref from mip_identity.mapping_versions where revision='+
@@ -31,13 +32,26 @@ export async function continuityCases(t,f,runWorker){
   t.after(async()=>{
    await f.admin('select pg_drop_replication_slot(slot_name) from pg_replication_slots where slot_name='+q(slot)+';drop publication '+pub+';')
   })
-  let rows
+  let baseline,capturedIds=[]
   try{
-   rows=JSON.parse(await f.admin('begin isolation level repeatable read read only;set transaction snapshot '+q(exported.snapshot_id)+
-    ";select coalesce(jsonb_agg(jsonb_build_object('revision_id',r.id,'transaction_epoch',m.epoch,'creator_xid',m.creator_xid::text) order by r.id),'[]') "+
-    'from mip_hypothesis.revisions r left join mip_hypothesis.revision_transactions m on m.revision_id=r.id;commit;'))
+   if(paged){
+    baseline=await recordPagedBootstrap({context,observationEpoch,journal,pageSize:3,
+     input:{consistent_lsn:exported.consistent_lsn,snapshot_id:exported.snapshot_id},
+     withSnapshot:(id,consume)=>readSnapshotPages(f.db,id,async fetchPage=>{
+      let first=true
+      await consume(async size=>{
+       const rows=await fetchPage(size);capturedIds.push(...rows.map(r=>r.revision_id))
+       if(first){first=false;if(onFirstPage)await onFirstPage()}
+       return rows
+      })
+     })})
+   }else{
+    const rows=JSON.parse(await f.admin('begin isolation level repeatable read read only;set transaction snapshot '+q(exported.snapshot_id)+
+     ";select coalesce(jsonb_agg(jsonb_build_object('revision_id',r.id,'transaction_epoch',m.epoch,'creator_xid',m.creator_xid::text) order by r.id),'[]') "+
+     'from mip_hypothesis.revisions r left join mip_hypothesis.revision_transactions m on m.revision_id=r.id;commit;'))
+    baseline=await recordBootstrap({context,observationEpoch,journal,input:{consistent_lsn:exported.consistent_lsn,snapshot_id:exported.snapshot_id,rows}})
+   }
   }finally{await exported.close()}
-  const baseline=await recordBootstrap({context,observationEpoch,journal,input:{consistent_lsn:exported.consistent_lsn,snapshot_id:exported.snapshot_id,rows}})
   const b=await nativeAckBoundary(f,{journal,context,slot,runtime,session,observationEpoch})
   await f.admin('insert into mip_temporal.stream_configs values('+[b.bindingId,pub,exported.consistent_lsn,baseline.hash].map(q).join(',')+
    ');insert into mip_temporal.stream_heads values('+[b.bindingId,exported.consistent_lsn,null].map(q).join(',')+');')
@@ -55,7 +69,7 @@ export async function continuityCases(t,f,runWorker){
   const peek=async()=>JSON.parse(await f.admin("select coalesce(jsonb_agg(encode(data,'hex') order by sequence),'[]') from pg_logical_slot_peek_binary_changes("+
    q(slot)+",null,null,'proto_version','1','publication_names',"+q(pub)+",'binary','false','streaming','false','messages','false') with ordinality as c(lsn,xid,data,sequence);")).map(x=>Buffer.from(x,'hex'))
   return {...b,runtime,context,observationEpoch,baseline,pub,slot,capture,consume,confirmed,checkpointCount,produce,peek,prepare,advance,advanceSql,
-   before:exported.consistent_lsn,session:()=>session,
+   before:exported.consistent_lsn,snapshotId:exported.snapshot_id,capturedIds,journal:()=>journal,session:()=>session,
    refresh:async()=>{session=await f.issue(runtime,producerRole);journal=journalFor(session)}}
  }
  await t.test('source captures only the next native transaction and chains exact reconciled revision IDs',async t=>{
@@ -148,4 +162,26 @@ export async function continuityCases(t,f,runWorker){
   assert.equal(await f.admin("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_temporal' and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity)"),'0')
   assert.equal(await b.confirmed(),b.before)
  })
+ await t.test('paged native snapshot excludes between-page commits and its complete manifest gates covered stream advancement',async t=>{
+  const before=JSON.parse(await f.admin("select coalesce(jsonb_agg(id::text order by id),'[]') from mip_hypothesis.revisions"))
+  assert.ok(before.length>3)
+  let late
+  const b=await staged(t,{paged:true,onFirstPage:async()=>{
+   const v=await f.investigation();await v.captureGeneration();await runWorker(v)
+   late=JSON.parse(await f.admin('select jsonb_agg(id::text) from mip_hypothesis.revisions where investigation_id='+q(v.iid)))
+  }})
+  assert.deepEqual(b.capturedIds,before);assert.equal(b.baseline.revisions,before.length);assert.ok(b.baseline.pages>1)
+  const c=await b.capture()
+  const decoded=decodeRevisionCommits(c.frames.map(x=>Buffer.from(x,'hex')),{relationId,observationEpoch:f.observationEpoch})
+  assert.deepEqual(decoded.flatMap(x=>x.input.revisions.map(r=>r.revision_id)),late)
+  const current=JSON.parse(await f.admin("select jsonb_agg(id::text order by id) from mip_hypothesis.revisions"))
+  assert.deepEqual([...b.capturedIds,...late].sort(),current)
+  const old=b.journal(),missingKey=bootstrapPageKey(b.context,b.baseline.pages-1)
+  await assert.rejects(()=>b.consume(c,{journal:{putOnce:old.putOnce,get:async k=>k===missingKey?null:old.get(k)}}))
+  assert.equal(await b.confirmed(),b.before);assert.equal(await b.checkpointCount(),'0')
+  await b.consume(c)
+  assert.equal(await b.confirmed(),c.end_lsn);assert.equal(await b.checkpointCount(),'1')
+  await assert.rejects(()=>readSnapshotPages(f.db,b.snapshotId,async fetchPage=>{await fetchPage(1)}),/mip_snapshot_read_failed/)
+ })
+
 }
