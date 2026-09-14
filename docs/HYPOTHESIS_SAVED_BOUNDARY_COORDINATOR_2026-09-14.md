@@ -31,3 +31,8 @@ All historical/source/user/publication qualification flags remain false. Arbitra
 Hosted adversarial tests cover direct prefix escape, alternate identities/investigations, role/ACL/owner/search-path catalog, same-transaction savepoint limitation, source/member/material revoke ordering, natural material/session/JWT expiry, hung callback rollback, strict response keys and parameter faults. Fixture-admin row copies and expiry edits are explicit synthetic fault injection; no production equivalence is claimed. New results must be attached to their exact commit; tests are not predeclared passed.
 
 No live Supabase writes, migrations, deployment, merge, production credentials, user-device project files, real provider calls or publication.
+
+
+## Rejected redesign syntax head
+
+Root exact-read rejected `551bda27d5817d0be89fe1c46bfa1ad0462beb8b`: three new expiry helper function delimiters were reduced from SQL `$$` to `$` by JavaScript replacement-string interpolation. No native result from that head establishes this candidate. The follow-up restores literal paired delimiters using replacement callbacks; hosted validation remains mandatory. The generic SQL concurrency workflow does not install SQL023, so its success cannot detect this defect.

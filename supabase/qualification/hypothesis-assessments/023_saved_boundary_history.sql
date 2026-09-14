@@ -8,7 +8,7 @@ grant execute on function mip_hypothesis.read_bound_history(uuid,uuid) to mip_te
 
 -- Narrow expiry projections: no raw identity/material tables are exposed to either service.
 create function mip_identity.boundary_session_expiry(p_session uuid) returns timestamptz
-language plpgsql security definer set search_path='' as $
+language plpgsql security definer set search_path='' as $$
 declare result timestamptz;
 begin
  perform mip_identity.journal_runtime(p_session);
@@ -16,13 +16,13 @@ begin
  from mip_identity.sessions s join mip_identity.key_versions k on k.revision=s.key_revision
  join comparison_qualification.principal_sessions p using(session_id) where s.session_id=p_session;
  return result;
-end $;
+end $$;
 alter function mip_identity.boundary_session_expiry(uuid) owner to mip_identity_owner_v2;
 revoke all on function mip_identity.boundary_session_expiry(uuid) from public;
 grant execute on function mip_identity.boundary_session_expiry(uuid) to mip_temporal_advance_owner;
 
 create function mip_identity.boundary_permission_expiry(p_revision uuid) returns timestamptz
-language plpgsql security definer set search_path='' as $
+language plpgsql security definer set search_path='' as $$
 declare v mip_identity.operation_evidence_versions;c jsonb;
 begin
  select * into strict v from mip_identity.operation_evidence_versions where revision=p_revision;
@@ -30,13 +30,13 @@ begin
  if c->'allowed' is distinct from 'true'::jsonb or (c->>'revision')::uuid is distinct from p_revision
  then raise exception 'mip_boundary_permission_expired';end if;
  return v.expires_at;
-end $;
+end $$;
 alter function mip_identity.boundary_permission_expiry(uuid) owner to mip_publication_owner_v2;
 revoke all on function mip_identity.boundary_permission_expiry(uuid) from public;
 grant execute on function mip_identity.boundary_permission_expiry(uuid) to mip_hypothesis_owner;
 
 create function mip_hypothesis.boundary_payload_expiry(p_payload jsonb) returns timestamptz
-language plpgsql security definer set search_path='' as $
+language plpgsql security definer set search_path='' as $$
 declare ids uuid[];r record;result timestamptz:='infinity';until_time timestamptz;
 begin
  select array_agg((e->>'revision_id')::uuid) into ids from jsonb_array_elements(p_payload->'entries') e where e->>'status'='available';
@@ -53,7 +53,7 @@ begin
   result:=least(result,until_time);
  end loop;
  return result;
-end $;
+end $$;
 alter function mip_hypothesis.boundary_payload_expiry(jsonb) owner to mip_hypothesis_owner;
 revoke all on function mip_hypothesis.boundary_payload_expiry(jsonb) from public;
 grant execute on function mip_hypothesis.boundary_payload_expiry(jsonb) to mip_temporal_advance_owner;
