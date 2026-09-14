@@ -108,3 +108,26 @@ test('receive captures result bytes before adapter reentry',async()=>{
  const d=await receive(a,{putOnce:async(k,v)=>{a[3].approve=true;a[3].outcome='FAIL';a[1].get('src/example.jsx').fill(0);retained=v}});
  assert.equal(retained,expected);assert.equal(d.outcome,'PASS');
 });
+
+for(const kind of ['controller','protocol']){
+ test(kind+' accepts supporting verifier receipt alongside primary layer artifacts',()=>{
+  if(kind==='controller'){
+   const f=controllerFixture(),content='Synthetic supplemental receipt.';
+   f.q.evidence.push({id:'support',path:'verifier/run/receipt.txt',content,bytes:Buffer.byteLength(content),sha256:hash(Buffer.from(content)),role:'supporting',requirements:f.q.requirements.slice()});
+   for(const c of f.r.coverage)c.references.push('packet:'+f.q.packet+'/support');
+   rebindController(f);assert.equal(validateReport(f.q,f.r).outcome,'PASS');
+   f.r.coverage[1].references=['packet:'+f.q.packet+'/support'];
+   assert.throws(()=>validateReport(f.q,f.r),/unsupported_pass/);
+   f.q.evidence.splice(1,1);rebindController(f);
+   assert.throws(()=>validateReport(f.q,f.r),/missing_layer_evidence/);
+  }else{
+   const a=protocolFixture(),bytes=Buffer.from('Synthetic supplemental receipt.'),path='verifier/run/receipt.txt';
+   a[0].files.push({path,bytes:bytes.length,sha256:hash(bytes),role:'supporting',requirements:a[0].requirements.slice()});a[1].set(path,bytes);
+   for(const c of a[3].coverage)c.references.push(path);
+   rebindProtocol(a);assert.equal(validate(...a).outcome,'PASS');
+   a[3].coverage[1].references=[path];assert.throws(()=>validate(...a),/unsupported_pass/);
+   const [e]=a[0].files.splice(1,1);a[1].delete(e.path);rebindProtocol(a);
+   assert.throws(()=>validate(...a),/missing_layer_evidence/);
+  }
+ });
+}

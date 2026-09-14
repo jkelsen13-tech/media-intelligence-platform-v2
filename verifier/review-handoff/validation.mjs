@@ -17,6 +17,7 @@ export function pathLayer(path){
  if(/^(src|docs)\//.test(path))return 'frontend';
  if(/^supabase\/(functions|migrations|qualification)\//.test(path))return 'backend';
  if(/^tests\//.test(path))return 'cross_layer';
+ if(/^verifier\//.test(path))return 'supporting';
  return null;
 }
 export function requirements(q){
@@ -30,8 +31,8 @@ export function requirements(q){
 export function evidenceBinding(entry,q){
  check(safePath(entry.path),'unsafe_path');
  check(Number.isSafeInteger(entry.bytes)&&entry.bytes>=0&&typeof entry.sha256==='string'&&/^[a-f0-9]{64}$/.test(entry.sha256),'file_binding');
- check(layers.includes(entry.role)&&entry.role===pathLayer(entry.path),'evidence_layer');
- check(Array.isArray(entry.requirements)&&entry.requirements.length>0&&new Set(entry.requirements).size===entry.requirements.length&&entry.requirements.every(k=>q.requirements.includes(k)&&q.requirementLayers[k]===entry.role),'evidence_requirement');
+ check([...layers,'supporting'].includes(entry.role)&&entry.role===pathLayer(entry.path),'evidence_layer');
+ check(Array.isArray(entry.requirements)&&entry.requirements.length>0&&new Set(entry.requirements).size===entry.requirements.length&&entry.requirements.every(k=>q.requirements.includes(k)&&(entry.role==='supporting'||q.requirementLayers[k]===entry.role)),'evidence_requirement');
 }
 export function fullInventory(q,entries){
  check(q.requirements.every(k=>entries.some(e=>e.requirements.includes(k)&&e.role===q.requirementLayers[k])),'missing_layer_evidence');
@@ -66,8 +67,8 @@ export function coverage(q,r,lookup,classKey){
   check(['artifact_inspection','independently_reproduced_this_run','supplied_implementation_agent_result','missing_evidence','NOT_TESTED','BLOCKED'].includes(c[classKey]),'evidence_class');
   check(Array.isArray(c.references)&&new Set(c.references).size===c.references.length&&c.references.every(ref=>typeof ref==='string'&&lookup.has(ref)),'unbound_evidence');
   // Every cited artifact is explicitly declared for this requirement and layer.
-  check(c.references.every(ref=>{const e=lookup.get(ref);return e.requirements.includes(c.id)&&e.role===q.requirementLayers[c.id]}),'misreferenced_layer_evidence');
-  if(c.status==='PASS')check(c.references.length>0&&['artifact_inspection','independently_reproduced_this_run'].includes(c[classKey]),'unsupported_pass');
+  check(c.references.every(ref=>{const e=lookup.get(ref);return e.requirements.includes(c.id)&&(e.role==='supporting'||e.role===q.requirementLayers[c.id])}),'misreferenced_layer_evidence');
+  if(c.status==='PASS')check(c.references.some(ref=>lookup.get(ref).role===q.requirementLayers[c.id])&&['artifact_inspection','independently_reproduced_this_run'].includes(c[classKey]),'unsupported_pass');
  }
  details(q,r);
 }
