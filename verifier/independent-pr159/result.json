@@ -1,0 +1,134 @@
+{
+  "schema": 1,
+  "request_id": "pr159-220be5e-independent-1",
+  "candidate_commit": "220be5e69014316232c5c9ee85e5501b8f734c42",
+  "base_commit": "eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6",
+  "packet_sha256": "18bb46f0581df30fb59d089e31c75ebf0a83c30ecd0d35bc33e9df10e285aded",
+  "outcome": "PASS",
+  "scope": "Frontend clearing on authoritative reconsideration-request/detail denial only. Not whole-app security, unobserved revocation subscription, MIP/history qualification or production certification.",
+  "evidence_class": "artifact_inspection",
+  "coverage": [
+    {
+      "requirement": "Both authentication and access errors for reconsideration submission and pending/resolved detail must clear saved assessment and comparison.",
+      "status": "PASS",
+      "evidence_refs": [
+        "src/components/HypothesisReassessmentRequest.jsx:submit:L18-L20",
+        "src/components/HypothesisReassessmentRequest.jsx:inspect:L56-L58",
+        "src/components/HypothesisAssessmentHistory.jsx:invalidateAccess:L18-L21",
+        "src/components/HypothesisAssessmentHistory.jsx:current.status!=='ready':L61",
+        "src/components/HypothesisAssessmentHistory.jsx:pending ReassessmentRequestDetail onAccessFailure={invalidateAccess}:L83",
+        "src/components/HypothesisAssessmentHistory.jsx:resolved ReassessmentRequestDetail onAccessFailure={invalidateAccess}:L86-L87",
+        "src/components/HypothesisAssessmentHistory.jsx:HypothesisReassessmentRequest onAccessFailure={invalidateAccess}:L92-L94",
+        "src/components/HypothesisAssessmentHistory.jsx:HypothesisRevisionComparison key comparison:L91",
+        "tests/hypothesisAssessmentHistory.test.mjs:human request/detail authentication_required|access_denied",
+        "tests/hypothesisAssessmentHistory.test.mjs:resolved human request detail denial clears the older selected assessment",
+        "public_check_logs run_id=34833712324 job_id=103942660466 ok 571-574, ok 583"
+      ],
+      "explanation": "Base request/detail paths did not call parent onAccessFailure. Candidate submit() and inspect() invoke the parent after authentication_required or access_denied, but only after alive/client/scopeKey checks. Parent invalidateAccess writes status 'unavailable' for the current client+scope, which takes the L61 early return and therefore unmounts HypothesisAssessmentPanel and HypothesisRevisionComparison. Pending and resolved human_reconsideration rows both receive onAccessFailure={invalidateAccess}; the request form does too. Supplied Node22 TAP records the four pending request/detail code combinations (ok 571-574) plus resolved detail access_denied (ok 583) asserting Original/Later synthetic assessment gone, 'Assessment history is unavailable', and failures equal to the code."
+    },
+    {
+      "requirement": "Validated permission-withheld responses with exact identities must clear saved assessment/comparison; distinguish them from malformed or unrelated responses.",
+      "status": "PASS",
+      "evidence_refs": [
+        "src/components/HypothesisReassessmentRequest.jsx:inspect valid+withheld_reason:L60-L67",
+        "supabase/qualification/hypothesis-assessments/007_human_reconsideration.sql:mip_hypothesis.read_reassessment_request withheld_reason current_evidence_permission_required",
+        "tests/hypothesisAssessmentHistory.test.mjs:withheldDetail",
+        "tests/hypothesisAssessmentHistory.test.mjs:validated request-detail permission withholding clears parent but unsupported/cross-scope responses do not revoke it",
+        "public_check_logs run_id=34833712324 job_id=103942660466 ok 575"
+      ],
+      "explanation": "inspect() requires contract mip_hypothesis_request_detail_v1, matching investigation_id/request_id/cause_id/revision_id/trigger, publication_allowed===false, is_approval===false, status==='withheld', and withheld_reason==='current_evidence_permission_required' before calling failure.current?.('access_denied'). That reason string matches the unchanged SQL withheld return. Cross-scope investigation_id, unsupported withheld_reason, and publication_allowed=true take the generic local withheld branch and do not call onAccessFailure. Node22 ok 575 asserts parent text cleared and failures=['access_denied'] only for the exact withheldDetail; the three mutated responses keep Later synthetic assessment and failures=[]."
+    },
+    {
+      "requirement": "Stale client/scope/unmounted responses cannot clear replacement state.",
+      "status": "PASS",
+      "evidence_refs": [
+        "src/components/HypothesisReassessmentRequest.jsx:submit stale guard:L18",
+        "src/components/HypothesisReassessmentRequest.jsx:inspect stale guard:L56",
+        "src/components/HypothesisReassessmentRequest.jsx:alive unmount effect:L7 and L51",
+        "src/components/HypothesisAssessmentHistory.jsx:invalidateAccess clientRef/scopeRef:L16,L18-L19",
+        "tests/hypothesisAssessmentHistory.test.mjs:late human request|detail denial after client|scope|unmount",
+        "tests/hypothesisAssessmentHistory.test.mjs:late validated permission withholding after client|scope",
+        "public_check_logs run_id=34833712324 job_id=103942660466 ok 576-581, ok 584-585"
+      ],
+      "explanation": "Both in-flight paths return before failure.current when !alive.current or when active.current client/scopeKey differs from the captured context. Parent invalidateAccess additionally no-ops unless scopeRef and clientRef still match the callback closure, so a late child callback cannot mark a replacement client or scope unavailable. Node22 ok 576-581 keep Later synthetic assessment and failures=[] for request and detail denials after client, scope, and unmount replacement. ok 584-585 cover the same client/scope replacement for withheldDetail. Unmount for the withheldDetail branch is the same inspect() alive.current return already exercised by ok 581."
+    },
+    {
+      "requirement": "Ambiguous failure preserves exact retry identity and does not claim authoritative denial.",
+      "status": "PASS",
+      "evidence_refs": [
+        "src/components/HypothesisReassessmentRequest.jsx:attemptRef freeze:L14-L15",
+        "src/components/HypothesisReassessmentRequest.jsx:non-denial receipt/error -> uncertain:L22-L25",
+        "src/components/HypothesisReassessmentRequest.jsx:submit catch:L27",
+        "src/components/HypothesisReassessmentRequest.jsx:inspect catch local withheld only:L68",
+        "src/components/HypothesisReassessmentRequest.jsx:Retry the same request:L41-L44",
+        "src/lib/hypothesisAssessmentClient.js:createHypothesisAssessmentClient call() unknown codes -> request_failed",
+        "tests/hypothesisAssessmentHistory.test.mjs:ambiguous human request response preserves parent and exact retry identity",
+        "public_check_logs run_id=34833712324 job_id=103942660466 ok 582"
+      ],
+      "explanation": "request_failed and malformed receipts take setStatus('uncertain') without failure.current. inspect() catch and invalid/unrelated data set local withheld only. Retry uses attemptRef.current captured before send; trigger/reason inputs disable once attempt is set. Node22 ok 582 keeps Later synthetic assessment, shows 'Recording is unconfirmed', deep-equals two requestReassessment payloads, and failures=[]. That is not treated as authoritative denial."
+    },
+    {
+      "requirement": "No backend grant, publication or historical-qualification changes; maintain bounded frontend semantics.",
+      "status": "PASS",
+      "evidence_refs": [
+        "packet candidate_files roles: only HypothesisAssessmentHistory.jsx, HypothesisReassessmentRequest.jsx, tests/hypothesisAssessmentHistory.test.mjs are changed_file",
+        "src/lib/hypothesisAssessmentClient.js, HypothesisRevisionComparison.jsx, HypothesisAssessmentPanel.jsx, tests/hypothesisAssessmentFixture.mjs, 007_human_reconsideration.sql: explicitly_allowed_unchanged_dependency",
+        "src/components/HypothesisReassessmentRequest.jsx:receipt requires publication_allowed===false and completed_reassessment===false:L23-L25",
+        "src/components/HypothesisReassessmentRequest.jsx:detail requires publication_allowed===false and is_approval===false:L61-L63",
+        "src/components/HypothesisAssessmentHistory.jsx:L69,L73,L88 copy still denies time reconstruction and publication restore",
+        "src/lib/hypothesisAssessmentClient.js:hypothesisHistoryView historical_commit_visibility_qualified!==false and publication_allowed!==false"
+      ],
+      "explanation": "The candidate delta is parent wiring, request/detail denial callbacks, and tests. The five allowed dependencies are unchanged, including qualification SQL and history mapping. Frontend still requires private receipts (publication_allowed false, not an approval) and does not alter grants, publication, or historical qualification. Clearing is display-state only via status 'unavailable'."
+    },
+    {
+      "requirement": "Meaningful regression tests and honest supplied-test scope, including candidate/tree binding; no claims of independent execution.",
+      "status": "PASS",
+      "evidence_refs": [
+        "tests/hypothesisAssessmentHistory.test.mjs new cases: human request/detail codes, withheldDetail mutations, late client/scope/unmount, ambiguous retry, resolved detail denial, late withheld client/scope",
+        "public_check_logs run_id=34833712324 job_id=103942660466: checkout HEAD dcf4f74139b724ef561a8185976cf1424227fc97 'Merge 220be5e... into eb0d7ac...'; TAP tests 1915 pass 1915 fail 0; ok 571-585",
+        "check_metadata id=34833712324 head_sha=220be5e69014316232c5c9ee85e5501b8f734c42 conclusion=success",
+        "check_jobs run_id=34833712324 job test (24) id=103942660224 conclusion=success (metadata only; npm test step success)",
+        "tree_evidence: 220be5e and dcf4f74 both tree sha 20f43eafe837c1cbb6196240cf93cd492d3e0322",
+        "browser_pass_lines run_id=34833712314 job_id=103942660098 two MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS lines; scope=synthetic_ledger_saved_assessment_and_composer"
+      ],
+      "explanation": "This review did not execute tests. The supplied Node22 golden log is complete and records the new history-panel denial cases as ok 571-585 inside a 1915/1915 pass on the PR merge commit whose tree SHA equals candidate 220be5e. Node24 is metadata-only success. The two browser PASS JSON lines are synthetic ledger/composer/comparison scoped and do not themselves prove the new request/detail denial matrix; Node TAP is the evidence for those paths. Counts and docs were not treated as proof."
+    }
+  ],
+  "findings": [
+    {
+      "id": "browser-pass-json-omits-new-reconsideration-denial-matrix",
+      "severity": "low",
+      "classification": "test_gap",
+      "description": "The two supplied browser PASS JSON lines declare scope synthetic_ledger_saved_assessment_and_composer and flags such as deniedRecordsCleared/logoutCleared/comparisonPermissionRaceCleared. They do not name human requestReassessment/requestDetail authentication_required, access_denied, withheldDetail identity checks, or replacement-client races. Packet instruction: browser records alone do not prove every new denial path.",
+      "counterexample": "A chromium/webkit MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS success can hold while the new inspect()/submit() parent-clearing branches are unexercised in that browser job.",
+      "evidence_refs": [
+        "browser_pass_lines run_id=34833712314 job_id=103942660098 lines at 2026-09-14T10:33:53.1102909Z and 2026-09-14T10:33:59.2198630Z",
+        "tests/hypothesisAssessmentHistory.test.mjs Node TAP ok 571-585 as the covering evidence instead"
+      ],
+      "remediation": "Treat Node22 ok 571-585 as the denial-path evidence. Do not read the browser PASS JSON as coverage of the new reconsideration denial matrix."
+    },
+    {
+      "id": "some-denial-combinatorics-rely-on-shared-inspect-guards-not-dedicated-cases",
+      "severity": "low",
+      "classification": "test_gap",
+      "description": "Resolved-detail authentication_required and withheldDetail-after-unmount are not separate TAP cases. Both still run through inspect() L56-L65 (alive/client/scopeKey, then error-code or validated withheld_reason). Pending+authentication_required, resolved+access_denied, and detail-unmount+access_denied are recorded.",
+      "counterexample": "A regression that broke only resolved+authentication_required wiring while leaving pending auth and resolved access_denied intact would not have its own named test, though the same inspect() branch is shared.",
+      "evidence_refs": [
+        "src/components/HypothesisReassessmentRequest.jsx:inspect:L56-L65",
+        "tests/hypothesisAssessmentHistory.test.mjs:resolved human request detail denial (access_denied only)",
+        "public_check_logs job_id=103942660466 ok 573, ok 581, ok 583"
+      ],
+      "remediation": "Optional parametrization of resolved×authentication_required and withheldDetail×unmount; not required to justify the shared inspect() guards already tested."
+    }
+  ],
+  "blockers": [],
+  "limitations": [
+    "Evidence class is artifact_inspection of the frozen packet only; this reviewer did not run tests, browsers, or CI.",
+    "Node24 job 103942660224 is metadata (npm test step success) without a TAP body in the packet.",
+    "CI job 103942660466 checked out merge dcf4f74139b724ef561a8185976cf1424227fc97; content binding is the shared tree sha 20f43eafe837c1cbb6196240cf93cd492d3e0322 with candidate 220be5e, not a claim that the job detached HEAD was the candidate SHA.",
+    "Browser PASS JSON is not coverage of the new reconsideration denial paths.",
+    "Unchanged client/SQL/comparison/panel/fixture were used only as allowed contract context. No extra source was fetched.",
+    "Scope excludes unobserved revocation subscription, whole-app security, MIP/history qualification, publication, merge, and production certification."
+  ],
+  "summary": "PASS for bounded frontend clearing after authoritative reconsideration request/detail denial on candidate 220be5e versus eb0d7ac. Source and supplied Node22 TAP (run 34833712324 job 103942660466 ok 571-585) show both error codes clearing pending request and pending/resolved detail, exact withheldDetail identity clearing versus malformed/cross-scope no-ops, stale client/scope/unmount non-clearing, and ambiguous request_failed preserving parent plus exact retry identity, without backend grant/publication/qualification edits. Browser PASS lines and Node24 metadata were not used as proof of those new denial paths. Two low test_gaps remain. No approval, merge, publication, or production authority."
+}
