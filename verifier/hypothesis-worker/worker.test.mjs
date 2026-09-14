@@ -1,3 +1,4 @@
+import {savedBoundaryPrefixCases} from './savedBoundaryPrefixCases.mjs'
 import {boundaryIntegrationCases} from './boundaryIntegrationCases.mjs'
 import {markerBoundaryCases} from './markerBoundaryCases.mjs'
 import {continuityCases} from './continuityCases.mjs'
@@ -55,7 +56,7 @@ test('isolated hypothesis generation authority, retained computation and restart
  const f=await setup(t)
  await t.test('consistent exported snapshot bootstrap isolation',async t=>bootstrapCases(t,f,v=>runDurableHypothesisWorker(options(f,v))))
  await t.test('actual pgoutput metadata-to-durable-recorder isolation',async t=>pgoutputCases(t,f,v=>runDurableHypothesisWorker(options(f,v))))
- await t.test('source-captured contiguous metadata coverage isolation',async t=>continuityCases(t,f,v=>runDurableHypothesisWorker(options(f,v)),(t,staged)=>boundaryIntegrationCases(t,f,{staged,
+ await t.test('source-captured contiguous metadata coverage isolation',async t=>continuityCases(t,f,v=>runDurableHypothesisWorker(options(f,v)),(t,staged)=>boundaryIntegrationCases(t,f,{staged,onReady:(t,configured,relations)=>savedBoundaryPrefixCases(t,f,configured,relations),
   runWorker:v=>runDurableHypothesisWorker(options(f,v)),holdRevision:async()=>{
    const v=await f.investigation();await v.captureGeneration();const job=await claim(f,v)
    const pending=await hold(f.db,rpcSql(f,'worker_complete',completeArgs(v,job,output(job))),workerRole)

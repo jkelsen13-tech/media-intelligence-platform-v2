@@ -9,7 +9,7 @@ import {encryptedRemoteJournal} from '../../supabase/qualification/mip-cutover-a
 import {retainBoundaryRegistration,boundaryRegistrationDigest,createBoundaryCustodyTransport} from '../../supabase/qualification/hypothesis-assessments/boundaryRegistrationCustody.mjs'
 import {consumeBoundaryCapture} from '../../supabase/qualification/hypothesis-assessments/coveredBoundaryConsumer.mjs'
 const sha=s=>createHash('sha256').update(s).digest('hex')
-export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevision}){
+export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevision,onReady}){
  await f.admin(await readFile(new URL('../../supabase/qualification/hypothesis-assessments/022_registered_stream_boundaries.sql',import.meta.url),'utf8'))
  const revisionRelation=await f.admin("select 'mip_hypothesis.revision_transactions'::regclass::oid::text")
  const markerRelation=await f.admin("select 'mip_temporal.registered_stream_markers'::regclass::oid::text")
@@ -370,4 +370,5 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
    await assert.rejects(()=>f.admin('set session authorization '+role+';update mip_temporal.boundary_stream_configs set contract_digest='+q('a'.repeat(64))+';'),/mip_database_denied_42501/)
   }
  })
+ if(onReady)await onReady(t,configured,{revisionRelation,markerRelation})
 }
