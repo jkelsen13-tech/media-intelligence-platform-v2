@@ -5,6 +5,7 @@ on:
       - 'supabase/qualification/content-addressed-storage/**'
       - 'verifier/content-addressed-storage/**'
       - '.github/workflows/content-addressed-storage.yml'
+      - 'docs/CONTENT_ADDRESSED_STORAGE_PLAN_2026-09-14.md'
 permissions:
   contents: read
 jobs:
