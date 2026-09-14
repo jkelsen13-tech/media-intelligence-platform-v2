@@ -51,6 +51,24 @@
       "pass": 1916,
       "fail": 0,
       "build": "success"
+    },
+    {
+      "file": "golden-node24-job-103958361587.log",
+      "run": 34838692623,
+      "job": 103958361587,
+      "sha256": "31ae6aca599f0be7c4c5dba4f1c58eadf2293b553c9509ec314f79ebe47b4d64",
+      "tests": 1916,
+      "pass": 1916,
+      "fail": 0,
+      "build": "success"
+    },
+    {
+      "file": "failed-520-native-job-103958171203.log",
+      "run": 34838633795,
+      "job": 103958171203,
+      "candidate": "520dbcb74b74fbf2dc81fe1c87f3187f964ef9e9",
+      "sha256": "f585c35187426c97b569f70292e23aa52261048d3066e7ecd8834bcd8028936b",
+      "conclusion": "failure"
     }
   ],
   "digest_definition": "SHA-256 exact UTF-8 connector-decoded log text, preserving BOM if present; not ZIP digest",
@@ -58,7 +76,8 @@
     "candidate": "520dbcb74b74fbf2dc81fe1c87f3187f964ef9e9",
     "run": 34838633795,
     "job": 103958171203,
-    "reason": "Stale native HTTP result503instead409 due to diagnostic context suffix; corrected by943 closed classifier."
+    "reason": "Stale native HTTP result503instead409 due to diagnostic context suffix; corrected by943 closed classifier.",
+    "rationale": "Initial greedy [a-z_]+ regex consumed the sanitized _via_ function-context suffix, so the known stale-evidence error did not match the closed allowlist and safely returned503. Commit943 requires SQLSTATE P0001 and splits only the trusted _via_ suffix before exact allowlist comparison, yielding409 without forwarding arbitrary diagnostic text. Native final correction assertion proves this."
   },
   "limitations": [
     "No deployed endpoint/default URL/public tab/SQL or grant changes",
