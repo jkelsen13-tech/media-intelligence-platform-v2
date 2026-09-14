@@ -329,7 +329,16 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    assert.ok(appCalls.includes('history'));assert.ok(appCalls.includes('backlog'))
    await appHistory.scrollIntoViewIfNeeded()
    assert.equal(await appHistory.isVisible(),true)
-   assert.equal(await appHistory.evaluate(el=>el.scrollWidth>el.clientWidth+1),false)
+   const appLayout=await appHistory.evaluate(el=>({width:el.clientWidth,scroll:el.scrollWidth,
+    elements:[el,...el.querySelectorAll('*')].filter(n=>n.scrollWidth>n.clientWidth+1||n.getBoundingClientRect().right>el.getBoundingClientRect().right+1).map(n=>({
+     tag:n.tagName,classes:n.className,text:n.textContent?.slice(0,100),width:n.clientWidth,scroll:n.scrollWidth,
+     right:n.getBoundingClientRect().right,display:getComputedStyle(n).display,minWidth:getComputedStyle(n).minWidth,
+     whiteSpace:getComputedStyle(n).whiteSpace,grid:getComputedStyle(n).gridTemplateColumns,position:getComputedStyle(n).position})).slice(0,20)}))
+   if(appLayout.scroll>appLayout.width+1){
+    console.log('MIP_SYNTHETIC_NORMAL_APP_LAYOUT_FAILURE='+JSON.stringify({engine,width,...appLayout}))
+    console.log('MIP_SYNTHETIC_NORMAL_APP_LAYOUT_FAILURE_IMAGE_'+engine+'='+(await page.screenshot({type:'jpeg',quality:70})).toString('base64'))
+   }
+   assert.equal(appLayout.scroll>appLayout.width+1,false)
    if(width===390)console.log('MIP_SYNTHETIC_NORMAL_APP_HISTORY_'+engine+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
    appDenied=true
    await appHistory.getByRole('button',{name:'Refresh assessment history',exact:true}).click()
