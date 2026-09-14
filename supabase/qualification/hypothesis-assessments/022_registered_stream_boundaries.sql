@@ -137,10 +137,10 @@ begin
    if n=1 and get_byte(item.data,0)<>66 then raise exception 'mip_coverage_protocol_denied';end if;
    if get_byte(item.data,0)=73 then
     rid:=('x'||encode(substring(item.data from 2 for 4),'hex'))::bit(32)::bigint;
-    if rid=cfg.marker_relation then seen_marker:=true;
+    if rid=cfg.marker_relation::bigint then seen_marker:=true;
      if item.data<>mip_temporal.boundary_marker_tuple(i.request_id,p_binding,i.epoch,i.creator_xid,cfg.marker_relation)
      then raise exception 'mip_boundary_marker_mismatch';end if;
-    elsif rid=cfg.revision_relation then seen_revision:=true;
+    elsif rid=cfg.revision_relation::bigint then seen_revision:=true;
     else raise exception 'mip_boundary_relation_denied';end if;
    end if;
    hex:=encode(item.data,'hex');data:=data||jsonb_build_array(hex);
