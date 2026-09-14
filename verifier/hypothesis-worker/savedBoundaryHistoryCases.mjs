@@ -15,7 +15,7 @@ function transaction(db,onPid=()=>{}){
    {env:{PATH:process.env.PATH,PGPASSWORD:'mip-disposable-ci-only',PGOPTIONS:'-c statement_timeout=20000 -c lock_timeout=15000'},stdio:['pipe','pipe','pipe']})
   let buffer='',pending=null,failed=false
   const fail=()=>{failed=true;if(pending){pending.reject(Error('mip_boundary_native_query_failed'));pending=null}}
-  child.on('error',fail);child.on('exit',code=>{if(code)fail()})
+  child.on('error',fail);child.on('exit',fail);child.stdin.on('error',fail)
   child.stderr.on('data',x=>{if(String(x).includes('ERROR'))fail()})
   child.stdout.on('data',data=>{
    buffer+=data
@@ -27,7 +27,9 @@ function transaction(db,onPid=()=>{}){
   })
   const line=statement=>new Promise((resolve,reject)=>{
    if(failed||pending)return reject(Error('mip_boundary_native_query_failed'))
-   pending={resolve,reject};child.stdin.write(statement+';\n')
+   const timer=setTimeout(()=>{fail();child.kill()},30000)
+   pending={resolve:v=>{clearTimeout(timer);resolve(v)},reject:e=>{clearTimeout(timer);reject(e)}}
+   child.stdin.write(statement+';\n')
   })
   try{
    const pid=Number(await line('set session authorization mip_boundary_history_gateway;begin;select pg_backend_pid()'))
@@ -95,11 +97,15 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
    const x=await context(t);let ready,release,pid
    const entered=new Promise(r=>ready=r),gate=new Promise(r=>release=r)
    const read=deliverSavedBoundaryHistory({...x.options,withTransaction:transaction(f.db,v=>pid=v),deliver:async()=>{ready();await gate}})
-   await Promise.race([entered,read.then(()=>{throw Error('delivery_not_entered')})])
-   const revoke=fault==='source'?f.admin(x.b.revokeSql):f.pub('mip_investigation_workspace_v1','set_access',{investigation_id:x.identity.iid,user_id:x.identity.user,access_role:'revoked',reason:'Synthetic.'})
-   revoke.catch(()=>{})
-   try{await blocked(f,fault==='source'?x.b.custodyPid():pid)}
-   finally{release();await Promise.all([read,revoke])}
+   let timer,revoke
+   try{
+    await Promise.race([entered,read.then(()=>{throw Error('delivery_not_entered')}),
+     new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('mip_delivery_readiness_timeout')),30000)})])
+    clearTimeout(timer)
+    revoke=fault==='source'?f.admin(x.b.revokeSql):f.pub('mip_investigation_workspace_v1','set_access',{investigation_id:x.identity.iid,user_id:x.identity.user,access_role:'revoked',reason:'Synthetic.'})
+    revoke.catch(()=>{})
+    await blocked(f,fault==='source'?x.b.custodyPid():pid)
+   }finally{clearTimeout(timer);release();await Promise.all([read,...(revoke?[revoke]:[])])}
    await assert.rejects(()=>deliverSavedBoundaryHistory({...x.options,deliver:()=>{throw Error('unexpected_delivery')}}))
   }
  })
