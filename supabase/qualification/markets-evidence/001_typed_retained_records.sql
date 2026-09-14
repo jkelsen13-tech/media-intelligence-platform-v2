@@ -26,6 +26,25 @@ select a.article_count,r.articles_with_published_node,greatest(a.article_count-r
  p.pending_graph_candidate_count,g.published_node_count,g.documented_relationship_count
 from article_totals a cross join resolved_article_totals r cross join pending_graph_candidates p cross join published_graph g;
 grant select on public.graph_coverage_public to anon,authenticated;
+
+-- Fail closed for additional catalog-discoverable exposed graph views in this disposable target.
+-- Dynamic SQL/functions and production surfaces still require a separate inventory.
+do $inventory$
+declare unknown_view text;
+begin
+ with recursive dependent(oid) as(
+  select oid from pg_class where oid in('public.nodes'::regclass,'public.edges'::regclass)
+  union
+  select r.ev_class from dependent d join pg_depend p on p.refobjid=d.oid
+   join pg_rewrite r on r.oid=p.objid where r.ev_class<>d.oid
+ )
+ select c.oid::regclass::text into unknown_view from dependent d join pg_class c on c.oid=d.oid
+ where c.relkind in('v','m') and c.oid<>'public.graph_coverage_public'::regclass
+ and(has_table_privilege('anon',c.oid,'SELECT') or has_table_privilege('authenticated',c.oid,'SELECT'))
+ limit 1;
+ if unknown_view is not null then raise exception 'mip_market_exposed_view_inventory_required';end if;
+end $inventory$;
+
 create function mip_markets.guard_private_graph() returns trigger language plpgsql security definer set search_path='' as $$
 begin
  perform 1 from mip_cutover_authority.publication_fence where id for update;
