@@ -2,12 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {hash,validate,receive} from './protocol.mjs';
 function fixture() {
- const b=Buffer.from('Synthetic bounded input.');
- const p={candidate:'a'.repeat(40),synthetic:true,request:'synthetic-1',implementer:'synthetic-author',disclosure:'synthetic-only',files:[{path:'tests/example.txt',bytes:b.length,sha256:hash(b)}],requirements:['r1']};
- const a={candidate:p.candidate,disclosure:p.disclosure,files:structuredClone(p.files)};
- const r={candidate:p.candidate,packet:hash(JSON.stringify(p)),request:p.request,synthetic:true,reviewer:'synthetic-reviewer',model:'test-double',outcome:'PASS',coverage:[{id:'r1',status:'PASS',evidence_class:'artifact_inspection',references:['tests/example.txt']}],findings:[],blockers:[]};
+ const entries=[['src/example.jsx',Buffer.from('export const View=()=>null;')],['supabase/migrations/20260914000000_synthetic.sql',Buffer.from('select 1;')],['tests/cross-layer.txt',Buffer.from('Synthetic UI/API contract receipt.')]];
+ const files=entries.map(([path,b])=>({path,bytes:b.length,sha256:hash(b)}));
+ const requirements=['frontend_behavior','backend_contract','cross_layer_semantics'];
+ const requirementLayers={frontend_behavior:'frontend',backend_contract:'backend',cross_layer_semantics:'cross_layer'};
+ const p={candidate:'a'.repeat(40),synthetic:true,request:'synthetic-1',implementer:'synthetic-author',disclosure:'synthetic-only',files,requirements,requirementLayers};
+ const a={candidate:p.candidate,disclosure:p.disclosure,files:structuredClone(p.files),requirements:structuredClone(p.requirements),requirementLayers:structuredClone(p.requirementLayers)};
+ const r={candidate:p.candidate,packet:hash(JSON.stringify(p)),request:p.request,synthetic:true,reviewer:'synthetic-reviewer',model:'test-double',outcome:'PASS',coverage:p.requirements.map((id,i)=>({id,status:'PASS',evidence_class:'artifact_inspection',references:[p.files[i].path]})),findings:[],blockers:[]};
  const o={packet:r.packet,synthetic:true,verified:true,reviewer:r.reviewer,model:r.model};
- return [p,new Map([['tests/example.txt',b]]),a,r,o];
+ return [p,new Map(entries),a,r,o];
 }
 test('synthetic valid handoff never grants approval',()=>assert.deepEqual(validate(...fixture()),{outcome:'PASS',action:'synthetic_only',merge:false,approve:false}));
 for(const [name,mutate,code] of [
@@ -15,9 +18,13 @@ for(const [name,mutate,code] of [
  ['real execution closed',a=>a[0].synthetic=false,'real_transport_not_configured'],
  ['unbound disclosure',a=>a[2].disclosure='other','disclosure_unbound'],
  ['extra file',a=>a[1].set('tests/extra',Buffer.from('x')),'file_set'],
- ['changed bytes',a=>a[1].set('tests/example.txt',Buffer.from('x')),'file_binding'],
+ ['changed bytes',a=>a[1].set('src/example.jsx',Buffer.from('x')),'file_binding'],
  ['path traversal',a=>{a[0].files[0].path='tests/../secret';a[2].files=structuredClone(a[0].files)},'unsafe_path'],
  ['agent rules',a=>{a[0].files[0].path='docs/AGENTS.md';a[2].files=structuredClone(a[0].files)},'unsafe_path'],
+ ['supabase secret/config excluded',a=>{a[0].files[1].path='supabase/.env';a[2].files=structuredClone(a[0].files)},'unsafe_path'],
+ ['missing frontend layer',a=>{a[0].requirementLayers.frontend_behavior='backend';a[2].requirementLayers=structuredClone(a[0].requirementLayers)},'full_stack_required'],
+ ['missing backend layer',a=>{a[0].requirementLayers.backend_contract='frontend';a[2].requirementLayers=structuredClone(a[0].requirementLayers)},'full_stack_required'],
+ ['missing cross layer',a=>{a[0].requirementLayers.cross_layer_semantics='frontend';a[2].requirementLayers=structuredClone(a[0].requirementLayers)},'full_stack_required'],
  ['unverified origin',a=>a[4].verified=false,'unverified_origin'],
  ['wrong candidate',a=>a[3].candidate='b'.repeat(40),'result_binding'],
  ['wrong request',a=>a[3].request='other','result_binding'],
