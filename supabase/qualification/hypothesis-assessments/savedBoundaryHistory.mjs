@@ -1,6 +1,7 @@
 // Isolated admission and consume services. Their database principals MUST be disjoint.
 // No live endpoint, credential, provider, issuer or independently protected custody is configured.
 import {randomUUID,createHash} from 'node:crypto'
+import {validateHypothesisAssessment,assessmentInstant} from '../../../src/lib/hypothesisAssessment.js'
 import {createSupabaseHypothesisAuthenticator} from './supabaseAuthenticator.mjs'
 import {boundaryRegistrationEnvelope,boundaryRegistrationDigest} from './boundaryRegistrationCustody.mjs'
 import {verifyRetainedBoundaryPrefix} from './retainedBoundaryPrefix.mjs'
@@ -74,6 +75,37 @@ export function createBoundaryProofAuthority({authConfiguration,registration,obs
   })
  }})
 }
+
+function validateSavedEntry(e,investigationId){
+ const common='revision_id|revision|completed_at|status'
+ if(!e||!uid(e.revision_id)||!Number.isSafeInteger(e.revision)||e.revision<1||assessmentInstant(e.completed_at)===null)deny()
+ if(e.status==='withheld'){
+  keys(e,common+'|reason')
+  if(!['missing_acceptance_binding','current_permission_or_binding_denied','permission_binding_changed_fresh_review_required'].includes(e.reason))deny()
+  return
+ }
+ keys(e,common+'|assessment|workspace_version_id|observation_id|current_context|reassessment_pending')
+ if(e.status!=='available'||!uid(e.workspace_version_id)||!uid(e.observation_id)||
+  typeof e.current_context!=='boolean'||e.reassessment_pending!==!e.current_context)deny()
+ const a=e.assessment
+ if(!validateHypothesisAssessment(a).valid||a.question_id!==investigationId||a.id!==e.revision_id||
+  a.revision!==e.revision||a.completed_at!==e.completed_at)deny()
+ keys(a,'contract_version|id|question_id|question|revision|predecessor_id|knowledge_cutoff|completed_at|method_version|model_version|review_state|release_state|hypotheses|hypothesis_relationship|comparison|evidence|arguments|assumptions|gaps|change_tests|revision_reason|revision_trigger|revision_effect'+(Object.hasOwn(a,'reassessment_causes')?'|reassessment_causes':''))
+ const rating=r=>keys(r,r.kind==='qualitative'?'kind|reason|label|method_ref':'kind|reason')
+ for(const h of a.hypotheses){keys(h,'id|definition|likelihood|confidence');rating(h.likelihood);rating(h.confidence)}
+ keys(a.comparison,'state|favored_ids|rationale|main_limitation|confidence');rating(a.comparison.confidence)
+ for(const v of a.evidence){
+  keys(v,'id|input_position|material_version|acquired_at|published_at|event_time|source_span|origin_group|documented_claim|quality')
+  for(const key of ['published_at','event_time'])if(v[key]!==null&&(typeof v[key]!=='string'||!Number.isFinite(Date.parse(v[key]))))deny()
+  const s=v.source_span;keys(s,'source_field|start|end|excerpt_sha256')
+  if(typeof s.source_field!=='string'||!s.source_field||!Number.isSafeInteger(s.start)||!Number.isSafeInteger(s.end)||s.start<0||s.end<=s.start||
+   typeof s.excerpt_sha256!=='string'||!/^[0-9a-f]{64}$/.test(s.excerpt_sha256))deny()
+  rating(v.quality)
+ }
+ for(const arg of a.arguments){keys(arg,'id|hypothesis_id|relation|evidence_ids|inference|limitation|relevance');rating(arg.relevance)}
+ for(const cause of a.reassessment_causes??[])keys(cause,'cause_id|reason')
+}
+
 // withTransaction must reserve ONE consume-only authenticated backend, honor AbortSignal by
 // cancelling/closing it, and roll back on errors. Production transport admission remains absent.
 export function createSavedBoundaryReader({authority,withTransaction}={}){
@@ -102,17 +134,20 @@ export function createSavedBoundaryReader({authority,withTransaction}={}){
      payload.temporal_scope!=='saved_boundary_current_permission'||!Array.isArray(payload.entries)||payload.entries.length>128||
      Buffer.byteLength(JSON.stringify(payload))>1048576)deny()
     for(const k of ['historical_commit_visibility_qualified','source_authority_qualified','user_history_qualified','historical_time_qualified','publication_allowed'])if(payload[k]!==false)deny()
-    const seen=new Set()
+    const seen=new Set();let previous=0
     for(const e of payload.entries){
-     if(!uid(e.revision_id)||seen.has(e.revision_id)||!['available','withheld'].includes(e.status))deny()
-     seen.add(e.revision_id)
-     const allowed=e.status==='available'?['revision_id','revision','completed_at','status','assessment','workspace_version_id','observation_id','current_context','reassessment_pending']:['revision_id','revision','completed_at','status','reason','workspace_version_id','observation_id']
-     if(Object.keys(e).some(k=>!allowed.includes(k)))deny()
-     if(e.status==='available'&&e.assessment?.question_id!==r.investigationId)deny()
+     validateSavedEntry(e,r.investigationId)
+     if(seen.has(e.revision_id)||e.revision<=previous)deny()
+     seen.add(e.revision_id);previous=e.revision
     }
+    // Absolute monotonic receipt fence, not a transport revocation mechanism.
+    // A synchronous callback can still transmit while timers are stalled; no transport admission is claimed.
+    const deadline=started+envelope.remaining_ms
+    const assertDeadline=()=>{if(performance.now()>=deadline){controller.abort();throw Error('mip_boundary_delivery_aborted')}live(controller.signal)}
     leaseTimer=setTimeout(()=>controller.abort(),remaining)
-    await Promise.race([Promise.resolve().then(()=>deliver(payload,controller.signal)),aborted])
-    live(controller.signal)
+    assertDeadline()
+    await Promise.race([Promise.resolve().then(()=>{assertDeadline();return deliver(payload,controller.signal)}),aborted])
+    assertDeadline()
     return {schema:'mip_saved_boundary_delivery_receipt_v2',delivery_id:permit.permit_id,delivered:true,historical_time_qualified:false,publication_allowed:false}
    })
   },controller.signal)

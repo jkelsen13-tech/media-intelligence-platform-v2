@@ -149,14 +149,14 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
    const read=x.reader({withTransaction:transaction(f.db,v=>pid=v)})(x.request,async()=>{ready();await gate})
    await Promise.race([entered,read.then(()=>{throw Error('delivery_missing')})])
    const revoke=f.admin("update mip_identity.operation_evidence_heads set active=false where scope->>'material_version' in (select e->>'material_hash' from mip_hypothesis.acceptance_bindings b cross join lateral jsonb_array_elements(b.metadata) e where b.revision_id="+q(x.revisions[0])+")");revoke.catch(()=>{})
-   try{await blocked(f,x.b.custodyPid()??pid)}finally{release();await Promise.all([read,revoke])}
+   try{await blocked(f,pid)}finally{release();await Promise.all([read,revoke])}
    let next
    await x.reader()(x.request,v=>{next=v})
    assert.equal(next.entries.find(e=>e.revision_id===x.revisions[0]).status,'withheld')
   }
  })
 
- await t.test('natural material, source session and verified JWT expiry cap delivery and force rollback',async t=>{
+ await t.test('cooperative material/session expiry rolls back; expired JWT denies before admission',async t=>{
   for(const fault of ['material','session','jwt']){
    const x=await context(t);let restore;let observedSignal;let pid
    if(fault==='material'){
@@ -169,7 +169,13 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
     restore='alter table mip_identity.sessions disable trigger user;update mip_identity.sessions set expires_at='+q(original)+' where session_id='+q(x.b.session())+';alter table mip_identity.sessions enable trigger user'
     await f.admin("alter table mip_identity.sessions disable trigger user;update mip_identity.sessions set expires_at=clock_timestamp()+interval '5 seconds' where session_id="+q(x.b.session())+";alter table mip_identity.sessions enable trigger user")
    }
-   if(fault==='jwt')x.request.authorization='Bearer '+x.provider.token({exp:Math.floor(Date.now()/1000)+5})
+   if(fault==='jwt'){
+    x.request.authorization='Bearer '+x.provider.token({exp:0})
+    let delivered=false
+    await assert.rejects(()=>x.reader()(x.request,()=>{delivered=true}),/mip_boundary_history_denied/)
+    assert.equal(delivered,false)
+    continue
+   }
    try{
     const start=Date.now()
     await assert.rejects(()=>x.reader({withTransaction:transaction(f.db,v=>pid=v)})(x.request,async(_,signal)=>{
@@ -199,6 +205,40 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
    }),signal)
    await assert.rejects(()=>x.reader({withTransaction:decorated})(x.request,()=>{throw Error('unexpected_delivery')}))
   }
+
+  // Required fields, types, nested contracts and status-disclosure shapes all fail closed.
+  const mutations=[
+   e=>{const a=e.payload.entries[0];e.payload.entries[0]={revision_id:a.revision_id,revision:a.revision,completed_at:a.completed_at,status:'withheld'}},
+   e=>{const a=e.payload.entries[0];e.payload.entries[0]={revision_id:a.revision_id,revision:a.revision,completed_at:a.completed_at,status:'withheld',reason:42}},
+   e=>delete e.payload.entries[0].revision,
+   e=>{e.payload.entries[0].revision='1'},
+   e=>delete e.payload.entries[0].completed_at,
+   e=>{e.payload.entries[0].current_context='true'},
+   e=>{e.payload.entries[0].assessment.question_id=randomUUID()},
+   e=>{e.payload.entries[0].assessment.hypotheses[0].confidence={kind:'not_estimated'}},
+   e=>{e.payload.entries[0].assessment.evidence[0].source_span.start='0'},
+   e=>{e.payload.entries[0].assessment.evidence[0].source_span.unexpected=true},
+   e=>{e.payload.entries[0].assessment.comparison.favored_ids=42},
+   e=>{e.payload.entries[0].assessment.arguments[0].evidence_ids=['unknown']},
+   e=>{e.payload.entries[0].status='withheld';e.payload.entries[0].reason='current_permission_or_binding_denied'},
+  ]
+  for(const mutate of mutations){
+   let delivered=false
+   const decorated=async(run,signal)=>transaction(f.db)(query=>run(async(sql,args)=>{
+    const r=await query(sql,args);if(sql===consumeSql)mutate(r.rows[0].value);return r
+   }),signal)
+   await assert.rejects(()=>x.reader({withTransaction:decorated})(x.request,()=>{delivered=true}))
+   assert.equal(delivered,false)
+  }
+  let stalled=false
+  await assert.rejects(()=>x.reader()(x.request,()=>{
+   // Synthetic event-loop stall: cannot retract transmission, but must not issue a success receipt.
+   const end=performance.now()+11000
+   while(performance.now()<end){}
+   stalled=true
+  }),/mip_boundary_delivery_aborted/)
+  assert.equal(stalled,true)
+
   const claim={...x.claim(),auth_until:new Date(Date.now()+60000).toISOString()},session=x.b.session()
   for(const key of ['binding_id','incarnation_id','contract_digest','source_id','stream_epoch','observation_epoch','terminal_capture','target_marker','covered_through','user_id','investigation_id']){
    const bad={...claim,request_id:randomUUID(),[key]:key==='covered_through'?'0/0':randomUUID()}
