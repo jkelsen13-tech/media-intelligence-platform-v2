@@ -1,0 +1,77 @@
+{
+  "schema": "mip_implementation_evidence_v1",
+  "candidate": "406512127399e63e117f2a8e0b089f97579bd0d9",
+  "base": "208e160684407e5856ad04209cbe45ba8e05b865",
+  "candidate_tree": "85111c997391dac0f3789869ed406a7746e2ac2f",
+  "test_merge": "929cfb03859070cb6a5e71cf153bc04fb400dde1",
+  "test_merge_tree": "85111c997391dac0f3789869ed406a7746e2ac2f",
+  "independent_review": "pending",
+  "application_reader": "blocked",
+  "authority_and_time_qualified": false,
+  "artifacts": [
+    {
+      "path": "verifier/pr166-prefix-406/golden-node22.log",
+      "git_blob_sha": "b357d82cb06339697b316685c36f44e2148becb1",
+      "size": 792583
+    },
+    {
+      "path": "verifier/pr166-prefix-406/golden-node24.log",
+      "git_blob_sha": "699d7577d1a6a86f6b09eaf58e6856728fe1dba7",
+      "size": 267909
+    },
+    {
+      "path": "verifier/pr166-prefix-406/native.log",
+      "git_blob_sha": "36c9dde19050caa594fed8ed21fb67879ee45068",
+      "size": 50376
+    },
+    {
+      "path": "verifier/pr166-prefix-406/sql-concurrency.log",
+      "git_blob_sha": "37ab7929e830770de156f98871ff06291e72569d",
+      "size": 237054
+    }
+  ],
+  "runs": [
+    {
+      "run": 34839976210,
+      "job": 103962414678,
+      "kind": "native",
+      "tests": 108,
+      "passed": 108,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "run": 34839976201,
+      "job": 103962414571,
+      "kind": "Golden Node22",
+      "tests": 1909,
+      "passed": 1909,
+      "failed": 0,
+      "skipped": 0,
+      "build_seconds": 23.5
+    },
+    {
+      "run": 34839976201,
+      "job": 103962414852,
+      "kind": "Golden Node24",
+      "tests": 1909,
+      "passed": 1909,
+      "failed": 0,
+      "skipped": 0,
+      "build_seconds": 22.24
+    },
+    {
+      "run": 34839976275,
+      "job": 103962415302,
+      "kind": "SQL concurrency",
+      "tests": 94,
+      "result": "OK",
+      "seconds": 51.658
+    }
+  ],
+  "scope": "Internal source-wide retained artifact consistency only; not exposed application history, source authenticity, current permission, physical independence or wall-clock qualification. New unit covers invalid inputs; three named native groups provide actual bootstrap/prefix, corruption/scope and revocation cases.",
+  "blockers": [
+    "No attested same-current-incarnation relationship between source custody and independently injected user-history adapter.",
+    "No admitted joint source-authority/current-user-permission fence through combined delivery."
+  ]
+}
