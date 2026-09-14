@@ -270,6 +270,24 @@ test('isolated hypothesis generation authority, retained computation and restart
   await v.revokeAccess()
   await assert.rejects(f.gateway('generation_backlog',[v.user,v.iid]),/mip_database_denied_42501/)
  })
+ await t.test('expired session cannot commit an idle receipt after waiting on a permission fence',async()=>{
+  const v=await f.investigation();await v.captureGeneration()
+  const held=await hold(f.db,v.revokeSql)
+  const exp=Math.floor(Date.now()/1000)+3
+  const session=await f.issue(v.runtime,workerRole,{token:f.token(v.runtime,workerRole,{exp})})
+  const request=randomUUID(),pending=f.claim(session,v.runtime,request);pending.catch(()=>{})
+  await blocked(f,held.pid)
+  await new Promise(resolve=>setTimeout(resolve,Math.max(0,exp*1000-Date.now()+100)))
+  await held.finish()
+  await assert.rejects(pending,/mip_identity_expired/)
+  assert.equal(await f.admin('select count(*) from mip_hypothesis.generation_requests where request_id='+q(request)),'0')
+ })
+ await t.test('capture acknowledgement can be recovered after the generation has completed',async()=>{
+  const v=await f.investigation(),request=randomUUID(),first=await v.captureGeneration({request})
+  const j=await claim(f,v);await f.rpc('worker_complete',completeArgs(v,j,output(j)))
+  const retry=await v.captureGeneration({request})
+  assert.ok(JSON.stringify(first)===JSON.stringify(retry),'capture receipt survives later completion')
+ })
  await t.test('revoked signing key denies claim and completion despite an outstanding lease',async()=>{
   const v=await f.investigation();await v.captureGeneration();const j=await claim(f,v)
   await f.admin('update mip_identity.key_heads set active=false')

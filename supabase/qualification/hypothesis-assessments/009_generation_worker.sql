@@ -122,7 +122,7 @@ begin
  select * into old from mip_hypothesis.generations where request_id=p_request;
  if found then
   if old.request_arguments is distinct from args then raise exception 'mip_hypothesis_generation_retry_conflict';end if;
-  perform mip_hypothesis.require_generation(old,false);
+  perform mip_hypothesis.require_generation(old,(select state='completed' from mip_hypothesis.generation_jobs where generation_id=old.id));
   return jsonb_build_object('generation_id',old.id,'request_id',p_request,'investigation_id',p_investigation,'workspace_version_id',p_version,'method_revision',old.method_revision,'input_hash',old.input_hash,'publication_allowed',false);
  end if;
  select coalesce(array_agg((c->>'cause_id')::uuid order by (c->>'cause_id')::uuid),'{}'::uuid[]) into causes
@@ -158,6 +158,7 @@ begin
   'context',context,'hypotheses',p_spec->'hypotheses','hypothesis_relationship',p_spec->'hypothesis_relationship',
   'spans',spans,'method',jsonb_build_object('revision',m.revision,'implementation',m.implementation,'model_version',m.model_version,
    'qualification',m.qualification,'authorization_ref',m.authorization_ref,'parameters',m.parameters));
+ perform mip_hypothesis.generation_authority(p_runtime,p_source_project,m.implementation,p_method);
  insert into mip_hypothesis.generations(id,request_id,author_id,investigation_id,workspace_version_id,observation_id,
   predecessor_id,runtime,source_project,implementation,method_revision,mapping_revision,key_revision,request_arguments,inputs,input_hash,closure_bindings,cause_ids)
  values(gid,p_request,p_user,p_investigation,p_version,(context->>'observation_id')::uuid,
@@ -227,6 +228,7 @@ begin
   return jsonb_build_object('generation_id',g.id,'lease_token',token,'input_hash',g.input_hash,'input_text',g.inputs::text,
    'implementation_ref',g.implementation,'method_revision',g.method_revision,'publication_allowed',false);
  end loop;
+ perform mip_hypothesis.worker_session(p_session,p_runtime,'worker_claim');
  insert into mip_hypothesis.generation_requests values(p_runtime,'worker_claim',p_request,mip_hypothesis.digest(jsonb_build_object('runtime',p_runtime)),null,'null',clock_timestamp());
  return null;
 end $$;
@@ -365,6 +367,7 @@ begin
   return old.result;
  end if;
  if j.state<>'processing' or j.lease_expires_at<=clock_timestamp() then raise exception 'mip_hypothesis_lease_unavailable';end if;
+ perform mip_hypothesis.worker_session(p_session,p_runtime,'worker_fail');
  update mip_hypothesis.generation_jobs set state='failed' where generation_id=g.id;
  result:=jsonb_build_object('state','failed','generation_id',g.id,'retained_for_reconciliation',true);
  insert into mip_hypothesis.generation_requests values(p_runtime,'worker_fail',p_request,args,g.id,result,clock_timestamp());
