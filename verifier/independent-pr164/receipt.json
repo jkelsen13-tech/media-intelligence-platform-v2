@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "request_id": "pr164-50cb0bc-independent-1",
+  "candidate_commit": "50cb0bc0f3883c1454fa6489b249bcfc51787385",
+  "base_commit": "220be5e69014316232c5c9ee85e5501b8f734c42",
+  "packet_commit": "db2ce891f70aa5f5f470b564c462e3170dbb5d26",
+  "packet_path": "verifier/independent-pr164/request.json",
+  "packet_sha256": "18a33c45ac101b9e706f3382da60bb6fbee1d22f1cc753b1d5b50d5596f82e7c",
+  "packet_bytes": 2029730,
+  "agent_id": "bc-50cb0bc0-f388-4c14-94fa-6489b249bcfc",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "completed_with_blocked_acceptance",
+  "maximum_initial_posts": 1,
+  "scope": "Exactly one fresh PR164 App composition review; no retry/recovery.",
+  "pinned_run_id": "run-b4e3d3cb-b4b2-4b19-9fe0-75d2436c4166",
+  "provider_status": "FINISHED",
+  "reviewer_declared_outcome": "BLOCKED in nonconforming fragment",
+  "controller_acceptance": "BLOCKED",
+  "validation_errors": [
+    "Prose plus JSON fragment instead of exact JSON contract.",
+    "Missing schema/request/candidate/base/packet bindings and summary; overall replaces outcome, requirement strings changed, blocker/limitations fields changed.",
+    "Reviewer reports packet absent in continuation. Cause and claimed workspace state are not independently verified."
+  ],
+  "result": {
+    "commit": "70f2a11acddabcdbab14b62527ab4c114a2961d9",
+    "path": "verifier/independent-pr164/result.txt",
+    "bytes": 4007,
+    "sha256": "f853b5a7fd72d54b2db2f12fd9f934c1ed9c3fc4591e48023d04f5d2c6de3c9c",
+    "exact_provider_result": true
+  },
+  "provider": {
+    "commit": "2ef069b1b28663c17b6399cd5b82d4c4a89fbdc0",
+    "path": "verifier/independent-pr164/result.provider.json"
+  },
+  "reviewer_text_unchanged": true,
+  "retry_authorized": false,
+  "approval_granted": false,
+  "production_authorized": false
+}
