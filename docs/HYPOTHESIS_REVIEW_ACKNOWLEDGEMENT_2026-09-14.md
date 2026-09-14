@@ -28,3 +28,6 @@ Technical reference: PostgreSQL [row security](https://www.postgresql.org/docs/1
 
 
 Initial checkpoint ad3ca70b532a94f5f1f884bac4b46eba42a2eb32 passed native PostgreSQL 69/69 (run 34807394235/job 103861838434) and the expanded browser workflow (34807394219). A follow-up adds parent-context clearing when a fresh own-review read reports the selected target withheld, and extends the missing-fence guard to the review reader. These additions require their own exact-candidate regression results; the earlier PASS remains scoped to the earlier code.
+
+
+The first Golden run at ad3ca70b532a94f5f1f884bac4b46eba42a2eb32 failed one new duplicate-click test because the preceding deferred logout test returned its unresolved save promise from a synchronous act callback. React reported an unawaited asynchronous act scope, and the next test's initial button was not rendered. The test now uses a synchronous callback body while intentionally retaining the pending save; logout/late-response and duplicate-request assertions are unchanged. The failed Golden run 34807394264 (Node 24 job 103861838541, Node 22 job 103861838671) remains preserved.

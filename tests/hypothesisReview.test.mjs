@@ -109,7 +109,7 @@ test('late acknowledgement after logout cannot restore prior review state or inv
  let tree,resolve,input,failures=0
  const client={reviewHistory:async()=>({data:history([])}),acknowledgeReview:i=>{input=i;return new Promise(r=>resolve=r)}}
  await act(async()=>{tree=TestRenderer.create(createElement(Panel,{...props(client),onAccessFailure:()=>failures++}))})
- act(()=>button(tree,'Mark revision 1 reviewed').props.onClick())
+ act(()=>{button(tree,'Mark revision 1 reviewed').props.onClick()})
  await act(async()=>tree.update(createElement(Panel,{...props(client),userScopeKey:null,onAccessFailure:()=>failures++})))
  await act(async()=>resolve({data:receipt(input)}));assert.equal(tree.toJSON(),null);assert.equal(failures,0)
  act(()=>tree.unmount())
