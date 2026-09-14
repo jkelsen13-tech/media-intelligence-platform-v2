@@ -64,7 +64,7 @@ test('existing relationships have readable labels and preserve retained meanings
 test('hypothesis relationship explanations do not invent a missing estimate',()=>{
  const cases=[
   ['overlapping','more than one may contribute'],
-  ['mutually_exclusive','no more than one can be true'],
+  ['mutually_exclusive','These explanations are recorded as mutually exclusive: no more than one can be true.'],
   ['not_established','has not been established'],
  ]
  for(const [relationship,copy] of cases){

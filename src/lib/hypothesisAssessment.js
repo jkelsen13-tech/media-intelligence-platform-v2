@@ -16,7 +16,7 @@ export const EVIDENCE_RELATIONSHIP_COPY = Object.freeze({
 })
 export const HYPOTHESIS_RELATIONSHIP_COPY = Object.freeze({
   overlapping:'These explanations can overlap: more than one may contribute.',
-  mutually_exclusive:'These explanations are recorded as mutually exclusive: they no more than one can be true.',
+  mutually_exclusive:'These explanations are recorded as mutually exclusive: no more than one can be true.',
   not_established:'Whether these explanations can overlap has not been established.',
 })
 const text = x => typeof x === 'string' && x.trim().length > 0
