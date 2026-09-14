@@ -115,6 +115,7 @@ export async function incarnationCases(t,f,staged){
   const envelope={version:1,sequence:1,previous:'',source:b.context.source_id,stream:b.context.stream_epoch,
    bindingId:b.bindingId,incarnationId,recoveryEvidence:'a'.repeat(64)}
   const approved=new Set([registrationDigest(envelope)])
+  let failAfterEnvelope=true
   // Test custodian: separate authenticated runtime/key, but same physical PostgreSQL restore domain.
   // Advisory exclusion is shared by this adapter's calls; mapping/key row locks fence real revocation.
   const withAuthority=async(scope,fn)=>{
@@ -134,6 +135,7 @@ export async function incarnationCases(t,f,staged){
      append:async(digest,value,previous)=>{
       assert.equal((await tx.head(value.source))??'',previous)
       assert.equal((await journal.putOnce('registration:'+digest,value)).committed,true)
+      if(failAfterEnvelope){failAfterEnvelope=false;throw Error('synthetic_after_envelope_before_index')}
       assert.equal((await journal.putOnce(index(value.sequence),{digest})).committed,true)
      },
      bindRequest:async(request,value)=>{assert.equal((await journal.putOnce('registration-request:'+request,value)).committed,true)},
@@ -142,6 +144,9 @@ export async function incarnationCases(t,f,staged){
     return await fn(tx)
    }finally{await held.finish(true)}
   }
+  await assert.rejects(()=>retainRegistration({envelope,withAuthority}),/synthetic_after_envelope_before_index/)
+  assert.deepEqual(await journal.get('registration:'+registrationDigest(envelope)),envelope)
+  assert.equal(await journal.get('registration-sequence:'+envelope.source+':1'),null)
   await retainRegistration({envelope,withAuthority})
   const baseApi=transport(incarnationId)
   const call=(name,args)=>name==='capture_incarnation'?baseApi.capture({session:args[0],bindingId:args[1],before:args[3],request:args[4]}):
