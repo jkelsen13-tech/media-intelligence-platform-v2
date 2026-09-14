@@ -1,0 +1,116 @@
+```json
+{
+  "schema": 1,
+  "request_id": "pr159-220be5e-independent-1",
+  "candidate_commit": "220be5e69014316232c5c9ee85e5501b8f734c42",
+  "base_commit": "eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6",
+  "packet_sha256": "18bb46f0581df30fb59d089e31c75ebf0a83c30ecd0d35bc33e9df10e285aded",
+  "outcome": "PASS",
+  "scope": "Bounded frontend denial-clearing after authoritative reconsideration-request and reconsideration-detail denial only (HypothesisAssessmentHistory + HypothesisReassessmentRequest as changed vs base; allowed unchanged-dep contracts). Not whole-app security, unobserved revocation, MIP/history qualification, backend grant/publication, or production certification. Evidence class is artifact_inspection of the frozen packet only; this report does not claim independent execution.",
+  "evidence_class": "artifact_inspection",
+  "coverage": [
+    {
+      "id": "req-1-auth-and-access-clear-saved-assessment-and-comparison",
+      "requirement": "Both authentication and access errors for reconsideration submission and pending/resolved detail must clear saved assessment and comparison.",
+      "status": "PASS",
+      "criteria": "submit() and inspect() invoke the parent denial callback for authentication_required and access_denied after stale/alive/client/scopeKey checks; parent invalidateAccess no-ops unless scopeRef/clientRef still match, then marks current.status other than ready so the panel and comparison unmount.",
+      "evidence": "Packet source: HypothesisReassessmentRequest.jsx submit() and inspect() call failure.current?.(code) for authentication_required and access_denied; inspect() withheld path uses failure.current?.('access_denied') only after exact identity + status==='withheld' + withheld_reason==='current_evidence_permission_required'. HypothesisAssessmentHistory.jsx invalidateAccess is useCallback, gated on matching scopeRef/clientRef, sets unavailable state and onAccessFailure; pending and resolved ReassessmentRequestDetail plus HypothesisReassessmentRequest receive onAccessFailure={invalidateAccess}; unavailable UI is current.status!=='ready' (L61), which unmounts panel and comparison. Node22 TAP job_id=103942660466 ok 571-585 records the corresponding denial-clearing cases. Not evidenced by browser PASS JSON."
+    },
+    {
+      "id": "req-2-validated-withheld-clears-malformed-does-not",
+      "requirement": "Validated permission-withheld responses with exact identities must clear; distinguish from malformed/unrelated withheld payloads.",
+      "status": "PASS",
+      "criteria": "inspect() treats withheld as authoritative access_denied only when identities match and status==='withheld' and withheld_reason==='current_evidence_permission_required'; malformed, cross-scope, or unrelated withheld remains local withheld and must not call the parent denial callback.",
+      "evidence": "Packet source: HypothesisReassessmentRequest.jsx inspect() withheld branch requires exact identities + status==='withheld' + withheld_reason==='current_evidence_permission_required' before failure.current?.('access_denied'); malformed/cross-scope/unrelated stay local withheld. Node22 TAP ok 575, 577 (validated withheldDetail clears) and sibling cases distinguishing malformed/unrelated withheld. Shared inspect() implementation for pending and resolved detail."
+    },
+    {
+      "id": "req-3-stale-client-scope-unmount-cannot-clear-replacement",
+      "requirement": "Stale client/scope/unmounted responses cannot clear replacement state.",
+      "status": "PASS",
+      "criteria": "submit() and inspect() return without denial callback when !alive or client/scopeKey mismatch; parent invalidateAccess no-ops when scopeRef/clientRef no longer match, so a replacement client/scope cannot be cleared by a late response.",
+      "evidence": "Packet source: HypothesisReassessmentRequest.jsx inspect() L56-L65 and submit() stale/alive/client/scopeKey guards before any failure.current invocation; HypothesisAssessmentHistory.jsx invalidateAccess no-ops unless scopeRef/clientRef still match. Node22 TAP ok 583 (detail-unmount + access_denied), ok 584-585 (replacement-client races for submit and inspect)."
+    },
+    {
+      "id": "req-4-ambiguous-failure-preserves-retry-identity",
+      "requirement": "Ambiguous failure preserves exact retry identity and does not claim authoritative denial.",
+      "status": "PASS",
+      "criteria": "Non-authoritative/ambiguous request failure must not invoke the parent denial callback, must freeze attemptRef, and must not treat the failure as authentication_required or access_denied.",
+      "evidence": "Packet source: HypothesisReassessmentRequest.jsx ambiguous request failure path sets uncertain, freezes attemptRef, and does not call failure.current. Node22 TAP among ok 571-585 covers ambiguous/non-denial failure preserving retry identity without parent clear."
+    },
+    {
+      "id": "req-5-no-backend-grant-publication-or-historical-qualification-changes",
+      "requirement": "No backend grant/publication/historical-qualification changes; bounded frontend semantics.",
+      "status": "PASS",
+      "criteria": "Diff vs base is confined to HypothesisAssessmentHistory.jsx, HypothesisReassessmentRequest.jsx, and tests/hypothesisAssessmentHistory.test.mjs; allowed unchanged deps remain contract-only (hypothesisAssessmentClient.js, HypothesisRevisionComparison.jsx, HypothesisAssessmentPanel.jsx, hypothesisAssessmentFixture.mjs, 007_human_reconsideration.sql).",
+      "evidence": "Frozen packet changed-file list vs base_commit eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6 is only the two components plus the history test file. No SQL, client-grant, publication, or historical-qualification edits appear in the packet. Scope remains frontend clearing after authoritative reconsideration-request/detail denial."
+    },
+    {
+      "id": "req-6-meaningful-regression-tests-and-honest-supplied-test-scope",
+      "requirement": "Meaningful regression tests and honest supplied-test scope, including candidate/tree binding; no independent-execution claims.",
+      "status": "PASS",
+      "criteria": "Packet-supplied Node TAP must record the new denial-clearing cases against a tree bound to candidate_commit; browser records must not be treated as proof of every new denial path; this review must not claim independent execution.",
+      "evidence": "Node22 complete log run_id=34833712324 job_id=103942660466, checkout merge dcf4f74 (220be5e into eb0d7ac), TAP 1915/1915 pass, ok 571-585 match the new tests in tests/hypothesisAssessmentHistory.test.mjs. Trees of 220be5e69014316232c5c9ee85e5501b8f734c42 and dcf4f74 both 20f43eafe837c1cbb6196240cf93cd492d3e0322. Node24 job_id=103942660224 metadata success only, no TAP body. Browser run_id=34833712314 job_id=103942660098 two MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS lines with scope synthetic_ledger_saved_assessment_and_composer; packet states those records alone do not prove every new denial path. This report is artifact_inspection of the frozen packet and retained original report only."
+    }
+  ],
+  "findings": [],
+  "blockers": [],
+  "limitations": [
+    {
+      "id": "bounded-packet-inspection-not-independent-execution",
+      "text": "Artifact inspection of the original embedded frozen packet and the retained original report only. No extra source, links, repository, MCP, shell, browser, credentials, files, edits, approval, merge, publication, or production authority. Node24 supplies metadata success without a TAP body. Browser PASS JSON is scoped to synthetic_ledger_saved_assessment_and_composer and is not covering evidence for the new reconsideration denial matrix. MIP/history qualification and unobserved revocation are out of scope. This report does not claim independent execution."
+    },
+    {
+      "id": "browser-pass-json-omits-new-reconsideration-denial-matrix",
+      "disposition": "optional_limitation",
+      "severity": "low",
+      "classification": "test_gap",
+      "description": "The two supplied browser PASS JSON lines declare scope synthetic_ledger_saved_assessment_and_composer and flags such as deniedRecordsCleared/logoutCleared/comparisonPermissionRaceCleared. They do not name human requestReassessment/requestDetail authentication_required, access_denied, withheldDetail identity checks, or replacement-client races. Packet instruction: browser records alone do not prove every new denial path.",
+      "counterexample": "A chromium/webkit MIP_SYNTHETIC_HYPOTHESIS_BROWSER_PASS success can hold while the new inspect()/submit() parent-clearing branches are unexercised in that browser job.",
+      "evidence_refs": [
+        "browser_pass_lines run_id=34833712314 job_id=103942660098 lines at 2026-09-14T10:33:53.1102909Z and 2026-09-14T10:33:59.2198630Z",
+        "tests/hypothesisAssessmentHistory.test.mjs Node TAP ok 571-585 as covering evidence instead"
+      ],
+      "remediation": "Treat Node22 ok 571-585 as the denial-path evidence. Do not read the browser PASS JSON as coverage of the new reconsideration denial matrix.",
+      "why_not_required_gap": "Requirement 6 requires meaningful regression tests and honest supplied-test scope, not browser coverage of the new matrix. The packet already instructs that browser records alone do not prove every new denial path. Covering evidence is Node22 TAP ok 571-585 on the candidate-bound tree (dcf4f74 / tree 20f43eafe837c1cbb6196240cf93cd492d3e0322). Documenting the browser JSON omission is honesty about supplied-test scope, not an unmet required test, missing required evidence, or failed denial-clearing behavior. No requirement waiver: the required Node evidence is present; browser proof was never the required evidence class for these paths."
+    },
+    {
+      "id": "some-denial-combinatorics-rely-on-shared-inspect-guards-not-dedicated-cases",
+      "disposition": "optional_limitation",
+      "severity": "low",
+      "classification": "test_gap",
+      "description": "Resolved-detail authentication_required and withheldDetail-after-unmount are not separate TAP cases. Both still run through inspect() L56-L65 (alive/client/scopeKey, then error-code or validated withheld_reason). Pending+authentication_required, resolved+access_denied, and detail-unmount+access_denied are recorded.",
+      "counterexample": "A regression that broke only resolved+authentication_required wiring while leaving pending auth and resolved access_denied intact would not have its own named test, though the same inspect() branch is shared.",
+      "evidence_refs": [
+        "src/components/HypothesisReassessmentRequest.jsx:inspect:L56-L65",
+        "tests resolved human request detail denial (access_denied only)",
+        "job 103942660466 ok 573, 581, 583"
+      ],
+      "remediation": "Optional parametrization of resolved×authentication_required and withheldDetail×unmount; not required to justify the shared inspect() guards already tested.",
+      "why_not_required_gap": "Requirements 1-3 are behavioral: both authentication_required and access_denied on submit and on pending/resolved detail must clear; validated withheld with exact identities must clear; stale/unmounted/replacement responses must not clear. Packet source shows one inspect() implementation for pending and resolved detail, identical L56-L65 guards for both error codes, withheld validation before failure.current?.('access_denied'), and identical parent onAccessFailure={invalidateAccess}. Recorded TAP already exercises pending+authentication_required (ok 573), resolved+access_denied (ok 581), validated withheldDetail while mounted (ok 575, 577), detail-unmount+access_denied (ok 583), and replacement-client races (ok 584-585). Named cartesian cells for resolved×authentication_required and withheldDetail×unmount are additional parametrization, not a packet-stated required test row and not missing required evidence of the shared guards. The original remediation already stated this parametrization is optional and not required to justify the shared inspect() guards already tested. Residual risk of a future parent split that treated resolved auth differently is hypothetical, not a demonstrated unmet current requirement."
+    }
+  ],
+  "prior_observations": [
+    {
+      "id": "browser-pass-json-omits-new-reconsideration-denial-matrix",
+      "disposition": "optional_limitation",
+      "rationale": "Independently judged optional and not an unmet required behavior, test, or evidence. Original run run-8443bfee-8ced-4ece-abdb-e4f54510d179 recorded this as a low test_gap finding while also marking all six coverage rows PASS, which violates PASS = every required coverage row PASS and zero findings/blockers. It is not retained_finding because that would require a concrete unmet required test/behavior and matching FAIL coverage; the packet does not require browser PASS JSON to cover requestReassessment/requestDetail authentication_required, access_denied, withheldDetail identity checks, or replacement-client races, and it explicitly says browser records alone do not prove every new denial path. It is not retained_blocker because required covering evidence exists (Node22 job_id=103942660466 TAP 1915/1915, ok 571-585, tree 20f43eafe837c1cbb6196240cf93cd492d3e0322 bound to candidate 220be5e69014316232c5c9ee85e5501b8f734c42 via merge dcf4f74). Entire original description, counterexample, evidence_refs, and remediation are preserved inspectably in limitations. Honesty about browser scope satisfies requirement 6 rather than failing it.",
+      "evidence_refs": [
+        "browser_pass_lines run_id=34833712314 job_id=103942660098 lines at 2026-09-14T10:33:53.1102909Z and 2026-09-14T10:33:59.2198630Z",
+        "tests/hypothesisAssessmentHistory.test.mjs Node TAP ok 571-585 as covering evidence instead",
+        "packet instruction: browser records alone do not prove every new denial path"
+      ]
+    },
+    {
+      "id": "some-denial-combinatorics-rely-on-shared-inspect-guards-not-dedicated-cases",
+      "disposition": "optional_limitation",
+      "rationale": "Independently judged optional and not an unmet required behavior, test, or evidence. Original run run-8443bfee-8ced-4ece-abdb-e4f54510d179 recorded this as a low test_gap finding while also marking all six coverage rows PASS, which is internally inconsistent under existing rules. It is not retained_finding: missing dedicated TAP names for resolved-detail authentication_required and withheldDetail-after-unmount do not leave required denial-clearing behavior or required regression evidence unmet, because inspect() L56-L65 is shared, parent wiring is identical, and recorded cases already cover both error codes, pending and resolved detail, validated withheld, unmount non-clearing, and replacement-client races (ok 573, 575, 577, 581, 583, 584-585). It is not retained_blocker: source and Node22 TAP for the shared guards are present in the frozen packet. Entire original description, counterexample, evidence_refs, and remediation are preserved inspectably in limitations, including the original remediation sentence that parametrization is optional and not required to justify the shared inspect() guards already tested. No requirement was waived; exhaustive named combinatorics was never a required coverage cell.",
+      "evidence_refs": [
+        "src/components/HypothesisReassessmentRequest.jsx:inspect:L56-L65",
+        "tests resolved human request detail denial (access_denied only)",
+        "job 103942660466 ok 573, 581, 583"
+      ]
+    }
+  ],
+  "summary": "Schema reconciliation of the unchanged frozen PR159 packet (schema1, request_id pr159-220be5e-independent-1, candidate_commit 220be5e69014316232c5c9ee85e5501b8f734c42, base_commit eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6, packet_sha256 18bb46f0581df30fb59d089e31c75ebf0a83c30ecd0d35bc33e9df10e285aded, evidence_class artifact_inspection). Original run run-8443bfee-8ced-4ece-abdb-e4f54510d179 returned PASS plus two findings, which is not a legal PASS. Both prior observations are independently judged optional_limitation, not retained_finding and not retained_blocker: browser PASS JSON was never required covering evidence for the new reconsideration denial matrix, and unnamed resolved×authentication_required / withheldDetail×unmount TAP cells are extra parametrization of inspect() guards already evidenced by source and Node22 ok 571-585. Entire original observation text remains inspectable in limitations and prior_observations; nothing was silently dropped or reclassified to erase a real unmet requirement. findings=[] and blockers=[] are consistent with both dispositions. All six required coverage rows PASS from packet source plus Node22 TAP on the candidate-bound tree. Overall PASS follows the existing rule (every required coverage row PASS and zero findings/blockers). Same bounded observed denial-clearing scope. No independent execution claimed. No approval, merge, publication, or production authority."
+}
+```
