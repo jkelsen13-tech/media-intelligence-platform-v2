@@ -100,15 +100,15 @@ export function ComposerForm({client,context,onSaved,onClose,onAccessFailure,rec
       arguments:r.arguments.filter(a=>a.hypothesis_id!==h.id),comparison:{...r.comparison,favored_ids:r.comparison.favored_ids.filter(x=>x!==h.id)}}))}>Remove explanation and its arguments</button>:null}
     </fieldset>)}
     <button type="button" onClick={()=>change('hypotheses',[...draft.hypotheses,newHypothesis(id())])}>Add explanation</button>
-    <label className="piw-field">Relationship among explanations<select value={draft.hypothesis_relationship} onChange={e=>change('hypothesis_relationship',e.target.value)}>
+    <label className="piw-field">Relationship among explanations<select aria-label="Relationship among explanations" value={draft.hypothesis_relationship} onChange={e=>change('hypothesis_relationship',e.target.value)}>
      <option value="not_established">Not established</option><option value="overlapping">May overlap</option><option value="mutually_exclusive">Mutually exclusive</option></select></label>
    </section>
    <section className="piw-card piw-hypothesis-composer"><h3>Retained evidence</h3><p>Only explicitly opened, permission-checked passages can be linked. Retention does not establish support or independent corroboration.</p>
-    <label className="piw-field">Retained material<select value={pick.position} onChange={e=>choose({position:e.target.value,field:'',start:0,end:0})}>
+    <label className="piw-field">Retained material<select aria-label="Retained material" value={pick.position} onChange={e=>choose({position:e.target.value,field:'',start:0,end:0})}>
      <option value="">Choose retained material</option>{context.materials.map(m=><option key={m.input_position} value={m.input_position} disabled={m.permission_state!=='checked_current'}>
       Position {m.input_position}{m.permission_state==='blocked'?' — required permissions unavailable':''}</option>)}</select></label>
     {selected?<><p>Material version: {selected.material_version} · Obtained: {selected.acquired_at}. Current permission will be rechecked.</p>
-     <label className="piw-field">Retained text field<select value={pick.field} onChange={e=>{const f=selected.fields.find(f=>f.name===e.target.value);choose({...pick,field:e.target.value,start:0,end:Math.min(f?.length??0,2000)})}}>
+     <label className="piw-field">Retained text field<select aria-label="Retained text field" value={pick.field} onChange={e=>{const f=selected.fields.find(f=>f.name===e.target.value);choose({...pick,field:e.target.value,start:0,end:Math.min(f?.length??0,2000)})}}>
       <option value="">Choose text field</option>{selected.fields.map(f=><option key={f.name} value={f.name}>{f.name} ({f.length} code points)</option>)}</select></label>
      <p>Boundaries count Unicode code points; some displayed characters contain more than one. The end boundary is excluded. Each read is limited to 2,000 code points.</p>
      <label>Start<input type="number" min={0} max={field?.length??0} value={pick.start} onChange={e=>choose({...pick,start:Number(e.target.value)})}/></label>
@@ -126,9 +126,9 @@ export function ComposerForm({client,context,onSaved,onClose,onAccessFailure,rec
    </section>
    <section className="piw-card piw-hypothesis-composer"><h3>Evidence and reasoning</h3>
     {draft.arguments.map((a,index)=><fieldset key={a.id}><legend>Argument {index+1}</legend>
-     <label className="piw-field">Explanation<select value={a.hypothesis_id} onChange={e=>updateRow('arguments',a.id,{hypothesis_id:e.target.value})}>
+     <label className="piw-field">Explanation<select aria-label="Explanation" value={a.hypothesis_id} onChange={e=>updateRow('arguments',a.id,{hypothesis_id:e.target.value})}>
       {draft.hypotheses.map((h,i)=><option key={h.id} value={h.id}>Explanation {i+1}</option>)}</select></label>
-     <label className="piw-field">How the evidence relates<select value={a.relation} onChange={e=>updateRow('arguments',a.id,{relation:e.target.value})}>
+     <label className="piw-field">How the evidence relates<select aria-label="How the evidence relates" value={a.relation} onChange={e=>updateRow('arguments',a.id,{relation:e.target.value})}>
       {Object.entries(relationNames).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
      {draft.evidence.map((e,i)=><label key={e.id}><input type="checkbox" checked={a.evidence_ids.includes(e.id)} onChange={event=>updateRow('arguments',a.id,{
       evidence_ids:event.target.checked?[...a.evidence_ids,e.id]:a.evidence_ids.filter(x=>x!==e.id)})}/>Evidence {i+1}</label>)}
@@ -140,7 +140,7 @@ export function ComposerForm({client,context,onSaved,onClose,onAccessFailure,rec
     <button type="button" onClick={()=>change('arguments',[...draft.arguments,newArgument(id(),draft.hypotheses[0].id)])}>Add argument</button>
    </section>
    <section className="piw-card piw-hypothesis-composer"><h3>Current assessment</h3>
-    <label className="piw-field">Comparison<select required value={draft.comparison.state} onChange={e=>change('comparison',{...draft.comparison,state:e.target.value,favored_ids:[]})}>
+    <label className="piw-field">Comparison<select aria-label="Comparison" required value={draft.comparison.state} onChange={e=>change('comparison',{...draft.comparison,state:e.target.value,favored_ids:[]})}>
      <option value="">Choose the recorded comparison</option>{Object.entries(COMPARISON_COPY).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
     {draft.comparison.state==='better_supported'?draft.hypotheses.map((h,i)=><label key={h.id}><input type="checkbox" checked={draft.comparison.favored_ids.includes(h.id)}
      onChange={e=>change('comparison',{...draft.comparison,favored_ids:e.target.checked?[...draft.comparison.favored_ids,h.id]:draft.comparison.favored_ids.filter(x=>x!==h.id)})}/>Explanation {i+1} is better supported</label>):null}
@@ -151,9 +151,9 @@ export function ComposerForm({client,context,onSaved,onClose,onAccessFailure,rec
      <TextField key={key} label={label+' (one item per line)'} value={draft[key].join('\n')} onChange={value=>change(key,value.split('\n'))}/>)}
    </section>
    <section className="piw-card piw-hypothesis-composer"><h3>Revision record</h3><p>Human argument entry · No model used · Private and unreviewed.</p>
-    {context.head?<><label className="piw-field">Main reason for revision<select required value={draft.revision_trigger} onChange={e=>change('revision_trigger',e.target.value)}>
+    {context.head?<><label className="piw-field">Main reason for revision<select aria-label="Main reason for revision" required value={draft.revision_trigger} onChange={e=>change('revision_trigger',e.target.value)}>
      <option value="">Choose revision cause</option>{Object.entries(triggerNames).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
-     <label className="piw-field">Result of reconsideration<select required value={draft.revision_effect} onChange={e=>change('revision_effect',e.target.value)}>
+     <label className="piw-field">Result of reconsideration<select aria-label="Result of reconsideration" required value={draft.revision_effect} onChange={e=>change('revision_effect',e.target.value)}>
       <option value="">Choose the result</option><option value="changed">Conclusion changed</option><option value="unchanged">Conclusion unchanged</option><option value="less_certain">Assessment is less certain</option></select></label>
      {!draft.reassessment_causes.length?<p role="status">No pending cause is recorded. Request reconsideration or reconcile changes before saving another revision.</p>:null}
     </>:<p>This will be the first saved hypothesis assessment.</p>}
