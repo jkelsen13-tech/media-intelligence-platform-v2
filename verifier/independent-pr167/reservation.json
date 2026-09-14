@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "request_id": "pr167-e2f4e03-independent-1",
+  "candidate_commit": "e2f4e0369ca577c11b0c8e809fb3bd782a344fc6",
+  "base_commit": "b838ac43601ec905b95524b9c15437e6f1b23d7d",
+  "packet_commit": "c00170af23cfe4febfe70e67f5e00d2e6ac22295",
+  "packet_path": "verifier/independent-pr167/authorized-request.json",
+  "packet_sha256": "ea060ca6060994c02a581e16742f488bbb8be7b8fe87343986baabdab8572bbf",
+  "packet_bytes": 139999,
+  "agent_id": "bc-e2f4e036-9ca5-47c1-9b0c-8e809fb3bd78",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "reserved_before_launch",
+  "maximum_initial_posts": 1,
+  "scope": "Exactly one fresh small synthetic PR167 test-regression experiment. No followup/retry/recovery or capacity/unattended guarantee; older BLOCKED reviews unchanged."
+}
