@@ -42,7 +42,7 @@ async function fillForm(tree) {
 test('authoring context fails closed on invented estimates, source clocks and public or cross-scope state',()=>{
  const c=syntheticAuthoringContext();assert.equal(validAuthoringContext(c,c.investigation_id,c.workspace_version_id),true)
  for(const mutate of [x=>x.estimation_methods=['unapproved'],x=>x.publication_allowed=true,x=>x.access_role='viewer',
-  x=>x.materials[0].acquired_at='2026-09-14T12:00:00Z',x=>x.materials.push(x.materials[0])]){
+  x=>x.materials[0].acquired_at='2026-09-14T12:00:00Z',x=>x.materials.push(x.materials[0]),x=>x.materials[0].input_position=9007199254740993,x=>x.materials[0].permission_state='blocked']){
   const bad=structuredClone(c);mutate(bad);assert.equal(validAuthoringContext(bad,c.investigation_id,c.workspace_version_id),false)
  }
  assert.equal(validAuthoringContext(c,'other',c.workspace_version_id),false)

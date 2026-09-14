@@ -11,9 +11,9 @@ export function validAuthoringContext(c,investigationId,workspaceVersionId) {
   !Array.isArray(c.materials)||!unique(c.materials.map(m=>m?.input_position)))return false
  if(c.head!==null&&(!text(c.head?.revision_id)||!Number.isSafeInteger(c.head.revision)||c.head.revision<1||
   !['available','withheld'].includes(c.head.status)||Object.hasOwn(c.head,'assessment')))return false
- for(const m of c.materials) if(!/^[1-9][0-9]*$/.test(m?.input_position)||!text(m.material_version)||!/^[a-f0-9]{64}$/.test(m.material_hash)||
+ for(const m of c.materials) if(typeof m?.input_position!=='string'||!/^[1-9][0-9]*$/.test(m?.input_position)||!text(m.material_version)||!/^[a-f0-9]{64}$/.test(m.material_hash)||
   assessmentInstant(m.acquired_at)===null||assessmentInstant(m.acquired_at)>assessmentInstant(c.knowledge_cutoff)||
-  !['checked_current','blocked'].includes(m.permission_state)||!Array.isArray(m.fields)||!unique(m.fields.map(f=>f?.name))||
+  !['checked_current','blocked'].includes(m.permission_state)||!Array.isArray(m.fields)||(m.permission_state==='blocked'&&m.fields.length>0)||!unique(m.fields.map(f=>f?.name))||
   m.fields.some(f=>!['title','summary','body_text'].includes(f?.name)||!Number.isSafeInteger(f.length)||f.length<0))return false
  const b=c.backlog
  return b?.contract_version==='mip_hypothesis_reassessment_backlog_v2'&&b.investigation_id===investigationId&&b.publication_allowed===false&&
