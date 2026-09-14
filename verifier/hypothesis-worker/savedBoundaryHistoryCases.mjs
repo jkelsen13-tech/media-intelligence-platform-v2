@@ -1,3 +1,4 @@
+import {exactCitationCases} from './exactCitationCases.mjs'
 import {syntheticAuthProvider} from '../../tests/hypothesisAuthProviderFixture.mjs'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
@@ -78,6 +79,7 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   return {...x,identity,provider,authority,request,claim:()=>observedClaim,permit:()=>observedPermit,
    reader:extra=>createSavedBoundaryReader({authority,withTransaction:transaction(f.db),...extra})}
  }
+ await nativeCase('exact canonical field citation integration',async t=>exactCitationCases(t,f,context))
  await nativeCase('sealed SQL intersects prefix before gateway delivery; direct gateway cannot escape into later same-investigation history',async t=>{
   const x=await context(t),later=randomUUID()
   // Native fixture fault: exact accepted row/binding copy representing a later revision,

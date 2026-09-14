@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'supabase/qualification/hypothesis-assessments/**'
+      - 'supabase/qualification/content-addressed-storage/**'
+      - 'docs/EXACT_HYPOTHESIS_CITATION_2026-09-14.md'
       - 'supabase/qualification/markets-evidence/**'
       - 'supabase/functions/_shared/marketsEvidenceContract.mjs'
       - 'supabase/qualification/mip-cutover-authority/**'
