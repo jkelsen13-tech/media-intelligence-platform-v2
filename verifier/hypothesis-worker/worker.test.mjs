@@ -1,4 +1,7 @@
 import {marketsCases} from './marketsCases.mjs'
+import {savedBoundaryPrefixCases} from './savedBoundaryPrefixCases.mjs'
+import {boundaryIntegrationCases} from './boundaryIntegrationCases.mjs'
+import {markerBoundaryCases} from './markerBoundaryCases.mjs'
 import {continuityCases} from './continuityCases.mjs'
 import {bootstrapCases} from './bootstrapCases.mjs'
 import {pgoutputCases} from './pgoutputCases.mjs'
@@ -54,7 +57,20 @@ test('isolated hypothesis generation authority, retained computation and restart
  const f=await setup(t)
  await t.test('consistent exported snapshot bootstrap isolation',async t=>bootstrapCases(t,f,v=>runDurableHypothesisWorker(options(f,v))))
  await t.test('actual pgoutput metadata-to-durable-recorder isolation',async t=>pgoutputCases(t,f,v=>runDurableHypothesisWorker(options(f,v))))
- await t.test('source-captured contiguous metadata coverage isolation',async t=>continuityCases(t,f,v=>runDurableHypothesisWorker(options(f,v))))
+ await t.test('source-captured contiguous metadata coverage isolation',async t=>continuityCases(t,f,v=>runDurableHypothesisWorker(options(f,v)),(t,staged)=>boundaryIntegrationCases(t,f,{staged,onReady:(t,configured,relations)=>savedBoundaryPrefixCases(t,f,configured,relations),
+  runWorker:v=>runDurableHypothesisWorker(options(f,v)),holdRevision:async()=>{
+   const v=await f.investigation();await v.captureGeneration();const job=await claim(f,v)
+   const pending=await hold(f.db,rpcSql(f,'worker_complete',completeArgs(v,job,output(job))),workerRole)
+   return {investigationId:v.iid,finish:pending.finish}
+  }})))
+ await t.test('native marker boundary proof without source activation',async t=>markerBoundaryCases(t,f,{
+  runWorker:v=>runDurableHypothesisWorker(options(f,v)),
+  holdRevision:async()=>{
+   const v=await f.investigation();await v.captureGeneration()
+   const job=await claim(f,v),pending=await hold(f.db,rpcSql(f,'worker_complete',completeArgs(v,job,output(job))),workerRole)
+   return {investigationId:v.iid,finish:pending.finish}
+  }
+ }))
  await t.test('configured synthetic client-handler-store-worker-review path uses native gateway transactions',async()=>{
   const v=await f.investigation()
   const provider=syntheticAuthProvider(v.user),acceptedToken=provider.token()
@@ -205,7 +221,9 @@ test('isolated hypothesis generation authority, retained computation and restart
   for(const override of [{aud:'wrong'},{sub:'wrong'},{exp:0}])
    await assert.rejects(f.issue(v.runtime,workerRole,{token:f.token(v.runtime,workerRole,override)}),/mip_workload_identity_denied/)
   await assert.rejects(f.issue(v.runtime,workerRole,{token:f.token('runtime-b')}),/mip_workload_identity_denied/)
-  await assert.rejects(f.claim(f.session,v.runtime),/mip_identity_stale_revision/)
+  // Isolate wrong-runtime semantics from the age of the suite-start session.
+  const otherRuntimeSession=await f.issue('runtime-a')
+  await assert.rejects(f.claim(otherRuntimeSession,v.runtime),/mip_identity_stale_revision/)
   const token=f.token(v.runtime),request=randomUUID()
   await f.issue(v.runtime,workerRole,{token,request})
   await assert.rejects(f.issue(v.runtime,workerRole,{token}),/mip_identity_token_replay/)
