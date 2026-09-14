@@ -7,9 +7,9 @@ create role mip_cas_codec_verifier nologin nosuperuser nocreatedb nocreaterole n
 create schema mip_cas authorization mip_cas_owner;
 revoke all on schema mip_cas from public;
 set role mip_cas_owner;
-create table mip_cas.policies(version bigint primary key,max_raw integer not null check(max_raw>0),max_encoded integer not null check(max_encoded>0),max_objects bigint not null check(max_objects>0),max_total bigint not null check(max_total>0),max_refs bigint not null check(max_refs>0),max_jobs integer not null check(max_jobs>0),max_page integer not null check(max_page between 1 and 1000),locations text[] not null,codecs text[] not null,tiers text[] not null,qualification jsonb not null);
+create table mip_cas.policies(version bigint primary key,max_raw integer not null check(max_raw>0),max_encoded integer not null check(max_encoded>0),max_objects bigint not null check(max_objects>0),max_total bigint not null check(max_total>0),max_refs bigint not null check(max_refs>0),max_jobs integer not null check(max_jobs>0),max_page integer not null check(max_page between 1 and 1000),locations text[] not null,codecs text[] not null,tiers text[] not null,qualification jsonb not null,initial_location text not null,initial_tier text not null,check(initial_location=any(locations)),check(initial_tier=any(tiers)));
 create table mip_cas.active_policy(id boolean primary key check(id),version bigint not null references mip_cas.policies);
-insert into mip_cas.policies values(1,1048576,1048576,256,16777216,128,16,50,array['disposable_postgres'],array['identity-v1','gzip-v1'],array['hot','warm','cold','deep_archive'],'{"production":false,"deployment":false,"rights":false,"codec":false,"publication":false}');
+insert into mip_cas.policies values(1,1048576,1048576,256,16777216,128,16,50,array['disposable_postgres'],array['identity-v1','gzip-v1'],array['hot','warm','cold','deep_archive'],'{"production":false,"deployment":false,"rights":false,"codec":false,"publication":false}','disposable_postgres','hot');
 insert into mip_cas.active_policy values(true,1);
 create table mip_cas.object_usage(id boolean primary key check(id),objects bigint not null,raw_bytes bigint not null);
 insert into mip_cas.object_usage values(true,0,0);
@@ -19,13 +19,14 @@ declare p mip_cas.policies;
 begin
  select v.* into p from mip_cas.active_policy a join mip_cas.policies v on v.version=a.version where a.id for share of a;
  if not found or p.qualification is distinct from '{"production":false,"deployment":false,"rights":false,"codec":false,"publication":false}'::jsonb then raise exception 'mip_cas_policy_unavailable';end if;
+ if cardinality(p.locations) not between 1 and 32 or cardinality(p.codecs) not between 1 and 32 or cardinality(p.tiers) not between 1 and 4 or array_position(p.locations,null) is not null or array_position(p.codecs,null) is not null or array_position(p.tiers,null) is not null or cardinality(p.locations)<>(select count(distinct v) from unnest(p.locations) v) or cardinality(p.codecs)<>(select count(distinct v) from unnest(p.codecs) v) or cardinality(p.tiers)<>(select count(distinct v) from unnest(p.tiers) v) or exists(select 1 from unnest(p.locations||p.codecs) v where v !~ '^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$') or exists(select 1 from unnest(p.tiers) v where v not in('hot','warm','cold','deep_archive')) then raise exception 'mip_cas_policy_unavailable';end if;
  return p;
 end$$;
 create table mip_cas.principals(login name primary key,user_id uuid not null);
 create table mip_cas.access(user_id uuid not null,investigation uuid not null,expires_at timestamptz not null,primary key(user_id,investigation));
 create table mip_cas.source_permissions(investigation uuid not null,source_version text not null,rights_ref text not null,privacy_ref text not null,expires_at timestamptz not null,primary key(investigation,source_version));
 create table mip_cas.objects(hash text primary key check(hash~'^[0-9a-f]{64}$'),raw_size integer not null check(raw_size>0),created_at timestamptz not null default clock_timestamp());
-create table mip_cas.representations(hash text primary key references mip_cas.objects,codec text not null check(codec in('identity-v1','gzip-v1')),encoded bytea not null check(octet_length(encoded)>0),location text not null default 'disposable_postgres',encoded_hash text not null check(encoded_hash~'^[0-9a-f]{64}$'),tier text not null check(tier in('hot','warm','cold','deep_archive')),version bigint not null default 1,changed_at timestamptz not null default clock_timestamp());
+create table mip_cas.representations(hash text primary key references mip_cas.objects,codec text not null check(codec ~ '^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$'),encoded bytea not null check(octet_length(encoded)>0),location text not null check(location ~ '^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$'),encoded_hash text not null check(encoded_hash~'^[0-9a-f]{64}$'),tier text not null check(tier in('hot','warm','cold','deep_archive')),version bigint not null default 1,changed_at timestamptz not null default clock_timestamp());
 create table mip_cas.refs(id uuid primary key,investigation uuid not null,logical_key text not null,hash text not null references mip_cas.objects,provenance jsonb not null,created_by uuid not null,created_at timestamptz not null default clock_timestamp(),unique(investigation,logical_key));
 create table mip_cas.indexes(ref_id uuid primary key references mip_cas.refs,investigation uuid not null,canonical_hash text not null,version bigint not null default 1,metadata jsonb not null);
 create table mip_cas.jobs(id uuid primary key,ref_id uuid not null references mip_cas.refs,user_id uuid not null,request_id uuid not null,expires_at timestamptz not null,expected_version bigint not null,state text not null check(state in('pending','completed')),unique(user_id,request_id));
@@ -58,7 +59,7 @@ language plpgsql security definer set search_path='' as $$
 declare h text;fingerprint text;o mip_cas.objects;r mip_cas.representations;p mip_cas.policies;usage mip_cas.object_usage;
 begin
  p:=mip_cas.policy();
- if not('disposable_postgres'=any(p.locations)) or not('hot'=any(p.tiers)) then raise exception 'mip_cas_representation_unverified';end if;
+ if not(p.initial_location=any(p.locations)) or not(p.initial_tier=any(p.tiers)) then raise exception 'mip_cas_representation_unverified';end if;
  if raw is null or encoded_bytes is null or codec_name is null or octet_length(raw) not between 1 and p.max_raw or octet_length(encoded_bytes) not between 1 and p.max_encoded or not(codec_name=any(p.codecs)) then raise exception 'mip_cas_invalid';end if;
  if codec_name='identity-v1' and raw is distinct from encoded_bytes then raise exception 'mip_cas_codec_mismatch';end if;
  h:=encode(public.digest(raw,'sha256'),'hex');fingerprint:=encode(public.digest(encoded_bytes,'sha256'),'hex');
@@ -72,9 +73,9 @@ begin
   if usage.objects>=p.max_objects or usage.raw_bytes+octet_length(raw)>p.max_total then raise exception 'mip_cas_object_quota';end if;
   update mip_cas.object_usage set objects=objects+1,raw_bytes=raw_bytes+octet_length(raw) where id;
   insert into mip_cas.objects values(h,octet_length(raw),clock_timestamp());
-  insert into mip_cas.representations(hash,codec,encoded,encoded_hash,tier) values(h,codec_name,encoded_bytes,fingerprint,'hot');
+  insert into mip_cas.representations(hash,codec,encoded,encoded_hash,tier,location) values(h,codec_name,encoded_bytes,fingerprint,p.initial_tier,p.initial_location) returning * into r;
  end if;
- return jsonb_build_object('hash',h,'raw_size',octet_length(raw),'encoded_hash',fingerprint,'codec',codec_name,'policy_version',p.version,'codec_qualified',false);
+ return jsonb_build_object('hash',h,'raw_size',octet_length(raw),'encoded_hash',fingerprint,'codec',codec_name,'policy_version',p.version,'location',r.location,'tier',r.tier,'codec_qualified',false);
 end$$;
 create function mip_cas.bind(i uuid,k text,raw bytea,provenance_value jsonb) returns jsonb
 language plpgsql security definer set search_path='' as $$

@@ -43,7 +43,7 @@ export function createCodecVerifier({call,policy}){
   const decoded=decodeCanonical({state:'canonical_encoded',...e,encoded:e.encoded.toString('base64'),raw_size:e.raw.length,policy_version:configured.policyVersion,max_raw:configured.maxRaw,max_encoded:configured.maxEncoded,max_page:configured.maxPage,allowed_locations:configured.allowedLocations,allowed_codecs:configured.allowedCodecs,allowed_tiers:configured.allowedTiers})
   if(!decoded.equals(e.raw))throw Error('codec_roundtrip')
   const r=await call('admit',[e.raw,e.codec,e.encoded])
-  if(!exact(r,['hash','raw_size','encoded_hash','codec','policy_version','codec_qualified'])||r.codec_qualified!==false||!positive(r.policy_version)||!positive(r.raw_size)||r.policy_version!==configured.policyVersion||r.hash!==e.hash||r.raw_size!==e.raw.length||r.encoded_hash!==e.encoded_hash||r.codec!==e.codec)throw Error('codec_receipt')
+  if(!exact(r,['hash','raw_size','encoded_hash','codec','policy_version','location','tier','codec_qualified'])||r.codec_qualified!==false||!configured.allowedLocations.includes(r.location)||!configured.allowedTiers.includes(r.tier)||!positive(r.policy_version)||!positive(r.raw_size)||r.policy_version!==configured.policyVersion||r.hash!==e.hash||r.raw_size!==e.raw.length||r.encoded_hash!==e.encoded_hash||r.codec!==e.codec)throw Error('codec_receipt')
   return Object.freeze({...r})
  }})
 }

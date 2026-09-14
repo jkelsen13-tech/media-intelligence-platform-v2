@@ -10,7 +10,7 @@ const policy={policyVersion:1,maxRaw:1048576,maxEncoded:1048576,maxPage:50,allow
 const envelopePolicy={policy_version:1,max_raw:1048576,max_encoded:1048576,max_page:50,allowed_locations:policy.allowedLocations,allowed_codecs:policy.allowedCodecs,allowed_tiers:policy.allowedTiers}
 const provenance={source_version:'synthetic-v1',acquired_at:'2026-09-14T00:00:00Z',rights_ref:'synthetic-only',privacy_ref:'synthetic-only'}
 const q=x=>x===null?'null':Buffer.isBuffer(x)?"decode('"+x.toString('hex')+"','hex')":typeof x==='number'?String(x):"'"+(typeof x==='object'?JSON.stringify(x):x).replaceAll("'","''")+"'"
-async function sql(s){const r=await exec('psql',['-X','-v','ON_ERROR_STOP=1','-At','-h','127.0.0.1','-U','postgres','-d','mip_cas_test','-c',s],{env:{...process.env,PGPASSWORD:'mip-disposable-ci-only'},timeout:10000,maxBuffer:4*1024*1024});return r.stdout.trim().split('\n').filter(x=>x&&!['SET','RESET','BEGIN','COMMIT'].includes(x)).at(-1)}
+async function sql(s){const r=await exec('psql',['-X','-v','ON_ERROR_STOP=1','-At','-h','127.0.0.1','-U','postgres','-d','mip_cas_test','-c',s],{env:{...process.env,PGPASSWORD:'mip-disposable-ci-only'},timeout:10000,maxBuffer:4*1024*1024});return r.stdout.trim().split('\n').filter(x=>x&&!['SET','RESET','BEGIN','COMMIT','ROLLBACK'].includes(x)).at(-1)}
 const names=new Set(['admit','bind','locate','read','put','index_put','transition','rehydrate','complete','cleanup'])
 function callAs(role){return async(name,args)=>{assert(names.has(name));const result=await sql('set session authorization '+role+';select mip_cas.'+name+'('+args.map(q).join(',')+')');return result?JSON.parse(result):null}}
 test('content addressed tier qualification: native PostgreSQL, synthetic principals only',async t=>{
@@ -147,6 +147,18 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   assert.equal((await store.metadata('tier-object')).hash,m.hash)
   assert.equal(await sql('select count(*) from mip_cas.jobs'),'0')
  })
+ await t.test('SQL admission location and codec are policy driven while unknown JS codecs fail closed',async()=>{
+  const raw=Buffer.from('Future codec synthetic representation')
+  const result=await sql("begin;insert into mip_cas.policies select 3,max_raw,max_encoded,max_objects,max_total,max_refs,max_jobs,max_page,array['test-remote-provider'],array['future-lossless-v2'],tiers,qualification,'test-remote-provider','warm' from mip_cas.policies where version=1;update mip_cas.active_policy set version=3;set session authorization cas_codec;select mip_cas.admit("+q(raw)+",'future-lossless-v2',"+q(raw)+");reset session authorization;set session authorization cas_alice;select mip_cas.bind("+q(i)+",'future-codec',"+q(raw)+","+q(provenance)+");select mip_cas.read("+q(i)+",'future-codec','canonical');rollback")
+  const retained=JSON.parse(result)
+  assert.equal(retained.location,'test-remote-provider');assert.equal(retained.tier,'warm')
+  assert.equal(retained.codec,'future-lossless-v2');assert.equal(retained.policy_version,3)
+  assert.deepEqual(retained.allowed_locations,['test-remote-provider'])
+  assert.equal(retained.hash,createHash('sha256').update(raw).digest('hex'))
+  assert.throws(()=>decodeCanonical(retained),/codec_unsupported/)
+  assert.equal(await sql('select version from mip_cas.active_policy'),'1')
+  await assert.rejects(a('admit',[raw,'future-lossless-v2',raw]),/permission denied/)
+ })
  await t.test('reference quota and immutable identity/history',async()=>{
   const existing=Number(await sql('select count(*) from mip_cas.refs where investigation='+q(i)))
   for(let n=0;n<128-existing;n++)await store.putOnce('quota-'+n,value)
@@ -168,7 +180,7 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
   const meta=await store.metadata('revision:1')
   await assert.rejects(sql("begin;delete from mip_cas.active_policy;set session authorization cas_alice;select mip_cas.read("+q(i)+",'revision:1','metadata')"),/mip_cas_policy_unavailable/)
   for(const field of ['locations','codecs','tiers']){
-   await assert.rejects(sql("begin;insert into mip_cas.policies select 2,max_raw,max_encoded,max_objects,max_total,max_refs,max_jobs,max_page,"+(field==='locations'?"array[]::text[]":"locations")+","+(field==='codecs'?"array[]::text[]":"codecs")+","+(field==='tiers'?"array[]::text[]":"tiers")+",qualification from mip_cas.policies where version=1;update mip_cas.active_policy set version=2;set session authorization cas_alice;select mip_cas.read("+q(i)+",'revision:1','canonical')"),/mip_cas_representation_unverified/)
+   await assert.rejects(sql("begin;insert into mip_cas.policies select 2,max_raw,max_encoded,max_objects,max_total,max_refs,max_jobs,max_page,"+(field==='locations'?"array[]::text[]":"locations")+","+(field==='codecs'?"array[]::text[]":"codecs")+","+(field==='tiers'?"array[]::text[]":"tiers")+",qualification,initial_location,initial_tier from mip_cas.policies where version=1;update mip_cas.active_policy set version=2;set session authorization cas_alice;select mip_cas.read("+q(i)+",'revision:1','canonical')"),/mip_cas_representation_unverified|mip_cas_policy_unavailable|violates check constraint/)
   }
   await assert.rejects(sql("begin;alter table mip_cas.representations disable trigger immutable_representation;delete from mip_cas.representations where hash="+q(meta.hash)+";set session authorization cas_alice;select mip_cas.read("+q(i)+",'revision:1','canonical')"),/mip_cas_representation_unavailable/)
   await assert.rejects(a('bind',[i,'unknown-rights',Buffer.from(JSON.stringify(value)),{...provenance,rights_ref:'unknown'}]),/mip_cas_source_rights_unverified/)
@@ -195,7 +207,7 @@ test('content addressed tier qualification: native PostgreSQL, synthetic princip
    await assert.rejects(bad.locate('summary','Restored',{limit:1}),/locator_/)
   }
   const raw=Buffer.from('transport-codec'),e=encodeCanonical(raw,'gzip-v1',policy)
-  const receipt={hash:e.hash,raw_size:raw.length,encoded_hash:e.encoded_hash,codec:e.codec,policy_version:1,codec_qualified:false}
+  const receipt={hash:e.hash,raw_size:raw.length,encoded_hash:e.encoded_hash,codec:e.codec,policy_version:1,location:'disposable_postgres',tier:'hot',codec_qualified:false}
   for(const mutate of [r=>({...r,codec_qualified:true}),r=>({...r,extra:true}),r=>({...r,policy_version:'1'}),r=>({...r,encoded_hash:'0'.repeat(64)}),r=>({...r,raw_size:NaN})]){
    const bad=createCodecVerifier({call:async()=>mutate({...receipt}),policy})
    await assert.rejects(bad.admit(raw),/codec_receipt/)
