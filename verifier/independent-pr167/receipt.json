@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "request_id": "pr167-e2f4e03-independent-1",
+  "candidate_commit": "e2f4e0369ca577c11b0c8e809fb3bd782a344fc6",
+  "base_commit": "b838ac43601ec905b95524b9c15437e6f1b23d7d",
+  "packet_commit": "c00170af23cfe4febfe70e67f5e00d2e6ac22295",
+  "packet_path": "verifier/independent-pr167/authorized-request.json",
+  "packet_sha256": "ea060ca6060994c02a581e16742f488bbb8be7b8fe87343986baabdab8572bbf",
+  "packet_bytes": 139999,
+  "agent_id": "bc-e2f4e036-9ca5-47c1-9b0c-8e809fb3bd78",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "completed",
+  "maximum_initial_posts": 1,
+  "scope": "Exactly one fresh small synthetic PR167 test-regression experiment. No followup/retry/recovery or capacity/unattended guarantee; older BLOCKED reviews unchanged.",
+  "pinned_run_id": "run-392fcc94-a44b-40c3-a36d-c03b71943880",
+  "provider_status": "FINISHED",
+  "reviewer_outcome": "PASS",
+  "controller_acceptance": "PASS",
+  "validation_errors": [],
+  "result": {
+    "commit": "9fda61ce4656d879eeff719653eedc23e910e94f",
+    "path": "verifier/independent-pr167/result.json",
+    "bytes": 12045,
+    "sha256": "c3d552d3be2574a37ae4ff19d21797fdeb11f64ea669fb308ee39c78822bb30a",
+    "exact_provider_result": true,
+    "provider_status": "FINISHED"
+  },
+  "provider": {
+    "commit": "888af809609f4b58c9f8f4f5699cad370aa2e7dd",
+    "path": "verifier/independent-pr167/result.provider.json"
+  },
+  "verification": [
+    "Exact strict schema/request/candidate/base/packet binding and seven unchanged requirement rows.",
+    "All seven PASS; findings[] blockers[]; three conforming limitations retained.",
+    "Ten named synthetic log cases137-146 checked against submitted source factories.",
+    "Fourteen packet blob hashes and complete synthetic log SHA256 verified before launch; exact provider/GitHub result equality after completion."
+  ],
+  "limitations": [
+    {
+      "id": "L1",
+      "description": "This packet contains no actual review payload, live provider terminal stream, authenticated provider lifecycle, quarantine implementation, real publisher/dispatcher/callback, downstream exactly-once remediation, capacity/context-admission proof, or activation wiring.",
+      "evidence_refs": [
+        "verifier/review-handoff/TERMINAL-OUTPUT-REGRESSION.md",
+        "verifier/review-handoff/terminal-output.test.mjs",
+        "verifier/review-handoff/controller.mjs",
+        "verifier/review-handoff/protocol.mjs",
+        "verifier/review-terminal-e2-20260914/manifest.json scope"
+      ],
+      "rationale": "R2-R6 are satisfied by synthetic accept/receive rejection before storage. Those operational properties are outside this test-only candidate and are recorded here so a PASS is not read as provider, quarantine, callback, remediation, capacity, or activation evidence.",
+      "original_observation": null
+    },
+    {
+      "id": "L2",
+      "description": "Golden Node 22/24 runs are metadata-only in this packet; full 1782-test logs are absent. Independent acceptance is not inherited from base or from TAP pass counts.",
+      "evidence_refs": [
+        "golden_job_metadata 103963989505",
+        "golden_job_metadata 103963989849",
+        "verifier/review-terminal-e2-20260914/manifest.json logs golden-node22-job-103963989849.log and golden-node24-job-103963989505.log",
+        "verifier/review-terminal-e2-20260914/manifest.json independent_acceptance",
+        "packet evidence_limits"
+      ],
+      "rationale": "R6 requires goldens to remain metadata-only; R7 forbids inherited acceptance. The ten new cases are supported by the embedded 146-test synthetic log and source titles, not by golden bodies or prior reviews.",
+      "original_observation": null
+    },
+    {
+      "id": "L3",
+      "description": "Base blobs are not embedded, and source/log SHA256 values were not recomputed in this inspection.",
+      "evidence_refs": [
+        "base_files []",
+        "verifier/review-terminal-e2-20260914/manifest.json changed_files unchanged_core identical_tree digest_definition",
+        "public_check_logs manifest_sha256 82c6b213a1f01b6f4705a0ac9f59a4a04f43610270fe694cccc411709f8fdcd7",
+        "/git/commits/e2f4e0369ca577c11b0c8e809fb3bd782a344fc6"
+      ],
+      "rationale": "R1/R6 use the provided commit-parent, identical-tree, changed_files, and name-matching log bindings. Absence of a base unified diff or locally recomputed digests is a method limit of this artifact inspection, not an unmet named case.",
+      "original_observation": null
+    }
+  ],
+  "no_independent_runtime_execution": true,
+  "no_followup_retry_recovery": true,
+  "no_local_files": true,
+  "older_blocked_outcomes_unchanged": true,
+  "capacity_guarantee": false,
+  "unattended_activation": false,
+  "approval_granted": false,
+  "production_authorized": false,
+  "remaining_owner_gated_choices": [
+    "Any additional review/recovery launch beyond this experiment.",
+    "Any change to reviewer delivery access, such as bounded cloud-file ingestion or an allowlisted remote read tool, requires a separately scoped design and authorization; no verified compatible arbitrary-input persistence path exists under current restrictions.",
+    "Protected always-on controller/publisher identity, remote runtime, credential custody, model spending and disclosure policies, unattended wakeup and operation.",
+    "Production approval/deployment/publication or expanded data disclosure remain separately authorized actions. Existing independent engineering/tests can continue within their authority."
+  ]
+}
