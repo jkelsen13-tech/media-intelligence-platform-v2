@@ -288,13 +288,7 @@ test('isolated hypothesis generation authority, retained computation and restart
   const retry=await v.captureGeneration({request})
   assert.ok(JSON.stringify(first)===JSON.stringify(retry),'capture receipt survives later completion')
  })
- await t.test('revoked signing key denies claim and completion despite an outstanding lease',async()=>{
-  const v=await f.investigation();await v.captureGeneration();const j=await claim(f,v)
-  await f.admin('update mip_identity.key_heads set active=false')
-  await assert.rejects(claim(f,v),/mip_identity_key_revoked/)
-  await assert.rejects(f.rpc('worker_complete',completeArgs(v,j,output(j))),/mip_identity_key_revoked/)
-  assert.equal(await counts(f,v),'0:0:0')
- })
+
  await t.test('method replacement retains a distinct pending cause and explicit new-version reassessment',async()=>{
   const v=await f.investigation();await v.captureGeneration();
   const j=await claim(f,v);await f.rpc('worker_complete',completeArgs(v,j,output(j)));
@@ -333,4 +327,11 @@ test('isolated hypothesis generation authority, retained computation and restart
   await assert.rejects(v.captureGeneration(),/mip_hypothesis_method_unavailable/);
  });
 
+ await t.test('revoked signing key denies claim and completion despite an outstanding lease',async()=>{
+  const v=await f.investigation();await v.captureGeneration();const j=await claim(f,v)
+  await f.admin('update mip_identity.key_heads set active=false')
+  await assert.rejects(claim(f,v),/mip_identity_key_revoked/)
+  await assert.rejects(f.rpc('worker_complete',completeArgs(v,j,output(j))),/mip_identity_key_revoked/)
+  assert.equal(await counts(f,v),'0:0:0')
+ })
 })
