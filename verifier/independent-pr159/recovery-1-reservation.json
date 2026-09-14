@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "recovery_request_id": "pr159-220be5e-recovery-1",
+  "original_request_id": "pr159-220be5e-independent-1",
+  "agent_id": "bc-220be5e6-9014-4162-b2c5-c9ee85e5501b",
+  "original_run_id": "run-8443bfee-8ced-4ece-abdb-e4f54510d179",
+  "original_result_commit": "d5d993d9c36d49b8d9e0655fd83cd0eba11cdae2",
+  "original_acceptance": "BLOCKED",
+  "candidate_commit": "220be5e69014316232c5c9ee85e5501b8f734c42",
+  "packet_sha256": "18bb46f0581df30fb59d089e31c75ebf0a83c30ecd0d35bc33e9df10e285aded",
+  "reason": "One independently dispositioned contract-consistency review of PASS plus retained findings; no steering toward PASS.",
+  "model": "inherit same Grok4.6 xhigh fast false",
+  "mcpServers": [],
+  "repos": [],
+  "maximum_recovery_posts": 1,
+  "status": "reserved_before_single_continuation_post",
+  "prompt": "Schema reconciliation request pr159-220be5e-recovery-1 for your SAME unchanged frozen PR159 packet. Original run run-8443bfee-8ced-4ece-abdb-e4f54510d179 returned PASS plus two findings. The controller preserved the original verbatim and marked acceptance BLOCKED under existing PASS/FAIL/BLOCKED rules. No candidate, source, logs, scope or authority changed.\nIndependently resolve the contradiction. Do NOT aim for PASS. Existing rules: PASS requires every required coverage row PASS and zero findings/blockers. Any concrete unmet required behavior/test/evidence remains a finding linked to corresponding FAIL coverage and overall FAIL; missing required evidence/authority remains a blocker linked to BLOCKED coverage and overall BLOCKED. Do not erase or reclassify a real unmet requirement to obtain acceptance.\nDisposition BOTH prior observations completely: browser-pass-json-omits-new-reconsideration-denial-matrix; some-denial-combinatorics-rely-on-shared-inspect-guards-not-dedicated-cases. If and only if you independently judge an observation optional and not an unmet requirement, preserve its entire original description, counterexample, evidence_refs and remediation in limitations, explain why it is not a required gap, and explicitly record that disposition. Otherwise retain it as a finding or blocker with matching coverage/outcome. All prior text remains in original report and every observation must remain inspectable in this report; none silently dropped.\nReturn complete final JSON using original schema/identities: schema1, request_id pr159-220be5e-independent-1, candidate_commit220be5e69014316232c5c9ee85e5501b8f734c42, base_commit eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6, packet_sha25618bb46f0581df30fb59d089e31c75ebf0a83c30ecd0d35bc33e9df10e285aded, outcome,scope,evidence_class artifact_inspection, all six coverage rows,findings,blockers,limitations,summary. Add prior_observations array with id, disposition (retained_finding|retained_blocker|optional_limitation), rationale and evidence_refs. Keep findings/status and blockers/status consistent. Return final complete report, not only progress or reasoning.\nUse ONLY original embedded packet and your retained original report. No extra source, links, repository/MCP, shell, browser, credentials, files, edits, approval, merge, publication or production authority. Do not claim independent execution. Same bounded observed denial-clearing scope; not whole-app security/unobserved revocation. No requirement waiver or schema change is authorized.",
+  "local_files_created": false
+}
