@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "request_id": "pr158-b838ac4-independent-1",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "delivered_and_acknowledged",
+  "result_commit": "3570197dfe627e735f68db94b2d077717d647b8b",
+  "receipt_commit": "1c6fee3a4a922b8e5335ff33cc1576c63827852c",
+  "outcome": "PASS",
+  "scope": "bounded synthetic artifact inspection",
+  "approve": false,
+  "merge": false
+}
