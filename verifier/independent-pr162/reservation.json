@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "request_id": "pr162-21bd637-independent-1",
+  "candidate_commit": "21bd6370bfb1b983a51c81d6e0990d864f24af29",
+  "base_commit": "eb0d7acf9050b4a41b1fbdc9b3d3f04eeca0c1e6",
+  "packet_commit": "3f44000f71576e64a9a8ac1908bacab0041a74ba",
+  "packet_path": "verifier/independent-pr162/request.json",
+  "packet_sha256": "7e79e17792ce7ddb398fc950c14ca85d7e66ef1217f63a40d51133754fb6a477",
+  "packet_bytes": 1122677,
+  "agent_id": "bc-21bd6370-bfb1-4983-a51c-81d6e0990d86",
+  "model": {
+    "id": "grok-4.6",
+    "params": [
+      {
+        "id": "effort",
+        "value": "xhigh"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ]
+  },
+  "repos": [],
+  "mcpServers": [],
+  "autoCreatePR": false,
+  "stage": "owner_supervised",
+  "destination_thread": "01a09f4b-2038-7140-a438-db86219cec7c",
+  "status": "reserved_before_launch",
+  "maximum_initial_posts": 1,
+  "scope": "Fresh PR162 review, not a PR157 recovery; no PR161/163 authority"
+}
