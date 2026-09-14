@@ -206,8 +206,8 @@ class Hypothesis(unittest.TestCase):
         self.a.execute(self.append());self.a.execute(self.observe())
         for table in ["history_observations","revision_transactions"]:
             with self.assertRaisesRegex(RuntimeError,"append-only"):self.admin("delete from mip_hypothesis."+table)
-            with self.assertRaisesRegex(RuntimeError,"permission denied"):self.session().execute("select * from mip_hypothesis."+table)
-        with self.assertRaisesRegex(RuntimeError,"permission denied"):self.session().execute("update mip_hypothesis.observation_epoch set enabled=true")
+            with self.assertRaisesRegex(RuntimeError,"permission denied"):self.session().execute("select * from mip_hypothesis."+table+";")
+        with self.assertRaisesRegex(RuntimeError,"permission denied"):self.session().execute("update mip_hypothesis.observation_epoch set enabled=true;")
         self.assertEqual(self.observation_count(),"1")
     def test_observation_rejects_old_isolation_and_missing_fence(self):
         with self.assertRaisesRegex(RuntimeError,"requires read committed"):self.a.execute("begin isolation level repeatable read;"+self.observe())
