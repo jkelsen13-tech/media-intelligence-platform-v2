@@ -142,6 +142,10 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
   await x.reader()(x.request,()=>{})
   const seed=x.permit().permit_id,seedRow=JSON.parse(await f.admin('select to_jsonb(p) from mip_temporal.boundary_history_permits p where id='+q(seed)))
   const clone=(count,fresh=false)=>"insert into mip_temporal.boundary_history_permits select (jsonb_populate_record(null::mip_temporal.boundary_history_permits,to_jsonb(p)||jsonb_build_object('id',gen_random_uuid(),'request_id',gen_random_uuid(),'user_id',gen_random_uuid(),'investigation_id',gen_random_uuid(),'created_at',clock_timestamp()"+(fresh?"":"-interval '20 seconds'")+",'expires_at',clock_timestamp()"+(fresh?"+interval '9 seconds'":"-interval '10 seconds'")+",'consumed',true))).* from jsonb_populate_record(null::mip_temporal.boundary_history_permits,"+q(seedRow)+"::jsonb) p cross join generate_series(1,"+count+") n"
+  const maximal={...seedRow,id:randomUUID(),request_id:randomUUID(),user_id:randomUUID(),investigation_id:randomUUID(),revision_ids:Array.from({length:512},()=>randomUUID())}
+  await f.admin("set session authorization mip_temporal_advance_owner;insert into mip_temporal.boundary_history_permits select (jsonb_populate_record(null::mip_temporal.boundary_history_permits,"+q(maximal)+"::jsonb||jsonb_build_object('created_at',clock_timestamp(),'expires_at',clock_timestamp()+interval '9 seconds'))).*")
+  const maximalSize=JSON.parse(await f.admin("select jsonb_build_object('count',cardinality(revision_ids),'bytes',octet_length(to_jsonb(p)::text)) from mip_temporal.boundary_history_permits p where id="+q(maximal.id)))
+  assert.equal(maximalSize.count,512);assert.ok(maximalSize.bytes>16384&&maximalSize.bytes<=32768)
   const count=Number(await f.admin('select count(*) from mip_temporal.boundary_history_permits'))
   assert.ok(count<1023)
   // Every copied fixture row goes through the real enforcing INSERT trigger and has a distinct user/scope.

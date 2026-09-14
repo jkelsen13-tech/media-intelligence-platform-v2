@@ -26,6 +26,8 @@ Every source/history/publication flag remains false. This is no live migration, 
 
 ## Verification
 
+This component branch is not a combined frontend/backend candidate. Green checks on it do not prove integration with PR171, PR170, other backend branches, or deployed Supabase. The pull-request evidence ledger must record this exact base, proposed head, GitHub-tested merge commit and tree, and the workflow run IDs; a combined candidate needs a single reconciled tree and cross-layer tests. At preparation time the base is `e973a2a4fa413c452e8ab48800587a248be3eb4f`, reviewed implementation parent is `58e03bcea0a26643ad4d0dda142821835eb79140`, and no merge commit or hosted result exists yet.
+
 Native GitHub CI must install SQL023 and exercise the new groups. Generic SQL concurrency checks do not install this file and cannot prove this change. New results must be attached to the resulting commit; none are predeclared passed.
 
 Current Supabase documentation checked: [function privileges and empty search paths](https://supabase.com/docs/guides/database/functions), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), and [explicit Data API grants](https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically). No public grants are added.
