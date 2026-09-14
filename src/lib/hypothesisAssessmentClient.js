@@ -17,6 +17,7 @@ export function createHypothesisAssessmentClient(transport) {
   backlog:investigationId=>call('backlog',{investigation_id:investigationId}),
   reconcile:investigationId=>call('reconcile',{investigation_id:investigationId}),
   append:input=>call('append',input),
+  complete:input=>call('complete',input),
  })
 }
 export function hypothesisHistoryView(history,backlog,investigationId) {

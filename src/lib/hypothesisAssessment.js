@@ -63,6 +63,10 @@ export function validateHypothesisAssessment(r) {
       !['initial','changed','unchanged','less_certain'].includes(r.revision_effect) ||
       (r.revision===1 ? r.revision_trigger!=='initial'||r.revision_effect!=='initial' : r.revision_trigger==='initial'||r.revision_effect==='initial'))
     return fail('invalid_revision_cause')
+  if (Object.hasOwn(r,'reassessment_causes') && (r.revision===1 || !list(r.reassessment_causes) || !r.reassessment_causes.length ||
+      !unique(r.reassessment_causes.map(c=>c?.cause_id)) || r.reassessment_causes.some(c=>!text(c?.cause_id)||!text(c.reason)||
+        Object.keys(c).some(k=>!['cause_id','reason'].includes(k)))))
+    return fail('invalid_reassessment_causes')
   return {valid:true,reason:null}
 }
 export function ratingCopy(r) {

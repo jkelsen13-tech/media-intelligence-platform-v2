@@ -46,6 +46,7 @@ class Hypothesis(unittest.TestCase):
             "outcome":"insufficient_evidence","rationale":"Synthetic.","remaining_uncertainty":"Synthetic.",
             "context_positions":context["context_positions"]})
         obs = scalar(db,"mip_investigation_briefings_v1","observe",{"observation_id":str(uuid.uuid4()),"candidate_ids":[candidate]})
+        cls.observation=obs["id"]
         cls.state = {"question":"What explains the fictional contract award?","scope_note":"Synthetic only.","canonical_subject":None,
             "time_range":{"from":None,"to":None,"meaning":"Not established."},"unresolved_questions":[],
             "hypotheses":[],"commitments":[],"coverage":[]}
@@ -91,6 +92,7 @@ class Hypothesis(unittest.TestCase):
         h.run(db,Path("supabase/qualification/hypothesis-assessments/003_bound_acceptance.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/004_bound_history.sql").read_text())
         h.run(db,Path("supabase/qualification/hypothesis-assessments/005_reassessment_causes.sql").read_text())
+        h.run(db,Path("supabase/qualification/hypothesis-assessments/006_reassessment_completion.sql").read_text())
         cls.request=str(uuid.uuid4())
 
     @classmethod
@@ -282,6 +284,145 @@ class Hypothesis(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,"append-only"):
             self.admin("delete from mip_hypothesis.reassessment_causes;")
         self.assertEqual(len(json.loads(self.a.execute(self.backlog()))["causes"]),1)
+    def grant_observed_fixture_operations(self,version):
+        binding=json.loads(self.admin("select mip_hypothesis.observation_binding("+",".join(map(q,[self.user,self.iid,version]))+");"))
+        statements=[]
+        for entry in binding["observation"]["snapshot"]["inputs"]:
+            kind="capture" if "capture" in entry else "record_version"
+            material=entry[kind]
+            for operation in ["retention","analysis","excerpt_display"]:
+                for domain in ["rights","privacy"]:
+                    scope={"source_project":self.source,"material_ref":kind+":"+material["id"],
+                        "material_version":material["source_version_hash"],"source_version":material["id"],
+                        "audience":"isolated_internal_review","operation":operation,"domain":domain}
+                    if self.admin("select count(*) from mip_identity.operation_evidence_heads where scope="+js(scope))=="1":continue
+                    revision=str(uuid.uuid4())
+                    statements.append("insert into mip_identity.operation_evidence_versions values("+q(revision)+","+js(scope)+
+                        ",'synthetic-fixture-v1','synthetic-policy','v1',"+q(hashlib.sha256(b"synthetic policy").hexdigest())+
+                        ",'synthetic-evidence','synthetic-owner','synthetic-approval','recorded','allow','2000-01-01','2999-01-01','[]',true);"+
+                        "insert into mip_identity.operation_evidence_heads values("+js(scope)+","+q(revision)+",true);")
+        if statements:self.admin("".join(statements))
+        return binding
+    def prepare_completion(self,source_change=False):
+        self.first=json.loads(self.a.execute(self.append()))
+        self.admin(self.change() if source_change else self.method_change())
+        obs=scalar(self.database,"mip_investigation_briefings_v1","observe",{
+            "observation_id":str(uuid.uuid4()),"previous_observation_id":self.observation,"candidate_ids":[self.candidate]})
+        self.new_version=str(uuid.uuid4())
+        scalar(self.database,"mip_investigation_workspace_v1","put",{"investigation_id":self.iid,"version_id":self.new_version,
+            "previous_version_id":self.vid,"observation_id":obs["id"],"state":self.state,"change_reason":"Synthetic reassessment context."})
+        self.new_binding=self.grant_observed_fixture_operations(self.new_version)
+        causes=json.loads(self.a.execute(self.reconcile()))["causes"]
+        self.pending=[c for c in causes if c["state"]=="pending_explicit_reconciliation"]
+        self.completion_assessment=copy.deepcopy(self.assessment)
+        cutoff=self.admin("""select to_char(clock_timestamp() at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"')""")
+        self.completion_assessment.update(id="synthetic-next",revision=2,predecessor_id=self.first["assessment"]["id"],
+            knowledge_cutoff=cutoff,completed_at=cutoff,revision_trigger="correction" if source_change else "methodology",
+            revision_effect="unchanged",revision_reason="Synthetic retained reassessment.",
+            reassessment_causes=[{"cause_id":c["cause_id"],"reason":"Synthetic explicit consideration; no semantic qualification."} for c in self.pending])
+        self.completion_request=str(uuid.uuid4())
+    def complete(self,assessment=None,request=None,version=None):
+        return "select mip_hypothesis.complete_reassessment("+",".join(map(q,[
+            self.user,self.iid,version or self.new_version,self.source,request or self.completion_request,
+            self.first["assessment"]["id"]]))+","+js(assessment or self.completion_assessment)+");"
+    def completion_counts(self):
+        return self.admin("select (select count(*) from mip_hypothesis.revisions)||':'||"+
+            "(select count(*) from mip_hypothesis.acceptance_bindings)||':'||"+
+            "(select count(*) from mip_hypothesis.reassessment_completion_receipts)||':'||"+
+            "(select count(*) from mip_hypothesis.reassessment_resolutions)")
+    def revoke_unselected_closure_permission(self):
+        return "update mip_identity.operation_evidence_heads set active=false where scope->>'material_ref' like 'record_version:%' and scope->>'operation'='analysis' and scope->>'domain'='privacy';"
+    def test_completion_revision_resolution_and_receipt_commit_atomically(self):
+        self.prepare_completion();self.a.execute("begin;")
+        result=json.loads(self.a.execute(self.complete()))
+        self.assertEqual(self.completion_counts(),"1:1:0:0")
+        self.b.start(self.complete());self.blocked(self.b,self.a)
+        self.a.execute("commit;")
+        self.assertEqual(json.loads(self.b.finish()),result)
+        self.assertEqual(self.completion_counts(),"2:2:1:"+str(len(self.pending)))
+        self.assertTrue(result["completed_reassessment"]);self.assertFalse(result["publication_allowed"])
+        self.assertEqual(result["assessment"]["review_state"],"unreviewed")
+        backlog=json.loads(self.a.execute(self.backlog()))
+        self.assertTrue(all(c["state"]=="reassessment_recorded" for c in backlog["causes"]))
+        self.assertFalse(backlog["is_completion_receipt"])
+    def test_completion_outer_rollback_keeps_every_cause_pending(self):
+        self.prepare_completion();self.a.execute("begin;");self.a.execute(self.complete());self.a.execute("rollback;")
+        self.assertEqual(self.completion_counts(),"1:1:0:0")
+        self.assertTrue(all(c["state"]=="pending_explicit_reconciliation" for c in json.loads(self.b.execute(self.backlog()))["causes"]))
+    def test_completion_missing_duplicate_and_changed_cause_arguments_fail_closed(self):
+        self.prepare_completion()
+        for action in ["omit","duplicate","unknown","blank_reason"]:
+            changed=copy.deepcopy(self.completion_assessment)
+            if action=="omit":changed["reassessment_causes"].pop()
+            elif action=="duplicate":changed["reassessment_causes"].append(changed["reassessment_causes"][0])
+            elif action=="unknown":changed["reassessment_causes"][0]["cause_id"]=str(uuid.uuid4())
+            else:changed["reassessment_causes"][0]["reason"]=""
+            with self.assertRaisesRegex(RuntimeError,"cause set changed|ambiguous reassessment|cause explanation"):
+                self.session().execute(self.complete(assessment=changed))
+        self.assertEqual(self.completion_counts(),"1:1:0:0")
+    def test_completion_cannot_acknowledge_a_change_missing_from_observation(self):
+        self.prepare_completion(source_change=True)
+        with self.assertRaisesRegex(RuntimeError,"missing retained source change"):
+            self.a.execute(self.complete(version=self.vid))
+        self.assertEqual(self.completion_counts(),"1:1:0:0")
+    def test_completion_cannot_bypass_pending_work_via_plain_append(self):
+        self.prepare_completion();plain=copy.deepcopy(self.completion_assessment);del plain["reassessment_causes"]
+        sql="select mip_hypothesis.append_bound_revision("+",".join(map(q,[self.user,self.iid,self.new_version,self.source,
+            str(uuid.uuid4()),self.first["assessment"]["id"]]))+","+js(plain)+");"
+        with self.assertRaisesRegex(RuntimeError,"explicit reassessment completion required"):self.a.execute(sql)
+        with self.assertRaisesRegex(RuntimeError,"permission denied"):
+            self.b.execute(sql.replace("append_bound_revision(","append_bound_revision_v1("))
+        self.assertEqual(self.completion_counts(),"1:1:0:0")
+    def test_completion_process_loss_before_commit_recovers_pending_work(self):
+        self.prepare_completion();self.a.execute("begin;");self.a.execute(self.complete())
+        self.a.process.kill();self.a.process.wait(timeout=5)
+        result=json.loads(self.b.execute(self.complete()))
+        self.assertTrue(result["completed_reassessment"])
+        self.assertEqual(self.completion_counts(),"2:2:1:"+str(len(self.pending)))
+    def test_completion_process_loss_after_commit_recovers_exact_receipt(self):
+        self.prepare_completion();first=json.loads(self.a.execute(self.complete()))
+        self.a.process.kill();self.a.process.wait(timeout=5)
+        self.assertEqual(json.loads(self.b.execute(self.complete())),first)
+        changed=copy.deepcopy(self.completion_assessment);changed["reassessment_causes"][0]["reason"]="Changed synthetic argument."
+        with self.assertRaisesRegex(RuntimeError,"retry conflict"):self.session().execute(self.complete(assessment=changed))
+        self.assertEqual(self.completion_counts(),"2:2:1:"+str(len(self.pending)))
+    def test_completion_acceptance_first_preserves_receipt_then_records_revocation(self):
+        self.prepare_completion();self.a.execute("begin;");self.a.execute(self.complete())
+        self.b.execute("reset role;");self.b.start(self.revoke());self.blocked(self.b,self.a)
+        self.a.execute("commit;");self.b.finish()
+        self.assertEqual(self.completion_counts(),"2:2:1:"+str(len(self.pending)))
+        with self.assertRaisesRegex(RuntimeError,"operation denied"):self.session().execute(self.complete())
+    def test_completion_revocation_first_rolls_back_every_new_record(self):
+        self.prepare_completion();self.b.execute("reset role;begin;"+self.revoke())
+        self.a.start(self.complete());self.blocked(self.a,self.b);self.b.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"operation denied|cause set changed"):self.a.finish()
+        self.assertEqual(self.completion_counts(),"1:1:0:0")
+    def test_completion_requires_permissions_for_unselected_retained_dependency(self):
+        self.prepare_completion();self.admin(self.revoke_unselected_closure_permission())
+        with self.assertRaisesRegex(RuntimeError,"operation denied|cause set changed"):self.a.execute(self.complete())
+        self.assertEqual(self.completion_counts(),"1:1:0:0")
+    def test_completed_closure_revocation_withholds_history_and_preserves_prior_causes(self):
+        self.prepare_completion();self.a.execute(self.complete());self.admin(self.revoke_unselected_closure_permission())
+        history=json.loads(self.a.execute(self.history()))
+        self.assertEqual(history["entries"][-1]["status"],"withheld");self.assertNotIn("assessment",history["entries"][-1])
+        backlog=json.loads(self.a.execute(self.backlog()))
+        self.assertTrue(any(c["state"]=="pending_explicit_reconciliation" and c["kind"]=="permission_changed" for c in backlog["causes"]))
+        self.assertEqual(sum(c["state"]=="reassessment_recorded" for c in backlog["causes"]),len(self.pending))
+    def test_later_changes_do_not_get_cleared_by_completion_receipt_replay(self):
+        self.prepare_completion();first=json.loads(self.a.execute(self.complete()))
+        self.admin("update public.articles set summary='A later synthetic correction.' where url='https://example.org/hypothesis-native-synthetic';")
+        replay=json.loads(self.a.execute(self.complete()))
+        self.assertEqual(replay["assessment"],first["assessment"]);self.assertTrue(replay["reassessment_pending"])
+        self.assertEqual(self.completion_counts(),"2:2:1:"+str(len(self.pending)))
+        self.assertTrue(any(c["state"]=="pending_explicit_reconciliation" for c in json.loads(self.a.execute(self.backlog()))["causes"]))
+    def test_completion_receipts_and_resolutions_are_not_worker_writable_or_mutable(self):
+        self.prepare_completion();self.a.execute(self.complete())
+        for table in ["reassessment_completion_receipts","reassessment_resolutions"]:
+            with self.assertRaisesRegex(RuntimeError,"permission denied"):
+                self.session().execute("insert into mip_hypothesis."+table+" default values;")
+            with self.assertRaisesRegex(RuntimeError,"append-only"):
+                self.admin("delete from mip_hypothesis."+table+";")
+
     def test_gateway_cannot_write_approve_or_use_unbound_primitive(self):
         for sql in ["select * from mip_hypothesis.revisions;","update mip_identity.operation_evidence_heads set active=true;",
             "select mip_hypothesis.append_revision("+",".join(map(q,[self.user,self.iid,self.request]))+",null,"+js(self.assessment)+");"]:

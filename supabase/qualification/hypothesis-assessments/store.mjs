@@ -22,6 +22,15 @@ export function createHypothesisStore(query) {
     [verifiedUserId,investigationId,workspaceVersionId,sourceProject,requestId,predecessorId,JSON.stringify(assessment)])
    return result.rows[0].value
   },
+  async complete({verifiedUserId,investigationId,workspaceVersionId,sourceProject,requestId,predecessorId,assessment}) {
+   const validation=validateHypothesisAssessment(assessment)
+   if(!validation.valid)throw new Error(validation.reason)
+   if(!assessment.reassessment_causes?.length)throw new Error('reassessment_causes_required')
+   if(assessment.question_id!==investigationId||assessment.predecessor_id!==predecessorId)throw new Error('assessment_scope_mismatch')
+   const result=await query('select mip_hypothesis.complete_reassessment($1::uuid,$2::uuid,$3::uuid,$4::text,$5::uuid,$6::uuid,$7::jsonb) as value',
+    [verifiedUserId,investigationId,workspaceVersionId,sourceProject,requestId,predecessorId,JSON.stringify(assessment)])
+   return result.rows[0].value
+  },
   async boundHistory({verifiedUserId,investigationId}) {
    const result=await query('select mip_hypothesis.read_bound_history($1::uuid,$2::uuid) as value',[verifiedUserId,investigationId])
    return result.rows[0].value
