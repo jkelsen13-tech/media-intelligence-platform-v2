@@ -616,7 +616,7 @@
 .piw-hypothesis-reassessment button:disabled { opacity: .6; cursor: not-allowed; }
 .piw-hypothesis-reassessment :is(select,textarea,button):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .piw-hypothesis-reassessment select {
- appearance: none; text-overflow: ellipsis; padding-inline-end: 32px;
+ appearance: none; overflow: hidden; text-overflow: ellipsis; padding-inline-end: 32px;
  background-image: linear-gradient(45deg, transparent 50%, var(--text-primary) 50%), linear-gradient(135deg, var(--text-primary) 50%, transparent 50%);
  background-position: right 16px center, right 11px center;
  background-size: 5px 5px; background-repeat: no-repeat;

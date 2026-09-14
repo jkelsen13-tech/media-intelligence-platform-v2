@@ -331,6 +331,7 @@ for(const [engine,launcher] of Object.entries({chromium,webkit})){
    await appReason.selectOption('methodology')
    assert.equal(await appReason.inputValue(),'methodology')
    await appHistory.getByText('Selected reason: Method or reasoning needs reconsideration',{exact:true}).waitFor()
+   assert.equal(await appHistory.evaluate(el=>el.scrollWidth>el.clientWidth+1),false,'longest reason must not overflow the history panel')
    await appReason.focus();await page.keyboard.press('ArrowUp')
    assert.equal(await appReason.inputValue(),'shared_origin')
    assert.ok((await appReason.boundingBox()).height>=44)
