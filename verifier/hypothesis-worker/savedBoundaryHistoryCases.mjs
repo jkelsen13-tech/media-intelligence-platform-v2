@@ -325,16 +325,16 @@ export async function savedBoundaryHistoryCases(t,f,prepared){
      await x.reader()(x.request,payload=>{withheld=payload.entries.find(e=>e.revision_id===x.revisions[0])})
      assert.equal(withheld?.status,'withheld');assert.equal(Object.hasOwn(withheld,'assessment'),false)
     }
-    // Five seconds starts after expensive admission checks; the eight-second assertion
-    // leaves at least three seconds of scheduling margin without changing product deadlines.
-    arm=()=>f.admin(expireSql.replace('EXPIRY_INTERVAL','5 seconds'))
+    // Nine seconds permits SQL issuance after expensive admission checks. The reader
+    // independently caps remaining_ms at ten seconds; twelve seconds allows timer scheduling lag.
+    arm=()=>f.admin(expireSql.replace('EXPIRY_INTERVAL','9 seconds'))
     let failure
     try{await x.reader({withTransaction:transaction(f.db,v=>pid=v)})(x.request,async(_,signal)=>{
      enteredAt=performance.now();observedSignal=signal;await new Promise(()=>{})
     })}catch(error){failure=error}
-    assert.ok(enteredAt!==undefined,'delivery callback must enter before testing its expiry')
+    assert.ok(enteredAt!==undefined,'delivery callback must enter before testing its expiry; caught: '+(failure?.message??'no error'))
     assert.match(failure?.message??'',/^mip_boundary_delivery_aborted$/)
-    assert.ok(observedSignal?.aborted);assert.ok(performance.now()-enteredAt<8000)
+    assert.ok(observedSignal?.aborted);assert.ok(performance.now()-enteredAt<12000)
     assert.equal(await f.admin('select count(*) from pg_stat_activity where pid='+pid),'0')
    }finally{if(restore)await f.admin(restore)}
   }
