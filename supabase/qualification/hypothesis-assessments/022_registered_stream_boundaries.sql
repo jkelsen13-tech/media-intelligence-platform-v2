@@ -267,7 +267,7 @@ create function mip_temporal.capture_incarnation(p_session uuid,p_binding uuid,p
 returns jsonb language plpgsql security definer set search_path='' as $$
 begin
  perform mip_temporal.require_incarnation(p_session,p_binding,p_expected);
- if exists(select 1 from mip_temporal.boundary_stream_configs where binding_id=p_binding) then raise exception 'mip_boundary_v1_fallback_denied';end if;
+ if exists(select 1 from mip_temporal.boundary_stream_configs where binding_id=p_binding) then raise exception 'mip_boundary_legacy_fallback_denied';end if;
  return mip_temporal.capture_revision_incarnation_impl(p_session,p_binding,p_expected,p_before,p_request);
 end $$;
 create function mip_temporal.prepare_incarnation(p_session uuid,p_capture uuid,p_expected uuid,p_request uuid,p_source uuid,p_stream uuid,
@@ -277,7 +277,7 @@ declare binding uuid;
 begin
  select binding_id into binding from mip_temporal.stream_captures where id=p_capture;
  perform mip_temporal.require_incarnation(p_session,binding,p_expected);
- if exists(select 1 from mip_temporal.boundary_stream_configs where binding_id=binding) then raise exception 'mip_boundary_v1_fallback_denied';end if;
+ if exists(select 1 from mip_temporal.boundary_stream_configs where binding_id=binding) then raise exception 'mip_boundary_legacy_fallback_denied';end if;
  return mip_temporal.prepare_revision_incarnation_impl(p_session,p_capture,p_expected,p_request,p_source,p_stream,p_end,p_bootstrap,p_frames,p_delivery);
 end $$;
 create function mip_temporal.advance_incarnation(p_session uuid,p_request uuid,p_expected uuid)
@@ -286,7 +286,7 @@ declare binding uuid;
 begin
  select c.binding_id into binding from mip_temporal.covered_permits p join mip_temporal.stream_captures c on c.id=p.capture_id where p.request_id=p_request;
  perform mip_temporal.require_incarnation(p_session,binding,p_expected);
- if exists(select 1 from mip_temporal.boundary_stream_configs where binding_id=binding) then raise exception 'mip_boundary_v1_fallback_denied';end if;
+ if exists(select 1 from mip_temporal.boundary_stream_configs where binding_id=binding) then raise exception 'mip_boundary_legacy_fallback_denied';end if;
  return mip_temporal.advance_revision_incarnation_impl(p_session,p_request,p_expected);
 end $$;
 alter function mip_temporal.capture_incarnation(uuid,uuid,uuid,pg_lsn,uuid) owner to mip_temporal_advance_owner;

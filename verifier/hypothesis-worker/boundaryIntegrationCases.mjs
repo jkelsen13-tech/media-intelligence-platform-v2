@@ -27,7 +27,7 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
   await f.admin('insert into mip_identity.mapping_versions select '+q(mapping)+','+q(runtime)+
    ',principal,issuer,audience,'+q(runtime+':'+producerRole)+',key_revision,max_lifetime_seconds,approval_ref from mip_identity.mapping_versions where revision='+
    q(f.mappings['runtime-a'+producerRole])+';insert into mip_identity.mapping_heads values('+[runtime,producerRole,mapping].map(q).join(',')+',true);')
-  let custodySession=await f.issue(runtime,producerRole)
+  let custodySession=await f.issue(runtime,producerRole),activeCustodyPid=null
   const custodyJournal=()=>encryptedRemoteJournal({sql:sqlTransport(f.db,'mip_journal_gateway_v2'),session:custodySession,
    keyProvider:r=>{if(r!==runtime)throw Error('wrong_custodian');return material}})
   const approved=new Set([boundaryRegistrationDigest(registration)])
@@ -35,6 +35,7 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
    if(scope.source!==registration.source||!approved.has(scope.digest))throw Error('synthetic_registration_not_admitted')
    const held=await hold(f.db,'select pg_advisory_xact_lock(hashtextextended('+q('boundary-custody:'+registration.source)+',0));'+
     'select 1 from mip_identity.fence where id for share;select 1 from mip_identity.mapping_heads where runtime='+q(runtime)+' for share;select 1 from mip_identity.key_heads for share;')
+   activeCustodyPid=held.pid
    try{
     const journal=custodyJournal(),index=n=>'boundary-registration-sequence:'+registration.source+':'+n
     const tx={
@@ -49,7 +50,7 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
      readRequest:r=>journal.get('boundary-request:'+r)
     }
     return await fn(tx)
-   }finally{await held.finish(true)}
+   }finally{try{await held.finish(true)}finally{activeCustodyPid=null}}
   }
   await retainBoundaryRegistration({envelope:registration,withAuthority})
   const calls=[]
@@ -66,7 +67,7 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
   const capture=(target,before=b.before,request=randomUUID(),using=api)=>using.capture({session:b.session(),bindingId:b.bindingId,before,request,target})
   const consume=(c,extra={})=>consumeBoundaryCapture({capture:c,registration,observationEpoch:f.observationEpoch,
    revisionRelation,markerRelation,session:b.session(),journal:b.journal(),transport:api,...extra})
-  return {...b,registration,contractDigest,incarnationId,api,makeApi,call,calls,issue,capture,consume,withAuthority,
+  return {...b,registration,contractDigest,incarnationId,api,makeApi,call,calls,issue,capture,consume,withAuthority,custodyPid:()=>activeCustodyPid,
    refreshAll:async()=>{await b.refresh();custodySession=await f.issue(runtime,producerRole)},
    replaceCustody:async()=>{
     const next={...registration,sequence:2,previous:boundaryRegistrationDigest(registration),bindingId:randomUUID(),incarnationId:randomUUID(),recoveryEvidence:sha('synthetic replacement')}
@@ -245,18 +246,23 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
  })
  await t.test('custody-bound source advancement holds revocation fence until committed',async t=>{
   const b=await configured(t),issue=await b.issue(),c=await b.capture(issue.marker_id)
-  let held,release,entered,timer,revoke
+  let held,release,entered,timer,revoke,custodyPid
   const gate=new Promise(r=>release=r),ready=new Promise(r=>entered=r)
   const api=b.makeApi(b.registration,async(name,args)=>{
    if(name!=='advance_boundary_incarnation')return b.call(name,args)
    held=await hold(f.db,'select mip_temporal.'+name+'('+args.map(q).join(',')+');','mip_temporal_ack_gateway')
-   entered()
-   const commit=await gate
-   await held.finish(commit)
-   if(!commit)throw Error('synthetic_advance_orchestration_aborted')
-   // Read back the receipt produced by the exact already-authorized held gateway call.
-   // No identity or endpoint is reconstructed by this fault-injection adapter.
-   return JSON.parse(await f.admin('select receipt from mip_temporal.stream_checkpoints where capture_id='+q(c.id)))
+   let ended=false
+   try{
+    custodyPid=b.custodyPid()
+    assert.ok(Number.isSafeInteger(custodyPid)&&custodyPid!==held.pid)
+    entered()
+    const commit=await gate
+    await held.finish(commit);ended=true
+    if(!commit)throw Error('synthetic_advance_orchestration_aborted')
+    // Read back the receipt produced by the exact already-authorized held gateway call.
+    // No identity or endpoint is reconstructed by this fault-injection adapter.
+    return JSON.parse(await f.admin('select receipt from mip_temporal.stream_checkpoints where capture_id='+q(c.id)))
+   }finally{if(!ended)await held.finish(false)}
   })
   const completion=b.consume(c,{transport:api})
   // Surface early source/consumer failure, rather than waiting forever for an unreachable signal.
@@ -268,7 +274,10 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
    })])
    clearTimeout(timer)
    revoke=f.admin(b.revokeSql);revoke.catch(()=>{})
-   await blocked(f,held.pid)
+   // The outer authenticated custody transaction acquired the shared authority fence first.
+   // PostgreSQL can wait on that holder before the inner source gateway holder.
+   assert.equal(b.custodyPid(),custodyPid)
+   await blocked(f,custodyPid)
    release(true)
    // Custody exclusion fences revocation until the exact source receipt is read back.
    await completion;await revoke
@@ -329,9 +338,9 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
   await f.admin('alter publication '+b.pub+' set table mip_hypothesis.revision_transactions(revision_id,epoch,creator_xid);')
   await assert.rejects(()=>b.capture(issue.marker_id,b.before,c.id),/mip_boundary_publication_denied/)
   const oldCall=(role,name,args)=>f.admin('set session authorization '+role+';select mip_temporal.'+name+'('+args.map(q).join(',')+');')
-  await assert.rejects(()=>oldCall('mip_temporal_recorder','capture_incarnation',[b.session(),b.bindingId,b.incarnationId,b.before,randomUUID()]),/mip_boundary_v1_fallback_denied/)
-  await assert.rejects(()=>oldCall('mip_temporal_recorder','prepare_incarnation',[b.session(),c.id,b.incarnationId,randomUUID(),b.context.source_id,b.context.stream_epoch,c.end_lsn,c.bootstrap_hash,c.frame_hash,'a'.repeat(64)]),/mip_boundary_v1_fallback_denied/)
-  await assert.rejects(()=>oldCall('mip_temporal_ack_gateway','advance_incarnation',[b.session(),request.request,b.incarnationId]),/mip_boundary_v1_fallback_denied/)
+  await assert.rejects(()=>oldCall('mip_temporal_recorder','capture_incarnation',[b.session(),b.bindingId,b.incarnationId,b.before,randomUUID()]),/mip_boundary_legacy_fallback_denied/)
+  await assert.rejects(()=>oldCall('mip_temporal_recorder','prepare_incarnation',[b.session(),c.id,b.incarnationId,randomUUID(),b.context.source_id,b.context.stream_epoch,c.end_lsn,c.bootstrap_hash,c.frame_hash,'a'.repeat(64)]),/mip_boundary_legacy_fallback_denied/)
+  await assert.rejects(()=>oldCall('mip_temporal_ack_gateway','advance_incarnation',[b.session(),request.request,b.incarnationId]),/mip_boundary_legacy_fallback_denied/)
   for(const role of ['anon','authenticated','service_role','mip_temporal_recorder','mip_temporal_ack_gateway','mip_comparison_worker_v1','mip_comparison_producer_v1'])
    for(const signature of ['mip_temporal.capture_revision_incarnation_impl(uuid,uuid,uuid,pg_lsn,uuid)','mip_temporal.prepare_revision_incarnation_impl(uuid,uuid,uuid,uuid,uuid,uuid,pg_lsn,text,text,text)','mip_temporal.advance_revision_incarnation_impl(uuid,uuid,uuid)'])
     assert.equal(await f.admin('select has_function_privilege('+[role,signature,'EXECUTE'].map(q).join(',')+')'),'f')
@@ -355,7 +364,7 @@ export async function boundaryIntegrationCases(t,f,{staged,runWorker,holdRevisio
  await t.test('v1 publication contract and direct native/table privilege exclusions are preserved',async t=>{
   const b=await configured(t)
   await assert.rejects(()=>b.capture(randomUUID()),/mip_registration_custody_required/)
-  await assert.rejects(()=>f.admin('set session authorization mip_temporal_recorder;select mip_temporal.capture_incarnation('+[b.session(),b.bindingId,b.incarnationId,b.before,randomUUID()].map(q).join(',')+');'),/mip_boundary_v1_fallback_denied/)
+  await assert.rejects(()=>f.admin('set session authorization mip_temporal_recorder;select mip_temporal.capture_incarnation('+[b.session(),b.bindingId,b.incarnationId,b.before,randomUUID()].map(q).join(',')+');'),/mip_boundary_legacy_fallback_denied/)
   for(const role of ['mip_temporal_recorder','mip_temporal_ack_gateway','mip_comparison_worker_v1','service_role']){
    await assert.rejects(()=>f.admin('set session authorization '+role+';insert into mip_temporal.registered_stream_markers values('+[randomUUID(),b.bindingId,f.observationEpoch,'1'].map(q).join(',')+');'),/mip_database_denied_42501/)
    await assert.rejects(()=>f.admin('set session authorization '+role+';update mip_temporal.boundary_stream_configs set contract_digest='+q('a'.repeat(64))+';'),/mip_database_denied_42501/)
