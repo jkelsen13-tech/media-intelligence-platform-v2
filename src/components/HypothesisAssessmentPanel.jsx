@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { validateHypothesisAssessment, ratingCopy, COMPARISON_COPY } from '../lib/hypothesisAssessment.js'
+import { validateHypothesisAssessment, ratingCopy, COMPARISON_COPY, EVIDENCE_RELATIONSHIP_COPY, HYPOTHESIS_RELATIONSHIP_COPY } from '../lib/hypothesisAssessment.js'
 import { retainedDateDisplay } from '../lib/investigationEvidenceTrail.js'
 
 const date = value => retainedDateDisplay(value).label
@@ -27,17 +27,17 @@ export default function HypothesisAssessmentPanel({assessment,dependencyChanged=
     <p>Assessment completed: {date(r.completed_at)} · Revision {r.revision}</p>
     <p>{historyMode==='reconstructed_now'?'Reconstructed now: later-acquired evidence may inform this assessment.':'Saved observation: no current evidence is substituted.'}</p>
     <p>Saved review state: {r.review_state.replaceAll('_',' ')} · Private; publication disabled.</p>
-    {dependencyChanged?<p role="status">A dependency changed. Reassessment is pending; this is still the saved assessment.</p>:null}
+    {dependencyChanged?<p role="status">Stale — reassessment pending. A dependency changed. Reassessment is pending; this is still the saved assessment.</p>:null}
     <details className="piw-linked-record" onToggle={event=>{if(event.target===event.currentTarget)setOpen(event.currentTarget.open)}}>
-      <summary>Evidence, reasoning, alternatives, and assessment history</summary>
+      <summary>Why? Evidence, reasoning, alternatives, and assessment history</summary>
       {open?<div>
-        <p>Hypotheses: {r.hypothesis_relationship.replaceAll('_',' ')}. Leading support does not establish more-likely-than-not probability. Shared origins are not independent corroboration.</p>
+        <p>{HYPOTHESIS_RELATIONSHIP_COPY[r.hypothesis_relationship]} Leading support does not establish more-likely-than-not probability. Shared origins are not independent corroboration.</p>
         {r.hypotheses.map(h=><section className="piw-card" key={h.id}>
           <h4>{h.definition}</h4>
           {r.comparison.favored_ids.includes(h.id)?<p>Better supported in this saved comparison.</p>:null}
           <dl><Rating title="Likelihood" value={h.likelihood}/><Rating title="Confidence in this likelihood assessment" value={h.confidence}/></dl>
           {r.arguments.filter(a=>a.hypothesis_id===h.id).map(a=><article key={a.id}>
-            <h5>{a.relation.replaceAll('_',' ')}</h5><p>{a.inference}</p>
+            <h5>{EVIDENCE_RELATIONSHIP_COPY[a.relation].label}</h5><p>{EVIDENCE_RELATIONSHIP_COPY[a.relation].explanation}</p><p>{a.inference}</p>
             <p>Inferential limitation: {a.limitation}</p>
             <dl><Rating title="Diagnostic relevance" value={a.relevance}/></dl>
             <ul>{a.evidence_ids.map(id=>{const e=evidence.get(id);return <li key={id}>
