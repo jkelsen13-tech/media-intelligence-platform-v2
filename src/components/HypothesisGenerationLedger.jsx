@@ -29,8 +29,10 @@ export default function HypothesisGenerationLedger({client,investigationId,userS
    <p><strong>{labels[e.state]}</strong>{e.lease_expired?' · Lease expired; retained work has not been requeued.':''}</p>
    <p>Requested {e.recorded_at} · Generation {e.generation_id}</p>
    <p>Method revision {e.method_revision} · Retained input hash {e.input_hash}</p>
+   {e.recovery_prior_generation_id?<p>Fresh recovery of retained generation {e.recovery_prior_generation_id}.</p>:null}
+   {e.recovery_generation_id?<p>Linked fresh generation {e.recovery_generation_id}. This prior attempt remains retained.</p>:null}
    {e.block_reason?<p>Current authority or retained context was unavailable at selection. Reconciliation remains explicit.</p>:null}
-   {typeof onRecover==='function'&&(e.state==='failed'||(e.state==='processing'&&e.lease_expired))?<button type="button" onClick={()=>onRecover(e.generation_id)}>Prepare fresh-generation recovery</button>:null}
+   {typeof onRecover==='function'&&!e.recovery_generation_id&&(e.state==='failed'||(e.state==='processing'&&e.lease_expired))?<button type="button" onClick={()=>onRecover(e.generation_id)}>Prepare fresh-generation recovery</button>:null}
    {e.completed_revision_id?<p>Saved assessment revision {e.completed_revision_id}. Refresh assessment history to inspect it.</p>:null}
   </li>)}</ul>:<p>No retained worker attempts were returned.</p>:null}
   <p>There is no automatic retry or force cancellation. A processing record alone does not prove that a worker is still running.</p>

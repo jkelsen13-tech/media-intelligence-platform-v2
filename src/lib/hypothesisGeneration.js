@@ -28,7 +28,8 @@ export function validGenerationReceipt(input,r) {
   Object.keys(r).every(k=>['generation_id','request_id','investigation_id','workspace_version_id','method_revision','input_hash','publication_allowed'].includes(k))
 }
 export function generationBacklogView(r,iid) {
- if(r?.contract_version!=='mip_hypothesis_generation_backlog_v1'||r.investigation_id!==iid||r.coverage!=='retained_generation_jobs'||
+ const v2=r?.contract_version==='mip_hypothesis_generation_backlog_v2'
+ if((!v2&&r?.contract_version!=='mip_hypothesis_generation_backlog_v1')||r.investigation_id!==iid||r.coverage!=='retained_generation_jobs'||
   r.current_authority_qualified!==false||r.automatic_retry!==false||r.force_cancellation!==false||r.publication_allowed!==false||!Array.isArray(r.entries)||
   Object.keys(r).some(k=>!['contract_version','investigation_id','entries','coverage','current_authority_qualified','automatic_retry','force_cancellation','publication_allowed'].includes(k)))return null
  const seen=new Set()
@@ -40,8 +41,19 @@ export function generationBacklogView(r,iid) {
    (e.state==='completed')!==(e.completed_revision_id!==null)||(e.lease_expired&&e.state!=='processing')||
    (e.block_reason!==null&&e.block_reason!=='current_authority_or_context_unavailable')||
    Object.keys(e).some(k=>!['generation_id','request_id','workspace_version_id','observation_id','predecessor_id','input_hash','method_revision',
-    'implementation','state','recorded_at','lease_expired','retained_for_reconciliation','block_reason','completed_revision_id'].includes(k)))return null
+    'implementation','state','recorded_at','lease_expired','retained_for_reconciliation','block_reason','completed_revision_id',...(v2?['recovery_prior_generation_id','recovery_generation_id']:[])].includes(k)))return null
+  if(v2&&['recovery_prior_generation_id','recovery_generation_id'].some(k=>!Object.hasOwn(e,k)||(e[k]!==null&&(!uuid(e[k])||e[k]===e.generation_id))))return null
   seen.add(e.generation_id)
+ }
+ if(v2) {
+  const byId=new Map(r.entries.map(e=>[e.generation_id,e])),checked=new Set()
+  for(const e of r.entries) {
+   if(e.recovery_prior_generation_id&&byId.get(e.recovery_prior_generation_id)?.recovery_generation_id!==e.generation_id)return null
+   if(e.recovery_generation_id&&byId.get(e.recovery_generation_id)?.recovery_prior_generation_id!==e.generation_id)return null
+   const chain=new Set();let cursor=e
+   while(cursor&&!checked.has(cursor.generation_id)){if(chain.has(cursor.generation_id))return null;chain.add(cursor.generation_id);cursor=byId.get(cursor.recovery_generation_id)}
+   for(const id of chain)checked.add(id)
+  }
  }
  return r.entries
 }

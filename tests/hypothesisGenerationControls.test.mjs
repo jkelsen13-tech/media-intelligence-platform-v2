@@ -172,3 +172,32 @@ test('ledger exposes recovery preparation only for failed or expired processing 
  await act(async()=>choices[0].props.onClick());assert.deepEqual(selected,[uid]);
  await act(async()=>tree.unmount());
 });
+
+function recoveryLedger(c) {
+ const r=ledger(c),next='00000000-0000-4000-8000-000000000099';
+ r.contract_version='mip_hypothesis_generation_backlog_v2';
+ Object.assign(r.entries[0],{recovery_prior_generation_id:null,recovery_generation_id:next});
+ r.entries.push({...r.entries[0],generation_id:next,request_id:next,state:'pending',lease_expired:false,
+  recovery_prior_generation_id:uid,recovery_generation_id:null});
+ return r;
+}
+test('recovery lineage rejects missing, cross-ledger, cyclic and one-sided references',()=>{
+ const c=syntheticAuthoringContext(),r=recoveryLedger(c);
+ assert.equal(generationBacklogView(r,c.investigation_id).length,2);
+ for(const mutate of [
+  x=>delete x.entries[0].recovery_generation_id,
+  x=>x.entries[0].recovery_generation_id=randomUUID(),
+  x=>x.entries[1].recovery_prior_generation_id=null,
+  x=>{x.entries[0].recovery_prior_generation_id=x.entries[1].generation_id;x.entries[1].recovery_generation_id=uid},
+  x=>x.contract_version='mip_hypothesis_generation_backlog_v1',
+ ]){const changed=structuredClone(r);mutate(changed);assert.equal(generationBacklogView(changed,c.investigation_id),null)}
+});
+test('ledger displays both recovery links and suppresses sibling recovery preparation',async()=>{
+ const c=syntheticAuthoringContext(),data=recoveryLedger(c);let tree;
+ await act(async()=>{tree=TestRenderer.create(createElement(Ledger,{client:{generationBacklog:async()=>({data})},
+  investigationId:c.investigation_id,userScopeKey:'synthetic',onRecover:()=>{throw Error('unexpected sibling')}}))});
+ await act(async()=>button(tree,'Inspect worker attempts').props.onClick());
+ assert.match(content(tree),/Linked fresh generation/);assert.match(content(tree),/Fresh recovery of retained generation/);
+ assert.equal(button(tree,'Prepare fresh-generation recovery'),undefined);
+ await act(async()=>tree.unmount());
+});

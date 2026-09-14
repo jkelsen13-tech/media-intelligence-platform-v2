@@ -338,6 +338,12 @@ test('isolated hypothesis generation authority, retained computation and restart
   const recovered=await f.gateway('recover_generation',args);
   assert.notEqual(recovered.generation_id,original.generation_id);
   assert.equal(recovered.prior_generation_id,original.generation_id);
+  const lineage=await f.gateway('generation_backlog',[v.user,v.iid]);
+  assert.equal(lineage.contract_version,'mip_hypothesis_generation_backlog_v2');
+  assert.equal(lineage.entries.find(e=>e.generation_id===original.generation_id).recovery_generation_id,recovered.generation_id);
+  assert.equal(lineage.entries.find(e=>e.generation_id===recovered.generation_id).recovery_prior_generation_id,original.generation_id);
+  assert.equal(lineage.entries.find(e=>e.generation_id===original.generation_id).state,'processing');
+  assert.equal(JSON.stringify(lineage).includes(j.lease_token),false);
   assert.equal(recovered.prior_retained,true);assert.equal(recovered.force_cancellation,false);assert.equal(recovered.automatic_retry,false);
   assert.deepEqual(await f.gateway('recover_generation',args),recovered);
   assert.equal(await f.admin('select state from mip_hypothesis.generation_jobs where generation_id='+q(original.generation_id)),'processing');
