@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {randomUUID,randomBytes} from 'node:crypto'
-import {fixture,producerRole} from '../integrated/fixture.mjs'
+import {producerRole} from '../integrated/fixture.mjs'
+import {setup} from './fixture.mjs'
 import {transport,quote as q} from '../integrated/transport.mjs'
 import {encryptedRemoteJournal} from '../../supabase/qualification/mip-cutover-authority/brokerSession.js'
 import {recordCommittedMetadata,commitEnvelope,commitJournalKey} from '../../supabase/qualification/hypothesis-assessments/commitRecorder.mjs'
@@ -27,7 +28,7 @@ async function childRun({context,input,journal,crash}){
  })
 }
 test('synthetic commit recorder uses existing encrypted remote journal and actual isolated process restart',async t=>{
- const f=await fixture(t),runtime='temporal-synthetic-'+randomUUID(),mapping=randomUUID()
+ const f=await setup(t),runtime='temporal-synthetic-'+randomUUID(),mapping=randomUUID()
  // Separate runtime, key custody and session. Reuse the existing producer identity vocabulary only
  // in this fixture, with no application/source/worker capabilities. Not a production identity decision.
  await f.admin('insert into mip_identity.mapping_versions select '+q(mapping)+','+q(runtime)+
@@ -51,7 +52,8 @@ test('synthetic commit recorder uses existing encrypted remote journal and actua
  await t.test('comparison worker cannot read recorder runtime; recorder has no producer enqueue capability',async()=>{
   const args=make(),envelope=commitEnvelope(args.context,args.input),key=commitJournalKey(envelope)
   await journal.putOnce(key,envelope)
-  assert.equal(await f.journal(f.session).get(key),null)
+  const worker=await f.investigation()
+  assert.equal(await f.journal(worker.session).get(key),null)
   await assert.rejects(()=>f.producerRpc('producer_enqueue',[randomUUID(),session,runtime,{},null]))
   const cipher=await f.admin('select envelope::text from mip_identity.journal where runtime='+q(runtime)+' and entry_key='+q(key))
   assert.equal(cipher.includes(args.input.revisions[0].revision_id),false)

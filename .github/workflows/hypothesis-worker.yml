@@ -41,4 +41,4 @@ jobs:
       - name: Synthetic native authority and actual worker restart tests
         env:
           MIP_DISPOSABLE_POSTGRES: comparison-qualification
-        run: node --test verifier/hypothesis-worker/*.test.mjs
+        run: node --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs
