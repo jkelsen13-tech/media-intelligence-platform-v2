@@ -16,11 +16,12 @@ async function boundedJson(request) {
 function valid(body) {
  if(!object(body)||Object.keys(body).some(k=>!['action','input'].includes(k))||!object(body.input))return false
  const input=body.input
- const keys=['history','backlog','reconcile','generation_backlog'].includes(body.action)?['investigation_id']:body.action==='capture_generation'?['investigation_id','workspace_version_id','request_id','spec']:body.action==='authoring_context'?['investigation_id','workspace_version_id']:body.action==='authoring_span'?['investigation_id','workspace_version_id','input_position','source_field','start','end']:body.action==='request_reassessment'?['investigation_id','request_id','revision_id','trigger','reason']:body.action==='request_detail'?['investigation_id','request_id']:['append','complete'].includes(body.action)
+ const keys=['history','backlog','reconcile','generation_backlog'].includes(body.action)?['investigation_id']:body.action==='recover_generation'?['investigation_id','workspace_version_id','request_id','prior_generation_id','spec']:body.action==='capture_generation'?['investigation_id','workspace_version_id','request_id','spec']:body.action==='authoring_context'?['investigation_id','workspace_version_id']:body.action==='authoring_span'?['investigation_id','workspace_version_id','input_position','source_field','start','end']:body.action==='request_reassessment'?['investigation_id','request_id','revision_id','trigger','reason']:body.action==='request_detail'?['investigation_id','request_id']:['append','complete'].includes(body.action)
   ?['investigation_id','workspace_version_id','request_id','predecessor_id','assessment']:null
  if(!keys||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k))||!uuid(input.investigation_id))return false
  if(['history','backlog','reconcile','generation_backlog'].includes(body.action))return true
- if(body.action==='capture_generation') {
+ if(['capture_generation','recover_generation'].includes(body.action)) {
+  if(body.action==='recover_generation'&&!uuid(input.prior_generation_id))return false
   const s=input.spec
   return uuid(input.workspace_version_id)&&uuid(input.request_id)&&object(s)&&Object.keys(s).length===3&&
    ['overlapping','mutually_exclusive','not_established'].includes(s.hypothesis_relationship)&&
@@ -74,8 +75,9 @@ export function createHypothesisHandler({authenticate,store,sourceProject,allowe
    const user=await authenticate(authorization)
    if(!user||!uuid(user.id)||user.is_anonymous===true)return reply(401,{error:{code:'authentication_required'}})
    const i=body.input,scope={verifiedUserId:user.id,investigationId:i.investigation_id}
-   if(body.action==='capture_generation'&&(!target||typeof store.captureGeneration!=='function'))return reply(409,{error:{code:'generation_not_configured'}})
-   const data=body.action==='capture_generation'?await store.captureGeneration({...scope,workspaceVersionId:i.workspace_version_id,sourceProject,
+   if(['capture_generation','recover_generation'].includes(body.action)&&(!target||typeof store[body.action==='recover_generation'?'recoverGeneration':'captureGeneration']!=='function'))return reply(409,{error:{code:'generation_not_configured'}})
+   const data=body.action==='recover_generation'?await store.recoverGeneration({...scope,workspaceVersionId:i.workspace_version_id,sourceProject,
+    requestId:i.request_id,runtimeId:target.runtimeId,methodRevision:target.methodRevision,priorGenerationId:i.prior_generation_id,spec:i.spec}):body.action==='capture_generation'?await store.captureGeneration({...scope,workspaceVersionId:i.workspace_version_id,sourceProject,
     requestId:i.request_id,runtimeId:target.runtimeId,methodRevision:target.methodRevision,spec:i.spec}):body.action==='generation_backlog'?await store.generationBacklog(scope):body.action==='authoring_context'?await store.authoringContext({...scope,workspaceVersionId:i.workspace_version_id,sourceProject}):body.action==='authoring_span'?await store.authoringSpan({...scope,workspaceVersionId:i.workspace_version_id,sourceProject,inputPosition:i.input_position,sourceField:i.source_field,start:i.start,end:i.end}):body.action==='request_detail'?await store.requestDetail({...scope,requestId:i.request_id}):body.action==='request_reassessment'?await store.requestReassessment({...scope,requestId:i.request_id,revisionId:i.revision_id,trigger:i.trigger,reason:i.reason}):body.action==='history'?await store.boundHistory(scope):body.action==='backlog'?await store.backlog(scope):body.action==='reconcile'?await store.reconcile(scope):await (body.action==='complete'?store.complete.bind(store):store.appendBound.bind(store))({...scope,
     workspaceVersionId:i.workspace_version_id,sourceProject,requestId:i.request_id,predecessorId:i.predecessor_id,assessment:i.assessment})
    return reply(200,{data})

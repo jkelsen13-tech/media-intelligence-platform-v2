@@ -7,7 +7,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url'
 import {createElement} from 'react'
 import TestRenderer,{act} from 'react-test-renderer'
 import {syntheticAuthoringContext,fillSyntheticComposer} from './hypothesisComposerFixture.mjs'
-import {buildGenerationRequest,validGenerationReceipt,generationBacklogView} from '../src/lib/hypothesisGeneration.js'
+import {buildGenerationRequest,validGenerationReceipt,generationBacklogView,buildRecoveryRequest,validRecoveryReceipt} from '../src/lib/hypothesisGeneration.js'
 import {createHypothesisHandler} from '../supabase/qualification/hypothesis-assessments/handler.mjs'
 import {createHypothesisStore} from '../supabase/qualification/hypothesis-assessments/store.mjs'
 import {createHypothesisAssessmentClient} from '../src/lib/hypothesisAssessmentClient.js'
@@ -121,3 +121,54 @@ test('late worker ledger cannot restore state after logout',async()=>{
  await act(async()=>tree.update(createElement(Ledger,{...p,userScopeKey:null})))
  await act(async()=>resolve({data:ledger(c)}));assert.equal(tree.toJSON(),null);act(()=>tree.unmount())
 })
+
+const recoveryReceipt=i=>({...receipt(i),generation_id:'00000000-0000-4000-8000-000000000099',
+ prior_generation_id:i.prior_generation_id,prior_state:'processing',prior_retained:true,force_cancellation:false,automatic_retry:false});
+test('recovery receipt binds the prior attempt and a distinct new generation',()=>{
+ const c=syntheticAuthoringContext(),i=buildRecoveryRequest(c,fillSyntheticComposer(c),uid,uid),r=recoveryReceipt(i);
+ assert.equal(validRecoveryReceipt(i,r),true);
+ for(const bad of [{...r,prior_generation_id:randomUUID()},{...r,generation_id:uid},{...r,prior_retained:false},
+  {...r,automatic_retry:true},{...r,force_cancellation:true},{...r,prior_state:'completed'},{...r,lease_token:'synthetic-secret'}])
+  assert.equal(validRecoveryReceipt(i,bad),false);
+});
+test('recovery transport binds verified owner and configured runtime; rejects caller authority',async()=>{
+ const c=syntheticAuthoringContext(),i=buildRecoveryRequest(c,fillSyntheticComposer(c),uid,uid),calls=[];
+ const store=createHypothesisStore(async(sql,args)=>{calls.push({sql,args});return{rows:[{value:recoveryReceipt(i)}]}});
+ const options={authenticate:async()=>({id:uid}),store,sourceProject:'synthetic-only',allowedOrigins:['https://example.org']};
+ const clientFor=h=>createHypothesisAssessmentClient(async(action,input)=>(await h(new Request('https://example.org/hypothesis',{method:'POST',
+  headers:{authorization:'Bearer synthetic-only','content-type':'application/json'},body:JSON.stringify({action,input})}))).json());
+ assert.equal((await clientFor(createHypothesisHandler(options)).recoverGeneration(i)).error.code,'generation_not_configured');
+ const client=clientFor(createHypothesisHandler({...options,generationTarget:{runtimeId:'synthetic-runtime',methodRevision:uid}}));
+ assert.equal((await client.recoverGeneration(i)).error,null);
+ assert.match(calls[0].sql,/mip_hypothesis.recover_generation/);
+ assert.deepEqual(calls[0].args,[uid,c.investigation_id,c.workspace_version_id,'synthetic-only',uid,'synthetic-runtime',uid,uid,JSON.stringify(i.spec)]);
+ for(const bad of [{...i,user_id:uid},{...i,prior_generation_id:'bad'},{...i,runtime:'other'},{...i,method_revision:uid},{...i,spec:{...i.spec,lease_token:'bad'}}])
+  assert.equal((await client.recoverGeneration(bad)).error.code,'invalid_request');
+ assert.equal(calls.length,1);
+});
+test('recovery form freezes prior generation and retries exact request without manual append',async()=>{
+ const context=syntheticAuthoringContext(),calls=[];let tree,manual=0;
+ const client={recoverGeneration:async input=>{calls.push(structuredClone(input));return calls.length===1?{error:{code:'service_unavailable'}}:{data:recoveryReceipt(input)}},
+  append:async()=>manual++};
+ await act(async()=>{tree=TestRenderer.create(createElement(Form,{client,context,recoveryPrior:uid}))});
+ await definitions(tree);
+ assert.equal(button(tree,'Save private assessment'),undefined);
+ await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
+ assert.equal(calls.length,1);assert.equal(calls[0].prior_generation_id,uid);assert.equal(manual,0);
+ assert.match(content(tree),/Saving is unconfirmed/);
+ await act(async()=>button(tree,'Retry the same generation request').props.onClick({preventDefault(){}}));
+ assert.deepEqual(calls[1],calls[0]);assert.match(content(tree),/Retained-input work requested/);
+ await act(async()=>tree.unmount());
+});
+test('ledger exposes recovery preparation only for failed or expired processing attempts',async()=>{
+ const c=syntheticAuthoringContext(),data=ledger(c),selected=[];let tree;
+ data.entries.push({...data.entries[0],generation_id:randomUUID(),state:'pending',lease_expired:false});
+ data.entries.push({...data.entries[0],generation_id:randomUUID(),state:'completed',lease_expired:false,completed_revision_id:uid});
+ const client={generationBacklog:async()=>({data})};
+ await act(async()=>{tree=TestRenderer.create(createElement(Ledger,{client,investigationId:c.investigation_id,userScopeKey:'synthetic',onRecover:x=>selected.push(x)}))});
+ await act(async()=>button(tree,'Inspect worker attempts').props.onClick());
+ const choices=tree.root.findAllByType('button').filter(b=>b.children.join('')==='Prepare fresh-generation recovery');
+ assert.equal(choices.length,1);
+ await act(async()=>choices[0].props.onClick());assert.deepEqual(selected,[uid]);
+ await act(async()=>tree.unmount());
+});

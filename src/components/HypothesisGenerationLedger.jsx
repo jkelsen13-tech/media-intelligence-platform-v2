@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from 'react'
 import {generationBacklogView} from '../lib/hypothesisGeneration.js'
 const labels={pending:'Pending selection',processing:'Processing or awaiting explicit recovery',completed:'Assessment saved',failed:'Failed; retained for reconciliation'}
-export default function HypothesisGenerationLedger({client,investigationId,userScopeKey,onAccessFailure}) {
+export default function HypothesisGenerationLedger({client,investigationId,userScopeKey,onAccessFailure,onRecover}) {
  const [state,setState]=useState(null)
  const scope=JSON.stringify([userScopeKey,investigationId]),scopeRef=useRef(scope),clientRef=useRef(client),epoch=useRef(0),active=useRef(true)
  scopeRef.current=scope;clientRef.current=client
@@ -30,6 +30,7 @@ export default function HypothesisGenerationLedger({client,investigationId,userS
    <p>Requested {e.recorded_at} · Generation {e.generation_id}</p>
    <p>Method revision {e.method_revision} · Retained input hash {e.input_hash}</p>
    {e.block_reason?<p>Current authority or retained context was unavailable at selection. Reconciliation remains explicit.</p>:null}
+   {typeof onRecover==='function'&&(e.state==='failed'||(e.state==='processing'&&e.lease_expired))?<button type="button" onClick={()=>onRecover(e.generation_id)}>Prepare fresh-generation recovery</button>:null}
    {e.completed_revision_id?<p>Saved assessment revision {e.completed_revision_id}. Refresh assessment history to inspect it.</p>:null}
   </li>)}</ul>:<p>No retained worker attempts were returned.</p>:null}
   <p>There is no automatic retry or force cancellation. A processing record alone does not prove that a worker is still running.</p>

@@ -45,3 +45,14 @@ export function generationBacklogView(r,iid) {
  }
  return r.entries
 }
+
+export function buildRecoveryRequest(context,draft,requestId,priorGenerationId) {
+ if(!uuid(priorGenerationId))throw Error('invalid_recovery_generation');
+ return {...buildGenerationRequest(context,draft,requestId),prior_generation_id:priorGenerationId};
+}
+export function validRecoveryReceipt(input,r) {
+ if(!r||r.prior_generation_id!==input.prior_generation_id||r.generation_id===input.prior_generation_id||
+  !['failed','processing'].includes(r.prior_state)||r.prior_retained!==true||r.force_cancellation!==false||r.automatic_retry!==false)return false;
+ const {prior_generation_id,prior_state,prior_retained,force_cancellation,automatic_retry,...capture}=r;
+ return validGenerationReceipt(input,capture);
+}

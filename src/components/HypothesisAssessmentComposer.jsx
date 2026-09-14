@@ -1,18 +1,18 @@
 import {useEffect,useId,useRef,useState} from 'react'
-import {buildGenerationRequest,validGenerationReceipt} from '../lib/hypothesisGeneration.js'
+import {buildGenerationRequest,validGenerationReceipt,buildRecoveryRequest,validRecoveryReceipt} from '../lib/hypothesisGeneration.js'
 import {COMPARISON_COPY} from '../lib/hypothesisAssessment.js'
 import {buildComposerSubmission,createAssessmentDraft,missingEstimate,newArgument,newHypothesis,validAuthoringContext,validComposerReceipt,verifyComposerSpan} from '../lib/hypothesisAssessmentComposer.js'
 const relationNames={reports_allegation:'Reports this allegation',supports:'Supports this explanation',weakens:'Weakens this explanation',compatible:'Fits but does not distinguish',context:'Provides context'}
 const triggerNames={new_evidence:'New evidence',correction:'Source correction',withdrawal:'Source withdrawal',contradiction:'Contradiction',shared_origin:'Shared source origin',methodology:'Method or reasoning reconsidered'}
-const causeNames={retained_source_change:'Retained source changed',retained_assessment_change:'Retained assessment changed',workspace_changed:'Investigation changed',permission_changed:'Permission changed',human_reconsideration:'Human reconsideration requested'}
+const causeNames={method_changed:'Evaluated method changed',retained_source_change:'Retained source changed',retained_assessment_change:'Retained assessment changed',workspace_changed:'Investigation changed',permission_changed:'Permission changed',human_reconsideration:'Human reconsideration requested'}
 function TextField({label,value,onChange,required=false}) {
  const id=useId()
  return <label className="piw-field" htmlFor={id}>{label}<textarea id={id} value={value} rows={3} maxLength={4000} required={required} onChange={e=>onChange(e.target.value)}/></label>
 }
 function MissingRating({label,value,onChange}) {return <fieldset className="piw-card"><legend>{label} — not estimated</legend><TextField label={'Why '+label.toLowerCase()+' is not estimated'} value={value.reason} onChange={reason=>onChange({kind:'not_estimated',reason})} required/></fieldset>}
 const id=()=>globalThis.crypto.randomUUID()
-export default function HypothesisAssessmentComposer({client,investigationId,workspaceVersionId,userScopeKey,onSaved,onAccessFailure}) {
- const [open,setOpen]=useState(false),[state,setState]=useState(null)
+export default function HypothesisAssessmentComposer({client,investigationId,workspaceVersionId,userScopeKey,onSaved,onAccessFailure,recoveryPrior=null,onRecoveryClose}) {
+ const [open,setOpen]=useState(Boolean(recoveryPrior)),[state,setState]=useState(null)
  const scope=JSON.stringify([investigationId,workspaceVersionId,userScopeKey])
  useEffect(()=>{
   if(!open||!userScopeKey){setState(null);return}
@@ -32,9 +32,9 @@ export default function HypothesisAssessmentComposer({client,investigationId,wor
  if(!current||current.status==='loading')return <p role="status">Loading retained authoring context…</p>
  if(current.status==='unavailable')return <section className="piw-card"><p role="status">Authoring is unavailable. Current reviewer access and a current retained observation are required.</p><button type="button" onClick={()=>setOpen(false)}>Close authoring</button></section>
  return <ComposerForm key={scope} client={client} context={current.context} onSaved={onSaved}
-  onClose={()=>setOpen(false)} onAccessFailure={code=>{setState({client,scope,status:'unavailable'});onAccessFailure?.(code)}}/>
+  recoveryPrior={recoveryPrior} onClose={()=>{setOpen(false);onRecoveryClose?.()}} onAccessFailure={code=>{setState({client,scope,status:'unavailable'});onAccessFailure?.(code)}}/>
 }
-export function ComposerForm({client,context,onSaved,onClose,onAccessFailure}) {
+export function ComposerForm({client,context,onSaved,onClose,onAccessFailure,recoveryPrior=null}) {
  const [draft,setDraft]=useState(()=>createAssessmentDraft(context)),[status,setStatus]=useState('editing'),[error,setError]=useState(null)
  const [previews,setPreviews]=useState({}),[pick,setPick]=useState({position:'',field:'',start:0,end:0}),[preview,setPreview]=useState(null),[loadingSpan,setLoadingSpan]=useState(false)
  const active=useRef(true),spanEpoch=useRef(0),attempt=useRef(null),saving=useRef(false)
@@ -58,35 +58,37 @@ export function ComposerForm({client,context,onSaved,onClose,onAccessFailure}) {
  }
  async function save(event,kind='manual') {
   event.preventDefault()
+  if(recoveryPrior)kind='worker'
   if(saving.current)return
   let submission=attempt.current
-  if(!submission)try{submission=kind==='worker'?{action:'captureGeneration',input:buildGenerationRequest(context,draft,id())}:buildComposerSubmission(context,draft,id())}
+  if(!submission)try{submission=kind==='worker'?(recoveryPrior?{action:'recoverGeneration',input:buildRecoveryRequest(context,draft,id(),recoveryPrior)}:{action:'captureGeneration',input:buildGenerationRequest(context,draft,id())}):buildComposerSubmission(context,draft,id())}
   catch(e){setError(e.message==='record_reassessment_request_first'?'Record a reconsideration request or reconcile pending changes before creating another revision.':
    e.message==='supporting_argument_required'?'Each favored explanation needs an explicit supporting argument linked to retained evidence.':'Complete the required reasoning, evidence links and revision fields before saving.');return}
   attempt.current=submission;saving.current=true;setStatus('saving');setPreview(null);setError(null)
   try {
    const result=await client[submission.action](submission.input)
    if(!active.current)return
-   if(submission.action==='captureGeneration'&&result?.error?.code==='generation_not_configured') {
+   if(['captureGeneration','recoverGeneration'].includes(submission.action)&&result?.error?.code==='generation_not_configured') {
     attempt.current=null;setStatus('editing');setError('No evaluated worker is configured for this investigation. A trusted runtime and authorized method are required.');return
    }
-   if(result?.error||!(submission.action==='captureGeneration'?validGenerationReceipt(submission.input,result?.data):validComposerReceipt(context,submission,result?.data))){
+   if(result?.error||!(submission.action==='recoverGeneration'?validRecoveryReceipt(submission.input,result?.data):submission.action==='captureGeneration'?validGenerationReceipt(submission.input,result?.data):validComposerReceipt(context,submission,result?.data))){
     if(['access_denied','authentication_required'].includes(result?.error?.code))onAccessFailure?.(result.error.code)
     setStatus('uncertain');return
    }
-   setStatus(submission.action==='captureGeneration'?'queued':'saved');onSaved?.(result.data)
+   setStatus(['captureGeneration','recoverGeneration'].includes(submission.action)?'queued':'saved');onSaved?.(result.data)
   }catch{if(active.current)setStatus('uncertain')}
   finally{saving.current=false}
  }
- if(status==='uncertain')return <section className="piw-card"><p role="status">Saving is unconfirmed. The request is frozen; retry it to recover the same result. Current authority and identical arguments are still required.</p><button type="button" onClick={save}>{attempt.current?.action==='captureGeneration'?'Retry the same generation request':'Retry the same assessment'}</button><button type="button" onClick={onClose}>Close and inspect saved history</button></section>
+ if(status==='uncertain')return <section className="piw-card"><p role="status">Saving is unconfirmed. The request is frozen; retry it to recover the same result. Current authority and identical arguments are still required.</p><button type="button" onClick={save}>{['captureGeneration','recoverGeneration'].includes(attempt.current?.action)?'Retry the same generation request':'Retry the same assessment'}</button><button type="button" onClick={onClose}>Close and inspect saved history</button></section>
  if(status==='queued')return <p role="status">Retained-input work requested. Inspect worker attempts for completion or explicit recovery; no assessment is approved or published.</p>
- if(status==='saving')return <p role="status">{attempt.current?.action==='captureGeneration'?'Capturing retained-input work…':'Saving the immutable assessment…'}</p>
+ if(status==='saving')return <p role="status">{['captureGeneration','recoverGeneration'].includes(attempt.current?.action)?'Capturing retained-input work…':'Saving the immutable assessment…'}</p>
  if(status==='saved')return <p role="status">Assessment saved privately. Human review and publication eligibility remain separate.</p>
  const selected=context.materials.find(m=>m.input_position===pick.position),field=selected?.fields.find(f=>f.name===pick.field)
  return <section className="piw-stack" aria-label="Compose hypothesis assessment"><header className="piw-card"><h2>{context.question}</h2>
   <p>Write a saved assessment from this retained observation. Human entry and a separately configured worker are distinct paths. Source, acquisition and assessment times remain distinct.</p>
   <p>Likelihood, confidence, evidence quality and relevance remain separate. Estimation controls are unavailable until an approved method is configured.</p>
   <button type="button" onClick={onClose}>Close authoring</button></header>
+  {recoveryPrior?<p role="status">Prepare new work linked to prior generation {recoveryPrior}. Select the current definitions and retained passages. The original attempt stays retained; current authority and eligibility are rechecked.</p>:null}
   {error?<p role="alert">{error}</p>:null}
   <form onSubmit={save} className="piw-stack">
    <section className="piw-card"><h3>Competing explanations</h3>
@@ -159,9 +161,9 @@ export function ComposerForm({client,context,onSaved,onClose,onAccessFailure}) {
     {draft.reassessment_causes?.map(c=><TextField key={c.cause_id} label={'How this change was considered: '+(causeNames[context.backlog.causes.find(x=>x.cause_id===c.cause_id)?.kind]??'Retained change')}
      value={c.reason} onChange={reason=>change('reassessment_causes',draft.reassessment_causes.map(x=>x.cause_id===c.cause_id?{...x,reason}:x))} required/>)}
     <p>Evidence cutoff: {context.knowledge_cutoff}. The database assigns completion time. Saving neither approves publication nor marks the workspace reviewed.</p>
-    <button type="submit" disabled={context.head&&!draft.reassessment_causes.length}>Save private assessment</button>
-    {typeof client?.captureGeneration==='function'?<div><p>A worker request uses the competing definitions and selected retained passages above. It requires a separately configured evaluated method and does not save this form's human rationale or approve its result.</p>
-     <button type="button" disabled={loadingSpan||(context.head&&!draft.reassessment_causes.length)} onClick={e=>save(e,'worker')}>Request retained-input assessment</button></div>:null}
+    {!recoveryPrior?<button type="submit" disabled={context.head&&!draft.reassessment_causes.length}>Save private assessment</button>:null}
+    {typeof client?.[recoveryPrior?'recoverGeneration':'captureGeneration']==='function'?<div><p>A worker request uses the competing definitions and selected retained passages above. It requires a separately configured evaluated method and does not save this form's human rationale or approve its result.</p>
+     <button type="button" disabled={loadingSpan||(context.head&&!draft.reassessment_causes.length)} onClick={e=>save(e,'worker')}>{recoveryPrior?'Request fresh generation for recovery':'Request retained-input assessment'}</button></div>:null}
    </section>
   </form>
  </section>

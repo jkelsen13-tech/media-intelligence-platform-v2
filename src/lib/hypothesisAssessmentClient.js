@@ -13,6 +13,7 @@ export function createHypothesisAssessmentClient(transport) {
   }catch{return{data:null,error:{code:'request_failed'}}}
  }
  return Object.freeze({
+  recoverGeneration:input=>call('recover_generation',input),
   captureGeneration:input=>call('capture_generation',input),
   generationBacklog:investigationId=>call('generation_backlog',{investigation_id:investigationId}),
   authoringContext:(investigationId,workspaceVersionId)=>call('authoring_context',{investigation_id:investigationId,workspace_version_id:workspaceVersionId}),

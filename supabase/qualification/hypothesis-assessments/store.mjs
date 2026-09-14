@@ -4,6 +4,10 @@ import {validateHypothesisAssessment} from '../../../src/lib/hypothesisAssessmen
 export function createHypothesisStore(query) {
  if(typeof query!=='function') throw new TypeError('query required')
  return Object.freeze({
+  async recoverGeneration({verifiedUserId,investigationId,workspaceVersionId,sourceProject,requestId,runtimeId,methodRevision,priorGenerationId,spec}) {
+   const result=await query('select mip_hypothesis.recover_generation($1::uuid,$2::uuid,$3::uuid,$4::text,$5::uuid,$6::text,$7::uuid,$8::uuid,$9::jsonb) as value',
+    [verifiedUserId,investigationId,workspaceVersionId,sourceProject,requestId,runtimeId,methodRevision,priorGenerationId,JSON.stringify(spec)]);return result.rows[0].value
+  },
   async captureGeneration({verifiedUserId,investigationId,workspaceVersionId,sourceProject,requestId,runtimeId,methodRevision,spec}) {
    const result=await query('select mip_hypothesis.capture_generation($1::uuid,$2::uuid,$3::uuid,$4::text,$5::uuid,$6::text,$7::uuid,$8::jsonb) as value',
     [verifiedUserId,investigationId,workspaceVersionId,sourceProject,requestId,runtimeId,methodRevision,JSON.stringify(spec)]);return result.rows[0].value
