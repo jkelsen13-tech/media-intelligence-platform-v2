@@ -35,6 +35,7 @@ function harness({query,mode=()=> 'ready'}={}){
    const data=marketsResult({asset_id:args[4],event_id:args[5],at:args[6]})
    if(mode()==='empty')data.paths=[]
    if(mode()==='wrong_observation')data.observation_id='00000000-0000-4000-8000-000000000099'
+   if(mode()==='wrong_version')for(const p of data.paths){p.asset_version_id=p.aliases_version_id=p.hops[0].subject_version_id=p.hops[0].subject.version_id='00000000-0000-4000-8000-000000000099'}
    return {rows:[{value:data}]}
   }})
  return{calls,fetch:async(url,options)=>{
@@ -68,12 +69,14 @@ test('normal App private Markets uses shared typed records in both directions wi
  }finally{act(()=>tree?.unmount());globalThis.fetch=original}
 })
 test('current canonical Markets denial removes the entire private bundle; empty and mismatched observations never retain asset cards',async()=>{
- for(const mode of ['denied','empty','wrong_observation']){
+ for(const mode of ['denied','empty','wrong_observation','wrong_version']){
   const original=globalThis.fetch;let currentMode='ready',tree
   const h=harness({mode:()=>currentMode});globalThis.fetch=h.fetch
   try{
    await act(async()=>{tree=TestRenderer.create(createElement(App,{privateInvestigationPreview:marketsPreview(),authSessionOverride:marketsAuth(),privateMarketsEndpoint:marketsEndpoint}))})
-   await openRead(tree);assert.match(content(tree),/Synthetic equity instrument/);currentMode=mode
+   await openRead(tree);assert.match(content(tree),/Synthetic equity instrument/)
+   if(mode==='wrong_version')await act(async()=>button(tree,'Explore this asset’s events').props.onClick())
+   currentMode=mode
    await act(async()=>read(tree))
    assert.doesNotMatch(content(tree),/Synthetic equity instrument|Synthetic cryptoasset/)
    if(mode==='denied'){

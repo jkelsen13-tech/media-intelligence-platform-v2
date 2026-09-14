@@ -18,18 +18,20 @@ export default function PrivateMarketsWorkspace({workspace,auth,endpoint=null}){
  const scope=useMemo(()=>({bundle,endpoint,user,sessionUser,token,expires,loading}),[bundle,endpoint,user,sessionUser,token,expires,loading])
  const latest=useRef(scope),[saved,setSaved]=useState(null);latest.current=scope
  const seed=workspace.state.panels?.canonicalSubject?.id
- const defaults={scope,open:false,target:{kind:'event',id:marketUUID(seed)?seed:null},draftAt:bundle?.version?.state?.time_range?.from??'',at:null,revision:0}
+ const defaults={scope,open:false,target:{kind:'event',id:marketUUID(seed)?seed:null,versionId:null},draftAt:bundle?.version?.state?.time_range?.from??'',at:null,revision:0}
  const current=saved?.scope===scope?saved:defaults
  const change=patch=>{if(latest.current!==scope)return;setSaved(old=>({...((old?.scope===scope)?old:defaults),...patch,scope}))}
  const input=useMemo(()=>current.open&&current.at?snapshotPrivateMarketsRequest({
   investigation_id:bundle?.investigation_id,workspace_version_id:bundle?.version?.id,
   asset_id:current.target.kind==='asset'?current.target.id:null,event_id:current.target.kind==='event'?current.target.id:null,at:current.at
  }):null,[bundle,current.open,current.at,current.target.kind,current.target.id])
- const result=usePrivateMarketsRead({endpoint,auth,active:current.open,input,expectedObservationId:bundle?.observation?.id,
+ const expectedTarget=useMemo(()=>current.target.versionId?{...current.target}:null,
+  [current.target.kind,current.target.id,current.target.versionId])
+ const result=usePrivateMarketsRead({endpoint,auth,active:current.open,input,expectedObservationId:bundle?.observation?.id,expectedTarget,
   revision:current.revision,onAccessFailure:code=>workspace.actions.rejectInputImpactAccess?.(code,bundle)})
  if(!endpoint||!bundle||workspace.status!=='ready')return null
  const paths=result.data?.paths??[]
- const navigate=(kind,id)=>change({target:{kind,id},revision:current.revision+1})
+ const navigate=(kind,id,versionId)=>change({target:{kind,id,versionId},revision:current.revision+1})
  const submit=event=>{event.preventDefault();change({at:current.draftAt,revision:current.revision+1})}
  return <section className="piw-section piw-private-markets" aria-label="Private Markets workspace">
   {!current.open?<button type="button" className="piw-btn" onClick={()=>change({open:true})}>Open private Markets evidence</button>:<>
@@ -54,7 +56,7 @@ export default function PrivateMarketsWorkspace({workspace,auth,endpoint=null}){
      <h3>{relation==='direct_reporting'?'Direct reporting':'Connected developments'}</h3>
      {!paths.some(p=>p.relation===relation)?<p>No paths in this category were returned; coverage is bounded, not exhaustive.</p>:null}
      {paths.filter(p=>p.relation===relation).map(p=><PrivateMarketAssetCard key={p.hops.map(h=>h.candidate_id).join(':')} path={p}
-      onOpenAsset={asset=>navigate('asset',asset.asset_id)} onOpenEvent={event=>navigate('event',event.id)}/>)}
+      onOpenAsset={asset=>navigate('asset',asset.asset_id,asset.asset_version_id)} onOpenEvent={event=>navigate('event',event.id,event.version_id)}/>)}
     </section>)}
    </>:null}
    <section aria-label="Broader context"><h3>Broader context</h3><p>Not available in this reader. No broader-context coverage or absence is inferred.</p></section>

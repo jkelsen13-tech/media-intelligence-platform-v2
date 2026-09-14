@@ -2,10 +2,10 @@ import {useEffect,useMemo,useRef,useState} from 'react'
 import {createPrivateMarketsClient} from './privateMarketsClient.js'
 import {createPrivateMarketsHttpTransport} from './privateMarketsHttpTransport.js'
 // View-scoped lifetime only. Session data selects credentials; server owns authority.
-export function usePrivateMarketsRead({endpoint=null,auth,active=false,input=null,expectedObservationId=null,revision=0,onAccessFailure}={}){
+export function usePrivateMarketsRead({endpoint=null,auth,active=false,input=null,expectedObservationId=null,expectedTarget=null,revision=0,onAccessFailure}={}){
  const user=auth?.user?.id,sessionUser=auth?.session?.user?.id,token=auth?.session?.access_token,expires=auth?.session?.expires_at,loading=auth?.loading
- const binding=useMemo(()=>({endpoint,user,sessionUser,token,expires,loading,active,input,expectedObservationId,revision}),
-  [endpoint,user,sessionUser,token,expires,loading,active,input,expectedObservationId,revision])
+ const binding=useMemo(()=>({endpoint,user,sessionUser,token,expires,loading,active,input,expectedObservationId,expectedTarget,revision}),
+  [endpoint,user,sessionUser,token,expires,loading,active,input,expectedObservationId,expectedTarget,revision])
  const latest=useRef(binding),failure=useRef(onAccessFailure),[state,setState]=useState(null)
  latest.current=binding;failure.current=onAccessFailure
  useEffect(()=>{
@@ -27,6 +27,11 @@ export function usePrivateMarketsRead({endpoint=null,auth,active=false,input=nul
     if(!current())return
     if(!permitted()){accept('unavailable',null,'authentication_required');return}
     if(result.error?.code==='request_cancelled')return
+    if(result.data&&expectedTarget?.versionId&&!result.data.paths.every(p=>expectedTarget.kind==='asset'
+     ?p.asset_id===expectedTarget.id&&p.asset_version_id===expectedTarget.versionId
+     :p.event_id===expectedTarget.id&&p.hops.at(-1).object.version_id===expectedTarget.versionId)){
+     accept('unavailable',null,'invalid_response');return
+    }
     accept(result.error?'unavailable':'ready',result.data??null,result.error?.code??null)
    })
    const expire=()=>{
