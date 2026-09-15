@@ -1,0 +1,4 @@
+# Hosted CI only: CPython 3.12 / Linux x86_64 manylinux wheel.
+# Authoritative digest: https://pypi.org/project/pglast/7.10/#files
+# pglast-7.10-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+pglast==7.10 --hash=sha256:b89c6bf904b4043752431564ce5c6bacf5d54cb6d6bc487a175cab9a47f18436

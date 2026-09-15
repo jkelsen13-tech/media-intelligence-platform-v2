@@ -69,17 +69,26 @@ Files remain outside supabase/migrations because the required CLI migration-gene
 - [PostgreSQL 17 concurrent indexes](https://www.postgresql.org/docs/17/sql-createindex.html)
 - [PostgreSQL 17 invalid-index recovery](https://www.postgresql.org/docs/17/sql-reindex.html)
 
-## Hosted parser gate after delimiter repair
+## PR-only outer-parser CI gate
 
-The delimiter-only repair fixes accidental lone-dollar DO block delimiters in verifier.sql and acl-and-absence.sql. All candidate SQL files were rescanned; compatibility.sql is unchanged.
+The delimiter repair fixes accidental lone-dollar DO block delimiters in verifier.sql and acl-and-absence.sql. The dedicated workflow at .github/workflows/markets-outer-sql.yml now runs for pull requests changing this candidate directory or the workflow itself. Checkout uses the event's exact PR head SHA and verifies HEAD before checking files. No push, manual dispatch, deployment, database service, credentials, or live operations are configured.
 
-On the disposable hosted CI runner, install the pinned PostgreSQL 17 parser and run:
+The hosted job uses Python 3.12.10 (x64), a fresh virtual environment, and pglast 7.10. Checkout and setup-python actions are pinned by commit SHA. Installation requires the SHA-256 of the CPython 3.12 Linux x86_64 wheel published in the [authoritative PyPI file metadata](https://pypi.org/project/pglast/7.10/#files), rejects source builds, disables cache/dependency resolution, and checks installed dependencies. The requirements lock intentionally supports that one hosted platform. Runner images and Python distribution artifacts are not independently digest-locked by this change; this is not a claim of a fully reproducible operating-system image.
 
-```sh
-python -m pip install "pglast==7.10"
-python supabase/production-candidates/markets-graph-compatibility/parse-sql.py
-```
+The parser requires exactly these seven regular, non-symlink SQL files, including rejection of unexpected nested SQL files:
 
-The parser entry point reads every candidate SQL file, rejects lone block delimiters, handles the explicitly allowlisted psql directives/parameter, and parses outer SQL. It performs no database writes. [pglast 7.10](https://pypi.org/project/pglast/7.10/) provides the PostgreSQL 17 parser family.
+- acl-and-absence.sql
+- compatibility.sql
+- index-recovery.sql
+- indexes.sql
+- security-fingerprint.sql
+- spatial-fixture.sql
+- verifier.sql
 
-Parser installation/execution was not performed in the remote-only repair session. PL/pgSQL compilation, psql include execution, and all PostgreSQL/index/concurrency tests remain pending on the exact repaired commit.
+Each file has an explicit ordered directive manifest. Every stripped psql line must match its full expected directive: exact ON_ERROR_STOP setting, exact include targets, exact requested_index values, and exact bare gexec. Missing, duplicate, reordered, alternate-path and extra-token directives fail. Only surrounding whitespace is ignored. The two index scripts each require exactly one requested_index parser placeholder. These checks raise ordinary exceptions and remain active under optimized Python.
+
+The workflow runs thirteen focused Python tests both normally and with optimization enabled, then parses all seven SQL files separately. Tests cover the valid candidate, missing/extra/nested/nonregular/symlink files, unexpected directives, include traversal, setting changes, duplicate/reordered/missing wiring, gexec suffixes, placeholder misuse, lone dollar delimiters, malformed SQL and empty SQL.
+
+This is deliberately a strict line-oriented input contract, not a psql interpreter. Includes and gexec are never executed; generated SQL and PL/pgSQL bodies are not compiled. Manifest validation does not prove correct include placement relative to SQL statements or runtime behavior. Future wiring changes must update and review the manifest and PostgreSQL tests together.
+
+**Execution status:** the workflow and Python tests are authored but have not run in this remote-only session. Remote blob rereads and source inspection do not qualify execution. Creating a detached commit does not trigger this PR-only workflow. A passing run on the exact reviewed PR head remains required. PL/pgSQL compilation, psql execution, catalog semantics, index builds/recovery, concurrency, security behavior and scale qualification remain independent pending gates.
