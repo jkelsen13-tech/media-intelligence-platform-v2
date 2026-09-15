@@ -1,0 +1,1024 @@
+{
+  "state": {
+    "edges": {
+      "acl": "{postgres=arwdDxtm/postgres,anon=rxtm/postgres,authenticated=rxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "view": null,
+      "force": false,
+      "owner": "postgres",
+      "columns": [
+        {
+          "acl": null,
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "source_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "target_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "type",
+          "type": "text",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "weight",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "label",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "metadata",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "similarity",
+          "type": "numeric",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "sky_verified",
+          "type": "boolean",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "signal_source",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "doc_strength",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "claimed_by",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "stance",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "disputed_by",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "alternative_causes",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "counterfactual_test",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "reliability",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "arc_membership_candidate_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "options": null,
+      "policies": [
+        {
+          "cmd": "SELECT",
+          "qual": "true",
+          "roles": [
+            "anon",
+            "authenticated"
+          ],
+          "tablename": "edges",
+          "permissive": "PERMISSIVE",
+          "policyname": "edges_public_read",
+          "schemaname": "public",
+          "with_check": null
+        }
+      ],
+      "triggers": [
+        {
+          "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+          "name": "policy_edge_attributed",
+          "owner": "postgres",
+          "enabled": "O",
+          "function": "CREATE OR REPLACE FUNCTION public.policy_edge_attributed()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nbegin\n  if exists (select 1 from public.nodes n where n.type = 'policy' and (n.id = new.source_id or n.id = new.target_id)) then\n    if new.claimed_by is null or new.doc_strength is null or new.signal_source is null or new.reliability is null then\n      raise exception 'policy edge missing attribution (claimed_by/doc_strength/signal_source/reliability required)';\n    end if;\n    if new.claimed_by = 'MIP_inferred' and (new.counterfactual_test is null or jsonb_array_length(new.alternative_causes) = 0) then\n      raise exception 'MIP_inferred policy edge requires counterfactual_test and >=1 alternative_causes';\n    end if;\n  end if;\n  return new;\nend $function$\n",
+          "definition": "CREATE TRIGGER policy_edge_attributed BEFORE INSERT OR UPDATE ON public.edges FOR EACH ROW EXECUTE FUNCTION policy_edge_attributed()"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "edges_check",
+          "validated": true,
+          "definition": "CHECK ((source_id <> target_id))"
+        },
+        {
+          "name": "edges_pkey",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "edges_source_id_fkey",
+          "validated": true,
+          "definition": "FOREIGN KEY (source_id) REFERENCES nodes(id)"
+        },
+        {
+          "name": "edges_target_id_fkey",
+          "validated": true,
+          "definition": "FOREIGN KEY (target_id) REFERENCES nodes(id)"
+        }
+      ]
+    },
+    "nodes": {
+      "acl": "{postgres=arwdDxtm/postgres,anon=r/postgres,authenticated=r/postgres,service_role=r/postgres}",
+      "rls": true,
+      "view": null,
+      "force": false,
+      "owner": "postgres",
+      "columns": [
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "notnull": true
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "slug",
+          "type": "text",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "label",
+          "type": "text",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "type",
+          "type": "text",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "description",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "metadata",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "notnull": true
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notnull": true
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notnull": true
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "confidence",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "summary",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "occurred_at",
+          "type": "date",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "arc_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": "{spatial_owner=r/postgres}",
+          "name": "arc_membership_candidate_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "options": null,
+      "policies": [
+        {
+          "cmd": "SELECT",
+          "qual": "true",
+          "roles": [
+            "public"
+          ],
+          "tablename": "nodes",
+          "permissive": "PERMISSIVE",
+          "policyname": "public read nodes",
+          "schemaname": "public",
+          "with_check": null
+        }
+      ],
+      "triggers": [
+        {
+          "acl": "{postgres=X/postgres,service_role=X/postgres}",
+          "name": "mip_pipeline_event_history",
+          "owner": "postgres",
+          "enabled": "O",
+          "function": "CREATE OR REPLACE FUNCTION evidence_pipeline.capture_version()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\ndeclare before_row jsonb; after_row jsonb; k text; kind text := TG_ARGV[0];\nbegin\n  if TG_OP <> 'INSERT' then before_row := to_jsonb(OLD); end if;\n  if TG_OP <> 'DELETE' then after_row := to_jsonb(NEW); end if;\n  if kind='temporal_assessment' then\n    k := coalesce(after_row->>'key',before_row->>'key');\n    if k not like 'temporal.assessment.%' and coalesce(before_row->>'key','') not like 'temporal.assessment.%' then return null; end if;\n    if TG_OP='UPDATE' and before_row->>'key' is distinct from after_row->>'key' then\n      raise exception 'temporal assessment keys are immutable; insert a new key';\n    end if;\n  else\n    k := coalesce(after_row->>'id',before_row->>'id');\n    if TG_OP='UPDATE' and before_row->>'id' is distinct from after_row->>'id' then\n      raise exception 'versioned record identity is immutable';\n    end if;\n  end if;\n  -- Embeddings are recomputable, and would dominate retained history size.\n  before_row := before_row - 'embedding'; after_row := after_row - 'embedding';\n  if TG_OP='UPDATE' and before_row is not distinct from after_row then return null; end if;\n  perform pg_advisory_xact_lock(hashtextextended('mip-version:' || kind || ':' || k,0));\n  if before_row is not null and not exists(select 1 from evidence_pipeline.record_versions where record_kind=kind and record_key=k) then\n    perform evidence_pipeline.append_version(kind,k,'baseline',before_row,'first_observed_before_change');\n  end if;\n  perform evidence_pipeline.append_version(kind,k,lower(TG_OP),coalesce(after_row,before_row),\n    coalesce(nullif(current_setting('mip.change_reason',true),''),'direct_database_change'));\n  return null;\nend $function$\n",
+          "definition": "CREATE TRIGGER mip_pipeline_event_history AFTER INSERT OR DELETE OR UPDATE ON public.nodes FOR EACH ROW EXECUTE FUNCTION evidence_pipeline.capture_version('graph_node')"
+        },
+        {
+          "acl": "{postgres=X/postgres,service_role=X/postgres}",
+          "name": "mip_pipeline_node_no_truncate",
+          "owner": "postgres",
+          "enabled": "O",
+          "function": "CREATE OR REPLACE FUNCTION evidence_pipeline.reject_history_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nbegin raise exception 'history is append-only'; end $function$\n",
+          "definition": "CREATE TRIGGER mip_pipeline_node_no_truncate BEFORE TRUNCATE ON public.nodes FOR EACH STATEMENT EXECUTE FUNCTION evidence_pipeline.reject_history_mutation()"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "nodes_arc_id_fkey",
+          "validated": true,
+          "definition": "FOREIGN KEY (arc_id) REFERENCES story_arcs(id) ON DELETE SET NULL"
+        },
+        {
+          "name": "nodes_confidence_check",
+          "validated": true,
+          "definition": "CHECK (((confidence >= 0) AND (confidence <= 100)))"
+        },
+        {
+          "name": "nodes_pkey",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "nodes_slug_key",
+          "validated": true,
+          "definition": "UNIQUE (slug)"
+        },
+        {
+          "name": "nodes_type_check",
+          "validated": true,
+          "definition": "CHECK ((type = ANY (ARRAY['event'::text, 'actor'::text, 'institution'::text, 'document'::text, 'anomaly'::text, 'policy'::text, 'topic'::text])))"
+        }
+      ]
+    },
+    "citations": {
+      "acl": "{postgres=arwdDxtm/postgres,anon=rxtm/postgres,authenticated=rxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "view": null,
+      "force": false,
+      "owner": "postgres",
+      "columns": [
+        {
+          "acl": null,
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "article_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "cited_entity",
+          "type": "text",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "cited_type",
+          "type": "text",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "documentation_strength",
+          "type": "numeric",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "resolved_node_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notnull": true
+        }
+      ],
+      "options": null,
+      "policies": [
+        {
+          "cmd": "SELECT",
+          "qual": "(EXISTS ( SELECT 1\n   FROM articles a\n  WHERE ((a.id = citations.article_id) AND (a.reader_state = 'eligible'::text) AND (a.source_status = 'active'::text))))",
+          "roles": [
+            "anon",
+            "authenticated"
+          ],
+          "tablename": "citations",
+          "permissive": "PERMISSIVE",
+          "policyname": "citations_public_read",
+          "schemaname": "public",
+          "with_check": null
+        }
+      ],
+      "triggers": null,
+      "constraints": [
+        {
+          "name": "citations_article_id_fkey",
+          "validated": true,
+          "definition": "FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "citations_pkey",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "citations_resolved_node_id_fkey",
+          "validated": true,
+          "definition": "FOREIGN KEY (resolved_node_id) REFERENCES nodes(id)"
+        }
+      ]
+    },
+    "node_topics": {
+      "acl": "{postgres=arwdDxtm/postgres,anon=rxtm/postgres,authenticated=rxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "view": null,
+      "force": false,
+      "owner": "postgres",
+      "columns": [
+        {
+          "acl": null,
+          "name": "node_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "topic_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "confidence",
+          "type": "numeric",
+          "default": "0.5",
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notnull": true
+        }
+      ],
+      "options": null,
+      "policies": [
+        {
+          "cmd": "SELECT",
+          "qual": "true",
+          "roles": [
+            "anon",
+            "authenticated"
+          ],
+          "tablename": "node_topics",
+          "permissive": "PERMISSIVE",
+          "policyname": "node_topics_read",
+          "schemaname": "public",
+          "with_check": null
+        }
+      ],
+      "triggers": null,
+      "constraints": [
+        {
+          "name": "node_topics_node_id_fkey",
+          "validated": true,
+          "definition": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "node_topics_pkey",
+          "validated": true,
+          "definition": "PRIMARY KEY (node_id, topic_id)"
+        },
+        {
+          "name": "node_topics_topic_id_fkey",
+          "validated": true,
+          "definition": "FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE"
+        }
+      ]
+    },
+    "comparison_public": {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": false,
+      "view": " SELECT md5(id::text) AS event_key,\n    canonical_title,\n    occurred_at_start,\n    occurred_at_end,\n    COALESCE(( SELECT jsonb_agg(article_row.article ORDER BY article_row.published_at, article_row.article_key) AS jsonb_agg\n           FROM ( SELECT a.published_at,\n                    md5(a.id::text) AS article_key,\n                    jsonb_build_object('article_key', md5(a.id::text), 'outlet', a.outlet, 'article_url', a.url, 'published_at', a.published_at, 'arc_slug', arc.slug, 'arc_title', arc.title, 'timeline_key', timeline.timeline_key, 'has_extracted_claim', (EXISTS ( SELECT 1\n                           FROM article_claims existing_surface\n                             JOIN claims existing_claim ON existing_claim.id = existing_surface.claim_id\n                          WHERE existing_surface.article_id = a.id AND existing_surface.is_current = true AND existing_claim.event_id = e.id AND (EXISTS ( SELECT 1\n                                   FROM mip_private.reader_claim_surfaces rs\n                                  WHERE rs.id = existing_surface.id)) AND existing_claim.status = 'active'::text AND existing_claim.rule_version = 'sc-v2-event-projection'::text))) AS article\n                   FROM event_articles ea\n                     JOIN articles a ON a.id = ea.article_id\n                     LEFT JOIN story_arcs arc ON arc.id = a.arc_id\n                     LEFT JOIN LATERAL ( SELECT \"right\"(n.slug, 8) AS timeline_key\n                           FROM nodes n\n                          WHERE n.type = 'event'::text AND n.arc_id = a.arc_id\n                          ORDER BY (n.slug ~~ 'evt-%'::text) DESC, n.slug\n                         LIMIT 1) timeline ON true\n                  WHERE ea.event_id = e.id AND a.reader_state = 'eligible'::text AND a.source_status = 'active'::text) article_row), '[]'::jsonb) AS articles,\n    COALESCE(( SELECT jsonb_agg(claim_row.claim ORDER BY claim_row.canonical_text) AS jsonb_agg\n           FROM ( SELECT c.canonical_text,\n                    jsonb_build_object('claim_key', md5(c.id::text), 'canonical_text', c.canonical_text, 'thin_extraction', c.thin_extraction, 'surfaces', COALESCE(( SELECT jsonb_agg(surface_row.surface ORDER BY surface_row.published_at, surface_row.article_key) AS jsonb_agg\n                           FROM ( SELECT a.published_at,\n                                    md5(a.id::text) AS article_key,\n                                    jsonb_build_object('article_key', md5(a.id::text), 'surface_text', ac.surface_text, 'loaded_language', ac.loaded_language, 'explanation', explanation.explanation) AS surface\n                                   FROM article_claims ac\n                                     JOIN articles a ON a.id = ac.article_id\n                                     LEFT JOIN LATERAL ( SELECT jsonb_build_object('supporting_passage', x.supporting_passage, 'rule_version', x.rule_version, 'provenance_class', x.provenance_class, 'reviewed_at', x.reviewed_at, 'review_status', x.review_status, 'state', x.state, 'remaining_uncertainty', x.remaining_uncertainty) AS explanation\n   FROM explanations x\n  WHERE x.assertion_type = 'claim_grouping'::text AND x.is_current = true AND x.review_status = 'published'::text AND x.state = 'ok'::text AND NULLIF(btrim(x.supporting_passage), ''::text) IS NOT NULL AND NULLIF(btrim(x.falsification_condition), ''::text) IS NOT NULL AND btrim(x.falsification_condition) !~~* 'missing:%'::text AND jsonb_typeof(x.archived_sources) = 'array'::text AND NOT jsonb_path_exists(x.archived_sources, '$[*]?(@.\"status\" == \"missing\")'::jsonpath) AND x.rule_version ~~ 'sc-v2-event-projection|%'::text AND x.assertion_id ~ (((('^sc:claim_grouping:'::text || c.event_id::text) || ':[0-9]+:'::text) || ac.article_id::text) || '$'::text) AND POSITION((format('Surface claim \"%s\" grouped under canonical \"%s\"'::text, ac.surface_text, c.canonical_text)) IN (COALESCE(x.supporting_passage, ''::text))) = 1\n  ORDER BY x.recomputed_at DESC NULLS LAST, x.id\n LIMIT 1) explanation ON true\n                                  WHERE ac.claim_id = c.id AND ac.is_current = true AND (EXISTS ( SELECT 1\n   FROM mip_private.reader_claim_surfaces rs\n  WHERE rs.id = ac.id)) AND a.reader_state = 'eligible'::text AND a.source_status = 'active'::text) surface_row), '[]'::jsonb), 'evidence_links', COALESCE(( SELECT jsonb_agg(jsonb_build_object('evidence_url', cel.evidence_url, 'evidence_type', cel.evidence_type) ORDER BY cel.evidence_type, cel.evidence_url) AS jsonb_agg\n                           FROM claim_evidence_links cel\n                          WHERE cel.claim_id = c.id AND (EXISTS ( SELECT 1\n                                   FROM mip_private.reader_claim_surfaces rs\n                                  WHERE rs.claim_id = c.id AND rs.article_id = cel.linked_from_article_id))), '[]'::jsonb), 'corrections', COALESCE(( SELECT jsonb_agg(jsonb_build_object('correction_text', cc.correction_text, 'occurred_at', cc.occurred_at) ORDER BY cc.occurred_at) AS jsonb_agg\n                           FROM claim_corrections cc\n                          WHERE cc.claim_id = c.id AND (EXISTS ( SELECT 1\n                                   FROM articles ca\n                                     JOIN event_articles cea ON cea.article_id = ca.id\n                                  WHERE ca.id = cc.correcting_article_id AND cea.event_id = c.event_id AND ca.reader_state = 'eligible'::text AND ca.source_status = 'active'::text))), '[]'::jsonb)) AS claim\n                   FROM claims c\n                  WHERE c.event_id = e.id AND c.status = 'active'::text AND c.rule_version = 'sc-v2-event-projection'::text AND (EXISTS ( SELECT 1\n                           FROM mip_private.reader_claim_surfaces rs\n                          WHERE rs.claim_id = c.id))) claim_row), '[]'::jsonb) AS claims\n   FROM events e\n  WHERE status <> 'timeline_only'::text AND comparison_validation_state = 'approved'::text AND (EXISTS ( SELECT 1\n           FROM event_articles ea\n             JOIN articles a ON a.id = ea.article_id\n          WHERE ea.event_id = e.id AND a.reader_state = 'eligible'::text AND a.source_status = 'active'::text\n          GROUP BY ea.event_id\n         HAVING count(DISTINCT a.outlet) >= 2));",
+      "force": false,
+      "owner": "postgres",
+      "columns": [
+        {
+          "acl": null,
+          "name": "event_key",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "canonical_title",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "occurred_at_start",
+          "type": "date",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "occurred_at_end",
+          "type": "date",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "articles",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "claims",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "options": [
+        "security_barrier=true",
+        "security_invoker=false"
+      ],
+      "policies": null,
+      "triggers": null,
+      "constraints": null
+    },
+    "graph_coverage_public": {
+      "acl": "{postgres=arwdDxtm/postgres,anon=rxtm/postgres,authenticated=rxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": false,
+      "view": " WITH article_totals AS (\n         SELECT count(*)::integer AS article_count\n           FROM articles\n          WHERE articles.reader_state = 'eligible'::text AND articles.source_status = 'active'::text\n        ), resolved_article_totals AS (\n         SELECT count(DISTINCT c.article_id)::integer AS articles_with_published_node\n           FROM citations c\n             JOIN articles a_1 ON a_1.id = c.article_id AND a_1.reader_state = 'eligible'::text AND a_1.source_status = 'active'::text\n          WHERE c.resolved_node_id IS NOT NULL\n        ), pending_graph_candidates AS (\n         SELECT count(*)::integer AS pending_graph_candidate_count\n           FROM cross_surface_candidates c\n          WHERE (c.candidate_type = ANY (ARRAY['graph_node'::text, 'graph_edge'::text])) AND (c.review_state = ANY (ARRAY['pending'::text, 'owner_hold'::text]))\n        ), published_graph AS (\n         SELECT ( SELECT count(*)::integer AS count\n                   FROM nodes) AS published_node_count,\n            ( SELECT count(*)::integer AS count\n                   FROM edges) AS documented_relationship_count\n        )\n SELECT a.article_count,\n    r.articles_with_published_node,\n    GREATEST(a.article_count - r.articles_with_published_node, 0) AS articles_without_published_node,\n    p.pending_graph_candidate_count,\n    g.published_node_count,\n    g.documented_relationship_count\n   FROM article_totals a\n     CROSS JOIN resolved_article_totals r\n     CROSS JOIN pending_graph_candidates p\n     CROSS JOIN published_graph g;",
+      "force": false,
+      "owner": "postgres",
+      "columns": [
+        {
+          "acl": null,
+          "name": "article_count",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "articles_with_published_node",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "articles_without_published_node",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "pending_graph_candidate_count",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "published_node_count",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "documented_relationship_count",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "options": [
+        "security_barrier=true",
+        "security_invoker=false"
+      ],
+      "policies": null,
+      "triggers": null,
+      "constraints": null
+    },
+    "spatial_projection_v1": {
+      "acl": "{postgres=arwdDxtm/postgres,anon=rxtm/postgres,authenticated=rxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": false,
+      "view": " WITH in_effect_scopes AS (\n         SELECT s.id,\n            s.audience_code,\n            s.audience_version,\n            s.canonical_capabilities,\n            s.canonicalization_version,\n            s.content_hash_algorithm,\n            s.content_hash,\n            s.effective_at,\n            s.supersedes_audience_scope_id,\n            s.created_by_principal_ref,\n            s.created_at\n           FROM spatial.audience_scopes s\n          WHERE s.effective_at <= now()\n        ), public_scopes AS (\n         SELECT s.id\n           FROM in_effect_scopes s\n          WHERE s.audience_code = 'public'::text AND NOT (EXISTS ( SELECT 1\n                   FROM in_effect_scopes newer\n                  WHERE newer.supersedes_audience_scope_id = s.id))\n        ), public_scope_head AS (\n         SELECT\n                CASE\n                    WHEN count(*) = 1 THEN min(public_scopes.id::text)::uuid\n                    ELSE NULL::uuid\n                END AS id\n           FROM public_scopes\n        ), current_revision AS (\n         SELECT r_1.id,\n            r_1.spatial_assertion_id,\n            r_1.revision_ordinal,\n            r_1.graph_node_authority_snapshot_id,\n            r_1.location_role,\n            r_1.relationship_qualifier,\n            r_1.canonical_place_id,\n            r_1.place_authority_snapshot_id,\n            r_1.evidence_precision,\n            r_1.internal_geometry_snapshot_id,\n            r_1.valid_time_precision,\n            r_1.source_native_time,\n            r_1.guard_start_utc,\n            r_1.guard_end_utc,\n            r_1.temporal_policy_artifact_id,\n            r_1.uncertainty_class,\n            r_1.uncertainty_note,\n            r_1.revision_fingerprint,\n            r_1.created_by_principal_ref,\n            r_1.created_at,\n            row_number() OVER (PARTITION BY r_1.spatial_assertion_id ORDER BY r_1.revision_ordinal DESC) AS rn\n           FROM spatial.assertion_revisions r_1\n        ), in_effect_review AS (\n         SELECT d.id,\n            d.assertion_revision_id,\n            d.support_disposition,\n            d.review_mode,\n            d.review_outcome_basis,\n            d.review_policy_artifact_id,\n            d.reviewed_by_principal_ref,\n            d.effective_at,\n            d.reason_code,\n            d.decision_fingerprint,\n            d.created_at\n           FROM spatial.review_decisions d\n          WHERE d.effective_at <= now()\n        ), review_heads AS (\n         SELECT d.assertion_revision_id,\n            d.id,\n            d.support_disposition,\n            d.effective_at\n           FROM in_effect_review d\n          WHERE NOT (EXISTS ( SELECT 1\n                   FROM in_effect_review n\n                  WHERE n.assertion_revision_id = d.assertion_revision_id AND ((ROW(n.effective_at, n.created_at) > ROW(d.effective_at, d.created_at)))))\n        ), review_head AS (\n         SELECT review_heads.assertion_revision_id,\n                CASE\n                    WHEN count(*) = 1 THEN min(review_heads.support_disposition)\n                    ELSE NULL::text\n                END AS disposition,\n                CASE\n                    WHEN count(*) = 1 THEN min(review_heads.effective_at)\n                    ELSE NULL::timestamp with time zone\n                END AS effective_at\n           FROM review_heads\n          GROUP BY review_heads.assertion_revision_id\n        ), in_effect_release AS (\n         SELECT d.id,\n            d.assertion_revision_id,\n            d.audience_scope_id,\n            d.release_policy_artifact_id,\n            d.decision_disposition,\n            d.predecessor_release_decision_id,\n            d.decided_by_principal_ref,\n            d.decided_at,\n            d.effective_at,\n            d.reason_code,\n            d.decision_fingerprint,\n            d.created_at\n           FROM spatial.release_decisions d\n          WHERE d.effective_at <= now()\n        ), release_heads AS (\n         SELECT d.assertion_revision_id,\n            d.audience_scope_id,\n            d.id,\n            d.decision_disposition,\n            d.effective_at\n           FROM in_effect_release d\n          WHERE NOT (EXISTS ( SELECT 1\n                   FROM in_effect_release n\n                  WHERE n.predecessor_release_decision_id = d.id AND n.assertion_revision_id = d.assertion_revision_id AND n.audience_scope_id = d.audience_scope_id))\n        ), release_head AS (\n         SELECT release_heads.assertion_revision_id,\n            release_heads.audience_scope_id,\n                CASE\n                    WHEN count(*) = 1 THEN min(release_heads.decision_disposition)\n                    ELSE NULL::text\n                END AS disposition,\n                CASE\n                    WHEN count(*) = 1 THEN min(release_heads.effective_at)\n                    ELSE NULL::timestamp with time zone\n                END AS effective_at\n           FROM release_heads\n          GROUP BY release_heads.assertion_revision_id, release_heads.audience_scope_id\n        )\n SELECT 'spatial_projection_v1'::text AS projection_contract_version,\n    a.id AS mip_object_id,\n    a.assertion_kind AS object_type,\n    a.graph_node_id AS subject_graph_node_id,\n    g.snapshot_hash AS subject_snapshot_hash,\n    r.id AS revision_id,\n    r.revision_ordinal,\n    sup.to_revision_id AS superseded_by_revision_id,\n    r.location_role AS spatial_role,\n    r.relationship_qualifier,\n    r.canonical_place_id,\n    p.snapshot_hash AS place_snapshot_hash,\n    r.evidence_precision AS precision_class,\n    r.valid_time_precision,\n    r.source_native_time,\n    r.guard_start_utc AS valid_from_utc,\n    r.guard_end_utc AS valid_to_utc,\n    r.created_at AS revision_known_at_utc,\n    rh.effective_at AS review_effective_at_utc,\n    rl.effective_at AS release_effective_at_utc,\n    rh.disposition AS review_state,\n    rl.disposition AS release_state,\n    r.uncertainty_class,\n    r.uncertainty_note,\n    NULL::text AS confidence,\n    'unsupported_by_governed_model'::text AS confidence_status,\n        CASE r.location_role\n            WHEN 'event'::text THEN 'event_location'::text\n            WHEN 'facility'::text THEN 'facility_location'::text\n            WHEN 'jurisdiction'::text THEN 'jurisdiction_area'::text\n            WHEN 'context'::text THEN 'context_location'::text\n            WHEN 'publisher'::text THEN 'publisher_location'::text\n            ELSE NULL::text\n        END AS display_hint,\n        CASE\n            WHEN gs.id IS NULL THEN NULL::jsonb\n            WHEN gs.representation_kind <> ALL (ARRAY['point'::text, 'representative_point'::text]) THEN NULL::jsonb\n            WHEN gs.canonical_geojson IS NULL THEN NULL::jsonb\n            WHEN (gs.canonical_geojson ->> 'type'::text) <> 'Point'::text THEN NULL::jsonb\n            ELSE jsonb_build_object('type', 'Point', 'coordinates', jsonb_build_array(floor((((gs.canonical_geojson -> 'coordinates'::text) ->> 0)::numeric) / grid.step) * grid.step, floor((((gs.canonical_geojson -> 'coordinates'::text) ->> 1)::numeric) / grid.step) * grid.step))\n        END AS display_geometry,\n        CASE\n            WHEN gs.id IS NULL THEN 'absent_no_geometry_referenced'::text\n            WHEN gs.representation_kind <> ALL (ARRAY['point'::text, 'representative_point'::text]) THEN 'omitted_unsupported_representation'::text\n            WHEN gs.canonical_geojson IS NULL OR (gs.canonical_geojson ->> 'type'::text) <> 'Point'::text THEN 'omitted_unsupported_representation'::text\n            ELSE 'coarsened_to_precision_class'::text\n        END AS geometry_status,\n    COALESCE(ev.evidence_refs, '[]'::jsonb) AS evidence_refs\n   FROM spatial.assertions a\n     JOIN nodes subj ON subj.id = a.graph_node_id AND subj.type = 'event'::text\n     JOIN current_revision r ON r.spatial_assertion_id = a.id AND r.rn = 1\n     JOIN spatial.graph_node_authority_snapshots g ON g.id = r.graph_node_authority_snapshot_id AND (g.node_payload ->> 'type'::text) = 'event'::text\n     JOIN review_head rh ON rh.assertion_revision_id = r.id AND rh.disposition = 'operative'::text\n     JOIN release_head rl ON rl.assertion_revision_id = r.id AND rl.disposition = 'released'::text\n     JOIN public_scope_head ph ON ph.id = rl.audience_scope_id\n     LEFT JOIN spatial.place_authority_snapshots p ON p.id = r.place_authority_snapshot_id\n     LEFT JOIN spatial.geometry_snapshots gs ON gs.id = r.internal_geometry_snapshot_id\n     LEFT JOIN LATERAL ( SELECT jsonb_agg(jsonb_build_object('evidence_snapshot_id', re.evidence_snapshot_id, 'evidence_role', re.evidence_role) ORDER BY re.evidence_role, re.evidence_snapshot_id) AS evidence_refs\n           FROM spatial.revision_evidence re\n          WHERE re.assertion_revision_id = r.id) ev ON true\n     JOIN LATERAL ( SELECT\n                CASE r.evidence_precision\n                    WHEN 'country'::text THEN 1.0\n                    WHEN 'region'::text THEN 0.5\n                    WHEN 'city'::text THEN 0.1\n                    ELSE NULL::numeric\n                END AS step) grid ON grid.step IS NOT NULL\n     LEFT JOIN LATERAL ( SELECT l.to_revision_id\n           FROM spatial.revision_lineage l\n          WHERE l.from_revision_id = r.id AND (l.relationship_type = ANY (ARRAY['supersedes'::text, 'corrects'::text]))\n          ORDER BY l.created_at DESC\n         LIMIT 1) sup ON true\n  WHERE a.assertion_kind = 'event_spatial_relationship'::text AND (r.evidence_precision = ANY (ARRAY['country'::text, 'region'::text, 'city'::text]));",
+      "force": false,
+      "owner": "postgres",
+      "columns": [
+        {
+          "acl": null,
+          "name": "projection_contract_version",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "mip_object_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "object_type",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "subject_graph_node_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "subject_snapshot_hash",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "revision_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "revision_ordinal",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "superseded_by_revision_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "spatial_role",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "relationship_qualifier",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "canonical_place_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "place_snapshot_hash",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "precision_class",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "valid_time_precision",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "source_native_time",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "valid_from_utc",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "valid_to_utc",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "revision_known_at_utc",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "review_effective_at_utc",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "release_effective_at_utc",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "review_state",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "release_state",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "uncertainty_class",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "uncertainty_note",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "confidence",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "confidence_status",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "display_hint",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "display_geometry",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "geometry_status",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "evidence_refs",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "options": [
+        "security_barrier=true"
+      ],
+      "policies": null,
+      "triggers": null,
+      "constraints": null
+    },
+    "investigation_surface_public": {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": false,
+      "view": " SELECT id AS canonical_event_id,\n    slug,\n    label AS event_label,\n    type AS event_type,\n    occurred_at,\n    (EXISTS ( SELECT 1\n           FROM spatial_projection_v1 p\n          WHERE p.subject_graph_node_id = n.id)) AS has_released_geography,\n    ( SELECT p.revision_id\n           FROM spatial_projection_v1 p\n          WHERE p.subject_graph_node_id = n.id\n         LIMIT 1) AS spatial_revision_id,\n    ( SELECT count(*)::integer AS count\n           FROM graph_event_article_memberships m\n             JOIN articles a ON a.id = m.article_id\n          WHERE m.event_node_id = n.id AND a.reader_state = 'eligible'::text AND a.source_status = 'active'::text) AS public_article_count,\n    0 AS reviewed_claim_count,\n    ( SELECT count(*)::integer AS count\n           FROM edges e\n          WHERE e.source_id = n.id OR e.target_id = n.id) AS published_relationship_count,\n    false AS auto_approval_enabled\n   FROM nodes n\n  WHERE type = 'event'::text;",
+      "force": false,
+      "owner": "postgres",
+      "columns": [
+        {
+          "acl": null,
+          "name": "canonical_event_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "slug",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "event_label",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "event_type",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "occurred_at",
+          "type": "date",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "has_released_geography",
+          "type": "boolean",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "spatial_revision_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "public_article_count",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "reviewed_claim_count",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "published_relationship_count",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "acl": null,
+          "name": "auto_approval_enabled",
+          "type": "boolean",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "options": [
+        "security_invoker=true"
+      ],
+      "policies": null,
+      "triggers": null,
+      "constraints": null
+    },
+    "graph_event_article_memberships": {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,anon=r/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "view": null,
+      "force": false,
+      "owner": "postgres",
+      "columns": [
+        {
+          "acl": null,
+          "name": "event_node_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "article_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "acl": null,
+          "name": "recorded_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notnull": true
+        }
+      ],
+      "options": null,
+      "policies": [
+        {
+          "cmd": "SELECT",
+          "qual": "(EXISTS ( SELECT 1\n   FROM articles a\n  WHERE ((a.id = graph_event_article_memberships.article_id) AND (a.reader_state = 'eligible'::text) AND (a.source_status = 'active'::text))))",
+          "roles": [
+            "anon",
+            "authenticated"
+          ],
+          "tablename": "graph_event_article_memberships",
+          "permissive": "PERMISSIVE",
+          "policyname": "graph_event_article_memberships_public_select",
+          "schemaname": "public",
+          "with_check": null
+        }
+      ],
+      "triggers": [
+        {
+          "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+          "name": "graph_event_article_memberships_require_event_node",
+          "owner": "postgres",
+          "enabled": "O",
+          "function": "CREATE OR REPLACE FUNCTION public.graph_event_article_memberships_require_event_node()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nbegin\n  if not exists (\n    select 1 from public.nodes n\n    where n.id = new.event_node_id and n.type = 'event'\n  ) then\n    raise exception 'graph_event_article_memberships.event_node_id must reference a node of type event';\n  end if;\n  return new;\nend;\n$function$\n",
+          "definition": "CREATE TRIGGER graph_event_article_memberships_require_event_node BEFORE INSERT OR UPDATE ON public.graph_event_article_memberships FOR EACH ROW EXECUTE FUNCTION graph_event_article_memberships_require_event_node()"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "graph_event_article_memberships_article_id_fkey",
+          "validated": true,
+          "definition": "FOREIGN KEY (article_id) REFERENCES articles(id)"
+        },
+        {
+          "name": "graph_event_article_memberships_event_node_id_fkey",
+          "validated": true,
+          "definition": "FOREIGN KEY (event_node_id) REFERENCES nodes(id)"
+        },
+        {
+          "name": "graph_event_article_memberships_pkey",
+          "validated": true,
+          "definition": "PRIMARY KEY (event_node_id, article_id)"
+        }
+      ]
+    }
+  },
+  "fingerprint": "e5aea518d5606e19012091d64515789f"
+}

@@ -1,0 +1,35 @@
+# Isolated registration custody contract — 2026-09-14
+
+This slice adds registrationCustody.mjs alongside the unqualified sourceIncarnation transport. It is an executable integration contract with synthetic durable custody tests; no production custodian, identity, location, recovery authority, or protected head has been configured.
+
+The envelope binds source, stream, binding, incarnation, sequence, exact predecessor digest and recovery-evidence digest. Registration appends once and requires exact durable readback. Current-head exact replay is idempotent; changed/stale replay, missing predecessor, skipped sequence, reused binding/incarnation and a head mismatch are denied. The recovery-evidence digest commits to supplied bytes but does not authenticate the issuer or resolve those bytes: the trusted authority adapter must do that before admitting registration.
+
+The wrapper fixes an independently configured head and scope at construction. It snapshots primitive arguments synchronously before storage awaits. Capture and preparation reject another binding/source/stream. Preparation retains the request-to-registration binding before any source side effect and verifies its durable readback. Advancement requires that same retained request binding. Existing source incarnation RPCs and their native authority/permit/capture/receipt checks still enforce source-side correctness.
+
+The injected withAuthority adapter must authenticate the caller, independently resolve recovery authority/evidence, serialize all changes for the source, and hold exclusion against revocation and recovery until the complete callback/source RPC settles. A precheck alone does not implement this contract. It must provide crash-durable append-only compare-and-append, uncached exact reads, immutable request bindings, and one authority boundary shared by all concurrent clients. The fixture uses a single-process promise queue; it is not proof of distributed locking, authenticated principal separation, network failure fencing, or a real custodian.
+
+Tests run filesystem cases only when GITHUB_ACTIONS=true and place disposable synthetic bytes in the hosted runner's temporary directory. They fsync append records and directory metadata, reconstruct a transport from durable bytes, exercise both authority rejection and operation-before-revocation order, test immutable input capture, and state the antirollback limitation explicitly. Transport reconstruction is not a killed-process recovery experiment. Existing native PostgreSQL checks remain necessary and separately scoped; the native incarnation fixture now routes actual capture, preparation and advancement through this wrapper and the existing encrypted remote journal. Its separate synthetic runtime/key has no application-source grants; an explicit approved-digest set admits the frozen recovery envelope. PostgreSQL advisory exclusion and broker identity-fence locks span each callback. The test advances the retained external registration head and verifies old capture/preparation/receipt replay stop while source records remain unchanged. This is fixture integration, not a production recorder deployment.
+
+A ledger stored beside the source, or a pin restored together with that ledger, cannot establish external antirollback. The explicit limitation test shows an old ledger rejected by an independently retained newer pin, and the old state accepted if both are restored. The fixture's separate pathname is not an independent physical backup/custody boundary.
+
+Remaining: select an authorized independent custodian and storage domain, bind authenticated issuer and recovery evidence to the envelope, implement/prove a multi-process authority adapter and durable journal, integrate the real adapter with the deployed recorder, run actual separate-store source restart/clone/restore fault tests, and obtain independent review. Historical qualification remains false. This does not authorize publication, production changes, paid services, source fetches, or any local-device project files.
+
+Sources inspected: [Supabase backup behavior](https://supabase.com/docs/guides/platform/backups) and [current changelog](https://supabase.com/changelog), including physical-restore credential behavior. No Supabase API/schema change is made by this slice.
+
+## PR157 review correction
+
+The independent recovery report at 8cfa664c81b5621970bea53df9e96dc92c58f534/verifier/independent-pr157/recovery-1-result.json says PASS but contains seven findings and two blockers. Controller acceptance is BLOCKED. This inconsistent report is preserved verbatim and is not clean independent approval.
+
+F1: the filesystem fixture now reads head, envelope and request state from uncached durable bytes. A fault test appends a newer durable registration after authority entry while preserving the original envelope body; stale callback-local head caching would wrongly accept idempotent retain. A separate test changes durable envelope bytes under the retained digest and proves idempotent retain rejects without appending.
+
+F2: the chain is source-scoped, not permanently stream-scoped. Recovery may establish a new stream epoch with a new binding/incarnation and authority-admitted envelope. A new independently configured expectedHead and transport are required; old transport and old-stream input fail. This correction tests and documents the existing behavior rather than silently imposing old.stream equality. The fixture's authority admission does not authenticate a real recovery issuer.
+
+F3: fresh review evidence must include complete Golden logs with named filesystem tests and zero skipped gated tests, the native worker log, package.json's test graph, workflow files, and all referenced native transport/journal/SQL dependencies at the frozen candidate. Check conclusions alone are insufficient.
+
+F4: both native transports now share a direct nativeCall dispatcher that forwards the exact wrapper-supplied argument array. The positive custody envelope explicitly equals the registered incarnation. A separate encrypted-journal fixture retains a deliberately mismatched envelope and reaches actual PostgreSQL rejection at capture, preparation, advancement and receipt replay; it never silently substitutes register()'s ID.
+
+F5/F7: changed readback on idempotent retain is now exercised. Capture request continuity remains in native capture/permit checks; the v1 wrapper binds preparation and advancement. No killed-process custody, independent physical storage, authenticated recovery issuer, distributed locking or real custodian is claimed. Trusted-adapter duties remain unresolved deployment obligations, not properties proved by this fixture.
+
+F6: sourceIncarnation v1 behavior is unchanged. prepare_incarnation SQL derives the binding from the retained capture; its signature has no binding argument. The custody wrapper additionally checks caller binding/source/stream before delegation. Broader v2 integration is a separate candidate and requires separate evidence.
+
+No application or SQL changes, production activation, migration, local-device files, merge or deployment occur in this correction.

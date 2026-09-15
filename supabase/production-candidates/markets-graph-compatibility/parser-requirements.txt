@@ -1,0 +1,8 @@
+# Hosted CI only: CPython 3.12 / Linux x86_64 manylinux wheel.
+# Authoritative digest: https://pypi.org/project/pglast/7.10/#files
+# pglast-7.10-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+pglast==7.10 --hash=sha256:b89c6bf904b4043752431564ce5c6bacf5d54cb6d6bc487a175cab9a47f18436
+# pglast declares setuptools as a runtime dependency; Python 3.12 venv omits it.
+# Authoritative digest: https://pypi.org/project/setuptools/80.9.0/#files
+# setuptools-80.9.0-py3-none-any.whl (Python >=3.9, including CI's 3.12).
+setuptools==80.9.0 --hash=sha256:062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922

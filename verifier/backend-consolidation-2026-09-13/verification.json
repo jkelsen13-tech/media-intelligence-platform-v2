@@ -1,0 +1,54 @@
+{
+  "testedCommit": "8403f9a5a644dfb0dcecad115de0d9971b3aac69",
+  "newCollectorTests": 12,
+  "golden": {
+    "run": 34774946441,
+    "nodes": [
+      {
+        "node": 22,
+        "job": 103771234859,
+        "tests": 1675,
+        "pass": 1675,
+        "fail": 0,
+        "build": "pass"
+      },
+      {
+        "node": 24,
+        "job": 103771234612,
+        "tests": 1675,
+        "pass": 1675,
+        "fail": 0,
+        "build": "pass"
+      }
+    ]
+  },
+  "integrated": {
+    "run": 34774946449,
+    "job": 103771234485,
+    "result": "success",
+    "batch": "MIP_PERMISSION_BATCH_NOT_ACTIVATED",
+    "tests": 53,
+    "pass": 53
+  },
+  "native": {
+    "run": 34774946407,
+    "job": 103771234398,
+    "original": 14,
+    "baseline": {
+      "discovered": 7,
+      "skipped": 4,
+      "preservedCounterexamples": 3
+    },
+    "authority": 7,
+    "interfaces": 6,
+    "result": "success"
+  },
+  "extension": {
+    "run": 34774946412,
+    "job": 103771234469,
+    "tests": 8,
+    "result": "success"
+  },
+  "independentReview": false,
+  "limitations": "Remote hosted implementation regressions; not live operational parity, owner authorization, semantic qualification or whole-backend restore."
+}

@@ -1,0 +1,43 @@
+{
+  "id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
+  "status": "PACKET_PREPARED_REVIEW_NOT_PERFORMED",
+  "outcome": null,
+  "pass": null,
+  "fail": null,
+  "owner_acceptance": null,
+  "independent_review": {
+    "designation": "separate Grok review",
+    "contacted": false,
+    "credentials_supplied": false,
+    "write_privileges_supplied": false,
+    "credential_management_access_supplied": false,
+    "release_authority_supplied": false,
+    "result": null
+  },
+  "production_cutover": "ON_HOLD",
+  "automatic_membership_approval": "disabled",
+  "publication": "disabled",
+  "legacy_infrastructure": "retain",
+  "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
+  "operational_baseline_subject": "Merge pull request #146 from jkelsen13-tech/codex/dynamic-globe-capture-2026-09-10",
+  "review_packet_commit": null,
+  "review_packet_commit_resolution": "Stamp via scripts/buildCutoverReviewPacket.mjs --stamp-head after the hashed tree is committed. Until then this field stays null so PASS cannot be inferred from a placeholder SHA.",
+  "owner_decision_brief_dated": "2026-09-10",
+  "owner_decision_brief_body": "NOT_RECOVERED_FROM_GITHUB_OR_REPOSITORY",
+  "prepared_at": "2026-09-10T07:15:00Z",
+  "prepared_by": "implementation_agent",
+  "evidence_classes": [
+    "artifact_inspection",
+    "independently_reproduced_this_run",
+    "supplied_implementation_agent_result",
+    "missing_evidence",
+    "NOT_TESTED",
+    "BLOCKED"
+  ],
+  "notes": [
+    "Do not treat this file as a completed review.",
+    "Do not prepopulate PASS.",
+    "A favorable design review is not production approval.",
+    "Owner acceptance is a separate document (OWNER_ACCEPTANCE.json)."
+  ]
+}

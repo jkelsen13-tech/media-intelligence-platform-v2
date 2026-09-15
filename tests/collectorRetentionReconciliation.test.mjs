@@ -1,0 +1,30 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {reconcileCollectorRetention,DIGEST_METHOD} from '../scripts/collectorRetentionReconciliation.mjs';
+const observed=JSON.parse(readFileSync(new URL('../verifier/backend-consolidation-2026-09-13/observations.json',import.meta.url)));
+const original=observed.collector;
+const copy=()=>structuredClone(original);
+test('observed retained collector range matches while exact observed delta remains pending',()=>{
+ const r=reconcileCollectorRetention(original);
+ assert.equal(r.status,'retained_range_matches_delta_pending');
+ assert.deepEqual(r.checks.map(x=>x.rows),[7,4775,4755]);
+ assert.deepEqual(r.deltas.map(x=>x.rows),[985,985]);
+ assert.equal(r.wholeBackendParity,false);assert.equal(r.retirementAuthorized,false);
+});
+test('synthetic equal counts with changed content fail closed',()=>{const e=copy();e.archive[0].payload_multiset_sha256='0'.repeat(64);assert.equal(reconcileCollectorRetention(e).status,'blocked');});
+test('synthetic missing retained relation cannot disappear from comparison',()=>{const e=copy();e.archive.pop();assert.equal(reconcileCollectorRetention(e).status,'blocked');});
+test('synthetic duplicate relation is ambiguous',()=>{const e=copy();e.archive.push(e.archive[0]);assert.equal(reconcileCollectorRetention(e).status,'blocked');});
+test('synthetic missing digest is not count parity',()=>{const e=copy();delete e.archive[0].payload_multiset_sha256;assert.equal(reconcileCollectorRetention(e).status,'blocked');});
+test('synthetic cross-project receipt reuse is denied',()=>{const e=copy();e.archiveSourceProject='different';assert.equal(reconcileCollectorRetention(e).status,'blocked');});
+test('synthetic range substitution is denied',()=>{const e=copy();e.archiveCutoff='2026-09-11T00:00:00Z';assert.equal(reconcileCollectorRetention(e).status,'blocked');});
+test('synthetic algorithm substitution is denied',()=>{const e=copy();e.method='md5';assert.equal(reconcileCollectorRetention(e).status,'blocked');});
+test('synthetic omitted delta is unknown rather than zero',()=>{const e=copy();e.source=e.source.filter(r=>r.scope!=='after_retained_time_range');assert.equal(reconcileCollectorRetention(e).status,'blocked');});
+test('synthetic fractional or negative counts are denied',()=>{for(const n of [-1,0.5]){const e=copy();e.source[0].rows=n;assert.equal(reconcileCollectorRetention(e).status,'blocked');}});
+test('synthetic zero delta still cannot authorize retirement or whole-backend parity',()=>{const e=copy();e.source.filter(r=>r.scope==='after_retained_time_range').forEach(r=>r.rows=0);const r=reconcileCollectorRetention(e);assert.equal(r.status,'retained_range_matches');assert.equal(r.retirementAuthorized,false);assert.equal(r.wholeBackendParity,false);});
+test('completed permission batch stays closed with historical tested commitment',()=>{
+ const a=JSON.parse(readFileSync(new URL('../verifier/integrated/realPermissionActivation.json',import.meta.url)));
+ assert.equal(a.status,'closed_permission_component_passed');assert.equal(a.attempt,3);assert.equal(a.max_attempts,3);assert.equal(a.commit_subject,null);
+ assert.equal(a.completed_attempt.commit,'0da8b5a0a4f9540160b71a39a1bbba3d655bcc95');
+ assert.equal(original.method,DIGEST_METHOD);
+});

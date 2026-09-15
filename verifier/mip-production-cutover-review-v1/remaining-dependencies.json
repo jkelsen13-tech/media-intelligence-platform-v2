@@ -1,0 +1,106 @@
+{
+  "production_cutover": "ON_HOLD",
+  "agent_completed_this_packet": [
+    "Isolated capability-separation RPCs, grants, RLS, request_runs, publication follow, retain_parity, diagnosis, revocation tests",
+    "F4 argument-bound request replay; F5 scheduler_claim no longer leases; revoke_principal; F6 server-bound source/implementation and publication closure fingerprints",
+    "Isolated mip_* EXECUTE-only design package (not deployed); v16 vs qualified-generation architecture split tests",
+    "Secret-free review packet, disclosure manifest builder, evaluation-policy proposal with null thresholds",
+    "Independently reproduced live inventory (hashes, cron active flags, Auth counts, qualification schema absent)",
+    "Staged isolated / proposed shadow-canary / cutover / rollback text"
+  ],
+  "agent_remaining_authorized_without_new_owner_permission": [
+    "Keep qualification SQL out of migrations and live projects",
+    "Keep publication and membership auto-approval disabled",
+    "Do not merge PR #147, provision credentials, or transmit Grok’s review as owner acceptance"
+  ],
+  "agent_cannot_complete_without_owner_decision": [
+    {
+      "id": "freeze-evaluation-policy",
+      "need": "Accept or edit mip-semantic-evaluation-policy-proposal-1 and freeze the split before any final held-out run"
+    },
+    {
+      "id": "freeze-label-adjudication",
+      "need": "Accept the human, source-grounded dual-adjudication arrangement; agent/model labels are not ground truth"
+    },
+    {
+      "id": "accept-review-limitations",
+      "need": "Whether missing brief body, excluded Auth/payloads, and undownloaded live v15 source are acceptable independent-review limitations"
+    },
+    {
+      "id": "runtime-bindings",
+      "need": "How live workers bind to principals; whether verify_jwt=false functions stay until cutover; Auth user/session reconciliation"
+    },
+    {
+      "id": "authorize-live-trial",
+      "need": "Any shadow/canary, credential provisioning, schedule change, publication, or cutover requires a later prompt"
+    },
+    {
+      "id": "re-review-reconciled-candidate",
+      "need": "Independent review of this engineering-reconciliation HEAD. Grok’s BLOCKED review applies to frozen 47075711 only and is preserved unchanged."
+    },
+    {
+      "id": "owner-acceptance",
+      "need": "Separate owner acceptance of MIP_PRODUCTION_CUTOVER_REVIEW_v1 after independent review writes a non-null outcome"
+    }
+  ],
+  "technical_dependencies_still_open": [
+    {
+      "area": "production_dependency_publication_contract",
+      "status": "isolated_proposal_extended_not_live",
+      "notes": "publication_history.dependency_hash now includes generation identity plus fingerprints of named survivor-closure relations (events, membership, articles, claims/surfaces, explanations, evidence links, corrections, nodes, edges/arcs, mip_private.reader_claim_surfaces). Absence is explicit. Isolated fixture mutation fails publisher_release. Live survivor public predicates remain authoritative. No live publication rows were written. Isolated qualification is still not survivor publication eligibility."
+    },
+    {
+      "area": "withdrawal_revocation_integration",
+      "status": "isolated_tests_pass",
+      "live": "NOT_TESTED",
+      "notes": "selector_select(null) follows publication to withdrawn/revoked. Concurrent native Postgres test exists for CI only."
+    },
+    {
+      "area": "authorization_failure_diagnosis",
+      "status": "isolated_tests_pass",
+      "live": "NOT_TESTED"
+    },
+    {
+      "area": "request_to_run_correlation",
+      "status": "isolated_tests_pass",
+      "live": "NOT_INSTALLED"
+    },
+    {
+      "area": "auth_session_reconciliation",
+      "status": "inventory_only",
+      "observed": {
+        "qikvmopbtijoebdqosyq": "2 users / 3 sessions",
+        "niejaejtbxgakyrsntxm": "3 users / 4 sessions",
+        "yhbwnrtlqbjtcrrlpbge": "0 users / 0 sessions",
+        "auth.sessions.revoked": false,
+        "auth.sessions.not_after": true
+      }
+    },
+    {
+      "area": "external_runtime_inventory",
+      "status": "this_run_reproduced_metadata",
+      "not_tested": [
+        "GitHub Pages current bundle",
+        "Cloud Run mop-extraction current service state",
+        "live v15 vs repo v16 bytes"
+      ]
+    },
+    {
+      "area": "backlog_history_parity",
+      "status": "isolated_retain_parity_copies_pending_as_pending",
+      "live_manus_this_run": {
+        "source_comparison_enrichment_queue": {
+          "succeeded": 8
+        },
+        "ingestion_runs_count": 4786,
+        "payloads": "EXCLUDED"
+      },
+      "notes": "Current Manus comparison queue has no pending rows. Historical ingestion_runs were not copied. retain_parity is not live acknowledgement."
+    }
+  ],
+  "production_engineering_obligations": {
+    "F1": "OPEN: authorization stubs are not implemented producer/worker/publisher behavior or real verified workload identity binding.",
+    "F3": "OPEN: generation-safe real worker integration, conditional acknowledgement, recovery and parity; documentation is not integration.",
+    "F6": "OPEN: survivor publication eligibility, complete rights/privacy dependency evaluation and revocation; fingerprints are not eligibility."
+  }
+}

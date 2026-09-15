@@ -1,3 +1,4 @@
+import {useHypothesisSessionClient} from './lib/useHypothesisSessionClient.js'
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import GraphView from './graph/GraphView'
 import Legend from './graph/Legend'
@@ -36,7 +37,7 @@ import {
   graphNodeMatchingInvestigation,
 } from './lib/investigationContext'
 import { commitNewSubject } from './lib/newSubjectPropagation'
-import { privateWorkspacePublicNode, savedInvestigationHandoffVisible } from './lib/privateWorkspacePublicHandoff.js'
+import { privateWorkspacePublicNode, savedInvestigationHandoffVisible, publicWorkspaceEntry, retainWorkspaceEntry, preservesPublicWorkspaceEntry } from './lib/privateWorkspacePublicHandoff.js'
 import {
   emptyDeepLinkSelection,
   formatTimeQuery,
@@ -211,6 +212,8 @@ export default function App({
   investigationEvidenceChecksClient = null,
   investigationEvidenceReviewsClient = null,
   authSessionOverride = null,
+  hypothesisEndpoint = null,
+  privateMarketsEndpoint = null,
   privateInvestigationPreview = null,
 } = {}) {
   const [graph, setGraph] = useState(null)
@@ -233,6 +236,7 @@ export default function App({
   )
   const recentRef = useRef(recentInvestigations)
   const investigationContextRef = useRef(investigationContext)
+  const workspaceEntryRef = useRef(publicWorkspaceEntry(INITIAL_DEEP_LINK.investigationContext))
   const [nodeQuery, setNodeQuery] = useState('')
   const [aboutOpen, setAboutOpen] = useState(false)
   // Track B nav restructure: the "More" tab opens a bottom sheet listing
@@ -316,6 +320,7 @@ export default function App({
     }
   }, [privateInvestigationPreview, investigationWorkspaceClient, investigationEvidenceChecksClient, investigationEvidenceReviewsClient, authSessionOverride])
   const auth = authSessionOverride ?? devPreview?.auth ?? liveAuth
+  const hypothesisClient = useHypothesisSessionClient({endpoint:hypothesisEndpoint,auth,active:view===PRIVATE_INVESTIGATION_VIEW})
   const workspaceClient = investigationWorkspaceClient
     ?? devPreview?.client
     ?? mipBackend.investigations.workspace
@@ -334,8 +339,31 @@ export default function App({
     active: view === PRIVATE_INVESTIGATION_VIEW,
     initialInvestigationId: devPreview?.initialInvestigationId ?? null,
   })
+  // Explicit private selection ends URL-owned navigation; passive retained
+  // bundles must never override a newly entered public event URL.
+  const selectPrivateEntry = (action, args) => {
+    workspaceEntryRef.current = publicWorkspaceEntry(null)
+    return action(...args)
+  }
+  const navigationWorkspace = {
+    ...privateWorkspace,
+    actions: {
+      ...privateWorkspace.actions,
+      selectInvestigation: (...args) => selectPrivateEntry(privateWorkspace.actions.selectInvestigation, args),
+      selectVersion: (...args) => selectPrivateEntry(privateWorkspace.actions.selectVersion, args),
+      openBeforeVersion: (...args) => selectPrivateEntry(privateWorkspace.actions.openBeforeVersion, args),
+    },
+  }
+  // Once a saved question participates in this entry, denial/logout cannot
+  // turn it back into an unrelated public-context handoff.
+  useEffect(() => {
+    if (view === PRIVATE_INVESTIGATION_VIEW) {
+      workspaceEntryRef.current = retainWorkspaceEntry(workspaceEntryRef.current, privateWorkspace.state)
+    }
+  }, [view, privateWorkspace.state.selectedInvestigationId, privateWorkspace.state.bundle])
   useEffect(() => {
     if (!devPreview) return
+    workspaceEntryRef.current = publicWorkspaceEntry(null)
     setView(PRIVATE_INVESTIGATION_VIEW)
     setInvestigationContext((ic) => setInvestigationActiveView(ic, PRIVATE_INVESTIGATION_VIEW))
   }, [devPreview])
@@ -656,9 +684,13 @@ export default function App({
 
   // Ordinary public tab switches retain the existing subject.
   const changeView = useCallback((key) => {
+    if (key === PRIVATE_INVESTIGATION_VIEW && investigationContextRef.current.active_view !== PRIVATE_INVESTIGATION_VIEW
+      && !preservesPublicWorkspaceEntry(workspaceEntryRef.current, investigationContextRef.current)) {
+      workspaceEntryRef.current = retainWorkspaceEntry(publicWorkspaceEntry(investigationContextRef.current), privateWorkspace.state)
+    }
     setView(key)
     setInvestigationContext((ic) => setInvestigationActiveView(ic, key))
-  }, [])
+  }, [privateWorkspace.state.selectedInvestigationId, privateWorkspace.state.bundle])
 
   // Opening Explore is NOT a view change. Do not call changeView('news').
   const openExplore = useCallback(() => {
@@ -1051,6 +1083,7 @@ export default function App({
       if (hydrated.parsed.subjectId) {
         rememberPriorSubject(current, hydrated.parsed.subjectId)
       }
+      workspaceEntryRef.current = publicWorkspaceEntry(hydrated.investigationContext, { routeOwned: true })
       setInvestigationContext(hydrated.investigationContext)
       if (hydrated.investigationContext.active_view) setView(hydrated.investigationContext.active_view)
       setLinkSelection(hydrated.selection)
@@ -1180,12 +1213,22 @@ export default function App({
   // node identity. Later ordinary public tab changes retain that identity.
   const navigateWorkspaceView = useCallback((key) => {
     if (view === PRIVATE_INVESTIGATION_VIEW && ['graph','timeline','world'].includes(key)) {
+      const entry = retainWorkspaceEntry(workspaceEntryRef.current, privateWorkspace.state)
+      workspaceEntryRef.current = entry
+      if (preservesPublicWorkspaceEntry(entry, investigationContextRef.current)) {
+        setSavedInvestigationHandoff(null)
+        changeView(key)
+        return
+      }
       const match = privateWorkspacePublicNode({
         status: privateWorkspace.status, userId: auth.user?.id,
         panels: privateWorkspace.state.panels, graph,
       })
       resetJumpContext()
       clearInvalidNewSubjectSubSelections()
+      // A replaced/cleared canonical subject must not restore a stale URL entity.
+      setLinkSelection(emptyDeepLinkSelection())
+      setSelectionFallbacks([])
       if (match) {
         setGraphScreen('all')
         setInvestigationContext((ic) => commitNewSubjectFromApp(ic, match, { landingView: key }))
@@ -1204,7 +1247,7 @@ export default function App({
     } else {
       changeView(key)
     }
-  }, [changeView, view, privateWorkspace.status, privateWorkspace.state.panels, privateWorkspace.state.bundle,
+  }, [changeView, view, privateWorkspace.status, privateWorkspace.state.panels, privateWorkspace.state.bundle, privateWorkspace.state.selectedInvestigationId,
     auth.user, graph, resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
   const showSavedInvestigationHandoff = savedInvestigationHandoffVisible({
@@ -1239,7 +1282,7 @@ export default function App({
         inspectorSlot={
           view === PRIVATE_INVESTIGATION_VIEW ? (
             <PrivateInvestigationInspector
-              workspace={privateWorkspace}
+              workspace={navigationWorkspace}
               publicNode={publicInvestigationNode}
               onOpenPublicGraphNode={openPrivatePublicGraphNode}
             />
@@ -1872,7 +1915,10 @@ export default function App({
         )}
         {view === PRIVATE_INVESTIGATION_VIEW && (
           <PrivateInvestigationWorkspace
-            workspace={privateWorkspace}
+            workspace={navigationWorkspace}
+            hypothesisClient={hypothesisClient}
+            privateMarketsEndpoint={privateMarketsEndpoint}
+            privateMarketsAuth={auth}
             accountUiAvailable={accountUi}
             onSignIn={() => setAccountOpen(true)}
             publicNode={publicInvestigationNode}

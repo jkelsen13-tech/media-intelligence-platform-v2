@@ -1,0 +1,22 @@
+name: Review handoff synthetic protocol
+on:
+  push:
+    paths:
+      - 'verifier/review-handoff/**'
+      - '.github/workflows/review-handoff-synthetic.yml'
+  pull_request:
+    paths:
+      - 'verifier/review-handoff/**'
+      - '.github/workflows/review-handoff-synthetic.yml'
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          sparse-checkout: verifier/review-handoff
+      - run: node --test verifier/review-handoff/*.test.mjs

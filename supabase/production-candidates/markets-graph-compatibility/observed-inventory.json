@@ -1,0 +1,200 @@
+{
+  "parent": "7cde1087fb5089a74c6329e05d447bb2127d2750",
+  "project": "qikvmopbtijoebdqosyq",
+  "inspectionDate": "2026-09-14",
+  "indexes": [
+    "CREATE UNIQUE INDEX citations_pkey ON public.citations USING btree (id)",
+    "CREATE UNIQUE INDEX edges_pkey ON public.edges USING btree (id)",
+    "CREATE UNIQUE INDEX graph_event_article_memberships_pkey ON public.graph_event_article_memberships USING btree (event_node_id, article_id)",
+    "CREATE UNIQUE INDEX nodes_pkey ON public.nodes USING btree (id)",
+    "CREATE UNIQUE INDEX nodes_slug_key ON public.nodes USING btree (slug)"
+  ],
+  "version": "170006",
+  "functions": [
+    {
+      "anon": false,
+      "name": "spatial.append_assertion(uuid,text,uuid,jsonb,text,text,text)",
+      "definer": true,
+      "authenticated": false
+    },
+    {
+      "anon": false,
+      "name": "spatial.append_assertion_revision(uuid,text,text,uuid,text,uuid,text,jsonb,timestamp with time zone,timestamp with time zone,uuid,text,text,jsonb,text,text,jsonb,text,text,jsonb,text,text,text)",
+      "definer": true,
+      "authenticated": false
+    },
+    {
+      "anon": false,
+      "name": "spatial.register_evidence_artifact(text,uuid,text,uuid,jsonb,text,text,jsonb,text,text,jsonb,text,text,text)",
+      "definer": true,
+      "authenticated": false
+    },
+    {
+      "anon": true,
+      "name": "policy_edge_attributed()",
+      "definer": false,
+      "authenticated": true
+    },
+    {
+      "anon": false,
+      "name": "evidence_pipeline.append_candidate(jsonb)",
+      "definer": false,
+      "authenticated": false
+    },
+    {
+      "anon": false,
+      "name": "legacy_graph_staging.family_collision(text,uuid)",
+      "definer": false,
+      "authenticated": false
+    },
+    {
+      "anon": false,
+      "name": "legacy_graph_staging.public_graph_row(text,uuid)",
+      "definer": false,
+      "authenticated": false
+    },
+    {
+      "anon": false,
+      "name": "legacy_graph_staging.validate_endpoints(jsonb)",
+      "definer": false,
+      "authenticated": false
+    },
+    {
+      "anon": false,
+      "name": "legacy_graph_staging.manifest()",
+      "definer": false,
+      "authenticated": false
+    },
+    {
+      "anon": true,
+      "name": "graph_event_article_memberships_require_event_node()",
+      "definer": false,
+      "authenticated": true
+    },
+    {
+      "anon": false,
+      "name": "mip_private.require_spatial_parent_reference()",
+      "definer": false,
+      "authenticated": false
+    },
+    {
+      "anon": false,
+      "name": "mip_private.retain_spatial_rows(text,text,timestamp with time zone,jsonb)",
+      "definer": false,
+      "authenticated": false
+    }
+  ],
+  "references": [
+    {
+      "anon": false,
+      "table": "sources",
+      "definition": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
+      "authenticated": false
+    },
+    {
+      "anon": false,
+      "table": "spatial.assertions",
+      "definition": "FOREIGN KEY (graph_node_id) REFERENCES nodes(id) ON DELETE RESTRICT",
+      "authenticated": false
+    },
+    {
+      "anon": false,
+      "table": "spatial.graph_node_authority_snapshots",
+      "definition": "FOREIGN KEY (graph_node_id) REFERENCES nodes(id) ON DELETE RESTRICT",
+      "authenticated": false
+    },
+    {
+      "anon": true,
+      "table": "edges",
+      "definition": "FOREIGN KEY (source_id) REFERENCES nodes(id)",
+      "authenticated": true
+    },
+    {
+      "anon": true,
+      "table": "edges",
+      "definition": "FOREIGN KEY (target_id) REFERENCES nodes(id)",
+      "authenticated": true
+    },
+    {
+      "anon": true,
+      "table": "graph_event_article_memberships",
+      "definition": "FOREIGN KEY (event_node_id) REFERENCES nodes(id)",
+      "authenticated": true
+    },
+    {
+      "anon": true,
+      "table": "node_topics",
+      "definition": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
+      "authenticated": true
+    },
+    {
+      "anon": true,
+      "table": "citations",
+      "definition": "FOREIGN KEY (resolved_node_id) REFERENCES nodes(id)",
+      "authenticated": true
+    },
+    {
+      "anon": false,
+      "table": "node_location_mentions",
+      "definition": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
+      "authenticated": false
+    },
+    {
+      "anon": false,
+      "table": "evidence_pipeline.evidence_candidates",
+      "definition": "FOREIGN KEY (event_node_id) REFERENCES nodes(id)",
+      "authenticated": false
+    },
+    {
+      "anon": false,
+      "table": "evidence_pipeline.evidence_candidates",
+      "definition": "FOREIGN KEY (related_node_id) REFERENCES nodes(id)",
+      "authenticated": false
+    }
+  ],
+  "dependent_views": [
+    {
+      "anon": true,
+      "kind": "v",
+      "name": "spatial_projection_v1",
+      "authenticated": true
+    },
+    {
+      "anon": true,
+      "kind": "v",
+      "name": "investigation_surface_public",
+      "authenticated": true
+    },
+    {
+      "anon": true,
+      "kind": "v",
+      "name": "graph_coverage_public",
+      "authenticated": true
+    },
+    {
+      "anon": true,
+      "kind": "v",
+      "name": "comparison_public",
+      "authenticated": true
+    }
+  ],
+  "execution": "NOT RUN. Read-only live catalog inspection plus in-memory structural verification; no PostgreSQL/index/concurrency execution.",
+  "repairParent": "b9e2507749ffffa3c2e89c9f4be0cc102b60c9c1",
+  "securityFingerprint": "e5aea518d5606e19012091d64515789f",
+  "previousStaticChecks": "Superseded; prior candidate failed independent security review.",
+  "defaultACLObservation": {
+    "creator": "postgres",
+    "schema": "public",
+    "tables": "anon/authenticated full privileges arwdDxtm",
+    "sequences": "anon/authenticated rwU",
+    "functions": "anon/authenticated EXECUTE"
+  },
+  "remainingGates": [
+    "Exact-commit disposable execution",
+    "Index build/interruption/recovery execution",
+    "Source/destination two-session execution",
+    "API/RPC/GraphQL/CDC inventory",
+    "Million-row performance",
+    "Separate live default ACL remediation review"
+  ]
+}
