@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { exactSpan, canonicalUrl, analyzeSources, resolveIdentity, createPreview } from '../scripts/demoCorpus.mjs'
+import { exactSpan, canonicalUrl, analyzeSources, resolveIdentity, createPreview, nearDuplicates, validatePrivateRelation, syntheticProjection } from '../scripts/demoCorpus.mjs'
 const record = { topic: 'epstein', url: 'https://example.org/a', title: 'Oversight statement', article_id: 'a', capture_id: 'c', content_hash: 'h', reader_state: 'pending_review', capture_state: 'pending' }
 test('Unicode spans use code points and reject ambiguous or normalized substitutions', () => {
   assert.deepEqual(exactSpan('😀 Aé Z', 'Aé'), { span_start: 2, span_end: 4 })
@@ -49,4 +49,22 @@ test('corrections and contradictory statements retain distinct capture identitie
   const sources = createPreview([record, { ...record, capture_id: 'c2', content_hash: 'h2', statement: 'contradicts previous statement' }])[1].sources
   assert.notEqual(sources[0].preview_id, sources[1].preview_id)
   assert.equal(sources[0].article_id, sources[1].article_id)
+})
+test('body-derived near duplicates are review suggestions, not extra corroboration', () => {
+  const text = 'The committee released new records following the formal oversight request on Monday'
+  const pairs = nearDuplicates([{ url: 'a', excerpt: text }, { url: 'b', excerpt: text + ' morning' }, { url: 'c', excerpt: 'Different legal question concerning grant appropriations across multiple federal agencies and offices' }])
+  assert.equal(pairs.length, 1); assert.equal(pairs[0].disposition, 'human_dependency_review_required')
+  assert.deepEqual(nearDuplicates([{ url: 'a', excerpt: 'The motion passed' }, { url: 'b', excerpt: 'The motion passed' }]), [])
+})
+test('causal, misconduct, person guilt and proposal-to-outcome relations fail closed', () => {
+  const ref = { namespace: 'synthetic:epstein', id: 'event-1' }, registry = syntheticProjection('epstein').registry
+  for (const type of ['causes', 'guilty_by_mention', 'private_person_misconduct', 'proposal_implemented', 'outcome_proven']) assert.throws(() => validatePrivateRelation({ type, from: ref, to: ref, publication_allowed: false }, registry))
+})
+test('synthetic canonical joins preserve separate comparison and graph families', () => {
+  const fixture = syntheticProjection('iran'), event = fixture.timeline[0]
+  assert.equal(fixture.geography[0].event, event); assert.equal(fixture.arc.members[0], event)
+  assert.equal(fixture.comparison_event.graph_event, event)
+  assert.notEqual(fixture.comparison_event.namespace, event.namespace)
+  assert.equal(fixture.relationships.every(r => r.publication_allowed === false), true)
+  assert.throws(() => validatePrivateRelation({ type: 'synthetic_event_place', from: event, to: { namespace: 'real', id: 'x' }, publication_allowed: false }, [...fixture.registry, { namespace: 'real', id: 'x' }]))
 })
