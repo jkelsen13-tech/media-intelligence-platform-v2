@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { build } from 'esbuild'
 import { exactSpan, canonicalUrl, analyzeSources, resolveIdentity, createPreview, nearDuplicates, validatePrivateRelation, syntheticProjection } from '../scripts/demoCorpus.mjs'
 const record = { topic: 'epstein', url: 'https://example.org/a', title: 'Oversight statement', article_id: 'a', capture_id: 'c', content_hash: 'h', reader_state: 'pending_review', capture_state: 'pending' }
 test('Unicode spans use code points and reject ambiguous or normalized substitutions', () => {
@@ -67,4 +68,12 @@ test('synthetic canonical joins preserve separate comparison and graph families'
   assert.notEqual(fixture.comparison_event.namespace, event.namespace)
   assert.equal(fixture.relationships.every(r => r.publication_allowed === false), true)
   assert.throws(() => validatePrivateRelation({ type: 'synthetic_event_place', from: event, to: { namespace: 'real', id: 'x' }, publication_allowed: false }, [...fixture.registry, { namespace: 'real', id: 'x' }]))
+})
+test('compiled isolated preview has no live backend/auth/operator import path', async () => {
+  const result = await build({ entryPoints: ['scripts/demo-corpus-preview.jsx'], bundle: true, write: false, outdir: 'memory-only', metafile: true, jsx: 'automatic', logLevel: 'silent' })
+  const inputs = Object.keys(result.metafile.inputs)
+  assert.ok(inputs.some(p => p.endsWith('expanded-source-receipts.json')))
+  assert.equal(inputs.some(p => /supabase|operatorBackend|investigationBackend|src\/App|authSession|themeFlag/i.test(p)), false)
+  assert.equal(inputs.some(p => p.startsWith('src/')), false)
+  assert.equal(result.errors.length, 0)
 })
