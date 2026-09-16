@@ -25,8 +25,10 @@
     "semantic_kind": "enacted_requirement",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Requirement is not proof of compliance."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Requirement is not proof of compliance.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.senate.gov/legislative/LIS/roll_call_votes/vote1191/vote_119_1_00512.htm",
@@ -54,8 +56,10 @@
     "semantic_kind": "procedural_vote",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Yea means tabling the amendment, not voting for disclosure."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Yea means tabling the amendment, not voting for disclosure.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.govinfo.gov/content/pkg/BILLS-119s5005is/html/BILLS-119s5005is.htm",
@@ -83,8 +87,10 @@
     "semantic_kind": "legislative_proposal",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Introduced version only; not enacted law."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Introduced version only; not enacted law.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.govinfo.gov/app/details/BILLS-119s2746is",
@@ -112,8 +118,10 @@
     "semantic_kind": "legislative_proposal",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Introduction differs from press release date; not enacted."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Introduction differs from press release date; not enacted.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.judiciary.senate.gov/press/dem/releases/durbin-van-hollen-call-on-attorney-general-to-immediately-release-the-epstein-files",
@@ -141,8 +149,10 @@
     "semantic_kind": "oversight_request",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Release describes appropriations committee amendment, not final enactment."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Release describes appropriations committee amendment, not final enactment.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.judiciary.senate.gov/press/dem/releases/durbin-presses-bondi-patel-bongino-on-rifts-between-doj-fbi-white-house-on-epstein-files",
@@ -170,8 +180,10 @@
     "semantic_kind": "oversight_request",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Alleged discrepancies attributed to Durbin, not adjudicated facts."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Alleged discrepancies attributed to Durbin, not adjudicated facts.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.grassley.senate.gov/news/news-releases/grassley-questions-patel-at-fbi-oversight-hearing",
@@ -199,8 +211,10 @@
     "semantic_kind": "oversight_hearing",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Questions and framing do not establish investigative claims."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Questions and framing do not establish investigative claims.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/chairman-comer-subpoenas-ghislaine-maxwell-for-deposition-at-federal-prison/",
@@ -228,8 +242,10 @@
     "semantic_kind": "subpoena_process",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Scheduled deposition is not confirmed occurrence. The bounded sentence relies on source context for the motion identity."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Scheduled deposition is not confirmed occurrence. The bounded sentence relies on source context for the motion identity.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
@@ -239,7 +255,7 @@
     "outlet": "DOJ Office of Public Affairs",
     "rights": "US federal authored public text; bounded excerpt only; no linked personal records retained.",
     "run_id": "demo-epstein-20260916",
-    "manus_id": null,
+    "manus_id": "067a1994-f2ba-4da2-a6fd-c492a6bd5af5",
     "span_end": 123,
     "origin_id": "doj-executive",
     "statement": "Agency production-total claim.",
@@ -257,8 +273,10 @@
     "semantic_kind": "official_claim",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Not independently verified compliance; same event as Jan30 letter."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Not independently verified compliance; same event as Jan30 letter.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.justice.gov/opa/pr/attorney-general-pamela-bondi-releases-first-phase-declassified-epstein-files",
@@ -286,8 +304,10 @@
     "semantic_kind": "official_claim",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Agency description, not independent novelty assessment; no linked personal-data records retained."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Agency description, not independent novelty assessment; no linked personal-data records retained.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.justice.gov/archives/opa/pr/statement-doj-office-professional-responsibility-report-jeffrey-epstein-2006-2008",
@@ -315,8 +335,10 @@
     "semantic_kind": "agency_legal_position",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Page updated 2025-02-05; issuance date retained. DOJ characterization of disclosure law."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Page updated 2025-02-05; issuance date retained. DOJ characterization of disclosure law.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.justice.gov/media/1426281/dl?inline=",
@@ -344,8 +366,10 @@
     "semantic_kind": "agency_instruction",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Instruction not proof of implementation. PDF extraction whitespace normalized; words unchanged; subject line used as title."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Instruction not proof of implementation. PDF extraction whitespace normalized; words unchanged; subject line used as title.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/oversight-committee-releases-epstein-records-provided-by-the-department-of-justice/",
@@ -373,8 +397,10 @@
     "semantic_kind": "official_release_accounting",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Records originate from DOJ; not independent corroboration of contents."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Records originate from DOJ; not independent corroboration of contents.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/oversight-committee-releases-records-provided-by-the-epstein-estate-chairman-comer-provides-statement/",
@@ -402,8 +428,10 @@
     "semantic_kind": "oversight_plan",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Plan not completed acquisition; no underlying bank data retained."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Plan not completed acquisition; no underlying bank data retained.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/chairman-comer-announces-new-actions-in-oversight-committees-investigation-of-federal-governments-handling-of-epstein-and-maxwell/",
@@ -431,8 +459,10 @@
     "semantic_kind": "publication_event",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Witness appearance or mention never implies misconduct."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Witness appearance or mention never implies misconduct.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/oversight-committee-republicans-and-democrats-hold-leon-black-in-contempt-for-defying-lawful-subpoenas/",
@@ -460,8 +490,10 @@
     "semantic_kind": "committee_recommendation",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Committee recommendation only, not full House vote or criminal judgment; title overstates procedural stage."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Committee recommendation only, not full House vote or criminal judgment; title overstates procedural stage.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/chairman-comer-provides-update-on-review-of-the-federal-governments-investigation-of-epstein-and-maxwell/",
@@ -489,8 +521,10 @@
     "semantic_kind": "oversight_action",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Subpoena not finding of wrongdoing."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Subpoena not finding of wrongdoing.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/oversight-committee-releases-acosta-transcript/",
@@ -518,8 +552,10 @@
     "semantic_kind": "publication_event",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Estate records are supplied material, not established truth."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Estate records are supplied material, not established truth.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/chairman-comer-statement-on-transcribed-interview-with-alexander-acosta/",
@@ -547,8 +583,10 @@
     "semantic_kind": "release_commitment",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Promise distinct from actual release; dependent chronology not independent corroboration."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Promise distinct from actual release; dependent chronology not independent corroboration.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/oversight-committee-releases-jes-staley-transcript/",
@@ -576,8 +614,10 @@
     "semantic_kind": "publication_event",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Interview participation never establishes misconduct. Publication date differs from interview date."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Interview participation never establishes misconduct. Publication date differs from interview date.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/chairman-comer-seeks-transcribed-interview-with-epstein-prison-guard/",
@@ -605,8 +645,10 @@
     "semantic_kind": "scheduled_procedure",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Scheduled event not confirmed occurrence; title concerns separate witness request."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Scheduled event not confirmed occurrence; title concerns separate witness request.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/oversight-committee-releases-additional-epstein-investigation-transcripts/",
@@ -634,8 +676,10 @@
     "semantic_kind": "publication_event",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Testimony publication not validation of testimony."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Testimony publication not validation of testimony.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/chairman-comer-doj-complying-with-epstein-records-subpoena/",
@@ -663,8 +707,10 @@
     "semantic_kind": "oversight_action",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Compliance characterization attributed to Comer, not independent adjudication."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Compliance characterization attributed to Comer, not independent adjudication.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oversight.house.gov/release/oversight-committee-seeks-epstein-maxwell-suspicious-activity-reports-from-treasury-department/",
@@ -692,8 +738,10 @@
     "semantic_kind": "official_release_accounting",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "34,000 received differs from 33,295 published; differing measures, not automatically contradiction. SAR never implies guilt."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "34,000 received differs from 33,295 published; differing measures, not automatically contradiction. SAR never implies guilt.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
@@ -721,8 +769,10 @@
     "semantic_kind": "agency_projection",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "PDF extraction whitespace normalized; words unchanged. Projection is not completion. Search metadata differs; date verified on PDF page 1."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "PDF extraction whitespace normalized; words unchanged. Projection is not completion. Search metadata differs; date verified on PDF page 1.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.justice.gov/letter-to-congress.pdf",
@@ -750,8 +800,10 @@
     "semantic_kind": "agency_disclosure_accounting",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "PDF extraction whitespace normalized; words unchanged. Same origin/event as January 30 release; legal basis not adjudicated."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "PDF extraction whitespace normalized; words unchanged. Same origin/event as January 30 release; legal basis not adjudicated.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
@@ -779,8 +831,10 @@
     "semantic_kind": "publication_notice",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "PDF extraction whitespace normalized; words unchanged. Signed August 21, filed August 26, published August 27. Publication does not establish compliance; no appendix retained."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "PDF extraction whitespace normalized; words unchanged. Signed August 21, filed August 26, published August 27. Publication does not establish compliance; no appendix retained.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.finance.senate.gov/ranking-members-news/following-new-epstein-revelations-wyden-renews-demand-for-trump-administration-to-produce-epstein-files",
@@ -808,8 +862,10 @@
     "semantic_kind": "oversight_access_claim",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Wyden's account of Treasury response; not independently adjudicated."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Wyden's account of Treasury response; not independently adjudicated.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.finance.senate.gov/ranking-members-news/senate-republican-blocks-wyden-bill-mandating-treasury-hand-over-epstein-bank-records",
@@ -837,8 +893,10 @@
     "semantic_kind": "legislative_process",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Attributed procedural claim; unanimous-consent request, not full Senate roll-call rejection."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Attributed procedural claim; unanimous-consent request, not full Senate roll-call rejection.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.iaea.org/newscenter/pressreleases/update-on-developments-in-iran-4",
@@ -866,8 +924,10 @@
     "semantic_kind": "technical_assessment",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Time-limited expectation; regulator-reported radiation data, not proof of no on-site harm."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Time-limited expectation; regulator-reported radiation data, not proof of no on-site harm.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.iaea.org/newscenter/pressreleases/update-on-developments-in-iran-6",
@@ -895,8 +955,10 @@
     "semantic_kind": "diplomatic_proposal",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Proposed meeting not completed agreement."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Proposed meeting not completed agreement.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.iaea.org/newscenter/pressreleases/update-on-developments-in-iran-7",
@@ -924,8 +986,10 @@
     "semantic_kind": "technical_assessment",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Regional levels do not establish absence of local contamination."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Regional levels do not establish absence of local contamination.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.centcom.mil/MEDIA/PUBLIC-RELEASES/Article/4457220/us-forces-start-mine-clearance-mission-in-strait-of-hormuz/",
@@ -953,8 +1017,10 @@
     "semantic_kind": "official_operational_plan",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Future plan not confirmed deployment; mine attribution remains military claim."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Future plan not confirmed deployment; mine attribution remains military claim.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.centcom.mil/MEDIA/PUBLIC-RELEASES/Article/4457255/us-to-blockade-ships-entering-or-exiting-iranian-ports/",
@@ -982,8 +1048,10 @@
     "semantic_kind": "official_operational_policy",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Policy announcement not demonstrated practice or legal adjudication."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Policy announcement not demonstrated practice or legal adjudication.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.centcom.mil/MEDIA/PUBLIC-RELEASES/Article/4448978/centcom-refutes-media-claims-of-us-strikes-in-lamerd-iran/",
@@ -1011,8 +1079,10 @@
     "semantic_kind": "disputed_official_denial",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Not a verified correction. Military account disputed; conflict locator https://warwatch.ch/situations/armed-conflicts-in-iran/violations/ cites outside investigations."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Not a verified correction. Military account disputed; conflict locator https://warwatch.ch/situations/armed-conflicts-in-iran/violations/ cites outside investigations.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.dvidshub.net/news/574128/us-destroys-5-irgc-tankers-after-iran-targets-another-american-warship",
@@ -1040,8 +1110,10 @@
     "semantic_kind": "official_operational_claim",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "DVIDS distributes CENTCOM; not independent origin. Title not evidence of causality."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "DVIDS distributes CENTCOM; not independent origin. Title not evidence of causality.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.iaea.org/newscenter/pressreleases/update-on-developments-in-iran",
@@ -1069,8 +1141,10 @@
     "semantic_kind": "technical_assessment",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Grossi assessment pertains to Natanz facility, not all Iran."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Grossi assessment pertains to Natanz facility, not all Iran.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.iaea.org/newscenter/pressreleases/update-on-developments-in-iran-2",
@@ -1098,8 +1172,10 @@
     "semantic_kind": "technical_assessment",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Statement specific to centrifuge workshop; not all Esfahan facilities."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Statement specific to centrifuge workshop; not all Esfahan facilities.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.iaea.org/newscenter/pressreleases/update-on-developments-in-iran-3",
@@ -1127,8 +1203,10 @@
     "semantic_kind": "technical_assessment",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Reported radiation assessment; not evidence of no onsite contamination."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Reported radiation assessment; not evidence of no onsite contamination.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.everycrsreport.com/reports/IN12577.html",
@@ -1156,8 +1234,10 @@
     "semantic_kind": "legal_analysis",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "CRS analysis not judicial decision. Canonical locator https://www.congress.gov/crs-product/IN12577; mirror not independent origin."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "CRS analysis not judicial decision. Canonical locator https://www.congress.gov/crs-product/IN12577; mirror not independent origin.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.everycrsreport.com/reports/IN12662.html",
@@ -1185,8 +1265,10 @@
     "semantic_kind": "policy_analysis",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Early-conflict snapshot; questions not outcomes. Canonical https://www.congress.gov/crs-product/IN12662."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Early-conflict snapshot; questions not outcomes. Canonical https://www.congress.gov/crs-product/IN12662.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.everycrsreport.com/reports/IN12665.html",
@@ -1214,8 +1296,10 @@
     "semantic_kind": "uncertainty_statement",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Aggregates official/outside sources, not independent battlefield measurement. Canonical https://www.congress.gov/crs-product/IN12665."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Aggregates official/outside sources, not independent battlefield measurement. Canonical https://www.congress.gov/crs-product/IN12665.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.everycrsreport.com/reports/R48887.html",
@@ -1243,8 +1327,10 @@
     "semantic_kind": "conditional_analysis",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Possibility not observed outcome. Canonical https://www.congress.gov/crs-product/R48887."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Possibility not observed outcome. Canonical https://www.congress.gov/crs-product/R48887.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gov.uk/government/speeches/prime-ministers-oral-statement-on-iran-2-march-2026",
@@ -1272,8 +1358,10 @@
     "semantic_kind": "official_policy_statement",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "UK account of its own decision; other claims remain attributed."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "UK account of its own decision; other claims remain attributed.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.whitehouse.gov/fact-sheets/2025/02/fact-sheet-president-donald-j-trump-restores-maximum-pressure-on-iran/",
@@ -1301,8 +1389,10 @@
     "semantic_kind": "policy_objective",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Objective not proof of possession/effect; no causal inference to later conflict."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Objective not proof of possession/effect; no causal inference to later conflict.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.whitehouse.gov/releases/2025/06/experts-agree-irans-nuclear-facilities-have-been-obliterated/",
@@ -1330,8 +1420,10 @@
     "semantic_kind": "disputed_official_claim",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Not verified consensus; IAEA uncertainty differs in date and available evidence."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Not verified consensus; IAEA uncertainty differs in date and available evidence.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://home.treasury.gov/news/press-releases/sb0026",
@@ -1359,8 +1451,10 @@
     "semantic_kind": "sanctions_action",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Designation is agency action, not judicial guilt or proof of effectiveness."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Designation is agency action, not judicial guilt or proof of effectiveness.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.whitehouse.gov/presidential-actions/2025/01/restoring-accountability-to-policy-influencing-positions-within-the-federal-workforce/",
@@ -1388,8 +1482,10 @@
     "semantic_kind": "executive_order",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Directive not realized employment outcome. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Directive not realized employment outcome. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.whitehouse.gov/presidential-actions/2025/02/ensuring-accountability-for-all-agencies/",
@@ -1417,8 +1513,10 @@
     "semantic_kind": "executive_order",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "No outcome or Project2025 causality inferred. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "No outcome or Project2025 causality inferred. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.whitehouse.gov/presidential-actions/2025/01/unleashing-american-energy/",
@@ -1446,8 +1544,10 @@
     "semantic_kind": "executive_order",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "No emissions or economic outcome inference. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "No emissions or economic outcome inference. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.whitehouse.gov/presidential-actions/2025/01/ending-radical-indoctrination-in-k-12-schooling/",
@@ -1475,8 +1575,10 @@
     "semantic_kind": "executive_order",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Deadline or directive not evidence achieved. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Deadline or directive not evidence achieved. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.whitehouse.gov/wp-content/uploads/2025/03/M-25-14-Rescission-of-M-25-13.pdf",
@@ -1504,8 +1606,10 @@
     "semantic_kind": "memorandum_correction",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Do not present earlier memo as still operative. PDF text extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Do not present earlier memo as still operative. PDF text extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.whitehouse.gov/wp-content/uploads/2025/03/M-25-13-Temporary-Pause-to-Review-Agency-Grant-Loan-and-Other-Financial-Assistance-Programs.pdf",
@@ -1533,8 +1637,10 @@
     "semantic_kind": "memorandum",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Rescinded Jan29 by M-25-14. PDF text extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Rescinded Jan29 by M-25-14. PDF text extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gao.gov/assets/890/880282.pdf",
@@ -1562,8 +1668,10 @@
     "semantic_kind": "oversight_legal_decision",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Limited 30-day pause; not blanket approval. PDF extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Limited 30-day pause; not blanket approval. PDF extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gao.gov/products/b-337366",
@@ -1591,8 +1699,10 @@
     "semantic_kind": "oversight_legal_decision",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Does not settle legality under other law. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Does not settle legality under other law. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gao.gov/assets/890/880607.pdf",
@@ -1620,8 +1730,10 @@
     "semantic_kind": "oversight_legal_decision",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Based on public data; HHS says notice pause lifted; not judicial holding. PDF extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Based on public data; HHS says notice pause lifted; not judicial holding. PDF extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gao.gov/assets/890/881507.pdf",
@@ -1649,8 +1761,10 @@
     "semantic_kind": "oversight_legal_decision",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Mixed findings include violations for other programs; excerpt not full decision. PDF extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Mixed findings include violations for other programs; excerpt not full decision. PDF extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gao.gov/assets/890/881838.pdf",
@@ -1678,8 +1792,10 @@
     "semantic_kind": "oversight_legal_decision",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Scope sentence only; cannot substantiate particular program outcomes. PDF extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Scope sentence only; cannot substantiate particular program outcomes. PDF extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.supremecourt.gov/opinions/24pdf/24a884_8n59.pdf",
@@ -1707,8 +1823,10 @@
     "semantic_kind": "judicial_order",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Remedy decision does not decide executive-order citizenship merits. PDF extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Remedy decision does not decide executive-order citizenship merits. PDF extraction whitespace normalized. Relationship to Project 2025 is unreviewed; sequence or similarity does not establish implementation.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.ed.gov/about/news/press-release/us-department-of-education-initiates-reduction-force",
@@ -1736,8 +1854,10 @@
     "semantic_kind": "agency_announcement",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Commitment distinct from observed outcome. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Commitment distinct from observed outcome. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.epa.gov/newsreleases/epa-launches-biggest-deregulatory-action-us-history",
@@ -1765,8 +1885,10 @@
     "semantic_kind": "agency_announcement",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Reconsideration not finalized repeal. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Reconsideration not finalized repeal. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://oig.ed.gov/reports/other/review-us-department-education-changes-staffing-and-operations",
@@ -1794,8 +1916,10 @@
     "semantic_kind": "oversight_report",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Review covers Jan20–Mar31 2025 with express access/scope limits and department disagreement. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Review covers Jan20–Mar31 2025 with express access/scope limits and department disagreement. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.epa.gov/system/files/documents/2025-10/epaoig_20250929-25-e-0053_cert.pdf",
@@ -1823,8 +1947,10 @@
     "semantic_kind": "oversight_report",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Synthesis of 2009–2023 reports, not finding all new actions unlawful. PDF whitespace normalized. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Synthesis of 2009–2023 reports, not finding all new actions unlawful. PDF whitespace normalized. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.opm.gov/media/sqfnpy4n/opm-memorandum-re-schedule-policy-career-guidance-01-27-25-final-2.pdf",
@@ -1852,8 +1978,10 @@
     "semantic_kind": "implementation_guidance",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Not proof transfers occurred. PDF whitespace normalized. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Not proof transfers occurred. PDF whitespace normalized. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.opm.gov/chcoc/latest-memos/opm-schedule-policycareer-implementation-guidance-memorandum.pdf",
@@ -1881,8 +2009,10 @@
     "semantic_kind": "implementation_guidance",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Final rule guidance not evidence all positions transferred. PDF whitespace normalized. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Final rule guidance not evidence all positions transferred. PDF whitespace normalized. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.heritage.org/press/project-2025-publishes-comprehensive-policy-guide-mandate-leadership-the-conservative-promise",
@@ -1910,8 +2040,10 @@
     "semantic_kind": "proposal_publication_metadata",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Authorship metadata, not substantive policy proof. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Authorship metadata, not substantive policy proof. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://static.heritage.org/project2025/2025_MandateForLeadership_FULL.pdf",
@@ -1939,8 +2071,10 @@
     "semantic_kind": "original_policy_proposal",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Printed p319/PDF350; month precision only. One bounded quotation from entire book; proposal not law or implemented outcome. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "month only; timestamp withheld",
+    "remaining_uncertainty": "Printed p319/PDF350; month precision only. One bounded quotation from entire book; proposal not law or implemented outcome. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.supremecourt.gov/opinions/24pdf/24a1203_new_6j37.pdf",
@@ -1968,8 +2102,10 @@
     "semantic_kind": "judicial_stay",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Stay pending appeal not final merits ruling. Accompanying criticism is dissent, not majority holding. PDF whitespace normalized. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Stay pending appeal not final merits ruling. Accompanying criticism is dissent, not majority holding. PDF whitespace normalized. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.justice.gov/ag/media/1388561/dl",
@@ -1997,8 +2133,10 @@
     "semantic_kind": "implementation_memorandum",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Bounded lead-in alone cannot substantiate particular action list or prove an execution occurred. PDF whitespace normalized. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Bounded lead-in alone cannot substantiate particular action list or prove an execution occurred. PDF whitespace normalized. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.whitehouse.gov/presidential-actions/2025/01/restoring-the-death-penalty-and-protecting-public-safety/",
@@ -2026,8 +2164,10 @@
     "semantic_kind": "executive_order",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Directive not a sentence or execution outcome. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Directive not a sentence or execution outcome. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.hhs.gov/press-room/dr-fink-statement.html",
@@ -2055,8 +2195,10 @@
     "semantic_kind": "agency_statement",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Review commitment not observed program outcome. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Review commitment not observed program outcome. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.whitehouse.gov/presidential-actions/2025/01/enforcing-the-hyde-amendment/",
@@ -2084,8 +2226,10 @@
     "semantic_kind": "executive_order",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Lead-in only; source context identifies EO14076/14079, not substantiated by bounded lead-in alone. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Lead-in only; source context identifies EO14076/14079, not substantiated by bounded lead-in alone. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.whitehouse.gov/presidential-actions/2025/03/improving-education-outcomes-by-empowering-parents-states-and-communities/",
@@ -2113,8 +2257,10 @@
     "semantic_kind": "executive_order",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Qualified by extent permitted by law and uninterrupted services; no proof of legal abolition. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Qualified by extent permitted by law and uninterrupted services; no proof of legal abolition. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.heritage.org/press/project-2025-responds-house-democrats-unserious-and-misleading-task-force",
@@ -2142,8 +2288,10 @@
     "semantic_kind": "proponent_statement",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Attributed rhetoric, not independent evaluation. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Attributed rhetoric, not independent evaluation. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.heritage.org/press/heritage-foundation-and-heritage-action-president-criticizes-house-democrats-bogus-project",
@@ -2171,8 +2319,10 @@
     "semantic_kind": "proponent_statement",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Advocacy characterization; same organization, not independent corroboration. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Advocacy characterization; same organization, not independent corroboration. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://huffman.house.gov/media-center/press-releases/congressional-leaders-form-task-force-to-counter-project-2025-and-defend-democracy",
@@ -2200,8 +2350,10 @@
     "semantic_kind": "opposition_statement",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Political characterization attributed to issuer, not neutral evaluation. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Political characterization attributed to issuer, not neutral evaluation. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gao.gov/products/b-337202",
@@ -2229,8 +2381,10 @@
     "semantic_kind": "oversight_legal_decision",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Jan20–Apr15 withholding; later rates consistent with FY2024, not continued total suspension. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Jan20–Apr15 withholding; later rates consistent with FY2024, not continued total suspension. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.govinfo.gov/content/pkg/FR-2025-02-25/pdf/2025-03014.pdf",
@@ -2258,8 +2412,10 @@
     "semantic_kind": "interim_final_rule",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Publication and effective dates distinct; does not repeal NEPA statute. PDF whitespace normalized. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Publication and effective dates distinct; does not repeal NEPA statute. PDF whitespace normalized. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.govinfo.gov/content/pkg/FR-2026-01-08/pdf/2026-00178.pdf",
@@ -2287,8 +2443,10 @@
     "semantic_kind": "final_rule",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Same rulemaking dependency; not independent corroboration or repeal of statute. PDF whitespace normalized. No similarity-based Project2025 implementation assertion."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Same rulemaking dependency; not independent corroboration or repeal of statute. PDF whitespace normalized. No similarity-based Project2025 implementation assertion.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gov.uk/government/news/e3-joint-statement-on-iran-initiation-of-the-snapback-process",
@@ -2316,8 +2474,10 @@
     "semantic_kind": "official_procedural_announcement",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "E3 position not judicial determination or sanctions effects. Joint statement is one shared origin."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "E3 position not judicial determination or sanctions effects. Joint statement is one shared origin.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gov.uk/government/news/e3-joint-statement-on-iran-activation-of-the-snapback",
@@ -2345,8 +2505,10 @@
     "semantic_kind": "official_diplomatic_position",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Attributed position, not neutral legal adjudication or proof of successful diplomacy."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Attributed position, not neutral legal adjudication or proof of successful diplomacy.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gov.uk/government/news/uk-reimposes-un-sanctions-on-iran",
@@ -2374,8 +2536,10 @@
     "semantic_kind": "announced_agency_action",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Official count; designations not criminal convictions or effectiveness proof."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Official count; designations not criminal convictions or effectiveness proof.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gov.uk/government/news/foreign-secretary-statement-ceasefire-in-the-middle-east-8-april",
@@ -2403,8 +2567,10 @@
     "semantic_kind": "official_diplomatic_position",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Announcement not verified compliance or durable peace."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Announcement not verified compliance or durable peace.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gov.uk/government/news/joint-statement-from-finance-ministers-on-the-middle-east-15-april-2026",
@@ -2432,8 +2598,10 @@
     "semantic_kind": "official_policy_expectation",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Prediction not realized effects; joint signatories not independent confirmations."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Prediction not realized effects; joint signatories not independent confirmations.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.gov.uk/government/news/joint-e4-leaders-statement-on-the-us-iran-peace-deal-14-june-2026",
@@ -2461,8 +2629,10 @@
     "semantic_kind": "official_diplomatic_position",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Title June14; publication June15; updated June24 for signatories. No implemented-peace inference."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Title June14; publication June15; updated June24 for signatories. No implemented-peace inference.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://commonslibrary.parliament.uk/research-briefings/cbp-10521/",
@@ -2490,8 +2660,10 @@
     "semantic_kind": "evidence_limitation",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Synthesis of cited sources, not direct observation; snapshot not live tracker."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Synthesis of cited sources, not direct observation; snapshot not live tracker.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.iaea.org/newscenter/news/restoring-iaea-inspections-in-iran-would-create-promising-ground-for-wider-progress-says-director-general-grossi",
@@ -2519,8 +2691,10 @@
     "semantic_kind": "official_diplomatic_assessment",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Attributed assessment not completed inspection restoration; source body September8."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Attributed assessment not completed inspection restoration; source body September8.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.centcom.mil/MEDIA/PUBLIC-RELEASES/Article/4430855/civilians-warned-to-avoid-ports-used-by-iranian-forces/",
@@ -2548,8 +2722,10 @@
     "semantic_kind": "official_warning",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Underlying military-use claims remain attributed. No inference warning reached civilians, allowed evacuation, or made attack lawful."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Underlying military-use claims remain attributed. No inference warning reached civilians, allowed evacuation, or made attack lawful.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.centcom.mil/MEDIA/PUBLIC-RELEASES/Article/4451965/us-continues-strikes-into-iran-after-successful-rescue-of-f-15e-aircrew/",
@@ -2577,8 +2753,10 @@
     "semantic_kind": "official_operational_claim",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Not independent confirmation. April5 report describes April4 recovery after April2 loss."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Not independent confirmation. April5 report describes April4 recovery after April2 loss.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   },
   {
     "url": "https://www.centcom.mil/MEDIA/STATEMENTS/Statements-View/Article/4434083/all-crew-members-of-us-kc-135-loss-in-iraq-confirmed-deceased/",
@@ -2606,7 +2784,9 @@
     "semantic_kind": "investigation_status",
     "retained_scope": "bounded_exact_excerpt",
     "candidate_state": "pending",
-    "publication_precision": "day only or unknown; timestamp withheld",
-    "remaining_uncertainty": "Excerpt does not establish cause or completed investigation; no service-member names retained."
+    "publication_precision": "day only; timestamp withheld",
+    "remaining_uncertainty": "Excerpt does not establish cause or completed investigation; no service-member names retained.",
+    "retained_text_availability": "retained bounded excerpt in private qik capture; public source body verified during research",
+    "source_verified_at": "2026-09-16"
   }
 ]

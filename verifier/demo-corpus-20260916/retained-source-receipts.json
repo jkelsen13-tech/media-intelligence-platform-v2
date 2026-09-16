@@ -1,6 +1,10 @@
 [
   {
     "topic": "iran",
+    "origin_id": "iaea",
+    "dependency_id": "fordow-june22-assessment",
+    "source_type": "intergovernmental_press_release",
+    "semantic_kind": "uncertainty_statement",
     "run_id": "demo-iran-20260916",
     "source_date": "2025-06-22",
     "rights": "Bounded quotation fragment (17 words); no full article, media or linked documents retained.",
@@ -28,6 +32,10 @@
   },
   {
     "topic": "epstein",
+    "origin_id": "doj-oig",
+    "dependency_id": "efta-oig-audit",
+    "source_type": "audit_scope_notice",
+    "semantic_kind": "audit_status",
     "run_id": "demo-epstein-20260916",
     "source_date": "2026-04-23",
     "rights": "DOJ authored government text; DOJ copyright policy checked 2026-09-16. No third-party or underlying disclosure material.",
@@ -55,6 +63,10 @@
   },
   {
     "topic": "project2025",
+    "origin_id": "doj-executive",
+    "dependency_id": "seattle-consent-decree-motion",
+    "source_type": "government_press_release",
+    "semantic_kind": "agency_procedural_action",
     "run_id": "demo-project2025-20260916",
     "source_date": "2025-07-23",
     "rights": "DOJ authored government text; DOJ copyright policy checked 2026-09-16. No linked filings or third-party text.",
