@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {validateReviewProposal,comparisonDependency,releasePublic,PUBLIC_RELEASE_ENABLED} from '../supabase/qualification/mip-cutover-authority/eftaReviewContract.mjs';
+import {validateReviewProposal,assertAuthoritativeReviewShape,comparisonDependency,releasePublic,PUBLIC_RELEASE_ENABLED} from '../supabase/qualification/mip-cutover-authority/eftaReviewContract.mjs';
 const manifest=JSON.parse(readFileSync(new URL('../verifier/efta-governed-demo/manifest.json',import.meta.url)));
 const registry=[{namespace:'test:institution',id:'test-only-doj',kind:'institution',state:'resolved',resolution_revision:'test-only'}];
 function fixture(index=0) {
@@ -28,9 +28,14 @@ for(const change of [
 ]){
  test('reject stale retained input '+JSON.stringify(change),()=>{const f=fixture();Object.assign(f.retained,change);assert.throws(()=>validateReviewProposal(f.proposal,f.retained,registry))});
 }
-for(const change of [{reviewer:''},{reason:''},{uncertainty:''},{action:'publish'},{reviewed_at:'invalid'},{publication_allowed:true},{geography:{lat:0,lng:0}}]){
+for(const change of [{reason:''},{uncertainty:''},{action:'publish'},{reviewed_at:'invalid'},{publication_allowed:true},{geography:{lat:0,lng:0}}]){
  test('reject missing review / public authority '+JSON.stringify(change),()=>{const f=fixture();Object.assign(f.proposal,change);assert.throws(()=>validateReviewProposal(f.proposal,f.retained,registry))});
 }
+test('preflight reviewer label is display-only and cannot become authoritative',()=>{
+ const f=fixture();const p=validateReviewProposal(f.proposal,f.retained,registry);
+ assert.equal(Object.hasOwn(p,'reviewer'),false);
+ assert.throws(()=>assertAuthoritativeReviewShape({identity_resolution_id:'fixture-resolution',reviewer:'synthetic reviewer'}),/free_text_authority_reviewer/);
+});
 test('identity must resolve once to an institution revision',()=>{
  const f=fixture();for(const rows of [[],[...registry,...registry],[{...registry[0],kind:'person'}],[{...registry[0],state:'ambiguous'}],[{...registry[0],resolution_revision:null}]]){
  assert.throws(()=>validateReviewProposal(f.proposal,f.retained,rows));}

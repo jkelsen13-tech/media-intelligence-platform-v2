@@ -4,6 +4,10 @@ export function createEftaReviewClient({request}) {
  return Object.freeze({async read() {
   const response=await request({method:'GET',cache:'no-store'});
   if(!response?.ok) throw Error('efta_reader_unavailable');
-  return response.json();
+  const payload=await response.json();
+  if(payload?.contract!=='efta-private-review-v2'||payload.public_release!==false)
+   throw Error('efta_reader_invalid_contract');
+  return payload;
  }});
 }
+
