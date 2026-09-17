@@ -21,6 +21,6 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: node --test tests/eftaGovernedDemo.test.mjs
+      - run: node --test tests/efta*.test.mjs
       - run: npm test
       - run: npm run build
