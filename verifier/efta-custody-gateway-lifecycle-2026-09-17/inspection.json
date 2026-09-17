@@ -1,0 +1,379 @@
+{
+  "contract": "efta-custody-gateway-lifecycle-inspection-v1",
+  "as_of": "2026-09-17",
+  "source_anchor": "c070bae5d565b9834f16a89f6d75ea29be50bf9d",
+  "branch": "codex/mip-efta-credential-authority-preflight-20260917",
+  "effect": "inspection_and_record_preparation_only",
+  "executable_authority": false,
+  "prohibited": [
+    "installation",
+    "deployment",
+    "credential creation",
+    "grant or membership change",
+    "MFA change",
+    "identity-head activation",
+    "reviewer assignment activation",
+    "admission",
+    "release",
+    "publication",
+    "production mutation"
+  ],
+  "records": {
+    "primary_custody": {
+      "record_id": "f3c8a9b0-624b-41b3-97e2-1ac7698ac4ef",
+      "status": "proposed_conditionally_selected_not_active",
+      "project_ref": "qikvmopbtijoebdqosyq",
+      "principal": "supabase_org_member:jkelsen13@gmail.com",
+      "demonstrated_current_access": "sole observed organization member; Owner; organization-wide; no custom/project-scoped role shown",
+      "current_mfa_state": "disabled",
+      "authority_boundary": "future custody of the narrowly scoped EFTA broker credential only; no review, admission, release, publication, rights, privacy, or identity authority",
+      "precondition": {
+        "account": "jkelsen13@gmail.com",
+        "required": "Dashboard Team/Members reports MFA enabled; a verified primary TOTP factor exists; a distinct backup TOTP factor is enrolled and separately custodied; a fresh post-enrollment login challenge succeeds",
+        "evidence": "timestamped control-plane observation and factor metadata/status only",
+        "forbidden_evidence": [
+          "TOTP seed",
+          "TOTP code",
+          "secret",
+          "recovery material"
+        ],
+        "note": "Supabase platform MFA supplies no recovery codes; organization MFA enforcement is a separate owner decision"
+      },
+      "fields_unfinalized": [
+        "MFA evidence reference",
+        "credential name/value",
+        "credential revision",
+        "broker LOGIN",
+        "custody activation time",
+        "receipt signer"
+      ]
+    },
+    "gateway_runtime": {
+      "record_id": "646ccac2-f8f7-416a-8b68-4166179c5d33",
+      "status": "owner_selected_for_design_not_production_suitable_yet",
+      "runtime": "Supabase Edge Function",
+      "pooler": {
+        "host": "aws-0-us-west-1.pooler.supabase.com",
+        "port": 6543,
+        "database": "postgres",
+        "mode": "transaction",
+        "tls": "require",
+        "prepared_statements": false,
+        "max_application_connections_per_warm_isolate": 1,
+        "custom_username_template": "[ROLE].qikvmopbtijoebdqosyq"
+      },
+      "transaction_contract": [
+        "acquire exactly one client",
+        "BEGIN",
+        "SET LOCAL ROLE mip_efta_reviewer_v1",
+        "invoke exactly one literal allowlisted EFTA operation",
+        "COMMIT or guaranteed ROLLBACK",
+        "release client"
+      ],
+      "browser_boundary": "no database password, privileged mutation RPC, service-role key, or broker credential exposed to the browser",
+      "blocker": "Hosted Edge Functions are automatically provisioned with SUPABASE_DB_URL and privileged secret/service-role keys. Project custom secrets are also project-wide rather than function-isolated. Therefore the selected hosted Edge runtime has not demonstrated cryptographic least-authority confinement to the proposed EFTA broker LOGIN.",
+      "fields_unfinalized": [
+        "Edge function name",
+        "deployment identity",
+        "broker LOGIN role",
+        "secret name/revision",
+        "proof privileged default credentials can be suppressed or isolated"
+      ]
+    },
+    "authentication_policy": {
+      "record_id": "49dae53c-f260-4c74-97ea-347400d24cee",
+      "status": "owner_approved_for_design_not_implemented",
+      "issuer": "https://qikvmopbtijoebdqosyq.supabase.co/auth/v1",
+      "audience": "authenticated",
+      "subject_binding": "JWT sub must equal the authenticated auth_user UUID and the active EFTA assignment subject",
+      "allowed_algorithms": [
+        "ES256"
+      ],
+      "allowed_current_kids": [
+        "f11c0b62-e0f6-44fc-8663-75543b5a6f3d"
+      ],
+      "rejected": [
+        "HS256",
+        "legacy signing key 790fbb23-6db1-433a-be3a-55e76a240bf6",
+        "unknown alg",
+        "unknown kid",
+        "missing session_id",
+        "expired token"
+      ],
+      "checks_every_action": [
+        "signature against current governed JWKS revision",
+        "iss",
+        "aud",
+        "sub",
+        "exp",
+        "session_id live/revoked state",
+        "assignment identity/revision/status/scope",
+        "authentication/mapping revision",
+        "credential revision"
+      ],
+      "implementation_gap": "The candidate gateway currently exposes an abstract checkRevocation hook. Its SQL authority_context checks MIP sessions/principal_sessions, not the live Supabase auth.sessions row named by JWT session_id. ES256/KID enforcement and the live-session adapter require implementation and requalification.",
+      "fields_unfinalized": [
+        "auth-policy content hash after implementation",
+        "JWKS revision observation cadence/cache bound",
+        "least-privilege live-session adapter identity"
+      ]
+    },
+    "network_dependency": {
+      "record_id": "4d4d39b0-b14f-426d-83c9-1069e1b084bb",
+      "status": "observed_dependency_not_authority",
+      "project_ref": "qikvmopbtijoebdqosyq",
+      "restrictions_applied": false,
+      "ipv4_cidrs": [],
+      "ipv6_cidrs": [],
+      "dependency_contract": "Any change from this exact state, inability to inspect it, or loss of pooler reachability fails the EFTA gateway closed pending explicit compatibility review and requalification.",
+      "fallback_prohibited": [
+        "service_role",
+        "platform database URL",
+        "Data API privileged mutation",
+        "alternate host",
+        "weakened network policy"
+      ]
+    },
+    "credential_lifecycle": {
+      "record_id": "df8f4c1c-f31f-4ecc-8299-0aec9ece1c41",
+      "status": "recommended_not_owner_selected",
+      "recommended_policy": "A_monthly_single_role_fail_closed_cutover",
+      "rationale": "bounded low-frequency governed workflow has no demonstrated continuous-availability requirement; this avoids a second LOGIN and simultaneous valid credentials",
+      "schedule": {
+        "rotate_no_later_than_days": 30,
+        "password_valid_until_days": 32,
+        "standing_overlap_seconds": 0,
+        "maintenance_window_required": true
+      },
+      "note": "Thirty days is a governance choice, not a Supabase/PostgreSQL requirement.",
+      "routine": [
+        "verify MFA and exact governed state",
+        "close gateway",
+        "drain and terminate attributable broker sessions",
+        "mint fresh secret only inside approved custody boundary",
+        "change existing LOGIN password and VALID UNTIL",
+        "replace named Edge secret and credential revision",
+        "force new connection",
+        "run least-authority and denial canaries",
+        "write append-only receipt",
+        "reopen only on complete pass"
+      ],
+      "rollback": "Never restore a retired password. Failure remains closed and recovery mints a fresh credential/revision.",
+      "fields_unfinalized": [
+        "owner policy selection",
+        "broker LOGIN",
+        "rotation administrator",
+        "credential registry implementation",
+        "Supavisor session-attribution/termination behavior",
+        "maintenance SLA"
+      ]
+    },
+    "emergency_revocation": {
+      "record_id": "4b4df6f3-9c56-43c2-9322-52de9902a019",
+      "status": "proposed_not_executable",
+      "order": [
+        "close gateway",
+        "mark credential revision inactive",
+        "reject traffic",
+        "revoke broker SET membership",
+        "apply NOLOGIN, PASSWORD NULL and expired VALID UNTIL",
+        "terminate attributable sessions",
+        "remove/replace secret",
+        "prove old/missing credential rejection",
+        "reconcile operations around cutoff",
+        "recover only with fresh owner-authorized revision"
+      ],
+      "caveat": "Password expiry/NOLOGIN does not prove termination of already authenticated pooler sessions. Database-side current-revision checks and session termination are mandatory."
+    },
+    "secondary_protection": {
+      "record_id": "8ce98a0f-d373-4e16-90ca-ffe45887eff5",
+      "status": "alternatives_only_owner_selection_required",
+      "preferred_for_smallest_scope": "offline_encrypted_2_of_3_escrow",
+      "alternatives": [
+        {
+          "id": "offline_encrypted_2_of_3_escrow",
+          "standing_supabase_access": false,
+          "benefit": "recovery and continuity without another ordinary human seeing all Edge secrets",
+          "limit": "no online veto or runtime-compromise containment",
+          "new_decisions": [
+            "three share holders or controlled locations",
+            "encryption/package format",
+            "hardware-backed custody",
+            "drill cadence",
+            "recovery authorization"
+          ],
+          "recovery_rule": "use triggers immediate rotation/revocation and linked receipt"
+        },
+        {
+          "id": "managed_emergency_access_vault",
+          "standing_supabase_access": false,
+          "benefit": "auditable delayed emergency access",
+          "limit": "new provider/account/recovery principal and provider compromise dependency",
+          "new_decisions": [
+            "provider",
+            "vault scope",
+            "emergency principal",
+            "wait period",
+            "billing and retention"
+          ]
+        },
+        {
+          "id": "github_protected_environment_plus_oidc_kms",
+          "standing_supabase_access": false,
+          "benefit": "independent approval and managed-key operations",
+          "limit": "requires new KMS/WIF, scoped Supabase management authority, and possibly plan-dependent reviewer controls; not demonstrated",
+          "new_decisions": [
+            "cloud/provider",
+            "OIDC trust",
+            "reviewer",
+            "PAT/management API scope",
+            "network path"
+          ]
+        },
+        {
+          "id": "second_supabase_owner_or_admin",
+          "standing_supabase_access": true,
+          "benefit": "native recovery path",
+          "limit": "unnecessarily broad standing visibility/control of all project Edge secrets",
+          "recommendation": "fallback_only"
+        }
+      ],
+      "rejected_as_solution": [
+        {
+          "id": "supabase_vault",
+          "reason": "circular: gateway must first connect and privileged SQL can reveal the stored value"
+        },
+        {
+          "id": "external_kms_from_edge_with_static_cloud_key",
+          "reason": "no demonstrated Edge workload identity; a long-lived cloud credential merely moves the secret"
+        }
+      ]
+    }
+  },
+  "state_change_policy": {
+    "network_restrictions": "mismatch/unreadable/unreachable => fail closed; no alternate privileged path; requalification required",
+    "signing_keys": "only exact governed ES256 KID set accepted; HS256/unknown rejected; KID/JWKS revision change suspends until reviewed and requalified",
+    "project_membership": "membership/role inventory hash change suspends; potential disclosure triggers incident assessment and credential rotation",
+    "credential_revision": "missing/inactive/expired/mismatched/duplicated => reject before DB action",
+    "broker_membership": "unexpected role, SET/INHERIT/ADMIN option, ownership or direct privilege => reject/suspend and requalify",
+    "assignment_revision": "missing/inactive/superseded/out-of-scope/subject mismatch => reject",
+    "live_session": "missing/revoked/not checked/unavailable => reject every action; no cached authorization; validate immediately before bounded transaction",
+    "operation_in_flight": "revocation can race an already executing transaction; terminate sessions and reconcile every operation near cutoff in receipt"
+  },
+  "rights_privacy": {
+    "state": "all_evidence_required_unapproved",
+    "candidates": 7,
+    "operations": [
+      "retention",
+      "analysis",
+      "excerpt_display"
+    ],
+    "dimensions": [
+      "rights",
+      "privacy"
+    ],
+    "cell_count": 42,
+    "approved_count": 0,
+    "approvers": {
+      "rights": "NO DESIGNATED PRINCIPAL",
+      "privacy": "NO DESIGNATED PRINCIPAL"
+    },
+    "rule": "Public accessibility, government hosting, federal authorship, synthetic qualification evidence, ownership, reviewer selection, and credential custody do not authorize any cell."
+  },
+  "deferred": {
+    "efta_admitter_subject": "UNSELECTED",
+    "efta_private_reader_subject": "UNSELECTED"
+  },
+  "lifecycle_receipt_contract": {
+    "record_id": "bf275f97-caf2-4acf-bf90-5ee3554a57a1",
+    "append_only": true,
+    "prohibited_payload": [
+      "password",
+      "database URI",
+      "password hash/derivative",
+      "JWT",
+      "TOTP seed/code",
+      "recovery share/private key",
+      "PAT"
+    ],
+    "required": [
+      "receipt_schema_version",
+      "receipt_id",
+      "rotation_id",
+      "action",
+      "environment",
+      "project_ref",
+      "gateway_config_revision",
+      "edge_function_name",
+      "edge_deployment_id",
+      "pooler nonsecret tuple",
+      "broker_login_role",
+      "authority_role",
+      "credential_revision_id",
+      "predecessor_credential_revision_id",
+      "secret name and provider revision, never value",
+      "activation/rotation/expiry/retirement UTC times",
+      "custodian principal and nonsecret MFA evidence",
+      "owner decision ref",
+      "network/auth/broker-membership revisions",
+      "before/after catalog snapshot hashes",
+      "session termination counts",
+      "new and old authentication results",
+      "session_user and SET LOCAL ROLE results",
+      "allowlisted and unrelated-operation denial results",
+      "stale-revision result",
+      "maintenance gate times",
+      "rollback/recovery and incident refs",
+      "recording principal/time",
+      "previous receipt hash",
+      "payload hash",
+      "signature/attestation ref"
+    ]
+  },
+  "blockers": [
+    {
+      "severity": "critical",
+      "id": "edge_ambient_privilege",
+      "detail": "Selected hosted Edge runtime receives ambient production DB/service-role credentials that defeat demonstrated least-authority confinement of compromised runtime code."
+    },
+    {
+      "severity": "high",
+      "id": "live_auth_session_adapter",
+      "detail": "Concrete least-privilege live auth.sessions validation keyed by JWT session_id is not implemented or qualified."
+    },
+    {
+      "severity": "high",
+      "id": "jwt_algorithm_enforcement",
+      "detail": "Gateway-local ES256 and exact KID-set rejection of legacy HS256 is not yet implemented/qualified."
+    },
+    {
+      "severity": "owner_reserved",
+      "id": "mfa",
+      "detail": "Primary custodian MFA remains disabled; no credential may be created until exact precondition passes."
+    },
+    {
+      "severity": "owner_reserved",
+      "id": "secondary_protection",
+      "detail": "Mechanism, holders/locations and recovery protocol are not selected."
+    },
+    {
+      "severity": "owner_reserved",
+      "id": "rotation_policy",
+      "detail": "Policy A is recommended but not selected."
+    },
+    {
+      "severity": "owner_reserved",
+      "id": "rights_privacy",
+      "detail": "No rights/privacy authority or cell approval exists."
+    },
+    {
+      "severity": "owner_reserved",
+      "id": "admitter_private_reader",
+      "detail": "Human subjects remain deferred."
+    }
+  ],
+  "rights_privacy_principal_blocker": false,
+  "explanation": "Rights/privacy authority remains a necessary owner-reserved blocker, but it is not the sole or principal current technical blocker: the ambient hosted-Edge privilege and unimplemented live-session/ES256 enforcement prevent a bounded production-equivalent qualification claim first.",
+  "disposition": "NOT_READY",
+  "exact_smallest_next_prompt": "Continue from the exact inspection packet head. Perform read-only/remediation design only: determine whether Supabase hosted Edge Functions can verifiably suppress or isolate the automatically provided SUPABASE_DB_URL and privileged service-role/secret keys for one EFTA function. If not, design the smallest non-production qualification using either an isolated Supabase project or an existing authorized external runtime with workload identity and only the narrow EFTA broker LOGIN. Implement no infrastructure or production change. In the candidate gateway, specify the concrete least-privilege live Supabase auth.sessions adapter keyed by JWT session_id and gateway-local ES256/exact-KID enforcement, with fail-closed tests and a requalification plan. Return the smallest owner decision that resolves only these blockers."
+}
