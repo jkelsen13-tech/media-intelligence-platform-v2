@@ -291,6 +291,12 @@ do $roles$ begin
  end if;
 end $roles$;
 
+-- Fail closed for any future function created by the dedicated EFTA owner. This changes
+-- only that role's defaults; migration/schema-owner and unrelated application defaults
+-- remain untouched. The exact six current functions are still revoked explicitly below.
+alter default privileges for role mip_efta_owner_v1
+ revoke execute on functions from public,anon,authenticated,service_role;
+
 -- Extend only the broker mapping vocabulary. These principals receive no LOGIN and no
 -- membership in the older factual-review or projection-publication roles.
 alter table mip_identity.mapping_versions drop constraint mapping_versions_principal_check;

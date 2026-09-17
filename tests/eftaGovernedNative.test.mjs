@@ -20,6 +20,7 @@ test('all six EFTA definers have empty search_path and EFTA owner',()=>{
   assert.match(compact,new RegExp(`create (?:or replace )?function mip_identity\\.${name}\\([^;]+?security definer set search_path=''`,'i'))
  assert.match(compact,/where n\.nspname='mip_identity' and p\.proname in \('efta_current_binding','efta_require_identity','efta_resolve_identity','efta_decide','efta_admit','efta_private_read'\)/)
  assert.match(compact,/alter function '\|\|f\|\|' owner to mip_efta_owner_v1/)
+ assert.match(compact,/alter default privileges for role mip_efta_owner_v1 revoke execute on functions from public,anon,authenticated,service_role/)
 })
 
 test('authority heads are relationally bound to exact version identity',()=>{
