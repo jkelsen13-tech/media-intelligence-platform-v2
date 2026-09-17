@@ -35,7 +35,11 @@ async function setup(t){
  const issued=(await db.query("select comparison_qualification.issue_session('mip_projection_publisher_v1','runtime-a','2999-01-01') id")).rows[0].id;
  await db.query("insert into mip_identity.sessions values($1,$2,$3,$4,$5,'2999-01-01','synthetic-only')",[issued,session,randomUUID(),mapping,key]);
  async function role(name,sql,args=[]){await db.exec('set role '+name);try{return(await db.query(sql,args)).rows[0]?.result}finally{await db.exec('reset role')}}
- const review=(i=0)=>({reviewer:'Fixture reviewer',reason:'Explicit synthetic qualification only',semantic_kind:manifest.sources[i].semantic_kind,
+ const resolutions=new Map();
+ const entity=(origin)=>({namespace:'fixture:institution',id:origin,label:origin,kind:'institution',resolution_ref:'fixture-reviewed-identity'});
+ const resolve=(request,origin,record=entity(origin),predecessor=null,state='resolved')=>role('mip_factual_reviewer_v3','select mip_identity.efta_resolve_identity($1,$2,$3,$4,$5,$6,$7) result',[request,origin,JSON.stringify(record),predecessor,state,'Fixture identity reviewer','Explicit fixture identity decision']);
+ for(const origin of new Set(manifest.sources.map(s=>s.origin_id))){const id=randomUUID();await resolve(id,origin);resolutions.set(origin,id)}
+ const review=(i=0)=>({identity_resolution_id:resolutions.get(manifest.sources[i].origin_id),reviewer:'Fixture reviewer',reason:'Explicit synthetic qualification only',semantic_kind:manifest.sources[i].semantic_kind,
  audience:'isolated_internal_review',publication_allowed:false,uncertainty:manifest.sources[i].remaining_uncertainty,
  owner_authorization_ref:'fixture-only',privacy_ref:'fixture-only',rights_ref:'fixture-only',
  event_time:{date:manifest.sources[i].source_date,precision:'day',evidence_basis:'Explicit fixture document-date review',uncertainty:'day only'},
@@ -43,7 +47,7 @@ async function setup(t){
  const decide=(id,i=0,action='approve',predecessor=null,r=review(i))=>role('mip_factual_reviewer_v3','select mip_identity.efta_decide($1,$2,$3,$4,$5) result',[id,manifest.sources[i].candidate_id,action,predecessor,JSON.stringify(r)]);
  const admit=(decision,request=randomUUID())=>role('mip_projection_publisher_v1','select mip_identity.efta_admit($1,$2,$3,$4) result',[request,issued,'runtime-a',decision]);
  const get=(request=randomUUID())=>role('mip_projection_publisher_v1','select mip_identity.efta_private_read($1,$2,$3) result',[request,issued,'runtime-a']);
- return {db,role,review,decide,admit,get,issued,mapping};
+ return {db,role,review,decide,admit,get,issued,mapping,resolve,resolutions,entity};
 }
 test('native exact seven anchors, reviewed admissions, identity continuity and append-only receipts',async t=>{
  const f=await setup(t);
@@ -52,7 +56,7 @@ test('native exact seven anchors, reviewed admissions, identity continuity and a
  const view=eftaWorkspace(payload);assert.equal(view.sources.length,7);assert.equal(view.timeline.length,6);assert.equal(view.arc.members.length,6);
  assert.equal(view.comparison.state,'unavailable');assert.equal(view.world_view.state,'absent');
  assert.ok(view.claims.every(c=>view.sources.some(s=>s.id===c.source_id&&s.event_id===c.event_id)));
- for(const table of ['efta_scope','efta_decisions','efta_admissions','efta_private_reads']) await assert.rejects(f.db.exec('delete from mip_identity.'+table),/immutable/);
+ for(const table of ['efta_scope','efta_identity_resolutions','efta_decisions','efta_admissions','efta_private_reads']) await assert.rejects(f.db.exec('delete from mip_identity.'+table),/immutable/);
  await assert.rejects(f.db.exec('select mip_identity.release_public()'),/disabled/);
  for(const role of ['anon','authenticated','service_role','mip_comparison_worker_v1','mip_comparison_producer_v1']) await assert.rejects(f.role(role,'select mip_identity.efta_private_read(gen_random_uuid(),gen_random_uuid(),\'runtime-a\') result'),/permission denied/);
 });
@@ -80,4 +84,15 @@ test('native source replacement, body mutation and broker revocation fail closed
  await assert.rejects(f.get(),/replaced/);
  await f.db.query("update mip_identity.mapping_heads set active=false where revision=$1",[f.mapping]);
  await assert.rejects(f.get(),/revoked/);
+});
+
+test('native identities require separate current resolution and deny drift, ambiguity and revocation',async t=>{
+ const f=await setup(t),origin=manifest.sources[0].origin_id,other=manifest.sources[1].origin_id;
+ await assert.rejects(f.decide(randomUUID(),0,'approve',null,{...f.review(),identity_resolution_id:randomUUID()}),/identity/);
+ await assert.rejects(f.decide(randomUUID(),0,'approve',null,{...f.review(),entity:{...f.review().entity,label:'drift'}}),/identity/);
+ await assert.rejects(f.resolve(randomUUID(),other,{...f.entity(origin),label:'conflict'},f.resolutions.get(other)),/ambiguous/);
+ await assert.rejects(f.resolve(randomUUID(),origin,f.entity(origin),null),/predecessor/);
+ const id=randomUUID();await f.decide(id);await f.admit(id);
+ await f.resolve(randomUUID(),origin,f.entity(origin),f.resolutions.get(origin),'revoked');
+ await assert.rejects(f.get(),/identity/);await assert.rejects(f.admit(id),/identity/);await assert.rejects(f.decide(id),/identity/);
 });

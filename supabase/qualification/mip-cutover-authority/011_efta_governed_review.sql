@@ -3,6 +3,14 @@
 begin;
 create table mip_identity.efta_scope(candidate_id uuid primary key,binding jsonb not null);
 insert into mip_identity.efta_scope select (x->>'candidate_id')::uuid,x from jsonb_array_elements($scope$[{"candidate_id":"f5548254-e6c4-4abd-925d-8ea6d8e076ea","capture_id":"a1e37087-54c7-49a8-886d-0f7189ffbde9","article_id":"44167b15-ca52-4827-be4b-50f81d384674","content_hash":"d9f0ed6ccf11a673749d7ba91b34e228d3649d7b84c33b2be9a371199a939470","url":"https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm","span_start":0,"span_end":122,"source_field":"body_text","excerpt":"All redactions must be accompanied by a written justification published in the Federal Register and submitted to Congress.","origin_id":"us-congress-enacted-law","dependency_id":"pl119-38","semantic_kind":"enacted_requirement","statement":"Statutory redaction-accountability requirement, section 2(c)(2).","remaining_uncertainty":"Requirement is not proof of compliance."},{"candidate_id":"dd1ef05f-dd67-4595-908f-d195671a5db5","capture_id":"5a01a9c2-0f86-4757-a056-52700980d0aa","article_id":"1baddfa5-9b2d-466d-8bd3-2e9a5c3702ee","content_hash":"7062c77032a711a61eac7cb1071cb9c916166eba429110ebb9dfdbc2456e5a57","url":"https://www.justice.gov/opa/media/1434851/dl?inline=","span_start":0,"span_end":73,"source_field":"body_text","excerpt":"I anticipate this ongoing review being completed over the next two weeks.","origin_id":"doj-executive","dependency_id":"doj-efta-dec19-letter","semantic_kind":"agency_projection","statement":"Agency projection acknowledges ongoing review.","remaining_uncertainty":"PDF extraction whitespace normalized; words unchanged. Projection is not completion. Search metadata differs; date verified on PDF page 1."},{"candidate_id":"a255ffc5-2209-4e50-8fec-cf72f3f0e7eb","capture_id":"225e33dc-9e67-47a0-86e4-7a75b8ff4b88","article_id":"d0bf46df-efcb-4f0d-83cd-f5f60343f650","content_hash":"f23bb82300d53b4870bdf8001cfb61cabc38791abaca2efc8f52cd0dfce82642","url":"https://www.justice.gov/media/1426281/dl?inline=","span_start":0,"span_end":127,"source_field":"body_text","excerpt":"It is of paramount importance to the Department that this review is thorough and that victim information is properly protected.","origin_id":"doj-executive","dependency_id":"efta-review-protocol","semantic_kind":"agency_instruction","statement":"Redaction review standard.","remaining_uncertainty":"Instruction not proof of implementation. PDF extraction whitespace normalized; words unchanged; subject line used as title."},{"candidate_id":"c5a7416f-2495-41cf-b3d6-8a02d3becf22","capture_id":"9a898688-2f39-4a40-a1a7-0e6bb5b0f58c","article_id":"e444d8ef-765a-4624-bf8b-3f2f90eab743","content_hash":"f4b682cf0a6c7476aa115d1cf83dcbd35da057165821aa483dc08b08f1ddbf1a","url":"https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files","span_start":0,"span_end":123,"source_field":"body_text","excerpt":"Combined with prior releases, this makes the total production nearly 3.5 million pages released in compliance with the Act.","origin_id":"doj-executive","dependency_id":"doj-efta-jan30-production","semantic_kind":"official_claim","statement":"Agency production-total claim.","remaining_uncertainty":"Not independently verified compliance; same event as Jan30 letter."},{"candidate_id":"f741208c-0a00-418a-afab-028f558b902b","capture_id":"2c7428e6-0e4b-4dd2-af93-fca438307359","article_id":"c6b19030-a485-4fd8-9e68-3674ea8bffeb","content_hash":"342d4813cc6fc151b6937d20b549e76957908a4a0f70dcc2429406dddfac973a","url":"https://www.justice.gov/letter-to-congress.pdf","span_start":0,"span_end":87,"source_field":"body_text","excerpt":"approximately 200,000 pages have been redacted or withheld based on various privileges.","origin_id":"doj-executive","dependency_id":"doj-efta-jan30-production","semantic_kind":"agency_disclosure_accounting","statement":"Agency quantifies claimed privilege withholding.","remaining_uncertainty":"PDF extraction whitespace normalized; words unchanged. Same origin/event as January 30 release; legal basis not adjudicated."},{"candidate_id":"5cabcb8f-99bf-4e42-8172-473ef6c59f0f","capture_id":"df6eeb70-a24a-4e3f-9ea8-55faa8fcabfd","article_id":"781bf13f-f1db-4a9f-9a8d-e234a5a303d2","content_hash":"b7fe286748aabbe09ad853f6abea1e8cfa3ead74dbe2eee26c0889bb343fd682","url":"https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act","span_start":0,"span_end":105,"source_field":"body_text","excerpt":"The OIG is auditing the Department of Justice’s (DOJ) compliance with the Epstein Files Transparency Act.","origin_id":"doj-oig","dependency_id":"efta-oig-audit","semantic_kind":"audit_status","statement":"DOJ OIG states that it is auditing DOJ compliance with the Epstein Files Transparency Act.","remaining_uncertainty":"Audit initiation/status statement only, not an audit conclusion. No underlying disclosure documents, private persons, victims, contacts or misconduct assertions retained."},{"candidate_id":"a5457418-1a23-4345-8fb7-788d07123aa8","capture_id":"b556327b-1053-4ea2-bdf8-464cd3133c35","article_id":"8cd6f366-1254-4ef9-97cd-f4057520bc80","content_hash":"ff60158e4e80cce95b8c0dae955becc91791a536b92458fc7ce8643bac03c7b5","url":"https://public-inspection.federalregister.gov/2026-17533.pdf","span_start":0,"span_end":142,"source_field":"body_text","excerpt":"The Department of Justice is publishing a report submitted to Congress concerning records released and withheld pursuant to Public Law 119-38.","origin_id":"doj-executive","dependency_id":"efta-fr-2026-17533","semantic_kind":"publication_notice","statement":"Formal publication milestone for withholding report.","remaining_uncertainty":"PDF extraction whitespace normalized; words unchanged. Signed August 21, filed August 26, published August 27. Publication does not establish compliance; no appendix retained."}]$scope$::jsonb) x;
+create table mip_identity.efta_identity_resolutions(
+ id uuid primary key,scope_origin text not null,entity jsonb not null,
+ predecessor uuid references mip_identity.efta_identity_resolutions,
+ state text not null check(state in ('resolved','revoked')),
+ reviewer text not null,reason text not null,actor text not null,
+ recorded_at timestamptz not null default clock_timestamp()
+);
+create unique index efta_identity_successor on mip_identity.efta_identity_resolutions(predecessor) where predecessor is not null;
 create table mip_identity.efta_decisions(
  id uuid primary key,candidate_id uuid not null references mip_identity.efta_scope,
  predecessor uuid references mip_identity.efta_decisions,
@@ -56,6 +64,47 @@ create trigger efta_capture_fence before insert or update or delete or truncate 
  for each statement execute function mip_identity.collector_lock();
 create trigger efta_candidate_fence before insert or update or delete or truncate on evidence_pipeline.evidence_candidates
  for each statement execute function mip_identity.collector_lock();
+create function mip_identity.efta_resolve_identity(p_request uuid,p_origin text,p_entity jsonb,p_predecessor uuid,p_state text,p_reviewer text,p_reason text) returns uuid
+language plpgsql security definer set search_path='' as $
+declare prior mip_identity.efta_identity_resolutions;latest mip_identity.efta_identity_resolutions;
+begin
+ perform 1 from mip_cutover_authority.publication_fence where id for update;
+ if not exists(select 1 from mip_identity.efta_scope where binding->>'origin_id'=p_origin)
+ or p_state is null or p_state not in ('resolved','revoked')
+ or nullif(btrim(p_reviewer),'') is null or nullif(btrim(p_reason),'') is null
+ or p_entity->>'kind' is distinct from 'institution'
+ or nullif(btrim(p_entity->>'namespace'),'') is null or nullif(btrim(p_entity->>'id'),'') is null
+ or nullif(btrim(p_entity->>'label'),'') is null or nullif(btrim(p_entity->>'resolution_ref'),'') is null
+ then raise exception 'efta_identity_review_required';end if;
+ select * into prior from mip_identity.efta_identity_resolutions where id=p_request;
+ if found then
+ if prior.scope_origin is distinct from p_origin or prior.entity is distinct from p_entity or prior.predecessor is distinct from p_predecessor
+ or prior.state is distinct from p_state or prior.reviewer is distinct from p_reviewer or prior.reason is distinct from p_reason
+ then raise exception 'efta_replay_conflict';end if;
+ if exists(select 1 from mip_identity.efta_identity_resolutions where predecessor=prior.id) then raise exception 'efta_identity_replaced';end if;
+ return prior.id;end if;
+ select r.* into latest from mip_identity.efta_identity_resolutions r where scope_origin=p_origin
+ and not exists(select 1 from mip_identity.efta_identity_resolutions n where n.predecessor=r.id);
+ if latest.id is distinct from p_predecessor or (latest.id is null and p_state='revoked') then raise exception 'efta_identity_predecessor';end if;
+ if p_state='revoked' and p_entity is distinct from latest.entity then raise exception 'efta_identity_drift';end if;
+ -- A canonical namespace/id cannot denote two different institutional records.
+ if exists(select 1 from mip_identity.efta_identity_resolutions r where r.scope_origin<>p_origin
+ and r.entity->>'namespace'=p_entity->>'namespace' and r.entity->>'id'=p_entity->>'id'
+ and r.entity is distinct from p_entity) then raise exception 'efta_identity_ambiguous';end if;
+ insert into mip_identity.efta_identity_resolutions(id,scope_origin,entity,predecessor,state,reviewer,reason,actor)
+ values(p_request,p_origin,p_entity,p_predecessor,p_state,p_reviewer,p_reason,session_user);
+ return p_request;
+end $;
+create function mip_identity.efta_require_identity(p_review jsonb,p_binding jsonb) returns void
+language plpgsql security definer set search_path='' as $
+declare r mip_identity.efta_identity_resolutions;
+begin
+ select * into r from mip_identity.efta_identity_resolutions where id=(p_review->>'identity_resolution_id')::uuid;
+ if r.id is null or r.state<>'resolved' or r.scope_origin is distinct from p_binding->>'origin_id'
+ or r.entity is distinct from p_review->'entity'
+ or exists(select 1 from mip_identity.efta_identity_resolutions where predecessor=r.id)
+ then raise exception 'efta_identity_unresolved_or_stale';end if;
+end $;
 create function mip_identity.efta_decide(p_request uuid,p_candidate uuid,p_action text,p_predecessor uuid,p_review jsonb) returns uuid
 language plpgsql security definer set search_path='' as $$
 declare b jsonb;prior mip_identity.efta_decisions;latest mip_identity.efta_decisions;binding_hash text;
@@ -71,6 +120,7 @@ begin
  if prior.action<>'reverse' then
  b:=mip_identity.efta_current_binding(p_candidate);
  if comparison_qualification.argument_digest(b) is distinct from prior.binding_hash then raise exception 'efta_stale_review';end if;
+ perform mip_identity.efta_require_identity(prior.review,b);
  end if;
  return prior.id;
  end if;
@@ -106,6 +156,7 @@ begin
  or nullif(btrim(p_review#>>'{entity,resolution_ref}'),'') is null
  then raise exception 'efta_review_binding_required';end if;
  perform (p_review#>>'{event_time,date}')::date;
+ perform mip_identity.efta_require_identity(p_review,b);
  -- Stable institutional identity cannot silently be relabelled between admissions.
  if exists(select 1 from mip_identity.efta_decisions d where d.action<>'reverse'
  and d.review#>>'{entity,namespace}'=p_review#>>'{entity,namespace}'
@@ -128,6 +179,7 @@ begin
  if d.action='reverse' or exists(select 1 from mip_identity.efta_decisions where predecessor=d.id) then raise exception 'efta_decision_replaced';end if;
  b:=mip_identity.efta_current_binding(d.candidate_id);
  if comparison_qualification.argument_digest(b)<>d.binding_hash then raise exception 'efta_stale_review';end if;
+ perform mip_identity.efta_require_identity(d.review,b);
  h:=comparison_qualification.argument_digest(jsonb_build_object('decision',to_jsonb(d),'runtime',p_runtime));
  select * into prior from mip_identity.efta_admissions where request_id=p_request;
  if found then
@@ -144,10 +196,10 @@ begin
  perform mip_identity.authorize(p_session,p_runtime,'mip_projection_publisher_v1');
  perform 1 from mip_identity.collector_fence where id for share;
  perform 1 from mip_cutover_authority.publication_fence where id for update;
- for d in select d.* from mip_identity.efta_decisions d join mip_identity.efta_admissions a on a.decision_id=d.id
- where a.runtime=p_runtime and d.action<>'reverse'
- and not exists(select 1 from mip_identity.efta_decisions n where n.predecessor=d.id)
- order by d.candidate_id loop
+ for d in select decision_row.* from mip_identity.efta_decisions decision_row join mip_identity.efta_admissions a on a.decision_id=decision_row.id
+ where a.runtime=p_runtime and decision_row.action<>'reverse'
+ and not exists(select 1 from mip_identity.efta_decisions n where n.predecessor=decision_row.id)
+ order by decision_row.candidate_id loop
  b:=mip_identity.efta_current_binding(d.candidate_id);
  if comparison_qualification.argument_digest(b)<>d.binding_hash then raise exception 'efta_stale_review';end if;
  items:=items||jsonb_build_array((b-'capture_payload'-'candidate_record'-'article_record')||
@@ -170,7 +222,7 @@ end $$;
 do $permissions$
 declare t text;f record;
 begin
- foreach t in array array['efta_scope','efta_decisions','efta_admissions','efta_private_reads'] loop
+ foreach t in array array['efta_scope','efta_identity_resolutions','efta_decisions','efta_admissions','efta_private_reads'] loop
  execute format('alter table mip_identity.%I owner to mip_cutover_schema_owner_v1',t);
  execute format('alter table mip_identity.%I enable row level security',t);
  execute format('alter table mip_identity.%I force row level security',t);
@@ -180,7 +232,7 @@ begin
  execute format('create trigger immutable before update or delete on mip_identity.%I for each row execute function comparison_qualification.reject_rewrite()',t);
  execute format('create trigger no_truncate before truncate on mip_identity.%I for each statement execute function comparison_qualification.reject_rewrite()',t);
  end loop;
- foreach t in array array['efta_decisions','efta_admissions','efta_private_reads'] loop
+ foreach t in array array['efta_identity_resolutions','efta_decisions','efta_admissions','efta_private_reads'] loop
  execute format('grant insert on mip_identity.%I to mip_publication_owner_v2',t);
  execute format('create policy efta_append on mip_identity.%I for insert to mip_publication_owner_v2 with check(true)',t);
  end loop;
@@ -196,6 +248,7 @@ grant select on evidence_pipeline.article_captures,evidence_pipeline.evidence_ca
 create policy efta_capture_read on evidence_pipeline.article_captures for select to mip_publication_owner_v2 using(true);
 create policy efta_candidate_read on evidence_pipeline.evidence_candidates for select to mip_publication_owner_v2 using(true);
 grant usage on schema mip_identity to mip_factual_reviewer_v3;
+grant execute on function mip_identity.efta_resolve_identity(uuid,text,jsonb,uuid,text,text,text) to mip_factual_reviewer_v3;
 grant execute on function mip_identity.efta_decide(uuid,uuid,text,uuid,jsonb) to mip_factual_reviewer_v3;
 grant execute on function mip_identity.efta_admit(uuid,uuid,text,uuid),mip_identity.efta_private_read(uuid,uuid,text) to mip_projection_publisher_v1;
 commit;

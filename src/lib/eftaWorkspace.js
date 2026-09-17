@@ -6,7 +6,7 @@ export function eftaWorkspace(payload) {
  const seen=new Set(),entities=new Map(),events=new Map(),sources=[],claims=[],edges=[];
  for(const s of payload.sources) {
   const e=s.review?.entity,t=s.review?.event_time;
-  if (!s.decision_id || !s.candidate_id || seen.has(s.candidate_id) || !s.capture_id || !s.article_id ||
+  if (!s.review?.identity_resolution_id || !s.decision_id || !s.candidate_id || seen.has(s.candidate_id) || !s.capture_id || !s.article_id ||
       !s.content_hash || !s.excerpt || !s.source_field || !s.review?.uncertainty ||
       e?.kind!=='institution' || !e.namespace || !e.id || !e.resolution_ref || !t?.date ||
       !t.evidence_basis || t.precision!=='day' || s.review.publication_allowed!==false) throw Error('efta_reader_binding');
