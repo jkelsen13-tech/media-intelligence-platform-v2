@@ -4,9 +4,14 @@ on:
     branches: ['codex/mip-post-lane-a-governed-demo-20260916']
   pull_request:
     paths:
-      - 'supabase/qualification/mip-cutover-authority/eftaReviewContract.mjs'
+      - 'supabase/qualification/mip-cutover-authority/011_efta_governed_review.sql'
+      - 'supabase/qualification/mip-cutover-authority/efta*.mjs'
+      - 'src/lib/efta*.js'
+      - 'src/components/EftaGovernedWorkspace.jsx'
+      - 'src/App.jsx'
+      - 'docs/EFTA_GOVERNED_DEMO_2026-09-16.md'
       - 'verifier/efta-governed-demo/**'
-      - 'tests/eftaGovernedDemo.test.mjs'
+      - 'tests/efta*.test.mjs'
       - '.github/workflows/efta-governed-demo.yml'
 permissions:
   contents: read

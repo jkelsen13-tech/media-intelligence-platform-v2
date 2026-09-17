@@ -203,6 +203,7 @@ begin
  order by decision_row.candidate_id loop
  b:=mip_identity.efta_current_binding(d.candidate_id);
  if comparison_qualification.argument_digest(b)<>d.binding_hash then raise exception 'efta_stale_review';end if;
+ perform mip_identity.efta_require_identity(d.review,b);
  items:=items||jsonb_build_array((b-'capture_payload'-'candidate_record'-'article_record')||
  jsonb_build_object('decision_id',d.id,'predecessor',d.predecessor,'review',d.review,'reviewed_at',d.recorded_at));
  ids:=array_append(ids,d.id);

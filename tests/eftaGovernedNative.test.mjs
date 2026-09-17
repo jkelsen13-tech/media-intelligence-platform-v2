@@ -97,3 +97,10 @@ test('native identities require separate current resolution and deny drift, ambi
  await f.resolve(randomUUID(),origin,f.entity(origin),f.resolutions.get(origin),'revoked');
  await assert.rejects(f.get(),/identity/);await assert.rejects(f.admit(id),/identity/);await assert.rejects(f.decide(id),/identity/);
 });
+
+test('post-admission identity replacement invalidates private reads even with unchanged text',async t=>{
+ const f=await setup(t),id=randomUUID(),origin=manifest.sources[0].origin_id;
+ await f.decide(id);await f.admit(id);assert.equal((await f.get()).sources.length,1);
+ await f.resolve(randomUUID(),origin,f.entity(origin),f.resolutions.get(origin),'resolved');
+ await assert.rejects(f.get(),/identity/);
+});
