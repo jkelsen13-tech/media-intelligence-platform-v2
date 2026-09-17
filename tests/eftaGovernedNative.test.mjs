@@ -112,3 +112,26 @@ test('native candidate mutation and restoration cannot revive a prior review',as
  await f.db.query("update evidence_pipeline.evidence_candidates set excerpt=$2 where id=$1",[manifest.sources[0].candidate_id,manifest.sources[0].excerpt]);
  await assert.rejects(f.get(),/stale_review/);
 });
+
+test('native reader requires active source and durable collector revision',async t=>{
+ const f=await setup(t),s=manifest.sources[0];
+ for(const status of [null,'unknown','withdrawn','corrected','revoked']){
+ await f.db.query('update public.articles set source_status=$2 where id=$1',[s.article_id,status]);
+ await assert.rejects(f.decide(randomUUID()),/stale_source/);
+ }
+ await f.db.query("update public.articles set source_status='active' where id=$1",[s.article_id]);
+ // Simulates an incomplete historical deployment; ordinary roles cannot erase receipts.
+ await f.db.exec('alter table mip_identity.source_changes disable trigger immutable');
+ await f.db.query("delete from mip_identity.source_changes where relation_name='public.articles' and row_key=$1",[s.article_id]);
+ await f.db.exec('alter table mip_identity.source_changes enable trigger immutable');
+ await assert.rejects(f.decide(randomUUID()),/source_revision_missing/);
+});
+test('publication role can inspect only scope-linked captures, candidates and source changes',async t=>{
+ const f=await setup(t),article=randomUUID(),capture=randomUUID(),candidate=randomUUID();
+ await f.db.query("insert into public.articles(id,title,reader_state,source_status) values($1,'Unrelated','pending_review','active')",[article]);
+ await f.db.query("insert into evidence_pipeline.article_captures(id,article_id,content_hash,payload) values($1,$2,'unrelated','{}')",[capture,article]);
+ await f.db.query("insert into evidence_pipeline.evidence_candidates(id,capture_id,source_field,span_start,span_end,excerpt) values($1,$2,'body_text',0,1,'x')",[candidate,capture]);
+ assert.equal(await f.role('mip_publication_owner_v2','select count(*)::int result from evidence_pipeline.article_captures'),7);
+ assert.equal(await f.role('mip_publication_owner_v2','select count(*)::int result from evidence_pipeline.evidence_candidates'),7);
+ assert.equal(await f.role('mip_publication_owner_v2','select count(*)::int result from mip_identity.source_changes where row_key=$1',[article]),0);
+});

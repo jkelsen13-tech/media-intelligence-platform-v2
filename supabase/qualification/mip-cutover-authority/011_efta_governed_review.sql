@@ -56,8 +56,9 @@ begin
  or encode(sha256(convert_to((c->'payload')::text,'UTF8')),'hex') is distinct from b->>'content_hash'
  or substring(canonical->>(b->>'source_field') from (b->>'span_start')::int+1 for (b->>'span_end')::int-(b->>'span_start')::int) is distinct from b->>'excerpt'
  or a->>'reader_state' is distinct from 'pending_review'
- or a->>'source_status' in ('withdrawn','corrected','revoked')
+ or a->>'source_status' is distinct from 'active'
  then raise exception 'efta_stale_source';end if;
+ if not exists(select 1 from mip_identity.source_changes where relation_name='public.articles' and row_key=b->>'article_id') then raise exception 'efta_source_revision_missing';end if;
  return b||jsonb_build_object('capture_payload',c->'payload','candidate_record',k,'article_record',a,
  'collector_revision',(select id from mip_identity.source_changes where relation_name='public.articles' and row_key=b->>'article_id' order by retained_at desc,id desc limit 1),
  'capture_revision',(select id from mip_identity.source_changes where relation_name='evidence_pipeline.article_captures' and row_key=b->>'capture_id' order by retained_at desc,id desc limit 1),
@@ -251,12 +252,18 @@ begin
 end $permissions$;
 grant usage on schema evidence_pipeline to mip_publication_owner_v2;
 grant select on mip_identity.source_changes to mip_publication_owner_v2;
-create policy efta_source_history on mip_identity.source_changes for select to mip_publication_owner_v2 using(true);
+create policy efta_source_history on mip_identity.source_changes for select to mip_publication_owner_v2 using(
+ (relation_name='public.articles' and row_key in (select binding->>'article_id' from mip_identity.efta_scope))
+ or (relation_name='evidence_pipeline.article_captures' and row_key in (select binding->>'capture_id' from mip_identity.efta_scope))
+ or (relation_name='evidence_pipeline.evidence_candidates' and row_key in (select candidate_id::text from mip_identity.efta_scope)));
 grant select on public.articles to mip_publication_owner_v2;
-create policy efta_article_read on public.articles for select to mip_publication_owner_v2 using(true);
+create policy efta_article_read on public.articles for select to mip_publication_owner_v2 using(id in (select (binding->>'article_id')::uuid from mip_identity.efta_scope));
 grant select on evidence_pipeline.article_captures,evidence_pipeline.evidence_candidates to mip_publication_owner_v2;
-create policy efta_capture_read on evidence_pipeline.article_captures for select to mip_publication_owner_v2 using(true);
-create policy efta_candidate_read on evidence_pipeline.evidence_candidates for select to mip_publication_owner_v2 using(true);
+create policy efta_capture_read on evidence_pipeline.article_captures for select to mip_publication_owner_v2 using(article_id in (select (binding->>'article_id')::uuid from mip_identity.efta_scope));
+create policy efta_candidate_read on evidence_pipeline.evidence_candidates for select to mip_publication_owner_v2 using(
+ id in (select candidate_id from mip_identity.efta_scope)
+ or predecessor_candidate_id in (select candidate_id from mip_identity.efta_scope)
+ or capture_id in (select id from evidence_pipeline.article_captures where article_id in (select (binding->>'article_id')::uuid from mip_identity.efta_scope)));
 grant usage on schema mip_identity to mip_factual_reviewer_v3;
 grant execute on function mip_identity.efta_resolve_identity(uuid,text,jsonb,uuid,text,text,text) to mip_factual_reviewer_v3;
 grant execute on function mip_identity.efta_decide(uuid,uuid,text,uuid,jsonb) to mip_factual_reviewer_v3;
