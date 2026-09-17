@@ -37,7 +37,13 @@
           "secret",
           "recovery material"
         ],
-        "note": "Supabase platform MFA supplies no recovery codes; organization MFA enforcement is a separate owner decision"
+        "note": "Supabase platform MFA supplies no recovery codes; organization MFA enforcement is a separate owner decision",
+        "observation_provenance": {
+          "observed_on": "2026-09-17",
+          "source": "authenticated Supabase Dashboard read-only preflight",
+          "evidence_ref": "UNFINALIZED",
+          "captured_at_utc": "UNFINALIZED"
+        }
       },
       "fields_unfinalized": [
         "MFA evidence reference",
@@ -152,10 +158,13 @@
         "drain and terminate attributable broker sessions",
         "mint fresh secret only inside approved custody boundary",
         "change existing LOGIN password and VALID UNTIL",
-        "replace named Edge secret and credential revision",
-        "force new connection",
-        "run least-authority and denial canaries",
-        "write append-only receipt",
+        "prepare an append-only successor credential revision",
+        "prepare and validate an append-only successor EFTA reviewer-assignment revision/head that hash/FK-binds the new credential revision, plus every dependent authentication/mapping and broker-session revision",
+        "replace the named Edge secret",
+        "force a new connection",
+        "run least-authority and denial canaries using the successor revisions",
+        "atomically activate the successor governed heads and explicitly retire the predecessor assignment and credential revisions only after complete verification",
+        "write append-only receipts for the full revision chain",
         "reopen only on complete pass"
       ],
       "rollback": "Never restore a retired password. Failure remains closed and recovery mints a fresh credential/revision.",
@@ -165,7 +174,8 @@
         "rotation administrator",
         "credential registry implementation",
         "Supavisor session-attribution/termination behavior",
-        "maintenance SLA"
+        "maintenance SLA",
+        "exact successor assignment/mapping/broker-session revision transition"
       ]
     },
     "emergency_revocation": {
@@ -187,14 +197,26 @@
     },
     "secondary_protection": {
       "record_id": "8ce98a0f-d373-4e16-90ca-ffe45887eff5",
-      "status": "alternatives_only_owner_selection_required",
-      "preferred_for_smallest_scope": "offline_encrypted_2_of_3_escrow",
+      "status": "smallest_recommendation_recorded_alternatives_owner_reserved",
+      "preferred_for_smallest_scope": "backup_totp_no_offline_database_password_control_plane_rotation",
       "alternatives": [
+        {
+          "id": "backup_totp_no_offline_database_password_control_plane_rotation",
+          "standing_supabase_access": false,
+          "benefit": "smallest platform-compatible solo-owner recovery path; avoids additional database-password copies and trustees",
+          "limit": "continuity depends on Supabase account recovery and verified control-plane access; provides no independent online veto",
+          "new_decisions": [
+            "backup TOTP custody location/device",
+            "account-recovery procedure",
+            "rotation drill cadence"
+          ],
+          "recovery_rule": "recover control-plane access, keep gateway closed, mint a fresh broker credential/revision, create linked successor assignment/mapping revisions, revoke predecessor state, verify, then reopen"
+        },
         {
           "id": "offline_encrypted_2_of_3_escrow",
           "standing_supabase_access": false,
-          "benefit": "recovery and continuity without another ordinary human seeing all Edge secrets",
-          "limit": "no online veto or runtime-compromise containment",
+          "benefit": "additional recovery continuity without another ordinary human standing Supabase membership",
+          "limit": "creates extra recovery material and security principals; exact escrow contents, expiry, holders and ceremony require approval; no online veto or runtime-compromise containment",
           "new_decisions": [
             "three share holders or controlled locations",
             "encryption/package format",
@@ -202,7 +224,8 @@
             "drill cadence",
             "recovery authorization"
           ],
-          "recovery_rule": "use triggers immediate rotation/revocation and linked receipt"
+          "recovery_rule": "use triggers immediate rotation/revocation and linked receipt",
+          "recommendation": "optional_stronger_recovery_only_after_explicit_owner_approval"
         },
         {
           "id": "managed_emergency_access_vault",
@@ -253,7 +276,7 @@
   "state_change_policy": {
     "network_restrictions": "mismatch/unreadable/unreachable => fail closed; no alternate privileged path; requalification required",
     "signing_keys": "only exact governed ES256 KID set accepted; HS256/unknown rejected; KID/JWKS revision change suspends until reviewed and requalified",
-    "project_membership": "membership/role inventory hash change suspends; potential disclosure triggers incident assessment and credential rotation",
+    "project_membership": "membership/role inventory hash change suspends; potential disclosure triggers incident assessment and credential rotation; observation provenance timestamp/source/evidence ref must be current",
     "credential_revision": "missing/inactive/expired/mismatched/duplicated => reject before DB action",
     "broker_membership": "unexpected role, SET/INHERIT/ADMIN option, ownership or direct privilege => reject/suspend and requalify",
     "assignment_revision": "missing/inactive/superseded/out-of-scope/subject mismatch => reject",
@@ -327,7 +350,8 @@
       "recording principal/time",
       "previous receipt hash",
       "payload hash",
-      "signature/attestation ref"
+      "signature/attestation ref",
+      "successor and predecessor reviewer-assignment, authentication/mapping and broker-session revision IDs and head-transition results"
     ]
   },
   "blockers": [
@@ -370,6 +394,11 @@
       "severity": "owner_reserved",
       "id": "admitter_private_reader",
       "detail": "Human subjects remain deferred."
+    },
+    {
+      "severity": "high",
+      "id": "revision_chain_rotation",
+      "detail": "Rotation must create and qualify successor assignment/head plus dependent authentication/mapping and broker-session revisions bound to the new credential revision, then explicitly retire predecessors."
     }
   ],
   "rights_privacy_principal_blocker": false,
