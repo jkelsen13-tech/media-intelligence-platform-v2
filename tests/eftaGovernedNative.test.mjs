@@ -7,6 +7,13 @@ import {assertAuthoritativeReviewShape} from '../supabase/qualification/mip-cuto
 // executable migration, RLS, role, race, and replay coverage; these tests do not replace it.
 const sql = await readFile(new URL('../supabase/qualification/mip-cutover-authority/011_efta_governed_review.sql', import.meta.url), 'utf8')
 const compact = sql.replace(/\s+/g, ' ')
+const finalFunctionBody=name=>{
+ const start=sql.lastIndexOf(`create function mip_identity.${name}(`)
+ assert.notEqual(start,-1,`missing ${name}`)
+ const end=sql.indexOf('end $$;',start)
+ assert.notEqual(end,-1,`unterminated ${name}`)
+ return sql.slice(start,end)
+}
 
 test('final EFTA entry points use narrow roles and current signatures', () => {
  assert.match(compact,/grant execute on function mip_identity\.efta_resolve_identity\(uuid,text,uuid,uuid,text,text,uuid,text,uuid\), mip_identity\.efta_decide\(uuid,uuid,text,uuid,jsonb,uuid,text,uuid\) to mip_efta_reviewer_v1/)
@@ -64,4 +71,14 @@ test('exact replay revalidates source, operation and identity and rejects replac
 test('free-text authority and public release remain denied',()=>{
  assert.match(compact,/p_review \?\| array\['reviewer','rights_ref','privacy_ref','owner_authorization_ref'\]/)
  assert.doesNotMatch(compact,/grant execute on function mip_identity\.release_public\(\) to mip_efta_/)
+})
+
+test('external EFTA actions lock collector then publication before validating authority',()=>{
+ for(const name of ['efta_resolve_identity','efta_decide','efta_admit','efta_private_read']){
+  const body=finalFunctionBody(name)
+  const collector=body.indexOf('from mip_identity.collector_fence where id for share')
+  const publication=body.indexOf('from mip_cutover_authority.publication_fence where id for update')
+  const authority=body.indexOf('mip_identity.authority_context(')
+  assert.ok(collector>=0&&publication>collector&&authority>publication,`${name} lock order`)
+ }
 })

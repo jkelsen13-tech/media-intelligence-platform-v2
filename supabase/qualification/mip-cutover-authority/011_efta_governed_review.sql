@@ -689,8 +689,9 @@ create function mip_identity.efta_resolve_identity(
 declare prior mip_identity.efta_identity_resolutions;latest mip_identity.efta_identity_resolutions;
  v mip_identity.efta_institution_versions;h mip_identity.efta_institution_heads;ctx jsonb;receipt text;
 begin
- ctx:=mip_identity.authority_context(p_session,p_runtime,p_assignment,'mip_efta_reviewer_v1');
+ perform 1 from mip_identity.collector_fence where id for share;
  perform 1 from mip_cutover_authority.publication_fence where id for update;
+ ctx:=mip_identity.authority_context(p_session,p_runtime,p_assignment,'mip_efta_reviewer_v1');
  if not exists(select 1 from mip_identity.efta_scope where binding->>'origin_id'=p_origin)
  or p_state not in ('resolved','revoked') or nullif(btrim(p_reason),'') is null then raise exception 'efta_identity_review_required';end if;
  select * into strict v from mip_identity.efta_institution_versions where revision=p_institution_revision;
@@ -730,8 +731,8 @@ create function mip_identity.efta_decide(
 declare b jsonb;prior mip_identity.efta_decisions;latest mip_identity.efta_decisions;
  ctx jsonb;identity jsonb;operations jsonb;binding_hash text;operation_hash text;resolution uuid;receipt text;
 begin
- ctx:=mip_identity.authority_context(p_session,p_runtime,p_assignment,'mip_efta_reviewer_v1');
  perform 1 from mip_identity.collector_fence where id for share;perform 1 from mip_cutover_authority.publication_fence where id for update;
+ ctx:=mip_identity.authority_context(p_session,p_runtime,p_assignment,'mip_efta_reviewer_v1');
  if p_action not in ('approve','correct','reverse') or jsonb_typeof(p_review) is distinct from 'object'
  or nullif(btrim(p_review->>'reason'),'') is null or p_review ?| array['reviewer','rights_ref','privacy_ref','owner_authorization_ref']
  then raise exception 'efta_review_required';end if;
@@ -788,8 +789,8 @@ create function mip_identity.efta_admit(
 ) returns uuid language plpgsql security definer set search_path='' as $$
 declare d mip_identity.efta_decisions;b jsonb;ctx jsonb;operations jsonb;identity jsonb;h text;prior mip_identity.efta_admissions;
 begin
- ctx:=mip_identity.authority_context(p_session,p_runtime,p_assignment,'mip_efta_admitter_v1');
  perform 1 from mip_identity.collector_fence where id for share;perform 1 from mip_cutover_authority.publication_fence where id for update;
+ ctx:=mip_identity.authority_context(p_session,p_runtime,p_assignment,'mip_efta_admitter_v1');
  select * into strict d from mip_identity.efta_decisions where id=p_decision;
  if d.action='reverse' or exists(select 1 from mip_identity.efta_decisions where predecessor=d.id) then raise exception 'efta_decision_replaced';end if;
  b:=mip_identity.efta_current_binding(d.candidate_id);operations:=mip_identity.operation_closure(d.candidate_id,b);
@@ -813,8 +814,8 @@ create function mip_identity.efta_private_read(
 declare d mip_identity.efta_decisions;b jsonb;items jsonb:='[]'::jsonb;result jsonb;ids uuid[]:='{}';identity jsonb;
  ctx jsonb;operations jsonb;all_operations jsonb:='[]'::jsonb;h text;op_hash text;prior mip_identity.efta_private_reads;
 begin
- ctx:=mip_identity.authority_context(p_session,p_runtime,p_assignment,'mip_efta_private_reader_v1');
  perform 1 from mip_identity.collector_fence where id for share;perform 1 from mip_cutover_authority.publication_fence where id for update;
+ ctx:=mip_identity.authority_context(p_session,p_runtime,p_assignment,'mip_efta_private_reader_v1');
  for d in select dr.* from mip_identity.efta_decisions dr join mip_identity.efta_admissions a on a.decision_id=dr.id
   where a.runtime=p_runtime and dr.action<>'reverse' and not exists(select 1 from mip_identity.efta_decisions n where n.predecessor=dr.id)
   order by dr.candidate_id loop
