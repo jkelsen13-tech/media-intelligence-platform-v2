@@ -24,6 +24,7 @@ function fixture(overrides={}){
  const broker={session_id:ids.broker,runtime:'efta-qualification-v1',database_principal:assignment.database_principal,
   subject_id:ids.subject,assignment_revision:ids.assignment,authentication_revision:ids.auth,
   mapping_revision:ids.mapping,key_revision:ids.key,credential_revision:ids.credential,
+  token_binding_hash:hash,revocation_revision:ids.revocation,
   invokeExact:async(signature,values,attribution)=>{calls.push({signature,values,attribution});return {ok:true}},
   close:async()=>{calls.push({closed:true})},...overrides.broker};
  let revocations=0;
@@ -69,6 +70,7 @@ test('invalid token, assignment and broker fields fail closed',async()=>{
   {assignment:{subject_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},{assignment:{scope:'other'}},
   {assignment:{mapping_revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
   {broker:{database_principal:'mip_projection_publisher_v1'}},{broker:{credential_revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
+  {broker:{token_binding_hash:'b'.repeat(64)}},{broker:{revocation_revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
   {broker:{password:'must-never-enter-adapter'}}
  ];
  for(const x of cases){const f=fixture(x);await assert.rejects(f.authority.invoke(req(),'private_read',()=>[]),/efta_gateway_denied/);}

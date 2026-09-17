@@ -38,12 +38,13 @@ function validateAssignment(a,v,principal,now){
   ||Date.parse(a.valid_from)>now*1000||Date.parse(a.valid_until)<=now*1000) denied();
 }
 
-function validateBroker(b,v,a,principal,runtime){
+function validateBroker(b,v,a,principal,runtime,revocationRevision){
  if(!b||!isUuid(b.session_id)||b.runtime!==runtime
   ||b.database_principal!==principal||b.subject_id!==v.sub
   ||b.assignment_revision!==a.revision||b.authentication_revision!==v.authentication_revision
   ||b.mapping_revision!==v.mapping_revision||b.key_revision!==v.key_revision
-  ||b.credential_revision!==a.credential_revision||typeof b.invokeExact!=='function'||typeof b.close!=='function'
+  ||b.credential_revision!==a.credential_revision||b.token_binding_hash!==v.token_binding_hash
+  ||b.revocation_revision!==revocationRevision||typeof b.invokeExact!=='function'||typeof b.close!=='function'
   ||Object.keys(b).some(k=>/password|secret|database_url|dsn|access_token/i.test(k))) denied();
 }
 
@@ -75,7 +76,7 @@ export function createEftaGatewayAuthority(deps){
    revocation_revision:first.revision}));
   if(!broker||typeof broker.close!=='function') denied();
   try{
-   validateBroker(broker,verified,assignment,spec.principal,deps.runtime);
+   validateBroker(broker,verified,assignment,spec.principal,deps.runtime,first.revision);
    const second=await checkRevocation(revocationInput);
    if(!second||second.revoked!==false||second.revision!==first.revision) denied();
    const values=buildArgs(Object.freeze({session:broker.session_id,runtime:broker.runtime,
