@@ -1,0 +1,308 @@
+{
+  "contract": "efta-credential-authority-preflight-v1",
+  "as_of": "2026-09-17",
+  "source_commit": "ab7b8603bbd5a8971286db96ba5aa00411c75a28",
+  "source_tree": "859de8d0af4f075295afd175e77e47e962706ba1",
+  "branch": "codex/mip-efta-credential-authority-preflight-20260917",
+  "effect": "inspection_only",
+  "production_authority": false,
+  "owner_accepted_identity_successors": {
+    "effect": "record_preparation_only",
+    "activate_heads": false,
+    "source_of_exact_payloads": "verifier/efta-owner-decisions-2026-09-17/decision-records.json@ab7b8603bbd5a8971286db96ba5aa00411c75a28",
+    "revisions": [
+      {
+        "institution": "United States Congress",
+        "revision": "85b4e360-a014-5e14-a727-a29ff85536a8"
+      },
+      {
+        "institution": "United States Department of Justice",
+        "revision": "40baeeaf-4b99-5dfe-96ab-cf7474c064a2"
+      },
+      {
+        "institution": "U.S. Department of Justice Office of Inspector General",
+        "revision": "b1e6e59c-72c5-594a-a33a-747ca7c2d8e0"
+      }
+    ],
+    "preserved": [
+      "receipt payloads",
+      "predecessors",
+      "UUIDv5 derivation",
+      "approval semantics",
+      "correction/supersession model"
+    ]
+  },
+  "project": {
+    "ref": "qikvmopbtijoebdqosyq",
+    "name": "mip-v2-account-verification-20260831",
+    "organization_id": "ntmqymyaujspymfqmxew",
+    "organization_name": "jkelsen13-tech's Org",
+    "plan": "pro",
+    "status": "ACTIVE_HEALTHY",
+    "region": "us-west-1",
+    "postgres_engine": "17",
+    "database_build": "17.6.1.166",
+    "sql_server_version": "17.6",
+    "direct_host": "db.qikvmopbtijoebdqosyq.supabase.co",
+    "direct_dns_observation": "AAAA only at inspection time; billing/add-on flag not independently readable"
+  },
+  "custody_access_inventory": {
+    "exact_current_principals": {
+      "status": "UNKNOWN_NOT_EXPOSED_BY_AUTHORIZED_INTERFACE",
+      "members": []
+    },
+    "evidence_gap": "Connector exposes project/org but no member listing or caller role; dashboard/browser read failed; no authenticated local CLI or management token was available or extracted.",
+    "role_class_capabilities": [
+      {
+        "role": "Owner",
+        "edge_secret_view": true,
+        "edge_secret_create_or_delete": true
+      },
+      {
+        "role": "Administrator",
+        "edge_secret_view": true,
+        "edge_secret_create_or_delete": true
+      },
+      {
+        "role": "Developer",
+        "edge_secret_view": true,
+        "edge_secret_create_or_delete": false
+      },
+      {
+        "role": "Read-Only",
+        "edge_secret_view": true,
+        "edge_secret_create_or_delete": false,
+        "note": "Role availability depends on plan; no inference that it exists on this project."
+      }
+    ],
+    "conclusion": "Any actual project member can be inside the Edge-secret disclosure boundary; exact members must be enumerated before custody approval.",
+    "authority_source": "https://supabase.com/docs/guides/platform/access-control"
+  },
+  "network_pooler": {
+    "current_network_restrictions": {
+      "status": "UNKNOWN",
+      "applied": null,
+      "ipv4_cidrs": null,
+      "ipv6_cidrs": null
+    },
+    "why_unknown": "Management-plane network restriction GET is not exposed by current connector/SQL; SQL cannot observe a pre-database network filter.",
+    "material_rule": "If restrictions are applied, hosted Edge Functions cannot directly reach Postgres or the pooler; HTTPS APIs remain available but cannot implement the qualified custom LOGIN plus SET LOCAL ROLE contract.",
+    "direct_endpoint": {
+      "host": "db.qikvmopbtijoebdqosyq.supabase.co",
+      "port": 5432,
+      "ip_mode_observed": "IPv6-only",
+      "intended_use": "persistent backend/direct"
+    },
+    "shared_transaction_pooler": {
+      "host": "UNKNOWN_MUST_USE_PASSWORD_REDACTED_CONNECT_METADATA",
+      "port": 6543,
+      "database": "postgres",
+      "username_template": "[LOGIN_ROLE].qikvmopbtijoebdqosyq",
+      "ip_mode": "IPv4",
+      "tls": "require minimum; verify-full preferred",
+      "prepared_statements": false,
+      "application_pool_max": 1,
+      "mode": "Supavisor transaction"
+    },
+    "transaction_contract": [
+      "checkout one client",
+      "BEGIN",
+      "SET LOCAL ROLE mip_efta_reviewer_v1",
+      "invoke one exact allowlisted operation",
+      "COMMIT or guaranteed ROLLBACK",
+      "release client"
+    ],
+    "historical_proof": {
+      "runtime": "spatial-runtime v6",
+      "fact": "Custom-login Edge-to-native-SQL transactions were operational on 2026-09-03",
+      "limitation": "Does not prove current network restrictions or present reachability."
+    },
+    "live_efta_roles": "NONE; zero pg_roles matching mip_efta_%",
+    "sources": [
+      "https://supabase.com/docs/guides/platform/network-restrictions",
+      "https://supabase.com/docs/guides/database/connecting-to-postgres"
+    ]
+  },
+  "auth": {
+    "issuer": "https://qikvmopbtijoebdqosyq.supabase.co/auth/v1",
+    "user_audience": "authenticated",
+    "jwks": {
+      "observed_keys": 1,
+      "kty": "EC",
+      "curve": "P-256",
+      "alg": "ES256",
+      "use": "sig",
+      "kid": "f11c0b62-e0f6-44fc-8663-75543b5a6f3d",
+      "interpretation": "Asymmetric verification infrastructure exists; JWKS alone does not establish current/standby/previous lifecycle state."
+    },
+    "selected_subject": {
+      "principal": "auth_user:f576f162-b6c6-46b7-9aaf-96b1ea90e194",
+      "exists": true,
+      "aud": "authenticated",
+      "role": "authenticated",
+      "anonymous": false,
+      "banned": false,
+      "deleted": false,
+      "nonexpired_session_rows_observed": 3,
+      "observed_aal": [
+        "aal1"
+      ],
+      "verified_mfa_factors": 0,
+      "authority_effect": "Account/session evidence only; no custody, rights, privacy, admission or publication authority."
+    },
+    "api_key_modes": {
+      "legacy_anon_active": true,
+      "modern_publishable_active": true,
+      "modern_publishable_key_id": "e165b19f-6c28-4a74-b015-9c974dff8a6d",
+      "secret_values_recorded": false
+    },
+    "edge_functions": {
+      "active_count": 8,
+      "all_verify_jwt": true,
+      "slugs": [
+        "spatial-runtime",
+        "investigation-workspace",
+        "investigation-evidence-checks",
+        "investigation-evidence-reviews",
+        "investigation-input-impact",
+        "investigation-source-spans",
+        "investigation-api",
+        "capture-retrieval"
+      ]
+    },
+    "session_validation": "JWT session_id can be correlated to auth.sessions; sensitive EFTA actions must check live row existence because already-issued access tokens can remain valid until exp after sign-out.",
+    "jwks_cache_risk": "External verifier caches may extend trust after key rotation; live session/revocation checks remain mandatory.",
+    "unknown_settings": [
+      "access-token expiration",
+      "session time-box",
+      "inactivity timeout",
+      "single-session setting",
+      "refresh-token reuse setting",
+      "signing-key lifecycle status current/standby/previous"
+    ],
+    "sources": [
+      "https://supabase.com/docs/guides/auth/jwts",
+      "https://supabase.com/docs/guides/auth/sessions",
+      "https://supabase.com/docs/guides/auth/signing-keys",
+      "https://supabase.com/docs/guides/functions/auth-headers"
+    ]
+  },
+  "runtime_inventory": [
+    {
+      "option": "Existing Supabase Edge runtime",
+      "demonstrated": true,
+      "details": "Eight active functions; spatial-runtime demonstrates custom DB URL, custom LOGIN and explicit transactions; investigation gateway demonstrates user /auth/v1/user check and literal RPC allowlists.",
+      "gaps": [
+        "exact secret-visible principals",
+        "current network restrictions",
+        "exact pooler host",
+        "EFTA-only LOGIN/credential/membership",
+        "EFTA handler deployment"
+      ],
+      "viability": "conditional_only"
+    },
+    {
+      "option": "Existing GCP Cloud Run mop-extraction",
+      "demonstrated": "health-only scaffold and manual deploy workflow",
+      "workload_authentication": "static GCP_SA_KEY repository secret, not workload identity federation",
+      "exposure": "workflow requests allow-unauthenticated",
+      "managed_secret_custody": "not demonstrated",
+      "database_path": "not demonstrated",
+      "narrow_efta_authority": "not demonstrated",
+      "viability": "not currently viable without material new authority/infrastructure"
+    },
+    {
+      "option": "GitHub Pages/Actions",
+      "demonstrated": "ephemeral Pages deployment only",
+      "workload_authentication": "Pages-scoped OIDC",
+      "database_path": "none",
+      "viability": "not a persistent private broker"
+    },
+    {
+      "option": "Other persistent workload-identity/KMS runtime",
+      "demonstrated": false,
+      "viability": "none found in authorized MIP repositories/services"
+    }
+  ],
+  "credential_runtime_comparison": [
+    {
+      "option": "Supabase Edge + Edge secret + versioned EFTA LOGIN",
+      "custody_boundary": "All actual project members can view Edge secrets; only Owner/Admin can create/delete under current documented role model",
+      "connectivity": "Conditional on restrictions=false and exact Connect metadata",
+      "workload_authentication": "Platform function deployment identity plus server-held DSN; not external cloud workload identity",
+      "blast_radius": "Narrow only after new EFTA-only LOGIN, one capability membership and allowlisted handler",
+      "rotation_revocation": "New LOGIN+secret version+relational revision; disable heads first, then NOLOGIN/revoke/terminate/delete secret",
+      "additional_authority": [
+        "name custodians",
+        "approve/create narrow LOGIN and membership",
+        "create secret",
+        "deploy handler"
+      ],
+      "recommendation": "smallest only if custody and network preflight pass"
+    },
+    {
+      "option": "Existing GCP Cloud Run",
+      "custody_boundary": "Current static GCP_SA_KEY repository secret; exact custodians unknown",
+      "connectivity": "No approved DB path demonstrated",
+      "workload_authentication": "Static service-account key, not WIF",
+      "blast_radius": "Unknown",
+      "rotation_revocation": "Not demonstrated",
+      "additional_authority": [
+        "verify service state",
+        "replace static key with WIF",
+        "establish Secret Manager/KMS custody",
+        "remove unauthenticated exposure",
+        "approve DB route",
+        "implement EFTA broker"
+      ],
+      "recommendation": "not smallest"
+    },
+    {
+      "option": "New external runtime",
+      "custody_boundary": "Undefined",
+      "connectivity": "Undefined",
+      "workload_authentication": "Possible but not demonstrated",
+      "blast_radius": "New infrastructure",
+      "rotation_revocation": "Undefined",
+      "additional_authority": [
+        "create and operate new infrastructure"
+      ],
+      "recommendation": "not authorized"
+    }
+  ],
+  "eligible_principals": {
+    "credential_custodian": {
+      "result": "NO DEMONSTRATED ELIGIBLE PRINCIPAL",
+      "reason": "No explicit credential-custody designation or authority evidence."
+    },
+    "second_independent_credential_custodian": {
+      "result": "NO DEMONSTRATED ELIGIBLE PRINCIPAL",
+      "reason": "No explicit independent custody designation or authority evidence."
+    },
+    "rights_approver": {
+      "result": "NO DEMONSTRATED ELIGIBLE PRINCIPAL",
+      "reason": "No explicit rights/copyright approval assignment."
+    },
+    "privacy_approver": {
+      "result": "NO DEMONSTRATED ELIGIBLE PRINCIPAL",
+      "reason": "No explicit privacy/victim-information approval assignment."
+    }
+  },
+  "rights_privacy": {
+    "cells": 42,
+    "status": "evidence_required",
+    "approved": 0,
+    "changed": false,
+    "rule": "Public availability, federal authorship, government hosting, accessibility and synthetic qualification evidence are not operation-specific authorization."
+  },
+  "unresolved_blockers": [
+    "Exact current Supabase organization/project member list, scope and role",
+    "Exact current network-restrictions applied flag and CIDRs",
+    "Password-redacted exact Connect metadata for shared transaction pooler host/user template",
+    "Exact Auth expiry/session/reuse configuration and signing-key lifecycle state",
+    "Two designated credential custodians with demonstrated authority",
+    "Designated rights approver with demonstrated authority",
+    "Designated privacy approver with demonstrated authority"
+  ],
+  "disposition_basis": "The owner cannot safely choose Edge custody or authorize qualification from current evidence because the secret disclosure boundary and network viability remain unknown."
+}
