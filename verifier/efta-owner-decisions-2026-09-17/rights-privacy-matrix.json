@@ -1,0 +1,937 @@
+{
+  "contract": "efta-rights-privacy-resolution-v1",
+  "as_of": "2026-09-17",
+  "source_commit": "2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249",
+  "scope": "seven exact retained body_text spans; isolated_internal_review only",
+  "counts": {
+    "cells": 42,
+    "substantively_supported": 42,
+    "unsupported": 0,
+    "ambiguous": 0,
+    "evidence_required_unapproved": 42,
+    "approved": 0
+  },
+  "caveat": "Public access and government authorship are evidence, not operation authorization. Synthetic qualification rows are not genuine authority.",
+  "operations": {
+    "retention": [
+      "exact bytes only",
+      "private encrypted storage",
+      "least privilege",
+      "defined retention/recheck/deletion"
+    ],
+    "analysis": [
+      "exact bytes only",
+      "purpose-limited institutional-claim analysis",
+      "no unapproved provider/model reuse or training",
+      "external processor terms must be evidenced"
+    ],
+    "excerpt_display": [
+      "isolated authenticated review only",
+      "citation/attribution",
+      "no seals/logos/embedded files",
+      "no public indexing/export"
+    ]
+  },
+  "authoritative_sources": [
+    "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+    "https://www.justice.gov/legalpolicies",
+    "https://www.govinfo.gov/about/policies",
+    "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+    "https://www.justice.gov/epstein",
+    "https://www.justice.gov/doj/privacy-policy",
+    "https://www.justice.gov/opcl/privacy-act-1974"
+  ],
+  "source_specific_hazards": {
+    "f5548254-e6c4-4abd-925d-8ea6d8e076ea": "Do not expand to legislative history or linked/embedded third-party matter.",
+    "dd1ef05f-dd67-4595-908f-d195671a5db5": "Full letter discusses victims, grand-jury and protective-order material; exact schedule-projection span only.",
+    "a255ffc5-2209-4e50-8fec-cf72f3f0e7eb": "HIGH expansion hazard: remainder includes graphic descriptions of sexual abuse of minors and operational redaction instructions; full PDF needs new trauma-informed privacy review and controls.",
+    "c5a7416f-2495-41cf-b3d6-8a02d3becf22": "Underlying production may contain false submissions; official production-total claim is not independent verification.",
+    "f741208c-0a00-418a-afab-028f558b902b": "Outside span: victims, court orders, grand-jury/protective-order records and sexually explicit material.",
+    "5cabcb8f-99bf-4e42-8172-473ef6c59f0f": "Audit-status notice is not a finding; strict rights approver may seek OIG OGC authorship confirmation.",
+    "a5457418-1a23-4345-8fb7-788d07123aa8": "Appendix may identify officials/politically exposed persons; signed/filed/published dates differ; appendix excluded."
+  },
+  "cells": [
+    {
+      "candidate_id": "f5548254-e6c4-4abd-925d-8ea6d8e076ea",
+      "capture_id": "a1e37087-54c7-49a8-886d-0f7189ffbde9",
+      "content_hash": "d9f0ed6ccf11a673749d7ba91b34e228d3649d7b84c33b2be9a371199a939470",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 122,
+      "source_title": "Public Law 119-38",
+      "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "operation": "retention",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "f5548254-e6c4-4abd-925d-8ea6d8e076ea",
+      "capture_id": "a1e37087-54c7-49a8-886d-0f7189ffbde9",
+      "content_hash": "d9f0ed6ccf11a673749d7ba91b34e228d3649d7b84c33b2be9a371199a939470",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 122,
+      "source_title": "Public Law 119-38",
+      "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "operation": "retention",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "f5548254-e6c4-4abd-925d-8ea6d8e076ea",
+      "capture_id": "a1e37087-54c7-49a8-886d-0f7189ffbde9",
+      "content_hash": "d9f0ed6ccf11a673749d7ba91b34e228d3649d7b84c33b2be9a371199a939470",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 122,
+      "source_title": "Public Law 119-38",
+      "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "operation": "analysis",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "f5548254-e6c4-4abd-925d-8ea6d8e076ea",
+      "capture_id": "a1e37087-54c7-49a8-886d-0f7189ffbde9",
+      "content_hash": "d9f0ed6ccf11a673749d7ba91b34e228d3649d7b84c33b2be9a371199a939470",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 122,
+      "source_title": "Public Law 119-38",
+      "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "operation": "analysis",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "f5548254-e6c4-4abd-925d-8ea6d8e076ea",
+      "capture_id": "a1e37087-54c7-49a8-886d-0f7189ffbde9",
+      "content_hash": "d9f0ed6ccf11a673749d7ba91b34e228d3649d7b84c33b2be9a371199a939470",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 122,
+      "source_title": "Public Law 119-38",
+      "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "operation": "excerpt_display",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "f5548254-e6c4-4abd-925d-8ea6d8e076ea",
+      "capture_id": "a1e37087-54c7-49a8-886d-0f7189ffbde9",
+      "content_hash": "d9f0ed6ccf11a673749d7ba91b34e228d3649d7b84c33b2be9a371199a939470",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 122,
+      "source_title": "Public Law 119-38",
+      "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "operation": "excerpt_display",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "dd1ef05f-dd67-4595-908f-d195671a5db5",
+      "capture_id": "5a01a9c2-0f86-4757-a056-52700980d0aa",
+      "content_hash": "7062c77032a711a61eac7cb1071cb9c916166eba429110ebb9dfdbc2456e5a57",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 73,
+      "source_title": "December 19 DOJ letter",
+      "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "operation": "retention",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "dd1ef05f-dd67-4595-908f-d195671a5db5",
+      "capture_id": "5a01a9c2-0f86-4757-a056-52700980d0aa",
+      "content_hash": "7062c77032a711a61eac7cb1071cb9c916166eba429110ebb9dfdbc2456e5a57",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 73,
+      "source_title": "December 19 DOJ letter",
+      "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "operation": "retention",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "dd1ef05f-dd67-4595-908f-d195671a5db5",
+      "capture_id": "5a01a9c2-0f86-4757-a056-52700980d0aa",
+      "content_hash": "7062c77032a711a61eac7cb1071cb9c916166eba429110ebb9dfdbc2456e5a57",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 73,
+      "source_title": "December 19 DOJ letter",
+      "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "operation": "analysis",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "dd1ef05f-dd67-4595-908f-d195671a5db5",
+      "capture_id": "5a01a9c2-0f86-4757-a056-52700980d0aa",
+      "content_hash": "7062c77032a711a61eac7cb1071cb9c916166eba429110ebb9dfdbc2456e5a57",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 73,
+      "source_title": "December 19 DOJ letter",
+      "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "operation": "analysis",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "dd1ef05f-dd67-4595-908f-d195671a5db5",
+      "capture_id": "5a01a9c2-0f86-4757-a056-52700980d0aa",
+      "content_hash": "7062c77032a711a61eac7cb1071cb9c916166eba429110ebb9dfdbc2456e5a57",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 73,
+      "source_title": "December 19 DOJ letter",
+      "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "operation": "excerpt_display",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "dd1ef05f-dd67-4595-908f-d195671a5db5",
+      "capture_id": "5a01a9c2-0f86-4757-a056-52700980d0aa",
+      "content_hash": "7062c77032a711a61eac7cb1071cb9c916166eba429110ebb9dfdbc2456e5a57",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 73,
+      "source_title": "December 19 DOJ letter",
+      "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "operation": "excerpt_display",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a255ffc5-2209-4e50-8fec-cf72f3f0e7eb",
+      "capture_id": "225e33dc-9e67-47a0-86e4-7a75b8ff4b88",
+      "content_hash": "f23bb82300d53b4870bdf8001cfb61cabc38791abaca2efc8f52cd0dfce82642",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 127,
+      "source_title": "Attorney Review Protocol",
+      "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "operation": "retention",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a255ffc5-2209-4e50-8fec-cf72f3f0e7eb",
+      "capture_id": "225e33dc-9e67-47a0-86e4-7a75b8ff4b88",
+      "content_hash": "f23bb82300d53b4870bdf8001cfb61cabc38791abaca2efc8f52cd0dfce82642",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 127,
+      "source_title": "Attorney Review Protocol",
+      "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "operation": "retention",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a255ffc5-2209-4e50-8fec-cf72f3f0e7eb",
+      "capture_id": "225e33dc-9e67-47a0-86e4-7a75b8ff4b88",
+      "content_hash": "f23bb82300d53b4870bdf8001cfb61cabc38791abaca2efc8f52cd0dfce82642",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 127,
+      "source_title": "Attorney Review Protocol",
+      "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "operation": "analysis",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a255ffc5-2209-4e50-8fec-cf72f3f0e7eb",
+      "capture_id": "225e33dc-9e67-47a0-86e4-7a75b8ff4b88",
+      "content_hash": "f23bb82300d53b4870bdf8001cfb61cabc38791abaca2efc8f52cd0dfce82642",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 127,
+      "source_title": "Attorney Review Protocol",
+      "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "operation": "analysis",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a255ffc5-2209-4e50-8fec-cf72f3f0e7eb",
+      "capture_id": "225e33dc-9e67-47a0-86e4-7a75b8ff4b88",
+      "content_hash": "f23bb82300d53b4870bdf8001cfb61cabc38791abaca2efc8f52cd0dfce82642",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 127,
+      "source_title": "Attorney Review Protocol",
+      "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "operation": "excerpt_display",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a255ffc5-2209-4e50-8fec-cf72f3f0e7eb",
+      "capture_id": "225e33dc-9e67-47a0-86e4-7a75b8ff4b88",
+      "content_hash": "f23bb82300d53b4870bdf8001cfb61cabc38791abaca2efc8f52cd0dfce82642",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 127,
+      "source_title": "Attorney Review Protocol",
+      "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "operation": "excerpt_display",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "c5a7416f-2495-41cf-b3d6-8a02d3becf22",
+      "capture_id": "9a898688-2f39-4a40-a1a7-0e6bb5b0f58c",
+      "content_hash": "f4b682cf0a6c7476aa115d1cf83dcbd35da057165821aa483dc08b08f1ddbf1a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 123,
+      "source_title": "January 30 DOJ release",
+      "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "operation": "retention",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "c5a7416f-2495-41cf-b3d6-8a02d3becf22",
+      "capture_id": "9a898688-2f39-4a40-a1a7-0e6bb5b0f58c",
+      "content_hash": "f4b682cf0a6c7476aa115d1cf83dcbd35da057165821aa483dc08b08f1ddbf1a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 123,
+      "source_title": "January 30 DOJ release",
+      "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "operation": "retention",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "c5a7416f-2495-41cf-b3d6-8a02d3becf22",
+      "capture_id": "9a898688-2f39-4a40-a1a7-0e6bb5b0f58c",
+      "content_hash": "f4b682cf0a6c7476aa115d1cf83dcbd35da057165821aa483dc08b08f1ddbf1a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 123,
+      "source_title": "January 30 DOJ release",
+      "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "operation": "analysis",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "c5a7416f-2495-41cf-b3d6-8a02d3becf22",
+      "capture_id": "9a898688-2f39-4a40-a1a7-0e6bb5b0f58c",
+      "content_hash": "f4b682cf0a6c7476aa115d1cf83dcbd35da057165821aa483dc08b08f1ddbf1a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 123,
+      "source_title": "January 30 DOJ release",
+      "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "operation": "analysis",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "c5a7416f-2495-41cf-b3d6-8a02d3becf22",
+      "capture_id": "9a898688-2f39-4a40-a1a7-0e6bb5b0f58c",
+      "content_hash": "f4b682cf0a6c7476aa115d1cf83dcbd35da057165821aa483dc08b08f1ddbf1a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 123,
+      "source_title": "January 30 DOJ release",
+      "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "operation": "excerpt_display",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "c5a7416f-2495-41cf-b3d6-8a02d3becf22",
+      "capture_id": "9a898688-2f39-4a40-a1a7-0e6bb5b0f58c",
+      "content_hash": "f4b682cf0a6c7476aa115d1cf83dcbd35da057165821aa483dc08b08f1ddbf1a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 123,
+      "source_title": "January 30 DOJ release",
+      "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "operation": "excerpt_display",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "f741208c-0a00-418a-afab-028f558b902b",
+      "capture_id": "2c7428e6-0e4b-4dd2-af93-fca438307359",
+      "content_hash": "342d4813cc6fc151b6937d20b549e76957908a4a0f70dcc2429406dddfac973a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 87,
+      "source_title": "January 30 DOJ letter",
+      "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "operation": "retention",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "f741208c-0a00-418a-afab-028f558b902b",
+      "capture_id": "2c7428e6-0e4b-4dd2-af93-fca438307359",
+      "content_hash": "342d4813cc6fc151b6937d20b549e76957908a4a0f70dcc2429406dddfac973a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 87,
+      "source_title": "January 30 DOJ letter",
+      "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "operation": "retention",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "f741208c-0a00-418a-afab-028f558b902b",
+      "capture_id": "2c7428e6-0e4b-4dd2-af93-fca438307359",
+      "content_hash": "342d4813cc6fc151b6937d20b549e76957908a4a0f70dcc2429406dddfac973a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 87,
+      "source_title": "January 30 DOJ letter",
+      "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "operation": "analysis",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "f741208c-0a00-418a-afab-028f558b902b",
+      "capture_id": "2c7428e6-0e4b-4dd2-af93-fca438307359",
+      "content_hash": "342d4813cc6fc151b6937d20b549e76957908a4a0f70dcc2429406dddfac973a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 87,
+      "source_title": "January 30 DOJ letter",
+      "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "operation": "analysis",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "f741208c-0a00-418a-afab-028f558b902b",
+      "capture_id": "2c7428e6-0e4b-4dd2-af93-fca438307359",
+      "content_hash": "342d4813cc6fc151b6937d20b549e76957908a4a0f70dcc2429406dddfac973a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 87,
+      "source_title": "January 30 DOJ letter",
+      "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "operation": "excerpt_display",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "f741208c-0a00-418a-afab-028f558b902b",
+      "capture_id": "2c7428e6-0e4b-4dd2-af93-fca438307359",
+      "content_hash": "342d4813cc6fc151b6937d20b549e76957908a4a0f70dcc2429406dddfac973a",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 87,
+      "source_title": "January 30 DOJ letter",
+      "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "operation": "excerpt_display",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "5cabcb8f-99bf-4e42-8172-473ef6c59f0f",
+      "capture_id": "df6eeb70-a24a-4e3f-9ea8-55faa8fcabfd",
+      "content_hash": "b7fe286748aabbe09ad853f6abea1e8cfa3ead74dbe2eee26c0889bb343fd682",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 105,
+      "source_title": "DOJ OIG audit notice",
+      "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "operation": "retention",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "5cabcb8f-99bf-4e42-8172-473ef6c59f0f",
+      "capture_id": "df6eeb70-a24a-4e3f-9ea8-55faa8fcabfd",
+      "content_hash": "b7fe286748aabbe09ad853f6abea1e8cfa3ead74dbe2eee26c0889bb343fd682",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 105,
+      "source_title": "DOJ OIG audit notice",
+      "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "operation": "retention",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "5cabcb8f-99bf-4e42-8172-473ef6c59f0f",
+      "capture_id": "df6eeb70-a24a-4e3f-9ea8-55faa8fcabfd",
+      "content_hash": "b7fe286748aabbe09ad853f6abea1e8cfa3ead74dbe2eee26c0889bb343fd682",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 105,
+      "source_title": "DOJ OIG audit notice",
+      "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "operation": "analysis",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "5cabcb8f-99bf-4e42-8172-473ef6c59f0f",
+      "capture_id": "df6eeb70-a24a-4e3f-9ea8-55faa8fcabfd",
+      "content_hash": "b7fe286748aabbe09ad853f6abea1e8cfa3ead74dbe2eee26c0889bb343fd682",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 105,
+      "source_title": "DOJ OIG audit notice",
+      "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "operation": "analysis",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "5cabcb8f-99bf-4e42-8172-473ef6c59f0f",
+      "capture_id": "df6eeb70-a24a-4e3f-9ea8-55faa8fcabfd",
+      "content_hash": "b7fe286748aabbe09ad853f6abea1e8cfa3ead74dbe2eee26c0889bb343fd682",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 105,
+      "source_title": "DOJ OIG audit notice",
+      "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "operation": "excerpt_display",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "5cabcb8f-99bf-4e42-8172-473ef6c59f0f",
+      "capture_id": "df6eeb70-a24a-4e3f-9ea8-55faa8fcabfd",
+      "content_hash": "b7fe286748aabbe09ad853f6abea1e8cfa3ead74dbe2eee26c0889bb343fd682",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 105,
+      "source_title": "DOJ OIG audit notice",
+      "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "operation": "excerpt_display",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a5457418-1a23-4345-8fb7-788d07123aa8",
+      "capture_id": "b556327b-1053-4ea2-bdf8-464cd3133c35",
+      "content_hash": "ff60158e4e80cce95b8c0dae955becc91791a536b92458fc7ce8643bac03c7b5",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 142,
+      "source_title": "Federal Register notice",
+      "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "operation": "retention",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a5457418-1a23-4345-8fb7-788d07123aa8",
+      "capture_id": "b556327b-1053-4ea2-bdf8-464cd3133c35",
+      "content_hash": "ff60158e4e80cce95b8c0dae955becc91791a536b92458fc7ce8643bac03c7b5",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 142,
+      "source_title": "Federal Register notice",
+      "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "operation": "retention",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a5457418-1a23-4345-8fb7-788d07123aa8",
+      "capture_id": "b556327b-1053-4ea2-bdf8-464cd3133c35",
+      "content_hash": "ff60158e4e80cce95b8c0dae955becc91791a536b92458fc7ce8643bac03c7b5",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 142,
+      "source_title": "Federal Register notice",
+      "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "operation": "analysis",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a5457418-1a23-4345-8fb7-788d07123aa8",
+      "capture_id": "b556327b-1053-4ea2-bdf8-464cd3133c35",
+      "content_hash": "ff60158e4e80cce95b8c0dae955becc91791a536b92458fc7ce8643bac03c7b5",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 142,
+      "source_title": "Federal Register notice",
+      "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "operation": "analysis",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a5457418-1a23-4345-8fb7-788d07123aa8",
+      "capture_id": "b556327b-1053-4ea2-bdf8-464cd3133c35",
+      "content_hash": "ff60158e4e80cce95b8c0dae955becc91791a536b92458fc7ce8643bac03c7b5",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 142,
+      "source_title": "Federal Register notice",
+      "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "operation": "excerpt_display",
+      "domain": "rights",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    },
+    {
+      "candidate_id": "a5457418-1a23-4345-8fb7-788d07123aa8",
+      "capture_id": "b556327b-1053-4ea2-bdf8-464cd3133c35",
+      "content_hash": "ff60158e4e80cce95b8c0dae955becc91791a536b92458fc7ce8643bac03c7b5",
+      "source_field": "body_text",
+      "span_start": 0,
+      "span_end": 142,
+      "source_title": "Federal Register notice",
+      "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "operation": "excerpt_display",
+      "domain": "privacy",
+      "audience": "isolated_internal_review",
+      "substantive_status": "supported_for_exact_bounded_span",
+      "authorization_status": "evidence_required_unapproved",
+      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
+      "conditions": [
+        "bounded_exact_excerpt",
+        "no seals/images/linked material",
+        "new review if bytes, source version, operation or audience changes"
+      ]
+    }
+  ]
+}
