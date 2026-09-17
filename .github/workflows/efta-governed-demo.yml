@@ -1,0 +1,26 @@
+name: EFTA bounded review proposal
+on:
+  push:
+    branches: ['codex/mip-post-lane-a-governed-demo-20260916']
+  pull_request:
+    paths:
+      - 'supabase/qualification/mip-cutover-authority/eftaReviewContract.mjs'
+      - 'verifier/efta-governed-demo/**'
+      - 'tests/eftaGovernedDemo.test.mjs'
+      - '.github/workflows/efta-governed-demo.yml'
+permissions:
+  contents: read
+jobs:
+  proposal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/eftaGovernedDemo.test.mjs
+      - run: npm test
+      - run: npm run build
