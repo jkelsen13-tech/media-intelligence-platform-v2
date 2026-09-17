@@ -1,55 +1,24 @@
 {
-  "contract": "efta-rights-privacy-resolution-v1",
+  "contract": "efta-rights-privacy-resolution-v2",
   "as_of": "2026-09-17",
   "source_commit": "2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249",
   "scope": "seven exact retained body_text spans; isolated_internal_review only",
+  "classification_legend": {
+    "supported": "complete authoritative evidence and valid operation-specific approval receipt",
+    "unsupported": "evidence affirmatively denies the operation",
+    "ambiguous": "material conflicting or unresolved authority",
+    "evidence_required": "potential basis exists but evidence/authority required for assumption-free decision is incomplete"
+  },
   "counts": {
     "cells": 42,
-    "substantively_supported": 42,
+    "supported": 0,
     "unsupported": 0,
     "ambiguous": 0,
-    "evidence_required_unapproved": 42,
+    "evidence_required": 42,
     "approved": 0
   },
-  "caveat": "Public access and government authorship are evidence, not operation authorization. Synthetic qualification rows are not genuine authority.",
-  "operations": {
-    "retention": [
-      "exact bytes only",
-      "private encrypted storage",
-      "least privilege",
-      "defined retention/recheck/deletion"
-    ],
-    "analysis": [
-      "exact bytes only",
-      "purpose-limited institutional-claim analysis",
-      "no unapproved provider/model reuse or training",
-      "external processor terms must be evidenced"
-    ],
-    "excerpt_display": [
-      "isolated authenticated review only",
-      "citation/attribution",
-      "no seals/logos/embedded files",
-      "no public indexing/export"
-    ]
-  },
-  "authoritative_sources": [
-    "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
-    "https://www.justice.gov/legalpolicies",
-    "https://www.govinfo.gov/about/policies",
-    "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
-    "https://www.justice.gov/epstein",
-    "https://www.justice.gov/doj/privacy-policy",
-    "https://www.justice.gov/opcl/privacy-act-1974"
-  ],
-  "source_specific_hazards": {
-    "f5548254-e6c4-4abd-925d-8ea6d8e076ea": "Do not expand to legislative history or linked/embedded third-party matter.",
-    "dd1ef05f-dd67-4595-908f-d195671a5db5": "Full letter discusses victims, grand-jury and protective-order material; exact schedule-projection span only.",
-    "a255ffc5-2209-4e50-8fec-cf72f3f0e7eb": "HIGH expansion hazard: remainder includes graphic descriptions of sexual abuse of minors and operational redaction instructions; full PDF needs new trauma-informed privacy review and controls.",
-    "c5a7416f-2495-41cf-b3d6-8a02d3becf22": "Underlying production may contain false submissions; official production-total claim is not independent verification.",
-    "f741208c-0a00-418a-afab-028f558b902b": "Outside span: victims, court orders, grand-jury/protective-order records and sexually explicit material.",
-    "5cabcb8f-99bf-4e42-8172-473ef6c59f0f": "Audit-status notice is not a finding; strict rights approver may seek OIG OGC authorship confirmation.",
-    "a5457418-1a23-4345-8fb7-788d07123aa8": "Appendix may identify officials/politically exposed persons; signed/filed/published dates differ; appendix excluded."
-  },
+  "conclusion": "No cell can presently be supported without assumption. Each is conditionally supportable at exact-span scope, but remains evidence-required and unapproved.",
+  "caveat": "Public accessibility and government authorship are provenance/legal inputs, not operation authorization. Synthetic qualification evidence is not genuine authority.",
   "cells": [
     {
       "candidate_id": "f5548254-e6c4-4abd-925d-8ea6d8e076ea",
@@ -60,16 +29,39 @@
       "span_end": 122,
       "source_title": "Public Law 119-38",
       "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "source_specific_hazard": "Do not expand to legislative history or third-party embedded matter.",
       "operation": "retention",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -81,16 +73,39 @@
       "span_end": 122,
       "source_title": "Public Law 119-38",
       "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "source_specific_hazard": "Do not expand to legislative history or third-party embedded matter.",
       "operation": "retention",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -102,16 +117,39 @@
       "span_end": 122,
       "source_title": "Public Law 119-38",
       "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "source_specific_hazard": "Do not expand to legislative history or third-party embedded matter.",
       "operation": "analysis",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -123,16 +161,39 @@
       "span_end": 122,
       "source_title": "Public Law 119-38",
       "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "source_specific_hazard": "Do not expand to legislative history or third-party embedded matter.",
       "operation": "analysis",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -144,16 +205,39 @@
       "span_end": 122,
       "source_title": "Public Law 119-38",
       "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "source_specific_hazard": "Do not expand to legislative history or third-party embedded matter.",
       "operation": "excerpt_display",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -165,16 +249,39 @@
       "span_end": 122,
       "source_title": "Public Law 119-38",
       "source_url": "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+      "source_specific_hazard": "Do not expand to legislative history or third-party embedded matter.",
       "operation": "excerpt_display",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -186,16 +293,39 @@
       "span_end": 73,
       "source_title": "December 19 DOJ letter",
       "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "source_specific_hazard": "Full letter discusses victims, grand-jury and protective-order material; exact projection span only.",
       "operation": "retention",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/media/1434851/dl?inline=",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -207,16 +337,39 @@
       "span_end": 73,
       "source_title": "December 19 DOJ letter",
       "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "source_specific_hazard": "Full letter discusses victims, grand-jury and protective-order material; exact projection span only.",
       "operation": "retention",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/media/1434851/dl?inline=",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -228,16 +381,39 @@
       "span_end": 73,
       "source_title": "December 19 DOJ letter",
       "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "source_specific_hazard": "Full letter discusses victims, grand-jury and protective-order material; exact projection span only.",
       "operation": "analysis",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/media/1434851/dl?inline=",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -249,16 +425,39 @@
       "span_end": 73,
       "source_title": "December 19 DOJ letter",
       "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "source_specific_hazard": "Full letter discusses victims, grand-jury and protective-order material; exact projection span only.",
       "operation": "analysis",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/media/1434851/dl?inline=",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -270,16 +469,39 @@
       "span_end": 73,
       "source_title": "December 19 DOJ letter",
       "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "source_specific_hazard": "Full letter discusses victims, grand-jury and protective-order material; exact projection span only.",
       "operation": "excerpt_display",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/media/1434851/dl?inline=",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -291,16 +513,39 @@
       "span_end": 73,
       "source_title": "December 19 DOJ letter",
       "source_url": "https://www.justice.gov/opa/media/1434851/dl?inline=",
+      "source_specific_hazard": "Full letter discusses victims, grand-jury and protective-order material; exact projection span only.",
       "operation": "excerpt_display",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/media/1434851/dl?inline=",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -312,16 +557,39 @@
       "span_end": 127,
       "source_title": "Attorney Review Protocol",
       "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "source_specific_hazard": "HIGH expansion hazard: remainder contains graphic minor-sexual-abuse descriptions; full PDF needs trauma-informed review and stronger controls.",
       "operation": "retention",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/media/1426281/dl?inline=",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -333,16 +601,39 @@
       "span_end": 127,
       "source_title": "Attorney Review Protocol",
       "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "source_specific_hazard": "HIGH expansion hazard: remainder contains graphic minor-sexual-abuse descriptions; full PDF needs trauma-informed review and stronger controls.",
       "operation": "retention",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/media/1426281/dl?inline=",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -354,16 +645,39 @@
       "span_end": 127,
       "source_title": "Attorney Review Protocol",
       "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "source_specific_hazard": "HIGH expansion hazard: remainder contains graphic minor-sexual-abuse descriptions; full PDF needs trauma-informed review and stronger controls.",
       "operation": "analysis",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/media/1426281/dl?inline=",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -375,16 +689,39 @@
       "span_end": 127,
       "source_title": "Attorney Review Protocol",
       "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "source_specific_hazard": "HIGH expansion hazard: remainder contains graphic minor-sexual-abuse descriptions; full PDF needs trauma-informed review and stronger controls.",
       "operation": "analysis",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/media/1426281/dl?inline=",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -396,16 +733,39 @@
       "span_end": 127,
       "source_title": "Attorney Review Protocol",
       "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "source_specific_hazard": "HIGH expansion hazard: remainder contains graphic minor-sexual-abuse descriptions; full PDF needs trauma-informed review and stronger controls.",
       "operation": "excerpt_display",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/media/1426281/dl?inline=",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -417,16 +777,39 @@
       "span_end": 127,
       "source_title": "Attorney Review Protocol",
       "source_url": "https://www.justice.gov/media/1426281/dl?inline=",
+      "source_specific_hazard": "HIGH expansion hazard: remainder contains graphic minor-sexual-abuse descriptions; full PDF needs trauma-informed review and stronger controls.",
       "operation": "excerpt_display",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/media/1426281/dl?inline=",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -438,16 +821,39 @@
       "span_end": 123,
       "source_title": "January 30 DOJ release",
       "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "source_specific_hazard": "Underlying production may contain false submissions; official total is not independent verification.",
       "operation": "retention",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -459,16 +865,39 @@
       "span_end": 123,
       "source_title": "January 30 DOJ release",
       "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "source_specific_hazard": "Underlying production may contain false submissions; official total is not independent verification.",
       "operation": "retention",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -480,16 +909,39 @@
       "span_end": 123,
       "source_title": "January 30 DOJ release",
       "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "source_specific_hazard": "Underlying production may contain false submissions; official total is not independent verification.",
       "operation": "analysis",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -501,16 +953,39 @@
       "span_end": 123,
       "source_title": "January 30 DOJ release",
       "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "source_specific_hazard": "Underlying production may contain false submissions; official total is not independent verification.",
       "operation": "analysis",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -522,16 +997,39 @@
       "span_end": 123,
       "source_title": "January 30 DOJ release",
       "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "source_specific_hazard": "Underlying production may contain false submissions; official total is not independent verification.",
       "operation": "excerpt_display",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -543,16 +1041,39 @@
       "span_end": 123,
       "source_title": "January 30 DOJ release",
       "source_url": "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+      "source_specific_hazard": "Underlying production may contain false submissions; official total is not independent verification.",
       "operation": "excerpt_display",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/opa/pr/department-justice-publishes-35-million-responsive-pages-compliance-epstein-files",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -564,16 +1085,39 @@
       "span_end": 87,
       "source_title": "January 30 DOJ letter",
       "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "source_specific_hazard": "Outside span: victims, court orders, grand-jury/protective-order records and sexually explicit material.",
       "operation": "retention",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/letter-to-congress.pdf",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -585,16 +1129,39 @@
       "span_end": 87,
       "source_title": "January 30 DOJ letter",
       "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "source_specific_hazard": "Outside span: victims, court orders, grand-jury/protective-order records and sexually explicit material.",
       "operation": "retention",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/letter-to-congress.pdf",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -606,16 +1173,39 @@
       "span_end": 87,
       "source_title": "January 30 DOJ letter",
       "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "source_specific_hazard": "Outside span: victims, court orders, grand-jury/protective-order records and sexually explicit material.",
       "operation": "analysis",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/letter-to-congress.pdf",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -627,16 +1217,39 @@
       "span_end": 87,
       "source_title": "January 30 DOJ letter",
       "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "source_specific_hazard": "Outside span: victims, court orders, grand-jury/protective-order records and sexually explicit material.",
       "operation": "analysis",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/letter-to-congress.pdf",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -648,16 +1261,39 @@
       "span_end": 87,
       "source_title": "January 30 DOJ letter",
       "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "source_specific_hazard": "Outside span: victims, court orders, grand-jury/protective-order records and sexually explicit material.",
       "operation": "excerpt_display",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/letter-to-congress.pdf",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -669,16 +1305,39 @@
       "span_end": 87,
       "source_title": "January 30 DOJ letter",
       "source_url": "https://www.justice.gov/letter-to-congress.pdf",
+      "source_specific_hazard": "Outside span: victims, court orders, grand-jury/protective-order records and sexually explicit material.",
       "operation": "excerpt_display",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://www.justice.gov/letter-to-congress.pdf",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -690,16 +1349,39 @@
       "span_end": 105,
       "source_title": "DOJ OIG audit notice",
       "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "source_specific_hazard": "Audit-status notice is not a finding; strict rights reviewer may require OIG OGC authorship confirmation.",
       "operation": "retention",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -711,16 +1393,39 @@
       "span_end": 105,
       "source_title": "DOJ OIG audit notice",
       "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "source_specific_hazard": "Audit-status notice is not a finding; strict rights reviewer may require OIG OGC authorship confirmation.",
       "operation": "retention",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -732,16 +1437,39 @@
       "span_end": 105,
       "source_title": "DOJ OIG audit notice",
       "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "source_specific_hazard": "Audit-status notice is not a finding; strict rights reviewer may require OIG OGC authorship confirmation.",
       "operation": "analysis",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -753,16 +1481,39 @@
       "span_end": 105,
       "source_title": "DOJ OIG audit notice",
       "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "source_specific_hazard": "Audit-status notice is not a finding; strict rights reviewer may require OIG OGC authorship confirmation.",
       "operation": "analysis",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -774,16 +1525,39 @@
       "span_end": 105,
       "source_title": "DOJ OIG audit notice",
       "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "source_specific_hazard": "Audit-status notice is not a finding; strict rights reviewer may require OIG OGC authorship confirmation.",
       "operation": "excerpt_display",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -795,16 +1569,39 @@
       "span_end": 105,
       "source_title": "DOJ OIG audit notice",
       "source_url": "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+      "source_specific_hazard": "Audit-status notice is not a finding; strict rights reviewer may require OIG OGC authorship confirmation.",
       "operation": "excerpt_display",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://oig.justice.gov/ongoing-work/audit-department-justices-compliance-epstein-files-transparency-act",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -816,16 +1613,39 @@
       "span_end": 142,
       "source_title": "Federal Register notice",
       "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "source_specific_hazard": "Appendix may identify officials/PEPs; signed, filed and published dates differ; appendix excluded.",
       "operation": "retention",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://public-inspection.federalregister.gov/2026-17533.pdf",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -837,16 +1657,39 @@
       "span_end": 142,
       "source_title": "Federal Register notice",
       "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "source_specific_hazard": "Appendix may identify officials/PEPs; signed, filed and published dates differ; appendix excluded.",
       "operation": "retention",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://public-inspection.federalregister.gov/2026-17533.pdf",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "approved retention period, deletion/reversal schedule, encrypted-storage and access-control evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -858,16 +1701,39 @@
       "span_end": 142,
       "source_title": "Federal Register notice",
       "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "source_specific_hazard": "Appendix may identify officials/PEPs; signed, filed and published dates differ; appendix excluded.",
       "operation": "analysis",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://public-inspection.federalregister.gov/2026-17533.pdf",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -879,16 +1745,39 @@
       "span_end": 142,
       "source_title": "Federal Register notice",
       "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "source_specific_hazard": "Appendix may identify officials/PEPs; signed, filed and published dates differ; appendix excluded.",
       "operation": "analysis",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://public-inspection.federalregister.gov/2026-17533.pdf",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "exact processor/model identity, contract/terms snapshot, retention/training policy, transfer/subprocessor basis, and approved no-reuse conditions"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -900,16 +1789,39 @@
       "span_end": 142,
       "source_title": "Federal Register notice",
       "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "source_specific_hazard": "Appendix may identify officials/PEPs; signed, filed and published dates differ; appendix excluded.",
       "operation": "excerpt_display",
       "domain": "rights",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP rights/copyright principal, preferably counsel",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://public-inspection.federalregister.gov/2026-17533.pdf",
+        "https://uscode.house.gov/view.xhtml?edition=prelim&path=%2Fprelim%40title17%2Fchapter1",
+        "https://www.justice.gov/legalpolicies",
+        "https://www.govinfo.gov/about/policies"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "no seal, image, linked file or apparent third-party material in exact span"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited rights authority evidence",
+        "owner-designated rights approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP rights/copyright principal, preferably counsel; agency/OIG counsel may clarify authorship but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     },
     {
@@ -921,16 +1833,39 @@
       "span_end": 142,
       "source_title": "Federal Register notice",
       "source_url": "https://public-inspection.federalregister.gov/2026-17533.pdf",
+      "source_specific_hazard": "Appendix may identify officials/PEPs; signed, filed and published dates differ; appendix excluded.",
       "operation": "excerpt_display",
       "domain": "privacy",
       "audience": "isolated_internal_review",
-      "substantive_status": "supported_for_exact_bounded_span",
-      "authorization_status": "evidence_required_unapproved",
-      "authority_required": "owner-designated MIP privacy/data-governance principal with victim-information competence",
-      "conditions": [
+      "classification": "evidence_required",
+      "authorization_status": "unapproved",
+      "present_support_without_assumption": false,
+      "basis_assessment": "conditionally_supportable for the exact bounded span only; not presently approved or assumption-free",
+      "authoritative_evidence_accessible": [
+        "https://public-inspection.federalregister.gov/2026-17533.pdf",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ38/html/PLAW-119publ38.htm",
+        "https://www.justice.gov/epstein",
+        "https://www.justice.gov/opcl/privacy-act-1974"
+      ],
+      "evidence_already_observed": [
+        "official source currently accessible",
+        "exact retained span re-found in current official source on 2026-09-17",
+        "negative exact-span screen found no victim identity, private-person PII, medical detail, sensitive image or named-person allegation"
+      ],
+      "authoritative_evidence_snapshot_hashes": [],
+      "remains_missing": [
+        "frozen cryptographic snapshot/hash of the exact authoritative source bytes",
+        "frozen cryptographic snapshots/hashes of the cited privacy authority evidence",
+        "owner-designated privacy approver auth_user principal and assignment revision",
+        "operation/domain/audience-specific signed or durably authenticated approval receipt",
+        "validity and mandatory recheck date",
+        "authenticated-audience/access-control proof, attribution form, export/indexing restriction evidence"
+      ],
+      "competent_authority": "owner-designated MIP privacy/data-governance principal with victim-information competence; DOJ privacy offices may clarify process but cannot grant MIP authority",
+      "limiting_conditions": [
         "bounded_exact_excerpt",
-        "no seals/images/linked material",
-        "new review if bytes, source version, operation or audience changes"
+        "no whole PDF/page, appendix, seal, image, logo, linked or underlying EFTA file",
+        "new decision if bytes, source version, operation, processor or audience changes"
       ]
     }
   ]

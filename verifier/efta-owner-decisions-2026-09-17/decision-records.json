@@ -20,7 +20,8 @@
   "reviewer_selection_intent": {
     "contract": "efta-reviewer-selection-intent-v1",
     "selection_intent_id": "e28950b8-c81a-5864-a618-0a471df187db",
-    "uuid_derivation": "UUIDv5(URL, https://mip.invalid/assignment/efta-bounded-demo-v1/reviewer/auth_user:f576f162-b6c6-46b7-9aaf-96b1ea90e194/owner-selected/2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249)",
+    "uuid_namespace": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+    "uuid_name": "https://mip.invalid/assignment/efta-bounded-demo-v1/reviewer/auth_user:f576f162-b6c6-46b7-9aaf-96b1ea90e194/owner-selected/2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249",
     "source_head": "2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249",
     "subject_id": "f576f162-b6c6-46b7-9aaf-96b1ea90e194",
     "subject_principal": "auth_user:f576f162-b6c6-46b7-9aaf-96b1ea90e194",
@@ -39,71 +40,145 @@
     "owner_approval_receipt_hash": null,
     "owner_approval_payload_hash": null,
     "schema_materializable": false,
-    "blocking_reason": "mapping, key, credential and validity revisions are deferred and NOT NULL; final payload hash covers them",
-    "warning": "This is a selection-intent envelope, not an assignment revision or grant."
+    "blocking_reason": "mapping_revision, key_revision, credential_revision, valid_from and valid_until are unresolved mandatory fields; final digest binds them",
+    "warning": "Selection intent only; not an assignment revision or grant."
   },
-  "institutions": [
+  "institution_versions_and_heads": [
     {
       "institution_id": "62bb9132-5a8a-581f-992f-f0a38ae78e39",
       "normalized_label": "United States Congress",
-      "kind": "institution",
+      "institution_kind": "legislature",
       "parent_institution_id": null,
       "approved_proposal_revision": "d8428b15-0827-599b-8856-f1dbf89e584b",
+      "proposal_receipt": {
+        "contract": "efta-institution-proposal-v1",
+        "owner_approved": false,
+        "deterministic_name": "https://mip.invalid/institution/us-congress",
+        "origin_ids": [
+          "us-congress-enacted-law"
+        ]
+      },
       "proposal_receipt_hash": "0630fc94971f09b5c6397dcf0a9a986aaff53aa79acfce8001ea1c65d90f18be",
-      "current_migration_state": "proposed/proposed_unapproved, immutable, unheaded",
+      "successor_revision": "85b4e360-a014-5e14-a727-a29ff85536a8",
+      "uuid_name": "https://mip.invalid/institution/us-congress/revision/owner-approved/2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249/d8428b15-0827-599b-8856-f1dbf89e584b",
+      "digest": "f2a59ace096a01f0aa576cb735be592b43db2f9a918558459c364652b30c355c",
+      "current_migration_state": "proposed/proposed_unapproved; immutable; no head",
       "predecessor": null,
-      "proposed_successor_revision": "85b4e360-a014-5e14-a727-a29ff85536a8",
-      "successor_uuid_derivation": "UUIDv5 bound to source head and predecessor",
+      "successor_uuid_namespace": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+      "successor_uuid_algorithm": "UUIDv5 (SHA-1), URL namespace, exact UTF-8 name",
       "successor_state_if_later_authorized": "current/owner_approved",
       "successor_predecessor": "d8428b15-0827-599b-8856-f1dbf89e584b",
       "successor_head_active_if_later_authorized": true,
       "successor_owner_approved": false,
-      "approval_receipt_content_digest": "f2a59ace096a01f0aa576cb735be592b43db2f9a918558459c364652b30c355c"
+      "approval_receipt_payload": {
+        "contract": "efta-institution-owner-approval-v1",
+        "decision_date": "2026-09-17",
+        "source_commit": "2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249",
+        "institution_id": "62bb9132-5a8a-581f-992f-f0a38ae78e39",
+        "owner_decision": "approved_for_record_preparation_only",
+        "normalized_label": "United States Congress",
+        "predecessor_revision": "d8428b15-0827-599b-8856-f1dbf89e584b",
+        "parent_institution_id": null
+      },
+      "approval_receipt_digest_algorithm": "SHA-256 of exact UTF-8 PostgreSQL jsonb::text canonical preimage via comparison_qualification.argument_digest",
+      "approval_receipt_content_digest": "f2a59ace096a01f0aa576cb735be592b43db2f9a918558459c364652b30c355c",
+      "owner_approval_receipt_hash": null
     },
     {
       "institution_id": "a95e3f14-f75d-5718-a7b3-55e4c4e055a9",
       "normalized_label": "United States Department of Justice",
-      "kind": "institution",
+      "institution_kind": "executive_department",
       "parent_institution_id": null,
       "approved_proposal_revision": "6875d412-6b9a-512f-a8b5-dd03ccaf7e76",
+      "proposal_receipt": {
+        "contract": "efta-institution-proposal-v1",
+        "owner_approved": false,
+        "deterministic_name": "https://mip.invalid/institution/us-doj",
+        "origin_ids": [
+          "doj-executive"
+        ]
+      },
       "proposal_receipt_hash": "079e8b568a558796af8c70ae280677ab08255dded088f1dac98a07994377be62",
-      "current_migration_state": "proposed/proposed_unapproved, immutable, unheaded",
+      "successor_revision": "40baeeaf-4b99-5dfe-96ab-cf7474c064a2",
+      "uuid_name": "https://mip.invalid/institution/us-doj/revision/owner-approved/2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249/6875d412-6b9a-512f-a8b5-dd03ccaf7e76",
+      "digest": "a2beab4418eb16ff943209f32a89efedb326dc6927e2c474f925874dec9a0b61",
+      "current_migration_state": "proposed/proposed_unapproved; immutable; no head",
       "predecessor": null,
-      "proposed_successor_revision": "40baeeaf-4b99-5dfe-96ab-cf7474c064a2",
-      "successor_uuid_derivation": "UUIDv5 bound to source head and predecessor",
+      "successor_uuid_namespace": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+      "successor_uuid_algorithm": "UUIDv5 (SHA-1), URL namespace, exact UTF-8 name",
       "successor_state_if_later_authorized": "current/owner_approved",
       "successor_predecessor": "6875d412-6b9a-512f-a8b5-dd03ccaf7e76",
       "successor_head_active_if_later_authorized": true,
       "successor_owner_approved": false,
-      "approval_receipt_content_digest": "a2beab4418eb16ff943209f32a89efedb326dc6927e2c474f925874dec9a0b61"
+      "approval_receipt_payload": {
+        "contract": "efta-institution-owner-approval-v1",
+        "decision_date": "2026-09-17",
+        "source_commit": "2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249",
+        "institution_id": "a95e3f14-f75d-5718-a7b3-55e4c4e055a9",
+        "owner_decision": "approved_for_record_preparation_only",
+        "normalized_label": "United States Department of Justice",
+        "predecessor_revision": "6875d412-6b9a-512f-a8b5-dd03ccaf7e76",
+        "parent_institution_id": null
+      },
+      "approval_receipt_digest_algorithm": "SHA-256 of exact UTF-8 PostgreSQL jsonb::text canonical preimage via comparison_qualification.argument_digest",
+      "approval_receipt_content_digest": "a2beab4418eb16ff943209f32a89efedb326dc6927e2c474f925874dec9a0b61",
+      "owner_approval_receipt_hash": null
     },
     {
       "institution_id": "d9e9e444-d183-5e9e-b4cb-f0b4670723a3",
       "normalized_label": "U.S. Department of Justice Office of Inspector General",
-      "kind": "institution",
+      "institution_kind": "inspector_general",
       "parent_institution_id": "a95e3f14-f75d-5718-a7b3-55e4c4e055a9",
       "approved_proposal_revision": "c50912f4-0fd0-5fd4-9034-08d20b092c75",
+      "proposal_receipt": {
+        "contract": "efta-institution-proposal-v1",
+        "owner_approved": false,
+        "deterministic_name": "https://mip.invalid/institution/us-doj-oig",
+        "origin_ids": [
+          "doj-oig"
+        ],
+        "parent_institution_id": "a95e3f14-f75d-5718-a7b3-55e4c4e055a9"
+      },
       "proposal_receipt_hash": "146a005d06c8afe5b1d1a07220263fdbf9087ba31bb270c7b06417cfae2f9726",
-      "current_migration_state": "proposed/proposed_unapproved, immutable, unheaded",
+      "successor_revision": "b1e6e59c-72c5-594a-a33a-747ca7c2d8e0",
+      "uuid_name": "https://mip.invalid/institution/us-doj-oig/revision/owner-approved/2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249/c50912f4-0fd0-5fd4-9034-08d20b092c75",
+      "digest": "ce4505f311d9bce2cec2b40ad12d4601c849b2ccd5bfc9e5df2e1f0e0b429c31",
+      "current_migration_state": "proposed/proposed_unapproved; immutable; no head",
       "predecessor": null,
-      "proposed_successor_revision": "b1e6e59c-72c5-594a-a33a-747ca7c2d8e0",
-      "successor_uuid_derivation": "UUIDv5 bound to source head and predecessor",
+      "successor_uuid_namespace": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+      "successor_uuid_algorithm": "UUIDv5 (SHA-1), URL namespace, exact UTF-8 name",
       "successor_state_if_later_authorized": "current/owner_approved",
       "successor_predecessor": "c50912f4-0fd0-5fd4-9034-08d20b092c75",
       "successor_head_active_if_later_authorized": true,
       "successor_owner_approved": false,
-      "approval_receipt_content_digest": "ce4505f311d9bce2cec2b40ad12d4601c849b2ccd5bfc9e5df2e1f0e0b429c31"
+      "approval_receipt_payload": {
+        "contract": "efta-institution-owner-approval-v1",
+        "decision_date": "2026-09-17",
+        "source_commit": "2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249",
+        "institution_id": "d9e9e444-d183-5e9e-b4cb-f0b4670723a3",
+        "owner_decision": "approved_for_record_preparation_only",
+        "normalized_label": "U.S. Department of Justice Office of Inspector General",
+        "predecessor_revision": "c50912f4-0fd0-5fd4-9034-08d20b092c75",
+        "parent_institution_id": "a95e3f14-f75d-5718-a7b3-55e4c4e055a9"
+      },
+      "approval_receipt_digest_algorithm": "SHA-256 of exact UTF-8 PostgreSQL jsonb::text canonical preimage via comparison_qualification.argument_digest",
+      "approval_receipt_content_digest": "ce4505f311d9bce2cec2b40ad12d4601c849b2ccd5bfc9e5df2e1f0e0b429c31",
+      "owner_approval_receipt_hash": null
     }
   ],
-  "institution_owner_decision_receipt_contract": {
-    "contract": "efta-institution-owner-approval-v1",
-    "decision_date": "2026-09-17",
-    "source_commit": "2c862413e5a3f943f2f6ed8376e9a5fa6a8c9249",
-    "owner_decision": "approved_for_record_preparation_only",
-    "authenticated_durable_receipt_adopted": false,
-    "hash_note": "Listed content digests are inspection digests only. owner_approval_receipt_hash remains null until this contract is durably and authentically adopted."
+  "exact_successor_row_semantics": {
+    "state": "current",
+    "approval_state": "owner_approved",
+    "proposal_receipt": "preserve exact predecessor proposal_receipt",
+    "proposal_receipt_hash": "preserve exact predecessor proposal_receipt_hash",
+    "owner_approval_receipt_hash": "NULL until exact receipt contract is durably authenticated and separately authorized",
+    "head_active": "false now; true only after separate authorization and insertion",
+    "dependency_order": [
+      "United States Congress or DOJ may be inserted independently",
+      "DOJ current head must exist before DOJ OIG head activates"
+    ]
   },
-  "correction_semantics": "Append a successor revision, atomically move the head, preserve every prior proposal/current/superseded revision; never update/delete historical identity evidence.",
+  "correction_semantics": "Append immutable successor; predecessor=current revision; atomically move active head; never update/delete historical identity evidence.",
   "deferred_principals": {
     "admitter": null,
     "private_reader": null,
@@ -111,5 +186,5 @@
     "privacy_approver": null
   },
   "deferred_credentials": true,
-  "assignment_hash_semantics": "Final database payload uses SHA-256 of PostgreSQL jsonb canonical text via comparison_qualification.argument_digest; no final assignment hash exists until every required revision and validity field is frozen."
+  "assignment_hash_sql": "comparison_qualification.argument_digest(jsonb_build_object('revision',revision,'subject_id',subject_id,'database_principal',database_principal,'scope',scope,'mapping_revision',mapping_revision,'key_revision',key_revision,'credential_revision',credential_revision,'predecessor',predecessor,'valid_from',valid_from,'valid_until',valid_until))"
 }
