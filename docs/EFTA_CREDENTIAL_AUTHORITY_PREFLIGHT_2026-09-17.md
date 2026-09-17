@@ -83,7 +83,7 @@ Only demonstrated private-gateway runtime class. Eight functions are active. `sp
 
 ### GCP Cloud Run
 
-The repository contains a manual `mop-extraction` deployment workflow using static `GCP_SA_KEY`, `--allow-unauthenticated`, and a health-only service with no capabilities. Current deployment, Secret Manager/KMS state, network route and callers were previously unverified. This is merely possible infrastructure, not a demonstrated or authorized EFTA runtime.
+The repository contains a manual `mop-extraction` deployment workflow that references the secret name `GCP_SA_KEY`, requests `--allow-unauthenticated`, and deploys a health-only service with no capabilities. The workflow reference does not prove that the secret is currently configured. Current deployment, Secret Manager/KMS state, network route and callers were previously unverified. This is merely possible infrastructure, not a demonstrated or authorized EFTA runtime.
 
 ### GitHub Pages/Actions
 
@@ -98,7 +98,7 @@ Repository evidence: [investigation gateway](https://github.com/jkelsen13-tech/m
 | Option | Custody | Connectivity | Workload authentication | Result |
 |---|---|---|---|---|
 | Supabase Edge + Edge secret + versioned EFTA LOGIN | All actual project members can view secret; exact people unknown | Conditional on restrictions=false and exact pooler metadata | Platform deployment identity plus static server-held DSN | Smallest only after missing custody/network evidence is resolved |
-| Existing Cloud Run | Static GitHub `GCP_SA_KEY`; exact custodian unknown | No approved DB route demonstrated | Static key, not workload identity federation | Not currently viable without material new authority/infrastructure |
+| Existing Cloud Run | Workflow references GitHub secret name `GCP_SA_KEY`; configured-secret existence and custodian are unverified | No approved DB route demonstrated | Workflow is designed for a static key, not workload identity federation; current secret existence is unverified | Not currently viable without material new authority/infrastructure |
 | GitHub Pages/Actions | Ephemeral repository/OIDC boundary | No approved DB path | Pages/job only | Not a private broker |
 | New external runtime | Undefined | Undefined | Possible only | Not authorized |
 

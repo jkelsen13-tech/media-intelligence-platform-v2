@@ -242,9 +242,9 @@
     },
     {
       "option": "Existing GCP Cloud Run",
-      "custody_boundary": "Current static GCP_SA_KEY repository secret; exact custodians unknown",
+      "custody_boundary": "Workflow references repository secret name GCP_SA_KEY; whether a configured secret currently exists and its custodians are unverified",
       "connectivity": "No approved DB path demonstrated",
-      "workload_authentication": "Static service-account key, not WIF",
+      "workload_authentication": "Workflow is designed for a static service-account key, not WIF; current configured secret existence is unverified",
       "blast_radius": "Unknown",
       "rotation_revocation": "Not demonstrated",
       "additional_authority": [
