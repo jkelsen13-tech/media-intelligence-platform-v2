@@ -1,3 +1,4 @@
+import EftaGovernedWorkspace from './components/EftaGovernedWorkspace.jsx'
 import {useHypothesisSessionClient} from './lib/useHypothesisSessionClient.js'
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import GraphView from './graph/GraphView'
@@ -207,7 +208,7 @@ function topicSubgraph(nodes, edges, memberIds) {
   }
 }
 
-export default function App({
+function AppCore({
   investigationWorkspaceClient = null,
   investigationEvidenceChecksClient = null,
   investigationEvidenceReviewsClient = null,
@@ -1953,4 +1954,10 @@ export default function App({
       </nav>
     </div>
   )
+}
+
+// Explicit private route; no browser publication RPC or service credentials.
+export default function App(props={}) {
+ const route=typeof window!=='undefined' && new URLSearchParams(window.location.search).get('workspace')==='efta';
+ return route ? <EftaGovernedWorkspace client={props.eftaReviewClient??null}/> : <AppCore {...props}/>;
 }
