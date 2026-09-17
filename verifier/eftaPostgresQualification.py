@@ -277,6 +277,62 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
                 with self.assertRaisesRegex(RuntimeError,"permission denied"):role_sql(self.session(),role,sql)
         with self.assertRaisesRegex(RuntimeError,"public_release_disabled"):
             self.admin("select mip_identity.release_public()")
+    def resolution_call(self,request,role_index=0):
+        origin=next(iter(INSTITUTIONS));revision=INSTITUTIONS[origin][1]
+        return (f"select mip_identity.efta_resolve_identity({q(request)},{q(origin)},{q(revision)},"
+                f"null,'resolved','revocation race qualification',{q(SESSIONS[ROLES[role_index]])},"
+                f"{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[role_index]])});")
+    def test_assignment_revocation_wins_without_persisted_resolution(self):
+        holder=self.session();holder.execute("reset role;begin;")
+        holder.execute("update mip_identity.efta_authority_assignment_heads set active=false "
+                       f"where subject_id={q(SUBJECT)} and database_principal={q(ROLES[0])};")
+        waiter=self.session();waiter.execute("reset role;set role mip_efta_reviewer_v1;")
+        waiter.start(self.resolution_call(str(uuid.uuid4())))
+        self.blocked(waiter,holder);holder.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"efta_assignment_not_authorized"):waiter.finish()
+        self.assertEqual(self.admin("select count(*) from mip_identity.efta_identity_resolutions"),"0")
+    def test_gateway_rotation_wins_without_persisted_private_read(self):
+        new_credential="22000000-0000-4000-8000-000000000001"
+        holder=self.session();holder.execute("reset role;begin;")
+        holder.execute(f"""with x as(select {q(new_credential)}::uuid revision,
+ 'efta-private-gateway-v1'::text gateway_id,repeat('1',64)::text fingerprint,
+ {q(CREDENTIAL)}::uuid predecessor,'current'::text state,
+ '2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
+insert into mip_identity.efta_gateway_credential_versions(
+ revision,gateway_id,credential_fingerprint_hash,predecessor,state,approval_state,
+ owner_approval_receipt_hash,owner_approval_payload_hash,valid_from,valid_until,created_at)
+select revision,gateway_id,fingerprint,predecessor,state,'owner_approved',repeat('2',64),
+ comparison_qualification.argument_digest(jsonb_build_object(
+ 'revision',revision,'gateway_id',gateway_id,'credential_fingerprint_hash',fingerprint,
+ 'predecessor',predecessor,'state',state,'valid_from',valid_from,'valid_until',valid_until)),
+ valid_from,valid_until,clock_timestamp() from x;
+update mip_identity.efta_gateway_credential_heads set revision={q(new_credential)}
+where gateway_id='efta-private-gateway-v1';""")
+        waiter=self.session();waiter.execute("reset role;set role mip_efta_private_reader_v1;")
+        request=str(uuid.uuid4())
+        waiter.start(f"select mip_identity.efta_private_read({q(request)},{q(SESSIONS[ROLES[2]])},"
+                     f"{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[2]])});")
+        self.blocked(waiter,holder);holder.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"efta_gateway_credential_not_authorized"):waiter.finish()
+        self.assertEqual(self.admin("select count(*) from mip_identity.efta_private_reads"),"0")
+    def test_mapping_revocation_wins_without_persisted_resolution(self):
+        holder=self.session();holder.execute("reset role;begin;")
+        holder.execute(f"update mip_identity.mapping_heads set active=false where runtime={q(RUNTIME)} "
+                       f"and principal={q(ROLES[0])};")
+        waiter=self.session();waiter.execute("reset role;set role mip_efta_reviewer_v1;")
+        waiter.start(self.resolution_call(str(uuid.uuid4())))
+        self.blocked(waiter,holder);holder.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"mip_identity_mapping_revoked"):waiter.finish()
+        self.assertEqual(self.admin("select count(*) from mip_identity.efta_identity_resolutions"),"0")
+    def test_broker_session_revocation_wins_without_persisted_resolution(self):
+        holder=self.session();holder.execute("reset role;begin;")
+        holder.execute(f"update comparison_qualification.principal_sessions "
+                       f"set revoked_at=clock_timestamp() where session_id={q(SESSIONS[ROLES[0]])};")
+        waiter=self.session();waiter.execute("reset role;set role mip_efta_reviewer_v1;")
+        waiter.start(self.resolution_call(str(uuid.uuid4())))
+        self.blocked(waiter,holder);holder.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"mip_identity_session_revoked"):waiter.finish()
+        self.assertEqual(self.admin("select count(*) from mip_identity.efta_identity_resolutions"),"0")
     def test_concurrent_decisions_serialize_and_loser_denies(self):
         a=self.session();res=self.resolve_all(a);src=SOURCES[0]
         review=q(json.dumps(self.review(src,res[src["origin_id"]]),separators=(",",":")))
