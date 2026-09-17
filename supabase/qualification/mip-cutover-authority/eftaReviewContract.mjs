@@ -195,6 +195,50 @@ const scope = [
 const fail = reason => { throw new Error('efta_review_' + reason) };
 const text = x => typeof x === 'string' && x.trim().length > 0;
 export const PUBLIC_RELEASE_ENABLED = false;
+export const EFTA_AUTHORITY_SCOPE = 'efta-bounded-demo-v1';
+export const EFTA_OWNER_SELECTABLE_SUBJECT = Object.freeze({
+  principal: 'auth_user:f576f162-b6c6-46b7-9aaf-96b1ea90e194',
+  selected: false,
+  authorized: false,
+  note: 'Existing human candidate only; an owner-approved versioned assignment and active head are required.'
+});
+export const EFTA_DATABASE_PRINCIPALS = Object.freeze({
+  owner: 'mip_efta_owner_v1', reviewer: 'mip_efta_reviewer_v1',
+  admitter: 'mip_efta_admitter_v1', privateReader: 'mip_efta_private_reader_v1'
+});
+export const EFTA_OPERATION_CELLS = Object.freeze(
+  ['retention','analysis','excerpt_display'].flatMap(operation =>
+    ['rights','privacy'].map(domain => Object.freeze({operation,domain,audience:'isolated_internal_review'})))
+);
+export const EFTA_INSTITUTION_PROPOSALS = Object.freeze([
+  Object.freeze({
+    institution_id:'62bb9132-5a8a-581f-992f-f0a38ae78e39',
+    revision:'d8428b15-0827-599b-8856-f1dbf89e584b',
+    normalized_label:'United States Congress',kind:'legislature',parent_institution_id:null,
+    deterministic_name:'https://mip.invalid/institution/us-congress',approval_state:'proposed_unapproved'
+  }),
+  Object.freeze({
+    institution_id:'a95e3f14-f75d-5718-a7b3-55e4c4e055a9',
+    revision:'6875d412-6b9a-512f-a8b5-dd03ccaf7e76',
+    normalized_label:'United States Department of Justice',kind:'executive_department',parent_institution_id:null,
+    deterministic_name:'https://mip.invalid/institution/us-doj',approval_state:'proposed_unapproved'
+  }),
+  Object.freeze({
+    institution_id:'d9e9e444-d183-5e9e-b4cb-f0b4670723a3',
+    revision:'c50912f4-0fd0-5fd4-9034-08d20b092c75',
+    normalized_label:'U.S. Department of Justice Office of Inspector General',kind:'inspector_general',
+    parent_institution_id:'a95e3f14-f75d-5718-a7b3-55e4c4e055a9',
+    deterministic_name:'https://mip.invalid/institution/us-doj-oig',approval_state:'proposed_unapproved'
+  })
+]);
+export function assertAuthoritativeReviewShape(review) {
+  if (!review || typeof review !== 'object' || Array.isArray(review)) fail('review_object');
+  for (const forbidden of ['reviewer','rights_ref','privacy_ref','owner_authorization_ref']) {
+    if (Object.hasOwn(review, forbidden)) fail('free_text_authority_' + forbidden);
+  }
+  if (!text(review.identity_resolution_id)) fail('identity_resolution');
+  return true;
+}
 export function validateReviewProposal(proposal, retained, registry) {
   const expected = scope.find(r => r.candidate_id === proposal?.candidate_id);
   if (!expected) fail('outside_scope');
