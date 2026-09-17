@@ -289,13 +289,13 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
         a.execute("commit;")
         loser=self.session();loser.execute("reset role;set role mip_efta_reviewer_v1;")
         with self.assertRaisesRegex(RuntimeError,"predecessor_conflict"):
-            loser.execute(f"select mip_identity.efta_decide({q(two)},{q(src['candidate_id'])},'approve',null,{review}::jsonb,{q(SESSIONS[ROLES[0]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[0]])})")
+            loser.execute(f"select mip_identity.efta_decide({q(two)},{q(src['candidate_id'])},'approve',null,{review}::jsonb,{q(SESSIONS[ROLES[0]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[0]])});")
         self.assertEqual(self.admin("select count(*) from mip_identity.efta_decisions"),"1")
     def test_private_read_serializes_source_change_then_invalidates(self):
         reader,res,decisions=self.admit_all()
         reader.execute("reset role;set role mip_efta_private_reader_v1;begin;")
         rid=str(uuid.uuid4())
-        reader.execute(f"select mip_identity.efta_private_read({q(rid)},{q(SESSIONS[ROLES[2]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[2]])})")
+        reader.execute(f"select mip_identity.efta_private_read({q(rid)},{q(SESSIONS[ROLES[2]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[2]])});")
         mut=self.session();mut.execute("set lock_timeout='500ms';reset role;")
         change="update public.articles set body_text='changed' where id="+q(SOURCES[0]["article_id"])+";"
         with self.assertRaisesRegex(RuntimeError,"lock timeout"):mut.execute(change)
