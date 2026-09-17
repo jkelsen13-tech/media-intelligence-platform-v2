@@ -1,5 +1,8 @@
 """Disposable exact-chain EFTA qualification. Never accepts a production DSN or emits a dump."""
 import json, os, pathlib, subprocess, unittest, uuid, time
+# The reused Session helper has its own disposable-CI import guard. This harness
+# independently enforces the narrower EFTA marker immediately below.
+os.environ.setdefault("MIP_DISPOSABLE_POSTGRES","comparison-qualification")
 import comparisonPostgresConcurrency as base
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
@@ -11,6 +14,10 @@ ENV={k:v for k,v in os.environ.items() if not k.startswith("PG")}
 ENV.update(PGPASSWORD="mip-efta-disposable-ci-only",PGCONNECT_TIMEOUT="5",
            PGOPTIONS="-c statement_timeout=20000 -c lock_timeout=12000")
 PSQL=["psql","-X","-qAt","-v","ON_ERROR_STOP=1","-h","127.0.0.1","-p","5432","-U","postgres"]
+# Ensure reused interactive sessions have this harness\'s fixed loopback service
+# and credential rather than the helper\'s independent qualification service.
+base.ENV=ENV
+base.BASE=PSQL
 TEMPLATE="mip_efta_template"
 SUBJECT="11111111-1111-4111-8111-111111111111"
 RUNTIME="efta-qualification-runtime"
@@ -45,7 +52,7 @@ alter table public.articles enable row level security; alter table public.articl
 """
     for name in generic:
         sql+=f"create table public.{name}(id uuid primary key default gen_random_uuid(),payload jsonb not null default '{{}}'::jsonb);\n"
-    sql+="""drop table public.explanations;
+    sql+="""drop table if exists public.explanations;
 create table public.explanations(
  id uuid primary key default gen_random_uuid(),assertion_id text not null,assertion_type text not null,
  version integer not null,is_current boolean not null default true,source_ids uuid[] not null default '{}',
@@ -256,7 +263,6 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
         self.admin("update public.articles set body_text='changed' where id="+q(src["article_id"]))
         with self.assertRaisesRegex(RuntimeError,"stale"):self.read(s)
     def test_unrelated_review_release_publication_and_direct_dml_denied(self):
-        s=self.session()
         forbidden=[
           ("mip_efta_reviewer_v1","select mip_factual.review_publish(gen_random_uuid(),'x')"),
           ("mip_efta_private_reader_v1","select mip_identity.release_isolated(gen_random_uuid(),gen_random_uuid(),'x',gen_random_uuid())"),
@@ -264,7 +270,8 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
           ("mip_efta_private_reader_v1","insert into public.claims default values"),
           ("mip_efta_reviewer_v1","select * from mip_identity.efta_decisions")]
         for role,sql in forbidden:
-            with self.assertRaisesRegex(RuntimeError,"permission denied"):role_sql(s,role,sql)
+            # psql exits after each expected ON_ERROR_STOP failure; isolate cases.
+            with self.assertRaisesRegex(RuntimeError,"permission denied"):role_sql(self.session(),role,sql)
         with self.assertRaisesRegex(RuntimeError,"public_release_disabled"):
             self.admin("select mip_identity.release_public()")
     def test_concurrent_decisions_serialize_and_loser_denies(self):
