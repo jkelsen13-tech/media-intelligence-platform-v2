@@ -229,7 +229,7 @@ and not rolcanlogin and not rolsuper and not rolcreaterole and not rolcreatedb a
         self.assertEqual(self.admin("""select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
 join pg_roles r on r.oid=p.proowner where n.nspname='mip_identity'
 and p.proname in('efta_current_binding','efta_require_identity','efta_resolve_identity','efta_decide','efta_admit','efta_private_read')
-and p.prosecdef and r.rolname='mip_efta_owner_v1' and p.proconfig@>array['search_path=']"""),"6")
+and p.prosecdef and r.rolname='mip_efta_owner_v1' and p.proconfig@>array['search_path=""']"""),"6")
         self.assertEqual(self.admin("""select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
 join pg_roles r on r.oid=c.relowner where n.nspname='mip_identity' and c.relname like 'efta_%'
 and c.relkind='r' and c.relrowsecurity and c.relforcerowsecurity and r.rolname='mip_cutover_schema_owner_v1'"""),"12")
@@ -261,7 +261,7 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
         d,request=self.decide(s,src,res[src["origin_id"]]);self.admit(s,d)
         self.admin("update mip_identity.efta_operation_evidence_heads set active=false where candidate_id="+q(src["candidate_id"])+" and operation='analysis' and domain='rights'")
         with self.assertRaisesRegex(RuntimeError,"operation_denied|stale"):self.read(s)
-        with self.assertRaisesRegex(RuntimeError,"operation_denied|stale"):self.decide(s,src,res[src["origin_id"]],request=request)
+        with self.assertRaisesRegex(RuntimeError,"operation_denied|stale"):self.decide(self.session(),src,res[src["origin_id"]],request=request)
         self.admin("update mip_identity.efta_operation_evidence_heads set active=true where candidate_id="+q(src["candidate_id"])+" and operation='analysis' and domain='rights'")
         self.admin("update public.articles set body_text='changed' where id="+q(src["article_id"]))
         with self.assertRaisesRegex(RuntimeError,"stale"):self.read(s)
@@ -274,28 +274,34 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
           ("mip_efta_reviewer_v1","select * from mip_identity.efta_decisions")]
         for role,sql in forbidden:
             # psql exits after each expected ON_ERROR_STOP failure; isolate cases.
-            with self.assertRaisesRegex(RuntimeError,"permission denied"):role_sql(self.session(),role,sql)
+            with self.subTest(role=role,sql=sql):
+                with self.assertRaisesRegex(RuntimeError,"permission denied"):role_sql(self.session(),role,sql)
         with self.assertRaisesRegex(RuntimeError,"public_release_disabled"):
             self.admin("select mip_identity.release_public()")
     def test_concurrent_decisions_serialize_and_loser_denies(self):
-        a=self.session();b=self.session();res=self.resolve_all(a);src=SOURCES[0]
+        a=self.session();res=self.resolve_all(a);src=SOURCES[0]
         review=q(json.dumps(self.review(src,res[src["origin_id"]]),separators=(",",":")))
         a.execute("reset role;set role mip_efta_reviewer_v1;begin;")
         one=str(uuid.uuid4());two=str(uuid.uuid4())
         a.execute(f"select mip_identity.efta_decide({q(one)},{q(src['candidate_id'])},'approve',null,{review}::jsonb,{q(SESSIONS[ROLES[0]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[0]])})")
-        b.execute("reset role;set role mip_efta_reviewer_v1;")
-        b.start(f"select mip_identity.efta_decide({q(two)},{q(src['candidate_id'])},'approve',null,{review}::jsonb,{q(SESSIONS[ROLES[0]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[0]])})")
-        self.blocked(b,a);a.execute("commit;")
-        with self.assertRaisesRegex(RuntimeError,"predecessor_conflict"):b.finish()
+        b=self.session();b.execute("set lock_timeout='500ms';reset role;set role mip_efta_reviewer_v1;")
+        with self.assertRaisesRegex(RuntimeError,"lock timeout"):
+            b.execute(f"select mip_identity.efta_decide({q(two)},{q(src['candidate_id'])},'approve',null,{review}::jsonb,{q(SESSIONS[ROLES[0]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[0]])})")
+        a.execute("commit;")
+        loser=self.session();loser.execute("reset role;set role mip_efta_reviewer_v1;")
+        with self.assertRaisesRegex(RuntimeError,"predecessor_conflict"):
+            loser.execute(f"select mip_identity.efta_decide({q(two)},{q(src['candidate_id'])},'approve',null,{review}::jsonb,{q(SESSIONS[ROLES[0]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[0]])})")
         self.assertEqual(self.admin("select count(*) from mip_identity.efta_decisions"),"1")
     def test_private_read_serializes_source_change_then_invalidates(self):
         reader,res,decisions=self.admit_all()
         reader.execute("reset role;set role mip_efta_private_reader_v1;begin;")
         rid=str(uuid.uuid4())
         reader.execute(f"select mip_identity.efta_private_read({q(rid)},{q(SESSIONS[ROLES[2]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[2]])})")
-        mut=self.session();mut.execute("reset role;")
-        mut.start("update public.articles set body_text='changed' where id="+q(SOURCES[0]["article_id"]))
-        self.blocked(mut,reader);reader.execute("commit;");mut.finish()
+        mut=self.session();mut.execute("set lock_timeout='500ms';reset role;")
+        change="update public.articles set body_text='changed' where id="+q(SOURCES[0]["article_id"])
+        with self.assertRaisesRegex(RuntimeError,"lock timeout"):mut.execute(change)
+        reader.execute("commit;")
+        self.admin(change)
         with self.assertRaisesRegex(RuntimeError,"stale"):self.read(self.session())
 if __name__=="__main__":
     run("postgres","do $$begin if not exists(select 1 from pg_roles where rolname='anon') then create role anon;end if;if not exists(select 1 from pg_roles where rolname='authenticated') then create role authenticated;end if;if not exists(select 1 from pg_roles where rolname='service_role') then create role service_role bypassrls;end if;end$$;")
