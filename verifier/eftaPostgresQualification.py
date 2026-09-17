@@ -112,7 +112,10 @@ insert into mip_identity.sessions values({q(session)},{q(auth)},{q(token)},{q(ma
 with x as(select {q(assignment)}::uuid revision,{q(SUBJECT)}::uuid subject_id,{q(role)}::text principal,
  {q(mapping)}::uuid mapping_revision,{q(KEY)}::uuid key_revision,{q(CREDENTIAL)}::uuid credential_revision,
  null::uuid predecessor,'2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
-insert into mip_identity.efta_authority_assignment_versions
+insert into mip_identity.efta_authority_assignment_versions(
+ revision,subject_id,database_principal,scope,mapping_revision,key_revision,credential_revision,
+ predecessor,approval_state,owner_approval_receipt_hash,owner_approval_payload_hash,reason,
+ valid_from,valid_until,created_at)
 select revision,subject_id,principal,'efta-bounded-demo-v1',mapping_revision,key_revision,credential_revision,
  predecessor,'owner_approved',repeat('c',64),
  comparison_qualification.argument_digest(jsonb_build_object('revision',revision,'subject_id',subject_id,
