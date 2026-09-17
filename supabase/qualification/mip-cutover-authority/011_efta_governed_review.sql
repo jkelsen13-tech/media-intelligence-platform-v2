@@ -295,7 +295,7 @@ end $roles$;
 -- membership in the older factual-review or projection-publication roles.
 alter table mip_identity.mapping_versions drop constraint mapping_versions_principal_check;
 alter table mip_identity.mapping_versions add constraint mapping_versions_principal_check check(principal in (
- 'mip_comparison_worker_v1','mip_comparison_producer_v1',
+ 'mip_comparison_worker_v1','mip_comparison_producer_v1','mip_projection_publisher_v1',
  'mip_efta_reviewer_v1','mip_efta_admitter_v1','mip_efta_private_reader_v1'));
 
 -- Remove the proposal-only external entry points and their broader-role grants.
