@@ -318,15 +318,19 @@ create table mip_identity.efta_authority_assignment_versions(
  scope text not null check(scope='efta-bounded-demo-v1'),
  mapping_revision uuid not null references mip_identity.mapping_versions,
  key_revision uuid not null references mip_identity.key_versions,
+ credential_revision uuid not null,
  predecessor uuid references mip_identity.efta_authority_assignment_versions,
  approval_state text not null check(approval_state in ('proposed','owner_approved','revoked','rejected')),
  owner_approval_receipt_hash text,
+ owner_approval_payload_hash text,
  reason text not null check(length(btrim(reason))>0),
  valid_from timestamptz not null check(isfinite(valid_from)),
  valid_until timestamptz not null check(isfinite(valid_until) and valid_until>valid_from),
  created_at timestamptz not null default clock_timestamp(),
- check((approval_state='owner_approved' and owner_approval_receipt_hash ~ '^[0-9a-f]{64}$')
-    or (approval_state<>'owner_approved' and owner_approval_receipt_hash is null)),
+ check(credential_revision<>key_revision),
+ check((approval_state='owner_approved' and owner_approval_receipt_hash ~ '^[0-9a-f]{64}$'
+       and owner_approval_payload_hash ~ '^[0-9a-f]{64}$')
+    or (approval_state<>'owner_approved' and owner_approval_receipt_hash is null and owner_approval_payload_hash is null)),
  unique(subject_id,database_principal,revision)
 );
 create unique index efta_assignment_successor on mip_identity.efta_authority_assignment_versions(predecessor)
@@ -337,6 +341,32 @@ create table mip_identity.efta_authority_assignment_heads(
  active boolean not null,
  primary key(subject_id,database_principal)
 );
+
+-- Versioned metadata for the server-held gateway/database credential. No secret, token,
+-- private key, password, or connection string is stored in this contract.
+create table mip_identity.efta_gateway_credential_versions(
+ revision uuid primary key,gateway_id text not null check(gateway_id='efta-private-gateway-v1'),
+ credential_fingerprint_hash text not null check(credential_fingerprint_hash ~ '^[0-9a-f]{64}$'),
+ predecessor uuid references mip_identity.efta_gateway_credential_versions,
+ state text not null check(state in ('proposed','current','revoked','rejected')),
+ approval_state text not null check(approval_state in ('proposed','owner_approved','revoked','rejected')),
+ owner_approval_receipt_hash text,owner_approval_payload_hash text,
+ valid_from timestamptz not null check(isfinite(valid_from)),
+ valid_until timestamptz not null check(isfinite(valid_until) and valid_until>valid_from),
+ created_at timestamptz not null default clock_timestamp(),
+ check((approval_state='owner_approved' and state='current'
+       and owner_approval_receipt_hash ~ '^[0-9a-f]{64}$' and owner_approval_payload_hash ~ '^[0-9a-f]{64}$')
+    or (approval_state<>'owner_approved' and owner_approval_receipt_hash is null and owner_approval_payload_hash is null))
+);
+create unique index efta_gateway_credential_successor on mip_identity.efta_gateway_credential_versions(predecessor)
+ where predecessor is not null;
+create table mip_identity.efta_gateway_credential_heads(
+ gateway_id text primary key,revision uuid not null references mip_identity.efta_gateway_credential_versions,
+ active boolean not null
+);
+alter table mip_identity.efta_authority_assignment_versions
+ add constraint efta_assignment_credential_revision_fkey foreign key(credential_revision)
+ references mip_identity.efta_gateway_credential_versions(revision);
 
 create table mip_identity.efta_institution_versions(
  revision uuid primary key,
@@ -397,6 +427,7 @@ create table mip_identity.efta_identity_resolutions(
  authentication_revision uuid not null,broker_session uuid not null references mip_identity.sessions,
  mapping_revision uuid not null references mip_identity.mapping_versions,
  key_revision uuid not null references mip_identity.key_versions,
+ credential_revision uuid not null,
  authority_receipt_hash text not null check(authority_receipt_hash ~ '^[0-9a-f]{64}$'),
  database_actor text not null,recorded_at timestamptz not null default clock_timestamp()
 );
@@ -438,6 +469,7 @@ create table mip_identity.efta_decisions(
  subject_id uuid not null,assignment_revision uuid not null references mip_identity.efta_authority_assignment_versions,
  authentication_revision uuid not null,broker_session uuid not null references mip_identity.sessions,
  mapping_revision uuid not null references mip_identity.mapping_versions,key_revision uuid not null references mip_identity.key_versions,
+ credential_revision uuid not null,
  authority_receipt_hash text not null check(authority_receipt_hash ~ '^[0-9a-f]{64}$'),
  database_actor text not null,recorded_at timestamptz not null default clock_timestamp()
 );
@@ -448,6 +480,7 @@ create table mip_identity.efta_admissions(
  subject_id uuid not null,assignment_revision uuid not null references mip_identity.efta_authority_assignment_versions,
  authentication_revision uuid not null,broker_session uuid not null references mip_identity.sessions,
  mapping_revision uuid not null references mip_identity.mapping_versions,key_revision uuid not null references mip_identity.key_versions,
+ credential_revision uuid not null,
  authority_receipt_hash text not null check(authority_receipt_hash ~ '^[0-9a-f]{64}$'),
  database_actor text not null,recorded_at timestamptz not null default clock_timestamp()
 );
@@ -457,6 +490,7 @@ create table mip_identity.efta_private_reads(
  subject_id uuid not null,assignment_revision uuid not null references mip_identity.efta_authority_assignment_versions,
  authentication_revision uuid not null,broker_session uuid not null references mip_identity.sessions,
  mapping_revision uuid not null references mip_identity.mapping_versions,key_revision uuid not null references mip_identity.key_versions,
+ credential_revision uuid not null,
  authority_receipt_hash text not null check(authority_receipt_hash ~ '^[0-9a-f]{64}$'),
  database_actor text not null,recorded_at timestamptz not null default clock_timestamp()
 );
@@ -467,7 +501,9 @@ create function mip_identity.authority_context(
  p_session uuid,p_runtime text,p_assignment uuid,p_expected_principal text
 ) returns jsonb language plpgsql set search_path='' as $$
 declare a mip_identity.efta_authority_assignment_versions;h mip_identity.efta_authority_assignment_heads;
- s mip_identity.sessions;m mip_identity.mapping_versions;k mip_identity.key_versions;auth_revision uuid;result jsonb;
+ c mip_identity.efta_gateway_credential_versions;ch mip_identity.efta_gateway_credential_heads;
+ s mip_identity.sessions;m mip_identity.mapping_versions;k mip_identity.key_versions;result jsonb;
+ assignment_payload_hash text;credential_payload_hash text;
 begin
  perform mip_identity.authorize(p_session,p_runtime,p_expected_principal);
  select * into strict a from mip_identity.efta_authority_assignment_versions where revision=p_assignment;
@@ -480,16 +516,35 @@ begin
  select * into strict s from mip_identity.sessions where session_id=p_session;
  select * into strict m from mip_identity.mapping_versions where revision=s.mapping_revision;
  select * into strict k from mip_identity.key_versions where revision=s.key_revision;
+ select * into strict c from mip_identity.efta_gateway_credential_versions where revision=a.credential_revision;
+ select * into ch from mip_identity.efta_gateway_credential_heads where gateway_id=c.gateway_id;
+ credential_payload_hash:=comparison_qualification.argument_digest(jsonb_build_object(
+  'revision',c.revision,'gateway_id',c.gateway_id,'credential_fingerprint_hash',c.credential_fingerprint_hash,
+  'predecessor',c.predecessor,'state',c.state,'valid_from',c.valid_from,'valid_until',c.valid_until));
+ if ch.revision is distinct from c.revision or ch.active is distinct from true
+ or c.approval_state<>'owner_approved' or c.state<>'current'
+ or c.valid_from>clock_timestamp() or c.valid_until<=clock_timestamp()
+ or c.owner_approval_payload_hash is distinct from credential_payload_hash
+ then raise exception 'efta_gateway_credential_not_authorized';end if;
+ assignment_payload_hash:=comparison_qualification.argument_digest(jsonb_build_object(
+  'revision',a.revision,'subject_id',a.subject_id,'database_principal',a.database_principal,
+  'scope',a.scope,'mapping_revision',a.mapping_revision,'key_revision',a.key_revision,
+  'credential_revision',a.credential_revision,'predecessor',a.predecessor,
+  'valid_from',a.valid_from,'valid_until',a.valid_until));
+ if a.owner_approval_payload_hash is distinct from assignment_payload_hash then
+  raise exception 'efta_assignment_receipt_payload_mismatch';end if;
  if s.mapping_revision is distinct from a.mapping_revision or s.key_revision is distinct from a.key_revision
  or m.runtime is distinct from p_runtime or m.principal is distinct from p_expected_principal
  or m.subject is distinct from a.subject_principal or m.key_revision is distinct from k.revision
  then raise exception 'efta_authenticated_subject_mismatch';end if;
- select ps.session_id into strict auth_revision from comparison_qualification.principal_sessions ps
+ perform 1 from comparison_qualification.principal_sessions ps
  where ps.session_id=p_session and ps.runtime_id=p_runtime and ps.principal=p_expected_principal
  and ps.revoked_at is null and ps.expires_at>clock_timestamp();
+ if not found then raise exception 'efta_authentication_session_revoked';end if;
  result:=jsonb_build_object('subject_id',a.subject_id,'subject_principal',a.subject_principal,
-  'assignment_revision',a.revision,'authentication_revision',auth_revision,'broker_session',p_session,
+  'assignment_revision',a.revision,'authentication_revision',s.request_id,'broker_session',p_session,
   'mapping_revision',s.mapping_revision,'key_revision',s.key_revision,'runtime',p_runtime,
+  'credential_revision',a.credential_revision,'credential_fingerprint_hash',c.credential_fingerprint_hash,
   'database_principal',p_expected_principal,'token_hash',s.token_hash);
  return result||jsonb_build_object('authority_receipt_hash',comparison_qualification.argument_digest(result));
 end $$;
@@ -643,7 +698,7 @@ begin
  insert into mip_identity.efta_identity_resolutions values(p_request,p_origin,p_institution_revision,p_predecessor,p_state,p_reason,
   (ctx->>'subject_id')::uuid,(ctx->>'assignment_revision')::uuid,(ctx->>'authentication_revision')::uuid,
   (ctx->>'broker_session')::uuid,(ctx->>'mapping_revision')::uuid,(ctx->>'key_revision')::uuid,
-  receipt,session_user,clock_timestamp());
+  (ctx->>'credential_revision')::uuid,receipt,session_user,clock_timestamp());
  return p_request;
 end $$;
 
@@ -693,7 +748,7 @@ begin
  insert into mip_identity.efta_decisions values(p_request,p_candidate,p_predecessor,p_action,p_review,binding_hash,
   operation_hash,resolution,(ctx->>'subject_id')::uuid,(ctx->>'assignment_revision')::uuid,
   (ctx->>'authentication_revision')::uuid,(ctx->>'broker_session')::uuid,(ctx->>'mapping_revision')::uuid,
-  (ctx->>'key_revision')::uuid,receipt,session_user,clock_timestamp());
+  (ctx->>'key_revision')::uuid,(ctx->>'credential_revision')::uuid,receipt,session_user,clock_timestamp());
  return p_request;
 end $$;
 
@@ -717,7 +772,7 @@ begin
  insert into mip_identity.efta_admissions values(p_request,p_decision,p_runtime,operations->>'closure_hash',h,
   (ctx->>'subject_id')::uuid,(ctx->>'assignment_revision')::uuid,(ctx->>'authentication_revision')::uuid,
   (ctx->>'broker_session')::uuid,(ctx->>'mapping_revision')::uuid,(ctx->>'key_revision')::uuid,
-  ctx->>'authority_receipt_hash',session_user,clock_timestamp());
+  (ctx->>'credential_revision')::uuid,ctx->>'authority_receipt_hash',session_user,clock_timestamp());
  return p_request;
 end $$;
 
@@ -755,7 +810,7 @@ begin
  else insert into mip_identity.efta_private_reads values(p_request,p_runtime,h,ids,op_hash,
   (ctx->>'subject_id')::uuid,(ctx->>'assignment_revision')::uuid,(ctx->>'authentication_revision')::uuid,
   (ctx->>'broker_session')::uuid,(ctx->>'mapping_revision')::uuid,(ctx->>'key_revision')::uuid,
-  ctx->>'authority_receipt_hash',session_user,clock_timestamp());end if;
+  (ctx->>'credential_revision')::uuid,ctx->>'authority_receipt_hash',session_user,clock_timestamp());end if;
  return result||jsonb_build_object('receipt_id',p_request,'payload_hash',h,
   'reader_subject',ctx->>'subject_principal','reader_assignment_revision',ctx->>'assignment_revision');
 end $$;
@@ -766,6 +821,7 @@ declare t text;f regprocedure;
 begin
  foreach t in array array[
   'efta_authority_assignment_versions','efta_authority_assignment_heads','efta_institution_versions','efta_institution_heads',
+  'efta_gateway_credential_versions','efta_gateway_credential_heads',
   'efta_identity_resolutions','efta_operation_evidence_versions','efta_operation_evidence_heads',
   'efta_decisions','efta_admissions','efta_private_reads'] loop
   execute format('alter table mip_identity.%I owner to mip_cutover_schema_owner_v1',t);
@@ -778,7 +834,7 @@ begin
   execute format('create trigger no_truncate_v2 before truncate on mip_identity.%I for each statement execute function comparison_qualification.reject_rewrite()',t);
  end loop;
  -- Heads are the only mutable authorization selectors; replace immutable triggers with fenced, version-retiring updates.
- foreach t in array array['efta_authority_assignment_heads','efta_institution_heads','efta_operation_evidence_heads'] loop
+ foreach t in array array['efta_authority_assignment_heads','efta_gateway_credential_heads','efta_institution_heads','efta_operation_evidence_heads'] loop
   execute format('drop trigger immutable_v2 on mip_identity.%I',t);
   execute format('create trigger retire_revision before insert or update or delete on mip_identity.%I for each row execute function mip_identity.guard_revision_reuse()',t);
   execute format('create trigger publication_fence before insert or update or delete on mip_identity.%I for each statement execute function mip_cutover_authority.fence_publication_write()',t);

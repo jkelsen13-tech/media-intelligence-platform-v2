@@ -54,6 +54,10 @@ corresponding function capability. `mip_efta_owner_v1` owns the six EFTA
 or canonical write capability. A live human is not selected by this SQL. In particular,
 `auth_user:f576f162-b6c6-46b7-9aaf-96b1ea90e194` remains only an owner-selectable
 candidate until a distinct `owner_approved` assignment version and active head exist.
+The JavaScript contract remains a candidate-generation/preflight validator only. It may
+receive and then discard a free-text reviewer display label, but that label never reaches
+an authoritative review record. The SQL decision contract rejects a `reviewer` key and
+derives the human subject exclusively from the active assignment and broker session.
 
 Every positive candidate decision must close six exact operation cells:
 `retention`, `analysis`, and `excerpt_display`, each for both `rights` and `privacy`.
@@ -74,4 +78,11 @@ mip_identity.efta_private_read(uuid,uuid,text,uuid)
 `efta_current_binding(uuid)` and `efta_require_identity(uuid,jsonb)` are internal-only.
 Every durable decision/read/admission receipt captures the authenticated subject,
 assignment revision, authentication/broker session, mapping revision, key revision,
-database actor, and authoritative operation-closure hash.
+gateway-credential revision/fingerprint, database actor, and authoritative
+operation-closure hash. Gateway credential versions store only a SHA-256 fingerprint and
+approval metadata, never secret material. A credential head must be active, current,
+unexpired, and owner approved. Its approval payload hash covers the fingerprint and
+validity interval; the assignment approval payload hash separately covers the subject,
+capability, mapping, signing-key revision, gateway-credential revision, predecessor, and
+validity interval. Therefore a credential rotation invalidates the old assignment rather
+than silently inheriting its authority.

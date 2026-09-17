@@ -1,5 +1,7 @@
-// Proposal validation only. This module grants no database or publication authority.
-// Deployment must reuse mip_identity.validate_review / stage_review / release_isolated.
+// Candidate-generation/preflight validation only. This module grants no database,
+// reviewer, admission, or publication authority. Authoritative EFTA actions use only the
+// versioned assignment/session/identity/operation-evidence path in 011; they do not call
+// stage_review, release_isolated, or any public release function.
 const scope = [
   {
     "candidate_id": "f5548254-e6c4-4abd-925d-8ea6d8e076ea",
@@ -254,7 +256,7 @@ export function validateReviewProposal(proposal, retained, registry) {
   // Offsets are Unicode code points, not JS UTF-16 offsets.
   if (Array.from(content).slice(proposal.span_start,proposal.span_end).join('') !== proposal.excerpt) fail('span');
   if (proposal.publication_allowed !== false || proposal.geography != null) fail('publication_or_geography');
-  if (proposal.uncertainty !== expected.remaining_uncertainty || !text(proposal.reviewer) ||
+  if (proposal.uncertainty !== expected.remaining_uncertainty ||
       !text(proposal.reason) || proposal.action !== 'propose_review' ||
       !text(proposal.reviewed_at) || !Number.isFinite(Date.parse(proposal.reviewed_at))) fail('human_review');
   const eventTime = proposal.event_time;
@@ -266,7 +268,10 @@ export function validateReviewProposal(proposal, retained, registry) {
   const identities = registry.filter(r => r.namespace === proposal.entity.namespace && r.id === proposal.entity.id);
   if (identities.length !== 1 || identities[0].kind !== 'institution' ||
       identities[0].state !== 'resolved' || !text(identities[0].resolution_revision)) fail('identity');
-  return structuredClone({...proposal, entity: identities[0], state:'review_proposal_only',
+  // A free-text reviewer label may exist in a candidate-generation payload for display,
+  // but is deliberately discarded here and is forbidden by assertAuthoritativeReviewShape.
+  const {reviewer: _nonAuthoritativeReviewerLabel, ...safeProposal} = proposal;
+  return structuredClone({...safeProposal, entity: identities[0], state:'review_proposal_only',
     publication_allowed:false, world_view:{state:'absent',reason:'No reviewed geography'}});
 }
 export function comparisonDependency(leftId, rightId) {
