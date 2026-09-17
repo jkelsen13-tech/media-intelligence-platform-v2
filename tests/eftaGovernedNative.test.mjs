@@ -26,7 +26,7 @@ async function setup(t){
   await db.query('insert into evidence_pipeline.article_captures(id,article_id,content_hash,payload) values($1,$2,$3,$4)',[s.capture_id,s.article_id,s.content_hash,JSON.stringify(payload)]);
   await db.query('insert into evidence_pipeline.evidence_candidates(id,capture_id,source_field,span_start,span_end,excerpt) values($1,$2,$3,$4,$5,$6)',[s.candidate_id,s.capture_id,s.source_field,s.span_start,s.span_end,s.excerpt]);
  }
- await db.exec(await read(root+'011_efta_governed_review.sql'));
+ await db.exec(await read(root+'011_efta_governed_review.sql')).catch(e=>{throw Error('efta_install:'+e.message+' position='+e.position)});
  const key=randomUUID(),mapping=randomUUID(),session=randomUUID();
  await db.query("insert into mip_identity.key_versions values($1,'fixture','fixture','{}','2000-01-01','2999-01-01','synthetic-only')",[key]);
  await db.query("insert into mip_identity.key_heads values('fixture','fixture',$1,true)",[key]);
@@ -80,6 +80,7 @@ test('native source replacement, body mutation and broker revocation fail closed
  await f.db.query("update public.articles set body_text='changed' where id=$1",[manifest.sources[0].article_id]);
  await assert.rejects(f.get(),/stale/);
  await f.db.query("update public.articles set body_text=$2 where id=$1",[manifest.sources[0].article_id,manifest.sources[0].excerpt]);
+ await assert.rejects(f.get(),/stale_review/);
  await f.db.query("insert into evidence_pipeline.article_captures(id,article_id,content_hash,payload) select gen_random_uuid(),article_id,content_hash,payload from evidence_pipeline.article_captures where id=$1",[manifest.sources[0].capture_id]);
  await assert.rejects(f.get(),/replaced/);
  await f.db.query("update mip_identity.mapping_heads set active=false where revision=$1",[f.mapping]);
