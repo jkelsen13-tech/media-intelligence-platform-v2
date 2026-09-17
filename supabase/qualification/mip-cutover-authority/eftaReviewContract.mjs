@@ -13,7 +13,19 @@ const scope = [
     "dependency_id": "pl119-38",
     "semantic_kind": "enacted_requirement",
     "source_field": "body_text",
-    "excerpt": "All redactions must be accompanied by a written justification published in the Federal Register and submitted to Congress."
+    "excerpt": "All redactions must be accompanied by a written justification published in the Federal Register and submitted to Congress.",
+    "event_time_rules": {
+      "date": "2025-11-19",
+      "precision": "day",
+      "basis_id": "document-date:a1e37087-54c7-49a8-886d-0f7189ffbde9:2025-11-19",
+      "milestones": [
+        {
+          "kind": "document_date",
+          "date": "2025-11-19"
+        }
+      ]
+    },
+    "remaining_uncertainty": "Requirement is not proof of compliance."
   },
   {
     "candidate_id": "dd1ef05f-dd67-4595-908f-d195671a5db5",
@@ -27,7 +39,19 @@ const scope = [
     "dependency_id": "doj-efta-dec19-letter",
     "semantic_kind": "agency_projection",
     "source_field": "body_text",
-    "excerpt": "I anticipate this ongoing review being completed over the next two weeks."
+    "excerpt": "I anticipate this ongoing review being completed over the next two weeks.",
+    "event_time_rules": {
+      "date": "2025-12-19",
+      "precision": "day",
+      "basis_id": "document-date:5a01a9c2-0f86-4757-a056-52700980d0aa:2025-12-19",
+      "milestones": [
+        {
+          "kind": "document_date",
+          "date": "2025-12-19"
+        }
+      ]
+    },
+    "remaining_uncertainty": "PDF extraction whitespace normalized; words unchanged. Projection is not completion. Search metadata differs; date verified on PDF page 1."
   },
   {
     "candidate_id": "a255ffc5-2209-4e50-8fec-cf72f3f0e7eb",
@@ -41,7 +65,19 @@ const scope = [
     "dependency_id": "efta-review-protocol",
     "semantic_kind": "agency_instruction",
     "source_field": "body_text",
-    "excerpt": "It is of paramount importance to the Department that this review is thorough and that victim information is properly protected."
+    "excerpt": "It is of paramount importance to the Department that this review is thorough and that victim information is properly protected.",
+    "event_time_rules": {
+      "date": "2026-01-04",
+      "precision": "day",
+      "basis_id": "document-date:225e33dc-9e67-47a0-86e4-7a75b8ff4b88:2026-01-04",
+      "milestones": [
+        {
+          "kind": "document_date",
+          "date": "2026-01-04"
+        }
+      ]
+    },
+    "remaining_uncertainty": "Instruction not proof of implementation. PDF extraction whitespace normalized; words unchanged; subject line used as title."
   },
   {
     "candidate_id": "c5a7416f-2495-41cf-b3d6-8a02d3becf22",
@@ -55,7 +91,19 @@ const scope = [
     "dependency_id": "doj-efta-jan30-production",
     "semantic_kind": "official_claim",
     "source_field": "body_text",
-    "excerpt": "Combined with prior releases, this makes the total production nearly 3.5 million pages released in compliance with the Act."
+    "excerpt": "Combined with prior releases, this makes the total production nearly 3.5 million pages released in compliance with the Act.",
+    "event_time_rules": {
+      "date": "2026-01-30",
+      "precision": "day",
+      "basis_id": "document-date:9a898688-2f39-4a40-a1a7-0e6bb5b0f58c:2026-01-30",
+      "milestones": [
+        {
+          "kind": "document_date",
+          "date": "2026-01-30"
+        }
+      ]
+    },
+    "remaining_uncertainty": "Not independently verified compliance; same event as Jan30 letter."
   },
   {
     "candidate_id": "f741208c-0a00-418a-afab-028f558b902b",
@@ -69,7 +117,19 @@ const scope = [
     "dependency_id": "doj-efta-jan30-production",
     "semantic_kind": "agency_disclosure_accounting",
     "source_field": "body_text",
-    "excerpt": "approximately 200,000 pages have been redacted or withheld based on various privileges."
+    "excerpt": "approximately 200,000 pages have been redacted or withheld based on various privileges.",
+    "event_time_rules": {
+      "date": "2026-01-30",
+      "precision": "day",
+      "basis_id": "document-date:2c7428e6-0e4b-4dd2-af93-fca438307359:2026-01-30",
+      "milestones": [
+        {
+          "kind": "document_date",
+          "date": "2026-01-30"
+        }
+      ]
+    },
+    "remaining_uncertainty": "PDF extraction whitespace normalized; words unchanged. Same origin/event as January 30 release; legal basis not adjudicated."
   },
   {
     "candidate_id": "5cabcb8f-99bf-4e42-8172-473ef6c59f0f",
@@ -83,7 +143,19 @@ const scope = [
     "dependency_id": "efta-oig-audit",
     "semantic_kind": "audit_status",
     "source_field": "body_text",
-    "excerpt": "The OIG is auditing the Department of Justice’s (DOJ) compliance with the Epstein Files Transparency Act."
+    "excerpt": "The OIG is auditing the Department of Justice’s (DOJ) compliance with the Epstein Files Transparency Act.",
+    "event_time_rules": {
+      "date": "2026-04-23",
+      "precision": "day",
+      "basis_id": "document-date:df6eeb70-a24a-4e3f-9ea8-55faa8fcabfd:2026-04-23",
+      "milestones": [
+        {
+          "kind": "document_date",
+          "date": "2026-04-23"
+        }
+      ]
+    },
+    "remaining_uncertainty": "Audit initiation/status statement only, not an audit conclusion. No underlying disclosure documents, private persons, victims, contacts or misconduct assertions retained."
   },
   {
     "candidate_id": "a5457418-1a23-4345-8fb7-788d07123aa8",
@@ -97,7 +169,27 @@ const scope = [
     "dependency_id": "efta-fr-2026-17533",
     "semantic_kind": "publication_notice",
     "source_field": "body_text",
-    "excerpt": "The Department of Justice is publishing a report submitted to Congress concerning records released and withheld pursuant to Public Law 119-38."
+    "excerpt": "The Department of Justice is publishing a report submitted to Congress concerning records released and withheld pursuant to Public Law 119-38.",
+    "event_time_rules": {
+      "date": "2026-08-27",
+      "precision": "day",
+      "basis_id": "document-date:b556327b-1053-4ea2-bdf8-464cd3133c35:2026-08-27",
+      "milestones": [
+        {
+          "kind": "signed",
+          "date": "2026-08-21"
+        },
+        {
+          "kind": "filed",
+          "date": "2026-08-26"
+        },
+        {
+          "kind": "published",
+          "date": "2026-08-27"
+        }
+      ]
+    },
+    "remaining_uncertainty": "PDF extraction whitespace normalized; words unchanged. Signed August 21, filed August 26, published August 27. Publication does not establish compliance; no appendix retained."
   }
 ];
 const fail = reason => { throw new Error('efta_review_' + reason) };
@@ -106,7 +198,7 @@ export const PUBLIC_RELEASE_ENABLED = false;
 export function validateReviewProposal(proposal, retained, registry) {
   const expected = scope.find(r => r.candidate_id === proposal?.candidate_id);
   if (!expected) fail('outside_scope');
-  for (const key of Object.keys(expected)) if (proposal[key] !== expected[key]) fail('binding_' + key);
+  for (const key of Object.keys(expected).filter(k=>k!=='event_time_rules')) if (proposal[key] !== expected[key]) fail('binding_' + key);
   if (!retained || retained.candidate_id !== expected.candidate_id ||
       retained.capture_id !== expected.capture_id || retained.article_id !== expected.article_id ||
       retained.url !== expected.url || retained.content_hash !== expected.content_hash ||
@@ -118,14 +210,14 @@ export function validateReviewProposal(proposal, retained, registry) {
   // Offsets are Unicode code points, not JS UTF-16 offsets.
   if (Array.from(content).slice(proposal.span_start,proposal.span_end).join('') !== proposal.excerpt) fail('span');
   if (proposal.publication_allowed !== false || proposal.geography != null) fail('publication_or_geography');
-  if (!text(proposal.uncertainty) || !text(proposal.reviewer) ||
+  if (proposal.uncertainty !== expected.remaining_uncertainty || !text(proposal.reviewer) ||
       !text(proposal.reason) || proposal.action !== 'propose_review' ||
       !text(proposal.reviewed_at) || !Number.isFinite(Date.parse(proposal.reviewed_at))) fail('human_review');
   const eventTime = proposal.event_time;
   if (!eventTime || !/^\d{4}-\d{2}-\d{2}$/.test(eventTime.date ?? '') ||
       eventTime.precision !== 'day' || eventTime.reviewed !== true ||
       !text(eventTime.evidence_basis) || !text(eventTime.uncertainty) ||
-      eventTime.evidence_basis === 'published_at') fail('event_time');
+      eventTime.evidence_basis !== expected.event_time_rules.basis_id || eventTime.date !== expected.event_time_rules.date) fail('event_time');
   if (!proposal.entity || !text(proposal.entity.namespace) || !text(proposal.entity.id)) fail('identity');
   const identities = registry.filter(r => r.namespace === proposal.entity.namespace && r.id === proposal.entity.id);
   if (identities.length !== 1 || identities[0].kind !== 'institution' ||

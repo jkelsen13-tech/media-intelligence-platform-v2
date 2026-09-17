@@ -8,7 +8,7 @@ function fixture(index=0) {
  const r=manifest.sources[index];
  return {proposal:{...r,uncertainty:r.remaining_uncertainty,reviewer:'synthetic reviewer',reason:'test only',
  action:'propose_review',reviewed_at:'2026-09-16T20:00:00Z',publication_allowed:false,
- event_time:{date:r.source_date,precision:'day',reviewed:true,evidence_basis:'synthetic review of document date',uncertainty:'day only'},
+ event_time:{date:r.source_date,precision:'day',reviewed:true,evidence_basis:r.event_time_proposal.basis_id,uncertainty:'day only'},
  entity:{namespace:registry[0].namespace,id:registry[0].id}},
  retained:{...r,current:true,state:'retained',fields:{body_text:r.excerpt}}};
 }

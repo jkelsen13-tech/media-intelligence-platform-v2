@@ -42,7 +42,7 @@ async function setup(t){
  const review=(i=0)=>({identity_resolution_id:resolutions.get(manifest.sources[i].origin_id),reviewer:'Fixture reviewer',reason:'Explicit synthetic qualification only',semantic_kind:manifest.sources[i].semantic_kind,
  audience:'isolated_internal_review',publication_allowed:false,uncertainty:manifest.sources[i].remaining_uncertainty,
  owner_authorization_ref:'fixture-only',privacy_ref:'fixture-only',rights_ref:'fixture-only',
- event_time:{date:manifest.sources[i].source_date,precision:'day',evidence_basis:'Explicit fixture document-date review',uncertainty:'day only'},
+ event_time:{date:manifest.sources[i].source_date,precision:'day',evidence_basis:manifest.sources[i].event_time_proposal.basis_id,uncertainty:'day only'},
  entity:{namespace:'fixture:institution',id:manifest.sources[i].origin_id,label:manifest.sources[i].origin_id,kind:'institution',resolution_ref:'fixture-reviewed-identity'}});
  const decide=(id,i=0,action='approve',predecessor=null,r=review(i))=>role('mip_factual_reviewer_v3','select mip_identity.efta_decide($1,$2,$3,$4,$5) result',[id,manifest.sources[i].candidate_id,action,predecessor,JSON.stringify(r)]);
  const admit=(decision,request=randomUUID())=>role('mip_projection_publisher_v1','select mip_identity.efta_admit($1,$2,$3,$4) result',[request,issued,'runtime-a',decision]);
@@ -134,4 +134,13 @@ test('publication role can inspect only scope-linked captures, candidates and so
  assert.equal(await f.role('mip_publication_owner_v2','select count(*)::int result from evidence_pipeline.article_captures'),7);
  assert.equal(await f.role('mip_publication_owner_v2','select count(*)::int result from evidence_pipeline.evidence_candidates'),7);
  assert.equal(await f.role('mip_publication_owner_v2','select count(*)::int result from mip_identity.source_changes where row_key=$1',[article]),0);
+});
+
+test('native scope pins document-date basis and mandatory uncertainty',async t=>{
+ const f=await setup(t),r=f.review();
+ for(const event_time of [{...r.event_time,date:'1999-01-01'},{...r.event_time,evidence_basis:'publication timestamp'},{...r.event_time,evidence_basis:'document date according to metadata'}]){
+ await assert.rejects(f.decide(randomUUID(),0,'approve',null,{...r,event_time}),/review_binding/);}
+ await assert.rejects(f.decide(randomUUID(),0,'approve',null,{...r,uncertainty:'Compliance established'}),/review_binding/);
+ const fr=f.review(6);
+ for(const date of ['2026-08-21','2026-08-26'])await assert.rejects(f.decide(randomUUID(),6,'approve',null,{...fr,event_time:{...fr.event_time,date}}),/review_binding/);
 });

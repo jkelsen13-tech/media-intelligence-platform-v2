@@ -42,8 +42,9 @@
         "date": "2025-11-19",
         "precision": "day",
         "status": "requires_explicit_review",
-        "basis": "PR176 source_date receipt; published_at is null",
-        "uncertainty": "Requirement is not proof of compliance."
+        "basis": "Enactment date on Public Law 119-38",
+        "uncertainty": "Requirement is not proof of compliance.",
+        "basis_id": "document-date:a1e37087-54c7-49a8-886d-0f7189ffbde9:2025-11-19"
       },
       "source_field": "body_text",
       "excerpt": "All redactions must be accompanied by a written justification published in the Federal Register and submitted to Congress.",
@@ -52,6 +53,17 @@
         "source": "live qik read-only verification 2026-09-16 by parent task",
         "exact_span": true,
         "revalidate_at_admission": true
+      },
+      "event_time_rules": {
+        "date": "2025-11-19",
+        "precision": "day",
+        "basis_id": "document-date:a1e37087-54c7-49a8-886d-0f7189ffbde9:2025-11-19",
+        "milestones": [
+          {
+            "kind": "document_date",
+            "date": "2025-11-19"
+          }
+        ]
       }
     },
     {
@@ -88,8 +100,9 @@
         "date": "2025-12-19",
         "precision": "day",
         "status": "requires_explicit_review",
-        "basis": "PR176 source_date receipt; published_at is null",
-        "uncertainty": "PDF extraction whitespace normalized; words unchanged. Projection is not completion. Search metadata differs; date verified on PDF page 1."
+        "basis": "Date on December 19 letter page 1",
+        "uncertainty": "PDF extraction whitespace normalized; words unchanged. Projection is not completion. Search metadata differs; date verified on PDF page 1.",
+        "basis_id": "document-date:5a01a9c2-0f86-4757-a056-52700980d0aa:2025-12-19"
       },
       "source_field": "body_text",
       "excerpt": "I anticipate this ongoing review being completed over the next two weeks.",
@@ -98,6 +111,17 @@
         "source": "live qik read-only verification 2026-09-16 by parent task",
         "exact_span": true,
         "revalidate_at_admission": true
+      },
+      "event_time_rules": {
+        "date": "2025-12-19",
+        "precision": "day",
+        "basis_id": "document-date:5a01a9c2-0f86-4757-a056-52700980d0aa:2025-12-19",
+        "milestones": [
+          {
+            "kind": "document_date",
+            "date": "2025-12-19"
+          }
+        ]
       }
     },
     {
@@ -134,8 +158,9 @@
         "date": "2026-01-04",
         "precision": "day",
         "status": "requires_explicit_review",
-        "basis": "PR176 source_date receipt; published_at is null",
-        "uncertainty": "Instruction not proof of implementation. PDF extraction whitespace normalized; words unchanged; subject line used as title."
+        "basis": "Date on attorney review protocol",
+        "uncertainty": "Instruction not proof of implementation. PDF extraction whitespace normalized; words unchanged; subject line used as title.",
+        "basis_id": "document-date:225e33dc-9e67-47a0-86e4-7a75b8ff4b88:2026-01-04"
       },
       "source_field": "body_text",
       "excerpt": "It is of paramount importance to the Department that this review is thorough and that victim information is properly protected.",
@@ -144,6 +169,17 @@
         "source": "live qik read-only verification 2026-09-16 by parent task",
         "exact_span": true,
         "revalidate_at_admission": true
+      },
+      "event_time_rules": {
+        "date": "2026-01-04",
+        "precision": "day",
+        "basis_id": "document-date:225e33dc-9e67-47a0-86e4-7a75b8ff4b88:2026-01-04",
+        "milestones": [
+          {
+            "kind": "document_date",
+            "date": "2026-01-04"
+          }
+        ]
       }
     },
     {
@@ -180,8 +216,9 @@
         "date": "2026-01-30",
         "precision": "day",
         "status": "requires_explicit_review",
-        "basis": "PR176 source_date receipt; published_at is null",
-        "uncertainty": "Not independently verified compliance; same event as Jan30 letter."
+        "basis": "Date on DOJ production press release",
+        "uncertainty": "Not independently verified compliance; same event as Jan30 letter.",
+        "basis_id": "document-date:9a898688-2f39-4a40-a1a7-0e6bb5b0f58c:2026-01-30"
       },
       "source_field": "body_text",
       "excerpt": "Combined with prior releases, this makes the total production nearly 3.5 million pages released in compliance with the Act.",
@@ -190,6 +227,17 @@
         "source": "live qik read-only verification 2026-09-16 by parent task",
         "exact_span": true,
         "revalidate_at_admission": true
+      },
+      "event_time_rules": {
+        "date": "2026-01-30",
+        "precision": "day",
+        "basis_id": "document-date:9a898688-2f39-4a40-a1a7-0e6bb5b0f58c:2026-01-30",
+        "milestones": [
+          {
+            "kind": "document_date",
+            "date": "2026-01-30"
+          }
+        ]
       }
     },
     {
@@ -226,8 +274,9 @@
         "date": "2026-01-30",
         "precision": "day",
         "status": "requires_explicit_review",
-        "basis": "PR176 source_date receipt; published_at is null",
-        "uncertainty": "PDF extraction whitespace normalized; words unchanged. Same origin/event as January 30 release; legal basis not adjudicated."
+        "basis": "Date on January 30 letter to Congress",
+        "uncertainty": "PDF extraction whitespace normalized; words unchanged. Same origin/event as January 30 release; legal basis not adjudicated.",
+        "basis_id": "document-date:2c7428e6-0e4b-4dd2-af93-fca438307359:2026-01-30"
       },
       "source_field": "body_text",
       "excerpt": "approximately 200,000 pages have been redacted or withheld based on various privileges.",
@@ -236,6 +285,17 @@
         "source": "live qik read-only verification 2026-09-16 by parent task",
         "exact_span": true,
         "revalidate_at_admission": true
+      },
+      "event_time_rules": {
+        "date": "2026-01-30",
+        "precision": "day",
+        "basis_id": "document-date:2c7428e6-0e4b-4dd2-af93-fca438307359:2026-01-30",
+        "milestones": [
+          {
+            "kind": "document_date",
+            "date": "2026-01-30"
+          }
+        ]
       }
     },
     {
@@ -272,8 +332,9 @@
         "date": "2026-04-23",
         "precision": "day",
         "status": "requires_explicit_review",
-        "basis": "PR176 source_date receipt; published_at is null",
-        "uncertainty": "Audit initiation/status statement only, not an audit conclusion. No underlying disclosure documents, private persons, victims, contacts or misconduct assertions retained."
+        "basis": "Dated OIG audit-scope notice; not completed audit",
+        "uncertainty": "Audit initiation/status statement only, not an audit conclusion. No underlying disclosure documents, private persons, victims, contacts or misconduct assertions retained.",
+        "basis_id": "document-date:df6eeb70-a24a-4e3f-9ea8-55faa8fcabfd:2026-04-23"
       },
       "source_field": "body_text",
       "excerpt": "The OIG is auditing the Department of Justice’s (DOJ) compliance with the Epstein Files Transparency Act.",
@@ -282,6 +343,17 @@
         "source": "live qik read-only verification 2026-09-16 by parent task",
         "exact_span": true,
         "revalidate_at_admission": true
+      },
+      "event_time_rules": {
+        "date": "2026-04-23",
+        "precision": "day",
+        "basis_id": "document-date:df6eeb70-a24a-4e3f-9ea8-55faa8fcabfd:2026-04-23",
+        "milestones": [
+          {
+            "kind": "document_date",
+            "date": "2026-04-23"
+          }
+        ]
       }
     },
     {
@@ -318,8 +390,9 @@
         "date": "2026-08-27",
         "precision": "day",
         "status": "requires_explicit_review",
-        "basis": "PR176 source_date receipt; published_at is null",
-        "uncertainty": "PDF extraction whitespace normalized; words unchanged. Signed August 21, filed August 26, published August 27. Publication does not establish compliance; no appendix retained."
+        "basis": "Federal Register publication date; distinct from signed and filed dates",
+        "uncertainty": "PDF extraction whitespace normalized; words unchanged. Signed August 21, filed August 26, published August 27. Publication does not establish compliance; no appendix retained.",
+        "basis_id": "document-date:b556327b-1053-4ea2-bdf8-464cd3133c35:2026-08-27"
       },
       "source_field": "body_text",
       "excerpt": "The Department of Justice is publishing a report submitted to Congress concerning records released and withheld pursuant to Public Law 119-38.",
@@ -328,6 +401,25 @@
         "source": "live qik read-only verification 2026-09-16 by parent task",
         "exact_span": true,
         "revalidate_at_admission": true
+      },
+      "event_time_rules": {
+        "date": "2026-08-27",
+        "precision": "day",
+        "basis_id": "document-date:b556327b-1053-4ea2-bdf8-464cd3133c35:2026-08-27",
+        "milestones": [
+          {
+            "kind": "signed",
+            "date": "2026-08-21"
+          },
+          {
+            "kind": "filed",
+            "date": "2026-08-26"
+          },
+          {
+            "kind": "published",
+            "date": "2026-08-27"
+          }
+        ]
       }
     }
   ]
