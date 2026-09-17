@@ -1,6 +1,6 @@
 // Pure presentation adapter. Only the authorized native reader may supply this contract.
 export function eftaWorkspace(payload) {
- if (payload?.contract !== 'efta-private-review-v1' || payload.state!=='private_review' ||
+ if (payload?.contract !== 'efta-private-review-v2' || payload.state!=='private_review' ||
  payload.public_release!==false || !payload.receipt_id || !payload.payload_hash ||
  !Array.isArray(payload.sources) || payload.world_view?.state!=='absent') throw Error('efta_reader_contract');
  const seen=new Set(),entities=new Map(),events=new Map(),sources=[],claims=[],edges=[];
@@ -8,7 +8,10 @@ export function eftaWorkspace(payload) {
   const e=s.review?.entity,t=s.review?.event_time;
   if (!s.review?.identity_resolution_id || !s.decision_id || !s.candidate_id || seen.has(s.candidate_id) || !s.capture_id || !s.article_id ||
       !s.remaining_uncertainty || !s.content_hash || !s.excerpt || !s.source_field || !s.review?.uncertainty ||
-      e?.kind!=='institution' || !e.namespace || !e.id || !e.resolution_ref || !t?.date ||
+      e?.kind!=='institution' || e.namespace!=='mip:institution' ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(e.id??'') ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(e.resolution_ref??'') ||
+      !e.label || !t?.date ||
       !t.evidence_basis || t.precision!=='day' || s.review.publication_allowed!==false) throw Error('efta_reader_binding');
   seen.add(s.candidate_id);
   const entityId=e.namespace+':'+e.id,eventId='efta:event:'+s.dependency_id,sourceId='efta:capture:'+s.capture_id,claimId='efta:claim:'+s.candidate_id;

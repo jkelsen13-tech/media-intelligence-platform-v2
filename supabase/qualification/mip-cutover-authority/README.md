@@ -86,3 +86,18 @@ validity interval; the assignment approval payload hash separately covers the su
 capability, mapping, signing-key revision, gateway-credential revision, predecessor, and
 validity interval. Therefore a credential rotation invalidates the old assignment rather
 than silently inheriting its authority.
+
+Assignment, canonical-institution, and operation-evidence heads use composite foreign
+keys to the exact version identity represented by every head key. In particular, an
+operation head for one candidate/operation/domain cannot point at another cell's version;
+the operation reader independently checks candidate, operation, domain, audience,
+capture, and content hash as defense in depth. Runtime EFTA roles receive neither direct
+table access nor `UPDATE` on heads. Rotation is an owner-gated qualification/bootstrap
+operation protected by the publication fence.
+
+Authoritative decision input contains only `identity_resolution_id`; caller-supplied
+`review.entity` is rejected. Private-read output reconstructs the entity from the current
+owner-approved institutional version with namespace `mip:institution`, canonical UUID,
+normalized label, and institutional revision. Exact RPC replay revalidates source state,
+all six operation-evidence cells, and identity currency, and rejects any historical row
+that has acquired a correction, reversal, or superseding identity resolution.

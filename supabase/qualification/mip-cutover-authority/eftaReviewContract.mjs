@@ -235,7 +235,7 @@ export const EFTA_INSTITUTION_PROPOSALS = Object.freeze([
 ]);
 export function assertAuthoritativeReviewShape(review) {
   if (!review || typeof review !== 'object' || Array.isArray(review)) fail('review_object');
-  for (const forbidden of ['reviewer','rights_ref','privacy_ref','owner_authorization_ref']) {
+  for (const forbidden of ['reviewer','rights_ref','privacy_ref','owner_authorization_ref','entity']) {
     if (Object.hasOwn(review, forbidden)) fail('free_text_authority_' + forbidden);
   }
   if (!text(review.identity_resolution_id)) fail('identity_resolution');

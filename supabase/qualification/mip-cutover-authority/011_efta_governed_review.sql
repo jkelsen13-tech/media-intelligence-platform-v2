@@ -339,7 +339,9 @@ create table mip_identity.efta_authority_assignment_heads(
  subject_id uuid not null,database_principal text not null,
  revision uuid not null references mip_identity.efta_authority_assignment_versions,
  active boolean not null,
- primary key(subject_id,database_principal)
+ primary key(subject_id,database_principal),
+ foreign key(subject_id,database_principal,revision)
+  references mip_identity.efta_authority_assignment_versions(subject_id,database_principal,revision)
 );
 
 -- Versioned metadata for the server-held gateway/database credential. No secret, token,
@@ -390,7 +392,9 @@ create unique index efta_institution_successor on mip_identity.efta_institution_
 create table mip_identity.efta_institution_heads(
  institution_id uuid primary key,
  revision uuid not null references mip_identity.efta_institution_versions,
- active boolean not null
+ active boolean not null,
+ foreign key(institution_id,revision)
+  references mip_identity.efta_institution_versions(institution_id,revision)
 );
 
 -- Deterministic UUIDv5 proposal identities. These rows are explicitly unapproved and are
@@ -457,7 +461,9 @@ create table mip_identity.efta_operation_evidence_versions(
 create table mip_identity.efta_operation_evidence_heads(
  candidate_id uuid not null,operation text not null,domain text not null,
  revision uuid not null references mip_identity.efta_operation_evidence_versions,
- active boolean not null,primary key(candidate_id,operation,domain)
+ active boolean not null,primary key(candidate_id,operation,domain),
+ foreign key(candidate_id,operation,domain,revision)
+  references mip_identity.efta_operation_evidence_versions(candidate_id,operation,domain,revision)
 );
 
 create table mip_identity.efta_decisions(
@@ -572,7 +578,11 @@ begin
  or p_scope->>'capture_id' is distinct from b->>'capture_id' then reason:='material_version_mismatch';
  elsif h.revision is null then reason:='missing_operation_evidence';
  elsif h.active is distinct from true then reason:='revoked_operation_evidence';
- elsif v.candidate_id is distinct from candidate or v.capture_id::text is distinct from b->>'capture_id'
+ elsif v.candidate_id is distinct from candidate
+ or v.operation is distinct from p_scope->>'operation'
+ or v.domain is distinct from p_scope->>'domain'
+ or v.audience is distinct from p_scope->>'audience'
+ or v.capture_id::text is distinct from b->>'capture_id'
  or v.content_hash is distinct from b->>'content_hash' then reason:='evidence_binding_mismatch';
  elsif v.authority_adapter<>'efta-authoritative-rights-privacy-v1' or not v.non_fixture then reason:='authoritative_adapter_unbound';
  elsif v.approval_state<>'owner_approved' then reason:='approval_'||v.approval_state;
@@ -661,7 +671,9 @@ begin
  then raise exception 'efta_identity_parent_unresolved';end if;
  return jsonb_build_object('resolution_id',r.id,'institution_id',v.institution_id,
   'institution_revision',v.revision,'label',v.normalized_label,'parent_institution_id',v.parent_institution_id,
-  'owner_approval_receipt_hash',v.owner_approval_receipt_hash);
+  'owner_approval_receipt_hash',v.owner_approval_receipt_hash,
+  'entity',jsonb_build_object('kind','institution','namespace','mip:institution',
+   'id',v.institution_id::text,'label',v.normalized_label,'resolution_ref',v.revision::text));
 end $$;
 
 create function mip_identity.efta_resolve_identity(
@@ -688,7 +700,10 @@ begin
   if prior.scope_origin is distinct from p_origin or prior.institution_revision is distinct from p_institution_revision
   or prior.predecessor is distinct from p_predecessor or prior.state is distinct from p_state
   or prior.reason is distinct from p_reason or prior.assignment_revision is distinct from p_assignment
-  then raise exception 'efta_replay_conflict';end if;return prior.id;
+  then raise exception 'efta_replay_conflict';end if;
+  if exists(select 1 from mip_identity.efta_identity_resolutions where predecessor=prior.id)
+  then raise exception 'efta_identity_replaced';end if;
+  return prior.id;
  end if;
  select r.* into latest from mip_identity.efta_identity_resolutions r where scope_origin=p_origin
  and not exists(select 1 from mip_identity.efta_identity_resolutions n where n.predecessor=r.id);
@@ -719,6 +734,16 @@ begin
   if prior.candidate_id is distinct from p_candidate or prior.action is distinct from p_action
   or prior.predecessor is distinct from p_predecessor or prior.review is distinct from p_review
   or prior.assignment_revision is distinct from p_assignment then raise exception 'efta_replay_conflict';end if;
+  if exists(select 1 from mip_identity.efta_decisions where predecessor=prior.id)
+  then raise exception 'efta_decision_replaced';end if;
+  if prior.action<>'reverse' then
+   b:=mip_identity.efta_current_binding(prior.candidate_id);
+   operations:=mip_identity.operation_closure(prior.candidate_id,b);
+   if comparison_qualification.argument_digest(b) is distinct from prior.binding_hash
+   or operations->>'closure_hash' is distinct from prior.operation_receipt_hash
+   then raise exception 'efta_stale_review';end if;
+   identity:=mip_identity.efta_require_identity(prior.identity_resolution_id,b);
+  end if;
   return prior.id;
  end if;
  select * into latest from mip_identity.efta_decisions where candidate_id=p_candidate order by recorded_at desc,id desc limit 1;
@@ -732,7 +757,7 @@ begin
   if p_review->>'semantic_kind' is distinct from b->>'semantic_kind'
   or p_review->>'audience' is distinct from 'isolated_internal_review'
   or p_review->'publication_allowed' is distinct from 'false'::jsonb
-  or p_review ? 'geography' or p_review ? 'place_id'
+  or p_review ? 'geography' or p_review ? 'place_id' or p_review ? 'entity'
   or p_review->>'uncertainty' is distinct from b->>'remaining_uncertainty'
   or p_review#>>'{event_time,precision}' is distinct from 'day'
   or p_review#>>'{event_time,date}' is distinct from b#>>'{event_time_rules,date}'
@@ -779,7 +804,7 @@ end $$;
 create function mip_identity.efta_private_read(
  p_request uuid,p_session uuid,p_runtime text,p_assignment uuid
 ) returns jsonb language plpgsql security definer set search_path='' as $$
-declare d mip_identity.efta_decisions;b jsonb;items jsonb:='[]'::jsonb;result jsonb;ids uuid[]:='{}';
+declare d mip_identity.efta_decisions;b jsonb;items jsonb:='[]'::jsonb;result jsonb;ids uuid[]:='{}';identity jsonb;
  ctx jsonb;operations jsonb;all_operations jsonb:='[]'::jsonb;h text;op_hash text;prior mip_identity.efta_private_reads;
 begin
  ctx:=mip_identity.authority_context(p_session,p_runtime,p_assignment,'mip_efta_private_reader_v1');
@@ -790,10 +815,11 @@ begin
   b:=mip_identity.efta_current_binding(d.candidate_id);operations:=mip_identity.operation_closure(d.candidate_id,b);
   if comparison_qualification.argument_digest(b)<>d.binding_hash or operations->>'closure_hash' is distinct from d.operation_receipt_hash
   then raise exception 'efta_stale_review';end if;
-  perform mip_identity.efta_require_identity(d.identity_resolution_id,b);
+  identity:=mip_identity.efta_require_identity(d.identity_resolution_id,b);
   all_operations:=all_operations||jsonb_build_array(operations);
   items:=items||jsonb_build_array((b-'capture_payload'-'candidate_record'-'article_record')||
-   jsonb_build_object('decision_id',d.id,'predecessor',d.predecessor,'review',d.review,'reviewed_at',d.recorded_at,
+   jsonb_build_object('decision_id',d.id,'predecessor',d.predecessor,
+   'review',(d.review-'entity')||jsonb_build_object('entity',identity->'entity'),'reviewed_at',d.recorded_at,
    'reviewer_subject','auth_user:'||d.subject_id::text,'reviewer_assignment_revision',d.assignment_revision));
   ids:=array_append(ids,d.id);
  end loop;
@@ -902,6 +928,10 @@ revoke all on function mip_identity.operation_check(jsonb),mip_identity.operatio
  mip_efta_reviewer_v1,mip_efta_admitter_v1,mip_efta_private_reader_v1;
 grant execute on function mip_identity.operation_check(jsonb) to mip_efta_owner_v1,mip_publication_owner_v2;
 grant execute on function mip_identity.operation_check_pre_efta_v4(jsonb) to mip_publication_owner_v2;
+
+-- The proposal-only first half temporarily needed the broad factual reviewer while its
+-- functions existed. The final EFTA-only surface does not; remove schema reachability.
+revoke usage on schema mip_identity from mip_factual_reviewer_v3;
 
 -- release_public remains the unchanged, deliberately disabled 007 function. No EFTA role
 -- receives stage_review, release_isolated, review_publish, or any canonical/public DML.
