@@ -65,14 +65,15 @@ The approved contract is therefore correctly modeled but not yet implemented.
 
 | Option | Standing access | Protection | Material limitation |
 |---|---:|---|---|
-| Offline encrypted 2-of-3 escrow | No Supabase membership | Recovery and continuity | No online veto or runtime-compromise containment; trustees/locations and ceremony become security principals |
+| Backup TOTP + no offline database-password copy + control-plane rotation | No additional Supabase membership | Smallest platform-compatible account recovery; avoids extra password copies | Continuity depends on Supabase account recovery; no independent online veto |
+| Offline encrypted 2-of-3 escrow | No Supabase membership | Optional additional recovery continuity | Creates recovery material and principals; no online veto; exact contents, expiry, holders and ceremony require approval |
 | Managed emergency-access vault | No Supabase membership | Delayed, auditable emergency recovery | New provider, account, recovery principal and retention dependency |
 | Protected GitHub environment + Actions OIDC + cloud KMS | No Supabase membership | Independent approval and managed-key operation | New KMS/WIF and scoped Supabase management authority; current viability not demonstrated |
 | Second Supabase Owner/Admin | Yes, broad | Native control-plane recovery | Exposes all project Edge secrets and broad project control; fallback only |
 
 Supabase Vault is circular for this purpose because the runtime must already connect to retrieve the value. No documented hosted-Edge workload identity capable of directly using an external KMS was demonstrated; putting a long-lived cloud credential in an Edge secret merely moves the bootstrap secret.
 
-The smallest recovery-only option is offline encrypted 2-of-3 escrow, but it requires owner selection of holders/locations, package and cryptographic tooling, recovery ceremony, drill cadence and whether continuity without an online veto is acceptable. A stricter alternative is to keep **no offline database-password copy** and recover only by control-plane rotation after account recovery; that reduces secret copies but makes account recovery the continuity dependency.
+The smallest bounded recommendation is the required separately custodied backup TOTP plus **no offline database-password copy**, followed by fail-closed control-plane rotation after account recovery. It avoids new trustees and database-secret copies, but account recovery remains the continuity dependency and there is no independent online veto. Offline encrypted 2-of-3 escrow is optional only after explicit approval of exact escrow contents, expiry, holders/locations, package/tooling and recovery ceremony.
 
 ## Credential-validity alternatives
 
@@ -83,6 +84,8 @@ The smallest recovery-only option is offline encrypted 2-of-3 escrow, but it req
 | C: monthly blue/green LOGINs | each slot expires by day 32 | at least 12 complex cycles/year | overlap capped at 24 hours; lower downtime but temporarily doubles credential surface |
 
 Policy A is the bounded recommendation for a low-frequency governed workflow with no demonstrated continuous-availability requirement. Thirty days is a governance choice, not a platform requirement. The independent review preferred separate versioned LOGINs because Edge-secret propagation and authenticated pooler-session retirement are not yet proven. Accordingly, final selection remains owner-reserved until qualification measures propagation, session termination and rollback. For a one-time consultation-only credential, an expiry at the consultation cutoff with no renewal is an additional narrow alternative.
+
+Every routine rollover must also create an append-only successor EFTA reviewer-assignment revision/head because the qualified assignment hash/FK-binds `credential_revision`. Every dependent authentication/mapping and broker-session revision must roll consistently. Only after canaries pass may the successor governed heads activate and the predecessor assignment and credential revisions be explicitly retired. The lifecycle receipt must name and hash the complete predecessor/successor chain.
 
 Routine and emergency rotation must never restore a retired or suspected password. Password change, `VALID UNTIL`, `NOLOGIN` and secret replacement do not alone prove termination of authenticated pooler sessions. A database-authoritative active credential revision, explicit session termination and old-revision rejection evidence are mandatory.
 
@@ -97,7 +100,7 @@ Routine and emergency rotation must never restore a retired or suspected passwor
 - **Live session:** missing, revoked, unverifiable or unavailable rejects every action; no cached authorization.
 - **In-flight revocation:** a bounded transaction may race revocation. Terminate sessions and reconcile every operation around the cutoff.
 
-The gateway cannot independently attest the Dashboard network or membership settings at runtime. Their signed inspection revisions are preconditions; stale or unavailable preconditions keep the gate closed.
+The gateway cannot independently attest the Dashboard network or membership settings at runtime. Their versioned, committed inspection revisions are preconditions; stale or unavailable preconditions keep the gate closed. The present observation was collected through the authenticated Supabase Dashboard on 2026-09-17; exact UTC capture time and durable evidence reference remain unfinalized and must be bound before use.
 
 ## Rights/privacy and deferred roles
 
@@ -116,7 +119,7 @@ Critical/high blockers:
 Owner-reserved:
 
 - Complete and evidence the MFA gate; optionally decide organization-wide MFA enforcement.
-- Select secondary-protection mode and its principals/locations/ceremony.
+- Confirm the smallest secondary-protection path (backup TOTP, no offline database-password copy, control-plane rotation) or explicitly select a stronger escrow option and its principals/locations/ceremony.
 - Select credential cadence after a rotation rehearsal.
 - Later designate rights and privacy authorities and approve cells.
 - Later designate admitter and private-reader subjects.
@@ -143,4 +146,4 @@ Official references:
 
 Exact smallest next prompt:
 
-> Continue from the exact inspection packet head. Perform read-only/remediation design only: determine whether Supabase hosted Edge Functions can verifiably suppress or isolate the automatically provided SUPABASE_DB_URL and privileged service-role/secret keys for one EFTA function. If not, design the smallest non-production qualification using either an isolated Supabase project or an existing authorized external runtime with workload identity and only the narrow EFTA broker LOGIN. Implement no infrastructure or production change. In the candidate gateway, specify the concrete least-privilege live Supabase auth.sessions adapter keyed by JWT session_id and gateway-local ES256/exact-KID enforcement, with fail-closed tests and a requalification plan. Return the smallest owner decision that resolves only these blockers.
+> Continue from the exact inspection packet head. Perform read-only/remediation design only: determine whether Supabase hosted Edge Functions can verifiably suppress or isolate the automatically provided SUPABASE_DB_URL and privileged service-role/secret keys for one EFTA function. If not, design the smallest non-production qualification using either an isolated Supabase project or an existing authorized external runtime with workload identity and only the narrow EFTA broker LOGIN. Implement no infrastructure or production change. In the candidate gateway, specify the concrete least-privilege live Supabase auth.sessions adapter keyed by JWT session_id and gateway-local ES256/exact-KID enforcement, with fail-closed tests and a requalification plan. Also define the complete credential → reviewer-assignment → authentication/mapping → broker-session successor/retirement chain and retain backup-TOTP/no-offline-password-copy as the default smallest secondary-protection path. Return the smallest owner decision that resolves only these blockers.
