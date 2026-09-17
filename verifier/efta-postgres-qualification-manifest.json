@@ -1,0 +1,20 @@
+{
+  "contract": "efta-postgres-qualification-v1",
+  "base_candidate": "1a11fdedac268d78b9bdb47930751dd69d268e77",
+  "remediation_head_before_qualification": "5637c07b7c7f0fa5a96ccbf9830573a436ce4072",
+  "postgres_image": "postgres:17.6",
+  "fixture": "disposable-mechanism-only-no-owner-authorization",
+  "migrations": [
+    {"path":"supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql","blob":"136204c77c0e18bce2592493db4765cdeb4c9d1b"},
+    {"path":"supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql","blob":"f5a9fba65d3b5bac782afd511f94c46e7e9e6315"},
+    {"path":"supabase/qualification/mip-cutover-authority/003_scoped_queue.sql","blob":"209bf4bd6ec405d8d9e8bc751f989631c47a137b"},
+    {"path":"supabase/qualification/mip-cutover-authority/004_publication_staging.sql","blob":"38379113e73d5fea1f3a3dba8647f374ed2733fe"},
+    {"path":"supabase/qualification/mip-cutover-authority/005_broker_sessions.sql","blob":"f78288fbabba40407cd206521b43faa0278f674a"},
+    {"path":"supabase/qualification/mip-cutover-authority/006_collector_reconciliation.sql","blob":"3c812ca1ff0535a950aa96a21424394c651e7dbc"},
+    {"path":"supabase/qualification/mip-cutover-authority/007_survivor_release.sql","blob":"5fe9bebb669c35a3b3474cab5b7bc8a18d60a8f7"},
+    {"path":"supabase/qualification/mip-cutover-authority/008_operation_evidence.sql","blob":"a1c9f2fb236e7069e80c5a1cfe6b58274c537ee6"},
+    {"path":"supabase/qualification/mip-cutover-authority/009_factual_enforcement.sql","blob":"60e6198c3ad389c335dfe56024153a187f30f0a4"},
+    {"path":"supabase/qualification/mip-cutover-authority/010_real_permission_reader.sql","blob":"80f869c417706b5bf6a714e15da5809e599c2811"},
+    {"path":"supabase/qualification/mip-cutover-authority/011_efta_governed_review.sql","blob":"e28129d5e0243239ad6a0f7ce28fca4c818cbd22"}
+  ]
+}

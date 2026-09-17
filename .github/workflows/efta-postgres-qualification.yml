@@ -1,0 +1,55 @@
+name: EFTA isolated PostgreSQL 17 qualification
+on:
+  push:
+    branches:
+      - codex/mip-efta-qualification-remediation-20260916
+    paths:
+      - 'supabase/qualification/mip-cutover-authority/**'
+      - 'src/lib/eftaReviewClient.js'
+      - 'src/lib/eftaWorkspace.js'
+      - 'tests/efta*.test.mjs'
+      - 'verifier/eftaPostgresQualification.py'
+      - 'verifier/efta-postgres-qualification-manifest.json'
+      - '.github/workflows/efta-postgres-qualification.yml'
+  pull_request:
+    paths:
+      - 'supabase/qualification/mip-cutover-authority/**'
+      - 'src/lib/eftaReviewClient.js'
+      - 'src/lib/eftaWorkspace.js'
+      - 'tests/efta*.test.mjs'
+      - 'verifier/eftaPostgresQualification.py'
+      - 'verifier/efta-postgres-qualification-manifest.json'
+      - '.github/workflows/efta-postgres-qualification.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  postgres-qualification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: mip-efta-disposable-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Exact PostgreSQL 17.6 migration, ACL and concurrency qualification
+        env:
+          MIP_EFTA_DISPOSABLE_POSTGRES: exact-001-011
+        run: python3 -B verifier/eftaPostgresQualification.py
+      - name: Gateway, reviewer, frontend and full regression
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: Dependency audit
+        run: npm audit --omit=dev
