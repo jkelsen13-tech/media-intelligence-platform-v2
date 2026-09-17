@@ -104,3 +104,11 @@ test('post-admission identity replacement invalidates private reads even with un
  await f.resolve(randomUUID(),origin,f.entity(origin),f.resolutions.get(origin),'resolved');
  await assert.rejects(f.get(),/identity/);
 });
+
+test('native candidate mutation and restoration cannot revive a prior review',async t=>{
+ const f=await setup(t),id=randomUUID();await f.decide(id);await f.admit(id);
+ await f.db.query("update evidence_pipeline.evidence_candidates set excerpt='changed' where id=$1",[manifest.sources[0].candidate_id]);
+ await assert.rejects(f.get(),/binding/);
+ await f.db.query("update evidence_pipeline.evidence_candidates set excerpt=$2 where id=$1",[manifest.sources[0].candidate_id,manifest.sources[0].excerpt]);
+ await assert.rejects(f.get(),/stale_review/);
+});

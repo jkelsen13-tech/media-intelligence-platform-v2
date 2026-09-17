@@ -59,12 +59,18 @@ begin
  or a->>'source_status' in ('withdrawn','corrected','revoked')
  then raise exception 'efta_stale_source';end if;
  return b||jsonb_build_object('capture_payload',c->'payload','candidate_record',k,'article_record',a,
- 'collector_revision',(select id from mip_identity.source_changes where relation_name='public.articles' and row_key=b->>'article_id' order by retained_at desc,id desc limit 1));
+ 'collector_revision',(select id from mip_identity.source_changes where relation_name='public.articles' and row_key=b->>'article_id' order by retained_at desc,id desc limit 1),
+ 'capture_revision',(select id from mip_identity.source_changes where relation_name='evidence_pipeline.article_captures' and row_key=b->>'capture_id' order by retained_at desc,id desc limit 1),
+ 'candidate_revision',(select id from mip_identity.source_changes where relation_name='evidence_pipeline.evidence_candidates' and row_key=b->>'candidate_id' order by retained_at desc,id desc limit 1));
 end $$;
 create trigger efta_capture_fence before insert or update or delete or truncate on evidence_pipeline.article_captures
  for each statement execute function mip_identity.collector_lock();
 create trigger efta_candidate_fence before insert or update or delete or truncate on evidence_pipeline.evidence_candidates
  for each statement execute function mip_identity.collector_lock();
+create trigger efta_capture_change after insert or update or delete on evidence_pipeline.article_captures
+ for each row execute function mip_identity.collector_change('id');
+create trigger efta_candidate_change after insert or update or delete on evidence_pipeline.evidence_candidates
+ for each row execute function mip_identity.collector_change('id');
 create function mip_identity.efta_resolve_identity(p_request uuid,p_origin text,p_entity jsonb,p_predecessor uuid,p_state text,p_reviewer text,p_reason text) returns uuid
 language plpgsql security definer set search_path='' as $$
 declare prior mip_identity.efta_identity_resolutions;latest mip_identity.efta_identity_resolutions;
