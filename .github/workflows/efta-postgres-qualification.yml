@@ -43,6 +43,8 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 1
+      - name: Install locked dependencies
+        run: npm ci
       - name: Exact PostgreSQL 17.6 migration, ACL and concurrency qualification
         env:
           MIP_EFTA_DISPOSABLE_POSTGRES: exact-001-011
