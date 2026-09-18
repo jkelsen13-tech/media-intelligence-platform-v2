@@ -428,7 +428,7 @@ update mip_identity.efta_authentication_policy_heads set revision={q(new_auth)} 
 update comparison_qualification.principal_sessions set revoked_at=clock_timestamp() where session_id={q(old_session)};
 commit;""")
         old=self.session();old.execute("reset role;begin;set role mip_efta_authenticator_v1;")
-        with self.assertRaisesRegex(RuntimeError,"efta_assignment_not_authorized|mip_identity_session_revoked"):
+        with self.assertRaisesRegex(RuntimeError,"efta_authentication_policy_not_authorized|efta_assignment_not_authorized|mip_identity_session_revoked"):
             old.execute(live_assert_sql(role))
         fresh=self.session();begin_authenticated(fresh,role,auth_policy=new_auth,broker_session=new_session,
                                                   assignment=new_assignment,token=new_token)

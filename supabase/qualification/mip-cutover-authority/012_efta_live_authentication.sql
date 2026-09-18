@@ -78,7 +78,7 @@ begin
  then raise exception 'efta_authenticated_subject_mismatch';end if;
  perform 1 from comparison_qualification.principal_sessions ps where ps.session_id=p_broker_session
  and ps.runtime_id=p_runtime and ps.principal=a.database_principal and ps.revoked_at is null
- and ps.expires_at>clock_timestamp() for share;
+ and ps.expires_at>clock_timestamp();
  if not found then raise exception 'mip_identity_session_revoked';end if;
  select x.user_id into observed_subject from auth.sessions x where x.id=p_auth_session and x.user_id=p_subject for key share;
  if not found or observed_subject is distinct from p_subject then raise exception 'efta_live_auth_session_invalid';end if;
