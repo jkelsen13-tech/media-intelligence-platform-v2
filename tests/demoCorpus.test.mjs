@@ -47,7 +47,7 @@ test('default deny rejects eligible, absent and unretained receipts', () => {
   for (const patch of [{ reader_state: 'eligible' }, { capture_state: undefined }, { capture_id: null }, { candidate_id: 'x', candidate_state: 'approved' }]) assert.throws(() => createPreview([{ ...record, ...patch }]))
 })
 test('corrections and contradictory statements retain distinct capture identities', () => {
-  const sources = createPreview([record, { ...record, capture_id: 'c2', content_hash: 'b'.repeat(64), statement: 'contradicts previous statement' }])[1].sources
+  const sources = createPreview([record, { ...record, capture_id: 'c2', candidate_id: 'd2', content_hash: 'b'.repeat(64), statement: 'contradicts previous statement' }])[1].sources
   assert.notEqual(sources[0].preview_id, sources[1].preview_id)
   assert.equal(sources[0].article_id, sources[1].article_id)
 })
