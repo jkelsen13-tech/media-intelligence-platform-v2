@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:demo": "vite build --config scripts/vite.demo-corpus.config.js",
+    "dev:demo": "vite --config scripts/vite.demo-corpus.config.js",
     "test": "node --test $(find tests -type f -name '*.test.mjs' | sort)",
     "verify:track3": "node verifier/runV2Track3Propagation.mjs",
     "verify:claims": "node verifier/runV2ClaimAuditabilityPromotion.mjs",

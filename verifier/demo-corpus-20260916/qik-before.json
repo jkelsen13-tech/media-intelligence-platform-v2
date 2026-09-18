@@ -1,0 +1,49 @@
+[
+  {
+    "inventory": {
+      "jobs": [
+        {
+          "count": 2,
+          "state": "completed"
+        }
+      ],
+      "counts": {
+        "arcs": 0,
+        "nodes": 1,
+        "events": 1,
+        "articles": 5,
+        "captures": 2,
+        "candidates": 3
+      },
+      "policies": [
+        {
+          "cmd": "SELECT",
+          "qual": "((reader_state = 'eligible'::text) AND (source_status = 'active'::text))",
+          "roles": [
+            "anon",
+            "authenticated"
+          ],
+          "tablename": "articles",
+          "permissive": "PERMISSIVE",
+          "policyname": "articles_select_eligible",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "true",
+          "roles": [
+            "spatial_owner"
+          ],
+          "tablename": "articles",
+          "permissive": "PERMISSIVE",
+          "policyname": "spatial_owner_read_articles",
+          "schemaname": "public",
+          "with_check": null
+        }
+      ],
+      "news_view": " SELECT id AS article_id,\n    COALESCE(( SELECT jsonb_agg(jsonb_build_object('surface_text', ac.surface_text, 'canonical_text', c.canonical_text, 'auditability_state', ac.auditability_state, 'auditability_note', ac.auditability_note, 'evidence_source_field', ac.evidence_source_field, 'evidence_excerpt', ac.evidence_excerpt, 'evidence_records', COALESCE(( SELECT jsonb_agg(jsonb_build_object('evidence_url', cel.evidence_url, 'evidence_type', cel.evidence_type) ORDER BY cel.evidence_type, cel.evidence_url) AS jsonb_agg\n                   FROM claim_evidence_links cel\n                  WHERE cel.claim_id = c.id AND (EXISTS ( SELECT 1\n                           FROM mip_private.reader_claim_surfaces rs\n                          WHERE rs.claim_id = c.id AND rs.article_id = cel.linked_from_article_id))), '[]'::jsonb)) ORDER BY ac.id) AS jsonb_agg\n           FROM article_claims ac\n             JOIN claims c ON c.id = ac.claim_id\n          WHERE ac.article_id = a.id AND ac.is_current = true AND (EXISTS ( SELECT 1\n                   FROM mip_private.reader_claim_surfaces rs\n                  WHERE rs.id = ac.id))), '[]'::jsonb) AS reviewed_claims\n   FROM articles a\n  WHERE reader_state = 'eligible'::text AND source_status = 'active'::text;",
+      "pipeline_acl": "{postgres=X/postgres,service_role=X/postgres}"
+    }
+  }
+]
