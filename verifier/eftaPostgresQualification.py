@@ -335,6 +335,18 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
         wrong=self.session();wrong.execute("set role mip_efta_authenticator_v1;")
         with self.assertRaisesRegex(RuntimeError,"efta_live_auth_session_invalid"):
             wrong.execute(live_assert_sql(ROLES[0],auth_session=str(uuid.uuid4())))
+        one=self.session();one.execute("reset role;begin;set role mip_efta_authenticator_v1;")
+        one.execute(live_assert_sql(ROLES[0]))
+        with self.assertRaisesRegex(RuntimeError,"efta_live_auth_receipts_transaction_id_key"):
+            one.execute(live_assert_sql(ROLES[1]))
+    def test_authentication_policy_retirement_wins_before_assertion_and_no_operation_persists(self):
+        holder=self.session();holder.execute("reset role;begin;")
+        holder.execute("update mip_identity.efta_authentication_policy_heads set active=false "
+                       "where policy_id='supabase-user-access-v1';")
+        waiter=self.session();waiter.execute("reset role;begin;set role mip_efta_authenticator_v1;")
+        waiter.start(live_assert_sql(ROLES[0]));self.blocked(waiter,holder);holder.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"efta_authentication_policy_not_authorized"):waiter.finish()
+        self.assertEqual(self.admin("select count(*) from mip_identity.efta_identity_resolutions"),"0")
     def test_auth_session_revocation_race_serializes_and_fails_closed(self):
         holder=self.session();holder.execute("reset role;begin;")
         holder.execute(f"delete from auth.sessions where id={q(AUTH_SESSION)};")
@@ -423,13 +435,13 @@ select revision,issuer,audience,algorithm,kid,key_revision,jwks_sha256,predecess
  comparison_qualification.argument_digest(jsonb_build_object('revision',revision,'issuer',issuer,'audience',audience,
  'algorithm',algorithm,'kid',kid,'key_revision',key_revision,'jwks_sha256',jwks_sha256,'predecessor',predecessor,
  'state',state,'valid_from',valid_from,'valid_until',valid_until)),valid_from,valid_until from x;
+update mip_identity.efta_gateway_credential_heads set revision={q(new_credential)} where gateway_id='efta-private-gateway-v1';
+update mip_identity.efta_authority_assignment_heads set revision={q(new_assignment)} where subject_id={q(SUBJECT)} and database_principal={q(role)};
+update mip_identity.mapping_heads set revision={q(new_mapping)} where runtime={q(RUNTIME)} and principal={q(role)};
+update mip_identity.efta_authentication_policy_heads set revision={q(new_auth)} where policy_id='supabase-user-access-v1';
 insert into comparison_qualification.principal_sessions(session_id,principal,runtime_id,expires_at)
  values({q(new_session)},{q(role)},{q(RUNTIME)},'2999-01-01');
 insert into mip_identity.sessions values({q(new_session)},gen_random_uuid(),{q(new_token)},{q(new_mapping)},{q(KEY)},'2999-01-01','successor qualification');
-update mip_identity.efta_gateway_credential_heads set revision={q(new_credential)} where gateway_id='efta-private-gateway-v1';
-update mip_identity.mapping_heads set revision={q(new_mapping)} where runtime={q(RUNTIME)} and principal={q(role)};
-update mip_identity.efta_authority_assignment_heads set revision={q(new_assignment)} where subject_id={q(SUBJECT)} and database_principal={q(role)};
-update mip_identity.efta_authentication_policy_heads set revision={q(new_auth)} where policy_id='supabase-user-access-v1';
 update comparison_qualification.principal_sessions set revoked_at=clock_timestamp() where session_id={q(old_session)};
 commit;""")
         old=self.session();old.execute("reset role;begin;set role mip_efta_authenticator_v1;")

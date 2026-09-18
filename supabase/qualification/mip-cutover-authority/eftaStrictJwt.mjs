@@ -41,12 +41,13 @@ export function createStrictEftaJwtVerifier(config){
   if(typeof raw!=='string'||raw.length>16384) denied();
   const parts=raw.split('.');if(parts.length!==3) denied();
   const header=json(parts[0]),claims=json(parts[1]),signature=decode(parts[2]);
-  if(header?.alg!=='ES256'||header?.kid!==kid||header?.jwk!==undefined||header?.jku!==undefined||header?.x5u!==undefined
+  if(header?.alg!=='ES256'||header?.kid!==kid||header?.crit!==undefined
+   ||header?.jwk!==undefined||header?.jku!==undefined||header?.x5u!==undefined
    ||signature.length!==64) denied();
   const input=new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
   if(!await cryptoApi.subtle.verify({name:'ECDSA',hash:'SHA-256'},await key(),signature,input)) denied();
   const observed=now();
-  if(claims?.iss!==issuer||!exactAudience(claims?.aud,audience)||claims?.role!=='authenticated'||claims?.is_anonymous===true
+  if(claims?.iss!==issuer||!exactAudience(claims?.aud,audience)||claims?.role!=='authenticated'||claims?.is_anonymous!==false
    ||!UUID.test(claims?.sub??'')
    ||!UUID.test(claims?.session_id??'')||!Number.isFinite(claims?.exp)||claims.exp<=observed
    ||!Number.isFinite(claims?.iat)||claims.iat>observed

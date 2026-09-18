@@ -30,7 +30,7 @@ create table mip_identity.efta_live_auth_receipts(
  credential_revision uuid not null references mip_identity.efta_gateway_credential_versions,
  token_binding_hash text not null check(token_binding_hash~'^[0-9a-f]{64}$'),session_observed_at timestamptz not null,
  receipt_hash text not null check(receipt_hash~'^[0-9a-f]{64}$'),database_actor text not null,recorded_at timestamptz not null default clock_timestamp(),
- unique(transaction_id,broker_session)
+ unique(transaction_id)
 );
 create table mip_identity.efta_live_auth_uses(
  receipt_id uuid primary key references mip_identity.efta_live_auth_receipts,used_at timestamptz not null default clock_timestamp()
@@ -48,6 +48,9 @@ declare p mip_identity.efta_authentication_policy_versions;h mip_identity.efta_a
 begin
  if p_receipt is null or p_auth_session is null or p_subject is null or p_broker_session is null
  or p_token_binding_hash !~ '^[0-9a-f]{64}$' then raise exception 'efta_live_session_bad_request';end if;
+ -- Share the same global authority linearization fence as every governed EFTA
+ -- operation and every policy/head retirement.  The lock is transaction-scoped.
+ perform 1 from mip_cutover_authority.publication_fence where id for update;
  select * into strict p from mip_identity.efta_authentication_policy_versions where revision=p_authentication_revision;
  select * into h from mip_identity.efta_authentication_policy_heads where policy_id='supabase-user-access-v1';
  policy_payload_hash:=comparison_qualification.argument_digest(jsonb_build_object(
@@ -199,6 +202,9 @@ grant select(id,user_id) on auth.sessions to mip_efta_auth_session_owner_v1;
 -- only reads.  Limit that technical privilege to the immutable session key and
 -- keep it inside this NOLOGIN, non-membership definer role.
 grant update(id) on auth.sessions to mip_efta_auth_session_owner_v1;
+grant select,update on mip_cutover_authority.publication_fence to mip_efta_auth_session_owner_v1;
+create policy efta_auth_owner_publication_fence on mip_cutover_authority.publication_fence
+ to mip_efta_auth_session_owner_v1 using(true) with check(true);
 create policy efta_auth_assignment_versions on mip_identity.efta_authority_assignment_versions
  for select to mip_efta_auth_session_owner_v1 using(scope='efta-bounded-demo-v1' and database_principal like 'mip_efta_%');
 create policy efta_auth_assignment_heads on mip_identity.efta_authority_assignment_heads

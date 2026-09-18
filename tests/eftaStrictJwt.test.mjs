@@ -17,7 +17,8 @@ async function fixture(){
   keyRevision:ids.key,kid,jwks,jwksSha256,now:()=>now,crypto:webcrypto});
  async function token(claims={},header={}){
   const h=b64({alg:'ES256',typ:'JWT',kid,...header});
-  const p=b64({iss:issuer,aud:'authenticated',role:'authenticated',sub:ids.subject,session_id:ids.session,iat:now-60,exp:now+600,...claims});
+  const p=b64({iss:issuer,aud:'authenticated',role:'authenticated',is_anonymous:false,
+   sub:ids.subject,session_id:ids.session,iat:now-60,exp:now+600,...claims});
   const sig=await webcrypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},pair.privateKey,Buffer.from(`${h}.${p}`));
   return `${h}.${p}.${Buffer.from(sig).toString('base64url')}`;
  }
@@ -41,7 +42,7 @@ test('wrong issuer, audience, kid, malformed and expired tokens fail closed',asy
 
 test('HS256 and attacker-supplied key locations are rejected before signature acceptance',async()=>{
  const f=await fixture();
- for(const header of [{alg:'HS256'},{jku:'https://attacker.invalid/jwks'},{jwk:{kty:'oct',k:'x'}},{x5u:'https://attacker.invalid/cert'}])
+ for(const header of [{alg:'HS256'},{crit:['exp']},{jku:'https://attacker.invalid/jwks'},{jwk:{kty:'oct',k:'x'}},{x5u:'https://attacker.invalid/cert'}])
   await assert.rejects(f.verifier(await f.token({},header)),/efta_authentication_denied/);
 });
 
@@ -50,6 +51,6 @@ test('unexpected JWKS lifecycle state, array audience and anonymous claims fail 
  const changed={keys:[...f.jwks.keys,{...f.jwks.keys[0],kid:'unexpected'}]};
  assert.throws(()=>createStrictEftaJwtVerifier({issuer,audience:'authenticated',authenticationRevision:ids.auth,
   keyRevision:ids.key,kid,jwks:changed,jwksSha256:f.jwksSha256,now:()=>now,crypto:webcrypto}),/unconfigured/);
- for(const claims of [{aud:['authenticated']},{role:'anon'},{is_anonymous:true}])
+ for(const claims of [{aud:['authenticated']},{role:'anon'},{is_anonymous:true},{is_anonymous:undefined}])
   await assert.rejects(f.verifier(await f.token(claims)),/efta_authentication_denied/);
 });
