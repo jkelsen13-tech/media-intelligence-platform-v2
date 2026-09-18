@@ -158,12 +158,16 @@ begin
  return result||jsonb_build_object('authority_receipt_hash',comparison_qualification.argument_digest(result));
 end$$;
 
-alter table mip_identity.efta_authentication_policy_versions,mip_identity.efta_authentication_policy_heads,
- mip_identity.efta_live_auth_receipts,mip_identity.efta_live_auth_uses owner to mip_cutover_schema_owner_v1;
-alter table mip_identity.efta_authentication_policy_versions,mip_identity.efta_authentication_policy_heads,
- mip_identity.efta_live_auth_receipts,mip_identity.efta_live_auth_uses enable row level security;
-alter table mip_identity.efta_authentication_policy_versions,mip_identity.efta_authentication_policy_heads,
- mip_identity.efta_live_auth_receipts,mip_identity.efta_live_auth_uses force row level security;
+do $secure_tables$
+declare t text;
+begin
+ foreach t in array array['efta_authentication_policy_versions','efta_authentication_policy_heads',
+  'efta_live_auth_receipts','efta_live_auth_uses'] loop
+  execute format('alter table mip_identity.%I owner to mip_cutover_schema_owner_v1',t);
+  execute format('alter table mip_identity.%I enable row level security',t);
+  execute format('alter table mip_identity.%I force row level security',t);
+ end loop;
+end$secure_tables$;
 revoke all on table mip_identity.efta_authentication_policy_versions,mip_identity.efta_authentication_policy_heads,
  mip_identity.efta_live_auth_receipts,mip_identity.efta_live_auth_uses from public,anon,authenticated,service_role,
  mip_factual_reviewer_v3,mip_projection_publisher_v1,mip_efta_reviewer_v1,mip_efta_admitter_v1,mip_efta_private_reader_v1,mip_efta_authenticator_v1;
