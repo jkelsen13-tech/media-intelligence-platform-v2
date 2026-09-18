@@ -1,6 +1,13 @@
 // Isolated corpus analysis. No backend client, credentials, or publication code.
 export const TOPICS = ['iran', 'epstein', 'project2025']
-export const DEMO_SURFACES = ['context', 'news', 'evidence', 'compare', 'graph', 'timeline', 'arc']
+export const DEMO_SURFACES = ['context', 'news', 'evidence', 'compare', 'graph', 'timeline', 'arc', 'world']
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+export function deepFreeze(value) {
+  if (value == null || typeof value !== 'object' || Object.isFrozen(value)) return value
+  for (const child of Object.values(value)) deepFreeze(child)
+  return Object.freeze(value)
+}
 export function parseDemoRoute(hash, records = []) {
   const fallback = { topic: 'iran', surface: 'context', capture: null }
   if (typeof hash !== 'string' || hash.length > 240 || /[\u0000-\u001f]/.test(hash)) return fallback
@@ -13,8 +20,9 @@ export function parseDemoRoute(hash, records = []) {
   const member = records.some((record) => record.topic === topic && record.capture_id === capture)
   return member ? { topic, surface, capture } : { topic, surface: 'context', capture: null }
 }
-export function serializeDemoRoute({ topic, surface, capture = null }) {
+export function serializeDemoRoute({ topic, surface, capture = null }, records = []) {
   if (!TOPICS.includes(topic) || !DEMO_SURFACES.includes(surface)) throw new Error('Invalid demo route')
+  if (capture && !records.some((record) => record.topic === topic && record.capture_id === capture)) throw new Error('Capture is not a member of this demo investigation')
   return `#/demo/${topic}/${surface}${capture ? `/${encodeURIComponent(capture)}` : ''}`
 }
 export function exactSpan(text, excerpt) {
@@ -122,9 +130,9 @@ export function projectReceipt(receipt) {
   if (sourceUrl.protocol !== 'https:') throw new Error('Demo sources require HTTPS')
   for (const forbidden of ['public_node_id', 'canonical_claim_id', 'canonical_event_id', 'relationship_id', 'admission_id']) if (receipt[forbidden] != null) throw new Error(`Canonical field forbidden: ${forbidden}`)
   const projected = Object.fromEntries(RECEIPT_FIELDS.map((key) => [key, receipt[key] ?? null]))
-  return Object.freeze({ ...projected, preview_id: `private:capture:${receipt.capture_id}`, public_node_id: null,
+  return deepFreeze({ ...projected, preview_id: `private:capture:${receipt.capture_id}`, public_node_id: null,
     publication_allowed: false, timeline_basis: 'source_publication_date_only',
-    geography: Object.freeze({ state: 'withheld_unreviewed', causal_inference: false }) })
+    geography: { state: 'withheld_unreviewed', causal_inference: false } })
 }
 
 export function createPreview(records, { requireComplete = false } = {}) {
@@ -135,14 +143,17 @@ export function createPreview(records, { requireComplete = false } = {}) {
     if (new Set(values).size !== values.length) throw new Error(`Duplicate demo identity: ${key}`)
   }
   if (requireComplete) {
+    const counts = Object.fromEntries(TOPICS.map((topic) => [topic, records.filter((record) => record.topic === topic).length]))
+    if (records.length !== 93 || counts.iran !== 30 || counts.epstein !== 30 || counts.project2025 !== 33) throw new Error('Incomplete bounded demo corpus')
+    for (const record of records) for (const key of ['article_id', 'capture_id', 'candidate_id']) {
+      if (!UUID.test(record[key])) throw new Error(`Invalid retained UUID: ${key}`)
+    }
     for (const key of ['url', 'article_id']) {
       const values = records.map((record) => record[key])
       if (new Set(values).size !== values.length) throw new Error(`Duplicate bounded-corpus identity: ${key}`)
     }
-    const counts = Object.fromEntries(TOPICS.map((topic) => [topic, records.filter((record) => record.topic === topic).length]))
-    if (records.length !== 93 || counts.iran !== 30 || counts.epstein !== 30 || counts.project2025 !== 33) throw new Error('Incomplete bounded demo corpus')
   }
-  return TOPICS.map(topic => {
+  return deepFreeze(TOPICS.map(topic => {
     const sources = records.filter(r => r.topic === topic).map(projectReceipt)
     return { topic, sources, accounting: analyzeSources(sources),
       comparison: { state: 'provisional_topic_collection', event_identity: null, sources: sources.map(s => s.preview_id) },
@@ -153,5 +164,5 @@ export function createPreview(records, { requireComplete = false } = {}) {
       synthetic: syntheticProjection(topic),
       arc: { id: `private:collection:${topic}`, type: 'research_collection', members: sources.map(s => s.preview_id) },
       admission: { allowed: false, reason: 'No reviewed and authorized candidate-promotion operation exists for this demo projection' } }
-  })
+  }))
 }

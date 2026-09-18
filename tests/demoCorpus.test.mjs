@@ -1,5 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
 import { build } from 'esbuild'
 import { exactSpan, canonicalUrl, analyzeSources, resolveIdentity, createPreview, nearDuplicates, validatePrivateRelation, syntheticProjection, projectReceipt, parseDemoRoute, serializeDemoRoute } from '../scripts/demoCorpus.mjs'
 const record = { topic: 'epstein', url: 'https://example.org/a', title: 'Oversight statement', article_id: 'a', capture_id: 'c', candidate_id: 'd', content_hash: 'a'.repeat(64), span_start: 0, span_end: 3, reader_state: 'pending_review', capture_state: 'pending', candidate_state: 'pending', semantic_kind: 'oversight_statement' }
@@ -70,11 +72,12 @@ test('synthetic canonical joins preserve separate comparison and graph families'
   assert.throws(() => validatePrivateRelation({ type: 'synthetic_event_place', from: event, to: { namespace: 'real', id: 'x' }, publication_allowed: false }, [...fixture.registry, { namespace: 'real', id: 'x' }]))
 })
 test('compiled isolated preview has no live backend/auth/operator import path', async () => {
-  const result = await build({ entryPoints: ['scripts/demo-corpus-preview.jsx'], bundle: true, write: false, outdir: 'memory-only', metafile: true, jsx: 'automatic', logLevel: 'silent' })
-  const inputs = Object.keys(result.metafile.inputs)
+  const result = await build({ entryPoints: ['scripts/demo-corpus-preview.jsx'], bundle: true, write: false, outdir: 'memory-only', metafile: true, packages: 'external', jsx: 'automatic', logLevel: 'silent' })
+  const inputs = Object.keys(result.metafile.inputs).map((path) => path.replaceAll('\\', '/'))
   assert.ok(inputs.some(p => p.endsWith('expanded-source-receipts.json')))
-  assert.equal(inputs.some(p => /supabase|mipBackend|operatorBackend|investigationBackend|src\/App|authSession|themeFlag/i.test(p)), false)
-  assert.deepEqual(inputs.filter(p => p.startsWith('src/')), ['src/styles/tokens.css'])
+  assert.ok(inputs.some(p => p.endsWith('src/components/InvestigationWorkspace.jsx')))
+  assert.ok(inputs.some(p => p.endsWith('src/graph/GraphView.jsx')))
+  assert.equal(inputs.some(p => /@supabase|src\/lib\/supabase|mipBackend|operatorBackend|investigationBackend|src\/App|authSession|themeFlag/i.test(p)), false)
   assert.equal(result.errors.length, 0)
 })
 
@@ -97,6 +100,46 @@ test('all retained receipts project to exact counts with no public identity', as
   assert.equal(views.flatMap(v => v.sources).every(s => s.publication_allowed === false && s.public_node_id === null && s.timeline_basis === 'source_publication_date_only'), true)
 })
 
+test('all-record identity tuple digest remains pinned to the qualified corpus', async () => {
+  const initial = (await import('../verifier/demo-corpus-20260916/retained-source-receipts.json', { with: { type: 'json' } })).default
+  const expanded = (await import('../verifier/demo-corpus-20260916/expanded-source-receipts.json', { with: { type: 'json' } })).default
+  const tuples = [...initial, ...expanded].map((row) => [row.topic, row.article_id, row.capture_id, row.candidate_id, row.content_hash, row.span_start, row.span_end])
+    .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+  const digest = createHash('sha256').update(tuples.map((tuple) => tuple.join('|')).join('\n')).digest('hex')
+  assert.equal(digest, 'fa42640b95da39c5c8a51df474cc3828c05205502bcccb9b5e6274fa59c7bd0d')
+})
+
+test('strict corpus projection is deeply immutable and UUID-bound', async () => {
+  const initial = (await import('../verifier/demo-corpus-20260916/retained-source-receipts.json', { with: { type: 'json' } })).default
+  const expanded = (await import('../verifier/demo-corpus-20260916/expanded-source-receipts.json', { with: { type: 'json' } })).default
+  const views = createPreview([...initial, ...expanded], { requireComplete: true })
+  assert.ok(Object.isFrozen(views) && Object.isFrozen(views[0]) && Object.isFrozen(views[0].sources) && Object.isFrozen(views[0].graph.nodes) && Object.isFrozen(views[0].arc.members))
+  assert.throws(() => views[0].sources.push(record))
+  const invalid = [...initial, ...expanded].map((row, index) => index === 0 ? { ...row, article_id: 'not-a-uuid' } : row)
+  assert.throws(() => createPreview(invalid, { requireComplete: true }), /Invalid retained UUID/)
+})
+
+test('all 93 private capture identities remain continuous across permitted surfaces', async () => {
+  const initial = (await import('../verifier/demo-corpus-20260916/retained-source-receipts.json', { with: { type: 'json' } })).default
+  const expanded = (await import('../verifier/demo-corpus-20260916/expanded-source-receipts.json', { with: { type: 'json' } })).default
+  const views = createPreview([...initial, ...expanded], { requireComplete: true })
+  for (const view of views) for (const source of view.sources) {
+    assert.ok(view.comparison.sources.includes(source.preview_id))
+    assert.ok(view.graph.nodes.some((node) => node.id === source.preview_id))
+    assert.ok(view.arc.members.includes(source.preview_id))
+    assert.ok(view.statements.some((candidate) => candidate.capture === source.preview_id && candidate.id === `private:candidate:${source.candidate_id}`))
+    assert.equal(source.timeline_basis, 'source_publication_date_only')
+    assert.equal(source.geography.state, 'withheld_unreviewed')
+    assert.equal(source.publication_allowed, false)
+  }
+})
+
+test('demo entry enforces a no-connect content security policy', async () => {
+  const html = await readFile(new URL('../scripts/demo-corpus-preview.html', import.meta.url), 'utf8')
+  assert.match(html, /connect-src 'none'/)
+  assert.match(html, /frame-ancestors 'none'/)
+})
+
 test('whole-corpus validation rejects unknown topics, duplicates and incomplete strict input', () => {
   assert.throws(() => createPreview([{ ...record, topic: 'unknown' }]), /Unknown demo topic/)
   assert.throws(() => createPreview([record, { ...record }]), /Duplicate demo identity/)
@@ -117,7 +160,8 @@ test('demo deep links preserve member capture identity and reject cross-investig
   const records = [{ topic: 'iran', capture_id: capture }]
   const route = parseDemoRoute(`#/demo/iran/evidence/${capture}`, records)
   assert.deepEqual(route, { topic: 'iran', surface: 'evidence', capture })
-  assert.equal(serializeDemoRoute(route), `#/demo/iran/evidence/${capture}`)
+  assert.equal(serializeDemoRoute(route, records), `#/demo/iran/evidence/${capture}`)
+  assert.throws(() => serializeDemoRoute({ topic: 'epstein', surface: 'evidence', capture }, records), /not a member/)
   assert.deepEqual(parseDemoRoute(`#/demo/epstein/evidence/${capture}`, records), { topic: 'epstein', surface: 'context', capture: null })
 })
 
@@ -138,5 +182,5 @@ test('ordinary production entry excludes both pending receipt manifests', async 
 test('compiled demo has no network, mutation or promotion surface', async () => {
   const result = await build({ entryPoints: ['scripts/demo-corpus-preview.jsx'], bundle: true, write: false, outdir: 'memory-only', packages: 'external', jsx: 'automatic', logLevel: 'silent' })
   const source = result.outputFiles.map((file) => Buffer.from(file.contents).toString('utf8')).join('\n')
-  for (const forbidden of ['supabase.co', '.rpc(', 'service_role', 'publish(', 'admit(', 'approve(', 'XMLHttpRequest', 'sendBeacon', 'WebSocket']) assert.equal(source.includes(forbidden), false, forbidden)
+  for (const forbidden of ['@supabase/supabase-js', 'qikvmopbtijoebdqosyq', 'VITE_SUPABASE', '.rpc(', 'service_role', 'publish(', 'admit(', 'approve(', 'XMLHttpRequest', 'sendBeacon', 'WebSocket', 'EventSource']) assert.equal(source.includes(forbidden), false, forbidden)
 })

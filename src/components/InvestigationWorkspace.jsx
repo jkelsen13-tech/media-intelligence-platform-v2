@@ -25,9 +25,9 @@ import {
   MISSING_EVIDENCE_GUIDANCE,
   WORKSPACE_TAB_VIEWS,
   handleWorkspaceDrawerKeyDown,
+  investigationContextDomProps,
   restoreWorkspaceDrawerFocus,
-} from '../lib/workspacePresentation'
-import { investigationContextDomProps } from '../lib/investigationContext'
+} from '../lib/workspaceShell'
 import '../styles/workspace.css'
 import WorkspaceScrollControl from './WorkspaceScrollControl'
 
