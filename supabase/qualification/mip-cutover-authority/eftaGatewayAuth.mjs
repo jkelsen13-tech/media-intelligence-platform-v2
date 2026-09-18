@@ -58,7 +58,7 @@ export function createEftaGatewayAuthority(deps){
  if(deps.issuer!=='https://qikvmopbtijoebdqosyq.supabase.co/auth/v1'||deps.audience!=='authenticated'||typeof deps.kid!=='string'||!deps.kid
   ||typeof deps.runtime!=='string'||!deps.runtime) throw Error('efta_gateway_unconfigured');
  const now=typeof deps.now==='function'?deps.now:()=>Math.floor(Date.now()/1000);
- return Object.freeze({async invoke(request,operation,buildArgs){
+ async function governedInvoke(request,operation,buildArgs){
   const spec=EFTA_RPC_ALLOWLIST[operation];
   if(!spec||typeof buildArgs!=='function') denied();
   const raw=bearer(request),verified=await verifyAccessToken(raw);
@@ -101,6 +101,9 @@ export function createEftaGatewayAuthority(deps){
    }));
   } catch {denied();
   } finally {await broker.close();}
+ }
+ return Object.freeze({async invoke(...args){
+  try{return await governedInvoke(...args)}catch{denied()}
  }});
 }
 

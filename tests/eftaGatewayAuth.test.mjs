@@ -98,3 +98,16 @@ test('broker is closed when exact invocation fails',async()=>{
  assert.equal(closed,true);
 });
 
+test('all dependency and close failures are externally normalized',async()=>{
+ for(const deps of [
+  {validateLiveSession:async()=>{throw Error('session-database-secret')}},
+  {lookupAssignment:async()=>{throw Error('assignment-database-secret')}},
+  {openBrokerSession:async()=>{throw Error('credential-secret')}}
+ ]){
+  const f=fixture({deps});
+  await assert.rejects(f.authority.invoke(req(),'private_read',()=>[]),/^Error: efta_gateway_denied$/);
+ }
+ const f=fixture({broker:{close:async()=>{throw Error('close-database-secret')}}});
+ await assert.rejects(f.authority.invoke(req(),'private_read',()=>[]),/^Error: efta_gateway_denied$/);
+});
+
