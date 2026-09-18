@@ -195,6 +195,10 @@ grant select on mip_identity.efta_authority_assignment_versions,mip_identity.eft
 grant select on comparison_qualification.principal_sessions to mip_efta_auth_session_owner_v1;
 grant execute on function comparison_qualification.argument_digest(jsonb) to mip_efta_auth_session_owner_v1;
 grant select(id,user_id) on auth.sessions to mip_efta_auth_session_owner_v1;
+-- PostgreSQL row-locking clauses require UPDATE privilege even when the function
+-- only reads.  Limit that technical privilege to the immutable session key and
+-- keep it inside this NOLOGIN, non-membership definer role.
+grant update(id) on auth.sessions to mip_efta_auth_session_owner_v1;
 create policy efta_auth_assignment_versions on mip_identity.efta_authority_assignment_versions
  for select to mip_efta_auth_session_owner_v1 using(scope='efta-bounded-demo-v1' and database_principal like 'mip_efta_%');
 create policy efta_auth_assignment_heads on mip_identity.efta_authority_assignment_heads

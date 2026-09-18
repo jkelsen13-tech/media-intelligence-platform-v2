@@ -324,6 +324,11 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
             self.assertEqual(self.admin(f"select has_table_privilege({q(role)},'auth.sessions','select')"),"f")
         self.assertEqual(self.admin(f"select has_function_privilege('mip_efta_authenticator_v1',{q(signature)},'execute')"),"t")
         self.assertEqual(self.admin("select has_table_privilege('mip_efta_authenticator_v1','auth.sessions','select')"),"f")
+        self.assertEqual(self.admin("select has_column_privilege('mip_efta_auth_session_owner_v1','auth.sessions','id','update')"),"t")
+        self.assertEqual(self.admin("select has_column_privilege('mip_efta_auth_session_owner_v1','auth.sessions','user_id','update')"),"f")
+        for role in ("public","anon","authenticated","service_role","mip_efta_authenticator_v1",
+                     "mip_efta_reviewer_v1","mip_efta_admitter_v1","mip_efta_private_reader_v1"):
+            self.assertEqual(self.admin(f"select has_table_privilege({q(role)},'auth.sessions','update')"),"f")
         s=self.session();s.execute("set role mip_efta_reviewer_v1;")
         with self.assertRaisesRegex(RuntimeError,"efta_live_authentication_required"):
             s.execute(self.resolution_call(str(uuid.uuid4())))
