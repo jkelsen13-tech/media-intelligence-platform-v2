@@ -1,0 +1,59 @@
+{
+  "contract": "efta-runtime-auth-remediation-qualification-v1",
+  "date": "2026-09-18",
+  "inspection_anchor": "a7f5c5d33ce621dc37013b34410c42f3dee96c39",
+  "inspection_anchor_tree": "98f9929f3088b5d23ae9976307c2cdccbb5b085a",
+  "branch": "codex/mip-efta-runtime-auth-remediation-20260918",
+  "implementation_candidate": "797a7dfbb8b1b24a7a293f121328c8abbff55ac5",
+  "implementation_tree": "c730fc1af7bd5d298c0f1ccea004f5d96917a42b",
+  "effect": "bounded_nonproduction_remediation_and_qualification_only",
+  "production_authority": false,
+  "hosted_edge": {
+    "disposition": "rejected_for_efta_gateway",
+    "ambient_credentials_present": true,
+    "same_runtime_arbitrary_code_can_read": true,
+    "enforceable_per_function_isolation_demonstrated": false,
+    "reason": "Hosted functions receive privileged project environment values and no documented per-function suppression or inaccessible compartment was found."
+  },
+  "authentication_policy": {
+    "issuer": "https://qikvmopbtijoebdqosyq.supabase.co/auth/v1",
+    "audience": "authenticated",
+    "algorithm": "ES256",
+    "observed_kid_not_activated": "f11c0b62-e0f6-44fc-8663-75543b5a6f3d",
+    "observed_jwks_digest_not_activated": "b56db536c7562fcf2371d0f403caa24843db393648e54dc8c264c80549f92ea3",
+    "legacy_hs256": "rejected",
+    "subject_binding": "authenticated UUID sub",
+    "session_binding": "exact UUID session_id plus authoritative auth.sessions id/user_id row",
+    "revision_source": "server-derived and database-authoritative; never browser-supplied"
+  },
+  "transaction_contract": [
+    "exclusive connection",
+    "BEGIN",
+    "SET LOCAL ROLE mip_efta_authenticator_v1",
+    "assert exact live auth session and revision chain",
+    "SET LOCAL ROLE exact allowlisted EFTA operation role",
+    "invoke exactly one literal allowlisted EFTA RPC",
+    "COMMIT or guaranteed ROLLBACK"
+  ],
+  "migration_012_blob": "c655c6e3e54da33b958f949ed32765a7305012b5",
+  "code_blobs": {
+    "supabase/qualification/mip-cutover-authority/eftaBrokerTransaction.mjs": "41277ba7673c0ab10ecfb6d5cad090b314165894",
+    "supabase/qualification/mip-cutover-authority/eftaGatewayAuth.mjs": "8ea8c98fd556ea29689d05c2952406d1f5fe1ec8",
+    "supabase/qualification/mip-cutover-authority/eftaStrictJwt.mjs": "c9252db6c2cacf3082f98bac1e2bcef2665defee",
+    "verifier/eftaPostgresQualification.py": "3f05ea6c4d37f560c940acd06dad0cfc33947445"
+  },
+  "rights_privacy": {
+    "cell_count": 42,
+    "state": "evidence_required_unapproved",
+    "rights_approver": null,
+    "privacy_approver": null
+  },
+  "deferred_subjects": {
+    "admitter": null,
+    "private_reader": null
+  },
+  "secondary_protection": "proposed backup TOTP under separate custody plus no offline database-password copy; not activated",
+  "credential_rotation": "proposed day-30/day-32 zero-standing-overlap; provisional pending isolated runtime qualification",
+  "remaining_critical_blocker": "No existing authorized persistent runtime has demonstrated sole possession of only the narrow EFTA broker credential.",
+  "next_owner_boundary": "Authorize creation and execution of the specified disposable isolated gateway-runtime qualification, or select and authorize a dedicated external runtime preflight; neither is authorized by this record."
+}

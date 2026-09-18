@@ -11,6 +11,8 @@ on:
       - 'tests/efta*.test.mjs'
       - 'verifier/eftaPostgresQualification.py'
       - 'verifier/efta-postgres-qualification-manifest.json'
+      - 'verifier/efta-runtime-auth-remediation-2026-09-18/**'
+      - 'docs/EFTA_RUNTIME_AUTH_REMEDIATION_2026-09-18.md'
       - '.github/workflows/efta-postgres-qualification.yml'
   pull_request:
     paths:
@@ -20,6 +22,8 @@ on:
       - 'tests/efta*.test.mjs'
       - 'verifier/eftaPostgresQualification.py'
       - 'verifier/efta-postgres-qualification-manifest.json'
+      - 'verifier/efta-runtime-auth-remediation-2026-09-18/**'
+      - 'docs/EFTA_RUNTIME_AUTH_REMEDIATION_2026-09-18.md'
       - '.github/workflows/efta-postgres-qualification.yml'
   workflow_dispatch:
 permissions:
