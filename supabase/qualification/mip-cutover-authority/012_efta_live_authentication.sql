@@ -199,7 +199,7 @@ create trigger immutable_auth_use before update or delete on mip_identity.efta_l
 create trigger auth_policy_retirement before insert or update or delete on mip_identity.efta_authentication_policy_heads for each row execute function mip_identity.guard_revision_reuse();
 create trigger auth_policy_fence before insert or update or delete on mip_identity.efta_authentication_policy_heads for each statement execute function mip_cutover_authority.fence_publication_write();
 
-grant usage on schema mip_identity,comparison_qualification,auth to mip_efta_auth_session_owner_v1;
+grant usage on schema mip_identity,comparison_qualification,auth,mip_cutover_authority to mip_efta_auth_session_owner_v1;
 grant select on mip_identity.efta_authority_assignment_versions,mip_identity.efta_authority_assignment_heads,
  mip_identity.sessions,mip_identity.mapping_versions,mip_identity.key_versions,mip_identity.key_heads,
  mip_identity.efta_gateway_credential_versions,mip_identity.efta_gateway_credential_heads to mip_efta_auth_session_owner_v1;
