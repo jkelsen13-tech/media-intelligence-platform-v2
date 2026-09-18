@@ -377,8 +377,8 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
         holder=self.session();holder.execute("reset role;begin;")
         holder.execute("update mip_identity.efta_authority_assignment_heads set active=false "
                        f"where subject_id={q(SUBJECT)} and database_principal={q(ROLES[0])};")
-        waiter=self.session();begin_authenticated(waiter,ROLES[0])
-        waiter.start(self.resolution_call(str(uuid.uuid4())))
+        waiter=self.session();waiter.execute("reset role;begin;set role mip_efta_authenticator_v1;")
+        waiter.start(live_assert_sql(ROLES[0]))
         self.blocked(waiter,holder);holder.execute("commit;")
         with self.assertRaisesRegex(RuntimeError,"efta_assignment_not_authorized"):waiter.finish()
         self.assertEqual(self.admin("select count(*) from mip_identity.efta_identity_resolutions"),"0")
@@ -399,10 +399,8 @@ select revision,gateway_id,fingerprint,predecessor,state,'owner_approved',repeat
  valid_from,valid_until,clock_timestamp() from x;
 update mip_identity.efta_gateway_credential_heads set revision={q(new_credential)}
 where gateway_id='efta-private-gateway-v1';""")
-        waiter=self.session();begin_authenticated(waiter,ROLES[2])
-        request=str(uuid.uuid4())
-        waiter.start(f"select mip_identity.efta_private_read({q(request)},{q(SESSIONS[ROLES[2]])},"
-                     f"{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[2]])});")
+        waiter=self.session();waiter.execute("reset role;begin;set role mip_efta_authenticator_v1;")
+        waiter.start(live_assert_sql(ROLES[2]))
         self.blocked(waiter,holder);holder.execute("commit;")
         with self.assertRaisesRegex(RuntimeError,"efta_gateway_credential_not_authorized"):waiter.finish()
         self.assertEqual(self.admin("select count(*) from mip_identity.efta_private_reads"),"0")
@@ -502,9 +500,8 @@ commit;""")
         begin_authenticated(a,ROLES[0])
         one=str(uuid.uuid4());two=str(uuid.uuid4())
         a.execute(f"select mip_identity.efta_decide({q(one)},{q(src['candidate_id'])},'approve',null,{review}::jsonb,{q(SESSIONS[ROLES[0]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[0]])});")
-        b=self.session();b.execute("set lock_timeout='500ms';");begin_authenticated(b,ROLES[0])
         with self.assertRaisesRegex(RuntimeError,"lock timeout"):
-            b.execute(f"select mip_identity.efta_decide({q(two)},{q(src['candidate_id'])},'approve',null,{review}::jsonb,{q(SESSIONS[ROLES[0]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[0]])});")
+            b=self.session();b.execute("set lock_timeout='500ms';");begin_authenticated(b,ROLES[0])
         a.execute("commit;")
         loser=self.session();begin_authenticated(loser,ROLES[0])
         with self.assertRaisesRegex(RuntimeError,"predecessor_conflict"):
