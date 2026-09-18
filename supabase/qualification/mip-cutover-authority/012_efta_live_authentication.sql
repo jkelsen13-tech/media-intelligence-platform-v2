@@ -195,6 +195,24 @@ grant select on mip_identity.efta_authority_assignment_versions,mip_identity.eft
 grant select on comparison_qualification.principal_sessions to mip_efta_auth_session_owner_v1;
 grant execute on function comparison_qualification.argument_digest(jsonb) to mip_efta_auth_session_owner_v1;
 grant select(id,user_id) on auth.sessions to mip_efta_auth_session_owner_v1;
+create policy efta_auth_assignment_versions on mip_identity.efta_authority_assignment_versions
+ for select to mip_efta_auth_session_owner_v1 using(scope='efta-bounded-demo-v1' and database_principal like 'mip_efta_%');
+create policy efta_auth_assignment_heads on mip_identity.efta_authority_assignment_heads
+ for select to mip_efta_auth_session_owner_v1 using(database_principal like 'mip_efta_%');
+create policy efta_auth_sessions on mip_identity.sessions for select to mip_efta_auth_session_owner_v1 using(
+ mapping_revision in(select revision from mip_identity.mapping_versions where principal like 'mip_efta_%'));
+create policy efta_auth_mapping_versions on mip_identity.mapping_versions
+ for select to mip_efta_auth_session_owner_v1 using(principal like 'mip_efta_%');
+create policy efta_auth_key_versions on mip_identity.key_versions for select to mip_efta_auth_session_owner_v1 using(
+ revision in(select key_revision from mip_identity.mapping_versions where principal like 'mip_efta_%'));
+create policy efta_auth_key_heads on mip_identity.key_heads for select to mip_efta_auth_session_owner_v1 using(
+ revision in(select key_revision from mip_identity.mapping_versions where principal like 'mip_efta_%'));
+create policy efta_auth_gateway_versions on mip_identity.efta_gateway_credential_versions
+ for select to mip_efta_auth_session_owner_v1 using(true);
+create policy efta_auth_gateway_heads on mip_identity.efta_gateway_credential_heads
+ for select to mip_efta_auth_session_owner_v1 using(true);
+create policy efta_auth_principal_sessions on comparison_qualification.principal_sessions
+ for select to mip_efta_auth_session_owner_v1 using(principal like 'mip_efta_%');
 alter function mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text) owner to mip_efta_auth_session_owner_v1;
 revoke all on function mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text)
  from public,anon,authenticated,service_role,mip_factual_reviewer_v3,mip_projection_publisher_v1,
