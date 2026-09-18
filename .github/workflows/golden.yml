@@ -22,6 +22,8 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - name: Build isolated pending-corpus demo
+        run: npm run build:demo
       - name: Dependency audit (triage report)
         if: matrix.node == 24
         continue-on-error: true
