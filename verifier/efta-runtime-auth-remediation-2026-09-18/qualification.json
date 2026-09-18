@@ -4,8 +4,8 @@
   "inspection_anchor": "a7f5c5d33ce621dc37013b34410c42f3dee96c39",
   "inspection_anchor_tree": "98f9929f3088b5d23ae9976307c2cdccbb5b085a",
   "branch": "codex/mip-efta-runtime-auth-remediation-20260918",
-  "implementation_candidate": "2bede84a132a479f671ae7403b649de6012441bd",
-  "implementation_tree": "357c96f87807a0925008ffae9b8b9fb8abd823b1",
+  "implementation_candidate": "676fc3198241cdbbd80f61691e154cd31c016b53",
+  "implementation_tree": "0307196b722215136dda8c3ae04ac56fb87f8a25",
   "effect": "bounded_nonproduction_remediation_and_qualification_only",
   "production_authority": false,
   "hosted_edge": {
@@ -58,7 +58,7 @@
   "migration_012_blob": "2df5b168d35bdfc0ee0ce2f5a6b82301f7e6d100",
   "code_blobs": {
     "supabase/qualification/mip-cutover-authority/eftaBrokerTransaction.mjs": "a57064e9126855d2a488be36d734e2511156410c",
-    "supabase/qualification/mip-cutover-authority/eftaGatewayAuth.mjs": "444ed8bedd3f3b1b33145cb46a6add9da7731bc2",
+    "supabase/qualification/mip-cutover-authority/eftaGatewayAuth.mjs": "71bdfccc095abab7467d0139b2660dbbc77c5e60",
     "supabase/qualification/mip-cutover-authority/eftaStrictJwt.mjs": "768193a9554f57cefa07aaefc3647e83e4983ddc",
     "verifier/eftaPostgresQualification.py": "ccb1bed16dcbfd999a6e0ca55c0528cd59391288"
   },
@@ -75,17 +75,17 @@
   "secondary_protection": "proposed backup TOTP under separate custody plus no offline database-password copy; not activated",
   "credential_rotation": "proposed day-30/day-32 zero-standing-overlap; provisional pending isolated runtime qualification",
   "candidate_qualification": {
-    "sha": "2bede84a132a479f671ae7403b649de6012441bd",
-    "postgresql_run": 35308954286,
+    "sha": "676fc3198241cdbbd80f61691e154cd31c016b53",
+    "postgresql_run": 35309489244,
     "postgresql": "17.6",
     "postgresql_tests": {"run": 16, "pass": 16, "fail": 0, "errors": 0},
     "repository_tests": {"run": 2098, "pass": 2098, "fail": 0, "cancelled": 0, "skipped": 0, "todo": 0},
     "production_build": "pass",
     "production_dependency_audit": "pass_zero_reported_vulnerabilities",
-    "golden_run": 35308954284,
+    "golden_run": 35309489270,
     "golden_node_22": "pass",
     "golden_node_24": "pass",
-    "focused_gateway_jwt_transaction_tests": {"run": 13, "pass": 13, "fail": 0},
+    "focused_gateway_jwt_transaction_tests": {"run": 14, "pass": 14, "fail": 0},
     "scope": "disposable synthetic mechanism-only; not persistent-runtime or managed-live-schema qualification"
   },
   "remaining_critical_blocker": "No existing authorized persistent runtime has demonstrated sole possession of only the narrow EFTA broker credential; the disposable fixture also does not qualify managed live auth.sessions owner/RLS/ACL compatibility.",

@@ -6,9 +6,9 @@
 
 **Remediation branch:** `codex/mip-efta-runtime-auth-remediation-20260918`
 
-**Implementation candidate under exact-head qualification:** `2bede84a132a479f671ae7403b649de6012441bd`
+**Implementation candidate under exact-head qualification:** `676fc3198241cdbbd80f61691e154cd31c016b53`
 
-**Candidate tree:** `357c96f87807a0925008ffae9b8b9fb8abd823b1`
+**Candidate tree:** `0307196b722215136dda8c3ae04ac56fb87f8a25`
 
 **Effect:** bounded non-production remediation and qualification only.
 
@@ -87,16 +87,16 @@ The proposed backup-TOTP-under-separate-custody and no-offline-database-password
 
 ## Exact candidate qualification
 
-At implementation SHA `2bede84a132a479f671ae7403b649de6012441bd`:
+At implementation SHA `676fc3198241cdbbd80f61691e154cd31c016b53`:
 
-- EFTA isolated PostgreSQL 17 run `35308954286` passed. PostgreSQL `17.6` applied exact migrations 001–012, then passed 16/16 ACL, RLS, receipt, replay, successor/retirement and concurrency tests with zero failures/errors.
+- EFTA isolated PostgreSQL 17 run `35309489244` passed. PostgreSQL `17.6` applied exact migrations 001–012, then passed 16/16 ACL, RLS, receipt, replay, successor/retirement and concurrency tests with zero failures/errors.
 - The same run passed the complete repository suite: 2,098/2,098, zero failed/cancelled/skipped/todo.
 - The production build passed.
 - `npm audit --omit=dev` passed with zero reported vulnerabilities.
-- Golden regression run `35308954284` passed on both Node 22 and Node 24.
-- Focused gateway/JWT/transaction tests passed locally: 13/13.
+- Golden regression run `35309489270` passed on both Node 22 and Node 24.
+- Focused gateway/JWT/transaction tests passed locally: 14/14.
 
-The PostgreSQL fixture is disposable, synthetic and mechanism-only. It contains no owner authorization, production data, credential, token, admission or release. It qualifies the code and SQL mechanism, not a persistent runtime, managed Supabase `auth.sessions` installation compatibility, secret propagation, production network behavior, or a real transaction-pooler driver configured with TLS, one exclusive connection, `max=1` and prepared statements disabled. The gateway normalizes broker/database failures; a future HTTP adapter must preserve that uniform external denial.
+The PostgreSQL fixture is disposable, synthetic and mechanism-only. It contains no owner authorization, production data, credential, token, admission or release. It qualifies the code and SQL mechanism, not a persistent runtime, managed Supabase `auth.sessions` installation compatibility, secret propagation, production network behavior, or a real transaction-pooler driver configured with TLS, one exclusive connection, `max=1` and prepared statements disabled. The gateway normalizes verification, lookup, broker-open, invocation and close failures to one external denial; a future HTTP adapter must preserve that boundary.
 
 ## Remaining blocker and owner decision
 
