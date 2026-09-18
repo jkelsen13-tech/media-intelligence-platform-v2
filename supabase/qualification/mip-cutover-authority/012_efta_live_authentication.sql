@@ -193,6 +193,7 @@ grant select on mip_identity.efta_authority_assignment_versions,mip_identity.eft
  mip_identity.sessions,mip_identity.mapping_versions,mip_identity.key_versions,mip_identity.key_heads,
  mip_identity.efta_gateway_credential_versions,mip_identity.efta_gateway_credential_heads to mip_efta_auth_session_owner_v1;
 grant select on comparison_qualification.principal_sessions to mip_efta_auth_session_owner_v1;
+grant execute on function comparison_qualification.argument_digest(jsonb) to mip_efta_auth_session_owner_v1;
 grant select(id,user_id) on auth.sessions to mip_efta_auth_session_owner_v1;
 alter function mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text) owner to mip_efta_auth_session_owner_v1;
 revoke all on function mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text)
