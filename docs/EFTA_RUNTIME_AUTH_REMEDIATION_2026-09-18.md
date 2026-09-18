@@ -1,10 +1,15 @@
 # EFTA runtime and live-authentication remediation packet
 
-**Date:** 2026-09-18  
-**Inspection anchor:** `a7f5c5d33ce621dc37013b34410c42f3dee96c39`  
-**Remediation branch:** `codex/mip-efta-runtime-auth-remediation-20260918`  
-**Qualified implementation candidate:** `797a7dfbb8b1b24a7a293f121328c8abbff55ac5`  
-**Candidate tree:** `c730fc1af7bd5d298c0f1ccea004f5d96917a42b`  
+**Date:** 2026-09-18
+
+**Inspection anchor:** `a7f5c5d33ce621dc37013b34410c42f3dee96c39`
+
+**Remediation branch:** `codex/mip-efta-runtime-auth-remediation-20260918`
+
+**Implementation candidate under exact-head qualification:** `2bede84a132a479f671ae7403b649de6012441bd`
+
+**Candidate tree:** `357c96f87807a0925008ffae9b8b9fb8abd823b1`
+
 **Effect:** bounded non-production remediation and qualification only.
 
 This packet authorizes no deployment, infrastructure installation, production database change, credential or assignment creation, MFA or Supabase configuration change, grant, identity-head activation, admission, release, publication, merge, or public release.
@@ -37,13 +42,13 @@ The minimum future non-production runtime qualification is a separate gateway co
 
 ## Authentication and live-session architecture
 
-`eftaStrictJwt.mjs` enforces a compact-token size/shape limit, exact `ES256`, exact authorized KID and canonical JWKS-set digest, P-256 signature validation, exact issuer `https://qikvmopbtijoebdqosyq.supabase.co/auth/v1`, scalar audience `authenticated`, `role=authenticated`, UUID `sub`, UUID `session_id`, non-anonymous identity, and valid `iat`/`nbf`/`exp`. It rejects HS256, alternate algorithms, attacker-supplied key URLs/material and unexpected key-set lifecycle state. Authentication, key and token-binding revisions are server-derived.
+`eftaStrictJwt.mjs` enforces a compact-token size/shape limit, exact `ES256`, exact authorized KID and canonical JWKS-set digest, P-256 signature validation, exact issuer `https://qikvmopbtijoebdqosyq.supabase.co/auth/v1`, scalar audience `authenticated`, `role=authenticated`, UUID `sub`, UUID `session_id`, `is_anonymous=false`, and valid `iat`/`nbf`/`exp`. It rejects HS256, alternate algorithms, JOSE `crit`, attacker-supplied key URLs/material and unexpected key-set lifecycle state. Authentication, key and token-binding revisions are server-derived.
 
-The currently observed, not activated, key policy fixture is KID `f11c0b62-e0f6-44fc-8663-75543b5a6f3d` with canonical public-JWKS digest `b56db536c7562fcf2371d0f403caa24843db393648e54dc8c264c80549f92ea3`.
+The currently observed, not activated, key policy fixture is KID `f11c0b62-e0f6-44fc-8663-75543b5a6f3d` with canonical public-JWKS digest `b56db536c7562fcf2371d0f403caa24843db393648e54dc8c264c80549f92ea3`. The machine-readable packet preserves the public JWK, endpoint and observation time so the digest is independently reproducible; this observation is not an activation or owner authorization.
 
 `eftaBrokerTransaction.mjs` holds one exclusive connection and one explicit transaction: `BEGIN`; `SET LOCAL ROLE mip_efta_authenticator_v1`; invoke the exact live-session assertion; `SET LOCAL ROLE` to the exact allowlisted EFTA operation role; invoke exactly one literal allowlisted EFTA RPC; `COMMIT`, otherwise guaranteed `ROLLBACK` and connection discard on uncertainty.
 
-Migration `012_efta_live_authentication.sql` locks and validates the exact `(auth.sessions.id, auth.sessions.user_id)` row before every governed operation or sensitive read, binds the live result to the exact JWT subject/session, authentication policy, assignment, mapping, signing key, broker credential and broker session, writes an append-only transaction receipt, and permits one consumption in that same transaction. Missing, revoked, mismatched, expired, superseded or stale state fails closed.
+Migration `012_efta_live_authentication.sql` first locks the same global authority fence used by every policy/head retirement and governed EFTA operation, then locks and validates the exact `(auth.sessions.id, auth.sessions.user_id)` row. It compares the verifier-observed issuer, audience, algorithm, KID, key revision and JWKS digest to the current approved database policy under that fence, and binds those fields plus the JWT subject/session, assignment, mapping, broker credential and broker session into the durable receipt. It writes one append-only receipt per transaction and permits one consumption in that same transaction. Missing, revoked, mismatched, expired, superseded or stale state fails closed.
 
 ## Privilege matrix
 
@@ -67,7 +72,7 @@ The tested order is:
 
 `credential successor → reviewer-assignment/head successor → authentication-policy/mapping successor → fresh authentication revision → fresh broker session`
 
-Each predecessor remains append-only historical evidence but is explicitly retired. A stale predecessor cannot satisfy current heads. A successor broker session cannot bind stale credentials, assignments, mappings or authentication policy. In-flight work uses row locks: if the governed transaction linearizes first, retirement waits; if retirement or session deletion commits first, the stale action fails. A rollback never re-points a head to a retired revision; it creates a fresh corrective successor with its own receipt.
+Each predecessor remains append-only historical evidence but is explicitly retired. A stale predecessor cannot satisfy current heads. Versions may be prepared in dependency order, but activation follows credential head, reviewer-assignment head, authentication/mapping heads, then fresh broker session. A successor broker session cannot bind stale credentials, assignments, mappings or authentication policy. In-flight work uses the common authority fence and row locks: if the governed transaction linearizes first, retirement waits; if retirement or session deletion commits first, the stale action fails. A rollback never re-points a head to a retired revision; it creates a fresh corrective successor with its own receipt.
 
 The proposed backup-TOTP-under-separate-custody and no-offline-database-password-copy path remains unactivated. The day-30/day-32 zero-standing-overlap policy remains provisional until the future selected runtime demonstrates secret propagation, session termination, successor activation, failure recovery and rollback behavior.
 
@@ -80,7 +85,19 @@ The proposed backup-TOTP-under-separate-custody and no-offline-database-password
 - Custodian MFA remains a prerequisite; no MFA state was changed.
 - No credential, broker LOGIN, membership, secret, grant or production identity head was created.
 
+## Exact candidate qualification
+
+At implementation SHA `2bede84a132a479f671ae7403b649de6012441bd`:
+
+- EFTA isolated PostgreSQL 17 run `35308954286` passed. PostgreSQL `17.6` applied exact migrations 001–012, then passed 16/16 ACL, RLS, receipt, replay, successor/retirement and concurrency tests with zero failures/errors.
+- The same run passed the complete repository suite: 2,098/2,098, zero failed/cancelled/skipped/todo.
+- The production build passed.
+- `npm audit --omit=dev` passed with zero reported vulnerabilities.
+- Golden regression run `35308954284` passed on both Node 22 and Node 24.
+- Focused gateway/JWT/transaction tests passed locally: 13/13.
+
+The PostgreSQL fixture is disposable, synthetic and mechanism-only. It contains no owner authorization, production data, credential, token, admission or release. It qualifies the code and SQL mechanism, not a persistent runtime, managed Supabase `auth.sessions` installation compatibility, secret propagation, production network behavior, or a real transaction-pooler driver configured with TLS, one exclusive connection, `max=1` and prepared statements disabled. The gateway normalizes broker/database failures; a future HTTP adapter must preserve that uniform external denial.
+
 ## Remaining blocker and owner decision
 
-The code-level authentication and authority blockers are remediated for the disposable PostgreSQL mechanism. The unresolved critical boundary is runtime isolation: no existing authorized persistent runtime has demonstrated that it possesses only the narrow EFTA broker credential. A separately authorized isolated runtime qualification is required before production suitability can be claimed. Rights/privacy authorities and all 42 cells remain later owner gates for real-source operations; they are not silently resolved by this technical remediation.
-
+The code-level authentication and authority blockers are remediated for the disposable PostgreSQL mechanism. The unresolved critical boundary is runtime isolation: no existing authorized persistent runtime has demonstrated that it possesses only the narrow EFTA broker credential. A separately authorized isolated runtime qualification is required before production suitability can be claimed. The disposable fixture also does not establish managed-production `auth.sessions` owner/RLS/ACL compatibility; that exact live-schema installation preflight remains an owner-gated read-only qualification step. Rights/privacy authorities and all 42 cells remain later owner gates for real-source operations; they are not silently resolved by this technical remediation.
