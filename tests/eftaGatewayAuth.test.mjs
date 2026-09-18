@@ -94,7 +94,7 @@ test('missing or malformed bearer and arbitrary operations are denied',async()=>
 
 test('broker is closed when exact invocation fails',async()=>{
  let closed=false;const f=fixture({broker:{invokeExact:async()=>{throw Error('database-secret')},close:async()=>{closed=true}}});
- await assert.rejects(f.authority.invoke(req(),'private_read',()=>[]),/database-secret/);
+ await assert.rejects(f.authority.invoke(req(),'private_read',()=>[]),/efta_gateway_denied/);
  assert.equal(closed,true);
 });
 

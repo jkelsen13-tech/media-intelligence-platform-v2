@@ -99,6 +99,7 @@ export function createEftaGatewayAuthority(deps){
     credential_revision:assignment.credential_revision,token_binding_hash:verified.token_binding_hash,
     database_principal:spec.principal
    }));
+  } catch {denied();
   } finally {await broker.close();}
  }});
 }
