@@ -130,11 +130,15 @@ export function projectReceipt(receipt) {
 export function createPreview(records, { requireComplete = false } = {}) {
   if (!Array.isArray(records)) throw new Error('Demo corpus must be an array')
   if (records.some((record) => !TOPICS.includes(record?.topic))) throw new Error('Unknown demo topic')
-  for (const key of ['url', 'article_id', 'capture_id', 'candidate_id']) {
+  for (const key of ['capture_id', 'candidate_id']) {
     const values = records.map((record) => record[key])
     if (new Set(values).size !== values.length) throw new Error(`Duplicate demo identity: ${key}`)
   }
   if (requireComplete) {
+    for (const key of ['url', 'article_id']) {
+      const values = records.map((record) => record[key])
+      if (new Set(values).size !== values.length) throw new Error(`Duplicate bounded-corpus identity: ${key}`)
+    }
     const counts = Object.fromEntries(TOPICS.map((topic) => [topic, records.filter((record) => record.topic === topic).length]))
     if (records.length !== 93 || counts.iran !== 30 || counts.epstein !== 30 || counts.project2025 !== 33) throw new Error('Incomplete bounded demo corpus')
   }
