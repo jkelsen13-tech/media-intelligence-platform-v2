@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { build } from 'esbuild'
-import { exactSpan, canonicalUrl, analyzeSources, resolveIdentity, createPreview, nearDuplicates, validatePrivateRelation, syntheticProjection, projectReceipt } from '../scripts/demoCorpus.mjs'
+import { exactSpan, canonicalUrl, analyzeSources, resolveIdentity, createPreview, nearDuplicates, validatePrivateRelation, syntheticProjection, projectReceipt, parseDemoRoute, serializeDemoRoute } from '../scripts/demoCorpus.mjs'
 const record = { topic: 'epstein', url: 'https://example.org/a', title: 'Oversight statement', article_id: 'a', capture_id: 'c', candidate_id: 'd', content_hash: 'a'.repeat(64), span_start: 0, span_end: 3, reader_state: 'pending_review', capture_state: 'pending', candidate_state: 'pending', semantic_kind: 'oversight_statement' }
 test('Unicode spans use code points and reject ambiguous or normalized substitutions', () => {
   assert.deepEqual(exactSpan('😀 Aé Z', 'Aé'), { span_start: 2, span_end: 4 })
@@ -92,9 +92,15 @@ test('explicit projection schema rejects canonical leakage and non-HTTPS URLs', 
 test('all retained receipts project to exact counts with no public identity', async () => {
   const initial = (await import('../verifier/demo-corpus-20260916/retained-source-receipts.json', { with: { type: 'json' } })).default
   const expanded = (await import('../verifier/demo-corpus-20260916/expanded-source-receipts.json', { with: { type: 'json' } })).default
-  const views = createPreview([...initial, ...expanded])
+  const views = createPreview([...initial, ...expanded], { requireComplete: true })
   assert.deepEqual(Object.fromEntries(views.map(v => [v.topic, v.sources.length])), { iran: 30, epstein: 30, project2025: 33 })
   assert.equal(views.flatMap(v => v.sources).every(s => s.publication_allowed === false && s.public_node_id === null && s.timeline_basis === 'source_publication_date_only'), true)
+})
+
+test('whole-corpus validation rejects unknown topics, duplicates and incomplete strict input', () => {
+  assert.throws(() => createPreview([{ ...record, topic: 'unknown' }]), /Unknown demo topic/)
+  assert.throws(() => createPreview([record, { ...record }]), /Duplicate demo identity/)
+  assert.throws(() => createPreview([record], { requireComplete: true }), /Incomplete bounded demo corpus/)
 })
 
 test('candidate, capture and article namespaces never collapse across surfaces', () => {
@@ -104,4 +110,33 @@ test('candidate, capture and article namespaces never collapse across surfaces',
   assert.equal(view.comparison.sources[0], `private:capture:${source.capture_id}`)
   assert.equal(view.arc.members[0], `private:capture:${source.capture_id}`)
   assert.equal(view.graph.edges.length, 0)
+})
+
+test('demo deep links preserve member capture identity and reject cross-investigation injection', () => {
+  const capture = '11fc9bc5-433b-4d32-ab14-72f9f16f6a27'
+  const records = [{ topic: 'iran', capture_id: capture }]
+  const route = parseDemoRoute(`#/demo/iran/evidence/${capture}`, records)
+  assert.deepEqual(route, { topic: 'iran', surface: 'evidence', capture })
+  assert.equal(serializeDemoRoute(route), `#/demo/iran/evidence/${capture}`)
+  assert.deepEqual(parseDemoRoute(`#/demo/epstein/evidence/${capture}`, records), { topic: 'epstein', surface: 'context', capture: null })
+})
+
+test('malformed, unknown, overlong and traversal-like demo routes fail closed', () => {
+  for (const hash of ['#/event/iran/graph', '#/demo/unknown/news', '#/demo/iran/publish', '#/demo/iran/news/not-a-uuid', '#/demo/iran/news/%E0%A4%A', `#/demo/iran/news/${'x'.repeat(300)}`, '#/demo/iran/news/id/extra']) {
+    const route = parseDemoRoute(hash, [])
+    assert.equal(route.capture, null)
+    assert.equal(route.surface === 'context' || route.topic === 'iran', true)
+  }
+})
+
+test('ordinary production entry excludes both pending receipt manifests', async () => {
+  const result = await build({ entryPoints: ['src/main.jsx'], bundle: true, write: false, outdir: 'memory-only', metafile: true, packages: 'external', jsx: 'automatic', logLevel: 'silent' })
+  const inputs = Object.keys(result.metafile.inputs)
+  assert.equal(inputs.some((path) => /demo-corpus-20260916|demoCorpus|demo-corpus-preview/i.test(path)), false)
+})
+
+test('compiled demo has no network, mutation or promotion surface', async () => {
+  const result = await build({ entryPoints: ['scripts/demo-corpus-preview.jsx'], bundle: true, write: false, outdir: 'memory-only', packages: 'external', jsx: 'automatic', logLevel: 'silent' })
+  const source = result.outputFiles.map((file) => Buffer.from(file.contents).toString('utf8')).join('\n')
+  for (const forbidden of ['supabase.co', '.rpc(', 'service_role', 'publish(', 'admit(', 'approve(', 'XMLHttpRequest', 'sendBeacon', 'WebSocket']) assert.equal(source.includes(forbidden), false, forbidden)
 })

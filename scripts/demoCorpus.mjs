@@ -1,5 +1,22 @@
 // Isolated corpus analysis. No backend client, credentials, or publication code.
 export const TOPICS = ['iran', 'epstein', 'project2025']
+export const DEMO_SURFACES = ['context', 'news', 'evidence', 'compare', 'graph', 'timeline', 'arc']
+export function parseDemoRoute(hash, records = []) {
+  const fallback = { topic: 'iran', surface: 'context', capture: null }
+  if (typeof hash !== 'string' || hash.length > 240 || /[\u0000-\u001f]/.test(hash)) return fallback
+  let parts
+  try { parts = hash.split('/').map(decodeURIComponent) } catch { return fallback }
+  const [, root, topic, surface, capture, ...extra] = parts
+  if (root !== 'demo' || !TOPICS.includes(topic) || !DEMO_SURFACES.includes(surface) || extra.length) return fallback
+  if (!capture) return { topic, surface, capture: null }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(capture)) return { topic, surface: 'context', capture: null }
+  const member = records.some((record) => record.topic === topic && record.capture_id === capture)
+  return member ? { topic, surface, capture } : { topic, surface: 'context', capture: null }
+}
+export function serializeDemoRoute({ topic, surface, capture = null }) {
+  if (!TOPICS.includes(topic) || !DEMO_SURFACES.includes(surface)) throw new Error('Invalid demo route')
+  return `#/demo/${topic}/${surface}${capture ? `/${encodeURIComponent(capture)}` : ''}`
+}
 export function exactSpan(text, excerpt) {
   const haystack = Array.from(text), needle = Array.from(excerpt)
   if (!needle.length) throw new Error('Empty evidence')
@@ -110,7 +127,17 @@ export function projectReceipt(receipt) {
     geography: Object.freeze({ state: 'withheld_unreviewed', causal_inference: false }) })
 }
 
-export function createPreview(records) {
+export function createPreview(records, { requireComplete = false } = {}) {
+  if (!Array.isArray(records)) throw new Error('Demo corpus must be an array')
+  if (records.some((record) => !TOPICS.includes(record?.topic))) throw new Error('Unknown demo topic')
+  for (const key of ['url', 'article_id', 'capture_id', 'candidate_id']) {
+    const values = records.map((record) => record[key])
+    if (new Set(values).size !== values.length) throw new Error(`Duplicate demo identity: ${key}`)
+  }
+  if (requireComplete) {
+    const counts = Object.fromEntries(TOPICS.map((topic) => [topic, records.filter((record) => record.topic === topic).length]))
+    if (records.length !== 93 || counts.iran !== 30 || counts.epstein !== 30 || counts.project2025 !== 33) throw new Error('Incomplete bounded demo corpus')
+  }
   return TOPICS.map(topic => {
     const sources = records.filter(r => r.topic === topic).map(projectReceipt)
     return { topic, sources, accounting: analyzeSources(sources),
@@ -121,6 +148,6 @@ export function createPreview(records) {
       dependencyGroups: [...new Set(sources.map(s => s.dependency_id).filter(Boolean))].map(id => ({ id, members: sources.filter(s => s.dependency_id === id).map(s => s.preview_id), interpretation: 'research_dependency_not_corroboration' })),
       synthetic: syntheticProjection(topic),
       arc: { id: `private:collection:${topic}`, type: 'research_collection', members: sources.map(s => s.preview_id) },
-      admission: { allowed: false, reason: 'Lane A unresolved; no authorized candidate promotion mechanism' } }
+      admission: { allowed: false, reason: 'No reviewed and authorized candidate-promotion operation exists for this demo projection' } }
   })
 }

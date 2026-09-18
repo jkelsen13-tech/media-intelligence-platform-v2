@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createPreview } from './demoCorpus.mjs'
+import { createPreview, parseDemoRoute, serializeDemoRoute } from './demoCorpus.mjs'
 import receipts from '../verifier/demo-corpus-20260916/retained-source-receipts.json'
 import expandedReceipts from '../verifier/demo-corpus-20260916/expanded-source-receipts.json'
 import './demo-corpus-preview.css'
 
-const investigations = createPreview([...receipts, ...expandedReceipts])
+const investigations = createPreview([...receipts, ...expandedReceipts], { requireComplete: true })
 const topicMeta = {
   iran: { name: 'US–Iran', kicker: 'Conflict, diplomacy & oversight', color: '#d7aa65' },
   epstein: { name: 'Epstein disclosure', kicker: 'Disclosure & oversight', color: '#a699e8' },
@@ -14,15 +14,9 @@ const topicMeta = {
 const surfaces = [['context', 'Context'], ['news', 'Sources'], ['evidence', 'Evidence'], ['compare', 'Compare'], ['graph', 'Graph'], ['timeline', 'Timeline'], ['arc', 'Research Arc']]
 
 function parseRoute() {
-  const [, root, topic, surface, capture] = window.location.hash.split('/')
-  return { topic: root === 'demo' && topicMeta[topic] ? topic : 'iran', surface: root === 'demo' && surfaces.some(([key]) => key === surface) ? surface : 'context', capture: capture ? decodeURIComponent(capture) : null }
+  return parseDemoRoute(window.location.hash, investigations.flatMap((item) => item.sources))
 }
-function sanitizeRoute(route) {
-  if (!route.capture) return route
-  const collection = investigations.find((item) => item.topic === route.topic)
-  return collection.sources.some((source) => source.capture_id === route.capture) ? route : { ...route, surface: 'context', capture: null }
-}
-function writeRoute(topic, surface, capture = null) { const next = `#/demo/${topic}/${surface}${capture ? `/${encodeURIComponent(capture)}` : ''}`; if (window.location.hash !== next) window.location.hash = next }
+function writeRoute(topic, surface, capture = null) { const next = serializeDemoRoute({ topic, surface, capture }); if (window.location.hash !== next) window.location.hash = next }
 const shortId = (value) => value ? `${value.slice(0, 8)}…${value.slice(-4)}` : '—'
 const pretty = (value) => String(value ?? 'unresolved').replaceAll('_', ' ')
 function StatusPill({ children, tone = 'pending' }) { return <span className={`status status--${tone}`}>{children}</span> }
@@ -62,10 +56,10 @@ function TimelineView({ investigation, onSelect }) { const groups = Map.groupBy(
 function ArcView({ investigation, topic, onSelect }) { return <section><div className="surface-title"><div><span className="eyebrow">RESEARCH COLLECTION</span><h1>{topicMeta[topic].name}</h1></div><p>Membership, not an approved narrative arc</p></div><article className="arc-card"><header><div><span className="eyebrow">COLLECTION ID</span><code>{investigation.arc.id}</code></div><StatusPill>{investigation.sources.length} pending members</StatusPill></header><div className="arc-thread">{investigation.sources.map((s, i) => <button key={s.capture_id} onClick={() => onSelect(s)}><span>{String(i + 1).padStart(2, '0')}</span><div><strong>{s.title}</strong><small>{s.outlet} · {s.source_date ?? 'date unresolved'}</small></div></button>)}</div></article></section> }
 
 function DemoApp() {
-  const initial = sanitizeRoute(parseRoute()), [topic, setTopic] = useState(initial.topic), [surface, setSurface] = useState(initial.surface), [selectedId, setSelectedId] = useState(initial.capture), [query, setQuery] = useState('')
+  const initial = parseRoute(), [topic, setTopic] = useState(initial.topic), [surface, setSurface] = useState(initial.surface), [selectedId, setSelectedId] = useState(initial.capture), [query, setQuery] = useState('')
   const investigation = investigations.find((i) => i.topic === topic), selected = investigation.sources.find((s) => s.capture_id === selectedId) ?? null
-  useEffect(() => { const update = () => { const parsed = parseRoute(), route = sanitizeRoute(parsed); if (route.surface !== parsed.surface || route.capture !== parsed.capture) { writeRoute(route.topic, route.surface); return } setTopic(route.topic); setSurface(route.surface); setSelectedId(route.capture) }; window.addEventListener('hashchange', update); if (!window.location.hash) writeRoute(topic, surface); else if (initial.capture !== parseRoute().capture) writeRoute(initial.topic, initial.surface); return () => window.removeEventListener('hashchange', update) }, [])
-  const selectTopic = (next) => writeRoute(next, 'context'), openSurface = (next) => writeRoute(topic, next, selectedId), selectSource = (source) => writeRoute(topic, surface, source.capture_id)
+  useEffect(() => { const update = () => { const route = parseRoute(); setTopic(route.topic); setSurface(route.surface); setSelectedId(route.capture) }; window.addEventListener('hashchange', update); const canonical = serializeDemoRoute(initial); if (window.location.hash !== canonical) window.location.hash = canonical; return () => window.removeEventListener('hashchange', update) }, [])
+  const selectTopic = (next) => { setQuery(''); writeRoute(next, 'context') }, openSurface = (next) => writeRoute(topic, next, selectedId), selectSource = (source) => writeRoute(topic, surface, source.capture_id)
   const view = useMemo(() => ({ context: <ContextView investigation={investigation} topic={topic} openSurface={openSurface} />, news: <SourcesView investigation={investigation} query={query} onSelect={selectSource} />, evidence: <EvidenceView investigation={investigation} onSelect={selectSource} />, compare: <CompareView investigation={investigation} onSelect={selectSource} />, graph: <GraphView investigation={investigation} onSelect={selectSource} />, timeline: <TimelineView investigation={investigation} onSelect={selectSource} />, arc: <ArcView investigation={investigation} topic={topic} onSelect={selectSource} /> })[surface], [investigation, query, surface, topic, selectedId])
   return <div className="app-shell"><header className="topbar"><div className="brand"><span className="brand__mark">M</span><div><strong>Media Intelligence Platform</strong><small>PRIVATE DEMONSTRATION WORKSPACE</small></div></div><div className="topbar__state"><span>93 retained sources</span><StatusPill>all pending</StatusPill></div></header><div className="demo-banner"><strong>DEMO / NONCANONICAL</strong><span>No record shown here is public, admitted, or available to production write paths.</span></div><div className="shell-body">
     <nav className="sidebar" aria-label="Investigation navigation"><span className="eyebrow">INVESTIGATIONS</span>{investigations.map((item) => <button key={item.topic} onClick={() => selectTopic(item.topic)} aria-current={item.topic === topic ? 'page' : undefined}><span className="topic-dot" style={{ background: topicMeta[item.topic].color }}/><span><strong>{topicMeta[item.topic].name}</strong><small>{item.sources.length} retained</small></span></button>)}<div className="sidebar__rule"/><span className="eyebrow">SURFACES</span>{surfaces.map(([key, label]) => <button className="surface-nav" key={key} onClick={() => openSurface(key)} aria-current={surface === key ? 'page' : undefined}><span>{label}</span><small>→</small></button>)}<div className="withheld"><span>World View</span><small>withheld · no reviewed geography</small></div></nav>
