@@ -177,11 +177,13 @@ def token_hash(role):
     i=ROLES.index(role)+1
     return (hex(i)[2:]*64)[:64]
 def live_assert_sql(role,receipt=None,auth_session=AUTH_SESSION,auth_policy=AUTH_POLICY,
-                    broker_session=None,assignment=None,token=None):
+                    broker_session=None,assignment=None,token=None,issuer=ISSUER,audience='authenticated',
+                    algorithm='ES256',kid=KID,key_revision=KEY,jwks_sha256='9'*64):
     receipt=receipt or str(uuid.uuid4());broker_session=broker_session or SESSIONS[role]
     assignment=assignment or ASSIGNMENTS[role]
     return (f"select mip_identity.efta_assert_live_auth_session({q(receipt)},{q(auth_session)},{q(SUBJECT)},"
-            f"{q(auth_policy)},{q(broker_session)},{q(RUNTIME)},{q(assignment)},{q(token or token_hash(role))});")
+            f"{q(auth_policy)},{q(broker_session)},{q(RUNTIME)},{q(assignment)},{q(token or token_hash(role))},"
+            f"{q(issuer)},{q(audience)},{q(algorithm)},{q(kid)},{q(key_revision)},{q(jwks_sha256)});")
 def begin_authenticated(session,role,**kw):
     session.execute("reset role;begin;set role mip_efta_authenticator_v1;")
     session.execute(live_assert_sql(role,**kw))
@@ -316,7 +318,7 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
                 f"null,'resolved','revocation race qualification',{q(SESSIONS[ROLES[role_index]])},"
                 f"{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[role_index]])});")
     def test_live_auth_adapter_is_private_exact_and_non_enumerating(self):
-        signature="mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text)"
+        signature="mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text,text,text,text,text,uuid,text)"
         for role in ("public","anon","authenticated","service_role","mip_efta_reviewer_v1",
                      "mip_efta_admitter_v1","mip_efta_private_reader_v1"):
             self.assertEqual(self.admin(f"select has_function_privilege({q(role)},{q(signature)},'execute')"),"f")
@@ -335,6 +337,11 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
         wrong=self.session();wrong.execute("set role mip_efta_authenticator_v1;")
         with self.assertRaisesRegex(RuntimeError,"efta_live_auth_session_invalid"):
             wrong.execute(live_assert_sql(ROLES[0],auth_session=str(uuid.uuid4())))
+        for changed in ({"issuer":"https://wrong.invalid"},{"audience":"anon"},{"algorithm":"HS256"},
+                        {"kid":"wrong-kid"},{"key_revision":str(uuid.uuid4())},{"jwks_sha256":"8"*64}):
+            mixed=self.session();mixed.execute("reset role;begin;set role mip_efta_authenticator_v1;")
+            with self.assertRaisesRegex(RuntimeError,"efta_authentication_policy_not_authorized"):
+                mixed.execute(live_assert_sql(ROLES[0],**changed))
         one=self.session();one.execute("reset role;begin;set role mip_efta_authenticator_v1;")
         one.execute(live_assert_sql(ROLES[0]))
         with self.assertRaisesRegex(RuntimeError,"efta_live_auth_receipts_transaction_id_key"):

@@ -22,7 +22,7 @@ function bearer(request){
 function validateToken(v,now,issuer,audience,kid){
  if(!v||v.verified!==true||!isUuid(v.sub)||!isUuid(v.session_id)
   ||!isUuid(v.authentication_revision)||!isUuid(v.key_revision)
-  ||!HASH.test(v.token_binding_hash??'')
+  ||!HASH.test(v.token_binding_hash??'')||!HASH.test(v.jwks_sha256??'')
   ||v.issuer!==issuer||v.audience!==audience
   ||v.algorithm!=='ES256'||v.kid!==kid
   ||!Number.isFinite(v.expires_at)||v.expires_at<=now
@@ -44,6 +44,8 @@ function validateBroker(b,v,a,principal,runtime,liveRevision){
   ||b.database_principal!==principal||b.subject_id!==v.sub
   ||b.assignment_revision!==a.revision||b.authentication_revision!==v.authentication_revision
   ||b.auth_session_id!==v.session_id||b.mapping_revision!==a.mapping_revision||b.key_revision!==v.key_revision
+  ||b.issuer!==v.issuer||b.audience!==v.audience||b.algorithm!==v.algorithm||b.kid!==v.kid
+  ||b.jwks_sha256!==v.jwks_sha256
   ||b.credential_revision!==a.credential_revision||b.token_binding_hash!==v.token_binding_hash
   ||b.live_session_revision!==liveRevision||typeof b.invokeExact!=='function'||typeof b.close!=='function'
   ||Object.keys(b).some(k=>/password|secret|database_url|dsn|access_token/i.test(k))) denied();
@@ -53,7 +55,7 @@ export function createEftaGatewayAuthority(deps){
  const {verifyAccessToken,validateLiveSession,lookupAssignment,openBrokerSession}=deps??{};
  if([verifyAccessToken,validateLiveSession,lookupAssignment,openBrokerSession].some(x=>typeof x!=='function'))
   throw Error('efta_gateway_unconfigured');
- if(typeof deps.issuer!=='string'||!deps.issuer||typeof deps.audience!=='string'||!deps.audience||typeof deps.kid!=='string'||!deps.kid
+ if(deps.issuer!=='https://qikvmopbtijoebdqosyq.supabase.co/auth/v1'||deps.audience!=='authenticated'||typeof deps.kid!=='string'||!deps.kid
   ||typeof deps.runtime!=='string'||!deps.runtime) throw Error('efta_gateway_unconfigured');
  const now=typeof deps.now==='function'?deps.now:()=>Math.floor(Date.now()/1000);
  return Object.freeze({async invoke(request,operation,buildArgs){
@@ -74,6 +76,8 @@ export function createEftaGatewayAuthority(deps){
    subject_principal:`auth_user:${verified.sub}`,database_principal:spec.principal,
    assignment_revision:assignment.revision,authentication_revision:verified.authentication_revision,
    mapping_revision:assignment.mapping_revision,key_revision:verified.key_revision,auth_session_id:verified.session_id,
+   issuer:verified.issuer,audience:verified.audience,algorithm:verified.algorithm,kid:verified.kid,
+   jwks_sha256:verified.jwks_sha256,
    credential_revision:assignment.credential_revision,token_binding_hash:verified.token_binding_hash,
    live_session_revision:first.revision}));
   if(!broker||typeof broker.close!=='function') denied();
@@ -90,6 +94,8 @@ export function createEftaGatewayAuthority(deps){
     authentication_revision:verified.authentication_revision,broker_session:broker.session_id,
     auth_session_id:verified.session_id,live_session_revision:first.revision,
     mapping_revision:assignment.mapping_revision,key_revision:verified.key_revision,
+    issuer:verified.issuer,audience:verified.audience,algorithm:verified.algorithm,kid:verified.kid,
+    jwks_sha256:verified.jwks_sha256,
     credential_revision:assignment.credential_revision,token_binding_hash:verified.token_binding_hash,
     database_principal:spec.principal
    }));

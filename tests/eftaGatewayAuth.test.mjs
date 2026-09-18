@@ -14,7 +14,7 @@ function fixture(overrides={}){
  const calls=[];
  const verified={verified:true,sub:ids.subject,session_id:ids.authSession,jti:'token-id',
   authentication_revision:ids.auth,key_revision:ids.key,algorithm:'ES256',kid:'current-es256',
-  token_binding_hash:hash,issuer:'https://issuer.invalid',audience:'efta-gateway',
+  token_binding_hash:hash,jwks_sha256:hash,issuer:'https://qikvmopbtijoebdqosyq.supabase.co/auth/v1',audience:'authenticated',
   expires_at:now+600,not_before:now-60,...overrides.verified};
  const assignment={revision:ids.assignment,subject_id:ids.subject,subject_principal:`auth_user:${ids.subject}`,
   database_principal:'mip_efta_private_reader_v1',scope:'efta-bounded-demo-v1',approval_state:'owner_approved',
@@ -24,11 +24,12 @@ function fixture(overrides={}){
  const broker={session_id:ids.broker,runtime:'efta-qualification-v1',database_principal:assignment.database_principal,
   subject_id:ids.subject,assignment_revision:ids.assignment,authentication_revision:ids.auth,
   auth_session_id:ids.authSession,mapping_revision:ids.mapping,key_revision:ids.key,credential_revision:ids.credential,
+  issuer:verified.issuer,audience:verified.audience,algorithm:verified.algorithm,kid:verified.kid,jwks_sha256:verified.jwks_sha256,
   token_binding_hash:hash,live_session_revision:ids.revocation,
   invokeExact:async(signature,values,attribution)=>{calls.push({signature,values,attribution});return {ok:true}},
   close:async()=>{calls.push({closed:true})},...overrides.broker};
  let validations=0;
- const deps={now:()=>now,issuer:'https://issuer.invalid',audience:'efta-gateway',kid:'current-es256',runtime:'efta-qualification-v1',verifyAccessToken:async()=>verified,
+ const deps={now:()=>now,issuer:'https://qikvmopbtijoebdqosyq.supabase.co/auth/v1',audience:'authenticated',kid:'current-es256',runtime:'efta-qualification-v1',verifyAccessToken:async()=>verified,
   validateLiveSession:async()=>({active:true,subject_id:ids.subject,auth_session_id:ids.authSession,
    authentication_revision:ids.auth,revision:ids.revocation,...(overrides.liveSession?.(++validations)??{})}),
   lookupAssignment:async query=>{calls.push({assignmentQuery:query});return overrides.noAssignment?null:assignment},
@@ -69,12 +70,14 @@ test('invalid token, assignment and broker fields fail closed',async()=>{
  const cases=[
   {verified:{verified:false}},{verified:{sub:'not-a-uuid'}},{verified:{expires_at:now}},{verified:{not_before:now+1}},
   {verified:{algorithm:'HS256'}},{verified:{kid:'legacy'}},
+  {verified:{jwks_sha256:'invalid'}},
   {assignment:{approval_state:'proposed'}},{assignment:{active:false}},{assignment:{current:false}},
   {assignment:{subject_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},{assignment:{scope:'other'}},
   {assignment:{mapping_revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
   {broker:{database_principal:'mip_projection_publisher_v1'}},{broker:{credential_revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
   {broker:{token_binding_hash:'b'.repeat(64)}},{broker:{auth_session_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
   {broker:{live_session_revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
+  {broker:{jwks_sha256:'b'.repeat(64)}},{broker:{kid:'other'}},
   {broker:{password:'must-never-enter-adapter'}}
  ];
  for(const x of cases){const f=fixture(x);await assert.rejects(f.authority.invoke(req(),'private_read',()=>[]),/efta_gateway_denied/);}

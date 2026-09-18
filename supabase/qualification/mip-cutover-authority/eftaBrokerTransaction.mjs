@@ -3,7 +3,7 @@
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const HASH=/^[0-9a-f]{64}$/;
 const AUTHENTICATOR='mip_efta_authenticator_v1';
-const ASSERT='mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text)';
+const ASSERT='mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text,text,text,text,text,uuid,text)';
 const TARGETS=new Map([
  ['mip_identity.efta_private_read(uuid,uuid,text,uuid)','mip_efta_private_reader_v1'],
  ['mip_identity.efta_resolve_identity(uuid,text,uuid,uuid,text,text,uuid,text,uuid)','mip_efta_reviewer_v1'],
@@ -18,6 +18,8 @@ export function createEftaAtomicBrokerSession({client,context,randomUUID=()=>cry
   ||!UUID.test(context.assignment_revision??'')||!UUID.test(context.authentication_revision??'')
   ||!UUID.test(context.mapping_revision??'')||!UUID.test(context.key_revision??'')
   ||!UUID.test(context.credential_revision??'')||!HASH.test(context.token_binding_hash??'')
+  ||!HASH.test(context.jwks_sha256??'')||typeof context.issuer!=='string'||!context.issuer
+  ||context.audience!=='authenticated'||context.algorithm!=='ES256'||typeof context.kid!=='string'||!context.kid
   ||typeof context.runtime!=='string'||!context.runtime||!TARGETS.has([...TARGETS].find(([,r])=>r===context.database_principal)?.[0]??''))
   throw Error('efta_broker_transaction_unconfigured');
  let closed=false;
@@ -32,14 +34,18 @@ export function createEftaAtomicBrokerSession({client,context,randomUUID=()=>cry
     ||attribution?.assignment_revision!==context.assignment_revision
     ||attribution?.mapping_revision!==context.mapping_revision||attribution?.key_revision!==context.key_revision
     ||attribution?.credential_revision!==context.credential_revision
-    ||attribution?.token_binding_hash!==context.token_binding_hash) denied();
+    ||attribution?.token_binding_hash!==context.token_binding_hash
+    ||attribution?.issuer!==context.issuer||attribution?.audience!==context.audience
+    ||attribution?.algorithm!==context.algorithm||attribution?.kid!==context.kid
+    ||attribution?.jwks_sha256!==context.jwks_sha256) denied();
    const receipt=randomUUID();if(!UUID.test(receipt)) denied();
    return client.transaction(async tx=>{
     if(!tx||typeof tx.setLocalRole!=='function'||typeof tx.invokeExact!=='function') denied();
     await tx.setLocalRole(AUTHENTICATOR);
     await tx.invokeExact(ASSERT,Object.freeze([receipt,context.auth_session_id,context.subject_id,
      context.authentication_revision,context.session_id,context.runtime,context.assignment_revision,
-     context.token_binding_hash]));
+     context.token_binding_hash,context.issuer,context.audience,context.algorithm,context.kid,
+     context.key_revision,context.jwks_sha256]));
     await tx.setLocalRole(context.database_principal);
     return tx.invokeExact(signature,Object.freeze([...values]));
    });

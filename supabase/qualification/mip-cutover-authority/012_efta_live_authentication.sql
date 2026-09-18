@@ -28,6 +28,7 @@ create table mip_identity.efta_live_auth_receipts(
  broker_session uuid not null references mip_identity.sessions,assignment_revision uuid not null references mip_identity.efta_authority_assignment_versions,
  mapping_revision uuid not null references mip_identity.mapping_versions,key_revision uuid not null references mip_identity.key_versions,
  credential_revision uuid not null references mip_identity.efta_gateway_credential_versions,
+ issuer text not null,audience text not null,algorithm text not null,kid text not null,jwks_sha256 text not null check(jwks_sha256~'^[0-9a-f]{64}$'),
  token_binding_hash text not null check(token_binding_hash~'^[0-9a-f]{64}$'),session_observed_at timestamptz not null,
  receipt_hash text not null check(receipt_hash~'^[0-9a-f]{64}$'),database_actor text not null,recorded_at timestamptz not null default clock_timestamp(),
  unique(transaction_id)
@@ -38,7 +39,8 @@ create table mip_identity.efta_live_auth_uses(
 
 create function mip_identity.efta_assert_live_auth_session(
  p_receipt uuid,p_auth_session uuid,p_subject uuid,p_authentication_revision uuid,
- p_broker_session uuid,p_runtime text,p_assignment uuid,p_token_binding_hash text
+ p_broker_session uuid,p_runtime text,p_assignment uuid,p_token_binding_hash text,
+ p_issuer text,p_audience text,p_algorithm text,p_kid text,p_key_revision uuid,p_jwks_sha256 text
 ) returns uuid language plpgsql security definer set search_path='' as $$
 declare p mip_identity.efta_authentication_policy_versions;h mip_identity.efta_authentication_policy_heads;
  a mip_identity.efta_authority_assignment_versions;ah mip_identity.efta_authority_assignment_heads;
@@ -60,6 +62,9 @@ begin
  if h.revision is distinct from p.revision or h.active is distinct from true or p.state<>'current'
  or p.approval_state<>'owner_approved' or p.issuer<>'https://qikvmopbtijoebdqosyq.supabase.co/auth/v1'
  or p.audience<>'authenticated' or p.algorithm<>'ES256'
+ or p_issuer is distinct from p.issuer or p_audience is distinct from p.audience
+ or p_algorithm is distinct from p.algorithm or p_kid is distinct from p.kid
+ or p_key_revision is distinct from p.key_revision or p_jwks_sha256 is distinct from p.jwks_sha256
  or p.valid_from>clock_timestamp() or p.valid_until<=clock_timestamp()
  or p.owner_approval_payload_hash is distinct from policy_payload_hash
  then raise exception 'efta_authentication_policy_not_authorized';end if;
@@ -94,13 +99,15 @@ begin
   'auth_session_id',p_auth_session,'subject_id',p_subject,'authentication_revision',p.revision,
   'broker_session',p_broker_session,'assignment_revision',a.revision,'mapping_revision',a.mapping_revision,
   'key_revision',a.key_revision,'credential_revision',a.credential_revision,'token_binding_hash',p_token_binding_hash,
+  'issuer',p_issuer,'audience',p_audience,'algorithm',p_algorithm,'kid',p_kid,'jwks_sha256',p_jwks_sha256,
   'database_actor',session_user);
  digest:=comparison_qualification.argument_digest(payload);
  insert into mip_identity.efta_live_auth_receipts(receipt_id,transaction_id,auth_session_id,subject_id,
   authentication_revision,broker_session,assignment_revision,mapping_revision,key_revision,credential_revision,
-  token_binding_hash,session_observed_at,receipt_hash,database_actor)
+  issuer,audience,algorithm,kid,jwks_sha256,token_binding_hash,session_observed_at,receipt_hash,database_actor)
  values(p_receipt,pg_current_xact_id()::text,p_auth_session,p_subject,p.revision,p_broker_session,a.revision,
-  a.mapping_revision,a.key_revision,a.credential_revision,p_token_binding_hash,clock_timestamp(),digest,session_user);
+  a.mapping_revision,a.key_revision,a.credential_revision,p_issuer,p_audience,p_algorithm,p_kid,p_jwks_sha256,
+  p_token_binding_hash,clock_timestamp(),digest,session_user);
  return p_receipt;
 end$$;
 
@@ -155,6 +162,7 @@ begin
  result:=jsonb_build_object('subject_id',a.subject_id,'subject_principal',a.subject_principal,
   'assignment_revision',a.revision,'authentication_revision',ar.authentication_revision,
   'auth_session_id',ar.auth_session_id,'live_auth_receipt_id',ar.receipt_id,'live_auth_receipt_hash',ar.receipt_hash,
+  'issuer',ar.issuer,'audience',ar.audience,'algorithm',ar.algorithm,'kid',ar.kid,'jwks_sha256',ar.jwks_sha256,
   'broker_session',p_session,'mapping_revision',s.mapping_revision,'key_revision',s.key_revision,'runtime',p_runtime,
   'credential_revision',a.credential_revision,'credential_fingerprint_hash',c.credential_fingerprint_hash,
   'database_principal',p_expected_principal,'token_hash',s.token_hash);
@@ -223,12 +231,12 @@ create policy efta_auth_gateway_heads on mip_identity.efta_gateway_credential_he
  for select to mip_efta_auth_session_owner_v1 using(true);
 create policy efta_auth_principal_sessions on comparison_qualification.principal_sessions
  for select to mip_efta_auth_session_owner_v1 using(principal like 'mip_efta_%');
-alter function mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text) owner to mip_efta_auth_session_owner_v1;
-revoke all on function mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text)
+alter function mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text,text,text,text,text,uuid,text) owner to mip_efta_auth_session_owner_v1;
+revoke all on function mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text,text,text,text,text,uuid,text)
  from public,anon,authenticated,service_role,mip_factual_reviewer_v3,mip_projection_publisher_v1,
  mip_efta_reviewer_v1,mip_efta_admitter_v1,mip_efta_private_reader_v1,mip_efta_owner_v1;
 grant usage on schema mip_identity to mip_efta_authenticator_v1;
-grant execute on function mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text) to mip_efta_authenticator_v1;
+grant execute on function mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text,text,text,text,text,uuid,text) to mip_efta_authenticator_v1;
 revoke all on function mip_identity.authority_context(uuid,text,uuid,text) from public,anon,authenticated,service_role,
  mip_factual_reviewer_v3,mip_projection_publisher_v1,mip_efta_reviewer_v1,mip_efta_admitter_v1,
  mip_efta_private_reader_v1,mip_efta_authenticator_v1;
