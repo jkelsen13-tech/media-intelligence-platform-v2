@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - codex/mip-efta-qualification-remediation-20260916
+      - codex/mip-efta-runtime-auth-remediation-20260918
     paths:
       - 'supabase/qualification/mip-cutover-authority/**'
       - 'src/lib/eftaReviewClient.js'
@@ -47,7 +48,7 @@ jobs:
         run: npm ci
       - name: Exact PostgreSQL 17.6 migration, ACL and concurrency qualification
         env:
-          MIP_EFTA_DISPOSABLE_POSTGRES: exact-001-011
+          MIP_EFTA_DISPOSABLE_POSTGRES: exact-001-012
         run: python3 -B verifier/eftaPostgresQualification.py
       - name: Gateway, reviewer, frontend and full regression
         run: npm test

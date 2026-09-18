@@ -13,7 +13,7 @@ const req=()=>new Request('https://qualification.invalid/efta',{headers:{authori
 function fixture(overrides={}){
  const calls=[];
  const verified={verified:true,sub:ids.subject,session_id:ids.authSession,jti:'token-id',
-  authentication_revision:ids.auth,mapping_revision:ids.mapping,key_revision:ids.key,
+  authentication_revision:ids.auth,key_revision:ids.key,algorithm:'ES256',kid:'current-es256',
   token_binding_hash:hash,issuer:'https://issuer.invalid',audience:'efta-gateway',
   expires_at:now+600,not_before:now-60,...overrides.verified};
  const assignment={revision:ids.assignment,subject_id:ids.subject,subject_principal:`auth_user:${ids.subject}`,
@@ -23,13 +23,14 @@ function fixture(overrides={}){
   valid_from:'2030-01-01T00:00:00.000Z',valid_until:'2040-01-01T00:00:00.000Z',...overrides.assignment};
  const broker={session_id:ids.broker,runtime:'efta-qualification-v1',database_principal:assignment.database_principal,
   subject_id:ids.subject,assignment_revision:ids.assignment,authentication_revision:ids.auth,
-  mapping_revision:ids.mapping,key_revision:ids.key,credential_revision:ids.credential,
-  token_binding_hash:hash,revocation_revision:ids.revocation,
+  auth_session_id:ids.authSession,mapping_revision:ids.mapping,key_revision:ids.key,credential_revision:ids.credential,
+  token_binding_hash:hash,live_session_revision:ids.revocation,
   invokeExact:async(signature,values,attribution)=>{calls.push({signature,values,attribution});return {ok:true}},
   close:async()=>{calls.push({closed:true})},...overrides.broker};
- let revocations=0;
- const deps={now:()=>now,issuer:'https://issuer.invalid',audience:'efta-gateway',runtime:'efta-qualification-v1',verifyAccessToken:async()=>verified,
-  checkRevocation:async()=>({revoked:false,revision:ids.revocation,...(overrides.revocation?.(++revocations)??{})}),
+ let validations=0;
+ const deps={now:()=>now,issuer:'https://issuer.invalid',audience:'efta-gateway',kid:'current-es256',runtime:'efta-qualification-v1',verifyAccessToken:async()=>verified,
+  validateLiveSession:async()=>({active:true,subject_id:ids.subject,auth_session_id:ids.authSession,
+   authentication_revision:ids.auth,revision:ids.revocation,...(overrides.liveSession?.(++validations)??{})}),
   lookupAssignment:async query=>{calls.push({assignmentQuery:query});return overrides.noAssignment?null:assignment},
   openBrokerSession:async context=>{calls.push({brokerContext:context});return broker},...overrides.deps};
  return {authority:createEftaGatewayAuthority(deps),calls,verified,assignment,broker};
@@ -55,9 +56,10 @@ test('owner-selectable subject without an approved assignment is denied before b
  assert.equal(f.calls.some(x=>x.brokerContext),false);
 });
 
-test('token/session revocation and revision drift fail closed',async()=>{
- for(const revocation of [()=>({revoked:true}),n=>n===2?{revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}:{}]){
-  const f=fixture({revocation});
+test('live session revocation, subject mismatch and revision drift fail closed',async()=>{
+ for(const liveSession of [()=>({active:false}),()=>({subject_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}),
+  n=>n===2?{revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}:{}]){
+  const f=fixture({liveSession});
   await assert.rejects(f.authority.invoke(req(),'private_read',()=>[]),/efta_gateway_denied/);
   assert.equal(f.calls.some(x=>x.signature),false);
  }
@@ -66,11 +68,13 @@ test('token/session revocation and revision drift fail closed',async()=>{
 test('invalid token, assignment and broker fields fail closed',async()=>{
  const cases=[
   {verified:{verified:false}},{verified:{sub:'not-a-uuid'}},{verified:{expires_at:now}},{verified:{not_before:now+1}},
+  {verified:{algorithm:'HS256'}},{verified:{kid:'legacy'}},
   {assignment:{approval_state:'proposed'}},{assignment:{active:false}},{assignment:{current:false}},
   {assignment:{subject_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},{assignment:{scope:'other'}},
   {assignment:{mapping_revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
   {broker:{database_principal:'mip_projection_publisher_v1'}},{broker:{credential_revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
-  {broker:{token_binding_hash:'b'.repeat(64)}},{broker:{revocation_revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
+  {broker:{token_binding_hash:'b'.repeat(64)}},{broker:{auth_session_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
+  {broker:{live_session_revision:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}},
   {broker:{password:'must-never-enter-adapter'}}
  ];
  for(const x of cases){const f=fixture(x);await assert.rejects(f.authority.invoke(req(),'private_read',()=>[]),/efta_gateway_denied/);}

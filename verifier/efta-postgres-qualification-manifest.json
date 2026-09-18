@@ -15,6 +15,7 @@
     {"path":"supabase/qualification/mip-cutover-authority/008_operation_evidence.sql","blob":"a1c9f2fb236e7069e80c5a1cfe6b58274c537ee6"},
     {"path":"supabase/qualification/mip-cutover-authority/009_factual_enforcement.sql","blob":"60e6198c3ad389c335dfe56024153a187f30f0a4"},
     {"path":"supabase/qualification/mip-cutover-authority/010_real_permission_reader.sql","blob":"80f869c417706b5bf6a714e15da5809e599c2811"},
-    {"path":"supabase/qualification/mip-cutover-authority/011_efta_governed_review.sql","blob":"d08b8dc06d8e73d3d84fcf216e3df5321465d482"}
+    {"path":"supabase/qualification/mip-cutover-authority/011_efta_governed_review.sql","blob":"d08b8dc06d8e73d3d84fcf216e3df5321465d482"},
+    {"path":"supabase/qualification/mip-cutover-authority/012_efta_live_authentication.sql","blob":"5f0cb3dc852cb5f48d632c0484cf04b939ce259a"}
   ]
 }

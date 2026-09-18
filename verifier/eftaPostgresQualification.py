@@ -8,7 +8,7 @@ import comparisonPostgresConcurrency as base
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 MANIFEST=json.loads((ROOT/"verifier/efta-postgres-qualification-manifest.json").read_text())
 SOURCES=json.loads((ROOT/"verifier/efta-governed-demo/manifest.json").read_text())["sources"]
-if os.environ.get("GITHUB_ACTIONS")!="true" or os.environ.get("MIP_EFTA_DISPOSABLE_POSTGRES")!="exact-001-011":
+if os.environ.get("GITHUB_ACTIONS")!="true" or os.environ.get("MIP_EFTA_DISPOSABLE_POSTGRES")!="exact-001-012":
     raise SystemExit("EFTA qualification is restricted to the disposable GitHub Actions PostgreSQL service")
 ENV={k:v for k,v in os.environ.items() if not k.startswith("PG")}
 ENV.update(PGPASSWORD="mip-efta-disposable-ci-only",PGCONNECT_TIMEOUT="5",
@@ -24,6 +24,10 @@ RUNTIME="efta-qualification-runtime"
 ROLES=("mip_efta_reviewer_v1","mip_efta_admitter_v1","mip_efta_private_reader_v1")
 KEY="20000000-0000-4000-8000-000000000001"
 CREDENTIAL="21000000-0000-4000-8000-000000000001"
+AUTH_POLICY="22000000-0000-4000-8000-000000000001"
+AUTH_SESSION="23000000-0000-4000-8000-000000000001"
+ISSUER="https://qikvmopbtijoebdqosyq.supabase.co/auth/v1"
+KID="f11c0b62-e0f6-44fc-8663-75543b5a6f3d"
 MAPPINGS={r:f"30000000-0000-4000-8000-00000000000{i}" for i,r in enumerate(ROLES,1)}
 SESSIONS={r:f"40000000-0000-4000-8000-00000000000{i}" for i,r in enumerate(ROLES,1)}
 AUTHS={r:f"41000000-0000-4000-8000-00000000000{i}" for i,r in enumerate(ROLES,1)}
@@ -46,7 +50,9 @@ def git_blob(path):
 def uuid_for(*parts): return str(uuid.uuid5(uuid.NAMESPACE_URL,"qualification:"+":".join(parts)))
 def build_extra_schema():
     generic=["claims","article_claims","claim_evidence_links","claim_corrections","story_arcs","nodes","edges","arc_events","arc_milestones","arc_membership_candidates"]
-    sql="""alter table public.articles add column reader_state text not null default 'pending_review';
+    sql="""create schema auth;
+create table auth.sessions(id uuid primary key,user_id uuid not null,created_at timestamptz not null default clock_timestamp(),updated_at timestamptz not null default clock_timestamp());
+alter table public.articles add column reader_state text not null default 'pending_review';
 alter table public.articles add column source_status text not null default 'active';
 alter table public.articles enable row level security; alter table public.articles force row level security;
 """
@@ -88,8 +94,8 @@ insert into evidence_pipeline.evidence_candidates(id,capture_id,source_field,spa
 values({q(s['candidate_id'])},{q(s['capture_id'])},{q(s['source_field'])},{s['span_start']},{s['span_end']},{q(s['excerpt'])});""")
 def seed_authority(db):
     run(db,f"""insert into mip_identity.key_versions values(
- {q(KEY)},'qualification-issuer','qualification-key','{{}}','2020-01-01','2999-01-01','mechanism-only');
-insert into mip_identity.key_heads values('qualification-issuer','qualification-key',{q(KEY)},true);
+ {q(KEY)},{q(ISSUER)},{q(KID)},'{{}}','2020-01-01','2999-01-01','mechanism-only');
+insert into mip_identity.key_heads values({q(ISSUER)},{q(KID)},{q(KEY)},true);
 with x as(select {q(CREDENTIAL)}::uuid revision,'efta-private-gateway-v1'::text gateway_id,
  repeat('a',64)::text fingerprint,null::uuid predecessor,'current'::text state,
  '2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
@@ -99,11 +105,23 @@ select revision,gateway_id,fingerprint,predecessor,state,'owner_approved',repeat
  'credential_fingerprint_hash',fingerprint,'predecessor',predecessor,'state',state,
  'valid_from',valid_from,'valid_until',valid_until)),valid_from,valid_until,clock_timestamp() from x;
 insert into mip_identity.efta_gateway_credential_heads values('efta-private-gateway-v1',{q(CREDENTIAL)},true);""")
+    run(db,f"""insert into auth.sessions(id,user_id) values({q(AUTH_SESSION)},{q(SUBJECT)});
+with x as(select {q(AUTH_POLICY)}::uuid revision,{q(ISSUER)}::text issuer,'authenticated'::text audience,
+ 'ES256'::text algorithm,{q(KID)}::text kid,{q(KEY)}::uuid key_revision,repeat('9',64)::text jwks_sha256,
+ null::uuid predecessor,'current'::text state,'2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
+insert into mip_identity.efta_authentication_policy_versions(
+ revision,issuer,audience,algorithm,kid,key_revision,jwks_sha256,predecessor,state,approval_state,
+ owner_approval_receipt_hash,owner_approval_payload_hash,valid_from,valid_until)
+select revision,issuer,audience,algorithm,kid,key_revision,jwks_sha256,predecessor,state,'owner_approved',repeat('8',64),
+ comparison_qualification.argument_digest(jsonb_build_object('revision',revision,'issuer',issuer,'audience',audience,
+ 'algorithm',algorithm,'kid',kid,'key_revision',key_revision,'jwks_sha256',jwks_sha256,'predecessor',predecessor,
+ 'state',state,'valid_from',valid_from,'valid_until',valid_until)),valid_from,valid_until from x;
+insert into mip_identity.efta_authentication_policy_heads values('supabase-user-access-v1',{q(AUTH_POLICY)},true);""")
     for i,role in enumerate(ROLES,1):
         mapping=MAPPINGS[role];session=SESSIONS[role];auth=AUTHS[role];assignment=ASSIGNMENTS[role]
         token=(hex(i)[2:]*64)[:64]
         run(db,f"""insert into mip_identity.mapping_versions values(
- {q(mapping)},{q(RUNTIME)},{q(role)},'qualification-issuer','qualification-audience',
+ {q(mapping)},{q(RUNTIME)},{q(role)},{q(ISSUER)},'authenticated',
  {q('auth_user:'+SUBJECT)},{q(KEY)},600,'mechanism-only');
 insert into mip_identity.mapping_heads values({q(RUNTIME)},{q(role)},{q(mapping)},true);
 insert into comparison_qualification.principal_sessions(session_id,principal,runtime_id,expires_at)
@@ -155,11 +173,26 @@ def build_template():
     for path in paths[7:]: run(TEMPLATE,file_sql(path),120)
     seed_sources(TEMPLATE)
     seed_authority(TEMPLATE)
+def token_hash(role):
+    i=ROLES.index(role)+1
+    return (hex(i)[2:]*64)[:64]
+def live_assert_sql(role,receipt=None,auth_session=AUTH_SESSION,auth_policy=AUTH_POLICY,
+                    broker_session=None,assignment=None,token=None):
+    receipt=receipt or str(uuid.uuid4());broker_session=broker_session or SESSIONS[role]
+    assignment=assignment or ASSIGNMENTS[role]
+    return (f"select mip_identity.efta_assert_live_auth_session({q(receipt)},{q(auth_session)},{q(SUBJECT)},"
+            f"{q(auth_policy)},{q(broker_session)},{q(RUNTIME)},{q(assignment)},{q(token or token_hash(role))});")
+def begin_authenticated(session,role,**kw):
+    session.execute("reset role;begin;set role mip_efta_authenticator_v1;")
+    session.execute(live_assert_sql(role,**kw))
+    session.execute("set role "+role+";")
 def role_sql(session,role,sql):
-    session.execute("reset role;set role "+role+";")
+    begin_authenticated(session,role)
     statement=sql.rstrip()
     if not statement.endswith(";"): statement+=";"
-    return session.execute(statement)
+    result=session.execute(statement)
+    session.execute("commit;")
+    return result
 class EftaPG(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -227,14 +260,14 @@ join mip_identity.source_changes e on e.relation_name='evidence_pipeline.evidenc
         self.assertEqual(self.admin("select count(*) from mip_identity.efta_institution_heads where active"),"3")
     def test_acl_rls_owners_search_path_and_default_acl(self):
         self.assertEqual(self.admin("""select count(*) from pg_roles where rolname like 'mip_efta_%'
-and not rolcanlogin and not rolsuper and not rolcreaterole and not rolcreatedb and not rolinherit and not rolreplication and not rolbypassrls"""),"4")
+and not rolcanlogin and not rolsuper and not rolcreaterole and not rolcreatedb and not rolinherit and not rolreplication and not rolbypassrls"""),"6")
         self.assertEqual(self.admin("""select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
 join pg_roles r on r.oid=p.proowner where n.nspname='mip_identity'
 and p.proname in('efta_current_binding','efta_require_identity','efta_resolve_identity','efta_decide','efta_admit','efta_private_read')
 and p.prosecdef and r.rolname='mip_efta_owner_v1' and p.proconfig@>array['search_path=""']"""),"6")
         self.assertEqual(self.admin("""select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
 join pg_roles r on r.oid=c.relowner where n.nspname='mip_identity' and c.relname like 'efta_%'
-and c.relkind='r' and c.relrowsecurity and c.relforcerowsecurity and r.rolname='mip_cutover_schema_owner_v1'"""),"13")
+and c.relkind='r' and c.relrowsecurity and c.relforcerowsecurity and r.rolname='mip_cutover_schema_owner_v1'"""),"17")
         for role in ("public","anon","authenticated","service_role","mip_factual_reviewer_v3","mip_projection_publisher_v1"):
             self.assertEqual(self.admin(f"""select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
 where n.nspname='mip_identity' and p.proname like 'efta_%'
@@ -282,11 +315,43 @@ and d.defaclobjtype='f' and x.grantee=0 and (x.privilege_type='EXECUTE')"""),"0"
         return (f"select mip_identity.efta_resolve_identity({q(request)},{q(origin)},{q(revision)},"
                 f"null,'resolved','revocation race qualification',{q(SESSIONS[ROLES[role_index]])},"
                 f"{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[role_index]])});")
+    def test_live_auth_adapter_is_private_exact_and_non_enumerating(self):
+        signature="mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text)"
+        for role in ("public","anon","authenticated","service_role","mip_efta_reviewer_v1",
+                     "mip_efta_admitter_v1","mip_efta_private_reader_v1"):
+            self.assertEqual(self.admin(f"select has_function_privilege({q(role)},{q(signature)},'execute')"),"f")
+            self.assertEqual(self.admin(f"select has_schema_privilege({q(role)},'auth','usage')"),"f")
+            self.assertEqual(self.admin(f"select has_table_privilege({q(role)},'auth.sessions','select')"),"f")
+        self.assertEqual(self.admin(f"select has_function_privilege('mip_efta_authenticator_v1',{q(signature)},'execute')"),"t")
+        self.assertEqual(self.admin("select has_table_privilege('mip_efta_authenticator_v1','auth.sessions','select')"),"f")
+        s=self.session();s.execute("set role mip_efta_reviewer_v1;")
+        with self.assertRaisesRegex(RuntimeError,"efta_live_authentication_required"):
+            s.execute(self.resolution_call(str(uuid.uuid4())))
+        wrong=self.session();wrong.execute("set role mip_efta_authenticator_v1;")
+        with self.assertRaisesRegex(RuntimeError,"efta_live_auth_session_invalid"):
+            wrong.execute(live_assert_sql(ROLES[0],auth_session=str(uuid.uuid4())))
+    def test_auth_session_revocation_race_serializes_and_fails_closed(self):
+        holder=self.session();holder.execute("reset role;begin;")
+        holder.execute(f"delete from auth.sessions where id={q(AUTH_SESSION)};")
+        waiter=self.session();waiter.execute("reset role;begin;set role mip_efta_authenticator_v1;")
+        waiter.start(live_assert_sql(ROLES[0]));self.blocked(waiter,holder);holder.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError,"efta_live_auth_session_invalid"):waiter.finish()
+        self.assertEqual(self.admin("select count(*) from mip_identity.efta_identity_resolutions"),"0")
+    def test_live_operation_linearizes_before_concurrent_signout(self):
+        actor=self.session();begin_authenticated(actor,ROLES[0]);request=str(uuid.uuid4())
+        actor.execute(self.resolution_call(request))
+        signout=self.session();signout.execute("reset role;begin;")
+        signout.start(f"delete from auth.sessions where id={q(AUTH_SESSION)};")
+        self.blocked(signout,actor);actor.execute("commit;");signout.finish();signout.execute("commit;")
+        self.assertEqual(self.admin(f"select count(*) from mip_identity.efta_identity_resolutions where id={q(request)}"),"1")
+        denied=self.session();denied.execute("reset role;begin;set role mip_efta_authenticator_v1;")
+        with self.assertRaisesRegex(RuntimeError,"efta_live_auth_session_invalid"):
+            denied.execute(live_assert_sql(ROLES[0]))
     def test_assignment_revocation_wins_without_persisted_resolution(self):
         holder=self.session();holder.execute("reset role;begin;")
         holder.execute("update mip_identity.efta_authority_assignment_heads set active=false "
                        f"where subject_id={q(SUBJECT)} and database_principal={q(ROLES[0])};")
-        waiter=self.session();waiter.execute("reset role;set role mip_efta_reviewer_v1;")
+        waiter=self.session();begin_authenticated(waiter,ROLES[0])
         waiter.start(self.resolution_call(str(uuid.uuid4())))
         self.blocked(waiter,holder);holder.execute("commit;")
         with self.assertRaisesRegex(RuntimeError,"efta_assignment_not_authorized"):waiter.finish()
@@ -308,18 +373,90 @@ select revision,gateway_id,fingerprint,predecessor,state,'owner_approved',repeat
  valid_from,valid_until,clock_timestamp() from x;
 update mip_identity.efta_gateway_credential_heads set revision={q(new_credential)}
 where gateway_id='efta-private-gateway-v1';""")
-        waiter=self.session();waiter.execute("reset role;set role mip_efta_private_reader_v1;")
+        waiter=self.session();begin_authenticated(waiter,ROLES[2])
         request=str(uuid.uuid4())
         waiter.start(f"select mip_identity.efta_private_read({q(request)},{q(SESSIONS[ROLES[2]])},"
                      f"{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[2]])});")
         self.blocked(waiter,holder);holder.execute("commit;")
         with self.assertRaisesRegex(RuntimeError,"efta_gateway_credential_not_authorized"):waiter.finish()
         self.assertEqual(self.admin("select count(*) from mip_identity.efta_private_reads"),"0")
+    def test_complete_successor_chain_retires_predecessors_without_reactivation(self):
+        role=ROLES[0];old_mapping=MAPPINGS[role];old_assignment=ASSIGNMENTS[role];old_session=SESSIONS[role]
+        new_credential="22000000-0000-4000-8000-000000000011"
+        new_mapping="32000000-0000-4000-8000-000000000011"
+        new_session="42000000-0000-4000-8000-000000000011"
+        new_assignment="52000000-0000-4000-8000-000000000011"
+        new_auth="62000000-0000-4000-8000-000000000011";new_token='7'*64
+        self.admin(f"""begin;
+with x as(select {q(new_credential)}::uuid revision,'efta-private-gateway-v1'::text gateway_id,
+ repeat('7',64)::text fingerprint,{q(CREDENTIAL)}::uuid predecessor,'current'::text state,
+ '2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
+insert into mip_identity.efta_gateway_credential_versions
+select revision,gateway_id,fingerprint,predecessor,state,'owner_approved',repeat('8',64),
+ comparison_qualification.argument_digest(jsonb_build_object('revision',revision,'gateway_id',gateway_id,
+ 'credential_fingerprint_hash',fingerprint,'predecessor',predecessor,'state',state,
+ 'valid_from',valid_from,'valid_until',valid_until)),valid_from,valid_until,clock_timestamp() from x;
+insert into mip_identity.mapping_versions values({q(new_mapping)},{q(RUNTIME)},{q(role)},{q(ISSUER)},'authenticated',
+ {q('auth_user:'+SUBJECT)},{q(KEY)},600,'successor qualification');
+with x as(select {q(new_assignment)}::uuid revision,{q(SUBJECT)}::uuid subject_id,{q(role)}::text principal,
+ {q(new_mapping)}::uuid mapping_revision,{q(KEY)}::uuid key_revision,{q(new_credential)}::uuid credential_revision,
+ {q(old_assignment)}::uuid predecessor,'2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
+insert into mip_identity.efta_authority_assignment_versions(
+ revision,subject_id,database_principal,scope,mapping_revision,key_revision,credential_revision,predecessor,
+ approval_state,owner_approval_receipt_hash,owner_approval_payload_hash,reason,valid_from,valid_until,created_at)
+select revision,subject_id,principal,'efta-bounded-demo-v1',mapping_revision,key_revision,credential_revision,predecessor,
+ 'owner_approved',repeat('9',64),comparison_qualification.argument_digest(jsonb_build_object('revision',revision,
+ 'subject_id',subject_id,'database_principal',principal,'scope','efta-bounded-demo-v1','mapping_revision',mapping_revision,
+ 'key_revision',key_revision,'credential_revision',credential_revision,'predecessor',predecessor,
+ 'valid_from',valid_from,'valid_until',valid_until)),'successor qualification',valid_from,valid_until,clock_timestamp() from x;
+with x as(select {q(new_auth)}::uuid revision,{q(ISSUER)}::text issuer,'authenticated'::text audience,
+ 'ES256'::text algorithm,{q(KID)}::text kid,{q(KEY)}::uuid key_revision,repeat('9',64)::text jwks_sha256,
+ {q(AUTH_POLICY)}::uuid predecessor,'current'::text state,'2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
+insert into mip_identity.efta_authentication_policy_versions(revision,issuer,audience,algorithm,kid,key_revision,
+ jwks_sha256,predecessor,state,approval_state,owner_approval_receipt_hash,owner_approval_payload_hash,valid_from,valid_until)
+select revision,issuer,audience,algorithm,kid,key_revision,jwks_sha256,predecessor,state,'owner_approved',repeat('a',64),
+ comparison_qualification.argument_digest(jsonb_build_object('revision',revision,'issuer',issuer,'audience',audience,
+ 'algorithm',algorithm,'kid',kid,'key_revision',key_revision,'jwks_sha256',jwks_sha256,'predecessor',predecessor,
+ 'state',state,'valid_from',valid_from,'valid_until',valid_until)),valid_from,valid_until from x;
+insert into comparison_qualification.principal_sessions(session_id,principal,runtime_id,expires_at)
+ values({q(new_session)},{q(role)},{q(RUNTIME)},'2999-01-01');
+insert into mip_identity.sessions values({q(new_session)},gen_random_uuid(),{q(new_token)},{q(new_mapping)},{q(KEY)},'2999-01-01','successor qualification');
+update mip_identity.efta_gateway_credential_heads set revision={q(new_credential)} where gateway_id='efta-private-gateway-v1';
+update mip_identity.mapping_heads set revision={q(new_mapping)} where runtime={q(RUNTIME)} and principal={q(role)};
+update mip_identity.efta_authority_assignment_heads set revision={q(new_assignment)} where subject_id={q(SUBJECT)} and database_principal={q(role)};
+update mip_identity.efta_authentication_policy_heads set revision={q(new_auth)} where policy_id='supabase-user-access-v1';
+update comparison_qualification.principal_sessions set revoked_at=clock_timestamp() where session_id={q(old_session)};
+commit;""")
+        old=self.session();old.execute("reset role;begin;set role mip_efta_authenticator_v1;")
+        with self.assertRaisesRegex(RuntimeError,"efta_assignment_not_authorized|mip_identity_session_revoked"):
+            old.execute(live_assert_sql(role))
+        fresh=self.session();begin_authenticated(fresh,role,auth_policy=new_auth,broker_session=new_session,
+                                                  assignment=new_assignment,token=new_token)
+        rid=str(uuid.uuid4());fresh.execute(
+          f"select mip_identity.efta_resolve_identity({q(rid)},{q(next(iter(INSTITUTIONS)))},{q(next(iter(INSTITUTIONS.values()))[1])},"
+          f"null,'resolved','successor chain qualification',{q(new_session)},{q(RUNTIME)},{q(new_assignment)});")
+        fresh.execute("commit;")
+        self.assertEqual(self.admin("select count(*) from mip_identity.retired_authority where revision in ("
+          f"{q(CREDENTIAL)},{q(old_mapping)},{q(old_assignment)},{q(AUTH_POLICY)})"),"4")
+        for table,where in [
+          ("mip_identity.efta_gateway_credential_heads",f"gateway_id='efta-private-gateway-v1'"),
+          ("mip_identity.mapping_heads",f"runtime={q(RUNTIME)} and principal={q(role)}"),
+          ("mip_identity.efta_authority_assignment_heads",f"subject_id={q(SUBJECT)} and database_principal={q(role)}"),
+          ("mip_identity.efta_authentication_policy_heads","policy_id='supabase-user-access-v1'")]:
+            with self.subTest(table=table):
+                with self.assertRaisesRegex(RuntimeError,"fresh_revision_required"):
+                    self.admin(f"update {table} set revision="+q({
+                      'mip_identity.efta_gateway_credential_heads':CREDENTIAL,
+                      'mip_identity.mapping_heads':old_mapping,
+                      'mip_identity.efta_authority_assignment_heads':old_assignment,
+                      'mip_identity.efta_authentication_policy_heads':AUTH_POLICY}[table])+f" where {where}")
+        self.assertEqual(self.admin("select count(*) from mip_identity.efta_gateway_credential_versions where revision in ("
+          f"{q(CREDENTIAL)},{q(new_credential)})"),"2")
     def test_mapping_revocation_wins_without_persisted_resolution(self):
         holder=self.session();holder.execute("reset role;begin;")
         holder.execute(f"update mip_identity.mapping_heads set active=false where runtime={q(RUNTIME)} "
                        f"and principal={q(ROLES[0])};")
-        waiter=self.session();waiter.execute("reset role;set role mip_efta_reviewer_v1;")
+        waiter=self.session();begin_authenticated(waiter,ROLES[0])
         waiter.start(self.resolution_call(str(uuid.uuid4())))
         self.blocked(waiter,holder);holder.execute("commit;")
         with self.assertRaisesRegex(RuntimeError,"mip_identity_mapping_revoked"):waiter.finish()
@@ -328,7 +465,7 @@ where gateway_id='efta-private-gateway-v1';""")
         holder=self.session();holder.execute("reset role;begin;")
         holder.execute(f"update comparison_qualification.principal_sessions "
                        f"set revoked_at=clock_timestamp() where session_id={q(SESSIONS[ROLES[0]])};")
-        waiter=self.session();waiter.execute("reset role;set role mip_efta_reviewer_v1;")
+        waiter=self.session();begin_authenticated(waiter,ROLES[0])
         waiter.start(self.resolution_call(str(uuid.uuid4())))
         self.blocked(waiter,holder);holder.execute("commit;")
         with self.assertRaisesRegex(RuntimeError,"mip_identity_session_revoked"):waiter.finish()
@@ -336,20 +473,20 @@ where gateway_id='efta-private-gateway-v1';""")
     def test_concurrent_decisions_serialize_and_loser_denies(self):
         a=self.session();res=self.resolve_all(a);src=SOURCES[0]
         review=q(json.dumps(self.review(src,res[src["origin_id"]]),separators=(",",":")))
-        a.execute("reset role;set role mip_efta_reviewer_v1;begin;")
+        begin_authenticated(a,ROLES[0])
         one=str(uuid.uuid4());two=str(uuid.uuid4())
         a.execute(f"select mip_identity.efta_decide({q(one)},{q(src['candidate_id'])},'approve',null,{review}::jsonb,{q(SESSIONS[ROLES[0]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[0]])});")
-        b=self.session();b.execute("set lock_timeout='500ms';reset role;set role mip_efta_reviewer_v1;")
+        b=self.session();b.execute("set lock_timeout='500ms';");begin_authenticated(b,ROLES[0])
         with self.assertRaisesRegex(RuntimeError,"lock timeout"):
             b.execute(f"select mip_identity.efta_decide({q(two)},{q(src['candidate_id'])},'approve',null,{review}::jsonb,{q(SESSIONS[ROLES[0]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[0]])});")
         a.execute("commit;")
-        loser=self.session();loser.execute("reset role;set role mip_efta_reviewer_v1;")
+        loser=self.session();begin_authenticated(loser,ROLES[0])
         with self.assertRaisesRegex(RuntimeError,"predecessor_conflict"):
             loser.execute(f"select mip_identity.efta_decide({q(two)},{q(src['candidate_id'])},'approve',null,{review}::jsonb,{q(SESSIONS[ROLES[0]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[0]])});")
         self.assertEqual(self.admin("select count(*) from mip_identity.efta_decisions"),"1")
     def test_private_read_serializes_source_change_then_invalidates(self):
         reader,res,decisions=self.admit_all()
-        reader.execute("reset role;set role mip_efta_private_reader_v1;begin;")
+        begin_authenticated(reader,ROLES[2])
         rid=str(uuid.uuid4())
         reader.execute(f"select mip_identity.efta_private_read({q(rid)},{q(SESSIONS[ROLES[2]])},{q(RUNTIME)},{q(ASSIGNMENTS[ROLES[2]])});")
         mut=self.session();mut.execute("set lock_timeout='500ms';reset role;")
