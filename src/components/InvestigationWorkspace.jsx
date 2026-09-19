@@ -442,11 +442,11 @@ export function WorkspaceSearch({
   )
 }
 
-export function WorkspaceAccountButton({ onClick, enabled }) {
+export function WorkspaceAccountButton({ onClick, enabled, label = 'Account', title = 'Account / Sign in' }) {
   return (
-    <button type="button" className="ws-account-btn" aria-label="Account" title="Account / Sign in" onClick={onClick} disabled={!enabled && !onClick}>
+    <button type="button" className="ws-account-btn" aria-label={label} title={title} onClick={onClick} disabled={!enabled && !onClick}>
       <User size={16} />
-      <span className="ws-account-label">Account</span>
+      <span className="ws-account-label">{label}</span>
     </button>
   )
 }

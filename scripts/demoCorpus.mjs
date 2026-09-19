@@ -1,5 +1,7 @@
 // Isolated corpus analysis. No backend client, credentials, or publication code.
+import { sharedDeclaredProvenance } from './demoProvenance.mjs'
 export const TOPICS = ['iran', 'epstein', 'project2025']
+export const DEMO_LENSES = ['all', ...TOPICS]
 export const DEMO_SURFACES = ['context', 'news', 'evidence', 'compare', 'graph', 'timeline', 'arc', 'world']
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -14,15 +16,15 @@ export function parseDemoRoute(hash, records = []) {
   let parts
   try { parts = hash.split('/').map(decodeURIComponent) } catch { return fallback }
   const [, root, topic, surface, capture, ...extra] = parts
-  if (root !== 'demo' || !TOPICS.includes(topic) || !DEMO_SURFACES.includes(surface) || extra.length) return fallback
+  if (root !== 'demo' || !DEMO_LENSES.includes(topic) || !DEMO_SURFACES.includes(surface) || extra.length) return fallback
   if (!capture) return { topic, surface, capture: null }
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(capture)) return { topic, surface: 'context', capture: null }
-  const member = records.some((record) => record.topic === topic && record.capture_id === capture)
+  const member = records.some((record) => (topic === 'all' || record.topic === topic) && record.capture_id === capture)
   return member ? { topic, surface, capture } : { topic, surface: 'context', capture: null }
 }
 export function serializeDemoRoute({ topic, surface, capture = null }, records = []) {
-  if (!TOPICS.includes(topic) || !DEMO_SURFACES.includes(surface)) throw new Error('Invalid demo route')
-  if (capture && !records.some((record) => record.topic === topic && record.capture_id === capture)) throw new Error('Capture is not a member of this demo investigation')
+  if (!DEMO_LENSES.includes(topic) || !DEMO_SURFACES.includes(surface)) throw new Error('Invalid demo route')
+  if (capture && !records.some((record) => (topic === 'all' || record.topic === topic) && record.capture_id === capture)) throw new Error('Capture is not a member of this demo investigation')
   return `#/demo/${topic}/${surface}${capture ? `/${encodeURIComponent(capture)}` : ''}`
 }
 export function exactSpan(text, excerpt) {
@@ -90,9 +92,62 @@ export function validatePrivateRelation(relation, registry) {
   if (!['source_statement', 'attribution', 'research_membership', 'synthetic_event_place', 'synthetic_sequence'].includes(relation.type)) throw new Error('Unsupported inference')
   const from = resolveIdentity(relation.from, registry), to = resolveIdentity(relation.to, registry)
   if (!from || !to) throw new Error('Unresolved endpoint')
+  // These fixtures may demonstrate synthetic structure, never real assertions.
+  // An endpoint registry alone cannot authorize an evidentiary relationship.
+  if (!from.synthetic || !to.synthetic || !from.namespace.startsWith('synthetic:') || !to.namespace.startsWith('synthetic:')) throw new Error('Real relationship evidence unavailable')
   if (relation.type.startsWith('synthetic_') && (!from.synthetic || !to.synthetic)) throw new Error('Synthetic relationship requires synthetic endpoints')
   if (relation.publication_allowed !== false) throw new Error('Publication forbidden')
   return { ...relation, from, to }
+}
+
+// One immutable universe. Investigations select references into it; they do not
+// create private copies, merge similarly named actors, or authorize new edges.
+export function createDemoUniverse(records, options = {}) {
+  const investigations = createPreview(records, options)
+  const sources = deepFreeze(investigations.flatMap(view => view.sources))
+  const membership = Object.fromEntries(sources.map(source => [source.capture_id, [source.topic]]))
+  const universe = { sources, investigations, membership, sharedActors: [], relationships: [], sharedProvenance: sharedDeclaredProvenance(sources) }
+  return deepFreeze(universe)
+}
+
+export function demoLens(universe, topic = 'all') {
+  if (!DEMO_LENSES.includes(topic)) throw new Error('Unknown demo lens')
+  if (topic !== 'all') return universe.investigations.find(view => view.topic === topic)
+  return deepFreeze({ topic, sources: universe.sources, accounting: analyzeSources(universe.sources),
+    dependencyGroups: universe.investigations.flatMap(view => view.dependencyGroups.map(group => ({ ...group, id: `${view.topic}:${group.id}` }))),
+    graph: graphForLens(universe), arc: { id: 'private:collection:all', type: 'research_collection', members: universe.sources.map(source => source.preview_id) } })
+}
+
+export function graphForLens(universe, topics = TOPICS) {
+  if (!Array.isArray(topics) || topics.some(topic => !TOPICS.includes(topic))) throw new Error('Unknown graph lens')
+  const allowed = new Set(topics)
+  const sources = universe.sources.filter(source => allowed.has(source.topic))
+  const origins = universe.sharedProvenance.filter(origin => sources.some(source => origin.captures.includes(source.capture_id)))
+  const nodes = sources.map(source => ({
+    id: source.preview_id, label: source.title, type: 'document', capture_id: source.capture_id,
+    metadata: { demo_semantics: 'retained_private_capture', memberships: universe.membership[source.capture_id] },
+  }))
+  for (const origin of origins) nodes.push({ ...origin, metadata: { demo_semantics: 'declared_provenance_not_actor', memberships: origin.memberships } })
+  const edges = sources.flatMap(source => origins.filter(origin => origin.captures.includes(source.capture_id)).map(origin => ({
+    id: `private:declared-provenance:${source.capture_id}`, source: source.preview_id, target: origin.id,
+    type: 'documentary', label: 'receipt-declared provenance only', relationshipClass: 'declared_provenance',
+    substantive: false, corroborative: false, publication_allowed: false,
+    evidenceRoots: origin.evidenceRoots.filter(root => root.capture_id === source.capture_id),
+  })))
+  return deepFreeze({ nodes, edges })
+}
+
+export function searchDemoUniverse(universe, query) {
+  const needle = String(query ?? '').trim().toLocaleLowerCase()
+  return universe.sources.filter(source => !needle || [source.title, source.outlet, source.statement, source.semantic_kind,
+    source.topic, source.capture_id, source.candidate_id, source.origin_id].some(value => String(value ?? '').toLocaleLowerCase().includes(needle)))
+    .map(source => ({ source, memberships: universe.membership[source.capture_id] }))
+}
+
+export function switchDemoLens(route, topic, universe) {
+  const lens = demoLens(universe, topic)
+  const capture = lens.sources.some(source => source.capture_id === route.capture) ? route.capture : null
+  return { topic, surface: route.surface, capture }
 }
 export function syntheticProjection(topic) {
   // Invented demonstration, deliberately unrelated to real people and places.
@@ -112,6 +167,7 @@ export function syntheticProjection(topic) {
 }
 
 const RECEIPT_FIELDS = [
+  'job_id', 'state', 'outcome',
   'topic', 'origin_id', 'dependency_id', 'source_type', 'semantic_kind', 'run_id',
   'source_date', 'rights', 'manus_id', 'url', 'title', 'outlet', 'published_at',
   'publication_precision', 'retained_scope', 'statement', 'remaining_uncertainty',
@@ -122,6 +178,7 @@ const RECEIPT_FIELDS = [
 
 export function projectReceipt(receipt) {
   if (!TOPICS.includes(receipt?.topic)) throw new Error('Unknown demo topic')
+  if (receipt.publication_allowed != null && receipt.publication_allowed !== false) throw new Error('Publication forbidden')
   if (receipt.reader_state !== 'pending_review' || receipt.capture_state !== 'pending' || receipt.candidate_state !== 'pending') throw new Error('Preview requires pending receipts')
   for (const key of ['article_id', 'capture_id', 'candidate_id', 'content_hash']) if (!receipt[key]) throw new Error(`Missing retained identity: ${key}`)
   if (!/^[a-f0-9]{64}$/.test(receipt.content_hash)) throw new Error('Invalid retained content hash')

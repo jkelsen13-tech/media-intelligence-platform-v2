@@ -176,11 +176,11 @@ test('malformed, unknown, overlong and traversal-like demo routes fail closed', 
 test('ordinary production entry excludes both pending receipt manifests', async () => {
   const result = await build({ entryPoints: ['src/main.jsx'], bundle: true, write: false, outdir: 'memory-only', metafile: true, packages: 'external', jsx: 'automatic', logLevel: 'silent' })
   const inputs = Object.keys(result.metafile.inputs)
-  assert.equal(inputs.some((path) => /demo-corpus-20260916|demoCorpus|demo-corpus-preview/i.test(path)), false)
+  assert.equal(inputs.some((path) => /demo-corpus-20260916|demoCorpus|demoProvenance|demo-corpus-preview|demoSession/i.test(path)), false)
 })
 
 test('compiled demo has no network, mutation or promotion surface', async () => {
   const result = await build({ entryPoints: ['scripts/demo-corpus-preview.jsx'], bundle: true, write: false, outdir: 'memory-only', packages: 'external', jsx: 'automatic', logLevel: 'silent' })
   const source = result.outputFiles.map((file) => Buffer.from(file.contents).toString('utf8')).join('\n')
-  for (const forbidden of ['@supabase/supabase-js', 'qikvmopbtijoebdqosyq', 'VITE_SUPABASE', '.rpc(', 'service_role', 'publish(', 'admit(', 'approve(', 'XMLHttpRequest', 'sendBeacon', 'WebSocket', 'EventSource']) assert.equal(source.includes(forbidden), false, forbidden)
+  for (const forbidden of ['@supabase/supabase-js', 'qikvmopbtijoebdqosyq', 'VITE_SUPABASE', '.rpc(', 'service_role', 'publish(', 'admit(', 'approve(', 'fetch(', 'XMLHttpRequest', 'sendBeacon', 'WebSocket', 'EventSource']) assert.equal(source.includes(forbidden), false, forbidden)
 })
