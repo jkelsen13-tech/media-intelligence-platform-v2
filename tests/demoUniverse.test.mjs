@@ -138,3 +138,9 @@ test('demo account seam presents preview labels without implying authentication'
   assert.match(shell, /label = 'Account', title = 'Account \/ Sign in'/)
   assert.match(shell, /aria-label=\{label\} title=\{title\}/)
 })
+
+test('native graph leaves Cytoscape wheel sensitivity at its warning-free default', () => {
+  const graph = readFileSync(new URL('../src/graph/GraphView.jsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(graph, /wheelSensitivity\s*:/)
+  assert.match(graph, /addEventListener\('wheel', onWheel/)
+})

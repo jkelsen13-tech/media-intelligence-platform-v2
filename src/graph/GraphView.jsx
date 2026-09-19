@@ -254,10 +254,6 @@ export default function GraphView({
           },
       minZoom: 0.2,
       maxZoom: 3,
-      // Tier 5: cytoscape never sees wheel events (they are intercepted in
-      // capture phase below and normalized per input device), so the single
-      // wheelSensitivity knob is no longer what governs wheel zoom.
-      wheelSensitivity: 1,
     })
 
     // --- Tier 5: device-normalized wheel zoom ---
