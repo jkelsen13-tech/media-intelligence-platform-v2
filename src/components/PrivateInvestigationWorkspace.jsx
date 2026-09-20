@@ -8,6 +8,7 @@ import { RetainedInputInspector } from './InvestigationRetainedInputs.jsx'
 import InvestigationTextAvailability from './InvestigationTextAvailability.jsx'
 
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
+import { StatusBanner, BoundedRecords } from './InvestigationPanelPresentation.jsx'
 import {
   EVIDENCE_REVIEW_LABELS,
 } from '../lib/investigationEvidenceReviewsClient.js'
@@ -67,16 +68,6 @@ const RELATION_LABELS = {
   context: 'Recorded as context',
 }
 
-const BEFORE_DISCLOSURE_LIMIT = 4
-
-function StatusBanner({ children, tone = 'note', ...rest }) {
-  return (
-    <p className={`piw-banner piw-banner-${tone}`} role={tone === 'error' ? 'alert' : 'status'} {...rest}>
-      {children}
-    </p>
-  )
-}
-
 function ExcerptBlock({ resolved, reference, onOpen }) {
   if (!resolved) {
     return (
@@ -129,24 +120,6 @@ function EvidenceList({ evidence, bundle, onOpenCitation, versionLabel }) {
         )
       })}
     </ul>
-  )
-}
-
-function BoundedRecords({ items, renderItem, label, initial = BEFORE_DISCLOSURE_LIMIT }) {
-  const list = items ?? []
-  if (list.length === 0) return <p className="piw-muted">No {label} recorded on this saved version.</p>
-  const visible = list.slice(0, initial)
-  const rest = list.slice(initial)
-  return (
-    <>
-      {visible.map(renderItem)}
-      {rest.length > 0 && (
-        <details className="piw-more">
-          <summary>Show {rest.length} more {label}</summary>
-          {rest.map(renderItem)}
-        </details>
-      )}
-    </>
   )
 }
 

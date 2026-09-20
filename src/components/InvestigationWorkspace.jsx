@@ -413,15 +413,17 @@ export function WorkspaceSearch({
   dialogId,
   query = '',
   onQueryChange,
+  searchLabel = 'Search headlines and article text',
+  searchHint = 'Enter a search, then choose Explore',
 }) {
   return (
     <div className="ws-search">
       <MagnifyingGlass size={16} />
       <input
         type="search"
-        placeholder="Search headlines and article text..."
-        aria-label="Search headlines and article text"
-        title="Enter a search, then choose Explore"
+        placeholder={`${searchLabel}...`}
+        aria-label={searchLabel}
+        title={searchHint}
         value={query}
         onChange={(event) => onQueryChange?.(event.target.value)}
       />

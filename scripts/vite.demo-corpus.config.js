@@ -19,6 +19,11 @@ export default defineConfig({
   publicDir: false,
   envPrefix: 'DEMO_PUBLIC_UNUSED_',
   plugins: [demoNoExternalFonts, demoBrandAsset(), react()],
+  // CSS @imports are resolved inside PostCSS, bypassing Vite's JS transform
+  // hook for nested tokens.css. Remove the external font request at that seam.
+  css: { postcss: { plugins: [{ postcssPlugin: 'demo-no-external-font-imports',
+    AtRule: { import(rule) { if (/https:\/\/fonts\.googleapis\.com\//.test(rule.params)) rule.remove() } },
+  }] } },
   resolve: { alias: existsSync(localPhosphor) ? { '@phosphor-icons/react': localPhosphor } : {} },
   server: { host: '127.0.0.1', port: 4179 },
   build: { outDir: 'demo-preview-dist', rollupOptions: { input: 'scripts/demo-corpus-preview.html' } },
