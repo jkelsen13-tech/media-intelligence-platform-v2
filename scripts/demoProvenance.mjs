@@ -1,13 +1,13 @@
 import retained from '../verifier/demo-corpus-20260916/retained-source-receipts.json' with { type: 'json' }
 import expanded from '../verifier/demo-corpus-20260916/expanded-source-receipts.json' with { type: 'json' }
 
-// Audited repeated institutional provenance labels, not canonical actors.
-const allowedOrigins = ['doj-executive', 'us-whitehouse']
+// Exhaustively enumerate receipt-bound repeated provenance; no handpicked bridge
+// shortlist. These are annotations, not resolved actors or independent sources.
 const identityFields = ['topic', 'origin_id', 'capture_id', 'article_id', 'candidate_id', 'content_hash', 'span_start', 'span_end', 'url']
 const receipts = [...retained, ...expanded]
 
 export function sharedDeclaredProvenance(sources) {
-  return allowedOrigins.flatMap(origin => {
+  return [...new Set(receipts.map(receipt => receipt.origin_id).filter(Boolean))].sort().flatMap(origin => {
     const members = sources.filter(source => source.origin_id === origin && receipts.some(receipt =>
       identityFields.every(field => source[field] === receipt[field])))
     const memberships = [...new Set(members.map(source => source.topic))].sort()

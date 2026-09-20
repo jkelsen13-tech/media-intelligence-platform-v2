@@ -1,5 +1,6 @@
 // Isolated corpus analysis. No backend client, credentials, or publication code.
 import { sharedDeclaredProvenance } from './demoProvenance.mjs'
+import { buildReceiptPropagation } from './demoPropagation.mjs'
 export const TOPICS = ['iran', 'epstein', 'project2025']
 export const DEMO_LENSES = ['all', ...TOPICS]
 export const DEMO_SURFACES = ['context', 'news', 'evidence', 'compare', 'graph', 'timeline', 'arc', 'world']
@@ -67,7 +68,8 @@ export function analyzeSources(records) {
   }
   return { records: records.length, unique_urls: identities.size,
     versions: [...identities.values()].reduce((n, s) => n + s.size, 0),
-    independent_origins: origins.size, dependency_groups: [...dependencies.entries()], warnings }
+    declared_origins: new Set(records.map(record => record.origin_id).filter(Boolean)).size,
+    independent_origins: null, independence_state: 'unknown', dependency_groups: [...dependencies.entries()], warnings }
 }
 export function resolveIdentity(reference, registry) {
   // Labels, fuzzy matches and ambiguous aliases do not confer canonical identity.
@@ -107,6 +109,7 @@ export function createDemoUniverse(records, options = {}) {
   const sources = deepFreeze(investigations.flatMap(view => view.sources))
   const membership = Object.fromEntries(sources.map(source => [source.capture_id, [source.topic]]))
   const universe = { sources, investigations, membership, sharedActors: [], relationships: [], sharedProvenance: sharedDeclaredProvenance(sources) }
+  universe.propagation = buildReceiptPropagation(universe, graphForLens(universe))
   return deepFreeze(universe)
 }
 
@@ -142,6 +145,14 @@ export function searchDemoUniverse(universe, query) {
   return universe.sources.filter(source => !needle || [source.title, source.outlet, source.statement, source.semantic_kind,
     source.topic, source.capture_id, source.candidate_id, source.origin_id].some(value => String(value ?? '').toLocaleLowerCase().includes(needle)))
     .map(source => ({ source, memberships: universe.membership[source.capture_id] }))
+}
+
+export function searchDemoUniverseWithCoverage(universe, query) {
+  return deepFreeze({ results: searchDemoUniverse(universe, query), scope: 'frozen_receipt_metadata_only',
+    examined_sources: universe.sources.length, metadata_scan_complete: true,
+    exact_text_sources_searched: 0, exact_text_sources_unavailable: universe.sources.length,
+    semantic_search_complete: false, external_sources_searched: 0,
+    no_results_meaning: 'No matching receipt metadata in this bounded universe; no claim of real-world absence.' })
 }
 
 export function switchDemoLens(route, topic, universe) {
@@ -216,7 +227,7 @@ export function createPreview(records, { requireComplete = false } = {}) {
       comparison: { state: 'provisional_topic_collection', event_identity: null, sources: sources.map(s => s.preview_id) },
       graph: { nodes: sources.map(s => ({ id: s.preview_id, type: 'private_source_capture' })), edges: [] },
       origins: [...new Set(sources.map(s => s.origin_id).filter(Boolean))].map(id => ({ id: `private:origin:${id}`, label: id })),
-      statements: sources.filter(s => s.candidate_id).map(s => ({ id: `private:candidate:${s.candidate_id}`, capture: s.preview_id, statement: s.statement, origin: s.origin_id ? `private:origin:${s.origin_id}` : null, state: 'pending' })),
+      statements: sources.filter(s => s.candidate_id).map(s => ({ id: `private:candidate:${s.candidate_id}`, capture: s.preview_id, statement: s.statement, text_basis: 'receipt_synopsis_not_exact_evidence', exact_text: null, canonical_claim_id: null, publication_allowed: false, origin: s.origin_id ? `private:origin:${s.origin_id}` : null, state: 'pending' })),
       dependencyGroups: [...new Set(sources.map(s => s.dependency_id).filter(Boolean))].map(id => ({ id, members: sources.filter(s => s.dependency_id === id).map(s => s.preview_id), interpretation: 'research_dependency_not_corroboration' })),
       synthetic: syntheticProjection(topic),
       arc: { id: `private:collection:${topic}`, type: 'research_collection', members: sources.map(s => s.preview_id) },

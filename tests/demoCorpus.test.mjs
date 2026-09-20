@@ -15,14 +15,15 @@ test('URL tracking dedupes while semantic versions and query identity survive', 
   assert.equal(canonicalUrl('https://EXAMPLE.org/a?utm_source=x&id=2#x'), 'https://example.org/a?id=2')
   const result = analyzeSources([record, { ...record, url: record.url + '?utm_source=x' }, { ...record, content_hash: 'correction' }])
   assert.equal(result.unique_urls, 1); assert.equal(result.versions, 2)
-  assert.equal(result.independent_origins, 0)
+  assert.equal(result.independent_origins, null)
 })
 test('syndicated or dependent sources never multiply independent origins', () => {
   const result = analyzeSources([record, { ...record, url: 'https://example.org/b' }].map(r => ({ ...r, origin_id: 'agency', dependency_id: 'release-1' })))
-  assert.equal(result.independent_origins, 1)
+  assert.equal(result.independent_origins, null)
+  assert.equal(result.declared_origins, 1)
   assert.deepEqual(result.dependency_groups, [['release-1', 2]])
   const conflicting = analyzeSources([{ ...record, origin_id: 'publisher-a', dependency_id: 'wire-1' }, { ...record, origin_id: 'publisher-b', dependency_id: 'wire-1' }])
-  assert.equal(conflicting.independent_origins, 0)
+  assert.equal(conflicting.independent_origins, null)
   assert.equal(conflicting.warnings[0].reason, 'conflicting_origin_assignment')
 })
 test('actor labels and duplicate canonical references cannot resolve identity', () => {
