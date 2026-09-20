@@ -91,7 +91,7 @@ independent deployment gates. A JavaScript `assertSecurity` call is not proof.
 
 ## Current native qualification result
 
-GitHub Actions run `35526537554` passed all 13 tests against an isolated native
+GitHub Actions run `35527332553` passed all 24 tests against an isolated native
 PostgreSQL 17.6 service. It used distinct direct-login connections and covered
 effective identity; owners, default ACLs, forced RLS, and runtime grants; role
 escalation and foreign-caller denial; `SKIP LOCKED`; rollback attempt
@@ -99,12 +99,15 @@ accounting; exact replay without token/input disclosure; atomic completion;
 complete/fail and rights-revocation races; authority rechecks after blocking;
 session expiry; expired-lease requeue with token rotation and bounded attempt
 exhaustion; deterministic backend termination before and after commit; and
-committed-state persistence over a graceful database restart.
+committed-state persistence over a graceful database restart. The expanded
+matrix also covers source, session, runtime, implementation, and configuration
+authority-first rollback/commit plus worker-first replay ordering, rights
+rollback, and effective future-function default ACLs for all three owner roles.
 
 That result proves a bounded PostgreSQL core contract only. It does not prove
 the Supabase authenticator/pooler identity path, the intended target's complete
-reachable privilege graph, authentic source/rights approvals, the full
-revocation matrix, production credential or host isolation, remote-journal
+reachable privilege graph, authentic source/rights approvals, the remaining
+claim/fail revocation matrix, production credential or host isolation, remote-journal
 security, crash recovery, or a dump-and-restore rehearsal.
 
 ## Required qualification before any deployment proposal

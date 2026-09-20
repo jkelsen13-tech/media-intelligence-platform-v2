@@ -227,7 +227,7 @@ implementation/config revisions, global request-ID replay, an authorization
 fence, hashed database lease tokens, and an explicit recovery-only expired
 lease requeue that always produces a new token on the next claim. Five PGlite
 contract tests and the twelve existing candidate tests pass. A subsequent
-native PostgreSQL 17.6 workflow run (`35526537554`) also passes all 13 bounded
+native PostgreSQL 17.6 workflow run (`35527332553`) also passes all 24 bounded
 direct-login concurrency/security tests. The review also
 identified and closed two design defects during qualification: row-locking
 required broader table privileges than intended, so the contract uses
@@ -251,7 +251,11 @@ suite then exercised the two-connection timing cases, `SKIP LOCKED`, atomic
 terminal races, rights-revocation ordering, blocked session-expiry rechecks,
 requeue/token fencing, bounded recovery exhaustion, deterministic backend
 termination around commit, and graceful-restart persistence. This closes the
-bounded native-core rehearsal gap only.
+bounded native-core rehearsal gap only. The expanded matrix adds source,
+session, runtime, implementation, and configuration authority-first rollback/
+commit plus worker-first replay ordering; a new effective-default probe proves
+future owner-created functions do not inherit PUBLIC execution merely because
+`pg_default_acl` rows are absent.
 
 This is still not deployed. Fixture approval is not production provenance or
 rights authority; the native suite is not proof of Supabase authenticator/pooler

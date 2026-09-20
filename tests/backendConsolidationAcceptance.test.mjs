@@ -32,6 +32,9 @@ test('main report returns separate authority and pipeline verdicts', () => {
   assert.match(report, /B\. PIPELINE OPERATIONAL[\s\S]+FAIL/)
   assert.match(report, /qik[\s\S]+no active cron/i)
   assert.match(report, /yhb[\s\S]+two active five-minute/i)
+  assert.match(report, /each recorded\s+288 successes, zero failures/i)
+  assert.match(report, /zero public base\/partitioned tables\s+with RLS disabled/i)
+  assert.match(report, /27 effectively anon-callable[\s\S]+92 GraphQL-exposed tables/i)
 })
 
 test('Phase 1 checkpoint is honest, inspectable, and owner-gated', () => {
@@ -105,9 +108,9 @@ test('algorithm shadow SQL qualification remains non-deployed and owner-gated', 
   assert.match(checkpoint, /qualification contract now supplies isolated SQL[\s\S]+This is still not deployed/i)
   assert.match(shadowQualificationReadme, /not a\s+migration and must not be applied/i)
   assert.match(shadowQualificationReadme, /direct PostgreSQL[\s\S]+session_user/i)
-  assert.match(shadowQualificationReadme, /passed all 13 tests[\s\S]+bounded PostgreSQL core contract only/i)
+  assert.match(shadowQualificationReadme, /passed all 24 tests[\s\S]+bounded PostgreSQL core contract only/i)
   assert.match(shadowQualificationReadme, /target-shaped\s+Supabase restore must still verify pooler\/authenticator identity/i)
-  assert.match(report, /passes all 13 bounded\s+concurrency\/security tests/i)
+  assert.match(report, /passes all 24 bounded\s+concurrency\/security tests/i)
   assert.match(report, /not deployment evidence[\s\S]+not a full recovery rehearsal/i)
   assert.match(productionCandidateReadme, /Do not adapt the existing service-role collector shadow as its host/i)
 })

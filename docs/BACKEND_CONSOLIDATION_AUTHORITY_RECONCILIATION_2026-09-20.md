@@ -98,6 +98,15 @@ egress, and direct-connection consumers were not exposed and remain unknown.
 | `jfnzyvzthzqtczlxhjll` | `mip-spatial-verification-sandbox-20260829` | `us-west-1` / `17.6.1.166` | 28 / 0 / 46 | 0 | 0 / 5 | no active cron; no buckets/objects |
 | `niejaejtbxgakyrsntxm` | `jkelsen13-tech's Project` | `us-west-2` / `17.6.1.104` | 92 / 3 / 14,103 | 3 | 6 / 77 | two inactive crons; public `post-media` bucket with zero objects |
 
+A read-only re-verification from `2026-09-20T17:48:08Z` through
+`17:50:27Z` confirmed all four projects remain `ACTIVE_HEALTHY` on PostgreSQL
+17.6. Yhb's two `*/5` jobs are actively operating, not merely configured:
+`mip-ingest-rss-hourly` and `mip-source-comparison-enrichment` each recorded
+288 successes, zero failures, and a latest successful start at `17:45Z` during
+the preceding 24 hours. The historical project name does not change its current
+collector ownership. Qik still has no `pg_cron`; its seven shadow receipts do
+not establish recurring canonical ingestion.
+
 There were no database branches on qik, yhb, or jfn. Nie had a default `main`
 branch entry. Secret values were not inspected. Vault *names* on yhb show live
 scheduler/config ownership: `mip_ingest_rss_anon_jwt`,
@@ -166,7 +175,7 @@ classifies it as EXTEND, RECONCILE, or NEW.
 |---|---|---|
 | qik | **KEEP; canonical intent; NOT CONSOLIDATION-COMPLETE** | Owns canonical Auth/investigation/evidence/spatial foundations and the two direct High paths are remediated, but legacy corpus/jobs and residual ambient/default authority remain |
 | yhb | **CONSOLIDATE; NOT RETIRE-READY** | 177,478 rows, 34,277 articles, 45,399 article-entity links, 13,008 events, active ingestion/comparison jobs, six Edge functions and Vault scheduler references; no proved restore/caller cutover |
-| jfn | **CONSOLIDATE; NOT RETIRE-READY** | Not empty: 46 rows including eight assertion revisions, nine policy artifacts, four release decisions and three lineage rows; five RLS-off owner-only tables; no full export/restore proof |
+| jfn | **CONSOLIDATE; NOT RETIRE-READY** | Not empty: 46 rows including eight assertion revisions, nine policy artifacts, four release decisions and three lineage rows; its five formerly RLS-off owner-only tables are now RLS-enabled, but no full export/restore proof exists |
 | nie | **CONSOLIDATE; NOT RETIRE-READY** | 14,103 rows including 752 articles and 1,892 explanations, three Auth users, six Edge functions, historical lineage/config and a public bucket definition; recovery and caller closure unproved |
 
 No project qualifies as `RETIRE-READY`. Historical labels such as “sandbox” or
@@ -252,7 +261,7 @@ delta described above; it did not copy or overwrite live canonical domain rows.
 | `investigation-source-spans` | 1 | true | authenticated workspace read before projection |
 | `investigation-api` | 3 | true | fixed route dispatcher to private handlers and fixed qik host |
 | `capture-retrieval` | 6 | true | exact configured service credential, browser-Origin rejection, bounded routes |
-| `collector-shadow` | 1 | false | custom high-entropy Vault token; service-role-only authorization/plan/receipt RPCs; fetch/hash/count receipt only; no article, evidence, graph, publication, acknowledgement, or schedule writes |
+| `collector-shadow` | 1 | false | custom high-entropy Vault token; fetch/hash/count receipt-only contract and no schedule, but the host still carries ambient service-role credentials and is not a least-authority runtime |
 
 `verify_jwt=true` authenticates a gateway token; it does not prove action-level
 authorization. The private investigation RPCs are SECURITY INVOKER with narrow
@@ -340,6 +349,26 @@ The five RLS-disabled public tables found on jfn were:
 anon/authenticated CRUD path was demonstrated. Migration
 `20260920151010_spatial_sandbox_public_rls_hardening_v1` enabled RLS on all five;
 their ACLs remain postgres-owner-only.
+
+The `17:48Z`–`17:50Z` re-verification found zero public base/partitioned tables
+with RLS disabled across all four projects. That closes the literal base-table
+condition, not the authorization review. Current security advisors still report:
+
+- qik: six owner-authority (`security_invoker=false`) public views, plus 84
+  RLS-enabled/no-policy informational findings;
+- yhb: four owner-authority views, 27 effectively anon-callable and 27
+  authenticated-callable SECURITY DEFINER routines, and 13 mutable search paths;
+- jfn: one anon/authenticated-callable SECURITY DEFINER routine; and
+- nie: the `feed_posts` owner-authority view, 92 GraphQL-exposed tables for each
+  browser role, three anon/authenticated-callable SECURITY DEFINER routines,
+  and 11 mutable search paths.
+
+These counts are reachability leads, not automatic vulnerability verdicts.
+Each effective grant must be reconciled with its RLS policy, function body,
+owner, search path, downstream calls, and intended caller. The new read-only
+catalog audit in `supabase/tests/backend_consolidation_20260920_verification.sql`
+reports those edges and flags unsafe implicit default function privileges;
+dynamic SQL and dashboard-only Data API settings remain separately unresolved.
 
 ## 9. Reconciliation work completed
 
@@ -432,8 +461,8 @@ Isolated branch checks include:
   sanitization checks also pass.
 
 - A separate qualification-only collector algorithm-shadow SQL contract passes
-  five PGlite tests and a native PostgreSQL 17.6 workflow passes all 13 bounded
-  concurrency/security tests (GitHub Actions run `35526537554`). The native
+  five PGlite tests and a native PostgreSQL 17.6 workflow passes all 24 bounded
+  concurrency/security tests (GitHub Actions run `35527332553`). The native
   suite uses separate direct-login connections and verifies effective identity,
   owners/default ACLs/RLS, denial of role escalation and unrelated callers,
   `SKIP LOCKED`, rollback attempt accounting, exact replay, atomic terminal
@@ -441,13 +470,17 @@ Isolated branch checks include:
   after a blocking lock, expired-session rejection, lease-token rotation,
   bounded recovery contention/exhaustion, deterministic backend termination
   before and after commit, and persistence across a graceful database restart.
+  It now also proves completion/replay ordering for source, session, runtime,
+  implementation, configuration, and rights rollback, and creates new
+  owner-defined functions to verify effective default ACLs rather than treating
+  absent `pg_default_acl` rows as safe.
   This is bounded native-core qualification evidence—not deployment evidence
   and not a full recovery rehearsal. It does not establish Supabase
   authenticator/pooler behavior, the target database's complete inherited
   `PUBLIC`/security-definer privilege graph, production provenance/rights
-  authority, isolated credentials/host, remote-journal controls, the complete
-  source/session/runtime/implementation/configuration revocation matrix, or a
-  dump-and-restore recovery of the intended target.
+  authority, isolated credentials/host, remote-journal controls, claim/fail
+  variants of the authority-revocation matrix, rights/lease expiry after each
+  applicable lock, or dump-and-restore recovery of the intended target.
 
 The transient local environment could not complete the full dependency-backed
 PGlite batch because of host resource limits. That is not counted as a local
@@ -475,6 +508,11 @@ Recovery is not proven for any predecessor.
   memberships, review receipts and audit attribution and must survive migration.
 - Empty storage objects do not prove bucket configuration, policies, URL
   compatibility or external callers are recoverable.
+- Restoring an older database also restores its older authorization state. The
+  collector contract has no independent restore epoch or external revocation
+  checkpoint, so a faithful archive can still predate a rights/session/runtime
+  revocation. Any restored system must remain quarantined until current
+  authority is reconciled; archive fidelity alone cannot authorize reactivation.
 
 Each predecessor needs a fresh consistent export or verified backup/PITR point,
 an independently accessible encrypted copy with a named recovery owner, and a
@@ -515,7 +553,8 @@ demo-derived implementation adopted by the consolidation changes.
    now-correct external capability gate.
 3. Yhb active schedulers, large unique corpus and unresolved in-flight state.
 4. Nie unique Auth/history and legacy workers; jfn unique spatial history.
-5. Legacy browser-callable SECURITY DEFINER mutations.
+5. Browser-callable owner-authority views/functions and their complete
+   downstream privilege graph, especially the yhb and nie advisor findings.
 6. Full service-secret/ambient-runtime boundary and external caller inventory.
 7. Exact per-project billing, backup/PITR and recovery authority.
 8. Full data hashes/identity maps and isolated restore rehearsal.
@@ -526,7 +565,8 @@ demo-derived implementation adopted by the consolidation changes.
     isolated SQL now defines the required direct-login/three-RPC model, but
     actual Supabase role creation, effective PUBLIC/security-definer privilege
     closure, pooler behavior, host secret isolation, real authority-record
-    integration, multi-connection races, and recovery remain unproved. The
+    integration, remaining claim/fail revocation cases, archive/crash recovery,
+    and connection-path semantics remain unproved. The
     worker must not be hosted with an ambient service-role credential.
 
 ## 14. Remaining owner/platform gates
