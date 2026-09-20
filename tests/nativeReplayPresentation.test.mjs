@@ -64,4 +64,7 @@ test('shell mounts independently of replay fetch and native graph inputs survive
  assert.match(entry,/const \[privateReplay, setPrivateReplay\] = useState\(null\)/)
  assert.match(entry,/const graphNodes = useMemo/);assert.match(entry,/const selectGraphNode = useCallback/)
  assert.match(entry,/onSelect=\{selectGraphNode\}/);assert.match(entry,/const selectSource = useCallback/)
+ assert.match(entry,/selectedIsolateId = !showIsolated && selected && !connectedIds.has\(selected.preview_id\)/)
+ const graphMemo=entry.split('\n').find(line=>line.includes('const graphNodes = useMemo'))
+ assert.match(graphMemo,/selectedIsolateId\]\)/);assert.doesNotMatch(graphMemo,/selected\?\.preview_id/)
 })

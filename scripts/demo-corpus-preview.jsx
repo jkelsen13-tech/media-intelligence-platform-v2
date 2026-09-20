@@ -94,7 +94,10 @@ function NativeGraph({ investigation, selected, onSelect, privateReplay }) {
   const fullGraph = useMemo(() => privateReplay ? replayGraph(privateReplay, investigation.sources) : graphForLens(universe, investigation.topic === 'all' ? undefined : [investigation.topic]), [investigation, privateReplay])
   const visibleClusters = useMemo(() => privateReplay?.clusters.filter(c=>fullGraph.nodes.some(n=>n.id===c.id)) ?? [], [privateReplay, fullGraph])
   const connectedIds = useMemo(() => new Set(fullGraph.edges.flatMap(edge => [edge.source, edge.target])), [fullGraph])
-  const graphNodes = useMemo(() => fullGraph.nodes.filter(node => showIsolated || connectedIds.has(node.id) || node.id === selected?.preview_id), [fullGraph, showIsolated, connectedIds, selected?.preview_id])
+  // Connected selection changes highlighting only. Only a selected hidden isolate
+  // changes membership and therefore warrants a new Cytoscape input array.
+  const selectedIsolateId = !showIsolated && selected && !connectedIds.has(selected.preview_id) ? selected.preview_id : null
+  const graphNodes = useMemo(() => fullGraph.nodes.filter(node => showIsolated || connectedIds.has(node.id) || node.id === selectedIsolateId), [fullGraph, showIsolated, connectedIds, selectedIsolateId])
   const byId = useMemo(() => new Map(universe.sources.map(source => [source.preview_id, source])), [])
   const selectGraphNode = useCallback(node => { if (visibleClusters.some(c=>c.id===node?.id)) { setClusterId(node.id); return }; setClusterId(null); if (node?.type === 'declared_origin_identity') setOriginId(node.id); else if (byId.has(node?.id)) onSelect(byId.get(node.id)) }, [visibleClusters, byId, onSelect])
   const results = graphQuery.trim() ? searchDemoUniverse(universe, graphQuery).map(result => result.source) : []
