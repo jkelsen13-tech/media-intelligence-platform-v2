@@ -641,9 +641,16 @@ candidate migrations, and review packaging remain safe.
 unique data, active callers, recovery, decision semantics, and authorization
 state remain unresolved.
 
-**PIPELINE OPERATIONAL also fails independently.** Qik has no active scheduler
-and no representative article has completed the intended canonical end-to-end
-analytical path. The receipt-only shadow is not an ingestion pipeline.
+**PIPELINE VALIDATED IN ISOLATION fails independently.** Substantial component
+and cross-component qualifications pass, but no single production-shaped
+isolated system has traversed every required stage with the real authority
+boundaries and observable degraded/failure behavior.
+
+**PIPELINE OPERATIONAL ON THE AUTHORIZED LIVE BACKEND also fails
+independently.** Qik has no active scheduler and no representative article has
+completed the intended canonical end-to-end analytical path. The receipt-only
+shadow is not an ingestion pipeline. Yhb's active predecessor path does not
+make qik operational.
 
 ## 16. Is any redundant paid project demonstrably retirement-ready?
 
@@ -653,10 +660,25 @@ unreconciled data/configuration, and yhb has active production-like jobs.
 
 ## 17. Exact recommended next action
 
-Owner review should authorize an **isolated qik restore rehearsal**, not a live
-deployment. Apply the qualification design there with newly provisioned
-restricted direct-login identities; connect it to synthetic or independently
-approved retained captures; audit all inherited PUBLIC/security-definer paths;
+The exact next bounded owner-authorization prompt is:
+
+> Authorize a fresh, access-controlled PostgreSQL 17/Supabase-compatible
+> rehearsal destination and read-only consistent exports of the minimum qik
+> and yhb state needed for recovery and full-pipeline validation. Keep all
+> schedules, workers, publication, outbound collection, and provider calls
+> disabled; omit secret values and bind only owner-approved reference
+> identities; restrict retained material to an explicitly approved
+> source/rights/privacy cohort; and assign a recovery custodian and deletion
+> date for the rehearsal copy. Permit schema/data/owner/grant/RLS/sequence/Auth-
+> metadata restore, complete reachable-privilege audit, and one representative
+> retained article traversal through ingestion handoff, extraction,
+> provider-neutral decision, graph/event/timeline, and observable terminal
+> state. Do not authorize production writes, source or scheduler enablement,
+> credential rotation, paid-provider activation, public deployment, caller
+> cutoff, or predecessor retirement.
+
+Apply the qualification design there with newly provisioned restricted
+direct-login identities; audit all inherited PUBLIC/security-definer paths;
 run real two-connection claim/completion/revocation/requeue races and
 connection-loss/restart recovery; and verify the remote journal's controls.
 The rehearsal and any later host must have no ambient service role or shared
