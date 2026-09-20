@@ -10,6 +10,14 @@ const checkpoint = fs.readFileSync(
   new URL('../docs/PHASE1_BACKEND_RECONCILIATION_CHECKPOINT_2026-09-20.md', import.meta.url),
   'utf8',
 )
+const foundationCheckpoint = fs.readFileSync(
+  new URL('../docs/FOUNDATION_RUNTIME_OWNERSHIP_CHECKPOINT_2026-09-20.md', import.meta.url),
+  'utf8',
+)
+const foundationReceipt = JSON.parse(fs.readFileSync(
+  new URL('../verifier/backend-consolidation-2026-09-20/foundation-runtime-checkpoint-20260920.json', import.meta.url),
+  'utf8',
+))
 const semantics = fs.readFileSync(
   new URL('../docs/SEMANTIC_DECISION_ABSENCE_CHANGE_AUTHORITY_2026-09-20.md', import.meta.url),
   'utf8',
@@ -31,9 +39,10 @@ const liveReverification = JSON.parse(fs.readFileSync(
   'utf8',
 ))
 
-test('main report returns separate authority and pipeline verdicts', () => {
+test('main report returns three independent authority and pipeline verdicts', () => {
   assert.match(report, /A\. AUTHORITY CONSOLIDATED[\s\S]+FAIL/)
-  assert.match(report, /B\. PIPELINE OPERATIONAL[\s\S]+FAIL/)
+  assert.match(report, /B\. PIPELINE VALIDATED IN ISOLATION[\s\S]+FAIL/)
+  assert.match(report, /C\. PIPELINE OPERATIONAL ON THE AUTHORIZED LIVE BACKEND[\s\S]+FAIL/)
   assert.match(report, /qik[\s\S]+no active cron/i)
   assert.match(report, /yhb[\s\S]+two active five-minute/i)
   assert.match(report, /each recorded\s+288 successes, zero failures/i)
@@ -47,6 +56,27 @@ test('main report returns separate authority and pipeline verdicts', () => {
   assert.ok(Object.values(liveReverification.projects).every(
     project => project.security.public_tables_rls_disabled === 0,
   ))
+})
+
+test('foundation checkpoint distinguishes all eight runtime stages without percentages', () => {
+  for (const stage of [
+    'Foundation located', 'Contract / implementation coverage',
+    'Tested in isolation', 'Integrated with required components',
+    'Installed / deployed', 'Enabled', 'Authorized real data',
+    'End-to-end operational verification',
+  ]) assert.ok(foundationCheckpoint.includes(stage), stage)
+  for (const capability of [
+    'Hypothesis assessment', 'Entity identity and actor agency',
+    'Content-addressed storage', 'Markets', 'Weather rights',
+    'Operation evidence', 'Provider-neutral System-One decision layer',
+  ]) assert.ok(foundationCheckpoint.includes(capability), capability)
+  assert.doesNotMatch(foundationCheckpoint, /\b\d{1,3}%\s+(?:complete|done|built)/i)
+  assert.deepEqual(foundationReceipt.verdicts, {
+    authority_consolidated: 'FAIL',
+    pipeline_validated_in_isolation: 'FAIL',
+    pipeline_operational_authorized_live_backend: 'FAIL',
+  })
+  assert.equal(foundationReceipt.live_observations.mutations, 0)
 })
 
 test('Phase 1 checkpoint is honest, inspectable, and owner-gated', () => {
@@ -120,10 +150,10 @@ test('algorithm shadow SQL qualification remains non-deployed and owner-gated', 
   assert.match(checkpoint, /qualification contract now supplies isolated SQL[\s\S]+This is still not deployed/i)
   assert.match(shadowQualificationReadme, /not a\s+migration and must not be applied/i)
   assert.match(shadowQualificationReadme, /direct PostgreSQL[\s\S]+session_user/i)
-  assert.match(shadowQualificationReadme, /passed all 24 tests[\s\S]+bounded PostgreSQL core contract only/i)
+  assert.match(shadowQualificationReadme, /passed all 25 tests[\s\S]+bounded PostgreSQL core contract only/i)
   assert.match(shadowQualificationReadme, /target-shaped\s+Supabase restore must still verify pooler\/authenticator identity/i)
-  assert.match(report, /passes all 24 bounded\s+concurrency\/security tests/i)
-  assert.match(report, /not deployment evidence[\s\S]+not a full recovery rehearsal/i)
+  assert.match(report, /passes all 25 bounded\s+concurrency\/security\/recovery tests/i)
+  assert.match(report, /not deployment evidence[\s\S]+not a predecessor or disaster-recovery rehearsal/i)
   assert.match(productionCandidateReadme, /Do not adapt the existing service-role collector shadow as its host/i)
 })
 

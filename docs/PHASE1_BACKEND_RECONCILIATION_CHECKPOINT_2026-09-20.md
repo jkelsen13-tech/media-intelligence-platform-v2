@@ -227,7 +227,7 @@ implementation/config revisions, global request-ID replay, an authorization
 fence, hashed database lease tokens, and an explicit recovery-only expired
 lease requeue that always produces a new token on the next claim. Five PGlite
 contract tests and the twelve existing candidate tests pass. A subsequent
-native PostgreSQL 17.6 workflow run (`35527332553`) also passes all 24 bounded
+native PostgreSQL 17.6 workflow run (`35530600346`) also passes all 25 bounded
 direct-login concurrency/security tests. The review also
 identified and closed two design defects during qualification: row-locking
 required broader table privileges than intended, so the contract uses
@@ -262,7 +262,11 @@ rights authority; the native suite is not proof of Supabase authenticator/pooler
 identity; the target database's complete inherited `PUBLIC`/security-definer
 call graph is not audited; the full source/session/runtime/implementation/
 configuration revocation matrix has not been rehearsed; runtime credentials,
-an isolated host, and real remote-journal controls do not exist; and no isolated
-dump-and-restore has run. Those remain the security/recovery gate. This work
+an isolated host, and real remote-journal controls do not exist. A bounded
+same-cluster logical dump/restore now proves the synthetic collector contract's
+catalog, owners/ACLs/RLS, functions/policies, sequences, private histories and
+post-restore behavior, but it pre-creates global roles and does not prove a
+fresh cluster, a predecessor restore, Supabase Auth/Storage/Edge/Cron, PITR, or
+crash recovery. Those remain the security/recovery gate. This work
 advances reversible preparation without changing the Phase 1 stop decision or
 either failure verdict.

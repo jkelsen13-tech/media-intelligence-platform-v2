@@ -18,7 +18,19 @@ provider-neutral System-One contract is only partially implemented; and no
 predecessor has a proved isolated restore. Therefore retirement readiness
 cannot be affirmed for any predecessor.
 
-### B. PIPELINE OPERATIONAL — **FAIL**
+### B. PIPELINE VALIDATED IN ISOLATION — **FAIL**
+
+The repository contains substantial isolated foundations for hypothesis
+assessment, entity/agency resolution, content-addressed storage, Markets
+evidence, authority, comparison, and collector behavior. Exact integration-head
+and current-branch CI prove many individual contracts. They do not yet prove a
+single representative retained article through the complete intended ingestion,
+extraction, provider-neutral decision, graph/event/timeline, publication and
+observable-failure path in one production-shaped isolated system. Component
+qualification therefore remains evidence, not a substitute for full-pipeline
+isolation validation.
+
+### C. PIPELINE OPERATIONAL ON THE AUTHORIZED LIVE BACKEND — **FAIL**
 
 The intended qik ingestion and analytical pipeline is not operational. Qik has
 no active cron. Its collector shadow proved authorization and HTTP reachability
@@ -29,9 +41,9 @@ article traversed a qik-owned schedule, ingestion, extraction, semantic
 decision, graph/event/timeline, and observable completion path. The surviving
 pipeline therefore still relies on predecessor authority.
 
-These verdicts are independent. Neither backend consolidation nor launch
-readiness may be inferred from the bounded security and shadow work in this
-report.
+These three verdicts are independent. Neither backend consolidation nor live
+launch readiness may be inferred from component isolation or the bounded
+security and shadow work in this report.
 
 This report began with read-only inventory and now records the bounded live
 reconciliation expressly authorized by the owner on 2026-09-20. It includes
@@ -48,6 +60,8 @@ labelled as a reconstruction from retained pre-change evidence. Further live
 production work is paused at the new owner-review gate. The System-One,
 absence-semantics, and knowledge-change reconciliation is recorded in
 `docs/SEMANTIC_DECISION_ABSENCE_CHANGE_AUTHORITY_2026-09-20.md`.
+The corrected eight-stage foundation/runtime ownership checkpoint is
+`docs/FOUNDATION_RUNTIME_OWNERSHIP_CHECKPOINT_2026-09-20.md`.
 
 ## 1. Git identity and protected reference
 
@@ -110,6 +124,16 @@ not establish recurring canonical ingestion.
 The sanitized durable receipt is
 `verifier/backend-consolidation-2026-09-20/live-reverification-20260920T175027Z.json`.
 
+A later foundation/runtime recheck at `19:02Z`–`19:04Z` confirmed that yhb
+collection is actively producing data, not merely scheduled: all seven sources
+were enabled, both five-minute jobs again had 288/288 successful runs and zero
+failures, 239 articles had been fetched in the preceding 24 hours, and the
+latest ingestion run completed at `19:00:19.631Z`. The deployed v8 function
+accepts either the owner key or its Vault-backed scheduler token; it is not the
+later repository-only implementation that returns a disabled response when an
+owner key is absent. The sanitized checkpoint receipt is
+`verifier/backend-consolidation-2026-09-20/foundation-runtime-checkpoint-20260920.json`.
+
 There were no database branches on qik, yhb, or jfn. Nie had a default `main`
 branch entry. Secret values were not inspected. Vault *names* on yhb show live
 scheduler/config ownership: `mip_ingest_rss_anon_jwt`,
@@ -144,14 +168,14 @@ split. The decision column uses the archive's required vocabulary.
 | Source lineage and comparison | yhb active comparison/ingestion; nie legacy comparison; qik retained collector/comparison history | **RECONCILE into qik** | Stop unsafe legacy public mutations; preserve run generations, mappings and audit history |
 | Events, timelines, arcs/collections | yhb owns the large live population (13,008 events and timeline/arc state); qik has limited gated/reference state | **RECONCILE into qik** | Identity mapping, membership/release policy, temporal precision and publication parity |
 | Assessments and revisions | qik migration `20260906051224_evidence_assessment_dependencies_v1` is already live; one assessment observed | **EXTEND qik** | Do not replay migration; later semantic model/scheduler remains separate algorithm work |
-| Provider-neutral System-One decisions | qik assessment/change foundation; no provider-specific live authority proven | **EXTEND qik** | Add the full semantic key, evidence digest, subject/temporal/policy/adapter/provider metadata, permission-safe reuse, typed invalidation, deterministic disposition and provider-disabled behavior |
+| Provider-neutral System-One decisions | qik assessment/change foundation plus unmerged hypothesis/authority contracts; no provider-specific live authority proven | **RECONCILE/EXTEND qik** | Unify the located decision IDs, evidence bindings, temporal/method revisions, permission-safe reuse, typed invalidation, deterministic disposition and provider-disabled behavior; do not create a parallel store |
 | Reconsideration and source history | qik change queues, dependency runs, record versions, 9,537 collector versions and 45 spatial versions | **EXTEND qik** | Confirm all legacy generations/leases/checkpoints are represented before cutover |
 | Investigation workspace/context | qik private evidence pipeline and eight deployed Edge functions | **EXTEND qik** | Reduce service-role blast radius without weakening RPC membership/reviewer checks |
 | Search/discovery | front ends read qik public projections; backing corpus authority is split | **RECONCILE around qik** | Projection parity after corpus move; Data API exposure and ACL tests |
 | Spatial projections / World View | qik schema/runtime is intended authority; jfn retains 46 verification/release rows | **RECONCILE into qik** | Import unique jfn history; add admin-controlled capability model; complete reproducible runtime bundle |
 | Terrain/runtime dependencies | repository/Vercel build assets; no separate Supabase storage objects observed | **EXTEND repository contract** | Reproducible dependency install/build and deployment evidence |
 | Temporal intelligence | yhb owns material timeline data; qik temporal/publication output is incomplete | **RECONCILE into qik** | Preserve date evidence, uncertainty, placement audits and release gating |
-| Markets | no authoritative live implementation was proven | **UNKNOWN; NEW only after requirements gate** | Do not create a parallel store from name-only requirements |
+| Markets | typed evidence contract, private workspace/transport, isolated Markets evidence package and unapplied graph-compatibility candidate are located in integration/current; none is live authority | **RECONCILE/EXTEND qik; not NEW** | Review the candidate against qik graph/evidence foundations, retain default-closed endpoints, and require installation/data/E2E evidence before enablement |
 | Publication/public projection | qik public views are intended surface; legacy yhb/nie functions also mutate publication | **RECONCILE around qik** | Fix qik view write ACLs; migrate callers before revoking legacy entrypoints |
 | Private/public boundary | qik private investigation boundary is strongest; the direct public-view and self-service spatial escalations are remediated | **EXTEND and harden qik** | Close residual `supabase_admin` defaults and shared-runtime ambient authority |
 | Content-addressed storage/rehydration | qik evidence identities/captures and `capture-retrieval`; zero storage objects | **EXTEND qik** | Prove actual byte-level restore/rehydration, not only metadata rows |
@@ -464,8 +488,8 @@ Isolated branch checks include:
   sanitization checks also pass.
 
 - A separate qualification-only collector algorithm-shadow SQL contract passes
-  five PGlite tests and a native PostgreSQL 17.6 workflow passes all 24 bounded
-  concurrency/security tests (GitHub Actions run `35527332553`). The native
+  five PGlite tests and a native PostgreSQL 17.6 workflow passes all 25 bounded
+  concurrency/security/recovery tests (GitHub Actions run `35530600346`). The native
   suite uses separate direct-login connections and verifies effective identity,
   owners/default ACLs/RLS, denial of role escalation and unrelated callers,
   `SKIP LOCKED`, rollback attempt accounting, exact replay, atomic terminal
@@ -476,14 +500,21 @@ Isolated branch checks include:
   It now also proves completion/replay ordering for source, session, runtime,
   implementation, configuration, and rights rollback, and creates new
   owner-defined functions to verify effective default ACLs rather than treating
-  absent `pg_default_acl` rows as safe.
+  absent `pg_default_acl` rows as safe. It also performs a same-cluster custom
+  logical dump and single-transaction restore without replaying contract DDL,
+  then compares catalog/owner/ACL/RLS/policy/function/sequence fingerprints and
+  every private history table, exercises replay/denial/claim behavior, and
+  appends a new sequenced recovery event. The 145,129-byte archive had SHA-256
+  `f72d017793cc115146c166a2365502d69894a5fc5ced43af92905195931bfd8c` and
+  restored in 506 ms in that disposable run.
   This is bounded native-core qualification evidence—not deployment evidence
-  and not a full recovery rehearsal. It does not establish Supabase
+  and not a predecessor or disaster-recovery rehearsal. It does not establish Supabase
   authenticator/pooler behavior, the target database's complete inherited
   `PUBLIC`/security-definer privilege graph, production provenance/rights
   authority, isolated credentials/host, remote-journal controls, claim/fail
   variants of the authority-revocation matrix, rights/lease expiry after each
-  applicable lock, or dump-and-restore recovery of the intended target.
+  applicable lock, fresh-cluster/global-role reconstruction, PITR, crash
+  recovery, or dump-and-restore recovery of the intended target.
 
 The transient local environment could not complete the full dependency-backed
 PGlite batch because of host resource limits. That is not counted as a local
@@ -495,6 +526,13 @@ system.
 ## 11. Recovery evidence
 
 Recovery is not proven for any predecessor.
+
+- The synthetic collector qualification contract now has a successful
+  same-cluster PostgreSQL 17.6 logical dump/restore rehearsal with object,
+  authority, history, sequence, replay and post-restore mutation checks. Its
+  pre-existing global roles and same service container are explicit limits;
+  this is not evidence for predecessor data, Supabase Auth/Storage/Edge/Cron,
+  a fresh cluster, PITR, or crash/disaster recovery.
 
 - Existing `backend_recovery_verification_2026-09-05.json` covers 15 snapshot
   files and explicitly says fixture tests do not establish production

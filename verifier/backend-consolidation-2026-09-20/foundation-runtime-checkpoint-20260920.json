@@ -1,0 +1,90 @@
+{
+  "evidence_kind": "sanitized_parent_reconciled_foundation_runtime_checkpoint",
+  "recorded_date": "2026-09-20",
+  "mutations": 0,
+  "anchors": {
+    "main": "1dc317200b7a928fad85d06b43351b60e2a50d92",
+    "integration_branch": "codex/integrated-reconciliation-20260914",
+    "integration_head": "4d69243cd2de91d7588e4eb263cc05b48e8fd0ef",
+    "pr_175": {
+      "state": "open",
+      "draft": true,
+      "merged": false
+    },
+    "consolidation_pre_checkpoint_head": "498b68e73985b6a201cc979f7d10578a4c712aad"
+  },
+  "stages": [
+    "foundation_located",
+    "contract_implementation_coverage",
+    "tested_in_isolation",
+    "integrated_with_required_components",
+    "installed_deployed",
+    "enabled",
+    "authorized_real_data",
+    "end_to_end_operationally_verified"
+  ],
+  "verdicts": {
+    "authority_consolidated": "FAIL",
+    "pipeline_validated_in_isolation": "FAIL",
+    "pipeline_operational_authorized_live_backend": "FAIL"
+  },
+  "live_observations": {
+    "mutations": 0,
+    "window_utc": {
+      "from": "2026-09-20T19:02:20Z",
+      "through": "2026-09-20T19:04:39Z"
+    },
+    "qikvmopbtijoebdqosyq": {
+      "article_captures": 95,
+      "article_identities": 95,
+      "evidence_candidates": 96,
+      "evidence_changes": 195,
+      "record_versions": 100,
+      "investigation_observations": 2,
+      "assessments": 1,
+      "worker_evaluations": 0,
+      "worker_evaluation_revocations": 0,
+      "qualification_schemas_present": [],
+      "qualification_schemas_checked": [
+        "mip_hypothesis",
+        "mip_mentions",
+        "mip_cas",
+        "mip_markets",
+        "mip_identity",
+        "mip_factual",
+        "mip_cutover_authority"
+      ]
+    },
+    "yhbwnrtlqbjtcrrlpbge": {
+      "ingest_sources_total": 7,
+      "ingest_sources_enabled": 7,
+      "active_cron_jobs": 2,
+      "cron_runs_each_last_24h": 288,
+      "cron_failures_each_last_24h": 0,
+      "articles_total": 34333,
+      "articles_fetched_last_24h": 239,
+      "latest_fetched_at": "2026-09-20T19:00:07.357835Z",
+      "latest_ingestion_completed_at": "2026-09-20T19:00:19.631Z",
+      "deployed_ingest_authority": "owner_run_key_or_vault_backed_scheduler_token"
+    },
+    "niejaejtbxgakyrsntxm": {
+      "ingest_sources_total": 5,
+      "ingest_sources_enabled": 5,
+      "active_cron_jobs": 0,
+      "inactive_cron_jobs": 2
+    },
+    "external_scheduler_owner": "not_proven_or_disproven"
+  },
+  "capability_dispositions": {
+    "hypothesis_assessment": "EXTEND_RECONCILE_QIK_NOT_NEW",
+    "provider_neutral_decision_layer": "RECONCILE_AROUND_QIK",
+    "entity_identity_and_agency": "RECONCILE_INTO_QIK_NOT_NEW",
+    "content_addressed_storage": "EXTEND_QIK_NOT_NEW",
+    "markets": "EXTEND_RECONCILE_QIK_NOT_NEW",
+    "weather_rights": "KEEP_FAIL_CLOSED_OUTSIDE_CRITICAL_PATH",
+    "operation_evidence": "RECONCILE_REUSABLE_FOUNDATIONS_REJECT_DEMO_SPECIFIC_AUTHORITY",
+    "collector_ingestion": "RECONCILE_YHB_TO_QIK_OWNER_GATED",
+    "source_comparison": "RECONCILE_YHB_TO_QIK_OWNER_GATED"
+  },
+  "former_demo_excluded": true
+}
