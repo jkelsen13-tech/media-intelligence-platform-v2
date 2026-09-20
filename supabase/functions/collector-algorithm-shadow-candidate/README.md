@@ -10,9 +10,12 @@ The worker has no Supabase client, service-role credential, environment access,
 network call, scheduler, provider integration, table interface, or publication
 path. A future host must supply exactly three dedicated capabilities:
 `shadow_claim`, `shadow_complete`, and `shadow_fail`. Their database contract is
-not included here because the actual production object owner and scoped runtime
-identity remain owner-gated security decisions. Substituting a service-role
-client would violate this candidate's contract.
+modeled by the separate, non-migration
+`supabase/qualification/collector-algorithm-shadow/contract.sql`. That isolated
+contract is design/test evidence, not a deployable production definition;
+actual production roles, login provisioning, host isolation, and authentic
+authority-record integration remain owner/platform-gated. Substituting a
+service-role client would violate this candidate's contract.
 
 The worker proves only internal digest consistency of caller assertions. It
 does not prove that text is an immutable raw capture, that a source ID belongs
@@ -29,9 +32,11 @@ The durable wrapper is the only acceptable future host entrypoint. Exact retry
 requires its remote journal to retain lease tokens and completion payloads, so
 the journal must be independently verified as access-controlled, encrypted,
 log-redacted, and governed by an explicit retention policy. The JavaScript
-assertion is not evidence that those controls exist. Recovery, atomic SQL,
-lease expiry, object-owner privileges, and unique runtime authority remain
-unimplemented deployment gates.
+assertion is not evidence that those controls exist. The qualification contract
+tests atomic SQL, explicit expired-lease requeue, and unique direct-login
+runtime authority in a disposable database. Real PostgreSQL concurrency,
+platform object ownership, credential issuance, journal security, and restore
+recovery remain unimplemented deployment gates.
 
 The envelope check is deliberately bounded and is not a validating XML parser.
 A production host must add a hardened, fully bounded XML parser and record its

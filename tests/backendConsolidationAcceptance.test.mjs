@@ -18,6 +18,10 @@ const productionCandidateReadme = fs.readFileSync(
   new URL('../supabase/production-candidates/README.md', import.meta.url),
   'utf8',
 )
+const shadowQualificationReadme = fs.readFileSync(
+  new URL('../supabase/qualification/collector-algorithm-shadow/README.md', import.meta.url),
+  'utf8',
+)
 
 test('main report returns separate authority and pipeline verdicts', () => {
   assert.match(report, /A\. AUTHORITY CONSOLIDATED[\s\S]+FAIL/)
@@ -86,10 +90,13 @@ test('former demo lane is historical only and excluded from acceptance', () => {
   assert.match(checkpoint, /frozen historical work only/i)
 })
 
-test('algorithm shadow is prepared only behind the unresolved dedicated-authority gate', () => {
+test('algorithm shadow SQL qualification remains non-deployed and owner-gated', () => {
   assert.match(report, /did not deploy[\s\S]+network-free collector algorithm-shadow/i)
   assert.match(report, /no ambient service role/i)
   assert.match(checkpoint, /service-role credential as an effective least-privilege[\s\S]+rejected/i)
-  assert.match(checkpoint, /not deployed and supplies no database capability SQL/i)
+  assert.match(checkpoint, /qualification contract now supplies isolated SQL[\s\S]+This is still not deployed/i)
+  assert.match(shadowQualificationReadme, /not a\s+migration and must not be applied/i)
+  assert.match(shadowQualificationReadme, /direct PostgreSQL[\s\S]+session_user/i)
+  assert.match(shadowQualificationReadme, /real PostgreSQL\s+restore[\s\S]+must additionally prove contention/i)
   assert.match(productionCandidateReadme, /Do not adapt the existing service-role collector shadow as its host/i)
 })

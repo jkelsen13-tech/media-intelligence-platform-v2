@@ -431,6 +431,17 @@ Isolated branch checks include:
   existing dependency-free collector-shadow checks and four golden
   sanitization checks also pass.
 
+- A separate qualification-only collector algorithm-shadow SQL contract now
+  passes five PGlite tests. The tested boundary uses separate storage,
+  worker-function, and authority owners; dedicated direct-login runtime
+  identities; forced RLS; exactly three worker RPC grants; database-selected
+  immutable input; global request uniqueness; current-authority replay checks;
+  atomic completion/failure; and explicit expired-lease requeue with a fresh
+  token. Together with the twelve candidate tests, 17 focused checks pass.
+  This does not establish real PostgreSQL contention, Supabase role/pooler
+  behavior, production provenance/rights authority, credential isolation,
+  journal controls, or restore recovery.
+
 Four existing PGlite integration files could not run in the transient local
 environment because `@electric-sql/pglite` was absent. A locked dependency
 restore was attempted, but the available package client failed TLS certificate
@@ -511,10 +522,12 @@ will be spent repairing or reconciling the former demo lane.
 9. Reproducible Edge bundles outside the newly retained collector packages,
    especially spatial-runtime v6.
 10. Qualified lockfile install, full test baseline and integration/auth tests.
-11. A dedicated collector-shadow runtime identity and its real database
-    capability implementation. The prepared worker intentionally refuses to
-    define this boundary in application code, and must not be hosted with an
-    ambient service-role credential.
+11. Production realization of the qualified collector-shadow boundary. The
+    isolated SQL now defines the required direct-login/three-RPC model, but
+    actual Supabase role creation, effective PUBLIC/security-definer privilege
+    closure, pooler behavior, host secret isolation, real authority-record
+    integration, multi-connection races, and recovery remain unproved. The
+    worker must not be hosted with an ambient service-role credential.
 
 ## 14. Remaining owner/platform gates
 
@@ -559,16 +572,18 @@ unreconciled data/configuration, and yhb has active production-like jobs.
 
 ## 17. Exact recommended next action
 
-Owner review should approve or reject the exact runtime boundary for the
-already-prepared qik **private staging-only algorithm shadow**: a dedicated
-identity, private append-only input/output generations, atomic lease-bound
-completion, and a remote recovery journal, with no ambient service role. On
-approval, turn that reviewed contract into a timestamped migration, rehearse it
-on an isolated restore, and only then deploy the network-free worker against
-host-authenticated, approved public feed captures. The run must stop after
-count/hash/output, independently audited before/after forbidden-write evidence,
-authorization, and recovery receipts; it must not move either
-five-minute schedule. Only a later gate, after restore rehearsal and an
-end-to-end qik article traversal, may consider scheduler cutover. Yhb must
-remain active through a measured rollback window; pause, deletion, and
-destructive retirement remain out of scope.
+Owner review should authorize an **isolated qik restore rehearsal**, not a live
+deployment. Apply the qualification design there with newly provisioned
+restricted direct-login identities; connect it to synthetic or independently
+approved retained captures; audit all inherited PUBLIC/security-definer paths;
+run real two-connection claim/completion/revocation/requeue races and
+connection-loss/restart recovery; and verify the remote journal's controls.
+The rehearsal and any later host must have no ambient service role or shared
+project writer credential.
+Only a clean rehearsal should produce a timestamped production migration and
+host proposal for a separate owner decision. It must not move either
+five-minute schedule. Only a later gate, after production-authority approval,
+restore proof, measured shadow parity, and an end-to-end qik article traversal,
+may consider scheduler cutover. Yhb must remain active through a measured
+rollback window; pause, deletion, and destructive retirement remain out of
+scope.
