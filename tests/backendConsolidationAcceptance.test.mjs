@@ -22,6 +22,10 @@ const shadowQualificationReadme = fs.readFileSync(
   new URL('../supabase/qualification/collector-algorithm-shadow/README.md', import.meta.url),
   'utf8',
 )
+const liveAuthorityAudit = fs.readFileSync(
+  new URL('../supabase/tests/backend_consolidation_20260920_verification.sql', import.meta.url),
+  'utf8',
+)
 
 test('main report returns separate authority and pipeline verdicts', () => {
   assert.match(report, /A\. AUTHORITY CONSOLIDATED[\s\S]+FAIL/)
@@ -106,4 +110,15 @@ test('algorithm shadow SQL qualification remains non-deployed and owner-gated', 
   assert.match(report, /passes all 13 bounded\s+concurrency\/security tests/i)
   assert.match(report, /not deployment evidence[\s\S]+not a full recovery rehearsal/i)
   assert.match(productionCandidateReadme, /Do not adapt the existing service-role collector shadow as its host/i)
+})
+
+test('live authority audit detects effective reachability and implicit unsafe defaults', () => {
+  assert.match(liveAuthorityAudit, /repeatable read read only/i)
+  assert.match(liveAuthorityAudit, /pgrst\.db_schemas/i)
+  assert.match(liveAuthorityAudit, /has_table_privilege\('anon'[\s\S]+relrowsecurity/i)
+  assert.match(liveAuthorityAudit, /p\.prosecdef[\s\S]+has_function_privilege\('public'/i)
+  assert.match(liveAuthorityAudit, /coalesce\(defaclacl,acldefault\('f',owner_oid\)\)/i)
+  assert.match(liveAuthorityAudit, /effective_default_public_execute/i)
+  assert.match(liveAuthorityAudit, /pg_auth_members/i)
+  assert.doesNotMatch(liveAuthorityAudit, /auth\.users|storage\.objects|vault\.secrets/i)
 })

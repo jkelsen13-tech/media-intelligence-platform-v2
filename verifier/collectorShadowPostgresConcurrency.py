@@ -304,6 +304,71 @@ class CollectorShadowPostgres(unittest.TestCase):
                   claim["implementation_ref"], "mip_shadow_bounded_algorithm_failure"]
         return "select collector_shadow_api.shadow_fail(" + ",".join(map(sql_quote, values)) + ");"
 
+    def authority_action_sql(self, authority):
+        actions = {
+            "source": "select collector_shadow_control.retire_source(" + sql_quote(self.refs["source_revision"]) + ");",
+            "session": "select collector_shadow_control.revoke_session(" + sql_quote(self.session_a) + ");",
+            "runtime": "select collector_shadow_control.revoke_runtime(" + sql_quote(self.runtime_a) + ");",
+            "implementation": "select collector_shadow_control.retire_implementation(" + sql_quote(IMPLEMENTATION) + ");",
+            "configuration": "select collector_shadow_control.retire_config(" + sql_quote(self.refs["config_revision"]) + ");",
+        }
+        return actions[authority]
+
+    def authority_is_active_sql(self, authority):
+        checks = {
+            "source": "select retired_at is null from collector_shadow_private.source_revisions where id=" + sql_quote(self.refs["source_revision"]),
+            "session": "select revoked_at is null from collector_shadow_private.runtime_sessions where id=" + sql_quote(self.session_a),
+            "runtime": "select b.active and b.revoked_at is null and s.revoked_at is null from collector_shadow_private.runtime_bindings b join collector_shadow_private.runtime_sessions s on s.runtime_id=b.runtime_id where b.runtime_id=" + sql_quote(self.runtime_a) + " and s.id=" + sql_quote(self.session_a),
+            "implementation": "select retired_at is null from collector_shadow_private.implementations where implementation_ref=" + sql_quote(IMPLEMENTATION),
+            "configuration": "select retired_at is null from collector_shadow_private.config_revisions where id=" + sql_quote(self.refs["config_revision"]),
+        }
+        return checks[authority]
+
+    def assert_authority_rollback_then_commit_denies(self, authority):
+        first = self.claim(self.a)
+        rollback_request = str(uuid.uuid4())
+        revoker = self.session(ADMITTER)
+        revoker.execute("begin;")
+        revoker.execute(self.authority_action_sql(authority))
+        rollback_waiter = self.session(RUNTIME_A)
+        rollback_waiter.start(self.complete_sql(first, rollback_request))
+        self.blocked(rollback_waiter, revoker)
+        revoker.execute("rollback;")
+        self.assertEqual(rollback_waiter.finish(), "completed")
+        self.assertEqual(self.admin(self.authority_is_active_sql(authority)), "t")
+
+        second_refs = self.register_bundle("authority-first-" + authority, 10)
+        second_generation = self.admit(second_refs)
+        second = self.claim(self.a2)
+        self.assertEqual(second["generation_id"], second_generation)
+        revoker.execute("begin;")
+        revoker.execute(self.authority_action_sql(authority))
+        committed_waiter = self.session(RUNTIME_A)
+        committed_waiter.start(self.complete_sql(second, str(uuid.uuid4())))
+        self.blocked(committed_waiter, revoker)
+        revoker.execute("commit;")
+        with self.assertRaisesRegex(RuntimeError, "mip_shadow_(completion|runtime_session|config)_not_(authorized|active)|query returned no rows"):
+            committed_waiter.finish()
+        self.assertEqual(self.admin(self.authority_is_active_sql(authority)), "f")
+        self.assertEqual(self.admin("select count(*) from collector_shadow_private.outputs"), "1")
+        self.assertEqual(self.admin("select state from collector_shadow_private.jobs where generation_id=" + sql_quote(second_generation)), "processing")
+
+    def assert_worker_first_then_authority_denies_replay(self, authority):
+        claim = self.claim(self.a)
+        request = str(uuid.uuid4())
+        self.a.execute("begin;")
+        self.assertEqual(self.a.execute(self.complete_sql(claim, request)), "completed")
+        revoker = self.session(ADMITTER)
+        revoker.start(self.authority_action_sql(authority))
+        self.blocked(revoker, self.a)
+        self.a.execute("commit;")
+        revoker.finish()
+        self.assertEqual(self.admin(self.authority_is_active_sql(authority)), "f")
+        replay = self.session(RUNTIME_A)
+        with self.assertRaisesRegex(RuntimeError, "mip_shadow_(replay|runtime_session)_not_authorized|query returned no rows"):
+            replay.execute(self.complete_sql(claim, request))
+        self.assertEqual(self.admin("select count(*) from collector_shadow_private.outputs"), "1")
+
     def blocked(self, waiter, holder):
         deadline = time.monotonic() + 5
         while time.monotonic() < deadline:
@@ -358,6 +423,27 @@ class CollectorShadowPostgres(unittest.TestCase):
         self.assertEqual(self.admin("select count(*) from pg_default_acl d cross join lateral aclexplode(d.defaclacl) a where d.defaclrole in ('mip_shadow_store_owner_v1'::regrole,'mip_shadow_worker_fn_owner_v1'::regrole,'mip_shadow_authority_fn_owner_v1'::regrole) and a.grantee=0 and a.privilege_type='EXECUTE'"), "0")
         self.assertEqual(self.admin("select has_function_privilege('mip_shadow_runtime_a_fixture','collector_shadow_api.shadow_claim(uuid,uuid,uuid)','execute') and has_function_privilege('mip_shadow_runtime_a_fixture','collector_shadow_api.shadow_complete(uuid,uuid,uuid,uuid,uuid,text,text,jsonb)','execute') and has_function_privilege('mip_shadow_runtime_a_fixture','collector_shadow_api.shadow_fail(uuid,uuid,uuid,uuid,uuid,text,text,text)','execute')"), "t")
         self.assertEqual(self.admin("select has_function_privilege('mip_shadow_recovery_fixture','collector_shadow_control.requeue_expired(uuid,integer)','execute') and not has_function_privilege('mip_shadow_admitter_fixture','collector_shadow_control.requeue_expired(uuid,integer)','execute') and not has_function_privilege('mip_shadow_recovery_fixture','collector_shadow_control.admit_generation(uuid,uuid,uuid,text,uuid)','execute')"), "t")
+        self.admin(";".join([
+            "set role mip_shadow_store_owner_v1",
+            "create function collector_shadow_private.default_acl_probe_store_v1() returns integer language sql set search_path='' as 'select 1'",
+            "reset role",
+            "set role mip_shadow_worker_fn_owner_v1",
+            "create function collector_shadow_api.default_acl_probe_worker_v1() returns integer language sql set search_path='' as 'select 1'",
+            "reset role",
+            "set role mip_shadow_authority_fn_owner_v1",
+            "create function collector_shadow_control.default_acl_probe_authority_v1() returns integer language sql set search_path='' as 'select 1'",
+            "reset role",
+        ]) + ";")
+        probes = "(n.nspname,p.proname) in (('collector_shadow_private','default_acl_probe_store_v1'),('collector_shadow_api','default_acl_probe_worker_v1'),('collector_shadow_control','default_acl_probe_authority_v1'))"
+        expected_owners = "(n.nspname='collector_shadow_private' and pg_get_userbyid(p.proowner)='mip_shadow_store_owner_v1') or (n.nspname='collector_shadow_api' and pg_get_userbyid(p.proowner)='mip_shadow_worker_fn_owner_v1') or (n.nspname='collector_shadow_control' and pg_get_userbyid(p.proowner)='mip_shadow_authority_fn_owner_v1')"
+        self.assertEqual(self.admin("select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where " + probes + " and not (" + expected_owners + ")"), "0")
+        for role in ["public", RUNTIME_A, RUNTIME_B, ADMITTER, RECOVERY,
+                     "anon", "authenticated", "service_role", "authenticator"]:
+            self.assertEqual(self.admin("select coalesce(bool_or(has_function_privilege(" + sql_quote(role) + ",p.oid,'execute')),false) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where " + probes), "f")
+        with self.assertRaisesRegex(RuntimeError, "permission denied"):
+            run(self.database, "select collector_shadow_api.default_acl_probe_worker_v1();", RUNTIME_A)
+        with self.assertRaisesRegex(RuntimeError, "permission denied"):
+            run(self.database, "select collector_shadow_control.default_acl_probe_authority_v1();", ADMITTER)
         for role in ["anon", "authenticated", "service_role", "authenticator"]:
             with self.assertRaisesRegex(RuntimeError, "permission denied"):
                 run(self.database, self.claim_sql(self.runtime_a, self.session_a, str(uuid.uuid4())), role)
@@ -467,6 +553,19 @@ class CollectorShadowPostgres(unittest.TestCase):
         self.assertEqual(self.admin("select count(*) from collector_shadow_private.outputs"), "0")
         self.assertEqual(self.admin("select state from collector_shadow_private.jobs"), "processing")
 
+    def test_rights_revocation_rollback_allows_waiting_completion(self):
+        claim = self.claim(self.a)
+        revoker = self.session(ADMITTER)
+        revoker.execute("begin;")
+        revoker.execute("select collector_shadow_control.revoke_rights(" + sql_quote(self.refs["rights_revision"]) + ");")
+        waiter = self.session(RUNTIME_A)
+        waiter.start(self.complete_sql(claim, str(uuid.uuid4())))
+        self.blocked(waiter, revoker)
+        revoker.execute("rollback;")
+        self.assertEqual(waiter.finish(), "completed")
+        self.assertEqual(self.admin("select revoked_at is null from collector_shadow_private.rights_revisions where id=" + sql_quote(self.refs["rights_revision"])), "t")
+        self.assertEqual(self.admin("select count(*) from collector_shadow_private.outputs"), "1")
+
     def test_worker_first_linearizes_before_revocation_and_replay_then_denies(self):
         claim = self.claim(self.a)
         request = str(uuid.uuid4())
@@ -481,6 +580,36 @@ class CollectorShadowPostgres(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "mip_shadow_replay_not_authorized|query returned no rows"):
             replay.execute(self.complete_sql(claim, request))
         self.assertEqual(self.admin("select count(*) from collector_shadow_private.outputs"), "1")
+
+    def test_source_authority_rollback_and_authority_first_ordering(self):
+        self.assert_authority_rollback_then_commit_denies("source")
+
+    def test_source_worker_first_ordering(self):
+        self.assert_worker_first_then_authority_denies_replay("source")
+
+    def test_session_authority_rollback_and_authority_first_ordering(self):
+        self.assert_authority_rollback_then_commit_denies("session")
+
+    def test_session_worker_first_ordering(self):
+        self.assert_worker_first_then_authority_denies_replay("session")
+
+    def test_runtime_authority_rollback_and_authority_first_ordering(self):
+        self.assert_authority_rollback_then_commit_denies("runtime")
+
+    def test_runtime_worker_first_ordering(self):
+        self.assert_worker_first_then_authority_denies_replay("runtime")
+
+    def test_implementation_authority_rollback_and_authority_first_ordering(self):
+        self.assert_authority_rollback_then_commit_denies("implementation")
+
+    def test_implementation_worker_first_ordering(self):
+        self.assert_worker_first_then_authority_denies_replay("implementation")
+
+    def test_configuration_authority_rollback_and_authority_first_ordering(self):
+        self.assert_authority_rollback_then_commit_denies("configuration")
+
+    def test_configuration_worker_first_ordering(self):
+        self.assert_worker_first_then_authority_denies_replay("configuration")
 
     def test_session_expiry_while_waiting_on_job_is_rechecked(self):
         holder = self.session("postgres")
