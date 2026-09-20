@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ArrowSquareOut, CheckCircle, Fingerprint, GitFork, LockKey, MagnifyingGlass, ShieldCheck, X } from '@phosphor-icons/react'
 import InvestigationWorkspace, { WorkspaceAccountButton, WorkspaceInfoButton, WorkspaceNavButton, WorkspaceSearch } from '../src/components/InvestigationWorkspace.jsx'
@@ -16,7 +16,6 @@ import './demo-corpus-preview.css'
 
 document.documentElement.dataset.theme = 'light'
 
-let privateReplay = null
 const universe = createDemoUniverse([...receipts, ...expandedReceipts], { requireComplete: true })
 const investigations = [demoLens(universe), ...universe.investigations]
 const allSources = universe.sources
@@ -56,7 +55,7 @@ function SourceCard({ source, selected, onSelect }) {
   </button>
 }
 
-function ProvenanceInspector({ source, investigation, surface, onOpenEvidence }) {
+function ProvenanceInspector({ source, investigation, surface, onOpenEvidence, privateReplay }) {
   if (!source) return <div className="demo-inspector-empty"><h2>{titleForTopic(investigation.topic)}</h2><p className="ws-nav-note">The same private research collection, in every view.</p><section><h3>Recorded context</h3><dl className="ws-inspector-dl"><div><dt>Subject type</dt><dd>Research collection</dd></div><div><dt>Location</dt><dd>Not recorded</dd></div><div><dt>Review</dt><dd>Pending</dd></div></dl></section><section><h3>Reading the evidence</h3><p>Select a retained source to inspect its capture, candidate, exact-span coordinates, hash, dependency, rights note, and uncertainty.</p><p className="ws-guidance"><ShieldCheck size={16} /> Missing evidence is not a contradiction. Publication date is not event time.</p></section></div>
   if (privateReplay) return <ReplayEvidence candidate={privateReplay.candidates.find(c=>c.capture_id===source.capture_id)} />
   return <div className="demo-provenance" data-selected-capture={source.capture_id}><PendingBadge /><h2>{source.title}</h2><p className="demo-inspector-synopsis"><strong>Synopsis:</strong> {source.statement}</p>
@@ -86,24 +85,25 @@ function EvidenceLedger({ investigation, selected, onSelect }) {
 }
 
 
-function NativeGraph({ investigation, selected, onSelect }) {
+function NativeGraph({ investigation, selected, onSelect, privateReplay }) {
   const [originId, setOriginId] = useState(null)
   const [clusterId, setClusterId] = useState(null)
   const [showIsolated, setShowIsolated] = useState(false)
   const [graphQuery, setGraphQuery] = useState('')
   const origin = universe.sharedProvenance.find(item => item.id === originId)
-  const fullGraph = useMemo(() => privateReplay ? replayGraph(privateReplay, investigation.sources) : graphForLens(universe, investigation.topic === 'all' ? undefined : [investigation.topic]), [investigation])
-  const visibleClusters = privateReplay?.clusters.filter(c=>fullGraph.nodes.some(n=>n.id===c.id)) ?? []
-  const connectedIds = new Set(fullGraph.edges.flatMap(edge => [edge.source, edge.target]))
-  const graphNodes = fullGraph.nodes.filter(node => showIsolated || connectedIds.has(node.id) || node.id === selected?.preview_id)
-  const byId = new Map(universe.sources.map(source => [source.preview_id, source]))
+  const fullGraph = useMemo(() => privateReplay ? replayGraph(privateReplay, investigation.sources) : graphForLens(universe, investigation.topic === 'all' ? undefined : [investigation.topic]), [investigation, privateReplay])
+  const visibleClusters = useMemo(() => privateReplay?.clusters.filter(c=>fullGraph.nodes.some(n=>n.id===c.id)) ?? [], [privateReplay, fullGraph])
+  const connectedIds = useMemo(() => new Set(fullGraph.edges.flatMap(edge => [edge.source, edge.target])), [fullGraph])
+  const graphNodes = useMemo(() => fullGraph.nodes.filter(node => showIsolated || connectedIds.has(node.id) || node.id === selected?.preview_id), [fullGraph, showIsolated, connectedIds, selected?.preview_id])
+  const byId = useMemo(() => new Map(universe.sources.map(source => [source.preview_id, source])), [])
+  const selectGraphNode = useCallback(node => { if (visibleClusters.some(c=>c.id===node?.id)) { setClusterId(node.id); return }; setClusterId(null); if (node?.type === 'declared_origin_identity') setOriginId(node.id); else if (byId.has(node?.id)) onSelect(byId.get(node.id)) }, [visibleClusters, byId, onSelect])
   const results = graphQuery.trim() ? searchDemoUniverse(universe, graphQuery).map(result => result.source) : []
   return <div className="demo-native-view demo-graph-view"><div className="demo-view-heading"><div><p className="demo-eyebrow">Graph</p><h2>{privateReplay ? 'Pending analytical candidate structures' : 'Shared declared-provenance structures'}</h2><p>{privateReplay ? 'Native lexical and unresolved entity-overlap clusters plus dependency evidence. All candidate structures are pending; none are accepted events, relationships or corroboration.' : 'Universe: 17 connected capture-to-provenance edges and two declared-provenance nodes. These are not actors, substantive relationships or corroboration.'}</p></div></div><DemoBoundaryNote compact />
     <div className="demo-graph-tools"><label><input type="checkbox" checked={showIsolated} onChange={event => setShowIsolated(event.target.checked)} /> Show isolated receipt nodes</label><label>Find any retained capture <input aria-label="Find graph capture" value={graphQuery} onChange={event => setGraphQuery(event.target.value)} placeholder="Search all 93 receipt records" /></label></div>
     <p>{graphNodes.length} nodes displayed · {fullGraph.edges.length} {privateReplay ? 'pending analytical candidate' : 'declared-provenance'} edges in this lens. Isolated receipts remain selectable through search.</p>
     {graphQuery.trim() ? <div className="demo-graph-results">{results.length ? results.map(source => <button key={source.capture_id} onClick={() => { onSelect(source); setGraphQuery('') }}>{source.title} · {source.topic}</button>) : <p>No matching receipt metadata in the bounded 93-record universe. Exact text was not searched.</p>}</div> : null}
     <div className="demo-provenance-legend"><span>{privateReplay ? 'Analytical candidates (pending / unverified)' : 'Receipt-declared provenance (unverified)'} · dashed, no arrows · not substantive evidence</span>{fullGraph.nodes.filter(node => node.type === 'declared_origin_identity').map(node => <button key={node.id} onClick={() => setOriginId(node.id)}>Inspect declared provenance {node.id}</button>)}</div>
-    <div className="demo-graph-stage" data-graph-node-count={graphNodes.length} data-graph-edge-count={fullGraph.edges.length}><GraphView nodes={graphNodes} edges={fullGraph.edges} selectedId={clusterId ?? selected?.preview_id ?? null} onSelect={node => { if (visibleClusters.some(c=>c.id===node?.id)) { setClusterId(node.id); return }; setClusterId(null); if (node?.type === 'declared_origin_identity') setOriginId(node.id); else if (byId.has(node?.id)) onSelect(byId.get(node.id)) }} panelOpen={false} focused /></div>
+    <div className="demo-graph-stage" data-graph-node-count={graphNodes.length} data-graph-edge-count={fullGraph.edges.length}><GraphView nodes={graphNodes} edges={fullGraph.edges} selectedId={clusterId ?? selected?.preview_id ?? null} onSelect={selectGraphNode} panelOpen={false} focused /></div>
     {privateReplay ? <ReplayClusterDetails replay={privateReplay} clusters={visibleClusters} selectedId={clusterId} onSelectCluster={setClusterId} sources={universe.sources} onSelectSource={source=>{setClusterId(null);onSelect(source)}} /> : null}
     {origin ? <Modal title={`Declared provenance: ${origin.label}`} onClose={() => setOriginId(null)}><p>{origin.reasoning}</p><p>Investigation membership: {origin.memberships.map(titleForTopic).join(' · ')}</p><div className="demo-source-grid">{universe.sources.filter(source => origin.captures.includes(source.capture_id)).map(source => <SourceCard key={source.capture_id} source={source} onSelect={item => { setOriginId(null); onSelect(item) }} />)}</div></Modal> : null}
   </div>
@@ -142,6 +142,12 @@ function Modal({ title, onClose, children }) {
 }
 
 function NativeDemoApp() {
+  const [privateReplay, setPrivateReplay] = useState(null)
+  useEffect(() => {
+    const controller = new AbortController()
+    loadPrivateReplay(allSources, fetch, {signal:controller.signal}).then(replay => { if(!controller.signal.aborted)setPrivateReplay(replay) })
+    return () => controller.abort()
+  }, [])
   const initial = readRoute(), [route, setRoute] = useState(initial), [query, setQuery] = useState(''), [exploreOpen, setExploreOpen] = useState(false), [aboutOpen, setAboutOpen] = useState(false), [accountOpen, setAccountOpen] = useState(false)
   useEffect(() => { const update = () => setRoute(readRoute()); window.addEventListener('hashchange', update); const canonical = serializeDemoRoute(initial, allSources); if (window.location.hash !== canonical) window.location.hash = canonical; return () => window.removeEventListener('hashchange', update) }, [])
   const investigation = useMemo(() => demoLens(universe, route.topic), [route.topic])
@@ -150,7 +156,7 @@ function NativeDemoApp() {
   const header = { eyebrow: 'Investigation workspace · private demonstration', title: titleForTopic(route.topic), location: 'Location not recorded', when: 'Document dates only', description: topicMeta[route.topic].description, dimensions: [{ key: 'evidence', label: 'Evidence strength', value: 'Not recorded', tone: 'unavailable' }, { key: 'reliability', label: 'Source reliability', value: 'Not recorded', tone: 'unavailable' }, { key: 'demo-presentation', label: 'Access context', value: session.presentationLabel, tone: 'unavailable' }, { key: 'review', label: 'Review status', value: 'Pending', tone: 'unavailable' }, { key: 'uncertainty', label: 'Remaining uncertainty', value: 'Recorded per source', tone: 'unavailable' }] }
   const investigationContext = { canonical_subject_type: null, canonical_subject_id: null, parent_event_id: null, as_of_time: null, selected_time_range: null, active_view: view, temporal_assessment_reference: null }
   const openView = (nextView) => writeRoute(route.topic, viewToRoute[nextView] ?? 'context', selected?.capture_id ?? null)
-  const selectSource = (source) => writeRoute(route.topic === 'all' || route.topic === source.topic ? route.topic : 'all', route.surface, source.capture_id)
+  const selectSource = useCallback((source) => { if(source)writeRoute(route.topic === 'all' || route.topic === source.topic ? route.topic : 'all', route.surface, source.capture_id) }, [route.topic, route.surface])
   const chooseInvestigation = (topic) => { setQuery(''); setExploreOpen(false); const next = switchDemoLens(route, topic, universe); writeRoute(next.topic, next.surface, next.capture) }
   let content
   if (view === 'world') content = <WorldUnavailable />
@@ -158,14 +164,14 @@ function NativeDemoApp() {
   else if (route.surface === 'news') content = <SourceFeed investigation={investigation} query={query} selected={selected} onSelect={selectSource} onOpenEvidence={() => writeRoute(route.topic, 'evidence', selected?.capture_id ?? null)} />
   else if (route.surface === 'evidence') content = privateReplay ? <ReplayEvidenceLedger replay={privateReplay} investigation={investigation} selected={selected} onSelect={selectSource} /> : <EvidenceLedger investigation={investigation} selected={selected} onSelect={selectSource} />
   else if (route.surface === 'compare') content = privateReplay ? <ReplayComparison key={route.topic} replay={privateReplay} investigation={investigation} selected={selected} onSelect={selectSource} /> : <ReceiptComparison key={route.topic} universe={universe} investigation={investigation} selected={selected} onSelect={selectSource} />
-  else if (route.surface === 'graph') content = <NativeGraph investigation={investigation} selected={selected} onSelect={(source) => source && selectSource(source)} />
+  else if (route.surface === 'graph') content = <NativeGraph investigation={investigation} selected={selected} onSelect={selectSource} privateReplay={privateReplay} />
   else if (route.surface === 'timeline') content = <ReceiptTimeline universe={universe} investigation={investigation} selected={selected} onSelect={selectSource} />
   else content = <ResearchCollection investigation={investigation} onSelect={selectSource} />
-  return <div className="app ws-app demo-native-app"><InvestigationWorkspace view={view} onChangeView={openView} investigationContext={investigationContext} header={header} selectedChild={selected ? { label: selected.title } : null} hasNativeInspector={false} onChangeInvestigation={() => setExploreOpen(true)} corpusLine="Private corpus — 93 retained — all pending" searchSlot={<WorkspaceSearch searchLabel="Search all 93 receipt metadata records" searchHint={replaySearchHint(privateReplay)} exploreOpen={exploreOpen} onOpenExplore={() => setExploreOpen(true)} dialogId="demo-explore" query={query} onQueryChange={(value) => { setQuery(value); if (route.surface !== 'news') writeRoute(route.topic, 'news', selected?.capture_id ?? null) }} />} accountSlot={<WorkspaceAccountButton enabled label={session.displayName} title={`${session.presentationLabel} · ${session.displayName}`} onClick={() => setAccountOpen(true)} />} infoSlot={<WorkspaceInfoButton onClick={() => setAboutOpen(true)} />} leftNav={<>{DEMO_NAV_ITEMS.map((item) => <WorkspaceNavButton key={item.key} item={item} active={view === item.key} onClick={() => openView(item.key)} />)}</>} inspectorSlot={<ProvenanceInspector source={selected} investigation={investigation} surface={route.surface} onOpenEvidence={() => writeRoute(route.topic, 'evidence', selected?.capture_id ?? null)} />} inspectorSelection={selected} details={<details className="ws-details"><summary>Investigation details &amp; demo boundary</summary><div className="demo-details"><DemoBoundaryNote /><p>Static build-time provider · no Supabase client · no production backend · no admission or publication operation.</p><p>Selected collection: {titleForTopic(route.topic)} · {investigation.sources.length} pending records.</p></div></details>}><main className="app-main">{content}</main></InvestigationWorkspace>
+  return <div className="app ws-app demo-native-app"><InvestigationWorkspace view={view} onChangeView={openView} investigationContext={investigationContext} header={header} selectedChild={selected ? { label: selected.title } : null} hasNativeInspector={false} onChangeInvestigation={() => setExploreOpen(true)} corpusLine="Private corpus — 93 retained — all pending" searchSlot={<WorkspaceSearch searchLabel="Search all 93 receipt metadata records" searchHint={replaySearchHint(privateReplay)} exploreOpen={exploreOpen} onOpenExplore={() => setExploreOpen(true)} dialogId="demo-explore" query={query} onQueryChange={(value) => { setQuery(value); if (route.surface !== 'news') writeRoute(route.topic, 'news', selected?.capture_id ?? null) }} />} accountSlot={<WorkspaceAccountButton enabled label={session.displayName} title={`${session.presentationLabel} · ${session.displayName}`} onClick={() => setAccountOpen(true)} />} infoSlot={<WorkspaceInfoButton onClick={() => setAboutOpen(true)} />} leftNav={<>{DEMO_NAV_ITEMS.map((item) => <WorkspaceNavButton key={item.key} item={item} active={view === item.key} onClick={() => openView(item.key)} />)}</>} inspectorSlot={<ProvenanceInspector privateReplay={privateReplay} source={selected} investigation={investigation} surface={route.surface} onOpenEvidence={() => writeRoute(route.topic, 'evidence', selected?.capture_id ?? null)} />} inspectorSelection={selected} details={<details className="ws-details"><summary>Investigation details &amp; demo boundary</summary><div className="demo-details"><DemoBoundaryNote /><p>Static build-time provider · no Supabase client · no production backend · no admission or publication operation.</p><p>Selected collection: {titleForTopic(route.topic)} · {investigation.sources.length} pending records.</p></div></details>}><main className="app-main">{content}</main></InvestigationWorkspace>
     {exploreOpen && <Modal title="Explore / Change investigation" onClose={() => setExploreOpen(false)}><div id="demo-explore" className="demo-investigation-picker"><p>Choose a lens over the shared corpus. Selection persists wherever it belongs to the chosen lens.</p>{investigations.map((item) => <button type="button" key={item.topic} className={item.topic === route.topic ? 'active' : ''} onClick={() => chooseInvestigation(item.topic)}><span><strong>{titleForTopic(item.topic)}</strong><small>{topicMeta[item.topic].description}</small></span><span>{item.sources.length}</span></button>)}</div></Modal>}
     {aboutOpen && <Modal title="Media Intelligence Platform" onClose={() => setAboutOpen(false)}><div className="sheet-body"><DemoBoundaryNote /><p>This September 22 preview uses the native MIP investigation shell with an isolated static provider. It contains no production transport or mutation path.</p></div></Modal>}
     {accountOpen && <Modal title={`${session.presentationLabel} · ${session.displayName}`} onClose={() => setAccountOpen(false)}><div className="sheet-body"><p><CheckCircle size={18} /> {session.displayName} · private demo presentation</p><p>Authentication must be enforced by the private host for every page and asset. This presentation session is not a credential and cannot authorize backend actions.</p></div></Modal>}
   </div>
 }
 
-loadPrivateReplay(allSources).then(replay => { privateReplay = replay; createRoot(document.getElementById('root')).render(<NativeDemoApp />) })
+createRoot(document.getElementById('root')).render(<NativeDemoApp />)

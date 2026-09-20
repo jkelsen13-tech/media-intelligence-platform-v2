@@ -57,3 +57,11 @@ test('keyboard cluster list selects pending membership and exposes member source
  act(()=>member.props.onClick());assert.ok(selectedSource.capture_id)
  const html=render(ui.ReplayClusterDetails,{...props,selectedId:selectedCluster});assert.match(html,/not an accepted event or relationship/);assert.match(html,/Source URL/);assert.match(html,/aria-pressed="true"/)
 })
+test('shell mounts independently of replay fetch and native graph inputs survive selection',()=>{
+ const entry=readFileSync(new URL('../scripts/demo-corpus-preview.jsx',import.meta.url),'utf8')
+ assert.match(entry,/createRoot\(document.getElementById\('root'\)\).render\(<NativeDemoApp \/>\)/)
+ assert.doesNotMatch(entry,/loadPrivateReplay\(allSources\).then/)
+ assert.match(entry,/const \[privateReplay, setPrivateReplay\] = useState\(null\)/)
+ assert.match(entry,/const graphNodes = useMemo/);assert.match(entry,/const selectGraphNode = useCallback/)
+ assert.match(entry,/onSelect=\{selectGraphNode\}/);assert.match(entry,/const selectSource = useCallback/)
+})

@@ -2,9 +2,19 @@ export const PRIVATE_REPLAY_PATH='/private/native-replay.json'
 export function replaySearchHint(replay) {
   return replay ? 'Local receipt metadata search only; bounded retained excerpts are available in Evidence and Source Comparison, but are not searched here.' : 'Local metadata search; exact retained text is unavailable'
 }
-export async function loadPrivateReplay(sources, fetcher=fetch) {
+export async function loadPrivateReplay(sources, fetcher=fetch, {timeoutMs=4000,signal}={}) {
+  const controller=new AbortController()
+  let timer,abort
+  const deadline=new Promise(resolve=>{
+    abort=()=>{controller.abort();resolve(null)}
+    timer=setTimeout(abort,Math.max(1,Math.min(timeoutMs,10000)))
+    if(signal?.aborted)abort()
+    else signal?.addEventListener('abort',abort,{once:true})
+  })
+  const attempt=async()=>{
   try {
-    const response=await fetcher(PRIVATE_REPLAY_PATH,{cache:'no-store',credentials:'same-origin',redirect:'error'})
+    if(controller.signal.aborted)return null
+    const response=await fetcher(PRIVATE_REPLAY_PATH,{cache:'no-store',credentials:'same-origin',redirect:'error',signal:controller.signal})
     if(!response.ok) return null
     const r=await response.json()
     if(r.contract!=='private-native-offline-replay-v1'||r.publication_allowed!==false||r.public_admission!==false||r.review_state!=='pending'||r.candidates?.length!==sources.length) return null
@@ -14,6 +24,9 @@ export async function loadPrivateReplay(sources, fetcher=fetch) {
     // Date precision is frozen receipt metadata, not a derivation from the excerpt.
     return {...r,candidates:r.candidates.map(c=>({...c,publication_precision:c.publication_precision??sources.find(s=>s.capture_id===c.capture_id)?.publication_precision??null}))}
   } catch { return null }
+  }
+  try { return await Promise.race([attempt(),deadline]) }
+  finally { clearTimeout(timer);signal?.removeEventListener('abort',abort) }
 }
 export function replayGraph(replay,sources) {
   const byCapture=new Map(sources.map(s=>[s.capture_id,s]))

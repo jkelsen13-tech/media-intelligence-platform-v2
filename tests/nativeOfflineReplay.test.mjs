@@ -81,3 +81,13 @@ test('private client accepts exact universe only; missing artifact falls back; g
   assert.equal(await loadPrivateReplay(sources.slice(1),async()=>({ok:true,json:async()=>result})),null)
   const graph=replayGraph(result,sources);assert.ok(graph.edges.length>0);assert.ok(graph.edges.every(e=>e.type==='analytical_candidate'&&e.publication_allowed===false));assert.equal(graph.nodes.filter(n=>n.capture_id).length,93)
 })
+test('optional replay deadline aborts stalled fetch and stalled JSON without blocking fallback',async()=>{
+  let signal
+  const start=Date.now()
+  assert.equal(await loadPrivateReplay([],async(_url,options)=>{signal=options.signal;return new Promise(()=>{})},{timeoutMs:15}),null)
+  assert.equal(signal.aborted,true);assert.ok(Date.now()-start<1000)
+  assert.equal(await loadPrivateReplay([],async()=>({ok:true,json:()=>new Promise(()=>{})}),{timeoutMs:15}),null)
+  const controller=new AbortController()
+  const pending=loadPrivateReplay([],()=>new Promise(()=>{}),{signal:controller.signal});controller.abort()
+  assert.equal(await pending,null)
+})
