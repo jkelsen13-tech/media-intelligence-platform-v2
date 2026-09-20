@@ -1,0 +1,39 @@
+{
+  "captured_at": "2026-09-20T15:40:00Z",
+  "source_project": "yhbwnrtlqbjtcrrlpbge",
+  "slug": "source-comparison-run",
+  "deployed_version": 15,
+  "verify_jwt": true,
+  "edge_package_sha256": "4ea9f61ac94965b4ed00635c0e0b26e7375961e9cc5c17414f6e197fc7c3db18",
+  "files": [
+    {
+      "name": "index.ts",
+      "characters": 22149
+    },
+    {
+      "name": "articleInputReadback.js",
+      "characters": 830
+    },
+    {
+      "name": "projectionConfig.js",
+      "characters": 796
+    },
+    {
+      "name": "lib.js",
+      "characters": 46850
+    },
+    {
+      "name": "membershipFingerprint.js",
+      "characters": 2751
+    },
+    {
+      "name": "membershipScoreReadback.js",
+      "characters": 1946
+    },
+    {
+      "name": "loadedLanguageLexicon.json",
+      "characters": 1920
+    }
+  ],
+  "authority_note": "Live source text returned by the Supabase Management API and retained after line-ending/trailing-whitespace normalization; deployed version and package SHA-256 remain the authoritative byte-package identifiers. Presence is not activation authority."
+}

@@ -5,12 +5,49 @@ Date: 2026-09-20
 Target deadline: 2026-10-03
 Decision: **not complete; no project is retirement-ready**
 
+## Independent acceptance verdicts
+
+### A. AUTHORITY CONSOLIDATED — **FAIL**
+
+Qik is the intended destination and owns the strongest Auth, investigation,
+evidence, assessment, spatial, and public-projection foundations. Authority is
+not consolidated: yhb still owns the active large corpus and both scheduled
+workers; nie retains unique Auth/data/history; jfn retains unique spatial
+history; caller closure and full data/identity mappings are incomplete; the
+provider-neutral System-One contract is only partially implemented; and no
+predecessor has a proved isolated restore. Therefore retirement readiness
+cannot be affirmed for any predecessor.
+
+### B. PIPELINE OPERATIONAL — **FAIL**
+
+The intended qik ingestion and analytical pipeline is not operational. Qik has
+no active cron. Its collector shadow proved authorization and HTTP reachability
+to seven feeds, but intentionally wrote no articles, events, claims,
+explanations, operational runs, or downstream analysis. The active ingestion
+and source-comparison schedules remain on yhb. No representative retained
+article traversed a qik-owned schedule, ingestion, extraction, semantic
+decision, graph/event/timeline, and observable completion path. The surviving
+pipeline therefore still relies on predecessor authority.
+
+These verdicts are independent. Neither backend consolidation nor launch
+readiness may be inferred from the bounded security and shadow work in this
+report.
+
 This report began with read-only inventory and now records the bounded live
 reconciliation expressly authorized by the owner on 2026-09-20. It includes
-three canonical migrations, one canonical Edge upgrade, two legacy function
-grant repairs, one sandbox RLS repair, and append-only retention of the current
-yhb collector delta. It does not rotate credentials, cut off a required caller,
-pause/delete a project, change billing, merge main, or change publication data.
+six canonical migrations, one canonical Edge upgrade, a new receipt-only
+collector shadow, two legacy function grant repairs, one sandbox RLS repair,
+and append-only retention of the current yhb collector delta. It does not
+rotate credentials, cut off a required caller, pause/delete a project, change
+billing, merge main, or change publication data.
+
+The inspectable reconstructed Phase 1 decision record is
+`docs/PHASE1_BACKEND_RECONCILIATION_CHECKPOINT_2026-09-20.md`. The checkpoint
+requirement arrived after bounded Phase 2 work had started, so it is explicitly
+labelled as a reconstruction from retained pre-change evidence. Further live
+production work is paused at the new owner-review gate. The System-One,
+absence-semantics, and knowledge-change reconciliation is recorded in
+`docs/SEMANTIC_DECISION_ABSENCE_CHANGE_AUTHORITY_2026-09-20.md`.
 
 ## 1. Git identity and protected reference
 
@@ -22,12 +59,17 @@ pause/delete a project, change billing, merge main, or change publication data.
 - Current `main` observed: commit
   `1dc317200b7a928fad85d06b43351b60e2a50d92`, tree
   `5ebc3687e7b22b4a78fce1681999035b57738995`.
-- Protected demo acceptance fixture: branch
+- Former isolated demo historical branch:
   `codex/mip-september-22-demo-20260918`, commit
   `195109b48f12ae5d472b1794e9680d53f2c0de34`, tree
   `785de273770e7365eae90b7ca73d29be3f0e45ac`.
 - The demo branch was inspected only. It was not edited, committed, pushed,
   deployed, merged, or repurposed.
+- It is frozen historical work only and has no behavioral, architectural,
+  algorithmic, presentation, qualification, or acceptance authority. The
+  September 22 consultation uses the current live MIP platform as its primary
+  surface. No isolated-demo output contract or presentation was used to define
+  correct MIP behavior in this reconciliation.
 
 The two supplied ZIP archives were read before implementation:
 
@@ -67,10 +109,13 @@ The sanitized point-in-time evidence is in
 full local read-only capture is retained outside Git because it is an audit
 working artifact, not product configuration.
 
-After the initial census, qik received 5,786 append-only collector-history rows
-and three migration records; its live row and migration totals therefore no
-longer equal the initial table above. The exact post-change receipt is
-`verifier/backend-consolidation-2026-09-20/live-reconciliation-receipt.json`.
+After the initial census, qik received the append-only collector history,
+canonical operational contracts, a private seven-source shadow registry and
+seven successful shadow receipts. It now has 42 migration records and nine
+Edge Functions. Its live row/table totals therefore no longer equal the
+initial table above. The exact receipts are
+`verifier/backend-consolidation-2026-09-20/live-reconciliation-receipt.json`
+and `collector-shadow-live-receipt.json` in the same directory.
 
 ## 3. Canonical authority map
 
@@ -87,6 +132,7 @@ split. The decision column uses the archive's required vocabulary.
 | Source lineage and comparison | yhb active comparison/ingestion; nie legacy comparison; qik retained collector/comparison history | **RECONCILE into qik** | Stop unsafe legacy public mutations; preserve run generations, mappings and audit history |
 | Events, timelines, arcs/collections | yhb owns the large live population (13,008 events and timeline/arc state); qik has limited gated/reference state | **RECONCILE into qik** | Identity mapping, membership/release policy, temporal precision and publication parity |
 | Assessments and revisions | qik migration `20260906051224_evidence_assessment_dependencies_v1` is already live; one assessment observed | **EXTEND qik** | Do not replay migration; later semantic model/scheduler remains separate algorithm work |
+| Provider-neutral System-One decisions | qik assessment/change foundation; no provider-specific live authority proven | **EXTEND qik** | Add the full semantic key, evidence digest, subject/temporal/policy/adapter/provider metadata, permission-safe reuse, typed invalidation, deterministic disposition and provider-disabled behavior |
 | Reconsideration and source history | qik change queues, dependency runs, record versions, 9,537 collector versions and 45 spatial versions | **EXTEND qik** | Confirm all legacy generations/leases/checkpoints are represented before cutover |
 | Investigation workspace/context | qik private evidence pipeline and eight deployed Edge functions | **EXTEND qik** | Reduce service-role blast radius without weakening RPC membership/reviewer checks |
 | Search/discovery | front ends read qik public projections; backing corpus authority is split | **RECONCILE around qik** | Projection parity after corpus move; Data API exposure and ACL tests |
@@ -100,11 +146,19 @@ split. The decision column uses the archive's required vocabulary.
 | Jobs/workers/selective ingestion | yhb two active five-minute jobs; legacy Edge workers on yhb/nie; qik has no active cron | **RECONCILE into qik** | Scheduler ownership, idempotency, credentials, in-flight work and rollback window |
 | Environment/configuration | GitHub, Vercel, Vault names, Supabase project settings and branch code all participate | **RECONCILE** | Establish a single non-secret config registry and eliminate hidden ref fallbacks |
 
-The demo findings—no structured SPO output, verified lineage, canonical
-admission, accepted relationship/event output, or generated
-hypothesis/assessment state, plus incomplete temporal/publication timestamps—
-remain algorithm/product gaps. They are registered above only so later work
-extends canonical stores rather than creating parallel ones.
+Former-demo observations are excluded from the authority map and product-gap
+definition. Any code with former-demo provenance must be evaluated
+independently against the governing requirements, current architecture, live
+backend state, security boundaries, and foundation-reuse rules before adoption.
+
+Absence and change semantics are also incomplete. Current code correctly
+distinguishes some states—Source Comparison omission versus extraction/coverage
+unknown, source unavailable, reviewed absence markers, and partial/unavailable
+loads—but no canonical backend enum owns all required meanings. Similarly,
+source changes only type `corrected`/`withdrawn`, while assessment invalidations
+identify evidence or supersession without a complete “why knowledge changed”
+taxonomy. The semantic authority report maps every required distinction and
+classifies it as EXTEND, RECONCILE, or NEW.
 
 ## 4. Project-by-project disposition
 
@@ -135,7 +189,7 @@ No project qualifies as `RETIRE-READY`. Historical labels such as “sandbox” 
 | yhb/nie legacy ingestion/graph functions | local project | ingestion, graph, comparison, publication | mixed service/writer keys; some JWT gateway disabled | R/W | unresolved per function | qik or retire | body/auth review, caller migration, negative RPC tests |
 | Vercel production site | qik via `VITE_SUPABASE_URL` and publishable key | public UI/API | browser publishable key | R plus exposed surface | current deployment | qik | environment-name/ref check and public contract test; do not disclose values |
 | GitHub workflow `.github/workflows/blank.yml` | qik | Pages build config | repository variables/static ref | build/read | active on main | qik | workflow scan and successful protected CI |
-| Frozen demo preview | same-origin fixture/private replay; qik refs retained in code | acceptance fixture | protected Vercel login | fixture | protected reference | unchanged | exact branch/SHA/tree and URL smoke only |
+| Former isolated demo preview | historical artifact; not a product caller or reference | protected historical surface | none in this run | not required | no target | no cutover | preserve remotely; spend no reconciliation effort |
 | Tests/fixtures/runtime snapshots | all four refs appear | provenance, migration and replay evidence | none/live calls generally mocked | read/fixture | required as evidence | retain qualified history | distinguish executable callers from documentation/snapshots |
 
 Static project-ref matches are intentionally not equated with active callers.
@@ -198,6 +252,7 @@ delta described above; it did not copy or overwrite live canonical domain rows.
 | `investigation-source-spans` | 1 | true | authenticated workspace read before projection |
 | `investigation-api` | 3 | true | fixed route dispatcher to private handlers and fixed qik host |
 | `capture-retrieval` | 6 | true | exact configured service credential, browser-Origin rejection, bounded routes |
+| `collector-shadow` | 1 | false | custom high-entropy Vault token; service-role-only authorization/plan/receipt RPCs; fetch/hash/count receipt only; no article, evidence, graph, publication, acknowledgement, or schedule writes |
 
 `verify_jwt=true` authenticates a gateway token; it does not prove action-level
 authorization. The private investigation RPCs are SECURITY INVOKER with narrow
@@ -302,6 +357,27 @@ their ACLs remain postgres-owner-only.
   At their fences, source/archive counts and ordered full-payload SHA-256 hashes
   are identical: 7,668 / `2b6b7f...b4dcb` and 7,648 /
   `e014dc...c9e4` respectively.
+- Extended qik with the five missing private operational contracts:
+  `ingestion_runs`, `ingestion_source_runs`, `author_profile_queue`,
+  `original_source_import_credentials`, and
+  `source_comparison_enrichment_queue`. All use RLS + FORCE RLS, deny browser
+  roles, and explicitly grant only service-role DML. The queue trigger exists,
+  but no worker or schedule was activated.
+- Installed `pg_net` as transport only; qik still has no `pg_cron` extension and
+  no collector schedule.
+- Deployed qik `collector-shadow` v1. An unauthenticated probe failed 401. Seven
+  explicitly dispatched probes fetched all seven retained yhb feed endpoints
+  successfully and wrote only immutable private receipts. Post-probe canonical
+  counts remained 98 articles, one event, four claims and zero explanations;
+  all five new operational tables remained empty.
+- Advanced the yhb collector-history fence through
+  `2026-09-20T15:42:51.302400Z`. Source and qik archive now match at 7,672
+  ingestion runs (`db13a5...96da9`) and 7,652 source runs
+  (`e8d67a...23a1b`) by exact ordered full-payload SHA-256.
+- Retrieved and retained the live yhb `ingest-rss` v8 and
+  `source-comparison-run` v15 source text, normalized only for line endings and
+  trailing whitespace, with the authoritative deployed package hashes under
+  `supabase/runtime-snapshots/*-live-20260920`.
 - Reverified all jfn spatial content: 39 spatial rows and six parent rows across
   21 relations remain exact ordered-hash matches in qik's 45-row archive. The
   only non-archived row is `pipeline_config.account_ui=true`, already present on
@@ -309,6 +385,8 @@ their ACLs remain postgres-owner-only.
 - Added regression tests that reject missing projection coverage, future-object
   default ACL drift, row DML, view replacement, `security_invoker` flips, and
   accidental grants in that candidate.
+- Prepared, but did not apply, an isolated follow-up index for the
+  `ingestion_source_runs.run_id` foreign key after PostgreSQL schema review.
 - Added a Vercel branch deployment guard and a regression test for it.
 - Preserved the protected demo and made no destructive backend change.
 
@@ -318,11 +396,18 @@ capabilities.
 
 ## 10. Tests and verification
 
-Isolated branch checks to run before delivery:
+Isolated branch checks include:
 
 - Node syntax/static tests for the new SQL candidate and Vercel guard.
 - JSON parse of `vercel.json` and the sanitized inventory summary.
 - Repository diff/secret scan and branch-identity check.
+- Collector-shadow contract tests, JSON receipt validation, live 401 negative
+  authorization, service-role-only RPC/table privilege checks, and seven live
+  source successes.
+- Acceptance-document tests requiring separate authority/pipeline verdicts,
+  the Phase 1 evidence sections, all decision-layer fields, all eight absence
+  meanings, all twelve knowledge-change causes, and a no-provider-activation
+  rule.
 
 Full frozen-demo reproduction was attempted twice with bundled Node v24.19.0
 using a Windows-compatible sorted 237-file invocation. Dependency installation
@@ -353,6 +438,9 @@ Recovery is not proven for any predecessor.
 - The retrieved spatial-runtime v6 package references lock/module/test inputs
   that are absent from the eight-file snapshot, so exact redeployment is not
   reproducible from the retained bundle alone.
+- The two active yhb collector worker packages are now durably retained in Git
+  with deployed versions and package hashes. This improves code recovery, but
+  does not yet prove database/secret/scheduler restore or output equivalence.
 - Auth counts are not identity/session equivalence. Source IDs link profiles,
   memberships, review receipts and audit attribution and must survive migration.
 - Empty storage objects do not prove bucket configuration, policies, URL
@@ -366,23 +454,18 @@ reference, histories, in-flight leases and publication behavior. Counts,
 hashes, referential invariants, negative authorization and RPO/RTO must be
 recorded.
 
-## 12. Frozen-head failures
+## 12. Former demo lane disposition
 
-The historical qualification reported 1,588 passes and 25 platform-sensitive
-failures. This Windows environment could not reproduce that exact dependency
-graph, so it must not replace the historical receipt.
+The former 93-source isolated demo branch, its output contracts, presentation,
+qualification receipt (including the historical 1,588-pass/25-failure result),
+and preview are frozen historical evidence only. They are not an acceptance
+baseline for this run, and their failures are not consolidation work.
 
-Confirmed portability ownership:
-
-| Files | Classification | Disposition |
-|---|---|---|
-| `articleInputReadback`, `comparisonPreparedWorker`, `comparisonProjectionConfig`, `membershipScoreReadback`, `originalSourceImportGuard` tests | literal-LF/CRLF comparison | test-infrastructure owner; normalize text in tests or enforce checkout EOL |
-| `r475Step8Closeout.test.mjs` | URL pathname and slash-regex misuse on Windows | test-infrastructure owner; use `fileURLToPath` and normalized relative paths |
-| `security/buildDependencyPatches.test.mjs` symlink subcase | explicitly skipped on Windows | keep Linux CI evidence; do not infer Windows coverage |
-| missing dependency/build failures in this run | TLS/install environment | rerun from a verified lockfile/cache on the qualified platform |
-
-No frozen failure was changed in this consolidation branch because none was
-shown to conceal a consolidation defect and the demo fixture is protected.
+Before this scope correction, a Windows reproduction was attempted and some
+portability symptoms were classified. Those results are discarded from both
+acceptance verdicts and from the recommended work queue. No demo test, contract,
+presentation, or implementation was changed or adopted. No further run budget
+will be spent repairing or reconciling the former demo lane.
 
 ## 13. Unresolved blockers
 
@@ -396,27 +479,44 @@ shown to conceal a consolidation defect and the demo fixture is protected.
 6. Full service-secret/ambient-runtime boundary and external caller inventory.
 7. Exact per-project billing, backup/PITR and recovery authority.
 8. Full data hashes/identity maps and isolated restore rehearsal.
-9. Reproducible Edge bundles, especially spatial-runtime v6.
+9. Reproducible Edge bundles outside the newly retained collector packages,
+   especially spatial-runtime v6.
 10. Qualified lockfile install, full test baseline and integration/auth tests.
 
-## 14. Actions requiring owner authorization
+## 14. Remaining owner/platform gates
 
-- Change `supabase_admin` defaults through an authorized Supabase platform-owner
-  path; do not grant broad role membership as a workaround.
-- Replace the spatial shared-role append surface with database-enforced wrappers
-  or separately scoped runtime principals.
-- Use or rotate any production credential or reveal/configure secret values.
-- Create a billable recovery project or change paid resources/backups.
-- Pause/cut over yhb cron or any legacy Edge/external caller.
-- Import production data, Auth users, storage objects/config or in-flight jobs.
-- Change live Vercel/GitHub/Pages/publication state.
-- Merge to main, deploy production functions, drop schemas/tables, pause or
-  delete a project, or downgrade/change billing.
+The owner's later clarification authorizes non-destructive reconciliation
+across all backends, including isolated production DDL and new bounded Edge
+functions. That authority was used for the live changes recorded here. It does
+not erase the mission's express irreversible/destructive reservations.
+
+- `supabase_admin` default ACL repair requires a Supabase platform-owner path;
+  the current database principal cannot perform it. Broad role membership is
+  not an acceptable workaround.
+- Secret disclosure/rotation, a new paid recovery project, backup-plan or
+  billing changes remain explicit credential/cost gates.
+- Public publication changes, main-branch merge, destructive schema/data
+  changes, project pause/delete/downgrade, or permanent caller/scheduler
+  shutdown remain gated until their rollback and recovery evidence is complete.
+- Private staging imports, additive canonical contracts, bounded shadow
+  functions and reversible verification remain authorized and in scope.
+
+The later checkpoint acceptance rule now makes the already-observed production
+mutation requirement, split runtime authority, and residual authorization
+ambiguity an owner-review gate. No further live production mutation, scheduler
+activation/cutover, corpus import, provider activation, or credential change is
+being performed in this run after that rule. Isolated documentation, tests,
+candidate migrations, and review packaging remain safe.
 
 ## 15. Is consolidation complete?
 
-**No.** Canonical intent is clear, but authority, unique data, active callers,
-recovery and authorization state are unresolved.
+**No. AUTHORITY CONSOLIDATED fails.** Canonical intent is clear, but authority,
+unique data, active callers, recovery, decision semantics, and authorization
+state remain unresolved.
+
+**PIPELINE OPERATIONAL also fails independently.** Qik has no active scheduler
+and no representative article has completed the intended canonical end-to-end
+analytical path. The receipt-only shadow is not an ingestion pipeline.
 
 ## 16. Is any redundant paid project demonstrably retirement-ready?
 
@@ -426,10 +526,13 @@ unreconciled data/configuration, and yhb has active production-like jobs.
 
 ## 17. Exact recommended next action
 
-Build the qik collector shadow from the recovered live yhb v8/v15 packages and
-the already-qualified generation-fenced queue foundation. First install the
-five missing private operational contracts, transfer a new write-fenced source
-snapshot, and run qik manually with publication and acknowledgement disabled.
-Only after count/hash/output parity should the two every-five-minute schedules
-be moved from yhb to qik. Keep yhb running until that exact cutover fence is
-verified; deletion/pausing remains out of scope.
+Owner review should authorize or reject one bounded next phase: build and run a
+qik **private staging-only algorithm shadow** using the retained `ingest-rss`
+parser/extractor and generation-fenced comparison worker, after approving the
+seven outlet/source identity mapping and the residual Edge authority model.
+The run would create no publication writes and stop after count/hash/output and
+authorization parity receipts. It must not move either five-minute schedule.
+Only a later gate, after restore rehearsal and end-to-end qik article traversal,
+may consider scheduler cutover. Yhb must remain active through a measured
+rollback window; pause, deletion, and destructive retirement remain out of
+scope.

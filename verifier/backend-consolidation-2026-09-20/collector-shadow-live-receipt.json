@@ -1,0 +1,59 @@
+{
+  "observed_at": "2026-09-20T15:42:51.302400Z",
+  "canonical_project": "qikvmopbtijoebdqosyq",
+  "source_project": "yhbwnrtlqbjtcrrlpbge",
+  "edge_function": {
+    "slug": "collector-shadow",
+    "version": 1,
+    "status": "ACTIVE",
+    "verify_jwt": false,
+    "custom_auth": "Vault-held x-mip-collector-shadow-token validated by service-role-only RPC",
+    "package_sha256": "2c5d50665bd9be4c6b9032844cfa7485fa9bc35a68613e1ffec22faf6024606d",
+    "unauthenticated_probe": {
+      "http_status": 401,
+      "body": { "error": "unauthorized" }
+    }
+  },
+  "scope": {
+    "canonical_domain_writes": false,
+    "publication_writes": false,
+    "predecessor_acknowledgements": false,
+    "schedule_created": false
+  },
+  "source_snapshot": {
+    "sources": 7,
+    "config_hash": "fa85b8df5fccda862220bb153de20a5fdf9915dcfed7bee298db8ce6132cbf8a"
+  },
+  "probes": [
+    { "outlet": "Al Jazeera", "http_status": 200, "bytes": 17067, "items": 25, "entries": 0, "sha256": "f58c538333711141cf76d7abd40a3329cd40eded96397b863405fd5723e69a0b" },
+    { "outlet": "BBC News", "http_status": 200, "bytes": 19770, "items": 25, "entries": 0, "sha256": "4b17247bddb1795420056cada60112130266cd00da6452b51d2b99b778e19c27" },
+    { "outlet": "CBC News", "http_status": 200, "bytes": 27234, "items": 20, "entries": 0, "sha256": "87b6d91910f40416fcabb7f230176995eaeae2d0a66014f14c277d93d6f99115" },
+    { "outlet": "CNN", "http_status": 200, "bytes": 130144, "items": 50, "entries": 0, "sha256": "b3469be0662a1555ed302baa14e6fc02af30bd2b750987380a3bdbc871b53760" },
+    { "outlet": "Fox News", "http_status": 200, "bytes": 221325, "items": 25, "entries": 0, "sha256": "915473acb98ee837f7a90c86e108a614af1a6a1460355859803586731be5be71" },
+    { "outlet": "The Guardian", "http_status": 200, "bytes": 151405, "items": 45, "entries": 0, "sha256": "5022ca4e1e6e32877707a1d8ee036e6c2248a5ff20fad90a4af61ba9b2805125" },
+    { "outlet": "The New York Times", "http_status": 200, "bytes": 124415, "items": 56, "entries": 0, "sha256": "1400587a4fa30e032eb5fe16f032a7490b93e1736a6efcc38d8c3038e3a45be1" }
+  ],
+  "post_probe_counts": {
+    "articles": 98,
+    "events": 1,
+    "claims": 4,
+    "explanations": 0,
+    "ingestion_runs": 0,
+    "ingestion_source_runs": 0,
+    "author_profile_queue": 0,
+    "source_comparison_enrichment_queue": 0,
+    "shadow_receipts": 7,
+    "shadow_successes": 7
+  },
+  "collector_history_fence": {
+    "source_observed_at": "2026-09-20T15:42:51.302400Z",
+    "ingestion_runs": {
+      "count": 7672,
+      "source_and_archive_sha256": "db13a52e3e41fb9eff0d0b2b30a733f725d82ca003d61ee44be107b019496da9"
+    },
+    "ingestion_source_runs": {
+      "count": 7652,
+      "source_and_archive_sha256": "e8d67a7192573ab3d89cb37747eb0692b1b5a0c756ee5fdf2e720f24bbc23a1b"
+    }
+  }
+}

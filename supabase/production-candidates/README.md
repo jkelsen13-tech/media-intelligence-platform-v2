@@ -43,8 +43,9 @@ Owner-gated execution prerequisites:
    projection and denial of all non-SELECT privileges.
 4. Create representative table/view/function objects as `supabase_admin` and
    prove browser roles receive no implicit privileges.
-5. Prove service RPCs, publication reads, Pages, Vercel, and the frozen demo
-   acceptance fixture are unchanged.
+5. Prove service RPCs, publication reads, Pages, Vercel, and the current live
+   platform contracts are unchanged. The former isolated demo is not part of
+   this acceptance scope.
 6. Apply only with a recorded owner authorization, bounded maintenance plan,
    catalog evidence captured before/after, and a tested restoration script
    generated from the pre-apply ACL snapshot.
