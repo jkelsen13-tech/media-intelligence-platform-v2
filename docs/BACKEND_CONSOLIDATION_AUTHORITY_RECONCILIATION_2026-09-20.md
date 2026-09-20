@@ -431,23 +431,30 @@ Isolated branch checks include:
   existing dependency-free collector-shadow checks and four golden
   sanitization checks also pass.
 
-- A separate qualification-only collector algorithm-shadow SQL contract now
-  passes five PGlite tests. The tested boundary uses separate storage,
-  worker-function, and authority owners; dedicated direct-login runtime
-  identities; forced RLS; exactly three worker RPC grants; database-selected
-  immutable input; global request uniqueness; current-authority replay checks;
-  atomic completion/failure; and explicit expired-lease requeue with a fresh
-  token. Together with the twelve candidate tests, 17 focused checks pass.
-  This does not establish real PostgreSQL contention, Supabase role/pooler
-  behavior, production provenance/rights authority, credential isolation,
-  journal controls, or restore recovery.
+- A separate qualification-only collector algorithm-shadow SQL contract passes
+  five PGlite tests and a native PostgreSQL 17.6 workflow passes all 13 bounded
+  concurrency/security tests (GitHub Actions run `35526537554`). The native
+  suite uses separate direct-login connections and verifies effective identity,
+  owners/default ACLs/RLS, denial of role escalation and unrelated callers,
+  `SKIP LOCKED`, rollback attempt accounting, exact replay, atomic terminal
+  visibility, complete/fail and rights-revocation ordering, authority rechecks
+  after a blocking lock, expired-session rejection, lease-token rotation,
+  bounded recovery contention/exhaustion, deterministic backend termination
+  before and after commit, and persistence across a graceful database restart.
+  This is bounded native-core qualification evidence—not deployment evidence
+  and not a full recovery rehearsal. It does not establish Supabase
+  authenticator/pooler behavior, the target database's complete inherited
+  `PUBLIC`/security-definer privilege graph, production provenance/rights
+  authority, isolated credentials/host, remote-journal controls, the complete
+  source/session/runtime/implementation/configuration revocation matrix, or a
+  dump-and-restore recovery of the intended target.
 
-Four existing PGlite integration files could not run in the transient local
-environment because `@electric-sql/pglite` was absent. A locked dependency
-restore was attempted, but the available package client failed TLS certificate
-verification while fetching unrelated Rollup packages. This is a local
-environment limitation, not a passing result; the affected transaction,
-capability, recovery, and generation-isolation suites remain required in CI.
+The transient local environment could not complete the full dependency-backed
+PGlite batch because of host resource limits. That is not counted as a local
+pass. The independent native PostgreSQL workflow result above is the durable
+concurrency evidence; repository-wide CI status is recorded separately and
+does not convert this qualification contract into a deployed or recovered
+system.
 
 ## 11. Recovery evidence
 

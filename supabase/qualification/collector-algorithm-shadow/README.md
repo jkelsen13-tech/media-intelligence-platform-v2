@@ -89,14 +89,34 @@ arguments for exact recovery. Its access control, encryption, atomic `putOnce`,
 concurrency, log redaction, corruption handling, and retention policy remain
 independent deployment gates. A JavaScript `assertSecurity` call is not proof.
 
+## Current native qualification result
+
+GitHub Actions run `35526537554` passed all 13 tests against an isolated native
+PostgreSQL 17.6 service. It used distinct direct-login connections and covered
+effective identity; owners, default ACLs, forced RLS, and runtime grants; role
+escalation and foreign-caller denial; `SKIP LOCKED`; rollback attempt
+accounting; exact replay without token/input disclosure; atomic completion;
+complete/fail and rights-revocation races; authority rechecks after blocking;
+session expiry; expired-lease requeue with token rotation and bounded attempt
+exhaustion; deterministic backend termination before and after commit; and
+committed-state persistence over a graceful database restart.
+
+That result proves a bounded PostgreSQL core contract only. It does not prove
+the Supabase authenticator/pooler identity path, the intended target's complete
+reachable privilege graph, authentic source/rights approvals, the full
+revocation matrix, production credential or host isolation, remote-journal
+security, crash recovery, or a dump-and-restore rehearsal.
+
 ## Required qualification before any deployment proposal
 
-PGlite tests may establish constraints, grants, deterministic state
-transitions, rollback, replay, and wrapper integration. A real PostgreSQL
-restore with separate connections/logins must additionally prove contention,
-revocation races, `SKIP LOCKED`, connection loss before/after commit, restart
-recovery, actual role inheritance/default privileges, object owners, exposed
-schemas, and extension behavior.
+PGlite tests establish constraints, grants, deterministic state transitions,
+rollback, replay, and wrapper integration. The bounded native PostgreSQL result
+above adds direct-login contention, selected revocation races, `SKIP LOCKED`,
+backend termination around commit, graceful restart persistence, and the
+qualification database's actual owners/default privileges. A target-shaped
+Supabase restore must still verify pooler/authenticator identity, all exposed
+schemas and extensions, the complete effective privilege graph, the remaining
+revocation cases, crash behavior, and dump/restore recovery.
 
 The complete reachable privilege graph must also be audited. Every role
 inherits `PUBLIC`; an unrelated callable security-definer function elsewhere
