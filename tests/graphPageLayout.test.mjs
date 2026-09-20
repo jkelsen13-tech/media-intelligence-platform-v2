@@ -91,8 +91,11 @@ test('zoom controls stay inside the canvas wrap, not over coverage chrome', () =
 test('initial graph fit follows focused-view node separation', () => {
   const graph = GRAPH.replaceAll('\r\n', '\n')
   const separation = graph.indexOf("cy.on('layoutstop', () => {\n      updateOverlays()\n      runSettleSeparation()")
-  const fit = graph.indexOf("cy.one('layoutstop', () => {\n      if (!cy.destroyed()) cy.fit(undefined, 80)", separation)
+  const fit = graph.indexOf("cy.one('layoutstop', () => {", separation)
   assert.ok(separation >= 0 && fit > separation)
+  assert.match(graph, /if \(!initializing \|\| cy.destroyed\(\)\) return/)
+  assert.match(graph, /gestureContainer.addEventListener\(event, handViewportToUser/)
+  assert.match(graph, /clearTimeout\(initialFitTimer\)/)
 })
 
 test('significant canvas size changes and layoutRevision refit the graph', () => {

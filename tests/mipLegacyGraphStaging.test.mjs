@@ -4,6 +4,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { PGlite } from '@electric-sql/pglite'
 import { applyFoundation, restoreEclipseInvestigation } from '../scripts/mipConsolidationRestore.mjs'
 import { insertCyclosporaCohort, CYCLOSPORA_EVENT } from '../scripts/mipPublicSurfaceCohort.mjs'
@@ -29,6 +30,12 @@ import {
 } from '../scripts/mipLegacyGraphStaging.mjs'
 
 const MANUS = 'yhbwnrtlqbjtcrrlpbge'
+
+test('manifest CLI executes by platform-native absolute path and matches imported dry run', () => {
+  const scriptPath = fileURLToPath(new URL('../scripts/mipLegacyGraphStaging.mjs', import.meta.url))
+  const output = execFileSync(process.execPath, [scriptPath, 'manifest'], { encoding: 'utf8', windowsHide: true })
+  assert.deepEqual(JSON.parse(output), dryRunManifest())
+})
 
 test('lossless parser preserves special JSON keys and their exact numeric fingerprints', () => {
   const raw = '{"metadata":{"__proto__":{"n":9007199254740993},"constructor":1,"prototype":2}}'

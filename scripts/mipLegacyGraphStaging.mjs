@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
+import { pathToFileURL } from 'node:url'
 import {
   GRAPH_EVENT_FAMILY,
   IDENTITY_DECISIONS,
@@ -889,6 +890,6 @@ async function main() {
   throw new Error('usage: node scripts/mipLegacyGraphStaging.mjs dry-run <page.json>|plan <page.json>|manifest')
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main()
 }

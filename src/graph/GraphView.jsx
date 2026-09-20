@@ -256,6 +256,19 @@ export default function GraphView({
       maxZoom: 3,
     })
 
+    // Initial layout owns the viewport only until its final fit or the first
+    // user gesture. Suppress zoom-triggered geometry work during initialization:
+    // otherwise fitting can queue declutter that moves nodes outside that fit.
+    let initializing = true
+    let initialFitTimer = null
+    cy.scratch('initialFitState', 'pending')
+    const handViewportToUser = () => {
+      initializing = false
+      clearTimeout(initialFitTimer)
+      cy.stop(true, false)
+      cy.scratch('initialFitState', 'user-controlled')
+    }
+
     // --- Tier 5: device-normalized wheel zoom ---
     // A single sensitivity cannot serve all three wheel sources: a standard
     // mouse emits large discrete notches, a trackpad two-finger scroll emits
@@ -265,6 +278,7 @@ export default function GraphView({
     // wheel listener and applies a device-appropriate, cursor-centered step.
     // Touch pinch is unaffected — touch gestures produce no wheel events.
     const graphContainer = containerRef.current
+    const gestureContainer = graphContainer.parentElement ?? graphContainer
     const onWheelZoom = (e) => {
       e.preventDefault()
       e.stopPropagation()
@@ -288,6 +302,9 @@ export default function GraphView({
       })
     }
     graphContainer.addEventListener('wheel', onWheelZoom, { passive: false, capture: true })
+    for (const event of ['pointerdown', 'wheel', 'keydown']) {
+      gestureContainer.addEventListener(event, handViewportToUser, { capture: true })
+    }
 
     // --- Track B Step 2: fcose on connected nodes; singleton band after ---
     // The band-placement layoutstop handler is registered BEFORE the
@@ -543,6 +560,7 @@ export default function GraphView({
     let declutterTimer = null
     const scheduleDeclutter = () => {
       clearTimeout(declutterTimer)
+      if (initializing) return
       declutterTimer = setTimeout(declutter, 140)
     }
     cy.on('zoom pan', scheduleDeclutter)
@@ -777,6 +795,7 @@ export default function GraphView({
     let relaxTimer = null
     const scheduleRelax = () => {
       clearTimeout(relaxTimer)
+      if (initializing) return
       relaxTimer = setTimeout(runRelax, 140)
     }
 
@@ -795,7 +814,18 @@ export default function GraphView({
     // Fit the final geometry, including singleton placement and focused-view
     // separation. One-shot: subsequent drag reheats retain the user's viewport.
     cy.one('layoutstop', () => {
-      if (!cy.destroyed()) cy.fit(undefined, 80)
+      if (!initializing || cy.destroyed()) return
+      // Allow the initial resize animation (80ms debounce + 300ms animation)
+      // to finish, then fit once without queuing more position-changing work.
+      initialFitTimer = setTimeout(() => {
+        if (!initializing || cy.destroyed()) return
+        cy.stop(true, false)
+        cy.resize()
+        captureRest()
+        cy.fit(undefined, 80)
+        initializing = false
+        cy.scratch('initialFitState', 'complete')
+      }, 420)
     })
     cy.on('select unselect', 'node', updateCards)
 
@@ -937,6 +967,10 @@ export default function GraphView({
       cy.stop(true, false)
       cy.elements().stop(true, false)
       graphContainer.removeEventListener('wheel', onWheelZoom, { capture: true })
+      for (const event of ['pointerdown', 'wheel', 'keydown']) {
+        gestureContainer.removeEventListener(event, handViewportToUser, { capture: true })
+      }
+      clearTimeout(initialFitTimer)
       clearTimeout(declutterTimer)
       clearTimeout(relaxTimer)
       clearTimeout(fitFromResizeTimer)
@@ -989,8 +1023,10 @@ export default function GraphView({
   useEffect(() => {
     const cy = cyRef.current
     if (!cy || cy.destroyed()) return
+    const initialInvocation = cy.scratch('initialFitState') === 'pending'
     const timer = setTimeout(() => {
       if (cy.destroyed()) return
+      if (initialInvocation && cy.scratch('initialFitState') === 'user-controlled') return
       cy.resize()
       cy.animate(
         { fit: { eles: cy.elements(), padding: 80 } },
