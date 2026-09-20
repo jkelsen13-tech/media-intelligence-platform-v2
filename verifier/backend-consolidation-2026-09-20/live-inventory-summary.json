@@ -1,0 +1,78 @@
+{
+  "captured_at": "2026-09-20",
+  "canonical_intent": "qikvmopbtijoebdqosyq",
+  "organization": {
+    "id": "ntmqymyaujspymfqmxew",
+    "name": "jkelsen13-tech's Org",
+    "plan": "pro",
+    "qualification": "Organization plan is known; per-project compute, billing, backup/PITR, egress, and recovery retention were not exposed."
+  },
+  "projects": [
+    {
+      "ref": "qikvmopbtijoebdqosyq",
+      "name": "mip-v2-account-verification-20260831",
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-1",
+      "postgres": "17.6.1.166",
+      "application_tables": 95,
+      "application_views": 9,
+      "exact_rows": 16506,
+      "auth_users": 2,
+      "edge_functions": 8,
+      "migrations": 36,
+      "storage_buckets": 0,
+      "storage_objects": 0,
+      "active_cron_jobs": 0
+    },
+    {
+      "ref": "yhbwnrtlqbjtcrrlpbge",
+      "name": "mip-v2-manus-sandbox-20260818",
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-1",
+      "postgres": "17.6.1.155",
+      "application_tables": 97,
+      "application_views": 12,
+      "exact_rows": 177478,
+      "auth_users": 0,
+      "edge_functions": 6,
+      "migrations": 66,
+      "storage_buckets": 0,
+      "storage_objects": 0,
+      "active_cron_jobs": 2
+    },
+    {
+      "ref": "jfnzyvzthzqtczlxhjll",
+      "name": "mip-spatial-verification-sandbox-20260829",
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-1",
+      "postgres": "17.6.1.166",
+      "application_tables": 28,
+      "application_views": 0,
+      "exact_rows": 46,
+      "auth_users": 0,
+      "edge_functions": 0,
+      "migrations": 5,
+      "storage_buckets": 0,
+      "storage_objects": 0,
+      "active_cron_jobs": 0
+    },
+    {
+      "ref": "niejaejtbxgakyrsntxm",
+      "name": "jkelsen13-tech's Project",
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-2",
+      "postgres": "17.6.1.104",
+      "application_tables": 92,
+      "application_views": 3,
+      "exact_rows": 14103,
+      "auth_users": 3,
+      "edge_functions": 6,
+      "migrations": 77,
+      "storage_buckets": 1,
+      "storage_objects": 0,
+      "active_cron_jobs": 0
+    }
+  ],
+  "point_in_time_warning": "Counts are live point-in-time observations and can change while legacy jobs remain active.",
+  "secret_handling": "No secret values or credential-row contents were retrieved or recorded."
+}
