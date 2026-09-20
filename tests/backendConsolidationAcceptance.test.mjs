@@ -45,7 +45,7 @@ test('main report returns three independent authority and pipeline verdicts', ()
   assert.match(report, /C\. PIPELINE OPERATIONAL ON THE AUTHORIZED LIVE BACKEND[\s\S]+FAIL/)
   assert.match(report, /qik[\s\S]+no active cron/i)
   assert.match(report, /yhb[\s\S]+two active five-minute/i)
-  assert.match(report, /each recorded\s+288 successes, zero failures/i)
+  assert.match(report, /each recorded\s+288 successes (?:and|,) zero failures/i)
   assert.match(report, /zero RLS-disabled base or partitioned tables/i)
   assert.match(report, /Twenty-seven public SECURITY DEFINER functions/i)
   assert.match(report, /policy-ingest[\s\S]+service-role external-fetch\/write behavior/i)
@@ -66,11 +66,12 @@ test('foundation checkpoint distinguishes all eight runtime stages without perce
     'Installed / deployed', 'Enabled', 'Authorized real data',
     'End-to-end operational verification',
   ]) assert.ok(foundationCheckpoint.includes(stage), stage)
+  const foundationLower = foundationCheckpoint.toLowerCase()
   for (const capability of [
-    'Hypothesis assessment', 'Entity identity and actor agency',
-    'Content-addressed storage', 'Markets', 'Weather rights',
-    'Operation evidence', 'Provider-neutral System-One decision layer',
-  ]) assert.ok(foundationCheckpoint.includes(capability), capability)
+    'evidence-to-hypothesis relations', 'entity identity and actor agency',
+    'content-addressed storage', 'markets', 'weather rights',
+    'operation evidence', 'provider-neutral system-one decision layer',
+  ]) assert.ok(foundationLower.includes(capability), capability)
   assert.doesNotMatch(foundationCheckpoint, /\b\d{1,3}%\s+(?:complete|done|built)/i)
   assert.deepEqual(foundationReceipt.verdicts, {
     authority_consolidated: 'FAIL',

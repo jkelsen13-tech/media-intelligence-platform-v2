@@ -455,7 +455,7 @@ creation, and leaked-password changes remain owner-gated.
   parser/extractor seams, hard-disables providers, records typed absence,
   malformed-input, URL-taint, and coverage state, and can call only dedicated
   claim/complete/fail
-  capabilities supplied by a future host. It contains no Supabase client,
+  capabilities supplied by a future host. It has no ambient service role and contains no Supabase client,
   service-role credential, environment access, table interface, fetch path,
   scheduler, publication action, or predecessor acknowledgement.
 - Reused the existing generation-fenced Source Comparison candidate and v16

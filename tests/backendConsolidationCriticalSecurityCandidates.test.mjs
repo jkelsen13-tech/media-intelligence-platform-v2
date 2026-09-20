@@ -85,7 +85,7 @@ test('candidates are non-deployed, owner-gated and contain no row mutation', () 
   assert.match(edge, /Immediate containment/)
   assert.match(edge, /BACKFILL_LEGACY_RUN_KEY/)
   assert.match(edge, /POLICY_INGEST_RUN_KEY/)
-  assert.match(edge, /before creating a service-role client/i)
+  assert.match(edge, /Only after this point: read SUPABASE_SERVICE_ROLE_KEY/i)
   assert.match(edge, /reset=1[\s\S]+separately disabled/i)
   for (const sql of [yhb, rollback, qik]) {
     assert.doesNotMatch(sql, /\b(?:INSERT\s+INTO|UPDATE\s+[^\n;]+\s+SET|DELETE\s+FROM|TRUNCATE|DROP\s+(?:TABLE|SCHEMA)|ALTER\s+TABLE)\b/i)
