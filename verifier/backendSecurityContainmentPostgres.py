@@ -20,6 +20,11 @@ BASE = ["psql", "-X", "-qAt", "-v", "ON_ERROR_STOP=1",
 ROOT = Path("supabase/production-candidates/backend-consolidation-security")
 YHB = (ROOT / "yhb_browser_authority_containment.sql").read_text()
 QIK = (ROOT / "qik_private_predicate_revoke.sql").read_text()
+ROLLBACK = (ROOT / "yhb_browser_authority_containment_rollback.sql").read_text()
+PUBLIC_SIGNATURES = set(re.findall(
+    r"GRANT EXECUTE ON FUNCTION (public\.[a-z0-9_]+\([^;]*\)) TO PUBLIC;",
+    ROLLBACK,
+))
 TRIGGERS = {
     "articles_source_status_propagate", "handle_new_mip_user",
     "mip_arc_membership_projection_state_change", "mip_intercept_direct_arc_attachment",
@@ -46,10 +51,12 @@ def expect_denied(database, sql, object_name):
 def ensure_roles():
     run("postgres", r"""
 SELECT format('CREATE ROLE %I', role_name)
-FROM (VALUES ('anon'), ('authenticated'), ('service_role')) AS wanted(role_name)
+FROM (VALUES ('anon'), ('authenticated'), ('service_role'), ('authenticator')) AS wanted(role_name)
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = role_name)
 \gexec
 ALTER ROLE service_role BYPASSRLS;
+ALTER ROLE authenticator NOINHERIT;
+GRANT anon, authenticated, service_role TO authenticator;
 """)
 
 def yhb_fixture(database):
@@ -73,7 +80,10 @@ def yhb_fixture(database):
             statements.append(
                 f"CREATE FUNCTION {signature} RETURNS boolean LANGUAGE sql SECURITY DEFINER "
                 "SET search_path='' AS $$ SELECT true $$")
+        statements.append(f"REVOKE EXECUTE ON FUNCTION {signature} FROM PUBLIC, anon, authenticated, service_role")
         statements.append(f"GRANT EXECUTE ON FUNCTION {signature} TO anon, authenticated, service_role")
+        if signature in PUBLIC_SIGNATURES:
+            statements.append(f"GRANT EXECUTE ON FUNCTION {signature} TO PUBLIC")
     statements.extend([
         "CREATE TRIGGER containment_trigger BEFORE INSERT ON public.trigger_probe "
         "FOR EACH ROW EXECUTE FUNCTION public.handle_new_mip_user()",
@@ -108,11 +118,15 @@ def qualify_yhb(database):
     signatures = yhb_fixture(database)
     untouched_before = fingerprint(database)
     definitions_before = run(database, r"""
-SELECT md5(string_agg(p.oid::regprocedure::text || ':' || pg_get_functiondef(p.oid), E'\n'
-                      ORDER BY p.oid::regprocedure::text))
+SELECT count(*)::text || ':' ||
+       md5(string_agg(n.nspname || '.' || p.oid::regprocedure::text || ':' ||
+                      pg_get_functiondef(p.oid), E'\n'
+                      ORDER BY n.nspname, p.oid::regprocedure::text))
 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
-WHERE n.nspname='public' AND p.oid::regprocedure::text LIKE 'public.%';
+WHERE n.nspname='public' AND p.prosecdef;
 """)
+    assert definitions_before.split(':', 1)[0] == "27", definitions_before
+    assert len(PUBLIC_SIGNATURES) == 14, PUBLIC_SIGNATURES
     run(database, YHB)
     for signature in signatures:
         for role in ("anon", "authenticated"):
@@ -127,16 +141,19 @@ WHERE n.nspname='public' AND p.oid::regprocedure::text LIKE 'public.%';
     assert run(database, "SELECT count(*) FROM public.owner_rows WHERE id=7") == "1"
     assert run(database, "SELECT has_table_privilege('anon','public.authors_public','INSERT')") == "t"
     definitions_after = run(database, r"""
-SELECT md5(string_agg(p.oid::regprocedure::text || ':' || pg_get_functiondef(p.oid), E'\n'
-                      ORDER BY p.oid::regprocedure::text))
+SELECT count(*)::text || ':' ||
+       md5(string_agg(n.nspname || '.' || p.oid::regprocedure::text || ':' ||
+                      pg_get_functiondef(p.oid), E'\n'
+                      ORDER BY n.nspname, p.oid::regprocedure::text))
 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
-WHERE n.nspname='public' AND p.oid::regprocedure::text LIKE 'public.%';
+WHERE n.nspname='public' AND p.prosecdef;
 """)
+    assert definitions_after.split(':', 1)[0] == "27", definitions_after
     assert definitions_before == definitions_after
     assert untouched_before == fingerprint(database)
     print("MIP_YHB_EXACT_CANDIDATE_EXECUTED=pass", flush=True)
     print("MIP_YHB_BROWSER_EXECUTE_REVOKED_SERVICE_ROLE_RETAINED=pass", flush=True)
-    print("MIP_YHB_TRIGGER_CHAIN_AFTER_REVOKE=pass", flush=True)
+    print("MIP_YHB_GENERIC_TRIGGER_EXECUTION_AFTER_REVOKE=pass", flush=True)
     print("MIP_YHB_RESIDUAL_UPDATABLE_VIEW_INSERT=confirmed", flush=True)
 
 def qik_fixture(database):
