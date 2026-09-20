@@ -85,8 +85,7 @@ def yhb_fixture(database):
         "GRANT EXECUTE ON FUNCTION public.untouched() TO anon",
         "GRANT SELECT ON public.unrelated_view TO anon",
     ])
-    run(database, ";
-".join(statements) + ";")
+    run(database, ";\n".join(statements) + ";")
     return signatures
 
 def fingerprint(database):
