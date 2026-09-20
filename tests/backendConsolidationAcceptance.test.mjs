@@ -70,7 +70,7 @@ test('foundation checkpoint distinguishes all eight runtime stages without perce
   for (const capability of [
     'evidence-to-hypothesis relations', 'actor identity and agency',
     'content-addressed storage', 'markets', 'weather source-rights gate',
-    'operation evidence', 'provider-neutral system-one decision layer',
+    'operation evidence', 'provider-neutral decision/reuse',
   ]) assert.ok(foundationLower.includes(capability), capability)
   assert.doesNotMatch(foundationCheckpoint, /\b\d{1,3}%\s+(?:complete|done|built)/i)
   assert.deepEqual(foundationReceipt.verdicts, {
