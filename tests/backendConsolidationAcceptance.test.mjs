@@ -86,8 +86,12 @@ test('former demo lane is historical only and excluded from acceptance', () => {
   }
   assert.match(report, /current live MIP platform as its primary\s+surface/i)
   assert.match(report, /No isolated-demo output contract or presentation was used/i)
-  assert.match(report, /No further run budget\s+will be spent repairing or reconciling the former demo lane/i)
+  assert.match(report, /No further run budget\s+will be spent\s+repairing or reconciling the former demo lane/i)
+  assert.match(report, /frozen demo commit is not\s+an ancestor/i)
+  assert.match(report, /no\s+demo-derived implementation adopted/i)
+  assert.doesNotMatch(report, /Full frozen-demo reproduction was attempted/i)
   assert.match(checkpoint, /frozen historical work only/i)
+  assert.match(checkpoint, /no adopted demo implementation/i)
 })
 
 test('algorithm shadow SQL qualification remains non-deployed and owner-gated', () => {

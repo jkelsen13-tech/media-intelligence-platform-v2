@@ -449,23 +449,6 @@ verification while fetching unrelated Rollup packages. This is a local
 environment limitation, not a passing result; the affected transaction,
 capability, recovery, and generation-isolation suites remain required in CI.
 
-Full frozen-demo reproduction was attempted twice with bundled Node v24.19.0
-using a Windows-compatible sorted 237-file invocation. Dependency installation
-failed on TLS certificate verification, so the observed result is **not** the
-qualified historical baseline: 837 tests, 699 passing, 138 failing, zero
-skipped/cancelled (42.745s and 37.505s). Remaining failures were dominated by
-missing `@supabase/supabase-js`, PGlite, React, esbuild, graphology,
-browserslist, PostCSS, Vite and Cesium; MapLibre byte verification also lacked
-installed bytes. Both builds failed immediately because Vite was absent.
-
-Six dependency-free assertions were proven CRLF artifacts under
-`core.autocrlf=true`; an in-memory CRLF-to-LF diagnostic made all 26 tests in
-their five files pass without changing disk contents. A separate latent
-Windows bug uses `new URL(...).pathname` as a filesystem path in
-`r475Step8Closeout.test.mjs` and then compares Windows paths to slash-only
-regexes. These are test-harness portability issues, not established backend
-defects.
-
 ## 11. Recovery evidence
 
 Recovery is not proven for any predecessor.
@@ -502,10 +485,20 @@ and preview are frozen historical evidence only. They are not an acceptance
 baseline for this run, and their failures are not consolidation work.
 
 Before this scope correction, a Windows reproduction was attempted and some
-portability symptoms were classified. Those results are discarded from both
-acceptance verdicts and from the recommended work queue. No demo test, contract,
-presentation, or implementation was changed or adopted. No further run budget
-will be spent repairing or reconciling the former demo lane.
+portability symptoms were classified. All detailed results have been removed
+from this validation record and are excluded from both acceptance verdicts and
+the recommended work queue. No demo test, contract, presentation, or
+implementation was changed or adopted. No further run budget will be spent
+repairing or reconciling the former demo lane.
+
+An ancestry and changed-path audit confirms that the frozen demo commit is not
+an ancestor of this consolidation branch. Of the 52 paths changed from the
+authorized consolidation base through commit `dd36905`, only `vercel.json`
+also exists at the frozen demo commit. The files differ: this branch contains
+only an independently required deployment-disable guard for
+`codex/mip-backend-consolidation-20260920`; it contains no demo route, header,
+output contract, corpus, or presentation behavior. This audit found no
+demo-derived implementation adopted by the consolidation changes.
 
 ## 13. Unresolved blockers
 

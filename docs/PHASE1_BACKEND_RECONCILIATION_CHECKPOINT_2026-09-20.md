@@ -17,6 +17,12 @@ it is not a behavioral, architectural, algorithmic, presentation, or acceptance
 reference. The current live MIP platform and governing requirements are the
 canonical product reference for the scheduled consultation.
 
+The frozen demo commit is not an ancestor of this consolidation branch. A
+changed-path audit found no adopted demo implementation: the sole overlapping
+path is `vercel.json`, whose consolidation version independently disables
+deployment of this branch and contains no demo route, contract, corpus, or
+presentation behavior.
+
 ## Parent reconciliation of specialist evidence
 
 The parent reviewed and reconciled three independent evidence streams rather
