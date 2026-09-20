@@ -29,13 +29,16 @@ Vercel deployment for that exact branch. Vercel's live deployment list showed
 no consolidation-branch deployment after the prior pushes. The connector could
 not return the project-settings object because of a connector schema mismatch,
 so that project-level setting remains unverified rather than inferred.
-The same read-only list returned the latest production deployment for Vercel
-project `media-intelligence-platform-v2` from the former-demo branch at
-`f4932d82b989ae95a176ff2427d6892c9b0d418f`. That deployment is caller/config
-evidence only and has no product-reference authority. It conflicts with the
-verified GitHub Pages `main` deployment as a claimed live surface, so the owner
-must identify the canonical live URL/project before frontend caller closure or
-any deployment proposal.
+
+The canonical live product surface is
+`https://jkelsen13-tech.github.io/media-intelligence-platform-v2/`. GitHub
+Pages run `34440532626` successfully deployed verified `main`
+`1dc317200b7a928fad85d06b43351b60e2a50d92`; its live bundle
+(`assets/index-BUxP66NE.js`) issued only qik REST requests. The visible
+three-article population is the qik `reader_state = 'eligible'` projection,
+not a conflicting total-table census. The Vercel project still reports an old
+former-demo deployment, but it is owner-rejected historical residue with no
+product-reference authority and is not a competing live-product definition.
 
 ## Eight required runtime stages
 
@@ -55,47 +58,124 @@ percentages. A missing relation name does not prove a missing capability, and a
 present table, validator, UI, or successful cron invocation does not prove the
 later stages.
 
-## Corrected foundation-to-runtime matrix
+## Corrected F1–F15 foundation-to-runtime matrix
 
-| Capability / intended owner | Foundation located | Contract / implementation coverage | Tested in isolation | Integrated with required components | Installed / deployed | Enabled | Authorized real data | End-to-end operational verification | Disposition |
-|---|---|---|---|---|---|---|---|---|---|
-| Canonical evidence, investigation, assessment base / qik | **Proven:** live `evidence_pipeline`, investigation Edge functions and public RPCs | **Proven for bounded base:** captures, versions, changes, investigation reads/reviews and assessment dependencies | **Proven for bounded components** in repository and prior exact-head CI | **Partial:** several live qik functions compose; collector and semantic generation do not | **Proven:** live qik migrations/functions | **Partial:** user-facing reads and bounded operations exist; no general analytical scheduler | **Partial/unknown authority:** live records exist; complete source/rights chain is not re-proven | **No:** no full article-to-decision-to-publication traversal | **EXTEND qik** |
-| Hypothesis assessment / qik | **Proven:** `src/lib/hypothesisAssessment.js` plus `supabase/qualification/hypothesis-assessments/` revisions 001–023; live qik has overlapping assessment/change foundations | **Proven for bounded contract:** revisions, history, reassessment, observations, boundary custody, worker/recovery and review acknowledgement | **Proven for isolated scope:** integration exact-head workflows and current hypothesis PostgreSQL run `35530600347` pass | **Partial:** App composition and cross-component tests exist; no production-shaped full-pipeline proof | **Partial:** qik assessment foundation is installed; exact `mip_hypothesis` qualification schema is absent | **Partial:** live assessment reads/writes exist; no canonical generation schedule/provider path | **Unknown:** one live qik assessment exists, but the full qualification authorization chain is not installed | **No** | **EXTEND/RECONCILE qik; not NEW** |
-| Provider-neutral System-One decision layer / qik | **Proven:** assessment, evidence-change, hypothesis and authority foundations are located | **Partial:** decision IDs, evidence bindings, temporal/method revisions and provider-disabled behavior exist in separate contracts; one canonical contract does not yet own all fields | **Partial:** component tests exist | **No full integration proof** | **Partial overlap only:** qik assessment/change tables; no complete canonical decision store | **No complete decision runtime** | **No complete authorized decision population proven** | **No** | **RECONCILE around qik** |
-| Entity identity and actor agency / qik | **Proven:** live graph/entity implementations plus `supabase/qualification/entity-resolution/` | **Proven for bounded mention, candidate, actor-revision, agency and lineage contracts** | **Proven for isolated scope:** exact integration-head entity/agency workflows passed | **Partial:** contracts compose in the integration candidate, not the canonical live pipeline | **Partial:** predecessor graph implementations are live; exact `mip_mentions` qualification schema is absent on qik | **Predecessor only:** yhb ingestion remains active | **Proven on predecessor, not reconciled to canonical authority:** large real entity/link corpus exists | **Predecessor pipeline activity proven; canonical E2E not proven** | **RECONCILE into qik; not NEW** |
-| Content-addressed storage and exact citation / qik | **Proven:** qualification package plus qik capture/identity/hash/retrieval foundation | **Proven for bounded CAS, tier, locator, rehydration and exact-span contracts** | **Proven for isolated scope:** exact integration-head CAS workflow passed | **Partial:** hypothesis worker and citation contracts reference it; no live byte path proof | **Partial overlap:** qik capture metadata/RPC installed; exact `mip_cas` schema absent and Supabase storage has zero objects | **Partial metadata path only** | **Unknown:** 95 live captures/identities exist, but authorized durable bytes and rights-complete rehydration are not proven | **No exact live rehydration traversal** | **EXTEND qik; do not duplicate** |
-| Markets evidence and semantic path / qik | **Proven:** `marketsEvidenceContract.mjs` and `supabase/qualification/markets-evidence/` | **Proven for bounded private identity/path, retained assessment/capture, exact excerpt and rights checks** | **Proven for isolated scope:** exact integration-head Markets workflows passed | **Partial:** UI/handler/store/contract compose in the integration tree | **No exact package proof:** qik has no Markets-named relations and `mip_markets` is absent | **No:** entrypoint is default-closed/unconfigured | **No** | **No** | **EXTEND/RECONCILE qik graph/evidence foundations; not NEW** |
-| Private Markets workspace and transport / qik application | **Proven:** `PrivateMarketsWorkspace.jsx`, private contract and transport | **Proven for a bounded private workspace; no quote feed or publication authority** | **Proven for isolated browser/transport scope** | **Partial:** composed into `PrivateInvestigationWorkspace` in integration/current tree | **No live proof:** absent from main and PR #175 is unmerged | **No:** endpoint approval/config remains empty/default-closed | **No** | **No** | **EXTEND after backend authority gate** |
-| Markets graph compatibility / qik | **Proven:** unapplied production-candidate package | **Partial candidate:** privacy compatibility, public-view ACL reset, absence semantics, index/recovery and drift verification | **Proven only for candidate scope:** the first parser run failed; repaired exact-head run `34917764936` passed | **No:** candidate explicitly is not composed with the typed Markets evidence migration | **No:** unapplied, and live qik lacks `mip_markets` | **No** | **No** | **No** | **RECONCILE after representative restore review; do not execute archived/candidate SQL** |
-| Weather rights gate / current application | **Proven:** `weatherSourceRights.js` exists unchanged in main/integration/current | **Proven for narrow event-time display rights:** hosted terms are separate from data license | **Proven:** focused tests and integration-head weather workflow passed | **Proven in code:** `eventTimeWeather` → `spatialBackend` → `WorldView` | **Proven for main application:** main Pages deployment run `34440532626`; exact live bundle behavior was not browser-reverified here | **Gate enabled; feeds disabled:** Open-Meteo blocked, NASA/NOAA pending, adapter absent | **No weather feed data authorized in this path** | **No live weather fetch; intentionally outside critical path** | **KEEP fail-closed; optional feed work excluded** |
-| Operation evidence and cutover authority / qik | **Proven:** qualification 008–010 in integration/current; 011–012 are later current-only extensions | **Partial:** 008 rights/privacy operation evidence, 009 factual enforcement, 010 exact CC reader; 011 is rejected-demo-scoped and cannot define product behavior; 012 is a reusable authentication mechanism only after independent review | **Proven only for disposable scopes:** exact integration/head and retained current qualification runs; not fresh live certification | **Partial in current tree; not canonical product integration** | **No:** `mip_identity`, `mip_factual`, `mip_cutover_authority`, and related qualification schemas are absent on qik | **No** | **No production authority population proven** | **No** | **RECONCILE reusable 008–010/012 ideas; reject demo-specific 011 authority** |
-| Collector ingestion / qik destination, yhb current owner | **Proven:** live yhb v8 and qik shadow/qualification contracts | **Proven for predecessor behavior and bounded shadow contracts** | **Proven:** collector native run `35530600346` passes 25 tests, including same-cluster logical restore | **Partial:** qik shadow is receipt-only and does not feed canonical analysis | **Proven on yhb; shadow only on qik** | **Proven on yhb:** seven enabled sources and active five-minute cron | **Proven activity on yhb:** 239 articles fetched in 24 hours; source-rights completeness remains a separate gate | **Operational on predecessor:** latest run completed at 19:00Z; not operational on qik | **RECONCILE/cut over only after owner gate** |
-| Source-comparison enrichment / qik destination, yhb current owner | **Proven:** live yhb function/job and qik candidate/history foundations | **Proven for predecessor and bounded generation contracts** | **Proven for isolated concurrency scope** | **Partial:** canonical qik consumer/cutover not integrated | **Proven on yhb, candidate/history on qik** | **Proven on yhb:** active five-minute cron | **Real predecessor corpus is populated; canonical authorization reconciliation incomplete** | **Operational on predecessor schedule, not verified end to end on qik** | **RECONCILE** |
+Statuses are evidence classifications, not completion levels:
+
+- `VERIFIED`: freshly rechecked against the pinned source/live scope.
+- `PARTIAL`: some required behavior is proved, but material contract scope remains.
+- `REPORTED_NOT_RECHECKED`: carried only as dated evidence from the prior checkpoint.
+- `NOT_DEMONSTRATED`: neither success nor nonexistence is inferred.
+- `BLOCKED`: a named gate prevents the stage.
+- `NOT_FOUND_IN_INSPECTED_SCOPE`: bounded negative search, not global absence.
+- `NOT_APPLICABLE`: the dimension does not apply to the scoped foundation.
+
+| ID / foundation | D1 located | D2 coverage | D3 isolated test | D4 integrated | D5 installed/deployed | D6 enabled | D7 authorized real data | D8 canonical E2E |
+|---|---|---|---|---|---|---|---|---|
+| F1 evidence-to-hypothesis relations | VERIFIED | PARTIAL | VERIFIED | PARTIAL | NOT_DEMONSTRATED | NOT_DEMONSTRATED | NOT_DEMONSTRATED | NOT_DEMONSTRATED |
+| F2 hypothesis revision store | VERIFIED | PARTIAL | VERIFIED | PARTIAL | VERIFIED: exact `mip_hypothesis` package absent on qik | NOT_DEMONSTRATED | NOT_DEMONSTRATED | NOT_DEMONSTRATED |
+| F3 actor identity and agency | VERIFIED | PARTIAL | VERIFIED | PARTIAL | VERIFIED: exact `mip_mentions` package absent; overlapping graph exists | NOT_DEMONSTRATED on qik | VERIFIED on predecessors; authority unresolved | NOT_DEMONSTRATED |
+| F4 content-addressed storage/exact citation | VERIFIED | PARTIAL | VERIFIED | PARTIAL | VERIFIED: exact `mip_cas` absent; qik capture overlap present | NOT_DEMONSTRATED for exact-byte path | VERIFIED row presence; rights/custody unresolved | NOT_DEMONSTRATED |
+| F5 assessment lineage/invalidation | VERIFIED | PARTIAL | VERIFIED | PARTIAL | VERIFIED: qik overlapping objects + one assessment | NOT_DEMONSTRATED for active generation | VERIFIED row presence; provenance unresolved | NOT_DEMONSTRATED |
+| F6 Markets evidence contract | VERIFIED | PARTIAL | VERIFIED | PARTIAL | NOT_DEMONSTRATED as runtime | NOT_APPLICABLE to standalone validator | NOT_DEMONSTRATED | NOT_DEMONSTRATED |
+| F7 Markets workspace/private service | VERIFIED | PARTIAL | VERIFIED | PARTIAL | NOT_DEMONSTRATED; PR #175 unmerged | BLOCKED: endpoint approval/config default-closed | NOT_DEMONSTRATED | NOT_DEMONSTRATED |
+| F8 weather source-rights gate | VERIFIED | PARTIAL | VERIFIED | PARTIAL: static call chain | VERIFIED in current main Pages build | VERIFIED fail-closed; optional feeds disabled | NOT_APPLICABLE while no feed is authorized | NOT_DEMONSTRATED |
+| F9 operation evidence/cutover authority | VERIFIED | PARTIAL | VERIFIED | PARTIAL | VERIFIED: exact 008–010 schemas absent on qik | NOT_DEMONSTRATED | NOT_DEMONSTRATED | NOT_DEMONSTRATED |
+| F10 ingestion/execution ownership | VERIFIED | PARTIAL | VERIFIED | PARTIAL | VERIFIED: yhb runtime; qik shadow only | VERIFIED: yhb active; qik recurring scheduler absent | VERIFIED predecessor activity; rights completeness unresolved | NOT_DEMONSTRATED on qik |
+| F11 World View foundations | VERIFIED | PARTIAL | VERIFIED | PARTIAL | VERIFIED in main Pages/qik | PARTIAL: core live; optional feeds intentionally off | NOT_APPLICABLE to optional feeds | NOT_DEMONSTRATED for consolidated analytical E2E |
+| F12 optional GEV-style Live mode | NOT_FOUND_IN_INSPECTED_SCOPE | NOT_APPLICABLE | NOT_APPLICABLE | NOT_APPLICABLE | NOT_APPLICABLE | NOT_APPLICABLE | NOT_APPLICABLE | NOT_APPLICABLE |
+| F13 provider-neutral decision/reuse | VERIFIED: distributed foundations | PARTIAL | PARTIAL | NOT_DEMONSTRATED | PARTIAL: qik overlap, no canonical whole | NOT_DEMONSTRATED | NOT_DEMONSTRATED | NOT_DEMONSTRATED |
+| F14 absence-semantics ownership | VERIFIED: distributed representations | PARTIAL | PARTIAL | NOT_DEMONSTRATED | NOT_DEMONSTRATED as canonical owner | NOT_DEMONSTRATED | NOT_DEMONSTRATED | NOT_DEMONSTRATED |
+| F15 knowledge-change ownership | VERIFIED: distributed ledgers/triggers | PARTIAL | PARTIAL | PARTIAL: hypothesis cause chain | PARTIAL: qik overlapping history | NOT_DEMONSTRATED as complete taxonomy | NOT_DEMONSTRATED | NOT_DEMONSTRATED |
+
+D1–D8 are independent. A live row does not prove the producer is enabled; a
+validator does not prove runtime integration; a successful predecessor schedule
+does not prove the canonical path; and absence of a qualification schema does
+not prove absence of overlapping capability.
+
+### Parent-reconciled evidence and smallest deltas
+
+- **F1/F2/F5:** `src/lib/hypothesisAssessment.js`, the isolated
+  `supabase/qualification/hypothesis-assessments/` chain, and live qik
+  assessment/change tables cover complementary pieces. The revision store is
+  explicitly non-deployable qualification material. The live migration states
+  that it adds dependency/invalidation mechanics, not a semantic model or
+  publication path. RECONCILE/EXTEND qik; do not create another belief engine.
+- **F3:** `entity-resolution/001_mentions.sql` and `002_agency.sql` keep
+  mentions, identity decisions, actor revisions/lineage and agency assertions
+  distinct. Registration and accepted agency are not established fact.
+  Preserve that separation while mapping predecessor IDs and history into qik.
+- **F4:** the isolated CAS package defines exact hashes, representations,
+  references, tiers, jobs, permissions and exact-citation derivation. Qik has
+  overlapping captures/identities/retrieval, but no live exact-byte custody and
+  rehydration proof. EXTEND that foundation; do not create a second evidence store.
+- **F6/F7:** the Markets validator is contract qualification, not a live
+  endpoint. The private workspace is statically composed but returns no UI until
+  endpoint, bundle and readiness are approved. The repaired parser run passed;
+  the unapplied graph candidate still lacks database/runtime composition proof.
+- **F8:** fresh caller tracing proves
+  `weatherSourceRights.js -> eventTimeWeather.js -> spatialBackend.js -> WorldView`.
+  This is a narrow fail-closed display path, not system-wide rights enforcement.
+  Optional live feeds remain outside the consolidation critical path.
+- **F9:** only 008–010 are independently justified here. 008 is an opt-in
+  isolated operation-evidence cache with no seeded grants; 009/010 remain
+  narrow qualification layers. Former-lane 011/012 are excluded and supply no
+  product authority in this workstream.
+- **F10:** yhb is the only verified active recurring collector/comparison
+  authority. Qik's seven receipt-only shadow probes neither schedule ingestion
+  nor write canonical articles/analysis. The external caller that initiated
+  those probes is UNKNOWN.
+- **F11/F12:** the current core World View path is live; optional feeds and
+  optional GEV-style Live mode are not consolidation blockers.
+- **F13:** distributed code covers decision/revision IDs, input hashes, evidence
+  spans, temporal cutoff, method/model revisions, failure retention and private
+  release. No one provider-neutral contract owns semantic key, evidence-set
+  digest, subject-role binding, policy/domain/provider versions,
+  authorization-safe reuse/invalidation, typed deterministic disposition and
+  provider-disabled behavior. RECONCILE, not NEW.
+- **F14:** concrete unavailability, insufficient-evidence, rights-denial and
+  review states exist, but not-reported, not-retained, not-extracted and
+  not-searched remain liable to collapse. Add typed, scoped observations to
+  existing owners; do not infer real-world absence.
+- **F15:** existing causes include new evidence, correction, withdrawal,
+  contradiction, shared origin, methodology, permission and human
+  reconsideration. Canonical distinct entity remap, temporal reinterpretation,
+  algorithm/policy/domain/provider changes, full lineage change, relationship
+  reassessment and authorized override envelopes remain to be reconciled under
+  append-only history.
 
 ## Live observations reconciled at this checkpoint
 
-Read-only SQL at `2026-09-20T19:02:20Z`–`19:04:39Z` found:
+Read-only re-verification through approximately
+`2026-09-20T20:07:00Z` found:
 
-- qik has 95 article captures, 95 article identities, 96 evidence candidates,
-  195 evidence changes, 100 record versions, two investigation observations,
-  one assessment, and zero worker evaluations/revocations. The live
-  `evidence_pipeline` is a real foundation, not proof that the separate
-  qualification packages are installed.
-- qik has no `mip_hypothesis`, `mip_mentions`, `mip_cas`, `mip_markets`,
-  `mip_identity`, `mip_factual`, or `mip_cutover_authority` schema. The only
-  `mip_*` schema is `mip_private`. This proves those exact packages are absent;
-  it does not prove their capabilities lack overlapping foundations.
-- yhb has seven sources and all seven are enabled. Its two `*/5` pg_cron jobs
-  each recorded 288 successes and zero failures in the preceding 24 hours,
-  most recently at 19:00Z. It held 34,333 articles; 239 had `fetched_at` within
-  24 hours, and the latest ingestion run completed at `19:00:19.631Z`.
-- The deployed yhb v8 function accepts either an owner run key or the
-  Vault-backed scheduler token verified by
-  `mip_ingest_rss_schedule_authorized`; it selects only enabled sources. This
-  differs from the repository's later fail-closed implementation and confirms
-  that yhb collection is active rather than globally disabled.
-- nie has five enabled sources, but both pg_cron definitions remain inactive.
-  Enabled rows do not override an inactive scheduler.
+- qik has 104 application tables, nine application views, and 22,321 exact
+  application rows. It has 98 articles, of which exactly three are
+  `reader_state = 'eligible'`; 95 captures; 95 article identities; 96
+  evidence candidates; 195 evidence changes; 100 record versions; two
+  investigation observations; one assessment; and zero worker evaluations or
+  revocations. The live evidence and assessment objects are real foundations,
+  not proof that generation is enabled or end-to-end operational.
+- qik has no exact `mip_hypothesis`, `mip_mentions`, `mip_cas`,
+  `mip_markets`, `mip_identity`, `mip_factual`, or
+  `mip_cutover_authority` schema. That proves those package names are absent;
+  it does not prove the underlying capabilities lack overlapping foundations.
+- yhb has 97 application tables, 12 views, and 177,996 exact rows. It held
+  34,343 articles, 1,604 article claims, 45,630 article-entity links, 13,008
+  events, and 13,541 entities. Seven of seven ingest sources were enabled and
+  seven of seven ingestion sources were active. Its two five-minute pg_cron
+  jobs each recorded 288 successes and zero failures in the preceding 24
+  hours; the latest observed ingestion completed at
+  `2026-09-20T19:55:19.482Z`.
+- The deployed yhb ingestion function accepts the owner run key or its
+  Vault-backed scheduler token and selects only enabled sources. This confirms
+  that current collection is active on yhb; qik's seven receipt-only shadow
+  probes do not constitute a scheduler or canonical ingestion.
+- nie has 92 application tables, three views, 14,103 exact rows, three Auth
+  users, five of five enabled source rows, and two inactive cron definitions.
+  Enabled source rows do not override an inactive scheduler.
+- jfn has 28 application tables, 46 exact rows, and no Edge Function or
+  scheduler. Its 39 spatial rows remain unique recovery material.
 
 No GitHub workflow has a scheduled trigger. The checked-in Cloud Run workflow
 is manual only. No external Cloud Scheduler, operator, or third-party caller
@@ -152,16 +232,19 @@ canonical ingestion, extraction, decision, graph/timeline, and publication.
 
 ## Safe continuation and owner gate
 
-Eligible isolated work may continue: contract/test reconciliation, machine-
-readable inventory, caller tracing, native disposable qualification, and
-non-deployed migration planning. Do not enable sources/workers/schedules, copy
-protected production data, provision credentials, create paid infrastructure,
-deploy, cut over, or retire a predecessor without the applicable owner gate.
+Eligible isolated work may continue: contract/test reconciliation,
+machine-readable inventory, caller tracing, native disposable qualification,
+and non-deployed migration/security planning. Do not enable sources, workers,
+or schedules; copy protected production data; provision credentials; create
+paid infrastructure; deploy; cut over; or retire a predecessor without the
+applicable owner gate.
 
-The next bounded gate is authorization for a fresh, isolated recovery and
-full-pipeline rehearsal using approved source/rights scope, schedules and
-publication disabled, no production writes, and an owner-approved destination
-and credential custodian. It also requires designation of the canonical live
-frontend URL/project because GitHub Pages and the Vercel project currently
-point at different source trees. Exact requested language is retained in the
-final handoff rather than implied by this checkpoint.
+The first bounded owner gate is now critical authorization containment, not
+live-surface selection. The exact candidate revokes and Edge guard requirements
+are recorded under
+`supabase/production-candidates/backend-consolidation-security/`. They make
+no row changes and are not installed. A later, separate gate is required for a
+fresh isolated recovery/full-pipeline rehearsal with approved rights scope,
+disabled schedules/publication/provider calls, an approved destination, and a
+named recovery custodian.
+

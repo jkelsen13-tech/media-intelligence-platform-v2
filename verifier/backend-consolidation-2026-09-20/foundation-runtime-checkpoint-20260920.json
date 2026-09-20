@@ -1,5 +1,5 @@
 {
-  "evidence_kind": "sanitized_parent_reconciled_foundation_runtime_checkpoint",
+  "evidence_kind": "sanitized_parent_reconciled_foundation_runtime_checkpoint_v2",
   "recorded_date": "2026-09-20",
   "mutations": 0,
   "anchors": {
@@ -31,8 +31,7 @@
   "live_observations": {
     "mutations": 0,
     "window_utc": {
-      "from": "2026-09-20T19:02:20Z",
-      "through": "2026-09-20T19:04:39Z"
+      "through_approximately": "2026-09-20T20:07:00Z"
     },
     "qikvmopbtijoebdqosyq": {
       "article_captures": 95,
@@ -53,7 +52,15 @@
         "mip_identity",
         "mip_factual",
         "mip_cutover_authority"
-      ]
+      ],
+      "application_tables": 104,
+      "application_views": 9,
+      "application_exact_rows": 22321,
+      "articles_total": 98,
+      "articles_reader_eligible": 3,
+      "collector_row_versions": 15331,
+      "shadow_sources": 7,
+      "shadow_runs": 7
     },
     "yhbwnrtlqbjtcrrlpbge": {
       "ingest_sources_total": 7,
@@ -61,32 +68,60 @@
       "active_cron_jobs": 2,
       "cron_runs_each_last_24h": 288,
       "cron_failures_each_last_24h": 0,
-      "articles_total": 34333,
+      "articles_total": 34343,
       "articles_fetched_last_24h": 239,
       "latest_fetched_at": "2026-09-20T19:00:07.357835Z",
-      "latest_ingestion_completed_at": "2026-09-20T19:00:19.631Z",
-      "deployed_ingest_authority": "owner_run_key_or_vault_backed_scheduler_token"
+      "latest_ingestion_completed_at": "2026-09-20T19:55:19.482Z",
+      "deployed_ingest_authority": "owner_run_key_or_vault_backed_scheduler_token",
+      "application_tables": 97,
+      "application_views": 12,
+      "application_exact_rows": 177996,
+      "article_claims": 1604,
+      "article_entities": 45630,
+      "extraction_results": 9020,
+      "entities": 13541,
+      "events": 13008,
+      "event_articles": 13586,
+      "story_arcs": 218,
+      "ingestion_runs": 7722
     },
     "niejaejtbxgakyrsntxm": {
       "ingest_sources_total": 5,
       "ingest_sources_enabled": 5,
       "active_cron_jobs": 0,
-      "inactive_cron_jobs": 2
+      "inactive_cron_jobs": 2,
+      "application_tables": 92,
+      "application_views": 3,
+      "application_exact_rows": 14103,
+      "auth_users": 3,
+      "articles_total": 752,
+      "explanations": 1892
     },
-    "external_scheduler_owner": "not_proven_or_disproven",
+    "external_scheduler_owner": "NOT_DEMONSTRATED",
     "frontend_deployment_authority": {
       "github_pages": {
         "source": "main",
         "commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
-        "deployment_run": 34440532626
+        "deployment_run": 34440532626,
+        "url": "https://jkelsen13-tech.github.io/media-intelligence-platform-v2/",
+        "live_bundle": "assets/index-BUxP66NE.js",
+        "backend_project": "qikvmopbtijoebdqosyq"
       },
       "vercel_media_intelligence_platform_v2": {
         "latest_returned_target": "production",
         "source_branch": "codex/mip-september-22-demo-20260918",
         "commit": "f4932d82b989ae95a176ff2427d6892c9b0d418f",
-        "product_reference_authority": false
+        "product_reference_authority": false,
+        "disposition": "owner_rejected_historical_residue"
       },
-      "canonical_live_surface": "owner_designation_required"
+      "canonical_live_surface": "github_pages_main_verified"
+    },
+    "jfnzyvzthzqtczlxhjll": {
+      "application_tables": 28,
+      "application_views": 0,
+      "application_exact_rows": 46,
+      "spatial_rows": 39,
+      "edge_functions": 0
     }
   },
   "capability_dispositions": {
@@ -100,5 +135,220 @@
     "collector_ingestion": "RECONCILE_YHB_TO_QIK_OWNER_GATED",
     "source_comparison": "RECONCILE_YHB_TO_QIK_OWNER_GATED"
   },
-  "former_demo_excluded": true
+  "former_demo_excluded": true,
+  "controlling_handoff": {
+    "archive_sha256": "522BBA1EBCA36F32EC5FA0B7F167C1779F499267EE629E0AE3A19CD7AE0FD4B0",
+    "prompt_sha256": "DAA660C2E905471D3FE5393E5239256A48311100BF810BCE7A1574E214E753F7",
+    "local_artifacts_retained": false
+  },
+  "foundation_runtime_matrix": {
+    "F1": [
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED"
+    ],
+    "F2": [
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "NOT_FOUND_IN_INSPECTED_SCOPE",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED"
+    ],
+    "F3": [
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "NOT_FOUND_IN_INSPECTED_SCOPE",
+      "NOT_DEMONSTRATED",
+      "PARTIAL",
+      "NOT_DEMONSTRATED"
+    ],
+    "F4": [
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "NOT_FOUND_IN_INSPECTED_SCOPE",
+      "NOT_DEMONSTRATED",
+      "PARTIAL",
+      "NOT_DEMONSTRATED"
+    ],
+    "F5": [
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "PARTIAL",
+      "NOT_DEMONSTRATED",
+      "PARTIAL",
+      "NOT_DEMONSTRATED"
+    ],
+    "F6": [
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "NOT_DEMONSTRATED",
+      "NOT_APPLICABLE",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED"
+    ],
+    "F7": [
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "BLOCKED",
+      "BLOCKED",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED"
+    ],
+    "F8": [
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "NOT_APPLICABLE",
+      "NOT_DEMONSTRATED"
+    ],
+    "F9": [
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "NOT_FOUND_IN_INSPECTED_SCOPE",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED"
+    ],
+    "F10": [
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "PARTIAL",
+      "PARTIAL",
+      "PARTIAL",
+      "NOT_DEMONSTRATED"
+    ],
+    "F11": [
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "VERIFIED",
+      "PARTIAL",
+      "NOT_APPLICABLE",
+      "NOT_DEMONSTRATED"
+    ],
+    "F12": [
+      "NOT_FOUND_IN_INSPECTED_SCOPE",
+      "NOT_APPLICABLE",
+      "NOT_APPLICABLE",
+      "NOT_APPLICABLE",
+      "NOT_APPLICABLE",
+      "NOT_APPLICABLE",
+      "NOT_APPLICABLE",
+      "NOT_APPLICABLE"
+    ],
+    "F13": [
+      "VERIFIED",
+      "PARTIAL",
+      "PARTIAL",
+      "NOT_DEMONSTRATED",
+      "PARTIAL",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED"
+    ],
+    "F14": [
+      "VERIFIED",
+      "PARTIAL",
+      "PARTIAL",
+      "NOT_DEMONSTRATED",
+      "NOT_FOUND_IN_INSPECTED_SCOPE",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED"
+    ],
+    "F15": [
+      "VERIFIED",
+      "PARTIAL",
+      "PARTIAL",
+      "PARTIAL",
+      "PARTIAL",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED",
+      "NOT_DEMONSTRATED"
+    ]
+  },
+  "foundation_runtime_matrix_columns": [
+    "foundation_located",
+    "contract_implementation_coverage",
+    "tested_in_isolation",
+    "integrated_with_required_components",
+    "installed_deployed",
+    "enabled",
+    "authorized_real_data",
+    "end_to_end_operationally_verified"
+  ],
+  "security_gate": {
+    "production_mutations": 0,
+    "literal_rls_disabled_application_tables": 0,
+    "critical": [
+      {
+        "project": "yhbwnrtlqbjtcrrlpbge",
+        "surface": "backfill-legacy_v9",
+        "finding": "gateway JWT without app authorization reaches destructive service-role reset"
+      },
+      {
+        "project": "yhbwnrtlqbjtcrrlpbge",
+        "surface": "27_public_security_definer_functions",
+        "finding": "browser roles can execute service-authority mutators"
+      }
+    ],
+    "high": [
+      {
+        "project": "yhbwnrtlqbjtcrrlpbge",
+        "surface": "owner_executed_public_views",
+        "finding": "news_detail_public exposes noneligible rows and claim surfaces"
+      },
+      {
+        "project": "niejaejtbxgakyrsntxm",
+        "surface": "policy-ingest_v16",
+        "finding": "gateway JWT without app authorization reaches service-role fetch/write"
+      }
+    ],
+    "next_action": "owner_authorized_production_containment",
+    "candidates_applied": false
+  },
+  "project_dispositions": {
+    "qikvmopbtijoebdqosyq": {
+      "consolidation": "KEEP_REQUIRED",
+      "retirement": "NOT_APPLICABLE"
+    },
+    "yhbwnrtlqbjtcrrlpbge": {
+      "consolidation": "CONSOLIDATION_PENDING",
+      "retirement": "BLOCKED"
+    },
+    "jfnzyvzthzqtczlxhjll": {
+      "consolidation": "CONSOLIDATION_PENDING",
+      "retirement": "BLOCKED"
+    },
+    "niejaejtbxgakyrsntxm": {
+      "consolidation": "CONSOLIDATION_PENDING",
+      "retirement": "BLOCKED"
+    }
+  }
 }

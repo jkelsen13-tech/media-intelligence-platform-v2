@@ -46,8 +46,9 @@ test('main report returns three independent authority and pipeline verdicts', ()
   assert.match(report, /qik[\s\S]+no active cron/i)
   assert.match(report, /yhb[\s\S]+two active five-minute/i)
   assert.match(report, /each recorded\s+288 successes, zero failures/i)
-  assert.match(report, /zero public base\/partitioned tables\s+with RLS disabled/i)
-  assert.match(report, /27 effectively anon-callable[\s\S]+92 GraphQL-exposed tables/i)
+  assert.match(report, /zero RLS-disabled base or partitioned tables/i)
+  assert.match(report, /Twenty-seven public SECURITY DEFINER functions/i)
+  assert.match(report, /policy-ingest[\s\S]+service-role external-fetch\/write behavior/i)
   assert.equal(liveReverification.mutations, 0)
   assert.equal(liveReverification.projects.yhbwnrtlqbjtcrrlpbge.cron_jobs.length, 2)
   assert.ok(liveReverification.projects.yhbwnrtlqbjtcrrlpbge.cron_jobs.every(
@@ -79,13 +80,18 @@ test('foundation checkpoint distinguishes all eight runtime stages without perce
   assert.equal(foundationReceipt.live_observations.mutations, 0)
   assert.equal(
     foundationReceipt.live_observations.frontend_deployment_authority.canonical_live_surface,
-    'owner_designation_required',
+    'github_pages_main_verified',
   )
   assert.equal(
     foundationReceipt.live_observations.frontend_deployment_authority
       .vercel_media_intelligence_platform_v2.product_reference_authority,
     false,
   )
+  assert.equal(foundationReceipt.live_observations.qikvmopbtijoebdqosyq.articles_total, 98)
+  assert.equal(foundationReceipt.live_observations.qikvmopbtijoebdqosyq.articles_reader_eligible, 3)
+  assert.equal(foundationReceipt.foundation_runtime_matrix.F1.length, 8)
+  assert.equal(foundationReceipt.foundation_runtime_matrix.F15.length, 8)
+  assert.equal(foundationReceipt.security_gate.candidates_applied, false)
 })
 
 test('Phase 1 checkpoint is honest, inspectable, and owner-gated', () => {
