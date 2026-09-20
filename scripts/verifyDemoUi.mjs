@@ -33,7 +33,14 @@ function canvasGeometry(label) {
 }
 function checkGraph(width, height) {
   visit('graph')
+  run('wait', '2000')
   const geometry = canvasGeometry(width + ' initial')
+  const bounds = evaluate(`(()=>{const cy=document.querySelector('.graph-canvas')._cyreg.cy;return cy.nodes().map(node=>({id:node.id(),center:node.renderedPosition(),box:node.renderedBoundingBox({includeLabels:false,includeOverlays:false})}))})()`)
+  assert.equal(bounds.length,19)
+  for (const {id,center,box} of bounds) {
+    assert.ok(center.x>=0 && center.x<=geometry.width && center.y>=0 && center.y<=geometry.height, `${width}: clipped center ${id}`)
+    assert.ok(box.x1>=0 && box.y1>=0 && box.x2<=geometry.width && box.y2<=geometry.height, `${width}: clipped node bounds ${id}`)
+  }
   run('screenshot', output + `${width}-graph-visible.png`)
   const edgeStyles = evaluate(`(()=>{const cy=document.querySelector('.graph-canvas')._cyreg.cy;cy.zoom(1.5);return cy.edges().map(e=>({label:e.style('label'),line:e.style('line-style'),source:e.style('source-arrow-shape'),target:e.style('target-arrow-shape')}))})()`)
   assert.equal(edgeStyles.length, 17)
@@ -71,7 +78,7 @@ function checkGraph(width, height) {
   run('press','Escape')
   assert.equal(evaluate(`document.querySelector('[role=dialog]')===null`),true)
   assert.equal(evaluate(`document.activeElement===document.querySelector('.demo-provenance-legend button')`),true)
-  graphChecks.push({width,geometry,resize:'pass',isolated_toggle:'pass',pointer:'pass',keyboard:'pass',modal:'pass',edge_styles:17})
+  graphChecks.push({width,geometry,visible_default_node_centers:bounds.length,visible_default_node_bounds:bounds.length,resize:'pass',isolated_toggle:'pass',pointer:'pass',keyboard:'pass',modal:'pass',edge_styles:17})
 }
 const visit = surface => run('open', `${base}#/demo/all/${surface}`)
 try {

@@ -296,11 +296,8 @@ export default function GraphView({
     // Item 3: without a band, fit once when the initial layout settles
     // (constructor fcose runs with fit:false; see above). One-shot, so
     // later drag-reheat layoutstops never yank the user's viewport.
-    if (!runBand) {
-      cy.one('layoutstop', () => {
-        if (!cy.destroyed()) cy.fit(undefined, 80)
-      })
-    }
+    // Initial fitting is registered after the focused-view separation below;
+    // fitting here would use positions that separation subsequently moves.
     const updateBandLabel = () => {
       if (cy.destroyed()) return
       const el = bandLabelRef.current
@@ -794,6 +791,11 @@ export default function GraphView({
     cy.on('layoutstop', () => {
       updateOverlays()
       runSettleSeparation()
+    })
+    // Fit the final geometry, including singleton placement and focused-view
+    // separation. One-shot: subsequent drag reheats retain the user's viewport.
+    cy.one('layoutstop', () => {
+      if (!cy.destroyed()) cy.fit(undefined, 80)
     })
     cy.on('select unselect', 'node', updateCards)
 

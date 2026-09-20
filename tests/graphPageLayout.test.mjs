@@ -88,6 +88,13 @@ test('zoom controls stay inside the canvas wrap, not over coverage chrome', () =
   assert.match(INDEX_CSS, /\.graph-layout\.inspector-overlay \.graph-view-controls/)
 })
 
+test('initial graph fit follows focused-view node separation', () => {
+  const graph = GRAPH.replaceAll('\r\n', '\n')
+  const separation = graph.indexOf("cy.on('layoutstop', () => {\n      updateOverlays()\n      runSettleSeparation()")
+  const fit = graph.indexOf("cy.one('layoutstop', () => {\n      if (!cy.destroyed()) cy.fit(undefined, 80)", separation)
+  assert.ok(separation >= 0 && fit > separation)
+})
+
 test('significant canvas size changes and layoutRevision refit the graph', () => {
   assert.equal(GRAPH_FIT_RESIZE_THRESHOLD_PX, 32)
   assert.equal(shouldRefitGraph(null, { width: 800, height: 400 }), false)

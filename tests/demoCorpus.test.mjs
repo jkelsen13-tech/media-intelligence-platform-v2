@@ -138,7 +138,10 @@ test('all 93 private capture identities remain continuous across permitted surfa
 test('demo entry enforces a no-connect content security policy', async () => {
   const html = await readFile(new URL('../scripts/demo-corpus-preview.html', import.meta.url), 'utf8')
   assert.match(html, /connect-src 'none'/)
-  assert.match(html, /frame-ancestors 'none'/)
+  assert.doesNotMatch(html, /frame-ancestors/)
+  const config = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'))
+  const demoHeaders = config.headers.find(rule => rule.source === '/scripts/demo-corpus-preview.html')
+  assert.ok(demoHeaders.headers.some(header => header.key === 'Content-Security-Policy' && header.value === "frame-ancestors 'none'"))
 })
 
 test('whole-corpus validation rejects unknown topics, duplicates and incomplete strict input', () => {
