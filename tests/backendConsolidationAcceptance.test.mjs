@@ -48,7 +48,7 @@ test('main report returns three independent authority and pipeline verdicts', ()
   assert.match(report, /each recorded\s+288 successes (?:and|,) zero failures/i)
   assert.match(report, /zero RLS-disabled base or partitioned tables/i)
   assert.match(report, /Twenty-seven public SECURITY DEFINER functions/i)
-  assert.match(report, /policy-ingest[\s\S]+service-role external-fetch\/write behavior/i)
+  assert.match(report, /policy-ingest[\s\S]+service-role client for external fetches and writes/i)
   assert.equal(liveReverification.mutations, 0)
   assert.equal(liveReverification.projects.yhbwnrtlqbjtcrrlpbge.cron_jobs.length, 2)
   assert.ok(liveReverification.projects.yhbwnrtlqbjtcrrlpbge.cron_jobs.every(
@@ -68,7 +68,7 @@ test('foundation checkpoint distinguishes all eight runtime stages without perce
   ]) assert.ok(foundationCheckpoint.includes(stage), stage)
   const foundationLower = foundationCheckpoint.toLowerCase()
   for (const capability of [
-    'evidence-to-hypothesis relations', 'entity identity and actor agency',
+    'evidence-to-hypothesis relations', 'actor identity and agency',
     'content-addressed storage', 'markets', 'weather rights',
     'operation evidence', 'provider-neutral system-one decision layer',
   ]) assert.ok(foundationLower.includes(capability), capability)
