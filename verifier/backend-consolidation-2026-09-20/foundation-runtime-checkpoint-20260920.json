@@ -73,7 +73,21 @@
       "active_cron_jobs": 0,
       "inactive_cron_jobs": 2
     },
-    "external_scheduler_owner": "not_proven_or_disproven"
+    "external_scheduler_owner": "not_proven_or_disproven",
+    "frontend_deployment_authority": {
+      "github_pages": {
+        "source": "main",
+        "commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
+        "deployment_run": 34440532626
+      },
+      "vercel_media_intelligence_platform_v2": {
+        "latest_returned_target": "production",
+        "source_branch": "codex/mip-september-22-demo-20260918",
+        "commit": "f4932d82b989ae95a176ff2427d6892c9b0d418f",
+        "product_reference_authority": false
+      },
+      "canonical_live_surface": "owner_designation_required"
+    }
   },
   "capability_dispositions": {
     "hypothesis_assessment": "EXTEND_RECONCILE_QIK_NOT_NEW",

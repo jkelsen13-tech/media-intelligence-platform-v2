@@ -29,6 +29,13 @@ Vercel deployment for that exact branch. Vercel's live deployment list showed
 no consolidation-branch deployment after the prior pushes. The connector could
 not return the project-settings object because of a connector schema mismatch,
 so that project-level setting remains unverified rather than inferred.
+The same read-only list returned the latest production deployment for Vercel
+project `media-intelligence-platform-v2` from the former-demo branch at
+`f4932d82b989ae95a176ff2427d6892c9b0d418f`. That deployment is caller/config
+evidence only and has no product-reference authority. It conflicts with the
+verified GitHub Pages `main` deployment as a claimed live surface, so the owner
+must identify the canonical live URL/project before frontend caller closure or
+any deployment proposal.
 
 ## Eight required runtime stages
 
@@ -154,5 +161,7 @@ deploy, cut over, or retire a predecessor without the applicable owner gate.
 The next bounded gate is authorization for a fresh, isolated recovery and
 full-pipeline rehearsal using approved source/rights scope, schedules and
 publication disabled, no production writes, and an owner-approved destination
-and credential custodian. Exact requested language is retained in the final
-handoff rather than implied by this checkpoint.
+and credential custodian. It also requires designation of the canonical live
+frontend URL/project because GitHub Pages and the Vercel project currently
+point at different source trees. Exact requested language is retained in the
+final handoff rather than implied by this checkpoint.

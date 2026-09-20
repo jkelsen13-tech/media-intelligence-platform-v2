@@ -77,6 +77,15 @@ test('foundation checkpoint distinguishes all eight runtime stages without perce
     pipeline_operational_authorized_live_backend: 'FAIL',
   })
   assert.equal(foundationReceipt.live_observations.mutations, 0)
+  assert.equal(
+    foundationReceipt.live_observations.frontend_deployment_authority.canonical_live_surface,
+    'owner_designation_required',
+  )
+  assert.equal(
+    foundationReceipt.live_observations.frontend_deployment_authority
+      .vercel_media_intelligence_platform_v2.product_reference_authority,
+    false,
+  )
 })
 
 test('Phase 1 checkpoint is honest, inspectable, and owner-gated', () => {

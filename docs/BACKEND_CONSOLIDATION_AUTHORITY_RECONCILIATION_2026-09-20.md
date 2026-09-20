@@ -213,6 +213,7 @@ No project qualifies as `RETIRE-READY`. Historical labels such as “sandbox” 
 | Caller | Backend/project | Operation | Auth identity | R/W | Necessity | Target | Cutover and verification |
 |---|---|---|---|---|---|---|---|
 | GitHub Pages/public browser | qik REST/public views | public news, graph and projection reads | publishable/anon | R | required | qik | contract snapshots, anonymous read parity, forbidden-write tests |
+| Vercel project `media-intelligence-platform-v2` | latest returned production deployment is former-demo branch commit `f4932d82b989ae95a176ff2427d6892c9b0d418f` | browser deployment/caller configuration only; no product-reference authority | Vercel project deployment | R browser | owner-rejected as reference; canonical live-surface status unresolved | owner-designated current platform | identify canonical live URL/project before caller closure; do not repair or reuse former demo |
 | Account UI | qik Auth + `mip_profiles` | OTP/session/profile | end-user JWT | R/W own profile | required | qik | login/session/profile regression and capability separation |
 | Private investigation UI | qik `investigation-api` | workspace, checks, reviews, spans | authenticated non-anonymous user | R/W gated | required | qik | member/reviewer/revoked/non-member matrix |
 | `investigation-api` and private Edge handlers | qik RPCs | dispatch allowlisted private operations | service role after custom user check | R/W | required | qik | narrow runtime identity design plus RPC contract tests |
@@ -609,6 +610,10 @@ demo-derived implementation adopted by the consolidation changes.
     integration, remaining claim/fail revocation cases, archive/crash recovery,
     and connection-path semantics remain unproved. The
     worker must not be hosted with an ambient service-role credential.
+12. Canonical live frontend identity: GitHub Pages is deployed from verified
+    `main`, while Vercel's `media-intelligence-platform-v2` project still
+    reports a production deployment from the former-demo branch. The latter is
+    not a product reference, but its caller/deployment disposition is unresolved.
 
 ## 14. Remaining owner/platform gates
 
@@ -662,7 +667,11 @@ unreconciled data/configuration, and yhb has active production-like jobs.
 
 The exact next bounded owner-authorization prompt is:
 
-> Authorize a fresh, access-controlled PostgreSQL 17/Supabase-compatible
+> Confirm the canonical live MIP frontend URL/project for caller tracing; the
+> verified GitHub Pages deployment is on `main`, while Vercel project
+> `media-intelligence-platform-v2` still reports a former-demo-branch production
+> deployment that must remain excluded from product authority. Then authorize
+> a fresh, access-controlled PostgreSQL 17/Supabase-compatible
 > rehearsal destination and read-only consistent exports of the minimum qik
 > and yhb state needed for recovery and full-pipeline validation. Keep all
 > schedules, workers, publication, outbound collection, and provider calls
