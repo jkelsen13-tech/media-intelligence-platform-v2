@@ -75,7 +75,8 @@ test('rights, publication and review gates reject input',()=>{
 })
 test('private client accepts exact universe only; missing artifact falls back; graph has pending edges',async()=>{
   const sources=input.records.map(r=>({...r,preview_id:r.capture_id}))
-  assert.equal(await loadPrivateReplay(sources,async()=>({ok:true,json:async()=>result})),result)
+  const loaded=await loadPrivateReplay(sources,async()=>({ok:true,json:async()=>result}))
+  assert.equal(loaded.revision,result.revision);assert.equal(loaded.candidates.length,result.candidates.length)
   assert.equal(await loadPrivateReplay(sources,async()=>({ok:false})),null)
   assert.equal(await loadPrivateReplay(sources.slice(1),async()=>({ok:true,json:async()=>result})),null)
   const graph=replayGraph(result,sources);assert.ok(graph.edges.length>0);assert.ok(graph.edges.every(e=>e.type==='analytical_candidate'&&e.publication_allowed===false));assert.equal(graph.nodes.filter(n=>n.capture_id).length,93)

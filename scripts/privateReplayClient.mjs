@@ -1,4 +1,7 @@
 export const PRIVATE_REPLAY_PATH='/private/native-replay.json'
+export function replaySearchHint(replay) {
+  return replay ? 'Local receipt metadata search only; bounded retained excerpts are available in Evidence and Source Comparison, but are not searched here.' : 'Local metadata search; exact retained text is unavailable'
+}
 export async function loadPrivateReplay(sources, fetcher=fetch) {
   try {
     const response=await fetcher(PRIVATE_REPLAY_PATH,{cache:'no-store',credentials:'same-origin',redirect:'error'})
@@ -7,7 +10,9 @@ export async function loadPrivateReplay(sources, fetcher=fetch) {
     if(r.contract!=='private-native-offline-replay-v1'||r.publication_allowed!==false||r.public_admission!==false||r.review_state!=='pending'||r.candidates?.length!==sources.length) return null
     const known=new Map(sources.map(s=>[s.capture_id,s]))
     for(const c of r.candidates) { const s=known.get(c.capture_id); if(!s||s.article_id!==c.article_id||s.candidate_id!==c.candidate_id||s.content_hash!==c.content_hash||s.span_start!==c.span_start||s.span_end!==c.span_end||c.publication_allowed!==false||c.review_state!=='pending')return null;known.delete(c.capture_id) }
-    return known.size===0?r:null
+    if(known.size!==0)return null
+    // Date precision is frozen receipt metadata, not a derivation from the excerpt.
+    return {...r,candidates:r.candidates.map(c=>({...c,publication_precision:c.publication_precision??sources.find(s=>s.capture_id===c.capture_id)?.publication_precision??null}))}
   } catch { return null }
 }
 export function replayGraph(replay,sources) {
