@@ -5,6 +5,15 @@ export const privateReplayHeaders = [
   { key:'X-Robots-Tag', value:'noindex, nofollow, noarchive' },
   { key:'Content-Security-Policy', value:"default-src 'none'; frame-ancestors 'none'" },
 ]
+const privateReplayDocumentHeaders = [
+  { key:'Cache-Control', value:'private, no-store, max-age=0' },
+  { key:'Content-Security-Policy', value:"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'" },
+]
+export const privateReplayVercelHeaders = [
+  // Vercel applies matching rules in order; keep the narrower private rule last.
+  { source:'/(.*)', headers:privateReplayDocumentHeaders },
+  { source:'/private/(.*)', headers:privateReplayHeaders },
+]
 // Only the explicit demo build can copy this untracked file. Production has no hook.
 export function privateReplayAsset() {
   let root, out
@@ -16,7 +25,7 @@ export function privateReplayAsset() {
       if(existsSync(path)&&process.env.VERCEL_ENV==='production')throw new Error('Private replay artifacts are forbidden in Production builds.')
       if(existsSync(path)) { mkdirSync(resolve(out,'private'),{recursive:true});copyFileSync(path,resolve(out,'private/native-replay.json')) }
       // Output-local host configuration travels with the protected Preview artifact.
-      writeFileSync(resolve(out,'vercel.json'),JSON.stringify({headers:[{source:'/private/(.*)',headers:privateReplayHeaders},{source:'/(.*)',headers:[{key:'Cache-Control',value:'private, no-store, max-age=0'},{key:'Content-Security-Policy',value:"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"}]}]},null,2))
+      writeFileSync(resolve(out,'vercel.json'),JSON.stringify({headers:privateReplayVercelHeaders},null,2))
     },
   }
 }

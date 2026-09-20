@@ -8,7 +8,7 @@ import { syntheticReplayInput } from './fixtures/nativeReplaySynthetic.mjs'
 import { PROPAGATION_STAGES } from '../scripts/demoPropagation.mjs'
 import { createHash } from 'node:crypto'
 import { spawn } from 'node:child_process'
-import { privateReplayHeaders } from '../scripts/privateReplayAsset.mjs'
+import { privateReplayHeaders,privateReplayVercelHeaders } from '../scripts/privateReplayAsset.mjs'
 const input=syntheticReplayInput()
 const result=replayPrivateInput(input)
 test('93 exact candidates, native outputs, Unicode spans, truthful dependency and bounded absence',()=>{
@@ -47,6 +47,8 @@ test('stdin newline is processed without EOF and errors contain no input',async(
 })
 test('private artifact response headers and build isolation are explicit',()=>{
   assert.ok(privateReplayHeaders.some(h=>h.key==='Cache-Control'&&h.value.includes('private, no-store')))
+  assert.equal(privateReplayVercelHeaders.at(-1).source,'/private/(.*)')
+  assert.ok(privateReplayVercelHeaders.at(-1).headers.some(h=>h.key==='Content-Security-Policy'&&h.value==="default-src 'none'; frame-ancestors 'none'"))
   const production=readFileSync(new URL('../vite.config.js',import.meta.url),'utf8')
   assert.doesNotMatch(production,/privateReplayAsset|native-replay/)
   const style=readFileSync(new URL('../src/graph/styles.js',import.meta.url),'utf8')
