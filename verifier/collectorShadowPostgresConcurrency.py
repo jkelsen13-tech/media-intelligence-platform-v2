@@ -217,8 +217,8 @@ def logical_restore_fingerprint(database):
           from pg_namespace where nspname in ({schemas}) order by nspname
         """),
         "relations": query_lines(database, f"""
-          select n.nspname||'|'||c.relname||'|'||c.relkind||'|'||pg_get_userbyid(c.relowner)
-            ||'|'||c.relrowsecurity||'|'||c.relforcerowsecurity||'|'||coalesce(c.relacl::text,'<null>')
+          select n.nspname||'|'||c.relname||'|'||c.relkind::text||'|'||pg_get_userbyid(c.relowner)
+            ||'|'||c.relrowsecurity::text||'|'||c.relforcerowsecurity::text||'|'||coalesce(c.relacl::text,'<null>')
           from pg_class c join pg_namespace n on n.oid=c.relnamespace
           where n.nspname in ({schemas}) and c.relkind in ('r','p','v','m','S','i','I')
           order by n.nspname,c.relname,c.relkind
@@ -232,7 +232,7 @@ def logical_restore_fingerprint(database):
           order by n.nspname,c.relname,a.attnum
         """),
         "constraints": query_lines(database, f"""
-          select n.nspname||'|'||c.relname||'|'||con.conname||'|'||con.contype||'|'
+          select n.nspname||'|'||c.relname||'|'||con.conname||'|'||con.contype::text||'|'
             ||encode(sha256(convert_to(pg_get_constraintdef(con.oid,true),'UTF8')),'hex')
           from pg_constraint con join pg_class c on c.oid=con.conrelid
             join pg_namespace n on n.oid=c.relnamespace
@@ -246,7 +246,7 @@ def logical_restore_fingerprint(database):
           order by n.nspname,c.relname
         """),
         "triggers": query_lines(database, f"""
-          select n.nspname||'|'||c.relname||'|'||t.tgname||'|'||t.tgenabled||'|'
+          select n.nspname||'|'||c.relname||'|'||t.tgname||'|'||t.tgenabled::text||'|'
             ||encode(sha256(convert_to(pg_get_triggerdef(t.oid,true),'UTF8')),'hex')
           from pg_trigger t join pg_class c on c.oid=t.tgrelid
             join pg_namespace n on n.oid=c.relnamespace
@@ -255,7 +255,7 @@ def logical_restore_fingerprint(database):
         """),
         "functions": query_lines(database, f"""
           select n.nspname||'|'||p.proname||'|'||pg_get_function_identity_arguments(p.oid)||'|'
-            ||pg_get_userbyid(p.proowner)||'|'||p.prosecdef||'|'||p.provolatile||'|'||p.proparallel
+            ||pg_get_userbyid(p.proowner)||'|'||p.prosecdef::text||'|'||p.provolatile::text||'|'||p.proparallel::text
             ||'|'||coalesce(p.proconfig::text,'<null>')||'|'||coalesce(p.proacl::text,'<null>')||'|'
             ||encode(sha256(convert_to(pg_get_functiondef(p.oid),'UTF8')),'hex')
           from pg_proc p join pg_namespace n on n.oid=p.pronamespace
@@ -263,7 +263,7 @@ def logical_restore_fingerprint(database):
           order by n.nspname,p.proname,pg_get_function_identity_arguments(p.oid)
         """),
         "policies": query_lines(database, f"""
-          select n.nspname||'|'||c.relname||'|'||p.polname||'|'||p.polcmd||'|'||p.polpermissive
+          select n.nspname||'|'||c.relname||'|'||p.polname||'|'||p.polcmd::text||'|'||p.polpermissive::text
             ||'|'||coalesce((select string_agg(coalesce(r.rolname,'public'),',' order by coalesce(r.rolname,'public'))
                 from unnest(p.polroles) as role_ids(role_oid)
                 left join pg_roles r on r.oid=role_ids.role_oid),'')
@@ -275,7 +275,7 @@ def logical_restore_fingerprint(database):
         """),
         "default_acls": query_lines(database, f"""
           select pg_get_userbyid(d.defaclrole)||'|'||coalesce(n.nspname,'<global>')||'|'
-            ||d.defaclobjtype||'|'||coalesce(d.defaclacl::text,'<null>')
+            ||d.defaclobjtype::text||'|'||coalesce(d.defaclacl::text,'<null>')
           from pg_default_acl d left join pg_namespace n on n.oid=d.defaclnamespace
           where pg_get_userbyid(d.defaclrole) like 'mip_shadow_%' or n.nspname in ({schemas})
           order by 1
