@@ -29,7 +29,12 @@
 .demo-receipt-timeline [data-selected=true] { border-color: var(--accent); }
 .demo-graph-tools label { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .demo-graph-tools input:not([type=checkbox]) { padding: 8px; min-width: 0; }
-.demo-graph-results { display: grid; gap: 6px; max-height: 220px; overflow: auto; }
+.demo-graph-results { display: grid; gap: 6px; max-height: 220px; overflow: auto; flex: 0 0 auto; position: relative; z-index: 2; }
+.demo-graph-view input, .demo-graph-view button { scroll-margin-block: 180px; }
+.demo-graph-tools, .demo-graph-view > p, .demo-provenance-legend { flex: 0 0 auto; position: relative; z-index: 2; }
+.demo-provenance-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-block: 12px; }
+.demo-provenance-legend > span::before { content: ''; display: inline-block; width: 26px; border-top: 2px dashed currentColor; margin-right: 8px; }
+.demo-provenance-legend button { min-height: 44px; }
 @media (max-width: 1100px) { .demo-candidate-grid { grid-template-columns: 1fr; } }
 @media (max-width: 767px) {
   /* Static graph has a document header and controls above its native canvas.
@@ -125,7 +130,9 @@
 .demo-graph-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .demo-graph-legend i { width: 10px; height: 10px; border-radius: 3px; border: 2px solid var(--cat-amber); background: var(--bg-panel); }
 .demo-graph-legend i.capture { border-color: var(--cat-green); }
-.demo-graph-stage { position: relative; flex: 1; min-height: 500px; overflow: hidden; border: 1px solid var(--border-color); border-radius: var(--card-radius); background: var(--bg-panel); }
+.demo-graph-stage { position: relative; flex: 0 0 520px; height: 520px; min-height: 520px; z-index: 0; isolation: isolate; overflow: hidden; border: 1px solid var(--border-color); border-radius: var(--card-radius); background: var(--bg-panel); }
+.demo-graph-stage .graph-canvas-wrap { width: 100%; height: 100%; min-height: 100%; }
+.demo-graph-stage .graph-canvas { width: 100%; height: 100%; }
 .demo-graph-stage .graph-view { height: 100%; min-height: 500px; }
 .demo-timeline { position: relative; max-width: 920px; }
 .demo-timeline::before { position: absolute; top: 9px; bottom: 0; left: 112px; width: 1px; content: ''; background: var(--border-strong); }

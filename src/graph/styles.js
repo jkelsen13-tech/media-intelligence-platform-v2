@@ -171,6 +171,21 @@ export const graphStylesheet = [
       label: 'hypothesis',
     },
   },
+  // Receipt provenance is a declaration, not a documentary or causal relationship.
+  {
+    selector: 'edge[type = "receipt_provenance"]',
+    style: {
+      'line-style': 'dashed',
+      'source-arrow-shape': 'none',
+      'target-arrow-shape': 'none',
+      opacity: 0.65,
+    },
+  },
+  // This type retains its literal qualifier at readable zoom.
+  {
+    selector: 'edge[type = "receipt_provenance"].lbl',
+    style: { label: (ele) => edgePlainLabel(ele.data()) },
+  },
   // Step 7 (§6): reliability / hypothesis filters hide edges without a
   // re-layout; nodes left isolated by the filter stay but dim.
   {

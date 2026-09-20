@@ -44,6 +44,8 @@ export const RELIABILITY_MIN = 1
 export const RELIABILITY_MAX = 4
 
 export const EDGE_TYPES = {
+  // Private display-only link, not documentary evidence or an accepted relation.
+  receipt_provenance: { color: '#9ca3af', cssVar: '--cat-grey', label: 'Receipt-declared provenance (unverified)', plain: 'receipt-declared provenance (unverified)' },
   causal: { color: '#4d9aff', cssVar: '--cat-blue', label: 'Causal', plain: 'led to' }, // blue
   actor: { color: '#9ca3af', cssVar: '--cat-grey', label: 'Actor', plain: 'involves' }, // grey
   financial: { color: '#ffb01f', cssVar: '--cat-amber', label: 'Financial', plain: 'funded' }, // amber

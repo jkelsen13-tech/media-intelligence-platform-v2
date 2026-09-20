@@ -133,7 +133,7 @@ export function graphForLens(universe, topics = TOPICS) {
   for (const origin of origins) nodes.push({ ...origin, metadata: { demo_semantics: 'declared_provenance_not_actor', memberships: origin.memberships } })
   const edges = sources.flatMap(source => origins.filter(origin => origin.captures.includes(source.capture_id)).map(origin => ({
     id: `private:declared-provenance:${source.capture_id}`, source: source.preview_id, target: origin.id,
-    type: 'documentary', label: 'receipt-declared provenance only', relationshipClass: 'declared_provenance',
+    type: 'receipt_provenance', label: 'receipt-declared provenance (unverified)', relationshipClass: 'declared_provenance',
     substantive: false, corroborative: false, publication_allowed: false,
     evidenceRoots: origin.evidenceRoots.filter(root => root.capture_id === source.capture_id),
   })))

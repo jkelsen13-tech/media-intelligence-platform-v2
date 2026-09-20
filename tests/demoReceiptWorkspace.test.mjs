@@ -10,6 +10,7 @@ import retained from '../verifier/demo-corpus-20260916/retained-source-receipts.
 import expanded from '../verifier/demo-corpus-20260916/expanded-source-receipts.json' with { type: 'json' }
 import owner from './fixtures/demoOwnerContract.json' with { type: 'json' }
 import { createDemoUniverse, demoLens } from '../scripts/demoCorpus.mjs'
+import { edgePlainLabel } from '../src/graph/theme.js'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const output = fileURLToPath(new URL('./.compiled/DemoReceiptWorkspace.mjs', import.meta.url))
@@ -110,4 +111,26 @@ test('entry mounts reconciled adapters and keeps native graph connected-first an
   assert.match(adapter, /InvestigationPanelPresentation/)
   assert.match(adapter, /RemainingUncertaintyBlock/)
   assert.match(adapter, /InvestigationVersionNavigation bundle=\{null\}/)
+})
+test('successful metadata searches do not claim absence and timestamp gaps remain explicit', () => {
+  const html = render(ui.ReceiptSearchCoverage, { query: universe.sources[0].article_id })
+  assert.match(html, /data-search-outcome="matches"/)
+  assert.match(html, /Metadata matches within the listed fields/)
+  assert.doesNotMatch(html, /No substring match|no claim of real-world absence/)
+  for (const component of [ui.ReceiptComparison, ui.ReceiptTimeline]) assert.match(render(component), /[Ss]ource update/)
+  for (const row of universe.propagation.sourceReceipts) {
+    assert.equal(row.publication.source_updated_at, null)
+    assert.equal(row.publication.source_update_state, 'unavailable')
+    assert.match(row.publication.source_update_reason, /capture or verification time cannot substitute/)
+  }
+})
+
+test('receipt provenance has a qualified neutral label without changing documentary defaults', () => {
+  assert.equal(edgePlainLabel({ type: 'receipt_provenance', label: 'unsafe override' }), 'receipt-declared provenance (unverified)')
+  assert.equal(edgePlainLabel({ type: 'documentary' }), 'documented in')
+  const styles = readFileSync(new URL('../src/graph/styles.js', import.meta.url), 'utf8')
+  assert.match(styles, /edge\[type = "receipt_provenance"\]/)
+  assert.match(styles, /'line-style': 'dashed'/)
+  assert.match(styles, /'source-arrow-shape': 'none'/)
+  assert.match(styles, /'target-arrow-shape': 'none'/)
 })

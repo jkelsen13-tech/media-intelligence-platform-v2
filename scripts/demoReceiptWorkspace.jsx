@@ -60,6 +60,7 @@ export function ReceiptIdentity({ source, row }) {
       ['SHA-256', source.content_hash], ['Code-point span', `[${source.span_start}, ${source.span_end})`],
       ['Declared origin', source.origin_id ?? 'Unresolved'], ['Declared dependency', source.dependency_id ?? 'Unresolved'],
       ['Rights note', source.rights], ['Published timestamp', source.published_at ?? 'Unavailable'],
+      ['Source update timestamp', `Unavailable — ${row.publication.source_update_reason}`],
       ['Source date (not event time)', source.source_date], ['Recorded precision', source.publication_precision],
       ['Private identity', row.subject.private_subject_id], ['Canonical identity', 'Unavailable; no canonical link'],
       ['Reader / capture / candidate', `${source.reader_state} / ${source.capture_state} / ${source.candidate_state}`],
@@ -73,7 +74,7 @@ export function ReceiptSearchCoverage({ universe, query = '' }) {
   const coverage = searchDemoUniverseWithCoverage(universe, query)
   return <section className="piw-card" aria-label="Bounded search coverage"><h3>Search Coverage</h3>
     <p>{coverage.examined_sources} receipt records scanned · {coverage.results.length} metadata matches · 0 exact-text searches · semantic search not run.</p>
-    <p>{coverage.no_results_meaning}</p><details><summary>Search field allowlist</summary><p className="piw-mono">{coverage.searched_fields.join(', ')}</p><p>{coverage.synopsis_basis}</p></details>
+    <p data-search-outcome={coverage.results.length ? 'matches' : 'no_matches'}>{coverage.results.length ? 'Metadata matches within the listed fields of this frozen 93-receipt universe. Exact retained text and external sources were not searched.' : coverage.no_results_meaning}</p><details><summary>Search field allowlist</summary><p className="piw-mono">{coverage.searched_fields.join(', ')}</p><p>{coverage.synopsis_basis}</p></details>
   </section>
 }
 
@@ -123,7 +124,7 @@ export function ReceiptComparison({ universe, investigation, selected, onSelect 
     <div className="demo-candidate-grid">{sources.map(source => { const row = byId.get(source.capture_id); return <article className="piw-card" key={source.candidate_id} data-candidate-id={source.candidate_id} data-selected={selected?.capture_id === source.capture_id}>
       <header><h3>{source.outlet}</h3><button onClick={() => onSelect(source)}>Select candidate</button></header><p>{source.title}</p><p className="piw-mono">Candidate {source.candidate_id}</p>
       <p><strong>Exact claim text unavailable.</strong> No synopsis is substituted.</p>
-      <dl className="ws-inspector-dl"><div><dt>Source membership</dt><dd>{source.article_id} / {source.capture_id}</dd></div><div><dt>Collection membership</dt><dd>{source.topic}; native comparison event unavailable</dd></div><div><dt>Shared / unique / present / absent</dt><dd>Unknown / unknown / unknown / unknown</dd></div><div><dt>Declared lineage</dt><dd>{source.origin_id ?? 'Unresolved'} · unverified</dd></div><div><dt>Declared dependency</dt><dd>{source.dependency_id ?? 'Unresolved'} · unverified</dd></div><div><dt>Publication timestamp</dt><dd>{source.published_at ?? 'Unavailable'}</dd></div><div><dt>Source date only</dt><dd>{source.source_date} · {source.publication_precision}</dd></div><div><dt>Framing / attribution / exact scope</dt><dd>Not run / blocked / unavailable</dd></div></dl>
+      <dl className="ws-inspector-dl"><div><dt>Source membership</dt><dd>{source.article_id} / {source.capture_id}</dd></div><div><dt>Collection membership</dt><dd>{source.topic}; native comparison event unavailable</dd></div><div><dt>Shared / unique / present / absent</dt><dd>Unknown / unknown / unknown / unknown</dd></div><div><dt>Declared lineage</dt><dd>{source.origin_id ?? 'Unresolved'} · unverified</dd></div><div><dt>Declared dependency</dt><dd>{source.dependency_id ?? 'Unresolved'} · unverified</dd></div><div><dt>Publication timestamp</dt><dd>{source.published_at ?? 'Unavailable'}</dd></div><div><dt>Source update timestamp</dt><dd>Unavailable — {row.publication.source_update_reason}</dd></div><div><dt>Source date only</dt><dd>{source.source_date} · {source.publication_precision}</dd></div><div><dt>Framing / attribution / exact scope</dt><dd>Not run / blocked / unavailable</dd></div></dl>
       <RemainingUncertaintyBlock>{source.remaining_uncertainty}</RemainingUncertaintyBlock>
       <details><summary>Provenance &amp; explanation</summary><ReceiptIdentity source={source} row={row} /><ReceiptStageStatus rows={[row]} names={['shared_unique_claims', 'outlet_framing', 'attributed_statements', 'exact_evidence']} /></details>
     </article> })}</div>
@@ -135,7 +136,7 @@ export function ReceiptTimeline({ universe, investigation, selected, onSelect })
   const items = universe.propagation.timeline.filter(item => sources.has(item.capture_id)).sort((a, b) => a.source_date.localeCompare(b.source_date))
   const dated = new Set(items.map(item => item.capture_id))
   const unavailableSources = investigation.sources.filter(source => !dated.has(source.capture_id))
-  return <div className="demo-native-view"><p className="demo-eyebrow">Timeline</p><h2>Source-date chronology</h2><StatusBanner>Universe: 92 source-date-only items; one precise date unavailable. No publication timestamp or event time is substituted.</StatusBanner><p>This lens: {items.length} dated source items; {unavailableSources.length} precise dates unavailable.</p>
+  return <div className="demo-native-view"><p className="demo-eyebrow">Timeline</p><h2>Source-date chronology</h2><StatusBanner>Universe: 92 source-date-only items; one precise date unavailable. No publication timestamp or event time is substituted. Source update timestamps are unavailable: no update timestamp is supplied; capture or verification time cannot substitute.</StatusBanner><p>This lens: {items.length} dated source items; {unavailableSources.length} precise dates unavailable.</p>
     <ol className="demo-receipt-timeline">{items.map(item => { const source = sources.get(item.capture_id); const date = retainedDateDisplay(item.source_date); return <li key={item.capture_id}><time dateTime={date.dateTime}>{date.label}</time><button data-selected={selected?.capture_id === item.capture_id} onClick={() => onSelect(source)}>{source.title}<small>{source.outlet} · source date only; event identity unavailable</small></button></li> })}</ol>
     {unavailableSources.length ? <section className="piw-card"><h3>Precise date unavailable</h3>{unavailableSources.map(source => <p key={source.capture_id}><button onClick={() => onSelect(source)}>{source.title}</button> · retained value {source.source_date}; no day invented.</p>)}</section> : null}
   </div>

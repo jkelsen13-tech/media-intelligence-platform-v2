@@ -48,7 +48,7 @@ function DemoBoundaryNote({ compact = false }) {
 function SourceCard({ source, selected, onSelect }) {
   return <button type="button" className={`demo-source-card${selected ? ' selected' : ''}`} onClick={() => onSelect(source)} data-capture-id={source.capture_id}>
     <span className="demo-source-card__top"><span className="demo-source-card__outlet">{source.outlet}</span><time>{source.source_date ?? 'Date not recorded'}</time></span>
-    <strong>{source.title}</strong><span className="demo-source-card__synopsis">Synopsis: {source.statement}</span>
+    <span>Source update unavailable — no update timestamp supplied; capture or verification time cannot substitute.</span><strong>{source.title}</strong><span className="demo-source-card__synopsis">Synopsis: {source.statement}</span>
     <span className="demo-source-card__meta"><span>{titleForTopic(source.topic)} · {pretty(source.semantic_kind)}</span><span>Capture {shortId(source.capture_id)}</span></span>
   </button>
 }
@@ -58,7 +58,7 @@ function ProvenanceInspector({ source, investigation, surface, onOpenEvidence })
   return <div className="demo-provenance" data-selected-capture={source.capture_id}><PendingBadge /><h2>{source.title}</h2><p className="demo-inspector-synopsis"><strong>Synopsis:</strong> {source.statement}</p>
     <button type="button" className="demo-native-link" onClick={onOpenEvidence}><Fingerprint size={15} /> {surface === 'evidence' ? 'Evidence identity open' : 'Inspect evidence identity'}</button>
     <section className="demo-evidence-frame"><span>Exact retained evidence identity</span><strong>Code points [{source.span_start}, {source.span_end})</strong><p>The frozen receipts retain the exact coordinates and content hash, but not the excerpt body. The synopsis above is not presented as a quotation.</p></section>
-    <details className="ws-provenance" open={surface === 'evidence'}><summary>Provenance identifiers &amp; history</summary><dl className="ws-inspector-dl demo-id-list"><div><dt>Article</dt><dd>{source.article_id}</dd></div><div><dt>Capture</dt><dd>{source.capture_id}</dd></div><div><dt>Candidate</dt><dd>{source.candidate_id}</dd></div><div><dt>Content SHA-256</dt><dd>{source.content_hash}</dd></div><div><dt>Origin</dt><dd>{source.origin_id ?? 'Unresolved'}</dd></div><div><dt>Dependency</dt><dd>{source.dependency_id ?? 'Unresolved'}</dd></div><div><dt>Source date only</dt><dd>{source.source_date ?? 'Not recorded'} · {source.publication_precision}</dd></div><div><dt>Rights note</dt><dd>{source.rights}</dd></div></dl></details>
+    <details className="ws-provenance" open={surface === 'evidence'}><summary>Provenance identifiers &amp; history</summary><dl className="ws-inspector-dl demo-id-list"><div><dt>Article</dt><dd>{source.article_id}</dd></div><div><dt>Capture</dt><dd>{source.capture_id}</dd></div><div><dt>Candidate</dt><dd>{source.candidate_id}</dd></div><div><dt>Content SHA-256</dt><dd>{source.content_hash}</dd></div><div><dt>Origin</dt><dd>{source.origin_id ?? 'Unresolved'}</dd></div><div><dt>Dependency</dt><dd>{source.dependency_id ?? 'Unresolved'}</dd></div><div><dt>Source date only</dt><dd>{source.source_date ?? 'Not recorded'} · {source.publication_precision}</dd></div><div><dt>Source update timestamp</dt><dd>Unavailable — no update timestamp supplied; capture or verification time cannot substitute.</dd></div><div><dt>Rights note</dt><dd>{source.rights}</dd></div></dl></details>
     <section><h3>Remaining uncertainty</h3><p>{source.remaining_uncertainty}</p></section><a className="demo-native-link" href={source.url} target="_blank" rel="noreferrer">Open original source <ArrowSquareOut size={14} /></a></div>
 }
 
@@ -96,6 +96,7 @@ function NativeGraph({ investigation, selected, onSelect }) {
     <div className="demo-graph-tools"><label><input type="checkbox" checked={showIsolated} onChange={event => setShowIsolated(event.target.checked)} /> Show isolated receipt nodes</label><label>Find any retained capture <input aria-label="Find graph capture" value={graphQuery} onChange={event => setGraphQuery(event.target.value)} placeholder="Search all 93 receipt records" /></label></div>
     <p>{graphNodes.length} nodes displayed · {fullGraph.edges.length} declared-provenance edges in this lens. Isolated receipts remain selectable through search.</p>
     {graphQuery.trim() ? <div className="demo-graph-results">{results.length ? results.map(source => <button key={source.capture_id} onClick={() => { onSelect(source); setGraphQuery('') }}>{source.title} · {source.topic}</button>) : <p>No matching receipt metadata in the bounded 93-record universe. Exact text was not searched.</p>}</div> : null}
+    <div className="demo-provenance-legend"><span>Receipt-declared provenance (unverified) · dashed, no arrows · not substantive evidence</span>{fullGraph.nodes.filter(node => node.type === 'declared_origin_identity').map(node => <button key={node.id} onClick={() => setOriginId(node.id)}>Inspect declared provenance {node.id}</button>)}</div>
     <div className="demo-graph-stage" data-graph-node-count={graphNodes.length} data-graph-edge-count={fullGraph.edges.length}><GraphView nodes={graphNodes} edges={fullGraph.edges} selectedId={selected?.preview_id ?? null} onSelect={node => { if (node?.type === 'declared_origin_identity') setOriginId(node.id); else if (byId.has(node?.id)) onSelect(byId.get(node.id)) }} panelOpen={false} focused /></div>
     {origin ? <Modal title={`Declared provenance: ${origin.label}`} onClose={() => setOriginId(null)}><p>{origin.reasoning}</p><p>Investigation membership: {origin.memberships.map(titleForTopic).join(' · ')}</p><div className="demo-source-grid">{universe.sources.filter(source => origin.captures.includes(source.capture_id)).map(source => <SourceCard key={source.capture_id} source={source} onSelect={item => { setOriginId(null); onSelect(item) }} />)}</div></Modal> : null}
   </div>
@@ -106,7 +107,7 @@ function ResearchCollection({ investigation, onSelect }) {
   const collections = universe.propagation.collections.filter(collection => investigation.topic === 'all' || collection.id === investigation.arc.id)
   const byId = new Map(universe.sources.map(source => [source.preview_id, source]))
   return <div className="demo-native-view"><p className="demo-eyebrow">Arcs / Collections</p><h2>Private research collections</h2><p>{collections.length} distinct collections in this lens. Research membership is not an approved narrative arc; no canonical arc or causal sequence is supplied.</p><DemoBoundaryNote compact />
-    {collections.map(collection => <article key={collection.id} className="demo-native-panel demo-collection"><header><div><h3>{collection.id}</h3><p>{collection.members.length} retained capture memberships · narrative arc unavailable</p></div></header><ol>{collection.members.map((id, index) => { const source = byId.get(id); return <li key={id}><button onClick={() => onSelect(source)}><span>{index + 1}</span><span><strong>{source.title}</strong><small>{source.outlet} · {source.source_date} (source date only)</small></span></button></li> })}</ol></article>)}
+    {collections.map(collection => <article key={collection.id} className="demo-native-panel demo-collection"><header><div><h3>{collection.id}</h3><p>{collection.members.length} retained capture memberships · narrative arc unavailable</p></div></header><ol>{collection.members.map((id, index) => { const source = byId.get(id); return <li key={id}><button onClick={() => onSelect(source)}><span>{index + 1}</span><span><strong>{source.title}</strong><small>{source.outlet} · {source.source_date} (source date only); source update unavailable — no update timestamp supplied; capture or verification time cannot substitute.</small></span></button></li> })}</ol></article>)}
   </div>
 }
 
@@ -116,8 +117,21 @@ function WorldUnavailable() {
 
 function Modal({ title, onClose, children }) {
   const ref = useRef(null)
-  useEffect(() => { ref.current?.focus() }, [])
-  return <div className="sheet-backdrop" onClick={onClose}><div ref={ref} tabIndex={-1} className="sheet demo-sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(event) => event.stopPropagation()}><div className="sheet-head"><h2>{title}</h2><button type="button" className="sheet-close" aria-label="Close" onClick={onClose}><X size={18} /></button></div>{children}</div></div>
+  useEffect(() => {
+    const trigger = document.activeElement
+    ref.current?.querySelector('button')?.focus()
+    return () => { if (trigger?.isConnected) trigger.focus() }
+  }, [])
+  const handleKeyDown = event => {
+    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onClose(); return }
+    if (event.key !== 'Tab') return
+    const items = [...ref.current.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]')].filter(item => item.getClientRects().length)
+    const first = items[0], last = items.at(-1)
+    if (!first) { event.preventDefault(); ref.current.focus() }
+    else if (event.shiftKey && (document.activeElement === first || document.activeElement === ref.current)) { event.preventDefault(); last.focus() }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+  }
+  return <div className="sheet-backdrop" onClick={onClose}><div ref={ref} tabIndex={-1} className="sheet demo-sheet" role="dialog" onKeyDown={handleKeyDown} aria-modal="true" aria-label={title} onClick={(event) => event.stopPropagation()}><div className="sheet-head"><h2>{title}</h2><button type="button" className="sheet-close" aria-label="Close" onClick={onClose}><X size={18} /></button></div>{children}</div></div>
 }
 
 function NativeDemoApp() {

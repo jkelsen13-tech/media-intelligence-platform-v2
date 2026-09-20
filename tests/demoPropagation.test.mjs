@@ -149,7 +149,8 @@ test('distinct groups, memberships, typed graph objects and accepted relationshi
   assert.equal(p.groups.dependencies.length, 80)
   assert.equal(p.objectAccounting.graph_nodes_by_type.document.count, 93)
   assert.equal(p.objectAccounting.graph_nodes_by_type.declared_origin_identity.count, 2)
-  assert.equal(p.objectAccounting.graph_edges_by_type.documentary.count, 17)
+  assert.equal(p.objectAccounting.graph_edges_by_type.receipt_provenance.count, 17)
+  assert.equal(p.objectAccounting.graph_edges_by_type.documentary.count, 0)
   for (const type of ownerContract.accepted_relationship_types) {
     assert.equal(p.objectAccounting.accepted_relationships_by_type[type].count, 0)
     assert.equal(p.objectAccounting.accepted_relationships_by_type[type].state, 'gated')
