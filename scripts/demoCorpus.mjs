@@ -141,18 +141,20 @@ export function graphForLens(universe, topics = TOPICS) {
 }
 
 export function searchDemoUniverse(universe, query) {
-  const needle = String(query ?? '').trim().toLocaleLowerCase()
-  return universe.sources.filter(source => !needle || [source.title, source.outlet, source.statement, source.semantic_kind,
-    source.topic, source.capture_id, source.candidate_id, source.origin_id].some(value => String(value ?? '').toLocaleLowerCase().includes(needle)))
+  const needle = String(query ?? '').trim().toLowerCase()
+  return universe.sources.filter(source => !needle || DEMO_SEARCH_FIELDS.some(field => String(source[field] ?? '').toLowerCase().includes(needle)))
     .map(source => ({ source, memberships: universe.membership[source.capture_id] }))
 }
 
 export function searchDemoUniverseWithCoverage(universe, query) {
   return deepFreeze({ results: searchDemoUniverse(universe, query), scope: 'frozen_receipt_metadata_only',
+    searched_fields: DEMO_SEARCH_FIELDS, synopsis_basis: 'statement is receipt synopsis, never exact evidence',
+    count_units: { examined_sources: 'receipt records', exact_text_sources_searched: 'receipt records',
+      exact_text_sources_unavailable: 'receipt records', external_sources_searched: 'external source documents' },
     examined_sources: universe.sources.length, metadata_scan_complete: true,
     exact_text_sources_searched: 0, exact_text_sources_unavailable: universe.sources.length,
     semantic_search_complete: false, external_sources_searched: 0,
-    no_results_meaning: 'No matching receipt metadata in this bounded universe; no claim of real-world absence.' })
+    no_results_meaning: 'No substring match in the listed receipt metadata fields within this bounded universe; exact evidence was not searched and there is no claim of real-world absence.' })
 }
 
 export function switchDemoLens(route, topic, universe) {
@@ -186,6 +188,9 @@ const RECEIPT_FIELDS = [
   'candidate_id', 'candidate_state', 'span_start', 'span_end',
   'retained_text_availability', 'source_verified_at',
 ]
+
+// Complete projected receipt metadata allowlist; no exact retained field body.
+export const DEMO_SEARCH_FIELDS = Object.freeze([...RECEIPT_FIELDS])
 
 export function projectReceipt(receipt) {
   if (!TOPICS.includes(receipt?.topic)) throw new Error('Unknown demo topic')
