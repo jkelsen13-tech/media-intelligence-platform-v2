@@ -6,6 +6,14 @@ timestamp. If an owner authorizes production work, first create a migration
 with `supabase migration new`, copy the approved SQL into it, run the disposable
 database checks below, and record the resulting migration identity.
 
+The non-deployed collector algorithm-shadow code is kept under
+`supabase/functions/collector-algorithm-shadow-candidate`, not here, because it
+is a network-free worker candidate rather than executable DDL. Its README is
+authoritative about its deployment prohibition. No matching production SQL is
+provided yet: the dedicated runtime identity, actual object owner, private
+schema ACL/RLS closure, and recovery authority require owner security review.
+Do not adapt the existing service-role collector shadow as its host.
+
 ## Public projection authority hardening
 
 Live migrations `20260920145928_public_projection_write_revoke_v1` and

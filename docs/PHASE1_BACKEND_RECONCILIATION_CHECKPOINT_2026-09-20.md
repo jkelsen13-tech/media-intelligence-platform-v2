@@ -186,3 +186,32 @@ authorized by this checkpoint.
 An index-only follow-up for `ingestion_source_runs.run_id` was prepared after
 this gate to satisfy the foreign-key access pattern. It is explicitly marked
 unapplied and does not change the checkpoint decision.
+
+## Parent reconciliation of the algorithm-shadow reviews
+
+The parent reconciled three later specialist traces against the repository and
+retained live packages rather than adopting any conclusion automatically:
+
+- The mechanical worker inventory correctly identified pure parser/extractor
+  seams in retained yhb `ingest-rss` v8 and destructive/domain-mutating paths
+  in `source-comparison-run` v15. Direct inspection confirmed both findings.
+- The pipeline trace correctly identified qik's existing intake, retrieval,
+  assessment, graph-staging, and publication foundations, but also confirmed
+  that qik has no active scheduler or proven live extractor. Those foundations
+  are therefore canonical extension points, not evidence of operability.
+- The High security/recovery review correctly rejected the existing
+  `collector-shadow` service-role credential as an effective least-privilege
+  boundary and rejected fresh-feed fetching for the algorithm worker. The
+  existing function remains evidence of transport reachability only.
+
+The resulting isolated candidate uses caller-supplied staged text, has no
+network/provider/database/environment path, preserves typed coverage, malformed
+input, URL-taint, and absence meanings, and calls only abstract dedicated
+claim/complete/fail capabilities. Its digest fields prove internal consistency,
+not source-registry provenance or rights clearance; the future host must
+authenticate those revisions. It independently reuses the existing
+generation-fenced Source Comparison candidate rather than creating another
+comparison store. It is not deployed and supplies no database capability SQL:
+the actual object owner, dedicated runtime identity, ACL/RLS closure, and
+recovery authority are the unresolved security gate. This work advances
+preparation without changing the Phase 1 stop decision.

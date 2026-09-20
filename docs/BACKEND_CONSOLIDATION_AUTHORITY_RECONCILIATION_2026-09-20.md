@@ -387,6 +387,20 @@ their ACLs remain postgres-owner-only.
   accidental grants in that candidate.
 - Prepared, but did not apply, an isolated follow-up index for the
   `ingestion_source_runs.run_id` foreign key after PostgreSQL schema review.
+- Prepared, but did not deploy, a network-free collector algorithm-shadow
+  candidate under `supabase/functions/collector-algorithm-shadow-candidate`.
+  It evaluates caller-supplied staged text with the captured yhb v8 pure
+  parser/extractor seams, hard-disables providers, records typed absence,
+  malformed-input, URL-taint, and coverage state, and can call only dedicated
+  claim/complete/fail
+  capabilities supplied by a future host. It contains no Supabase client,
+  service-role credential, environment access, table interface, fetch path,
+  scheduler, publication action, or predecessor acknowledgement.
+- Reused the existing generation-fenced Source Comparison candidate and v16
+  pure projection snapshot as the comparison foundation. The live yhb v15
+  entrypoint is not reusable as a shadow host because it destructively
+  rebuilds derived rows, can approve events, and acknowledges a mutable
+  all-pending queue.
 - Added a Vercel branch deployment guard and a regression test for it.
 - Preserved the protected demo and made no destructive backend change.
 
@@ -408,6 +422,21 @@ Isolated branch checks include:
   the Phase 1 evidence sections, all decision-layer fields, all eight absence
   meanings, all twelve knowledge-change causes, and a no-provider-activation
   rule.
+- Twelve focused algorithm-shadow tests pass, including the full sanitization
+  golden corpus, deterministic staged-input derivation, typed
+  `not_extracted`/`coverage_incomplete` semantics, internal source/rights/method
+  binding checks, absence of ambient database/network/provider paths, exact retry,
+  remote-journal request recovery mechanics, and fail-closed journal behavior.
+  These are not a proved production recovery path. The six
+  existing dependency-free collector-shadow checks and four golden
+  sanitization checks also pass.
+
+Four existing PGlite integration files could not run in the transient local
+environment because `@electric-sql/pglite` was absent. A locked dependency
+restore was attempted, but the available package client failed TLS certificate
+verification while fetching unrelated Rollup packages. This is a local
+environment limitation, not a passing result; the affected transaction,
+capability, recovery, and generation-isolation suites remain required in CI.
 
 Full frozen-demo reproduction was attempted twice with bundled Node v24.19.0
 using a Windows-compatible sorted 237-file invocation. Dependency installation
@@ -482,6 +511,10 @@ will be spent repairing or reconciling the former demo lane.
 9. Reproducible Edge bundles outside the newly retained collector packages,
    especially spatial-runtime v6.
 10. Qualified lockfile install, full test baseline and integration/auth tests.
+11. A dedicated collector-shadow runtime identity and its real database
+    capability implementation. The prepared worker intentionally refuses to
+    define this boundary in application code, and must not be hosted with an
+    ambient service-role credential.
 
 ## 14. Remaining owner/platform gates
 
@@ -526,13 +559,16 @@ unreconciled data/configuration, and yhb has active production-like jobs.
 
 ## 17. Exact recommended next action
 
-Owner review should authorize or reject one bounded next phase: build and run a
-qik **private staging-only algorithm shadow** using the retained `ingest-rss`
-parser/extractor and generation-fenced comparison worker, after approving the
-seven outlet/source identity mapping and the residual Edge authority model.
-The run would create no publication writes and stop after count/hash/output and
-authorization parity receipts. It must not move either five-minute schedule.
-Only a later gate, after restore rehearsal and end-to-end qik article traversal,
-may consider scheduler cutover. Yhb must remain active through a measured
-rollback window; pause, deletion, and destructive retirement remain out of
-scope.
+Owner review should approve or reject the exact runtime boundary for the
+already-prepared qik **private staging-only algorithm shadow**: a dedicated
+identity, private append-only input/output generations, atomic lease-bound
+completion, and a remote recovery journal, with no ambient service role. On
+approval, turn that reviewed contract into a timestamped migration, rehearse it
+on an isolated restore, and only then deploy the network-free worker against
+host-authenticated, approved public feed captures. The run must stop after
+count/hash/output, independently audited before/after forbidden-write evidence,
+authorization, and recovery receipts; it must not move either
+five-minute schedule. Only a later gate, after restore rehearsal and an
+end-to-end qik article traversal, may consider scheduler cutover. Yhb must
+remain active through a measured rollback window; pause, deletion, and
+destructive retirement remain out of scope.

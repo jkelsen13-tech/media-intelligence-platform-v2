@@ -85,3 +85,11 @@ test('former demo lane is historical only and excluded from acceptance', () => {
   assert.match(report, /No further run budget\s+will be spent repairing or reconciling the former demo lane/i)
   assert.match(checkpoint, /frozen historical work only/i)
 })
+
+test('algorithm shadow is prepared only behind the unresolved dedicated-authority gate', () => {
+  assert.match(report, /did not deploy[\s\S]+network-free collector algorithm-shadow/i)
+  assert.match(report, /no ambient service role/i)
+  assert.match(checkpoint, /service-role credential as an effective least-privilege[\s\S]+rejected/i)
+  assert.match(checkpoint, /not deployed and supplies no database capability SQL/i)
+  assert.match(productionCandidateReadme, /Do not adapt the existing service-role collector shadow as its host/i)
+})
