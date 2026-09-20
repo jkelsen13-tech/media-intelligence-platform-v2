@@ -108,7 +108,7 @@ test('isolated demo emits only the exact native logo without enabling publicDir'
   assert.equal(emitted[0].source.subarray(0, 8).toString('hex'), '89504e470d0a1a0a')
   const config = readFileSync(new URL('../scripts/vite.demo-corpus.config.js', import.meta.url), 'utf8')
   assert.match(config, /publicDir: false/)
-  assert.match(config, /plugins: \[demoNoExternalFonts, demoBrandAsset\(\), react\(\)\]/)
+  assert.match(config, /plugins: \[demoNoExternalFonts, demoBrandAsset\(\), privateReplayAsset\(\), react\(\)\]/)
 })
 
 test('demo development logo middleware serves only the required asset', () => {

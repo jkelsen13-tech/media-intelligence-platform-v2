@@ -173,7 +173,7 @@ export const graphStylesheet = [
   },
   // Receipt provenance is a declaration, not a documentary or causal relationship.
   {
-    selector: 'edge[type = "receipt_provenance"]',
+      selector: 'edge[type = "receipt_provenance"], edge[type = "analytical_candidate"]',
     style: {
       'line-style': 'dashed',
       'source-arrow-shape': 'none',

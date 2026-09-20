@@ -135,9 +135,9 @@ test('all 93 private capture identities remain continuous across permitted surfa
   }
 })
 
-test('demo entry enforces a no-connect content security policy', async () => {
+test('demo entry permits same-origin private artifact only in content security policy', async () => {
   const html = await readFile(new URL('../scripts/demo-corpus-preview.html', import.meta.url), 'utf8')
-  assert.match(html, /connect-src 'none'/)
+  assert.match(html, /connect-src 'self';/)
   assert.doesNotMatch(html, /frame-ancestors/)
   const config = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'))
   const demoHeaders = config.headers.find(rule => rule.source === '/scripts/demo-corpus-preview.html')

@@ -62,3 +62,6 @@ verifier/live_validation/
 
 # node --test JSX compile output
 tests/.compiled/
+
+# Private stdin replay artifacts: never publish to Git or production output.
+.private-demo/

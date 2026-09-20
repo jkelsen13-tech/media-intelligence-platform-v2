@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { demoBrandAsset } from './demoBrandAsset.mjs'
+import { privateReplayAsset } from './privateReplayAsset.mjs'
 // Explicit separate build target. Never imported by the production entry.
 const localPhosphor = fileURLToPath(new URL('../vendor-phosphor/package/dist/index.es.js', import.meta.url))
 const demoNoExternalFonts = {
@@ -18,7 +19,7 @@ export default defineConfig({
   // assets or expose deployment credentials through Vite's environment loader.
   publicDir: false,
   envPrefix: 'DEMO_PUBLIC_UNUSED_',
-  plugins: [demoNoExternalFonts, demoBrandAsset(), react()],
+  plugins: [demoNoExternalFonts, demoBrandAsset(), privateReplayAsset(), react()],
   // CSS @imports are resolved inside PostCSS, bypassing Vite's JS transform
   // hook for nested tokens.css. Remove the external font request at that seam.
   css: { postcss: { plugins: [{ postcssPlugin: 'demo-no-external-font-imports',
