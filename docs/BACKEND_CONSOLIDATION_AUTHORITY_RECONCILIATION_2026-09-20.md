@@ -1,4 +1,4 @@
-# MIP V2 backend consolidation and canonical-authority reconciliation
+# MIP version 2 backend consolidation and canonical-authority reconciliation
 
 Date: 2026-09-20
 

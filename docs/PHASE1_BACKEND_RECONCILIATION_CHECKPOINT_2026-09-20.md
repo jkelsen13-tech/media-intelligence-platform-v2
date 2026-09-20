@@ -1,4 +1,4 @@
-# MIP V2 Phase 1 backend-reconciliation checkpoint
+# MIP version 2 Phase 1 backend-reconciliation checkpoint
 
 Date: 2026-09-20
 
