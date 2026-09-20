@@ -57,3 +57,28 @@ test('native ACL audit probes effective owner defaults instead of trusting catal
   assert.match(verifier,/select collector_shadow_api\.default_acl_probe_worker_v1\(\)/)
   assert.match(verifier,/select collector_shadow_control\.default_acl_probe_authority_v1\(\)/)
 })
+
+test('native same-cluster logical restore preserves bounded catalog, history, and behavior',()=>{
+  assert.match(verifier,/test_logical_dump_restore_preserves_catalog_history_and_direct_login_behavior/)
+  assert.match(verifier,/container_postgres_tool\("pg_dump"/)
+  assert.match(verifier,/container_postgres_tool\("pg_restore"/)
+  assert.match(verifier,/matching PostgreSQL 17\.6 logical backup tools required/)
+  assert.match(verifier,/--format=custom/)
+  assert.match(verifier,/--single-transaction/)
+  assert.doesNotMatch(verifier,/--no-owner|--no-acl/)
+  for(const catalogProbe of [
+    'pg_get_constraintdef','pg_get_indexdef','pg_get_triggerdef','pg_get_functiondef',
+    'pg_policy','relforcerowsecurity','pg_default_acl','attacl','pg_sequences'
+  ]) assert.match(verifier,new RegExp(catalogProbe))
+  for(const history of [
+    'completed','failed','pending','processing','recovery_events','revoke_rights',
+    'mip_shadow_lease_attempts_exhausted','request_runs'
+  ]) assert.match(verifier,new RegExp(history))
+  assert.match(verifier,/owners_acl_preserved;global_roles_preexisting/)
+  assert.match(verifier,/same_cluster_only;global_roles_not_archived;not_fresh_cluster;not_pitr;not_crash_recovery/)
+  assert.match(verifier,/MIP_SHADOW_LOGICAL_ARCHIVE_SHA256/)
+  assert.match(verifier,/MIP_SHADOW_LOGICAL_RESTORE_DURATION_MS/)
+  assert.match(verifier,/prior_recovery_id/)
+  assert.match(verifier,/select max\(id\) from collector_shadow_private\.recovery_events/)
+  assert.match(verifier,/Do not reapply contract/)
+})

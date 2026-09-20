@@ -107,6 +107,9 @@ the preceding 24 hours. The historical project name does not change its current
 collector ownership. Qik still has no `pg_cron`; its seven shadow receipts do
 not establish recurring canonical ingestion.
 
+The sanitized durable receipt is
+`verifier/backend-consolidation-2026-09-20/live-reverification-20260920T175027Z.json`.
+
 There were no database branches on qik, yhb, or jfn. Nie had a default `main`
 branch entry. Secret values were not inspected. Vault *names* on yhb show live
 scheduler/config ownership: `mip_ingest_rss_anon_jwt`,

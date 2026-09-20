@@ -156,7 +156,7 @@ def create_cluster_roles():
     run("postgres", ";".join(statements) + ";")
 
 
-def restart_postgres_service():
+def postgres_service_container_id():
     containers = subprocess.run(
         ["docker", "ps", "--filter", "ancestor=postgres:17.6", "--filter", "publish=5432",
          "--format", "{{.ID}}"],
@@ -170,7 +170,24 @@ def restart_postgres_service():
     ).stdout
     if ":5432" not in port:
         raise RuntimeError("disposable PostgreSQL service does not own loopback test port")
-    subprocess.run(["docker", "restart", containers[0]], check=True, capture_output=True, text=True, timeout=30)
+    return containers[0]
+
+
+def container_postgres_tool(tool, args, input_bytes=None, timeout=60):
+    """Run the client shipped in the exact disposable PostgreSQL 17.6 image."""
+    result = subprocess.run(
+        ["docker", "exec", "-i", postgres_service_container_id(), tool, *args],
+        input=input_bytes, capture_output=True, timeout=timeout,
+    )
+    if result.returncode:
+        detail = result.stderr.decode(errors="replace").strip()
+        raise RuntimeError(detail or result.stdout.decode(errors="replace").strip())
+    return result.stdout
+
+
+def restart_postgres_service():
+    container = postgres_service_container_id()
+    subprocess.run(["docker", "restart", container], check=True, capture_output=True, text=True, timeout=30)
     deadline = time.monotonic() + 20
     while time.monotonic() < deadline:
         try:
@@ -180,6 +197,133 @@ def restart_postgres_service():
             pass
         time.sleep(0.25)
     raise RuntimeError("disposable PostgreSQL service did not recover")
+
+
+def query_lines(database, sql):
+    output = run(database, sql)
+    return [] if not output else output.splitlines()
+
+
+def logical_restore_fingerprint(database):
+    """Fingerprint the bounded collector schemas and every private history row."""
+    schemas = "'collector_shadow_private','collector_shadow_api','collector_shadow_control'"
+    catalog = {
+        "database": query_lines(database, """
+          select pg_get_userbyid(datdba)||'|'||coalesce(datacl::text,'<null>')
+          from pg_database where datname=current_database()
+        """),
+        "schemas": query_lines(database, f"""
+          select nspname||'|'||pg_get_userbyid(nspowner)||'|'||coalesce(nspacl::text,'<null>')
+          from pg_namespace where nspname in ({schemas}) order by nspname
+        """),
+        "relations": query_lines(database, f"""
+          select n.nspname||'|'||c.relname||'|'||c.relkind||'|'||pg_get_userbyid(c.relowner)
+            ||'|'||c.relrowsecurity||'|'||c.relforcerowsecurity||'|'||coalesce(c.relacl::text,'<null>')
+          from pg_class c join pg_namespace n on n.oid=c.relnamespace
+          where n.nspname in ({schemas}) and c.relkind in ('r','p','v','m','S','i','I')
+          order by n.nspname,c.relname,c.relkind
+        """),
+        "columns": query_lines(database, f"""
+          select n.nspname||'|'||c.relname||'|'||a.attnum||'|'||a.attname||'|'
+            ||coalesce(a.attacl::text,'<null>')
+          from pg_attribute a join pg_class c on c.oid=a.attrelid
+            join pg_namespace n on n.oid=c.relnamespace
+          where n.nspname in ({schemas}) and a.attnum>0 and not a.attisdropped
+          order by n.nspname,c.relname,a.attnum
+        """),
+        "constraints": query_lines(database, f"""
+          select n.nspname||'|'||c.relname||'|'||con.conname||'|'||con.contype||'|'
+            ||encode(sha256(convert_to(pg_get_constraintdef(con.oid,true),'UTF8')),'hex')
+          from pg_constraint con join pg_class c on c.oid=con.conrelid
+            join pg_namespace n on n.oid=c.relnamespace
+          where n.nspname in ({schemas}) order by n.nspname,c.relname,con.conname
+        """),
+        "indexes": query_lines(database, f"""
+          select n.nspname||'|'||c.relname||'|'
+            ||encode(sha256(convert_to(pg_get_indexdef(c.oid),'UTF8')),'hex')
+          from pg_class c join pg_namespace n on n.oid=c.relnamespace
+          where n.nspname in ({schemas}) and c.relkind in ('i','I')
+          order by n.nspname,c.relname
+        """),
+        "triggers": query_lines(database, f"""
+          select n.nspname||'|'||c.relname||'|'||t.tgname||'|'||t.tgenabled||'|'
+            ||encode(sha256(convert_to(pg_get_triggerdef(t.oid,true),'UTF8')),'hex')
+          from pg_trigger t join pg_class c on c.oid=t.tgrelid
+            join pg_namespace n on n.oid=c.relnamespace
+          where n.nspname in ({schemas}) and not t.tgisinternal
+          order by n.nspname,c.relname,t.tgname
+        """),
+        "functions": query_lines(database, f"""
+          select n.nspname||'|'||p.proname||'|'||pg_get_function_identity_arguments(p.oid)||'|'
+            ||pg_get_userbyid(p.proowner)||'|'||p.prosecdef||'|'||p.provolatile||'|'||p.proparallel
+            ||'|'||coalesce(p.proconfig::text,'<null>')||'|'||coalesce(p.proacl::text,'<null>')||'|'
+            ||encode(sha256(convert_to(pg_get_functiondef(p.oid),'UTF8')),'hex')
+          from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+          where n.nspname in ({schemas})
+          order by n.nspname,p.proname,pg_get_function_identity_arguments(p.oid)
+        """),
+        "policies": query_lines(database, f"""
+          select n.nspname||'|'||c.relname||'|'||p.polname||'|'||p.polcmd||'|'||p.polpermissive
+            ||'|'||coalesce((select string_agg(coalesce(r.rolname,'public'),',' order by coalesce(r.rolname,'public'))
+                from unnest(p.polroles) as role_ids(role_oid)
+                left join pg_roles r on r.oid=role_ids.role_oid),'')
+            ||'|'||encode(sha256(convert_to(coalesce(pg_get_expr(p.polqual,p.polrelid),''),'UTF8')),'hex')
+            ||'|'||encode(sha256(convert_to(coalesce(pg_get_expr(p.polwithcheck,p.polrelid),''),'UTF8')),'hex')
+          from pg_policy p join pg_class c on c.oid=p.polrelid
+            join pg_namespace n on n.oid=c.relnamespace
+          where n.nspname in ({schemas}) order by n.nspname,c.relname,p.polname
+        """),
+        "default_acls": query_lines(database, f"""
+          select pg_get_userbyid(d.defaclrole)||'|'||coalesce(n.nspname,'<global>')||'|'
+            ||d.defaclobjtype||'|'||coalesce(d.defaclacl::text,'<null>')
+          from pg_default_acl d left join pg_namespace n on n.oid=d.defaclnamespace
+          where pg_get_userbyid(d.defaclrole) like 'mip_shadow_%' or n.nspname in ({schemas})
+          order by 1
+        """),
+        "sequences": query_lines(database, f"""
+          select schemaname||'|'||sequencename||'|'||sequenceowner||'|'||coalesce(last_value::text,'<null>')
+          from pg_sequences where schemaname in ({schemas}) order by schemaname,sequencename
+        """),
+    }
+    tables = query_lines(database, """
+      select c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='collector_shadow_private' and c.relkind='r' order by c.relname
+    """)
+    histories = {}
+    for table in tables:
+        histories[table] = run(database, f"""
+          select count(*)||'|'||encode(sha256(convert_to(coalesce(
+            string_agg(to_jsonb(t)::text,E'\\n' order by to_jsonb(t)::text),''),'UTF8')),'hex')
+          from collector_shadow_private.{table} t
+        """)
+    return {"catalog": catalog, "histories": histories}
+
+
+def dump_and_restore_database(source_database, restored_database):
+    started = time.monotonic()
+    dump_version = container_postgres_tool("pg_dump", ["--version"]).decode().strip()
+    restore_version = container_postgres_tool("pg_restore", ["--version"]).decode().strip()
+    if " 17.6 " not in dump_version + " " or " 17.6 " not in restore_version + " ":
+        raise RuntimeError("matching PostgreSQL 17.6 logical backup tools required")
+    archive = container_postgres_tool(
+        "pg_dump", ["-U", "postgres", "-d", source_database, "--format=custom", "--no-password"],
+    )
+    if not archive:
+        raise RuntimeError("logical archive was empty")
+    archive_sha256 = hashlib.sha256(archive).hexdigest()
+    run("postgres", "create database " + restored_database)
+    # Preserve archive ownership and ACL commands. Do not reapply contract,
+    # fixtures, or grants to the empty destination.
+    container_postgres_tool(
+        "pg_restore", ["-U", "postgres", "-d", restored_database, "--single-transaction",
+                       "--exit-on-error", "--no-password"],
+        input_bytes=archive,
+    )
+    print("MIP_SHADOW_LOGICAL_RESTORE=pg17.6_custom_archive;owners_acl_preserved;global_roles_preexisting", flush=True)
+    print("MIP_SHADOW_LOGICAL_RESTORE_SCOPE=same_cluster_only;global_roles_not_archived;not_fresh_cluster;not_pitr;not_crash_recovery", flush=True)
+    print("MIP_SHADOW_LOGICAL_ARCHIVE_SHA256=" + archive_sha256, flush=True)
+    print("MIP_SHADOW_LOGICAL_ARCHIVE_BYTES=" + str(len(archive)), flush=True)
+    print("MIP_SHADOW_LOGICAL_RESTORE_DURATION_MS=" + str(round((time.monotonic() - started) * 1000)), flush=True)
 
 
 class CollectorShadowPostgres(unittest.TestCase):
@@ -703,6 +847,98 @@ class CollectorShadowPostgres(unittest.TestCase):
         recovery_client = self.session(RUNTIME_A)
         self.assertEqual(recovery_client.execute(self.complete_sql(second, after_request)), "completed")
         self.assertEqual(self.admin("select count(*) from collector_shadow_private.outputs"), "2")
+
+    def test_logical_dump_restore_preserves_catalog_history_and_direct_login_behavior(self):
+        # Keep one processing generation.
+        processing = self.claim(self.a)
+        self.assertEqual(processing["generation_id"], self.generation)
+
+        # Preserve a completed generation and its exact durable replay record.
+        completed_refs = self.register_bundle("restore-completed", 21)
+        completed_generation = self.admit(completed_refs)
+        completed = self.claim(self.a2)
+        self.assertEqual(completed["generation_id"], completed_generation)
+        completed_request = str(uuid.uuid4())
+        completed_statement = self.complete_sql(completed, completed_request)
+        self.assertEqual(self.a2.execute(completed_statement), "completed")
+        self.assertEqual(self.a2.execute(completed_statement), "completed")
+
+        # Preserve an explicit worker failure.
+        failed_refs = self.register_bundle("restore-failed", 22)
+        failed_generation = self.admit(failed_refs)
+        failed = self.claim(self.a)
+        self.assertEqual(failed["generation_id"], failed_generation)
+        self.assertEqual(self.a.execute(self.fail_sql(failed, str(uuid.uuid4()))), "failed")
+
+        # Preserve every bounded recovery transition and attempts-exhausted history.
+        exhausted_refs = self.register_bundle("restore-exhausted", 23)
+        exhausted_generation = self.admit(exhausted_refs)
+        exhausted = self.claim(self.a2)
+        for expected_attempt in [1, 2, 3]:
+            self.assertEqual(exhausted["attempt"], expected_attempt)
+            self.admin("update collector_shadow_private.jobs set lease_expires_at=clock_timestamp()-interval '1 second' where generation_id=" + sql_quote(exhausted_generation))
+            result = self.recovery("select collector_shadow_control.requeue_expired(" + sql_quote(exhausted_generation) + "," + str(expected_attempt) + ");")
+            self.assertEqual(result, "failed" if expected_attempt == 3 else "requeued")
+            if expected_attempt < 3:
+                self.admin("update collector_shadow_private.jobs set available_at=clock_timestamp()-interval '1 second' where generation_id=" + sql_quote(exhausted_generation))
+                exhausted = self.claim(self.a2)
+
+        # Preserve a revoked authority revision and a separate active pending job.
+        revoked_refs = self.register_bundle("restore-revoked", 24)
+        self.admit(revoked_refs)
+        self.admitter("select collector_shadow_control.revoke_rights(" + sql_quote(revoked_refs["rights_revision"]) + ");")
+        pending_refs = self.register_bundle("restore-pending", 25)
+        pending_generation = self.admit(pending_refs)
+        self.assertEqual(
+            self.admin("select state||':'||count(*) from collector_shadow_private.jobs group by state order by state"),
+            "completed:1\nfailed:2\npending:2\nprocessing:1",
+        )
+        self.assertEqual(self.admin("select count(*) from collector_shadow_private.recovery_events"), "3")
+        self.assertEqual(
+            self.admin("select failure_code from collector_shadow_private.jobs where generation_id=" + sql_quote(exhausted_generation)),
+            "mip_shadow_lease_attempts_exhausted",
+        )
+        self.assertEqual(
+            self.admin("select operation||':'||count(*) from collector_shadow_private.request_runs group by operation order by operation"),
+            "shadow_claim:6\nshadow_complete:1\nshadow_fail:1",
+        )
+        self.assertEqual(
+            self.admin("select count(*) from collector_shadow_private.rights_revisions where revoked_at is not null"),
+            "1",
+        )
+
+        source_fingerprint = logical_restore_fingerprint(self.database)
+        restored_database = "mip_shadow_restore_" + uuid.uuid4().hex
+        self.addCleanup(lambda: run("postgres", "drop database if exists " + restored_database + " with (force)"))
+        dump_and_restore_database(self.database, restored_database)
+        self.assertEqual(logical_restore_fingerprint(restored_database), source_fingerprint)
+
+        restored_a = Session(restored_database, RUNTIME_A)
+        restored_b = Session(restored_database, RUNTIME_B)
+        restored_recovery = Session(restored_database, RECOVERY)
+        self.sessions.extend([restored_a, restored_b, restored_recovery])
+        self.assertEqual(restored_a.execute(completed_statement), "completed")
+        with self.assertRaisesRegex(RuntimeError, "query returned no rows|mip_shadow_runtime_session_not_authorized"):
+            restored_b.execute(self.claim_sql(self.runtime_a, self.session_a, str(uuid.uuid4())))
+        with self.assertRaisesRegex(RuntimeError, "permission denied"):
+            run(restored_database, "select * from collector_shadow_private.jobs;", "anon")
+        restored_claim = self.claim(restored_a, request=str(uuid.uuid4()))
+        self.assertEqual(restored_claim["generation_id"], pending_generation)
+        self.assertEqual(
+            run(restored_database, "select bool_and(relrowsecurity and relforcerowsecurity) from pg_class where relnamespace='collector_shadow_private'::regnamespace and relkind='r'"),
+            "t",
+        )
+        prior_recovery_id = int(run(restored_database, "select max(id) from collector_shadow_private.recovery_events"))
+        run(restored_database, "update collector_shadow_private.jobs set lease_expires_at=clock_timestamp()-interval '1 second' where generation_id=" + sql_quote(processing["generation_id"]))
+        self.assertEqual(
+            restored_recovery.execute("select collector_shadow_control.requeue_expired(" + sql_quote(processing["generation_id"]) + ",1);"),
+            "requeued",
+        )
+        self.assertEqual(run(restored_database, "select count(*) from collector_shadow_private.recovery_events"), "4")
+        self.assertGreater(
+            int(run(restored_database, "select max(id) from collector_shadow_private.recovery_events")),
+            prior_recovery_id,
+        )
 
     def test_zz_postgresql_restart_preserves_committed_history_and_acl(self):
         claim = self.claim(self.a)

@@ -26,6 +26,10 @@ const liveAuthorityAudit = fs.readFileSync(
   new URL('../supabase/tests/backend_consolidation_20260920_verification.sql', import.meta.url),
   'utf8',
 )
+const liveReverification = JSON.parse(fs.readFileSync(
+  new URL('../verifier/backend-consolidation-2026-09-20/live-reverification-20260920T175027Z.json', import.meta.url),
+  'utf8',
+))
 
 test('main report returns separate authority and pipeline verdicts', () => {
   assert.match(report, /A\. AUTHORITY CONSOLIDATED[\s\S]+FAIL/)
@@ -35,6 +39,14 @@ test('main report returns separate authority and pipeline verdicts', () => {
   assert.match(report, /each recorded\s+288 successes, zero failures/i)
   assert.match(report, /zero public base\/partitioned tables\s+with RLS disabled/i)
   assert.match(report, /27 effectively anon-callable[\s\S]+92 GraphQL-exposed tables/i)
+  assert.equal(liveReverification.mutations, 0)
+  assert.equal(liveReverification.projects.yhbwnrtlqbjtcrrlpbge.cron_jobs.length, 2)
+  assert.ok(liveReverification.projects.yhbwnrtlqbjtcrrlpbge.cron_jobs.every(
+    job => job.active && job.runs_last_24h === 288 && job.failures_last_24h === 0,
+  ))
+  assert.ok(Object.values(liveReverification.projects).every(
+    project => project.security.public_tables_rls_disabled === 0,
+  ))
 })
 
 test('Phase 1 checkpoint is honest, inspectable, and owner-gated', () => {
