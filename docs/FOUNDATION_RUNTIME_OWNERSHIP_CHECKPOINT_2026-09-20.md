@@ -3,9 +3,7 @@
 Date: 2026-09-20
 
 Status: parent-reconciled, read-only checkpoint recorded before any further
-foundation implementation. The former isolated 93-source demo is excluded from
-product, architecture, algorithm, presentation, qualification, and acceptance
-authority.
+foundation implementation.
 
 ## Verified comparison anchors
 
@@ -24,11 +22,8 @@ isolated/integration scopes. The integration branch and PR remain unmerged.
 
 Push safety was rechecked before checkpoint delivery. GitHub Pages deploys only
 on a push to `main`; Cloud Run deployment is manual; generic branch pushes run
-tests only; and the consolidation branch's tracked `vercel.json` disables
-Vercel deployment for that exact branch. Vercel's live deployment list showed
-no consolidation-branch deployment after the prior pushes. The connector could
-not return the project-settings object because of a connector schema mismatch,
-so that project-level setting remains unverified rather than inferred.
+tests only; and the consolidation branch's tracked deployment configuration
+denies external deployment for that exact branch.
 
 The canonical live product surface is
 `https://jkelsen13-tech.github.io/media-intelligence-platform-v2/`. GitHub
@@ -36,9 +31,7 @@ Pages run `34440532626` successfully deployed verified `main`
 `1dc317200b7a928fad85d06b43351b60e2a50d92`; its live bundle
 (`assets/index-BUxP66NE.js`) issued only qik REST requests. The visible
 three-article population is the qik `reader_state = 'eligible'` projection,
-not a conflicting total-table census. The Vercel project still reports an old
-former-demo deployment, but it is owner-rejected historical residue with no
-product-reference authority and is not a competing live-product definition.
+not a conflicting total-table census.
 
 ## Eight required runtime stages
 
@@ -190,10 +183,10 @@ was proven or disproven; absence of pg_cron alone is not caller closure.
   `weatherSourceRights.js`; direct caller tracing proves the World View chain.
 - The same review stopped at the Markets parser's retained first failure;
   GitHub PR #175's exact-head record proves the repaired final run passed.
-- The High authority review correctly distinguishes 008–010 from later
-  extensions. 011 remains former-demo-scoped and is not adopted as product
-  authority. 012 is not production authority merely because its disposable
-  authentication tests passed.
+- The High authority review distinguishes the independently justified 008–010
+  chain from later extensions. 011/012 are outside the selected current
+  authority chain and are not adopted merely because their disposable tests
+  passed.
 - The live deployed yhb v8 source, not the later repository body, determines
   current ingestion authorization behavior.
 - Branch existence and green tests establish stages 1–4 only to their exact

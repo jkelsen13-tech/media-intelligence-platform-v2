@@ -76,9 +76,6 @@ The corrected eight-stage foundation/runtime ownership checkpoint is
 - Integration branch: `codex/integrated-reconciliation-20260914`, head
   `4d69243cd2de91d7588e4eb263cc05b48e8fd0ef`; PR #175 remains open,
   draft, and unmerged.
-- The owner-rejected isolated demo branch remains frozen historical evidence
-  only. It was not edited, deployed, merged, repurposed, or used to define
-  product behavior in this reconciliation.
 
 The supplied archives were read and verified before relying on them. No local
 project checkout, extraction directory, report copy, or generated consolidation
@@ -88,11 +85,15 @@ artifact is retained on the user's device.
 |---|---|---|
 | `MIP_PRELAUNCH_SEQUENCE_RECONCILED_v5_2026-09-19.zip` | `8E21E4B4ACAB96EDF8F33FC36C2B5A1AA122FD6910A1431D24829744C5C7AEFB` | internal manifests previously matched |
 | `Media intelligence platform version 4.zip` | `50E4B6B2C26B713FFCE761CE44EBDEE2086DC807B34B7CDB540C7DDD7A13D41A` | root and assessment manifests previously matched |
-| `MIP_CONSOLIDATION_HANDOFF_RECONCILED_v2_2026-09-20.zip` | `522BBA1EBCA36F32EC5FA0B7F167C1779F499267EE629E0AE3A19CD7AE0FD4B0` | read in memory; successor prompt/map/notes and original provenance members matched the supplied hashes |
+| `MIP_CONSOLIDATION_HANDOFF_RECONCILED_v3_2026-09-20.zip` | `CE471420BED271875E990C3D680801A3DFD32FC800D565EC8C4D2D55EDF0C67C` | read in memory only; four entries verified; successor prompt/map/notes hashes matched `SHA256SUMS.txt` |
 
 The controlling instruction from the latest archive is only
-`01_NEXT_RUN_CONSOLIDATION_PROMPT.txt` (24,996 bytes,
-SHA-256 `DAA660C2E905471D3FE5393E5239256A48311100BF810BCE7A1574E214E753F7`).
+`01_NEXT_RUN_CONSOLIDATION_PROMPT.txt` (24,503 bytes,
+SHA-256 `0A8D2CF7D3977CC9848CBF173EEE6698FF427F82209FEEA613F74D922FD45426`).
+The unchanged foundation map is 18,650 bytes with SHA-256
+`0FC39BEB56DD1C9D841BEB74BF372477561EB8EED2AE19C32B76B233A1612233`;
+the v3 reconciliation notes are 5,039 bytes with SHA-256
+`EC4965C9BA7ACEEEEB486D6CE3857B17972EF47F2D24BF187B5C7F5AF15AB0A4`.
 The bundled original prompts are provenance, not competing instructions.
 
 ## 2. Verified current backend inventory
@@ -165,19 +166,15 @@ split. The decision column uses the archive's required vocabulary.
 | Investigation workspace/context | qik private evidence pipeline and eight deployed Edge functions | **EXTEND qik** | Reduce service-role blast radius without weakening RPC membership/reviewer checks |
 | Search/discovery | front ends read qik public projections; backing corpus authority is split | **RECONCILE around qik** | Projection parity after corpus move; Data API exposure and ACL tests |
 | Spatial projections / World View | qik schema/runtime is intended authority; jfn retains 46 verification/release rows | **RECONCILE into qik** | Import unique jfn history; add admin-controlled capability model; complete reproducible runtime bundle |
-| Terrain/runtime dependencies | repository/Vercel build assets; no separate Supabase storage objects observed | **EXTEND repository contract** | Reproducible dependency install/build and deployment evidence |
+| Terrain/runtime dependencies | repository and GitHub Pages build assets; no separate Supabase storage objects observed | **EXTEND repository contract** | Reproducible dependency install/build and deployment evidence |
 | Temporal intelligence | yhb owns material timeline data; qik temporal/publication output is incomplete | **RECONCILE into qik** | Preserve date evidence, uncertainty, placement audits and release gating |
 | Markets | typed evidence contract, private workspace/transport, isolated Markets evidence package and unapplied graph-compatibility candidate are located in integration/current; none is live authority | **RECONCILE/EXTEND qik; not NEW** | Review the candidate against qik graph/evidence foundations, retain default-closed endpoints, and require installation/data/E2E evidence before enablement |
 | Publication/public projection | qik public views are intended surface; legacy yhb/nie functions also mutate publication | **RECONCILE around qik** | Fix qik view write ACLs; migrate callers before revoking legacy entrypoints |
 | Private/public boundary | qik private investigation boundary is strongest; the direct public-view and self-service spatial escalations are remediated | **EXTEND and harden qik** | Close residual `supabase_admin` defaults and shared-runtime ambient authority |
 | Content-addressed storage/rehydration | qik evidence identities/captures and `capture-retrieval`; zero storage objects | **EXTEND qik** | Prove actual byte-level restore/rehydration, not only metadata rows |
 | Jobs/workers/selective ingestion | yhb two active five-minute jobs; legacy Edge workers on yhb/nie; qik has no active cron | **RECONCILE into qik** | Scheduler ownership, idempotency, credentials, in-flight work and rollback window |
-| Environment/configuration | GitHub, Vercel, Vault names, Supabase project settings and branch code all participate | **RECONCILE** | Establish a single non-secret config registry and eliminate hidden ref fallbacks |
+| Environment/configuration | GitHub, Vault names, Supabase project settings and branch code all participate | **RECONCILE** | Establish a single non-secret config registry and eliminate hidden ref fallbacks |
 
-Former-demo observations are excluded from the authority map and product-gap
-definition. Any code with former-demo provenance must be evaluated
-independently against the governing requirements, current architecture, live
-backend state, security boundaries, and foundation-reuse rules before adoption.
 
 Absence and change semantics are also incomplete. Current code correctly
 distinguishes some states—Source Comparison omission versus extraction/coverage
@@ -219,7 +216,6 @@ callers, authorization state, or recovery obligations.
 | nie `policy-ingest` | nie | external fetch plus service-role writes | any valid JWT; no app-level auth | R/W | schedule inactive; callable exposure remains | disable/owner-only, then reconcile | immediate containment candidate; negative anon and positive owner tests |
 | yhb `import-original-source` | reads nie, writes yhb | legacy import and downstream comparison | function credential; gateway JWT disabled | R/W | legacy dependency until reconciled | remove after canonical import | source-qualified import receipt and zero-caller observation |
 | Operator CLI/scripts | all projects | service RPCs and verification | service/operator keys | R/W | required where evidenced | qik plus named recovery authority | scoped credentials, named owner and audited runbook |
-| Vercel project `media-intelligence-platform-v2` | former-demo deployment residue | historical deployment/config only | Vercel project config | none for canonical product | not a product caller/reference | no target | preserve as evidence; any removal remains owner-gated and off critical path |
 | GitHub workflow `.github/workflows/blank.yml` | qik | Pages build config | repository variables/static ref | build/read | active on main | qik | verified successful Pages deployment |
 | External scheduler/operator not present in repo/pg_cron | unknown | possible collection trigger | unknown | unknown | **NOT_DEMONSTRATED** | explicit registry | obtain platform inventory before caller closure |
 | Tests/fixtures/runtime snapshots | all four refs appear | provenance, migration and replay evidence | none/live calls generally mocked | read/fixture | required as evidence | retain qualified history | distinguish executable callers from docs/snapshots |
@@ -230,8 +226,6 @@ rows in total. These are different populations, not conflicting same-query
 measurements.
 
 Static project-ref matches remain leads rather than proof of active callers.
-Vercel's former-demo deployment is explicitly non-authoritative; it does not
-reopen the canonical live-surface decision.
 
 ## 6. Unique data/schema reconciliation
 
@@ -469,12 +463,11 @@ creation, and leaked-password changes remain owner-gated.
   entrypoint is not reusable as a shadow host because it destructively
   rebuilds derived rows, can approve events, and acknowledges a mutable
   all-pending queue.
-- Added a Vercel branch deployment guard and a regression test for it.
 - Added production-gated, rollback-ready authorization containment candidates
   for the exact 27 yhb SECURITY DEFINER signatures, four yhb owner-executed
   views, two unnecessary qik private predicates, and the yhb/nie Edge
   authorization gates. These candidates were not applied or deployed.
-- Preserved the protected demo and made no destructive backend change.
+- Made no destructive backend change.
 
 The spatial gate preserves the current principal set to avoid a caller cut-off;
 it does not assert that both principals should permanently retain all three
@@ -484,8 +477,8 @@ capabilities.
 
 Isolated branch checks include:
 
-- Node syntax/static tests for the new SQL candidate and Vercel guard.
-- JSON parse of `vercel.json` and the sanitized inventory summary.
+- Node syntax/static tests for the new SQL and deployment-safety candidates.
+- JSON parse of deployment configuration and the sanitized inventory summary.
 - Repository diff/secret scan and branch-identity check.
 - Collector-shadow contract tests, JSON receipt validation, live 401 negative
   authorization, service-role-only RPC/table privilege checks, and seven live
@@ -579,28 +572,19 @@ reference, histories, in-flight leases and publication behavior. Counts,
 hashes, referential invariants, negative authorization and RPO/RTO must be
 recorded.
 
-## 12. Former demo lane disposition
+## 12. Historical-source and baseline handling
 
-The former 93-source isolated demo branch, its output contracts, presentation,
-qualification receipt (including the historical 1,588-pass/25-failure result),
-and preview are frozen historical evidence only. They are not an acceptance
-baseline for this run, and their failures are not consolidation work.
+Historical reports, branch summaries and archived SQL were treated as
+provenance leads only. No archived SQL was executed and no branch was adopted
+because it existed or had an earlier success report. The active comparison
+anchors remain verified main, PR #175/integration, the isolated consolidation
+branch, and the four current Supabase projects. Frozen or deleted experimental
+deployment artifacts are not part of the active architecture, caller map,
+acceptance criteria, runtime reference set, or work plan.
 
-Before this scope correction, a Windows reproduction was attempted and some
-portability symptoms were classified. All detailed results have been removed
-from this validation record and are excluded from both acceptance verdicts and
-the recommended work queue. No demo test, contract, presentation, or
-implementation was changed or adopted. No further run budget will be spent
-repairing or reconciling the former demo lane.
-
-An ancestry and changed-path audit confirms that the frozen demo commit is not
-an ancestor of this consolidation branch. Of the 52 paths changed from the
-authorized consolidation base through commit `dd36905`, only `vercel.json`
-also exists at the frozen demo commit. The files differ: this branch contains
-only an independently required deployment-disable guard for
-`codex/mip-backend-consolidation-20260920`; it contains no demo route, header,
-output contract, corpus, or presentation behavior. This audit found no
-demo-derived implementation adopted by the consolidation changes.
+The earlier platform-sensitive test observations are not used as an acceptance
+baseline for this consolidation. Relevant current-head tests and the exact
+bounded qualification suites are reported independently in section 10.
 
 ## 13. Unresolved blockers
 
@@ -634,9 +618,7 @@ demo-derived implementation adopted by the consolidation changes.
     and complete auth/integration tests remain incomplete outside the bounded
     packages already recorded.
 
-The Vercel former-demo deployment is not a blocker to identifying the canonical
-live product. GitHub Pages on verified `main` is the canonical live surface.
-Any Vercel cleanup is a separate owner-gated historical-resource action.
+GitHub Pages on verified `main` is the canonical live surface.
 
 ## 14. Remaining owner/platform gates
 

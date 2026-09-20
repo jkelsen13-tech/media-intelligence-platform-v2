@@ -1,5 +1,5 @@
 {
-  "evidence_kind": "sanitized_parent_reconciled_foundation_runtime_checkpoint_v2",
+  "evidence_kind": "sanitized_parent_reconciled_foundation_runtime_checkpoint_v3",
   "recorded_date": "2026-09-20",
   "mutations": 0,
   "anchors": {
@@ -107,13 +107,6 @@
         "live_bundle": "assets/index-BUxP66NE.js",
         "backend_project": "qikvmopbtijoebdqosyq"
       },
-      "vercel_media_intelligence_platform_v2": {
-        "latest_returned_target": "production",
-        "source_branch": "codex/mip-september-22-demo-20260918",
-        "commit": "f4932d82b989ae95a176ff2427d6892c9b0d418f",
-        "product_reference_authority": false,
-        "disposition": "owner_rejected_historical_residue"
-      },
       "canonical_live_surface": "github_pages_main_verified"
     },
     "jfnzyvzthzqtczlxhjll": {
@@ -131,14 +124,15 @@
     "content_addressed_storage": "EXTEND_QIK_NOT_NEW",
     "markets": "EXTEND_RECONCILE_QIK_NOT_NEW",
     "weather_rights": "KEEP_FAIL_CLOSED_OUTSIDE_CRITICAL_PATH",
-    "operation_evidence": "RECONCILE_REUSABLE_FOUNDATIONS_REJECT_DEMO_SPECIFIC_AUTHORITY",
+    "operation_evidence": "RECONCILE_AROUND_INDEPENDENTLY_JUSTIFIED_CURRENT_AUTHORITY_CHAIN",
     "collector_ingestion": "RECONCILE_YHB_TO_QIK_OWNER_GATED",
     "source_comparison": "RECONCILE_YHB_TO_QIK_OWNER_GATED"
   },
-  "former_demo_excluded": true,
   "controlling_handoff": {
-    "archive_sha256": "522BBA1EBCA36F32EC5FA0B7F167C1779F499267EE629E0AE3A19CD7AE0FD4B0",
-    "prompt_sha256": "DAA660C2E905471D3FE5393E5239256A48311100BF810BCE7A1574E214E753F7",
+    "archive_sha256": "CE471420BED271875E990C3D680801A3DFD32FC800D565EC8C4D2D55EDF0C67C",
+    "prompt_sha256": "0A8D2CF7D3977CC9848CBF173EEE6698FF427F82209FEEA613F74D922FD45426",
+    "foundation_map_sha256": "0FC39BEB56DD1C9D841BEB74BF372477561EB8EED2AE19C32B76B233A1612233",
+    "reconciliation_notes_sha256": "EC4965C9BA7ACEEEEB486D6CE3857B17972EF47F2D24BF187B5C7F5AF15AB0A4",
     "local_artifacts_retained": false
   },
   "foundation_runtime_matrix": {

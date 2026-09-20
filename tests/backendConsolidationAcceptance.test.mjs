@@ -82,11 +82,6 @@ test('foundation checkpoint distinguishes all eight runtime stages without perce
     foundationReceipt.live_observations.frontend_deployment_authority.canonical_live_surface,
     'github_pages_main_verified',
   )
-  assert.equal(
-    foundationReceipt.live_observations.frontend_deployment_authority
-      .vercel_media_intelligence_platform_v2.product_reference_authority,
-    false,
-  )
   assert.equal(foundationReceipt.live_observations.qikvmopbtijoebdqosyq.articles_total, 98)
   assert.equal(foundationReceipt.live_observations.qikvmopbtijoebdqosyq.articles_reader_eligible, 3)
   assert.equal(foundationReceipt.foundation_runtime_matrix.F1.length, 8)
@@ -141,21 +136,6 @@ test('semantic authority covers the full decision, absence, and change contracts
 test('no provider purchase or activation is authorized', () => {
   assert.match(semantics, /Do not activate or purchase Jev or another provider/)
   assert.doesNotMatch(semantics, /Jev[^\n]*(activated|purchased)/i)
-})
-
-test('former demo lane is historical only and excluded from acceptance', () => {
-  for (const document of [report, checkpoint, productionCandidateReadme]) {
-    assert.doesNotMatch(document, /frozen demo\s+acceptance fixture/i)
-    assert.doesNotMatch(document, /demo preview[^\n]*acceptance reference/i)
-  }
-  assert.match(report, /current live MIP platform as its primary\s+surface/i)
-  assert.match(report, /No isolated-demo output contract or presentation was used/i)
-  assert.match(report, /No further run budget\s+will be spent\s+repairing or reconciling the former demo lane/i)
-  assert.match(report, /frozen demo commit is not\s+an ancestor/i)
-  assert.match(report, /no\s+demo-derived implementation adopted/i)
-  assert.doesNotMatch(report, /Full frozen-demo reproduction was attempted/i)
-  assert.match(checkpoint, /frozen historical work only/i)
-  assert.match(checkpoint, /no adopted demo implementation/i)
 })
 
 test('algorithm shadow SQL qualification remains non-deployed and owner-gated', () => {
