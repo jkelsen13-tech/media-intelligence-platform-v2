@@ -17,8 +17,8 @@ DB="residual_acl_"+uuid.uuid4().hex[:10]
 TARGET="public.mip_retract_arc_membership_projection(uuid)"
 TRIGGER="public.mip_arc_membership_projection_state_change()"
 EXPECTED={
- TARGET:"232c921ca5c157da976cd25b70f59fa0fa6364a0fe437092d5c4a55ba87d3023",
- TRIGGER:"ddeb2f97ad70b568c66770782f9fc7a724c7feebb0c9d810e409ab52ff9d0569",
+ "mip_retract_arc_membership_projection(uuid)":"232c921ca5c157da976cd25b70f59fa0fa6364a0fe437092d5c4a55ba87d3023",
+ "mip_arc_membership_projection_state_change()":"ddeb2f97ad70b568c66770782f9fc7a724c7feebb0c9d810e409ab52ff9d0569",
 }
 
 def run(db,sql,ok=True):
