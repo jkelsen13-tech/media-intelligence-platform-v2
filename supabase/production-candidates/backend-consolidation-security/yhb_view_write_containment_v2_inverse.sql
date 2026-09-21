@@ -32,7 +32,7 @@ BEGIN
       OR EXISTS (SELECT 1 FROM pg_rewrite WHERE ev_class=target AND rulename <> '_RETURN')
     THEN RAISE EXCEPTION 'Unexpected view write rule/trigger: %', item.name; END IF;
     -- Exact normalized ACL: four explicit roles, postgres grantor, no PUBLIC/options.
-    IF (SELECT count(*) FROM pg_class c CROSS JOIN LATERAL aclexplode(c.relacl) a WHERE c.oid=target) <> CASE WHEN item.name='graph_coverage_public' THEN 32 ELSE 26 END
+    IF (SELECT count(*) FROM pg_class c CROSS JOIN LATERAL aclexplode(c.relacl) a WHERE c.oid=target) <> (CASE WHEN item.name='graph_coverage_public' THEN 32 ELSE 26 END)
       OR EXISTS (SELECT 1 FROM pg_class c CROSS JOIN LATERAL aclexplode(c.relacl) a
         WHERE c.oid=target AND (a.grantee NOT IN ('postgres'::regrole,'anon'::regrole,
           'authenticated'::regrole,'service_role'::regrole) OR a.grantor <> 'postgres'::regrole

@@ -35,3 +35,13 @@ information-disclosure defect requires its own minimal candidate and owner gate.
 The embedded original rollback would add PUBLIC access absent from the recorded
 pre-state. It must not be used. Since no qik change is proposed, no restoration
 is needed; any future inverse must derive from that action's immediate ACLs.
+
+Native source inspection confirms both are STABLE SQL SECURITY DEFINER functions
+with fixed `search_path=public, pg_catalog`, fully qualified reads of
+`public.arc_membership_candidates`, UUID equality, and `state='approved'`.
+The event predicate additionally rejects null candidate IDs. They return only
+approval-existence booleans, execute no dynamic SQL or mutators, and expose no
+review payload. This is global public-approval metadata, not a per-user private
+lookup contract; unrelated pending, rejected, nonexistent and wrong-ID inputs
+must remain false. A future product shift to private approval state requires a
+separate rights/interface review.
