@@ -1,0 +1,37 @@
+{
+  "format_version": 1,
+  "status": "THREE-VIEW WRITE CONTAINMENT APPLIED AND VERIFIED",
+  "reviewed_at_utc": "2026-09-21T02:37:52Z",
+  "review_effort": "HIGH",
+  "target_project": "yhbwnrtlqbjtcrrlpbge",
+  "candidate": {
+    "git_blob": "f1aab658f95196c96c3c44489a9075d0cf382320",
+    "sha256": "1915e3ae4b806d37610ef561a9dc35011b415a08f1475ca0c56fdab191f44b81",
+    "byte_length": 4287
+  },
+  "evidence": {
+    "preflight_commit": "d650839ee64c380557138b995d3d40bc334e55db",
+    "applied_receipt_commit": "ac54b14c91cccd2f779b8bc241717feee2c73b63",
+    "exact_delta": "Each target lost only anon/authenticated INSERT, UPDATE, DELETE; no additions.",
+    "unchanged": "graph_coverage_public plus all four view definitions, owners, options, column ACL absence, rules and triggers",
+    "permissions": "anon/authenticated DML and column writes denied; SELECT retained; service_role SELECT/INSERT/UPDATE/DELETE retained separately",
+    "intended_reads": "bounded role-level reads returned existing rows for all three views",
+    "worker_observation": "cron 2/3 succeeded at 02:35; native ingestion run started 02:35:08Z and completed 02:35:22Z"
+  },
+  "recovery": {
+    "immediate_before_state_preserved": true,
+    "inverse_sha256": "05493cf162c9d413745da9d58e27552f18303df78fd4a8f33988f67469c6d55f",
+    "automatic_execution_authorized": false
+  },
+  "limitations": [
+    "Classification is limited to direct browser DML routes through the three target views.",
+    "Read exposure, other view privileges, callable privileged functions and vulnerable Edge endpoints remain outside this result.",
+    "Role-level database reads are not a new HTTP/JWT/session or full frontend verification.",
+    "No comparison-queue completion was observed; comparison and full-pipeline operation remain unverified.",
+    "Active collection prevents an unchanged-entire-database claim.",
+    "Residual advisors remain material: four security-definer views, 27 browser-executable definer functions per browser role, plus policy/search-path/extension findings.",
+    "External-caller absence is bounded by inspected evidence."
+  ],
+  "broader_verdicts_unchanged": true,
+  "local_durable_files_created": false
+}
