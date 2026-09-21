@@ -82,3 +82,84 @@ jobs:
           MIP_DISPOSABLE_POSTGRES: comparison-qualification
           MIP_PERMISSION_HEAD: ${{ github.event.pull_request.head.sha }}
         run: node verifier/integrated/realPermissionBatch.mjs
+
+  native-ingestion-recovery:
+    name: Native synthetic ingestion and isolated restore
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Record exact source and prepare credential-free utility
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD HEAD^{tree}
+          ! grep -q extraheader .git/config
+          docker pull postgres:17.6
+          docker build -f verifier/integrated/native-path.Dockerfile -t mip-native-utility verifier/integrated
+          docker image inspect postgres:17.6 mip-native-utility --format 'RUNTIME {{.Id}} {{json .RepoDigests}}'
+      - name: Execute existing native extraction and persistence without network
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker volume create mip-native-socket
+          docker run -d --name mip-native-pg --network none --memory 512m --pids-limit 128 \
+            --security-opt no-new-privileges:true \
+            --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=256m \
+            --mount type=volume,source=mip-native-socket,target=/var/run/postgresql \
+            -e POSTGRES_PASSWORD=mip-native-disposable-only postgres:17.6
+          for attempt in $(seq 1 60); do
+            if docker exec mip-native-pg pg_isready -U postgres; then break; fi
+            test "$attempt" -lt 60
+            sleep 1
+          done
+          test "$(docker inspect --format '{{.HostConfig.NetworkMode}}' mip-native-pg)" = none
+          test -z "$(docker port mip-native-pg)"
+          docker exec mip-native-pg createdb -U postgres mip_native_path
+          docker exec mip-native-pg psql -U postgres -d mip_native_path -Atc \
+            "select current_database(),current_user,current_setting('server_version'),inet_server_addr();"
+          docker run --rm --name mip-native-exercise --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges:true --user 65534:65534 --memory 256m --pids-limit 32 \
+            --tmpfs /tmp:rw,noexec,nosuid,size=32m \
+            --mount type=volume,source=mip-native-socket,target=/var/run/postgresql,readonly \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/verifier/integrated/nativePipeline.py,target=/workspace/verifier/integrated/nativePipeline.py,readonly" \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/verifier/ingestion_pipeline.py,target=/workspace/verifier/ingestion_pipeline.py,readonly" \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/supabase/migrations/20260905082406_evidence_pipeline_reliability.sql,target=/workspace/supabase/migrations/20260905082406_evidence_pipeline_reliability.sql,readonly" \
+            -e MIP_NATIVE_SYNTHETIC=network-none-socket-only \
+            mip-native-utility /workspace/verifier/integrated/nativePipeline.py exercise mip_native_path
+      - name: Restore independent artifact and reconcile current authority before readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec mip-native-pg pg_dump -U postgres -d mip_native_path --format=plain \
+            > "$RUNNER_TEMP/mip-native-path.sql"
+          test -s "$RUNNER_TEMP/mip-native-path.sql"
+          sha256sum "$RUNNER_TEMP/mip-native-path.sql" > "$RUNNER_TEMP/mip-native-path.sha256"
+          sha256sum -c "$RUNNER_TEMP/mip-native-path.sha256"
+          sha256sum "$RUNNER_TEMP/mip-native-path.sql"
+          docker exec mip-native-pg createdb -U postgres mip_native_path_restored
+          docker exec -i mip-native-pg psql -X -q -U postgres -d mip_native_path_restored -v ON_ERROR_STOP=1 \
+            < "$RUNNER_TEMP/mip-native-path.sql"
+          # Reconcile synthetic current revocation before any restored consumer.
+          docker exec mip-native-pg psql -X -q -U postgres -d mip_native_path_restored -v ON_ERROR_STOP=1 -c \
+            "REVOKE EXECUTE ON FUNCTION public.mip_pipeline_v1(text,jsonb) FROM service_role; REVOKE ALL ON SCHEMA evidence_pipeline FROM service_role;"
+          docker run --rm --name mip-native-readback --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges:true --user 65534:65534 --memory 256m --pids-limit 32 \
+            --tmpfs /tmp:rw,noexec,nosuid,size=32m \
+            --mount type=volume,source=mip-native-socket,target=/var/run/postgresql,readonly \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/verifier/integrated/nativePipeline.py,target=/workspace/verifier/integrated/nativePipeline.py,readonly" \
+            -e MIP_NATIVE_SYNTHETIC=network-none-socket-only \
+            mip-native-utility /workspace/verifier/integrated/nativePipeline.py readback mip_native_path_restored
+          docker inspect mip-native-pg --format 'BOUNDARY network={{.HostConfig.NetworkMode}} ports={{json .HostConfig.PortBindings}} memory={{.HostConfig.Memory}} pids={{.HostConfig.PidsLimit}}'
+      - name: Remove synthetic runtime and ephemeral restore input
+        if: always()
+        shell: bash
+        run: |
+          docker rm -f -v mip-native-exercise mip-native-readback mip-native-pg >/dev/null 2>&1 || true
+          docker volume rm mip-native-socket >/dev/null 2>&1 || true
+          rm -f "$RUNNER_TEMP/mip-native-path.sql" "$RUNNER_TEMP/mip-native-path.sha256"
+          test -z "$(docker ps -aq --filter name=^/mip-native-pg$)"
+          ! docker volume inspect mip-native-socket >/dev/null 2>&1
