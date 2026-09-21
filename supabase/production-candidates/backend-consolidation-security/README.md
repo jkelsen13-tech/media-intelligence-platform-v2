@@ -5,6 +5,8 @@ Status: **held originals; isolated successors require fresh review and explicit 
 Application/deployment status: **not applied, not deployed**. All SQL candidates
 remain unapplied, and both prepared Edge containment handlers remain undeployed.
 
+All live actions remain owner-gated.
+
 The earlier README and PR wording are historical evidence, not readiness authority.
 The diagnostic PostgreSQL tests deliberately reproduce two failures: qik's
 original predicate revoke breaks populated public reads, and yhb's SELECT-only
