@@ -12,11 +12,11 @@ M=Path("supabase/migrations")
 C=(R/"yhb_gdelt_function_containment_v1.sql").read_text()
 I=(R/"yhb_gdelt_function_containment_v1_inverse.sql").read_text()
 H={
-"mip_v2_gdelt_stage_batch(text,jsonb)":"a2002a66e606d9187bebb650213441efa6b67b54dc0c8a72d6f5456a227304ff",
-"mip_v2_gdelt_materialize_batch(text,integer)":"184c0b5f31638c886f67c58d755b13e0e23105a70909e66dc1b1920a001ae9e7",
-"mip_v2_gdelt_attach_batch(text,integer)":"44dd7112fca94db0586bff655b182f76c655ba3b7c22f6f878e3192d0174f9ac",
-"mip_v2_gdelt_originate_batch(text,integer)":"7506627e27e7b83e4bf3e32dc56f5d1a644c6342461f1212fb44d3e9108d2ede",
-"mip_v2_gdelt_close_staging(text)":"85b2bf4d3be95b4102ce2385d617cc1dd50586e07f158ec74f4480e6adfc2031"}
+"mip_v2_gdelt_stage_batch(text,jsonb)":"3ceb0f7899fa108c7f85d9a23dbf65a75fc6a36a94a8d62df13f76a036e3aa2f",
+"mip_v2_gdelt_materialize_batch(text,integer)":"919fd6ef12e92d6449c86376d8a6b40dc156070c69fb5c8a9ef4b3ad715ee386",
+"mip_v2_gdelt_attach_batch(text,integer)":"d3d19f08d752dac17cfbe824d15dbce2c5e0cdb9739a9487270da3a5d044a5ac",
+"mip_v2_gdelt_originate_batch(text,integer)":"8c70de67fd94f4cce0ba001948d9fb2bd794602b57c902284514cd68d309567a",
+"mip_v2_gdelt_close_staging(text)":"668b85824413609acd2ba8990805342981fd01a7940dde5551ceea18c3a80488"}
 D="gdelt_acl_"+uuid.uuid4().hex[:10]
 def run(db,sql,ok=True):
  p=subprocess.run(B+["-d",db],input=sql,text=True,capture_output=True,env=E)
@@ -34,7 +34,7 @@ def cat():
  return json.loads(val("""select jsonb_agg(jsonb_build_object(
  'sig',p.oid::regprocedure::text,'owner',r.rolname,'definer',p.prosecdef,
  'config',p.proconfig,'acl',p.proacl::text,
- 'sha',encode(digest(pg_get_functiondef(p.oid),'sha256'),'hex'),
+ 'sha',encode(digest(p.prosrc,'sha256'),'hex'),
  'anon',has_function_privilege('anon',p.oid,'execute'),
  'auth',has_function_privilege('authenticated',p.oid,'execute'),
  'service',has_function_privilege('service_role',p.oid,'execute'),
@@ -114,5 +114,5 @@ select mip_v2_gdelt_close_staging('mip-v2-gdelt-stage-20260903');''')
  assert val("""select coalesce(jsonb_object_agg(p.oid::regprocedure::text,coalesce(p.proacl::text,'<null>') order by p.oid::regprocedure::text),'{}')::text from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname<>all(array['mip_v2_gdelt_stage_batch','mip_v2_gdelt_materialize_batch','mip_v2_gdelt_attach_batch','mip_v2_gdelt_originate_batch','mip_v2_gdelt_close_staging']);""")==other
  run(D,I); r=cat(); native(r); assert {x["sig"]:x["acl"] for x in r}==bacl
  run(D,C); r=cat(); native(r); assert all(not x["anon"] and not x["auth"] and x["service"] and not x["public"] for x in r)
- print(json.dumps({"status":"PASS","hashes":H,"browser_write_reproduced":["anon","authenticated"],"preserved":["postgres","service_role","PUBLIC absence","definitions","memberships","non-target ACLs"],"state_chain":["stage","close","materialize","attach","originate","completed"],"inverse":"exact direct ACL restoration and candidate replay","limitation":"synthetic empty-selection chain; pgvector helper and membership/queue triggers not executed"},sort_keys=True))
+ print(json.dumps({"status":"PASS","native_body_hashes":H,"browser_write_reproduced":["anon","authenticated"],"preserved":["postgres","service_role","PUBLIC absence","definitions","memberships","non-target ACLs"],"state_chain":["stage","close","materialize","attach","originate","completed"],"inverse":"exact direct ACL restoration and candidate replay","limitation":"synthetic empty-selection chain; pgvector helper and membership/queue triggers not executed"},sort_keys=True))
 finally: run("postgres",f'drop database if exists "{D}" with (force);',False)
