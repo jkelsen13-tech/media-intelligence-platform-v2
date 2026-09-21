@@ -7,6 +7,7 @@ on:
       - 'verifier/backendSecurityContainmentPostgres.py'
       - 'verifier/backendSecuritySuccessorPostgres.py'
       - 'verifier/backendSecurityGdeltPostgres.py'
+      - 'verifier/backendSecurityResidualPostgres.py'
       - '.github/workflows/backend-security-containment.yml'
   workflow_dispatch:
 
@@ -43,3 +44,7 @@ jobs:
         env:
           MIP_DISPOSABLE_POSTGRES: gdelt-function-qualification
         run: python3 -B verifier/backendSecurityGdeltPostgres.py
+      - name: Qualify native residual projection-retraction ACL successor
+        env:
+          MIP_DISPOSABLE_POSTGRES: residual-authority-qualification
+        run: python3 -B verifier/backendSecurityResidualPostgres.py

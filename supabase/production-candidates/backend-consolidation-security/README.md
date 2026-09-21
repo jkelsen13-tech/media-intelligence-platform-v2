@@ -1,6 +1,6 @@
 # Backend containment readiness — active record
 
-Status: **completed live units preserved; staged-GDELT ACL successor ready for separate owner authorization**.
+Status: **completed live units preserved; residual authorization findings remain partitioned**.
 
 This file records current state. Superseded candidates and failing reproductions
 remain preserved in Git history but are not readiness authority.
@@ -15,6 +15,7 @@ remain preserved in Git history but are not readiness authority.
   authorized, unchanged deny-all handler and were read back and verified with
   `verify_jwt=true`. Source-forward recovery remains the accepted standard;
   the vulnerable handlers must not be restored automatically.
+- The five-function yhb staged-GDELT EXECUTE containment was separately authorized, applied as migration `20260921162451_contain_yhb_gdelt_browser_execute_20260921`, and verified. Current direct EXECUTE is postgres/service_role only; anon, authenticated and PUBLIC are denied. Its earlier qualification evidence is historical.
 - Qik private predicates remain `KEEP_WITH_JUSTIFICATION`.
 
 These completed operations do not authorize any further live change.
@@ -28,10 +29,9 @@ These completed operations do not authorize any further live change.
   containment above superseded that portion.
 - The bundled historical rollback definitions are inaccurate and remain held.
 
-## Five-function staged-GDELT successor
+## Five-function staged-GDELT containment
 
-Live application status: **UNAPPLIED — READY_FOR_AUTHORIZATION** as one coupled
-ACL unit after parent reconciliation and fresh High security/recovery review.
+Live application status: **APPLIED AND VERIFIED** as one coupled ACL unit under separate owner authorization.
 
 Exact targets:
 
@@ -41,10 +41,9 @@ Exact targets:
 - `public.mip_v2_gdelt_originate_batch(text,integer)`
 - `public.mip_v2_gdelt_close_staging(text)`
 
-The successor revokes only the ten explicit EXECUTE entries for `anon` and
-`authenticated`. PUBLIC is already absent. The candidate leaves `postgres`,
-`service_role`, owners, function definitions, memberships, and every
-non-target privilege unchanged.
+The applied successor removed only the ten explicit EXECUTE entries for `anon` and
+`authenticated`. PUBLIC remains absent. It preserved `postgres`, `service_role`,
+owners, function definitions, memberships, and every non-target privilege.
 
 - Candidate blob: `7690dfb43bf0ef67eb354935724bcfbd3b19a4b2`
 - Candidate SHA-256: `b9eee98c2cc00957a77b1f730fa482fc6051effe092bac25b0dbcd8f9ea997ac`
@@ -95,13 +94,30 @@ membership/comparison trigger graph. Those omissions prevent worker-semantic,
 pipeline-validation and operational claims. They do not expand authority or
 change this ACL-only candidate.
 
+## Residual projection-retraction candidate
+
+Live application status: **UNAPPLIED — ISOLATED QUALIFICATION PENDING**.
+
+The highest-risk independently understood residual function is
+`public.mip_retract_arc_membership_projection(uuid)`. It directly marks a
+projection run retracted and deletes associated edges, sources, arc events and
+nodes. It has no caller-authorization or candidate-state check. The located
+legitimate path is the postgres-owned state-change trigger; no supported
+browser caller was found.
+
+The successor candidate removes only explicit anon/authenticated EXECUTE and
+preserves postgres/service_role plus the internal trigger chain. The exact
+inverse reconstructs the freshly recorded direct ACL and is recovery evidence,
+not automatic regrant authorization. Native-definition qualification uses
+synthetic rows and records omitted dependencies.
+
 ## Recovery and live gate
 
 Recovery status: **VERIFIED_IN_ISOLATION** for the freshly recorded normalized
 ACL state. The inverse is evidence, not permission to restore browser access.
 
-Any live authorization must require a fresh check of project, signatures,
-definitions, ACLs, memberships and caller state; execute the unchanged candidate
+Historical staged-GDELT live authorization required a fresh check of project, signatures,
+definitions, ACLs, memberships and caller state and executed the unchanged candidate
 as the recorded grantor `postgres`; and verify browser denial plus preserved
 postgres/service-role authority without invoking live mutators. If an unexpected
 required caller fails, preserve containment and request the smallest secure

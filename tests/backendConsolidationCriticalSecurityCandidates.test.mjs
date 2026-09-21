@@ -14,6 +14,8 @@ const qik = read('qik_private_predicate_revoke.sql')
 const edge = read('edge_function_auth_gates.md')
 const gdelt = read('yhb_gdelt_function_containment_v1.sql')
 const gdeltInverse = read('yhb_gdelt_function_containment_v1_inverse.sql')
+const retract = read('yhb_arc_projection_retract_containment_v1.sql')
+const retractInverse = read('yhb_arc_projection_retract_containment_v1_inverse.sql')
 
 const signatures = [
   'articles_source_status_propagate()',
@@ -81,16 +83,18 @@ test('qik cleanup is bounded to the two private predicates', () => {
   assert.match(qik, /TO service_role/)
 })
 
-test('active record separates completed containment from the unapplied owner-gated GDELT unit', () => {
+test('active record preserves applied GDELT state and separates the residual owner-gated unit', () => {
   assert.match(readme, /completed live units preserved/i)
-  assert.match(readme, /Live application status:[\s\S]+UNAPPLIED[\s\S]+READY_FOR_AUTHORIZATION/i)
-  assert.match(readme, /separate owner authorization/i)
+  assert.match(readme, /staged-GDELT EXECUTE containment[\s\S]+separately authorized[\s\S]+applied/i)
+  assert.match(readme, /Residual projection-retraction candidate[\s\S]+UNAPPLIED[\s\S]+QUALIFICATION PENDING/i)
+  assert.match(retract, /REVOKE EXECUTE[\s\S]+mip_retract_arc_membership_projection\(uuid\)[\s\S]+FROM anon, authenticated/i)
+  assert.match(retractInverse, /GRANT EXECUTE[\s\S]+mip_retract_arc_membership_projection\(uuid\)[\s\S]+TO anon, authenticated/i)
   assert.match(edge, /Immediate containment/)
   assert.match(edge, /BACKFILL_LEGACY_RUN_KEY/)
   assert.match(edge, /POLICY_INGEST_RUN_KEY/)
   assert.match(edge, /Only after this point: read SUPABASE_SERVICE_ROLE_KEY/i)
   assert.match(edge, /reset=1[\s\S]+separately disabled/i)
-  for (const sql of [yhb, rollback, qik, gdelt, gdeltInverse]) {
+  for (const sql of [yhb, rollback, qik, gdelt, gdeltInverse, retract, retractInverse]) {
     assert.doesNotMatch(sql, /\b(?:INSERT\s+INTO|UPDATE\s+[^\n;]+\s+SET|DELETE\s+FROM|TRUNCATE|DROP\s+(?:TABLE|SCHEMA)|ALTER\s+TABLE)\b/i)
   }
 })
