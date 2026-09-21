@@ -32,6 +32,8 @@ def qualify_yhb_successor(database):
         run(database, f"CREATE VIEW public.{name} WITH (security_barrier=true,security_invoker=false) AS " + view["definition"])
         actual = run(database, f"SELECT encode(sha256(convert_to(pg_get_viewdef('public.{name}'::regclass,true),'UTF8')),'hex')")
         assert actual == view["sha256"], (name, actual)
+        catalog_hash = run(database, f"SET search_path=pg_catalog; SELECT encode(sha256(convert_to(pg_get_viewdef(\'public.{name}\'::regclass,true),\'UTF8\')),\'hex\')")
+        assert catalog_hash == view["pg_catalog_sha256"], (name,catalog_hash)
         run(database, f"GRANT ALL PRIVILEGES ON public.{name} TO anon,authenticated,service_role")
     run(database, """
 CREATE VIEW public.unrelated_probe AS SELECT 17 AS value;
@@ -98,3 +100,65 @@ INSERT INTO public.event_articles(event_id,article_id) VALUES
     print("MIP_YHB_SUCCESSOR_READS_SERVICE_ROLE_UNCHANGED=pass",flush=True)
     print("MIP_YHB_SUCCESSOR_EXACT_NORMALIZED_ACL_INVERSE=pass",flush=True)
     print("MIP_YHB_NATIVE_CONSTRAINT_TRIGGER_WORKER_COMPATIBILITY=not_reproduced",flush=True)
+
+def qualify_qik_native(database):
+    run(database,"CREATE SCHEMA mip_private; CREATE TABLE public.arc_membership_candidates(id uuid,arc_id uuid,state text); ALTER TABLE public.arc_membership_candidates ENABLE ROW LEVEL SECURITY")
+    functions=json.loads((ROOT/"qualification/qik_native_predicates.json").read_text())
+    for item in functions:
+        run(database,item["definition"])
+        signature="mip_private."+item["proname"]+"(uuid)"
+        actual=run(database,f"SELECT encode(sha256(convert_to(pg_get_functiondef('{signature}'::regprocedure),'UTF8')),'hex')")
+        assert actual==item["sha256"],(signature,actual)
+        run(database,f"REVOKE ALL ON FUNCTION {signature} FROM PUBLIC; GRANT EXECUTE ON FUNCTION {signature} TO anon,authenticated,service_role")
+    run(database,"GRANT USAGE ON SCHEMA mip_private TO anon,authenticated,service_role; GRANT ALL ON public.arc_membership_candidates TO service_role")
+    run(database,"""
+CREATE TABLE public.arc_events(id integer,arc_membership_candidate_id uuid);
+ALTER TABLE public.arc_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY arc_events_public_algorithmic_read ON public.arc_events FOR SELECT TO anon,authenticated
+ USING ((arc_membership_candidate_id IS NULL) OR mip_private.arc_event_candidate_is_approved(arc_membership_candidate_id));
+GRANT SELECT ON public.arc_events TO anon,authenticated,service_role;
+CREATE TABLE public.arc_milestones(id integer,arc_id uuid,title text,status text,notes text,updated_at timestamptz);
+ALTER TABLE public.arc_milestones ENABLE ROW LEVEL SECURITY;
+CREATE POLICY arc_milestones_public_algorithmic_read ON public.arc_milestones FOR SELECT TO authenticated
+ USING (mip_private.arc_has_approved_membership(arc_id));
+GRANT SELECT ON public.arc_milestones TO authenticated,service_role;
+CREATE VIEW public.arc_milestones_public AS
+ SELECT id,arc_id,title,status,notes,updated_at FROM public.arc_milestones m
+ WHERE mip_private.arc_has_approved_membership(arc_id);
+GRANT SELECT ON public.arc_milestones_public TO anon,authenticated,service_role;
+""")
+    ids=[f"00000000-0000-0000-0000-{n:012d}" for n in range(1,9)]
+    def check(role,function,arg,expected):
+        literal="NULL" if arg is None else "'"+arg+"'::uuid"
+        result=run(database,f"SET ROLE {role}; SELECT mip_private.{function}({literal}); RESET ROLE")
+        assert result==expected,(role,function,arg,result,expected)
+    for role in ("anon","authenticated","service_role"):
+        for name in ("arc_event_candidate_is_approved","arc_has_approved_membership"):
+            for ident in (None,ids[0],ids[7]): check(role,name,ident,"f")
+        assert run(database,f"SET ROLE {role}; SELECT count(*) FROM public.arc_events; RESET ROLE")=="0"
+    run(database,f"""
+INSERT INTO public.arc_membership_candidates VALUES
+ ('{ids[0]}','{ids[4]}','approved'),('{ids[1]}','{ids[5]}','pending'),
+ ('{ids[2]}','{ids[5]}','rejected'),('{ids[3]}','{ids[5]}','invalidated');
+INSERT INTO public.arc_events VALUES (0,NULL),(1,'{ids[0]}'),(2,'{ids[1]}'),(3,'{ids[2]}'),(4,'{ids[3]}'),(5,'{ids[7]}');
+INSERT INTO public.arc_milestones(id,arc_id,title) VALUES (1,'{ids[4]}','synthetic approved'),(2,'{ids[5]}','synthetic pending'),(3,'{ids[7]}','synthetic unknown');
+""")
+    for role in ("anon","authenticated","service_role"):
+        for ident in (None,ids[1],ids[2],ids[3],ids[4],ids[7]):
+            check(role,"arc_event_candidate_is_approved",ident,"f")
+        check(role,"arc_event_candidate_is_approved",ids[0],"t")
+        for ident in (None,ids[0],ids[5],ids[7]): check(role,"arc_has_approved_membership",ident,"f")
+        check(role,"arc_has_approved_membership",ids[4],"t")
+    for role in ("anon","authenticated"):
+        expect_denied(database,f"SET ROLE {role}; SELECT * FROM public.arc_membership_candidates","private candidate rows")
+        assert run(database,f"SET ROLE {role}; SELECT string_agg(id::text,',' ORDER BY id) FROM public.arc_events; RESET ROLE")=="0,1"
+        assert run(database,f"SET ROLE {role}; SELECT string_agg(id::text,',' ORDER BY id) FROM public.arc_milestones_public; RESET ROLE")=="1"
+    assert run(database,"SET ROLE authenticated; SELECT string_agg(id::text,',' ORDER BY id) FROM public.arc_milestones; RESET ROLE")=="1"
+    expect_denied(database,"SET ROLE anon; SELECT * FROM public.arc_milestones","ungranted anon base-table read")
+    assert run(database,"SET ROLE service_role; SELECT count(*) FROM public.arc_membership_candidates; RESET ROLE")=="4"
+    assert run(database,"SET ROLE service_role; SELECT count(*) FROM public.arc_events; RESET ROLE")=="6"
+    print("MIP_QIK_NATIVE_DEFINITION_HASHES=pass",flush=True)
+    print("MIP_QIK_NATIVE_EMPTY_APPROVED_UNAPPROVED_WRONG_ID_NULL=pass",flush=True)
+    print("MIP_QIK_NATIVE_PUBLIC_READ_DEPENDENCIES_PRIVATE_ROWS_DENIED=pass",flush=True)
+    print("MIP_QIK_NATIVE_NULL_EVENT_POLICY_BYPASS=preserved_existing_contract",flush=True)
+    print("MIP_QIK_NATIVE_FULL_PRODUCTION_POLICY_SET=not_reproduced",flush=True)

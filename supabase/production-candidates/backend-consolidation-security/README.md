@@ -48,3 +48,18 @@ The authoritative readiness receipt must name the tested commit and CI result,
 fresh security review, custody evidence, caller limitations and exact unit scope.
 Security containment does not establish authority consolidation, isolated
 pipeline validation or operation of the authorized live pipeline.
+
+## Custody limitation
+
+The private recovery repository preserves and independently readback-verifies
+exact UTF-8 source file bodies on its dedicated archival branch. The inspection
+API did not expose the original package container bytes. Provider package
+SHA-256 values are recorded, not recomputed from an original container.
+Exact original-package custody therefore remains blocked unless the owner accepts
+source-file custody or an original-package export is obtained. Source custody
+alone must not be reported as either Edge endpoint being ready.
+
+The successor uses pg_catalog-only search_path. Native view fingerprints in its
+preflight use that rendering; the fixture preserves both the original
+public-visible and fully qualified pg_catalog-rendered digests. This is an
+explicit deparse-context difference, not changed native view logic.

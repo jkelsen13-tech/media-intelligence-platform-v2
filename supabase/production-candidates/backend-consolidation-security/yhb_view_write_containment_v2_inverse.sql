@@ -5,16 +5,16 @@
 BEGIN;
 SET LOCAL lock_timeout='5s';
 SET LOCAL statement_timeout='15s';
-SET LOCAL search_path=public,pg_catalog;
+SET LOCAL search_path=pg_catalog;
 DO $preflight$
 DECLARE item record; target oid; actual_hash text; expected_count integer; role_name text;
 BEGIN
   IF current_user <> 'postgres' THEN RAISE EXCEPTION 'Expected recorded grantor postgres'; END IF;
   FOR item IN SELECT * FROM (VALUES
-      ('authors_public','85a0b484707e6381578d1320733138ac354c8e4f6666107f535d9c0286d6b707'),
-      ('comparison_public','8b00f4d68b6d99f5f9815189cbbd744a78febac403fa4c5208a341325f5191ee'),
-      ('graph_coverage_public','d44945be5f15bb88a06a0480d61c3f2f91b2c951ab30bac4c70d458ee669c348'),
-      ('news_detail_public','3d6087c8d6680cbaa387397ec19e8ca1f14dfa0f585378a4e295db2c31a87ed4')
+      ('authors_public','85b594b03bd556c44c0efa7c27db2f39baf1b298800a1519c2a9e3329301dbc4'),
+      ('comparison_public','4621f3b62f3d06669a230720b6a0d1cde13afeaff1f606cea589eb589ef86208'),
+      ('graph_coverage_public','3022b89c6cb0f50ee4028b16521677b1605d3f511202794e8eb1d189dd19278e'),
+      ('news_detail_public','3ec939e813ba2032314d795bcaac410544d6cb16c925dd95010c6ce1ba0d2f00')
     ) AS expected(name,sha256)
   LOOP
     target := to_regclass('public.' || item.name);

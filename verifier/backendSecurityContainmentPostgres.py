@@ -218,9 +218,9 @@ WHERE n.nspname='mip_private';
     print("MIP_QIK_POPULATED_PUBLIC_READ_REGRESSION=confirmed", flush=True)
 
 def main():
-    from backendSecuritySuccessorPostgres import qualify_yhb_successor
+    from backendSecuritySuccessorPostgres import qualify_yhb_successor, qualify_qik_native
     ensure_roles()
-    for label, qualifier in (("yhb", qualify_yhb), ("qik", qualify_qik), ("yhb_successor", qualify_yhb_successor)):
+    for label, qualifier in (("yhb", qualify_yhb), ("qik", qualify_qik), ("yhb_successor", qualify_yhb_successor), ("qik_native", qualify_qik_native)):
         database = f"mip_containment_{label}_{uuid.uuid4().hex}"
         run("postgres", f"CREATE DATABASE {database}")
         try:

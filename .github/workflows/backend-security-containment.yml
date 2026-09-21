@@ -5,6 +5,7 @@ on:
     paths:
       - 'supabase/production-candidates/backend-consolidation-security/**'
       - 'verifier/backendSecurityContainmentPostgres.py'
+      - 'verifier/backendSecuritySuccessorPostgres.py'
       - '.github/workflows/backend-security-containment.yml'
   workflow_dispatch:
 
@@ -29,6 +30,10 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Record tested head
+        run: git rev-parse HEAD
       - name: Qualify exact candidate ACL effects
         env:
           MIP_DISPOSABLE_POSTGRES: comparison-qualification

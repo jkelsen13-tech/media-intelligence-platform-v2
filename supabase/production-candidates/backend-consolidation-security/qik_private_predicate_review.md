@@ -45,3 +45,15 @@ review payload. This is global public-approval metadata, not a per-user private
 lookup contract; unrelated pending, rejected, nonexistent and wrong-ID inputs
 must remain false. A future product shift to private approval state requires a
 separate rights/interface review.
+
+The successor qualification harness now additionally executes the exact native
+predicate definitions, verifies both SHA-256 values, and uses observed policy
+expressions and the public milestones view projection against skeletal tables.
+It tests empty, NULL, nonexistent, approved, pending, rejected and invalidated
+inputs, candidate/arc identifier separation, both browser roles, denied direct
+candidate-row reads and retained service_role access. The existing NULL candidate
+policy OR branch remains visible independently of the predicate; this is an
+existing policy contract requiring its own review if challenged. Synthetic rows
+and a bounded policy subset are used; the complete native policy set, constraints
+and full live behavior are not claimed. Consult the commit's CI result before
+calling this matrix passed. The original failing revoke test remains separate.
