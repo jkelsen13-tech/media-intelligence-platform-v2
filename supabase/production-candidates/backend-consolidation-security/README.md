@@ -96,7 +96,7 @@ change this ACL-only candidate.
 
 ## Residual projection-retraction candidate
 
-Live application status: **UNAPPLIED — ISOLATED QUALIFICATION PENDING**.
+Live application status: **UNAPPLIED — READY_FOR_AUTHORIZATION**.
 
 The highest-risk independently understood residual function is
 `public.mip_retract_arc_membership_projection(uuid)`. It directly marks a
@@ -108,8 +108,24 @@ browser caller was found.
 The successor candidate removes only explicit anon/authenticated EXECUTE and
 preserves postgres/service_role plus the internal trigger chain. The exact
 inverse reconstructs the freshly recorded direct ACL and is recovery evidence,
-not automatic regrant authorization. Native-definition qualification uses
-synthetic rows and records omitted dependencies.
+not automatic regrant authorization.
+
+- Candidate blob: `cdc7e531c7490c37417780027dba7bdcd1f315a6`
+- Candidate SHA-256: `a1b5f940fd7a45666c7aac544b1c275c1b6b28d33e0f58db598cf2d1e86abf98`
+- Candidate length: 367 UTF-8 bytes
+- Inverse blob: `df1d06072e7ac32022f657feb987743bcdcb00a4`
+- Inverse SHA-256: `33e227a5fd50f5035820b07f39229d84fb8e4fee36b221c9d61d2e269cec8678`
+- Inverse length: 326 UTF-8 bytes
+- Exact-head qualification: run `35631547770`, job `106438686545`, PASS.
+- Fresh High security/recovery review: **READY_FOR_AUTHORIZATION**.
+
+The native-body fixture matches the live target and state-change-trigger
+definition hashes and current ACL shape. It proves the original browser
+destructive path, post-candidate browser denial, preserved service-role and
+internal trigger behavior, unchanged definitions/non-target ACL, transaction
+rollback, exact inverse restoration and candidate replay. Rows are synthetic;
+the milestone evidence loop, complete production constraint/trigger graph,
+Edge callers and external operator integrations were not executed.
 
 ## Recovery and live gate
 
