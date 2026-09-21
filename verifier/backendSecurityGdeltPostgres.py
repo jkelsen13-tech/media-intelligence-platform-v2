@@ -33,7 +33,11 @@ def block(src,name):
 def cat():
  return json.loads(val("""select jsonb_agg(jsonb_build_object(
  'sig',p.oid::regprocedure::text,'owner',r.rolname,'definer',p.prosecdef,
- 'config',p.proconfig,'acl',p.proacl::text,
+ 'config',p.proconfig,'acl',(select jsonb_agg(
+   jsonb_build_array(coalesce(g.rolname,'PUBLIC'),h.rolname,a.privilege_type,a.is_grantable)
+   order by coalesce(g.rolname,'PUBLIC'),h.rolname,a.privilege_type)
+   from aclexplode(p.proacl) a left join pg_roles g on g.oid=a.grantee
+   join pg_roles h on h.oid=a.grantor),
  'sha',encode(digest(p.prosrc,'sha256'),'hex'),
  'anon',has_function_privilege('anon',p.oid,'execute'),
  'auth',has_function_privilege('authenticated',p.oid,'execute'),
