@@ -1,88 +1,113 @@
 # Backend containment readiness — active record
 
-Status: **held originals; isolated successors require fresh review and explicit live authorization**.
+Status: **completed live units preserved; staged-GDELT ACL successor ready for separate owner authorization**.
 
-Application/deployment status: **not applied, not deployed**. All SQL candidates
-remain unapplied, and both prepared Edge containment handlers remain undeployed.
+This file records current state. Superseded candidates and failing reproductions
+remain preserved in Git history but are not readiness authority.
 
-All live actions remain owner-gated.
+## Completed units — do not repeat or reopen
 
-The earlier README and PR wording are historical evidence, not readiness authority.
-The diagnostic PostgreSQL tests deliberately reproduce two failures: qik's
-original predicate revoke breaks populated public reads, and yhb's SELECT-only
-quarantine leaves browser writes through updatable views. Successful diagnostic
-execution does not approve either candidate for production.
+- Yhb three-view browser-write containment was separately authorized, applied,
+  and verified. It removed anon/authenticated INSERT, UPDATE and DELETE from
+  `authors_public`, `comparison_public` and `news_detail_public` while
+  preserving intended reads and service-role access.
+- Yhb `backfill-legacy` v10 and nie `policy-ingest` v17 use the separately
+  authorized, unchanged deny-all handler and were read back and verified with
+  `verify_jwt=true`. Source-forward recovery remains the accepted standard;
+  the vulnerable handlers must not be restored automatically.
+- Qik private predicates remain `KEEP_WITH_JUSTIFICATION`.
 
-## Current units
+These completed operations do not authorize any further live change.
 
-- Edge `backfill-legacy` and `policy-ingest`: reuse the qualified deny-all source,
-  blob `4d32d8438993cd3fca187e6e1ecd181906873af1`, SHA-256
-  `0d44074b2fc0ed8c02d7f5bf0d2e170a07fb81eace3ba6920936f795e625012c`.
-  Each endpoint is independent. Exact private before-state custody, fresh package
-  identity/gateway preflight and review are required before requesting deployment.
-  This continuation does not authorize deployment.
-- qik original `qik_private_predicate_revoke.sql`: **incompatible and held**.
-  Keep the limited helper interface; see `qik_private_predicate_review.md`.
-- yhb original combined `yhb_browser_authority_containment.sql`: **incomplete and
-  held**. SELECT revocation does not remove INSERT/UPDATE/DELETE. Function grants
-  require separate caller classification; no all-27 readiness claim is made.
-- yhb successor `yhb_view_write_containment_v2.sql`: isolates the demonstrated DML
-  route on three updatable views, retaining SELECT and service-role privileges.
-  It does not cure any existing read-disclosure issue or change graph_coverage.
-- Both original rollback definitions are inaccurate. The yhb original omits
-  explicit browser grants for functions also granted to PUBLIC; qik adds PUBLIC
-  where the recorded pre-state had none. Preserve these bytes as failing evidence.
-  The successor inverse is proposed for inspection and isolated qualification,
-  never automatic restoration.
+## Held historical candidates
 
-## Scope and qualification
+- `qik_private_predicate_revoke.sql` is incompatible with populated public-read
+  dependencies and remains held.
+- The combined 27-function yhb candidate is over-broad and remains held.
+- Its SELECT-only view quarantine was incomplete; the successor three-view
+  containment above superseded that portion.
+- The bundled historical rollback definitions are inaccurate and remain held.
 
-The original SQL files and failing diagnostic tests remain preserved.
-The successor pins native view definitions, owners, options, normalized ACL shape,
-absence of column/PUBLIC grants and browser role memberships, plus bounded
-timeouts. Its executable test uses those native view definitions against skeletal
-dependency tables and synthetic rows. Native constraints, triggers and actual
-worker runs are not reproduced by that test. Test output must retain this limit.
+## Five-function staged-GDELT successor
 
-Do not invoke vulnerable live mutators. No production SQL, Edge deployment,
-credential/source/scheduler change, cutover, retirement or merge is authorized.
-On required-caller failure preserve containment and propose a secure repair;
-do not restore unsafe code or grants to obtain passing tests.
+Live application status: **UNAPPLIED — READY_FOR_AUTHORIZATION** as one coupled
+ACL unit after parent reconciliation and fresh High security/recovery review.
 
-The authoritative readiness receipt must name the tested commit and CI result,
-fresh security review, custody evidence, caller limitations and exact unit scope.
-Security containment does not establish authority consolidation, isolated
-pipeline validation or operation of the authorized live pipeline.
+Exact targets:
 
-## Custody limitation
+- `public.mip_v2_gdelt_stage_batch(text,jsonb)`
+- `public.mip_v2_gdelt_materialize_batch(text,integer)`
+- `public.mip_v2_gdelt_attach_batch(text,integer)`
+- `public.mip_v2_gdelt_originate_batch(text,integer)`
+- `public.mip_v2_gdelt_close_staging(text)`
 
-The private recovery repository preserves and independently readback-verifies
-exact UTF-8 source file bodies on its dedicated archival branch. The inspection
-API did not expose the original package container bytes. Provider package
-SHA-256 values are recorded, not recomputed from an original container.
-Exact original-package custody therefore remains blocked unless the owner accepts
-source-file custody or an original-package export is obtained. Source custody
-alone must not be reported as either Edge endpoint being ready.
+The successor revokes only the ten explicit EXECUTE entries for `anon` and
+`authenticated`. PUBLIC is already absent. The candidate leaves `postgres`,
+`service_role`, owners, function definitions, memberships, and every
+non-target privilege unchanged.
 
-The successor uses pg_catalog-only search_path. Native view fingerprints in its
-preflight use that rendering; the fixture preserves both the original
-public-visible and fully qualified pg_catalog-rendered digests. This is an
-explicit deparse-context difference, not changed native view logic.
+- Candidate blob: `7690dfb43bf0ef67eb354935724bcfbd3b19a4b2`
+- Candidate SHA-256: `b9eee98c2cc00957a77b1f730fa482fc6051effe092bac25b0dbcd8f9ea997ac`
+- Candidate length: 714 UTF-8 bytes
+- Inverse blob: `3069a090ba0c7f27cf0156ddece7b0d8834d1d91`
+- Inverse SHA-256: `d0d8a2259400e1f80278e3aefc8b971e397f6c91b19b1072b819ab49140b89eb`
+- Inverse length: 704 UTF-8 bytes
 
+The exact native definitions contain no writer-key, JWT, user-ownership, or
+`current_user` authorization check. Fresh catalog evidence records postgres
+ownership, `SECURITY DEFINER`, `search_path=public, pg_temp`, direct
+postgres/anon/authenticated/service_role EXECUTE grants without grant options,
+and no PUBLIC grant.
 
-## Five-function staged-GDELT successor (2026-09-21)
+Retained `pg_stat_statements` evidence observed at
+`2026-09-21T07:59:14.404737Z` (statistics reset
+`2026-08-18T08:45:50.769278Z`) shows top-level postgres calls for all five:
+stage 15, materialize 28, attach 28, originate 7, close 1. The repository
+operator generator also produces control-plane SQL. No current cron, inspected
+Edge package, workflow, or stored function refers to the five targets. This
+supports the known postgres operator path; it does not prove permanent absence
+of external callers.
 
-Status: **isolated qualification pending fresh High review; no live change**.
+## Isolated qualification
 
-This partition revokes only explicit `anon` and `authenticated` EXECUTE from
-the coupled stage/materialize/attach/originate/close operations. It leaves
-`postgres`, `service_role`, PUBLIC absence, definitions, and non-target
-objects unchanged. The inverse restores only the freshly recorded explicit
-grants and touches no completed view or Edge containment.
+Passing run `35575699417`, job `106256969001`, tested exact head
+`bacf8d737bf93e648a117c24411d5afb74abfa5d`.
 
-The executable harness installs the exact current native target definitions captured from yhb,
-checks their live fingerprints, reproduces browser writes, tests the
-exact successor and inverse, and exercises state ordering through a synthetic
-empty-selection service-role chain. It does not install pgvector or reproduce
-the membership/comparison trigger graph, so it does not claim data-bearing
-attachment/origination compatibility or full pipeline validation.
+The disposable PostgreSQL 17.6 harness:
+
+- installs the exact current native target bodies captured from yhb;
+- verifies live native body hashes plus full definition, result,
+  arguments/defaults, language, owner, definer mode and search path;
+- reproduces anon and authenticated writes before the candidate;
+- denies every target to both browser roles after the candidate;
+- preserves postgres and service-role execution, PUBLIC absence, memberships,
+  target definitions and non-target function ACLs;
+- exercises state ordering through stage, close, materialize, attach, originate
+  and completion on synthetic empty-selection data;
+- proves row-idempotent duplicate staging (the requested counter intentionally
+  increments) and forced-transaction rollback of rows/counters;
+- executes the exact inverse, restores normalized explicit ACL entries,
+  grantors and grant-option state, then reapplies the candidate.
+
+The harness cannot install production pgvector and does not exercise
+data-bearing materialization/attachment/origination or the native
+membership/comparison trigger graph. Those omissions prevent worker-semantic,
+pipeline-validation and operational claims. They do not expand authority or
+change this ACL-only candidate.
+
+## Recovery and live gate
+
+Recovery status: **VERIFIED_IN_ISOLATION** for the freshly recorded normalized
+ACL state. The inverse is evidence, not permission to restore browser access.
+
+Any live authorization must require a fresh check of project, signatures,
+definitions, ACLs, memberships and caller state; execute the unchanged candidate
+as the recorded grantor `postgres`; and verify browser denial plus preserved
+postgres/service-role authority without invoking live mutators. If an unexpected
+required caller fails, preserve containment and request the smallest secure
+repair. Do not automatically run the inverse, regrant browser access, substitute
+service-role credentials, or alter any unrelated object.
+
+This unit does not establish system-wide security, authority consolidation,
+pipeline validation, live pipeline operation, cutover readiness or retirement
+readiness.
