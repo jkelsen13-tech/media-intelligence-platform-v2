@@ -1,50 +1,50 @@
-# Backend-consolidation security containment candidates
+# Backend containment readiness — active record
 
-Status: **prepared, reviewed, not applied, not deployed**
+Status: **held originals; isolated successors require fresh review and explicit live authorization**.
 
-These files are an owner-gated response to live authorization findings. They do
-not authorize themselves. They contain no row DML, source/scheduler change,
-credential value, project pause, deletion, retirement, or billing action.
+The earlier README and PR wording are historical evidence, not readiness authority.
+The diagnostic PostgreSQL tests deliberately reproduce two failures: qik's
+original predicate revoke breaks populated public reads, and yhb's SELECT-only
+quarantine leaves browser writes through updatable views. Successful diagnostic
+execution does not approve either candidate for production.
 
-## Live evidence
+## Current units
 
-- yhb `backfill-legacy` v9 package SHA-256:
-  `5cd76641e068fb512c9d0815f9d35325a9806be11593829df1daf62f87de8f68`.
-  A gateway-valid anon JWT reaches a service-role implementation; `?reset=1`
-  can destroy/rebuild analytical state.
-- yhb exposes the 27 exact SECURITY DEFINER signatures in
-  `yhb_browser_authority_containment.sql` to browser roles.
-- yhb owner-executed `news_detail_public` exposes noneligible rows and claim
-  surfaces; the same candidate quarantines all four reviewed owner views
-  pending caller verification.
-- nie `policy-ingest` v16 package SHA-256:
-  `f18ec228daf35dd5001a436c1299a1229bab32fcc1657179bf44d0ef5c6143ef`.
-  A gateway-valid anon JWT reaches service-role external-fetch/write behavior.
-- qik's two private arc predicates do not require browser/PUBLIC execution.
+- Edge `backfill-legacy` and `policy-ingest`: reuse the qualified deny-all source,
+  blob `4d32d8438993cd3fca187e6e1ecd181906873af1`, SHA-256
+  `0d44074b2fc0ed8c02d7f5bf0d2e170a07fb81eace3ba6920936f795e625012c`.
+  Each endpoint is independent. Exact private before-state custody, fresh package
+  identity/gateway preflight and review are required before requesting deployment.
+  This continuation does not authorize deployment.
+- qik original `qik_private_predicate_revoke.sql`: **incompatible and held**.
+  Keep the limited helper interface; see `qik_private_predicate_review.md`.
+- yhb original combined `yhb_browser_authority_containment.sql`: **incomplete and
+  held**. SELECT revocation does not remove INSERT/UPDATE/DELETE. Function grants
+  require separate caller classification; no all-27 readiness claim is made.
+- yhb successor `yhb_view_write_containment_v2.sql`: isolates the demonstrated DML
+  route on three updatable views, retaining SELECT and service-role privileges.
+  It does not cure any existing read-disclosure issue or change graph_coverage.
+- Both original rollback definitions are inaccurate. The yhb original omits
+  explicit browser grants for functions also granted to PUBLIC; qik adds PUBLIC
+  where the recorded pre-state had none. Preserve these bytes as failing evidence.
+  The successor inverse is proposed for inspection and isolated qualification,
+  never automatic restoration.
 
-## Application order after explicit authorization
+## Scope and qualification
 
-1. Capture current Edge definitions, function/view ACLs, row counts, hashes,
-   active jobs, and negative/positive auth baselines.
-2. Deploy temporary deny-all versions of yhb `backfill-legacy` and nie
-   `policy-ingest`; do not merely rely on `verify_jwt`.
-3. Apply the yhb grant/view candidate. Its preflight aborts the whole
-   transaction if a signature/relation drifted or a function is no longer
-   SECURITY DEFINER.
-4. Apply the qik predicate candidate.
-5. Verify anon/auth Edge requests fail; browser RPCs are permission denied;
-   dedicated workers still pass; qik public projections retain intended reads;
-   and row counts/hashes are unchanged.
-6. Rerun security advisors and complete external caller verification before
-   retaining the narrowed grants.
-7. Roll back only the exact failed grant if a verified required caller breaks.
+The original SQL files and failing diagnostic tests remain preserved.
+The successor pins native view definitions, owners, options, normalized ACL shape,
+absence of column/PUBLIC grants and browser role memberships, plus bounded
+timeouts. Its executable test uses those native view definitions against skeletal
+dependency tables and synthetic rows. Native constraints, triggers and actual
+worker runs are not reproduced by that test. Test output must retain this limit.
 
-## Later Edge re-enable contract
+Do not invoke vulnerable live mutators. No production SQL, Edge deployment,
+credential/source/scheduler change, cutover, retirement or merge is authorized.
+On required-caller failure preserve containment and propose a secure repair;
+do not restore unsafe code or grants to obtain passing tests.
 
-A later owner-secret re-enable is separate from immediate containment. The
-function must reject non-POST requests and compare a dedicated secret header
-before creating a service-role client, reading configuration, fetching any
-external source, or starting work. See `edge_function_auth_gates.md`.
-
-Do not activate a scheduler, source, provider, publication path, or new paid
-service in this change.
+The authoritative readiness receipt must name the tested commit and CI result,
+fresh security review, custody evidence, caller limitations and exact unit scope.
+Security containment does not establish authority consolidation, isolated
+pipeline validation or operation of the authorized live pipeline.
