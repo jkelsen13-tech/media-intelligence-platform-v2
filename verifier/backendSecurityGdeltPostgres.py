@@ -17,6 +17,12 @@ H={
 "mip_v2_gdelt_attach_batch(text,integer)":"d3d19f08d752dac17cfbe824d15dbce2c5e0cdb9739a9487270da3a5d044a5ac",
 "mip_v2_gdelt_originate_batch(text,integer)":"8c70de67fd94f4cce0ba001948d9fb2bd794602b57c902284514cd68d309567a",
 "mip_v2_gdelt_close_staging(text)":"668b85824413609acd2ba8990805342981fd01a7940dde5551ceea18c3a80488"}
+A={
+"mip_v2_gdelt_stage_batch(text,jsonb)":("jsonb","p_run_id text, p_records jsonb"),
+"mip_v2_gdelt_materialize_batch(text,integer)":("jsonb","p_run_id text, p_limit integer DEFAULT 100"),
+"mip_v2_gdelt_attach_batch(text,integer)":("jsonb","p_run_id text, p_limit integer DEFAULT 100"),
+"mip_v2_gdelt_originate_batch(text,integer)":("jsonb","p_run_id text, p_max_components integer DEFAULT 50"),
+"mip_v2_gdelt_close_staging(text)":("void","p_run_id text")}
 D="gdelt_acl_"+uuid.uuid4().hex[:10]
 def run(db,sql,ok=True):
  p=subprocess.run(B+["-d",db],input=sql,text=True,capture_output=True,env=E)
@@ -33,7 +39,7 @@ def block(src,name):
 def cat():
  return json.loads(val("""select jsonb_agg(jsonb_build_object(
  'sig',p.oid::regprocedure::text,'owner',r.rolname,'definer',p.prosecdef,
- 'config',p.proconfig,'acl',(select jsonb_agg(
+ 'config',p.proconfig,'definition_sha',encode(digest(pg_get_functiondef(p.oid),'sha256'),'hex'),'result',pg_get_function_result(p.oid),'args',pg_get_function_arguments(p.oid),'language',l.lanname,'acl',(select jsonb_agg(
    jsonb_build_array(coalesce(g.rolname,'PUBLIC'),h.rolname,a.privilege_type,a.is_grantable)
    order by coalesce(g.rolname,'PUBLIC'),h.rolname,a.privilege_type)
    from aclexplode(p.proacl) a left join pg_roles g on g.oid=a.grantee
@@ -43,7 +49,7 @@ def cat():
  'auth',has_function_privilege('authenticated',p.oid,'execute'),
  'service',has_function_privilege('service_role',p.oid,'execute'),
  'public',has_function_privilege('public',p.oid,'execute'))
- order by p.oid::regprocedure::text)::text from pg_proc p join pg_roles r on r.oid=p.proowner
+ order by p.oid::regprocedure::text)::text from pg_proc p join pg_roles r on r.oid=p.proowner join pg_language l on l.oid=p.prolang
  where p.oid=any(array[
  'public.mip_v2_gdelt_stage_batch(text,jsonb)'::regprocedure,
  'public.mip_v2_gdelt_materialize_batch(text,integer)'::regprocedure,
@@ -56,6 +62,7 @@ def native(rows):
   sig=x["sig"].replace("public.","")
   assert H[sig]==x["sha"],(sig,x["sha"])
   assert x["owner"]=="postgres" and x["definer"] and x["config"]==["search_path=public, pg_temp"]
+  assert x["language"]=="plpgsql" and (x["result"],x["args"])==A[sig]
   assert not x["public"]
   d=val(f"select pg_get_functiondef('public.{sig}'::regprocedure);").lower()
   assert not re.search(r"writer.?key|auth\\.uid|current_user|request\\.jwt|jwt\\(\\)",d)
@@ -89,6 +96,7 @@ try:
  run(D,"\n".join(f"revoke all on function public.{s} from public,anon,authenticated,service_role; grant execute on function public.{s} to anon,authenticated,service_role;" for s in H))
  b=cat(); native(b); assert all(x["anon"] and x["auth"] and x["service"] for x in b)
  bacl={x["sig"]:x["acl"] for x in b}
+ bdefs={x["sig"]:(x["definition_sha"],x["result"],x["args"],x["language"]) for x in b}
  roles=val("select jsonb_agg(jsonb_build_array(roleid::regrole::text,member::regrole::text,admin_option) order by 1,2)::text from pg_auth_members;")
  other=val("""select coalesce(jsonb_object_agg(p.oid::regprocedure::text,coalesce(p.proacl::text,'<null>') order by p.oid::regprocedure::text),'{}')::text from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname<>all(array['mip_v2_gdelt_stage_batch','mip_v2_gdelt_materialize_batch','mip_v2_gdelt_attach_batch','mip_v2_gdelt_originate_batch','mip_v2_gdelt_close_staging']);""")
  for role,suf in (("anon","01"),("authenticated","02")):
@@ -97,9 +105,19 @@ set role {role}; select mip_v2_gdelt_stage_batch('mip-v2-gdelt-stage-202609{suf}
   assert val(f"select count(*) from gdelt_staged_articles where run_id='mip-v2-gdelt-stage-202609{suf}';")=="1"
  run(D,C); a=cat(); native(a)
  assert all(not x["anon"] and not x["auth"] and x["service"] and not x["public"] for x in a)
+ assert {x["sig"]:(x["definition_sha"],x["result"],x["args"],x["language"]) for x in a}==bdefs
  calls={"mip_v2_gdelt_stage_batch":"'x','[]'::jsonb","mip_v2_gdelt_materialize_batch":"'x',1","mip_v2_gdelt_attach_batch":"'x',1","mip_v2_gdelt_originate_batch":"'x',1","mip_v2_gdelt_close_staging":"'x'"}
  for role in ("anon","authenticated"):
   for name,args in calls.items(): denied(role,f"{name}({args})")
+ # Native duplicate replay and forced transaction rollback under preserved worker authority.
+ run(D,"select mip_v2_gdelt_begin_stage('mip-v2-gdelt-stage-20260904','synthetic','urn:synthetic',date '2026-09-04',date '2026-09-04');")
+ dup='[{"gdelt_event_id":"dup","source_url":"https://synthetic.invalid/dup","source_domain":"synthetic.invalid"}]'
+ run(D,f"set role service_role; select mip_v2_gdelt_stage_batch('mip-v2-gdelt-stage-20260904','{dup}'::jsonb); select mip_v2_gdelt_stage_batch('mip-v2-gdelt-stage-20260904','{dup}'::jsonb);")
+ replay=val("select jsonb_build_object('rows',(select count(*) from gdelt_staged_articles where run_id='mip-v2-gdelt-stage-20260904'),'counters',(select counters from gdelt_staging_runs where run_id='mip-v2-gdelt-stage-20260904'))::text;")
+ replay_obj=json.loads(replay); assert replay_obj["rows"]==1 and replay_obj["counters"]["stage_requested"]==2 and replay_obj["counters"]["staged"]==1
+ rollback='[{"gdelt_event_id":"rollback","source_url":"https://synthetic.invalid/rollback","source_domain":"synthetic.invalid"}]'
+ err(f"begin; set role service_role; select mip_v2_gdelt_stage_batch('mip-v2-gdelt-stage-20260904','{rollback}'::jsonb); do $forced$ begin raise exception 'forced qualification rollback'; end $forced$; commit;","forced qualification rollback")
+ assert val("select jsonb_build_object('rows',(select count(*) from gdelt_staged_articles where run_id='mip-v2-gdelt-stage-20260904'),'counters',(select counters from gdelt_staging_runs where run_id='mip-v2-gdelt-stage-20260904'))::text;")==replay
  run(D,"select mip_v2_gdelt_begin_stage('mip-v2-gdelt-stage-20260903','synthetic','urn:synthetic',date '2026-09-03',date '2026-09-03');")
  err("set role service_role; select mip_v2_gdelt_materialize_batch('mip-v2-gdelt-stage-20260903',1);","not ready to materialize")
  assert val("select state from gdelt_staging_runs where run_id='mip-v2-gdelt-stage-20260903';")=="staging"
@@ -115,7 +133,7 @@ select mip_v2_gdelt_close_staging('mip-v2-gdelt-stage-20260903');''')
  assert val("select state from gdelt_staging_runs where run_id='mip-v2-gdelt-stage-20260903';")=="completed"
  assert val("select jsonb_agg(jsonb_build_array(roleid::regrole::text,member::regrole::text,admin_option) order by 1,2)::text from pg_auth_members;")==roles
  assert val("""select coalesce(jsonb_object_agg(p.oid::regprocedure::text,coalesce(p.proacl::text,'<null>') order by p.oid::regprocedure::text),'{}')::text from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname<>all(array['mip_v2_gdelt_stage_batch','mip_v2_gdelt_materialize_batch','mip_v2_gdelt_attach_batch','mip_v2_gdelt_originate_batch','mip_v2_gdelt_close_staging']);""")==other
- run(D,I); r=cat(); native(r); assert {x["sig"]:x["acl"] for x in r}==bacl
+ run(D,I); r=cat(); native(r); assert {x["sig"]:x["acl"] for x in r}==bacl; assert {x["sig"]:(x["definition_sha"],x["result"],x["args"],x["language"]) for x in r}==bdefs
  run(D,C); r=cat(); native(r); assert all(not x["anon"] and not x["auth"] and x["service"] and not x["public"] for x in r)
- print(json.dumps({"status":"PASS","native_body_hashes":H,"browser_write_reproduced":["anon","authenticated"],"preserved":["postgres","service_role","PUBLIC absence","definitions","memberships","non-target ACLs"],"state_chain":["stage","close","materialize","attach","originate","completed"],"inverse":"exact direct ACL restoration and candidate replay","limitation":"synthetic empty-selection chain; pgvector helper and membership/queue triggers not executed"},sort_keys=True))
+ print(json.dumps({"status":"PASS","native_body_hashes":H,"browser_write_reproduced":["anon","authenticated"],"preserved":["postgres","service_role","PUBLIC absence","definitions","memberships","non-target ACLs"],"state_chain":["stage","close","materialize","attach","originate","completed"],"replay_and_rollback":"duplicate idempotency and transaction rollback restored rows/counters","definition_metadata":"full definition hash, result, arguments/defaults and language unchanged","inverse":"exact direct ACL restoration and candidate replay","limitation":"synthetic empty-selection chain; pgvector helper and membership/queue triggers not executed"},sort_keys=True))
 finally: run("postgres",f'drop database if exists "{D}" with (force);',False)
