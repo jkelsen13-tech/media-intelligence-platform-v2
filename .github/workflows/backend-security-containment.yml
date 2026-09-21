@@ -6,6 +6,7 @@ on:
       - 'supabase/production-candidates/backend-consolidation-security/**'
       - 'verifier/backendSecurityContainmentPostgres.py'
       - 'verifier/backendSecuritySuccessorPostgres.py'
+      - 'verifier/backendSecurityGdeltPostgres.py'
       - '.github/workflows/backend-security-containment.yml'
   workflow_dispatch:
 
@@ -38,3 +39,7 @@ jobs:
         env:
           MIP_DISPOSABLE_POSTGRES: comparison-qualification
         run: python3 -B verifier/backendSecurityContainmentPostgres.py
+      - name: Qualify native GDELT function ACL successor
+        env:
+          MIP_DISPOSABLE_POSTGRES: gdelt-function-qualification
+        run: python3 -B verifier/backendSecurityGdeltPostgres.py

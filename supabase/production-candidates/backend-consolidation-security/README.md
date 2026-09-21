@@ -68,3 +68,21 @@ The successor uses pg_catalog-only search_path. Native view fingerprints in its
 preflight use that rendering; the fixture preserves both the original
 public-visible and fully qualified pg_catalog-rendered digests. This is an
 explicit deparse-context difference, not changed native view logic.
+
+
+## Five-function staged-GDELT successor (2026-09-21)
+
+Status: **isolated qualification pending fresh High review; no live change**.
+
+This partition revokes only explicit `anon` and `authenticated` EXECUTE from
+the coupled stage/materialize/attach/originate/close operations. It leaves
+`postgres`, `service_role`, PUBLIC absence, definitions, and non-target
+objects unchanged. The inverse restores only the freshly recorded explicit
+grants and touches no completed view or Edge containment.
+
+The executable harness installs native target definitions from the authoritative
+migrations, checks their live fingerprints, reproduces browser writes, tests the
+exact successor and inverse, and exercises state ordering through a synthetic
+empty-selection service-role chain. It does not install pgvector or reproduce
+the membership/comparison trigger graph, so it does not claim data-bearing
+attachment/origination compatibility or full pipeline validation.
