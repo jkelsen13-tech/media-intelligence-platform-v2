@@ -88,6 +88,7 @@ for each row execute function public.mip_arc_membership_projection_state_change(
 revoke all on function public.mip_retract_arc_membership_projection(uuid) from public;
 grant execute on function public.mip_retract_arc_membership_projection(uuid)
  to postgres,anon,authenticated,service_role;
+revoke all on function public.mip_arc_membership_projection_state_change() from public;
 grant execute on function public.mip_arc_membership_projection_state_change()
  to anon,authenticated,service_role;
 grant select,update on public.arc_membership_candidates to trigger_driver;
