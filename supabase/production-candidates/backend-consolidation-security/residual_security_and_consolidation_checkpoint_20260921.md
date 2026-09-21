@@ -8,58 +8,34 @@ not authorize a live change.
 
 - Repository: `jkelsen13-tech/media-intelligence-platform-v2`
 - Branch: `codex/mip-backend-consolidation-20260920`
-- Prepared against head `4fdeca5fe3e830b38505f8bd2dbc585bcfa4f2d5`
+- Updated through native-path implementation head `e1816b8d49d961888b9017ea3b6552cc2cb8ec0b`, tree `93f8d10d71988d6f3ae3428d335b2dc61b8b23bd`
 - PR #177 remains open, draft and unmerged.
 - Live catalog/data observations in this checkpoint were bounded read-only
-  checks from 2026-09-21 17:00:08 through 17:26:01 UTC.
+  checks from 2026-09-21 17:00:08 through 19:56:47 UTC.
 - The yhb three-view write containment, two deny-all Edge replacements,
-  five-function GDELT containment, accepted source-forward recovery standard,
-  and qik predicate KEEP_WITH_JUSTIFICATION remain completed and were not
-  repeated or changed.
+  five-function GDELT containment, projection-retraction EXECUTE containment,
+  accepted source-forward recovery standard, and qik predicate
+  KEEP_WITH_JUSTIFICATION remain completed and were not repeated or changed.
 
 ## Parent-reconciled residual authorization dispositions
 
-### READY_FOR_AUTHORIZATION
+### COMPLETED AFTER SEPARATE OWNER AUTHORIZATION
 
-`public.mip_retract_arc_membership_projection(uuid)` is the highest-risk
-independently actionable unit. It is postgres-owned, SECURITY DEFINER, and has
-no caller-identity or candidate-state authorization check. Direct invocation
-marks the projection run retracted and deletes associated edges, sources, arc
-events and nodes. Current direct EXECUTE is explicit for postgres, anon,
-authenticated and service_role; PUBLIC is absent. Browser roles have no
-inherited role path.
+`public.mip_retract_arc_membership_projection(uuid)` is **APPLIED AND
+VERIFIED**, not pending authorization. Migration
+`20260921175457_contain_yhb_arc_projection_retract_browser_execute_20260921`
+removed only explicit anon/authenticated EXECUTE. PUBLIC remained absent;
+postgres/service_role and the enabled internal postgres trigger retained
+effective authority. Target and trigger definition hashes, memberships and
+all recorded non-target ACL/definition fingerprints were unchanged.
 
-The only stored-function caller located is the enabled postgres-owned
-`mip_arc_membership_projection_state_change()` trigger. Retained statement
-statistics contain two top-level postgres calls; this is positive operator
-evidence, not exhaustive external-caller closure.
-
-The successor removes only explicit anon/authenticated EXECUTE:
-
-- Candidate blob: `cdc7e531c7490c37417780027dba7bdcd1f315a6`
-- Candidate SHA-256: `a1b5f940fd7a45666c7aac544b1c275c1b6b28d33e0f58db598cf2d1e86abf98`
-- Candidate UTF-8 length: 367 bytes
-- Inverse blob: `df1d06072e7ac32022f657feb987743bcdcb00a4`
-- Inverse SHA-256: `33e227a5fd50f5035820b07f39229d84fb8e4fee36b221c9d61d2e269cec8678`
-- Inverse UTF-8 length: 326 bytes
-- Target definition SHA-256:
-  `232c921ca5c157da976cd25b70f59fa0fa6364a0fe437092d5c4a55ba87d3023`
-- Trigger definition SHA-256:
-  `ddeb2f97ad70b568c66770782f9fc7a724c7feebb0c9d810e409ab52ff9d0569`
-
-Exact-head run `35631547770`, job `106438686545`, passed the native-body
-isolated harness. It reproduced browser destructive behavior before the
-candidate; denied anon/authenticated afterward; preserved service_role direct
-execution and the internal definer-trigger path; preserved definition hashes
-and the non-target trigger ACL; restored the normalized ACL with the exact
-inverse; replayed the candidate; and proved transaction rollback.
-
-The fresh High reviewer independently classified the candidate
-**READY_FOR_AUTHORIZATION**. Limits: synthetic rows; no milestone evidence rows;
-the refresh helper is stubbed; approval/project branches, the full production
-constraint/trigger graph, Edge callers and external operator integrations were
-not executed. The inverse restores ACLs only and is not permission to regrant
-browser access.
+Bounded negative role checks returned PostgreSQL `42501` without executing
+the mutator. Fresh postflight advisors reduced the historical 22
+browser-executable SECURITY DEFINER findings per browser role to 21 and
+excluded the target. The exact private receipt is commit
+`287514de511ea01c281e9cafd5bf01ea0c9b40c4`, blob
+`8eae3d8581bb18e0e56ef72eb452bda6d5c8d4ca`. The inverse remains unapplied
+recovery evidence and is not authorization to restore browser access.
 
 ### PREPARE_NARROW_CONTAINMENT
 
@@ -115,10 +91,10 @@ empty-project summaries.
 
 | Project | Bounded current evidence | Concrete missing prerequisite |
 |---|---|---|
-| qik canonical intent | 98 articles; newest fetched row 2026-09-16; 2 Auth users; no storage buckets/objects; no cron schema. Collector-shadow records feed receipts only and does not write canonical articles. | Target-shaped isolated restore, real rights-approved retained input custody, scheduler/worker binding, canonical stage transitions and recovery rehearsal. |
-| yhb active predecessor | 34,591 articles at 17:24:17 UTC; newest fetched row 17:20:08 UTC; two enabled five-minute jobs; no Auth users or storage objects. | Consistent export/fence, ongoing-delta procedure, worker/caller cutover and replay/rollback proof before any cutover or retirement decision. |
-| nie predecessor | 752 articles, 347 events, 839 claims, 1,892 explanations, 750 nodes, 411 edges and 3 Auth users; zero profiles; one empty storage bucket; six ACTIVE Edge functions. | Full table/provenance reconciliation, Auth identity and attribution decision, Edge caller/package disposition, restore proof and target population verification. |
-| jfn predecessor | 1 article and 1 node; zero Auth users, buckets and objects. Both records are absent from qik, yhb and nie by hashed ID checks; the article URL is also absent. | Preserve and classify these unique records, export schema/functions/config, establish restore procedure and close all callers before disposition. |
+| qik canonical intent | At 19:55:09 UTC: 98 articles; newest fetched row 2026-09-16; 2 Auth users; no storage objects; no cron schema. Collector-shadow remains receipt-only and does not write canonical articles. | Target-shaped isolated restore, real rights-approved retained input custody, scheduler/worker binding, canonical stage transitions and recovery rehearsal. |
+| yhb active predecessor | At 19:55:02 UTC: 34,630 articles; newest fetched row 19:50:10 UTC; two enabled five-minute jobs; no Auth users or storage objects. | Consistent export/fence, ongoing-delta procedure, worker/caller cutover and replay/rollback proof before any cutover or retirement decision. |
+| nie predecessor | At 19:55:10 UTC: 752 articles, 347 events, 839 claims, 1,892 explanations, 750 nodes, 411 edges and 3 Auth users; zero profiles/storage objects; six ACTIVE Edge functions, including the completed deny-all policy-ingest v17. | Full table/provenance reconciliation, Auth identity and attribution decision, Edge caller/package disposition, restore proof and target population verification. |
+| jfn predecessor | At 19:55:12 UTC: 1 article and 1 node; zero Auth users/storage objects; no Edge functions. Both records are absent from qik, yhb and nie by hashed ID checks; the article URL is also absent. | Preserve and classify these unique records, export schema/functions/config, establish restore procedure and close all callers before disposition. |
 
 Qik and yhb contain 3,818 mapping rows and 1,504 conflict rows with identical
 ordered full-row SHA-256 values under the same query:
@@ -140,29 +116,61 @@ one rights-approved retained capture whose exact bytes may enter private
 isolated custody. Existing collector and cutover qualifications are synthetic
 or receipt-only; they do not supply that evidence.
 
+## Bounded native isolated execution and recovery
+
+Code head `e1816b8d49d961888b9017ea3b6552cc2cb8ec0b`, tree
+`93f8d10d71988d6f3ae3428d335b2dc61b8b23bd`, run `35648523721`,
+native job `106494809370` passed with fresh High review.
+
+The existing deterministic literal extractor generated two pending literal
+claim candidates from 216 original synthetic bytes (SHA-256
+`fd357bc7ff7646368600db86a009133b51ba99d9bb22e2b6157592455a8dec81`).
+The unchanged native evidence-pipeline migration persisted input admission,
+capture bytes, stable identity, candidates, job events and version history.
+The lane exercised duplicate admission, rollback/reconnect, stale completion,
+retry/new lease, correction as `revision_pending`, pending-only review state
+and private/public denials. It did not inject supplied judgments or fabricate
+accepted graph/public state.
+
+A plain dump (SHA-256
+`55b75e1e10ef3b823cc0f9151fdb8374b159f58a007abb89964cf8b6b1083bc7`)
+was checksummed and restored into a second socket-only PostgreSQL 17.6
+database. Eight row hashes and the native function-definition fingerprint
+matched after scoped current-authority revocation. Containers had no network
+or published ports and received no production credential.
+
+Private receipt and exact synthetic input custody are at commit
+`90bc84f3fedf7736274714c1d1a203a95c85601d`. The dump was deleted after
+rehearsal, so durable dump custody and cluster-role restore remain unproved.
+The public CI lane is authorized only for synthetic material. No qualifying
+real retained input was located: prior CC bytes are gone/closed and the EFTA
+rights matrix remains unapproved.
+
+This is concrete validation of a bounded portable native segment, not the
+complete intended pipeline. Semantic evaluation, assessment/review generation,
+downstream invalidation/reconsideration, comparison, graph, temporal,
+investigation, hosted Auth/pooler/gateway/Edge/Storage/Realtime and managed
+backup/PITR remain untested.
+
 ## Dependency-ordered path
 
-1. Apply no further live change without a fresh bounded owner authorization.
-2. If authorized, preflight and apply only the ready projection-retraction ACL
-   candidate; verify effective denial and retained worker/trigger authority.
-3. Separately authorize private isolated custody/transfer for one retained
-   input plus a target-shaped restore environment.
-4. Exercise native capture, ingestion, extraction, evidence, decision and
-   recovery transitions; label every unexercised semantic stage.
-5. Reconcile the nie corpus/Auth/Edge state and jfn unique records into an
-   independently restorable canonical package.
-6. Bind and verify qik schedulers/workers/callers before any live cutover.
-7. Only then assess predecessor cutover readiness, recovery time and
-   retirement/billing effects. No predecessor is currently retirement-ready.
+1. Preserve all completed containment; apply no further live change without a fresh bounded owner authorization.
+2. Obtain one exact rights-approved retained capture and verify private custody/readback; the bounded synthetic native segment is already qualified.
+3. Extend the isolated lane through the actual provider-neutral semantic evaluator, assessment/review and stale-output reconsideration contracts without supplied judgments.
+4. Reconcile the nie corpus/Auth/Edge state and jfn unique records into independently restorable canonical packages, including a consistent yhb fence plus ongoing deltas.
+5. Preserve a durable private restore artifact and rehearse definitions, data, identities and independently recreated roles/authority.
+6. Bind and verify qik schedulers/workers/callers plus hosted Auth/gateway/Edge behavior before any live cutover.
+7. Only then assess predecessor cutover readiness, recovery time and retirement/billing effects. No predecessor is currently retirement-ready.
 
 ## Independent verdicts
 
 - **AUTHORITY CONSOLIDATED: FAIL.** Active runtime/data authority remains on
   yhb; nie retains data, Auth users and active Edge functions; jfn has unique
   records; caller and recovery closure are incomplete.
-- **PIPELINE VALIDATED IN ISOLATION: FAIL.** Individual native ACL and
-  concurrency harnesses pass, but there is no authorized target-shaped,
-  real-input end-to-end analytical exercise.
+- **PIPELINE VALIDATED IN ISOLATION: FAIL for the complete intended pipeline.**
+  The bounded portable deterministic-extraction → native capture/candidate
+  persistence → ephemeral dump/restore segment now passes. Real retained input,
+  semantic assessment and later analytical stages remain unqualified.
 - **PIPELINE OPERATIONAL ON THE AUTHORIZED LIVE BACKEND: FAIL.** Qik has no
   canonical ingestion scheduler/history and its deployed collector-shadow is
   receipt-only.
