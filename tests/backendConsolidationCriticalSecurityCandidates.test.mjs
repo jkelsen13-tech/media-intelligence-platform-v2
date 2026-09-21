@@ -83,10 +83,10 @@ test('qik cleanup is bounded to the two private predicates', () => {
   assert.match(qik, /TO service_role/)
 })
 
-test('active record preserves applied GDELT state and separates the residual owner-gated unit', () => {
+test('active record preserves completed GDELT and projection-retraction containment', () => {
   assert.match(readme, /completed live units preserved/i)
   assert.match(readme, /staged-GDELT EXECUTE containment[\s\S]+separately authorized[\s\S]+applied/i)
-  assert.match(readme, /Residual projection-retraction candidate[\s\S]+UNAPPLIED[\s\S]+READY_FOR_AUTHORIZATION/i)
+  assert.match(readme, /Projection-retraction containment[\s\S]+APPLIED AND VERIFIED[\s\S]+20260921175457_contain_yhb_arc_projection_retract_browser_execute_20260921/i)
   assert.match(retract, /REVOKE EXECUTE[\s\S]+mip_retract_arc_membership_projection\(uuid\)[\s\S]+FROM anon, authenticated/i)
   assert.match(retractInverse, /GRANT EXECUTE[\s\S]+mip_retract_arc_membership_projection\(uuid\)[\s\S]+TO anon, authenticated/i)
   assert.match(edge, /Immediate containment/)
