@@ -57,12 +57,12 @@ def native(rows):
   assert not re.search(r"writer.?key|auth\\.uid|current_user|request\\.jwt|jwt\\(\\)",d)
 BOOT=r"""
 create extension pgcrypto;
-do $begin
+do $roles$ begin
  if not exists(select 1 from pg_roles where rolname='anon') then create role anon nologin; end if;
  if not exists(select 1 from pg_roles where rolname='authenticated') then create role authenticated nologin; end if;
  if not exists(select 1 from pg_roles where rolname='service_role') then create role service_role nologin; end if;
  if not exists(select 1 from pg_roles where rolname='authenticator') then create role authenticator nologin noinherit; end if;
-end$;
+end $roles$;
 grant anon,authenticated,service_role to authenticator;
 create domain vector as text;
 create table articles(id uuid primary key default gen_random_uuid(),feed text,outlet text,title text,url text unique,summary text,published_at timestamptz,body_text text,claims jsonb,unattributed boolean,monoculture boolean,is_digest boolean,ingestion_run_id text,source_status text,source_status_note text,arc_id uuid,arc_assignment_evidence jsonb,embedding vector);
