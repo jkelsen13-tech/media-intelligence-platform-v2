@@ -80,8 +80,8 @@ the coupled stage/materialize/attach/originate/close operations. It leaves
 objects unchanged. The inverse restores only the freshly recorded explicit
 grants and touches no completed view or Edge containment.
 
-The executable harness installs native target definitions from the authoritative
-migrations, checks their live fingerprints, reproduces browser writes, tests the
+The executable harness installs the exact current native target definitions captured from yhb,
+checks their live fingerprints, reproduces browser writes, tests the
 exact successor and inverse, and exercises state ordering through a synthetic
 empty-selection service-role chain. It does not install pgvector or reproduce
 the membership/comparison trigger graph, so it does not claim data-bearing

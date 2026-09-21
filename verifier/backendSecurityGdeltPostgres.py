@@ -79,10 +79,9 @@ create table pipeline_config(key text primary key,value jsonb);
 create function attach_article_to_arc(uuid,uuid,vector,jsonb) returns jsonb language sql as $$select '{"status":"not_reached"}'::jsonb$$;
 """
 S=(M/"20260823_gdelt_staged_bulk_ingestion.sql").read_text()
-T=(M/"20260823_gdelt_origination_terminal_state.sql").read_text()
+N=(R/"qualification/yhb_gdelt_native_definitions.sql").read_text()
 try:
- run("postgres",f'create database "{D}";'); run(D,BOOT); run(D,S)
- run(D,block(T,"mip_v2_gdelt_originate_batch"))
+ run("postgres",f'create database "{D}";'); run(D,BOOT); run(D,S); run(D,N)
  run(D,"\n".join(f"revoke all on function public.{s} from public,anon,authenticated,service_role; grant execute on function public.{s} to anon,authenticated,service_role;" for s in H))
  b=cat(); native(b); assert all(x["anon"] and x["auth"] and x["service"] for x in b)
  bacl={x["sig"]:x["acl"] for x in b}
