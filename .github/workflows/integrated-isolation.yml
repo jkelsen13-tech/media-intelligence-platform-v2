@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 12
     services:
       postgres:
-        image: postgres:17.6
+        image: postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
         env:
           POSTGRES_PASSWORD: mip-disposable-ci-only
         ports:
@@ -98,9 +98,9 @@ jobs:
           set -euo pipefail
           git rev-parse HEAD HEAD^{tree}
           ! grep -q extraheader .git/config
-          docker pull postgres:17.6
+          docker pull postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
           docker build -f verifier/integrated/native-path.Dockerfile -t mip-native-utility verifier/integrated
-          docker image inspect postgres:17.6 mip-native-utility --format 'RUNTIME {{.Id}} {{json .RepoDigests}}'
+          docker image inspect postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929 mip-native-utility --format 'RUNTIME {{.Id}} {{json .RepoDigests}}'
       - name: Execute existing native extraction and persistence without network
         shell: bash
         run: |
@@ -110,9 +110,11 @@ jobs:
             --security-opt no-new-privileges:true \
             --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=256m \
             --mount type=volume,source=mip-native-socket,target=/var/run/postgresql \
-            -e POSTGRES_PASSWORD=mip-native-disposable-only postgres:17.6
+            -e POSTGRES_PASSWORD=mip-native-disposable-only postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+          stable=0
           for attempt in $(seq 1 60); do
-            if docker exec mip-native-pg pg_isready -U postgres; then break; fi
+            if docker exec mip-native-pg pg_isready -U postgres >/dev/null 2>&1; then stable=$((stable + 1)); else stable=0; fi
+            if [ "$stable" -ge 5 ]; then break; fi
             test "$attempt" -lt 60
             sleep 1
           done
@@ -145,7 +147,7 @@ jobs:
             < "$RUNNER_TEMP/mip-native-path.sql"
           # Reconcile synthetic current revocation before any restored consumer.
           docker exec mip-native-pg psql -X -q -U postgres -d mip_native_path_restored -v ON_ERROR_STOP=1 -c \
-            "REVOKE EXECUTE ON FUNCTION public.mip_pipeline_v1(text,jsonb) FROM service_role; REVOKE ALL ON SCHEMA evidence_pipeline FROM service_role;"
+            "REVOKE EXECUTE ON FUNCTION public.mip_pipeline_v1(text,jsonb) FROM service_role; REVOKE ALL ON SCHEMA evidence_pipeline FROM service_role; REVOKE SELECT ON public.articles FROM service_role; REVOKE INSERT(feed,outlet,title,url,summary,body_text,published_at,ingestion_run_id) ON public.articles FROM service_role;"
           docker run --rm --name mip-native-readback --network none --read-only --cap-drop ALL \
             --security-opt no-new-privileges:true --user 65534:65534 --memory 256m --pids-limit 32 \
             --tmpfs /tmp:rw,noexec,nosuid,size=32m \

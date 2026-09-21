@@ -31,7 +31,7 @@ assert db.execute("select inet_server_addr() is null and current_database()=%s",
 assert db.execute("select current_setting('server_version_num')::int").fetchone()[0] == 170006
 
 def sql(statement, params=()):
-    return db.execute(statement, params)
+    return db.execute(statement, params) if params else db.execute(statement)
 
 def one(statement, params=()):
     return sql(statement, params).fetchone()[0]
@@ -80,10 +80,14 @@ if sys.argv[1] == "readback":
         assert not one("select has_function_privilege(%s,'public.mip_pipeline_v1(text,jsonb)','EXECUTE')", (role,))
         denied("select public.mip_pipeline_v1('status','{}')", role=role)
         denied("select * from evidence_pipeline.article_captures", role=role)
+        denied("select body_text from public.articles", role=role)
+        assert not one("select has_any_column_privilege(%s,'public.articles','SELECT') or has_any_column_privilege(%s,'public.articles','INSERT')", (role, role))
+        denied("insert into public.articles(url,title,outlet,body_text) values('https://synthetic.invalid/forbidden-restored','forbidden','synthetic','forbidden')", role=role)
     assert one("select count(*) from public.articles where reader_state<>'pending_review'") == 0
     print(json.dumps({"status": "PASS", "stage": "independent_dump_restore_readback",
                       "source_sha256": expected["source_sha256"], "rows": state(),
-                      "current_authority_reconciled": True, "public_release": False}, sort_keys=True))
+                      "reconciled_authority_scope": "pipeline_rpc_private_schema_and_synthetic_article_read_write",
+                      "complete_project_authority_reconciled": False, "public_release": False}, sort_keys=True))
     sys.exit(0)
 
 # Minimal synthetic dependency substrate, not a canonical-project schema restore.
