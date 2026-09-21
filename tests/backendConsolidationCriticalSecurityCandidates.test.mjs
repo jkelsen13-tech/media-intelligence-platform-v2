@@ -12,6 +12,8 @@ const yhb = read('yhb_browser_authority_containment.sql')
 const rollback = read('yhb_browser_authority_containment_rollback.sql')
 const qik = read('qik_private_predicate_revoke.sql')
 const edge = read('edge_function_auth_gates.md')
+const gdelt = read('yhb_gdelt_function_containment_v1.sql')
+const gdeltInverse = read('yhb_gdelt_function_containment_v1_inverse.sql')
 
 const signatures = [
   'articles_source_status_propagate()',
@@ -79,15 +81,16 @@ test('qik cleanup is bounded to the two private predicates', () => {
   assert.match(qik, /TO service_role/)
 })
 
-test('candidates are non-deployed, owner-gated and contain no row mutation', () => {
-  assert.match(readme, /not applied, not deployed/i)
-  assert.match(readme, /owner-gated/i)
+test('active record separates completed containment from the unapplied owner-gated GDELT unit', () => {
+  assert.match(readme, /completed live units preserved/i)
+  assert.match(readme, /Live application status:[\s\S]+UNAPPLIED[\s\S]+READY_FOR_AUTHORIZATION/i)
+  assert.match(readme, /separate owner authorization/i)
   assert.match(edge, /Immediate containment/)
   assert.match(edge, /BACKFILL_LEGACY_RUN_KEY/)
   assert.match(edge, /POLICY_INGEST_RUN_KEY/)
   assert.match(edge, /Only after this point: read SUPABASE_SERVICE_ROLE_KEY/i)
   assert.match(edge, /reset=1[\s\S]+separately disabled/i)
-  for (const sql of [yhb, rollback, qik]) {
+  for (const sql of [yhb, rollback, qik, gdelt, gdeltInverse]) {
     assert.doesNotMatch(sql, /\b(?:INSERT\s+INTO|UPDATE\s+[^\n;]+\s+SET|DELETE\s+FROM|TRUNCATE|DROP\s+(?:TABLE|SCHEMA)|ALTER\s+TABLE)\b/i)
   }
 })
