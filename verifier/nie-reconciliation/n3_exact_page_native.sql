@@ -99,7 +99,7 @@ insert into public.original_source_import_mappings
   (source_project_ref,source_table,source_id,target_id)
 values ('niejaejtbxgakyrsntxm','articles',
   'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
-  '33333333-3333-4333-8333-333333333333');
+  '66666666-6666-4666-8666-666666666666');
 insert into legacy_graph_staging.nie_parent_page_scope
   (login_name,run_id,source_project_ref,source_table,page_sha256,page_size,
    expires_at,approved_manifest_sha256,expected_rows,expected_fields)

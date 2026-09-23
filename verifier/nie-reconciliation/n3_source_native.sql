@@ -118,8 +118,10 @@ select ((select row_to_json(t)::text from
     where id='33333333-3333-4333-8333-333333333333')
   and (select embedding::text like '[0.125,%,-0.5]'
     and length(embedding::text)-length(replace(embedding::text,',',''))=383
-    and (row_to_json(a)::jsonb->>'embedding')=embedding::text
-    from public.articles a
+    and (select row_to_json(t)::jsonb->>'embedding'
+      from (select embedding from public.articles
+        where id='33333333-3333-4333-8333-333333333333') t)=embedding::text
+    from public.articles
     where id='33333333-3333-4333-8333-333333333333'))
   as typed_unicode_null_read \gset
 \if :typed_unicode_null_read
@@ -153,10 +155,14 @@ values ('nie_source_fixture_login','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
 \connect nie_source_synthetic nie_source_fixture_login 127.0.0.1
 begin isolation level repeatable read read only;
 select (embedding is null
-  and (row_to_json(a)::jsonb ? 'embedding')
-  and (row_to_json(a)::jsonb->'embedding')='null'::jsonb)
+  and (select row_to_json(t)::jsonb ? 'embedding'
+    from (select embedding from public.articles
+      where id='44444444-4444-4444-8444-444444444444') t)
+  and (select row_to_json(t)::jsonb->'embedding'
+    from (select embedding from public.articles
+      where id='44444444-4444-4444-8444-444444444444') t)='null'::jsonb)
   as selected_native_null_embedding
-from public.articles a
+ from public.articles
 where id='44444444-4444-4444-8444-444444444444' \gset
 \if :selected_native_null_embedding
 \else

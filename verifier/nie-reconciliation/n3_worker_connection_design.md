@@ -184,7 +184,10 @@ The source fixture installs pgvector in an `extensions` namespace without
 USAGE for the narrow role, then checks the native type and dimensions as
 administrator and the selected vector serialization as the narrow role. This
 fixture also selects a native SQL NULL embedding in a separate synthetic
-read-only fence and checks its JSON null serialization. This models the
+read-only fence and checks its JSON null serialization. Both source-side
+serialization checks select only the authorized `embedding` column; a whole
+row would require the deliberately denied private fixture field. The qik NULL
+page uses a distinct synthetic target mapping from the vector page. This models the
 required ACL boundary without changing 003. The actual NIE
 extension namespace and effective ACL still require a bounded catalog check;
 if the pinned fixture image preinstalls pgvector in another namespace, the
