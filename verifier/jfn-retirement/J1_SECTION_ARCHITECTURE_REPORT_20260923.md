@@ -37,7 +37,7 @@ Actual archived rows were not restored in a test; no complete hosted restore or 
 
 - Reviewed before-head: `32028d49a1c554a23ece3ec30a5aeaf9c21647ab`, tree `2d625ca8ffe07b62fa063066a054018ffbb59527`.
 - [Private preflight](https://github.com/jkelsen13-tech/mip-production-qualification/blob/179b24e574525149fddd75f1afa822126b3b18e9/evidence/jfn-retirement/2026-09-23-deletion-preflight.json), preserved as its original pre-action record.
-- [Private deletion and postflight receipt](https://github.com/jkelsen13-tech/mip-production-qualification/blob/0838b11a08a23a85f3d44d88602acdc7366883de/evidence/jfn-retirement/2026-09-23-deletion-postflight.json), including aggregates/hashes, attempts, protected inventory, billing observations and limits.
+- [Private deletion and postflight receipt](https://github.com/jkelsen13-tech/mip-production-qualification/blob/c25681d2fce8f2d8408445f03d62acfefe6325ed/evidence/jfn-retirement/2026-09-23-deletion-postflight.json), including aggregates/hashes, attempts, protected inventory, billing observations and limits.
 
 Only this report is changed in the application branch by the retirement closeout. No executable code, test, workflow or deployment configuration is changed. Existing exposure and trigger controls were checked; no CI was dispatched. Allowance remains **zero executions**, with 2553 unused runner-seconds that do not authorize a dispatch. The 4GiB build exception remains consumed. No durable MIP files were created on the owner's device.
 
