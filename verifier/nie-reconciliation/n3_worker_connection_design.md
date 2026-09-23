@@ -175,12 +175,21 @@ The signed approval now includes `issued_at`; both source-ID and qik-page SQL
 scope expiry and both receipts use the same absolute bound: the earlier of the
 owner-approved expiry and `issued_at + max_runtime_ms`. A lost administrator
 COMMIT acknowledgment discards the connection and issues no receipt. The new
-native fixture exercises real `vector(384)` text, JSON nulls, exact readback,
-foreign-ID and extra-field refusal, and expired-scope denial after 004. That
-fixture has not run in the pinned Supabase PostgreSQL image. The source fixture
-uses `public.articles.embedding vector(384)` and `create extension vector`,
-matching the recorded NIE migration; the live NIE extension namespace and
-effective ACL still require a fresh catalog check. The authenticated
+native fixture exercises real `vector(384)` text, a second approved article
+whose selected embedding is JSON null, exact narrow-login readback, foreign-ID
+and extra-field refusal, and expired-scope denial after 004. Its expected
+digest is computed by the fixture administrator before the narrow LOGIN reads
+it. The native fixture has not run in the pinned Supabase PostgreSQL image.
+The source fixture installs pgvector in an `extensions` namespace without
+USAGE for the narrow role, then checks the native type and dimensions as
+administrator and the selected vector serialization as the narrow role. This
+fixture also selects a native SQL NULL embedding in a separate synthetic
+read-only fence and checks its JSON null serialization. This models the
+required ACL boundary without changing 003. The actual NIE
+extension namespace and effective ACL still require a bounded catalog check;
+if the pinned fixture image preinstalls pgvector in another namespace, the
+native run will fail diagnostically until that configuration is reconciled.
+The authenticated
 worker-to-operator receipt channel and operator key custody remain concrete
 hosted release gates. No signing key or administrator connection belongs in
 the GitHub worker process.

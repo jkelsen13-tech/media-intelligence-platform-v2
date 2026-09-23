@@ -73,9 +73,54 @@ from (select 'nie-exact-valid'::text run_id,records from fixture_exact_page
       union all select run_id,records from fixture_exact_attack) runs
 cross join fixture_exact_page valid;
 create table fixture_exact_digest as
-select page_sha256 from legacy_graph_staging.nie_parent_page_scope
-where run_id='nie-exact-valid';
+select s.page_sha256,
+  legacy_graph_staging.fingerprint_payload(p.records->0->'payload')
+    as payload_sha256
+from legacy_graph_staging.nie_parent_page_scope s
+cross join fixture_exact_page p
+where s.run_id='nie-exact-valid';
 grant select on fixture_exact_digest to nie_parent_fixture_login;
+
+-- A second, separately scoped approved source row proves a selected SQL NULL
+-- embedding remains JSON null through enqueue, finish, and narrow readback.
+create table fixture_exact_null_page as
+with p as (
+  select jsonb_set(jsonb_set(records->0->'payload',
+    '{id}','"cccccccc-cccc-4ccc-8ccc-cccccccccccc"'::jsonb),
+    '{embedding}','null'::jsonb) as payload from fixture_exact_page
+)
+select jsonb_build_array(jsonb_build_object(
+  'source_project_ref','niejaejtbxgakyrsntxm','source_table','articles',
+  'source_id','cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+  'object_family','article','payload',payload,'payload_json',payload::text,
+  'source_imported_at',null,'recovery_status',null)) as records from p;
+grant select on fixture_exact_null_page to nie_parent_fixture_login;
+insert into public.original_source_import_mappings
+  (source_project_ref,source_table,source_id,target_id)
+values ('niejaejtbxgakyrsntxm','articles',
+  'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+  '33333333-3333-4333-8333-333333333333');
+insert into legacy_graph_staging.nie_parent_page_scope
+  (login_name,run_id,source_project_ref,source_table,page_sha256,page_size,
+   expires_at,approved_manifest_sha256,expected_rows,expected_fields)
+select 'nie_parent_fixture_login','nie-exact-null','niejaejtbxgakyrsntxm',
+  'articles',legacy_graph_staging.fingerprint_payload(
+    legacy_graph_staging.prepare_page(records)),1,
+  clock_timestamp()+interval '20 minutes',repeat('e',64),
+  jsonb_build_array(jsonb_build_object('id',
+    'cccccccc-cccc-4ccc-8ccc-cccccccccccc','sha256',
+    legacy_graph_staging.fingerprint_payload(records->0->'payload'))),
+  (select to_jsonb(array_agg(k order by k))
+    from jsonb_object_keys(records->0->'payload') as keys(k))
+from fixture_exact_null_page;
+create table fixture_exact_null_digest as
+select s.page_sha256,
+  legacy_graph_staging.fingerprint_payload(p.records->0->'payload')
+    as payload_sha256
+from legacy_graph_staging.nie_parent_page_scope s
+cross join fixture_exact_null_page p
+where s.run_id='nie-exact-null';
+grant select on fixture_exact_null_digest to nie_parent_fixture_login;
 
 \connect postgres nie_parent_fixture_login 127.0.0.1
 set search_path = fixture_nie_worker, public;
@@ -123,15 +168,44 @@ select (jsonb_array_length(r)=1
   and length(((r->0->>'payload_json')::jsonb->>'embedding'))-
     length(replace(((r->0->>'payload_json')::jsonb->>'embedding'),',',''))=383
   and ((r->0->>'payload_json')::jsonb->'monoculture')='null'::jsonb
-  and ((r->0->>'payload_json')::jsonb#>'{claims,revisions}')='null'::jsonb
-  and (r->0->>'payload_sha256')=legacy_graph_staging.fingerprint_payload(
-    (select records->0->'payload' from fixture_exact_page))
+  and (((r->0->>'payload_json')::jsonb#>>'{claims,0,weight}')::numeric)
+    =0.000000000000000001::numeric
+  and (r->0->>'payload_sha256')=(select payload_sha256
+    from fixture_exact_digest)
   and jsonb_array_length(r->0->'versions')=1
   and r->0->'versions'->0->>'origin'='staged_original'
   and r->0->'versions'->0->>'payload_json'=r->0->>'payload_json')
   as exact_vector_null_readback
 from (select legacy_graph_staging.nie_parent_readback_run_scoped('nie-exact-valid') r) x \gset
 \if :exact_vector_null_readback
+\else
+  \quit 1
+\endif
+begin;
+select legacy_graph_staging.nie_parent_enqueue_scoped(
+  'nie-exact-null',(select records from fixture_exact_null_page))->>'job_id'
+  as exact_null_job_id \gset
+select legacy_graph_staging.nie_parent_claim_scoped('nie-exact-null')->>'lease_token'
+  as exact_null_lease \gset
+select (legacy_graph_staging.nie_parent_finish_scoped(
+  :'exact_null_job_id'::uuid,:'exact_null_lease'::uuid,'nie-exact-null',
+  (select page_sha256 from fixture_exact_null_digest))->>'state')='completed'
+  as exact_null_finished \gset
+\if :exact_null_finished
+\else
+  \quit 1
+\endif
+commit;
+select (jsonb_array_length(r)=1
+  and (r->0->>'source_id')='cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+  and ((r->0->>'payload_json')::jsonb ? 'embedding')
+  and ((r->0->>'payload_json')::jsonb->'embedding')='null'::jsonb
+  and (r->0->>'payload_sha256')=(select payload_sha256
+    from fixture_exact_null_digest)
+  and r->0->'versions'->0->>'payload_json'=r->0->>'payload_json')
+  as exact_null_embedding_readback
+from (select legacy_graph_staging.nie_parent_readback_run_scoped('nie-exact-null') r) x \gset
+\if :exact_null_embedding_readback
 \else
   \quit 1
 \endif
