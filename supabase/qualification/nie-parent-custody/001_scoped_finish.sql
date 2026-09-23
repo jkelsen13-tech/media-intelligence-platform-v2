@@ -90,7 +90,7 @@ begin
     'job_id', job.id, 'run_id', job.run_id, 'state', job.state,
     'staged', n, 'results', legacy_graph_staging.job_results(job.id, job.page, staged)
   );
-end $$;
+end; $$;
 
 revoke all on function legacy_graph_staging.finish_nie_parent_job(uuid,uuid,text,text)
   from public, anon, authenticated;
