@@ -1,7 +1,7 @@
 {
   "schema": "mip-intake-reader-section-v1",
   "section": "C1-stage2-stage3-intake-reader",
-  "status": "IMPLEMENTING",
+  "status": "PARTIAL_BUILD_RESOURCE_GATE",
   "baseline": {
     "repository": "jkelsen13-tech/media-intelligence-platform-v2",
     "branch": "codex/mip-backend-consolidation-20260920",
@@ -94,9 +94,18 @@
       },
       {
         "attempt": 6,
-        "status": "RESERVED_NOT_DISPATCHED",
-        "runner_minutes_reserved": 15,
-        "purpose": "Final bounded build diagnostic:896MB old heap/1MB semi-space within unchanged1024MB cap; no core dump"
+        "head": "6a3585ed931be328b1f0199512b6dde69f6415f2",
+        "run": 35817649764,
+        "reservedMinutes": 15,
+        "status": "PARTIAL",
+        "job": 107042524454,
+        "runnerSeconds": 76,
+        "results": {
+          "native": "PASS",
+          "nativeTests": 2,
+          "build": "FAIL V8 896MB heap; not evidence of container OOM"
+        },
+        "cleanup": "PASS"
       }
     ],
     "remaining": 4,
@@ -114,9 +123,11 @@
       "durable local project files"
     ],
     "additional_runner_minutes_limit": 60,
-    "runner_minutes_observed": 0,
+    "runner_minutes_observed": 14.1,
     "allowance_note": "Owner replaced previous unspent three-execution ceiling with ten additional executions and sixty additional runner-minutes for this slice; lower boundary controls. Job timeout 15 minutes; reserve each dispatch against remaining minutes.",
-    "runner_seconds_observed": 770
+    "runner_seconds_observed": 846,
+    "runner_seconds_remaining": 2754,
+    "build_allocation_exception": "Not authorized; propose one build-only run capped4GB container/3GB V8/15min within remaining allowance, all other boundaries unchanged"
   },
   "disposition": "EXTEND native deterministic extraction and mip_pipeline_v1 persistence; RECONCILE into the bound News reader seam.",
   "foundations": [
@@ -140,14 +151,16 @@
     "Bounded retries retain diagnostics"
   ],
   "verification": {
-    "located": "VERIFIED for listed foundations",
-    "coverage": "PARTIAL pending slice",
-    "isolated": "NOT EXERCISED for new slice",
-    "integration": "NOT EXERCISED for new slice",
+    "located": "VERIFIED",
+    "coverage": "PASS for bounded native-reader slice",
+    "isolated": "PASS synthetic native persistence/negative/legacy cases",
+    "integration": "PASS actual bound SDK/backend and rendered existing NewsView via test transport",
+    "regression": "2144 PASS;0 FAIL;8 preexisting skips at728c578",
+    "build": "UNQUALIFIED: V8 heap OOM at512/768/896MB, not container OOM proof",
     "deployment": "UNAPPLIED",
     "enablement": "NOT AUTHORIZED",
     "real_input": "NOT AUTHORIZED",
-    "end_to_end": "NOT EXERCISED"
+    "end_to_end": "PASS for bounded synthetic intake-to-News; full intended pipeline NOT ESTABLISHED"
   },
   "execution_boundary": {
     "remote": "existing public application repository, standard ubuntu-24.04 GitHub-hosted runner",
@@ -173,5 +186,13 @@
     "authority_consolidated": "NOT ESTABLISHED",
     "pipeline_validated_in_isolation": "NOT ESTABLISHED for complete intended path",
     "pipeline_operational_on_authorized_live_backend": "NOT ESTABLISHED"
-  }
+  },
+  "review": {
+    "reviewer": "fresh nonimplementing Astra High requested",
+    "verdict": "No unresolved must-fix product finding within isolated slice; full build incomplete",
+    "head": "6a3585ed931be328b1f0199512b6dde69f6415f2",
+    "independentReplay": false,
+    "read": "Exact implementation blobs, assembled heads and decoded job logs"
+  },
+  "report": "verifier/news-intake/SECTION_ARCHITECTURE_REPORT_20260923.md"
 }
