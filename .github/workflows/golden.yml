@@ -96,7 +96,7 @@ jobs:
           done
           docker logs mip-news-bridge
           docker run --rm --name mip-news-node --network container:mip-news-bridge --read-only --cap-drop ALL \
-            --security-opt no-new-privileges:true --memory 1024m --pids-limit 128 \
+            --security-opt no-new-privileges:true --memory 1024m --pids-limit 128 --ulimit core=0 \
             --tmpfs /tmp:rw,nosuid,size=128m \
             --tmpfs /workspace/tests:rw,nosuid,size=64m \
             --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace,readonly" \
@@ -104,7 +104,7 @@ jobs:
             --workdir /workspace \
             -e MIP_NEWS_READER_TEST=http://127.0.0.1:8765 \
             node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 \
-            sh -ec 'cp -R /source/tests/. /workspace/tests/; node --test --test-concurrency=1 verifier/news-intake/newsReaderNative.test.mjs; node --max-old-space-size=768 node_modules/vite/bin/vite.js build --configLoader runner --outDir /tmp/mip-build --emptyOutDir'
+            sh -ec 'cp -R /source/tests/. /workspace/tests/; node --test --test-concurrency=1 verifier/news-intake/newsReaderNative.test.mjs; node --max-old-space-size=896 --max-semi-space-size=1 node_modules/vite/bin/vite.js build --configLoader runner --outDir /tmp/mip-build --emptyOutDir'
           printf '%s\n' 'SECTION_EXECUTION_PASS'
       - name: Preserve partial diagnostics and remove disposable runtime
         if: always()
