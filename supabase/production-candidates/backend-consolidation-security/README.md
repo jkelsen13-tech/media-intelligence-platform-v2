@@ -146,11 +146,25 @@ matched after scoped current-authority revocation.
 - Private receipt/input custody commit:
   `90bc84f3fedf7736274714c1d1a203a95c85601d`.
 
-The dump was deleted after the rehearsal, global roles were shared across the
+For that historical synthetic run, the dump was deleted after the rehearsal, global roles were shared across the
 two databases, and durable dump custody remains unproved. Real retained input,
 semantic evaluation, downstream reconsideration, comparison/graph/temporal/
 investigation stages, hosted Auth/pooler/gateway/Edge/Storage/Realtime and
 predecessor recovery remain unqualified.
+
+## Successor bounded real-material restore receipt
+
+The later sanitized [restore-only follow-up](https://github.com/jkelsen13-tech/mip-production-qualification/blob/e543e2b3577257662730a6a25f357edb74970c05/real-material/restore-only/restore-followup-20260922.md)
+records bounded D PASS at code `c3efcd6262f2df623298abd44576321d67fc2081`,
+run `35756083004`, job `106842090223`. It supersedes the absence of
+real-material restore evidence for that bounded segment, not the historical
+synthetic run's own limits. The original D failure remains historical; a
+different diagnostic failure is not retrospectively classified as passing.
+
+This section read only the sanitized receipt. It did not retrieve the retained
+artifact, reacquire input, repeat the canary or restore, extend retention, or
+reopen completed containment. Bounded restore success does not establish full
+pipeline operation, hosted Supabase behavior, or predecessor retirement readiness.
 
 ## Recovery and live gate
 

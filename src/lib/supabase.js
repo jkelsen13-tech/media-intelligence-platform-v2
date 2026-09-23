@@ -9,6 +9,7 @@ import {
 } from '../data/demoData.js'
 import { canonicalizeTimelineEvents, remapTimelineEdges } from './timelineDedup.js'
 import { resolveV2SupabaseUrl } from './supabaseOrigin.js'
+import { eligibleNewsEnvelope } from './newsReaderEnvelope.js'
 
 // Sandbox safety: V2 only connects to the explicit environment target. When
 // either value is absent, makeClient() returns null and the application follows
@@ -1184,7 +1185,7 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
   let query = client
     .from('articles')
     .select(
-      'id, title, url, summary, published_at, outlet, monoculture, unattributed, arc_id, author_id',
+      'id, title, url, summary, published_at, fetched_at, feed, source_status, outlet, monoculture, unattributed, arc_id, author_id',
       { count: 'exact' },
     )
     .order('published_at', { ascending: false, nullsFirst: false })
@@ -1205,6 +1206,7 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
       ...a,
       author_name: authorNames.get(a.author_id) ?? null,
       author_id: undefined,
+      readerEnvelope: eligibleNewsEnvelope(a),
       arc_title: null,
       story_arcs: undefined,
     })),
@@ -1220,7 +1222,7 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
   const [artRes, citRes, newsDetailRes] = await Promise.all([
     client
       .from('articles')
-      .select('id, title, url, summary, published_at, outlet, claims, monoculture, unattributed, author_id')
+      .select('id, title, url, summary, published_at, fetched_at, feed, source_status, outlet, claims, monoculture, unattributed, author_id')
       .eq('id', id)
       .eq('reader_state', 'eligible')
       .single(),
@@ -1281,6 +1283,7 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
   return {
     ...artRes.data,
     claims,
+    readerEnvelope: eligibleNewsEnvelope(artRes.data),
     author_name: authorNames.get(artRes.data.author_id) ?? null,
     author_id: undefined,
     arc_title: null,

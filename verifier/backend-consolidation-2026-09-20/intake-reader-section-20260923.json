@@ -12,9 +12,15 @@
   },
   "authorization": {
     "scope": "Owner explicitly adopted 06_NEXT_STAGE_PROMPT.txt in the existing session: minimal isolated EXTEND/RECONCILE, targeted reads, source-free tests and sanitized remote recording.",
-    "test_execution_limit": 3,
-    "test_executions": [],
-    "remaining": 3,
+    "test_execution_limit": 10,
+    "test_executions": [
+      {
+        "attempt": 1,
+        "status": "RESERVED_NOT_DISPATCHED",
+        "runner_minutes_reserved": 15
+      }
+    ],
+    "remaining": 9,
     "excluded": [
       "production changes",
       "real-data transfer",
@@ -27,7 +33,10 @@
       "cutover",
       "retirement",
       "durable local project files"
-    ]
+    ],
+    "additional_runner_minutes_limit": 60,
+    "runner_minutes_observed": 0,
+    "allowance_note": "Owner replaced previous unspent three-execution ceiling with ten additional executions and sixty additional runner-minutes for this slice; lower boundary controls. Job timeout 15 minutes; reserve each dispatch against remaining minutes."
   },
   "disposition": "EXTEND native deterministic extraction and mip_pipeline_v1 persistence; RECONCILE into the bound News reader seam.",
   "foundations": [
