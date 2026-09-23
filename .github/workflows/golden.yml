@@ -57,7 +57,7 @@ jobs:
           docker pull node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6
           docker build -f verifier/integrated/native-path.Dockerfile -t mip-news-python verifier/integrated
           docker image inspect postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929 node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 mip-news-python --format 'RUNTIME {{.Id}} {{json .RepoDigests}}'
-      - name: Native source-shaped writer and real News seam in one isolated execution
+      - name: Native reader smoke and bounded build continuation
         shell: bash
         run: |
           set -euo pipefail
@@ -104,7 +104,7 @@ jobs:
             --workdir /workspace \
             -e MIP_NEWS_READER_TEST=http://127.0.0.1:8765 \
             node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 \
-            sh -ec 'cp -R /source/tests/. /workspace/tests/; node --test --test-concurrency=1 verifier/news-intake/newsReaderNative.test.mjs; node --test --test-concurrency=1 $(find tests -type f -name "*.test.mjs" | sort); node node_modules/vite/bin/vite.js build --configLoader runner --outDir /tmp/mip-build --emptyOutDir'
+            sh -ec 'cp -R /source/tests/. /workspace/tests/; node --test --test-concurrency=1 verifier/news-intake/newsReaderNative.test.mjs; node --max-old-space-size=768 node_modules/vite/bin/vite.js build --configLoader runner --outDir /tmp/mip-build --emptyOutDir'
           printf '%s\n' 'SECTION_EXECUTION_PASS'
       - name: Preserve partial diagnostics and remove disposable runtime
         if: always()

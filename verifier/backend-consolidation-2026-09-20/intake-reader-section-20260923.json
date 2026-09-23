@@ -61,11 +61,30 @@
       },
       {
         "attempt": 4,
+        "head": "728c5785cfcd71bc9d2669e58e0cfc2e18e6252a",
+        "run": 35816973752,
+        "reservedMinutes": 15,
+        "status": "PARTIAL",
+        "job": 107040468842,
+        "runnerSeconds": 288,
+        "results": {
+          "native": "PASS",
+          "nativeTests": 2,
+          "regressionPass": 2144,
+          "regressionFail": 0,
+          "regressionSkip": 8,
+          "build": "FAIL default Node 512MB heap"
+        },
+        "cleanup": "PASS"
+      },
+      {
+        "attempt": 5,
         "status": "RESERVED_NOT_DISPATCHED",
-        "runner_minutes_reserved": 15
+        "runner_minutes_reserved": 15,
+        "purpose": "Native smoke and build only; broad regression PASS retained from identical application code in run35816973752"
       }
     ],
-    "remaining": 6,
+    "remaining": 5,
     "excluded": [
       "production changes",
       "real-data transfer",
@@ -82,7 +101,7 @@
     "additional_runner_minutes_limit": 60,
     "runner_minutes_observed": 0,
     "allowance_note": "Owner replaced previous unspent three-execution ceiling with ten additional executions and sixty additional runner-minutes for this slice; lower boundary controls. Job timeout 15 minutes; reserve each dispatch against remaining minutes.",
-    "runner_seconds_observed": 425
+    "runner_seconds_observed": 713
   },
   "disposition": "EXTEND native deterministic extraction and mip_pipeline_v1 persistence; RECONCILE into the bound News reader seam.",
   "foundations": [
