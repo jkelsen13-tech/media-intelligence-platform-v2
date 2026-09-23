@@ -197,6 +197,62 @@ worker-to-operator receipt channel and operator key custody remain concrete
 hosted release gates. No signing key or administrator connection belongs in
 the GitHub worker process.
 
+## Issue comment channel candidate (source-free, unprovisioned)
+
+`scripts/mipNieIssueChannel.mjs` now supplies concrete callback functions for
+`superviseNarrowParentCustody` and a separate operator processor using an
+existing GitHub Issues comment API. It does not create an issue, token, key,
+scope, role, workflow, or live process. A dedicated issue in a separately
+controlled private repository is a proposed mailbox. An owner-signed channel
+authorization pins the repository ID/name, issue number, run ID, run actor ID,
+worker comment actor ID, exact head commit, operator comment actor ID,
+operator X25519 key digest, signed
+operation approval digest, issue and expiry. The signed operation's `host_id`
+must equal that run ID. Both sides inspect the GitHub run's repository, actor,
+head commit and active state through the API. GitHub comment actor identity is
+checked as a routing constraint; it is not treated as grant authority. The
+operator verifies the signed approval and existing issuer verifies it again
+before any administrator SQL. The worker verifies each Ed25519 issuer receipt
+with its independently pinned issuer key in the existing supervisor.
+
+The worker encrypts the signed approval and source claim request to the pinned
+operator key. After the source fence commits, it encrypts the exact manifest
+and page metadata for the page grant request. The operator invokes the
+existing `createNarrowScopeIssuer` with its own local signing key and separate
+administrator connections, then encrypts the signed receipt to a fresh
+worker reply key held only in runner memory. X25519-derived AES-256-GCM uses
+request, phase, direction and authorization digest as associated data. The
+comment body contains ciphertext and routing nonces only. Schema checks reject
+payload-shaped callback arguments, oversized comments, malformed ciphertext,
+cross-run replies and late authorization. The SQL operation and run-prefix
+uniqueness checks are the persistent replay fences. The operator process is
+one-shot per request; an uncertain response must be reconciled from source/qik
+scope state, not blindly retried.
+
+GitHub Issues would gain a **durable encrypted copy of selected ID/digest
+metadata**. Encryption does not erase that custody or its retention question.
+The worker would need a separately reviewed `issues:write` token for that
+private repository; the present public application workflow's `contents:read`
+token does not supply it. The operator would need reviewed Issues read/write
+and Actions read authority. Neither privilege is granted here. A public issue,
+workflow input, log, uploaded artifact, or GitHub secret containing an NIE
+payload, plaintext selected IDs, database DSN or administrator key is outside
+this candidate. There is no claim that comment deletion or an expiry removes
+GitHub's durable copy. A large or incompressible manifest exceeding the bounded
+comment size fails closed and needs a separate reviewed custody route.
+
+The existing qik page-scope rows could eliminate the *page grant response*
+mailbox only with a new narrow read wrapper and signed receipt storage. They
+cannot deliver the prerequisite NIE source claim before the source connection,
+and making the worker poll source or qik administrator tables would widen its
+authority. That alternative would require its own SQL, rights and retention
+review. The Issue candidate reuses GitHub's existing API without adding a
+backend, while keeping the administrator and issuer keys off the worker.
+Its source-free tests cover delivery, account/run pinning, ciphertext failure,
+request shape, expiry and no plaintext metadata in comment bodies. They do
+not qualify the real host, token permissions, account authority, GitHub
+retention, network path, live grants or payload transfer.
+
 Provisioning would require two distinct independently generated secrets and
 LOGINs, one on NIE and one on qik, each dedicated to a single approved
 operation. Proposed bounds are `CONNECTION LIMIT 1`, `VALID UNTIL` no more
