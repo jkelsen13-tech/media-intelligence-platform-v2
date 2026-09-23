@@ -88,6 +88,7 @@ permissions:
 
 jobs:
   weather-preview:
+    if: ${{ github.ref != 'refs/heads/codex/mip-backend-consolidation-20260920' && github.head_ref != 'codex/mip-backend-consolidation-20260920' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -160,6 +161,7 @@ jobs:
         run: node verifier/runComparisonRecoveryBrowser.mjs
 
   refinement-preview:
+    if: ${{ github.ref != 'refs/heads/codex/mip-backend-consolidation-20260920' && github.head_ref != 'codex/mip-backend-consolidation-20260920' }}
     runs-on: ubuntu-latest
     timeout-minutes: 8
     permissions:

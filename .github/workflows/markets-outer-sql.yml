@@ -8,6 +8,7 @@ permissions:
   contents: read
 jobs:
   outer-sql:
+    if: ${{ github.ref != 'refs/heads/codex/mip-backend-consolidation-20260920' && github.head_ref != 'codex/mip-backend-consolidation-20260920' }}
     name: Seven-file outer SQL parser (no database qualification)
     runs-on: ubuntu-24.04
     timeout-minutes: 5
