@@ -70,8 +70,8 @@ begin
         or (rec->>'payload_json')::jsonb is distinct from rec->'payload'
         or rec->'source_imported_at' is distinct from 'null'::jsonb
         or rec->'recovery_status' is distinct from 'null'::jsonb
-        or rec->>'object_family' is distinct from case
-          when page_table='events' then 'source_comparison_event' else 'article' end
+        or rec->>'object_family' is distinct from (case
+          when page_table='events' then 'source_comparison_event' else 'article' end)
     then
       raise exception 'nie page row or field outside approved manifest';
     end if;
