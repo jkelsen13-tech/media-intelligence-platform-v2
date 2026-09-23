@@ -33,7 +33,7 @@ jobs:
 
   intake-reader:
     name: J1 native preservation recovery
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/codex/mip-backend-consolidation-20260920' && github.run_attempt == 1 && github.event.head_commit.message == 'J1 isolated execution 9' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/codex/mip-backend-consolidation-20260920' && github.run_attempt == 1 && github.event.head_commit.message == 'J1 isolated execution 9' && github.event.before == '41ad750f25be37dbbee8a680e7ab5d86ce7f2d0d' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
