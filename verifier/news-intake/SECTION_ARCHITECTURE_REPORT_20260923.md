@@ -67,7 +67,6 @@ All executions used original synthetic text and disposable PostgreSQL 17.6, with
 | [Run 3](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/35816777517), `35869f5` | Native/legacy compatibility PASS; fixture copy failed ownership preservation | Same legacy payload/hash observed before and after candidate; Node checks not reached |
 | [Run 4](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/35816973752), `728c578` | Native 2/2 PASS; regression 2,144 PASS, zero FAIL, eight existing skips; build heap OOM | Broad suite passes; default 512MB V8 build heap was insufficient |
 | [Run 5](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/35817437990), `34cb7f7` | Native 2/2 PASS; build 768MB V8 heap OOM | Application/test blobs unchanged from broad PASS; build still unqualified |
-
 | [Run 6](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/35817649764), `6a3585e` | Native 2/2 PASS; build 896MB heap OOM, exit 134 | Same 1GB container cap; no container OOM-kill claim |
 
 Native assertions covered duplicate replay, exact source metadata, same-URL distinct capture, rollback after post-finish interruption, stale lease refusal, retry, pending correction history, private/RPC denial, withdrawn-source withholding and legacy hash compatibility. The reader assertions exercised typed clocks, unknown independence/version fields, stable article destination, empty unapproved claim output and permission-denied feed/detail reads. Existing frontend regressions rejected out-of-order details and destinations.
@@ -86,7 +85,7 @@ An eligible source card now carries a qualified contract alongside its existing 
 
 The envelope exposes article ID, feed, URL and outlet, while private capture ID and input revision remain null. Coverage is scoped to the current page, and independent origins are unknown. Two outlets repeating a statement do not establish independent corroboration. The envelope does not claim that separately queried graph, event and claim projections form an atomic snapshot.
 
-Home/Feed and existing article detail integration are exercised within the bounded test. Following is not implemented: the existing local visit marker is not an account-following store. On the Record remains a later consumer; existing investigation definition/revision and input-impact clients are located reusable seams. Following preferences would not confer evidentiary support or publication authority.
+Existing News feed and article detail integration are exercised within the bounded test. Following is not implemented: the existing local visit marker is not an account-following store. On the Record remains a later consumer; existing investigation definition/revision and input-impact clients are located reusable seams. Following preferences would not confer evidentiary support or publication authority.
 
 ## 8. What this enables next
 
@@ -120,7 +119,7 @@ Recovery for this branch-only change is a reviewed code reversal or secure forwa
 **Next report must inherit:** unchanged application/test blobs from `728c578` through `6a3585e`, six immutable run receipts, pending-only publication and explicit reader uncertainty.
 **Do not repeat or undo:** orientation, material acquisition, canary, retained-artifact restore, containment or passing broad regression without a changed guarantee.
 **Permission remaining:** four of ten additional executions; 45m54s of the sixty-minute elapsed-runner allowance, using observable job start/end times. This is elapsed runner usage, not verified billing; remaining dispatches must reserve their maximum timeout against the lower boundary.
-**Durable receipt:** this report and `verifier/backend-consolidation-2026-09-20/intake-reader-section-20260923.json` in the existing remote branch. The parent verifies the committed blobs after writing.
+**Durable receipt:** this report and `verifier/backend-consolidation-2026-09-20/intake-reader-section-20260923.json` in the existing remote branch. Parent readback verified report and ledger blobs; the documentation-only head triggered zero workflow runs.
 **Private-material/device status:** no new real material or retained artifact accessed, no durable MIP project file created on the physical device. Disposable containers/volume cleanup passed in all six runs; no retained build artifact was uploaded.
 **Observed usage:** six dispatches, 846 runner-seconds (14m06s). Actual ChatGPT quota/billing conversion is not inferred.
 
