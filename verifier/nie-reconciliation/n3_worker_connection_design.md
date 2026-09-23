@@ -211,6 +211,17 @@ operation approval digest, issue and expiry. The signed operation's `host_id`
 must equal that run ID. Both sides inspect the GitHub run's repository, actor,
 head commit and active state through the API. GitHub comment actor identity is
 checked as a routing constraint; it is not treated as grant authority. The
+store's repository and issue URL must exactly match the signed authorization
+before any mailbox access. The candidate uses one private repository for both
+the issue and worker run; a different mailbox repository would require a new
+signed identity and separate API routing review. A delayed response is rejected
+if the channel has expired or the run is no longer eligible after the await.
+The operator likewise rechecks eligibility after issuer work before posting;
+if provisioning committed but response delivery becomes ineligible, the scope
+must be inspected and revoked or allowed to expire under the recovery procedure,
+not retried blindly.
+Both worker and operator need narrowly reviewed Actions-read authority for the
+run-state check, in addition to the Issues permissions described below. The
 operator verifies the signed approval and existing issuer verifies it again
 before any administrator SQL. The worker verifies each Ed25519 issuer receipt
 with its independently pinned issuer key in the existing supervisor.
@@ -223,7 +234,7 @@ administrator connections, then encrypts the signed receipt to a fresh
 worker reply key held only in runner memory. X25519-derived AES-256-GCM uses
 request, phase, direction and authorization digest as associated data. The
 comment body contains ciphertext and routing nonces only. Schema checks reject
-payload-shaped callback arguments, oversized comments, malformed ciphertext,
+unexpected nested request/manifest fields before posting, oversized comments, malformed ciphertext,
 cross-run replies and late authorization. The SQL operation and run-prefix
 uniqueness checks are the persistent replay fences. The operator process is
 one-shot per request; an uncertain response must be reconciled from source/qik

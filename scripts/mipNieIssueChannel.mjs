@@ -3,6 +3,7 @@ import { createCipheriv, createDecipheriv, createHash, createPublicKey,
   verify } from 'node:crypto'
 import { deflateRawSync, inflateRawSync } from 'node:zlib'
 import { stableStringify } from './mipLegacyGraphStaging.mjs'
+import { FIELD_ALLOWLIST, validateParentManifest } from './mipNieParentCustody.mjs'
 import { authorityKeySha256 } from './mipNieSupervisor.mjs'
 
 const PREFIX = 'NIE_CHANNEL_V1:'
@@ -15,6 +16,12 @@ const CHANNEL_KEYS = ['version','repository','repository_id','issue_number','run
   'run_actor_id','worker_comment_actor_id','head_sha','operator_comment_actor_id',
   'operator_key_sha256',
   'approval_sha256','issued_at','expires_at']
+const APPROVAL_KEYS = ['version','operation_id','host_id','source_login',
+  'destination_login','source_project_ref','destination_project_ref',
+  'source_endpoint_host','destination_endpoint_host','approved_ids',
+  'field_allowlist','run_prefix','max_bytes','max_runtime_ms','expires_at',
+  'issued_at','scope_sha256','source_group_scope_sha256','permission_basis_id',
+  'retention_contract_id','route_id','cost_boundary_id']
 function fail(code) { throw Object.assign(Error(code), { code }) }
 function exact(value, keys) {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -107,6 +114,80 @@ function sameRun(run,b) {
     && run?.head_sha===b.head_sha && run?.actor?.id===b.run_actor_id
     && ['queued','in_progress'].includes(run.status)
 }
+function signedIssueUrl(b) {
+  return `https://api.github.com/repos/${b.repository}/issues/${b.issue_number}`
+}
+function assertStoreBinding(store,b) {
+  if (store?.issueUrl!==signedIssueUrl(b)) fail('channel_store_binding_invalid')
+}
+function boundedText(value,max=256) {
+  return typeof value==='string' && value.length>0 && value.length<=max
+}
+function metadataRequest(request,phase) {
+  if (!exact(request,phase==='claim'?['approval','scope']:
+      ['approval','scope','claim','claimDocument','manifest','pages'])
+      || !exact(request.approval,['body','signature'])
+      || typeof request.approval.signature!=='string'
+      || !/^[A-Za-z0-9+/]{86}==$/.test(request.approval.signature)
+      || !exact(request.approval.body,APPROVAL_KEYS)
+      || !exact(request.scope,APPROVAL_KEYS)
+      || stableStringify(request.approval.body)!==stableStringify(request.scope)
+      || !exact(request.scope.approved_ids,['events','articles'])
+      || Object.values(request.scope.approved_ids).some(ids=>!Array.isArray(ids)
+        || ids.some(id=>typeof id!=='string' || !UUID.test(id)))
+      || stableStringify(request.scope.field_allowlist)!==stableStringify(FIELD_ALLOWLIST)
+      || !UUID.test(request.scope.operation_id)
+      || !['host_id','source_login','destination_login','source_project_ref',
+        'destination_project_ref','source_endpoint_host','destination_endpoint_host',
+        'run_prefix','permission_basis_id','retention_contract_id','route_id',
+        'cost_boundary_id'].every(k=>boundedText(request.scope[k]))
+      || !['scope_sha256','source_group_scope_sha256'].every(k=>SHA.test(request.scope[k]))
+      || !['issued_at','expires_at'].every(k=>typeof request.scope[k]==='string'
+        && Number.isFinite(Date.parse(request.scope[k])))
+      || !Number.isSafeInteger(request.scope.max_bytes)
+      || !Number.isSafeInteger(request.scope.max_runtime_ms)) {
+    fail('channel_request_shape_invalid')
+  }
+  if (phase==='claim') return
+  const m=request.manifest
+  if (!exact(request.claim,['version','operation_id','attempt_id','host_id',
+      'scope_sha256','source_login','expires_at'])
+      || !UUID.test(request.claim.operation_id) || !UUID.test(request.claim.attempt_id)
+      || !SHA.test(request.claim.scope_sha256)
+      || !['version','host_id','source_login'].every(k=>boundedText(request.claim[k]))
+      || typeof request.claim.expires_at!=='string'
+      || !Number.isFinite(Date.parse(request.claim.expires_at))
+      || !exact(request.claimDocument,['body','signature'])
+      || typeof request.claimDocument.signature!=='string'
+      || !/^[A-Za-z0-9+/]{86}==$/.test(request.claimDocument.signature)
+      || stableStringify(request.claimDocument.body)!==stableStringify(request.claim)
+      || !exact(m,['version','source_project_ref','destination_project_ref',
+        'destination_schema','snapshot_kind','snapshot_id','retained_versions',
+        'closure','fence','schema_sha256','max_bytes','run_prefix',
+        'source_group_scope_sha256','tables','sha256'])
+      || !exact(m.tables,['events','articles'])
+      || Object.entries(m.tables).some(([table,spec])=>!exact(spec,
+        ['fields','rows','rows_sha256','keys_sha256'])
+        || stableStringify(spec.fields)!==stableStringify(FIELD_ALLOWLIST[table])
+        || !Array.isArray(spec.rows)
+        || spec.rows.some(row=>!exact(row,['id','sha256'])
+          || !UUID.test(row.id) || !SHA.test(row.sha256)))
+      || !exact(m.closure,['membership_count','membership_keys_sha256'])
+      || !exact(m.fence,['method','captured_at'])
+      || typeof m.fence.captured_at!=='string'
+      || !Number.isFinite(Date.parse(m.fence.captured_at))
+      || !UUID.test(m.snapshot_id)
+      || !Array.isArray(m.retained_versions) || m.retained_versions.length!==0
+      || (()=>{try { return !validateParentManifest(m) } catch { return true }})()
+      || !Array.isArray(request.pages)
+      || request.pages.some(p=>!exact(p,['run_id','source_table','page_sha256','page_size'])
+        || !/^[A-Za-z0-9._-]{1,120}$/.test(p.run_id ?? '')
+        || !['events','articles'].includes(p.source_table)
+        || !SHA.test(p.page_sha256)
+        || !Number.isSafeInteger(p.page_size) || p.page_size<1 || p.page_size>100)) {
+    fail('channel_request_shape_invalid')
+  }
+}
 
 /** GitHub is a durable encrypted metadata copy, not a payload store. The caller
  * must provision a dedicated private issue and narrowly reviewed Issues write
@@ -148,16 +229,14 @@ export function createWorkerIssueCallbacks({store,authorization,approvalPublicKe
   approvalKeySha256,operatorPublicKey,context,now=()=>Date.now(),
   pause=ms=>new Promise(resolve=>setTimeout(resolve,ms)),pollMs=1000}) {
   async function exchange(phase,request,approval) {
-    if (!exact(request,phase==='claim'?['approval','scope']:
-      ['approval','scope','claim','claimDocument','manifest','pages'])
-        || (phase==='grant' && (!Array.isArray(request.pages)
-          || request.pages.some(p=>!exact(p,['run_id','source_table','page_sha256','page_size']))))) {
-      fail('channel_request_shape_invalid')
-    }
+    metadataRequest(request,phase)
     const {binding,operator}=verifiedAuthorization({authorization,approval,
       approvalPublicKey,approvalKeySha256,operatorPublicKey,context,now:now()})
-    const b=authorization.body, run=await store.getRun(b.run_id)
+    const b=authorization.body
+    assertStoreBinding(store,b)
+    const run=await store.getRun(b.run_id)
     if (!sameRun(run,b)) fail('channel_run_invalid')
+    if (now()>=Date.parse(b.expires_at)) fail('channel_response_expired')
     const requestId=randomUUID(),reply=generateKeyPairSync('x25519')
     const payload={version:'nie-issue-request/v1',binding,request_id:requestId,
       phase,reply_key:keyDer(reply.publicKey),authorization,request}
@@ -174,6 +253,9 @@ export function createWorkerIssueCallbacks({store,authorization,approvalPublicKe
             || envelope.version!=='nie-issue-envelope/v1' || envelope.binding!==binding
             || envelope.request_id!==requestId || envelope.phase!==phase
             || envelope.direction!=='response') continue
+        if (now()>=Date.parse(b.expires_at)) fail('channel_response_expired')
+        if (!sameRun(await store.getRun(b.run_id),b)) fail('channel_run_invalid')
+        if (now()>=Date.parse(b.expires_at)) fail('channel_response_expired')
         const result=open(envelope.sealed,reply.privateKey,aad(binding,requestId,phase,'response'))
         if (!exact(result,['version','binding','request_id','phase','document'])
             || result.version!=='nie-issue-response/v1' || result.binding!==binding
@@ -200,6 +282,7 @@ export function createOperatorIssueProcessor({store,authorization,approvalPublic
   const handled=new Set()
   async function processOnce() {
     const b=authorization.body
+    assertStoreBinding(store,b)
     for(const comment of await store.list()) {
       if (handled.has(comment.id) || !validComment(comment,b.worker_comment_actor_id,store.issueUrl)) continue
       const envelope=decode(comment.body)
@@ -223,17 +306,19 @@ export function createOperatorIssueProcessor({store,authorization,approvalPublic
           || decoded.request_id!==envelope.request_id || decoded.phase!==envelope.phase
           || stableStringify(decoded.authorization)!==stableStringify(authorization)
           || !exact(decoded.request,envelope.phase==='claim'?['approval','scope']:
-            ['approval','scope','claim','claimDocument','manifest','pages'])
-          || (envelope.phase==='grant' && (!Array.isArray(decoded.request.pages)
-            || decoded.request.pages.some(p=>!exact(p,['run_id','source_table','page_sha256','page_size']))))) {
+            ['approval','scope','claim','claimDocument','manifest','pages'])) {
         fail('channel_request_invalid')
       }
+      metadataRequest(decoded.request,envelope.phase)
       verifiedAuthorization({authorization,approval:decoded.request.approval,
         approvalPublicKey,approvalKeySha256,operatorPublicKey,context,now:now()})
       const replyKey=peerKey(decoded.reply_key)
       const document=envelope.phase==='claim'
         ? await issuer.claimOperation(decoded.request)
         : await issuer.authorizePages(decoded.request)
+      if (now()>=Date.parse(b.expires_at)
+          || !sameRun(await store.getRun(b.run_id),b)
+          || now()>=Date.parse(b.expires_at)) fail('channel_response_ineligible')
       const response={version:'nie-issue-response/v1',binding,
         request_id:envelope.request_id,phase:envelope.phase,document}
       const posted=await store.post(encode({version:'nie-issue-envelope/v1',binding,
