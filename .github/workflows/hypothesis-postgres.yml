@@ -11,7 +11,6 @@ permissions:
   contents: read
 jobs:
   hypothesis:
-    if: ${{ github.ref != 'refs/heads/codex/mip-backend-consolidation-20260920' && github.head_ref != 'codex/mip-backend-consolidation-20260920' }}
     runs-on: ubuntu-latest
     timeout-minutes: 8
     services:
