@@ -1,0 +1,88 @@
+{
+  "schema": "mip-intake-reader-section-v1",
+  "section": "C1-stage2-stage3-intake-reader",
+  "status": "IMPLEMENTING",
+  "baseline": {
+    "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+    "branch": "codex/mip-backend-consolidation-20260920",
+    "head": "d694f172dc4100321a5157562746578ee74417e3",
+    "tree": "823087bbe0ad7aed531d084e8c3a517da98ee47a",
+    "main": "1dc317200b7a928fad85d06b43351b60e2a50d92",
+    "integration": "4d69243cd2de91d7588e4eb263cc05b48e8fd0ef"
+  },
+  "authorization": {
+    "scope": "Owner explicitly adopted 06_NEXT_STAGE_PROMPT.txt in the existing session: minimal isolated EXTEND/RECONCILE, targeted reads, source-free tests and sanitized remote recording.",
+    "test_execution_limit": 3,
+    "test_executions": [],
+    "remaining": 3,
+    "excluded": [
+      "production changes",
+      "real-data transfer",
+      "retained-artifact retrieval",
+      "source/provider/scheduler activation",
+      "credentials",
+      "added costs",
+      "merge",
+      "deployment",
+      "cutover",
+      "retirement",
+      "durable local project files"
+    ]
+  },
+  "disposition": "EXTEND native deterministic extraction and mip_pipeline_v1 persistence; RECONCILE into the bound News reader seam.",
+  "foundations": [
+    "verifier/ingestion_pipeline.py",
+    "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql",
+    "verifier/integrated/nativePipeline.py",
+    "src/lib/newsBackend.js",
+    "src/lib/supabase.js",
+    "src/lib/newsFeedModel.js"
+  ],
+  "invariants": [
+    "No native publication authority added",
+    "Pending/private fields denied by database policy",
+    "Exact capture and source-qualified article identity retained",
+    "Changed captures do not overwrite approved history",
+    "No source-copy independence claim",
+    "Typed publication/fetch/event clocks",
+    "No atomic cross-surface snapshot claim",
+    "Same existing News backend and deep routes",
+    "Permission loss rejects stale responses",
+    "Bounded retries retain diagnostics"
+  ],
+  "verification": {
+    "located": "VERIFIED for listed foundations",
+    "coverage": "PARTIAL pending slice",
+    "isolated": "NOT EXERCISED for new slice",
+    "integration": "NOT EXERCISED for new slice",
+    "deployment": "UNAPPLIED",
+    "enablement": "NOT AUTHORIZED",
+    "real_input": "NOT AUTHORIZED",
+    "end_to_end": "NOT EXERCISED"
+  },
+  "execution_boundary": {
+    "remote": "existing public application repository, standard ubuntu-24.04 GitHub-hosted runner",
+    "data": "synthetic only",
+    "runtime": "disposable PostgreSQL 17.6 and credential-free test utilities; no retained-material restore",
+    "dispatch": "manual parent-controlled",
+    "automatic_ci": "Preparation/report commits use [skip ci]; existing tests remain unchanged",
+    "deployment": "Pages main only; Cloud Run manual; Vercel disabled for exact consolidation branch",
+    "exposure": "Code, synthetic fixtures and sanitized metadata only; no private source/package contents"
+  },
+  "preserved": {
+    "restore": "Historical bounded D PASS at c3efcd6262f2df623298abd44576321d67fc2081; not reexecuted",
+    "containments": "Completed units retained; no reopening",
+    "deep_surfaces": "Graph, Timeline, Arcs, Source Comparison, World View, Investigation Context"
+  },
+  "team": {
+    "parent": "single reconciler; exact model/effort telemetry not independently exposed",
+    "implementation": "same-session gpt-6-sol / medium requested",
+    "evidence": "same-session gpt-6-luna / medium requested",
+    "review": "fresh non-implementer High required before closeout"
+  },
+  "campaign_verdicts": {
+    "authority_consolidated": "NOT ESTABLISHED",
+    "pipeline_validated_in_isolation": "NOT ESTABLISHED for complete intended path",
+    "pipeline_operational_on_authorized_live_backend": "NOT ESTABLISHED"
+  }
+}
