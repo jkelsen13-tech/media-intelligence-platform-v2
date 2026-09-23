@@ -1,7 +1,7 @@
 {
   "schema": "mip-intake-reader-section-v1",
   "section": "C1-stage2-stage3-intake-reader",
-  "status": "PARTIAL_BUILD_RESOURCE_GATE",
+  "status": "AUTHORIZED_ONE_BUILD_EXCEPTION",
   "baseline": {
     "repository": "jkelsen13-tech/media-intelligence-platform-v2",
     "branch": "codex/mip-backend-consolidation-20260920",
@@ -106,9 +106,15 @@
           "build": "FAIL V8 896MB heap; not evidence of container OOM"
         },
         "cleanup": "PASS"
+      },
+      {
+        "attempt": 7,
+        "status": "RESERVED_NOT_DISPATCHED",
+        "kind": "build_only",
+        "runner_minutes_reserved": 15
       }
     ],
-    "remaining": 4,
+    "remaining": 3,
     "excluded": [
       "production changes",
       "real-data transfer",
@@ -127,7 +133,16 @@
     "allowance_note": "Owner replaced previous unspent three-execution ceiling with ten additional executions and sixty additional runner-minutes for this slice; lower boundary controls. Job timeout 15 minutes; reserve each dispatch against remaining minutes.",
     "runner_seconds_observed": 846,
     "runner_seconds_remaining": 2754,
-    "build_allocation_exception": "Not authorized; propose one build-only run capped4GB container/3GB V8/15min within remaining allowance, all other boundaries unchanged"
+    "build_allocation_exception": {
+      "authorized": true,
+      "executionCount": 1,
+      "containerMemoryBytes": 4294967296,
+      "v8OldSpaceMiB": 3072,
+      "timeoutMinutes": 15,
+      "oneRunOnly": true,
+      "noPaidRunner": true,
+      "restoreWorkflowAfterRun": true
+    }
   },
   "disposition": "EXTEND native deterministic extraction and mip_pipeline_v1 persistence; RECONCILE into the bound News reader seam.",
   "foundations": [
