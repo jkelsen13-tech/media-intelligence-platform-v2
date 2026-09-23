@@ -1,7 +1,7 @@
 {
   "schema": "mip-intake-reader-section-v1",
   "section": "C1-stage2-stage3-intake-reader",
-  "status": "AUTHORIZED_ONE_BUILD_EXCEPTION",
+  "status": "COMPLETE_ISOLATED_SLICE",
   "baseline": {
     "repository": "jkelsen13-tech/media-intelligence-platform-v2",
     "branch": "codex/mip-backend-consolidation-20260920",
@@ -109,9 +109,22 @@
       },
       {
         "attempt": 7,
-        "status": "RESERVED_NOT_DISPATCHED",
+        "head": "b9502dc79949a2b27363b94f495bcfc1b62cf5bc",
+        "tree": "b6edff95b7f4a4804ec4e095fdb83e2b1851ec17",
+        "run": 35820587212,
+        "job": 107051378112,
+        "status": "PASS",
         "kind": "build_only",
-        "runner_minutes_reserved": 15
+        "runnerSeconds": 53,
+        "results": {
+          "build": "PASS",
+          "exit": 0,
+          "modules": 7331,
+          "viteSeconds": 23.13,
+          "peakContainerBytes": 2934505472,
+          "oomKilled": false
+        },
+        "cleanup": "PASS"
       }
     ],
     "remaining": 3,
@@ -129,10 +142,10 @@
       "durable local project files"
     ],
     "additional_runner_minutes_limit": 60,
-    "runner_minutes_observed": 14.1,
+    "runner_minutes_observed": 14.983333333333333,
     "allowance_note": "Owner replaced previous unspent three-execution ceiling with ten additional executions and sixty additional runner-minutes for this slice; lower boundary controls. Job timeout 15 minutes; reserve each dispatch against remaining minutes.",
-    "runner_seconds_observed": 846,
-    "runner_seconds_remaining": 2754,
+    "runner_seconds_observed": 899,
+    "runner_seconds_remaining": 2701,
     "build_allocation_exception": {
       "authorized": true,
       "executionCount": 1,
@@ -141,7 +154,9 @@
       "timeoutMinutes": 15,
       "oneRunOnly": true,
       "noPaidRunner": true,
-      "restoreWorkflowAfterRun": true
+      "restoreWorkflowAfterRun": true,
+      "consumed": true,
+      "restoredWorkflowBlob": "44932ab442e31b83cd855016578d99dbc5afa47e"
     }
   },
   "disposition": "EXTEND native deterministic extraction and mip_pipeline_v1 persistence; RECONCILE into the bound News reader seam.",
@@ -171,7 +186,7 @@
     "isolated": "PASS synthetic native persistence/negative/legacy cases",
     "integration": "PASS actual bound SDK/backend and rendered existing NewsView via test transport",
     "regression": "2144 PASS;0 FAIL;8 preexisting skips at728c578",
-    "build": "UNQUALIFIED: V8 heap OOM at512/768/896MB, not container OOM proof",
+    "build": "PASS full ordinary production build at b9502dc; prior OOM diagnostics preserved",
     "deployment": "UNAPPLIED",
     "enablement": "NOT AUTHORIZED",
     "real_input": "NOT AUTHORIZED",
@@ -204,10 +219,37 @@
   },
   "review": {
     "reviewer": "fresh nonimplementing Astra High requested",
-    "verdict": "No unresolved must-fix product finding within isolated slice; full build incomplete",
+    "verdict": "ACCEPT bounded isolated slice; no unresolved must-fix blocker",
     "head": "6a3585ed931be328b1f0199512b6dde69f6415f2",
     "independentReplay": false,
-    "read": "Exact implementation blobs, assembled heads and decoded job logs"
+    "read": "Exact implementation blobs, assembled heads and decoded job logs",
+    "buildHead": "b9502dc79949a2b27363b94f495bcfc1b62cf5bc",
+    "buildRun": 35820587212,
+    "buildJob": 107051378112
   },
-  "report": "verifier/news-intake/SECTION_ARCHITECTURE_REPORT_20260923.md"
+  "report": "verifier/news-intake/SECTION_ARCHITECTURE_REPORT_20260923.md",
+  "build_receipt": {
+    "command": "node --max-old-space-size=3072 node_modules/vite/bin/vite.js build --configLoader runner --outDir /tmp/mip-build --emptyOutDir",
+    "containerMemoryBytes": 4294967296,
+    "v8OldSpaceMiB": 3072,
+    "peakContainerBytes": 2934505472,
+    "timeoutMinutes": 15,
+    "network": "none",
+    "ports": {},
+    "start": "2026-09-23T05:00:01Z",
+    "end": "2026-09-23T05:00:54Z",
+    "warnings": [
+      "node:crypto externalized from temporalAssessment.js",
+      "mixed dynamic/static imports: demoData, timelineDedup, supabase",
+      "chunks exceed 500kB"
+    ],
+    "unchanged": {
+      "src": "4cfffc8bbf4c0a105328f0ae543f11dd135cdc13",
+      "tests": "667b8d39bf77290bcbf1d83ecc9176ab683f8289",
+      "lock": "b5d44ec6e0a21f931cb2d43884010025ee89889c",
+      "viteConfig": "6b5514dc489a8e4ec7c5b4d658b1f19c119d8f77"
+    },
+    "artifactsUploaded": false,
+    "deployed": false
+  }
 }
