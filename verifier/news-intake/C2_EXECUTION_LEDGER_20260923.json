@@ -1,0 +1,62 @@
+{
+  "section": "C2-stage4-target-compatibility-worker-preparation",
+  "status": "PREPARED_NOT_EXECUTED",
+  "baseline": "2b4e5f3e3b2aab55392385361cf65ca2e79e367a",
+  "preservesC1": true,
+  "allowance": {
+    "totalExecutions": 10,
+    "totalRunnerSeconds": 3600,
+    "inheritedExecutions": 7,
+    "inheritedRunnerSeconds": 899,
+    "remainingExecutions": 3,
+    "remainingRunnerSeconds": 2701,
+    "reservation": {
+      "attempt": 8,
+      "maxRunnerSeconds": 900,
+      "status": "NOT_DISPATCHED"
+    },
+    "buildExceptionConsumed": true
+  },
+  "cost": {
+    "ci": "VERIFIED_NO_ADDITIONAL_CHARGE",
+    "ciEvidence": "GitHub repo visibility public; standard ubuntu-24.04 only; current GitHub Actions billing policy; no cache/artifact uploads",
+    "targetReadOnly": "VERIFIED_NO_ADDITIONAL_CHARGE",
+    "targetEvidence": "Existing organization dashboard spend cap enabled; target already active Micro; no capacity/billing changes",
+    "observedAt": "2026-09-23 05:24:13 UTC"
+  },
+  "target": {
+    "project": "qikvmopbtijoebdqosyq",
+    "version": "17.6.1.166",
+    "inspection": "catalog-only read-only bounded; no production article bodies/Auth/private payloads",
+    "sourceFlags": {
+      "enabled": 0,
+      "collectionEnabled": 0
+    },
+    "candidateApplied": false,
+    "arcCandidateIdDefault": null,
+    "arcDirectAttachment": "expected fail-closed; native intake does not set arc_id"
+  },
+  "limits": [
+    "portable PostgreSQL17.6, not hosted Supabase",
+    "nullable vector embeddings omitted",
+    "lookup write semantics omitted",
+    "spatial read query reproduced, spatial write constraints/triggers and non-null spatial candidates omitted",
+    "populated reviewed claim propagation unqualified",
+    "Auth/JWT/PostgREST/Edge/pooler/scheduler unqualified"
+  ],
+  "exclusions": [
+    "production mutations",
+    "source/provider activation",
+    "real-material or retained-artifact retrieval",
+    "credentials",
+    "cost/billing changes",
+    "merge/deploy/cutover/retirement",
+    "durable local MIP files"
+  ],
+  "campaignVerdicts": {
+    "authorityConsolidated": "NOT_ESTABLISHED",
+    "completePipelineIsolated": "NOT_ESTABLISHED",
+    "pipelineLive": "NOT_ESTABLISHED"
+  },
+  "review": "Nonimplementer static review: fixture terminator correction completed, no remaining dispatch blocker; scoped omissions retained"
+}
