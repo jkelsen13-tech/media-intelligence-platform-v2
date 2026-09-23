@@ -16,11 +16,22 @@
     "test_executions": [
       {
         "attempt": 1,
+        "head": "47d265c2987884e9308ce0dd23cc01516931b136",
+        "run": 35816031343,
+        "reservedMinutes": 15,
+        "status": "FAIL",
+        "job": 107037630220,
+        "runnerSeconds": 39,
+        "failure": "Disposable substrate lacks service_role SELECT on spatial_projection_v1; subsequent RESET ROLE masks root SQL error",
+        "cleanup": "PASS"
+      },
+      {
+        "attempt": 2,
         "status": "RESERVED_NOT_DISPATCHED",
         "runner_minutes_reserved": 15
       }
     ],
-    "remaining": 9,
+    "remaining": 8,
     "excluded": [
       "production changes",
       "real-data transfer",
@@ -36,7 +47,8 @@
     ],
     "additional_runner_minutes_limit": 60,
     "runner_minutes_observed": 0,
-    "allowance_note": "Owner replaced previous unspent three-execution ceiling with ten additional executions and sixty additional runner-minutes for this slice; lower boundary controls. Job timeout 15 minutes; reserve each dispatch against remaining minutes."
+    "allowance_note": "Owner replaced previous unspent three-execution ceiling with ten additional executions and sixty additional runner-minutes for this slice; lower boundary controls. Job timeout 15 minutes; reserve each dispatch against remaining minutes.",
+    "runner_seconds_observed": 39
   },
   "disposition": "EXTEND native deterministic extraction and mip_pipeline_v1 persistence; RECONCILE into the bound News reader seam.",
   "foundations": [
@@ -50,13 +62,13 @@
   "invariants": [
     "No native publication authority added",
     "Pending/private fields denied by database policy",
-    "Exact capture and source-qualified article identity retained",
+    "Exact captures and source-qualified capture/job identity; article identity remains canonical URL",
     "Changed captures do not overwrite approved history",
     "No source-copy independence claim",
     "Typed publication/fetch/event clocks",
     "No atomic cross-surface snapshot claim",
     "Same existing News backend and deep routes",
-    "Permission loss rejects stale responses",
+    "Permission-denied reads fail closed; stale detail responses rejected separately, no atomic permission-generation claim",
     "Bounded retries retain diagnostics"
   ],
   "verification": {

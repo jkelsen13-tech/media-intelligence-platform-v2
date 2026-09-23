@@ -19,6 +19,7 @@ from urllib.parse import parse_qs, urlparse
 import psycopg
 from psycopg import sql as psql
 from psycopg.types.json import Jsonb
+from psycopg.pq import TransactionStatus
 
 ROOT = Path("/workspace")
 if sys.argv != [__file__, "serve"] or os.environ.get("MIP_NEWS_READER_ISOLATION") != "network-none-socket-only":
@@ -39,7 +40,10 @@ def rpc(action, payload=None):
     try:
         return one("select public.mip_pipeline_v1(%s,%s)", (action, Jsonb(payload or {})))
     finally:
-        db.execute("reset role")
+        # A failed statement inside atomic() aborts that transaction. RESET ROLE
+        # cannot run until rollback; the rollback itself reverts SET ROLE.
+        if db.info.transaction_status != TransactionStatus.INERROR:
+            db.execute("reset role")
 
 def load_module(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -86,6 +90,9 @@ create table public.claim_evidence_links(claim_id uuid,evidence_url text,evidenc
  linked_from_article_id uuid);
 revoke all on all tables in schema public from public,anon,authenticated,service_role;
 grant select on public.articles,public.citations to anon;
+-- The native append_candidate function references this projection during
+-- validation even for a null spatial revision. It remains empty here.
+grant select on public.nodes,public.spatial_projection_v1 to service_role;
 """)
 db.execute((ROOT / "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql").read_text())
 db.execute((ROOT / "supabase/production-candidates/news-intake-reader/001_native_source_identity.sql").read_text())
@@ -133,6 +140,7 @@ assert one("select reader_state from public.articles where id=%s", (article_id,)
 assert one("select feed from public.articles where id=%s", (article_id,)) == "synthetic-feed-a"
 assert one("select count(*) from evidence_pipeline.article_captures where job_id=%s", (job,)) == 1
 assert one("select count(*) from evidence_pipeline.evidence_candidates where capture_id=%s", (result["job"]["capture_id"],)) == len(result["candidate_ids"])
+print(json.dumps({"stage":"first_native_capture_and_atomic_recovery","status":"PASS"}), flush=True)
 
 # Identical publisher URL/body through a different registry entry retains a
 # distinct private capture, without manufacturing a second article or support.
@@ -146,11 +154,19 @@ assert copy_result["job"]["outcome"] == "existing"
 assert copy_result["job"]["article_id"] == article_id
 assert one("select count(*) from public.articles") == 1
 assert one("select count(*) from evidence_pipeline.article_captures where article_id=%s", (article_id,)) == 2
+print(json.dumps({"stage":"same_url_source_identity","status":"PASS"}), flush=True)
 # Explicit malformed metadata must fail, rather than collapsing to legacy V1.
 invalid = {**adapter.source_payload(first), "source_key": " ", "source_feed": " "}
 try:
     rpc("enqueue", {"run_id": "synthetic-native-reader", "article": invalid})
     raise AssertionError("blank source metadata accepted")
+except psycopg.Error:
+    pass
+invalid_without_label = {**invalid}
+invalid_without_label.pop("source_label")
+try:
+    rpc("enqueue", {"run_id": "synthetic-native-reader", "article": invalid_without_label})
+    raise AssertionError("blank source pair without label accepted")
 except psycopg.Error:
     pass
 
@@ -173,6 +189,7 @@ second_result = adapter.process_claim(rpc, retry, pipeline, db.transaction)
 assert second_result["job"]["outcome"] == "inserted"
 assert one("select count(*) from public.articles") == 2
 assert one("select count(*) from evidence_pipeline.article_captures") == 3
+print(json.dumps({"stage":"bounded_retry_and_multi_outlet","status":"PASS"}), flush=True)
 
 # Changed source version retains original public row and creates a pending capture.
 correction = source("source-a", "synthetic-feed-a", "Synthetic Outlet A", "one",
@@ -188,6 +205,7 @@ assert one("select body_text from public.articles where id=%s", (article_id,)) =
 assert one("select count(*) from evidence_pipeline.article_captures where article_id=%s", (article_id,)) == 3
 assert one("select count(*) from evidence_pipeline.record_versions where record_kind='article' and record_key=%s", (str(article_id),)) == 1
 assert one("select count(*) from public.nodes") == 0
+print(json.dumps({"stage":"revision_pending_preservation","status":"PASS"}), flush=True)
 
 # The fixture represents an explicit synthetic reader admission, not a
 # publication decision produced by extraction or a model.
@@ -258,7 +276,7 @@ class Handler(BaseHTTPRequestHandler):
         table = parsed.path.removeprefix("/rest/v1/")
         if table not in COLUMNS or parsed.path != "/rest/v1/" + table:
             self.send_error(404); return
-        q = parse_qs(parsed.query)
+        q = parse_qs(parsed.query, keep_blank_values=True)
         fields = (q.get("select", ["*"])[0]).split(",")
         if "*" in fields or not set(fields) <= COLUMNS[table]:
             self._reply(400, {"code":"PGRST204","message":"unsupported test projection"}); return
