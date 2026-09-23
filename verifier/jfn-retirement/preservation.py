@@ -316,6 +316,14 @@ def catalog_signature(conn: psycopg.Connection, *, _inside_transaction: bool = F
         order by member.rolname,parent.rolname
     """, (list(ROLES), list(ROLES))).fetchall()
     records.append(("roles", role_records, memberships))
+    # Native extension identity is part of the restore authority and type shape.
+    extensions = conn.execute("""
+        select extname,extversion,extnamespace::regnamespace::text
+        from pg_extension where extname in ('pgcrypto','vector') order by extname
+    """).fetchall()
+    if [row for row in extensions if row[0] == "vector"] != [("vector", "0.8.2", "public")]:
+        raise PreservationError("isolated native extension mismatch")
+    records.append(("extensions", extensions))
     table_privileges = ("SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER")
     column_privileges = ("SELECT", "INSERT", "UPDATE", "REFERENCES")
     for relation in sorted(RELATIONS):

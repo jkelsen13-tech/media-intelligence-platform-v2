@@ -26,6 +26,8 @@ for db in (source,archive,target):
     db.execute("set statement_timeout='20s';set lock_timeout='3s'")
 native=(ROOT/"verifier/jfn-retirement/native_structure.sql").read_text()
 source.execute(native);target.execute(native)
+for db in (source,target):
+    assert db.execute("select extversion,extnamespace::regnamespace::text from pg_extension where extname='vector'").fetchone()==("0.8.2","public")
 source.execute((ROOT/"verifier/jfn-retirement/synthetic_rows.sql").read_text())
 archive.execute("create schema mip_private")
 for name in ("20260909181233_spatial_history_retention.sql","20260909190228_spatial_parent_retention.sql","20260909191503_spatial_source_ancestor.sql"):
@@ -40,6 +42,7 @@ def reject(call,code=None,message=None):
         if message: assert str(e)==message,(type(e).__name__,str(e))
         return
     raise AssertionError("expected refusal")
+reject(lambda: source.execute("select '[1,2]'::public.vector(384)"))
 def digest(db,relation):
     return db.execute(sql.SQL("select count(*)::int,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\\n' order by to_jsonb(t)::text),''),'UTF8')),'hex') from {} t").format(sql.Identifier(*relation.split(".")))).fetchone()
 manifest={r:dict(zip(("count","sha256"),digest(source,r))) for r in sorted(helper.RELATIONS)}
@@ -48,6 +51,7 @@ for name,expected in facts["functionHashes"].items():
     got=source.execute("select encode(sha256(convert_to(pg_get_functiondef(p.oid),'UTF8')),'hex') from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='spatial' and p.proname=%s",(name,)).fetchone()[0]
     assert got==expected,name
 assert len(facts["functionHashes"])==17
+assert source.execute("select count(*),count(embedding),min(public.vector_dims(embedding)) from public.articles").fetchone()==(2,1,384)
 passed("native_definition_identity_and_constraints")
 # Existing retention owner, actual SQL and raw JSONB text; no payload parsed in Python.
 for relation in list(helper.SPATIAL)+list(helper.PARENTS):
@@ -83,11 +87,16 @@ passed("missing_dependency_refused")
 archive.execute("alter table mip_private.spatial_row_versions rename to j1_saved_versions")
 archive.execute("""create view mip_private.spatial_row_versions as
 select source_project,source_relation,source_key,
- encode(sha256(convert_to(case when source_relation='public.articles' then (payload||'{"embedding":null}'::jsonb)::text else payload::text end,'UTF8')),'hex') as payload_hash,
- case when source_relation='public.articles' then payload||'{"embedding":null}'::jsonb else payload end as payload,
+ encode(sha256(convert_to(case when source_relation='public.articles' then (payload||'{"j1_unknown_nullable_field":null}'::jsonb)::text else payload::text end,'UTF8')),'hex') as payload_hash,
+ case when source_relation='public.articles' then payload||'{"j1_unknown_nullable_field":null}'::jsonb else payload end as payload,
  source_observed_at,retained_at from mip_private.j1_saved_versions""")
 extra={r:dict(v) for r,v in manifest.items()}
-extra["public.articles"]["sha256"]=archive.execute("select encode(sha256(convert_to(payload::text,'UTF8')),'hex') from mip_private.spatial_row_versions where source_relation='public.articles'").fetchone()[0]
+extra["public.articles"]["sha256"]=archive.execute("""
+    select encode(sha256(convert_to(coalesce(
+      string_agg(payload::text,E'\\n' order by payload::text),''),'UTF8')),'hex')
+    from mip_private.spatial_row_versions
+    where source_project=%s and source_relation='public.articles'
+""",(helper.SOURCE_PROJECT,)).fetchone()[0]
 reject(lambda:helper.restore_isolated(archive,target,extra,catalog,isolation_token="synthetic-isolated-restore"),message="isolated target lacks exact payload fields")
 assert all(digest(target,r)[0]==0 for r in helper.RELATIONS)
 archive.execute("drop view mip_private.spatial_row_versions;alter table mip_private.j1_saved_versions rename to spatial_row_versions")
@@ -106,6 +115,8 @@ assert all(digest(target,r)==(v["count"],v["sha256"]) for r,v in manifest.items(
 assert restore()["state"]=="verified_noop"
 assert helper.catalog_signature(target)==catalog
 assert target.execute("select metadata->>'large_integer' from public.nodes").fetchone()[0]=="900719925474099312345"
+assert target.execute("select count(*),count(embedding),min(public.vector_dims(embedding)) from public.articles").fetchone()==(2,1,384)
+assert target.execute("select id,embedding::text from public.articles order by id").fetchall()==source.execute("select id,embedding::text from public.articles order by id").fetchall()
 assert target.execute("select canonical_geojson->'coordinates'->>0 from spatial.geometry_snapshots").fetchone()[0]=="12.1234567890123456789"
 assert target.execute("select count(distinct location_role) from spatial.assertion_revisions").fetchone()[0]==2
 assert target.execute("select count(*) from spatial.revision_lineage").fetchone()[0]==1
@@ -134,5 +145,5 @@ writer.close()
 passed("restored_authority_private_denials_and_direct_wire_identity")
 reject(restore) # extra writer row makes target divergent; never overwrite it.
 passed("divergent_target_refused")
-print(json.dumps({"section":"J1","status":"SYNTHETIC_NATIVE_RECOVERY_PASS","rows":verified["rows"],"relations":21,"functions":17,"hosted":False,"live_transfer":False,"omissions":["nullable vector embedding type/column","Auth/profile and managed project config","hosted login credential/pooler/Auth/PostgREST behavior","real archived material recovery"],"catalog_sha256":catalog}),flush=True)
+print(json.dumps({"section":"J1","status":"SYNTHETIC_NATIVE_RECOVERY_PASS","rows":verified["rows"],"relations":21,"functions":17,"hosted":False,"live_transfer":False,"omissions":["Auth/profile and managed project config","hosted login credential/pooler/Auth/PostgREST behavior","real archived material recovery"],"catalog_sha256":catalog}),flush=True)
 for db in (source,archive,target,admin):db.close()

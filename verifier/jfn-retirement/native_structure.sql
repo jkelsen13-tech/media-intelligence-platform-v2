@@ -1,7 +1,8 @@
 -- J1 portable native structure from bounded jfn catalog 2026-09-23.
--- Synthetic-only. NOT a live migration. Omits nullable articles.embedding vector(384),
--- Auth/profile UI and project-wide service configuration; no equivalence claimed there.
+-- Synthetic-only. NOT a live migration. Omits Auth/profile UI and project-wide
+-- service configuration; no equivalence claimed there.
 create schema extensions; create extension pgcrypto with schema extensions;
+create extension vector with schema public;
 create schema spatial authorization spatial_owner;
 set check_function_bodies=off;
 create table arc_membership_candidates (
@@ -19,6 +20,7 @@ create table articles (
  "outlet_id" uuid,
  "author_id" uuid,
  "body_text" text,
+ "embedding" public.vector(384),
  "claims" jsonb default '[]'::jsonb not null,
  "arc_id" uuid,
  "unattributed" boolean default false not null,

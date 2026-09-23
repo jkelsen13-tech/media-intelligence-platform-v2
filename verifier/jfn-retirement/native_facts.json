@@ -85,6 +85,13 @@
       "notnull": false
     },
     {
+      "type": "vector(384)",
+      "table": "articles",
+      "column": "embedding",
+      "default": null,
+      "notnull": false
+    },
+    {
       "type": "jsonb",
       "table": "articles",
       "column": "claims",
