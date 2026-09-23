@@ -32,6 +32,8 @@ export function validateParentManifest(manifest) {
       || manifest.snapshot_kind !== 'current_at_fence' || !manifest.snapshot_id || !Array.isArray(manifest.retained_versions) || manifest.retained_versions.length !== 0
       || !manifest.fence?.method || manifest.fence.method !== 'repeatable_read_read_only_pinned'
       || !manifest.fence?.captured_at || !manifest.schema_sha256 || !SHA.test(manifest.schema_sha256)
+      || (manifest.source_group_scope_sha256 !== undefined
+        && !SHA.test(manifest.source_group_scope_sha256))
       || !Number.isSafeInteger(manifest.max_bytes) || manifest.max_bytes < 1 || manifest.max_bytes > MAX_CUSTODY_BYTES
       || !manifest.run_prefix || !/^[a-zA-Z0-9._-]{1,40}$/.test(manifest.run_prefix)
       || !Number.isSafeInteger(manifest.closure?.membership_count) || manifest.closure.membership_count < 1
@@ -142,7 +144,8 @@ function assertReadback(rows, page) {
 async function processPage(destination, page, records) {
   // One destination transaction keeps the queued job invisible to generic workers
   // until the scoped finish has completed. This is separate from the source fence.
-  const result = await destination.withPageTransaction(async tx => {
+  let result
+  try { result = await destination.withPageTransaction(async tx => {
     if (typeof tx?.rpc !== 'function' || typeof tx?.finishParentJob !== 'function') fail('destination_transaction_invalid')
     const queued = await tx.rpc('enqueue', { run_id: page.run_id, records, mappings: [] })
     if (queued?.run_id !== page.run_id || !queued.job_id) fail('destination_enqueue_mismatch')
@@ -158,7 +161,16 @@ async function processPage(destination, page, records) {
     }
     assertRpcResult(finished, page)
     return finished
-  })
+  }) } catch (error) {
+    if (error?.code !== 'commit_outcome_unknown') throw error
+    // A lost acknowledgment is never a reason to replay the page. The same
+    // narrow LOGIN must prove the exact committed rows on a new connection.
+    const rows = await destination.readStaged({ source_project_ref: SOURCE_REF,
+      source_table: page.table, run_id: page.run_id, ids: page.expected.map(r => r.id) })
+    assertReadback(rows, page)
+    return { table: page.table, run_id: page.run_id, count: page.expected.length,
+      page_sha256: page.page_sha256, state: 'verified_after_unknown_commit' }
+  }
   assertRpcResult(result, page)
   const readback = await destination.readStaged({ source_project_ref: SOURCE_REF, source_table: page.table,
     run_id: page.run_id, ids: page.expected.map(r => r.id) })
@@ -355,10 +367,11 @@ export async function withNarrowPgSourceSnapshot({ connect, expectedLogin, requi
  * snapshot. Selected-root closure is checked before any qik authority exists.
  */
 export async function buildScopedNarrowManifest({ fence, readPage, readClosure },
-  { approvedIds, runPrefix, maxBytes = MAX_CUSTODY_BYTES }) {
+  { approvedIds, runPrefix, maxBytes = MAX_CUSTODY_BYTES, sourceGroupScopeSha256 }) {
   if (!fence?.pinned || typeof readPage !== 'function' || typeof readClosure !== 'function'
       || !approvedIds || !/^[a-zA-Z0-9._-]{1,40}$/.test(runPrefix ?? '')
-      || !Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > MAX_CUSTODY_BYTES) fail('manifest_builder_scope_invalid')
+      || !Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > MAX_CUSTODY_BYTES
+      || (sourceGroupScopeSha256 !== undefined && !SHA.test(sourceGroupScopeSha256))) fail('manifest_builder_scope_invalid')
   const tables = {}
   let bytes = 0, total = 0
   for (const table of TABLES) {
@@ -400,6 +413,7 @@ export async function buildScopedNarrowManifest({ fence, readPage, readClosure }
       membership_keys_sha256: closure.membership_keys_sha256 },
     fence: { method: fence.method, captured_at: fence.captured_at },
     schema_sha256: fence.schema_sha256, max_bytes: maxBytes, run_prefix: runPrefix,
+    ...(sourceGroupScopeSha256 === undefined ? {} : { source_group_scope_sha256:sourceGroupScopeSha256 }),
     tables,
   })
   validateParentManifest(manifest)
@@ -436,12 +450,14 @@ export async function prepareNarrowPgParentCustody({ sourceConnection, approvedI
     if (operationAuthorization.synthetic_test_only !== true) fail('source_operation_not_authorized')
   } else if (operationAuthorization.mode !== 'owner_approved'
       || operationAuthorization.private_host !== true
+      || !SHA.test(operationAuthorization.source_group_scope_sha256 ?? '')
       || !UUID.test(operationAuthorization.operation_id ?? '')
       || !operationAuthorization.host_id || !operationAuthorization.permission_basis_id
       || !operationAuthorization.retention_contract_id || !operationAuthorization.route_id
       || !operationAuthorization.cost_boundary_id) fail('source_operation_not_authorized')
   const preparedCustody = await withNarrowPgSourceSnapshot(sourceConnection, async context => {
-    const manifest = await buildScopedNarrowManifest(context, { approvedIds, runPrefix, maxBytes })
+    const manifest = await buildScopedNarrowManifest(context, { approvedIds, runPrefix, maxBytes,
+      sourceGroupScopeSha256:operationAuthorization.source_group_scope_sha256 })
     return prepareParentPages(manifest, context.source)
   })
   return { ...preparedCustody, operation_scope_sha256: scopeSha256,
@@ -490,7 +506,8 @@ export function createNarrowPgDestination({ connect, expectedLogin, requireTls =
       const result = await callback(tx)
       active = false
       committing = true
-      await client.query('commit')
+      try { await client.query('commit') }
+      catch { fail('commit_outcome_unknown') }
       return result
     } catch (error) {
       active = false
@@ -515,5 +532,6 @@ export function createNarrowPgDestination({ connect, expectedLogin, requireTls =
       return value
     } finally { await closeClient(client, !readbackOk) }
   }
-  return { rpc, withPageTransaction, readStaged }
+  return { expectedLogin, endpointHost:connect.endpointHost, requireTls,
+    rpc, withPageTransaction, readStaged }
 }

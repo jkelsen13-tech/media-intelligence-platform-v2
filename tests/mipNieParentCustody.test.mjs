@@ -50,7 +50,8 @@ function harness({rows,manifest}, options = {}) {
       try {
         const result=await fn(destination)
         calls.push(['transaction_commit'])
-        if(options.breakAfterCommit) throw Object.assign(Error('ack lost SECRET_PRIVATE_URL'),{afterCommit:true})
+        if(options.breakAfterCommit || options.breakAfterCommitCode) throw Object.assign(Error('ack lost SECRET_PRIVATE_URL'),
+          {afterCommit:true,...(options.breakAfterCommitCode?{code:'commit_outcome_unknown'}:{})})
         return result
       } catch(error) {
         if(!error.afterCommit) {
@@ -148,6 +149,16 @@ test('lost acknowledgement leaves incomplete then exact retry reads committed st
   const second=await executeParentCustody({manifest:f.manifest,...resume,authorization:{mode:'synthetic_test_only',synthetic_test_only:true,manifest_sha256:f.manifest.sha256}})
   assert.equal(second.state,'readback_verified')
   assert.equal(resume.calls.filter(c=>c[0]==='claim').length,1)
+})
+test('typed unknown commit uses exact narrow readback and does not replay a page',async()=>{
+  const f=fixture(),h=harness(f,{breakAfterCommitCode:true})
+  const result=await executeParentCustody({manifest:f.manifest,...h,
+    authorization:{mode:'synthetic_test_only',synthetic_test_only:true,manifest_sha256:f.manifest.sha256}})
+  assert.equal(result.state,'readback_verified')
+  assert.equal(result.verified_pages.length,2)
+  assert.equal(result.verified_pages.every(p=>p.state==='verified_after_unknown_commit'),true)
+  assert.equal(h.calls.filter(c=>c[0]==='enqueue').length,2)
+  assert.equal(h.calls.filter(c=>c[0]==='readback').length,2)
 })
 test('bounded deterministic pages and incomplete partial transfer',async()=>{
   const f=fixture(101),h=harness(f,{breakAt:'readback'})

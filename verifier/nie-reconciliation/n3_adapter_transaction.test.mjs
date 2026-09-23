@@ -89,7 +89,7 @@ test('destination transaction methods close after commit and ambiguous commit', 
       escaped = tx
       return tx.rpc('enqueue', { run_id: 'synthetic-run', records: [{ id }] })
     })
-    if (rejectCommit) await assert.rejects(work, /lost commit acknowledgment/)
+    if (rejectCommit) await assert.rejects(work, /commit_outcome_unknown/)
     else assert.deepEqual(await work, { job_id: id })
     assert.equal(client.released, true)
     assert.equal(client.discarded, rejectCommit)

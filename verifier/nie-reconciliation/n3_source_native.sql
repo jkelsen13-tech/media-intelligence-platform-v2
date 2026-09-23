@@ -1,5 +1,7 @@
 \set ON_ERROR_STOP on
 -- Disposable NIE-source catalog fixture. The data and identities are synthetic.
+-- This pinned Supabase PostgreSQL image must provide native pgvector.
+create extension if not exists vector;
 create table public.events (
   id uuid primary key, canonical_title text, occurred_at_start timestamptz,
   occurred_at_end timestamptz, location_text text, arc_id uuid, arc_event_id uuid,
@@ -8,7 +10,7 @@ create table public.events (
 create table public.articles (
   id uuid primary key, feed text, outlet text, title text, url text,
   summary text, published_at timestamptz, fetched_at timestamptz,
-  outlet_id uuid, author_id uuid, body_text text, embedding text, claims jsonb,
+  outlet_id uuid, author_id uuid, body_text text, embedding vector(384), claims jsonb,
   arc_id uuid, unattributed boolean, monoculture boolean, is_digest boolean,
   image_url text, image_alt text, entities_extracted_at timestamptz,
   arc_assign_attempted_at timestamptz, arc_assignment_evidence jsonb,
@@ -30,9 +32,19 @@ insert into public.events (id,canonical_title,status,rule_version,created_at,unr
 values ('11111111-1111-4111-8111-111111111111','Synthetic Αθηνα 🛰️','active','v1',now(),'hidden'),
        ('22222222-2222-4222-8222-222222222222','Unrelated synthetic','active','v1',now(),'hidden');
 insert into public.articles (id,title,embedding,claims,unrelated_private_field)
-values ('33333333-3333-4333-8333-333333333333','Approved article','[0.125,0.5]',
+values ('33333333-3333-4333-8333-333333333333','Approved article',
+        (select ('['||string_agg(case when i=1 then '0.125'
+          when i=384 then '-0.5' else '0' end,',' order by i)||']')::vector(384)
+          from generate_series(1,384) as g(i)),
         '{"score":0.125,"revisions":null}'::jsonb,'hidden'),
        ('44444444-4444-4444-8444-444444444444','Unrelated article',null,null,'hidden');
+do $$
+declare wrong_dimension_rejected boolean := false;
+begin
+  begin perform '[0.125,0.5]'::vector(384);
+  exception when others then wrong_dimension_rejected := true; end;
+  if not wrong_dimension_rejected then raise exception 'vector dimension not enforced'; end if;
+end $$;
 insert into public.event_articles(event_id,article_id,private_review_note)
 values ('11111111-1111-4111-8111-111111111111','33333333-3333-4333-8333-333333333333','hidden'),
        ('11111111-1111-4111-8111-111111111111','44444444-4444-4444-8444-444444444444','hidden'),
@@ -84,6 +96,13 @@ select ((select row_to_json(t)::text from
   and (select claims->>'score' from public.articles
     where id='33333333-3333-4333-8333-333333333333')='0.125'
   and (select claims ? 'revisions' from public.articles
+    where id='33333333-3333-4333-8333-333333333333')
+  and (select pg_typeof(embedding)::text='vector'
+    and vector_dims(embedding)=384
+    and embedding::text like '[0.125,%,-0.5]'
+    and length(embedding::text)-length(replace(embedding::text,',',''))=383
+    and (row_to_json(a)::jsonb->>'embedding')=embedding::text
+    from public.articles a
     where id='33333333-3333-4333-8333-333333333333'))
   as typed_unicode_null_read \gset
 \if :typed_unicode_null_read
