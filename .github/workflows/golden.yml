@@ -98,12 +98,13 @@ jobs:
           docker run --rm --name mip-news-node --network container:mip-news-bridge --read-only --cap-drop ALL \
             --security-opt no-new-privileges:true --memory 1024m --pids-limit 128 \
             --tmpfs /tmp:rw,nosuid,size=128m \
-            --tmpfs /workspace/tests/.compiled:rw,nosuid,size=64m \
+            --tmpfs /workspace/tests:rw,nosuid,size=64m \
             --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace,readonly" \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/tests,target=/source/tests,readonly" \
             --workdir /workspace \
             -e MIP_NEWS_READER_TEST=http://127.0.0.1:8765 \
             node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 \
-            sh -ec 'node --test --test-concurrency=1 verifier/news-intake/newsReaderNative.test.mjs; node --test --test-concurrency=1 $(find tests -type f -name "*.test.mjs" | sort); node node_modules/vite/bin/vite.js build --configLoader runner --outDir /tmp/mip-build --emptyOutDir'
+            sh -ec 'cp -a /source/tests/. /workspace/tests/; node --test --test-concurrency=1 verifier/news-intake/newsReaderNative.test.mjs; node --test --test-concurrency=1 $(find tests -type f -name "*.test.mjs" | sort); node node_modules/vite/bin/vite.js build --configLoader runner --outDir /tmp/mip-build --emptyOutDir'
           printf '%s\n' 'SECTION_EXECUTION_PASS'
       - name: Preserve partial diagnostics and remove disposable runtime
         if: always()

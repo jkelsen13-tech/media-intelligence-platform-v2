@@ -95,7 +95,27 @@ grant select on public.articles,public.citations to anon;
 grant select on public.nodes,public.spatial_projection_v1 to service_role;
 """)
 db.execute((ROOT / "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql").read_text())
+# Compare the original V1 canonical payload/hash against the extension for a
+# metadata-absent caller. Both enqueue observations are rolled back, so they
+# cannot affect later intake counts or reader fixtures.
+legacy_input = {"url":"https://synthetic.invalid/legacy-v1", "title":"Legacy fixture",
+                "outlet":"Legacy synthetic outlet", "summary":None, "body_text":None,
+                "published_at":"2020-01-02T03:04:05Z"}
+def legacy_identity():
+    db.execute("begin")
+    try:
+        job_id = rpc("enqueue", {"run_id":"synthetic-legacy-compat", "article":legacy_input})
+        return db.execute("select input_hash,payload from evidence_pipeline.import_jobs where id=%s", (job_id,)).fetchone()
+    finally:
+        db.execute("rollback")
+legacy_before = legacy_identity()
 db.execute((ROOT / "supabase/production-candidates/news-intake-reader/001_native_source_identity.sql").read_text())
+legacy_after = legacy_identity()
+assert legacy_before == legacy_after
+assert "source_key" not in legacy_after[1] and "source_feed" not in legacy_after[1]
+assert one("select count(*) from evidence_pipeline.import_jobs") == 0
+print(json.dumps({"stage":"legacy_hash_compatibility","status":"PASS",
+                  "input_hash":legacy_after[0]}), flush=True)
 # Execute the actual current nested News view definitions against empty minimal
 # dependencies. No approved event/claim rows are invented for this slice.
 publication = (ROOT / "supabase/migrations/20260905182355_mip_nested_claim_publication_gates.sql").read_text()
