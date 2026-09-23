@@ -46,11 +46,26 @@
       },
       {
         "attempt": 3,
+        "head": "35869f55295c4461ca7f81aabf8ef9fdca263cf0",
+        "run": 35816777517,
+        "reservedMinutes": 15,
+        "status": "FAIL",
+        "job": 107039876796,
+        "runnerSeconds": 49,
+        "results": {
+          "nativeSetup": "PASS including legacy hash",
+          "nodeTests": "NOT_REACHED"
+        },
+        "failure": "cp -a attempted ownership preservation under cap-drop ALL",
+        "cleanup": "PASS"
+      },
+      {
+        "attempt": 4,
         "status": "RESERVED_NOT_DISPATCHED",
         "runner_minutes_reserved": 15
       }
     ],
-    "remaining": 7,
+    "remaining": 6,
     "excluded": [
       "production changes",
       "real-data transfer",
@@ -67,7 +82,7 @@
     "additional_runner_minutes_limit": 60,
     "runner_minutes_observed": 0,
     "allowance_note": "Owner replaced previous unspent three-execution ceiling with ten additional executions and sixty additional runner-minutes for this slice; lower boundary controls. Job timeout 15 minutes; reserve each dispatch against remaining minutes.",
-    "runner_seconds_observed": 376
+    "runner_seconds_observed": 425
   },
   "disposition": "EXTEND native deterministic extraction and mip_pipeline_v1 persistence; RECONCILE into the bound News reader seam.",
   "foundations": [
