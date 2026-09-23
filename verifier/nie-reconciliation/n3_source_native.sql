@@ -40,6 +40,8 @@ values ('11111111-1111-4111-8111-111111111111','33333333-3333-4333-8333-33333333
 insert into private_auth_fixture.users values ('55555555-5555-4555-8555-555555555555','hidden');
 \i /repo/supabase/qualification/nie-parent-custody/003_nie_source_read_candidate.sql
 create role nie_source_fixture_login login noinherit nobypassrls;
+alter role nie_source_fixture_login password :'fixture_password';
+grant connect on database nie_source_synthetic to nie_source_fixture_login;
 grant nie_parent_source_read to nie_source_fixture_login with inherit true, set false;
 insert into nie_parent_access.operations
   (login_name,operation_id,source_project_ref,expires_at)
@@ -55,7 +57,7 @@ values
    'niejaejtbxgakyrsntxm','articles','33333333-3333-4333-8333-333333333333',
    clock_timestamp()+interval '1 hour');
 
-set session authorization nie_source_fixture_login;
+\connect nie_source_synthetic nie_source_fixture_login 127.0.0.1
 begin isolation level repeatable read read only;
 select (current_setting('transaction_isolation')='repeatable read'
   and current_setting('transaction_read_only')='on'
@@ -129,13 +131,13 @@ select (not pg_has_role('nie_source_fixture_login','service_role','MEMBER'))
 \else
   \quit 1
 \endif
-reset session authorization;
+\connect nie_source_synthetic postgres 127.0.0.1
 
 -- Admin revocation blocks subsequent statements/sessions. For immediate
 -- revocation of an already-pinned RR transaction, terminate its backend too.
 update nie_parent_access.operations set expires_at=clock_timestamp()-interval '1 second'
 where login_name='nie_source_fixture_login';
-set session authorization nie_source_fixture_login;
+\connect nie_source_synthetic nie_source_fixture_login 127.0.0.1
 select ((select count(*) from public.events)=0 and
   (select count(*) from public.articles)=0 and
   (select count(*) from public.event_articles)=0) as expired_scope_denied \gset
@@ -150,5 +152,5 @@ begin
   exception when others then denied := true; end;
   if not denied then raise exception 'expired inventory allowed'; end if;
 end $$;
-reset session authorization;
+\connect nie_source_synthetic postgres 127.0.0.1
 select 'NIE_SOURCE_NATIVE_PASS' as status;

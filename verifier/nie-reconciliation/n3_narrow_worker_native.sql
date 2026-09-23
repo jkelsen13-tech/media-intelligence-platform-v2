@@ -5,6 +5,11 @@
 -- Relevant native relation columns and constraints from supabase/schema.sql
 -- and 20260905151626_mip_consolidation_delta.sql. The update trigger and
 -- unrelated public relations are omitted from this source-free fixture.
+-- The runner passes one synthetic fixture_password. The disposable server uses
+-- localhost password authentication; psql reconnects as the LOGIN itself so
+-- session_user proves the intended principal. No production secret is used.
+create schema fixture_nie_worker;
+set search_path = fixture_nie_worker, public;
 create table public.nodes (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique, label text not null,
@@ -23,10 +28,15 @@ alter table public.original_source_import_mappings enable row level security;
 \i /repo/supabase/qualification/nie-parent-custody/001_scoped_finish.sql
 \i /repo/supabase/qualification/nie-parent-custody/002_narrow_worker_candidate.sql
 
-create role nie_parent_fixture_login login noinherit nobypassrls;
-create role nie_parent_foreign_login login noinherit nobypassrls;
+create role nie_parent_fixture_login login noinherit nobypassrls
+  password :'fixture_password';
+create role nie_parent_foreign_login login noinherit nobypassrls
+  password :'fixture_password';
+grant connect on database postgres
+  to nie_parent_fixture_login, nie_parent_foreign_login;
 grant nie_parent_worker_call to nie_parent_fixture_login with inherit true, set false;
-create temporary table fixture_page as
+grant usage on schema fixture_nie_worker to nie_parent_fixture_login;
+create table fixture_page as
 select jsonb_build_array(jsonb_build_object(
   'source_project_ref','niejaejtbxgakyrsntxm',
   'source_table','events',
@@ -46,11 +56,11 @@ select jsonb_build_array(jsonb_build_object(
     'created_at','2026-09-23T00:00:00+00:00')::text,
   'source_imported_at',null,'recovery_status',null)) as records;
 grant select on fixture_page to nie_parent_fixture_login;
-create temporary table fixture_digest as
+create table fixture_digest as
 select legacy_graph_staging.fingerprint_payload(
   legacy_graph_staging.prepare_page(records)) as page_sha256 from fixture_page;
 grant select on fixture_digest to nie_parent_fixture_login;
-create temporary table foreign_page as
+create table foreign_page as
 select jsonb_build_array(jsonb_set(jsonb_set(jsonb_set(records->0,
   '{source_id}','"66666666-6666-4666-8666-666666666666"'::jsonb),
   '{payload,id}','"66666666-6666-4666-8666-666666666666"'::jsonb),
@@ -80,7 +90,7 @@ select 'nie-foreign-page','niejaejtbxgakyrsntxm','events',
   legacy_graph_staging.prepare_page(records),
   legacy_graph_staging.fingerprint_payload(legacy_graph_staging.prepare_page(records)),
   1,'completed' from foreign_page;
-create temporary table foreign_job_id as
+create table foreign_job_id as
 select id from legacy_graph_staging.import_jobs where run_id='nie-foreign-page';
 insert into legacy_graph_staging.staged_records
   (job_id,source_project_ref,source_table,source_id,object_family,payload,
@@ -99,7 +109,7 @@ select r.id,r.source_project_ref,r.source_table,r.source_id,1,'staged_original',
   r.payload,r.payload_sha256 from legacy_graph_staging.staged_records r
 where r.source_id='66666666-6666-4666-8666-666666666666';
 grant select on foreign_job_id to nie_parent_fixture_login;
-create temporary table own_job_id (id uuid not null);
+create table own_job_id (id uuid not null);
 grant select, insert on own_job_id to nie_parent_fixture_login;
 
 select (not rolbypassrls and not rolsuper) as narrow_executor
@@ -131,7 +141,8 @@ select (not has_table_privilege('nie_parent_fixture_login',
   \quit 1
 \endif
 
-set session authorization nie_parent_fixture_login;
+\connect postgres nie_parent_fixture_login 127.0.0.1
+set search_path = fixture_nie_worker, public;
 select (session_user='nie_parent_fixture_login'
   and current_user='nie_parent_fixture_login') as intended_login \gset
 \if :intended_login
@@ -242,5 +253,6 @@ begin
   exception when others then denied := true; end;
   if not denied then raise exception 'foreign finish accepted'; end if;
 end $$;
-reset session authorization;
+\connect postgres postgres 127.0.0.1
+set search_path = fixture_nie_worker, public;
 select 'NIE_NARROW_WORKER_NATIVE_PASS' as status;
