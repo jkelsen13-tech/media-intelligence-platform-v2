@@ -1,3 +1,106 @@
+# J1 · Approved disposition and complete native recovery follow-up
+
+**Current conclusion: READY FOR SPECIFIC JFN DELETION AUTHORIZATION, subject to a final bounded no-drift preflight. No deletion is authorized or performed by this report.** Direct retirement remains the selected path. Hosted C3 qualification and temporary staging are not prerequisites for any demonstrated jfn responsibility.
+
+This follow-up supersedes the original J1 report's open disposition, vector, managed-metadata and known-operator gates. The original report below is preserved as dated historical evidence; its next-decision wording and allowance are no longer current.
+
+## 1. Outcome and authority
+
+The owner approved historical-only retention of the exact 45 hash-matched rows in 21 relations in the existing qik private source-qualified archive, including qualification history and unresolved provenance. That decision was recorded **once**, in [private disposition receipt](https://github.com/jkelsen13-tech/mip-production-qualification/blob/b911fe060a44a042c0ddcb40f9fec21f880106eb/evidence/jfn-retirement/2026-09-23-owner-disposition.json), referencing the original J1 manifest commit/blob. The owner-disposition gate is SATISFIED. No archived payload, classification of unknown provenance, original identity/history, review/release decision, retention obligation or disclosure right changed.
+
+The current owner instructions, adopted workflow v3, consolidation handoff v3 and Section Architecture Report method continue to govern. C1/C2, containment and prior restore qualifications were not reopened.
+
+## 2. Architecture before
+
+The original J1 helper already restored a source-qualified native spatial history graph with exact JSONB, dependency ordering, atomicity and selected authority checks. Its fixture omitted the actual nullable vector column, so it correctly rejected a real payload containing embedding—even null. The 45-row archive was independently hash matched, but known operator closure and managed backup/configuration metadata were incomplete.
+
+Live topology was jfn's qualification project plus qik's existing private historical archive; the application spatial runtime was bound to qik. No demonstrated runtime responsibility required moving jfn history into canonical production tables.
+
+## 3. Actual changes and preserved boundaries
+
+The minimal EXTEND delta adds actual **public.vector(384)** with extension **vector0.8.2 in public**, includes extension identity in the native catalog signature, and adds null/non-null synthetic vectors and their required registry dependency. Five existing verifier files were extended and one dependency Dockerfile added. The helper continues to retain null fields, raw JSONB numeric precision, unknown-field rejection, source-qualified identities, lineage and historical authority. No application or production-candidate behavior changed.
+
+A fresh High review identified two fixture defects before execution: the unknown-field negative case needed a two-article aggregate hash, and the added vector article needed its registry reference. Both were corrected and reviewed before the single dispatch.
+
+The temporary manual workflow used exact branch/run-attempt guards and [skip ci] publishing, then was restored to baseline. It did not run the application build, modify live roles/configuration, retrieve retained material, export archived rows, activate a writer or change publication.
+
+## 4. Why this approach
+
+The required disposition is historical preservation, not production promotion or reconstruction of an unused hosted service. Existing qik custody plus an executable compatible native recovery procedure supplies the needed preservation path without another backend or another payload copy. No jfn-specific application caller or hosted responsibility was demonstrated that would justify C3 staging.
+
+The readonly archive checks evaluate identities and dependency closure inside qik and return aggregates only. They do not execute the helper against real payloads or pretend synthetic tests restore the 45 actual rows.
+
+## 5. Architecture after and caller closure
+
+Live topology is unchanged. The selected native recovery procedure now includes the previously missing vector type and null semantics.
+
+The owner's answer identifying this agent as operator closes the known agent-owned qualification use of spatial_writer_runtime. Repository evidence places frontend spatial reads and spatial-runtime on qik; no jfn Edge/cron, attached GitHub repository, Vercel project connection or PrivateLink connection was identified. No configured log drain was listed. Empty activity is not the basis for closure. Out-of-band manual SQL cannot be universally excluded; this remains an explicit uncertainty, not an invented active dependency.
+
+Redacted Auth/API/pooler/integration settings, migration references, versions and backup availability are retained in the [private recovery/caller receipt](https://github.com/jkelsen13-tech/mip-production-qualification/blob/9a0f29d9ba057474dea276b60479115529b11db3/evidence/jfn-retirement/2026-09-23-recovery-and-caller-closure.json). Deterministic Auth users/sessions counts remained zero; a contradictory UI estimate was not treated as records.
+
+## 6. Executed verification and limits
+
+[Run35832449347 / job107087972028](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/35832449347/job/107087972028) executed **cb1be9f818d642ecead4c5f6d5717eef962e0a90**, tree **5b90ab9d6caf8230444da060f8f230b34eddb5d0**, during **2026-09-23 07:34:49–07:36:18 UTC**. Exit0; **nine distinct case groups PASS,27 synthetic rows,21 relations,17 native functions**. Null and populated384-dimensional values reconstruct exactly. Existing identity/closure/no-op, missing dependency, unknown nullable field, interrupted transaction, history/precision/lineage, authority/private denial/direct-wire identity and divergent-target checks all pass. Cleanup log repetition is not another execution.
+
+Runtime PG512MiB/Python256MiB, network none/no published ports, read-only nonroot Python, 15-minute job maximum. Both dependency builds used enforced512MiB memory/swap limits. Vector source v0.8.2 is pinned at cab9da72c04353f143bb06b42ab70a403daac64a; PG runtime base remains pinned17.6. Compiler packages are not fully pinned. Peak memory was not measured. Containers and socket volume removal/absence checks passed; temporary images stayed on the disposable hosted runner, with no upload/cache. Ordinary test/build job had no runner.
+
+Warnings remain attached: Docker legacy builder deprecation, pip root-install/upgrade notices, plus unchanged C1 browser/build warnings. See [vector execution receipt](vector-execution-receipt.json) for exact blobs, image identity and ledger.
+
+Readonly archive observation **07:36:22UTC**:45rows/21relations; zero duplicate identities, invalid identity/hash, missing dependencies, cycles, non-null external ancestors, unreferenced public parents or typed-source mismatches. The one archived article retains explicit embedding:null. At **07:38:07UTC**, comparison against current native column names found zero unexpected-field rows. Queries and exact private evidence are retained in the private receipt.
+
+**Limits:** actual45-row restoration remains unexecuted; no hosted Auth/JWT/PostgREST/Edge/pooler qualification, whole-project restoration, universal external-caller proof or full transitive cluster-authority guarantee. The source-free procedure and independent source-qualified archive support the approved historical-only criterion. They do not establish full pipeline operation. The original selected-authority limitations remain applicable.
+
+## 7. Consequences and reuse
+
+The parent accepts the fresh non-implementing High code/workflow/terminal review and its conclusion that another actual-row transfer is not a required gate for this approved historical-only disposition, given exact independent custody and the recorded compatibility/closure evidence. The known native recovery gap is closed.
+
+Later work can reuse the complete vector-capable native procedure, refusal/rollback tests, private source manifest and redacted configuration receipt. Reusing the helper for actual data still requires a separate data-specific authorization and permitted isolated custody. It must not regain broad historical grants or become a production writer.
+
+News eligibility, Graph/Timeline/Arcs/Source Comparison/World View/Investigation Context purposes and C1/C2 identities are unchanged.
+
+## 8. Cost and allowance
+
+**VERIFIED NO ADDITIONAL CHARGE** for this public-repository standard ubuntu-24.04 runner with no artifact/cache storage or paid runner. The single execution consumed **89 observed runner-seconds**. Inherited9executions/958seconds plus this run = **10executions/1047seconds used;0executions/2553seconds (42m33s) remain**. Time remaining does not authorize another execution. The4GiB build exception remains consumed.
+
+Fresh infrastructure inspection corrects the earlier billing-label interpretation: actual selected compute is **Nano/t3a.nano**, not Micro; the displayed hourly rate is still **$0.01344**. No resource setting changed. Billing cycle/invoice and account credit observations remain in the private receipt. Removing jfn avoids future compute accrual under that configuration—about$0.32256/day—without refunding incurred usage or ending the organization subscription. No money has been saved.
+
+Seven daily physical backups were visible. [Supabase backup guidance](https://supabase.com/docs/guides/platform/backups) states that project deletion removes its associated backups; they are not independent custody. Custom-role passwords are not backed up, and Storage objects are separate. No backup was retrieved. Paid pause remains unavailable. No new retention/export service is proposed.
+
+## 9. Separate readiness and irreversible consequences
+
+| Boundary | Current conclusion |
+|---|---|
+| Required historical state | SATISFIED for exact45 approved archived rows; unresolved provenance unchanged |
+| Canonical runtime replacement | No required jfn application runtime identified; no qik installation needed |
+| Known caller closure | CLOSED for inspected agent/repository/account-managed use; external manual uncertainty disclosed |
+| Independent preservation/recovery | Exact qik custody and complete selected-native synthetic procedure PASS; actual45 restore unexecuted |
+| Managed configuration | Relevant redacted metadata/migration identities preserved; unused hosted-service recreation not claimed |
+| Temporary hosted reuse | NOT RECOMMENDED; no demonstrated dependency |
+| Retirement | READY FOR SPECIFIC AUTHORIZATION with final no-drift preflight; deletion not executed |
+| Billing reduction | Future compute consequence established; no observed savings yet |
+
+Deleting jfn irreversibly removes its database, project settings and project-coupled backups; there is no whole-project undo. The approved historical archive and repository evidence survive elsewhere. If final preflight finds changed state, a required caller or an archive mismatch, stop deletion and report that exact new dependency.
+
+Campaign-wide verdicts remain separate: **AUTHORITY CONSOLIDATED—not established; full PIPELINE VALIDATED IN ISOLATION—not established; PIPELINE OPERATIONAL ON THE AUTHORIZED LIVE BACKEND—not established.** C1/C2/J1 bounded PASS evidence is preserved.
+
+## 10. Exact continuation and next gate
+
+Starting head/tree:795e991c54740c67c43ad5dfa46699d138d5b17d/de0fe436680538debaf1d4aa1ff1a05a5c050771. Tested execution:cb1be9f818d642ecead4c5f6d5717eef962e0a90/5b90ab9d6caf8230444da060f8f230b34eddb5d0. Cleanup/receipt head:420d697604814a9522e9511348fb67102629ec3d; this report-only successor does not change tested code. All workflow content returns to baseline.
+
+Application src4cfffc8bbf4c0a105328f0ae543f11dd135cdc13, tests667b8d39bf77290bcbf1d83ecc9176ab683f8289 and lockb5d44ec6e0a21f931cb2d43884010025ee89889c are unchanged. C1/C2 reports, passing build and news-intake implementation are preserved.
+
+Actual routing: SolMedium implementation, LunaMedium bounded caller evidence, fresh non-implementing AstraHigh review; parent reconciliation once. No claim of an unavailable model setting or independent replay. GitHub/Supabase and authenticated browser worked; all durable records are remote.
+
+Shortest path: obtain exact jfn irreversible-deletion authorization; recheck only source/archive/required-caller and cost drift; delete only jfn if unchanged; verify project removal and future compute cessation, recording sanitized private evidence. No migration, new project, credentials, source activation, deployment, merge or other predecessor action is included. Browser deletion also requires confirmation at the irreversible action under the tool policy.
+
+**Next owner authorization unit:** permanently delete only jfnzyvzthzqtczlxhjll after that bounded preflight, acknowledging loss of its database/configuration/seven currently visible project-coupled backups and no whole-project rollback; preserve qik's approved45-row historical archive and all remote evidence; verify future compute cessation without promising a refund. This report prepares that decision and does not execute it.
+
+---
+
+# Historical original J1 report — preserved verbatim
+
+The following describes the earlier checkpoint. Its now-closed gates and old remaining allowance are historical; the follow-up above controls current readiness.
+
 # J1 · Jfn preservation and retirement-versus-reuse decision
 
 ## 1. What happened and why it matters
