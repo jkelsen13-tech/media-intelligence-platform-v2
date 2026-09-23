@@ -1,3 +1,52 @@
+# J1 · JFN RETIRED — final authorized retirement, 2026-09-23
+
+**Current responsibility status: JFN RETIRED.** Supabase confirmed deletion of only `jfnzyvzthzqtczlxhjll` (`mip-spatial-verification-sandbox-20260829`) in organization `ntmqymyaujspymfqmxew`. Confirmation was observed at **2026-09-23 07:59:54 UTC**; a provider-side event timestamp was not exposed. Authenticated inventory and qik archive postflight independently passed. This addendum supersedes earlier pending-authorization/readiness wording; all dated historical reports below remain unchanged.
+
+## Authority, before-state and bounded preflight
+
+The owner explicitly authorized irreversible deletion after a bounded no-drift preflight, accepted the selected-native historical preservation basis and its recovery/caller limitations, and confirmed the browser action at execution time. The target was ACTIVE_HEALTHY under the authenticated owner-controlled account immediately beforehand. No other retirement, live migration, role change, transfer, deployment or CI execution was authorized or performed.
+
+The final preflight (approximately 07:49–07:56:30 UTC) matched the source-qualified 45-row/21-relation archive to current source hashes and the approved manifest. The broader 28-table source scope remained 46 rows, including the unchanged reproducible pipeline configuration row outside the archive disposition. Selected native columns, constraints, functions, triggers, policies, migrations and recovery dependencies matched the reviewed evidence. No new Auth/Storage state, job, function, managed integration or required caller was identified. The last bounded writer check at 07:57:54 UTC found no writer connection; this does not establish universal absence of out-of-band callers.
+
+The private preflight records the precise comparison scope and the PostgreSQL17 MAINTAIN privilege coverage limitation on pipeline_config; no whole-project authority-equivalence claim is made. No payloads or credentials were exported. Required remote code, original observation, disposition and recovery/configuration records remained independently accessible.
+
+## Actual change and postflight
+
+The supported Supabase Dashboard permanently deleted the exact target. The first submission produced no success; authenticated inventory confirmed jfn still existed. The form was inspected, validation corrected and the same authorized action submitted successfully. No destructive request was blindly repeated. Provider success message: “Successfully deleted mip-spatial-verification-sandbox-20260829”.
+
+Authenticated inventory then contained only qik, yhb and nie, all ACTIVE_HEALTHY in the expected organization. Qik's 45 archived rows across 21 relations retained identical deterministic hashes. Postflight at 07:59:57.607793 UTC found zero invalid/duplicate identities, missing dependencies, cycles, typed-source mismatches or missing embedding keys; the explicit null embedding remained present. Nothing in qik was written or promoted.
+
+| Active responsibility | Current disposition |
+|---|---|
+| Jfn historical rows, revisions, evidence, authority and review/release history | Existing qik private source-qualified archive; owner-approved historical-only disposition, unchanged |
+| Jfn managed project and compute | **JFN RETIRED**; deleted, no replacement project |
+| Selected native recovery | Existing vector-capable source-free qualified procedure and remote definitions retained |
+| Known jfn callers | Inspected agent/repository/account-managed closure retained; accepted out-of-band uncertainty remains |
+| Qik, yhb and nie | Protected and present; no cutover or responsibility transfer in this action |
+| Hosted intake qualification | Still unresolved; not a prerequisite for the demonstrated jfn historical responsibilities |
+
+## Cost and verification limits
+
+Before deletion the compute page showed Nano/t3a.nano at $0.01344/hour, with no IPv4, PITR, custom-domain add-on or read replica. Under [Supabase deletion policy](https://supabase.com/docs/guides/platform/delete-project), deletion stops future project usage: gross future compute avoidance at the observed rate is $0.32256/day. No replacement resource or additional paid action was introduced.
+
+The authenticated billing page after deletion still showed the September05–October05 cycle, next invoice October05, unchanged Pro subscription and enabled spend cap. It retained accrued jfn usage and warns of delayed billing updates. The invoice labels this usage Micro Compute while the project compute screen said Nano/t3a.nano; neither setting was changed. This is not a verified final invoice reduction, refund or independently sampled cessation of the usage meter. Accrued charges and organization subscription remain.
+
+Actual archived rows were not restored in a test; no complete hosted restore or whole-project undo exists. The owner accepted those limits. Synthetic J1 recovery PASS remains bounded and does not become actual-row recovery. C1/C2 implementation, passing tests/build, containment and historical qualification evidence remain intact.
+
+## Evidence, unchanged implementation and closeout
+
+- Reviewed before-head: `32028d49a1c554a23ece3ec30a5aeaf9c21647ab`, tree `2d625ca8ffe07b62fa063066a054018ffbb59527`.
+- [Private preflight](https://github.com/jkelsen13-tech/mip-production-qualification/blob/179b24e574525149fddd75f1afa822126b3b18e9/evidence/jfn-retirement/2026-09-23-deletion-preflight.json), preserved as its original pre-action record.
+- [Private deletion and postflight receipt](https://github.com/jkelsen13-tech/mip-production-qualification/blob/0838b11a08a23a85f3d44d88602acdc7366883de/evidence/jfn-retirement/2026-09-23-deletion-postflight.json), including aggregates/hashes, attempts, protected inventory, billing observations and limits.
+
+Only this report is changed in the application branch by the retirement closeout. No executable code, test, workflow or deployment configuration is changed. Existing exposure and trigger controls were checked; no CI was dispatched. Allowance remains **zero executions**, with 2553 unused runner-seconds that do not authorize a dispatch. The 4GiB build exception remains consumed. No durable MIP files were created on the owner's device.
+
+Campaign verdicts remain separate: **AUTHORITY CONSOLIDATED** within the adopted contracts; **PIPELINE VALIDATED IN ISOLATION** only within existing scoped C1/C2/J1 evidence; **PIPELINE OPERATIONAL ON THE AUTHORIZED LIVE BACKEND — NOT ESTABLISHED**. Retirement removes one backend project and its future compute responsibility; it does not complete canonical live intake, hosted qualification or protected-predecessor consolidation.
+
+**Next action: stop at completed jfn retirement.** No further owner authorization is needed for this completed action. Future campaign work must retain its own scope and resource boundaries.
+
+---
+
 # J1 · Approved disposition and complete native recovery follow-up
 
 **Current conclusion: READY FOR SPECIFIC JFN DELETION AUTHORIZATION, subject to a final bounded no-drift preflight. No deletion is authorized or performed by this report.** Direct retirement remains the selected path. Hosted C3 qualification and temporary staging are not prerequisites for any demonstrated jfn responsibility.
