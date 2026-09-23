@@ -41,7 +41,7 @@ Actual archived rows were not restored in a test; no complete hosted restore or 
 
 Only this report is changed in the application branch by the retirement closeout. No executable code, test, workflow or deployment configuration is changed. Existing exposure and trigger controls were checked; no CI was dispatched. Allowance remains **zero executions**, with 2553 unused runner-seconds that do not authorize a dispatch. The 4GiB build exception remains consumed. No durable MIP files were created on the owner's device.
 
-Campaign verdicts remain separate: **AUTHORITY CONSOLIDATED** within the adopted contracts; **PIPELINE VALIDATED IN ISOLATION** only within existing scoped C1/C2/J1 evidence; **PIPELINE OPERATIONAL ON THE AUTHORIZED LIVE BACKEND — NOT ESTABLISHED**. Retirement removes one backend project and its future compute responsibility; it does not complete canonical live intake, hosted qualification or protected-predecessor consolidation.
+Campaign verdicts remain separate: **AUTHORITY CONSOLIDATED — NOT ESTABLISHED campaign-wide**; **PIPELINE VALIDATED IN ISOLATION — NOT ESTABLISHED for the complete intended pipeline**, despite existing scoped C1/C2/J1 PASS evidence; **PIPELINE OPERATIONAL ON THE AUTHORIZED LIVE BACKEND — NOT ESTABLISHED**. Retirement removes one backend project and its future compute responsibility; it does not complete canonical live intake, hosted qualification or protected-predecessor consolidation.
 
 **Next action: stop at completed jfn retirement.** No further owner authorization is needed for this completed action. Future campaign work must retain its own scope and resource boundaries.
 
