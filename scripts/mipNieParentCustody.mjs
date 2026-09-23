@@ -137,18 +137,25 @@ function assertReadback(rows, page) {
   })
 }
 async function processPage(destination, page, records) {
-  const queued = await destination.rpc('enqueue', { run_id: page.run_id, records, mappings: [] })
-  if (queued?.run_id !== page.run_id || !queued.job_id) fail('destination_enqueue_mismatch')
-  let result = queued
-  if (!queued.already_completed) {
-    const claimed = await destination.rpc('claim', { run_id: page.run_id })
-    if (!claimed || claimed.run_id !== page.run_id || claimed.id !== queued.job_id || !claimed.lease_token
-        || claimed.source_project_ref !== SOURCE_REF || claimed.source_table !== page.table
-        || claimed.page_sha256 !== fingerprintPayload(records)) fail('destination_claim_unavailable')
-    result = await destination.finishParentJob({ job_id: claimed.id, lease_token: claimed.lease_token,
-      run_id: page.run_id, page_sha256: claimed.page_sha256 })
-    if (result?.job_id !== claimed.id) fail('destination_finish_mismatch')
-  }
+  // One destination transaction keeps the queued job invisible to generic workers
+  // until the scoped finish has completed. This is separate from the source fence.
+  const result = await destination.withPageTransaction(async tx => {
+    if (typeof tx?.rpc !== 'function' || typeof tx?.finishParentJob !== 'function') fail('destination_transaction_invalid')
+    const queued = await tx.rpc('enqueue', { run_id: page.run_id, records, mappings: [] })
+    if (queued?.run_id !== page.run_id || !queued.job_id) fail('destination_enqueue_mismatch')
+    let finished = queued
+    if (!queued.already_completed) {
+      const claimed = await tx.rpc('claim', { run_id: page.run_id })
+      if (!claimed || claimed.run_id !== page.run_id || claimed.id !== queued.job_id || !claimed.lease_token
+          || claimed.source_project_ref !== SOURCE_REF || claimed.source_table !== page.table
+          || claimed.page_sha256 !== fingerprintPayload(records)) fail('destination_claim_unavailable')
+      finished = await tx.finishParentJob({ job_id: claimed.id, lease_token: claimed.lease_token,
+        run_id: page.run_id, page_sha256: claimed.page_sha256 })
+      if (finished?.job_id !== claimed.id) fail('destination_finish_mismatch')
+    }
+    assertRpcResult(finished, page)
+    return finished
+  })
   assertRpcResult(result, page)
   const readback = await destination.readStaged({ source_project_ref: SOURCE_REF, source_table: page.table, ids: page.expected.map(r => r.id) })
   assertReadback(readback, page)
@@ -158,14 +165,15 @@ async function processPage(destination, page, records) {
  * Source adapter must keep every readPage call inside ONE read-only repeatable-read
  * transaction and return a pinned transaction attestation. This interface cannot
  * prove connector behavior; the approved private host must qualify it separately.
- * Destination adapter exposes exact-run enqueue/claim, private scoped finish and readStaged.
+ * Destination adapter holds enqueue, exact-run claim and private scoped finish on one
+ * destination connection and transaction; readback occurs after that commit.
  * synthetic_test_only is for source-free qualification fixtures, not a security boundary.
  */
 export async function executeParentCustody({ manifest, source, destination, authorization }) {
   validateParentManifest(manifest)
   assertAuthorized(manifest, authorization)
   if (typeof source?.withSnapshot !== 'function' || typeof destination?.rpc !== 'function'
-      || typeof destination?.readStaged !== 'function' || typeof destination?.finishParentJob !== 'function') fail('adapter_missing')
+      || typeof destination?.readStaged !== 'function' || typeof destination?.withPageTransaction !== 'function') fail('adapter_missing')
   const pages = pagePlan(manifest)
   let prepared
   try {

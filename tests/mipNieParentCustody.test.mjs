@@ -44,6 +44,23 @@ function harness({rows,manifest}, options = {}) {
     },
   })}
   const destination = {
+    withPageTransaction:async fn=>{
+      calls.push(['transaction_begin'])
+      const beforeJobs=structuredClone(jobs), beforeStaged=structuredClone(staged)
+      try {
+        const result=await fn(destination)
+        calls.push(['transaction_commit'])
+        if(options.breakAfterCommit) throw Object.assign(Error('ack lost SECRET_PRIVATE_URL'),{afterCommit:true})
+        return result
+      } catch(error) {
+        if(!error.afterCommit) {
+          jobs.clear();for(const [k,v] of beforeJobs) jobs.set(k,v)
+          staged.clear();for(const [k,v] of beforeStaged) staged.set(k,v)
+          calls.push(['transaction_rollback'])
+        }
+        throw error
+      }
+    },
     rpc:async (action,input) => {
       calls.push([action,input])
       if (options.breakAt === action) throw Object.assign(Error('synthetic SECRET_PRIVATE_URL'),{code:'SECRET_PRIVATE_URL'})
@@ -72,7 +89,6 @@ function harness({rows,manifest}, options = {}) {
             conflict_id:prior && prior.payload_sha256!==r.payload_sha256?'synthetic-conflict':null}
         })
         job.completed=true
-        if (options.breakAfterCommit) throw Error('acknowledgement lost')
         return {job_id:job.id,run_id:job.run_id,state:'completed',results:job.results}
       }
       throw Error('unallowed action')
@@ -154,6 +170,11 @@ test('native staging RPC preserves exact source-qualified versions and private/p
     [table,Number((await db.query(`select count(*)::int n from public.${table}`)).rows[0].n)])))
   const native={
     synthetic:true,
+    withPageTransaction:async fn=>{
+      await db.exec('begin')
+      try {await db.exec('set local role service_role');const result=await fn(native);await db.exec('commit');return result}
+      catch(error){await db.exec('rollback');throw error}
+    },
     rpc:async(action,input)=>{
       assert.ok(['enqueue','claim','finish'].includes(action))
       const result=(await db.query('select public.mip_legacy_graph_v1($1,$2::jsonb) result',
@@ -213,7 +234,7 @@ test('native staging RPC preserves exact source-qualified versions and private/p
   result=await executeParentCustody({manifest:f.manifest,source:h.source,destination:native,
     authorization:{mode:'synthetic_test_only',synthetic_test_only:true,manifest_sha256:f.manifest.sha256}})
   assert.equal(result.state,'readback_verified')
-  assert.equal(Number((await db.query('select count(*)::int n from legacy_graph_staging.payload_versions')).rows[0].n),4)
+  assert.equal(Number((await db.query("select count(*)::int n from legacy_graph_staging.payload_versions where source_table in ('events','articles')")).rows[0].n),4)
   for(const [table,count] of Object.entries(baseline))
     assert.equal(Number((await db.query(`select count(*)::int n from public.${table}`)).rows[0].n),count)
   const changed={...f.rows.articles[0],title:'Synthetic conflicting title'}
@@ -232,11 +253,26 @@ test('native staging RPC preserves exact source-qualified versions and private/p
     authorization:{mode:'synthetic_test_only',synthetic_test_only:true,manifest_sha256:f.manifest.sha256}})
   assert.equal(result.state,'incomplete')
   assert.equal(result.code,'destination_conflict')
+  const rollbackId='80000000-0000-0000-0000-000000000001'
+  const malformed={source_project_ref:SOURCE_REF,source_table:'events',source_id:rollbackId,
+    object_family:'source_comparison_event',payload:{id:rollbackId},
+    payload_json:serializeStagingJson({id:rollbackId}),payload_sha256:hash({id:rollbackId}),
+    source_imported_at:null,recovery_status:null}
+  await assert.rejects(native.withPageTransaction(async tx=>{
+    await tx.rpc('enqueue',{run_id:'n2.synthetic.rollback',records:[malformed],mappings:[]})
+    const lease=await tx.rpc('claim',{run_id:'n2.synthetic.rollback'})
+    return tx.finishParentJob({job_id:lease.id,lease_token:lease.lease_token,
+      run_id:lease.run_id,page_sha256:lease.page_sha256})
+  }),/outside exact custody contract/)
+  assert.equal(Number((await db.query("select count(*)::int n from legacy_graph_staging.import_jobs where run_id='n2.synthetic.rollback'")).rows[0].n),0)
+  assert.equal(Number((await db.query('select count(*)::int n from legacy_graph_staging.staged_records where source_id=$1',[rollbackId])).rows[0].n),0)
   for(const role of ['anon','authenticated']) {
     await db.exec(`set role ${role}`)
     try {
       await assert.rejects(db.query('select * from legacy_graph_staging.staged_records'),/permission denied/)
       await assert.rejects(db.query('select public.mip_legacy_graph_v1($1,$2::jsonb)', ['claim','{}']),/permission denied/)
+      await assert.rejects(db.query('select legacy_graph_staging.finish_nie_parent_job($1::uuid,$2::uuid,$3::text,$4::text)',
+        ['00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002','denied','a'.repeat(64)]),/permission denied/)
     } finally {await db.exec('reset role')}
   }
 })
