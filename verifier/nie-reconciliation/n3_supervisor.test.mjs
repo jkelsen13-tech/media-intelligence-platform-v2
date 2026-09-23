@@ -22,6 +22,7 @@ function approval() {
     destination_endpoint_host:`db.${DESTINATION_REF}.supabase.co`,
     approved_ids:ids, field_allowlist:FIELD_ALLOWLIST, run_prefix:'n3.synthetic',
     max_bytes:1024*1024, max_runtime_ms:60000,
+    issued_at:new Date().toISOString(),
     expires_at:new Date(Date.now()+60000).toISOString(),
     scope_sha256:sourceOperationScopeDigest({approvedIds:ids,runPrefix:'n3.synthetic',maxBytes:1024*1024}),
     source_group_scope_sha256:'a'.repeat(64), permission_basis_id:'synthetic',

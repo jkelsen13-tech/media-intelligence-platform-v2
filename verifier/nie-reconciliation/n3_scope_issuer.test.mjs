@@ -20,6 +20,7 @@ function fixture({sourceCommitFails=false}={}) {
     destination_endpoint_host:`db.${DESTINATION_REF}.supabase.co`,
     approved_ids:ids,field_allowlist:FIELD_ALLOWLIST,run_prefix:runPrefix,
     max_bytes:1024*1024,max_runtime_ms:60000,
+    issued_at:new Date().toISOString(),
     expires_at:new Date(Date.now()+60000).toISOString(),
     scope_sha256:sourceOperationScopeDigest({approvedIds:ids,runPrefix,maxBytes:1024*1024}),
     source_group_scope_sha256:'a'.repeat(64),permission_basis_id:'synthetic',
@@ -85,6 +86,28 @@ test('tampered approval cannot provision source IDs',async()=>{
   const wrong={...f.scope,source_group_scope_sha256:'f'.repeat(64)}
   await assert.rejects(f.scopeIssuer.claimOperation({approval:f.approval,scope:wrong}),/issuer_approval_invalid/)
   assert.equal(f.calls.length,0)
+})
+test('administrator SQL and both receipts use the signed absolute runtime bound',async()=>{
+  const f=fixture()
+  f.scope.max_runtime_ms=30000
+  f.approval=signed(f.scope,f.owner.privateKey)
+  const bound=Date.parse(f.scope.issued_at)+30000
+  const claimDocument=await f.scopeIssuer.claimOperation({approval:f.approval,scope:f.scope})
+  const sourceExpiry=f.calls.find(c=>c.sql.includes('insert into nie_parent_access.operations')).params[3]
+  const idExpiries=f.calls.filter(c=>c.sql.includes('insert into nie_parent_access.allowed_source_ids'))
+    .map(c=>c.params[4])
+  assert.equal(Date.parse(sourceExpiry),bound)
+  assert.equal(idExpiries.every(x=>x===sourceExpiry),true)
+  assert.equal(claimDocument.body.expires_at,sourceExpiry)
+  const grant=await f.scopeIssuer.authorizePages({approval:f.approval,scope:f.scope,
+    claim:claimDocument.body,claimDocument,manifest:f.manifest,pages:f.pages})
+  const qikExpiry=f.calls.find(c=>c.sql.includes('insert into legacy_graph_staging.nie_parent_page_scope')).params[2]
+  assert.equal(qikExpiry,sourceExpiry)
+  assert.equal(grant.body.expires_at,sourceExpiry)
+  const installed=JSON.parse(f.calls.find(c=>c.sql.includes('insert into legacy_graph_staging.nie_parent_page_scope')).params[4])
+  assert.deepEqual(installed[0].expected_rows,f.manifest.tables.events.rows)
+  assert.deepEqual(installed[1].expected_rows,f.manifest.tables.articles.rows)
+  assert.deepEqual(installed[1].expected_fields,[...FIELD_ALLOWLIST.articles].sort())
 })
 test('unknown source scope COMMIT discards admin connection and issues no claim',async()=>{
   const f=fixture({sourceCommitFails:true})

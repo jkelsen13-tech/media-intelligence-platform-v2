@@ -46,6 +46,15 @@ function validExpiry(value) {
   const expiry=Date.parse(value)
   return Number.isFinite(expiry) && expiry>Date.now() && expiry<=Date.now()+30*60*1000
 }
+function boundedExpiry(scope) {
+  const issuedAt=Date.parse(scope?.issued_at)
+  const expiresAt=Date.parse(scope?.expires_at)
+  const deadline=Math.min(expiresAt,issuedAt+scope.max_runtime_ms)
+  if (!Number.isFinite(issuedAt) || issuedAt>Date.now()
+      || issuedAt<Date.now()-30*60*1000 || !Number.isFinite(deadline)
+      || deadline<=Date.now()) fail('issuer_operation_expired')
+  return new Date(deadline).toISOString()
+}
 /** Source-free OPERATOR-SIDE provisioning contract. Never construct this
  * issuer in a GitHub worker: its signing key and administrator connections
  * belong to a separate, controlled operator context. The callback interface
@@ -74,6 +83,7 @@ export function createNarrowScopeIssuer({ sourceAdmin, destinationAdmin, signing
           runPrefix:scope.run_prefix,maxBytes:scope.max_bytes})
         || !Number.isSafeInteger(scope.max_runtime_ms) || scope.max_runtime_ms<1
         || scope.max_runtime_ms>15*60*1000) fail('issuer_approval_invalid')
+    boundedExpiry(scope)
   }
   return {
     async claimOperation({ approval, scope }) {
@@ -85,21 +95,21 @@ export function createNarrowScopeIssuer({ sourceAdmin, destinationAdmin, signing
           || scope.approved_ids.events.length < 1 || scope.approved_ids.articles.length < 1
           || scope.approved_ids.events.length + scope.approved_ids.articles.length > 10000) fail('issuer_source_scope_invalid')
       const attemptId=randomUUID()
-      const expiry=new Date(Math.min(Date.parse(scope.expires_at),Date.now()+scope.max_runtime_ms)).toISOString()
+      const expiry=boundedExpiry(scope)
       await withAdminTransaction(sourceAdmin,SOURCE_REF,scope.source_login,async client=>{
         // Both primary keys make an operation one-use across processes. A lost
         // COMMIT acknowledgment never signs a claim; a retry must use a new UUID.
         const operation=await client.query(`insert into nie_parent_access.operations
           (login_name,operation_id,source_project_ref,expires_at)
           values ($1,$2::uuid,$3,$4::timestamptz)`,
-        [scope.source_login,scope.operation_id,SOURCE_REF,scope.expires_at])
+        [scope.source_login,scope.operation_id,SOURCE_REF,expiry])
         if (operation.rowCount !== 1) fail('issuer_operation_not_unique')
         for (const table of ['events','articles']) {
           const ids=scope.approved_ids[table]
           const inserted=await client.query(`insert into nie_parent_access.allowed_source_ids
             (login_name,operation_id,source_project_ref,source_table,source_id,expires_at)
             select $1,$2::uuid,$3,$4,id,$5::timestamptz from unnest($6::uuid[]) as id`,
-          [scope.source_login,scope.operation_id,SOURCE_REF,table,scope.expires_at,ids])
+          [scope.source_login,scope.operation_id,SOURCE_REF,table,expiry,ids])
           if (inserted.rowCount !== ids.length) fail('issuer_source_ids_incomplete')
         }
       })
@@ -131,16 +141,19 @@ export function createNarrowScopeIssuer({ sourceAdmin, destinationAdmin, signing
       // The issuer independently checks the exact page count, table, size and
       // run IDs; page hashes are provided by the prepared payload digest.
       let i=0
+      const installedPages=[]
       for (const table of ['events','articles']) {
         const rows=manifest.tables[table].rows
         for (let start=0;start<rows.length;start+=100) {
           const p=pages[i++], ordinal=Math.floor(start/100)
           if (p?.source_table!==table || p.page_size!==Math.min(100,rows.length-start)
               || p.run_id!==`${manifest.run_prefix}.${manifest.sha256}.${table}.${String(ordinal).padStart(4,'0')}`) fail('issuer_page_scope_invalid')
+          installedPages.push({...p, expected_rows:rows.slice(start,start+100),
+            expected_fields:[...FIELD_ALLOWLIST[table]].sort()})
         }
       }
       if (i!==pages.length) fail('issuer_page_scope_invalid')
-      const expiry=new Date(Math.min(Date.parse(scope.expires_at),Date.parse(claim.expires_at))).toISOString()
+      const expiry=new Date(Math.min(Date.parse(boundedExpiry(scope)),Date.parse(claim.expires_at))).toISOString()
       await withAdminTransaction(destinationAdmin,DESTINATION_REF,scope.destination_login,async client=>{
         // Serialize issuers for this signed run prefix. Any prior page, even
         // expired, means this operation already chose a manifest.
@@ -152,11 +165,13 @@ export function createNarrowScopeIssuer({ sourceAdmin, destinationAdmin, signing
         if (Number(existing)!==0) fail('issuer_manifest_already_granted')
         const inserted=await client.query(`insert into legacy_graph_staging.nie_parent_page_scope
           (login_name,run_id,source_project_ref,source_table,page_sha256,page_size,
-            expires_at,approved_manifest_sha256)
-          select $1,p.run_id,$2,p.source_table,p.page_sha256,p.page_size,$3::timestamptz,$4
+            expires_at,approved_manifest_sha256,expected_rows,expected_fields)
+          select $1,p.run_id,$2,p.source_table,p.page_sha256,p.page_size,$3::timestamptz,$4,
+            p.expected_rows,p.expected_fields
           from jsonb_to_recordset($5::jsonb)
-            as p(run_id text,source_table text,page_sha256 text,page_size integer)`,
-        [scope.destination_login,SOURCE_REF,expiry,manifest.sha256,JSON.stringify(pages)])
+            as p(run_id text,source_table text,page_sha256 text,page_size integer,
+              expected_rows jsonb,expected_fields jsonb)`,
+        [scope.destination_login,SOURCE_REF,expiry,manifest.sha256,JSON.stringify(installedPages)])
         if (inserted.rowCount!==pages.length) fail('issuer_pages_incomplete')
       })
       return signBody({version:'nie-parent-page-grant/v1',operation_id:scope.operation_id,

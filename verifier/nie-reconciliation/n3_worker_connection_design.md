@@ -152,6 +152,39 @@ operator identity or approved key/administrator-secret custody is installed.
 Direct in-process issuer wiring in a test proves callback agreement only and
 must not be used as the live deployment topology.
 
+## Exact page review correction
+
+Before this correction, 002's enqueue wrapper checked page hash, count and
+source table. The issuer inserted a page hash supplied through the worker
+callback. That did not independently bind a page to the manifest's ordered
+source IDs, each payload digest or the exact retained field keys. The new
+**uninstalled** `004_exact_page_candidate.sql` adds `expected_rows` and
+`expected_fields` to the qik page scope and replaces the enqueue wrapper.
+The operator-side issuer derives those values from the validated source
+manifest, checks the manifest's ordered IDs, run prefix, byte bound and
+source-group scope digest against the signed approval, then inserts them as
+admin-only scope. The wrapper rejects a matching-size page with a foreign ID,
+different payload digest or extra/missing field before enqueue. It also checks
+the outer record keys and source identity. A submitted page SHA remains useful
+for job integrity, but it no longer grants authority without the row and field
+matches. 002 and 004 must be reviewed and installed together for this guarantee;
+neither was applied here. The previous 002-only synthetic PASS remains
+historical evidence, not proof of the corrected route.
+
+The signed approval now includes `issued_at`; both source-ID and qik-page SQL
+scope expiry and both receipts use the same absolute bound: the earlier of the
+owner-approved expiry and `issued_at + max_runtime_ms`. A lost administrator
+COMMIT acknowledgment discards the connection and issues no receipt. The new
+native fixture exercises real `vector(384)` text, JSON nulls, exact readback,
+foreign-ID and extra-field refusal, and expired-scope denial after 004. That
+fixture has not run in the pinned Supabase PostgreSQL image. The source fixture
+uses `public.articles.embedding vector(384)` and `create extension vector`,
+matching the recorded NIE migration; the live NIE extension namespace and
+effective ACL still require a fresh catalog check. The authenticated
+worker-to-operator receipt channel and operator key custody remain concrete
+hosted release gates. No signing key or administrator connection belongs in
+the GitHub worker process.
+
 Provisioning would require two distinct independently generated secrets and
 LOGINs, one on NIE and one on qik, each dedicated to a single approved
 operation. Proposed bounds are `CONNECTION LIMIT 1`, `VALID UNTIL` no more

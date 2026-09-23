@@ -10,6 +10,7 @@ const REQUIRED_APPROVAL = ['version','operation_id','host_id','source_login',
   'destination_login','source_project_ref','destination_project_ref',
   'source_endpoint_host','destination_endpoint_host','approved_ids',
   'field_allowlist','run_prefix','max_bytes','max_runtime_ms','expires_at',
+  'issued_at',
   'scope_sha256','source_group_scope_sha256','permission_basis_id',
   'retention_contract_id','route_id','cost_boundary_id']
 function exactKeys(value, keys) {
@@ -67,6 +68,7 @@ export async function superviseNarrowParentCustody({ approval, approvalPublicKey
   const issuerKey = keyWithPin(issuerPublicKey, issuerKeySha256)
   const scope = signedBody(approval, approverKey, REQUIRED_APPROVAL)
   const start = now()
+  const issuedAt = Date.parse(scope.issued_at)
   if (scope.version !== 'nie-parent-operation/v1' || !UUID.test(scope.operation_id ?? '')
       || scope.host_id !== hostId || scope.source_project_ref !== SOURCE_REF
       || scope.destination_project_ref !== DESTINATION_REF
@@ -79,6 +81,7 @@ export async function superviseNarrowParentCustody({ approval, approvalPublicKey
       || !SHA.test(scope.source_group_scope_sha256 ?? '')
       || !Number.isSafeInteger(scope.max_runtime_ms) || scope.max_runtime_ms < 1
       || scope.max_runtime_ms > 15 * 60 * 1000 || !liveExpiry(scope.expires_at, start)
+      || !Number.isFinite(issuedAt) || issuedAt > start || issuedAt < start-30*60*1000
       || !scope.permission_basis_id || !scope.retention_contract_id
       || !scope.route_id || !scope.cost_boundary_id
       || scope.scope_sha256 !== sourceOperationScopeDigest({
@@ -86,7 +89,8 @@ export async function superviseNarrowParentCustody({ approval, approvalPublicKey
       || typeof claimOperation !== 'function' || typeof authorizePages !== 'function') {
     throw Error('operation_approval_invalid')
   }
-  const deadline = Math.min(Date.parse(scope.expires_at), start + scope.max_runtime_ms)
+  const deadline = Math.min(Date.parse(scope.expires_at), issuedAt + scope.max_runtime_ms)
+  if (deadline <= start) throw Error('operation_approval_expired')
   const claimDocument = await claimOperation({ approval, scope })
   const claimed = signedBody(claimDocument, issuerKey,
     ['version','operation_id','attempt_id','host_id','scope_sha256','source_login','expires_at'])
