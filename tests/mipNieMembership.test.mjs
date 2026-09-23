@@ -11,6 +11,7 @@ import {
 const EVENT = '11111111-1111-4111-8111-111111111111'
 const ARTICLE = '22222222-2222-4222-8222-222222222222'
 const OTHER = '33333333-3333-4333-8333-333333333333'
+const GAP = '44444444-4444-4444-8444-444444444444'
 const membership = {
   source_project_ref: NIE_PROJECT_REF,
   event_id: EVENT,
@@ -18,6 +19,11 @@ const membership = {
   membership_method: 'manual',
   membership_confidence: 0.6,
   created_at: '2026-09-20T12:34:56.123456Z',
+}
+
+async function asRole(db, role, action) {
+  await db.exec(`set role ${role}`)
+  try { return await action() } finally { await db.exec('reset role') }
 }
 
 async function count(db, sql, values = []) {
@@ -55,7 +61,7 @@ test('nie membership preserves native composite identity and dependencies in pri
   assert.throws(() => prepareNieEventArticle({ ...membership, source_project_ref: 'yhbwnrtlqbjtcrrlpbge' }), /exact source project/)
   assert.throws(() => prepareNieEventArticle({ ...membership, comparison_validation_state: 'approved' }), /exact native/)
 
-  await assert.rejects(stageNieEventArticle(db, membership), /missing source-qualified Source Comparison event/)
+  await assert.rejects(asRole(db, 'service_role', () => stageNieEventArticle(db, membership)), /missing source-qualified Source Comparison event/)
   await applyStagingPage(db, {
     run_id: 'nie-event-dependency',
     records: [{
@@ -63,7 +69,7 @@ test('nie membership preserves native composite identity and dependencies in pri
       payload: { id: EVENT, canonical_title: 'Synthetic source comparison', status: 'candidate' },
     }],
   })
-  await assert.rejects(stageNieEventArticle(db, membership), /missing source-qualified article/)
+  await assert.rejects(asRole(db, 'service_role', () => stageNieEventArticle(db, membership)), /missing source-qualified article/)
   await applyStagingPage(db, {
     run_id: 'nie-article-dependency',
     records: [{
@@ -72,17 +78,44 @@ test('nie membership preserves native composite identity and dependencies in pri
     }],
   })
 
-  const first = await stageNieEventArticle(db, membership)
+  await applyStagingPage(db, {
+    run_id: 'nie-gap-article',
+    records: [{
+      source_project_ref: NIE_PROJECT_REF, source_table: 'articles', source_id: GAP,
+      recovery_status: 'not_restorable_no_pre_import_snapshot',
+      payload: { id: GAP, title: 'Synthetic source with missing prior snapshot', url: 'https://example.invalid/nie-gap' },
+    }],
+  })
+  assert.equal((await db.query(
+    'select review_state from legacy_graph_staging.staged_records where source_project_ref=$1 and source_table=$2 and source_id=$3',
+    [NIE_PROJECT_REF, 'articles', GAP],
+  )).rows[0].review_state, 'gap_recorded')
+  await assert.rejects(
+    asRole(db, 'service_role', () => stageNieEventArticle(db, { ...membership, article_id: GAP })),
+    /missing source-qualified article/,
+  )
+  for (const [field, value] of [
+    ['membership_method', '42' ], ['created_at', '42'], ['event_id', '42'],
+  ]) {
+    const malformed = JSON.stringify({ ...candidate.payload, [field]: 42 })
+    await assert.rejects(
+      db.query('select legacy_graph_staging.stage_nie_event_article($1::jsonb,$2::text)',
+        [malformed, candidate.payload_sha256]),
+      /membership requires event, article, method, and creation time/,
+    )
+  }
+
+  const first = await asRole(db, 'service_role', () => stageNieEventArticle(db, membership))
   assert.equal(first.review_state, 'pending_review')
   assert.equal(first.replayed, false)
-  const retry = await stageNieEventArticle(db, membership)
+  const retry = await asRole(db, 'service_role', () => stageNieEventArticle(db, membership))
   assert.equal(retry.replayed, true)
   assert.equal(await count(db, 'select count(*)::int n from legacy_graph_staging.nie_event_article_versions'), 1)
   const changed = { ...membership, membership_confidence: 0.7 }
-  const divergent = await stageNieEventArticle(db, changed)
+  const divergent = await asRole(db, 'service_role', () => stageNieEventArticle(db, changed))
   assert.equal(divergent.review_state, 'quarantined')
   assert.equal(divergent.replayed, false)
-  assert.equal((await stageNieEventArticle(db, changed)).replayed, true)
+  assert.equal((await asRole(db, 'service_role', () => stageNieEventArticle(db, changed))).replayed, true)
   const versions = (await db.query(`
     select ordinal, payload->>'membership_method' method, payload->>'membership_confidence' confidence,
            predecessor_sha256
@@ -103,10 +136,6 @@ test('nie membership preserves native composite identity and dependencies in pri
   assert.equal(await count(db, 'select count(*)::int n from public.event_articles'), 0)
   assert.equal(await count(db, 'select count(*)::int n from public.comparison_public'), publicBefore)
 
-  await db.exec('begin')
-  await assert.rejects(stageNieEventArticle(db, { ...membership, article_id: OTHER }), /missing source-qualified article/)
-  await db.exec('rollback')
-  assert.equal(await count(db, 'select count(*)::int n from legacy_graph_staging.nie_event_article_memberships'), 1)
   await applyStagingPage(db, {
     run_id: 'nie-interrupted-article',
     records: [{
@@ -114,9 +143,32 @@ test('nie membership preserves native composite identity and dependencies in pri
       payload: { id: OTHER, title: 'Recovered synthetic article', url: 'https://example.invalid/nie-recovered' },
     }],
   })
-  const recovered = await stageNieEventArticle(db, { ...membership, article_id: OTHER })
-  assert.equal(recovered.review_state, 'pending_review')
+  await db.exec('begin')
+  const transient = await asRole(db, 'service_role', () => stageNieEventArticle(db, { ...membership, article_id: OTHER }))
+  assert.equal(transient.review_state, 'pending_review')
   assert.equal(await count(db, 'select count(*)::int n from legacy_graph_staging.nie_event_article_memberships'), 2)
+  assert.equal(await count(db, 'select count(*)::int n from legacy_graph_staging.nie_event_article_versions'), 3)
+  await db.exec('rollback')
+  assert.equal(await count(db, 'select count(*)::int n from legacy_graph_staging.nie_event_article_memberships'), 1)
+  assert.equal(await count(db, 'select count(*)::int n from legacy_graph_staging.nie_event_article_versions'), 2)
+  const recovered = await asRole(db, 'service_role', () => stageNieEventArticle(db, { ...membership, article_id: OTHER }))
+  assert.equal(recovered.review_state, 'pending_review')
+  assert.equal(recovered.replayed, false)
+  assert.equal(await count(db, 'select count(*)::int n from legacy_graph_staging.nie_event_article_memberships'), 2)
+  assert.equal(await count(db, 'select count(*)::int n from legacy_graph_staging.nie_event_article_versions'), 3)
+
+  await asRole(db, 'service_role', async () => {
+    assert.equal(await count(db, 'select count(*)::int n from legacy_graph_staging.nie_event_article_memberships'), 2)
+    await assert.rejects(db.exec(
+      "update legacy_graph_staging.nie_event_article_memberships set payload='{}'::jsonb",
+    ), /permission denied/)
+    await assert.rejects(db.exec(
+      'delete from legacy_graph_staging.nie_event_article_memberships',
+    ), /permission denied/)
+    await assert.rejects(db.exec(
+      'truncate legacy_graph_staging.nie_event_article_memberships',
+    ), /permission denied/)
+  })
 
   for (const role of ['anon', 'authenticated']) {
     await db.exec(`set role ${role}`)

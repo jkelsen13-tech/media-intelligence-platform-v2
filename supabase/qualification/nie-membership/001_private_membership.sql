@@ -49,7 +49,7 @@ create trigger immutable_nie_event_article_memberships_truncate
 alter table legacy_graph_staging.nie_event_article_memberships enable row level security;
 alter table legacy_graph_staging.nie_event_article_versions enable row level security;
 revoke all on legacy_graph_staging.nie_event_article_memberships,
-  legacy_graph_staging.nie_event_article_versions from public, anon, authenticated;
+  legacy_graph_staging.nie_event_article_versions from public, anon, authenticated, service_role;
 grant select, insert on legacy_graph_staging.nie_event_article_memberships
   to service_role;
 grant update (review_state) on legacy_graph_staging.nie_event_article_memberships
@@ -86,13 +86,16 @@ begin
      ) then
     raise exception 'membership requires exact native event_articles fields';
   end if;
-  source_event := (p_payload->>'event_id')::uuid;
-  source_article := (p_payload->>'article_id')::uuid;
-  if source_event is null or source_article is null
+  if jsonb_typeof(p_payload->'event_id') <> 'string'
+     or jsonb_typeof(p_payload->'article_id') <> 'string'
+     or jsonb_typeof(p_payload->'membership_method') <> 'string'
+     or jsonb_typeof(p_payload->'created_at') <> 'string'
      or nullif(btrim(p_payload->>'membership_method'), '') is null
      or nullif(p_payload->>'created_at', '') is null then
     raise exception 'membership requires event, article, method, and creation time';
   end if;
+  source_event := (p_payload->>'event_id')::uuid;
+  source_article := (p_payload->>'article_id')::uuid;
   perform (p_payload->>'created_at')::timestamptz;
   if jsonb_typeof(p_payload->'membership_confidence') not in ('number', 'null') then
     raise exception 'membership confidence must be numeric or null';
@@ -108,7 +111,7 @@ begin
       and s.source_table = 'events'
       and s.source_id = source_event
       and s.object_family = 'source_comparison_event'
-      and s.review_state <> 'quarantined'
+      and s.review_state = 'pending'
   ) then
     raise exception 'missing source-qualified Source Comparison event';
   end if;
@@ -118,7 +121,7 @@ begin
       and s.source_table = 'articles'
       and s.source_id = source_article
       and s.object_family = 'article'
-      and s.review_state <> 'quarantined'
+      and s.review_state = 'pending'
   ) then
     raise exception 'missing source-qualified article';
   end if;
