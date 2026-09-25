@@ -25,7 +25,8 @@ begin
    on j.entry->>'operation'='worker_claim'
    and r.request_id=(j.entry->'args'->>'p_request')::uuid and r.rpc_name='worker_claim'
    and r.runtime_id=p_runtime and r.principal='mip_comparison_worker_v1'
-  where j.runtime_id=p_runtime and j.journal_key>p_after
+  where j.runtime_id=p_runtime and (case when j.entry->>'operation'='worker_claim' then 1 else 0 end,j.journal_key)>
+    (case when p_after='' then -1 when p_after like 'worker_claim:%' then 1 else 0 end,p_after)
    and right(j.journal_key,8)<>':receipt'
    and (
     (j.entry->>'operation' in ('worker_complete','worker_fail') and not exists(
@@ -42,7 +43,7 @@ begin
          and terminal.entry->'args'->>'p_generation'=r.generation_id::text))
     ))
    )
-  order by j.journal_key limit p_limit
+  order by case when j.entry->>'operation'='worker_claim' then 1 else 0 end,j.journal_key limit p_limit
  loop
   if item.token_hash is not null then
    -- Reuse native lease owner/source/implementation checks; never return tokens.

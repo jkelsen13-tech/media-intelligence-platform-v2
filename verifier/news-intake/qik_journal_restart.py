@@ -49,7 +49,7 @@ def main():
     owner.execute("create role anon;create role authenticated;create role service_role bypassrls")
     for file in ("contract.sql", "selection.sql", "capability.sql", "source-fixture.sql", "source-snapshot.sql"):
         owner.execute((ROOT / "supabase/qualification/comparison-generations" / file).read_text())
-    for file in ("001_execute_only_identities.sql", "002_candidate_interfaces.sql", "003_scoped_queue.sql", "013_worker_journal.sql"):
+    for file in ("001_execute_only_identities.sql", "002_candidate_interfaces.sql", "003_scoped_queue.sql", "013_worker_journal.sql", "014_worker_journal_discovery.sql"):
         owner.execute((ROOT / "supabase/qualification/mip-cutover-authority" / file).read_text())
     owner.execute("insert into mip_cutover_authority.runtime_config values(%s,'synthetic-source',%s,'{\"entries\":[]}')", (RUNTIME, IMPL))
     one(owner, "select comparison_qualification.bind_source_scope(%s,'synthetic-source')", (RUNTIME,))
@@ -57,7 +57,7 @@ def main():
     sessions = {}
     for role, operations in {
         "mip_comparison_producer_v1": ("producer_enqueue",),
-        "mip_comparison_worker_v1": ("worker_claim", "worker_complete", "worker_fail", "worker_journal_put", "worker_journal_get"),
+        "mip_comparison_worker_v1": ("worker_claim", "worker_complete", "worker_fail", "worker_journal_put", "worker_journal_get", "worker_journal_pending"),
     }.items():
         for operation in operations:
             one(owner, "select comparison_qualification.bind_runtime(%s,%s,%s)", (RUNTIME, role, operation))
@@ -70,6 +70,7 @@ def main():
         "worker_fail": ("p_request", "p_session", "p_runtime", "p_generation", "p_token", "p_input_hash", "p_implementation"),
         "worker_journal_put": ("p_session", "p_runtime", "p_key", "p_entry"),
         "worker_journal_get": ("p_session", "p_runtime", "p_key"),
+        "worker_journal_pending": ("p_session", "p_runtime", "p_after", "p_limit"),
     }
     def rpc(name, args):
         assert name in signatures and set(args) == set(signatures[name])

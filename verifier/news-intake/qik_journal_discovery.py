@@ -128,15 +128,32 @@ def main():
             "runtime":RUNTIME,"implementation":"synthetic-mismatch" if fail else IMPL}, crash)
         assert result["state"] == "killed"
         fresh = str(one(owner, "select comparison_qualification.issue_session('mip_comparison_worker_v1',%s,clock_timestamp()+interval '10 minutes')", (RUNTIME,)))
+        held_keys=[]
+        if crash=="before_terminal":
+            # More unresolved claims than the default page must not starve a terminal.
+            for _ in range(21):
+                request=str(uuid.uuid4());held_keys.append("worker_claim:"+request)
+                rpc("worker_journal_put",{"p_session":fresh,"p_runtime":RUNTIME,"p_key":held_keys[-1],
+                    "p_entry":{"version":1,"operation":"worker_claim","args":{"p_runtime":RUNTIME,"p_request":request}}})
         started = time.monotonic()
         # NO key/request/output is supplied to the fresh process.
         result, resumed, _ = child({"mode":"resume","session":fresh,"runtime":RUNTIME,"implementation":IMPL})
         durations.append(round((time.monotonic()-started)*1000,3))
-        assert result == {"state":"recovery_required","recovered":1}
+        assert result == ({"state":"held_claim_requires_native_owner","recovered":1,"held":19}
+                          if held_keys else {"state":"recovery_required","recovered":1})
         assert resumed == ["worker_journal_pending","worker_journal_get","worker_journal_put",
                            "worker_fail" if fail else "worker_complete","worker_journal_put"]
         assert one(owner, "select count(*) from comparison_qualification.request_runs where rpc_name=%s and generation_id=%s",
                    ("worker_fail" if fail else "worker_complete", generation)) == 1
+        # Resolve synthetic unissued claim requests via the native owner; no ready work exists.
+        for held_key in held_keys:
+            request=held_key.split(":")[1]
+            assert rpc("worker_claim",{"p_session":fresh,"p_runtime":RUNTIME,"p_request":request}) is None
+            rpc("worker_journal_put",{"p_session":fresh,"p_runtime":RUNTIME,"p_key":held_key+":receipt",
+                "p_entry":{"version":1,"result":None}})
+    # Empty-page invocation reaches the existing worker and confirms idle.
+    idle, idle_ops, _=child({"mode":"run","session":sessions["mip_comparison_worker_v1"],"runtime":RUNTIME,"implementation":IMPL})
+    assert idle["state"]=="idle" and idle_ops[0]=="worker_journal_pending" and "worker_claim" in idle_ops
     context={"p_session":sessions["mip_comparison_worker_v1"],"p_runtime":RUNTIME,"p_after":"","p_limit":2}
     assert rpc("worker_journal_pending",context)==[]
     # Pagination and safe admission hold for requests whose native result is unknown.

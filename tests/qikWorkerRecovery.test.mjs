@@ -1,10 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {resumeQikJournaledWorker} from '../supabase/functions/source-comparison-generation-candidate/qikWorkerJournal.js'
+import {resumeQikJournaledWorker,runQikJournaledWorker} from '../supabase/functions/source-comparison-generation-candidate/qikWorkerJournal.js'
 const key='worker_complete:00000000-0000-0000-0000-000000000001'
 test('restart discovers exact terminal key and uses fresh authority before admitting work',async()=>{
  const calls=[]
- const result=await resumeQikJournaledWorker({runtime:'r',session:'fresh',rpc:async(name,args)=>{
+ const result=await runQikJournaledWorker({runtime:'r',session:'fresh',rpc:async(name,args)=>{
   calls.push(name);assert.equal(args.p_session,'fresh')
   if(name==='worker_journal_pending')return [{key,action:'retry_terminal',native_state:'completed'}]
   if(name==='worker_journal_get')return {version:1,operation:'worker_complete',args:{p_runtime:'r',p_request:key.split(':')[1]}}
@@ -37,4 +37,20 @@ test('drain gates admission but does not cancel a recovery already invoked',asyn
 test('page bounds and malformed discovery refuse before new work',async()=>{
  for(const pageSize of [0,51,1.1])await assert.rejects(resumeQikJournaledWorker({pageSize}),/page_bounds/)
  await assert.rejects(resumeQikJournaledWorker({rpc:async()=>[{key:'bad',action:'retry_terminal'}]}),/discovery_shape/)
+})
+
+test('successive bounded pages make terminal progress before empty-page admission',async()=>{
+ const outstanding=[key,key.replace(/1$/,'2')];let claims=0
+ const options={runtime:'r',session:'s',pageSize:1,requestId:()=> 'new-request',rpc:async(name,args)=>{
+  if(name==='worker_journal_pending')return outstanding.slice(0,1).map(key=>({key,action:'retry_terminal',native_state:'completed'}))
+  if(name==='worker_journal_get')return {version:1,operation:'worker_complete',args:{p_runtime:'r',p_request:args.p_key.split(':')[1]}}
+  if(name==='worker_journal_put'){if(args.p_key.endsWith(':receipt')&&args.p_key.startsWith('worker_complete'))outstanding.shift();return true}
+  if(name==='worker_complete')return 'completed'
+  if(name==='worker_claim'){claims++;return null}
+ }}
+ assert.deepEqual(await runQikJournaledWorker(options),{state:'recovery_required',recovered:1})
+ assert.deepEqual(await runQikJournaledWorker(options),{state:'recovery_required',recovered:1})
+ assert.equal(claims,0)
+ assert.deepEqual(await runQikJournaledWorker(options),{state:'idle'})
+ assert.equal(claims,1)
 })

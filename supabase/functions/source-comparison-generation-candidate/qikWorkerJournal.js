@@ -20,12 +20,15 @@ export function qikWorkerJournal({rpc,runtime,session}){
  })
 }
 export function runQikJournaledWorker(options){
- return runDurableGenerationWorker({...options,journal:qikWorkerJournal(options)})
+ return resumeQikJournaledWorker(options)
 }
 export function recoverQikJournaledRequest(options){
  return recoverGenerationRequest({...options,journal:qikWorkerJournal(options)})
 }
 
+// Discovery and claim use separate transactions: concurrent callers may create
+// pending work after an empty read. This is per-invocation admission, not a global
+// drain or distributed serialization guarantee. Native leases/replay still own work.
 // Startup/reconnect owner: no key comes from a caller or process memory.
 // One bounded page per invocation; unresolved claims block admission, never reset
 // or cancel a native lease. Call again after recovery_required before new work.
@@ -52,5 +55,5 @@ export async function resumeQikJournaledWorker(options){
  // short page read before retries; other old requests may become visible.
  if(pending.length)return {state:'recovery_required',recovered}
  if(await shouldDrain())return {state:'draining',recovered}
- return runQikJournaledWorker(options)
+ return runDurableGenerationWorker({...options,journal:qikWorkerJournal(options)})
 }
