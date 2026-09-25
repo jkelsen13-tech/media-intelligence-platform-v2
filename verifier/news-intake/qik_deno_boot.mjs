@@ -62,7 +62,7 @@ try{
  assert.equal(uncertain.status,503);assert.deepEqual(await uncertain.json(),{state:'recovery_required'})
  assert.equal(calls.length,count+1)
  console.log(JSON.stringify({case:'deno_actual_index_listener_handler',status:'PASS',deno:Deno.version.deno,
-  synthetic_request_ms:Math.round((performance.now()-started)*1000)/1000,real_provider_calls:0,synthetic_rpc_calls:calls.length}))
+  two_request_sequence_ms:Math.round((performance.now()-started)*1000)/1000,real_provider_calls:0,synthetic_rpc_calls:calls.length}))
 }finally{
  globalThis.fetch=nativeFetch
  Deno.serve=nativeServe
