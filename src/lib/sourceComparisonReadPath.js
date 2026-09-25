@@ -28,7 +28,9 @@ export function canonicalUrl(url) {
     const params = [...u.searchParams.entries()]
       .filter(([k]) => !TRACKING_PARAMS.test(k.toLowerCase()))
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, v]) => `${k}=${v}`)
+      // URLSearchParams decodes each component. Re-escape before joining so
+      // encoded '&'/'=' inside a key or value cannot become query structure.
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
       .join('&')
     return host + path + (params ? '?' + params : '')
   } catch {
