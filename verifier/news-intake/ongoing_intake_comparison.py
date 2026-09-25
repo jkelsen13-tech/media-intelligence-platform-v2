@@ -77,20 +77,14 @@ def main():
     intake_db = connect("service_role")
     intake = worker_module.NativeIntakeWorker(intake_db, pipeline)
 
-    # Minimal event/membership fixture; article schema/data remain C2 native.
+    # Reuse C2's actual event/membership shape, defaults and foreign keys.
     # Membership is a separately reviewed premise, not intake-generated judgment.
     db.execute("""
-      create table public.events(id uuid primary key,canonical_title text,status text,
-        comparison_validation_state text,occurred_at_start date,occurred_at_end date);
-      create table public.event_articles(event_id uuid references public.events,
-        article_id uuid references public.articles,membership_method text,
-        membership_confidence numeric,created_at timestamptz default now(),
-        primary key(event_id,article_id));
       alter table public.events enable row level security;
       alter table public.event_articles enable row level security;
       revoke all on public.events,public.event_articles from public,anon,authenticated,service_role;
     """)
-    db.execute("insert into public.events values(%s,'Council water infrastructure funding','active','pending_review','2026-01-01','2026-01-01')", (EVENT,))
+    db.execute("insert into public.events(id,canonical_title,status,comparison_validation_state,occurred_at_start,occurred_at_end) values(%s,'Council water infrastructure funding','active','pending_review','2026-01-01','2026-01-01')", (EVENT,))
     for name in ("contract.sql", "selection.sql", "capability.sql", "source-snapshot.sql"):
         db.execute((ROOT / "supabase/qualification/comparison-generations" / name).read_text())
     for name in ("001_execute_only_identities.sql", "002_candidate_interfaces.sql"):
@@ -287,7 +281,7 @@ def main():
     })
     assert metrics["pending_intake_jobs"] == metrics["pending_comparison_jobs"] == 0
     print(json.dumps({"section":"R1_R5","status":"PORTABLE_INTEGRATION_PASS","measurements":metrics,
-      "limits":["synthetic source only","explicit fixture review and simplified event/membership schema",
+      "limits":["synthetic source only","explicit fixture review and existing C2 event/membership schema",
         "hosted login/pooler/scheduler not qualified","no historical backfill or transitional bridge",
         "no semantic certification or publication","no live activation/cutover"]}),flush=True)
 try:
