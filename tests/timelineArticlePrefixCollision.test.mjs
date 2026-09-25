@@ -6,7 +6,8 @@ const source = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 
 const grouped = readFileSync(new URL('../src/lib/arcGroupedTimeline.js', import.meta.url), 'utf8')
 const view = readFileSync(new URL('../src/views/GroupedTimelineView.jsx', import.meta.url), 'utf8')
 const cross = new Function(source.slice(source.indexOf('export function buildTimelineCrossLinks'), source.indexOf('// Doc 05 pair 3 (News')).replace('export function', 'function') + '; return buildTimelineCrossLinks')()
-const news = new Function('supabase', source.slice(source.indexOf('export async function loadArticleTimelineKey'), source.indexOf('// Opaque comparison keys')).replace('export async function', 'async function') + '; return loadArticleTimelineKey')(null)
+const canonicalizeTimelineEvents = new Function(readFileSync(new URL('../src/lib/timelineDedup.js', import.meta.url), 'utf8').replaceAll('export function', 'function') + '; return canonicalizeTimelineEvents')()
+const news = new Function('supabase', 'canonicalizeTimelineEvents', source.slice(source.indexOf('export async function loadArticleTimelineKey'), source.indexOf('// Opaque comparison keys')).replace('export async function', 'async function') + '; return loadArticleTimelineKey')(null, canonicalizeTimelineEvents)
 const groupedMaps = new Function('articlesRes', grouped.slice(grouped.indexOf('  const articleIdBySuffix = new Map()'), grouped.indexOf('  // Package 1 arc-grouped addition: per-event outlet index')) + '; return {articleIdBySuffix, articleArcBySuffix, outletByArticleId}')
 const focusLine = view.split('\n').find(line => line.includes('const match =') && line.includes('pendingFocus'))
 const focus = new Function('evt', 'pendingFocus', focusLine.trim() + '; return match(evt)')
@@ -31,14 +32,14 @@ test('unique prefixes preserve article links and arcs', () => {
   assert.equal(result.articleIdBySuffix.get('1234abcd'), A)
   assert.equal(result.articleArcBySuffix.get('1234abcd'), 'arc-a')
 })
-function client(prefixRows, prefixError = null, nodes = [node], fallback = articles[0], nodeError = null) {
+function client(prefixRows, prefixError = null, nodes = [node], fallback = articles[0], nodeError = null, memberships = [{event_node_id:node.id, article_id:A}], membershipError = null) {
   const calls = []
   return {calls, from(table) {
     const call = {table, ops: []}; calls.push(call)
     const q = {}
-    for (const method of ['select', 'gte', 'lte', 'eq', 'like', 'limit']) q[method] = (...args) => {call.ops.push([method, ...args]); return q}
+    for (const method of ['select', 'gte', 'lte', 'eq', 'like', 'limit', 'in']) q[method] = (...args) => {call.ops.push([method, ...args]); return q}
     q.maybeSingle = () => Promise.resolve({data: fallback, error: null})
-    q.then = (ok, bad) => Promise.resolve(table === 'articles' ? {data: prefixRows, error: prefixError} : {data: nodes, error: nodeError}).then(ok, bad)
+    q.then = (ok, bad) => Promise.resolve(table === 'graph_event_article_memberships' ? {data:memberships, error:membershipError} : table === 'articles' ? {data: prefixRows, error: prefixError} : {data: nodes, error: nodeError}).then(ok, bad)
     return q
   }}
 }
@@ -94,18 +95,13 @@ test('ambiguous nodes never return a suffix or arbitrary first event', async () 
     assert.equal(await news(A, {supabaseClient: db}), 'article-' + A)
     assert.deepEqual(db.calls[1].ops, [
       ['select', 'id, slug, type'], ['eq', 'type', 'event'],
-      ['like', 'slug', '%1234abcd'], ['limit', 2],
+      ['like', 'slug', '%1234abcd'], ['limit', 3],
     ])
     assert.equal(await news(A, {supabaseClient: client([articles[0]], null, candidates, {id:A, arc_id:null})}), null)
   }
 })
-test('unreadable or invalid event results never become an article fallback', async () => {
-  for (const [nodes, error] of [
-    [[node], {code:'42501'}], [null, null],
-    [[{...node, type:'actor'}], null],
-    [[{...node, slug:'art-unrelated-ffffffff'}], null],
-    [[{...node, id:''}], null],
-  ]) {
+test('unreadable event results never become an article fallback', async () => {
+  for (const [nodes, error] of [[[node], {code:'42501'}], [null, null]]) {
     const db = client([articles[0]], null, nodes, articles[0], error)
     assert.equal(await news(A, {supabaseClient: db}), null)
     assert.equal(db.calls.length, 2)
@@ -113,4 +109,44 @@ test('unreadable or invalid event results never become an article fallback', asy
 })
 test('fallback requires the requested full article identity', async () => {
   assert.equal(await news(A, {supabaseClient: client([articles[0]], null, [], articles[1])}), null)
+})
+
+test('normal exact-body mirror pair retains canonical evt link without an arc', async () => {
+  const pair = [{id:'evt-id', type:'event', slug:'evt-story-1234abcd'}, {id:'art-id', type:'event', slug:'art-story-1234abcd'}]
+  for (const rows of [pair, [...pair].reverse()]) for (const member of pair) {
+    const db = client([articles[0]], null, rows, {id:A, arc_id:null}, null, [{article_id:A, event_node_id:member.id}])
+    assert.equal(await news(A, {supabaseClient:db}), 'evt-id')
+    assert.deepEqual(db.calls[2].ops, [
+      ['select', 'event_node_id, article_id'], ['eq', 'article_id', A],
+      ['in', 'event_node_id', rows.map(row => row.id)], ['limit', 2],
+    ])
+    assert.equal(db.calls.length, 3, 'positive membership does not need fallback')
+  }
+})
+test('singleton suffix hint requires positive full-ID membership even when prefix appears unique', async () => {
+  for (const [members, error] of [
+    [[], null], [null, {code:'42501'}], [null, {code:'42P01'}],
+    [[{article_id:B, event_node_id:node.id}], null],
+    [[{article_id:A, event_node_id:'unrelated'}], null],
+  ]) {
+    assert.equal(await news(A, {supabaseClient:client([articles[0]], null, [node], articles[0], null, members, error)}), 'article-' + A)
+    assert.equal(await news(A, {supabaseClient:client([articles[0]], null, [node], {id:A, arc_id:null}, null, members, error)}), null)
+  }
+})
+test('third candidate, mismatched pair, and malformed node cannot authorize a graph destination', async () => {
+  const pair = [{id:'evt-id', type:'event', slug:'evt-story-1234abcd'}, {id:'art-id', type:'event', slug:'art-story-1234abcd'}]
+  for (const rows of [
+    [...pair, {...node, id:'third'}],
+    [pair[0], {...pair[1], slug:'art-other-1234abcd'}],
+    [{...node, type:'actor'}], [{...node, slug:'art-other-ffffffff'}], [{...node, id:''}],
+  ]) {
+    const db = client([articles[0]], null, rows)
+    assert.equal(await news(A, {supabaseClient:db}), 'article-' + A)
+    assert.ok(!db.calls.some(call => call.table === 'graph_event_article_memberships'))
+  }
+})
+test('exact-body mirror pair without membership uses only full-ID fallback or null', async () => {
+  const pair = [{id:'evt-id', type:'event', slug:'evt-story-1234abcd'}, {id:'art-id', type:'event', slug:'art-story-1234abcd'}]
+  assert.equal(await news(A, {supabaseClient:client([articles[0]], null, pair, articles[0], null, [])}), 'article-' + A)
+  assert.equal(await news(A, {supabaseClient:client([articles[0]], null, pair, {id:A, arc_id:null}, null, [])}), null)
 })
