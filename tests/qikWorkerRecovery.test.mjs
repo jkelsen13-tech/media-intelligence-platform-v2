@@ -15,13 +15,16 @@ test('restart discovers exact terminal key and uses fresh authority before admit
  assert.deepEqual(result,{state:'recovery_required',recovered:1})
  assert.deepEqual(calls,['worker_journal_pending','worker_journal_get','worker_journal_put','worker_complete','worker_journal_put'])
 })
-test('unknown claim holds native ownership and never polls or cancels it',async()=>{
+test('discovered claim asks its native owner and waits without generic polling or cancellation',async()=>{
  const calls=[]
  const result=await resumeQikJournaledWorker({runtime:'r',session:'fresh',rpc:async(name)=>{
-  calls.push(name);return [{key:key.replace('complete','claim'),action:'hold_claim',native_state:'processing'}]
+  calls.push(name)
+  if(name==='worker_journal_pending')return [{key:key.replace('complete','claim'),action:'hold_claim',native_state:'processing'}]
+  if(name==='worker_resume_claim')return {state:'waiting_lease'}
+  throw Error('unexpected RPC')
  }})
- assert.deepEqual(result,{state:'held_claim_requires_native_owner',recovered:0,held:1})
- assert.deepEqual(calls,['worker_journal_pending'])
+ assert.deepEqual(result,{state:'waiting_native_claim_recovery',recovered:0,held:1})
+ assert.deepEqual(calls,['worker_journal_pending','worker_resume_claim'])
 })
 test('drain gates admission but does not cancel a recovery already invoked',async()=>{
  let drain=false,completed=false

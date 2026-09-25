@@ -13,7 +13,7 @@ grant execute on function comparison_qualification.lock_generation_for_journal(u
 
 create or replace function mip_cutover_authority.worker_journal_token(
  p_runtime text,p_args jsonb,p_token_hash text
-) returns uuid language plpgsql security invoker set search_path='' as $
+) returns uuid language plpgsql security invoker set search_path='' as $$
 declare token uuid;bound jsonb;
 begin
  perform comparison_qualification.lock_generation_for_journal((p_args->>'p_generation')::uuid);
@@ -37,7 +37,7 @@ begin
  comparison_qualification.argument_digest(jsonb_build_object('token',candidate::text))=p_token_hash limit 1;
  if token is null then raise exception 'mip_journal_native_token_unavailable';end if;
  return token;
-end $;
+end $$;
 
 create function comparison_qualification.resume_exact_claim(p_runtime text,p_request uuid)
 returns jsonb language plpgsql security definer set search_path='' as $$
