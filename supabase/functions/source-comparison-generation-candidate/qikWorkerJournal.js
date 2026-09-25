@@ -1,7 +1,9 @@
 // Concrete qik-owned RPC journal for the existing durable worker. Undeployed.
 // The SQL boundary removes session/lease tokens before storage and reconstructs
 // terminal lease tokens from native state only under fresh bound authority.
-import {runDurableGenerationWorker,recoverGenerationRequest} from './durableWorker.js'
+import {runDurableGenerationWorker,recoverGenerationRequest,durableWorkerRpc} from './durableWorker.js'
+
+import {processGenerationClaim} from './workerV2.js'
 
 export function qikWorkerJournal({rpc,runtime,session}){
  if(typeof rpc!=='function'||typeof runtime!=='string'||!runtime||
@@ -30,8 +32,8 @@ export function recoverQikJournaledRequest(options){
 // pending work after an empty read. This is per-invocation admission, not a global
 // drain or distributed serialization guarantee. Native leases/replay still own work.
 // Startup/reconnect owner: no key comes from a caller or process memory.
-// One bounded page per invocation; unresolved claims block admission, never reset
-// or cancel a native lease. Call again after recovery_required before new work.
+// One bounded page per invocation; exact native owners resume expired claims.
+// Active leases/backoff block admission. No cancellation or generic queue reset.
 export async function resumeQikJournaledWorker(options){
  const {rpc,runtime,session,pageSize=20,shouldDrain=()=>false}=options
  if(!Number.isInteger(pageSize)||pageSize<1||pageSize>50)throw Error('mip_journal_page_bounds')
@@ -43,14 +45,27 @@ export async function resumeQikJournaledWorker(options){
  for(const item of pending){
   if(!item||typeof item.key!=='string'||!/^worker_(claim|complete|fail):[0-9a-f-]{36}$/.test(item.key)||
    !['retry_terminal','hold_claim'].includes(item.action))throw Error('mip_journal_discovery_shape')
-  if(item.action==='hold_claim'){held++;continue}
+  if(item.action==='hold_claim'){
+   if(await shouldDrain())return {state:'draining',recovered}
+   const resumed=await rpc('worker_resume_claim',{p_session:session,p_runtime:runtime,p_key:item.key})
+   if(!resumed||!['resumed','resolved','exhausted','waiting_lease','waiting_backoff','terminal_pending'].includes(resumed.state))
+    throw Error('mip_claim_resume_shape')
+   if(resumed.state==='resumed'){
+    if(!resumed.claim?.lease_token)throw Error('mip_claim_resume_shape')
+    const result=await processGenerationClaim({...options,rpc:durableWorkerRpc({...options,journal:qikWorkerJournal(options)})},resumed.claim)
+    // Stop on an ambiguous terminal; its exact request is now discoverable.
+    if(!['completed','failed'].includes(result.state))return result
+    recovered++
+   }else if(['waiting_lease','waiting_backoff','terminal_pending'].includes(resumed.state))held++
+   continue
+  }
   if(!/^worker_(complete|fail):/.test(item.key))throw Error('mip_journal_discovery_shape')
   if(await shouldDrain())return {state:'draining',recovered}
   const result=await recoverQikJournaledRequest({...options,key:item.key})
   if(!['completed','failed'].includes(result))throw Error('mip_journal_recovery_unconfirmed')
   recovered++
  }
- if(held)return {state:'held_claim_requires_native_owner',recovered,held}
+ if(held)return {state:'waiting_native_claim_recovery',recovered,held}
  // Re-query on the next bounded invocation. Never infer drained state from a
  // short page read before retries; other old requests may become visible.
  if(pending.length)return {state:'recovery_required',recovered}

@@ -8,6 +8,10 @@ import {dedupeArticleClaims,dedupeProjectionExplanations} from './projectionDedu
 export async function runGenerationWorker({rpc,requestId,session,runtime,implementation,sha256}){
   const context={p_session:session,p_runtime:runtime}
   const claim=await rpc('worker_claim',{...context,p_request:requestId('claim')})
+  return processGenerationClaim({rpc,requestId,session,runtime,implementation,sha256},claim)
+}
+export async function processGenerationClaim({rpc,requestId,session,runtime,implementation,sha256},claim){
+  const context={p_session:session,p_runtime:runtime}
   if(claim===null)return {state:'idle'}
   if(!claim.lease_token)return {state:'claim_receipt_only',generation:claim.generation_id}
   const binding={...context,p_generation:claim.generation_id,p_token:claim.lease_token,
