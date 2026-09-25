@@ -31,7 +31,7 @@ test('host fixes runtime and schema and supplies no caller key',async()=>{
  assert.deepEqual(await (await host(request())).json(),{state:'idle'})
  assert.equal(seen[0].name,'worker_journal_pending')
  assert.equal(seen[0].args.p_runtime,'synthetic-runtime')
- assert.equal(seen[0].headers['content-profile'],'mip_cutover_authority')
+ assert.equal(seen[0].headers['content-profile'],'mip_identity')
  assert.equal(seen.filter(x=>x.name==='worker_claim').length,1)
 })
 

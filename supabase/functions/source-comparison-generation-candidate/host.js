@@ -23,7 +23,7 @@ export function qikWorkerHost({rpcUrl,apiKey,workerJwt,invokeToken,session,runti
   // retry on the next invocation, never an invisible HTTP client retry.
   const response=await fetchImpl(new URL(name,url),{method:'POST',redirect:'error',
    headers:{apikey:apiKey,authorization:'Bearer '+workerJwt,'content-type':'application/json',
-    'content-profile':'mip_cutover_authority','accept-profile':'mip_cutover_authority'},
+    'content-profile':'mip_identity','accept-profile':'mip_identity'},
    body:JSON.stringify(args),signal:AbortSignal.timeout(15000)})
   if(!response.ok)throw Error('mip_host_rpc_refused')
   return response.json()

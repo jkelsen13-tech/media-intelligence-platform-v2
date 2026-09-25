@@ -8,7 +8,7 @@ const next=async()=>{const line=await lines.next();if(line.done)throw Error('bro
 const config=await next()
 const fetchImpl=async(url,options)=>{
  const name=new URL(url).pathname.split('/').at(-1)
- process.stdout.write(JSON.stringify({rpc:name,args:JSON.parse(options.body)})+'\n')
+ process.stdout.write(JSON.stringify({rpc:name,args:JSON.parse(options.body),schema:options.headers['content-profile']})+'\n')
  const reply=await next()
  return new Response(JSON.stringify(reply.result??null),{status:reply.error?403:200})
 }
