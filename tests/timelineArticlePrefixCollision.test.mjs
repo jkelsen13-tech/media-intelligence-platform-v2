@@ -12,7 +12,7 @@ const focusLine = view.split('\n').find(line => line.includes('const match =') &
 const focus = new Function('evt', 'pendingFocus', focusLine.trim() + '; return match(evt)')
 const A = '1234abcd-0000-4000-8000-000000000001'
 const B = '1234abcd-0000-4000-8000-000000000002'
-const node = {id: 'event', slug: 'art-story-1234abcd'}
+const node = {id: 'event', slug: 'art-story-1234abcd', type: 'event'}
 const articles = [{id: A, arc_id: 'arc-a', outlet: 'A'}, {id: B, arc_id: 'arc-b', outlet: 'B'}]
 
 test('flat and grouped refuse colliding visible article prefixes in either order', () => {
@@ -31,14 +31,14 @@ test('unique prefixes preserve article links and arcs', () => {
   assert.equal(result.articleIdBySuffix.get('1234abcd'), A)
   assert.equal(result.articleArcBySuffix.get('1234abcd'), 'arc-a')
 })
-function client(prefixRows, prefixError = null, nodes = [node], fallback = articles[0]) {
+function client(prefixRows, prefixError = null, nodes = [node], fallback = articles[0], nodeError = null) {
   const calls = []
   return {calls, from(table) {
     const call = {table, ops: []}; calls.push(call)
     const q = {}
     for (const method of ['select', 'gte', 'lte', 'eq', 'like', 'limit']) q[method] = (...args) => {call.ops.push([method, ...args]); return q}
     q.maybeSingle = () => Promise.resolve({data: fallback, error: null})
-    q.then = (ok, bad) => Promise.resolve(table === 'articles' ? {data: prefixRows, error: prefixError} : {data: nodes, error: null}).then(ok, bad)
+    q.then = (ok, bad) => Promise.resolve(table === 'articles' ? {data: prefixRows, error: prefixError} : {data: nodes, error: nodeError}).then(ok, bad)
     return q
   }}
 }
@@ -49,9 +49,9 @@ test('News refuses collision, zero rows, wrong full ID, and unreadable prefixes 
     assert.deepEqual(db.calls.map(c => c.table), ['articles'])
   }
 })
-test('unique News prefix retains existing key with validated bounded UUID range', async () => {
+test('unique News prefix returns exact event ID with validated bounded UUID range', async () => {
   const db = client([articles[0]])
-  assert.equal(await news(A, {supabaseClient: db}), '1234abcd')
+  assert.equal(await news(A, {supabaseClient: db}), 'event')
   assert.deepEqual(db.calls[0].ops, [
     ['select', 'id'], ['gte', 'id', '1234abcd-0000-0000-0000-000000000000'],
     ['lte', 'id', '1234abcd-ffff-ffff-ffff-ffffffffffff'], ['limit', 2],
@@ -82,4 +82,35 @@ test('collision refusal preserves full-ID reporting records and direct node arcs
   const maps = groupedMaps({data: articles})
   assert.deepEqual(resolve({...node, arc_id:'direct'}, new Map(), maps.articleArcBySuffix), {arcId:'direct', resolution:'direct'})
   assert.deepEqual(resolve(node, new Map(), maps.articleArcBySuffix), {arcId:null, resolution:null})
+})
+
+test('ambiguous nodes never return a suffix or arbitrary first event', async () => {
+  const nodes = [
+    {id:'alpha', type:'event', slug:'evt-alpha-1234abcd'},
+    {id:'beta', type:'event', slug:'art-beta-1234abcd'},
+  ]
+  for (const candidates of [nodes, [...nodes].reverse()]) {
+    const db = client([articles[0]], null, candidates)
+    assert.equal(await news(A, {supabaseClient: db}), 'article-' + A)
+    assert.deepEqual(db.calls[1].ops, [
+      ['select', 'id, slug, type'], ['eq', 'type', 'event'],
+      ['like', 'slug', '%1234abcd'], ['limit', 2],
+    ])
+    assert.equal(await news(A, {supabaseClient: client([articles[0]], null, candidates, {id:A, arc_id:null})}), null)
+  }
+})
+test('unreadable or invalid event results never become an article fallback', async () => {
+  for (const [nodes, error] of [
+    [[node], {code:'42501'}], [null, null],
+    [[{...node, type:'actor'}], null],
+    [[{...node, slug:'art-unrelated-ffffffff'}], null],
+    [[{...node, id:''}], null],
+  ]) {
+    const db = client([articles[0]], null, nodes, articles[0], error)
+    assert.equal(await news(A, {supabaseClient: db}), null)
+    assert.equal(db.calls.length, 2)
+  }
+})
+test('fallback requires the requested full article identity', async () => {
+  assert.equal(await news(A, {supabaseClient: client([articles[0]], null, [], articles[1])}), null)
 })
