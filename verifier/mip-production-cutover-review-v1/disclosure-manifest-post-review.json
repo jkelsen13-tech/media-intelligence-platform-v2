@@ -1,8 +1,10 @@
 {
   "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
+  "supplement_version": 2,
+  "historical_manifest_sha256": "04d28b676f15bd63acf5e96d01622d1f9d06aa4f79d68b7b6dae42e3b63f858f",
   "disclosure_status": "proposed_not_transmitted",
   "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
-  "review_packet_commit": "392907a4c079c3b01fa633a92b7350055372f22c",
+  "review_packet_commit": null,
   "review_packet_commit_resolution": "Stamp the git commit that contains the hashed_files tree. Do not mix hashes from a different commit.",
   "mixed_candidate_rule": "If any hashed file differs from this manifest, the packet is not the frozen candidate.",
   "hashed_files": [
@@ -28,8 +30,8 @@
     },
     {
       "path": "supabase/functions/source-comparison-generation-candidate/worker.js",
-      "sha256": "afd9c3f326c3ce44d69a8c168ae99c977140ea5f072fa468154473bcc7609e4f",
-      "bytes": 2551
+      "sha256": "7ea57900aa343b4d4b1b37f8e45c9fdb7f905dd90c0d8e0bd967d7a891d48eb0",
+      "bytes": 2881
     },
     {
       "path": "tests/comparisonGenerationCandidate.test.mjs",
@@ -113,13 +115,13 @@
     },
     {
       "path": "package.json",
-      "sha256": "2575ce3f1b097d576b9e3da0306c85f1e3acbc76c64f912968558ef32ec4f7a0",
-      "bytes": 1329
+      "sha256": "cf3f3b0f0c468fb472ebc5c255c9a502997ab88fc44d1b945a5d9da832348bbe",
+      "bytes": 1349
     },
     {
       "path": "package-lock.json",
-      "sha256": "1f12bc7e116a262d7cfad8693fea9e271cb0e409d8ca3993a9737b42f24fe255",
-      "bytes": 118411
+      "sha256": "4d53b154da17f662b408eeb8601ced2492ec62c47cf0a16bf50d1cd8f2e2a23f",
+      "bytes": 123826
     },
     {
       "path": "scripts/buildCutoverReviewPacket.mjs",
@@ -359,7 +361,5 @@
   ],
   "rights_check": "GitHub reports this repository as public. Existing repository presence does not establish disclosure rights. Included paths are MIP implementation, qualification, or operator documentation in the GitHub repository. No live payloads, Auth records, or uncleared third-party bodies were added. Redaction is by omission of whole classes, not by rewriting test assertions.",
   "independent_reviewer_access": "Owner supplies this packet. This implementation agent does not contact Grok or transmit material.",
-  "secret_free": true,
-  "supplement_version": 2,
-  "historical_manifest_sha256": "04d28b676f15bd63acf5e96d01622d1f9d06aa4f79d68b7b6dae42e3b63f858f"
+  "secret_free": true
 }
