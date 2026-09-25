@@ -8,8 +8,14 @@ export function qikWorkerHost({rpcUrl,apiKey,workerJwt,invokeToken,session,runti
  if([apiKey,workerJwt,invokeToken,session,runtime,implementation].some(v=>typeof v!=='string'||!v))throw Error('mip_host_configuration')
  // This is a shape restriction, not signature verification. The provider and
  // native RPC verify the actual current identity. No administrator fallback.
+ const jwtClaims=value=>JSON.parse(atob(value.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))
+ if(!apiKey.startsWith('sb_publishable_')){
+  let publicClaims
+  try{publicClaims=jwtClaims(apiKey)}catch{throw Error('mip_host_public_key')}
+  if(publicClaims.role!=='anon')throw Error('mip_host_public_key')
+ }
  let claims
- try{claims=JSON.parse(atob(workerJwt.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))}catch{throw Error('mip_host_worker_jwt')}
+ try{claims=jwtClaims(workerJwt)}catch{throw Error('mip_host_worker_jwt')}
  if(claims.role!=='mip_comparison_worker_v1')throw Error('mip_host_worker_role')
  const rpc=async(name,args)=>{
   if(!allowed.has(name))throw Error('mip_host_rpc_denied')

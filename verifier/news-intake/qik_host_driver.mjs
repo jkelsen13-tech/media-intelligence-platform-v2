@@ -13,7 +13,7 @@ const fetchImpl=async(url,options)=>{
  return new Response(JSON.stringify(reply.result??null),{status:reply.error?403:200})
 }
 const jwt='dummy.'+Buffer.from(JSON.stringify({role:'mip_comparison_worker_v1'})).toString('base64url')+'.dummy'
-const host=qikWorkerHost({rpcUrl:'https://qualification.invalid/rest/v1/rpc/',apiKey:'synthetic-publishable',
+const host=qikWorkerHost({rpcUrl:'https://qualification.invalid/rest/v1/rpc/',apiKey:'sb_publishable_synthetic',
  workerJwt:jwt,invokeToken:'synthetic-invoke',session:config.session,runtime:config.runtime,
  implementation:config.implementation,fetchImpl,cryptoImpl:webcrypto})
 const response=await host(new Request('https://qualification.invalid/worker',{method:'POST',headers:{authorization:'Bearer synthetic-invoke'}}))
