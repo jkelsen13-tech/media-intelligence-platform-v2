@@ -1,6 +1,14 @@
--- R5 isolated candidate only; load after 002. No live schema, login or schedule.
+-- R5 isolated candidate only; load after 003_scoped_queue.sql. No live schema, login or schedule.
 -- Request payloads live in qik-owned storage; session/lease tokens are not copied.
 begin;
+-- 003 supplies the source/implementation row-lock fences used below.
+do $ begin
+ if to_regclass('mip_cutover_authority.source_turns') is null then
+  raise exception 'mip_journal_requires_scoped_queue';
+ end if;
+end $;
+grant execute on function comparison_qualification.require_bound_final(text,text,uuid,text)
+ to mip_comparison_worker_owner_v1;
 create table mip_cutover_authority.worker_journal (
  runtime_id text not null check(length(runtime_id) between 1 and 100),
  journal_key text not null check(length(journal_key) between 1 and 100),
@@ -123,8 +131,9 @@ begin
  if prior.entry is distinct from retained or prior.token_hash is distinct from digest then
   raise exception 'mip_journal_content_conflict';
  end if;
+ perform comparison_qualification.require_bound_final('mip_comparison_worker_v1','worker_journal_put',p_session,p_runtime);
  return true;
-end $$;
+end $;
 
 create function mip_cutover_authority.worker_journal_get(
  p_session uuid,p_runtime text,p_key text
@@ -134,13 +143,18 @@ begin
  perform comparison_qualification.require_bound('mip_comparison_worker_v1','worker_journal_get',p_session,p_runtime);
  select * into retained from mip_cutover_authority.worker_journal
   where runtime_id=p_runtime and journal_key=p_key;
- if not found then return null;end if;
+ if not found then
+  perform comparison_qualification.require_bound_final('mip_comparison_worker_v1','worker_journal_get',p_session,p_runtime);
+  return null;
+ end if;
  if retained.token_hash is not null then
   token:=mip_cutover_authority.worker_journal_token(p_runtime,retained.entry->'args',retained.token_hash);
+  perform comparison_qualification.require_bound_final('mip_comparison_worker_v1','worker_journal_get',p_session,p_runtime);
   return jsonb_set(retained.entry,'{args,p_token}',to_jsonb(token::text));
  end if;
+ perform comparison_qualification.require_bound_final('mip_comparison_worker_v1','worker_journal_get',p_session,p_runtime);
  return retained.entry;
-end $$;
+end $;
 
 alter function mip_cutover_authority.worker_journal_token(text,jsonb,text) owner to mip_comparison_worker_owner_v1;
 alter function mip_cutover_authority.worker_journal_put(uuid,text,text,jsonb) owner to mip_comparison_worker_owner_v1;

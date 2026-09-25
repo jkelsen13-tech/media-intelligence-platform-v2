@@ -3,6 +3,7 @@ Existing intake/comparison qualification is not replayed. SQL and broker paths
 run against disposable PostgreSQL; no hosted login or durable host is claimed.
 """
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 import selectors
@@ -47,7 +48,7 @@ def main():
     owner.execute("create role anon;create role authenticated;create role service_role bypassrls")
     for file in ("contract.sql", "selection.sql", "capability.sql", "source-fixture.sql", "source-snapshot.sql"):
         owner.execute((ROOT / "supabase/qualification/comparison-generations" / file).read_text())
-    for file in ("001_execute_only_identities.sql", "002_candidate_interfaces.sql", "013_worker_journal.sql"):
+    for file in ("001_execute_only_identities.sql", "002_candidate_interfaces.sql", "003_scoped_queue.sql", "013_worker_journal.sql"):
         owner.execute((ROOT / "supabase/qualification/mip-cutover-authority" / file).read_text())
     owner.execute("insert into mip_cutover_authority.runtime_config values(%s,'synthetic-source',%s,'{\"entries\":[]}')", (RUNTIME, IMPL))
     one(owner, "select comparison_qualification.bind_source_scope(%s,'synthetic-source')", (RUNTIME,))
@@ -169,6 +170,44 @@ def main():
     reject(lambda: one(table_owner, "select count(*) from mip_cutover_authority.worker_journal"), "42501")
     assert one(owner, "select relforcerowsecurity from pg_class where oid='mip_cutover_authority.worker_journal'::regclass")
     reject(lambda: rpc("worker_journal_get", {**context, "p_runtime": "foreign-runtime"}))
+    # Deterministic overlap: initial authorization passes, then the unique-key
+    # insert blocks on an uncommitted row. Revocation commits before release.
+    blocked = connect("mip_comparison_worker_v1")
+    observer = connect()
+    blocking_session = str(one(owner, "select comparison_qualification.issue_session('mip_comparison_worker_v1',%s,clock_timestamp()+interval '10 minutes')", (RUNTIME,)))
+    request_id = str(uuid.uuid4())
+    blocked_key = "worker_claim:" + request_id
+    blocked_entry = {"version": 1, "operation": "worker_claim",
+                     "args": {"p_runtime": RUNTIME, "p_request": request_id}}
+    blocked_pid = one(blocked, "select pg_backend_pid()")
+    def blocked_put():
+        try:
+            one(blocked, "select mip_cutover_authority.worker_journal_put(%s,%s,%s,%s)",
+                (blocking_session, RUNTIME, blocked_key, Jsonb(blocked_entry)))
+        except psycopg.Error as error:
+            return error.sqlstate
+        return "unexpected_success"
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        with owner.transaction():
+            owner.execute("insert into mip_cutover_authority.worker_journal values(%s,%s,%s,null)",
+                          (RUNTIME, blocked_key, Jsonb(blocked_entry)))
+            pending = executor.submit(blocked_put)
+            deadline = time.monotonic() + 3
+            while True:
+                observer.execute("select pg_stat_clear_snapshot()")
+                wait = observer.execute("select wait_event_type,wait_event from pg_stat_activity where pid=%s", (blocked_pid,)).fetchone()
+                if wait == ("Lock", "transactionid"):
+                    break
+                assert not pending.done(), "put did not block behind the uncommitted row"
+                assert time.monotonic() < deadline, "expected unique-conflict lock not observed"
+                time.sleep(0.01)
+            assert one(observer, "select comparison_qualification.revoke_session(%s)", (blocking_session,)) == "revoked"
+        assert pending.result(timeout=5) == "42501", "revoked blocked put must not acknowledge"
+    assert one(owner, "select count(*) from mip_cutover_authority.worker_journal where journal_key=%s", (blocked_key,)) == 1
+    # Missing-key reads still pass through the final bound fence.
+    reject(lambda: one(blocked, "select mip_cutover_authority.worker_journal_get(%s,%s,'absent')",
+                       (blocking_session, RUNTIME)), "42501")
+    print(json.dumps({"case": "blocked_put_concurrent_revocation_final_fence", "status": "PASS"}), flush=True)
     one(owner, "select comparison_qualification.revoke_source_scope(%s,'synthetic-source')", (RUNTIME,))
     reject(lambda: rpc("worker_journal_get", context))
     one(owner, "select comparison_qualification.revoke_principal(%s,'mip_comparison_worker_v1')", (RUNTIME,))
