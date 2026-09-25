@@ -2,7 +2,7 @@
 -- Request payloads live in qik-owned storage; session/lease tokens are not copied.
 begin;
 -- 003 supplies the source/implementation row-lock fences used below.
-do $ begin
+do $$ begin
  if to_regclass('mip_cutover_authority.source_turns') is null then
   raise exception 'mip_journal_requires_scoped_queue';
  end if;
