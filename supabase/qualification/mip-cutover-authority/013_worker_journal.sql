@@ -93,7 +93,7 @@ begin
   if op='worker_claim' then
    if p_entry->'result'<>'null'::jsonb and (
     jsonb_typeof(p_entry->'result')<>'object'
-    or (p_entry->'result'-'generation_id')<>'{}'::jsonb
+    or ((p_entry->'result')-'generation_id'::text)<>'{}'::jsonb
     or jsonb_typeof(p_entry->'result'->'generation_id') is distinct from 'string'
    ) then raise exception 'mip_journal_receipt_shape';end if;
   elsif (op='worker_complete' and p_entry->>'result' is distinct from 'completed')

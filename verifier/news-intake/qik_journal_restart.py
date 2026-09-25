@@ -34,12 +34,13 @@ def connect(role=None):
     return db
 def one(db, sql, args=()):
     return db.execute(sql, args).fetchone()[0]
-def reject(call, code=None):
+def reject(call, code, diagnostic=None):
     try:
         call()
     except psycopg.Error as error:
-        if code is not None:
-            assert error.sqlstate == code
+        assert error.sqlstate == code, "unexpected refusal SQLSTATE"
+        if diagnostic is not None:
+            assert error.diag.message_primary == diagnostic, "unexpected refusal diagnostic"
         return
     raise AssertionError("expected SQL refusal")
 def main():
@@ -153,15 +154,15 @@ def main():
     assert rpc("worker_journal_put", {**context, "p_entry": entry}) is True
     changed = json.loads(json.dumps(entry))
     changed["args"]["p_request"] = str(uuid.uuid4())
-    reject(lambda: rpc("worker_journal_put", {**context, "p_entry": changed}))
+    reject(lambda: rpc("worker_journal_put", {**context, "p_entry": changed}), "P0001", "mip_journal_binding")
     complete_context = {**context, "p_key": completed_key}
     completed_entry = rpc("worker_journal_get", complete_context)
     completed_entry["args"]["p_output"]["synthetic_conflict"] = True
-    reject(lambda: rpc("worker_journal_put", {**complete_context, "p_entry": completed_entry}))
-    reject(lambda: rpc("worker_journal_put", {**context, "p_key": last_key + ":receipt", "p_entry": {"version": 1, "result": "completed"}}))
+    reject(lambda: rpc("worker_journal_put", {**complete_context, "p_entry": completed_entry}), "P0001", "mip_journal_content_conflict")
+    reject(lambda: rpc("worker_journal_put", {**context, "p_key": last_key + ":receipt", "p_entry": {"version": 1, "result": "completed"}}), "P0001", "mip_journal_receipt_shape")
     leaked = json.loads(json.dumps(entry))
     leaked["args"]["p_session"] = context["p_session"]
-    reject(lambda: rpc("worker_journal_put", {**context, "p_entry": leaked}))
+    reject(lambda: rpc("worker_journal_put", {**context, "p_entry": leaked}), "P0001", "mip_journal_args")
     for role in ("mip_comparison_worker_v1", "mip_comparison_producer_v1", "anon", "authenticated", "service_role"):
         denied = connect(role)
         reject(lambda: one(denied, "select entry from mip_cutover_authority.worker_journal"), "42501")
@@ -169,10 +170,11 @@ def main():
     # The schema has no USAGE for this NOLOGIN owner; FORCE RLS remains on.
     reject(lambda: one(table_owner, "select count(*) from mip_cutover_authority.worker_journal"), "42501")
     assert one(owner, "select relforcerowsecurity from pg_class where oid='mip_cutover_authority.worker_journal'::regclass")
-    reject(lambda: rpc("worker_journal_get", {**context, "p_runtime": "foreign-runtime"}))
+    reject(lambda: rpc("worker_journal_get", {**context, "p_runtime": "foreign-runtime"}), "42501", "mip_authz_runtime_mismatch")
     # Deterministic overlap: initial authorization passes, then the unique-key
     # insert blocks on an uncommitted row. Revocation commits before release.
     blocked = connect("mip_comparison_worker_v1")
+    blocked.execute("set lock_timeout='8s'")  # Allow the 3s observation window before the 10s statement cap.
     observer = connect()
     blocking_session = str(one(owner, "select comparison_qualification.issue_session('mip_comparison_worker_v1',%s,clock_timestamp()+interval '10 minutes')", (RUNTIME,)))
     request_id = str(uuid.uuid4())
@@ -185,7 +187,7 @@ def main():
             one(blocked, "select mip_cutover_authority.worker_journal_put(%s,%s,%s,%s)",
                 (blocking_session, RUNTIME, blocked_key, Jsonb(blocked_entry)))
         except psycopg.Error as error:
-            return error.sqlstate
+            return error.sqlstate, error.diag.message_primary
         return "unexpected_success"
     with ThreadPoolExecutor(max_workers=1) as executor:
         with owner.transaction():
@@ -202,16 +204,17 @@ def main():
                 assert time.monotonic() < deadline, "expected unique-conflict lock not observed"
                 time.sleep(0.01)
             assert one(observer, "select comparison_qualification.revoke_session(%s)", (blocking_session,)) == "revoked"
-        assert pending.result(timeout=5) == "42501", "revoked blocked put must not acknowledge"
+        assert pending.result(timeout=5) == ("42501", "mip_authz_revoked_session"), "revoked blocked put must not acknowledge"
     assert one(owner, "select count(*) from mip_cutover_authority.worker_journal where journal_key=%s", (blocked_key,)) == 1
-    # Missing-key reads still pass through the final bound fence.
+    # This revoked-session missing-key check proves the initial fence only;
+    # source inspection separately covers the successful-null final fence.
     reject(lambda: one(blocked, "select mip_cutover_authority.worker_journal_get(%s,%s,'absent')",
-                       (blocking_session, RUNTIME)), "42501")
+                       (blocking_session, RUNTIME)), "42501", "mip_authz_revoked_session")
     print(json.dumps({"case": "blocked_put_concurrent_revocation_final_fence", "status": "PASS"}), flush=True)
     one(owner, "select comparison_qualification.revoke_source_scope(%s,'synthetic-source')", (RUNTIME,))
-    reject(lambda: rpc("worker_journal_get", context))
+    reject(lambda: rpc("worker_journal_get", context), "42501", "mip_source_not_in_scope")
     one(owner, "select comparison_qualification.revoke_principal(%s,'mip_comparison_worker_v1')", (RUNTIME,))
-    reject(lambda: rpc("worker_journal_get", context))
+    reject(lambda: rpc("worker_journal_get", context), "42501", "mip_authz_revoked_session")
     print(json.dumps({"case": "journal_access_shape_conflict_revocation_no_publication", "status": "PASS"}), flush=True)
 try:
     main()
