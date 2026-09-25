@@ -96,3 +96,36 @@ test('one zero-byte chunk requires EOF within the same admission deadline',async
   assert.ok(performance.now()-started<1000,mode)
  }
 })
+
+test('host HTTP recovery waits on native claim owners and never admits new work',async()=>{
+ const seen=[]
+ const host=qikWorkerHost({...defaults,fetchImpl:async(url,options)=>{
+  const name=new URL(url).pathname.split('/').at(-1)
+  seen.push({name,profile:options.headers['content-profile']})
+  if(name==='worker_journal_pending')return new Response(JSON.stringify([
+   {key:'worker_claim:00000000-0000-4000-8000-000000000001',action:'hold_claim'}]))
+  if(name==='worker_resume_claim')return new Response(JSON.stringify({state:'waiting_lease'}))
+  throw Error('unexpected new work')
+ }})
+ const response=await host(request())
+ assert.equal(response.status,200)
+ assert.deepEqual(await response.json(),{state:'waiting_native_claim_recovery',recovered:0,held:1})
+ assert.deepEqual(seen.map(x=>x.name),['worker_journal_pending','worker_resume_claim'])
+ assert.ok(seen.every(x=>x.profile==='mip_identity'))
+})
+
+test('host HTTP exhausted native claim retains failure without a new claim',async()=>{
+ const seen=[]
+ const host=qikWorkerHost({...defaults,fetchImpl:async(url)=>{
+  const name=new URL(url).pathname.split('/').at(-1)
+  seen.push(name)
+  if(name==='worker_journal_pending')return new Response(JSON.stringify([
+   {key:'worker_claim:00000000-0000-4000-8000-000000000002',action:'hold_claim'}]))
+  if(name==='worker_resume_claim')return new Response(JSON.stringify({state:'exhausted'}))
+  throw Error('unexpected new work')
+ }})
+ const response=await host(request())
+ assert.equal(response.status,200)
+ assert.deepEqual(await response.json(),{state:'recovery_required',recovered:0})
+ assert.deepEqual(seen,['worker_journal_pending','worker_resume_claim'])
+})

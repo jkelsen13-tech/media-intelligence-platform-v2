@@ -185,6 +185,67 @@ def main():
     assert killed["state"]=="killed"
     resumed,ops,_=child(config(issue()))
     assert resumed=={"state":"recovery_required","recovered":1} and "worker_journal_get" in ops
+    expire=lambda generation,seconds:owner.execute(
+        "update comparison_qualification.jobs set lease_expires_at=clock_timestamp()-(%s*interval '1 second') where generation_id=%s",
+        (seconds,generation))
+    # Two concurrent exact resumes cannot issue two active tokens. Native state owns retry.
+    generation=enqueue()
+    killed,_,original=child(config(issue()),"after_claim")
+    assert killed["state"]=="killed" and original["generation_id"]==str(generation)
+    key=one(owner,"select 'worker_claim:'||request_id::text from comparison_qualification.request_runs where generation_id=%s and rpc_name='worker_claim'",(generation,))
+    expire(generation,31)
+    sid=issue()
+    def resume_connection():
+        conn=connect("mip_comparison_worker_v1")
+        return one(conn,"select mip_identity.worker_resume_claim(%s,%s,%s)",(sid,RUNTIME,key))
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        outcomes=list(pool.map(lambda _:resume_connection(),range(2)))
+    assert sorted(v["state"] for v in outcomes)==["resumed","waiting_lease"]
+    assert one(owner,"select attempt from comparison_qualification.jobs where generation_id=%s",(generation,))==2
+    stale_request=str(uuid.uuid4())
+    reject(lambda:rpc("worker_journal_put",{"p_session":sid,"p_runtime":RUNTIME,"p_key":"worker_fail:"+stale_request,
+      "p_entry":{"version":1,"operation":"worker_fail","args":{"p_request":stale_request,"p_runtime":RUNTIME,
+       "p_generation":str(generation),"p_token":original["lease_token"],"p_input_hash":original["input_hash"],
+       "p_implementation":IMPL}}}),"P0001","mip_journal_native_token_unavailable")
+    expire(generation,61)
+    recovered,_,_=child(config(issue()))
+    assert recovered["recovered"]==1
+    assert one(owner,"select attempt from comparison_qualification.jobs where generation_id=%s",(generation,))==3
+    # Active lease and backoff hold admission; the next invocation recovers after wait.
+    generation_hold=enqueue()
+    killed,_,_=child(config(issue()),"after_claim")
+    held,ops,_=child(config(issue()))
+    assert held=={"state":"waiting_native_claim_recovery","recovered":0,"held":1}
+    assert "worker_resume_claim" in ops and "worker_claim" not in ops
+    expire(generation_hold,1)
+    waiting,_,_=child(config(issue()))
+    assert waiting["state"]=="waiting_native_claim_recovery"
+    expire(generation_hold,31)
+    recovered,ops,_=child(config(issue()))
+    assert recovered=={"state":"recovery_required","recovered":1}
+    assert one(owner,"select attempt from comparison_qualification.jobs where generation_id=%s",(generation_hold,))==2
+    # Exhaustion retains the same job with native failure; never publishes or duplicates.
+    generation_ex=enqueue()
+    killed,_,_=child(config(issue()),"after_claim")
+    key_ex=one(owner,"select 'worker_claim:'||request_id::text from comparison_qualification.request_runs where generation_id=%s and rpc_name='worker_claim'",(generation_ex,))
+    expire(generation_ex,31)
+    sid_ex=issue()
+    assert rpc("worker_resume_claim",{"p_session":sid_ex,"p_runtime":RUNTIME,"p_key":key_ex})["state"]=="resumed"
+    expire(generation_ex,61)
+    assert rpc("worker_resume_claim",{"p_session":sid_ex,"p_runtime":RUNTIME,"p_key":key_ex})["state"]=="resumed"
+    expire(generation_ex,1)
+    assert rpc("worker_resume_claim",{"p_session":sid_ex,"p_runtime":RUNTIME,"p_key":key_ex})["state"]=="exhausted"
+    assert one(owner,"select failure_code from comparison_qualification.jobs where generation_id=%s",(generation_ex,))=="lease_attempts_exhausted"
+    assert rpc("worker_resume_claim",{"p_session":sid_ex,"p_runtime":RUNTIME,"p_key":key_ex})["state"]=="resolved"
+    # Empty/never-issued native request resolves without admitting unrelated work.
+    request=str(uuid.uuid4());empty_key="worker_claim:"+request
+    sid_empty=issue()
+    rpc("worker_journal_put",{"p_session":sid_empty,"p_runtime":RUNTIME,"p_key":empty_key,
+      "p_entry":{"version":1,"operation":"worker_claim","args":{"p_runtime":RUNTIME,"p_request":request}}})
+    resolved,_,_=child(config(issue()))
+    assert resolved=={"state":"recovery_required","recovered":0}
+    idle,_,_=child(config(issue()))
+    assert idle=={"state":"idle"}
     # No alternate direct API or native table path is available to external workers.
     for signature in ("worker_claim(uuid,uuid,text)","worker_complete(uuid,uuid,text,uuid,uuid,text,text,jsonb)",
       "worker_fail(uuid,uuid,text,uuid,uuid,text,text)","worker_journal_put(uuid,text,text,jsonb)",
@@ -229,6 +290,30 @@ def main():
     resumed,_,_=child(config(current))
     assert resumed=={"state":"recovery_required","recovered":1}
     assert rpc("worker_journal_pending",{"p_session":current,"p_runtime":RUNTIME,"p_after":"","p_limit":20})==[]
+    # Prepared terminal wins: its native row share lock blocks lease rotation.
+    generation_term=enqueue()
+    killed,_,original_term=child(config(issue()),"after_claim")
+    key_term=one(owner,"select 'worker_claim:'||request_id::text from comparison_qualification.request_runs where generation_id=%s and rpc_name='worker_claim'",(generation_term,))
+    expire(generation_term,31)
+    prepare=connect("mip_comparison_worker_v1")
+    request_term=str(uuid.uuid4());sid_term=issue()
+    token=one(owner,"select lease_token from comparison_qualification.jobs where generation_id=%s",(generation_term,))
+    bound=one(owner,"select comparison_qualification.claim_payload(%s,true,'fixture')",(generation_term,))
+    entry={"version":1,"operation":"worker_fail","args":{"p_request":request_term,"p_runtime":RUNTIME,
+      "p_generation":str(generation_term),"p_token":str(token),"p_input_hash":bound["input_hash"],"p_implementation":IMPL}}
+    prepare.execute("begin")
+    assert one(prepare,"select mip_identity.worker_journal_put(%s,%s,%s,%s)",(sid_term,RUNTIME,"worker_fail:"+request_term,Jsonb(entry)))
+    concurrent=connect("mip_comparison_worker_v1");pid=one(concurrent,"select pg_backend_pid()")
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        pending=pool.submit(lambda:one(concurrent,"select mip_identity.worker_resume_claim(%s,%s,%s)",(sid_term,RUNTIME,key_term)))
+        deadline=time.monotonic()+2
+        while not one(owner,"select cardinality(pg_blocking_pids(%s))>0",(pid,)):
+            assert time.monotonic()<deadline,"resume did not wait on prepared-terminal lock"
+            time.sleep(0.01)
+        prepare.execute("commit")
+        assert pending.result(timeout=3)["state"]=="terminal_pending"
+    assert one(owner,"select attempt from comparison_qualification.jobs where generation_id=%s",(generation_term,))==1
+    assert original_term["generation_id"]==str(generation_term)
     # Scope revocation retires the external mapping. Rebinding scope/evaluation alone
     # cannot reactivate it; the exact external mapping must receive fresh approval.
     one(owner,"select comparison_qualification.revoke_source_scope(%s,'synthetic-source')",(RUNTIME,))
@@ -245,9 +330,10 @@ def main():
       ("worker_resume_claim",{"p_key":"worker_claim:"+str(uuid.uuid4())}),
       ("worker_journal_put",{"p_key":"worker_claim:"+str(uuid.uuid4()),"p_entry":{}})):
         reject(lambda:rpc(name,{"p_session":current,"p_runtime":RUNTIME,**args}),"P0001","mip_identity_key_revoked")
-    assert one(owner,"select count(*) from comparison_qualification.outputs")==3
+    assert one(owner,"select count(*) from comparison_qualification.outputs")==5
     assert one(owner,"select count(*) from comparison_qualification.publication_history")==0
     print(json.dumps({"case":"broker_host_native_resume_and_terminal_recovery","status":"PASS","fresh_process_ms":elapsed}),flush=True)
+    print(json.dumps({"case":"broker_exact_retry_recovery_semantics","status":"PASS"}),flush=True)
     print(json.dumps({"case":"broker_mapping_key_scope_direct_api_denials","status":"PASS"}),flush=True)
 try:
     main()
