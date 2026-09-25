@@ -14,8 +14,10 @@ grant select on mip_cutover_authority.worker_journal to mip_kernel_owner_v2;
 create policy native_resume_journal_read on mip_cutover_authority.worker_journal
  for select to mip_kernel_owner_v2 using(true);
 grant select,insert on mip_cutover_authority.lease_owners to mip_kernel_owner_v2;
-create policy native_resume_lease_owner on mip_cutover_authority.lease_owners
- to mip_kernel_owner_v2 using(true) with check(true);
+create policy native_resume_lease_owner_read on mip_cutover_authority.lease_owners
+ for select to mip_kernel_owner_v2 using(true);
+create policy native_resume_lease_owner_insert on mip_cutover_authority.lease_owners
+ for insert to mip_kernel_owner_v2 with check(true);
 
 create function mip_identity.worker_journal_put(p_session uuid,p_runtime text,p_key text,p_entry jsonb)
 returns boolean language plpgsql security definer set search_path='' as $$
