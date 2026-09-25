@@ -23,8 +23,9 @@ export function canonicalUrl(url) {
   if (!url) return null
   try {
     const u = new URL(url)
-    const host = u.hostname.toLowerCase().replace(/^www\./, '')
-    const path = u.pathname.replace(/\/+$/, '').toLowerCase()
+    const host = u.hostname.toLowerCase().replace(/^www\./, '') + (u.port ? ':' + u.port : '')
+    // Path case and non-default port can identify different source documents.
+    const path = u.pathname.replace(/\/+$/, '')
     const params = [...u.searchParams.entries()]
       .filter(([k]) => !TRACKING_PARAMS.test(k.toLowerCase()))
       .sort(([a], [b]) => a.localeCompare(b))
