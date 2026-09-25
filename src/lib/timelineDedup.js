@@ -1,11 +1,11 @@
 // Tier 4 deterministic duplicate rule (Phase 0 Item 4, 2026-07-28).
 //
-// Event nodes are grouped by the 8-char slug suffix (article identity). When
-// a group holds both an `evt-` node and an `art-` node, the `art-` node is an
-// article mirror of the SAME event (verified live: 37/37 pairs share identical
-// label and occurred_at; scores 65 vs 70 were the reported "duplicate events
-// with different scores"). Only the `evt-` node renders — it is canonical
-// because it carries the summary. Unpaired nodes always render.
+// The historical 8-char article suffix only locates mirror candidates.
+// A unique evt-/art- pair must also share the complete post-prefix slug body:
+// ingest-rss generates both from the same title stem and article-id prefix.
+// A suffix collision alone is not identity evidence. Only an unambiguous
+// matching pair suppresses its art- node in favor of the evt- summary;
+// unpaired, mismatched, and ambiguous candidates always render.
 //
 // Pure functions, no imports — unit-tested outside the Vite bundle.
 
@@ -29,7 +29,8 @@ export function canonicalizeTimelineEvents(events) {
     const artNodes = group.filter((n) => typeof n.slug === 'string' && n.slug.startsWith('art-'))
     // Multiple evt or art candidates make the suffix ambiguous. Preserve
     // every identity rather than choosing one and redirecting its edges.
-    const paired = group.length === 2 && evtNodes.length === 1 && artNodes.length === 1
+    const paired = group.length === 2 && evtNodes.length === 1 && artNodes.length === 1 &&
+      evtNodes[0].slug.slice(4) === artNodes[0].slug.slice(4)
     if (paired) {
       const canonical = evtNodes[0]
       for (const n of group) {
