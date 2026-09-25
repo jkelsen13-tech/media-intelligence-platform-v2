@@ -385,11 +385,20 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
   const articleIdBySuffix = new Map()
   const articleArcBySuffix = new Map()
   const outletByArticleId = new Map()
+  const ambiguousArticleSuffixes = new Set()
   for (const a of articlesRes.data) {
     const suffix = String(a.id).slice(0, 8)
+    if (articleIdBySuffix.has(suffix) && articleIdBySuffix.get(suffix) !== a.id) ambiguousArticleSuffixes.add(suffix)
     articleIdBySuffix.set(suffix, a.id)
     if (a.arc_id) articleArcBySuffix.set(suffix, a.arc_id)
     if (a.outlet) outletByArticleId.set(a.id, a.outlet)
+  }
+
+  // Ambiguous article prefixes carry neither a derived link nor a derived arc.
+  // Full-ID reporting records and direct node arc assignments remain intact.
+  for (const suffix of ambiguousArticleSuffixes) {
+    articleIdBySuffix.delete(suffix)
+    articleArcBySuffix.delete(suffix)
   }
 
   // Package 1 arc-grouped addition: per-event outlet index + per-article
