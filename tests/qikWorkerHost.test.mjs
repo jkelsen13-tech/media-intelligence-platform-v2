@@ -34,3 +34,12 @@ test('host fixes runtime and schema and supplies no caller key',async()=>{
  assert.equal(seen[0].headers['content-profile'],'mip_cutover_authority')
  assert.equal(seen.filter(x=>x.name==='worker_claim').length,1)
 })
+
+test('nonempty or streaming bodies are refused without being read',async()=>{
+ let calls=0,cancelled=false
+ const host=qikWorkerHost({...defaults,fetchImpl:async()=>{calls++;throw Error('unexpected')}})
+ const stream=new ReadableStream({cancel(){cancelled=true}})
+ const response=await host(new Request('https://qualification.invalid/worker',{method:'POST',duplex:'half',
+  headers:{authorization:'Bearer synthetic-invoke'},body:stream}))
+ assert.equal(response.status,400);assert.equal(calls,0);assert.equal(cancelled,true)
+})

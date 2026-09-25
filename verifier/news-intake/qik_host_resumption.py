@@ -176,6 +176,12 @@ def main():
         outcomes=list(pool.map(lambda _:resume_connection(),range(2)))
     assert sorted(v["state"] for v in outcomes)==["resumed","waiting_lease"]
     assert one(owner,"select attempt from comparison_qualification.jobs where generation_id=%s",(generation,))==2
+    # Resume won: old token cannot prepare a terminal journal request afterward.
+    stale_request=str(uuid.uuid4())
+    reject(lambda:rpc("worker_journal_put",{"p_session":sid,"p_runtime":RUNTIME,"p_key":"worker_fail:"+stale_request,
+      "p_entry":{"version":1,"operation":"worker_fail","args":{"p_request":stale_request,"p_runtime":RUNTIME,
+       "p_generation":str(generation),"p_token":original["lease_token"],"p_input_hash":original["input_hash"],
+       "p_implementation":IMPL}}}),"P0001","mip_journal_native_token_unavailable")
     # Simulate losing that recovery response too; wait then third native attempt completes.
     expire(generation,61)
     recovered,_,_=child(config(fresh()))
@@ -211,6 +217,31 @@ def main():
     killed,_,_=child(config(fresh()),"after_claim")
     key=one(owner,"select 'worker_claim:'||request_id::text from comparison_qualification.request_runs where generation_id=%s and rpc_name='worker_claim'",(generation,))
     expire(generation,31)
+    one(owner,"select comparison_qualification.revoke_evaluated_implementation(%s,%s)",(RUNTIME,IMPL))
+    reject(lambda:rpc("worker_resume_claim",context(fresh(),key)),"42501","mip_implementation_not_evaluated")
+    one(owner,"select comparison_qualification.bind_evaluated_implementation(%s,%s)",(RUNTIME,IMPL))
+    # Prepared terminal wins: its native row share lock blocks lease rotation.
+    prepare=connect("mip_comparison_worker_v1")
+    request=str(uuid.uuid4());sid=fresh()
+    entry={"version":1,"operation":"worker_fail","args":{"p_request":request,"p_runtime":RUNTIME,
+      "p_generation":str(generation),"p_token":original["lease_token"],"p_input_hash":original["input_hash"],"p_implementation":IMPL}}
+    # Obtain this generation's actual old claim (the earlier variable belonged to another job).
+    token=one(owner,"select lease_token from comparison_qualification.jobs where generation_id=%s",(generation,))
+    bound=one(owner,"select comparison_qualification.claim_payload(%s,true,'fixture')",(generation,))
+    entry["args"]["p_token"]=str(token);entry["args"]["p_input_hash"]=bound["input_hash"]
+    prepare.execute("begin")
+    assert one(prepare,"select mip_cutover_authority.worker_journal_put(%s,%s,%s,%s)",(sid,RUNTIME,"worker_fail:"+request,Jsonb(entry)))
+    concurrent=connect("mip_comparison_worker_v1");pid=one(concurrent,"select pg_backend_pid()")
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        pending=pool.submit(lambda:one(concurrent,"select mip_cutover_authority.worker_resume_claim(%s,%s,%s)",(sid,RUNTIME,key)))
+        deadline=time.monotonic()+2
+        while not one(owner,"select cardinality(pg_blocking_pids(%s))>0",(pid,)):
+            assert time.monotonic()<deadline,"resume did not wait on prepared-terminal lock"
+            time.sleep(0.01)
+        prepare.execute("commit")
+        assert pending.result(timeout=3)["state"]=="terminal_pending"
+    assert one(owner,"select attempt from comparison_qualification.jobs where generation_id=%s",(generation,))==1
+    # This stale prepared-terminal case intentionally remains held; no content is discarded.
     one(owner,"select comparison_qualification.revoke_source_scope(%s,'synthetic-source')",(RUNTIME,))
     reject(lambda:rpc("worker_resume_claim",context(fresh(),key)),"42501","mip_source_not_in_scope")
     assert one(owner,"select attempt from comparison_qualification.jobs where generation_id=%s",(generation,))==1

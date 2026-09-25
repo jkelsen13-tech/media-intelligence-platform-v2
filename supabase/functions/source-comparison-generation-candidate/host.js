@@ -31,7 +31,8 @@ export function qikWorkerHost({rpcUrl,apiKey,workerJwt,invokeToken,session,runti
  return async request=>{
   if(request.method!=='POST')return json(405,{state:'method_denied'})
   if(request.headers.get('authorization')!=='Bearer '+invokeToken)return json(403,{state:'denied'})
-  if(await request.text()!=='')return json(400,{state:'body_denied'})
+  // Invocation has no payload. Reject streams without reading or buffering them.
+  if(request.body!==null){void request.body.cancel();return json(400,{state:'body_denied'})}
   const started=performance.now()
   try{
    const result=await runQikJournaledWorker({rpc,session,runtime,implementation,pageSize:20,
