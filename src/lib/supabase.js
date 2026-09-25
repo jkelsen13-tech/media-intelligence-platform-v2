@@ -84,38 +84,45 @@ export async function keysetAll(client, table, cols, { filter = (q) => q, pageSi
   }
 }
 
-// Composite-key variant for tables with no `id` column (node_topics PK is
-// (node_id, topic_id)). Same guarantees as keysetAll — every row present for
-// the duration of the read is returned exactly once, and concurrent inserts
-// cannot shift pages the way offset pagination allows. The cursor advances on
-// the leading key via .gte(); the handful of overlap rows at the cursor value
-// (one node carries at most a dozen topics) is dropped client-side, which
-// keeps the filter simple enough for PostgREST's .or() grammar to stay out
-// of it. Termination: even if a whole page overlaps the cursor, the cursor
-// still advances to the page tail, so the loop always makes progress.
-// NOTE: `cols` MUST include every column in `keyCols` — the cursor reads
-// them back off the returned rows.
+// Two-column primary-key pagination for node_topics and event_articles.
+// Drain the current leading-key group with (first = cursor, second > cursor),
+// then advance to first > cursor. A group may span any number of pages.
+// No raw PostgREST OR grammar or client-side overlap removal is required.
+// Separate reads are not an atomic snapshot; rows inserted behind an already
+// consumed cursor are outside this traversal. cols must include both keyCols.
 export async function keysetAllComposite(client, table, cols, { keyCols, filter = (q) => q, pageSize = 1000 } = {}) {
   const out = []
   let cursor = null
+  let afterGroup = false
   for (;;) {
     let q = filter(client.from(table).select(cols))
     for (const c of keyCols) q = q.order(c, { ascending: true })
-    if (cursor !== null) q = q.gte(keyCols[0], cursor[0])
+    if (cursor !== null) {
+      q = afterGroup
+        ? q.gt(keyCols[0], cursor[0])
+        : q.eq(keyCols[0], cursor[0]).gt(keyCols[1], cursor[1])
+    }
     const { data, error } = await q.limit(pageSize)
     if (error) return { data: null, error }
-    let page = data ?? []
-    if (cursor !== null) {
-      page = page.filter(
-        (r) =>
-          String(r[keyCols[0]]) > String(cursor[0]) ||
-          (String(r[keyCols[0]]) === String(cursor[0]) && String(r[keyCols[1]]) > String(cursor[1])),
-      )
+    const page = data ?? []
+    if (page.length > 0) {
+      const tail = page[page.length - 1]
+      const next = keyCols.map((c) => tail[c])
+      if (next.some((value) => value == null) ||
+          (cursor !== null && next.every((value, index) => value === cursor[index]))) {
+        throw new Error('Composite pagination cursor did not advance')
+      }
+      out.push(...page)
+      // A short unrestricted/after-group page exhausted the remaining table.
+      if (page.length < pageSize && (cursor === null || afterGroup)) {
+        return { data: out, error: null }
+      }
+      cursor = next
+    } else if (cursor === null || afterGroup) {
+      return { data: out, error: null }
     }
-    out.push(...page)
-    if (!data || data.length < pageSize) return { data: out, error: null }
-    const tail = data[data.length - 1]
-    cursor = keyCols.map((c) => tail[c])
+    // A short or empty within-group page exhausts only this leading key.
+    afterGroup = page.length < pageSize
   }
 }
 
