@@ -78,3 +78,19 @@ test('existing unique suppressed mirror can still supply an arc fallback', () =>
   assert.deepEqual(buildMirrorArcMap(input, events), new Map([['event', 'retained-arc']]))
   assert.deepEqual(buildMirrorArcMap(input, input), new Map(), 'a caller retaining both identities grants no mirror fallback')
 })
+
+test('opposite-prefix suffix collision with different full stems preserves both identities and edges', () => {
+  assertIndependent([
+    { id: 'one', slug: 'evt-alpha-1234abcd' },
+    { id: 'two', slug: 'art-beta-1234abcd' },
+  ])
+})
+
+test('different full stems cannot suppress an identity or donate its arc', () => {
+  const input = [
+    { id: 'one', slug: 'evt-alpha-1234abcd', arc_id: null },
+    { id: 'two', slug: 'art-beta-1234abcd', arc_id: 'unrelated-arc' },
+  ]
+  const { events } = canonicalizeTimelineEvents(input)
+  assert.deepEqual(buildMirrorArcMap(input, events), new Map())
+})
