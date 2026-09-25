@@ -55,3 +55,14 @@ test('bounded body admission accepts only EOF and refuses data stalled and error
   assert.ok(pulls<=2,mode)
  }
 })
+
+test('body framing refusal cannot be bypassed with EOF',async()=>{
+ for(const headers of [{'transfer-encoding':'chunked'},{'content-length':'1'},{'content-length':'invalid'},{'content-length':'00'}]){
+  let calls=0,pulls=0
+  const host=qikWorkerHost({...defaults,fetchImpl:async()=>{calls++;throw Error('unexpected')}})
+  const stream=new ReadableStream({pull(controller){pulls++;controller.close()}})
+  const response=await host(new Request('https://qualification.invalid/worker',{method:'POST',duplex:'half',
+   headers:{authorization:'Bearer synthetic-invoke',...headers},body:stream}))
+  assert.equal(response.status,400);assert.equal(calls,0)
+ }
+})
