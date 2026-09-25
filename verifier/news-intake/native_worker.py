@@ -9,6 +9,8 @@ remain with the caller before enqueue_source() is invoked.
 from __future__ import annotations
 
 import importlib.util
+import math
+import time
 from pathlib import Path
 from typing import Any
 
@@ -125,12 +127,37 @@ class NativeIntakeWorker:
             "candidate_count": len(result["candidate_ids"]),
         }
 
-    def run(self, max_jobs: int = 1) -> list[dict[str, Any]]:
-        """Claim no more than 1..10 jobs; the database enforces <=5 attempts each."""
+    def run(
+        self, max_jobs: int = 1, *, max_elapsed_seconds: float | None = None,
+    ) -> list[dict[str, Any]]:
+        """Claim at most 1..10 jobs, optionally stopping new claims at a deadline.
+
+        The monotonic deadline is checked before each run_one(). A transaction
+        already in flight is allowed to finish, including native failure/retry
+        recording. This is a drain boundary, not a total-runtime timeout.
+        None preserves count-only behavior; zero starts no new claims.
+        The database still enforces <=5 attempts per job.
+        """
         if isinstance(max_jobs, bool) or not isinstance(max_jobs, int) or not 1 <= max_jobs <= 10:
             raise ValueError("max_jobs must be an integer from 1 to 10")
+        if max_elapsed_seconds is not None and (
+            isinstance(max_elapsed_seconds, bool)
+            or not isinstance(max_elapsed_seconds, (int, float))
+            or max_elapsed_seconds < 0
+        ):
+            raise ValueError("max_elapsed_seconds must be finite and nonnegative")
+        if max_elapsed_seconds is not None:
+            try:
+                max_elapsed_seconds = float(max_elapsed_seconds)
+            except OverflowError:
+                raise ValueError("max_elapsed_seconds must be finite and nonnegative") from None
+            if not math.isfinite(max_elapsed_seconds):
+                raise ValueError("max_elapsed_seconds must be finite and nonnegative")
+        deadline = None if max_elapsed_seconds is None else time.monotonic() + max_elapsed_seconds
         results = []
         for _ in range(max_jobs):
+            if deadline is not None and time.monotonic() >= deadline:
+                break
             item = self.run_one()
             if item["state"] == "idle":
                 break
