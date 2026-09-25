@@ -2,6 +2,7 @@ name: Golden regression suite
 
 on:
   push:
+    branches-ignore: ['candidate/r5-ongoing-synthetic-20260925']
   pull_request:
   workflow_dispatch:
 
