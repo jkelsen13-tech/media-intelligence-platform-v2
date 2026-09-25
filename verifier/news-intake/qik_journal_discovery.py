@@ -171,7 +171,7 @@ def main():
         reject(lambda:rpc("worker_journal_pending",{**context,"p_limit":limit}),"P0001","mip_journal_page_bounds")
     reject(lambda:rpc("worker_journal_pending",{**context,"p_runtime":"foreign-runtime"}),"42501","mip_authz_runtime_mismatch")
     one(owner,"select comparison_qualification.revoke_source_scope(%s,'synthetic-source')",(RUNTIME,))
-    reject(lambda:rpc("worker_journal_pending",context),"42501","mip_source_not_in_scope")
+    reject(lambda:rpc("worker_journal_pending",{**context,"p_limit":50}),"42501","mip_source_not_in_scope")
     one(owner,"select comparison_qualification.revoke_session(%s)",(context["p_session"],))
     reject(lambda:rpc("worker_journal_pending",context),"42501","mip_authz_revoked_session")
     assert one(owner,"select count(*) from comparison_qualification.outputs")==2
