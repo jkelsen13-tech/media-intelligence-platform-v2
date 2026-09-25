@@ -744,10 +744,9 @@ export function buildTimelineCrossLinks(allEventNodes, canonicalOf, articleRows,
   return { articleIdBySuffix, arcTitleById }
 }
 
-// Doc 05 pair 3 (News → Timeline): the timeline focus key for an article is
-// its id's 8-hex prefix, IF an event node exists with a slug ending in that
-// suffix (art- node or its evt- twin — same dedup group key). Returns null
-// when no timeline event covers this article — the link then does not render.
+// Doc 05 pair 3 (News → Timeline): a suffix is a lookup hint, never a
+// navigation identity. Return a unique visible event's exact ID, otherwise
+// retain the existing arc-assigned article-record destination when available.
 export async function loadArticleTimelineKey(articleId, { supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client || !articleId) return null
@@ -768,21 +767,29 @@ export async function loadArticleTimelineKey(articleId, { supabaseClient } = {})
 
     const { data: eventRows, error: eventError } = await client
       .from('nodes')
-      .select('id, slug')
+      .select('id, slug, type')
       .eq('type', 'event')
       .like('slug', `%${prefix}`)
-      .limit(1)
-    if (!eventError && eventRows && eventRows.length > 0) return prefix
+      .limit(2)
+    if (eventError || !Array.isArray(eventRows)) return null
+    if (eventRows.length === 1) {
+      const event = eventRows[0]
+      if (typeof event.id !== 'string' || !event.id.trim() ||
+          event.type !== 'event' || typeof event.slug !== 'string' ||
+          !event.slug.endsWith(prefix)) return null
+      return event.id
+    }
 
-    // If no graph event mirror exists but the article already belongs to an
-    // arc, return the explicit article-record key instead of withholding the
-    // Timeline destination. This creates no event assertion.
+    // Zero or ambiguous event candidates cannot authorize suffix navigation.
+    // Preserve the existing full-ID reporting-record fallback for an article
+    // with an arc. This is best effort: separate reads and the destination's
+    // loaded scope can change; it creates no graph-event assertion.
     const { data: article, error: articleError } = await client
       .from('articles')
       .select('id, arc_id')
       .eq('id', articleId)
       .maybeSingle()
-    if (articleError || !article?.arc_id) return null
+    if (articleError || !article?.arc_id || String(article.id).toLowerCase() !== normalizedId) return null
     return `article-${article.id}`
   } catch {
     return null
