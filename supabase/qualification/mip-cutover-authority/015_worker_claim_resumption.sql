@@ -93,7 +93,7 @@ grant execute on function comparison_qualification.resume_exact_claim(text,uuid)
 create function mip_cutover_authority.worker_resume_claim(
  p_session uuid,p_runtime text,p_key text
 ) returns jsonb language plpgsql security definer set search_path='' as $$
-declare request uuid;result jsonb;claimed jsonb;prior comparison_qualification.request_runs;
+declare request uuid;result jsonb;claimed jsonb;
 begin
  perform comparison_qualification.require_bound('mip_comparison_worker_v1','worker_resume_claim',p_session,p_runtime);
  if p_key is null or p_key !~ '^worker_claim:[0-9a-f-]{36}$' then raise exception 'mip_resume_key';end if;
@@ -103,7 +103,7 @@ begin
  and entry->'args'->>'p_request'=request::text) then raise exception 'mip_resume_journal_missing';end if;
  -- Same native request lock used by replay(), including a crash before claim commit.
  perform pg_advisory_xact_lock(hashtextextended(request::text||':worker_claim',149));
- select * into prior from comparison_qualification.request_runs
+ perform 1 from comparison_qualification.request_runs
  where request_id=request and rpc_name='worker_claim'
  and runtime_id=p_runtime and principal='mip_comparison_worker_v1';
  if not found then
