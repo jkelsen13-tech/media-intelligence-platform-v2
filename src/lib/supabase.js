@@ -721,7 +721,13 @@ export async function loadArcDetail(arcKey, { supabaseClient } = {}) {
 export function buildTimelineCrossLinks(allEventNodes, canonicalOf, articleRows, arcRows) {
   const articleIdBySuffix = new Map()
   const idByPrefix = new Map()
-  for (const a of articleRows ?? []) idByPrefix.set(String(a.id).slice(0, 8), a.id)
+  const ambiguousPrefixes = new Set()
+  for (const a of articleRows ?? []) {
+    const prefix = String(a.id).slice(0, 8)
+    if (idByPrefix.has(prefix) && idByPrefix.get(prefix) !== a.id) ambiguousPrefixes.add(prefix)
+    idByPrefix.set(prefix, a.id)
+  }
+  for (const prefix of ambiguousPrefixes) idByPrefix.delete(prefix)
   // Map by GROUP suffix (shared by evt-/art- mirrors): any art- node in a
   // group gives the whole group its article. Walk art- nodes, resolve their
   // canonical card's suffix.
@@ -745,8 +751,21 @@ export function buildTimelineCrossLinks(allEventNodes, canonicalOf, articleRows,
 export async function loadArticleTimelineKey(articleId, { supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client || !articleId) return null
-  const prefix = String(articleId).slice(0, 8)
+  // UUID bounds avoid raw filter interpolation and never inspect hidden rows.
+  // Uniqueness is only within this same client's RLS-visible article set.
+  if (typeof articleId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(articleId)) return null
+  const normalizedId = articleId.toLowerCase()
+  const prefix = normalizedId.slice(0, 8)
   try {
+    const { data: prefixRows, error: prefixError } = await client
+      .from('articles')
+      .select('id')
+      .gte('id', `${prefix}-0000-0000-0000-000000000000`)
+      .lte('id', `${prefix}-ffff-ffff-ffff-ffffffffffff`)
+      .limit(2)
+    if (prefixError || !Array.isArray(prefixRows) || prefixRows.length !== 1 ||
+        String(prefixRows[0].id).toLowerCase() !== normalizedId) return null
+
     const { data: eventRows, error: eventError } = await client
       .from('nodes')
       .select('id, slug')
