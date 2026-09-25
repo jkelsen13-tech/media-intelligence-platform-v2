@@ -144,12 +144,13 @@ export function buildClaimView(claim, surfaces, ctx) {
   const coverageUnknown = []
   for (const outlet of eventOutlets) {
     if (claimingOutlets.has(outlet)) continue
-    // Omission requires extracted coverage: the outlet's event articles must
-    // have produced claim rows (or carry a non-empty claims payload). Empty
-    // extraction means we cannot say "didn't cover" — only "nothing extracted".
+    // Omission is limited to the supplied event articles. Partial extraction
+    // cannot establish absence across an outlet: every included article must
+    // have extracted coverage. This is not a claim about real-world reporting.
     const outletArticles = ctx.eventArticlesByOutlet.get(outlet) ?? []
-    const anyExtracted = outletArticles.some((a) => ctx.extractedArticleIds.has(a.id))
-    if (anyExtracted) omittedBy.push(outlet)
+    const allExtracted = outletArticles.length > 0
+      && outletArticles.every((a) => ctx.extractedArticleIds.has(a.id))
+    if (allExtracted) omittedBy.push(outlet)
     else coverageUnknown.push(outlet)
   }
   const links = evidenceLinks.filter((l) => l.claim_id === claim.id)
