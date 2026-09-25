@@ -51,11 +51,15 @@ try{
  assert.equal(body.status,400);await body.text();assert.equal(calls.length,0)
  const unauthorized=await invoke({method:'POST'})
  assert.equal(unauthorized.status,403);await unauthorized.text();assert.equal(calls.length,0)
+ const explicitEmpty=await invoke({method:'POST',headers:{authorization:'Bearer synthetic-invoke'},body:''})
+ assert.equal(explicitEmpty.status,200);assert.deepEqual(await explicitEmpty.json(),{state:'idle'})
+ assert.equal(calls.length,4)
+ const baseline=calls.length
  const started=performance.now()
  const response=await invoke({method:'POST',headers:{authorization:'Bearer synthetic-invoke'}})
  assert.equal(response.status,200)
  assert.deepEqual(await response.json(),{state:'idle'})
- assert.deepEqual(calls,['worker_journal_pending','worker_journal_put','worker_claim','worker_journal_put'])
+ assert.deepEqual(calls.slice(baseline),['worker_journal_pending','worker_journal_put','worker_claim','worker_journal_put'])
  ambiguous=true
  const count=calls.length
  const uncertain=await invoke({method:'POST',headers:{authorization:'Bearer synthetic-invoke'}})
@@ -67,5 +71,5 @@ try{
  globalThis.fetch=nativeFetch
  Deno.serve=nativeServe
  if(server){await server.shutdown();await server.finished}
+ console.log('DENO_OWNED_SERVER_CLEANUP_PASS')
 }
-console.log('DENO_OWNED_SERVER_CLEANUP_PASS')

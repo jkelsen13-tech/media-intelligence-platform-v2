@@ -31,9 +31,29 @@ export function qikWorkerHost({rpcUrl,apiKey,workerJwt,invokeToken,session,runti
  return async request=>{
   if(request.method!=='POST')return json(405,{state:'method_denied'})
   if(request.headers.get('authorization')!=='Bearer '+invokeToken)return json(403,{state:'denied'})
-  // Invocation has no payload. Reject streams without reading or buffering them.
-  if(request.body!==null){void request.body.cancel();return json(400,{state:'body_denied'})}
   const started=performance.now()
+  const contentLength=request.headers.get('content-length')
+  if(request.headers.has('transfer-encoding')||(contentLength!==null&&contentLength!=='0')){
+   if(request.body!==null)void request.body.cancel().catch(()=>{})
+   return json(400,{state:'body_denied'})
+  }
+  // Deno represents even an empty network POST as a stream. Inspect at most
+  // one chunk, without accumulation; only EOF within 250ms permits invocation.
+  if(request.body!==null){
+   const reader=request.body.getReader()
+   let timer
+   let empty=false
+   try{
+    const first=await Promise.race([reader.read(),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),250)})])
+    empty=first!==null&&first.done===true
+   }catch{}finally{
+    clearTimeout(timer)
+    // Cancellation must not extend admission if the peer/source never settles.
+    void reader.cancel().catch(()=>{})
+    try{reader.releaseLock()}catch{}
+   }
+   if(!empty)return json(400,{state:'body_denied'})
+  }
   try{
    const result=await runQikJournaledWorker({rpc,session,runtime,implementation,pageSize:20,
     requestId:()=>cryptoImpl.randomUUID(),shouldDrain:()=>performance.now()-started>=45000,

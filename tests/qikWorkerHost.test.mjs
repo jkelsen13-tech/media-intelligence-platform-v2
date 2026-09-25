@@ -35,11 +35,23 @@ test('host fixes runtime and schema and supplies no caller key',async()=>{
  assert.equal(seen.filter(x=>x.name==='worker_claim').length,1)
 })
 
-test('nonempty or streaming bodies are refused without being read',async()=>{
- let calls=0,cancelled=false
- const host=qikWorkerHost({...defaults,fetchImpl:async()=>{calls++;throw Error('unexpected')}})
- const stream=new ReadableStream({cancel(){cancelled=true}})
- const response=await host(new Request('https://qualification.invalid/worker',{method:'POST',duplex:'half',
-  headers:{authorization:'Bearer synthetic-invoke'},body:stream}))
- assert.equal(response.status,400);assert.equal(calls,0);assert.equal(cancelled,true)
+test('bounded body admission accepts only EOF and refuses data stalled and errored streams',async()=>{
+ for(const mode of ['empty','data','stalled','error']){
+  let calls=0,cancelled=false,pulls=0
+  const host=qikWorkerHost({...defaults,fetchImpl:async()=>{calls++;throw Error('synthetic provider refusal')}})
+  const stream=new ReadableStream({pull(controller){
+   pulls++
+   if(mode==='empty')controller.close()
+   if(mode==='data')controller.enqueue(new Uint8Array([1]))
+   if(mode==='error')controller.error(Error('synthetic body failure'))
+  },cancel(){cancelled=true}})
+  const started=performance.now()
+  const response=await host(new Request('https://qualification.invalid/worker',{method:'POST',duplex:'half',
+   headers:{authorization:'Bearer synthetic-invoke','content-length':'0'},body:stream}))
+  assert.equal(response.status,mode==='empty'?503:400,mode)
+  assert.equal(calls,mode==='empty'?1:0,mode)
+  assert.ok(performance.now()-started<1000,mode)
+  if(mode==='data'||mode==='stalled')assert.equal(cancelled,true,mode)
+  assert.ok(pulls<=2,mode)
+ }
 })
