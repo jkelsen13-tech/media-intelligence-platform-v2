@@ -66,3 +66,33 @@ test('body framing refusal cannot be bypassed with EOF',async()=>{
   assert.equal(response.status,400);assert.equal(calls,0)
  }
 })
+
+test('one zero-byte chunk requires EOF within the same admission deadline',async()=>{
+ for(const mode of ['eof','data','zero','error','stall','late_eof']){
+  let calls=0,pulls=0,cancelled=false
+  const host=qikWorkerHost({...defaults,fetchImpl:async()=>{calls++;throw Error('synthetic provider refusal')}})
+  const stream=new ReadableStream({async pull(controller){
+   pulls++
+   if(pulls===1){
+    if(mode==='late_eof')await new Promise(resolve=>setTimeout(resolve,180))
+    if(!cancelled)controller.enqueue(new Uint8Array(0))
+    return
+   }
+   if(mode==='eof')controller.close()
+   if(mode==='data')controller.enqueue(new Uint8Array([1]))
+   if(mode==='zero')controller.enqueue(new Uint8Array(0))
+   if(mode==='error')controller.error(Error('synthetic stream error'))
+   if(mode==='late_eof'){
+    await new Promise(resolve=>setTimeout(resolve,180))
+    if(!cancelled)controller.close()
+   }
+  },cancel(){cancelled=true}},{highWaterMark:0})
+  const started=performance.now()
+  const response=await host(new Request('https://qualification.invalid/worker',{method:'POST',duplex:'half',
+   headers:{authorization:'Bearer synthetic-invoke','content-length':'0'},body:stream}))
+  assert.equal(response.status,mode==='eof'?503:400,mode)
+  assert.equal(calls,mode==='eof'?1:0,mode)
+  assert.ok(pulls<=2,mode)
+  assert.ok(performance.now()-started<1000,mode)
+ }
+})

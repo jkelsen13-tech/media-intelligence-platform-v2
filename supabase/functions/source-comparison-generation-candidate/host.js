@@ -38,14 +38,20 @@ export function qikWorkerHost({rpcUrl,apiKey,workerJwt,invokeToken,session,runti
    return json(400,{state:'body_denied'})
   }
   // Deno represents even an empty network POST as a stream. Inspect at most
-  // one chunk, without accumulation; only EOF within 250ms permits invocation.
+  // two reads, without accumulation: EOF or one empty Uint8Array then EOF.
+  // Both reads share one 250ms deadline; any payload or repeated empty chunk fails.
   if(request.body!==null){
    const reader=request.body.getReader()
    let timer
    let empty=false
    try{
-    const first=await Promise.race([reader.read(),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),250)})])
+    const deadline=new Promise(resolve=>{timer=setTimeout(()=>resolve(null),250)})
+    const first=await Promise.race([reader.read(),deadline])
     empty=first!==null&&first.done===true
+    if(first!==null&&!first.done&&first.value instanceof Uint8Array&&first.value.byteLength===0){
+     const second=await Promise.race([reader.read(),deadline])
+     empty=second!==null&&second.done===true
+    }
    }catch{}finally{
     clearTimeout(timer)
     // Cancellation must not extend admission if the peer/source never settles.
