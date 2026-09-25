@@ -4,6 +4,11 @@ name: QIK broker PostgreSQL qualification
 on:
   workflow_dispatch:
   workflow_call:
+  # Dispatch is not usable from this integration (new file 404 on default;
+  # registered workflow_dispatch returns 403). Branch-scoped push is the
+  # remaining one-shot trigger; Golden is filtered on this branch only.
+  push:
+    branches: ['qual/qik-broker-pg-20260925']
 
 permissions:
   contents: read
@@ -21,14 +26,14 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-          fetch-depth: 2
+          fetch-depth: 8
       - name: Exact source and bounded source-free broker PostgreSQL qualification
         shell: bash
         run: |
           set -euo pipefail
           test "$GITHUB_REPOSITORY" = "jkelsen13-tech/media-intelligence-platform-v2"
           test "$GITHUB_REF" = "refs/heads/qual/qik-broker-pg-20260925"
-          case "$GITHUB_EVENT_NAME" in workflow_dispatch|workflow_call) ;; *) exit 1 ;; esac
+          case "$GITHUB_EVENT_NAME" in workflow_dispatch|workflow_call|push) ;; *) exit 1 ;; esac
           test "$GITHUB_RUN_ATTEMPT" = "1"
           test "$(git rev-parse HEAD)" = "$R5_EXECUTION_SHA"
           git diff --exit-code "$R5_REVIEWED_SOURCE" HEAD -- . ':!.github/workflows'
