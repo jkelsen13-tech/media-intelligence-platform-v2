@@ -30,8 +30,16 @@ export async function runGenerationWorker({rpc,requestId,session,runtime,impleme
       snapshot_metadata:retained.snapshot_metadata}
   }catch{
     // Existing isolated policy: explicit failure is terminal. Never reset a lease.
-    const state=await rpc('worker_fail',{...binding,p_request:requestId('failure')})
-    return {state,generation:claim.generation_id}
+    const failure={...binding,p_request:requestId('failure')}
+    try{
+      const state=await rpc('worker_fail',failure)
+      return {state,generation:claim.generation_id}
+    }catch{
+      // The failure may already be committed. Preserve this exact request;
+      // retry must recheck current authority and must never claim new work.
+      return {state:'failure_unconfirmed',generation:claim.generation_id,
+        retry:()=>rpc('worker_fail',failure)}
+    }
   }
   // Do not convert an ambiguous completion response into a conflicting failure.
   // The host must retain this exact request and arguments for identical retry.
