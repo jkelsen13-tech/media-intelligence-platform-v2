@@ -1,0 +1,106 @@
+# Temporary one-shot source-free QIK broker PostgreSQL qualification.
+# Synthetic disposable PostgreSQL only. No live credentials or source payloads.
+name: QIK broker PostgreSQL qualification
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  qik-broker-pg:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    env:
+      R5_EXECUTION_SHA: ${{ github.sha }}
+      R5_REVIEWED_SOURCE: f4920e691f355e684933c2762534debbbdd7880b
+      R5_RUN: ${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Exact source and bounded source-free broker PostgreSQL qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "jkelsen13-tech/media-intelligence-platform-v2"
+          test "$GITHUB_REF" = "refs/heads/qual/qik-broker-pg-20260925"
+          case "$GITHUB_EVENT_NAME" in workflow_dispatch|workflow_call) ;; *) exit 1 ;; esac
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          test "$(git rev-parse HEAD)" = "$R5_EXECUTION_SHA"
+          git diff --exit-code "$R5_REVIEWED_SOURCE" HEAD -- . ':!.github/workflows'
+          git rev-parse HEAD HEAD^{tree}
+          if grep -q extraheader .git/config; then exit 1; fi
+          timeout --signal=TERM --kill-after=2s 150s bash <<'R5_BOUND'
+          set -euo pipefail
+          prefix="mip-qik-broker-$R5_RUN"
+          image="$prefix-utility"
+          for name in "$prefix-pg" "$prefix-test"; do
+            if docker container inspect "$name" >/dev/null 2>&1; then exit 1; fi
+          done
+          if docker volume inspect "$prefix-socket" >/dev/null 2>&1; then exit 1; fi
+          if docker image inspect "$image" >/dev/null 2>&1; then exit 1; fi
+          node_binary="$(readlink -f "$(command -v node)")"
+          test -f "$node_binary"
+          test -x "$node_binary"
+          docker pull postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+          docker build --label "mip.qik-broker.run=$R5_RUN" -f verifier/integrated/native-path.Dockerfile -t "$image" verifier/integrated
+          docker image inspect postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929 "$image" --format 'RUNTIME {{.Id}} {{json .RepoDigests}}'
+          docker volume create --label "mip.qik-broker.run=$R5_RUN" "$prefix-socket"
+          docker run -d --name "$prefix-pg" --label "mip.qik-broker.run=$R5_RUN" \
+            --network none --memory 512m --pids-limit 128 --security-opt no-new-privileges:true \
+            --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=256m \
+            --mount "type=volume,source=$prefix-socket,target=/var/run/postgresql" \
+            -e POSTGRES_PASSWORD=source-free-disposable-only \
+            postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+          stable=0
+          for attempt in $(seq 1 25); do
+            if docker exec "$prefix-pg" pg_isready -U postgres >/dev/null 2>&1; then stable=$((stable + 1)); else stable=0; fi
+            if [ "$stable" -ge 5 ]; then break; fi
+            test "$attempt" -lt 25
+            sleep 1
+          done
+          test "$(docker inspect --format '{{.HostConfig.NetworkMode}}' "$prefix-pg")" = none
+          test -z "$(docker port "$prefix-pg")"
+          docker exec "$prefix-pg" createdb -U postgres mip_r5_journal
+          docker exec "$prefix-pg" psql -U postgres -d mip_r5_journal -Atc \
+            "select current_database(),current_user,inet_server_addr() is null"
+          docker run --rm --name "$prefix-test" --label "mip.qik-broker.run=$R5_RUN" \
+            --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true \
+            --user 65534:65534 --memory 256m --pids-limit 32 --ulimit core=0 \
+            --tmpfs /tmp:rw,noexec,nosuid,size=32m \
+            --mount "type=volume,source=$prefix-socket,target=/var/run/postgresql,readonly" \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace,readonly" \
+            --mount "type=bind,source=$node_binary,target=/usr/local/bin/node,readonly" \
+            --workdir /workspace -e MIP_R5_ISOLATION=network-none-socket-only \
+            --entrypoint python "$image" -I -B /workspace/verifier/news-intake/qik_broker_resumption.py
+          docker inspect "$prefix-pg" --format 'BOUNDARY network={{.HostConfig.NetworkMode}} ports={{json .HostConfig.PortBindings}} memory={{.HostConfig.Memory}} pids={{.HostConfig.PidsLimit}}'
+          R5_BOUND
+      - name: Verify owned disposable cleanup
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          prefix="mip-qik-broker-$R5_RUN"
+          for name in "$prefix-test" "$prefix-pg"; do
+            if docker container inspect "$name" >/dev/null 2>&1; then
+              test "$(docker inspect --format '{{index .Config.Labels "mip.qik-broker.run"}}' "$name")" = "$R5_RUN"
+              timeout --kill-after=1s 5s docker rm -f -v "$name" >/dev/null
+            fi
+          done
+          if docker volume inspect "$prefix-socket" >/dev/null 2>&1; then
+            test "$(docker volume inspect --format '{{index .Labels "mip.qik-broker.run"}}' "$prefix-socket")" = "$R5_RUN"
+            docker volume rm "$prefix-socket" >/dev/null
+          fi
+          if docker image inspect "$prefix-utility" >/dev/null 2>&1; then
+            test "$(docker image inspect --format '{{index .Config.Labels "mip.qik-broker.run"}}' "$prefix-utility")" = "$R5_RUN"
+            docker image rm "$prefix-utility" >/dev/null
+          fi
+          if docker container inspect "$prefix-test" >/dev/null 2>&1; then exit 1; fi
+          if docker container inspect "$prefix-pg" >/dev/null 2>&1; then exit 1; fi
+          if docker volume inspect "$prefix-socket" >/dev/null 2>&1; then exit 1; fi
+          if docker image inspect "$prefix-utility" >/dev/null 2>&1; then exit 1; fi
+          printf '%s\n' 'QIK_BROKER_PG_DISPOSABLE_CLEANUP_PASS'

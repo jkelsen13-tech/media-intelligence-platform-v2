@@ -2,6 +2,19 @@ name: Golden regression suite
 
 on:
   push:
+    # Temporary qual-branch-only guard: this commit only changes workflow YAML.
+    # Re-verify before any later push that adds product paths.
+    branches-ignore:
+      - qual/qik-broker-pg-20260925
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'index.html'
+      - 'vite.config.js'
+      - 'vite.config.mjs'
+      - 'tests/**'
   pull_request:
   workflow_dispatch:
 
