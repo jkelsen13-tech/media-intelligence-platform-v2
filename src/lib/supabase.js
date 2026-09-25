@@ -1190,6 +1190,8 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
     )
     .order('published_at', { ascending: false, nullsFirst: false })
     .order('fetched_at', { ascending: false })
+    // Native batch intake can share both clocks; the immutable ID closes ties.
+    .order('id', { ascending: true })
     .range(offset, offset + limit - 1)
 
   query = applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore })
