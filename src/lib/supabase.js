@@ -770,14 +770,34 @@ export async function loadArticleTimelineKey(articleId, { supabaseClient } = {})
       .select('id, slug, type')
       .eq('type', 'event')
       .like('slug', `%${prefix}`)
-      .limit(2)
+      .limit(3)
     if (eventError || !Array.isArray(eventRows)) return null
-    if (eventRows.length === 1) {
-      const event = eventRows[0]
-      if (typeof event.id !== 'string' || !event.id.trim() ||
-          event.type !== 'event' || typeof event.slug !== 'string' ||
-          !event.slug.endsWith(prefix)) return null
-      return event.id
+    const validEvents = eventRows.every((event) =>
+      event && typeof event.id === 'string' && event.id.trim() &&
+      event.type === 'event' && typeof event.slug === 'string' &&
+      event.slug.endsWith(prefix))
+    let candidate = null
+    if (validEvents && eventRows.length === 1) candidate = eventRows[0]
+    if (validEvents && eventRows.length === 2 &&
+        new Set(eventRows.map((event) => event.id)).size === 2) {
+      // A third candidate makes the suffix ambiguous. Only the established
+      // exact-body mirror rule can canonicalize this complete two-row set.
+      const canonical = canonicalizeTimelineEvents(eventRows)
+      if (canonical.suppressed === 1 && canonical.events.length === 1) candidate = canonical.events[0]
+    }
+    if (candidate) {
+      const candidateIds = eventRows.map((event) => event.id)
+      const { data: memberships, error: membershipError } = await client
+        .from('graph_event_article_memberships')
+        .select('event_node_id, article_id')
+        .eq('article_id', normalizedId)
+        .in('event_node_id', candidateIds)
+        .limit(2)
+      // Positive full-ID evidence only; missing membership is not proof of
+      // corpus completeness. RLS-hidden prefix collisions cannot grant a link.
+      if (!membershipError && Array.isArray(memberships) && memberships.length > 0 &&
+          memberships.every((row) => row && row.article_id === normalizedId &&
+            candidateIds.includes(row.event_node_id))) return candidate.id
     }
 
     // Zero or ambiguous event candidates cannot authorize suffix navigation.
