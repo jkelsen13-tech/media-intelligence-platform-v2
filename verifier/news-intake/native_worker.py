@@ -130,12 +130,15 @@ class NativeIntakeWorker:
     def run(
         self, max_jobs: int = 1, *, max_elapsed_seconds: float | None = None,
     ) -> list[dict[str, Any]]:
-        """Claim at most 1..10 jobs, optionally stopping new claims at a deadline.
+        """Admit at most 1..10 run_one iterations, with an optional deadline.
 
-        The monotonic deadline is checked before each run_one(). A transaction
-        already in flight is allowed to finish, including native failure/retry
-        recording. This is a drain boundary, not a total-runtime timeout.
-        None preserves count-only behavior; zero starts no new claims.
+        The monotonic deadline is checked before entering each run_one().
+        Readiness and current_user database round trips happen afterward, so
+        an admitted iteration may reach its SQL claim after the deadline.
+        An admitted iteration is allowed to finish, including atomic processing
+        and native failure/retry recording. This bounds iteration admission,
+        not the precise lease-acquisition time or total runtime.
+        None preserves count-only behavior; zero admits no iterations.
         The database still enforces <=5 attempts per job.
         """
         if isinstance(max_jobs, bool) or not isinstance(max_jobs, int) or not 1 <= max_jobs <= 10:

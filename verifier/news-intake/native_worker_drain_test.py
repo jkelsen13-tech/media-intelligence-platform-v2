@@ -1,4 +1,4 @@
-"""Source-free tests for the optional pre-claim drain deadline only.
+"""Source-free tests for the optional iteration-admission deadline only.
 
 Fake run_one calls do not establish PostgreSQL, hosted-login or pooler behavior.
 The unchanged native C1/C2 and representative R1/R5 receipts remain separate.
