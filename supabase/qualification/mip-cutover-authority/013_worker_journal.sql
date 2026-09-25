@@ -96,7 +96,8 @@ begin
     or (p_entry->'result'-'generation_id')<>'{}'::jsonb
     or jsonb_typeof(p_entry->'result'->'generation_id') is distinct from 'string'
    ) then raise exception 'mip_journal_receipt_shape';end if;
-  elsif p_entry->>'result' is distinct from case op when 'worker_complete' then 'completed' else 'failed' end then
+  elsif (op='worker_complete' and p_entry->>'result' is distinct from 'completed')
+     or (op='worker_fail' and p_entry->>'result' is distinct from 'failed') then
    raise exception 'mip_journal_receipt_shape';
   end if;
   retained:=p_entry;
