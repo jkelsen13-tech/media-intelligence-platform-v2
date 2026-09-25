@@ -1,12 +1,8 @@
 # Temporary one-shot source-free journal qualification; no PR workflow change.
 name: Integrated isolated candidate
 on:
-  workflow_dispatch:
-    inputs:
-      execution_sha:
-        description: Exact reviewed temporary execution commit
-        required: true
-        type: string
+  push:
+    branches: ['candidate/qik-journal-native-20260925']
 permissions:
   contents: read
 jobs:
@@ -14,8 +10,8 @@ jobs:
     if: >-
       github.repository == 'jkelsen13-tech/media-intelligence-platform-v2' &&
       github.ref == 'refs/heads/candidate/qik-journal-native-20260925' &&
-      github.event_name == 'workflow_dispatch' && github.run_attempt == 1 &&
-      inputs.execution_sha == github.sha
+      github.event_name == 'push' && github.run_attempt == 1 &&
+      github.event.before == 'fdef85b1dd33130bb6c29d4ac88597ec8d33005f'
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     env:
@@ -27,13 +23,13 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-          fetch-depth: 2
+          fetch-depth: 3
       - name: Exact source and bounded source-free journal qualification
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$R5_EXECUTION_SHA"
-          git diff --exit-code "$R5_REVIEWED_SOURCE" HEAD -- . ':!.github/workflows/integrated-isolation.yml'
+          git diff --exit-code "$R5_REVIEWED_SOURCE" HEAD -- . ':!.github/workflows/integrated-isolation.yml' ':!.github/workflows/golden.yml'
           git rev-parse HEAD HEAD^{tree}
           if grep -q extraheader .git/config; then exit 1; fi
           timeout --signal=TERM --kill-after=2s 95s bash <<'R5_BOUND'
