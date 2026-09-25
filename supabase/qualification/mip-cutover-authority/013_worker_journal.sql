@@ -6,7 +6,7 @@ do $ begin
  if to_regclass('mip_cutover_authority.source_turns') is null then
   raise exception 'mip_journal_requires_scoped_queue';
  end if;
-end $;
+end $$;
 grant execute on function comparison_qualification.require_bound_final(text,text,uuid,text)
  to mip_comparison_worker_owner_v1;
 create table mip_cutover_authority.worker_journal (
@@ -133,7 +133,7 @@ begin
  end if;
  perform comparison_qualification.require_bound_final('mip_comparison_worker_v1','worker_journal_put',p_session,p_runtime);
  return true;
-end $;
+end $$;
 
 create function mip_cutover_authority.worker_journal_get(
  p_session uuid,p_runtime text,p_key text
@@ -154,7 +154,7 @@ begin
  end if;
  perform comparison_qualification.require_bound_final('mip_comparison_worker_v1','worker_journal_get',p_session,p_runtime);
  return retained.entry;
-end $;
+end $$;
 
 alter function mip_cutover_authority.worker_journal_token(text,jsonb,text) owner to mip_comparison_worker_owner_v1;
 alter function mip_cutover_authority.worker_journal_put(uuid,text,text,jsonb) owner to mip_comparison_worker_owner_v1;
