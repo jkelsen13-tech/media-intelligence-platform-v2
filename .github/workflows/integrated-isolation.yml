@@ -1,167 +1,89 @@
-name: Integrated isolated candidate
+name: Targeted standalone Deno candidate boot
 on:
-  pull_request:
-    paths:
-      - 'supabase/qualification/mip-cutover-authority/**'
-      - 'supabase/functions/source-comparison-generation-candidate/**'
-      - 'verifier/integrated/**'
-      - '.github/workflows/integrated-isolation.yml'
-  workflow_dispatch:
+  push:
+    branches: ['candidate/qik-deno-zero-eof-20260925']
 permissions:
   contents: read
 jobs:
-  integrated:
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    services:
-      postgres:
-        image: postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
-        env:
-          POSTGRES_PASSWORD: mip-disposable-ci-only
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    steps:
-      - uses: actions/checkout@v7.0.1
-        with:
-          fetch-depth: 2
-      - uses: actions/setup-node@v7.0.0
-        with:
-          node-version: 24
-      - name: Pull isolated worker image on hosted runner only
-        run: docker pull node:24-alpine
-      - name: Broker, encrypted remote journal and real process-restart regressions
-        env:
-          MIP_DISPOSABLE_POSTGRES: comparison-qualification
-          MIP_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
-        run: node --test verifier/integrated/*.test.mjs
-      - name: Require same-candidate Golden and native regression success
-        if: github.event_name == 'pull_request'
-        env:
-          MIP_PERMISSION_HEAD: ${{ github.event.pull_request.head.sha }}
-        run: |
-          python3 -I -B - <<'PY'
-          import json,os,time,urllib.request,sys
-          with open('verifier/integrated/realPermissionActivation.json') as f:
-              activation=json.load(f)
-          if activation['status']!='authorized_single_batch':
-              print('MIP_PERMISSION_REGRESSION_GATE_INACTIVE')
-              sys.exit(0)
-          head=os.environ['MIP_PERMISSION_HEAD']
-          required={'Golden regression suite','Comparison PostgreSQL concurrency','Isolated authority extension concurrency'}
-          url='https://api.github.com/repos/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs?head_sha='+head+'&event=pull_request&per_page=100'
-          for attempt in range(24):
-              try:
-                  request=urllib.request.Request(url,headers={'Accept':'application/vnd.github+json','User-Agent':'MIP-bounded-regression-gate'})
-                  with urllib.request.urlopen(request,timeout=15) as response:
-                      runs=json.load(response)['workflow_runs']
-              except Exception:
-                  print('MIP_PERMISSION_REGRESSION_GATE_READ_FAILED')
-                  sys.exit(1)
-              selected={}
-              for run in runs:
-                  if run['name'] in required and run['head_sha']==head and (run['name'] not in selected or run['id']>selected[run['name']]['id']):
-                      selected[run['name']]=run
-              if any(r['status']=='completed' and r['conclusion']!='success' for r in selected.values()):
-                  print('MIP_PERMISSION_REGRESSION_GATE_DENIED')
-                  sys.exit(1)
-              if set(selected)==required and all(r['status']=='completed' and r['conclusion']=='success' for r in selected.values()):
-                  print('MIP_PERMISSION_REGRESSION_GATE_PASS '+json.dumps({'head':head,'runs':{n:r['id'] for n,r in selected.items()}},sort_keys=True))
-                  sys.exit(0)
-              time.sleep(15)
-          print('MIP_PERMISSION_REGRESSION_GATE_TIMEOUT')
-          sys.exit(1)
-          PY
-      - name: Bounded owner-admitted permission component
-        if: github.event_name == 'pull_request'
-        env:
-          MIP_DISPOSABLE_POSTGRES: comparison-qualification
-          MIP_PERMISSION_HEAD: ${{ github.event.pull_request.head.sha }}
-        run: node verifier/integrated/realPermissionBatch.mjs
-
-  native-ingestion-recovery:
-    name: Native synthetic ingestion and isolated restore
+  deno-boot:
+    if: >-
+      github.repository == 'jkelsen13-tech/media-intelligence-platform-v2' &&
+      github.ref == 'refs/heads/candidate/qik-deno-zero-eof-20260925' &&
+      github.event_name == 'push' && github.run_attempt == 1 &&
+      github.event.before == 'be392417c05a6d7a9145f6c920c2267b73214d03'
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 2
+    env:
+      DENO_REVIEWED_SOURCE: be392417c05a6d7a9145f6c920c2267b73214d03
+      DENO_RUN: ${{ github.run_id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - name: Record exact source and prepare credential-free utility
+          fetch-depth: 2
+      - name: Exact source and bounded standalone Deno boot
         shell: bash
         run: |
           set -euo pipefail
+          git diff --exit-code "$DENO_REVIEWED_SOURCE" HEAD -- . ':!.github/workflows/integrated-isolation.yml' ':!.github/workflows/golden.yml'
           git rev-parse HEAD HEAD^{tree}
-          ! grep -q extraheader .git/config
-          docker pull postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
-          docker build -f verifier/integrated/native-path.Dockerfile -t mip-native-utility verifier/integrated
-          docker image inspect postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929 mip-native-utility --format 'RUNTIME {{.Id}} {{json .RepoDigests}}'
-      - name: Execute existing native extraction and persistence without network
-        shell: bash
-        run: |
+          timeout --signal=TERM --kill-after=2s 60s bash <<'DENO_BOUND'
           set -euo pipefail
-          docker volume create mip-native-socket
-          docker run -d --name mip-native-pg --network none --memory 512m --pids-limit 128 \
-            --security-opt no-new-privileges:true \
-            --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=256m \
-            --mount type=volume,source=mip-native-socket,target=/var/run/postgresql \
-            -e POSTGRES_PASSWORD=mip-native-disposable-only postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
-          stable=0
-          for attempt in $(seq 1 60); do
-            if docker exec mip-native-pg pg_isready -U postgres >/dev/null 2>&1; then stable=$((stable + 1)); else stable=0; fi
-            if [ "$stable" -ge 5 ]; then break; fi
-            test "$attempt" -lt 60
-            sleep 1
-          done
-          test "$(docker inspect --format '{{.HostConfig.NetworkMode}}' mip-native-pg)" = none
-          test -z "$(docker port mip-native-pg)"
-          docker exec mip-native-pg createdb -U postgres mip_native_path
-          docker exec mip-native-pg psql -U postgres -d mip_native_path -Atc \
-            "select current_database(),current_user,current_setting('server_version'),inet_server_addr();"
-          docker run --rm --name mip-native-exercise --network none --read-only --cap-drop ALL \
-            --security-opt no-new-privileges:true --user 65534:65534 --memory 256m --pids-limit 32 \
-            --tmpfs /tmp:rw,noexec,nosuid,size=32m \
-            --mount type=volume,source=mip-native-socket,target=/var/run/postgresql,readonly \
-            --mount "type=bind,source=$GITHUB_WORKSPACE/verifier/integrated/nativePipeline.py,target=/workspace/verifier/integrated/nativePipeline.py,readonly" \
-            --mount "type=bind,source=$GITHUB_WORKSPACE/verifier/ingestion_pipeline.py,target=/workspace/verifier/ingestion_pipeline.py,readonly" \
-            --mount "type=bind,source=$GITHUB_WORKSPACE/supabase/migrations/20260905082406_evidence_pipeline_reliability.sql,target=/workspace/supabase/migrations/20260905082406_evidence_pipeline_reliability.sql,readonly" \
-            -e MIP_NATIVE_SYNTHETIC=network-none-socket-only \
-            mip-native-utility /workspace/verifier/integrated/nativePipeline.py exercise mip_native_path
-      - name: Restore independent artifact and reconcile current authority before readback
-        shell: bash
-        run: |
-          set -euo pipefail
-          docker exec mip-native-pg pg_dump -U postgres -d mip_native_path --format=plain \
-            > "$RUNNER_TEMP/mip-native-path.sql"
-          test -s "$RUNNER_TEMP/mip-native-path.sql"
-          sha256sum "$RUNNER_TEMP/mip-native-path.sql" > "$RUNNER_TEMP/mip-native-path.sha256"
-          sha256sum -c "$RUNNER_TEMP/mip-native-path.sha256"
-          sha256sum "$RUNNER_TEMP/mip-native-path.sql"
-          docker exec mip-native-pg createdb -U postgres mip_native_path_restored
-          docker exec -i mip-native-pg psql -X -q -U postgres -d mip_native_path_restored -v ON_ERROR_STOP=1 \
-            < "$RUNNER_TEMP/mip-native-path.sql"
-          # Reconcile synthetic current revocation before any restored consumer.
-          docker exec mip-native-pg psql -X -q -U postgres -d mip_native_path_restored -v ON_ERROR_STOP=1 -c \
-            "REVOKE EXECUTE ON FUNCTION public.mip_pipeline_v1(text,jsonb) FROM service_role; REVOKE ALL ON SCHEMA evidence_pipeline FROM service_role; REVOKE SELECT ON public.articles FROM service_role; REVOKE INSERT(feed,outlet,title,url,summary,body_text,published_at,ingestion_run_id) ON public.articles FROM service_role;"
-          docker run --rm --name mip-native-readback --network none --read-only --cap-drop ALL \
-            --security-opt no-new-privileges:true --user 65534:65534 --memory 256m --pids-limit 32 \
-            --tmpfs /tmp:rw,noexec,nosuid,size=32m \
-            --mount type=volume,source=mip-native-socket,target=/var/run/postgresql,readonly \
-            --mount "type=bind,source=$GITHUB_WORKSPACE/verifier/integrated/nativePipeline.py,target=/workspace/verifier/integrated/nativePipeline.py,readonly" \
-            -e MIP_NATIVE_SYNTHETIC=network-none-socket-only \
-            mip-native-utility /workspace/verifier/integrated/nativePipeline.py readback mip_native_path_restored
-          docker inspect mip-native-pg --format 'BOUNDARY network={{.HostConfig.NetworkMode}} ports={{json .HostConfig.PortBindings}} memory={{.HostConfig.Memory}} pids={{.HostConfig.PidsLimit}}'
-      - name: Remove synthetic runtime and ephemeral restore input
+          timeout --signal=TERM --kill-after=1s 10s node --test --test-name-pattern="bounded body admission|body framing refusal|one zero-byte chunk" tests/qikWorkerHost.test.mjs
+          [[ "$DENO_RUN" =~ ^[0-9]+$ ]]
+          runtime_dir="$RUNNER_TEMP/mip-qik-deno-$DENO_RUN"
+          container="mip-qik-deno-$DENO_RUN"
+          test ! -e "$runtime_dir"
+          if docker container inspect "$container" >/dev/null 2>&1; then exit 1; fi
+          mkdir -m 755 -- "$runtime_dir"
+          test "$(realpath -- "$runtime_dir")" = "$RUNNER_TEMP/mip-qik-deno-$DENO_RUN"
+          curl --fail --location --proto '=https' --proto-redir '=https' --max-time 25 --max-filesize 41596794 \
+            'https://github.com/denoland/deno/releases/download/v2.9.7/deno-x86_64-unknown-linux-gnu.zip' -o "$runtime_dir/deno.zip"
+          test "$(stat -c %s "$runtime_dir/deno.zip")" = 41596794
+          printf '%s  %s\n' 'c6527f24f4b16031d3ae4fa9f658d5f11534c8d84ce7dc8502420280919c3490' "$runtime_dir/deno.zip" | sha256sum --check -
+          test "$(unzip -Z1 "$runtime_dir/deno.zip")" = deno
+          unzip -q "$runtime_dir/deno.zip" -d "$runtime_dir"
+          chmod 755 "$runtime_dir/deno"
+          docker pull python@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7
+          docker run --name "$container" --label "mip.deno.run=$DENO_RUN" \
+            --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true \
+            --user 65534:65534 --memory 256m --pids-limit 32 --ulimit core=0 \
+            --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace,readonly" \
+            --mount "type=bind,source=$runtime_dir/deno,target=/usr/local/bin/deno,readonly" \
+            --workdir /workspace -e DENO_DIR=/tmp/deno -e DENO_NO_UPDATE_CHECK=1 -e NO_COLOR=1 \
+            --entrypoint /bin/sh python@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7 -ec '
+              deno --version
+              deno --version | grep -q "^deno 2.9.7 "
+              help="$(deno run --help)"
+              for flag in --no-config --no-lock --no-npm --no-remote --cached-only --no-code-cache --no-prompt --allow-read --allow-env --allow-net; do
+                case "$help" in *"$flag"*) ;; *) exit 1 ;; esac
+              done
+              deno run --no-config --no-lock --no-npm --no-remote --cached-only --no-code-cache --no-prompt \
+                --allow-read=/workspace \
+                --allow-env=MIP_QIK_WORKER_RPC_URL,MIP_QIK_PUBLISHABLE_KEY,MIP_QIK_WORKER_JWT,MIP_QIK_WORKER_INVOKE_TOKEN,MIP_QIK_WORKER_SESSION,MIP_QIK_WORKER_RUNTIME,MIP_QIK_WORKER_IMPLEMENTATION \
+                --allow-net=0.0.0.0:8000,127.0.0.1:8000 verifier/news-intake/qik_deno_boot.mjs'
+          docker inspect "$container" --format 'DENO_BOUNDARY network={{.HostConfig.NetworkMode}} ports={{json .HostConfig.PortBindings}} memory={{.HostConfig.Memory}} pids={{.HostConfig.PidsLimit}} exit={{.State.ExitCode}}'
+          DENO_BOUND
+      - name: Owned runtime cleanup
         if: always()
         shell: bash
         run: |
-          docker rm -f -v mip-native-exercise mip-native-readback mip-native-pg >/dev/null 2>&1 || true
-          docker volume rm mip-native-socket >/dev/null 2>&1 || true
-          rm -f "$RUNNER_TEMP/mip-native-path.sql" "$RUNNER_TEMP/mip-native-path.sha256"
-          test -z "$(docker ps -aq --filter name=^/mip-native-pg$)"
-          ! docker volume inspect mip-native-socket >/dev/null 2>&1
+          set -euo pipefail
+          [[ "$DENO_RUN" =~ ^[0-9]+$ ]]
+          container="mip-qik-deno-$DENO_RUN"
+          if docker container inspect "$container" >/dev/null 2>&1; then
+            test "$(docker inspect --format '{{index .Config.Labels "mip.deno.run"}}' "$container")" = "$DENO_RUN"
+            timeout --kill-after=1s 5s docker rm -f -v "$container" >/dev/null
+          fi
+          runtime_dir="$RUNNER_TEMP/mip-qik-deno-$DENO_RUN"
+          if test -d "$runtime_dir"; then
+            test "$(realpath -- "$runtime_dir")" = "$RUNNER_TEMP/mip-qik-deno-$DENO_RUN"
+            for file in "$runtime_dir/deno" "$runtime_dir/deno.zip"; do
+              if test -f "$file"; then rm -- "$file"; fi
+            done
+            rmdir -- "$runtime_dir"
+          fi
+          if docker container inspect "$container" >/dev/null 2>&1; then exit 1; fi
+          test ! -e "$runtime_dir"
+          printf '%s\n' DENO_OWNED_RUNTIME_CLEANUP_PASS
