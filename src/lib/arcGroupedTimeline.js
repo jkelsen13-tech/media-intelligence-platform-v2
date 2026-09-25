@@ -1,3 +1,5 @@
+import { canonicalizeTimelineEvents } from './timelineDedup.js'
+
 // 04-ADD Track B Step 3 Addendum — Arc-Grouped Timeline.
 // Read-path restructure only: grouping, date ranges, and status mapping are
 // computed at query/render time from existing columns (nodes.arc_id,
@@ -49,21 +51,18 @@ export function resolveEventArc(evt, directArcByKey, articleArcBySuffix) {
 // when the canonical evt- node lacks arc_id but its art- mirror carries one,
 // the group still resolves directly.
 export function buildMirrorArcMap(rawEvents, canonicalEvents) {
-  const canonicalKeys = new Set(canonicalEvents.map((e) => e.id ?? e.slug))
-  const groups = new Map()
-  for (const n of rawEvents ?? []) {
-    const suffix = (n.slug ?? '').slice(-8)
-    const arr = groups.get(suffix) ?? []
-    arr.push(n)
-    groups.set(suffix, arr)
-  }
+  const canonicalByKey = new Map(canonicalEvents.map((event) => [event.id ?? event.slug, event]))
+  const { canonicalOf } = canonicalizeTimelineEvents(rawEvents)
   const map = new Map()
-  for (const group of groups.values()) {
-    const canonical =
-      group.find((n) => canonicalKeys.has(n.id ?? n.slug)) ?? group[0]
-    if (canonical.arc_id) continue
-    const mirrorArc = group.find((n) => n !== canonical && n.arc_id)?.arc_id
-    if (mirrorArc) map.set(canonical.id ?? canonical.slug, mirrorArc)
+  for (const node of rawEvents ?? []) {
+    const identity = node.id ?? node.slug
+    const canonicalKey = canonicalOf.get(identity)
+    const canonical = canonicalByKey.get(canonicalKey)
+    // Inherit only from an actual uniquely suppressed mirror. A retained
+    // peer sharing a suffix cannot donate its arc to a different event.
+    if (canonicalKey == null || canonicalKey === identity || canonicalByKey.has(identity) ||
+        !canonical || canonical.arc_id || !node.arc_id) continue
+    map.set(canonicalKey, node.arc_id)
   }
   return map
 }
