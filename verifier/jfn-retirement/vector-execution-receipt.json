@@ -1,0 +1,151 @@
+{
+  "section": "J1 approved-disposition follow-up",
+  "execution_number": 10,
+  "commit": "cb1be9f818d642ecead4c5f6d5717eef962e0a90",
+  "tree": "5b90ab9d6caf8230444da060f8f230b34eddb5d0",
+  "run_id": 35832449347,
+  "job_id": 107087972028,
+  "started_at": "2026-09-23T07:34:49Z",
+  "completed_at": "2026-09-23T07:36:18Z",
+  "observed_runner_seconds": 89,
+  "exit_status": 0,
+  "result": "PASS",
+  "events": [
+    {
+      "case": "native_definition_identity_and_constraints",
+      "status": "PASS"
+    },
+    {
+      "case": "source_qualified_archive_exactness_replay_and_closure",
+      "status": "PASS"
+    },
+    {
+      "case": "target_identity_manifest_and_role_drift_refused",
+      "status": "PASS"
+    },
+    {
+      "case": "missing_dependency_refused",
+      "status": "PASS"
+    },
+    {
+      "case": "unknown_nullable_field_refused_without_partial_restore",
+      "status": "PASS"
+    },
+    {
+      "case": "interrupted_restore_atomic_recovery",
+      "status": "PASS"
+    },
+    {
+      "case": "native_restore_exact_identity_precision_temporal_lineage_and_noop",
+      "status": "PASS"
+    },
+    {
+      "case": "restored_authority_private_denials_and_direct_wire_identity",
+      "status": "PASS"
+    },
+    {
+      "case": "divergent_target_refused",
+      "status": "PASS"
+    },
+    {
+      "section": "J1",
+      "status": "SYNTHETIC_NATIVE_RECOVERY_PASS",
+      "rows": 27,
+      "relations": 21,
+      "functions": 17,
+      "hosted": false,
+      "live_transfer": false,
+      "omissions": [
+        "Auth/profile and managed project config",
+        "hosted login credential/pooler/Auth/PostgREST behavior",
+        "real archived material recovery"
+      ],
+      "catalog_sha256": "37169c94352b29c17ee05cd39e1250b83a547ea04110d6e6251009eac7f1d108"
+    }
+  ],
+  "cleanup": "J1_DISPOSABLE_CLEANUP_PASS",
+  "postgres_memory_bytes": 536870912,
+  "python_memory_bytes": 268435456,
+  "dependency_build_memory_and_swap_bytes": 536870912,
+  "job_timeout_minutes": 15,
+  "network": "none",
+  "published_ports": 0,
+  "peak_memory": "not measured",
+  "vector_version": "0.8.2",
+  "vector_schema": "public",
+  "vector_dimensions": 384,
+  "vector_source_commit": "cab9da72c04353f143bb06b42ab70a403daac64a",
+  "vector_image": "sha256:844de0603102b36216dc1b808ec01b9358612e2eb2937bc7ff0be24b6653e6cb",
+  "command": "python -I -B /workspace/verifier/jfn-retirement/recovery_qualification.py",
+  "unchanged_application": {
+    "src": "4cfffc8bbf4c0a105328f0ae543f11dd135cdc13",
+    "tests": "667b8d39bf77290bcbf1d83ecc9176ab683f8289",
+    "lock": "b5d44ec6e0a21f931cb2d43884010025ee89889c"
+  },
+  "allowance": {
+    "inherited_used_executions": 9,
+    "inherited_used_seconds": 958,
+    "this_execution_seconds": 89,
+    "total_used_executions": 10,
+    "total_used_seconds": 1047,
+    "remaining_executions": 0,
+    "remaining_seconds": 2553,
+    "previous_build_exception": "consumed; not reused"
+  },
+  "warnings": [
+    "Docker legacy builder deprecated; retained for enforced build memory limit",
+    "pip root-install warning and upgrade notice during disposable preparation",
+    "Build toolchain apt packages not fully pinned; runtime PG base and vector source commit pinned"
+  ],
+  "incremental_cost": "VERIFIED NO ADDITIONAL CHARGE: public repo standard ubuntu-24.04 GitHub Actions runner, no artifacts/cache or paid runner",
+  "files": [
+    {
+      "path": "verifier/jfn-retirement/native_structure.sql",
+      "sha": "bb596445bbb879661762fb96e57cb2087514a9fd",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/jfn-retirement/native_facts.json",
+      "sha": "8106d4408cadbb56ba7a3f94171bb9db5956897f",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/jfn-retirement/synthetic_rows.sql",
+      "sha": "cad0c1b2f169f8eb8295b21d73c47b8dbb815c65",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/jfn-retirement/recovery_qualification.py",
+      "sha": "8d3f989fd5b57f3bbf313bcd8f12fd1c9e00d4d0",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/jfn-retirement/preservation.py",
+      "sha": "4105d342a195dd6a106b36c47ecb038193863355",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/jfn-retirement/vector-postgres.Dockerfile",
+      "sha": "1bc2ca32225b9278517a17b3c17f2af3350bfa69",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": ".github/workflows/golden.yml",
+      "sha": "81f90bf04d8ae6a92d9467c9c161a15d5efbb5a2",
+      "mode": "100644",
+      "type": "blob"
+    }
+  ],
+  "proof_limits": [
+    "Source-free synthetic selected native recovery, not actual45-row restoration",
+    "No hosted Auth/JWT/PostgREST/pooler/Edge or managed-service equivalence",
+    "No production credentials/data/mutations or deployment",
+    "No repeat execution; cleanup log repetition is not another test"
+  ]
+}

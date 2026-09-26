@@ -1,0 +1,50 @@
+name: Backend containment PostgreSQL qualification
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/production-candidates/backend-consolidation-security/**'
+      - 'verifier/backendSecurityContainmentPostgres.py'
+      - 'verifier/backendSecuritySuccessorPostgres.py'
+      - 'verifier/backendSecurityGdeltPostgres.py'
+      - 'verifier/backendSecurityResidualPostgres.py'
+      - '.github/workflows/backend-security-containment.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acl-effects:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: mip-disposable-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Record tested head
+        run: git rev-parse HEAD
+      - name: Qualify exact candidate ACL effects
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+        run: python3 -B verifier/backendSecurityContainmentPostgres.py
+      - name: Qualify native GDELT function ACL successor
+        env:
+          MIP_DISPOSABLE_POSTGRES: gdelt-function-qualification
+        run: python3 -B verifier/backendSecurityGdeltPostgres.py
+      - name: Qualify native residual projection-retraction ACL successor
+        env:
+          MIP_DISPOSABLE_POSTGRES: residual-authority-qualification
+        run: python3 -B verifier/backendSecurityResidualPostgres.py

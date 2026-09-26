@@ -1,0 +1,128 @@
+{
+  "section": "J1",
+  "execution_number": 9,
+  "commit": "8dbb28b07ff8156b35b62d7597dd42360cde03ea",
+  "tree": "950c7dcafcd1274f389ef8d046fabe2287749318",
+  "run_id": 35827875791,
+  "job_id": 107073526435,
+  "started_at": "2026-09-23T06:40:45Z",
+  "completed_at": "2026-09-23T06:41:18Z",
+  "observed_runner_seconds": 33,
+  "result": "PASS",
+  "events": [
+    {
+      "case": "native_definition_identity_and_constraints",
+      "status": "PASS"
+    },
+    {
+      "case": "source_qualified_archive_exactness_replay_and_closure",
+      "status": "PASS"
+    },
+    {
+      "case": "target_identity_manifest_and_role_drift_refused",
+      "status": "PASS"
+    },
+    {
+      "case": "missing_dependency_refused",
+      "status": "PASS"
+    },
+    {
+      "case": "unknown_nullable_field_refused_without_partial_restore",
+      "status": "PASS"
+    },
+    {
+      "case": "interrupted_restore_atomic_recovery",
+      "status": "PASS"
+    },
+    {
+      "case": "native_restore_exact_identity_precision_temporal_lineage_and_noop",
+      "status": "PASS"
+    },
+    {
+      "case": "restored_authority_private_denials_and_direct_wire_identity",
+      "status": "PASS"
+    },
+    {
+      "case": "divergent_target_refused",
+      "status": "PASS"
+    },
+    {
+      "section": "J1",
+      "status": "SYNTHETIC_NATIVE_RECOVERY_PASS",
+      "rows": 25,
+      "relations": 21,
+      "functions": 17,
+      "hosted": false,
+      "live_transfer": false,
+      "omissions": [
+        "nullable vector embedding type/column",
+        "Auth/profile and managed project config",
+        "hosted login credential/pooler/Auth/PostgREST behavior",
+        "real archived material recovery"
+      ],
+      "catalog_sha256": "4693874db9e4c74e37acff722636396654816156f90c335d1325a1cf382e22d0"
+    }
+  ],
+  "cleanup": "J1_DISPOSABLE_CLEANUP_PASS",
+  "postgres_memory_bytes": 536870912,
+  "python_memory_bytes": 268435456,
+  "peak_memory": "not measured",
+  "network": "none",
+  "published_ports": 0,
+  "job_timeout_minutes": 15,
+  "incremental_cost": "VERIFIED NO ADDITIONAL CHARGE: public repository, standard ubuntu-24.04 hosted runner; no artifact/cache upload",
+  "allowance": {
+    "inherited_used_executions": 8,
+    "inherited_used_seconds": 925,
+    "j1_used_executions": 1,
+    "j1_used_seconds": 33,
+    "total_used_executions": 9,
+    "total_used_seconds": 958,
+    "remaining_executions": 1,
+    "remaining_seconds": 2642,
+    "previous_build_exception": "consumed; not reused"
+  },
+  "warnings": [
+    "pip root-install warning during disposable image preparation",
+    "pip upgrade notice; dependencies not changed"
+  ],
+  "proof_limits": [
+    "native selected-catalog and source-free synthetic rows only",
+    "nullable vector embedding omitted and unknown fields fail closed",
+    "Auth/profile and managed project configuration omitted",
+    "hosted credential login, pooler, Auth/JWT, PostgREST and Edge not tested",
+    "real archived row restoration not executed"
+  ],
+  "files": [
+    {
+      "path": "verifier/jfn-retirement/preservation.py",
+      "sha": "695a8f4080eaffddc88b13a1de4acf67b23a47ec",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/jfn-retirement/native_structure.sql",
+      "sha": "33bc3059abb9b9dafdaddf03fa841eb071973cdc",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/jfn-retirement/synthetic_rows.sql",
+      "sha": "8c5badbbd6747670bcec6a4d6f7055f0df520a08",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/jfn-retirement/native_facts.json",
+      "sha": "4cfd98ba372a6dbd6b67dafe6d013ea2348303b5",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/jfn-retirement/recovery_qualification.py",
+      "sha": "df5c5f8d24a4c1deb7b51eea516f62e439e9ffe8",
+      "mode": "100644",
+      "type": "blob"
+    }
+  ]
+}

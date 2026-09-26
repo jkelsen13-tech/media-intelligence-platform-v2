@@ -233,7 +233,7 @@ export default function GroupedTimelineView({ onOpenArc, onOpenArticle, focusEve
 
   useEffect(() => {
     if (!pendingFocus || !filtered) return
-    const match = (evt) => (evt.slug ?? '').slice(-8) === pendingFocus
+    const match = (evt) => (evt.id ?? evt.slug) === pendingFocus || (evt.slug ?? '').slice(-8) === pendingFocus
     const all = [
       ...filtered.sections.flatMap((s) => s.events),
       ...filtered.unclassifiedEvents,

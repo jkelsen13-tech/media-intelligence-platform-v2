@@ -77,10 +77,15 @@ test('article joins and location feature flag stay on the supplied client', asyn
     events: [{ id: 'event', canonical_title: 'Event' }], event_articles: [{ article_id: id, event_id: 'event' }],
     comparison_public: [{ event_key: 'event-key', canonical_title: 'Compared event', articles: [{ article_url: article.url }] }],
     pipeline_config: [{ key: 'location_corroboration', value: true }], sky_verifications: [{ article_id: id, id: 'location', captured_at: '2026-08-03' }],
+    graph_event_article_memberships: [{ event_node_id: 'node', article_id: id }],
   }
   const f = newsBackendFixture({ tables })
   assert.equal((await f.backend.loadArticleGraphLinks(id))[0].nodeId, 'node')
-  assert.equal(await f.backend.loadArticleTimelineKey(id), '10000000')
+  // Exact event identity only; the article-id prefix is a lookup hint, never a destination.
+  assert.equal(await f.backend.loadArticleTimelineKey(id), 'node')
+  const noMembership = newsBackendFixture({ tables: { ...tables, graph_event_article_memberships: [] } })
+  assert.equal(await noMembership.backend.loadArticleTimelineKey(id), null)
+  assert.ok(noMembership.calls.some(c => c.table === 'graph_event_article_memberships'))
   assert.equal((await f.backend.loadArticleComparisonEvents(id))[0].eventId, 'event-key')
   assert.equal((await f.backend.loadArticleCitationMap()).get(id).firstNodeId, 'node')
   assert.equal((await f.backend.loadEventGrouping()).get(id).title, 'Event')

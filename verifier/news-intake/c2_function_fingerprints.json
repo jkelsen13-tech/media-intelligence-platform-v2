@@ -1,0 +1,72 @@
+[
+  {
+    "schema": "public",
+    "name": "mip_pipeline_v1",
+    "body_sha256": "680e4c0e9700ba35ba391da2972f3c50655a2bf4ccfea23a459143076dda7fb1"
+  },
+  {
+    "schema": "evidence_pipeline",
+    "name": "append_version",
+    "body_sha256": "17a83e74b8a8420f8f36b2191cd3380737fd11105c09b37f4113f459313b8fa9"
+  },
+  {
+    "schema": "evidence_pipeline",
+    "name": "reject_history_mutation",
+    "body_sha256": "e0369ed6ccb815fbfaaab54c5fd3f2562ba4d1f0b61fedb9464406f6f19eb025"
+  },
+  {
+    "schema": "evidence_pipeline",
+    "name": "capture_version",
+    "body_sha256": "e8f0c826d77fdd0c3e1e8569816f78594b1f8eb39b5fe33ee68f0e2d5515eaba"
+  },
+  {
+    "schema": "evidence_pipeline",
+    "name": "enqueue",
+    "body_sha256": "adcd2dcb5853c8551446fde0857fb7c43220d146002646f3899fab52a442d7cc"
+  },
+  {
+    "schema": "evidence_pipeline",
+    "name": "claim_job",
+    "body_sha256": "73c9a3c4143a66877a3118735818ced61e7707e773ec6d419e2bcbaa58958e7a"
+  },
+  {
+    "schema": "evidence_pipeline",
+    "name": "finish_job",
+    "body_sha256": "f9b4351aa8b5ca4d9d3094dd710c7ce21842f71e223cb87eddfb1fc74660a28f"
+  },
+  {
+    "schema": "evidence_pipeline",
+    "name": "fail_job",
+    "body_sha256": "82e8a56c4bf2e3a0245ccb96096b8c74530c6eab6c7b569d00bbc03c9970cbb6"
+  },
+  {
+    "schema": "evidence_pipeline",
+    "name": "append_candidate",
+    "body_sha256": "1ea91d2186f7426564ad5a3c875cd98f374d142cce853b045793ee0ff44d1221"
+  },
+  {
+    "schema": "evidence_pipeline",
+    "name": "canonical_url",
+    "body_sha256": "af0044df265438034ac38dc68af1359a9103114268c718e3f12523bdb5b9e5fc"
+  },
+  {
+    "schema": "evidence_pipeline",
+    "name": "capture_evidence_change",
+    "body_sha256": "8fddce868ad8e2a20b8cacfa7d03c86ed7b8d74c5b087340651f58530024ca45"
+  },
+  {
+    "schema": "evidence_pipeline",
+    "name": "dispatch_evidence_change",
+    "body_sha256": "bfb072a297813a90f9de1fbdd6d597e17ccdb85047f8ab093f4b6103c1086151"
+  },
+  {
+    "schema": "public",
+    "name": "mip_intercept_direct_arc_attachment",
+    "body_sha256": "d66177cc5f0072d52690814dc34e8b88e6e907e7e25fa3bd4657478e42b9eb65"
+  },
+  {
+    "schema": "public",
+    "name": "mip_invalidate_arc_membership_approvals",
+    "body_sha256": "4bc58d34ed96873b7383daa6fd938ad03fd8067c7ffb13c5550c64997fb1e89d"
+  }
+]

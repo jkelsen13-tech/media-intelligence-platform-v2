@@ -9,6 +9,7 @@ import {
 } from '../data/demoData.js'
 import { canonicalizeTimelineEvents, remapTimelineEdges } from './timelineDedup.js'
 import { resolveV2SupabaseUrl } from './supabaseOrigin.js'
+import { eligibleNewsEnvelope } from './newsReaderEnvelope.js'
 
 // Sandbox safety: V2 only connects to the explicit environment target. When
 // either value is absent, makeClient() returns null and the application follows
@@ -83,38 +84,45 @@ export async function keysetAll(client, table, cols, { filter = (q) => q, pageSi
   }
 }
 
-// Composite-key variant for tables with no `id` column (node_topics PK is
-// (node_id, topic_id)). Same guarantees as keysetAll — every row present for
-// the duration of the read is returned exactly once, and concurrent inserts
-// cannot shift pages the way offset pagination allows. The cursor advances on
-// the leading key via .gte(); the handful of overlap rows at the cursor value
-// (one node carries at most a dozen topics) is dropped client-side, which
-// keeps the filter simple enough for PostgREST's .or() grammar to stay out
-// of it. Termination: even if a whole page overlaps the cursor, the cursor
-// still advances to the page tail, so the loop always makes progress.
-// NOTE: `cols` MUST include every column in `keyCols` — the cursor reads
-// them back off the returned rows.
+// Two-column primary-key pagination for node_topics and event_articles.
+// Drain the current leading-key group with (first = cursor, second > cursor),
+// then advance to first > cursor. A group may span any number of pages.
+// No raw PostgREST OR grammar or client-side overlap removal is required.
+// Separate reads are not an atomic snapshot; rows inserted behind an already
+// consumed cursor are outside this traversal. cols must include both keyCols.
 export async function keysetAllComposite(client, table, cols, { keyCols, filter = (q) => q, pageSize = 1000 } = {}) {
   const out = []
   let cursor = null
+  let afterGroup = false
   for (;;) {
     let q = filter(client.from(table).select(cols))
     for (const c of keyCols) q = q.order(c, { ascending: true })
-    if (cursor !== null) q = q.gte(keyCols[0], cursor[0])
+    if (cursor !== null) {
+      q = afterGroup
+        ? q.gt(keyCols[0], cursor[0])
+        : q.eq(keyCols[0], cursor[0]).gt(keyCols[1], cursor[1])
+    }
     const { data, error } = await q.limit(pageSize)
     if (error) return { data: null, error }
-    let page = data ?? []
-    if (cursor !== null) {
-      page = page.filter(
-        (r) =>
-          String(r[keyCols[0]]) > String(cursor[0]) ||
-          (String(r[keyCols[0]]) === String(cursor[0]) && String(r[keyCols[1]]) > String(cursor[1])),
-      )
+    const page = data ?? []
+    if (page.length > 0) {
+      const tail = page[page.length - 1]
+      const next = keyCols.map((c) => tail[c])
+      if (next.some((value) => value == null) ||
+          (cursor !== null && next.every((value, index) => value === cursor[index]))) {
+        throw new Error('Composite pagination cursor did not advance')
+      }
+      out.push(...page)
+      // A short unrestricted/after-group page exhausted the remaining table.
+      if (page.length < pageSize && (cursor === null || afterGroup)) {
+        return { data: out, error: null }
+      }
+      cursor = next
+    } else if (cursor === null || afterGroup) {
+      return { data: out, error: null }
     }
-    out.push(...page)
-    if (!data || data.length < pageSize) return { data: out, error: null }
-    const tail = data[data.length - 1]
-    cursor = keyCols.map((c) => tail[c])
+    // A short or empty within-group page exhausts only this leading key.
+    afterGroup = page.length < pageSize
   }
 }
 
@@ -713,7 +721,13 @@ export async function loadArcDetail(arcKey, { supabaseClient } = {}) {
 export function buildTimelineCrossLinks(allEventNodes, canonicalOf, articleRows, arcRows) {
   const articleIdBySuffix = new Map()
   const idByPrefix = new Map()
-  for (const a of articleRows ?? []) idByPrefix.set(String(a.id).slice(0, 8), a.id)
+  const ambiguousPrefixes = new Set()
+  for (const a of articleRows ?? []) {
+    const prefix = String(a.id).slice(0, 8)
+    if (idByPrefix.has(prefix) && idByPrefix.get(prefix) !== a.id) ambiguousPrefixes.add(prefix)
+    idByPrefix.set(prefix, a.id)
+  }
+  for (const prefix of ambiguousPrefixes) idByPrefix.delete(prefix)
   // Map by GROUP suffix (shared by evt-/art- mirrors): any art- node in a
   // group gives the whole group its article. Walk art- nodes, resolve their
   // canonical card's suffix.
@@ -730,32 +744,72 @@ export function buildTimelineCrossLinks(allEventNodes, canonicalOf, articleRows,
   return { articleIdBySuffix, arcTitleById }
 }
 
-// Doc 05 pair 3 (News → Timeline): the timeline focus key for an article is
-// its id's 8-hex prefix, IF an event node exists with a slug ending in that
-// suffix (art- node or its evt- twin — same dedup group key). Returns null
-// when no timeline event covers this article — the link then does not render.
+// Doc 05 pair 3 (News → Timeline): a suffix is a lookup hint, never a
+// navigation identity. Return a unique visible event's exact ID, otherwise
+// retain the existing arc-assigned article-record destination when available.
 export async function loadArticleTimelineKey(articleId, { supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client || !articleId) return null
-  const prefix = String(articleId).slice(0, 8)
+  // UUID bounds avoid raw filter interpolation and never inspect hidden rows.
+  // Uniqueness is only within this same client's RLS-visible article set.
+  if (typeof articleId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(articleId)) return null
+  const normalizedId = articleId.toLowerCase()
+  const prefix = normalizedId.slice(0, 8)
   try {
+    const { data: prefixRows, error: prefixError } = await client
+      .from('articles')
+      .select('id')
+      .gte('id', `${prefix}-0000-0000-0000-000000000000`)
+      .lte('id', `${prefix}-ffff-ffff-ffff-ffffffffffff`)
+      .limit(2)
+    if (prefixError || !Array.isArray(prefixRows) || prefixRows.length !== 1 ||
+        String(prefixRows[0].id).toLowerCase() !== normalizedId) return null
+
     const { data: eventRows, error: eventError } = await client
       .from('nodes')
-      .select('id, slug')
+      .select('id, slug, type')
       .eq('type', 'event')
       .like('slug', `%${prefix}`)
-      .limit(1)
-    if (!eventError && eventRows && eventRows.length > 0) return prefix
+      .limit(3)
+    if (eventError || !Array.isArray(eventRows)) return null
+    const validEvents = eventRows.every((event) =>
+      event && typeof event.id === 'string' && event.id.trim() &&
+      event.type === 'event' && typeof event.slug === 'string' &&
+      event.slug.endsWith(prefix))
+    let candidate = null
+    if (validEvents && eventRows.length === 1) candidate = eventRows[0]
+    if (validEvents && eventRows.length === 2 &&
+        new Set(eventRows.map((event) => event.id)).size === 2) {
+      // A third candidate makes the suffix ambiguous. Only the established
+      // exact-body mirror rule can canonicalize this complete two-row set.
+      const canonical = canonicalizeTimelineEvents(eventRows)
+      if (canonical.suppressed === 1 && canonical.events.length === 1) candidate = canonical.events[0]
+    }
+    if (candidate) {
+      const candidateIds = eventRows.map((event) => event.id)
+      const { data: memberships, error: membershipError } = await client
+        .from('graph_event_article_memberships')
+        .select('event_node_id, article_id')
+        .eq('article_id', normalizedId)
+        .in('event_node_id', candidateIds)
+        .limit(2)
+      // Positive full-ID evidence only; missing membership is not proof of
+      // corpus completeness. RLS-hidden prefix collisions cannot grant a link.
+      if (!membershipError && Array.isArray(memberships) && memberships.length > 0 &&
+          memberships.every((row) => row && row.article_id === normalizedId &&
+            candidateIds.includes(row.event_node_id))) return candidate.id
+    }
 
-    // If no graph event mirror exists but the article already belongs to an
-    // arc, return the explicit article-record key instead of withholding the
-    // Timeline destination. This creates no event assertion.
+    // Zero or ambiguous event candidates cannot authorize suffix navigation.
+    // Preserve the existing full-ID reporting-record fallback for an article
+    // with an arc. This is best effort: separate reads and the destination's
+    // loaded scope can change; it creates no graph-event assertion.
     const { data: article, error: articleError } = await client
       .from('articles')
       .select('id, arc_id')
       .eq('id', articleId)
       .maybeSingle()
-    if (articleError || !article?.arc_id) return null
+    if (articleError || !article?.arc_id || String(article.id).toLowerCase() !== normalizedId) return null
     return `article-${article.id}`
   } catch {
     return null
@@ -1184,11 +1238,13 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
   let query = client
     .from('articles')
     .select(
-      'id, title, url, summary, published_at, outlet, monoculture, unattributed, arc_id, author_id',
+      'id, title, url, summary, published_at, fetched_at, feed, source_status, outlet, monoculture, unattributed, arc_id, author_id',
       { count: 'exact' },
     )
     .order('published_at', { ascending: false, nullsFirst: false })
     .order('fetched_at', { ascending: false })
+    // Native batch intake can share both clocks; the immutable ID closes ties.
+    .order('id', { ascending: true })
     .range(offset, offset + limit - 1)
 
   query = applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore })
@@ -1205,6 +1261,7 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
       ...a,
       author_name: authorNames.get(a.author_id) ?? null,
       author_id: undefined,
+      readerEnvelope: eligibleNewsEnvelope(a),
       arc_title: null,
       story_arcs: undefined,
     })),
@@ -1220,7 +1277,7 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
   const [artRes, citRes, newsDetailRes] = await Promise.all([
     client
       .from('articles')
-      .select('id, title, url, summary, published_at, outlet, claims, monoculture, unattributed, author_id')
+      .select('id, title, url, summary, published_at, fetched_at, feed, source_status, outlet, claims, monoculture, unattributed, author_id')
       .eq('id', id)
       .eq('reader_state', 'eligible')
       .single(),
@@ -1281,6 +1338,7 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
   return {
     ...artRes.data,
     claims,
+    readerEnvelope: eligibleNewsEnvelope(artRes.data),
     author_name: authorNames.get(artRes.data.author_id) ?? null,
     author_id: undefined,
     arc_title: null,

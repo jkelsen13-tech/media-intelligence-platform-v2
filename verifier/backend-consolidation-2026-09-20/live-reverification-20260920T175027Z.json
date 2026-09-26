@@ -1,0 +1,188 @@
+{
+  "evidence_kind": "sanitized_read_only_live_reverification",
+  "observed_window_utc": {
+    "from": "2026-09-20T17:48:08Z",
+    "through": "2026-09-20T17:50:27Z"
+  },
+  "sources": [
+    "Supabase Management API project metadata",
+    "Supabase Edge Function metadata and read-only source inspection",
+    "read-only PostgreSQL catalog and aggregate queries",
+    "Supabase security advisors"
+  ],
+  "projects": {
+    "qikvmopbtijoebdqosyq": {
+      "name": "mip-v2-account-verification-20260831",
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-1",
+      "database_build": "17.6.1.166",
+      "server_version": "17.6",
+      "auth_users": 2,
+      "storage_buckets": 0,
+      "storage_objects": 0,
+      "cron_extension": false,
+      "edge_functions": [
+        {"slug": "spatial-runtime", "version": 7, "verify_jwt": true},
+        {"slug": "investigation-workspace", "version": 1, "verify_jwt": true},
+        {"slug": "investigation-evidence-checks", "version": 1, "verify_jwt": true},
+        {"slug": "investigation-evidence-reviews", "version": 1, "verify_jwt": true},
+        {"slug": "investigation-input-impact", "version": 2, "verify_jwt": true},
+        {"slug": "investigation-source-spans", "version": 1, "verify_jwt": true},
+        {"slug": "investigation-api", "version": 3, "verify_jwt": true},
+        {"slug": "capture-retrieval", "version": 6, "verify_jwt": true},
+        {"slug": "collector-shadow", "version": 1, "verify_jwt": false}
+      ],
+      "collector_shadow": {
+        "config_rows": 1,
+        "enabled_sources": 7,
+        "configured_sources": 7,
+        "runs": 7,
+        "succeeded": 7,
+        "failed_last_24h": 0,
+        "latest_success_utc": "2026-09-20T15:38:45Z",
+        "custom_token_check": true,
+        "ambient_service_role": true,
+        "recurring_scheduler_proven": false
+      },
+      "security": {
+        "public_base_or_partitioned_tables": 50,
+        "public_tables_rls_disabled": 0,
+        "security_definer_view_errors": 6,
+        "security_definer_views": [
+          "spatial_projection_v1",
+          "arc_milestones_public",
+          "comparison_public",
+          "graph_coverage_public",
+          "news_detail_public",
+          "authors_public"
+        ],
+        "rls_enabled_no_policy_info": 84,
+        "leaked_password_protection_warning": true
+      }
+    },
+    "yhbwnrtlqbjtcrrlpbge": {
+      "name": "mip-v2-manus-sandbox-20260818",
+      "name_is_historical_not_disposition": true,
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-1",
+      "database_build": "17.6.1.155",
+      "server_version": "17.6",
+      "auth_users": 0,
+      "storage_buckets": 0,
+      "storage_objects": 0,
+      "extensions": {"pg_cron": "1.6.4", "pg_net": "0.20.4"},
+      "cron_jobs": [
+        {
+          "job_id": 2,
+          "name": "mip-ingest-rss-hourly",
+          "schedule": "*/5 * * * *",
+          "active": true,
+          "latest_start_utc": "2026-09-20T17:45:00Z",
+          "runs_last_24h": 288,
+          "successes_last_24h": 288,
+          "failures_last_24h": 0
+        },
+        {
+          "job_id": 3,
+          "name": "mip-source-comparison-enrichment",
+          "schedule": "*/5 * * * *",
+          "active": true,
+          "latest_start_utc": "2026-09-20T17:45:00Z",
+          "runs_last_24h": 288,
+          "successes_last_24h": 288,
+          "failures_last_24h": 0
+        }
+      ],
+      "edge_functions": [
+        {"slug": "ingest-rss", "version": 8, "verify_jwt": true},
+        {"slug": "backfill-legacy", "version": 9, "verify_jwt": true},
+        {"slug": "import-original-source", "version": 12, "verify_jwt": false},
+        {"slug": "source-comparison-run", "version": 15, "verify_jwt": true},
+        {"slug": "arc-membership-run", "version": 5, "verify_jwt": true},
+        {"slug": "membership-qualification", "version": 1, "verify_jwt": true}
+      ],
+      "security": {
+        "public_base_or_partitioned_tables": 82,
+        "public_tables_rls_disabled": 0,
+        "security_definer_view_errors": 4,
+        "anon_callable_security_definer_functions": 27,
+        "authenticated_callable_security_definer_functions": 27,
+        "rls_enabled_no_policy_info": 52,
+        "mutable_search_path_findings": 13
+      }
+    },
+    "jfnzyvzthzqtczlxhjll": {
+      "name": "mip-spatial-verification-sandbox-20260829",
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-1",
+      "database_build": "17.6.1.166",
+      "server_version": "17.6",
+      "auth_users": 0,
+      "storage_buckets": 0,
+      "storage_objects": 0,
+      "cron_extension": false,
+      "edge_functions": [],
+      "security": {
+        "public_base_or_partitioned_tables": 13,
+        "public_tables_rls_disabled": 0,
+        "anon_callable_security_definer_functions": 1,
+        "authenticated_callable_security_definer_functions": 1,
+        "callable_function": "handle_new_mip_user",
+        "rls_enabled_no_policy_info": 21
+      }
+    },
+    "niejaejtbxgakyrsntxm": {
+      "name": "jkelsen13-tech's Project",
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-2",
+      "database_build": "17.6.1.104",
+      "server_version": "17.6",
+      "auth_users": 3,
+      "storage_buckets": 1,
+      "storage_objects": 0,
+      "extensions": {"pg_cron": "1.6.4", "pg_net": "0.20.0"},
+      "cron_jobs": [
+        {"name": "mip-ingest-rss-daily", "active": false},
+        {"name": "mip-backfill-legacy", "active": false}
+      ],
+      "edge_functions": [
+        {"slug": "ingest-rss", "version": 41, "verify_jwt": true},
+        {"slug": "debug-parse", "version": 16, "verify_jwt": true},
+        {"slug": "policy-ingest", "version": 16, "verify_jwt": true},
+        {"slug": "graph-analysis-run", "version": 16, "verify_jwt": true},
+        {"slug": "source-comparison-run", "version": 17, "verify_jwt": false},
+        {"slug": "batch-intake", "version": 14, "verify_jwt": false}
+      ],
+      "security": {
+        "public_base_or_partitioned_tables": 92,
+        "public_tables_rls_disabled": 0,
+        "security_definer_view_errors": 1,
+        "security_definer_view": "feed_posts",
+        "graphql_exposed_tables_anon": 92,
+        "graphql_exposed_tables_authenticated": 92,
+        "anon_callable_security_definer_functions": 3,
+        "authenticated_callable_security_definer_functions": 3,
+        "rls_enabled_no_policy_info": 42,
+        "mutable_search_path_findings": 11,
+        "leaked_password_protection_warning": true
+      }
+    }
+  },
+  "interpretation": {
+    "rls_disabled_advisory_condition_present_now": false,
+    "authorization_review_complete": false,
+    "yhb_collectors_active": true,
+    "qik_recurring_canonical_ingestion_proven": false,
+    "any_project_retirement_ready": false
+  },
+  "limitations": [
+    "No secret or credential value was inspected.",
+    "No article body, user identifier, or row-level private payload is included.",
+    "The connector did not expose full Auth provider configuration.",
+    "The connector did not expose dashboard Data API exposed-schema settings.",
+    "Advisor findings are reachability leads and are not automatic exploitability verdicts.",
+    "No billing, backup/PITR entitlement, recovery authority, or external direct-database caller was established.",
+    "The former isolated demo was outside scope and supplied no acceptance input."
+  ],
+  "mutations": 0
+}

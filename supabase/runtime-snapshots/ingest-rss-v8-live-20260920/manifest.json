@@ -1,0 +1,19 @@
+{
+  "captured_at": "2026-09-20T15:40:00Z",
+  "source_project": "yhbwnrtlqbjtcrrlpbge",
+  "slug": "ingest-rss",
+  "deployed_version": 8,
+  "verify_jwt": true,
+  "edge_package_sha256": "ace39d46b2b6970b57f01c76dae8480fe4e8c7a164fccf7868d4b2870ae6ddc2",
+  "files": [
+    {
+      "name": "index.ts",
+      "characters": 98515
+    },
+    {
+      "name": "lib.js",
+      "characters": 1382
+    }
+  ],
+  "authority_note": "Live source text returned by the Supabase Management API and retained after line-ending/trailing-whitespace normalization; deployed version and package SHA-256 remain the authoritative byte-package identifiers. Presence is not activation authority."
+}

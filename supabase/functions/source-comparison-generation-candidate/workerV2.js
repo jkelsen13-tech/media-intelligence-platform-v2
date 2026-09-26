@@ -8,6 +8,10 @@ import {dedupeArticleClaims,dedupeProjectionExplanations} from './projectionDedu
 export async function runGenerationWorker({rpc,requestId,session,runtime,implementation,sha256}){
   const context={p_session:session,p_runtime:runtime}
   const claim=await rpc('worker_claim',{...context,p_request:requestId('claim')})
+  return processGenerationClaim({rpc,requestId,session,runtime,implementation,sha256},claim)
+}
+export async function processGenerationClaim({rpc,requestId,session,runtime,implementation,sha256},claim){
+  const context={p_session:session,p_runtime:runtime}
   if(claim===null)return {state:'idle'}
   if(!claim.lease_token)return {state:'claim_receipt_only',generation:claim.generation_id}
   const binding={...context,p_generation:claim.generation_id,p_token:claim.lease_token,
@@ -27,11 +31,23 @@ export async function runGenerationWorker({rpc,requestId,session,runtime,impleme
     projection.explanations=dedupeProjectionExplanations(projection.explanations,deduped.winners)
     output={projection,generation_id:claim.generation_id,input_hash:claim.input_hash,
       implementation_ref:implementation,source_observed_at:claim.source_observed_at,
-      snapshot_metadata:retained.snapshot_metadata}
+      snapshot_metadata:retained.snapshot_metadata,
+      // Pending source candidates are lineage only, never inputs to public claims.
+      lineage_review_state:'pending',
+      retained_lineage:retained.eventInputs.flatMap(({event,members})=>members.map(member=>({
+        event_id:event.id,article_id:member.article.id,retained_capture:member.retained_capture??null}))) }
   }catch{
     // Existing isolated policy: explicit failure is terminal. Never reset a lease.
-    const state=await rpc('worker_fail',{...binding,p_request:requestId('failure')})
-    return {state,generation:claim.generation_id}
+    const failure={...binding,p_request:requestId('failure')}
+    try{
+      const state=await rpc('worker_fail',failure)
+      return {state,generation:claim.generation_id}
+    }catch{
+      // The failure may already be committed. Preserve this exact request;
+      // retry must recheck current authority and must never claim new work.
+      return {state:'failure_unconfirmed',generation:claim.generation_id,
+        retry:()=>rpc('worker_fail',failure)}
+    }
   }
   // Do not convert an ambiguous completion response into a conflicting failure.
   // The host must retain this exact request and arguments for identical retry.

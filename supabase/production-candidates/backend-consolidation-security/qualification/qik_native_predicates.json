@@ -1,0 +1,12 @@
+[
+  {
+    "proname": "arc_has_approved_membership",
+    "definition": "CREATE OR REPLACE FUNCTION mip_private.arc_has_approved_membership(p_arc_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public', 'pg_catalog'\nAS $function$ select exists (select 1 from public.arc_membership_candidates c where c.arc_id = p_arc_id and c.state = 'approved'); $function$\n",
+    "sha256": "d8191f4ad3a849e5df6605e98960bda4975978e2eba9178fa0b46c735a2dcbed"
+  },
+  {
+    "proname": "arc_event_candidate_is_approved",
+    "definition": "CREATE OR REPLACE FUNCTION mip_private.arc_event_candidate_is_approved(p_candidate_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public', 'pg_catalog'\nAS $function$ select p_candidate_id is not null and exists (select 1 from public.arc_membership_candidates c where c.id = p_candidate_id and c.state = 'approved'); $function$\n",
+    "sha256": "1114353076ac65f2398afd1d045cd74a3bda0a441d4d544c36ee85bc955eca63"
+  }
+]

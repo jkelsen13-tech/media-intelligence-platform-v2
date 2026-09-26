@@ -23,12 +23,15 @@ export function canonicalUrl(url) {
   if (!url) return null
   try {
     const u = new URL(url)
-    const host = u.hostname.toLowerCase().replace(/^www\./, '')
-    const path = u.pathname.replace(/\/+$/, '').toLowerCase()
+    const host = u.hostname.toLowerCase().replace(/^www\./, '') + (u.port ? ':' + u.port : '')
+    // Path case and non-default port can identify different source documents.
+    const path = u.pathname.replace(/\/+$/, '')
     const params = [...u.searchParams.entries()]
       .filter(([k]) => !TRACKING_PARAMS.test(k.toLowerCase()))
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, v]) => `${k}=${v}`)
+      // URLSearchParams decodes each component. Re-escape before joining so
+      // encoded '&'/'=' inside a key or value cannot become query structure.
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
       .join('&')
     return host + path + (params ? '?' + params : '')
   } catch {
@@ -144,12 +147,13 @@ export function buildClaimView(claim, surfaces, ctx) {
   const coverageUnknown = []
   for (const outlet of eventOutlets) {
     if (claimingOutlets.has(outlet)) continue
-    // Omission requires extracted coverage: the outlet's event articles must
-    // have produced claim rows (or carry a non-empty claims payload). Empty
-    // extraction means we cannot say "didn't cover" — only "nothing extracted".
+    // Omission is limited to the supplied event articles. Partial extraction
+    // cannot establish absence across an outlet: every included article must
+    // have extracted coverage. This is not a claim about real-world reporting.
     const outletArticles = ctx.eventArticlesByOutlet.get(outlet) ?? []
-    const anyExtracted = outletArticles.some((a) => ctx.extractedArticleIds.has(a.id))
-    if (anyExtracted) omittedBy.push(outlet)
+    const allExtracted = outletArticles.length > 0
+      && outletArticles.every((a) => ctx.extractedArticleIds.has(a.id))
+    if (allExtracted) omittedBy.push(outlet)
     else coverageUnknown.push(outlet)
   }
   const links = evidenceLinks.filter((l) => l.claim_id === claim.id)
@@ -209,8 +213,21 @@ export function buildEventView(event, memberRows, ctx) {
   return {
     id: event.id,
     title: event.canonical_title,
-    occurredAtStart: event.occurred_at_start,
-    occurredAtEnd: event.occurred_at_end,
+    // Public comparison has no independent temporal attribution. Some legacy
+    // producers populated these columns from member publication dates.
+    occurredAtStart: null,
+    occurredAtEnd: null,
+    occurrence: { state: 'unverified', start: null, end: null, precision: 'unknown' },
+    retainedEventDateProxy: {
+      kind: 'unverified_event_date_proxy',
+      basis: 'publication_derived_or_unknown',
+      occurrenceVerified: false,
+      start: event.occurred_at_start ?? null,
+      end: event.occurred_at_end ?? null,
+      sourceFields: ['comparison_public.occurred_at_start', 'comparison_public.occurred_at_end'],
+      precision: 'unknown',
+    },
+    generationObservation: { state: 'unavailable', at: null },
     status: event.status,
     outlets, // all of them, thin included — no gating
     singleSource: outlets.length <= 1,
@@ -404,6 +421,9 @@ export async function loadSourceComparisonView({ supabaseClient } = {}) {
   const events = (projectionRes.data ?? [])
     .map(projectionEventView)
     .filter((event) => event.outlets.length >= 2)
-    .sort((a, b) => String(b.occurredAtStart ?? '').localeCompare(String(a.occurredAtStart ?? '')))
-  return { enabled: true, events }
+    // Preserve the existing legacy-date browsing order without treating it as
+    // occurrence chronology. Undated rows stay last; ties use stable identity.
+    .sort((a, b) => String(b.retainedEventDateProxy.start ?? '').localeCompare(String(a.retainedEventDateProxy.start ?? ''))
+      || String(a.id).localeCompare(String(b.id)))
+  return { enabled: true, events, sortBasis: 'unverified_event_date_proxy' }
 }

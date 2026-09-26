@@ -1,0 +1,79 @@
+{
+  "captured_at": "2026-09-20",
+  "canonical_project": "qikvmopbtijoebdqosyq",
+  "production_changes": [
+    {
+      "project": "qikvmopbtijoebdqosyq",
+      "migration": "20260920145928_public_projection_write_revoke_v1",
+      "result": "applied",
+      "verification": "anon/authenticated retain SELECT and lack INSERT/UPDATE/DELETE on all seven reviewed projections; anon UPDATE planning is denied"
+    },
+    {
+      "project": "qikvmopbtijoebdqosyq",
+      "migration": "20260920150006_postgres_public_default_acl_hardening_v1",
+      "result": "applied",
+      "verification": "future public tables/functions created by postgres no longer grant browser roles implicit table privileges or function EXECUTE"
+    },
+    {
+      "project": "qikvmopbtijoebdqosyq",
+      "migration": "20260920150416_spatial_runtime_capability_gate_v1",
+      "result": "applied",
+      "verification": "six active grants preserve two confirmed existing principals; unknown user and unknown operation return false; only spatial_writer_runtime can execute the gate"
+    },
+    {
+      "project": "qikvmopbtijoebdqosyq",
+      "edge_function": "spatial-runtime",
+      "version": 7,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "f60e1646c364ae177dc19bab8ff4b17ca1d63c37559211c2535926a4d0e2d210",
+      "verification": "deployed handler exactly matches repository adapter; preserved base handler matches v6 after line-ending normalization; unauthenticated HTTP POST returns 401"
+    },
+    {
+      "project": "jfnzyvzthzqtczlxhjll",
+      "migration": "20260920151010_spatial_sandbox_public_rls_hardening_v1",
+      "result": "applied",
+      "verification": "all five previously RLS-disabled public tables now have RLS enabled and remain postgres-owner-only"
+    },
+    {
+      "project": "yhbwnrtlqbjtcrrlpbge",
+      "migration": "20260920151055_legacy_browser_definer_mutation_revoke_v1",
+      "result": "applied",
+      "verification": "anon/authenticated cannot execute publish_explanation or mip_v2_gdelt_begin_stage; service_role compatibility retained"
+    },
+    {
+      "project": "niejaejtbxgakyrsntxm",
+      "migration": "20260920151057_legacy_browser_definer_mutation_revoke_v1",
+      "result": "applied",
+      "verification": "anon/authenticated cannot execute publish_explanation; service_role compatibility retained"
+    }
+  ],
+  "retention": {
+    "jfn_spatial": {
+      "source_rows": 39,
+      "parent_rows": 6,
+      "archived_rows": 45,
+      "relations": 21,
+      "ordered_count_and_sha256_match": true,
+      "pipeline_config": "account_ui=true already exists with the same value and description on qik"
+    },
+    "yhb_collector_delta": {
+      "ingestion_runs": {
+        "source_rows_at_fence": 7668,
+        "archived_rows": 7668,
+        "inserted_this_run": 2893,
+        "source_fence": "2026-09-20T15:21:15.011796Z",
+        "ordered_payload_sha256": "2b6b7f0e943d3563cec3a2b07b74ad2c4bd5b525bf8124ae4e282d8e0a2b4dcb"
+      },
+      "ingestion_source_runs": {
+        "source_rows_at_fence": 7648,
+        "archived_rows": 7648,
+        "inserted_this_run": 2893,
+        "source_fence": "2026-09-20T15:22:50.443479Z",
+        "ordered_payload_sha256": "e014dcfc736f02861d48ba52a8f1fc80763bd9c5077dc4f55649ce272204c9e4"
+      }
+    }
+  },
+  "residual_platform_gate": "The connected postgres role cannot alter supabase_admin default privileges; the attempted transaction was rejected atomically and the remaining candidate is retained outside migration history.",
+  "destructive_actions": []
+}

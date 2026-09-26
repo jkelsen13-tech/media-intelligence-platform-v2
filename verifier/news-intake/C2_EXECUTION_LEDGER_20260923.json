@@ -1,0 +1,146 @@
+{
+  "section": "C2-stage4-target-compatibility-worker-preparation",
+  "status": "COMPLETE_PORTABLE_PREPARATION",
+  "baseline": "2b4e5f3e3b2aab55392385361cf65ca2e79e367a",
+  "preservesC1": true,
+  "allowance": {
+    "totalExecutions": 10,
+    "totalRunnerSeconds": 3600,
+    "inheritedExecutions": 7,
+    "inheritedRunnerSeconds": 899,
+    "remainingExecutions": 2,
+    "remainingRunnerSeconds": 2675,
+    "reservation": {
+      "attempt": 8,
+      "maxRunnerSeconds": 900,
+      "status": "CONSUMED_26_SECONDS"
+    },
+    "buildExceptionConsumed": true,
+    "observedTotalExecutions": 8,
+    "observedTotalRunnerSeconds": 925
+  },
+  "cost": {
+    "ci": "VERIFIED_NO_ADDITIONAL_CHARGE",
+    "ciEvidence": "GitHub repo visibility public; standard ubuntu-24.04 only; current GitHub Actions billing policy; no cache/artifact uploads",
+    "targetReadOnly": "VERIFIED_NO_ADDITIONAL_CHARGE",
+    "targetEvidence": "Existing organization dashboard spend cap enabled; target already active Micro; no capacity/billing changes",
+    "observedAt": "2026-09-23 05:24:13 UTC"
+  },
+  "target": {
+    "project": "qikvmopbtijoebdqosyq",
+    "version": "17.6.1.166",
+    "inspection": "catalog-only read-only bounded; no production article bodies/Auth/private payloads",
+    "sourceFlags": {
+      "enabled": 0,
+      "collectionEnabled": 0
+    },
+    "candidateApplied": false,
+    "directArcAttachment": "Portable reproduction of target schema rejects unapproved attachment with23502: candidate ID has no default; not repaired or bypassed"
+  },
+  "limits": [
+    "portable PostgreSQL17.6, not hosted Supabase",
+    "nullable vector embeddings omitted",
+    "lookup write semantics omitted",
+    "spatial read query reproduced, spatial write constraints/triggers and non-null spatial candidates omitted",
+    "populated reviewed claim propagation unqualified",
+    "Auth/JWT/PostgREST/Edge/pooler/scheduler unqualified"
+  ],
+  "exclusions": [
+    "production mutations",
+    "source/provider activation",
+    "real-material or retained-artifact retrieval",
+    "credentials",
+    "cost/billing changes",
+    "merge/deploy/cutover/retirement",
+    "durable local MIP files"
+  ],
+  "campaignVerdicts": {
+    "authorityConsolidated": "NOT_ESTABLISHED",
+    "completePipelineIsolated": "NOT_ESTABLISHED",
+    "pipelineLive": "NOT_ESTABLISHED"
+  },
+  "execution": {
+    "commit": "daf0ce821eca558dfb389cc2c5ed7b5f31e067a9",
+    "tree": "92ff01916de76ea5be72646b6ad3c5cfd14f8d26",
+    "run": 35822610895,
+    "job": 107057500351,
+    "runAttempt": 1,
+    "startedAt": "2026-09-23T05:29:27Z",
+    "completedAt": "2026-09-23T05:29:53Z",
+    "elapsedRunnerSeconds": 26,
+    "conclusion": "success",
+    "uniqueCaseGroups": 12,
+    "pythonExit": 0,
+    "cleanup": "PASS",
+    "buildRepeated": false,
+    "peakMemory": "NOT_OBSERVED",
+    "limits": {
+      "timeoutSeconds": 900,
+      "postgresBytes": 536870912,
+      "pythonBytes": 268435456,
+      "network": "none",
+      "publishedPorts": []
+    }
+  },
+  "review": {
+    "agent": "same-run fresh non-implementing reviewer",
+    "requestedModel": "Astra High",
+    "independentRuntimeTelemetry": "not exposed",
+    "result": "no unresolved must-fix within C2 portable scope",
+    "independentReplay": false
+  },
+  "identities": [
+    {
+      "path": "verifier/news-intake/c2_target_structure.sql",
+      "sha": "9599c3f335bdeda8b7f849b58c213b565eb0f25e",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/news-intake/c2_target_compatibility.py",
+      "sha": "468993acea551bce590f32b3e848ad3df00ea309",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/news-intake/install_source_identity.py",
+      "sha": "9a4c121fc26606885804d778509b9eacedc0b7c0",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/news-intake/c2_function_fingerprints.json",
+      "sha": "836579fd03f17a1428da1b847e07a42fd5f0909b",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": ".github/workflows/golden.yml",
+      "sha": "102537ad3bb1c9f828ac91e86001908b019b4265",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "verifier/news-intake/native_worker.py",
+      "sha": "4994d8c69f9f1cd7cd2f5321881456c10f4d543c",
+      "mode": "100644",
+      "type": "blob"
+    }
+  ],
+  "preserved": {
+    "application": "6a3585ed931be328b1f0199512b6dde69f6415f2",
+    "build": "b9502dc79949a2b27363b94f495bcfc1b62cf5bc",
+    "C1reportBlob": "72d2df001cd0a8586f9b2eb6a663e9774b47ef74",
+    "srcTree": "4cfffc8bbf4c0a105328f0ae543f11dd135cdc13",
+    "testsTree": "667b8d39bf77290bcbf1d83ecc9176ab683f8289",
+    "lockBlob": "b5d44ec6e0a21f931cb2d43884010025ee89889c",
+    "viteConfigBlob": "6b5514dc489a8e4ec7c5b4d658b1f19c119d8f77"
+  },
+  "remainingGates": [
+    "authorized isolated hosted surface with verified cost and access",
+    "qualified worker host/connection identity and transaction-preserving transport",
+    "target-version drift and omitted applicable dependencies",
+    "source permission and bounded admission/retention decisions",
+    "separate migration/activation authorization"
+  ]
+}

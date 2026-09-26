@@ -1,0 +1,2960 @@
+{
+  "columns": [
+    {
+      "type": "uuid",
+      "table": "arc_membership_candidates",
+      "column": "id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "articles",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "feed",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "outlet",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "title",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "url",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "summary",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "articles",
+      "column": "published_at",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "articles",
+      "column": "fetched_at",
+      "default": "now()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "articles",
+      "column": "outlet_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "articles",
+      "column": "author_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "body_text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "vector(384)",
+      "table": "articles",
+      "column": "embedding",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "jsonb",
+      "table": "articles",
+      "column": "claims",
+      "default": "'[]'::jsonb",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "articles",
+      "column": "arc_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "boolean",
+      "table": "articles",
+      "column": "unattributed",
+      "default": "false",
+      "notnull": true
+    },
+    {
+      "type": "boolean",
+      "table": "articles",
+      "column": "monoculture",
+      "default": "false",
+      "notnull": true
+    },
+    {
+      "type": "boolean",
+      "table": "articles",
+      "column": "is_digest",
+      "default": "false",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "image_url",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "image_alt",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "articles",
+      "column": "entities_extracted_at",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "articles",
+      "column": "arc_assign_attempted_at",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "ingestion_run_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "source_status",
+      "default": "'active'::text",
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "articles",
+      "column": "source_status_changed_at",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "source_status_note",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "jsonb",
+      "table": "articles",
+      "column": "arc_assignment_evidence",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "articles",
+      "column": "candidate_generation_attempted_at",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "candidate_generation_note",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "reader_state",
+      "default": "'pending_review'::text",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "articles",
+      "column": "reader_exclusion_reason",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "authors",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "geographic_places",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "geographic_places",
+      "column": "canonical_name",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "geographic_places",
+      "column": "country_code",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "geographic_places",
+      "column": "admin1_name",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "numeric(9,6)",
+      "table": "geographic_places",
+      "column": "latitude",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "numeric(9,6)",
+      "table": "geographic_places",
+      "column": "longitude",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "geographic_places",
+      "column": "precision",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "geographic_places",
+      "column": "gazetteer_provider",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "geographic_places",
+      "column": "gazetteer_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "geographic_places",
+      "column": "created_at",
+      "default": "now()",
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "geographic_places",
+      "column": "updated_at",
+      "default": "now()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "nodes",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "nodes",
+      "column": "slug",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "nodes",
+      "column": "label",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "nodes",
+      "column": "type",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "nodes",
+      "column": "description",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "jsonb",
+      "table": "nodes",
+      "column": "metadata",
+      "default": "'{}'::jsonb",
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "nodes",
+      "column": "created_at",
+      "default": "now()",
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "nodes",
+      "column": "updated_at",
+      "default": "now()",
+      "notnull": true
+    },
+    {
+      "type": "integer",
+      "table": "nodes",
+      "column": "confidence",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "nodes",
+      "column": "summary",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "date",
+      "table": "nodes",
+      "column": "occurred_at",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "nodes",
+      "column": "arc_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "nodes",
+      "column": "arc_membership_candidate_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "outlets",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "pipeline_config",
+      "column": "key",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "jsonb",
+      "table": "pipeline_config",
+      "column": "value",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "pipeline_config",
+      "column": "description",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "pipeline_config",
+      "column": "updated_at",
+      "default": "now()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "policies",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "policy_documents",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "policy_documents",
+      "column": "policy_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "policy_documents",
+      "column": "source",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "policy_documents",
+      "column": "external_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "policy_documents",
+      "column": "title",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "policy_documents",
+      "column": "url",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "policy_documents",
+      "column": "published_at",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "policy_documents",
+      "column": "raw_summary",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "jsonb",
+      "table": "policy_documents",
+      "column": "extracted_claims",
+      "default": "'[]'::jsonb",
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "policy_documents",
+      "column": "created_at",
+      "default": "now()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "source_change_events",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "source_change_events",
+      "column": "source_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "source_change_events",
+      "column": "change_type",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text[]",
+      "table": "source_change_events",
+      "column": "affected_assertion_ids",
+      "default": "'{}'::text[]",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "source_change_events",
+      "column": "actor",
+      "default": "'system'::text",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "source_change_events",
+      "column": "note",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "source_change_events",
+      "column": "created_at",
+      "default": "now()",
+      "notnull": true
+    },
+    {
+      "type": "text[]",
+      "table": "source_change_events",
+      "column": "linked_assertion_ids",
+      "default": "'{}'::text[]",
+      "notnull": true
+    },
+    {
+      "type": "text[]",
+      "table": "source_change_events",
+      "column": "mutated_assertion_ids",
+      "default": "'{}'::text[]",
+      "notnull": true
+    },
+    {
+      "type": "text[]",
+      "table": "source_change_events",
+      "column": "skipped_withdrawn_assertion_ids",
+      "default": "'{}'::text[]",
+      "notnull": true
+    },
+    {
+      "type": "integer",
+      "table": "source_change_events",
+      "column": "linked_count",
+      "default": "0",
+      "notnull": true
+    },
+    {
+      "type": "integer",
+      "table": "source_change_events",
+      "column": "mutated_count",
+      "default": "0",
+      "notnull": true
+    },
+    {
+      "type": "integer",
+      "table": "source_change_events",
+      "column": "skipped_withdrawn_count",
+      "default": "0",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "sources",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "sources",
+      "column": "node_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "sources",
+      "column": "outlet",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "sources",
+      "column": "headline",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "sources",
+      "column": "url",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "date",
+      "table": "sources",
+      "column": "published_at",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "sources",
+      "column": "created_at",
+      "default": "now()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "sources",
+      "column": "arc_membership_candidate_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.assertion_revisions",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.assertion_revisions",
+      "column": "spatial_assertion_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "integer",
+      "table": "spatial.assertion_revisions",
+      "column": "revision_ordinal",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.assertion_revisions",
+      "column": "graph_node_authority_snapshot_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertion_revisions",
+      "column": "location_role",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertion_revisions",
+      "column": "relationship_qualifier",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.assertion_revisions",
+      "column": "canonical_place_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.assertion_revisions",
+      "column": "place_authority_snapshot_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertion_revisions",
+      "column": "evidence_precision",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.assertion_revisions",
+      "column": "internal_geometry_snapshot_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertion_revisions",
+      "column": "valid_time_precision",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "jsonb",
+      "table": "spatial.assertion_revisions",
+      "column": "source_native_time",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.assertion_revisions",
+      "column": "guard_start_utc",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.assertion_revisions",
+      "column": "guard_end_utc",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.assertion_revisions",
+      "column": "temporal_policy_artifact_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertion_revisions",
+      "column": "uncertainty_class",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertion_revisions",
+      "column": "uncertainty_note",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertion_revisions",
+      "column": "revision_fingerprint",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertion_revisions",
+      "column": "created_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.assertion_revisions",
+      "column": "created_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.assertions",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.assertions",
+      "column": "graph_node_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertions",
+      "column": "assertion_kind",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertions",
+      "column": "relationship_scope_key",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.assertions",
+      "column": "scope_policy_artifact_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertions",
+      "column": "created_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.assertions",
+      "column": "assertion_fingerprint",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.assertions",
+      "column": "created_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.audience_scopes",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.audience_scopes",
+      "column": "audience_code",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.audience_scopes",
+      "column": "audience_version",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "jsonb",
+      "table": "spatial.audience_scopes",
+      "column": "canonical_capabilities",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.audience_scopes",
+      "column": "canonicalization_version",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.audience_scopes",
+      "column": "content_hash_algorithm",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.audience_scopes",
+      "column": "content_hash",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.audience_scopes",
+      "column": "effective_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.audience_scopes",
+      "column": "supersedes_audience_scope_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.audience_scopes",
+      "column": "created_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.audience_scopes",
+      "column": "created_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.break_glass_audit",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.break_glass_audit",
+      "column": "audit_phase",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.break_glass_audit",
+      "column": "related_intent_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.break_glass_audit",
+      "column": "administrator_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.break_glass_audit",
+      "column": "owner_authorization_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.break_glass_audit",
+      "column": "target_object",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.break_glass_audit",
+      "column": "proposed_or_completed_action",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.break_glass_audit",
+      "column": "reason",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.break_glass_audit",
+      "column": "before_state_hash",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.break_glass_audit",
+      "column": "result_state_hash",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.break_glass_audit",
+      "column": "created_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "artifact_type_code",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "article_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "policy_document_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "source_record_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "source_node_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "source_node_authority_snapshot_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "source_graph_association_fingerprint",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "stable_artifact_key",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "validation_policy_artifact_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "validated_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "validated_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_artifact_registry",
+      "column": "registry_fingerprint",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_condition_events",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_condition_events",
+      "column": "evidence_snapshot_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_condition_events",
+      "column": "condition",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_condition_events",
+      "column": "source_change_event_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_condition_events",
+      "column": "condition_policy_artifact_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_condition_events",
+      "column": "reason_code",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_condition_events",
+      "column": "observed_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.evidence_condition_events",
+      "column": "observed_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_condition_events",
+      "column": "event_fingerprint",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_snapshots",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_snapshots",
+      "column": "evidence_artifact_registry_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "source_field",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "integer",
+      "table": "spatial.evidence_snapshots",
+      "column": "span_start",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "integer",
+      "table": "spatial.evidence_snapshots",
+      "column": "span_end",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "span_coordinate_system",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "normalization_version",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "encoding_version",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "content_hash_algorithm",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "content_hash",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "source_version_identifier",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.evidence_snapshots",
+      "column": "source_acquired_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "capture_mode",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_snapshots",
+      "column": "capture_policy_artifact_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.evidence_snapshots",
+      "column": "retention_policy_artifact_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "retention_classification",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "access_scope",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "immutable_capture_ref",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "snapshot_fingerprint",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.evidence_snapshots",
+      "column": "created_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.evidence_snapshots",
+      "column": "created_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.geometry_snapshots",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.geometry_snapshots",
+      "column": "geometry_scope",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.geometry_snapshots",
+      "column": "representation_kind",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.geometry_snapshots",
+      "column": "crs",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "jsonb",
+      "table": "spatial.geometry_snapshots",
+      "column": "canonical_geojson",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.geometry_snapshots",
+      "column": "canonical_place_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.geometry_snapshots",
+      "column": "place_authority_snapshot_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.geometry_snapshots",
+      "column": "geometry_precision",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.geometry_snapshots",
+      "column": "geometry_source_kind",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.geometry_snapshots",
+      "column": "geometry_source_version",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.geometry_snapshots",
+      "column": "compatibility_policy_artifact_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.geometry_snapshots",
+      "column": "canonicalization_version",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.geometry_snapshots",
+      "column": "geometry_hash",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.geometry_snapshots",
+      "column": "capture_basis",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.geometry_snapshots",
+      "column": "created_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.geometry_snapshots",
+      "column": "created_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.graph_node_authority_snapshots",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.graph_node_authority_snapshots",
+      "column": "graph_node_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "jsonb",
+      "table": "spatial.graph_node_authority_snapshots",
+      "column": "node_payload",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.graph_node_authority_snapshots",
+      "column": "node_updated_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.graph_node_authority_snapshots",
+      "column": "observed_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.graph_node_authority_snapshots",
+      "column": "canonicalization_version",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.graph_node_authority_snapshots",
+      "column": "snapshot_hash",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.graph_node_authority_snapshots",
+      "column": "captured_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.graph_node_authority_snapshots",
+      "column": "captured_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.place_authority_snapshots",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.place_authority_snapshots",
+      "column": "canonical_place_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "jsonb",
+      "table": "spatial.place_authority_snapshots",
+      "column": "place_payload",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.place_authority_snapshots",
+      "column": "place_updated_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.place_authority_snapshots",
+      "column": "observed_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.place_authority_snapshots",
+      "column": "canonicalization_version",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.place_authority_snapshots",
+      "column": "snapshot_hash",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.place_authority_snapshots",
+      "column": "captured_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.place_authority_snapshots",
+      "column": "captured_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.policy_artifacts",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.policy_artifacts",
+      "column": "policy_family_code",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.policy_artifacts",
+      "column": "policy_version",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "jsonb",
+      "table": "spatial.policy_artifacts",
+      "column": "canonical_content",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.policy_artifacts",
+      "column": "canonicalization_version",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.policy_artifacts",
+      "column": "content_hash_algorithm",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.policy_artifacts",
+      "column": "content_hash",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.policy_artifacts",
+      "column": "effective_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.policy_artifacts",
+      "column": "supersedes_policy_artifact_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.policy_artifacts",
+      "column": "created_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.policy_artifacts",
+      "column": "created_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.release_decisions",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.release_decisions",
+      "column": "assertion_revision_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.release_decisions",
+      "column": "audience_scope_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.release_decisions",
+      "column": "release_policy_artifact_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.release_decisions",
+      "column": "decision_disposition",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.release_decisions",
+      "column": "predecessor_release_decision_id",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "type": "text",
+      "table": "spatial.release_decisions",
+      "column": "decided_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.release_decisions",
+      "column": "decided_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.release_decisions",
+      "column": "effective_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.release_decisions",
+      "column": "reason_code",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.release_decisions",
+      "column": "decision_fingerprint",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.release_decisions",
+      "column": "created_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.review_decisions",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.review_decisions",
+      "column": "assertion_revision_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.review_decisions",
+      "column": "support_disposition",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.review_decisions",
+      "column": "review_mode",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "jsonb",
+      "table": "spatial.review_decisions",
+      "column": "review_outcome_basis",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.review_decisions",
+      "column": "review_policy_artifact_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.review_decisions",
+      "column": "reviewed_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.review_decisions",
+      "column": "effective_at",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.review_decisions",
+      "column": "reason_code",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.review_decisions",
+      "column": "decision_fingerprint",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.review_decisions",
+      "column": "created_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.revision_evidence",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.revision_evidence",
+      "column": "assertion_revision_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.revision_evidence",
+      "column": "evidence_snapshot_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.revision_evidence",
+      "column": "evidence_role",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.revision_evidence",
+      "column": "linkage_fingerprint",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.revision_evidence",
+      "column": "created_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.revision_lineage",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.revision_lineage",
+      "column": "from_revision_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "spatial.revision_lineage",
+      "column": "to_revision_id",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.revision_lineage",
+      "column": "relationship_type",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.revision_lineage",
+      "column": "lineage_fingerprint",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "text",
+      "table": "spatial.revision_lineage",
+      "column": "created_by_principal_ref",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "spatial.revision_lineage",
+      "column": "created_at",
+      "default": "transaction_timestamp()",
+      "notnull": true
+    },
+    {
+      "type": "uuid",
+      "table": "story_arcs",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    }
+  ],
+  "constraints": [
+    {
+      "name": "assertions_graph_node_id_fkey",
+      "table": "spatial.assertions",
+      "definition": "FOREIGN KEY (graph_node_id) REFERENCES nodes(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "assertions_scope_policy_artifact_id_fkey",
+      "table": "spatial.assertions",
+      "definition": "FOREIGN KEY (scope_policy_artifact_id) REFERENCES spatial.policy_artifacts(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "story_arcs_pkey",
+      "table": "story_arcs",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "outlets_pkey",
+      "table": "outlets",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "authors_pkey",
+      "table": "authors",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "policies_pkey",
+      "table": "policies",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "arc_membership_candidates_pkey",
+      "table": "arc_membership_candidates",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "assertion_revisions_spatial_assertion_id_fkey",
+      "table": "spatial.assertion_revisions",
+      "definition": "FOREIGN KEY (spatial_assertion_id) REFERENCES spatial.assertions(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "assertion_revisions_graph_node_authority_snapshot_id_fkey",
+      "table": "spatial.assertion_revisions",
+      "definition": "FOREIGN KEY (graph_node_authority_snapshot_id) REFERENCES spatial.graph_node_authority_snapshots(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "nodes_type_check",
+      "table": "nodes",
+      "definition": "CHECK ((type = ANY (ARRAY['event'::text, 'actor'::text, 'institution'::text, 'document'::text, 'anomaly'::text, 'policy'::text, 'topic'::text])))"
+    },
+    {
+      "name": "nodes_confidence_check",
+      "table": "nodes",
+      "definition": "CHECK (((confidence >= 0) AND (confidence <= 100)))"
+    },
+    {
+      "name": "nodes_pkey",
+      "table": "nodes",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "nodes_slug_key",
+      "table": "nodes",
+      "definition": "UNIQUE (slug)"
+    },
+    {
+      "name": "nodes_arc_id_fkey",
+      "table": "nodes",
+      "definition": "FOREIGN KEY (arc_id) REFERENCES story_arcs(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "sources_pkey",
+      "table": "sources",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "sources_node_id_fkey",
+      "table": "sources",
+      "definition": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "sources_arc_membership_candidate_id_fkey",
+      "table": "sources",
+      "definition": "FOREIGN KEY (arc_membership_candidate_id) REFERENCES arc_membership_candidates(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "articles_source_status_check",
+      "table": "articles",
+      "definition": "CHECK ((source_status = ANY (ARRAY['active'::text, 'corrected'::text, 'withdrawn'::text])))"
+    },
+    {
+      "name": "articles_reader_state_check",
+      "table": "articles",
+      "definition": "CHECK ((reader_state = ANY (ARRAY['eligible'::text, 'pending_review'::text, 'withheld'::text])))"
+    },
+    {
+      "name": "geographic_places_check",
+      "table": "geographic_places",
+      "definition": "CHECK ((((latitude IS NULL) AND (longitude IS NULL)) OR (((latitude >= ('-90'::integer)::numeric) AND (latitude <= (90)::numeric)) AND ((longitude >= ('-180'::integer)::numeric) AND (longitude <= (180)::numeric)))))"
+    },
+    {
+      "name": "geographic_places_pkey",
+      "table": "geographic_places",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "geographic_places_gazetteer_provider_gazetteer_id_key",
+      "table": "geographic_places",
+      "definition": "UNIQUE NULLS NOT DISTINCT (gazetteer_provider, gazetteer_id)"
+    },
+    {
+      "name": "policy_artifacts_policy_family_code_check",
+      "table": "spatial.policy_artifacts",
+      "definition": "CHECK ((policy_family_code = ANY (ARRAY['assertion_scope_key'::text, 'temporal_interval'::text, 'evidence_artifact_validation'::text, 'evidence_capture'::text, 'evidence_retention'::text, 'geometry_compatibility'::text, 'evidence_condition_interpretation'::text, 'review_authorization'::text, 'release_disclosure'::text])))"
+    },
+    {
+      "name": "articles_reader_exclusion_reason_check",
+      "table": "articles",
+      "definition": "CHECK (((reader_exclusion_reason IS NULL) OR (reader_exclusion_reason = ANY (ARRAY['malformed_title'::text, 'unavailable_page'::text, 'canonical_url_duplicate'::text, 'promotional_material'::text, 'off_mission'::text, 'manual_hold'::text]))))"
+    },
+    {
+      "name": "articles_pkey",
+      "table": "articles",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "articles_url_key",
+      "table": "articles",
+      "definition": "UNIQUE (url)"
+    },
+    {
+      "name": "articles_outlet_id_fkey",
+      "table": "articles",
+      "definition": "FOREIGN KEY (outlet_id) REFERENCES outlets(id)"
+    },
+    {
+      "name": "articles_author_id_fkey",
+      "table": "articles",
+      "definition": "FOREIGN KEY (author_id) REFERENCES authors(id)"
+    },
+    {
+      "name": "articles_arc_id_fkey",
+      "table": "articles",
+      "definition": "FOREIGN KEY (arc_id) REFERENCES story_arcs(id)"
+    },
+    {
+      "name": "policy_documents_source_check",
+      "table": "policy_documents",
+      "definition": "CHECK ((source = ANY (ARRAY['federal_register'::text, 'gao'::text, 'crs'::text, 'ig'::text, 'eurlex'::text, 'legislation_gov_uk'::text, 'courtlistener'::text])))"
+    },
+    {
+      "name": "policy_documents_pkey",
+      "table": "policy_documents",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "policy_documents_source_external_id_key",
+      "table": "policy_documents",
+      "definition": "UNIQUE (source, external_id)"
+    },
+    {
+      "name": "policy_documents_policy_id_fkey",
+      "table": "policy_documents",
+      "definition": "FOREIGN KEY (policy_id) REFERENCES policies(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "source_change_events_change_type_check",
+      "table": "source_change_events",
+      "definition": "CHECK ((change_type = ANY (ARRAY['corrected'::text, 'withdrawn'::text])))"
+    },
+    {
+      "name": "source_change_events_pkey",
+      "table": "source_change_events",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "geographic_places_precision_check",
+      "table": "geographic_places",
+      "definition": "CHECK ((\"precision\" = ANY (ARRAY['country'::text, 'region'::text, 'city'::text, 'area'::text, 'facility'::text])))"
+    },
+    {
+      "name": "assertions_graph_node_id_assertion_kind_relationship_scope__key",
+      "table": "spatial.assertions",
+      "definition": "UNIQUE (graph_node_id, assertion_kind, relationship_scope_key)"
+    },
+    {
+      "name": "policy_artifacts_canonicalization_version_check",
+      "table": "spatial.policy_artifacts",
+      "definition": "CHECK ((canonicalization_version = 'rfc8785-jcs-v1'::text))"
+    },
+    {
+      "name": "policy_artifacts_content_hash_algorithm_check",
+      "table": "spatial.policy_artifacts",
+      "definition": "CHECK ((content_hash_algorithm = 'sha256'::text))"
+    },
+    {
+      "name": "policy_artifacts_content_hash_check",
+      "table": "spatial.policy_artifacts",
+      "definition": "CHECK ((content_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "policy_artifacts_check",
+      "table": "spatial.policy_artifacts",
+      "definition": "CHECK (((supersedes_policy_artifact_id IS NULL) OR (supersedes_policy_artifact_id <> id)))"
+    },
+    {
+      "name": "policy_artifacts_pkey",
+      "table": "spatial.policy_artifacts",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "policy_artifacts_policy_family_code_policy_version_key",
+      "table": "spatial.policy_artifacts",
+      "definition": "UNIQUE (policy_family_code, policy_version)"
+    },
+    {
+      "name": "policy_artifacts_supersedes_policy_artifact_id_fkey",
+      "table": "spatial.policy_artifacts",
+      "definition": "FOREIGN KEY (supersedes_policy_artifact_id) REFERENCES spatial.policy_artifacts(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "audience_scopes_canonicalization_version_check",
+      "table": "spatial.audience_scopes",
+      "definition": "CHECK ((canonicalization_version = 'rfc8785-jcs-v1'::text))"
+    },
+    {
+      "name": "audience_scopes_content_hash_algorithm_check",
+      "table": "spatial.audience_scopes",
+      "definition": "CHECK ((content_hash_algorithm = 'sha256'::text))"
+    },
+    {
+      "name": "audience_scopes_content_hash_check",
+      "table": "spatial.audience_scopes",
+      "definition": "CHECK ((content_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "audience_scopes_check",
+      "table": "spatial.audience_scopes",
+      "definition": "CHECK (((supersedes_audience_scope_id IS NULL) OR (supersedes_audience_scope_id <> id)))"
+    },
+    {
+      "name": "audience_scopes_pkey",
+      "table": "spatial.audience_scopes",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "audience_scopes_audience_code_audience_version_key",
+      "table": "spatial.audience_scopes",
+      "definition": "UNIQUE (audience_code, audience_version)"
+    },
+    {
+      "name": "audience_scopes_supersedes_audience_scope_id_fkey",
+      "table": "spatial.audience_scopes",
+      "definition": "FOREIGN KEY (supersedes_audience_scope_id) REFERENCES spatial.audience_scopes(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "assertions_assertion_kind_check",
+      "table": "spatial.assertions",
+      "definition": "CHECK ((assertion_kind = 'event_spatial_relationship'::text))"
+    },
+    {
+      "name": "assertions_assertion_fingerprint_check",
+      "table": "spatial.assertions",
+      "definition": "CHECK ((assertion_fingerprint ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "assertions_pkey",
+      "table": "spatial.assertions",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "assertions_assertion_fingerprint_key",
+      "table": "spatial.assertions",
+      "definition": "UNIQUE (assertion_fingerprint)"
+    },
+    {
+      "name": "graph_node_authority_snapshots_canonicalization_version_check",
+      "table": "spatial.graph_node_authority_snapshots",
+      "definition": "CHECK ((canonicalization_version = 'rfc8785-jcs-v1'::text))"
+    },
+    {
+      "name": "graph_node_authority_snapshots_snapshot_hash_check",
+      "table": "spatial.graph_node_authority_snapshots",
+      "definition": "CHECK ((snapshot_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "graph_node_authority_snapshots_pkey",
+      "table": "spatial.graph_node_authority_snapshots",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "graph_node_authority_snapshots_graph_node_id_snapshot_hash_key",
+      "table": "spatial.graph_node_authority_snapshots",
+      "definition": "UNIQUE (graph_node_id, snapshot_hash)"
+    },
+    {
+      "name": "graph_node_authority_snapshots_graph_node_id_fkey",
+      "table": "spatial.graph_node_authority_snapshots",
+      "definition": "FOREIGN KEY (graph_node_id) REFERENCES nodes(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "place_authority_snapshots_canonicalization_version_check",
+      "table": "spatial.place_authority_snapshots",
+      "definition": "CHECK ((canonicalization_version = 'rfc8785-jcs-v1'::text))"
+    },
+    {
+      "name": "place_authority_snapshots_snapshot_hash_check",
+      "table": "spatial.place_authority_snapshots",
+      "definition": "CHECK ((snapshot_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "place_authority_snapshots_pkey",
+      "table": "spatial.place_authority_snapshots",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "place_authority_snapshots_canonical_place_id_snapshot_hash_key",
+      "table": "spatial.place_authority_snapshots",
+      "definition": "UNIQUE (canonical_place_id, snapshot_hash)"
+    },
+    {
+      "name": "place_authority_snapshots_canonical_place_id_fkey",
+      "table": "spatial.place_authority_snapshots",
+      "definition": "FOREIGN KEY (canonical_place_id) REFERENCES geographic_places(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "geometry_snapshots_geometry_scope_check",
+      "table": "spatial.geometry_snapshots",
+      "definition": "CHECK ((geometry_scope = 'internal'::text))"
+    },
+    {
+      "name": "geometry_snapshots_representation_kind_check",
+      "table": "spatial.geometry_snapshots",
+      "definition": "CHECK ((representation_kind = ANY (ARRAY['point'::text, 'representative_point'::text, 'line'::text, 'route'::text, 'polygon'::text, 'multipolygon'::text, 'named_place_reference'::text, 'no_geometry'::text])))"
+    },
+    {
+      "name": "geometry_snapshots_crs_check",
+      "table": "spatial.geometry_snapshots",
+      "definition": "CHECK ((crs = 'EPSG:4326'::text))"
+    },
+    {
+      "name": "assertion_revisions_canonical_place_id_fkey",
+      "table": "spatial.assertion_revisions",
+      "definition": "FOREIGN KEY (canonical_place_id) REFERENCES geographic_places(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "assertion_revisions_place_authority_snapshot_id_fkey",
+      "table": "spatial.assertion_revisions",
+      "definition": "FOREIGN KEY (place_authority_snapshot_id) REFERENCES spatial.place_authority_snapshots(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "assertion_revisions_internal_geometry_snapshot_id_fkey",
+      "table": "spatial.assertion_revisions",
+      "definition": "FOREIGN KEY (internal_geometry_snapshot_id) REFERENCES spatial.geometry_snapshots(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "assertion_revisions_temporal_policy_artifact_id_fkey",
+      "table": "spatial.assertion_revisions",
+      "definition": "FOREIGN KEY (temporal_policy_artifact_id) REFERENCES spatial.policy_artifacts(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "geometry_snapshots_geometry_precision_check",
+      "table": "spatial.geometry_snapshots",
+      "definition": "CHECK ((geometry_precision = ANY (ARRAY['country'::text, 'region'::text, 'city'::text, 'area'::text, 'facility'::text])))"
+    },
+    {
+      "name": "geometry_snapshots_canonicalization_version_check",
+      "table": "spatial.geometry_snapshots",
+      "definition": "CHECK ((canonicalization_version = 'rfc8785-jcs-v1'::text))"
+    },
+    {
+      "name": "geometry_snapshots_geometry_hash_check",
+      "table": "spatial.geometry_snapshots",
+      "definition": "CHECK ((geometry_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "geometry_snapshots_check",
+      "table": "spatial.geometry_snapshots",
+      "definition": "CHECK (((canonical_place_id IS NULL) = (place_authority_snapshot_id IS NULL)))"
+    },
+    {
+      "name": "geometry_snapshots_check1",
+      "table": "spatial.geometry_snapshots",
+      "definition": "CHECK (((representation_kind <> ALL (ARRAY['named_place_reference'::text, 'no_geometry'::text])) OR (canonical_geojson IS NULL)))"
+    },
+    {
+      "name": "geometry_snapshots_check2",
+      "table": "spatial.geometry_snapshots",
+      "definition": "CHECK (((representation_kind = ANY (ARRAY['named_place_reference'::text, 'no_geometry'::text])) OR (canonical_geojson IS NOT NULL)))"
+    },
+    {
+      "name": "geometry_snapshots_pkey",
+      "table": "spatial.geometry_snapshots",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "geometry_snapshots_geometry_hash_key",
+      "table": "spatial.geometry_snapshots",
+      "definition": "UNIQUE (geometry_hash)"
+    },
+    {
+      "name": "geometry_snapshots_canonical_place_id_fkey",
+      "table": "spatial.geometry_snapshots",
+      "definition": "FOREIGN KEY (canonical_place_id) REFERENCES geographic_places(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "geometry_snapshots_place_authority_snapshot_id_fkey",
+      "table": "spatial.geometry_snapshots",
+      "definition": "FOREIGN KEY (place_authority_snapshot_id) REFERENCES spatial.place_authority_snapshots(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "geometry_snapshots_compatibility_policy_artifact_id_fkey",
+      "table": "spatial.geometry_snapshots",
+      "definition": "FOREIGN KEY (compatibility_policy_artifact_id) REFERENCES spatial.policy_artifacts(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "assertion_revisions_revision_ordinal_check",
+      "table": "spatial.assertion_revisions",
+      "definition": "CHECK ((revision_ordinal > 0))"
+    },
+    {
+      "name": "evidence_artifact_registry_validation_policy_artifact_id_fkey",
+      "table": "spatial.evidence_artifact_registry",
+      "definition": "FOREIGN KEY (validation_policy_artifact_id) REFERENCES spatial.policy_artifacts(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "evidence_condition_events_evidence_snapshot_id_fkey",
+      "table": "spatial.evidence_condition_events",
+      "definition": "FOREIGN KEY (evidence_snapshot_id) REFERENCES spatial.evidence_snapshots(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "assertion_revisions_location_role_check",
+      "table": "spatial.assertion_revisions",
+      "definition": "CHECK ((location_role = ANY (ARRAY['event'::text, 'facility'::text, 'jurisdiction'::text, 'context'::text, 'publisher'::text])))"
+    },
+    {
+      "name": "assertion_revisions_relationship_qualifier_check",
+      "table": "spatial.assertion_revisions",
+      "definition": "CHECK ((relationship_qualifier = ANY (ARRAY['none'::text, 'origin'::text, 'destination'::text, 'route'::text, 'affected_area'::text, 'operational_footprint'::text, 'multiple_sites'::text, 'ongoing_area'::text, 'representative_context'::text])))"
+    },
+    {
+      "name": "assertion_revisions_evidence_precision_check",
+      "table": "spatial.assertion_revisions",
+      "definition": "CHECK ((evidence_precision = ANY (ARRAY['country'::text, 'region'::text, 'city'::text, 'area'::text, 'facility'::text])))"
+    },
+    {
+      "name": "assertion_revisions_valid_time_precision_check",
+      "table": "spatial.assertion_revisions",
+      "definition": "CHECK ((valid_time_precision = ANY (ARRAY['exact_timestamp'::text, 'day'::text, 'month'::text, 'year'::text, 'range'::text, 'approximate'::text, 'unknown'::text])))"
+    },
+    {
+      "name": "assertion_revisions_revision_fingerprint_check",
+      "table": "spatial.assertion_revisions",
+      "definition": "CHECK ((revision_fingerprint ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "assertion_revisions_check",
+      "table": "spatial.assertion_revisions",
+      "definition": "CHECK (((canonical_place_id IS NULL) = (place_authority_snapshot_id IS NULL)))"
+    },
+    {
+      "name": "assertion_revisions_check1",
+      "table": "spatial.assertion_revisions",
+      "definition": "CHECK (((guard_start_utc IS NULL) OR (guard_end_utc IS NULL) OR (guard_start_utc < guard_end_utc)))"
+    },
+    {
+      "name": "assertion_revisions_pkey",
+      "table": "spatial.assertion_revisions",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "assertion_revisions_revision_fingerprint_key",
+      "table": "spatial.assertion_revisions",
+      "definition": "UNIQUE (revision_fingerprint)"
+    },
+    {
+      "name": "assertion_revisions_spatial_assertion_id_revision_ordinal_key",
+      "table": "spatial.assertion_revisions",
+      "definition": "UNIQUE (spatial_assertion_id, revision_ordinal)"
+    },
+    {
+      "name": "revision_lineage_relationship_type_check",
+      "table": "spatial.revision_lineage",
+      "definition": "CHECK ((relationship_type = ANY (ARRAY['supersedes'::text, 'corrects'::text, 'derives_from'::text])))"
+    },
+    {
+      "name": "revision_lineage_lineage_fingerprint_check",
+      "table": "spatial.revision_lineage",
+      "definition": "CHECK ((lineage_fingerprint ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "revision_lineage_check",
+      "table": "spatial.revision_lineage",
+      "definition": "CHECK ((from_revision_id <> to_revision_id))"
+    },
+    {
+      "name": "revision_lineage_pkey",
+      "table": "spatial.revision_lineage",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "revision_lineage_lineage_fingerprint_key",
+      "table": "spatial.revision_lineage",
+      "definition": "UNIQUE (lineage_fingerprint)"
+    },
+    {
+      "name": "revision_lineage_from_revision_id_to_revision_id_key",
+      "table": "spatial.revision_lineage",
+      "definition": "UNIQUE (from_revision_id, to_revision_id)"
+    },
+    {
+      "name": "revision_lineage_from_revision_id_fkey",
+      "table": "spatial.revision_lineage",
+      "definition": "FOREIGN KEY (from_revision_id) REFERENCES spatial.assertion_revisions(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "revision_lineage_to_revision_id_fkey",
+      "table": "spatial.revision_lineage",
+      "definition": "FOREIGN KEY (to_revision_id) REFERENCES spatial.assertion_revisions(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "evidence_artifact_registry_artifact_type_code_check",
+      "table": "spatial.evidence_artifact_registry",
+      "definition": "CHECK ((artifact_type_code = ANY (ARRAY['article'::text, 'source_record'::text, 'policy_document'::text])))"
+    },
+    {
+      "name": "evidence_artifact_registry_source_graph_association_finge_check",
+      "table": "spatial.evidence_artifact_registry",
+      "definition": "CHECK (((source_graph_association_fingerprint IS NULL) OR (source_graph_association_fingerprint ~ '^[0-9a-f]{64}$'::text)))"
+    },
+    {
+      "name": "evidence_artifact_registry_registry_fingerprint_check",
+      "table": "spatial.evidence_artifact_registry",
+      "definition": "CHECK ((registry_fingerprint ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "evidence_artifact_registry_check",
+      "table": "spatial.evidence_artifact_registry",
+      "definition": "CHECK ((((artifact_type_code = 'article'::text) AND (article_id IS NOT NULL) AND (policy_document_id IS NULL) AND (source_record_id IS NULL) AND (source_node_id IS NULL) AND (source_node_authority_snapshot_id IS NULL) AND (source_graph_association_fingerprint IS NULL)) OR ((artifact_type_code = 'policy_document'::text) AND (article_id IS NULL) AND (policy_document_id IS NOT NULL) AND (source_record_id IS NULL) AND (source_node_id IS NULL) AND (source_node_authority_snapshot_id IS NULL) AND (source_graph_association_fingerprint IS NULL)) OR ((artifact_type_code = 'source_record'::text) AND (article_id IS NULL) AND (policy_document_id IS NULL) AND (source_record_id IS NOT NULL) AND (source_node_id IS NOT NULL) AND (source_node_authority_snapshot_id IS NOT NULL) AND (source_graph_association_fingerprint IS NOT NULL))))"
+    },
+    {
+      "name": "evidence_artifact_registry_pkey",
+      "table": "spatial.evidence_artifact_registry",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "evidence_artifact_registry_stable_artifact_key_key",
+      "table": "spatial.evidence_artifact_registry",
+      "definition": "UNIQUE (stable_artifact_key)"
+    },
+    {
+      "name": "evidence_artifact_registry_registry_fingerprint_key",
+      "table": "spatial.evidence_artifact_registry",
+      "definition": "UNIQUE (registry_fingerprint)"
+    },
+    {
+      "name": "evidence_artifact_registry_article_id_fkey",
+      "table": "spatial.evidence_artifact_registry",
+      "definition": "FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "evidence_artifact_registry_policy_document_id_fkey",
+      "table": "spatial.evidence_artifact_registry",
+      "definition": "FOREIGN KEY (policy_document_id) REFERENCES policy_documents(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "evidence_artifact_registry_source_node_authority_snapshot__fkey",
+      "table": "spatial.evidence_artifact_registry",
+      "definition": "FOREIGN KEY (source_node_authority_snapshot_id) REFERENCES spatial.graph_node_authority_snapshots(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "evidence_snapshots_span_start_check",
+      "table": "spatial.evidence_snapshots",
+      "definition": "CHECK (((span_start IS NULL) OR (span_start >= 0)))"
+    },
+    {
+      "name": "evidence_snapshots_span_end_check",
+      "table": "spatial.evidence_snapshots",
+      "definition": "CHECK (((span_end IS NULL) OR (span_end >= 0)))"
+    },
+    {
+      "name": "evidence_snapshots_span_coordinate_system_check",
+      "table": "spatial.evidence_snapshots",
+      "definition": "CHECK ((span_coordinate_system = ANY (ARRAY['unicode_codepoint_v1'::text, 'structured_field_v1'::text])))"
+    },
+    {
+      "name": "evidence_snapshots_content_hash_algorithm_check",
+      "table": "spatial.evidence_snapshots",
+      "definition": "CHECK ((content_hash_algorithm = 'sha256'::text))"
+    },
+    {
+      "name": "evidence_snapshots_content_hash_check",
+      "table": "spatial.evidence_snapshots",
+      "definition": "CHECK ((content_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "evidence_snapshots_capture_mode_check",
+      "table": "spatial.evidence_snapshots",
+      "definition": "CHECK ((capture_mode = ANY (ARRAY['hash_offsets'::text, 'immutable_artifact_ref'::text])))"
+    },
+    {
+      "name": "evidence_snapshots_retention_classification_check",
+      "table": "spatial.evidence_snapshots",
+      "definition": "CHECK ((retention_classification = ANY (ARRAY['reference_only'::text, 'governed_internal'::text])))"
+    },
+    {
+      "name": "evidence_snapshots_access_scope_check",
+      "table": "spatial.evidence_snapshots",
+      "definition": "CHECK ((access_scope = ANY (ARRAY['internal_governance'::text, 'internal_restricted'::text])))"
+    },
+    {
+      "name": "evidence_snapshots_snapshot_fingerprint_check",
+      "table": "spatial.evidence_snapshots",
+      "definition": "CHECK ((snapshot_fingerprint ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "evidence_condition_events_event_fingerprint_check",
+      "table": "spatial.evidence_condition_events",
+      "definition": "CHECK ((event_fingerprint ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "evidence_condition_events_pkey",
+      "table": "spatial.evidence_condition_events",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "evidence_snapshots_check",
+      "table": "spatial.evidence_snapshots",
+      "definition": "CHECK ((((span_start IS NULL) AND (span_end IS NULL)) OR ((span_start IS NOT NULL) AND (span_end IS NOT NULL) AND (span_start < span_end))))"
+    },
+    {
+      "name": "evidence_snapshots_check1",
+      "table": "spatial.evidence_snapshots",
+      "definition": "CHECK (((capture_mode <> 'immutable_artifact_ref'::text) OR (immutable_capture_ref IS NOT NULL)))"
+    },
+    {
+      "name": "evidence_snapshots_pkey",
+      "table": "spatial.evidence_snapshots",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "evidence_snapshots_snapshot_fingerprint_key",
+      "table": "spatial.evidence_snapshots",
+      "definition": "UNIQUE (snapshot_fingerprint)"
+    },
+    {
+      "name": "evidence_snapshots_evidence_artifact_registry_id_fkey",
+      "table": "spatial.evidence_snapshots",
+      "definition": "FOREIGN KEY (evidence_artifact_registry_id) REFERENCES spatial.evidence_artifact_registry(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "evidence_snapshots_capture_policy_artifact_id_fkey",
+      "table": "spatial.evidence_snapshots",
+      "definition": "FOREIGN KEY (capture_policy_artifact_id) REFERENCES spatial.policy_artifacts(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "evidence_snapshots_retention_policy_artifact_id_fkey",
+      "table": "spatial.evidence_snapshots",
+      "definition": "FOREIGN KEY (retention_policy_artifact_id) REFERENCES spatial.policy_artifacts(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "revision_evidence_evidence_role_check",
+      "table": "spatial.revision_evidence",
+      "definition": "CHECK ((evidence_role = ANY (ARRAY['primary_support'::text, 'corroborating_support'::text, 'contradictory'::text, 'context_only'::text])))"
+    },
+    {
+      "name": "revision_evidence_linkage_fingerprint_check",
+      "table": "spatial.revision_evidence",
+      "definition": "CHECK ((linkage_fingerprint ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "revision_evidence_pkey",
+      "table": "spatial.revision_evidence",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "revision_evidence_linkage_fingerprint_key",
+      "table": "spatial.revision_evidence",
+      "definition": "UNIQUE (linkage_fingerprint)"
+    },
+    {
+      "name": "revision_evidence_assertion_revision_id_evidence_snapshot_i_key",
+      "table": "spatial.revision_evidence",
+      "definition": "UNIQUE (assertion_revision_id, evidence_snapshot_id)"
+    },
+    {
+      "name": "revision_evidence_assertion_revision_id_fkey",
+      "table": "spatial.revision_evidence",
+      "definition": "FOREIGN KEY (assertion_revision_id) REFERENCES spatial.assertion_revisions(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "revision_evidence_evidence_snapshot_id_fkey",
+      "table": "spatial.revision_evidence",
+      "definition": "FOREIGN KEY (evidence_snapshot_id) REFERENCES spatial.evidence_snapshots(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "evidence_condition_events_condition_check",
+      "table": "spatial.evidence_condition_events",
+      "definition": "CHECK ((condition = ANY (ARRAY['active'::text, 'changed'::text, 'unavailable'::text, 'contradicted'::text])))"
+    },
+    {
+      "name": "evidence_condition_events_event_fingerprint_key",
+      "table": "spatial.evidence_condition_events",
+      "definition": "UNIQUE (event_fingerprint)"
+    },
+    {
+      "name": "evidence_condition_events_source_change_event_id_fkey",
+      "table": "spatial.evidence_condition_events",
+      "definition": "FOREIGN KEY (source_change_event_id) REFERENCES source_change_events(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "evidence_condition_events_condition_policy_artifact_id_fkey",
+      "table": "spatial.evidence_condition_events",
+      "definition": "FOREIGN KEY (condition_policy_artifact_id) REFERENCES spatial.policy_artifacts(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "review_decisions_support_disposition_check",
+      "table": "spatial.review_decisions",
+      "definition": "CHECK ((support_disposition = ANY (ARRAY['under_review'::text, 'operative'::text, 'invalidated'::text, 'retracted'::text])))"
+    },
+    {
+      "name": "review_decisions_review_mode_check",
+      "table": "spatial.review_decisions",
+      "definition": "CHECK ((review_mode = ANY (ARRAY['manual'::text, 'assisted'::text, 'deterministic_verification'::text, 'automated_proposal'::text])))"
+    },
+    {
+      "name": "review_decisions_decision_fingerprint_check",
+      "table": "spatial.review_decisions",
+      "definition": "CHECK ((decision_fingerprint ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "review_decisions_pkey",
+      "table": "spatial.review_decisions",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "review_decisions_decision_fingerprint_key",
+      "table": "spatial.review_decisions",
+      "definition": "UNIQUE (decision_fingerprint)"
+    },
+    {
+      "name": "review_decisions_assertion_revision_id_fkey",
+      "table": "spatial.review_decisions",
+      "definition": "FOREIGN KEY (assertion_revision_id) REFERENCES spatial.assertion_revisions(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "review_decisions_review_policy_artifact_id_fkey",
+      "table": "spatial.review_decisions",
+      "definition": "FOREIGN KEY (review_policy_artifact_id) REFERENCES spatial.policy_artifacts(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "release_decisions_decision_disposition_check",
+      "table": "spatial.release_decisions",
+      "definition": "CHECK ((decision_disposition = ANY (ARRAY['withheld'::text, 'revoked'::text, 'released'::text, 'restricted'::text])))"
+    },
+    {
+      "name": "release_decisions_decision_fingerprint_check",
+      "table": "spatial.release_decisions",
+      "definition": "CHECK ((decision_fingerprint ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "release_decisions_check",
+      "table": "spatial.release_decisions",
+      "definition": "CHECK (((predecessor_release_decision_id IS NULL) OR (predecessor_release_decision_id <> id)))"
+    },
+    {
+      "name": "release_decisions_pkey",
+      "table": "spatial.release_decisions",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "release_decisions_decision_fingerprint_key",
+      "table": "spatial.release_decisions",
+      "definition": "UNIQUE (decision_fingerprint)"
+    },
+    {
+      "name": "release_decisions_assertion_revision_id_fkey",
+      "table": "spatial.release_decisions",
+      "definition": "FOREIGN KEY (assertion_revision_id) REFERENCES spatial.assertion_revisions(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "release_decisions_audience_scope_id_fkey",
+      "table": "spatial.release_decisions",
+      "definition": "FOREIGN KEY (audience_scope_id) REFERENCES spatial.audience_scopes(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "release_decisions_release_policy_artifact_id_fkey",
+      "table": "spatial.release_decisions",
+      "definition": "FOREIGN KEY (release_policy_artifact_id) REFERENCES spatial.policy_artifacts(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "release_decisions_predecessor_release_decision_id_fkey",
+      "table": "spatial.release_decisions",
+      "definition": "FOREIGN KEY (predecessor_release_decision_id) REFERENCES spatial.release_decisions(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "break_glass_audit_audit_phase_check",
+      "table": "spatial.break_glass_audit",
+      "definition": "CHECK ((audit_phase = ANY (ARRAY['intent'::text, 'completion'::text])))"
+    },
+    {
+      "name": "break_glass_audit_before_state_hash_check",
+      "table": "spatial.break_glass_audit",
+      "definition": "CHECK (((before_state_hash IS NULL) OR (before_state_hash ~ '^[0-9a-f]{64}$'::text)))"
+    },
+    {
+      "name": "break_glass_audit_result_state_hash_check",
+      "table": "spatial.break_glass_audit",
+      "definition": "CHECK (((result_state_hash IS NULL) OR (result_state_hash ~ '^[0-9a-f]{64}$'::text)))"
+    },
+    {
+      "name": "break_glass_audit_check",
+      "table": "spatial.break_glass_audit",
+      "definition": "CHECK ((((audit_phase = 'intent'::text) AND (related_intent_id IS NULL)) OR ((audit_phase = 'completion'::text) AND (related_intent_id IS NOT NULL))))"
+    },
+    {
+      "name": "break_glass_audit_pkey",
+      "table": "spatial.break_glass_audit",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "break_glass_audit_related_intent_id_fkey",
+      "table": "spatial.break_glass_audit",
+      "definition": "FOREIGN KEY (related_intent_id) REFERENCES spatial.break_glass_audit(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "pipeline_config_pkey",
+      "table": "pipeline_config",
+      "definition": "PRIMARY KEY (key)"
+    }
+  ],
+  "functions": [
+    {
+      "acl": "{spatial_owner=X/spatial_owner}",
+      "args": "p_run_id text",
+      "name": "resolve_direct_wire_principal",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "9983cfc57d6abb1b746857fc2f787306b288f6cc87a387097317f5a7ed55e1e4",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner}",
+      "args": "p_policy_id uuid, p_family text",
+      "name": "require_policy_family",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "05c92323cf05ea9689e6e98b7de22d6c958b7cd0e64c51d335ed06b7d66c6017",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner}",
+      "args": "p_claimed jsonb, p_server jsonb, p_label text",
+      "name": "require_exact_fingerprint_payload",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "33f00c85525377b4c7d3a153b789146f4fa48b9186bcf361795e3f55430938f0",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner}",
+      "args": "",
+      "name": "reject_historical_mutation",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "f3d444d6448b07c1dbbc24183c7612aa1c0e694d0a650d950060bb81b1219d1a",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_from_revision_id uuid, p_to_revision_id uuid, p_relationship_type text, p_lineage_payload jsonb, p_lineage_canonical_text text, p_lineage_fingerprint text, p_run_id text",
+      "name": "append_revision_lineage",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "c5a79fa28b40cc342bdcd03f3307520c759184828e3a444ca2b95370ebe263b2",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner}",
+      "args": "p_payload jsonb, p_canonical_text text, p_claimed_hash text",
+      "name": "verify_jcs_claim",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "c5ae419e485a0a2ac58b21e8dcef525ca5906f0bc8cf4c3c67dbbd2fa502ccdb",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_artifact_type_code text, p_native_id uuid, p_stable_artifact_key text, p_validation_policy_artifact_id uuid, p_registry_payload jsonb, p_registry_canonical_text text, p_registry_fingerprint text, p_source_node_payload jsonb, p_source_node_canonical_text text, p_source_node_snapshot_hash text, p_source_graph_payload jsonb, p_source_graph_canonical_text text, p_source_graph_association_fingerprint text, p_run_id text",
+      "name": "register_evidence_artifact",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "4fe938e34a927f5496aeeaee4fea1537abd0f0ae25d3dcee58b6e4cf90446e6b",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_revision_id uuid, p_support_disposition text, p_review_mode text, p_review_outcome_basis jsonb, p_review_policy_artifact_id uuid, p_effective_at timestamp with time zone, p_reason_code text, p_decision_payload jsonb, p_decision_canonical_text text, p_decision_fingerprint text, p_run_id text",
+      "name": "append_review_decision",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "913625d0dd8246e8c9c56a816f0f71c712e0f9b8f93e354b0f4ad977e2b9ef00",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_assertion_id uuid, p_location_role text, p_relationship_qualifier text, p_canonical_place_id uuid, p_evidence_precision text, p_internal_geometry_snapshot_id uuid, p_valid_time_precision text, p_source_native_time jsonb, p_guard_start_utc timestamp with time zone, p_guard_end_utc timestamp with time zone, p_temporal_policy_artifact_id uuid, p_uncertainty_class text, p_uncertainty_note text, p_revision_payload jsonb, p_revision_canonical_text text, p_revision_fingerprint text, p_node_payload jsonb, p_node_canonical_text text, p_node_snapshot_hash text, p_place_payload jsonb, p_place_canonical_text text, p_place_snapshot_hash text, p_run_id text",
+      "name": "append_assertion_revision",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "988f2fd2de015f17117f0147dd106ac3432003872553a759fe2d4f6d57c4d470",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_graph_node_id uuid, p_relationship_scope_key text, p_scope_policy_artifact_id uuid, p_identity_payload jsonb, p_identity_canonical_text text, p_assertion_fingerprint text, p_run_id text",
+      "name": "append_assertion",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "4f6fc4adff14d44758d5495eea46c4f4992329720c3f9b3620d966e5332d6b80",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_revision_id uuid, p_evidence_snapshot_id uuid, p_evidence_role text, p_linkage_payload jsonb, p_linkage_canonical_text text, p_linkage_fingerprint text, p_run_id text",
+      "name": "append_revision_evidence",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "90c3134a2ed3f020e169583f3acc0a19e50eedc67f0b7ffbff4337714afd609e",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_audience_code text, p_audience_version text, p_canonical_capabilities jsonb, p_canonical_text text, p_content_hash text, p_effective_at timestamp with time zone, p_supersedes_audience_scope_id uuid, p_run_id text",
+      "name": "append_audience_scope",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "65e125dbf267606d0ae28358200884ad5a00293445b603ab026a22ad8bf4f6a6",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_representation_kind text, p_canonical_geojson jsonb, p_canonical_place_id uuid, p_place_payload jsonb, p_place_canonical_text text, p_place_snapshot_hash text, p_geometry_precision text, p_geometry_source_kind text, p_geometry_source_version text, p_compatibility_policy_artifact_id uuid, p_geometry_payload jsonb, p_geometry_canonical_text text, p_geometry_hash text, p_capture_basis text, p_run_id text",
+      "name": "append_geometry_snapshot",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "8d16641fd99cf0ab25df228183a35b7270e4f5b222a2164ba1a2bce727978fc6",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_registry_id uuid, p_source_field text, p_span_start integer, p_span_end integer, p_span_coordinate_system text, p_normalization_version text, p_encoding_version text, p_content_hash text, p_source_version_identifier text, p_source_acquired_at timestamp with time zone, p_capture_mode text, p_capture_policy_artifact_id uuid, p_retention_policy_artifact_id uuid, p_retention_classification text, p_access_scope text, p_immutable_capture_ref text, p_snapshot_payload jsonb, p_snapshot_canonical_text text, p_snapshot_fingerprint text, p_run_id text",
+      "name": "append_evidence_snapshot",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "b988b51e00873ce635cbe5579bb9e130ef811e162ec7ba5d6cd2d9e2ab840222",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_evidence_snapshot_id uuid, p_condition text, p_source_change_event_id uuid, p_condition_policy_artifact_id uuid, p_reason_code text, p_observed_at timestamp with time zone, p_event_payload jsonb, p_event_canonical_text text, p_event_fingerprint text, p_run_id text",
+      "name": "append_evidence_condition_event",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "c9f8a280aa21f7f16172fa88698e2c44020da6610924a2fda10fb5e5f6262e0d",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_policy_family_code text, p_policy_version text, p_canonical_content jsonb, p_canonical_text text, p_content_hash text, p_effective_at timestamp with time zone, p_supersedes_policy_artifact_id uuid, p_run_id text",
+      "name": "append_policy_artifact",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "b8429fa4cad8bb267cc1752581f7c2b2470eb8a25d214b81df2a24ceddba11be",
+      "definer": true
+    },
+    {
+      "acl": "{spatial_owner=X/spatial_owner,spatial_writer_runtime=X/spatial_owner}",
+      "args": "p_revision_id uuid, p_audience_scope_id uuid, p_release_policy_artifact_id uuid, p_decision_disposition text, p_predecessor_release_decision_id uuid, p_decided_at timestamp with time zone, p_effective_at timestamp with time zone, p_reason_code text, p_decision_payload jsonb, p_decision_canonical_text text, p_decision_fingerprint text, p_run_id text",
+      "name": "append_release_decision",
+      "owner": "spatial_owner",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "schema": "spatial",
+      "sha256": "00c472e7d851216161940784a0c3a4992f2896605edb568cdad072c6b56eaf74",
+      "definer": true
+    }
+  ],
+  "relations": [
+    "public.articles",
+    "public.geographic_places",
+    "public.nodes",
+    "public.policy_documents",
+    "public.source_change_events",
+    "public.sources",
+    "spatial.assertion_revisions",
+    "spatial.assertions",
+    "spatial.audience_scopes",
+    "spatial.break_glass_audit",
+    "spatial.evidence_artifact_registry",
+    "spatial.evidence_condition_events",
+    "spatial.evidence_snapshots",
+    "spatial.geometry_snapshots",
+    "spatial.graph_node_authority_snapshots",
+    "spatial.place_authority_snapshots",
+    "spatial.policy_artifacts",
+    "spatial.release_decisions",
+    "spatial.review_decisions",
+    "spatial.revision_evidence",
+    "spatial.revision_lineage"
+  ],
+  "functionHashes": {
+    "resolve_direct_wire_principal": "9983cfc57d6abb1b746857fc2f787306b288f6cc87a387097317f5a7ed55e1e4",
+    "require_policy_family": "05c92323cf05ea9689e6e98b7de22d6c958b7cd0e64c51d335ed06b7d66c6017",
+    "require_exact_fingerprint_payload": "33f00c85525377b4c7d3a153b789146f4fa48b9186bcf361795e3f55430938f0",
+    "reject_historical_mutation": "f3d444d6448b07c1dbbc24183c7612aa1c0e694d0a650d950060bb81b1219d1a",
+    "append_revision_lineage": "c5a79fa28b40cc342bdcd03f3307520c759184828e3a444ca2b95370ebe263b2",
+    "verify_jcs_claim": "c5ae419e485a0a2ac58b21e8dcef525ca5906f0bc8cf4c3c67dbbd2fa502ccdb",
+    "register_evidence_artifact": "4fe938e34a927f5496aeeaee4fea1537abd0f0ae25d3dcee58b6e4cf90446e6b",
+    "append_review_decision": "913625d0dd8246e8c9c56a816f0f71c712e0f9b8f93e354b0f4ad977e2b9ef00",
+    "append_assertion_revision": "988f2fd2de015f17117f0147dd106ac3432003872553a759fe2d4f6d57c4d470",
+    "append_assertion": "4f6fc4adff14d44758d5495eea46c4f4992329720c3f9b3620d966e5332d6b80",
+    "append_revision_evidence": "90c3134a2ed3f020e169583f3acc0a19e50eedc67f0b7ffbff4337714afd609e",
+    "append_audience_scope": "65e125dbf267606d0ae28358200884ad5a00293445b603ab026a22ad8bf4f6a6",
+    "append_geometry_snapshot": "8d16641fd99cf0ab25df228183a35b7270e4f5b222a2164ba1a2bce727978fc6",
+    "append_evidence_snapshot": "b988b51e00873ce635cbe5579bb9e130ef811e162ec7ba5d6cd2d9e2ab840222",
+    "append_evidence_condition_event": "c9f8a280aa21f7f16172fa88698e2c44020da6610924a2fda10fb5e5f6262e0d",
+    "append_policy_artifact": "b8429fa4cad8bb267cc1752581f7c2b2470eb8a25d214b81df2a24ceddba11be",
+    "append_release_decision": "00c472e7d851216161940784a0c3a4992f2896605edb568cdad072c6b56eaf74"
+  }
+}

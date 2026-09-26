@@ -181,7 +181,7 @@ test('comparison methods are optional while scope and evidence limits remain out
   } finally { await act(async () => renderer.unmount()) }
 })
 
-test('comparison event bounds use retained date precision and explicit unknown states', async () => {
+test('comparison renders raw date proxies separately from unverified event occurrence', async () => {
   let renderer
   try {
     for (const [start, end, expected] of [
@@ -194,8 +194,12 @@ test('comparison event bounds use retained date precision and explicit unknown s
       const f = comparisonBackendFixture({ tables: { comparison_public: [row] } })
       await act(async () => { const element = React.createElement(View, { backend: f.backend }); if (renderer) renderer.update(element); else renderer = TestRenderer.create(element) })
       const state = renderer.root.findByProps({ className: 'sc-event-state' })
-      const label = state.findByProps({ className: 'sc-meta' }).children.join('')
-      assert.equal(label, 'Recorded event time: ' + expected)
+      const labels = state.findAllByProps({ className: 'sc-meta' }).map(node => node.children.join(''))
+      assert.deepEqual(labels, ['Event time: not established', 'Unverified date proxy: ' + expected])
+      assert.doesNotMatch(text(renderer), /Recorded event time:/)
+      assert.match(text(renderer), /may derive from publication records/)
+      assert.match(text(renderer), /Source publication:/)
+      assert.match(text(renderer), /Review summary:/)
     }
   } finally { if (renderer) await act(async () => renderer.unmount()) }
 })

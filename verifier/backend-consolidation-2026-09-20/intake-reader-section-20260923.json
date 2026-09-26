@@ -1,0 +1,255 @@
+{
+  "schema": "mip-intake-reader-section-v1",
+  "section": "C1-stage2-stage3-intake-reader",
+  "status": "COMPLETE_ISOLATED_SLICE",
+  "baseline": {
+    "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+    "branch": "codex/mip-backend-consolidation-20260920",
+    "head": "d694f172dc4100321a5157562746578ee74417e3",
+    "tree": "823087bbe0ad7aed531d084e8c3a517da98ee47a",
+    "main": "1dc317200b7a928fad85d06b43351b60e2a50d92",
+    "integration": "4d69243cd2de91d7588e4eb263cc05b48e8fd0ef"
+  },
+  "authorization": {
+    "scope": "Owner explicitly adopted 06_NEXT_STAGE_PROMPT.txt in the existing session: minimal isolated EXTEND/RECONCILE, targeted reads, source-free tests and sanitized remote recording.",
+    "test_execution_limit": 10,
+    "test_executions": [
+      {
+        "attempt": 1,
+        "head": "47d265c2987884e9308ce0dd23cc01516931b136",
+        "run": 35816031343,
+        "reservedMinutes": 15,
+        "status": "FAIL",
+        "job": 107037630220,
+        "runnerSeconds": 39,
+        "failure": "Disposable substrate lacks service_role SELECT on spatial_projection_v1; subsequent RESET ROLE masks root SQL error",
+        "cleanup": "PASS"
+      },
+      {
+        "attempt": 2,
+        "head": "174b24a6c3b94bb52d8a3b128f7e01caedc967ac",
+        "run": 35816262855,
+        "reservedMinutes": 15,
+        "status": "FAIL",
+        "job": 107038321915,
+        "runnerSeconds": 337,
+        "results": {
+          "native": "PASS",
+          "nativeTests": 2,
+          "regressionPass": 2137,
+          "regressionFail": 4,
+          "regressionSkip": 8,
+          "build": "NOT_REACHED"
+        },
+        "failure": "Four readonly test-directory failures",
+        "cleanup": "PASS"
+      },
+      {
+        "attempt": 3,
+        "head": "35869f55295c4461ca7f81aabf8ef9fdca263cf0",
+        "run": 35816777517,
+        "reservedMinutes": 15,
+        "status": "FAIL",
+        "job": 107039876796,
+        "runnerSeconds": 49,
+        "results": {
+          "nativeSetup": "PASS including legacy hash",
+          "nodeTests": "NOT_REACHED"
+        },
+        "failure": "cp -a attempted ownership preservation under cap-drop ALL",
+        "cleanup": "PASS"
+      },
+      {
+        "attempt": 4,
+        "head": "728c5785cfcd71bc9d2669e58e0cfc2e18e6252a",
+        "run": 35816973752,
+        "reservedMinutes": 15,
+        "status": "PARTIAL",
+        "job": 107040468842,
+        "runnerSeconds": 288,
+        "results": {
+          "native": "PASS",
+          "nativeTests": 2,
+          "regressionPass": 2144,
+          "regressionFail": 0,
+          "regressionSkip": 8,
+          "build": "FAIL default Node 512MB heap"
+        },
+        "cleanup": "PASS"
+      },
+      {
+        "attempt": 5,
+        "head": "34cb7f77c9ab204d1825f63aa534dbcc9972ab1f",
+        "run": 35817437990,
+        "reservedMinutes": 15,
+        "status": "PARTIAL",
+        "job": 107041883360,
+        "runnerSeconds": 57,
+        "results": {
+          "native": "PASS",
+          "nativeTests": 2,
+          "build": "FAIL 768MB V8 heap"
+        },
+        "cleanup": "PASS"
+      },
+      {
+        "attempt": 6,
+        "head": "6a3585ed931be328b1f0199512b6dde69f6415f2",
+        "run": 35817649764,
+        "reservedMinutes": 15,
+        "status": "PARTIAL",
+        "job": 107042524454,
+        "runnerSeconds": 76,
+        "results": {
+          "native": "PASS",
+          "nativeTests": 2,
+          "build": "FAIL V8 896MB heap; not evidence of container OOM"
+        },
+        "cleanup": "PASS"
+      },
+      {
+        "attempt": 7,
+        "head": "b9502dc79949a2b27363b94f495bcfc1b62cf5bc",
+        "tree": "b6edff95b7f4a4804ec4e095fdb83e2b1851ec17",
+        "run": 35820587212,
+        "job": 107051378112,
+        "status": "PASS",
+        "kind": "build_only",
+        "runnerSeconds": 53,
+        "results": {
+          "build": "PASS",
+          "exit": 0,
+          "modules": 7331,
+          "viteSeconds": 23.13,
+          "peakContainerBytes": 2934505472,
+          "oomKilled": false
+        },
+        "cleanup": "PASS"
+      }
+    ],
+    "remaining": 3,
+    "excluded": [
+      "production changes",
+      "real-data transfer",
+      "retained-artifact retrieval",
+      "source/provider/scheduler activation",
+      "credentials",
+      "added costs",
+      "merge",
+      "deployment",
+      "cutover",
+      "retirement",
+      "durable local project files"
+    ],
+    "additional_runner_minutes_limit": 60,
+    "runner_minutes_observed": 14.983333333333333,
+    "allowance_note": "Owner replaced previous unspent three-execution ceiling with ten additional executions and sixty additional runner-minutes for this slice; lower boundary controls. Job timeout 15 minutes; reserve each dispatch against remaining minutes.",
+    "runner_seconds_observed": 899,
+    "runner_seconds_remaining": 2701,
+    "build_allocation_exception": {
+      "authorized": true,
+      "executionCount": 1,
+      "containerMemoryBytes": 4294967296,
+      "v8OldSpaceMiB": 3072,
+      "timeoutMinutes": 15,
+      "oneRunOnly": true,
+      "noPaidRunner": true,
+      "restoreWorkflowAfterRun": true,
+      "consumed": true,
+      "restoredWorkflowBlob": "44932ab442e31b83cd855016578d99dbc5afa47e"
+    }
+  },
+  "disposition": "EXTEND native deterministic extraction and mip_pipeline_v1 persistence; RECONCILE into the bound News reader seam.",
+  "foundations": [
+    "verifier/ingestion_pipeline.py",
+    "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql",
+    "verifier/integrated/nativePipeline.py",
+    "src/lib/newsBackend.js",
+    "src/lib/supabase.js",
+    "src/lib/newsFeedModel.js"
+  ],
+  "invariants": [
+    "No native publication authority added",
+    "Pending/private fields denied by database policy",
+    "Exact captures and source-qualified capture/job identity; article identity remains canonical URL",
+    "Changed captures do not overwrite approved history",
+    "No source-copy independence claim",
+    "Typed publication/fetch/event clocks",
+    "No atomic cross-surface snapshot claim",
+    "Same existing News backend and deep routes",
+    "Permission-denied reads fail closed; stale detail responses rejected separately, no atomic permission-generation claim",
+    "Bounded retries retain diagnostics"
+  ],
+  "verification": {
+    "located": "VERIFIED",
+    "coverage": "PASS for bounded native-reader slice",
+    "isolated": "PASS synthetic native persistence/negative/legacy cases",
+    "integration": "PASS actual bound SDK/backend and rendered existing NewsView via test transport",
+    "regression": "2144 PASS;0 FAIL;8 preexisting skips at728c578",
+    "build": "PASS full ordinary production build at b9502dc; prior OOM diagnostics preserved",
+    "deployment": "UNAPPLIED",
+    "enablement": "NOT AUTHORIZED",
+    "real_input": "NOT AUTHORIZED",
+    "end_to_end": "PASS for bounded synthetic intake-to-News; full intended pipeline NOT ESTABLISHED"
+  },
+  "execution_boundary": {
+    "remote": "existing public application repository, standard ubuntu-24.04 GitHub-hosted runner",
+    "data": "synthetic only",
+    "runtime": "disposable PostgreSQL 17.6 and credential-free test utilities; no retained-material restore",
+    "dispatch": "manual parent-controlled",
+    "automatic_ci": "Preparation/report commits use [skip ci]; existing tests remain unchanged",
+    "deployment": "Pages main only; Cloud Run manual; Vercel disabled for exact consolidation branch",
+    "exposure": "Code, synthetic fixtures and sanitized metadata only; no private source/package contents"
+  },
+  "preserved": {
+    "restore": "Historical bounded D PASS at c3efcd6262f2df623298abd44576321d67fc2081; not reexecuted",
+    "containments": "Completed units retained; no reopening",
+    "deep_surfaces": "Graph, Timeline, Arcs, Source Comparison, World View, Investigation Context"
+  },
+  "team": {
+    "parent": "single reconciler; exact model/effort telemetry not independently exposed",
+    "implementation": "same-session gpt-6-sol / medium requested",
+    "evidence": "same-session gpt-6-luna / medium requested",
+    "review": "fresh non-implementer High required before closeout"
+  },
+  "campaign_verdicts": {
+    "authority_consolidated": "NOT ESTABLISHED",
+    "pipeline_validated_in_isolation": "NOT ESTABLISHED for complete intended path",
+    "pipeline_operational_on_authorized_live_backend": "NOT ESTABLISHED"
+  },
+  "review": {
+    "reviewer": "fresh nonimplementing Astra High requested",
+    "verdict": "ACCEPT bounded isolated slice; no unresolved must-fix blocker",
+    "head": "6a3585ed931be328b1f0199512b6dde69f6415f2",
+    "independentReplay": false,
+    "read": "Exact implementation blobs, assembled heads and decoded job logs",
+    "buildHead": "b9502dc79949a2b27363b94f495bcfc1b62cf5bc",
+    "buildRun": 35820587212,
+    "buildJob": 107051378112
+  },
+  "report": "verifier/news-intake/SECTION_ARCHITECTURE_REPORT_20260923.md",
+  "build_receipt": {
+    "command": "node --max-old-space-size=3072 node_modules/vite/bin/vite.js build --configLoader runner --outDir /tmp/mip-build --emptyOutDir",
+    "containerMemoryBytes": 4294967296,
+    "v8OldSpaceMiB": 3072,
+    "peakContainerBytes": 2934505472,
+    "timeoutMinutes": 15,
+    "network": "none",
+    "ports": {},
+    "start": "2026-09-23T05:00:01Z",
+    "end": "2026-09-23T05:00:54Z",
+    "warnings": [
+      "node:crypto externalized from temporalAssessment.js",
+      "mixed dynamic/static imports: demoData, timelineDedup, supabase",
+      "chunks exceed 500kB"
+    ],
+    "unchanged": {
+      "src": "4cfffc8bbf4c0a105328f0ae543f11dd135cdc13",
+      "tests": "667b8d39bf77290bcbf1d83ecc9176ab683f8289",
+      "lock": "b5d44ec6e0a21f931cb2d43884010025ee89889c",
+      "viteConfig": "6b5514dc489a8e4ec7c5b4d658b1f19c119d8f77"
+    },
+    "artifactsUploaded": false,
+    "deployed": false
+  }
+}

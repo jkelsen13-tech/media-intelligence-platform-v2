@@ -1,0 +1,33 @@
+{
+  "lexicon_version": "ll-v1",
+  "rule_version": "sc-v1",
+  "notes": "Versioned loaded-language lexicon for deterministic detection. Any add/remove/rename requires owner review plus tests/golden/CHANGELOG.md entry (golden-set class). Detection output is attached to the per-article surface form only; never aggregated into a score.",
+  "categories": {
+    "attack_verb": "Verb framing the subject as aggressor rather than reporter of fact",
+    "hedge_attribution": "Wording that distances or casts doubt on an attribution",
+    "evaluative_adjective": "Explicit judgment adjective/adverb presented inside news copy",
+    "scare_label": "Ideologically loaded label for a group or policy",
+    "dramatizing_noun": "Noun escalating severity beyond sourced fact"
+  },
+  "entries": [
+    { "term": "slams", "category": "attack_verb" },
+    { "term": "blasts", "category": "attack_verb" },
+    { "term": "lashes out", "category": "attack_verb" },
+    { "term": "fires back", "category": "attack_verb" },
+    { "term": "so-called", "category": "hedge_attribution" },
+    { "term": "claims without evidence", "category": "hedge_attribution" },
+    { "term": "purported", "category": "hedge_attribution" },
+    { "term": "allegedly", "category": "hedge_attribution" },
+    { "term": "admits", "category": "hedge_attribution" },
+    { "term": "fails to", "category": "evaluative_adjective" },
+    { "term": "desperate", "category": "evaluative_adjective" },
+    { "term": "controversial", "category": "evaluative_adjective" },
+    { "term": "radical", "category": "scare_label" },
+    { "term": "regime", "category": "scare_label" },
+    { "term": "far-left", "category": "scare_label" },
+    { "term": "far-right", "category": "scare_label" },
+    { "term": "chaos", "category": "dramatizing_noun" },
+    { "term": "meltdown", "category": "dramatizing_noun" },
+    { "term": "bombshell", "category": "dramatizing_noun" }
+  ]
+}
