@@ -67,7 +67,7 @@ export async function installPersistentQik(db,{operationId,expectedLogin}) {
     await identity(db,expectedLogin)
     const closed=(await db.query("select (select collection_authorized=false from qik_ingest.collection_gate where id) gate_closed,(select count(*)=0 from qik_ingest.runtime_credentials) credentials_empty,(select bool_and(not active) from qik_ingest.schedule_intent) schedule_inactive")).rows[0]
     if(!closed.gate_closed||!closed.credentials_empty||!closed.schedule_inactive)throw Error('persistent_default_state_refused')
-    await db.query('create table qik_ingest_operation.persistent_install_receipt(id boolean primary key check(id),operation_id text not null,installer name not null,sql_manifest_sha256 text not null,runtime_login name,runtime_token_hash text,installed_at timestamptz not null default clock_timestamp())')
+    await db.query('create table qik_ingest_operation.persistent_install_receipt(id boolean primary key check(id),operation_id text not null,installer name not null,sql_manifest_sha256 text not null,runtime_login name,runtime_token_hash text,runtime_creator_grantor name,installed_at timestamptz not null default clock_timestamp())')
     await db.query('revoke all on qik_ingest_operation.persistent_install_receipt from public,anon,authenticated,service_role,qik_ingest_runtime')
     await db.query('insert into qik_ingest_operation.persistent_install_receipt(id,operation_id,installer,sql_manifest_sha256) values(true,$1,session_user,$2)',[operationId,sqlHash])
     await db.query("comment on schema qik_ingest_operation is 'persistent-c3:"+operationId+"'")
@@ -90,7 +90,7 @@ export async function cleanupPersistentQik(db,{operationId,expectedLogin,cleanup
     const marker=(await db.query("select obj_description(oid,'pg_namespace') marker,nspowner=current_user::regrole owned from pg_namespace where nspname='qik_ingest_operation'")).rows[0]
     if(!marker?.owned||marker.marker!=='persistent-c3:'+operationId)throw Error('persistent_cleanup_ownership_refused')
     const receipt=(await db.query('select * from qik_ingest_operation.persistent_install_receipt where id for update')).rows[0]
-    if(!receipt||receipt.operation_id!==operationId||receipt.installer!==expectedLogin||receipt.sql_manifest_sha256!==await manifest()||receipt.runtime_login!==null||receipt.runtime_token_hash!==null)
+    if(!receipt||receipt.operation_id!==operationId||receipt.installer!==expectedLogin||receipt.sql_manifest_sha256!==await manifest()||receipt.runtime_login!==null||receipt.runtime_token_hash!==null||receipt.runtime_creator_grantor!==null)
       throw Error('persistent_cleanup_receipt_refused')
     // Existing cleanup checks gate/sources, ledger drift and external grants.
     // Preserve watermarks and native audit rows after persistent use.
