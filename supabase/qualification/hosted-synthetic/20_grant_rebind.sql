@@ -59,6 +59,48 @@ begin
 end
 $revoke_public_select$;
 
+-- Assert SELECT is gone while USAGE on public still exists (005). Then drop
+-- leftover public-schema USAGE so the kernel cannot re-bind those tables by
+-- name even if a later grant is attempted without this file.
+revoke usage on schema public from mip_kernel_owner_v2;
+
+revoke all on function comparison_qualification.source_snapshot(jsonb,text),
+  comparison_qualification.capture_source(jsonb,text)
+  from public,anon,authenticated,service_role,mip_comparison_worker_v1,
+       mip_comparison_producer_v1;
+
+do $snapshot_binding$
+declare def text;
+begin
+  def := pg_get_functiondef('comparison_qualification.source_snapshot(jsonb,text)'::regprocedure);
+  if def ~ 'public\.events' or def ~ 'public\.articles'
+     or def ~ 'public\.event_articles' or def ~ 'public\.pipeline_config' then
+    raise exception 'hosted_synthetic_snapshot_still_binds_public';
+  end if;
+  if def !~ 'comparison_qualification\.synthetic_events' then
+    raise exception 'hosted_synthetic_snapshot_missing_synthetic_bind';
+  end if;
+  def := pg_get_functiondef('comparison_qualification.capture_source(jsonb,text)'::regprocedure);
+  if def ~ 'public\.events' or def ~ 'public\.articles' then
+    raise exception 'hosted_synthetic_capture_still_binds_public';
+  end if;
+  if has_function_privilege('service_role',
+       'comparison_qualification.source_snapshot(jsonb,text)', 'EXECUTE')
+     or has_function_privilege('anon',
+       'comparison_qualification.source_snapshot(jsonb,text)', 'EXECUTE')
+     or has_function_privilege('authenticated',
+       'comparison_qualification.source_snapshot(jsonb,text)', 'EXECUTE')
+     or has_function_privilege('mip_comparison_worker_v1',
+       'comparison_qualification.source_snapshot(jsonb,text)', 'EXECUTE') then
+    raise exception 'hosted_synthetic_snapshot_execute_unintended';
+  end if;
+  if not has_function_privilege('mip_comparison_producer_owner_v1',
+       'comparison_qualification.source_snapshot(jsonb,text)', 'EXECUTE') then
+    raise exception 'hosted_synthetic_producer_owner_snapshot_execute_missing';
+  end if;
+end
+$snapshot_binding$;
+
 grant select on comparison_qualification.synthetic_events,
   comparison_qualification.synthetic_articles,
   comparison_qualification.synthetic_event_articles,

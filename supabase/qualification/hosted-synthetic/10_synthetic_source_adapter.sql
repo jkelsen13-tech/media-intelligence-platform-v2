@@ -90,6 +90,7 @@ begin
 end $$;
 revoke all on function comparison_qualification.source_snapshot(jsonb,text),
   comparison_qualification.capture_source(jsonb,text) from public,anon,authenticated,service_role;
-grant execute on function comparison_qualification.source_snapshot(jsonb,text),
-  comparison_qualification.capture_source(jsonb,text) to service_role;
+-- No EXECUTE to service_role / anon / authenticated. 002 grants EXECUTE of
+-- source_snapshot to mip_comparison_producer_owner_v1 for producer_enqueue.
+-- Hosted-synthetic must not restore the stock snapshot's service_role grant.
 commit;
