@@ -65,37 +65,7 @@ begin
 end
 $drop_policies$;
 
-do $revoke_grants$
-declare rec record;
-begin
-  for rec in
-    select * from qik_ingest_operation.introduced_grants
-    where status='introduced'
-  loop
-    begin
-      if rec.object_kind='table' then
-        execute format('revoke %s on %I.%I from %I',
-          rec.privilege, rec.schema_name, rec.object_name, rec.grantee);
-      elsif rec.object_kind='column' and rec.column_name <> '' then
-        execute format('revoke %s (%I) on %I.%I from %I',
-          rec.privilege, rec.column_name, rec.schema_name, rec.object_name, rec.grantee);
-      elsif rec.object_kind='function' and rec.privilege='EXECUTE' then
-        execute format('revoke execute on function %I.%I(%s) from %I',
-          rec.schema_name,rec.object_name,rec.column_name,rec.grantee);
-      elsif rec.object_kind='sequence' then
-        execute format('revoke %s on sequence %I.%I from %I',
-          rec.privilege,rec.schema_name,rec.object_name,rec.grantee);
-      elsif rec.object_kind='schema' then
-        execute format('revoke %s on schema %I from %I', rec.privilege,rec.schema_name,rec.grantee);
-      end if;
-    exception
-      when undefined_object then
-        null;
-    end;
-    update qik_ingest_operation.introduced_grants set status='revoked' where id=rec.id;
-  end loop;
-end
-$revoke_grants$;
+
 
 do $drop_package_objects$
 declare
@@ -194,6 +164,41 @@ begin
   end loop;
 end
 $restore_constraints$;
+
+-- Remove package-owned functions first: their runtime grants disappear with
+-- their objects. Retain schema USAGE while dropping owner-context functions.
+-- Exact external privileges are still revoked before the package roles drop.
+do $revoke_grants$
+declare rec record;
+begin
+  for rec in
+    select * from qik_ingest_operation.introduced_grants
+    where status='introduced'
+  loop
+    begin
+      if rec.object_kind='table' then
+        execute format('revoke %s on %I.%I from %I',
+          rec.privilege, rec.schema_name, rec.object_name, rec.grantee);
+      elsif rec.object_kind='column' and rec.column_name <> '' then
+        execute format('revoke %s (%I) on %I.%I from %I',
+          rec.privilege, rec.column_name, rec.schema_name, rec.object_name, rec.grantee);
+      elsif rec.object_kind='function' and rec.privilege='EXECUTE' then
+        execute format('revoke execute on function %I.%I(%s) from %I',
+          rec.schema_name,rec.object_name,rec.column_name,rec.grantee);
+      elsif rec.object_kind='sequence' then
+        execute format('revoke %s on sequence %I.%I from %I',
+          rec.privilege,rec.schema_name,rec.object_name,rec.grantee);
+      elsif rec.object_kind='schema' then
+        execute format('revoke %s on schema %I from %I', rec.privilege,rec.schema_name,rec.grantee);
+      end if;
+    exception
+      when undefined_object or undefined_function then
+        null;
+    end;
+    update qik_ingest_operation.introduced_grants set status='revoked' where id=rec.id;
+  end loop;
+end
+$revoke_grants$;
 
 do $drop_roles$
 declare rec record; r text;
