@@ -55,6 +55,18 @@ begin
     if has_table_privilege('mip_kernel_owner_v2', format('public.%I', rel), 'SELECT') then
       raise exception 'hosted_synthetic_public_select_not_revoked: public.%', rel;
     end if;
+    for col in
+      select a.attname::text as column_name
+      from pg_attribute a
+      join pg_class c on c.oid=a.attrelid
+      join pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='public' and c.relname=rel and a.attnum>0 and not a.attisdropped
+    loop
+      if has_column_privilege('mip_kernel_owner_v2', format('public.%I', rel), col.column_name, 'SELECT') then
+        raise exception 'hosted_synthetic_public_column_select_not_revoked: public.%.%',
+          rel, col.column_name;
+      end if;
+    end loop;
   end loop;
 end
 $revoke_public_select$;
@@ -149,5 +161,20 @@ begin
   end loop;
 end
 $force_rls$;
+
+do $ledger$
+begin
+  if to_regprocedure('hosted_synthetic_operation.mark_cleared_public_source_grants()') is not null then
+    perform hosted_synthetic_operation.mark_cleared_public_source_grants();
+    update hosted_synthetic_operation.introduced_grants
+      set status='revoked'
+      where object_kind='schema' and privilege='USAGE' and schema_name='public'
+        and grantee='mip_kernel_owner_v2' and status='introduced';
+    perform hosted_synthetic_operation.capture_step('20');
+    update hosted_synthetic_operation.operation set window_005_20='atomic_closed'
+      where window_005_20 in ('pending','needs_recovery','recovered');
+  end if;
+end
+$ledger$;
 
 commit;

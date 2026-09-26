@@ -61,10 +61,18 @@ select comparison_qualification.bind_runtime(
 do $enqueue$
 declare sid uuid;
         gid uuid;
+        producer_until timestamptz;
 begin
+  producer_until := clock_timestamp() + interval '15 minutes';
   -- Owner/superuser fixture RPC (capability.sql). Not a JWT. Not mip_identity.issue.
+  -- Operation-bound short lifetime (not year-2999). Ledger records the session
+  -- so cleanup can revoke it explicitly before dropping relations.
   sid:=comparison_qualification.issue_session(
-    'mip_comparison_producer_v1','hosted-synthetic-qik-v1','2999-01-01+00'::timestamptz);
+    'mip_comparison_producer_v1','hosted-synthetic-qik-v1',producer_until);
+  if to_regclass('hosted_synthetic_operation.operation') is not null then
+    update hosted_synthetic_operation.operation
+      set producer_session_id=sid, producer_expires_at=producer_until;
+  end if;
   -- 002 producer_enqueue refuses caller payload/timestamp and reads source_snapshot.
   gid:=mip_cutover_authority.producer_enqueue(
     '00000000-0000-4000-8000-00000000a001'::uuid,
