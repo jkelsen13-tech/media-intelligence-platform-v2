@@ -40,11 +40,15 @@ export async function provisionPersistentRuntime(db,{operationId,expectedLogin,r
   await db.query('begin')
   let commitAttempted=false
   try {
-    await db.query("set local statement_timeout='1000ms'")
-    await assertCredentialLogging(db)
+    await db.query("set local statement_timeout='30000ms'")
     const row=await receipt(db,operationId,expectedLogin)
     if (row.runtime_login!==null || row.runtime_token_hash!==null) throw Error('persistent_runtime_already_provisioned')
+    // Serialize with gate and source activation before deciding that collection is stopped.
+    await db.query('lock table public.ingest_sources, qik_ingest.collection_gate in share row exclusive mode')
     await closed(db)
+    // No password-bearing DDL occurs before the logging guard.
+    await db.query("set local statement_timeout='1000ms'")
+    await assertCredentialLogging(db)
     if ((await db.query('select 1 from pg_roles where rolname=$1',[runtimeLogin])).rowCount ||
         (await db.query('select 1 from qik_ingest.runtime_credentials')).rowCount)
       throw Error('persistent_runtime_preexisting_identity')
