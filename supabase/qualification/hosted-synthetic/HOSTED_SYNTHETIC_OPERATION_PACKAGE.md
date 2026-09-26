@@ -1,151 +1,53 @@
 # Hosted-synthetic operation package (qik)
 
-**Status: SOURCE + disposable tests.** Files under `supabase/qualification/hosted-synthetic/` plus `tests/hostedSyntheticQualification.test.mjs`. This does not apply SQL, create or overwrite secrets, deploy Edge functions, merge or execute PR #177, cut over, delete live objects, or run CI (commits use `[skip ci]`). Local PGlite is not hosted success.
+**LIVE HOLD. Not authorized.** Source + disposable tests only. Files under `supabase/qualification/hosted-synthetic/` plus `tests/hostedSyntheticQualification.test.mjs`. This does not apply SQL, create or overwrite secrets, deploy Edge functions, merge PR #177 or #179, cut over, delete live objects, or run extra CI (commits use `[skip ci]`). Local PGlite is not hosted success.
 
 | Field | Value |
 |---|---|
 | Target | Supabase project ref `qikvmopbtijoebdqosyq` only |
 | Repository | `jkelsen13-tech/media-intelligence-platform-v2` |
 | Base tip | `c4cfd28db7672c631e86af012febda4890e34f33` |
-| Cost boundary | **$0** — no paid runner upgrade, no extra compute add-on, no project plan change, no billed API expansion. Owner-authorized later stages must stay inside already-included quota or stop |
-| Cleanup | `supabase/qualification/hosted-synthetic/90_cleanup.sql` plus owner Edge/secret undeploy listed there |
-| Install order | `supabase/qualification/hosted-synthetic/00_INSTALL_ORDER.md` |
+| Cost boundary | **$0** |
+| Install | `installHostedSynthetic.mjs` (ledger + atomic 005→20) |
+| Cleanup | `90_cleanup.sql` bound to `hosted_synthetic_operation` ledger |
+| Credentials | `40_credential_operators.md` + `61_broker_connection_adapter.mjs` (disposable) |
 
-## Explicitly NOT authorized until the owner pastes allowance
+Silence is not allowance. A prior auth package, this source tree, and disposable PGlite evidence are not qik execution rights.
 
-This package is **not** authorization for:
+## What this package implements
 
-- installing SQL on qik or any other project
-- creating, rotating, or overwriting Edge/project secrets
-- deploying or redeploying Edge functions
-- running CI jobs beyond the pull request’s natural path (prefer no extra workflows)
-- reading or writing real `public.events` / `public.articles` / membership / pipeline rows as qualification input
-- merging, applying, or otherwise executing [PR #177](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/177)
-- cutover, publication release, scheduler enablement
-- deletion of live projects, roles that exist outside this install, or secrets this run did not create
+1. **Worker JWT signing is not `mip_identity.issue`.** Issue returns a session UUID. Route A HS256 is owner-machine mint with the project JWT secret (never this utility, never an online debugger). Route B is existing `issueWorkloadSession` via `61_broker_connection_adapter.mjs`.
+2. **`source_snapshot` binds `synthetic_*`.** `20_grant_rebind.sql` clears 005 public SELECT (table and column). Installer runs 005 and 20 in **one transaction**. If 005 ever commits alone, `25_window_recovery.sql` syncs created package roles vs the install baseline, revokes table and column public-source SELECT, and refuses if effective SELECT remains. It does not `REVOKE FROM PUBLIC`.
+3. **Empty POST carries no work.** Seed is `30_seed_runtime_and_work.sql` with a **15-minute** producer session recorded in the ledger.
+4. **Cleanup is operation-owned.** `05_operation_ledger.sql` records exact created objects/roles/grants. `90_cleanup.sql` refuses unexpected same-schema objects and unrelated public privileges; it does not enumerate-and-erase or `REVOKE ALL ON ALL TABLES IN SCHEMA public`. No CASCADE, DISABLE TRIGGER, journal DELETE, or public table DROP. Pre-existing package roles are refused at install.
 
-Silence is not allowance. A prior auth package, this source tree, and disposable PGlite/CI evidence are not qik execution rights.
+## Proposed bounded operation (paste-ready, **not authorized**)
 
-## Gaps this delta corrects
+Replace the old stage-by-stage pastes. One allowance covers setup, checks, invocation, and exact cleanup on failure:
 
-1. **Worker JWT signing is not `mip_identity.issue`.** `issue` returns a session UUID from a `token_hash`. Provider HS256 (`role=mip_comparison_worker_v1`) is a separate owner mint. See `40_credential_operators.md`. This package does not add an issuer/controller.
-2. **`source_snapshot` and kernel `SELECT` bind to `comparison_qualification.synthetic_*`, not `public.*`.** Skipping `source-fixture.sql` is not enough: 005 still grants `SELECT` on the four public tables. `10_synthetic_source_adapter.sql` plus `20_grant_rebind.sql` (after 005) close that.
-3. **Empty POST carries no work.** Seed is `30_seed_runtime_and_work.sql` via `producer_enqueue` / approved bind/session RPCs. Invoke sequence is `50_invoke_sequence.md`.
-4. **Cleanup is exact.** `90_cleanup.sql` drops test-owned relations after ownership/dependent checks. No `DISABLE TRIGGER`, no `DELETE` from immutable journals, no `CASCADE`, no secret overwrite.
+> I authorize one bounded hosted-synthetic qualification operation on qik project `qikvmopbtijoebdqosyq` only, at commit `<this commit sha>`, cost boundary $0.
+>
+> Setup: run `supabase/qualification/hosted-synthetic/installHostedSynthetic.mjs` load order (ledger, files 1–4, 001–004, **005+20 in one transaction**, 013–016, 30 seed). Refuse if package roles/schemas already exist. Do not load source-fixture.sql, stock source-snapshot.sql, or 006–012.
+>
+> Checks: after install, `mip_kernel_owner_v2` has no table or column SELECT on public.events / event_articles / articles / pipeline_config; source_snapshot reads synthetic_* only; producer session expires within 15 minutes; one pending generation with source_project hosted-synthetic-qik.
+>
+> Credentials (disposable keys in this phase; live Route A HS256 only on the owner machine with MIP_QIK_JWT_SECRET already present, via the node:crypto HMAC in 40_credential_operators.md — never an online debugger, never this repo). Route B via 61_broker_connection_adapter.mjs as mip_identity_broker_v2; mip_identity.issue returns UUID only. Create only absent MIP_QIK_* names. GRANT mip_comparison_worker_v1 TO authenticator only after confirming authenticator is the live API switch role; 90_cleanup revokes that membership when authenticator exists because the worker role is created_roles. Expose mip_identity on the Data API. Deploy source-comparison-generation-candidate with verify_jwt=false for that function only.
+>
+> Invocation: 50_invoke_sequence.md steps (a)–(d) only. Empty POST bodies. Stop on failure.
+>
+> Cleanup on failure or completion: 25_window_recovery.sql if 005 committed without 20; then 90_cleanup.sql (ledger-bound). Stop on unexpected objects or unrelated privileges. REVOKE mip_comparison_worker_v1 FROM authenticator if this run granted it. Undeploy this function and delete listed MIP_QIK_* names only if this run created them. No CASCADE. No DISABLE TRIGGER. No public table drops. No PR #177. No cutover. No secret overwrite.
 
-## Proposed changes (this package)
+Do not perform that operation from this source commit.
 
-Files:
+## Checks (stay inside the one operation)
 
-- `supabase/qualification/hosted-synthetic/00_INSTALL_ORDER.md`
-- `supabase/qualification/hosted-synthetic/10_synthetic_source_adapter.sql`
-- `supabase/qualification/hosted-synthetic/20_grant_rebind.sql`
-- `supabase/qualification/hosted-synthetic/30_seed_runtime_and_work.sql`
-- `supabase/qualification/hosted-synthetic/40_credential_operators.md`
-- `supabase/qualification/hosted-synthetic/50_invoke_sequence.md`
-- `supabase/qualification/hosted-synthetic/60_disposable_credential_session.mjs`
-- `supabase/qualification/hosted-synthetic/90_cleanup.sql`
-- `supabase/qualification/hosted-synthetic/HOSTED_SYNTHETIC_OPERATION_PACKAGE.md`
-- `tests/hostedSyntheticFixture.mjs`
-- `tests/hostedSyntheticQualification.test.mjs`
-
-No migrations under `supabase/migrations/`. No `config.toml` change. No secret material. No new workflow.
-
-## Owner actions (gated; not this commit)
-
-Documented for a later paste-allowance. Do not perform them from this source commit.
-
-1. Read-only catalog preflight on `qikvmopbtijoebdqosyq` (stage 1).
-2. Apply `00_INSTALL_ORDER.md` files 1–17 in the SQL editor as `postgres` (stage 2).
-3. Owner-chosen `mip_identity` key/mapping rows; RS256 mint; `issueWorkloadSession` as `mip_identity_broker_v2`; HS256 worker JWT; create **missing** `MIP_QIK_*` secrets only; `GRANT mip_comparison_worker_v1 TO authenticator`; expose `mip_identity` on the Data API (stage 3).
-4. Deploy `source-comparison-generation-candidate` with `verify_jwt=false` for that function only (stage 4).
-5. Bounded empty-POST sequence in `50_invoke_sequence.md` (stage 5).
-6. `90_cleanup.sql` plus Edge undeploy and listed-secret delete if this run created them (stage 6).
-
-## Execution allowance text
-
-The owner pastes a distinct allowance for the stage they mean. Example for **stage 2 only**:
-
-> I authorize hosted-synthetic SQL install on qik project `qikvmopbtijoebdqosyq` only, using `supabase/qualification/hosted-synthetic/00_INSTALL_ORDER.md` at commit `<this commit sha>`, files 1–17, cost boundary $0. No Edge deploy, no secret writes, no overwrite of existing secrets, no PR #177, no cutover, no deletion. If any stage-2 check fails, stop.
-
-Example for **stage 3 only** (secrets):
-
-> I authorize creating only absent `MIP_QIK_*` names listed in `40_credential_operators.md` on qik `qikvmopbtijoebdqosyq` for hosted-synthetic, cost boundary $0. Do not overwrite existing secrets. No deploy, no #177, no cutover, no deletion.
-
-Example for **stage 4 only** (deploy):
-
-> I authorize deploying `source-comparison-generation-candidate` to qik `qikvmopbtijoebdqosyq` with `verify_jwt=false` for that function only, using this package’s host/index at commit `<this commit sha>`, cost boundary $0. No other functions. No secret overwrite. No #177. No cutover.
-
-Example for **stage 6 only** (cleanup):
-
-> I authorize `90_cleanup.sql` on qik `qikvmopbtijoebdqosyq` and undeploy/delete only this run’s listed `MIP_QIK_*` secrets and this function if this run deployed it, cost boundary $0. Stop on unexpected dependents. No CASCADE. No DISABLE TRIGGER. No public table drops.
-
-## Stages (resource-dependent checks stay inside the stage)
-
-### Stage 0 — source (this package)
-
-**Check:** tree contains the hosted-synthetic files and disposable tests; no live apply.
-
-**Do:** keep the reviewable PR. Stop before qik SQL/secrets/deploy.
-
-### Stage 1 — read-only qik preflight
-
-**Checks (stop if any fail):**
-
-- Project ref is `qikvmopbtijoebdqosyq` and the project is the intended survivor.
-- `comparison_qualification`, `mip_identity`, and `mip_cutover_authority` are **absent** (this install is not a second copy).
-- `public.events`, `public.event_articles`, `public.articles`, `public.pipeline_config` **exist** (005 will grant `SELECT` to `mip_kernel_owner_v2`; 20 must revoke it).
-- `mip_kernel_owner_v2` / `mip_comparison_worker_v1` / `mip_identity_broker_v2` are absent or the owner has a written exception.
-- Named Edge secrets `MIP_QIK_WORKER_RPC_URL`, `MIP_QIK_PUBLISHABLE_KEY`, `MIP_QIK_WORKER_JWT`, `MIP_QIK_WORKER_INVOKE_TOKEN`, `MIP_QIK_WORKER_SESSION`, `MIP_QIK_WORKER_RUNTIME`, `MIP_QIK_WORKER_IMPLEMENTATION` are inventoried. Existing names **block stage 3** (no overwrite).
-- Function `source-comparison-generation-candidate` inventory: already-deployed bodies/verify_jwt are recorded. A foreign contract **blocks stage 4**.
-
-**Do not:** SELECT real article bodies or event text beyond existence/privilege catalog.
-
-### Stage 2 — SQL install
-
-**Requires:** pasted stage-2 allowance; stage 1 pass.
-
-**Checks during load:**
-
-- After file 4: `source_snapshot` text reads `synthetic_events` and does not read `public.events`.
-- After file 11 (005): if `GRANT SELECT` on public tables fails, stop (qik is expected to have those tables).
-- File 12 (`20_grant_rebind.sql`) **raises** if public `SELECT` cannot be revoked from `mip_kernel_owner_v2`.
-- After file 17: one pending job whose `source_project` is `hosted-synthetic-qik`, not a live public id.
-
-**Do not:** load `source-fixture.sql` or stock `source-snapshot.sql`; do not load 006–012; do not `SET ROLE` a live data role against public tables.
-
-### Stage 3 — credentials
-
-**Requires:** pasted stage-3 allowance; stage 2 pass.
-
-**Checks:** each `MIP_QIK_*` name is created only when absent; HS256 `role` is exactly `mip_comparison_worker_v1`; RS256 mint matches seeded JWK/`kid`; `mip_identity.issue` returns UUID only; runtime/implementation secrets equal `hosted-synthetic-qik-v1` / `hosted-synthetic-event-projection-v1`.
-
-**Do not:** put the RS256 workload token in `MIP_QIK_WORKER_JWT`; do not use `service_role`; do not invent iss/aud/sub in leftover SQL.
-
-### Stage 4 — Edge deploy
-
-**Requires:** pasted stage-4 allowance; stage 3 pass.
-
-**Checks:** deploy identity is `source-comparison-generation-candidate` only; `verify_jwt=false` for that function only; `index.ts` env names match the seven `MIP_QIK_*` keys; no `SUPABASE_SERVICE_ROLE_KEY` fallback.
-
-**Do not:** deploy other functions; do not enable a schedule.
-
-### Stage 5 — bounded invoke
-
-**Requires:** pasted stage-5 allowance; stage 4 pass.
-
-**Do:** `50_invoke_sequence.md` steps (a)–(d) only. **Check:** (e) limits claims to that sequence.
-
-**Do not:** extra POSTs, payload “help”, second seed, or publication RPCs.
-
-### Stage 6 — cleanup
-
-**Requires:** pasted stage-6 allowance.
-
-**Checks:** `90_cleanup.sql` ownership/dependent raises abort the transaction; public events/articles still exist; only listed secrets created by this run are deleted.
-
-**Do not:** `DROP … CASCADE`; `DISABLE TRIGGER`; `DELETE` from immutable journals; drop `public.*` source tables; delete unrelated secrets.
+- Project ref is `qikvmopbtijoebdqosyq`.
+- Package schemas and listed package roles are **absent** before install (no exceptions).
+- `public.events`, `public.event_articles`, `public.articles`, `public.pipeline_config` exist (005 will grant SELECT; 20 / recovery must clear table and column SELECT for package roles).
+- Named Edge secrets inventoried; existing names block create (no overwrite).
+- Function `source-comparison-generation-candidate` inventory: a foreign contract blocks deploy.
+- Do not SELECT real article bodies beyond existence/privilege catalog.
 
 ## Cost boundary
 
-**$0.** This source commit must not start paid work. Later owner stages use the existing qik project and included quota. If a stage would require a paid runner, add-on, or plan change, stop.
+**$0.** If a step would require a paid runner, add-on, or plan change, stop.

@@ -8,7 +8,9 @@
 // Route B (RS256 workload): verifyWorkloadIdentity + issueWorkloadSession as
 // mip_identity_broker_v2. mip_identity.issue returns a session UUID only.
 import {generateKeyPairSync,randomUUID,sign} from 'node:crypto'
-import {issueWorkloadSession} from '../mip-cutover-authority/brokerSession.js'
+import {
+ assertRouteAShape,issueWorkloadSessionViaAdapter,pgliteBrokerAdapter
+} from './61_broker_connection_adapter.mjs'
 
 export const DISPOSABLE_RUNTIME='hosted-synthetic-qik-v1'
 export const DISPOSABLE_PRINCIPAL='mip_comparison_worker_v1'
@@ -16,7 +18,6 @@ export const DISPOSABLE_IMPLEMENTATION='hosted-synthetic-event-projection-v1'
 export const DISPOSABLE_ISSUER='https://qualification.invalid'
 export const DISPOSABLE_AUDIENCE='synthetic-broker'
 export const DISPOSABLE_KID='synthetic'
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export function shapeWorkerJwt(role=DISPOSABLE_PRINCIPAL){
  if(typeof role!=='string'||!role)throw Error('hosted_synthetic_worker_jwt_role')
@@ -26,11 +27,11 @@ export function shapeWorkerJwt(role=DISPOSABLE_PRINCIPAL){
 export function liveHs256WorkerJwtSpec(){
  return Object.freeze({
   algorithm:'HS256',
-  secret:'Supabase project JWT secret (owner-held; never in this repository)',
+  secret:'Supabase project JWT secret (owner-held; never in this repository or this utility)',
   requiredClaim:Object.freeze({role:'mip_comparison_worker_v1'}),
   delivery:'MIP_QIK_WORKER_JWT only if that name is absent',
-  signer:'none in-repo',
-  see:'40_credential_operators.md Route A'
+  signer:'owner-machine node:crypto createHmac only; never this repo; never an online debugger',
+  see:'40_credential_operators.md single operator route'
  })
 }
 
@@ -67,20 +68,7 @@ export async function seedDisposableIdentity(db,{
 }
 
 export function brokerSql(db){
- return async(name,args)=>{
-  if(name!=='configuration'&&name!=='issue')throw Error('hosted_synthetic_broker_rpc_denied')
-  await db.exec('set role mip_identity_broker_v2')
-  try{
-   if(name==='configuration'){
-    const r=await db.query('select mip_identity.configuration($1,$2) result',args)
-    return r.rows[0].result
-   }
-   const r=await db.query('select mip_identity.issue($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) result',args)
-   const sid=String(r.rows[0].result??'')
-   if(!UUID.test(sid))throw Error('hosted_synthetic_issue_not_uuid')
-   return sid
-  }finally{await db.exec('reset role')}
- }
+ return pgliteBrokerAdapter(db)
 }
 
 export async function issueDisposableWorkerSession(db,{
@@ -96,7 +84,14 @@ export async function issueDisposableWorkerSession(db,{
  const seeded=await seedDisposableIdentity(db,{runtime,principal,publicJwk:jwk,kid,issuer,audience})
  const token=mintWorkloadRs256({privateKey:key,kid,iss:issuer,aud:audience,sub:seeded.subject,
   now,exp:now+lifetimeSeconds})
- const session=await issueWorkloadSession({sql:brokerSql(db),token,runtime,principal,request,now})
- if(typeof session!=='string'||!UUID.test(session))throw Error('hosted_synthetic_issue_not_uuid')
+ const session=await issueWorkloadSessionViaAdapter({
+  sql:pgliteBrokerAdapter(db),token,runtime,principal,request,now})
  return {session,token,...seeded}
+}
+
+export async function runDisposableOperatorOneshot(db,extra={}){
+ const issued=await issueDisposableWorkerSession(db,extra)
+ const workerJwtShape=shapeWorkerJwt()
+ assertRouteAShape(workerJwtShape)
+ return {...issued,workerJwtShape}
 }
