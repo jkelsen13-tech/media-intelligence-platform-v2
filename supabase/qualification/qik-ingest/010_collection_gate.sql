@@ -94,18 +94,20 @@ for each row execute function qik_ingest.enforce_collection_gate();
 create or replace function qik_ingest.require_token(p_token text)
 returns void
 language plpgsql
-stable
+volatile
 set search_path = ''
 as $$
 begin
   if p_token is null or length(p_token) < 32 then
     raise exception 'qik_ingest_unauthorized' using errcode = '28000';
   end if;
-  if not exists (
-    select 1 from qik_ingest.runtime_credentials
-    where active
-      and credential_hash = encode(sha256(convert_to(p_token, 'UTF8')), 'hex')
-  ) then
+  -- A successful admission holds this credential row through the caller's
+  -- transaction. Revocation DELETE waits, then checks resulting run state.
+  perform 1 from qik_ingest.runtime_credentials
+  where active
+    and credential_hash = encode(sha256(convert_to(p_token, 'UTF8')), 'hex')
+  for share;
+  if not found then
     raise exception 'qik_ingest_unauthorized' using errcode = '28000';
   end if;
 end
