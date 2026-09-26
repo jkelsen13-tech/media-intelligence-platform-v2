@@ -27,8 +27,9 @@ Apply in one transaction, in this order, from
 2. `010_collection_gate.sql` — roles, gate **false**, token table **empty**.
 3. `020_run_ledger.sql` — begin / finish / recover / observe RPCs.
 4. `030_retain_upsert.sql` — discovery `observed_items`; no `public.articles` insert.
-5. `040_watermarks.sql` — write the YHB pause fence and idle qik forward cursor.
-6. `050_schedule_disabled.sql` — schedule **intent** with `active=false` only.
+5. `035_native_caller.sql` — execute-only observation-bound native caller; no credentials.
+6. `040_watermarks.sql` — write the YHB pause fence and idle qik forward cursor.
+7. `050_schedule_disabled.sql` — schedule **intent** with `active=false` only.
 
 Never apply `fixture_substrate.sql` on a hosted project.
 
@@ -56,7 +57,7 @@ disabled. `cron.schedule` is omitted from 010–050 because pg_cron creates
 `090_cleanup.sql` drops **only ledgered package objects** (no `DROP OWNED`, no
 schema `CASCADE`) and restores recorded `collection_enabled = false` checks.
 It refuses if the gate is on, any source is collection-enabled, unexpected
-same-role objects exist, or unrelated public privileges were granted to
+same-role objects exist, or unrelated external privileges were granted to
 package roles. It does not delete articles, YHB jobs, NIE, or collector-shadow.
 Native handoff is existing `mip_pipeline_v1` enqueue/finish plus
 `mip_qik_ingest_claim_bound` (same queue/lease rules, bound job ids only).

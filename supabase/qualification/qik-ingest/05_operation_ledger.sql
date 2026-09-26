@@ -96,7 +96,7 @@ end $$;
 
 create function qik_ingest_operation.current_external_grants()
 returns table(grantee text,object_kind text,schema_name text,object_name text,column_name text,privilege text)
-language sql set search_path='' as $
+language sql set search_path='' as $$
  select r.rolname::text,case when c.relkind='S' then 'sequence' else 'table' end,
  n.nspname::text,c.relname::text,''::text,a.privilege_type::text
  from pg_class c join pg_namespace n on n.oid=c.relnamespace
@@ -120,10 +120,10 @@ language sql set search_path='' as $
  from pg_namespace n cross join lateral aclexplode(n.nspacl) a join pg_roles r on r.oid=a.grantee
  join qik_ingest_operation.created_roles own on own.rolname=r.rolname
  where n.nspname not in ('qik_ingest','qik_ingest_operation') and n.nspowner<>r.oid;
-$;
+$$;
 
 create function qik_ingest_operation.record_introduced_grants()
-returns void language plpgsql as $
+returns void language plpgsql as $$
 begin
  insert into qik_ingest_operation.introduced_grants
  (grantee,object_kind,schema_name,object_name,column_name,privilege,status)
@@ -131,7 +131,7 @@ begin
  from qik_ingest_operation.current_external_grants()
  on conflict(grantee,object_kind,schema_name,object_name,column_name,privilege)
  do update set status='introduced';
-end $;
+end $$;
 
 create function qik_ingest_operation.capture_step(p_step text)
 returns void language plpgsql as $$
@@ -244,7 +244,7 @@ begin
 end $$;
 
 create function qik_ingest_operation.refuse_unrelated_public_privileges()
-returns void language plpgsql as $
+returns void language plpgsql as $$
 begin
  if exists(
    select 1 from qik_ingest_operation.current_external_grants() a
@@ -253,7 +253,7 @@ begin
        =(a.grantee,a.object_kind,a.schema_name,a.object_name,a.column_name,a.privilege)
        and g.status='introduced')
  ) then raise exception 'qik_ingest_unrelated_privilege'; end if;
-end $;
+end $$;
 
 select qik_ingest_operation.snapshot_baseline();
 commit;
