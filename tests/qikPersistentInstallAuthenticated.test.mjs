@@ -143,12 +143,114 @@ test('persistent C3: restricted login, atomic install, reconnect and existing na
     const runtimeConfig={operationId,expectedLogin:adminName,runtimePassword:password,token,
       authorization:'owner-authorized-restricted-runtime'}
     await assert.rejects(provisionPersistentRuntime(admin,{...runtimeConfig,authorization:null}),/persistent_runtime_authorization_required/)
+    // An activation that commits while provision waits must be observed before role creation.
+    const activator=new pg.Client(config);await activator.connect()
+    let waitingProvision
+    try {
+      await activator.query('begin')
+      await activator.query('update qik_ingest.collection_gate set collection_authorized=true where id')
+      waitingProvision=provisionPersistentRuntime(admin,runtimeConfig)
+      let waited=false
+      for(let i=0;i<80;i++){
+        const wait=(await root.query('select wait_event_type from pg_stat_activity where pid=$1',[admin.processID])).rows[0]?.wait_event_type
+        if(wait==='Lock'){waited=true;break}
+        await new Promise(resolve=>setTimeout(resolve,25))
+      }
+      assert.equal(waited,true,'provision must wait for gate activation transaction')
+      await activator.query('commit')
+      await assert.rejects(waitingProvision,/persistent_runtime_provision_failed/)
+      assert.equal((await admin.query('select collection_authorized from qik_ingest.collection_gate where id')).rows[0].collection_authorized,true)
+      assert.equal((await admin.query('select 1 from pg_roles where rolname=$1',[names.collector])).rowCount,0)
+      assert.equal((await admin.query('select count(*)::int n from qik_ingest.runtime_credentials')).rows[0].n,0)
+      assert.equal((await admin.query('select runtime_login from qik_ingest_operation.persistent_install_receipt')).rows[0].runtime_login,null)
+    }finally{
+      await activator.query('rollback').catch(()=>{})
+      if(waitingProvision)await waitingProvision.catch(()=>{})
+      await activator.end()
+    }
+    await admin.query('update qik_ingest.collection_gate set collection_authorized=false where id')
+    // Source activation can commit with the gate closed; provision must still recheck sources.
+    const sourceActivator=new pg.Client(config);await sourceActivator.connect()
+    let sourceProvision
+    try {
+      await sourceActivator.query('begin')
+      await sourceActivator.query('update qik_ingest.collection_gate set collection_authorized=true where id')
+      await sourceActivator.query("update public.ingest_sources set enabled=true,collection_enabled=true where id='11111111-1111-4111-8111-111111111111'")
+      await sourceActivator.query('update qik_ingest.collection_gate set collection_authorized=false where id')
+      sourceProvision=provisionPersistentRuntime(admin,runtimeConfig)
+      let waited=false
+      for(let i=0;i<80;i++){
+        const wait=(await root.query('select wait_event_type from pg_stat_activity where pid=$1',[admin.processID])).rows[0]?.wait_event_type
+        if(wait==='Lock'){waited=true;break}
+        await new Promise(resolve=>setTimeout(resolve,25))
+      }
+      assert.equal(waited,true,'provision must wait for source activation transaction')
+      await sourceActivator.query('commit')
+      await assert.rejects(sourceProvision,/persistent_runtime_provision_failed/)
+      assert.equal((await admin.query('select collection_authorized from qik_ingest.collection_gate where id')).rows[0].collection_authorized,false)
+      assert.equal((await admin.query("select enabled and collection_enabled active from public.ingest_sources where id='11111111-1111-4111-8111-111111111111'")).rows[0].active,true)
+      assert.equal((await admin.query('select 1 from pg_roles where rolname=$1',[names.collector])).rowCount,0)
+      assert.equal((await admin.query('select runtime_login from qik_ingest_operation.persistent_install_receipt')).rows[0].runtime_login,null)
+    }finally{
+      await sourceActivator.query('rollback').catch(()=>{})
+      if(sourceProvision)await sourceProvision.catch(()=>{})
+      await sourceActivator.end()
+    }
+    await admin.query("update public.ingest_sources set enabled=false,collection_enabled=false where id='11111111-1111-4111-8111-111111111111'")
     let stopped=false
     const runtimeFault={query:(sql,params)=>{if(sql.startsWith('insert into qik_ingest.runtime_credentials')){stopped=true;throw Error('injected')}return admin.query(sql,params)}}
     await assert.rejects(provisionPersistentRuntime(runtimeFault,runtimeConfig),/persistent_runtime_provision_failed/)
     assert.equal(stopped,true)
     assert.equal((await admin.query('select 1 from pg_roles where rolname=$1',[names.collector])).rowCount,0)
     assert.equal((await admin.query('select count(*)::int n from qik_ingest.runtime_credentials')).rows[0].n,0)
+    assert.equal((await admin.query('select runtime_login from qik_ingest_operation.persistent_install_receipt')).rows[0].runtime_login,null)
+    // Provision holds both table locks through receipt COMMIT; a later activation waits.
+    let lockAcquired,releaseLock
+    const acquired=new Promise(resolve=>lockAcquired=resolve)
+    const held=new Promise(resolve=>releaseLock=resolve)
+    const pausedDb={query:async(sql,params)=>{
+      const value=await admin.query(sql,params)
+      if(sql==='lock table public.ingest_sources, qik_ingest.collection_gate in share row exclusive mode'){
+        lockAcquired();await held
+      }
+      return value
+    }}
+    const lateActivator=new pg.Client(config);await lateActivator.connect()
+    let firstProvision,lateUpdate
+    try {
+      firstProvision=provisionPersistentRuntime(pausedDb,runtimeConfig)
+      let acquireTimer
+      try {
+        await Promise.race([acquired,new Promise((_,reject)=>{
+          acquireTimer=setTimeout(()=>reject(Error('provision_lock_not_acquired')),2000)
+        })])
+      }finally{clearTimeout(acquireTimer)}
+      await lateActivator.query('begin')
+      lateUpdate=lateActivator.query('update qik_ingest.collection_gate set collection_authorized=true where id')
+      let waited=false
+      for(let i=0;i<80;i++){
+        const wait=(await root.query('select wait_event_type from pg_stat_activity where pid=$1',[lateActivator.processID])).rows[0]?.wait_event_type
+        if(wait==='Lock'){waited=true;break}
+        await new Promise(resolve=>setTimeout(resolve,25))
+      }
+      assert.equal(waited,true,'activation must wait for provision transaction')
+      releaseLock()
+      const first=await firstProvision
+      assert.equal(first.state,'restricted_runtime_provisioned')
+      await lateUpdate
+      await lateActivator.query('commit')
+      assert.equal((await admin.query('select collection_authorized from qik_ingest.collection_gate where id')).rows[0].collection_authorized,true)
+    }finally{
+      releaseLock()
+      if(firstProvision)await firstProvision.catch(()=>{})
+      if(lateUpdate)await lateUpdate.catch(()=>{})
+      await lateActivator.query('rollback').catch(()=>{})
+      await lateActivator.end()
+    }
+    await admin.query('update qik_ingest.collection_gate set collection_authorized=false where id')
+    const firstRevocation=await revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
+      authorization:'owner-authorized-restricted-runtime-revocation'})
+    assert.equal(firstRevocation.state,'restricted_runtime_revoked')
     assert.equal((await admin.query('select runtime_login from qik_ingest_operation.persistent_install_receipt')).rows[0].runtime_login,null)
     const runtimeChild=spawn(process.execPath,[new URL('../supabase/qualification/qik-ingest/runPersistentRuntime.mjs',import.meta.url).pathname,
       'provision','--execute','--disposable'],{env:{PATH:process.env.PATH,MIP_DISPOSABLE_POSTGRES:'qik-persistent-install',
