@@ -45,7 +45,7 @@ export async function connectPersistentInstaller({connectionString,expectedLogin
   const url=connectionTarget(connectionString,expectedLogin,disposable,sessionPoolerHost)
   if(!disposable&&url.pathname!=='/postgres')throw Error('persistent_database_refused')
   const db=new pg.Client({connectionString:url.href,ssl:disposable?false:{rejectUnauthorized:true},
-    connectionTimeoutMillis:10000,statement_timeout:10000,query_timeout:20000,
+    connectionTimeoutMillis:10000,statement_timeout:30000,query_timeout:40000,
     application_name:'mip-c3-persistent-install-source'})
   try {await db.connect();await identity(db,expectedLogin);return db}
   catch {await db.end().catch(()=>{});throw Error('persistent_authenticated_connection_failed')}

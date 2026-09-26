@@ -16,7 +16,7 @@ export MIP_C3_SESSION_POOLER_HOST=aws-0-us-west-1.pooler.supabase.com
 node supabase/qualification/qik-ingest/runPersistentInstall.mjs install --execute --prompt-secrets
 ```
 
-The terminal prompt hides the password-bearing PostgreSQL URL; do not put it in command history. The alternative MIP_C3_INSTALLER_DATABASE_URL environment variable is for protected process delivery. Connections use verified TLS and the existing exact qik direct/session-pooler target validation; transaction pooling is rejected. The operation needs its separately reviewed owner authorization before execution.
+The terminal prompt hides the password-bearing PostgreSQL URL; do not put it in command history. The alternative MIP_C3_INSTALLER_DATABASE_URL environment variable is for protected process delivery. Connections allow 10 seconds to connect, 30 seconds per server statement and a 40-second client query deadline, with one attempt and no automatic retry. Connections use verified TLS and the existing exact qik direct/session-pooler target validation; transaction pooling is rejected. The operation needs its separately reviewed owner authorization before execution.
 
 A successful receipt reports installed_disabled. Record the operation ID, installer identity and SQL manifest hash privately. Duplicate installation refuses existing packages. An uncertain COMMIT acknowledgement reports needs_reconciliation: true: inspect the operation receipt and state before any retry. There is no automatic teardown.
 
