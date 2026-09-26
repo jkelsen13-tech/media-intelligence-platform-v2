@@ -25,7 +25,7 @@
 
 ### Phase F — Legacy disposition
 - [ ] Per-project checklist: responsibilities replaced or explicitly dispositioned; history/attribution preserved; recovery drill named; billing verified.
-- [ ] YHB/NIE/jfn retirement only with **exact owner authorization** — never delete-first.
+- [ ] YHB/NIE retirement only with **exact owner authorization** — never delete-first. **JFN is already retired** (2026-09-23).
 - [ ] Corpus lane may still be “retain as cold archive” while capabilities are already on qik.
 
 ---
@@ -37,9 +37,9 @@
 | **Strangler / expand-contract** | Keep YHB paused-but-present while qik path grows; do not big-bang delete; facade is already qik frontend | Strangler fig / parallel change (industry) |
 | **Single writer during move** | Prefer qik-authoritative writes after enable; avoid dual-write races; use watermark + idempotent upsert by version | CDC/strangler notes: single writer + version gates |
 | **Cron / Edge move** | Recreate schedule on qik (pg_cron+pg_net+Vault); do not “flip” YHB jobs to point at qik without new credentials/preflight | Supabase pg_cron → Edge pattern; YHB command text is YHB-scoped |
-| **Auth vs attribution** | Migrate Auth users separately from evidence actors/outlets; RLS membership ≠ provenance | Index G2; authority recon caller matrix |
+| **Auth vs attribution** | End-user Auth ≠ evidence attribution; NIE historical attribution does **not** require migrating login sessions; RLS membership ≠ provenance | Index G2; authority recon caller matrix |
 | **RLS / PostgREST** | Do not copy YHB public SECURITY DEFINER / anon write posture onto qik; paginate (Doc 13); default-deny public views | Doc 13; consolidation security candidates |
-| **Watermarks** | qik `mip_consolidation_watermarks` + YHB pause checkpoint ~36183 are the cutover fence | Live qik table comment; YHB census |
+| **Watermarks** | qik `mip_consolidation_watermarks` are operational cutover state. YHB **36,183** is the observed pause article count, **not** a complete consistency fence | Live qik table comment; YHB census |
 | **Backfill vs continuous** | Continuous ingest on qik first (B); historical backfill parallel (C22)—backfill must not block B–E | Strangler backfill-after-forward-path |
 | **Fence / delta** | Comparison/arc enrichment queues require generation fence before any re-enable (qik queue comment already states this) | qik `source_comparison_enrichment_queue` comment; comparison recovery docs |
 
@@ -63,7 +63,7 @@
 1. **Enable qik ingestion schedule / collection flags** — required for Phase B; not authorized by this doc.
 2. **Publication/eligibility policy** for faster source-only visibility (reader contracts §3) — default-deny stays until exact decision.
 3. **NIE credential scrub** in inactive cron command text before any future reactivation (prefer: never reactivate; dispose).
-4. **Predecessor retirement** (YHB/NIE/jfn) — exact authorization after Phase E/F proofs; billing/PITR unknowns remain.
+4. **Predecessor retirement** (YHB/NIE) — exact authorization after Phase E/F proofs; billing/PITR unknowns remain. **JFN is already retired** (2026-09-23); do not treat as an active predecessor.
 5. **PR #177 / #175 merge policy** — integration code stays unmerged; Phase A does not merge.
 6. **PR #179 LIVE HOLD** — do not lift via consolidation narrative.
 7. **R4.9 / R4.5 / 02C public / security-privacy** — launch blockers per Index; orthogonal to strangler order but still owner gates for public release.
@@ -75,7 +75,7 @@
 - No SQL migrations applied to qik/YHB/NIE.
 - No Edge deploys; no cron `active=true`; no YHB job deletion.
 - No PR merges; no project deletes; no paid add-ons.
-- Historical corpus work is **parallel**, not gated in front of C3–C7.
+- Historical corpus work is **parallel**, not gated in front of C3–C7. Operational migration can proceed without a full historical corpus copy.
 
 ---
 

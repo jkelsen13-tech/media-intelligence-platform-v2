@@ -3,14 +3,16 @@
 Date: 2026-09-26 (ET)  
 Status: **PLANNING ONLY** — does **not** authorize SQL apply, Edge deploy, cron re-enable, PR merge, project delete, or paid add-ons.
 
+**Correction note — 2026-09-26 (same-day, in-place).** Git history on this branch remains the dated original. This note does **not** start a new architecture series. Five facts are corrected in the living parts (full list at the top of part 1a): `collector-shadow` remains receipt-only; JFN is already retired; NIE historical attribution does not require migrating login sessions; **36,183** is the observed YHB pause article count, not a complete consistency fence; the DAG expresses dependencies (not a serialize-all or corpus-first mandate). Operational migration can proceed without a full historical corpus copy. Intended ingest/retain connect is **C3→native capture** (sibling PR in flight); no new package is named here.
+
 **Continue reading in order (one logical document):**
 
 1a. [Anchors + final-state target + capabilities C1–C11](./MIP_PHASE_A_2026-09-26_1a_capabilities.md)  
 1b. [Capabilities C12–C22](./MIP_PHASE_A_2026-09-26_1b_capabilities.md)  
-2. [Frontend ruthlessness + ordered migration DAG](./MIP_PHASE_A_2026-09-26_2_frontend_dag.md)  
+2. [Frontend ruthlessness + migration dependency DAG](./MIP_PHASE_A_2026-09-26_2_frontend_dag.md)  
 3. [Phases B–F stubs, consolidation practices, counts, blockers](./MIP_PHASE_A_2026-09-26_3_phases_practices.md)
 
-Concat SHA-256 of parts 1a||1b||2||3: `30c8b36b642d791d267224b990fd75c3a9266bd342034ec1cbac7254349c85a7`
+Concat SHA-256 of parts 1a||1b||2||3: `cfe442d1d361687937b3269fb9207c0b966e865046dd9c3ca87140110cc401d7`
 
 Also registered in `docs/BACKEND_CONSOLIDATION_PLANNING_REGISTRY_2026-09-26.md`.
 

@@ -24,14 +24,14 @@
 
 ### C16 · Spatial / World View projection — EXTEND
 1. **qik:** `spatial_projection_v1` + chain; Edge `spatial-runtime`; `spatialBackend` → World View.
-2. **Best today:** **qik** (R3/R4 shipped). jfn unique spatial history → reconcile/disposition.
-3. **Move:** jfn **historical records** (parallel); R4.9 renderer is frontend/repo (not YHB/NIE).
+2. **Best today:** **qik** (R3/R4 shipped). **JFN is already retired** (2026-09-23); unique spatial history already lives in the qik private archive — not an active predecessor.
+3. **Move:** nothing from a live jfn. R4.9 renderer is frontend/repo (not YHB/NIE). Retired-jfn archive already on qik (historical-only).
 4. **Proof:** World View continues on qik; removing YHB/NIE does not break spatial.
 
 ### C17 · Temporal intelligence assessments — MIGRATE (when R4.5 executes)
 1. **qik:** temporal assessment store referenced by Investigation Context (spec); clocks on articles/events.
 2. **Best today:** **repo-only** specs + partial YHB timeline evidence; not a live qik product owner.
-3. **Move:** **schema contract** + **algorithm** when authorized; data from migrated corpus.
+3. **Move:** **schema contract** + **algorithm** when authorized; uses qik-owned data as operational ingest and selective history land. Full predecessor corpus copy is not a prerequisite.
 4. **Proof:** shared temporal assessment ID across surfaces; no per-view recomputation.
 
 ### C18 · Search / discovery / Investigation Context — EXTEND
@@ -55,13 +55,13 @@
 ### C21 · Recovery / watermarks / fence·delta — EXTEND + MIGRATE (ops discipline)
 1. **qik:** `mip_consolidation_watermarks`; mapping/conflict ledgers; fenced enrichment generations; append-only run ledgers.
 2. **Best today:** **qik** watermarks + import mappings; **YHB** live checkpoints/runs; bounded recovery receipt (post-consultation).
-3. **Move:** **state/cursors** at cutover; keep predecessors as restore sources until retirement gate.
+3. **Move:** **state/cursors** at cutover; keep YHB/NIE as restore sources until retirement gate. **JFN is already retired.**
 4. **Proof:** restore drill identity named; watermark advance only after qik success; predecessor not needed for forward progress.
 
 ### C22 · Historical corpus disposition lane — DISPOSITION (parallel)
 1. **qik:** import mappings/conflicts; selective reconcile jobs; cold archive designation.
-2. **Best today:** **YHB** primary corpus; **NIE** analytical history; **jfn** spatial history.
-3. **Move:** **historical records** on their own DAG (export → map → reconcile → verify → retire).
+2. **Best today:** **YHB** primary corpus; **NIE** analytical history. **JFN is already retired**; spatial archive already on qik (not an active predecessor).
+3. **Move:** YHB/NIE **historical records** on their own DAG (export → map → reconcile → verify → retire). This lane does **not** precede operational migration.
 4. **Proof:** retirement checklist (workflow Stage 4): every responsibility replaced/dispositioned; callers closed; recovery usable; billing verified — **exact owner authorization**.
 
 ---
