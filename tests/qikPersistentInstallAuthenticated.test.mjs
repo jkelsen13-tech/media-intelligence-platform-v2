@@ -319,6 +319,18 @@ test('persistent C3: restricted login, atomic install, reconnect and existing na
     await assert.rejects(revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
       authorization:'owner-authorized-restricted-runtime-revocation'}),/persistent_runtime_revoke_failed/)
     await admin.query("update public.ingestion_runs set counters=counters-'extraction_incomplete' where run_id=$1",['qik-host-'+operationId+'-first'])
+    // No observation can identify the token on an empty failed qik run. Age is not attribution.
+    const emptyDebt='qik-empty-debt-'+operationId
+    const completeEmpty='qik-empty-complete-'+operationId
+    const unrelatedFailed='unrelated-empty-failed-'+operationId
+    const qikAlgorithm='qik-ingest-rss-v1-retain-from-yhb-v8'
+    await admin.query("insert into public.ingestion_runs(run_id,mode,state,started_at,algorithm_version,counters) values($1,'discover','failed','2000-01-01T00:00:00Z',$2,'{}'::jsonb)",[emptyDebt,qikAlgorithm])
+    await assert.rejects(revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
+      authorization:'owner-authorized-restricted-runtime-revocation'}),/persistent_runtime_revoke_failed/)
+    assert.equal((await admin.query('select count(*)::int n from qik_ingest.runtime_credentials')).rows[0].n,1)
+    assert.equal((await admin.query('select runtime_login from qik_ingest_operation.persistent_install_receipt')).rows[0].runtime_login,names.collector)
+    await admin.query('delete from public.ingestion_runs where run_id=$1',[emptyDebt]) // disposable fixture only
+    await admin.query("insert into public.ingestion_runs(run_id,mode,state,algorithm_version,counters) values($1,'discover','completed',$2,'{}'::jsonb),($3,'discover','failed','legacy-other-algorithm','{}'::jsonb)",[completeEmpty,qikAlgorithm,unrelatedFailed])
     // A foreign incoming membership must never be silently dropped with the role.
     const foreign='mip_c3_foreign_'+operationId.slice(0,12)
     await admin.query('create role '+ident(foreign)+' nologin noinherit')
@@ -353,10 +365,12 @@ test('persistent C3: restricted login, atomic install, reconnect and existing na
     }else revoked=outcome.value
     runtimeCreated=false
     assert.equal(revoked.state,'restricted_runtime_revoked')
+    assert.equal((await admin.query('select count(*)::int n from public.ingestion_runs where run_id=any($1::text[])',[[completeEmpty,unrelatedFailed]])).rows[0].n,2)
     assert.equal((await admin.query('select count(*)::int n from qik_ingest.runtime_credentials')).rows[0].n,0)
     assert.equal((await admin.query('select 1 from pg_roles where rolname=$1',[names.collector])).rowCount,0)
     const preserved=(await admin.query('select source_project_ref,channel,watermark,captured_at::text from public.mip_consolidation_watermarks order by 1,2')).rows
     await cleanupPersistentQik(admin,cleanupConfig);installed=false
+    assert.equal((await admin.query('select count(*)::int n from public.ingestion_runs where run_id=any($1::text[])',[[completeEmpty,unrelatedFailed]])).rows[0].n,2)
     assert.deepEqual((await admin.query('select source_project_ref,channel,watermark,captured_at::text from public.mip_consolidation_watermarks order by 1,2')).rows,preserved)
     assert.equal((await admin.query('select count(*)::int n from public.articles')).rows[0].n,3)
     assert.equal((await admin.query('select id from public.persist_sentinel')).rows[0].id,42)
