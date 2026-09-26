@@ -7,7 +7,7 @@ import {createServer} from 'node:http'
 import pg from 'pg'
 import {installPersistentQik,cleanupPersistentQik} from '../supabase/qualification/qik-ingest/persistentInstall.mjs'
 import {runNativeHost} from '../supabase/qualification/qik-ingest/nativeHost.mjs'
-import {installCredentialHelper,assignCredential,removeCredentialHelper} from '../supabase/qualification/collector-native-capture/credentialDelivery.mjs'
+import {provisionPersistentRuntime,revokePersistentRuntime} from '../supabase/qualification/qik-ingest/persistentRuntime.mjs'
 import {FEED} from './qikIngestTestKit.mjs'
 const packageRoles=['qik_ingest_fn_owner','qik_ingest_runtime']
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8')
@@ -138,15 +138,40 @@ test('persistent C3: restricted login, atomic install, reconnect and existing na
     assert.equal((await admin.query("select has_table_privilege('qik_ingest_fn_owner','public.persist_sentinel','SELECT') allowed")).rows[0].allowed,true)
     assert.equal((await admin.query('select operation_id from qik_ingest_operation.persistent_install_receipt')).rows[0].operation_id,operationId)
     await admin.query('revoke select on public.persist_sentinel from qik_ingest_fn_owner')
-    // Fixture-only owner provisioning; the installer never issues this login,
-    // password, token, gate change or feed approval.
+    // A separate owner action grants only the existing runtime group for 30 minutes.
     stage='runtime_provision'
-    await admin.query('begin');await admin.query("set local statement_timeout='1000ms'")
-    await admin.query('create role '+ident(names.collector)+' login nosuperuser nocreatedb nocreaterole inherit nobypassrls')
-    await installCredentialHelper(admin);await assignCredential(admin,names.collector,password);await removeCredentialHelper(admin)
-    await admin.query('grant qik_ingest_runtime to '+ident(names.collector))
-    await admin.query("insert into qik_ingest.runtime_credentials values(encode(sha256(convert_to($1,'UTF8')),'hex'),true,'disposable separately provisioned owner token')",[token])
-    await admin.query('commit');runtimeCreated=true
+    const runtimeConfig={operationId,expectedLogin:adminName,runtimePassword:password,token,
+      authorization:'owner-authorized-restricted-runtime'}
+    await assert.rejects(provisionPersistentRuntime(admin,{...runtimeConfig,authorization:null}),/persistent_runtime_authorization_required/)
+    let stopped=false
+    const runtimeFault={query:(sql,params)=>{if(sql.startsWith('insert into qik_ingest.runtime_credentials')){stopped=true;throw Error('injected')}return admin.query(sql,params)}}
+    await assert.rejects(provisionPersistentRuntime(runtimeFault,runtimeConfig),/persistent_runtime_provision_failed/)
+    assert.equal(stopped,true)
+    assert.equal((await admin.query('select 1 from pg_roles where rolname=$1',[names.collector])).rowCount,0)
+    assert.equal((await admin.query('select count(*)::int n from qik_ingest.runtime_credentials')).rows[0].n,0)
+    assert.equal((await admin.query('select runtime_login from qik_ingest_operation.persistent_install_receipt')).rows[0].runtime_login,null)
+    const runtimeChild=spawn(process.execPath,[new URL('../supabase/qualification/qik-ingest/runPersistentRuntime.mjs',import.meta.url).pathname,
+      'provision','--execute','--disposable'],{env:{PATH:process.env.PATH,MIP_DISPOSABLE_POSTGRES:'qik-persistent-install',
+      MIP_C3_RUNTIME_AUTHORIZATION:runtimeConfig.authorization,MIP_C3_INSTALLER_DATABASE_URL:dbUrl.href,
+      MIP_C3_INSTALLER_LOGIN:adminName,MIP_C3_OPERATION_ID:operationId,
+      MIP_C3_RUNTIME_PASSWORD:password,MIP_C3_RUNTIME_TOKEN:token},stdio:['ignore','pipe','pipe']})
+    let runtimeOut='',runtimeErr='';runtimeChild.stdout.on('data',x=>runtimeOut+=x);runtimeChild.stderr.on('data',x=>runtimeErr+=x)
+    const runtimeCode=await new Promise((resolve,reject)=>{runtimeChild.on('error',reject);runtimeChild.on('close',resolve)})
+    assert.equal((runtimeOut+runtimeErr).includes(password),false)
+    assert.equal((runtimeOut+runtimeErr).includes(token),false)
+    const provisioned=JSON.parse(runtimeOut)
+    assert.equal(runtimeCode,0,JSON.stringify(provisioned));runtimeCreated=true
+    assert.equal(provisioned.state,'restricted_runtime_provisioned')
+    assert.equal(provisioned.password_valid_minutes,30)
+    await assert.rejects(provisionPersistentRuntime(admin,runtimeConfig),/persistent_runtime_provision_failed/)
+    const memberships=(await admin.query("select m.admin_option,m.inherit_option,m.set_option from pg_auth_members m join pg_roles a on a.oid=m.member join pg_roles b on b.oid=m.roleid where a.rolname=$1 and b.rolname='qik_ingest_runtime'",[names.collector])).rows
+    assert.deepEqual(memberships,[{admin_option:false,inherit_option:true,set_option:false}])
+    const runtimeRole=(await admin.query('select rolsuper,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit,rolvaliduntil from pg_roles where rolname=$1',[names.collector])).rows[0]
+    assert.equal(runtimeRole.rolsuper,false);assert.equal(runtimeRole.rolcreaterole,false)
+    assert.equal(runtimeRole.rolcreatedb,false);assert.equal(runtimeRole.rolbypassrls,false)
+    assert.equal(runtimeRole.rolinherit,true)
+    assert.ok(runtimeRole.rolvaliduntil.getTime()>Date.now())
+    assert.ok(runtimeRole.rolvaliduntil.getTime()<=Date.now()+31*60*1000)
     server=createServer((_req,res)=>{res.writeHead(200,{'content-type':'application/rss+xml'});res.end(FEED)})
     await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
     const feed='http://127.0.0.1:'+server.address().port+'/feed.xml'
@@ -171,9 +196,27 @@ test('persistent C3: restricted login, atomic install, reconnect and existing na
     await assert.rejects(cleanupPersistentQik(admin,cleanupConfig),/persistent_cleanup_failed/)
     await admin.query('update public.ingest_sources set enabled=false,collection_enabled=false')
     await admin.query('update qik_ingest.collection_gate set collection_authorized=false')
-    await admin.query('delete from qik_ingest.runtime_credentials')
-    await admin.query('revoke qik_ingest_runtime from '+ident(names.collector))
-    await admin.query('drop role '+ident(names.collector));runtimeCreated=false
+    await assert.rejects(cleanupPersistentQik(admin,cleanupConfig),/persistent_cleanup_failed/)
+    await admin.query("update public.ingestion_runs set state='running' where run_id=$1",['qik-host-'+operationId+'-first'])
+    await assert.rejects(revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
+      authorization:'owner-authorized-restricted-runtime-revocation'}),/persistent_runtime_revoke_failed/)
+    await admin.query("update public.ingestion_runs set state='completed' where run_id=$1",['qik-host-'+operationId+'-first'])
+    const heldRuntime=new pg.Client({host:'127.0.0.1',port:rootConfig.port,database,user:names.collector,password})
+    await heldRuntime.connect()
+    try{await assert.rejects(revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
+      authorization:'owner-authorized-restricted-runtime-revocation'}),/persistent_runtime_revoke_failed/)}
+    finally{await heldRuntime.end()}
+    assert.equal((await admin.query('select count(*)::int n from qik_ingest.runtime_credentials')).rows[0].n,1)
+    const boundJob=(await admin.query('select native_job_id from qik_ingest.observed_items where native_job_id is not null limit 1')).rows[0].native_job_id
+    await admin.query("update evidence_pipeline.import_jobs set state='retry_wait' where id=$1",[boundJob])
+    await assert.rejects(revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
+      authorization:'owner-authorized-restricted-runtime-revocation'}),/persistent_runtime_revoke_failed/)
+    await admin.query("update evidence_pipeline.import_jobs set state='completed' where id=$1",[boundJob])
+    const revoked=await revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
+      authorization:'owner-authorized-restricted-runtime-revocation'});runtimeCreated=false
+    assert.equal(revoked.state,'restricted_runtime_revoked')
+    assert.equal((await admin.query('select count(*)::int n from qik_ingest.runtime_credentials')).rows[0].n,0)
+    assert.equal((await admin.query('select 1 from pg_roles where rolname=$1',[names.collector])).rowCount,0)
     const preserved=(await admin.query('select source_project_ref,channel,watermark,captured_at::text from public.mip_consolidation_watermarks order by 1,2')).rows
     await cleanupPersistentQik(admin,cleanupConfig);installed=false
     assert.deepEqual((await admin.query('select source_project_ref,channel,watermark,captured_at::text from public.mip_consolidation_watermarks order by 1,2')).rows,preserved)
