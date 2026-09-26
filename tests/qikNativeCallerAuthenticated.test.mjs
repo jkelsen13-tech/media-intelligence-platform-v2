@@ -81,7 +81,7 @@ test('permanent native seam: actual restricted login, bound history, denied unre
    await assert.rejects(call(run,'enqueue',{observation_id:observed.id},otherToken),e=>e.code==='42501')
    await assert.rejects(call(run,'enqueue',{observation_id:observed.id,article:{reader_state:'eligible'}}),e=>e.code==='22023')
    const foreign=(await admin.query("select evidence_pipeline.enqueue('foreign-run',$1::jsonb) id",
-     [JSON.stringify({...article,url:article.url+'/foreign'})])).rows[0].id
+     [JSON.stringify({...article,outlet:'Synthetic foreign source',url:article.url+'/foreign'})])).rows[0].id
    await admin.query("update evidence_pipeline.import_jobs set state='processing',attempt_count=1,lease_token=gen_random_uuid(),lease_expires_at=clock_timestamp()-interval '1 minute' where id=$1",[foreign])
    const foreignBefore=(await admin.query('select to_jsonb(j) row from evidence_pipeline.import_jobs j where id=$1',[foreign])).rows[0].row
    for(const action of ['claim','states'])await assert.rejects(call(run,action,{job_ids:[job,foreign]}),e=>e.code==='42501')
@@ -101,6 +101,53 @@ test('permanent native seam: actual restricted login, bound history, denied unre
    await assert.rejects(call(run,'claim',{job_ids:[job]},otherToken),e=>e.code==='42501')
    await runtimeRpc('finish_run',{token,run_id:run,state:'completed',counters:{inserted:1}})
    await assert.rejects(call(run,'states',{job_ids:[job]}),e=>e.code==='55000')
+   stage='run_lock'
+   const finalizer=new pg.Client({...config,database,user:login,password})
+   await finalizer.connect();connections.push(finalizer)
+   const finalizerRpc=rpc(finalizer)
+   const finalizerPid=(await finalizer.query('select pg_backend_pid() id')).rows[0].id
+   const nativePid=(await client.query('select pg_backend_pid() id')).rows[0].id
+   async function waitsFor(waiter,blocker){
+     const until=Date.now()+3000
+     do{
+       const blocked=(await admin.query('select $2::int=any(pg_blocking_pids($1::int)) blocked',[waiter,blocker])).rows[0].blocked
+       if(blocked)return
+       await new Promise(resolve=>setTimeout(resolve,20))
+     }while(Date.now()<until)
+     assert.fail('expected run row lock was not observed')
+   }
+   for(const finalAction of ['finish','recover']){
+     const lockRun='native-lock-'+finalAction+'-'+id
+     await runtimeRpc('begin_run',{token,run_id:lockRun})
+     const lockObservation=await runtimeRpc('retain_item',{token,run_id:lockRun,
+       source_id:'11111111-1111-4111-8111-111111111111',
+       item:{...article,url:article.url+'/'+finalAction}})
+     const lockedPipeline=createBoundNativePipelineRpc(client,{token,runId:lockRun})
+     const lockJob=await lockedPipeline.enqueueObservation({runId:lockRun,observationId:lockObservation.id})
+     const lease=await lockedPipeline.claimBound([lockJob])
+     await client.query('begin')
+     await lockedPipeline('finish',{job_id:lockJob,lease_token:lease.lease_token})
+     const finalize=()=>finalAction==='finish'
+       ?finalizerRpc('finish_run',{token,run_id:lockRun,state:'completed',counters:{inserted:1}})
+       :finalizer.query('select public.mip_qik_ingest_recover_inflight($1,$2,null)',[token,lockRun])
+     const pending=finalize().then(value=>({value}),error=>({error}))
+     await waitsFor(finalizerPid,nativePid)
+     assert.equal((await admin.query('select state from public.ingestion_runs where run_id=$1',[lockRun])).rows[0].state,'running')
+     await client.query('commit')
+     const finalized=await pending;if(finalized.error)throw finalized.error
+     await assert.rejects(lockedPipeline.readJobStates([lockJob]),e=>e.code==='55000')
+     // Inverse ordering: a native action waiting behind terminal state must
+     // recheck state after the finalizer commits, rather than write afterwards.
+     const reverseRun=lockRun+'-reverse'
+     await runtimeRpc('begin_run',{token,run_id:reverseRun})
+     await finalizer.query('begin')
+     await finalizerRpc('finish_run',{token,run_id:reverseRun,state:'completed',counters:{}})
+     const reverse=call(reverseRun,'enqueue',{observation_id:lockObservation.id}).then(value=>({value}),error=>({error}))
+     await waitsFor(nativePid,finalizerPid)
+     await finalizer.query('commit')
+     const refused=await reverse;assert.equal(refused.error?.code,'55000')
+   }
+   await finalizer.end();connections.splice(connections.indexOf(finalizer),1)
    stage='collector'
    for(const [suffix,xml,expected] of [
      ['run1',FEED,{inserted:2,duplicates:0,revisions:0}],

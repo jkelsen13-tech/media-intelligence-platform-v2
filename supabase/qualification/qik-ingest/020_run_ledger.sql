@@ -132,7 +132,8 @@ begin
   if p_state not in ('completed', 'completed_with_errors', 'failed', 'cancelled') then
     raise exception 'qik_ingest_invalid_completion_state' using errcode = '22023';
   end if;
-  if not exists (select 1 from public.ingestion_runs where run_id = p_run_id and state = 'running') then
+  perform 1 from public.ingestion_runs where run_id = p_run_id and state = 'running' for update;
+  if not found then
     raise exception 'qik_ingest_run_not_running' using errcode = '55000';
   end if;
   select count(*) into v_failed
@@ -166,7 +167,8 @@ declare
   v_now timestamptz := coalesce(p_now, clock_timestamp());
 begin
   perform qik_ingest.require_token(p_token);
-  if not exists (select 1 from public.ingestion_runs where run_id = p_run_id and state = 'running') then
+  perform 1 from public.ingestion_runs where run_id = p_run_id and state = 'running' for update;
+  if not found then
     raise exception 'qik_ingest_run_not_running' using errcode = '55000';
   end if;
   update public.ingestion_runs

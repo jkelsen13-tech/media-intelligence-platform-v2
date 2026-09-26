@@ -57,7 +57,10 @@ begin
  perform qik_ingest.require_token(p_token);
  if not coalesce((select collection_authorized from qik_ingest.collection_gate where id),false)
    then raise exception 'qik_ingest_collection_not_authorized' using errcode='42501'; end if;
- if not exists(select 1 from public.ingestion_runs where run_id=p_run_id and state='running')
+ -- Hold the run row through this transaction. Finalization uses the same lock;
+ -- PostgreSQL rechecks the running predicate after a concurrent writer commits.
+ perform 1 from public.ingestion_runs where run_id=p_run_id and state='running' for update;
+ if not found
    then raise exception 'qik_ingest_run_not_running' using errcode='55000'; end if;
  if p_input is null or jsonb_typeof(p_input)<>'object'
    then raise exception 'qik_ingest_native_input_invalid' using errcode='22023'; end if;

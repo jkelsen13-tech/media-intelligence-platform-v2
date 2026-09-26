@@ -42,7 +42,8 @@ declare
   v_id uuid;
 begin
   perform qik_ingest.require_token(p_token);
-  if not exists (select 1 from public.ingestion_runs where run_id = p_run_id and state = 'running') then
+  perform 1 from public.ingestion_runs where run_id = p_run_id and state = 'running' for update;
+  if not found then
     raise exception 'qik_ingest_run_not_running' using errcode = '55000';
   end if;
   if not exists (
@@ -117,7 +118,8 @@ begin
   if p_state = 'succeeded' and p_error_note is not null then
     raise exception 'qik_ingest_succeeded_source_forbids_note' using errcode = '22023';
   end if;
-  if not exists (select 1 from public.ingestion_runs where run_id = p_run_id and state = 'running') then
+  perform 1 from public.ingestion_runs where run_id = p_run_id and state = 'running' for update;
+  if not found then
     raise exception 'qik_ingest_run_not_running' using errcode = '55000';
   end if;
   select feed_url, outlet_name into v_url, v_outlet from public.ingest_sources where id = p_source_id;
