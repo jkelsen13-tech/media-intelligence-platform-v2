@@ -108,7 +108,7 @@ export async function runQikIngestCollector({
         if (result.disposition !== 'observed' || !result.article) {
           throw new Error('qik_ingest_native_handoff_required')
         }
-        const jobId = await enqueueObserved({pipelineRpc, runId, article: result.article})
+        const jobId = await enqueueObserved({pipelineRpc, runId, article: result.article, observationId: result.id})
         if (!jobId) throw new Error('native_job_id_required')
         sourceJobIds.push(jobId)
         allJobIds.push(jobId)

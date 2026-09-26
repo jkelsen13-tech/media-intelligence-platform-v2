@@ -7,6 +7,7 @@ export const LOAD_ORDER = Object.freeze([
   '010_collection_gate.sql',
   '020_run_ledger.sql',
   '030_retain_upsert.sql',
+  '035_native_caller.sql',
   '040_watermarks.sql',
   '050_schedule_disabled.sql',
 ])

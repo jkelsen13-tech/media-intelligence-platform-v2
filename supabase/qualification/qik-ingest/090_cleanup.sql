@@ -78,8 +78,14 @@ begin
       elsif rec.object_kind='column' and rec.column_name <> '' then
         execute format('revoke %s (%I) on %I.%I from %I',
           rec.privilege, rec.column_name, rec.schema_name, rec.object_name, rec.grantee);
-      elsif rec.object_kind='schema' and rec.privilege='USAGE' then
-        execute format('revoke usage on schema %I from %I', rec.schema_name, rec.grantee);
+      elsif rec.object_kind='function' and rec.privilege='EXECUTE' then
+        execute format('revoke execute on function %I.%I(%s) from %I',
+          rec.schema_name,rec.object_name,rec.column_name,rec.grantee);
+      elsif rec.object_kind='sequence' then
+        execute format('revoke %s on sequence %I.%I from %I',
+          rec.privilege,rec.schema_name,rec.object_name,rec.grantee);
+      elsif rec.object_kind='schema' then
+        execute format('revoke %s on schema %I from %I', rec.privilege,rec.schema_name,rec.grantee);
       end if;
     exception
       when undefined_object then

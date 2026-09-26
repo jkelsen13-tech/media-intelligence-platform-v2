@@ -13,6 +13,8 @@ create table qik_ingest.observed_items (
   summary text,
   body_text text,
   published_at timestamptz,
+  credential_hash text not null,
+  native_job_id uuid,
   observed_at timestamptz not null default clock_timestamp()
 );
 
@@ -71,10 +73,10 @@ begin
     end if;
   end if;
   insert into qik_ingest.observed_items (
-    run_id, source_id, url, title, outlet, summary, body_text, published_at
+    run_id, source_id, url, title, outlet, summary, body_text, published_at, credential_hash
   ) values (
     p_run_id, p_source_id, v_url, v_title, v_outlet, v_summary, v_body,
-    v_published::timestamptz
+    v_published::timestamptz, encode(sha256(convert_to(p_token,'UTF8')),'hex')
   ) returning id into v_id;
   return jsonb_build_object(
     'disposition', 'observed',

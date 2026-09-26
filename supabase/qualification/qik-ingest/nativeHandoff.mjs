@@ -74,9 +74,48 @@ export function createPipelineRpc(db) {
   return pipelineRpc
 }
 
-export async function enqueueObserved({pipelineRpc, runId, article}) {
+// Permanent execute-only adapter: actual qik_ingest_runtime login (or its
+// operation-owned member), with no service_role membership or SET ROLE.
+export function createBoundNativePipelineRpc(db,{token,runId}={}) {
+  if (!db || typeof db.query!=='function') throw Error('pipeline_transport_required')
+  if (typeof token!=='string' || token.length<32 || typeof runId!=='string')
+    throw Error('native_caller_scope_required')
+  const call=async(action,input={})=>{
+    const result=await db.query(
+      'select public.mip_qik_ingest_native($1,$2,$3,$4::jsonb) result',
+      [token,runId,action,JSON.stringify(input)])
+    return result.rows?.[0]?.result??null
+  }
+  const pipeline=async(action,input={})=>{
+    if(action!=='finish') throw Error('native_caller_action_forbidden')
+    return call(action,input)
+  }
+  pipeline.enqueueObservation=async({runId:requestedRun,observationId})=>{
+    if(requestedRun!==runId || !observationId) throw Error('native_observation_required')
+    return call('enqueue',{observation_id:observationId})
+  }
+  pipeline.claimBound=ids=>call('claim',{job_ids:uniqueJobIds(ids)})
+  pipeline.readJobStates=async ids=>{
+    const bound=uniqueJobIds(ids)
+    if(!bound.length)return []
+    const rows=await call('states',{job_ids:bound})
+    return rows.map(normalizeJobRow)
+  }
+  pipeline.extractCapture=({job_id,capture_id})=>extractRetainedCapture({
+    capture_id,backend:{
+      readCapture:id=>call('capture',{job_id,capture_id:id}),
+      appendCandidate:candidate=>call('candidate',{job_id,candidate}),
+    },
+  })
+  return pipeline
+}
+
+export async function enqueueObserved({pipelineRpc, runId, article, observationId}) {
   if (typeof pipelineRpc !== 'function') throw new Error('native_pipeline_rpc_required')
   if (typeof runId !== 'string' || runId.length < 8) throw new Error('run_id required, maximum 120 characters')
+  if (typeof pipelineRpc.enqueueObservation==='function') {
+    return asJobId(await pipelineRpc.enqueueObservation({runId,observationId}))
+  }
   if (!article || typeof article !== 'object') throw new Error('invalid import payload')
   return asJobId(await pipelineRpc('enqueue', {run_id: runId, article}))
 }
