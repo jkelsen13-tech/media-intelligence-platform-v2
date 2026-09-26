@@ -121,7 +121,13 @@ export async function runAuthenticatedQualification({admin,collector,native,cas,
   await call('complete',[investigation,logicalKey,rehydration.job_id])
   assert.deepEqual(decodeCanonical(await call('read',[investigation,logicalKey,'canonical'])),capture.bytes)
   // Revoke only this source permission and prove current authorization is checked.
-  await admin.query('delete from mip_cas.source_permissions where investigation=$1::uuid and source_version=$2',[investigation,provenance.source_version])
+  await admin.query('begin')
+  try {
+    await admin.query('set local role mip_cas_owner')
+    await admin.query('delete from mip_cas.source_permissions where investigation=$1::uuid and source_version=$2',[investigation,provenance.source_version])
+    await admin.query('reset role')
+    await admin.query('commit')
+  } catch (error) { await admin.query('rollback').catch(()=>{}); throw error }
   await assert.rejects(call('read',[investigation,logicalKey,'canonical']),/mip_cas_source_rights_unverified/)
   return {
     operationId,manifest:updatedManifest,runs:results,

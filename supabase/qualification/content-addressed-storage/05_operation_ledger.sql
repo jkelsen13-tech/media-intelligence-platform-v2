@@ -25,8 +25,23 @@ select 'function', n.nspname||'.'||p.proname||'('||pg_get_function_identity_argu
 from pg_proc p
 join pg_namespace n on n.oid=p.pronamespace
 where n.nspname='mip_cas';
+-- Includes PostgreSQL 16's automatic creator ADMIN grant and explicit SET.
+create table mip_cas_source_install.memberships (
+  member_role text not null,granted_role text not null,grantor text not null,
+  admin_option boolean not null,inherit_option boolean not null,set_option boolean not null,
+  primary key(member_role,granted_role,grantor)
+);
+insert into mip_cas_source_install.memberships
+select mem.rolname::text,rol.rolname::text,pg_get_userbyid(m.grantor),
+       m.admin_option,m.inherit_option,m.set_option
+from pg_auth_members m
+join pg_roles mem on mem.oid=m.member
+join pg_roles rol on rol.oid=m.roleid
+where mem.rolname in (select identity from mip_cas_source_install.objects where kind='role')
+   or rol.rolname in (select identity from mip_cas_source_install.objects where kind='role');
+
 create function mip_cas_source_install.refuse_external_dependents()
-returns void language plpgsql as $$
+returns void language plpgsql as $
 declare extra text;
 begin
   -- DROP FUNCTION CASCADE is not limited to mip_cas. Refuse any unapproved

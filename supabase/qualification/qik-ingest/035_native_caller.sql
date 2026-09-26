@@ -119,5 +119,8 @@ begin
  end case;
 end $$;
 revoke all on function public.mip_qik_ingest_native(text,text,text,jsonb) from public,anon,authenticated,service_role;
-alter function public.mip_qik_ingest_native(text,text,text,jsonb) owner to qik_ingest_fn_owner;
 grant execute on function public.mip_qik_ingest_native(text,text,text,jsonb) to qik_ingest_runtime;
+-- Ownership transfer requires target CREATE even with explicit SET membership.
+grant create on schema public to qik_ingest_fn_owner;
+alter function public.mip_qik_ingest_native(text,text,text,jsonb) owner to qik_ingest_fn_owner;
+revoke create on schema public from qik_ingest_fn_owner;

@@ -236,7 +236,8 @@ grant execute on function public.mip_qik_ingest_finish_run(text, text, text, jso
 grant execute on function public.mip_qik_ingest_recover_inflight(text, text, timestamptz) to service_role, qik_ingest_runtime;
 grant execute on function public.mip_qik_ingest_observe(text) to service_role, qik_ingest_runtime;
 
-do $$
+grant create on schema qik_ingest, public to qik_ingest_fn_owner;
+do $
 begin
   execute 'alter function qik_ingest.set_forward_watermark(timestamptz, text, text, jsonb) owner to qik_ingest_fn_owner';
   execute 'alter function public.mip_qik_ingest_schedule_authorized(text) owner to qik_ingest_fn_owner';
@@ -246,4 +247,6 @@ begin
   execute 'alter function public.mip_qik_ingest_recover_inflight(text, text, timestamptz) owner to qik_ingest_fn_owner';
   execute 'alter function public.mip_qik_ingest_observe(text) owner to qik_ingest_fn_owner';
 end
-$$;
+$;
+
+revoke create on schema qik_ingest, public from qik_ingest_fn_owner;

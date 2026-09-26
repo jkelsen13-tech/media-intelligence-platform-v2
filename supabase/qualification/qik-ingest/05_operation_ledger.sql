@@ -58,8 +58,9 @@ create table qik_ingest_operation.created_relations(
   primary key(nspname,relname));
 create table qik_ingest_operation.created_functions(signature text primary key);
 create table qik_ingest_operation.created_memberships(
-  member_role text not null,granted_role text not null,
-  primary key(member_role,granted_role));
+  member_role text not null,granted_role text not null,grantor text not null,
+  admin_option boolean not null,inherit_option boolean not null,set_option boolean not null,
+  primary key(member_role,granted_role,grantor));
 create table qik_ingest_operation.created_policies(
   schemaname text not null,tablename text not null,policyname text not null,
   primary key(schemaname,tablename,policyname));
@@ -168,8 +169,9 @@ begin
      or (n.nspname='public' and p.proname like 'mip_qik_ingest_%')
   on conflict do nothing;
 
-  insert into qik_ingest_operation.created_memberships(member_role,granted_role)
-  select mem.rolname::text,rol.rolname::text
+  insert into qik_ingest_operation.created_memberships(member_role,granted_role,grantor,admin_option,inherit_option,set_option)
+  select mem.rolname::text,rol.rolname::text,pg_get_userbyid(m.grantor),
+         m.admin_option,m.inherit_option,m.set_option
   from pg_auth_members m
   join pg_roles mem on mem.oid=m.member
   join pg_roles rol on rol.oid=m.roleid
@@ -255,6 +257,27 @@ begin
        and g.status='introduced')
  ) then raise exception 'qik_ingest_unrelated_privilege'; end if;
 end $$;
+
+create function qik_ingest_operation.refuse_membership_drift()
+returns void language plpgsql as $
+begin
+  if exists (
+    with current_memberships as (
+      select mem.rolname::text member_role,rol.rolname::text granted_role,
+             pg_get_userbyid(m.grantor)::text grantor,m.admin_option,m.inherit_option,m.set_option
+      from pg_auth_members m
+      join pg_roles mem on mem.oid=m.member
+      join pg_roles rol on rol.oid=m.roleid
+      where mem.rolname in (select rolname from qik_ingest_operation.created_roles)
+         or rol.rolname in (select rolname from qik_ingest_operation.created_roles)
+    )
+    (select * from current_memberships except select * from qik_ingest_operation.created_memberships)
+    union all
+    (select * from qik_ingest_operation.created_memberships except select * from current_memberships)
+  ) then
+    raise exception 'qik_ingest_membership_drift';
+  end if;
+end $;
 
 select qik_ingest_operation.snapshot_baseline();
 commit;

@@ -1,7 +1,6 @@
 -- Drop only ledgered package identities. No public-table CASCADE, no secret wipe.
 -- Selecting mip_cas functions and DROP FUNCTION CASCADE is not schema-limited:
 -- refuse unapproved external dependents, then drop recorded objects RESTRICT.
-set session authorization postgres;
 begin;
 do $cleanup$
 declare extra text;
@@ -13,6 +12,22 @@ declare extra text;
 begin
   if not exists (select 1 from pg_namespace where nspname='mip_cas_source_install') then
     raise exception 'mip_cas_install_ledger_missing';
+  end if;
+  if exists (
+    with current_memberships as (
+      select mem.rolname::text member_role,rol.rolname::text granted_role,
+             pg_get_userbyid(m.grantor)::text grantor,m.admin_option,m.inherit_option,m.set_option
+      from pg_auth_members m
+      join pg_roles mem on mem.oid=m.member
+      join pg_roles rol on rol.oid=m.roleid
+      where mem.rolname in (select identity from mip_cas_source_install.objects where kind='role')
+         or rol.rolname in (select identity from mip_cas_source_install.objects where kind='role')
+    )
+    (select * from current_memberships except select * from mip_cas_source_install.memberships)
+    union all
+    (select * from mip_cas_source_install.memberships except select * from current_memberships)
+  ) then
+    raise exception 'mip_cas_membership_drift';
   end if;
   select string_agg(n.nspname||'.'||c.relname, ',' order by 1) into extra
   from pg_class c
@@ -46,7 +61,9 @@ begin
     join pg_namespace n on n.oid=c.relnamespace
     where n.nspname='mip_cas' and not t.tgisinternal
   loop
+    execute 'set local role mip_cas_owner';
     execute format('drop trigger %I on %I.%I', r.tgname, r.nspname, r.relname);
+    execute 'reset role';
   end loop;
 
   for attempt in 1..80 loop
@@ -57,7 +74,9 @@ begin
     loop
       remaining := remaining + 1;
       begin
+        execute 'set local role mip_cas_owner';
         execute 'drop function '||r.identity;
+        execute 'reset role';
         delete from mip_cas_source_install.objects
           where kind='function' and identity=r.identity;
         dropped := dropped + 1;
@@ -84,20 +103,16 @@ begin
     on o.kind='table' and o.identity=n.nspname||'.'||c.relname
   where n.nspname='mip_cas' and c.relkind='r';
   if drop_sql is not null then
+    execute 'set local role mip_cas_owner';
     execute drop_sql;
+    execute 'reset role';
   end if;
   if exists (select 1 from pg_namespace where nspname='mip_cas') then
+    execute 'set local role mip_cas_owner';
     execute 'drop schema mip_cas restrict';
+    execute 'reset role';
   end if;
-  for r in
-    select mem.rolname as member_name, granted.rolname as role_name
-    from pg_auth_members m
-    join pg_roles granted on granted.oid=m.roleid
-    join pg_roles mem on mem.oid=m.member
-    where granted.rolname in (select identity from mip_cas_source_install.objects where kind='role')
-  loop
-    execute format('revoke %I from %I', r.role_name, r.member_name);
-  end loop;
+  -- Keep creator ADMIN until DROP ROLE; it removes the verified memberships.
   for r in select identity from mip_cas_source_install.objects where kind='role' order by identity
   loop
     if exists (
@@ -118,6 +133,7 @@ begin
 end
 $cleanup$;
 drop function if exists mip_cas_source_install.refuse_external_dependents();
+drop table mip_cas_source_install.memberships;
 drop table mip_cas_source_install.objects;
 drop schema mip_cas_source_install restrict;
 commit;
