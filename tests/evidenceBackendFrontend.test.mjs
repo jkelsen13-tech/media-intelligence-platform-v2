@@ -73,3 +73,46 @@ test('policy reliability renders only recorded tiers one through four', async ()
     } finally { await act(async () => renderer.unmount()) }
   }
 })
+
+test('relationship provenance distinguishes disabled, empty and unavailable reads without losing the selected edge', async () => {
+  for (const mode of ['disabled', 'empty', 'flag-denied', 'rows-denied', 'network']) {
+    const tables = evidenceTables(), errors = {}
+    if (mode === 'disabled') tables.pipeline_config = [{ key: 'provenance_ui', value: false }]
+    if (mode === 'empty') tables.explanations = []
+    if (mode === 'flag-denied') errors.pipeline_config = { code: '42501', message: 'private diagnostic' }
+    if (mode === 'rows-denied') errors.explanations = { code: '42501', message: 'private diagnostic' }
+    if (mode === 'network') errors.explanations = () => { throw Error('private diagnostic') }
+    const f = evidenceBackendFixture({ tables, errors }); let renderer
+    await act(async () => { renderer = TestRenderer.create(React.createElement(panels.RelationshipPanel, { ...props.RelationshipPanel, backend: f.backend })) })
+    try {
+      const output = text(renderer)
+      assert.match(output, /Recorded policy/); assert.match(output, /Recorded event/)
+      assert.match(output, /Recorded agency/)
+      assert.doesNotMatch(output, /Recorded grounding passage|private diagnostic/)
+      assert.ok(f.calls.every(call => ['pipeline_config', 'explanations'].includes(call.table)), 'no source lookup without readable explanations')
+      if (mode === 'disabled') assert.match(output, /provenance_ui flag off/)
+      else if (mode === 'empty') {
+        assert.match(output, /No provenance recorded/); assert.doesNotMatch(output, /could not be loaded|flag off/)
+      } else {
+        assert.match(output, /Provenance could not be loaded/)
+        assert.doesNotMatch(output, /flag off|No provenance recorded|No sources documented/)
+      }
+    } finally { await act(async () => renderer.unmount()) }
+  }
+})
+
+test('a late unavailable relationship result cannot replace a newer readable selection', async () => {
+  const pending = [], backend = { ...createEvidenceBackend(null),
+    loadExplanationReadView: () => { const d = deferred(); pending.push(d); return d.promise },
+    loadEdgeSources: async () => [],
+  }; let renderer
+  await act(async () => { renderer = TestRenderer.create(React.createElement(panels.RelationshipPanel, { ...props.RelationshipPanel, backend })) })
+  try {
+    await act(async () => renderer.update(React.createElement(panels.RelationshipPanel, { ...props.RelationshipPanel, edge: { ...evidenceEdge, id: 'new-edge' }, backend })))
+    const row = { ...evidenceTables().explanations[0], supporting_passage: 'Current selected evidence', source_ids: [] }
+    await act(async () => pending[1].resolve({ enabled: true, eligible: [row], excluded: [] }))
+    await act(async () => pending[0].resolve({ enabled: true, eligible: [], excluded: [], loadError: { code: 'provenance_unavailable', stage: 'explanations' } }))
+    assert.match(text(renderer), /Current selected evidence/)
+    assert.doesNotMatch(text(renderer), /could not be loaded|flag off/)
+  } finally { await act(async () => renderer.unmount()) }
+})

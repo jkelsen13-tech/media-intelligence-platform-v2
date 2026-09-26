@@ -6,6 +6,7 @@ import { build } from 'esbuild'
 import React from 'react'
 import TestRenderer, { act } from 'react-test-renderer'
 import { curatedFixture, curatedTables } from './curatedBackendFixture.mjs'
+import { evidenceBackendFixture, evidenceTables } from './evidenceBackendFixture.mjs'
 const components = {}
 await mkdir(new URL('./.compiled/', import.meta.url), { recursive: true })
 for (const [name, path] of [['Phase3View', 'views'], ['ReviewStatusPanel', 'panels']]) {
@@ -55,4 +56,41 @@ test('curated and review views ignore obsolete loads after their backend is repl
       assert.doesNotMatch(text(renderer), /Synthetic proceeding|edge:synthetic/)
     } finally { await act(async () => renderer.unmount()) }
   }
+})
+
+test('review status distinguishes confirmed disabled, readable empty and unavailable provenance', async () => {
+  for (const mode of ['disabled', 'empty', 'flag-denied', 'rows-denied', 'network']) {
+    const tables = evidenceTables(), errors = {}
+    if (mode === 'disabled') tables.pipeline_config = [{ key: 'provenance_ui', value: false }]
+    if (mode === 'empty') tables.explanations = []
+    if (mode === 'flag-denied') errors.pipeline_config = { code: '42501', message: 'private diagnostic' }
+    if (mode === 'rows-denied') errors.explanations = { code: '42501', message: 'private diagnostic' }
+    if (mode === 'network') errors.explanations = () => { throw Error('private diagnostic') }
+    const f = evidenceBackendFixture({ tables, errors }); let renderer
+    await act(async () => { renderer = TestRenderer.create(React.createElement(components.ReviewStatusPanel, { backend: f.backend })) })
+    try {
+      const output = text(renderer)
+      assert.doesNotMatch(output, /edge:edge-one|private diagnostic/)
+      if (mode === 'disabled') assert.match(output, /provenance_ui flag off/)
+      else if (mode === 'empty') {
+        assert.match(output, /No explanation rows found/); assert.doesNotMatch(output, /could not be loaded|flag off/)
+      } else {
+        assert.match(output, /Review status could not be loaded/)
+        assert.doesNotMatch(output, /flag off|No explanation rows found/)
+      }
+    } finally { await act(async () => renderer.unmount()) }
+  }
+})
+
+test('a stale unavailable review load cannot replace a newer readable backend', async () => {
+  let resolve, renderer
+  const old = { loadExplanationReadView: () => new Promise(done => { resolve = done }) }
+  const current = evidenceBackendFixture({ tables: evidenceTables() }).backend
+  await act(async () => { renderer = TestRenderer.create(React.createElement(components.ReviewStatusPanel, { backend: old })) })
+  try {
+    await act(async () => renderer.update(React.createElement(components.ReviewStatusPanel, { backend: current })))
+    await act(async () => resolve({ enabled: true, eligible: [], excluded: [], loadError: { code: 'provenance_unavailable', stage: 'explanations' } }))
+    assert.match(text(renderer), /edge:edge-one/)
+    assert.doesNotMatch(text(renderer), /could not be loaded|flag off/)
+  } finally { await act(async () => renderer.unmount()) }
 })

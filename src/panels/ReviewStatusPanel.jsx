@@ -18,7 +18,9 @@ export default function ReviewStatusPanel({ onClose, backend = mipBackend.public
     setError(null)
     backend.loadExplanationReadView({ limit: 1000 })
       .then((v) => {
-        if (!cancelled) setView(v)
+        if (cancelled) return
+        if (v.loadError) setError(true)
+        else setView(v)
       })
       .catch((e) => {
         if (!cancelled) setError(e)
