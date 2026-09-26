@@ -24,7 +24,7 @@ async function closed(db) {
   if (!row || row.gate_on || row.source_on || row.run_on) throw Error('persistent_runtime_activity_refused')
 }
 async function membership(db, name) {
-  return (await db.query("select member.rolname member,role.rolname granted,m.admin_option,m.inherit_option,m.set_option from pg_auth_members m join pg_roles member on member.oid=m.member join pg_roles role on role.oid=m.roleid where member.rolname=$1 or role.rolname=$1",[name])).rows
+  return (await db.query("select member.rolname member,role.rolname granted,grantor.rolname grantor,m.admin_option,m.inherit_option,m.set_option from pg_auth_members m join pg_roles member on member.oid=m.member join pg_roles role on role.oid=m.roleid join pg_roles grantor on grantor.oid=m.grantor where member.rolname=$1 or role.rolname=$1",[name])).rows
 }
 function failed(action, error, commitAttempted) {
   const result=Error('persistent_runtime_'+action+'_failed')
@@ -55,11 +55,12 @@ export async function provisionPersistentRuntime(db,{operationId,expectedLogin,r
     await db.query('grant qik_ingest_runtime to '+quote(runtimeLogin)+' with admin false, inherit true, set false')
     const members=await membership(db,runtimeLogin)
     const runtime=members.filter(m=>m.member===runtimeLogin && m.granted==='qik_ingest_runtime')
-    if (runtime.length!==1 || runtime[0].admin_option || !runtime[0].inherit_option || runtime[0].set_option ||
-        members.some(m=>m.member===runtimeLogin && m.granted!=='qik_ingest_runtime'))
+    const creator=members.filter(m=>m.member===expectedLogin && m.granted===runtimeLogin)
+    if (members.length!==2 || runtime.length!==1 || runtime[0].grantor!==expectedLogin || runtime[0].admin_option || !runtime[0].inherit_option || runtime[0].set_option ||
+        creator.length!==1 || !creator[0].admin_option || creator[0].inherit_option || creator[0].set_option)
       throw Error('persistent_runtime_membership_refused')
     const inserted=await db.query("insert into qik_ingest.runtime_credentials(credential_hash,active,notes) values(encode(sha256(convert_to($1,'UTF8')),'hex'),true,'operation-owned one-shot runtime') returning credential_hash",[token])
-    await db.query('update qik_ingest_operation.persistent_install_receipt set runtime_login=$1,runtime_token_hash=$2 where id',[runtimeLogin,inserted.rows[0].credential_hash])
+    await db.query('update qik_ingest_operation.persistent_install_receipt set runtime_login=$1,runtime_token_hash=$2,runtime_creator_grantor=$3 where id',[runtimeLogin,inserted.rows[0].credential_hash,creator[0].grantor])
     commitAttempted=true;await db.query('commit')
     return {state:'restricted_runtime_provisioned',operation_id:operationId,runtime_login:runtimeLogin,password_valid_minutes:30,collection_unchanged:true,needs_reconciliation:false}
   } catch(error) { await db.query('rollback').catch(()=>{});throw failed('provision',error,commitAttempted) }
@@ -71,26 +72,35 @@ export async function revokePersistentRuntime(db,{operationId,expectedLogin,auth
   await db.query('begin')
   let commitAttempted=false
   try {
+    await db.query("set local statement_timeout='30000ms'")
     const row=await receipt(db,operationId,expectedLogin)
-    if (row.runtime_login!==runtimeLogin || !/^[a-f0-9]{64}$/.test(row.runtime_token_hash??'')) throw Error('persistent_runtime_receipt_refused')
-    await closed(db)
-    if ((await db.query('select 1 from pg_stat_activity where usename=$1 and pid<>pg_backend_pid()',[runtimeLogin])).rowCount)
-      throw Error('persistent_runtime_session_active')
-    // Observations are token-bound in the existing facade. Revoking their
-    // token while work is unfinished would strand the original job identity.
-    if ((await db.query("select 1 from qik_ingest.observed_items o left join evidence_pipeline.import_jobs j on j.id=o.native_job_id where o.credential_hash=$1 and (j.id is null or j.state not in ('completed','dead_letter')) limit 1",[row.runtime_token_hash])).rowCount)
-      throw Error('persistent_runtime_jobs_unresolved')
-    const members=await membership(db,runtimeLogin)
-    const runtime=members.filter(m=>m.member===runtimeLogin && m.granted==='qik_ingest_runtime')
-    if (runtime.length!==1 || runtime[0].admin_option || !runtime[0].inherit_option || runtime[0].set_option ||
-        members.some(m=>m.member===runtimeLogin && m.granted!=='qik_ingest_runtime'))
-      throw Error('persistent_runtime_membership_drift')
+    if (row.runtime_login!==runtimeLogin || !/^[a-f0-9]{64}$/.test(row.runtime_token_hash??'') || !row.runtime_creator_grantor)
+      throw Error('persistent_runtime_receipt_refused')
+    // require_token holds FOR SHARE through every admitted RPC transaction.
+    // DELETE waits for them, then prevents any later token admission.
     const credential=await db.query('delete from qik_ingest.runtime_credentials where credential_hash=$1 and active returning credential_hash',[row.runtime_token_hash])
     if (credential.rowCount!==1 || (await db.query('select 1 from qik_ingest.runtime_credentials')).rowCount)
       throw Error('persistent_runtime_credential_drift')
+    // Prevent a concurrent source/gate activation while checking the stopped state.
+    await db.query('lock table public.ingest_sources, qik_ingest.collection_gate in share row exclusive mode')
+    await closed(db)
+    if ((await db.query('select 1 from pg_stat_activity where usename=$1 and pid<>pg_backend_pid()',[runtimeLogin])).rowCount)
+      throw Error('persistent_runtime_session_active')
+    // Do not strand token-bound native work or a run needing reconciliation,
+    // including extraction incomplete after the native job completed.
+    if ((await db.query("select 1 from qik_ingest.observed_items o left join evidence_pipeline.import_jobs j on j.id=o.native_job_id where o.credential_hash=$1 and (j.id is null or j.state not in ('completed','dead_letter')) limit 1",[row.runtime_token_hash])).rowCount)
+      throw Error('persistent_runtime_jobs_unresolved')
+    if ((await db.query("select 1 from public.ingestion_runs r where r.mode='discover' and exists(select 1 from qik_ingest.observed_items o where o.run_id=r.run_id and o.credential_hash=$1) and (r.state<>'completed' or coalesce((r.counters->>'unresolved')::int,0)>0 or coalesce((r.counters->>'failed_jobs')::int,0)>0 or coalesce((r.counters->>'extraction_incomplete')::int,0)>0) limit 1",[row.runtime_token_hash])).rowCount)
+      throw Error('persistent_runtime_run_unresolved')
+    const members=await membership(db,runtimeLogin)
+    const runtime=members.filter(m=>m.member===runtimeLogin && m.granted==='qik_ingest_runtime')
+    const creator=members.filter(m=>m.member===expectedLogin && m.granted===runtimeLogin)
+    if (members.length!==2 || runtime.length!==1 || runtime[0].grantor!==expectedLogin || runtime[0].admin_option || !runtime[0].inherit_option || runtime[0].set_option ||
+        creator.length!==1 || creator[0].grantor!==row.runtime_creator_grantor || !creator[0].admin_option || creator[0].inherit_option || creator[0].set_option)
+      throw Error('persistent_runtime_membership_drift')
     await db.query('revoke qik_ingest_runtime from '+quote(runtimeLogin))
     await db.query('drop role '+quote(runtimeLogin))
-    await db.query('update qik_ingest_operation.persistent_install_receipt set runtime_login=null,runtime_token_hash=null where id')
+    await db.query('update qik_ingest_operation.persistent_install_receipt set runtime_login=null,runtime_token_hash=null,runtime_creator_grantor=null where id')
     await db.query('select qik_ingest_operation.refuse_membership_drift()')
     commitAttempted=true;await db.query('commit')
     return {state:'restricted_runtime_revoked',operation_id:operationId,runtime_login:runtimeLogin,collection_unchanged:true,needs_reconciliation:false}
