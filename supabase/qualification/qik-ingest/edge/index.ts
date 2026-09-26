@@ -67,8 +67,18 @@ Deno.serve(async (req: Request) => {
   }
 
   const runId = `qik-ingest-${new Date().toISOString()}`
+  const pipelineRpc = async (action: string, input: Record<string, unknown> = {}) => {
+    const { data, error } = await supabase.rpc('mip_pipeline_v1', {
+      p_action: action,
+      p_input: input,
+    })
+    if (error) throw new Error(error.message)
+    return data
+  }
+
   const result = await runQikIngestCollector({
     rpc,
+    pipelineRpc,
     token: rpcToken,
     runId,
     fetchText: async (url: string) => {

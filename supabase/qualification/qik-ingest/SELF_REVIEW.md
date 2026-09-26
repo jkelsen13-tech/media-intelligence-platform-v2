@@ -8,7 +8,7 @@ deploy, Vault, cron, or real feed fetch. Golden / Deno / broker not rerun.
 | ID | Severity | Finding | Disposition |
 |---|---|---|---|
 | F1 | must-fix | First Edge draft only checked `MIP_QIK_INGEST_RUN_KEY` and 503'd when unset. Captured YHB **v8** (`runtime-snapshots/ingest-rss-v8-live-20260920`) authorizes **owner run key or** Vault scheduler RPC (`mip_ingest_rss_schedule_authorized`). | **CLOSE** — `mip_qik_ingest_schedule_authorized` + `x-mip-qik-ingest-scheduler-token`; unset owner key disables that path only. |
-| F2 | must-fix | `090` could not `DROP ROLE qik_ingest_runtime` (grants remained). | **CLOSE** — revoke + `DROP OWNED`. |
+| F2 | must-fix | `090` could not `DROP ROLE qik_ingest_runtime` (grants remained). Composition replaces `DROP OWNED` with ledger-bound drops. | **CLOSE** — revoke recorded grants + exact drops |
 | F3 | must-fix | Static scan treated SQL comments mentioning forbidden APIs as executable. | **CLOSE** — scan strips `--` comments. |
 | F4 | should-fix | All-fail and all-success were tested; mixed source failure (Phase B honesty) was not. | **CLOSE** — `completed_with_errors` + `qik_forward_stale` + `is_current=false`. |
 | F5 | should-fix | Successful complete did not re-read observe. | **CLOSE** — observe after ok remains `is_current=false`, freshness `qik_forward_ok`. |
@@ -21,7 +21,7 @@ deploy, Vault, cron, or real feed fetch. Golden / Deno / broker not rerun.
 ## Corrections applied in this PR
 
 1. Dual-auth Edge + boolean scheduler RPC (qik names only).
-2. Cleanup revoke/`DROP OWNED` so roles drop.
+2. Cleanup revoke/`DROP OWNED` so roles drop. **Superseded in composition:** ledger-bound 090, no DROP OWNED.
 3. Comment-stripped activation scan.
 4. Mixed-failure and post-success observe assertions.
 5. Docs cite the v8 snapshot and the hash/vault bind requirement.

@@ -1,10 +1,15 @@
 -- Drop only ledgered package identities. No public-table CASCADE, no secret wipe.
+-- Selecting mip_cas functions and DROP FUNCTION CASCADE is not schema-limited:
+-- refuse unapproved external dependents, then drop recorded objects RESTRICT.
 set session authorization postgres;
 begin;
 do $cleanup$
 declare extra text;
         r record;
         drop_sql text;
+        attempt int;
+        dropped int;
+        remaining int;
 begin
   if not exists (select 1 from pg_namespace where nspname='mip_cas_source_install') then
     raise exception 'mip_cas_install_ledger_missing';
@@ -32,19 +37,51 @@ begin
   if extra is not null then
     raise exception 'mip_cas_unexpected_object:%', extra;
   end if;
-  -- CASCADE here drops only trigger dependents of these functions (still inside mip_cas).
-  select 'drop function '||string_agg(p.oid::regprocedure::text, ', ')||' cascade'
-    into drop_sql
-  from pg_proc p
-  join pg_namespace n on n.oid=p.pronamespace
-  where n.nspname='mip_cas';
-  if drop_sql is not null then
-    execute drop_sql;
-  end if;
+  perform mip_cas_source_install.refuse_external_dependents();
+
+  for r in
+    select n.nspname, c.relname, t.tgname
+    from pg_trigger t
+    join pg_class c on c.oid=t.tgrelid
+    join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='mip_cas' and not t.tgisinternal
+  loop
+    execute format('drop trigger %I on %I.%I', r.tgname, r.nspname, r.relname);
+  end loop;
+
+  for attempt in 1..80 loop
+    dropped := 0;
+    remaining := 0;
+    for r in
+      select identity from mip_cas_source_install.objects where kind='function'
+    loop
+      remaining := remaining + 1;
+      begin
+        execute 'drop function '||r.identity;
+        delete from mip_cas_source_install.objects
+          where kind='function' and identity=r.identity;
+        dropped := dropped + 1;
+      exception
+        when undefined_function then
+          delete from mip_cas_source_install.objects
+            where kind='function' and identity=r.identity;
+          dropped := dropped + 1;
+        when dependent_objects_still_exist then
+          null;
+      end;
+    end loop;
+    exit when remaining = 0;
+    if dropped = 0 then
+      raise exception 'mip_cas_function_dependents';
+    end if;
+  end loop;
+
   select 'drop table '||string_agg(format('%I.%I', n.nspname, c.relname), ', ')
     into drop_sql
   from pg_class c
   join pg_namespace n on n.oid=c.relnamespace
+  join mip_cas_source_install.objects o
+    on o.kind='table' and o.identity=n.nspname||'.'||c.relname
   where n.nspname='mip_cas' and c.relkind='r';
   if drop_sql is not null then
     execute drop_sql;
@@ -63,12 +100,24 @@ begin
   end loop;
   for r in select identity from mip_cas_source_install.objects where kind='role' order by identity
   loop
+    if exists (
+      select 1 from pg_class c
+      join pg_roles own on own.oid=c.relowner
+      where own.rolname=r.identity
+    ) or exists (
+      select 1 from pg_proc p
+      join pg_roles own on own.oid=p.proowner
+      where own.rolname=r.identity
+    ) then
+      raise exception 'mip_cas_role_still_owns_objects: %', r.identity;
+    end if;
     if exists (select 1 from pg_roles where rolname=r.identity) then
       execute format('drop role %I', r.identity);
     end if;
   end loop;
 end
 $cleanup$;
+drop function if exists mip_cas_source_install.refuse_external_dependents();
 drop table mip_cas_source_install.objects;
 drop schema mip_cas_source_install restrict;
 commit;

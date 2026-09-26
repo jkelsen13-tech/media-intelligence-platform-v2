@@ -3,7 +3,6 @@ import assert from 'node:assert/strict'
 import { readFile, readdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { PGlite } from '@electric-sql/pglite'
 import {
   ALGORITHM_VERSION,
   DISPOSABLE_TEST_TOKEN,
@@ -17,78 +16,36 @@ import {
   parseFeed,
   runQikIngestCollector,
 } from '../supabase/qualification/qik-ingest/collector.mjs'
+import {
+  FEED,
+  cleanupQikIngest,
+  createDisposableDb,
+  createPipelineRpc,
+  enableDisposableWriter,
+  installQikIngest,
+  loadNativeSubstrate,
+  loadQikIngest,
+  rpc,
+} from './qikIngestTestKit.mjs'
 
 const root = dirname(fileURLToPath(new URL('../supabase/qualification/qik-ingest/load_order.json', import.meta.url)))
 const loadOrder = JSON.parse(await readFile(join(root, 'load_order.json'), 'utf8'))
 const sqlOf = name => readFile(join(root, name), 'utf8')
 
-const FEED = `<?xml version="1.0"?><rss><channel>
-<item><title>Council Approves Water Plan</title><link>https://news.example/water</link>
-<description>Officials approved a public water plan after review.</description>
-<pubDate>Sat, 26 Sep 2026 12:00:00 GMT</pubDate></item>
-<item><title>Second Item</title><link>https://news.example/second</link>
-<description>Another retainable headline for the duplicate tests.</description></item>
-</channel></rss>`
-
-async function loadPackage(db) {
-  await db.exec(await sqlOf('fixture_substrate.sql'))
-  for (const name of loadOrder.apply) await db.exec(await sqlOf(name))
-}
-
 async function fixture(t) {
-  const db = await PGlite.create()
+  const {db, exec} = await createDisposableDb()
   t.after(() => db.close())
-  await loadPackage(db)
-  return db
-}
-
-async function enableDisposableWriter(db) {
-  await db.exec(`
-    insert into qik_ingest.runtime_credentials(credential_hash, active, notes)
-    values (encode(sha256(convert_to('${DISPOSABLE_TEST_TOKEN}', 'UTF8')), 'hex'), true, 'disposable PGlite only');
-    update qik_ingest.collection_gate set collection_authorized = true;
-    update public.ingest_sources
-      set enabled = true, collection_enabled = true
-      where id = '11111111-1111-4111-8111-111111111111';
-  `)
-}
-
-function rpc(db) {
-  return async (name, args) => {
-    const token = args.token
-    if (name === 'plan') {
-      return (await db.query('select public.mip_qik_ingest_plan($1) r', [token])).rows[0].r
-    }
-    if (name === 'begin_run') {
-      return (await db.query('select public.mip_qik_ingest_begin_run($1,$2,$3::timestamptz) r',
-        [token, args.run_id, args.now])).rows[0].r
-    }
-    if (name === 'retain_item') {
-      return (await db.query('select public.mip_qik_ingest_retain_item($1,$2,$3::uuid,$4::jsonb) r',
-        [token, args.run_id, args.source_id, JSON.stringify(args.item)])).rows[0].r
-    }
-    if (name === 'record_source_run') {
-      return (await db.query(
-        'select public.mip_qik_ingest_record_source_run($1,$2,$3::uuid,$4,$5,$6,$7,$8::timestamptz) r',
-        [token, args.run_id, args.source_id, args.state, args.fetched, args.new_items, args.error_note, args.now],
-      )).rows[0].r
-    }
-    if (name === 'finish_run') {
-      return (await db.query(
-        'select public.mip_qik_ingest_finish_run($1,$2,$3,$4::jsonb,$5::timestamptz) r',
-        [token, args.run_id, args.state, JSON.stringify(args.counters ?? {}), args.now],
-      )).rows[0].r
-    }
-    throw new Error(`unknown rpc ${name}`)
-  }
+  await loadQikIngest(exec)
+  return {db, exec}
 }
 
 test('source package is live-hold, ordered, and does not activate cron, vault, or browser grants', async () => {
   const files = await readdir(root)
-  for (const name of [...loadOrder.apply, ...loadOrder.cleanup, ...loadOrder.never_live, 'README.md', 'LIVE_OPERATION_PASTE.md']) {
+  for (const name of [...loadOrder.apply, ...loadOrder.cleanup, ...loadOrder.never_live, 'README.md', 'LIVE_OPERATION_PASTE.md', '05_operation_ledger.sql']) {
     assert.ok(files.includes(name), name)
   }
   assert.equal(loadOrder.live_hold, true)
+  assert.equal(loadOrder.apply[0], '05_operation_ledger.sql')
   assert.equal(loadOrder.yhb_pause_fence_articles, YHB_FENCE_ARTICLES)
   assert.equal(loadOrder.qik_observed_articles_at_phase_a, QIK_PHASE_A_ARTICLES)
   const sql = (await Promise.all([...loadOrder.apply, ...loadOrder.cleanup].map(sqlOf))).join('\n')
@@ -96,6 +53,7 @@ test('source package is live-hold, ordered, and does not activate cron, vault, o
   assert.doesNotMatch(sql, /cron\.schedule|cron\.alter_job|net\.http_post|vault\.create_secret/i)
   assert.doesNotMatch(sql, /grant\s+execute\s+on function[\s\S]{0,200}\s+to\s+(anon|authenticated|public)\b/i)
   assert.doesNotMatch(sql, /freshness['"],\s*'current'/)
+  assert.doesNotMatch(sql, /drop owned by|drop schema if exists qik_ingest cascade/i)
   const edge = await readFile(join(root, 'edge/index.ts'), 'utf8')
   const collectorSrc = await readFile(join(root, 'collector.mjs'), 'utf8')
   assert.match(edge, /ENV_RUN_KEY/)
@@ -103,8 +61,10 @@ test('source package is live-hold, ordered, and does not activate cron, vault, o
   assert.match(edge, /HEADER_RUN_KEY/)
   assert.match(edge, /HEADER_SCHEDULER_TOKEN/)
   assert.match(edge, /mip_qik_ingest_schedule_authorized/)
+  assert.match(edge, /mip_pipeline_v1/)
   assert.match(collectorSrc, new RegExp(HEADER_RUN_KEY))
   assert.match(collectorSrc, new RegExp(HEADER_SCHEDULER_TOKEN))
+  assert.match(collectorSrc, /drainNativePipeline/)
   assert.doesNotMatch(edge, /INGEST_RSS_RUN_KEY|x-ingest-rss-key|x-ingest-rss-scheduler-token/)
   assert.doesNotMatch(collectorSrc, /INGEST_RSS_RUN_KEY/)
   const paste = await readFile(join(root, 'LIVE_OPERATION_PASTE.md'), 'utf8')
@@ -116,7 +76,7 @@ test('source package is live-hold, ordered, and does not activate cron, vault, o
 })
 
 test('gate stays off: collection_enabled cannot flip and writer is disabled', async t => {
-  const db = await fixture(t)
+  const {db} = await fixture(t)
   await db.exec(`
     insert into qik_ingest.runtime_credentials(credential_hash, active, notes)
     values (encode(sha256(convert_to('${DISPOSABLE_TEST_TOKEN}', 'UTF8')), 'hex'), true, 'disposable');
@@ -140,39 +100,58 @@ test('gate stays off: collection_enabled cannot flip and writer is disabled', as
   assert.equal((await db.query('select count(*)::int n from public.ingestion_runs')).rows[0].n, 0)
 })
 
-test('duplicate delivery is idle and does not rewrite title, body, or reader_state', async t => {
-  const db = await fixture(t)
+test('identical delivery is idle; changed content uses revision_pending without rewriting reviewed rows', async t => {
+  const {db} = await fixture(t)
   await enableDisposableWriter(db)
-  await db.exec('set role qik_ingest_runtime')
+  const pipelineRpc = createPipelineRpc(db)
   const first = await runQikIngestCollector({
-    rpc: rpc(db), token: DISPOSABLE_TEST_TOKEN, runId: 'qik-run-dup-1',
+    rpc: rpc(db), pipelineRpc, token: DISPOSABLE_TEST_TOKEN, runId: 'qik-run-dup-1',
     now: '2026-09-26T15:00:00Z', fetchText: async () => FEED,
   })
   assert.equal(first.httpStatus, 200)
   assert.equal(first.body.state, 'completed')
   assert.equal(first.body.inserted, 2)
+  assert.equal(first.body.revisions, 0)
   assert.equal(first.body.is_current, false)
   const afterOk = (await db.query('select public.mip_qik_ingest_observe($1) r', [DISPOSABLE_TEST_TOKEN])).rows[0].r
   assert.equal(afterOk.is_current, false)
   assert.equal(afterOk.forward.freshness, 'qik_forward_ok')
   assert.equal((await db.query('select public.mip_qik_ingest_schedule_authorized($1) ok', [DISPOSABLE_TEST_TOKEN])).rows[0].ok, true)
   assert.equal((await db.query('select public.mip_qik_ingest_schedule_authorized($1) ok', ['nope'.repeat(8)])).rows[0].ok, false)
+  const jobs = (await db.query('select count(*)::int n from evidence_pipeline.import_jobs')).rows[0].n
+  const captures = (await db.query('select count(*)::int n from evidence_pipeline.article_captures')).rows[0].n
+  assert.equal(jobs, 2)
+  assert.equal(captures, 2)
+  const history = (await db.query(`
+    select count(*)::int n from evidence_pipeline.record_versions
+    where record_kind='article' and operation='insert'
+  `)).rows[0].n
+  assert.equal(history, 2)
+
+  await db.exec(`update public.articles set reader_state='eligible' where url='https://news.example/water'`)
   const second = await runQikIngestCollector({
-    rpc: rpc(db), token: DISPOSABLE_TEST_TOKEN, runId: 'qik-run-dup-2',
+    rpc: rpc(db), pipelineRpc, token: DISPOSABLE_TEST_TOKEN, runId: 'qik-run-dup-2',
     now: '2026-09-26T15:05:00Z',
     fetchText: async () => FEED.replace('Council Approves Water Plan', 'CHANGED TITLE'),
   })
   assert.equal(second.body.inserted, 0)
-  assert.equal(second.body.duplicates, 2)
-  await db.exec('reset role')
+  assert.equal(second.body.revisions, 1)
+  assert.equal(second.body.duplicates, 1)
   const row = (await db.query(
     `select title, body_text, reader_state, source_status, claims
      from public.articles where url = 'https://news.example/water'`,
   )).rows[0]
   assert.equal(row.title, 'Council Approves Water Plan')
-  assert.equal(row.reader_state, 'pending_review')
+  assert.equal(row.reader_state, 'eligible')
   assert.equal(row.source_status, 'active')
   assert.deepEqual(row.claims, [])
+  const pending = (await db.query(`
+    select payload->>'title' as title, review_state
+    from evidence_pipeline.article_captures
+    where payload->>'title'='CHANGED TITLE'
+  `)).rows[0]
+  assert.equal(pending.title, 'CHANGED TITLE')
+  assert.equal(pending.review_state, 'pending')
   const preexisting = (await db.query(
     `select count(*)::int n from public.articles where url = 'https://news.example/preexisting'`,
   )).rows[0].n
@@ -180,9 +159,8 @@ test('duplicate delivery is idle and does not rewrite title, body, or reader_sta
 })
 
 test('publication fields and non-http URLs cannot enter retain', async t => {
-  const db = await fixture(t)
+  const {db} = await fixture(t)
   await enableDisposableWriter(db)
-  await db.exec('set role qik_ingest_runtime')
   await db.query('select public.mip_qik_ingest_begin_run($1,$2,$3::timestamptz)',
     [DISPOSABLE_TEST_TOKEN, 'qik-run-reject', '2026-09-26T16:00:00Z'])
   const source = '11111111-1111-4111-8111-111111111111'
@@ -196,17 +174,16 @@ test('publication fields and non-http URLs cannot enter retain', async t => {
     [DISPOSABLE_TEST_TOKEN, 'qik-run-reject', source,
       JSON.stringify({ title: 'Bad', url: 'javascript:alert(1)' })])).rows[0].r
   assert.equal(rejected.disposition, 'rejected')
-  await db.exec('reset role')
   assert.equal((await db.query(`select count(*)::int n from public.articles where url like 'javascript:%'`)).rows[0].n, 0)
+  assert.equal((await db.query(`select count(*)::int n from qik_ingest.observed_items`)).rows[0].n, 0)
   assert.equal((await db.query(`select count(*)::int n from public.articles where reader_state = 'eligible'`)).rows[0].n, 0)
 })
 
 test('source failure and inflight recovery never advertise current', async t => {
-  const db = await fixture(t)
+  const {db} = await fixture(t)
   await enableDisposableWriter(db)
-  await db.exec('set role qik_ingest_runtime')
   const failed = await runQikIngestCollector({
-    rpc: rpc(db), token: DISPOSABLE_TEST_TOKEN, runId: 'qik-run-fail',
+    rpc: rpc(db), pipelineRpc: createPipelineRpc(db), token: DISPOSABLE_TEST_TOKEN, runId: 'qik-run-fail',
     now: '2026-09-26T17:00:00Z',
     fetchText: async () => { throw new Error('injected_feed_failure') },
   })
@@ -240,7 +217,6 @@ test('source failure and inflight recovery never advertise current', async t => 
   assert.equal(recovered.state, 'failed')
   assert.equal(recovered.freshness, 'qik_forward_stale')
   assert.equal(recovered.is_current, false)
-  await db.exec('reset role')
   const fence = (await db.query(
     `select watermark->>'articles' as articles, watermark->>'freshness' as freshness
      from public.mip_consolidation_watermarks
@@ -251,16 +227,15 @@ test('source failure and inflight recovery never advertise current', async t => 
 })
 
 test('mixed source failure is completed_with_errors and stays not current', async t => {
-  const db = await fixture(t)
+  const {db} = await fixture(t)
   await enableDisposableWriter(db)
   await db.exec(`
     update public.ingest_sources
       set enabled = true, collection_enabled = true
       where id = '22222222-2222-4222-8222-222222222222';
   `)
-  await db.exec('set role qik_ingest_runtime')
   const mixed = await runQikIngestCollector({
-    rpc: rpc(db), token: DISPOSABLE_TEST_TOKEN, runId: 'qik-run-mixed',
+    rpc: rpc(db), pipelineRpc: createPipelineRpc(db), token: DISPOSABLE_TEST_TOKEN, runId: 'qik-run-mixed',
     now: '2026-09-26T18:00:00Z',
     fetchText: async (url) => {
       if (String(url).includes('idle')) throw new Error('injected_second_source_failure')
@@ -279,7 +254,7 @@ test('mixed source failure is completed_with_errors and stays not current', asyn
 })
 
 test('schedule intent cannot be activated and fence insert does not add articles', async t => {
-  const db = await fixture(t)
+  const {db} = await fixture(t)
   const before = (await db.query('select count(*)::int n from public.articles')).rows[0].n
   assert.equal(before, 1, 'substrate preexisting row only; 040 must not copy 36183 articles')
   await assert.rejects(
@@ -293,7 +268,7 @@ test('schedule intent cannot be activated and fence insert does not add articles
 })
 
 test('anon cannot execute writer RPCs; bad token is unauthorized', async t => {
-  const db = await fixture(t)
+  const {db} = await fixture(t)
   await enableDisposableWriter(db)
   await db.exec('set role anon')
   await assert.rejects(
@@ -312,22 +287,37 @@ test('anon cannot execute writer RPCs; bad token is unauthorized', async t => {
   )
 })
 
-test('cleanup refuses an enabled gate and otherwise restores the collection false-check', async t => {
-  const enabled = await PGlite.create()
-  t.after(() => enabled.close())
-  await loadPackage(enabled)
-  await enableDisposableWriter(enabled)
-  await assert.rejects(enabled.exec(await sqlOf('090_cleanup.sql')), /qik_ingest_cleanup_refused/)
+test('pre-existing package role refuses install; cleanup restores collection constraint', async t => {
+  const leftover = await createDisposableDb()
+  t.after(() => leftover.db.close())
+  await loadNativeSubstrate(leftover.exec)
+  await leftover.exec('create role qik_ingest_fn_owner nologin')
+  await assert.rejects(installQikIngest(leftover.exec), /qik_ingest_preexisting_role/)
+  assert.equal((await leftover.db.query(`select to_regnamespace('qik_ingest') n`)).rows[0].n, null)
 
-  const db = await fixture(t)
-  await db.exec(await sqlOf('090_cleanup.sql'))
+  const enabled = await createDisposableDb()
+  t.after(() => enabled.db.close())
+  await loadQikIngest(enabled.exec)
+  await enableDisposableWriter(enabled.db)
+  await assert.rejects(cleanupQikIngest(enabled.exec), /qik_ingest_cleanup_refused/)
+
+  const {db, exec} = await fixture(t)
+  await exec(`
+    create role unrelated_reader nologin;
+    grant select on public.articles to unrelated_reader;
+  `)
+  await cleanupQikIngest(exec)
   assert.equal((await db.query(`select to_regclass('qik_ingest.collection_gate') c`)).rows[0].c, null)
+  assert.equal((await db.query(`select to_regnamespace('qik_ingest_operation') n`)).rows[0].n, null)
   await assert.rejects(
     db.exec(`update public.ingest_sources set collection_enabled = true
       where id = '11111111-1111-4111-8111-111111111111'`),
     /collection_enabled|check/i,
   )
   assert.equal((await db.query('select count(*)::int n from public.articles')).rows[0].n, 1)
+  assert.equal((await db.query(`
+    select has_table_privilege('unrelated_reader','public.articles','SELECT') ok
+  `)).rows[0].ok, true)
 })
 
 test('YHB v8 parseFeed seams remain the collector parser', () => {

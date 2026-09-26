@@ -3,6 +3,7 @@
 // local ingest-rss body. Publication, NER, embeddings, and arcs are out of scope.
 
 import { parseFeed } from '../../functions/collector-algorithm-shadow-candidate/predecessorV8.js'
+import {countHandoffOutcomes, drainNativePipeline, enqueueObserved} from './nativeHandoff.mjs'
 
 export const ALGORITHM_VERSION = 'qik-ingest-rss-v1-retain-from-yhb-v8'
 export const EDGE_SLUG = 'qik-ingest-rss'
@@ -23,6 +24,7 @@ function boundedError(error) {
 
 export async function runQikIngestCollector({
   rpc,
+  pipelineRpc,
   fetchText,
   token,
   runId,
@@ -59,19 +61,24 @@ export async function runQikIngestCollector({
   let inserted = 0
   let duplicates = 0
   let rejected = 0
+  let revisions = 0
   let sourceFailures = 0
   const sourceReports = []
+  const seenJobs = new Set()
 
   for (const source of sources) {
-    if (inserted >= maxNew) break
+    if (inserted + revisions >= maxNew) break
     try {
       if (typeof fetchText !== 'function') throw new Error('fetchText_not_injected')
       const xml = await fetchText(source.feed_url)
       const items = parseFeed(xml, source.feed_url)
       let newForSource = 0
       let dupForSource = 0
+      let revForSource = 0
+      let pendingNew = 0
+      const sourceJobIds = []
       for (const item of items) {
-        if (newForSource >= maxPerFeed || inserted >= maxNew) break
+        if (pendingNew >= maxPerFeed || inserted + revisions + pendingNew >= maxNew) break
         const result = await rpc('retain_item', {
           token,
           run_id: runId,
@@ -83,16 +90,32 @@ export async function runQikIngestCollector({
             published_at: item.published_at,
           },
         })
-        if (result.disposition === 'inserted') {
-          inserted += 1
-          newForSource += 1
-        } else if (result.disposition === 'duplicate') {
+        if (result.disposition === 'rejected') {
+          rejected += 1
+          continue
+        }
+        if (result.disposition !== 'observed' || !result.article) {
+          throw new Error('qik_ingest_native_handoff_required')
+        }
+        if (typeof pipelineRpc !== 'function') throw new Error('native_pipeline_rpc_required')
+        const jobId = await enqueueObserved({pipelineRpc, runId, article: result.article})
+        if (seenJobs.has(jobId)) {
           duplicates += 1
           dupForSource += 1
-        } else if (result.disposition === 'rejected') {
-          rejected += 1
+          continue
         }
+        seenJobs.add(jobId)
+        sourceJobIds.push(jobId)
+        pendingNew += 1
       }
+      const handedOff = await drainNativePipeline({pipelineRpc})
+      const counts = countHandoffOutcomes(sourceJobIds, handedOff)
+      inserted += counts.inserted
+      duplicates += counts.duplicates
+      revisions += counts.revisions
+      newForSource = counts.inserted + counts.revisions
+      dupForSource += counts.duplicates
+      revForSource = counts.revisions
       await rpc('record_source_run', {
         token,
         run_id: runId,
@@ -109,6 +132,7 @@ export async function runQikIngestCollector({
         fetched: items.length,
         new: newForSource,
         duplicates: dupForSource,
+        revisions: revForSource,
       })
     } catch (error) {
       sourceFailures += 1
@@ -129,12 +153,12 @@ export async function runQikIngestCollector({
 
   const finishState = sourceFailures === 0
     ? 'completed'
-    : (inserted > 0 ? 'completed_with_errors' : 'failed')
+    : (inserted + revisions > 0 ? 'completed_with_errors' : 'failed')
   const finished = await rpc('finish_run', {
     token,
     run_id: runId,
     state: finishState,
-    counters: { inserted, duplicates, rejected, source_failures: sourceFailures },
+    counters: { inserted, duplicates, rejected, revisions, source_failures: sourceFailures },
     now,
   })
 
@@ -146,6 +170,7 @@ export async function runQikIngestCollector({
       inserted,
       duplicates,
       rejected,
+      revisions,
       source_failures: sourceFailures,
       sources: sourceReports,
       freshness: finished.freshness,

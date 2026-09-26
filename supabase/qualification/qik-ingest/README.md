@@ -16,16 +16,17 @@ qik observed **articles=98**. This package does not change those live counts.
 
 ## What this package is
 
-A complete, later-installable **discover → retain** collector owned by qik:
+A complete, later-installable **discover → native retain** collector owned by qik:
 
 1. Install/order for an eventual owner apply (**not executed here**).
-2. Schema/contract deltas as **files only**.
+2. Schema/contract deltas as **files only**, with operation-owned cleanup.
 3. Edge source adapted from YHB/repo ingest-rss v8 parser seams (`predecessorV8`)
    with **qik env names**. Vault + pg_cron + pg_net pattern is documented.
    Default schedule is **disabled**; this package never calls `cron.schedule`.
 4. Watermark/checkpoint continuity from the YHB pause fence (~36183) **without**
    transferring articles.
-5. Idempotent URL upsert / duplicate-delivery behavior on disposable PGlite.
+5. Observe → existing `mip_pipeline_v1` enqueue/claim/finish (jobs, captures,
+   history). Identical delivery is idle; changed content is `revision_pending`.
 6. Failure/recovery observability: this package **never** advertises `current`.
 
 Out of scope (later capabilities): NER, embeddings, arc origination, extraction
@@ -53,9 +54,10 @@ must not become the canonical writer.
 | `SELF_REVIEW.md` | Non-implementing review + corrections |
 | captured YHB v8 | `supabase/runtime-snapshots/ingest-rss-v8-live-20260920/` (lineage; not deployed from here) |
 | `fixture_substrate.sql` | Disposable PGlite only — **never live** |
-| `010`–`050` | Contract deltas (files only) |
-| `090_cleanup.sql` | Ledger-bound drop of **this package** only |
+| `010`–`050` | Contract deltas (files only); `05` ledger first |
+| `090_cleanup.sql` | Ledger-bound drop of **this package** only; no DROP OWNED |
 | `collector.mjs` | Testable worker (injected fetch, no network default) |
+| `nativeHandoff.mjs` | Existing `mip_pipeline_v1` enqueue/claim/finish |
 | `edge/` | Deno serve adapter; not in `supabase/functions/` |
 
 ## Later live proof (not this PR)

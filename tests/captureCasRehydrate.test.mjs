@@ -180,6 +180,14 @@ test('C4 capture/CAS source install: preflight, byte rehydrate, rights, citation
     await db.exec('drop table mip_cas.unexpected')
   })
 
+  await t.test('unapproved external view dependent of mip_cas.policy refuses cleanup and remains',async()=>{
+    await db.exec('create view public.cas_unapproved_dep as select 1 as n from mip_cas.policy()')
+    await assert.rejects(cleanupCaptureCas(exec),/mip_cas_unapproved_external_dependent/)
+    assert.equal(await scalar(db,"select to_regclass('public.cas_unapproved_dep') is not null"),true)
+    assert.equal(await scalar(db,"select to_regclass('mip_cas.objects') is not null"),true)
+    await db.exec('drop view public.cas_unapproved_dep')
+  })
+
   await t.test('cleanup removes package schema/roles; fixture login and public articles remain',async()=>{
     await cleanupCaptureCas(exec)
     assert.equal(await scalar(db,"select count(*)::int from pg_namespace where nspname in ('mip_cas','mip_cas_source_install')"),0)

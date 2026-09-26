@@ -5,6 +5,7 @@
   "never_apply_on_hosted": true,
   "never_live": ["fixture_substrate.sql"],
   "apply": [
+    "05_operation_ledger.sql",
     "010_collection_gate.sql",
     "020_run_ledger.sql",
     "030_retain_upsert.sql",

@@ -1,10 +1,10 @@
--- DISPOSABLE PGlite substrate only. NEVER apply to qik, YHB, NIE, or jfn.
--- Mirrors the qik-owned collector surface enough to load 010–090: unique URL
--- articles, fenced ingest_sources, run ledger, watermarks. No real feeds.
+-- DISPOSABLE substrate only. NEVER apply to qik, YHB, NIE, or jfn.
+-- Collector surface plus the existing evidence_pipeline prerequisites
+-- (history triggers, nodes, spatial stub). No real feeds.
 
 create role anon nologin noinherit;
 create role authenticated nologin noinherit;
-create role service_role nologin noinherit;
+create role service_role nologin noinherit bypassrls;
 
 create table public.articles (
   id uuid primary key default gen_random_uuid(),
@@ -99,3 +99,34 @@ grant select on public.articles to anon, authenticated;
 create policy articles_reader_eligible on public.articles
   for select to anon, authenticated
   using (reader_state = 'eligible' and source_status = 'active');
+
+create table public.nodes (
+  id uuid primary key default gen_random_uuid(),
+  type text not null,
+  label text,
+  metadata jsonb default '{}'
+);
+create table public.geographic_places (
+  id uuid primary key default gen_random_uuid(),
+  canonical_name text
+);
+create table public.pipeline_config (
+  key text primary key,
+  value jsonb
+);
+create schema spatial;
+create table spatial.assertions (
+  id uuid primary key default gen_random_uuid(),
+  graph_node_id uuid references public.nodes(id)
+);
+create table spatial.assertion_revisions (
+  id uuid primary key default gen_random_uuid(),
+  spatial_assertion_id uuid references spatial.assertions(id),
+  canonical_place_id uuid references public.geographic_places(id)
+);
+create view public.spatial_projection_v1 as
+  select r.id revision_id, r.canonical_place_id, a.graph_node_id subject_graph_node_id
+  from spatial.assertion_revisions r
+  join spatial.assertions a on a.id = r.spatial_assertion_id;
+grant usage on schema public to anon, authenticated, service_role;
+grant select on public.nodes, public.geographic_places, public.spatial_projection_v1 to service_role;

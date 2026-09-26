@@ -45,6 +45,7 @@ Proof target: *byte-level retrieve/rehydrate; rights/custody gate held.*
 | Locator text is not evidence | poisoned index | gated |
 | Capture `content_hash` = SHA-256(`payload::text` UTF-8); mismatch refuses | synthetic pipeline article already in repo tests | gated |
 | Unexpected `mip_cas` relation blocks cleanup | PGlite | gated |
+| Unapproved public view/trigger dependent refuses cleanup | PGlite | gated |
 | Cleanup removes package; does not delete public articles | PGlite | gated |
 
 ## Live-gated remainder
@@ -65,7 +66,11 @@ Do not run this from this commit. `$0`. No ingest enable.
 >
 > Checks: `mip_cas` relations match the ledger; qualification flags remain false; no public SECURITY DEFINER copied from YHB.
 >
-> Cleanup on failure or completion: `90_cleanup.sql` (ledger-bound). Stop on `mip_cas_unexpected_object`. No CASCADE onto `public`. No DROP of `evidence_pipeline` or `public.articles`. No secret overwrite. No PR #177/#179 merge. No cutover.
+> Cleanup on failure or completion: `90_cleanup.sql` (ledger-bound). Stop on
+> `mip_cas_unexpected_object` or `mip_cas_unapproved_external_dependent`. Do not
+> `DROP FUNCTION CASCADE`. No CASCADE onto `public`. No DROP of
+> `evidence_pipeline` or `public.articles`. No secret overwrite. No PR #177/#179
+> merge. No cutover.
 
 ## Non-actions
 

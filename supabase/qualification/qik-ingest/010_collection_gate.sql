@@ -1,18 +1,10 @@
 -- C3 qik ingest: owner collection gate. FILES ONLY. Not a live migration.
 -- Default remains disabled. Does not create secrets, schedules, or articles.
+-- Pre-existing package identities are refused by 05_operation_ledger.sql.
 
-create schema if not exists qik_ingest;
-
-do $$
-begin
-  if not exists (select 1 from pg_roles where rolname = 'qik_ingest_fn_owner') then
-    create role qik_ingest_fn_owner nologin noinherit;
-  end if;
-  if not exists (select 1 from pg_roles where rolname = 'qik_ingest_runtime') then
-    create role qik_ingest_runtime login noinherit;
-  end if;
-end
-$$;
+create schema qik_ingest;
+create role qik_ingest_fn_owner nologin noinherit;
+create role qik_ingest_runtime login noinherit;
 
 grant usage on schema qik_ingest to qik_ingest_fn_owner;
 grant usage on schema public to qik_ingest_fn_owner, qik_ingest_runtime, service_role;
@@ -44,17 +36,23 @@ create table if not exists qik_ingest.runtime_credentials (
 
 do $$
 declare
-  constraint_name name;
+  rec record;
 begin
-  for constraint_name in
-    select c.conname
+  if to_regclass('qik_ingest_operation.dropped_constraints') is null then
+    raise exception 'qik_ingest_cleanup_requires_ledger';
+  end if;
+  for rec in
+    select c.conname, pg_get_constraintdef(c.oid) as definition
     from pg_constraint c
     where c.conrelid = 'public.ingest_sources'::regclass
       and c.contype = 'c'
       and pg_get_constraintdef(c.oid) ~* 'collection_enabled'
       and pg_get_constraintdef(c.oid) ~* 'false'
   loop
-    execute format('alter table public.ingest_sources drop constraint %I', constraint_name);
+    insert into qik_ingest_operation.dropped_constraints(nspname,relname,conname,definition)
+    values ('public','ingest_sources',rec.conname,rec.definition)
+    on conflict do nothing;
+    execute format('alter table public.ingest_sources drop constraint %I', rec.conname);
   end loop;
 end
 $$;
@@ -138,9 +136,6 @@ create policy qik_ingest_fn_runtime_credentials on qik_ingest.runtime_credential
 drop policy if exists qik_ingest_fn_select_articles on public.articles;
 create policy qik_ingest_fn_select_articles on public.articles
   for select to qik_ingest_fn_owner using (true);
-drop policy if exists qik_ingest_fn_insert_articles on public.articles;
-create policy qik_ingest_fn_insert_articles on public.articles
-  for insert to qik_ingest_fn_owner with check (true);
 drop policy if exists qik_ingest_fn_select_sources on public.ingest_sources;
 create policy qik_ingest_fn_select_sources on public.ingest_sources
   for select to qik_ingest_fn_owner using (true);
@@ -155,8 +150,6 @@ create policy qik_ingest_fn_watermarks on public.mip_consolidation_watermarks
   for all to qik_ingest_fn_owner using (true) with check (true);
 
 grant select on public.ingest_sources to qik_ingest_fn_owner;
-grant insert (feed, outlet, title, url, summary, body_text, published_at, ingestion_run_id)
-  on public.articles to qik_ingest_fn_owner;
 grant select on public.articles to qik_ingest_fn_owner;
 grant select, insert, update on public.ingestion_runs to qik_ingest_fn_owner;
 grant select, insert, update on public.ingestion_source_runs to qik_ingest_fn_owner;

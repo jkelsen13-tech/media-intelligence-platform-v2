@@ -17,9 +17,12 @@ article transfer is in scope for Package C3 source-ready.
 >    NIE hold unchanged. qik `collector-shadow` stays receipt-only. Record
 >    `count(articles)` on qik and confirm YHB articles fence 36183 without
 >    exporting bodies.
-> 2. Apply `010`–`050` from `supabase/qualification/qik-ingest/` in one
->    transaction in `INSTALL_ORDER.md` order. Refuse if schema `qik_ingest`
->    already exists. Do **not** apply `fixture_substrate.sql`.
+> 2. Apply `05_operation_ledger.sql` then `010`–`050` from
+>    `supabase/qualification/qik-ingest/` in `INSTALL_ORDER.md` order. Refuse if
+>    schema `qik_ingest` / package roles already exist. Do **not** apply
+>    `fixture_substrate.sql`. Native retain is observe + existing
+>    `mip_pipeline_v1` enqueue/claim/finish; do not insert `public.articles`
+>    from C3.
 > 3. Do not `GRANT` execute to `anon` / `authenticated` / `PUBLIC`. Do not
 >    expose schema `qik_ingest` on the Data API.
 > 4. Create Vault secret `mip_qik_ingest_scheduler_token` **only if absent**;
@@ -43,10 +46,12 @@ article transfer is in scope for Package C3 source-ready.
 >    fence `articles=36183`, `corpus_transfer=false`, schedule `active=false`.
 > 2. Gate false: Edge POST returns writer disabled (503) even with the run key.
 > 3. After a **separate** sentence authorizing the gate and one test source,
->    one authorized run inserts ≥1 synthetic or owner-approved fixture article
->    with `reader_state=pending_review`, an `ingestion_runs` row, and does not
->    set `freshness=current`. Duplicate POST of the same URL is idle
->    (`disposition=duplicate`) and does not rewrite body/title.
+>    one authorized run observes ≥1 item, enqueues native jobs, claim/finish
+>    inserts pending_review articles + captures + history. Duplicate POST of
+>    the same URL+payload is idle. A changed title at the same URL is
+>    `revision_pending` and does not rewrite body/title/`reader_state`.
+>    Bind capture bytes with existing `bindExactCaptureBytes` only if C4 is
+>    in the same authorized op.
 > 4. Induced source failure leaves `failed` or `completed_with_errors`,
 >    forward `qik_forward_stale` or inflight, `is_current=false`.
 > 5. YHB crons still `active=false`. qik article count did not jump by 36183.
@@ -55,7 +60,8 @@ article transfer is in scope for Package C3 source-ready.
 > 1. If the gate was turned on, turn it off first and set sources
 >    `collection_enabled=false` before 090.
 > 2. Run `090_cleanup.sql`. Stop if it refuses (gate still on, source still
->    collection-enabled, or unexpected objects).
+>    collection-enabled, unexpected objects, unrelated privileges). No
+>    `DROP OWNED`. No schema `CASCADE`.
 > 3. Undeploy `qik-ingest-rss` only if this run deployed it. Delete
 >    `MIP_QIK_INGEST_RUN_KEY` and `mip_qik_ingest_scheduler_token` only if this
 >    run created them.

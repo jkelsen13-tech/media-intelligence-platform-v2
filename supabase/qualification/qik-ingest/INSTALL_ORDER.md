@@ -13,20 +13,22 @@ from this PR.
 4. Confirm qik `collector-shadow` is still receipt-only.
 5. Record qik `count(public.articles)` and the YHB fence **36183** without
    exporting article bodies.
-6. Confirm schema `qik_ingest` is absent. Refuse replay if it already exists.
-7. Confirm this operation is still separately authorized. This file is not
-   authorization.
+6. Confirm schema `qik_ingest` / `qik_ingest_operation` and roles
+   `qik_ingest_fn_owner` / `qik_ingest_runtime` are absent. Refuse replay.
+7. Confirm `evidence_pipeline` / `public.mip_pipeline_v1` already exist on qik
+   (native handoff). This package does not install a second pipeline.
 
 ## 1. Files (this package)
 
 Apply in one transaction, in this order, from
 `supabase/qualification/qik-ingest/`:
 
-1. `010_collection_gate.sql` — roles, gate **false**, token table **empty**.
-2. `020_run_ledger.sql` — begin / finish / recover / observe RPCs.
-3. `030_retain_upsert.sql` — idempotent URL retain; publication fields refused.
-4. `040_watermarks.sql` — write the YHB pause fence and idle qik forward cursor.
-5. `050_schedule_disabled.sql` — schedule **intent** with `active=false` only.
+1. `05_operation_ledger.sql` — refuse leftovers; snapshot baseline.
+2. `010_collection_gate.sql` — roles, gate **false**, token table **empty**.
+3. `020_run_ledger.sql` — begin / finish / recover / observe RPCs.
+4. `030_retain_upsert.sql` — discovery `observed_items`; no `public.articles` insert.
+5. `040_watermarks.sql` — write the YHB pause fence and idle qik forward cursor.
+6. `050_schedule_disabled.sql` — schedule **intent** with `active=false` only.
 
 Never apply `fixture_substrate.sql` on a hosted project.
 
@@ -51,7 +53,11 @@ disabled. `cron.schedule` is omitted from 010–050 because pg_cron creates
 
 ## 4. Cleanup
 
-`090_cleanup.sql` drops **this package** (schema, wrappers, ingest_sources
-trigger) and restores `collection_enabled = false`. It refuses if the gate is
-on or any source is collection-enabled. It does not delete articles, YHB jobs,
-NIE, or collector-shadow.
+`090_cleanup.sql` drops **only ledgered package objects** (no `DROP OWNED`, no
+schema `CASCADE`) and restores recorded `collection_enabled = false` checks.
+It refuses if the gate is on, any source is collection-enabled, unexpected
+same-role objects exist, or unrelated public privileges were granted to
+package roles. It does not delete articles, YHB jobs, NIE, or collector-shadow.
+Native handoff is existing `mip_pipeline_v1` enqueue/claim/finish (see
+`nativeHandoff.mjs`); identical delivery is idle; changed content is
+`revision_pending`.
