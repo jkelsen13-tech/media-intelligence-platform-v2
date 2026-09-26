@@ -1,0 +1,23 @@
+{
+  "package": "qik-ingest",
+  "status": "source-ready",
+  "live_hold": true,
+  "never_apply_on_hosted": true,
+  "never_live": ["fixture_substrate.sql"],
+  "apply": [
+    "010_collection_gate.sql",
+    "020_run_ledger.sql",
+    "030_retain_upsert.sql",
+    "040_watermarks.sql",
+    "050_schedule_disabled.sql"
+  ],
+  "cleanup": ["090_cleanup.sql"],
+  "algorithm_version": "qik-ingest-rss-v1-retain-from-yhb-v8",
+  "edge_slug": "qik-ingest-rss",
+  "jobname": "mip-qik-ingest-rss",
+  "env_run_key": "MIP_QIK_INGEST_RUN_KEY",
+  "header_run_key": "x-mip-qik-ingest-key",
+  "vault_secret_name": "mip_qik_ingest_scheduler_token",
+  "yhb_pause_fence_articles": 36183,
+  "qik_observed_articles_at_phase_a": 98
+}
