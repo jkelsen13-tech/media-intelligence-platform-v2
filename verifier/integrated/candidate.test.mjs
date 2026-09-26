@@ -822,11 +822,13 @@ test('native 018 read rechecks rights and native supersession after accepted rel
  const scope=f.scopes.find(s=>s.domain==='rights'&&s.operation==='excerpt_display')
  await f.evidence(scope,{disposition:'deny'})
  await assert.rejects(f.read(),/mip_/)
- // A new immutable allow record restores this synthetic fixture permission;
- // it cannot restore an old native lineage once a successor exists.
+ // A new permission revision cannot revive an already accepted review.
  await f.evidence(scope)
- await f.read()
+ await assert.rejects(f.read(),/mip_operation_fresh_review_required/)
+ const refreshed=randomUUID()
+ assert.equal(await f.release(await f.review(),refreshed),'isolated_released')
+ await f.read(refreshed)
  const old=JSON.parse(await f.admin("select to_jsonb(k)-'id'-'created_at'-'review_state' || jsonb_build_object('predecessor_candidate_id',k.id,'extractor_version',k.extractor_version||':reader-replacement') from evidence_pipeline.evidence_candidates k limit 1"))
  await f.admin("select public.mip_pipeline_v1('candidate',"+q(old)+"::jsonb)")
- await assert.rejects(f.read(),/mip_/)
+ await assert.rejects(f.read(refreshed),/mip_/)
 })
