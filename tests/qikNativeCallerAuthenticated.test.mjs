@@ -3,6 +3,9 @@ import assert from 'node:assert/strict'
 import {randomBytes,randomUUID} from 'node:crypto'
 import {readFile} from 'node:fs/promises'
 import pg from 'pg'
+import {createServer} from 'node:http'
+import {spawn} from 'node:child_process'
+import {boundedFeedFetcher} from '../supabase/qualification/qik-ingest/nativeHost.mjs'
 import {installQikIngest,cleanupQikIngest} from '../supabase/qualification/qik-ingest/installQikIngest.mjs'
 import {createBoundNativePipelineRpc} from '../supabase/qualification/qik-ingest/nativeHandoff.mjs'
 import {runQikIngestCollector} from '../supabase/qualification/qik-ingest/collector.mjs'
@@ -164,6 +167,71 @@ test('permanent native seam: actual restricted login, bound history, denied unre
    }
    assert.equal((await admin.query("select count(*)::int n from evidence_pipeline.evidence_candidates where review_state='pending'")).rows[0].n,4)
    assert.equal((await admin.query("select count(*)::int n from public.articles where reader_state<>'pending_review'")).rows[0].n,0)
+   stage='execution_host'
+   let requests=0,mode='feed'
+   const server=createServer((_request,response)=>{
+     requests++
+     if(mode==='redirect'){response.writeHead(302,{location:'http://127.0.0.1:1/forbidden'});response.end();return}
+     response.writeHead(200,{'content-type':'application/rss+xml'})
+     response.end(mode==='oversize'?'x'.repeat(1048577):FEED)
+   })
+   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
+   const feedUrl='http://127.0.0.1:'+server.address().port+'/feed.xml'
+   async function hostCommand(suffix,{secret=password,runToken=token,allowed=[feedUrl]}={}){
+     const dbUrl=new URL('postgresql://127.0.0.1:'+config.port+'/'+database)
+     dbUrl.username=login;dbUrl.password=secret
+     const child=spawn(process.execPath,[
+       new URL('../supabase/qualification/qik-ingest/runNativeHost.mjs',import.meta.url).pathname,
+       '--execute','--disposable',
+     ],{env:{
+       PATH:process.env.PATH,
+       MIP_DISPOSABLE_POSTGRES:'qik-native-caller',
+       MIP_QIK_NATIVE_HOST_AUTHORIZATION:'owner-authorized-one-shot',
+       MIP_QIK_NATIVE_DATABASE_URL:dbUrl.href,MIP_QIK_NATIVE_LOGIN:login,
+       MIP_QIK_INGEST_RUN_KEY:runToken,MIP_QIK_NATIVE_RUN_ID:'qik-host-'+id+'-'+suffix,
+       MIP_QIK_NATIVE_ALLOWED_FEEDS:JSON.stringify(allowed),
+     },stdio:['ignore','pipe','pipe']})
+     let out='',err='';child.stdout.on('data',x=>out+=x);child.stderr.on('data',x=>err+=x)
+     const code=await new Promise((resolve,reject)=>{child.on('error',reject);child.on('close',resolve)})
+     for(const sensitive of [password,token,secret,runToken,dbUrl.href])assert.equal((out+err).includes(sensitive),false)
+     return {code,receipt:JSON.parse(out||err)}
+   }
+   try{
+     await admin.query("update public.ingest_sources set feed_url=$1 where id='11111111-1111-4111-8111-111111111111'",[feedUrl])
+     const before=requests
+     assert.equal((await hostCommand('wrong-password',{secret:randomBytes(32).toString('hex')})).code,1)
+     assert.equal(requests,before,'failed login must not fetch')
+     assert.equal((await hostCommand('wrong-token',{runToken:randomBytes(32).toString('hex')})).code,1)
+     assert.equal(requests,before,'failed token must not fetch')
+     const success=await hostCommand('actual-host')
+     assert.equal(success.code,0,JSON.stringify(success.receipt))
+     assert.equal(success.receipt.state,'completed')
+     assert.equal(success.receipt.connection_closed,true)
+     assert.equal(success.receipt.needs_reconciliation,false)
+     assert.equal(success.receipt.duplicates,2)
+     assert.equal(requests,before+1)
+     // Explicit run IDs are not silently retried or reused after completion.
+     assert.equal((await hostCommand('actual-host')).code,1)
+     assert.equal(requests,before+1)
+     mode='redirect'
+     const redirected=await hostCommand('redirect')
+     assert.equal(redirected.code,1);assert.equal(redirected.receipt.state,'failed')
+     assert.equal(redirected.receipt.connection_closed,true)
+     assert.equal(requests,before+2)
+     mode='oversize'
+     const oversized=await hostCommand('oversize')
+     assert.equal(oversized.code,1);assert.equal(oversized.receipt.state,'failed')
+     assert.equal(oversized.receipt.source_failures,1)
+     mode='feed'
+     await assert.rejects(boundedFeedFetcher({allowedFeedUrls:[feedUrl],disposable:true,maxBytes:16})(feedUrl),/native_host_feed_unavailable/)
+     const noFetch=requests
+     assert.equal((await hostCommand('not-allowlisted',{allowed:[feedUrl+'-different']})).code,1)
+     assert.equal(requests,noFetch)
+     assert.equal((await admin.query("select count(*)::int n from pg_stat_activity where usename=$1 and application_name='mip-cnc-authenticated-qualification'",[login])).rows[0].n,0)
+   }finally{
+     server.closeAllConnections()
+     await new Promise(resolve=>server.close(resolve))
+   }
    const ledger=(await exec("select object_kind,count(*)::int n from qik_ingest_operation.introduced_grants where schema_name='evidence_pipeline' group by object_kind")).rows
    for(const kind of ['function','sequence','table','column'])assert.ok(ledger.some(r=>r.object_kind===kind&&r.n>0),kind)
    stage='cleanup'
