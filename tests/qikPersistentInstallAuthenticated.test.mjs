@@ -81,6 +81,15 @@ test('persistent C3: restricted login, atomic install, reconnect and existing na
     t.diagnostic(JSON.stringify(identity))
 
     const configInstall={operationId,expectedLogin:adminName}
+    stage='active_source_refusal'
+    // Simulate an already-active substrate within a rolled-back fixture change.
+    await admin.query('begin')
+    const checks=(await admin.query("select conname from pg_constraint where conrelid='public.ingest_sources'::regclass and contype='c' and pg_get_constraintdef(oid) ilike '%collection_enabled%'")).rows
+    for(const row of checks)await admin.query('alter table public.ingest_sources drop constraint '+ident(row.conname))
+    await admin.query("update public.ingest_sources set enabled=true,collection_enabled=true where id='11111111-1111-4111-8111-111111111111'")
+    await assert.rejects(installPersistentQik(admin,configInstall),/persistent_active_sources_refused/)
+    assert.equal((await admin.query("select to_regnamespace('qik_ingest') n")).rows[0].n,null)
+    await admin.query('rollback')
     stage='rollback'
     let injected=false,impersonation=false
     const fault={query:(sql,params)=>{
@@ -118,6 +127,9 @@ test('persistent C3: restricted login, atomic install, reconnect and existing na
     assert.equal(yhb.watermark.freshness,'historical_observation');assert.equal(yhb.captured_at.toISOString(),'2026-09-26T05:03:32.000Z')
     assert.equal(qik.watermark.articles_observed_at_package,1);assert.equal(qik.watermark.continuity_verified,false)
     assert.ok(Math.abs(Date.now()-qik.captured_at.getTime())<60000)
+    stage='duplicate_install'
+    await assert.rejects(installPersistentQik(admin,configInstall),/persistent_install_failed/)
+    assert.equal((await admin.query('select operation_id from qik_ingest_operation.persistent_install_receipt')).rows[0].operation_id,operationId)
     stage='foreign_cleanup'
     const cleanupConfig={...configInstall,cleanupAuthorization:'owner-authorized-persistent-cleanup'}
     await assert.rejects(cleanupPersistentQik(admin,{...cleanupConfig,operationId:randomBytes(16).toString('hex')}),/persistent_cleanup_failed/)
