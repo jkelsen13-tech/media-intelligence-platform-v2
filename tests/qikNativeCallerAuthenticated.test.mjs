@@ -173,7 +173,7 @@ test('permanent native seam: actual restricted login, bound history, denied unre
      requests++
      if(mode==='redirect'){response.writeHead(302,{location:'http://127.0.0.1:1/forbidden'});response.end();return}
      response.writeHead(200,{'content-type':'application/rss+xml'})
-     response.end(mode==='oversize'?'x'.repeat(1048577):FEED)
+     response.end(mode==='oversize'?'x'.repeat(1048577):mode==='unresolved'?FEED.replace('https://news.example/water','https://news.example/host-waiting'):FEED)
    })
    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
    const feedUrl='http://127.0.0.1:'+server.address().port+'/feed.xml'
@@ -203,6 +203,14 @@ test('permanent native seam: actual restricted login, bound history, denied unre
      assert.equal(requests,before,'failed login must not fetch')
      assert.equal((await hostCommand('wrong-token',{runToken:randomBytes(32).toString('hex')})).code,1)
      assert.equal(requests,before,'failed token must not fetch')
+     await exec('grant select(content_hash) on evidence_pipeline.article_captures to "'+login+'"')
+     const excessive=await hostCommand('extra-column-grant')
+     assert.equal(excessive.code,1);assert.equal(requests,before,'extra native column grant must refuse before fetch')
+     await exec('revoke select(content_hash) on evidence_pipeline.article_captures from "'+login+'"')
+     await exec('grant service_role to "'+login+'"')
+     assert.equal((await hostCommand('extra-membership')).code,1)
+     assert.equal(requests,before,'extra membership must refuse before fetch')
+     await exec('revoke service_role from "'+login+'"')
      const success=await hostCommand('actual-host')
      assert.equal(success.code,0,JSON.stringify(success.receipt))
      assert.equal(success.receipt.state,'completed')
@@ -222,6 +230,18 @@ test('permanent native seam: actual restricted login, bound history, denied unre
      const oversized=await hostCommand('oversize')
      assert.equal(oversized.code,1);assert.equal(oversized.receipt.state,'failed')
      assert.equal(oversized.receipt.source_failures,1)
+     const pendingPayload=(await admin.query("select payload from evidence_pipeline.import_jobs where canonical_url='https://news.example/water' order by created_at limit 1")).rows[0].payload
+     const pendingJob=(await admin.query("select evidence_pipeline.enqueue('host-fixture-leased',$1::jsonb) id",
+       [JSON.stringify({...pendingPayload,url:'https://news.example/host-waiting'})])).rows[0].id
+     await admin.query("update evidence_pipeline.import_jobs set state='processing',attempt_count=1,lease_token=gen_random_uuid(),lease_expires_at=clock_timestamp()+interval '5 minutes' where id=$1",[pendingJob])
+     mode='unresolved'
+     const unresolved=await hostCommand('leased-work')
+     assert.equal(unresolved.code,1)
+     assert.equal(unresolved.receipt.state,'failed')
+     assert.equal(unresolved.receipt.unresolved,1)
+     assert.equal(unresolved.receipt.needs_reconciliation,true)
+     assert.equal(unresolved.receipt.connection_closed,true)
+     assert.equal((await admin.query('select state from evidence_pipeline.import_jobs where id=$1',[pendingJob])).rows[0].state,'processing')
      mode='feed'
      await assert.rejects(boundedFeedFetcher({allowedFeedUrls:[feedUrl],disposable:true,maxBytes:16})(feedUrl),/native_host_feed_unavailable/)
      const noFetch=requests

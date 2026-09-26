@@ -77,7 +77,12 @@ export async function runNativeHost({connectionString,expectedLogin,token,runId,
      select pg_has_role(current_user,'qik_ingest_runtime','USAGE') as runtime,
        exists(select 1 from pg_roles r where r.rolname not in(current_user,'qik_ingest_runtime')
          and pg_has_role(current_user,r.oid,'MEMBER')) as extra_membership,
-       has_table_privilege(current_user,(select c.oid from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='evidence_pipeline' and c.relname='import_jobs'),'SELECT,INSERT,UPDATE,DELETE') as native_table,
+       exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+         where n.nspname='evidence_pipeline' and (
+           (c.relkind in('r','p','v','m','f') and (
+             has_table_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+             or has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')))
+           or (c.relkind='S' and has_sequence_privilege(current_user,c.oid,'USAGE,SELECT,UPDATE')))) as native_table,
        has_any_column_privilege(current_user,'public.articles','INSERT,UPDATE') as article_write
    `)).rows[0]
    if(!authority?.runtime||authority.extra_membership||authority.native_table||authority.article_write)
@@ -96,7 +101,8 @@ export async function runNativeHost({connectionString,expectedLogin,token,runId,
    ...(terminal?Object.fromEntries(['inserted','duplicates','revisions','rejected','unresolved',
      'failed_jobs','source_failures','extracted_captures','extraction_incomplete'].map(k=>[k,body[k]])):{}),
    connection_closed:closed,
-   needs_reconciliation:failed||(!terminal&&result?.httpStatus===409),
+   needs_reconciliation:failed||(terminal&&(body.state!=='completed'||
+     ['unresolved','failed_jobs','extraction_incomplete'].some(k=>Number(body[k]??0)>0)))||(!terminal&&result?.httpStatus===409),
    // Even acknowledged terminal failure can retain observations/jobs/captures.
    residuals:'retain_run_observations_and_native_evidence',
  }
