@@ -20,6 +20,6 @@
   "env_run_key": "MIP_QIK_INGEST_RUN_KEY",
   "header_run_key": "x-mip-qik-ingest-key",
   "vault_secret_name": "mip_qik_ingest_scheduler_token",
-  "yhb_pause_fence_articles": 36183,
+  "yhb_historical_articles_observed": 36183,
   "qik_observed_articles_at_phase_a": 98
 }

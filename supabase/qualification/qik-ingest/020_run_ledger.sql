@@ -18,7 +18,9 @@ begin
       'freshness', p_freshness,
       'is_current', false,
       'corpus_transfer', false,
-      'continuity_from_yhb_fence_articles', 36183,
+      'yhb_historical_articles_observed', 36183,
+      'yhb_observed_at', '2026-09-26T05:03:32Z',
+      'continuity_verified', false,
       'last_run_id', p_run_id,
       'counters', coalesce(p_counters, '{}'::jsonb)
     ),

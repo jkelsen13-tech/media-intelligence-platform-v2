@@ -12,7 +12,7 @@ import {
   JOB_NAME,
   QIK_PHASE_A_ARTICLES,
   VAULT_SECRET_NAME,
-  YHB_FENCE_ARTICLES,
+  YHB_HISTORICAL_ARTICLES_OBSERVED,
   parseFeed,
   runQikIngestCollector,
 } from '../supabase/qualification/qik-ingest/collector.mjs'
@@ -46,7 +46,7 @@ test('source package is live-hold, ordered, and does not activate cron, vault, o
   }
   assert.equal(loadOrder.live_hold, true)
   assert.equal(loadOrder.apply[0], '05_operation_ledger.sql')
-  assert.equal(loadOrder.yhb_pause_fence_articles, YHB_FENCE_ARTICLES)
+  assert.equal(loadOrder.yhb_historical_articles_observed, YHB_HISTORICAL_ARTICLES_OBSERVED)
   assert.equal(loadOrder.qik_observed_articles_at_phase_a, QIK_PHASE_A_ARTICLES)
   const sql = (await Promise.all([...loadOrder.apply, ...loadOrder.cleanup].map(sqlOf))).join('\n')
     .replace(/--[^\n]*/g, '')
@@ -124,6 +124,10 @@ test('identical delivery is idle; changed content uses revision_pending without 
   const afterOk = (await db.query('select public.mip_qik_ingest_observe($1) r', [DISPOSABLE_TEST_TOKEN])).rows[0].r
   assert.equal(afterOk.is_current, false)
   assert.equal(afterOk.forward.freshness, 'qik_forward_ok')
+  assert.equal(afterOk.forward.yhb_historical_articles_observed, YHB_HISTORICAL_ARTICLES_OBSERVED)
+  assert.equal(afterOk.forward.yhb_observed_at, '2026-09-26T05:03:32Z')
+  assert.equal(afterOk.forward.continuity_verified, false)
+  assert.equal(Object.hasOwn(afterOk.forward, 'continuity_from_yhb_fence_articles'), false)
   assert.equal((await db.query('select public.mip_qik_ingest_schedule_authorized($1) ok', [DISPOSABLE_TEST_TOKEN])).rows[0].ok, true)
   assert.equal((await db.query('select public.mip_qik_ingest_schedule_authorized($1) ok', ['nope'.repeat(8)])).rows[0].ok, false)
   const jobs = (await db.query('select count(*)::int n from evidence_pipeline.import_jobs')).rows[0].n
@@ -209,7 +213,9 @@ test('source failure and inflight recovery never advertise current', async t => 
   assert.equal(observed.is_current, false)
   assert.equal(observed.forward.freshness, 'qik_forward_inflight')
   assert.equal(observed.inflight_runs.length, 1)
-  assert.equal(observed.fence.articles, YHB_FENCE_ARTICLES)
+  assert.equal(observed.fence.articles, YHB_HISTORICAL_ARTICLES_OBSERVED)
+  assert.equal(observed.fence.kind, 'yhb_ingest_pause_observation')
+  assert.equal(observed.fence.freshness, 'historical_observation')
   assert.equal(observed.fence.corpus_transfer, false)
   await db.query(
     'select public.mip_qik_ingest_record_source_run($1,$2,$3::uuid,$4,$5,$6,$7,$8::timestamptz)',
@@ -233,8 +239,8 @@ test('source failure and inflight recovery never advertise current', async t => 
      from public.mip_consolidation_watermarks
      where channel = 'ingest_pause_fence'`,
   )).rows[0]
-  assert.equal(fence.articles, String(YHB_FENCE_ARTICLES))
-  assert.equal(fence.freshness, 'fence')
+  assert.equal(fence.articles, String(YHB_HISTORICAL_ARTICLES_OBSERVED))
+  assert.equal(fence.freshness, 'historical_observation')
 })
 
 test('mixed source failure is completed_with_errors and stays not current', async t => {

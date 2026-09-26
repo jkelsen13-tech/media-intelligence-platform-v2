@@ -11,7 +11,7 @@ Phase A (PR #180, tip `509afb3ebb119a1be5181ce9f2a50e96d5fc1190`): C3 is
 **MIGRATE**. qik must own `ingest_sources` / `ingestion_runs` / watermarks /
 Edge ingest-rss (or successor) / schedule. Best live path today is YHB
 `ingest-rss` v8 + paused cron. qik `collector-shadow` remains receipt-only
-(`canonical_domain_writes=false`). YHB pause checkpoint **articles=36183**.
+(`canonical_domain_writes=false`). YHB pause observation at **2026-09-26T05:03:32Z**: **articles=36183** (not a consistency fence).
 qik observed **articles=98**. This package does not change those live counts.
 
 ## What this package is
@@ -23,8 +23,8 @@ A complete, later-installable **discover → native retain** collector owned by 
 3. Edge source adapted from YHB/repo ingest-rss v8 parser seams (`predecessorV8`)
    with **qik env names**. Vault + pg_cron + pg_net pattern is documented.
    Default schedule is **disabled**; this package never calls `cron.schedule`.
-4. Watermark/checkpoint continuity from the YHB pause fence (~36183) **without**
-   transferring articles.
+4. Record the dated YHB pause observation (36183 articles) alongside qik forward
+   status **without** claiming continuity or transferring articles.
 5. Observe → existing `mip_pipeline_v1` enqueue/finish and bound
    `mip_qik_ingest_claim_bound` (jobs, captures, history). Identical delivery
    is idle; changed content is `revision_pending`. Unfinished own jobs are
@@ -51,7 +51,7 @@ must not become the canonical writer.
 |---|---|
 | `INSTALL_ORDER.md` | Eventual apply order and preflight |
 | `SCHEMA_CONTRACT_DELTA.md` | qik today vs this delta |
-| `WATERMARK_CONTINUITY.md` | Fence 36183; no corpus copy |
+| `WATERMARK_CONTINUITY.md` | Dated YHB observation 36183; no continuity or corpus copy |
 | `LIVE_OPERATION_PASTE.md` | One coordinated paste; **LIVE HOLD** |
 | `SELF_REVIEW.md` | Non-implementing review + corrections |
 | captured YHB v8 | `supabase/runtime-snapshots/ingest-rss-v8-live-20260920/` (lineage; not deployed from here) |

@@ -21,7 +21,7 @@ article transfer is in scope for Package C3 source-ready.
 > 1. Read-only preflight: YHB `mip-ingest-rss-hourly` and
 >    `mip-source-comparison-enrichment` are `active=false`; do not change them.
 >    NIE hold unchanged. qik `collector-shadow` stays receipt-only. Record
->    `count(articles)` on qik and confirm YHB articles fence 36183 without
+>    `count(articles)` on qik and record the YHB 36183-article observation at 2026-09-26T05:03:32Z (not a consistency fence) without
 >    exporting bodies.
 > 2. Apply `05_operation_ledger.sql` then `010`–`050` from
 >    `supabase/qualification/qik-ingest/` in `INSTALL_ORDER.md` order. Refuse if
@@ -49,7 +49,7 @@ article transfer is in scope for Package C3 source-ready.
 >
 > **Checks**
 > 1. `mip_qik_ingest_observe` with a valid token returns `is_current=false`,
->    fence `articles=36183`, `corpus_transfer=false`, schedule `active=false`.
+>    legacy `fence` field has `articles=36183`, `freshness=historical_observation`, `corpus_transfer=false`; forward `continuity_verified=false`; schedule `active=false`.
 > 2. Gate false: Edge POST returns writer disabled (503) even with the run key.
 > 3. After a **separate** sentence authorizing the gate and one test source,
 >    one authorized run observes ≥1 item, enqueues native jobs, claim/finish
