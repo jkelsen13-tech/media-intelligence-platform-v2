@@ -67,21 +67,29 @@ export async function runQikIngestCollector({
   let failedJobs = 0
   let sourceFailures = 0
   const sourceReports = []
-  const seenJobs = new Set()
+  const allJobIds = []
+  const finishedJobs = []
+  const attemptedJobIds = new Set()
+  const latestJobRows = new Map()
+  const extractedCaptures = new Set()
+  const incompleteCaptures = new Set()
 
   for (const source of sources) {
     if (inserted + revisions >= maxNew) break
+    // Keep bound identities and partial receipts outside the failure scope.
+    const sourceJobIds = []
+    const sourceFinished = []
+    const sourceAttempts = new Set()
+    let fetched = 0
+    let failure = null
     try {
       if (typeof fetchText !== 'function') throw new Error('fetchText_not_injected')
       const xml = await fetchText(source.feed_url)
       const items = parseFeed(xml, source.feed_url)
-      let newForSource = 0
-      let dupForSource = 0
-      let revForSource = 0
-      let pendingNew = 0
-      const sourceJobIds = []
+      fetched = items.length
+      const uniqueSourceJobs = new Set()
       for (const item of items) {
-        if (pendingNew >= maxPerFeed || inserted + revisions + pendingNew >= maxNew) break
+        if (uniqueSourceJobs.size >= maxPerFeed || inserted + revisions + uniqueSourceJobs.size >= maxNew) break
         const result = await rpc('retain_item', {
           token,
           run_id: runId,
@@ -100,70 +108,88 @@ export async function runQikIngestCollector({
         if (result.disposition !== 'observed' || !result.article) {
           throw new Error('qik_ingest_native_handoff_required')
         }
-        if (typeof pipelineRpc !== 'function') throw new Error('native_pipeline_rpc_required')
         const jobId = await enqueueObserved({pipelineRpc, runId, article: result.article})
-        if (seenJobs.has(jobId)) {
-          duplicates += 1
-          dupForSource += 1
-          continue
-        }
-        seenJobs.add(jobId)
+        if (!jobId) throw new Error('native_job_id_required')
         sourceJobIds.push(jobId)
-        pendingNew += 1
+        allJobIds.push(jobId)
+        uniqueSourceJobs.add(jobId)
       }
-      const handedOff = await drainNativePipeline({
+      await drainNativePipeline({
         pipelineRpc,
         jobIds: sourceJobIds,
         maxJobs: drainMaxJobs,
-      })
-      if (typeof pipelineRpc.readJobStates !== 'function') {
-        throw new Error('bound_job_states_required')
-      }
-      const jobRows = await pipelineRpc.readJobStates(sourceJobIds)
-      const counts = countHandoffOutcomes(sourceJobIds, handedOff, jobRows)
-      inserted += counts.inserted
-      duplicates += counts.duplicates
-      revisions += counts.revisions
-      unresolved += counts.unresolved
-      failedJobs += counts.failed
-      newForSource = counts.inserted + counts.revisions
-      dupForSource += counts.duplicates
-      revForSource = counts.revisions
-      await rpc('record_source_run', {
-        token,
-        run_id: runId,
-        source_id: source.id,
-        state: 'succeeded',
-        fetched: items.length,
-        new_items: newForSource,
-        error_note: null,
-        now,
-      })
-      sourceReports.push({
-        source_id: source.id,
-        state: 'succeeded',
-        fetched: items.length,
-        new: newForSource,
-        duplicates: dupForSource,
-        revisions: revForSource,
-        unresolved: counts.unresolved,
-        failed_jobs: counts.failed,
+        finished: sourceFinished,
+        attemptedJobIds: sourceAttempts,
       })
     } catch (error) {
-      sourceFailures += 1
-      const note = boundedError(error)
-      await rpc('record_source_run', {
-        token,
-        run_id: runId,
-        source_id: source.id,
-        state: 'failed',
-        fetched: 0,
-        new_items: 0,
-        error_note: note,
-        now,
-      })
-      sourceReports.push({ source_id: source.id, state: 'failed', error: note })
+      failure = boundedError(error)
     }
+    finishedJobs.push(...sourceFinished)
+    for (const id of sourceAttempts) attemptedJobIds.add(id)
+
+    // Reconcile even after enqueue/claim/finish fails. In particular an
+    // ambiguous finish response must not erase an earlier committed capture.
+    let sourceRows = []
+    if (sourceJobIds.length) {
+      try {
+        if (typeof pipelineRpc?.readJobStates !== 'function') throw new Error('bound_job_states_required')
+        sourceRows = await pipelineRpc.readJobStates(sourceJobIds)
+        if (!Array.isArray(sourceRows)) throw new Error('job_states_required')
+        for (const row of sourceRows) latestJobRows.set(String(row.id), row)
+      } catch (error) {
+        failure = failure ?? boundedError(error)
+      }
+    }
+    // C5 is part of source completion. Use durable bound-state readback so
+    // duplicate delivery and a lost finish response also reach extraction.
+    for (const row of sourceRows) {
+      if (row.state !== 'completed') continue
+      const captureId = row.capture_id
+      if (extractedCaptures.has(captureId)) continue
+      try {
+        if (!captureId) throw new Error('completed_capture_binding_required')
+        if (typeof pipelineRpc.extractCapture !== 'function') throw new Error('retained_extraction_required')
+        const extracted = await pipelineRpc.extractCapture({job_id: row.id, capture_id: captureId})
+        if (extracted?.capture_id !== captureId ||
+          !['candidates_retained', 'no_candidates'].includes(extracted?.state))
+          throw new Error('retained_extraction_incomplete')
+        extractedCaptures.add(captureId)
+        incompleteCaptures.delete(captureId)
+      } catch (error) {
+        incompleteCaptures.add(captureId ?? row.id)
+        failure = failure ?? boundedError(error)
+      }
+    }
+    const counts = countHandoffOutcomes(sourceJobIds, sourceFinished, sourceRows, sourceAttempts)
+    const totals = countHandoffOutcomes(allJobIds, finishedJobs, [...latestJobRows.values()], attemptedJobIds)
+    inserted = totals.inserted
+    duplicates = totals.duplicates
+    revisions = totals.revisions
+    unresolved = totals.unresolved
+    failedJobs = totals.failed
+    if (failure) sourceFailures += 1
+    const state = failure ? 'failed' : 'succeeded'
+    await rpc('record_source_run', {
+      token,
+      run_id: runId,
+      source_id: source.id,
+      state,
+      fetched,
+      new_items: counts.inserted + counts.revisions,
+      error_note: failure,
+      now,
+    })
+    sourceReports.push({
+      source_id: source.id,
+      state,
+      fetched,
+      new: counts.inserted + counts.revisions,
+      duplicates: counts.duplicates,
+      revisions: counts.revisions,
+      unresolved: counts.unresolved,
+      failed_jobs: counts.failed,
+      ...(failure ? {error: failure} : {}),
+    })
   }
 
   const processingIncomplete = unresolved > 0 || failedJobs > 0
@@ -182,6 +208,8 @@ export async function runQikIngestCollector({
       unresolved,
       failed_jobs: failedJobs,
       source_failures: sourceFailures,
+      extracted_captures: extractedCaptures.size,
+      extraction_incomplete: incompleteCaptures.size,
     },
     now,
   })
@@ -198,6 +226,8 @@ export async function runQikIngestCollector({
       unresolved,
       failed_jobs: failedJobs,
       source_failures: sourceFailures,
+      extracted_captures: extractedCaptures.size,
+      extraction_incomplete: incompleteCaptures.size,
       sources: sourceReports,
       freshness: finished.freshness,
       is_current: false,

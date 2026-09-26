@@ -6,11 +6,13 @@ import assert from 'node:assert/strict'
 import {randomUUID,createHash} from 'node:crypto'
 import {isolatedWorker} from './isolatedContainer.mjs'
 import {readFile} from 'node:fs/promises'
-import {fixture,workerRole,producerRole} from './fixture.mjs'
-import {raw,quote as q,guard,transport} from './transport.mjs'
+import {fixture,workerRole,producerRole,implementation} from './fixture.mjs'
+import {raw,quote as q,guard,transport,remoteNativeMode} from './transport.mjs'
 import {issueWorkloadSession} from '../../supabase/qualification/mip-cutover-authority/brokerSession.js'
+import {runGenerationWorker} from '../../supabase/functions/source-comparison-generation-candidate/workerV2.js'
+import {extractRetainedCapture} from '../../supabase/qualification/collector-native-capture/retainedExtraction.mjs'
 guard()
-await raw('postgres',"alter system set log_min_error_statement='panic';alter system set log_min_messages='panic';alter system set log_statement='none';select pg_reload_conf();")
+if(!remoteNativeMode()) await raw('postgres',"alter system set log_min_error_statement='panic';alter system set log_min_messages='panic';alter system set log_statement='none';select pg_reload_conf();")
 await raw('postgres',"do $$begin if not exists(select 1 from pg_roles where rolname='anon') then create role anon;create role authenticated;create role service_role bypassrls;end if;end $$;")
 const signatures={worker_claim:['p_request','p_session','p_runtime'],worker_complete:['p_request','p_session','p_runtime','p_generation','p_token','p_input_hash','p_implementation','p_output'],worker_fail:['p_request','p_session','p_runtime','p_generation','p_token','p_input_hash','p_implementation']}
 const claim=f=>f.rpc('worker_claim',[randomUUID(),f.session,'runtime-a'])
@@ -202,7 +204,7 @@ test('finite eligible sources receive turns despite an out-of-scope backlog and 
 })
 
 const publisherRole='mip_projection_publisher_v1'
-async function publicationFixture(t){
+async function publicationFixture(t,options={}){
  const f=await fixture(t)
  await f.admin("alter table public.articles add column reader_state text;alter table public.articles add column source_status text;update public.articles set reader_state='eligible',source_status='active';")
  // Structural relationship fixtures. These do not claim production policy approval.
@@ -214,13 +216,25 @@ async function publicationFixture(t){
  await f.admin('insert into mip_identity.publication_policy_versions values('+q(policy)+",'synthetic-privacy-policy','synthetic-rights-policy','synthetic-publication-policy','survivor-reader-v1','synthetic-policy-owner');insert into mip_identity.publication_policy_heads values(true,"+q(policy)+",true);")
  const mr=randomUUID()
  await f.admin('insert into mip_identity.mapping_versions select '+q(mr)+",runtime,"+q(publisherRole)+",issuer,audience,runtime||':"+publisherRole+"',key_revision,max_lifetime_seconds,'synthetic-publication-owner' from mip_identity.mapping_versions where revision="+q(f.mappings['runtime-a'+workerRole])+";insert into mip_identity.mapping_heads values('runtime-a',"+q(publisherRole)+","+q(mr)+",true);")
- await f.capture();assert.equal((await childRun(f,f.session)).state,'completed')
+ if(options.beforeCapture) await options.beforeCapture(f)
+ await f.capture()
+ const completed=options.nativeLineage?await runGenerationWorker({
+  rpc:(name,args)=>f.rpc(name,signatures[name].map(k=>args[k])),requestId:()=>randomUUID(),
+  session:f.session,runtime:'runtime-a',implementation,
+  sha256:text=>createHash('sha256').update(text).digest('hex')
+ }):await childRun(f,f.session)
+ assert.equal(completed.state,'completed')
  const data=JSON.parse(await f.admin("select jsonb_build_object('generation',g.id,'input',g.input_payload,'input_hash',g.input_hash,'output',o.output_payload,'output_hash',o.output_hash) from comparison_qualification.generations g join comparison_qualification.outputs o on o.generation_id=g.id"))
  const evidence=data.output.projection.article_claims.map(ac=>{
   const a=data.input.eventInputs.flatMap(e=>e.members).find(m=>m.article.id===ac.article_id).article
   const field=['title','summary','body_text'].find(k=>typeof a[k]==='string'&&a[k].includes(ac.surface_text))
   assert.ok(field,'synthetic surface must be retained exactly')
-  return {article_id:ac.article_id,claim_key:ac.claim_key,field,excerpt:ac.surface_text,field_hash:createHash('sha256').update(a[field]).digest('hex'),auditability_state:'verified_retained_source'}
+  const retained=data.input.eventInputs.flatMap(e=>e.members).find(m=>m.article.id===ac.article_id).retained_capture
+  const candidate=options.nativeLineage?retained.candidates.find(k=>k.excerpt===ac.surface_text):null
+  if(options.nativeLineage) assert.ok(candidate)
+  return {...(candidate?{candidate_id:candidate.candidate_id,capture_id:retained.capture_id,
+   content_hash:retained.content_hash,span_start:candidate.span_start,span_end:candidate.span_end}:{}),
+   article_id:ac.article_id,claim_key:ac.claim_key,field:candidate?.source_field??field,excerpt:ac.surface_text,field_hash:createHash('sha256').update(a[candidate?.source_field??field]).digest('hex'),auditability_state:'verified_retained_source'}
  })
  const explanations=data.output.projection.explanations.map(x=>({...x,review_status:'published',falsification_condition:'Synthetic fixture: contradictory retained source invalidates this statement.',archived_sources:evidence.map(e=>({status:'retained',field_hash:e.field_hash,article_id:e.article_id}))}))
  async function review(overrides={}){
@@ -229,7 +243,7 @@ async function publicationFixture(t){
   return r.revision
  }
  const session=await f.issue('runtime-a',publisherRole),rpc=transport(f.db,publisherRole)
- return {...f,data,policy,evidence,explanations,review,publisher:session,pub:rpc,stage:r=>rpc('stage_review',[session,'runtime-a',r]),release:(r,request=randomUUID())=>rpc('release_isolated',[request,session,'runtime-a',r])}
+ return {...f,data,policy,evidence,reviewEvidence:evidence,explanations,review,publisher:session,pub:rpc,stage:r=>rpc('stage_review',[session,'runtime-a',r]),release:(r,request=randomUUID())=>rpc('release_isolated',[request,session,'runtime-a',r])}
 }
 test('authoritative synthetic review stages immutable payload and releases only into private isolated receipt',async t=>{
  const f=await publicationFixture(t),revision=await f.review(),request=randomUUID()
@@ -443,9 +457,9 @@ test('remote PostgreSQL service restart preserves committed encrypted journal an
  assert.equal(await f.admin("select count(*) from comparison_qualification.request_runs where rpc_name='worker_complete'"),'1')
 })
 
-async function operationFixture(t){
- const f=await publicationFixture(t)
- await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/008_operation_evidence.sql',import.meta.url),'utf8'))
+async function operationFixture(t,options={}){
+ const f=await publicationFixture(t,options)
+ if(!options.nativeLineage) await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/008_operation_evidence.sql',import.meta.url),'utf8'))
  // Exactly retained PostgreSQL JSONB digest; no JS numeric/string round-trip for source hashes.
  const scopes=JSON.parse(await f.admin("select jsonb_agg(distinct jsonb_build_object('source_project',g.source_project,'material_ref','article:'||(m.value#>>'{article,id}'),'material_version',comparison_qualification.argument_digest(m.value->'article'),'operation',op,'audience','isolated_internal_review','domain',d)) from comparison_qualification.generations g cross join lateral jsonb_array_elements(g.input_payload->'eventInputs') e cross join lateral jsonb_array_elements(e.value->'members') m cross join unnest(array['retention','analysis','excerpt_display']) op cross join unnest(array['rights','privacy']) d where g.id="+q(f.data.generation)))
  const check=s=>f.admin('select mip_identity.operation_check('+q(s)+')').then(JSON.parse)
@@ -536,14 +550,22 @@ for(const first of ['release','revocation'])test('operation '+first+' first seri
  }
 })
 
-async function factualFixture(t){
- const f=await operationFixture(t)
+async function factualFixture(t,options={}){
+ async function installFactual(f){
  await f.admin("alter table public.explanations add column assertion_id text,add column version int not null default 1,add column is_current boolean not null default true,add column source_ids uuid[] not null default '{}',add column review_status text not null default 'awaiting_review',add column state text not null default 'ok',add column supporting_passage text,add column falsification_condition text,add column archived_sources jsonb,add column rule_version text;")
  await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/009_factual_enforcement.sql',import.meta.url),'utf8'))
+ }
+ const beforeCapture=options.nativeLineage?async f=>{
+  await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/008_operation_evidence.sql',import.meta.url),'utf8'))
+  await installFactual(f)
+  await prepareNativeLineage(f)
+ }:undefined
+ const f=await operationFixture(t,{...options,beforeCapture})
+ if(!options.nativeLineage) await installFactual(f)
  // Disposable remote connection is outside worker scope. Never print connection strings.
  const auditRole='mip_audit_'+randomUUID().replaceAll('-',''),password=randomUUID()
  await f.admin('create role '+auditRole+' login password '+q(password)+';grant usage on schema mip_factual to '+auditRole+';grant insert on mip_factual.rejection_audit to '+auditRole+';create policy audit_sink on mip_factual.rejection_audit for insert to '+auditRole+' with check(true);')
- await f.admin('insert into mip_factual.audit_connection values(true,'+q('host=postgres port=5432 dbname='+f.db+' user='+auditRole+' password='+password+' connect_timeout=3 options=-csynchronous_commit=on')+');')
+ await f.admin('insert into mip_factual.audit_connection values(true,'+q((remoteNativeMode()?'host=127.0.0.1':'host=postgres')+' port=5432 dbname='+f.db+' user='+auditRole+' password='+password+' connect_timeout=3 options=-csynchronous_commit=on')+');')
  const explanationIds=[],sourceIds=[...new Set(f.data.input.eventInputs.flatMap(e=>e.members.map(m=>m.article.id)))]
  for(const x of f.explanations){
   const id=randomUUID()
@@ -684,4 +706,45 @@ test('real permission reader denies synthetic substitution and protects its auth
  }
  assert.equal(await f.admin("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_identity' and c.relname like 'real_%' and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity)"),'0')
  assert.equal(await f.admin("select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='mip_identity' and p.proname in ('operation_check','check_admitted_material') and (r.rolsuper or r.rolbypassrls or r.rolcanlogin)"),'0')
+})
+
+async function prepareNativeLineage(f){
+ // Real native migration on the existing synthetic source schema.
+ await f.admin("alter table public.articles add column feed text,add column ingestion_run_id text;alter table public.articles alter column reader_state set default 'pending_review';create unique index native_fixture_article_url on public.articles(url);update public.articles set url='https://native.example/'||id,claims='[]'::jsonb;")
+ await f.admin("alter table public.nodes add column type text;create table public.geographic_places(id uuid primary key,canonical_name text);create schema spatial;create table spatial.assertions(id uuid primary key,graph_node_id uuid references public.nodes(id));create table spatial.assertion_revisions(id uuid primary key,spatial_assertion_id uuid references spatial.assertions(id),canonical_place_id uuid references public.geographic_places(id));create view public.spatial_projection_v1 as select r.id revision_id,r.canonical_place_id,a.graph_node_id subject_graph_node_id from spatial.assertion_revisions r join spatial.assertions a on a.id=r.spatial_assertion_id;")
+ await f.admin(await readFile(new URL('../../supabase/migrations/20260905082406_evidence_pipeline_reliability.sql',import.meta.url),'utf8'))
+ await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/017_native_capture_review.sql',import.meta.url),'utf8'))
+ const pipeline=(action,input={})=>f.admin('select public.mip_pipeline_v1('+q(action)+','+q(input)+'::jsonb)').then(JSON.parse)
+ const rows=JSON.parse(await f.admin("select jsonb_agg(jsonb_build_object('url',url,'title',title,'outlet',outlet,'summary',summary,'body_text',body_text,'published_at',published_at)) from public.articles"))
+ for(const article of rows){
+  await pipeline('enqueue',{run_id:'native-review-fixture',article})
+  const job=await pipeline('claim')
+  const completed=await pipeline('finish',{job_id:job.id,lease_token:job.lease_token})
+  const result=await extractRetainedCapture({capture_id:completed.capture_id,backend:{
+   readCapture:id=>f.admin("select jsonb_build_object('id',id,'article_id',article_id,'content_hash',content_hash,'payload_text',payload::text) from evidence_pipeline.article_captures where id="+q(id)).then(JSON.parse),
+   appendCandidate:candidate=>pipeline('candidate',candidate)
+  }})
+  assert.equal(result.state,'candidates_retained')
+ }
+}
+
+test('native 017 full chain admits reviewed exact capture spans with NOLOGIN kernel and disabled public release',async t=>{
+ const f=await factualFixture(t,{nativeLineage:true})
+ assert.equal(await f.admin("select count(*) from pg_roles where rolname='mip_kernel_owner_v2' and not rolcanlogin and not rolsuper and not rolbypassrls"),'1')
+ assert.equal(await f.admin("set role mip_kernel_owner_v2;select count(*) from evidence_pipeline.article_captures"),'2')
+ await assert.rejects(raw(f.db,'set session authorization '+workerRole+';select * from evidence_pipeline.article_captures'),/mip_database_denied/)
+ assert.equal(await f.admin("select count(*) from evidence_pipeline.evidence_candidates where review_state='pending'"),'2')
+ await f.seed()
+ await assert.rejects(f.release(await f.review()),/mip_factual_release_ineligible/)
+ for(const id of f.explanationIds) await f.approve(id)
+ const bad=structuredClone(f.reviewEvidence);bad[0].candidate_id=randomUUID()
+ await assert.rejects(f.release(await f.review({evidence:bad})),/mip_native_review_span_unbound/)
+ const revision=await f.review()
+ assert.equal(await f.release(revision),'isolated_released')
+ await assert.rejects(f.admin('select mip_identity.release_public()'),/mip_public_release_disabled/)
+ assert.equal(await f.admin("select count(*) from public.claims"),'0')
+ assert.equal(await f.admin("select count(*) from evidence_pipeline.evidence_candidates where review_state<>'pending'"),'0')
+ const old=JSON.parse(await f.admin("select to_jsonb(k)-'id'-'created_at'-'review_state' || jsonb_build_object('predecessor_candidate_id',k.id,'extractor_version',k.extractor_version||':replacement') from evidence_pipeline.evidence_candidates k limit 1"))
+ await f.admin("select public.mip_pipeline_v1('candidate',"+q(old)+"::jsonb)")
+ await assert.rejects(f.release(await f.review()),/mip_/)
 })

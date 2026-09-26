@@ -4,6 +4,8 @@
 // attempt_count, SKIP LOCKED, and backoff as evidence_pipeline.claim_job, but
 // ONLY for explicitly bound job ids. Discovery stays in qik_ingest.observed_items.
 
+import {createRetainedExtractionBackend, extractRetainedCapture} from '../collector-native-capture/retainedExtraction.mjs'
+
 export function asJobId(value) {
   if (value == null) return null
   return String(value)
@@ -18,6 +20,7 @@ function normalizeJobRow(row) {
   return {
     id: asJobId(row.id),
     state: row.state,
+    capture_id: asJobId(row.capture_id),
     outcome: row.outcome ?? null,
     attempt_count: Number(row.attempt_count ?? 0),
     error_code: row.error_code ?? null,
@@ -54,6 +57,20 @@ export function createPipelineRpc(db) {
     const rows = result.rows?.[0]?.result
     return Array.isArray(rows) ? rows.map(normalizeJobRow) : []
   }
+  const extraction = createRetainedExtractionBackend(db)
+  pipelineRpc.extractCapture = async ({job_id, capture_id}) => extractRetainedCapture({
+    capture_id,
+    backend: {
+      async readCapture(id) {
+        const result = await db.query(
+          'select public.mip_qik_ingest_capture_for_job($1::uuid,$2::uuid) result',
+          [job_id, id],
+        )
+        return result.rows?.[0]?.result
+      },
+      appendCandidate: extraction.appendCandidate,
+    },
+  })
   return pipelineRpc
 }
 
@@ -64,13 +81,12 @@ export async function enqueueObserved({pipelineRpc, runId, article}) {
   return asJobId(await pipelineRpc('enqueue', {run_id: runId, article}))
 }
 
-export async function drainNativePipeline({pipelineRpc, jobIds, maxJobs = 32}) {
+export async function drainNativePipeline({pipelineRpc, jobIds, maxJobs = 32, finished = [], attemptedJobIds = new Set()}) {
   if (typeof pipelineRpc !== 'function') throw new Error('native_pipeline_rpc_required')
   if (typeof pipelineRpc.claimBound !== 'function') throw new Error('bound_claim_required')
   const bound = uniqueJobIds(jobIds)
   if (bound.length === 0) return []
   const boundSet = new Set(bound)
-  const finished = []
   const limit = Number(maxJobs)
   if (!Number.isInteger(limit) || limit < 0) throw new Error('drain_limit_invalid')
   for (let i = 0; i < limit; i += 1) {
@@ -80,6 +96,8 @@ export async function drainNativePipeline({pipelineRpc, jobIds, maxJobs = 32}) {
     // Bound SQL is the enforced boundary (claim already mutates). This tripwire
     // refuses finish effects on a job the bound claim must never return.
     if (!boundSet.has(claimedId)) throw new Error('claim_bound_violated')
+    // Retain the attempt before awaiting: finish may commit and lose its response.
+    attemptedJobIds.add(claimedId)
     finished.push(await pipelineRpc('finish', {
       job_id: claimedId,
       lease_token: claimed.lease_token,
@@ -88,9 +106,11 @@ export async function drainNativePipeline({pipelineRpc, jobIds, maxJobs = 32}) {
   return finished
 }
 
-export function countHandoffOutcomes(jobIds, finished, jobRows) {
+export function countHandoffOutcomes(jobIds, finished, jobRows, attemptedJobIds = new Set()) {
   if (!Array.isArray(jobRows)) throw new Error('job_states_required')
   const wanted = uniqueJobIds(jobIds)
+  const observations = new Map()
+  for (const id of jobIds.map(asJobId).filter(Boolean)) observations.set(id, (observations.get(id) ?? 0) + 1)
   const finishedById = new Map()
   for (const row of Array.isArray(finished) ? finished : []) {
     const id = asJobId(row?.job_id)
@@ -110,7 +130,9 @@ export function countHandoffOutcomes(jobIds, finished, jobRows) {
       continue
     }
     if (row.state === 'completed') {
-      const thisDrain = finishedById.get(id)
+      // Repeated discovery is a duplicate only after native completion.
+      duplicates += observations.get(id) - 1
+      const thisDrain = finishedById.get(id) ?? (attemptedJobIds.has(id) ? row : null)
       if (!thisDrain) {
         duplicates += 1
         continue

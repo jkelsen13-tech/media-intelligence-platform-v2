@@ -1,6 +1,13 @@
 import {spawn} from 'node:child_process'
+// Explicit opt-in for the existing remote disposable PostgreSQL host only.
+// This mode proves native database behavior, not container isolation.
+export function remoteNativeMode(){
+ return process.env.MIP_REMOTE_NATIVE_TEST==='comparison-native-lineage'
+  &&process.env.MIP_DISPOSABLE_POSTGRES==='comparison-qualification'
+}
 export function guard(){
- if(process.env.GITHUB_ACTIONS!=='true'||process.env.MIP_DISPOSABLE_POSTGRES!=='comparison-qualification')
+ if(process.env.MIP_DISPOSABLE_POSTGRES!=='comparison-qualification'
+  ||(process.env.GITHUB_ACTIONS!=='true'&&!remoteNativeMode()))
   throw Error('mip_disposable_environment_required')
 }
 export const quote=v=>v===null?'null':"'"+String(typeof v==='object'?JSON.stringify(v):v).replaceAll("'","''")+"'"
@@ -8,7 +15,7 @@ export function raw(database,sql){
  guard()
  return new Promise((resolve,reject)=>{
   const env=Object.fromEntries(Object.entries(process.env).filter(([k])=>!k.startsWith('PG')))
-  Object.assign(env,{PGPASSWORD:'mip-disposable-ci-only',PGOPTIONS:'-c statement_timeout=20000 -c lock_timeout=15000',PGCONNECT_TIMEOUT:'5'})
+  Object.assign(env,{PGPASSWORD:'mip-disposable-ci-only',PGOPTIONS:'-c statement_timeout=20000 -c lock_timeout=15000'+(remoteNativeMode()?' -c log_statement=none -c log_min_error_statement=panic':''),PGCONNECT_TIMEOUT:'5'})
   const child=spawn('psql',['-X','-qAt','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-h','127.0.0.1','-p','5432','-U','postgres','-d',database],{env,stdio:['pipe','pipe','pipe']})
   let out='',err='';child.stdout.on('data',x=>out+=x);child.stderr.on('data',x=>err+=x)
   child.on('error',()=>reject(Error('mip_database_unavailable')))

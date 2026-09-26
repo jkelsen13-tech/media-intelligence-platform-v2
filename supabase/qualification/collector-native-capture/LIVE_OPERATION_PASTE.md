@@ -1,115 +1,146 @@
-# Coordinated eventual live operation — LIVE HOLD
+# Collector → native capture authenticated driver — LIVE HOLD
 
-**This paste is not authorization. Do not perform it from this PR.**
+Source only. Nothing in this packet authorizes execution. The final parent
+checkpoint supplies the exact reviewed commit identity; do not execute from a
+moving branch. This file deliberately does not self-pin its own commit.
 
-This operation is **hosted-database / driver qualification** only. It does
-**not** qualify Edge, gateway JWT, cron, Vault, live RSS fetch, or PostgREST.
+One coordinated owner approval covers the temporary operation below, including
+installation, temporary credentials/role membership, the synthetic collection
+gate, three runs, CAS scope/permissions, teardown, and explicitly retained native
+evidence. There is no second per-stage approval sentence.
 
-No hosted SQL, Edge deploy, Vault write, Data API change, cron mutation, YHB
-restart, real-data transfer, publication, PR merge, or deletion is in scope
-until an owner pastes this block in an authorized session.
+## Exact temporary scope
 
-Execution SHA: `0a563ab34ced292005c5828120da790929f7ee08` (PR #183 HEAD may
-include this paste pin).
+Project: qik qikvmopbtijoebdqosyq. No YHB/NIE mutation, real RSS, real article
+payloads, publication, provider calls, Edge deployment, cron/Vault configuration,
+Data API exposure, JWT issuer changes, or merge. Collector-shadow remains
+receipt-only. qik currently has native evidence_pipeline; C3/CAS are absent.
 
----
+**Authority:** the temporary native login is LOGIN NOINHERIT, granted
+service_role, and explicitly executes SET ROLE service_role. This is broad
+existing native server authority, not a database-enforced bound-only credential.
+The driver restricts itself to existing enqueue/finish and bound claim/state
+operations. Approval must explicitly include that temporary broad membership.
+Authenticated runtime never uses SET SESSION AUTHORIZATION.
 
-> I authorize one bounded **collector → native capture hosted-database/driver
-> qualification** on project `qikvmopbtijoebdqosyq` only, at commit
-> `0a563ab34ced292005c5828120da790929f7ee08`, cost boundary $0. **LIVE HOLD until I paste this block
-> in an authorized session.** This is not Edge, gateway, cron, or live RSS
-> qualification.
->
-> **Setup**
-> 1. Read-only preflight: YHB `mip-ingest-rss-hourly` and
->    `mip-source-comparison-enrichment` are `active=false`; do not change them.
->    NIE hold unchanged. qik `collector-shadow` stays receipt-only. Confirm
->    `evidence_pipeline` / `public.mip_pipeline_v1` already exist. Confirm
->    `qik_ingest`, `qik_ingest_operation`, `mip_cas`, and
->    `mip_cas_source_install` are absent.
-> 2. Snapshot **operation-ID** baselines (do not use a 36183 jump check):
->    `count(*)` of `public.articles`, `evidence_pipeline.import_jobs`,
->    `article_captures`, `record_versions` where `record_kind='article'`, and
->    grants on `public.articles`. Confirm zero rows whose `url` or
->    `canonical_url` starts with
->    `https://qualification.invalid/collector-native-capture/0a563ab34ced292005c5828120da790929f7ee08/`.
->    Record the current `ingest_forward` watermark and the
->    `collection_enabled`/`enabled` flags of **no** existing source except the
->    synthetic source this run will insert.
-> 3. Apply C3 `05_operation_ledger.sql` then `010`–`050` via
->    `installQikIngest.mjs`. Refuse pre-existing package roles/schemas/RPCs.
->    Do **not** apply `fixture_substrate.sql`.
-> 4. Apply C4 `00_preflight.sql` → unmodified `001_store.sql` →
->    `05_operation_ledger.sql` via `installCaptureCas.mjs`. Do not load
->    `002_exact_citation.sql`.
-> 5. Do not `GRANT` execute to `anon` / `authenticated` / `PUBLIC`. Do not
->    expose `qik_ingest` or `mip_cas` on the Data API. Do not create Vault or
->    Edge secrets. Do not deploy Edge. Do not `cron.schedule`. Do not fetch
->    live RSS.
-> 6. Leave `qik_ingest.collection_gate.collection_authorized=false` and
->    `schedule_intent.active=false` until the exercise sentence below.
->
-> **Exercise** (separate authorizing sentence required for the gate + one
-> synthetic source)
-> 1. Insert **one** synthetic source this run owns, then enable only that
->    row after the gate is on:
->    `id = 'c0c1ec70-ca5c-4e11-9f3a-000000000001'`,
->    `feed_url = 'https://qualification.invalid/collector-native-capture/0a563ab34ced292005c5828120da790929f7ee08/feed.xml'`,
->    `outlet_name = 'CNC qualification'`, `enabled=true`,
->    `collection_enabled=true`. Do not update any other `ingest_sources` row.
-> 2. Driver-run `runQikIngestCollector` with injected synthetic XML (two
->    items) whose URLs are
->    `https://qualification.invalid/collector-native-capture/0a563ab34ced292005c5828120da790929f7ee08/water`
->    and `.../second`. `run_id = 'qik-cnc-0a563ab34ced292005c5828120da790929f7ee08'` (length ≥ 8).
->    Native handoff must use `mip_qik_ingest_claim_bound` on those enqueued
->    job ids plus existing `mip_pipeline_v1` enqueue/finish. Do **not** call
->    unscoped `mip_pipeline_v1('claim')`.
-> 3. Expected native deltas for this operation id (exact; no publication
->    eligibility):
->    - `+2` `public.articles` with those URLs, `reader_state='pending_review'`,
->      `ingestion_run_id='qik-cnc-0a563ab34ced292005c5828120da790929f7ee08'`. Pre-existing articles
->      unchanged.
->    - `+2` `evidence_pipeline.import_jobs` (`first_run_id` = that run id,
->      `state='completed'`, `outcome='inserted'`).
->    - `+2` `article_captures` with `review_state='pending'`.
->    - `+2` `record_versions` article `insert` rows for those new ids.
->    - Bind one capture with existing `bindExactCaptureBytes` (SHA-256 of
->      `payload::text` UTF-8).
-> 4. Identical re-run of the same XML: `duplicates=2`, `unresolved=0`, no
->    new articles. Changed title at the water URL: `revision_pending`;
->    reviewed title/`reader_state` unchanged; new capture `review_state`
->    stays `pending`.
-> 5. `mip_qik_ingest_observe` remains `is_current=false`; fence
->    `articles=36183`, `corpus_transfer=false`; YHB crons still
->    `active=false`.
->
-> **Temporary cleanup** (package objects only)
-> 1. Turn **this run's** source `collection_enabled=false` and `enabled=false`
->    (that id only). Then set `collection_authorized=false`. Do not
->    fixture-wide `UPDATE ingest_sources`.
-> 2. Run C4 `90_cleanup.sql` then C3 `090_cleanup.sql`. Stop on unexpected
->    objects, unapproved external dependents, unrelated privileges, or
->    gate/source still enabled. No `DROP OWNED`. No `DROP FUNCTION CASCADE`.
->    No `CASCADE` on `public`. No `DISABLE TRIGGER`. No drop of
->    `public.articles` or `evidence_pipeline`. Do **not** bypass append-only
->    history guards to erase `record_versions` / captures / jobs.
-> 3. Do not undeploy Edge, delete Vault/Edge secrets, or alter YHB/NIE (this
->    run must not have created them). No PR merge. No paid add-on.
->
-> **Proposed retained synthetic audit trail** (owner must explicitly approve)
-> Package cleanup **leaves** native pipeline rows. Proposed residual, all
-> tagged by this operation SHA / run id, none publication-eligible:
-> - 2 `public.articles` at the qualification.invalid URLs above
->   (`pending_review`)
-> - 2 completed `import_jobs` + receipts + job_events for that run
-> - 2 `article_captures` (`review_state='pending'`) and matching
->   `article_identities`
-> - 2 article `record_versions` insert rows (plus any `revision_pending`
->   capture from the changed-title check)
-> - the disabled synthetic `ingest_sources` row this run inserted
-> - `ingest_forward` watermark last_run_id for this run
-> Pre-existing articles, grants, and unrelated jobs must remain. Future
-> authorization to delete this residual is a **separate** sentence and must
-> still not disable history triggers.
->
-> Do not perform that operation from this source-ready commit.
+Three separate operation-owned password-authenticated logins are used:
+
+- Collector: LOGIN INHERIT, member only of qik_ingest_runtime.
+- Native: LOGIN NOINHERIT, member only of service_role.
+- CAS: LOGIN INHERIT, member only of mip_cas_gateway; its actual session_user
+  maps to the operation's synthetic user and investigation.
+
+CAS cannot insert its own authority. Owner bootstrap inserts the exact
+login/principal, 30-minute access, retained-capture identity, and synthetic
+source permission rows. It records ownership in
+qik_ingest_operation.authenticated_driver_operation, refuses existing names,
+tokens, scopes or source IDs, and removes exact authority on teardown.
+Immutable CAS source identities remain until CAS package cleanup. Native
+articles/captures/history deliberately remain.
+
+## Cost boundary
+
+Private owner operation packet records timestamped allowance/billing evidence; recheck before execution. The bounded operation must establish $0 incremental spend from that evidence. This does not establish zero cost for permanent operation or future overages.
+
+## Before approval/execution
+
+1. Confirm exact reviewed source commit and remote host. Verify real-data
+   permissions remain closed. Confirm qik C3/CAS namespaces absent and native
+   signatures/schema match. Check YHB's paused jobs remain off and NIE hold
+   unchanged using separate read-only project inspection.
+2. Confirm no qik recurring caller is enabled; this is one remote process.
+   Inventory external callers separately: absence of cron.job is insufficient.
+3. Establish $0 incremental spend from actual current allowance/billing and the
+   bounded operation. Organization Pro status alone is not $0 proof. If $0
+   cannot be established, do not execute.
+4. Supply credentials only through the approved remote host's ephemeral process
+   environment. Never use chat, checked-in files, command history, logs or .env.
+   Require TLS verification and real PostgreSQL password authentication.
+   Direct host is db.qikvmopbtijoebdqosyq.supabase.co. Alternatively supply the
+   dashboard-confirmed aws-0-us-west-1.pooler.supabase.com SESSION host via
+   MIP_CNC_OBSERVED_SESSION_POOLER_HOST; port must be 5432 and connection
+   username is ROLE.qikvmopbtijoebdqosyq. Actual session_user must still be ROLE.
+   Transaction pooler port 6543 is refused. No pooler host is invented here.
+5. The command below opens a no-echo prompt in the approved remote Cursor terminal. Paste the administrator database URL there, not into the command line. The runner reads it directly into memory; no history/file/env entry is required. An already securely supplied MIP_CNC_ADMIN_DATABASE_URL remains an alternative when --prompt-admin-url is omitted.
+   The runner generates an operation ID, three independent 256-bit passwords and
+   run token in process memory. Optional MIP_CNC_OPERATION_ID is non-secret.
+   Passwordless CREATE ROLE statements remain visible to DDL logging. A
+   temporary pg_temp SECURITY INVOKER helper receives passwords as bound
+   protocol parameters, applies a 30-minute server-clock expiry and sanitizes
+   caught errors before dropping itself. It changes no logging settings.
+   A strict read-only guard refuses statement=all, duration/sample logging,
+   transaction sampling, error-parameter logging, audit/nested tracking, or
+   auto_explain that could reveal parameters. When auto_explain is active, its threshold must be at least 5000ms while the exact secret-carrying connection has a verified 1000ms statement timeout. Admin uses only a transaction-local timeout around the helper, restored immediately; runtime connections are bounded to 1000ms. The helper explicitly catches query_canceled and assert_failure in addition to other errors, avoiding raw dynamic-query cancellation context. Native server-log
+   verification under the observed hosted settings is required before execution.
+6. After the single scope approval, set
+   MIP_CNC_AUTHORIZATION=owner-authorized-qik-synthetic-driver and run:
+
+   node supabase/qualification/collector-native-capture/runAuthenticatedQualification.mjs --execute --prompt-admin-url
+
+The runner atomically installs C3/CAS in one PostgreSQL transaction with existing installers and operation-specific schema ownership markers; preexisting or interrupted installs never authorize cleanup. The runner installs no fixture substrate and uses existing installers (no fixture substrate on
+qik), supplies synthetic XML in memory, exercises the scope below, closes all
+runtime connections, removes operation authority, then cleans CAS/C3 in order.
+Cleanup refusal returns cleanup_requires_owner_recovery; it does not claim PASS.
+Never delete unrelated objects to make cleanup pass.
+
+## Three runs and exact evidence
+
+For operation ID O, prefix is
+https://qualification.invalid/collector-native-capture/O/.
+Only water, second and this operation's feed.xml are used. The source is newly
+inserted; no preexisting source is enabled.
+
+| Run ID | Input | Expected result |
+|---|---|---|
+| qik-cnc-O-run1 | two synthetic items | inserted 2 |
+| qik-cnc-O-run2 | identical XML | duplicates 2 |
+| qik-cnc-O-run3 | water title changed | revisions 1, duplicates 1 |
+
+All runs have unresolved=0, failed_jobs=0, source_failures=0 and is_current=false.
+The article title stays original and pending review; changed content lives only
+in a new pending capture.
+
+Each synthetic description is one qualifying sentence. Mandatory C3→C5 extraction appends exactly one pending candidate per distinct capture (three total); repeated delivery reuses the same candidate IDs. The driver checks exact Unicode source spans against retained summaries. No facts or publication fields are promoted.
+
+Before cleanup, operation-scoped deltas are 2 articles, 3 native jobs, 3 captures,
+2 article identities, 6 job events (claim + complete for three jobs), 3 pending evidence_candidates, 5 evidence_changes and 10 pending change_jobs (five per existing discovery route), 2 article insert history records, 6 native import receipts, 3 ingestion runs and
+3 source runs. CAS binds native PostgreSQL payload::text UTF-8 bytes, verifies
+SHA-256, reads identical bytes, moves cold → rehydrated warm, reads identical
+bytes, then revokes its exact source permission and proves denial. These are
+synthetic database/driver proofs, not product rights, Edge, gateway, live RSS or
+operational consolidation.
+
+Cleanup removes the three logins/memberships, exact CAS principal/access/source
+permissions, run-token hash and operation ledger; it disables the owned source
+and collection gate. Existing package cleanup removes C3/CAS owned objects per
+its ledger. Native evidence remains: 2 pending-review articles, 3 native jobs,
+3 captures, 3 pending evidence_candidates, 2 article identities, 6 job events, 5 evidence_changes and 10 pending change_jobs, 2 article insert versions, 6 receipts, 3 ingestion runs and 3 source runs. The owned synthetic source
+remains disabled. Record residual IDs/hashes in the remote receipt. A global
+36183 count is not a consistency fence. The runner snapshots the exact pre-install qik ingest_forward watermark JSON and captured_at text, and restores that row (or removes its newly created row) only if the current value is still operation-owned; foreign advancement refuses cleanup. The C3-installed YHB pause observation row is retained if it did not previously exist; it is not a full consistency fence.
+
+## Subsequent persistent transition
+
+Temporary teardown does not consolidate a backend. Next review an exact
+persistent install/caller change using proven native contracts: retain C3/CAS
+through a separately reviewed persistent operation, choose least-privilege
+permanent native identity, bind execution-host configuration, qualify request/
+gateway authentication and bounded fetch, reconcile source rights and cursor/run
+recovery, then migrate the approved qik caller. Keep YHB paused and publication
+closed. Prove an authorized item end to end with recovery before recurring
+enablement. Historical corpus disposition remains parallel. Never reuse the
+temporary broad login as a production identity.
+
+## Disposable verification
+
+Opt-in test: MIP_DISPOSABLE_POSTGRES=collector-native-capture-authenticated
+node --test tests/collectorNativeCaptureAuthenticated.test.mjs.
+
+Creates a unique disposable database and actual random-password logins; proves
+wrong-password/wrong-login refusal, real CAS session_user and all three runs.
+The fixture also installs the existing evidence change queue and producer-scoped claim migrations, so native capture/history triggers generate the same bounded discovery residuals. The hosted driver verifies the enabled three-trigger binding inventory before collection; it never applies these native substrate migrations live. Host authentication must require passwords: trust is not authentication proof.
+Connections close before exact database/role cleanup; leftovers/cleanup errors
+fail the test. No hosted claim follows from disposable success.
+
+Credential logging references: [PostgreSQL CREATE ROLE](https://www.postgresql.org/docs/17/sql-createrole.html), [parameter logging controls](https://www.postgresql.org/docs/17/runtime-config-logging.html), and [SPI nested logging behavior](https://www.postgresql.org/message-id/CAFj8pRAKZBhsFQVcmsfFfvEYgv0SeA7TWgjvLRtzCfdB6ws3JQ@mail.gmail.com). A helper is not a generic bypass: the settings guard and verified log test are part of this bounded transport.
+
+For the disposable server-log test, set MIP_DISPOSABLE_PG_LOG_PATH to the remote test server's existing log file. The authenticated suite scans for its in-memory random runtime passwords/token and asserts absence; it also proves logging=all is refused and lock-blocks the role catalog tuple from another connection so credential ALTER times out; client error fields and server logs must contain no runtime password. Logging parameters are changed only on the disposable test connection to reproduce qik's DDL/error posture. No global or hosted logger setting is changed.

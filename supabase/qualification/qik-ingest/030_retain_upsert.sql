@@ -225,12 +225,34 @@ as $$
     'outcome', j.outcome,
     'attempt_count', j.attempt_count,
     'error_code', j.error_code,
-    'lease_token', j.lease_token
+    'lease_token', j.lease_token,
+    'capture_id', c.id
   ) order by j.created_at, j.id), '[]'::jsonb)
   from evidence_pipeline.import_jobs j
+  left join evidence_pipeline.article_captures c on c.job_id=j.id and j.state='completed'
   where coalesce(cardinality(p_job_ids), 0) > 0
     and j.id = any(p_job_ids);
 $$;
+
+-- Read one exact completed native job/capture pair for pending extraction.
+-- Invoker authority is the existing private service-role boundary, not a new
+-- browser or qik_ingest_runtime read grant.
+create or replace function public.mip_qik_ingest_capture_for_job(p_job_id uuid,p_capture_id uuid)
+returns jsonb language plpgsql security invoker set search_path='' as $$
+declare result jsonb;
+begin
+  select jsonb_build_object('id',c.id,'article_id',c.article_id,
+    'content_hash',c.content_hash,'payload_text',c.payload::text)
+  into result
+  from evidence_pipeline.article_captures c
+  join evidence_pipeline.import_jobs j on j.id=c.job_id
+  where j.id=p_job_id and j.state='completed' and c.id=p_capture_id;
+  if result is null then raise exception 'retained_capture_unavailable'; end if;
+  return result;
+end $$;
+revoke all on function public.mip_qik_ingest_capture_for_job(uuid,uuid)
+  from public,anon,authenticated,qik_ingest_runtime;
+grant execute on function public.mip_qik_ingest_capture_for_job(uuid,uuid) to service_role;
 
 revoke all on function public.mip_qik_ingest_claim_bound(uuid[])
   from public, anon, authenticated, qik_ingest_runtime;

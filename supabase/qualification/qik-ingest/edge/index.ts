@@ -6,6 +6,8 @@ import {
   HEADER_SCHEDULER_TOKEN,
 } from '../collector.mjs'
 
+import {extractRetainedCapture} from '../../collector-native-capture/retainedExtraction.mjs'
+
 const JSON_HEADERS = {
   'content-type': 'application/json',
   'cache-control': 'no-store',
@@ -90,6 +92,21 @@ Deno.serve(async (req: Request) => {
     if (error) throw new Error(error.message)
     return Array.isArray(data) ? data : []
   }
+
+  pipelineRpc.extractCapture = async ({job_id, capture_id}: {job_id: string, capture_id: string}) =>
+    extractRetainedCapture({
+      capture_id,
+      backend: {
+        async readCapture(id: string) {
+          const {data, error} = await supabase.rpc('mip_qik_ingest_capture_for_job', {
+            p_job_id: job_id, p_capture_id: id,
+          })
+          if (error) throw new Error(error.message)
+          return data
+        },
+        appendCandidate: (candidate: Record<string, unknown>) => pipelineRpc('candidate', candidate),
+      },
+    })
 
   const result = await runQikIngestCollector({
     rpc,

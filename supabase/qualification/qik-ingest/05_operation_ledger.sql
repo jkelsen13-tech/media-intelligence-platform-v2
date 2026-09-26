@@ -25,13 +25,12 @@ begin
   ) then
     raise exception 'qik_ingest_preexisting_function';
   end if;
-  if exists (
-    select 1 from pg_trigger t
-    join pg_class c on c.oid=t.tgrelid
-    join pg_namespace n on n.oid=c.relnamespace
-    where n.nspname='public' and c.relname='ingest_sources'
-      and t.tgname='qik_ingest_collection_gate'
-  ) then
+  -- capture_step inventories this reserved prefix on every relation. Refuse
+  -- pre-existing identities before installing or replacing any package object.
+  if exists (select 1 from pg_policy where polname like 'qik_ingest_%') then
+    raise exception 'qik_ingest_preexisting_policy';
+  end if;
+  if exists (select 1 from pg_trigger where tgname like 'qik_ingest_%' and not tgisinternal) then
     raise exception 'qik_ingest_preexisting_trigger';
   end if;
 end

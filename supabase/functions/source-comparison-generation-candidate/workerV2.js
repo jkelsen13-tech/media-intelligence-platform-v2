@@ -31,7 +31,11 @@ export async function processGenerationClaim({rpc,requestId,session,runtime,impl
     projection.explanations=dedupeProjectionExplanations(projection.explanations,deduped.winners)
     output={projection,generation_id:claim.generation_id,input_hash:claim.input_hash,
       implementation_ref:implementation,source_observed_at:claim.source_observed_at,
-      snapshot_metadata:retained.snapshot_metadata}
+      snapshot_metadata:retained.snapshot_metadata,
+      // Pending source candidates are lineage only, never inputs to public claims.
+      lineage_review_state:'pending',
+      retained_lineage:retained.eventInputs.flatMap(({event,members})=>members.map(member=>({
+        event_id:event.id,article_id:member.article.id,retained_capture:member.retained_capture??null}))) }
   }catch{
     // Existing isolated policy: explicit failure is terminal. Never reset a lease.
     const failure={...binding,p_request:requestId('failure')}
