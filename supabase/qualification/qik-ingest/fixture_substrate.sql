@@ -2,9 +2,19 @@
 -- Collector surface plus the existing evidence_pipeline prerequisites
 -- (history triggers, nodes, spatial stub). No real feeds.
 
-create role anon nologin noinherit;
-create role authenticated nologin noinherit;
-create role service_role nologin noinherit bypassrls;
+do $roles$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then
+    create role anon nologin noinherit;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'authenticated') then
+    create role authenticated nologin noinherit;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'service_role') then
+    create role service_role nologin noinherit bypassrls;
+  end if;
+end
+$roles$;
 
 create table public.articles (
   id uuid primary key default gen_random_uuid(),

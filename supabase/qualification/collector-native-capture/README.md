@@ -20,16 +20,20 @@ Peer trees reused (not rewritten as a second architecture):
 ## Connection (existing paths)
 
 Discovery is `qik_ingest.observed_items` (not `INSERT` into `public.articles`).
-The collector then calls existing `public.mip_pipeline_v1`:
+The collector then calls existing `public.mip_pipeline_v1` **enqueue** and
+**finish**, and `public.mip_qik_ingest_claim_bound` for claim / expired-lease
+recovery. Bound claim uses the same `evidence_pipeline.import_jobs` queue,
+leases, attempts, and `SKIP LOCKED` rules as `claim_job`, but only for
+explicitly bound synthetic job ids. Unscoped `mip_pipeline_v1('claim')` is
+refused. Identical `(canonical_url, input_hash)` is idle. Changed content at
+the same URL is `revision_pending`.
 
-`observe → enqueue → claim → finish → article_captures` + `record_versions`
-(history triggers from `20260905082406_evidence_pipeline_reliability.sql`)
-`→ bindExactCaptureBytes`.
+Package cleanup does **not** erase native articles, captures, or
+`record_versions`. Hosted residual is an owner-approved synthetic audit trail
+(see `LIVE_OPERATION_PASTE.md`). This package is hosted-database/driver
+qualification, not Edge/gateway/cron/live RSS.
 
-Identical `(canonical_url, input_hash)` is idle. Changed content at the same
-URL is a new job whose finish outcome is `revision_pending`: reviewed
-`reader_state` / title / body are not overwritten; capture `review_state`
-stays `pending`.
+PGlite `SET ROLE` is **not** hosted PostgREST auth.
 
 ## Cleanup boundaries
 

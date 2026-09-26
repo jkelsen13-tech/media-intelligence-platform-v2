@@ -68,12 +68,27 @@ Deno.serve(async (req: Request) => {
 
   const runId = `qik-ingest-${new Date().toISOString()}`
   const pipelineRpc = async (action: string, input: Record<string, unknown> = {}) => {
+    if (action === 'claim') throw new Error('unscoped_claim_forbidden')
     const { data, error } = await supabase.rpc('mip_pipeline_v1', {
       p_action: action,
       p_input: input,
     })
     if (error) throw new Error(error.message)
     return data
+  }
+  pipelineRpc.claimBound = async (jobIds: string[]) => {
+    const { data, error } = await supabase.rpc('mip_qik_ingest_claim_bound', {
+      p_job_ids: jobIds,
+    })
+    if (error) throw new Error(error.message)
+    return data
+  }
+  pipelineRpc.readJobStates = async (jobIds: string[]) => {
+    const { data, error } = await supabase.rpc('mip_qik_ingest_bound_job_states', {
+      p_job_ids: jobIds,
+    })
+    if (error) throw new Error(error.message)
+    return Array.isArray(data) ? data : []
   }
 
   const result = await runQikIngestCollector({

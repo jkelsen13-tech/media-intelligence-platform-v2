@@ -62,9 +62,15 @@ test('source package is live-hold, ordered, and does not activate cron, vault, o
   assert.match(edge, /HEADER_SCHEDULER_TOKEN/)
   assert.match(edge, /mip_qik_ingest_schedule_authorized/)
   assert.match(edge, /mip_pipeline_v1/)
+  assert.match(edge, /mip_qik_ingest_claim_bound/)
+  assert.match(edge, /unscoped_claim_forbidden/)
   assert.match(collectorSrc, new RegExp(HEADER_RUN_KEY))
   assert.match(collectorSrc, new RegExp(HEADER_SCHEDULER_TOKEN))
   assert.match(collectorSrc, /drainNativePipeline/)
+  const handoff = await readFile(join(root, 'nativeHandoff.mjs'), 'utf8')
+  assert.match(handoff, /mip_qik_ingest_claim_bound/)
+  assert.match(handoff, /unscoped_claim_forbidden/)
+  assert.doesNotMatch(handoff, /pipelineRpc\('claim'/)
   assert.doesNotMatch(edge, /INGEST_RSS_RUN_KEY|x-ingest-rss-key|x-ingest-rss-scheduler-token/)
   assert.doesNotMatch(collectorSrc, /INGEST_RSS_RUN_KEY/)
   const paste = await readFile(join(root, 'LIVE_OPERATION_PASTE.md'), 'utf8')
@@ -112,6 +118,8 @@ test('identical delivery is idle; changed content uses revision_pending without 
   assert.equal(first.body.state, 'completed')
   assert.equal(first.body.inserted, 2)
   assert.equal(first.body.revisions, 0)
+  assert.equal(first.body.unresolved, 0)
+  assert.equal(first.body.failed_jobs, 0)
   assert.equal(first.body.is_current, false)
   const afterOk = (await db.query('select public.mip_qik_ingest_observe($1) r', [DISPOSABLE_TEST_TOKEN])).rows[0].r
   assert.equal(afterOk.is_current, false)
@@ -137,6 +145,9 @@ test('identical delivery is idle; changed content uses revision_pending without 
   assert.equal(second.body.inserted, 0)
   assert.equal(second.body.revisions, 1)
   assert.equal(second.body.duplicates, 1)
+  assert.equal(second.body.unresolved, 0)
+  assert.equal(second.body.failed_jobs, 0)
+  assert.equal(second.body.state, 'completed')
   const row = (await db.query(
     `select title, body_text, reader_state, source_status, claims
      from public.articles where url = 'https://news.example/water'`,

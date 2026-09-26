@@ -25,8 +25,10 @@ A complete, later-installable **discover → native retain** collector owned by 
    Default schedule is **disabled**; this package never calls `cron.schedule`.
 4. Watermark/checkpoint continuity from the YHB pause fence (~36183) **without**
    transferring articles.
-5. Observe → existing `mip_pipeline_v1` enqueue/claim/finish (jobs, captures,
-   history). Identical delivery is idle; changed content is `revision_pending`.
+5. Observe → existing `mip_pipeline_v1` enqueue/finish and bound
+   `mip_qik_ingest_claim_bound` (jobs, captures, history). Identical delivery
+   is idle; changed content is `revision_pending`. Unfinished own jobs are
+   `unresolved`, not duplicates.
 6. Failure/recovery observability: this package **never** advertises `current`.
 
 Out of scope (later capabilities): NER, embeddings, arc origination, extraction

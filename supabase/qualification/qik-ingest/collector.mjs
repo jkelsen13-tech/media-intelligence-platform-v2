@@ -29,6 +29,7 @@ export async function runQikIngestCollector({
   token,
   runId,
   now = new Date().toISOString(),
+  drainMaxJobs = 32,
 }) {
   let plan
   try {
@@ -62,6 +63,8 @@ export async function runQikIngestCollector({
   let duplicates = 0
   let rejected = 0
   let revisions = 0
+  let unresolved = 0
+  let failedJobs = 0
   let sourceFailures = 0
   const sourceReports = []
   const seenJobs = new Set()
@@ -108,11 +111,21 @@ export async function runQikIngestCollector({
         sourceJobIds.push(jobId)
         pendingNew += 1
       }
-      const handedOff = await drainNativePipeline({pipelineRpc})
-      const counts = countHandoffOutcomes(sourceJobIds, handedOff)
+      const handedOff = await drainNativePipeline({
+        pipelineRpc,
+        jobIds: sourceJobIds,
+        maxJobs: drainMaxJobs,
+      })
+      if (typeof pipelineRpc.readJobStates !== 'function') {
+        throw new Error('bound_job_states_required')
+      }
+      const jobRows = await pipelineRpc.readJobStates(sourceJobIds)
+      const counts = countHandoffOutcomes(sourceJobIds, handedOff, jobRows)
       inserted += counts.inserted
       duplicates += counts.duplicates
       revisions += counts.revisions
+      unresolved += counts.unresolved
+      failedJobs += counts.failed
       newForSource = counts.inserted + counts.revisions
       dupForSource += counts.duplicates
       revForSource = counts.revisions
@@ -133,6 +146,8 @@ export async function runQikIngestCollector({
         new: newForSource,
         duplicates: dupForSource,
         revisions: revForSource,
+        unresolved: counts.unresolved,
+        failed_jobs: counts.failed,
       })
     } catch (error) {
       sourceFailures += 1
@@ -151,14 +166,23 @@ export async function runQikIngestCollector({
     }
   }
 
-  const finishState = sourceFailures === 0
+  const processingIncomplete = unresolved > 0 || failedJobs > 0
+  const finishState = sourceFailures === 0 && !processingIncomplete
     ? 'completed'
     : (inserted + revisions > 0 ? 'completed_with_errors' : 'failed')
   const finished = await rpc('finish_run', {
     token,
     run_id: runId,
     state: finishState,
-    counters: { inserted, duplicates, rejected, revisions, source_failures: sourceFailures },
+    counters: {
+      inserted,
+      duplicates,
+      rejected,
+      revisions,
+      unresolved,
+      failed_jobs: failedJobs,
+      source_failures: sourceFailures,
+    },
     now,
   })
 
@@ -171,6 +195,8 @@ export async function runQikIngestCollector({
       duplicates,
       rejected,
       revisions,
+      unresolved,
+      failed_jobs: failedJobs,
       source_failures: sourceFailures,
       sources: sourceReports,
       freshness: finished.freshness,

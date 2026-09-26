@@ -42,7 +42,7 @@ v8 owner-key **or** scheduler-RPC pattern under qik names. This package does
 | Drop hard `collection_enabled = false` **replace with owner gate** | Expand without enabling; trigger still refuses true while gate is false |
 | `public.mip_qik_ingest_*` RPCs | service_role + runtime EXECUTE; **no** anon/authenticated/PUBLIC |
 | Retain / observe | `qik_ingest.observed_items` then existing `mip_pipeline_v1` enqueue; publication fields refused |
-| Native handoff | claim/finish; identical hash idle; changed URL content → `revision_pending` |
+| Native handoff | Bound `mip_qik_ingest_claim_bound` + existing finish; identical hash idle via job state; changed URL content → `revision_pending` |
 | Operation ledger | `qik_ingest_operation` records exact created objects and dropped collection checks |
 | Watermark channels | `yhb…/ingest_pause_fence` = 36183; `qik…/ingest_forward` starts idle |
 | Schedule intent | `mip-qik-ingest-rss` **`active=false`** with a check that forbids true |

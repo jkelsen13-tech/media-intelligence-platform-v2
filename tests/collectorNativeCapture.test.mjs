@@ -6,6 +6,11 @@ import {installCaptureCas, cleanupCaptureCas, createSessionCall} from '../supaba
 import {bindExactCaptureBytes, assertCaptureHash, sha256Hex} from '../supabase/qualification/content-addressed-storage/bindExactCaptureBytes.mjs'
 import {runQikIngestCollector} from '../supabase/qualification/qik-ingest/collector.mjs'
 import {
+  countHandoffOutcomes,
+  drainNativePipeline,
+  enqueueObserved,
+} from '../supabase/qualification/qik-ingest/nativeHandoff.mjs'
+import {
   FEED,
   cleanupQikIngest,
   createDisposableDb,
@@ -62,6 +67,9 @@ test('composed collector observe → native handoff → history → reused C4 bi
   })
   assert.equal(result.body.inserted, 2)
   assert.equal(result.body.revisions, 0)
+  assert.equal(result.body.unresolved, 0)
+  assert.equal(result.body.failed_jobs, 0)
+  assert.equal(result.body.state, 'completed')
   assert.equal(await scalar(db, 'select count(*)::int from evidence_pipeline.import_jobs'), 2)
   assert.equal(await scalar(db, 'select count(*)::int from evidence_pipeline.article_captures'), 2)
   assert.equal(await scalar(db, `select count(*)::int from evidence_pipeline.record_versions where record_kind='article' and operation='insert'`), 2)
@@ -174,3 +182,160 @@ test('C3/C4 cleanup boundaries: unrelated objects, external dependents, interrup
     assert.equal(await scalar(db, "select count(*)::int from pg_namespace where nspname='mip_cas'"), 0)
   })
 })
+
+function articlePayload(url, title) {
+  return {url, title, outlet: 'Example World', summary: 'synthetic', body_text: null, published_at: null}
+}
+
+async function jobFingerprint(db, id) {
+  const row = (await db.query(`
+    select id::text, state, outcome, attempt_count, error_code,
+           lease_token::text as lease_token, payload, canonical_url, input_hash,
+           article_id::text as article_id
+    from evidence_pipeline.import_jobs where id = $1::uuid
+  `, [id])).rows[0]
+  const events = (await db.query(`
+    select count(*)::int as n from evidence_pipeline.job_events where job_id = $1::uuid
+  `, [id])).rows[0]
+  return {...row, event_count: events.n}
+}
+
+test('countHandoffOutcomes uses native job state, not missing-from-drain as duplicate', () => {
+  const job = '11111111-1111-4111-8111-111111111111'
+  const pending = '22222222-2222-4222-8222-222222222222'
+  const dead = '33333333-3333-4333-8333-333333333333'
+  const leased = '44444444-4444-4444-8444-444444444444'
+  const retrying = '55555555-5555-4555-8555-555555555555'
+  const prior = '66666666-6666-4666-8666-666666666666'
+  const counts = countHandoffOutcomes(
+    [job, pending, dead, leased, retrying, prior],
+    [{job_id: job, outcome: 'inserted'}],
+    [
+      {id: job, state: 'completed', outcome: 'inserted', attempt_count: 1},
+      {id: pending, state: 'pending', outcome: null, attempt_count: 0},
+      {id: dead, state: 'dead_letter', outcome: null, attempt_count: 5, error_code: 'lease_expired'},
+      {id: leased, state: 'processing', outcome: null, attempt_count: 1},
+      {id: retrying, state: 'retry_wait', outcome: null, attempt_count: 2, error_code: 'lease_expired'},
+      {id: prior, state: 'completed', outcome: 'inserted', attempt_count: 1},
+    ],
+  )
+  assert.deepEqual(counts, {
+    inserted: 1,
+    duplicates: 1,
+    revisions: 0,
+    unresolved: 3,
+    failed: 1,
+  })
+})
+
+test('drain limit leaves own jobs unresolved; collector does not report completed', async t => {
+  const {db, exec} = await createDisposableDb()
+  t.after(() => db.close())
+  await loadQikIngest(exec)
+  await enableDisposableWriter(db)
+  const pipelineRpc = createPipelineRpc(db)
+  await assert.rejects(pipelineRpc('claim', {}), /unscoped_claim_forbidden/)
+
+  const result = await runQikIngestCollector({
+    rpc: rpc(db),
+    pipelineRpc,
+    token: DISPOSABLE_TEST_TOKEN,
+    runId: 'qik-run-drain-limit',
+    now: '2026-09-26T19:30:00Z',
+    drainMaxJobs: 1,
+    fetchText: async () => FEED,
+  })
+  assert.equal(result.body.inserted, 1)
+  assert.equal(result.body.unresolved, 1)
+  assert.equal(result.body.duplicates, 0)
+  assert.equal(result.body.state, 'completed_with_errors')
+  assert.equal(result.httpStatus, 200)
+  assert.equal(await scalar(db, "select count(*)::int from evidence_pipeline.import_jobs where state='pending'"), 1)
+  assert.equal(await scalar(db, "select count(*)::int from evidence_pipeline.import_jobs where state='completed'"), 1)
+
+  const ownPending = (await db.query(`
+    select id::text as id from evidence_pipeline.import_jobs where state='pending'
+  `)).rows[0].id
+  const unfinished = countHandoffOutcomes(
+    [ownPending],
+    [],
+    await pipelineRpc.readJobStates([ownPending]),
+  )
+  assert.equal(unfinished.duplicates, 0)
+  assert.equal(unfinished.unresolved, 1)
+})
+
+test('bound claim/expire/finish leave unrelated pending and expired jobs untouched', async t => {
+  const {db, exec} = await createDisposableDb()
+  t.after(() => db.close())
+  await loadQikIngest(exec)
+  const pipelineRpc = createPipelineRpc(db)
+  const boundA = await enqueueObserved({
+    pipelineRpc, runId: 'bound-run-aa', article: articlePayload('https://qualification.invalid/cnc/a', 'Bound A'),
+  })
+  const boundB = await enqueueObserved({
+    pipelineRpc, runId: 'bound-run-aa', article: articlePayload('https://qualification.invalid/cnc/b', 'Bound B'),
+  })
+  const unrelatedPending = await enqueueObserved({
+    pipelineRpc, runId: 'other-run-xx', article: articlePayload('https://qualification.invalid/cnc/unrelated-pending', 'Unrelated pending'),
+  })
+  const unrelatedExpired = await enqueueObserved({
+    pipelineRpc, runId: 'other-run-xx', article: articlePayload('https://qualification.invalid/cnc/unrelated-expired', 'Unrelated expired'),
+  })
+  const boundExpired = await enqueueObserved({
+    pipelineRpc, runId: 'bound-run-aa', article: articlePayload('https://qualification.invalid/cnc/bound-expired', 'Bound expired'),
+  })
+  const held = await enqueueObserved({
+    pipelineRpc, runId: 'other-run-xx', article: articlePayload('https://qualification.invalid/cnc/held', 'Held by other worker'),
+  })
+  await db.query(`
+    update evidence_pipeline.import_jobs
+      set state='processing', attempt_count=1,
+          lease_token='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid,
+          lease_expires_at=clock_timestamp() - interval '1 hour'
+      where id = $1::uuid
+  `, [unrelatedExpired])
+  await db.query(`
+    update evidence_pipeline.import_jobs
+      set state='processing', attempt_count=1,
+          lease_token='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid,
+          lease_expires_at=clock_timestamp() - interval '1 hour'
+      where id = $1::uuid
+  `, [boundExpired])
+  await db.query(`
+    update evidence_pipeline.import_jobs
+      set state='processing', attempt_count=1,
+          lease_token='cccccccc-cccc-4ccc-8ccc-cccccccccccc'::uuid,
+          lease_expires_at=clock_timestamp() + interval '2 minutes'
+      where id = $1::uuid
+  `, [held])
+
+  const beforePending = await jobFingerprint(db, unrelatedPending)
+  const beforeExpired = await jobFingerprint(db, unrelatedExpired)
+  const beforeHeld = await jobFingerprint(db, held)
+  const historyBefore = await scalar(db, 'select count(*)::int from evidence_pipeline.record_versions')
+
+  const finished = await drainNativePipeline({
+    pipelineRpc,
+    jobIds: [boundA, boundB, boundExpired],
+    maxJobs: 8,
+  })
+  const counts = countHandoffOutcomes(
+    [boundA, boundB, boundExpired],
+    finished,
+    await pipelineRpc.readJobStates([boundA, boundB, boundExpired]),
+  )
+  assert.equal(counts.inserted, 2)
+  assert.equal(counts.unresolved, 1)
+  assert.equal(counts.duplicates, 0)
+  assert.equal(await scalar(db, `select state from evidence_pipeline.import_jobs where id=$1::uuid`, [boundExpired]), 'retry_wait')
+  assert.equal(await scalar(db, `select error_code from evidence_pipeline.import_jobs where id=$1::uuid`, [boundExpired]), 'lease_expired')
+
+  assert.deepEqual(await jobFingerprint(db, unrelatedPending), beforePending)
+  assert.deepEqual(await jobFingerprint(db, unrelatedExpired), beforeExpired)
+  assert.deepEqual(await jobFingerprint(db, held), beforeHeld)
+  assert.equal(await scalar(db, 'select count(*)::int from evidence_pipeline.record_versions'), historyBefore + 2)
+  assert.equal(await scalar(db, `select count(*)::int from evidence_pipeline.article_captures
+    where payload->>'url' like 'https://qualification.invalid/cnc/unrelated%'`), 0)
+})
+

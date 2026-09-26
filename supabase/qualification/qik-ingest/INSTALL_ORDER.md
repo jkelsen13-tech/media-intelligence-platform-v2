@@ -58,6 +58,7 @@ schema `CASCADE`) and restores recorded `collection_enabled = false` checks.
 It refuses if the gate is on, any source is collection-enabled, unexpected
 same-role objects exist, or unrelated public privileges were granted to
 package roles. It does not delete articles, YHB jobs, NIE, or collector-shadow.
-Native handoff is existing `mip_pipeline_v1` enqueue/claim/finish (see
-`nativeHandoff.mjs`); identical delivery is idle; changed content is
-`revision_pending`.
+Native handoff is existing `mip_pipeline_v1` enqueue/finish plus
+`mip_qik_ingest_claim_bound` (same queue/lease rules, bound job ids only).
+Identical delivery is idle; changed content is `revision_pending`. Cleanup
+does not erase native articles/captures/history.

@@ -148,6 +148,98 @@ grant execute on function public.mip_qik_ingest_retain_item(text, text, uuid, js
 grant execute on function public.mip_qik_ingest_record_source_run(text, text, uuid, text, integer, integer, text, timestamptz)
   to service_role, qik_ingest_runtime;
 
+-- Bound claim: same evidence_pipeline.import_jobs queue, lease, attempts,
+-- SKIP LOCKED, and expire rules as evidence_pipeline.claim_job, but ONLY for
+-- explicitly bound job ids. Not a second queue. Unscoped mip_pipeline_v1
+-- claim is not used by this qualification.
+create or replace function public.mip_qik_ingest_claim_bound(p_job_ids uuid[])
+returns jsonb
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  j evidence_pipeline.import_jobs;
+  t timestamptz := clock_timestamp();
+begin
+  if p_job_ids is null or coalesce(cardinality(p_job_ids), 0) = 0
+     or exists (select 1 from unnest(p_job_ids) x(id) where x.id is null) then
+    raise exception 'qik_ingest_bound_jobs_required' using errcode = '22023';
+  end if;
+
+  with expired as (
+    select id from evidence_pipeline.import_jobs
+    where state = 'processing' and lease_expires_at <= t
+      and id = any(p_job_ids)
+    order by lease_expires_at
+    limit 100
+    for update skip locked
+  ), changed as (
+    update evidence_pipeline.import_jobs x set
+      state = case when attempt_count >= 5 then 'dead_letter' else 'retry_wait' end,
+      error_code = 'lease_expired',
+      lease_token = null,
+      lease_expires_at = null,
+      available_at = t + make_interval(secs => least(3600, 30 * (2 ^ greatest(0, attempt_count - 1))::integer))
+    from expired e where x.id = e.id
+    returning x.*
+  )
+  insert into evidence_pipeline.job_events(job_id, attempt, state, code)
+    select id, attempt_count, state, 'lease_expired' from changed;
+
+  select * into j
+  from evidence_pipeline.import_jobs
+  where id = any(p_job_ids)
+    and state in ('pending', 'retry_wait')
+    and available_at <= t
+    and attempt_count < 5
+  order by available_at, created_at, id
+  limit 1
+  for update skip locked;
+  if not found then
+    return null;
+  end if;
+  update evidence_pipeline.import_jobs set
+    state = 'processing',
+    attempt_count = attempt_count + 1,
+    lease_token = gen_random_uuid(),
+    lease_expires_at = t + interval '2 minutes',
+    error_code = null
+  where id = j.id
+  returning * into j;
+  insert into evidence_pipeline.job_events(job_id, attempt, state)
+    values (j.id, j.attempt_count, j.state);
+  return to_jsonb(j);
+end
+$$;
+
+create or replace function public.mip_qik_ingest_bound_job_states(p_job_ids uuid[])
+returns jsonb
+language sql
+security invoker
+set search_path = ''
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'id', j.id,
+    'state', j.state,
+    'outcome', j.outcome,
+    'attempt_count', j.attempt_count,
+    'error_code', j.error_code,
+    'lease_token', j.lease_token
+  ) order by j.created_at, j.id), '[]'::jsonb)
+  from evidence_pipeline.import_jobs j
+  where coalesce(cardinality(p_job_ids), 0) > 0
+    and j.id = any(p_job_ids);
+$$;
+
+revoke all on function public.mip_qik_ingest_claim_bound(uuid[])
+  from public, anon, authenticated, qik_ingest_runtime;
+revoke all on function public.mip_qik_ingest_bound_job_states(uuid[])
+  from public, anon, authenticated;
+grant execute on function public.mip_qik_ingest_claim_bound(uuid[]) to service_role;
+grant execute on function public.mip_qik_ingest_bound_job_states(uuid[])
+  to service_role, qik_ingest_runtime;
+
 do $$
 begin
   execute 'alter function public.mip_qik_ingest_retain_item(text, text, uuid, jsonb) owner to qik_ingest_fn_owner';

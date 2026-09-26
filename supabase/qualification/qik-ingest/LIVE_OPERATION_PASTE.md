@@ -1,5 +1,11 @@
 # Coordinated eventual live operation — LIVE HOLD
 
+**LIVE HOLD.** Coordinated collector → native capture **hosted-database/driver**
+qualification (bound claim, residual trail) lives in
+`supabase/qualification/collector-native-capture/LIVE_OPERATION_PASTE.md`.
+This C3 file is package-local. Do not treat it as Edge/cron/live RSS
+authorization.
+
 **This paste is not authorization. Do not perform it from this PR.**
 
 No hosted SQL, Edge deploy, Vault write, Data API change, cron mutation, or
@@ -54,11 +60,15 @@ article transfer is in scope for Package C3 source-ready.
 >    in the same authorized op.
 > 4. Induced source failure leaves `failed` or `completed_with_errors`,
 >    forward `qik_forward_stale` or inflight, `is_current=false`.
-> 5. YHB crons still `active=false`. qik article count did not jump by 36183.
+> 5. YHB crons still `active=false`. Operation-ID URL prefix
+>    `https://qualification.invalid/...` has the expected article/job/capture
+>    deltas; pre-existing articles and grants unchanged. Do not use a 36183
+>    jump check.
 >
 > **Cleanup (failure or completion of this bounded op)**
-> 1. If the gate was turned on, turn it off first and set sources
->    `collection_enabled=false` before 090.
+> 1. If this run turned the gate on, turn it off and set **only the source
+>    this run enabled** `collection_enabled=false` before 090. Do not
+>    fixture-wide disable every ingest source.
 > 2. Run `090_cleanup.sql`. Stop if it refuses (gate still on, source still
 >    collection-enabled, unexpected objects, unrelated privileges). No
 >    `DROP OWNED`. No schema `CASCADE`.
