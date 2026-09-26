@@ -1,0 +1,17 @@
+{
+  "value": {"text": "Exact Unicode 🧭 and whitespace\n  retained", "n": 1},
+  "citation": {"passage": "Original retained passage"},
+  "citationChanged": {"passage": "A similar but changed passage"},
+  "provenance": {
+    "source_version": "synthetic-v1",
+    "acquired_at": "2026-09-14T00:00:00Z",
+    "rights_ref": "synthetic-only",
+    "privacy_ref": "synthetic-only"
+  },
+  "pipelineArticle": {
+    "url": "https://Example.org/story?utm_source=test&edition=us#section",
+    "title": "Original report",
+    "outlet": "Example",
+    "summary": "A 🚢 arrived in Cleveland."
+  }
+}
