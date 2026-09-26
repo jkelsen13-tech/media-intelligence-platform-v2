@@ -75,9 +75,10 @@ create table qik_ingest_operation.introduced_grants(
   grantee text not null,object_kind text not null
     check(object_kind in ('table','column','schema','function','sequence')),
   schema_name text not null,object_name text not null,column_name text not null default '',
-  privilege text not null,status text not null
+  privilege text not null,grantor text not null default current_user,
+  is_grantable boolean not null default false,status text not null
     check(status in ('introduced','revoked')),
-  unique(grantee,object_kind,schema_name,object_name,column_name,privilege)
+  unique(grantee,object_kind,schema_name,object_name,column_name,privilege,grantor)
 );
 
 create function qik_ingest_operation.snapshot_baseline()
@@ -95,28 +96,28 @@ begin
 end $$;
 
 create function qik_ingest_operation.current_external_grants()
-returns table(grantee text,object_kind text,schema_name text,object_name text,column_name text,privilege text)
+returns table(grantee text,object_kind text,schema_name text,object_name text,column_name text,privilege text,grantor text,is_grantable boolean)
 language sql set search_path='' as $$
  select r.rolname::text,case when c.relkind='S' then 'sequence' else 'table' end,
- n.nspname::text,c.relname::text,''::text,a.privilege_type::text
+ n.nspname::text,c.relname::text,''::text,a.privilege_type::text,pg_get_userbyid(a.grantor)::text,a.is_grantable
  from pg_class c join pg_namespace n on n.oid=c.relnamespace
  cross join lateral aclexplode(c.relacl) a join pg_roles r on r.oid=a.grantee
  join qik_ingest_operation.created_roles own on own.rolname=r.rolname
  where n.nspname not in ('qik_ingest','qik_ingest_operation') and c.relowner<>r.oid
  union all
- select r.rolname::text,'column',n.nspname::text,c.relname::text,at.attname::text,a.privilege_type::text
+ select r.rolname::text,'column',n.nspname::text,c.relname::text,at.attname::text,a.privilege_type::text,pg_get_userbyid(a.grantor)::text,a.is_grantable
  from pg_attribute at join pg_class c on c.oid=at.attrelid join pg_namespace n on n.oid=c.relnamespace
  cross join lateral aclexplode(at.attacl) a join pg_roles r on r.oid=a.grantee
  join qik_ingest_operation.created_roles own on own.rolname=r.rolname
  where n.nspname not in ('qik_ingest','qik_ingest_operation') and c.relowner<>r.oid
  union all
- select r.rolname::text,'function',n.nspname::text,p.proname::text,pg_get_function_identity_arguments(p.oid),a.privilege_type::text
+ select r.rolname::text,'function',n.nspname::text,p.proname::text,pg_get_function_identity_arguments(p.oid),a.privilege_type::text,pg_get_userbyid(a.grantor)::text,a.is_grantable
  from pg_proc p join pg_namespace n on n.oid=p.pronamespace
  cross join lateral aclexplode(p.proacl) a join pg_roles r on r.oid=a.grantee
  join qik_ingest_operation.created_roles own on own.rolname=r.rolname
  where n.nspname not in ('qik_ingest','qik_ingest_operation') and p.proowner<>r.oid
  union all
- select r.rolname::text,'schema',n.nspname::text,''::text,''::text,a.privilege_type::text
+ select r.rolname::text,'schema',n.nspname::text,''::text,''::text,a.privilege_type::text,pg_get_userbyid(a.grantor)::text,a.is_grantable
  from pg_namespace n cross join lateral aclexplode(n.nspacl) a join pg_roles r on r.oid=a.grantee
  join qik_ingest_operation.created_roles own on own.rolname=r.rolname
  where n.nspname not in ('qik_ingest','qik_ingest_operation') and n.nspowner<>r.oid;
@@ -126,11 +127,11 @@ create function qik_ingest_operation.record_introduced_grants()
 returns void language plpgsql as $$
 begin
  insert into qik_ingest_operation.introduced_grants
- (grantee,object_kind,schema_name,object_name,column_name,privilege,status)
- select grantee,object_kind,schema_name,object_name,column_name,privilege,'introduced'
+ (grantee,object_kind,schema_name,object_name,column_name,privilege,grantor,is_grantable,status)
+ select grantee,object_kind,schema_name,object_name,column_name,privilege,grantor,is_grantable,'introduced'
  from qik_ingest_operation.current_external_grants()
- on conflict(grantee,object_kind,schema_name,object_name,column_name,privilege)
- do update set status='introduced';
+ on conflict(grantee,object_kind,schema_name,object_name,column_name,privilege,grantor)
+ do update set status='introduced',is_grantable=excluded.is_grantable;
 end $$;
 
 create function qik_ingest_operation.capture_step(p_step text)
@@ -249,8 +250,8 @@ begin
  if exists(
    select 1 from qik_ingest_operation.current_external_grants() a
    where not exists(select 1 from qik_ingest_operation.introduced_grants g
-     where (g.grantee,g.object_kind,g.schema_name,g.object_name,g.column_name,g.privilege)
-       =(a.grantee,a.object_kind,a.schema_name,a.object_name,a.column_name,a.privilege)
+     where (g.grantee,g.object_kind,g.schema_name,g.object_name,g.column_name,g.privilege,g.grantor,g.is_grantable)
+       =(a.grantee,a.object_kind,a.schema_name,a.object_name,a.column_name,a.privilege,a.grantor,a.is_grantable)
        and g.status='introduced')
  ) then raise exception 'qik_ingest_unrelated_privilege'; end if;
 end $$;

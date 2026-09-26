@@ -171,6 +171,27 @@ test('permanent native seam: actual restricted login, bound history, denied unre
    await exec('update qik_ingest.collection_gate set collection_authorized=false')
    // Unexpected external privileges must refuse atomically, then exact owner
    // revocation allows cleanup. Do not absorb them by re-capturing the ledger.
+   await exec('grant execute on function evidence_pipeline.canonical_url(text) to qik_ingest_fn_owner with grant option')
+   await assert.rejects(cleanupQikIngest(exec),/qik_ingest_unrelated_privilege/)
+   assert.equal((await exec("select a.is_grantable from pg_proc p cross join lateral aclexplode(p.proacl) a where p.oid='evidence_pipeline.canonical_url(text)'::regprocedure and a.grantee='qik_ingest_fn_owner'::regrole")).rows[0].is_grantable,true)
+   await exec('revoke grant option for execute on function evidence_pipeline.canonical_url(text) from qik_ingest_fn_owner')
+   // Same privilege from a second grantor is a distinct foreign ACL entry.
+   const grantor='native_grantor_'+id
+   await exec('create role "'+grantor+'" nologin')
+   createdRoles.push(grantor)
+   await exec('grant usage on schema evidence_pipeline to "'+grantor+'"')
+   await exec('grant execute on function evidence_pipeline.canonical_url(text) to "'+grantor+'" with grant option')
+   await exec('set role "'+grantor+'"')
+   try{await exec('grant execute on function evidence_pipeline.canonical_url(text) to qik_ingest_fn_owner')}
+   finally{await exec('reset role')}
+   await assert.rejects(cleanupQikIngest(exec),/qik_ingest_unrelated_privilege/)
+   assert.equal((await admin.query("select count(*)::int n from pg_proc p cross join lateral aclexplode(p.proacl) a where p.oid='evidence_pipeline.canonical_url(text)'::regprocedure and a.grantee='qik_ingest_fn_owner'::regrole and a.grantor=$1::regrole",[grantor])).rows[0].n,1)
+   await exec('set role "'+grantor+'"')
+   try{await exec('revoke execute on function evidence_pipeline.canonical_url(text) from qik_ingest_fn_owner')}
+   finally{await exec('reset role')}
+   await exec('revoke execute on function evidence_pipeline.canonical_url(text) from "'+grantor+'"')
+   await exec('revoke usage on schema evidence_pipeline from "'+grantor+'"')
+   await exec('drop role "'+grantor+'"');createdRoles.splice(createdRoles.indexOf(grantor),1)
    await exec('grant delete on evidence_pipeline.import_jobs to qik_ingest_fn_owner')
    await assert.rejects(cleanupQikIngest(exec),/qik_ingest_unrelated_privilege/)
    assert.notEqual((await exec("select to_regnamespace('qik_ingest') n")).rows[0].n,null)
