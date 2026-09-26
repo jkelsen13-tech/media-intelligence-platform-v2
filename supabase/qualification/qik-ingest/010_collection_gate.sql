@@ -170,12 +170,12 @@ grant select, insert, update on public.ingestion_source_runs to qik_ingest_fn_ow
 grant select, insert, update on public.mip_consolidation_watermarks to qik_ingest_fn_owner;
 
 grant create on schema qik_ingest to qik_ingest_fn_owner;
-do $
+do $$
 begin
   execute 'alter function qik_ingest.enforce_collection_gate() owner to qik_ingest_fn_owner';
   execute 'alter function qik_ingest.require_token(text) owner to qik_ingest_fn_owner';
   execute 'alter function qik_ingest.reject_false_current(text) owner to qik_ingest_fn_owner';
 end
-$;
+$$;
 
 revoke create on schema qik_ingest from qik_ingest_fn_owner;

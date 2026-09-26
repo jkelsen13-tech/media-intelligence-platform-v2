@@ -267,11 +267,11 @@ grant execute on function public.mip_qik_ingest_bound_job_states(uuid[])
   to service_role, qik_ingest_runtime;
 
 grant create on schema public to qik_ingest_fn_owner;
-do $
+do $$
 begin
   execute 'alter function public.mip_qik_ingest_retain_item(text, text, uuid, jsonb) owner to qik_ingest_fn_owner';
   execute 'alter function public.mip_qik_ingest_record_source_run(text, text, uuid, text, integer, integer, text, timestamptz) owner to qik_ingest_fn_owner';
 end
-$;
+$$;
 
 revoke create on schema public from qik_ingest_fn_owner;

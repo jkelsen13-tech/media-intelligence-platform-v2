@@ -41,7 +41,7 @@ where mem.rolname in (select identity from mip_cas_source_install.objects where 
    or rol.rolname in (select identity from mip_cas_source_install.objects where kind='role');
 
 create function mip_cas_source_install.refuse_external_dependents()
-returns void language plpgsql as $
+returns void language plpgsql as $$
 declare extra text;
 begin
   -- DROP FUNCTION CASCADE is not limited to mip_cas. Refuse any unapproved

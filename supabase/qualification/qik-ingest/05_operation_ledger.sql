@@ -259,7 +259,7 @@ begin
 end $$;
 
 create function qik_ingest_operation.refuse_membership_drift()
-returns void language plpgsql as $
+returns void language plpgsql as $$
 begin
   if exists (
     with current_memberships as (
@@ -277,7 +277,7 @@ begin
   ) then
     raise exception 'qik_ingest_membership_drift';
   end if;
-end $;
+end $$;
 
 select qik_ingest_operation.snapshot_baseline();
 commit;
