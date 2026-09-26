@@ -20,6 +20,10 @@ async function identity(db,login) {
     throw Error('persistent_installer_identity_refused')
   return row
 }
+async function sourcesClosed(db) {
+  if((await db.query('select exists(select 1 from public.ingest_sources where enabled and collection_enabled) active')).rows[0].active)
+    throw Error('persistent_active_sources_refused')
+}
 async function manifest() {
   const hashes=[]
   for(const name of [...LOAD_ORDER,CLEANUP_FILE])hashes.push([name,createHash('sha256').update(await readFile(new URL(name,import.meta.url))).digest('hex')])
@@ -51,11 +55,14 @@ export async function connectPersistentInstaller({connectionString,expectedLogin
   catch {await db.end().catch(()=>{});throw Error('persistent_authenticated_connection_failed')}
 }
 export async function installPersistentQik(db,{operationId,expectedLogin}) {
-  operation(operationId);await identity(db,expectedLogin)
+  operation(operationId);await identity(db,expectedLogin);await sourcesClosed(db)
   const sqlHash=await manifest()
   await db.query('begin')
   let commitAttempted=false
   try {
+    // Serialize source activation against the disabled installation snapshot.
+    await db.query('lock table public.ingest_sources in share row exclusive mode')
+    await sourcesClosed(db)
     await installQikIngest(atomicExec(db),{sessionAuthorization:'current'})
     await identity(db,expectedLogin)
     const closed=(await db.query("select (select collection_authorized=false from qik_ingest.collection_gate where id) gate_closed,(select count(*)=0 from qik_ingest.runtime_credentials) credentials_empty,(select bool_and(not active) from qik_ingest.schedule_intent) schedule_inactive")).rows[0]
