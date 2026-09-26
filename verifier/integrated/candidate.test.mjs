@@ -748,3 +748,91 @@ test('native 017 full chain admits reviewed exact capture spans with NOLOGIN ker
  await f.admin("select public.mip_pipeline_v1('candidate',"+q(old)+"::jsonb)")
  await assert.rejects(f.release(await f.review()),/mip_/)
 })
+
+async function acceptedReaderFixture(t){
+ const f=await factualFixture(t,{nativeLineage:true})
+ await f.admin(await readFile(new URL('../../supabase/qualification/mip-cutover-authority/018_accepted_comparison_reader.sql',import.meta.url),'utf8'))
+ const request=randomUUID()
+ const read=(id=request)=>f.pub('read_isolated_comparison',[f.publisher,'runtime-a',id])
+ return {...f,request,read}
+}
+
+test('native 018 private reader returns accepted exact citations and distinct occurrence clocks only after release',async t=>{
+ const f=await acceptedReaderFixture(t)
+ await assert.rejects(f.read(),/mip_reader_release_missing/)
+ await f.seed()
+ for(const id of f.explanationIds) await f.approve(id)
+ // Invalid extra evidence is not a reader citation: 017 validates the actual
+ // bound entry, and the read adapter must choose that same native identity.
+ const extra={...f.reviewEvidence[0],candidate_id:randomUUID(),excerpt:'Unreviewed extra'}
+ const revision=await f.review({evidence:[extra,...f.reviewEvidence]})
+ await f.stage(revision)
+ await assert.rejects(f.read(),/mip_reader_release_missing/)
+ assert.equal(await f.release(revision,f.request),'isolated_released')
+ const result=await f.read()
+ assert.equal(result.contract_version,'accepted-comparison-private-v1')
+ assert.equal(result.audience,'isolated_internal_review')
+ assert.equal(result.review_revision,revision)
+ assert.equal(result.generation_id,f.data.generation)
+ assert.equal(result.input_hash,f.data.input_hash)
+ assert.equal(result.output_hash,f.data.output_hash)
+ assert.equal(result.events.length,1)
+ const event=result.events[0],input=f.data.input.eventInputs[0]
+ assert.deepEqual(event.event,input.event)
+ assert.equal(event.occurrence.start,input.event.occurred_at_start)
+ assert.equal(event.occurrence.end,input.event.occurred_at_end)
+ assert.equal(result.observation.kind,'generation_source_observation')
+ for(const source of event.sources){
+  const member=input.members.find(m=>m.article.id===source.article_id)
+  assert.equal(source.capture_id,member.retained_capture.capture_id)
+  assert.equal(source.publisher_url,member.retained_capture.payload.url)
+  assert.equal(source.publication.at,member.retained_capture.payload.published_at)
+  assert.notEqual(source.publication.at,event.occurrence.start)
+  assert.deepEqual(source.membership,member.membership)
+ }
+ assert.equal(event.evidence.length,f.data.output.projection.article_claims.length)
+ for(const evidence of event.evidence){
+  const member=input.members.find(m=>m.article.id===evidence.article_id)
+  const candidate=member.retained_capture.candidates.find(k=>k.candidate_id===evidence.candidate_id)
+  assert.ok(candidate)
+  assert.equal(evidence.excerpt,candidate.excerpt)
+  assert.equal(evidence.span_start,candidate.span_start)
+  assert.equal(evidence.span_end,candidate.span_end)
+  assert.equal(evidence.span_units,'unicode_code_points')
+  assert.equal(evidence.candidate_review_state,'pending')
+  assert.notEqual(evidence.candidate_id,extra.candidate_id)
+ }
+ assert.deepEqual(result.explanations,f.explanations)
+ for(const role of [workerRole,producerRole,'anon','authenticated','service_role'])
+  await assert.rejects(transport(f.db,role)('read_isolated_comparison',[f.publisher,'runtime-a',f.request]),/mip_database_denied/)
+ await assert.rejects(f.pub('read_isolated_comparison',[randomUUID(),'runtime-a',f.request]),/mip_/)
+ const otherMapping=randomUUID()
+ await f.admin('insert into mip_identity.mapping_versions select '+q(otherMapping)+",runtime,"+q(publisherRole)+",issuer,audience,runtime||':"+publisherRole+"',key_revision,max_lifetime_seconds,'synthetic-publication-owner' from mip_identity.mapping_versions where revision="+q(f.mappings['runtime-b'+workerRole])+";insert into mip_identity.mapping_heads values('runtime-b',"+q(publisherRole)+","+q(otherMapping)+",true);")
+ const otherSession=await f.issue('runtime-b',publisherRole)
+ await assert.rejects(f.pub('read_isolated_comparison',[otherSession,'runtime-b',f.request]),/mip_reader_release_scope/)
+ await assert.rejects(f.read(randomUUID()),/mip_reader_release_missing/)
+ assert.equal(await f.admin('select count(*) from public.claims'),'0')
+ await assert.rejects(f.admin('select mip_identity.release_public()'),/mip_public_release_disabled/)
+ await f.admin('update mip_identity.publication_policy_heads set active=false')
+ await assert.rejects(f.read(),/mip_publication_policy_revoked/)
+})
+
+test('native 018 read rechecks rights and native supersession after accepted release',async t=>{
+ const f=await acceptedReaderFixture(t)
+ await f.seed()
+ for(const id of f.explanationIds) await f.approve(id)
+ assert.equal(await f.release(await f.review(),f.request),'isolated_released')
+ await f.read()
+ const scope=f.scopes.find(s=>s.domain==='rights'&&s.operation==='excerpt_display')
+ await f.evidence(scope,{disposition:'deny'})
+ await assert.rejects(f.read(),/mip_/)
+ // A new permission revision cannot revive an already accepted review.
+ await f.evidence(scope)
+ await assert.rejects(f.read(),/mip_operation_fresh_review_required/)
+ const refreshed=randomUUID()
+ assert.equal(await f.release(await f.review(),refreshed),'isolated_released')
+ await f.read(refreshed)
+ const old=JSON.parse(await f.admin("select to_jsonb(k)-'id'-'created_at'-'review_state' || jsonb_build_object('predecessor_candidate_id',k.id,'extractor_version',k.extractor_version||':reader-replacement') from evidence_pipeline.evidence_candidates k limit 1"))
+ await f.admin("select public.mip_pipeline_v1('candidate',"+q(old)+"::jsonb)")
+ await assert.rejects(f.read(refreshed),/mip_/)
+})
