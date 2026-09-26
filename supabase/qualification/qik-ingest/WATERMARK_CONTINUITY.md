@@ -17,9 +17,11 @@ This number is a dated historical observation, not a rowset, consistency fence, 
 count and the denial of transfer. It does not `INSERT` 36183 articles, URLs,
 bodies, embeddings, or run payloads.
 
-qik observed population at the Phase A note is **98** articles. The idle
-forward cursor records that qik observation as context; later run updates
-replace it with run status. Neither observation proves corpus continuity.
+Phase A separately observed **98** qik articles. When `040_watermarks.sql`
+first inserts the idle forward cursor, `articles_observed_at_package` records
+the actual `count(*)` of `public.articles` at installation. An existing cursor
+is left unchanged; later run updates record run status. Neither count proves
+corpus continuity.
 
 The forward cursor carries `yhb_historical_articles_observed=36183`, `yhb_observed_at=2026-09-26T05:03:32Z`, and `continuity_verified=false` after each run update.
 
