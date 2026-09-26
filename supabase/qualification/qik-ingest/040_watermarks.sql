@@ -30,6 +30,7 @@ insert into public.mip_consolidation_watermarks (
     'corpus_transfer', false,
     'articles_observed_at_package', (select count(*) from public.articles),
     'yhb_historical_articles_observed', 36183,
+    'yhb_observed_at', '2026-09-26T05:03:32Z',
     'continuity_verified', false
   ),
   transaction_timestamp()

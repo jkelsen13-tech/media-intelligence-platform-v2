@@ -12,7 +12,7 @@ export const HEADER_RUN_KEY = 'x-mip-qik-ingest-key'
 export const HEADER_SCHEDULER_TOKEN = 'x-mip-qik-ingest-scheduler-token'
 export const VAULT_SECRET_NAME = 'mip_qik_ingest_scheduler_token'
 export const JOB_NAME = 'mip-qik-ingest-rss'
-export const YHB_FENCE_ARTICLES = 36183
+export const YHB_HISTORICAL_ARTICLES_OBSERVED = 36183
 export const QIK_PHASE_A_ARTICLES = 98
 export const DISPOSABLE_TEST_TOKEN = 'qik-ingest-disposable-test-token'
 

@@ -1,23 +1,29 @@
-# Watermark / checkpoint continuity (no article transfer)
+# Watermark and checkpoint observations (no article transfer)
 
-## Fence
+## Dated YHB pause observation
 
-YHB pause checkpoint used by Phase A / this package:
+YHB pause count observed at 2026-09-26T05:03:32Z; the legacy channel name is retained for compatibility:
 
 | Field | Value |
 |---|---|
 | Predecessor | `yhbwnrtlqbjtcrrlpbge` |
 | Channel | `ingest_pause_fence` |
 | `articles` | **36183** |
-| `freshness` | `fence` |
+| Observation time | `2026-09-26T05:03:32Z` |
+| `freshness` | `historical_observation` |
 | `corpus_transfer` | **false** |
 
-This number is a **count fence**, not a rowset. `040_watermarks.sql` writes the
+This number is a dated historical observation, not a rowset, consistency fence, or proof of continuity. `040_watermarks.sql` writes the
 count and the denial of transfer. It does not `INSERT` 36183 articles, URLs,
 bodies, embeddings, or run payloads.
 
-qik observed population at the Phase A note is **98** articles. The forward
-cursor records that observation as context, not as a claim that qik is current.
+Phase A separately observed **98** qik articles. When `040_watermarks.sql`
+first inserts the idle forward cursor, `articles_observed_at_package` records
+the actual `count(*)` of `public.articles` at installation. An existing cursor
+is left unchanged; later run updates record run status. Neither count proves
+corpus continuity.
+
+The forward cursor carries `yhb_historical_articles_observed=36183`, `yhb_observed_at=2026-09-26T05:03:32Z`, and `continuity_verified=false` after each run update.
 
 ## Forward cursor
 
@@ -28,9 +34,8 @@ cursor records that observation as context, not as a claim that qik is current.
 | Starting `freshness` | `qik_forward_idle` |
 | `is_current` | **always false** in `mip_qik_ingest_observe` |
 
-Allowed `freshness` values:
-
-- `fence` — predecessor pause count only
+The predecessor row uses `historical_observation`. Allowed qik forward
+`freshness` values:
 - `qik_forward_idle` — no successful qik retain run yet
 - `qik_forward_inflight` — a discover run is `running`
 - `qik_forward_stale` — last finish was `failed` / `completed_with_errors` / recovered
@@ -39,7 +44,8 @@ Allowed `freshness` values:
 **Forbidden:** `current`, `up_to_date`, `latest`, `live_current`.
 
 `qik_forward_ok` means “the last qik retain run finished without source
-failures.” It does **not** mean the product corpus is current. YHB still holds
+failures.” It does **not** mean the product corpus is current or continuous from
+the dated YHB observation. YHB still holds
 the large paused corpus; this package does not strangler-cut over readers.
 
 ## Honesty on failure
@@ -56,7 +62,7 @@ the large paused corpus; this package does not strangler-cut over readers.
 for that run is `failed`. Completing an inflight run as `completed` after
 `recover_inflight` is rejected.
 
-The YHB fence row is never updated by begin/finish/recover.
+The YHB historical-observation row is never updated by begin/finish/recover.
 
 ## What still requires owner enable
 

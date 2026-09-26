@@ -11,7 +11,7 @@ from this PR.
    remain `active=false`. Do not alter them.
 3. Confirm qik has no `cron.job` for `mip-qik-ingest-rss`.
 4. Confirm qik `collector-shadow` is still receipt-only.
-5. Record qik `count(public.articles)` and the YHB fence **36183** without
+5. Record qik `count(public.articles)` and the dated YHB count observation **36183 at 2026-09-26T05:03:32Z** (not a consistency fence) without
    exporting article bodies.
 6. Confirm schema `qik_ingest` / `qik_ingest_operation` and roles
    `qik_ingest_fn_owner` / `qik_ingest_runtime` are absent. Refuse replay.
@@ -28,7 +28,7 @@ Apply in one transaction, in this order, from
 3. `020_run_ledger.sql` — begin / finish / recover / observe RPCs.
 4. `030_retain_upsert.sql` — discovery `observed_items`; no `public.articles` insert.
 5. `035_native_caller.sql` — execute-only observation-bound native caller; no credentials.
-6. `040_watermarks.sql` — write the YHB pause fence and idle qik forward cursor.
+6. `040_watermarks.sql` — record the YHB pause observation and idle qik forward cursor.
 7. `050_schedule_disabled.sql` — schedule **intent** with `active=false` only.
 
 Never apply `fixture_substrate.sql` on a hosted project.

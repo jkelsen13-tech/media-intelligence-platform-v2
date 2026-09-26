@@ -24,7 +24,7 @@ disabled-but-installed ingest schedule.
 |---|---|
 | Edge `ingest-rss` **v8** | Best live collector algorithm; Vault-backed scheduler token or owner run key |
 | `mip-ingest-rss-hourly` | Was `*/5`; **paused `active=false`**; jobs retained |
-| articles **36183** | Pause fence; **not copied by this package** |
+| articles **36183** | Dated pause observation only; **not copied by this package** |
 
 Captured live YHB v8 source is
 `supabase/runtime-snapshots/ingest-rss-v8-live-20260920/`. Repo
@@ -44,7 +44,7 @@ v8 owner-key **or** scheduler-RPC pattern under qik names. This package does
 | Retain / observe | `qik_ingest.observed_items` then existing `mip_pipeline_v1` enqueue; publication fields refused |
 | Native handoff | Bound `mip_qik_ingest_claim_bound` + existing finish; identical hash idle via job state; changed URL content → `revision_pending` |
 | Operation ledger | `qik_ingest_operation` records exact created objects and dropped collection checks |
-| Watermark channels | `yhb…/ingest_pause_fence` = 36183; `qik…/ingest_forward` starts idle |
+| Watermark channels | legacy `yhb…/ingest_pause_fence` channel stores a dated observation of 36183, not a consistency fence; `qik…/ingest_forward` starts idle |
 | Schedule intent | `mip-qik-ingest-rss` **`active=false`** with a check that forbids true |
 
 ## Explicit non-deltas
