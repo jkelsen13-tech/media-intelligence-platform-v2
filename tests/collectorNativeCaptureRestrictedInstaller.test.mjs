@@ -27,11 +27,12 @@ test('restricted installer: password login, owner privileges, rollback and compl
   const names=operationNames(operationId),token=randomBytes(32).toString('hex')
   const passwords=Object.fromEntries(['collector','native','cas'].map(k=>[k,randomBytes(32).toString('hex')]))
   const root=new pg.Client(rootConfig),clients=[],createdBaseRoles=[]
-  let setup,admin,createdDb=false,createdAdmin=false,installed=false,bootstrapped=false,stage='provision',primary
+  let setup,admin,createdDb=false,createdAdmin=false,baselineAbsent=false,installed=false,bootstrapped=false,stage='provision',primary
   await root.connect()
   try {
     for(const role of [...packageRoles,adminName,...Object.values(names)])
       assert.equal((await root.query('select 1 from pg_roles where rolname=$1',[role])).rowCount,0,'preexisting test role')
+    baselineAbsent=true
     // The generated administrator secret exists only in process memory; setup
     // uses this session-only logging mode before its password DDL.
     await root.query("set log_statement='none'")
@@ -183,12 +184,13 @@ test('restricted installer: password login, owner privileges, rollback and compl
     // into PASS. Every error above is retained; only exact fresh test identities
     // may be removed after all connections close.
     if(createdDb)try{await root.query('drop database '+ident(database))}catch(e){errors.push(e)}
-    for(const role of [...Object.values(names),...packageRoles,...createdBaseRoles,...(createdAdmin?[adminName]:[])])try{
+    const ownedRoles=[...(baselineAbsent&&createdDb?[...Object.values(names),...packageRoles]:[]),...createdBaseRoles,...(createdAdmin?[adminName]:[])]
+    for(const role of ownedRoles)try{
       if((await root.query('select 1 from pg_roles where rolname=$1',[role])).rowCount)await root.query('drop role '+ident(role))
     }catch(e){errors.push(e)}
     try {
       assert.equal((await root.query('select 1 from pg_database where datname=$1',[database])).rowCount,0)
-      assert.equal((await root.query('select 1 from pg_roles where rolname=any($1::text[])',[[adminName,...packageRoles,...Object.values(names),...createdBaseRoles]])).rowCount,0)
+      assert.equal((await root.query('select 1 from pg_roles where rolname=any($1::text[])',[ownedRoles])).rowCount,0)
     }catch(e){errors.push(e)}
     await root.end()
     for(const error of errors)t.diagnostic(JSON.stringify({stage:'fixture_cleanup',code:error.code??null,message:'cleanup_failed'}))
