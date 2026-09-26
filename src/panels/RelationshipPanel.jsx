@@ -26,6 +26,10 @@ export default function RelationshipPanel({ edge, sourceLabel, targetLabel, onCl
     backend.loadExplanationReadView({ assertionId: `edge:${edgeId}`, limit: 1 })
       .then(async (view) => {
         if (cancelled) return
+        if (view.loadError) {
+          setState({ status: 'error' })
+          return
+        }
         const explanation =
           view.eligible[0] ?? view.excluded[0]?.explanation ?? null
         const sources = explanation?.source_ids?.length

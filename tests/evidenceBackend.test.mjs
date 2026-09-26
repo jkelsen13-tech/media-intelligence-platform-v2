@@ -27,12 +27,15 @@ test('evidence feature gates fail closed before requesting protected or location
   for (const value of [false, null, 'true']) {
     const tables = evidenceTables(); tables.pipeline_config = [{ key: 'provenance_ui', value }, { key: 'location_corroboration', value }]
     const f = evidenceBackendFixture({ tables })
-    assert.deepEqual(await f.backend.loadExplanationReadView(), { enabled: false, eligible: [], excluded: [] })
+    assert.deepEqual(await f.backend.loadExplanationReadView(), value === false
+      ? { enabled: false, eligible: [], excluded: [] }
+      : { enabled: false, eligible: [], excluded: [], loadError: { code: 'provenance_unavailable', stage: 'flag' } })
     assert.equal(await f.backend.loadSkyVerificationForNode('node-one'), null)
     assert.ok(f.calls.every(c => c.table === 'pipeline_config'))
   }
   const f = evidenceBackendFixture({ tables: evidenceTables(), errors: { explanations: { code: '42501', message: 'denied' } } })
-  assert.deepEqual(await f.backend.loadExplanationReadView(), { enabled: false, eligible: [], excluded: [] })
+  assert.deepEqual(await f.backend.loadExplanationReadView(), { enabled: true, eligible: [], excluded: [],
+    loadError: { code: 'provenance_unavailable', stage: 'explanations' } })
 })
 
 test('only current explanations for the selected assertion are returned and review exclusions remain explicit', async () => {
@@ -55,4 +58,29 @@ test('unavailable evidence preserves each existing optional or strict error cont
   assert.deepEqual(await f.backend.loadPolicyDetail('policy-one'), { policy: null, actors: [], topics: [] })
   assert.equal(await f.backend.loadSkyVerificationForNode('node-one'), null)
   assert.deepEqual((await evidenceBackendFixture().backend.loadSources('node-one')), [])
+})
+
+test('provenance read failures preserve availability without exposing server or network details', async () => {
+  const privateMessage = 'private-schema.secret-row SQL SELECT supporting_passage'
+  for (const stage of ['flag', 'explanations']) {
+    const table = stage === 'flag' ? 'pipeline_config' : 'explanations'
+    for (const error of [
+      { code: '42501', message: privateMessage, details: privateMessage },
+      () => { throw new Error(privateMessage) },
+    ]) {
+      const f = evidenceBackendFixture({ tables: evidenceTables(), errors: { [table]: error } })
+      const view = await f.backend.loadExplanationReadView()
+      assert.deepEqual(view, { enabled: stage === 'explanations', eligible: [], excluded: [],
+        loadError: { code: 'provenance_unavailable', stage } })
+      assert.equal(JSON.stringify(view).includes(privateMessage), false)
+      if (stage === 'flag') assert.ok(f.calls.every(call => call.table === 'pipeline_config'))
+    }
+  }
+  const tables = evidenceTables(); tables.explanations = []
+  assert.deepEqual(await evidenceBackendFixture({ tables }).backend.loadExplanationReadView(),
+    { enabled: true, eligible: [], excluded: [] })
+  tables.pipeline_config = []
+  const missing = evidenceBackendFixture({ tables })
+  assert.equal((await missing.backend.loadExplanationReadView()).loadError.stage, 'flag')
+  assert.ok(missing.calls.every(call => call.table === 'pipeline_config'))
 })

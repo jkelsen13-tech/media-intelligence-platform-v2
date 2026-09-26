@@ -40,41 +40,61 @@ export function buildExplanationReadView(rows, { enabled } = {}) {
  * Load the explanation read view for the given assertions.
  *
  * Reads pipeline_config.provenance_ui first; when the flag is not exactly true
- * the fetch is skipped entirely and the disabled view is returned (02B rollback
+ * the fetch is skipped entirely. A confirmed false value returns the disabled view (02B rollback
  * posture: disabling the flag restores legacy reads without touching recorded
- * provenance). Only current rows (is_current = true) are read — version history
+ * provenance). Missing/unreadable configuration and failed reads return sanitized
+ * unavailable metadata with empty evidence arrays. Only current rows (is_current = true) are read — version history
  * is never served on the read path.
  *
  * @param {{ assertionId?: string, assertionType?: string, limit?: number }} opts
  */
+function unavailableRead(stage, enabled = false) {
+  // Do not disclose database messages, query text, or protected row existence.
+  return { enabled, eligible: [], excluded: [], loadError: { code: 'provenance_unavailable', stage } }
+}
+
 export async function loadExplanationReadView({ assertionId, assertionType, limit = 200, supabaseClient } = {}) {
-  const supabase = supabaseClient === undefined ? (await import('./supabase.js')).supabase : supabaseClient
-  if (!supabase) return buildExplanationReadView([], { enabled: false })
-
-  const { data: flagRow, error: flagError } = await supabase
-    .from('pipeline_config')
-    .select('value')
-    .eq('key', 'provenance_ui')
-    .maybeSingle()
-  if (flagError || flagRow?.value !== true) {
-    return buildExplanationReadView([], { enabled: false })
+  let supabase
+  try {
+    supabase = supabaseClient === undefined ? (await import('./supabase.js')).supabase : supabaseClient
+  } catch {
+    return unavailableRead('configuration')
   }
+  if (!supabase) return unavailableRead('configuration')
 
-  let query = supabase
-    .from('explanations')
-    .select(
-      'id, assertion_id, assertion_type, version, is_current, source_ids, archived_sources, source_roles, supporting_passage, contradicting_evidence, missing_evidence, shared_entities, relationship_type, rule_version, provenance_class, created_at, recomputed_at, reviewed_at, review_status, falsification_condition, correction_history, remaining_uncertainty, state',
-    )
-    .eq('is_current', true)
-    .order('assertion_id')
-    .limit(limit)
-  if (assertionId) query = query.eq('assertion_id', assertionId)
-  if (assertionType) query = query.eq('assertion_type', assertionType)
+  let flagRow
+  try {
+    const { data, error } = await supabase
+      .from('pipeline_config')
+      .select('value')
+      .eq('key', 'provenance_ui')
+      .maybeSingle()
+    if (error) return unavailableRead('flag')
+    flagRow = data
+  } catch {
+    return unavailableRead('flag')
+  }
+  if (flagRow?.value === false) return buildExplanationReadView([], { enabled: false })
+  if (flagRow?.value !== true) return unavailableRead('flag')
 
-  const { data, error } = await query
-  // Private explanations are not an ordinary-user table. Permission
-  // denial and other fetch failures fail closed, matching the flag-off
-  // withhold posture, instead of treating a signed-in user as a reviewer.
-  if (error) return buildExplanationReadView([], { enabled: false })
-  return buildExplanationReadView(data ?? [], { enabled: true })
+  try {
+    let query = supabase
+      .from('explanations')
+      .select(
+        'id, assertion_id, assertion_type, version, is_current, source_ids, archived_sources, source_roles, supporting_passage, contradicting_evidence, missing_evidence, shared_entities, relationship_type, rule_version, provenance_class, created_at, recomputed_at, reviewed_at, review_status, falsification_condition, correction_history, remaining_uncertainty, state',
+      )
+      .eq('is_current', true)
+      .order('assertion_id')
+      .limit(limit)
+    if (assertionId) query = query.eq('assertion_id', assertionId)
+    if (assertionType) query = query.eq('assertion_type', assertionType)
+
+    const { data, error } = await query
+    // An enabled gate grants no table access. Withhold every row on failure,
+    // while preserving that the observed feature flag was enabled.
+    if (error) return unavailableRead('explanations', true)
+    return buildExplanationReadView(data ?? [], { enabled: true })
+  } catch {
+    return unavailableRead('explanations', true)
+  }
 }
