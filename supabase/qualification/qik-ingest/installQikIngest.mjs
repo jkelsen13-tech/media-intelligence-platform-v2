@@ -13,9 +13,10 @@ export const LOAD_ORDER = Object.freeze([
 ])
 export const CLEANUP_FILE = '090_cleanup.sql'
 
-export async function installQikIngest(exec, {until} = {}) {
+export async function installQikIngest(exec, {until, sessionAuthorization = 'postgres'} = {}) {
   if (typeof exec !== 'function') throw new Error('install_exec_required')
-  await exec('set session authorization postgres')
+  if (!['postgres','current'].includes(sessionAuthorization)) throw new Error('install_session_mode_invalid')
+  if (sessionAuthorization === 'postgres') await exec('set session authorization postgres')
   const stopAt = until == null ? LOAD_ORDER.length : LOAD_ORDER.indexOf(until) + 1
   if (until && stopAt === 0) throw new Error('install_until_unknown')
   for (const file of LOAD_ORDER.slice(0, stopAt || LOAD_ORDER.length)) {
@@ -31,9 +32,10 @@ export async function installQikIngest(exec, {until} = {}) {
   }
 }
 
-export async function cleanupQikIngest(exec) {
+export async function cleanupQikIngest(exec, {sessionAuthorization = 'postgres'} = {}) {
   if (typeof exec !== 'function') throw new Error('cleanup_exec_required')
-  await exec('set session authorization postgres')
+  if (!['postgres','current'].includes(sessionAuthorization)) throw new Error('install_session_mode_invalid')
+  if (sessionAuthorization === 'postgres') await exec('set session authorization postgres')
   try {
     await exec(await read(CLEANUP_FILE))
   } catch (error) {

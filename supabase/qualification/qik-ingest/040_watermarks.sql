@@ -1,5 +1,5 @@
--- C3 qik ingest: watermark fence + idle forward cursor. FILES ONLY.
--- Writes the YHB pause count 36183. Does not insert predecessor articles.
+-- C3 qik ingest: historical count observation + idle forward cursor.
+-- Legacy channel names are retained for compatibility, not consistency claims.
 
 insert into public.mip_consolidation_watermarks (
   source_project_ref, channel, watermark, captured_at
@@ -7,14 +7,14 @@ insert into public.mip_consolidation_watermarks (
   'yhbwnrtlqbjtcrrlpbge',
   'ingest_pause_fence',
   jsonb_build_object(
-    'kind', 'yhb_ingest_pause_fence',
+    'kind', 'yhb_ingest_pause_observation',
     'articles', 36183,
-    'freshness', 'fence',
+    'freshness', 'historical_observation',
     'is_current', false,
     'corpus_transfer', false,
-    'note', 'Count fence only. This package does not copy article rows.'
+    'note', 'Historical count observation only; not a consistency or continuity fence. No article rows are copied.'
   ),
-  '2026-09-26T00:00:00Z'::timestamptz
+  '2026-09-26T05:03:32Z'::timestamptz
 )
 on conflict (source_project_ref, channel) do nothing;
 
@@ -28,9 +28,10 @@ insert into public.mip_consolidation_watermarks (
     'freshness', 'qik_forward_idle',
     'is_current', false,
     'corpus_transfer', false,
-    'articles_observed_at_package', 98,
-    'continuity_from_yhb_fence_articles', 36183
+    'articles_observed_at_package', (select count(*) from public.articles),
+    'yhb_historical_articles_observed', 36183,
+    'continuity_verified', false
   ),
-  '2026-09-26T00:00:00Z'::timestamptz
+  transaction_timestamp()
 )
 on conflict (source_project_ref, channel) do nothing;
