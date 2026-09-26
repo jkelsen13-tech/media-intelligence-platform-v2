@@ -84,13 +84,22 @@ begin
    evidence:=evidence||jsonb_build_array(bound);
   end loop;
   events:=events||jsonb_build_array(jsonb_build_object(
-   'event',event_input->'event','sources',sources,'claims',claims,'evidence',evidence,
-   'occurrence',jsonb_build_object('kind','event_occurrence',
+   -- Legacy comparison v15 populated these date columns from publication
+   -- dates. Comparison claim review does not establish temporal attribution.
+   -- Keep the raw fields in an explicitly unverified proxy, never in the
+   -- event's usable occurrence fields or a fabricated precision interval.
+   'event',(event_input->'event')-'occurred_at_start'-'occurred_at_end',
+   'sources',sources,'claims',claims,'evidence',evidence,
+   'occurrence',jsonb_build_object('kind','event_occurrence','state','unverified',
+    'start',null,'end',null,'precision','unknown',
+    'reason','independent_temporal_attribution_missing'),
+   'retained_event_date_proxy',jsonb_build_object('kind','unverified_event_date_proxy',
+    'basis','publication_derived_or_unknown','occurrence_verified',false,
     'start',event_input#>'{event,occurred_at_start}','end',event_input#>'{event,occurred_at_end}',
     'source_fields',jsonb_build_array('events.occurred_at_start','events.occurred_at_end'),
-    'precision','as_retained')));
+    'precision','unknown')));
  end loop;
- result:=jsonb_build_object('contract_version','accepted-comparison-private-v1',
+ result:=jsonb_build_object('contract_version','accepted-comparison-private-v2',
   'audience','isolated_internal_review','release_request',receipt.request_id,
   'generation_id',g.id,'source_project',g.source_project,'implementation_ref',g.implementation_ref,
   'input_hash',rev.input_hash,'output_hash',rev.output_hash,'approved_payload_hash',receipt.payload_hash,

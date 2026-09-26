@@ -757,7 +757,7 @@ async function acceptedReaderFixture(t){
  return {...f,request,read}
 }
 
-test('native 018 private reader returns accepted exact citations and distinct occurrence clocks only after release',async t=>{
+test('native 018 private reader preserves citations but withholds unverified occurrence after accepted review',async t=>{
  const f=await acceptedReaderFixture(t)
  await assert.rejects(f.read(),/mip_reader_release_missing/)
  await f.seed()
@@ -770,7 +770,7 @@ test('native 018 private reader returns accepted exact citations and distinct oc
  await assert.rejects(f.read(),/mip_reader_release_missing/)
  assert.equal(await f.release(revision,f.request),'isolated_released')
  const result=await f.read()
- assert.equal(result.contract_version,'accepted-comparison-private-v1')
+ assert.equal(result.contract_version,'accepted-comparison-private-v2')
  assert.equal(result.audience,'isolated_internal_review')
  assert.equal(result.review_revision,revision)
  assert.equal(result.generation_id,f.data.generation)
@@ -778,16 +778,30 @@ test('native 018 private reader returns accepted exact citations and distinct oc
  assert.equal(result.output_hash,f.data.output_hash)
  assert.equal(result.events.length,1)
  const event=result.events[0],input=f.data.input.eventInputs[0]
- assert.deepEqual(event.event,input.event)
- assert.equal(event.occurrence.start,input.event.occurred_at_start)
- assert.equal(event.occurrence.end,input.event.occurred_at_end)
+ const {occurred_at_start,occurred_at_end,...eventMetadata}=input.event
+ assert.deepEqual(event.event,eventMetadata)
+ // The accepted review binds claim/source evidence, not event-date semantics.
+ // Non-null legacy dates must remain unavailable as usable occurrence times.
+ assert.ok(occurred_at_start)
+ assert.equal(Object.hasOwn(event.event,'occurred_at_start'),false)
+ assert.equal(Object.hasOwn(event.event,'occurred_at_end'),false)
+ assert.deepEqual(event.occurrence,{
+  kind:'event_occurrence',state:'unverified',start:null,end:null,precision:'unknown',
+  reason:'independent_temporal_attribution_missing'
+ })
+ assert.deepEqual(event.retained_event_date_proxy,{
+  kind:'unverified_event_date_proxy',basis:'publication_derived_or_unknown',
+  occurrence_verified:false,start:occurred_at_start,end:occurred_at_end,
+  source_fields:['events.occurred_at_start','events.occurred_at_end'],precision:'unknown'
+ })
  assert.equal(result.observation.kind,'generation_source_observation')
  for(const source of event.sources){
   const member=input.members.find(m=>m.article.id===source.article_id)
   assert.equal(source.capture_id,member.retained_capture.capture_id)
   assert.equal(source.publisher_url,member.retained_capture.payload.url)
   assert.equal(source.publication.at,member.retained_capture.payload.published_at)
-  assert.notEqual(source.publication.at,event.occurrence.start)
+  assert.equal(source.publication.kind,'publisher_publication')
+  assert.notEqual(source.publication.at,event.retained_event_date_proxy.start)
   assert.deepEqual(source.membership,member.membership)
  }
  assert.equal(event.evidence.length,f.data.output.projection.article_claims.length)
