@@ -1,12 +1,19 @@
-import {readFile} from 'node:fs/promises'
 import {webcrypto} from 'node:crypto'
 import {PGlite} from '@electric-sql/pglite'
 import {qikWorkerHost} from '../supabase/functions/source-comparison-generation-candidate/host.js'
 import {
  DISPOSABLE_IMPLEMENTATION,DISPOSABLE_PRINCIPAL,DISPOSABLE_RUNTIME,shapeWorkerJwt
 } from '../supabase/qualification/hosted-synthetic/60_disposable_credential_session.mjs'
+import {
+ HOSTED_SYNTHETIC_INSTALL,cleanupHostedSynthetic,installHostedSynthetic,
+ recoverPublicSourceWindow,stripOuterTransaction
+} from '../supabase/qualification/hosted-synthetic/installHostedSynthetic.mjs'
+import {readFile} from 'node:fs/promises'
 
-const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8')
+const repo=p=>readFile(new URL('../'+p,import.meta.url),'utf8')
+
+export {HOSTED_SYNTHETIC_INSTALL,cleanupHostedSynthetic as cleanupPackage,
+ installHostedSynthetic,recoverPublicSourceWindow,stripOuterTransaction}
 
 export const LIVE_EVENT_ID='ffffffff-ffff-4fff-8fff-ffffffffffff'
 export const LIVE_ARTICLE_A='ffffffff-ffff-4fff-8fff-ffffffffff01'
@@ -26,24 +33,6 @@ export const SYNTHETIC_RELATIONS=Object.freeze([
 export const PACKAGE_ROLES=Object.freeze([
  'mip_kernel_owner_v2','mip_comparison_worker_v1','mip_comparison_producer_v1',
  'mip_identity_broker_v2','service_role','anon','authenticated'])
-
-export const HOSTED_SYNTHETIC_INSTALL=Object.freeze([
- {id:1,path:'supabase/qualification/comparison-generations/contract.sql'},
- {id:2,path:'supabase/qualification/comparison-generations/selection.sql'},
- {id:3,path:'supabase/qualification/comparison-generations/capability.sql'},
- {id:4,path:'supabase/qualification/hosted-synthetic/10_synthetic_source_adapter.sql'},
- {id:7,path:'supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql'},
- {id:8,path:'supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql'},
- {id:9,path:'supabase/qualification/mip-cutover-authority/003_scoped_queue.sql'},
- {id:10,path:'supabase/qualification/mip-cutover-authority/004_publication_staging.sql'},
- {id:11,path:'supabase/qualification/mip-cutover-authority/005_broker_sessions.sql'},
- {id:12,path:'supabase/qualification/hosted-synthetic/20_grant_rebind.sql'},
- {id:13,path:'supabase/qualification/mip-cutover-authority/013_worker_journal.sql'},
- {id:14,path:'supabase/qualification/mip-cutover-authority/014_worker_journal_discovery.sql'},
- {id:15,path:'supabase/qualification/mip-cutover-authority/015_worker_claim_resumption.sql'},
- {id:16,path:'supabase/qualification/mip-cutover-authority/016_worker_broker_recovery.sql'},
- {id:17,path:'supabase/qualification/hosted-synthetic/30_seed_runtime_and_work.sql'}
-])
 
 const WORKER_RPC=Object.freeze({
  worker_claim:{sql:'select mip_identity.worker_claim($1::uuid,$2::uuid,$3) result',
@@ -98,15 +87,13 @@ insert into public.pipeline_config values ('claim_group_confidence_floor','0.99'
 `)
 }
 
-export async function execInstall(db,{until=17,from=1}={}){
- for(const step of HOSTED_SYNTHETIC_INSTALL){
-  if(step.id<from||step.id>until)continue
-  await db.exec(await read(step.path))
- }
-}
-
 export async function privilege(db,role,rel,priv='SELECT'){
  const r=await db.query('select has_table_privilege($1,$2,$3) ok',[role,rel,priv])
+ return r.rows[0].ok===true
+}
+
+export async function columnPrivilege(db,role,rel,col,priv='SELECT'){
+ const r=await db.query('select has_column_privilege($1,$2,$3,$4) ok',[role,rel,col,priv])
  return r.rows[0].ok===true
 }
 
@@ -128,8 +115,6 @@ export function workerFetchImpl(db,{onCall}={}){
   if(!spec)return new Response(JSON.stringify({state:'rpc_denied'}),{status:400})
   const args=JSON.parse(options.body)
   if(onCall)onCall({name,args,headers:options.headers})
-  // Disposable stand-in for PostgREST role switch after a verified Route A JWT.
-  // Live qik still requires GRANT mip_comparison_worker_v1 TO authenticator.
   await db.exec('set role mip_comparison_worker_v1')
   try{
    const result=(await db.query(spec.sql,spec.keys.map(k=>bind(args[k])))).rows[0].result
@@ -160,6 +145,6 @@ export function emptyInvoke(token=INVOKE_TOKEN){
   method:'POST',headers:{authorization:'Bearer '+token}})
 }
 
-export async function cleanupPackage(db){
- await db.exec(await read('supabase/qualification/hosted-synthetic/90_cleanup.sql'))
+export async function loadSql(path){
+ return repo(path)
 }
