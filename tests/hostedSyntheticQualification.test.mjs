@@ -21,8 +21,8 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 test('adapter does not grant snapshot execute to service_role',async()=>{
  const sql=await read('supabase/qualification/hosted-synthetic/10_synthetic_source_adapter.sql')
  assert.match(sql,/synthetic_events/)
- assert.doesNotMatch(sql,/grant execute[\s\S]*to service_role/i)
- assert.doesNotMatch(sql,/public\.events/)
+ assert.doesNotMatch(sql,/^\s*grant execute\b/im)
+ assert.doesNotMatch(sql,/\b(?:from|join)\s+public\.(events|articles|event_articles|pipeline_config)\b/i)
 })
 
 test('install order skips fixture/snapshot and names live qik ref plus index env',async()=>{

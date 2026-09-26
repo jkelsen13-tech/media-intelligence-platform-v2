@@ -59,9 +59,12 @@ begin
 end
 $revoke_public_select$;
 
--- Assert SELECT is gone while USAGE on public still exists (005). Then drop
--- leftover public-schema USAGE so the kernel cannot re-bind those tables by
--- name even if a later grant is attempted without this file.
+-- 005 also grants USAGE on schema public to mip_kernel_owner_v2. The SELECT
+-- revoke and has_table_privilege assertion above run first, while schema USAGE
+-- still exists so the privilege probe is meaningful. Then revoke 005's explicit
+-- USAGE grant. PostgreSQL still grants USAGE on schema public to PUBLIC by
+-- default; do not REVOKE FROM PUBLIC (that would be a live catalog change).
+-- Isolation of source rows is the SELECT revoke, not schema USAGE.
 revoke usage on schema public from mip_kernel_owner_v2;
 
 revoke all on function comparison_qualification.source_snapshot(jsonb,text),

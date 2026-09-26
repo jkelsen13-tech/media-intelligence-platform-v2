@@ -128,6 +128,8 @@ export function workerFetchImpl(db,{onCall}={}){
   if(!spec)return new Response(JSON.stringify({state:'rpc_denied'}),{status:400})
   const args=JSON.parse(options.body)
   if(onCall)onCall({name,args,headers:options.headers})
+  // Disposable stand-in for PostgREST role switch after a verified Route A JWT.
+  // Live qik still requires GRANT mip_comparison_worker_v1 TO authenticator.
   await db.exec('set role mip_comparison_worker_v1')
   try{
    const result=(await db.query(spec.sql,spec.keys.map(k=>bind(args[k])))).rows[0].result
