@@ -212,8 +212,44 @@ test('persistent C3: restricted login, atomic install, reconnect and existing na
     await assert.rejects(revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
       authorization:'owner-authorized-restricted-runtime-revocation'}),/persistent_runtime_revoke_failed/)
     await admin.query("update evidence_pipeline.import_jobs set state='completed' where id=$1",[boundJob])
-    const revoked=await revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
-      authorization:'owner-authorized-restricted-runtime-revocation'});runtimeCreated=false
+    // A completed native job can still have run-level extraction debt.
+    await admin.query("update public.ingestion_runs set counters=jsonb_set(counters,'{extraction_incomplete}','1'::jsonb) where run_id=$1",['qik-host-'+operationId+'-first'])
+    await assert.rejects(revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
+      authorization:'owner-authorized-restricted-runtime-revocation'}),/persistent_runtime_revoke_failed/)
+    await admin.query("update public.ingestion_runs set counters=counters-'extraction_incomplete' where run_id=$1",['qik-host-'+operationId+'-first'])
+    // A foreign incoming membership must never be silently dropped with the role.
+    const foreign='mip_c3_foreign_'+operationId.slice(0,12)
+    await admin.query('create role '+ident(foreign)+' nologin noinherit')
+    try {
+      await admin.query('grant '+ident(names.collector)+' to '+ident(foreign)+' with admin false, inherit false, set false')
+      await assert.rejects(revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
+        authorization:'owner-authorized-restricted-runtime-revocation'}),/persistent_runtime_revoke_failed/)
+      await admin.query('revoke '+ident(names.collector)+' from '+ident(foreign))
+    } finally {await admin.query('drop role '+ident(foreign))}
+    // An admitted RPC holds the token row; the DELETE must wait for its transaction.
+    const admission=new pg.Client({host:'127.0.0.1',port:rootConfig.port,database,user:names.collector,password})
+    await admission.connect()
+    await admission.query('begin')
+    await admission.query('select public.mip_qik_ingest_plan($1)',[token])
+    const pending=revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
+      authorization:'owner-authorized-restricted-runtime-revocation'}).then(value=>({value}),error=>({error}))
+    let waited=false
+    for(let i=0;i<40;i++){
+      const wait=(await root.query('select wait_event_type from pg_stat_activity where pid=$1',[admin.processID])).rows[0]?.wait_event_type
+      if(wait==='Lock'){waited=true;break}
+      await new Promise(resolve=>setTimeout(resolve,25))
+    }
+    assert.equal(waited,true,'revocation must wait for admitted transaction')
+    await admission.query('commit');await admission.end()
+    const outcome=await pending
+    let revoked
+    if(outcome.error){
+      assert.match(outcome.error.message,/persistent_runtime_revoke_failed/)
+      assert.equal((await admin.query('select count(*)::int n from qik_ingest.runtime_credentials')).rows[0].n,1)
+      revoked=await revokePersistentRuntime(admin,{operationId,expectedLogin:adminName,
+        authorization:'owner-authorized-restricted-runtime-revocation'})
+    }else revoked=outcome.value
+    runtimeCreated=false
     assert.equal(revoked.state,'restricted_runtime_revoked')
     assert.equal((await admin.query('select count(*)::int n from qik_ingest.runtime_credentials')).rows[0].n,0)
     assert.equal((await admin.query('select 1 from pg_roles where rolname=$1',[names.collector])).rowCount,0)
