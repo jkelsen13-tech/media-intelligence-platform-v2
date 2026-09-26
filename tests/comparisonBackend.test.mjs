@@ -44,7 +44,7 @@ test('comparison provenance, missing extraction, and opaque navigation identitie
 
 test('comparison page failure discards partial cards and remains distinct from an empty projection', async () => {
   const empty = comparisonBackendFixture()
-  assert.deepEqual(await empty.backend.loadSourceComparisonView(), { enabled: true, events: [] })
+  assert.deepEqual(await empty.backend.loadSourceComparisonView(), { enabled: true, events: [], sortBasis: 'unverified_event_date_proxy' })
   const failed = comparisonBackendFixture({ tables: { comparison_public: Array.from({ length: 101 }, (_, n) => comparisonRow(n)) },
     errors: { comparison_public: p => Number(p.get('offset')) >= 100 ? { code: '42501', message: 'Projection unavailable' } : null } })
   assert.deepEqual(await failed.backend.loadSourceComparisonView(), { enabled: true, events: [], loadError: 'Projection unavailable' })

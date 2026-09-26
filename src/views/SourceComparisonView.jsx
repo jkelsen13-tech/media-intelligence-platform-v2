@@ -219,8 +219,11 @@ function EventCard({ event, onOpenArticle, onOpenArc, onOpenTimeline, focused, s
         <div className="sc-event-state">
           <span className="sc-chip sc-chip-shared">{event.outlets.length} {event.outlets.length === 1 ? 'outlet' : 'outlets'} ingested</span>
           <span className="sc-meta">
-            Recorded event time: {formatWorkspaceDate(event.occurredAtStart)}
-            {event.occurredAtEnd && event.occurredAtEnd !== event.occurredAtStart ? ` → ${formatWorkspaceDate(event.occurredAtEnd)}` : ''}
+            Event time: not established
+          </span>
+          <span className="sc-meta">
+            Unverified date proxy: {formatWorkspaceDate(event.retainedEventDateProxy?.start)}
+            {event.retainedEventDateProxy?.end && event.retainedEventDateProxy.end !== event.retainedEventDateProxy.start ? ` → ${formatWorkspaceDate(event.retainedEventDateProxy.end)}` : ''}
           </span>
         </div>
       </header>
@@ -394,7 +397,9 @@ export default function SourceComparisonView({ onOpenArticle, onOpenArc, onOpenT
           <p>
             Compare source-linked coverage claim by claim. Shared facts, unique claims, omissions,
             loaded language, primary evidence, corrections, timing, and source quality stay separate;
-            no composite score is computed.
+            no composite score is computed. Date ordering uses unverified legacy dates, with undated comparisons last.
+            These dates may derive from publication records; they do not establish when an event occurred.
+            Source publication and review timestamps remain separate.
           </p>
         </details>
         <p className="sc-evidence-notice">

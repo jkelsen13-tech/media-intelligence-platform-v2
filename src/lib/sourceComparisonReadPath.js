@@ -213,8 +213,21 @@ export function buildEventView(event, memberRows, ctx) {
   return {
     id: event.id,
     title: event.canonical_title,
-    occurredAtStart: event.occurred_at_start,
-    occurredAtEnd: event.occurred_at_end,
+    // Public comparison has no independent temporal attribution. Some legacy
+    // producers populated these columns from member publication dates.
+    occurredAtStart: null,
+    occurredAtEnd: null,
+    occurrence: { state: 'unverified', start: null, end: null, precision: 'unknown' },
+    retainedEventDateProxy: {
+      kind: 'unverified_event_date_proxy',
+      basis: 'publication_derived_or_unknown',
+      occurrenceVerified: false,
+      start: event.occurred_at_start ?? null,
+      end: event.occurred_at_end ?? null,
+      sourceFields: ['comparison_public.occurred_at_start', 'comparison_public.occurred_at_end'],
+      precision: 'unknown',
+    },
+    generationObservation: { state: 'unavailable', at: null },
     status: event.status,
     outlets, // all of them, thin included — no gating
     singleSource: outlets.length <= 1,
@@ -408,6 +421,9 @@ export async function loadSourceComparisonView({ supabaseClient } = {}) {
   const events = (projectionRes.data ?? [])
     .map(projectionEventView)
     .filter((event) => event.outlets.length >= 2)
-    .sort((a, b) => String(b.occurredAtStart ?? '').localeCompare(String(a.occurredAtStart ?? '')))
-  return { enabled: true, events }
+    // Preserve the existing legacy-date browsing order without treating it as
+    // occurrence chronology. Undated rows stay last; ties use stable identity.
+    .sort((a, b) => String(b.retainedEventDateProxy.start ?? '').localeCompare(String(a.retainedEventDateProxy.start ?? ''))
+      || String(a.id).localeCompare(String(b.id)))
+  return { enabled: true, events, sortBasis: 'unverified_event_date_proxy' }
 }
