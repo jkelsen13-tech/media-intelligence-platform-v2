@@ -1,12 +1,20 @@
 -- Isolated synthetic qualification; no deployment or production role admission.
 begin;
-create extension if not exists pgcrypto;
 create role mip_cas_owner nologin nosuperuser nocreatedb nocreaterole noinherit nobypassrls;
 create role mip_cas_gateway nologin nosuperuser nocreatedb nocreaterole noinherit nobypassrls;
 create role mip_cas_codec_verifier nologin nosuperuser nocreatedb nocreaterole noinherit nobypassrls;
+-- Explicit SET access only; do not inherit owner DML into the installer.
+do $owner_access$
+begin
+  if not (select rolsuper from pg_roles where rolname=current_user) then
+    execute format('grant mip_cas_owner to %I with set true', current_user);
+    execute format('grant mip_cas_owner to %I with inherit false', current_user);
+  end if;
+end
+$owner_access$;
 create schema mip_cas authorization mip_cas_owner;
-revoke all on schema mip_cas from public;
 set role mip_cas_owner;
+revoke all on schema mip_cas from public;
 create table mip_cas.policies(version bigint primary key,max_raw integer not null check(max_raw>0),max_encoded integer not null check(max_encoded>0),max_objects bigint not null check(max_objects>0),max_total bigint not null check(max_total>0),max_refs bigint not null check(max_refs>0),max_jobs integer not null check(max_jobs>0),max_page integer not null check(max_page between 1 and 1000),locations text[] not null,codecs text[] not null,tiers text[] not null,qualification jsonb not null,initial_location text not null,initial_tier text not null,check(initial_location=any(locations)),check(initial_tier=any(tiers)));
 create table mip_cas.active_policy(id boolean primary key check(id),version bigint not null references mip_cas.policies);
 insert into mip_cas.policies values(1,1048576,1048576,256,16777216,128,16,50,array['disposable_postgres'],array['identity-v1','gzip-v1'],array['hot','warm','cold','deep_archive'],'{"production":false,"deployment":false,"rights":false,"codec":false,"publication":false}','disposable_postgres','hot');
@@ -69,7 +77,7 @@ begin
  if not(p.initial_location=any(p.locations)) or not(p.initial_tier=any(p.tiers)) then raise exception 'mip_cas_representation_unverified';end if;
  if raw is null or encoded_bytes is null or codec_name is null or octet_length(raw) not between 1 and p.max_raw or octet_length(encoded_bytes) not between 1 and p.max_encoded or not(codec_name=any(p.codecs)) then raise exception 'mip_cas_invalid';end if;
  if codec_name='identity-v1' and raw is distinct from encoded_bytes then raise exception 'mip_cas_codec_mismatch';end if;
- h:=encode(public.digest(raw,'sha256'),'hex');fingerprint:=encode(public.digest(encoded_bytes,'sha256'),'hex');
+ h:=encode(pg_catalog.sha256(raw),'hex');fingerprint:=encode(pg_catalog.sha256(encoded_bytes),'hex');
  perform pg_advisory_xact_lock(hashtextextended('mip-cas-quota',0));
  select * into o from mip_cas.objects where hash=h;
  if found then
@@ -93,7 +101,7 @@ begin
  if k is null or length(k) not between 1 and 256 or raw is null or octet_length(raw) not between 1 and p.max_raw or jsonb_typeof(provenance_value) is distinct from 'object' or not(provenance_value ?& array['source_version','acquired_at','rights_ref','privacy_ref']) or (select count(*) from jsonb_object_keys(provenance_value))<>4 or exists(select 1 from jsonb_each(provenance_value) e where jsonb_typeof(e.value)<>'string' or length(e.value#>>'{}') not between 1 and 512) or provenance_value->>'acquired_at' !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$' then raise exception 'mip_cas_provenance_invalid';end if;
  t:=(provenance_value->>'acquired_at')::timestamptz;
  if not isfinite(t) then raise exception 'mip_cas_provenance_invalid';end if;
- h:=encode(public.digest(raw,'sha256'),'hex');
+ h:=encode(pg_catalog.sha256(raw),'hex');
  perform mip_cas.check_source(i,provenance_value,h);
  if not exists(select 1 from mip_cas.source_identities where investigation=i and source_version=provenance_value->>'source_version' and canonical_hash=h and acquired_at=t and raw_size=octet_length(raw)) then raise exception 'mip_cas_source_identity_unverified';end if;
  perform pg_advisory_xact_lock(hashtextextended('mip-cas-quota',0));
@@ -250,7 +258,7 @@ begin
  if field_name is null or field_name not in('summary','entities','claims','timeline','vector_refs') or needle is null or length(needle) not between 1 and 128 or page_size is null or page_size not between 1 and p.max_page then raise exception 'mip_cas_locator_invalid';end if;
  select index_epoch into epoch from mip_cas.scope_usage where investigation=i for share;
  epoch:=coalesce(epoch,0);
- query_hash:=encode(public.digest(convert_to(jsonb_build_array(i,field_name,needle,page_size)::text,'UTF8'),'sha256'),'hex');
+ query_hash:=encode(pg_catalog.sha256(convert_to(jsonb_build_array(i,field_name,needle,page_size)::text,'UTF8')),'hex');
  if after_cursor is not null then
   if jsonb_typeof(after_cursor)<>'object' or (select count(*) from jsonb_object_keys(after_cursor))<>4 or not(after_cursor ?& array['last_ref','query_hash','policy_version','index_epoch']) or after_cursor->>'query_hash' is distinct from query_hash or (after_cursor->>'policy_version')::bigint is distinct from p.version or (after_cursor->>'index_epoch')::bigint is distinct from epoch then raise exception 'mip_cas_cursor_stale_or_ambiguous';end if;
   last_ref:=(after_cursor->>'last_ref')::uuid;

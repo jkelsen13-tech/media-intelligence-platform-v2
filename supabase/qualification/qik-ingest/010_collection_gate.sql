@@ -6,8 +6,22 @@ create schema qik_ingest;
 create role qik_ingest_fn_owner nologin noinherit;
 create role qik_ingest_runtime login noinherit;
 
+-- A non-superuser creator receives ADMIN, not SET, on PostgreSQL 16.
+-- Keep explicit owner access non-inheriting; DROP ROLE removes it at cleanup.
+do $owner_access$
+begin
+  if not (select rolsuper from pg_roles where rolname=current_user) then
+    execute format('grant qik_ingest_fn_owner to %I with set true', current_user);
+    execute format('grant qik_ingest_fn_owner to %I with inherit false', current_user);
+  end if;
+  if not has_schema_privilege('service_role','public','USAGE') then
+    raise exception 'qik_ingest_service_public_usage_required';
+  end if;
+end
+$owner_access$;
+
 grant usage on schema qik_ingest to qik_ingest_fn_owner;
-grant usage on schema public to qik_ingest_fn_owner, qik_ingest_runtime, service_role;
+grant usage on schema public to qik_ingest_fn_owner, qik_ingest_runtime;
 
 create table if not exists qik_ingest.package_meta (
   id boolean primary key default true check (id),
@@ -155,6 +169,7 @@ grant select, insert, update on public.ingestion_runs to qik_ingest_fn_owner;
 grant select, insert, update on public.ingestion_source_runs to qik_ingest_fn_owner;
 grant select, insert, update on public.mip_consolidation_watermarks to qik_ingest_fn_owner;
 
+grant create on schema qik_ingest to qik_ingest_fn_owner;
 do $$
 begin
   execute 'alter function qik_ingest.enforce_collection_gate() owner to qik_ingest_fn_owner';
@@ -162,3 +177,5 @@ begin
   execute 'alter function qik_ingest.reject_false_current(text) owner to qik_ingest_fn_owner';
 end
 $$;
+
+revoke create on schema qik_ingest from qik_ingest_fn_owner;

@@ -29,6 +29,7 @@ begin
 end
 $refuse_live$;
 
+select qik_ingest_operation.refuse_membership_drift();
 select qik_ingest_operation.refuse_unexpected_package_objects();
 select qik_ingest_operation.refuse_unrelated_public_privileges();
 
@@ -103,7 +104,14 @@ begin
     for rec in select signature from qik_ingest_operation.created_functions loop
       remaining := remaining + 1;
       begin
+        if exists (
+          select 1 from pg_proc p join pg_roles own on own.oid=p.proowner
+          where p.oid=to_regprocedure(rec.signature) and own.rolname='qik_ingest_fn_owner'
+        ) then
+          execute 'set local role qik_ingest_fn_owner';
+        end if;
         execute 'drop function '||rec.signature;
+        execute 'reset role';
         delete from qik_ingest_operation.created_functions where signature=rec.signature;
         dropped := dropped + 1;
       exception
@@ -184,24 +192,8 @@ $restore_constraints$;
 do $drop_roles$
 declare rec record; r text;
 begin
-  for rec in select member_role,granted_role from qik_ingest_operation.created_memberships loop
-    begin
-      execute format('revoke %I from %I', rec.granted_role, rec.member_role);
-    exception
-      when undefined_object then
-        null;
-    end;
-  end loop;
-  if exists (select 1 from pg_roles where rolname='authenticator') then
-    for r in select rolname from qik_ingest_operation.created_roles loop
-      begin
-        execute format('revoke %I from authenticator', r);
-      exception
-        when undefined_object then
-          null;
-      end;
-    end loop;
-  end if;
+  -- Preserve creator ADMIN until DROP ROLE; PostgreSQL removes memberships
+  -- automatically. The exact membership snapshot was checked before mutation.
   for r in select rolname from qik_ingest_operation.created_roles loop
     if exists (
       select 1 from pg_class c
