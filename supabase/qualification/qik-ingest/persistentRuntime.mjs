@@ -96,6 +96,9 @@ export async function revokePersistentRuntime(db,{operationId,expectedLogin,auth
       throw Error('persistent_runtime_jobs_unresolved')
     if ((await db.query("select 1 from public.ingestion_runs r where r.mode='discover' and exists(select 1 from qik_ingest.observed_items o where o.run_id=r.run_id and o.credential_hash=$1) and (r.state<>'completed' or coalesce((r.counters->>'unresolved')::int,0)>0 or coalesce((r.counters->>'failed_jobs')::int,0)>0 or coalesce((r.counters->>'extraction_incomplete')::int,0)>0) limit 1",[row.runtime_token_hash])).rowCount)
       throw Error('persistent_runtime_run_unresolved')
+    // Empty qik runs have no credential attribution; refuse their debt conservatively.
+    if ((await db.query("select 1 from public.ingestion_runs r where r.mode='discover' and r.algorithm_version='qik-ingest-rss-v1-retain-from-yhb-v8' and not exists(select 1 from qik_ingest.observed_items o where o.run_id=r.run_id) and (r.state<>'completed' or coalesce((r.counters->>'unresolved')::int,0)>0 or coalesce((r.counters->>'failed_jobs')::int,0)>0 or coalesce((r.counters->>'extraction_incomplete')::int,0)>0) limit 1")).rowCount)
+      throw Error('persistent_runtime_run_unattributed')
     const members=await membership(db,runtimeLogin)
     const runtime=members.filter(m=>m.member===runtimeLogin && m.granted==='qik_ingest_runtime')
     const creator=members.filter(m=>m.member===expectedLogin && m.granted===runtimeLogin)
