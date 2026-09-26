@@ -82,8 +82,10 @@ test('relationship provenance distinguishes disabled, empty and unavailable read
     if (mode === 'flag-denied') errors.pipeline_config = { code: '42501', message: 'private diagnostic' }
     if (mode === 'rows-denied') errors.explanations = { code: '42501', message: 'private diagnostic' }
     if (mode === 'network') errors.explanations = () => { throw Error('private diagnostic') }
-    const f = evidenceBackendFixture({ tables, errors }); let renderer
-    await act(async () => { renderer = TestRenderer.create(React.createElement(panels.RelationshipPanel, { ...props.RelationshipPanel, backend: f.backend })) })
+    const f = evidenceBackendFixture({ tables, errors }); let renderer, read
+    const backend = { ...f.backend, loadExplanationReadView: options => (read = f.backend.loadExplanationReadView(options)) }
+    await act(async () => { renderer = TestRenderer.create(React.createElement(panels.RelationshipPanel, { ...props.RelationshipPanel, backend })) })
+    await act(async () => { await read })
     try {
       const output = text(renderer)
       assert.match(output, /Recorded policy/); assert.match(output, /Recorded event/)

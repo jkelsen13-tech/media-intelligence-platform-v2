@@ -66,8 +66,10 @@ test('review status distinguishes confirmed disabled, readable empty and unavail
     if (mode === 'flag-denied') errors.pipeline_config = { code: '42501', message: 'private diagnostic' }
     if (mode === 'rows-denied') errors.explanations = { code: '42501', message: 'private diagnostic' }
     if (mode === 'network') errors.explanations = () => { throw Error('private diagnostic') }
-    const f = evidenceBackendFixture({ tables, errors }); let renderer
-    await act(async () => { renderer = TestRenderer.create(React.createElement(components.ReviewStatusPanel, { backend: f.backend })) })
+    const f = evidenceBackendFixture({ tables, errors }); let renderer, read
+    const backend = { ...f.backend, loadExplanationReadView: options => (read = f.backend.loadExplanationReadView(options)) }
+    await act(async () => { renderer = TestRenderer.create(React.createElement(components.ReviewStatusPanel, { backend })) })
+    await act(async () => { await read })
     try {
       const output = text(renderer)
       assert.doesNotMatch(output, /edge:edge-one|private diagnostic/)
