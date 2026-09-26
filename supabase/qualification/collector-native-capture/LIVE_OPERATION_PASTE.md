@@ -9,14 +9,14 @@ No hosted SQL, Edge deploy, Vault write, Data API change, cron mutation, YHB
 restart, real-data transfer, publication, PR merge, or deletion is in scope
 until an owner pastes this block in an authorized session.
 
-Execution SHA: see the commit hash in the fenced quote after it is pinned on
-this branch. Until then treat PR #183 HEAD as the candidate.
+Execution SHA: `0a563ab34ced292005c5828120da790929f7ee08` (PR #183 HEAD may
+include this paste pin).
 
 ---
 
 > I authorize one bounded **collector → native capture hosted-database/driver
 > qualification** on project `qikvmopbtijoebdqosyq` only, at commit
-> `<EXECUTION_SHA>`, cost boundary $0. **LIVE HOLD until I paste this block
+> `0a563ab34ced292005c5828120da790929f7ee08`, cost boundary $0. **LIVE HOLD until I paste this block
 > in an authorized session.** This is not Edge, gateway, cron, or live RSS
 > qualification.
 >
@@ -32,7 +32,7 @@ this branch. Until then treat PR #183 HEAD as the candidate.
 >    `article_captures`, `record_versions` where `record_kind='article'`, and
 >    grants on `public.articles`. Confirm zero rows whose `url` or
 >    `canonical_url` starts with
->    `https://qualification.invalid/collector-native-capture/<EXECUTION_SHA>/`.
+>    `https://qualification.invalid/collector-native-capture/0a563ab34ced292005c5828120da790929f7ee08/`.
 >    Record the current `ingest_forward` watermark and the
 >    `collection_enabled`/`enabled` flags of **no** existing source except the
 >    synthetic source this run will insert.
@@ -54,20 +54,20 @@ this branch. Until then treat PR #183 HEAD as the candidate.
 > 1. Insert **one** synthetic source this run owns, then enable only that
 >    row after the gate is on:
 >    `id = 'c0c1ec70-ca5c-4e11-9f3a-000000000001'`,
->    `feed_url = 'https://qualification.invalid/collector-native-capture/<EXECUTION_SHA>/feed.xml'`,
+>    `feed_url = 'https://qualification.invalid/collector-native-capture/0a563ab34ced292005c5828120da790929f7ee08/feed.xml'`,
 >    `outlet_name = 'CNC qualification'`, `enabled=true`,
 >    `collection_enabled=true`. Do not update any other `ingest_sources` row.
 > 2. Driver-run `runQikIngestCollector` with injected synthetic XML (two
 >    items) whose URLs are
->    `https://qualification.invalid/collector-native-capture/<EXECUTION_SHA>/water`
->    and `.../second`. `run_id = 'qik-cnc-<EXECUTION_SHA>'` (length ≥ 8).
+>    `https://qualification.invalid/collector-native-capture/0a563ab34ced292005c5828120da790929f7ee08/water`
+>    and `.../second`. `run_id = 'qik-cnc-0a563ab34ced292005c5828120da790929f7ee08'` (length ≥ 8).
 >    Native handoff must use `mip_qik_ingest_claim_bound` on those enqueued
 >    job ids plus existing `mip_pipeline_v1` enqueue/finish. Do **not** call
 >    unscoped `mip_pipeline_v1('claim')`.
 > 3. Expected native deltas for this operation id (exact; no publication
 >    eligibility):
 >    - `+2` `public.articles` with those URLs, `reader_state='pending_review'`,
->      `ingestion_run_id='qik-cnc-<EXECUTION_SHA>'`. Pre-existing articles
+>      `ingestion_run_id='qik-cnc-0a563ab34ced292005c5828120da790929f7ee08'`. Pre-existing articles
 >      unchanged.
 >    - `+2` `evidence_pipeline.import_jobs` (`first_run_id` = that run id,
 >      `state='completed'`, `outcome='inserted'`).
