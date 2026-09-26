@@ -78,6 +78,17 @@ Create **only missing** names. Never overwrite.
 
 No `SUPABASE_SERVICE_ROLE_KEY` fallback exists in `index.ts`.
 
+## Disposable executable procedure (PGlite / local only)
+
+`60_disposable_credential_session.mjs` is the executable procedure for **disposable** databases. It does not mint HS256 with a project JWT secret (no in-repo signer). It:
+
+1. **Route A shape only:** `shapeWorkerJwt('mip_comparison_worker_v1')` — dummy three-part JWT for `host.js` role check, same pattern as `tests/qikWorkerHost.test.mjs`. Live Route A remains owner mint with the project JWT secret; see table above and `liveHs256WorkerJwtSpec()`.
+2. **Route B executable:** generate RSA-2048, `seedDisposableIdentity` into `mip_identity.*` (test-only `iss`/`aud`/`kid`/`sub`; never written by install SQL), `mintWorkloadRs256`, then existing `issueWorkloadSession` as `mip_identity_broker_v2`. `mip_identity.issue` returns a session UUID only → `MIP_QIK_WORKER_SESSION` analogue in the test host config.
+
+Do not import this helper into Edge `index.ts`. Do not copy disposable `https://qualification.invalid` claims onto live qik.
+
 ## Owner seed of identity rows (not this SQL package)
 
 After 005, the owner inserts `mip_identity.key_versions` / `key_heads` / `mapping_versions` / `mapping_heads` for runtime `hosted-synthetic-qik-v1` and principal `mip_comparison_worker_v1`, using owner-chosen `issuer`, `audience`, `subject`, `kid`, and JWK. This hosted-synthetic package **does not** write those values so it cannot invent JWT identity claims in SQL.
+
+**Smallest remaining owner action before hosted qualification (not performed this phase):** mint Route A HS256 (`role=mip_comparison_worker_v1`) with the qik project JWT secret; seed live `mip_identity` key/mapping rows with owner-chosen claims; run `issueWorkloadSession` as `mip_identity_broker_v2`; create **absent** `MIP_QIK_*` secrets only; `GRANT mip_comparison_worker_v1 TO authenticator`; expose `mip_identity` on the Data API; deploy with `verify_jwt=false` for this function only. Requires pasted stage 3/4 allowance. This phase does not apply SQL, deploy, or write secrets on `qikvmopbtijoebdqosyq`.

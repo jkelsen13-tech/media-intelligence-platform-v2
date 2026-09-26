@@ -1,6 +1,6 @@
 # Hosted-synthetic operation package (qik)
 
-**Status: SOURCE ONLY.** This commit adds files under `supabase/qualification/hosted-synthetic/`. It does not apply SQL, create or overwrite secrets, deploy Edge functions, merge or execute PR #177, cut over, delete live objects, or run CI beyond whatever the pull request naturally does.
+**Status: SOURCE + disposable tests.** Files under `supabase/qualification/hosted-synthetic/` plus `tests/hostedSyntheticQualification.test.mjs`. This does not apply SQL, create or overwrite secrets, deploy Edge functions, merge or execute PR #177, cut over, delete live objects, or run CI (commits use `[skip ci]`). Local PGlite is not hosted success.
 
 | Field | Value |
 |---|---|
@@ -33,9 +33,9 @@ Silence is not allowance. A prior auth package, this source tree, and disposable
 3. **Empty POST carries no work.** Seed is `30_seed_runtime_and_work.sql` via `producer_enqueue` / approved bind/session RPCs. Invoke sequence is `50_invoke_sequence.md`.
 4. **Cleanup is exact.** `90_cleanup.sql` drops test-owned relations after ownership/dependent checks. No `DISABLE TRIGGER`, no `DELETE` from immutable journals, no `CASCADE`, no secret overwrite.
 
-## Proposed changes (this commit)
+## Proposed changes (this package)
 
-Files added (only):
+Files:
 
 - `supabase/qualification/hosted-synthetic/00_INSTALL_ORDER.md`
 - `supabase/qualification/hosted-synthetic/10_synthetic_source_adapter.sql`
@@ -43,10 +43,13 @@ Files added (only):
 - `supabase/qualification/hosted-synthetic/30_seed_runtime_and_work.sql`
 - `supabase/qualification/hosted-synthetic/40_credential_operators.md`
 - `supabase/qualification/hosted-synthetic/50_invoke_sequence.md`
+- `supabase/qualification/hosted-synthetic/60_disposable_credential_session.mjs`
 - `supabase/qualification/hosted-synthetic/90_cleanup.sql`
 - `supabase/qualification/hosted-synthetic/HOSTED_SYNTHETIC_OPERATION_PACKAGE.md`
+- `tests/hostedSyntheticFixture.mjs`
+- `tests/hostedSyntheticQualification.test.mjs`
 
-No migrations under `supabase/migrations/`. No `config.toml` change. No secret material.
+No migrations under `supabase/migrations/`. No `config.toml` change. No secret material. No new workflow.
 
 ## Owner actions (gated; not this commit)
 
@@ -79,11 +82,11 @@ Example for **stage 6 only** (cleanup):
 
 ## Stages (resource-dependent checks stay inside the stage)
 
-### Stage 0 — source (this commit)
+### Stage 0 — source (this package)
 
-**Check:** tree contains the eight hosted-synthetic files; no live apply.
+**Check:** tree contains the hosted-synthetic files and disposable tests; no live apply.
 
-**Do:** open a pull request. Stop.
+**Do:** keep the reviewable PR. Stop before qik SQL/secrets/deploy.
 
 ### Stage 1 — read-only qik preflight
 

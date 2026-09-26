@@ -34,6 +34,8 @@ Edge deploy, `MIP_QIK_*` secrets, JWT minting, `GRANT … TO authenticator`, and
 
 Cleanup: `supabase/qualification/hosted-synthetic/90_cleanup.sql` plus the owner Edge/secret actions listed in that file. Credential operators: `40_credential_operators.md`. Bounded empty-POST sequence: `50_invoke_sequence.md`.
 
+Disposable (not SQL, not live qik): `60_disposable_credential_session.mjs` is the executable HS256-shape + RS256 `issueWorkloadSession` procedure used by `tests/hostedSyntheticQualification.test.mjs` on PGlite. Do **not** load it in the SQL editor. Do not treat local PGlite evidence as hosted qualification.
+
 ## Verification (do not invert files 1–3)
 
 `capability.sql` line 1: *Load after contract.sql and selection.sql.*
