@@ -78,11 +78,12 @@ export async function runNativeHost({connectionString,expectedLogin,token,runId,
        exists(select 1 from pg_roles r where r.rolname not in(current_user,'qik_ingest_runtime')
          and pg_has_role(current_user,r.oid,'MEMBER')) as extra_membership,
        exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
-         where n.nspname='evidence_pipeline' and (
-           (c.relkind in('r','p','v','m','f') and (
+         where n.nspname='evidence_pipeline' and case
+           when c.relkind in('r','p','v','m','f') then
              has_table_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
-             or has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')))
-           or (c.relkind='S' and has_sequence_privilege(current_user,c.oid,'USAGE,SELECT,UPDATE')))) as native_table,
+             or has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')
+           when c.relkind='S' then has_sequence_privilege(current_user,c.oid,'USAGE,SELECT,UPDATE')
+           else false end) as native_table,
        has_any_column_privilege(current_user,'public.articles','INSERT,UPDATE') as article_write
    `)).rows[0]
    if(!authority?.runtime||authority.extra_membership||authority.native_table||authority.article_write)
