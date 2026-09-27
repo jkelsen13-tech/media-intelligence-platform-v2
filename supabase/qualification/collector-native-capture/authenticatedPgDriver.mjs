@@ -14,19 +14,35 @@ const encode = value => Buffer.isBuffer(value) ? value
   : value instanceof Uint8Array ? Buffer.from(value)
   : value !== null && typeof value === 'object' ? JSON.stringify(value) : value
 
+// Supavisor can reject the first password login after a temporary role is
+// recreated while refreshing its credential cache. Only a 28P01 at the
+// initial session-pooler handshake gets one fresh connection; no SQL has run.
+export async function connectAfterPoolerCacheRefresh(makeClient, sessionPooler) {
+  let client=makeClient()
+  try { await client.connect(); return client }
+  catch (error) {
+    await client.end().catch(()=>{})
+    if (!sessionPooler || error.code!=='28P01') throw error
+  }
+  client=makeClient()
+  try { await client.connect(); return client }
+  catch (error) { await client.end().catch(()=>{}); throw error }
+}
+
 export async function connectAuthenticatedPg({connectionString, expectedLogin, effectiveRole = null, disposable = false, sessionPoolerHost = null}) {
   if (!/^[a-z][a-z0-9_]{0,62}$/.test(expectedLogin ?? '')
       || ['postgres','service_role','authenticator','supabase_admin'].includes(expectedLogin)) {
     throw Error('cnc_login_forbidden')
   }
   const url = connectionTarget(connectionString, expectedLogin, disposable, sessionPoolerHost)
-  const client = new pg.Client({
+  const options = {
     connectionString: url.href, ssl: disposable ? false : {rejectUnauthorized: true},
     connectionTimeoutMillis: 10000, statement_timeout: 1000,
     query_timeout: 20000, application_name: 'mip-cnc-authenticated-qualification',
-  })
+  }
+  let client=null
   try {
-    await client.connect()
+    client=await connectAfterPoolerCacheRefresh(()=>new pg.Client(options),!disposable&&url.hostname===sessionPoolerHost)
     // Supavisor session pooling can ignore startup GUCs. Enforce the runtime
     // limit on the authenticated server session before any identity query.
     await client.query("set statement_timeout='1000ms'")
@@ -49,7 +65,7 @@ export async function connectAuthenticatedPg({connectionString, expectedLogin, e
     await assertCredentialLogging(client)
     return client
   } catch {
-    await client.end().catch(() => {})
+    if(client)await client.end().catch(() => {})
     throw Error('cnc_authenticated_connection_failed')
   }
 }
