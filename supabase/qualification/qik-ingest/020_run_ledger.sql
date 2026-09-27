@@ -77,9 +77,10 @@ begin
         select jsonb_agg(jsonb_build_object(
           'id', s.id,
           'feed_url', s.feed_url,
-          'outlet_name', coalesce(s.outlet_name, s.feed_url)
+          'outlet_name', coalesce(o.name, s.feed_url)
         ) order by s.feed_url)
         from public.ingest_sources s
+        left join public.outlets o on o.id = s.outlet_id
         where s.enabled and s.collection_enabled
       ), '[]'::jsonb)
       else '[]'::jsonb

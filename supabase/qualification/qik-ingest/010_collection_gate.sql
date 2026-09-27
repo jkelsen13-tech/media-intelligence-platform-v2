@@ -165,6 +165,11 @@ drop policy if exists qik_ingest_fn_watermarks on public.mip_consolidation_water
 create policy qik_ingest_fn_watermarks on public.mip_consolidation_watermarks
   for all to qik_ingest_fn_owner using (true) with check (true);
 
+-- Source display attribution follows qik's existing outlet_id relationship.
+-- The private function owner needs only these two outlet columns.
+create policy qik_ingest_fn_select_outlets on public.outlets
+  for select to qik_ingest_fn_owner using (true);
+grant select(id,name) on public.outlets to qik_ingest_fn_owner;
 grant select on public.ingest_sources to qik_ingest_fn_owner;
 grant select on public.articles to qik_ingest_fn_owner;
 grant select, insert, update on public.ingestion_runs to qik_ingest_fn_owner;
