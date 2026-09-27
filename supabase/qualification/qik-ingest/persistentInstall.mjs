@@ -51,7 +51,14 @@ export async function connectPersistentInstaller({connectionString,expectedLogin
   const db=new pg.Client({connectionString:url.href,ssl:disposable?false:{rejectUnauthorized:true},
     connectionTimeoutMillis:10000,statement_timeout:30000,query_timeout:40000,
     application_name:'mip-c3-persistent-install-source'})
-  try {await db.connect();await identity(db,expectedLogin);return db}
+  try {
+    await db.connect()
+    // Supavisor's Session pooler can ignore startup GUCs. Establish the
+    // bounded server-side timeout on the authenticated session itself.
+    await db.query("set statement_timeout='30000ms'")
+    await identity(db,expectedLogin)
+    return db
+  }
   catch {await db.end().catch(()=>{});throw Error('persistent_authenticated_connection_failed')}
 }
 export async function installPersistentQik(db,{operationId,expectedLogin}) {

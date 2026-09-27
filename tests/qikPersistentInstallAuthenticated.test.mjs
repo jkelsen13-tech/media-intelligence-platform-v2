@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises'
 import {spawn} from 'node:child_process'
 import {createServer} from 'node:http'
 import pg from 'pg'
-import {installPersistentQik,cleanupPersistentQik} from '../supabase/qualification/qik-ingest/persistentInstall.mjs'
+import {connectPersistentInstaller,installPersistentQik,cleanupPersistentQik} from '../supabase/qualification/qik-ingest/persistentInstall.mjs'
 import {runNativeHost} from '../supabase/qualification/qik-ingest/nativeHost.mjs'
 import {provisionPersistentRuntime,revokePersistentRuntime} from '../supabase/qualification/qik-ingest/persistentRuntime.mjs'
 import {FEED} from './qikIngestTestKit.mjs'
@@ -105,6 +105,13 @@ test('persistent C3: restricted login, atomic install, reconnect and existing na
     stage='command_install'
     const dbUrl=new URL('postgresql://127.0.0.1:'+config.port+'/'+database)
     dbUrl.username=adminName;dbUrl.password=adminPassword
+    const installerProbe=await connectPersistentInstaller({
+      connectionString:dbUrl.href,expectedLogin:adminName,disposable:true,
+    })
+    try {
+      assert.equal((await installerProbe.query('show statement_timeout')).rows[0].statement_timeout,'30s')
+      assert.equal((await installerProbe.query('select session_user::text login')).rows[0].login,adminName)
+    }finally{await installerProbe.end()}
     const child=spawn(process.execPath,[new URL('../supabase/qualification/qik-ingest/runPersistentInstall.mjs',import.meta.url).pathname,'install','--execute','--disposable'],
       {env:{PATH:process.env.PATH,MIP_DISPOSABLE_POSTGRES:'qik-persistent-install',MIP_C3_PERSISTENT_AUTHORIZATION:'owner-authorized-disabled-install',
         MIP_C3_INSTALLER_DATABASE_URL:dbUrl.href,MIP_C3_INSTALLER_LOGIN:adminName,MIP_C3_OPERATION_ID:operationId},stdio:['ignore','pipe','pipe']})
