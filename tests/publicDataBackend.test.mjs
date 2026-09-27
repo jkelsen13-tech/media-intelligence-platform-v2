@@ -78,7 +78,7 @@ test('explicitly unconfigured public backend cannot escape to a configured globa
       assert.deepEqual(await backend.evidence.loadActorDerivation(['node-one']), { category: null, sources: [] })
       assert.deepEqual(await backend.evidence.loadPolicyDetail('policy-one'), { policy: null, actors: [], topics: [] })
       assert.deepEqual(await backend.evidence.loadEdgeSources(['source-one']), [])
-      assert.deepEqual(await backend.evidence.loadExplanationReadView({ assertionId: 'edge:one' }), { enabled: false, eligible: [], excluded: [] })
+      assert.deepEqual(await backend.evidence.loadExplanationReadView({ assertionId: 'edge:one' }), { enabled: false, eligible: [], excluded: [], loadError: { code: 'provenance_unavailable', stage: 'configuration' } })
       assert.deepEqual(await backend.loadSourceComparisonView(), { enabled: false, events: [] })
       assert.equal((await backend.loadGraph()).source, 'demo')
       assert.equal(await backend.loadGraphCoverage(), null)

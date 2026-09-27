@@ -18,17 +18,17 @@
 
 ### C15 · Review / publication / release gates — EXTEND + MIGRATE (policies)
 1. **qik:** algorithm_release_policies; spatial release; comparison/arc/timeline release_policy rows; default-deny.
-2. **Best today:** **qik** spatial release closed (R3); **YHB** comparison/arc release tables operational historically.
+2. **Best today:** **qik** spatial release closed (release 3); **YHB** comparison/arc release tables operational historically.
 3. **Move:** **config** + release **state** for comparison/arc/timeline onto qik.
 4. **Proof:** no public projection without qik gate; predecessor RPCs not callable for publication.
 
 ### C16 · Spatial / World View projection — EXTEND
 1. **qik:** `spatial_projection_v1` + chain; Edge `spatial-runtime`; `spatialBackend` → World View.
-2. **Best today:** **qik** (R3/R4 shipped). **JFN is already retired** (2026-09-23); unique spatial history already lives in the qik private archive — not an active predecessor.
-3. **Move:** nothing from a live jfn. R4.9 renderer is frontend/repo (not YHB/NIE). Retired-jfn archive already on qik (historical-only).
+2. **Best today:** **qik** (releases 3 and 4 shipped). **JFN is already retired** (2026-09-23); unique spatial history already lives in the qik private archive — not an active predecessor.
+3. **Move:** nothing from a live jfn. release 4.9 renderer is frontend/repo (not YHB/NIE). Retired-jfn archive already on qik (historical-only).
 4. **Proof:** World View continues on qik; removing YHB/NIE does not break spatial.
 
-### C17 · Temporal intelligence assessments — MIGRATE (when R4.5 executes)
+### C17 · Temporal intelligence assessments — MIGRATE (when release 4.5 executes)
 1. **qik:** temporal assessment store referenced by Investigation Context (spec); clocks on articles/events.
 2. **Best today:** **repo-only** specs + partial YHB timeline evidence; not a live qik product owner.
 3. **Move:** **schema contract** + **algorithm** when authorized; uses qik-owned data as operational ingest and selective history land. Full predecessor corpus copy is not a prerequisite.
@@ -36,7 +36,7 @@
 
 ### C18 · Search / discovery / Investigation Context — EXTEND
 1. **qik:** public loaders + deepLinks + exploreShell; Investigation Context client state bound to qik IDs.
-2. **Best today:** **qik** frontend (R4.75 closed). Backing corpus thin.
+2. **Best today:** **qik** frontend (release 4.75 closed). Backing corpus thin.
 3. **Move:** population via C2–C7; nothing from NIE/YHB HTTP.
 4. **Proof:** search/explore resolve only qik-eligible subjects.
 

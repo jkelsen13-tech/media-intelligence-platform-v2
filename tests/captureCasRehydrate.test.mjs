@@ -172,6 +172,11 @@ test('C4 capture/CAS source install: preflight, byte rehydrate, rights, citation
     assert.equal(await scalar(db,"select reader_state from public.articles"),'pending_review')
   })
 
+  await t.test('unrecorded fixture gateway memberships block cleanup until revoked',async()=>{
+    await assert.rejects(cleanupCaptureCas(exec),/mip_cas_membership_drift/)
+    await db.exec('revoke mip_cas_gateway from cas_alice,cas_bob')
+  })
+
   await t.test('unexpected mip_cas table blocks cleanup and remains',async()=>{
     await db.exec('create table mip_cas.unexpected(id int)')
     await assert.rejects(cleanupCaptureCas(exec),/mip_cas_unexpected_object/)

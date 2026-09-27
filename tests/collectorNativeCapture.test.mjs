@@ -106,6 +106,7 @@ test('composed collector observe → native handoff → history → reused C4 bi
     update qik_ingest.collection_gate set collection_authorized = false;
     update public.ingest_sources set collection_enabled = false, enabled = false;
   `)
+  await db.exec('revoke mip_cas_gateway from cas_alice')
   await cleanupCaptureCas(exec)
   await cleanupQikIngest(exec)
   assert.equal(await scalar(db, "select count(*)::int from pg_namespace where nspname in ('mip_cas','qik_ingest','qik_ingest_operation')"), 0)
