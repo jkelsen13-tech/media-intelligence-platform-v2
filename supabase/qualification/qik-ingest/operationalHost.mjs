@@ -65,9 +65,21 @@ export async function runOperationalHost({env=process.env,source,disposable=fals
  catch{return {state:'operational_host_configuration_refused',needs_reconciliation:false,connection_closed:true}}
  try{
    const result=await runNativeHostImpl(config)
-   if(!result||typeof result.state!=='string')
+   if(!result||result.run_id!==config.runId||
+     !['completed','completed_with_errors','failed','native_host_failed','native_host_refused'].includes(result.state))
      return {state:'operational_host_ambiguous',needs_reconciliation:true,connection_closed:false}
-   return result
+   const safe={run_id:config.runId,state:result.state,http_status:result.http_status??null,
+     connection_closed:result.connection_closed===true,
+     needs_reconciliation:result.needs_reconciliation===true||result.state!=='completed'||result.connection_closed!==true}
+   for(const key of ['inserted','duplicates','revisions','rejected','unresolved','failed_jobs',
+     'source_failures','extracted_captures','extraction_incomplete']){
+     if(result[key]!==undefined){
+       if(!Number.isSafeInteger(result[key])||result[key]<0)
+         return {state:'operational_host_ambiguous',needs_reconciliation:true,connection_closed:safe.connection_closed}
+       safe[key]=result[key]
+     }
+   }
+   return safe
  }catch{
    return {state:'operational_host_ambiguous',needs_reconciliation:true,connection_closed:false}
  }
