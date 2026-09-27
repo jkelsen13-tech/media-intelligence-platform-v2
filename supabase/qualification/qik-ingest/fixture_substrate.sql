@@ -34,14 +34,23 @@ create table public.articles (
   claims jsonb not null default '[]'::jsonb
 );
 
+create table public.outlets (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  parent_ownership text,
+  country text,
+  known_editorial_stance text,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
 create table public.ingest_sources (
   id uuid primary key default gen_random_uuid(),
-  outlet_id uuid,
+  outlet_id uuid references public.outlets(id),
   feed_url text not null unique,
   enabled boolean not null default false,
   collection_enabled boolean not null default false,
   added_at timestamptz not null default now(),
-  outlet_name text,
   constraint ingest_sources_collection_enabled_false_check check (collection_enabled = false)
 );
 
@@ -82,10 +91,17 @@ create table public.mip_consolidation_watermarks (
   primary key (source_project_ref, channel)
 );
 
-insert into public.ingest_sources (id, feed_url, enabled, collection_enabled, outlet_name)
+insert into public.outlets(id,name) values
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','Example World'),
+  ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','Example Idle');
+insert into public.ingest_sources (id, outlet_id, feed_url, enabled, collection_enabled)
 values
-  ('11111111-1111-4111-8111-111111111111', 'https://news.example/world.xml', false, false, 'Example World'),
-  ('22222222-2222-4222-8222-222222222222', 'https://news.example/idle.xml', false, false, 'Example Idle');
+  ('11111111-1111-4111-8111-111111111111','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'https://news.example/world.xml', false, false),
+  ('22222222-2222-4222-8222-222222222222','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'https://news.example/idle.xml', false, false);
+alter table public.outlets enable row level security;
+revoke all on public.outlets from public,anon,authenticated,service_role;
+grant select on public.outlets to anon,authenticated;
+create policy outlets_public_read on public.outlets for select to anon,authenticated using(true);
 
 insert into public.articles (feed, outlet, title, url, reader_state)
 values (

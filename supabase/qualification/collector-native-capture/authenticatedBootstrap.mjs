@@ -72,7 +72,7 @@ export async function bootstrapAuthenticatedOperation(admin, config) {
       await admin.query("insert into mip_cas.access values($1::uuid,$2::uuid,clock_timestamp()+interval '30 minutes')",[userId,investigation])
     })
     await admin.query('insert into qik_ingest.runtime_credentials(credential_hash,active,notes) values($1,true,$2)',[tokenHash,'synthetic qualification '+operationId])
-    await admin.query('insert into public.ingest_sources(id,feed_url,outlet_name,enabled,collection_enabled) values($1::uuid,$2,$3,false,false)',[sourceId,prefix+'feed.xml','CNC qualification '+operationId])
+    await admin.query('insert into public.ingest_sources(id,feed_url,enabled,collection_enabled) values($1::uuid,$2,false,false)',[sourceId,prefix+'feed.xml'])
     const installedWatermark=await readForwardWatermark(admin)
     const watermarkBaseline=Object.hasOwn(config,'watermarkBaseline')?config.watermarkBaseline:installedWatermark
     const memberships=(await admin.query('select parent.rolname as parent,child.rolname as child,m.admin_option from pg_auth_members m join pg_roles parent on parent.oid=m.roleid join pg_roles child on child.oid=m.member where child.rolname=any($1::text[]) or parent.rolname=any($1::text[]) order by parent.rolname,child.rolname',[Object.values(names)])).rows

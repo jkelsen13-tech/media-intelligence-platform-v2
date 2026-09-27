@@ -83,6 +83,9 @@ test('restricted installer: password login, owner privileges, rollback and compl
     assert.equal((await admin.query("select nspowner::regrole::text owner from pg_namespace where nspname='public'")).rows[0].owner,'pg_database_owner')
     assert.equal((await admin.query("select relowner=current_user::regrole owned from pg_class where oid='public.articles'::regclass")).rows[0].owned,true)
     t.diagnostic(JSON.stringify(identity))
+    assert.equal((await admin.query("select 1 from information_schema.columns where table_schema='public' and table_name='ingest_sources' and column_name='outlet_name'")).rowCount,0)
+    const outletState=async()=>(await admin.query("select c.relacl::text acl,c.relrowsecurity,c.relforcerowsecurity,(select jsonb_agg(jsonb_build_object('name',p.polname,'roles',p.polroles::text,'qual',pg_get_expr(p.polqual,p.polrelid)) order by p.polname) from pg_policy p where p.polrelid=c.oid) policies from pg_class c where c.oid='public.outlets'::regclass")).rows[0]
+    const outletsBefore=await outletState()
     const baseline=await readForwardWatermark(admin)
     // Independent negative prerequisites, rolled back including roles.
     stage='missing_set'
@@ -147,6 +150,26 @@ test('restricted installer: password login, owner privileges, rollback and compl
     stage='bootstrap'
     const manifest=await bootstrapAuthenticatedOperation(admin,{operationId,passwords,token,watermarkBaseline:baseline,sourceId:randomUUID(),investigation:randomUUID(),userId:randomUUID()})
     bootstrapped=true
+    stage='outlet_join'
+    assert.equal((await admin.query("select has_column_privilege('qik_ingest_fn_owner','public.outlets','name','SELECT') allowed")).rows[0].allowed,true)
+    assert.equal((await admin.query("select has_column_privilege('qik_ingest_fn_owner','public.outlets','notes','SELECT') allowed")).rows[0].allowed,false)
+    assert.equal((await admin.query("select 1 from qik_ingest_operation.created_policies where schemaname='public' and tablename='outlets' and policyname='qik_ingest_fn_select_outlets'")).rowCount,1)
+    // Rolled-back RPC proof exercises populated outlet_id without changing the
+    // three-run qualification or introducing a synthetic outlet into its scope.
+    await admin.query('begin')
+    try {
+      await admin.query('update qik_ingest.collection_gate set collection_authorized=true where id')
+      await admin.query("update public.ingest_sources set enabled=true,collection_enabled=true where id='11111111-1111-4111-8111-111111111111'")
+      const plan=(await admin.query('select public.mip_qik_ingest_plan($1) result',[token])).rows[0].result
+      assert.equal(plan.sources[0].outlet_name,'Example World')
+      const probeRun='qik-outlet-join-'+operationId
+      await admin.query('select public.mip_qik_ingest_begin_run($1,$2,null)',[token,probeRun])
+      const observed=(await admin.query("select public.mip_qik_ingest_retain_item($1,$2,'11111111-1111-4111-8111-111111111111',$3::jsonb) result",[token,probeRun,JSON.stringify({url:'https://qualification.invalid/outlet-join/'+operationId,title:'Joined outlet probe'})])).rows[0].result
+      assert.equal(observed.article.outlet,'Example World')
+      await admin.query("select public.mip_qik_ingest_record_source_run($1,$2,'11111111-1111-4111-8111-111111111111','succeeded',1,0,null,null)",[token,probeRun])
+      assert.equal((await admin.query('select outlet_name from public.ingestion_source_runs where run_id=$1',[probeRun])).rows[0].outlet_name,'Example World')
+    }finally{await admin.query('rollback')}
+    assert.equal((await admin.query('select outlet_id from public.ingest_sources where id=$1',[manifest.sourceId])).rows[0].outlet_id,null)
     const connection=(name,password)=>'postgresql://'+name+':'+password+'@127.0.0.1:'+config.port+'/'+database
     for(const kind of ['collector','native','cas']) {
       const client=await connectAuthenticatedPg({connectionString:connection(names[kind],passwords[kind]),expectedLogin:names[kind],effectiveRole:kind==='native'?'service_role':null,disposable:true})
@@ -156,11 +179,17 @@ test('restricted installer: password login, owner privileges, rollback and compl
     stage='qualification'
     const result=await runAuthenticatedQualification({admin,collector:clients[0],native:clients[1],cas:clients[2],manifest,token})
     assert.deepEqual(result.residual,{articles:2,jobs:3,captures:3,articleIdentities:2,jobEvents:6,evidenceChanges:5,changeJobs:10,evidenceCandidates:3,articleInsertVersions:2,importReceipts:6,ingestionRuns:3,sourceRuns:3,disabledSyntheticSource:1})
+    const expectedOutlet=manifest.prefix+'feed.xml'
+    assert.ok((await admin.query('select outlet from public.articles where id=any($1::uuid[])',[result.evidenceIds.articles])).rows.every(r=>r.outlet===expectedOutlet))
+    const sourceRows=(await admin.query('select outlet_name from public.ingestion_source_runs where run_id=any($1::text[])',[result.evidenceIds.runIds])).rows
+    assert.equal(sourceRows.length,3);assert.ok(sourceRows.every(r=>r.outlet_name===expectedOutlet))
     assert.equal(result.cas.exactBytes,true);assert.equal(result.cas.rehydrated,true);assert.equal(result.cas.revocationDenied,true)
     for(const client of clients.splice(0))await client.end()
     stage='runtime_cleanup';await cleanupAuthenticatedOperation(admin,operationId);bootstrapped=false
     stage='package_cleanup';await cleanupOwnedPackages(admin,operationId);installed=false
     assert.deepEqual(await readForwardWatermark(admin),baseline)
+    assert.deepEqual(await outletState(),outletsBefore)
+    assert.equal((await admin.query('select count(*)::int n from public.outlets')).rows[0].n,2)
     assert.equal((await admin.query("select extnamespace::regnamespace::text n from pg_extension where extname='pgcrypto'")).rows[0].n,'extensions')
     assert.equal((await admin.query('select id from public.restricted_sentinel')).rows[0].id,42)
     assert.equal((await admin.query('select count(*)::int n from public.articles')).rows[0].n,3)

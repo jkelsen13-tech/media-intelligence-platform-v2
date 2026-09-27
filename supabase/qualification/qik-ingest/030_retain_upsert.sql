@@ -60,8 +60,9 @@ begin
   if v_url !~ '^https?://' then
     return jsonb_build_object('disposition', 'rejected', 'reason', 'unsafe_or_non_http_url');
   end if;
-  select coalesce(outlet_name, feed_url) into v_outlet
-  from public.ingest_sources where id = p_source_id;
+  select coalesce(o.name, s.feed_url) into v_outlet
+  from public.ingest_sources s left join public.outlets o on o.id = s.outlet_id
+  where s.id = p_source_id;
   v_summary := nullif(p_item->>'summary', '');
   v_body := nullif(p_item->>'body_text', '');
   v_published := nullif(p_item->>'published_at', '');
@@ -118,7 +119,9 @@ begin
   if not exists (select 1 from public.ingestion_runs where run_id = p_run_id and state = 'running') then
     raise exception 'qik_ingest_run_not_running' using errcode = '55000';
   end if;
-  select feed_url, outlet_name into v_url, v_outlet from public.ingest_sources where id = p_source_id;
+  select s.feed_url, coalesce(o.name, s.feed_url) into v_url, v_outlet
+  from public.ingest_sources s left join public.outlets o on o.id = s.outlet_id
+  where s.id = p_source_id;
   if v_url is null then
     raise exception 'qik_ingest_unknown_source' using errcode = '22023';
   end if;
