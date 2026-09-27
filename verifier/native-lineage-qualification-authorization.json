@@ -2,9 +2,9 @@
   "status": "internal_qualification_authorized_user_amendment",
   "material": "synthetic_only",
   "origin": "cc8f1b19171917351548362f82f03fa2b1684831",
-  "reviewed_source_commit": "69705c9822848d45184bc0b54ce32ba4f5b8cf26",
-  "reviewed_source_tree": "6500a74c5fe2d9f905e2fcda302d99deaa3fc1be",
-  "patch_sha256": "7eaa205729c5683afb9e9d2fb95b38e1801d37c93e80fc5bb9550c29ab39cf94",
+  "reviewed_source_commit": "5f82b5efc33313456d157d2eeb8f6c7d23218e4d",
+  "reviewed_source_tree": "75ac1f331cd542e863c83bed4751462e47051c89",
+  "patch_sha256": "66802d128b9715b7502717426117128d232507bbbb0d3e5e2139666ea4542057",
   "source_manifest_sha256": "7529e8201824c444b5f16bb97ab32e7855a4ae819d242f78d507f7eed9dcd9ac",
   "source_reviewed_identity": {
     "files": [
@@ -27,9 +27,9 @@
         "status": "modified"
       },
       {
-        "bytes": 23876,
+        "bytes": 23878,
         "path": "supabase/qualification/comparison-generations/source-snapshot.sql",
-        "sha256": "f05abdbda2b2f72d3aff747266c9a1db3f47ec122a6bbba7a21ac7b55875452e",
+        "sha256": "f9fbd20e621789e05359761b8717fe40b357272095bcbec1371eb767a255dcd9",
         "status": "modified"
       },
       {
@@ -113,5 +113,7 @@
   "qualification_is_acceptance": false,
   "owner_field_signature": null,
   "user_amendment_reference": "Current session owner amendment authorizes qualification and retesting on existing resources; synthetic material only; maximum $25 one-time and $10 monthly, no new services or upgrades. Execution scope only, not publication acceptance or owner-field signature.",
-  "result": "NOT RUN"
+  "result": "NOT RUN",
+  "prior_reviewed_patch_sha256": "7eaa205729c5683afb9e9d2fb95b38e1801d37c93e80fc5bb9550c29ab39cf94",
+  "repair_review": "Independent non-implementing review closed on CASE parentheses only; source-snapshot SHA256 f9fbd20e621789e05359761b8717fe40b357272095bcbec1371eb767a255dcd9. Existing private remote Node22.14.0 synthetic suites 12/12 PASS; full PostgreSQL qualification pending."
 }
