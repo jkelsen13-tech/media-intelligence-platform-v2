@@ -30,7 +30,7 @@ export async function readForwardWatermark(admin) {
   return (await admin.query("select watermark,captured_at::text as captured_at from public.mip_consolidation_watermarks where source_project_ref='qikvmopbtijoebdqosyq' and channel='ingest_forward'")).rows[0] ?? null
 }
 export async function bootstrapAuthenticatedOperation(admin, config) {
-  const {operationId, passwords, token, sourceId, investigation, userId} = config
+  const {operationId, passwords, token, sourceId, investigation, userId, reuseDisabledSource=false} = config
   const names = operationNames(operationId)
   for (const password of Object.values(passwords ?? {})) secretLiteral(password)
   for (const name of ['collector','native','cas']) secretLiteral(passwords?.[name])
@@ -42,7 +42,10 @@ export async function bootstrapAuthenticatedOperation(admin, config) {
     const existing = await admin.query("select to_regclass('qik_ingest_operation.authenticated_driver_operation') as ledger")
     if (existing.rows[0].ledger) throw Error('cnc_operation_already_present')
     if ((await admin.query('select 1 from pg_roles where rolname=any($1::text[])',[Object.values(names)])).rowCount) throw Error('cnc_role_already_present')
-    if ((await admin.query('select 1 from public.ingest_sources where id=$1::uuid or feed_url=$2',[sourceId,prefix+'feed.xml'])).rowCount) throw Error('cnc_source_already_present')
+    const sourceRows=(await admin.query('select id,feed_url,enabled,collection_enabled,outlet_id from public.ingest_sources where id=$1::uuid or feed_url=$2 for update',[sourceId,prefix+'feed.xml'])).rows
+    if (reuseDisabledSource) {
+      if (sourceRows.length!==1 || sourceRows[0].id!==sourceId || sourceRows[0].feed_url!==prefix+'feed.xml' || sourceRows[0].enabled!==false || sourceRows[0].collection_enabled!==false || sourceRows[0].outlet_id!==null) throw Error('cnc_source_reuse_refused')
+    } else if (sourceRows.length) throw Error('cnc_source_already_present')
     const casScopePresent = await withCasOwner(admin, async () =>
       (await admin.query('select 1 from mip_cas.principals where login=$1 or user_id=$2::uuid',[names.cas,userId])).rowCount
       || (await admin.query('select 1 from mip_cas.access where investigation=$1::uuid',[investigation])).rowCount
@@ -72,11 +75,11 @@ export async function bootstrapAuthenticatedOperation(admin, config) {
       await admin.query("insert into mip_cas.access values($1::uuid,$2::uuid,clock_timestamp()+interval '30 minutes')",[userId,investigation])
     })
     await admin.query('insert into qik_ingest.runtime_credentials(credential_hash,active,notes) values($1,true,$2)',[tokenHash,'synthetic qualification '+operationId])
-    await admin.query('insert into public.ingest_sources(id,feed_url,enabled,collection_enabled) values($1::uuid,$2,false,false)',[sourceId,prefix+'feed.xml'])
+    if (!reuseDisabledSource) await admin.query('insert into public.ingest_sources(id,feed_url,enabled,collection_enabled) values($1::uuid,$2,false,false)',[sourceId,prefix+'feed.xml'])
     const installedWatermark=await readForwardWatermark(admin)
     const watermarkBaseline=Object.hasOwn(config,'watermarkBaseline')?config.watermarkBaseline:installedWatermark
     const memberships=(await admin.query('select parent.rolname as parent,child.rolname as child,m.admin_option from pg_auth_members m join pg_roles parent on parent.oid=m.roleid join pg_roles child on child.oid=m.member where child.rolname=any($1::text[]) or parent.rolname=any($1::text[]) order by parent.rolname,child.rolname',[Object.values(names)])).rows
-    const manifest = {operationId,names,sourceId,investigation,userId,tokenHash,prefix,memberships,watermarkBaseline,installedWatermark,sourceVersions:[],captureIds:[]}
+    const manifest = {operationId,names,sourceId,reuseDisabledSource,investigation,userId,tokenHash,prefix,memberships,watermarkBaseline,installedWatermark,sourceVersions:[],captureIds:[]}
     await admin.query('insert into qik_ingest_operation.authenticated_driver_operation values($1,$2::jsonb)',[operationId,JSON.stringify(manifest)])
     await admin.query('commit')
     return manifest
