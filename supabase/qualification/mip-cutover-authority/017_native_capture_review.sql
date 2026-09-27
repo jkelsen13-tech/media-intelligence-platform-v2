@@ -38,19 +38,49 @@ create policy mip_native_review_kernel_select on evidence_pipeline.evidence_cand
 -- deltas through the existing invalidation path. Reuse already installed EFTA
 -- triggers when they call these exact owners; never create duplicate deltas.
 do $fences$
-declare relation regclass;prefix text;
+declare relation regclass;prefix text;existing record;n integer;
 begin
+ if to_regprocedure('mip_identity.collector_native_change()') is null then
+  raise exception 'mip_native_collector_prerequisite_missing';
+ end if;
  foreach relation in array array['evidence_pipeline.article_captures'::regclass,
    'evidence_pipeline.evidence_candidates'::regclass] loop
   prefix:=case when relation='evidence_pipeline.article_captures'::regclass then 'native_comparison_capture' else 'native_comparison_candidate' end;
-  if not exists(select 1 from pg_trigger where tgrelid=relation
-    and tgfoid='mip_identity.collector_lock()'::regprocedure and tgenabled='O' and tgtype=62) then
+  select count(*) into n from pg_trigger where tgrelid=relation and not tgisinternal
+   and tgfoid='mip_identity.collector_lock()'::regprocedure;
+  if n>1 or exists(select 1 from pg_trigger where tgrelid=relation
+    and tgfoid='mip_identity.collector_lock()'::regprocedure
+    and (tgenabled<>'O' or tgtype<>62 or tgnargs<>0)) then
+   raise exception 'mip_native_collector_fence_topology';
+  end if;
+  if n=0 then
    execute format('create trigger %I before insert or update or delete or truncate on %s for each statement execute function mip_identity.collector_lock()',prefix||'_fence',relation);
   end if;
+  select count(*) into n from pg_trigger where tgrelid=relation and not tgisinternal
+   and tgfoid in ('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure);
+  if n>1 then raise exception 'mip_native_collector_duplicate_recorder';end if;
+  if n=1 then
+   select * into strict existing from pg_trigger where tgrelid=relation and not tgisinternal
+    and tgfoid in ('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure);
+   if existing.tgenabled<>'O' or existing.tgtype<>29
+    or (existing.tgfoid='mip_identity.collector_change()'::regprocedure
+     and (existing.tgnargs<>1 or encode(existing.tgargs,'escape')<>'id\000'))
+    or (existing.tgfoid='mip_identity.collector_native_change()'::regprocedure and existing.tgnargs<>0) then
+    raise exception 'mip_native_collector_recorder_topology';
+   end if;
+   if existing.tgfoid='mip_identity.collector_change()'::regprocedure then
+    -- Rebind the existing EFTA trigger, keeping its name and historical records.
+    execute format('drop trigger %I on %s',existing.tgname,relation);
+    execute format('create trigger %I after insert or update or delete on %s for each row execute function mip_identity.collector_native_change()',existing.tgname,relation);
+   end if;
+  else
+   execute format('create trigger %I after insert or update or delete on %s for each row execute function mip_identity.collector_native_change()',prefix||'_change',relation);
+  end if;
+  -- TRUNCATE has no OLD image. Reject rather than silently omit invalidation.
   if not exists(select 1 from pg_trigger where tgrelid=relation
-    and tgfoid='mip_identity.collector_change()'::regprocedure and tgenabled='O' and tgtype=29
-    and encode(tgargs,'escape')='id\000') then
-   execute format('create trigger %I after insert or update or delete on %s for each row execute function mip_identity.collector_change(''id'')',prefix||'_change',relation);
+    and tgfoid='comparison_qualification.reject_rewrite()'::regprocedure
+    and tgenabled='O' and tgtype=34) then
+   execute format('create trigger %I before truncate on %s for each statement execute function comparison_qualification.reject_rewrite()',prefix||'_no_truncate',relation);
   end if;
  end loop;
 end $fences$;
