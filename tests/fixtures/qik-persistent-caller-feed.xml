@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>MIP persistent caller synthetic qualification</title>
+    <link>https://qualification.invalid/persistent-native-caller/a1e9c643a48da45c2b7cadf30d967271/</link>
+    <description>Two invented records for an explicitly approved, bounded caller check.</description>
+    <item>
+      <title>Water plan synthetic record</title>
+      <link>https://qualification.invalid/persistent-native-caller/a1e9c643a48da45c2b7cadf30d967271/water</link>
+      <description>Synthetic council reviewed a synthetic public water plan.</description>
+      <pubDate>Sun, 27 Sep 2026 12:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Second synthetic record</title>
+      <link>https://qualification.invalid/persistent-native-caller/a1e9c643a48da45c2b7cadf30d967271/second</link>
+      <description>Another invented record to verify native intake and duplicate handling.</description>
+      <pubDate>Sun, 27 Sep 2026 12:01:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>
