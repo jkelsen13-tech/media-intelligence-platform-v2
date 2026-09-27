@@ -6,6 +6,7 @@ import pg from 'pg'
 import {createServer} from 'node:http'
 import {spawn} from 'node:child_process'
 import {boundedFeedFetcher} from '../supabase/qualification/qik-ingest/nativeHost.mjs'
+import {runOperationalHost} from '../supabase/qualification/qik-ingest/operationalHost.mjs'
 import {installQikIngest,cleanupQikIngest} from '../supabase/qualification/qik-ingest/installQikIngest.mjs'
 import {createBoundNativePipelineRpc} from '../supabase/qualification/qik-ingest/nativeHandoff.mjs'
 import {runQikIngestCollector} from '../supabase/qualification/qik-ingest/collector.mjs'
@@ -286,6 +287,44 @@ test('permanent native seam: actual restricted login, bound history, denied unre
      const noFetch=requests
      assert.equal((await hostCommand('not-allowlisted',{allowed:[feedUrl+'-different']})).code,1)
      assert.equal(requests,noFetch)
+     // New operational boundary, real password login and existing localhost feed.
+     // No injected runner: this exercises runOperationalHost -> runNativeHost -> SQL.
+     const operationalUrl=new URL('postgresql://127.0.0.1:'+config.port+'/'+database)
+     operationalUrl.username=login;operationalUrl.password=password
+     const operationalSource={id:'11111111-1111-4111-8111-111111111111',feedUrl}
+     const operationalEnv={
+       MIP_QIK_OPERATIONAL_ENABLED:'owner-authorized-one-shot',
+       MIP_DISPOSABLE_POSTGRES:'qik-native-caller',
+       MIP_QIK_SOURCE_ID:operationalSource.id,MIP_QIK_SOURCE_FEED_URL:feedUrl,
+       MIP_QIK_RELEASE_SHA:'82bc1a501cf3fca9eb40cf52c23889db340fbc75',
+       MIP_QIK_EXPECTED_RELEASE_SHA:'82bc1a501cf3fca9eb40cf52c23889db340fbc75',
+       MIP_QIK_NATIVE_LOGIN:login,MIP_QIK_NATIVE_DATABASE_URL:operationalUrl.href,
+       MIP_QIK_INGEST_RUN_KEY:token,
+     }
+     const operationalBefore=requests
+     for(const suffix of ['operational-first','operational-repeat']){
+       const runId='qik-host-'+id+'-'+suffix
+       const receipt=await runOperationalHost({env:{...operationalEnv,MIP_QIK_NATIVE_RUN_ID:runId},
+         source:operationalSource,disposable:true})
+       assert.equal(receipt.state,'completed',JSON.stringify(receipt))
+       assert.equal(receipt.run_id,runId)
+       assert.equal(receipt.inserted,0);assert.equal(receipt.duplicates,2)
+       assert.equal(receipt.extracted_captures,2);assert.equal(receipt.extraction_incomplete,0)
+       assert.equal(receipt.connection_closed,true);assert.equal(receipt.needs_reconciliation,false)
+       for(const sensitive of [password,token,operationalUrl.href,feedUrl])
+         assert.equal(JSON.stringify(receipt).includes(sensitive),false)
+       assert.equal((await admin.query('select count(*)::int n from qik_ingest.observed_items where run_id=$1',[runId])).rows[0].n,2)
+     }
+     assert.equal(requests,operationalBefore+2)
+     const refusedRun='qik-host-'+id+'-operational-wrong-source'
+     const wrongSource={...operationalSource,id:'22222222-2222-4222-8222-222222222222'}
+     const refusal=await runOperationalHost({env:{...operationalEnv,MIP_QIK_NATIVE_RUN_ID:refusedRun,
+       MIP_QIK_SOURCE_ID:wrongSource.id},source:wrongSource,disposable:true})
+     assert.notEqual(refusal.state,'completed')
+     assert.equal(refusal.connection_closed,true)
+     assert.equal(requests,operationalBefore+2,'plan identity mismatch must refuse before any feed GET')
+     assert.equal((await admin.query('select count(*)::int n from public.ingestion_runs where run_id=$1',[refusedRun])).rows[0].n,0,
+       'plan refusal must precede begin_run')
      assert.equal((await admin.query("select count(*)::int n from pg_stat_activity where usename=$1 and application_name='mip-cnc-authenticated-qualification'",[login])).rows[0].n,0)
    }finally{
      server.closeAllConnections()
