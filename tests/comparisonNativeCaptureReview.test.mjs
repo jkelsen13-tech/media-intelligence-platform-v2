@@ -64,7 +64,7 @@ async function fixture(t,{replaceBefore=false}={}) {
   return {article_id:surface.article_id,claim_key:surface.claim_key,candidate_id:k.candidate_id,
    capture_id:cap.capture_id,content_hash:cap.content_hash,field:k.source_field,
    span_start:k.span_start,span_end:k.span_end,excerpt:k.excerpt,
-   field_hash:hash(cap.payload[k.source_field]),auditability_state:'verified_retained_source'}
+   field_hash:k.field_hash,auditability_state:'verified_retained_source'}
  })
  const check=(i=input,o=output,e=evidence)=>db.query(
   'select comparison_qualification.check_native_review_lineage($1::jsonb,$2::jsonb,$3::jsonb)',
