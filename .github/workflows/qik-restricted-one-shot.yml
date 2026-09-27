@@ -1,0 +1,87 @@
+name: Qik restricted one-shot caller (held)
+
+# Source candidate only. workflow_dispatch requires this file on the default
+# branch; dispatch must select the exact reviewed release ref so GITHUB_SHA
+# equals the protected approved release SHA. No push, PR or schedule trigger.
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        description: "Exact owner-authorized one-shot marker"
+        required: true
+        type: string
+      release_sha:
+        description: "Reviewed 40-character application commit"
+        required: true
+        type: string
+      run_id:
+        description: "Fresh qik-host- run ID; never rerun an ambiguous attempt"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qik-native-caller
+  cancel-in-progress: false
+
+jobs:
+  one-shot:
+    if: ${{ inputs.execute == 'owner-authorized-one-shot' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    environment: qik-forward-controlled
+    steps:
+      - name: Refuse any action rerun or changed release
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          QIK_APPROVED_RELEASE_SHA: ${{ vars.QIK_APPROVED_RELEASE_SHA }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          [[ "$RELEASE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$RELEASE_SHA" = "$QIK_APPROVED_RELEASE_SHA"
+          test "$GITHUB_SHA" = "$RELEASE_SHA"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_sha }}
+          persist-credentials: false
+      - name: Verify checked-out source
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          printf 'MIP_QIK_CHECKED_OUT_SHA=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+      - name: Install locked runtime dependencies
+        run: npm ci --omit=dev --ignore-scripts
+      - name: Load pinned public qik CA
+        env:
+          QIK_CA_PEM_BASE64: ${{ vars.QIK_CA_PEM_BASE64 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$QIK_CA_PEM_BASE64"
+          printf '%s' "$QIK_CA_PEM_BASE64" | base64 -d > "$RUNNER_TEMP/qik-ca.crt"
+          echo '700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7  '"$RUNNER_TEMP/qik-ca.crt" | sha256sum -c -
+      - name: Run exactly one restricted forward-source delivery
+        timeout-minutes: 5
+        env:
+          MIP_QIK_OPERATIONAL_ENABLED: owner-authorized-one-shot
+          MIP_QIK_RELEASE_SHA: ${{ inputs.release_sha }}
+          MIP_QIK_EXPECTED_RELEASE_SHA: ${{ vars.QIK_APPROVED_RELEASE_SHA }}
+          MIP_QIK_NATIVE_RUN_ID: ${{ inputs.run_id }}
+          MIP_QIK_SOURCE_ID: ${{ vars.QIK_FORWARD_SOURCE_ID }}
+          MIP_QIK_SOURCE_FEED_URL: ${{ vars.QIK_FORWARD_SOURCE_FEED_URL }}
+          MIP_QIK_NATIVE_LOGIN: ${{ vars.QIK_RUNTIME_LOGIN }}
+          MIP_QIK_NATIVE_SESSION_POOLER_HOST: aws-0-us-west-1.pooler.supabase.com
+          MIP_QIK_NATIVE_DATABASE_URL: ${{ secrets.QIK_RUNTIME_DATABASE_URL }}
+          MIP_QIK_INGEST_RUN_KEY: ${{ secrets.QIK_RUNTIME_TOKEN }}
+          NODE_EXTRA_CA_CERTS: ${{ runner.temp }}/qik-ca.crt
+        run: node supabase/qualification/qik-ingest/runOperationalHost.mjs

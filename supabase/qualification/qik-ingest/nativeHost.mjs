@@ -60,7 +60,7 @@ export function boundedFeedFetcher({allowedFeedUrls,disposable=false,maxBytes=10
  }
 }
 export async function runNativeHost({connectionString,expectedLogin,token,runId,allowedFeedUrls,
- sessionPoolerHost=null,disposable=false,maxFeedBytes=1048576,feedTimeoutMs=8000}){
+ sessionPoolerHost=null,disposable=false,maxFeedBytes=1048576,feedTimeoutMs=8000,assertPlan=null}){
  if(typeof runId!=='string'||!/^qik-host-[a-zA-Z0-9_-]{1,100}$/.test(runId))
    throw Error('native_host_run_id_invalid')
  if(typeof token!=='string'||token.length<32||token.length>256)throw Error('native_host_token_invalid')
@@ -88,7 +88,13 @@ export async function runNativeHost({connectionString,expectedLogin,token,runId,
    `)).rows[0]
    if(!authority?.runtime||authority.extra_membership||authority.native_table||authority.article_write)
      throw Error('native_host_authority_refused')
-   result=await runQikIngestCollector({rpc:createNativeCollectorRpc(db),
+   const baseRpc=createNativeCollectorRpc(db)
+   const rpc=assertPlan?async(name,args)=>{
+     const value=await baseRpc(name,args)
+     if(name==='plan' && value?.collection_authorized)assertPlan(value)
+     return value
+   }:baseRpc
+   result=await runQikIngestCollector({rpc,
      pipelineRpc:createBoundNativePipelineRpc(db,{token,runId}),token,runId,fetchText})
  }catch{failed=true}
  finally{if(db)try{await db.end();closed=true}catch{failed=true}}
