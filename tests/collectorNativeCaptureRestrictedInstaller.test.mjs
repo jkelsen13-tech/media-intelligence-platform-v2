@@ -200,6 +200,22 @@ test('restricted installer: password login, owner privileges, rollback and compl
     for(const client of clients.splice(0))await client.end()
     stage='runtime_cleanup';await cleanupAuthenticatedOperation(admin,operationId);bootstrapped=false
     stage='package_cleanup';await cleanupOwnedPackages(admin,operationId);installed=false
+    stage='disabled_source_reuse'
+    const retainedBefore=(await admin.query('select count(*)::int n from public.ingest_sources where feed_url=$1',[manifest.prefix+'feed.xml'])).rows[0].n
+    assert.equal(retainedBefore,1)
+    await installOwnedPackages(admin,operationId);installed=true
+    const reuseConfig={operationId,passwords,token,watermarkBaseline:baseline,reuseDisabledSource:true,investigation:randomUUID(),userId:randomUUID()}
+    await assert.rejects(bootstrapAuthenticatedOperation(admin,{...reuseConfig,sourceId:randomUUID()}),/cnc_bootstrap_failed/)
+    await admin.query('update public.ingest_sources set enabled=true where id=$1',[manifest.sourceId])
+    await assert.rejects(bootstrapAuthenticatedOperation(admin,{...reuseConfig,sourceId:manifest.sourceId}),/cnc_bootstrap_failed/)
+    await admin.query('update public.ingest_sources set enabled=false where id=$1',[manifest.sourceId])
+    const reused=await bootstrapAuthenticatedOperation(admin,{...reuseConfig,sourceId:manifest.sourceId});bootstrapped=true
+    assert.equal(reused.reuseDisabledSource,true)
+    assert.equal(reused.sourceId,manifest.sourceId)
+    assert.equal((await admin.query('select count(*)::int n from public.ingest_sources where feed_url=$1',[manifest.prefix+'feed.xml'])).rows[0].n,retainedBefore)
+    await cleanupAuthenticatedOperation(admin,operationId);bootstrapped=false
+    await cleanupOwnedPackages(admin,operationId);installed=false
+    assert.equal((await admin.query('select count(*)::int n from public.ingest_sources where feed_url=$1 and not enabled and not collection_enabled and outlet_id is null',[manifest.prefix+'feed.xml'])).rows[0].n,1)
     assert.deepEqual(await readForwardWatermark(admin),baseline)
     assert.deepEqual(await outletState(),outletsBefore)
     assert.equal((await admin.query('select count(*)::int n from public.outlets')).rows[0].n,2)
