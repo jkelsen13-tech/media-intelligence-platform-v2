@@ -14,7 +14,7 @@ returns jsonb language plpgsql security definer set search_path='' as $$
 declare receipt mip_identity.private_releases;rev mip_identity.publication_reviews;
  g comparison_qualification.generations;approved jsonb;validated jsonb;result jsonb;
  event_input jsonb;event_id text;events jsonb:='[]';sources jsonb;claims jsonb;
- surface jsonb;member jsonb;capture jsonb;candidate jsonb;evidence jsonb;bound jsonb;
+ surface jsonb;member jsonb;capture jsonb;candidate jsonb;evidence jsonb;bound jsonb;source_metadata jsonb;
 begin
  perform mip_identity.authorize(p_session,p_runtime,'mip_projection_publisher_v1');
  -- Same fence order as staging; source changes and policy changes cannot race
@@ -45,13 +45,16 @@ begin
    from jsonb_array_elements(approved#>'{projection,claims}') where value->>'event_id'=event_id;
   for member in select value from jsonb_array_elements(event_input->'members') loop
    capture:=member->'retained_capture';
+   -- Existing accepted v1 generations remain read-only; new v2 retains metadata.
+   source_metadata:=case when g.input_payload?'native_lineage_version'
+     then capture->'source_metadata' else capture->'payload' end;
    sources:=sources||jsonb_build_array(jsonb_build_object(
     'article_id',member#>>'{article,id}','capture_id',capture->>'capture_id',
-    'content_hash',capture->>'content_hash','publisher_url',capture#>>'{payload,url}',
-    'publisher',capture#>>'{payload,outlet}','source_key',capture#>'{payload,source_key}',
-    'source_feed',capture#>'{payload,source_feed}','membership',member->'membership',
+    'content_hash',capture->>'content_hash','publisher_url',source_metadata->>'url',
+    'publisher',source_metadata->>'outlet','source_key',source_metadata->'source_key',
+    'source_feed',source_metadata->'source_feed','membership',member->'membership',
     'publication',jsonb_build_object('kind','publisher_publication',
-      'at',capture#>'{payload,published_at}','source_field','article_captures.payload.published_at')));
+      'at',source_metadata->'published_at','source_field','article_captures.payload.published_at')));
   end loop;
   for surface in select a.value from jsonb_array_elements(approved#>'{projection,article_claims}') a
    where exists(select 1 from jsonb_array_elements(claims) c where c.value->>'claim_key'=a.value->>'claim_key') loop
@@ -70,8 +73,8 @@ begin
     and e.value->>'field'=k.value->>'source_field'
     and e.value->'span_start'=k.value->'span_start' and e.value->'span_end'=k.value->'span_end'
     and e.value->>'excerpt'=k.value->>'excerpt' and k.value->>'excerpt'=surface->>'surface_text'
-    and k.value->>'excerpt'=substring(capture->'payload'->>(k.value->>'source_field')
-     from (k.value->>'span_start')::int+1 for (k.value->>'span_end')::int-(k.value->>'span_start')::int)
+    and e.value->>'field_hash'=case when g.input_payload?'native_lineage_version' then k.value->>'field_hash'
+     else encode(sha256(convert_to(capture->'payload'->>(k.value->>'source_field'),'UTF8')),'hex') end
    order by k.value->>'candidate_id' limit 1;
    if candidate is null then raise exception 'mip_reader_evidence_unbound';end if;
    bound:=jsonb_build_object('article_id',surface->>'article_id','claim_key',surface->>'claim_key',
@@ -79,6 +82,8 @@ begin
     'candidate_id',candidate->>'candidate_id','source_field',candidate->>'source_field',
     'span_start',candidate->'span_start','span_end',candidate->'span_end',
     'span_units','unicode_code_points','excerpt',candidate->>'excerpt',
+    'field_hash',case when g.input_payload?'native_lineage_version' then candidate->>'field_hash'
+      else encode(sha256(convert_to(capture->'payload'->>(candidate->>'source_field'),'UTF8')),'hex') end,
     'extractor_version',candidate->>'extractor_version','candidate_review_state','pending',
     'review_revision',rev.revision);
    evidence:=evidence||jsonb_build_array(bound);
