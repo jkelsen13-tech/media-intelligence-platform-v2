@@ -41,7 +41,9 @@ export function validateOperationalConfig(env,{source,disposable=false}={}){
    ||env.MIP_QIK_NATIVE_SESSION_POOLER_HOST!==url.hostname) {
    if(!disposable)refused()
  }
- if(!disposable){
+ if(disposable){
+   if(env.MIP_DISPOSABLE_POSTGRES!=='qik-native-caller'||url.hostname!=='127.0.0.1')refused()
+ }else{
    if(!env.NODE_EXTRA_CA_CERTS)refused()
    let digest
    try{digest=createHash('sha256').update(readFileSync(env.NODE_EXTRA_CA_CERTS)).digest('hex')}catch{refused()}
