@@ -75,4 +75,3 @@ export function connectionTarget(connectionString, expectedLogin, disposable=fal
       || decodeURIComponent(url.username)!==expectedLogin+(!disposable&&pooler?'.qikvmopbtijoebdqosyq':'')) throw Error('cnc_connection_invalid')
   return url
 }
-
