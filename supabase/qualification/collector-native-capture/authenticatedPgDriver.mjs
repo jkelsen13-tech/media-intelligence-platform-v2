@@ -27,6 +27,9 @@ export async function connectAuthenticatedPg({connectionString, expectedLogin, e
   })
   try {
     await client.connect()
+    // Supavisor session pooling can ignore startup GUCs. Enforce the runtime
+    // limit on the authenticated server session before any identity query.
+    await client.query("set statement_timeout='1000ms'")
     const {rows} = await client.query(`
       select session_user::text as login, current_user::text as effective,
              r.rolsuper, r.rolbypassrls, r.rolcreaterole, r.rolcreatedb
@@ -72,3 +75,4 @@ export function connectionTarget(connectionString, expectedLogin, disposable=fal
       || decodeURIComponent(url.username)!==expectedLogin+(!disposable&&pooler?'.qikvmopbtijoebdqosyq':'')) throw Error('cnc_connection_invalid')
   return url
 }
+
