@@ -26,10 +26,20 @@ on:
       - 'docs/EFTA_RUNTIME_AUTH_REMEDIATION_2026-09-18.md'
       - '.github/workflows/efta-postgres-qualification.yml'
   workflow_dispatch:
+    inputs:
+      qualification:
+        description: Qualification route; native mode uses synthetic material only
+        type: choice
+        required: true
+        default: historical
+        options:
+          - historical
+          - native-lineage-v2
 permissions:
   contents: read
 jobs:
   postgres-qualification:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.qualification == 'historical' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -60,3 +70,79 @@ jobs:
         run: npm run build
       - name: Dependency audit
         run: npm audit --omit=dev
+
+  # Authored route; no qualification result is asserted by this source.
+  native-lineage-qualification:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.qualification == 'native-lineage-v2' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: mip-efta-disposable-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify reviewed source and internal qualification authority
+        env:
+          MIP_QUALIFICATION_CHOICE: ${{ inputs.qualification }}
+        shell: bash
+        run: |
+          python3 -I -B - <<'PY'
+          import hashlib,json,os,pathlib,re,subprocess
+          root=pathlib.Path.cwd().resolve()
+          def require(ok,code):
+              if not ok: raise SystemExit(code)
+          require(os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch' and os.environ.get('MIP_QUALIFICATION_CHOICE')=='native-lineage-v2','native_qualification_wrong_event')
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          require(re.fullmatch('[0-9a-f]{40}',head) and head==os.environ.get('GITHUB_SHA'),'native_qualification_wrong_checkout')
+          config=subprocess.check_output(['git','config','--local','--list'],text=True)
+          require('extraheader' not in config.lower(),'native_qualification_checkout_credentials')
+          a=json.loads((root/'verifier/native-lineage-qualification-authorization.json').read_text())
+          require(a['status']=='internal_qualification_authorized_user_amendment' and a['material']=='synthetic_only','native_qualification_scope')
+          require(a['origin']=='cc8f1b19171917351548362f82f03fa2b1684831','native_qualification_source_identity')
+          require(a['patch_sha256']=='7eaa205729c5683afb9e9d2fb95b38e1801d37c93e80fc5bb9550c29ab39cf94','native_qualification_patch_identity')
+          require(a['source_manifest_sha256']=='7529e8201824c444b5f16bb97ab32e7855a4ae819d242f78d507f7eed9dcd9ac','native_qualification_manifest_identity')
+          require(a['qualification_is_acceptance'] is False and a['owner_field_signature'] is None and isinstance(a['user_amendment_reference'],str) and bool(a['user_amendment_reference'].strip()),'native_qualification_authority_kind')
+          reviewed=a['source_reviewed_identity']['files']; protected=a['historical_protected_files']
+          require(isinstance(reviewed,list) and len(reviewed)==15 and isinstance(protected,list) and len(protected)>0,'native_qualification_inventory')
+          def inventory(rows):
+              paths=set()
+              for row in rows:
+                  name=row['path']; digest=row['sha256']
+                  require(isinstance(name,str) and name not in paths and not pathlib.PurePosixPath(name).is_absolute() and '..' not in pathlib.PurePosixPath(name).parts and chr(92) not in name,'native_qualification_path')
+                  paths.add(name); file=root/name
+                  require(file.is_file() and not file.is_symlink() and file.resolve().is_relative_to(root) and re.fullmatch('[0-9a-f]{64}',digest),'native_qualification_file')
+                  require(hashlib.sha256(file.read_bytes()).hexdigest()==digest,'native_qualification_digest_mismatch')
+              return paths
+          reviewed_paths=inventory(reviewed); inventory(protected)
+          manifest='verifier/native-lineage-minimization-source-candidate.json'
+          require(manifest in reviewed_paths and hashlib.sha256((root/manifest).read_bytes()).hexdigest()==a['source_manifest_sha256'],'native_qualification_manifest_mismatch')
+          print('NATIVE_LINEAGE_SOURCE_AUTHORIZATION_PASS '+head)
+          PY
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.14.0
+          package-manager-cache: false
+      - name: Install locked dependencies without lifecycle scripts or audit
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Qualify lineage projection and native capture review
+        run: node --test --test-concurrency=1 tests/nativeLineageMinimization.test.mjs tests/comparisonNativeCaptureReview.test.mjs
+      - name: Qualify synthetic journal review reader and final permissions
+        env:
+          MIP_NATIVE_LINEAGE_QUALIFICATION: separately-approved-disposable-only
+          MIP_NATIVE_LINEAGE_DISPOSABLE_CONTEXT: approved-dedicated-ci
+        run: python3 -I -B verifier/nativeLineageMinimizationPostgres.py
