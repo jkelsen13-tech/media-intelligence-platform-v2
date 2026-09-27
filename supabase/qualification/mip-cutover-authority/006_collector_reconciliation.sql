@@ -8,7 +8,21 @@ insert into mip_identity.collector_fence values(true);
 create table mip_identity.source_changes(
  id uuid primary key default gen_random_uuid(),source text not null,relation_name text not null,
  row_key text not null,before_row jsonb,after_row jsonb,kind text not null check(kind in ('backlog','delta')),
- transaction_id text not null,retained_at timestamptz not null default clock_timestamp()
+ transaction_id text not null,retained_at timestamptz not null default clock_timestamp(),
+ -- NULL marks historical/public full images. Never backfill or rewrite history.
+ native_retention_version smallint,operation text,
+ before_identity jsonb,after_identity jsonb,before_hash text,after_hash text,
+ check(native_retention_version is null or (
+  native_retention_version=1 and relation_name in
+   ('evidence_pipeline.article_captures','evidence_pipeline.evidence_candidates')
+  and before_row is null and after_row is null and kind='delta'
+  and operation is not null and operation in ('INSERT','UPDATE','DELETE')
+  and ((operation='INSERT' and before_identity is null and before_hash is null
+    and after_identity is not null and after_hash is not null)
+   or (operation='UPDATE' and before_identity is not null and before_hash is not null
+    and after_identity is not null and after_hash is not null)
+   or (operation='DELETE' and before_identity is not null and before_hash is not null
+    and after_identity is null and after_hash is null))))
 );
 create table mip_identity.generation_changes(
  change_id uuid primary key references mip_identity.source_changes,
@@ -36,6 +50,43 @@ begin
  if k is null then k:=encode(sha256(convert_to(coalesce(a,b)::text,'UTF8')),'hex');end if;
  insert into mip_identity.source_changes(source,relation_name,row_key,before_row,after_row,kind,transaction_id)
  values(src,tg_table_schema||'.'||tg_table_name,k,b,a,'delta',pg_current_xact_id()::text);
+ return null;
+end $$;
+-- Native source changes retain identity and full-source-row digests only. The
+-- public collector_change function above deliberately keeps its existing shape.
+create function mip_identity.collector_native_change() returns trigger
+language plpgsql security definer set search_path='' as $$
+declare src text;b jsonb;a jsonb;bi jsonb;ai jsonb;bh text;ah text;k text;
+begin
+ if tg_table_schema<>'evidence_pipeline'
+ or tg_table_name not in ('article_captures','evidence_candidates')
+ or tg_op not in ('INSERT','UPDATE','DELETE') then
+  raise exception 'mip_native_collector_relation';
+ end if;
+ select source into strict src from mip_identity.collector_config where id;
+ b:=case when tg_op='INSERT' then null else to_jsonb(old) end;
+ a:=case when tg_op='DELETE' then null else to_jsonb(new) end;
+ -- Compare the COMPLETE source image: excluded-field edits still invalidate.
+ if a is not distinct from b then return null;end if;
+ -- Same argument_digest canonicalization as historical reconciliation. SQL
+ -- NULL means absent image, not a digest of JSON null or minimized identity.
+ bh:=case when b is null then null else comparison_qualification.argument_digest(b) end;
+ ah:=case when a is null then null else comparison_qualification.argument_digest(a) end;
+ k:=coalesce(a,b)->>'id';
+ if k is null then raise exception 'mip_native_collector_identity_missing';end if;
+ if tg_table_name='article_captures' then
+  bi:=case when b is null then null else jsonb_build_object('id',b->'id','article_id',b->'article_id') end;
+  ai:=case when a is null then null else jsonb_build_object('id',a->'id','article_id',a->'article_id') end;
+ else
+  bi:=case when b is null then null else jsonb_build_object('id',b->'id','capture_id',b->'capture_id',
+   'predecessor_candidate_id',b->'predecessor_candidate_id') end;
+  ai:=case when a is null then null else jsonb_build_object('id',a->'id','capture_id',a->'capture_id',
+   'predecessor_candidate_id',a->'predecessor_candidate_id') end;
+ end if;
+ insert into mip_identity.source_changes(source,relation_name,row_key,kind,transaction_id,
+  native_retention_version,operation,before_identity,after_identity,before_hash,after_hash)
+ values(src,tg_table_schema||'.'||tg_table_name,k,'delta',pg_current_xact_id()::text,
+  1,tg_op,bi,ai,bh,ah);
  return null;
 end $$;
 create trigger collector_events_lock before insert or update or delete or truncate on public.events for each statement execute function mip_identity.collector_lock();
@@ -100,8 +151,8 @@ begin
  select source into strict src from mip_identity.collector_config where id;
  perform comparison_qualification.require_source_scope(p_runtime,src);
  select coalesce(jsonb_agg(jsonb_build_object('change_id',c.id,'relation',c.relation_name,'row_key',c.row_key,
- 'kind',c.kind,'before_hash',case when c.before_row is null then null else comparison_qualification.argument_digest(c.before_row) end,
- 'after_hash',case when c.after_row is null then null else comparison_qualification.argument_digest(c.after_row) end,
+ 'kind',c.kind,'before_hash',case when c.native_retention_version=1 then c.before_hash when c.before_row is null then null else comparison_qualification.argument_digest(c.before_row) end,
+ 'after_hash',case when c.native_retention_version=1 then c.after_hash when c.after_row is null then null else comparison_qualification.argument_digest(c.after_row) end,
  'generation_id',g.id,'input_hash',g.input_hash,'output_hash',o.output_hash,
  'job_state',j.state,'acknowledged',coalesce(j.state='completed' and o.generation_id=g.id,false))
  order by c.retained_at,c.id),'[]') into result
@@ -129,7 +180,7 @@ begin
  execute format('create trigger immutable before update or delete on mip_identity.%I for each row execute function comparison_qualification.reject_rewrite()',t);
  execute format('create trigger no_truncate before truncate on mip_identity.%I for each statement execute function comparison_qualification.reject_rewrite()',t);
  end loop;
- for r in select p.oid::regprocedure::text sig from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_identity' and p.proname in ('collector_lock','collector_change','capture_backlog','capture_delta','reconciliation') loop
+ for r in select p.oid::regprocedure::text sig from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_identity' and p.proname in ('collector_lock','collector_change','collector_native_change','capture_backlog','capture_delta','reconciliation') loop
  execute 'alter function '||r.sig||' owner to mip_collector_owner_v2';
  execute 'revoke all on function '||r.sig||' from public,anon,authenticated,service_role';
  end loop;
