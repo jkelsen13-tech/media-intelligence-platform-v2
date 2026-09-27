@@ -97,6 +97,57 @@ create trigger publication_review_fence before insert or update or delete or tru
 create trigger publication_review_retirement before insert or update or delete on mip_identity.publication_review_heads
  for each row execute function mip_identity.guard_revision_reuse();
 
+
+-- Versioned native review retention. Historical public rows are unchanged.
+create function mip_identity.canonicalize_native_review(p_generation uuid,p_evidence jsonb,p_explanations jsonb) returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+declare input jsonb;e jsonb;x jsonb;a jsonb;result jsonb:='[]'::jsonb;
+ evidence_keys text[]:=array['article_id','claim_key','candidate_id','capture_id','content_hash','field','span_start','span_end','excerpt','field_hash','auditability_state'];
+ retained_keys text[]:=array['assertion_id','assertion_type','version','is_current','source_ids','archived_sources','supporting_passage','rule_version','provenance_class','review_status','state','falsification_condition'];
+ accepted_keys text[]:=array['id','assertion_id','assertion_type','version','is_current','source_ids','archived_sources','source_roles','supporting_passage','contradicting_evidence','missing_evidence','shared_entities','relationship_type','rule_version','provenance_class','created_at','recomputed_at','reviewed_at','review_status','falsification_condition','correction_history','remaining_uncertainty','state'];
+begin
+ select input_payload into strict input from comparison_qualification.generations where id=p_generation;
+ if not(input?'native_lineage_version') then return p_explanations;end if;
+ if input->>'native_lineage_version' is distinct from 'native-capture-lineage-v2' then raise exception 'mip_native_lineage_version';end if;
+ if jsonb_typeof(p_evidence) is distinct from 'array' or jsonb_typeof(p_explanations) is distinct from 'array' then raise exception 'mip_native_review_retention_shape';end if;
+ for e in select value from jsonb_array_elements(p_evidence) loop
+  if jsonb_typeof(e) is distinct from 'object' or not(e?&evidence_keys) or (e-evidence_keys)<>'{}'::jsonb
+   or exists(select 1 from jsonb_each(e-array['span_start','span_end']) kv where jsonb_typeof(kv.value)<>'string')
+   or jsonb_typeof(e->'span_start') is distinct from 'number' or jsonb_typeof(e->'span_end') is distinct from 'number'
+   or e->>'span_start' !~ '^[0-9]+$' or e->>'span_end' !~ '^[0-9]+$'
+   or e->>'field_hash' !~ '^[0-9a-f]{64}$' or e->>'content_hash' !~ '^[0-9a-f]{64}$'
+  then raise exception 'mip_native_review_retention_shape';end if;
+ end loop;
+ for x in select value from jsonb_array_elements(p_explanations) loop
+  if jsonb_typeof(x) is distinct from 'object' or not(x?&retained_keys) or (x-accepted_keys)<>'{}'::jsonb
+   or exists(select 1 from jsonb_each(x) kv where kv.key=any(array['assertion_id','assertion_type','supporting_passage','rule_version','provenance_class','review_status','state','falsification_condition']) and jsonb_typeof(kv.value)<>'string')
+   or jsonb_typeof(x->'version') is distinct from 'number' or x->>'version' !~ '^[0-9]+$'
+   or jsonb_typeof(x->'is_current') is distinct from 'boolean' or jsonb_typeof(x->'source_ids') is distinct from 'array' or jsonb_typeof(x->'archived_sources') is distinct from 'array'
+  then raise exception 'mip_native_review_retention_shape';end if;
+  if exists(select 1 from jsonb_array_elements(x->'source_ids') v where jsonb_typeof(v.value)<>'string') then raise exception 'mip_native_review_retention_shape';end if;
+  for a in select value from jsonb_array_elements(x->'archived_sources') loop
+   if jsonb_typeof(a) is distinct from 'object' or not(a?&array['article_id','field_hash','status']) or (a-array['article_id','field_hash','status'])<>'{}'::jsonb
+    or exists(select 1 from jsonb_each(a) kv where jsonb_typeof(kv.value)<>'string') or a->>'status' is distinct from 'retained'
+    or not exists(select 1 from jsonb_array_elements(p_evidence) ev where ev.value->>'article_id'=a->>'article_id' and ev.value->>'field_hash'=a->>'field_hash')
+   then raise exception 'mip_native_review_retention_shape';end if;
+  end loop;
+  -- Unconsumed public-table fields and diagnostics are never durably copied here.
+  result:=result||jsonb_build_array(jsonb_build_object('assertion_id',x->'assertion_id','assertion_type',x->'assertion_type','version',x->'version','is_current',x->'is_current','source_ids',x->'source_ids','archived_sources',x->'archived_sources','supporting_passage',x->'supporting_passage','rule_version',x->'rule_version','provenance_class',x->'provenance_class','review_status',x->'review_status','state',x->'state','falsification_condition',x->'falsification_condition'));
+ end loop;
+ return result;
+end $$;
+alter function mip_identity.canonicalize_native_review(uuid,jsonb,jsonb) owner to mip_publication_owner_v2;
+revoke all on function mip_identity.canonicalize_native_review(uuid,jsonb,jsonb) from public,anon,authenticated,service_role,mip_comparison_worker_v1,mip_comparison_producer_v1,mip_projection_publisher_v1;
+create function mip_identity.guard_publication_review_retention() returns trigger
+language plpgsql security definer set search_path='' as $$
+begin
+ new.explanations:=mip_identity.canonicalize_native_review(new.generation_id,new.evidence,new.explanations);
+ return new;
+end $$;
+alter function mip_identity.guard_publication_review_retention() owner to mip_publication_owner_v2;
+revoke all on function mip_identity.guard_publication_review_retention() from public,anon,authenticated,service_role,mip_comparison_worker_v1,mip_comparison_producer_v1,mip_projection_publisher_v1;
+create trigger publication_review_retention before insert on mip_identity.publication_reviews for each row execute function mip_identity.guard_publication_review_retention();
+
 create function mip_identity.validate_review(p_revision uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare rev mip_identity.publication_reviews;g comparison_qualification.generations;o comparison_qualification.outputs;pc jsonb;
@@ -112,8 +163,14 @@ begin
  where h.id and h.active and h.revision=rev.policy_revision and v.adapter_ref='survivor-reader-v1') then raise exception 'mip_publication_policy_revoked';end if;
  select * into strict g from comparison_qualification.generations where id=rev.generation_id;
  select * into strict o from comparison_qualification.outputs where generation_id=g.id;
+ rev.explanations:=mip_identity.canonicalize_native_review(g.id,rev.evidence,rev.explanations);
  if rev.input_hash is distinct from g.input_hash or rev.output_hash is distinct from o.output_hash then raise exception 'mip_publication_binding';end if;
- current_input:=comparison_qualification.source_snapshot(g.input_payload->'lexicon',g.implementation_ref);
+ -- Version follows the immutable generation; never a caller-selected downgrade.
+ if not(g.input_payload?'native_lineage_version') then
+  current_input:=comparison_qualification.source_snapshot_legacy(g.input_payload->'lexicon',g.implementation_ref);
+ elsif g.input_payload->>'native_lineage_version'='native-capture-lineage-v2' then
+  current_input:=comparison_qualification.source_snapshot(g.input_payload->'lexicon',g.implementation_ref);
+ else raise exception 'mip_native_lineage_version';end if;
  if (current_input-'snapshot_metadata') is distinct from (g.input_payload-'snapshot_metadata') then raise exception 'mip_publication_stale_source_input';end if;
  if mip_identity.survivor_context() is distinct from rev.relationship_context then raise exception 'mip_publication_stale_source_context';end if;
  if jsonb_typeof(g.input_payload->'eventInputs') is distinct from 'array'
