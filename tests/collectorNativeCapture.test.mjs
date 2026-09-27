@@ -106,6 +106,11 @@ test('composed collector observe → native handoff → history → reused C4 bi
     update qik_ingest.collection_gate set collection_authorized = false;
     update public.ingest_sources set collection_enabled = false, enabled = false;
   `)
+  // The test owns this post-install login/membership, not the CAS package.
+  await assert.rejects(cleanupCaptureCas(exec), /mip_cas_membership_drift/)
+  await db.query('delete from mip_cas.access where user_id=$1::uuid and investigation=$2::uuid',[alice,investigation])
+  await db.query('delete from mip_cas.principals where login=$1 and user_id=$2::uuid',['cas_alice',alice])
+  await db.exec('revoke mip_cas_gateway from cas_alice; drop role cas_alice;')
   await cleanupCaptureCas(exec)
   await cleanupQikIngest(exec)
   assert.equal(await scalar(db, "select count(*)::int from pg_namespace where nspname in ('mip_cas','qik_ingest','qik_ingest_operation')"), 0)

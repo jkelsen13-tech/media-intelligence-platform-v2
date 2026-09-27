@@ -46,7 +46,7 @@ create table public.outlets (
 
 create table public.ingest_sources (
   id uuid primary key default gen_random_uuid(),
-  outlet_id uuid references public.outlets(id),
+  outlet_id uuid,
   feed_url text not null unique,
   enabled boolean not null default false,
   collection_enabled boolean not null default false,
@@ -101,6 +101,7 @@ values
 alter table public.outlets enable row level security;
 revoke all on public.outlets from public,anon,authenticated,service_role;
 grant select on public.outlets to anon,authenticated;
+grant select,insert,update on public.outlets to service_role;
 create policy outlets_public_read on public.outlets for select to anon,authenticated using(true);
 
 insert into public.articles (feed, outlet, title, url, reader_state)

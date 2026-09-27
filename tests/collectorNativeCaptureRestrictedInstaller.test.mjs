@@ -147,6 +147,14 @@ test('restricted installer: password login, owner privileges, rollback and compl
     assert.equal((await admin.query("select has_table_privilege('qik_ingest_fn_owner','public.restricted_sentinel','SELECT') allowed")).rows[0].allowed,true)
     assert.equal((await admin.query('select id from public.restricted_sentinel')).rows[0].id,42)
     await admin.query('revoke select on public.restricted_sentinel from qik_ingest_fn_owner')
+    stage='outlet_column_grant_drift'
+    await admin.query('grant select(name) on public.outlets to qik_ingest_fn_owner with grant option')
+    await assert.rejects(cleanupOwnedPackages(admin,operationId),/cnc_owned_cleanup_failed/)
+    const nameAcl=async()=>(await admin.query("select pg_get_userbyid(x.grantor)::text grantor,x.is_grantable from pg_attribute a cross join lateral aclexplode(a.attacl) x where a.attrelid='public.outlets'::regclass and a.attname='name' and x.grantee='qik_ingest_fn_owner'::regrole")).rows
+    assert.deepEqual(await nameAcl(),[{grantor:adminName,is_grantable:true}])
+    assert.notEqual((await admin.query("select to_regnamespace('qik_ingest_operation') n")).rows[0].n,null)
+    await admin.query('revoke grant option for select(name) on public.outlets from qik_ingest_fn_owner')
+    assert.deepEqual(await nameAcl(),[{grantor:adminName,is_grantable:false}])
     stage='bootstrap'
     const manifest=await bootstrapAuthenticatedOperation(admin,{operationId,passwords,token,watermarkBaseline:baseline,sourceId:randomUUID(),investigation:randomUUID(),userId:randomUUID()})
     bootstrapped=true

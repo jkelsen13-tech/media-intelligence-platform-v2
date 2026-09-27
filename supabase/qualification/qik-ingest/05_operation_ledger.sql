@@ -76,6 +76,7 @@ create table qik_ingest_operation.introduced_grants(
   grantee text not null,object_kind text not null
     check(object_kind in ('table','column','schema')),
   schema_name text not null,object_name text not null,column_name text not null default '',
+  grantor text not null default '',is_grantable boolean not null default false,
   privilege text not null,status text not null
     check(status in ('introduced','revoked')),
   unique(grantee,object_kind,schema_name,object_name,column_name,privilege)
@@ -112,17 +113,23 @@ begin
     on conflict (grantee,object_kind,schema_name,object_name,column_name,privilege)
       do update set status='introduced';
   end loop;
+  -- Column ACLs are distinct from table privileges; retain the actual grantor
+  -- and grant option so later foreign changes cannot be silently revoked.
   for rec in
-    select cp.grantee::text as grantee,cp.table_schema::text as schema_name,
-           cp.table_name::text as object_name,cp.column_name::text as column_name,
-           cp.privilege_type::text as privilege
-    from information_schema.column_privileges cp
-    join qik_ingest_operation.created_roles c on c.rolname=cp.grantee
-    where cp.table_schema='public'
+    select r.rolname::text as grantee,n.nspname::text as schema_name,
+           t.relname::text as object_name,a.attname::text as column_name,
+           x.privilege_type::text as privilege,
+           pg_get_userbyid(x.grantor)::text as grantor,x.is_grantable
+    from pg_attribute a join pg_class t on t.oid=a.attrelid
+    join pg_namespace n on n.oid=t.relnamespace
+    cross join lateral aclexplode(a.attacl) x
+    join pg_roles r on r.oid=x.grantee
+    join qik_ingest_operation.created_roles c on c.rolname=r.rolname
+    where n.nspname='public' and a.attnum>0 and not a.attisdropped
   loop
     insert into qik_ingest_operation.introduced_grants
-      (grantee,object_kind,schema_name,object_name,column_name,privilege,status)
-    values (rec.grantee,'column',rec.schema_name,rec.object_name,rec.column_name,rec.privilege,'introduced')
+      (grantee,object_kind,schema_name,object_name,column_name,privilege,grantor,is_grantable,status)
+    values (rec.grantee,'column',rec.schema_name,rec.object_name,rec.column_name,rec.privilege,rec.grantor,rec.is_grantable,'introduced')
     on conflict (grantee,object_kind,schema_name,object_name,column_name,privilege)
       do update set status='introduced';
   end loop;
@@ -271,6 +278,28 @@ begin
     raise exception 'qik_ingest_unrelated_privilege: % % public.%',
       rec.grantee, rec.privilege, rec.table_name;
   end loop;
+  if exists (
+    with current_columns as (
+      select r.rolname::text grantee,n.nspname::text schema_name,
+             t.relname::text object_name,a.attname::text column_name,
+             x.privilege_type::text privilege,pg_get_userbyid(x.grantor)::text grantor,x.is_grantable
+      from pg_attribute a join pg_class t on t.oid=a.attrelid
+      join pg_namespace n on n.oid=t.relnamespace
+      cross join lateral aclexplode(a.attacl) x
+      join pg_roles r on r.oid=x.grantee
+      join qik_ingest_operation.created_roles c on c.rolname=r.rolname
+      where n.nspname='public' and a.attnum>0 and not a.attisdropped
+    ), recorded_columns as (
+      select grantee,schema_name,object_name,column_name,privilege,grantor,is_grantable
+      from qik_ingest_operation.introduced_grants
+      where object_kind='column' and status='introduced'
+    )
+    (select * from current_columns except select * from recorded_columns)
+    union all
+    (select * from recorded_columns except select * from current_columns)
+  ) then
+    raise exception 'qik_ingest_unrelated_column_privilege';
+  end if;
 end $$;
 
 create function qik_ingest_operation.refuse_membership_drift()
