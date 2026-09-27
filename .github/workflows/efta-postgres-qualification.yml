@@ -117,7 +117,7 @@ jobs:
           a=json.loads((root/'verifier/native-lineage-qualification-authorization.json').read_text())
           require(a['status']=='internal_qualification_authorized_user_amendment' and a['material']=='synthetic_only','native_qualification_scope')
           require(a['origin']=='cc8f1b19171917351548362f82f03fa2b1684831','native_qualification_source_identity')
-          require(a['patch_sha256']=='7eaa205729c5683afb9e9d2fb95b38e1801d37c93e80fc5bb9550c29ab39cf94','native_qualification_patch_identity')
+          require(a['patch_sha256']=='66802d128b9715b7502717426117128d232507bbbb0d3e5e2139666ea4542057','native_qualification_patch_identity')
           require(a['source_manifest_sha256']=='7529e8201824c444b5f16bb97ab32e7855a4ae819d242f78d507f7eed9dcd9ac','native_qualification_manifest_identity')
           require(a['qualification_is_acceptance'] is False and a['owner_field_signature'] is None and isinstance(a['user_amendment_reference'],str) and bool(a['user_amendment_reference'].strip()),'native_qualification_authority_kind')
           reviewed=a['source_reviewed_identity']['files']; protected=a['historical_protected_files']
@@ -131,10 +131,10 @@ jobs:
                   require(file.is_file() and not file.is_symlink() and file.resolve().is_relative_to(root) and re.fullmatch('[0-9a-f]{64}',digest),'native_qualification_file')
                   require(hashlib.sha256(file.read_bytes()).hexdigest()==digest,'native_qualification_digest_mismatch')
               return paths
-          source='69705c9822848d45184bc0b54ce32ba4f5b8cf26'
-          require(a.get('reviewed_source_commit')==source and a.get('reviewed_source_tree')=='6500a74c5fe2d9f905e2fcda302d99deaa3fc1be','native_qualification_review_binding')
+          source='5f82b5efc33313456d157d2eeb8f6c7d23218e4d'
+          require(a.get('reviewed_source_commit')==source and a.get('reviewed_source_tree')=='75ac1f331cd542e863c83bed4751462e47051c89','native_qualification_review_binding')
           tree=subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()
-          require(tree=='6500a74c5fe2d9f905e2fcda302d99deaa3fc1be','native_qualification_review_tree')
+          require(tree=='75ac1f331cd542e863c83bed4751462e47051c89','native_qualification_review_tree')
           require(subprocess.run(['git','merge-base','--is-ancestor',source,head],check=False).returncode==0,'native_qualification_review_ancestry')
           delta=set(subprocess.check_output(['git','diff','--name-only',source,head],text=True).splitlines())
           require(delta=={'.github/workflows/efta-postgres-qualification.yml','verifier/native-lineage-qualification-authorization.json'},'native_qualification_dependency_tree_changed')
