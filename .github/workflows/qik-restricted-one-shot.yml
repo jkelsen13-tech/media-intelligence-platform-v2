@@ -1,7 +1,8 @@
 name: Qik restricted one-shot caller (held)
 
 # Source candidate only. workflow_dispatch requires this file on the default
-# branch; no push, pull_request or schedule trigger is configured.
+# branch; dispatch must select the exact reviewed release ref so GITHUB_SHA
+# equals the protected approved release SHA. No push, PR or schedule trigger.
 on:
   workflow_dispatch:
     inputs:
@@ -42,6 +43,7 @@ jobs:
           test "$GITHUB_RUN_ATTEMPT" = 1
           [[ "$RELEASE_SHA" =~ ^[a-f0-9]{40}$ ]]
           test "$RELEASE_SHA" = "$QIK_APPROVED_RELEASE_SHA"
+          test "$GITHUB_SHA" = "$RELEASE_SHA"
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.release_sha }}
