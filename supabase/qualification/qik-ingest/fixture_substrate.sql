@@ -51,7 +51,7 @@ create table public.ingest_sources (
   enabled boolean not null default false,
   collection_enabled boolean not null default false,
   added_at timestamptz not null default now(),
-  constraint ingest_sources_collection_enabled_false_check check (collection_enabled = false)
+  constraint ingest_sources_collection_enabled_check check (collection_enabled = false)
 );
 
 create table public.ingestion_runs (
