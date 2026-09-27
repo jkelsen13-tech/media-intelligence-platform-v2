@@ -20,7 +20,7 @@ export function validateOperationalConfig(env,{source,disposable=false}={}){
    ||!source||typeof source.id!=='string'||typeof source.feedUrl!=='string'
    ||env.MIP_QIK_SOURCE_ID!==source.id||env.MIP_QIK_SOURCE_FEED_URL!==source.feedUrl
    ||!sha(env.MIP_QIK_RELEASE_SHA)||env.MIP_QIK_EXPECTED_RELEASE_SHA!==env.MIP_QIK_RELEASE_SHA
-   ||(env.GITHUB_SHA&&env.GITHUB_SHA!==env.MIP_QIK_RELEASE_SHA)
+   ||(env.MIP_QIK_CHECKED_OUT_SHA&&env.MIP_QIK_CHECKED_OUT_SHA!==env.MIP_QIK_RELEASE_SHA)
    ||(env.GITHUB_RUN_ATTEMPT&&env.GITHUB_RUN_ATTEMPT!=='1')
    ||(env.CLOUD_RUN_TASK_COUNT&&env.CLOUD_RUN_TASK_COUNT!=='1')
    ||(env.CLOUD_RUN_TASK_INDEX&&env.CLOUD_RUN_TASK_INDEX!=='0')
