@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {connectAfterPoolerCacheRefresh} from '../supabase/qualification/collector-native-capture/authenticatedPgDriver.mjs'
+import {connectAfterPoolerCacheRefresh,observedSessionPooler} from '../supabase/qualification/collector-native-capture/authenticatedPgDriver.mjs'
 
 const failure=code=>Object.assign(Error('simulated_auth_failure'),{code})
 function connections(outcomes) {
@@ -17,6 +17,10 @@ function connections(outcomes) {
 }
 
 test('one pre-query session-pooler cache refresh reconnect only for initial 28P01',async()=>{
+  const pooler='aws-0-us-west-1.pooler.supabase.com'
+  assert.equal(observedSessionPooler(new URL('postgresql://example@'+pooler+':5432/postgres'),pooler,false),true)
+  assert.equal(observedSessionPooler(new URL('postgresql://example@'+pooler+':5432/postgres'),pooler,true),false)
+  assert.equal(observedSessionPooler(new URL('postgresql://example@db.qikvmopbtijoebdqosyq.supabase.co:5432/postgres'),'db.qikvmopbtijoebdqosyq.supabase.co',false),false)
   const stale=connections(['28P01',null])
   const connected=await connectAfterPoolerCacheRefresh(stale.makeClient,true)
   assert.equal(stale.clients.length,2)
