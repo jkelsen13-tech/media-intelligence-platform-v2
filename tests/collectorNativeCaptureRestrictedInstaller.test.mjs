@@ -239,4 +239,3 @@ test('restricted installer: password login, owner privileges, rollback and compl
     if(primary||errors.length)throw new AggregateError([...(primary?[primary]:[]),...errors],'restricted_installer_verification_failed')
   }
 })
-
