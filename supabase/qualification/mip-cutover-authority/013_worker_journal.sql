@@ -121,6 +121,18 @@ begin
     raise exception 'mip_journal_token_binding';
    end if;
    if op='worker_complete' and jsonb_typeof(args->'p_output') is distinct from 'object' then raise exception 'mip_journal_output_shape';end if;
+   if op='worker_complete' then
+    if ((comparison_qualification.claim_payload((args->>'p_generation')::uuid,true,'journal_scope')->>'input_text')::jsonb)?'native_lineage_version'
+      and (args#>>'{p_output,generation_id}' is distinct from args->>'p_generation'
+       or args#>>'{p_output,input_hash}' is distinct from args->>'p_input_hash'
+       or args#>>'{p_output,implementation_ref}' is distinct from args->>'p_implementation') then
+      raise exception 'mip_native_output_binding';end if;
+    -- Resolve the immutable bound input through the existing restricted kernel
+    -- capability, transiently. Never store another input or native payload copy.
+    perform comparison_qualification.check_native_lineage_output(
+      (comparison_qualification.claim_payload((args->>'p_generation')::uuid,true,'journal_scope')->>'input_text')::jsonb,
+      args->'p_output');
+   end if;
   end if;
  end if;
  -- A uniqueness conflict waits for the other short transaction, then the next
