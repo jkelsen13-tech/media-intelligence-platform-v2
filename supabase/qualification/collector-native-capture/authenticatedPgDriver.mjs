@@ -28,6 +28,10 @@ export async function connectAfterPoolerCacheRefresh(makeClient, sessionPooler) 
   try { await client.connect(); return client }
   catch (error) { await client.end().catch(()=>{}); throw error }
 }
+export function observedSessionPooler(url, sessionPoolerHost, disposable) {
+  return !disposable && sessionPoolerHost==='aws-0-us-west-1.pooler.supabase.com'
+    && url.hostname===sessionPoolerHost
+}
 
 export async function connectAuthenticatedPg({connectionString, expectedLogin, effectiveRole = null, disposable = false, sessionPoolerHost = null}) {
   if (!/^[a-z][a-z0-9_]{0,62}$/.test(expectedLogin ?? '')
@@ -42,7 +46,7 @@ export async function connectAuthenticatedPg({connectionString, expectedLogin, e
   }
   let client=null
   try {
-    client=await connectAfterPoolerCacheRefresh(()=>new pg.Client(options),!disposable&&url.hostname===sessionPoolerHost)
+    client=await connectAfterPoolerCacheRefresh(()=>new pg.Client(options),observedSessionPooler(url,sessionPoolerHost,disposable))
     // Supavisor session pooling can ignore startup GUCs. Enforce the runtime
     // limit on the authenticated server session before any identity query.
     await client.query("set statement_timeout='1000ms'")
