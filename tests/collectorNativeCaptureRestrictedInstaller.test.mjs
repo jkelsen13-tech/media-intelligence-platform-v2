@@ -187,6 +187,7 @@ test('restricted installer: password login, owner privileges, rollback and compl
       const client=await connectAuthenticatedPg({connectionString:connection(names[kind],passwords[kind]),expectedLogin:names[kind],effectiveRole:kind==='native'?'service_role':null,disposable:true})
       clients.push(client)
       assert.equal((await client.query('select session_user::text login')).rows[0].login,names[kind])
+      assert.equal((await client.query("select setting from pg_settings where name='statement_timeout'")).rows[0].setting,'1000')
     }
     stage='qualification'
     const result=await runAuthenticatedQualification({admin,collector:clients[0],native:clients[1],cas:clients[2],manifest,token})
@@ -238,3 +239,4 @@ test('restricted installer: password login, owner privileges, rollback and compl
     if(primary||errors.length)throw new AggregateError([...(primary?[primary]:[]),...errors],'restricted_installer_verification_failed')
   }
 })
+
