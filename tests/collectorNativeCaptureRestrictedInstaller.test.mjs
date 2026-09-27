@@ -160,6 +160,9 @@ test('restricted installer: password login, owner privileges, rollback and compl
     try {
       await admin.query('update qik_ingest.collection_gate set collection_authorized=true where id')
       await admin.query("update public.ingest_sources set enabled=true,collection_enabled=true where id='11111111-1111-4111-8111-111111111111'")
+      // Existing explicit SET membership is part of the restricted installer
+      // contract; this probe uses function-owner execution, not extra RPC grants.
+      await admin.query('set local role qik_ingest_fn_owner')
       const plan=(await admin.query('select public.mip_qik_ingest_plan($1) result',[token])).rows[0].result
       assert.equal(plan.sources[0].outlet_name,'Example World')
       const probeRun='qik-outlet-join-'+operationId
@@ -167,6 +170,7 @@ test('restricted installer: password login, owner privileges, rollback and compl
       const observed=(await admin.query("select public.mip_qik_ingest_retain_item($1,$2,'11111111-1111-4111-8111-111111111111',$3::jsonb) result",[token,probeRun,JSON.stringify({url:'https://qualification.invalid/outlet-join/'+operationId,title:'Joined outlet probe'})])).rows[0].result
       assert.equal(observed.article.outlet,'Example World')
       await admin.query("select public.mip_qik_ingest_record_source_run($1,$2,'11111111-1111-4111-8111-111111111111','succeeded',1,0,null,null)",[token,probeRun])
+      await admin.query('reset role')
       assert.equal((await admin.query('select outlet_name from public.ingestion_source_runs where run_id=$1',[probeRun])).rows[0].outlet_name,'Example World')
     }finally{await admin.query('rollback')}
     assert.equal((await admin.query('select outlet_id from public.ingest_sources where id=$1',[manifest.sourceId])).rows[0].outlet_id,null)
