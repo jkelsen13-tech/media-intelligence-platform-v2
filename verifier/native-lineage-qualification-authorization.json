@@ -1,0 +1,117 @@
+{
+  "status": "internal_qualification_authorized_user_amendment",
+  "material": "synthetic_only",
+  "origin": "cc8f1b19171917351548362f82f03fa2b1684831",
+  "reviewed_source_commit": "69705c9822848d45184bc0b54ce32ba4f5b8cf26",
+  "reviewed_source_tree": "6500a74c5fe2d9f905e2fcda302d99deaa3fc1be",
+  "patch_sha256": "7eaa205729c5683afb9e9d2fb95b38e1801d37c93e80fc5bb9550c29ab39cf94",
+  "source_manifest_sha256": "7529e8201824c444b5f16bb97ab32e7855a4ae819d242f78d507f7eed9dcd9ac",
+  "source_reviewed_identity": {
+    "files": [
+      {
+        "bytes": 15322,
+        "path": "docs/NATIVE_LINEAGE_MINIMIZATION_QUALIFICATION_SOURCE_CANDIDATE.md",
+        "sha256": "eb02477c1f1b49e639b7614446546f7395a3fbc3d5786b03627aafbe5f3b18a7",
+        "status": "new"
+      },
+      {
+        "bytes": 7077,
+        "path": "supabase/functions/source-comparison-generation-candidate/workerV2.js",
+        "sha256": "5032ee3f00a7f9be5a354cc9753a56339d6664dbe3d730e19d71cdf39da0b398",
+        "status": "modified"
+      },
+      {
+        "bytes": 13114,
+        "path": "supabase/qualification/comparison-generations/contract.sql",
+        "sha256": "2e40f7ef8962df3a3711b60683bd6e12ef5bccdeceac288381520ffb0ddf7a2d",
+        "status": "modified"
+      },
+      {
+        "bytes": 23876,
+        "path": "supabase/qualification/comparison-generations/source-snapshot.sql",
+        "sha256": "f05abdbda2b2f72d3aff747266c9a1db3f47ec122a6bbba7a21ac7b55875452e",
+        "status": "modified"
+      },
+      {
+        "bytes": 15237,
+        "path": "supabase/qualification/mip-cutover-authority/006_collector_reconciliation.sql",
+        "sha256": "2ea14219d83ed4d4f0c52b3363029d9669251c15b30646fbf261c40e9c38ae94",
+        "status": "modified"
+      },
+      {
+        "bytes": 33128,
+        "path": "supabase/qualification/mip-cutover-authority/007_survivor_release.sql",
+        "sha256": "0e0d46e4ca518d9e5a349735560888d6a336affe17de491ee6777ce74b1efd66",
+        "status": "modified"
+      },
+      {
+        "bytes": 11284,
+        "path": "supabase/qualification/mip-cutover-authority/013_worker_journal.sql",
+        "sha256": "d3c26967042f11b6c9e11d971eaf1ec7059b44c440e5ee1b5c4b3472fca5117d",
+        "status": "modified"
+      },
+      {
+        "bytes": 6689,
+        "path": "supabase/qualification/mip-cutover-authority/017_native_capture_review.sql",
+        "sha256": "2b7961ab03b4fa93be5ab63ade6bdcaa7878a9aa01a9c9e5e78486665b432540",
+        "status": "modified"
+      },
+      {
+        "bytes": 8680,
+        "path": "supabase/qualification/mip-cutover-authority/018_accepted_comparison_reader.sql",
+        "sha256": "27c1d91136caab633146c6cbad4ba8a6372f235937f494b86980355f8782326d",
+        "status": "modified"
+      },
+      {
+        "bytes": 35297,
+        "path": "supabase/qualification/mip-cutover-authority/019_native_retention_permissions.sql",
+        "sha256": "20c3f55db4153e04c08bfb15dc2a42dc9e78638d56b810b15ae182b5fbffdf52",
+        "status": "new"
+      },
+      {
+        "bytes": 8780,
+        "path": "tests/comparisonNativeCaptureReview.test.mjs",
+        "sha256": "d14812b0f3cdd8dfe3427ede004667a936f54b1586c088c95bf8333bdfbfded5",
+        "status": "modified"
+      },
+      {
+        "bytes": 10898,
+        "path": "tests/nativeLineageMinimization.test.mjs",
+        "sha256": "abd472610c817feaa199be92d0db119777fd7958f7aed4038305110dfbc0f4c6",
+        "status": "new"
+      },
+      {
+        "bytes": 11368,
+        "path": "verifier/native-lineage-minimization-source-candidate.json",
+        "sha256": "7529e8201824c444b5f16bb97ab32e7855a4ae819d242f78d507f7eed9dcd9ac",
+        "status": "new"
+      },
+      {
+        "bytes": 40305,
+        "path": "verifier/nativeLineageMinimizationPostgres.py",
+        "sha256": "95c5d31a402cbdd9fe2baf768055ba34b32c44734c020ba45f88dc8d863fcd65",
+        "status": "new"
+      },
+      {
+        "bytes": 911,
+        "path": "verifier/nativeLineageWorkerFixture.mjs",
+        "sha256": "7b9efe063cff1e246cd7d639bae241dbc4d08f42bea0b92137a3aaf1b53318a2",
+        "status": "new"
+      }
+    ]
+  },
+  "historical_protected_files": [
+    {
+      "path": "verifier/efta-postgres-qualification-manifest.json",
+      "sha256": "841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9"
+    },
+    {
+      "path": "verifier/eftaPostgresQualification.py",
+      "sha256": "000eac69f781f1803c19d98ac44388400ee8324feeeb4cd6498e8a984ef65f10"
+    }
+  ],
+  "qualification_is_acceptance": false,
+  "owner_field_signature": null,
+  "user_amendment_reference": "Current session owner amendment authorizes qualification and retesting on existing resources; synthetic material only; maximum $25 one-time and $10 monthly, no new services or upgrades. Execution scope only, not publication acceptance or owner-field signature.",
+  "result": "NOT RUN"
+}
