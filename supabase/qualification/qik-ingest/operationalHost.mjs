@@ -10,7 +10,7 @@ function refused(){throw Error('operational_host_configuration_refused')}
 const sha=value=>typeof value==='string'&&/^[a-f0-9]{40}$/.test(value)
 
 export function assertExactSourcePlan(plan,source){
- if(!plan?.collection_authorized||!Array.isArray(plan.sources)||plan.sources.length!==1
+ if(plan?.collection_authorized!==true||!Array.isArray(plan.sources)||plan.sources.length!==1
    ||plan.sources[0]?.id!==source.id||plan.sources[0]?.feed_url!==source.feedUrl)
    throw Error('operational_host_source_plan_refused')
 }
@@ -68,7 +68,10 @@ export async function runOperationalHost({env=process.env,source,disposable=fals
    if(!result||result.run_id!==config.runId||
      !['completed','completed_with_errors','failed','native_host_failed','native_host_refused'].includes(result.state))
      return {state:'operational_host_ambiguous',needs_reconciliation:true,connection_closed:false}
-   const safe={run_id:config.runId,state:result.state,http_status:result.http_status??null,
+   const code=result.http_status
+   if(code!==null&&(!Number.isSafeInteger(code)||code<100||code>599))
+     return {state:'operational_host_ambiguous',needs_reconciliation:true,connection_closed:result.connection_closed===true}
+   const safe={run_id:config.runId,state:result.state,http_status:code,
      connection_closed:result.connection_closed===true,
      needs_reconciliation:result.needs_reconciliation===true||result.state!=='completed'||result.connection_closed!==true}
    for(const key of ['inserted','duplicates','revisions','rejected','unresolved','failed_jobs',
@@ -78,6 +81,13 @@ export async function runOperationalHost({env=process.env,source,disposable=fals
          return {state:'operational_host_ambiguous',needs_reconciliation:true,connection_closed:safe.connection_closed}
        safe[key]=result[key]
      }
+   }
+   if(result.state==='completed'){
+     const required=['inserted','duplicates','revisions','rejected','unresolved','failed_jobs',
+       'source_failures','extracted_captures','extraction_incomplete']
+     if(code!==200||required.some(key=>!Number.isSafeInteger(safe[key]))||
+       ['unresolved','failed_jobs','source_failures','extraction_incomplete'].some(key=>safe[key]!==0))
+       return {state:'operational_host_inconsistent',needs_reconciliation:true,connection_closed:safe.connection_closed}
    }
    return safe
  }catch{
