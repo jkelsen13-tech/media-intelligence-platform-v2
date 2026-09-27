@@ -2,6 +2,7 @@ name: EFTA isolated PostgreSQL 17 qualification
 on:
   push:
     branches:
+      - codex/native-lineage-minimization-20260927
       - codex/mip-efta-qualification-remediation-20260916
       - codex/mip-efta-runtime-auth-remediation-20260918
     paths:
@@ -39,7 +40,7 @@ permissions:
   contents: read
 jobs:
   postgres-qualification:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.qualification == 'historical' }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.qualification == 'historical') && !(github.event_name == 'push' && github.ref == 'refs/heads/codex/native-lineage-minimization-20260927') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -73,7 +74,7 @@ jobs:
 
   # Authored route; no qualification result is asserted by this source.
   native-lineage-qualification:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.qualification == 'native-lineage-v2' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.qualification == 'native-lineage-v2') || (github.event_name == 'push' && github.ref == 'refs/heads/codex/native-lineage-minimization-20260927') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     permissions:
@@ -94,7 +95,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 4
+          fetch-depth: 8
           persist-credentials: false
       - name: Verify reviewed source and internal qualification authority
         env:
@@ -106,7 +107,9 @@ jobs:
           root=pathlib.Path.cwd().resolve()
           def require(ok,code):
               if not ok: raise SystemExit(code)
-          require(os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch' and os.environ.get('MIP_QUALIFICATION_CHOICE')=='native-lineage-v2','native_qualification_wrong_event')
+          manual=os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch' and os.environ.get('MIP_QUALIFICATION_CHOICE')=='native-lineage-v2'
+          native_push=os.environ.get('GITHUB_EVENT_NAME')=='push' and os.environ.get('GITHUB_REF')=='refs/heads/codex/native-lineage-minimization-20260927'
+          require(manual or native_push,'native_qualification_wrong_event')
           head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           require(re.fullmatch('[0-9a-f]{40}',head) and head==os.environ.get('GITHUB_SHA'),'native_qualification_wrong_checkout')
           config=subprocess.check_output(['git','config','--local','--list'],text=True)
