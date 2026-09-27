@@ -17,6 +17,8 @@ async function hiddenAdminUrl() {
 const env=process.env
 if(process.argv[2]!=='--execute' || env.MIP_CNC_AUTHORIZATION!=='owner-authorized-qik-synthetic-driver') throw Error('cnc_explicit_remote_execution_authorization_required')
 const operationId=env.MIP_CNC_OPERATION_ID||randomBytes(16).toString('hex'),names=operationNames(operationId)
+const reuseDisabledSourceId=env.MIP_CNC_REUSE_DISABLED_SOURCE_ID||null
+if(reuseDisabledSourceId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(reuseDisabledSourceId))throw Error('cnc_source_id_invalid')
 const sessionPoolerHost=env.MIP_CNC_OBSERVED_SESSION_POOLER_HOST||null
 const adminUrl=process.argv.includes('--prompt-admin-url')?await hiddenAdminUrl():env.MIP_CNC_ADMIN_DATABASE_URL
 const url=connectionTarget(adminUrl,'postgres',false,sessionPoolerHost)
@@ -31,7 +33,7 @@ try {
   if(who.login!=='postgres'||who.effective!=='postgres')throw Error('cnc_admin_identity_refused')
   const watermarkBaseline=await readForwardWatermark(admin)
   await installOwnedPackages(admin,operationId);installed=true
-  const manifest=await bootstrapAuthenticatedOperation(admin,{operationId,passwords,token,watermarkBaseline,sourceId:randomUUID(),investigation:randomUUID(),userId:randomUUID()})
+  const manifest=await bootstrapAuthenticatedOperation(admin,{operationId,passwords,token,watermarkBaseline,sourceId:reuseDisabledSourceId||randomUUID(),reuseDisabledSource:!!reuseDisabledSourceId,investigation:randomUUID(),userId:randomUUID()})
   bootstrapped=true
   for(const kind of ['collector','native','cas']) {
     const runtimeUrl=new URL(url.href)
