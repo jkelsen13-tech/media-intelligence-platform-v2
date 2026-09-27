@@ -222,8 +222,8 @@ begin
  and ev->>'content_hash'=lineage->>'content_hash'
  and ev->>'field'=k->>'source_field' and ev->'span_start'=k->'span_start' and ev->'span_end'=k->'span_end'
  and ev->>'excerpt'=k->>'excerpt' and k->>'excerpt'=surface->>'surface_text'
- and ev->>'field_hash'=case when p_input?'native_lineage_version' then k->>'field_hash'
-   else encode(sha256(convert_to(lineage->'payload'->>(k->>'source_field'),'UTF8')),'hex') end
+ and ev->>'field_hash'=(case when p_input?'native_lineage_version' then k->>'field_hash'
+   else encode(sha256(convert_to(lineage->'payload'->>(k->>'source_field'),'UTF8')),'hex') end)
  then valid:=true;end if;
  end loop;
  if not valid then raise exception 'mip_native_review_span_unbound';end if;
