@@ -111,6 +111,7 @@ test('authenticated native collector/CAS: real logins, exact bytes, three runs, 
       clients.push(client)
       const identity=(await client.query('select session_user::text login,current_user::text effective')).rows[0]
       assert.equal(identity.login,names[kind]);assert.equal(identity.effective,kind==='native'?'service_role':names[kind])
+      assert.equal((await client.query("select setting from pg_settings where name='statement_timeout'")).rows[0].setting,'1000')
     }
     stage='qualification'
     const result=await runAuthenticatedQualification({admin,collector:clients[0],native:clients[1],cas:clients[2],manifest,token})
@@ -155,3 +156,4 @@ test('authenticated native collector/CAS: real logins, exact bytes, three runs, 
     if(primary||cleanupErrors.length)throw new AggregateError([...(primary?[primary]:[]),...cleanupErrors],'cnc_disposable_verification_failed')
   }
 })
+
