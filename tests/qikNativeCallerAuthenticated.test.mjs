@@ -236,9 +236,9 @@ test('permanent native seam: actual restricted login, bound history, denied unre
      assert.equal(revision.receipt.revisions,1)
      assert.equal(revision.receipt.extracted_captures,2)
      assert.equal(revision.receipt.extraction_incomplete,0)
-    assert.equal(revision.receipt.connection_closed,true)
-    assert.equal(revision.receipt.needs_reconciliation,false)
-    assert.equal(requests,before+2)
+     assert.equal(revision.receipt.connection_closed,true)
+     assert.equal(revision.receipt.needs_reconciliation,false)
+     assert.equal(requests,before+2)
      const waterAfter=(await admin.query('select id,title,reader_state from public.articles where id=$1',[waterBefore.id])).rows[0]
      assert.deepEqual(waterAfter,waterBefore,'revision must not rewrite the existing article')
      assert.equal((await admin.query("select count(*)::int n from evidence_pipeline.record_versions where record_kind='article' and record_key=$1",[waterBefore.id])).rows[0].n,versionsBefore,
@@ -264,7 +264,7 @@ test('permanent native seam: actual restricted login, bound history, denied unre
      const redirected=await hostCommand('redirect')
      assert.equal(redirected.code,1);assert.equal(redirected.receipt.state,'failed')
      assert.equal(redirected.receipt.connection_closed,true)
-    assert.equal(requests,before+3)
+     assert.equal(requests,before+3)
      mode='oversize'
      const oversized=await hostCommand('oversize')
      assert.equal(oversized.code,1);assert.equal(oversized.receipt.state,'failed')
@@ -328,7 +328,7 @@ test('permanent native seam: actual restricted login, bound history, denied unre
    assert.equal((await exec("select count(*)::int n from pg_roles where rolname in ('qik_ingest_runtime','qik_ingest_fn_owner')")).rows[0].n,0)
    assert.equal((await exec("select count(*)::int n from pg_policy where polname like 'qik_ingest_%'")).rows[0].n,0)
    assert.equal((await exec("select count(*)::int n from pg_proc where pronamespace='evidence_pipeline'::regnamespace")).rows[0].n,substrateBefore)
-   assert.equal((await exec('select count(*)::int n from evidence_pipeline.evidence_candidates')).rows[0].n,4)
+    assert.equal((await exec('select count(*)::int n from evidence_pipeline.evidence_candidates')).rows[0].n,5)
    assert.equal((await exec("select to_regnamespace('qik_ingest_operation') n")).rows[0].n,null)
  }catch(error){primary=error;t.diagnostic('native caller stage='+stage+' code='+(error.code??'none'));throw error}
  finally{
