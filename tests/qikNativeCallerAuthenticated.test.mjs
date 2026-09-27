@@ -236,8 +236,9 @@ test('permanent native seam: actual restricted login, bound history, denied unre
      assert.equal(revision.receipt.revisions,1)
      assert.equal(revision.receipt.extracted_captures,2)
      assert.equal(revision.receipt.extraction_incomplete,0)
-     assert.equal(revision.receipt.connection_closed,true)
-     assert.equal(revision.receipt.needs_reconciliation,false)
+    assert.equal(revision.receipt.connection_closed,true)
+    assert.equal(revision.receipt.needs_reconciliation,false)
+    assert.equal(requests,before+2)
      const waterAfter=(await admin.query('select id,title,reader_state from public.articles where id=$1',[waterBefore.id])).rows[0]
      assert.deepEqual(waterAfter,waterBefore,'revision must not rewrite the existing article')
      assert.equal((await admin.query("select count(*)::int n from evidence_pipeline.record_versions where record_kind='article' and record_key=$1",[waterBefore.id])).rows[0].n,versionsBefore,
@@ -263,7 +264,7 @@ test('permanent native seam: actual restricted login, bound history, denied unre
      const redirected=await hostCommand('redirect')
      assert.equal(redirected.code,1);assert.equal(redirected.receipt.state,'failed')
      assert.equal(redirected.receipt.connection_closed,true)
-     assert.equal(requests,before+2)
+    assert.equal(requests,before+3)
      mode='oversize'
      const oversized=await hostCommand('oversize')
      assert.equal(oversized.code,1);assert.equal(oversized.receipt.state,'failed')
