@@ -173,7 +173,10 @@ test('permanent native seam: actual restricted login, bound history, denied unre
      requests++
      if(mode==='redirect'){response.writeHead(302,{location:'http://127.0.0.1:1/forbidden'});response.end();return}
      response.writeHead(200,{'content-type':'application/rss+xml'})
-     response.end(mode==='oversize'?'x'.repeat(1048577):mode==='unresolved'?FEED.replace('https://news.example/water','https://news.example/host-waiting'):FEED)
+     response.end(mode==='oversize'?'x'.repeat(1048577)
+       :mode==='unresolved'?FEED.replace('https://news.example/water','https://news.example/host-waiting')
+       :mode==='revision'?FEED.replace('Council Approves Water Plan','Council Updates Water Plan Again')
+       :FEED)
    })
    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
    const feedUrl='http://127.0.0.1:'+server.address().port+'/feed.xml'
@@ -217,10 +220,45 @@ test('permanent native seam: actual restricted login, bound history, denied unre
      assert.equal(success.receipt.connection_closed,true)
      assert.equal(success.receipt.needs_reconciliation,false)
      assert.equal(success.receipt.duplicates,2)
+     assert.equal(success.receipt.extracted_captures,2)
      assert.equal(requests,before+1)
+     const waterBefore=(await admin.query("select id,title,reader_state from public.articles where url='https://news.example/water'")).rows[0]
+     const versionsBefore=(await admin.query("select count(*)::int n from evidence_pipeline.record_versions where record_kind='article' and record_key=$1",[waterBefore.id])).rows[0].n
      // Explicit run IDs are not silently retried or reused after completion.
      assert.equal((await hostCommand('actual-host')).code,1)
      assert.equal(requests,before+1)
+     mode='revision'
+     const revision=await hostCommand('actual-host-revision')
+     assert.equal(revision.code,0,JSON.stringify(revision.receipt))
+     assert.equal(revision.receipt.state,'completed')
+     assert.equal(revision.receipt.inserted,0)
+     assert.equal(revision.receipt.duplicates,1)
+     assert.equal(revision.receipt.revisions,1)
+     assert.equal(revision.receipt.extracted_captures,2)
+     assert.equal(revision.receipt.extraction_incomplete,0)
+     assert.equal(revision.receipt.connection_closed,true)
+     assert.equal(revision.receipt.needs_reconciliation,false)
+     const waterAfter=(await admin.query('select id,title,reader_state from public.articles where id=$1',[waterBefore.id])).rows[0]
+     assert.deepEqual(waterAfter,waterBefore,'revision must not rewrite the existing article')
+     assert.equal((await admin.query("select count(*)::int n from evidence_pipeline.record_versions where record_kind='article' and record_key=$1",[waterBefore.id])).rows[0].n,versionsBefore,
+       'a pending revision must preserve the original article version history')
+     const lineage=(await admin.query(`
+       select j.outcome,c.review_state capture_review,ec.review_state candidate_review,
+         c.payload->>'title' capture_title,ec.source_field,ec.excerpt,
+         substring(c.payload->>ec.source_field from ec.span_start+1 for ec.span_end-ec.span_start)=ec.excerpt span_matches
+       from qik_ingest.observed_items o
+       join evidence_pipeline.import_jobs j on j.id=o.native_job_id
+       join evidence_pipeline.article_captures c on c.job_id=j.id
+       join evidence_pipeline.evidence_candidates ec on ec.capture_id=c.id
+       where o.run_id=$1 and o.url='https://news.example/water'`,['qik-host-'+id+'-actual-host-revision'])).rows
+     assert.ok(lineage.length>0,'changed host input must reach retained extraction')
+     for(const row of lineage){
+       assert.equal(row.outcome,'revision_pending')
+       assert.equal(row.capture_review,'pending')
+       assert.equal(row.candidate_review,'pending')
+       assert.equal(row.capture_title,'Council Updates Water Plan Again')
+       assert.equal(row.span_matches,true,'candidate span must match its exact retained capture')
+     }
      mode='redirect'
      const redirected=await hostCommand('redirect')
      assert.equal(redirected.code,1);assert.equal(redirected.receipt.state,'failed')
