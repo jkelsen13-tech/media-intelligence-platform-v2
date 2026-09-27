@@ -2,6 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {PGlite} from '@electric-sql/pglite'
+import {createHash,randomUUID} from 'node:crypto'
+import {processGenerationClaim} from '../supabase/functions/source-comparison-generation-candidate/workerV2.js'
 import {runEventProjection} from '../supabase/runtime-snapshots/source-comparison-run-v16/lib.js'
 import {comparisonProjectionConfig} from '../supabase/runtime-snapshots/source-comparison-run-v16/projectionConfig.js'
 const read=path=>readFile(new URL(path,import.meta.url),'utf8')
@@ -33,8 +35,24 @@ test('capture retains exact selected rows, metadata and usable projection input 
  assert.ok(output.claims.length>0)
  const job=(await db.query('select comparison_qualification.claim() value')).rows[0].value
  assert.equal(job.generation_id,id);assert.equal(job.input_text,raw)
- assert.equal((await db.query('select comparison_qualification.complete($1,$2,$3,$4,$5::jsonb) value',
- [id,job.lease_token,job.input_hash,impl,JSON.stringify(output)])).rows[0].value,'completed')
+ const rpc=async(name,args)=>{
+  if(name==='worker_complete')return(await db.query(
+   'select comparison_qualification.complete($1,$2,$3,$4,$5::jsonb) value',
+   [args.p_generation,args.p_token,args.p_input_hash,args.p_implementation,JSON.stringify(args.p_output)])).rows[0].value
+  if(name==='worker_fail')return(await db.query(
+   'select comparison_qualification.fail($1,$2,$3,$4) value',
+   [args.p_generation,args.p_token,args.p_input_hash,args.p_implementation])).rows[0].value
+  throw Error('unexpected synthetic snapshot RPC')
+ }
+ const result=await processGenerationClaim({rpc,requestId:()=>randomUUID(),session:'synthetic-snapshot',
+  runtime:'synthetic-snapshot',implementation:impl,
+  sha256:value=>createHash('sha256').update(value).digest('hex')},job)
+ assert.equal(result.state,'completed')
+ const retained=(await db.query('select output_payload from comparison_qualification.outputs where generation_id=$1',[id])).rows[0].output_payload
+ assert.deepEqual(retained.projection,output)
+ assert.equal(retained.generation_id,id)
+ assert.equal(retained.input_hash,job.input_hash)
+ assert.deepEqual(retained.snapshot_metadata,input.snapshot_metadata)
 })
 
 test('later source, membership and configuration changes create independent retained input and preserve the old generation',async t=>{
