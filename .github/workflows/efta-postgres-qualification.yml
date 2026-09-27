@@ -94,7 +94,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 1
+          fetch-depth: 4
           persist-credentials: false
       - name: Verify reviewed source and internal qualification authority
         env:
@@ -128,6 +128,15 @@ jobs:
                   require(file.is_file() and not file.is_symlink() and file.resolve().is_relative_to(root) and re.fullmatch('[0-9a-f]{64}',digest),'native_qualification_file')
                   require(hashlib.sha256(file.read_bytes()).hexdigest()==digest,'native_qualification_digest_mismatch')
               return paths
+          source='69705c9822848d45184bc0b54ce32ba4f5b8cf26'
+          require(a.get('reviewed_source_commit')==source and a.get('reviewed_source_tree')=='6500a74c5fe2d9f905e2fcda302d99deaa3fc1be','native_qualification_review_binding')
+          tree=subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()
+          require(tree=='6500a74c5fe2d9f905e2fcda302d99deaa3fc1be','native_qualification_review_tree')
+          require(subprocess.run(['git','merge-base','--is-ancestor',source,head],check=False).returncode==0,'native_qualification_review_ancestry')
+          delta=set(subprocess.check_output(['git','diff','--name-only',source,head],text=True).splitlines())
+          require(delta=={'.github/workflows/efta-postgres-qualification.yml','verifier/native-lineage-qualification-authorization.json'},'native_qualification_dependency_tree_changed')
+          expected_protected={'verifier/efta-postgres-qualification-manifest.json':'841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9','verifier/eftaPostgresQualification.py':'000eac69f781f1803c19d98ac44388400ee8324feeeb4cd6498e8a984ef65f10'}
+          require(isinstance(protected,list) and len(protected)==2 and {r['path']:r['sha256'] for r in protected}==expected_protected,'native_qualification_historical_identity')
           reviewed_paths=inventory(reviewed); inventory(protected)
           manifest='verifier/native-lineage-minimization-source-candidate.json'
           require(manifest in reviewed_paths and hashlib.sha256((root/manifest).read_bytes()).hexdigest()==a['source_manifest_sha256'],'native_qualification_manifest_mismatch')
