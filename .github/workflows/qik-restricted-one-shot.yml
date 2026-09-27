@@ -35,12 +35,13 @@ jobs:
       - name: Refuse any action rerun or changed release
         env:
           RELEASE_SHA: ${{ inputs.release_sha }}
+          QIK_APPROVED_RELEASE_SHA: ${{ vars.QIK_APPROVED_RELEASE_SHA }}
         shell: bash
         run: |
           set -euo pipefail
           test "$GITHUB_RUN_ATTEMPT" = 1
-          test "$GITHUB_SHA" = "$RELEASE_SHA"
           [[ "$RELEASE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$RELEASE_SHA" = "$QIK_APPROVED_RELEASE_SHA"
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.release_sha }}
@@ -49,7 +50,10 @@ jobs:
         env:
           RELEASE_SHA: ${{ inputs.release_sha }}
         shell: bash
-        run: test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          printf 'MIP_QIK_CHECKED_OUT_SHA=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
         with:
           node-version: 22.14.0
@@ -69,7 +73,7 @@ jobs:
         env:
           MIP_QIK_OPERATIONAL_ENABLED: owner-authorized-one-shot
           MIP_QIK_RELEASE_SHA: ${{ inputs.release_sha }}
-          MIP_QIK_EXPECTED_RELEASE_SHA: ${{ github.sha }}
+          MIP_QIK_EXPECTED_RELEASE_SHA: ${{ vars.QIK_APPROVED_RELEASE_SHA }}
           MIP_QIK_NATIVE_RUN_ID: ${{ inputs.run_id }}
           MIP_QIK_SOURCE_ID: ${{ vars.QIK_FORWARD_SOURCE_ID }}
           MIP_QIK_SOURCE_FEED_URL: ${{ vars.QIK_FORWARD_SOURCE_FEED_URL }}
