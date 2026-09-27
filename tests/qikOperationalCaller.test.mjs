@@ -8,6 +8,7 @@ const localSource = Object.freeze({...FORWARD_SOURCE, feedUrl: 'http://127.0.0.1
 function environment() {
   return {
     MIP_QIK_OPERATIONAL_ENABLED: 'owner-authorized-one-shot',
+    MIP_DISPOSABLE_POSTGRES: 'qik-native-caller',
     MIP_QIK_SOURCE_ID: localSource.id, MIP_QIK_SOURCE_FEED_URL: localSource.feedUrl,
     MIP_QIK_RELEASE_SHA: '82bc1a501cf3fca9eb40cf52c23889db340fbc75',
     MIP_QIK_EXPECTED_RELEASE_SHA: '82bc1a501cf3fca9eb40cf52c23889db340fbc75',
@@ -18,7 +19,7 @@ function environment() {
   }
 }
 const complete = config => ({run_id: config.runId, state: 'completed', connection_closed: true,
-  needs_reconciliation: false, http_status: 200, inserted: 2, duplicates: 0, unresolved: 0,
+  needs_reconciliation: false, http_status: 200, inserted: 2, duplicates: 0, revisions: 0, rejected: 0, source_failures: 0, unresolved: 0,
   failed_jobs: 0, extracted_captures: 2, extraction_incomplete: 0})
 
 test('operational wrapper refuses disabled, source drift and host retry configuration before execution', async () => {
@@ -27,7 +28,7 @@ test('operational wrapper refuses disabled, source drift and host retry configur
     {MIP_QIK_SOURCE_ID: '00000000-0000-4000-8000-000000000001'},
     {MIP_QIK_SOURCE_FEED_URL: localSource.feedUrl + '?drift=1'},
     {MIP_QIK_EXPECTED_RELEASE_SHA: '0'.repeat(40)},
-    {GITHUB_SHA: '0'.repeat(40)}, {GITHUB_RUN_ATTEMPT: '2'},
+    {MIP_QIK_CHECKED_OUT_SHA: '0'.repeat(40)}, {GITHUB_RUN_ATTEMPT: '2'},
     {CLOUD_RUN_TASK_COUNT: '2'}, {CLOUD_RUN_TASK_INDEX: '1'}, {CLOUD_RUN_TASK_ATTEMPT: '1'},
     {MIP_QIK_NATIVE_RUN_ID: 'unbounded-run'}, {MIP_QIK_NATIVE_LOGIN: 'postgres'},
     {MIP_QIK_INGEST_RUN_KEY: 'short'},
