@@ -137,6 +137,15 @@ begin
   if p_input_hash is distinct from g.input_hash or p_implementation is distinct from g.implementation_ref then
     raise exception 'comparison input binding mismatch';
   end if;
+  -- The saved generation chooses the v2 contract; caller markers cannot bypass
+  -- minimization. Legacy generations retain their exact completion/retry shape.
+  if g.input_payload?'native_lineage_version' then
+    if p_output->>'generation_id' is distinct from p_generation::text
+      or p_output->>'input_hash' is distinct from p_input_hash
+      or p_output->>'implementation_ref' is distinct from p_implementation then
+      raise exception 'mip_native_output_binding';end if;
+    perform comparison_qualification.check_native_lineage_output(g.input_payload,p_output);
+  end if;
   v_hash:=encode(sha256(convert_to(p_output::text,'UTF8')),'hex');
   if j.state='completed' then
     select * into strict prior from comparison_qualification.outputs where generation_id=p_generation;
