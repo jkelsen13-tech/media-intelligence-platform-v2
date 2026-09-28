@@ -147,9 +147,9 @@ test('catalog additions remain source-specific and preserve complete dependency 
   const x=fixture()
   const expected={
     [PROJECTS.nie]:{article_claims:13,article_entities:6,article_entities_canary_sweep_backup_20260809:6,
-      article_lineage_assertions:17,claims:9,claim_evidence_links:6,entities:8,authors:12,outlets:7,story_arcs:16,arc_events:7},
+      article_lineage_assertions:17,claims:9,claim_evidence_links:6,entities:8,authors:11,outlets:7,story_arcs:16,arc_events:7},
     [PROJECTS.yhb]:{article_claims:17,article_entities:6,article_extraction_results:11,gdelt_staged_articles:21,
-      claims:9,claim_evidence_links:6,entities:8,authors:12,outlets:7,story_arcs:17,arc_events:8,gdelt_staging_runs:14},
+      claims:9,claim_evidence_links:6,entities:8,authors:11,outlets:7,story_arcs:17,arc_events:8,gdelt_staging_runs:13},
   }
   let ordinal=100
   for(const [project,tables] of Object.entries(expected)) {
