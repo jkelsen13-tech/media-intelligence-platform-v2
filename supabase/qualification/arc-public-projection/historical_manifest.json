@@ -1,0 +1,1010 @@
+{
+  "contract": "arc-public-projection-historical-fixture-v1",
+  "purpose": "synthetic exact historical algorithm qualification; not native manual publication authority",
+  "source_ref": "79f25d3519d26fd0dbda37fd0728e5783c04834a",
+  "schema_metadata_blobs": [
+    "9f3ad8a71a2a81b0168fddc031a78be3e1f8f09d",
+    "b85eccfe5952d7dc85c78a5b814e678e175d66a7"
+  ],
+  "files": [
+    {
+      "path": "supabase/qualification/arc-public-projection/recovered_milestone_outcome.sql",
+      "blob": "3dbcf5fa80cb182b26d443044e58b17b12f6121b",
+      "sha256": "b82b49f1ce1a093da035e80a2de98bf0478ce3bf1a8a30ead44a0f3c4cdd7893"
+    },
+    {
+      "path": "supabase/qualification/arc-public-projection/recovered_milestone_refresh.sql",
+      "blob": "3d2b05014e8dd22abffe6a9fa2d41db8824bd3e9",
+      "sha256": "0383af905b9451f8318748756cb9efa1e87c59e41d93f419ad4fe9ec4b99faa7"
+    },
+    {
+      "path": "supabase/qualification/arc-public-projection/recovered_candidate_touch.sql",
+      "blob": "2b474cb7dcf7dbc80867521c94ea6f80dbc0d5cd",
+      "sha256": "93a38d3207377c51dff1528b0b5e4d2368f64f69a0db931040528b25fa9530bb"
+    },
+    {
+      "path": "supabase/qualification/arc-public-projection/recovered_projector.sql",
+      "blob": "1060e1aa6424b67ed7e03b5fd6f9c2cde6a51f4c"
+    },
+    {
+      "path": "supabase/qualification/arc-public-projection/recovered_approver.sql",
+      "blob": "1a1fcf4c26f214dad3ef2b616f47b08246c64802"
+    },
+    {
+      "path": "supabase/migrations/20260813_atomic_arc_attach.sql",
+      "blob": "3ff55bf40d58dc9687b1f7190c21fc8c25b43c44"
+    },
+    {
+      "path": "supabase/production-candidates/backend-consolidation-security/qualification/yhb_arc_projection_retract_native.sql",
+      "blob": "71ba79a29786279e04a7c08d30808c349cb0fe66",
+      "selected_functions": [
+        "public.mip_retract_arc_membership_projection",
+        "public.mip_arc_membership_projection_state_change"
+      ]
+    },
+    {
+      "path": "supabase/migrations/20260905172527_mip_public_surface_predicates.sql",
+      "blob": "b46b7a62252f0f6355736ee0c68a51503131bf8d",
+      "selected_functions": [
+        "public.mip_intercept_direct_arc_attachment",
+        "public.mip_invalidate_arc_membership_approvals",
+        "public.policy_edge_attributed"
+      ]
+    },
+    {
+      "path": "supabase/schema.sql",
+      "blob": "9f3184a40b8f70963b87c04d3ac63885d007cc0f",
+      "selected_functions": [
+        "public.touch_updated_at"
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "name": "arc_events",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "arc_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "confidence",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "occurred_at",
+          "type": "date",
+          "not_null": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "arc_membership_candidate_id",
+          "type": "uuid",
+          "not_null": false
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "name": "arc_membership_candidates",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "article_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "arc_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "generation_method",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "generation_evidence",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "state",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "membership_fingerprint",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "membership_fingerprint_hash",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "invalidated_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "approved_score_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "approved_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        }
+      ],
+      "triggers": [
+        {
+          "name": "arc_membership_candidate_projection_state_change",
+          "type": 17,
+          "enabled": "O",
+          "function": "mip_arc_membership_projection_state_change()",
+          "definition": "CREATE TRIGGER arc_membership_candidate_projection_state_change AFTER UPDATE OF state ON public.arc_membership_candidates FOR EACH ROW EXECUTE FUNCTION mip_arc_membership_projection_state_change()"
+        },
+        {
+          "name": "arc_membership_candidate_touch",
+          "type": 19,
+          "enabled": "O",
+          "function": "mip_touch_arc_membership_candidate()",
+          "definition": "CREATE TRIGGER arc_membership_candidate_touch BEFORE UPDATE ON public.arc_membership_candidates FOR EACH ROW EXECUTE FUNCTION mip_touch_arc_membership_candidate()"
+        }
+      ]
+    },
+    {
+      "name": "arc_membership_projection_milestone_baselines",
+      "columns": [
+        {
+          "name": "milestone_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "baseline_status",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "baseline_notes",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "captured_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "name": "arc_membership_projection_milestone_evidence",
+      "columns": [
+        {
+          "name": "candidate_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "milestone_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "outcome",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "article_title",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "article_url",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "recorded_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "name": "arc_membership_projection_runs",
+      "columns": [
+        {
+          "name": "candidate_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "state",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "event_node_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "source_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "edge_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "arc_event_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "projected_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "retracted_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "name": "arc_membership_release_policy",
+      "columns": [
+        {
+          "name": "model_version",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "fixture_passed",
+          "type": "boolean",
+          "not_null": true
+        },
+        {
+          "name": "fixture_checked_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "auto_approval_threshold",
+          "type": "numeric",
+          "not_null": false
+        },
+        {
+          "name": "auto_approval_enabled",
+          "type": "boolean",
+          "not_null": true
+        },
+        {
+          "name": "threshold_evidence",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "name": "arc_membership_scores",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "candidate_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "model_version",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "membership_fingerprint",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "membership_fingerprint_hash",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "candidate_updated_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "cluster_confidence",
+          "type": "numeric",
+          "not_null": true
+        },
+        {
+          "name": "decision",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "hard_rejections",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "signal_breakdown",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "evidence",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "release_gate",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "scored_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "name": "arc_milestones",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "arc_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "milestone_key",
+          "type": "text",
+          "not_null": false
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "name": "articles",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "feed",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "outlet",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "url",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "summary",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "fetched_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "outlet_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "author_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "body_text",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "embedding",
+          "type": "vector(384)",
+          "not_null": false
+        },
+        {
+          "name": "claims",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "arc_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "unattributed",
+          "type": "boolean",
+          "not_null": true
+        },
+        {
+          "name": "monoculture",
+          "type": "boolean",
+          "not_null": true
+        },
+        {
+          "name": "is_digest",
+          "type": "boolean",
+          "not_null": true
+        },
+        {
+          "name": "image_url",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "image_alt",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "entities_extracted_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "arc_assign_attempted_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "ingestion_run_id",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "source_status",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "source_status_changed_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "source_status_note",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "arc_assignment_evidence",
+          "type": "jsonb",
+          "not_null": false
+        },
+        {
+          "name": "candidate_generation_attempted_at",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "candidate_generation_note",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "reader_state",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "reader_exclusion_reason",
+          "type": "text",
+          "not_null": false
+        }
+      ],
+      "triggers": [
+        {
+          "name": "articles_intercept_direct_arc_attachment",
+          "type": 19,
+          "enabled": "O",
+          "function": "mip_intercept_direct_arc_attachment()",
+          "definition": "CREATE TRIGGER articles_intercept_direct_arc_attachment BEFORE UPDATE OF arc_id ON public.articles FOR EACH ROW EXECUTE FUNCTION mip_intercept_direct_arc_attachment()"
+        },
+        {
+          "name": "articles_invalidate_arc_membership_approvals",
+          "type": 29,
+          "enabled": "O",
+          "function": "mip_invalidate_arc_membership_approvals()",
+          "definition": "CREATE TRIGGER articles_invalidate_arc_membership_approvals AFTER INSERT OR DELETE OR UPDATE ON public.articles FOR EACH ROW EXECUTE FUNCTION mip_invalidate_arc_membership_approvals()"
+        },
+        {
+          "name": "articles_source_status_d5_propagate",
+          "type": 19,
+          "enabled": "O",
+          "function": "articles_source_status_propagate()",
+          "definition": "CREATE TRIGGER articles_source_status_d5_propagate BEFORE UPDATE OF source_status ON public.articles FOR EACH ROW WHEN (((old.source_status IS DISTINCT FROM new.source_status) AND (new.source_status = ANY (ARRAY['corrected'::text, 'withdrawn'::text])))) EXECUTE FUNCTION articles_source_status_propagate()"
+        }
+      ]
+    },
+    {
+      "name": "citations",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "article_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "cited_entity",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "cited_type",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "documentation_strength",
+          "type": "numeric",
+          "not_null": true
+        },
+        {
+          "name": "resolved_node_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "name": "edges",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "source_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "target_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "type",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "weight",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "label",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "similarity",
+          "type": "numeric",
+          "not_null": false
+        },
+        {
+          "name": "sky_verified",
+          "type": "boolean",
+          "not_null": true
+        },
+        {
+          "name": "signal_source",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "doc_strength",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "claimed_by",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "stance",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "disputed_by",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "alternative_causes",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "counterfactual_test",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "reliability",
+          "type": "integer",
+          "not_null": false
+        },
+        {
+          "name": "arc_membership_candidate_id",
+          "type": "uuid",
+          "not_null": false
+        }
+      ],
+      "triggers": [
+        {
+          "name": "policy_edge_attributed",
+          "type": 23,
+          "enabled": "O",
+          "function": "policy_edge_attributed()",
+          "definition": "CREATE TRIGGER policy_edge_attributed BEFORE INSERT OR UPDATE ON public.edges FOR EACH ROW EXECUTE FUNCTION policy_edge_attributed()"
+        }
+      ]
+    },
+    {
+      "name": "nodes",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "label",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "type",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "not_null": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "confidence",
+          "type": "integer",
+          "not_null": false
+        },
+        {
+          "name": "summary",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "occurred_at",
+          "type": "date",
+          "not_null": false
+        },
+        {
+          "name": "arc_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "arc_membership_candidate_id",
+          "type": "uuid",
+          "not_null": false
+        }
+      ],
+      "triggers": [
+        {
+          "name": "nodes_touch_updated_at",
+          "type": 19,
+          "enabled": "O",
+          "function": "touch_updated_at()",
+          "definition": "CREATE TRIGGER nodes_touch_updated_at BEFORE UPDATE ON public.nodes FOR EACH ROW EXECUTE FUNCTION touch_updated_at()"
+        }
+      ]
+    },
+    {
+      "name": "sources",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "node_id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "outlet",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "headline",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "url",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "published_at",
+          "type": "date",
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "arc_membership_candidate_id",
+          "type": "uuid",
+          "not_null": false
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "name": "story_arcs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "not_null": true
+        },
+        {
+          "name": "root_node_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "coverage_gap",
+          "type": "boolean",
+          "not_null": true
+        },
+        {
+          "name": "summary",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "started_at",
+          "type": "date",
+          "not_null": true
+        },
+        {
+          "name": "last_update_at",
+          "type": "timestamp with time zone",
+          "not_null": true
+        },
+        {
+          "name": "embedding",
+          "type": "vector(384)",
+          "not_null": false
+        },
+        {
+          "name": "last_assignment_run",
+          "type": "timestamp with time zone",
+          "not_null": false
+        },
+        {
+          "name": "seed_article_id",
+          "type": "uuid",
+          "not_null": false
+        },
+        {
+          "name": "category_confidence",
+          "type": "numeric",
+          "not_null": false
+        },
+        {
+          "name": "category_evidence",
+          "type": "text",
+          "not_null": false
+        },
+        {
+          "name": "title_article_count",
+          "type": "integer",
+          "not_null": true
+        },
+        {
+          "name": "display_kind",
+          "type": "text",
+          "not_null": true
+        }
+      ],
+      "triggers": []
+    }
+  ],
+  "excluded_unexercised_trigger": "articles_source_status_d5_propagate (UPDATE OF source_status; projection does not change that field)",
+  "no_actual_material": true,
+  "no_release_policy_activation": true,
+  "excluded_trigger_name": "articles_source_status_d5_propagate"
+}
