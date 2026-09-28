@@ -214,11 +214,11 @@ begin
    then raise exception 'arc_native_effective_storage_boundary';end if;
   end loop;
  end loop;
- if exists(select 1 from pg_proc p cross join lateral aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
-  where p.oid='mip_mentions.canonical_prelock_articles(uuid,uuid[],uuid[])'::regprocedure
-  and (p.proowner<>'mip_mentions_owner'::regrole or not p.prosecdef
-   or not(p.proconfig @> array['search_path=""'])
-   or a.grantee not in('mip_mentions_owner'::regrole,'mip_arc_native_owner'::regrole)))
+ if exists(select 1 from pg_proc proc_entry cross join lateral aclexplode(coalesce(proc_entry.proacl,acldefault('f',proc_entry.proowner))) acl_entry
+  where proc_entry.oid='mip_mentions.canonical_prelock_articles(uuid,uuid[],uuid[])'::regprocedure
+  and (proc_entry.proowner<>'mip_mentions_owner'::regrole or not proc_entry.prosecdef
+   or not(proc_entry.proconfig @> array['search_path=""'])
+   or acl_entry.grantee not in('mip_mentions_owner'::regrole,'mip_arc_native_owner'::regrole)))
  then raise exception 'arc_native_prelock_boundary';end if;
  perform mip_arc_native.assert_source_authority();
  if has_schema_privilege('mip_arc_native_worker','mip_arc_native','CREATE')

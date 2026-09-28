@@ -888,11 +888,11 @@
     "c9_order": [
       {
         "path": "supabase/qualification/arc-membership-native/001_governed_cohort.sql",
-        "blob": "f0b585c360bb523b3ab4b0626d01ef95e5f76c53"
+        "blob": "ff213eb4420ebd3b42a75ece4fd0bf656e2978de"
       },
       {
         "path": "supabase/qualification/arc-membership-native/002_private_score_review.sql",
-        "blob": "30213489f69f11867988316dec190b0250cbda01"
+        "blob": "f2f950cf2822576e5687c795146bc3f9ceaa630f"
       }
     ],
     "full_sequence": "Pristine fixture catalog/real auth relations + extensions → native reliability → C3 ordereddisabledprofile/actualreceipt → prepareAtomicInstall/installComparisonAtomic fullcompiledcomparison001–019 plusDOJ020 → real auditqualification/finalclosure → C6 ordered001/003/004/qik001/005/qik002 → C9 001/002 → new finaleffectiveowner/role/membership/schema/functionACL/RLS/sourceauthorityassertions.",

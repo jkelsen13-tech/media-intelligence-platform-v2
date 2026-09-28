@@ -529,8 +529,8 @@ revoke all on all sequences in schema mip_arc_native from public;
 do $acl$
 declare r record;a record;
 begin
- for r in select distinct a.grantee from pg_class c cross join lateral aclexplode(c.relacl)a
-  where c.relnamespace='mip_arc_native'::regnamespace and a.grantee<>c.relowner and a.grantee<>0 loop
+ for r in select distinct acl_entry.grantee from pg_class c cross join lateral aclexplode(c.relacl) acl_entry
+  where c.relnamespace='mip_arc_native'::regnamespace and acl_entry.grantee<>c.relowner and acl_entry.grantee<>0 loop
   execute format('revoke all on all tables in schema mip_arc_native from %I',r.grantee::regrole);
   execute format('revoke all on all sequences in schema mip_arc_native from %I',r.grantee::regrole);
  end loop;
