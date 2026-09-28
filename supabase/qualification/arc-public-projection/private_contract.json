@@ -1,0 +1,519 @@
+{
+  "contract": "native-private-arc-projection-source-v1",
+  "source_ref": "610beccab07286d1bc9cab907502d6b0d21f1384",
+  "status": "source_authored_unrun",
+  "public_release": false,
+  "automatic_approval": false,
+  "public_writes": false,
+  "durable_tables": [
+    {
+      "table": "mip_arc_projection_private.source_bindings",
+      "fields": [
+        "scope",
+        "id",
+        "article",
+        "capture",
+        "job",
+        "content_hash",
+        "body_kind",
+        "body_hash",
+        "url_hash",
+        "principal"
+      ]
+    },
+    {
+      "table": "mip_arc_projection_private.source_access",
+      "fields": [
+        "scope",
+        "binding",
+        "version",
+        "allowed"
+      ]
+    },
+    {
+      "table": "mip_arc_projection_private.citation_reviews",
+      "fields": [
+        "scope",
+        "id",
+        "binding",
+        "version",
+        "predecessor",
+        "state",
+        "items",
+        "principal"
+      ]
+    },
+    {
+      "table": "mip_arc_projection_private.context_reviews",
+      "fields": [
+        "scope",
+        "id",
+        "arc",
+        "version",
+        "predecessor",
+        "state",
+        "selected_context",
+        "context_hash",
+        "principal"
+      ]
+    },
+    {
+      "table": "mip_arc_projection_private.projections",
+      "fields": [
+        "scope",
+        "id",
+        "generation",
+        "input_hash",
+        "output_hash",
+        "score_review",
+        "binding",
+        "access_version",
+        "citation_review",
+        "context_review",
+        "dependency_manifest",
+        "dependency_hash",
+        "display_payload",
+        "display_hash",
+        "principal"
+      ]
+    },
+    {
+      "table": "mip_arc_projection_private.reviews",
+      "fields": [
+        "scope",
+        "id",
+        "projection",
+        "version",
+        "predecessor",
+        "dependency_hash",
+        "display_hash",
+        "disposition",
+        "reason",
+        "principal"
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "signature": "mip_arc_projection_private.enter_scope(uuid,boolean)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": false,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": []
+    },
+    {
+      "signature": "mip_arc_projection_private.hash_json(jsonb)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": false,
+      "volatility": "i",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": []
+    },
+    {
+      "signature": "mip_arc_projection_private.receipt(mip_arc_projection_private.projections)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": false,
+      "volatility": "i",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": []
+    },
+    {
+      "signature": "mip_arc_projection_private.source_value(mip_arc_projection_private.source_bindings,boolean)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": false,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\"",
+        "timezone=UTC"
+      ],
+      "callers": []
+    },
+    {
+      "signature": "mip_arc_projection_private.review_source(uuid,uuid,uuid,uuid,uuid,text,text,text,text)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": true,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": [
+        "mip_mentions_gateway"
+      ]
+    },
+    {
+      "signature": "mip_arc_projection_private.set_source_access(uuid,uuid,boolean)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": true,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": [
+        "mip_mentions_gateway"
+      ]
+    },
+    {
+      "signature": "mip_arc_projection_private.check_citations(jsonb,jsonb)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": false,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": []
+    },
+    {
+      "signature": "mip_arc_projection_private.review_citations(uuid,uuid,uuid,integer,uuid,text,jsonb)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": true,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": [
+        "mip_mentions_gateway"
+      ]
+    },
+    {
+      "signature": "mip_arc_projection_private.current_context(uuid)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": false,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": []
+    },
+    {
+      "signature": "mip_arc_projection_private.review_context(uuid,uuid,uuid,integer,uuid,text,text)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": true,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": [
+        "mip_mentions_gateway"
+      ]
+    },
+    {
+      "signature": "mip_arc_projection_private.milestone_outcome(text,text)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": false,
+      "volatility": "i",
+      "configuration": [
+        "search_path=pg_catalog"
+      ],
+      "callers": []
+    },
+    {
+      "signature": "mip_arc_projection_private.expand(mip_arc_projection_private.projections)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": false,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\"",
+        "timezone=UTC",
+        "datestyle=ISO,YMD"
+      ],
+      "callers": []
+    },
+    {
+      "signature": "mip_arc_projection_private.prepare(uuid,uuid,uuid,text,text,uuid,uuid,uuid,uuid)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": true,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": [
+        "mip_mentions_gateway"
+      ]
+    },
+    {
+      "signature": "mip_arc_projection_private.require_current(uuid,uuid,text,text)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": false,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": []
+    },
+    {
+      "signature": "mip_arc_projection_private.review(uuid,uuid,uuid,text,text,integer,uuid,text,text)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": true,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": [
+        "mip_mentions_gateway"
+      ]
+    },
+    {
+      "signature": "mip_arc_projection_private.read_current(uuid,uuid,text,text,uuid)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": true,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": [
+        "mip_mentions_gateway"
+      ]
+    },
+    {
+      "signature": "mip_arc_projection_private.inspect_context(uuid,uuid)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": true,
+      "volatility": "v",
+      "configuration": [
+        "search_path=\"\""
+      ],
+      "callers": [
+        "mip_mentions_gateway"
+      ]
+    }
+  ],
+  "source_additions": {
+    "public.articles": [
+      "reader_state",
+      "source_status"
+    ],
+    "public.story_arcs": [
+      "category",
+      "root_node_id"
+    ],
+    "public.nodes": [
+      "id",
+      "type"
+    ],
+    "public.arc_milestones": [
+      "id",
+      "arc_id",
+      "milestone_key",
+      "status"
+    ]
+  },
+  "returned_fields": {
+    "receipt": [
+      "contract",
+      "projection_id",
+      "generation_id",
+      "dependency_hash",
+      "display_hash",
+      "state",
+      "approval_allowed",
+      "publication_allowed",
+      "attached"
+    ],
+    "current": [
+      "receipt",
+      "review",
+      "display",
+      "approval_allowed",
+      "publication_allowed",
+      "attached"
+    ],
+    "review": [
+      "review_id",
+      "version",
+      "disposition",
+      "reason"
+    ],
+    "inspect_context": [
+      "context",
+      "context_hash",
+      "publication_allowed"
+    ],
+    "context": [
+      "contract",
+      "arc_id",
+      "category",
+      "root_node_id",
+      "root_type",
+      "milestones",
+      "selected_relation_change_count"
+    ],
+    "context_milestone": [
+      "id",
+      "milestone_key",
+      "status"
+    ],
+    "citation_item": [
+      "start",
+      "end",
+      "span_hash",
+      "cited_type"
+    ],
+    "dependency_manifest": [
+      "contract",
+      "codec",
+      "generation_id",
+      "native_input_hash",
+      "native_output_hash",
+      "score_review_id",
+      "native_manifest_hash",
+      "source_binding_id",
+      "article_id",
+      "capture_id",
+      "job_id",
+      "content_hash",
+      "body_kind",
+      "body_hash",
+      "url_hash",
+      "source_access_version",
+      "citation_review_id",
+      "citation_set_hash",
+      "context_review_id",
+      "context_hash",
+      "reader_state",
+      "source_status",
+      "vector",
+      "public_release",
+      "privacy_review",
+      "rights_review",
+      "publication_eligible"
+    ],
+    "dependency_vector": [
+      "state",
+      "producer_id"
+    ],
+    "display": [
+      "contract",
+      "projection_id",
+      "candidate_id",
+      "article_id",
+      "arc_id",
+      "node",
+      "source",
+      "event",
+      "edge",
+      "milestone_outcomes",
+      "vector",
+      "state",
+      "approval_allowed",
+      "publication_allowed",
+      "attached"
+    ],
+    "node": [
+      "label",
+      "type",
+      "description",
+      "summary",
+      "confidence",
+      "occurred_at"
+    ],
+    "source": [
+      "outlet",
+      "headline",
+      "url",
+      "published_at"
+    ],
+    "event": [
+      "title",
+      "category",
+      "confidence",
+      "occurred_at",
+      "description"
+    ],
+    "edge": [
+      "source_id",
+      "target_projection_id",
+      "type",
+      "weight",
+      "label",
+      "signal_source",
+      "doc_strength",
+      "claimed_by",
+      "reliability",
+      "counterfactual_test"
+    ],
+    "milestone_outcome": [
+      "milestone_id",
+      "outcome"
+    ],
+    "display_vector": [
+      "state",
+      "centroid_updated"
+    ]
+  },
+  "retention": {
+    "source_bindings": "Metadata only; original body and URL resolve from exact capture; no payload copy.",
+    "citation_reviews": "Reviewed classifications and UTF8 byte spans/hashes only; no excerpts or cited labels.",
+    "context_reviews": "Exact bounded arc category/root/type and milestone id/key/status context, consumed by private projection replay and current equality. No baseline notes copied.",
+    "projections": "One deliberate private display payload for scoped current reader plus separately bounded metadata manifest. Original body is never retained here.",
+    "reviews": "Metadata only; private disposition never confers privacy, rights or publication eligibility."
+  },
+  "limits": {
+    "capture_bytes": 262144,
+    "citations": 64,
+    "milestones": 64,
+    "context_bytes": 65536,
+    "display_bytes": 131072,
+    "manifest_bytes": 16384,
+    "combined_bytes": 8388608,
+    "combined_hash_work_bytes": 134217728
+  },
+  "fixture": {
+    "helper": "tests/nativeArcPublicProjectionAssertions.mjs",
+    "export": "assertNativeArcPrivateProjection",
+    "checks": 5,
+    "synthetic_native_profile_bytes": 4194304,
+    "synthetic_native_profile_hash_bytes": 67108864,
+    "required_context_ids": [
+      "contextNodeId",
+      "contextMilestoneId"
+    ],
+    "context_seed_order": "Seed a real institution root node, arc root_node_id, and pending ia_concludes milestone before building the reviewed native generation. Suggested synthetic IDs 2020 and 2021.",
+    "changed_then_restored_checks": [
+      "articles.reader_state",
+      "articles.source_status",
+      "nodes.type (actual root)",
+      "arc_milestones.status (actual bound milestone)"
+    ]
+  },
+  "dependencies": {
+    "native001": "3097d03987aee00df912f913d41c6e0cad342b2d",
+    "native002": "92c4382b46c83027f4b9b1dd0a615462680083cd",
+    "native003": "94dd9c7cbcf117767f5909fd9a6db0312f14ebe2",
+    "native_capture": "e7beb22b9a4dd2e38076b5554c7f5b4e6e0e4e77",
+    "publication004": "38379113e73d5fea1f3a3dba8647f374ed2733fe",
+    "publication007": "9f7038d8e921ef7839a35375f2f05294058e3383",
+    "publication009": "60e6198c3ad389c335dfe56024153a187f30f0a4",
+    "milestone": "3dbcf5fa80cb182b26d443044e58b17b12f6121b",
+    "collector006": "21383a9d581bdf2da8f9eb58cd2f329a7ccd213b"
+  },
+  "required_article_recorders": [
+    {
+      "name": "collector_articles_lock",
+      "function": "mip_identity.collector_lock()",
+      "type": 62,
+      "enabled": "O",
+      "arguments_hex": ""
+    },
+    {
+      "name": "collector_articles_change",
+      "function": "mip_identity.collector_change()",
+      "type": 29,
+      "enabled": "O",
+      "arguments_hex": "696400"
+    },
+    {
+      "name": "no_collector_articles_truncate",
+      "function": "comparison_qualification.reject_rewrite()",
+      "type": 34,
+      "enabled": "O",
+      "arguments_hex": ""
+    }
+  ]
+}

@@ -6,8 +6,8 @@
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
   "immediate_base": {
-    "commit": "2af5109fd85b4d223a40d40b0543e79568575557",
-    "tree": "eecf21975b4e975b5a8d98f715dbd167bdbae3d6"
+    "commit": "198b6c8aaa18e05d00ef51807481d057c84e1955",
+    "tree": "02a241f56a198426bea47cbedc1bb64a9c48d367"
   },
   "authorization": {
     "internal_source_and_synthetic_qualification": "User consolidation continuation amendment prospectively authorizes this distinct governed successor and installer mode into source review and synthetic internal qualification. Qualification receipts and actual external Cursor review bind the exact candidate; no individual owner field signature, historical acceptance, hosted installation or actual-material receiving authorization is represented.",
@@ -15,7 +15,7 @@
     "publication": "No automatic publication, broadened eligibility or release-policy bypass.",
     "spending": "At most $25 one-time and $10/month incremental on existing authorized services; no new service, plan upgrade or on-demand enablement."
   },
-  "scope": "Additive governed C6 canonical relation, C9 native scoring/review, explicit private membership and joint restricted-principal installation. Native article bytes are transient through restricted original-evidence validation; original capture/candidate/change history and prior manifest/hash assertions remain unchanged. Historical public C9/C10 projection, operating caller cutover and corpus disposition remain required consolidation dependencies, not completed by this package.",
+  "scope": "Additive governed C6 canonical relation, C9 native scoring/review, explicit private membership and joint restricted-principal installation. Native article bytes are transient through restricted original-evidence validation; original capture/candidate/change history and prior manifest/hash assertions remain unchanged. Historical public C9/C10 projection, operating caller cutover and corpus disposition remain required consolidation dependencies, not completed by this package. This distinct revision adds generation-bound pending/private projection from original bound body/URL, reviewed citation spans and complete selected arc/node/milestone context; public installation/cutover remains required and unimplemented by this private contract.",
   "c6": {
     "semantic_kind": "reviewed_evidence_weight_v1",
     "meaning": "Explicit uncalibrated reviewer weight 0..1; no default, inferred probability, candidate rank or acceptance substitution.",
@@ -279,7 +279,8 @@
     "c9": [
       "tests/nativeArcCohortPostgres17.test.mjs",
       "tests/nativeArcScoring.test.mjs",
-      "tests/nativeArcAttachmentAssertions.mjs"
+      "tests/nativeArcAttachmentAssertions.mjs",
+      "tests/nativeArcPublicProjectionAssertions.mjs"
     ],
     "status_at_source_authorship": "NOT RUN; qualification receipts are separate and must identify actual candidate and environment.",
     "installer": "tests/nativeGovernedInstallerPostgres17.test.mjs"
@@ -326,7 +327,7 @@
     "canonical_semantics": "Explicit reviewed_evidence_weight_v1 with a distinct reviewed selection-cutoff policy; old resolver defaults/acceptance/rank do not establish probability or canonical equivalence.",
     "extraction": "Exact reviewed completed versus unavailable attestation; complete import job or empty entity list is not evidence of extraction completion.",
     "copy_justification": "Selected arc context (id,title,summary,started_at,last_update) may be durably retained to reproduce deterministic scoring after mutable arc source changes because no authoritative old arc-context version exists. Native article title/summary/outlet/published_at bytes are transient and re-resolved from exact original scalar bindings.",
-    "ordered_installation": "Full real comparison/native/journal/review/accepted-reader and DOJ source program plus disabled C3 baseline. Joint native-governed-v2 executes C6 and C9 001/002/003 before existing temporary backend creator cleanup, exact stage assertions after savepoint cleanup, and complete final effective combined closure after real cleanup. Separate authenticated NOSUPERUSER synthetic principal exercises actual ordered installation/audit/ambiguity/reconciliation; no hosted receipt follows from it.",
+    "ordered_installation": "Full real comparison/native/journal/review/accepted-reader and DOJ source program plus disabled C3 baseline. Joint native-governed-v2 executes C6 and C9 001/002/003 before existing temporary backend creator cleanup, exact stage assertions after savepoint cleanup, and complete final effective combined closure after real cleanup. Separate authenticated NOSUPERUSER synthetic principal exercises actual ordered installation/audit/ambiguity/reconciliation; no hosted receipt follows from it. Explicit native-governed-v3 appends one exact curated private projection successor after those same nine v2 descriptors; complete private/source/article recorder and original003 closure executes after real native cleanup. V2/default mode stays supported and independently qualified.",
     "publication": "Private score accepted_private remains separate from explicit reviewer attached_private membership decision. No public articles.arc_id/candidate/release-policy/graph mutation, auto approval, public eligibility or publication. Current private Timeline/Arc membership reader validates every head and original dependency; historical public approval/projector remains a required separate integration dependency.",
     "budget": "At most32 unique article/capture pairs (candidate+31 members),128 scalar slots and existing C6 whole-union limits. One deduplicated transient source union reserves two conservative complete source-validation passes plus cumulative per-origin native delta/manifest/expanded-input hash work. max_total_bytes<=8388608, max_hash_work_bytes<=134217728, source cache/expanded wire<=2097152, manifest<=1048576. Overflow refuses the whole operation; no truncation, recursive per-head evidence expansion or artificial one-private-member cap.",
     "durable_tables": [
@@ -1008,7 +1009,7 @@
     },
     "atomic_installer": {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "blob": "079d478a872125cc348272f5006af7c5c4a5a281"
+      "blob": "1a65a4a71a0a70f34f9326a44e8fbd5d5f725ed0"
     },
     "catalog_preflight": {
       "path": "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs",
@@ -1054,7 +1055,7 @@
         "blob": "94dd9c7cbcf117767f5909fd9a6db0312f14ebe2"
       }
     ],
-    "full_sequence": "Pristine fixture catalog/real auth relations + pgcrypto/vector0.8.2/dblink → native reliability → C3 ordered disabled profile/actual synthetic receipt → prepareAtomicInstall native-governed-v2 complete comparison001–019/DOJ020 → C6 ordered001/003/004/qik001/005/qik002 → C9 001/002/003 BEFORE backend temporary creator cleanup → real final complete effective combined owner/role/membership/ACL/schema/RLS/source authority + original backend final closure → one COMMIT → real autonomous rejection-audit qualification. Original ordinary-mode fixture separately exercises full scorer/review/private reader dependencies; joint nonsuper installer test is actual installation principal proof for synthetic environment only.",
+    "full_sequence": "Pristine fixture catalog/real auth relations + pgcrypto/vector0.8.2/dblink → native reliability → C3 ordered disabled profile/actual synthetic receipt → prepareAtomicInstall native-governed-v2 complete comparison001–019/DOJ020 → C6 ordered001/003/004/qik001/005/qik002 → C9 001/002/003 BEFORE backend temporary creator cleanup → real final complete effective combined owner/role/membership/ACL/schema/RLS/source authority + original backend final closure → one COMMIT → real autonomous rejection-audit qualification. Original ordinary-mode fixture separately exercises full scorer/review/private reader dependencies; joint nonsuper installer test is actual installation principal proof for synthetic environment only. For explicit v3, append native private projection001 with selected context columns/RLS and same real006/007 source fences; exact protected private helper closure after real cleanup, then unchanged original backend closure and one COMMIT. Actual restricted-principal test exercises v2 then v3 in separately recreated pristine fixture.",
     "installation_principal_scope": "Real separately authenticated SCRAM NOSUPERUSER/CREATEROLE/CREATEDB/BYPASSRLS/INHERIT/LOGIN synthetic installer matches targeted observed qik principal attributes. Fixture administrator only bootstraps synthetic substrate/extensions/principals and independently inspects/cleans. Native source-only profile is jointly compiled with temporary owner authority and exact assertion helpers; no residual owner membership/helper/login remains. Does not claim hosted defaults/event trigger or secure route equivalence.",
     "assertions_after_complete_order": [
       "Object/function owners and protected role attributes",
@@ -1062,22 +1063,24 @@
       "Effective exact column/table/schema access",
       "Named direct/wrapper EXEC privileges, PUBLIC/default ACL and inherited rights",
       "FORCE RLS/session principal scope and complete source-view authority, including restrictive policy refusal",
-      "Unchanged public/native recorders and closed release/publication fences"
+      "Unchanged public/native recorders and closed release/publication fences",
+      "Exact public.articles collector_articles_lock/change/no_collector_articles_truncate plus nodes/milestones/arcs survivor retention, source_changes immutability; private projection exact six tables, 17 functions, column/schema/EXEC/RLS/owner and no publication writes."
     ],
     "native_joint_installer": {
       "path": "supabase/qualification/native-governed-install/install.mjs",
-      "blob": "146d6a9e94bba5e8e709050f1ca0542bf52c6c6e",
-      "mode": "native-governed-v2",
-      "authorization": "owner-authorized-disabled-comparison-native-install",
+      "blob": "af228464330af46dc33fd8382067f6709796180f",
+      "mode": "native-governed-v3",
+      "authorization": "owner-authorized-disabled-comparison-native-private-projection-install",
       "source_base": "79f25d3519d26fd0dbda37fd0728e5783c04834a",
       "selection": "Current selected candidate bytes by exact curated Git blobs; no claim revised SQL exists at source_base; no arbitrary SQL/callback extension",
       "program_hash": "SHA256 JSON.stringify exact compiled native steps incl original assertion text/hash; nested native plan is immutable and WeakSet-bound to internal preparation",
       "outer_manifest": "Distinct complete SHA256 JSON.stringify atomic plan with native program; existing default-mode manifest and historical assertions preserved",
-      "temporary_assertion_helpers": "Fixed exact source assertion, zero arguments/void/empty search_path, owner-owned SECURITY DEFINER, explicit installer-only EXEC; intermediate source stage assertions with all native edges removed in savepoint; final exact003 combined closure after real creator removal. Helpers/schema all dropped before commit."
+      "temporary_assertion_helpers": "Fixed exact source assertion, zero arguments/void/empty search_path, owner-owned SECURITY DEFINER, explicit installer-only EXEC; intermediate source stage assertions with all native edges removed in savepoint; final exact003 combined closure after real creator removal. Helpers/schema all dropped before commit.",
+      "compatibility": "native-governed-v2 nine ordered stage descriptors and distinct old authorization remain unchanged; explicit closed enum selects v3 ten-stage source program/manifest. Default mode and historical assertions are preserved."
     },
     "native_joint_installer_documentation": {
       "path": "supabase/qualification/native-governed-install/README.md",
-      "blob": "86fe30610aefc4fa839f80a34121d64c6f2bf225"
+      "blob": "df9e44ffac96f43a6f9ac52475903aaaf96efe32"
     },
     "attachment_assertions": {
       "path": "tests/nativeArcAttachmentAssertions.mjs",
@@ -1089,11 +1092,11 @@
     },
     "c9_postgres_fixture": {
       "path": "tests/nativeArcCohortPostgres17.test.mjs",
-      "blob": "db9e2da3e9f31a675f94430ccbc77259468341c8"
+      "blob": "1fcc3b794b765566eab2a81ca502898871d37b47"
     },
     "native_joint_installer_fixture": {
       "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
-      "blob": "d7a5503a1cdca37edae24e3dd7a5c57246e4f727"
+      "blob": "984ec6d8caeac07b79ebb17f43bc676a61e250b5"
     },
     "native_installation_diagnostics": {
       "retained_fields": [
@@ -1126,7 +1129,13 @@
         "frames_condition": "strict parser permits only normalized assertion-block/helper kind, numericline and closed SQLoperation"
       },
       "temporary_assertion_context": "Only original native fields003 helper uses existing mip_mentions_native_validator with explicit schemaUSAGE; original assertion/source hashes/runtimepermissions unchanged; program descriptor/hash explicitly changes. Finalnative003 helper remains mip_arc_native_owner."
-    }
+    },
+    "c9_projection_order": [
+      {
+        "path": "supabase/qualification/arc-public-projection/001_native_private_projection.sql",
+        "blob": "055083ea50c058c6fd476a80a32e4f998232a51a"
+      }
+    ]
   },
   "qualification_groups": {
     "c6": {
@@ -1148,8 +1157,8 @@
       "file": "tests/nativeArcCohortPostgres17.test.mjs",
       "environment": "MIP_NATIVE_ARC_COHORT_DISPOSABLE=synthetic-pg17-only; MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
       "invocation": "node --test tests/nativeArcCohortPostgres17.test.mjs",
-      "fixture": "Fresh pristinepostgrescluster, real full atomicbackend/audit/C3syntheticdisabledreceipt and C6/C9install order; synthetic sources only.",
-      "expectation": "All14 C9 authored child groups pass, no skips: complete real dependency chain and final effective closure; exact native evidence/capture/null-missing/currentness/access/member drift; deterministic scorer/retry, complete ordinary score binding and explicit private attachment, two additions/concurrent retry/origin continuity/revocation/source non-mutation/exact nested metadata receipts; no public assignment/eligibility/activation.",
+      "fixture": "Fresh pristinepostgrescluster, real full atomicbackend/audit/C3syntheticdisabledreceipt and C6/C9install order; synthetic sources only. Selected private context columns/types/RLS; seed institution root2020 and pending ia_concludes milestone2021 before generation1001. Later synthetic-only selection revision2022/version2/predecessor402 reserves4MiB/64MiB under unchanged8MiB/128MiB production whole-operation ceilings; both subsequent cohort generations use2022. Earlier original hard-bound assertions remain unchanged.",
+      "expectation": "All14 C9 authored child groups pass, no skips: complete real dependency chain and final effective closure; exact native evidence/capture/null-missing/currentness/access/member drift; deterministic scorer/retry, complete ordinary score binding and explicit private attachment, two additions/concurrent retry/origin continuity/revocation/source non-mutation/exact nested metadata receipts; no public assignment/eligibility/activation. Five actual internal private projection check groups run before private attachment using the same real native generation and original capture, reviewed empty/nonempty spans, current selected root/milestone. Change→restore article eligibility/root/milestone tests prove immutable count drift and valid unchanged native score before private reader refuses; each source TX rolls back. Exact final permission negatives temporarily revoke only two fixture worker memberships, first pass positive closure, then require precise expected boundary; rollback verifies original grantor/options unchanged.",
       "cleanup": "Restore independently guarded disposable database/role baseline, independently end clients; always remove container+volumes and assertabsence. Any primary/cleanup failure failsqualification."
     },
     "native_joint_install": {
@@ -1158,7 +1167,7 @@
       "environment": "MIP_NATIVE_GOVERNED_INSTALL_DISPOSABLE=synthetic-pg17-only; MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
       "invocation": "node --test tests/nativeGovernedInstallerPostgres17.test.mjs",
       "fixture": "Pristine pinned PostgreSQL17.6 engine170006; pgvector0.8.2 binary installed; pgcrypto/dblink; fake loopback SCRAM sessions; full actual disabled C3 substrate/receipt, real atomic backend/audit and curated native C6/C9 profile; no dependency stubs. Beforeinstallation, independently observed restrictedprincipal asserts allfive source tables kindr, installerownership, RLStrue/FORCEfalse. Synthetic pipeline_config RLS now matches catalog-only qik observation; no configuration rows/material read.",
-      "expectation": "All actual restricted-principal installation, identity/authorization/program/manifest refusal, late restrictive-source failure and whole-transaction rollback, acknowledged and ambiguous COMMIT/ROLLBACK reconciliation, exact final effective owners/roles/ACL/schema/RLS/noedges/nohelpers, real autonomous audit and no collection/schedules/publication activation assertions pass. No skipped groups; every failure refuses qualification.",
+      "expectation": "All actual restricted-principal installation, identity/authorization/program/manifest refusal, late restrictive-source failure and whole-transaction rollback, acknowledged and ambiguous COMMIT/ROLLBACK reconciliation, exact final effective owners/roles/ACL/schema/RLS/noedges/nohelpers, real autonomous audit and no collection/schedules/publication activation assertions pass. No skipped groups; every failure refuses qualification. Both v2 and v3 run sequentially with independently verified pristine teardown. V3 late source-authority failure occurs at actual tenth stage; ambiguous outcomes include private schema inventory. Exact combined final assertion and rolled-back forbidden private PUBLIC table grant are exercised.",
       "cleanup": "Independent client closure; verify exact expected created-role allowlist; destroy only armed pristine disposable database/recreate default and remove exact synthetic roles; compare baseline. Runner always removes container/volumes and checks absence. Any primary/rollback/close/cleanup failure fails qualification.",
       "resource_limits": "Existing verified-free public source/synthetic GitHub job; bounded5min test step/15min entire job, no hosted credentials, data, artifacts, new service, material transfer or plan upgrade."
     },
@@ -1237,7 +1246,543 @@
       "selected real triggers; explicit fixture PUBLICexecute revoke for12selectedfunctions; no legacy auto approval activation"
     ],
     "retention_scope": "unchanged historical algorithms/derived display title/summary/URL and milestone baseline/evidence solely synthetic fixture; full body is transient matching input, authoritative fixture article intact; no native source lineage fabrication or additional migration journal payload",
-    "remaining_required": "native publication-input/dependency contract + generation-bound manual pending/private adapter; existing004/007/009 privacy/rights/comparison generation/public release fences preserved",
+    "remaining_required": "Governed public review/owned projection/manual attachment, required public readers/callers and actual private unattended host operation/recovery remain required; this private projection does not confer qik public eligibility.",
     "status_at_source_authorship": "NOT RUN"
+  },
+  "private_projection_successor": {
+    "contract_file": {
+      "path": "supabase/qualification/arc-public-projection/private_contract.json",
+      "blob": "28bac6bc47b42eecf4d2422954ddb57c45e56143"
+    },
+    "documentation": {
+      "path": "supabase/qualification/arc-public-projection/PRIVATE_CONTRACT.md",
+      "blob": "dad5d87bd0470bde32f02e0b9fbea3331d125059"
+    },
+    "assertions": {
+      "path": "tests/nativeArcPublicProjectionAssertions.mjs",
+      "blob": "f9912868d35e0f76b01e05236fc1b51709d82074"
+    },
+    "contract": "native-private-arc-projection-source-v1",
+    "source_ref": "610beccab07286d1bc9cab907502d6b0d21f1384",
+    "status": "source_authored_unrun",
+    "public_release": false,
+    "automatic_approval": false,
+    "public_writes": false,
+    "durable_tables": [
+      {
+        "table": "mip_arc_projection_private.source_bindings",
+        "fields": [
+          "scope",
+          "id",
+          "article",
+          "capture",
+          "job",
+          "content_hash",
+          "body_kind",
+          "body_hash",
+          "url_hash",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_projection_private.source_access",
+        "fields": [
+          "scope",
+          "binding",
+          "version",
+          "allowed"
+        ]
+      },
+      {
+        "table": "mip_arc_projection_private.citation_reviews",
+        "fields": [
+          "scope",
+          "id",
+          "binding",
+          "version",
+          "predecessor",
+          "state",
+          "items",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_projection_private.context_reviews",
+        "fields": [
+          "scope",
+          "id",
+          "arc",
+          "version",
+          "predecessor",
+          "state",
+          "selected_context",
+          "context_hash",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_projection_private.projections",
+        "fields": [
+          "scope",
+          "id",
+          "generation",
+          "input_hash",
+          "output_hash",
+          "score_review",
+          "binding",
+          "access_version",
+          "citation_review",
+          "context_review",
+          "dependency_manifest",
+          "dependency_hash",
+          "display_payload",
+          "display_hash",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_projection_private.reviews",
+        "fields": [
+          "scope",
+          "id",
+          "projection",
+          "version",
+          "predecessor",
+          "dependency_hash",
+          "display_hash",
+          "disposition",
+          "reason",
+          "principal"
+        ]
+      }
+    ],
+    "functions": [
+      {
+        "signature": "mip_arc_projection_private.enter_scope(uuid,boolean)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": false,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": []
+      },
+      {
+        "signature": "mip_arc_projection_private.hash_json(jsonb)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": false,
+        "volatility": "i",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": []
+      },
+      {
+        "signature": "mip_arc_projection_private.receipt(mip_arc_projection_private.projections)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": false,
+        "volatility": "i",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": []
+      },
+      {
+        "signature": "mip_arc_projection_private.source_value(mip_arc_projection_private.source_bindings,boolean)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": false,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\"",
+          "timezone=UTC"
+        ],
+        "callers": []
+      },
+      {
+        "signature": "mip_arc_projection_private.review_source(uuid,uuid,uuid,uuid,uuid,text,text,text,text)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": true,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": [
+          "mip_mentions_gateway"
+        ]
+      },
+      {
+        "signature": "mip_arc_projection_private.set_source_access(uuid,uuid,boolean)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": true,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": [
+          "mip_mentions_gateway"
+        ]
+      },
+      {
+        "signature": "mip_arc_projection_private.check_citations(jsonb,jsonb)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": false,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": []
+      },
+      {
+        "signature": "mip_arc_projection_private.review_citations(uuid,uuid,uuid,integer,uuid,text,jsonb)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": true,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": [
+          "mip_mentions_gateway"
+        ]
+      },
+      {
+        "signature": "mip_arc_projection_private.current_context(uuid)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": false,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": []
+      },
+      {
+        "signature": "mip_arc_projection_private.review_context(uuid,uuid,uuid,integer,uuid,text,text)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": true,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": [
+          "mip_mentions_gateway"
+        ]
+      },
+      {
+        "signature": "mip_arc_projection_private.milestone_outcome(text,text)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": false,
+        "volatility": "i",
+        "configuration": [
+          "search_path=pg_catalog"
+        ],
+        "callers": []
+      },
+      {
+        "signature": "mip_arc_projection_private.expand(mip_arc_projection_private.projections)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": false,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\"",
+          "timezone=UTC",
+          "datestyle=ISO,YMD"
+        ],
+        "callers": []
+      },
+      {
+        "signature": "mip_arc_projection_private.prepare(uuid,uuid,uuid,text,text,uuid,uuid,uuid,uuid)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": true,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": [
+          "mip_mentions_gateway"
+        ]
+      },
+      {
+        "signature": "mip_arc_projection_private.require_current(uuid,uuid,text,text)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": false,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": []
+      },
+      {
+        "signature": "mip_arc_projection_private.review(uuid,uuid,uuid,text,text,integer,uuid,text,text)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": true,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": [
+          "mip_mentions_gateway"
+        ]
+      },
+      {
+        "signature": "mip_arc_projection_private.read_current(uuid,uuid,text,text,uuid)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": true,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": [
+          "mip_mentions_gateway"
+        ]
+      },
+      {
+        "signature": "mip_arc_projection_private.inspect_context(uuid,uuid)",
+        "owner": "mip_arc_native_owner",
+        "security_definer": true,
+        "volatility": "v",
+        "configuration": [
+          "search_path=\"\""
+        ],
+        "callers": [
+          "mip_mentions_gateway"
+        ]
+      }
+    ],
+    "source_additions": {
+      "public.articles": [
+        "reader_state",
+        "source_status"
+      ],
+      "public.story_arcs": [
+        "category",
+        "root_node_id"
+      ],
+      "public.nodes": [
+        "id",
+        "type"
+      ],
+      "public.arc_milestones": [
+        "id",
+        "arc_id",
+        "milestone_key",
+        "status"
+      ]
+    },
+    "returned_fields": {
+      "receipt": [
+        "contract",
+        "projection_id",
+        "generation_id",
+        "dependency_hash",
+        "display_hash",
+        "state",
+        "approval_allowed",
+        "publication_allowed",
+        "attached"
+      ],
+      "current": [
+        "receipt",
+        "review",
+        "display",
+        "approval_allowed",
+        "publication_allowed",
+        "attached"
+      ],
+      "review": [
+        "review_id",
+        "version",
+        "disposition",
+        "reason"
+      ],
+      "inspect_context": [
+        "context",
+        "context_hash",
+        "publication_allowed"
+      ],
+      "context": [
+        "contract",
+        "arc_id",
+        "category",
+        "root_node_id",
+        "root_type",
+        "milestones",
+        "selected_relation_change_count"
+      ],
+      "context_milestone": [
+        "id",
+        "milestone_key",
+        "status"
+      ],
+      "citation_item": [
+        "start",
+        "end",
+        "span_hash",
+        "cited_type"
+      ],
+      "dependency_manifest": [
+        "contract",
+        "codec",
+        "generation_id",
+        "native_input_hash",
+        "native_output_hash",
+        "score_review_id",
+        "native_manifest_hash",
+        "source_binding_id",
+        "article_id",
+        "capture_id",
+        "job_id",
+        "content_hash",
+        "body_kind",
+        "body_hash",
+        "url_hash",
+        "source_access_version",
+        "citation_review_id",
+        "citation_set_hash",
+        "context_review_id",
+        "context_hash",
+        "reader_state",
+        "source_status",
+        "vector",
+        "public_release",
+        "privacy_review",
+        "rights_review",
+        "publication_eligible"
+      ],
+      "dependency_vector": [
+        "state",
+        "producer_id"
+      ],
+      "display": [
+        "contract",
+        "projection_id",
+        "candidate_id",
+        "article_id",
+        "arc_id",
+        "node",
+        "source",
+        "event",
+        "edge",
+        "milestone_outcomes",
+        "vector",
+        "state",
+        "approval_allowed",
+        "publication_allowed",
+        "attached"
+      ],
+      "node": [
+        "label",
+        "type",
+        "description",
+        "summary",
+        "confidence",
+        "occurred_at"
+      ],
+      "source": [
+        "outlet",
+        "headline",
+        "url",
+        "published_at"
+      ],
+      "event": [
+        "title",
+        "category",
+        "confidence",
+        "occurred_at",
+        "description"
+      ],
+      "edge": [
+        "source_id",
+        "target_projection_id",
+        "type",
+        "weight",
+        "label",
+        "signal_source",
+        "doc_strength",
+        "claimed_by",
+        "reliability",
+        "counterfactual_test"
+      ],
+      "milestone_outcome": [
+        "milestone_id",
+        "outcome"
+      ],
+      "display_vector": [
+        "state",
+        "centroid_updated"
+      ]
+    },
+    "retention": {
+      "source_bindings": "Metadata only; original body and URL resolve from exact capture; no payload copy.",
+      "citation_reviews": "Reviewed classifications and UTF8 byte spans/hashes only; no excerpts or cited labels.",
+      "context_reviews": "Exact bounded arc category/root/type and milestone id/key/status context, consumed by private projection replay and current equality. No baseline notes copied.",
+      "projections": "One deliberate private display payload for scoped current reader plus separately bounded metadata manifest. Original body is never retained here.",
+      "reviews": "Metadata only; private disposition never confers privacy, rights or publication eligibility."
+    },
+    "limits": {
+      "capture_bytes": 262144,
+      "citations": 64,
+      "milestones": 64,
+      "context_bytes": 65536,
+      "display_bytes": 131072,
+      "manifest_bytes": 16384,
+      "combined_bytes": 8388608,
+      "combined_hash_work_bytes": 134217728
+    },
+    "fixture": {
+      "helper": "tests/nativeArcPublicProjectionAssertions.mjs",
+      "export": "assertNativeArcPrivateProjection",
+      "checks": 5,
+      "synthetic_native_profile_bytes": 4194304,
+      "synthetic_native_profile_hash_bytes": 67108864,
+      "required_context_ids": [
+        "contextNodeId",
+        "contextMilestoneId"
+      ],
+      "context_seed_order": "Seed a real institution root node, arc root_node_id, and pending ia_concludes milestone before building the reviewed native generation. Suggested synthetic IDs 2020 and 2021.",
+      "changed_then_restored_checks": [
+        "articles.reader_state",
+        "articles.source_status",
+        "nodes.type (actual root)",
+        "arc_milestones.status (actual bound milestone)"
+      ]
+    },
+    "dependencies": {
+      "native001": "3097d03987aee00df912f913d41c6e0cad342b2d",
+      "native002": "92c4382b46c83027f4b9b1dd0a615462680083cd",
+      "native003": "94dd9c7cbcf117767f5909fd9a6db0312f14ebe2",
+      "native_capture": "e7beb22b9a4dd2e38076b5554c7f5b4e6e0e4e77",
+      "publication004": "38379113e73d5fea1f3a3dba8647f374ed2733fe",
+      "publication007": "9f7038d8e921ef7839a35375f2f05294058e3383",
+      "publication009": "60e6198c3ad389c335dfe56024153a187f30f0a4",
+      "milestone": "3dbcf5fa80cb182b26d443044e58b17b12f6121b",
+      "collector006": "21383a9d581bdf2da8f9eb58cd2f329a7ccd213b"
+    },
+    "required_article_recorders": [
+      {
+        "name": "collector_articles_lock",
+        "function": "mip_identity.collector_lock()",
+        "type": 62,
+        "enabled": "O",
+        "arguments_hex": ""
+      },
+      {
+        "name": "collector_articles_change",
+        "function": "mip_identity.collector_change()",
+        "type": 29,
+        "enabled": "O",
+        "arguments_hex": "696400"
+      },
+      {
+        "name": "no_collector_articles_truncate",
+        "function": "comparison_qualification.reject_rewrite()",
+        "type": 34,
+        "enabled": "O",
+        "arguments_hex": ""
+      }
+    ],
+    "qualified": false,
+    "installed": false,
+    "accepted": false,
+    "status_at_source_authorship": "NOT RUN",
+    "remaining_required": "Governed public review/owned projection/manual attachment, required public readers/callers and actual private unattended host operation/recovery remain required; this private projection does not confer qik public eligibility."
   }
 }

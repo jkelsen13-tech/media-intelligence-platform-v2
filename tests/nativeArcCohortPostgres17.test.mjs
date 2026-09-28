@@ -6,12 +6,13 @@ import {readFile} from 'node:fs/promises'
 import {createHash} from 'node:crypto'
 import pg from 'pg'
 import {assertNativeArcAttachments} from './nativeArcAttachmentAssertions.mjs'
+import {assertNativeArcPrivateProjection} from './nativeArcPublicProjectionAssertions.mjs'
 import {prepareAtomicInstall,installComparisonAtomic,qualifyComparisonAudit,DBLINK_PREFLIGHT_SQL} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
 import {REQUIRED_RELATIONS,RESERVED_ROLES} from '../supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs'
 import {LOAD_ORDER} from '../supabase/qualification/qik-ingest/installQikIngest.mjs'
 import {scoreGovernedNativeInput,runGovernedNativeArc} from '../supabase/qualification/arc-membership-native/runGovernedNativeArc.mjs'
 const frames=error=>String(error?.stack??'').split('\n').slice(1).flatMap(line=>{
- const match=line.match(/(?:nativeArcCohortPostgres17\.test\.mjs|nativeArcAttachmentAssertions\.mjs|atomicInstall\.mjs):(\d{1,6}):(\d{1,6})/);
+ const match=line.match(/(?:nativeArcCohortPostgres17\.test\.mjs|nativeArcAttachmentAssertions\.mjs|nativeArcPublicProjectionAssertions\.mjs|atomicInstall\.mjs):(\d{1,6}):(\d{1,6})/);
  return match?[match[0]]:[];
 }).slice(0,4);
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8')
@@ -93,7 +94,13 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   await db.query(await read('supabase/qualification/entity-resolution/candidate-review/004_candidate_review.sql'))
   assert.deepEqual(await catalog(),prior,'existing role, membership, ACL, RLS, policy and function boundaries preserved')
   await db.query(`create table public.entities(id uuid primary key,canonical_name text,normalized_name text,type text,aliases text[],mention_count integer default 0,last_seen timestamptz);
-   alter table public.story_arcs add column started_at date not null,add column title text,add column summary text,add column last_update_at timestamptz;
+   alter table public.story_arcs add column started_at date not null,add column title text,add column summary text,add column last_update_at timestamptz,add column category text not null default 'accountability',add column root_node_id uuid;
+   -- Exact selected context columns only; the separate historical fixture owns
+   -- full legacy projector schema/default/index dependency qualification.
+   alter table public.nodes add column if not exists type text;
+   alter table public.arc_milestones add column if not exists arc_id uuid,add column if not exists milestone_key text,add column if not exists status text not null default 'pending';
+   alter table public.articles add column if not exists reader_state text not null default 'pending_review',add column if not exists source_status text not null default 'active';
+   alter table public.nodes enable row level security;alter table public.arc_milestones enable row level security;
    alter table public.arc_membership_candidates add column article_id uuid,add column arc_id uuid,add column state text,add column updated_at timestamptz;
    alter table public.articles enable row level security;alter table public.entities enable row level security;
    alter table public.story_arcs enable row level security;alter table public.pipeline_config enable row level security;
@@ -196,7 +203,8 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   const recorderBaseline=(await db.query("select p.oid,pg_get_functiondef(p.oid) definition from pg_proc p where p.oid in('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure,'mip_identity.collector_lock()'::regprocedure) order by p.oid")).rows;
   for(const path of ['supabase/qualification/arc-membership-native/001_governed_cohort.sql',
    'supabase/qualification/arc-membership-native/002_private_score_review.sql',
-   'supabase/qualification/arc-membership-native/003_governed_attachment.sql'])await db.query(await read(path));
+   'supabase/qualification/arc-membership-native/003_governed_attachment.sql',
+   'supabase/qualification/arc-public-projection/001_native_private_projection.sql'])await db.query(await read(path));
   assert.deepEqual((await db.query("select p.oid,pg_get_functiondef(p.oid) definition from pg_proc p where p.oid in('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure,'mip_identity.collector_lock()'::regprocedure) order by p.oid")).rows,recorderBaseline);
   await db.query('grant mip_arc_native_worker to "'+aliceName+'", "'+workerName+'"');
   privateWorker=await connect(workerName);sameReviewer=await connect(reviewerName);
@@ -473,10 +481,20 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   });
 
   await checkNative('private_attachment_complete_union_two_successors_and_current_dependency_revalidation',async()=>{
+   const contextNodeId=id(2020),contextMilestoneId=id(2021),privateFixtureSelection=id(2022);
+   await db.query('insert into public.nodes(id,type) values($1,$2)',[contextNodeId,'institution']);
+   await db.query('update public.story_arcs set root_node_id=$2 where id=$1',[arc,contextNodeId]);
+   await db.query('insert into public.arc_milestones(id,arc_id,milestone_key,status) values($1,$2,$3,$4)',
+    [contextMilestoneId,arc,'ia_concludes','pending']);
+   // Supplemental projection work reserves space under the original whole
+   // operation limits. This later SYNTHETIC profile does not reduce production
+   // ceilings or change earlier 8MiB/128MiB whole-core qualification.
+   await reviewer.query('select mip_arc_native.review_selection_policy($1,$2,2,$3,0.7,true,31,128,4194304,67108864)',
+    [s,privateFixtureSelection,selection]);
    const buildReviewed=async({capture:original,candidateId,cohortId,generationId,reviewKey,memberIds,bindingIds,extractionIds})=>{
     const candidateRevision=(await db.query('select updated_at::text revision from public.arc_membership_candidates where id=$1',[candidateId])).rows[0].revision;
     await reviewer.query('select mip_arc_native.review_cohort($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
-     [s,cohortId,candidateId,candidateRevision,original.article_id,arc,memberIds.sort(),bindingIds,extractionIds,selection]);
+     [s,cohortId,candidateId,candidateRevision,original.article_id,arc,memberIds.sort(),bindingIds,extractionIds,privateFixtureSelection]);
     const snap=await call(alice,'select mip_arc_native.snapshot($1,$2,$3) result',[s,cohortId,generationId]);
     const wire=await call(alice,'select mip_arc_native.read_scoring_input($1,$2,$3) result',[s,generationId,snap.input_hash]);
     const scoredOutput=scoreGovernedNativeInput(wire);
@@ -489,6 +507,11 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
    };
    const first=await buildReviewed({capture:cap,candidateId:arcCandidate,cohortId:id(1000),generationId:id(1001),reviewKey:id(1002),
     memberIds:[conflictCap.article_id],bindingIds:bindings,extractionIds:extractions});
+   const privateProjection=await assertNativeArcPrivateProjection({syntheticFixture:true,db,reviewer,
+    gateway:alice,outsider:guest,worker:privateWorker,scope:s,first,sentinel,id,contextNodeId,contextMilestoneId});
+   assert.equal(privateProjection.checks,5);
+   assert.equal(privateProjection.publication_allowed,false);
+   assert.equal(privateProjection.attachment_performed,false);
    await assertNativeArcAttachments({
     syntheticFixture:true,db,reviewer,sameReviewer,gateway:alice,outsider:guest,worker:privateWorker,
     scope:s,sentinel,ids:[id(1010),id(1011),id(1012),id(1013)],first,

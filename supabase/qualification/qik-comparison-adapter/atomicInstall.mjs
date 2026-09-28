@@ -1,6 +1,6 @@
 // Source-only until separately qualified. No CLI, activation or automatic retry.
 import {createHash} from 'node:crypto'
-import {NATIVE_MODE,NATIVE_AUTHORIZATION,NATIVE_ROLES,prepareNativeGovernedInstall,installNativeGovernedInTransaction,assertNativeGovernedClosure,nativeInstallFailure} from '../native-governed-install/install.mjs'
+import {NATIVE_PROJECTION_MODE,isNativeMode,nativeAuthorization,NATIVE_ROLES,prepareNativeGovernedInstall,installNativeGovernedInTransaction,assertNativeGovernedClosure,nativeInstallFailure} from '../native-governed-install/install.mjs'
 import {compileSource,PROJECT,NAME_MAPPING} from './compileSource.mjs'
 import {collectCatalog,validateCatalog,RESERVED_ROLES,RESERVED_SCHEMAS} from './catalogPreflight.mjs'
 import {connectPersistentInstaller} from '../qik-ingest/persistentInstall.mjs'
@@ -125,7 +125,7 @@ function outer(s){
 }
 function split(s,marker){if(s.split(marker).length!==2)refuse('assertion_boundary');const at=s.indexOf(marker);return [s.slice(0,at),s.slice(at)]}
 export async function prepareAtomicInstall(readPinnedSource,options={}){
- if(Object.keys(options).some(k=>k!=='nativeMode')||(options.nativeMode!==undefined&&options.nativeMode!==NATIVE_MODE))refuse('native_mode')
+ if(Object.keys(options).some(k=>k!=='nativeMode')||(options.nativeMode!==undefined&&!isNativeMode(options.nativeMode)))refuse('native_mode')
  const compiled=await compileSource(readPinnedSource)
  const raw=Buffer.from(await readPinnedSource(DOJ_PATH,DOJ_SOURCE_COMMIT))
  if(createHash('sha1').update(Buffer.from('blob '+raw.length+'\0')).update(raw).digest('hex')!==DOJ_BLOB)refuse('doj_source_digest')
@@ -173,13 +173,13 @@ export async function prepareAtomicInstall(readPinnedSource,options={}){
  const plan={version:INSTALL_VERSION,target_project:PROJECT,source_commit:compiled.source_commit,
   doj_source_commit:DOJ_SOURCE_COMMIT,catalog_inspection_schemas:[...CATALOG_INSPECTION_SCHEMAS],credential_statement_timeout_max_ms:1000,roles:[...roles.entries()].sort(([a],[b])=>a.localeCompare(b)),
   body,dojBody,permissions,closure:closure.sql,assertions,dojAssertions,compatibility:compatibility.sql}
- if(options.nativeMode===NATIVE_MODE)plan.native=await prepareNativeGovernedInstall(readPinnedSource)
+ if(isNativeMode(options.nativeMode))plan.native=await prepareNativeGovernedInstall(readPinnedSource,options.nativeMode)
  return {...plan,manifest_sha256:digest(JSON.stringify(plan))}
 }
 export function validateAtomicConfig(c){
- if(!c||(c.nativeMode!==undefined&&c.nativeMode!==NATIVE_MODE)
-  ||(c.nativeMode===NATIVE_MODE?!SHA.test(c.expectedNativeProgramSha256??''):c.expectedNativeProgramSha256!==undefined)
-  ||c.authorization!==(c.nativeMode===NATIVE_MODE?NATIVE_AUTHORIZATION:'owner-authorized-disabled-comparison-install')||!ID.test(c.operationId??'')
+ if(!c||(c.nativeMode!==undefined&&!isNativeMode(c.nativeMode))
+  ||(isNativeMode(c.nativeMode)?!SHA.test(c.expectedNativeProgramSha256??''):c.expectedNativeProgramSha256!==undefined)
+  ||c.authorization!==(isNativeMode(c.nativeMode)?nativeAuthorization(c.nativeMode):'owner-authorized-disabled-comparison-install')||!ID.test(c.operationId??'')
   ||!LOGIN.test(c.expectedLogin??'')||!ID.test(c.c3OperationId??'')||!SHA.test(c.c3ManifestSha256??'')
   ||!SHA.test(c.expectedManifestSha256??'')||!SHA.test(c.dblinkMetadataSha256??'')||typeof c.collectorSource!=='string'
   ||!/^qik-[a-z0-9_-]{1,90}$/.test(c.collectorSource))refuse('configuration')
@@ -200,7 +200,7 @@ export function validateAtomicConfig(c){
  return {operationId:c.operationId,expectedLogin:c.expectedLogin,auditLogin:c.auditLogin,
   c3OperationId:c.c3OperationId,c3ManifestSha256:c.c3ManifestSha256,
   expectedManifestSha256:c.expectedManifestSha256,dblinkMetadataSha256:c.dblinkMetadataSha256,collectorSource:c.collectorSource,
-  creator:'mip_tmp_'+c.operationId,...(c.nativeMode===NATIVE_MODE?{nativeMode:NATIVE_MODE,expectedNativeProgramSha256:c.expectedNativeProgramSha256}:{})}
+  creator:'mip_tmp_'+c.operationId,...(isNativeMode(c.nativeMode)?{nativeMode:c.nativeMode,expectedNativeProgramSha256:c.expectedNativeProgramSha256}:{})}
 }
 // Hash only the existing configuration/receipt rows. Never source articles/captures.
 const C3_SQL=String.raw`
@@ -448,7 +448,7 @@ export async function reconcileComparisonInstall(config){
   phase='reconciliation_inventory'
   const exists=(await db.query("select to_regclass('mip_comparison_install.receipts') is not null present")).rows[0]
   if(!exists?.present){
-   const remnants=(await db.query('select exists(select 1 from pg_namespace where nspname=any($1::text[])) or exists(select 1 from pg_roles where rolname=any($2::text[])) present',[[...schemas,RECEIPT_SCHEMA,...(c.nativeMode?['mip_mentions','mip_arc_qik_source','mip_arc_native','mip_nca_'+c.operationId]:[])],[...RESERVED_ROLES,c.creator,...(c.nativeMode?[...NATIVE_ROLES,'mip_nci_'+c.operationId]:[])]])).rows[0]
+   const remnants=(await db.query('select exists(select 1 from pg_namespace where nspname=any($1::text[])) or exists(select 1 from pg_roles where rolname=any($2::text[])) present',[[...schemas,RECEIPT_SCHEMA,...(c.nativeMode?['mip_mentions','mip_arc_qik_source','mip_arc_native','mip_nca_'+c.operationId,...(c.nativeMode===NATIVE_PROJECTION_MODE?['mip_arc_projection_private']:[])]:[])],[...RESERVED_ROLES,c.creator,...(c.nativeMode?[...NATIVE_ROLES,'mip_nci_'+c.operationId]:[])]])).rows[0]
    return safe(remnants?.present?'reconciliation_drift':'not_installed',c,c.expectedManifestSha256,{needs_reconciliation:remnants?.present!==false})
   }
   phase='reconciliation_receipt'
@@ -463,7 +463,7 @@ export async function reconcileComparisonInstall(config){
   if(c.nativeMode){
    phase='native_reconciliation'
    const native=(await db.query('select mode,program_sha256 from mip_comparison_install.native_programs where operation_id=$1',[c.operationId])).rows[0]
-   if(native?.mode!==NATIVE_MODE||native.program_sha256!==c.expectedNativeProgramSha256)refuse('native_receipt')
+   if(native?.mode!==c.nativeMode||native.program_sha256!==c.expectedNativeProgramSha256)refuse('native_receipt')
    await assertNativeGovernedClosure(db,c)
   }
   return safe('installed_disabled_audit_pending',c,c.expectedManifestSha256,{needs_reconciliation:false,audit_qualified:false})

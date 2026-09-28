@@ -7,7 +7,7 @@ import pg from 'pg'
 import {prepareAtomicInstall,installComparisonAtomic,qualifyComparisonAudit,DBLINK_PREFLIGHT_SQL,validateAtomicConfig,reconcileComparisonInstall} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
 import {REQUIRED_RELATIONS,RESERVED_ROLES} from '../supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs'
 import {LOAD_ORDER} from '../supabase/qualification/qik-ingest/installQikIngest.mjs'
-import {NATIVE_MODE,NATIVE_AUTHORIZATION,NATIVE_ORDER,NATIVE_ROLES,assertNativeGovernedClosure} from '../supabase/qualification/native-governed-install/install.mjs'
+import {NATIVE_MODE,NATIVE_PROJECTION_MODE,nativeAuthorization,NATIVE_ORDER,NATIVE_PROJECTION_ORDER,NATIVE_ROLES,assertNativeGovernedClosure} from '../supabase/qualification/native-governed-install/install.mjs'
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8')
 const database='postgres',password='mip-efta-disposable-ci-only'
 const backendInstaller='native_install_principal',backendAudit='native_install_audit'
@@ -34,23 +34,25 @@ async function loseAcknowledgementOnce(command,operation){
  try{const result=await operation();return {result,injected}}
  finally{pg.Client.prototype.query=original}
 }
-test('joint native installation uses actual PG17.6 nonsuper principal, rollback, cleanup and disabled audit', {
+for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE])test(selectedMode+' joint native installation uses actual PG17.6 nonsuper principal, rollback, cleanup and disabled audit', {
  skip:process.env.MIP_NATIVE_GOVERNED_INSTALL_DISPOSABLE!=='synthetic-pg17-only',timeout:300000
 },async t=>{
  let root,principal,baseline,armed=false,primary=null,stage='pristine',lastInstall=null;const cleanup=[]
+ const projection=selectedMode===NATIVE_PROJECTION_MODE,selectedOrder=projection?NATIVE_PROJECTION_ORDER:NATIVE_ORDER
+ const refusalRelation=projection?'public.nodes':'public.articles',refusalPath=projection?selectedOrder.at(-1).path:'supabase/qualification/arc-membership-native/001_governed_cohort.sql'
  try{
   assert.equal(process.env.MIP_QIK_COMPARISON_DISPOSABLE,'synthetic-pg17-only')
   assert.equal(process.env.MIP_DISPOSABLE_POSTGRES,'qik-persistent-install')
   root=await connect();await assertPristineFixture(root)
   assert.equal((await root.query("select bool_and(error is null and(type='local' or(type='host' and auth_method='scram-sha-256'))) ok from pg_hba_file_rules")).rows[0].ok,true)
   baseline=(await roleCatalog(root)).map(r=>r.rolname);armed=true
-  stage='actual_dependency_program';const {cfg,plan}=await prepareFullBackend(root)
+  stage='actual_dependency_program';const {cfg,plan}=await prepareFullBackend(root,selectedMode)
   principal=await connect(backendInstaller)
   await t.test('separate SCRAM session matches observed restricted installer attributes',async()=>{
    assert.deepEqual((await principal.query("select session_user::text principal,current_user::text effective,rolsuper,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit,rolcanlogin from pg_roles where rolname=current_user")).rows[0],
     {principal:backendInstaller,effective:backendInstaller,rolsuper:false,rolcreaterole:true,rolcreatedb:true,rolbypassrls:true,rolinherit:true,rolcanlogin:true})
    await assert.rejects(connect(backendInstaller,'deliberately-wrong-synthetic-password'),e=>e.code==='28P01')
-   for(const name of ['articles','entities','story_arcs','pipeline_config','arc_membership_candidates']){
+   for(const name of ['articles','entities','story_arcs','pipeline_config','arc_membership_candidates',...(projection?['nodes','arc_milestones']:[])]){
     assert.deepEqual((await principal.query("select relkind::text kind,pg_get_userbyid(relowner) owner,relrowsecurity rls,relforcerowsecurity force from pg_class where oid=$1::regclass",['public.'+name])).rows[0],{kind:'r',owner:backendInstaller,rls:true,force:false})
    }
   })
@@ -60,23 +62,27 @@ test('joint native installation uses actual PG17.6 nonsuper principal, rollback,
    assert.notEqual((await prepareAtomicInstall(read)).manifest_sha256,plan.manifest_sha256)
    await assert.rejects(installComparisonAtomic({...cfg,expectedNativeProgramSha256:'0'.repeat(64)},read),/atomic_manifest_mismatch/)
    await assert.rejects(installComparisonAtomic({...cfg,expectedManifestSha256:'0'.repeat(64)},read),/atomic_manifest_mismatch/)
-   assert.deepEqual(plan.native.steps.map(s=>s.blob),NATIVE_ORDER.map(s=>s.blob))
+   assert.throws(()=>validateAtomicConfig({...cfg,authorization:nativeAuthorization(projection?NATIVE_MODE:NATIVE_PROJECTION_MODE)}))
+   const prior=await prepareAtomicInstall(read,{nativeMode:NATIVE_MODE})
+   assert.deepEqual(plan.native.steps.slice(0,9),prior.native.steps)
+   if(projection)assert.notEqual(plan.native.program_sha256,prior.native.program_sha256)
+   assert.deepEqual(plan.native.steps.map(s=>s.blob),selectedOrder.map(s=>s.blob))
    for(const s of plan.native.steps.filter(s=>s.assertion))assert.match(s.assertion_sha256,/^[a-f0-9]{64}$/)
   })
   stage='transaction_failure'
   const beforeRoles=await roleCatalog(root),beforeEdges=await edgeCatalog(root)
-  await principal.query('create policy native_qualification_refuse on public.articles as restrictive for select to public using(false)')
+  await principal.query('create policy native_qualification_refuse on '+refusalRelation+' as restrictive for select to public using(false)')
   const failed=await installComparisonAtomic(cfg,read);lastInstall=safeResult(failed)
   await t.test('actual late source-authority failure rolls back full backend/native DDL and memberships',async()=>{
    assert.equal(failed.state,'installation_refused')
    assert.equal(failed.phase,'native_joint_install',JSON.stringify(lastInstall))
    assert.equal(failed.sqlstate,'P0001',JSON.stringify(lastInstall))
    assert.equal(failed.native_failure?.stage,'checkpoint_assertion',JSON.stringify(lastInstall))
-   assert.equal(failed.native_failure?.source,'supabase/qualification/arc-membership-native/001_governed_cohort.sql',JSON.stringify(lastInstall))
+   assert.equal(failed.native_failure?.source,refusalPath,JSON.stringify(lastInstall))
    assert.equal(failed.native_failure?.name,'arc_native_source_authority',JSON.stringify(lastInstall))
    assert.deepEqual(await roleCatalog(root),beforeRoles)
    assert.deepEqual(await edgeCatalog(root),beforeEdges)
-   assert.equal((await root.query("select count(*)::int n from pg_namespace where nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_identity','mip_comparison_install') or nspname like 'mip_nca_%'")).rows[0].n,0)
+   assert.equal((await root.query("select count(*)::int n from pg_namespace where nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_arc_projection_private','mip_identity','mip_comparison_install') or nspname like 'mip_nca_%'")).rows[0].n,0)
    assert.equal((await root.query("select n.nspname from pg_extension e join pg_namespace n on n.oid=e.extnamespace where e.extname='dblink'")).rows[0].nspname,'extensions')
    assert.equal((await principal.query('select count(*)::int n from qik_ingest_operation.persistent_install_receipt')).rows[0].n,1)
   })
@@ -88,13 +94,14 @@ test('joint native installation uses actual PG17.6 nonsuper principal, rollback,
    assert.equal(rollbackUnknown.state,'rollback_unverified',JSON.stringify(lastInstall))
    assert.equal(rollbackUnknown.sqlstate,'P0001',JSON.stringify(lastInstall))
    assert.equal(rollbackUnknown.native_failure?.stage,'checkpoint_assertion',JSON.stringify(lastInstall))
+   assert.equal(rollbackUnknown.native_failure?.source,refusalPath,JSON.stringify(lastInstall))
    assert.equal(rollbackUnknown.native_failure?.name,'arc_native_source_authority',JSON.stringify(lastInstall))
    assert.equal(rollbackUnknown.needs_reconciliation,true)
    assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
    assert.deepEqual(await roleCatalog(root),beforeRoles)
    assert.deepEqual(await edgeCatalog(root),beforeEdges)
   })
-  await principal.query('drop policy native_qualification_refuse on public.articles')
+  await principal.query('drop policy native_qualification_refuse on '+refusalRelation)
   stage='joint_install';const commitAttempt=await loseAcknowledgementOnce('commit',()=>installComparisonAtomic(cfg,read))
   const attempt=commitAttempt.result;lastInstall=safeResult(attempt)
   assert.equal(commitAttempt.injected,true,JSON.stringify(lastInstall))
@@ -103,12 +110,23 @@ test('joint native installation uses actual PG17.6 nonsuper principal, rollback,
   await t.test('actual committed program reconciles after lost COMMIT acknowledgement without replay',async()=>{
    assert.equal(installed.state,'installed_disabled_audit_pending',JSON.stringify({phase:installed.phase,sqlstate:installed.sqlstate,diagnostic:installed.diagnostic}))
    assert.equal(installed.needs_reconciliation,false)
-   assert.equal(installed.native_mode,NATIVE_MODE);assert.equal(installed.native_program_sha256,plan.native.program_sha256)
-   assert.equal(plan.native.steps.at(-1).path,'supabase/qualification/arc-membership-native/003_governed_attachment.sql')
+   assert.equal(installed.native_mode,selectedMode);assert.equal(installed.native_program_sha256,plan.native.program_sha256)
+   assert.equal(plan.native.steps.at(-1).path,selectedOrder.at(-1).path)
    await assertNativeGovernedClosure(principal,cfg)
    const receipt=(await principal.query('select mode,program_sha256,stage_assertions from mip_comparison_install.native_programs where operation_id=$1',[cfg.operationId])).rows[0]
-   assert.equal(receipt.mode,NATIVE_MODE);assert.equal(receipt.program_sha256,plan.native.program_sha256)
+   assert.equal(receipt.mode,selectedMode);assert.equal(receipt.program_sha256,plan.native.program_sha256)
    assert.deepEqual(receipt.stage_assertions,plan.native.steps.filter(s=>s.assertion).map(s=>({path:s.path,sha256:s.assertion_sha256})))
+  })
+  if(projection)await t.test('private final closure verifies source permissions, exact ACLs and complete survivor fences after real cleanup',async()=>{
+   await root.query(plan.native.steps.at(-1).assertion)
+   assert.equal((await root.query("select count(*)::int n from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_arc_projection_private' and c.relkind='r'")).rows[0].n,6)
+   assert.equal((await root.query("select count(*)::int n from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_arc_projection_private'")).rows[0].n,17)
+   await root.query('begin')
+   try{
+    await root.query('grant select on mip_arc_projection_private.projections to public')
+    await assert.rejects(root.query(plan.native.steps.at(-1).assertion),e=>e.code==='P0001'&&e.message==='arc_projection_table_acl')
+   }finally{await root.query('rollback')}
+   await root.query(plan.native.steps.at(-1).assertion)
   })
   stage='audit';const audited=await qualifyComparisonAudit(cfg)
   await t.test('actual autonomous comparison audit qualifies while all activation fences stay closed',async()=>{
@@ -123,7 +141,7 @@ test('joint native installation uses actual PG17.6 nonsuper principal, rollback,
    await assertNativeGovernedClosure(principal,cfg)
    for(const role of NATIVE_ROLES)await assert.rejects(principal.query('set role '+ident(role)),e=>e.code==='42501')
    for(const role of ['anon','authenticated','service_role']){
-    assert.equal((await root.query("select bool_or(has_table_privilege($1,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') or has_any_column_privilege($1,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')) bad from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source') and c.relkind='r'",[role])).rows[0].bad,false)
+    assert.equal((await root.query("select bool_or(has_table_privilege($1,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') or has_any_column_privilege($1,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')) bad from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_arc_projection_private') and c.relkind='r'",[role])).rows[0].bad,false)
    }
    assert.equal((await root.query("select count(*)::int n from pg_roles where rolname like 'mip_nci_%' or rolname like 'mip_tmp_%'")).rows[0].n,0)
    assert.equal((await root.query("select count(*)::int n from pg_namespace where nspname like 'mip_nca_%'")).rows[0].n,0)
@@ -184,7 +202,7 @@ async function assertPristineFixture(db){
  assert.deepEqual(edges,['pg_read_all_settings','pg_read_all_stats','pg_stat_scan_tables'].map(parent=>({parent,member:'pg_monitor',admin:false,inherit:true,set:true})))
 }
 
-async function prepareFullBackend(root){
+async function prepareFullBackend(root,selectedMode){
  let owner;
  try{
   await root.query("create role "+backendInstaller+" login superuser password '"+password+"'");
@@ -227,13 +245,31 @@ async function prepareFullBackend(root){
    await nativeBase.query("create table public.entities(id uuid primary key,canonical_name text,normalized_name text,type text,aliases text[],mention_count integer default 0,last_seen timestamptz);alter table public.story_arcs add column started_at date not null,add column title text,add column summary text,add column last_update_at timestamptz;alter table public.arc_membership_candidates add column article_id uuid,add column arc_id uuid,add column state text,add column updated_at timestamptz");
    await nativeBase.query("alter table public.articles enable row level security;alter table public.entities enable row level security;alter table public.story_arcs enable row level security;alter table public.pipeline_config enable row level security;alter table public.arc_membership_candidates enable row level security");
   }finally{await nativeBase.end()}
-  const plan=await prepareAtomicInstall(read,{nativeMode:NATIVE_MODE});
+  if(selectedMode===NATIVE_PROJECTION_MODE){
+   const selected=await connect(backendInstaller)
+   try{
+    for(const [relation,columns] of [
+     ['articles',{reader_state:'text',source_status:'text'}],
+     ['story_arcs',{category:'text',root_node_id:'uuid'}],
+     ['nodes',{id:'uuid',type:'text'}],
+     ['arc_milestones',{id:'uuid',arc_id:'uuid',milestone_key:'text',status:'text'}]
+    ]){
+     const existing=new Map((await selected.query("select attname,format_type(atttypid,atttypmod) type from pg_attribute where attrelid=$1::regclass and attnum>0 and not attisdropped",['public.'+relation])).rows.map(x=>[x.attname,x.type]))
+     for(const [name,type] of Object.entries(columns)){
+      if(existing.has(name))assert.equal(existing.get(name),type)
+      else await selected.query('alter table public.'+ident(relation)+' add column '+ident(name)+' '+type)
+     }
+    }
+    await selected.query('alter table public.nodes enable row level security;alter table public.arc_milestones enable row level security')
+   }finally{await selected.end()}
+  }
+  const plan=await prepareAtomicInstall(read,{nativeMode:selectedMode});
   const pre=await connect(backendInstaller);
   let metadata;
   try{metadata=(await pre.query(DBLINK_PREFLIGHT_SQL)).rows[0];assert.equal(metadata.expected,true);assert.equal(metadata.unused,true);assert.equal(metadata.no_servers,true)}
   finally{await pre.end()}
   const url=name=>'postgresql://'+name+':'+password+'@127.0.0.1:5432/postgres';
-  const cfg={authorization:NATIVE_AUTHORIZATION,nativeMode:NATIVE_MODE,operationId:'2'.repeat(32),
+  const cfg={authorization:nativeAuthorization(selectedMode),nativeMode:selectedMode,operationId:'2'.repeat(32),
    expectedLogin:backendInstaller,connectionString:url(backendInstaller),c3OperationId:'3'.repeat(32),c3ManifestSha256:'1'.repeat(64),
    expectedManifestSha256:plan.manifest_sha256,expectedNativeProgramSha256:plan.native.program_sha256,dblinkMetadataSha256:metadata.metadata_sha256,collectorSource:'qik-fixture-v1',
    auditLogin:backendAudit,auditConnectionString:url(backendAudit),disposable:true};

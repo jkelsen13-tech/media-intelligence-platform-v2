@@ -2,6 +2,8 @@
 // Only prepareNativeGovernedInstall's fixed source program is executable.
 import {createHash} from 'node:crypto'
 export const NATIVE_MODE='native-governed-v2'
+export const NATIVE_PROJECTION_MODE='native-governed-v3'
+export const NATIVE_PROJECTION_AUTHORIZATION='owner-authorized-disabled-comparison-native-private-projection-install'
 export const NATIVE_AUTHORIZATION='owner-authorized-disabled-comparison-native-install'
 export const NATIVE_SOURCE_BASE='79f25d3519d26fd0dbda37fd0728e5783c04834a'
 export const NATIVE_ORDER=Object.freeze([
@@ -60,6 +62,14 @@ export const NATIVE_ORDER=Object.freeze([
     "assertion_owner": "mip_arc_native_owner"
   }
 ].map(Object.freeze))
+export const NATIVE_PROJECTION_ORDER=Object.freeze([...NATIVE_ORDER,Object.freeze({
+ path:'supabase/qualification/arc-public-projection/001_native_private_projection.sql',blob:'055083ea50c058c6fd476a80a32e4f998232a51a',
+ assertion_marker:'do $private_projection_final$',assertion_owner:'mip_arc_native_owner'
+})])
+export const isNativeMode=mode=>mode===NATIVE_MODE||mode===NATIVE_PROJECTION_MODE
+export function nativeAuthorization(mode){if(!isNativeMode(mode))fail('plan');return mode===NATIVE_MODE?NATIVE_AUTHORIZATION:NATIVE_PROJECTION_AUTHORIZATION}
+const orderFor=mode=>mode===NATIVE_MODE?NATIVE_ORDER:mode===NATIVE_PROJECTION_MODE?NATIVE_PROJECTION_ORDER:fail('plan')
+const schemasFor=mode=>['mip_mentions','mip_arc_qik_source','mip_arc_native',...(mode===NATIVE_PROJECTION_MODE?['mip_arc_projection_private']:[])]
 const identifier=/^[a-z][a-z0-9_]{0,62}$/
 const quote=s=>{if(!identifier.test(s))throw Error('native_install_identifier');return '"'+s+'"'}
 const literal=s=>"'"+s.replaceAll("'","''")+"'"
@@ -68,7 +78,7 @@ const blob=b=>createHash('sha1').update(Buffer.from('blob '+b.length+'\0')).upda
 const fail=s=>{throw Error('native_install_'+s)}
 const preparedPlans=new WeakSet()
 const failureDetails=new WeakMap()
-const REFUSAL_NAMES=new Set(["native_install_assertion_boundary","native_install_assertion_helper_boundary","native_install_collision","native_install_creation_boundary","native_install_creator_owns_objects","native_install_creator_topology","native_install_existing_owner_path","native_install_final_role_attributes","native_install_final_role_edges","native_install_final_scaffolding","native_install_final_schema_owners","native_install_final_storage","native_install_membership_statement","native_install_plan","native_install_principal","native_install_role_contract","native_install_role_inventory","native_install_source_digest","native_install_source_encoding","native_install_transaction_boundary"])
+const REFUSAL_NAMES=new Set(["native_install_assertion_boundary","native_install_assertion_helper_boundary","native_install_collision","native_install_creation_boundary","native_install_creator_owns_objects","native_install_creator_topology","native_install_existing_owner_path","native_install_final_role_attributes","native_install_final_role_edges","native_install_final_scaffolding","native_install_final_schema_owners","native_install_final_storage","native_install_final_private_storage","native_install_membership_statement","native_install_plan","native_install_principal","native_install_role_contract","native_install_role_inventory","native_install_source_digest","native_install_source_encoding","native_install_transaction_boundary"])
 // Values originate only from this fixed program; no SQL text, args, detail,
 // hint, context, payload, connection target, or arbitrary error message escapes.
 export function nativeInstallFailure(error){return error&&typeof error==='object'?failureDetails.get(error)??null:null}
@@ -109,9 +119,9 @@ function outer(s){
   ||!/^commit;\s*$/.test(s.slice(s.lastIndexOf('\ncommit;')+1)))fail('transaction_boundary')
  return s.replace(/^begin;[ \t]*$/m,'').replace(/^commit;[ \t]*$/m,'')
 }
-export async function prepareNativeGovernedInstall(read){
+export async function prepareNativeGovernedInstall(read,mode=NATIVE_MODE){
  const steps=[],roles=[]
- for(const entry of NATIVE_ORDER){
+ for(const entry of orderFor(mode)){
   const bytes=Buffer.from(await read(entry.path))
   if(blob(bytes)!==entry.blob)fail('source_digest')
   const text=bytes.toString('utf8')
@@ -135,7 +145,7 @@ export async function prepareNativeGovernedInstall(read){
   steps.push({...entry,body:sql,created,assertion,assertion_sha256:assertion===null?null:hash(assertion)})
  }
  if(NATIVE_ROLES.some(r=>!roles.includes(r))||roles.length!==NATIVE_ROLES.length)fail('role_inventory')
- const plan=freeze({mode:NATIVE_MODE,source_base:NATIVE_SOURCE_BASE,steps,roles,program_sha256:hash(JSON.stringify(steps))})
+ const plan=freeze({mode,source_base:NATIVE_SOURCE_BASE,steps,roles,program_sha256:hash(JSON.stringify(steps))})
  preparedPlans.add(plan);return plan
 }
 async function identity(db,login){
@@ -173,8 +183,8 @@ async function assertionHelper(db,schema,owner,login,sql){
 export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,operationId}){
  let nativeStage='plan',nativeSource=null,nativeObject=null
  try{
- if(!preparedPlans.has(plan)||!/^[0-9a-f]{32}$/.test(operationId)||plan?.mode!==NATIVE_MODE||plan.program_sha256!==hash(JSON.stringify(plan.steps))
-  ||JSON.stringify(plan.steps.map(({path,blob,assertion_marker,assertion_owner})=>({path,blob,assertion_marker,assertion_owner})))!==JSON.stringify(NATIVE_ORDER))fail('plan')
+ if(!preparedPlans.has(plan)||!/^[0-9a-f]{32}$/.test(operationId)||!isNativeMode(plan?.mode)||plan.program_sha256!==hash(JSON.stringify(plan.steps))
+  ||JSON.stringify(plan.steps.map(({path,blob,assertion_marker,assertion_owner})=>({path,blob,assertion_marker,assertion_owner})))!==JSON.stringify(orderFor(plan.mode)))fail('plan')
  // The enclosing atomic installer owns BEGIN/COMMIT/ROLLBACK. SAVEPOINT refuses
  // standalone/autocommit use; failure aborts the whole joint transaction.
  nativeStage='transaction_entry'
@@ -183,9 +193,9 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
  await identity(db,expectedLogin)
  const creator='mip_nci_'+operationId,schema='mip_nca_'+operationId
  nativeStage='collision'
- if((await db.query('select exists(select 1 from pg_roles where rolname=any($1)) or exists(select 1 from pg_namespace where nspname=any($2)) collision',[[...NATIVE_ROLES,creator],['mip_mentions','mip_arc_qik_source','mip_arc_native',schema]])).rows[0].collision)fail('collision')
+ if((await db.query('select exists(select 1 from pg_roles where rolname=any($1)) or exists(select 1 from pg_namespace where nspname=any($2)) collision',[[...NATIVE_ROLES,creator],[...schemasFor(plan.mode),schema]])).rows[0].collision)fail('collision')
  nativeStage='ownership_preflight'
- for(const relation of requiredOwnerRelations){
+ for(const relation of [...requiredOwnerRelations,...(plan.mode===NATIVE_PROJECTION_MODE?['public.arc_milestones','public.nodes']:[])]){
   nativeObject=relation
   const r=(await db.query("select c.relrowsecurity,pg_has_role(current_user,c.relowner,'USAGE') owner_rights from pg_class c where c.oid=to_regclass($1)",[relation])).rows[0]
   if(!r?.relrowsecurity||!r.owner_rights)fail('existing_owner_path')
@@ -220,7 +230,7 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
    await db.query('drop schema '+quote(schema)+' cascade')
   }
  }
- // Combined final v2 C6/C9/private-attachment assertion is replayed after REAL cleanup, followed by all native
+ // Selected final combined C6/C9/private assertion is replayed after REAL cleanup, followed by all native
  // role attributes/no-edge checks. The parent then executes its original
  // backend final assertions and audit/C3 closure before the single COMMIT.
  const final=plan.steps.at(-1)
@@ -233,19 +243,24 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
  nativeStage='final_helper_drop'
  await db.query('drop schema '+quote(schema)+' cascade')
  nativeStage='final_closure'
- await assertNativeGovernedClosure(db,{expectedLogin,operationId})
+ await assertNativeGovernedClosure(db,{expectedLogin,operationId,nativeMode:plan.mode})
  await db.query('release savepoint native_entry')
- return {mode:NATIVE_MODE,program_sha256:plan.program_sha256,stage_assertions:plan.steps.filter(s=>s.assertion).map(s=>({path:s.path,sha256:s.assertion_sha256})),committed:false,production_qualified:false,publication_allowed:false}
+ return {mode:plan.mode,program_sha256:plan.program_sha256,stage_assertions:plan.steps.filter(s=>s.assertion).map(s=>({path:s.path,sha256:s.assertion_sha256})),committed:false,production_qualified:false,publication_allowed:false}
  }catch(error){recordFailure(error,plan,nativeStage,nativeSource,nativeObject);throw error}
 }
-export async function assertNativeGovernedClosure(db,{expectedLogin,operationId}){
+export async function assertNativeGovernedClosure(db,{expectedLogin,operationId,nativeMode=NATIVE_MODE}){
+ if(!isNativeMode(nativeMode))fail('plan')
  await identity(db,expectedLogin)
  const roles=(await db.query('select rolname,rolcanlogin,rolsuper,rolcreaterole,rolcreatedb,rolreplication,rolbypassrls,rolinherit from pg_roles where rolname=any($1)',[NATIVE_ROLES])).rows
  if(roles.length!==NATIVE_ROLES.length||roles.some(r=>r.rolcanlogin||r.rolsuper||r.rolcreaterole||r.rolcreatedb||r.rolreplication||r.rolbypassrls||r.rolinherit!==['mip_mentions_owner','mip_mentions_gateway','mip_mentions_admin'].includes(r.rolname)))fail('final_role_attributes')
  if((await db.query("select exists(select 1 from pg_auth_members where roleid in(select oid from pg_roles where rolname=any($1)) or member in(select oid from pg_roles where rolname=any($1))) edges",[NATIVE_ROLES])).rows[0].edges)fail('final_role_edges')
  if((await db.query('select exists(select 1 from pg_roles where rolname=$1) or exists(select 1 from pg_namespace where nspname=$2) residue',['mip_nci_'+operationId,'mip_nca_'+operationId])).rows[0].residue)fail('final_scaffolding')
- const schemas=(await db.query("select nspname,pg_get_userbyid(nspowner) owner from pg_namespace where nspname=any($1) order by nspname",[['mip_mentions','mip_arc_qik_source','mip_arc_native']])).rows
- if(JSON.stringify(schemas)!==JSON.stringify([{nspname:'mip_arc_native',owner:'mip_arc_native_owner'},{nspname:'mip_arc_qik_source',owner:'mip_arc_qik_source_owner'},{nspname:'mip_mentions',owner:'mip_mentions_owner'}]))fail('final_schema_owners')
- const bad=(await db.query("select exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity or pg_get_userbyid(c.relowner) not in('mip_mentions_owner','mip_arc_qik_source_owner','mip_canonical_writer','mip_arc_native_owner','mip_arc_attachment_owner'))) bad",[['mip_mentions','mip_arc_qik_source','mip_arc_native']])).rows[0].bad
+ const schemas=(await db.query("select nspname,pg_get_userbyid(nspowner) owner from pg_namespace where nspname=any($1) order by nspname",[schemasFor(nativeMode)])).rows
+ if(JSON.stringify(schemas)!==JSON.stringify([{nspname:'mip_arc_native',owner:'mip_arc_native_owner'},...(nativeMode===NATIVE_PROJECTION_MODE?[{nspname:'mip_arc_projection_private',owner:'mip_arc_native_owner'}]:[]),{nspname:'mip_arc_qik_source',owner:'mip_arc_qik_source_owner'},{nspname:'mip_mentions',owner:'mip_mentions_owner'}]))fail('final_schema_owners')
+ const bad=(await db.query("select exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity or pg_get_userbyid(c.relowner) not in('mip_mentions_owner','mip_arc_qik_source_owner','mip_canonical_writer','mip_arc_native_owner','mip_arc_attachment_owner'))) bad",[schemasFor(nativeMode)])).rows[0].bad
  if(bad)fail('final_storage')
+ if(nativeMode===NATIVE_PROJECTION_MODE){
+  const privateShape=(await db.query("select count(*)::int n,bool_and(c.relowner=(select oid from pg_roles where rolname='mip_arc_native_owner') and c.relrowsecurity and c.relforcerowsecurity and not exists(select 1 from aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a where a.grantee<>c.relowner) and not exists(select 1 from pg_attribute at cross join lateral aclexplode(at.attacl) a where at.attrelid=c.oid and a.grantee<>c.relowner)) ok from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_arc_projection_private' and c.relkind='r'")).rows[0]
+  if(privateShape?.n!==6||privateShape.ok!==true)fail('final_private_storage')
+ }
 }
