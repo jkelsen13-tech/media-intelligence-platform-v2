@@ -18,6 +18,7 @@ test('source plan preserves pinned source and final assertion order',async()=>{
  const p=await prepareAtomicInstall(reader)
  assert.equal(p.manifest_sha256,(await prepareAtomicInstall(reader)).manifest_sha256)
  assert.ok(p.roles.length>30)
+ assert.deepEqual(p.catalog_inspection_schemas,['mip_comparison_kernel_v1','mip_cutover_authority','mip_identity'])
  const original=await compileSource(reader)
  const changes=p.closure.split('\n').filter(line=>line.startsWith('alter role '))
  assert.equal(changes.length,7)
