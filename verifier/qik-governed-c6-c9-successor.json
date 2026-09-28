@@ -1286,7 +1286,7 @@
       },
       "test": {
         "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
-        "blob": "4642e43efb1b7c7e240d64b6dd73350bc499da7b"
+        "blob": "3a99cfa646a96ab02523033a13a8d1e72354d515"
       },
       "retention": "Private fixed acquisition helper is trusted installer-owned, UUID-only and source-checked. Existing main transport ownership/ACLs are unchanged; history owner receives neither raw transport nor Vault. No route qualification/real connection is implied. The final fixed-helper source check also requires exact text result, function kind/volatility/parallel/leakproof posture and complete search_path/110s/3s configuration.",
       "qualification": "NOT RUN in this new combined candidate; separate core/preclosed historical72PASS receipt remains limited to its original scope."
