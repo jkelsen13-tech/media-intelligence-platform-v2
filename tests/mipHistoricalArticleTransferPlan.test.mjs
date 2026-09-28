@@ -123,3 +123,14 @@ test('historical partial rows and cell journals retain distinct explicit field c
   const p=planHistoricalArticles(x)
   assert.equal(p.pages.find(page=>page.table==='articles_decode_backup_20260726_r3').rows.length,2)
 })
+
+test('inherited table keys and non-string table selectors fail closed',()=>{
+  for (const table of ['__proto__','constructor','toString','hasOwnProperty',null,42,[],{},['articles']]) {
+    const x=fixture();x.records[0].identity.table=table
+    throwsCode(()=>planHistoricalArticles(x),'unsupported_source_family')
+    const y=fixture();y.records[0].dependencies=[{
+      project:PROJECTS.nie,table,source_id:H(88),version_sha256:H(89),
+    }]
+    throwsCode(()=>planHistoricalArticles(y),'unsupported_source_family')
+  }
+})
