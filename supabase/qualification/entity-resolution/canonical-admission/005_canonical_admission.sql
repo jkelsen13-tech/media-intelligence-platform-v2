@@ -417,7 +417,7 @@ begin
  end loop;
  for f in select p.* from pg_proc p where pronamespace='mip_mentions'::regnamespace
   and (proname like 'canonical_%' or proname in('admit_actor_locator','review_canonical_mapping','review_weight_policy','review_canonical_admission')) loop
-  if f.proowner<>case when f.proname='canonical_capture_octets' then 'mip_mentions_native_validator'::regrole else r.oid end
+  if f.proowner<>(case when f.proname='canonical_capture_octets' then 'mip_mentions_native_validator'::regrole else r.oid end)
    or f.proconfig is distinct from array['search_path=""']
    or exists(select 1 from aclexplode(coalesce(f.proacl,acldefault('f',f.proowner))) a
     where a.grantee not in(r.oid,case when f.proname='canonical_capture_octets' then 'mip_mentions_native_validator'::regrole else r.oid end,case when f.proname in('admit_actor_locator','review_canonical_mapping','review_weight_policy','review_canonical_admission') then 'mip_mentions_gateway'::regrole else r.oid end))
