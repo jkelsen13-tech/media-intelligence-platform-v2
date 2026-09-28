@@ -1,0 +1,338 @@
+{
+  "contract": "qik-c6-c9-retention-successor-v1",
+  "status": "UNAPPROVED SUCCESSOR ALLOWLIST — INTERNAL SYNTHETIC QUALIFICATION AUTHORIZED UNDER CONSOLIDATION AMENDMENT",
+  "origin": {
+    "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
+    "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
+  },
+  "reviewed_dependency_candidate": {
+    "commit": "ea4e771d9948a8767ef2f0e7654367f70e9016f9",
+    "tree": "020e36e011ed4396b1812a9e93d0db790c9c8020",
+    "cursor_job": "bc-5349efe9-6f80-45b3-9b3e-cecb329a3844"
+  },
+  "authorization": {
+    "record": "user consolidation amendment and subsequent bounded historical transfer/addenda; prospective only",
+    "internal_synthetic_qualification": true,
+    "individual_owner_field_signature": false,
+    "historical_acceptance": false,
+    "actual_material_transmission_authority_from_this_manifest": false,
+    "hosted_installation_receipt": false,
+    "publication": false
+  },
+  "scope": {
+    "additional_native_fields_mentions_and_occurrence_plans": true,
+    "arc_preparation_and_historical_public_replay": true,
+    "upstream_native_comparison_stages": "Unchanged verifier/native-lineage-minimization-source-candidate.json blob e58f4c2740b74eedbae99ea5e6d33fa85110345c retains the separately reviewed snapshot/worker/journal/staging/approved/reader contract.",
+    "all_preexisting_historical_stores_minimized": false,
+    "complete_c6_c9_operating_capabilities": false
+  },
+  "protections": {
+    "captures_candidates_append_only_history_approvals": "unchanged",
+    "historical_manifest_sha256": "841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9",
+    "historical_verifier_sha256": "000eac69f781f1803c19d98ac44388400ee8324feeeb4cd6498e8a984ef65f10",
+    "no_latest_capture_substitution": true,
+    "no_auto_publication": true
+  },
+  "source_resolution": {
+    "native": "003 native_binding_bytes/resolve_native_field: originally owner-admitted capture/job/article/hash/field; current scoped membership/field_access and whole-operation budgets checked by unchanged consumer wrappers; bytes transient; native occurrence module alone does not authorize access.",
+    "historical_arc": "Owner admission rechecks full explicitly selected public projection and complete sets in one owned repeatable-read transaction. One immutable canonical input is original replay source. Current locked scope/principal access remains required. RLS-enabled source admission refused, not disabled.",
+    "native_arc": "Refused before connection. Missing native date/outlet/whole-generation authority and guarded persistence are not supplied by historical replay."
+  },
+  "stages": [
+    {
+      "stage": "authoritative_native_capture",
+      "producer": "existing evidence_pipeline enqueue/finish",
+      "consumer": "restricted bound validation and extraction",
+      "durable": "original capture and existing history remain; no rewrite/deletion",
+      "additional_copy": "none introduced",
+      "identity": "capture/job/article UUIDs + original JSONB-text native content SHA256"
+    },
+    {
+      "stage": "native_field_admission",
+      "producer": "owner-only admit_native_field",
+      "consumer": "001/002 mention validation through check_mentions",
+      "durable_fields": [
+        "scope",
+        "id",
+        "source_version",
+        "field_version",
+        "field_hash",
+        "raw",
+        "native_capture_id",
+        "native_job_id",
+        "native_article_id",
+        "native_content_hash",
+        "native_source_field",
+        "native_byte_length"
+      ],
+      "native_raw": "NULL; native bytes resolved transiently from exact original capture; historical raw rows remain under original constraints",
+      "additional_copy": "no full native field or payload"
+    },
+    {
+      "stage": "native_occurrence_plan",
+      "producer": "existing heuristic physical matching loop, new entityOccurrences.mjs",
+      "consumer": "future qualified caller prepares complete put_mention inputs and exact retry",
+      "durability": "module stores nothing; returned in-memory selected literals and metadata only",
+      "configuration": "Explicit version + digest of sorted normalized outlet set. Original configuration is required for replay; module does not create a durable configuration store.",
+      "identity": "physical UUIDv8 locator is distinct from configuration/input/result/plan digests and never actor identity"
+    },
+    {
+      "stage": "mention_admission_reader",
+      "producer": "existing put_mention",
+      "consumer": "existing mention/hypothesis/decision/agency source-span checks",
+      "deliberately_retained_copy": "selected mention literal and span_hash once in immutable mention row; exact literal/span and existing consumer replay require it",
+      "excludes": "full field bytes/capture payload; no actors/candidates/decisions created by occurrence producer"
+    },
+    {
+      "stage": "arc_prepared_worker_result",
+      "producer": "prepareArcMembership",
+      "consumer": "explicit owner-reviewed complete input digest, no durable writer",
+      "source_bytes": "explicit article/arc title and summary fields are transient scorer inputs; body/URL/embeddings/payload/excerpt excluded",
+      "durable_copy": "none",
+      "digest": "arc-membership-consumed-input-v1, separate from legacy fingerprint; current-source freshness only"
+    },
+    {
+      "stage": "arc_historical_retained_input",
+      "producer": "admitHistoricalArc + admit_input",
+      "consumer": "readHistoricalArc → unchanged recovered arc scorer for exact original replay",
+      "durable_fields": [
+        "scope",
+        "generation",
+        "input_sha256",
+        "canonical_input",
+        "admitted_by"
+      ],
+      "deliberately_retained_copy": "one canonical UTF8 input string: consumed historical public fields and context below because mutable public rows have no historical resolver. No parallel JSONB/receipt/journal source copy.",
+      "digest": "SHA256 over exact Node-canonical UTF8 text; SQL JSONB only transient validation, never substituted jsonb::text digest",
+      "retry": "same scope/generation/input digest/candidate requests/audit returns retained original; conflict refused; zero appended retry records"
+    },
+    {
+      "stage": "arc_retained_worker_result_reader",
+      "producer": "readHistoricalArc",
+      "consumer": "private replay verification; future guarded score writer remains unavailable",
+      "source_bytes": "readback canonical input transient for scorer; only allowlisted metadata/numeric scores/audit IDs returned",
+      "durable_copy": "no stored score or source-text receipt"
+    },
+    {
+      "stage": "journal_review_staging_approved_publication",
+      "producer": "no new C6/C9 journal/staging/approved writer",
+      "consumer": "none admitted by these new components",
+      "durable_copy": "none",
+      "publication": "all component authority flags false; existing historical publication data cannot confer qik eligibility"
+    }
+  ],
+  "historical_arc_input": {
+    "top": [
+      "version",
+      "source_kind",
+      "scorer",
+      "scorer_blob",
+      "candidates",
+      "arcs",
+      "articles",
+      "members",
+      "entities",
+      "floor",
+      "release",
+      "audit"
+    ],
+    "candidates": [
+      "id",
+      "article_id",
+      "arc_id",
+      "state",
+      "updated_at"
+    ],
+    "arcs": [
+      "id",
+      "title",
+      "summary",
+      "started_at",
+      "last_update_at"
+    ],
+    "articles": [
+      "id",
+      "title",
+      "summary",
+      "published_at",
+      "outlet",
+      "arc_id"
+    ],
+    "members": [
+      "article_id",
+      "arc_id"
+    ],
+    "entities": [
+      "article_id",
+      "entity_id",
+      "confidence"
+    ],
+    "floor": [
+      "present",
+      "value"
+    ],
+    "release": [
+      "present",
+      "fixture_passed",
+      "auto_approval_enabled",
+      "auto_approval_threshold"
+    ],
+    "audit": [
+      "lowConfidence",
+      "highSampleSize",
+      "seed"
+    ],
+    "excluded": [
+      "body_text",
+      "url",
+      "embedding",
+      "generation_evidence",
+      "excerpt",
+      "native_capture_id",
+      "native_payload",
+      "credentials"
+    ],
+    "representation": "Once per article; member pairs reference the unique article. Candidate exact microsecond revision, timestamp text, confidence text and config presence retained."
+  },
+  "output_allowlists": {
+    "native_plan": [
+      "scope",
+      "field_id",
+      "capture_id",
+      "job_id",
+      "article_id",
+      "content_hash",
+      "source_field",
+      "source_version",
+      "field_version",
+      "field_hash",
+      "extractor_version",
+      "configuration_version",
+      "configuration_digest",
+      "input_digest",
+      "result_digest",
+      "plan_digest",
+      "occurrences",
+      "production_qualified",
+      "source_authority_qualified",
+      "transport_qualified",
+      "publication_allowed"
+    ],
+    "native_occurrence": [
+      "role_prefix",
+      "mention"
+    ],
+    "native_mention": [
+      "scope",
+      "id",
+      "field_id",
+      "source_version",
+      "field_version",
+      "field_hash",
+      "offset_unit",
+      "start",
+      "end",
+      "literal",
+      "speaker",
+      "addressee"
+    ],
+    "arc_prepared": [
+      "contract",
+      "input_sha256",
+      "source_kind",
+      "consistent_snapshot",
+      "durable",
+      "native_lineage_qualified",
+      "approval_allowed",
+      "publication_allowed",
+      "scores_persisted",
+      "scorer_version",
+      "scorer_blob",
+      "counts",
+      "scores",
+      "audit"
+    ],
+    "arc_retained_extra": [
+      "generation_id",
+      "scope",
+      "retained_contract"
+    ],
+    "counts": [
+      "candidates",
+      "arcs",
+      "articles",
+      "members",
+      "entity_relations"
+    ],
+    "score": [
+      "model_version",
+      "candidate_article_id",
+      "arc_id",
+      "cluster_confidence",
+      "decision",
+      "eligible_for_auto_approval",
+      "hard_rejections",
+      "signals",
+      "evidence",
+      "release_gate",
+      "candidate_id",
+      "candidate_updated_at"
+    ],
+    "signals": [
+      "entity",
+      "canonical",
+      "recent",
+      "action",
+      "continuity",
+      "temporal",
+      "source_diversity"
+    ],
+    "evidence": [
+      "shared_entity_count",
+      "candidate_entity_count",
+      "arc_entity_count",
+      "temporal_gap_days",
+      "explicit_continuity",
+      "recent_member_count"
+    ],
+    "release_gate": [
+      "fixture_passed",
+      "auto_approval_enabled",
+      "auto_approval_threshold"
+    ],
+    "audit": [
+      "population",
+      "sample"
+    ],
+    "audit_sample": [
+      "candidate_id",
+      "audit_stratum"
+    ]
+  },
+  "qualification": {
+    "source_tests": [
+      "tests/nativeMentionFieldsPostgres17.test.mjs",
+      "tests/nativeEntityOccurrences.test.mjs",
+      "tests/nativeEntityOccurrencesPostgres17.test.mjs",
+      "tests/arcMembershipPrepared.test.mjs",
+      "tests/arcMembershipPreparedPostgres.test.mjs",
+      "tests/arcMembershipRetained.test.mjs",
+      "tests/arcMembershipRetainedPostgres.test.mjs",
+      "tests/qikC6C9RetentionSuccessor.test.mjs"
+    ],
+    "native_order": [
+      "synthetic tests/changeQueueFixture.sql only",
+      "native reliability migration",
+      "001_mentions.sql",
+      "optional unchanged002_agency.sql",
+      "003_native_fields.sql",
+      "synthetic owner admission and separately seeded source access"
+    ],
+    "historical_arc_order": [
+      "six explicit synthetic historical-public source tables",
+      "arc-membership-retained/001_retained.sql",
+      "synthetic owner/reader membership and exact scope ACL"
+    ],
+    "bounds": "Existing qualification workflow: Node22.14.0, actual PostgreSQL17.6, loopback-only SCRAM disposable containers/empty dedicated DBs; no hosted secrets or actual material; cleanup required. Results belong in separate run receipts, not acceptance implied by this source document."
+  }
+}
