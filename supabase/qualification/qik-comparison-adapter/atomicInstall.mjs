@@ -55,6 +55,8 @@ const EXACT_DIAGNOSTICS=Object.freeze([
  "atomic_creator_owned_objects",
  "atomic_residual_memberships",
  "atomic_catalog_inspection_permissions",
+ "atomic_credential_timeout_configuration",
+ "cnc_credential_logging_refused",
  "atomic_audit_receipt_drift",
  "atomic_audit_probe",
  "atomic_audit_readback_inflight",
@@ -167,7 +169,7 @@ export async function prepareAtomicInstall(readPinnedSource){
  }
  // Full original attribute/ownership/membership assertions remain unchanged.
  const plan={version:INSTALL_VERSION,target_project:PROJECT,source_commit:compiled.source_commit,
-  doj_source_commit:DOJ_SOURCE_COMMIT,catalog_inspection_schemas:[...CATALOG_INSPECTION_SCHEMAS],roles:[...roles.entries()].sort(([a],[b])=>a.localeCompare(b)),
+  doj_source_commit:DOJ_SOURCE_COMMIT,catalog_inspection_schemas:[...CATALOG_INSPECTION_SCHEMAS],credential_statement_timeout_max_ms:1000,roles:[...roles.entries()].sort(([a],[b])=>a.localeCompare(b)),
   body,dojBody,permissions,closure:closure.sql,assertions,dojAssertions,compatibility:compatibility.sql}
  return {...plan,manifest_sha256:digest(JSON.stringify(plan))}
 }
@@ -329,11 +331,22 @@ export async function installComparisonAtomic(config,readPinnedSource){
     await db.query('select mip_identity.install_survivor_fences()')
    if(step.path.endsWith('/009_factual_enforcement.sql')){
     // Existing 009 private contract. Secret only in protocol parameter, never SQL text.
+    phase='credential_timeout_bound'
+    const savedTimeout=(await db.query("select current_setting('statement_timeout') display,setting from pg_settings where name='statement_timeout'")).rows[0]
+    const priorMilliseconds=Number(savedTimeout?.setting)
+    if(typeof savedTimeout?.display!=='string'||!/^[0-9]+$/.test(savedTimeout?.setting??'')||!Number.isSafeInteger(priorMilliseconds))refuse('credential_timeout_configuration')
+    const boundedMilliseconds=priorMilliseconds>0?Math.min(priorMilliseconds,plan.credential_statement_timeout_max_ms):plan.credential_statement_timeout_max_ms
+    await db.query("select set_config('statement_timeout',$1,true)",[boundedMilliseconds+'ms'])
+    phase='credential_logging_assertion'
     await assertCredentialLogging(db)
+    phase='credential_configuration'
     await db.query("create function pg_temp.atomic_audit_config(p_secret text) returns void language plpgsql security invoker set search_path='' as $private$ begin begin insert into mip_factual.audit_connection(id,connection_string) values(true,p_secret); exception when query_canceled or assert_failure then raise exception 'atomic_audit_configuration_failed'; when others then raise exception 'atomic_audit_configuration_failed'; end; end $private$")
     await db.query('revoke all on function pg_temp.atomic_audit_config(text) from public')
     await db.query('select pg_temp.atomic_audit_config($1)',[config.auditConnectionString])
     await db.query('drop function pg_temp.atomic_audit_config(text)')
+    phase='credential_timeout_restore'
+    await db.query("select set_config('statement_timeout',$1,true)",[savedTimeout.display])
+    phase='source:'+step.path
     await db.query('grant usage on schema mip_factual to '+quote(c.auditLogin))
     await db.query('grant insert on mip_factual.rejection_audit to '+quote(c.auditLogin))
     await db.query('create policy atomic_audit_insert on mip_factual.rejection_audit for insert to '+quote(c.auditLogin)+' with check(true)')
