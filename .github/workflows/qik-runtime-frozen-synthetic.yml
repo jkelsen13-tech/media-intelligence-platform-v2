@@ -1,4 +1,4 @@
-name: Qik pinned runtime targeted synthetic qualification
+name: Qik bounded historical capacity and role authority synthetic qualification
 on:
   push:
     branches: [codex/qik-operational-integration-20260927]
@@ -23,15 +23,15 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='eeb52e37311aadd61d57f1a2e4f445a3f8543306'
+          source='2d555fe2dae5245d09024afbf3ed6f8e3f8613e9'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='b4895c04998329ed75d07c9001e95c355ba52900'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='e3e9e69402584df3acecb9f555c9813e02a48ca8'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
           subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-runtime-frozen-synthetic.yml']
-          pins={"supabase/qualification/native-comparison-display/001_private_display.sql":"6602515e55fe7cb70bba1e505a2d3e21b94398e5","supabase/qualification/native-comparison-display/displayContract.mjs":"e5975cf78bfe875c17a8e5ce3be2bc39f248a20a","supabase/qualification/native-comparison-display/serverRoute.mjs":"94ecb69bf660563b7921a9991b4f1b4cb328e532","supabase/qualification/native-comparison-display/README.md":"499e7252dee0b3043dff54e3b11e701d85efacbd","supabase/qualification/native-comparison-display/contract.json":"ab6dec0faad0ecc03370f6a7ad5cacf293993aa4","tests/nativeComparisonDisplay.test.mjs":"29006a483186fa0b09095421920d8c586ed7d6ab","tests/nativeComparisonDisplayAssertions.mjs":"194ae7ec92349754e6dd27f04137307aadd28306","tests/nativeComparisonBindingFixture.mjs":"f325d80133e9a152ae94b00ffa1e65714e199470","supabase/qualification/native-governed-install/install.mjs":"c56aa3e050fdb9342ef90dc71dca44f2810782ea","supabase/qualification/qik-comparison-adapter/atomicInstall.mjs":"b73fcfa4782bd56ec220a2744aa749e8f50830a7","tests/nativeGovernedInstallerPostgres17.test.mjs":"4a01cf7ff02a31093fe27cf72ce57621d272bd2f","supabase/qualification/native-governed-install/README.md":"08277b4d5dd28652794db38cd9d48b904ac9de39","tests/nativeArcCohortPostgres17.test.mjs":"2118e37d75ea0a9b0fdedc1ad87023e7ed3997e1","verifier/qik-governed-c6-c9-successor.json":"da089fa1439267a0d05c1abbd606903748bf5813","supabase/qualification/historical-qik-executor/install.mjs":"d4c72b5e2ff50ce19d46de9c6911135fc0216f48","tests/nativeComparisonCallerPostgresAssertions.mjs":"80a8632a5bd749742c97ff4c4b3c4685376a206a","supabase/qualification/native-comparison-caller/README.md":"1b50091ac71a2a6c4b46290d49ffb0bd11328e05","supabase/qualification/native-comparison-caller/001_admission.sql":"a9428d8b2120514a0d6ee13a53d801dba7b6e060","supabase/qualification/native-comparison-caller/host.mjs":"b258b01e701ce18a0c6c91d34e85063bb3ee77aa","tests/nativeComparisonCaller.test.mjs":"79d65fcab37dff7c987cedac7aded4bd5d8ee346","src/lib/nativePrivateComparisonRead.js":"d2b22e92f3e8240a13d5478773e177f0b1990871","src/components/NativePrivateComparisonWorkspace.jsx":"c3f104544fa9a31200b5f6bbddd068e82dd2aa68","tests/nativePrivateUiFixture.mjs":"cfc7fd58016db965850bacbf424e97321592785c","tests/nativePrivateUiRead.test.mjs":"4cc9a7699f835b1c2457ae78cbc0af6c6f200c65","docs/native-private-browser-consumer.md":"91f35a89055aebc0457efc7c6824ddc04767d5b7","src/components/PrivateInvestigationWorkspace.jsx":"1cb1bd52db17191674083f8b93f4bbeb77b3134b","supabase/functions/native-comparison-display/index.ts":"ff4998b69ae0ca40be166a7437210cba5170f73d","supabase/functions/native-comparison-display/adapter.mjs":"a6d113c25d284fa296c9816adae2dc17d9b0ca7f","supabase/functions/native-comparison-display/deno.json":"9126bd3e8ddc618bfbdc8239f14c84295ed662af","supabase/functions/native-comparison-display/config.fragment.toml":"3295db2df6bb45efe884b8b3b4d0b5c6aa81101d","supabase/functions/native-comparison-display/dependency-closure.json":"b93ec062b7b34aa83c04966de50f950c233e681f","supabase/functions/native-comparison-display/README.md":"17aed1a4c628fa340db1eb36cb0ae6df878e7c76","tests/nativeComparisonEdgePackaging.test.mjs":"db97133693c14f198d3566a02d25c34a9fde6e44","tests/nativeComparisonDenoRuntime.mjs":"a313f47a040e6bf24326c8fa731b68fc44ff9868","tests/nativeComparisonDenoRuntimePin.json":"82305814e17a4fa749c6e7a4c5ea2ba284045722","docs/native-comparison-deno-runtime-qualification.md":"f212b261d0de7cbd4ec4d06796ec20b542755b85","supabase/qualification/native-governed-host/adapter.mjs":"47622a1729351d0cabda279d63855b9309e490b0","supabase/qualification/native-governed-host/run.mjs":"d713431e63d62cbfdddd8e196e7d7b4000a9d3b1","supabase/qualification/native-governed-host/README.md":"a323c15282e168ef35bdbb5a8a3bc601d306daf9","tests/nativeGovernedHost.test.mjs":"d3325ee764c41fb3d40613d9ec9fb708561b0a17",".github/workflows/qik-native-installer-held.yml":"d59e0e063518ccabd455e4a0be0b2ae365348a93","tests/historicalQikDenoRuntime.mjs":"66eea36fee9ee43d412adcddbf023007f7242a94","tests/historicalQikExecutorPostgres17.test.mjs":"3f71bc7d8dba77f3046cbe05afc3727d026ddf4f","supabase/qualification/historical-qik-executor/DENO_RUNTIME.md":"88b4b8e7ac1b736e2a06fd9d2b25df08eb7a986a","tests/qikComparisonAtomicInstall.test.mjs":"b855762ad64da0234dc17849477891f21ae46b94","verifier/qikComparisonAtomicInstallPostgres17.mjs":"00de8b575dca2c485e4ea6c75a615efb499b5e61","verifier/qik-history-bounded-adapter-successor.json":"d5253906f80267934a72f745201b1847b14a0792","supabase/functions/native-comparison-display/deno.lock":"11d5e1328c2a0b273f5085dc0a9946881adac3ee","src/lib/semanticAuthorityEnvelope.js":"27d44e70227f53080ef7ff18bb07d7afc326cd77","tests/semanticAuthorityEnvelope.test.mjs":"962033f773d5e845a3bc4d1a1ca29be3f6716806","docs/semantic-authority-envelope-contract.md":"e488b36973f835b08d6c4b829494879abacd7faf"}
+          pins={".github/workflows/qik-historical-executor-synthetic.yml":"9d2eef226fb77976c430c01b3562b70066f36a0a",".github/workflows/qik-native-installer-held.yml":"d59e0e063518ccabd455e4a0be0b2ae365348a93",".github/workflows/qik-operational-adapter-synthetic.yml":"44a44e032ed935edf3c7d2f6835378fff405bd2e","docs/native-comparison-deno-runtime-qualification.md":"f212b261d0de7cbd4ec4d06796ec20b542755b85","docs/native-private-browser-consumer.md":"91f35a89055aebc0457efc7c6824ddc04767d5b7","docs/semantic-authority-envelope-contract.md":"e488b36973f835b08d6c4b829494879abacd7faf","src/components/NativePrivateComparisonWorkspace.jsx":"c3f104544fa9a31200b5f6bbddd068e82dd2aa68","src/components/PrivateInvestigationWorkspace.jsx":"1cb1bd52db17191674083f8b93f4bbeb77b3134b","src/lib/nativePrivateComparisonRead.js":"d2b22e92f3e8240a13d5478773e177f0b1990871","src/lib/semanticAuthorityEnvelope.js":"27d44e70227f53080ef7ff18bb07d7afc326cd77","supabase/functions/native-comparison-display/README.md":"17aed1a4c628fa340db1eb36cb0ae6df878e7c76","supabase/functions/native-comparison-display/adapter.mjs":"a6d113c25d284fa296c9816adae2dc17d9b0ca7f","supabase/functions/native-comparison-display/config.fragment.toml":"3295db2df6bb45efe884b8b3b4d0b5c6aa81101d","supabase/functions/native-comparison-display/deno.json":"9126bd3e8ddc618bfbdc8239f14c84295ed662af","supabase/functions/native-comparison-display/deno.lock":"11d5e1328c2a0b273f5085dc0a9946881adac3ee","supabase/functions/native-comparison-display/dependency-closure.json":"b93ec062b7b34aa83c04966de50f950c233e681f","supabase/functions/native-comparison-display/index.ts":"ff4998b69ae0ca40be166a7437210cba5170f73d","supabase/qualification/historical-qik-executor/DENO_RUNTIME.md":"88b4b8e7ac1b736e2a06fd9d2b25df08eb7a986a","supabase/qualification/historical-qik-executor/README.md":"573f1564dca5894f4c59523a5b4e5f09d6ef27b2","supabase/qualification/historical-qik-executor/executor.mjs":"fa2e6a6f04287f45ce75ee0ae79e66afea5a3e1a","supabase/qualification/historical-qik-executor/handler.mjs":"d00b3d331e161f0fb269ed26b173d5c7bcc3cb29","supabase/qualification/native-comparison-caller/001_admission.sql":"a9428d8b2120514a0d6ee13a53d801dba7b6e060","supabase/qualification/native-comparison-caller/README.md":"1b50091ac71a2a6c4b46290d49ffb0bd11328e05","supabase/qualification/native-comparison-caller/host.mjs":"b258b01e701ce18a0c6c91d34e85063bb3ee77aa","supabase/qualification/native-comparison-display/displayContract.mjs":"e5975cf78bfe875c17a8e5ce3be2bc39f248a20a","supabase/qualification/native-governed-host/README.md":"4c99ca24ec49f28c6ce904062605867490796228","supabase/qualification/native-governed-host/adapter.mjs":"47622a1729351d0cabda279d63855b9309e490b0","supabase/qualification/native-governed-host/run.mjs":"d713431e63d62cbfdddd8e196e7d7b4000a9d3b1","supabase/qualification/native-governed-install/README.md":"08277b4d5dd28652794db38cd9d48b904ac9de39","supabase/qualification/native-governed-install/install.mjs":"c56aa3e050fdb9342ef90dc71dca44f2810782ea","supabase/qualification/qik-comparison-adapter/atomicInstall.mjs":"b73fcfa4782bd56ec220a2744aa749e8f50830a7","tests/historicalQikDenoRuntime.mjs":"66eea36fee9ee43d412adcddbf023007f7242a94","tests/historicalQikExecutor.mjs":"bb80465876c7c7c62dd261da260079244445ffa9","tests/historicalQikExecutorHandler.test.mjs":"f1780203995e5efc6b65aa86beb87d4946e5eaa4","tests/historicalQikExecutorPostgres17.test.mjs":"7d9ba542c49cab82377bc8bbcd75afff8741769d","tests/nativeArcCohortPostgres17.test.mjs":"2118e37d75ea0a9b0fdedc1ad87023e7ed3997e1","tests/nativeComparisonBindingFixture.mjs":"f325d80133e9a152ae94b00ffa1e65714e199470","tests/nativeComparisonCaller.test.mjs":"79d65fcab37dff7c987cedac7aded4bd5d8ee346","tests/nativeComparisonCallerPostgresAssertions.mjs":"80a8632a5bd749742c97ff4c4b3c4685376a206a","tests/nativeComparisonDenoRuntime.mjs":"a313f47a040e6bf24326c8fa731b68fc44ff9868","tests/nativeComparisonDenoRuntimePin.json":"82305814e17a4fa749c6e7a4c5ea2ba284045722","tests/nativeComparisonEdgePackaging.test.mjs":"db97133693c14f198d3566a02d25c34a9fde6e44","tests/nativeGovernedHost.test.mjs":"d3325ee764c41fb3d40613d9ec9fb708561b0a17","tests/nativeGovernedInstallerPostgres17.test.mjs":"4a01cf7ff02a31093fe27cf72ce57621d272bd2f","tests/nativePrivateUiFixture.mjs":"cfc7fd58016db965850bacbf424e97321592785c","tests/nativePrivateUiRead.test.mjs":"4cc9a7699f835b1c2457ae78cbc0af6c6f200c65","tests/qikComparisonAtomicInstall.test.mjs":"b855762ad64da0234dc17849477891f21ae46b94","tests/semanticAuthorityEnvelope.test.mjs":"962033f773d5e845a3bc4d1a1ca29be3f6716806","verifier/qik-governed-c6-c9-successor.json":"f5418a93bf74a922f017abedf6585ed6ffc759eb","verifier/qik-history-bounded-adapter-successor.json":"d5253906f80267934a72f745201b1847b14a0792","verifier/qikComparisonAtomicInstallPostgres17.mjs":"00de8b575dca2c485e4ea6c75a615efb499b5e61","tests/historicalQikCapacity.mjs":"dd006a230c274e4911078a719ea8f627a23a9a46","tests/historicalQikCapacityDeno.mjs":"8cc90f6a4504a815225675ecc70e28d8eaf2bb8a","tests/historicalQikCapacityMetrics.mjs":"f8f4d3f9e6289fbe55d25eed82b00f7c8603afbe","tests/historicalQikCapacityMetrics.test.mjs":"a68c1edb9e8bfe359dd61a52d9dc054f1594af36","tests/qikRoleLifecyclePostgres17.test.mjs":"83705b16aceca48a4675d48bff7e84cde14076dd","supabase/qualification/historical-qik-executor/capacity-qualification/README.md":"0956e5aef7a0ec8869a6ab06172654cbc97bc8d5","verifier/qik-history-capacity-source-candidate.json":"40bc1db4195547d9cfcbcd9b3795763921168ec6"}
           for name,blob in pins.items():
               body=pathlib.Path(name).read_bytes()
               assert hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()==blob
@@ -40,7 +40,7 @@ jobs:
               assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
           config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
           assert config.returncode==1 and not config.stdout
-          print('TARGETED frozen runtime recheck; unchanged combined266 and historical83 receipts reused. New semantic foundation15 tests only; not operational closure. Pinned complete integrated source tree; earlier mode evidence preserved. New v6, private caller/UI/Edge and actual pinned Deno driver qualification use synthetic-only material under the consolidation amendment. Fresh consequential Cursor review follows applicable tests; no hosted installation, actual-material receiving or historical acceptance claim.')
+          print('Bounded source/synthetic capacity and PG17 role authority qualification only. Existing combined266/history83/frozen57 receipts retained; no unchanged full runtime rerun, hosted installation, actual source material or route acceptance. Complete fixed source pins and historical SHA assertions checked.')
           PY
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -77,6 +77,7 @@ jobs:
             supabase/qualification/native-comparison-caller/host.mjs \
             tests/nativeComparisonDenoRuntime.mjs \
             tests/historicalQikDenoRuntime.mjs \
+            tests/historicalQikCapacityDeno.mjs \
             supabase/qualification/historical-qik-executor/index.ts
           timeout --signal=KILL 90s "$DENO_BINARY" check --config="$cfg" --lock="$lock" --frozen --node-modules-dir=none \
             supabase/functions/native-comparison-display/index.ts \
@@ -87,9 +88,9 @@ jobs:
             supabase/qualification/historical-qik-executor/index.ts
           test "$(sha256sum "$lock" | awk '{print $1}')" = "$lock_before"
           printf 'DENO_BINARY=%s\nDENO_DIR=%s\nDENO_NO_UPDATE_CHECK=1\n' "$DENO_BINARY" "$DENO_DIR" >> "$GITHUB_ENV"
-      - name: Qualify only the new conservative semantic metadata foundation
+      - name: Qualify capacity metric parsing and refusal
         timeout-minutes: 1
-        run: node --test tests/semanticAuthorityEnvelope.test.mjs
+        run: node --test tests/historicalQikCapacityMetrics.test.mjs
       - name: Start pristine PostgreSQL 17.6 for the full ordered installation
         shell: bash
         run: |
@@ -99,42 +100,25 @@ jobs:
             sleep 2
           done
           exit 1
-      - name: Build pinned pgvector 0.8.2 for the actual hosted shape
-        id: vector_build
-        timeout-minutes: 5
+      - name: Verify exact database version and qualify scoped role authority
+        timeout-minutes: 2
+        env:
+          MIP_QIK_ROLE_LIFECYCLE_DISPOSABLE: synthetic-pg17-only
         shell: bash
         run: |
           set -euo pipefail
-          docker exec -u root qik-op-qualification bash -euc '
-            apt-mark hold postgresql-17 postgresql-client-17
-            apt-get update -qq
-            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends build-essential curl ca-certificates postgresql-server-dev-17
-            install -d -m 700 /tmp/qik-vector-build
-            cd /tmp/qik-vector-build
-            curl --fail --location --max-time 45 --proto "=https" --tlsv1.2 https://codeload.github.com/pgvector/pgvector/tar.gz/cab9da72c04353f143bb06b42ab70a403daac64a -o vector.tar.gz
-            echo "0af705b6c9b2a3a1fd1f6fd991425c125387d3c8edc68b75ef027d2e0a05e57a  vector.tar.gz" | sha256sum -c -
-            tar -xzf vector.tar.gz --strip-components=1
-            make -j2 PG_CONFIG=/usr/lib/postgresql/17/bin/pg_config OPTFLAGS=""
-            make PG_CONFIG=/usr/lib/postgresql/17/bin/pg_config install
-            dpkg-query -W build-essential postgresql-server-dev-17 postgresql-17 postgresql-client-17
-            rm -rf /tmp/qik-vector-build
-          '
           test "$(docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification psql -X -h 127.0.0.1 -U postgres -Atc "show server_version_num")" = 170006
-      - name: Qualify complete native arc installation journal review and reader
-        timeout-minutes: 5
+          node --test tests/qikRoleLifecyclePostgres17.test.mjs
+      - name: Measure bounded capacity with bootstrap transport and verify exact custody
+        timeout-minutes: 8
         env:
-          MIP_NATIVE_ARC_COHORT_DISPOSABLE: synthetic-pg17-only
-          MIP_QIK_COMPARISON_DISPOSABLE: synthetic-pg17-only
-          MIP_DISPOSABLE_POSTGRES: qik-persistent-install
-        run: node --test tests/nativeArcCohortPostgres17.test.mjs
-      - name: Test actual acquisition snapshot retry and permissions
-        timeout-minutes: 4
-        env:
+          MIP_HISTORICAL_CAPACITY_DISPOSABLE: synthetic-pg17-only
           MIP_HISTORICAL_EXECUTOR_DISPOSABLE: synthetic-pg17-only
         run: node --test tests/historicalQikExecutorPostgres17.test.mjs
-      - name: Test restricted ordinary installer on preclosed transport and repeat acquisition checks
-        timeout-minutes: 4
+      - name: Repeat capacity and custody with closed ordinary installer
+        timeout-minutes: 8
         env:
+          MIP_HISTORICAL_CAPACITY_DISPOSABLE: synthetic-pg17-only
           MIP_HISTORICAL_EXECUTOR_DISPOSABLE: synthetic-pg17-only
           MIP_HISTORICAL_EXECUTOR_INSTALL_PROFILE: closed-ordinary
         run: node --test tests/historicalQikExecutorPostgres17.test.mjs
@@ -144,7 +128,7 @@ jobs:
           set -euo pipefail
           test "$(sha256sum supabase/functions/native-comparison-display/deno.lock | awk '{print $1}')" = 'df06499a54915068be7976853021d67c0b6598927c552cf5e6f19b99c404dbe3'
           git diff --exit-code --quiet
-          echo 'Pinned frozen source/lock unchanged; targeted runtime evidence only, no hosted installation or material transfer.'
+          echo 'Pinned source/lock unchanged; bounded synthetic measurements and authority semantics only, no hosted qualification or actual-material transfer.'
       - name: Remove disposable database and verify no container or volume remains
         if: always()
         shell: bash
