@@ -476,8 +476,14 @@ test('governed canonical admission and actual qik projection writer', {
    }
   }
   if(db)await attempt(()=>db.end())
-  if(primaryFailure||cleanupFailures.length)throw new AggregateError([
-   ...(primaryFailure?[primaryFailure]:[]),...cleanupFailures,
-  ],'native_canonical_admission_fixture_failed')
+  if(primaryFailure||cleanupFailures.length){
+   const failures=[...(primaryFailure?[primaryFailure]:[]),...cleanupFailures]
+   // Node TAP may omit AggregateError.errors. Render only diagnostics already
+   // constructed above; bounded entries/frames preserve no underlying payload.
+   const rendered=failures.slice(0,12).map(failure=>
+    failure.stack.split('\n').slice(0,5).join('\n').slice(0,1024)).join('\n')
+   throw new AggregateError(failures,
+    ('native_canonical_admission_fixture_failed\n'+rendered).slice(0,12288))
+  }
  }
 })
