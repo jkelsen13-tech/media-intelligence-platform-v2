@@ -23,20 +23,24 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='f5760a0c75a23854be873513044f4af67267ea84'
+          source='3533fdf7d62e5dba882f2da3e3e2d2eca710d29d'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='03b6f609e0ae485a505057ee5fddb8d34af376ab'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='a11959d48842f449857fa9e569380e1316e9ce38'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
           subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-operational-adapter-synthetic.yml']
+          pins={"supabase/qualification/native-comparison-display/001_private_display.sql":"6602515e55fe7cb70bba1e505a2d3e21b94398e5","supabase/qualification/native-comparison-display/displayContract.mjs":"1bfd19145470aca6ccea34f461085ee9cc255960","supabase/qualification/native-comparison-display/serverRoute.mjs":"94ecb69bf660563b7921a9991b4f1b4cb328e532","supabase/qualification/native-comparison-display/README.md":"499e7252dee0b3043dff54e3b11e701d85efacbd","supabase/qualification/native-comparison-display/contract.json":"ab6dec0faad0ecc03370f6a7ad5cacf293993aa4","tests/nativeComparisonDisplay.test.mjs":"29006a483186fa0b09095421920d8c586ed7d6ab","tests/nativeComparisonDisplayAssertions.mjs":"194ae7ec92349754e6dd27f04137307aadd28306","tests/nativeComparisonBindingFixture.mjs":"11cfa89033431ab5e71ab0b89a6e3bd12a924ecf","supabase/qualification/native-governed-install/install.mjs":"7fbf4831d1bbdc5ffd33ac5d0c83aff124285e6c","supabase/qualification/qik-comparison-adapter/atomicInstall.mjs":"a9942e32cfeb4d807834bf64df5f496939105c18","tests/nativeGovernedInstallerPostgres17.test.mjs":"4642e43efb1b7c7e240d64b6dd73350bc499da7b","supabase/qualification/native-governed-install/README.md":"dbf13c74c13099ec5b0948055adbd024a69d9493","tests/nativeArcCohortPostgres17.test.mjs":"dd6dbee189bb326cc26c9ba4eb4c7100810b691a","verifier/qik-governed-c6-c9-successor.json":"6c492507ccb4808b428eafd61453e63be7db1022"}
+          for name,blob in pins.items():
+              body=pathlib.Path(name).read_bytes()
+              assert hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()==blob
           protected={'verifier/efta-postgres-qualification-manifest.json':'841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9','verifier/eftaPostgresQualification.py':'000eac69f781f1803c19d98ac44388400ee8324feeeb4cd6498e8a984ef65f10'}
           for name,digest in protected.items():
               assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
           config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
           assert config.returncode==1 and not config.stdout
-          print('Pinned complete candidate tree; canonical writer, complete private membership, bound private display, separately preserved v2/v3/v4 restricted-principal joint installer and exact dual-reader native comparison binding and historical projection fixture await applicable fresh actual Cursor review after applicable tests. Synthetic-only internal qualification under user consolidation amendment. Not owner field signature, historical acceptance, hosted installation or material-transfer authority.')
+          print('Pinned complete candidate tree; canonical writer, complete private membership, bound private display, separately preserved v2/v3/v4 plus v5 restricted-principal joint installer and actual ordered main-to-historical compatibility and exact dual-reader native comparison binding and historical projection fixture await applicable fresh actual Cursor review after applicable tests. Synthetic-only internal qualification under user consolidation amendment. Not owner field signature, historical acceptance, hosted installation or material-transfer authority.')
           PY
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -45,7 +49,7 @@ jobs:
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Qualify combined occurrence, replay and nested retention contracts
-        run: node --test tests/arcMembershipPrepared.test.mjs tests/collectorRetainedExtraction.test.mjs tests/retainedExtraction.test.mjs tests/nativeEntityOccurrences.test.mjs tests/arcMembershipRetained.test.mjs tests/qikC6C9RetentionSuccessor.test.mjs tests/nativeArcScoring.test.mjs tests/nativeComparisonServerCaller.test.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs
+        run: node --test tests/arcMembershipPrepared.test.mjs tests/collectorRetainedExtraction.test.mjs tests/retainedExtraction.test.mjs tests/nativeEntityOccurrences.test.mjs tests/arcMembershipRetained.test.mjs tests/qikC6C9RetentionSuccessor.test.mjs tests/nativeArcScoring.test.mjs tests/nativeComparisonServerCaller.test.mjs tests/nativeComparisonDisplay.test.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs
       - name: Start disposable PostgreSQL 17.6 on loopback only
         shell: bash
         run: |
