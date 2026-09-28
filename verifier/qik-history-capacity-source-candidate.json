@@ -6,8 +6,8 @@
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
   "parent": {
-    "commit": "ecd66e41123f9f16ec8dd38208571a25273ef093",
-    "tree": "aaef4a0a53b710ef6f6d92cbffd582acefe693f4"
+    "commit": "583fbda16c8db989539886125dc91e62f991a610",
+    "tree": "749adf5d14ccc1e02d8139eb47629be3035e3235"
   },
   "authorization": {
     "record": "Continuation consolidation amendment and minimum qik-hosted migration executor amendment",
@@ -15,13 +15,13 @@
     "owner_field_acceptance": false
   },
   "files": {
-    "tests/historicalQikCapacity.mjs": "dd006a230c274e4911078a719ea8f627a23a9a46",
-    "tests/historicalQikCapacityDeno.mjs": "8cc90f6a4504a815225675ecc70e28d8eaf2bb8a",
-    "tests/historicalQikCapacityMetrics.mjs": "f8f4d3f9e6289fbe55d25eed82b00f7c8603afbe",
-    "tests/historicalQikCapacityMetrics.test.mjs": "a68c1edb9e8bfe359dd61a52d9dc054f1594af36",
+    "tests/historicalQikCapacity.mjs": "87c1c6bde5dd753536d7f34d03a92b28eed49167",
+    "tests/historicalQikCapacityDeno.mjs": "a96c7585703005def71df16fde2132eb5b7e698d",
+    "tests/historicalQikCapacityMetrics.mjs": "6802054c1bfbaa4d04c662bdcc654b534e4b4673",
+    "tests/historicalQikCapacityMetrics.test.mjs": "f3290b093e29c424d29374e7fccf4683a21cf1d6",
     "tests/qikRoleLifecyclePostgres17.test.mjs": "83705b16aceca48a4675d48bff7e84cde14076dd",
     "tests/historicalQikExecutorPostgres17.test.mjs": "7d9ba542c49cab82377bc8bbcd75afff8741769d",
-    "supabase/qualification/historical-qik-executor/capacity-qualification/README.md": "0956e5aef7a0ec8869a6ab06172654cbc97bc8d5"
+    "supabase/qualification/historical-qik-executor/capacity-qualification/README.md": "6f7f05e2d156b8fafa452fb233e74df0c64e81de"
   },
   "unchanged_dependencies": {
     "original_planner": "ad30cb603757888840e737694b333c3b6ae234e1",
@@ -34,7 +34,7 @@
     "native_manifest": "f5418a93bf74a922f017abedf6585ed6ffc759eb"
   },
   "qualification": {
-    "status": "NOT RUN",
+    "status": "REPAIR AUTHORED — NOT RUN",
     "routes": [
       "Existing source/synthetic GitHub Ubuntu22.04 owned loopback PostgreSQL17.6",
       "Pinned standalone Deno2.5.2; not Supabase Edge"
@@ -50,6 +50,35 @@
       "processes_per_profile": 4,
       "child_seconds": 60,
       "material": "Synthetic fixtures only"
+    },
+    "initial_attempt": {
+      "candidate": "583fbda16c8db989539886125dc91e62f991a610",
+      "source": "2d555fe2dae5245d09024afbf3ed6f8e3f8613e9",
+      "run": 36459391029,
+      "job": 109053827943,
+      "role_tests": {
+        "pass": 4,
+        "fail": 0,
+        "skip": 0
+      },
+      "metric_tests": {
+        "pass": 3,
+        "fail": 0,
+        "skip": 0
+      },
+      "capacity": "FAILED new synthetic canonical-inventory fixture; repaired without changing original engine, count or budgets",
+      "environment": "Existing remote GitHub Ubuntu22.04 owned loopback PG17.6/170006 standaloneDeno2.5.2; synthetic only",
+      "cleanup": "success",
+      "hosted": false
+    },
+    "reused_role_proof": {
+      "candidate": "583fbda16c8db989539886125dc91e62f991a610",
+      "run": 36459391029,
+      "job": 109053827943,
+      "pass": 4,
+      "fail": 0,
+      "skip": 0,
+      "blob": "83705b16aceca48a4675d48bff7e84cde14076dd"
     }
   },
   "retention": {

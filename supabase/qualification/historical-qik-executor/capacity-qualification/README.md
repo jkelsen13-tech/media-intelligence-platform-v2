@@ -74,3 +74,13 @@ Observed child sessions must return to baseline before success.
 Role probe rolls back all generated roles, drops only collision-checked owned setup roles and verifies absence.
 Workflow always removes its exact owned container and volumes and checks tracked source/lock unchanged.
 No upload/artifact/publication or permanent payload receipt is created.
+
+## Initial attempt and repair
+
+Candidate583fbda16c8db989539886125dc91e62f991a610, source2d555fe2dae5245d09024afbf3ed6f8e3f8613e9,
+run36459391029/job109053827943: metric3PASS and role authority4PASS; existing historical12subtestsPASS.
+New capacity subtest FAILED, parent group failure recorded; closed-ordinary step skipped, cleanup succeeded.
+Synthetic metadata inventory returned generation order against the original canonical manifest.
+The new fixture uses original planHistoricalArticles(...).manifest before measurement;32768records and budgets unchanged.
+Two new ordinary regression tests cover exact canonical inventory and finite sanitized failure diagnostics.
+Required frozen scope/hosted fit remain unproved. Repairs authored; NOT RUN as of this source candidate.
