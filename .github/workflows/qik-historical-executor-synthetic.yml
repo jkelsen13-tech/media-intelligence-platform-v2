@@ -1,0 +1,79 @@
+name: Qik historical executor synthetic qualification
+on:
+  push:
+    branches: [codex/qik-operational-integration-20260927]
+    paths: [.github/workflows/qik-historical-executor-synthetic.yml]
+permissions:
+  contents: read
+concurrency:
+  group: qik-historical-executor-synthetic
+  cancel-in-progress: false
+jobs:
+  synthetic:
+    if: github.repository == 'jkelsen13-tech/media-intelligence-platform-v2' && github.ref == 'refs/heads/codex/qik-operational-integration-20260927'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Verify exact source and synthetic-only boundary
+        shell: bash
+        run: |
+          python3 -I -B - <<'PY'
+          import hashlib,os,pathlib,subprocess
+          source='8db0c8776ba7c54e26729f2fa1455bf2caeb7790'
+          assert os.environ['GITHUB_EVENT_NAME']=='push'
+          assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
+          assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='46645a3e50c46622733011dc578ed6881e4c3392'
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
+          assert subprocess.check_output(['git','rev-parse','HEAD^'],text=True).strip()==source
+          assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-historical-executor-synthetic.yml']
+          protected={'verifier/efta-postgres-qualification-manifest.json':'841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9','verifier/eftaPostgresQualification.py':'000eac69f781f1803c19d98ac44388400ee8324feeeb4cd6498e8a984ef65f10'}
+          for name,digest in protected.items():
+              assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
+          pins={"supabase/qualification/historical-qik-executor/candidate.sql":"7cb6ccb2615e60f4f5626f095e00387f3e2be087","supabase/qualification/historical-qik-executor/executor.mjs":"272c20d198c9e696021f79481efa998781c8c035","supabase/qualification/historical-qik-executor/contracts.mjs":"6277ff14cf9009e7bca8b77e9824e4cfb51c1542","supabase/qualification/historical-qik-executor/README.md":"491a70fc45c63ee5a0ac135ccbb9b408f60687a3","tests/historicalQikExecutor.mjs":"c53dbf501c73e5d3dc076b546766548b4693c5d9","tests/historicalQikExecutorPostgres17.test.mjs":"9f8001b23ac5608c7dfccf3ede2a535a56c9a33b"}
+          for name,blob in pins.items():
+              body=pathlib.Path(name).read_bytes()
+              actual=hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()
+              assert actual==blob
+          config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
+          assert config.returncode==1 and not config.stdout
+          print('Exact source candidate. Synthetic-only PG17.6 acquisition and engine tests; Vault-shape surrogate. Not a qik install, actual Vault qualification, Edge capacity proof or real transfer receipt.')
+          PY
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.14.0
+          package-manager-cache: false
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test adapter and unchanged planner/transfer contracts
+        run: node --test tests/historicalQikExecutor.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs
+      - name: Start owned PostgreSQL 17.6 on loopback only
+        shell: bash
+        run: |
+          docker run --detach --name qik-history-qualification --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=mip-efta-disposable-ci-only -e POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+          for attempt in $(seq 1 30); do
+            if docker exec qik-history-qualification pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - name: Test actual acquisition snapshot retry and permissions
+        timeout-minutes: 4
+        env:
+          MIP_HISTORICAL_EXECUTOR_DISPOSABLE: synthetic-pg17-only
+        run: node --test tests/historicalQikExecutorPostgres17.test.mjs
+      - name: Remove owned container and volumes and assert absence
+        if: always()
+        shell: bash
+        run: |
+          if docker container inspect qik-history-qualification >/dev/null 2>&1; then
+            volumes=$(docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{println .Name}}{{end}}{{end}}' qik-history-qualification)
+            docker rm --force --volumes qik-history-qualification
+            for volume in $volumes; do
+              if docker volume inspect "$volume" >/dev/null 2>&1; then exit 1; fi
+            done
+          fi
+          if docker container inspect qik-history-qualification >/dev/null 2>&1; then exit 1; fi
