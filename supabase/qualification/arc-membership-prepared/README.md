@@ -131,9 +131,14 @@ Unit/transport contracts (no database; do not label these actual PostgreSQL):
 node --test tests/arcMembershipPrepared.test.mjs
 ```
 
-Actual PostgreSQL 17 qualification uses an **already approved disposable** loopback
-database named exactly `mip_arc_prepared_test`, initially empty in public.
-The harness refuses any other host/database and takes a session advisory lock.
+Actual PostgreSQL 17.6 (exact server version 170006) qualification uses an **already approved disposable** loopback
+database named exactly `mip_arc_prepared_test`. Before arming cleanup, the harness
+refuses other user schemas, public classes/routines/types/operators/collations/
+conversions/text-search objects, extra extensions, foreign servers, event triggers,
+large objects and publications. The allowed extension is the fresh database's
+standard plpgsql only. This is a dedicated disposable-catalog check, not a hosted
+database audit. The harness refuses any other host/database, takes a session
+advisory lock, and bounds the test at 90 seconds and admin statements at 5 seconds.
 The caller provisions that disposable database outside this package; no hosted
 URL, real credentials or material belongs in this command.
 
@@ -146,8 +151,17 @@ node --test tests/arcMembershipPreparedPostgres.test.mjs
 The harness creates only synthetic relations in that dedicated database, executes
 the actual reader with more than 1,000 members, performs a competing committed
 source update between reader queries, proves snapshot stability and subsequent
-stale-retry refusal, checks server-enforced read-only rejection, and closes the
-reader. It drops its six owned synthetic tables without CASCADE in finally.
+stale-retry refusal (including a one-microsecond candidate revision mismatch),
+checks server-enforced read-only rejection, and closes the reader. A generated
+temporary NOLOGIN role gets SELECT only on the six synthetic tables. A real
+`SET ROLE` reader must reproduce the allowed result; revoked article SELECT must
+produce PostgreSQL 42501 internally and only the static sanitized adapter error
+externally, without driver cause/detail. This is **effective-role permission**
+evidence, not direct-password authentication qualification.
+The harness drops its six owned synthetic tables without CASCADE and removes the
+temporary role/grants in finally. Every cleanup stage is attempted even after an
+earlier cleanup failure, and the admin Client closes even after connect or cleanup
+failure. Cleanup failure is reported as a static failure, not success.
 The external harness owner removes the already-disposable database afterward.
 Without the marker the native test is explicitly skipped, never reported as passed.
 

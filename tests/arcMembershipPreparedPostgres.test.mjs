@@ -3,6 +3,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
+import {randomBytes} from 'node:crypto'
 import {prepareArcMembership} from '../supabase/qualification/arc-membership-prepared/prepare.mjs'
 import {fixture,requests,id} from '../supabase/qualification/arc-membership-prepared/syntheticFixture.mjs'
 
@@ -18,17 +19,45 @@ function connection() {
   return {connectionString:url.href,ssl:false,connectionTimeoutMillis:5000}
 }
 test('actual PostgreSQL owns one repeatable-read snapshot, detects stale replay, and leaves no writes',
-  {skip:!enabled},async()=>{
-  const config=connection(),db=new pg.Client(config)
-  let connected=false,owned=false
+  {skip:!enabled,timeout:90000},async()=>{
+  const config=connection(),db=new pg.Client({...config,query_timeout:10000,
+    statement_timeout:5000,application_name:'mip-arc-prepared-synthetic-admin'})
+  const readerRole='arc_prepared_reader_'+randomBytes(8).toString('hex')
+  // Generated identifier has no caller-controlled punctuation.
+  const quotedRole='"'+readerRole+'"'
+  let owned=false,roleCreated=false
   try {
-    await db.connect();connected=true
+    await db.connect()
+    await db.query("set statement_timeout='5000ms'")
     const version=(await db.query("select current_database() name,current_setting('server_version_num')::int version")).rows[0]
     assert.equal(version.name,'mip_arc_prepared_test')
-    assert.ok(version.version>=170000&&version.version<180000,'PostgreSQL 17 required')
+    assert.equal(version.version,170006,'exact PostgreSQL 17.6 required')
     assert.equal((await db.query('select pg_try_advisory_lock(790613504) held')).rows[0].held,true)
-    const existing=(await db.query("select c.oid from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public'")).rows
-    assert.equal(existing.length,0,'fresh dedicated synthetic database required')
+    // Class-only emptiness is insufficient: functions or another user schema
+    // could hide preexisting objects in a database that merely has no tables.
+    const existing=(await db.query(`
+      select 'user_schema' kind from pg_namespace
+       where nspname not in ('public','pg_catalog','information_schema','pg_toast')
+        and nspname !~ '^pg_(toast_)?temp_[0-9]+$'
+      union all select 'public_class' from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public'
+      union all select 'public_routine' from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public'
+      union all select 'public_type' from pg_type t join pg_namespace n on n.oid=t.typnamespace where n.nspname='public'
+      union all select 'public_operator' from pg_operator o join pg_namespace n on n.oid=o.oprnamespace where n.nspname='public'
+      union all select 'public_collation' from pg_collation c join pg_namespace n on n.oid=c.collnamespace where n.nspname='public'
+      union all select 'public_conversion' from pg_conversion c join pg_namespace n on n.oid=c.connamespace where n.nspname='public'
+      union all select 'public_text_search_config' from pg_ts_config c join pg_namespace n on n.oid=c.cfgnamespace where n.nspname='public'
+      union all select 'public_text_search_dictionary' from pg_ts_dict d join pg_namespace n on n.oid=d.dictnamespace where n.nspname='public'
+      union all select 'public_text_search_parser' from pg_ts_parser p join pg_namespace n on n.oid=p.prsnamespace where n.nspname='public'
+      union all select 'public_text_search_template' from pg_ts_template t join pg_namespace n on n.oid=t.tmplnamespace where n.nspname='public'
+      union all select 'extra_extension' from pg_extension where extname<>'plpgsql'
+      union all select 'foreign_server' from pg_foreign_server
+      union all select 'event_trigger' from pg_event_trigger
+      union all select 'large_object' from pg_largeobject_metadata
+      union all select 'publication' from pg_publication
+      limit 1
+    `)).rows
+    assert.equal(existing.length,0,'dedicated database catalog must be empty')
+    assert.equal((await db.query('select 1 from pg_roles where rolname=$1',[readerRole])).rows.length,0)
     owned=true
     await db.query(`
       create table public.arc_membership_candidates(id uuid primary key,article_id uuid not null,
@@ -44,6 +73,7 @@ test('actual PostgreSQL owns one repeatable-read snapshot, detects stale replay,
         fixture_passed boolean,auto_approval_enabled boolean,auto_approval_threshold numeric);
     `)
     const data=fixture()
+    data.candidates[0].updated_at='2026-01-14 12:00:00.123456+00'
     for(const row of data.candidates)await db.query('insert into public.arc_membership_candidates values($1,$2,$3,$4,$5)',
       [row.id,row.article_id,row.arc_id,row.state,row.updated_at])
     for(const row of data.arcs)await db.query('insert into public.story_arcs values($1,$2,$3,$4,$5)',
@@ -58,6 +88,43 @@ test('actual PostgreSQL owns one repeatable-read snapshot, detects stale replay,
     await db.query("insert into public.arc_membership_release_policy values('arc-v1-membership-2026-08-23.2',true,false,null)")
     const input={connection:config,sourceKind:'historical_public',requests:requests(data),limits:{page:97}}
     const baseline=await prepareArcMembership(input)
+    assert.equal(baseline.scores[0].candidate_updated_at,'2026-01-14 12:00:00.123456+00')
+    await assert.rejects(prepareArcMembership({...input,requests:input.requests.map(row=>({
+      ...row,candidate_updated_at:'2026-01-14 12:00:00.123457+00',
+    }))}),/stale_or_foreign_candidate/)
+    await db.query('create role '+quotedRole+' nologin nosuperuser nocreatedb nocreaterole noinherit nobypassrls')
+    roleCreated=true
+    await db.query('grant usage on schema public to '+quotedRole)
+    await db.query('grant select on public.arc_membership_candidates,public.story_arcs,public.articles,'+
+      'public.article_entities,public.pipeline_config,public.arc_membership_release_policy to '+quotedRole)
+    let deniedReadCode=null,closedReaders=0
+    class LimitedReader extends pg.Client {
+      async connect() {
+        await super.connect()
+        await super.query('set role '+quotedRole)
+      }
+      async query(sql,...args) {
+        try { return await super.query(sql,...args) }
+        catch(error) { deniedReadCode=error.code;throw error }
+      }
+      async end() { try { return await super.end() } finally { closedReaders++ } }
+    }
+    // This proves server-enforced effective-role grants, not direct password
+    // authentication. No runtime grants or hosted roles are installed.
+    const limited=await prepareArcMembership(input,{ClientClass:LimitedReader})
+    assert.equal(limited.input_sha256,baseline.input_sha256)
+    await db.query('revoke select on public.articles from '+quotedRole)
+    await assert.rejects(prepareArcMembership(input,{ClientClass:LimitedReader}),error=>{
+      assert.equal(error.message,'arc_prepared_read_failed')
+      assert.equal(error.cause,undefined)
+      assert.equal(error.detail,undefined)
+      assert.equal(error.code,undefined)
+      assert.ok(!JSON.stringify(error).includes('articles'))
+      return true
+    })
+    assert.equal(deniedReadCode,'42501','actual PostgreSQL missing SELECT denial required')
+    assert.equal(closedReaders,2,'both allowed and denied reader sessions close')
+    await db.query('grant select on public.articles to '+quotedRole)
     assert.equal(baseline.counts.members,1001)
     assert.equal(baseline.counts.entity_relations,1002)
     assert.ok(!JSON.stringify(baseline).includes('SENTINEL'))
@@ -99,10 +166,30 @@ test('actual PostgreSQL owns one repeatable-read snapshot, detects stale replay,
     assert.equal(denied,true)
     assert.equal((await db.query('select state from public.arc_membership_candidates')).rows[0].state,'pending')
   } finally {
-    if(owned)await db.query(`
-      drop table if exists public.article_entities,public.arc_membership_candidates,
-        public.story_arcs,public.articles,public.pipeline_config,public.arc_membership_release_policy;
-    `)
-    if(connected)await db.end()
+    let cleanupFailed=false
+    try {
+      if(owned) {
+        try {
+          await db.query(`
+            drop table if exists public.article_entities,public.arc_membership_candidates,
+              public.story_arcs,public.articles,public.pipeline_config,public.arc_membership_release_policy;
+          `)
+        } catch { cleanupFailed=true }
+      }
+      if(roleCreated) {
+        // Attempt each owned-role cleanup even if an earlier drop failed.
+        for(const sql of [
+          'revoke all privileges on all tables in schema public from '+quotedRole,
+          'revoke all privileges on schema public from '+quotedRole,
+          'drop role '+quotedRole,
+        ]) {
+          try { await db.query(sql) } catch { cleanupFailed=true }
+        }
+      }
+    } finally {
+      // Client.end is attempted even after connect or cleanup fails.
+      try { await db.end() } catch { cleanupFailed=true }
+    }
+    if(cleanupFailed)throw Error('arc_prepared_synthetic_cleanup_failed')
   }
 })
