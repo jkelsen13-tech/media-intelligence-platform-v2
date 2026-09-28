@@ -233,8 +233,8 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   const inspector=await client(installer)
   try{
    for(const name of plan.catalog_inspection_schemas){
-    const observed=(await inspector.query("select has_schema_privilege(current_user,$1,'USAGE') usage,has_schema_privilege(current_user,$1,'CREATE') create",[name])).rows[0]
-    assert.deepEqual(observed,{usage:true,create:false})
+    const observed=(await inspector.query("select has_schema_privilege(current_user,$1,'USAGE') usage,has_schema_privilege(current_user,$1,'CREATE') can_create",[name])).rows[0]
+    assert.deepEqual(observed,{usage:true,can_create:false})
    }
    for(const signature of ['mip_comparison_kernel_v1.source_snapshot(jsonb,text)','mip_identity.authorize(uuid,text,text)','mip_cutover_authority.worker_complete(uuid,uuid,text,uuid,uuid,text,text,jsonb)'])
     assert.equal((await inspector.query("select has_function_privilege(current_user,$1,'EXECUTE') allowed",[signature])).rows[0].allowed,false)
