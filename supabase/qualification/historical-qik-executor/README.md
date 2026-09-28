@@ -211,3 +211,63 @@ invoker function. The runner confirms the exact waiting lock, its blocker, sourc
 database/principal and active snapshot before changing the synthetic source.
 It always releases and settles acquisition, and stops dependent tests on failure.
 Neither test nor acquisition timeouts were increased for this repair.
+
+
+## Bounded adapter successor (source authored; not executed)
+
+The SQL candidate, original acquisition, planner blob
+ad30cb603757888840e737694b333c3b6ae234e1 and engine blob
+b5b80ee37c6cd068d17f59b506bab6df70839ea6 remain unchanged. Acquisition still
+freezes complete SQL-selected source inventories in their original read-only
+repeatable-read sessions. This change does not page acquisition or relax its
+global raw-row/root-pair guard.
+
+seal accepts max_canonical_records (default 100, range 1–100) and
+max_canonical_bytes (default 8,388,608, range 1–134,217,728). Its server-side
+cursor is the existing canonical flag and original ordinal, never a supplied
+cursor. Each invocation selects only not-yet-canonical rows. The byte budget
+charges original body bytes plus canonical output bytes; it is an invocation
+work/input bound, not a claim about total JS heap or CPU. If the next row cannot
+fit, the result is unit_exceeds_budget before any progress, or
+canonicalization_paused after progress. Both are explicit fixed status values.
+HTTP still returns ONLY state/code, never counts, cursors, metadata or material.
+Retries use the SAME operation UUID. Completed canonical bodies are not reread.
+
+Before returning raw inventory, manifest, selected body or identity metadata,
+SQL computes octet lengths and uses CASE to suppress oversized values. Body
+limits use the smaller of the route and measured unit limit. Metadata uses
+the smaller of route and measured manifest limit, with a 268,435,455-byte
+allocation ceiling. This ceiling alone is not proof of a 256 MiB runtime fit:
+the measured full-engine CPU/peak-memory/profile gate remains required, and
+the complete metadata manifest, fixed units and repeated planner passes remain.
+SQL can still scan/hash metadata to evaluate these guards; this is not a bounded
+database-CPU claim. Canonicalization can transiently parse a body before discovering
+that its canonical output plus original exceeds the remaining invocation budget;
+it then pauses without writing that row.
+
+Each call binds route and authorization digests. Acquired-state repeats compare
+the original inventory hash inside the call and validate the descriptor/contract
+snapshot against every already-canonical row; final complete family counts,
+metadata, roots, closure and mapping go through the unchanged planner/SQL seal.
+The inventory hash uses PostgreSQL JSONB text solely as a same-statement acquired
+fence, not as the canonical manifest/wire hash. Ordinary executor permissions
+cannot replace acquired raw inventory. This preserves the trusted-owner boundary:
+it does not claim protection against a privileged owner rewriting acquired
+inventory between invocations before any canonical metadata exists.
+
+A sealed reopen fetches the size-bounded manifest once, verifies its original
+canonical SHA, and thereafter checks only immutable sealed state, exact hash,
+route/auth digests and byte length. Missing export, changed route/auth or changed
+hash refuses; sealed state alone is insufficient even for a seal retry.
+The existing SQL immutability fences are a prerequisite. No fresh source fetch
+or replacement operation is attempted on cancellation or uncertain completion.
+
+Qualification additions exercise resumable one-record batches without rereading
+canonical bodies, cancelled/too-small invocations, preallocation suppression,
+changed acquired snapshot, sealed metadata fences, unchanged original snapshot
+and exact retries. Actual PostgreSQL cases run in BOTH existing bootstrap and
+closed-ordinary fixture profiles; they do not establish hosted Edge capacity.
+Run the existing Node tests and armed Postgres17 runner with unchanged dependency
+installation and cleanup. Parent must repin the adapter/handler/test sources in
+its selected runner. The original SQL/install pins and acquisition 110-second
+timeout remain unchanged. No tests were executed by this source author.

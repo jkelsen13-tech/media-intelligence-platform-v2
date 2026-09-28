@@ -5,7 +5,7 @@ const project='qikvmopbtijoebdqosyq'
 const fixedCodes=new Set(['route_unconfigured','route_unqualified','capacity_unqualified',
   'original_export_unavailable','original_export_changed','object_capture_unqualified',
   'adapter_operation_failed','invocation_budget','cancelled','request_invalid','unauthorized','busy'])
-const states=new Set(['acquired','sealed','readback_verified','budget_paused','unit_exceeds_budget',
+const states=new Set(['acquired','sealed','readback_verified','budget_paused','canonicalization_paused','unit_exceeds_budget',
   'unsupported_unit_capacity','incomplete','not_started'])
 const reply=(status,state,code=null)=>new Response(JSON.stringify({state,code}),{
   status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})
@@ -55,7 +55,7 @@ function parameters(value) {
     !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value.operation_id??''))
     fail('request_invalid')
   const allowed=value.action==='acquire'?['action','operation_id']:
-    value.action==='seal'?['action','operation_id','manifest_limits']:
+    value.action==='seal'?['action','operation_id','manifest_limits','max_canonical_records','max_canonical_bytes']:
     ['action','operation_id','manifest_limits','max_units','max_material_bytes','timeout_ms']
   if(Object.keys(value).some(k=>!allowed.includes(k)))fail('request_invalid')
   if(value.action!=='acquire') {
@@ -63,6 +63,11 @@ function parameters(value) {
     if(!m||Object.keys(m).sort().join(',')!=='bytes,objects,records'||
       !Object.values(m).every(n=>Number.isSafeInteger(n)&&n>0)||
       m.records>250000||m.objects>100000||m.bytes>1024**4)fail('request_invalid')
+  }
+  if(value.action==='seal') {
+    for(const [key,max] of [['max_canonical_records',100],['max_canonical_bytes',134217728]])
+      if(value[key]!==undefined&&(!Number.isSafeInteger(value[key])||value[key]<1||value[key]>max))
+        fail('request_invalid')
   }
   if(value.action==='resume') {
     for(const [key,max] of [['max_units',100],['max_material_bytes',134217728],['timeout_ms',110000]])
@@ -120,7 +125,7 @@ export function createHistoricalHandler({readSecret,createClient,makeExecutor=cr
       const adapter=makeExecutor(db)
       let result
       if(p.action==='acquire') result=await adapter.acquire(p.operation_id,{signal:controller.signal})
-      else if(p.action==='seal') result=await adapter.seal(p.operation_id,{manifest_limits:p.manifest_limits,signal:controller.signal})
+      else if(p.action==='seal') result=await adapter.seal(p.operation_id,{manifest_limits:p.manifest_limits,max_canonical_records:p.max_canonical_records,max_canonical_bytes:p.max_canonical_bytes,signal:controller.signal})
       else {
         const {action,operation_id,...budget}=p
         result=await adapter.resume(operation_id,budget)

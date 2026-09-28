@@ -34,7 +34,8 @@ function fixture() {
       measured_max_unit_bytes:134217728}}
   const plan=assertCapacity(route,input,limits).plan
   const exported={state:'sealed',manifest_text:stableStringify(plan.manifest),manifest_sha256:plan.manifest_sha256,
-    route_sha256:route.route_sha256,authorization_sha256:route.authorization_sha256}
+    route_sha256:route.route_sha256,authorization_sha256:route.authorization_sha256,
+    manifest_bytes:Buffer.byteLength(stableStringify(plan.manifest))}
   return {rows,route,input:plan.manifest,exported}
 }
 // Test database models byte/metadata persistence and failed responses only.
@@ -47,9 +48,9 @@ function syntheticDb(f=fixture()) {
       let rows=[]
       if(text==='select mip_history.guard()') {guards++;rows=[{}]}
       else if(text==='select * from mip_history.route') rows=[f.route]
-      else if(text.startsWith('select state,manifest_text')) rows=changeExport?[]:[f.exported]
+      else if(text.startsWith('select state,manifest_sha256')) rows=changeExport?[]:[f.exported]
       else if(text.startsWith('select ordinal,record_meta')) rows=f.rows.filter(r=>same(r.record_meta.identity,JSON.parse(values[2])))
-      else if(text.startsWith('select p.ordinal,p.body')) {readbacks++;rows=arg.map(n=>f.rows.find(r=>r.ordinal===String(n)))}
+      else if(text.startsWith('select p.ordinal,octet_length(p.body)')) {readbacks++;rows=arg.map(n=>f.rows.find(r=>r.ordinal===String(n)))}
       else if(text.startsWith('select manifest_sha256,unit_sha256')) rows=units.has(arg)?[units.get(arg)]:[]
       else if(text.startsWith('select mip_history.commit_unit')) {
         const [,manifest_sha256,unit_id,unit_sha256,ordinals,receipt]=values
@@ -222,3 +223,54 @@ export async function qualifyAcquisitionWithPostgres({executor,anonymous,sourceW
   await assert.rejects(()=>executor.query({text:'delete from mip_history.payload where operation_id=$1',values:[operation_id]}))
   await assertNoPublicWrites()
 }
+
+test('sealed retries fetch manifest once and use metadata-only repeat fences',async()=>{
+  const base=syntheticDb();let manifests=0,fences=0
+  const db={query:async input=>{
+    if(input.text.startsWith('select state,manifest_sha256')) {
+      if(input.text.includes('else null end as manifest_text')) manifests++
+      else {fences++;assert.ok(!input.text.includes('then manifest_text'))}
+    }
+    return base.query(input)
+  }}
+  assert.equal((await createQikHistoricalExecutor(db).resume(operation,{manifest_limits:limits,max_units:10})).state,'readback_verified')
+  assert.equal(manifests,1);assert.ok(fences>1)
+})
+test('manifest size refusal precedes parse and material transfer',async()=>{
+  const f=fixture();f.exported.manifest_bytes=10000001;f.exported.manifest_text=null
+  const db=syntheticDb(f)
+  await assert.rejects(()=>createQikHistoricalExecutor(db).resume(operation,{manifest_limits:limits}),e=>e.code==='capacity_unqualified')
+  assert.equal(db.stats().readbacks,0);assert.equal(db.units.size,0)
+})
+test('same-size changed sealed identity and route authorization are refused at repeat fences',async()=>{
+  for(const mode of ['hash','route','authorization','missing']) {
+    const base=syntheticDb();let initial=false
+    const db={query:async input=>{
+      if(input.text.startsWith('select state,manifest_sha256')) {
+        if(initial) {
+          if(mode==='hash')base.f.exported.manifest_sha256=sha('different fixed original')
+          if(mode==='route')base.f.route.route_sha256=sha('different route')
+          if(mode==='authorization')base.f.route.authorization_sha256=sha('different authorization')
+          if(mode==='missing')base.changeOriginal()
+        }
+        initial=true
+      }
+      return base.query(input)
+    }}
+    const result=await createQikHistoricalExecutor(db).resume(operation,{manifest_limits:limits,max_units:10})
+    assert.equal(result.state,'not_started');assert.equal(base.units.size,0)
+  }
+})
+test('SQL preallocation suppression refuses bodies before wire parsing or committing',async()=>{
+  const base=syntheticDb()
+  const db={query:async input=>{
+    const result=await base.query(input)
+    if(input.text.startsWith('select p.ordinal,octet_length(p.body)')) {
+      assert.ok(input.text.includes('sum(octet_length(p.body)) over()<=$3'))
+      return {rows:result.rows.map(r=>({...r,body:null}))}
+    }
+    return result
+  }}
+  const result=await createQikHistoricalExecutor(db).resume(operation,{manifest_limits:limits,max_units:10})
+  assert.equal(result.state,'incomplete');assert.equal(base.units.size,0)
+})

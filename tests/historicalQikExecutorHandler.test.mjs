@@ -75,3 +75,17 @@ test('client construction failure releases only its own concurrency slot',async(
   assert.equal((await handler(f.request())).status,503)
   assert.equal(attempts,2)
 })
+
+test('seal accepts only bounded canonicalization controls and returns a metadata-only pause',async()=>{
+  let received
+  const f=setup({makeExecutor:()=>({async seal(id,budget){received={id,budget};return {state:'canonicalization_paused',body:'PRIVATE_SENTINEL'}}})})
+  const body={action:'seal',operation_id:operation,manifest_limits:{records:100,objects:100,bytes:100000},
+    max_canonical_records:2,max_canonical_bytes:4096}
+  assert.deepEqual(await (await f.handler(f.request(body))).json(),{state:'canonicalization_paused',code:null})
+  assert.equal(received.id,operation);assert.equal(received.budget.max_canonical_records,2)
+  assert.equal(received.budget.max_canonical_bytes,4096)
+  for(const patch of [{max_canonical_records:101},{max_canonical_records:0},{max_canonical_bytes:134217729},
+    {max_canonical_bytes:'4096'},{cursor:2}]) {
+    assert.equal((await f.handler(f.request({...body,...patch}))).status,400)
+  }
+})

@@ -202,7 +202,7 @@ test('historical executor PG17.6 '+(closedProfile?'closed transport ordinary ins
     let lostCommit=false,lostCheckpoint=false,readbacks=0
     const transport={query:async input=>{
       const result=await executor.query(input)
-      if(input.text.startsWith('select p.ordinal,p.body')) readbacks++
+      if(input.text.startsWith('select p.ordinal,octet_length(p.body)')) readbacks++
       if(lostCommit&&input.text.startsWith('select mip_history.commit_unit')) {
         lostCommit=false;throw new Error('synthetic_lost_commit_ack')
       }
@@ -307,7 +307,54 @@ test('historical executor PG17.6 '+(closedProfile?'closed transport ordinary ins
     // node:test reports a failed child without throwing at await t.test().
     // Explicitly stop the parent so no seal queues behind a failed acquisition.
     assert.equal(originalSnapshotProved,true,'dependent custody tests require the completed snapshot proof')
-    await t.test('lossless canonical seal preserves duplicates, Unicode, null and exact native numbers',async()=>{
+    await t.test('canonicalization preflights bytes and cancellation without advancing the original cursor',async()=>{
+      let bodies=0
+      const boundedAdapter=createQikHistoricalExecutor({query:async input=>{
+        if(input.text.startsWith('select ordinal,project,table_name,case')) bodies++
+        return transport.query(input)
+      }})
+      assert.equal((await boundedAdapter.seal(operation,{manifest_limits:limits,max_canonical_bytes:1})).state,'unit_exceeds_budget')
+      assert.equal(bodies,0)
+      const controller=new AbortController();controller.abort()
+      await assert.rejects(()=>boundedAdapter.seal(operation,{manifest_limits:limits,signal:controller.signal}),e=>e.code==='cancelled')
+      assert.equal((await executor.query({text:'select count(*)::int n from mip_history.payload where operation_id=$1 and canonical',values:[operation]})).rows[0].n,0)
+      const old=(await qik.query('select qualification from mip_history.route')).rows[0].qualification
+      await qik.query({text:"update mip_history.route set qualification=jsonb_set(qualification,'{measured_max_unit_bytes}','1')",values:[]})
+      try {await assert.rejects(()=>boundedAdapter.seal(operation,{manifest_limits:limits}),e=>e.code==='capacity_unqualified')}
+      finally {await qik.query({text:'update mip_history.route set qualification=$1',values:[old]})}
+      assert.equal(bodies,0)
+    })
+    await t.test('lossless canonical seal resumes bounded original rows without canonical body rereads',async()=>{
+      const seen=new Set();let lostCanonicalAck=true
+      const boundedAdapter=createQikHistoricalExecutor({query:async input=>{
+        if(input.text.startsWith('select ordinal,project,table_name,case')) {
+          const key=String(input.values[1]);assert.equal(seen.has(key),false);seen.add(key)
+        }
+        const result=await transport.query(input)
+        if(lostCanonicalAck&&input.text.startsWith('select mip_history.canonicalize')) {
+          lostCanonicalAck=false;throw new Error('synthetic_canonical_ack_lost')
+        }
+        return result
+      }})
+      await assert.rejects(()=>boundedAdapter.seal(operation,{manifest_limits:limits,max_canonical_records:1}),e=>e.code==='adapter_operation_failed')
+      let sealed=false,pauses=0
+      for(let attempt=0;attempt<100;attempt++) {
+        const result=await boundedAdapter.seal(operation,{manifest_limits:limits,max_canonical_records:1})
+        if(result.state==='sealed'){sealed=true;break}
+        assert.equal(result.state,'canonicalization_paused');pauses++
+        if(pauses===1) {
+          // Snapshot descriptors remain immutable to ordinary executor callers.
+          const original=(await qik.query({text:'select raw_inventory from mip_history.export where operation_id=$1',values:[operation]})).rows[0].raw_inventory
+          const project=(await executor.query({text:'select project from mip_history.payload where operation_id=$1 and canonical order by ordinal limit 1',values:[operation]})).rows[0].project
+          const changed=structuredClone(original)
+          const descriptor=JSON.parse(changed[project].descriptor_json);descriptor.snapshot='synthetic_changed_snapshot'
+          changed[project].descriptor_json=JSON.stringify(descriptor)
+          await qik.query({text:'update mip_history.export set raw_inventory=$2 where operation_id=$1',values:[operation,changed]})
+          try {await assert.rejects(()=>boundedAdapter.seal(operation,{manifest_limits:limits}),e=>e.code==='original_export_changed')}
+          finally {await qik.query({text:'update mip_history.export set raw_inventory=$2 where operation_id=$1',values:[operation,original]})}
+        }
+      }
+      assert.equal(sealed,true);assert.ok(pauses>0)
       assert.equal((await adapter.seal(operation,{manifest_limits:limits})).state,'sealed')
       const payload=await executor.query({text:`select table_name,record_meta,convert_from(body,'UTF8') body
         from mip_history.payload where operation_id=$1 and project=$2 order by ordinal`,values:[operation,PROJECTS.nie]})
@@ -320,6 +367,25 @@ test('historical executor PG17.6 '+(closedProfile?'closed transport ordinary ins
       assert.ok(backup[0].body.includes('résumé 😀'))
       await assert.rejects(()=>qik.query({text:'update mip_history.payload set body=body where operation_id=$1',values:[operation]}))
       await assert.rejects(()=>qik.query({text:"update mip_history.export set state='acquired' where operation_id=$1",values:[operation]}))
+    })
+    await t.test('sealed exact retry validates original route and refuses manifest overflow before transfer',async()=>{
+      const saved=(await qik.query('select qualification,authorization_sha256 from mip_history.route')).rows[0]
+      let materialReads=0,manifestReads=0
+      const boundedAdapter=createQikHistoricalExecutor({query:async input=>{
+        if(input.text.startsWith('select p.ordinal,octet_length(p.body)')) materialReads++
+        if(input.text.includes('else null end as manifest_text')) manifestReads++
+        return transport.query(input)
+      }})
+      await qik.query("update mip_history.route set qualification=jsonb_set(qualification,'{measured_manifest_bytes}','1')")
+      try {
+        await assert.rejects(()=>boundedAdapter.resume(operation,{manifest_limits:limits}),e=>e.code==='capacity_unqualified')
+        assert.equal(manifestReads,1);assert.equal(materialReads,0)
+      } finally {await qik.query({text:'update mip_history.route set qualification=$1',values:[saved.qualification]})}
+      await qik.query({text:'update mip_history.route set authorization_sha256=$1',values:['a'.repeat(64)]})
+      try {await assert.rejects(()=>boundedAdapter.seal(operation,{manifest_limits:limits}),e=>e.code==='original_export_changed')}
+      finally {await qik.query({text:'update mip_history.route set authorization_sha256=$1',values:[saved.authorization_sha256]})}
+      assert.equal((await boundedAdapter.seal(operation,{manifest_limits:limits})).state,'sealed')
+      assert.equal(materialReads,0)
     })
     await t.test('ambiguous commits/CAS reconcile actual independent reads and exact original export',async()=>{
       lostCommit=true;lostCheckpoint=true

@@ -1,0 +1,177 @@
+{
+  "label": "UNAPPROVED — SOURCE CANDIDATE ONLY — INTERNAL SYNTHETIC QUALIFICATION AUTHORIZED BY CONSOLIDATION AMENDMENT",
+  "origin": {
+    "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+    "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
+    "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
+  },
+  "predecessor_receipt": {
+    "candidate": "7cbcd91004e924c1335e7f347779e1df1b71e065",
+    "tree": "23a4cbbdd8e3872f59a01941c17baa75deb0667c",
+    "run": 36433497487,
+    "pass": 72,
+    "fail": 0,
+    "skip": 0,
+    "scope": "Existing two synthetic PG profiles and Node; not new bounded adapter or hosted capacity"
+  },
+  "selected_sources": {
+    "supabase/qualification/historical-qik-executor/candidate.sql": "6fe6035223de1dac94fba6c238e33324bc0ca266",
+    "supabase/qualification/historical-qik-executor/executor.mjs": "fa2e6a6f04287f45ce75ee0ae79e66afea5a3e1a",
+    "supabase/qualification/historical-qik-executor/contracts.mjs": "6277ff14cf9009e7bca8b77e9824e4cfb51c1542",
+    "supabase/qualification/historical-qik-executor/README.md": "573f1564dca5894f4c59523a5b4e5f09d6ef27b2",
+    "tests/historicalQikExecutor.mjs": "bb80465876c7c7c62dd261da260079244445ffa9",
+    "tests/historicalQikExecutorPostgres17.test.mjs": "150b59cf3a5680fd991c7f33840aa8f89cfe02a1",
+    "supabase/qualification/historical-qik-executor/install.mjs": "d4c72b5e2ff50ce19d46de9c6911135fc0216f48",
+    "supabase/qualification/historical-qik-executor/handler.mjs": "d00b3d331e161f0fb269ed26b173d5c7bcc3cb29",
+    "supabase/qualification/historical-qik-executor/index.ts": "ebebe21f4bf2eed94070e71d0a8a4e8a4986bbb2",
+    "supabase/qualification/historical-qik-executor/deno.json": "ac66847f390776a239ed12087d9c7095019fd4a3",
+    "supabase/qualification/historical-qik-executor/config.toml": "e5fe571d97c7f75ed0ae5679013d373817870f47",
+    "tests/historicalQikExecutorHandler.test.mjs": "f1780203995e5efc6b65aa86beb87d4946e5eaa4",
+    "scripts/mipHistoricalArticleTransferPlan.mjs": "ad30cb603757888840e737694b333c3b6ae234e1",
+    "scripts/mipHistoricalArticleTransfer.mjs": "b5b80ee37c6cd068d17f59b506bab6df70839ea6"
+  },
+  "policy": {
+    "projects": {
+      "YHB": "yhbwnrtlqbjtcrrlpbge",
+      "NIE": "niejaejtbxgakyrsntxm",
+      "qik": "qikvmopbtijoebdqosyq"
+    },
+    "field_allowlist": {
+      "path": "scripts/mipHistoricalArticleTransferPlan.mjs",
+      "blob": "ad30cb603757888840e737694b333c3b6ae234e1",
+      "contract": "Existing exact FIELD_CONTRACTS/project/category and roots/dependencies only; no added Auth/credential/project-config/function/role fields"
+    },
+    "route": "Read-only original YHB/NIE REPEATABLE READ through qik dblink acquire SQL to qik frozen private export; qik-hosted authenticated adapter seals original ordinal bodies and unchanged transfer engine creates private ordinal mappings/metadata checkpoints. Raw full corpus acquisition stays server-contained; acquire returns status only.",
+    "material_destinations": [
+      "qik existing private mip_history custody only"
+    ],
+    "excluded_receivers": [
+      "Cursor",
+      "source/synthetic GitHub",
+      "chat",
+      "physical device"
+    ],
+    "no_replacement_fetch": true,
+    "no_source_writes": true,
+    "originals_retained": true,
+    "no_automatic_processing": true,
+    "no_new_publication": true,
+    "no_retirement": true
+  },
+  "retention": [
+    {
+      "stage": "acquire",
+      "producer": "Unchanged candidate.sql",
+      "consumer": "Canonical sealing/exact source snapshot retry/recovery",
+      "durable": "One original ordinal payload body plus source project/table/native identity/version/provenance/dependency/root data in qik existing mip_history.payload and fixed raw inventory/snapshot metadata",
+      "temporary": "YHB/NIE read-only transaction/dblink buffers in qik only",
+      "historical_capture_semantics": "Preserve actual legacy representation; missing historical bytes/identities are not fabricated"
+    },
+    {
+      "stage": "seal",
+      "producer": "Bounded adapter calling unchanged canonicalRecord/canonicalize",
+      "consumer": "Exact deterministic manifest/fixed-unit transfer and verified custody",
+      "durable": "Existing canonical ordinal replaces its raw representation atomically with content hash/size/identity metadata; no second permanent raw/canonical receipt body",
+      "batch": "Default100 records /8MiB raw+canonical, max100records/128MiB; resumes canonical flags/ordinals; completed canonical bodies not reread",
+      "fence": "Ordinary executor cannot rewrite acquired inventory. Each invocation binds route/auth and snapshot identities; already-canonical records require same frozen snapshot. Privileged-owner rewriting before metadata exists is outside this trust guarantee, explicitly not hidden."
+    },
+    {
+      "stage": "manifest",
+      "producer": "Unchanged planHistoricalArticles/planHistoricalTransferUnits over complete bound metadata",
+      "consumer": "Original deterministic planning and exactly fixed indivisible units",
+      "durable": "Existing sealed manifest metadata/hash; no additional article payload",
+      "transient": "Complete metadata/planner passes still required; SQL guards refuse oversize before Pg driver allocation"
+    },
+    {
+      "stage": "resume/import/readback",
+      "producer": "Unchanged transferHistoricalArticles plus bounded adapter",
+      "consumer": "Exact verified original unit identity/graph/contents and retry recovery",
+      "durable": "Existing original custody is payload home. Unit references, collision-safe mappings, digest receipts, metadata-only CAS checkpoints; no redundant payload completion journal",
+      "transient": "One complete fixed unit bodies, unchanged cloning/independent readback; full-engine capacity required",
+      "fence": "Manifest loaded/verified once per invocation; every source/read/checkpoint/admission uses metadata-only sealed state/hash/route/auth fence; incompatible snapshot refuses"
+    },
+    {
+      "stage": "handler/status",
+      "producer": "Authenticated existing qik-only HTTP handler",
+      "consumer": "Bounded invoke/resume/status",
+      "durable": "No new status store",
+      "fields": [
+        "state",
+        "code"
+      ],
+      "states": [
+        "acquired",
+        "sealed",
+        "readback_verified",
+        "budget_paused",
+        "canonicalization_paused",
+        "unit_exceeds_budget",
+        "unsupported_unit_capacity",
+        "incomplete",
+        "not_started"
+      ],
+      "diagnostics": "Closed codes only; no payload, root identity, DSN, SQL/error text or secret"
+    }
+  ],
+  "prerequisites": {
+    "order": [
+      "Already installed-disabled C3 and qualified full main native installation dependencies if main route used",
+      "Exact existing dblink extension ownership and closed public transport/RLS helpers; main-to-history ordinary compatibility separately tested by main fixture",
+      "qik Vault source read-only DSN names mip_history_yhb_ro_db_url and mip_history_nie_ro_db_url securely configured without values in model",
+      "Existing restricted authenticated installer executes exact historical install.mjs/candidate.sql; fresh bootstrap and preclosed transport fixture profiles are distinct",
+      "Configure exactly scoped route/auth qualification metadata and least-privilege executor LOGIN/secure destination DSN and invoker secret inside qik",
+      "Deploy selected qik-hosted adapter only after actual runtime/TLS/snapshot/role/capacity qualification; synthetic GitHub is not receiving environment"
+    ],
+    "required_features": [
+      "PostgreSQL17.6 fixture",
+      "pgcrypto",
+      "dblink",
+      "Synthetic empty Vault shape only for GitHub fixtures; actual Vault separately required",
+      "Node22.14.0 synthetic fixture runtime; hosted Deno/Edge equivalence not asserted"
+    ],
+    "capacity": "Full unchanged engine CPU<2000ms/peak<256MiB/wall<120s for measured exact record/object/manifest/fixed-unit size, plus110s source-acquire transaction bounds. Smaller adapter sealing does not replace full-engine measurement; objects nonempty refuse until separately qualified byte-transfer support."
+  },
+  "qualification": {
+    "status": "NOT RUN at source authorship",
+    "files": [
+      "tests/historicalQikExecutor.mjs",
+      "tests/historicalQikExecutorHandler.test.mjs",
+      "tests/historicalQikExecutorPostgres17.test.mjs",
+      "tests/mipHistoricalArticleTransferPlan.test.mjs",
+      "tests/mipHistoricalArticleTransfer.test.mjs"
+    ],
+    "invocations": [
+      "node --test tests/historicalQikExecutor.mjs tests/historicalQikExecutorHandler.test.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs",
+      "MIP_HISTORICAL_EXECUTOR_DISPOSABLE=synthetic-pg17-only node --test tests/historicalQikExecutorPostgres17.test.mjs",
+      "MIP_HISTORICAL_EXECUTOR_DISPOSABLE=synthetic-pg17-only MIP_HISTORICAL_EXECUTOR_INSTALL_PROFILE=closed-ordinary node --test tests/historicalQikExecutorPostgres17.test.mjs"
+    ],
+    "assertions": [
+      "Unchanged deterministic canonical identities/hash/unit/planner/engine/retry and graph allowlists",
+      "Bounded partial seal, raw+canonical bytes, cancellation and indivisible-unit refusal",
+      "Missing/stale/tampered acquired/metadata snapshot/route/auth refusal",
+      "Once per invocation manifest and metadata-only repeated fences",
+      "Actual PG lost canonical write acknowledgment resumes exact original ordinal without completed body reread",
+      "Actual source REPEATABLE READ membership gate, role/transport/schema/ACL/RLS/TOCTOU/permission refusals in both profiles",
+      "Exact no enqueue/publication/overwrite/payload receipt copies",
+      "No skipped checks; any primary/cleanup failure refuses qualification"
+    ],
+    "cleanup": "Independently close owned PG connections, roll back mutations, restore fixture role/schema/custody baseline and destroy only owned loopback container/volumes with absence assertion; no production originals deleted"
+  },
+  "uncertainty": [
+    "No configured secure source/destination/invoker bindings observed",
+    "No deployed executor or actual invocation/status capability proved",
+    "No measured qik full-engine capacity, actual Vault encryption/TLS/source permissions proved",
+    "No actual frozen source inventory/material batch/import receipt",
+    "Privileged owner trust boundary remains unchanged"
+  ],
+  "historical_protections": "Historical approvals/manifests/hash assertions and existing source records remain unchanged; this distinct successor is not retroactive acceptance",
+  "qualified": false,
+  "installed": false,
+  "real_batch_verified": false,
+  "transfer_complete": false,
+  "immediate_base": {
+    "candidate": "48770da57716ffe1854a1a68ebfb631a6f6e4cbe",
+    "tree": "1176457a4f7b9e28eea0d7906f3a64403707da51",
+    "main_qualification": "New combined result pending; no main installation claim"
+  }
+}
