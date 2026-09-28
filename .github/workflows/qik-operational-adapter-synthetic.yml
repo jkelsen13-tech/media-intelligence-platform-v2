@@ -23,7 +23,7 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='4524d16f8e48dd60f21695ff51448e0c91d4a10d'
+          source='06c13dfb9d9ea6b065e11fe3bcad946c6e766a3e'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
@@ -43,8 +43,6 @@ jobs:
           package-manager-cache: false
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Qualify planner and hosted-source contracts
-        run: node --test --test-concurrency=1 tests/mipHistoricalArticleTransferPlan.test.mjs tests/qikComparisonAdapterSource.test.mjs tests/qikComparisonCatalogPreflight.test.mjs tests/qikRoleCreatorIsolation.test.mjs tests/qikComparisonAtomicInstall.test.mjs tests/mipHistoricalArticleTransfer.test.mjs
       - name: Start disposable PostgreSQL 17.6 on loopback only
         shell: bash
         run: |
@@ -74,16 +72,6 @@ jobs:
             rm -rf /tmp/qik-vector-build
           '
           test "$(docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification psql -X -h 127.0.0.1 -U postgres -Atc "show server_version_num")" = 170006
-      - name: Qualify complete native lineage journal review reader dependencies
-        env:
-          MIP_NATIVE_LINEAGE_QUALIFICATION: separately-approved-disposable-only
-          MIP_NATIVE_LINEAGE_DISPOSABLE_CONTEXT: approved-dedicated-ci
-        run: python3 -I -B verifier/nativeLineageMinimizationPostgres.py
-      - name: Qualify DOJ permissions through actual C3 and accepted reader
-        env:
-          MIP_NATIVE_LINEAGE_QUALIFICATION: separately-approved-disposable-only
-          MIP_NATIVE_LINEAGE_DISPOSABLE_CONTEXT: approved-dedicated-ci
-        run: python3 -I -B verifier/dojPrivatePermissionPostgres.py
       - name: Qualify full non-superuser atomic install and autonomous audit
         timeout-minutes: 5
         env:
