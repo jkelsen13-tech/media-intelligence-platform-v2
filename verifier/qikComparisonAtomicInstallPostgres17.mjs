@@ -230,6 +230,19 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   assert.equal(installed.sqlstate,'08006',safeDiagnostic(installed))
   assert.equal(installed.activation_allowed,false)
   assert.equal((await reconcileComparisonInstall(cfg)).state,'installed_disabled_audit_pending')
+  const inspector=await client(installer)
+  try{
+   for(const name of plan.catalog_inspection_schemas){
+    const observed=(await inspector.query("select has_schema_privilege(current_user,$1,'USAGE') usage,has_schema_privilege(current_user,$1,'CREATE') create",[name])).rows[0]
+    assert.deepEqual(observed,{usage:true,create:false})
+   }
+   for(const signature of ['mip_comparison_kernel_v1.source_snapshot(jsonb,text)','mip_identity.authorize(uuid,text,text)','mip_cutover_authority.worker_complete(uuid,uuid,text,uuid,uuid,text,text,jsonb)'])
+    assert.equal((await inspector.query("select has_function_privilege(current_user,$1,'EXECUTE') allowed",[signature])).rows[0].allowed,false)
+   assert.equal((await inspector.query("select has_table_privilege(current_user,'mip_identity.source_changes','SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') allowed")).rows[0].allowed,false)
+   await assert.rejects(inspector.query('select 1 from mip_identity.source_changes limit 0'),error=>error.code==='42501')
+   await assert.rejects(inspector.query("select mip_comparison_kernel_v1.source_snapshot('{}'::jsonb,'synthetic-inspection-denied')"),error=>error.code==='42501')
+  }finally{await inspector.end()}
+
   assert.equal((await admin.query('select count(*)::integer n from pg_auth_members where roleid in(select oid from pg_roles where rolname=any($1::text[])) or member in(select oid from pg_roles where rolname=any($1::text[]))',[[...RESERVED_ROLES]])).rows[0].n,0)
   assert.equal((await admin.query("select count(*)::integer n from mip_identity.efta_scope")).rows[0].n,0)
   assert.equal((await admin.query("select count(*)::integer n from mip_identity.doj_policy_versions")).rows[0].n,0)
