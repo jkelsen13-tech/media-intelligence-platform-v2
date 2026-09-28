@@ -139,7 +139,15 @@ test('native occurrence plans use actual put_mention with original retained fiel
     {id:id(35),source_version:'latest'},{id:id(36),field_version:'latest'},
     {id:id(37),field_hash:'0'.repeat(64)},{id:id(38),offset_unit:'utf16'},
    ])await deny(alice.query(putSQL,params({...m,...change})))
-   assert.equal((await readMention(m)).rows[0].result.mention.start,m.start)
+   // read_mention returns the stored SQL row (start_pos/end_pos), while the
+   // producer's put_mention input uses start/end. Verify the complete retained
+   // span and source binding after every attempted invalid write above.
+   const stored=(await readMention(m)).rows[0].result.mention
+   assert.deepEqual(
+    [stored.start_pos,stored.end_pos,stored.offset_unit,stored.literal,stored.field_id,
+     stored.source_version,stored.field_version,stored.field_hash,stored.span_hash],
+    [m.start,m.end,m.offset_unit,m.literal,m.field_id,m.source_version,m.field_version,m.field_hash,sha(m.literal)],
+   )
   })
   await t.test('native metadata and nested outputs retain selected literals only',async()=>{
    const metadata=(await db.query('select jsonb_agg(to_jsonb(f)) rows from mip_mentions.fields f')).rows[0].rows
