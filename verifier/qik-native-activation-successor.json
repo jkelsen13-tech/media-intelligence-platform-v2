@@ -68,7 +68,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/audit.mjs",
-      "git_blob": "bf9338bf7fa5b6debad39a6948aec3d90b56129f"
+      "git_blob": "a01901d27a26dfb704b652c3ce8a14b75f816f50"
     },
     {
       "path": "supabase/qualification/native-governed-install/install.mjs",
@@ -88,7 +88,7 @@
     },
     {
       "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
-      "git_blob": "eb8f6a02e2c52e2d6f48d9981c7f653b6ad0ead3"
+      "git_blob": "4fada3e91fb72e3c622ebbe63d08cf22133c65a6"
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/compileSource.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "8eebf17440e074370dd9a97973440a0f1c17e0a5"
+      "git_blob": "ba7cb2dc62b8bb1e783a24ea0a65c0ebaa3063c9"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -140,7 +140,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/README.md",
-      "git_blob": "63d77b05258dbf71849763a26b167599986902fc"
+      "git_blob": "666bbe1d01c2c190fd55e3a5747a8bf3e016137f"
     },
     {
       "path": ".github/workflows/qik-native-installer-held.yml",
@@ -172,7 +172,7 @@
     "credential": "metadataAuditConnectionString for expectedMetadataAuditor only",
     "authority_current": false,
     "reads": "catalog plus bootstrap/head and non-authority revision columns; no Auth/capture/session/token reads",
-    "host_integration": "Separate exact source-pinned host/CLI and real nonsuper fixture implemented; all original v2-v6 checks restored. New successor final boundary refused cardinality; second repair qualification NOT RUN. Secure hosted bindings absent.",
+    "host_integration": "Exact source-pinned host/CLI and actual nonsuper fixture implemented. New direct independent metadata audit and same-search-path correction AUTHORED — NOT RUN. Secure hosted bindings absent.",
     "success_field": "permission_boundary_current (only a successful independently executed audit may set true)"
   },
   "gates": [
@@ -199,14 +199,15 @@
     "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
-  "integration_parent": "f89c1d8b243e580140f0e4736d30075f347f2236",
+  "integration_parent": "7d07eb03cffc148aad94588d45b1dba92a934dcd",
   "qualification": {
-    "status": "SECOND REPAIR AUTHORED — NOT RUN",
+    "status": "AUDIT REPAIR AUTHORED — NOT RUN",
     "synthetic_only": true,
     "actual_qik_installation": false,
     "actual_material": false,
-    "prior_failed_run": 36466067286,
-    "prior_failed_candidate": "f89c1d8b243e580140f0e4736d30075f347f2236",
+    "prior_failed_run": 36466906536,
+    "prior_failed_job": 109079158368,
+    "prior_failed_candidate": "7d07eb03cffc148aad94588d45b1dba92a934dcd",
     "prior_result": {
       "source_pass": 51,
       "original_ordered_pg_pass": 55,
@@ -215,7 +216,16 @@
       "cleanup": "success",
       "source_clean_verification": "skipped"
     },
-    "defect": "FOREACH array expression scalar cardinality SQLSTATE21000; exact five-group iteration preserved"
+    "reached": [
+      "successor installed_disabled_audit_pending",
+      "fresh disabled reconciliation",
+      "autonomous base audit qualified"
+    ],
+    "not_reached": [
+      "independent composed metadata audit success",
+      "activation lifecycle"
+    ],
+    "defect": "Independent catalog JSON must use the installed hash function's empty search_path; no changed digest meaning"
   },
   "host_route": {
     "existing_environment": "qik-forward-controlled",

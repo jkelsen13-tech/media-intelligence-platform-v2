@@ -767,6 +767,14 @@ test('successor concrete full install, historical checkpoints and actual nonsupe
   assert.equal(qualified.audit_qualified,true,JSON.stringify(safeResult(qualified)));
   // Actual composed source/metadata host audit uses two genuinely authenticated
   // independent audit contracts. This synthetic trusted cfg is not a hosted URL admission.
+  const metadataBaseline=await auditNativeActivationMetadata({
+   expectedLogin:cfg.expectedLogin,operationId:cfg.operationId,expectedMetadataAuditor:metadataAuditor,
+   expectedInstallManifest:plan.manifest_sha256,expectedNativeProgram:plan.native.program_sha256,
+   expectedSuccessorProgram:plan.activation.program_sha256,metadataAuditConnectionString:url(metadataAuditor),
+   disposable:true,sessionPoolerHost:null
+  },read);
+  assert.equal(metadataBaseline.permission_boundary_current,true,JSON.stringify({state:metadataBaseline.state,
+   phase:metadataBaseline.phase??null,sqlstate:metadataBaseline.sqlstate??null,connection_cleanup_verified:metadataBaseline.connection_cleanup_verified}));
   const hostConfig={...cfg,releaseSha:'0'.repeat(40),metadataAuditConnectionString:url(metadataAuditor)};
   const hostAudit=await dispatchActivationHostAction('audit',hostConfig,read,{
    installComparisonAtomic,reconcileComparisonInstall,qualifyComparisonAudit,auditNativeActivationMetadata});
