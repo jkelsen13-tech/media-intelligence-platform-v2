@@ -1,0 +1,934 @@
+{
+  "label": "UNAPPROVED — SOURCE CANDIDATE ONLY — NOT A HOSTED INSTALLATION OR HISTORICAL ACCEPTANCE",
+  "origin": {
+    "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+    "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
+    "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
+  },
+  "immediate_base": {
+    "commit": "2af5109fd85b4d223a40d40b0543e79568575557",
+    "tree": "eecf21975b4e975b5a8d98f715dbd167bdbae3d6"
+  },
+  "authorization": {
+    "internal_source_and_synthetic_qualification": "User consolidation continuation amendment authorizes this distinct successor into internal qualification after applicable source review. No individual field signature or prior historical approval is represented.",
+    "actual_material_receiving_route": "Existing qualified private execution route and qik only; Cursor and public CI remain source/synthetic only; route currently unavailable.",
+    "publication": "No automatic publication, broadened eligibility or release-policy bypass.",
+    "spending": "At most $25 one-time and $10/month incremental on existing authorized services; no new service, plan upgrade or on-demand enablement."
+  },
+  "scope": "Only additive governed C6 canonical relation and C9 native arc paths. Historical captures, native source rows, article/event/membership stores, old approvals and historical hash assertions are preserved. This is not whole-platform store minimization.",
+  "c6": {
+    "semantic_kind": "reviewed_evidence_weight_v1",
+    "meaning": "Explicit uncalibrated reviewer weight 0..1; no default, inferred probability, candidate rank or acceptance substitution.",
+    "identity_kind": "qik_entity_identity_v1",
+    "identity_fields": [
+      "id",
+      "canonical_name",
+      "normalized_name",
+      "type",
+      "aliases"
+    ],
+    "identity_encoding": "SHA256 UTF8 PostgreSQL JSONB text; alias order and null distinctions retained; original native bytes resolved only through bound restricted path.",
+    "durable_tables": [
+      {
+        "table": "mip_mentions.canonical_mappings",
+        "fields": [
+          "scope",
+          "id",
+          "actor_id",
+          "entity_id",
+          "version",
+          "predecessor_id",
+          "state",
+          "identity_kind",
+          "identity_digest",
+          "reason",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_mentions.canonical_mapping_heads",
+        "fields": [
+          "scope",
+          "actor_id",
+          "revision"
+        ]
+      },
+      {
+        "table": "mip_mentions.canonical_weight_policies",
+        "fields": [
+          "scope",
+          "id",
+          "policy_key",
+          "version",
+          "predecessor_id",
+          "state",
+          "semantic_kind",
+          "reason",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_mentions.canonical_weight_heads",
+        "fields": [
+          "scope",
+          "policy_key",
+          "revision"
+        ]
+      },
+      {
+        "table": "mip_mentions.canonical_admissions",
+        "fields": [
+          "scope",
+          "id",
+          "mention_id",
+          "version",
+          "predecessor_id",
+          "state",
+          "decision_id",
+          "mapping_revision",
+          "policy_revision",
+          "evidence_weight",
+          "article_id",
+          "entity_id",
+          "field_id",
+          "capture_id",
+          "job_id",
+          "content_hash",
+          "field_hash",
+          "source_version",
+          "field_version",
+          "start_pos",
+          "end_pos",
+          "span_hash",
+          "reason",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_mentions.canonical_admission_heads",
+        "fields": [
+          "scope",
+          "mention_id",
+          "revision"
+        ]
+      },
+      {
+        "table": "mip_arc_qik_source.governed_ownership",
+        "fields": [
+          "article_id",
+          "entity_id",
+          "scope",
+          "first_projection"
+        ]
+      },
+      {
+        "table": "mip_arc_qik_source.governed_projections",
+        "fields": [
+          "scope",
+          "id",
+          "article_id",
+          "entity_id",
+          "version",
+          "predecessor_id",
+          "mapping_revision",
+          "weight_policy_revision",
+          "admission_ids",
+          "evidence_weight",
+          "set_digest",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_qik_source.governed_heads",
+        "fields": [
+          "scope",
+          "article_id",
+          "entity_id",
+          "projection_id"
+        ]
+      }
+    ],
+    "returned_fields": {
+      "actor_locator": [
+        "scope",
+        "actor_id",
+        "locator_only",
+        "identity_accepted",
+        "production_qualified",
+        "source_authority_qualified",
+        "transport_qualified",
+        "publication_allowed"
+      ],
+      "revision_receipt": [
+        "kind",
+        "revision_id",
+        "version",
+        "state",
+        "production_qualified",
+        "source_authority_qualified",
+        "transport_qualified",
+        "publication_allowed"
+      ],
+      "prepare_relation": [
+        "semantic_kind",
+        "scope",
+        "article_id",
+        "entity_id",
+        "mapping_revision",
+        "weight_policy_revision",
+        "admission_ids",
+        "evidence_weight",
+        "set_digest",
+        "projection_status",
+        "expected_predecessor",
+        "current_projection_id",
+        "production_qualified",
+        "source_authority_qualified",
+        "transport_qualified",
+        "publication_allowed"
+      ],
+      "read_write_relation": [
+        "semantic_kind",
+        "scope",
+        "article_id",
+        "entity_id",
+        "mapping_revision",
+        "weight_policy_revision",
+        "admission_ids",
+        "evidence_weight",
+        "set_digest",
+        "projection_id",
+        "version",
+        "predecessor_id",
+        "projection_status",
+        "production_qualified",
+        "source_authority_qualified",
+        "transport_qualified",
+        "publication_allowed"
+      ],
+      "prepare_article": [
+        "semantic_kind",
+        "scope",
+        "article_id",
+        "capture_id",
+        "head_revision_ids",
+        "groups",
+        "input_status",
+        "article_set_digest",
+        "production_qualified",
+        "source_authority_qualified",
+        "transport_qualified",
+        "publication_allowed"
+      ],
+      "article_groups": [
+        "semantic_kind",
+        "scope",
+        "article_id",
+        "entity_id",
+        "mapping_revision",
+        "weight_policy_revision",
+        "admission_ids",
+        "evidence_weight",
+        "set_digest",
+        "projection_status",
+        "expected_predecessor",
+        "current_projection_id"
+      ]
+    },
+    "limits": {
+      "identity_bytes": 16384,
+      "aliases": 64,
+      "weight_numeric_text_bytes": 64,
+      "current_heads_per_article": 128,
+      "active_heads_per_article": 64,
+      "active_heads_per_cohort": 64,
+      "article_capture_pairs": 32,
+      "context_hard_ceiling": 128
+    },
+    "current_authority": "Complete current active admission set; exact mapping/policy/accepted-decision/native capture/job/article/field/hash/span bindings. Physical article_entities cache and historical projection rows are not current authority.",
+    "retained_copy": "No new native payload/excerpt copy; UUID locator labels, immutable metadata revisions and bounded UUID arrays only. Existing native fields/literals remain under their distinct historical contract.",
+    "cache_fields": [
+      "article_id",
+      "entity_id",
+      "confidence",
+      "extraction_method",
+      "role"
+    ],
+    "cache_constraints": {
+      "confidence": "Maximum explicit current group weight",
+      "extraction_method": "reviewed_evidence_weight_v1",
+      "role": null
+    },
+    "consumers": {
+      "mapping": "Canonical equivalence review and identity drift refusal",
+      "weight_policy": "Explicit weight semantic revision",
+      "admission": "Exact reviewed evidence binding and supersession/revocation",
+      "projection": "Idempotent owned link writes, current retry validation and history",
+      "heads": "Current revision selection preserving append-only histories",
+      "ownership": "Prevent unowned or cross-scope link overwrite"
+    },
+    "execution_flags": {
+      "production_qualified": false,
+      "source_authority_qualified": false,
+      "transport_qualified": false,
+      "publication_allowed": false
+    }
+  },
+  "authored_tests": {
+    "c6": "tests/nativeCanonicalAdmissionPostgres17.test.mjs",
+    "c9": [
+      "tests/nativeArcCohortPostgres17.test.mjs",
+      "tests/nativeArcScoring.test.mjs"
+    ],
+    "status_at_source_authorship": "NOT RUN; qualification receipts are separate and must identify actual candidate and environment."
+  },
+  "historical_protections": {
+    "efta_manifest_sha256": "841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9",
+    "efta_verifier_sha256": "000eac69f781f1803c19d98ac44388400ee8324feeeb4cd6498e8a984ef65f10",
+    "existing_native_digest": "Existing collector before_hash/after_hash remain original full-row source digests. Historical rows are not rewritten; new selected C9 projection digests must use a distinct versioned meaning.",
+    "unchanged_scorer_blob": "08ce23092cfbbe8dcb7eb7c26cf6e3943e177531"
+  },
+  "execution_route": {
+    "kind": "Existing public GitHub source/synthetic qualification workflow; no actual-material ingress",
+    "workflow": ".github/workflows/qik-operational-adapter-synthetic.yml",
+    "ref": "refs/heads/codex/qik-operational-integration-20260927",
+    "event": "Exact-path push only; no PR/dispatch/schedule/deploy",
+    "runner": "ubuntu-22.04",
+    "node": "22.14.0",
+    "postgres_image": "postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929",
+    "postgres_version_num": 170006,
+    "pgvector_version": "0.8.2",
+    "pgvector_source_commit": "cab9da72c04353f143bb06b42ab70a403daac64a",
+    "pgvector_archive_sha256": "0af705b6c9b2a3a1fd1f6fd991425c125387d3c8edc68b75ef027d2e0a05e57a",
+    "job_limit_minutes": 15,
+    "vector_build_limit_minutes": 5,
+    "c9_pg_limit_minutes": 5,
+    "material": "Distinctive synthetic fixtures only; no actual article payloads, tokens, hosted DSNs, production captures or ordinary runtime credentials",
+    "cleanup": "Every owned container and volume removed even on failure; fresh full-dependency cluster after helper cleanup; fixture clients/database/roles independently cleaned and residual catalog/container/volume absence asserted",
+    "exclusions": [
+      "qik installation",
+      "actual material or historical transfer",
+      "collector/source activation",
+      "publication",
+      "retirement",
+      "billing upgrades",
+      "operational secrets",
+      "CI artifacts/caches"
+    ]
+  },
+  "c9": {
+    "native_only_first_route": true,
+    "complete_cohort": "Explicit reviewed candidate plus every attached arc member, complete ID and source-access validation; RLS-hidden/inaccessible/added/removed members refuse the whole cohort.",
+    "current_capture_rule": "Same inherited comparison native lineage order: captured_at DESC,id DESC across all article captures. Originally reviewed capture must still be selected; newest inaccessible/excluded capture refuses, never replaces bytes under old identity.",
+    "historical_replay": "Append-only original references and recorded scores survive. Exact byte replay uses originally bound evidence under current access; successful reproducibility alone does not confer current eligibility after supersession/invalidation.",
+    "canonical_semantics": "Explicit reviewed_evidence_weight_v1 with a distinct reviewed selection-cutoff policy; old resolver defaults/acceptance/rank do not establish probability or canonical equivalence.",
+    "extraction": "Exact reviewed completed versus unavailable attestation; complete import job or empty entity list is not evidence of extraction completion.",
+    "copy_justification": "Selected arc context (id,title,summary,started_at,last_update) may be durably retained to reproduce deterministic scoring after mutable arc source changes because no authoritative old arc-context version exists. Native article title/summary/outlet/published_at bytes are transient and re-resolved from exact original scalar bindings.",
+    "ordered_installation": "Full selected atomic comparison/journal/review/accepted-reader profile and audit closure, then actual C6 dependencies and C9 files, then final effective permissions assertions. No stub fences or helper-only proof.",
+    "publication": "Private score/audit/manual review/current reader only; release-policy remains closed and no attachment or auto-publication authority is claimed.",
+    "budget": "Separate max_total_bytes<=8388608 and max_hash_work_bytes<=134217728. Charge conservative actual repeated work H*(1+N+4*A) plus scalar/field/span/identity and expanded-input hashing; whole overflow refuses, no truncation.",
+    "durable_tables": [
+      {
+        "table": "mip_arc_native.scalar_bindings",
+        "fields": [
+          "scope",
+          "id",
+          "article",
+          "capture",
+          "job",
+          "content_hash",
+          "field",
+          "value_kind",
+          "field_hash",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_native.scalar_access",
+        "fields": [
+          "scope",
+          "binding",
+          "allowed"
+        ]
+      },
+      {
+        "table": "mip_arc_native.extraction_reviews",
+        "fields": [
+          "scope",
+          "id",
+          "article",
+          "capture",
+          "content_hash",
+          "version",
+          "predecessor",
+          "state",
+          "reason",
+          "article_set_digest",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_native.selection_policies",
+        "fields": [
+          "scope",
+          "id",
+          "version",
+          "predecessor",
+          "cutoff",
+          "active",
+          "max_members",
+          "max_fields",
+          "max_total_bytes",
+          "max_hash_work_bytes",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_native.cohorts",
+        "fields": [
+          "scope",
+          "id",
+          "candidate",
+          "candidate_revision",
+          "article",
+          "arc",
+          "members",
+          "bindings",
+          "extraction_reviews",
+          "policy",
+          "native_revision_digest",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_native.cohort_revocations",
+        "fields": [
+          "scope",
+          "cohort",
+          "id",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_native.generations",
+        "fields": [
+          "scope",
+          "id",
+          "cohort",
+          "manifest",
+          "manifest_hash",
+          "expanded_hash"
+        ]
+      },
+      {
+        "table": "mip_arc_native.source_revisions",
+        "fields": [
+          "sequence",
+          "source_contract",
+          "relation_name",
+          "operation",
+          "before_id",
+          "after_id",
+          "before_projection_hash",
+          "after_projection_hash",
+          "transaction_id"
+        ]
+      },
+      {
+        "table": "mip_arc_native.private_scores",
+        "fields": [
+          "scope",
+          "generation",
+          "output",
+          "output_hash",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_native.private_reviews",
+        "fields": [
+          "scope",
+          "id",
+          "generation",
+          "output_hash",
+          "version",
+          "predecessor",
+          "state",
+          "reason",
+          "principal"
+        ]
+      }
+    ],
+    "retained_manifest_fields": [
+      "version",
+      "cohort",
+      "candidate",
+      "candidate_revision",
+      "candidate_state",
+      "arc_source_revision",
+      "candidate_source_revision",
+      "article",
+      "arc",
+      "native_revision_digest",
+      "native_change_ids",
+      "members",
+      "scalar_binding_ids",
+      "extraction_review_ids",
+      "group_refs",
+      "selection_policy",
+      "cutoff",
+      "max_members",
+      "max_fields",
+      "max_total_bytes",
+      "max_hash_work_bytes",
+      "runtime",
+      "scorer_blob",
+      "audit_low_confidence",
+      "audit_high_sample_size"
+    ],
+    "retained_arc_fields": [
+      "id",
+      "title",
+      "summary",
+      "started_at",
+      "last_update_at"
+    ],
+    "retained_group_fields": [
+      "article_id",
+      "entity_id",
+      "projection_id",
+      "set_digest"
+    ],
+    "expanded_transient_input_fields": [
+      "version",
+      "codec",
+      "runtime",
+      "scorer_blob",
+      "scorer_version",
+      "generation_id",
+      "candidate_id",
+      "candidate_revision",
+      "candidate",
+      "arc",
+      "members",
+      "entity_states",
+      "selection",
+      "audit"
+    ],
+    "transient_article_fields": [
+      "id",
+      "title",
+      "summary",
+      "outlet",
+      "published_at"
+    ],
+    "private_score_output_fields": [
+      "contract",
+      "generation_id",
+      "candidate_id",
+      "input_hash",
+      "manifest_hash",
+      "runtime",
+      "scorer_blob",
+      "score",
+      "audit",
+      "approval_allowed",
+      "publication_allowed",
+      "attached"
+    ],
+    "score_fields": [
+      "model_version",
+      "candidate_article_id",
+      "arc_id",
+      "cluster_confidence",
+      "decision",
+      "eligible_for_auto_approval",
+      "hard_rejections",
+      "signals",
+      "evidence",
+      "release_gate"
+    ],
+    "signals_fields": [
+      "entity",
+      "canonical",
+      "recent",
+      "action",
+      "continuity",
+      "temporal",
+      "source_diversity"
+    ],
+    "evidence_fields": [
+      "shared_entity_count",
+      "candidate_entity_count",
+      "arc_entity_count",
+      "temporal_gap_days",
+      "explicit_continuity",
+      "recent_member_count"
+    ],
+    "current_review_fields": [
+      "review_id",
+      "version",
+      "state",
+      "reason"
+    ],
+    "review_state": "accepted_private",
+    "release_gate": {
+      "fixture_passed": false,
+      "auto_approval_enabled": false,
+      "auto_approval_threshold": null
+    },
+    "audit": {
+      "population": 1,
+      "high_sample_size": 1,
+      "low_confidence": 0.7,
+      "seed": "arc-native:<generationUUID>:arc-v1-membership-2026-08-23.2:<policyUUID>"
+    },
+    "output_flags": {
+      "approval_allowed": false,
+      "publication_allowed": false,
+      "attached": false
+    },
+    "source_revisions": {
+      "contract": "native_arc_source_revision_v1",
+      "selected_arc_fields": [
+        "id",
+        "title",
+        "summary",
+        "started_at",
+        "last_update_at"
+      ],
+      "selected_candidate_fields": [
+        "id",
+        "article_id",
+        "arc_id",
+        "state",
+        "updated_at"
+      ],
+      "encoding": "SHA256 UTF8 PostgreSQL JSONB arrays in exact selected field order with UTC/ISO text dates. INSERT before=NULL, DELETE after=NULL; UPDATE both. Local monotone sequence and transaction_id preserved. Separate before_projection_hash/after_projection_hash meaning, not historical full-row before_hash/after_hash.",
+      "generation_links": "Exact arc/candidate source sequence plus bounded native change IDs/digest; any relevant later changes invalidate current reader; no historical row rewrite."
+    },
+    "native_delta_scope": {
+      "records": 256,
+      "bytes": 262144,
+      "fields": [
+        "id",
+        "relation_name",
+        "operation",
+        "before_identity",
+        "after_identity",
+        "before_hash",
+        "after_hash"
+      ],
+      "consumer": "Bind complete relevant native capture/article and original-capture candidate delta set to explicit cohort/generation; detect excluded/new/superseded evidence without payload copies."
+    },
+    "copy_consumers": {
+      "scalar_bindings": "Restricted re-resolution of exactly original capture/job/article/content/nullable-field identity; no source bytes",
+      "extraction_reviews": "Distinguish reviewed completion/zero from authoritative unavailability and bind whole C6 head set",
+      "selection_policies": "Explicit cutoff and operation bounds; no legacy default substitution",
+      "cohorts": "Complete member enumeration and exact candidate/scalar/extraction/policy references, source delta binding",
+      "generations": "Exact deterministic replay manifest and separate expanded-input digest; arc selected-context deliberate copy described above",
+      "source_revisions": "Transaction/sequence/operation/selected-digest invalidation metadata only",
+      "private_scores": "Typed numerical/enum score and audit output required for exact retry and manual review; no lexical material",
+      "private_reviews": "Append-only exact generation/output review history and current-state decisions; no publication rights"
+    },
+    "returned_fields": {
+      "snapshot": [
+        "generation_id",
+        "input_hash",
+        "manifest_hash",
+        "publication_allowed",
+        "attached"
+      ],
+      "scoring_input_wire": [
+        "input_text",
+        "input_hash",
+        "manifest_hash"
+      ],
+      "completion": [
+        "generation_id",
+        "output_hash",
+        "state",
+        "approval_allowed",
+        "publication_allowed",
+        "attached"
+      ],
+      "manual_review": [
+        "generation_id",
+        "review_id",
+        "output_hash",
+        "state",
+        "approval_allowed",
+        "publication_allowed",
+        "attached"
+      ],
+      "current_score": [
+        "generation_id",
+        "input_hash",
+        "output_hash",
+        "output",
+        "review",
+        "approval_allowed",
+        "publication_allowed",
+        "attached"
+      ],
+      "entity_state": [
+        "article_id",
+        "state",
+        "reason",
+        "attestation_id",
+        "article_set_digest",
+        "entities"
+      ],
+      "entity": [
+        "entity_id",
+        "evidence_weight",
+        "projection_id"
+      ],
+      "selection": [
+        "policy_id",
+        "domain",
+        "cutoff"
+      ],
+      "audit_input": [
+        "low_confidence",
+        "high_sample_size",
+        "seed"
+      ],
+      "audit_item": [
+        "candidate_id",
+        "stratum"
+      ]
+    }
+  },
+  "dependencies": {
+    "environment": {
+      "node": "22.14.0",
+      "engine": "PostgreSQL17.6 synthetic only; no hosted compatibility or install claim",
+      "extensions": [
+        "pgcrypto",
+        "vector0.8.2",
+        "dblink"
+      ],
+      "transport": "Loopback SCRAM fake fixture principals; no hosted credentials"
+    },
+    "fixture_substrate": {
+      "path": "supabase/qualification/qik-ingest/fixture_substrate.sql",
+      "blob": "2127adb8743d50cd318fba63b6547cdfedacf039"
+    },
+    "native_reliability": {
+      "path": "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql",
+      "blob": "e7beb22b9a4dd2e38076b5554c7f5b4e6e0e4e77"
+    },
+    "c3_order": [
+      {
+        "path": "supabase/qualification/qik-ingest/05_operation_ledger.sql",
+        "blob": "518c96d4f02275a91d5a5088659e14f8cd863819"
+      },
+      {
+        "path": "supabase/qualification/qik-ingest/010_collection_gate.sql",
+        "blob": "f9315dd8d21ce8b98d148ac28bd05754c7e7a7a2"
+      },
+      {
+        "path": "supabase/qualification/qik-ingest/020_run_ledger.sql",
+        "blob": "85c604cac1b522befff171c22686c3ba2905f4be"
+      },
+      {
+        "path": "supabase/qualification/qik-ingest/030_retain_upsert.sql",
+        "blob": "c1fc740745a846e3722d7f87d160ca93ea613fc3"
+      },
+      {
+        "path": "supabase/qualification/qik-ingest/035_native_caller.sql",
+        "blob": "470ce05a39bef914b6dace0c18833056674433f8"
+      },
+      {
+        "path": "supabase/qualification/qik-ingest/040_watermarks.sql",
+        "blob": "c665bb12516fd2b0c654be460eced6ab51f83ee3"
+      },
+      {
+        "path": "supabase/qualification/qik-ingest/050_schedule_disabled.sql",
+        "blob": "4456c7240911fae00be72630a0f95811fffd596f"
+      }
+    ],
+    "comparison_source_order": [
+      {
+        "path": "supabase/qualification/comparison-generations/contract.sql",
+        "blob": "2cd760316e01b8ff6f06bf44cfa91aed37e606a8"
+      },
+      {
+        "path": "supabase/qualification/comparison-generations/selection.sql",
+        "blob": "e5b2fdbe236db31e273ef3939f3d3ed36be3b0c6"
+      },
+      {
+        "path": "supabase/qualification/comparison-generations/capability.sql",
+        "blob": "07777c1463dba6b20de37ed08d4fe4aefd70da1d"
+      },
+      {
+        "path": "supabase/qualification/comparison-generations/source-snapshot.sql",
+        "blob": "f7f091987f024388d2cfc46385086c0dd08e5467"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql",
+        "blob": "136204c77c0e18bce2592493db4765cdeb4c9d1b"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql",
+        "blob": "f5a9fba65d3b5bac782afd511f94c46e7e9e6315"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/003_scoped_queue.sql",
+        "blob": "209bf4bd6ec405d8d9e8bc751f989631c47a137b"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/004_publication_staging.sql",
+        "blob": "38379113e73d5fea1f3a3dba8647f374ed2733fe"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/005_broker_sessions.sql",
+        "blob": "f78288fbabba40407cd206521b43faa0278f674a"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/006_collector_reconciliation.sql",
+        "blob": "21383a9d581bdf2da8f9eb58cd2f329a7ccd213b"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/007_survivor_release.sql",
+        "blob": "9f7038d8e921ef7839a35375f2f05294058e3383"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/008_operation_evidence.sql",
+        "blob": "a1c9f2fb236e7069e80c5a1cfe6b58274c537ee6"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/009_factual_enforcement.sql",
+        "blob": "60e6198c3ad389c335dfe56024153a187f30f0a4"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/010_real_permission_reader.sql",
+        "blob": "80f869c417706b5bf6a714e15da5809e599c2811"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/011_efta_governed_review.sql",
+        "blob": "d08b8dc06d8e73d3d84fcf216e3df5321465d482"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/012_efta_live_authentication.sql",
+        "blob": "2df5b168d35bdfc0ee0ce2f5a6b82301f7e6d100"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/013_worker_journal.sql",
+        "blob": "842ca0e21b92aa3c528dfe92c342848fdd2410d5"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/014_worker_journal_discovery.sql",
+        "blob": "e1235566b79d5746eac614bd0d1437bd95939b61"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/015_worker_claim_resumption.sql",
+        "blob": "a4a5fff4bd2629f52936806a036ca4b7329d3336"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/016_worker_broker_recovery.sql",
+        "blob": "ef79d5babc235a78bfd313782d7c988166381dc7"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/017_native_capture_review.sql",
+        "blob": "a48a4dc4eabf95371ecc47bfc7051fb657715172"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/018_accepted_comparison_reader.sql",
+        "blob": "f55f7da3b22e992c20f6c968a37ae0af75dd2a47"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/019_native_retention_permissions.sql",
+        "blob": "df829634068d4b113862da3f4ba877ccc6cc72b7"
+      },
+      {
+        "path": "supabase/qualification/mip-cutover-authority/020_doj_private_permission.sql",
+        "blob": "0e0b3d2f3ae200b551b98ce66bc3c90d277ff333"
+      }
+    ],
+    "compiler": {
+      "path": "supabase/qualification/qik-comparison-adapter/compileSource.mjs",
+      "blob": "cd87eb0a0bc758315246e74675339f3ea2972a19"
+    },
+    "atomic_installer": {
+      "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
+      "blob": "0cfaf06969881b8c4983c752d893b9f08a84ae3e"
+    },
+    "catalog_preflight": {
+      "path": "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs",
+      "blob": "a591c92b10d174bd2937e9634f8d491b4c34567b"
+    },
+    "c6_order": [
+      {
+        "path": "supabase/qualification/entity-resolution/001_mentions.sql",
+        "blob": "3f86cfdfe0503ca5b4277afcf601c6a716531ca9"
+      },
+      {
+        "path": "supabase/qualification/entity-resolution/native-capture-fields/003_native_fields.sql",
+        "blob": "ffc192276276cea2345690bccc7b65d54a0f0ab6"
+      },
+      {
+        "path": "supabase/qualification/entity-resolution/candidate-review/004_candidate_review.sql",
+        "blob": "e25930fb4552b7b0086d7d1c50414845df453dbc"
+      },
+      {
+        "path": "supabase/qualification/arc-membership-qik-source/001_storage.sql",
+        "blob": "fc321af39e982e0cb1f06238c81f99d2dcc6fe8a"
+      },
+      {
+        "path": "supabase/qualification/entity-resolution/canonical-admission/005_canonical_admission.sql",
+        "blob": "6ea5d5f3bcaa24a1772387c276c0e5642dcd180b"
+      },
+      {
+        "path": "supabase/qualification/arc-membership-qik-source/002_governed_writer.sql",
+        "blob": "7cac6a7cb8ab665886944bf5092edcf01a60cf3f"
+      }
+    ],
+    "c9_order": [
+      {
+        "path": "supabase/qualification/arc-membership-native/001_governed_cohort.sql",
+        "blob": "f0b585c360bb523b3ab4b0626d01ef95e5f76c53"
+      },
+      {
+        "path": "supabase/qualification/arc-membership-native/002_private_score_review.sql",
+        "blob": "8d1aa9f970447f4c29cb499cdf04efc6bb63420c"
+      }
+    ],
+    "full_sequence": "Pristine fixture catalog/real auth relations + extensions → native reliability → C3 ordereddisabledprofile/actualreceipt → prepareAtomicInstall/installComparisonAtomic fullcompiledcomparison001–019 plusDOJ020 → real auditqualification/finalclosure → C6 ordered001/003/004/qik001/005/qik002 → C9 001/002 → new finaleffectiveowner/role/membership/schema/functionACL/RLS/sourceauthorityassertions.",
+    "installation_principal_scope": "Atomic backend runs with actual nonsuper synthetic installer and real loopback audit; C6/C9 are installed by separately protected synthetic substrate administrator. This does not qualify a hosted qik installer principal.",
+    "assertions_after_complete_order": [
+      "Object/function owners and protected role attributes",
+      "No owner/worker incoming or outgoing memberships after installer cleanup",
+      "Effective exact column/table/schema access",
+      "Named direct/wrapper EXEC privileges, PUBLIC/default ACL and inherited rights",
+      "FORCE RLS/session principal scope and complete source-view authority, including restrictive policy refusal",
+      "Unchanged public/native recorders and closed release/publication fences"
+    ]
+  },
+  "qualification_groups": {
+    "c6": {
+      "file": "tests/nativeCanonicalAdmissionPostgres17.test.mjs",
+      "environment": "MIP_NATIVE_CANONICAL_ADMISSION_DISPOSABLE=synthetic-pg17-only",
+      "invocation": "node --test tests/nativeCanonicalAdmissionPostgres17.test.mjs",
+      "fixture": "mip_canonical_admission_test on pinned loopback PostgreSQL17.6/SCRAM; synthetic native job/capture/mentions/candidate/decision/identity inputs",
+      "expectation": "All8 authored groups pass, no skippedgroups; actual role/owner/RLS/wrapper boundaries; exact retry/collision/stale/hash/span/sentinel/current-set/lock assertions",
+      "cleanup": "Independent client+owned schema/table/role cleanup, runner drops dedicated database and destroyshelpercontainer+volumes."
+    },
+    "c9_node": {
+      "file": "tests/nativeArcScoring.test.mjs",
+      "invocation": "node --test tests/nativeArcScoring.test.mjs",
+      "fixture": "Synthetic complete wire and pinned unchanged scorer/runtime",
+      "expectation": "Unchanged deterministic arithmetic/audit, fixed contract, exact nested allowlists, current/unavailable/zero distinctions, hash/identity/refusal, cross-process determinism.",
+      "cleanup": "No durable material/job; child process termination and fixture in-memory only."
+    },
+    "c9_postgres": {
+      "file": "tests/nativeArcCohortPostgres17.test.mjs",
+      "environment": "MIP_NATIVE_ARC_COHORT_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
+      "invocation": "node --test tests/nativeArcCohortPostgres17.test.mjs",
+      "fixture": "Fresh pristinepostgrescluster, real full atomicbackend/audit/C3syntheticdisabledreceipt and C6/C9install order; synthetic sources only.",
+      "expectation": "Complete dependency chain+finaleffectiveclosures; fullcurrentcohort; native originalcapture/latest-order/supersession/null-missing/sourceaccess/memberdrift; realwriter/scorer/journal/manualreview/currentreader; deterministicretry; nooverwrite/noautoactivation/noattachment/noeligibility.",
+      "cleanup": "Restore independently guarded disposable database/role baseline, independently end clients; always remove container+volumes and assertabsence. Any primary/cleanup failure failsqualification."
+    }
+  }
+}
