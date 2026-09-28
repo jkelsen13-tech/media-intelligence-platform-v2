@@ -163,6 +163,16 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
     restore:()=>root.query('revoke execute on function mip_native_comparison.comparison_metadata(uuid,text,uuid,uuid) from public'),
     expectedName:'native_comparison_function_acl',expectedStage:'binding_verifier_assertion'
    })
+   await mutation({
+    apply:()=>root.query('drop policy native_comparison_kernel_sources on public.articles'),
+    restore:()=>root.query('create policy native_comparison_kernel_sources on public.articles for select to mip_kernel_owner_v2 using(true)'),
+    expectedName:'native_comparison_source_authority',expectedStage:'binding_verifier_assertion'
+   })
+   await mutation({
+    apply:()=>root.query('create policy native_comparison_restrictive_probe on public.articles as restrictive for select to mip_kernel_owner_v2 using(false)'),
+    restore:()=>root.query('drop policy native_comparison_restrictive_probe on public.articles'),
+    expectedName:'native_comparison_source_authority',expectedStage:'binding_verifier_assertion'
+   })
    const original=(await root.query("select pg_get_functiondef('mip_comparison_install.native_boundary_v4()'::regprocedure) definition")).rows[0].definition
    await mutation({
     apply:()=>root.query("create or replace function mip_comparison_install.native_boundary_v4() returns void language plpgsql security definer set search_path='' as 'begin return; end'"),

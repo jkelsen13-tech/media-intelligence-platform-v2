@@ -2,6 +2,61 @@
 begin;
 set local lock_timeout='5s';
 grant mip_arc_native_owner,mip_publication_owner_v2 to current_user with set true;
+-- Complete the existing protected source consumers' RLS access. Their unchanged
+-- 005/007 contracts already grant SELECT; this adds no table/column grant,
+-- worker/browser right, role edge, source mutation, or publication eligibility.
+-- Only RLS-enabled exact required relations receive an owner-only read policy.
+do $native_comparison_source_install$
+declare spec record;rel oid;relation_row record;role_id oid;
+begin
+ if not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_identity'
+  and p.proname='survivor_relations' and p.pronargs=0 and p.prorettype='text[]'::regtype
+  and p.proowner='mip_publication_owner_v2'::regrole and not p.prosecdef and p.provolatile='i'
+  and p.proconfig=array['search_path=""'] and p.prosrc='
+ select array[''events'',''articles'',''event_articles'',''pipeline_config'',''claims'',''article_claims'',
+ ''claim_evidence_links'',''claim_corrections'',''explanations'',''story_arcs'',''nodes'',
+ ''edges'',''arc_events'',''arc_milestones'',''arc_membership_candidates''];
+')
+ then raise exception 'native_comparison_source_inventory';end if;
+ for spec in select * from(values
+ ('mip_kernel_owner_v2','events','native_comparison_kernel_sources'),
+ ('mip_kernel_owner_v2','articles','native_comparison_kernel_sources'),
+ ('mip_kernel_owner_v2','event_articles','native_comparison_kernel_sources'),
+ ('mip_kernel_owner_v2','pipeline_config','native_comparison_kernel_sources'),
+ ('mip_publication_owner_v2','events','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','articles','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','event_articles','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','pipeline_config','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','claims','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','article_claims','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','claim_evidence_links','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','claim_corrections','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','explanations','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','story_arcs','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','nodes','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','edges','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','arc_events','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','arc_milestones','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','arc_membership_candidates','native_comparison_publication_sources')
+ )v(role_name,relation_name,policy_name) loop
+  rel:=to_regclass('public.'||spec.relation_name);role_id:=spec.role_name::regrole::oid;
+  select c.* into strict relation_row from pg_class c where c.oid=rel and c.relkind='r';
+  if not has_schema_privilege(role_id,'public','USAGE') or not has_table_privilege(role_id,rel,'SELECT')
+   or exists(select 1 from pg_policy p where p.polrelid=rel and not p.polpermissive and p.polcmd in('r','*')
+    and(0=any(p.polroles) or exists(select 1 from unnest(p.polroles)r(oid) where r.oid<>0 and pg_has_role(role_id,r.oid,'USAGE'))))
+  then raise exception 'native_comparison_source_authority';end if;
+  if relation_row.relrowsecurity and not exists(select 1 from pg_policy p where p.polrelid=rel and p.polpermissive
+   and p.polcmd in('r','*') and p.polroles=array[role_id] and pg_get_expr(p.polqual,p.polrelid)='true') then
+   if not exists(select 1 from pg_policy p where p.polrelid=rel and p.polname=spec.policy_name) then
+    execute format('create policy %I on public.%I for select to %I using(true)',spec.policy_name,spec.relation_name,spec.role_name);
+   elsif not exists(select 1 from pg_policy p where p.polrelid=rel and p.polname=spec.policy_name and p.polcmd='r'
+    and p.polpermissive and p.polroles=array[role_id] and pg_get_expr(p.polqual,p.polrelid)='true' and p.polwithcheck is null) then
+    raise exception 'native_comparison_source_policy_collision';
+   end if;
+  end if;
+ end loop;
+end $native_comparison_source_install$;
+
 create schema mip_native_comparison authorization mip_arc_native_owner;
 revoke all on schema mip_native_comparison from public,anon,authenticated,service_role;
 grant usage on schema mip_native_comparison to mip_publication_owner_v2,mip_mentions_gateway;
@@ -621,6 +676,50 @@ begin
    or not exists(select 1 from pg_trigger t where t.tgrelid=relation_id and t.tgname='immutable_table'
     and t.tgfoid='mip_arc_native.immutable()'::regprocedure and t.tgtype=34 and t.tgenabled='O' and t.tgqual is null and t.tgattr=''::int2vector)
   then raise exception 'native_comparison_immutable_boundary';end if;
+ end loop;
+
+
+ if not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_identity'
+  and p.proname='survivor_relations' and p.pronargs=0 and p.prorettype='text[]'::regtype
+  and p.proowner='mip_publication_owner_v2'::regrole and not p.prosecdef and p.provolatile='i'
+  and p.proconfig=array['search_path=""'] and p.prosrc='
+ select array[''events'',''articles'',''event_articles'',''pipeline_config'',''claims'',''article_claims'',
+ ''claim_evidence_links'',''claim_corrections'',''explanations'',''story_arcs'',''nodes'',
+ ''edges'',''arc_events'',''arc_milestones'',''arc_membership_candidates''];
+')
+ then raise exception 'native_comparison_source_inventory';end if;
+ -- Final current effective source visibility, including inherited restrictive
+ -- policies. Missing RLS rows must refuse; an empty snapshot is not authority.
+ for spec in select * from(values
+ ('mip_kernel_owner_v2','events','native_comparison_kernel_sources'),
+ ('mip_kernel_owner_v2','articles','native_comparison_kernel_sources'),
+ ('mip_kernel_owner_v2','event_articles','native_comparison_kernel_sources'),
+ ('mip_kernel_owner_v2','pipeline_config','native_comparison_kernel_sources'),
+ ('mip_publication_owner_v2','events','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','articles','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','event_articles','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','pipeline_config','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','claims','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','article_claims','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','claim_evidence_links','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','claim_corrections','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','explanations','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','story_arcs','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','nodes','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','edges','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','arc_events','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','arc_milestones','native_comparison_publication_sources'),
+ ('mip_publication_owner_v2','arc_membership_candidates','native_comparison_publication_sources')
+ )v(source_role,source_relation,source_policy) loop
+  relation_id:=to_regclass('public.'||spec.source_relation);
+  select c.* into strict object_row from pg_class c where c.oid=relation_id and c.relkind='r';
+  if not has_schema_privilege(spec.source_role,'public','USAGE') or not has_table_privilege(spec.source_role,relation_id,'SELECT')
+   or exists(select 1 from pg_policy p where p.polrelid=relation_id and not p.polpermissive and p.polcmd in('r','*')
+    and(0=any(p.polroles) or exists(select 1 from unnest(p.polroles)r(oid) where r.oid<>0 and pg_has_role(spec.source_role::regrole::oid,r.oid,'USAGE'))))
+   or(object_row.relrowsecurity and not exists(select 1 from pg_policy p where p.polrelid=relation_id
+    and p.polcmd in('r','*') and p.polpermissive and p.polroles=array[spec.source_role::regrole::oid]
+    and pg_get_expr(p.polqual,p.polrelid)='true'))
+  then raise exception 'native_comparison_source_authority';end if;
  end loop;
  -- No widening of either protected existing comparison function.
  for spec in select * from(values

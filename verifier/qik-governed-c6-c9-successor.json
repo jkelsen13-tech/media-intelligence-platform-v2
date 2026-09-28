@@ -6,8 +6,8 @@
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
   "immediate_base": {
-    "commit": "77772ac151df65752f09b4f8f0d31d50026dd629",
-    "tree": "c8830db56affb34bf03f299120ea02c2e01eec99"
+    "commit": "8f90b66237d11b165df22224459955bc95d4c610",
+    "tree": "96c2804811e911d9ffda7c2372cb6c92e7fa9b13"
   },
   "authorization": {
     "internal_source_and_synthetic_qualification": "User consolidation continuation amendment prospectively authorizes this distinct governed successor and installer mode into source review and synthetic internal qualification. Qualification receipts and actual external Cursor review bind the exact candidate; no individual owner field signature, historical acceptance, hosted installation or actual-material receiving authorization is represented.",
@@ -15,7 +15,7 @@
     "publication": "No automatic publication, broadened eligibility or release-policy bypass.",
     "spending": "At most $25 one-time and $10/month incremental on existing authorized services; no new service, plan upgrade or on-demand enablement."
   },
-  "scope": "Additive governed C6 canonical relation, C9 native scoring/review, explicit private membership and joint restricted-principal installation. Native article bytes are transient through restricted original-evidence validation; original capture/candidate/change history and prior manifest/hash assertions remain unchanged. Historical public C9/C10 projection, operating caller cutover and corpus disposition remain required consolidation dependencies, not completed by this package. This distinct revision adds generation-bound pending/private projection from original bound body/URL, reviewed citation spans and complete selected arc/node/milestone context; public installation/cutover remains required and unimplemented by this private contract. This distinct additive revision binds the same original capture set across native private scoring/projection and the accepted comparison event using separate generation/review/policy/release identities. It retains bounded identity/hash/span metadata only, calls both unchanged current readers, and introduces an explicit v4 ordered installer plus a code-only verifier consumed by final closure and fresh reconciliation. Source authored; not yet qualified, reviewed, hosted installed or accepted.",
+  "scope": "Additive governed C6 canonical relation, C9 native scoring/review, explicit private membership and joint restricted-principal installation. Native article bytes are transient through restricted original-evidence validation; original capture/candidate/change history and prior manifest/hash assertions remain unchanged. Historical public C9/C10 projection, operating caller cutover and corpus disposition remain required consolidation dependencies, not completed by this package. This distinct revision adds generation-bound pending/private projection from original bound body/URL, reviewed citation spans and complete selected arc/node/milestone context; public installation/cutover remains required and unimplemented by this private contract. This distinct additive revision binds the same original capture set across native private scoring/projection and the accepted comparison event using separate generation/review/policy/release identities. It retains bounded identity/hash/span metadata only, calls both unchanged current readers, and introduces an explicit v4 ordered installer plus a code-only verifier consumed by final closure and fresh reconciliation. Source authored; not yet qualified, reviewed, hosted installed or accepted. This revision adds a strict server-only binding dispatch with one fresh exact-read ambiguity reconciliation and closes protected source-row visibility for the unchanged snapshot/release consumers. It does not install a host or complete private display composition/caller cutover.",
   "c6": {
     "semantic_kind": "reviewed_evidence_weight_v1",
     "meaning": "Explicit uncalibrated reviewer weight 0..1; no default, inferred probability, candidate rank or acceptance substitution.",
@@ -285,7 +285,8 @@
       "tests/nativeComparisonBindingAssertions.mjs"
     ],
     "status_at_source_authorship": "NOT RUN; qualification receipts are separate and must identify actual candidate and environment.",
-    "installer": "tests/nativeGovernedInstallerPostgres17.test.mjs"
+    "installer": "tests/nativeGovernedInstallerPostgres17.test.mjs",
+    "native_comparison_server": "tests/nativeComparisonServerCaller.test.mjs"
   },
   "historical_protections": {
     "efta_manifest_sha256": "841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9",
@@ -1057,7 +1058,7 @@
         "blob": "94dd9c7cbcf117767f5909fd9a6db0312f14ebe2"
       }
     ],
-    "full_sequence": "Pristine fixture catalog/real auth relations + pgcrypto/vector0.8.2/dblink → native reliability → C3 ordered disabled profile/actual synthetic receipt → prepareAtomicInstall native-governed-v2 complete comparison001–019/DOJ020 → C6 ordered001/003/004/qik001/005/qik002 → C9 001/002/003 BEFORE backend temporary creator cleanup → real final complete effective combined owner/role/membership/ACL/schema/RLS/source authority + original backend final closure → one COMMIT → real autonomous rejection-audit qualification. Original ordinary-mode fixture separately exercises full scorer/review/private reader dependencies; joint nonsuper installer test is actual installation principal proof for synthetic environment only. For explicit v3, append native private projection001 with selected context columns/RLS and same real006/007 source fences; exact protected private helper closure after real cleanup, then unchanged original backend closure and one COMMIT. Actual restricted-principal test exercises v2 then v3 in separately recreated pristine fixture. Explicit v4 appends exact native-comparison binding SQL after the v3 tenth stage. Its strict combined final assertion runs via a fixed verified code-only zero-argument function after BOTH real native and backend/publication temporary creator cleanup, then one COMMIT. Each v2/v3/v4 restricted-principal fixture uses separately recreated pristine substrate. Fresh v4 reconciliation reconstructs the same pinned source program before invoking current-boundary verification; no DDL replay or regranting owner rights.",
+    "full_sequence": "Pristine fixture catalog/real auth relations + pgcrypto/vector0.8.2/dblink → native reliability → C3 ordered disabled profile/actual synthetic receipt → prepareAtomicInstall native-governed-v2 complete comparison001–019/DOJ020 → C6 ordered001/003/004/qik001/005/qik002 → C9 001/002/003 BEFORE backend temporary creator cleanup → real final complete effective combined owner/role/membership/ACL/schema/RLS/source authority + original backend final closure → one COMMIT → real autonomous rejection-audit qualification. Original ordinary-mode fixture separately exercises full scorer/review/private reader dependencies; joint nonsuper installer test is actual installation principal proof for synthetic environment only. For explicit v3, append native private projection001 with selected context columns/RLS and same real006/007 source fences; exact protected private helper closure after real cleanup, then unchanged original backend closure and one COMMIT. Actual restricted-principal test exercises v2 then v3 in separately recreated pristine fixture. Explicit v4 appends exact native-comparison binding SQL after the v3 tenth stage. Its strict combined final assertion runs via a fixed verified code-only zero-argument function after BOTH real native and backend/publication temporary creator cleanup, then one COMMIT. Each v2/v3/v4 restricted-principal fixture uses separately recreated pristine substrate. Fresh v4 reconciliation reconstructs the same pinned source program before invoking current-boundary verification; no DDL replay or regranting owner rights. V4 additionally verifies protected owners' pre-existing SELECT/schema access and exact RLS source visibility for four kernel source relations and fifteen publication survivor relations. The installer must have actual policy-creation ownership/SET authority on every RLS-enabled affected relation; BYPASSRLS/SELECT alone is insufficient. Existing equivalent direct role policies, including factual_enforcement/explanations publication_rows, are reused. The fixed source-matching survivor relation list is checked through catalog metadata without execution.",
     "installation_principal_scope": "Real separately authenticated SCRAM NOSUPERUSER/CREATEROLE/CREATEDB/BYPASSRLS/INHERIT/LOGIN synthetic installer matches targeted observed qik principal attributes. Fixture administrator only bootstraps synthetic substrate/extensions/principals and independently inspects/cleans. Native source-only profile is jointly compiled with temporary owner authority and exact assertion helpers; no residual owner membership/helper/login remains. Does not claim hosted defaults/event trigger or secure route equivalence.",
     "assertions_after_complete_order": [
       "Object/function owners and protected role attributes",
@@ -1067,11 +1068,12 @@
       "FORCE RLS/session principal scope and complete source-view authority, including restrictive policy refusal",
       "Unchanged public/native recorders and closed release/publication fences",
       "Exact public.articles collector_articles_lock/change/no_collector_articles_truncate plus nodes/milestones/arcs survivor retention, source_changes immutability; private projection exact six tables, 17 functions, column/schema/EXEC/RLS/owner and no publication writes.",
-      "V4 exact binding two-table/seven-function/schema inventory, protected publication-owner helper ACL, complete embedded private/native boundary, zero native/publication-owner edges, and fixed source-matching install verifier; fresh reconciliation refuses PUBLIC helper grant, changed verifier body or publication-owner membership."
+      "V4 exact binding two-table/seven-function/schema inventory, protected publication-owner helper ACL, complete embedded private/native boundary, zero native/publication-owner edges, and fixed source-matching install verifier; fresh reconciliation refuses PUBLIC helper grant, changed verifier body or publication-owner membership.",
+      "V4 final source visibility: exact protected role policy coverage, restrictive policy refusal for applicable PUBLIC/inherited/direct roles, unchanged fixed survivor_relations source/owner/signature/settings; no effective worker/browser privileges changed."
     ],
     "native_joint_installer": {
       "path": "supabase/qualification/native-governed-install/install.mjs",
-      "blob": "aa8cd8908f6c7284724246dca187adaf457dc897",
+      "blob": "ac4b715d295199a7fecec33a0adc5c609992a266",
       "mode": "native-governed-v4",
       "authorization": "owner-authorized-disabled-comparison-native-comparison-binding-install",
       "source_base": "a43893801c5f2c8543e0c08b9bfa7b039899574c",
@@ -1083,7 +1085,7 @@
     },
     "native_joint_installer_documentation": {
       "path": "supabase/qualification/native-governed-install/README.md",
-      "blob": "f7491679751672884e38a940745d9e1db3ac4fcb"
+      "blob": "17f91da68f0febc24a052695073b0b9a51b8b4f1"
     },
     "attachment_assertions": {
       "path": "tests/nativeArcAttachmentAssertions.mjs",
@@ -1099,7 +1101,7 @@
     },
     "native_joint_installer_fixture": {
       "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
-      "blob": "1bd8055ec013ba3b7e9167fd4cccfcdcc3c25159"
+      "blob": "3ec7017d6889891bf08df552a567f28239a488cd"
     },
     "native_installation_diagnostics": {
       "retained_fields": [
@@ -1142,16 +1144,28 @@
     "native_comparison_binding_order": [
       {
         "path": "supabase/qualification/native-comparison-binding/001_private_binding.sql",
-        "blob": "4466825f4e8e5b794c3ccd6e89c54410293d2976"
+        "blob": "7bd78e703b1a81414e3a24b4049ea407d00435c8"
       }
     ],
     "native_comparison_fixture": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "a272c20aa75cd45af69f557220d6a6efe268c679"
+      "blob": "961bcee5ce943a40d0c7386c24329d4b35f3cd04"
     },
     "native_comparison_assertions": {
       "path": "tests/nativeComparisonBindingAssertions.mjs",
-      "blob": "b1b554cdd2d573026d7a110a8235ead395a5c290"
+      "blob": "48ca61f83b2cd9ba75c6e5aeb1481f0a9c012727"
+    },
+    "native_comparison_server_caller": {
+      "path": "supabase/qualification/native-comparison-binding/serverCaller.mjs",
+      "blob": "70642f07993cf62f3776aeb87c99864fc3a19e55"
+    },
+    "native_comparison_server_documentation": {
+      "path": "supabase/qualification/native-comparison-binding/SERVER_CALLER.md",
+      "blob": "676793e2bb3b93e4a224718c3312a37eba1cb099"
+    },
+    "native_comparison_server_tests": {
+      "path": "tests/nativeComparisonServerCaller.test.mjs",
+      "blob": "b8a46a5e5de9d953c6e8b770402bf2d33ca2bade"
     }
   },
   "qualification_groups": {
@@ -1175,7 +1189,7 @@
       "environment": "MIP_NATIVE_ARC_COHORT_DISPOSABLE=synthetic-pg17-only; MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
       "invocation": "node --test tests/nativeArcCohortPostgres17.test.mjs",
       "fixture": "Fresh pristinepostgrescluster, real full atomicbackend/audit/C3syntheticdisabledreceipt and C6/C9install order; synthetic sources only. Selected private context columns/types/RLS; seed institution root2020 and pending ia_concludes milestone2021 before generation1001. Later synthetic-only selection revision2022/version2/predecessor402 reserves4MiB/120MiB under unchanged8MiB/128MiB production whole-operation ceilings; both subsequent cohort generations use2022. Earlier original hard-bound assertions remain unchanged. Additional actual four-capture/two-accepted-event fixture uses real retained extraction, real workload broker issuance and journaled worker, full factual/rights/privacy/release readers, and native/private current readers. Native generation binds first exact two captures to one accepted event; second event has disjoint originals. Uses code-point claim spans and independent UTF8 native citation semantics without substitution.",
-      "expectation": "All15 C9 authored child groups pass, no skips: complete real dependency chain and final effective closure; exact native evidence/capture/null-missing/currentness/access/member drift; deterministic scorer/retry, complete ordinary score binding and explicit private attachment, two additions/concurrent retry/origin continuity/revocation/source non-mutation/exact nested metadata receipts; no public assignment/eligibility/activation. Five actual internal private projection check groups run before private attachment using the same real native generation and original capture, reviewed empty/nonempty spans, current selected root/milestone. Change→restore article eligibility/root/milestone tests prove immutable count drift and valid unchanged native score before private reader refuses; each source TX rolls back. Exact final permission negatives temporarily revoke only two fixture worker memberships, first pass positive closure, then require precise expected boundary; rollback verifies original grantor/options unchanged. Six additional internal binding groups cover exact retry, concurrency, wrong event/capture membership, nested field allowlists, synthetic sentinel exclusion/source intact, revoked/inaccessible source/broker/publication authority, final direct/wrapper permission refusal and append-only local revocation. Real mutation transactions restore baseline; closed diagnostics retain no driver detail/SQL/payload.",
+      "expectation": "All15 C9 authored child groups pass, no skips: complete real dependency chain and final effective closure; exact native evidence/capture/null-missing/currentness/access/member drift; deterministic scorer/retry, complete ordinary score binding and explicit private attachment, two additions/concurrent retry/origin continuity/revocation/source non-mutation/exact nested metadata receipts; no public assignment/eligibility/activation. Five actual internal private projection check groups run before private attachment using the same real native generation and original capture, reviewed empty/nonempty spans, current selected root/milestone. Change→restore article eligibility/root/milestone tests prove immutable count drift and valid unchanged native score before private reader refuses; each source TX rolls back. Exact final permission negatives temporarily revoke only two fixture worker memberships, first pass positive closure, then require precise expected boundary; rollback verifies original grantor/options unchanged. Six additional internal binding groups cover exact retry, concurrency, wrong event/capture membership, nested field allowlists, synthetic sentinel exclusion/source intact, revoked/inaccessible source/broker/publication authority, final direct/wrapper permission refusal and append-only local revocation. Real mutation transactions restore baseline; closed diagnostics retain no driver detail/SQL/payload. Real SCRAM gateway-only server dispatch exercises exact admit/read/revoke and synthetic loss of a post-COMMIT acknowledgment followed by one distinct fresh authenticated read, never admission replay. Actual server guard retains 1000ms statement timeout and closed logging; source identity namespaces are separately bound even for equal UUID values. Synthetic lost acknowledgment is not a real network outage.",
       "cleanup": "Restore independently guarded disposable database/role baseline, independently end clients; always remove container+volumes and assertabsence. Any primary/cleanup failure failsqualification."
     },
     "native_joint_install": {
@@ -1183,8 +1197,8 @@
       "status_at_source_authorship": "NOT RUN",
       "environment": "MIP_NATIVE_GOVERNED_INSTALL_DISPOSABLE=synthetic-pg17-only; MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
       "invocation": "node --test tests/nativeGovernedInstallerPostgres17.test.mjs",
-      "fixture": "Pristine pinned PostgreSQL17.6 engine170006; pgvector0.8.2 binary installed; pgcrypto/dblink; fake loopback SCRAM sessions; full actual disabled C3 substrate/receipt, real atomic backend/audit and curated native C6/C9 profile; no dependency stubs. Beforeinstallation, independently observed restrictedprincipal asserts allfive source tables kindr, installerownership, RLStrue/FORCEfalse. Synthetic pipeline_config RLS now matches catalog-only qik observation; no configuration rows/material read. V4 is the complete eleven-stage additive binding program, not a reduced helper install.",
-      "expectation": "All actual restricted-principal installation, identity/authorization/program/manifest refusal, late restrictive-source failure and whole-transaction rollback, acknowledged and ambiguous COMMIT/ROLLBACK reconciliation, exact final effective owners/roles/ACL/schema/RLS/noedges/nohelpers, real autonomous audit and no collection/schedules/publication activation assertions pass. No skipped groups; every failure refuses qualification. Both v2 and v3 run sequentially with independently verified pristine teardown. V3 late source-authority failure occurs at actual tenth stage; ambiguous outcomes include private schema inventory. Exact combined final assertion and rolled-back forbidden private PUBLIC table grant are exercised. V4 runs after separately pristine v2/v3 with the eleventh stage and fixed current-boundary verifier executed after real outer cleanup; adds exact verifier-source/owner/schema/ACL checks and independently restored drift refusal on fresh reconciliation, including source-pinned reader dependency.",
+      "fixture": "Pristine pinned PostgreSQL17.6 engine170006; pgvector0.8.2 binary installed; pgcrypto/dblink; fake loopback SCRAM sessions; full actual disabled C3 substrate/receipt, real atomic backend/audit and curated native C6/C9 profile; no dependency stubs. Beforeinstallation, independently observed restrictedprincipal asserts allfive source tables kindr, installerownership, RLStrue/FORCEfalse. Synthetic pipeline_config RLS now matches catalog-only qik observation; no configuration rows/material read. V4 is the complete eleven-stage additive binding program, not a reduced helper install. Complete protected kernel/source_snapshot and publication/survivor_context source-policy catalog prerequisite. Missing source-read policy and role-specific restrictive policy are independently introduced and rolled back during v4 fresh reconciliation.",
+      "expectation": "All actual restricted-principal installation, identity/authorization/program/manifest refusal, late restrictive-source failure and whole-transaction rollback, acknowledged and ambiguous COMMIT/ROLLBACK reconciliation, exact final effective owners/roles/ACL/schema/RLS/noedges/nohelpers, real autonomous audit and no collection/schedules/publication activation assertions pass. No skipped groups; every failure refuses qualification. Both v2 and v3 run sequentially with independently verified pristine teardown. V3 late source-authority failure occurs at actual tenth stage; ambiguous outcomes include private schema inventory. Exact combined final assertion and rolled-back forbidden private PUBLIC table grant are exercised. V4 runs after separately pristine v2/v3 with the eleventh stage and fixed current-boundary verifier executed after real outer cleanup; adds exact verifier-source/owner/schema/ACL checks and independently restored drift refusal on fresh reconciliation, including source-pinned reader dependency. Exact native_comparison_source_authority refusal when the kernel article policy is absent or restrictive; restore baseline and require current final closure after each mutation.",
       "cleanup": "Independent client closure; verify exact expected created-role allowlist; destroy only armed pristine disposable database/recreate default and remove exact synthetic roles; compare baseline. Runner always removes container/volumes and checks absence. Any primary/rollback/close/cleanup failure fails qualification.",
       "resource_limits": "Existing verified-free public source/synthetic GitHub job; bounded5min test step/15min entire job, no hosted credentials, data, artifacts, new service, material transfer or plan upgrade."
     },
@@ -1197,6 +1211,25 @@
       "expectation": "All10 childchecks+outer pass, no skips; exact schema, outcome rules/failure precedence/default-closed approval, real trigger-before-attach ordering, deterministic atomicretry/vector/no-vector branches/observedlock concurrency, retraction/baseline restoration, missing conflict-index wholeTXrollback, denied ambient access/body-only sentinel absent from derived destinations. Historical dependency coverage only; native/currentaccess/publicrelease not qualified by thisfixture.",
       "cleanup": "Independently close two testDBclients; verify zero sessions; drop only database and role actually created; absent-only guards neveradopt/delete preexisting; primary/cleanuperrors independentlyreported and failqualification; runneralwayscontainer+volumeabsence.",
       "resource_limits": "Existing verifiedfree GitHubsource/synthetic qualification; bounded4min step/15minjob; no capturedmaterial/keys/artifacts/hostedchanges/newservice/spending"
+    },
+    "native_comparison_server": {
+      "file": "tests/nativeComparisonServerCaller.test.mjs",
+      "status_at_source_authorship": "NOT RUN",
+      "invocation": "node --test tests/nativeComparisonServerCaller.test.mjs",
+      "fixture": "Thirteen synthetic Node tests with injected pg.Client while importing the real supported driver. No actual database/host claim from this group; actual SCRAM/database operations are covered by the full C9 dependency-aware fixture.",
+      "expectation": "Exact action/request/receipt fields and nested allowlist; nonprivileged gateway-only identity, 1000ms timeout, TLS route and no collector credential reuse; same-ID retries; equal generation UUIDs across separate namespaces; wrong generation or receipt hashes refuse; one fresh authenticated read after unknown COMMIT, no replay; independent cleanup and closed diagnostics without session/runtime/SQL/credentials/payload.",
+      "cleanup": "Restore injected driver and synthetic guard in finally; no files, network destination, database state or actual material."
+    },
+    "historical_bulk_source": {
+      "files": [
+        "tests/mipHistoricalArticleTransferPlan.test.mjs",
+        "tests/mipHistoricalArticleTransfer.test.mjs"
+      ],
+      "status_at_source_authorship": "NOT RUN in this combined candidate",
+      "invocation": "node --test tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs",
+      "fixture": "Synthetic injected source/sink/checkpoint only, no live predecessor or qik connection. Exact existing planner allowlist and checkpointed batch orchestrator; no real-material adapter or transfer completion is claimed.",
+      "expectation": "Collision-safe source lineage, stable membership/snapshot and exact retry; field exclusions, no blind overwrite or enqueue/publication, complete graph accounting; changed snapshots/hash/content/object integrity mismatch and unauthorized scope refuse; bounded retry/checkpoint failures remain accounted for.",
+      "cleanup": "In-memory fixture state only. Actual private transfer temporary cleanup and usable restore remain unperformed requirements."
     }
   },
   "joint_installer_retention": {
@@ -1815,11 +1848,11 @@
   "native_comparison_binding_successor": {
     "contract_file": {
       "path": "supabase/qualification/native-comparison-binding/contract.json",
-      "blob": "ca33c2269f197912e657b03a599cca965fd49ba6"
+      "blob": "97effde1cefb12a6b6630f861d4407edb531e139"
     },
     "documentation": {
       "path": "supabase/qualification/native-comparison-binding/CONTRACT.md",
-      "blob": "2eea6a42156e9eceaac4465ebe0e121cb4193453"
+      "blob": "a2145e19e5691d4a2bb3ca73750ffd3c2eb08302"
     },
     "allowlist": {
       "contract": "native-comparison-binding-v1",
@@ -2027,7 +2060,41 @@
         "display payload",
         "full capture payload"
       ],
-      "runtime_qualification": "Not run by author. Parent integrates real PG17.6 full ordered fixture, existing role cleanup, actual worker/reader calls, then source review."
+      "runtime_qualification": "Not run by author. Parent integrates real PG17.6 full ordered fixture, existing role cleanup, actual worker/reader calls, then source review.",
+      "source_read_policy_contract": {
+        "version": "native-comparison-protected-source-rls-v1",
+        "kernel_relations": [
+          "events",
+          "articles",
+          "event_articles",
+          "pipeline_config"
+        ],
+        "publication_relations": [
+          "events",
+          "articles",
+          "event_articles",
+          "pipeline_config",
+          "claims",
+          "article_claims",
+          "claim_evidence_links",
+          "claim_corrections",
+          "explanations",
+          "story_arcs",
+          "nodes",
+          "edges",
+          "arc_events",
+          "arc_milestones",
+          "arc_membership_candidates"
+        ],
+        "consumers": {
+          "mip_kernel_owner_v2": "Unchanged source_snapshot and legacy validator read complete selected event/article/membership/config rows, including pending source evidence through existing restricted APIs.",
+          "mip_publication_owner_v2": "Unchanged survivor_context and accepted reader require the complete fixed15 source fence/context relations to validate source consistency, review and invalidation."
+        },
+        "change": "No table/column GRANT, role edge, DML permission or public/browser/worker privilege changes. Only RLS-enabled exact required relations lacking an existing exact-role permissive TRUE read policy receive SELECT-only USING(true) policy.",
+        "preservation": "Existing coverage, including009 publication_rows on explanations, is reused; RLS/FORCE configuration, unrelated policies and native permissions remain unchanged. Applicable restrictive SELECT/ALL policies refuse, including PUBLIC and inherited roles. Fixed original survivor_relations source body/owner/settings is asserted.",
+        "installation_prerequisite": "Current trusted installer must have actual owner/owner-SET authority to CREATE POLICY on each affected relation in the full ordered profile; SELECT/BYPASSRLS alone is insufficient.",
+        "history": "Earlier empty/subset generations remain unchanged; changed current source visibility must fail original current-snapshot comparison, never be rewritten/reaccepted."
+      }
     },
     "retained_copy": "One immutable bounded identity/hash/span metadata manifest and its SHA256, concrete consumers are exact retries, current dual-reader validation and replay of originally bound evidence. No native payload, URL, excerpt, display, broker session or runtime plaintext copy.",
     "qualification": "NOT RUN at source authorship; exact-candidate real source/synthetic receipts and applicable fresh Cursor review recorded separately.",
@@ -2035,6 +2102,21 @@
     "installed": false,
     "accepted": false,
     "authorization": "Prospectively authorized into internal qualification by user consolidation amendment; not individually owner-signed fields, historical acceptance or a new data destination.",
-    "source_correction": "New binding immutable_rows is BEFORE ROW UPDATE OR DELETE; final exact trigger assertion uses27. Existing embedded historical/native/private statement-trigger assertions remain byte-identical with26."
+    "source_correction": "New binding immutable_rows is BEFORE ROW UPDATE OR DELETE; final exact trigger assertion uses27. Existing embedded historical/native/private statement-trigger assertions remain byte-identical with26. This revision repairs missing source visibility with direct protected-owner SELECT USING(true) policies only where required by unchanged source_snapshot and survivor_context consumers. Reuses existing equivalent policies; rejects restrictive or colliding policies; verifies the unchanged fixed survivor relation function. No table/column grants, DML, worker/browser/PUBLIC rights, role edges or source mutation.",
+    "server_caller": {
+      "path": "supabase/qualification/native-comparison-binding/serverCaller.mjs",
+      "blob": "70642f07993cf62f3776aeb87c99864fc3a19e55",
+      "documentation": {
+        "path": "supabase/qualification/native-comparison-binding/SERVER_CALLER.md",
+        "blob": "676793e2bb3b93e4a224718c3312a37eba1cb099"
+      },
+      "tests": {
+        "path": "tests/nativeComparisonServerCaller.test.mjs",
+        "blob": "b8a46a5e5de9d953c6e8b770402bf2d33ca2bade"
+      },
+      "retention": "Transient broker session/runtime consumed by protected calls; metadata-only exact receipt and ambiguous-outcome reconciliation identity. No server payload/secret/log/journal copy.",
+      "transport": "Existing authenticatedPgDriver; gateway-only scoped service principal separate from collector; exact supported private qik TLS route or explicitly guarded synthetic loopback. Actual unattended host/session delivery remains unavailable.",
+      "state": "SOURCE AUTHORED — NOT RUN; no hosted caller/cutover/public display integration claim"
+    }
   }
 }

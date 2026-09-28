@@ -70,7 +70,7 @@ export const NATIVE_PROJECTION_ORDER=Object.freeze([...NATIVE_ORDER,Object.freez
  assertion_marker:'do $private_projection_final$',assertion_owner:'mip_arc_native_owner'
 })])
 export const NATIVE_BINDING_ORDER=Object.freeze([...NATIVE_PROJECTION_ORDER,Object.freeze({
- path:'supabase/qualification/native-comparison-binding/001_private_binding.sql',blob:'4466825f4e8e5b794c3ccd6e89c54410293d2976',
+ path:'supabase/qualification/native-comparison-binding/001_private_binding.sql',blob:'7bd78e703b1a81414e3a24b4049ea407d00435c8',
  assertion_marker:'do $native_comparison_final$',assertion_owner:'mip_arc_native_owner'
 })])
 export const isNativeMode=mode=>mode===NATIVE_MODE||mode===NATIVE_PROJECTION_MODE||mode===NATIVE_BINDING_MODE

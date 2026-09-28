@@ -18,9 +18,9 @@ export async function assertNativeComparisonBinding(fx){
  if(fx.syntheticFixture!==true)throw Error('native_comparison_real_fixture_required');
  const {db,reviewer,sameReviewer,gateway,outsider,worker,scope,native,comparison,otherComparison,
   nativeSources,bindingIds,sentinels,finalAssertion,
-  withRevokedComparisonSession,withRevokedNativeAccess,withInvalidatedComparison,withFinalBoundary}=fx;
+  withRevokedComparisonSession,withRevokedNativeAccess,withInvalidatedComparison,withFinalBoundary,exerciseActualServerCaller}=fx;
  for(const client of [db,reviewer,sameReviewer,gateway,outsider,worker])if(typeof client?.query!=='function')throw Error('native_comparison_real_clients_required');
- for(const callback of [withRevokedComparisonSession,withRevokedNativeAccess,withInvalidatedComparison,withFinalBoundary])
+ for(const callback of [withRevokedComparisonSession,withRevokedNativeAccess,withInvalidatedComparison,withFinalBoundary,exerciseActualServerCaller])
   if(typeof callback!=='function')throw Error('native_comparison_real_mutation_required');
  if(!Array.isArray(nativeSources)||nativeSources.length<2||!Array.isArray(bindingIds)||bindingIds.length!==2
  ||!Array.isArray(sentinels)||!sentinels.length||typeof finalAssertion!=='string'||!otherComparison)
@@ -42,6 +42,7 @@ export async function assertNativeComparisonBinding(fx){
   assert.notEqual(receipt.native_generation_id,receipt.comparison_generation_id);
   assert.equal(receipt.state,'bound_private');assert.equal(receipt.publication_allowed,false);assert.equal(receipt.attachment_allowed,false);
   assert.deepEqual(await read(),receipt);
+  await exerciseActualServerCaller(receipt,'current');
   // Read authority requires both a current native member and a valid broker session.
   assert.deepEqual(await read(gateway),receipt);
   for(const client of [outsider,worker])await denied(read(client));
@@ -107,6 +108,7 @@ export async function assertNativeComparisonBinding(fx){
  });
  await check('append_only_local_revocation_no_publication',async()=>{
   await denied(gateway.query('select mip_native_comparison.revoke_binding($1,$2)',[scope,bindingIds[0]]));
+  await exerciseActualServerCaller(receipt,'revoke');
   await reviewer.query('select mip_native_comparison.revoke_binding($1,$2)',[scope,bindingIds[0]]);
   await denied(read());await denied(value(reviewer,queryAdmit,args()));
   await reviewer.query('select mip_native_comparison.revoke_binding($1,$2)',[scope,bindingIds[0]]);

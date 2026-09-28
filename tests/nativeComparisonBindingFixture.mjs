@@ -1,6 +1,8 @@
 // Source-authored full-backend synthetic constructor. NOT RUN by its author.
 // No service, installation, credential delivery, or real source is created here.
 import assert from 'node:assert/strict'
+import pg from 'pg'
+import {callNativeComparisonBinding} from '../supabase/qualification/native-comparison-binding/serverCaller.mjs'
 import {readFile} from 'node:fs/promises'
 import {createHash,generateKeyPairSync,randomUUID,sign} from 'node:crypto'
 import {createRetainedExtractionBackend,extractRetainedCapture} from '../supabase/qualification/collector-native-capture/retainedExtraction.mjs'
@@ -322,13 +324,80 @@ export async function runNativeComparisonBindingFixture(fx){
    }
    if(failure)throw failure
   }
+  const exerciseActualServerCaller=async(receipt,phase)=>{
+   assert.ok(phase==='current'||phase==='revoke')
+   assert.equal(receipt.scope,scope);assert.equal(receipt.binding_id,id(7150))
+   stage=phase==='current'?'actual_server_caller_current':'actual_server_caller_revoke'
+   const previousGuard=process.env.MIP_DISPOSABLE_POSTGRES
+   assert.equal(previousGuard,'qik-persistent-install')
+   const connection={
+    connectionString:'postgresql://'+reviewerName+':mip-efta-disposable-ci-only@127.0.0.1:5432/postgres',
+    expectedLogin:reviewerName,sessionPoolerHost:null,disposable:true
+   }
+   const brokerContext={session:publisherSession,runtime}
+   const expected={native_generation_id:nativeGeneration,comparison_generation_id:comparisonGeneration}
+   const admitRequest={action:'admit',scope,binding_id:id(7150),projection_id:projection,
+    dependency_hash:projectionReceipt.dependency_hash,display_hash:projectionReceipt.display_hash,
+    private_review_id:privateReview,release_request:releaseRequest,event_id:eventIds[0],
+    ...expected,broker:brokerContext}
+   const readRequest={action:'read',scope,binding_id:id(7150),manifest_hash:receipt.manifest_hash,
+    ...expected,broker:brokerContext}
+   const confirm=(answer,state,wire,diagnostics=[])=>assert.deepEqual(answer,{
+    state,receipt:wire,needs_reconciliation:false,connection_closed:true,diagnostics,
+    reconciliation_identity:null,publication_allowed:false,attachment_allowed:false
+   })
+   try{
+    process.env.MIP_DISPOSABLE_POSTGRES='qik-native-caller'
+    if(phase==='current'){
+     // Real SCRAM login and unchanged authenticatedPgDriver; no SET ROLE or
+     // synthetic result substitution in this server-caller exercise.
+     confirm(await callNativeComparisonBinding({connection,request:admitRequest}),'current_binding_confirmed',receipt)
+     confirm(await callNativeComparisonBinding({connection,request:readRequest}),'current_binding_confirmed',receipt)
+     const originalQuery=pg.Client.prototype.query
+     const seen={admit:0,read:0,commit:0,lost:0},admitClients=new Set(),readClients=new Set()
+     try{
+      pg.Client.prototype.query=async function(...args){
+       const selected=this.connectionParameters?.user===reviewerName
+       const sql=typeof args[0]==='string'?args[0]:args[0]?.text
+       if(selected&&sql==='select mip_native_comparison.admit($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) result'){
+        seen.admit++;admitClients.add(this)
+       }
+       if(selected&&sql==='select mip_native_comparison.read_current($1,$2,$3,$4,$5) result'){
+        seen.read++;readClients.add(this)
+       }
+       // Execute every real query first. Lose exactly one successful COMMIT
+       // acknowledgement; this is synthetic acknowledgement loss, not a network outage.
+       const answer=await originalQuery.apply(this,args)
+       if(selected&&sql==='commit'){
+        seen.commit++
+        if(seen.lost===0){seen.lost++;throw Error('synthetic_commit_acknowledgement_lost')}
+       }
+       return answer
+      }
+      confirm(await callNativeComparisonBinding({connection,request:admitRequest}),
+       'current_binding_confirmed',receipt,['commit_acknowledgement_unknown'])
+     }finally{pg.Client.prototype.query=originalQuery}
+     assert.deepEqual(seen,{admit:1,read:1,commit:2,lost:1})
+     assert.equal(admitClients.size,1);assert.equal(readClients.size,1)
+     assert.notEqual([...admitClients][0],[...readClients][0])
+    }else{
+     const request={action:'revoke',scope,binding_id:id(7150)}
+     confirm(await callNativeComparisonBinding({connection,request}),'revoked_private',null)
+     confirm(await callNativeComparisonBinding({connection,request}),'revoked_private',null)
+    }
+   }finally{
+    if(previousGuard===undefined)delete process.env.MIP_DISPOSABLE_POSTGRES
+    else process.env.MIP_DISPOSABLE_POSTGRES=previousGuard
+   }
+   stage='binding_assertions'
+  }
   const comparison={session:publisherSession,runtime,release_request:releaseRequest,event_id:eventIds[0],generation_id:comparisonGeneration}
   result=await assertNativeComparisonBinding({...fx,
    native:{projection_id:projection,generation_id:nativeGeneration,dependency_hash:projectionReceipt.dependency_hash,display_hash:projectionReceipt.display_hash,review_id:privateReview},
    comparison,otherComparison:{...comparison,event_id:eventIds[1]},
    nativeSources:captures.slice(0,2).map(c=>({article_id:c.article_id,capture_id:c.id,content_hash:c.content_hash,job_id:c.job_id})),
    bindingIds:[id(7150),id(7151)],sentinels:[sentinel,sentence,...originalPayloads.map(x=>x.url)],
-   finalAssertion,withFinalBoundary,
+   finalAssertion,withFinalBoundary,exerciseActualServerCaller,
    withRevokedComparisonSession:body=>rollbackMutation(c=>c.query('select mip_comparison_kernel_v1.revoke_session($1)',[publisherSession]),body),
    withRevokedNativeAccess:body=>rollbackMutation(c=>c.query('update mip_arc_projection_private.source_access set allowed=false,version=version+1 where scope=$1 and binding=$2',[scope,sourceBinding]),body),
    withInvalidatedComparison:body=>rollbackMutation(c=>c.query('update mip_identity.publication_review_heads set active=false where generation_id=$1',[comparisonGeneration]),body)

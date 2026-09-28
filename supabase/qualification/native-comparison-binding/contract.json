@@ -204,5 +204,39 @@
     "display payload",
     "full capture payload"
   ],
-  "runtime_qualification": "Not run by author. Parent integrates real PG17.6 full ordered fixture, existing role cleanup, actual worker/reader calls, then source review."
+  "runtime_qualification": "Not run by author. Parent integrates real PG17.6 full ordered fixture, existing role cleanup, actual worker/reader calls, then source review.",
+  "source_read_policy_contract": {
+    "version": "native-comparison-protected-source-rls-v1",
+    "kernel_relations": [
+      "events",
+      "articles",
+      "event_articles",
+      "pipeline_config"
+    ],
+    "publication_relations": [
+      "events",
+      "articles",
+      "event_articles",
+      "pipeline_config",
+      "claims",
+      "article_claims",
+      "claim_evidence_links",
+      "claim_corrections",
+      "explanations",
+      "story_arcs",
+      "nodes",
+      "edges",
+      "arc_events",
+      "arc_milestones",
+      "arc_membership_candidates"
+    ],
+    "consumers": {
+      "mip_kernel_owner_v2": "Unchanged source_snapshot and legacy validator read complete selected event/article/membership/config rows, including pending source evidence through existing restricted APIs.",
+      "mip_publication_owner_v2": "Unchanged survivor_context and accepted reader require the complete fixed15 source fence/context relations to validate source consistency, review and invalidation."
+    },
+    "change": "No table/column GRANT, role edge, DML permission or public/browser/worker privilege changes. Only RLS-enabled exact required relations lacking an existing exact-role permissive TRUE read policy receive SELECT-only USING(true) policy.",
+    "preservation": "Existing coverage, including009 publication_rows on explanations, is reused; RLS/FORCE configuration, unrelated policies and native permissions remain unchanged. Applicable restrictive SELECT/ALL policies refuse, including PUBLIC and inherited roles. Fixed original survivor_relations source body/owner/settings is asserted.",
+    "installation_prerequisite": "Current trusted installer must have actual owner/owner-SET authority to CREATE POLICY on each affected relation in the full ordered profile; SELECT/BYPASSRLS alone is insufficient.",
+    "history": "Earlier empty/subset generations remain unchanged; changed current source visibility must fail original current-snapshot comparison, never be rewritten/reaccepted."
+  }
 }
