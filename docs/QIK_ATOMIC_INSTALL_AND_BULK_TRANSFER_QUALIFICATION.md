@@ -14,7 +14,7 @@ A protected caller supplies the same-qik verified-TLS audit connection through t
 
 Final audit-secret and transport checks must reject unexpected effective grants, column privileges, policies, owners, function execution or membership paths. Unrelated default privileges are not globally changed. The synthetic harness must establish a pristine dedicated cluster before arming destructive cleanup and refuse unrelated-schema sentinels.
 
-Temporary role-creator rights and new-schema CREATE grants are removed before final native/DOJ/compatibility assertions. Existing C3 permissions are restored to their baseline. Installation returns installed_disabled_audit_pending. COMMIT acknowledgement loss requires a fresh-session receipt reconciliation; it does not authorize replay or imply rollback. A separate synthetic metadata rejection probe must survive caller rollback before an append-only audit qualification receipt is recorded. Even audit success leaves activation_allowed false; operational activation has its own existing conditions.
+Temporary role-creator rights and new-schema CREATE grants are removed before final native/DOJ/compatibility assertions. The seven freshly created compatibility roles change only NOINHERIT; the original full attribute assertions remain unchanged. The installer retains explicit, nongrantable USAGE on exactly mip_comparison_kernel_v1, mip_cutover_authority and mip_identity for catalog name resolution. This three-schema contract is included in the plan digest; final checks deny CREATE, owner membership, table rights and direct protected function execution. Existing C3 permissions are restored to their baseline. Installation returns installed_disabled_audit_pending. COMMIT acknowledgement loss requires a fresh-session receipt reconciliation; it does not authorize replay or imply rollback. A separate synthetic metadata rejection probe must survive caller rollback before an append-only audit qualification receipt is recorded. Even audit success leaves activation_allowed false; operational activation has its own existing conditions.
 
 ## Synthetic qualification
 
@@ -34,9 +34,15 @@ node --test --test-concurrency=1 tests/qikComparisonAtomicInstall.test.mjs tests
 MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only MIP_DISPOSABLE_POSTGRES=qik-persistent-install node --test verifier/qikComparisonAtomicInstallPostgres17.mjs
 ```
 
+Initialize the disposable server with POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256. Before setup or destructive cleanup is armed, the fixture verifies SCRAM host rules including internal 127.0.0.1/32 (used by dblink), and separately rejects a wrong password through the runner connection. A supplied password alone does not prove password authentication when an earlier trust rule matches.
+
 The actual PostgreSQL fixture prepares required public columns (including vector), Auth substrate, native reliability migration, existing ordered C3 installation source, and synthetic receipt/audit identities. A separate synthetic bootstrap identity performs prerequisite creation and final cleanup; the tested installer is demoted to the non-superuser role flags. The fixture checks empty starting state, restores its disposable database/role inventory, and the enclosing workflow always removes its container and anonymous volumes. No hosted cleanup is implied or permitted by this fixture.
 
-The existing full native/DOJ suites execute before the installer fixture. Source review, exact final candidate pin, workflow effects, synthetic-only authority and preserved historical assertions are checked before workflow publication. See the private consolidation ledger and run receipts for actual results; new tests remain NOT RUN until a receipt records otherwise.
+The unchanged full native/DOJ suites passed 11 + 11 cases in run 36367070570 at 43e4f7169b17a06bdc83572bb00e00956714cb98; its 45 Node cases also passed, while its then-new atomic fixture failed. These component receipts are reused only for unchanged source. Subsequent targeted runs repaired ordinary fixture/permission issues without weakening gates.
+
+The final targeted run [36369561852](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/36369561852), job 108762798524, passed at d592bd44e6959fde87efc1490b172af2b5d54213: six atomic unit tests and the complete non-superuser PostgreSQL fixture, with container/volume cleanup verified. It exercised pinned dependencies, exact negative ACL reasons, rollback and lost acknowledgement recovery, final permissions, installer inspection denials, autonomous audit readback and immutable receipts. Tested Node 22.14.0, PostgreSQL 17.6 and pgvector 0.8.2. PostgreSQL runtime/client packages remained 17.6; development headers were 17.11, so this is not a wholly pinned compiler toolchain claim. It is not hosted success, activation approval or historical acceptance.
+
+Fresh external Cursor review of the changed integrated installer and these results is pending. Existing independent reviews remain evidence for unchanged work; they are not relabeled Cursor.
 
 ## Historical custody contract
 
