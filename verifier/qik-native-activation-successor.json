@@ -124,15 +124,15 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/host.mjs",
-      "git_blob": "5946dc059e926e94723fe75b9925d6e3f7be555a"
+      "git_blob": "49042ca3b039dd6a3d253609850a786f747f952e"
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "abec4ee461272f5714404027aefe0560afe1ca44"
+      "git_blob": "3075e0216fd36453bf1dd09f7478b63b42d57b76"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
-      "git_blob": "5eae155039f4101679a5fe0744983cc61f0f082c"
+      "git_blob": "d41aa012292456036eb8e79db7b2960192f80d82"
     },
     {
       "path": "supabase/qualification/native-governed-host/adapter.mjs",
@@ -140,7 +140,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/README.md",
-      "git_blob": "eca9e71f57ea87eaca748c2fde3e5a476cbe1231"
+      "git_blob": "2fb1e2e8eec4f38105d0b566c49cb541bb45e3f1"
     },
     {
       "path": ".github/workflows/qik-native-installer-held.yml",
@@ -176,7 +176,7 @@
     "credential": "metadataAuditConnectionString for expectedMetadataAuditor only",
     "authority_current": false,
     "reads": "catalog plus bootstrap/head and non-authority revision columns; no Auth/capture/session/token reads",
-    "host_integration": "Actual separately authenticated autonomous/metadata auditors and composed host passed in full124-check receipt. Hosted credentials remain unconfigured.",
+    "host_integration": "Actual separately authenticated autonomous/metadata auditors and composed host passed only for the candidate recorded in the retained full 124-check receipt. The changed host name validation is AUTHORED — NOT RUN; no hosted operation or connection proof.",
     "success_field": "permission_boundary_current (only a successful independently executed audit may set true)"
   },
   "gates": [
@@ -205,7 +205,7 @@
   },
   "integration_parent": "ca9d05d51cf59bf6c931c48ce61e4ca8216d17af",
   "qualification": {
-    "status": "124 PASS — 0 FAIL — 0 SKIP; complete ordered synthetic scope only",
+    "status": "AUTHORED — NOT RUN: managed installer name compatibility repair; retained 124-pass receipt applies only to its recorded old candidate",
     "synthetic_only": true,
     "actual_qik_installation": false,
     "actual_material": false,
@@ -262,5 +262,16 @@
     "status": "Fresh actual Cursor review required; existing browser Transport closed",
     "new_review_dispatched": false,
     "old_unchanged_runtime_review": "c6d3d7b21108fd9993a1e990fdff79cdf63ac6da only; not this changed candidate"
+  },
+  "installer_name_compatibility_repair": {
+    "status": "AUTHORED — NOT RUN",
+    "source_candidate": "73c468d5c5c66ed9565b2d7796c28141f99d9c1f",
+    "source_tree": "5dc6914375489f02e35399788159f7bb816599d6",
+    "change": "Remove postgres only from the activation host installer-name veto; service and protected-role vetoes remain. Both auditors retain postgres exclusion.",
+    "authenticated_checks": "Unchanged expected session/current user, NOSUPERUSER, CREATEROLE and database ownership; successor LOGIN/CREATEDB/BYPASSRLS/INHERIT/NOREPLICATION and exact C3 checks remain mandatory.",
+    "proof_limit": "Configuration acceptance proves no connection, privilege, installation, audit or operation. Retained 124-pass historical receipt does not qualify changed source.",
+    "qualification_scope": "Exact changed source/manifest integrity and focused host unit checks; complete ordered original v2-v6 plus successor PostgreSQL and atomic regression scope in the existing synthetic route. No execution performed.",
+    "database_changes": false,
+    "host_success": false
   }
 }

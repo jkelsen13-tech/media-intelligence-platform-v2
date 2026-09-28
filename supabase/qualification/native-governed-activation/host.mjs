@@ -1,6 +1,8 @@
 // Metadata-only host successor. No source bytes, activation, SQL or material callback.
 import {validateHostConfig,sanitizeApiResult} from '../native-governed-host/adapter.mjs'
 import {PROFILE,ROLES} from './prepare.mjs'
+// Installer names do not prove privileges: connectPersistentInstaller checks the actual
+// authenticated database owner and attributes; preparation and C3 checks remain mandatory.
 const extra=['expectedMetadataAuditor','expectedSuccessorProgram']
 const fields=['releaseSha','operationId','expectedLogin','auditLogin','c3OperationId','c3ManifestSha256','expectedManifestSha256','expectedNativeProgramSha256','dblinkMetadataSha256','collectorSource',...extra]
 const fail=()=>{throw Error('native_activation_host_configuration_refused')}
@@ -11,7 +13,7 @@ export function validateActivationHostConfig(raw,secrets){
   ||!/^[0-9a-f]{64}$/.test(input.expectedSuccessorProgram??'')
   ||!/^[a-z][a-z0-9_]{0,62}$/.test(input.expectedMetadataAuditor??'')
   ||[input.expectedLogin,input.auditLogin,'postgres','service_role','authenticator','supabase_admin',...ROLES].includes(input.expectedMetadataAuditor)
-  ||['postgres','service_role','authenticator','supabase_admin',...ROLES].includes(input.expectedLogin))fail()
+  ||['service_role','authenticator','supabase_admin',...ROLES].includes(input.expectedLogin))fail()
  if(!secrets||Object.keys(secrets).sort().join()!=='audit,installer,metadataAudit')fail()
  const common=Object.fromEntries(Object.entries(input).filter(([k])=>!extra.includes(k)))
  const validated=validateHostConfig(JSON.stringify(common),{installer:secrets.installer,audit:secrets.audit})

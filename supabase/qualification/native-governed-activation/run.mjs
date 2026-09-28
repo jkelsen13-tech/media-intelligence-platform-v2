@@ -22,7 +22,7 @@ const CODE_PINS=Object.freeze({
   "package.json": "68caf5625166966005fff9cd702b3bc6c5fa49ad",
   "package-lock.json": "2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0",
   "supabase/qualification/native-governed-host/adapter.mjs": "47622a1729351d0cabda279d63855b9309e490b0",
-  "supabase/qualification/native-governed-activation/host.mjs": "5946dc059e926e94723fe75b9925d6e3f7be555a"
+  "supabase/qualification/native-governed-activation/host.mjs": "49042ca3b039dd6a3d253609850a786f747f952e"
 })
 let emitted=false
 function stop(){

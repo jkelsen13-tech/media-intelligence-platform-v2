@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {validateActivationHostConfig,dispatchActivationHostAction,activationHostActionSatisfied} from '../supabase/qualification/native-governed-activation/host.mjs'
+import {ROLES} from '../supabase/qualification/native-governed-activation/prepare.mjs'
 const hash='a'.repeat(64),release='b'.repeat(40),profile='native-governed-activation-v1'
 const plain={releaseSha:release,operationId:'1'.repeat(32),expectedLogin:'qik_native_installer',auditLogin:'qik_native_audit',
  c3OperationId:'2'.repeat(32),c3ManifestSha256:hash,expectedManifestSha256:hash,
@@ -18,9 +19,38 @@ test('successor host requires distinct secure qik metadata credential and explic
  const c=config();assert.equal(c.activationProfile,profile);assert.equal(c.disposable,false)
  assert.equal(c.authorization,'owner-authorized-native-governed-activation-bootstrap-install')
  for(const x of [{expectedMetadataAuditor:plain.expectedLogin},{expectedMetadataAuditor:plain.auditLogin},
-  {expectedMetadataAuditor:'mip_mentions_owner'},{expectedLogin:'postgres'},{expectedSuccessorProgram:null},
+  {expectedMetadataAuditor:'mip_mentions_owner'},{expectedLogin:'bad;role'},{expectedSuccessorProgram:null},
   {payload:'PRIVATE_SENTINEL'},{activate:true},{expectedMetadataAuditor:'bad;role'}])
   assert.throws(()=>validateActivationHostConfig(JSON.stringify({...plain,...x}),secrets))
+})
+test('managed owner name is configurable only as installer and proves no authenticated operation',()=>{
+ const c=validateActivationHostConfig(JSON.stringify({...plain,expectedLogin:'postgres'}),
+  {...secrets,installer:dsn('postgres')})
+ assert.equal(c.expectedLogin,'postgres');assert.equal(c.connectionString,dsn('postgres'))
+ assert.equal(c.auditLogin,plain.auditLogin);assert.equal(c.expectedMetadataAuditor,plain.expectedMetadataAuditor)
+ assert.equal(c.disposable,false);assert.equal(Object.isFrozen(c),true)
+ for(const field of ['state','database_owner','connection_cleanup_verified','base_audit_qualified',
+  'permission_boundary_current','activation_allowed','publication_allowed','material_access_allowed','production_qualified'])
+  assert.equal(Object.hasOwn(c,field),false)
+ for(const action of ['install','reconcile','audit'])assert.equal(activationHostActionSatisfied(action,c),false)
+ // The same name with a mismatched credential must still fail target validation.
+ assert.throws(()=>validateActivationHostConfig(JSON.stringify({...plain,expectedLogin:'postgres'}),secrets))
+})
+test('managed owner and forbidden service names remain refused for both auditors with matching credentials',()=>{
+ for(const login of ['postgres','service_role','authenticator','supabase_admin']){
+  assert.throws(()=>validateActivationHostConfig(JSON.stringify({...plain,auditLogin:login}),
+   {...secrets,audit:dsn(login)+'?sslmode=verify-full&sslrootcert=system&connect_timeout=5'}))
+  assert.throws(()=>validateActivationHostConfig(JSON.stringify({...plain,expectedMetadataAuditor:login}),
+   {...secrets,metadataAudit:dsn(login)}))
+ }
+})
+test('service and protected roles remain refused as installer and metadata auditor with matching credentials',()=>{
+ for(const login of ['service_role','authenticator','supabase_admin',...ROLES]){
+  assert.throws(()=>validateActivationHostConfig(JSON.stringify({...plain,expectedLogin:login}),
+   {...secrets,installer:dsn(login)}))
+  assert.throws(()=>validateActivationHostConfig(JSON.stringify({...plain,expectedMetadataAuditor:login}),
+   {...secrets,metadataAudit:dsn(login)}))
+ }
 })
 test('successor host refuses absent, wrong-project and externally routed metadata secrets',()=>{
  for(const value of ['',dsn('someone_else'),dsn(plain.expectedMetadataAuditor).replace('aws-0-us-west-1.pooler.supabase.com','example.invalid'),
