@@ -2933,5 +2933,27 @@
       "hosted": false
     },
     "scope": "Actual synthetic-only initial qualification; independent review, frozen integration recheck and hosted conditions remain open. No historical acceptance or owner field signature."
+  },
+  "semantic_authority_foundation": {
+    "label": "UNAPPROVED bounded source foundation; no operational C12/C13 closure",
+    "files": {
+      "src/lib/semanticAuthorityEnvelope.js": "27d44e70227f53080ef7ff18bb07d7afc326cd77",
+      "tests/semanticAuthorityEnvelope.test.mjs": "7eaadc0b4fe4e1032e4038a1f29b36c84d0fd10c",
+      "docs/semantic-authority-envelope-contract.md": "e488b36973f835b08d6c4b829494879abacd7faf"
+    },
+    "retention": "Pure metadata projection only; no store/cache/network/log or additional durable native payload. Existing assessment/cause identities/fingerprints remain authoritative; distinct explicitly versioned metadata digest only.",
+    "consumers": "Not yet wired to existing callers. Future authorized private reader projections only, original readers/current authorization remain mandatory; no present backend capability closure claimed.",
+    "meanings": "Assessment-scoped unresolved only; method-authority and exact operation permission changes conservatively mapped; comparison omission ephemeral and never source-level absence. Unsupported stronger causes/absence refuse.",
+    "tests": {
+      "file": "tests/semanticAuthorityEnvelope.test.mjs",
+      "groups": 15,
+      "status": "NOT RUN",
+      "command": "node --test tests/semanticAuthorityEnvelope.test.mjs",
+      "dependencies": "Node22.14.0 WebCrypto only; no new package, SQL installation or provider",
+      "cleanup": "No I/O, persistence or runtime resources created."
+    },
+    "installed": false,
+    "operational": false,
+    "accepted": false
   }
 }
