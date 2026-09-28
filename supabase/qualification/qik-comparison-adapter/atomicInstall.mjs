@@ -1,6 +1,6 @@
 // Source-only until separately qualified. No CLI, activation or automatic retry.
 import {createHash} from 'node:crypto'
-import {NATIVE_PROJECTION_MODE,isNativeMode,nativeAuthorization,NATIVE_ROLES,prepareNativeGovernedInstall,installNativeGovernedInTransaction,assertNativeGovernedClosure,nativeInstallFailure} from '../native-governed-install/install.mjs'
+import {NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MODE,verifyNativeBindingCurrentBoundary,isNativeMode,nativeAuthorization,NATIVE_ROLES,prepareNativeGovernedInstall,installNativeGovernedInTransaction,assertNativeGovernedClosure,nativeInstallFailure} from '../native-governed-install/install.mjs'
 import {compileSource,PROJECT,NAME_MAPPING} from './compileSource.mjs'
 import {collectCatalog,validateCatalog,RESERVED_ROLES,RESERVED_SCHEMAS} from './catalogPreflight.mjs'
 import {connectPersistentInstaller} from '../qik-ingest/persistentInstall.mjs'
@@ -419,7 +419,11 @@ export async function installComparisonAtomic(config,readPinnedSource){
   await db.query(plan.dojAssertions)
   phase='final_compatibility_assertions'
   await db.query(plan.compatibility)
-  if(plan.native){phase='native_final_joint_closure';await assertNativeGovernedClosure(db,c)}
+  if(plan.native){
+   phase='native_final_joint_closure';
+   if(c.nativeMode===NATIVE_BINDING_MODE)await verifyNativeBindingCurrentBoundary(db,plan.native,c);
+   else await assertNativeGovernedClosure(db,c);
+  }
   phase='commit'
   commitAttempted=true
   await db.query('commit');begun=false
@@ -434,8 +438,13 @@ export async function installComparisonAtomic(config,readPinnedSource){
     diagnostic:sanitizeInstallDiagnostic(error),...(plan.native?{native_failure:nativeInstallFailure(error)}:{})})
  }finally{await db.end().catch(()=>{})}
 }
-export async function reconcileComparisonInstall(config){
+export async function reconcileComparisonInstall(config,readPinnedSource){
  const c=validateAtomicConfig(config)
+ // v4's fresh reconciliation proves the exact complete source verifier again.
+ // Earlier API modes retain their existing call contract.
+ if(c.nativeMode===NATIVE_BINDING_MODE&&typeof readPinnedSource!=='function')refuse('configuration')
+ const plan=c.nativeMode===NATIVE_BINDING_MODE?await prepareAtomicInstall(readPinnedSource,{nativeMode:c.nativeMode}):null
+ if(plan&&(plan.manifest_sha256!==c.expectedManifestSha256||plan.native.program_sha256!==c.expectedNativeProgramSha256))refuse('manifest_mismatch')
  let db=null,phase='connection'
  try{
   db=await connectPersistentInstaller({connectionString:config.connectionString,
@@ -448,7 +457,7 @@ export async function reconcileComparisonInstall(config){
   phase='reconciliation_inventory'
   const exists=(await db.query("select to_regclass('mip_comparison_install.receipts') is not null present")).rows[0]
   if(!exists?.present){
-   const remnants=(await db.query('select exists(select 1 from pg_namespace where nspname=any($1::text[])) or exists(select 1 from pg_roles where rolname=any($2::text[])) present',[[...schemas,RECEIPT_SCHEMA,...(c.nativeMode?['mip_mentions','mip_arc_qik_source','mip_arc_native','mip_nca_'+c.operationId,...(c.nativeMode===NATIVE_PROJECTION_MODE?['mip_arc_projection_private']:[])]:[])],[...RESERVED_ROLES,c.creator,...(c.nativeMode?[...NATIVE_ROLES,'mip_nci_'+c.operationId]:[])]])).rows[0]
+   const remnants=(await db.query('select exists(select 1 from pg_namespace where nspname=any($1::text[])) or exists(select 1 from pg_roles where rolname=any($2::text[])) present',[[...schemas,RECEIPT_SCHEMA,...(c.nativeMode?['mip_mentions','mip_arc_qik_source','mip_arc_native','mip_nca_'+c.operationId,...(c.nativeMode!==NATIVE_MODE?['mip_arc_projection_private']:[]),...(c.nativeMode===NATIVE_BINDING_MODE?['mip_native_comparison']:[])]:[])],[...RESERVED_ROLES,c.creator,...(c.nativeMode?[...NATIVE_ROLES,'mip_nci_'+c.operationId]:[])]])).rows[0]
    return safe(remnants?.present?'reconciliation_drift':'not_installed',c,c.expectedManifestSha256,{needs_reconciliation:remnants?.present!==false})
   }
   phase='reconciliation_receipt'
@@ -464,17 +473,18 @@ export async function reconcileComparisonInstall(config){
    phase='native_reconciliation'
    const native=(await db.query('select mode,program_sha256 from mip_comparison_install.native_programs where operation_id=$1',[c.operationId])).rows[0]
    if(native?.mode!==c.nativeMode||native.program_sha256!==c.expectedNativeProgramSha256)refuse('native_receipt')
-   await assertNativeGovernedClosure(db,c)
+   if(c.nativeMode===NATIVE_BINDING_MODE)await verifyNativeBindingCurrentBoundary(db,plan.native,c);
+   else await assertNativeGovernedClosure(db,c)
   }
   return safe('installed_disabled_audit_pending',c,c.expectedManifestSha256,{needs_reconciliation:false,audit_qualified:false})
  }catch(error){return safe('reconciliation_unavailable',c,c.expectedManifestSha256,{needs_reconciliation:true,phase,
-  sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null,diagnostic:sanitizeInstallDiagnostic(error)})}
+  sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null,diagnostic:sanitizeInstallDiagnostic(error),...(plan?{native_failure:nativeInstallFailure(error)}:{})})}
  finally{if(db){await db.query('rollback').catch(()=>{});await db.end().catch(()=>{})}}
 }
 
-export async function qualifyComparisonAudit(config){
+export async function qualifyComparisonAudit(config,readPinnedSource){
  const c=validateAtomicConfig(config)
- const observed=await reconcileComparisonInstall(config)
+ const observed=await reconcileComparisonInstall(config,readPinnedSource)
  if(observed.state!=='installed_disabled_audit_pending')return observed
  let db=null,phase='connection'
  try{

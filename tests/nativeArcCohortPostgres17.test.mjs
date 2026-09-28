@@ -7,12 +7,13 @@ import {createHash} from 'node:crypto'
 import pg from 'pg'
 import {assertNativeArcAttachments} from './nativeArcAttachmentAssertions.mjs'
 import {assertNativeArcPrivateProjection} from './nativeArcPublicProjectionAssertions.mjs'
+import {runNativeComparisonBindingFixture,nativeComparisonFixtureDiagnostic} from './nativeComparisonBindingFixture.mjs'
 import {prepareAtomicInstall,installComparisonAtomic,qualifyComparisonAudit,DBLINK_PREFLIGHT_SQL} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
 import {REQUIRED_RELATIONS,RESERVED_ROLES} from '../supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs'
 import {LOAD_ORDER} from '../supabase/qualification/qik-ingest/installQikIngest.mjs'
 import {scoreGovernedNativeInput,runGovernedNativeArc} from '../supabase/qualification/arc-membership-native/runGovernedNativeArc.mjs'
 const frames=error=>String(error?.stack??'').split('\n').slice(1).flatMap(line=>{
- const match=line.match(/(?:nativeArcCohortPostgres17\.test\.mjs|nativeArcAttachmentAssertions\.mjs|nativeArcPublicProjectionAssertions\.mjs|atomicInstall\.mjs):(\d{1,6}):(\d{1,6})/);
+ const match=line.match(/(?:nativeArcCohortPostgres17\.test\.mjs|nativeArcAttachmentAssertions\.mjs|nativeArcPublicProjectionAssertions\.mjs|nativeComparisonBindingFixture\.mjs|nativeComparisonBindingAssertions\.mjs|atomicInstall\.mjs):(\d{1,6}):(\d{1,6})/);
  return match?[match[0]]:[];
 }).slice(0,4);
 // Only exact static refusal names from the pinned native source may enter diagnostics.
@@ -206,7 +207,8 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   for(const path of ['supabase/qualification/arc-membership-native/001_governed_cohort.sql',
    'supabase/qualification/arc-membership-native/002_private_score_review.sql',
    'supabase/qualification/arc-membership-native/003_governed_attachment.sql',
-   'supabase/qualification/arc-public-projection/001_native_private_projection.sql'])await db.query(await read(path));
+   'supabase/qualification/arc-public-projection/001_native_private_projection.sql',
+   'supabase/qualification/native-comparison-binding/001_private_binding.sql'])await db.query(await read(path));
   assert.deepEqual((await db.query("select p.oid,pg_get_functiondef(p.oid) definition from pg_proc p where p.oid in('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure,'mip_identity.collector_lock()'::regprocedure) order by p.oid")).rows,recorderBaseline);
   await db.query('grant mip_arc_native_worker to "'+aliceName+'", "'+workerName+'"');
   privateWorker=await connect(workerName);sameReviewer=await connect(reviewerName);
@@ -257,7 +259,7 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
      const refusal=nativeRefusalNames.has(e.message)?e.message:'none';
      // Nested fixture failures expose only a closed synthetic check/code/line descriptor.
      const privateDiagnostic=/^arc_private_projection_check_[1-5]_sqlstate_(?:[A-Z0-9]{5}|none)_position_(?:[0-9]{1,8}|none)_frames_(?:nativeArcPublicProjectionAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}(?:,nativeArcPublicProjectionAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}){0,2})?$/.test(e.message??'')?e.message:'none';
-     throw Error('native_arc_'+stage+'_sqlstate_'+state+'_refusal_'+refusal+'_position_'+position+'_private_'+privateDiagnostic+'_frames_'+locations.join(','));
+     throw Error('native_arc_'+stage+'_sqlstate_'+state+'_refusal_'+refusal+'_position_'+position+'_private_'+privateDiagnostic+'_comparison_'+JSON.stringify(nativeComparisonFixtureDiagnostic(e))+'_frames_'+locations.join(','));
     }
    });
   };
@@ -559,6 +561,12 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
      try{await body()}finally{await db.query('update public.entities set canonical_name=$2 where id=$1',[entity,original])}
     },
    });
+  });
+
+  await checkNative('real_native_to_accepted_comparison_binding_both_current_readers',async()=>{
+   const bound=await runNativeComparisonBindingFixture({syntheticFixture:true,db,reviewer,sameReviewer,
+    gateway:alice,outsider:guest,worker:privateWorker,admin,scope:s,id,sentinel,connect});
+   assert.deepEqual(bound,{checks:6,original_captures:4,accepted_events:2,publication_allowed:false,attachment_allowed:false});
   });
 
  }catch(error){

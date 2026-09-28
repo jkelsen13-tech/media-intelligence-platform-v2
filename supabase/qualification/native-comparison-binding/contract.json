@@ -1,0 +1,208 @@
+{
+  "contract": "native-comparison-binding-v1",
+  "status": "source_authored_not_run",
+  "base_tree": "09347a3f9783110a0864aa021b873a9c4e6085c9",
+  "schema": "mip_native_comparison",
+  "new_roles": [],
+  "existing_roles": [
+    "mip_arc_native_owner",
+    "mip_publication_owner_v2"
+  ],
+  "table_fields": {
+    "bindings": [
+      "scope",
+      "id",
+      "manifest",
+      "manifest_hash",
+      "principal"
+    ],
+    "revocations": [
+      "scope",
+      "binding_id",
+      "principal"
+    ]
+  },
+  "manifest_fields": [
+    "contract",
+    "codec",
+    "native",
+    "comparison",
+    "publication_allowed",
+    "attachment_allowed"
+  ],
+  "native_fields": [
+    "projection_id",
+    "generation_id",
+    "projection_review_id",
+    "dependency_hash",
+    "display_hash",
+    "input_hash",
+    "output_hash",
+    "score_review_id",
+    "cohort_id",
+    "sources"
+  ],
+  "native_source_fields": [
+    "article_id",
+    "capture_id",
+    "content_hash",
+    "job_id"
+  ],
+  "comparison_fields": [
+    "generation_id",
+    "review_revision",
+    "policy_revision",
+    "release_request",
+    "event_id",
+    "runtime_hash",
+    "input_hash",
+    "output_hash",
+    "approved_payload_hash",
+    "sources",
+    "evidence"
+  ],
+  "comparison_source_fields": [
+    "article_id",
+    "capture_id",
+    "content_hash",
+    "membership_hash"
+  ],
+  "comparison_evidence_fields": [
+    "article_id",
+    "capture_id",
+    "candidate_id",
+    "content_hash",
+    "source_field",
+    "field_hash",
+    "span_start",
+    "span_end",
+    "span_units",
+    "claim_key_hash"
+  ],
+  "receipt_fields": [
+    "contract",
+    "scope",
+    "binding_id",
+    "manifest_hash",
+    "native_generation_id",
+    "comparison_generation_id",
+    "state",
+    "publication_allowed",
+    "attachment_allowed"
+  ],
+  "codec": "postgres17-jsonb-text-utf8-v1",
+  "span_units": "unicode_code_points",
+  "bounds": {
+    "native_sources_min": 2,
+    "native_sources_max": 32,
+    "comparison_events_max": 32,
+    "event_sources_min": 2,
+    "event_sources_max": 32,
+    "event_evidence_max": 128,
+    "selected_persisted_comparison_inputs_bytes": 131072,
+    "accepted_reader_result_bytes": 262144,
+    "comparison_metadata_bytes": 98304,
+    "binding_manifest_bytes": 114688,
+    "native_selection_bytes_max": 4194304,
+    "native_selection_hash_work_bytes_max": 125829120
+  },
+  "bound_meaning": "Additional adapter data/input bounds only. Existing018 recomputation has no whole-operation CPU/hash accounting receipt. No total legacy-reader CPU/memory proof is claimed. Original native/private limits and supplemental private reserve remain unchanged.",
+  "functions": [
+    {
+      "signature": "authorize_session(uuid,text)",
+      "owner": "mip_publication_owner_v2",
+      "security_definer": true,
+      "execute": [
+        "mip_publication_owner_v2",
+        "mip_arc_native_owner"
+      ]
+    },
+    {
+      "signature": "comparison_metadata(uuid,text,uuid,uuid)",
+      "owner": "mip_publication_owner_v2",
+      "security_definer": true,
+      "execute": [
+        "mip_publication_owner_v2",
+        "mip_arc_native_owner"
+      ]
+    },
+    {
+      "signature": "collect(uuid,uuid,text,text,uuid,uuid,text,uuid,uuid)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": false,
+      "execute": [
+        "mip_arc_native_owner"
+      ]
+    },
+    {
+      "signature": "receipt(mip_native_comparison.bindings)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": false,
+      "execute": [
+        "mip_arc_native_owner"
+      ],
+      "volatility": "immutable"
+    },
+    {
+      "signature": "admit(uuid,uuid,uuid,text,text,uuid,uuid,text,uuid,uuid)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": true,
+      "execute": [
+        "mip_arc_native_owner",
+        "mip_mentions_gateway"
+      ]
+    },
+    {
+      "signature": "read_current(uuid,uuid,text,uuid,text)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": true,
+      "execute": [
+        "mip_arc_native_owner",
+        "mip_mentions_gateway"
+      ]
+    },
+    {
+      "signature": "revoke_binding(uuid,uuid)",
+      "owner": "mip_arc_native_owner",
+      "security_definer": true,
+      "execute": [
+        "mip_arc_native_owner",
+        "mip_mentions_gateway"
+      ]
+    }
+  ],
+  "source_dependencies": [
+    {
+      "path": "supabase/qualification/arc-public-projection/001_native_private_projection.sql",
+      "blob": "bc58ef8143fdea209bdf91ad9edfb6e96a089657"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/018_accepted_comparison_reader.sql",
+      "blob": "f55f7da3b22e992c20f6c968a37ae0af75dd2a47"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/019_native_retention_permissions.sql",
+      "blob": "df829634068d4b113862da3f4ba877ccc6cc72b7"
+    },
+    {
+      "path": "supabase/qualification/qik-comparison-adapter/compileSource.mjs",
+      "blob": "cd87eb0a0bc758315246e74675339f3ea2972a19"
+    }
+  ],
+  "installation": "After selected full compiled backend001–020, complete existing native/C6/C9/attachment stages, and private projection. Historical source and ACL matrices remain unchanged. New final marker native_comparison_final embeds exact preceding private/native assertions and additive assertions.",
+  "publication_allowed": false,
+  "attachment_allowed": false,
+  "no_retention": [
+    "broker session UUID",
+    "runtime plaintext",
+    "token",
+    "credential",
+    "body",
+    "url",
+    "excerpt",
+    "claim text",
+    "display payload",
+    "full capture payload"
+  ],
+  "runtime_qualification": "Not run by author. Parent integrates real PG17.6 full ordered fixture, existing role cleanup, actual worker/reader calls, then source review."
+}
