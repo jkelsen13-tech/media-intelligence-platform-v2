@@ -23,10 +23,17 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
   {skip:!enabled,timeout:90000},async()=>{
   const config=connection(),db=new pg.Client({...config,query_timeout:10000,
     statement_timeout:5000,application_name:'mip-arc-retained-synthetic-admin'})
-  let owned=false
+  let owned=false,stage='connect',primaryFailure=null
+  const cleanupFailures=[]
+  const sanitized=error=>({
+    sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:'none',
+    code:/^arc_retained_[a-z_]+$/.test(error?.message??'')?error.message:
+      error?.code==='ERR_ASSERTION'?'assertion_failed':'operation_failed',
+  })
   try {
     await db.connect()
     await db.query("set statement_timeout='5000ms'")
+    stage='catalog_guard'
     const version=(await db.query("select current_database() name,current_setting('server_version_num')::int version")).rows[0]
     assert.equal(version.name,'mip_arc_retained_test')
     assert.equal(version.version,170006,'exact PostgreSQL 17.6 required')
@@ -56,6 +63,7 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
     `)).rows
     assert.equal(existing.length,0,'dedicated database catalog must be empty')
     assert.equal((await db.query("select 1 from pg_roles where rolname in ('mip_arc_retained_owner','mip_arc_retained_reader','mip_arc_retained_outsider_test')")).rows.length,0)
+    stage='source_fixture'
     owned=true
     await db.query('create role mip_arc_retained_outsider_test nologin noinherit nosuperuser nocreatedb nocreaterole noreplication nobypassrls')
     await db.query(`
@@ -87,14 +95,18 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
     await db.query("insert into public.arc_membership_release_policy values('arc-v1-membership-2026-08-23.2',true,false,null)")
 
     const input={connection:config,sourceKind:'historical_public',requests:requests(data),limits:{page:97}}
+    stage='baseline'
     const baseline=await prepareArcMembership(input)
+    stage='install'
     await db.query(await readFile(new URL('../supabase/qualification/arc-membership-retained/001_retained.sql',import.meta.url),'utf8'))
     // Test admin is the synthetic session principal; runtime users/credentials
     // are not seeded by the installation. Role membership is test-only.
+    stage='test_access'
     await db.query('grant mip_arc_retained_owner,mip_arc_retained_reader to current_user')
     const scope=id(901),generation=id(902)
     await db.query('insert into mip_arc_retained.access values($1,session_user,true)',[scope])
     const args={...input,scope,generation,expectedInputHash:baseline.input_sha256}
+    stage='first_admission'
     const first=await admitHistoricalArc(args)
     assert.deepEqual(first.scores,baseline.scores)
     assert.equal(first.input_sha256,baseline.input_sha256)
@@ -105,11 +117,13 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
     assert.equal((await db.query('select count(*)::int n from mip_arc_retained.inputs')).rows[0].n,1)
     await assert.rejects(admitHistoricalArc({...args,expectedInputHash:'f'.repeat(64)}),/retry_conflict/)
     await assert.rejects(admitHistoricalArc({...args,requests:args.requests.map(r=>({...r,candidate_updated_at:'2026-01-14 12:00:00.123457+00'}))}),/retry_conflict/)
+    stage='original_replay'
     // Readback and exact retry are bound to original retained context, not latest.
     await db.query("update public.articles set title='LATEST_SENTINEL' where id=$1",[data.articles[0].id])
     await db.query('delete from public.article_entities')
     assert.deepEqual(await readHistoricalArc(args),first)
     assert.deepEqual(await admitHistoricalArc(args),first)
+    stage='revocation'
     // Revocation takes the same actual ACL row lock as admission/readback.
     await db.query('update mip_arc_retained.access set allowed=false where scope=$1',[scope])
     await assert.rejects(readHistoricalArc(args),e=>e.message==='arc_retained_access_denied'&&e.cause===undefined)
@@ -117,6 +131,7 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
     await db.query('update mip_arc_retained.access set allowed=true where scope=$1',[scope])
     await assert.rejects(readHistoricalArc({...args,generation:id(999)}),/missing/)
     await assert.rejects(readHistoricalArc({...args,scope:id(999)}),/access_denied/)
+    stage='source_authority'
     // Source SELECT omission and RLS visibility are explicit failures, never
     // a silently truncated retained context. Old readback remains independent.
     const current=await prepareArcMembership(input)
@@ -128,6 +143,7 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
     await assert.rejects(admitHistoricalArc(next),/source_authority/)
     assert.deepEqual(await readHistoricalArc(args),first)
     await db.query('alter table public.articles disable row level security')
+    stage='concurrent_snapshot'
     // Real second connection mutates between first source page and subsequent
     // reads. The admitted context remains that one owned MVCC snapshot.
     let changed=false
@@ -146,6 +162,7 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
     assert.equal(changed,true)
     assert.deepEqual(await readHistoricalArc(next),concurrent)
     await assert.rejects(admitHistoricalArc({...next,generation:id(904)}),/stale_source/)
+    stage='direct_acl'
     // Effective ACL and direct SQL wrapper boundary, with real PostgreSQL.
     assert.equal((await db.query("select has_function_privilege('mip_arc_retained_reader','mip_arc_retained.admit_input(uuid,uuid,text,text)','EXECUTE') allowed")).rows[0].allowed,false)
     assert.equal((await db.query("select has_table_privilege('mip_arc_retained_reader','mip_arc_retained.inputs','SELECT') allowed")).rows[0].allowed,false)
@@ -187,20 +204,40 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
       await assert.rejects(db.query('select mip_arc_retained.admit_input($1,$2,$3,$4)',[scope,id(906),stored.input_sha256,JSON.stringify(invalid)]),
         e=>e.message==='arc_retained_admission_failed'&&!String(e.detail??'').includes('SENTINEL'))
     }finally{await db.query('rollback')}
+    stage='immutability'
     await assert.rejects(db.query('update mip_arc_retained.inputs set input_sha256=input_sha256'),/arc_retained_immutable/)
     await assert.rejects(db.query('delete from mip_arc_retained.inputs'),/arc_retained_immutable/)
     assert.equal((await db.query('select count(*)::int n from mip_arc_retained.inputs')).rows[0].n,2)
+  }catch(error){
+    primaryFailure={stage,...sanitized(error)}
   }finally{
-    let cleanupFailed=false
-    if(owned){
-      try{await db.query('rollback')}catch{cleanupFailed=true}
-      try{await db.query('reset role')}catch{cleanupFailed=true}
-      try{await db.query('drop schema if exists mip_arc_retained cascade')}catch{cleanupFailed=true}
-      try{await db.query('drop table if exists public.arc_membership_release_policy,public.pipeline_config,public.article_entities,public.articles,public.story_arcs,public.arc_membership_candidates')}catch{cleanupFailed=true}
-      try{await db.query('revoke usage on schema public from mip_arc_retained_owner')}catch{cleanupFailed=true}
-      try{await db.query('drop role if exists mip_arc_retained_reader,mip_arc_retained_owner,mip_arc_retained_outsider_test')}catch{cleanupFailed=true}
+    const attempt=async(name,operation)=>{
+      try{await operation()}catch(error){cleanupFailures.push({stage:name,...sanitized(error)})}
     }
-    try{await db.end()}catch{cleanupFailed=true}
-    if(cleanupFailed)throw Error('arc_retained_synthetic_cleanup_failed')
+    if(owned){
+      await attempt('rollback',()=>db.query('rollback'))
+      await attempt('reset_role',()=>db.query('reset role'))
+      await attempt('owned_schema',()=>db.query('drop schema if exists mip_arc_retained cascade'))
+      await attempt('owned_tables',()=>db.query('drop table if exists public.arc_membership_release_policy,public.pipeline_config,public.article_entities,public.articles,public.story_arcs,public.arc_membership_candidates'))
+      // Installer roles are transactional. An installation failure may leave
+      // neither role; never assume owned=true means those roles committed.
+      await attempt('owner_public_usage',()=>db.query(`
+        do $cleanup$
+        begin
+          if exists(select 1 from pg_roles where rolname='mip_arc_retained_owner') then
+            revoke usage on schema public from mip_arc_retained_owner;
+          end if;
+        end $cleanup$;
+      `))
+      await attempt('owned_roles',()=>db.query('drop role if exists mip_arc_retained_reader,mip_arc_retained_owner,mip_arc_retained_outsider_test'))
+    }
+    await attempt('close',()=>db.end())
+  }
+  if(primaryFailure||cleanupFailures.length){
+    // Only fixed stage labels, SQLSTATE and allowlisted contract codes escape.
+    // Never attach driver objects, causes, query text, values or assertion data.
+    throw Error('arc_retained_synthetic_failure '+JSON.stringify({
+      primary:primaryFailure,cleanup:cleanupFailures,
+    }))
   }
 })

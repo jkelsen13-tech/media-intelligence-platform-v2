@@ -16,7 +16,8 @@ grant select(key,value) on public.pipeline_config to mip_arc_retained_owner;
 grant select(model_version,fixture_passed,auto_approval_enabled,auto_approval_threshold)
  on public.arc_membership_release_policy to mip_arc_retained_owner;
 set role mip_arc_retained_owner;
-alter default privileges in schema mip_arc_retained revoke execute on functions from public;
+-- Explicit function ACL revocation below is required: a schema-scoped
+-- default-privilege REVOKE cannot subtract global default PUBLIC EXECUTE.
 create table mip_arc_retained.access(
  scope uuid not null,principal name not null,allowed boolean not null,
  primary key(scope,principal));
@@ -199,6 +200,9 @@ begin
  where i.scope=s and i.generation=g and i.input_sha256=h;
  if not found and not allow_missing then raise exception 'arc_retained_missing';end if;
 end $$;
+-- All these functions were created in this transaction in this new schema.
+-- Revoke the actual default PUBLIC EXECUTE, then grant only the read wrapper.
+revoke all on all functions in schema mip_arc_retained from public;
 grant usage on schema mip_arc_retained to mip_arc_retained_reader;
 grant execute on function mip_arc_retained.read_input(uuid,uuid,text,boolean) to mip_arc_retained_reader;
 reset role;

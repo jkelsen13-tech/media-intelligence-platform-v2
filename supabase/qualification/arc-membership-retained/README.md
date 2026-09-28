@@ -84,7 +84,9 @@ There is no append-per-retry journal: exact retries add zero rows.
 
 Installation creates NOLOGIN, non-superuser, non-BYPASSRLS owner and reader
 roles. No application, gateway, browser, collection worker or service role is
-granted either role. Final installation assertions verify schema/table/function ownership, the sole read_input SECURITY DEFINER boundary, fixed search paths, exact function/schema/table ACLs, role memberships/attributes, all source-column effective SELECT rights, absent source writes and source-schema CREATE, and denial for existing anon/authenticated/service_role principals. Effective PUBLIC rights are included; unsupported ambient permissions cause a closed installation failure instead of revoking unrelated grants.
+granted either role. The installation explicitly revokes actual PUBLIC EXECUTE on all functions created in the new private schema before granting the sole reader wrapper. It does not rely on schema-scoped default privilege revocation, which cannot subtract the global function default, and it changes no unrelated schema privileges.
+
+Final installation assertions verify schema/table/function ownership, the sole read_input SECURITY DEFINER boundary, fixed search paths, exact function/schema/table ACLs, role memberships/attributes, all source-column effective SELECT rights, absent source writes and source-schema CREATE, and denial for existing anon/authenticated/service_role principals. Effective PUBLIC rights are included; unsupported ambient permissions cause a closed installation failure instead of revoking unrelated grants.
 
 The owner alone receives explicit SELECT columns on six
 existing historical source tables, no body/URL or write access. Its temporary
@@ -156,7 +158,7 @@ The actual harness refuses another database name, non-loopback host, URL
 query/fragment, non-17.6 server, occupied catalog or preexisting owned role.
 It proves an empty dedicated catalog before arming cleanup, has a 90-second
 test timeout plus 5-second statements and 10-second queries, and always attempts
-Client.end, including failed connect/cleanup. It drops only its owned schema
+Client.end, including failed connect/cleanup. If installation rolls back, cleanup checks whether the transactional owner role exists before revoking its owned public-schema usage. Failures preserve the primary static stage and SQLSTATE/allowlisted contract code separately from cleanup stages; driver objects, values, queries, causes and assertion details never enter these diagnostics. It drops only its owned schema
 and six tables and removes its two contract roles plus one synthetic outsider role; it never cleans a nonempty database.
 Schema CASCADE is limited to the exact new schema in that proved-empty target.
 The harness verifies actual grants/RLS denial, immutable writes, original
