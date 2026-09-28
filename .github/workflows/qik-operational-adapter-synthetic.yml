@@ -23,11 +23,11 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='edb5403bc68a3c31466f7532ae4a61b88e706283'
+          source='93bde4c33693820adb168613f813e1181959765e'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='4cbdbe82c28bdefea6a34394cb112a9a5f69aac7'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='8ea87d7a6f158327880115e95505e135584aeaa9'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
           subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-operational-adapter-synthetic.yml']
@@ -36,7 +36,7 @@ jobs:
               assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
           config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
           assert config.returncode==1 and not config.stdout
-          print('Pinned complete candidate tree; canonical writer, complete private membership, restricted-principal joint installer and historical projection fixture await fresh actual Cursor review after applicable tests. Synthetic-only internal qualification under user consolidation amendment. Not owner field signature, historical acceptance, hosted installation or material-transfer authority.')
+          print('Pinned complete candidate tree; canonical writer, complete private membership, bound private display, separately preserved v2/v3 restricted-principal joint installer and historical projection fixture await applicable fresh actual Cursor review after applicable tests. Synthetic-only internal qualification under user consolidation amendment. Not owner field signature, historical acceptance, hosted installation or material-transfer authority.')
           PY
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
