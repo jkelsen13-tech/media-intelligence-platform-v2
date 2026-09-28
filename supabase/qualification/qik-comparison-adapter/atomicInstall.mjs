@@ -52,6 +52,7 @@ export async function prepareAtomicInstall(readPinnedSource){
    if(!schemas.includes(name))refuse('schema_contract')
    return statement+'\ngrant create on schema '+quote(name)+' to '+roleList+';'
   })
+  step.compiled_sha256=digest(step.sql)
  }
  const closure=steps.find(s=>s.path==='adapter:compatibility-closure-v1')
  const compatibility=steps.find(s=>s.path==='adapter:compatibility-assertions-v1')
@@ -173,11 +174,12 @@ export async function installComparisonAtomic(config,readPinnedSource){
  if(plan.manifest_sha256!==c.expectedManifestSha256)refuse('manifest_mismatch')
  const db=await connectPersistentInstaller({connectionString:config.connectionString,
   expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
- let begun=false,commitAttempted=false
+ let begun=false,commitAttempted=false,phase='begin'
  try{
   await db.query('begin');begun=true
   await db.query("set local lock_timeout='5000ms'")
   await db.query("select pg_advisory_xact_lock(hashtextextended('qik-comparison-atomic-v1',0))")
+  phase='catalog_preflight'
   const catalog=await collectCatalog(db)
   // Explicit adapter dependency mode: existing verified dblink in extensions,
   // subsequently relocated atomically. Core catalog's original contract is unchanged.
@@ -187,10 +189,13 @@ export async function installComparisonAtomic(config,readPinnedSource){
   const collision=(await db.query('select exists(select 1 from pg_namespace where nspname=$1) or exists(select 1 from pg_roles where rolname=$2) collision',[RECEIPT_SCHEMA,c.creator])).rows[0]
   if(collision?.collision!==false)refuse('installation_collision')
   await db.query('lock table public.ingest_sources,qik_ingest.collection_gate,qik_ingest.schedule_intent,qik_ingest.runtime_credentials,qik_ingest_operation.persistent_install_receipt in share row exclusive mode')
+  phase='c3_baseline'
   const baseline=await c3(db,c)
+  phase='audit_prerequisite'
   await auditRole(db,c)
   const owner=(await db.query("select pg_has_role(current_user,'qik_ingest_fn_owner','SET') can_transfer,has_schema_privilege('qik_ingest_fn_owner','qik_ingest','CREATE') had_create")).rows[0]
   if(owner?.can_transfer!==true||typeof owner.had_create!=='boolean')refuse('existing_c3_owner_transfer')
+  phase='temporary_creator'
   await db.query('create role '+quote(c.creator)+' nologin createrole noinherit nosuperuser nocreatedb nobypassrls noreplication')
   await db.query('grant '+quote(c.creator)+' to '+quote(c.expectedLogin)+' with inherit false,set true')
   await db.query('set role '+quote(c.creator))
@@ -200,6 +205,7 @@ export async function installComparisonAtomic(config,readPinnedSource){
   }
   await db.query('reset role')
   for(const step of plan.body){
+   phase='source:'+step.path
    await db.query(step.sql)
    if(step.path.endsWith('/006_collector_reconciliation.sql'))
     await db.query('insert into mip_identity.collector_config(id,source) values(true,$1)',[c.collectorSource])
@@ -217,9 +223,11 @@ export async function installComparisonAtomic(config,readPinnedSource){
     await db.query('create policy atomic_audit_insert on mip_factual.rejection_audit for insert to '+quote(c.auditLogin)+' with check(true)')
    }
   }
+  phase='doj_permission_unit'
   if(!owner.had_create)await db.query('grant create on schema qik_ingest to qik_ingest_fn_owner')
   await db.query(plan.dojBody)
   if(!owner.had_create)await db.query('revoke create on schema qik_ingest from qik_ingest_fn_owner')
+  phase='final_permission_mutations'
   await db.query(plan.permissions)
   // New-schema CREATE grants are installer scaffolding, never runtime authority.
   for(const schema of schemas)await db.query('revoke create on schema '+quote(schema)+' from '+plan.roles.map(([r])=>quote(r)).join(','))
@@ -229,11 +237,14 @@ export async function installComparisonAtomic(config,readPinnedSource){
   for(const statement of alterRoles)await db.query(statement)
   await db.query('reset role')
   await db.query(aclClosure)
+  phase='installation_receipt'
   await db.query(receiptDDL)
   await db.query(auditProbeDDL(c))
   await db.query('insert into mip_comparison_install.receipts(operation_id,installer,manifest_sha256,c3_baseline_sha256,collector_source,audit_login,state) values($1,session_user,$2,$3,$4,$5,$6)',
    [c.operationId,plan.manifest_sha256,baseline,c.collectorSource,c.auditLogin,'installed_disabled_audit_pending'])
+  phase='c3_preservation'
   if(await c3(db,c)!==baseline)refuse('c3_drift')
+  phase='temporary_creator_cleanup'
   await db.query('set role '+quote(c.creator))
   for(const [role] of plan.roles)await db.query('revoke '+quote(role)+' from '+quote(c.expectedLogin)+' cascade')
   await db.query('reset role')
@@ -241,17 +252,20 @@ export async function installComparisonAtomic(config,readPinnedSource){
   await db.query('drop role '+quote(c.creator))
   const edges=(await db.query('select count(*)::integer n from pg_auth_members where roleid in(select oid from pg_roles where rolname=any($1::text[])) or member in(select oid from pg_roles where rolname=any($1::text[]))',[plan.roles.map(([r])=>r)])).rows[0]
   if(edges?.n!==0)refuse('residual_memberships')
+  phase='final_assertions'
   await db.query(plan.assertions)
   await db.query(plan.dojAssertions)
   await db.query(plan.compatibility)
+  phase='commit'
   commitAttempted=true
   await db.query('commit');begun=false
   return safe('installed_disabled_audit_pending',c,plan.manifest_sha256,{needs_reconciliation:false,audit_qualified:false})
- }catch{
+ }catch(error){
   if(begun&&!commitAttempted)await db.query('rollback').catch(()=>{})
   // Never send a replay or claim rollback once COMMIT may have reached the server.
   return safe(commitAttempted?'commit_ambiguous':'installation_refused',c,plan.manifest_sha256,
-   {needs_reconciliation:commitAttempted,audit_qualified:false})
+   {needs_reconciliation:commitAttempted,audit_qualified:false,phase,
+    sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null})
  }finally{await db.end().catch(()=>{})}
 }
 export async function reconcileComparisonInstall(config){
