@@ -94,11 +94,25 @@ language sql stable security definer set search_path='' as $$
    and j.payload=c.payload and j.input_hash=c.content_hash
    and c.content_hash=encode(sha256(convert_to(c.payload::text,'UTF8')),'hex')
    and c.payload=jsonb_build_object('url',evidence_pipeline.canonical_url(o.url),'title',btrim(o.title),'outlet',btrim(o.outlet),
-    'summary',nullif(o.summary,''),'body_text',null,'published_at',o.published_at))
+    'summary',nullif(o.summary,''),'body_text',null,'published_at',o.published_at)
+   -- A new administrative article hash must not expand the feed material.
+   and a.body_text is null
+   and a.feed='pipeline-v1'
+   and (a.ingestion_run_id is null or a.ingestion_run_id=j.first_run_id)
+   and coalesce(to_jsonb(a)->'claims','null'::jsonb) in ('null'::jsonb,'[]'::jsonb)
+   -- All other nonempty source columns would be retained by to_jsonb(a).
+   -- These exceptions are the existing C3 operational metadata, not content.
+   and not exists(select 1 from jsonb_each(to_jsonb(a)-array[
+    'id','feed','outlet','title','url','summary','body_text','published_at',
+    'fetched_at','ingestion_run_id','reader_state','source_status','claims']) extra
+    where extra.value not in ('null'::jsonb,'""'::jsonb,'[]'::jsonb,'{}'::jsonb))
+   and c.payload=jsonb_build_object('url',evidence_pipeline.canonical_url(a.url),'title',btrim(a.title),'outlet',btrim(a.outlet),
+    'summary',nullif(a.summary,''),'body_text',null,'published_at',a.published_at))
  from qik_ingest.observed_items o join public.ingest_sources s on s.id=o.source_id
  join evidence_pipeline.import_jobs j on j.id=o.native_job_id
  join evidence_pipeline.import_receipts r on r.job_id=j.id and r.run_id=o.run_id
  join evidence_pipeline.article_captures c on c.job_id=j.id and c.article_id=j.article_id
+ join public.articles a on a.id=c.article_id
  where o.id=p_observation and c.id=p_capture and c.article_id=p_article;
 $$;
 alter function qik_ingest.check_doj_material(uuid,uuid,uuid) owner to qik_ingest_fn_owner;
@@ -167,6 +181,7 @@ grant execute on function mip_identity.operation_check(jsonb) to mip_efta_owner_
 -- Final checks validate this unit after 019 and actual C3; they change no grants.
 do $final_doj_permissions$
 declare r record;t text;n integer;role_name text;rel regclass;
+ actual_using text;actual_check text;expected_using text;expected_check text;
  denied text[]:=array['anon','authenticated','service_role','mip_comparison_worker_v1','mip_comparison_producer_v1','mip_projection_publisher_v1','qik_ingest_runtime','qik_ingest_fn_owner'];
 begin
  foreach role_name in array array['mip_cutover_authority_admin_v1','mip_cutover_schema_owner_v1','mip_publication_owner_v2','qik_ingest_fn_owner'] loop
@@ -215,9 +230,70 @@ begin
   if not has_column_privilege('mip_cutover_authority_admin_v1','mip_identity.doj_policy_heads',t,'UPDATE') or not has_column_privilege('mip_cutover_authority_admin_v1','mip_identity.operation_evidence_heads',t,'UPDATE') then raise exception 'doj_admin_head_update: %',t;end if;
  end loop;
  if has_table_privilege('mip_cutover_authority_admin_v1','mip_identity.doj_policy_heads','UPDATE,DELETE,TRUNCATE') or has_table_privilege('mip_cutover_authority_admin_v1','mip_identity.operation_evidence_heads','UPDATE,DELETE,TRUNCATE') then raise exception 'doj_admin_excess_head_privilege';end if;
- foreach t in array array['qik_ingest.observed_items','public.ingest_sources','evidence_pipeline.import_jobs','evidence_pipeline.import_receipts','evidence_pipeline.article_captures'] loop
+ foreach t in array array['qik_ingest.observed_items','public.ingest_sources','public.articles','evidence_pipeline.import_jobs','evidence_pipeline.import_receipts','evidence_pipeline.article_captures'] loop
   if not has_table_privilege('qik_ingest_fn_owner',t,'SELECT') then raise exception 'doj_existing_c3_dependency: %',t;end if;
  end loop;
  if not has_function_privilege('qik_ingest_fn_owner','evidence_pipeline.canonical_url(text)','EXECUTE') then raise exception 'doj_existing_canonical_dependency';end if;
+
+ -- Preserve the existing 008 reader policy and constrain all five new admin
+ -- policies on its existing tables. No unrelated operation scope is writable.
+ foreach t in array array['operation_evidence_versions','operation_evidence_heads'] loop
+  rel:=('mip_identity.'||t)::regclass;
+  if not exists(select 1 from pg_class where oid=rel and relowner='mip_cutover_schema_owner_v1'::regrole and relrowsecurity and relforcerowsecurity) then raise exception 'doj_operation_storage_configuration: %',t;end if;
+  if exists(select 1 from pg_class c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a left join pg_roles g on g.oid=a.grantee where c.oid=rel and a.grantee<>c.relowner and
+   (a.grantee=0 or a.is_grantable or not((g.rolname='mip_publication_owner_v2' and a.privilege_type='SELECT') or (g.rolname='mip_cutover_authority_admin_v1' and a.privilege_type in ('SELECT','INSERT'))))) then raise exception 'doj_operation_storage_acl: %',t;end if;
+  if exists(select 1 from pg_attribute c cross join lateral aclexplode(c.attacl) a where c.attrelid=rel and
+   not(t='operation_evidence_heads' and c.attname in ('revision','active') and a.grantee='mip_cutover_authority_admin_v1'::regrole and a.privilege_type='UPDATE' and not a.is_grantable)) then raise exception 'doj_operation_column_acl: %',t;end if;
+  if not has_table_privilege('mip_publication_owner_v2',rel,'SELECT') or not has_table_privilege('mip_cutover_authority_admin_v1',rel,'SELECT') or not has_table_privilege('mip_cutover_authority_admin_v1',rel,'INSERT')
+   or has_table_privilege('mip_cutover_authority_admin_v1',rel,'UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+   or has_table_privilege('mip_publication_owner_v2',rel,'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+   or (t='operation_evidence_versions' and has_any_column_privilege('mip_cutover_authority_admin_v1',rel,'UPDATE')) then raise exception 'doj_operation_effective_acl: %',t;end if;
+  foreach role_name in array denied||array['mip_efta_owner_v1','mip_kernel_owner_v2','mip_collector_owner_v2','mip_comparison_worker_owner_v1','mip_comparison_producer_owner_v1'] loop
+   if has_table_privilege(role_name,rel,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') or has_any_column_privilege(role_name,rel,'SELECT,INSERT,UPDATE,REFERENCES') then raise exception 'doj_operation_denied_path: %, %',t,role_name;end if;
+  end loop;
+  select count(*) into n from pg_policy where polrelid=rel;
+  if n<>(case when t='operation_evidence_heads' then 4 else 3 end) then raise exception 'doj_operation_policy_count: %',t;end if;
+ end loop;
+ for r in select * from (values
+  ('operation_evidence_versions','operation_reader','*','mip_publication_owner_v2','true','true'),
+  ('operation_evidence_heads','operation_reader','*','mip_publication_owner_v2','true','true'),
+  ('operation_evidence_versions','doj_admin_evidence_read','r','mip_cutover_authority_admin_v1',$e$authority_adapter='doj-private-policy-v1' and not synthetic and exists(select 1 from mip_identity.doj_policy_versions p where p.source_project=scope->>'source_project')$e$,null),
+  ('operation_evidence_versions','doj_admin_evidence_insert','a','mip_cutover_authority_admin_v1',null,$e$authority_adapter='doj-private-policy-v1' and not synthetic and exists(select 1 from mip_identity.doj_policy_versions p where p.source_project=scope->>'source_project')$e$),
+  ('operation_evidence_heads','doj_admin_heads_read','r','mip_cutover_authority_admin_v1',$e$exists(select 1 from mip_identity.doj_policy_versions p where p.source_project=scope->>'source_project')$e$,null),
+  ('operation_evidence_heads','doj_admin_heads_insert','a','mip_cutover_authority_admin_v1',null,$e$exists(select 1 from mip_identity.operation_evidence_versions v where v.scope=operation_evidence_heads.scope and v.revision=operation_evidence_heads.revision and v.authority_adapter='doj-private-policy-v1' and not v.synthetic)$e$),
+  ('operation_evidence_heads','doj_admin_heads_update','w','mip_cutover_authority_admin_v1',$e$exists(select 1 from mip_identity.doj_policy_versions p where p.source_project=scope->>'source_project')$e$,$e$exists(select 1 from mip_identity.operation_evidence_versions v where v.scope=operation_evidence_heads.scope and v.revision=operation_evidence_heads.revision and v.authority_adapter='doj-private-policy-v1' and not v.synthetic)$e$)
+ ) expected(table_name,policy_name,command,grantee,using_expr,check_expr) loop
+  rel:=('mip_identity.'||r.table_name)::regclass;
+  select pg_get_expr(p.polqual,p.polrelid),pg_get_expr(p.polwithcheck,p.polrelid)
+   into actual_using,actual_check from pg_policy p where p.polrelid=rel and p.polname=r.policy_name and p.polcmd::text=r.command and p.polpermissive and p.polroles=array[r.grantee::regrole::oid];
+  if not found then raise exception 'doj_operation_policy_shape: %, %',r.table_name,r.policy_name;end if;
+  -- These predicates contain only conjunctions/EXISTS, never OR. Ignore
+  -- deparser whitespace, grouping, text casts and outer-table qualification;
+  -- compare every remaining token, including complete subquery restrictions.
+  actual_using:=regexp_replace(replace(regexp_replace(lower(coalesce(actual_using,'@null@')),'operation_evidence_(versions|heads)\.','','g'),'::text',''),'[()[:space:]]','','g');
+  actual_check:=regexp_replace(replace(regexp_replace(lower(coalesce(actual_check,'@null@')),'operation_evidence_(versions|heads)\.','','g'),'::text',''),'[()[:space:]]','','g');
+  expected_using:=regexp_replace(replace(regexp_replace(lower(coalesce(r.using_expr,'@null@')),'operation_evidence_(versions|heads)\.','','g'),'::text',''),'[()[:space:]]','','g');
+  expected_check:=regexp_replace(replace(regexp_replace(lower(coalesce(r.check_expr,'@null@')),'operation_evidence_(versions|heads)\.','','g'),'::text',''),'[()[:space:]]','','g');
+  if actual_using is distinct from expected_using or actual_check is distinct from expected_check then raise exception 'doj_operation_policy_expression: %, %',r.table_name,r.policy_name;end if;
+ end loop;
+ for r in select * from (values
+  ('doj_policy_versions','doj_fence',62,'mip_cutover_authority.fence_publication_write()'),
+  ('doj_policy_heads','doj_fence',62,'mip_cutover_authority.fence_publication_write()'),
+  ('doj_material_bindings','doj_fence',62,'mip_cutover_authority.fence_publication_write()'),
+  ('doj_policy_versions','doj_no_truncate',34,'comparison_qualification.reject_rewrite()'),
+  ('doj_policy_heads','doj_no_truncate',34,'comparison_qualification.reject_rewrite()'),
+  ('doj_material_bindings','doj_no_truncate',34,'comparison_qualification.reject_rewrite()'),
+  ('doj_policy_versions','doj_immutable',27,'comparison_qualification.reject_rewrite()'),
+  ('doj_material_bindings','doj_immutable',27,'comparison_qualification.reject_rewrite()'),
+  ('doj_policy_heads','doj_policy_retirement',31,'mip_identity.guard_revision_reuse()'),
+  ('operation_evidence_versions','immutable',27,'comparison_qualification.reject_rewrite()'),
+  ('operation_evidence_versions','no_truncate',34,'comparison_qualification.reject_rewrite()'),
+  ('operation_evidence_heads','operation_fence',62,'mip_cutover_authority.fence_publication_write()'),
+  ('operation_evidence_heads','operation_retirement',31,'mip_identity.guard_revision_reuse()'),
+  ('operation_evidence_heads','operation_no_truncate',34,'comparison_qualification.reject_rewrite()')
+ ) expected(table_name,trigger_name,trigger_type,signature) loop
+  rel:=('mip_identity.'||r.table_name)::regclass;
+  if not exists(select 1 from pg_trigger where tgrelid=rel and tgname=r.trigger_name and not tgisinternal and tgtype=r.trigger_type and tgfoid=to_regprocedure(r.signature) and tgenabled='O' and tgnargs=0 and tgqual is null and tgattr::text='') then raise exception 'doj_retention_trigger: %, %',r.table_name,r.trigger_name;end if;
+ end loop;
 end $final_doj_permissions$;
 commit;
