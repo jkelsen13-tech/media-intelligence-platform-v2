@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import pg from 'pg'
 import {prepareAtomicInstall,installComparisonAtomic,reconcileComparisonInstall,
- qualifyComparisonAudit,DBLINK_PREFLIGHT_SQL} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
+ qualifyComparisonAudit,DBLINK_PREFLIGHT_SQL,INSTALL_DIAGNOSTICS} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
 import {REQUIRED_RELATIONS,RESERVED_ROLES,RESERVED_SCHEMAS} from '../supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs'
 import {LOAD_ORDER} from '../supabase/qualification/qik-ingest/installQikIngest.mjs'
 const root=new URL('../',import.meta.url),H='1'.repeat(64)
@@ -35,7 +35,7 @@ async function loseAcknowledgement(command,body){
  }
  try{
   const result=await body()
-  assert.equal(losses,1,'expected exactly one real transaction acknowledgement to be discarded')
+  assert.equal(losses,1,'expected exactly one real transaction acknowledgement to be discarded: '+safeDiagnostic(result))
   return result
  }finally{pg.Client.prototype.query=original}
 }
@@ -51,7 +51,7 @@ async function injectPrivateUnitDrift(sql,body){
   }
   return result
  }
- try{const result=await body();assert.equal(injected,true);return result}
+ try{const result=await body();assert.equal(injected,true,safeDiagnostic(result));return result}
  finally{pg.Client.prototype.query=original}
 }
 async function assertPristineFixture(db){
@@ -92,7 +92,8 @@ function safeDiagnostic(receipt){
  const state=/^[a-z_]{1,80}$/.test(receipt?.state??'')?receipt.state:null
  const phase=/^[a-z0-9_:./-]{1,220}$/.test(receipt?.phase??'')?receipt.phase:null
  const sqlstate=/^[0-9A-Z]{5}$/.test(receipt?.sqlstate??'')?receipt.sqlstate:null
- return JSON.stringify({state,phase,sqlstate})
+ const diagnostic=INSTALL_DIAGNOSTICS.includes(receipt?.diagnostic)?receipt.diagnostic:null
+ return JSON.stringify({state,phase,sqlstate,diagnostic})
 }
 const ident=s=>'"'+s.replaceAll('"','""')+'"'
 test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and audit recovery',{timeout:240000},async()=>{
@@ -179,19 +180,21 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   assert.equal(drift.state,'installation_refused',safeDiagnostic(drift))
   assert.equal(drift.phase,'audit_secret_boundary',safeDiagnostic(drift))
   assert.equal(drift.sqlstate,'P0001',safeDiagnostic(drift))
+  assert.equal(drift.diagnostic,'atomic_audit_table_acl',safeDiagnostic(drift))
   assert.deepEqual((await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value,defaultsDuring)
   assert.equal((await admin.query("select to_regclass('mip_factual.audit_connection') object")).rows[0].object,null)
   await admin.query('alter default privileges for role '+ident(installer)+' revoke select on tables from atomic_fixture_reader;alter default privileges for role '+ident(installer)+' revoke usage on schemas from atomic_fixture_reader')
   assert.deepEqual((await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value,defaultsBefore)
-  for(const sql of [
-   'grant select(connection_string) on mip_factual.audit_connection to atomic_fixture_reader',
-   'create policy unsafe_fixture_read on mip_factual.audit_connection for select to atomic_fixture_reader using(true)',
-   'grant execute on function mip_factual_transport.dblink_exec(text,text) to atomic_fixture_reader',
+  for(const [sql,diagnostic] of [
+   ['grant select(connection_string) on mip_factual.audit_connection to atomic_fixture_reader','atomic_audit_column_acl'],
+   ['create policy unsafe_fixture_read on mip_factual.audit_connection for select to atomic_fixture_reader using(true)','atomic_audit_policy'],
+   ['grant execute on function mip_factual_transport.dblink_exec(text,text) to atomic_fixture_reader','atomic_audit_function_acl'],
   ]){
    const rejected=await injectPrivateUnitDrift(sql,()=>installComparisonAtomic(cfg,async p=>read(p)))
    assert.equal(rejected.state,'installation_refused',safeDiagnostic(rejected))
    assert.equal(rejected.phase,'audit_secret_boundary',safeDiagnostic(rejected))
    assert.equal(rejected.sqlstate,'P0001',safeDiagnostic(rejected))
+   assert.equal(rejected.diagnostic,diagnostic,safeDiagnostic(rejected))
    assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
   }
   // Y inherits no table rights, but can SET ROLE to NOLOGIN+BYPASSRLS X,
@@ -203,6 +206,7 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   assert.equal(setPath.state,'installation_refused',safeDiagnostic(setPath))
   assert.equal(setPath.phase,'audit_secret_boundary',safeDiagnostic(setPath))
   assert.equal(setPath.sqlstate,'P0001',safeDiagnostic(setPath))
+  assert.equal(setPath.diagnostic,'atomic_audit_effective_table',safeDiagnostic(setPath))
   assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
   assert.equal((await admin.query("select pg_has_role('atomic_fixture_set_login','atomic_fixture_set_target','SET') allowed,pg_has_role('atomic_fixture_set_target','pg_read_all_data','USAGE') inherited")).rows[0].allowed,true)
   assert.equal((await admin.query("select pg_has_role('atomic_fixture_set_target','pg_read_all_data','USAGE') inherited")).rows[0].inherited,true)
