@@ -7,12 +7,12 @@ import {BASE,CA_SHA256,verifySourceBlob} from '../native-governed-host/adapter.m
 import {validateActivationHostConfig,dispatchActivationHostAction,activationHostActionSatisfied} from './host.mjs'
 const exec=promisify(execFile)
 const CODE_PINS=Object.freeze({
-  "supabase/qualification/native-governed-activation/001_profile.sql": "2654db95c674d73c0467625b024a16ea6154d2dd",
-  "supabase/qualification/native-governed-activation/prepare.mjs": "986aad7509b58d33799ffbb66eb79cd6573f7dc1",
+  "supabase/qualification/native-governed-activation/001_profile.sql": "11d0bbeb0f5a9114d69dea5613e50dd9e9f3829d",
+  "supabase/qualification/native-governed-activation/prepare.mjs": "3d641cc5200408756b9b77c79c8210b58e6b8a4c",
   "supabase/qualification/native-governed-activation/activation.mjs": "c5a7ce9b9098930833b474d60e9a996561e0d2f5",
   "supabase/qualification/native-governed-activation/audit.mjs": "bf9338bf7fa5b6debad39a6948aec3d90b56129f",
   "supabase/qualification/native-governed-install/install.mjs": "aa92f9e5003bbf12b19d4cfbf5871da1c496ce1c",
-  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "06b48b78f588c447f929b64f35b9cc876cf20a1a",
+  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "49fb974fcfcbd745cc05201552fdfbd8af9360ae",
   "supabase/qualification/qik-comparison-adapter/compileSource.mjs": "cd87eb0a0bc758315246e74675339f3ea2972a19",
   "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs": "a591c92b10d174bd2937e9634f8d491b4c34567b",
   "supabase/qualification/qik-ingest/persistentInstall.mjs": "24625b8382399db71e9dba6e3ddb88a936ade33f",

@@ -315,9 +315,9 @@ begin
    where n.nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_arc_projection_private',
     'mip_native_comparison','mip_native_caller','mip_comparison_kernel_v1','mip_cutover_authority',
     'mip_identity','mip_factual','evidence_pipeline','auth') and c.relkind in('r','p','v','m','f','S') loop
-   if case when x.relkind='S' then has_sequence_privilege(b.issuer_oid,x.oid,'USAGE,SELECT,UPDATE')
+   if (case when x.relkind='S' then has_sequence_privilege(b.issuer_oid,x.oid,'USAGE,SELECT,UPDATE')
     else has_table_privilege(b.issuer_oid,x.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')
-      or has_any_column_privilege(b.issuer_oid,x.oid,'SELECT,INSERT,UPDATE,REFERENCES') end
+      or has_any_column_privilege(b.issuer_oid,x.oid,'SELECT,INSERT,UPDATE,REFERENCES') end)
    then raise exception 'native_activation_issuer_storage';end if;
   end loop;
  -- Bound runtime identities are separate leaf LOGINs, including in disabled state.
@@ -350,9 +350,9 @@ begin
    where n.nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_arc_projection_private',
     'mip_native_comparison','mip_native_caller','mip_comparison_kernel_v1','mip_cutover_authority',
     'mip_identity','mip_factual','evidence_pipeline','auth') and c.relkind in('r','p','v','m','f','S') loop
-   if case when x.relkind='S' then has_sequence_privilege(member_oid,x.oid,'USAGE,SELECT,UPDATE')
+   if (case when x.relkind='S' then has_sequence_privilege(member_oid,x.oid,'USAGE,SELECT,UPDATE')
     else has_table_privilege(member_oid,x.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')
-      or has_any_column_privilege(member_oid,x.oid,'SELECT,INSERT,UPDATE,REFERENCES') end
+      or has_any_column_privilege(member_oid,x.oid,'SELECT,INSERT,UPDATE,REFERENCES') end)
    then raise exception 'native_activation_runtime_storage';end if;
   end loop;
  end loop;

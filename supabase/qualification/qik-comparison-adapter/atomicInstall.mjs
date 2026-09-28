@@ -528,7 +528,7 @@ export async function reconcileComparisonInstall(config,readPinnedSource){
    phase='native_reconciliation'
    const native=(await db.query('select mode,program_sha256 from mip_comparison_install.native_programs where operation_id=$1',[c.operationId])).rows[0]
    if(native?.mode!==c.nativeMode||native.program_sha256!==c.expectedNativeProgramSha256)refuse('native_receipt')
-   if(plan.activation){
+   if(plan?.activation){
     // This is a successor permission assertion, never final old-v6 attestation.
     const b=(await db.query('select successor_program,install_manifest,native_program from mip_native_activation.bootstrap where singleton')).rows[0];
     if(b?.successor_program!==c.expectedSuccessorProgram||b.install_manifest!==c.expectedManifestSha256||b.native_program!==c.expectedNativeProgramSha256)refuse('activation_receipt');

@@ -3,7 +3,7 @@
 import {createHash} from 'node:crypto'
 export const PROFILE='native-governed-activation-v1'
 export const SQL_PATH='supabase/qualification/native-governed-activation/001_profile.sql'
-export const SQL_BLOB='2654db95c674d73c0467625b024a16ea6154d2dd'
+export const SQL_BLOB='11d0bbeb0f5a9114d69dea5613e50dd9e9f3829d'
 export const GROUPS=Object.freeze(['mip_arc_native_worker','mip_comparison_worker_v1','mip_identity_broker_v2','mip_mentions_admin','mip_mentions_gateway'])
 export const ROLES=Object.freeze([
  ...'mip_collector_owner_v2 mip_collector_scheduler_v1 mip_collector_worker_v1 mip_comparison_producer_owner_v1 mip_comparison_producer_v1 mip_comparison_worker_owner_v1 mip_comparison_worker_v1 mip_cutover_authority_admin_v1 mip_cutover_recovery_v1 mip_cutover_schema_owner_v1 mip_efta_admitter_v1 mip_efta_auth_session_owner_v1 mip_efta_authenticator_v1 mip_efta_owner_v1 mip_efta_private_reader_v1 mip_efta_reviewer_v1 mip_factual_owner_v3 mip_factual_reviewer_v3 mip_identity_broker_v2 mip_identity_owner_v2 mip_journal_gateway_v2 mip_journal_owner_v2 mip_kernel_owner_v2 mip_projection_builder_v1 mip_projection_publisher_owner_v1 mip_projection_publisher_v1 mip_publication_owner_v2 mip_retention_reader_v1 mip_retention_writer_v1'.split(' '),
