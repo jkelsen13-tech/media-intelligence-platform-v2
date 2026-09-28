@@ -35,10 +35,21 @@ function checkedPlan(input, bounds) {
   return plan
 }
 function unitsFor(plan) {
-  const units=plan.pages.map(page=>({
-    kind:'records', project:page.project, table:page.table,
-    fields:page.fields, rows:page.rows, bytes:page.rows.reduce((n,r)=>n+r.payload_bytes,0),
-  }))
+  const units=[]
+  for (const page of plan.pages) {
+    let rows=[],bytes=0
+    const flush=()=>{
+      if(rows.length) units.push({kind:'records',project:page.project,table:page.table,
+        fields:page.fields,rows,bytes})
+      rows=[];bytes=0
+    }
+    for(const row of page.rows) {
+      if(rows.length && bytes+row.payload_bytes>LIMITS.bytes) flush()
+      rows.push(row);bytes+=row.payload_bytes
+      if(bytes>LIMITS.bytes) flush()
+    }
+    flush()
+  }
   for (const object of plan.manifest.objects) units.push({
     kind:'object', project:object.project, object, bytes:object.bytes,
   })
@@ -47,6 +58,11 @@ function unitsFor(plan) {
     return { ...body, unit_sha256,
       unit_id:fingerprintPayload({version:TRANSFER_VERSION,manifest_sha256:plan.manifest_sha256,unit_sha256}) }
   })
+}
+// Pure metadata preview: deterministic units use the fixed global byte ceiling,
+// never the caller's per-invocation budget. This grants no execution authority.
+export function planHistoricalTransferUnits(input,requestedLimits) {
+  return unitsFor(checkedPlan(input,manifestLimits(requestedLimits)))
 }
 function expectedInventory(plan, project) {
   return {
@@ -205,6 +221,8 @@ export async function transferHistoricalArticles({
   const report=(state,code=null)=>({
     version:TRANSFER_VERSION,state,code,mode,manifest_sha256:plan.manifest_sha256,
     operation_id,checkpoint:checkpoint?clone(checkpoint):null,pending_unit_id,
+    pending_unit_bytes:pending_unit_id===null?null:units.find(u=>u.unit_id===pending_unit_id)?.bytes??null,
+    invocation_byte_limit:max_material_bytes,unit_byte_limit:LIMITS.bytes,
     verified_this_invocation:verified,material_bytes_this_invocation:material_bytes,
     remaining_units:units.length-(checkpoint?.verified_units.length??0),
     evidence:'injected_adapter_readback_only',public_processing_authorized:false,
@@ -245,6 +263,8 @@ export async function transferHistoricalArticles({
       for (let i=0;i<units.length;i++) {
         const unit=units[i]
         if (i<checkpoint.verified_units.length) continue
+        if(unit.bytes>LIMITS.bytes) {pending_unit_id=unit.unit_id;return 'unsupported_unit_capacity'}
+        if(unit.bytes>max_material_bytes) {pending_unit_id=unit.unit_id;return 'unit_exceeds_budget'}
         if (verified>=max_units || material_bytes+unit.bytes>max_material_bytes) return 'budget_paused'
         pending_unit_id=unit.unit_id
         const request={operation_id,manifest_sha256:plan.manifest_sha256,unit_id:unit.unit_id,max_bytes:unit.bytes}
