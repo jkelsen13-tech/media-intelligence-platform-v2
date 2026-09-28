@@ -23,7 +23,7 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='2cb764617f38b33099539bd5addc01670465ddd2'
+          source='e212e2eebc1a74cac454dc4e4c4daf5b9114e241'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
