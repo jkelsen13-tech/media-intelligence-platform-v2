@@ -65,11 +65,15 @@ test('new selection outranks old response and cannot reuse an old binding',async
  }finally{h.client.dispose()}
 });
 test('session change and signout discard responses and already-rendered records',async()=>{
- const first=deferred(),h=await harness({fetchImpl:()=>first.promise});
+ const first=deferred();let requests=0;
+ // Each HTTP request owns its Response stream. The stale first response is
+ // cancelled by the reader and cannot be reused for the refreshed-session read.
+ const h=await harness({fetchImpl:()=>++requests===1?first.promise:Promise.resolve(response())});
  try{
   const old=h.client.load(expected);h.auth({...session(),access_token:'new.synthetic.synthetic'});first.resolve(response());await old;await tick();
   assert.equal(h.client.getState().status,'selection_required');assert.equal(h.client.getState().workspace,null);
   await h.client.load(expected);assert.equal(h.client.getState().status,'ready');
+  assert.equal(requests,2);assert.equal(h.calls[1][1].headers.Authorization,'Bearer new.synthetic.synthetic');
   h.auth(null);assert.equal(h.client.getState().status,'authentication_required');assert.equal(h.client.getState().workspace,null);
  }finally{h.client.dispose()}
 });

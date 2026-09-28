@@ -1347,7 +1347,7 @@
       },
       "tests/nativePrivateUiRead.test.mjs": {
         "path": "tests/nativePrivateUiRead.test.mjs",
-        "blob": "c055ca7c47b13be2f65a67d42a96c187de3471af"
+        "blob": "4cc9a7699f835b1c2457ae78cbc0af6c6f200c65"
       },
       "docs/native-private-browser-consumer.md": {
         "path": "docs/native-private-browser-consumer.md",
