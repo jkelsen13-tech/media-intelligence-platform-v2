@@ -199,6 +199,7 @@ class DOJ(M.NativeLineagePG):
         article_id=scope['material_ref'].split(':',1)[1]
         binding=self.bindings[article_id]
         record=self.records[json.dumps(scope,sort_keys=True)]
+        original_url=self.admin('select url from public.articles where id='+q(article_id))
         # Each case creates a valid NEW administrative binding and operation
         # revision for the changed full article hash. A stale-hash check alone
         # would allow it; the bound native feed fields must still reject it.
@@ -211,6 +212,8 @@ class DOJ(M.NativeLineagePG):
             ('summary','synthetic different summary'),
             ('outlet','synthetic different outlet'),
             ('url','https://www.justice.gov/synthetic/different-item'),
+            ('url',original_url+'#SYNTHETIC_EXTRA'),
+            ('url',original_url+'?utm_source=SYNTHETIC_EXTRA'),
             ('published_at','2026-02-01T00:00:00Z'),
         ]
         for field,value in changes:
@@ -265,6 +268,9 @@ class DOJ(M.NativeLineagePG):
           'grant mip_cutover_authority_admin_v1 to qik_ingest_runtime',
           'alter policy doj_admin_insert on mip_identity.doj_policy_versions with check(false)',
           'alter policy doj_admin_evidence_insert on mip_identity.operation_evidence_versions with check(true)',
+          "alter policy doj_admin_evidence_insert on mip_identity.operation_evidence_versions with check(authority_adapter='doj-private-policy-v1' and not (synthetic and exists(select 1 from mip_identity.doj_policy_versions p where p.source_project=scope->>'source_project')))",
+          "alter policy doj_admin_evidence_insert on mip_identity.operation_evidence_versions with check(authority_adapter='doj-private-policy-v1' and not synthetic and exists(select 1 from mip_identity.doj_policy_versions p where p.source_project=scope->>'SOURCE_PROJECT'))",
+          "alter policy doj_admin_evidence_insert on mip_identity.operation_evidence_versions with check(authority_adapter='doj-private-policy-v1' and not synthetic and exists(select 1 from mip_identity.doj_policy_versions p where p.source_project=scope->>'source_ project'))",
           'alter policy doj_admin_heads_update on mip_identity.operation_evidence_heads using(true) with check(true)',
           'grant insert on mip_identity.operation_evidence_versions to service_role',
           'grant update(scope) on mip_identity.operation_evidence_heads to mip_cutover_authority_admin_v1',
