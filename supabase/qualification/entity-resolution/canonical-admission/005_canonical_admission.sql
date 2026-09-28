@@ -386,6 +386,11 @@ revoke all on function mip_mentions.canonical_entity_mutation(),mip_mentions.can
  mip_mentions.canonical_context(uuid,uuid,uuid,uuid,uuid),mip_mentions.canonical_prelock_context(uuid,uuid[],uuid[]),mip_mentions.canonical_group(uuid,uuid,uuid),
  mip_mentions.canonical_article(uuid,uuid,uuid),mip_mentions.canonical_prelock_articles(uuid,uuid[],uuid[])
  from public,mip_mentions_gateway,mip_mentions_admin;
+revoke all on function mip_mentions.admit_actor_locator(uuid,uuid),
+ mip_mentions.review_canonical_mapping(uuid,uuid,uuid,uuid,integer,uuid,text,text,text),
+ mip_mentions.review_weight_policy(uuid,uuid,uuid,integer,uuid,text,text),
+ mip_mentions.review_canonical_admission(uuid,uuid,uuid,integer,uuid,text,uuid,uuid,uuid,numeric,text)
+ from public,mip_mentions_admin;
 grant execute on function mip_mentions.admit_actor_locator(uuid,uuid),
  mip_mentions.review_canonical_mapping(uuid,uuid,uuid,uuid,integer,uuid,text,text,text),
  mip_mentions.review_weight_policy(uuid,uuid,uuid,integer,uuid,text,text),

@@ -37,7 +37,10 @@ function diagnostic(error,stage){
   return match?['    at tests/nativeCanonicalAdmissionPostgres17.test.mjs:'+match[1]+':'+match[2]]:[]
  }).slice(0,12):[]
  const numericPosition=value=>typeof value==='string'&&/^[0-9]{1,10}$/.test(value)?value:'NONE'
- const result=Error('native_canonical_admission_failed stage='+safeStage+' sqlstate='+code+
+ const installerLabels=new Set(['canonical_entity_shape','canonical_owner_boundary','canonical_table_boundary',
+  'canonical_function_boundary','canonical_capture_size_boundary','canonical_entity_privilege_boundary'])
+ const label=safeStage==='INSTALL_CANONICAL'&&installerLabels.has(error?.message)?error.message:'NONE'
+ const result=Error('native_canonical_admission_failed stage='+safeStage+' sqlstate='+code+' boundary='+label+
   ' position='+numericPosition(error?.position)+' internal_position='+numericPosition(error?.internalPosition))
  result.stack=result.name+': '+result.message+(frames.length?'\n'+frames.join('\n'):'')
  return result

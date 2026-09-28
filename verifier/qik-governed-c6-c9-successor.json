@@ -878,7 +878,7 @@
       },
       {
         "path": "supabase/qualification/entity-resolution/canonical-admission/005_canonical_admission.sql",
-        "blob": "f24cdb674dd6a4ae1debfcbf293029876532ebca"
+        "blob": "799820c9c40d499071b6be10cc6822d44c3c7819"
       },
       {
         "path": "supabase/qualification/arc-membership-qik-source/002_governed_writer.sql",
