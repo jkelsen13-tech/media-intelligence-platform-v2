@@ -17,6 +17,17 @@ const membership = ['event_id','article_id','membership_method','membership_conf
 const yhb = ['id','feed','outlet','title','url','summary','published_at','fetched_at','outlet_id','author_id','body_text','embedding','claims','arc_id','unattributed','monoculture','is_digest','image_url','image_alt','entities_extracted_at','arc_assign_attempted_at','ingestion_run_id','source_status','source_status_changed_at','source_status_note','arc_assignment_evidence','candidate_generation_attempted_at','candidate_generation_note','reader_state','reader_exclusion_reason']
 export const FIELD_CONTRACTS = Object.freeze({
   [PROJECTS.nie]: Object.freeze({
+    article_claims: Object.freeze(["id","claim_id","article_id","surface_text","char_start","char_end","extraction_method","extraction_confidence","stance","loaded_language","version","is_current","created_at"]),
+    article_entities: Object.freeze(["article_id","entity_id","confidence","extraction_method","role","created_at"]),
+    article_entities_canary_sweep_backup_20260809: Object.freeze(["article_id","entity_id","confidence","extraction_method","role","created_at"]),
+    article_lineage_assertions: Object.freeze(["id","child_article_id","parent_article_id","relationship_class","relationship_type","origin_status","detection_method","evidence_basis","confidence_band","review_status","rule_version","version","is_current","superseded_by","created_at","reviewed_at","reviewer_id"]),
+    claims: Object.freeze(["id","event_id","canonical_text","claim_kind","thin_extraction","status","rule_version","first_seen_at","created_at"]),
+    claim_evidence_links: Object.freeze(["id","claim_id","evidence_url","evidence_type","linked_from_article_id","created_at"]),
+    entities: Object.freeze(["id","canonical_name","normalized_name","aliases","entity_type","mention_count","created_at","last_seen"]),
+    authors: Object.freeze(["id","name","normalized_name","outlet_ids","beats","article_count","first_seen","last_seen","framing_profile","confidence","last_computed"]),
+    outlets: Object.freeze(["id","name","parent_ownership","country","known_editorial_stance","notes","created_at"]),
+    story_arcs: Object.freeze(["id","slug","title","category","status","root_node_id","coverage_gap","summary","started_at","last_update_at","embedding","last_assignment_run","seed_article_id","category_confidence","category_evidence","title_article_count"]),
+    arc_events: Object.freeze(["id","arc_id","title","category","confidence","occurred_at","description"]),
     articles: Object.freeze(nie), events: Object.freeze(events),
     event_articles: Object.freeze(membership),
     articles_canary_sweep_backup_20260809: Object.freeze([...nie]),
@@ -28,18 +39,33 @@ export const FIELD_CONTRACTS = Object.freeze({
     arc_backup_20260726_articles: Object.freeze(['id','arc_id','arc_assign_attempted_at']),
   }),
   [PROJECTS.yhb]: Object.freeze({
+    article_claims: Object.freeze(["id","claim_id","article_id","surface_text","char_start","char_end","extraction_method","extraction_confidence","stance","loaded_language","version","is_current","created_at","evidence_source_field","evidence_excerpt","auditability_state","auditability_note"]),
+    article_entities: Object.freeze(["article_id","entity_id","confidence","extraction_method","role","created_at"]),
+    article_extraction_results: Object.freeze(["id","article_id","algorithm_version","model_id","input_sha256","output","state","validation_errors","created_at","reviewed_at","reviewed_by"]),
+    gdelt_staged_articles: Object.freeze(["id","run_id","source_id","gdelt_event_id","gdelt_event_date","source_url","source_domain","actor1_name","actor2_name","event_code","event_root_code","event_label","fetched_at","provenance","state","article_id","materialized_at","attached_at","failure_note","created_at","updated_at"]),
+    claims: Object.freeze(["id","event_id","canonical_text","claim_kind","thin_extraction","status","rule_version","first_seen_at","created_at"]),
+    claim_evidence_links: Object.freeze(["id","claim_id","evidence_url","evidence_type","linked_from_article_id","created_at"]),
+    entities: Object.freeze(["id","canonical_name","normalized_name","aliases","entity_type","mention_count","created_at","last_seen"]),
+    authors: Object.freeze(["id","name","normalized_name","outlet_ids","beats","article_count","first_seen","last_seen","framing_profile","confidence","last_computed"]),
+    outlets: Object.freeze(["id","name","parent_ownership","country","known_editorial_stance","notes","created_at"]),
+    story_arcs: Object.freeze(["id","slug","title","category","status","root_node_id","coverage_gap","summary","started_at","last_update_at","embedding","last_assignment_run","seed_article_id","category_confidence","category_evidence","title_article_count","display_kind"]),
+    arc_events: Object.freeze(["id","arc_id","title","category","confidence","occurred_at","description","arc_membership_candidate_id"]),
+    gdelt_staging_runs: Object.freeze(["run_id","source_id","source_uri","source_window_start","source_window_end","state","fetch_started_at","fetch_completed_at","completed_at","counters","note","created_at","updated_at"]),
     articles: Object.freeze(yhb), events: Object.freeze([...events,'comparison_validation_state']),
     event_articles: Object.freeze([...membership]),
   }),
 })
 // Metadata ceilings bound planning memory only; they do not authorize material I/O.
-export const MANIFEST_HARD_LIMITS = Object.freeze({ records:100000, objects:100000, bytes:1024*1024*1024*1024 })
+export const MANIFEST_HARD_LIMITS = Object.freeze({ records:250000, objects:100000, bytes:1024*1024*1024*1024 })
 export function manifestLimits(value={records:LIMITS.records,objects:LIMITS.records,bytes:LIMITS.bytes}) {
   exact(value,['records','objects','bytes'])
   for (const k of ['records','objects','bytes'])
     if (!Number.isSafeInteger(value[k]) || value[k]<1 || value[k]>MANIFEST_HARD_LIMITS[k]) fail('manifest_limit')
   return {...value}
 }
+// Catalog traversal stops at these graph families; their payload schemas are
+// deliberately absent. New field contracts never authorize a graph sweep.
+export const GRAPH_BOUNDARY_TABLES = Object.freeze(['nodes','arc_membership_candidates'])
 const sha = /^[a-f0-9]{64}$/
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/
 const sourceRefs = [PROJECTS.nie, PROJECTS.yhb].sort()
@@ -58,6 +84,7 @@ function sortedUnique(values, check) {
 }
 function identity(value) {
   exact(value, ['project','table','source_id','version_sha256'])
+  if (GRAPH_BOUNDARY_TABLES.includes(value.table)) fail('unsupported_graph_boundary')
   if (!sourceRefs.includes(value.project) || typeof value.table !== 'string'
     || !Object.hasOwn(FIELD_CONTRACTS[value.project], value.table)) fail('unsupported_source_family')
   // source_id is an opaque digest of the native identity tuple, NOT a guessed UUID
