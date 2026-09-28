@@ -1,0 +1,162 @@
+{
+  "status": "UNAPPROVED SUCCESSOR ALLOWLIST — INTERNAL SYNTHETIC QUALIFICATION AUTHORIZED UNDER CONSOLIDATION AMENDMENT",
+  "scope": "Bounded candidate-proposal read contract and default-closed qik arc source storage; no production entity authority, hosted execution or publication claim",
+  "origin": {
+    "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
+    "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
+  },
+  "prior_candidate": {
+    "commit": "d185a305579e22a44a3c350668985334591f69e2",
+    "tree": "a6bdab3ad79ccf3e4cd71d193fb21b3e5272123e",
+    "qualification_run": 36385735494,
+    "qualification_job": 108810607029,
+    "tests_pass": 51,
+    "cursor_review_job": "bc-f473702d-f130-45f7-b584-52a6ab37926c",
+    "review_result": "NO REQUIRED SOURCE FIXES"
+  },
+  "upstream_contracts": [
+    {
+      "path": "verifier/native-lineage-minimization-source-candidate.json",
+      "blob": "e58f4c2740b74eedbae99ea5e6d33fa85110345c",
+      "unchanged": true
+    },
+    {
+      "path": "verifier/qik-c6-c9-retention-successor.json",
+      "blob": "f98b7271fc465bab4555dc2c0f4f1bc2602bb83a",
+      "unchanged": true
+    }
+  ],
+  "authorization": {
+    "record": "User consolidation amendment authorizes covered source integration, synthetic qualification, repair and selective actual Cursor review prospectively",
+    "individual_owner_field_signature": false,
+    "historical_acceptance": false,
+    "actual_material_transmission_authority_from_this_manifest": false,
+    "hosted_installation_receipt": false,
+    "production_entity_authority": false,
+    "publication": false
+  },
+  "stages": [
+    {
+      "stage": "candidate_proposal_review",
+      "producer": "mip_mentions.read_candidate_proposal(scope,candidate_id,expected_version)",
+      "consumer": "Scoped review caller displays original proposal and reconstructs exact put_candidate retries; accepted consumer still invokes resolved_actor with exact decision UUID",
+      "retained_fields": [
+        "scope",
+        "candidate_id",
+        "mention_id",
+        "actor_id",
+        "version",
+        "predecessor_id",
+        "rank",
+        "method",
+        "supporting_mentions",
+        "conflicting_mentions",
+        "policy_version",
+        "proposal_only",
+        "identity_accepted",
+        "production_qualified",
+        "source_authority_qualified",
+        "transport_qualified",
+        "publication_allowed"
+      ],
+      "nested_fields": {
+        "supporting_mentions": "Ordered UUID array from original candidate",
+        "conflicting_mentions": "Ordered UUID array from original candidate"
+      },
+      "durable_new_copy": false,
+      "source_bytes": "Originally bound capture bytes are resolved transiently only by unchanged restricted 003 validation; no bytes, fields, literals, actor labels, ordinals or decisions selected into this response",
+      "deliberate_copy_need": "Original bounded method and ordered evidence-ID arrays are transiently returned to preserve complete review and exact original retry arguments. Method remains untrusted pre-existing proposal text, not a claim of semantic sanitation.",
+      "identity_binding": "Exact scope/candidate UUID/version and current same-mention/same-actor head; existing actor must remain present; original target and every support/conflict mention bind capture/job/article/content+field hashes/versions/spans and current field access through unchanged check_mentions",
+      "replay": "Use original returned put_candidate tuple, never latest substituted metadata; oversized methods refuse without truncating old rows. Superseded proposals refuse even when original historical write retry can acknowledge.",
+      "acceptance": "proposal_only true; identity_accepted/production_qualified/source_authority_qualified/transport_qualified/publication_allowed false; other-actor proposals may invalidate previous acceptance, so resolved_actor remains required"
+    },
+    {
+      "stage": "qik_article_entity_storage",
+      "producer": "No qualified producer in this successor; entity-authority write fence refuses all DML",
+      "consumer": "Required recovered arc scorer consumes article_id/entity_id/confidence after a future separately qualified canonical entity admission; extraction_method/role/created_at preserve relation provenance, not inferred native capture lineage",
+      "retained_fields": [
+        "article_id",
+        "entity_id",
+        "confidence",
+        "extraction_method",
+        "role",
+        "created_at"
+      ],
+      "nested_fields": {},
+      "durable_new_copy": "No rows admitted by this source package; empty storage is not proof of an empty authoritative input",
+      "source_bytes": "No source payload/text/URL/embedding/excerpt/native bytes selected or copied; source tables and existing evidence unchanged",
+      "identity_binding": "Existing qik article/entity UUID primary keys enforced as FKs, composite relation key; no label-based merge or mapping from actor stubs/mention ranks",
+      "replay": "Not yet a scorer input/replay adapter. Existing retained historical contract remains separate and rejects RLS-enabled qik sources.",
+      "acceptance": "RLS ENABLE+FORCE, no policies/runtime grants; no entity/confidence default or admission; canonical mapping and scorer-compatible confidence remain unresolved"
+    },
+    {
+      "stage": "qik_arc_release_policy_storage",
+      "producer": "No qualified release producer; release-authority write fence refuses all DML",
+      "consumer": "Future guarded arc membership release worker requires exact model/fixture/policy; this storage creates no approval eligibility",
+      "retained_fields": [
+        "model_version",
+        "fixture_passed",
+        "auto_approval_enabled",
+        "auto_approval_threshold"
+      ],
+      "nested_fields": {},
+      "durable_new_copy": "No policy row seeded; closed defaults and constraint are not acceptance",
+      "source_bytes": "None retained or resolved",
+      "identity_binding": "Bounded model_version primary key; no real release identity or historical approval fabricated",
+      "replay": "No currently qualified production release/admission or guarded score writer",
+      "acceptance": "Auto approval false and threshold NULL; private FORCE RLS/no policies; no attach/publication/worker activation"
+    }
+  ],
+  "unchanged_paths": [
+    "Historical source captures/candidates/B/C3/append-only decisions and approvals",
+    "Native source_changes original row-digest/NULL/transaction/order/generation/invalidation semantics",
+    "Snapshot/worker/optional journal/review/staging/approved/accepted-reader native minimization contract",
+    "Prepared/retained historical arc arithmetic and immutable original input replay",
+    "Existing entity001/agency002/native-fields003/physical-occurrence extraction"
+  ],
+  "qualification": {
+    "material": "Synthetic only in existing approved source/synthetic routes",
+    "candidate_identity": "Exact integrating source commit/tree, complete patch and file digests recorded separately; no circular manufactured identity",
+    "new_test_files": [
+      "tests/nativeCandidateReviewPostgres17.test.mjs",
+      "tests/arcMembershipQikSourcePostgres.test.mjs"
+    ],
+    "dependency_order": {
+      "candidate_review": [
+        "tests/changeQueueFixture.sql",
+        "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql",
+        "supabase/qualification/entity-resolution/001_mentions.sql",
+        "supabase/qualification/entity-resolution/native-capture-fields/003_native_fields.sql",
+        "supabase/qualification/entity-resolution/candidate-review/004_candidate_review.sql"
+      ],
+      "qik_source": [
+        "Synthetic qik-shaped source relations with RLS-enabled UUID PKs and story_arcs.started_at DATE NOT NULL",
+        "supabase/qualification/arc-membership-qik-source/001_storage.sql"
+      ]
+    },
+    "optional_agency": "002 unchanged and optional; not installed/tested by these two new groups",
+    "existing_journal_review_reader": "No new journal/review/staging/approved writer introduced. Existing complete dependency-aware upstream qualification evidence applies only to unchanged source, not to uninstalled production C6/C9 consumers.",
+    "environment": "Dedicated empty per-group loopback PostgreSQL170006 with SCRAM; Node22.14.0/existing locked pg dependency",
+    "invocations": [
+      {
+        "database": "mip_candidate_review_test",
+        "environment": {
+          "MIP_NATIVE_CANDIDATE_REVIEW_DISPOSABLE": "synthetic-pg17-only"
+        },
+        "command": "node --test tests/nativeCandidateReviewPostgres17.test.mjs"
+      },
+      {
+        "database": "mip_arc_qik_source_test",
+        "environment": {
+          "MIP_DISPOSABLE_POSTGRES": "arc-membership-qik-source",
+          "MIP_ARC_QIK_SOURCE_DATABASE_URL": "postgres://postgres:mip-efta-disposable-ci-only@127.0.0.1:5432/mip_arc_qik_source_test"
+        },
+        "command": "node --test tests/arcMembershipQikSourcePostgres.test.mjs"
+      }
+    ],
+    "limits": "Existing15-minute source/synthetic workflow, each PG group3-minute maximum; dedicated DBs serially; no hosted credentials, real feeds/material, artifact/cache uploads or new services",
+    "failure": "Missing opt-in is a skip, not qualification success; dependency/type/identity/authority/ACL/role/RLS/trigger drift must refuse; consequential failures repaired and relevant rechecks required",
+    "cleanup": "Only proven-owned fixture resources after empty catalog guard; independent cleanup attempts, primary failure retained separately; outer workflow removes all disposable container/volumes",
+    "execution_status_at_authoring": "TESTS AUTHORED — NOT EXECUTED; actual later receipts are separate"
+  }
+}
