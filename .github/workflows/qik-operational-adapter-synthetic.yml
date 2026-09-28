@@ -23,11 +23,11 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='17e652f652e5bf42a9c0254f3548f1d774d44f22'
+          source='c549aadde99b47f728a44003df4204e9bbdbf5a6'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='9a77fcecad19a074a5292321e48ce80f0af63ad9'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='b6cc0c68538006747741da7df49fc70db7ed1574'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
           subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-operational-adapter-synthetic.yml']
@@ -45,7 +45,7 @@ jobs:
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Qualify combined occurrence, replay and nested retention contracts
-        run: node --test tests/arcMembershipPrepared.test.mjs tests/collectorRetainedExtraction.test.mjs tests/retainedExtraction.test.mjs tests/nativeEntityOccurrences.test.mjs tests/arcMembershipRetained.test.mjs tests/qikC6C9RetentionSuccessor.test.mjs tests/nativeArcScoring.test.mjs
+        run: node --test tests/arcMembershipPrepared.test.mjs tests/collectorRetainedExtraction.test.mjs tests/retainedExtraction.test.mjs tests/nativeEntityOccurrences.test.mjs tests/arcMembershipRetained.test.mjs tests/qikC6C9RetentionSuccessor.test.mjs tests/nativeArcScoring.test.mjs tests/nativeComparisonServerCaller.test.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs
       - name: Start disposable PostgreSQL 17.6 on loopback only
         shell: bash
         run: |
