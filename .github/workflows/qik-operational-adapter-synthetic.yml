@@ -23,11 +23,11 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='9f765e1d1391be5202de3c87fdff5722aa24942c'
+          source='0630a570bb298ecd782e5c79bd1d9b9fa0534207'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='9cf6efb20d55af0a857fe4015b4c79fc0052d4d7'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='d455ffa957b2d3bc91d2d0825c393d8e04df8e2e'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
           subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-operational-adapter-synthetic.yml']
@@ -36,7 +36,7 @@ jobs:
               assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
           config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
           assert config.returncode==1 and not config.stdout
-          print('Pinned complete candidate tree; canonical writer, complete private membership, bound private display, separately preserved v2/v3 restricted-principal joint installer and historical projection fixture await applicable fresh actual Cursor review after applicable tests. Synthetic-only internal qualification under user consolidation amendment. Not owner field signature, historical acceptance, hosted installation or material-transfer authority.')
+          print('Pinned complete candidate tree; canonical writer, complete private membership, bound private display, separately preserved v2/v3/v4 restricted-principal joint installer and exact dual-reader native comparison binding and historical projection fixture await applicable fresh actual Cursor review after applicable tests. Synthetic-only internal qualification under user consolidation amendment. Not owner field signature, historical acceptance, hosted installation or material-transfer authority.')
           PY
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
