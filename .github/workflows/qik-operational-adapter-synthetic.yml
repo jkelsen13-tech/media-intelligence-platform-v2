@@ -23,7 +23,7 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='76903c1f1cb0d6eca0448ab62ad92f5c70905e34'
+          source='35ddd197d58eb1a852732e3494de105575e96614'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
@@ -43,8 +43,8 @@ jobs:
           package-manager-cache: false
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Qualify atomic installer source contract
-        run: node --test tests/qikComparisonAtomicInstall.test.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs
+      - name: Qualify complete arc inputs and unchanged retained-extraction contracts
+        run: node --test tests/arcMembershipPrepared.test.mjs tests/collectorRetainedExtraction.test.mjs tests/retainedExtraction.test.mjs
       - name: Start disposable PostgreSQL 17.6 on loopback only
         shell: bash
         run: |
@@ -54,32 +54,23 @@ jobs:
             sleep 2
           done
           exit 1
-      - name: Build pinned pgvector 0.8.2 for the actual hosted shape
-        timeout-minutes: 5
+      - name: Qualify native field admission and consumers on actual PostgreSQL
+        timeout-minutes: 3
+        env:
+          MIP_NATIVE_MENTION_DISPOSABLE: synthetic-pg17-only
+        run: node --test tests/nativeMentionFieldsPostgres17.test.mjs
+      - name: Qualify arc preparation with actual PostgreSQL snapshot and permissions
+        timeout-minutes: 3
         shell: bash
+        env:
+          MIP_DISPOSABLE_POSTGRES: arc-membership-prepared
+          MIP_ARC_PREPARED_DATABASE_URL: postgres://postgres:mip-efta-disposable-ci-only@127.0.0.1:5432/mip_arc_prepared_test
         run: |
           set -euo pipefail
-          docker exec -u root qik-op-qualification bash -euc '
-            apt-mark hold postgresql-17 postgresql-client-17
-            apt-get update -qq
-            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends build-essential curl ca-certificates postgresql-server-dev-17
-            install -d -m 700 /tmp/qik-vector-build
-            cd /tmp/qik-vector-build
-            curl --fail --location --max-time 45 --proto "=https" --tlsv1.2 https://codeload.github.com/pgvector/pgvector/tar.gz/cab9da72c04353f143bb06b42ab70a403daac64a -o vector.tar.gz
-            echo "0af705b6c9b2a3a1fd1f6fd991425c125387d3c8edc68b75ef027d2e0a05e57a  vector.tar.gz" | sha256sum -c -
-            tar -xzf vector.tar.gz --strip-components=1
-            make -j2 PG_CONFIG=/usr/lib/postgresql/17/bin/pg_config OPTFLAGS=""
-            make PG_CONFIG=/usr/lib/postgresql/17/bin/pg_config install
-            dpkg-query -W build-essential postgresql-server-dev-17 postgresql-17 postgresql-client-17
-            rm -rf /tmp/qik-vector-build
-          '
           test "$(docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification psql -X -h 127.0.0.1 -U postgres -Atc "show server_version_num")" = 170006
-      - name: Qualify full non-superuser atomic install and autonomous audit
-        timeout-minutes: 5
-        env:
-          MIP_QIK_COMPARISON_DISPOSABLE: synthetic-pg17-only
-          MIP_DISPOSABLE_POSTGRES: qik-persistent-install
-        run: node --test verifier/qikComparisonAtomicInstallPostgres17.mjs
+          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification createdb -h 127.0.0.1 -U postgres mip_arc_prepared_test
+          node --test tests/arcMembershipPreparedPostgres.test.mjs
+          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification dropdb -h 127.0.0.1 -U postgres mip_arc_prepared_test
       - name: Remove disposable database and verify no container or volume remains
         if: always()
         shell: bash
