@@ -142,6 +142,49 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
    const result=(await db.query('select evidence_pipeline.finish_job($1,$2) result',[job,claimed.lease_token])).rows[0].result
    return (await db.query('select id,job_id,article_id,content_hash from evidence_pipeline.article_captures where id=$1',[result.capture_id])).rows[0]
   }
+  stage='native_install';
+  const recorderBaseline=(await db.query("select p.oid,pg_get_functiondef(p.oid) definition from pg_proc p where p.oid in('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure,'mip_identity.collector_lock()'::regprocedure) order by p.oid")).rows;
+  for(const path of ['supabase/qualification/arc-membership-native/001_governed_cohort.sql',
+   'supabase/qualification/arc-membership-native/002_private_score_review.sql',
+   'supabase/qualification/arc-membership-native/003_governed_attachment.sql',
+   'supabase/qualification/arc-public-projection/001_native_private_projection.sql',
+   'supabase/qualification/native-comparison-binding/001_private_binding.sql'])await db.query(await read(path));
+  assert.deepEqual((await db.query("select p.oid,pg_get_functiondef(p.oid) definition from pg_proc p where p.oid in('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure,'mip_identity.collector_lock()'::regprocedure) order by p.oid")).rows,recorderBaseline);
+  await db.query('grant mip_arc_native_worker to "'+aliceName+'", "'+workerName+'"');
+  privateWorker=await connect(workerName);sameReviewer=await connect(reviewerName);
+  await db.query("set timezone='UTC'");
+  const checkNative=async(name,body)=>{
+   const index=++checkIndex;
+   return t.test(name,async()=>{
+    stage='check_'+index;
+    try{await body()}catch(e){
+     const state=/^[0-9A-Z]{5}$/.test(e?.code??'')?e.code:'none';
+     const position=/^[0-9]{1,8}$/.test(String(e?.internalPosition??e?.position??''))?String(e.internalPosition??e.position):'none';
+     const locations=frames(e);
+     if(!primaryFailed){primaryState=state;primaryFrames=locations;primaryPosition=position;primaryStage=stage}
+     primaryFailed=true;
+     const refusal=nativeRefusalNames.has(e.message)?e.message:'none';
+     // Nested fixture failures expose only a closed synthetic check/code/line descriptor.
+     const privateDiagnostic=/^arc_private_projection_check_[1-5]_sqlstate_(?:[A-Z0-9]{5}|none)_position_(?:[0-9]{1,8}|none)_frames_(?:nativeArcPublicProjectionAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}(?:,nativeArcPublicProjectionAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}){0,2})?$/.test(e.message??'')?e.message:'none';
+     throw Error('native_arc_'+stage+'_sqlstate_'+state+'_refusal_'+refusal+'_position_'+position+'_private_'+privateDiagnostic+'_comparison_'+JSON.stringify(nativeComparisonFixtureDiagnostic(e))+'_frames_'+locations.join(','));
+    }
+   });
+  };
+  // Run the complete accepted-reader fixture while public source custody is
+  // pristine. Its unchanged007 survivor context deliberately refuses ANY
+  // pending-review article, including unrelated synthetic predecessor cases.
+  // Do not relabel or delete those cases; seed them only after this check.
+  // Separate scope preserves their exact generation-count and head contracts.
+  assert.equal((await db.query('select count(*)::integer n from public.articles')).rows[0].n,0);
+  const bindingScope=id(7200);
+  await db.query('insert into mip_mentions.members values($1,session_user,true),($1,$2,false),($1,$3,true),($1,$4,false)',
+   [bindingScope,reviewerName,aliceName,adminName]);
+  await checkNative('real_native_to_accepted_comparison_binding_both_current_readers',async()=>{
+   const bound=await runNativeComparisonBindingFixture({syntheticFixture:true,db,reviewer,sameReviewer,
+    gateway:alice,outsider:guest,worker:privateWorker,admin,scope:bindingScope,id,sentinel,connect});
+   assert.deepEqual(bound,{checks:6,original_captures:4,accepted_events:2,publication_allowed:false,attachment_allowed:false});
+  });
+
   const cap=await capture(body,'https://synthetic.invalid/review'),conflictCap=await capture('Ann objected. '+sentinel,'https://synthetic.invalid/conflict')
   const access=(f,allow)=>admin.query('select mip_mentions.set_field_access($1,$2,$3)',[s,f,allow])
   async function admitMention(f,mid,c,sourceField,text,start,end,literal){
@@ -202,17 +245,6 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   await reviewer.query(admissionSQL,admissionArgs(admission1,mentions[0],decision,0.8));
   await project(await prep(),projection);
   await db.query('insert into mip_mentions.members values($1,$2,false)',[s,adminName]);
-  stage='native_install';
-  const recorderBaseline=(await db.query("select p.oid,pg_get_functiondef(p.oid) definition from pg_proc p where p.oid in('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure,'mip_identity.collector_lock()'::regprocedure) order by p.oid")).rows;
-  for(const path of ['supabase/qualification/arc-membership-native/001_governed_cohort.sql',
-   'supabase/qualification/arc-membership-native/002_private_score_review.sql',
-   'supabase/qualification/arc-membership-native/003_governed_attachment.sql',
-   'supabase/qualification/arc-public-projection/001_native_private_projection.sql',
-   'supabase/qualification/native-comparison-binding/001_private_binding.sql'])await db.query(await read(path));
-  assert.deepEqual((await db.query("select p.oid,pg_get_functiondef(p.oid) definition from pg_proc p where p.oid in('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure,'mip_identity.collector_lock()'::regprocedure) order by p.oid")).rows,recorderBaseline);
-  await db.query('grant mip_arc_native_worker to "'+aliceName+'", "'+workerName+'"');
-  privateWorker=await connect(workerName);sameReviewer=await connect(reviewerName);
-  await db.query("set timezone='UTC'");
   const arc=id(400),arcCandidate=id(401),selection=id(402),cohort=id(403),generation=id(404),reviewId=id(405);
   await db.query('insert into public.story_arcs(id,started_at,title,summary,last_update_at) values($1,$2,$3,$4,$5)',[arc,'2026-01-01',title,summary,'2026-01-02T00:00:00Z']);
   await db.query('update public.articles set arc_id=$1 where id=$2',[arc,conflictCap.article_id]);
@@ -246,23 +278,6 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   let receipt=await snap(),output,scored;
   const wire=()=>call(alice,'select mip_arc_native.read_scoring_input($1,$2,$3) result',[s,generation,receipt.input_hash]);
   const current=(rid=null)=>call(alice,'select mip_arc_native.read_current_score($1,$2,$3,$4,$5) result',[s,generation,receipt.input_hash,scored.output_hash,rid]);
-  const checkNative=async(name,body)=>{
-   const index=++checkIndex;
-   return t.test(name,async()=>{
-    stage='check_'+index;
-    try{await body()}catch(e){
-     const state=/^[0-9A-Z]{5}$/.test(e?.code??'')?e.code:'none';
-     const position=/^[0-9]{1,8}$/.test(String(e?.internalPosition??e?.position??''))?String(e.internalPosition??e.position):'none';
-     const locations=frames(e);
-     if(!primaryFailed){primaryState=state;primaryFrames=locations;primaryPosition=position;primaryStage=stage}
-     primaryFailed=true;
-     const refusal=nativeRefusalNames.has(e.message)?e.message:'none';
-     // Nested fixture failures expose only a closed synthetic check/code/line descriptor.
-     const privateDiagnostic=/^arc_private_projection_check_[1-5]_sqlstate_(?:[A-Z0-9]{5}|none)_position_(?:[0-9]{1,8}|none)_frames_(?:nativeArcPublicProjectionAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}(?:,nativeArcPublicProjectionAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}){0,2})?$/.test(e.message??'')?e.message:'none';
-     throw Error('native_arc_'+stage+'_sqlstate_'+state+'_refusal_'+refusal+'_position_'+position+'_private_'+privateDiagnostic+'_comparison_'+JSON.stringify(nativeComparisonFixtureDiagnostic(e))+'_frames_'+locations.join(','));
-    }
-   });
-  };
   await checkNative('exact_snapshot_scoring_retry_and_private_review',async()=>{
    assert.deepEqual(await snap(),receipt);
    const input=await wire();output=scoreGovernedNativeInput(input);
@@ -563,11 +578,7 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
    });
   });
 
-  await checkNative('real_native_to_accepted_comparison_binding_both_current_readers',async()=>{
-   const bound=await runNativeComparisonBindingFixture({syntheticFixture:true,db,reviewer,sameReviewer,
-    gateway:alice,outsider:guest,worker:privateWorker,admin,scope:s,id,sentinel,connect});
-   assert.deepEqual(bound,{checks:6,original_captures:4,accepted_events:2,publication_allowed:false,attachment_allowed:false});
-  });
+
 
  }catch(error){
   if(!primaryFailed){
