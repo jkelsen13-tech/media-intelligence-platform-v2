@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { planHistoricalArticles, FIELD_CONTRACTS, LIMITS, PROJECTS } from './mipHistoricalArticleTransferPlan.mjs'
+import { planHistoricalArticles, FIELD_CONTRACTS, LIMITS, PROJECTS, manifestLimits } from './mipHistoricalArticleTransferPlan.mjs'
 import { fingerprintPayload, parseJsonLossless, stableStringify } from './mipLegacyGraphStaging.mjs'
 
 export const TRANSFER_VERSION = 'historical-article-transfer/v1'
@@ -27,8 +27,8 @@ function method(object, name) { if (typeof object?.[name] !== 'function') fail('
 function capabilities(actual, required) {
   if (!Array.isArray(actual) || !same([...actual].sort(), [...required].sort())) fail('capability_missing')
 }
-function checkedPlan(input) {
-  const plan=planHistoricalArticles(input)
+function checkedPlan(input, bounds) {
+  const plan=planHistoricalArticles(input,bounds)
   // Object gaps are discharged only by verified bytes below. All other
   // planner gaps remain hard stops. executable:false is never authorization.
   if (plan.gaps.some(g=>g.code!=='object_bytes_not_in_custody')) fail('manifest_closure_incomplete')
@@ -116,12 +116,15 @@ function validateCheckpoint(value,binding,units) {
   })
   return clone(value)
 }
-function validateAdmission(admission,plan,operation_id) {
+function validateAdmission(admission,plan,operation_id,bounds) {
   exact(admission,['version','mode','operation_id','manifest_sha256','destination_project',
-    'authorization_sha256','route_sha256','source_capabilities','sink_capabilities','checkpoint_capabilities'])
+    'authorization_sha256','route_sha256','source_capabilities','sink_capabilities','checkpoint_capabilities','manifest_limits','manifest_totals'])
   if (admission.version!==TRANSFER_VERSION || !['synthetic_test_only','owner_approved_private'].includes(admission.mode)
     || admission.operation_id!==operation_id || admission.manifest_sha256!==plan.manifest_sha256
     || admission.destination_project!==PROJECTS.qik) fail('admission_mismatch')
+  if (!same(admission.manifest_limits,bounds) || !same(admission.manifest_totals,{
+    records:plan.manifest.records.length,objects:plan.manifest.objects.length,bytes:plan.bytes,
+  })) fail('route_capacity_mismatch')
   sha(admission.authorization_sha256);sha(admission.route_sha256)
   exact(admission.source_capabilities,plan.manifest.snapshots.map(s=>s.project))
   for (const s of plan.manifest.snapshots) capabilities(admission.source_capabilities[s.project],SOURCE_CAPABILITIES)
@@ -138,7 +141,10 @@ function verifyFence(fence,snapshot,route) {
  * Reusable bounded orchestration, not a network/credential adapter.
  *
  * admission.verify must be provided by the approved private host and verify
- * actual owner scope AND route qualification, not echo caller booleans. Each
+ * actual owner scope AND route qualification, not echo caller booleans.
+ * Whole-corpus scope is already authorized separately; manifest_limits and
+ * exact manifest_totals are engineering route-capacity checks, not another
+ * owner approval. Larger metadata bounds never increase invocation I/O caps. Each
  * source.withFrozenSnapshot must keep callback reads inside the same original
  * transaction/export, verify native identity/version mapping and fail if that
  * snapshot is unavailable; it must never substitute current rows.
@@ -159,11 +165,11 @@ function verifyFence(fence,snapshot,route) {
  * This module reads no env, opens no connection and exports no CLI.
  */
 export async function transferHistoricalArticles({
-  input, operation_id, admission, sources, sink, checkpoints,
+  input, operation_id, admission, sources, sink, checkpoints, manifest_limits,
   max_units=20, max_material_bytes=LIMITS.bytes, timeout_ms=30000,
 }={}) {
   if (!UUID.test(operation_id??'')) fail('operation_id_required')
-  const plan=checkedPlan(input),units=unitsFor(plan)
+  const bounds=manifestLimits(manifest_limits),plan=checkedPlan(input,bounds),units=unitsFor(plan)
   if (!Number.isSafeInteger(max_units) || max_units<1 || max_units>100
     || !Number.isSafeInteger(max_material_bytes) || max_material_bytes<1 || max_material_bytes>LIMITS.bytes
     || !Number.isSafeInteger(timeout_ms) || timeout_ms<5 || timeout_ms>120000) fail('invocation_budget')
@@ -207,8 +213,9 @@ export async function transferHistoricalArticles({
     const grant=await call(a=>admission.verify(a),{
       version:TRANSFER_VERSION,operation_id,manifest_sha256:plan.manifest_sha256,
       destination_project:PROJECTS.qik,source_projects:plan.manifest.snapshots.map(s=>s.project),
+      manifest_limits:clone(bounds),manifest_totals:{records:plan.manifest.records.length,objects:plan.manifest.objects.length,bytes:plan.bytes},
     })
-    validateAdmission(grant,plan,operation_id);mode=grant.mode
+    validateAdmission(grant,plan,operation_id,bounds);mode=grant.mode
     binding={operation_id,manifest_sha256:plan.manifest_sha256,
       authorization_sha256:grant.authorization_sha256,route_sha256:grant.route_sha256}
     const saved=await call(a=>checkpoints.load(a),{operation_id})
@@ -267,7 +274,7 @@ export async function transferHistoricalArticles({
         }
         const next=sealCheckpoint({version:TRANSFER_VERSION,...binding,
           verified_units:[...checkpoint.verified_units,{unit_id:unit.unit_id,receipt_sha256:receipt}]})
-        await save(next);verified++;material_bytes+=unit.bytes
+        await save(next);verified++;material_bytes+=unit.bytes;pending_unit_id=null
       }
       pending_unit_id=null
       return 'readback_verified'
