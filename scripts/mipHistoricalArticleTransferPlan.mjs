@@ -32,6 +32,14 @@ export const FIELD_CONTRACTS = Object.freeze({
     event_articles: Object.freeze([...membership]),
   }),
 })
+// Metadata ceilings bound planning memory only; they do not authorize material I/O.
+export const MANIFEST_HARD_LIMITS = Object.freeze({ records:100000, objects:100000, bytes:1024*1024*1024*1024 })
+export function manifestLimits(value={records:LIMITS.records,objects:LIMITS.records,bytes:LIMITS.bytes}) {
+  exact(value,['records','objects','bytes'])
+  for (const k of ['records','objects','bytes'])
+    if (!Number.isSafeInteger(value[k]) || value[k]<1 || value[k]>MANIFEST_HARD_LIMITS[k]) fail('manifest_limit')
+  return {...value}
+}
 const sha = /^[a-f0-9]{64}$/
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/
 const sourceRefs = [PROJECTS.nie, PROJECTS.yhb].sort()
@@ -64,7 +72,8 @@ function canonicalIdentities(values) {
   if (new Set(result.map(key)).size !== result.length) fail('duplicate_identity')
   return result
 }
-export function planHistoricalArticles(input) {
+export function planHistoricalArticles(input, requestedLimits) {
+  const bounds=manifestLimits(requestedLimits)
   exact(input, ['version','destination_project','snapshots','records','objects'])
   if (input.version !== VERSION || input.destination_project !== PROJECTS.qik) fail('target_contract')
   if (!Array.isArray(input.snapshots) || input.snapshots.length !== 2) fail('two_source_snapshots_required')
@@ -79,8 +88,8 @@ export function planHistoricalArticles(input) {
       }) }
   }).sort((a,b) => a.project.localeCompare(b.project))
   if (new Set(snapshots.map(s => s.project)).size !== 2) fail('two_source_snapshots_required')
-  if (!Array.isArray(input.records) || input.records.length > LIMITS.records) fail('record_limit')
-  if (!Array.isArray(input.objects) || input.objects.length > LIMITS.records) fail('object_limit')
+  if (!Array.isArray(input.records) || input.records.length > bounds.records) fail('record_limit')
+  if (!Array.isArray(input.objects) || input.objects.length > bounds.objects) fail('object_limit')
   const snapshotByProject = new Map(snapshots.map(s => [s.project,s]))
   const records = input.records.map(r => {
     exact(r, ['identity','snapshot_sha256','payload_sha256','payload_bytes','root_article_ids','dependencies'])
@@ -110,14 +119,17 @@ export function planHistoricalArticles(input) {
   if (new Set(objects.map(o => key([o.project,o.object_identity_sha256]))).size !== objects.length) fail('duplicate_object')
   const bytes = [...records.map(r=>r.payload_bytes),...objects.map(o=>o.bytes)]
     .reduce((total,n) => total+n,0)
-  if (!Number.isSafeInteger(bytes) || bytes > LIMITS.bytes) fail('byte_limit')
+  if (!Number.isSafeInteger(bytes) || bytes > bounds.bytes) fail('byte_limit')
   const gaps = []
+  const articleRoots = new Set()
+  for (const r of records) if (r.identity.table==='articles')
+    for (const root of r.root_article_ids)
+      if (r.identity.source_id===fingerprintPayload({id:root})) articleRoots.add(r.identity.project+':'+root)
   for (const s of snapshots) {
     for (const c of CATEGORIES) if (!s.inventoried_categories.includes(c))
       gaps.push({ code:'category_inventory_missing',project:s.project,category:c })
     for (const root of s.root_article_ids) {
-      if (!records.some(r => r.identity.project === s.project && r.identity.table === 'articles'
-        && r.identity.source_id === fingerprintPayload({ id:root }) && r.root_article_ids.includes(root))) gaps.push({ code:'root_record_missing',project:s.project,article_id:root })
+      if (!articleRoots.has(s.project+':'+root)) gaps.push({ code:'root_record_missing',project:s.project,article_id:root })
     }
   }
   for (const r of records) for (const d of r.dependencies) if (!keys.has(key(d)))
@@ -149,8 +161,8 @@ export function planHistoricalArticles(input) {
       recovery:'In-memory planner only. Persisted private manifest/receipt custody and ambiguous-commit exact readback must be qualified before transfer; process loss must not silently rebuild membership.',
     } }
 }
-export function assertHistoricalRetry(previous, nextInput) {
-  const next = planHistoricalArticles(nextInput)
+export function assertHistoricalRetry(previous, nextInput, requestedLimits) {
+  const next = planHistoricalArticles(nextInput,requestedLimits)
   if (!previous || fingerprintPayload(previous.manifest) !== previous.manifest_sha256
     || previous.manifest_sha256 !== next.manifest_sha256) fail('frozen_manifest_changed')
   return next
