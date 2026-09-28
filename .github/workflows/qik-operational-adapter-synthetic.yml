@@ -23,10 +23,11 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='35ddd197d58eb1a852732e3494de105575e96614'
+          source='cb459e909fa95e7a344941e1d6848e35841c637b'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='0589e28ce2f4022d3fc10d8f829268fcea4f1f75'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
           subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-operational-adapter-synthetic.yml']
@@ -43,8 +44,8 @@ jobs:
           package-manager-cache: false
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Qualify complete arc inputs and unchanged retained-extraction contracts
-        run: node --test tests/arcMembershipPrepared.test.mjs tests/collectorRetainedExtraction.test.mjs tests/retainedExtraction.test.mjs
+      - name: Qualify combined occurrence, replay and nested retention contracts
+        run: node --test tests/arcMembershipPrepared.test.mjs tests/collectorRetainedExtraction.test.mjs tests/retainedExtraction.test.mjs tests/nativeEntityOccurrences.test.mjs tests/arcMembershipRetained.test.mjs tests/qikC6C9RetentionSuccessor.test.mjs
       - name: Start disposable PostgreSQL 17.6 on loopback only
         shell: bash
         run: |
@@ -71,6 +72,27 @@ jobs:
           docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification createdb -h 127.0.0.1 -U postgres mip_arc_prepared_test
           node --test tests/arcMembershipPreparedPostgres.test.mjs
           docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification dropdb -h 127.0.0.1 -U postgres mip_arc_prepared_test
+      - name: Qualify physical native occurrence admission and exact retries
+        timeout-minutes: 3
+        shell: bash
+        env:
+          MIP_NATIVE_ENTITY_OCCURRENCES_DISPOSABLE: synthetic-pg17-only
+        run: |
+          set -euo pipefail
+          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification createdb -h 127.0.0.1 -U postgres mip_native_occurrences_test
+          node --test tests/nativeEntityOccurrencesPostgres17.test.mjs
+          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification dropdb -h 127.0.0.1 -U postgres mip_native_occurrences_test
+      - name: Qualify retained historical arc context and effective private permissions
+        timeout-minutes: 3
+        shell: bash
+        env:
+          MIP_DISPOSABLE_POSTGRES: arc-membership-retained
+          MIP_ARC_RETAINED_DATABASE_URL: postgres://postgres:mip-efta-disposable-ci-only@127.0.0.1:5432/mip_arc_retained_test
+        run: |
+          set -euo pipefail
+          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification createdb -h 127.0.0.1 -U postgres mip_arc_retained_test
+          node --test tests/arcMembershipRetainedPostgres.test.mjs
+          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification dropdb -h 127.0.0.1 -U postgres mip_arc_retained_test
       - name: Remove disposable database and verify no container or volume remains
         if: always()
         shell: bash
