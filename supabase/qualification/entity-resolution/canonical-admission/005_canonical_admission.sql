@@ -249,7 +249,7 @@ begin
 end $context_lock$;
 create function mip_mentions.canonical_group(s uuid,article uuid,entity uuid) returns jsonb
 language plpgsql security definer set search_path='' as $group$
-declare ids uuid[];mentions uuid[];a mip_mentions.canonical_admissions;mid uuid;ctx jsonb;mapping uuid;policy uuid;weight numeric;payload jsonb;
+declare ids uuid[];mentions uuid[];admission_row mip_mentions.canonical_admissions;mid uuid;ctx jsonb;mapping uuid;policy uuid;weight numeric;payload jsonb;
 begin
  perform mip_mentions.canonical_begin(s,false);
  if article is null or entity is null then raise exception 'canonical_group_invalid';end if;
@@ -259,15 +259,15 @@ begin
   where a.scope=s and a.article_id=article and a.entity_id=entity and a.state='active' order by a.id limit 65) bounded;
  if ids is null or cardinality(ids)>64 then raise exception 'canonical_group_unavailable_or_budget';end if;
  perform mip_mentions.canonical_prelock_context(s,ids);
- for a in select * from mip_mentions.canonical_admissions where scope=s and id=any(ids) order by id loop
-  ctx:=mip_mentions.canonical_context(s,a.mention_id,a.decision_id,a.mapping_revision,a.policy_revision);
+ for admission_row in select * from mip_mentions.canonical_admissions where scope=s and id=any(ids) order by id loop
+  ctx:=mip_mentions.canonical_context(s,admission_row.mention_id,admission_row.decision_id,admission_row.mapping_revision,admission_row.policy_revision);
   if (ctx->>'article_id')::uuid<>article or (ctx->>'entity_id')::uuid<>entity
-   or ctx is distinct from (to_jsonb(a)-array['scope','id','mention_id','version','predecessor_id','state','decision_id','mapping_revision','policy_revision','evidence_weight','reason','principal'])
+   or ctx is distinct from (to_jsonb(admission_row)-array['scope','id','mention_id','version','predecessor_id','state','decision_id','mapping_revision','policy_revision','evidence_weight','reason','principal'])
   then raise exception 'canonical_admission_binding_mismatch';end if;
-  if mapping is not null and (mapping<>a.mapping_revision or policy<>a.policy_revision)
+  if mapping is not null and (mapping<>admission_row.mapping_revision or policy<>admission_row.policy_revision)
   then raise exception 'canonical_group_mixed_policy_or_mapping';end if;
-  mapping:=a.mapping_revision;policy:=a.policy_revision;
-  weight:=greatest(weight,a.evidence_weight);
+  mapping:=admission_row.mapping_revision;policy:=admission_row.policy_revision;
+  weight:=greatest(weight,admission_row.evidence_weight);
  end loop;
  payload:=jsonb_build_object('semantic_kind','reviewed_evidence_weight_v1','scope',s,'article_id',article,'entity_id',entity,
   'mapping_revision',mapping,'weight_policy_revision',policy,'admission_ids',ids,'evidence_weight',trim_scale(weight));

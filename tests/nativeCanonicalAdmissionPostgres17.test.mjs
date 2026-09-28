@@ -46,6 +46,14 @@ function diagnostic(error,stage){
  return result
 }
 
+
+function diagnosticBundle(failures){
+ const rendered=failures.slice(0,12).map(failure=>
+  failure.stack.split('\n').slice(0,5).join('\n').slice(0,1024)).join('\n')
+ return new AggregateError(failures,
+  ('native_canonical_admission_fixture_failed\n'+rendered).slice(0,12288))
+}
+
 async function connect(user='postgres',pass=password){
  const c=new pg.Client({host:'127.0.0.1',port:5432,database,user,password:pass,
   connectionTimeoutMillis:5000,statement_timeout:15000,query_timeout:20000})
@@ -61,7 +69,16 @@ test('governed canonical admission and actual qik projection writer', {
  const check=(name,body)=>{
   const checkStage='CHECK_'+(++checkIndex)
   return t.test(name,async()=>{
-   try{await body()}catch(error){throw diagnostic(error,checkStage)}
+   try{await body()}catch(error){
+    const failures=[diagnostic(error,checkStage)]
+    // A failed source call can leave an explicitly opened race transaction
+    // aborted. Restore each connection before subsequent independent checks.
+    for(const client of [alice,admin,bob,guest,reviewer,monitor,db])if(client){
+     try{await client.query('rollback')}catch(cleanupError){failures.push(diagnostic(cleanupError,'CLEANUP'))}
+    }
+    if(failures.length>1)throw diagnosticBundle(failures)
+    throw failures[0]
+   }
   })
  }
  try{
@@ -481,14 +498,7 @@ test('governed canonical admission and actual qik projection writer', {
    }
   }
   if(db)await attempt(()=>db.end())
-  if(primaryFailure||cleanupFailures.length){
-   const failures=[...(primaryFailure?[primaryFailure]:[]),...cleanupFailures]
-   // Node TAP may omit AggregateError.errors. Render only diagnostics already
-   // constructed above; bounded entries/frames preserve no underlying payload.
-   const rendered=failures.slice(0,12).map(failure=>
-    failure.stack.split('\n').slice(0,5).join('\n').slice(0,1024)).join('\n')
-   throw new AggregateError(failures,
-    ('native_canonical_admission_fixture_failed\n'+rendered).slice(0,12288))
-  }
+  if(primaryFailure||cleanupFailures.length)
+   throw diagnosticBundle([...(primaryFailure?[primaryFailure]:[]),...cleanupFailures])
  }
 })

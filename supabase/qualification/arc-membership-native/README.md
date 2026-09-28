@@ -242,7 +242,7 @@ Dependency pins from base 2af5109fd85b4d223a40d40b0543e79568575557:
   native-capture-fields/003_native_fields.sql: ffc192276276cea2345690bccc7b65d54a0f0ab6;
   candidate-review/004_candidate_review.sql: e25930fb4552b7b0086d7d1c50414845df453dbc.
 - arc-membership-qik-source/001_storage.sql: fc321af39e982e0cb1f06238c81f99d2dcc6fe8a.
-- Coordinated new canonical-admission/005: 799820c9c40d499071b6be10cc6822d44c3c7819;
+- Coordinated new canonical-admission/005: b6487f76f4186a58e7f77d50eecca0a40fd76c27;
   qik-source/002_governed_writer.sql: 7cac6a7cb8ab665886944bf5092edcf01a60cf3f.
 The existing atomic compiler verifies its complete selected 001–019 plus
 DOJ020 source order/pins and synthetic empty-scope transform. The test does not

@@ -878,7 +878,7 @@
       },
       {
         "path": "supabase/qualification/entity-resolution/canonical-admission/005_canonical_admission.sql",
-        "blob": "799820c9c40d499071b6be10cc6822d44c3c7819"
+        "blob": "b6487f76f4186a58e7f77d50eecca0a40fd76c27"
       },
       {
         "path": "supabase/qualification/arc-membership-qik-source/002_governed_writer.sql",
@@ -892,7 +892,7 @@
       },
       {
         "path": "supabase/qualification/arc-membership-native/002_private_score_review.sql",
-        "blob": "8d1aa9f970447f4c29cb499cdf04efc6bb63420c"
+        "blob": "30213489f69f11867988316dec190b0250cbda01"
       }
     ],
     "full_sequence": "Pristine fixture catalog/real auth relations + extensions → native reliability → C3 ordereddisabledprofile/actualreceipt → prepareAtomicInstall/installComparisonAtomic fullcompiledcomparison001–019 plusDOJ020 → real auditqualification/finalclosure → C6 ordered001/003/004/qik001/005/qik002 → C9 001/002 → new finaleffectiveowner/role/membership/schema/functionACL/RLS/sourceauthorityassertions.",

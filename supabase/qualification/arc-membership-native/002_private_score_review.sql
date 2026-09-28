@@ -58,7 +58,7 @@ begin
   ev:=score->'evidence'->k;
   if jsonb_typeof(ev) is distinct from 'number' then raise exception 'arc_native_score_evidence';end if;
   n:=(ev::text)::numeric;
-  if n<>trunc(n) or n<0 or n>case when k='recent_member_count' then 5 else 64 end
+  if n<>trunc(n) or n<0 or n>(case when k='recent_member_count' then 5 else 64 end)
   then raise exception 'arc_native_score_evidence';end if;
  end loop;
  ev:=score->'evidence'->'temporal_gap_days';
@@ -194,7 +194,7 @@ begin
   if p.proname in('review_scalar','review_selection_policy','review_extraction','review_cohort','revoke_cohort','review_score','read_current_score')
    then allowed:=allowed||'mip_mentions_gateway'::regrole::oid;end if;
   if p.proname='set_scalar_access' then allowed:=allowed||'mip_mentions_admin'::regrole::oid;end if;
-  if p.proowner<>case when p.proname='context' then 'mip_mentions_owner'::regrole else 'mip_arc_native_owner'::regrole end
+  if p.proowner<>(case when p.proname='context' then 'mip_mentions_owner'::regrole else 'mip_arc_native_owner'::regrole end)
    or not coalesce(p.proconfig @> array['search_path=""'],false)
    or exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) x where x.privilege_type='EXECUTE' and not(x.grantee=any(allowed)))
   then raise exception 'arc_native_function_boundary';end if;
