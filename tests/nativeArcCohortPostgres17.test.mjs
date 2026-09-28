@@ -171,11 +171,12 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
    });
   };
   // Run the complete accepted-reader fixture while public source custody is
-  // pristine. Its unchanged007 survivor context deliberately refuses ANY
+  // has only the exact initially eligible synthetic sentinel. Unchanged007 refuses ANY
   // pending-review article, including unrelated synthetic predecessor cases.
   // Do not relabel or delete those cases; seed them only after this check.
   // Separate scope preserves their exact generation-count and head contracts.
-  assert.equal((await db.query('select count(*)::integer n from public.articles')).rows[0].n,0);
+  assert.deepEqual((await db.query("select feed,outlet,title,url,reader_state,source_status from public.articles order by id")).rows,
+   [{feed:'preexisting',outlet:'fixture',title:'Preexisting qik row',url:'https://news.example/preexisting',reader_state:'eligible',source_status:'active'}]);
   const bindingScope=id(7200);
   await db.query('insert into mip_mentions.members values($1,session_user,true),($1,$2,false),($1,$3,true),($1,$4,false)',
    [bindingScope,reviewerName,aliceName,adminName]);
@@ -665,7 +666,16 @@ async function installFullBackend(root){
   owner=await connect(backendInstaller);
   await owner.query('create schema extensions;create extension pgcrypto with schema extensions;create extension vector with schema public;create extension dblink with schema extensions');
   assert.equal((await owner.query("select extversion from pg_extension where extname='vector'")).rows[0].extversion,'0.8.2');
-  await owner.query(await read('supabase/qualification/qik-ingest/fixture_substrate.sql'));
+  // Dataset-only profile for the full accepted-reader case. Keep every original
+  // substrate schema/role/ACL/constraint and the same sole custody sentinel.
+  // Author its INITIAL synthetic eligibility before history/install; later
+  // native pending-review cases keep their exact original state. Other fixtures
+  // still use the unchanged original substrate with its pending sentinel.
+  const substrate=await read('supabase/qualification/qik-ingest/fixture_substrate.sql');
+  const originalSeed="insert into public.articles (feed, outlet, title, url, reader_state)\nvalues (\n  'preexisting',\n  'fixture',\n  'Preexisting qik row',\n  'https://news.example/preexisting',\n  'pending_review'\n);";
+  const eligibleSeed="insert into public.articles (feed, outlet, title, url, reader_state)\nvalues (\n  'preexisting',\n  'fixture',\n  'Preexisting qik row',\n  'https://news.example/preexisting',\n  'eligible'\n);";
+  assert.equal(substrate.split(originalSeed).length,2,'exact original synthetic sentinel seed');
+  await owner.query(substrate.replace(originalSeed,()=>eligibleSeed));
   await owner.query('create schema auth');
   for(const relation of REQUIRED_RELATIONS.filter(r=>['public','auth'].includes(r.schema_name))){
    const exists=(await owner.query('select to_regclass($1) name',[relation.qualified])).rows[0].name;
