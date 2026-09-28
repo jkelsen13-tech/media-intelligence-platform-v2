@@ -23,7 +23,7 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='f812a2f14dbea5c4f5464cf007d7cb2ae47f1528'
+          source='efb5e395e387fd218191b4db52921643ce3ffc0b'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
@@ -48,7 +48,7 @@ jobs:
       - name: Start disposable PostgreSQL 17.6 on loopback only
         shell: bash
         run: |
-          docker run --detach --name qik-op-qualification --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=mip-efta-disposable-ci-only postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+          docker run --detach --name qik-op-qualification --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=mip-efta-disposable-ci-only -e POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
           for attempt in $(seq 1 30); do
             if docker exec qik-op-qualification pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then exit 0; fi
             sleep 2
