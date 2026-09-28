@@ -6,8 +6,8 @@
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
   "immediate_base": {
-    "commit": "7e162af689eb2d3ae42cb78b5828c34571ae9c18",
-    "tree": "acdbd00c5587570d65e77ca497b4cc57e06ef2f4"
+    "commit": "436501b6819b1373a7a5bb483ac4fa9e6144a60c",
+    "tree": "082f4d0870fe5cf261c7f4198be333e35727e3c9"
   },
   "authorization": {
     "internal_source_and_synthetic_qualification": "User consolidation continuation amendment prospectively authorizes this distinct governed successor and installer mode into source review and synthetic internal qualification. Qualification receipts and actual external Cursor review bind the exact candidate; no individual owner field signature, historical acceptance, hosted installation or actual-material receiving authorization is represented.",
@@ -1149,7 +1149,7 @@
     ],
     "native_comparison_fixture": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "f0b5fabcf233d81cfdac714086ac5662a107de20"
+      "blob": "dfb23af8b17cdf95bbb4903156f68b28202a0aa6"
     },
     "native_comparison_assertions": {
       "path": "tests/nativeComparisonBindingAssertions.mjs",
@@ -2120,18 +2120,18 @@
     },
     "fixture_correction": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "f0b5fabcf233d81cfdac714086ac5662a107de20",
+      "blob": "dfb23af8b17cdf95bbb4903156f68b28202a0aa6",
       "status": "AUTHORED — NOT RUN",
-      "reason": "Hosted compiler deliberately denies synthetic fallback. Exercise unchanged actual C3/020 resolver with synthetic feed-only material and explicit reviewed private seed membership; retain refusal. No production contract/grant/compiler change. Corrects disposable gate/source setup order required by the unchanged C3 enforcement trigger; final and failure cleanup still restore disabled gate/source. The isolated scope intentionally starts with reviewer can_decide=false. The corrected fixture requires the actual scope-access denial and zero scalar writes, then the existing administrator admits this synthetic reviewer through set_membership; finally restores can_decide=false independently, including failed/ambiguous setup. No role grants, original fixture scopes, real approvals or production permissions change.",
+      "reason": "Hosted compiler deliberately denies synthetic fallback. Exercise unchanged actual C3/020 resolver with synthetic feed-only material and explicit reviewed private seed membership; retain refusal. No production contract/grant/compiler change. Corrects disposable gate/source setup order required by the unchanged C3 enforcement trigger; final and failure cleanup still restore disabled gate/source. The isolated scope intentionally starts with reviewer can_decide=false. The corrected fixture requires the actual scope-access denial and zero scalar writes, then the existing administrator admits this synthetic reviewer through set_membership; finally restores can_decide=false independently, including failed/ambiguous setup. No role grants, original fixture scopes, real approvals or production permissions change. The distinct gateway begins can_decide=true in the separate setup; the existing administrator sets only this synthetic scope to read-only for the required denied admit/permitted read checks, then independently restores its original true value. Both actual principal roles, scope membership, production ACL/RLS and six binding test expectations remain unchanged.",
       "historical_receipt": {
-        "candidate": "7e162af689eb2d3ae42cb78b5828c34571ae9c18",
-        "run": 36427740254,
+        "candidate": "436501b6819b1373a7a5bb483ac4fa9e6144a60c",
+        "run": 36428285117,
         "pass": 176,
         "fail": 2,
-        "stage": "native_scalar_extraction_reviews",
-        "sqlstate": "P0001",
-        "source_line": 328,
-        "accepted_reader_stage_passed": true,
+        "stage": "binding_assertions",
+        "check": 1,
+        "source_line": 37,
+        "all_native_and_comparison_construction_and_current_readers_passed": true,
         "cleanup": "success"
       },
       "limits": "Source/synthetic only; not hosted installation, real DOJ policy approval, field signature, actual capture transfer or publication eligibility."
