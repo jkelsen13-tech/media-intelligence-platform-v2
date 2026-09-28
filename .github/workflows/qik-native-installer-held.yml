@@ -16,6 +16,12 @@ on:
         options: [reconcile, install, audit]
         default: reconcile
         required: true
+      profile:
+        type: choice
+        description: Exact reviewed permission profile; both routes install disabled
+        options: [native-v6, native-activation-v1]
+        default: native-v6
+        required: true
       release_sha:
         type: string
         description: Exact reviewed adapter release commit
@@ -34,7 +40,8 @@ jobs:
     steps:
       - name: Require exact held-route admission, budget and release
         env:
-          ROUTE: ${{ vars.QIK_NATIVE_INSTALL_HOST_ADMISSION }}
+          ROUTE: ${{ inputs.profile == 'native-activation-v1' && vars.QIK_NATIVE_ACTIVATION_HOST_ADMISSION || vars.QIK_NATIVE_INSTALL_HOST_ADMISSION }}
+          PROFILE: ${{ inputs.profile }}
           BUDGET: ${{ vars.QIK_NATIVE_INSTALL_BUDGET_ADMISSION }}
           APPROVED: ${{ vars.QIK_APPROVED_RELEASE_SHA }}
           REQUESTED: ${{ inputs.release_sha }}
@@ -42,7 +49,11 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_RUN_ATTEMPT" = 1
-          test "$ROUTE" = qualified-source-metadata-only-v1
+          case "$PROFILE" in
+            native-v6) test "$ROUTE" = qualified-source-metadata-only-v1 ;;
+            native-activation-v1) test "$ROUTE" = qualified-source-metadata-only-activation-v1 ;;
+            *) exit 1 ;;
+          esac
           test "$BUDGET" = within-existing-25-once-10-monthly
           [[ "$APPROVED" =~ ^[a-f0-9]{40}$ ]]
           test "$REQUESTED" = "$APPROVED"
@@ -56,7 +67,7 @@ jobs:
         with:
           node-version: 22.14.0
       - name: Install locked source runtime without lifecycle scripts
-        run: npm ci --omit=dev --ignore-scripts
+        run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
       - name: Verify pinned public qik CA
         env:
           QIK_CA_PEM_BASE64: ${{ vars.QIK_CA_PEM_BASE64 }}
@@ -71,15 +82,30 @@ jobs:
         env:
           NODE_EXTRA_CA_CERTS: ${{ runner.temp }}/qik-native-ca.crt
           NODE_NO_WARNINGS: '1'
-          MIP_NATIVE_HOST_ADMISSION: ${{ vars.QIK_NATIVE_INSTALL_HOST_ADMISSION }}
+          MIP_NATIVE_HOST_ADMISSION: ${{ inputs.profile == 'native-activation-v1' && vars.QIK_NATIVE_ACTIVATION_HOST_ADMISSION || vars.QIK_NATIVE_INSTALL_HOST_ADMISSION }}
+          MIP_NATIVE_HOST_PROFILE: ${{ inputs.profile }}
           MIP_NATIVE_HOST_BUDGET_ADMISSION: ${{ vars.QIK_NATIVE_INSTALL_BUDGET_ADMISSION }}
           QIK_APPROVED_RELEASE_SHA: ${{ vars.QIK_APPROVED_RELEASE_SHA }}
           MIP_NATIVE_HOST_RELEASE_SHA: ${{ inputs.release_sha }}
           MIP_NATIVE_HOST_ACTION: ${{ inputs.action }}
-          MIP_NATIVE_HOST_CONFIG_JSON: ${{ vars.QIK_NATIVE_INSTALL_CONFIG_JSON }}
+          MIP_NATIVE_HOST_CONFIG_JSON: ${{ inputs.profile == 'native-activation-v1' && vars.QIK_NATIVE_ACTIVATION_CONFIG_JSON || vars.QIK_NATIVE_INSTALL_CONFIG_JSON }}
+          QIK_NATIVE_ACTIVATION_MANIFEST_SHA256: ${{ vars.QIK_NATIVE_ACTIVATION_MANIFEST_SHA256 }}
           QIK_NATIVE_INSTALLER_DATABASE_URL: ${{ secrets.QIK_NATIVE_INSTALLER_DATABASE_URL }}
           QIK_NATIVE_AUDIT_DATABASE_URL: ${{ secrets.QIK_NATIVE_AUDIT_DATABASE_URL }}
-        run: node supabase/qualification/native-governed-host/run.mjs
+          QIK_NATIVE_METADATA_AUDIT_DATABASE_URL: ${{ secrets.QIK_NATIVE_METADATA_AUDIT_DATABASE_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$MIP_NATIVE_HOST_PROFILE" in
+            native-v6)
+              unset QIK_NATIVE_METADATA_AUDIT_DATABASE_URL QIK_NATIVE_ACTIVATION_MANIFEST_SHA256
+              node supabase/qualification/native-governed-host/run.mjs
+              ;;
+            native-activation-v1)
+              node supabase/qualification/native-governed-activation/run.mjs
+              ;;
+            *) exit 1 ;;
+          esac
       - name: Remove public CA staging
         if: always()
         run: rm -f -- "$RUNNER_TEMP/qik-native-ca.crt"

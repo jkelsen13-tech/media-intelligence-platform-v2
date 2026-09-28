@@ -1,3 +1,7 @@
+import {dispatchActivationHostAction,activationHostActionSatisfied} from '../supabase/qualification/native-governed-activation/host.mjs'
+import {auditNativeActivationMetadata} from '../supabase/qualification/native-governed-activation/audit.mjs'
+import {runNativeActivationQualification} from './nativeGovernedActivationPostgres17.test.mjs'
+import {GROUPS as ACTIVATION_GROUPS,PROFILE as ACTIVATION_PROFILE} from '../supabase/qualification/native-governed-activation/prepare.mjs'
 // AUTHORED ONLY: run only in a fresh dedicated pinned PG17.6 synthetic cluster.
 // Tests the actual full backend + C3-disabled profile + joint native installer.
 import test from 'node:test'
@@ -652,7 +656,7 @@ async function assertPristineFixture(db){
  assert.deepEqual(edges,['pg_read_all_settings','pg_read_all_stats','pg_stat_scan_tables'].map(parent=>({parent,member:'pg_monitor',admin:false,inherit:true,set:true})))
 }
 
-async function prepareFullBackend(root,selectedMode){
+async function prepareFullBackend(root,selectedMode,activationOptions=null){
  let owner;
  try{
   await root.query("create role "+backendInstaller+" login superuser password '"+password+"'");
@@ -718,7 +722,7 @@ async function prepareFullBackend(root,selectedMode){
    try{await shape.query('alter table auth.sessions add column if not exists not_after timestamptz')}
    finally{await shape.end()}
   }
-  const plan=await prepareAtomicInstall(read,{nativeMode:selectedMode});
+  const plan=await prepareAtomicInstall(read,{nativeMode:selectedMode,...(activationOptions??{})});
   const pre=await connect(backendInstaller);
   let metadata;
   try{metadata=(await pre.query(DBLINK_PREFLIGHT_SQL)).rows[0];assert.equal(metadata.expected,true);assert.equal(metadata.unused,true);assert.equal(metadata.no_servers,true)}
@@ -727,7 +731,124 @@ async function prepareFullBackend(root,selectedMode){
   const cfg={authorization:nativeAuthorization(selectedMode),nativeMode:selectedMode,operationId:'2'.repeat(32),
    expectedLogin:backendInstaller,connectionString:url(backendInstaller),c3OperationId:'3'.repeat(32),c3ManifestSha256:'1'.repeat(64),
    expectedManifestSha256:plan.manifest_sha256,expectedNativeProgramSha256:plan.native.program_sha256,dblinkMetadataSha256:metadata.metadata_sha256,collectorSource:'qik-fixture-v1',
-   auditLogin:backendAudit,auditConnectionString:url(backendAudit),disposable:true};
+   auditLogin:backendAudit,auditConnectionString:url(backendAudit),disposable:true,
+   ...(activationOptions?{authorization:'owner-authorized-native-governed-activation-bootstrap-install',activationProfile:ACTIVATION_PROFILE,expectedMetadataAuditor:activationOptions.expectedMetadataAuditor,expectedSuccessorProgram:plan.activation.program_sha256}:{})};
   return {cfg,plan};
  }finally{if(owner)await owner.end()}
 }
+
+// Successor is opt-in independently of all historical v2–v6 test modes.
+test('successor concrete full install, historical checkpoints and actual nonsuper activation lifecycle',{
+ skip:process.env.MIP_NATIVE_ACTIVATION_ARM!=='synthetic-pg17-only',timeout:300000
+},async t=>{
+ const uid=n=>'71000000-0000-4000-8000-'+String(n).padStart(12,'0');
+ const metadataAuditor='native_activation_auditor';
+ const runtimeNames=['native_activation_score','native_activation_worker','native_activation_broker','native_activation_admin','native_activation_gateway'];
+ const url=login=>'postgresql://'+login+':'+password+'@127.0.0.1:5432/postgres';
+ let root,baseline,armed=false,primary=null;const cleanup=[];
+ try{
+  assert.equal(process.env.MIP_QIK_COMPARISON_DISPOSABLE,'synthetic-pg17-only');
+  assert.equal(process.env.MIP_DISPOSABLE_POSTGRES,'qik-persistent-install');
+  root=await connect();await assertPristineFixture(root);
+  baseline=(await roleCatalog(root)).map(r=>r.rolname);armed=true;
+  // Synthetic provisioner alone creates bare LOGINs. The actual installer and
+  // all API/transition/audit sessions below authenticate as their nonsuper roles.
+  for(const login of [metadataAuditor,...runtimeNames])
+   await root.query('create role '+ident(login)+" login nosuperuser nocreatedb nocreaterole noinherit nobypassrls noreplication password '"+password+"'");
+  const options={activationProfile:ACTIVATION_PROFILE,expectedLogin:backendInstaller,
+   operationId:'2'.repeat(32),expectedMetadataAuditor:metadataAuditor};
+  const {cfg,plan}=await prepareFullBackend(root,NATIVE_CALLER_MODE,options);
+  const installed=await installComparisonAtomic(cfg,read);
+  assert.equal(installed.state,'installed_disabled_audit_pending',JSON.stringify(safeResult(installed)));
+  assert.equal(installed.connection_cleanup_verified,true);
+  const reconciled=await reconcileComparisonInstall(cfg,read);
+  assert.equal(reconciled.state,'installed_disabled_audit_pending',JSON.stringify(safeResult(reconciled)));
+  const qualified=await qualifyComparisonAudit(cfg,read);
+  assert.equal(qualified.audit_qualified,true,JSON.stringify(safeResult(qualified)));
+  // Actual composed source/metadata host audit uses two genuinely authenticated
+  // independent audit contracts. This synthetic trusted cfg is not a hosted URL admission.
+  const hostConfig={...cfg,releaseSha:'0'.repeat(40),metadataAuditConnectionString:url(metadataAuditor)};
+  const hostAudit=await dispatchActivationHostAction('audit',hostConfig,read,{
+   installComparisonAtomic,reconcileComparisonInstall,qualifyComparisonAudit,auditNativeActivationMetadata});
+  assert.equal(activationHostActionSatisfied('audit',hostAudit),true,JSON.stringify(hostAudit));
+  assert.equal(hostAudit.permission_boundary_current,true);
+  assert.equal(hostAudit.activation_allowed,false);
+  assert.equal(hostAudit.material_access_allowed,false);
+  // Control metadata only. No source, captures, generation, score, native
+  // binding, publication or reuse eligibility is invented by this fixture.
+  const scope=uid(1),subject=uid(2),authSession=uid(3),binding=uid(4),admission=uid(5);
+  const now=Date.now(),until=new Date(now+600000).toISOString(),from=new Date(now-60000).toISOString();
+  const tokenExp=Math.floor((now+600000)/1000);
+  await root.query('insert into auth.sessions(id,user_id,not_after) values($1,$2,$3)',[authSession,subject,until]);
+  for(const [group,name]of ACTIVATION_GROUPS.map((g,i)=>[g,runtimeNames[i]])){
+   if(['mip_mentions_admin','mip_mentions_gateway','mip_arc_native_worker'].includes(group))
+    await root.query('insert into mip_mentions.members(scope,principal,can_decide) values($1,$2,$3)',[scope,name,group==='mip_mentions_admin']);
+  }
+  const callerRuntime='synthetic-native-caller',workerRuntime='synthetic-native-worker';
+  const source='synthetic-native-source',implementation='synthetic-native-implementation';
+  for(const [runtime,principal,key,mapping,kid]of [
+   [callerRuntime,'mip_projection_publisher_v1',uid(6),uid(7),'synthetic-publisher'],
+   [workerRuntime,'mip_comparison_worker_v1',uid(8),uid(9),'synthetic-worker']
+  ]){
+   await root.query('insert into mip_identity.key_versions(revision,issuer,kid,jwk,valid_from,valid_until,approval_ref) values($1,$2,$3,$4::jsonb,$5,$6,$7)',
+    [key,'synthetic-issuer',kid,JSON.stringify({kty:'OKP',crv:'Ed25519',x:'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'}),from,until,'synthetic-only-approval']);
+   await root.query('insert into mip_identity.key_heads values($1,$2,$3,true)',['synthetic-issuer',kid,key]);
+   await root.query('insert into mip_identity.mapping_versions(revision,runtime,principal,issuer,audience,subject,key_revision,max_lifetime_seconds,approval_ref) values($1,$2,$3,$4,$5,$6,$7,600,$8)',
+    [mapping,runtime,principal,'synthetic-issuer','synthetic-audience','synthetic-subject',key,'synthetic-only-approval']);
+   await root.query('insert into mip_identity.mapping_heads values($1,$2,$3,true)',[runtime,principal,mapping]);
+  }
+  await root.query('insert into mip_comparison_kernel_v1.runtime_source_scope(runtime_id,source) values($1,$2)',[workerRuntime,source]);
+  await root.query('insert into mip_comparison_kernel_v1.evaluated_implementations(runtime_id,implementation) values($1,$2)',[workerRuntime,implementation]);
+  for(const rpc of ['worker_claim','worker_complete','worker_fail','worker_journal_put','worker_journal_get','worker_journal_pending','worker_resume_claim'])
+   await root.query('insert into mip_comparison_kernel_v1.runtime_bindings(runtime_id,principal,rpc_name) values($1,$2,$3)',[workerRuntime,'mip_comparison_worker_v1',rpc]);
+  const members=[];
+  for(let i=0;i<ACTIVATION_GROUPS.length;i++){
+   const row=(await root.query('select $1::regrole::oid::text group_oid,$2::regrole::oid::text oid',[ACTIVATION_GROUPS[i],runtimeNames[i]])).rows[0];
+   members.push({group:ACTIVATION_GROUPS[i],name:runtimeNames[i],...row});
+  }
+  const config={authorization:'owner-authorized-native-governed-permission-transition',
+   expectedLogin:backendInstaller,operationId:cfg.operationId,connectionString:url(backendInstaller),
+   expectedMetadataAuditor:metadataAuditor,metadataAuditConnectionString:url(metadataAuditor),
+   expectedInstallManifest:plan.manifest_sha256,expectedNativeProgram:plan.native.program_sha256,
+   expectedSuccessorProgram:plan.activation.program_sha256,disposable:true};
+  await runNativeActivationQualification(t,{config,
+   pending:{revision:uid(10),predecessor:null,action:'pending',members,
+    authority:{scope,subject,valid_until:until},ephemeral:{authSession,tokenExp}},
+   active:{revision:uid(11),predecessor:uid(10),action:'active',members,
+    authority:{scope,subject,binding,manifest:'a'.repeat(64),admission,caller_runtime:callerRuntime,
+     worker_runtime:workerRuntime,source,implementation,mapping:uid(7),key:uid(6),
+     worker_mapping:uid(9),worker_key:uid(8),valid_until:until},
+    ephemeral:{authSession,tokenExp,brokerSession:uid(90),workerSession:uid(91)}},
+   admissionValidFrom:from,urls:{broker:url(runtimeNames[2]),admin:url(runtimeNames[3]),worker:url(runtimeNames[1])}});
+  assert.equal((await root.query('select bool_and(not publication_release_enabled and not membership_auto_approval_enabled) closed from mip_comparison_kernel_v1.operating_gates')).rows[0].closed,true);
+  assert.equal((await root.query('select count(*)::int n from mip_native_comparison.bindings')).rows[0].n,0);
+ }catch(error){
+  primary={code:/^[A-Z0-9]{5}$/.test(error?.code??'')?error.code:null,
+   assertion:error?.code==='ERR_ASSERTION'?String(error.message).slice(0,600):null,
+   frames:String(error?.stack??'').split('\n').slice(1).flatMap(x=>x.match(/nativeGoverned(?:Installer|Activation)Postgres17\.test\.mjs:\d{1,6}:\d{1,6}/g)??[]).slice(0,4)};
+ }finally{
+  if(root)try{await root.end()}catch{cleanup.push('root_close')}
+  if(armed){
+   let clean;
+   try{
+    clean=new pg.Client({host:'127.0.0.1',port:5432,database:'template1',user:'postgres',password,connectionTimeoutMillis:5000,query_timeout:20000});
+    await clean.connect();
+    const created=(await roleCatalog(clean)).map(r=>r.rolname).filter(r=>!baseline.includes(r));
+    const issuer='mip_agi_'+'2'.repeat(32);
+    const allowed=new Set([...RESERVED_ROLES,...NATIVE_ROLES,backendInstaller,backendAudit,metadataAuditor,...runtimeNames,
+     'anon','authenticated','service_role','qik_ingest_fn_owner','qik_ingest_runtime',issuer,
+     'mip_tmp_'+'2'.repeat(32),'mip_nci_'+'2'.repeat(32)]);
+    if(!created.every(r=>allowed.has(r)))throw Error('unexpected_role');
+    await clean.query("select pg_terminate_backend(pid) from pg_stat_activity where datname='postgres' and pid<>pg_backend_pid()");
+    await clean.query('drop database postgres');await clean.query('create database postgres owner postgres');
+    // Drop runtime members first to remove any issuer-granted memberships even
+    // when an assertion stopped the test midway through active state.
+    const ordered=[...runtimeNames,issuer,...created.filter(r=>!runtimeNames.includes(r)&&r!==issuer)].filter(r=>created.includes(r));
+    for(const role of ordered)await clean.query('drop role '+ident(role));
+    assert.deepEqual((await roleCatalog(clean)).map(r=>r.rolname),baseline);
+   }catch{cleanup.push('cluster_baseline')}
+   finally{if(clean)try{await clean.end()}catch{cleanup.push('cleanup_close')}}
+  }
+  if(primary||cleanup.length)throw Error('native_successor_qualification_failed:'+JSON.stringify({primary,cleanup}));
+ }
+});

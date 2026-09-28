@@ -16,7 +16,7 @@
     },
     {
       "path": "supabase/qualification/native-semantic-integration/README.md",
-      "blob": "341dc09493bd007b3b58ffcc1697d0f8568f16ef"
+      "blob": "e8deae6b98416ef5136265fdc313a7628bb6ceee"
     },
     {
       "path": "supabase/qualification/hypothesis-assessments/handler.mjs",
@@ -215,7 +215,7 @@
     "validation": "originally bound producer under current permissions; two identical READ COMMITTED reads; fixed selected identity/hash; close before output; no fresh fetch/replacement"
   },
   "qualification": {
-    "status": "NOT RUN",
+    "status": "67 PASS — 0 FAIL — 0 SKIP; synthetic only",
     "environment": "existing source/synthetic-only remote GitHub Actions, Ubuntu22.04, Node22.14.0, PostgreSQL17.6 SCRAM loopback owned disposable containers",
     "tests": [
       "tests/nativeSemanticIntegration.test.mjs",
@@ -231,7 +231,45 @@
       "real evidence access",
       "unattended operation",
       "full caller cutover"
-    ]
+    ],
+    "receipt": {
+      "source": "30921561c962b498369151388a79169c68cbc62a",
+      "source_tree": "6b01310f7930f41877eaaa6dfb50146a0b53916b",
+      "candidate": "4a59e987a103b707a9d7d0ea7e573e1643b59046",
+      "tree": "2011591e3ed47ae8a5484c3d3bde182ea3f84ce2",
+      "workflow": "35df6f91733b5615ad41a20c1d3a495e0e2f189e",
+      "status": "bounded source/synthetic qualification triggered; no hosted material",
+      "run": 36462991415,
+      "job": 109065954966,
+      "conclusion": "success",
+      "pass": 67,
+      "fail": 0,
+      "skip": 0,
+      "groups": [
+        62,
+        1,
+        4
+      ],
+      "sourceUnchanged": true,
+      "cleanup": "both owned containers/volumes removed; new reader sessions and login verified by fixtures",
+      "environment": {
+        "host": "Existing source/synthetic-only GitHub Ubuntu22.04",
+        "node": "22.14.0",
+        "postgres": "17.6",
+        "postgres_engine": 170006,
+        "transport": "owned loopback SCRAM; synthetic Request/Response handler composition"
+      },
+      "realMaterial": false,
+      "qikInstallation": false,
+      "hostedAuthTLS": false,
+      "independentCursorReview": "not yet performed for this changed candidate; current route unavailable",
+      "limits": [
+        "assessment consumer is internal service authority",
+        "genuine permission_changed consumer qualified",
+        "unsupported retained_assessment_change refused",
+        "newmethodconsumer success not yet exercised"
+      ]
+    }
   },
   "review": {
     "required": "fresh actual Cursor review after affected qualification",

@@ -1,3 +1,4 @@
+import {captureActivationBootstrapCreation,createActivationOperationalGroup,retireActivationIssuerCreationAuthority,installActivationPreparationInTransaction,dropActivationIssuerForHistoricalCheckpoint} from '../native-governed-activation/prepare.mjs'
 // Source-only joint installer. No connection creation, commit, retry, or CLI.
 // Only prepareNativeGovernedInstall's fixed source program is executable.
 import {createHash} from 'node:crypto'
@@ -205,7 +206,8 @@ async function identity(db,login){
  const r=(await db.query("select session_user::text principal,current_user::text effective,rolsuper,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit,rolcanlogin from pg_roles where rolname=current_user")).rows[0]
  if(!r||r.principal!==login||r.effective!==login||r.rolsuper||!r.rolcreaterole||!r.rolcreatedb||!r.rolbypassrls||!r.rolinherit||!r.rolcanlogin)fail('principal')
 }
-async function cleanupCreator(db,creator,login,roles,mode){
+async function cleanupCreator(db,creator,login,roles,mode,activationPlan){
+ if(activationPlan)roles=roles.filter(role=>role!=='mip_arc_native_worker');
  if(mode===NATIVE_CALLER_MODE)roles=roles.filter(role=>!CALLER_BOOTSTRAP_ROLES.includes(role));
  await db.query('reset role')
  // Validate the complete native-role topology before changing any grant.
@@ -234,10 +236,10 @@ async function assertionHelper(db,schema,owner,login,sql){
  const checked=(await db.query("select p.proowner=$2::regrole and p.prosecdef and p.pronargs=0 and p.prorettype='void'::regtype and p.proconfig=$4::text[] and not exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where a.grantee not in($2::regrole,$3::regrole) or a.privilege_type<>'EXECUTE' or(a.grantee<>p.proowner and a.is_grantable)) and has_function_privilege($3,p.oid,'EXECUTE') ok from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname=$1 and p.proname='check_boundary'",[schema,owner,login,['search_path=""']])).rows[0]
  if(checked?.ok!==true)fail('assertion_helper_boundary')
 }
-export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,operationId}){
+export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,operationId,activationPlan}){
  let nativeStage='plan',nativeSource=null,nativeObject=null
  try{
- if(!preparedPlans.has(plan)||!/^[0-9a-f]{32}$/.test(operationId)||!isNativeMode(plan?.mode)||plan.program_sha256!==hash(JSON.stringify(plan.steps))
+ if((activationPlan&&plan.mode!==NATIVE_CALLER_MODE)||!preparedPlans.has(plan)||!/^[0-9a-f]{32}$/.test(operationId)||!isNativeMode(plan?.mode)||plan.program_sha256!==hash(JSON.stringify(plan.steps))
   ||JSON.stringify(plan.steps.map(({path,blob,assertion_marker,assertion_owner})=>({path,blob,assertion_marker,assertion_owner})))!==JSON.stringify(orderFor(plan.mode)))fail('plan')
  // The enclosing atomic installer owns BEGIN/COMMIT/ROLLBACK. SAVEPOINT refuses
  // standalone/autocommit use; failure aborts the whole joint transaction.
@@ -272,10 +274,14 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
     // CREATEROLE's actual automatic ADMIN-only grant belongs to the durable
     // trusted installer. These are non-owner API groups, never protected owners.
     await db.query(role.sql);
+    if(activationPlan)await captureActivationBootstrapCreation(db,activationPlan,role.name);
     const expected=[...bootstrapAtCreation.map(r=>r.role_name),role.name].sort();
     const observed=await callerBootstrapEdges(db,expectedLogin,expected);
     bootstrapAtCreation.splice(0,bootstrapAtCreation.length,...observed);
     sql=sql.replace(role.sql,()=>'-- Exact role created and automatic grantor bound immediately above.');
+   }else if(activationPlan&&role.name==='mip_arc_native_worker'){
+    await createActivationOperationalGroup(db,activationPlan,role.name);
+    sql=sql.replace(role.sql,()=>'-- Fixed successor issuer created this non-owner group.');
    }else{
    sql=sql.replace(role.sql,'set role '+quote(creator)+';\n'+role.sql+'\ngrant '+quote(role.name)+' to '+quote(expectedLogin)+' with admin false,inherit true,set true;\nreset role;')
    }
@@ -288,7 +294,8 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
    await assertionHelper(db,schema,step.assertion_owner,expectedLogin,step.assertion)
    await db.query('savepoint native_boundary')
    nativeStage='checkpoint_cleanup'
-   await cleanupCreator(db,creator,expectedLogin,created,plan.mode)
+   if(activationPlan)await dropActivationIssuerForHistoricalCheckpoint(db,activationPlan);
+   await cleanupCreator(db,creator,expectedLogin,created,plan.mode,activationPlan)
    nativeStage='checkpoint_assertion'
    await db.query('select '+quote(schema)+'.check_boundary()')
    // This restores ONLY temporary role cleanup. Source DDL and the helper
@@ -309,8 +316,13 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
  else if(plan.mode===NATIVE_DISPLAY_MODE)await createNativeDisplayVerifier(db,final,expectedLogin);
  else if(plan.mode===NATIVE_BINDING_MODE)await createNativeBindingVerifier(db,final,expectedLogin);
  else await assertionHelper(db,schema,final.assertion_owner,expectedLogin,final.assertion)
+ if(activationPlan){
+  nativeStage='successor_preparation';
+  await retireActivationIssuerCreationAuthority(db,activationPlan);
+  await installActivationPreparationInTransaction(db,activationPlan);
+ }
  nativeStage='final_cleanup'
- await cleanupCreator(db,creator,expectedLogin,created,plan.mode)
+ await cleanupCreator(db,creator,expectedLogin,created,plan.mode,activationPlan)
  if(!outerVerifierMode(plan.mode)){
   nativeStage='final_assertion'
   await db.query('select '+quote(schema)+'.check_boundary()')

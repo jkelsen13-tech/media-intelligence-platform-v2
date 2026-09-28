@@ -1,6 +1,6 @@
 # Native semantic producer/consumer integration v1
 
-UNAPPROVED successor to the qualified pure semantic envelope. Current new qualification source is authored, NOT RUN. It creates no SQL objects, grants, durable records, provider jobs, public eligibility or additional material receiver.
+UNAPPROVED successor to the qualified pure semantic envelope. Parent affected synthetic qualification has completed; this successor remains unapproved for installation and material transmission. It creates no SQL objects, grants, durable records, provider jobs, public eligibility or additional material receiver.
 
 ## Real producer paths
 
@@ -56,3 +56,7 @@ The narrow Python insertion preserves the existing fixture's tests and source-ki
 ## Remaining connection
 
 The existing handler and store now compose semantic_change through an explicitly configured trusted reader. Browser requests accept only investigation_id, revision_id, cause_id and expected_envelope_digest; user identity comes only from the authenticator. Missing reader configuration refuses without an old-query/public fallback. The assessment service consumer remains internal and is not added as a browser action. This is not a deployed or operating consumer, and C12/C13 operational closure is not claimed. Actual private route, secure scoped configuration, full fixture qualification, current permission behavior and applicable fresh external review remain required. Policy/domain/provider/temporal semantic fields absent in the original assessment producer remain explicitly unrepresented rather than silently reconstructed.
+
+## Actual bounded parent qualification
+
+Candidate 4a59e987a103b707a9d7d0ea7e573e1643b59046, tree2011591e3ed47ae8a5484c3d3bde182ea3f84ce2, source30921561c962b498369151388a79169c68cbc62a/tree6b01310f7930f41877eaaa6dfb50146a0b53916b; workflow35df6f91733b5615ad41a20c1d3a495e0e2f189e. Existing GitHub Actions run36462991415/job109065954966 passed67 (62 source unit/regression,1 actual assessment PostgreSQL reader,4 original hypothesis fixture methods), zeroFAIL/zeroSKIP. Node22.14.0 and PG17.6/170006 on owned loopback SCRAM, Ubuntu22.04; both containers/volumes and new reader sessions/random LOGIN cleanup were verified. Source and historical assertions remained unchanged. Synthetic fixed Auth mapping and Request/Response composition are not hosted Supabase Auth/TLS or qik installation. New method-change consumer success remains unexecuted. Fresh required Cursor review is not completed; existing browser transport is closed. Earlier unaffected266/83/57/33 qualification receipts are separately reused.

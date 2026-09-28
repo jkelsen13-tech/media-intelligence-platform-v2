@@ -1,0 +1,217 @@
+{
+  "profile": "native-governed-activation-v1",
+  "status": "UNAPPROVED — SOURCE CANDIDATE ONLY — NOT AUTHORIZED FOR EXECUTION OR TRANSMISSION",
+  "original_candidate": {
+    "commit": "ecd66e41123f9f16ec8dd38208571a25273ef093",
+    "tree": "aaef4a0a53b710ef6f6d92cbffd582acefe693f4",
+    "native_mode": "native-governed-v6",
+    "original_verifier": "mip_comparison_install.native_boundary_v6()",
+    "final_successor_result": "expected_refusal"
+  },
+  "activation_allowed": false,
+  "publication_allowed": false,
+  "reuse_eligible": false,
+  "material_transferred": false,
+  "production_qualified": false,
+  "prerequisites": {
+    "postgres": "17.6/170006",
+    "vector": "0.8.2",
+    "node": "22.14.0",
+    "original_selected_mode": "native-governed-v6",
+    "original_source_assertions": "unchanged",
+    "metadata_auditor": "explicit independently authenticated bare safe LOGIN; never created by installer",
+    "runtime_logins": "five distinct explicitly supplied bare safe LOGINs; never created by activation",
+    "authority": "actual scoped can_decide plus live Auth session, current admitted publisher and worker broker sessions and all seven worker RPC bindings; no identities/keys/admissions seeded by implementation"
+  },
+  "bootstrap_authorization": "owner-authorized-native-governed-activation-bootstrap-install",
+  "transition_authorization": "owner-authorized-native-governed-permission-transition",
+  "states": {
+    "disabled_bootstrap": "exact seven creation/issuer edges; no runtime group edge; original v6 refuses",
+    "pending": "exact admin/gateway/broker runtime edges; worker edges absent; live scoped Auth preconditions",
+    "active": "exact five runtime edges; current Auth, scoped membership/admission, separate broker sessions, source/evaluation/RPC authority; runtime_memberships_active only"
+  },
+  "groups": [
+    "mip_arc_native_worker",
+    "mip_comparison_worker_v1",
+    "mip_identity_broker_v2",
+    "mip_mentions_admin",
+    "mip_mentions_gateway"
+  ],
+  "issuer": {
+    "name": "mip_agi_<32-hex-install-operation-id>",
+    "permanent_attributes": [
+      "NOLOGIN",
+      "NOCREATEROLE",
+      "NOCREATEDB",
+      "NOINHERIT",
+      "NOSUPERUSER",
+      "NOBYPASSRLS",
+      "NOREPLICATION"
+    ],
+    "ownership": false,
+    "direct_acl": false,
+    "installer_path": "ADMIN-only automatic creation edge plus explicit SET-only edge; no inherited rights",
+    "group_paths": "automatic ADMIN-only to exact worker/worker-journal/broker non-owner groups; no USAGE or SET"
+  },
+  "sources": [
+    {
+      "path": "supabase/qualification/native-governed-activation/001_profile.sql",
+      "git_blob": "2654db95c674d73c0467625b024a16ea6154d2dd"
+    },
+    {
+      "path": "supabase/qualification/native-governed-activation/prepare.mjs",
+      "git_blob": "986aad7509b58d33799ffbb66eb79cd6573f7dc1"
+    },
+    {
+      "path": "supabase/qualification/native-governed-activation/activation.mjs",
+      "git_blob": "c5a7ce9b9098930833b474d60e9a996561e0d2f5"
+    },
+    {
+      "path": "supabase/qualification/native-governed-activation/audit.mjs",
+      "git_blob": "bf9338bf7fa5b6debad39a6948aec3d90b56129f"
+    },
+    {
+      "path": "supabase/qualification/native-governed-install/install.mjs",
+      "git_blob": "aa92f9e5003bbf12b19d4cfbf5871da1c496ce1c"
+    },
+    {
+      "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
+      "git_blob": "06b48b78f588c447f929b64f35b9cc876cf20a1a"
+    },
+    {
+      "path": "tests/nativeGovernedActivation.test.mjs",
+      "git_blob": "e2ae07e1c0f10643db89038b8854ee61898abf85"
+    },
+    {
+      "path": "tests/nativeGovernedActivationPostgres17.test.mjs",
+      "git_blob": "486789ad17497ae9718f5374be9c06087d79a7f5"
+    },
+    {
+      "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
+      "git_blob": "eb8f6a02e2c52e2d6f48d9981c7f653b6ad0ead3"
+    },
+    {
+      "path": "supabase/qualification/qik-comparison-adapter/compileSource.mjs",
+      "git_blob": "cd87eb0a0bc758315246e74675339f3ea2972a19"
+    },
+    {
+      "path": "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs",
+      "git_blob": "a591c92b10d174bd2937e9634f8d491b4c34567b"
+    },
+    {
+      "path": "supabase/qualification/qik-ingest/persistentInstall.mjs",
+      "git_blob": "24625b8382399db71e9dba6e3ddb88a936ade33f"
+    },
+    {
+      "path": "supabase/qualification/qik-ingest/installQikIngest.mjs",
+      "git_blob": "fa5d24041b38592ec950e2e46ca28be11f30d997"
+    },
+    {
+      "path": "supabase/qualification/collector-native-capture/authenticatedPgDriver.mjs",
+      "git_blob": "af0f3b69c34695f9241934fae89ac00cedd08515"
+    },
+    {
+      "path": "supabase/qualification/collector-native-capture/credentialDelivery.mjs",
+      "git_blob": "354679fadc48eb9f8a8154456f3d38e7faab3e61"
+    },
+    {
+      "path": "package.json",
+      "git_blob": "68caf5625166966005fff9cd702b3bc6c5fa49ad"
+    },
+    {
+      "path": "package-lock.json",
+      "git_blob": "2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0"
+    },
+    {
+      "path": "supabase/qualification/native-governed-activation/host.mjs",
+      "git_blob": "5946dc059e926e94723fe75b9925d6e3f7be555a"
+    },
+    {
+      "path": "supabase/qualification/native-governed-activation/run.mjs",
+      "git_blob": "30ba333c488e156f7ce3322077516f67e8d64ca3"
+    },
+    {
+      "path": "tests/nativeGovernedActivationHost.test.mjs",
+      "git_blob": "5eae155039f4101679a5fe0744983cc61f0f082c"
+    },
+    {
+      "path": "supabase/qualification/native-governed-host/adapter.mjs",
+      "git_blob": "47622a1729351d0cabda279d63855b9309e490b0"
+    },
+    {
+      "path": "supabase/qualification/native-governed-activation/README.md",
+      "git_blob": "6ab7369a4dfacf7e85be1359c816f5770b42c9b2"
+    },
+    {
+      "path": ".github/workflows/qik-native-installer-held.yml",
+      "git_blob": "3e64ec316ec90d5ca74679e385bdbe164b5bd58e"
+    }
+  ],
+  "replaced_blobs": [
+    {
+      "path": "supabase/qualification/native-governed-install/install.mjs",
+      "git_blob": "c56aa3e050fdb9342ef90dc71dca44f2810782ea"
+    },
+    {
+      "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
+      "git_blob": "b73fcfa4782bd56ec220a2744aa749e8f50830a7"
+    },
+    {
+      "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
+      "git_blob": "4a01cf7ff02a31093fe27cf72ce57621d272bd2f"
+    }
+  ],
+  "synthetic_commands": [
+    "node --test tests/nativeGovernedActivation.test.mjs",
+    "MIP_NATIVE_ACTIVATION_ARM=synthetic-pg17-only MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only MIP_DISPOSABLE_POSTGRES=qik-persistent-install node --test --test-concurrency=1 --test-name-pattern='successor concrete' tests/nativeGovernedInstallerPostgres17.test.mjs",
+    "MIP_NATIVE_ACTIVATION_ARM=synthetic-pg17-only MIP_NATIVE_GOVERNED_INSTALL_DISPOSABLE=synthetic-pg17-only MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only MIP_DISPOSABLE_POSTGRES=qik-persistent-install node --test --test-concurrency=1 tests/nativeGovernedInstallerPostgres17.test.mjs",
+    "node --test tests/nativeGovernedActivationHost.test.mjs tests/qikComparisonAtomicInstall.test.mjs tests/nativeGovernedHost.test.mjs"
+  ],
+  "independent_audit": {
+    "entrypoint": "auditNativeActivationMetadata",
+    "credential": "metadataAuditConnectionString for expectedMetadataAuditor only",
+    "authority_current": false,
+    "reads": "catalog plus bootstrap/head and non-authority revision columns; no Auth/capture/session/token reads",
+    "host_integration": "Separate source-pinned host/CLI implemented; actual nonsuper composed audit added to owned synthetic fixture; NOT RUN, secure hosted bindings absent",
+    "success_field": "permission_boundary_current (only a successful independently executed audit may set true)"
+  },
+  "gates": [
+    "source/test execution not performed by author",
+    "full actual nonsuper PG17 fixture still required",
+    "separate parent source review and selective external review required",
+    "secure actual qik installer/runtime/Auth/broker/admission/source/audit identities and credentials still unavailable",
+    "no actual installation, activation, operation, transfer, publication or reuse proof"
+  ],
+  "program_identity": {
+    "native_program_sha256": "unchanged selected source steps only; not the successor installer runtime",
+    "successor_program_sha256": "compiled 001_profile.sql template only; not the complete changed JS runtime",
+    "install_manifest_sha256": "complete prepared backend/native/profile SQL plan",
+    "complete_executable_candidate": "exact source blobs below; candidate commit/tree and this manifest blob must be pinned by the qualifying host",
+    "verification": "nativeGovernedActivation.test.mjs verifies every listed source blob; the hosted source loader must do the same before invoking any API"
+  },
+  "historical_sql_dependencies": "Exact SQL path/blob/source-commit inventories remain inside the pinned compileSource.mjs and native-governed-install/install.mjs; no original source blob or assertion hash is replaced.",
+  "internal_qualification_authority": {
+    "reference": "User full-consolidation amendment; synthetic-only qualification after coherent source integration",
+    "owner_field_signature": null,
+    "qualification_is_acceptance": false
+  },
+  "origin": {
+    "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
+    "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
+  },
+  "integration_parent": "4a59e987a103b707a9d7d0ea7e573e1643b59046",
+  "qualification": {
+    "status": "NOT RUN",
+    "synthetic_only": true,
+    "actual_qik_installation": false,
+    "actual_material": false
+  },
+  "host_route": {
+    "existing_environment": "qik-forward-controlled",
+    "held_workflow": ".github/workflows/qik-native-installer-held.yml",
+    "profile_input": "native-activation-v1",
+    "automatic_execution": false,
+    "credentials_currently_configured": false,
+    "requires": "actual qualified/reviewed exactrelease + secure installer/autonomousauditor/metadataauditor bindings; no parent setting admission before evidence"
+  }
+}

@@ -1,0 +1,87 @@
+# Native governed activation successor — authored, not qualified
+
+This is a separate permission profile over the unchanged selected native v6 SQL program. It is not installed or activated. No test or SQL execution was performed by this author. It grants no publication, automatic membership approval, reuse eligibility or material-transfer proof. The complete source candidate is pinned by verifier/qik-native-activation-successor.json; the parent must bind that manifest to the actual candidate commit/tree before qualification.
+
+## Identity and authorization
+
+The original native_program_sha256 identifies unchanged native SQL source steps. The new successor_program_sha256 identifies compiled 001_profile.sql. Neither identifies changed JavaScript orchestration. The manifest separately pins the changed native installer, atomic installer, new modules, unchanged transitive runtime modules, lockfile, and concrete fixtures. The unit suite checks each exact UTF8 Git blob. Install manifest hashing incorporates the complete prepared backend/native/profile SQL plan.
+
+Select activationProfile=native-governed-activation-v1 with nativeMode=native-governed-v6 and authorization=owner-authorized-native-governed-activation-bootstrap-install. Provide expectedLogin, operationId and an existing, separate expectedMetadataAuditor. prepareAtomicInstall returns the exact manifest, native program and activation program hashes; the reviewed host supplies all three expected values to installComparisonAtomic. No arbitrary issuer, SQL callback or waiver is accepted.
+
+Use the exports in qik-comparison-adapter/atomicInstall.mjs: prepareAtomicInstall, installComparisonAtomic, reconcileComparisonInstall and qualifyComparisonAudit. The existing v2–v6 optionless activation paths, compiled SQL plans and historical assertions remain unchanged. An old v6 authorization string does not authorize the new bootstrap option.
+
+The existing native-governed-host adapter pins the earlier JS blobs and rejects the extra configuration. It is intentionally not an operational route for this candidate. The separate host.mjs/run.mjs successor now binds those exact APIs and sourceVault blobs, with distinct installer, original autonomous-audit and independent metadata-audit credentials. It accepts install/reconcile/audit only, never activation or material reads. The existing old held host remains separate and cannot run this candidate. Secure configuration and actual hosted execution are not available or claimed.
+
+## Exact bootstrap lifecycle
+
+The installer remains its established genuine nonsuper CREATEROLE/CREATEDB/BYPASSRLS principal. A new operation-bound mip_agi_<operationId> NOLOGIN issuer is temporary CREATEROLE solely while creating these three non-owner API groups: mip_comparison_worker_v1, mip_identity_broker_v2 and mip_arc_native_worker. Their fixed CREATE statements match the selected source. They are created at the original stages, before the original conditional CREATE or exact native CREATE executes, so there is no duplicate/preflight collision. The ordinary temporary creators never create those groups.
+
+The issuer then becomes NOCREATEROLE/NOCREATEDB/NOINHERIT/NOBYPASSRLS/NOSUPERUSER/NOREPLICATION, owns no objects and holds no direct ACL. The installer retains the issuer's automatic ADMIN-only creation edge plus one explicit ADMIN=false/INHERIT=false/SET=true edge. The issuer retains only the three automatic ADMIN=true/INHERIT=false/SET=false creation edges. The original two caller groups retain their original installer ADMIN-only edges. Creation-time role/member/grantor OIDs and flags are captured immediately; all seven retained edges are later checked exactly.
+
+Neither installer nor issuer inherits or can SET any of the five operational groups or protected owners after creator cleanup. The explicit installer SET path reaches only the non-owner issuer. It does not restore a historical owner lease. PostgreSQL17 CREATEROLE alone is not assumed to grant an existing group, and implicit bootstrap-granted ADMIN edges are never assumed revocable by their creator.
+
+Every native source body, including ownership/permission/RLS writes, executes outside the historical checkpoint. Immediately before each original assertion helper, the caller takes SAVEPOINT native_boundary, drops the issuer, cleans the native creator, runs the unchanged assertion, then rolls back and releases that savepoint. This restores only the then-required temporary installation topology; it does not roll back source writes.
+
+The source-pinned assertion tails are:
+
+| Native source | Blob | Assertion-only split |
+| --- | --- | --- |
+| entity-resolution/native-capture-fields/003_native_fields.sql | ffc192276276cea2345690bccc7b65d54a0f0ab6 | do $assert$ |
+| entity-resolution/candidate-review/004_candidate_review.sql | e25930fb4552b7b0086d7d1c50414845df453dbc | do $boundary$ |
+| arc-membership-qik-source/001_storage.sql | fc321af39e982e0cb1f06238c81f99d2dcc6fe8a | do $assert$ |
+| entity-resolution/canonical-admission/005_canonical_admission.sql | b6487f76f4186a58e7f77d50eecca0a40fd76c27 | do $boundary$ |
+| arc-membership-qik-source/002_governed_writer.sql | 7cac6a7cb8ab665886944bf5092edcf01a60cf3f | do $boundary$ |
+| arc-membership-native/001_governed_cohort.sql | 3097d03987aee00df912f913d41c6e0cad342b2d | do $final$ |
+| arc-membership-native/002_private_score_review.sql | 92c4382b46c83027f4b9b1dd0a615462680083cd | do $final$ |
+| arc-membership-native/003_governed_attachment.sql | 94dd9c7cbcf117767f5909fd9a6db0312f14ebe2 | do $boundary$ |
+| arc-public-projection/001_native_private_projection.sql | bc58ef8143fdea209bdf91ad9edfb6e96a089657 | do $private_projection_final$ |
+| native-comparison-binding/001_private_binding.sql | 7bd78e703b1a81414e3a24b4049ea407d00435c8 | do $native_comparison_final$ |
+| native-comparison-display/001_private_display.sql | 6602515e55fe7cb70bba1e505a2d3e21b94398e5 | do $native_display_final$ |
+| native-comparison-caller/001_admission.sql | a9428d8b2120514a0d6ee13a53d801dba7b6e060 | do $native_caller_final$ |
+
+The last three remain the original deferred combined verifier chain. Existing caller prerequisite handling and all assertion hashes are unchanged. New preparation helpers are created only while original owner leases still exist, then their schema CREATE/USAGE is revoked. The original native creator and original outer creator are subsequently removed for real.
+
+Only after both genuine creator removals, SAVEPOINT successor_historical_final drops the non-owner issuer and runs the existing residual-membership assertion, autonomous-audit boundary, inspection checks, original019 final_native_permissions/final_retention_chain_permissions, original020 final_doj_permissions, compatibility assertions and complete original fixed v6 verifier. Original019 blob df829634068d4b113862da3f4ba877ccc6cc72b7 and original020 blob 0e0b3d2f3ae200b551b98ce66bc3c90d277ff333 remain intact. Their permission-creation bodies execute earlier, outside this checkpoint.
+
+Rollback restores only the scoped issuer and its exact bootstrap paths, not either creator. sealActivationBootstrapInTransaction independently validates the actual final successor topology, required effective APIs, safe role attributes, no owner access, helper ACL/configuration, and a complete logical non-system catalog hash. It links an immutable bootstrap receipt to the original installation receipt/program before the single COMMIT.
+
+## Two-phase operational provisioning
+
+The installation creates no runtime LOGIN, Auth identity/session, mapping/key approval, scope authority or admission. The trusted host supplies exactly five distinct existing safe bare runtime LOGINS with exact group/member OIDs, one per group. Each runtime has NOINHERIT and no direct ACL, owned object, incoming membership or unrelated outgoing membership. Grants explicitly carry ADMIN=false/INHERIT=true/SET=false.
+
+Call transitionNativeActivation from activation.mjs with authorization=owner-authorized-native-governed-permission-transition and the reviewed install/native/successor hashes. A pending revision requires an actual current Auth session and existing scoped admin can_decide plus gateway/native-worker scoped memberships. It grants only admin, gateway and broker memberships. Native-score and comparison-worker memberships remain absent.
+
+The real broker LOGIN can then call the existing configuration/issue APIs to obtain distinct publisher and comparison-worker sessions. The real admin LOGIN calls the existing configure_admission API under existing scoped authority. Missing hosted identities, Auth authority, mappings, keys or scope authority must be supplied through their established governed processes, not invented by this profile.
+
+The active successor rechecks current admission revision/expiry/gateway, the two broker mapping/key/session chains, actual live Auth, source/evaluated-implementation authority and all seven worker RPC bindings. It installs the remaining two memberships transactionally. Its successful receipt says runtime_memberships_active, never operating success. Existing APIs still enforce native binding, accepted material and other per-operation authorization. No accepted binding or captured material is fabricated or attested by this permission profile.
+
+Revisions are append-only with versioned predecessor CAS and immutable request digest. Exact retries succeed only for the current head and rerun current authority checks. A superseded revision refuses. The request carries transient session UUIDs but new durable activation revisions retain only their hashes. Original broker/admission APIs retain their existing original representations; this module adds no second session/token store.
+
+reconcileNativeActivation takes the exact original request and revalidates current catalog/topology/authority through a fresh genuine installer session. A lost COMMIT acknowledgement yields commit_outcome_unknown and no automatic retry or rollback claim. Close/rollback uncertainty withholds current-success and requires reconciliation.
+
+disabled_bootstrap revokes all five runtime memberships with their exact grantors, appends a successor revision and asserts the successor disabled state. It works after Auth/admission/broker revocation or partial external removal of expected runtime edges. It does not reacquire any owner or automatically repair altered schema/ACL/role identity. Unexpected extra rights or catalog drift still refuse and need separate governed repair. After deactivation, the restored bootstrap issuer means old v6/019 still refuse.
+
+## Independent final metadata audit
+
+auditNativeActivationMetadata from audit.mjs authenticates the supplied distinct metadata auditor. It runs a read-only transaction and an independently source-defined direct catalog query. It verifies role/member/grantor OIDs and flags, protected-owner zero edges, issuer and runtime effective rights, unchanged catalog owners/ACLs/RLS/configuration/source, and the expected receipt/program identities.
+
+The auditor has only new-schema USAGE, bootstrap/head SELECT and explicit non-authority revision-column SELECT. It has no installer membership, SET path, CREATEROLE, raw Auth/capture read or function EXECUTE. This reader returns permission_boundary_current only after actual independent verification and cleanup; authority_current remains false because it never reads sensitive Auth or broker material. It complements the transition's current authority assertion. The original fixed metadata auditor is a historical checkpoint reader and must continue refusing the final successor topology.
+
+## Qualification and cleanup
+
+The manifest gives exact commands. The new armed test is in nativeGovernedInstallerPostgres17.test.mjs, selected by the name “successor concrete”. It prepares the complete real backend fixture, creates only synthetic control accounts/metadata, invokes the actual nonsuper installer, then uses separate real LOGIN connections for pending, broker issuance, admission configuration, active, fresh reconciliation, lost-ack reconciliation, actual admission revocation, partial membership revocation, deactivation and independent audit denial checks. NativeGovernedActivationPostgres17.test.mjs is its assertion module, not a dependency on an unspecified preinstalled database.
+
+The fixture refuses any nonpristine or non-17.6 cluster, requires all explicit synthetic guards, pins vector0.8.2, and restores the cluster/role baseline even after a partial failure. Runtime member roles are dropped before the issuer so issuer-issued grants cannot block cleanup. No production cluster is a valid test target.
+
+Run the original five v2–v6 joint fixtures independently with their existing guard to prove regression coverage; do not mark them as passed from source inspection. The parent-reported four-test PG17 scoped-issuer probe proves only the narrow automatic-grant/drop/rollback semantics, not this application profile. Full successor tests, parent source inspection and required selective external review remain pending. Actual qik secure identities/credentials, host integration, installation, activation and operating acceptance remain separate gates.
+
+
+## Parent-integrated source/metadata executor
+
+run.mjs is a fixed Node22.14.0 entrypoint for the existing protected qik-forward-controlled GitHub environment. It verifies an exact approved release, clean source, original ancestry, the complete source manifest digest and every listed Git blob, exact sourceVault paths/refs, pinned qik CA and existing budget/host admission before any database call. It rejects rerun attempts and diagnostic/credential-logging switches. Credentials are removed from the inherited environment; source-only git subprocesses receive only a minimal noncredential environment. Receipts never serialize connections or raw errors.
+
+host.mjs validates the exact qik target and distinct installer/audit/metadata-auditor identities. It reconciles before any first installation and refuses automatic replay of uncertain or existing outcomes. The audit action requires both original autonomous audit qualification and the independently authenticated final successor metadata audit; neither alone qualifies the host. The concrete ordered PG fixture exercises that composed audit with actual API implementations. Eight source unit groups cover denial, mismatched receipts, uncertain cleanup and secret redaction.
+
+Required protected secure bindings: QIK_NATIVE_INSTALLER_DATABASE_URL, QIK_NATIVE_AUDIT_DATABASE_URL, QIK_NATIVE_METADATA_AUDIT_DATABASE_URL. Required nonsecret reviewed controls: QIK_APPROVED_RELEASE_SHA, QIK_NATIVE_ACTIVATION_CONFIG_JSON, QIK_NATIVE_ACTIVATION_MANIFEST_SHA256, QIK_CA_PEM_BASE64, QIK_NATIVE_ACTIVATION_HOST_ADMISSION and existing QIK_NATIVE_INSTALL_BUDGET_ADMISSION. The configuration exact fields are listed in host.mjs; expectedManifestSha256 must be obtained from the complete successor plan, not the old v6 plan. Metadata audit URL is the restricted auditor, with no query options, authenticated TLS/CA delivery; the old autonomous audit URL retains its existing verify-full requirements.
+
+Proposed invocation in that existing protected remote route: node supabase/qualification/native-governed-activation/run.mjs, with fixed workflow-dispatch admission and reviewed config. NOT RUN. No new execution service, storage receiver or actual-material path is introduced by this metadata-only host. Activation provisioning and later transition use the separately named existing governed APIs and are not performed by this entrypoint. All source qualification commands above remain NOT RUN until actual parent receipts say otherwise.

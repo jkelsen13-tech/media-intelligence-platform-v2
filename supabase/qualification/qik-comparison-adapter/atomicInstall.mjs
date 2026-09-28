@@ -1,3 +1,4 @@
+import {PROFILE as ACTIVATION_PROFILE,prepareNativeActivation,assertActivationRoleInventory,createActivationIssuerInTransaction,createActivationOperationalGroup,dropActivationIssuerForHistoricalCheckpoint,sealActivationBootstrapInTransaction} from '../native-governed-activation/prepare.mjs'
 // Source-only until separately qualified. No CLI, activation or automatic retry.
 import {createHash} from 'node:crypto'
 import {NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MODE,NATIVE_DISPLAY_MODE,NATIVE_CALLER_MODE,verifyNativeCallerCurrentBoundary,verifyNativeBindingCurrentBoundary,verifyNativeDisplayCurrentBoundary,isNativeMode,nativeAuthorization,NATIVE_ROLES,prepareNativeGovernedInstall,installNativeGovernedInTransaction,assertNativeGovernedClosure,nativeInstallFailure} from '../native-governed-install/install.mjs'
@@ -125,7 +126,9 @@ function outer(s){
 }
 function split(s,marker){if(s.split(marker).length!==2)refuse('assertion_boundary');const at=s.indexOf(marker);return [s.slice(0,at),s.slice(at)]}
 export async function prepareAtomicInstall(readPinnedSource,options={}){
- if(Object.keys(options).some(k=>k!=='nativeMode')||(options.nativeMode!==undefined&&!isNativeMode(options.nativeMode)))refuse('native_mode')
+ if(Object.keys(options).some(k=>!['nativeMode','activationProfile','expectedLogin','operationId','expectedMetadataAuditor'].includes(k))||(options.nativeMode!==undefined&&!isNativeMode(options.nativeMode)))refuse('native_mode')
+ if(options.activationProfile!==undefined&&(options.activationProfile!==ACTIVATION_PROFILE||options.nativeMode!==NATIVE_CALLER_MODE))refuse('activation_profile')
+ if(options.activationProfile===undefined&&['expectedLogin','operationId','expectedMetadataAuditor'].some(k=>options[k]!==undefined))refuse('activation_profile')
  const compiled=await compileSource(readPinnedSource)
  const raw=Buffer.from(await readPinnedSource(DOJ_PATH,DOJ_SOURCE_COMMIT))
  if(createHash('sha1').update(Buffer.from('blob '+raw.length+'\0')).update(raw).digest('hex')!==DOJ_BLOB)refuse('doj_source_digest')
@@ -174,12 +177,23 @@ export async function prepareAtomicInstall(readPinnedSource,options={}){
   doj_source_commit:DOJ_SOURCE_COMMIT,catalog_inspection_schemas:[...CATALOG_INSPECTION_SCHEMAS],credential_statement_timeout_max_ms:1000,roles:[...roles.entries()].sort(([a],[b])=>a.localeCompare(b)),
   body,dojBody,permissions,closure:closure.sql,assertions,dojAssertions,compatibility:compatibility.sql}
  if(isNativeMode(options.nativeMode))plan.native=await prepareNativeGovernedInstall(readPinnedSource,options.nativeMode)
+ if(options.activationProfile){
+  assertActivationRoleInventory([...roles.keys(),...NATIVE_ROLES]);
+  plan.activation=await prepareNativeActivation(readPinnedSource,options);
+ }
  return {...plan,manifest_sha256:digest(JSON.stringify(plan))}
 }
+function prepareOptions(c){
+ return c.activationProfile?{nativeMode:c.nativeMode,activationProfile:c.activationProfile,expectedLogin:c.expectedLogin,operationId:c.operationId,expectedMetadataAuditor:c.expectedMetadataAuditor}:c.nativeMode?{nativeMode:c.nativeMode}:{}
+}
 export function validateAtomicConfig(c){
+ if(c?.activationProfile!==undefined&&(c.activationProfile!==ACTIVATION_PROFILE||c.nativeMode!==NATIVE_CALLER_MODE
+  ||!LOGIN.test(c.expectedMetadataAuditor??'')||!SHA.test(c.expectedSuccessorProgram??'')
+  ||[c.expectedLogin,c.auditLogin,'postgres','service_role','authenticator','supabase_admin',...RESERVED_ROLES,...NATIVE_ROLES].includes(c.expectedMetadataAuditor)))refuse('activation_profile')
+ if(c?.activationProfile===undefined&&(c?.expectedMetadataAuditor!==undefined||c?.expectedSuccessorProgram!==undefined))refuse('activation_profile')
  if(!c||(c.nativeMode!==undefined&&!isNativeMode(c.nativeMode))
   ||(isNativeMode(c.nativeMode)?!SHA.test(c.expectedNativeProgramSha256??''):c.expectedNativeProgramSha256!==undefined)
-  ||c.authorization!==(isNativeMode(c.nativeMode)?nativeAuthorization(c.nativeMode):'owner-authorized-disabled-comparison-install')||!ID.test(c.operationId??'')
+  ||c.authorization!==(c.activationProfile?'owner-authorized-native-governed-activation-bootstrap-install':isNativeMode(c.nativeMode)?nativeAuthorization(c.nativeMode):'owner-authorized-disabled-comparison-install')||!ID.test(c.operationId??'')
   ||!LOGIN.test(c.expectedLogin??'')||!ID.test(c.c3OperationId??'')||!SHA.test(c.c3ManifestSha256??'')
   ||!SHA.test(c.expectedManifestSha256??'')||!SHA.test(c.dblinkMetadataSha256??'')||typeof c.collectorSource!=='string'
   ||!/^qik-[a-z0-9_-]{1,90}$/.test(c.collectorSource))refuse('configuration')
@@ -200,7 +214,7 @@ export function validateAtomicConfig(c){
  return {operationId:c.operationId,expectedLogin:c.expectedLogin,auditLogin:c.auditLogin,
   c3OperationId:c.c3OperationId,c3ManifestSha256:c.c3ManifestSha256,
   expectedManifestSha256:c.expectedManifestSha256,dblinkMetadataSha256:c.dblinkMetadataSha256,collectorSource:c.collectorSource,
-  creator:'mip_tmp_'+c.operationId,...(isNativeMode(c.nativeMode)?{nativeMode:c.nativeMode,expectedNativeProgramSha256:c.expectedNativeProgramSha256}:{})}
+  creator:'mip_tmp_'+c.operationId,...(c.activationProfile?{activationProfile:c.activationProfile,expectedMetadataAuditor:c.expectedMetadataAuditor,expectedSuccessorProgram:c.expectedSuccessorProgram}:{}),...(isNativeMode(c.nativeMode)?{nativeMode:c.nativeMode,expectedNativeProgramSha256:c.expectedNativeProgramSha256}:{})}
 }
 // Hash only the existing configuration/receipt rows. Never source articles/captures.
 const C3_SQL=String.raw`
@@ -288,7 +302,7 @@ function auditBoundarySQL(c){
  return "\ndo $audit_boundary$\ndeclare r record;t oid;f oid;allowed oid[];actual text[];want text[];\n installer oid:='__INSTALLER__'::regrole;\n factual oid:='mip_factual_owner_v3'::regrole;\n owner_role oid:='mip_cutover_schema_owner_v1'::regrole;\n audit_role oid:='__AUDIT__'::regrole;\nbegin\n if to_regprocedure('mip_factual_transport.dblink_exec(text,text)') is null\n or to_regprocedure('mip_factual.log_rejection(jsonb,text)') is null\n or to_regprocedure('mip_comparison_install.audit_probe(boolean)') is null\n or not exists(select 1 from pg_extension e join pg_namespace n on n.oid=e.extnamespace\n  where e.extname='dblink' and e.extversion='1.2' and e.extowner=installer and n.nspname='mip_factual_transport')\n then raise exception 'atomic_audit_transport_configuration';end if;\n foreach t in array array['mip_factual.audit_connection'::regclass::oid,'mip_factual.rejection_audit'::regclass::oid] loop\n  if not exists(select 1 from pg_class where oid=t and relowner=owner_role and relrowsecurity and relforcerowsecurity) then raise exception 'atomic_audit_storage_owner';end if;\n  if exists(select 1 from pg_attribute a cross join lateral aclexplode(a.attacl) p where a.attrelid=t and a.attnum>0 and not a.attisdropped) then raise exception 'atomic_audit_column_acl';end if;\n  select array_agg(g.rolname||':'||a.privilege_type order by g.rolname||':'||a.privilege_type) into actual\n  from pg_class c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a\n  left join pg_roles g on g.oid=a.grantee where c.oid=t and a.grantee<>owner_role;\n  want:=array['mip_factual_owner_v3:INSERT','mip_factual_owner_v3:SELECT'];\n  if t='mip_factual.rejection_audit'::regclass then\n   select array_agg(x order by x) into want from unnest(want||array['__AUDIT__:INSERT']) x;\n  end if;\n  if actual is distinct from want or exists(select 1 from pg_class c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a where c.oid=t and (a.grantee=0 or (a.grantee<>owner_role and a.is_grantable))) then raise exception 'atomic_audit_table_acl';end if;\n  if (select count(*) from pg_policy where polrelid=t)<>(case when t='mip_factual.audit_connection'::regclass then 1 else 2 end)\n   or not exists(select 1 from pg_policy where polrelid=t and polname='factual_kernel' and polcmd='*' and polpermissive and polroles=array[factual] and pg_get_expr(polqual,polrelid)='true' and pg_get_expr(polwithcheck,polrelid)='true')\n   or (t='mip_factual.rejection_audit'::regclass and not exists(select 1 from pg_policy where polrelid=t and polname='atomic_audit_insert' and polcmd='a' and polpermissive and polroles=array[audit_role] and polqual is null and pg_get_expr(polwithcheck,polrelid)='true'))\n  then raise exception 'atomic_audit_policy';end if;\n  for r in select target.oid from pg_roles target where not target.rolsuper and target.oid not in(installer,owner_role,factual,audit_role)\n   and exists(select 1 from pg_roles caller where caller.rolcanlogin and not caller.rolsuper and caller.oid<>installer\n    and pg_has_role(caller.oid,target.oid,'SET')) loop\n   if has_table_privilege(r.oid,t,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') or has_any_column_privilege(r.oid,t,'SELECT,INSERT,UPDATE,REFERENCES') then raise exception 'atomic_audit_effective_table';end if;\n  end loop;\n  if has_table_privilege(audit_role,t,'SELECT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') or has_any_column_privilege(audit_role,t,'SELECT,UPDATE,REFERENCES')\n   or has_table_privilege(audit_role,t,'INSERT') is distinct from (t='mip_factual.rejection_audit'::regclass) then raise exception 'atomic_audit_login_table';end if;\n end loop;\n for r in select * from (values\n  ('mip_factual',array['__INSTALLER__','__AUDIT__','mip_factual_owner_v3','mip_factual_reviewer_v3','mip_publication_owner_v2','mip_cutover_schema_owner_v1']),\n  ('mip_factual_transport',array['__INSTALLER__','mip_factual_owner_v3']),\n  ('mip_comparison_install',array['__INSTALLER__','mip_factual_owner_v3'])\n ) x(schema_name,allowed) loop\n  if not exists(select 1 from pg_namespace where nspname=r.schema_name and nspowner=installer) then raise exception 'atomic_audit_schema_owner';end if;\n  if exists(select 1 from pg_namespace n cross join lateral aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a left join pg_roles g on g.oid=a.grantee\n   where n.nspname=r.schema_name and (a.grantee=0 or not(g.rolname=any(r.allowed)) or (a.grantee<>installer and (a.privilege_type<>'USAGE' or a.is_grantable)))) then raise exception 'atomic_audit_schema_acl';end if;\n end loop;\n for r in select p.oid,p.proowner,p.prosecdef,p.proconfig,p.proacl,n.nspname,p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace\n where n.nspname='mip_factual_transport' or (n.nspname='mip_factual' and p.proname='log_rejection') or (n.nspname='mip_comparison_install' and p.proname='audit_probe') loop\n  if r.nspname='mip_factual_transport' then\n   if r.proowner<>installer then raise exception 'atomic_audit_transport_owner';end if;\n   allowed:=array[installer];\n   if r.oid='mip_factual_transport.dblink_exec(text,text)'::regprocedure then allowed:=allowed||array[factual];end if;\n  else\n   if r.proowner<>factual or not r.prosecdef or not coalesce(r.proconfig&&array['search_path=\"\"','search_path='],false) then raise exception 'atomic_audit_function_configuration';end if;\n   allowed:=case when r.proname='audit_probe' then array[factual,installer] else array[factual] end;\n  end if;\n  if exists(select 1 from aclexplode(coalesce(r.proacl,acldefault('f',r.proowner))) a\n   where a.grantee=0 or not(a.grantee=any(allowed)) or (a.grantee<>r.proowner and a.is_grantable)) then raise exception 'atomic_audit_function_acl';end if;\n  for f in select target.oid from pg_roles target where not target.rolsuper and target.oid<>installer\n   and exists(select 1 from pg_roles caller where caller.rolcanlogin and not caller.rolsuper and caller.oid<>installer\n    and pg_has_role(caller.oid,target.oid,'SET')) loop\n   if has_function_privilege(f,r.oid,'EXECUTE') is distinct from (f=any(allowed)) then raise exception 'atomic_audit_effective_execute';end if;\n  end loop;\n end loop;\n if exists(select 1 from pg_auth_members where roleid in(factual,owner_role,audit_role) or member in(factual,owner_role,audit_role)) then raise exception 'atomic_audit_membership';end if;\n if exists(select 1 from pg_roles target where not target.rolsuper and target.oid<>installer\n  and exists(select 1 from pg_roles caller where caller.rolcanlogin and not caller.rolsuper and caller.oid<>installer and pg_has_role(caller.oid,target.oid,'SET'))\n  and (pg_has_role(target.oid,installer,'SET') or pg_has_role(target.oid,installer,'USAGE'))) then raise exception 'atomic_audit_installer_path';end if;\nend $audit_boundary$;\n".replaceAll('__INSTALLER__',c.expectedLogin).replaceAll('__AUDIT__',c.auditLogin)
 }
 function safe(state,c,hash,extra={}){
- return {state,operation_id:c.operationId,manifest_sha256:hash,activation_allowed:false,...(c.nativeMode?{native_mode:c.nativeMode,native_program_sha256:c.expectedNativeProgramSha256}:{}),...extra}
+ return {state,operation_id:c.operationId,manifest_sha256:hash,activation_allowed:false,...(c.activationProfile?{activation_profile:c.activationProfile,successor_program_sha256:c.expectedSuccessorProgram,historical_checkpoint_only:true}:{}),...(c.nativeMode?{native_mode:c.nativeMode,native_program_sha256:c.expectedNativeProgramSha256}:{}),...extra}
 }
 // Internal lifecycle primitive, exported for synthetic close/rollback failure tests.
 // Mutate the pending receipt only after cleanup: finally awaits this before the
@@ -310,8 +324,8 @@ export async function finishAtomicConnection(db,result,rollback=false,rollbackFa
 // Only this authenticated entry point executes the prepared program. No raw SQL or
 // injectable verification callback is accepted. Caller source reader is blob-pinned.
 export async function installComparisonAtomic(config,readPinnedSource){
- const c=validateAtomicConfig(config),plan=await prepareAtomicInstall(readPinnedSource,c.nativeMode?{nativeMode:c.nativeMode}:{})
- if(plan.manifest_sha256!==c.expectedManifestSha256||(plan.native&&plan.native.program_sha256!==c.expectedNativeProgramSha256))refuse('manifest_mismatch')
+ const c=validateAtomicConfig(config),plan=await prepareAtomicInstall(readPinnedSource,prepareOptions(c))
+ if(plan.manifest_sha256!==c.expectedManifestSha256||(plan.native&&plan.native.program_sha256!==c.expectedNativeProgramSha256)||(plan.activation&&plan.activation.program_sha256!==c.expectedSuccessorProgram))refuse('manifest_mismatch')
  const db=await connectPersistentInstaller({connectionString:config.connectionString,
   expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
  let begun=false,commitAttempted=false,phase='begin',result=null,rollbackFailed=false
@@ -336,10 +350,17 @@ export async function installComparisonAtomic(config,readPinnedSource){
   const owner=(await db.query("select pg_has_role(current_user,'qik_ingest_fn_owner','SET') can_transfer,has_schema_privilege('qik_ingest_fn_owner','qik_ingest','CREATE') had_create")).rows[0]
   if(owner?.can_transfer!==true||typeof owner.had_create!=='boolean')refuse('existing_c3_owner_transfer')
   phase='temporary_creator'
+  if(plan.activation)await createActivationIssuerInTransaction(db,plan.activation);
   await db.query('create role '+quote(c.creator)+' nologin createrole noinherit nosuperuser nocreatedb nobypassrls noreplication')
   await db.query('grant '+quote(c.creator)+' to '+quote(c.expectedLogin)+' with inherit false,set true')
   await db.query('set role '+quote(c.creator))
   for(const [role,statement] of plan.roles){
+   if(plan.activation&&['mip_comparison_worker_v1','mip_identity_broker_v2'].includes(role)){
+    await db.query('reset role');
+    await createActivationOperationalGroup(db,plan.activation,role);
+    await db.query('set role '+quote(c.creator));
+    continue;
+   }
    await db.query(statement)
    await db.query('grant '+quote(role)+' to '+quote(c.expectedLogin)+' with inherit true,set true')
   }
@@ -405,7 +426,7 @@ export async function installComparisonAtomic(config,readPinnedSource){
    await db.query('grant usage on schema '+quote(schema)+' to '+quote(c.expectedLogin))
   if(plan.native){
    phase='native_joint_install'
-   const native=await installNativeGovernedInTransaction(db,plan.native,c)
+   const native=await installNativeGovernedInTransaction(db,plan.native,{...c,...(plan.activation?{activationPlan:plan.activation}:{})})
    await db.query("create table mip_comparison_install.native_programs(operation_id text primary key references mip_comparison_install.receipts,mode text not null,program_sha256 text not null,stage_assertions jsonb not null);revoke all on mip_comparison_install.native_programs from public,anon,authenticated,service_role;create trigger immutable before update or delete or truncate on mip_comparison_install.native_programs for each statement execute function mip_comparison_install.reject_change()")
    await db.query('insert into mip_comparison_install.native_programs values($1,$2,$3,$4::jsonb)',[c.operationId,native.mode,native.program_sha256,JSON.stringify(native.stage_assertions)])
   }
@@ -414,11 +435,20 @@ export async function installComparisonAtomic(config,readPinnedSource){
   if(creatorOwns?.owns_objects!==false)refuse('creator_owned_objects')
   phase='temporary_role_grants_revoke'
   await db.query('set role '+quote(c.creator))
-  for(const [role] of plan.roles)await db.query('revoke '+quote(role)+' from '+quote(c.expectedLogin)+' cascade')
+  for(const [role] of plan.roles){
+   if(plan.activation&&['mip_comparison_worker_v1','mip_identity_broker_v2'].includes(role))continue;
+   await db.query('revoke '+quote(role)+' from '+quote(c.expectedLogin)+' cascade');
+  }
   await db.query('reset role')
   await db.query('revoke '+quote(c.creator)+' from '+quote(c.expectedLogin))
   phase='temporary_creator_drop'
   await db.query('drop role '+quote(c.creator))
+  // Both historical creators have REALLY been removed before this savepoint.
+  // Only the explicitly non-owner successor issuer is restored below.
+  if(plan.activation){
+   await db.query('savepoint successor_historical_final');
+   await dropActivationIssuerForHistoricalCheckpoint(db,plan.activation);
+  }
   phase='temporary_membership_assertions'
   const edges=(await db.query('select count(*)::integer n from pg_auth_members where roleid in(select oid from pg_roles where rolname=any($1::text[])) or member in(select oid from pg_roles where rolname=any($1::text[]))',[plan.roles.map(([r])=>r)])).rows[0]
   if(edges?.n!==0)refuse('residual_memberships')
@@ -443,6 +473,12 @@ export async function installComparisonAtomic(config,readPinnedSource){
    else if(c.nativeMode===NATIVE_BINDING_MODE)await verifyNativeBindingCurrentBoundary(db,plan.native,c);
    else await assertNativeGovernedClosure(db,c);
   }
+  if(plan.activation){
+   await db.query('rollback to savepoint successor_historical_final');
+   await db.query('release savepoint successor_historical_final');
+   phase='successor_final_boundary';
+   await sealActivationBootstrapInTransaction(db,plan.activation,{operationId:c.operationId,installManifest:plan.manifest_sha256,nativeProgram:plan.native.program_sha256});
+  }
   phase='commit'
   commitAttempted=true
   await db.query('commit');begun=false
@@ -462,8 +498,8 @@ export async function reconcileComparisonInstall(config,readPinnedSource){
  // v4/v5 fresh reconciliation proves the exact complete source verifier again.
  // Earlier API modes retain their existing call contract.
  if((c.nativeMode===NATIVE_BINDING_MODE||c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)&&typeof readPinnedSource!=='function')refuse('configuration')
- const plan=(c.nativeMode===NATIVE_BINDING_MODE||c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?await prepareAtomicInstall(readPinnedSource,{nativeMode:c.nativeMode}):null
- if(plan&&(plan.manifest_sha256!==c.expectedManifestSha256||plan.native.program_sha256!==c.expectedNativeProgramSha256))refuse('manifest_mismatch')
+ const plan=(c.nativeMode===NATIVE_BINDING_MODE||c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?await prepareAtomicInstall(readPinnedSource,prepareOptions(c)):null
+ if(plan&&(plan.manifest_sha256!==c.expectedManifestSha256||plan.native.program_sha256!==c.expectedNativeProgramSha256||(plan.activation&&plan.activation.program_sha256!==c.expectedSuccessorProgram)))refuse('manifest_mismatch')
  let db=null,phase='connection',result=null
  try{
   db=await connectPersistentInstaller({connectionString:config.connectionString,
@@ -476,7 +512,7 @@ export async function reconcileComparisonInstall(config,readPinnedSource){
   phase='reconciliation_inventory'
   const exists=(await db.query("select to_regclass('mip_comparison_install.receipts') is not null present")).rows[0]
   if(!exists?.present){
-   const remnants=(await db.query('select exists(select 1 from pg_namespace where nspname=any($1::text[])) or exists(select 1 from pg_roles where rolname=any($2::text[])) present',[[...schemas,RECEIPT_SCHEMA,...(c.nativeMode?['mip_mentions','mip_arc_qik_source','mip_arc_native','mip_nca_'+c.operationId,...(c.nativeMode!==NATIVE_MODE?['mip_arc_projection_private']:[]),...((c.nativeMode===NATIVE_BINDING_MODE||c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?['mip_native_comparison']:[]),...((c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?['mip_native_display']:[]),...(c.nativeMode===NATIVE_CALLER_MODE?['mip_native_caller']:[])]:[])],[...RESERVED_ROLES,c.creator,...(c.nativeMode?[...NATIVE_ROLES,'mip_nci_'+c.operationId]:[])]])).rows[0]
+   const remnants=(await db.query('select exists(select 1 from pg_namespace where nspname=any($1::text[])) or exists(select 1 from pg_roles where rolname=any($2::text[])) present',[[...schemas,RECEIPT_SCHEMA,...(c.activationProfile?['mip_native_activation']:[]),...(c.nativeMode?['mip_mentions','mip_arc_qik_source','mip_arc_native','mip_nca_'+c.operationId,...(c.nativeMode!==NATIVE_MODE?['mip_arc_projection_private']:[]),...((c.nativeMode===NATIVE_BINDING_MODE||c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?['mip_native_comparison']:[]),...((c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?['mip_native_display']:[]),...(c.nativeMode===NATIVE_CALLER_MODE?['mip_native_caller']:[])]:[])],[...RESERVED_ROLES,c.creator,...(c.activationProfile?['mip_agi_'+c.operationId]:[]),...(c.nativeMode?[...NATIVE_ROLES,'mip_nci_'+c.operationId]:[])]])).rows[0]
    return result=safe(remnants?.present?'reconciliation_drift':'not_installed',c,c.expectedManifestSha256,{needs_reconciliation:remnants?.present!==false})
   }
   phase='reconciliation_receipt'
@@ -492,7 +528,12 @@ export async function reconcileComparisonInstall(config,readPinnedSource){
    phase='native_reconciliation'
    const native=(await db.query('select mode,program_sha256 from mip_comparison_install.native_programs where operation_id=$1',[c.operationId])).rows[0]
    if(native?.mode!==c.nativeMode||native.program_sha256!==c.expectedNativeProgramSha256)refuse('native_receipt')
-   if(c.nativeMode===NATIVE_CALLER_MODE)await verifyNativeCallerCurrentBoundary(db,plan.native,c);
+   if(plan.activation){
+    // This is a successor permission assertion, never final old-v6 attestation.
+    const b=(await db.query('select successor_program,install_manifest,native_program from mip_native_activation.bootstrap where singleton')).rows[0];
+    if(b?.successor_program!==c.expectedSuccessorProgram||b.install_manifest!==c.expectedManifestSha256||b.native_program!==c.expectedNativeProgramSha256)refuse('activation_receipt');
+    await db.query("select mip_native_activation.assert_current('disabled_bootstrap',(select revision from mip_native_activation.head where singleton))");
+   }else if(c.nativeMode===NATIVE_CALLER_MODE)await verifyNativeCallerCurrentBoundary(db,plan.native,c);
    else if(c.nativeMode===NATIVE_DISPLAY_MODE)await verifyNativeDisplayCurrentBoundary(db,plan.native,c);
    else if(c.nativeMode===NATIVE_BINDING_MODE)await verifyNativeBindingCurrentBoundary(db,plan.native,c);
    else await assertNativeGovernedClosure(db,c)
