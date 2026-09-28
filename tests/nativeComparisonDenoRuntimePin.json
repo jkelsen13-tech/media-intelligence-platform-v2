@@ -1,0 +1,14 @@
+{
+  "runtime": "deno",
+  "version": "2.5.2",
+  "platform": "x86_64-unknown-linux-gnu",
+  "release_url": "https://github.com/denoland/deno/releases/tag/v2.5.2",
+  "metadata_url": "https://api.github.com/repos/denoland/deno/releases/tags/v2.5.2",
+  "archive_url": "https://github.com/denoland/deno/releases/download/v2.5.2/deno-x86_64-unknown-linux-gnu.zip",
+  "archive_sha256": "520fd4bc2d18b50b6ac2ea8b7d0f7f6a35588e412754a081e8c6afd4b15264c4",
+  "archive_bytes": 45074518,
+  "checksum_url": "https://github.com/denoland/deno/releases/download/v2.5.2/deno-x86_64-unknown-linux-gnu.zip.sha256sum",
+  "checksum_file_sha256": "4c0fc62463955fa32e56d43d4d14b37424251e4ab78f14beb33e7092fd083cda",
+  "qualification": "Pure Deno compatibility probe, not the Supabase hosted Edge runtime or a latest-release recommendation.",
+  "verified_source": "Official denoland/deno release API asset digest metadata; binary not downloaded or executed by author."
+}

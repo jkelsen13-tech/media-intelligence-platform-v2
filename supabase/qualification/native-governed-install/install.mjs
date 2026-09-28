@@ -5,6 +5,9 @@ export const NATIVE_MODE='native-governed-v2'
 export const NATIVE_PROJECTION_MODE='native-governed-v3'
 export const NATIVE_BINDING_MODE='native-governed-v4'
 export const NATIVE_DISPLAY_MODE='native-governed-v5'
+export const NATIVE_CALLER_MODE='native-governed-v6'
+export const NATIVE_CALLER_AUTHORIZATION='owner-authorized-disabled-comparison-native-comparison-caller-install'
+export const NATIVE_CALLER_SOURCE_BASE='d706609405906c51ddf521acbd5eabb4617b6b41'
 export const NATIVE_DISPLAY_AUTHORIZATION='owner-authorized-disabled-comparison-native-comparison-display-install'
 export const NATIVE_DISPLAY_SOURCE_BASE='ec4670ade45c7ccff02f1403177f642bd402e019'
 export const NATIVE_BINDING_AUTHORIZATION='owner-authorized-disabled-comparison-native-comparison-binding-install'
@@ -80,12 +83,16 @@ export const NATIVE_DISPLAY_ORDER=Object.freeze([...NATIVE_BINDING_ORDER,Object.
  path:'supabase/qualification/native-comparison-display/001_private_display.sql',blob:'6602515e55fe7cb70bba1e505a2d3e21b94398e5',
  assertion_marker:'do $native_display_final$',assertion_owner:'mip_arc_native_owner'
 })])
-const outerVerifierMode=mode=>mode===NATIVE_BINDING_MODE||mode===NATIVE_DISPLAY_MODE
-const deferredAssertion=(mode,path)=>outerVerifierMode(mode)&&(path===NATIVE_BINDING_ORDER.at(-1).path||(mode===NATIVE_DISPLAY_MODE&&path===NATIVE_DISPLAY_ORDER.at(-1).path))
-export const isNativeMode=mode=>mode===NATIVE_MODE||mode===NATIVE_PROJECTION_MODE||mode===NATIVE_BINDING_MODE||mode===NATIVE_DISPLAY_MODE
-export function nativeAuthorization(mode){if(!isNativeMode(mode))fail('plan');return mode===NATIVE_MODE?NATIVE_AUTHORIZATION:mode===NATIVE_PROJECTION_MODE?NATIVE_PROJECTION_AUTHORIZATION:mode===NATIVE_BINDING_MODE?NATIVE_BINDING_AUTHORIZATION:NATIVE_DISPLAY_AUTHORIZATION}
-const orderFor=mode=>mode===NATIVE_MODE?NATIVE_ORDER:mode===NATIVE_PROJECTION_MODE?NATIVE_PROJECTION_ORDER:mode===NATIVE_BINDING_MODE?NATIVE_BINDING_ORDER:mode===NATIVE_DISPLAY_MODE?NATIVE_DISPLAY_ORDER:fail('plan')
-const schemasFor=mode=>['mip_mentions','mip_arc_qik_source','mip_arc_native',...(mode!==NATIVE_MODE?['mip_arc_projection_private']:[]),...(outerVerifierMode(mode)?['mip_native_comparison']:[]),...(mode===NATIVE_DISPLAY_MODE?['mip_native_display']:[])]
+export const NATIVE_CALLER_ORDER=Object.freeze([...NATIVE_DISPLAY_ORDER,Object.freeze({
+ path:'supabase/qualification/native-comparison-caller/001_admission.sql',blob:'1a080d0d12f27f7e13b3d692491e5641c2e70f94',
+ assertion_marker:'do $native_caller_final$',assertion_owner:'mip_arc_native_owner'
+})])
+const outerVerifierMode=mode=>mode===NATIVE_BINDING_MODE||mode===NATIVE_DISPLAY_MODE||mode===NATIVE_CALLER_MODE
+const deferredAssertion=(mode,path)=>outerVerifierMode(mode)&&(path===NATIVE_BINDING_ORDER.at(-1).path||((mode===NATIVE_DISPLAY_MODE||mode===NATIVE_CALLER_MODE)&&path===NATIVE_DISPLAY_ORDER.at(-1).path)||(mode===NATIVE_CALLER_MODE&&path===NATIVE_CALLER_ORDER.at(-1).path))
+export const isNativeMode=mode=>mode===NATIVE_MODE||mode===NATIVE_PROJECTION_MODE||mode===NATIVE_BINDING_MODE||mode===NATIVE_DISPLAY_MODE||mode===NATIVE_CALLER_MODE
+export function nativeAuthorization(mode){if(!isNativeMode(mode))fail('plan');return mode===NATIVE_MODE?NATIVE_AUTHORIZATION:mode===NATIVE_PROJECTION_MODE?NATIVE_PROJECTION_AUTHORIZATION:mode===NATIVE_BINDING_MODE?NATIVE_BINDING_AUTHORIZATION:mode===NATIVE_DISPLAY_MODE?NATIVE_DISPLAY_AUTHORIZATION:NATIVE_CALLER_AUTHORIZATION}
+const orderFor=mode=>mode===NATIVE_MODE?NATIVE_ORDER:mode===NATIVE_PROJECTION_MODE?NATIVE_PROJECTION_ORDER:mode===NATIVE_BINDING_MODE?NATIVE_BINDING_ORDER:mode===NATIVE_DISPLAY_MODE?NATIVE_DISPLAY_ORDER:mode===NATIVE_CALLER_MODE?NATIVE_CALLER_ORDER:fail('plan')
+const schemasFor=mode=>['mip_mentions','mip_arc_qik_source','mip_arc_native',...(mode!==NATIVE_MODE?['mip_arc_projection_private']:[]),...(outerVerifierMode(mode)?['mip_native_comparison']:[]),...((mode===NATIVE_DISPLAY_MODE||mode===NATIVE_CALLER_MODE)?['mip_native_display']:[]),...(mode===NATIVE_CALLER_MODE?['mip_native_caller']:[])]
 const identifier=/^[a-z][a-z0-9_]{0,62}$/
 const quote=s=>{if(!identifier.test(s))throw Error('native_install_identifier');return '"'+s+'"'}
 const literal=s=>"'"+s.replaceAll("'","''")+"'"
@@ -94,7 +101,7 @@ const blob=b=>createHash('sha1').update(Buffer.from('blob '+b.length+'\0')).upda
 const fail=s=>{throw Error('native_install_'+s)}
 const preparedPlans=new WeakSet()
 const failureDetails=new WeakMap()
-const REFUSAL_NAMES=new Set(["native_install_assertion_boundary","native_install_assertion_helper_boundary","native_install_collision","native_install_creation_boundary","native_install_creator_owns_objects","native_install_creator_topology","native_install_existing_owner_path","native_install_final_role_attributes","native_install_final_role_edges","native_install_final_scaffolding","native_install_final_schema_owners","native_install_final_storage","native_install_final_private_storage","native_install_membership_statement","native_install_plan","native_install_principal","native_install_role_contract","native_install_role_inventory","native_install_source_digest","native_install_source_encoding","native_install_transaction_boundary"])
+const REFUSAL_NAMES=new Set(["native_install_bootstrap_topology","native_install_caller_authority_prerequisite","native_install_assertion_boundary","native_install_assertion_helper_boundary","native_install_collision","native_install_creation_boundary","native_install_creator_owns_objects","native_install_creator_topology","native_install_existing_owner_path","native_install_final_role_attributes","native_install_final_role_edges","native_install_final_scaffolding","native_install_final_schema_owners","native_install_final_storage","native_install_final_private_storage","native_install_membership_statement","native_install_plan","native_install_principal","native_install_role_contract","native_install_role_inventory","native_install_source_digest","native_install_source_encoding","native_install_transaction_boundary"])
 // Values originate only from this fixed program; no SQL text, args, detail,
 // hint, context, payload, connection target, or arbitrary error message escapes.
 export function nativeInstallFailure(error){return error&&typeof error==='object'?failureDetails.get(error)??null:null}
@@ -148,6 +155,25 @@ export async function prepareNativeGovernedInstall(read,mode=NATIVE_MODE){
    const at=sql.indexOf(entry.assertion_marker)
    assertion=sql.slice(at);sql=sql.slice(0,at)
   }
+  if(mode===NATIVE_CALLER_MODE&&entry.path===NATIVE_CALLER_ORDER.at(-1).path){
+   const first='do $prerequisite$',last='end $prerequisite$;';
+   const a=sql.indexOf(first),b=sql.indexOf(last,a);
+   if(a<0||b<a||sql.split(first).length!==2)fail('assertion_boundary');
+   const prerequisite=sql.slice(a,b+last.length);
+   sql=sql.slice(0,a)+sql.slice(b+last.length);
+   const display=steps.find(s=>s.path===NATIVE_DISPLAY_ORDER.at(-1).path);
+   if(!display?.assertion)fail('assertion_boundary');
+   // Original complete DO bytes replay only after both creator leases disappear.
+   assertion=display.assertion+'\n'+prerequisite+'\n'+assertion;
+   const create='create schema mip_native_caller authorization mip_mentions_owner;';
+   const transfer='alter function mip_native_caller.assert_session(uuid,uuid,bigint) owner to mip_efta_auth_session_owner_v1;';
+   if(sql.split(create).length!==2||sql.split(transfer).length!==2)fail('creation_boundary');
+   // The native/outer creators still hold their original grants at this point.
+   // No new owner ADMIN/SET grant or separate privileged re-entry is created.
+   sql=sql.replace(create,()=>create+'\ngrant usage,create on schema mip_native_caller to current_user;');
+   sql=sql.replace(transfer,()=>'grant create on schema mip_native_caller to mip_efta_auth_session_owner_v1;\n'+transfer+'\nrevoke create on schema mip_native_caller from mip_efta_auth_session_owner_v1;');
+   sql+='\nrevoke usage,create on schema mip_native_caller from current_user;\n';
+  }
   const created=[...sql.matchAll(/^create role ([a-z0-9_]+)([^;]*);$/gm)].map(m=>({name:m[1],sql:m[0]}))
   for(const role of created){
    if(!NATIVE_ROLES.includes(role.name)||roles.includes(role.name)||/\b(login|superuser|createrole|createdb|bypassrls|replication)\b/.test(role.sql.slice(role.sql.indexOf(' ')+1).replace(role.name,'')))fail('role_contract')
@@ -158,7 +184,7 @@ export async function prepareNativeGovernedInstall(read,mode=NATIVE_MODE){
    if(!NATIVE_ROLES.includes(role))fail('membership_statement')
    return '-- Native joint installer manages this temporary membership.'
   })
-  if(deferredAssertion(mode,entry.path)){
+  if(deferredAssertion(mode,entry.path)&&entry.path!==NATIVE_CALLER_ORDER.at(-1).path){
    // The outer fixed backend installer already owns the publication-owner grant.
    // Native owner lifecycle is managed above. Preserve both exact grantor
    // topologies until their respective real cleanup, rather than self-granting.
@@ -172,14 +198,15 @@ export async function prepareNativeGovernedInstall(read,mode=NATIVE_MODE){
   steps.push({...entry,body:sql,created,assertion,assertion_sha256:assertion===null?null:hash(assertion)})
  }
  if(NATIVE_ROLES.some(r=>!roles.includes(r))||roles.length!==NATIVE_ROLES.length)fail('role_inventory')
- const plan=freeze({mode,source_base:mode===NATIVE_DISPLAY_MODE?NATIVE_DISPLAY_SOURCE_BASE:mode===NATIVE_BINDING_MODE?NATIVE_BINDING_SOURCE_BASE:NATIVE_SOURCE_BASE,steps,roles,program_sha256:hash(JSON.stringify(steps))})
+ const plan=freeze({mode,source_base:mode===NATIVE_CALLER_MODE?NATIVE_CALLER_SOURCE_BASE:mode===NATIVE_DISPLAY_MODE?NATIVE_DISPLAY_SOURCE_BASE:mode===NATIVE_BINDING_MODE?NATIVE_BINDING_SOURCE_BASE:NATIVE_SOURCE_BASE,steps,roles,program_sha256:hash(JSON.stringify(steps))})
  preparedPlans.add(plan);return plan
 }
 async function identity(db,login){
  const r=(await db.query("select session_user::text principal,current_user::text effective,rolsuper,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit,rolcanlogin from pg_roles where rolname=current_user")).rows[0]
  if(!r||r.principal!==login||r.effective!==login||r.rolsuper||!r.rolcreaterole||!r.rolcreatedb||!r.rolbypassrls||!r.rolinherit||!r.rolcanlogin)fail('principal')
 }
-async function cleanupCreator(db,creator,login,roles){
+async function cleanupCreator(db,creator,login,roles,mode){
+ if(mode===NATIVE_CALLER_MODE)roles=roles.filter(role=>!CALLER_BOOTSTRAP_ROLES.includes(role));
  await db.query('reset role')
  // Validate the complete native-role topology before changing any grant.
  const edges=(await db.query("select p.rolname parent,m.rolname member,g.rolname grantor,a.admin_option,a.inherit_option,a.set_option from pg_auth_members a join pg_roles p on p.oid=a.roleid join pg_roles m on m.oid=a.member join pg_roles g on g.oid=a.grantor where p.rolname=any($1) or m.rolname=any($1)",[roles])).rows
@@ -227,25 +254,41 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
   const r=(await db.query("select c.relrowsecurity,pg_has_role(current_user,c.relowner,'USAGE') owner_rights from pg_class c where c.oid=to_regclass($1)",[relation])).rows[0]
   if(!r?.relrowsecurity||!r.owner_rights)fail('existing_owner_path')
  }
+ if(plan.mode===NATIVE_CALLER_MODE){
+  nativeStage='caller_authority_preflight';nativeObject='auth.sessions';
+  const authority=(await db.query("select has_column_privilege(current_user,'auth.sessions','not_after','SELECT WITH GRANT OPTION') grantable,pg_has_role(current_user,'mip_efta_auth_session_owner_v1','SET') owner_set")).rows[0];
+  if(authority?.grantable!==true||authority.owner_set!==true)fail('caller_authority_prerequisite');
+ }
  nativeObject=null;nativeStage='creator_setup'
  await db.query('create role '+quote(creator)+' nologin createrole noinherit nosuperuser nocreatedb nobypassrls noreplication')
  await db.query('grant '+quote(creator)+' to '+quote(expectedLogin)+' with inherit false,set true')
- const created=[]
+ const created=[],bootstrapAtCreation=[]
  for(const step of plan.steps){
   nativeSource=step.path;nativeStage='source_body'
   let sql=step.body
   for(const role of step.created){
    if(sql.split(role.sql).length!==2)fail('creation_boundary')
+   if(plan.mode===NATIVE_CALLER_MODE&&CALLER_BOOTSTRAP_ROLES.includes(role.name)){
+    // CREATEROLE's actual automatic ADMIN-only grant belongs to the durable
+    // trusted installer. These are non-owner API groups, never protected owners.
+    await db.query(role.sql);
+    const expected=[...bootstrapAtCreation.map(r=>r.role_name),role.name].sort();
+    const observed=await callerBootstrapEdges(db,expectedLogin,expected);
+    bootstrapAtCreation.splice(0,bootstrapAtCreation.length,...observed);
+    sql=sql.replace(role.sql,()=>'-- Exact role created and automatic grantor bound immediately above.');
+   }else{
    sql=sql.replace(role.sql,'set role '+quote(creator)+';\n'+role.sql+'\ngrant '+quote(role.name)+' to '+quote(expectedLogin)+' with admin false,inherit true,set true;\nreset role;')
+   }
   }
   await db.query(sql);created.push(...step.created.map(r=>r.name))
   await db.query('reset role')
+  if(plan.mode===NATIVE_CALLER_MODE&&step.created.some(r=>CALLER_BOOTSTRAP_ROLES.includes(r.name)))await callerBootstrapEdges(db,expectedLogin);
   if(step.assertion&&!deferredAssertion(plan.mode,step.path)){
    nativeStage='assertion_helper'
    await assertionHelper(db,schema,step.assertion_owner,expectedLogin,step.assertion)
    await db.query('savepoint native_boundary')
    nativeStage='checkpoint_cleanup'
-   await cleanupCreator(db,creator,expectedLogin,created)
+   await cleanupCreator(db,creator,expectedLogin,created,plan.mode)
    nativeStage='checkpoint_assertion'
    await db.query('select '+quote(schema)+'.check_boundary()')
    // This restores ONLY temporary role cleanup. Source DDL and the helper
@@ -262,11 +305,12 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
  // backend final assertions and audit/C3 closure before the single COMMIT.
  const final=plan.steps.at(-1)
  nativeSource=final.path;nativeStage='final_helper'
- if(plan.mode===NATIVE_DISPLAY_MODE)await createNativeDisplayVerifier(db,final,expectedLogin);
+ if(plan.mode===NATIVE_CALLER_MODE)await createNativeCallerVerifier(db,final,expectedLogin,bootstrapAtCreation);
+ else if(plan.mode===NATIVE_DISPLAY_MODE)await createNativeDisplayVerifier(db,final,expectedLogin);
  else if(plan.mode===NATIVE_BINDING_MODE)await createNativeBindingVerifier(db,final,expectedLogin);
  else await assertionHelper(db,schema,final.assertion_owner,expectedLogin,final.assertion)
  nativeStage='final_cleanup'
- await cleanupCreator(db,creator,expectedLogin,created)
+ await cleanupCreator(db,creator,expectedLogin,created,plan.mode)
  if(!outerVerifierMode(plan.mode)){
   nativeStage='final_assertion'
   await db.query('select '+quote(schema)+'.check_boundary()')
@@ -283,6 +327,26 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
  return {mode:plan.mode,program_sha256:plan.program_sha256,stage_assertions:plan.steps.filter(s=>s.assertion).map(s=>({path:s.path,sha256:s.assertion_sha256})),committed:false,production_qualified:false,publication_allowed:false}
  }catch(error){recordFailure(error,plan,nativeStage,nativeSource,nativeObject);throw error}
 }
+const CALLER_BOOTSTRAP_ROLES=Object.freeze(['mip_mentions_admin','mip_mentions_gateway']);
+async function callerBootstrapEdges(db,login,expectedRoles=CALLER_BOOTSTRAP_ROLES){
+ const rows=(await db.query("select p.rolname role_name,p.oid::text role_oid,m.rolname member_name,m.oid::text member_oid,g.oid::text grantor_oid,a.admin_option,a.inherit_option,a.set_option from pg_auth_members a join pg_roles p on p.oid=a.roleid join pg_roles m on m.oid=a.member join pg_roles g on g.oid=a.grantor where p.rolname=any($1) or m.rolname=any($1) order by p.rolname,m.rolname,g.oid",[CALLER_BOOTSTRAP_ROLES])).rows;
+ if(rows.length!==expectedRoles.length||rows.some((r,n)=>r.role_name!==expectedRoles[n]||r.member_name!==login||r.admin_option!==true||r.inherit_option!==false||r.set_option!==false||![r.role_oid,r.member_oid,r.grantor_oid].every(v=>/^[1-9][0-9]*$/.test(v))))fail('bootstrap_topology');
+ return rows;
+}
+function callerBootstrapAssertion(login,edges){
+ if(!identifier.test(login))fail('identifier');
+ return "do $native_caller_bootstrap$ declare observed jsonb;begin "+
+ "select coalesce(jsonb_agg(jsonb_build_object('role_name',p.rolname,'role_oid',p.oid::text,'member_name',m.rolname,'member_oid',m.oid::text,'grantor_oid',g.oid::text,'admin_option',a.admin_option,'inherit_option',a.inherit_option,'set_option',a.set_option) order by p.rolname,m.rolname,g.oid),'[]'::jsonb) into observed from pg_auth_members a join pg_roles p on p.oid=a.roleid join pg_roles m on m.oid=a.member join pg_roles g on g.oid=a.grantor where p.rolname in('mip_mentions_admin','mip_mentions_gateway') or m.rolname in('mip_mentions_admin','mip_mentions_gateway'); "+
+ "if observed is distinct from "+literal(JSON.stringify(edges))+"::jsonb "+
+ "or not exists(select 1 from pg_roles where rolname="+literal(login)+" and rolcanlogin and not rolsuper and rolcreaterole and rolcreatedb and rolbypassrls and rolinherit and not rolreplication) "+
+ "or pg_has_role("+literal(login)+",'mip_mentions_admin','USAGE') or pg_has_role("+literal(login)+",'mip_mentions_admin','SET') "+
+ "or pg_has_role("+literal(login)+",'mip_mentions_gateway','USAGE') or pg_has_role("+literal(login)+",'mip_mentions_gateway','SET') "+
+ "or has_schema_privilege("+literal(login)+",'mip_native_caller','USAGE,CREATE') "+
+ "or has_function_privilege("+literal(login)+",'mip_native_caller.configure_admission(uuid,uuid,uuid,uuid,uuid,text,name,uuid,text,timestamptz,timestamptz,boolean)','EXECUTE') "+
+ "or has_function_privilege("+literal(login)+",'mip_native_caller.read_current(uuid,uuid,bigint,uuid,uuid,text)','EXECUTE') "+
+ "then raise exception 'native_install_bootstrap_topology';end if;end $native_caller_bootstrap$;";
+}
+const callerVerifierBody=(final,login,edges)=>bindingVerifierBody({assertion:final.assertion+'\n'+callerBootstrapAssertion(login,edges)});
 const bindingVerifierBody=final=>'begin execute '+literal(final.assertion)+'; end'
 async function createNativeBindingVerifier(db,final,login){
  const schema='mip_comparison_install',owner=final.assertion_owner
@@ -346,15 +410,49 @@ export async function verifyNativeDisplayCurrentBoundary(db,plan,{expectedLogin,
   await assertNativeGovernedClosure(db,{expectedLogin,operationId,nativeMode:plan.mode})
  }catch(error){recordFailure(error,plan,stage,source,null);throw error}
 }
+async function createNativeCallerVerifier(db,final,login,atCreation){
+ const schema='mip_comparison_install',owner=final.assertion_owner,edges=await callerBootstrapEdges(db,login)
+ if(JSON.stringify(edges)!==JSON.stringify(atCreation))fail('bootstrap_topology');
+ const prior=(await db.query("select has_schema_privilege($1,$2,'USAGE') u,has_schema_privilege($1,$2,'CREATE') c,to_regprocedure('mip_comparison_install.native_boundary_v6()') is not null collision",[owner,schema])).rows[0]
+ if(!prior||prior.u||prior.c||prior.collision)fail('assertion_helper_boundary')
+ await db.query('grant usage,create on schema '+schema+' to '+quote(owner))
+ await db.query('set role '+quote(owner))
+ await db.query('create function '+schema+'.native_boundary_v6() returns void language plpgsql security definer set search_path=\'\' as '+literal(callerVerifierBody(final,login,edges)))
+ // Remove provider defaults only on this newly created verification function.
+ await db.query('revoke all on function '+schema+'.native_boundary_v6() from public')
+ const grants=(await db.query("select distinct x.grantee::regrole::text role_name from pg_proc p cross join lateral aclexplode(p.proacl)x where p.oid='mip_comparison_install.native_boundary_v6()'::regprocedure and x.grantee<>0 and x.grantee<>p.proowner")).rows
+ for(const grant of grants)await db.query('revoke all on function '+schema+'.native_boundary_v6() from '+quote(grant.role_name))
+ await db.query('grant execute on function '+schema+'.native_boundary_v6() to '+quote(login))
+ await db.query('reset role')
+ await db.query('revoke usage,create on schema '+schema+' from '+quote(owner))
+}
+export async function verifyNativeCallerCurrentBoundary(db,plan,{expectedLogin,operationId}){
+ let stage='caller_verifier_plan';const source=plan?.steps?.at(-1)?.path??null
+ try{
+  if(!preparedPlans.has(plan)||plan.mode!==NATIVE_CALLER_MODE||!/^[0-9a-f]{32}$/.test(operationId)
+   ||plan.program_sha256!==hash(JSON.stringify(plan.steps)))fail('plan')
+  await identity(db,expectedLogin)
+  const final=plan.steps.at(-1),edges=await callerBootstrapEdges(db,expectedLogin)
+  stage='caller_verifier_source'
+  const checked=(await db.query("select p.proowner=$1::regrole and p.prosecdef and p.pronargs=0 and p.prorettype='void'::regtype and p.prokind='f' and p.provolatile='v' and p.proconfig=$3::text[] and p.prosrc=$4 and not p.proleakproof and p.proparallel='u' and not exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where a.grantee not in($1::regrole,$2::regrole) or a.privilege_type<>'EXECUTE' or(a.grantee<>p.proowner and a.is_grantable)) and has_function_privilege($2,p.oid,'EXECUTE') and not has_schema_privilege($1,n.oid,'USAGE,CREATE') ok from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_comparison_install' and p.proname='native_boundary_v6'",[final.assertion_owner,expectedLogin,['search_path=""'],callerVerifierBody(final,expectedLogin,edges)])).rows[0]
+  if(checked?.ok!==true)fail('assertion_helper_boundary')
+  stage='caller_verifier_assertion'
+  await db.query('select mip_comparison_install.native_boundary_v6()')
+  stage='caller_verifier_closure'
+  await assertNativeGovernedClosure(db,{expectedLogin,operationId,nativeMode:plan.mode})
+ }catch(error){recordFailure(error,plan,stage,source,null);throw error}
+}
 export async function assertNativeGovernedClosure(db,{expectedLogin,operationId,nativeMode=NATIVE_MODE}){
  if(!isNativeMode(nativeMode))fail('plan')
  await identity(db,expectedLogin)
  const roles=(await db.query('select rolname,rolcanlogin,rolsuper,rolcreaterole,rolcreatedb,rolreplication,rolbypassrls,rolinherit from pg_roles where rolname=any($1)',[NATIVE_ROLES])).rows
  if(roles.length!==NATIVE_ROLES.length||roles.some(r=>r.rolcanlogin||r.rolsuper||r.rolcreaterole||r.rolcreatedb||r.rolreplication||r.rolbypassrls||r.rolinherit!==['mip_mentions_owner','mip_mentions_gateway','mip_mentions_admin'].includes(r.rolname)))fail('final_role_attributes')
- if((await db.query("select exists(select 1 from pg_auth_members where roleid in(select oid from pg_roles where rolname=any($1)) or member in(select oid from pg_roles where rolname=any($1))) edges",[NATIVE_ROLES])).rows[0].edges)fail('final_role_edges')
+ const isolatedRoles=nativeMode===NATIVE_CALLER_MODE?NATIVE_ROLES.filter(role=>!CALLER_BOOTSTRAP_ROLES.includes(role)):NATIVE_ROLES;
+ if((await db.query("select exists(select 1 from pg_auth_members where roleid in(select oid from pg_roles where rolname=any($1)) or member in(select oid from pg_roles where rolname=any($1))) edges",[isolatedRoles])).rows[0].edges)fail('final_role_edges');
+ if(nativeMode===NATIVE_CALLER_MODE)await callerBootstrapEdges(db,expectedLogin);
  if((await db.query('select exists(select 1 from pg_roles where rolname=$1) or exists(select 1 from pg_namespace where nspname=$2) residue',['mip_nci_'+operationId,'mip_nca_'+operationId])).rows[0].residue)fail('final_scaffolding')
  const schemas=(await db.query("select nspname,pg_get_userbyid(nspowner) owner from pg_namespace where nspname=any($1) order by nspname",[schemasFor(nativeMode)])).rows
- if(JSON.stringify(schemas)!==JSON.stringify([{nspname:'mip_arc_native',owner:'mip_arc_native_owner'},...(nativeMode!==NATIVE_MODE?[{nspname:'mip_arc_projection_private',owner:'mip_arc_native_owner'}]:[]),{nspname:'mip_arc_qik_source',owner:'mip_arc_qik_source_owner'},{nspname:'mip_mentions',owner:'mip_mentions_owner'},...(outerVerifierMode(nativeMode)?[{nspname:'mip_native_comparison',owner:'mip_arc_native_owner'}]:[]),...(nativeMode===NATIVE_DISPLAY_MODE?[{nspname:'mip_native_display',owner:'mip_arc_native_owner'}]:[])]))fail('final_schema_owners')
+ if(JSON.stringify(schemas)!==JSON.stringify([{nspname:'mip_arc_native',owner:'mip_arc_native_owner'},...(nativeMode!==NATIVE_MODE?[{nspname:'mip_arc_projection_private',owner:'mip_arc_native_owner'}]:[]),{nspname:'mip_arc_qik_source',owner:'mip_arc_qik_source_owner'},{nspname:'mip_mentions',owner:'mip_mentions_owner'},...(nativeMode===NATIVE_CALLER_MODE?[{nspname:'mip_native_caller',owner:'mip_mentions_owner'}]:[]),...(outerVerifierMode(nativeMode)?[{nspname:'mip_native_comparison',owner:'mip_arc_native_owner'}]:[]), ...((nativeMode===NATIVE_DISPLAY_MODE||nativeMode===NATIVE_CALLER_MODE)?[{nspname:'mip_native_display',owner:'mip_arc_native_owner'}]:[])]))fail('final_schema_owners')
  const bad=(await db.query("select exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity or pg_get_userbyid(c.relowner) not in('mip_mentions_owner','mip_arc_qik_source_owner','mip_canonical_writer','mip_arc_native_owner','mip_arc_attachment_owner'))) bad",[schemasFor(nativeMode)])).rows[0].bad
  if(bad)fail('final_storage')
  if(nativeMode!==NATIVE_MODE){
@@ -366,7 +464,7 @@ export async function assertNativeGovernedClosure(db,{expectedLogin,operationId,
   if(shape?.n!==2||shape.ok!==true)fail('final_private_storage');
  }
 
- if(nativeMode===NATIVE_DISPLAY_MODE){
+ if(nativeMode===NATIVE_DISPLAY_MODE||nativeMode===NATIVE_CALLER_MODE){
   if((await db.query("select exists(select 1 from pg_class where relnamespace='mip_native_display'::regnamespace) storage")).rows[0].storage)fail('final_private_storage');
  }
 

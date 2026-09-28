@@ -149,7 +149,8 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
    'supabase/qualification/arc-membership-native/003_governed_attachment.sql',
    'supabase/qualification/arc-public-projection/001_native_private_projection.sql',
    'supabase/qualification/native-comparison-binding/001_private_binding.sql',
-   'supabase/qualification/native-comparison-display/001_private_display.sql'])await db.query(await read(path));
+   'supabase/qualification/native-comparison-display/001_private_display.sql',
+   'supabase/qualification/native-comparison-caller/001_admission.sql'])await db.query(await read(path));
   assert.deepEqual((await db.query("select p.oid,pg_get_functiondef(p.oid) definition from pg_proc p where p.oid in('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure,'mip_identity.collector_lock()'::regprocedure) order by p.oid")).rows,recorderBaseline);
   await db.query('grant mip_arc_native_worker to "'+aliceName+'", "'+workerName+'"');
   privateWorker=await connect(workerName);sameReviewer=await connect(reviewerName);
@@ -184,7 +185,7 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   await checkNative('real_native_to_accepted_comparison_binding_both_current_readers',async()=>{
    const bound=await runNativeComparisonBindingFixture({syntheticFixture:true,db,reviewer,sameReviewer,
     gateway:alice,outsider:guest,worker:privateWorker,admin,scope:bindingScope,id,sentinel,connect});
-   assert.deepEqual(bound,{checks:6,display_checks:5,original_captures:4,accepted_events:2,publication_allowed:false,attachment_allowed:false});
+   assert.deepEqual(bound,{checks:6,display_checks:5,caller_checks:8,original_captures:4,accepted_events:2,publication_allowed:false,attachment_allowed:false});
   });
 
   const cap=await capture(body,'https://synthetic.invalid/review'),conflictCap=await capture('Ann objected. '+sentinel,'https://synthetic.invalid/conflict')
@@ -690,6 +691,8 @@ async function installFullBackend(root){
     for(const[n,t]of Object.entries(relation.requiredColumns))if(!cols.has(n))await owner.query('alter table '+relation.qualified+' add column '+ident(n)+' '+t);
    }
   }
+  // Synthetic full Auth substrate for the new caller expiry check; actual hosted Auth stays unchanged.
+  await owner.query('alter table auth.sessions add column if not exists not_after timestamptz');
   await owner.query(await read('supabase/migrations/20260905082406_evidence_pipeline_reliability.sql'));
   for(const file of LOAD_ORDER){
    await owner.query(await read('supabase/qualification/qik-ingest/'+file));

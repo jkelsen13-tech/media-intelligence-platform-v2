@@ -194,6 +194,7 @@ export const DISPLAY_SCHEMA=Object.freeze({
   "publication_allowed": "boolean",
   "attachment_allowed": "boolean"
 });
+const byteLength=value=>new TextEncoder().encode(value).byteLength;
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const HASH=/^[0-9a-f]{64}$/;
 const refuse=()=>{throw Error('native_comparison_display_refused')};
@@ -213,13 +214,13 @@ function check(v,s,depth=0){
  if(kind.endsWith('?')){if(v===null)return null;kind=kind.slice(0,-1)}
  if(kind==='boolean'){if(typeof v!=='boolean')refuse();return v}
  if(kind==='number'){if(typeof v!=='number'||!Number.isFinite(v)||!Number.isSafeInteger(v))refuse();return v}
- if(typeof v!=='string'||Buffer.byteLength(v)>(kind==='passage'?65536:kind==='url'?2048:16384))refuse();
+ if(typeof v!=='string'||byteLength(v)>(kind==='passage'?65536:kind==='url'?2048:16384))refuse();
  if(kind==='uuid'&&!UUID.test(v)||kind==='hash'&&!HASH.test(v))refuse();
  if(kind==='url'){let u;try{u=new URL(v)}catch{refuse()}if(!['http:','https:'].includes(u.protocol)||u.username||u.password)refuse()}
  return v;
 }
 export function validateDisplay(value,expected){
- if(Buffer.byteLength(JSON.stringify(value))>524288)refuse();
+ if(byteLength(JSON.stringify(value))>524288)refuse();
  const out=check(value,DISPLAY_SCHEMA);
  if(out.contract!=='native-comparison-display-private-v1'||out.scope!==expected.scope
  ||out.binding_id!==expected.binding_id||out.manifest_hash!==expected.manifest_hash

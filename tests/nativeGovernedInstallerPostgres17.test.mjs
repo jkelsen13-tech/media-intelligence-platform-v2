@@ -9,7 +9,7 @@ import {prepareClosedHistoricalInstall,installClosedHistoricalInTransaction} fro
 import {prepareAtomicInstall,installComparisonAtomic,qualifyComparisonAudit,DBLINK_PREFLIGHT_SQL,validateAtomicConfig,reconcileComparisonInstall} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
 import {REQUIRED_RELATIONS,RESERVED_ROLES} from '../supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs'
 import {LOAD_ORDER} from '../supabase/qualification/qik-ingest/installQikIngest.mjs'
-import {NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MODE,NATIVE_DISPLAY_MODE,nativeAuthorization,NATIVE_ORDER,NATIVE_PROJECTION_ORDER,NATIVE_BINDING_ORDER,NATIVE_DISPLAY_ORDER,NATIVE_ROLES,assertNativeGovernedClosure,verifyNativeBindingCurrentBoundary,verifyNativeDisplayCurrentBoundary} from '../supabase/qualification/native-governed-install/install.mjs'
+import {NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MODE,NATIVE_DISPLAY_MODE,NATIVE_CALLER_MODE,nativeAuthorization,NATIVE_ORDER,NATIVE_PROJECTION_ORDER,NATIVE_BINDING_ORDER,NATIVE_DISPLAY_ORDER,NATIVE_CALLER_ORDER,NATIVE_ROLES,assertNativeGovernedClosure,verifyNativeBindingCurrentBoundary,verifyNativeDisplayCurrentBoundary,verifyNativeCallerCurrentBoundary} from '../supabase/qualification/native-governed-install/install.mjs'
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8')
 const database='postgres',password='mip-efta-disposable-ci-only'
 const backendInstaller='native_install_principal',backendAudit='native_install_audit'
@@ -36,11 +36,11 @@ async function loseAcknowledgementOnce(command,operation){
  try{const result=await operation();return {result,injected}}
  finally{pg.Client.prototype.query=original}
 }
-for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MODE,NATIVE_DISPLAY_MODE])test(selectedMode+' joint native installation uses actual PG17.6 nonsuper principal, rollback, cleanup and disabled audit', {
+for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MODE,NATIVE_DISPLAY_MODE,NATIVE_CALLER_MODE])test(selectedMode+' joint native installation uses actual PG17.6 nonsuper principal, rollback, cleanup and disabled audit', {
  skip:process.env.MIP_NATIVE_GOVERNED_INSTALL_DISPOSABLE!=='synthetic-pg17-only',timeout:300000
 },async t=>{
  let root,principal,baseline,armed=false,primary=null,stage='pristine',lastInstall=null;const cleanup=[]
- const projection=selectedMode!==NATIVE_MODE,binding=selectedMode===NATIVE_BINDING_MODE,display=selectedMode===NATIVE_DISPLAY_MODE,selectedOrder=display?NATIVE_DISPLAY_ORDER:binding?NATIVE_BINDING_ORDER:projection?NATIVE_PROJECTION_ORDER:NATIVE_ORDER
+ const projection=selectedMode!==NATIVE_MODE,binding=selectedMode===NATIVE_BINDING_MODE,display=selectedMode===NATIVE_DISPLAY_MODE,caller=selectedMode===NATIVE_CALLER_MODE,selectedOrder=caller?NATIVE_CALLER_ORDER:display?NATIVE_DISPLAY_ORDER:binding?NATIVE_BINDING_ORDER:projection?NATIVE_PROJECTION_ORDER:NATIVE_ORDER
  const refusalRelation=projection?'public.nodes':'public.articles',refusalPath=projection?NATIVE_PROJECTION_ORDER.at(-1).path:'supabase/qualification/arc-membership-native/001_governed_cohort.sql'
  try{
   assert.equal(process.env.MIP_QIK_COMPARISON_DISPOSABLE,'synthetic-pg17-only')
@@ -68,6 +68,12 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
    const prior=await prepareAtomicInstall(read,{nativeMode:NATIVE_MODE})
    assert.deepEqual(plan.native.steps.slice(0,9),prior.native.steps)
    if(projection)assert.notEqual(plan.native.program_sha256,prior.native.program_sha256)
+   if(caller){
+    const v5=await prepareAtomicInstall(read,{nativeMode:NATIVE_DISPLAY_MODE})
+    assert.deepEqual(plan.native.steps.slice(0,NATIVE_DISPLAY_ORDER.length),v5.native.steps)
+    assert.notEqual(plan.native.program_sha256,v5.native.program_sha256)
+    assert.throws(()=>validateAtomicConfig({...cfg,authorization:nativeAuthorization(NATIVE_DISPLAY_MODE)}))
+   }
    if(display){
     const v4=await prepareAtomicInstall(read,{nativeMode:NATIVE_BINDING_MODE})
     assert.deepEqual(plan.native.steps.slice(0,NATIVE_BINDING_ORDER.length),v4.native.steps)
@@ -76,6 +82,23 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
    }
    assert.deepEqual(plan.native.steps.map(s=>s.blob),selectedOrder.map(s=>s.blob))
    for(const s of plan.native.steps.filter(s=>s.assertion))assert.match(s.assertion_sha256,/^[a-f0-9]{64}$/)
+  })
+  if(caller)await t.test('v6 refuses missing actual Auth expiry grant authority and rolls back original leases',async()=>{
+   const roles=await roleCatalog(root),edges=await edgeCatalog(root)
+   await root.query('alter table auth.sessions owner to postgres')
+   await root.query('grant select(id,user_id),update(id) on auth.sessions to '+ident(backendInstaller)+' with grant option')
+   try{
+    const rejected=await installComparisonAtomic(cfg,read)
+    assert.equal(rejected.state,'installation_refused')
+    assert.equal(rejected.native_failure?.stage,'caller_authority_preflight')
+    assert.equal(rejected.native_failure?.name,'native_install_caller_authority_prerequisite')
+    assert.deepEqual(await roleCatalog(root),roles);assert.deepEqual(await edgeCatalog(root),edges)
+    assert.equal((await root.query("select to_regnamespace('mip_native_caller') is null absent")).rows[0].absent,true)
+   }finally{
+    await root.query('revoke all on auth.sessions from '+ident(backendInstaller))
+    await root.query('revoke all(id,user_id,not_after) on auth.sessions from '+ident(backendInstaller))
+    await root.query('alter table auth.sessions owner to '+ident(backendInstaller))
+   }
   })
   stage='transaction_failure'
   const beforeRoles=await roleCatalog(root),beforeEdges=await edgeCatalog(root)
@@ -90,7 +113,7 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
    assert.equal(failed.native_failure?.name,'arc_native_source_authority',JSON.stringify(lastInstall))
    assert.deepEqual(await roleCatalog(root),beforeRoles)
    assert.deepEqual(await edgeCatalog(root),beforeEdges)
-   assert.equal((await root.query("select count(*)::int n from pg_namespace where nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_arc_projection_private','mip_native_comparison','mip_native_display','mip_identity','mip_comparison_install') or nspname like 'mip_nca_%'")).rows[0].n,0)
+   assert.equal((await root.query("select count(*)::int n from pg_namespace where nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_arc_projection_private','mip_native_comparison','mip_native_display','mip_native_caller','mip_identity','mip_comparison_install') or nspname like 'mip_nca_%'")).rows[0].n,0)
    assert.equal((await root.query("select n.nspname from pg_extension e join pg_namespace n on n.oid=e.extnamespace where e.extname='dblink'")).rows[0].nspname,'extensions')
    assert.equal((await principal.query('select count(*)::int n from qik_ingest_operation.persistent_install_receipt')).rows[0].n,1)
   })
@@ -110,6 +133,33 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
    assert.deepEqual(await edgeCatalog(root),beforeEdges)
   })
   await principal.query('drop policy native_qualification_refuse on '+refusalRelation)
+  if(caller)await t.test('v6 late complete caller assertion fails after genuine cleanups and rolls back the entire joint install',async()=>{
+   const roles=await roleCatalog(root),edges=await edgeCatalog(root)
+   const original=pg.Client.prototype.query;let injected=false,sawClean=false
+   pg.Client.prototype.query=async function(...args){
+    if(this.connectionParameters?.user===backendInstaller&&args[0]==='select mip_comparison_install.native_boundary_v6()'){
+     const before=await original.call(this,"select not exists(select 1 from pg_roles where rolname like 'mip_nci_%' or rolname like 'mip_tmp_%') clean")
+     sawClean=before.rows[0].clean
+    }
+    const answer=await original.apply(this,args)
+    if(!injected&&this.connectionParameters?.user===backendInstaller&&typeof args[0]==='string'
+     &&args[0].includes('create schema mip_native_caller authorization mip_mentions_owner;')){
+     // Actual forbidden grant while the original native creator lease still
+     // exists. The late assertion must reject it after both real cleanups.
+     await original.call(this,'grant create on schema mip_native_caller to mip_mentions_gateway')
+     injected=true
+    }
+    return answer
+   }
+   let rejected
+   try{rejected=await installComparisonAtomic(cfg,read)}finally{pg.Client.prototype.query=original}
+   assert.equal(injected,true);assert.equal(sawClean,true)
+   assert.equal(rejected.state,'installation_refused')
+   assert.equal(rejected.phase,'native_final_joint_closure')
+   assert.equal(rejected.native_failure?.stage,'caller_verifier_assertion')
+   assert.deepEqual(await roleCatalog(root),roles);assert.deepEqual(await edgeCatalog(root),edges)
+   assert.equal((await root.query("select to_regnamespace('mip_native_caller') is null and to_regnamespace('mip_comparison_install') is null absent")).rows[0].absent,true)
+  })
   stage='joint_install';const commitAttempt=await loseAcknowledgementOnce('commit',()=>installComparisonAtomic(cfg,read))
   const attempt=commitAttempt.result;lastInstall=safeResult(attempt)
   assert.equal(commitAttempt.injected,true,JSON.stringify(lastInstall))
@@ -377,6 +427,142 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
    await verifyNativeDisplayCurrentBoundary(principal,plan.native,cfg)
    await assertNativeGovernedClosure(principal,cfg)
   })
+
+  if(caller)await t.test('v6 committed caller has complete fixed final boundary after both genuine creator cleanups',async()=>{
+   await verifyNativeCallerCurrentBoundary(principal,plan.native,cfg)
+   const verifier=(await root.query("select pg_get_userbyid(p.proowner) owner,p.pronargs,p.prorettype::regtype::text result,p.prosecdef,p.proconfig,p.prosrc,not has_schema_privilege(p.proowner,n.oid,'USAGE,CREATE') isolated from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.oid='mip_comparison_install.native_boundary_v6()'::regprocedure")).rows[0]
+   assert.equal(verifier.owner,'mip_arc_native_owner');assert.equal(verifier.pronargs,0)
+   assert.equal(verifier.result,'void');assert.equal(verifier.prosecdef,true);assert.equal(verifier.isolated,true)
+   assert.deepEqual(verifier.proconfig,['search_path=""'])
+   assert.equal(verifier.prosrc.startsWith('begin execute '+"'"+plan.native.steps.at(-1).assertion.replaceAll("'","''")+'\n'),true)
+   const bootstrap=(await root.query("select p.rolname role_name,p.oid::text role_oid,m.rolname member_name,m.oid::text member_oid,g.oid::text grantor_oid,a.admin_option,a.inherit_option,a.set_option from pg_auth_members a join pg_roles p on p.oid=a.roleid join pg_roles m on m.oid=a.member join pg_roles g on g.oid=a.grantor where p.rolname in('mip_mentions_admin','mip_mentions_gateway') or m.rolname in('mip_mentions_admin','mip_mentions_gateway') order by p.rolname,m.rolname,g.oid")).rows
+   assert.equal(bootstrap.length,2)
+   assert.deepEqual(bootstrap.map(e=>[e.role_name,e.member_name,e.admin_option,e.inherit_option,e.set_option]),[['mip_mentions_admin',backendInstaller,true,false,false],['mip_mentions_gateway',backendInstaller,true,false,false]])
+   assert.equal(verifier.prosrc.includes(JSON.stringify(bootstrap)),true)
+   assert.match(verifier.prosrc,/native_caller_bootstrap/)
+   const v5=await prepareAtomicInstall(read,{nativeMode:NATIVE_DISPLAY_MODE})
+   assert.equal(plan.native.steps.at(-1).assertion.startsWith(v5.native.steps.at(-1).assertion+'\n'),true)
+   assert.equal((await root.query("select count(*)::int n from pg_proc where pronamespace='mip_native_caller'::regnamespace")).rows[0].n,6)
+   assert.equal((await root.query("select count(*)::int n from pg_class where relnamespace='mip_native_caller'::regnamespace and relkind='r'")).rows[0].n,2)
+   assert.equal((await root.query("select count(*)::int n from mip_native_caller.admissions")).rows[0].n,0)
+   assert.equal((await root.query("select count(*)::int n from auth.sessions")).rows[0].n,0)
+   for(const role of ['anon','authenticated','service_role','mip_mentions_gateway','mip_efta_auth_session_owner_v1'])
+    assert.equal((await root.query("select has_function_privilege($1,'mip_comparison_install.native_boundary_v6()','EXECUTE') allowed",[role])).rows[0].allowed,false)
+   await assert.rejects(principal.query('set role mip_efta_auth_session_owner_v1'),e=>e.code==='42501')
+   assert.equal((await root.query("select count(*)::int n from pg_auth_members where roleid='mip_efta_auth_session_owner_v1'::regrole or member='mip_efta_auth_session_owner_v1'::regrole")).rows[0].n,0)
+  })
+  if(caller)await t.test('v6 fresh reconciliation detects caller Auth, helper and owner drift while preserving every prior boundary',async()=>{
+   const pristine=await edgeCatalog(root)
+   const mutation=async(apply,restore,expectedStage)=>{
+    try{
+     await apply();const observed=await reconcileComparisonInstall(cfg,read)
+     assert.equal(observed.state,'reconciliation_unavailable')
+     assert.equal(observed.needs_reconciliation,true)
+     assert.equal(observed.phase,'native_reconciliation')
+     assert.equal(observed.native_failure?.stage,expectedStage)
+    }finally{await restore()}
+    const restored=await reconcileComparisonInstall(cfg,read)
+    assert.equal(restored.state,'installed_disabled_audit_pending')
+    assert.equal(restored.needs_reconciliation,false)
+    assert.deepEqual(await edgeCatalog(root),pristine)
+   }
+   assert.equal((await root.query("select has_function_privilege('mip_mentions_admin','mip_native_caller.configure_admission(uuid,uuid,uuid,uuid,uuid,text,name,uuid,text,timestamptz,timestamptz,boolean)','EXECUTE') and not has_function_privilege('mip_mentions_admin','mip_native_caller.configure(uuid,uuid,uuid,uuid,uuid,text,name,uuid,text,timestamptz,timestamptz,boolean)','EXECUTE') allowed")).rows[0].allowed,true)
+   await mutation(
+    ()=>root.query('grant execute on function mip_native_caller.configure_admission(uuid,uuid,uuid,uuid,uuid,text,name,uuid,text,timestamptz,timestamptz,boolean) to mip_mentions_gateway'),
+    ()=>root.query('revoke execute on function mip_native_caller.configure_admission(uuid,uuid,uuid,uuid,uuid,text,name,uuid,text,timestamptz,timestamptz,boolean) from mip_mentions_gateway'),
+    'caller_verifier_assertion')
+   await mutation(
+    ()=>root.query('grant execute on function mip_native_caller.assert_session(uuid,uuid,bigint) to public'),
+    ()=>root.query('revoke execute on function mip_native_caller.assert_session(uuid,uuid,bigint) from public'),
+    'caller_verifier_assertion')
+   await mutation(
+    ()=>root.query('grant create on schema mip_native_caller to mip_mentions_gateway'),
+    ()=>root.query('revoke create on schema mip_native_caller from mip_mentions_gateway'),
+    'caller_verifier_assertion')
+   await mutation(
+    ()=>root.query('revoke select(not_after) on auth.sessions from mip_efta_auth_session_owner_v1'),
+    ()=>root.query('grant select(not_after) on auth.sessions to mip_efta_auth_session_owner_v1'),
+    'caller_verifier_assertion')
+   await mutation(
+    ()=>root.query('grant mip_efta_auth_session_owner_v1 to '+ident(backendInstaller)),
+    ()=>root.query('revoke mip_efta_auth_session_owner_v1 from '+ident(backendInstaller)),
+    'caller_verifier_assertion')
+   const original=(await root.query("select pg_get_functiondef('mip_comparison_install.native_boundary_v6()'::regprocedure) definition")).rows[0].definition
+   await mutation(
+    ()=>root.query("create or replace function mip_comparison_install.native_boundary_v6() returns void language plpgsql security definer set search_path='' as 'begin return; end'"),
+    ()=>root.query(original),'caller_verifier_source')
+   await mutation(
+    ()=>root.query('grant execute on function mip_native_display.accepted_event(uuid,text,jsonb) to mip_mentions_gateway'),
+    ()=>root.query('revoke execute on function mip_native_display.accepted_event(uuid,text,jsonb) from mip_mentions_gateway'),
+    'caller_verifier_assertion')
+   await verifyNativeCallerCurrentBoundary(principal,plan.native,cfg)
+   await principal.query(plan.assertions);await principal.query(plan.dojAssertions);await principal.query(plan.compatibility)
+  })
+
+  if(caller)await t.test('v6 fixed verifier rejects changed grantor topology and restores the exact observed automatic edges',async()=>{
+   const baseline=await edgeCatalog(root)
+   const grant=(await root.query("select g.rolname grantor from pg_auth_members a join pg_roles g on g.oid=a.grantor where roleid='mip_mentions_gateway'::regrole and member=$1::regrole",[backendInstaller])).rows
+   assert.equal(grant.length,1)
+   const alternate=grant[0].grantor===backendInstaller?'postgres':backendInstaller
+   assert.notEqual(alternate,grant[0].grantor)
+   await root.query('begin')
+   try{
+    await root.query('grant mip_mentions_gateway to '+ident(backendInstaller)+' with admin true,inherit false,set false granted by '+ident(alternate))
+    assert.notDeepEqual(await edgeCatalog(root),baseline)
+    await assert.rejects(root.query('select mip_comparison_install.native_boundary_v6()'),e=>e.code==='P0001')
+   }finally{await root.query('rollback')}
+   assert.deepEqual(await edgeCatalog(root),baseline)
+   await verifyNativeCallerCurrentBoundary(principal,plan.native,cfg)
+  })
+  if(caller)await t.test('actual retained non-owner ADMIN grantor can provision scoped runtime callers after commit, then restore disabled closure',async()=>{
+   const adminLogin='native_caller_admin_probe',gatewayLogin='native_caller_gateway_probe'
+   const roles=await roleCatalog(root),edges=await edgeCatalog(root)
+   const scope='92000000-0000-0000-0000-000000000001',revision='92000000-0000-0000-0000-000000000002'
+   const user='92000000-0000-0000-0000-000000000003',bindingId='92000000-0000-0000-0000-000000000004',broker='92000000-0000-0000-0000-000000000005'
+   const configure='select mip_native_caller.configure_admission($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)'
+   const args=[revision,null,user,scope,bindingId,'0'.repeat(64),gatewayLogin,broker,'synthetic-installer-proof','2026-01-01T00:00:00Z','2099-01-01T00:00:00Z',true]
+   let adminSession,gatewaySession,adminCreated=false,gatewayCreated=false,primary=null;const cleanup=[]
+   try{
+    for(const role of [adminLogin,gatewayLogin]){
+     await principal.query('create role '+ident(role)+" login nosuperuser nocreatedb nocreaterole inherit nobypassrls noreplication password '"+password+"'")
+     if(role===adminLogin)adminCreated=true;else gatewayCreated=true
+    }
+    await principal.query('grant mip_mentions_admin to '+ident(adminLogin)+' with admin false,inherit true,set false')
+    await principal.query('grant mip_mentions_gateway to '+ident(gatewayLogin)+' with admin false,inherit true,set false')
+    adminSession=await connect(adminLogin);gatewaySession=await connect(gatewayLogin)
+    for(const [client,login]of [[adminSession,adminLogin],[gatewaySession,gatewayLogin]]){
+     assert.deepEqual((await client.query('select session_user::text principal,current_user::text effective')).rows[0],{principal:login,effective:login})
+     for(const owner of NATIVE_ROLES.filter(r=>!['mip_mentions_admin','mip_mentions_gateway'].includes(r)))await assert.rejects(client.query('set role '+ident(owner)),e=>e.code==='42501')
+     await assert.rejects(client.query('select * from mip_native_caller.admissions'),e=>e.code==='42501')
+    }
+    // Runtime memberships are deliberately outside the disabled profile.
+    assert.equal((await reconcileComparisonInstall(cfg,read)).state,'reconciliation_unavailable')
+    await assert.rejects(gatewaySession.query(configure,args),e=>e.code==='42501')
+    await assert.rejects(adminSession.query(configure,args),e=>e.code==='P0001'&&e.message==='scope access denied')
+    await adminSession.query('select mip_mentions.set_membership($1,$2,false)',[scope,adminLogin])
+    await assert.rejects(adminSession.query(configure,args),e=>e.code==='P0001'&&e.message==='scope access denied')
+    await adminSession.query('select mip_mentions.set_membership($1,$2,true)',[scope,adminLogin])
+    await adminSession.query(configure,args);await adminSession.query(configure,args)
+    assert.equal((await root.query('select count(*)::int n from mip_native_caller.admissions where revision=$1',[revision])).rows[0].n,1)
+    await assert.rejects(adminSession.query(configure.replace('configure_admission','configure'),args),e=>e.code==='42501')
+    await assert.rejects(gatewaySession.query('select mip_native_caller.read_current($1,$2,$3,$4,$5,$6)',[user,broker,1,scope,bindingId,'0'.repeat(64)]),e=>e.code==='P0001')
+    const revoked=[...args];revoked[0]='92000000-0000-0000-0000-000000000006';revoked[1]=revision;revoked[11]=false
+    await adminSession.query(configure,revoked)
+    await adminSession.query('select mip_mentions.set_membership($1,$2,null)',[scope,adminLogin])
+   }catch(error){primary={sqlstate:/^[A-Z0-9]{5}$/.test(error?.code??'')?error.code:'NONE',frames:String(error?.stack??'').split('\n').slice(1).flatMap(line=>line.match(/nativeGovernedInstallerPostgres17\.test\.mjs:\d{1,6}:\d{1,6}/g)??[]).slice(0,3)}}
+   finally{
+    if(adminSession)try{await adminSession.query('select mip_mentions.set_membership($1,$2,null)',[scope,adminLogin])}catch{cleanup.push('membership')}
+    for(const [name,client]of [['admin',adminSession],['gateway',gatewaySession]])if(client)try{await client.end()}catch{cleanup.push('close_'+name)}
+    for(const [name,group,created]of [[gatewayLogin,'mip_mentions_gateway',gatewayCreated],[adminLogin,'mip_mentions_admin',adminCreated]])if(created){
+     try{await principal.query('revoke '+ident(group)+' from '+ident(name))}catch{cleanup.push('revoke_group')}
+     try{await principal.query('drop role '+ident(name))}catch{cleanup.push('drop_login')}
+    }
+   }
+   if(primary||cleanup.length)throw Error('native_runtime_bootstrap_fixture_failed:'+JSON.stringify({primary,cleanup}))
+   assert.deepEqual(await roleCatalog(root),roles);assert.deepEqual(await edgeCatalog(root),edges)
+   await verifyNativeCallerCurrentBoundary(principal,plan.native,cfg)
+   assert.equal((await reconcileComparisonInstall(cfg,read)).state,'installed_disabled_audit_pending')
+  })
   // The autonomous audit observes the surviving main installation only, after
   // the ordered historical transaction and synthetic Vault fixture are gone.
   stage='audit';const audited=await qualifyComparisonAudit(cfg,read)
@@ -392,7 +578,7 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
    await assertNativeGovernedClosure(principal,cfg)
    for(const role of NATIVE_ROLES)await assert.rejects(principal.query('set role '+ident(role)),e=>e.code==='42501')
    for(const role of ['anon','authenticated','service_role']){
-    assert.equal((await root.query("select bool_or(has_table_privilege($1,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') or has_any_column_privilege($1,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')) bad from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_arc_projection_private','mip_native_comparison','mip_native_display') and c.relkind='r'",[role])).rows[0].bad,false)
+    assert.equal((await root.query("select bool_or(has_table_privilege($1,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') or has_any_column_privilege($1,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')) bad from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_arc_projection_private','mip_native_comparison','mip_native_display','mip_native_caller') and c.relkind='r'",[role])).rows[0].bad,false)
    }
    assert.equal((await root.query("select count(*)::int n from pg_roles where rolname like 'mip_nci_%' or rolname like 'mip_tmp_%'")).rows[0].n,0)
    assert.equal((await root.query("select count(*)::int n from pg_namespace where nspname like 'mip_nca_%'")).rows[0].n,0)
@@ -406,7 +592,7 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
     clean=new pg.Client({host:'127.0.0.1',port:5432,database:'template1',user:'postgres',password,connectionTimeoutMillis:5000,query_timeout:20000,statement_timeout:15000})
     await clean.connect()
     const created=(await roleCatalog(clean)).map(r=>r.rolname).filter(r=>!baseline.includes(r))
-    const allowed=new Set([...RESERVED_ROLES,...NATIVE_ROLES,backendInstaller,backendAudit,'anon','authenticated','service_role','qik_ingest_fn_owner','qik_ingest_runtime','mip_tmp_'+'2'.repeat(32),'mip_nci_'+'2'.repeat(32),'mip_history_owner','mip_history_executor','mip_hci_'+'6'.repeat(32)])
+    const allowed=new Set([...RESERVED_ROLES,...NATIVE_ROLES,backendInstaller,backendAudit,'anon','authenticated','service_role','qik_ingest_fn_owner','qik_ingest_runtime','mip_tmp_'+'2'.repeat(32),'mip_nci_'+'2'.repeat(32),'mip_history_owner','mip_history_executor','mip_hci_'+'6'.repeat(32),'native_caller_admin_probe','native_caller_gateway_probe'])
     if(!created.every(r=>allowed.has(r)))throw Error('unexpected_role')
     await clean.query("select pg_terminate_backend(pid) from pg_stat_activity where datname='postgres' and pid<>pg_backend_pid()")
     await clean.query('drop database postgres')
@@ -513,6 +699,11 @@ async function prepareFullBackend(root,selectedMode){
     }
     await selected.query('alter table public.nodes enable row level security;alter table public.arc_milestones enable row level security')
    }finally{await selected.end()}
+  }
+  if(selectedMode===NATIVE_CALLER_MODE){
+   const shape=await connect(backendInstaller)
+   try{await shape.query('alter table auth.sessions add column if not exists not_after timestamptz')}
+   finally{await shape.end()}
   }
   const plan=await prepareAtomicInstall(read,{nativeMode:selectedMode});
   const pre=await connect(backendInstaller);

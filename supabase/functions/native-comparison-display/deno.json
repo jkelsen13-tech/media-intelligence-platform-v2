@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "pg": "npm:pg@8.23.0"
+  },
+  "compilerOptions": {
+    "allowJs": true
+  }
+}

@@ -1,3 +1,4 @@
+import NativePrivateComparisonWorkspace from './NativePrivateComparisonWorkspace.jsx'
 import PrivateMarketsWorkspace from './PrivateMarketsWorkspace.jsx'
 import HypothesisAssessmentHistory from './HypothesisAssessmentHistory.jsx'
 import AssessmentEvidenceTrail, { RetainedInputRecord, RetainedInputDates } from './InvestigationAssessmentTrail.jsx'
@@ -1732,6 +1733,7 @@ export default function PrivateInvestigationWorkspace({
 
   return (
     <div className="piw" data-private-investigation="true" data-workspace-status={status}>
+      <NativePrivateComparisonWorkspace />
       <div className="piw-toolbar">
         <div>
           <p className="piw-kicker">Assigned investigations</p>

@@ -11,6 +11,9 @@ import {runQikJournaledWorker} from '../supabase/functions/source-comparison-gen
 import {scoreGovernedNativeInput} from '../supabase/qualification/arc-membership-native/runGovernedNativeArc.mjs'
 import {assertNativeComparisonBinding} from './nativeComparisonBindingAssertions.mjs'
 import {assertNativeComparisonDisplay} from './nativeComparisonDisplayAssertions.mjs'
+import {assertNativeComparisonCaller} from './nativeComparisonCallerPostgresAssertions.mjs'
+import {prepareAtomicInstall} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
+import {NATIVE_CALLER_MODE} from '../supabase/qualification/native-governed-install/install.mjs'
 
 const sentence='Officials reportedly approved the council funding proposal on Tuesday.'
 const hash=x=>createHash('sha256').update(x,'utf8').digest('hex')
@@ -20,6 +23,7 @@ const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8')
 const fixtureFailures=new WeakMap()
 export const nativeComparisonFixtureDiagnostic=error=>error&&typeof error==='object'?fixtureFailures.get(error)??null:null
 const displayRefusal=/^native_display_check_[1-5] SQLSTATE=(?:[A-Z0-9]{5}|NONE) (?:nativeComparisonDisplayAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}(?: nativeComparisonDisplayAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}){0,2})?$/
+const callerRefusal=/^native_caller_check_[1-8] SQLSTATE=(?:[A-Z0-9]{5}|NONE) (?:nativeComparisonCallerPostgresAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}(?: nativeComparisonCallerPostgresAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}){0,2})?(?: cleanup=failed)?(?: native_caller_auth_cleanup)?$/
 const bindingRefusal=/^native_comparison_check_[1-6]_(?:dual_authority_and_actual_binding|exact_retry_and_real_event_mismatch|metadata_only_original_identity|current_both_sides_refuse_real_revocation|direct_wrapper_and_final_acl_boundary|append_only_local_revocation_no_publication)_sqlstate_(?:[A-Z0-9]{5}|NONE)_frames_(?:(?:nativeComparisonBindingAssertions\.mjs|nativeArcCohortPostgres17\.test\.mjs):[0-9]{1,6}:[0-9]{1,6}(?:,(?:nativeComparisonBindingAssertions\.mjs|nativeArcCohortPostgres17\.test\.mjs):[0-9]{1,6}:[0-9]{1,6}){0,3})?$/
 // Exact non-format static exception messages from the complete installed source only.
 // Includes fixed operation-denial reasons; never accepts a prefix or arbitrary message.
@@ -49,7 +53,7 @@ export async function runNativeComparisonBindingFixture(fx){
  if(fx.syntheticFixture!==true||typeof fx.connect!=='function'||typeof fx.id!=='function')
   throw Error('native_comparison_fixture_guard')
  const {db,reviewer,sameReviewer,gateway,outsider,worker,admin,scope,id,connect,sentinel}=fx
- const owned=[];let stage='guard',primary=null,result,displayResult=null,displayFailure=null,initialGate=null,sourceInitial=null,sourceInserted=false,reviewMembershipRestored=true,gatewayMembershipRestored=true;const cleanup=[]
+ const owned=[];let stage='guard',primary=null,result,displayResult=null,displayFailure=null,callerResult=null,callerFailure=null,initialGate=null,sourceInitial=null,sourceInserted=false,reviewMembershipRestored=true,gatewayMembershipRestored=true;const cleanup=[]
  const freshRole=async role=>{
   const c=await connect();owned.push(c)
   const original=(await c.query('select session_user::text u,current_user::text e')).rows[0]
@@ -530,6 +534,27 @@ export async function runNativeComparisonBindingFixture(fx){
       displayFailure=displayRefusal.test(error?.message??'')?error.message:'native_display_fixture_failed'
       throw error
      }
+     stage='native_caller_assertions'
+     try{
+      const callerPlan=await prepareAtomicInstall(read,{nativeMode:NATIVE_CALLER_MODE})
+      assert.equal((await db.query("select to_regprocedure('mip_native_caller.read_current(uuid,uuid,bigint,uuid,uuid,text)') is not null present")).rows[0].present,true)
+      callerResult=await assertNativeComparisonCaller({
+       syntheticFixture:true,db,admin,gateway:reviewer,outsider,worker,binding:receipt,
+       broker:brokerContext,id,openAdmin:()=>connect(),
+       verifyMainBoundary:extra=>withFinalBoundary(async c=>{
+        await c.query(callerPlan.assertions);await c.query(callerPlan.dojAssertions);await c.query(callerPlan.compatibility)
+        // Main C9 uses root-staged native SQL; restricted v6 installation is a separate test.
+        await c.query(callerPlan.native.steps.at(-1).assertion)
+        await c.query(extra)
+       }),
+       withRevokedBinding:body=>rollbackMutation(c=>c.query('insert into mip_native_comparison.revocations(scope,binding_id) values($1,$2)',[scope,receipt.binding_id]),body),
+       withRevokedBroker:body=>rollbackMutation(c=>c.query('select mip_comparison_kernel_v1.revoke_session($1)',[publisherSession]),body)
+      })
+      assert.deepEqual(callerResult,{checks:8,publication_allowed:false,attachment_allowed:false})
+     }catch(error){
+      callerFailure=callerRefusal.test(error?.message??'')?error.message:'native_caller_fixture_failed'
+      throw error
+     }
 
     }else{
      const request={action:'revoke',scope,binding_id:id(7150)}
@@ -554,7 +579,7 @@ export async function runNativeComparisonBindingFixture(fx){
    withInvalidatedComparison:body=>rollbackMutation(c=>c.query('update mip_identity.publication_review_heads set active=false where generation_id=$1',[comparisonGeneration]),body)
   })
   assert.deepEqual(result,{checks:6,publication_allowed:false,attachment_allowed:false})
- }catch(error){primary={...diagnostic(error,stage),display_check:displayFailure}}
+ }catch(error){primary={...diagnostic(error,stage),display_check:displayFailure,caller_check:callerFailure}}
  finally{
   if(!gatewayMembershipRestored){
    try{await admin.query('select mip_mentions.set_membership($1,$2,true)',[scope,(await gateway.query('select session_user::text u')).rows[0].u]);gatewayMembershipRestored=true}catch{cleanup.push('synthetic_gateway_membership_restore')}
@@ -581,5 +606,5 @@ export async function runNativeComparisonBindingFixture(fx){
   fixtureFailures.set(failure,Object.freeze({primary:primary?Object.freeze({...primary,frames:Object.freeze([...primary.frames])}):null,cleanup:Object.freeze([...cleanup])}))
   throw failure
  }
- return {checks:result.checks,display_checks:displayResult.checks,original_captures:4,accepted_events:2,publication_allowed:false,attachment_allowed:false}
+ return {checks:result.checks,display_checks:displayResult.checks,caller_checks:callerResult.checks,original_captures:4,accepted_events:2,publication_allowed:false,attachment_allowed:false}
 }

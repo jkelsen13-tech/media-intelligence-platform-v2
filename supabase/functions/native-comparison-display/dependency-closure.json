@@ -1,0 +1,98 @@
+{
+  "status": "source_inventory_not_edge_runtime_qualification",
+  "source_base": "5afbb1ca1cbb0f9aaef0e7ad69b016de8a8944b8",
+  "canonical_sources": {
+    "supabase/qualification/native-comparison-caller/host.mjs": "b258b01e701ce18a0c6c91d34e85063bb3ee77aa",
+    "supabase/qualification/collector-native-capture/authenticatedPgDriver.mjs": "af0f3b69c34695f9241934fae89ac00cedd08515",
+    "supabase/qualification/collector-native-capture/credentialDelivery.mjs": "354679fadc48eb9f8a8154456f3d38e7faab3e61",
+    "supabase/functions/_shared/privateGateway.mjs": "6f6b32804df0b2f270c1e354334112ce0863505b",
+    "supabase/qualification/native-comparison-display/displayContract.mjs": "e5975cf78bfe875c17a8e5ce3be2bc39f248a20a"
+  },
+  "node_compatibility": [
+    "node:buffer",
+    "node:process",
+    "pg transitive Node net/tls/stream/crypto support required"
+  ],
+  "npm_reference_lock": {
+    "path": "package-lock.json",
+    "blob": "2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0",
+    "packages": {
+      "pg": {
+        "version": "8.23.0",
+        "integrity": "sha512-Ip2EQCngowJLGOfCwkFhPXU7/ljlhn6Rxlmy4XYfL2Y+vyRM59+8uR2xqRWKdYmbXmxCFOAmKxBuSUCdF34qLg==",
+        "resolved": "https://registry.npmjs.org/pg/-/pg-8.23.0.tgz"
+      },
+      "pg-connection-string": {
+        "version": "2.14.0",
+        "integrity": "sha512-XwWDGcLRGCXAR8F/AM5bG7Q+A3Wm2s6QeEjlOKZLlH3UYcguiqCWKyWXVag5TLTIjR7oOJUY8kcADaZgWPyLeg==",
+        "resolved": "https://registry.npmjs.org/pg-connection-string/-/pg-connection-string-2.14.0.tgz"
+      },
+      "pg-pool": {
+        "version": "3.14.0",
+        "integrity": "sha512-gKtPkFdQPU3DksooVLi9LsjZxrsBUZIpa+7aVx+LV5pNh0KzP4Zleud2po+ConrxbuXGBJ6Hfer6hdgpIBpBaw==",
+        "resolved": "https://registry.npmjs.org/pg-pool/-/pg-pool-3.14.0.tgz"
+      },
+      "pg-protocol": {
+        "version": "1.16.0",
+        "integrity": "sha512-sILXutLVjCLjcDuOmvhX5e2Z4cS5qG/6Bu3VkpFwdf/633ElGLpEh9bgmuI5I4sqKqkifQiGyiCcx1HdtrK7tg==",
+        "resolved": "https://registry.npmjs.org/pg-protocol/-/pg-protocol-1.16.0.tgz"
+      },
+      "pg-types": {
+        "version": "2.2.0",
+        "integrity": "sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==",
+        "resolved": "https://registry.npmjs.org/pg-types/-/pg-types-2.2.0.tgz"
+      },
+      "pg-int8": {
+        "version": "1.0.1",
+        "integrity": "sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==",
+        "resolved": "https://registry.npmjs.org/pg-int8/-/pg-int8-1.0.1.tgz"
+      },
+      "postgres-array": {
+        "version": "2.0.0",
+        "integrity": "sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==",
+        "resolved": "https://registry.npmjs.org/postgres-array/-/postgres-array-2.0.0.tgz"
+      },
+      "postgres-bytea": {
+        "version": "1.0.1",
+        "integrity": "sha512-5+5HqXnsZPE65IJZSMkZtURARZelel2oXUEO8rH83VS/hxH5vv1uHquPg5wZs8yMAfdv971IU+kcPUczi7NVBQ==",
+        "resolved": "https://registry.npmjs.org/postgres-bytea/-/postgres-bytea-1.0.1.tgz"
+      },
+      "postgres-date": {
+        "version": "1.0.7",
+        "integrity": "sha512-suDmjLVQg78nMK2UZ454hAG+OAW+HQPZ6n++TNDUX+L0+uUlLywnoxJKDou51Zm+zTCjrCl0Nq6J9C5hP9vK/Q==",
+        "resolved": "https://registry.npmjs.org/postgres-date/-/postgres-date-1.0.7.tgz"
+      },
+      "postgres-interval": {
+        "version": "1.2.0",
+        "integrity": "sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==",
+        "resolved": "https://registry.npmjs.org/postgres-interval/-/postgres-interval-1.2.0.tgz"
+      },
+      "xtend": {
+        "version": "4.0.2",
+        "integrity": "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==",
+        "resolved": "https://registry.npmjs.org/xtend/-/xtend-4.0.2.tgz"
+      },
+      "pgpass": {
+        "version": "1.0.5",
+        "integrity": "sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==",
+        "resolved": "https://registry.npmjs.org/pgpass/-/pgpass-1.0.5.tgz"
+      },
+      "split2": {
+        "version": "4.2.0",
+        "integrity": "sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==",
+        "resolved": "https://registry.npmjs.org/split2/-/split2-4.2.0.tgz"
+      },
+      "pg-cloudflare": {
+        "version": "1.4.0",
+        "integrity": "sha512-Vo7z/6rrQYxpNRylp4Tlob2elzbh+N/MOQbxFVWCxS7oEx6jF53GTJFxK2WWpKuBRkmiin4Mt+xofFDjx09R0A==",
+        "resolved": "https://registry.npmjs.org/pg-cloudflare/-/pg-cloudflare-1.4.0.tgz"
+      }
+    }
+  },
+  "limitations": [
+    "This inventory does not cause Deno npm transitive resolution to use package-lock.json.",
+    "No deno.lock was generated or fabricated; exact Edge npm transitive resolution and integrity need qualification in the authorized remote runner.",
+    "No pg-native import or binary dependency is used; pg optional peer is not part of this import path.",
+    "No bundling, Deno typecheck, runtime, Auth call, database connection, TLS handshake or deployment was executed."
+  ]
+}

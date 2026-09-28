@@ -1,0 +1,5 @@
+# Held fragment only; merge into supabase/config.toml after integrated review.
+# Does not alter the existing hypothesis-api/private-markets-api settings.
+[functions.native-comparison-display]
+verify_jwt = true
+entrypoint = "./functions/native-comparison-display/index.ts"
