@@ -345,7 +345,24 @@
       "operational secrets",
       "CI artifacts/caches"
     ],
-    "atomic_cleanup_pg_limit_minutes": 9
+    "atomic_cleanup_pg_limit_minutes": 9,
+    "full_qualification": {
+      "workflow": ".github/workflows/qik-operational-adapter-synthetic.yml",
+      "candidate": "5f3fb644c9bdc7554d36375ac7fa5098e901769b",
+      "run": 36449315760,
+      "pass": 266,
+      "fail": 0,
+      "skipped": 0
+    },
+    "frozen_recheck": {
+      "workflow": ".github/workflows/qik-runtime-frozen-synthetic.yml",
+      "event": "Own-path push only on existing consolidation branch",
+      "runtime": "StandaloneDeno2.5.2",
+      "scope": "Exact dependency lock/typecheck, existing full16-group native comparison reader plus both13-group historical real Deno custody/retry profiles. Earlier unchanged266/83 evidence reused.",
+      "status": "NOT RUN",
+      "job_minutes": 15,
+      "material": "Synthetic-only, no credentials/private payloads/hosted SQL/CI artifacts."
+    }
   },
   "c9": {
     "native_only_first_route": true,
@@ -1383,15 +1400,19 @@
       },
       "supabase/functions/native-comparison-display/dependency-closure.json": {
         "path": "supabase/functions/native-comparison-display/dependency-closure.json",
-        "blob": "f7dbcb14b4410dd34b9bb138f003574208eef544"
+        "blob": "b93ec062b7b34aa83c04966de50f950c233e681f"
       },
       "supabase/functions/native-comparison-display/README.md": {
         "path": "supabase/functions/native-comparison-display/README.md",
-        "blob": "89c978c1ed95a432cae0987348cba7cc07c93444"
+        "blob": "17aed1a4c628fa340db1eb36cb0ae6df878e7c76"
       },
       "tests/nativeComparisonEdgePackaging.test.mjs": {
         "path": "tests/nativeComparisonEdgePackaging.test.mjs",
         "blob": "db97133693c14f198d3566a02d25c34a9fde6e44"
+      },
+      "supabase/functions/native-comparison-display/deno.lock": {
+        "path": "supabase/functions/native-comparison-display/deno.lock",
+        "blob": "11d5e1328c2a0b273f5085dc0a9946881adac3ee"
       }
     },
     "native_governed_host": {
@@ -1443,10 +1464,10 @@
       },
       "documentation": {
         "path": "docs/native-comparison-deno-runtime-qualification.md",
-        "blob": "c37b94bb1707b96e254c857ac44c540aaffbea1c"
+        "blob": "f212b261d0de7cbd4ec4d06796ec20b542755b85"
       },
       "engine": "Actual pinned pureDeno2.5.2 Linux x86_64 on existing remote GitHub source/synthetic runner; not hosted SupabaseEdge",
-      "closure": "Vendor archive+checksum hashes verified before use; real cache/check-generated deno.lock captured only as bounded source metadata after successful frozen check/actual fixture. npm package-lock is reference, does not control Deno resolution. Do not fabricate lock. Frozen check preserves exact lock bytes; cached-only is used only by actual Deno run, not check. No ignored compiler option or unsupported CLI flag is retained.",
+      "closure": "Actual standalone Deno generated lock from two successful remote synthetic jobs is byte-equal, parent SHA256 verified and exact source readback. Current targeted recheck uses --frozen throughout/cache-only child, unchanged lock assertions before/after. Node package-lock is a separate reference, not Deno authority.",
       "invocation": "Bounded vendor runtime/cache/check/frozen-check workflow stage; actual caller PG helper check2 spawns cached-only/frozen/loopback-only Deno using actual gateway SCRAM login and canonical host/driver/SQL plus synthetic Auth GET callback.",
       "assertions": "Actual index missing-config503/globals, real npm pg/canonicalhost/full012/caller/current binding+DTO digest, acknowledged TX/client closure and independent session-baseline recovery. Missingruntime, lock, timeout, mismatch or cleanup fails; no skips.",
       "cleanup": "Child exit/session baseline independently verified; source-only cache/binary remains solely disposable runner and removed with runner. Existing owned PG/container/volume cleanup unchanged.",
@@ -1467,9 +1488,29 @@
         },
         "documentation": {
           "path": "supabase/qualification/historical-qik-executor/DENO_RUNTIME.md",
-          "blob": "944709e36d44900cb246d4786335c056a7bea2a8"
+          "blob": "88b4b8e7ac1b736e2a06fd9d2b25df08eb7a986a"
         },
         "scope": "Combined generated lock caches/checks native and historical entrypoints. Actual historical new Deno group is a separately bounded synthetic PostgreSQL profile proof; not hosted material access."
+      },
+      "actual_generated_lock": {
+        "path": "supabase/functions/native-comparison-display/deno.lock",
+        "blob": "11d5e1328c2a0b273f5085dc0a9946881adac3ee",
+        "sha256": "df06499a54915068be7976853021d67c0b6598927c552cf5e6f19b99c404dbe3",
+        "bytes": 3185,
+        "runtime": "Standalone Deno2.5.2 Linuxx86_64; not hosted SupabaseEdge",
+        "origin": {
+          "main": {
+            "candidate": "5f3fb644c9bdc7554d36375ac7fa5098e901769b",
+            "run": 36449315760,
+            "job": 109019669886
+          },
+          "history": {
+            "candidate": "06220ff6aaa42b08ec625ef5a3b437d8cc316605",
+            "run": 36449393457,
+            "job": 109019936467
+          }
+        },
+        "verification": "Exact source-only bounded receipts from both successful jobs are byte-equal; parent independently verified SHA256 and exact Git blob readback."
       }
     },
     "atomic_cleanup_qualification": {
@@ -2819,5 +2860,78 @@
       "protected_roles": "All other seven native roles retain zero incoming/outgoing edges after disposable creator cleanup",
       "activation": "Disabled final profile permits only the exact two captured edges. Added runtime memberships refuse disabled reconciliation. Qualified activation assertions must separately bind their exact principals/rights before operation; existing user consolidation mandate covers ordinary engineering, not gate bypass."
     }
+  },
+  "synthetic_receipts": {
+    "combined": {
+      "source": "7186525a9a36e049c5b1250a72ef1501f51287f0",
+      "source_tree": "505669b015b54567ec4109a9ca9e95545fd2381a",
+      "parent": "c90664dbe3cb77653b4157a1b9f3aeb4350e9ca5",
+      "candidate": "5f3fb644c9bdc7554d36375ac7fa5098e901769b",
+      "tree": "09a7a5c94f4c34a6e2e9e79c16a0fe8236791a37",
+      "workflow_blob": "44a44e032ed935edf3c7d2f6835378fff405bd2e",
+      "manifest_blob": "f41c9fe72dfa6a32f6730e52b4c03b2e885eef44",
+      "run": 36449315760,
+      "job": 109019669886,
+      "conclusion": "success",
+      "pass": 266,
+      "fail": 0,
+      "skipped": 0,
+      "groups": [
+        149,
+        7,
+        1,
+        6,
+        1,
+        8,
+        1,
+        9,
+        16,
+        55,
+        2,
+        11
+      ],
+      "build": "success",
+      "cleanup": "success",
+      "deno": "Actual2.5.2 cache/check/frozen check and real synthetic SCRAM/current reader",
+      "environment": {
+        "node": "22.14.0",
+        "postgres": "17.6",
+        "postgres_engine": 170006,
+        "vector": "0.8.2",
+        "host": "Existing source/synthetic remote GitHub Ubuntu22.04 ownedloopbackSCRAM"
+      },
+      "real_material": false,
+      "hosted_install": false
+    },
+    "historical": {
+      "source": "5f3fb644c9bdc7554d36375ac7fa5098e901769b",
+      "source_tree": "09a7a5c94f4c34a6e2e9e79c16a0fe8236791a37",
+      "candidate": "06220ff6aaa42b08ec625ef5a3b437d8cc316605",
+      "tree": "b04935871157f41f208d58209ed6668d091fba9a",
+      "workflow_blob": "9d2eef226fb77976c430c01b3562b70066f36a0a",
+      "manifest_blob": "d6ffd6bc4a4cf30e9673b5380a4601efdf2d7827",
+      "main_candidate": "5f3fb644c9bdc7554d36375ac7fa5098e901769b",
+      "run": 36449393457,
+      "job": 109019936467,
+      "conclusion": "success",
+      "pass": 83,
+      "fail": 0,
+      "skip": 0,
+      "groups": [
+        57,
+        13,
+        13
+      ],
+      "cleanup": "success",
+      "environment": {
+        "node": "22.14.0",
+        "postgres": "17.6",
+        "deno": "2.5.2",
+        "host": "Existing remote source/synthetic-only GitHub Ubuntu22.04 owned loopbackSCRAM"
+      },
+      "real_material": false,
+      "hosted": false
+    },
+    "scope": "Actual synthetic-only initial qualification; independent review, frozen integration recheck and hosted conditions remain open. No historical acceptance or owner field signature."
   }
 }

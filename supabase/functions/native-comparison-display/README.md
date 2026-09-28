@@ -1,6 +1,6 @@
 # qik native-comparison Edge packaging candidate
 
-New source files only. This package adapts the existing Node caller to the existing qik Edge runtime; it does not add another host/provider, rewrite caller/Auth/SQL logic, or authorize deployment. The endpoint is not established as available.
+New source files only. This package adapts the existing Node caller to the existing qik Edge runtime; it does not add another host/provider, rewrite caller/Auth/SQL logic, or independently satisfy deployment gates under the consolidation authorization. The endpoint is not established as available.
 
 ## Entry and unchanged boundary
 
@@ -31,11 +31,11 @@ The canonical PgDriver explicitly sets ssl: {rejectUnauthorized:true}; it does n
 
 A failing qik Node-pg TLS handshake must remain unavailable. If the deployed runtime requires a custom CA for this exact driver path, this unchanged-host packaging cannot supply one: a separately coordinated driver extension and qualification would be required. The official production statement is not evidence that this exact qik/pg@8.23.0 path has passed a handshake.
 
-dependency-closure.json records the entire project-module import closure and the repository-locked pg npm dependency inventory. Deno does not consume that npm lock automatically. The top-level pg version is pinned, but an exact Deno dependency lock/bundle still must be resolved and checked in an authorized remote qualification environment. No synthetic lockfile is asserted.
+dependency-closure.json records the entire project-module import closure and the repository-locked pg npm dependency inventory. Deno does not consume that npm lock automatically. The actual deno.lock was generated and captured in both successful authorized remote synthetic jobs, verified byte-equal and hashed before exact source readback. Its SHA256 is df06499a54915068be7976853021d67c0b6598927c552cf5e6f19b99c404dbe3 (3185 bytes). It pins pg and actual transitive runtime/type dependencies, including @types/node24.2.0/undici-types7.10.0. This is a real generated lock, separate from package-lock. Current preparation must use --frozen throughout; no dependency resolution update is permitted.
 
 ## Qualification still required
 
-Seven synthetic adapter/Auth tests are authored in tests/nativeComparisonEdgePackaging.test.mjs, NOT RUN. No Deno typecheck, bundle, Node/npm compatibility execution, TLS handshake, database/Auth call, browser integration, cost/budget check or deployment occurred. Existing runtime CPU/memory limits, closure resolution, held config integration, gateway/admission setup and fresh integrated review remain release gates. This package is source-compatible by documented capabilities, not runtime-qualified.
+The seven adapter/Auth mock tests passed inside the 266-check combined qualification (run36449315760/job109019669886), together with the browser source build. Standalone Deno2.5.2 checked the actual index and exercised the canonical host/npm pg against actual loopback PostgreSQL17.6/SCRAM; its Auth response is synthetic. A separate historical run36449393457/job109019936467 passed83 checks including actual Deno first custody/retry. These prove neither hosted Edge bundling/TLS/Auth network nor browser rendering, real credentials, costs/headroom or deployment. The newly captured frozen lock requires the targeted runtime recheck, not an unchanged full-suite rerun. Existing runtime CPU/memory limits, closure resolution, held config integration, gateway/admission setup and fresh integrated review remain release gates. This package has actual standalone synthetic compatibility evidence, while hosted endpoint qualification remains open.
 
 Official sources consulted:
 - [Dependencies and Node built-ins](https://supabase.com/docs/guides/functions/dependencies)

@@ -1,5 +1,5 @@
 {
-  "status": "source_inventory_not_edge_runtime_qualification",
+  "status": "source_inventory_with_actual_standalone_synthetic_runtime_evidence_not_hosted_edge_qualification",
   "source_base": "5afbb1ca1cbb0f9aaef0e7ad69b016de8a8944b8",
   "canonical_sources": {
     "supabase/qualification/native-comparison-caller/host.mjs": "b258b01e701ce18a0c6c91d34e85063bb3ee77aa",
@@ -90,9 +90,29 @@
     }
   },
   "limitations": [
-    "This inventory does not cause Deno npm transitive resolution to use package-lock.json.",
-    "No deno.lock was generated or fabricated; exact Edge npm transitive resolution and integrity need qualification in the authorized remote runner.",
-    "No pg-native import or binary dependency is used; pg optional peer is not part of this import path.",
-    "No bundling, Deno typecheck, runtime, Auth call, database connection, TLS handshake or deployment was executed."
-  ]
+    "Deno consumes the actual generated deno.lock; repository package-lock remains only the separately used Node/npm reference.",
+    "Actual standalone Deno2.5.2 check/globals/npm pg/SCRAM/current read and historical first-write/retry tests passed with synthetic fixtures; targeted frozen-lock recheck still required for this source candidate.",
+    "No pg-native import or binary dependency is used; optional peer metadata is not an executed path.",
+    "Hosted Edge bundling, version/isolation/capacity, gateway JWT/Auth network, TLS/CA/pooler, secure config, deployment and real material remain unproved."
+  ],
+  "deno_lock": {
+    "path": "supabase/functions/native-comparison-display/deno.lock",
+    "blob": "11d5e1328c2a0b273f5085dc0a9946881adac3ee",
+    "sha256": "df06499a54915068be7976853021d67c0b6598927c552cf5e6f19b99c404dbe3",
+    "bytes": 3185,
+    "runtime": "Standalone Deno2.5.2 Linuxx86_64; not hosted SupabaseEdge",
+    "origin": {
+      "main": {
+        "candidate": "5f3fb644c9bdc7554d36375ac7fa5098e901769b",
+        "run": 36449315760,
+        "job": 109019669886
+      },
+      "history": {
+        "candidate": "06220ff6aaa42b08ec625ef5a3b437d8cc316605",
+        "run": 36449393457,
+        "job": 109019936467
+      }
+    },
+    "verification": "Exact source-only bounded receipts from both successful jobs are byte-equal; parent independently verified SHA256 and exact Git blob readback."
+  }
 }

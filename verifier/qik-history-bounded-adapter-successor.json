@@ -30,9 +30,10 @@
     "scripts/mipHistoricalArticleTransferPlan.mjs": "ad30cb603757888840e737694b333c3b6ae234e1",
     "scripts/mipHistoricalArticleTransfer.mjs": "b5b80ee37c6cd068d17f59b506bab6df70839ea6",
     "tests/historicalQikDenoRuntime.mjs": "66eea36fee9ee43d412adcddbf023007f7242a94",
-    "supabase/qualification/historical-qik-executor/DENO_RUNTIME.md": "944709e36d44900cb246d4786335c056a7bea2a8",
+    "supabase/qualification/historical-qik-executor/DENO_RUNTIME.md": "88b4b8e7ac1b736e2a06fd9d2b25df08eb7a986a",
     "supabase/functions/native-comparison-display/deno.json": "9126bd3e8ddc618bfbdc8239f14c84295ed662af",
-    "tests/nativeComparisonDenoRuntimePin.json": "82305814e17a4fa749c6e7a4c5ea2ba284045722"
+    "tests/nativeComparisonDenoRuntimePin.json": "82305814e17a4fa749c6e7a4c5ea2ba284045722",
+    "supabase/functions/native-comparison-display/deno.lock": "11d5e1328c2a0b273f5085dc0a9946881adac3ee"
   },
   "policy": {
     "projects": {
@@ -180,7 +181,61 @@
       "generated_lock": "supabase/functions/native-comparison-display/deno.lock",
       "required_closure": "Parent-generated actual combined native + historical entrypoints; vendor archive and checksum pinned; exact captured source lock then frozen-only recheck. Missing binary/cache/lock fails, no skip.",
       "profiles": "Both bootstrap and closed-ordinary",
-      "limits": "30s child, synthetic-only bounded stdin, only loopback5432 network, read repo/cache, clean env, no write/run/FFI, sanitized fixed digest receipt; actual source acquisition/seal remains Node."
+      "limits": "30s child, synthetic-only bounded stdin, only loopback5432 network, read repo/cache, clean env, no write/run/FFI, sanitized fixed digest receipt; actual source acquisition/seal remains Node.",
+      "actual_generated_lock": {
+        "path": "supabase/functions/native-comparison-display/deno.lock",
+        "blob": "11d5e1328c2a0b273f5085dc0a9946881adac3ee",
+        "sha256": "df06499a54915068be7976853021d67c0b6598927c552cf5e6f19b99c404dbe3",
+        "bytes": 3185,
+        "runtime": "Standalone Deno2.5.2 Linuxx86_64; not hosted SupabaseEdge",
+        "origin": {
+          "main": {
+            "candidate": "5f3fb644c9bdc7554d36375ac7fa5098e901769b",
+            "run": 36449315760,
+            "job": 109019669886
+          },
+          "history": {
+            "candidate": "06220ff6aaa42b08ec625ef5a3b437d8cc316605",
+            "run": 36449393457,
+            "job": 109019936467
+          }
+        },
+        "verification": "Exact source-only bounded receipts from both successful jobs are byte-equal; parent independently verified SHA256 and exact Git blob readback."
+      },
+      "frozen_recheck": {
+        "workflow": ".github/workflows/qik-runtime-frozen-synthetic.yml",
+        "status": "NOT RUN",
+        "scope": "Existing original13-group syntheticPG profiles with actual cached-only/frozenDeno and unchangedlock checks;16-group native reader runs in same qualified source-only route."
+      }
+    },
+    "actual_initial_receipt": {
+      "source": "5f3fb644c9bdc7554d36375ac7fa5098e901769b",
+      "source_tree": "09a7a5c94f4c34a6e2e9e79c16a0fe8236791a37",
+      "candidate": "06220ff6aaa42b08ec625ef5a3b437d8cc316605",
+      "tree": "b04935871157f41f208d58209ed6668d091fba9a",
+      "workflow_blob": "9d2eef226fb77976c430c01b3562b70066f36a0a",
+      "manifest_blob": "d6ffd6bc4a4cf30e9673b5380a4601efdf2d7827",
+      "main_candidate": "5f3fb644c9bdc7554d36375ac7fa5098e901769b",
+      "run": 36449393457,
+      "job": 109019936467,
+      "conclusion": "success",
+      "pass": 83,
+      "fail": 0,
+      "skip": 0,
+      "groups": [
+        57,
+        13,
+        13
+      ],
+      "cleanup": "success",
+      "environment": {
+        "node": "22.14.0",
+        "postgres": "17.6",
+        "deno": "2.5.2",
+        "host": "Existing remote source/synthetic-only GitHub Ubuntu22.04 owned loopbackSCRAM"
+      },
+      "real_material": false,
+      "hosted": false
     }
   },
   "uncertainty": [
