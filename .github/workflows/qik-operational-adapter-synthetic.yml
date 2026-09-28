@@ -23,7 +23,7 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='b79ac6ab99959cbf8fd69bf354c8839307a4781b'
+          source='4524d16f8e48dd60f21695ff51448e0c91d4a10d'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
@@ -44,7 +44,7 @@ jobs:
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Qualify planner and hosted-source contracts
-        run: node --test --test-concurrency=1 tests/mipHistoricalArticleTransferPlan.test.mjs tests/qikComparisonAdapterSource.test.mjs tests/qikComparisonCatalogPreflight.test.mjs tests/qikRoleCreatorIsolation.test.mjs
+        run: node --test --test-concurrency=1 tests/mipHistoricalArticleTransferPlan.test.mjs tests/qikComparisonAdapterSource.test.mjs tests/qikComparisonCatalogPreflight.test.mjs tests/qikRoleCreatorIsolation.test.mjs tests/qikComparisonAtomicInstall.test.mjs tests/mipHistoricalArticleTransfer.test.mjs
       - name: Start disposable PostgreSQL 17.6 on loopback only
         shell: bash
         run: |
@@ -54,6 +54,26 @@ jobs:
             sleep 2
           done
           exit 1
+      - name: Build pinned pgvector 0.8.2 for the actual hosted shape
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -u root qik-op-qualification bash -euc '
+            apt-mark hold postgresql-17 postgresql-client-17
+            apt-get update -qq
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends build-essential curl ca-certificates postgresql-server-dev-17
+            install -d -m 700 /tmp/qik-vector-build
+            cd /tmp/qik-vector-build
+            curl --fail --location --max-time 45 --proto "=https" --tlsv1.2 https://codeload.github.com/pgvector/pgvector/tar.gz/cab9da72c04353f143bb06b42ab70a403daac64a -o vector.tar.gz
+            echo "0af705b6c9b2a3a1fd1f6fd991425c125387d3c8edc68b75ef027d2e0a05e57a  vector.tar.gz" | sha256sum -c -
+            tar -xzf vector.tar.gz --strip-components=1
+            make -j2 PG_CONFIG=/usr/lib/postgresql/17/bin/pg_config OPTFLAGS=""
+            make PG_CONFIG=/usr/lib/postgresql/17/bin/pg_config install
+            dpkg-query -W build-essential postgresql-server-dev-17 postgresql-17 postgresql-client-17
+            rm -rf /tmp/qik-vector-build
+          '
+          test "$(docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification psql -X -h 127.0.0.1 -U postgres -Atc "show server_version_num")" = 170006
       - name: Qualify complete native lineage journal review reader dependencies
         env:
           MIP_NATIVE_LINEAGE_QUALIFICATION: separately-approved-disposable-only
@@ -64,6 +84,12 @@ jobs:
           MIP_NATIVE_LINEAGE_QUALIFICATION: separately-approved-disposable-only
           MIP_NATIVE_LINEAGE_DISPOSABLE_CONTEXT: approved-dedicated-ci
         run: python3 -I -B verifier/dojPrivatePermissionPostgres.py
+      - name: Qualify full non-superuser atomic install and autonomous audit
+        timeout-minutes: 5
+        env:
+          MIP_QIK_COMPARISON_DISPOSABLE: synthetic-pg17-only
+          MIP_DISPOSABLE_POSTGRES: qik-persistent-install
+        run: node --test verifier/qikComparisonAtomicInstallPostgres17.mjs
       - name: Remove disposable database and verify no container or volume remains
         if: always()
         shell: bash
