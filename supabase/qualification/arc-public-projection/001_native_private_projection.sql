@@ -173,7 +173,7 @@ begin
  then raise exception 'arc_projection_citation_shape';end if;
  select * into strict binding from mip_arc_projection_private.source_bindings where scope=s and id=b;
  perform mip_arc_projection_private.check_citations(items,mip_arc_projection_private.source_value(binding,true));
- select * into head from mip_arc_projection_private.citation_reviews where scope=s and binding=b order by version desc limit 1;
+ select r.* into head from mip_arc_projection_private.citation_reviews r where r.scope=s and r.binding=b order by r.version desc limit 1;
  select * into old from mip_arc_projection_private.citation_reviews where scope=s and id=i;
  if found then
   if (old.binding,old.version,old.predecessor,old.state,old.items) is distinct from(b,v,prev,st,items)
@@ -309,9 +309,9 @@ begin
  and e.article=binding.article and e.capture=binding.capture and e.content_hash=binding.content_hash)
  then raise exception 'arc_projection_native_lineage';end if;
  source:=mip_arc_projection_private.source_value(binding,true);
- select version into access_revision from mip_arc_projection_private.source_access where scope=p.scope and binding=p.binding;
+ select r.version into access_revision from mip_arc_projection_private.source_access r where r.scope=p.scope and r.binding=p.binding;
  if p.access_version is not null and access_revision<>p.access_version then raise exception 'arc_projection_access_revision';end if;
- select * into cite from mip_arc_projection_private.citation_reviews where scope=p.scope and binding=p.binding order by version desc limit 1;
+ select r.* into cite from mip_arc_projection_private.citation_reviews r where r.scope=p.scope and r.binding=p.binding order by r.version desc limit 1;
  if not found or cite.id is distinct from p.citation_review or cite.state<>'reviewed_complete'
  then raise exception 'arc_projection_citation_stale';end if;
  perform mip_arc_projection_private.check_citations(cite.items,source);

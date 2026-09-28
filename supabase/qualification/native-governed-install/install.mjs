@@ -63,7 +63,7 @@ export const NATIVE_ORDER=Object.freeze([
   }
 ].map(Object.freeze))
 export const NATIVE_PROJECTION_ORDER=Object.freeze([...NATIVE_ORDER,Object.freeze({
- path:'supabase/qualification/arc-public-projection/001_native_private_projection.sql',blob:'66f6a37c97c8a5bd66dcf6b9d42ba96c00ddd029',
+ path:'supabase/qualification/arc-public-projection/001_native_private_projection.sql',blob:'bc58ef8143fdea209bdf91ad9edfb6e96a089657',
  assertion_marker:'do $private_projection_final$',assertion_owner:'mip_arc_native_owner'
 })])
 export const isNativeMode=mode=>mode===NATIVE_MODE||mode===NATIVE_PROJECTION_MODE

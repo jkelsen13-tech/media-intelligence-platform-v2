@@ -1068,7 +1068,7 @@
     ],
     "native_joint_installer": {
       "path": "supabase/qualification/native-governed-install/install.mjs",
-      "blob": "22801c5d53b1eeb038b013ea9c30dc762a92e545",
+      "blob": "d346f6319b41b13aa81f191d7ced7851a775f119",
       "mode": "native-governed-v3",
       "authorization": "owner-authorized-disabled-comparison-native-private-projection-install",
       "source_base": "79f25d3519d26fd0dbda37fd0728e5783c04834a",
@@ -1133,7 +1133,7 @@
     "c9_projection_order": [
       {
         "path": "supabase/qualification/arc-public-projection/001_native_private_projection.sql",
-        "blob": "66f6a37c97c8a5bd66dcf6b9d42ba96c00ddd029"
+        "blob": "bc58ef8143fdea209bdf91ad9edfb6e96a089657"
       }
     ]
   },
