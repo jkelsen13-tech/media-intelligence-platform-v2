@@ -1085,7 +1085,7 @@
     },
     "native_joint_installer_documentation": {
       "path": "supabase/qualification/native-governed-install/README.md",
-      "blob": "17f91da68f0febc24a052695073b0b9a51b8b4f1"
+      "blob": "88631e62e23ac662195f97e8556784da776c0e0a"
     },
     "attachment_assertions": {
       "path": "tests/nativeArcAttachmentAssertions.mjs",
