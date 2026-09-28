@@ -52,6 +52,7 @@ revoke nq17_owner from nq17_parent cascade;
 reset role;
 revoke nq17_creator from nq17_parent;
 drop role nq17_creator;
+commit;
 do $success$ begin
  if session_user<>'nq17_parent' or current_user<>'nq17_parent' then raise exception 'Finalization escaped parent identity';end if;
  if exists(select 1 from pg_roles where rolname='nq17_creator') then raise exception 'Creator survived';end if;
@@ -66,8 +67,15 @@ reset session authorization;
 do $retained$ begin
  if (select count(*) from nq17_stage.sample)<>1 or (select id from nq17_stage.sample)<>7 then raise exception 'Object/data did not survive creator removal';end if;
 end $retained$;
-rollback;
-reset session authorization;
+-- Bootstrap cleanup restores the fixture after committed success.
+begin;
+drop table nq17_stage.sample;
+revoke usage,create on schema nq17_stage from nq17_owner;
+drop role nq17_owner;
+commit;
+do $success_cleanup$ begin
+ if (select row_to_json(c)::jsonb from nq17_catalog c) is distinct from (select row_to_json(c)::jsonb from nq17_fixture_baseline c) then raise exception 'Committed success cleanup changed baseline';end if;
+end $success_cleanup$;
 
 -- An actual failing installer subtransaction must roll back its DDL and grants.
 set session authorization nq17_parent;
