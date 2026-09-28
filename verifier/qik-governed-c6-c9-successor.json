@@ -2938,7 +2938,7 @@
     "label": "UNAPPROVED bounded source foundation; no operational C12/C13 closure",
     "files": {
       "src/lib/semanticAuthorityEnvelope.js": "27d44e70227f53080ef7ff18bb07d7afc326cd77",
-      "tests/semanticAuthorityEnvelope.test.mjs": "7eaadc0b4fe4e1032e4038a1f29b36c84d0fd10c",
+      "tests/semanticAuthorityEnvelope.test.mjs": "962033f773d5e845a3bc4d1a1ca29be3f6716806",
       "docs/semantic-authority-envelope-contract.md": "e488b36973f835b08d6c4b829494879abacd7faf"
     },
     "retention": "Pure metadata projection only; no store/cache/network/log or additional durable native payload. Existing assessment/cause identities/fingerprints remain authoritative; distinct explicitly versioned metadata digest only.",

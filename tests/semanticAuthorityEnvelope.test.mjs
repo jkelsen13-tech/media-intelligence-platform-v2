@@ -78,27 +78,27 @@ test('exact metadata retry uses new projection and preserves separate source and
   {same_metadata:true,authorization_conferred:false,reuse_authorized:false})
  const reordered=Object.fromEntries(Object.entries(assessment()).reverse())
  assert.equal((await assessmentAuthorityEnvelope(reordered)).envelope_digest.sha256,first.envelope_digest.sha256)
- await assert.rejects(()=>assertSameMetadataRetry(first,JSON.parse(JSON.stringify(fresh))),error('semantic_retry_refused'))
+ await assert.rejects(async()=>assertSameMetadataRetry(first,JSON.parse(JSON.stringify(fresh))),error('semantic_retry_refused'))
 })
 test('metadata changes, identity substitution and digest tampering conflict on retry',async()=>{
  const first=await assessmentAuthorityEnvelope(assessment())
  for(const patch of [{id:id(9)},{algorithm_version:'v2'},{input_fingerprint:'b'.repeat(64)},
  {assessed_at:'2026-09-20T12:01:02.123457+00:00'},{context_positions:['9007199254740993','3']}]){
   const changed=await assessmentAuthorityEnvelope({...assessment(),...patch})
-  await assert.rejects(()=>assertSameMetadataRetry(first,changed),error('semantic_retry_conflict'))
+  await assert.rejects(async()=>assertSameMetadataRetry(first,changed),error('semantic_retry_conflict'))
  }
  const forged=copy(first);forged.metadata.extra='BODY_SENTINEL'
- await assert.rejects(()=>assertSameMetadataRetry(forged,await assessmentAuthorityEnvelope(assessment())),error('semantic_retry_refused'))
+ await assert.rejects(async()=>assertSameMetadataRetry(forged,await assessmentAuthorityEnvelope(assessment())),error('semantic_retry_refused'))
 })
 test('stale and superseded historical records are preserved without current-reuse claims',async()=>{
  const raw=assessment();raw.stale=true;raw.stale_causes=[{change_position:'4',superseding_assessment_id:null}]
  const old=await assessmentAuthorityEnvelope(raw),fresh=await assessmentAuthorityEnvelope(raw)
  assert.equal(old.currentness.state,'stale')
- await assert.rejects(()=>assertSameMetadataRetry(old,fresh),error('semantic_currentness_refused'))
+ await assert.rejects(async()=>assertSameMetadataRetry(old,fresh),error('semantic_currentness_refused'))
  assert.equal((await assertSameMetadataRetry(old,fresh,{mode:'historical_metadata'})).reuse_authorized,false)
  const superseded=await assessmentAuthorityEnvelope({...assessment(),superseded_by:[id(8)]})
  assert.equal(superseded.currentness.state,'superseded')
- await assert.rejects(()=>assertSameMetadataRetry(superseded,await assessmentAuthorityEnvelope({...assessment(),superseded_by:[id(8)]})),error('semantic_currentness_refused'))
+ await assert.rejects(async()=>assertSameMetadataRetry(superseded,await assessmentAuthorityEnvelope({...assessment(),superseded_by:[id(8)]})),error('semantic_currentness_refused'))
  await assert.rejects(()=>assessmentAuthorityEnvelope({...raw,stale:false}),error('semantic_currentness_refused'))
 })
 test('method-head change preserves exact prior/new revisions without inferring provider change',async()=>{
@@ -110,7 +110,7 @@ test('method-head change preserves exact prior/new revisions without inferring p
  assert.equal(e.currentness.state,'unknown');assert.equal(e.metadata.review_approval_claimed,false)
  assert.equal(e.identity.namespace,'mip_hypothesis.reassessment_causes')
  const fresh=await hypothesisChangeAuthorityEnvelope(backlog(),id(21))
- await assert.rejects(()=>assertSameMetadataRetry(e,fresh),error('semantic_currentness_refused'))
+ await assert.rejects(async()=>assertSameMetadataRetry(e,fresh),error('semantic_currentness_refused'))
 })
 test('permission change preserves exact operation/domain and does not restore access',async()=>{
  const e=await hypothesisChangeAuthorityEnvelope(backlog('permission_changed'),id(21))
