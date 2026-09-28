@@ -9,7 +9,7 @@ import {prepareAtomicInstall,installComparisonAtomic,reconcileComparisonInstall,
 import {REQUIRED_RELATIONS,RESERVED_ROLES,RESERVED_SCHEMAS} from '../supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs'
 import {LOAD_ORDER} from '../supabase/qualification/qik-ingest/installQikIngest.mjs'
 const root=new URL('../',import.meta.url),H='1'.repeat(64)
-const password='mip-efta-disposable-ci-only',bootstrap='atomic_fixture_bootstrap',audit='atomic_fixture_audit'
+const password='mip-efta-disposable-ci-only',bootstrap='atomic_fixture_bootstrap',installer='atomic_fixture_installer',audit='atomic_fixture_audit'
 const read=async p=>readFile(new URL(p,root),'utf8')
 const url=user=>'postgresql://'+user+':'+password+'@127.0.0.1:5432/postgres'
 async function client(user,database='postgres'){
@@ -111,6 +111,12 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
  await owner.query("create role "+bootstrap+" login superuser password '"+password+"'")
  admin=await client(bootstrap)
  try{
+  // OID10 bootstrap superuser cannot be demoted. Use a distinct synthetic role
+  // for privileged substrate preparation, then legally remove SUPERUSER.
+  await admin.query("create role "+installer+" login superuser password '"+password+"'")
+  assert.equal((await admin.query('select oid<>10 nonbootstrap from pg_roles where rolname=$1',[installer])).rows[0].nonbootstrap,true)
+  await admin.query('alter database postgres owner to '+ident(installer))
+  await owner.end();owner=await client(installer)
   await owner.query('create schema extensions;create extension pgcrypto with schema extensions;create extension vector with schema public;create extension dblink with schema extensions')
   assert.equal((await owner.query("select extversion from pg_extension where extname='vector'")).rows[0].extversion,'0.8.2')
   await owner.query(await read('supabase/qualification/qik-ingest/fixture_substrate.sql'))
@@ -134,29 +140,33 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
    if(file!=='05_operation_ledger.sql')await owner.query('select qik_ingest_operation.capture_step($1)',[file])
   }
   await owner.query('create table qik_ingest_operation.persistent_install_receipt(id boolean primary key,operation_id text,installer name,sql_manifest_sha256 text,runtime_login name,runtime_token_hash text,runtime_creator_grantor name,installed_at timestamptz default now())')
-  await owner.query('insert into qik_ingest_operation.persistent_install_receipt(id,operation_id,installer,sql_manifest_sha256) values(true,$1,$2,$3)',['3'.repeat(32),'postgres',H])
+  await owner.query('insert into qik_ingest_operation.persistent_install_receipt(id,operation_id,installer,sql_manifest_sha256) values(true,$1,$2,$3)',['3'.repeat(32),installer,H])
   await owner.query("create role "+audit+" login nosuperuser nocreatedb nocreaterole noinherit nobypassrls noreplication password '"+password+"'")
-  await owner.query('grant qik_ingest_fn_owner to postgres with admin false,inherit true,set true')
+  await owner.query('grant qik_ingest_fn_owner to '+ident(installer)+' with admin false,inherit true,set true')
+  // Preserve the observed existing native function owner required by catalogPreflight.
+  await admin.query('alter function public.mip_pipeline_v1(text,jsonb) owner to postgres')
   // Superuser performs substrate/extension setup only. Installer is now actual
   // password-authenticated non-superuser CREATEROLE, matching qik owner flags.
-  await admin.query('alter role postgres nosuperuser createrole createdb bypassrls')
+  await admin.query('alter role '+ident(installer)+' nosuperuser createrole createdb bypassrls')
   await owner.end();owner=null
   const plan=await prepareAtomicInstall(async p=>read(p))
-  const pre=await client('postgres')
+  const pre=await client(installer)
+  const actualIdentity=(await pre.query('select session_user::text login,current_user::text effective,r.rolsuper,r.rolcreaterole,r.rolbypassrls,d.datdba=r.oid database_owner from pg_roles r join pg_database d on d.datname=current_database() where r.rolname=current_user')).rows[0]
+  assert.deepEqual(actualIdentity,{login:installer,effective:installer,rolsuper:false,rolcreaterole:true,rolbypassrls:true,database_owner:true})
   const dblink=(await pre.query(DBLINK_PREFLIGHT_SQL)).rows[0]
   assert.equal(dblink.expected,true);assert.equal(dblink.unused,true);assert.equal(dblink.no_servers,true)
   await pre.end()
   const cfg={authorization:'owner-authorized-disabled-comparison-install',
-   operationId:'2'.repeat(32),expectedLogin:'postgres',connectionString:url('postgres'),
+   operationId:'2'.repeat(32),expectedLogin:installer,connectionString:url(installer),
    c3OperationId:'3'.repeat(32),c3ManifestSha256:H,expectedManifestSha256:plan.manifest_sha256,
    dblinkMetadataSha256:dblink.metadata_sha256,collectorSource:'qik-fixture-v1',
    auditLogin:audit,auditConnectionString:url(audit),disposable:true}
   // A foreign LOGIN+BYPASSRLS principal must not acquire this new secret via
   // installer defaults. The installer refuses; it never edits global defaults.
   await admin.query("create role atomic_fixture_reader login bypassrls nosuperuser nocreatedb nocreaterole password '"+password+"'")
-  await admin.query('alter default privileges for role postgres in schema public grant select on tables to service_role')
+  await admin.query('alter default privileges for role '+ident(installer)+' in schema public grant select on tables to service_role')
   const defaultsBefore=(await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value
-  await admin.query('alter default privileges for role postgres grant select on tables to atomic_fixture_reader;alter default privileges for role postgres grant usage on schemas to atomic_fixture_reader')
+  await admin.query('alter default privileges for role '+ident(installer)+' grant select on tables to atomic_fixture_reader;alter default privileges for role '+ident(installer)+' grant usage on schemas to atomic_fixture_reader')
   const defaultsDuring=(await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value
   const drift=await installComparisonAtomic(cfg,async p=>read(p))
   assert.equal(drift.state,'installation_refused')
@@ -164,7 +174,7 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   assert.equal(drift.sqlstate,'P0001')
   assert.deepEqual((await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value,defaultsDuring)
   assert.equal((await admin.query("select to_regclass('mip_factual.audit_connection') object")).rows[0].object,null)
-  await admin.query('alter default privileges for role postgres revoke select on tables from atomic_fixture_reader;alter default privileges for role postgres revoke usage on schemas from atomic_fixture_reader')
+  await admin.query('alter default privileges for role '+ident(installer)+' revoke select on tables from atomic_fixture_reader;alter default privileges for role '+ident(installer)+' revoke usage on schemas from atomic_fixture_reader')
   assert.deepEqual((await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value,defaultsBefore)
   for(const sql of [
    'grant select(connection_string) on mip_factual.audit_connection to atomic_fixture_reader',
@@ -233,14 +243,13 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   if(admin){
    // Only the independently authenticated synthetic bootstrap can restore the
    // dedicated fixture. Drop the disposable database, never application tables.
-   await admin.query('alter role postgres superuser')
    await admin.end()
    const clean=await client(bootstrap,'template1')
    await clean.query("select pg_terminate_backend(pid) from pg_stat_activity where datname='postgres' and pid<>pg_backend_pid()")
    await clean.query('drop database postgres')
    await clean.query('create database postgres owner postgres')
    const created=(await clean.query('select rolname from pg_roles')).rows.map(r=>r.rolname).filter(n=>!baseline.includes(n)&&n!==bootstrap)
-   const allowed=new Set([...RESERVED_ROLES,'mip_tmp_'+'2'.repeat(32),'anon','authenticated','service_role','qik_ingest_fn_owner','qik_ingest_runtime',audit,'atomic_fixture_reader','atomic_fixture_set_target','atomic_fixture_set_login'])
+   const allowed=new Set([...RESERVED_ROLES,'mip_tmp_'+'2'.repeat(32),'anon','authenticated','service_role','qik_ingest_fn_owner','qik_ingest_runtime',installer,audit,'atomic_fixture_reader','atomic_fixture_set_target','atomic_fixture_set_login'])
    assert.ok(created.every(r=>allowed.has(r)),'unexpected role prevents unbounded cleanup')
    for(const name of created)await clean.query('drop role '+ident(name))
    await clean.end()
