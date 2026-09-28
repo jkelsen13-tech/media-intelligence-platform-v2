@@ -18,12 +18,12 @@ jobs:
         with:
           fetch-depth: 2
           persist-credentials: false
-      - name: Verify reviewed dependency tree and synthetic authority
+      - name: Verify candidate dependency tree and synthetic authority
         shell: bash
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='06c13dfb9d9ea6b065e11fe3bcad946c6e766a3e'
+          source='2cb764617f38b33099539bd5addc01670465ddd2'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
@@ -35,7 +35,7 @@ jobs:
               assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
           config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
           assert config.returncode==1 and not config.stdout
-          print('Reviewed complete source tree; synthetic-only internal qualification under user consolidation amendment. Not owner field signature, historical acceptance, hosted installation or material-transfer authority.')
+          print('Pinned complete candidate tree; affected repair awaits independent review after tests. Synthetic-only internal qualification under user consolidation amendment. Not owner field signature, historical acceptance, hosted installation or material-transfer authority.')
           PY
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -43,6 +43,8 @@ jobs:
           package-manager-cache: false
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Qualify atomic installer source contract
+        run: node --test tests/qikComparisonAtomicInstall.test.mjs
       - name: Start disposable PostgreSQL 17.6 on loopback only
         shell: bash
         run: |
