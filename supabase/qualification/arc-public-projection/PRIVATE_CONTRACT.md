@@ -58,3 +58,5 @@ Five check groups exercise original binding/access, reviewed empty and nonempty 
 Run through the parent-owned full PostgreSQL17.6/Node22.14 qualification entrypoint after integration; no standalone helper execution or mocked transaction success is claimed. Parent owns database/container cleanup. Errors expose only fixed stage/check indices, SQLSTATE/numeric position and restricted source line frames. Public callable SQL wrappers replace inner failures with bounded static messages and no raw cause/detail/hint.
 
 The current source and test bodies require actual qualification and fresh consequential review. No material or credentials were used to author them.
+
+The selected atomic compiler maps historical `comparison_qualification` to the installed `mip_comparison_kernel_v1`. Effective recorder assertions resolve the exact zero-argument trigger-return function through catalog OIDs. This gives the assertion access to identity metadata without granting runtime kernel schema access or function execution to native owners/workers. Historical006/007 SQL and hashes remain unchanged.

@@ -696,11 +696,18 @@ begin
    and tgname='immutable_table' and tgfoid='mip_arc_native.attachment_immutable()'::regprocedure and tgtype=34 and tgenabled='O' and tgqual is null)
  then raise exception 'arc_attachment_immutable_boundary';end if;
 end;
-declare spec record;obj record;principal text;function_oid oid;allowed oid[];rel regclass;
+declare spec record;obj record;principal text;function_oid oid;allowed oid[];rel regclass;reject_oid oid;
  owner_oid oid:='mip_arc_native_owner'::regrole;
  principals text[]:=array['mip_mentions_owner','mip_mentions_gateway','mip_mentions_admin','mip_mentions_native_validator',
  'mip_arc_qik_source_owner','mip_canonical_writer','mip_arc_native_owner','mip_arc_native_worker','mip_arc_attachment_owner','anon','authenticated','service_role'];
 begin
+ -- The selected atomic compiler maps the historical qualification namespace
+ -- to the existing protected hosted kernel. Resolve its exact trigger function
+ -- through public catalog OIDs; no runtime schema/EXEC grant is needed.
+ select p.oid into strict reject_oid from pg_catalog.pg_proc p
+ join pg_catalog.pg_namespace n on n.oid=p.pronamespace
+ where n.nspname='mip_comparison_kernel_v1' and p.proname='reject_rewrite'
+ and p.pronargs=0 and p.prokind='f' and p.prorettype='pg_catalog.trigger'::regtype;
  if not exists(select 1 from pg_namespace where nspname='mip_arc_projection_private' and nspowner=owner_oid)
  then raise exception 'arc_projection_schema_boundary';end if;
  if exists(select 1 from pg_namespace n cross join lateral aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner)))a
@@ -803,7 +810,7 @@ begin
     and tgfoid='mip_identity.collector_change()'::regprocedure and tgtype=29 and tgenabled='O'
     and tgqual is null and tgattr=''::int2vector and encode(tgargs,'hex')='696400' and not tgisinternal)<>1
    or(select count(*) from pg_trigger where tgrelid=rel and tgname='survivor_no_truncate'
-    and tgfoid='comparison_qualification.reject_rewrite()'::regprocedure and tgtype=34 and tgenabled='O'
+    and tgfoid=reject_oid and tgtype=34 and tgenabled='O'
     and tgqual is null and tgattr=''::int2vector and tgargs=''::bytea and not tgisinternal)<>1
    then raise exception 'arc_projection_source_fence';end if;
   end if;
@@ -820,15 +827,15 @@ begin
   and tgtype=29 and tgenabled='O' and tgqual is null and tgattr=''::int2vector
   and encode(tgargs,'hex')='696400' and not tgisinternal)<>1
  or(select count(*) from pg_trigger where tgrelid='public.articles'::regclass
-  and tgname='no_collector_articles_truncate' and tgfoid='comparison_qualification.reject_rewrite()'::regprocedure
+  and tgname='no_collector_articles_truncate' and tgfoid=reject_oid
   and tgtype=34 and tgenabled='O' and tgqual is null and tgattr=''::int2vector
   and tgargs=''::bytea and not tgisinternal)<>1
  then raise exception 'arc_projection_article_recorder_boundary';end if;
  if not exists(select 1 from pg_trigger where tgrelid='mip_identity.source_changes'::regclass
-  and tgname='immutable' and tgfoid='comparison_qualification.reject_rewrite()'::regprocedure
+  and tgname='immutable' and tgfoid=reject_oid
   and tgtype=27 and tgenabled='O' and tgqual is null and tgattr=''::int2vector and not tgisinternal)
  or not exists(select 1 from pg_trigger where tgrelid='mip_identity.source_changes'::regclass
-  and tgname='no_truncate' and tgfoid='comparison_qualification.reject_rewrite()'::regprocedure
+  and tgname='no_truncate' and tgfoid=reject_oid
   and tgtype=34 and tgenabled='O' and tgqual is null and tgattr=''::int2vector and not tgisinternal)
  then raise exception 'arc_projection_change_cursor_boundary';end if;
  perform mip_arc_native.assert_source_authority();

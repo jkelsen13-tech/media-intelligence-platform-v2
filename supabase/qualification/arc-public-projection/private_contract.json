@@ -510,10 +510,11 @@
     },
     {
       "name": "no_collector_articles_truncate",
-      "function": "comparison_qualification.reject_rewrite()",
+      "function": "mip_comparison_kernel_v1.reject_rewrite()",
       "type": 34,
       "enabled": "O",
       "arguments_hex": ""
     }
-  ]
+  ],
+  "installed_recorder_resolution": "Selected unchanged atomic compiler NAME_MAPPING comparison_qualification→mip_comparison_kernel_v1; final effective assertion resolves the unique namespace/name/zero-argument/trigger-return function by pg_catalog OID, with no new native-owner runtime kernel schema or execution rights."
 }
