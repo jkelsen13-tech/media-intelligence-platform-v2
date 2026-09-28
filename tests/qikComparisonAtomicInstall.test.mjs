@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {createHash} from 'node:crypto'
 import {prepareAtomicInstall,validateAtomicConfig,DOJ_PATH,DOJ_SOURCE_COMMIT} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
-import {SOURCE_COMMIT} from '../supabase/qualification/qik-comparison-adapter/compileSource.mjs'
+import {SOURCE_COMMIT,compileSource,NAME_MAPPING} from '../supabase/qualification/qik-comparison-adapter/compileSource.mjs'
 const root=new URL('../',import.meta.url)
 const reader=async(path,ref)=>{
  assert.ok([SOURCE_COMMIT,DOJ_SOURCE_COMMIT].includes(ref))
@@ -18,6 +18,15 @@ test('source plan preserves pinned source and final assertion order',async()=>{
  const p=await prepareAtomicInstall(reader)
  assert.equal(p.manifest_sha256,(await prepareAtomicInstall(reader)).manifest_sha256)
  assert.ok(p.roles.length>30)
+ const original=await compileSource(reader)
+ const changes=p.closure.split('\n').filter(line=>line.startsWith('alter role '))
+ assert.equal(changes.length,7)
+ assert.deepEqual(changes.map(line=>line.match(/^alter role ([a-z0-9_]+) noinherit;$/)?.[1]).sort(),
+  Object.entries(NAME_MAPPING).filter(([name])=>name.startsWith('qual_')).map(([,name])=>name).sort())
+ assert.equal(p.compatibility,original.steps.find(step=>step.path==='adapter:compatibility-assertions-v1').sql)
+ const finalSql=original.steps.find(step=>step.path.endsWith('/019_native_retention_permissions.sql')).sql
+ assert.equal(p.assertions,finalSql.slice(finalSql.indexOf('do $final_native_permissions$')))
+
  for(const step of p.body)assert.equal(step.compiled_sha256,createHash('sha256').update(step.sql).digest('hex'))
  assert.ok(p.body.every(s=>!s.path.endsWith('/019_native_retention_permissions.sql')))
  assert.match(p.permissions,/revoke all on function/)
