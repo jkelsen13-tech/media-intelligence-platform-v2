@@ -25,6 +25,7 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
     statement_timeout:5000,application_name:'mip-arc-retained-synthetic-admin'})
   let owned=false,stage='connect',primaryFailure=null
   const cleanupFailures=[]
+  let admissionDiagnostic=null
   const sanitized=error=>({
     sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:'none',
     code:/^arc_retained_[a-z_]+$/.test(error?.message??'')?error.message:
@@ -107,7 +108,19 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
     await db.query('insert into mip_arc_retained.access values($1,session_user,true)',[scope])
     const args={...input,scope,generation,expectedInputHash:baseline.input_sha256}
     stage='first_admission'
-    const first=await admitHistoricalArc(args)
+    class DiagnosticClient extends pg.Client {
+      async query(sql,...values){
+        try{return await super.query(sql,...values)}
+        catch(error){
+          if(error?.message==='arc_retained_admission_failed'){
+            const match=/^stage=(identity|authorization|hash|shape|candidate_projection|arc_projection|article_projection|relation_shape|cardinality|candidate_context|member_context|article_context|entity_context|floor|release|retry|insert);sqlstate=([0-9A-Z]{5})$/.exec(error.detail??'')
+            if(match)admissionDiagnostic={stage:match[1],sqlstate:match[2]}
+          }
+          throw error
+        }
+      }
+    }
+    const first=await admitHistoricalArc(args,{ClientClass:DiagnosticClient})
     assert.deepEqual(first.scores,baseline.scores)
     assert.equal(first.input_sha256,baseline.input_sha256)
     assert.equal(first.counts.members,1001)
@@ -147,7 +160,7 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
     // Real second connection mutates between first source page and subsequent
     // reads. The admitted context remains that one owned MVCC snapshot.
     let changed=false
-    class ConcurrentClient extends pg.Client {
+    class ConcurrentClient extends DiagnosticClient {
       async query(sql,...values){
         const result=await super.query(sql,...values)
         if(typeof sql==='string'&&sql.includes('arc-prepared:candidates')&&!changed){
@@ -209,7 +222,7 @@ test('actual PostgreSQL historical immutable admission, replay, authority and cl
     await assert.rejects(db.query('delete from mip_arc_retained.inputs'),/arc_retained_immutable/)
     assert.equal((await db.query('select count(*)::int n from mip_arc_retained.inputs')).rows[0].n,2)
   }catch(error){
-    primaryFailure={stage,...sanitized(error)}
+    primaryFailure={stage,...sanitized(error),admissionDiagnostic}
   }finally{
     const attempt=async(name,operation)=>{
       try{await operation()}catch(error){cleanupFailures.push({stage:name,...sanitized(error)})}

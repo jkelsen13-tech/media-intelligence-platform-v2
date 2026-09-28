@@ -171,3 +171,5 @@ retained input admission/resolution if native is required, hash-bound score
 persistence, and a qik approval guard that revalidates complete source identity.
 This source does not install the missing guard or copy the legacy broad ACL,
 and it never enables release policies.
+
+The SQL admission exception handler emits only a fixed internal validation-stage label and SQLSTATE in DETAIL. It never copies SQLERRM, original DETAIL, query text, context or values. The production adapter continues to strip all driver details. The synthetic PostgreSQL ClientClass can capture only a fully allowlisted stage/SQLSTATE pair before that sanitation to locate a qualification failure; it does not expose the original driver object.

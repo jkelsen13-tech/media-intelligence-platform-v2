@@ -90,15 +90,18 @@ end $authority$;
 
 create function mip_arc_retained.admit_input(s uuid,g uuid,h text,encoded text)
 returns void language plpgsql set search_path='' as $$
-declare j jsonb;r jsonb;old record;n integer;
+declare j jsonb;bound_row jsonb;old record;n integer;admission_stage text:='identity';
 begin
  if current_user<>'mip_arc_retained_owner' or current_setting('transaction_isolation')<>'repeatable read'
   or s is null or g is null or h is null or h!~'^[0-9a-f]{64}$' or encoded is null
   or octet_length(encoded)>8388608
  then raise exception 'arc_retained_admission_denied';end if;
+ admission_stage:='authorization';
  perform mip_arc_retained.authorize(s);
  perform mip_arc_retained.assert_source_authority();
+ admission_stage:='hash';
  if encode(sha256(convert_to(encoded,'UTF8')),'hex')<>h then raise exception 'arc_retained_integrity';end if;
+ admission_stage:='shape';
  j:=encoded::jsonb;
  if not mip_arc_retained.exact_keys(j,array['version','source_kind','scorer','scorer_blob','candidates','arcs','articles','members','entities','floor','release','audit'])
   or j->>'version' is distinct from 'arc-membership-consumed-input-v1' or j->>'source_kind' is distinct from 'historical_public'
@@ -116,75 +119,90 @@ begin
  then raise exception 'arc_retained_shape';end if;
  -- Projection equality binds every supplied historical-public value to this
  -- owned repeatable-read snapshot. Whole member/entity sets are compared below.
- for r in select value from jsonb_array_elements(j->'candidates') loop
-  if not mip_arc_retained.exact_keys(r,array['id','article_id','arc_id','state','updated_at'])
-   or r->>'state' not in ('pending','rejected','invalidated')
-   or not exists(select 1 from public.arc_membership_candidates c where c.id=(r->>'id')::uuid
-    and jsonb_build_object('id',c.id,'article_id',c.article_id,'arc_id',c.arc_id,'state',c.state,'updated_at',c.updated_at::text)=r)
+ admission_stage:='candidate_projection';
+ for bound_row in select value from jsonb_array_elements(j->'candidates') loop
+  if not mip_arc_retained.exact_keys(bound_row,array['id','article_id','arc_id','state','updated_at'])
+   or bound_row->>'state' not in ('pending','rejected','invalidated')
+   or not exists(select 1 from public.arc_membership_candidates c where c.id=(bound_row->>'id')::uuid
+    and jsonb_build_object('id',c.id,'article_id',c.article_id,'arc_id',c.arc_id,'state',c.state,'updated_at',c.updated_at::text)=bound_row)
   then raise exception 'arc_retained_stale_source';end if;
  end loop;
- for r in select value from jsonb_array_elements(j->'arcs') loop
-  if not mip_arc_retained.exact_keys(r,array['id','title','summary','started_at','last_update_at'])
-   or not exists(select 1 from public.story_arcs a where a.id=(r->>'id')::uuid
-    and jsonb_build_object('id',a.id,'title',a.title,'summary',a.summary,'started_at',a.started_at::text,'last_update_at',a.last_update_at::text)=r)
+ admission_stage:='arc_projection';
+ for bound_row in select value from jsonb_array_elements(j->'arcs') loop
+  if not mip_arc_retained.exact_keys(bound_row,array['id','title','summary','started_at','last_update_at'])
+   or not exists(select 1 from public.story_arcs a where a.id=(bound_row->>'id')::uuid
+    and jsonb_build_object('id',a.id,'title',a.title,'summary',a.summary,'started_at',a.started_at::text,'last_update_at',a.last_update_at::text)=bound_row)
   then raise exception 'arc_retained_stale_source';end if;
  end loop;
- for r in select value from jsonb_array_elements(j->'articles') loop
-  if not mip_arc_retained.exact_keys(r,array['id','title','summary','published_at','outlet','arc_id'])
-   or not exists(select 1 from public.articles a where a.id=(r->>'id')::uuid
-    and jsonb_build_object('id',a.id,'title',a.title,'summary',a.summary,'published_at',a.published_at::text,'outlet',a.outlet,'arc_id',a.arc_id)=r)
+ admission_stage:='article_projection';
+ for bound_row in select value from jsonb_array_elements(j->'articles') loop
+  if not mip_arc_retained.exact_keys(bound_row,array['id','title','summary','published_at','outlet','arc_id'])
+   or not exists(select 1 from public.articles a where a.id=(bound_row->>'id')::uuid
+    and jsonb_build_object('id',a.id,'title',a.title,'summary',a.summary,'published_at',a.published_at::text,'outlet',a.outlet,'arc_id',a.arc_id)=bound_row)
   then raise exception 'arc_retained_stale_source';end if;
  end loop;
+ admission_stage:='relation_shape';
  if exists(select 1 from jsonb_array_elements(j->'members') r
    where not mip_arc_retained.exact_keys(r,array['article_id','arc_id']))
   or exists(select 1 from jsonb_array_elements(j->'entities') r
    where not mip_arc_retained.exact_keys(r,array['article_id','entity_id','confidence']))
  then raise exception 'arc_retained_shape';end if;
+ admission_stage:='cardinality';
  -- Fail closed on cardinality before building full SQL aggregate projections.
  if (select count(*) from (select 1 from public.articles a where a.arc_id in
    (select (r->>'id')::uuid from jsonb_array_elements(j->'arcs') r) limit 8193) q)>8192
   or (select count(*) from (select 1 from public.article_entities e where e.article_id in
    (select (r->>'id')::uuid from jsonb_array_elements(j->'articles') r) limit 65537) q)>65536
  then raise exception 'arc_retained_overflow';end if;
+ admission_stage:='candidate_context';
  -- Exact sets reject omissions, duplicates and foreign context, not only invalid rows.
  if (select count(distinct r->>'id') from jsonb_array_elements(j->'candidates') r)<>jsonb_array_length(j->'candidates')
   or (select coalesce(jsonb_agg(x order by x->>'id'),'[]') from
    (select distinct jsonb_build_object('id',r->>'arc_id') x from jsonb_array_elements(j->'candidates') r) q)
    <> (select coalesce(jsonb_agg(jsonb_build_object('id',r->>'id') order by r->>'id'),'[]') from jsonb_array_elements(j->'arcs') r)
  then raise exception 'arc_retained_context';end if;
+ admission_stage:='member_context';
  if (select coalesce(jsonb_agg(jsonb_build_object('article_id',a.id,'arc_id',a.arc_id) order by a.arc_id,a.id),'[]')
    from public.articles a where a.arc_id in(select (r->>'id')::uuid from jsonb_array_elements(j->'arcs') r))
    <>j->'members'
  then raise exception 'arc_retained_context';end if;
+ admission_stage:='article_context';
  if (select coalesce(jsonb_agg(x order by x->>'id'),'[]') from (
    select distinct jsonb_build_object('id',r->>'article_id') x from jsonb_array_elements(j->'candidates') r
    union select distinct jsonb_build_object('id',r->>'article_id') x from jsonb_array_elements(j->'members') r) q)
    <> (select coalesce(jsonb_agg(jsonb_build_object('id',r->>'id') order by r->>'id'),'[]') from jsonb_array_elements(j->'articles') r)
  then raise exception 'arc_retained_context';end if;
+ admission_stage:='entity_context';
  if (select coalesce(jsonb_agg(jsonb_build_object('article_id',e.article_id,'entity_id',e.entity_id,'confidence',e.confidence::text)
    order by e.article_id,e.entity_id),'[]') from public.article_entities e where e.article_id in
     (select (r->>'id')::uuid from jsonb_array_elements(j->'articles') r))<>j->'entities'
  then raise exception 'arc_retained_context';end if;
+ admission_stage:='floor';
  select count(*) into n from public.pipeline_config where key='entity_resolve_min_confidence';
  if n>1 or j->'floor'<>jsonb_build_object('present',n=1,'value',
   coalesce((select (value #>> '{}')::numeric from public.pipeline_config where key='entity_resolve_min_confidence'),0.70))
  then raise exception 'arc_retained_configuration';end if;
+ admission_stage:='release';
  select count(*) into n from public.arc_membership_release_policy where model_version='arc-v1-membership-2026-08-23.2';
  if n>1 or j->'release'<>coalesce((select jsonb_build_object('present',true,'fixture_passed',fixture_passed,
    'auto_approval_enabled',auto_approval_enabled,'auto_approval_threshold',auto_approval_threshold)
   from public.arc_membership_release_policy where model_version='arc-v1-membership-2026-08-23.2'),
   jsonb_build_object('present',false,'fixture_passed',false,'auto_approval_enabled',false,'auto_approval_threshold',null))
  then raise exception 'arc_retained_configuration';end if;
+ admission_stage:='retry';
  perform pg_advisory_xact_lock(hashtextextended(s::text||g::text,0));
  select * into old from mip_arc_retained.inputs where scope=s and generation=g;
  if found then
   if old.input_sha256<>h or old.canonical_input<>encoded then raise exception 'arc_retained_retry_conflict';end if;
   return;
  end if;
+ admission_stage:='insert';
  insert into mip_arc_retained.inputs(scope,generation,input_sha256,canonical_input) values(s,g,h,encoded);
 exception when others then
- -- Source values, SQL casts and driver diagnostics never cross this boundary.
- raise exception 'arc_retained_admission_failed' using errcode='P0001';
+ -- Fixed internal stage + SQLSTATE only. Never copy SQLERRM, DETAIL, values,
+ -- query text or context. The runtime adapter still strips this detail entirely.
+ raise exception 'arc_retained_admission_failed' using errcode='P0001',
+  detail='stage='||admission_stage||';sqlstate='||SQLSTATE;
 end $$;
 create function mip_arc_retained.read_input(s uuid,g uuid,h text,allow_missing boolean default false)
 returns table(canonical_input text,input_sha256 text)
