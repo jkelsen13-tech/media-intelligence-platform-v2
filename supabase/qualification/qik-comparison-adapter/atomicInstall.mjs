@@ -13,6 +13,7 @@ const RECEIPT_SCHEMA='mip_comparison_install'
 const SHA=/^[a-f0-9]{64}$/
 const ID=/^[a-f0-9]{32}$/
 const LOGIN=/^[a-z][a-z0-9_]{0,62}$/
+const COMPATIBILITY_ROLES=Object.freeze(['mip_kernel_reader_compat_v1','mip_kernel_producer_compat_v1','mip_kernel_worker_compat_v1','mip_kernel_scheduler_compat_v1','mip_kernel_selector_compat_v1','mip_kernel_publisher_compat_v1','mip_kernel_scorer_compat_v1'].sort())
 const schemas=RESERVED_SCHEMAS.filter(x=>x!=='comparison_qualification')
 const digest=x=>createHash('sha256').update(x).digest('hex')
 const quote=x=>{if(!LOGIN.test(x))throw Error('atomic_identifier');return '"'+x+'"'}
@@ -57,6 +58,18 @@ export async function prepareAtomicInstall(readPinnedSource){
  const closure=steps.find(s=>s.path==='adapter:compatibility-closure-v1')
  const compatibility=steps.find(s=>s.path==='adapter:compatibility-assertions-v1')
  if(!closure||!compatibility)refuse('compiler_contract')
+ // These exact seven freshly created compatibility roles already have all
+ // privilege-bearing flags false. PG17 still requires elevated privileges to
+ // ALTER those flags to false; change only the differing default INHERIT flag.
+ if([...closure.sql.matchAll(/^alter role .*;$/gm)].length!==COMPATIBILITY_ROLES.length)
+  refuse('compatibility_role_boundary')
+ for(const role of COMPATIBILITY_ROLES){
+  if(roles.get(role)!=='create role '+role+';')refuse('compatibility_creation_boundary')
+  closure.sql=once(closure.sql,
+   'alter role '+role+' nologin nosuperuser nocreatedb nocreaterole noinherit noreplication nobypassrls;',
+   'alter role '+role+' noinherit;')
+ }
+ // Full original attribute/ownership/membership assertions remain unchanged.
  const plan={version:INSTALL_VERSION,target_project:PROJECT,source_commit:compiled.source_commit,
   doj_source_commit:DOJ_SOURCE_COMMIT,roles:[...roles.entries()].sort(([a],[b])=>a.localeCompare(b)),
   body,dojBody,permissions,closure:closure.sql,assertions,dojAssertions,compatibility:compatibility.sql}
@@ -234,15 +247,18 @@ export async function installComparisonAtomic(config,readPinnedSource){
   if(!owner.had_create)await db.query('grant create on schema qik_ingest to qik_ingest_fn_owner')
   await db.query(plan.dojBody)
   if(!owner.had_create)await db.query('revoke create on schema qik_ingest from qik_ingest_fn_owner')
-  phase='final_permission_mutations'
+  phase='final_permission_functions'
   await db.query(plan.permissions)
   // New-schema CREATE grants are installer scaffolding, never runtime authority.
+  phase='temporary_schema_create_revoke'
   for(const schema of schemas)await db.query('revoke create on schema '+quote(schema)+' from '+plan.roles.map(([r])=>quote(r)).join(','))
   const alterRoles=plan.closure.split('\n').filter(line=>line.startsWith('alter role '))
   const aclClosure=plan.closure.split('\n').filter(line=>!line.startsWith('alter role ')).join('\n')
+  phase='compatibility_role_attributes'
   await db.query('set role '+quote(c.creator))
   for(const statement of alterRoles)await db.query(statement)
   await db.query('reset role')
+  phase='compatibility_acl_revoke'
   await db.query(aclClosure)
   phase='installation_receipt'
   await db.query(receiptDDL)
@@ -251,12 +267,17 @@ export async function installComparisonAtomic(config,readPinnedSource){
    [c.operationId,plan.manifest_sha256,baseline,c.collectorSource,c.auditLogin,'installed_disabled_audit_pending'])
   phase='c3_preservation'
   if(await c3(db,c)!==baseline)refuse('c3_drift')
-  phase='temporary_creator_cleanup'
+  phase='temporary_creator_ownership'
+  const creatorOwns=(await db.query("select exists(select 1 from pg_shdepend where refclassid='pg_authid'::regclass and refobjid=$1::regrole and deptype='o') owns_objects",[c.creator])).rows[0]
+  if(creatorOwns?.owns_objects!==false)refuse('creator_owned_objects')
+  phase='temporary_role_grants_revoke'
   await db.query('set role '+quote(c.creator))
   for(const [role] of plan.roles)await db.query('revoke '+quote(role)+' from '+quote(c.expectedLogin)+' cascade')
   await db.query('reset role')
   await db.query('revoke '+quote(c.creator)+' from '+quote(c.expectedLogin))
+  phase='temporary_creator_drop'
   await db.query('drop role '+quote(c.creator))
+  phase='temporary_membership_assertions'
   const edges=(await db.query('select count(*)::integer n from pg_auth_members where roleid in(select oid from pg_roles where rolname=any($1::text[])) or member in(select oid from pg_roles where rolname=any($1::text[]))',[plan.roles.map(([r])=>r)])).rows[0]
   if(edges?.n!==0)refuse('residual_memberships')
   phase='audit_secret_boundary'
