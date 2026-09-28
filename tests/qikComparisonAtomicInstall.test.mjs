@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
+import {createHash} from 'node:crypto'
 import {prepareAtomicInstall,validateAtomicConfig,DOJ_PATH,DOJ_SOURCE_COMMIT} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
 import {SOURCE_COMMIT} from '../supabase/qualification/qik-comparison-adapter/compileSource.mjs'
 const root=new URL('../',import.meta.url)
@@ -17,6 +18,7 @@ test('source plan preserves pinned source and final assertion order',async()=>{
  const p=await prepareAtomicInstall(reader)
  assert.equal(p.manifest_sha256,(await prepareAtomicInstall(reader)).manifest_sha256)
  assert.ok(p.roles.length>30)
+ for(const step of p.body)assert.equal(step.compiled_sha256,createHash('sha256').update(step.sql).digest('hex'))
  assert.ok(p.body.every(s=>!s.path.endsWith('/019_native_retention_permissions.sql')))
  assert.match(p.permissions,/revoke all on function/)
  assert.ok(p.assertions.startsWith('do $final_native_permissions$'))
