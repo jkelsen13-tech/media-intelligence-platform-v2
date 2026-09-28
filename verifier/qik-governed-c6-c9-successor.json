@@ -6,8 +6,8 @@
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
   "immediate_base": {
-    "commit": "a43893801c5f2c8543e0c08b9bfa7b039899574c",
-    "tree": "09347a3f9783110a0864aa021b873a9c4e6085c9"
+    "commit": "77772ac151df65752f09b4f8f0d31d50026dd629",
+    "tree": "c8830db56affb34bf03f299120ea02c2e01eec99"
   },
   "authorization": {
     "internal_source_and_synthetic_qualification": "User consolidation continuation amendment prospectively authorizes this distinct governed successor and installer mode into source review and synthetic internal qualification. Qualification receipts and actual external Cursor review bind the exact candidate; no individual owner field signature, historical acceptance, hosted installation or actual-material receiving authorization is represented.",
@@ -1071,7 +1071,7 @@
     ],
     "native_joint_installer": {
       "path": "supabase/qualification/native-governed-install/install.mjs",
-      "blob": "ef697eb9a7b74f1957c82e4f7cdaaa0962f99f4d",
+      "blob": "aa8cd8908f6c7284724246dca187adaf457dc897",
       "mode": "native-governed-v4",
       "authorization": "owner-authorized-disabled-comparison-native-comparison-binding-install",
       "source_base": "a43893801c5f2c8543e0c08b9bfa7b039899574c",
@@ -1142,7 +1142,7 @@
     "native_comparison_binding_order": [
       {
         "path": "supabase/qualification/native-comparison-binding/001_private_binding.sql",
-        "blob": "3b229ea59b63255984f5ad45d05d64b80cc15dad"
+        "blob": "4466825f4e8e5b794c3ccd6e89c54410293d2976"
       }
     ],
     "native_comparison_fixture": {
@@ -2034,6 +2034,7 @@
     "qualified": false,
     "installed": false,
     "accepted": false,
-    "authorization": "Prospectively authorized into internal qualification by user consolidation amendment; not individually owner-signed fields, historical acceptance or a new data destination."
+    "authorization": "Prospectively authorized into internal qualification by user consolidation amendment; not individually owner-signed fields, historical acceptance or a new data destination.",
+    "source_correction": "New binding immutable_rows is BEFORE ROW UPDATE OR DELETE; final exact trigger assertion uses27. Existing embedded historical/native/private statement-trigger assertions remain byte-identical with26."
   }
 }

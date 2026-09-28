@@ -617,7 +617,7 @@ begin
   end loop;
   if(select count(*) from pg_trigger t where t.tgrelid=relation_id and not t.tgisinternal)<>2
    or not exists(select 1 from pg_trigger t where t.tgrelid=relation_id and t.tgname='immutable_rows'
-    and t.tgfoid='mip_arc_native.immutable()'::regprocedure and t.tgtype=26 and t.tgenabled='O' and t.tgqual is null and t.tgattr=''::int2vector)
+    and t.tgfoid='mip_arc_native.immutable()'::regprocedure and t.tgtype=27 and t.tgenabled='O' and t.tgqual is null and t.tgattr=''::int2vector)
    or not exists(select 1 from pg_trigger t where t.tgrelid=relation_id and t.tgname='immutable_table'
     and t.tgfoid='mip_arc_native.immutable()'::regprocedure and t.tgtype=34 and t.tgenabled='O' and t.tgqual is null and t.tgattr=''::int2vector)
   then raise exception 'native_comparison_immutable_boundary';end if;
