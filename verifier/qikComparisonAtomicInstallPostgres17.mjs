@@ -87,6 +87,13 @@ async function assertPristineFixture(db){
  const edges=(await db.query("select p.rolname parent,m.rolname member,a.admin_option admin,a.inherit_option inherit,a.set_option set from pg_auth_members a join pg_roles p on p.oid=a.roleid join pg_roles m on m.oid=a.member order by p.rolname,m.rolname")).rows
  assert.deepEqual(edges,['pg_read_all_settings','pg_read_all_stats','pg_stat_scan_tables'].map(parent=>({parent,member:'pg_monitor',admin:false,inherit:true,set:true})))
 }
+function safeDiagnostic(receipt){
+ // Only existing control-defined return fields; never errors, SQL or config.
+ const state=/^[a-z_]{1,80}$/.test(receipt?.state??'')?receipt.state:null
+ const phase=/^[a-z0-9_:./-]{1,220}$/.test(receipt?.phase??'')?receipt.phase:null
+ const sqlstate=/^[0-9A-Z]{5}$/.test(receipt?.sqlstate??'')?receipt.sqlstate:null
+ return JSON.stringify({state,phase,sqlstate})
+}
 const ident=s=>'"'+s.replaceAll('"','""')+'"'
 test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and audit recovery',{timeout:240000},async()=>{
  assert.equal(process.env.MIP_QIK_COMPARISON_DISPOSABLE,'synthetic-pg17-only')
@@ -169,9 +176,9 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   await admin.query('alter default privileges for role '+ident(installer)+' grant select on tables to atomic_fixture_reader;alter default privileges for role '+ident(installer)+' grant usage on schemas to atomic_fixture_reader')
   const defaultsDuring=(await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value
   const drift=await installComparisonAtomic(cfg,async p=>read(p))
-  assert.equal(drift.state,'installation_refused')
-  assert.equal(drift.phase,'audit_secret_boundary')
-  assert.equal(drift.sqlstate,'P0001')
+  assert.equal(drift.state,'installation_refused',safeDiagnostic(drift))
+  assert.equal(drift.phase,'audit_secret_boundary',safeDiagnostic(drift))
+  assert.equal(drift.sqlstate,'P0001',safeDiagnostic(drift))
   assert.deepEqual((await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value,defaultsDuring)
   assert.equal((await admin.query("select to_regclass('mip_factual.audit_connection') object")).rows[0].object,null)
   await admin.query('alter default privileges for role '+ident(installer)+' revoke select on tables from atomic_fixture_reader;alter default privileges for role '+ident(installer)+' revoke usage on schemas from atomic_fixture_reader')
@@ -182,9 +189,9 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
    'grant execute on function mip_factual_transport.dblink_exec(text,text) to atomic_fixture_reader',
   ]){
    const rejected=await injectPrivateUnitDrift(sql,()=>installComparisonAtomic(cfg,async p=>read(p)))
-   assert.equal(rejected.state,'installation_refused')
-   assert.equal(rejected.phase,'audit_secret_boundary')
-   assert.equal(rejected.sqlstate,'P0001')
+   assert.equal(rejected.state,'installation_refused',safeDiagnostic(rejected))
+   assert.equal(rejected.phase,'audit_secret_boundary',safeDiagnostic(rejected))
+   assert.equal(rejected.sqlstate,'P0001',safeDiagnostic(rejected))
    assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
   }
   // Y inherits no table rights, but can SET ROLE to NOLOGIN+BYPASSRLS X,
@@ -193,9 +200,9 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   await admin.query('grant pg_read_all_data to atomic_fixture_set_target with inherit true,set false;grant atomic_fixture_set_target to atomic_fixture_set_login with inherit false,set true')
   assert.equal((await admin.query("select has_table_privilege('atomic_fixture_set_login','public.articles','SELECT') direct")).rows[0].direct,false)
   const setPath=await installComparisonAtomic(cfg,async p=>read(p))
-  assert.equal(setPath.state,'installation_refused')
-  assert.equal(setPath.phase,'audit_secret_boundary')
-  assert.equal(setPath.sqlstate,'P0001')
+  assert.equal(setPath.state,'installation_refused',safeDiagnostic(setPath))
+  assert.equal(setPath.phase,'audit_secret_boundary',safeDiagnostic(setPath))
+  assert.equal(setPath.sqlstate,'P0001',safeDiagnostic(setPath))
   assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
   assert.equal((await admin.query("select pg_has_role('atomic_fixture_set_login','atomic_fixture_set_target','SET') allowed,pg_has_role('atomic_fixture_set_target','pg_read_all_data','USAGE') inherited")).rows[0].allowed,true)
   assert.equal((await admin.query("select pg_has_role('atomic_fixture_set_target','pg_read_all_data','USAGE') inherited")).rows[0].inherited,true)
@@ -203,20 +210,20 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   // Force a real mid-install failure at the existing 009 uniqueness constraint.
   await admin.query("insert into public.explanations(id,assertion_id,version,is_current) values('00000000-0000-4000-8000-000000000001','synthetic-duplicate',1,true),('00000000-0000-4000-8000-000000000002','synthetic-duplicate',1,true)")
   const failed=await loseAcknowledgement('rollback',()=>installComparisonAtomic(cfg,async p=>read(p)))
-  assert.equal(failed.state,'installation_refused')
-  assert.equal(failed.needs_reconciliation,false)
-  assert.equal(failed.phase,'source:supabase/qualification/mip-cutover-authority/009_factual_enforcement.sql')
-  assert.equal(failed.sqlstate,'23505')
+  assert.equal(failed.state,'installation_refused',safeDiagnostic(failed))
+  assert.equal(failed.needs_reconciliation,false,safeDiagnostic(failed))
+  assert.equal(failed.phase,'source:supabase/qualification/mip-cutover-authority/009_factual_enforcement.sql',safeDiagnostic(failed))
+  assert.equal(failed.sqlstate,'23505',safeDiagnostic(failed))
   assert.equal((await admin.query('select count(*)::integer n from pg_roles where rolname=any($1::text[])',[[...RESERVED_ROLES,'mip_tmp_'+cfg.operationId]])).rows[0].n,0)
   assert.equal((await admin.query('select count(*)::integer n from pg_namespace where nspname=any($1::text[])',[[...RESERVED_SCHEMAS,'mip_comparison_install']])).rows[0].n,0)
   assert.equal((await admin.query("select n.nspname from pg_extension e join pg_namespace n on n.oid=e.extnamespace where e.extname='dblink'")).rows[0].nspname,'extensions')
   assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
   await admin.query('delete from public.explanations')
   const installed=await loseAcknowledgement('commit',()=>installComparisonAtomic(cfg,async p=>read(p)))
-  assert.equal(installed.state,'commit_ambiguous')
-  assert.equal(installed.needs_reconciliation,true)
-  assert.equal(installed.phase,'commit')
-  assert.equal(installed.sqlstate,'08006')
+  assert.equal(installed.state,'commit_ambiguous',safeDiagnostic(installed))
+  assert.equal(installed.needs_reconciliation,true,safeDiagnostic(installed))
+  assert.equal(installed.phase,'commit',safeDiagnostic(installed))
+  assert.equal(installed.sqlstate,'08006',safeDiagnostic(installed))
   assert.equal(installed.activation_allowed,false)
   assert.equal((await reconcileComparisonInstall(cfg)).state,'installed_disabled_audit_pending')
   assert.equal((await admin.query('select count(*)::integer n from pg_auth_members where roleid in(select oid from pg_roles where rolname=any($1::text[])) or member in(select oid from pg_roles where rolname=any($1::text[]))',[[...RESERVED_ROLES]])).rows[0].n,0)
@@ -229,7 +236,7 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
    await assert.rejects(denied.query('select mip_comparison_install.audit_probe(false)'),e=>e.code==='42501')
   }finally{await denied.end()}
   const auditResult=await qualifyComparisonAudit(cfg)
-  assert.equal(auditResult.state,'installed_disabled_audit_qualified')
+  assert.equal(auditResult.state,'installed_disabled_audit_qualified',safeDiagnostic(auditResult))
   assert.equal(auditResult.activation_allowed,false)
   assert.equal((await qualifyComparisonAudit(cfg)).state,'installed_disabled_audit_qualified')
   const receipt=(await admin.query('select * from mip_comparison_install.receipts')).rows
