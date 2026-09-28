@@ -64,6 +64,7 @@ async function assertPristineFixture(db){
   "(select count(*)::integer from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public') public_relations,"+
   "(select count(*)::integer from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public') public_functions,"+
   "(select count(*)::integer from pg_type t join pg_namespace n on n.oid=t.typnamespace where n.nspname='public') public_types,"+
+  "(select count(*)::integer from pg_largeobject_metadata) large_objects,"+
   "(select count(*)::integer from pg_foreign_server)+(select count(*)::integer from pg_event_trigger)+(select count(*)::integer from pg_default_acl)+(select count(*)::integer from pg_publication)+(select count(*)::integer from pg_subscription) extras"
  )).rows[0]
  const names=['postgres','pg_database_owner','pg_read_all_data','pg_write_all_data','pg_monitor',
@@ -80,7 +81,7 @@ async function assertPristineFixture(db){
   ||JSON.stringify(r.databases)!==JSON.stringify(['postgres','template0','template1'])
   ||JSON.stringify(r.schemas)!==JSON.stringify(['information_schema','pg_catalog','pg_toast','public'])
   ||r.extensions?.length!==1||r.extensions[0].name!=='plpgsql'||r.extensions[0].version!=='1.0'||r.extensions[0].schema!=='pg_catalog'||r.extensions[0].owner!=='postgres'
-  ||r.public_relations!==0||r.public_functions!==0||r.public_types!==0||r.extras!==0
+  ||r.public_relations!==0||r.public_functions!==0||r.public_types!==0||r.large_objects!==0||r.extras!==0
   ||JSON.stringify(r.roles?.map(x=>x.name))!==JSON.stringify(names)||!r.roles.every(goodRole))
   throw Error('atomic_fixture_not_pristine')
  const edges=(await db.query("select p.rolname parent,m.rolname member,a.admin_option admin,a.inherit_option inherit,a.set_option set from pg_auth_members a join pg_roles p on p.oid=a.roleid join pg_roles m on m.oid=a.member order by p.rolname,m.rolname")).rows
@@ -99,6 +100,11 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
  await assert.rejects(assertPristineFixture(owner),/atomic_fixture_not_pristine/)
  assert.equal((await owner.query('select id from fixture_unrelated.sentinel')).rows[0].id,73)
  await owner.query('drop table fixture_unrelated.sentinel;drop schema fixture_unrelated')
+ await assertPristineFixture(owner)
+ const largeObject=(await owner.query('select lo_create(0) oid')).rows[0].oid
+ await assert.rejects(assertPristineFixture(owner),/atomic_fixture_not_pristine/)
+ assert.equal((await owner.query('select exists(select 1 from pg_largeobject_metadata where oid=$1) retained',[largeObject])).rows[0].retained,true)
+ assert.equal((await owner.query('select lo_unlink($1) removed',[largeObject])).rows[0].removed,1)
  await assertPristineFixture(owner)
  const baseline=(await owner.query('select rolname from pg_roles order by rolname')).rows.map(r=>r.rolname)
  // Bootstrap credentials are hardcoded synthetic fixture material, never production.
@@ -171,6 +177,19 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
    assert.equal(rejected.sqlstate,'P0001')
    assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
   }
+  // Y inherits no table rights, but can SET ROLE to NOLOGIN+BYPASSRLS X,
+  // which inherits pg_read_all_data. No new-unit ACL is explicitly granted.
+  await admin.query("create role atomic_fixture_set_target nologin bypassrls nosuperuser nocreatedb nocreaterole inherit;create role atomic_fixture_set_login login nosuperuser nocreatedb nocreaterole nobypassrls password '"+password+"'")
+  await admin.query('grant pg_read_all_data to atomic_fixture_set_target with inherit true,set false;grant atomic_fixture_set_target to atomic_fixture_set_login with inherit false,set true')
+  assert.equal((await admin.query("select has_table_privilege('atomic_fixture_set_login','public.articles','SELECT') direct")).rows[0].direct,false)
+  const setPath=await installComparisonAtomic(cfg,async p=>read(p))
+  assert.equal(setPath.state,'installation_refused')
+  assert.equal(setPath.phase,'audit_secret_boundary')
+  assert.equal(setPath.sqlstate,'P0001')
+  assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
+  assert.equal((await admin.query("select pg_has_role('atomic_fixture_set_login','atomic_fixture_set_target','SET') allowed,pg_has_role('atomic_fixture_set_target','pg_read_all_data','USAGE') inherited")).rows[0].allowed,true)
+  assert.equal((await admin.query("select pg_has_role('atomic_fixture_set_target','pg_read_all_data','USAGE') inherited")).rows[0].inherited,true)
+  await admin.query('drop role atomic_fixture_set_login;drop role atomic_fixture_set_target')
   // Force a real mid-install failure at the existing 009 uniqueness constraint.
   await admin.query("insert into public.explanations(id,assertion_id,version,is_current) values('00000000-0000-4000-8000-000000000001','synthetic-duplicate',1,true),('00000000-0000-4000-8000-000000000002','synthetic-duplicate',1,true)")
   const failed=await loseAcknowledgement('rollback',()=>installComparisonAtomic(cfg,async p=>read(p)))
@@ -221,7 +240,7 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
    await clean.query('drop database postgres')
    await clean.query('create database postgres owner postgres')
    const created=(await clean.query('select rolname from pg_roles')).rows.map(r=>r.rolname).filter(n=>!baseline.includes(n)&&n!==bootstrap)
-   const allowed=new Set([...RESERVED_ROLES,'mip_tmp_'+'2'.repeat(32),'anon','authenticated','service_role','qik_ingest_fn_owner','qik_ingest_runtime',audit,'atomic_fixture_reader'])
+   const allowed=new Set([...RESERVED_ROLES,'mip_tmp_'+'2'.repeat(32),'anon','authenticated','service_role','qik_ingest_fn_owner','qik_ingest_runtime',audit,'atomic_fixture_reader','atomic_fixture_set_target','atomic_fixture_set_login'])
    assert.ok(created.every(r=>allowed.has(r)),'unexpected role prevents unbounded cleanup')
    for(const name of created)await clean.query('drop role '+ident(name))
    await clean.end()
