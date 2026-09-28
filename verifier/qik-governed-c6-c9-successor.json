@@ -6,8 +6,8 @@
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
   "immediate_base": {
-    "commit": "88fa3aeef08471be1bf2dc8bf0a2ef6ace5cbc4d",
-    "tree": "dadd7eaa296afcedd9681ea2ba05c5899d2d5a61"
+    "commit": "9035a6b95d2e009455f35d6e3589c8476cbe8728",
+    "tree": "ae078d6b2d6302fa43b5c99251a6d12978790f8c"
   },
   "authorization": {
     "internal_source_and_synthetic_qualification": "User consolidation continuation amendment prospectively authorizes this distinct governed successor and installer mode into source review and synthetic internal qualification. Qualification receipts and actual external Cursor review bind the exact candidate; no individual owner field signature, historical acceptance, hosted installation or actual-material receiving authorization is represented.",
@@ -1149,7 +1149,7 @@
     ],
     "native_comparison_fixture": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "44a08e088f35d24905ada28a80e362698c3e21b0"
+      "blob": "527b1ce5b3d9f755729ec9919979c5fda2975c91"
     },
     "native_comparison_assertions": {
       "path": "tests/nativeComparisonBindingAssertions.mjs",
@@ -1189,7 +1189,7 @@
       "environment": "MIP_NATIVE_ARC_COHORT_DISPOSABLE=synthetic-pg17-only; MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
       "invocation": "node --test tests/nativeArcCohortPostgres17.test.mjs",
       "fixture": "Fresh pristinepostgrescluster, real full atomicbackend/audit/C3syntheticdisabledreceipt and C6/C9install order; synthetic sources only. Selected private context columns/types/RLS; seed institution root2020 and pending ia_concludes milestone2021 before generation1001. Later synthetic-only selection revision2022/version2/predecessor402 reserves4MiB/120MiB under unchanged8MiB/128MiB production whole-operation ceilings; both subsequent cohort generations use2022. Earlier original hard-bound assertions remain unchanged. Additional actual four-capture/two-accepted-event fixture uses real retained extraction, real workload broker issuance and journaled worker, full factual/rights/privacy/release readers, and native/private current readers. Native generation binds first exact two captures to one accepted event; second event has disjoint originals. Uses code-point claim spans and independent UTF8 native citation semantics without substitution. Preservation-safe fixture ordering: after the complete selected installation but before legacy synthetic captures, assert exactly the single initially eligible synthetic custody sentinel, seed separate scope7200, and run the full accepted comparison binding constructor. The unchanged007 survivor context refuses any pending-review source article; existing pending-review/native cases are seeded afterwards and remain unchanged. No installed-row relabeling, deletion or isolated smaller helper installation is used; original exact scoped generation-count assertions stay intact. The test-only bootstrap reads the unchanged fixture_substrate.sql, requires its exact sole initial sentinel INSERT byte sequence, and changes only that initial synthetic seed from pending_review to eligible before executing the substrate or installing history. All schema/role/ACL/constraint/extension and complete backend/journal/review/reader code remain identical. This single deterministic dataset profile is not a production installation step or approval. Other fixtures retain the original pending sentinel; all subsequent native pending-review cases retain their original data. The constructor now uses unchanged actual C3/DOJ020 with four entirely synthetic feed-only captures and no website fetch. Bodies and public article.arc_id remain NULL. It tests hosted authoritative_adapter_unbound refusal before appending synthetic-valued DOJ policy/material/operation revisions through the existing authority administrator. synthetic:false selects the actual020 resolver in this disposable fixture only; it is not owner evidence or actual-material permission. A separately reviewed empty-cohort private attachment establishes the native seed member before the final complete cohort; public article linkage remains NULL. Collection gate and source configuration are restored independently.",
-      "expectation": "All15 C9 authored child groups pass, no skips: complete real dependency chain and final effective closure; exact native evidence/capture/null-missing/currentness/access/member drift; deterministic scorer/retry, complete ordinary score binding and explicit private attachment, two additions/concurrent retry/origin continuity/revocation/source non-mutation/exact nested metadata receipts; no public assignment/eligibility/activation. Five actual internal private projection check groups run before private attachment using the same real native generation and original capture, reviewed empty/nonempty spans, current selected root/milestone. Change→restore article eligibility/root/milestone tests prove immutable count drift and valid unchanged native score before private reader refuses; each source TX rolls back. Exact final permission negatives temporarily revoke only two fixture worker memberships, first pass positive closure, then require precise expected boundary; rollback verifies original grantor/options unchanged. Six additional internal binding groups cover exact retry, concurrency, wrong event/capture membership, nested field allowlists, synthetic sentinel exclusion/source intact, revoked/inaccessible source/broker/publication authority, final direct/wrapper permission refusal and append-only local revocation. Real mutation transactions restore baseline; closed diagnostics retain no driver detail/SQL/payload. Real SCRAM gateway-only server dispatch exercises exact admit/read/revoke and synthetic loss of a post-COMMIT acknowledgment followed by one distinct fresh authenticated read, never admission replay. Actual server guard retains 1000ms statement timeout and closed logging; source identity namespaces are separately bound even for equal UUID values. Synthetic lost acknowledgment is not a real network outage. Closed staging refusal diagnostics retain only an exact non-format static exception message from the complete installed source plus fixed operation-denial reasons; no prefix match; no driver message/context/detail/SQL/parameters/material. Require actual bound DOJ operation checks and public_release_allowed=false, owner_field_signature=null; no production allowlist/adapter/SQL/compiler change, no restored permissive synthetic fallback. Both initial/final native scoring use the same reviewed policy.",
+      "expectation": "All15 C9 authored child groups pass, no skips: complete real dependency chain and final effective closure; exact native evidence/capture/null-missing/currentness/access/member drift; deterministic scorer/retry, complete ordinary score binding and explicit private attachment, two additions/concurrent retry/origin continuity/revocation/source non-mutation/exact nested metadata receipts; no public assignment/eligibility/activation. Five actual internal private projection check groups run before private attachment using the same real native generation and original capture, reviewed empty/nonempty spans, current selected root/milestone. Change→restore article eligibility/root/milestone tests prove immutable count drift and valid unchanged native score before private reader refuses; each source TX rolls back. Exact final permission negatives temporarily revoke only two fixture worker memberships, first pass positive closure, then require precise expected boundary; rollback verifies original grantor/options unchanged. Six additional internal binding groups cover exact retry, concurrency, wrong event/capture membership, nested field allowlists, synthetic sentinel exclusion/source intact, revoked/inaccessible source/broker/publication authority, final direct/wrapper permission refusal and append-only local revocation. Real mutation transactions restore baseline; closed diagnostics retain no driver detail/SQL/payload. Real SCRAM gateway-only server dispatch exercises exact admit/read/revoke and synthetic loss of a post-COMMIT acknowledgment followed by one distinct fresh authenticated read, never admission replay. Actual server guard retains 1000ms statement timeout and closed logging; source identity namespaces are separately bound even for equal UUID values. Synthetic lost acknowledgment is not a real network outage. Closed staging refusal diagnostics retain only an exact non-format static exception message from the complete installed source plus fixed operation-denial reasons; no prefix match; no driver message/context/detail/SQL/parameters/material. Require actual bound DOJ operation checks and public_release_allowed=false, owner_field_signature=null; no production allowlist/adapter/SQL/compiler change, no restored permissive synthetic fallback. Both initial/final native scoring use the same reviewed policy. Constructor diagnostics now also allow the exact97 non-format native refusal names already closed in the outer fixture, across constructor stages; the legacy staging_refusal property name is retained. No prefix, driver context/detail/SQL/argument/payload enters diagnostics.",
       "cleanup": "Restore independently guarded disposable database/role baseline, independently end clients; always remove container+volumes and assertabsence. Any primary/cleanup failure failsqualification."
     },
     "native_joint_install": {
@@ -2120,17 +2120,19 @@
     },
     "fixture_correction": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "44a08e088f35d24905ada28a80e362698c3e21b0",
+      "blob": "527b1ce5b3d9f755729ec9919979c5fda2975c91",
       "status": "AUTHORED — NOT RUN",
       "reason": "Hosted compiler deliberately denies synthetic fallback. Exercise unchanged actual C3/020 resolver with synthetic feed-only material and explicit reviewed private seed membership; retain refusal. No production contract/grant/compiler change. Corrects disposable gate/source setup order required by the unchanged C3 enforcement trigger; final and failure cleanup still restore disabled gate/source.",
       "historical_receipt": {
-        "candidate": "88fa3aeef08471be1bf2dc8bf0a2ef6ace5cbc4d",
-        "run": 36426831822,
+        "candidate": "9035a6b95d2e009455f35d6e3589c8476cbe8728",
+        "run": 36427232584,
         "pass": 176,
         "fail": 2,
-        "stage": "synthetic_c3_feed_profile",
-        "sqlstate": "42501",
-        "source_line": 96
+        "stage": "native_scalar_extraction_reviews",
+        "sqlstate": "P0001",
+        "source_line": 326,
+        "accepted_reader_stage_passed": true,
+        "cleanup": "success"
       },
       "limits": "Source/synthetic only; not hosted installation, real DOJ policy approval, field signature, actual capture transfer or publication eligibility."
     }
