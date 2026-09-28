@@ -50,8 +50,8 @@ test('joint native installation uses actual PG17.6 nonsuper principal, rollback,
    assert.deepEqual((await principal.query("select session_user::text principal,current_user::text effective,rolsuper,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit,rolcanlogin from pg_roles where rolname=current_user")).rows[0],
     {principal:backendInstaller,effective:backendInstaller,rolsuper:false,rolcreaterole:true,rolcreatedb:true,rolbypassrls:true,rolinherit:true,rolcanlogin:true})
    await assert.rejects(connect(backendInstaller,'deliberately-wrong-synthetic-password'),e=>e.code==='28P01')
-   for(const name of ['articles','entities','story_arcs','arc_membership_candidates']){
-    assert.deepEqual((await principal.query("select pg_get_userbyid(relowner) owner,relrowsecurity rls,relforcerowsecurity force from pg_class where oid=$1::regclass",['public.'+name])).rows[0],{owner:backendInstaller,rls:true,force:false})
+   for(const name of ['articles','entities','story_arcs','pipeline_config','arc_membership_candidates']){
+    assert.deepEqual((await principal.query("select relkind::text kind,pg_get_userbyid(relowner) owner,relrowsecurity rls,relforcerowsecurity force from pg_class where oid=$1::regclass",['public.'+name])).rows[0],{kind:'r',owner:backendInstaller,rls:true,force:false})
    }
   })
   await t.test('new mode requires distinct authorization and manifest; all historical source pins retained',async()=>{
@@ -225,7 +225,7 @@ async function prepareFullBackend(root){
   const nativeBase=await connect(backendInstaller);
   try{
    await nativeBase.query("create table public.entities(id uuid primary key,canonical_name text,normalized_name text,type text,aliases text[],mention_count integer default 0,last_seen timestamptz);alter table public.story_arcs add column started_at date not null,add column title text,add column summary text,add column last_update_at timestamptz;alter table public.arc_membership_candidates add column article_id uuid,add column arc_id uuid,add column state text,add column updated_at timestamptz");
-   await nativeBase.query("alter table public.articles enable row level security;alter table public.entities enable row level security;alter table public.story_arcs enable row level security;alter table public.arc_membership_candidates enable row level security");
+   await nativeBase.query("alter table public.articles enable row level security;alter table public.entities enable row level security;alter table public.story_arcs enable row level security;alter table public.pipeline_config enable row level security;alter table public.arc_membership_candidates enable row level security");
   }finally{await nativeBase.end()}
   const plan=await prepareAtomicInstall(read,{nativeMode:NATIVE_MODE});
   const pre=await connect(backendInstaller);
