@@ -194,3 +194,18 @@ test('unkeyed backup occurrences and cell history never collapse into a single s
     throwsCode(()=>planHistoricalArticles(x),'duplicate_identity')
   }
 })
+test('identical-content backup occurrences retain distinct native occurrence identities',()=>{
+  for(const table of ['article_entities_canary_sweep_backup_20260809','articles_decode_backup_20260726_r3']) {
+    const x=fixture(),root=x.records.find(r=>r.identity.project===PROJECTS.nie)
+    for(const ordinal of [0,1]) x.records.push({...structuredClone(root),
+      identity:{project:PROJECTS.nie,table,source_id:H(700+ordinal),version_sha256:H(800)},
+      dependencies:[structuredClone(root.identity)]})
+    const p=planHistoricalArticles(x),page=p.pages.find(p=>p.table===table)
+    assert.equal(page.rows.length,2)
+    assert.notEqual(page.rows[0].identity.source_id,page.rows[1].identity.source_id)
+    assert.equal(page.rows[0].identity.version_sha256,page.rows[1].identity.version_sha256)
+    assert.equal(page.rows[0].payload_sha256,page.rows[1].payload_sha256)
+    x.records.push(structuredClone(x.records.at(-1)))
+    throwsCode(()=>planHistoricalArticles(x),'duplicate_identity')
+  }
+})
