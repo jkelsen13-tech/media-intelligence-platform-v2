@@ -506,6 +506,108 @@ class Hypothesis(unittest.TestCase):
         self.assertEqual(cause["kind"],"retained_assessment_change")
         self.assertFalse(result["completed_reassessment"])
         self.assertNotIn("Synthetic method revision",json.dumps(result))
+    def test_native_semantic_http_reader_with_real_retained_permission_cause(self):
+        login="semantic_gateway_"+uuid.uuid4().hex
+        outsider=str(uuid.uuid4())
+        owned=False
+        primary=None
+        cleanup_errors=[]
+        permission_scopes=[]
+        membership_revoked=False
+        def sessions():
+            return int(self.admin("select count(*) from pg_stat_activity where datname="+q(self.database)+" and usename="+q(login)))
+        def journal():
+            return self.admin("select (select count(*) from mip_hypothesis.revisions)::text||':'||(select count(*) from mip_hypothesis.reassessment_causes)::text")
+        def invoke(cause_id,revision_id,mode,digest=None):
+            before=journal()
+            payload={"database":self.database,"login":login,"userId":self.user,"outsiderId":outsider,
+                "investigationId":self.iid,"revisionId":revision_id,"causeId":cause_id,
+                "sourceProject":self.source,"mode":mode,"expectedDigest":digest}
+            child=subprocess.run(["node","tests/nativeSemanticIntegrationHttpBridge.mjs"],
+                input=json.dumps(payload),capture_output=True,text=True,timeout=30,env=h.ENV)
+            # Never surface captured stdout/stderr, source assertion values or subprocess args.
+            if child.returncode or len(child.stdout.encode())>2048:
+                safe=re.fullmatch(r"semantic_http_[a-z_]+_sqlstate_(?:[A-Z0-9]{5}|NONE)(?: nativeSemanticIntegrationHttpBridge\.mjs:[0-9]{1,6}:[0-9]{1,6}){0,3}(?:;semantic_http_close_unverified)?",child.stderr)
+                raise RuntimeError(child.stderr if safe else "semantic_http_child_failed")
+            receipt=json.loads(child.stdout)
+            self.assertEqual(set(receipt),{"contract","mode","digest","publication_allowed","cleanup_observed_by_parent_required"})
+            self.assertEqual(receipt["contract"],"native_semantic_http_fixture_v1")
+            self.assertEqual(receipt["mode"],mode)
+            self.assertIs(receipt["publication_allowed"],False)
+            self.assertIs(receipt["cleanup_observed_by_parent_required"],True)
+            self.assertEqual(journal(),before)
+            for _ in range(100):
+                if sessions()==0:break
+                time.sleep(0.01)
+            self.assertEqual(sessions(),0)
+            return receipt["digest"]
+        try:
+            self.admin("insert into public.mip_profiles values("+q(outsider)+")")
+            # This disposable database only; no global or live logging changes.
+            for name,value in [("log_parameter_max_length_on_error","0"),("log_min_duration_statement","-1"),
+                ("log_min_duration_sample","-1"),("log_transaction_sample_rate","0"),("log_statement","none")]:
+                h.run("postgres","alter database "+self.database+" set "+name+"="+q(value))
+            self.assertEqual(h.run("postgres","select count(*) from pg_roles where rolname="+q(login)),"0")
+            h.run("postgres","create role "+login+" login inherit nosuperuser nocreatedb nocreaterole noreplication nobypassrls password 'semantic-gateway-synthetic-only'")
+            owned=True
+            h.run("postgres","grant mip_hypothesis_gateway to "+login+" with inherit true,set false")
+            self.assertEqual(sessions(),0)
+            self.a.execute(self.append())
+            revision_id=self.admin("select id from mip_hypothesis.revisions where investigation_id="+q(self.iid)+" order by revision desc limit 1")
+            self.admin(self.method_change())
+            reconciled=json.loads(self.a.execute(self.reconcile()))
+            retained=next(x for x in reconciled["causes"] if x["kind"]=="retained_assessment_change")
+            invoke(retained["cause_id"],revision_id,"unrepresented")
+            # Preserve exact old active heads; restoration does not invent a new revision.
+            permission_scopes=json.loads(self.admin("select coalesce(jsonb_agg(scope),'[]') from mip_identity.operation_evidence_heads where active and scope->>'domain'='privacy'"))
+            self.assertEqual(len(permission_scopes),3)
+            self.admin(self.revoke())
+            causes=json.loads(self.a.execute(self.backlog()))["causes"]
+            selected=next(x for x in causes if x["kind"]=="permission_changed" and x["detail"]["operation"]=="analysis")
+            invoke(selected["cause_id"],revision_id,"denied")
+            self.admin("update mip_identity.operation_evidence_heads set active=true where scope in (select value from jsonb_array_elements("+js(permission_scopes)+"))")
+            digest=invoke(selected["cause_id"],revision_id,"available")
+            self.assertRegex(digest,r"^[a-f0-9]{64}$")
+            invoke(selected["cause_id"],revision_id,"available",digest)
+            invoke(selected["cause_id"],revision_id,"conflict","0"*64)
+            scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,
+                "user_id":self.user,"access_role":"revoked","reason":"Synthetic semantic access test."})
+            membership_revoked=True
+            invoke(selected["cause_id"],revision_id,"denied",digest)
+            scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,
+                "user_id":self.user,"access_role":"reviewer","reason":"Restore synthetic fixture membership."})
+            membership_revoked=False
+            invoke(selected["cause_id"],revision_id,"available",digest)
+        except Exception as error:
+            # Preserve bounded source location and exact child diagnostic only.
+            frames=[]
+            cursor=error.__traceback__
+            while cursor:
+                if cursor.tb_frame.f_code.co_filename.endswith("hypothesisPostgresConcurrency.py"):
+                    frames.append(str(cursor.tb_lineno))
+                cursor=cursor.tb_next
+            child_code=str(error)
+            safe=re.fullmatch(r"semantic_http_[a-z_]+_sqlstate_(?:[A-Z0-9]{5}|NONE)(?: nativeSemanticIntegrationHttpBridge\.mjs:[0-9]{1,6}:[0-9]{1,6}){0,3}(?:;semantic_http_close_unverified)?",child_code)
+            primary=RuntimeError((child_code if safe else "semantic_http_parent_assertion_failed")+":lines:"+",".join(frames[-3:]))
+        finally:
+            if permission_scopes:
+                try:self.admin("update mip_identity.operation_evidence_heads set active=true where scope in (select value from jsonb_array_elements("+js(permission_scopes)+"))")
+                except Exception:cleanup_errors.append("permission_restore")
+            if membership_revoked:
+                try:scalar(self.database,"mip_investigation_workspace_v1","set_access",{"investigation_id":self.iid,
+                    "user_id":self.user,"access_role":"reviewer","reason":"Restore synthetic fixture membership."})
+                except Exception:cleanup_errors.append("membership_restore")
+            if owned:
+                try:
+                    if sessions()!=0:cleanup_errors.append("sessions_not_returned")
+                    # Failure cleanup is restricted to this test's random database/login.
+                    self.admin("select pg_terminate_backend(pid) from pg_stat_activity where datname="+q(self.database)+" and usename="+q(login))
+                except Exception:cleanup_errors.append("session_cleanup")
+                try:h.run("postgres","drop role "+login)
+                except Exception:cleanup_errors.append("role_cleanup")
+            if cleanup_errors:
+                raise RuntimeError((str(primary)+";" if primary else "")+"semantic_http_cleanup_failed:"+",".join(cleanup_errors)) from None
+        if primary:raise primary from None
     def backlog(self):
         return "select mip_hypothesis.reassessment_backlog("+q(self.user)+","+q(self.iid)+");"
     def reconcile(self):

@@ -1,0 +1,245 @@
+{
+  "contract_version": "qik_native_semantic_consumer_successor_v1",
+  "status": "UNAPPROVED — SOURCE CANDIDATE ONLY — NOT AUTHORIZED FOR MATERIAL TRANSMISSION",
+  "origin_commit": "cc8f1b19171917351548362f82f03fa2b1684831",
+  "origin_tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9",
+  "integration_parent": "a4d2b362aa30d0844bbd48e4b8997e7c1580394b",
+  "internal_qualification_authority": {
+    "reference": "User full-consolidation amendment, coherent source qualification with synthetic fixtures only",
+    "owner_field_signature": null,
+    "qualification_is_acceptance": false
+  },
+  "files": [
+    {
+      "path": "supabase/qualification/native-semantic-integration/reader.mjs",
+      "blob": "949baaf0401f5352a0be04545c1288f3c2354fc7"
+    },
+    {
+      "path": "supabase/qualification/native-semantic-integration/README.md",
+      "blob": "341dc09493bd007b3b58ffcc1697d0f8568f16ef"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/handler.mjs",
+      "blob": "551e7dd61a1ba856f281a144fb1423c07af44b44"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/store.mjs",
+      "blob": "286c88ffb8f6fba62900cc532236febca5430d34"
+    },
+    {
+      "path": "tests/nativeSemanticIntegration.test.mjs",
+      "blob": "fd0eed9d871882c544013e146bba0de917a9afb4"
+    },
+    {
+      "path": "tests/nativeSemanticIntegrationPostgres17.test.mjs",
+      "blob": "0afd47e34511e024d704c00ac92cebee1b53d08d"
+    },
+    {
+      "path": "tests/nativeSemanticIntegrationHttpBridge.mjs",
+      "blob": "e1bc8746da0d4f2cfec40838214622e025a98c08"
+    },
+    {
+      "path": "tests/nativeSemanticHandlerIntegration.test.mjs",
+      "blob": "2977db312970274b441a5096026941ff2d4dd191"
+    },
+    {
+      "path": "verifier/hypothesisPostgresConcurrency.py",
+      "blob": "9b3d914b7f403ca606fa3ab0857e3c44f14aac96"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "package-lock.json",
+      "blob": "2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0"
+    },
+    {
+      "path": "package.json",
+      "blob": "68caf5625166966005fff9cd702b3bc6c5fa49ad"
+    },
+    {
+      "path": "src/lib/hypothesisAssessment.js",
+      "blob": "4ce4979a85c2388d9f181b0599fab960ecad7d69"
+    },
+    {
+      "path": "src/lib/semanticAuthorityEnvelope.js",
+      "blob": "27d44e70227f53080ef7ff18bb07d7afc326cd77"
+    },
+    {
+      "path": "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql",
+      "blob": "e7beb22b9a4dd2e38076b5554c7f5b4e6e0e4e77"
+    },
+    {
+      "path": "supabase/migrations/20260906042413_evidence_change_queue_v1.sql",
+      "blob": "1b93f947f5351097e629adc718659a1125fdfe1f"
+    },
+    {
+      "path": "supabase/migrations/20260906051224_evidence_assessment_dependencies_v1.sql",
+      "blob": "d6092de9540550c4d126c91494cfe3374f02a721"
+    },
+    {
+      "path": "supabase/migrations/20260906071525_investigation_change_briefings_v1.sql",
+      "blob": "78b1bdce25432ef7e8194a764c585e7836ef943e"
+    },
+    {
+      "path": "supabase/migrations/20260906075718_investigation_workspace_batch_v1.sql",
+      "blob": "1eaf8bac441fee856f7f3e1b6723662d0408dcad"
+    },
+    {
+      "path": "supabase/qualification/collector-native-capture/authenticatedPgDriver.mjs",
+      "blob": "af0f3b69c34695f9241934fae89ac00cedd08515"
+    },
+    {
+      "path": "supabase/qualification/collector-native-capture/credentialDelivery.mjs",
+      "blob": "354679fadc48eb9f8a8154456f3d38e7faab3e61"
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/contract.sql",
+      "blob": "2cd760316e01b8ff6f06bf44cfa91aed37e606a8"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/001_revision_store.sql",
+      "blob": "6218ce921561821dc8f2e624f7fa4697785d3faf"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/002_retained_observation_reader.sql",
+      "blob": "a118cc404f39d37bb382012eaa4b945814da44ac"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/003_bound_acceptance.sql",
+      "blob": "036320a9c837ec9c139297bac18c88a0af857f99"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/004_bound_history.sql",
+      "blob": "8fbcf8686327f7ab74485436135d3fd540617bd5"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/005_reassessment_causes.sql",
+      "blob": "908e72584d14f937292d554c8a9e0a497034be0b"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/006_reassessment_completion.sql",
+      "blob": "e86b7da084beb9ae0fb723d00153e66a20b21bc3"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/007_human_reconsideration.sql",
+      "blob": "5ae00ef13ce49c29884503b2cb5501bdc442be42"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/008_authoring_reads.sql",
+      "blob": "510ba8865e209b93b926e26a7e1eee32d3bf3f83"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/014_review_acknowledgements.sql",
+      "blob": "a733bc58255cce6b89aac4cc2dac2a99fb2ff430"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/015_committed_observations.sql",
+      "blob": "984a51f370d4e41a58008ee61e387706b06f5dac"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/016_observation_delivery.sql",
+      "blob": "5365db95cc0ac133990d35cbe41c5acd576c5e68"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/017_external_observation_epoch.sql",
+      "blob": "9b2fb4b297d1598d4315e26d8e2d9a66951b43cc"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/004_publication_staging.sql",
+      "blob": "38379113e73d5fea1f3a3dba8647f374ed2733fe"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/008_operation_evidence.sql",
+      "blob": "a1c9f2fb236e7069e80c5a1cfe6b58274c537ee6"
+    },
+    {
+      "path": "tests/changeQueueFixture.sql",
+      "blob": "235f92e0ce285cbf5426444b06b576a39adb1e38"
+    },
+    {
+      "path": "tests/hypothesisAssessmentFixture.mjs",
+      "blob": "da57f4423665ac422a28ec500b939440e782387e"
+    },
+    {
+      "path": "verifier/comparisonPostgresConcurrency.py",
+      "blob": "815902d79aa8986a54d33de1f4b9432eca181278"
+    }
+  ],
+  "retention": {
+    "new_durable_payload_copies": 0,
+    "new_durable_records": 0,
+    "assessment": {
+      "producer": "public.mip_assessments_v1(read)",
+      "consumer": "trusted internal *_native service-role consumer",
+      "transient_fields": "Complete existing bounded producer result, including rationale/remaining_uncertainty; excluded from returned envelope",
+      "identity_binding": [
+        "assessment_id",
+        "candidate_id",
+        "expected input_fingerprint",
+        "exact envelope digest",
+        "original source lineage retained by producer"
+      ],
+      "publication_allowed": false
+    },
+    "change": {
+      "producer": "mip_hypothesis.read_bound_history + reassessment_backlog",
+      "consumer": "existing authenticated user-scoped hypothesis handler, explicitly configured reader",
+      "transient_fields": "SQL-selected revision metadata and bounded retained-cause backlog; assessment body stays in PostgreSQL",
+      "browser_input_fields": [
+        "investigation_id",
+        "revision_id",
+        "cause_id",
+        "expected_envelope_digest"
+      ],
+      "supported_canonical_causes": [
+        "method_changed",
+        "permission_changed"
+      ],
+      "unsupported_selected_causes": "refuse; never infer correction/retraction/absence/method provenance from generic rows",
+      "publication_allowed": false
+    },
+    "envelope_fields": [
+      "contract_version",
+      "kind",
+      "identity",
+      "scope",
+      "producer",
+      "metadata",
+      "currentness",
+      "visibility",
+      "time",
+      "authority",
+      "envelope_digest"
+    ],
+    "nested_contract": "Exact pinned semanticAuthorityEnvelope.js validators and seal; no spread of raw producer objects",
+    "validation": "originally bound producer under current permissions; two identical READ COMMITTED reads; fixed selected identity/hash; close before output; no fresh fetch/replacement"
+  },
+  "qualification": {
+    "status": "NOT RUN",
+    "environment": "existing source/synthetic-only remote GitHub Actions, Ubuntu22.04, Node22.14.0, PostgreSQL17.6 SCRAM loopback owned disposable containers",
+    "tests": [
+      "tests/nativeSemanticIntegration.test.mjs",
+      "tests/nativeSemanticIntegrationPostgres17.test.mjs",
+      "tests/nativeSemanticIntegrationHttpBridge.mjs",
+      "tests/nativeSemanticHandlerIntegration.test.mjs",
+      "verifier/hypothesisPostgresConcurrency.py"
+    ],
+    "method_change_consumer_success": "NOT COVERED by the new Python test; separate unchanged actual worker path is documented",
+    "not_proved": [
+      "hosted Auth/TLS",
+      "qik installation",
+      "real evidence access",
+      "unattended operation",
+      "full caller cutover"
+    ]
+  },
+  "review": {
+    "required": "fresh actual Cursor review after affected qualification",
+    "status": "NOT PERFORMED; existing browser transport closed",
+    "unchanged_prior_review": "c6d3 runtime review remains separate"
+  },
+  "historical_evidence_and_assertions": "UNCHANGED",
+  "deployment": false,
+  "publication": false,
+  "accepted": false
+}

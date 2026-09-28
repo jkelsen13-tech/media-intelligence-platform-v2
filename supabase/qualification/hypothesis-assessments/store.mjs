@@ -1,9 +1,14 @@
 // Trusted-gateway adapter for the isolated store. Not exported through the live API.
 // authorize/authenticate must precede this adapter. A client/worker cannot supply verifiedUserId.
 import {validateHypothesisAssessment} from '../../../src/lib/hypothesisAssessment.js'
-export function createHypothesisStore(query) {
+export function createHypothesisStore(query, {semanticChangeReader=null}={}) {
  if(typeof query!=='function') throw new TypeError('query required')
+ if(semanticChangeReader!==null&&typeof semanticChangeReader!=='function')throw new TypeError('invalid_semantic_reader')
  return Object.freeze({
+  async semanticChange({verifiedUserId,investigationId,revisionId,causeId,expectedEnvelopeDigest}) {
+   if(semanticChangeReader===null)throw Object.assign(new Error('semantic_native_producer_unavailable'),{code:'semantic_native_producer_unavailable'})
+   return semanticChangeReader({verifiedUserId,investigationId,revisionId,causeId,expectedEnvelopeDigest})
+  },
   async listObservations({verifiedUserId,investigationId,expectedEpoch}) {
    const result=await query('select mip_hypothesis.list_history_observations($1::uuid,$2::uuid,$3::uuid) as value',[verifiedUserId,investigationId,expectedEpoch]);
    return result.rows[0].value
