@@ -67,6 +67,20 @@ const hash=s=>createHash('sha256').update(s).digest('hex')
 const blob=b=>createHash('sha1').update(Buffer.from('blob '+b.length+'\0')).update(b).digest('hex')
 const fail=s=>{throw Error('native_install_'+s)}
 const preparedPlans=new WeakSet()
+const failureDetails=new WeakMap()
+const REFUSAL_NAMES=new Set(["native_install_assertion_boundary","native_install_assertion_helper_boundary","native_install_collision","native_install_creation_boundary","native_install_creator_owns_objects","native_install_creator_topology","native_install_existing_owner_path","native_install_final_role_attributes","native_install_final_role_edges","native_install_final_scaffolding","native_install_final_schema_owners","native_install_final_storage","native_install_membership_statement","native_install_plan","native_install_principal","native_install_role_contract","native_install_role_inventory","native_install_source_digest","native_install_source_encoding","native_install_transaction_boundary"])
+// Values originate only from this fixed program; no SQL text, args, detail,
+// hint, context, payload, connection target, or arbitrary error message escapes.
+export function nativeInstallFailure(error){return error&&typeof error==='object'?failureDetails.get(error)??null:null}
+function recordFailure(error,plan,stage,source,object){
+ if(!error||typeof error!=='object')return
+ const names=new Set(REFUSAL_NAMES)
+ if(preparedPlans.has(plan))for(const step of plan.steps)for(const m of (step.body+'\n'+(step.assertion??'')).matchAll(/raise exception '([^']+)'/g))
+  if(/^[a-zA-Z0-9_ .:-]{1,120}$/.test(m[1])&&!m[1].includes('%'))names.add(m[1])
+ const numeric=x=>/^[0-9]{1,9}$/.test(String(x??''))?Number(x):null
+ failureDetails.set(error,Object.freeze({stage,source:source??null,object:object??null,
+  name:names.has(error.message)?error.message:null,position:numeric(error.position),internal_position:numeric(error.internalPosition)}))
+}
 function freeze(value){if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value)}return value}
 export const NATIVE_ROLES=Object.freeze(['mip_mentions_owner','mip_mentions_gateway','mip_mentions_admin','mip_mentions_native_validator','mip_arc_qik_source_owner','mip_canonical_writer','mip_arc_native_owner','mip_arc_native_worker','mip_arc_attachment_owner'])
 const requiredOwnerRelations=['public.articles','public.entities','public.story_arcs','public.arc_membership_candidates','evidence_pipeline.article_captures','evidence_pipeline.import_jobs','mip_identity.source_changes','mip_identity.collector_fence','mip_cutover_authority.publication_fence']
@@ -137,22 +151,31 @@ async function assertionHelper(db,schema,owner,login,sql){
  if(checked?.ok!==true)fail('assertion_helper_boundary')
 }
 export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,operationId}){
+ let nativeStage='plan',nativeSource=null,nativeObject=null
+ try{
  if(!preparedPlans.has(plan)||!/^[0-9a-f]{32}$/.test(operationId)||plan?.mode!==NATIVE_MODE||plan.program_sha256!==hash(JSON.stringify(plan.steps))
   ||JSON.stringify(plan.steps.map(({path,blob,assertion_marker,assertion_owner})=>({path,blob,assertion_marker,assertion_owner})))!==JSON.stringify(NATIVE_ORDER))fail('plan')
  // The enclosing atomic installer owns BEGIN/COMMIT/ROLLBACK. SAVEPOINT refuses
  // standalone/autocommit use; failure aborts the whole joint transaction.
+ nativeStage='transaction_entry'
  await db.query('savepoint native_entry')
+ nativeStage='principal'
  await identity(db,expectedLogin)
  const creator='mip_nci_'+operationId,schema='mip_nca_'+operationId
+ nativeStage='collision'
  if((await db.query('select exists(select 1 from pg_roles where rolname=any($1)) or exists(select 1 from pg_namespace where nspname=any($2)) collision',[[...NATIVE_ROLES,creator],['mip_mentions','mip_arc_qik_source','mip_arc_native',schema]])).rows[0].collision)fail('collision')
+ nativeStage='ownership_preflight'
  for(const relation of requiredOwnerRelations){
+  nativeObject=relation
   const r=(await db.query("select c.relrowsecurity,pg_has_role(current_user,c.relowner,'USAGE') owner_rights from pg_class c where c.oid=to_regclass($1)",[relation])).rows[0]
   if(!r?.relrowsecurity||!r.owner_rights)fail('existing_owner_path')
  }
+ nativeObject=null;nativeStage='creator_setup'
  await db.query('create role '+quote(creator)+' nologin createrole noinherit nosuperuser nocreatedb nobypassrls noreplication')
  await db.query('grant '+quote(creator)+' to '+quote(expectedLogin)+' with inherit false,set true')
  const created=[]
  for(const step of plan.steps){
+  nativeSource=step.path;nativeStage='source_body'
   let sql=step.body
   for(const role of step.created){
    if(sql.split(role.sql).length!==2)fail('creation_boundary')
@@ -161,14 +184,19 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
   await db.query(sql);created.push(...step.created.map(r=>r.name))
   await db.query('reset role')
   if(step.assertion){
+   nativeStage='assertion_helper'
    await assertionHelper(db,schema,step.assertion_owner,expectedLogin,step.assertion)
    await db.query('savepoint native_boundary')
+   nativeStage='checkpoint_cleanup'
    await cleanupCreator(db,creator,expectedLogin,created)
+   nativeStage='checkpoint_assertion'
    await db.query('select '+quote(schema)+'.check_boundary()')
    // This restores ONLY temporary role cleanup. Source DDL and the helper
    // precede the savepoint. The original assertion executed against zero edges.
+   nativeStage='checkpoint_restore'
    await db.query('rollback to savepoint native_boundary')
    await db.query('release savepoint native_boundary')
+   nativeStage='checkpoint_helper_drop'
    await db.query('drop schema '+quote(schema)+' cascade')
   }
  }
@@ -176,13 +204,19 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
  // role attributes/no-edge checks. The parent then executes its original
  // backend final assertions and audit/C3 closure before the single COMMIT.
  const final=plan.steps.at(-1)
+ nativeSource=final.path;nativeStage='final_helper'
  await assertionHelper(db,schema,final.assertion_owner,expectedLogin,final.assertion)
+ nativeStage='final_cleanup'
  await cleanupCreator(db,creator,expectedLogin,created)
+ nativeStage='final_assertion'
  await db.query('select '+quote(schema)+'.check_boundary()')
+ nativeStage='final_helper_drop'
  await db.query('drop schema '+quote(schema)+' cascade')
+ nativeStage='final_closure'
  await assertNativeGovernedClosure(db,{expectedLogin,operationId})
  await db.query('release savepoint native_entry')
  return {mode:NATIVE_MODE,program_sha256:plan.program_sha256,stage_assertions:plan.steps.filter(s=>s.assertion).map(s=>({path:s.path,sha256:s.assertion_sha256})),committed:false,production_qualified:false,publication_allowed:false}
+ }catch(error){recordFailure(error,plan,nativeStage,nativeSource,nativeObject);throw error}
 }
 export async function assertNativeGovernedClosure(db,{expectedLogin,operationId}){
  await identity(db,expectedLogin)

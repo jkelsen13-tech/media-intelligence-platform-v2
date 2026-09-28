@@ -17,6 +17,8 @@ async function connect(user='postgres',pass=password){
  try{await c.connect();return c}catch(error){await c.end();throw error}
 }
 const roleCatalog=async db=>(await db.query("select rolname,rolsuper,rolinherit,rolcreaterole,rolcreatedb,rolcanlogin,rolreplication,rolbypassrls from pg_roles order by rolname")).rows
+const safeResult=r=>({state:r?.state??null,phase:r?.phase??null,sqlstate:r?.sqlstate??null,diagnostic:r?.diagnostic??null,native_failure:r?.native_failure??null})
+const numericPosition=x=>/^[0-9]{1,9}$/.test(String(x??''))?Number(x):null
 const edgeCatalog=async db=>(await db.query('select roleid,member,grantor,admin_option,inherit_option,set_option from pg_auth_members order by roleid,member,grantor')).rows
 // Fault injection loses the caller's acknowledgement AFTER the real PG command.
 // It does not replace SQL execution or assert that an actual network failed.
@@ -29,13 +31,13 @@ async function loseAcknowledgementOnce(command,operation){
   }
   return result
  }
- try{const result=await operation();assert.equal(injected,true);return result}
+ try{const result=await operation();return {result,injected}}
  finally{pg.Client.prototype.query=original}
 }
 test('joint native installation uses actual PG17.6 nonsuper principal, rollback, cleanup and disabled audit', {
  skip:process.env.MIP_NATIVE_GOVERNED_INSTALL_DISPOSABLE!=='synthetic-pg17-only',timeout:300000
 },async t=>{
- let root,principal,baseline,armed=false,primary=null,stage='pristine';const cleanup=[]
+ let root,principal,baseline,armed=false,primary=null,stage='pristine',lastInstall=null;const cleanup=[]
  try{
   assert.equal(process.env.MIP_QIK_COMPARISON_DISPOSABLE,'synthetic-pg17-only')
   assert.equal(process.env.MIP_DISPOSABLE_POSTGRES,'qik-persistent-install')
@@ -64,10 +66,14 @@ test('joint native installation uses actual PG17.6 nonsuper principal, rollback,
   stage='transaction_failure'
   const beforeRoles=await roleCatalog(root),beforeEdges=await edgeCatalog(root)
   await principal.query('create policy native_qualification_refuse on public.articles as restrictive for select to public using(false)')
-  const failed=await installComparisonAtomic(cfg,read)
+  const failed=await installComparisonAtomic(cfg,read);lastInstall=safeResult(failed)
   await t.test('actual late source-authority failure rolls back full backend/native DDL and memberships',async()=>{
    assert.equal(failed.state,'installation_refused')
-   assert.equal(failed.phase,'native_joint_install')
+   assert.equal(failed.phase,'native_joint_install',JSON.stringify(lastInstall))
+   assert.equal(failed.sqlstate,'P0001',JSON.stringify(lastInstall))
+   assert.equal(failed.native_failure?.stage,'checkpoint_assertion',JSON.stringify(lastInstall))
+   assert.equal(failed.native_failure?.source,'supabase/qualification/arc-membership-native/001_governed_cohort.sql',JSON.stringify(lastInstall))
+   assert.equal(failed.native_failure?.name,'arc_native_source_authority',JSON.stringify(lastInstall))
    assert.deepEqual(await roleCatalog(root),beforeRoles)
    assert.deepEqual(await edgeCatalog(root),beforeEdges)
    assert.equal((await root.query("select count(*)::int n from pg_namespace where nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_identity','mip_comparison_install') or nspname like 'mip_nca_%'")).rows[0].n,0)
@@ -75,18 +81,25 @@ test('joint native installation uses actual PG17.6 nonsuper principal, rollback,
    assert.equal((await principal.query('select count(*)::int n from qik_ingest_operation.persistent_install_receipt')).rows[0].n,1)
   })
   stage='rollback_acknowledgement'
-  const rollbackUnknown=await loseAcknowledgementOnce('rollback',()=>installComparisonAtomic(cfg,read))
+  const rollbackAttempt=await loseAcknowledgementOnce('rollback',()=>installComparisonAtomic(cfg,read))
+  const rollbackUnknown=rollbackAttempt.result;lastInstall=safeResult(rollbackUnknown)
   await t.test('lost rollback acknowledgement requires reconciliation and independently restores baseline',async()=>{
-   assert.equal(rollbackUnknown.state,'rollback_unverified')
+   assert.equal(rollbackAttempt.injected,true,JSON.stringify(lastInstall))
+   assert.equal(rollbackUnknown.state,'rollback_unverified',JSON.stringify(lastInstall))
+   assert.equal(rollbackUnknown.sqlstate,'P0001',JSON.stringify(lastInstall))
+   assert.equal(rollbackUnknown.native_failure?.stage,'checkpoint_assertion',JSON.stringify(lastInstall))
+   assert.equal(rollbackUnknown.native_failure?.name,'arc_native_source_authority',JSON.stringify(lastInstall))
    assert.equal(rollbackUnknown.needs_reconciliation,true)
    assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
    assert.deepEqual(await roleCatalog(root),beforeRoles)
    assert.deepEqual(await edgeCatalog(root),beforeEdges)
   })
   await principal.query('drop policy native_qualification_refuse on public.articles')
-  stage='joint_install';const attempt=await loseAcknowledgementOnce('commit',()=>installComparisonAtomic(cfg,read))
-  assert.equal(attempt.state,'commit_ambiguous');assert.equal(attempt.needs_reconciliation,true)
-  const installed=await reconcileComparisonInstall(cfg)
+  stage='joint_install';const commitAttempt=await loseAcknowledgementOnce('commit',()=>installComparisonAtomic(cfg,read))
+  const attempt=commitAttempt.result;lastInstall=safeResult(attempt)
+  assert.equal(commitAttempt.injected,true,JSON.stringify(lastInstall))
+  assert.equal(attempt.state,'commit_ambiguous',JSON.stringify(lastInstall));assert.equal(attempt.needs_reconciliation,true)
+  const installed=await reconcileComparisonInstall(cfg);lastInstall=safeResult(installed)
   await t.test('actual committed program reconciles after lost COMMIT acknowledgement without replay',async()=>{
    assert.equal(installed.state,'installed_disabled_audit_pending',JSON.stringify({phase:installed.phase,sqlstate:installed.sqlstate,diagnostic:installed.diagnostic}))
    assert.equal(installed.needs_reconciliation,false)
@@ -115,7 +128,7 @@ test('joint native installation uses actual PG17.6 nonsuper principal, rollback,
    assert.equal((await root.query("select count(*)::int n from pg_roles where rolname like 'mip_nci_%' or rolname like 'mip_tmp_%'")).rows[0].n,0)
    assert.equal((await root.query("select count(*)::int n from pg_namespace where nspname like 'mip_nca_%'")).rows[0].n,0)
   })
- }catch(error){primary={stage,code:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:'assertion'}}
+ }catch(error){primary={stage,code:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:'assertion',name:['Error','error','AssertionError'].includes(error?.name)?error.name:null,position:numericPosition(error?.position),internal_position:numericPosition(error?.internalPosition),installation:lastInstall}}
  finally{
   for(const [name,c]of [['principal',principal],['root',root]])if(c)try{await c.end()}catch{cleanup.push('close_'+name)}
   if(armed){

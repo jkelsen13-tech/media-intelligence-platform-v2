@@ -1008,7 +1008,7 @@
     },
     "atomic_installer": {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "blob": "cc04f6f7bbf5a119adbe0ac178538d7d785cdde6"
+      "blob": "079d478a872125cc348272f5006af7c5c4a5a281"
     },
     "catalog_preflight": {
       "path": "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs",
@@ -1066,7 +1066,7 @@
     ],
     "native_joint_installer": {
       "path": "supabase/qualification/native-governed-install/install.mjs",
-      "blob": "d49102a7ebd79d836dec082fd102f4ea334cd37a",
+      "blob": "0a03f1e6341af50187c564c2d49c1bbf8dbcfb56",
       "mode": "native-governed-v2",
       "authorization": "owner-authorized-disabled-comparison-native-install",
       "source_base": "79f25d3519d26fd0dbda37fd0728e5783c04834a",
@@ -1077,7 +1077,7 @@
     },
     "native_joint_installer_documentation": {
       "path": "supabase/qualification/native-governed-install/README.md",
-      "blob": "14f23909813cba1ad97b4cf343e4eb4f9afd8a44"
+      "blob": "a5dadd3c050f0406115d9f9f70eba44949ef264e"
     },
     "attachment_assertions": {
       "path": "tests/nativeArcAttachmentAssertions.mjs",
@@ -1093,7 +1093,19 @@
     },
     "native_joint_installer_fixture": {
       "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
-      "blob": "4dbde7da52ee7a4333e2d7cbbb1bb9455da40590"
+      "blob": "7c34b965375a199b2a29f2fb84b62c1637e7f5fe"
+    },
+    "native_installation_diagnostics": {
+      "retained_fields": [
+        "stage",
+        "source",
+        "object",
+        "name",
+        "position",
+        "internal_position"
+      ],
+      "purpose": "bounded static diagnostics of actual transaction stage/pinned source error without drivercontext/detail/SQLargs/connection/secret/nativepayload; WeakMap-authenticated program failures only",
+      "negative_test": "requires exact P0001+checkpoint_assertion+001_governed_cohort.sql+arc_native_source_authority; early native failure refuses this test"
     }
   },
   "qualification_groups": {
@@ -1129,6 +1141,16 @@
       "expectation": "All actual restricted-principal installation, identity/authorization/program/manifest refusal, late restrictive-source failure and whole-transaction rollback, acknowledged and ambiguous COMMIT/ROLLBACK reconciliation, exact final effective owners/roles/ACL/schema/RLS/noedges/nohelpers, real autonomous audit and no collection/schedules/publication activation assertions pass. No skipped groups; every failure refuses qualification.",
       "cleanup": "Independent client closure; verify exact expected created-role allowlist; destroy only armed pristine disposable database/recreate default and remove exact synthetic roles; compare baseline. Runner always removes container/volumes and checks absence. Any primary/rollback/close/cleanup failure fails qualification.",
       "resource_limits": "Existing verified-free public source/synthetic GitHub job; bounded5min test step/15min entire job, no hosted credentials, data, artifacts, new service, material transfer or plan upgrade."
+    },
+    "historical_public_projection": {
+      "file": "tests/nativeArcPublicProjectionPostgres17.test.mjs",
+      "status_at_source_authorship": "NOT RUN",
+      "environment": "MIP_ARC_PUBLIC_PROJECTION_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
+      "invocation": "node --test tests/nativeArcPublicProjectionPostgres17.test.mjs",
+      "fixture": "localhost5432 actual PostgreSQL170006+pgvector0.8.2 files; absent-only owned native_arc_public_projection_qualification DB and native_arc_projection_fixture_reader role; exact recovered real schema/functions/defaults/constraints/indexes/triggers; synthetic articles/score/candidate/citations/milestones/vector only; no autoapproval activation",
+      "expectation": "All10 childchecks+outer pass, no skips; exact schema, outcome rules/failure precedence/default-closed approval, real trigger-before-attach ordering, deterministic atomicretry/vector/no-vector branches/observedlock concurrency, retraction/baseline restoration, missing conflict-index wholeTXrollback, denied ambient access/body-only sentinel absent from derived destinations. Historical dependency coverage only; native/currentaccess/publicrelease not qualified by thisfixture.",
+      "cleanup": "Independently close two testDBclients; verify zero sessions; drop only database and role actually created; absent-only guards neveradopt/delete preexisting; primary/cleanuperrors independentlyreported and failqualification; runneralwayscontainer+volumeabsence.",
+      "resource_limits": "Existing verifiedfree GitHubsource/synthetic qualification; bounded4min step/15minjob; no capturedmaterial/keys/artifacts/hostedchanges/newservice/spending"
     }
   },
   "joint_installer_retention": {
@@ -1145,5 +1167,57 @@
     ],
     "purpose": "Exact curated native program and byte-identical source assertion receipt required to reconcile ambiguous installation outcome; no source/native payload or dynamic SQL retained.",
     "publication_allowed": false
+  },
+  "historical_public_projection_fixture": {
+    "contract": "arc-public-projection-historical-fixture-v1",
+    "purpose": "required exact historical projection/atomic attachment dependency qualification using synthetic material; not native manual publication implementation, qik installer or public release authorization",
+    "files": [
+      {
+        "path": "supabase/qualification/arc-public-projection/historical_schema.sql",
+        "blob": "2ac793856aeb8912fbc64ddcffa9555219bb16ec"
+      },
+      {
+        "path": "supabase/qualification/arc-public-projection/historical_manifest.json",
+        "blob": "0fe6f83b55cabe25f4538c8974725fe07534ea93"
+      },
+      {
+        "path": "supabase/qualification/arc-public-projection/README.md",
+        "blob": "58c1c7b35150227e701f0778ec58d70d118e77a1"
+      },
+      {
+        "path": "tests/nativeArcPublicProjectionPostgres17.test.mjs",
+        "blob": "182319d48307def65572f9569c1b174e60fe3f1d"
+      },
+      {
+        "path": "supabase/qualification/arc-public-projection/recovered_milestone_outcome.sql",
+        "blob": "3dbcf5fa80cb182b26d443044e58b17b12f6121b"
+      },
+      {
+        "path": "supabase/qualification/arc-public-projection/recovered_milestone_refresh.sql",
+        "blob": "3d2b05014e8dd22abffe6a9fa2d41db8824bd3e9"
+      },
+      {
+        "path": "supabase/qualification/arc-public-projection/recovered_candidate_touch.sql",
+        "blob": "2b474cb7dcf7dbc80867521c94ea6f80dbc0d5cd"
+      },
+      {
+        "path": "supabase/qualification/arc-public-projection/recovered_projector.sql",
+        "blob": "1060e1aa6424b67ed7e03b5fd6f9c2cde6a51f4c"
+      },
+      {
+        "path": "supabase/qualification/arc-public-projection/recovered_approver.sql",
+        "blob": "1a1fcf4c26f214dad3ef2b616f47b08246c64802"
+      }
+    ],
+    "dependency_manifest": "supabase/qualification/arc-public-projection/historical_manifest.json",
+    "installation_order": [
+      "absent-only dedicated database and denied role; PostgreSQL170006; pgvector0.8.2",
+      "historical_schema.sql; exact16table RLS/constraints/defaults/indexes",
+      "five recovered exact functions in manifest order; unchanged atomic attach; only named real retraction/predicate/touch functions from pinned dependencies",
+      "selected real triggers; explicit fixture PUBLICexecute revoke for12selectedfunctions; no legacy auto approval activation"
+    ],
+    "retention_scope": "unchanged historical algorithms/derived display title/summary/URL and milestone baseline/evidence solely synthetic fixture; full body is transient matching input, authoritative fixture article intact; no native source lineage fabrication or additional migration journal payload",
+    "remaining_required": "native publication-input/dependency contract + generation-bound manual pending/private adapter; existing004/007/009 privacy/rights/comparison generation/public release fences preserved",
+    "status_at_source_authorship": "NOT RUN"
   }
 }

@@ -1,6 +1,6 @@
 // Source-only until separately qualified. No CLI, activation or automatic retry.
 import {createHash} from 'node:crypto'
-import {NATIVE_MODE,NATIVE_AUTHORIZATION,NATIVE_ROLES,prepareNativeGovernedInstall,installNativeGovernedInTransaction,assertNativeGovernedClosure} from '../native-governed-install/install.mjs'
+import {NATIVE_MODE,NATIVE_AUTHORIZATION,NATIVE_ROLES,prepareNativeGovernedInstall,installNativeGovernedInTransaction,assertNativeGovernedClosure,nativeInstallFailure} from '../native-governed-install/install.mjs'
 import {compileSource,PROJECT,NAME_MAPPING} from './compileSource.mjs'
 import {collectCatalog,validateCatalog,RESERVED_ROLES,RESERVED_SCHEMAS} from './catalogPreflight.mjs'
 import {connectPersistentInstaller} from '../qik-ingest/persistentInstall.mjs'
@@ -431,7 +431,7 @@ export async function installComparisonAtomic(config,readPinnedSource){
   return safe(commitAttempted?'commit_ambiguous':rollbackUnverified?'rollback_unverified':'installation_refused',c,plan.manifest_sha256,
    {needs_reconciliation:commitAttempted||rollbackUnverified,audit_qualified:false,phase,
     sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null,
-    diagnostic:sanitizeInstallDiagnostic(error)})
+    diagnostic:sanitizeInstallDiagnostic(error),...(plan.native?{native_failure:nativeInstallFailure(error)}:{})})
  }finally{await db.end().catch(()=>{})}
 }
 export async function reconcileComparisonInstall(config){
