@@ -3,7 +3,7 @@
   "status": "UNAPPROVED — SOURCE CANDIDATE ONLY — NOT AUTHORIZED FOR MATERIAL TRANSMISSION",
   "origin_commit": "cc8f1b19171917351548362f82f03fa2b1684831",
   "origin_tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9",
-  "integration_parent": "3376fa53e8ee5b715d57f21b46e72bb8b5634a76",
+  "integration_parent": "cb504c18cab6079becbbba58ff464166bb5fd7df",
   "internal_qualification_authority": {
     "reference": "User full-consolidation amendment, coherent source qualification with synthetic fixtures only",
     "owner_field_signature": null,
@@ -16,7 +16,7 @@
     },
     {
       "path": "supabase/qualification/native-semantic-integration/README.md",
-      "blob": "f4070acb09f78826a571c2589a65e97a6a76795e"
+      "blob": "bb29e14b04435ecdd0db33b3fc2b0e5e01e8ad57"
     },
     {
       "path": "supabase/qualification/hypothesis-assessments/handler.mjs",
@@ -236,7 +236,7 @@
       "tests/nativeSemanticHandlerIntegration.test.mjs",
       "verifier/hypothesisPostgresConcurrency.py"
     ],
-    "method_change_consumer_success": "NOT RUN; failed full wildcard timed out before consumer; exhaustive repaired fixture shards required",
+    "method_change_consumer_success": "Original worker139PASS at13eb/run36469939409/job109089348144, including actualmethodproducer/reader; resourcepartitioncoveragefailed/sourcecleanwas skipped. Not yet complete qualification.",
     "not_proved": [
       "hosted Auth/TLS",
       "qik installation",
@@ -544,6 +544,18 @@
     {
       "path": "tests/hypothesisAuthProviderFixture.mjs",
       "blob": "b62050509dd50e370e957cee65c4fa86a17d9442"
+    },
+    {
+      "path": "tests/qualificationShardSelection.fixture.mjs",
+      "blob": "536e9668499379451191b69808dca519bd37d02e"
+    },
+    {
+      "path": "tests/qualificationShardSelection.tap.mjs",
+      "blob": "ad0102791575bfeee8de91c83914258efd40debc"
+    },
+    {
+      "path": "tests/qualificationShardSelection.test.mjs",
+      "blob": "9c80deabfba74d871d5997513160a8a2413134c1"
     }
   ],
   "method_fixture_install_order": {
@@ -595,9 +607,9 @@
     "fixture_specific": "Original schema scaffolding, native synthetic data, rights/privacy heads, Auth/session/method/RPC/broker synthetic fixtures remain in exact fixture.mjs; no reduced stand-in install"
   },
   "method_fixture_qualification": {
-    "status": "FIXTURE/SHARD REPAIR AUTHORED — NOT RUN",
+    "status": "SKIP-ONLY NODE SELECTION AND COMPLETION-COVERAGE REPAIR AUTHORED — NOT RUN",
     "entrypoint": "node --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs",
-    "host_node": "24",
+    "host_node": "24.21.0",
     "isolated_image": "node:24-alpine (original suite)",
     "postgres": "17.6/170006",
     "extensions": "Actual pgcrypto WITH SCHEMA public, verified public.digest(bytea,text) and fixed synthetic SHA256; built-in pgoutput logical WAL; no vector/dblink/pg_trgm requirement found in original selected fixture",
@@ -638,24 +650,66 @@
     "shards": [
       {
         "name": "continuity_marker",
-        "pattern": "^isolated hypothesis generation authority, retained computation and restart package(?:$| (?:source-captured contiguous metadata coverage isolation|native marker boundary proof without source activation)(?: .*)?)$",
         "worker_direct_children": 2,
         "subtrees": [
           "source-captured contiguous metadata coverage isolation",
           "native marker boundary proof without source activation"
         ],
         "test_limit_minutes": 30,
-        "job_limit_minutes": 35
+        "job_limit_minutes": 35,
+        "flag": "--test-skip-pattern",
+        "skip_pattern": "^(?:consistent exported snapshot bootstrap isolation|actual pgoutput metadata-to-durable-recorder isolation|configured synthetic client-handler-store-worker-review path uses native gateway transactions|atomic real retained-input capture; no caller source body or input hash accepted|separate worker table/function ownership, FORCE RLS and no escalation|closed CC source scope and missing permission never enter generation|wrong audience/subject/runtime, expired identity and cross-runtime session denied|revoked mapping and stale replacement cannot reuse a retained generation|source and evaluated-implementation revocation during processing strand work|revoked reviewer membership denies completion and retains processing|revoked method denies completion and cannot be reactivated under old revision|ineligible and out-of-runtime work cannot obstruct eligible investigation|rotating investigation selection advances an eligible later investigation|database independently rejects output source, method, rating, review and argument escalation|permission acceptance first: output/revision/ack/receipt commit, revocation waits|permission revocation first: output/revision/ack/receipt all reject|source correction during processing rejects stale retained generation|exact completion retry requires current authority and identical output|worker method mismatch is explicitly failed without invented assessment|expired lease does not requeue, force-cancel or accept completion|real container computes over retained spans with no broad credentials or network|actual termination/restart before_complete_commit recovers exact durable completion|actual termination/restart after_complete_commit recovers exact durable completion|actual lost claim response preserves stranded work; fresh process cannot invent lease|encrypted remote exact-content journal, scoped runtime, no plaintext and protocol separation|generated reassessment resolves exact human causes atomically and stays unreviewed/private|unselected retained input permissions still protect generated history and create causes|private operational ledger binds exact generation records and never returns lease secrets or source text|expired session cannot commit an idle receipt after waiting on a permission fence|capture acknowledgement can be recovered after the generation has completed|method replacement retains a distinct pending cause and explicit new-version reassessment|rolled-back method removal leaves no cause; committed removal retains cause and unrelated history|fresh-generation recovery preserves expired attempt and commits exact linked retry|recovery refuses wrong owner, scope, completed job and revoked input permission|recovery is atomic on rollback and inaccessible to the worker role|private Markets shared graph retained reader|revoked signing key denies claim and completion despite an outstanding lease|synthetic commit recorder uses existing encrypted remote journal and actual isolated process restart)$"
       },
       {
         "name": "core_method_commit",
-        "pattern": "^(?:isolated hypothesis generation authority, retained computation and restart package(?:$| (?!(?:source-captured contiguous metadata coverage isolation|native marker boundary proof without source activation)(?: |$)).+)|synthetic commit recorder uses existing encrypted remote journal and actual isolated process restart(?: .*)?)$",
         "worker_direct_children": 37,
         "commit_recorder_root": true,
         "test_limit_minutes": 17,
-        "job_limit_minutes": 20
+        "job_limit_minutes": 20,
+        "flag": "--test-skip-pattern",
+        "skip_pattern": "^(?:source-captured contiguous metadata coverage isolation|native marker boundary proof without source activation)$"
       }
     ],
-    "coverage": "Exact original39 direct worker children partition2+37; each selected complete subtree executes all descendants. Verify direct source names in TAP for each shard; do not double-count repeated root or treat filtered omission/zeroSKIP as coverage."
+    "coverage": "Checked original source inventory39; completed TAP ok/not ok plus SKIP/TODO classification provesexact2/37executedchildren, no selected-descendant skips, completecommitrootB, no repeatedrootdoublecount. Comments/zeroSKIP alonearenotcoverage.",
+    "failed_selection_attempts": [
+      {
+        "candidate": "13ebf786fbd1a296c4f56d7d07bc9cda41802d45",
+        "tree": "749bb31752d0d46a68ac77016799141bb86f0312",
+        "run": 36469939409,
+        "job": 109089347851,
+        "conclusion": "failure",
+        "timeout_minutes": 17,
+        "no_final_counts": true,
+        "method_consumer_reached": false,
+        "source_clean": "skipped",
+        "cleanup": "success"
+      },
+      {
+        "candidate": "13ebf786fbd1a296c4f56d7d07bc9cda41802d45",
+        "tree": "749bb31752d0d46a68ac77016799141bb86f0312",
+        "run": 36469939409,
+        "job": 109089348144,
+        "conclusion": "failure",
+        "suite": {
+          "pass": 139,
+          "fail": 0,
+          "skip": 0,
+          "original_direct_worker_children": 39,
+          "method_consumer_passed": true
+        },
+        "coverage_gate": "failed expected2 actual39",
+        "source_clean": "skipped",
+        "cleanup": "success"
+      }
+    ],
+    "selection_prerequisite": {
+      "command": "node --test --test-concurrency=1 tests/qualificationShardSelection.test.mjs",
+      "status": "AUTHORED — NOT RUN",
+      "node": "24.21.0",
+      "tests": 5,
+      "meaning": "actual subprocess proves skip-only selection and completed-TAP classification; not worker/SQL qualification",
+      "child_limit_seconds": 20,
+      "child_output_bytes": 1048576
+    }
   }
 }

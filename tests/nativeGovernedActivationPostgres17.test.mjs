@@ -72,11 +72,25 @@ export async function runNativeActivationQualification(t,f){
   assert.equal(rows.n,0)
  })
  await t.test('successor Auth helper uses existing live-session rights while original owner EXECUTE stays revoked',async()=>{
-  const rights=(await query(config,`select
-   has_schema_privilege('mip_efta_auth_session_owner_v1','mip_native_caller','USAGE') schema_usage,
-   has_function_privilege('mip_efta_auth_session_owner_v1','mip_native_caller.assert_session(uuid,uuid,bigint)','EXECUTE') original_execute,
-   (select p.proowner='mip_efta_auth_session_owner_v1'::regrole from pg_proc p
-    where p.oid='mip_native_activation.auth_current(jsonb,uuid,bigint)'::regprocedure) correct_owner`)).rows[0]
+  const rights=await query(config,`with owner_role as (
+   select oid from pg_catalog.pg_roles where rolname='mip_efta_auth_session_owner_v1'
+  ), caller_schema as (
+   select oid from pg_catalog.pg_namespace where nspname='mip_native_caller'
+  ), original_helper as (
+   select p.oid from pg_catalog.pg_proc p join caller_schema n on p.pronamespace=n.oid
+   where p.proname='assert_session' and p.prokind='f' and p.pronargs=3
+    and p.proargtypes=array['uuid'::regtype::oid,'uuid'::regtype::oid,'bigint'::regtype::oid]::oidvector
+  ), successor_helper as (
+   select p.proowner from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace
+   where n.nspname='mip_native_activation' and p.proname='auth_current' and p.prokind='f' and p.pronargs=3
+    and p.proargtypes=array['jsonb'::regtype::oid,'uuid'::regtype::oid,'bigint'::regtype::oid]::oidvector
+  ) select
+   has_schema_privilege((select oid from owner_role),(select oid from caller_schema),'USAGE') schema_usage,
+   has_function_privilege((select oid from owner_role),(select oid from original_helper),'EXECUTE') original_execute,
+   (select proowner from successor_helper)=(select oid from owner_role) correct_owner`).then(r=>r.rows[0],error=>{
+    throw new Error(JSON.stringify({phase:'auth_helper_metadata',
+     sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null}))
+   })
   assert.deepEqual(rights,{schema_usage:true,original_execute:false,correct_owner:true})
   const good=normalizeActivationRequest(pending)
   const check=(authority,session,expiry)=>query(config,
