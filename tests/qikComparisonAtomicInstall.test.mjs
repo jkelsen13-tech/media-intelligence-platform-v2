@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {createHash} from 'node:crypto'
-import {prepareAtomicInstall,validateAtomicConfig,DOJ_PATH,DOJ_SOURCE_COMMIT} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
+import {prepareAtomicInstall,validateAtomicConfig,DOJ_PATH,DOJ_SOURCE_COMMIT,sanitizeInstallDiagnostic,INSTALL_DIAGNOSTICS} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
 import {SOURCE_COMMIT,compileSource,NAME_MAPPING} from '../supabase/qualification/qik-comparison-adapter/compileSource.mjs'
 const root=new URL('../',import.meta.url)
 const reader=async(path,ref)=>{
@@ -71,4 +71,12 @@ test('session pooler is supported only with exact project-qualified login',()=>{
   .replace('db.qikvmopbtijoebdqosyq.supabase.co','aws-0-us-west-1.pooler.supabase.com')
  assert.equal(validateAtomicConfig(good).auditLogin,'qik_audit')
  assert.throws(()=>validateAtomicConfig({...good,auditConnectionString:good.auditConnectionString.replace('.qikvmopbtijoebdqosyq:','.niejaejtbxgakyrsntxm:')}),/audit_target/)
+})
+
+test('diagnostics expose only static controlled codes and omit arbitrary error data',()=>{
+ assert.equal(sanitizeInstallDiagnostic({message:'atomic_audit_column_acl',detail:'synthetic-secret'}),'atomic_audit_column_acl')
+ assert.equal(sanitizeInstallDiagnostic({message:'mip_native_final_chain_table_acl: synthetic-secret'}),'mip_native_final_chain_table_acl')
+ for(const message of ['synthetic-secret','atomic_audit_column_acl: synthetic-secret','mip_native_final_chain_table_acl_untrusted: synthetic-secret','atomic_audit_unknown'])assert.equal(sanitizeInstallDiagnostic({message}),null)
+ for(const value of [null,{},42,{message:42}])assert.equal(sanitizeInstallDiagnostic(value),null)
+ assert.equal(Object.isFrozen(INSTALL_DIAGNOSTICS),true)
 })
