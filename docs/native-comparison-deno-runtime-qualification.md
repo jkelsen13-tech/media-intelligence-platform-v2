@@ -16,7 +16,7 @@ Pure Deno 2.5.2 is not Supabase's hosted Edge Runtime. Passing proves this pinne
 
 Use tests/nativeComparisonDenoRuntimePin.json. Official denoland/deno v2.5.2 Linux x86_64 release metadata reports archive SHA-256 520fd4bc2d18b50b6ac2ea8b7d0f7f6a35588e412754a081e8c6afd4b15264c4 and size 45074518 bytes. The matching vendor checksum text asset itself has SHA-256 4c0fc62463955fa32e56d43d4d14b37424251e4ab78f14beb33e7092fd083cda. This is a deliberate immutable compatibility probe, not a claim that 2.5.2 is the newest release.
 
-[Official release](https://github.com/denoland/deno/releases/tag/v2.5.2), [release metadata](https://api.github.com/repos/denoland/deno/releases/tags/v2.5.2), [vendor installation guidance](https://docs.deno.com/runtime/getting_started/installation/). Deno 2.5.2 CLI source confirms --frozen=false, --cached-only and --node-modules-dir=none: [pinned CLI implementation](https://github.com/denoland/deno/blob/v2.5.2/cli/args/flags.rs).
+[Official release](https://github.com/denoland/deno/releases/tag/v2.5.2), [release metadata](https://api.github.com/repos/denoland/deno/releases/tags/v2.5.2), [vendor installation guidance](https://docs.deno.com/runtime/getting_started/installation/). The pinned actual runner supports --frozen and --node-modules-dir=none for check; --cached-only applies to run, not check. An attempted check --cached-only was refused by Deno2.5.2, and this successor uses frozen check with lock bytes unchanged. The unsupported allowJs compiler option is removed. Relevant pinned CLI implementation: [pinned CLI implementation](https://github.com/denoland/deno/blob/v2.5.2/cli/args/flags.rs).
 
 ## Bounded existing Linux GitHub runner snippet
 
@@ -48,8 +48,10 @@ timeout --signal=KILL 90s "$DENO_BINARY" cache --config="$cfg" --lock="$lock" --
   tests/nativeComparisonDenoRuntime.mjs
 timeout --signal=KILL 90s "$DENO_BINARY" check --config="$cfg" --lock="$lock" --frozen=false --node-modules-dir=none \
   supabase/functions/native-comparison-display/index.ts
-timeout --signal=KILL 30s "$DENO_BINARY" check --cached-only --config="$cfg" --lock="$lock" --frozen --node-modules-dir=none \
+lock_before="$(sha256sum "$lock" | awk '{print $1}')"
+timeout --signal=KILL 30s "$DENO_BINARY" check --config="$cfg" --lock="$lock" --frozen --node-modules-dir=none \
   supabase/functions/native-comparison-display/index.ts
+test "$(sha256sum "$lock" | awk '{print $1}')" = "$lock_before"
 printf 'DENO_BINARY=%s\nDENO_DIR=%s\nDENO_NO_UPDATE_CHECK=1\n' "$DENO_BINARY" "$DENO_DIR" >> "$GITHUB_ENV"
 ```
 

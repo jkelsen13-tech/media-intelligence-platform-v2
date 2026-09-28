@@ -1369,7 +1369,7 @@
       },
       "supabase/functions/native-comparison-display/deno.json": {
         "path": "supabase/functions/native-comparison-display/deno.json",
-        "blob": "ac66847f390776a239ed12087d9c7095019fd4a3"
+        "blob": "9126bd3e8ddc618bfbdc8239f14c84295ed662af"
       },
       "supabase/functions/native-comparison-display/config.fragment.toml": {
         "path": "supabase/functions/native-comparison-display/config.fragment.toml",
@@ -1437,10 +1437,10 @@
       },
       "documentation": {
         "path": "docs/native-comparison-deno-runtime-qualification.md",
-        "blob": "d5beba94f05befca6dadd1ec1912135717237e9a"
+        "blob": "c37b94bb1707b96e254c857ac44c540aaffbea1c"
       },
       "engine": "Actual pinned pureDeno2.5.2 Linux x86_64 on existing remote GitHub source/synthetic runner; not hosted SupabaseEdge",
-      "closure": "Vendor archive+checksum hashes verified before use; real cache/check-generated deno.lock captured only as bounded source metadata after successful frozen check/actual fixture. npm package-lock is reference, does not control Deno resolution. Do not fabricate lock.",
+      "closure": "Vendor archive+checksum hashes verified before use; real cache/check-generated deno.lock captured only as bounded source metadata after successful frozen check/actual fixture. npm package-lock is reference, does not control Deno resolution. Do not fabricate lock. Frozen check preserves exact lock bytes; cached-only is used only by actual Deno run, not check. No ignored compiler option or unsupported CLI flag is retained.",
       "invocation": "Bounded vendor runtime/cache/check/frozen-check workflow stage; actual caller PG helper check2 spawns cached-only/frozen/loopback-only Deno using actual gateway SCRAM login and canonical host/driver/SQL plus synthetic Auth GET callback.",
       "assertions": "Actual index missing-config503/globals, real npm pg/canonicalhost/full012/caller/current binding+DTO digest, acknowledged TX/client closure and independent session-baseline recovery. Missingruntime, lock, timeout, mismatch or cleanup fails; no skips.",
       "cleanup": "Child exit/session baseline independently verified; source-only cache/binary remains solely disposable runner and removed with runner. Existing owned PG/container/volume cleanup unchanged.",
