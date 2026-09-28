@@ -1066,7 +1066,7 @@
     ],
     "native_joint_installer": {
       "path": "supabase/qualification/native-governed-install/install.mjs",
-      "blob": "0a03f1e6341af50187c564c2d49c1bbf8dbcfb56",
+      "blob": "146d6a9e94bba5e8e709050f1ca0542bf52c6c6e",
       "mode": "native-governed-v2",
       "authorization": "owner-authorized-disabled-comparison-native-install",
       "source_base": "79f25d3519d26fd0dbda37fd0728e5783c04834a",
@@ -1077,7 +1077,7 @@
     },
     "native_joint_installer_documentation": {
       "path": "supabase/qualification/native-governed-install/README.md",
-      "blob": "a5dadd3c050f0406115d9f9f70eba44949ef264e"
+      "blob": "fa5788ba9c70a4610ea5a278b9542ca685a8c640"
     },
     "attachment_assertions": {
       "path": "tests/nativeArcAttachmentAssertions.mjs",
@@ -1102,10 +1102,30 @@
         "object",
         "name",
         "position",
-        "internal_position"
+        "internal_position",
+        "internal_source",
+        "frames"
       ],
       "purpose": "bounded static diagnostics of actual transaction stage/pinned source error without drivercontext/detail/SQLargs/connection/secret/nativepayload; WeakMap-authenticated program failures only",
-      "negative_test": "requires exact P0001+checkpoint_assertion+001_governed_cohort.sql+arc_native_source_authority; early native failure refuses this test"
+      "negative_test": "requires exact P0001+checkpoint_assertion+001_governed_cohort.sql+arc_native_source_authority; early native failure refuses this test",
+      "nested_allowlist": {
+        "internal_source": [
+          "area",
+          "sha256",
+          "offset",
+          "line",
+          "length"
+        ],
+        "frames": [
+          "kind",
+          "line",
+          "operation"
+        ],
+        "frames_maximum": 2,
+        "internal_source_condition": "exact original server internalQuery is a byte-for-byte substring of pinned source body or assertion; hash/static offset only; never raw query/context/payload/parameters",
+        "frames_condition": "strict parser permits only normalized assertion-block/helper kind, numericline and closed SQLoperation"
+      },
+      "temporary_assertion_context": "Only original native fields003 helper uses existing mip_mentions_native_validator with explicit schemaUSAGE; original assertion/source hashes/runtimepermissions unchanged; program descriptor/hash explicitly changes. Finalnative003 helper remains mip_arc_native_owner."
     }
   },
   "qualification_groups": {
@@ -1147,7 +1167,7 @@
       "status_at_source_authorship": "NOT RUN",
       "environment": "MIP_ARC_PUBLIC_PROJECTION_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
       "invocation": "node --test tests/nativeArcPublicProjectionPostgres17.test.mjs",
-      "fixture": "localhost5432 actual PostgreSQL170006+pgvector0.8.2 files; absent-only owned native_arc_public_projection_qualification DB and native_arc_projection_fixture_reader role; exact recovered real schema/functions/defaults/constraints/indexes/triggers; synthetic articles/score/candidate/citations/milestones/vector only; no autoapproval activation",
+      "fixture": "localhost5432 actual PostgreSQL170006+pgvector0.8.2 and pg_trgm1.6 files; absent-only owned native_arc_public_projection_qualification DB and native_arc_projection_fixture_reader role; exact recovered real schema/functions/defaults/constraints/indexes/triggers; synthetic articles/score/candidate/citations/milestones/vector only; no autoapproval activation",
       "expectation": "All10 childchecks+outer pass, no skips; exact schema, outcome rules/failure precedence/default-closed approval, real trigger-before-attach ordering, deterministic atomicretry/vector/no-vector branches/observedlock concurrency, retraction/baseline restoration, missing conflict-index wholeTXrollback, denied ambient access/body-only sentinel absent from derived destinations. Historical dependency coverage only; native/currentaccess/publicrelease not qualified by thisfixture.",
       "cleanup": "Independently close two testDBclients; verify zero sessions; drop only database and role actually created; absent-only guards neveradopt/delete preexisting; primary/cleanuperrors independentlyreported and failqualification; runneralwayscontainer+volumeabsence.",
       "resource_limits": "Existing verifiedfree GitHubsource/synthetic qualification; bounded4min step/15minjob; no capturedmaterial/keys/artifacts/hostedchanges/newservice/spending"
@@ -1178,15 +1198,15 @@
       },
       {
         "path": "supabase/qualification/arc-public-projection/historical_manifest.json",
-        "blob": "0fe6f83b55cabe25f4538c8974725fe07534ea93"
+        "blob": "04cf39079dcdb8b9c9de005fb20a47c1ce1cc5be"
       },
       {
         "path": "supabase/qualification/arc-public-projection/README.md",
-        "blob": "58c1c7b35150227e701f0778ec58d70d118e77a1"
+        "blob": "b65910bd43e1fc3c37912b5fd081e8f2137a9d84"
       },
       {
         "path": "tests/nativeArcPublicProjectionPostgres17.test.mjs",
-        "blob": "182319d48307def65572f9569c1b174e60fe3f1d"
+        "blob": "4ec7b50bb343f1f4dc6173fe060a140ce5ee6e8f"
       },
       {
         "path": "supabase/qualification/arc-public-projection/recovered_milestone_outcome.sql",
@@ -1211,7 +1231,7 @@
     ],
     "dependency_manifest": "supabase/qualification/arc-public-projection/historical_manifest.json",
     "installation_order": [
-      "absent-only dedicated database and denied role; PostgreSQL170006; pgvector0.8.2",
+      "absent-only dedicated database and denied role; PostgreSQL170006; exact pgvector0.8.2 and pg_trgm1.6 created/asserted in owned database",
       "historical_schema.sql; exact16table RLS/constraints/defaults/indexes",
       "five recovered exact functions in manifest order; unchanged atomic attach; only named real retraction/predicate/touch functions from pinned dependencies",
       "selected real triggers; explicit fixture PUBLICexecute revoke for12selectedfunctions; no legacy auto approval activation"

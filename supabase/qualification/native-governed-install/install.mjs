@@ -15,7 +15,7 @@ export const NATIVE_ORDER=Object.freeze([
     "path": "supabase/qualification/entity-resolution/native-capture-fields/003_native_fields.sql",
     "blob": "ffc192276276cea2345690bccc7b65d54a0f0ab6",
     "assertion_marker": "do $assert$",
-    "assertion_owner": "mip_mentions_owner"
+    "assertion_owner": "mip_mentions_native_validator"
   },
   {
     "path": "supabase/qualification/entity-resolution/candidate-review/004_candidate_review.sql",
@@ -78,8 +78,28 @@ function recordFailure(error,plan,stage,source,object){
  if(preparedPlans.has(plan))for(const step of plan.steps)for(const m of (step.body+'\n'+(step.assertion??'')).matchAll(/raise exception '([^']+)'/g))
   if(/^[a-zA-Z0-9_ .:-]{1,120}$/.test(m[1])&&!m[1].includes('%'))names.add(m[1])
  const numeric=x=>/^[0-9]{1,9}$/.test(String(x??''))?Number(x):null
+ let internalSource=null
+ const query=typeof error.internalQuery==='string'?error.internalQuery:null
+ const step=preparedPlans.has(plan)?plan.steps.find(s=>s.path===source):null
+ // Hash only a byte-for-byte static fragment of this exact pinned source.
+ // Never hash or expose a server-generated query containing runtime values.
+ if(step&&query&&query.length>=16&&query.length<=65536){
+  for(const area of ['assertion','body']){
+   const text=step[area],offset=typeof text==='string'?text.indexOf(query):-1
+   if(offset>=0){internalSource=Object.freeze({area,sha256:hash(query),offset:offset+1,line:text.slice(0,offset).split('\n').length,length:query.length});break}
+  }
+ }
+ const frames=[]
+ if(internalSource&&typeof error.where==='string'){
+  const pattern=/(?:^|\n)PL\/pgSQL function (inline_code_block|mip_nca_[a-f0-9]{32}\.check_boundary\(\)) line ([0-9]{1,6}) at (IF|FOREACH over array|FOR over SELECT rows|SQL statement|EXECUTE|RAISE|assignment)/g
+  for(const m of error.where.matchAll(pattern)){
+   frames.push(Object.freeze({kind:m[1]==='inline_code_block'?'assertion_block':'assertion_helper',line:Number(m[2]),operation:m[3]}))
+   if(frames.length===2)break
+  }
+ }
  failureDetails.set(error,Object.freeze({stage,source:source??null,object:object??null,
-  name:names.has(error.message)?error.message:null,position:numeric(error.position),internal_position:numeric(error.internalPosition)}))
+  name:names.has(error.message)?error.message:null,position:numeric(error.position),internal_position:numeric(error.internalPosition),
+  internal_source:internalSource,frames:Object.freeze(frames)}))
 }
 function freeze(value){if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value)}return value}
 export const NATIVE_ROLES=Object.freeze(['mip_mentions_owner','mip_mentions_gateway','mip_mentions_admin','mip_mentions_native_validator','mip_arc_qik_source_owner','mip_canonical_writer','mip_arc_native_owner','mip_arc_native_worker','mip_arc_attachment_owner'])

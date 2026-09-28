@@ -1006,5 +1006,18 @@
   "excluded_unexercised_trigger": "articles_source_status_d5_propagate (UPDATE OF source_status; projection does not change that field)",
   "no_actual_material": true,
   "no_release_policy_activation": true,
-  "excluded_trigger_name": "articles_source_status_d5_propagate"
+  "excluded_trigger_name": "articles_source_status_d5_propagate",
+  "required_extensions": [
+    {
+      "name": "vector",
+      "version": "0.8.2",
+      "schema": "public"
+    },
+    {
+      "name": "pg_trgm",
+      "version": "1.6",
+      "schema": "public",
+      "consumer": "exact recovered articles body/summary/title gin_trgm_ops indexes"
+    }
+  ]
 }

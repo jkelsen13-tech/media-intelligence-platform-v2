@@ -6,7 +6,7 @@ This directory contains a **disposable synthetic fixture**, not a deployment mig
 
 The repository dependencies are pinned to the selected historical source content in `historical_manifest.json`. The input repository revision was `79f25d3519d26fd0dbda37fd0728e5783c04834a`. Existing source files remain unchanged.
 
-1. A dedicated PostgreSQL **17.6** database, with the **pgvector 0.8.2** extension available, is required. The fixture creates the extension inside its newly owned database.
+1. A dedicated PostgreSQL **17.6** database, with **pgvector 0.8.2** and **pg_trgm 1.6** extensions available, is required. The fixture creates both extensions inside its newly owned database and asserts their exact versions. pg_trgm supplies the recovered body/summary/title gin_trgm_ops indexes; the exact schema and indexes remain unchanged.
 2. `historical_schema.sql` creates the recovered fourteen relations, selected exact column types/defaults/checks/keys/indexes, and the real authors/outlets foreign-key dependencies. All sixteen tables retain RLS enabled. It grants no application table permissions.
 3. The manifest loads five recovered real function bodies and the unchanged atomic attach migration. It extracts only the named real functions from the recorded retraction fixture, public predicate migration and schema source. In particular, it never installs the retraction fixture's no-op refresh or synthetic-unreached projector.
 4. Exact recovered trigger definitions are installed after their real functions. The unrelated source-status D5 propagation trigger is explicitly excluded: this fixture does not mutate source_status or claim D5 propagation coverage.
@@ -58,7 +58,7 @@ The next production source step is a reviewed native publication-input/dependenc
 
 ## Invocation and cleanup
 
-Use Node **22.14.0**, the repository's existing pg dependency, and the already selected disposable PostgreSQL 17.6 + pgvector 0.8.2 route. The administrator connection is fixed to localhost:5432 with the existing synthetic-only qualification credential. No hosted configuration is read.
+Use Node **22.14.0**, the repository's existing pg dependency, and the already selected disposable PostgreSQL 17.6 + pgvector 0.8.2 + pg_trgm 1.6 route. The administrator connection is fixed to localhost:5432 with the existing synthetic-only qualification credential. No hosted configuration is read.
 
 ```sh
 MIP_ARC_PUBLIC_PROJECTION_DISPOSABLE=synthetic-pg17-only \

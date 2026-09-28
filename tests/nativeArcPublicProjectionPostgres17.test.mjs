@@ -56,6 +56,8 @@ test('exact historical arc projection and atomic attachment dependencies',{
   db=await connect(database);parallel=await connect(database)
   stage='extension'
   await db.query('create extension vector with schema public')
+  await db.query('create extension pg_trgm with schema public')
+  assert.equal((await db.query("select extversion from pg_extension where extname='pg_trgm'")).rows[0].extversion,'1.6')
   assert.equal((await db.query("select extversion from pg_extension where extname='vector'")).rows[0].extversion,'0.8.2')
   stage='schema'
   const manifest=JSON.parse(await read('supabase/qualification/arc-public-projection/historical_manifest.json'))
