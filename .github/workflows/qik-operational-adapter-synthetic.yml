@@ -23,11 +23,11 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='01c970a2d9e37ea889ee792a2ee366fd6b6a52b6'
+          source='9a9106cd0a06291d55be39b5892ce325cf5b9760'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='cd5ca3e9e7dc8a934bfd6ab46cb9e9dc29968cb8'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='898ac3c6a8334e7f9c451c5c5111eca3bfcf89ce'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
           subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-operational-adapter-synthetic.yml']
@@ -36,7 +36,7 @@ jobs:
               assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
           config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
           assert config.returncode==1 and not config.stdout
-          print('Pinned complete candidate tree; governed canonical writer, complete private membership and joint restricted-principal installer await fresh actual Cursor review after tests. Synthetic-only internal qualification under user consolidation amendment. Not owner field signature, historical acceptance, hosted installation or material-transfer authority.')
+          print('Pinned complete candidate tree; canonical writer, complete private membership, restricted-principal joint installer and historical projection fixture await fresh actual Cursor review after applicable tests. Synthetic-only internal qualification under user consolidation amendment. Not owner field signature, historical acceptance, hosted installation or material-transfer authority.')
           PY
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -183,6 +183,15 @@ jobs:
           MIP_QIK_COMPARISON_DISPOSABLE: synthetic-pg17-only
           MIP_DISPOSABLE_POSTGRES: qik-persistent-install
         run: node --test tests/nativeGovernedInstallerPostgres17.test.mjs
+      - name: Qualify recovered historical projection and atomic attachment dependencies
+        # Independent absent-only synthetic database and role; cleanup is guarded.
+        # This does not qualify native publication or bypass any failed gate.
+        if: ${{ !cancelled() && steps.vector_build.outcome == 'success' }}
+        timeout-minutes: 4
+        env:
+          MIP_ARC_PUBLIC_PROJECTION_DISPOSABLE: synthetic-pg17-only
+          MIP_DISPOSABLE_POSTGRES: qik-persistent-install
+        run: node --test tests/nativeArcPublicProjectionPostgres17.test.mjs
       - name: Remove disposable database and verify no container or volume remains
         if: always()
         shell: bash
