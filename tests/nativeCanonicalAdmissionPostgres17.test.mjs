@@ -36,7 +36,9 @@ function diagnostic(error,stage){
   const match=line.match(/(?:^|[/\\])tests[/\\]nativeCanonicalAdmissionPostgres17\.test\.mjs:(\d+):(\d+)\)?$/)
   return match?['    at tests/nativeCanonicalAdmissionPostgres17.test.mjs:'+match[1]+':'+match[2]]:[]
  }).slice(0,12):[]
- const result=Error('native_canonical_admission_failed stage='+safeStage+' sqlstate='+code)
+ const numericPosition=value=>typeof value==='string'&&/^[0-9]{1,10}$/.test(value)?value:'NONE'
+ const result=Error('native_canonical_admission_failed stage='+safeStage+' sqlstate='+code+
+  ' position='+numericPosition(error?.position)+' internal_position='+numericPosition(error?.internalPosition))
  result.stack=result.name+': '+result.message+(frames.length?'\n'+frames.join('\n'):'')
  return result
 }
