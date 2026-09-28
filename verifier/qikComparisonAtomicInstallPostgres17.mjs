@@ -39,15 +39,67 @@ async function loseAcknowledgement(command,body){
   return result
  }finally{pg.Client.prototype.query=original}
 }
+async function injectPrivateUnitDrift(sql,body){
+ const original=pg.Client.prototype.query
+ let injected=false
+ pg.Client.prototype.query=async function(...args){
+  const result=await original.apply(this,args)
+  if(!injected&&this.connectionParameters.application_name==='mip-c3-persistent-install-source'
+   &&typeof args[0]==='string'&&args[0].startsWith('insert into mip_comparison_install.receipts(')){
+   injected=true
+   await original.call(this,sql)
+  }
+  return result
+ }
+ try{const result=await body();assert.equal(injected,true);return result}
+ finally{pg.Client.prototype.query=original}
+}
+async function assertPristineFixture(db){
+ const r=(await db.query(
+  "select current_database() db,current_setting('server_version_num') v,session_user::text login,current_user::text effective,"+
+  "(select jsonb_agg(jsonb_build_object('name',rolname,'super',rolsuper,'inherit',rolinherit,'createrole',rolcreaterole,'createdb',rolcreatedb,'login',rolcanlogin,'replication',rolreplication,'bypass',rolbypassrls,'limit',rolconnlimit,'until',rolvaliduntil,'config',rolconfig) order by rolname) from pg_roles) roles,"+
+  "(select jsonb_agg(datname order by datname) from pg_database) databases,"+
+  "(select jsonb_agg(nspname order by nspname) from pg_namespace) schemas,"+
+  "(select jsonb_agg(jsonb_build_object('name',e.extname,'version',e.extversion,'schema',n.nspname,'owner',pg_get_userbyid(e.extowner)) order by e.extname) from pg_extension e join pg_namespace n on n.oid=e.extnamespace) extensions,"+
+  "(select count(*)::integer from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public') public_relations,"+
+  "(select count(*)::integer from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public') public_functions,"+
+  "(select count(*)::integer from pg_type t join pg_namespace n on n.oid=t.typnamespace where n.nspname='public') public_types,"+
+  "(select count(*)::integer from pg_foreign_server)+(select count(*)::integer from pg_event_trigger)+(select count(*)::integer from pg_default_acl)+(select count(*)::integer from pg_publication)+(select count(*)::integer from pg_subscription) extras"
+ )).rows[0]
+ const names=['postgres','pg_database_owner','pg_read_all_data','pg_write_all_data','pg_monitor',
+  'pg_read_all_settings','pg_read_all_stats','pg_stat_scan_tables','pg_read_server_files',
+  'pg_write_server_files','pg_execute_server_program','pg_signal_backend','pg_checkpoint',
+  'pg_use_reserved_connections','pg_create_subscription','pg_maintain'].sort()
+ const goodRole=role=>{
+  const admin=role.name==='postgres'
+  return role.super===admin&&role.inherit===true&&role.createrole===admin
+   &&role.createdb===admin&&role.login===admin&&role.replication===admin
+   &&role.bypass===admin&&role.limit===-1&&role.until===null&&role.config===null
+ }
+ if(!r||r.db!=='postgres'||r.v!=='170006'||r.login!=='postgres'||r.effective!=='postgres'
+  ||JSON.stringify(r.databases)!==JSON.stringify(['postgres','template0','template1'])
+  ||JSON.stringify(r.schemas)!==JSON.stringify(['information_schema','pg_catalog','pg_toast','public'])
+  ||r.extensions?.length!==1||r.extensions[0].name!=='plpgsql'||r.extensions[0].version!=='1.0'||r.extensions[0].schema!=='pg_catalog'||r.extensions[0].owner!=='postgres'
+  ||r.public_relations!==0||r.public_functions!==0||r.public_types!==0||r.extras!==0
+  ||JSON.stringify(r.roles?.map(x=>x.name))!==JSON.stringify(names)||!r.roles.every(goodRole))
+  throw Error('atomic_fixture_not_pristine')
+ const edges=(await db.query("select p.rolname parent,m.rolname member,a.admin_option admin,a.inherit_option inherit,a.set_option set from pg_auth_members a join pg_roles p on p.oid=a.roleid join pg_roles m on m.oid=a.member order by p.rolname,m.rolname")).rows
+ assert.deepEqual(edges,['pg_read_all_settings','pg_read_all_stats','pg_stat_scan_tables'].map(parent=>({parent,member:'pg_monitor',admin:false,inherit:true,set:true})))
+}
 const ident=s=>'"'+s.replaceAll('"','""')+'"'
 test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and audit recovery',{timeout:240000},async()=>{
  assert.equal(process.env.MIP_QIK_COMPARISON_DISPOSABLE,'synthetic-pg17-only')
  assert.equal(process.env.MIP_DISPOSABLE_POSTGRES,'qik-persistent-install')
  let owner=await client('postgres'),admin=null
- const initial=(await owner.query("select current_setting('server_version_num') v,(select rolsuper from pg_roles where rolname=current_user) super")).rows[0]
- assert.equal(initial.v,'170006');assert.equal(initial.super,true)
- assert.equal((await owner.query("select count(*)::integer n from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind in ('r','p','v','m','f')")).rows[0].n,0)
- assert.equal((await owner.query("select count(*)::integer n from pg_roles where rolname like 'mip_%' or rolname like 'qik_%' or rolname like 'atomic_fixture_%'")).rows[0].n,0)
+ // No destructive cleanup is armed before this complete dedicated-cluster guard.
+ try{await assertPristineFixture(owner)}catch(error){await owner.end();throw error}
+ // Prove an unrelated application schema is refused and survives the refusal.
+ // This sentinel is created only after a truly pristine baseline was established.
+ await owner.query('create schema fixture_unrelated;create table fixture_unrelated.sentinel(id integer primary key);insert into fixture_unrelated.sentinel values(73)')
+ await assert.rejects(assertPristineFixture(owner),/atomic_fixture_not_pristine/)
+ assert.equal((await owner.query('select id from fixture_unrelated.sentinel')).rows[0].id,73)
+ await owner.query('drop table fixture_unrelated.sentinel;drop schema fixture_unrelated')
+ await assertPristineFixture(owner)
  const baseline=(await owner.query('select rolname from pg_roles order by rolname')).rows.map(r=>r.rolname)
  // Bootstrap credentials are hardcoded synthetic fixture material, never production.
  await owner.query("create role "+bootstrap+" login superuser password '"+password+"'")
@@ -93,6 +145,32 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
    c3OperationId:'3'.repeat(32),c3ManifestSha256:H,expectedManifestSha256:plan.manifest_sha256,
    dblinkMetadataSha256:dblink.metadata_sha256,collectorSource:'qik-fixture-v1',
    auditLogin:audit,auditConnectionString:url(audit),disposable:true}
+  // A foreign LOGIN+BYPASSRLS principal must not acquire this new secret via
+  // installer defaults. The installer refuses; it never edits global defaults.
+  await admin.query("create role atomic_fixture_reader login bypassrls nosuperuser nocreatedb nocreaterole password '"+password+"'")
+  await admin.query('alter default privileges for role postgres in schema public grant select on tables to service_role')
+  const defaultsBefore=(await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value
+  await admin.query('alter default privileges for role postgres grant select on tables to atomic_fixture_reader;alter default privileges for role postgres grant usage on schemas to atomic_fixture_reader')
+  const defaultsDuring=(await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value
+  const drift=await installComparisonAtomic(cfg,async p=>read(p))
+  assert.equal(drift.state,'installation_refused')
+  assert.equal(drift.phase,'audit_secret_boundary')
+  assert.equal(drift.sqlstate,'P0001')
+  assert.deepEqual((await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value,defaultsDuring)
+  assert.equal((await admin.query("select to_regclass('mip_factual.audit_connection') object")).rows[0].object,null)
+  await admin.query('alter default privileges for role postgres revoke select on tables from atomic_fixture_reader;alter default privileges for role postgres revoke usage on schemas from atomic_fixture_reader')
+  assert.deepEqual((await admin.query('select coalesce(jsonb_agg(to_jsonb(d) order by oid),\'[]\'::jsonb) value from pg_default_acl d')).rows[0].value,defaultsBefore)
+  for(const sql of [
+   'grant select(connection_string) on mip_factual.audit_connection to atomic_fixture_reader',
+   'create policy unsafe_fixture_read on mip_factual.audit_connection for select to atomic_fixture_reader using(true)',
+   'grant execute on function mip_factual_transport.dblink_exec(text,text) to atomic_fixture_reader',
+  ]){
+   const rejected=await injectPrivateUnitDrift(sql,()=>installComparisonAtomic(cfg,async p=>read(p)))
+   assert.equal(rejected.state,'installation_refused')
+   assert.equal(rejected.phase,'audit_secret_boundary')
+   assert.equal(rejected.sqlstate,'P0001')
+   assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
+  }
   // Force a real mid-install failure at the existing 009 uniqueness constraint.
   await admin.query("insert into public.explanations(id,assertion_id,version,is_current) values('00000000-0000-4000-8000-000000000001','synthetic-duplicate',1,true),('00000000-0000-4000-8000-000000000002','synthetic-duplicate',1,true)")
   const failed=await loseAcknowledgement('rollback',()=>installComparisonAtomic(cfg,async p=>read(p)))
@@ -115,6 +193,12 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   assert.equal((await admin.query('select count(*)::integer n from pg_auth_members where roleid in(select oid from pg_roles where rolname=any($1::text[])) or member in(select oid from pg_roles where rolname=any($1::text[]))',[[...RESERVED_ROLES]])).rows[0].n,0)
   assert.equal((await admin.query("select count(*)::integer n from mip_identity.efta_scope")).rows[0].n,0)
   assert.equal((await admin.query("select count(*)::integer n from mip_identity.doj_policy_versions")).rows[0].n,0)
+  const denied=await client('atomic_fixture_reader')
+  try{
+   await assert.rejects(denied.query('select connection_string from mip_factual.audit_connection'),e=>e.code==='42501')
+   await assert.rejects(denied.query("select mip_factual_transport.dblink_exec('unused','select 1')"),e=>e.code==='42501')
+   await assert.rejects(denied.query('select mip_comparison_install.audit_probe(false)'),e=>e.code==='42501')
+  }finally{await denied.end()}
   const auditResult=await qualifyComparisonAudit(cfg)
   assert.equal(auditResult.state,'installed_disabled_audit_qualified')
   assert.equal(auditResult.activation_allowed,false)
@@ -137,7 +221,7 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
    await clean.query('drop database postgres')
    await clean.query('create database postgres owner postgres')
    const created=(await clean.query('select rolname from pg_roles')).rows.map(r=>r.rolname).filter(n=>!baseline.includes(n)&&n!==bootstrap)
-   const allowed=new Set([...RESERVED_ROLES,'mip_tmp_'+'2'.repeat(32),'anon','authenticated','service_role','qik_ingest_fn_owner','qik_ingest_runtime',audit])
+   const allowed=new Set([...RESERVED_ROLES,'mip_tmp_'+'2'.repeat(32),'anon','authenticated','service_role','qik_ingest_fn_owner','qik_ingest_runtime',audit,'atomic_fixture_reader'])
    assert.ok(created.every(r=>allowed.has(r)),'unexpected role prevents unbounded cleanup')
    for(const name of created)await clean.query('drop role '+ident(name))
    await clean.end()
