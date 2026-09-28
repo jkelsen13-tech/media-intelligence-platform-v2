@@ -306,6 +306,10 @@
       "tests/nativeComparisonEdgePackaging.test.mjs",
       "tests/nativeComparisonDenoRuntime.mjs",
       "tests/nativeComparisonDenoRuntimePin.json"
+    ],
+    "atomic_cleanup": [
+      "tests/qikComparisonAtomicInstall.test.mjs",
+      "verifier/qikComparisonAtomicInstallPostgres17.mjs"
     ]
   },
   "historical_protections": {
@@ -340,7 +344,8 @@
       "billing upgrades",
       "operational secrets",
       "CI artifacts/caches"
-    ]
+    ],
+    "atomic_cleanup_pg_limit_minutes": 9
   },
   "c9": {
     "native_only_first_route": true,
@@ -1032,7 +1037,7 @@
     },
     "atomic_installer": {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "blob": "a97cd41a30216ad6561fc21088099c1bf75e2afd"
+      "blob": "b73fcfa4782bd56ec220a2744aa749e8f50830a7"
     },
     "catalog_preflight": {
       "path": "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs",
@@ -1124,7 +1129,7 @@
     },
     "native_joint_installer_fixture": {
       "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
-      "blob": "11d63a54ca6c2bb6c792b32ec8ee1f5e816b845a"
+      "blob": "4a01cf7ff02a31093fe27cf72ce57621d272bd2f"
     },
     "native_installation_diagnostics": {
       "retained_fields": [
@@ -1305,7 +1310,7 @@
       },
       "test": {
         "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
-        "blob": "11d63a54ca6c2bb6c792b32ec8ee1f5e816b845a"
+        "blob": "4a01cf7ff02a31093fe27cf72ce57621d272bd2f"
       },
       "retention": "Private fixed acquisition helper is trusted installer-owned, UUID-only and source-checked. Existing main transport ownership/ACLs are unchanged; history owner receives neither raw transport nor Vault. No route qualification/real connection is implied. The final fixed-helper source check also requires exact text result, function kind/volatility/parallel/leakproof posture and complete search_path/110s/3s configuration.",
       "qualification": "NOT RUN in this new combined candidate; separate core/preclosed historical72PASS receipt remains limited to its original scope."
@@ -1392,19 +1397,19 @@
     "native_governed_host": {
       "supabase/qualification/native-governed-host/adapter.mjs": {
         "path": "supabase/qualification/native-governed-host/adapter.mjs",
-        "blob": "1333aec658039d85c05d7c81f18a42250afff572"
+        "blob": "47622a1729351d0cabda279d63855b9309e490b0"
       },
       "supabase/qualification/native-governed-host/run.mjs": {
         "path": "supabase/qualification/native-governed-host/run.mjs",
-        "blob": "45a148c72ad24ff873b98d451da38d4e65919926"
+        "blob": "d713431e63d62cbfdddd8e196e7d7b4000a9d3b1"
       },
       "supabase/qualification/native-governed-host/README.md": {
         "path": "supabase/qualification/native-governed-host/README.md",
-        "blob": "3c34b83cf6ae3253fd2425a6367a3fa2507b6b36"
+        "blob": "a323c15282e168ef35bdbb5a8a3bc601d306daf9"
       },
       "tests/nativeGovernedHost.test.mjs": {
         "path": "tests/nativeGovernedHost.test.mjs",
-        "blob": "886cb8782ec8390d23398380b0aaf99fb15432e6"
+        "blob": "d3325ee764c41fb3d40613d9ec9fb708561b0a17"
       },
       ".github/workflows/qik-native-installer-held.yml": {
         "path": ".github/workflows/qik-native-installer-held.yml",
@@ -1450,7 +1455,48 @@
         "No hostedEdge isolation/runtime/capacity",
         "No hostedTLS/CA/pooler handshake",
         "No secureconfig/admission/install/activation"
-      ]
+      ],
+      "combined_history_probe": {
+        "harness": {
+          "path": "tests/historicalQikDenoRuntime.mjs",
+          "blob": "66eea36fee9ee43d412adcddbf023007f7242a94"
+        },
+        "fixture": {
+          "path": "tests/historicalQikExecutorPostgres17.test.mjs",
+          "blob": "3f71bc7d8dba77f3046cbe05afc3727d026ddf4f"
+        },
+        "documentation": {
+          "path": "supabase/qualification/historical-qik-executor/DENO_RUNTIME.md",
+          "blob": "944709e36d44900cb246d4786335c056a7bea2a8"
+        },
+        "scope": "Combined generated lock caches/checks native and historical entrypoints. Actual historical new Deno group is a separately bounded synthetic PostgreSQL profile proof; not hosted material access."
+      }
+    },
+    "atomic_cleanup_qualification": {
+      "api": {
+        "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
+        "blob": "b73fcfa4782bd56ec220a2744aa749e8f50830a7"
+      },
+      "unit": {
+        "path": "tests/qikComparisonAtomicInstall.test.mjs",
+        "blob": "b855762ad64da0234dc17849477891f21ae46b94"
+      },
+      "postgres": {
+        "path": "verifier/qikComparisonAtomicInstallPostgres17.mjs",
+        "blob": "00de8b575dca2c485e4ea6c75a615efb499b5e61"
+      },
+      "retained_fields": [
+        "connection_cleanup_verified",
+        "cleanup_diagnostic"
+      ],
+      "diagnostics": [
+        "atomic_cleanup_rollback_failed",
+        "atomic_connection_close_failed"
+      ],
+      "purpose": "Metadata-only operational consumer forbids state-only success/reinstallation. Awaited cleanup uncertainty preserves original state/identity/phase/diagnostic and forces needs_reconciliation/auditfalse. Verified cleanup never clears COMMIT ambiguity.",
+      "consumer": "Fixed metadata-only native-governed-host dispatch/success predicate and existing audit API prerequisite; no source material",
+      "tests": "NOT RUN at authorship; 12 unit groups and two independently pristine real PG17.6 profiles 240s each, actual end then static lost acknowledgement, exact receipt/rollback/recovery plus independent session baseline",
+      "installation_sql": "Unchanged selected original installation SQL, historical assertions and immutable evidence; additive API receipt fields only"
     }
   },
   "qualification_groups": {
@@ -2732,12 +2778,12 @@
       "unit_groups": 8,
       "pg_groups": 8,
       "ui_groups": 9,
-      "host_groups": 14,
+      "host_groups": 16,
       "edge_mock_groups": 7,
       "full_parent": "tests/nativeArcCohortPostgres17.test.mjs",
       "restricted_install": "tests/nativeGovernedInstallerPostgres17.test.mjs",
       "invocation": "Exact pinned existing synthetic combined workflow; all old modes plus actual NOSUPER v6/full012, separate main reader consumer and selected helper checks; no actual material",
-      "expected": "Default deny/direct/config/table and wrapper denial; exact successful DTO unchanged, live session/expiry/membership/broker/binding rejection; transaction locks and source currentness; revision exact retry/revocation; auth/selection races; strict nested/private identity/UTF8; no publication; exact final installed owners/role paths/ACL/RLS, rollback/ambiguity/reconcile/audit; cleanup failures fail Scoped admin wrapper actual effective identity/permissions, direct owner config denied; exact creation-time OID/grantor topology drift refused, post-commit principal exercise and independent restoration. Actual Deno runtime/npm driver is required (no skip), strict digest and session cleanup; no hosted TLS/Edge/Auth equivalence.",
+      "expected": "Default deny/direct/config/table and wrapper denial; exact successful DTO unchanged, live session/expiry/membership/broker/binding rejection; transaction locks and source currentness; revision exact retry/revocation; auth/selection races; strict nested/private identity/UTF8; no publication; exact final installed owners/role paths/ACL/RLS, rollback/ambiguity/reconcile/audit; cleanup failures fail Scoped admin wrapper actual effective identity/permissions, direct owner config denied; exact creation-time OID/grantor topology drift refused, post-commit principal exercise and independent restoration. Actual Deno runtime/npm driver is required (no skip), strict digest and session cleanup; no hosted TLS/Edge/Auth equivalence. Synthetic alternate grantor fixture adds ADMINfalse/INHERITfalse/SETfalse, proves two actual distinct grantor edges with original automatic ADMIN-only edge intact and no effective group USAGE/SET; exact fixed verifier must refuse, then full rollback catalog/current verification.",
       "cleanup": "Parent-owned synthetic Auth row deletion, client/child cleanup, immutable admission history until dedicated fixture database destruction; existing exact baseline role/schema/container/volume absence checks.",
       "fixture": "Complete real main012/current native binding/display/caller under original legacy root-staged C9 fixture; separate pristine v6 NOSUPER installation plus exact two-edge bootstrap/provision/revoke/drop/disabled restore. Actual Deno check nested in existing caller PG group2, synthetic Auth only. Existing browser controller mocks and Edge packaging mocks separately identified.",
       "deno_pg_probe": "Actual pinned Deno child in group2; synthetic Auth response, real SCRAM gateway/driver/SQL/readers, digest and independent session cleanup."

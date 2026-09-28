@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {createHash} from 'node:crypto'
-import {prepareAtomicInstall,validateAtomicConfig,DOJ_PATH,DOJ_SOURCE_COMMIT,sanitizeInstallDiagnostic,INSTALL_DIAGNOSTICS} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
+import {prepareAtomicInstall,validateAtomicConfig,DOJ_PATH,DOJ_SOURCE_COMMIT,sanitizeInstallDiagnostic,INSTALL_DIAGNOSTICS,finishAtomicConnection} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
 import {SOURCE_COMMIT,compileSource,NAME_MAPPING} from '../supabase/qualification/qik-comparison-adapter/compileSource.mjs'
 const root=new URL('../',import.meta.url)
 const reader=async(path,ref)=>{
@@ -81,4 +81,82 @@ test('diagnostics expose only static controlled codes and omit arbitrary error d
  for(const message of ['synthetic-secret','atomic_audit_column_acl: synthetic-secret','mip_native_final_chain_table_acl_untrusted: synthetic-secret','atomic_audit_unknown'])assert.equal(sanitizeInstallDiagnostic({message}),null)
  for(const value of [null,{},42,{message:42}])assert.equal(sanitizeInstallDiagnostic(value),null)
  assert.equal(Object.isFrozen(INSTALL_DIAGNOSTICS),true)
+})
+
+function pendingReceipt(state='installed_disabled_audit_pending',needsReconciliation=false){
+ return {state,operation_id:'2'.repeat(32),manifest_sha256:H,activation_allowed:false,
+  needs_reconciliation:needsReconciliation,audit_qualified:state==='installed_disabled_audit_qualified'}
+}
+test('cleanup completion preserves acknowledged transaction evidence and waits for close',async()=>{
+ const receipt=pendingReceipt(),calls=[]
+ let finishClose
+ const closing=new Promise(resolve=>{finishClose=resolve})
+ const pending=finishAtomicConnection({end:async()=>{calls.push('end');await closing}},receipt)
+ assert.deepEqual(calls,['end'])
+ assert.equal(receipt.connection_cleanup_verified,undefined)
+ finishClose();await pending
+ assert.equal(receipt.state,'installed_disabled_audit_pending')
+ assert.equal(receipt.needs_reconciliation,false)
+ assert.equal(receipt.connection_cleanup_verified,true)
+ assert.equal(receipt.cleanup_diagnostic,null)
+})
+test('close rejection or synchronous throw cannot hide committed installation or permit retry',async()=>{
+ for(const end of [
+  async()=>{throw Object.assign(Error('synthetic-credential'),{detail:'synthetic-material'})},
+  ()=>{throw Error('synthetic-credential')}
+ ]){
+  const receipt=pendingReceipt()
+  await finishAtomicConnection({end},receipt)
+  assert.equal(receipt.state,'installed_disabled_audit_pending')
+  assert.equal(receipt.needs_reconciliation,true)
+  assert.equal(receipt.connection_cleanup_verified,false)
+  assert.equal(receipt.cleanup_diagnostic,'atomic_connection_close_failed')
+  assert.doesNotMatch(JSON.stringify(receipt),/synthetic-credential|synthetic-material/)
+ }
+})
+test('cleanup preserves commit ambiguity and never issues rollback or replay for it',async()=>{
+ const calls=[],receipt=pendingReceipt('commit_ambiguous',true)
+ await finishAtomicConnection({query:async sql=>calls.push(sql),end:async()=>calls.push('end')},receipt)
+ assert.deepEqual(calls,['end'])
+ assert.equal(receipt.state,'commit_ambiguous')
+ assert.equal(receipt.needs_reconciliation,true)
+ assert.equal(receipt.connection_cleanup_verified,true)
+})
+test('reconciliation absence plus failed rollback remains unsafe even when close succeeds',async()=>{
+ const calls=[],receipt=pendingReceipt('not_installed')
+ await finishAtomicConnection({
+  query:async sql=>{calls.push(sql);throw Error('synthetic-credential')},
+  end:async()=>calls.push('end')
+ },receipt,true)
+ assert.deepEqual(calls,['rollback','end'])
+ assert.equal(receipt.state,'not_installed')
+ assert.equal(receipt.needs_reconciliation,true)
+ assert.equal(receipt.connection_cleanup_verified,false)
+ assert.equal(receipt.cleanup_diagnostic,'atomic_cleanup_rollback_failed')
+})
+test('both cleanup failures still attempt close once and expose only fixed diagnostics',async()=>{
+ const calls=[],receipt=pendingReceipt('installed_disabled_audit_qualified')
+ await finishAtomicConnection({
+  query:async sql=>{calls.push(sql);throw Error('synthetic-rollback-secret')},
+  end:async()=>{calls.push('end');throw Error('synthetic-close-secret')}
+ },receipt,true)
+ assert.deepEqual(calls,['rollback','end'])
+ assert.equal(receipt.state,'installed_disabled_audit_qualified')
+ assert.equal(receipt.audit_qualified,false)
+ assert.equal(receipt.needs_reconciliation,true)
+ assert.equal(receipt.connection_cleanup_verified,false)
+ assert.equal(receipt.cleanup_diagnostic,'atomic_connection_close_failed')
+ assert.doesNotMatch(JSON.stringify(receipt),/synthetic-/)
+})
+test('prior install rollback failure and missing connection never become verified cleanup',async()=>{
+ const refused=pendingReceipt('installation_refused')
+ await finishAtomicConnection({end:async()=>{}},refused,false,true)
+ assert.equal(refused.state,'installation_refused')
+ assert.equal(refused.needs_reconciliation,true)
+ assert.equal(refused.connection_cleanup_verified,false)
+ assert.equal(refused.cleanup_diagnostic,'atomic_cleanup_rollback_failed')
+ const unavailable=pendingReceipt('reconciliation_unavailable',true)
+ await finishAtomicConnection(null,unavailable,true)
+ assert.equal(unavailable.connection_cleanup_verified,false)
+ assert.equal(unavailable.needs_reconciliation,true)
 })

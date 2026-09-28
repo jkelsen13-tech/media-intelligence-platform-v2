@@ -290,6 +290,23 @@ function auditBoundarySQL(c){
 function safe(state,c,hash,extra={}){
  return {state,operation_id:c.operationId,manifest_sha256:hash,activation_allowed:false,...(c.nativeMode?{native_mode:c.nativeMode,native_program_sha256:c.expectedNativeProgramSha256}:{}),...extra}
 }
+// Internal lifecycle primitive, exported for synthetic close/rollback failure tests.
+// Mutate the pending receipt only after cleanup: finally awaits this before the
+// caller receives it. Transaction state remains evidence of the original outcome;
+// cleanup uncertainty never converts an acknowledged commit into a rollback.
+export async function finishAtomicConnection(db,result,rollback=false,rollbackFailed=false){
+ let cleanupDiagnostic=rollbackFailed?'atomic_cleanup_rollback_failed':null
+ if(db&&rollback)try{await db.query('rollback')}catch{cleanupDiagnostic='atomic_cleanup_rollback_failed'}
+ if(db)try{await db.end()}catch{cleanupDiagnostic='atomic_connection_close_failed'}
+ if(result){
+  result.connection_cleanup_verified=Boolean(db)&&cleanupDiagnostic===null
+  result.cleanup_diagnostic=cleanupDiagnostic
+  if(!result.connection_cleanup_verified){
+   result.needs_reconciliation=true
+   result.audit_qualified=false
+  }
+ }
+}
 // Only this authenticated entry point executes the prepared program. No raw SQL or
 // injectable verification callback is accepted. Caller source reader is blob-pinned.
 export async function installComparisonAtomic(config,readPinnedSource){
@@ -297,7 +314,7 @@ export async function installComparisonAtomic(config,readPinnedSource){
  if(plan.manifest_sha256!==c.expectedManifestSha256||(plan.native&&plan.native.program_sha256!==c.expectedNativeProgramSha256))refuse('manifest_mismatch')
  const db=await connectPersistentInstaller({connectionString:config.connectionString,
   expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
- let begun=false,commitAttempted=false,phase='begin'
+ let begun=false,commitAttempted=false,phase='begin',result=null,rollbackFailed=false
  try{
   await db.query('begin');begun=true
   await db.query("set local lock_timeout='5000ms'")
@@ -429,16 +446,16 @@ export async function installComparisonAtomic(config,readPinnedSource){
   phase='commit'
   commitAttempted=true
   await db.query('commit');begun=false
-  return safe('installed_disabled_audit_pending',c,plan.manifest_sha256,{needs_reconciliation:false,audit_qualified:false})
+  return result=safe('installed_disabled_audit_pending',c,plan.manifest_sha256,{needs_reconciliation:false,audit_qualified:false})
  }catch(error){
   let rollbackUnverified=false
-  if(begun&&!commitAttempted)try{await db.query('rollback')}catch{rollbackUnverified=Boolean(plan.native)}
+  if(begun&&!commitAttempted)try{await db.query('rollback')}catch{rollbackFailed=true;rollbackUnverified=Boolean(plan.native)}
   // Never send a replay or claim rollback once COMMIT may have reached the server.
-  return safe(commitAttempted?'commit_ambiguous':rollbackUnverified?'rollback_unverified':'installation_refused',c,plan.manifest_sha256,
+  return result=safe(commitAttempted?'commit_ambiguous':rollbackUnverified?'rollback_unverified':'installation_refused',c,plan.manifest_sha256,
    {needs_reconciliation:commitAttempted||rollbackUnverified,audit_qualified:false,phase,
     sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null,
     diagnostic:sanitizeInstallDiagnostic(error),...(plan.native?{native_failure:nativeInstallFailure(error)}:{})})
- }finally{await db.end().catch(()=>{})}
+ }finally{await finishAtomicConnection(db,result,false,rollbackFailed)}
 }
 export async function reconcileComparisonInstall(config,readPinnedSource){
  const c=validateAtomicConfig(config)
@@ -447,7 +464,7 @@ export async function reconcileComparisonInstall(config,readPinnedSource){
  if((c.nativeMode===NATIVE_BINDING_MODE||c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)&&typeof readPinnedSource!=='function')refuse('configuration')
  const plan=(c.nativeMode===NATIVE_BINDING_MODE||c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?await prepareAtomicInstall(readPinnedSource,{nativeMode:c.nativeMode}):null
  if(plan&&(plan.manifest_sha256!==c.expectedManifestSha256||plan.native.program_sha256!==c.expectedNativeProgramSha256))refuse('manifest_mismatch')
- let db=null,phase='connection'
+ let db=null,phase='connection',result=null
  try{
   db=await connectPersistentInstaller({connectionString:config.connectionString,
    expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
@@ -455,18 +472,18 @@ export async function reconcileComparisonInstall(config,readPinnedSource){
   phase='reconciliation_begin'
   await db.query('begin')
   const lock=(await db.query("select pg_try_advisory_xact_lock(hashtextextended('qik-comparison-atomic-v1',0)) acquired")).rows[0]
-  if(lock?.acquired!==true)return safe('reconciliation_inflight',c,c.expectedManifestSha256,{needs_reconciliation:true})
+  if(lock?.acquired!==true)return result=safe('reconciliation_inflight',c,c.expectedManifestSha256,{needs_reconciliation:true})
   phase='reconciliation_inventory'
   const exists=(await db.query("select to_regclass('mip_comparison_install.receipts') is not null present")).rows[0]
   if(!exists?.present){
    const remnants=(await db.query('select exists(select 1 from pg_namespace where nspname=any($1::text[])) or exists(select 1 from pg_roles where rolname=any($2::text[])) present',[[...schemas,RECEIPT_SCHEMA,...(c.nativeMode?['mip_mentions','mip_arc_qik_source','mip_arc_native','mip_nca_'+c.operationId,...(c.nativeMode!==NATIVE_MODE?['mip_arc_projection_private']:[]),...((c.nativeMode===NATIVE_BINDING_MODE||c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?['mip_native_comparison']:[]),...((c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?['mip_native_display']:[]),...(c.nativeMode===NATIVE_CALLER_MODE?['mip_native_caller']:[])]:[])],[...RESERVED_ROLES,c.creator,...(c.nativeMode?[...NATIVE_ROLES,'mip_nci_'+c.operationId]:[])]])).rows[0]
-   return safe(remnants?.present?'reconciliation_drift':'not_installed',c,c.expectedManifestSha256,{needs_reconciliation:remnants?.present!==false})
+   return result=safe(remnants?.present?'reconciliation_drift':'not_installed',c,c.expectedManifestSha256,{needs_reconciliation:remnants?.present!==false})
   }
   phase='reconciliation_receipt'
   const r=(await db.query('select operation_id,installer,manifest_sha256,c3_baseline_sha256,collector_source,audit_login,state from mip_comparison_install.receipts where operation_id=$1',[c.operationId])).rows[0]
   if(!r||r.installer!==c.expectedLogin||r.manifest_sha256!==c.expectedManifestSha256
    ||r.collector_source!==c.collectorSource||r.audit_login!==c.auditLogin||r.state!=='installed_disabled_audit_pending'
-   ||r.c3_baseline_sha256!==await c3(db,c))return safe('reconciliation_drift',c,c.expectedManifestSha256,{needs_reconciliation:true})
+   ||r.c3_baseline_sha256!==await c3(db,c))return result=safe('reconciliation_drift',c,c.expectedManifestSha256,{needs_reconciliation:true})
   phase='reconciliation_audit_boundary'
   await db.query(auditBoundarySQL(c))
   const hasNative=(await db.query("select to_regclass('mip_comparison_install.native_programs') is not null present")).rows[0].present
@@ -480,29 +497,29 @@ export async function reconcileComparisonInstall(config,readPinnedSource){
    else if(c.nativeMode===NATIVE_BINDING_MODE)await verifyNativeBindingCurrentBoundary(db,plan.native,c);
    else await assertNativeGovernedClosure(db,c)
   }
-  return safe('installed_disabled_audit_pending',c,c.expectedManifestSha256,{needs_reconciliation:false,audit_qualified:false})
- }catch(error){return safe('reconciliation_unavailable',c,c.expectedManifestSha256,{needs_reconciliation:true,phase,
+  return result=safe('installed_disabled_audit_pending',c,c.expectedManifestSha256,{needs_reconciliation:false,audit_qualified:false})
+ }catch(error){return result=safe('reconciliation_unavailable',c,c.expectedManifestSha256,{needs_reconciliation:true,phase,
   sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null,diagnostic:sanitizeInstallDiagnostic(error),...(plan?{native_failure:nativeInstallFailure(error)}:{})})}
- finally{if(db){await db.query('rollback').catch(()=>{});await db.end().catch(()=>{})}}
+ finally{await finishAtomicConnection(db,result,true)}
 }
 
 export async function qualifyComparisonAudit(config,readPinnedSource){
  const c=validateAtomicConfig(config)
  const observed=await reconcileComparisonInstall(config,readPinnedSource)
- if(observed.state!=='installed_disabled_audit_pending')return observed
- let db=null,phase='connection'
+ if(observed.state!=='installed_disabled_audit_pending'||observed.needs_reconciliation!==false||observed.connection_cleanup_verified!==true)return observed
+ let db=null,phase='connection',result=null
  try{
   db=await connectPersistentInstaller({connectionString:config.connectionString,
    expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
   phase='audit_begin'
   await db.query('begin')
   const locked=(await db.query("select pg_try_advisory_xact_lock(hashtextextended('qik-comparison-audit-v1',0)) acquired")).rows[0]
-  if(locked?.acquired!==true)return safe('audit_qualification_inflight',c,c.expectedManifestSha256,{needs_reconciliation:true})
+  if(locked?.acquired!==true)return result=safe('audit_qualification_inflight',c,c.expectedManifestSha256,{needs_reconciliation:true})
   phase='audit_existing_receipt'
   const already=(await db.query('select manifest_sha256 from mip_comparison_install.audit_qualifications where operation_id=$1',[c.operationId])).rows[0]
   if(already){
    if(already.manifest_sha256!==c.expectedManifestSha256)refuse('audit_receipt_drift')
-   return safe('installed_disabled_audit_qualified',c,c.expectedManifestSha256,{needs_reconciliation:false,audit_qualified:true})
+   return result=safe('installed_disabled_audit_qualified',c,c.expectedManifestSha256,{needs_reconciliation:false,audit_qualified:true})
   }
   phase='audit_write_probe'
   const written=(await db.query('select mip_comparison_install.audit_probe(true) verified')).rows[0]
@@ -522,9 +539,9 @@ export async function qualifyComparisonAudit(config,readPinnedSource){
   await db.query('insert into mip_comparison_install.audit_qualifications(operation_id,manifest_sha256) values($1,$2) on conflict(operation_id) do nothing',[c.operationId,c.expectedManifestSha256])
   phase='audit_qualification_commit'
   await db.query('commit')
-  return safe('installed_disabled_audit_qualified',c,c.expectedManifestSha256,{needs_reconciliation:false,audit_qualified:true})
+  return result=safe('installed_disabled_audit_qualified',c,c.expectedManifestSha256,{needs_reconciliation:false,audit_qualified:true})
  }catch(error){
-  return safe('installed_disabled_audit_unresolved',c,c.expectedManifestSha256,{needs_reconciliation:true,audit_qualified:false,phase,
+  return result=safe('installed_disabled_audit_unresolved',c,c.expectedManifestSha256,{needs_reconciliation:true,audit_qualified:false,phase,
    sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null,diagnostic:sanitizeInstallDiagnostic(error)})
- }finally{if(db){await db.query('rollback').catch(()=>{});await db.end().catch(()=>{})}}
+ }finally{await finishAtomicConnection(db,result,true)}
 }

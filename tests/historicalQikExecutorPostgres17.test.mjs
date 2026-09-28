@@ -1,7 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { randomBytes, randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID, createHash } from 'node:crypto'
+import { spawn } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
+import { planHistoricalTransferUnits } from '../scripts/mipHistoricalArticleTransfer.mjs'
 import pg from 'pg'
 import { createQikHistoricalExecutor } from '../supabase/qualification/historical-qik-executor/executor.mjs'
 import { prepareClosedHistoricalInstall, installClosedHistoricalInTransaction } from '../supabase/qualification/historical-qik-executor/install.mjs'
@@ -49,6 +52,94 @@ async function insert(db,table,values) {
  const columns=Object.keys(values)
  return db.query({text:'insert into public.'+qi(table)+'('+columns.map(qi).join(',')+') values ('+
    columns.map((_,i)=>'$'+(i+1)).join(',')+')',values:columns.map(k=>values[k])})
+}
+
+async function assertHistoricalDeno({executor,control,operation,manifestHash}) {
+  const binary=process.env.DENO_BINARY,cache=process.env.DENO_DIR
+  if(!armed||typeof binary!=='string'||!binary.startsWith('/')||typeof cache!=='string'||!cache.startsWith('/'))
+    throw Error('historical_deno_missing_runtime')
+  const parameters=executor.raw.connectionParameters
+  if(parameters.host!=='127.0.0.1'||Number(parameters.port)!==5432||
+    !/^mip_hist_qik_[a-f0-9]{12}$/.test(parameters.database)||
+    parameters.user!=='mip_history_executor'||parameters.password!==fixtureRolePassword)
+    throw Error('historical_deno_connection_refused')
+  const url=new URL('postgresql://127.0.0.1:5432/'+parameters.database)
+  url.username=parameters.user;url.password=parameters.password
+  const root=fileURLToPath(new URL('..',import.meta.url))
+  // Reuse the qualified imports-only configuration and combined generated lock.
+  const config=fileURLToPath(new URL('../supabase/functions/native-comparison-display/deno.json',import.meta.url))
+  const lock=fileURLToPath(new URL('../supabase/functions/native-comparison-display/deno.lock',import.meta.url))
+  const harness=fileURLToPath(new URL('./historicalQikDenoRuntime.mjs',import.meta.url))
+  const count=async()=>Number((await control.query({text:"select count(*)::int n from pg_stat_activity where datname=$1 and usename='mip_history_executor' and application_name='mip_historical_deno_synthetic'",values:[parameters.database]})).rows[0].n)
+  const baseline=await count()
+  const payloadSql="select ordinal::text ordinal,octet_length(body)::int bytes,encode(sha256(body),'hex') sha256,record_meta->>'payload_sha256' expected_sha256,(record_meta->>'payload_bytes')::int expected_bytes from mip_history.payload where operation_id=$1 order by ordinal"
+  const initial=(await control.query({text:payloadSql,values:[operation]})).rows
+  const digest=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex')
+  const manifest=(await control.query({text:'select manifest_text,manifest_sha256 from mip_history.export where operation_id=$1',values:[operation]})).rows[0]
+  const expectedUnits=planHistoricalTransferUnits(JSON.parse(manifest.manifest_text),limits)
+  assert.ok(manifest.manifest_sha256===manifestHash&&expectedUnits.length>1&&expectedUnits.length<=101)
+  assert.equal((await control.query({text:'select count(*)::int n from mip_history.unit where operation_id=$1',values:[operation]})).rows[0].n,0)
+  let primary=null,stage='spawn'
+  try {
+    const result=await new Promise((resolve,reject)=>{
+      const child=spawn(binary,['run','--cached-only','--frozen','--lock='+lock,'--config='+config,
+        '--node-modules-dir=none','--no-prompt','--allow-read='+root+','+cache,
+        '--allow-env','--allow-net=127.0.0.1:5432',harness],{
+        cwd:root,env:{PATH:process.env.PATH??'',DENO_DIR:cache,DENO_NO_UPDATE_CHECK:'1',NO_COLOR:'1',
+          MIP_HISTORICAL_EXECUTOR_DISPOSABLE:'synthetic-pg17-only'},stdio:['pipe','pipe','pipe']})
+      let output='',stderrBytes=0,failed=false,settled=false
+      const refuse=()=>{failed=true;child.kill('SIGKILL')}
+      const timer=setTimeout(refuse,30000)
+      child.stdout.on('data',chunk=>{output+=chunk.toString('utf8');if(Buffer.byteLength(output)>2048)refuse()})
+      child.stderr.on('data',chunk=>{stderrBytes+=chunk.length;if(stderrBytes>65536)refuse()})
+      child.stdin.on('error',()=>{failed=true})
+      child.on('error',()=>{if(settled)return;settled=true;clearTimeout(timer);reject(Error('historical_deno_spawn_failed'))})
+      child.on('close',code=>{
+        if(settled)return;settled=true;clearTimeout(timer)
+        if(failed||code!==0){reject(Error('historical_deno_runtime_failed'));return}
+        try{resolve(JSON.parse(output))}catch{reject(Error('historical_deno_receipt_failed'))}
+      })
+      // Synthetic fixture SCRAM password travels only through bounded stdin.
+      child.stdin.end(JSON.stringify({syntheticFixture:true,connectionString:url.href,
+        operation_id:operation,manifest_sha256:manifestHash}))
+    })
+    stage='receipt'
+    const keys=['status','deno','node_globals','pg_import','first_verified','finished_verified','retry_verified',
+      'body_queries','manifest_sha256','payload_sha256','records','payload_bytes','units','checkpoint_sha256',
+      'connection_closed','public_processing_authorized']
+    assert.ok(result&&Object.keys(result).sort().join(',')===keys.sort().join(','))
+    assert.ok(result.status==='passed'&&result.deno==='2.5.2'&&result.node_globals===true&&result.pg_import===true)
+    assert.ok(result.first_verified===1&&result.finished_verified===expectedUnits.length-1&&result.retry_verified===0)
+    assert.ok(Number.isSafeInteger(result.body_queries)&&result.body_queries>=6&&result.body_queries<=10000)
+    assert.ok(result.manifest_sha256===manifestHash&&result.payload_sha256===digest(initial))
+    assert.ok(result.records===initial.length&&result.payload_bytes===initial.reduce((n,r)=>n+r.bytes,0))
+    assert.ok(result.units===expectedUnits.length&&result.connection_closed===true&&result.public_processing_authorized===false)
+    stage='independent_readback'
+    const after=(await control.query({text:payloadSql,values:[operation]})).rows
+    assert.ok(digest(after)===digest(initial)&&after.every(r=>r.sha256===r.expected_sha256&&r.bytes===r.expected_bytes))
+    const units=(await control.query({text:'select unit_id,unit_sha256,manifest_sha256 from mip_history.unit where operation_id=$1 order by unit_id',values:[operation]})).rows
+    assert.ok(units.length===expectedUnits.length)
+    for(const expected of expectedUnits) {
+      const matching=units.filter(u=>u.unit_id===expected.unit_id&&u.unit_sha256===expected.unit_sha256&&u.manifest_sha256===manifestHash)
+      assert.ok(matching.length===1)
+    }
+    const checkpoint=(await control.query({text:'select value from mip_history.checkpoint where operation_id=$1',values:[operation]})).rows[0]?.value
+    assert.ok(checkpoint?.sha256===result.checkpoint_sha256&&checkpoint.verified_units.length===expectedUnits.length)
+  } catch {
+    primary=Error('historical_deno_'+stage+'_failed')
+  }
+  // Independently observe actual session cleanup, including a killed child.
+  let restored=false,cleanup=null
+  try {
+    for(let i=0;i<100;i++){
+      if(await count()===baseline){restored=true;break}
+      await new Promise(resolve=>setTimeout(resolve,10))
+    }
+    if(!restored)cleanup=Error('historical_deno_connection_cleanup_failed')
+  } catch {cleanup=Error('historical_deno_connection_cleanup_unobserved')}
+  if(primary&&cleanup)throw new AggregateError([primary,cleanup],'historical_deno_and_cleanup_failed')
+  if(cleanup)throw cleanup
+  if(primary)throw primary
 }
 
 test('historical executor PG17.6 '+(closedProfile?'closed transport ordinary installer':'bootstrap extensions fixture')+', acquisition and custody',
@@ -456,6 +547,14 @@ test('historical executor PG17.6 '+(closedProfile?'closed transport ordinary ins
         await adapter.acquire(failed)
         await assert.rejects(()=>adapter.seal(failed,{manifest_limits:limits}))
       } finally {await sources[PROJECTS.nie].query('delete from public.articles_decode_backup_20260726 where id is null')}
+    })
+    await t.test('pinned Deno performs real first-pass custody and exact retry through npm pg',async()=>{
+      const denoOperation=randomUUID()
+      assert.equal((await adapter.acquire(denoOperation)).state,'acquired')
+      const sealed=await adapter.seal(denoOperation,{manifest_limits:limits})
+      assert.equal(sealed.state,'sealed')
+      await assertHistoricalDeno({executor,control:qik,operation:denoOperation,manifestHash:sealed.manifest_sha256})
+      assert.deepEqual((await qik.query('select * from public.publication_sentinel')).rows,[{id:1,state:'unchanged'}])
     })
   } finally {
     // Ownership-recorded teardown only. Never accept a user-provided database or

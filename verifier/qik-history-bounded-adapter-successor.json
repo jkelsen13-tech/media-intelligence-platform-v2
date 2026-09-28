@@ -20,7 +20,7 @@
     "supabase/qualification/historical-qik-executor/contracts.mjs": "6277ff14cf9009e7bca8b77e9824e4cfb51c1542",
     "supabase/qualification/historical-qik-executor/README.md": "573f1564dca5894f4c59523a5b4e5f09d6ef27b2",
     "tests/historicalQikExecutor.mjs": "bb80465876c7c7c62dd261da260079244445ffa9",
-    "tests/historicalQikExecutorPostgres17.test.mjs": "150b59cf3a5680fd991c7f33840aa8f89cfe02a1",
+    "tests/historicalQikExecutorPostgres17.test.mjs": "3f71bc7d8dba77f3046cbe05afc3727d026ddf4f",
     "supabase/qualification/historical-qik-executor/install.mjs": "d4c72b5e2ff50ce19d46de9c6911135fc0216f48",
     "supabase/qualification/historical-qik-executor/handler.mjs": "d00b3d331e161f0fb269ed26b173d5c7bcc3cb29",
     "supabase/qualification/historical-qik-executor/index.ts": "ebebe21f4bf2eed94070e71d0a8a4e8a4986bbb2",
@@ -28,7 +28,11 @@
     "supabase/qualification/historical-qik-executor/config.toml": "e5fe571d97c7f75ed0ae5679013d373817870f47",
     "tests/historicalQikExecutorHandler.test.mjs": "f1780203995e5efc6b65aa86beb87d4946e5eaa4",
     "scripts/mipHistoricalArticleTransferPlan.mjs": "ad30cb603757888840e737694b333c3b6ae234e1",
-    "scripts/mipHistoricalArticleTransfer.mjs": "b5b80ee37c6cd068d17f59b506bab6df70839ea6"
+    "scripts/mipHistoricalArticleTransfer.mjs": "b5b80ee37c6cd068d17f59b506bab6df70839ea6",
+    "tests/historicalQikDenoRuntime.mjs": "66eea36fee9ee43d412adcddbf023007f7242a94",
+    "supabase/qualification/historical-qik-executor/DENO_RUNTIME.md": "944709e36d44900cb246d4786335c056a7bea2a8",
+    "supabase/functions/native-comparison-display/deno.json": "9126bd3e8ddc618bfbdc8239f14c84295ed662af",
+    "tests/nativeComparisonDenoRuntimePin.json": "82305814e17a4fa749c6e7a4c5ea2ba284045722"
   },
   "policy": {
     "projects": {
@@ -138,7 +142,8 @@
       "tests/historicalQikExecutorHandler.test.mjs",
       "tests/historicalQikExecutorPostgres17.test.mjs",
       "tests/mipHistoricalArticleTransferPlan.test.mjs",
-      "tests/mipHistoricalArticleTransfer.test.mjs"
+      "tests/mipHistoricalArticleTransfer.test.mjs",
+      "tests/historicalQikDenoRuntime.mjs"
     ],
     "invocations": [
       "node --test tests/historicalQikExecutor.mjs tests/historicalQikExecutorHandler.test.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs",
@@ -153,9 +158,30 @@
       "Actual PG lost canonical write acknowledgment resumes exact original ordinal without completed body reread",
       "Actual source REPEATABLE READ membership gate, role/transport/schema/ACL/RLS/TOCTOU/permission refusals in both profiles",
       "Exact no enqueue/publication/overwrite/payload receipt copies",
-      "No skipped checks; any primary/cleanup failure refuses qualification"
+      "No skipped checks; any primary/cleanup failure refuses qualification",
+      "Actual pinned Deno2.5.2 real npm pg/unchanged engine first-unit completion and exact retry against restricted SCRAM fixture; parent independent original-byte hash/length/unit/checkpoint/session cleanup verification. Synthetic Auth/loopback only; no hosted Edge/TLS/capacity or real transfer claim."
     ],
-    "cleanup": "Independently close owned PG connections, roll back mutations, restore fixture role/schema/custody baseline and destroy only owned loopback container/volumes with absence assertion; no production originals deleted"
+    "cleanup": "Independently close owned PG connections, roll back mutations, restore fixture role/schema/custody baseline and destroy only owned loopback container/volumes with absence assertion; no production originals deleted",
+    "predecessor_receipt": {
+      "candidate": "d0954f00a49beba0146de843b9a2543cb6fe3f81",
+      "tree": "0d65c5feee974c0222186283099c165cae5f708e",
+      "run": 36445849149,
+      "job": 109007835027,
+      "pass": 81,
+      "fail": 0,
+      "skipped": 0,
+      "cleanup": "success",
+      "scope": "Unchanged bounded adapter Node and both actual synthetic PostgreSQL profiles only; new Deno group NOT RUN."
+    },
+    "deno": {
+      "status": "NOT RUN",
+      "runtime": "2.5.2",
+      "config": "supabase/functions/native-comparison-display/deno.json",
+      "generated_lock": "supabase/functions/native-comparison-display/deno.lock",
+      "required_closure": "Parent-generated actual combined native + historical entrypoints; vendor archive and checksum pinned; exact captured source lock then frozen-only recheck. Missing binary/cache/lock fails, no skip.",
+      "profiles": "Both bootstrap and closed-ordinary",
+      "limits": "30s child, synthetic-only bounded stdin, only loopback5432 network, read repo/cache, clean env, no write/run/FFI, sanitized fixed digest receipt; actual source acquisition/seal remains Node."
+    }
   },
   "uncertainty": [
     "No configured secure source/destination/invoker bindings observed",
@@ -168,10 +194,5 @@
   "qualified": false,
   "installed": false,
   "real_batch_verified": false,
-  "transfer_complete": false,
-  "immediate_base": {
-    "candidate": "48770da57716ffe1854a1a68ebfb631a6f6e4cbe",
-    "tree": "1176457a4f7b9e28eea0d7906f3a64403707da51",
-    "main_qualification": "New combined result pending; no main installation claim"
-  }
+  "transfer_complete": false
 }

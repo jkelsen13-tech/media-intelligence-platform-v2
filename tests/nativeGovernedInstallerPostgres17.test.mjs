@@ -512,7 +512,15 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
    assert.notEqual(alternate,grant[0].grantor)
    await root.query('begin')
    try{
-    await root.query('grant mip_mentions_gateway to '+ident(backendInstaller)+' with admin true,inherit false,set false granted by '+ident(alternate))
+    // PG17 forbids granting ADMIN back through the grantor's own chain.
+    // This alternate grant conveys no ADMIN, inherited privileges or SET path;
+    // the original automatic ADMIN-only edge remains untouched.
+    await root.query('grant mip_mentions_gateway to '+ident(backendInstaller)+' with admin false,inherit false,set false granted by '+ident(alternate))
+    const observed=(await root.query("select g.rolname grantor,a.admin_option,a.inherit_option,a.set_option from pg_auth_members a join pg_roles g on g.oid=a.grantor where a.roleid='mip_mentions_gateway'::regrole and a.member=$1::regrole order by g.rolname",[backendInstaller])).rows
+    assert.equal(observed.length,2)
+    assert.deepEqual(observed.find(e=>e.grantor===grant[0].grantor),{grantor:grant[0].grantor,admin_option:true,inherit_option:false,set_option:false})
+    assert.deepEqual(observed.find(e=>e.grantor===alternate),{grantor:alternate,admin_option:false,inherit_option:false,set_option:false})
+    assert.equal((await root.query("select pg_has_role($1,'mip_mentions_gateway','USAGE') or pg_has_role($1,'mip_mentions_gateway','SET') expanded",[backendInstaller])).rows[0].expanded,false)
     assert.notDeepEqual(await edgeCatalog(root),baseline)
     await assert.rejects(root.query('select mip_comparison_install.native_boundary_v6()'),e=>e.code==='P0001')
    }finally{await root.query('rollback')}

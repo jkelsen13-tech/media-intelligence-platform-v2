@@ -6,7 +6,7 @@ import {promisify} from 'node:util'
 import {BASE,MODE,CA_SHA256,validateHostConfig,verifySourceBlob,dispatchHostAction,actionSatisfied} from './adapter.mjs'
 const exec=promisify(execFile)
 const CODE_PINS=Object.freeze({
-  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "a97cd41a30216ad6561fc21088099c1bf75e2afd",
+  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "b73fcfa4782bd56ec220a2744aa749e8f50830a7",
   "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs": "a591c92b10d174bd2937e9634f8d491b4c34567b",
   "supabase/qualification/qik-comparison-adapter/compileSource.mjs": "cd87eb0a0bc758315246e74675339f3ea2972a19",
   "supabase/qualification/native-governed-install/install.mjs": "c56aa3e050fdb9342ef90dc71dca44f2810782ea",

@@ -39,6 +39,45 @@ async function loseAcknowledgement(command,body){
   return result
  }finally{pg.Client.prototype.query=original}
 }
+// Armed disposable-only close acknowledgement fault. The real pg close runs
+// first; no live SQL, alternate connection factory or production hook is added.
+async function loseCloseAcknowledgement(body,targetClose=1){
+ assert.equal(process.env.MIP_QIK_COMPARISON_DISPOSABLE,'synthetic-pg17-only')
+ assert.equal(process.env.MIP_DISPOSABLE_POSTGRES,'qik-persistent-install')
+ const original=pg.Client.prototype.end
+ let closes=0,losses=0
+ pg.Client.prototype.end=async function(...args){
+  const selected=this.connectionParameters.application_name==='mip-c3-persistent-install-source'
+   &&this.connectionParameters.user===installer&&this.connectionParameters.host==='127.0.0.1'
+   &&this.connectionParameters.database==='postgres'
+  await original.apply(this,args)
+  if(selected&&++closes===targetClose){
+   losses++
+   throw Error('synthetic close acknowledgement discarded')
+  }
+ }
+ try{
+  const result=await body()
+  assert.equal(losses,1,'expected exactly one synthetic close acknowledgement loss')
+  assert.equal(closes,targetClose,'unexpected extra installer connection after cleanup refusal')
+  return result
+ }finally{pg.Client.prototype.end=original}
+}
+async function withoutInstallerSessionLeak(observer,body){
+ const sessions=async()=>Number((await observer.query(
+  "select count(*)::integer n from pg_stat_activity where datname='postgres' and usename=$1 and application_name='mip-c3-persistent-install-source'",[installer])).rows[0].n)
+ const baseline=await sessions()
+ assert.equal(baseline,0,'fixture starts without installer API sessions')
+ try{return await body()}
+ finally{
+  let current=await sessions()
+  for(let attempt=0;current!==baseline&&attempt<40;attempt++){
+   await new Promise(resolve=>setTimeout(resolve,25))
+   current=await sessions()
+  }
+  assert.equal(current,baseline,'installer API session cleanup did not restore baseline')
+ }
+}
 async function injectPrivateUnitDrift(sql,body){
  const original=pg.Client.prototype.query
  let injected=false
@@ -123,7 +162,8 @@ function safeDiagnostic(receipt){
  return JSON.stringify({state,phase,sqlstate,diagnostic})
 }
 const ident=s=>'"'+s.replaceAll('"','""')+'"'
-test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and audit recovery',{timeout:240000},async()=>{
+for(const commitProfile of ['lost_commit_acknowledgement','lost_close_acknowledgement'])
+test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and audit recovery: '+commitProfile,{timeout:240000,concurrency:false},async()=>{
  assert.equal(process.env.MIP_QIK_COMPARISON_DISPOSABLE,'synthetic-pg17-only')
  assert.equal(process.env.MIP_DISPOSABLE_POSTGRES,'qik-persistent-install')
  let owner=await client('postgres'),admin=null
@@ -212,6 +252,16 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
    c3OperationId:'3'.repeat(32),c3ManifestSha256:H,expectedManifestSha256:plan.manifest_sha256,
    dblinkMetadataSha256:dblink.metadata_sha256,collectorSource:'qik-fixture-v1',
    auditLogin:audit,auditConnectionString:url(audit),disposable:true}
+  const absent=await withoutInstallerSessionLeak(admin,()=>loseCloseAcknowledgement(()=>reconcileComparisonInstall(cfg)))
+  assert.equal(absent.state,'not_installed',safeDiagnostic(absent))
+  assert.equal(absent.needs_reconciliation,true)
+  assert.equal(absent.connection_cleanup_verified,false)
+  assert.equal(absent.cleanup_diagnostic,'atomic_connection_close_failed')
+  const cleanAbsent=await withoutInstallerSessionLeak(admin,()=>reconcileComparisonInstall(cfg))
+  assert.equal(cleanAbsent.state,'not_installed')
+  assert.equal(cleanAbsent.needs_reconciliation,false)
+  assert.equal(cleanAbsent.connection_cleanup_verified,true)
+  assert.equal(cleanAbsent.cleanup_diagnostic,null)
   for(const threshold of [500,1000]){
    await admin.query("alter database postgres set auto_explain.log_min_duration='"+threshold+"'")
    const refused=await credentialWindow(null,()=>installComparisonAtomic(cfg,async p=>read(p)))
@@ -286,7 +336,9 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   await admin.query("insert into public.explanations(id,assertion_id,version,is_current) values('00000000-0000-4000-8000-000000000001','synthetic-duplicate',1,true),('00000000-0000-4000-8000-000000000002','synthetic-duplicate',1,true)")
   const failed=await loseAcknowledgement('rollback',()=>installComparisonAtomic(cfg,async p=>read(p)))
   assert.equal(failed.state,'installation_refused',safeDiagnostic(failed))
-  assert.equal(failed.needs_reconciliation,false,safeDiagnostic(failed))
+  assert.equal(failed.needs_reconciliation,true,safeDiagnostic(failed))
+  assert.equal(failed.connection_cleanup_verified,false)
+  assert.equal(failed.cleanup_diagnostic,'atomic_cleanup_rollback_failed')
   assert.equal(failed.phase,'source:supabase/qualification/mip-cutover-authority/009_factual_enforcement.sql',safeDiagnostic(failed))
   assert.equal(failed.sqlstate,'23505',safeDiagnostic(failed))
   assert.equal((await admin.query('select count(*)::integer n from pg_roles where rolname=any($1::text[])',[[...RESERVED_ROLES,'mip_tmp_'+cfg.operationId]])).rows[0].n,0)
@@ -294,15 +346,37 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   assert.equal((await admin.query("select n.nspname from pg_extension e join pg_namespace n on n.oid=e.extnamespace where e.extname='dblink'")).rows[0].nspname,'extensions')
   assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
   await admin.query('delete from public.explanations')
-  const window=await credentialWindow(null,()=>loseAcknowledgement('commit',()=>installComparisonAtomic(cfg,async p=>read(p))))
+  const window=await credentialWindow(null,()=>withoutInstallerSessionLeak(admin,()=>commitProfile==='lost_commit_acknowledgement'
+   ?loseAcknowledgement('commit',()=>installComparisonAtomic(cfg,async p=>read(p)))
+   :loseCloseAcknowledgement(()=>installComparisonAtomic(cfg,async p=>read(p)))))
   const installed=window.receipt
   assert.deepEqual(window.seen,{bounded:'1000',restored:'30000',rollback:null,calls:1})
-  assert.equal(installed.state,'commit_ambiguous',safeDiagnostic(installed))
+  assert.equal(installed.state,commitProfile==='lost_commit_acknowledgement'?'commit_ambiguous':'installed_disabled_audit_pending',safeDiagnostic(installed))
   assert.equal(installed.needs_reconciliation,true,safeDiagnostic(installed))
-  assert.equal(installed.phase,'commit',safeDiagnostic(installed))
-  assert.equal(installed.sqlstate,'08006',safeDiagnostic(installed))
+  if(commitProfile==='lost_commit_acknowledgement'){
+   assert.equal(installed.phase,'commit',safeDiagnostic(installed))
+   assert.equal(installed.sqlstate,'08006',safeDiagnostic(installed))
+   assert.equal(installed.connection_cleanup_verified,true)
+   assert.equal(installed.cleanup_diagnostic,null)
+  }else{
+   assert.equal(installed.connection_cleanup_verified,false)
+   assert.equal(installed.cleanup_diagnostic,'atomic_connection_close_failed')
+   assert.equal(installed.audit_qualified,false)
+   assert.equal(installed.phase,undefined)
+   assert.equal(installed.sqlstate,undefined)
+  }
   assert.equal(installed.activation_allowed,false)
-  assert.equal((await reconcileComparisonInstall(cfg)).state,'installed_disabled_audit_pending')
+  const reconciled=await withoutInstallerSessionLeak(admin,()=>reconcileComparisonInstall(cfg))
+  assert.equal(reconciled.state,'installed_disabled_audit_pending')
+  assert.equal(reconciled.needs_reconciliation,false)
+  assert.equal(reconciled.connection_cleanup_verified,true)
+  assert.equal(reconciled.cleanup_diagnostic,null)
+  const stoppedAudit=await withoutInstallerSessionLeak(admin,()=>loseCloseAcknowledgement(()=>qualifyComparisonAudit(cfg)))
+  assert.equal(stoppedAudit.state,'installed_disabled_audit_pending')
+  assert.equal(stoppedAudit.needs_reconciliation,true)
+  assert.equal(stoppedAudit.audit_qualified,false)
+  assert.equal(stoppedAudit.connection_cleanup_verified,false)
+  assert.equal((await admin.query('select count(*)::integer n from mip_comparison_install.audit_qualifications')).rows[0].n,0)
   const inspector=await client(installer)
   try{
    for(const name of plan.catalog_inspection_schemas){
@@ -325,7 +399,18 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
    await assert.rejects(denied.query("select mip_factual_transport.dblink_exec('unused','select 1')"),e=>e.code==='42501')
    await assert.rejects(denied.query('select mip_comparison_install.audit_probe(false)'),e=>e.code==='42501')
   }finally{await denied.end()}
-  const auditResult=await qualifyComparisonAudit(cfg)
+  const unresolvedClose=await withoutInstallerSessionLeak(admin,()=>loseCloseAcknowledgement(()=>qualifyComparisonAudit(cfg),2))
+  assert.equal(unresolvedClose.state,'installed_disabled_audit_qualified',safeDiagnostic(unresolvedClose))
+  assert.equal(unresolvedClose.needs_reconciliation,true)
+  assert.equal(unresolvedClose.audit_qualified,false)
+  assert.equal(unresolvedClose.connection_cleanup_verified,false)
+  assert.equal(unresolvedClose.cleanup_diagnostic,'atomic_connection_close_failed')
+  assert.equal((await admin.query('select count(*)::integer n from mip_comparison_install.audit_qualifications')).rows[0].n,1)
+  const auditResult=await withoutInstallerSessionLeak(admin,()=>qualifyComparisonAudit(cfg))
+  assert.equal(auditResult.needs_reconciliation,false)
+  assert.equal(auditResult.audit_qualified,true)
+  assert.equal(auditResult.connection_cleanup_verified,true)
+  assert.equal(auditResult.cleanup_diagnostic,null)
   assert.equal(auditResult.state,'installed_disabled_audit_qualified',safeDiagnostic(auditResult))
   assert.equal(auditResult.activation_allowed,false)
   assert.equal((await qualifyComparisonAudit(cfg)).state,'installed_disabled_audit_qualified')

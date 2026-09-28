@@ -43,22 +43,28 @@ export function verifySourceBlob(bytes,expected){
   throw Error('native_host_source_refused')
  return b
 }
-function receipt(state,c,needs,diagnostic=null){
+function receipt(state,c,needs,diagnostic=null,cleanup=false){
  return {contract:'native-governed-host-receipt-v1',state,operation_id:c.operationId,
   release_sha:c.releaseSha,manifest_sha256:c.expectedManifestSha256,native_mode:MODE,
   native_program_sha256:c.expectedNativeProgramSha256,needs_reconciliation:needs,
-  audit_qualified:state==='installed_disabled_audit_qualified',activation_allowed:false,
-  publication_allowed:false,material_access_allowed:false,connection_cleanup_verified:false,diagnostic}
+  audit_qualified:state==='installed_disabled_audit_qualified'&&cleanup&&needs===false,activation_allowed:false,
+  publication_allowed:false,material_access_allowed:false,connection_cleanup_verified:cleanup,diagnostic}
 }
 export function sanitizeApiResult(r,c){
  if(!r||!states.has(r.state)||r.operation_id!==c.operationId||r.manifest_sha256!==c.expectedManifestSha256
   ||r.native_mode!==MODE||r.native_program_sha256!==c.expectedNativeProgramSha256||r.activation_allowed!==false
-  ||typeof r.needs_reconciliation!=='boolean')return receipt('outcome_unknown',c,true,'native_host_receipt_refused')
+  ||typeof r.needs_reconciliation!=='boolean'||typeof r.connection_cleanup_verified!=='boolean')
+  return receipt('outcome_unknown',c,true,'native_host_receipt_refused')
+ const cleanup=r.connection_cleanup_verified===true
+ if(cleanup&&r.cleanup_diagnostic!==null)return receipt('outcome_unknown',c,true,'native_host_receipt_refused')
  const success=['not_installed','installed_disabled_audit_pending','installed_disabled_audit_qualified'].includes(r.state)
- if(success&&r.needs_reconciliation)return receipt('outcome_unknown',c,true,'native_host_receipt_refused')
- if(r.state==='installed_disabled_audit_qualified'&&r.audit_qualified!==true)return receipt('outcome_unknown',c,true,'native_host_receipt_refused')
- // Never forward arbitrary API fields, error messages, phase strings or nested diagnostics.
- return receipt(r.state,c,success?false:true)
+ if(cleanup&&success&&r.needs_reconciliation)return receipt('outcome_unknown',c,true,'native_host_receipt_refused')
+ if(cleanup&&r.state==='installed_disabled_audit_qualified'&&r.audit_qualified!==true)
+  return receipt('outcome_unknown',c,true,'native_host_receipt_refused')
+ // Preserve acknowledged transaction state; cleanup uncertainty cannot authorize
+ // success, installation replay or audit. Never forward raw API diagnostics.
+ return receipt(r.state,c,cleanup?r.needs_reconciliation:true,
+  cleanup?null:'native_host_cleanup_unverified',cleanup)
 }
 // Internal orchestration seam for source tests, not a runtime option or SQL callback.
 // The CLI supplies the exact imported API namespace; inputs cannot select functions.
@@ -67,7 +73,7 @@ export async function dispatchHostAction(action,c,reader,api){
  try{
   if(action==='install'){
    const before=sanitizeApiResult(await api.reconcileComparisonInstall(c,reader),c)
-   if(before.state!=='not_installed')return before
+   if(before.state!=='not_installed'||before.needs_reconciliation!==false||before.connection_cleanup_verified!==true)return before
    return sanitizeApiResult(await api.installComparisonAtomic(c,reader),c)
   }
   if(action==='reconcile')return sanitizeApiResult(await api.reconcileComparisonInstall(c,reader),c)
@@ -76,8 +82,8 @@ export async function dispatchHostAction(action,c,reader,api){
 }
 
 export function actionSatisfied(action,r){
- if(r?.needs_reconciliation!==false)return false
- if(action==='audit')return r.state==='installed_disabled_audit_qualified'
+ if(r?.needs_reconciliation!==false||r.connection_cleanup_verified!==true)return false
+ if(action==='audit')return r.state==='installed_disabled_audit_qualified'&&r.audit_qualified===true
  if(action==='install')return r.state==='installed_disabled_audit_pending'
  return action==='reconcile'&&['not_installed','installed_disabled_audit_pending'].includes(r.state)
 }

@@ -12,7 +12,7 @@ const config=()=>validateHostConfig(JSON.stringify(plain),secrets)
 const result=(state,c=config())=>({state,operation_id:c.operationId,manifest_sha256:c.expectedManifestSha256,
  native_mode:MODE,native_program_sha256:c.expectedNativeProgramSha256,activation_allowed:false,
  needs_reconciliation:!['not_installed','installed_disabled_audit_pending','installed_disabled_audit_qualified'].includes(state),
- audit_qualified:state==='installed_disabled_audit_qualified'})
+ audit_qualified:state==='installed_disabled_audit_qualified',connection_cleanup_verified:true,cleanup_diagnostic:null})
 const reader=()=>{throw Error('source reader unused by injected orchestration fixture')}
 test('exact secure hosted configuration selects v6 and forbids override keys',()=>{
  const c=config();assert.equal(c.nativeMode,MODE);assert.equal(c.disposable,false);assert.equal(c.sessionPoolerHost,'aws-0-us-west-1.pooler.supabase.com')
@@ -46,7 +46,7 @@ test('installation requires fresh not-installed reconciliation and uses exact id
  assert.deepEqual(calls.map(x=>x[0]),['reconcile','install'])
  assert.ok(calls.every(x=>x[1]===c&&x[2]===reader))
  assert.equal(out.state,'installed_disabled_audit_pending');assert.equal(out.activation_allowed,false)
- assert.equal(out.connection_cleanup_verified,false)
+ assert.equal(out.connection_cleanup_verified,true)
 })
 test('existing receipt, drift or inflight state never causes install replay',async()=>{
  for(const state of ['installed_disabled_audit_pending','reconciliation_drift','reconciliation_inflight','reconciliation_unavailable']){
@@ -101,13 +101,29 @@ test('audit and install do not report a missing installation as fulfilled',()=>{
  assert.equal(actionSatisfied('audit',sanitizeApiResult(result('installed_disabled_audit_qualified'),config())),true)
 })
 
-test('swallowed underlying close failure never becomes verified cleanup',async()=>{
- const api={async reconcileComparisonInstall(){
-  try{throw Error('SYNTHETIC_CLOSE_SECRET')}catch{/* Existing API hides this cleanup error. */}
-  return result('installed_disabled_audit_pending')
- }}
- const out=await dispatchHostAction('reconcile',config(),reader,api)
- assert.equal(out.state,'installed_disabled_audit_pending')
- assert.equal(out.connection_cleanup_verified,false)
- assert.doesNotMatch(JSON.stringify(out),/SYNTHETIC_CLOSE_SECRET/)
+test('unverified absent reconciliation cannot authorize installation',async()=>{
+ let writes=0
+ const out=await dispatchHostAction('install',config(),reader,{
+  async reconcileComparisonInstall(){return {...result('not_installed'),connection_cleanup_verified:false,needs_reconciliation:true,cleanup_diagnostic:'atomic_connection_close_failed'}},
+  async installComparisonAtomic(){writes++}
+ })
+ assert.equal(writes,0);assert.equal(out.state,'not_installed')
+ assert.equal(out.connection_cleanup_verified,false);assert.equal(out.needs_reconciliation,true)
+ assert.equal(actionSatisfied('reconcile',out),false);assert.equal(actionSatisfied('install',out),false)
+})
+test('acknowledged commit and audit state survive cleanup uncertainty without success or replay',async()=>{
+ for(const state of ['installed_disabled_audit_pending','installed_disabled_audit_qualified','commit_ambiguous']){
+  const out=sanitizeApiResult({...result(state),connection_cleanup_verified:false,needs_reconciliation:true,audit_qualified:false,
+   cleanup_diagnostic:'SYNTHETIC_CLOSE_SECRET'},config())
+  assert.equal(out.state,state);assert.equal(out.operation_id,plain.operationId)
+  assert.equal(out.connection_cleanup_verified,false);assert.equal(out.needs_reconciliation,true);assert.equal(out.audit_qualified,false)
+  assert.equal(actionSatisfied('install',out),false);assert.equal(actionSatisfied('audit',out),false)
+  assert.equal(out.diagnostic,'native_host_cleanup_unverified');assert.doesNotMatch(JSON.stringify(out),/SYNTHETIC_CLOSE_SECRET/)
+ }
+})
+test('legacy receipt without cleanup evidence refuses and never calls installer',async()=>{
+ let writes=0
+ const legacy=result('not_installed');delete legacy.connection_cleanup_verified
+ const out=await dispatchHostAction('install',config(),reader,{async reconcileComparisonInstall(){return legacy},async installComparisonAtomic(){writes++}})
+ assert.equal(writes,0);assert.equal(out.state,'outcome_unknown');assert.equal(out.needs_reconciliation,true)
 })
