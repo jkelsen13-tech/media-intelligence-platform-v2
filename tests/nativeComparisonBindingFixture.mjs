@@ -512,10 +512,14 @@ export async function runNativeComparisonBindingFixture(fx){
      // Exact receipt comes from the unchanged binding admission above. Run
      // compositor checks before the original helper reaches binding revocation.
      stage='native_display_assertions'
+     assert.ok(originalPayloads.every(payload=>payload.body_text===null))
      try{
       displayResult=await assertNativeComparisonDisplay({
        syntheticFixture:true,db,reviewer,gateway,outsider,worker,binding:receipt,
-       broker:brokerContext,connection,withFinalBoundary,forbiddenBodySentinel:sentinel,
+       broker:brokerContext,connection,withFinalBoundary,
+       // This feed-only capture has no body remainder. The shared sentinel is
+       // deliberately part of the approved publisher URL/reviewed display text,
+       // so it cannot serve as an unselected-body exclusion marker.
        withRevokedComparisonSession:body=>rollbackMutation(c=>c.query('select mip_comparison_kernel_v1.revoke_session($1)',[publisherSession]),body),
        withRevokedNativeAccess:body=>rollbackMutation(c=>c.query('update mip_arc_projection_private.source_access set allowed=false,version=version+1 where scope=$1 and binding=$2',[scope,sourceBinding]),body),
        withInvalidatedComparison:body=>rollbackMutation(c=>c.query('update mip_identity.publication_review_heads set active=false where generation_id=$1',[comparisonGeneration]),body),

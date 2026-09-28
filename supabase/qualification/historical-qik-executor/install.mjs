@@ -144,6 +144,9 @@ export async function installClosedHistoricalInTransaction(db,plan,{expectedLogi
   if(stableStringify(before)!==stableStringify(after))fail('historical_install_transport_changed')
   const boundary=(await db.query(`select p.proowner=$1::regrole and p.prosecdef and p.pronargs=1
     and p.proargtypes='2950'::oidvector and p.prosrc=$2
+    and p.prorettype='text'::regtype and p.prokind='f' and p.provolatile='v'
+    and p.proparallel='u' and not p.proleakproof
+    and p.proconfig=array['search_path=pg_catalog, mip_history, mip_factual_transport','statement_timeout=110s','lock_timeout=3s']::text[]
     and not has_schema_privilege('mip_history_owner','mip_factual_transport','USAGE')
     and not has_schema_privilege('mip_history_executor','mip_factual_transport','USAGE')
     and not has_table_privilege('mip_history_owner','vault.decrypted_secrets','SELECT')

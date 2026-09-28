@@ -1105,7 +1105,7 @@
     },
     "native_joint_installer_fixture": {
       "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
-      "blob": "4642e43efb1b7c7e240d64b6dd73350bc499da7b"
+      "blob": "3a99cfa646a96ab02523033a13a8d1e72354d515"
     },
     "native_installation_diagnostics": {
       "retained_fields": [
@@ -1153,7 +1153,7 @@
     ],
     "native_comparison_fixture": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "11cfa89033431ab5e71ab0b89a6e3bd12a924ecf"
+      "blob": "f0dcec386460b00d83fc4a828535d679a7f3f070"
     },
     "native_comparison_assertions": {
       "path": "tests/nativeComparisonBindingAssertions.mjs",
@@ -1278,7 +1278,7 @@
     "historical_executor_ordered_compatibility": {
       "installer": {
         "path": "supabase/qualification/historical-qik-executor/install.mjs",
-        "blob": "d58bc1098815d5fc25cf6cdc363f8be8aa7fbfae"
+        "blob": "d4c72b5e2ff50ce19d46de9c6911135fc0216f48"
       },
       "sql": {
         "path": "supabase/qualification/historical-qik-executor/candidate.sql",
@@ -1288,7 +1288,7 @@
         "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
         "blob": "4642e43efb1b7c7e240d64b6dd73350bc499da7b"
       },
-      "retention": "Private fixed acquisition helper is trusted installer-owned, UUID-only and source-checked. Existing main transport ownership/ACLs are unchanged; history owner receives neither raw transport nor Vault. No route qualification/real connection is implied.",
+      "retention": "Private fixed acquisition helper is trusted installer-owned, UUID-only and source-checked. Existing main transport ownership/ACLs are unchanged; history owner receives neither raw transport nor Vault. No route qualification/real connection is implied. The final fixed-helper source check also requires exact text result, function kind/volatility/parallel/leakproof posture and complete search_path/110s/3s configuration.",
       "qualification": "NOT RUN in this new combined candidate; separate core/preclosed historical72PASS receipt remains limited to its original scope."
     }
   },
@@ -1321,7 +1321,7 @@
       "status_at_source_authorship": "NOT RUN",
       "environment": "MIP_NATIVE_GOVERNED_INSTALL_DISPOSABLE=synthetic-pg17-only; MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
       "invocation": "node --test tests/nativeGovernedInstallerPostgres17.test.mjs",
-      "fixture": "Pristine pinned PostgreSQL17.6 engine170006; pgvector0.8.2 binary installed; pgcrypto/dblink; fake loopback SCRAM sessions; full actual disabled C3 substrate/receipt, real atomic backend/audit and curated native C6/C9 profile; no dependency stubs. Beforeinstallation, independently observed restrictedprincipal asserts allfive source tables kindr, installerownership, RLStrue/FORCEfalse. Synthetic pipeline_config RLS now matches catalog-only qik observation; no configuration rows/material read. V4 is the complete eleven-stage additive binding program, not a reduced helper install. Complete protected kernel/source_snapshot and publication/survivor_context source-policy catalog prerequisite. Missing source-read policy and role-specific restrictive policy are independently introduced and rolled back during v4 fresh reconciliation. V5 ordered-history test checks actual closed main transport followed by exact historical install(d58bc109,SQL6fe60352), in the same restricted installer's rollback-only transaction. The separate root-owned empty Vault shape is only a synthetic prerequisite; it is removed after actual rollback. Exact roles/edges/schema/transport baseline is restored and the v5 boundary rechecked. The unchanged autonomous main audit runs separately after rollback and is not claimed to observe uncommitted historical objects. No real Vault/material/source connection or capacity claim.",
+      "fixture": "Pristine pinned PostgreSQL17.6 engine170006; pgvector0.8.2 binary installed; pgcrypto/dblink; fake loopback SCRAM sessions; full actual disabled C3 substrate/receipt, real atomic backend/audit and curated native C6/C9 profile; no dependency stubs. Beforeinstallation, independently observed restrictedprincipal asserts allfive source tables kindr, installerownership, RLStrue/FORCEfalse. Synthetic pipeline_config RLS now matches catalog-only qik observation; no configuration rows/material read. V4 is the complete eleven-stage additive binding program, not a reduced helper install. Complete protected kernel/source_snapshot and publication/survivor_context source-policy catalog prerequisite. Missing source-read policy and role-specific restrictive policy are independently introduced and rolled back during v4 fresh reconciliation. V5 ordered-history test checks actual closed main transport followed by exact historical install(d4c72b5e,SQL6fe60352), in the same restricted installer's rollback-only transaction. The separate root-owned empty Vault shape is only a synthetic prerequisite; it is removed after actual rollback. Exact roles/edges/schema/transport baseline is restored and the v5 boundary rechecked. The unchanged autonomous main audit runs separately after rollback and is not claimed to observe uncommitted historical objects. No real Vault/material/source connection or capacity claim.",
       "expectation": "All actual restricted-principal installation, identity/authorization/program/manifest refusal, late restrictive-source failure and whole-transaction rollback, acknowledged and ambiguous COMMIT/ROLLBACK reconciliation, exact final effective owners/roles/ACL/schema/RLS/noedges/nohelpers, real autonomous audit and no collection/schedules/publication activation assertions pass. No skipped groups; every failure refuses qualification. Both v2 and v3 run sequentially with independently verified pristine teardown. V3 late source-authority failure occurs at actual tenth stage; ambiguous outcomes include private schema inventory. Exact combined final assertion and rolled-back forbidden private PUBLIC table grant are exercised. V4 runs after separately pristine v2/v3 with the eleventh stage and fixed current-boundary verifier executed after real outer cleanup; adds exact verifier-source/owner/schema/ACL checks and independently restored drift refusal on fresh reconciliation, including source-pinned reader dependency. Exact native_comparison_source_authority refusal when the kernel article policy is absent or restrictive; restore baseline and require current final closure after each mutation. V5 is separately pristine with full twelfth stage, source-pinned complete current verifier and display/helper/schema/definer/verifier/policy/owner-edge drift refusal. Historical ordered compatibility is a distinct rollback-only actual main-to-historical test, not a hosted receipt.",
       "cleanup": "Independent client closure; verify exact expected created-role allowlist; destroy only armed pristine disposable database/recreate default and remove exact synthetic roles; compare baseline. Runner always removes container/volumes and checks absence. Any primary/rollback/close/cleanup failure fails qualification.",
       "resource_limits": "Existing verified-free public source/synthetic GitHub job; bounded5min test step/15min entire job, no hosted credentials, data, artifacts, new service, material transfer or plan upgrade."
@@ -2256,7 +2256,7 @@
     },
     "fixture_correction": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "11cfa89033431ab5e71ab0b89a6e3bd12a924ecf",
+      "blob": "f0dcec386460b00d83fc4a828535d679a7f3f070",
       "status": "AUTHORED — NOT RUN",
       "reason": "Hosted compiler deliberately denies synthetic fallback. Exercise unchanged actual C3/020 resolver with synthetic feed-only material and explicit reviewed private seed membership; retain refusal. No production contract/grant/compiler change. Corrects disposable gate/source setup order required by the unchanged C3 enforcement trigger; final and failure cleanup still restore disabled gate/source. The isolated scope intentionally starts with reviewer can_decide=false. The corrected fixture requires the actual scope-access denial and zero scalar writes, then the existing administrator admits this synthetic reviewer through set_membership; finally restores can_decide=false independently, including failed/ambiguous setup. No role grants, original fixture scopes, real approvals or production permissions change. The distinct gateway begins can_decide=true in the separate setup; the existing administrator sets only this synthetic scope to read-only for the required denied admit/permitted read checks, then independently restores its original true value. Both actual principal roles, scope membership, production ACL/RLS and six binding test expectations remain unchanged.",
       "historical_receipt": {
@@ -2495,7 +2495,8 @@
       "parent": "tests/nativeArcCohortPostgres17.test.mjs",
       "installation": "tests/nativeGovernedInstallerPostgres17.test.mjs",
       "invocation": "Existing pinned synthetic-only combined workflow, full actual backend001–020/C3/journal/review/018/native/binding/display dependency closure; separate nonsuper installer profile and real SCRAM display route; never actual material.",
-      "cleanup": "Parent-owned pristine disposable database, roles, clients and container/volume absence; actual authority/drift mutations rolled back."
+      "cleanup": "Parent-owned pristine disposable database, roles, clients and container/volume absence; actual authority/drift mutations rolled back.",
+      "fixture_correction": "Feed-only original captures have body_text NULL. Shared synthetic sentinel is deliberately present in approved publisher URLs/reviewed display passages and is excluded from metadata-only binding destinations by existing required assertions. The optional unselected-body sentinel check is not applied to this DTO fixture; explicit original null-body and exact-field/evidence/hash checks remain. No runtime display field was removed to satisfy a narrower claim."
     },
     "byte_bounds": "Response and adapter preflight bounds plus fixed1000ms statement timeout. No whole legacy-reader CPU/hash or hosted Edge capacity claim.",
     "remaining": "Authenticated deployed server endpoint, private UI consumer wiring, actual hosted TLS/service identity, unattended operating proof, full caller cutover and legacy disposition.",

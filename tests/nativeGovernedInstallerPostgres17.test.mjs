@@ -285,7 +285,7 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
    assert.ok(beforeTransport.every(r=>r.nspname==='mip_factual_transport'))
    assert.equal((await principal.query("select to_regnamespace('vault') is null and to_regnamespace('mip_history') is null and to_regnamespace('mip_history_transport') is null absent")).rows[0].absent,true)
    const historyInstaller=Buffer.from(await read('supabase/qualification/historical-qik-executor/install.mjs'))
-   assert.equal(createHash('sha1').update(Buffer.from('blob '+historyInstaller.length+'\0')).update(historyInstaller).digest('hex'),'d58bc1098815d5fc25cf6cdc363f8be8aa7fbfae')
+   assert.equal(createHash('sha1').update(Buffer.from('blob '+historyInstaller.length+'\0')).update(historyInstaller).digest('hex'),'d4c72b5e2ff50ce19d46de9c6911135fc0216f48')
    const historical=await prepareClosedHistoricalInstall(read)
    assert.equal(historical.blob,'6fe6035223de1dac94fba6c238e33324bc0ca266')
    let vaultReady=false,historyBegun=false,historyPrimary=null,historyStage='vault_fixture'
@@ -322,9 +322,11 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
     assert.deepEqual(installed,{state:'installed_in_transaction',committed:false,production_qualified:false})
     historyStage='historical_current_assertion'
     await principal.query(historical.assertion)
+    historyStage='historical_helper_assertion'
+    assert.ok(historical.helper.indexOf('as $$')>=0&&historical.helper.lastIndexOf('$$;')>historical.helper.indexOf('as $$'))
     const helper=(await principal.query(`select p.proowner=$1::regrole and p.prosecdef and p.pronargs=1
       and p.proargtypes='2950'::oidvector and p.prorettype='text'::regtype
-      and p.prosrc=$2 and p.proconfig=array['search_path=pg_catalog, mip_history, mip_factual_transport']::text[]
+      and p.prosrc=$2 and p.proconfig=array['search_path=pg_catalog, mip_history, mip_factual_transport','statement_timeout=110s','lock_timeout=3s']::text[]
       and has_function_privilege('mip_history_owner',p.oid,'EXECUTE')
       and not has_function_privilege('mip_history_executor',p.oid,'EXECUTE')
       and not has_schema_privilege('mip_history_owner','mip_factual_transport','USAGE')
@@ -334,8 +336,9 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
         where a.grantee not in($1::regrole,'mip_history_owner'::regrole) or a.privilege_type<>'EXECUTE'
         or (a.grantee<>p.proowner and a.is_grantable)) ok
       from pg_proc p where p.oid='mip_history_transport.acquire_original(uuid)'::regprocedure`,
-      [backendInstaller,historical.helper.slice(historical.helper.indexOf('as $')+5,historical.helper.lastIndexOf('$;'))])).rows[0]
+      [backendInstaller,historical.helper.slice(historical.helper.indexOf('as $$')+5,historical.helper.lastIndexOf('$$;'))])).rows[0]
     assert.equal(helper?.ok,true)
+    historyStage='historical_closed_state'
     assert.equal((await principal.query('select (select count(*) from mip_history.route)+(select count(*) from mip_history.source_contract)+(select count(*) from mip_history.family_contract)+(select count(*) from mip_history.export)=0 closed')).rows[0].closed,true)
     assert.deepEqual(await transport(principal),beforeTransport)
     assert.deepEqual(await edgeCatalog(principal),beforeEdges)
