@@ -271,3 +271,13 @@ Multiple failures produce AggregateError containing only those bounded codes.
 A missing COMMIT acknowledgement is commit_outcome_unknown; no success is inferred.
 Retry uses the same exact generation/hash and revalidates current authority.
 The adapter rejects audit settings other than exactly .70 and 1.
+
+The null/missing PostgreSQL check distinguishes producer normalization from
+substrate resolver capability. Standard enqueue always materializes all six
+canonical keys, so omitted published_at becomes explicit JSON null. That path
+is asserted and admitted as null. A separately labelled privileged synthetic
+fixture creates a fresh pending import job with a genuinely absent key and an
+exact PostgreSQL JSONB-text input hash; the unchanged claim_job/finish_job path
+then creates its article identity, immutable capture and job history. This is
+not evidence that standard enqueue preserves missing keys. No existing capture
+is rewritten, and missing/null field hashes must remain distinct.

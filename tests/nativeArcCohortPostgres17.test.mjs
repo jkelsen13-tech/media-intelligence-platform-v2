@@ -281,19 +281,42 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   await checkNative('actual_original_json_null_and_missing_scalar_bindings_admit_distinctly',async()=>{
    const job=(await db.query("select evidence_pipeline.enqueue('synthetic-native-null',$1::jsonb) id",
     [JSON.stringify({url:'https://synthetic.invalid/native-null',title:'Synthetic null scalar',outlet:'Synthetic',summary:null,body_text:null})])).rows[0].id;
-   const claim=(await db.query('select evidence_pipeline.claim_job() result')).rows[0].result;
-   assert.equal(claim.id,job);
-   const finished=(await db.query('select evidence_pipeline.finish_job($1,$2) result',[job,claim.lease_token])).rows[0].result;
-   const original=(await db.query('select id,article_id,job_id,content_hash from evidence_pipeline.article_captures where id=$1',[finished.capture_id])).rows[0];
-   const observed=[];
-   for(const [field,kind,binding] of [['summary','null',id(720)],['published_at','missing',id(721)]]){
+   // enqueue intentionally materializes every canonical key; absence becomes
+   // explicit JSON null. Preserve and assert that standard producer contract.
+   assert.deepEqual((await db.query("select payload?'published_at' present,payload->'published_at' value from evidence_pipeline.import_jobs where id=$1",[job])).rows[0],
+    {present:true,value:null});
+   const finish=async expectedJob=>{
+    const claim=(await db.query('select evidence_pipeline.claim_job() result')).rows[0].result;
+    assert.equal(claim.id,expectedJob);
+    const finished=(await db.query('select evidence_pipeline.finish_job($1,$2) result',[expectedJob,claim.lease_token])).rows[0].result;
+    assert.deepEqual((await db.query('select state from evidence_pipeline.job_events where job_id=$1 order by id',[expectedJob])).rows.map(r=>r.state),['processing','completed']);
+    return (await db.query('select id,article_id,job_id,content_hash from evidence_pipeline.article_captures where id=$1',[finished.capture_id])).rows[0];
+   };
+   const admit=async(original,field,kind,binding)=>{
     const hash=(await db.query("select encode(sha256(convert_to(jsonb_build_object('present',payload?$2,'value',payload->$2)::text,'UTF8')),'hex') hash from evidence_pipeline.article_captures where id=$1",[original.id,field])).rows[0].hash;
     await reviewer.query('select mip_arc_native.review_scalar($1,$2,$3,$4,$5,$6,$7,$8,$9)',
      [s,binding,original.article_id,original.id,original.job_id,original.content_hash,field,kind,hash]);
-    observed.push(hash);
-   }
-   assert.notEqual(observed[0],observed[1]);
-   assert.deepEqual((await db.query('select value_kind from mip_arc_native.scalar_bindings where scope=$1 and id=any($2::uuid[]) order by id',[s,[id(720),id(721)]])).rows.map(r=>r.value_kind),['null','missing']);
+    return hash;
+   };
+   const original=await finish(job);
+   await admit(original,'summary','null',id(720));
+   const nullHash=await admit(original,'published_at','null',id(721));
+   // A missing canonical key cannot be produced by enqueue. This separately
+   // labelled privileged synthetic substrate fixture seeds a NEW pending job
+   // with exact original JSON/hash; actual claim/finish creates identity,
+   // immutable capture and processing/completed history. No capture is edited.
+   const missingPayload={url:'https://synthetic.invalid/native-missing',title:'Synthetic missing scalar',outlet:'Synthetic',summary:null,body_text:null};
+   const missingJob=(await db.query("insert into evidence_pipeline.import_jobs(canonical_url,input_hash,payload,first_run_id) select evidence_pipeline.canonical_url($1::jsonb->>'url'),encode(sha256(convert_to(($1::jsonb)::text,'UTF8')),'hex'),$1::jsonb,'synthetic-privileged-missing-key' returning id",
+    [JSON.stringify(missingPayload)])).rows[0].id;
+   await db.query("insert into evidence_pipeline.import_receipts(run_id,job_id,original_url) values('synthetic-privileged-missing-key',$1,$2)",[missingJob,missingPayload.url]);
+   const missing=await finish(missingJob);
+   assert.deepEqual((await db.query("select payload?'published_at' present,payload->'published_at' value,content_hash=encode(sha256(convert_to(payload::text,'UTF8')),'hex') valid from evidence_pipeline.article_captures where id=$1",[missing.id])).rows[0],
+    {present:false,value:null,valid:true});
+   const missingHash=await admit(missing,'published_at','missing',id(722));
+   assert.notEqual(nullHash,missingHash);
+   assert.deepEqual((await db.query('select value_kind from mip_arc_native.scalar_bindings where scope=$1 and id=any($2::uuid[]) order by id',[s,[id(720),id(721),id(722)]])).rows.map(r=>r.value_kind),['null','null','missing']);
+   assert.deepEqual((await db.query("select payload?'published_at' present,payload->'published_at' value,content_hash=$2 unchanged from evidence_pipeline.article_captures where id=$1",[original.id,original.content_hash])).rows[0],
+    {present:true,value:null,unchanged:true});
    assert.deepEqual((await current(reviewId)).output,output);
   });
   await checkNative('field_null_missing_kind_and_exact_original_hash_are_not_interchangeable',async()=>{
