@@ -6,8 +6,8 @@
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
   "immediate_base": {
-    "commit": "9035a6b95d2e009455f35d6e3589c8476cbe8728",
-    "tree": "ae078d6b2d6302fa43b5c99251a6d12978790f8c"
+    "commit": "7e162af689eb2d3ae42cb78b5828c34571ae9c18",
+    "tree": "acdbd00c5587570d65e77ca497b4cc57e06ef2f4"
   },
   "authorization": {
     "internal_source_and_synthetic_qualification": "User consolidation continuation amendment prospectively authorizes this distinct governed successor and installer mode into source review and synthetic internal qualification. Qualification receipts and actual external Cursor review bind the exact candidate; no individual owner field signature, historical acceptance, hosted installation or actual-material receiving authorization is represented.",
@@ -1149,7 +1149,7 @@
     ],
     "native_comparison_fixture": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "527b1ce5b3d9f755729ec9919979c5fda2975c91"
+      "blob": "f0b5fabcf233d81cfdac714086ac5662a107de20"
     },
     "native_comparison_assertions": {
       "path": "tests/nativeComparisonBindingAssertions.mjs",
@@ -2120,17 +2120,17 @@
     },
     "fixture_correction": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "527b1ce5b3d9f755729ec9919979c5fda2975c91",
+      "blob": "f0b5fabcf233d81cfdac714086ac5662a107de20",
       "status": "AUTHORED — NOT RUN",
-      "reason": "Hosted compiler deliberately denies synthetic fallback. Exercise unchanged actual C3/020 resolver with synthetic feed-only material and explicit reviewed private seed membership; retain refusal. No production contract/grant/compiler change. Corrects disposable gate/source setup order required by the unchanged C3 enforcement trigger; final and failure cleanup still restore disabled gate/source.",
+      "reason": "Hosted compiler deliberately denies synthetic fallback. Exercise unchanged actual C3/020 resolver with synthetic feed-only material and explicit reviewed private seed membership; retain refusal. No production contract/grant/compiler change. Corrects disposable gate/source setup order required by the unchanged C3 enforcement trigger; final and failure cleanup still restore disabled gate/source. The isolated scope intentionally starts with reviewer can_decide=false. The corrected fixture requires the actual scope-access denial and zero scalar writes, then the existing administrator admits this synthetic reviewer through set_membership; finally restores can_decide=false independently, including failed/ambiguous setup. No role grants, original fixture scopes, real approvals or production permissions change.",
       "historical_receipt": {
-        "candidate": "9035a6b95d2e009455f35d6e3589c8476cbe8728",
-        "run": 36427232584,
+        "candidate": "7e162af689eb2d3ae42cb78b5828c34571ae9c18",
+        "run": 36427740254,
         "pass": 176,
         "fail": 2,
         "stage": "native_scalar_extraction_reviews",
         "sqlstate": "P0001",
-        "source_line": 326,
+        "source_line": 328,
         "accepted_reader_stage_passed": true,
         "cleanup": "success"
       },

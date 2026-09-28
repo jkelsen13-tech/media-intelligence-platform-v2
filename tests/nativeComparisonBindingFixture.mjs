@@ -47,7 +47,7 @@ export async function runNativeComparisonBindingFixture(fx){
  if(fx.syntheticFixture!==true||typeof fx.connect!=='function'||typeof fx.id!=='function')
   throw Error('native_comparison_fixture_guard')
  const {db,reviewer,sameReviewer,gateway,outsider,worker,admin,scope,id,connect,sentinel}=fx
- const owned=[];let stage='guard',primary=null,result,initialGate=null,sourceInitial=null,sourceInserted=false;const cleanup=[]
+ const owned=[];let stage='guard',primary=null,result,initialGate=null,sourceInitial=null,sourceInserted=false,reviewMembershipRestored=true;const cleanup=[]
  const freshRole=async role=>{
   const c=await connect();owned.push(c)
   const original=(await c.query('select session_user::text u,current_user::text e')).rows[0]
@@ -325,6 +325,14 @@ export async function runNativeComparisonBindingFixture(fx){
    for(const [fieldIndex,field] of ['title','summary','outlet','published_at'].entries()){
     const binding=id(7100+index*10+fieldIndex)
     const meta=(await db.query("select case when not(payload?$2) then 'missing' when payload->$2='null'::jsonb then 'null' else jsonb_typeof(payload->$2) end kind,encode(sha256(convert_to(jsonb_build_object('present',payload?$2,'value',payload->$2)::text,'UTF8')),'hex') hash from evidence_pipeline.article_captures where id=$1",[capture.id,field])).rows[0]
+    if(index===0&&fieldIndex===0){
+     // This separate fixture scope intentionally starts read-only. Prove the
+     // real review call refuses before the existing admin admits its reviewer.
+     assert.equal((await db.query('select can_decide from mip_mentions.members where scope=$1 and principal=$2',[scope,reviewerName])).rows[0].can_decide,false)
+     await assert.rejects(reviewer.query('select mip_arc_native.review_scalar($1,$2,$3,$4,$5,$6,$7,$8,$9)',[scope,binding,capture.article_id,capture.id,capture.job_id,capture.content_hash,field,meta.kind,meta.hash]),error=>error.code==='P0001'&&error.message==='scope access denied')
+     assert.equal((await db.query('select count(*)::int n from mip_arc_native.scalar_bindings where scope=$1',[scope])).rows[0].n,0)
+     reviewMembershipRestored=false;await admin.query('select mip_mentions.set_membership($1,$2,true)',[scope,reviewerName])
+    }
     await reviewer.query('select mip_arc_native.review_scalar($1,$2,$3,$4,$5,$6,$7,$8,$9)',[scope,binding,capture.article_id,capture.id,capture.job_id,capture.content_hash,field,meta.kind,meta.hash])
     await admin.query('select mip_arc_native.set_scalar_access($1,$2,true)',[scope,binding]);bindings.push(binding)
    }
@@ -518,6 +526,9 @@ export async function runNativeComparisonBindingFixture(fx){
   assert.deepEqual(result,{checks:6,publication_allowed:false,attachment_allowed:false})
  }catch(error){primary=diagnostic(error,stage)}
  finally{
+  if(!reviewMembershipRestored){
+   try{await admin.query('select mip_mentions.set_membership($1,$2,false)',[scope,(await reviewer.query('select session_user::text u')).rows[0].u]);reviewMembershipRestored=true}catch{cleanup.push('synthetic_review_membership_restore')}
+  }
   if(initialGate!==null){
    try{await db.query('update qik_ingest.collection_gate set collection_authorized=$1 where id',[initialGate])}catch{cleanup.push('collection_gate_restore')}
    try{
