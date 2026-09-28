@@ -64,7 +64,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/activation.mjs",
-      "git_blob": "c5a7ce9b9098930833b474d60e9a996561e0d2f5"
+      "git_blob": "7f209d3410cd69f7a1ae706ec4714a08515e6500"
     },
     {
       "path": "supabase/qualification/native-governed-activation/audit.mjs",
@@ -80,11 +80,11 @@
     },
     {
       "path": "tests/nativeGovernedActivation.test.mjs",
-      "git_blob": "e2ae07e1c0f10643db89038b8854ee61898abf85"
+      "git_blob": "1e41dc0f37d923f955d1c084ada87951d2401988"
     },
     {
       "path": "tests/nativeGovernedActivationPostgres17.test.mjs",
-      "git_blob": "486789ad17497ae9718f5374be9c06087d79a7f5"
+      "git_blob": "a589c9c6eb40ff3086aa5de3faf78396da3c60fc"
     },
     {
       "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "2d70db1dc582c82d3538dc7777f261cd28b47488"
+      "git_blob": "414ae72bec78235bcb615f9338f9090abad6be1f"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -140,7 +140,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/README.md",
-      "git_blob": "c13b22f8d355cc330c64b32320b723a67e2fa4f5"
+      "git_blob": "fd4883a478034fb9e661808f34b42bd46e8a8a8b"
     },
     {
       "path": ".github/workflows/qik-native-installer-held.yml",
@@ -172,7 +172,7 @@
     "credential": "metadataAuditConnectionString for expectedMetadataAuditor only",
     "authority_current": false,
     "reads": "catalog plus bootstrap/head and non-authority revision columns; no Auth/capture/session/token reads",
-    "host_integration": "Exact source-pinned host/CLI and actual nonsuper fixture implemented. New direct independent metadata audit and same-search-path correction AUTHORED — NOT RUN. Secure hosted bindings absent.",
+    "host_integration": "Actual independently authenticated metadata audit and full host composition passed at13ebf786fbd1a296c4f56d7d07bc9cda41802d45/run36469939409/job109089348043. Pending transition subsequently failed; this is not an installation receipt. Secure hosted bindings absent.",
     "success_field": "permission_boundary_current (only a successful independently executed audit may set true)"
   },
   "gates": [
@@ -199,29 +199,26 @@
     "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
-  "integration_parent": "3376fa53e8ee5b715d57f21b46e72bb8b5634a76",
+  "integration_parent": "13ebf786fbd1a296c4f56d7d07bc9cda41802d45",
   "qualification": {
-    "status": "TYPE-SAFE AUDIT REPAIR AUTHORED — NOT RUN",
+    "status": "PENDING-TRANSITION DIAGNOSTIC AUTHORED — NOT RUN",
     "synthetic_only": true,
     "actual_qik_installation": false,
     "actual_material": false,
-    "prior_failed_run": 36467783328,
-    "prior_failed_job": 109084632683,
-    "prior_failed_candidate": "3376fa53e8ee5b715d57f21b46e72bb8b5634a76",
+    "prior_failed_run": 36469939409,
+    "prior_failed_job": 109089348043,
+    "prior_failed_candidate": "13ebf786fbd1a296c4f56d7d07bc9cda41802d45",
     "prior_result": {
       "source_pass": 51,
-      "original_ordered_pg_pass": 55,
-      "new_successor_fail": 1,
+      "ordered_pg_pass": 58,
+      "ordered_pg_fail": 9,
       "atomic_pg_pass": 2,
       "cleanup": "success",
       "source_clean_verification": "skipped"
     },
-    "direct_audit_failure": {
-      "phase": "auditor_identity",
-      "sqlstate": "42809",
-      "connection_cleanup_verified": true
-    },
-    "defect": "Guard type-specific privilege predicates using CASE; no lowered privilege or hash assertion"
+    "metadata_audits": "Actual independent auditor and composed host passed",
+    "first_consequential_failure": "First pending transition returned unverified; later lifecycle failures cascade",
+    "diagnostic": "Fixed transition phase and validated SQLSTATE only; no permission/timeout/authority relaxation"
   },
   "host_route": {
     "existing_environment": "qik-forward-controlled",

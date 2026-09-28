@@ -179,3 +179,57 @@ test('successor candidate manifest pins the complete changed executable source a
  ])assert.equal(paths.has(path),true,path);
  assert.equal(manifest.production_qualified,false);
 });
+
+test('transition diagnostics expose only a fixed phase and valid SQLSTATE without server context',async()=>{
+ const fields={
+  message:'SYNTHETIC_PRIVATE_ERROR_MESSAGE_6841',
+  detail:'SYNTHETIC_PRIVATE_ERROR_DETAIL_6842',
+  query:'SYNTHETIC_PRIVATE_ERROR_QUERY_6843',
+  stack:'SYNTHETIC_PRIVATE_ERROR_STACK_6844',
+  hint:'SYNTHETIC_PRIVATE_ERROR_HINT_6845',
+  where:'SYNTHETIC_PRIVATE_ERROR_WHERE_6846',
+  internalQuery:'SYNTHETIC_PRIVATE_INTERNAL_QUERY_6847'
+ };
+ for(const [code,expected]of [['42501','42501'],['ECONNRESET',null],['private-code',null]]){
+  const db=connection(),query=db.query.bind(db);
+  db.query=async(sql,args)=>{
+   if(sql.includes('mip_native_activation.transition')){
+    db.calls.push({sql,args});
+    throw Object.assign(new Error(fields.message),fields,{code});
+   }
+   return query(sql,args);
+  };
+  const r=await activationTransaction(db,config,request());
+  assert.equal(r.phase,'transition');assert.equal(r.sqlstate,expected);
+  assert.equal(r.transaction,'not_committed');assert.equal(r.permissions_current,false);
+  assert.equal(r.connection_cleanup_verified,true);assert.equal(r.cleanup_diagnostic,null);
+  assert.equal(r.needs_reconciliation,false);
+  assert.equal(db.calls.filter(c=>c.sql==='rollback').length,1);
+  assert.equal(db.calls.filter(c=>c.sql==='end').length,1);
+  assert.equal(db.calls.some(c=>c.sql==='commit'),false);
+  const serialized=JSON.stringify(r);
+  for(const marker of Object.values(fields))assert.equal(serialized.includes(marker),false);
+  if(expected===null)assert.equal(serialized.includes(code),false);
+  for(const key of Object.keys(fields))assert.equal(Object.hasOwn(r,key),false);
+  for(const secret of Object.values(request().ephemeral))assert.equal(serialized.includes(String(secret)),false);
+ }
+});
+test('SQLSTATE diagnostics do not convert a lost commit acknowledgement into a rollback',async()=>{
+ const db=connection(),query=db.query.bind(db);
+ db.query=async(sql,args)=>{
+  const result=await query(sql,args);
+  if(sql==='commit')throw Object.assign(new Error('SYNTHETIC_PRIVATE_COMMIT_MESSAGE_6851'),{
+   code:'08006',detail:'SYNTHETIC_PRIVATE_COMMIT_DETAIL_6852',query:'SYNTHETIC_PRIVATE_COMMIT_QUERY_6853',
+   stack:'SYNTHETIC_PRIVATE_COMMIT_STACK_6854'
+  });
+  return result;
+ };
+ const r=await activationTransaction(db,config,request());
+ assert.equal(r.phase,'commit');assert.equal(r.sqlstate,'08006');
+ assert.equal(r.transaction,'commit_outcome_unknown');assert.equal(r.permissions_current,false);
+ assert.equal(r.needs_reconciliation,true);assert.equal(r.connection_cleanup_verified,true);
+ assert.equal(db.calls.some(c=>c.sql==='rollback'),false);
+ assert.equal(db.calls.filter(c=>c.sql==='commit').length,1);
+ assert.equal(db.calls.filter(c=>c.sql==='end').length,1);
+ assert.equal(JSON.stringify(r).includes('SYNTHETIC_PRIVATE_COMMIT_'),false);
+});

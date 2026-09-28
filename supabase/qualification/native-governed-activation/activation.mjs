@@ -73,35 +73,45 @@ export async function activationTransaction(db,c,request,{reconcile=false}={}){
  // Internal deterministic transaction primitive for synthetic tests. Production
  // exports below create the authenticated connection themselves.
  let r=null,e=null
- let begun=false,commitAttempted=false,committed=false,result
+ let begun=false,commitAttempted=false,committed=false,result,phase='request'
  try{
   r=normalizeActivationRequest(request);e=r.ephemeral
+  phase='begin'
   await db.query('begin');begun=true
+  phase='transaction_settings'
   await db.query("set local lock_timeout='5000ms'")
   await db.query("set local statement_timeout='1000ms'")
+  phase='lock'
   await db.query('select pg_advisory_xact_lock(171903,7001)')
+  phase='bootstrap'
   const b=(await db.query(baselineSQL,[c.operationId,c.expectedLogin,c.expectedInstallManifest,c.expectedNativeProgram,c.expectedSuccessorProgram])).rows[0]
   if(b?.matches!==true)fail('bootstrap_mismatch')
   // Reuse the concrete no-credential-logging boundary before transient parameters.
+  phase='credential_logging'
   await assertCredentialLogging(db)
   if(reconcile){
+   phase='reconciliation_revision'
    const exact=(await db.query("select predecessor is not distinct from $2::uuid and action=$3 and members=$4::jsonb and authority=$5::jsonb and operation_id=$6 matches from mip_native_activation.revisions where revision=$1",
     [r.revision,r.predecessor,r.action,JSON.stringify(r.members),JSON.stringify(r.authority),c.operationId])).rows[0]
    if(exact?.matches!==true)fail('reconciliation_mismatch')
+   phase='reconciliation_current'
    await db.query('select mip_native_activation.assert_current($1,$2,$3,$4,$5,$6)',
     [r.action,r.revision,e.brokerSession,e.workerSession,e.authSession,e.tokenExp])
   }else{
+   phase='transition'
    const changed=(await db.query('select mip_native_activation.transition($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7,$8,$9) state',
     [r.revision,r.predecessor,r.action,JSON.stringify(r.members),JSON.stringify(r.authority),
      e.brokerSession,e.workerSession,e.authSession,e.tokenExp])).rows[0]
    if(changed?.state!==r.action)fail('transition_unconfirmed')
   }
+  phase='commit'
   commitAttempted=true
   await db.query('commit');begun=false;committed=true
   result={profile:PROFILE,operation_id:c.operationId,revision:r.revision,state:r.action,
    transaction:'acknowledged_commit',permissions_current:true,needs_reconciliation:false}
- }catch{
+ }catch(error){
   result={profile:PROFILE,operation_id:c.operationId,revision:r?.revision??null,state:'unverified',
+   phase,sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null,
    transaction:commitAttempted?'commit_outcome_unknown':'not_committed',permissions_current:false,needs_reconciliation:commitAttempted}
  }finally{
   let rollbackOK=true,closeOK=true
