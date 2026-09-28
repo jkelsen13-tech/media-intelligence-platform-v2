@@ -1,0 +1,5 @@
+# Source-only deployment fragment; merge into qik config only after qualification.
+[functions.historical-qik-executor]
+verify_jwt = true
+entrypoint = "./index.ts"
+import_map = "./deno.json"

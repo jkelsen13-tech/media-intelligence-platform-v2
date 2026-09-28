@@ -124,6 +124,7 @@ declare
 begin
  perform mip_history.guard();
  select * into strict route_row from mip_history.route;
+ if not pg_try_advisory_xact_lock(730004192) then raise exception using message='acquisition_busy'; end if;
  perform pg_advisory_xact_lock(hashtextextended(p_operation::text,0));
  if exists(select 1 from mip_history.export where operation_id=p_operation)
  then raise exception using message='original_export_exists'; end if;
@@ -143,6 +144,9 @@ begin
    perform extensions.dblink_exec(conn,'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
    perform extensions.dblink_exec(conn,'SET LOCAL statement_timeout = ''90s''');
    perform extensions.dblink_exec(conn,'SET LOCAL search_path = pg_catalog');
+   -- Repeated bounded closure statements must not repeatedly JIT-compile an
+   -- inflated recursive plan. This is transaction-local; no source setting persists.
+   perform extensions.dblink_exec(conn,'SET LOCAL jit = off');
    select v into strict descriptor from extensions.dblink(conn,
      'SELECT json_build_object(''database'',current_database(),''snapshot'',pg_export_snapshot(),''mvcc'',pg_current_snapshot()::text,''readonly'',current_setting(''transaction_read_only''),''isolation'',current_setting(''transaction_isolation''))::text') as d(v text);
    if descriptor::jsonb->>'readonly'<>'on' or descriptor::jsonb->>'isolation'<>'repeatable read'

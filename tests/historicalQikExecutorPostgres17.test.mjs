@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { randomBytes, randomUUID } from 'node:crypto'
 import pg from 'pg'
 import { createQikHistoricalExecutor } from '../supabase/qualification/historical-qik-executor/executor.mjs'
+import { prepareClosedHistoricalInstall, installClosedHistoricalInTransaction } from '../supabase/qualification/historical-qik-executor/install.mjs'
 import { buildSourceContract, sourceContractStatements } from '../supabase/qualification/historical-qik-executor/contracts.mjs'
 import { FIELD_CONTRACTS, PROJECTS } from '../scripts/mipHistoricalArticleTransferPlan.mjs'
 import { stableStringify, fingerprintPayload } from '../scripts/mipLegacyGraphStaging.mjs'
@@ -13,6 +14,7 @@ import { stableStringify, fingerprintPayload } from '../scripts/mipLegacyGraphSt
 // Node outside and dblink inside that same service both use loopback:5432.
 // The explicit arm prevents accidental execution by ordinary developer tests.
 const armed=process.env.MIP_HISTORICAL_EXECUTOR_DISPOSABLE==='synthetic-pg17-only'
+const closedProfile=process.env.MIP_HISTORICAL_EXECUTOR_INSTALL_PROFILE==='closed-ordinary'
 const fixturePassword='mip-efta-disposable-ci-only'
 const fixtureRolePassword='mip-historical-fixture-only'
 const limits={records:10000,objects:100,bytes:10*1024*1024}
@@ -49,7 +51,7 @@ async function insert(db,table,values) {
    columns.map((_,i)=>'$'+(i+1)).join(',')+')',values:columns.map(k=>values[k])})
 }
 
-test('historical executor: real PostgreSQL 17.6 dblink acquisition, immutable custody and ACLs',
+test('historical executor PG17.6 '+(closedProfile?'closed transport ordinary installer':'bootstrap extensions fixture')+', acquisition and custody',
  {skip:!armed,timeout:180000},async t=>{
   const suffix=randomBytes(6).toString('hex')
   const names={qik:'mip_hist_qik_'+suffix,nie:'mip_hist_nie_'+suffix,yhb:'mip_hist_yhb_'+suffix}
@@ -62,8 +64,8 @@ test('historical executor: real PostgreSQL 17.6 dblink acquisition, immutable cu
     client.on('error',()=>{})
     try {await client.connect()} catch {throw new Error('synthetic_connection_failed')}
     clients.push(client)
-    return {raw:client,query:async input=>{
-      try {return await client.query(input)}
+    return {raw:client,query:async (input,values)=>{
+      try {return await client.query(input,values)}
       catch(error) {throw Object.assign(new Error('synthetic_pg_'+(error.code??'failure')),{code:error.code})}
     }}
   }
@@ -89,8 +91,15 @@ test('historical executor: real PostgreSQL 17.6 dblink acquisition, immutable cu
       createdDatabases.push(name)
     }
     for(const roleName of ['anon','authenticated','service_role']) await role(roleName)
-    await role('mip_history_owner',false,true)
-    await role('mip_history_executor',true,true)
+    if(!closedProfile) {
+      await role('mip_history_owner',false,true)
+      await role('mip_history_executor',true,true)
+    } else {
+      await role('mip_history_fixture_installer',true,true)
+      await admin.query('alter role mip_history_fixture_installer inherit createrole createdb bypassrls')
+      await admin.query('alter database '+qi(names.qik)+' owner to mip_history_fixture_installer')
+      await role('mip_history_transport_fixture_factual',false,true)
+    }
     await role('mip_history_source_reader',true,true)
     await role('mip_history_anonymous_fixture',true,true)
     const qik=await connect(names.qik)
@@ -131,11 +140,41 @@ test('historical executor: real PostgreSQL 17.6 dblink acquisition, immutable cu
     await qik.query('create schema vault')
     await qik.query('create table vault.synthetic_fixture_secrets(id uuid primary key,decrypted_secret text not null)')
     await qik.query('create view vault.decrypted_secrets as select id,decrypted_secret from vault.synthetic_fixture_secrets')
-    await qik.query('grant usage on schema vault,extensions to mip_history_owner')
-    await qik.query('grant select on vault.decrypted_secrets to mip_history_owner')
+    if(!closedProfile) {
+      await qik.query('grant usage on schema vault,extensions to mip_history_owner')
+      await qik.query('grant select on vault.decrypted_secrets to mip_history_owner')
+    } else {
+      await qik.query('alter schema extensions owner to mip_history_fixture_installer')
+      await qik.query('grant usage on schema vault to mip_history_fixture_installer')
+      await qik.query('grant select on vault.decrypted_secrets to mip_history_fixture_installer')
+      await qik.query('create schema mip_factual_transport authorization mip_history_fixture_installer')
+      await qik.query('alter extension dblink set schema mip_factual_transport')
+      await qik.query('revoke all on schema mip_factual_transport from public,anon,authenticated,service_role')
+      await qik.query('revoke all on all functions in schema mip_factual_transport from public,anon,authenticated,service_role')
+      await qik.query('grant execute on all functions in schema mip_factual_transport to mip_history_fixture_installer')
+      await qik.query('grant usage on schema mip_factual_transport to mip_history_transport_fixture_factual')
+      await qik.query('grant execute on function mip_factual_transport.dblink_exec(text,text) to mip_history_transport_fixture_factual')
+    }
     await qik.query('create table public.publication_sentinel(id integer primary key,state text)')
     await qik.query("insert into public.publication_sentinel values(1,'unchanged')")
-    await qik.query(await readFile(new URL('../supabase/qualification/historical-qik-executor/candidate.sql',import.meta.url),'utf8'))
+    if(!closedProfile) {
+      await qik.query(await readFile(new URL('../supabase/qualification/historical-qik-executor/candidate.sql',import.meta.url),'utf8'))
+    } else {
+      const installer=await connect(names.qik,'mip_history_fixture_installer',fixtureRolePassword)
+      const plan=await prepareClosedHistoricalInstall(path=>readFile(new URL('../'+path,import.meta.url)))
+      await installer.query('begin')
+      try {
+        const installed=await installClosedHistoricalInTransaction(installer,plan,{
+          expectedLogin:'mip_history_fixture_installer',operationId:randomBytes(16).toString('hex')})
+        assert.equal(installed.committed,false)
+        await installer.query('commit')
+        createdRoles.push('mip_history_owner','mip_history_executor')
+      } catch(error) {await installer.query('rollback');throw error}
+      // A fixture password, not a real secret-configuration mechanism.
+      await admin.query("alter role mip_history_executor password '"+fixtureRolePassword+"'")
+      const rights=await qik.query("select has_schema_privilege('mip_history_owner','mip_factual_transport','USAGE') owner_raw,has_table_privilege('mip_history_owner','vault.decrypted_secrets','SELECT') owner_secret")
+      assert.deepEqual(rights.rows[0],{owner_raw:false,owner_secret:false})
+    }
     const vaultIds={[PROJECTS.nie]:randomUUID(),[PROJECTS.yhb]:randomUUID()}
     for(const [project,name] of [[PROJECTS.nie,names.nie],[PROJECTS.yhb,names.yhb]]) {
       const conn='host=127.0.0.1 port=5432 dbname='+name+
@@ -189,32 +228,85 @@ test('historical executor: real PostgreSQL 17.6 dblink acquisition, immutable cu
     })
 
     const operation=randomUUID()
+
+    let originalSnapshotProved=false
     await t.test('one original RR snapshot survives concurrent source change during acquisition',async()=>{
-      const original=buildSourceContract(PROJECTS.nie).inventory_sql
+      const writer=sources[PROJECTS.nie],original=buildSourceContract(PROJECTS.nie).inventory_sql
+      // PL/pgSQL orders these statements: take the gate lock FIRST, only then
+      // plan/evaluate the inventory. A CROSS JOIN allowed expensive inventory
+      // planning before the lock, so a wall-clock probe could miss the gate.
+      await writer.query(`create function public.mip_history_fixture_inventory_gate() returns text
+        language plpgsql security invoker set search_path=pg_catalog as $fixture_gate$
+        begin
+          if current_setting('transaction_isolation')<>'repeatable read'
+             or current_setting('transaction_read_only')<>'on'
+             or current_setting('jit')<>'off'
+          then raise exception 'synthetic_snapshot_configuration'; end if;
+          perform pg_advisory_xact_lock(732419);
+          return (`+original+`);
+        end $fixture_gate$`)
       await qik.query({text:'update mip_history.source_contract set inventory_sql=$1 where project=$2',
-        values:["select x.v from ("+original+") x(v) cross join (select pg_advisory_xact_lock(732419)) gate",PROJECTS.nie]})
-      await sources[PROJECTS.nie].query('select pg_advisory_lock(732419)')
-      const acquisition=adapter.acquire(operation)
-      let waitSeen=false
+        values:['select public.mip_history_fixture_inventory_gate()',PROJECTS.nie]})
+      const writerPid=(await writer.query('select pg_backend_pid() pid')).rows[0].pid
+      let locked=false,settled=false,outcome=null,acquisition=null,gateObserved=false
+      const bounded=async(promise,ms)=>{
+        let timer
+        try {return await Promise.race([promise,new Promise(resolve=>{timer=setTimeout(()=>resolve(null),ms)})])}
+        finally {clearTimeout(timer)}
+      }
       try {
+        await writer.query('select pg_advisory_lock(732419)');locked=true
+        // Attach both continuations immediately: a failed assertion must never
+        // leave a rejected/unsettled acquisition behind on the shared connection.
+        acquisition=adapter.acquire(operation).then(
+          value=>{settled=true;return {value}},
+          error=>{settled=true;return {error}})
         for(let tries=0;tries<150;tries++) {
-          const waiting=await sources[PROJECTS.nie].query(`select count(*)::int n from pg_stat_activity
-            where usename='mip_history_source_reader' and wait_event='advisory'`)
-          if(waiting.rows[0].n>0) {waitSeen=true;break}
+          const gate=await writer.query({text:`select count(*)::int n
+            from pg_locks l join pg_stat_activity a on a.pid=l.pid
+            where l.locktype='advisory' and l.classid=0 and l.objid=732419
+              and l.objsubid=1 and not l.granted and a.datname=$1
+              and a.usename='mip_history_source_reader' and a.state='active'
+              and a.backend_xmin is not null and $2::int=any(pg_blocking_pids(a.pid))`,
+            values:[names.nie,writerPid]})
+          if(gate.rows[0].n===1) {gateObserved=true;break}
+          if(settled)break
           await new Promise(resolve=>setTimeout(resolve,20))
         }
-        assert.equal(waitSeen,true,'dblink transaction reached controlled snapshot gate')
-        await sources[PROJECTS.nie].query("update public.articles set title='after changed source'")
-      } finally {await sources[PROJECTS.nie].query('select pg_advisory_unlock(732419)')}
-      assert.equal((await acquisition).state,'acquired')
-      await qik.query({text:'update mip_history.source_contract set inventory_sql=$1 where project=$2',
-        values:[original,PROJECTS.nie]})
+        assert.equal(gateObserved,true,'original RR backend must be blocked by the owned fixture lock')
+        const changed=await writer.query("update public.articles set title='after changed source'")
+        assert.equal(changed.rowCount,1)
+      } finally {
+        if(locked)await writer.query('select pg_advisory_unlock(732419)')
+        if(acquisition) {
+          // Failure cleanup is bounded and owns this exact synthetic connection.
+          // It never targets a supplied PID, another database, or a live service.
+          outcome=await bounded(acquisition,5000)
+          if(outcome===null) {
+            await qik.query({text:`select pg_terminate_backend(pid) from pg_stat_activity
+              where pid=$1 and datname=$2 and usename='mip_history_executor'`,
+              values:[executor.raw.processID,names.qik]})
+            outcome=await bounded(acquisition,1000)
+            if(outcome===null) {await executor.raw.end();outcome=await bounded(acquisition,1000)}
+          }
+        }
+        await qik.query({text:'update mip_history.source_contract set inventory_sql=$1 where project=$2',
+          values:[original,PROJECTS.nie]})
+        await writer.query('drop function public.mip_history_fixture_inventory_gate()')
+      }
+      assert.ok(outcome,'synthetic acquisition must settle before a dependent test')
+      if(outcome.error)throw outcome.error
+      assert.equal(outcome.value.state,'acquired')
       const frozen=await executor.query({text:`select convert_from(body,'UTF8') body from mip_history.payload
         where operation_id=$1 and project=$2 and table_name='articles'`,values:[operation,PROJECTS.nie]})
       assert.ok(frozen.rows[0].body.includes('before café 日本 😀'))
       assert.ok(!frozen.rows[0].body.includes('after changed source'))
       await assert.rejects(()=>adapter.acquire(operation),e=>e.code==='adapter_operation_failed')
+      originalSnapshotProved=true
     })
+    // node:test reports a failed child without throwing at await t.test().
+    // Explicitly stop the parent so no seal queues behind a failed acquisition.
+    assert.equal(originalSnapshotProved,true,'dependent custody tests require the completed snapshot proof')
     await t.test('lossless canonical seal preserves duplicates, Unicode, null and exact native numbers',async()=>{
       assert.equal((await adapter.seal(operation,{manifest_limits:limits})).state,'sealed')
       const payload=await executor.query({text:`select table_name,record_meta,convert_from(body,'UTF8') body

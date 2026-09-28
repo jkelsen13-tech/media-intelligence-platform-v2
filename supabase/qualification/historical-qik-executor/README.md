@@ -17,6 +17,25 @@ not proof that a transfer happened. No secret values belong in this repository.
 - executor.mjs: lossless canonicalization and exact original-export reopen;
   unchanged pinned transfer engine performs full manifest/fence checks, verified
   receipt-prefix validation, source reads, immutable writes and independent readback.
+- install.mjs: pinned-source ordinary NOSUPERUSER installer; creates owner/runtime
+  roles through an isolated temporary creator, removes all membership edges,
+  and installs a fixed UUID-only acquisition helper owned by the trusted installer.
+  It reuses the already closed mip_factual_transport extension without changing
+  its schema, ownership or function/schema ACLs. Historical owner receives no
+  raw dblink or Vault privilege. Exact transport metadata is compared before/after.
+- handler.mjs/index.ts/deno.json/config.toml: concrete restricted qik Edge entry
+  using pinned pg@8.23.0, Node compatibility globals and the unchanged engine;
+  gateway JWT required plus a separate private invoker token; fixed status-only
+  responses. No caller-supplied SQL, connection, secrets, admission or material.
+- tests/historicalQikExecutorPostgres17.test.mjs: concrete armed CI runner creates
+  and tears down only three owned synthetic databases on the existing official
+  loopback PG17.6 service, exercises real dblink snapshots/concurrent source change,
+  independent readback, ambiguous commits/CAS, immutable rows and actual roles.
+  Vault is explicitly a fixture view surrogate, not Supabase Vault qualification.
+  The optional closed-ordinary profile tests the ordinary-role constructor and
+  preserved closed transport shape. It is not the full existing main installer.
+- tests/historicalQikExecutorHandler.test.mjs: restricted HTTP/credential/host/TLS
+  boundary and status redaction tests.
 - tests/historicalQikExecutor.mjs: synthetic canonicalization/capacity/retry/
   ambiguity/readback/refusal tests and future full-PostgreSQL qualification hooks.
   In-memory tests do not prove SQL isolation, grants, host capacity or cost.
@@ -50,7 +69,17 @@ identities are valid ONLY inside this original export; never deduplicate
 independent captures using ctid. Identical historical rows remain separate.
 No source captured_at, publication time or provenance value is fabricated.
 
-Every current and backup article seeds roots. Directed dependencies include
+Every current and backup article seeds roots. A metadata cardinality preflight
+limits raw rows and maximum root×row pairs BEFORE payload closure evaluation.
+Defaults (100,000 rows and 250,000 pairs) deliberately refuse the known large
+corpus; do not raise them without actual acquisition/closure resource qualification.
+This prevents uncontrolled multiplication but does not claim scalable completion.
+All family queries still repeat the same bounded closure; optimization remains
+an engineering dependency if its measured cost cannot fit the bounded acquisition.
+Backup/current same-ID matching is optional association, not an invented FK.
+Null historical roots and missing authors.outlet_ids targets refuse closure.
+r3 old_value values for unrelated columns remain payload, never guessed references.
+Directed dependencies include
 the explicitly enumerated author/outlet/entity/claim/evidence/event/arc/staging
 relations; selected reverse relations include article evidence and historical
 copies. Unattached rows are counted, not silently claimed transferred.
@@ -84,8 +113,11 @@ requires an explicit byte-route extension and qualification first.
    historical-only roots and empty/nonempty object inventories.
 2. On existing qik only, verify PG17, extension schemas, limits, space/WAL/index
    overhead, source network access, authenticated TLS endpoints and logging.
-   Install available dblink 1.2 in extensions only if that DDL remains in authorized
-   scope. Requires existing Vault plus pgcrypto digest. No new project/provider,
+   The existing main installer relocates the ONE dblink extension into closed
+   mip_factual_transport. Do not install another copy, move it back, or widen its
+   grants. candidate.sql's raw extensions-layout acquisition is a synthetic
+   baseline; use install.mjs's exact pinned constructor after the main install.
+   Requires existing Vault plus pgcrypto digest. No new project/provider,
    subscription upgrade or cost beyond $25 once/$10 monthly existing services.
 3. Establish mip_history_owner NOLOGIN NOINHERIT and mip_history_executor LOGIN
    NOINHERIT, neither privileged nor members/grantees of other roles. Installation
@@ -118,10 +150,15 @@ requires an explicit byte-route extension and qualification first.
    cannot fit Edge, leave route disabled and report capacity_unqualified.
    Lower invocation budgets do not split a deterministic unit or make metadata
    planning cheaper. This candidate does not authorize an external runtime.
-7. Bind a restricted authenticated qik-only handler to a pinned, non-logging,
-   parameterized TLS database driver with AbortSignal handling and independent
-   readback. This repository candidate supplies no public HTTP endpoint or driver
-   credentials. Verify exact host, caller identity, private schema exclusion from
+7. The concrete index.ts handler uses pinned pg@8.23.0 and a dedicated TLS
+   connection with cancellation/ambiguous-commit recovery. It accepts only the
+   fixed qik database host and mip_history_executor login, never privileged
+   postgres. Hosted SUPABASE_DB_URL may already exist server-side, but is accepted
+   only if its actual role is the restricted executor; otherwise securely configure
+   MIP_HISTORY_EXECUTOR_DB_URL. No default admin fallback is permitted.
+   Source Vault connection setup remains separate. Gateway JWT verification stays
+   enabled, and MIP_HISTORY_INVOKER_TOKEN must be entered through secure server
+   configuration, never chat/tools/code. Verify exact host, caller identity, private schema exclusion from
    Data API, final ACLs/RLS, source read-only rights, no material logs, and no
    worker/publication side effects using real roles. Synthetic bool fixtures are
    not this evidence. Set client/session acquisition timeout BEFORE invocation;
@@ -138,9 +175,13 @@ requires an explicit byte-route extension and qualification first.
 ## Remaining evidence
 
 No synthetic tests in this candidate have been run by its author. Parent owns
-integration, execution and Cursor review. SQL schema/ACL/transaction tests must
-use actual PostgreSQL; the exported qualification hook is an integration entry,
-not a passing test claim. Live qik acquisition/engine capacity, source schema
+integration, execution and Cursor review. Actual PostgreSQL tests are authored but have not been executed by this author.
+The initial hook is not test evidence; use the concrete PG17 runner. Bootstrap
+extensions-layout success is not ordinary-role/closed-transport qualification;
+closed-ordinary success is not full main→historical ordered-install evidence.
+Parent owns those executions and source reviews. Existing main audit assertions
+must be replayed unchanged after historical installation; the new component may
+not weaken them. Live qik acquisition/engine capacity, source schema
 qualification, credentials, closure/object inventory and final access assertions
 remain unqualified. Therefore no historical material invocation is authorized by
 the existence of these source files alone.
@@ -148,3 +189,25 @@ the existence of these source files alone.
 References checked: PostgreSQL 17 dblink/dblink_connect documentation and current
 Supabase Edge limits. Supabase changelog.md fetch was attempted but unsupported
 by the browsing endpoint; no current feature change is inferred from that failure.
+
+## Synthetic CI invocation contract
+
+Use the existing approved official postgres:17.6 service only:
+MIP_HISTORICAL_EXECUTOR_DISPOSABLE=synthetic-pg17-only.
+The runner connects solely to 127.0.0.1:5432 with the existing documented disposable
+fixture password. It never accepts remote connection URLs or real credentials.
+MIP_HISTORICAL_EXECUTOR_INSTALL_PROFILE=closed-ordinary selects the NOSUPERUSER,
+CREATEROLE, CREATEDB, BYPASSRLS fixture installer and the preclosed transport shape.
+Without that variable it exercises the clearly labeled bootstrap core profile.
+Both profiles need candidate.sql blob 6fe6035223de1dac94fba6c238e33324bc0ca266 for
+the pinned closed constructor. Do not substitute edited SQL without updating and
+reviewing its pin. No actual test was launched by the source author.
+
+The acquisition session sets jit=off only inside its original read-only
+transaction. Repeated short closure statements must not pay repeated compilation
+cost from inflated recursive plan estimates; no persistent source setting changes.
+The repaired PG fixture gate is a first-statement advisory lock in a security
+invoker function. The runner confirms the exact waiting lock, its blocker, source
+database/principal and active snapshot before changing the synthetic source.
+It always releases and settles acquisition, and stops dependent tests on failure.
+Neither test nor acquisition timeouts were increased for this repair.
