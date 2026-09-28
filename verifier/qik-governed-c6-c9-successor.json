@@ -1092,7 +1092,7 @@
     },
     "c9_postgres_fixture": {
       "path": "tests/nativeArcCohortPostgres17.test.mjs",
-      "blob": "d6a42196061c16153ccbbf16344125c4fa108b83"
+      "blob": "8eefc91982966fba551f02a4feb23660ab2052fd"
     },
     "native_joint_installer_fixture": {
       "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
@@ -1252,11 +1252,11 @@
   "private_projection_successor": {
     "contract_file": {
       "path": "supabase/qualification/arc-public-projection/private_contract.json",
-      "blob": "f36b991acf1244c61cf1b5700d945cf18efc0f98"
+      "blob": "4111b76725c47b524075597e1a93e33a64d32250"
     },
     "documentation": {
       "path": "supabase/qualification/arc-public-projection/PRIVATE_CONTRACT.md",
-      "blob": "b4a1c058fa22288dce92810b3429af99631448b2"
+      "blob": "997018200b89ccb374fe0cde8fd7f13100b05477"
     },
     "assertions": {
       "path": "tests/nativeArcPublicProjectionAssertions.mjs",
@@ -1732,7 +1732,7 @@
       "export": "assertNativeArcPrivateProjection",
       "checks": 5,
       "synthetic_native_profile_bytes": 4194304,
-      "synthetic_native_profile_hash_bytes": 67108864,
+      "synthetic_native_profile_hash_bytes": 125829120,
       "required_context_ids": [
         "contextNodeId",
         "contextMilestoneId"

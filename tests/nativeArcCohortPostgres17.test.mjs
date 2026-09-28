@@ -492,7 +492,7 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
    // Supplemental projection work reserves space under the original whole
    // operation limits. This later SYNTHETIC profile does not reduce production
    // ceilings or change earlier 8MiB/128MiB whole-core qualification.
-   await reviewer.query('select mip_arc_native.review_selection_policy($1,$2,2,$3,0.7,true,31,128,4194304,67108864)',
+   await reviewer.query('select mip_arc_native.review_selection_policy($1,$2,2,$3,0.7,true,31,128,4194304,125829120)',
     [s,privateFixtureSelection,selection]);
    const buildReviewed=async({capture:original,candidateId,cohortId,generationId,reviewKey,memberIds,bindingIds,extractionIds})=>{
     const candidateRevision=(await db.query('select updated_at::text revision from public.arc_membership_candidates where id=$1',[candidateId])).rows[0].revision;

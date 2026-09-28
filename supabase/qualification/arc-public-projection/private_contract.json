@@ -469,7 +469,7 @@
     "export": "assertNativeArcPrivateProjection",
     "checks": 5,
     "synthetic_native_profile_bytes": 4194304,
-    "synthetic_native_profile_hash_bytes": 67108864,
+    "synthetic_native_profile_hash_bytes": 125829120,
     "required_context_ids": [
       "contextNodeId",
       "contextMilestoneId"
