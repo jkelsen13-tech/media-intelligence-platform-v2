@@ -23,7 +23,7 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='efb5e395e387fd218191b4db52921643ce3ffc0b'
+          source='7b40e86ec7de58a1d860cd9cbc007f2b01f58e34'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
@@ -44,7 +44,7 @@ jobs:
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Qualify atomic installer source contract
-        run: node --test tests/qikComparisonAtomicInstall.test.mjs
+        run: node --test tests/qikComparisonAtomicInstall.test.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs
       - name: Start disposable PostgreSQL 17.6 on loopback only
         shell: bash
         run: |
