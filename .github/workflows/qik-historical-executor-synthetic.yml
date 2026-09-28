@@ -23,25 +23,25 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='8db0c8776ba7c54e26729f2fa1455bf2caeb7790'
+          source='0114b7f54eed148088d5a023939243d5369483c5'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='46645a3e50c46622733011dc578ed6881e4c3392'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='34d27dbbb149dfae3618cecd27dd4f9574c49ae3'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
           assert subprocess.check_output(['git','rev-parse','HEAD^'],text=True).strip()==source
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-historical-executor-synthetic.yml']
           protected={'verifier/efta-postgres-qualification-manifest.json':'841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9','verifier/eftaPostgresQualification.py':'000eac69f781f1803c19d98ac44388400ee8324feeeb4cd6498e8a984ef65f10'}
           for name,digest in protected.items():
               assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
-          pins={"supabase/qualification/historical-qik-executor/candidate.sql":"7cb6ccb2615e60f4f5626f095e00387f3e2be087","supabase/qualification/historical-qik-executor/executor.mjs":"272c20d198c9e696021f79481efa998781c8c035","supabase/qualification/historical-qik-executor/contracts.mjs":"6277ff14cf9009e7bca8b77e9824e4cfb51c1542","supabase/qualification/historical-qik-executor/README.md":"491a70fc45c63ee5a0ac135ccbb9b408f60687a3","tests/historicalQikExecutor.mjs":"c53dbf501c73e5d3dc076b546766548b4693c5d9","tests/historicalQikExecutorPostgres17.test.mjs":"9f8001b23ac5608c7dfccf3ede2a535a56c9a33b"}
+          pins={"supabase/qualification/historical-qik-executor/candidate.sql":"6fe6035223de1dac94fba6c238e33324bc0ca266","supabase/qualification/historical-qik-executor/executor.mjs":"272c20d198c9e696021f79481efa998781c8c035","supabase/qualification/historical-qik-executor/contracts.mjs":"6277ff14cf9009e7bca8b77e9824e4cfb51c1542","supabase/qualification/historical-qik-executor/README.md":"89f3433e4cd7e4a2d1b311e2d77c880de45b8d9d","tests/historicalQikExecutor.mjs":"c53dbf501c73e5d3dc076b546766548b4693c5d9","tests/historicalQikExecutorPostgres17.test.mjs":"8e17f2d397e3a85684fe0882db775ba87623d4bd","supabase/qualification/historical-qik-executor/install.mjs":"d58bc1098815d5fc25cf6cdc363f8be8aa7fbfae","supabase/qualification/historical-qik-executor/handler.mjs":"70f383705b729c29ffed74564bfbf4cc15b9c7d3","supabase/qualification/historical-qik-executor/index.ts":"ebebe21f4bf2eed94070e71d0a8a4e8a4986bbb2","supabase/qualification/historical-qik-executor/deno.json":"ac66847f390776a239ed12087d9c7095019fd4a3","supabase/qualification/historical-qik-executor/config.toml":"e5fe571d97c7f75ed0ae5679013d373817870f47","tests/historicalQikExecutorHandler.test.mjs":"f0f935008db8ce17b6c510486f866be295a9b477"}
           for name,blob in pins.items():
               body=pathlib.Path(name).read_bytes()
               actual=hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()
               assert actual==blob
           config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
           assert config.returncode==1 and not config.stdout
-          print('Exact source candidate. Synthetic-only PG17.6 acquisition and engine tests; Vault-shape surrogate. Not a qik install, actual Vault qualification, Edge capacity proof or real transfer receipt.')
+          print('Exact source candidate. Synthetic-only PG17.6 acquisition and engine tests; Vault-shape surrogate. Bootstrap and separate restricted closed-transport profiles are distinct evidence. Not full main-to-historical order, a qik install, actual Vault qualification, Edge capacity proof or real transfer receipt.')
           PY
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -50,7 +50,7 @@ jobs:
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Test adapter and unchanged planner/transfer contracts
-        run: node --test tests/historicalQikExecutor.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs
+        run: node --test tests/historicalQikExecutor.mjs tests/historicalQikExecutorHandler.test.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs
       - name: Start owned PostgreSQL 17.6 on loopback only
         shell: bash
         run: |
@@ -64,6 +64,12 @@ jobs:
         timeout-minutes: 4
         env:
           MIP_HISTORICAL_EXECUTOR_DISPOSABLE: synthetic-pg17-only
+        run: node --test tests/historicalQikExecutorPostgres17.test.mjs
+      - name: Test restricted ordinary installer on preclosed transport and repeat acquisition checks
+        timeout-minutes: 4
+        env:
+          MIP_HISTORICAL_EXECUTOR_DISPOSABLE: synthetic-pg17-only
+          MIP_HISTORICAL_EXECUTOR_INSTALL_PROFILE: closed-ordinary
         run: node --test tests/historicalQikExecutorPostgres17.test.mjs
       - name: Remove owned container and volumes and assert absence
         if: always()
