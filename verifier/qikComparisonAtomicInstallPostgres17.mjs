@@ -17,6 +17,28 @@ async function client(user,database='postgres'){
  connectionTimeoutMillis:5000,statement_timeout:30000,query_timeout:40000})
  await db.connect();return db
 }
+// Test-only fault injection at the existing actual pg client boundary.
+// Execute the real transaction command first; discard only its acknowledgement.
+// No production injection hook or competing connection/execution service.
+async function loseAcknowledgement(command,body){
+ const original=pg.Client.prototype.query
+ let losses=0
+ pg.Client.prototype.query=async function(...args){
+  const result=await original.apply(this,args)
+  const text=typeof args[0]==='string'?args[0]:args[0]?.text
+  if(losses===0&&this.connectionParameters.application_name==='mip-c3-persistent-install-source'
+    &&typeof text==='string'&&text.trim().toLowerCase()===command){
+   losses++
+   throw Object.assign(new Error('synthetic acknowledgement discarded'),{code:'08006'})
+  }
+  return result
+ }
+ try{
+  const result=await body()
+  assert.equal(losses,1,'expected exactly one real transaction acknowledgement to be discarded')
+  return result
+ }finally{pg.Client.prototype.query=original}
+}
 const ident=s=>'"'+s.replaceAll('"','""')+'"'
 test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and audit recovery',{timeout:240000},async()=>{
  assert.equal(process.env.MIP_QIK_COMPARISON_DISPOSABLE,'synthetic-pg17-only')
@@ -73,15 +95,21 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
    auditLogin:audit,auditConnectionString:url(audit),disposable:true}
   // Force a real mid-install failure at the existing 009 uniqueness constraint.
   await admin.query("insert into public.explanations(id,assertion_id,version,is_current) values('00000000-0000-4000-8000-000000000001','synthetic-duplicate',1,true),('00000000-0000-4000-8000-000000000002','synthetic-duplicate',1,true)")
-  const failed=await installComparisonAtomic(cfg,async p=>read(p))
+  const failed=await loseAcknowledgement('rollback',()=>installComparisonAtomic(cfg,async p=>read(p)))
   assert.equal(failed.state,'installation_refused')
   assert.equal(failed.needs_reconciliation,false)
+  assert.equal(failed.phase,'source:supabase/qualification/mip-cutover-authority/009_factual_enforcement.sql')
+  assert.equal(failed.sqlstate,'23505')
   assert.equal((await admin.query('select count(*)::integer n from pg_roles where rolname=any($1::text[])',[[...RESERVED_ROLES,'mip_tmp_'+cfg.operationId]])).rows[0].n,0)
   assert.equal((await admin.query('select count(*)::integer n from pg_namespace where nspname=any($1::text[])',[[...RESERVED_SCHEMAS,'mip_comparison_install']])).rows[0].n,0)
   assert.equal((await admin.query("select n.nspname from pg_extension e join pg_namespace n on n.oid=e.extnamespace where e.extname='dblink'")).rows[0].nspname,'extensions')
+  assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
   await admin.query('delete from public.explanations')
-  const installed=await installComparisonAtomic(cfg,async p=>read(p))
-  assert.equal(installed.state,'installed_disabled_audit_pending')
+  const installed=await loseAcknowledgement('commit',()=>installComparisonAtomic(cfg,async p=>read(p)))
+  assert.equal(installed.state,'commit_ambiguous')
+  assert.equal(installed.needs_reconciliation,true)
+  assert.equal(installed.phase,'commit')
+  assert.equal(installed.sqlstate,'08006')
   assert.equal(installed.activation_allowed,false)
   assert.equal((await reconcileComparisonInstall(cfg)).state,'installed_disabled_audit_pending')
   assert.equal((await admin.query('select count(*)::integer n from pg_auth_members where roleid in(select oid from pg_roles where rolname=any($1::text[])) or member in(select oid from pg_roles where rolname=any($1::text[]))',[[...RESERVED_ROLES]])).rows[0].n,0)
