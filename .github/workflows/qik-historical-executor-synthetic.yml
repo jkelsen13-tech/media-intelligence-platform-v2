@@ -12,7 +12,7 @@ jobs:
   synthetic:
     if: github.repository == 'jkelsen13-tech/media-intelligence-platform-v2' && github.ref == 'refs/heads/codex/qik-operational-integration-20260927'
     runs-on: ubuntu-22.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -23,25 +23,25 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='b405a05ceacaab9c9c238f340556a50f1c08fb86'
+          source='5f3fb644c9bdc7554d36375ac7fa5098e901769b'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='32d4584ed36ebf97da73e573c32c3634efd25a91'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='09a7a5c94f4c34a6e2e9e79c16a0fe8236791a37'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
-          assert subprocess.check_output(['git','rev-parse','HEAD^'],text=True).strip()==source
+          subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-historical-executor-synthetic.yml']
           protected={'verifier/efta-postgres-qualification-manifest.json':'841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9','verifier/eftaPostgresQualification.py':'000eac69f781f1803c19d98ac44388400ee8324feeeb4cd6498e8a984ef65f10'}
           for name,digest in protected.items():
               assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
-          pins={"supabase/qualification/historical-qik-executor/candidate.sql":"6fe6035223de1dac94fba6c238e33324bc0ca266","supabase/qualification/historical-qik-executor/executor.mjs":"fa2e6a6f04287f45ce75ee0ae79e66afea5a3e1a","supabase/qualification/historical-qik-executor/contracts.mjs":"6277ff14cf9009e7bca8b77e9824e4cfb51c1542","supabase/qualification/historical-qik-executor/README.md":"573f1564dca5894f4c59523a5b4e5f09d6ef27b2","tests/historicalQikExecutor.mjs":"bb80465876c7c7c62dd261da260079244445ffa9","tests/historicalQikExecutorPostgres17.test.mjs":"150b59cf3a5680fd991c7f33840aa8f89cfe02a1","supabase/qualification/historical-qik-executor/install.mjs":"d4c72b5e2ff50ce19d46de9c6911135fc0216f48","supabase/qualification/historical-qik-executor/handler.mjs":"d00b3d331e161f0fb269ed26b173d5c7bcc3cb29","supabase/qualification/historical-qik-executor/index.ts":"ebebe21f4bf2eed94070e71d0a8a4e8a4986bbb2","supabase/qualification/historical-qik-executor/deno.json":"ac66847f390776a239ed12087d9c7095019fd4a3","supabase/qualification/historical-qik-executor/config.toml":"e5fe571d97c7f75ed0ae5679013d373817870f47","tests/historicalQikExecutorHandler.test.mjs":"f1780203995e5efc6b65aa86beb87d4946e5eaa4","scripts/mipHistoricalArticleTransferPlan.mjs":"ad30cb603757888840e737694b333c3b6ae234e1","scripts/mipHistoricalArticleTransfer.mjs":"b5b80ee37c6cd068d17f59b506bab6df70839ea6","verifier/qik-history-bounded-adapter-successor.json":"f9bf11f725ee5275ad661ed9a3573a39a760a426"}
+          pins={"supabase/qualification/historical-qik-executor/candidate.sql":"6fe6035223de1dac94fba6c238e33324bc0ca266","supabase/qualification/historical-qik-executor/executor.mjs":"fa2e6a6f04287f45ce75ee0ae79e66afea5a3e1a","supabase/qualification/historical-qik-executor/contracts.mjs":"6277ff14cf9009e7bca8b77e9824e4cfb51c1542","supabase/qualification/historical-qik-executor/README.md":"573f1564dca5894f4c59523a5b4e5f09d6ef27b2","tests/historicalQikExecutor.mjs":"bb80465876c7c7c62dd261da260079244445ffa9","tests/historicalQikExecutorPostgres17.test.mjs":"3f71bc7d8dba77f3046cbe05afc3727d026ddf4f","supabase/qualification/historical-qik-executor/install.mjs":"d4c72b5e2ff50ce19d46de9c6911135fc0216f48","supabase/qualification/historical-qik-executor/handler.mjs":"d00b3d331e161f0fb269ed26b173d5c7bcc3cb29","supabase/qualification/historical-qik-executor/index.ts":"ebebe21f4bf2eed94070e71d0a8a4e8a4986bbb2","supabase/qualification/historical-qik-executor/deno.json":"ac66847f390776a239ed12087d9c7095019fd4a3","supabase/qualification/historical-qik-executor/config.toml":"e5fe571d97c7f75ed0ae5679013d373817870f47","tests/historicalQikExecutorHandler.test.mjs":"f1780203995e5efc6b65aa86beb87d4946e5eaa4","scripts/mipHistoricalArticleTransferPlan.mjs":"ad30cb603757888840e737694b333c3b6ae234e1","scripts/mipHistoricalArticleTransfer.mjs":"b5b80ee37c6cd068d17f59b506bab6df70839ea6","verifier/qik-history-bounded-adapter-successor.json":"d6ffd6bc4a4cf30e9673b5380a4601efdf2d7827","tests/historicalQikDenoRuntime.mjs":"66eea36fee9ee43d412adcddbf023007f7242a94","supabase/qualification/historical-qik-executor/DENO_RUNTIME.md":"944709e36d44900cb246d4786335c056a7bea2a8","supabase/functions/native-comparison-display/deno.json":"9126bd3e8ddc618bfbdc8239f14c84295ed662af","tests/nativeComparisonDenoRuntimePin.json":"82305814e17a4fa749c6e7a4c5ea2ba284045722"}
           for name,blob in pins.items():
               body=pathlib.Path(name).read_bytes()
               actual=hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()
               assert actual==blob
           config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
           assert config.returncode==1 and not config.stdout
-          print('Exact bounded adapter successor source with unchanged SQL/installation and transfer engine. Synthetic-only PG17.6 bootstrap and separate restricted closed-transport profiles plus Node contracts. Actual qik full-engine capacity, secure source/executor bindings, hosted runtime/TLS and real transfer remain unproved. No new material receiving route or historical acceptance.')
+          print('New actual standalone Deno2.5.2/npm pg probe in both existing historical profiles; no hosted Edge/TLS/material proof. Exact bounded adapter successor source with unchanged SQL/installation and transfer engine. Synthetic-only PG17.6 bootstrap and separate restricted closed-transport profiles plus Node contracts. Actual qik full-engine capacity, secure source/executor bindings, hosted runtime/TLS and real transfer remain unproved. No new material receiving route or historical acceptance.')
           PY
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -51,6 +51,44 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Test adapter and unchanged planner/transfer contracts
         run: node --test tests/historicalQikExecutor.mjs tests/historicalQikExecutorHandler.test.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs
+      - name: Prepare verified pinned Deno and actual frozen source dependencies
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -s)" = Linux
+          test "$(uname -m)" = x86_64
+          probe_dir="$(mktemp -d "$RUNNER_TEMP/native-comparison-deno.XXXXXX")"
+          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 --max-filesize 50000000 \
+            'https://github.com/denoland/deno/releases/download/v2.5.2/deno-x86_64-unknown-linux-gnu.zip' -o "$probe_dir/deno.zip"
+          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 --connect-timeout 10 --max-time 30 --max-filesize 1024 \
+            'https://github.com/denoland/deno/releases/download/v2.5.2/deno-x86_64-unknown-linux-gnu.zip.sha256sum' -o "$probe_dir/vendor.sha256sum"
+          printf '%s  %s\n' '520fd4bc2d18b50b6ac2ea8b7d0f7f6a35588e412754a081e8c6afd4b15264c4' "$probe_dir/deno.zip" | sha256sum --check --status
+          printf '%s  %s\n' '4c0fc62463955fa32e56d43d4d14b37424251e4ab78f14beb33e7092fd083cda' "$probe_dir/vendor.sha256sum" | sha256sum --check --status
+          test "$(awk 'NR==1 {print $1}' "$probe_dir/vendor.sha256sum")" = '520fd4bc2d18b50b6ac2ea8b7d0f7f6a35588e412754a081e8c6afd4b15264c4'
+          unzip -q "$probe_dir/deno.zip" deno -d "$probe_dir"
+          chmod 700 "$probe_dir/deno"
+          export DENO_BINARY="$probe_dir/deno"
+          export DENO_DIR="$probe_dir/cache"
+          export DENO_NO_UPDATE_CHECK=1
+          test "$("$DENO_BINARY" --version | head -n 1)" = 'deno 2.5.2 (stable, release, x86_64-unknown-linux-gnu)'
+          cfg='supabase/functions/native-comparison-display/deno.json'
+          lock='supabase/functions/native-comparison-display/deno.lock'
+          timeout --signal=KILL 90s "$DENO_BINARY" cache --config="$cfg" --lock="$lock" --frozen=false --node-modules-dir=none \
+            supabase/functions/native-comparison-display/index.ts \
+            supabase/qualification/native-comparison-caller/host.mjs \
+            tests/nativeComparisonDenoRuntime.mjs \
+            tests/historicalQikDenoRuntime.mjs \
+            supabase/qualification/historical-qik-executor/index.ts
+          timeout --signal=KILL 90s "$DENO_BINARY" check --config="$cfg" --lock="$lock" --frozen=false --node-modules-dir=none \
+            supabase/functions/native-comparison-display/index.ts \
+            supabase/qualification/historical-qik-executor/index.ts
+          lock_before="$(sha256sum "$lock" | awk '{print $1}')"
+          timeout --signal=KILL 30s "$DENO_BINARY" check --config="$cfg" --lock="$lock" --frozen --node-modules-dir=none \
+            supabase/functions/native-comparison-display/index.ts \
+            supabase/qualification/historical-qik-executor/index.ts
+          test "$(sha256sum "$lock" | awk '{print $1}')" = "$lock_before"
+          printf 'DENO_BINARY=%s\nDENO_DIR=%s\nDENO_NO_UPDATE_CHECK=1\n' "$DENO_BINARY" "$DENO_DIR" >> "$GITHUB_ENV"
       - name: Start owned PostgreSQL 17.6 on loopback only
         shell: bash
         run: |
@@ -71,6 +109,18 @@ jobs:
           MIP_HISTORICAL_EXECUTOR_DISPOSABLE: synthetic-pg17-only
           MIP_HISTORICAL_EXECUTOR_INSTALL_PROFILE: closed-ordinary
         run: node --test tests/historicalQikExecutorPostgres17.test.mjs
+      - name: Return bounded generated Deno dependency source identity
+        shell: bash
+        run: |
+          node --input-type=module - <<'JS'
+          import {readFile} from 'node:fs/promises';
+          import {createHash} from 'node:crypto';
+          const b=await readFile('supabase/functions/native-comparison-display/deno.lock');
+          if(b.length<1||b.length>65536)throw Error('deno_lock_source_size');
+          const value=JSON.parse(b.toString('utf8'));
+          if(!value||typeof value!=='object'||Array.isArray(value))throw Error('deno_lock_source_shape');
+          console.log(JSON.stringify({kind:'deno-lock-source-v1',runtime:'2.5.2',sha256:createHash('sha256').update(b).digest('hex'),bytes:b.length,base64:b.toString('base64')}));
+          JS
       - name: Remove owned container and volumes and assert absence
         if: always()
         shell: bash
