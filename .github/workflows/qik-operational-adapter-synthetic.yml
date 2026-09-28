@@ -23,11 +23,11 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='6f59a49981de55a00cd13e26a131c139055ce7a6'
+          source='b661e068a11e25ca3c820a5a386a27abe892b947'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='d1370277ddc68e261544e60e5077aa49a14b9333'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='15b5085cc22aa47cf7b582ebbd29d25f4cadbf09'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
           subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-operational-adapter-synthetic.yml']
