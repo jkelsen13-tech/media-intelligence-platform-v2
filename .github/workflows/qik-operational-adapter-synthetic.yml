@@ -12,175 +12,67 @@ jobs:
   synthetic:
     if: github.repository == 'jkelsen13-tech/media-intelligence-platform-v2' && github.ref == 'refs/heads/codex/qik-operational-integration-20260927'
     runs-on: ubuntu-22.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 2
           persist-credentials: false
-      - name: Verify candidate dependency tree and synthetic authority
+      - name: Verify exact candidate tree, all tracked blobs and historical integrity
         shell: bash
         run: |
           python3 -I -B - <<'PY'
-          import hashlib,os,pathlib,subprocess
-          source='7186525a9a36e049c5b1250a72ef1501f51287f0'
+          import hashlib,json,os,pathlib,subprocess
+          source='c824c154846d6104f20b907da798d31cfcb27534'
+          tree='ead9fefd57b89ffb9324613ae11f38de7c0257fb'
+          workflow='.github/workflows/qik-operational-adapter-synthetic.yml'
+          git=lambda *args: subprocess.check_output(['git',*args])
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='505669b015b54567ec4109a9ca9e95545fd2381a'
-          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
+          assert os.environ['GITHUB_RUN_ATTEMPT']=='1'
+          assert git('rev-parse','HEAD').decode().strip()==os.environ['GITHUB_SHA']
+          assert git('rev-parse',source+'^{tree}').decode().strip()==tree
           subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
-          assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-operational-adapter-synthetic.yml']
-          pins={"supabase/qualification/native-comparison-display/001_private_display.sql":"6602515e55fe7cb70bba1e505a2d3e21b94398e5","supabase/qualification/native-comparison-display/displayContract.mjs":"e5975cf78bfe875c17a8e5ce3be2bc39f248a20a","supabase/qualification/native-comparison-display/serverRoute.mjs":"94ecb69bf660563b7921a9991b4f1b4cb328e532","supabase/qualification/native-comparison-display/README.md":"499e7252dee0b3043dff54e3b11e701d85efacbd","supabase/qualification/native-comparison-display/contract.json":"ab6dec0faad0ecc03370f6a7ad5cacf293993aa4","tests/nativeComparisonDisplay.test.mjs":"29006a483186fa0b09095421920d8c586ed7d6ab","tests/nativeComparisonDisplayAssertions.mjs":"194ae7ec92349754e6dd27f04137307aadd28306","tests/nativeComparisonBindingFixture.mjs":"f325d80133e9a152ae94b00ffa1e65714e199470","supabase/qualification/native-governed-install/install.mjs":"c56aa3e050fdb9342ef90dc71dca44f2810782ea","supabase/qualification/qik-comparison-adapter/atomicInstall.mjs":"b73fcfa4782bd56ec220a2744aa749e8f50830a7","tests/nativeGovernedInstallerPostgres17.test.mjs":"4a01cf7ff02a31093fe27cf72ce57621d272bd2f","supabase/qualification/native-governed-install/README.md":"08277b4d5dd28652794db38cd9d48b904ac9de39","tests/nativeArcCohortPostgres17.test.mjs":"2118e37d75ea0a9b0fdedc1ad87023e7ed3997e1","verifier/qik-governed-c6-c9-successor.json":"f41c9fe72dfa6a32f6730e52b4c03b2e885eef44","supabase/qualification/historical-qik-executor/install.mjs":"d4c72b5e2ff50ce19d46de9c6911135fc0216f48","tests/nativeComparisonCallerPostgresAssertions.mjs":"80a8632a5bd749742c97ff4c4b3c4685376a206a","supabase/qualification/native-comparison-caller/README.md":"1b50091ac71a2a6c4b46290d49ffb0bd11328e05","supabase/qualification/native-comparison-caller/001_admission.sql":"a9428d8b2120514a0d6ee13a53d801dba7b6e060","supabase/qualification/native-comparison-caller/host.mjs":"b258b01e701ce18a0c6c91d34e85063bb3ee77aa","tests/nativeComparisonCaller.test.mjs":"79d65fcab37dff7c987cedac7aded4bd5d8ee346","src/lib/nativePrivateComparisonRead.js":"d2b22e92f3e8240a13d5478773e177f0b1990871","src/components/NativePrivateComparisonWorkspace.jsx":"c3f104544fa9a31200b5f6bbddd068e82dd2aa68","tests/nativePrivateUiFixture.mjs":"cfc7fd58016db965850bacbf424e97321592785c","tests/nativePrivateUiRead.test.mjs":"4cc9a7699f835b1c2457ae78cbc0af6c6f200c65","docs/native-private-browser-consumer.md":"91f35a89055aebc0457efc7c6824ddc04767d5b7","src/components/PrivateInvestigationWorkspace.jsx":"1cb1bd52db17191674083f8b93f4bbeb77b3134b","supabase/functions/native-comparison-display/index.ts":"ff4998b69ae0ca40be166a7437210cba5170f73d","supabase/functions/native-comparison-display/adapter.mjs":"a6d113c25d284fa296c9816adae2dc17d9b0ca7f","supabase/functions/native-comparison-display/deno.json":"9126bd3e8ddc618bfbdc8239f14c84295ed662af","supabase/functions/native-comparison-display/config.fragment.toml":"3295db2df6bb45efe884b8b3b4d0b5c6aa81101d","supabase/functions/native-comparison-display/dependency-closure.json":"f7dbcb14b4410dd34b9bb138f003574208eef544","supabase/functions/native-comparison-display/README.md":"89c978c1ed95a432cae0987348cba7cc07c93444","tests/nativeComparisonEdgePackaging.test.mjs":"db97133693c14f198d3566a02d25c34a9fde6e44","tests/nativeComparisonDenoRuntime.mjs":"a313f47a040e6bf24326c8fa731b68fc44ff9868","tests/nativeComparisonDenoRuntimePin.json":"82305814e17a4fa749c6e7a4c5ea2ba284045722","docs/native-comparison-deno-runtime-qualification.md":"c37b94bb1707b96e254c857ac44c540aaffbea1c","supabase/qualification/native-governed-host/adapter.mjs":"47622a1729351d0cabda279d63855b9309e490b0","supabase/qualification/native-governed-host/run.mjs":"d713431e63d62cbfdddd8e196e7d7b4000a9d3b1","supabase/qualification/native-governed-host/README.md":"a323c15282e168ef35bdbb5a8a3bc601d306daf9","tests/nativeGovernedHost.test.mjs":"d3325ee764c41fb3d40613d9ec9fb708561b0a17",".github/workflows/qik-native-installer-held.yml":"d59e0e063518ccabd455e4a0be0b2ae365348a93","tests/historicalQikDenoRuntime.mjs":"66eea36fee9ee43d412adcddbf023007f7242a94","tests/historicalQikExecutorPostgres17.test.mjs":"3f71bc7d8dba77f3046cbe05afc3727d026ddf4f","supabase/qualification/historical-qik-executor/DENO_RUNTIME.md":"944709e36d44900cb246d4786335c056a7bea2a8","tests/qikComparisonAtomicInstall.test.mjs":"b855762ad64da0234dc17849477891f21ae46b94","verifier/qikComparisonAtomicInstallPostgres17.mjs":"00de8b575dca2c485e4ea6c75a615efb499b5e61","verifier/qik-history-bounded-adapter-successor.json":"d6ffd6bc4a4cf30e9673b5380a4601efdf2d7827"}
-          for name,blob in pins.items():
+          assert git('diff','--name-only',source,'HEAD').decode().splitlines()==[workflow]
+          assert not git('status','--porcelain','--untracked-files=no')
+          entries=git('ls-tree','-rz',source).split(b'\0')
+          count=0
+          for entry in entries:
+              if not entry: continue
+              info,path=entry.split(b'\t',1)
+              mode,kind,blob=info.split()
+              assert kind==b'blob'
+              name=path.decode()
+              if name==workflow: continue
               body=pathlib.Path(name).read_bytes()
-              assert hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()==blob
+              assert hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()==blob.decode(),name
+              count+=1
+          manifest=json.loads(pathlib.Path('verifier/qik-native-activation-successor.json').read_text())
+          assert manifest['profile']=='native-governed-activation-v1'
+          assert manifest['production_qualified'] is False
+          assert len(manifest['sources'])==24
+          for entry in manifest['sources']:
+              name=entry['path']
+              body=pathlib.Path(name).read_bytes()
+              assert hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()==entry['git_blob'],name
           protected={'verifier/efta-postgres-qualification-manifest.json':'841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9','verifier/eftaPostgresQualification.py':'000eac69f781f1803c19d98ac44388400ee8324feeeb4cd6498e8a984ef65f10'}
           for name,digest in protected.items():
-              assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
+              assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest,name
           config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
           assert config.returncode==1 and not config.stdout
-          print('Pinned complete integrated source tree; earlier mode evidence preserved. New v6, private caller/UI/Edge and actual pinned Deno driver qualification use synthetic-only material under the consolidation amendment. Fresh consequential Cursor review follows applicable tests; no hosted installation, actual-material receiving or historical acceptance claim.')
+          print(json.dumps({'source_commit':source,'source_tree':tree,'workflow_child':os.environ['GITHUB_SHA'],'tracked_source_blobs':count,'manifest_sources':24,'historical_integrity':'verified','scope':'source-and-synthetic-only-no-hosted-operation'}))
           PY
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22.14.0
           package-manager-cache: false
       - name: Install locked dependencies without lifecycle scripts
+        timeout-minutes: 3
         run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Qualify combined occurrence, replay and nested retention contracts
-        run: node --test tests/arcMembershipPrepared.test.mjs tests/collectorRetainedExtraction.test.mjs tests/retainedExtraction.test.mjs tests/nativeEntityOccurrences.test.mjs tests/arcMembershipRetained.test.mjs tests/qikC6C9RetentionSuccessor.test.mjs tests/nativeArcScoring.test.mjs tests/nativeComparisonServerCaller.test.mjs tests/nativeComparisonDisplay.test.mjs tests/mipHistoricalArticleTransferPlan.test.mjs tests/mipHistoricalArticleTransfer.test.mjs tests/nativeComparisonCaller.test.mjs tests/nativePrivateUiRead.test.mjs tests/nativeGovernedHost.test.mjs tests/nativeComparisonEdgePackaging.test.mjs tests/qikComparisonAtomicInstall.test.mjs
-      - name: Prepare verified pinned Deno and actual frozen source dependencies
-        timeout-minutes: 5
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(uname -s)" = Linux
-          test "$(uname -m)" = x86_64
-          probe_dir="$(mktemp -d "$RUNNER_TEMP/native-comparison-deno.XXXXXX")"
-          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 --max-filesize 50000000 \
-            'https://github.com/denoland/deno/releases/download/v2.5.2/deno-x86_64-unknown-linux-gnu.zip' -o "$probe_dir/deno.zip"
-          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 --connect-timeout 10 --max-time 30 --max-filesize 1024 \
-            'https://github.com/denoland/deno/releases/download/v2.5.2/deno-x86_64-unknown-linux-gnu.zip.sha256sum' -o "$probe_dir/vendor.sha256sum"
-          printf '%s  %s\n' '520fd4bc2d18b50b6ac2ea8b7d0f7f6a35588e412754a081e8c6afd4b15264c4' "$probe_dir/deno.zip" | sha256sum --check --status
-          printf '%s  %s\n' '4c0fc62463955fa32e56d43d4d14b37424251e4ab78f14beb33e7092fd083cda' "$probe_dir/vendor.sha256sum" | sha256sum --check --status
-          test "$(awk 'NR==1 {print $1}' "$probe_dir/vendor.sha256sum")" = '520fd4bc2d18b50b6ac2ea8b7d0f7f6a35588e412754a081e8c6afd4b15264c4'
-          unzip -q "$probe_dir/deno.zip" deno -d "$probe_dir"
-          chmod 700 "$probe_dir/deno"
-          export DENO_BINARY="$probe_dir/deno"
-          export DENO_DIR="$probe_dir/cache"
-          export DENO_NO_UPDATE_CHECK=1
-          test "$("$DENO_BINARY" --version | head -n 1)" = 'deno 2.5.2 (stable, release, x86_64-unknown-linux-gnu)'
-          cfg='supabase/functions/native-comparison-display/deno.json'
-          lock='supabase/functions/native-comparison-display/deno.lock'
-          timeout --signal=KILL 90s "$DENO_BINARY" cache --config="$cfg" --lock="$lock" --frozen=false --node-modules-dir=none \
-            supabase/functions/native-comparison-display/index.ts \
-            supabase/qualification/native-comparison-caller/host.mjs \
-            tests/nativeComparisonDenoRuntime.mjs \
-            tests/historicalQikDenoRuntime.mjs \
-            supabase/qualification/historical-qik-executor/index.ts
-          timeout --signal=KILL 90s "$DENO_BINARY" check --config="$cfg" --lock="$lock" --frozen=false --node-modules-dir=none \
-            supabase/functions/native-comparison-display/index.ts \
-            supabase/qualification/historical-qik-executor/index.ts
-          lock_before="$(sha256sum "$lock" | awk '{print $1}')"
-          timeout --signal=KILL 30s "$DENO_BINARY" check --config="$cfg" --lock="$lock" --frozen --node-modules-dir=none \
-            supabase/functions/native-comparison-display/index.ts \
-            supabase/qualification/historical-qik-executor/index.ts
-          test "$(sha256sum "$lock" | awk '{print $1}')" = "$lock_before"
-          printf 'DENO_BINARY=%s\nDENO_DIR=%s\nDENO_NO_UPDATE_CHECK=1\n' "$DENO_BINARY" "$DENO_DIR" >> "$GITHUB_ENV"
-      - name: Build integrated private browser source without deployment
+      - name: Qualify exact activation and host source contracts
         timeout-minutes: 3
-        run: npm run build
-      - name: Start disposable PostgreSQL 17.6 on loopback only
-        shell: bash
-        run: |
-          docker run --detach --name qik-op-qualification --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=mip-efta-disposable-ci-only -e POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
-          for attempt in $(seq 1 30); do
-            if docker exec qik-op-qualification pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then exit 0; fi
-            sleep 2
-          done
-          exit 1
-      - name: Qualify native field admission and consumers on actual PostgreSQL
-        timeout-minutes: 3
-        env:
-          MIP_NATIVE_MENTION_DISPOSABLE: synthetic-pg17-only
-        run: node --test tests/nativeMentionFieldsPostgres17.test.mjs
-      - name: Qualify arc preparation with actual PostgreSQL snapshot and permissions
-        timeout-minutes: 3
-        shell: bash
-        env:
-          MIP_DISPOSABLE_POSTGRES: arc-membership-prepared
-          MIP_ARC_PREPARED_DATABASE_URL: postgres://postgres:mip-efta-disposable-ci-only@127.0.0.1:5432/mip_arc_prepared_test
-        run: |
-          set -euo pipefail
-          test "$(docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification psql -X -h 127.0.0.1 -U postgres -Atc "show server_version_num")" = 170006
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification createdb -h 127.0.0.1 -U postgres mip_arc_prepared_test
-          node --test tests/arcMembershipPreparedPostgres.test.mjs
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification dropdb -h 127.0.0.1 -U postgres mip_arc_prepared_test
-      - name: Qualify physical native occurrence admission and exact retries
-        timeout-minutes: 3
-        shell: bash
-        env:
-          MIP_NATIVE_ENTITY_OCCURRENCES_DISPOSABLE: synthetic-pg17-only
-        run: |
-          set -euo pipefail
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification createdb -h 127.0.0.1 -U postgres mip_native_occurrences_test
-          node --test tests/nativeEntityOccurrencesPostgres17.test.mjs
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification dropdb -h 127.0.0.1 -U postgres mip_native_occurrences_test
-      - name: Qualify retained historical arc context and effective private permissions
-        timeout-minutes: 3
-        shell: bash
-        env:
-          MIP_DISPOSABLE_POSTGRES: arc-membership-retained
-          MIP_ARC_RETAINED_DATABASE_URL: postgres://postgres:mip-efta-disposable-ci-only@127.0.0.1:5432/mip_arc_retained_test
-        run: |
-          set -euo pipefail
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification createdb -h 127.0.0.1 -U postgres mip_arc_retained_test
-          node --test tests/arcMembershipRetainedPostgres.test.mjs
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification dropdb -h 127.0.0.1 -U postgres mip_arc_retained_test
-      - name: Qualify exact candidate review and effective gateway boundaries
-        timeout-minutes: 3
-        shell: bash
-        env:
-          MIP_NATIVE_CANDIDATE_REVIEW_DISPOSABLE: synthetic-pg17-only
-        run: |
-          set -euo pipefail
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification createdb -h 127.0.0.1 -U postgres mip_candidate_review_test
-          node --test tests/nativeCandidateReviewPostgres17.test.mjs
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification dropdb -h 127.0.0.1 -U postgres mip_candidate_review_test
-      - name: Qualify qik DATE RLS storage and unqualified authority refusal
-        timeout-minutes: 3
-        shell: bash
-        env:
-          MIP_DISPOSABLE_POSTGRES: arc-membership-qik-source
-          MIP_ARC_QIK_SOURCE_DATABASE_URL: postgres://postgres:mip-efta-disposable-ci-only@127.0.0.1:5432/mip_arc_qik_source_test
-        run: |
-          set -euo pipefail
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification createdb -h 127.0.0.1 -U postgres mip_arc_qik_source_test
-          node --test tests/arcMembershipQikSourcePostgres.test.mjs
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification dropdb -h 127.0.0.1 -U postgres mip_arc_qik_source_test
-      - name: Qualify governed canonical admission and exact projection readers
-        timeout-minutes: 3
-        shell: bash
-        env:
-          MIP_NATIVE_CANONICAL_ADMISSION_DISPOSABLE: synthetic-pg17-only
-        run: |
-          set -euo pipefail
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification createdb -h 127.0.0.1 -U postgres mip_canonical_admission_test
-          node --test tests/nativeCanonicalAdmissionPostgres17.test.mjs
-          docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification dropdb -h 127.0.0.1 -U postgres mip_canonical_admission_test
-      - name: Remove helper-test container before full installation qualification
-        if: always()
-        shell: bash
-        run: |
-          if docker container inspect qik-op-qualification >/dev/null 2>&1; then
-            volumes=$(docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{println .Name}}{{end}}{{end}}' qik-op-qualification)
-            docker rm --force --volumes qik-op-qualification
-            for volume in $volumes; do
-              if docker volume inspect "$volume" >/dev/null 2>&1; then echo 'Disposable volume remains'; exit 1; fi
-            done
-          fi
-          if docker container inspect qik-op-qualification >/dev/null 2>&1; then exit 1; fi
+        run: node --test tests/nativeGovernedActivation.test.mjs tests/nativeGovernedActivationHost.test.mjs tests/qikComparisonAtomicInstall.test.mjs tests/nativeGovernedHost.test.mjs
       - name: Start pristine PostgreSQL 17.6 for the full ordered installation
         shell: bash
         run: |
@@ -211,23 +103,14 @@ jobs:
             rm -rf /tmp/qik-vector-build
           '
           test "$(docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification psql -X -h 127.0.0.1 -U postgres -Atc "show server_version_num")" = 170006
-      - name: Qualify complete native arc installation journal review and reader
-        timeout-minutes: 5
+      - name: Qualify complete ordered original modes and successor lifecycle
+        timeout-minutes: 10
         env:
-          MIP_NATIVE_ARC_COHORT_DISPOSABLE: synthetic-pg17-only
-          MIP_QIK_COMPARISON_DISPOSABLE: synthetic-pg17-only
-          MIP_DISPOSABLE_POSTGRES: qik-persistent-install
-        run: node --test tests/nativeArcCohortPostgres17.test.mjs
-      - name: Qualify joint governed installation as the actual restricted principal
-        # Independent synthetic fixture with its own pristine-cluster guard.
-        # A failed C9 check still fails the combined job and prevents acceptance.
-        if: ${{ !cancelled() && steps.vector_build.outcome == 'success' }}
-        timeout-minutes: 5
-        env:
+          MIP_NATIVE_ACTIVATION_ARM: synthetic-pg17-only
           MIP_NATIVE_GOVERNED_INSTALL_DISPOSABLE: synthetic-pg17-only
           MIP_QIK_COMPARISON_DISPOSABLE: synthetic-pg17-only
           MIP_DISPOSABLE_POSTGRES: qik-persistent-install
-        run: node --test tests/nativeGovernedInstallerPostgres17.test.mjs
+        run: node --test --test-concurrency=1 tests/nativeGovernedInstallerPostgres17.test.mjs
       - name: Qualify actual atomic cleanup across acknowledged and ambiguous commit profiles
         if: ${{ !cancelled() && steps.vector_build.outcome == 'success' }}
         timeout-minutes: 9
@@ -235,27 +118,52 @@ jobs:
           MIP_QIK_COMPARISON_DISPOSABLE: synthetic-pg17-only
           MIP_DISPOSABLE_POSTGRES: qik-persistent-install
         run: node --test verifier/qikComparisonAtomicInstallPostgres17.mjs
-      - name: Qualify recovered historical projection and atomic attachment dependencies
-        # Independent absent-only synthetic database and role; cleanup is guarded.
-        # This does not qualify native publication or bypass any failed gate.
-        if: ${{ !cancelled() && steps.vector_build.outcome == 'success' }}
-        timeout-minutes: 4
-        env:
-          MIP_ARC_PUBLIC_PROJECTION_DISPOSABLE: synthetic-pg17-only
-          MIP_DISPOSABLE_POSTGRES: qik-persistent-install
-        run: node --test tests/nativeArcPublicProjectionPostgres17.test.mjs
-      - name: Return bounded generated Deno dependency source identity
+      - name: Verify final exact tracked source and retained historical integrity
+        if: always()
         shell: bash
         run: |
-          node --input-type=module - <<'JS'
-          import {readFile} from 'node:fs/promises';
-          import {createHash} from 'node:crypto';
-          const b=await readFile('supabase/functions/native-comparison-display/deno.lock');
-          if(b.length<1||b.length>65536)throw Error('deno_lock_source_size');
-          const value=JSON.parse(b.toString('utf8'));
-          if(!value||typeof value!=='object'||Array.isArray(value))throw Error('deno_lock_source_shape');
-          console.log(JSON.stringify({kind:'deno-lock-source-v1',runtime:'2.5.2',sha256:createHash('sha256').update(b).digest('hex'),bytes:b.length,base64:b.toString('base64')}));
-          JS
+          python3 -I -B - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          source='c824c154846d6104f20b907da798d31cfcb27534'
+          tree='ead9fefd57b89ffb9324613ae11f38de7c0257fb'
+          workflow='.github/workflows/qik-operational-adapter-synthetic.yml'
+          git=lambda *args: subprocess.check_output(['git',*args])
+          assert os.environ['GITHUB_EVENT_NAME']=='push'
+          assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
+          assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
+          assert os.environ['GITHUB_RUN_ATTEMPT']=='1'
+          assert git('rev-parse','HEAD').decode().strip()==os.environ['GITHUB_SHA']
+          assert git('rev-parse',source+'^{tree}').decode().strip()==tree
+          subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
+          assert git('diff','--name-only',source,'HEAD').decode().splitlines()==[workflow]
+          assert not git('status','--porcelain','--untracked-files=no')
+          entries=git('ls-tree','-rz',source).split(b'\0')
+          count=0
+          for entry in entries:
+              if not entry: continue
+              info,path=entry.split(b'\t',1)
+              mode,kind,blob=info.split()
+              assert kind==b'blob'
+              name=path.decode()
+              if name==workflow: continue
+              body=pathlib.Path(name).read_bytes()
+              assert hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()==blob.decode(),name
+              count+=1
+          manifest=json.loads(pathlib.Path('verifier/qik-native-activation-successor.json').read_text())
+          assert manifest['profile']=='native-governed-activation-v1'
+          assert manifest['production_qualified'] is False
+          assert len(manifest['sources'])==24
+          for entry in manifest['sources']:
+              name=entry['path']
+              body=pathlib.Path(name).read_bytes()
+              assert hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()==entry['git_blob'],name
+          protected={'verifier/efta-postgres-qualification-manifest.json':'841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9','verifier/eftaPostgresQualification.py':'000eac69f781f1803c19d98ac44388400ee8324feeeb4cd6498e8a984ef65f10'}
+          for name,digest in protected.items():
+              assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest,name
+          config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
+          assert config.returncode==1 and not config.stdout
+          print(json.dumps({'source_commit':source,'source_tree':tree,'workflow_child':os.environ['GITHUB_SHA'],'tracked_source_blobs':count,'manifest_sources':24,'historical_integrity':'verified','scope':'source-and-synthetic-only-no-hosted-operation'}))
+          PY
       - name: Remove disposable database and verify no container or volume remains
         if: always()
         shell: bash
@@ -268,3 +176,5 @@ jobs:
             done
           fi
           if docker container inspect qik-op-qualification >/dev/null 2>&1; then exit 1; fi
+
+# Existing source-only synthetic route. No secrets, hosted qik, artifacts, caches, deployment or historical acceptance.
