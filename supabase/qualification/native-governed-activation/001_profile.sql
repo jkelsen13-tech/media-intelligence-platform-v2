@@ -298,7 +298,7 @@ begin
  or exists(select 1 from pg_shdepend where refclassid='pg_authid'::regclass and refobjid=b.issuer_oid and (deptype='o' or(deptype in('a','i','r') and classid<>'pg_auth_members'::regclass)))
  or pg_has_role(b.installer_oid,b.issuer_oid,'USAGE') or not pg_has_role(b.installer_oid,b.issuer_oid,'SET')
  then raise exception 'native_activation_issuer';end if;
- foreach role_oid in array(select oid from pg_roles where rolname=any(mip_native_activation.groups())) loop
+ foreach role_oid in array array(select oid from pg_roles where rolname=any(mip_native_activation.groups())) loop
   if pg_has_role(b.installer_oid,role_oid,'USAGE') or pg_has_role(b.installer_oid,role_oid,'SET')
   or pg_has_role(b.issuer_oid,role_oid,'USAGE') or pg_has_role(b.issuer_oid,role_oid,'SET')
   or exists(select 1 from pg_shdepend where refclassid='pg_authid'::regclass and refobjid=role_oid and deptype='o')

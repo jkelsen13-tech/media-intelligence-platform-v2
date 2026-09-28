@@ -16,6 +16,7 @@ import {createHypothesisHandler} from '../../supabase/qualification/hypothesis-a
 import {createHypothesisStore} from '../../supabase/qualification/hypothesis-assessments/store.mjs'
 import {createHypothesisAssessmentClient,hypothesisHistoryView} from '../../src/lib/hypothesisAssessmentClient.js'
 import {setup,hold,blocked,q,raw,workerRole} from './fixture.mjs'
+import {assertNativeSemanticMethodConsumer} from '../../tests/nativeSemanticMethodBridge.mjs'
 import {isolatedWorker} from './isolatedContainer.mjs'
 import {syntheticEvaluation} from './syntheticMethod.mjs'
 import {assessmentFromEvaluation,runDurableHypothesisWorker,recoverHypothesisRequest} from '../../supabase/qualification/hypothesis-assessments/worker.mjs'
@@ -447,6 +448,10 @@ test('isolated hypothesis generation authority, retained computation and restart
   assert.equal(history.entries[0].reassessment_pending,true);
   await f.gateway('reconcile_reassessment_causes',[v.user,v.iid]);
   assert.equal((await f.gateway('reassessment_backlog',[v.user,v.iid])).causes.filter(c=>c.kind==='method_changed').length,1);
+  const semanticPending=await assertNativeSemanticMethodConsumer(f,v,{
+   causeId:causes[0].cause_id,revisionId:causes[0].revision_id,
+   observedMethod:next,phase:'pending'
+  });
   const g=await v.captureGeneration({method:next});
   const newer=await claim(f,v);assert.equal(newer.generation_id,g.generation_id);
   await f.rpc('worker_complete',completeArgs(v,newer,output(newer)));
@@ -454,6 +459,10 @@ test('isolated hypothesis generation authority, retained computation and restart
   const finished=await f.gateway('reassessment_backlog',[v.user,v.iid]);
   assert.equal(finished.causes.filter(c=>c.kind==='method_changed').length,1);
   assert.notEqual(finished.causes.find(c=>c.kind==='method_changed').state,'pending_explicit_reconciliation');
+  await assertNativeSemanticMethodConsumer(f,v,{
+   causeId:causes[0].cause_id,revisionId:causes[0].revision_id,
+   observedMethod:next,phase:'resolved',priorDigest:semanticPending.digest
+  });
  });
  await t.test('rolled-back method removal leaves no cause; committed removal retains cause and unrelated history',async()=>{
   const v=await f.investigation(),other=await f.investigation();

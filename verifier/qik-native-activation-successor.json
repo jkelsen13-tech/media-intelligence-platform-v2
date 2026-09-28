@@ -56,11 +56,11 @@
   "sources": [
     {
       "path": "supabase/qualification/native-governed-activation/001_profile.sql",
-      "git_blob": "11d0bbeb0f5a9114d69dea5613e50dd9e9f3829d"
+      "git_blob": "779640b68e924f0ca0a8e94165ada0daa23b760d"
     },
     {
       "path": "supabase/qualification/native-governed-activation/prepare.mjs",
-      "git_blob": "3d641cc5200408756b9b77c79c8210b58e6b8a4c"
+      "git_blob": "03489666d56ab51ee76af867dbc0e65ba1874805"
     },
     {
       "path": "supabase/qualification/native-governed-activation/activation.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "6245ab1497edff0df9bbceb21c3a3df3604ad8a2"
+      "git_blob": "8eebf17440e074370dd9a97973440a0f1c17e0a5"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -140,7 +140,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/README.md",
-      "git_blob": "fa369025d87086b5f3133f369ce413a2b8f3693b"
+      "git_blob": "63d77b05258dbf71849763a26b167599986902fc"
     },
     {
       "path": ".github/workflows/qik-native-installer-held.yml",
@@ -172,7 +172,7 @@
     "credential": "metadataAuditConnectionString for expectedMetadataAuditor only",
     "authority_current": false,
     "reads": "catalog plus bootstrap/head and non-authority revision columns; no Auth/capture/session/token reads",
-    "host_integration": "Separate exact source-pinned host/CLI and real nonsuper synthetic fixture implemented; first full successor installation refused SQL syntax; repair qualification NOT RUN. Secure hosted bindings absent.",
+    "host_integration": "Separate exact source-pinned host/CLI and real nonsuper fixture implemented; all original v2-v6 checks restored. New successor final boundary refused cardinality; second repair qualification NOT RUN. Secure hosted bindings absent.",
     "success_field": "permission_boundary_current (only a successful independently executed audit may set true)"
   },
   "gates": [
@@ -199,22 +199,23 @@
     "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
-  "integration_parent": "ca29c00b0917c86a9e699565c10ccac67afab25e",
+  "integration_parent": "f89c1d8b243e580140f0e4736d30075f347f2236",
   "qualification": {
-    "status": "REPAIR AUTHORED — NOT RUN",
+    "status": "SECOND REPAIR AUTHORED — NOT RUN",
     "synthetic_only": true,
     "actual_qik_installation": false,
     "actual_material": false,
-    "prior_failed_run": 36464832257,
-    "prior_failed_candidate": "ca29c00b0917c86a9e699565c10ccac67afab25e",
+    "prior_failed_run": 36466067286,
+    "prior_failed_candidate": "f89c1d8b243e580140f0e4736d30075f347f2236",
     "prior_result": {
       "source_pass": 51,
-      "ordered_pg_pass": 49,
-      "ordered_pg_fail": 7,
+      "original_ordered_pg_pass": 55,
+      "new_successor_fail": 1,
       "atomic_pg_pass": 2,
       "cleanup": "success",
       "source_clean_verification": "skipped"
-    }
+    },
+    "defect": "FOREACH array expression scalar cardinality SQLSTATE21000; exact five-group iteration preserved"
   },
   "host_route": {
     "existing_environment": "qik-forward-controlled",

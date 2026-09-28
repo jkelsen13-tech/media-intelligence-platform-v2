@@ -3,7 +3,7 @@
   "status": "UNAPPROVED — SOURCE CANDIDATE ONLY — NOT AUTHORIZED FOR MATERIAL TRANSMISSION",
   "origin_commit": "cc8f1b19171917351548362f82f03fa2b1684831",
   "origin_tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9",
-  "integration_parent": "a4d2b362aa30d0844bbd48e4b8997e7c1580394b",
+  "integration_parent": "f89c1d8b243e580140f0e4736d30075f347f2236",
   "internal_qualification_authority": {
     "reference": "User full-consolidation amendment, coherent source qualification with synthetic fixtures only",
     "owner_field_signature": null,
@@ -16,7 +16,7 @@
     },
     {
       "path": "supabase/qualification/native-semantic-integration/README.md",
-      "blob": "e8deae6b98416ef5136265fdc313a7628bb6ceee"
+      "blob": "dd1fa1d94cbf85681b9dcbbf968ec3162d89cdd7"
     },
     {
       "path": "supabase/qualification/hypothesis-assessments/handler.mjs",
@@ -45,6 +45,14 @@
     {
       "path": "verifier/hypothesisPostgresConcurrency.py",
       "blob": "9b3d914b7f403ca606fa3ab0857e3c44f14aac96"
+    },
+    {
+      "path": "tests/nativeSemanticMethodBridge.mjs",
+      "blob": "0699dec9c2d12f5ed02c3b3e076997212da9bdb4"
+    },
+    {
+      "path": "verifier/hypothesis-worker/worker.test.mjs",
+      "blob": "53b7b42cf19944ef2564c80a2e31542ef97be509"
     }
   ],
   "dependencies": [
@@ -224,7 +232,7 @@
       "tests/nativeSemanticHandlerIntegration.test.mjs",
       "verifier/hypothesisPostgresConcurrency.py"
     ],
-    "method_change_consumer_success": "NOT COVERED by the new Python test; separate unchanged actual worker path is documented",
+    "method_change_consumer_success": "AUTHORED — NOT RUN; original full worker suite with actual pending and resolved method cause consumed by new reader",
     "not_proved": [
       "hosted Auth/TLS",
       "qik installation",
@@ -279,5 +287,326 @@
   "historical_evidence_and_assertions": "UNCHANGED",
   "deployment": false,
   "publication": false,
-  "accepted": false
+  "accepted": false,
+  "method_fixture_dependencies": [
+    {
+      "path": "verifier/hypothesis-worker/bootstrapCases.mjs",
+      "blob": "5ee3f2c806a8f1ebb0ed69f342377f18134a4796"
+    },
+    {
+      "path": "verifier/hypothesis-worker/boundaryIntegrationCases.mjs",
+      "blob": "cd14a4341a802e03267fe9e8b3b51cd5d4ccb927"
+    },
+    {
+      "path": "verifier/hypothesis-worker/commitContainer.mjs",
+      "blob": "be9a3c23a1a2582e0342f43f0751a04415f8b441"
+    },
+    {
+      "path": "verifier/hypothesis-worker/commitIsolated.mjs",
+      "blob": "1354f95d4efb700b70ca49c67b6d07a7e5ee5706"
+    },
+    {
+      "path": "verifier/hypothesis-worker/commitRecorder.test.mjs",
+      "blob": "48b0393cb9c634202ededb6489b7062c1338642c"
+    },
+    {
+      "path": "verifier/hypothesis-worker/continuityCases.mjs",
+      "blob": "b40e83244ec523861cb36b5f5e4805a3f0a18dad"
+    },
+    {
+      "path": "verifier/hypothesis-worker/exactCitationCases.mjs",
+      "blob": "f8b497f2e3af67c07ef962d311e93120207281b3"
+    },
+    {
+      "path": "verifier/hypothesis-worker/fixture.mjs",
+      "blob": "6d58c445a9a787868e8c6c2987a5fd0518f9e77d"
+    },
+    {
+      "path": "verifier/hypothesis-worker/incarnationCases.mjs",
+      "blob": "e8c7a05e2c967a2010214813f2c3134ade9dffca"
+    },
+    {
+      "path": "verifier/hypothesis-worker/isolatedContainer.mjs",
+      "blob": "e0ca67324568d090e7c5c4ab93acc1864f84e632"
+    },
+    {
+      "path": "verifier/hypothesis-worker/markerBoundaryCases.mjs",
+      "blob": "8fe15ff44cf450449e0f6f337926fbfd8557983c"
+    },
+    {
+      "path": "verifier/hypothesis-worker/marketsCases.mjs",
+      "blob": "ec5ff4a29286a7230d2966bbb3d7a28e4444db59"
+    },
+    {
+      "path": "verifier/hypothesis-worker/pgoutputCases.mjs",
+      "blob": "92092faa2a0966e1b12cf9a791b29338392958ac"
+    },
+    {
+      "path": "verifier/hypothesis-worker/prepareLogical.mjs",
+      "blob": "e1800b220a18d708cab2197b983952cee99e80d5"
+    },
+    {
+      "path": "verifier/hypothesis-worker/savedBoundaryHistoryCases.mjs",
+      "blob": "a396017848ff5d2a588918a13266dd4c408dfd92"
+    },
+    {
+      "path": "verifier/hypothesis-worker/savedBoundaryPrefixCases.mjs",
+      "blob": "3a52b6fa0b7752e47d656c95d4d37999defef85d"
+    },
+    {
+      "path": "verifier/hypothesis-worker/snapshotExporter.mjs",
+      "blob": "0fd1db482e9957cfc8c31ee4a0f6b47138f31d26"
+    },
+    {
+      "path": "verifier/hypothesis-worker/snapshotReader.mjs",
+      "blob": "c34749595a9363eed67b31471a58efde82e54fd2"
+    },
+    {
+      "path": "verifier/hypothesis-worker/sourceFenceCases.mjs",
+      "blob": "1713b7592cfb774703d991da31a96788c1d07978"
+    },
+    {
+      "path": "verifier/hypothesis-worker/syntheticMethod.mjs",
+      "blob": "6bdb413227d4958433830243e5fc7ecf6969298b"
+    },
+    {
+      "path": "verifier/hypothesis-worker/worker.test.mjs",
+      "blob": "53b7b42cf19944ef2564c80a2e31542ef97be509"
+    },
+    {
+      "path": "verifier/hypothesis-worker/workerIsolated.mjs",
+      "blob": "881e4e9d4097dab577849bb15ad3f2de36973a8f"
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/contract.sql",
+      "blob": "2cd760316e01b8ff6f06bf44cfa91aed37e606a8"
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/selection.sql",
+      "blob": "e5b2fdbe236db31e273ef3939f3d3ed36be3b0c6"
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/capability.sql",
+      "blob": "07777c1463dba6b20de37ed08d4fe4aefd70da1d"
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/source-fixture.sql",
+      "blob": "d78c5d0edcc3f5271d3e9b15b0f4a3d989cabdcf"
+    },
+    {
+      "path": "supabase/qualification/comparison-generations/source-snapshot.sql",
+      "blob": "f7f091987f024388d2cfc46385086c0dd08e5467"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql",
+      "blob": "136204c77c0e18bce2592493db4765cdeb4c9d1b"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql",
+      "blob": "f5a9fba65d3b5bac782afd511f94c46e7e9e6315"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/003_scoped_queue.sql",
+      "blob": "209bf4bd6ec405d8d9e8bc751f989631c47a137b"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/004_publication_staging.sql",
+      "blob": "38379113e73d5fea1f3a3dba8647f374ed2733fe"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/005_broker_sessions.sql",
+      "blob": "f78288fbabba40407cd206521b43faa0278f674a"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/006_collector_reconciliation.sql",
+      "blob": "21383a9d581bdf2da8f9eb58cd2f329a7ccd213b"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/007_survivor_release.sql",
+      "blob": "9f7038d8e921ef7839a35375f2f05294058e3383"
+    },
+    {
+      "path": "supabase/qualification/mip-cutover-authority/008_operation_evidence.sql",
+      "blob": "a1c9f2fb236e7069e80c5a1cfe6b58274c537ee6"
+    },
+    {
+      "path": "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql",
+      "blob": "e7beb22b9a4dd2e38076b5554c7f5b4e6e0e4e77"
+    },
+    {
+      "path": "supabase/migrations/20260906042413_evidence_change_queue_v1.sql",
+      "blob": "1b93f947f5351097e629adc718659a1125fdfe1f"
+    },
+    {
+      "path": "supabase/migrations/20260906051224_evidence_assessment_dependencies_v1.sql",
+      "blob": "d6092de9540550c4d126c91494cfe3374f02a721"
+    },
+    {
+      "path": "supabase/migrations/20260906071525_investigation_change_briefings_v1.sql",
+      "blob": "78b1bdce25432ef7e8194a764c585e7836ef943e"
+    },
+    {
+      "path": "supabase/migrations/20260906075718_investigation_workspace_batch_v1.sql",
+      "blob": "1eaf8bac441fee856f7f3e1b6723662d0408dcad"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/001_revision_store.sql",
+      "blob": "6218ce921561821dc8f2e624f7fa4697785d3faf"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/002_retained_observation_reader.sql",
+      "blob": "a118cc404f39d37bb382012eaa4b945814da44ac"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/003_bound_acceptance.sql",
+      "blob": "036320a9c837ec9c139297bac18c88a0af857f99"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/004_bound_history.sql",
+      "blob": "8fbcf8686327f7ab74485436135d3fd540617bd5"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/005_reassessment_causes.sql",
+      "blob": "908e72584d14f937292d554c8a9e0a497034be0b"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/006_reassessment_completion.sql",
+      "blob": "e86b7da084beb9ae0fb723d00153e66a20b21bc3"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/007_human_reconsideration.sql",
+      "blob": "5ae00ef13ce49c29884503b2cb5501bdc442be42"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/008_authoring_reads.sql",
+      "blob": "510ba8865e209b93b926e26a7e1eee32d3bf3f83"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/009_generation_worker.sql",
+      "blob": "6c95c0f2b0bacd709c62ecc714bad6600b675c95"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/010_generation_ledger.sql",
+      "blob": "69a177e1ee875ce167d4b78aaf31099c8b98fecc"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/011_method_change_signals.sql",
+      "blob": "8777e2bb814c8e67e96ff8d84e3d5970ababb382"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/012_generation_recovery.sql",
+      "blob": "477f774648d900c8bf04633df8661c25ec7a6f2b"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/013_recovery_lineage.sql",
+      "blob": "2c79e5c2225c8b6ecd58dc1139d7080717bed260"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/014_review_acknowledgements.sql",
+      "blob": "a733bc58255cce6b89aac4cc2dac2a99fb2ff430"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/015_committed_observations.sql",
+      "blob": "984a51f370d4e41a58008ee61e387706b06f5dac"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/016_observation_delivery.sql",
+      "blob": "5365db95cc0ac133990d35cbe41c5acd576c5e68"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/017_external_observation_epoch.sql",
+      "blob": "9b2fb4b297d1598d4315e26d8e2d9a66951b43cc"
+    },
+    {
+      "path": "supabase/qualification/hypothesis-assessments/018_source_acknowledgement.sql",
+      "blob": "cdca3e96f8858b51787f6d2b97e8553d89fb9181"
+    },
+    {
+      "path": "verifier/integrated/fixture.mjs",
+      "blob": "957fe4a446330f7309c6e9403229b9f19b17799f"
+    },
+    {
+      "path": "verifier/integrated/transport.mjs",
+      "blob": "88487367bdd5d75b4cedb80e17fc060597c80083"
+    },
+    {
+      "path": "verifier/integrated/remoteStoreRestart.mjs",
+      "blob": "a8181f63dd139bf4fd6edcfd4e609542347aacf7"
+    },
+    {
+      "path": "tests/changeQueueFixture.sql",
+      "blob": "235f92e0ce285cbf5426444b06b576a39adb1e38"
+    },
+    {
+      "path": "tests/hypothesisAuthProviderFixture.mjs",
+      "blob": "b62050509dd50e370e957cee65c4fa86a17d9442"
+    }
+  ],
+  "method_fixture_install_order": {
+    "host_prepare": "Original prepareLogical.mjs before creating fixtures; exact owned disposable PostgreSQL container only",
+    "comparison": [
+      "supabase/qualification/comparison-generations/contract.sql",
+      "supabase/qualification/comparison-generations/selection.sql",
+      "supabase/qualification/comparison-generations/capability.sql",
+      "supabase/qualification/comparison-generations/source-fixture.sql",
+      "supabase/qualification/comparison-generations/source-snapshot.sql"
+    ],
+    "authority": [
+      "supabase/qualification/mip-cutover-authority/001_execute_only_identities.sql",
+      "supabase/qualification/mip-cutover-authority/002_candidate_interfaces.sql",
+      "supabase/qualification/mip-cutover-authority/003_scoped_queue.sql",
+      "supabase/qualification/mip-cutover-authority/004_publication_staging.sql",
+      "supabase/qualification/mip-cutover-authority/005_broker_sessions.sql",
+      "supabase/qualification/mip-cutover-authority/006_collector_reconciliation.sql",
+      "supabase/qualification/mip-cutover-authority/007_survivor_release.sql",
+      "supabase/qualification/mip-cutover-authority/008_operation_evidence.sql"
+    ],
+    "native": [
+      "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql",
+      "supabase/migrations/20260906042413_evidence_change_queue_v1.sql",
+      "supabase/migrations/20260906051224_evidence_assessment_dependencies_v1.sql",
+      "supabase/migrations/20260906071525_investigation_change_briefings_v1.sql",
+      "supabase/migrations/20260906075718_investigation_workspace_batch_v1.sql"
+    ],
+    "hypothesis": [
+      "supabase/qualification/hypothesis-assessments/001_revision_store.sql",
+      "supabase/qualification/hypothesis-assessments/002_retained_observation_reader.sql",
+      "supabase/qualification/hypothesis-assessments/003_bound_acceptance.sql",
+      "supabase/qualification/hypothesis-assessments/004_bound_history.sql",
+      "supabase/qualification/hypothesis-assessments/005_reassessment_causes.sql",
+      "supabase/qualification/hypothesis-assessments/006_reassessment_completion.sql",
+      "supabase/qualification/hypothesis-assessments/007_human_reconsideration.sql",
+      "supabase/qualification/hypothesis-assessments/008_authoring_reads.sql",
+      "supabase/qualification/hypothesis-assessments/009_generation_worker.sql",
+      "supabase/qualification/hypothesis-assessments/010_generation_ledger.sql",
+      "supabase/qualification/hypothesis-assessments/011_method_change_signals.sql",
+      "supabase/qualification/hypothesis-assessments/012_generation_recovery.sql",
+      "supabase/qualification/hypothesis-assessments/013_recovery_lineage.sql",
+      "supabase/qualification/hypothesis-assessments/014_review_acknowledgements.sql",
+      "supabase/qualification/hypothesis-assessments/015_committed_observations.sql",
+      "supabase/qualification/hypothesis-assessments/016_observation_delivery.sql",
+      "supabase/qualification/hypothesis-assessments/017_external_observation_epoch.sql",
+      "supabase/qualification/hypothesis-assessments/018_source_acknowledgement.sql"
+    ],
+    "fixture_specific": "Original schema scaffolding, native synthetic data, rights/privacy heads, Auth/session/method/RPC/broker synthetic fixtures remain in exact fixture.mjs; no reduced stand-in install"
+  },
+  "method_fixture_qualification": {
+    "status": "NOT RUN",
+    "entrypoint": "node --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs",
+    "host_node": "24",
+    "isolated_image": "node:24-alpine (original suite)",
+    "postgres": "17.6/170006",
+    "extensions": "Built-in pgoutput logical WAL and exactly the extension/function dependencies in the pinned original SQL fixture; no additional vector/dblink/pg_trgm provisioning or claimed helper-only coverage.",
+    "source_guard": "MIP_DISPOSABLE_POSTGRES=comparison-qualification; GITHUB_ACTIONS=true; actual hex MIP_POSTGRES_SERVICE_ID",
+    "roles": "Original synthetic superuser fixture scaffolding; new random bare ordinary LOGIN inherits only mip_hypothesis_gateway with SET FALSE; fixed synthetic authenticator",
+    "assertions": [
+      "original full worker/snapshot/decoder/commit suite unchanged except method consumer calls",
+      "actual method_changed cause identity/detail",
+      "pending and reassessed state/changed envelope digest",
+      "exact retry and old-digest409",
+      "browser identity injection400",
+      "no new journal rows/sessions/runtime copies/authority/publication"
+    ],
+    "cleanup": "Existing owned database/logical snapshot cleanup plus outer independently verified isolated worker/commit/PostgreSQL container and anonymous volume removal; no artifacts; no actual material"
+  }
 }
