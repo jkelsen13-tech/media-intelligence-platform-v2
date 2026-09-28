@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { transferHistoricalArticles, TRANSFER_VERSION, SOURCE_CAPABILITIES, SINK_CAPABILITIES } from '../scripts/mipHistoricalArticleTransfer.mjs'
-import { planHistoricalArticles, FIELD_CONTRACTS, PROJECTS, VERSION, CATEGORIES } from '../scripts/mipHistoricalArticleTransferPlan.mjs'
+import { planHistoricalArticles, FIELD_CONTRACTS, PROJECTS, VERSION, CATEGORIES, LIMITS, MANIFEST_HARD_LIMITS, manifestLimits } from '../scripts/mipHistoricalArticleTransferPlan.mjs'
 import { fingerprintPayload, parseJsonLossless, stableStringify } from '../scripts/mipLegacyGraphStaging.mjs'
 
 const H=value=>createHash('sha256').update(value).digest('hex')
@@ -31,13 +31,15 @@ function fixture() {
   }
   return {input:{version:VERSION,destination_project:PROJECTS.qik,snapshots,records,objects},wire,objectBytes}
 }
-function harness(f=fixture()) {
-  const plan=planHistoricalArticles(f.input),commits=new Map(),checkpointStore=new Map()
+function harness(f=fixture(),limits) {
+  const bounds=manifestLimits(limits)
+  const plan=planHistoricalArticles(f.input,bounds),commits=new Map(),checkpointStore=new Map()
   const counts={put:0,record:0,object:0,read:0,inventory:0}
   const hooks={}
   const grant={version:TRANSFER_VERSION,mode:'synthetic_test_only',operation_id:OP,
     manifest_sha256:plan.manifest_sha256,destination_project:PROJECTS.qik,
     authorization_sha256:H('synthetic authorization'),route_sha256:H('synthetic route'),
+    manifest_limits:bounds,manifest_totals:{records:plan.manifest.records.length,objects:plan.manifest.objects.length,bytes:plan.bytes},
     source_capabilities:Object.fromEntries(plan.manifest.snapshots.map(s=>[s.project,[...SOURCE_CAPABILITIES]])),
     sink_capabilities:[...SINK_CAPABILITIES],checkpoint_capabilities:['durable_metadata_only','compare_and_swap']}
   const sources=Object.fromEntries(plan.manifest.snapshots.map(snapshot=>[snapshot.project,{
@@ -102,7 +104,7 @@ function harness(f=fixture()) {
       return {state:'stored',checkpoint_sha256:checkpoint.sha256}
     },
   }
-  const options={input:f.input,operation_id:OP,sources,sink,checkpoints,
+  const options={input:f.input,manifest_limits:bounds,operation_id:OP,sources,sink,checkpoints,
     admission:{async verify() { if(hooks.admissionError) throw new Error(SENTINEL);return copy(grant) }}}
   return {f,plan,grant,hooks,counts,commits,checkpointStore,options,
     run:overrides=>transferHistoricalArticles({...options,...overrides})}
@@ -238,4 +240,49 @@ test('incomplete manifest closure and missing real route interfaces fail before 
   await assert.rejects(()=>h.run({input:bad}),/manifest_closure_incomplete/)
   await assert.rejects(()=>h.run({sink:{readUnit:async()=>null}}),/adapter_missing/)
   assert.equal(h.counts.put,0)
+})
+
+test('whole-corpus metadata exceeds 10k while automatic batches preserve complete membership and retry',async()=>{
+  const f=fixture(),template=f.input.records[0]
+  // Distinct historical source versions share one canonical synthetic wire value;
+  // no large payload fixture and no real historical material.
+  for(let i=0;i<10000;i++) {
+    const r=copy(template);r.identity.version_sha256=H('historical-version:'+i)
+    f.input.records.push(r)
+    f.wire.set(stableStringify(r.identity),{identity:r.identity,snapshot_sha256:r.snapshot_sha256,
+      payload_json:f.wire.get(stableStringify(template.identity)).payload_json})
+  }
+  assert.throws(()=>planHistoricalArticles(f.input),/record_limit/)
+  const limits={records:10002,objects:2,bytes:LIMITS.bytes}
+  const h=harness(f,limits)
+  assert.equal(h.plan.manifest.records.length,10002)
+  assert.equal(h.plan.pages.reduce((n,p)=>n+p.rows.length,0),10002)
+  assert.ok(h.plan.pages.every(p=>p.rows.length<=100))
+  let r=await h.run({max_units:1})
+  const manifest=r.manifest_sha256
+  assert.equal(r.pending_unit_id,null)
+  let runs=1
+  while(r.state==='budget_paused'&&runs<5) {
+    r=await h.run({max_units:100});runs++
+    assert.equal(r.manifest_sha256,manifest)
+    assert.ok(r.material_bytes_this_invocation<=LIMITS.bytes)
+    assert.equal(r.pending_unit_id,null)
+  }
+  assert.equal(r.state,'readback_verified')
+  assert.equal([...h.commits.values()].reduce((n,c)=>n+(c.records?.length??0),0),10002)
+  assert.equal(h.counts.put,h.plan.pages.length+2)
+  const before=h.counts.put;await h.run();assert.equal(h.counts.put,before)
+  metadataOnly(r)
+})
+test('expanded aggregate metadata capacity does not silently expand invocation bytes or route capacity',async()=>{
+  const f=fixture();f.input.records[0].payload_bytes=LIMITS.bytes+1
+  assert.throws(()=>planHistoricalArticles(f.input),/byte_limit/)
+  const limits={records:10000,objects:10000,bytes:LIMITS.bytes*2}
+  const h=harness(f,limits),r=await h.run()
+  assert.equal(r.state,'budget_paused');assert.equal(h.counts.put,0)
+  const mismatch=harness(f,limits);mismatch.grant.manifest_totals.bytes--
+  const rejected=await mismatch.run()
+  assert.equal(rejected.code,'route_capacity_mismatch');assert.equal(mismatch.counts.inventory,0)
+  await assert.rejects(()=>h.run({max_material_bytes:LIMITS.bytes+1}),/invocation_budget/)
+  assert.throws(()=>manifestLimits({...limits,records:MANIFEST_HARD_LIMITS.records+1}),/manifest_limit/)
 })
