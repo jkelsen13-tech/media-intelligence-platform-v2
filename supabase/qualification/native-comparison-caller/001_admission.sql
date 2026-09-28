@@ -2,18 +2,26 @@
 -- Empty trusted admission metadata. No Auth user, broker, gateway or binding is seeded.
 begin;
 do $prerequisite$
+declare auth_table oid;
 begin
- if to_regprocedure('mip_native_display.read_current(uuid,uuid,text,uuid,text)') is null
- or to_regprocedure('mip_identity.efta_assert_live_auth_session(uuid,uuid,uuid,uuid,uuid,text,uuid,text,text,text,text,text,uuid,text)') is null
+ select c.oid into auth_table from pg_catalog.pg_class c
+ join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+ where n.nspname='auth' and c.relname='sessions' and c.relkind='r';
+ if auth_table is null or not exists(select 1 from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace
+  where n.nspname='mip_native_display' and p.proname='read_current' and p.prokind='f'
+   and array(select unnest(p.proargtypes))=array['uuid'::regtype::oid,'uuid'::regtype::oid,'text'::regtype::oid,'uuid'::regtype::oid,'text'::regtype::oid]::oid[])
+ or not exists(select 1 from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace
+  where n.nspname='mip_identity' and p.proname='efta_assert_live_auth_session' and p.prokind='f'
+   and array(select unnest(p.proargtypes))=array['uuid'::regtype::oid,'uuid'::regtype::oid,'uuid'::regtype::oid,'uuid'::regtype::oid,'uuid'::regtype::oid,'text'::regtype::oid,'uuid'::regtype::oid,'text'::regtype::oid,'text'::regtype::oid,'text'::regtype::oid,'text'::regtype::oid,'text'::regtype::oid,'uuid'::regtype::oid,'text'::regtype::oid]::oid[])
  or not exists(select 1 from pg_roles where rolname='mip_efta_auth_session_owner_v1'
   and not rolcanlogin and not rolsuper and not rolbypassrls and not rolinherit
   and not rolcreaterole and not rolcreatedb and not rolreplication)
  or exists(select 1 from pg_auth_members where roleid='mip_efta_auth_session_owner_v1'::regrole
   or member='mip_efta_auth_session_owner_v1'::regrole)
- or not has_column_privilege('mip_efta_auth_session_owner_v1','auth.sessions','id','SELECT')
- or not has_column_privilege('mip_efta_auth_session_owner_v1','auth.sessions','user_id','SELECT')
- or not has_column_privilege('mip_efta_auth_session_owner_v1','auth.sessions','id','UPDATE')
- or (select count(*) from pg_attribute where attrelid='auth.sessions'::regclass and attnum>0
+ or not has_column_privilege('mip_efta_auth_session_owner_v1',auth_table,'id','SELECT')
+ or not has_column_privilege('mip_efta_auth_session_owner_v1',auth_table,'user_id','SELECT')
+ or not has_column_privilege('mip_efta_auth_session_owner_v1',auth_table,'id','UPDATE')
+ or (select count(*) from pg_attribute where attrelid=auth_table and attnum>0
   and not attisdropped and ((attname in('id','user_id') and atttypid='uuid'::regtype)
   or(attname='not_after' and atttypid='timestamptz'::regtype)))<>3
  then raise exception 'native_caller_prerequisite';end if;
@@ -169,13 +177,27 @@ grant execute on function mip_native_caller.configure_admission(uuid,uuid,uuid,u
 
 do $native_caller_final$
 declare r record;allowed oid[];actual text[];
+ caller_schema oid;auth_table oid;admissions_table oid;heads_table oid;rewrite_function oid;
 begin
- if to_regprocedure('mip_native_caller.reject_rewrite()') is null
- or to_regprocedure('mip_native_caller.configure(uuid,uuid,uuid,uuid,uuid,text,name,uuid,text,timestamptz,timestamptz,boolean)') is null
- or to_regprocedure('mip_native_caller.configure_admission(uuid,uuid,uuid,uuid,uuid,text,name,uuid,text,timestamptz,timestamptz,boolean)') is null
- or to_regprocedure('mip_native_caller.resolve(uuid,uuid,uuid,text)') is null
- or to_regprocedure('mip_native_caller.assert_session(uuid,uuid,bigint)') is null
- or to_regprocedure('mip_native_caller.read_current(uuid,uuid,bigint,uuid,uuid,text)') is null
+ -- Catalog-only identity resolution: this verifier intentionally has no USAGE
+ -- on Auth or the caller schema and must not gain it to inspect their ACLs.
+ select oid into caller_schema from pg_catalog.pg_namespace where nspname='mip_native_caller';
+ select c.oid into auth_table from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+ where n.nspname='auth' and c.relname='sessions' and c.relkind='r';
+ select oid into admissions_table from pg_catalog.pg_class where relnamespace=caller_schema and relname='admissions' and relkind='r';
+ select oid into heads_table from pg_catalog.pg_class where relnamespace=caller_schema and relname='heads' and relkind='r';
+ select oid into rewrite_function from pg_catalog.pg_proc where pronamespace=caller_schema and proname='reject_rewrite' and pronargs=0;
+ if caller_schema is null or auth_table is null or admissions_table is null or heads_table is null
+ or exists(select 1 from (values
+  ('reject_rewrite',array[]::oid[]),
+  ('configure',array['uuid'::regtype::oid,'uuid'::regtype::oid,'uuid'::regtype::oid,'uuid'::regtype::oid,'uuid'::regtype::oid,'text'::regtype::oid,'name'::regtype::oid,'uuid'::regtype::oid,'text'::regtype::oid,'timestamptz'::regtype::oid,'timestamptz'::regtype::oid,'boolean'::regtype::oid]::oid[]),
+  ('configure_admission',array['uuid'::regtype::oid,'uuid'::regtype::oid,'uuid'::regtype::oid,'uuid'::regtype::oid,'uuid'::regtype::oid,'text'::regtype::oid,'name'::regtype::oid,'uuid'::regtype::oid,'text'::regtype::oid,'timestamptz'::regtype::oid,'timestamptz'::regtype::oid,'boolean'::regtype::oid]::oid[]),
+  ('resolve',array['uuid'::regtype::oid,'uuid'::regtype::oid,'uuid'::regtype::oid,'text'::regtype::oid]::oid[]),
+  ('assert_session',array['uuid'::regtype::oid,'uuid'::regtype::oid,'bigint'::regtype::oid]::oid[]),
+  ('read_current',array['uuid'::regtype::oid,'uuid'::regtype::oid,'bigint'::regtype::oid,'uuid'::regtype::oid,'uuid'::regtype::oid,'text'::regtype::oid]::oid[])
+ ) expected(name,args) where not exists(select 1 from pg_catalog.pg_proc p
+  where p.pronamespace=caller_schema and p.proname=expected.name
+   and array(select unnest(p.proargtypes))=expected.args))
  then raise exception 'native_caller_boundary';end if;
  if exists(select 1 from pg_namespace n cross join lateral aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a
   where n.nspname='mip_native_caller' and (a.grantee not in('mip_mentions_owner'::regrole,'mip_mentions_gateway'::regrole,'mip_mentions_admin'::regrole,'mip_efta_auth_session_owner_v1'::regrole)
@@ -183,27 +205,27 @@ begin
  then raise exception 'native_caller_boundary';end if;
  select array_agg(a.attname::text||':'||p.privilege_type order by a.attname::text||':'||p.privilege_type) into actual
  from pg_attribute a cross join lateral aclexplode(a.attacl) p
- where a.attrelid='auth.sessions'::regclass and a.attnum>0 and not a.attisdropped
+ where a.attrelid=auth_table and a.attnum>0 and not a.attisdropped
   and p.grantee='mip_efta_auth_session_owner_v1'::regrole;
  if actual is distinct from array['id:SELECT','id:UPDATE','not_after:SELECT','user_id:SELECT']
- or has_table_privilege('mip_efta_auth_session_owner_v1','auth.sessions','SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+ or has_table_privilege('mip_efta_auth_session_owner_v1',auth_table,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
  or exists(select 1 from pg_attribute a cross join lateral aclexplode(a.attacl) p
-  where a.attrelid='auth.sessions'::regclass and p.grantee='mip_efta_auth_session_owner_v1'::regrole and p.is_grantable)
+  where a.attrelid=auth_table and p.grantee='mip_efta_auth_session_owner_v1'::regrole and p.is_grantable)
  or exists(select 1 from pg_roles where rolname='mip_efta_auth_session_owner_v1'
   and(rolcanlogin or rolsuper or rolbypassrls or rolinherit or rolcreaterole or rolcreatedb or rolreplication))
  then raise exception 'native_caller_boundary';end if;
- if (select count(*) from pg_trigger where tgrelid in('mip_native_caller.admissions'::regclass,'mip_native_caller.heads'::regclass)
+ if (select count(*) from pg_trigger where tgrelid in(admissions_table,heads_table)
   and not tgisinternal)<>3
- or not exists(select 1 from pg_trigger where tgrelid='mip_native_caller.admissions'::regclass and tgname='immutable'
-  and tgtype=27 and tgenabled='O' and tgfoid='mip_native_caller.reject_rewrite()'::regprocedure and tgqual is null)
- or (select count(*) from pg_trigger where tgrelid in('mip_native_caller.admissions'::regclass,'mip_native_caller.heads'::regclass)
-  and tgname='no_truncate' and tgtype=34 and tgenabled='O' and tgfoid='mip_native_caller.reject_rewrite()'::regprocedure and tgqual is null)<>2
+ or not exists(select 1 from pg_trigger where tgrelid=admissions_table and tgname='immutable'
+  and tgtype=27 and tgenabled='O' and tgfoid=rewrite_function and tgqual is null)
+ or (select count(*) from pg_trigger where tgrelid in(admissions_table,heads_table)
+  and tgname='no_truncate' and tgtype=34 and tgenabled='O' and tgfoid=rewrite_function and tgqual is null)<>2
  then raise exception 'native_caller_boundary';end if;
- if (select count(*) from pg_class where relnamespace='mip_native_caller'::regnamespace and relkind='r')<>2
- or (select count(*) from pg_proc where pronamespace='mip_native_caller'::regnamespace)<>6
+ if (select count(*) from pg_class where relnamespace=caller_schema and relkind='r')<>2
+ or (select count(*) from pg_proc where pronamespace=caller_schema)<>6
  or (select nspowner from pg_namespace where nspname='mip_native_caller')<>'mip_mentions_owner'::regrole
  then raise exception 'native_caller_boundary';end if;
- for r in select c.* from pg_class c where c.relnamespace='mip_native_caller'::regnamespace and c.relkind='r' loop
+ for r in select c.* from pg_class c where c.relnamespace=caller_schema and c.relkind='r' loop
   if r.relowner<>'mip_mentions_owner'::regrole or not r.relrowsecurity or not r.relforcerowsecurity
   or exists(select 1 from aclexplode(coalesce(r.relacl,acldefault('r',r.relowner))) a where a.grantee<>r.relowner)
   or exists(select 1 from pg_attribute a where a.attrelid=r.oid and a.attacl is not null)
@@ -212,7 +234,7 @@ begin
    and polcmd='*' and polpermissive and pg_get_expr(polqual,polrelid)='true' and pg_get_expr(polwithcheck,polrelid)='true')
   then raise exception 'native_caller_boundary';end if;
  end loop;
- for r in select p.* from pg_proc p where p.pronamespace='mip_native_caller'::regnamespace loop
+ for r in select p.* from pg_proc p where p.pronamespace=caller_schema loop
   allowed:=array[r.proowner];
   if r.proname in('resolve','assert_session','read_current') then allowed:=allowed||'mip_mentions_gateway'::regrole::oid;end if;
   if r.proname='configure_admission' then allowed:=allowed||'mip_mentions_admin'::regrole::oid;end if;
@@ -227,14 +249,14 @@ begin
     where has_function_privilege(x,r.oid,'EXECUTE'))
   then raise exception 'native_caller_boundary';end if;
  end loop;
- if has_schema_privilege('mip_mentions_admin','mip_native_caller','CREATE')
- or not has_schema_privilege('mip_mentions_admin','mip_native_caller','USAGE')
- or has_schema_privilege('mip_mentions_gateway','mip_native_caller','CREATE')
- or has_schema_privilege('mip_efta_auth_session_owner_v1','mip_native_caller','CREATE')
- or not has_schema_privilege('mip_mentions_gateway','mip_native_caller','USAGE')
- or not has_schema_privilege('mip_efta_auth_session_owner_v1','mip_native_caller','USAGE')
+ if has_schema_privilege('mip_mentions_admin',caller_schema,'CREATE')
+ or not has_schema_privilege('mip_mentions_admin',caller_schema,'USAGE')
+ or has_schema_privilege('mip_mentions_gateway',caller_schema,'CREATE')
+ or has_schema_privilege('mip_efta_auth_session_owner_v1',caller_schema,'CREATE')
+ or not has_schema_privilege('mip_mentions_gateway',caller_schema,'USAGE')
+ or not has_schema_privilege('mip_efta_auth_session_owner_v1',caller_schema,'USAGE')
  or exists(select 1 from pg_auth_members where roleid='mip_efta_auth_session_owner_v1'::regrole or member='mip_efta_auth_session_owner_v1'::regrole)
- or not has_column_privilege('mip_efta_auth_session_owner_v1','auth.sessions','not_after','SELECT')
+ or not has_column_privilege('mip_efta_auth_session_owner_v1',auth_table,'not_after','SELECT')
  then raise exception 'native_caller_boundary';end if;
 end $native_caller_final$;
 commit;

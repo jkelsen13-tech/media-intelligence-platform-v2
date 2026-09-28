@@ -21,7 +21,7 @@ Actual imported installer is supabase/qualification/qik-comparison-adapter/atomi
 - catalogPreflight a591c92b10d174bd2937e9634f8d491b4c34567b selects pg_catalog identity, relation/column/type/owner/RLS/function/extension metadata, not relation row values.
 - auditProbeDDL uses only the deterministic operation UUID, assertion_id install-audit:<operation>, provenance rule and a synthetic rejection digest. qualifyComparisonAudit lines 487–527 verifies that synthetic audit survives caller rollback. Probe results are booleans; no existing explanation/approval payload is requested.
 - reconcileComparisonInstall lines 442–484 reads installation/native-program receipt fields, catalog/remnant checks, unchanged C3 digests and fixed final assertions. It does not rerun installation, recreate owner memberships or read display/native material.
-- native-governed-install/install.mjs 75e676900f6c16c17d0e9aac66cc912ed06a77d5 selects NATIVE_CALLER_ORDER, including native-comparison-caller/001_admission.sql blob 1a080d0d12f27f7e13b3d692491e5641c2e70f94, under the existing original creator lease, and executes the complete source-pinned final verifier after actual native/backend temporary privilege cleanup. New material-reader function definitions are source, not invocations.
+- native-governed-install/install.mjs c56aa3e050fdb9342ef90dc71dca44f2810782ea selects NATIVE_CALLER_ORDER, including native-comparison-caller/001_admission.sql blob a9428d8b2120514a0d6ee13a53d801dba7b6e060, under the existing original creator lease, and executes the complete source-pinned final verifier after actual native/backend temporary privilege cleanup. New material-reader function definitions are source, not invocations.
 
 The installer principal has powerful existing authority, including required source relation SELECT/ownership checks. That authority is not authorization to export rows: this fixed route never selects those values. Source metadata and error sanitization are therefore essential; do not expose an arbitrary SQL/callback/browser endpoint. Pinned source installation can execute source-defined DDL and catalog assertions within qik; describing the receiver as source/metadata-only does not describe installation as read-only.
 
@@ -29,7 +29,7 @@ Underlying module pins:
 - atomicInstall a97cd41a30216ad6561fc21088099c1bf75e2afd
 - catalogPreflight a591c92b10d174bd2937e9634f8d491b4c34567b
 - compileSource cd87eb0a0bc758315246e74675339f3ea2972a19
-- native install 75e676900f6c16c17d0e9aac66cc912ed06a77d5
+- native install c56aa3e050fdb9342ef90dc71dca44f2810782ea
 - persistentInstall 24625b8382399db71e9dba6e3ddb88a936ade33f
 - installQikIngest fa5d24041b38592ec950e2e46ca28be11f30d997
 - authenticatedPgDriver af0f3b69c34695f9241934fae89ac00cedd08515
@@ -79,3 +79,5 @@ Success exit requires the requested result: audit qualified, install acknowledge
 Parent invocation: node --test tests/nativeGovernedHost.test.mjs on Node22.14.0. Fourteen authored synthetic tests cover exact config, target/TLS refusals, source bytes, exact operation dispatch, no replay after ambiguity/drift, audit separation, result identity/allowlist, payload/secret error suppression and no invented verified-cleanup claim. Injected API methods are a trusted internal orchestration test seam, never workflow config or an arbitrary SQL seam. These tests are NOT RUN and do not qualify real pg transport, existing environment credentials or hosted install.
 
 Add source files only after parent inspection of workflow event effects. Existing d706 dependencies remain byte-for-byte unchanged. First run synthetic adapter checks and applicable combined regression, then fresh review; finally verify existing route/config/prerequisite metadata and secure injection before executing an already authorized operation. Do not invoke the existing destructive disposable PG harness against qik. Runner cleanup removes only its public CA staging file; database cleanup/reversal, source mutation, payload transfer and activation are not adapter actions.
+
+The new v6 final prerequisite/caller/bootstrap assertions resolve exact schema, relation and function identities using pg_catalog OIDs, because the native verifier owner deliberately lacks Auth and caller schema USAGE. Their effective owner/ACL/RLS/shape checks remain complete. No Auth/caller schema or payload-read grant is added to the verifier; the restricted-principal fixture explicitly checks that denial after success.

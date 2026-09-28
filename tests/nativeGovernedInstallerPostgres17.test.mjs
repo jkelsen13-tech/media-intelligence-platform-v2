@@ -430,6 +430,11 @@ for(const selectedMode of [NATIVE_MODE,NATIVE_PROJECTION_MODE,NATIVE_BINDING_MOD
 
   if(caller)await t.test('v6 committed caller has complete fixed final boundary after both genuine creator cleanups',async()=>{
    await verifyNativeCallerCurrentBoundary(principal,plan.native,cfg)
+   assert.deepEqual((await root.query("select has_schema_privilege('mip_arc_native_owner','auth','USAGE,CREATE') auth_schema,has_schema_privilege('mip_arc_native_owner','mip_native_caller','USAGE,CREATE') caller_schema,has_column_privilege('mip_arc_native_owner','auth.sessions','not_after','SELECT') expiry_read")).rows[0],
+    {auth_schema:false,caller_schema:false,expiry_read:false})
+   // The actual restricted fixed verifier above must inspect complete current
+   // Auth/caller ACLs by catalog OID, without gaining either schema's USAGE.
+
    const verifier=(await root.query("select pg_get_userbyid(p.proowner) owner,p.pronargs,p.prorettype::regtype::text result,p.prosecdef,p.proconfig,p.prosrc,not has_schema_privilege(p.proowner,n.oid,'USAGE,CREATE') isolated from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.oid='mip_comparison_install.native_boundary_v6()'::regprocedure")).rows[0]
    assert.equal(verifier.owner,'mip_arc_native_owner');assert.equal(verifier.pronargs,0)
    assert.equal(verifier.result,'void');assert.equal(verifier.prosecdef,true);assert.equal(verifier.isolated,true)

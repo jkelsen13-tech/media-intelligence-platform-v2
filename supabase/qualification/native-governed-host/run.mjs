@@ -9,7 +9,7 @@ const CODE_PINS=Object.freeze({
   "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "a97cd41a30216ad6561fc21088099c1bf75e2afd",
   "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs": "a591c92b10d174bd2937e9634f8d491b4c34567b",
   "supabase/qualification/qik-comparison-adapter/compileSource.mjs": "cd87eb0a0bc758315246e74675339f3ea2972a19",
-  "supabase/qualification/native-governed-install/install.mjs": "75e676900f6c16c17d0e9aac66cc912ed06a77d5",
+  "supabase/qualification/native-governed-install/install.mjs": "c56aa3e050fdb9342ef90dc71dca44f2810782ea",
   "supabase/qualification/qik-ingest/persistentInstall.mjs": "24625b8382399db71e9dba6e3ddb88a936ade33f",
   "supabase/qualification/qik-ingest/installQikIngest.mjs": "fa5d24041b38592ec950e2e46ca28be11f30d997",
   "supabase/qualification/collector-native-capture/authenticatedPgDriver.mjs": "af0f3b69c34695f9241934fae89ac00cedd08515",

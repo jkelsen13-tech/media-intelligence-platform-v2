@@ -84,7 +84,7 @@ export const NATIVE_DISPLAY_ORDER=Object.freeze([...NATIVE_BINDING_ORDER,Object.
  assertion_marker:'do $native_display_final$',assertion_owner:'mip_arc_native_owner'
 })])
 export const NATIVE_CALLER_ORDER=Object.freeze([...NATIVE_DISPLAY_ORDER,Object.freeze({
- path:'supabase/qualification/native-comparison-caller/001_admission.sql',blob:'1a080d0d12f27f7e13b3d692491e5641c2e70f94',
+ path:'supabase/qualification/native-comparison-caller/001_admission.sql',blob:'a9428d8b2120514a0d6ee13a53d801dba7b6e060',
  assertion_marker:'do $native_caller_final$',assertion_owner:'mip_arc_native_owner'
 })])
 const outerVerifierMode=mode=>mode===NATIVE_BINDING_MODE||mode===NATIVE_DISPLAY_MODE||mode===NATIVE_CALLER_MODE
@@ -341,9 +341,9 @@ function callerBootstrapAssertion(login,edges){
  "or not exists(select 1 from pg_roles where rolname="+literal(login)+" and rolcanlogin and not rolsuper and rolcreaterole and rolcreatedb and rolbypassrls and rolinherit and not rolreplication) "+
  "or pg_has_role("+literal(login)+",'mip_mentions_admin','USAGE') or pg_has_role("+literal(login)+",'mip_mentions_admin','SET') "+
  "or pg_has_role("+literal(login)+",'mip_mentions_gateway','USAGE') or pg_has_role("+literal(login)+",'mip_mentions_gateway','SET') "+
- "or has_schema_privilege("+literal(login)+",'mip_native_caller','USAGE,CREATE') "+
- "or has_function_privilege("+literal(login)+",'mip_native_caller.configure_admission(uuid,uuid,uuid,uuid,uuid,text,name,uuid,text,timestamptz,timestamptz,boolean)','EXECUTE') "+
- "or has_function_privilege("+literal(login)+",'mip_native_caller.read_current(uuid,uuid,bigint,uuid,uuid,text)','EXECUTE') "+
+ "or has_schema_privilege("+literal(login)+",(select oid from pg_catalog.pg_namespace where nspname='mip_native_caller'),'USAGE,CREATE') "+
+ "or has_function_privilege("+literal(login)+",(select p.oid from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_native_caller' and p.proname='configure_admission'),'EXECUTE') "+
+ "or has_function_privilege("+literal(login)+",(select p.oid from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_native_caller' and p.proname='read_current'),'EXECUTE') "+
  "then raise exception 'native_install_bootstrap_topology';end if;end $native_caller_bootstrap$;";
 }
 const callerVerifierBody=(final,login,edges)=>bindingVerifierBody({assertion:final.assertion+'\n'+callerBootstrapAssertion(login,edges)});
