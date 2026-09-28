@@ -50,7 +50,8 @@ function sortedUnique(values, check) {
 }
 function identity(value) {
   exact(value, ['project','table','source_id','version_sha256'])
-  if (!sourceRefs.includes(value.project) || !FIELD_CONTRACTS[value.project][value.table]) fail('unsupported_source_family')
+  if (!sourceRefs.includes(value.project) || typeof value.table !== 'string'
+    || !Object.hasOwn(FIELD_CONTRACTS[value.project], value.table)) fail('unsupported_source_family')
   // source_id is an opaque digest of the native identity tuple, NOT a guessed UUID
   // or payload hash. Historical duplicate rows require distinct occurrence/version IDs.
   return { project: value.project, table: value.table,
