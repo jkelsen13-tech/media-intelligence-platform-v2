@@ -494,7 +494,17 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
     scope:s,sentinel,ids:[id(1010),id(1011),id(1012),id(1013)],first,
     async makeNextReviewedInput({privateHeadIds}){
      assert.deepEqual(privateHeadIds,[id(1010)]);
-     const next=await capture('Synthetic new private member '+sentinel,'https://synthetic.invalid/private-next');
+     const nextText='Synthetic new private member '+sentinel;
+     const next=await capture(nextText,'https://synthetic.invalid/private-next');
+     // Reviewed zero entities still require an admitted, allowed native C6 field.
+     // Scalar access does not confer that original-field authority.
+     const nextField=id(1020);
+     await db.query('set role mip_mentions_owner');
+     try{
+      await db.query('select mip_mentions.admit_native_field($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+       [s,nextField,next.id,next.job_id,next.article_id,next.content_hash,'body_text',sha(nextText),Buffer.byteLength(nextText)]);
+     }finally{await db.query('reset role')}
+     await access(nextField,true);
      const nextBindings=[];
      for(const [j,field]of ['title','summary','outlet','published_at'].entries()){
       const bid=id(1030+j);
