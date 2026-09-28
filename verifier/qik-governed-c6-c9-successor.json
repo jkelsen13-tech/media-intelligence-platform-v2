@@ -6,8 +6,8 @@
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
   "immediate_base": {
-    "commit": "198b6c8aaa18e05d00ef51807481d057c84e1955",
-    "tree": "02a241f56a198426bea47cbedc1bb64a9c48d367"
+    "commit": "1e15b2d7b7da2d4e5a87ecf0ace1dd3c67b56d1b",
+    "tree": "c6bcb8331adf1583136a424e0e2ac42d5d201ea8"
   },
   "authorization": {
     "internal_source_and_synthetic_qualification": "User consolidation continuation amendment prospectively authorizes this distinct governed successor and installer mode into source review and synthetic internal qualification. Qualification receipts and actual external Cursor review bind the exact candidate; no individual owner field signature, historical acceptance, hosted installation or actual-material receiving authorization is represented.",
@@ -1068,7 +1068,7 @@
     ],
     "native_joint_installer": {
       "path": "supabase/qualification/native-governed-install/install.mjs",
-      "blob": "af228464330af46dc33fd8382067f6709796180f",
+      "blob": "2d0656b25e4c6df455559e1d6591f7e219656011",
       "mode": "native-governed-v3",
       "authorization": "owner-authorized-disabled-comparison-native-private-projection-install",
       "source_base": "79f25d3519d26fd0dbda37fd0728e5783c04834a",
@@ -1133,7 +1133,7 @@
     "c9_projection_order": [
       {
         "path": "supabase/qualification/arc-public-projection/001_native_private_projection.sql",
-        "blob": "055083ea50c058c6fd476a80a32e4f998232a51a"
+        "blob": "e6064ccaa580cfbd39e6331e776dfb74e27e0784"
       }
     ]
   },

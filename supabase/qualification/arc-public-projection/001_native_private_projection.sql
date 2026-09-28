@@ -276,7 +276,7 @@ begin
   end case;
   return null;
 end;
-$function$
+$function$;
 
 
 create function mip_arc_projection_private.expand(p mip_arc_projection_private.projections) returns jsonb
