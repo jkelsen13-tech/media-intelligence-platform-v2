@@ -101,7 +101,18 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
  assert.equal(process.env.MIP_DISPOSABLE_POSTGRES,'qik-persistent-install')
  let owner=await client('postgres'),admin=null
  // No destructive cleanup is armed before this complete dedicated-cluster guard.
- try{await assertPristineFixture(owner)}catch(error){await owner.end();throw error}
+ try{
+  await assertPristineFixture(owner)
+  // The runner connection may cross a Docker bridge; inspect the internal
+  // loopback rule used by dblink as well, before setup or cleanup is armed.
+  const authentication=(await owner.query("select bool_and(error is null and (type='local' or (type='host' and auth_method='scram-sha-256'))) valid,count(*) filter(where type='host' and address='127.0.0.1' and netmask='255.255.255.255' and database=array['all']::text[] and user_name=array['all']::text[])::integer loopback_rules from pg_hba_file_rules")).rows[0]
+  assert.deepEqual(authentication,{valid:true,loopback_rules:1},'fixture must require SCRAM on every host path, including internal loopback')
+  // Also prove the runner's connection rejects an incorrect password.
+  const wrongPassword=new pg.Client({host:'127.0.0.1',port:5432,database:'postgres',user:'postgres',
+   password:'synthetic-deliberately-incorrect',connectionTimeoutMillis:5000})
+  try{await assert.rejects(wrongPassword.connect(),error=>error.code==='28P01','fixture loopback must reject an incorrect password')}
+  finally{await wrongPassword.end().catch(()=>{})}
+ }catch(error){await owner.end();throw error}
  // Prove an unrelated application schema is refused and survives the refusal.
  // This sentinel is created only after a truly pristine baseline was established.
  await owner.query('create schema fixture_unrelated;create table fixture_unrelated.sentinel(id integer primary key);insert into fixture_unrelated.sentinel values(73)')
