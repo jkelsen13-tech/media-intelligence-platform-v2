@@ -58,7 +58,7 @@ class DOJ(M.NativeLineagePG):
         self.admin(extra)
         # Establish only the two selected synthetic articles before real native
         # history installation; no production reader eligibility is changed.
-        self.admin('update public.articles set title='+q(M.TEXT)+',summary='+q(M.TEXT)+",body_text=null,reader_state='eligible',source_status='active',url='https://www.justice.gov/synthetic/'||id::text where id in ("+','.join(q(i)+'::uuid' for i in IDS)+');alter table public.articles alter column url set not null;')
+        self.admin('update public.articles set title='+q(M.TEXT)+',summary='+q(M.TEXT)+",body_text=null,claims='[]'::jsonb,feed='pipeline-v1',reader_state='eligible',source_status='active',url='https://www.justice.gov/synthetic/'||id::text where id in ("+','.join(q(i)+'::uuid' for i in IDS)+');alter table public.articles alter column url set not null;')
         M.load(self.db,'supabase/migrations/20260905082406_evidence_pipeline_reliability.sql')
         # 030 supplies the actual bound native wrappers required by 035.
         for name in ['05_operation_ledger.sql','010_collection_gate.sql','020_run_ledger.sql','030_retain_upsert.sql','035_native_caller.sql']:
@@ -194,6 +194,65 @@ class DOJ(M.NativeLineagePG):
             prior=json.loads(self.role(U,'select mip_identity.operation_check_pre_doj_v1('+js(scope)+')'))
             self.assertEqual(actual,prior)
         self.assertEqual(self.admin('select count(*) from mip_identity.efta_scope'),'0')
+    def test_doj_rebound_article_projection_cannot_expand_feed_material(self):
+        self.prepare();scope=self.scopes[0]
+        article_id=scope['material_ref'].split(':',1)[1]
+        binding=self.bindings[article_id]
+        record=self.records[json.dumps(scope,sort_keys=True)]
+        # Each case creates a valid NEW administrative binding and operation
+        # revision for the changed full article hash. A stale-hash check alone
+        # would allow it; the bound native feed fields must still reject it.
+        changes=[
+            ('body_text','synthetic legacy page body'),
+            ('body_text',''),
+            ('claims',json.dumps([dict(surface_text=M.TEXT,extra_payload='synthetic forbidden claims payload')])),
+            ('embedding','synthetic forbidden embedding payload'),
+            ('title','synthetic different title'),
+            ('summary','synthetic different summary'),
+            ('outlet','synthetic different outlet'),
+            ('url','https://www.justice.gov/synthetic/different-item'),
+            ('published_at','2026-02-01T00:00:00Z'),
+        ]
+        for field,value in changes:
+            with self.subTest(field=field,value=value):
+                rebound_binding=dict(binding,revision=uid())
+                rebound_record=dict(record,revision=uid())
+                rebound_record['conditions']=[dict(c) for c in record['conditions']]
+                rebound_record['conditions'][2]['binding_revision']=rebound_binding['revision']
+                version="current_setting('mip.synthetic_rebound_hash')"
+                bound_scope='jsonb_set('+js(scope)+",'"+'{material_version}'+"',to_jsonb("+version+'))'
+                bound_binding=js(rebound_binding)+"||jsonb_build_object('article_version',"+version+')'
+                bound_record=js(rebound_record)+"||jsonb_build_object('scope',"+bound_scope+')'
+                sql=('begin;update public.articles set '+field+'='+q(value)+' where id='+q(article_id)+';'
+                     "do $bind$ begin perform set_config('mip.synthetic_rebound_hash',"
+                     '(select comparison_qualification.argument_digest(to_jsonb(a)) from public.articles a where id='+q(article_id)+"),true);end $bind$;"
+                     'set local role '+A+';'
+                     'insert into mip_identity.doj_material_bindings select x.* from jsonb_populate_record(null::mip_identity.doj_material_bindings,'+bound_binding+') x;'
+                     'insert into mip_identity.operation_evidence_versions select x.* from jsonb_populate_record(null::mip_identity.operation_evidence_versions,'+bound_record+') x;'
+                     'insert into mip_identity.operation_evidence_heads values('+bound_scope+','+q(rebound_record['revision'])+',true);'
+                     'set local role '+U+';select mip_identity.operation_check('+bound_scope+');rollback;')
+                decision=json.loads(self.admin(sql))
+                self.assertNotEqual(decision['scope']['material_version'],scope['material_version'])
+                self.assertEqual(decision['revision'],rebound_record['revision'])
+                self.assertEqual(decision['material_binding_revision'],rebound_binding['revision'])
+                self.assertFalse(decision['allowed'])
+                self.assertEqual(decision['reason'],'doj_material_stale_or_unavailable')
+                self.assertTrue(self.decision(scope)['allowed'])
+    def test_doj_admin_cannot_write_unrelated_operation_scope(self):
+        self.prepare()
+        scope=dict(self.scopes[0],source_project='unrelated-synthetic-project')
+        v=dict(next(iter(self.records.values())),revision=uid(),scope=scope)
+        with self.assertRaises(RuntimeError):self.insert_as_authority('operation_evidence_versions',v)
+        # Seed an unrelated synthetic revision/head as the fixture installer.
+        # The actual admin must see no head and cannot retarget it to DOJ.
+        old=dict(v,authority_adapter='synthetic-fixture-v1',synthetic=True)
+        self.admin('insert into mip_identity.operation_evidence_versions select x.* from jsonb_populate_record(null::mip_identity.operation_evidence_versions,'+js(old)+') x;insert into mip_identity.operation_evidence_heads values('+js(scope)+','+q(old['revision'])+',true);')
+        self.assertEqual(self.role(A,'select count(*) from mip_identity.operation_evidence_heads where scope='+js(scope)),'0')
+        self.role(A,'update mip_identity.operation_evidence_heads set active=false where scope='+js(scope))
+        self.assertEqual(self.admin('select active from mip_identity.operation_evidence_heads where scope='+js(scope)),'t')
+        other=dict(old,revision=uid(),scope=dict(scope,material_version='0'*64))
+        self.admin('insert into mip_identity.operation_evidence_versions select x.* from jsonb_populate_record(null::mip_identity.operation_evidence_versions,'+js(other)+') x;')
+        with self.assertRaises(RuntimeError):self.role(A,'insert into mip_identity.operation_evidence_heads values('+js(other['scope'])+','+q(other['revision'])+',true)')
     def test_doj_final_catalog_rejects_drift(self):
         s=(ROOT/NEW).read_text();start='do $final_doj_permissions$';end='end $final_doj_permissions$;'
         if s.count(start)!=1 or s.count(end)!=1:raise AssertionError('final assertion boundary changed')
@@ -205,6 +264,13 @@ class DOJ(M.NativeLineagePG):
           'alter function qik_ingest.check_doj_material(uuid,uuid,uuid) security invoker',
           'grant mip_cutover_authority_admin_v1 to qik_ingest_runtime',
           'alter policy doj_admin_insert on mip_identity.doj_policy_versions with check(false)',
+          'alter policy doj_admin_evidence_insert on mip_identity.operation_evidence_versions with check(true)',
+          'alter policy doj_admin_heads_update on mip_identity.operation_evidence_heads using(true) with check(true)',
+          'grant insert on mip_identity.operation_evidence_versions to service_role',
+          'grant update(scope) on mip_identity.operation_evidence_heads to mip_cutover_authority_admin_v1',
+          'alter table mip_identity.doj_material_bindings disable trigger doj_immutable',
+          'alter table mip_identity.doj_policy_heads disable trigger doj_fence',
+          'alter table mip_identity.doj_policy_versions disable trigger doj_no_truncate',
         ]:
             with self.subTest(mutation=mutation):
                 with self.assertRaises(RuntimeError):self.admin('begin;'+mutation+';'+checks+'rollback;')
@@ -212,6 +278,6 @@ class DOJ(M.NativeLineagePG):
 
 if __name__=='__main__':
     names=sorted(n for n in DOJ.__dict__ if n.startswith('test_doj_'))
-    if len(names)!=9:raise SystemExit('unexpected synthetic test inventory')
+    if len(names)!=11:raise SystemExit('unexpected synthetic test inventory')
     result=unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(DOJ(n) for n in names))
     raise SystemExit(not result.wasSuccessful())
