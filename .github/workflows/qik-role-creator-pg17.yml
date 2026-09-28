@@ -1,0 +1,66 @@
+name: Qik role creator PostgreSQL 17.6 qualification
+on:
+  push:
+    branches: [codex/native-lineage-minimization-20260927]
+    paths: [.github/workflows/qik-role-creator-pg17.yml]
+permissions:
+  contents: read
+concurrency:
+  group: qik-role-creator-pg17
+  cancel-in-progress: false
+jobs:
+  synthetic-creator-isolation:
+    if: github.repository == 'jkelsen13-tech/media-intelligence-platform-v2' && github.ref == 'refs/heads/codex/native-lineage-minimization-20260927'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Verify exact reviewed synthetic source and event
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, os, pathlib, subprocess
+          source = 'f9ce58206c43df0e241b47a8e6c7873913664902'
+          assert os.environ['GITHUB_EVENT_NAME'] == 'push'
+          assert os.environ['GITHUB_REPOSITORY'] == 'jkelsen13-tech/media-intelligence-platform-v2'
+          assert os.environ['GITHUB_REF'] == 'refs/heads/codex/native-lineage-minimization-20260927'
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip() == os.environ['GITHUB_SHA']
+          subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
+          paths = subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()
+          assert paths == ['.github/workflows/qik-role-creator-pg17.yml'], paths
+          path = pathlib.Path('verifier/qikRoleCreatorIsolationPostgres17.sql')
+          assert hashlib.sha256(path.read_bytes()).hexdigest() == '69b4da94548cb9b0dbb6986385dacd1db6402f164fe6be4350e6bdbf30cfd1b7'
+          result = subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
+          assert result.returncode == 1 and not result.stdout, 'checkout credential persisted'
+          print('Exact synthetic source and bounded event verified; no hosted installation authorized by this job.')
+          PY
+      - name: Start isolated disposable PostgreSQL 17.6
+        shell: bash
+        run: |
+          docker run --detach --name qik-role-qualification --network none -e POSTGRES_PASSWORD=synthetic-disposable-only postgres:17.6
+          for attempt in $(seq 1 30); do
+            if docker exec qik-role-qualification pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - name: Qualify creator removal, rollback and cleanup
+        shell: bash
+        run: |
+          docker exec -i qik-role-qualification psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 -c "set mip.qualification='synthetic-role-creator-pg17-only'" -f - < verifier/qikRoleCreatorIsolationPostgres17.sql
+      - name: Remove disposable container
+        if: always()
+        shell: bash
+        run: |
+          if docker container inspect qik-role-qualification >/dev/null 2>&1; then
+            volumes=$(docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{println .Name}}{{end}}{{end}}' qik-role-qualification)
+            docker rm --force --volumes qik-role-qualification
+            for volume in $volumes; do
+              if docker volume inspect "$volume" >/dev/null 2>&1; then
+                echo 'Disposable database volume remains'; exit 1
+              fi
+            done
+          fi
+          if docker container inspect qik-role-qualification >/dev/null 2>&1; then exit 1; fi
