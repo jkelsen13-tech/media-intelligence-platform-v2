@@ -1,0 +1,78 @@
+name: Qik operational adapter synthetic qualification
+on:
+  push:
+    branches: [codex/qik-operational-integration-20260927]
+    paths: [.github/workflows/qik-operational-adapter-synthetic.yml]
+permissions:
+  contents: read
+concurrency:
+  group: qik-operational-adapter-synthetic
+  cancel-in-progress: false
+jobs:
+  synthetic:
+    if: github.repository == 'jkelsen13-tech/media-intelligence-platform-v2' && github.ref == 'refs/heads/codex/qik-operational-integration-20260927'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Verify reviewed dependency tree and synthetic authority
+        shell: bash
+        run: |
+          python3 -I -B - <<'PY'
+          import hashlib,os,pathlib,subprocess
+          source='b79ac6ab99959cbf8fd69bf354c8839307a4781b'
+          assert os.environ['GITHUB_EVENT_NAME']=='push'
+          assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
+          assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
+          subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
+          assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-operational-adapter-synthetic.yml']
+          protected={'verifier/efta-postgres-qualification-manifest.json':'841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9','verifier/eftaPostgresQualification.py':'000eac69f781f1803c19d98ac44388400ee8324feeeb4cd6498e8a984ef65f10'}
+          for name,digest in protected.items():
+              assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
+          config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
+          assert config.returncode==1 and not config.stdout
+          print('Reviewed complete source tree; synthetic-only internal qualification under user consolidation amendment. Not owner field signature, historical acceptance, hosted installation or material-transfer authority.')
+          PY
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.14.0
+          package-manager-cache: false
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Qualify planner and hosted-source contracts
+        run: node --test --test-concurrency=1 tests/mipHistoricalArticleTransferPlan.test.mjs tests/qikComparisonAdapterSource.test.mjs tests/qikComparisonCatalogPreflight.test.mjs tests/qikRoleCreatorIsolation.test.mjs
+      - name: Start disposable PostgreSQL 17.6 on loopback only
+        shell: bash
+        run: |
+          docker run --detach --name qik-op-qualification --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=mip-efta-disposable-ci-only postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+          for attempt in $(seq 1 30); do
+            if docker exec qik-op-qualification pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - name: Qualify complete native lineage journal review reader dependencies
+        env:
+          MIP_NATIVE_LINEAGE_QUALIFICATION: separately-approved-disposable-only
+          MIP_NATIVE_LINEAGE_DISPOSABLE_CONTEXT: approved-dedicated-ci
+        run: python3 -I -B verifier/nativeLineageMinimizationPostgres.py
+      - name: Qualify DOJ permissions through actual C3 and accepted reader
+        env:
+          MIP_NATIVE_LINEAGE_QUALIFICATION: separately-approved-disposable-only
+          MIP_NATIVE_LINEAGE_DISPOSABLE_CONTEXT: approved-dedicated-ci
+        run: python3 -I -B verifier/dojPrivatePermissionPostgres.py
+      - name: Remove disposable database and verify no container or volume remains
+        if: always()
+        shell: bash
+        run: |
+          if docker container inspect qik-op-qualification >/dev/null 2>&1; then
+            volumes=$(docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{println .Name}}{{end}}{{end}}' qik-op-qualification)
+            docker rm --force --volumes qik-op-qualification
+            for volume in $volumes; do
+              if docker volume inspect "$volume" >/dev/null 2>&1; then echo 'Disposable volume remains'; exit 1; fi
+            done
+          fi
+          if docker container inspect qik-op-qualification >/dev/null 2>&1; then exit 1; fi
