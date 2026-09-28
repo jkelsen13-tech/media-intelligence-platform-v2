@@ -54,6 +54,33 @@ async function injectPrivateUnitDrift(sql,body){
  try{const result=await body();assert.equal(injected,true,safeDiagnostic(result));return result}
  finally{pg.Client.prototype.query=original}
 }
+// Observe only fixed settings/control outcomes; never retain query parameters.
+async function credentialWindow(fault,body,initialTimeout=null){
+ const original=pg.Client.prototype.query
+ const seen={bounded:null,restored:null,rollback:null,calls:0}
+ pg.Client.prototype.query=async function(...args){
+  const active=this.connectionParameters.application_name==='mip-c3-persistent-install-source'
+  const sql=typeof args[0]==='string'?args[0]:args[0]?.text
+  if(active&&typeof sql==='string'){
+   if(sql==='begin'&&initialTimeout!==null)
+    await original.call(this,"select set_config('statement_timeout',$1,false)",[initialTimeout+'ms'])
+   if(sql.startsWith('create function pg_temp.atomic_audit_config(')&&fault){
+    const prefix=fault==='timeout'?'perform pg_sleep(2); ':"raise exception 'synthetic-sensitive-failure'; "
+    args[0]=sql.replace('insert into mip_factual.audit_connection',()=>prefix+'insert into mip_factual.audit_connection')
+   }
+   if(sql==='select pg_temp.atomic_audit_config($1)'){
+    seen.calls++
+    seen.bounded=(await original.call(this,"select setting from pg_settings where name='statement_timeout'")).rows[0].setting
+   }
+   if(sql.startsWith('grant usage on schema mip_factual to '))
+    seen.restored=(await original.call(this,"select setting from pg_settings where name='statement_timeout'")).rows[0].setting
+  }
+  const result=await original.apply(this,args)
+  if(active&&sql==='rollback')seen.rollback=(await original.call(this,"select setting from pg_settings where name='statement_timeout'")).rows[0].setting
+  return result
+ }
+ try{return {receipt:await body(),seen}}finally{pg.Client.prototype.query=original}
+}
 async function assertPristineFixture(db){
  const r=(await db.query(
   "select current_database() db,current_setting('server_version_num') v,session_user::text login,current_user::text effective,"+
@@ -167,6 +194,11 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   // Superuser performs substrate/extension setup only. Installer is now actual
   // password-authenticated non-superuser CREATEROLE, matching qik owner flags.
   await admin.query('alter role '+ident(installer)+' nosuperuser createrole createdb bypassrls')
+  // Actual module configuration in the synthetic database only; no monitoring
+  // setting is relaxed by production code. Applies to new installer sessions.
+  await admin.query("alter database postgres set session_preload_libraries='auto_explain'")
+  await admin.query("alter database postgres set auto_explain.log_min_duration='10000'")
+  await admin.query("alter database postgres set auto_explain.log_nested_statements='off'")
   await owner.end();owner=null
   const plan=await prepareAtomicInstall(async p=>read(p))
   const pre=await client(installer)
@@ -180,6 +212,34 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
    c3OperationId:'3'.repeat(32),c3ManifestSha256:H,expectedManifestSha256:plan.manifest_sha256,
    dblinkMetadataSha256:dblink.metadata_sha256,collectorSource:'qik-fixture-v1',
    auditLogin:audit,auditConnectionString:url(audit),disposable:true}
+  for(const threshold of [500,1000]){
+   await admin.query("alter database postgres set auto_explain.log_min_duration='"+threshold+"'")
+   const refused=await credentialWindow(null,()=>installComparisonAtomic(cfg,async p=>read(p)))
+   assert.equal(refused.receipt.state,'installation_refused',safeDiagnostic(refused.receipt))
+   assert.equal(refused.receipt.phase,'credential_logging_assertion',safeDiagnostic(refused.receipt))
+   assert.equal(refused.receipt.diagnostic,'cnc_credential_logging_refused',safeDiagnostic(refused.receipt))
+   assert.equal(refused.seen.calls,0)
+   assert.equal(refused.seen.rollback,'30000')
+   assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
+  }
+  await admin.query("alter database postgres set auto_explain.log_min_duration='10000'")
+  const loggingSession=await client(installer)
+  try{
+   const settings=Object.fromEntries((await loggingSession.query("select name,setting from pg_settings where name in ('auto_explain.log_min_duration','auto_explain.log_nested_statements')")).rows.map(row=>[row.name,row.setting]))
+   assert.deepEqual(settings,{'auto_explain.log_min_duration':'10000','auto_explain.log_nested_statements':'off'})
+  }finally{await loggingSession.end()}
+  for(const fault of ['timeout','error','unlimited']){
+   const failedWindow=await credentialWindow(fault,()=>installComparisonAtomic(cfg,async p=>read(p)),fault==='error'?750:fault==='unlimited'?0:null)
+   assert.equal(failedWindow.receipt.state,'installation_refused',safeDiagnostic(failedWindow.receipt))
+   assert.equal(failedWindow.receipt.phase,'credential_configuration',safeDiagnostic(failedWindow.receipt))
+   assert.equal(failedWindow.receipt.diagnostic,'atomic_audit_configuration_failed',safeDiagnostic(failedWindow.receipt))
+   assert.equal(failedWindow.seen.calls,1)
+   assert.equal(failedWindow.receipt.sqlstate,'P0001',safeDiagnostic(failedWindow.receipt))
+   assert.equal(failedWindow.seen.bounded,fault==='error'?'750':'1000')
+   assert.equal(failedWindow.seen.rollback,fault==='error'?'750':fault==='unlimited'?'0':'30000')
+   for(const secret of [cfg.auditConnectionString,password,'synthetic-sensitive-failure'])assert.equal(JSON.stringify(failedWindow.receipt).includes(secret),false)
+   assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
+  }
   // A foreign LOGIN+BYPASSRLS principal must not acquire this new secret via
   // installer defaults. The installer refuses; it never edits global defaults.
   await admin.query("create role atomic_fixture_reader login bypassrls nosuperuser nocreatedb nocreaterole password '"+password+"'")
@@ -234,7 +294,9 @@ test('full pinned atomic install on non-superuser PostgreSQL17.6, rollback and a
   assert.equal((await admin.query("select n.nspname from pg_extension e join pg_namespace n on n.oid=e.extnamespace where e.extname='dblink'")).rows[0].nspname,'extensions')
   assert.equal((await reconcileComparisonInstall(cfg)).state,'not_installed')
   await admin.query('delete from public.explanations')
-  const installed=await loseAcknowledgement('commit',()=>installComparisonAtomic(cfg,async p=>read(p)))
+  const window=await credentialWindow(null,()=>loseAcknowledgement('commit',()=>installComparisonAtomic(cfg,async p=>read(p))))
+  const installed=window.receipt
+  assert.deepEqual(window.seen,{bounded:'1000',restored:'30000',rollback:null,calls:1})
   assert.equal(installed.state,'commit_ambiguous',safeDiagnostic(installed))
   assert.equal(installed.needs_reconciliation,true,safeDiagnostic(installed))
   assert.equal(installed.phase,'commit',safeDiagnostic(installed))
