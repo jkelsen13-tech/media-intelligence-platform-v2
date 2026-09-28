@@ -140,7 +140,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/README.md",
-      "git_blob": "8d0a46b88723f00f06f556f511f02ebd191076be"
+      "git_blob": "eca9e71f57ea87eaca748c2fde3e5a476cbe1231"
     },
     {
       "path": ".github/workflows/qik-native-installer-held.yml",
@@ -176,7 +176,7 @@
     "credential": "metadataAuditConnectionString for expectedMetadataAuditor only",
     "authority_current": false,
     "reads": "catalog plus bootstrap/head and non-authority revision columns; no Auth/capture/session/token reads",
-    "host_integration": "Actual independently authenticated metadata audit and full host composition passed at13ebf786fbd1a296c4f56d7d07bc9cda41802d45/run36469939409/job109089348043. Pending transition subsequently failed; this is not an installation receipt. Secure hosted bindings absent.",
+    "host_integration": "Actual separately authenticated autonomous/metadata auditors and composed host passed in full124-check receipt. Hosted credentials remain unconfigured.",
     "success_field": "permission_boundary_current (only a successful independently executed audit may set true)"
   },
   "gates": [
@@ -203,27 +203,52 @@
     "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
-  "integration_parent": "cb504c18cab6079becbbba58ff464166bb5fd7df",
+  "integration_parent": "ca9d05d51cf59bf6c931c48ce61e4ca8216d17af",
   "qualification": {
-    "status": "FIXTURE OID INTROSPECTION REPAIR AUTHORED — NOT RUN",
+    "status": "124 PASS — 0 FAIL — 0 SKIP; complete ordered synthetic scope only",
     "synthetic_only": true,
     "actual_qik_installation": false,
     "actual_material": false,
-    "prior_failed_run": 36472651193,
-    "prior_failed_job": 109098492623,
-    "prior_failed_candidate": "cb504c18cab6079becbbba58ff464166bb5fd7df",
-    "prior_result": {
-      "source_pass": 54,
-      "ordered_pg_pass": 66,
-      "ordered_pg_fail": 2,
-      "atomic_pg_pass": 2,
-      "tracked_source_and_historical_unchanged": true,
-      "cleanup": "success"
-    },
-    "only_failure": "Auth-rights fixture name-based function lookup required installer schemaUSAGE; exactcatalogOID introspection preserves existing denied access",
-    "runtime_lifecycle": "All actual pending/active/Auth/broker/admin/worker/exactretry/lostACK/deactivation/audit children passed; metadata helper valid/invalid checks still require corrected fixture",
-    "runtime_changes": 0,
-    "qualification_is_acceptance": false
+    "qualification_is_acceptance": false,
+    "receipt": {
+      "source": "25bc9c6c3c6f14f08617c64a6fd8b4238f74d4fa",
+      "source_tree": "085fb9a91d44e9c6096144f5a854db8d5be7e99b",
+      "candidate": "ca9d05d51cf59bf6c931c48ce61e4ca8216d17af",
+      "tree": "75ccb6122027434d5625566c7da57b777c9074ba",
+      "workflow": "92e0c2693ee0a160ff810fc7e6c7d224263d3c1d",
+      "run": 36473333101,
+      "job": 109100766733,
+      "conclusion": "success",
+      "groups": [
+        {
+          "pass": 54,
+          "fail": 0,
+          "skip": 0
+        },
+        {
+          "pass": 68,
+          "fail": 0,
+          "skip": 0
+        },
+        {
+          "pass": 2,
+          "fail": 0,
+          "skip": 0
+        }
+      ],
+      "total_pass": 124,
+      "source_clean": true,
+      "cleanup": "owned PostgreSQL container/volumes absent",
+      "environment": {
+        "host": "Existing source/synthetic-only GitHub Ubuntu22.04",
+        "node": "22.14.0",
+        "postgres": "17.6/170006",
+        "vector": "0.8.2",
+        "transport": "owned loopback SCRAM, actual nonsuper separate installer/auditor/runtime LOGINs"
+      },
+      "actual_qik_installation": false,
+      "actual_material": false
+    }
   },
   "host_route": {
     "existing_environment": "qik-forward-controlled",
@@ -232,5 +257,10 @@
     "automatic_execution": false,
     "credentials_currently_configured": false,
     "requires": "actual qualified/reviewed exactrelease + secure installer/autonomousauditor/metadataauditor bindings; no parent setting admission before evidence"
+  },
+  "review": {
+    "status": "Fresh actual Cursor review required; existing browser Transport closed",
+    "new_review_dispatched": false,
+    "old_unchanged_runtime_review": "c6d3d7b21108fd9993a1e990fdff79cdf63ac6da only; not this changed candidate"
   }
 }

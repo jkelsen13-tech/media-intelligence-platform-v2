@@ -3,7 +3,7 @@
   "status": "UNAPPROVED — SOURCE CANDIDATE ONLY — NOT AUTHORIZED FOR MATERIAL TRANSMISSION",
   "origin_commit": "cc8f1b19171917351548362f82f03fa2b1684831",
   "origin_tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9",
-  "integration_parent": "cb504c18cab6079becbbba58ff464166bb5fd7df",
+  "integration_parent": "ca9d05d51cf59bf6c931c48ce61e4ca8216d17af",
   "internal_qualification_authority": {
     "reference": "User full-consolidation amendment, coherent source qualification with synthetic fixtures only",
     "owner_field_signature": null,
@@ -16,7 +16,7 @@
     },
     {
       "path": "supabase/qualification/native-semantic-integration/README.md",
-      "blob": "bb29e14b04435ecdd0db33b3fc2b0e5e01e8ad57"
+      "blob": "b4a9f2ea8b3486c0c0bdded3287a94af4dcb1f10"
     },
     {
       "path": "supabase/qualification/hypothesis-assessments/handler.mjs",
@@ -607,7 +607,7 @@
     "fixture_specific": "Original schema scaffolding, native synthetic data, rights/privacy heads, Auth/session/method/RPC/broker synthetic fixtures remain in exact fixture.mjs; no reduced stand-in install"
   },
   "method_fixture_qualification": {
-    "status": "SKIP-ONLY NODE SELECTION AND COMPLETION-COVERAGE REPAIR AUTHORED — NOT RUN",
+    "status": "Selection qualified; correctly partitioned original worker/commit qualification NOT RUN",
     "entrypoint": "node --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs",
     "host_node": "24.21.0",
     "isolated_image": "node:24-alpine (original suite)",
@@ -704,12 +704,28 @@
     ],
     "selection_prerequisite": {
       "command": "node --test --test-concurrency=1 tests/qualificationShardSelection.test.mjs",
-      "status": "AUTHORED — NOT RUN",
+      "status": "5 PASS — 0 FAIL — 0 SKIP",
       "node": "24.21.0",
       "tests": 5,
       "meaning": "actual subprocess proves skip-only selection and completed-TAP classification; not worker/SQL qualification",
       "child_limit_seconds": 20,
-      "child_output_bytes": 1048576
+      "child_output_bytes": 1048576,
+      "receipt": {
+        "candidate": "ca9d05d51cf59bf6c931c48ce61e4ca8216d17af",
+        "tree": "75ccb6122027434d5625566c7da57b777c9074ba",
+        "source": "25bc9c6c3c6f14f08617c64a6fd8b4238f74d4fa",
+        "source_tree": "085fb9a91d44e9c6096144f5a854db8d5be7e99b",
+        "workflow": "92e0c2693ee0a160ff810fc7e6c7d224263d3c1d",
+        "run": 36473333101,
+        "job": 109100766382,
+        "conclusion": "success",
+        "pass": 5,
+        "fail": 0,
+        "skip": 0,
+        "node": "24.21.0",
+        "source_clean": true,
+        "scope": "actual bounded Node subprocess selection/TAP proof, no original worker proof"
+      }
     }
   }
 }
