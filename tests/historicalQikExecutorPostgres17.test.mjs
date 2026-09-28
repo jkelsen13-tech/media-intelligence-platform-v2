@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { runHistoricalQikCapacity } from './historicalQikCapacity.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { randomBytes, randomUUID, createHash } from 'node:crypto'
@@ -143,7 +144,7 @@ async function assertHistoricalDeno({executor,control,operation,manifestHash}) {
 }
 
 test('historical executor PG17.6 '+(closedProfile?'closed transport ordinary installer':'bootstrap extensions fixture')+', acquisition and custody',
- {skip:!armed,timeout:180000},async t=>{
+ {skip:!armed,timeout:process.env.MIP_HISTORICAL_CAPACITY_DISPOSABLE==='synthetic-pg17-only'?480000:180000},async t=>{
   const suffix=randomBytes(6).toString('hex')
   const names={qik:'mip_hist_qik_'+suffix,nie:'mip_hist_nie_'+suffix,yhb:'mip_hist_yhb_'+suffix}
   const createdDatabases=[],createdRoles=[],clients=[]
@@ -556,6 +557,14 @@ test('historical executor PG17.6 '+(closedProfile?'closed transport ordinary ins
       await assertHistoricalDeno({executor,control:qik,operation:denoOperation,manifestHash:sealed.manifest_sha256})
       assert.deepEqual((await qik.query('select * from public.publication_sentinel')).rows,[{id:1,state:'unchanged'}])
     })
+    if(process.env.MIP_HISTORICAL_CAPACITY_DISPOSABLE==='synthetic-pg17-only')
+      await t.test('bounded synthetic historical capacity observations',async t=>{
+        const result=await runHistoricalQikCapacity({sources,qik,executor,adapter})
+        assert.equal(result.status,'passed')
+        assert.equal(result.hosted_edge_qualified,false)
+        assert.equal(result.required_frozen_scope_fit,'unproved')
+        t.diagnostic(JSON.stringify(result))
+      })
   } finally {
     // Ownership-recorded teardown only. Never accept a user-provided database or
     // role name; refuse preexisting fixed-role collisions before mutations.

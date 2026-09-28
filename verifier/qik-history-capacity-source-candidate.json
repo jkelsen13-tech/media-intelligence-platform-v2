@@ -1,0 +1,75 @@
+{
+  "version": "mip.history.capacity-and-role-authority.source.v1",
+  "status": "SOURCE CANDIDATE — QUALIFICATION PENDING — NOT HOSTED QUALIFIED",
+  "origin": {
+    "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
+    "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
+  },
+  "parent": {
+    "commit": "ecd66e41123f9f16ec8dd38208571a25273ef093",
+    "tree": "aaef4a0a53b710ef6f6d92cbffd582acefe693f4"
+  },
+  "authorization": {
+    "record": "Continuation consolidation amendment and minimum qik-hosted migration executor amendment",
+    "scope": "Existing authorized remote GitHub source/synthetic qualification only; no actual material, hosted installation, credential entry, or publication eligibility",
+    "owner_field_acceptance": false
+  },
+  "files": {
+    "tests/historicalQikCapacity.mjs": "dd006a230c274e4911078a719ea8f627a23a9a46",
+    "tests/historicalQikCapacityDeno.mjs": "8cc90f6a4504a815225675ecc70e28d8eaf2bb8a",
+    "tests/historicalQikCapacityMetrics.mjs": "f8f4d3f9e6289fbe55d25eed82b00f7c8603afbe",
+    "tests/historicalQikCapacityMetrics.test.mjs": "a68c1edb9e8bfe359dd61a52d9dc054f1594af36",
+    "tests/qikRoleLifecyclePostgres17.test.mjs": "83705b16aceca48a4675d48bff7e84cde14076dd",
+    "tests/historicalQikExecutorPostgres17.test.mjs": "7d9ba542c49cab82377bc8bbcd75afff8741769d",
+    "supabase/qualification/historical-qik-executor/capacity-qualification/README.md": "0956e5aef7a0ec8869a6ab06172654cbc97bc8d5"
+  },
+  "unchanged_dependencies": {
+    "original_planner": "ad30cb603757888840e737694b333c3b6ae234e1",
+    "original_engine": "b5b80ee37c6cd068d17f59b506bab6df70839ea6",
+    "executor": "fa2e6a6f04287f45ce75ee0ae79e66afea5a3e1a",
+    "historical_install": "d4c72b5e2ff50ce19d46de9c6911135fc0216f48",
+    "historical_sql": "6fe6035223de1dac94fba6c238e33324bc0ca266",
+    "deno_lock": "11d5e1328c2a0b273f5085dc0a9946881adac3ee",
+    "historical_manifest": "d5253906f80267934a72f745201b1847b14a0792",
+    "native_manifest": "f5418a93bf74a922f017abedf6585ed6ffc759eb"
+  },
+  "qualification": {
+    "status": "NOT RUN",
+    "routes": [
+      "Existing source/synthetic GitHub Ubuntu22.04 owned loopback PostgreSQL17.6",
+      "Pinned standalone Deno2.5.2; not Supabase Edge"
+    ],
+    "groups": [
+      "Metrics parser",
+      "Actual PG17 scoped role grantor lifecycle",
+      "Historical bootstrap fixture plus capacity",
+      "Historical closed-ordinary fixture plus capacity"
+    ],
+    "limits": {
+      "job_minutes": 15,
+      "processes_per_profile": 4,
+      "child_seconds": 60,
+      "material": "Synthetic fixtures only"
+    }
+  },
+  "retention": {
+    "new_durable_payload_copy": false,
+    "raw_diagnostics": false,
+    "secrets": false,
+    "new_storage_destination": false,
+    "new_processing_eligibility": false,
+    "new_publication_eligibility": false
+  },
+  "preserved": {
+    "historical_manifests": true,
+    "historical_acceptance_assertions": true,
+    "native_disabled_v6": true,
+    "original_transfer_algorithm": true
+  },
+  "unproved": [
+    "Actual qik Edge CPU/RSS and full frozen largest unit fit",
+    "Hosted Auth/TLS/Vault and secure source/destination connections",
+    "Application active-profile final effective permission contract",
+    "Real article transfer, content custody and restore"
+  ]
+}
