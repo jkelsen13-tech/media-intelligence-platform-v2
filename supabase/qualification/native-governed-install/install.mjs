@@ -4,6 +4,9 @@ import {createHash} from 'node:crypto'
 export const NATIVE_MODE='native-governed-v2'
 export const NATIVE_PROJECTION_MODE='native-governed-v3'
 export const NATIVE_BINDING_MODE='native-governed-v4'
+export const NATIVE_DISPLAY_MODE='native-governed-v5'
+export const NATIVE_DISPLAY_AUTHORIZATION='owner-authorized-disabled-comparison-native-comparison-display-install'
+export const NATIVE_DISPLAY_SOURCE_BASE='ec4670ade45c7ccff02f1403177f642bd402e019'
 export const NATIVE_BINDING_AUTHORIZATION='owner-authorized-disabled-comparison-native-comparison-binding-install'
 export const NATIVE_BINDING_SOURCE_BASE='a43893801c5f2c8543e0c08b9bfa7b039899574c'
 export const NATIVE_PROJECTION_AUTHORIZATION='owner-authorized-disabled-comparison-native-private-projection-install'
@@ -73,10 +76,16 @@ export const NATIVE_BINDING_ORDER=Object.freeze([...NATIVE_PROJECTION_ORDER,Obje
  path:'supabase/qualification/native-comparison-binding/001_private_binding.sql',blob:'7bd78e703b1a81414e3a24b4049ea407d00435c8',
  assertion_marker:'do $native_comparison_final$',assertion_owner:'mip_arc_native_owner'
 })])
-export const isNativeMode=mode=>mode===NATIVE_MODE||mode===NATIVE_PROJECTION_MODE||mode===NATIVE_BINDING_MODE
-export function nativeAuthorization(mode){if(!isNativeMode(mode))fail('plan');return mode===NATIVE_MODE?NATIVE_AUTHORIZATION:mode===NATIVE_PROJECTION_MODE?NATIVE_PROJECTION_AUTHORIZATION:NATIVE_BINDING_AUTHORIZATION}
-const orderFor=mode=>mode===NATIVE_MODE?NATIVE_ORDER:mode===NATIVE_PROJECTION_MODE?NATIVE_PROJECTION_ORDER:mode===NATIVE_BINDING_MODE?NATIVE_BINDING_ORDER:fail('plan')
-const schemasFor=mode=>['mip_mentions','mip_arc_qik_source','mip_arc_native',...(mode!==NATIVE_MODE?['mip_arc_projection_private']:[]),...(mode===NATIVE_BINDING_MODE?['mip_native_comparison']:[])]
+export const NATIVE_DISPLAY_ORDER=Object.freeze([...NATIVE_BINDING_ORDER,Object.freeze({
+ path:'supabase/qualification/native-comparison-display/001_private_display.sql',blob:'6602515e55fe7cb70bba1e505a2d3e21b94398e5',
+ assertion_marker:'do $native_display_final$',assertion_owner:'mip_arc_native_owner'
+})])
+const outerVerifierMode=mode=>mode===NATIVE_BINDING_MODE||mode===NATIVE_DISPLAY_MODE
+const deferredAssertion=(mode,path)=>outerVerifierMode(mode)&&(path===NATIVE_BINDING_ORDER.at(-1).path||(mode===NATIVE_DISPLAY_MODE&&path===NATIVE_DISPLAY_ORDER.at(-1).path))
+export const isNativeMode=mode=>mode===NATIVE_MODE||mode===NATIVE_PROJECTION_MODE||mode===NATIVE_BINDING_MODE||mode===NATIVE_DISPLAY_MODE
+export function nativeAuthorization(mode){if(!isNativeMode(mode))fail('plan');return mode===NATIVE_MODE?NATIVE_AUTHORIZATION:mode===NATIVE_PROJECTION_MODE?NATIVE_PROJECTION_AUTHORIZATION:mode===NATIVE_BINDING_MODE?NATIVE_BINDING_AUTHORIZATION:NATIVE_DISPLAY_AUTHORIZATION}
+const orderFor=mode=>mode===NATIVE_MODE?NATIVE_ORDER:mode===NATIVE_PROJECTION_MODE?NATIVE_PROJECTION_ORDER:mode===NATIVE_BINDING_MODE?NATIVE_BINDING_ORDER:mode===NATIVE_DISPLAY_MODE?NATIVE_DISPLAY_ORDER:fail('plan')
+const schemasFor=mode=>['mip_mentions','mip_arc_qik_source','mip_arc_native',...(mode!==NATIVE_MODE?['mip_arc_projection_private']:[]),...(outerVerifierMode(mode)?['mip_native_comparison']:[]),...(mode===NATIVE_DISPLAY_MODE?['mip_native_display']:[])]
 const identifier=/^[a-z][a-z0-9_]{0,62}$/
 const quote=s=>{if(!identifier.test(s))throw Error('native_install_identifier');return '"'+s+'"'}
 const literal=s=>"'"+s.replaceAll("'","''")+"'"
@@ -149,7 +158,7 @@ export async function prepareNativeGovernedInstall(read,mode=NATIVE_MODE){
    if(!NATIVE_ROLES.includes(role))fail('membership_statement')
    return '-- Native joint installer manages this temporary membership.'
   })
-  if(mode===NATIVE_BINDING_MODE&&entry.path===NATIVE_BINDING_ORDER.at(-1).path){
+  if(deferredAssertion(mode,entry.path)){
    // The outer fixed backend installer already owns the publication-owner grant.
    // Native owner lifecycle is managed above. Preserve both exact grantor
    // topologies until their respective real cleanup, rather than self-granting.
@@ -163,7 +172,7 @@ export async function prepareNativeGovernedInstall(read,mode=NATIVE_MODE){
   steps.push({...entry,body:sql,created,assertion,assertion_sha256:assertion===null?null:hash(assertion)})
  }
  if(NATIVE_ROLES.some(r=>!roles.includes(r))||roles.length!==NATIVE_ROLES.length)fail('role_inventory')
- const plan=freeze({mode,source_base:mode===NATIVE_BINDING_MODE?NATIVE_BINDING_SOURCE_BASE:NATIVE_SOURCE_BASE,steps,roles,program_sha256:hash(JSON.stringify(steps))})
+ const plan=freeze({mode,source_base:mode===NATIVE_DISPLAY_MODE?NATIVE_DISPLAY_SOURCE_BASE:mode===NATIVE_BINDING_MODE?NATIVE_BINDING_SOURCE_BASE:NATIVE_SOURCE_BASE,steps,roles,program_sha256:hash(JSON.stringify(steps))})
  preparedPlans.add(plan);return plan
 }
 async function identity(db,login){
@@ -231,7 +240,7 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
   }
   await db.query(sql);created.push(...step.created.map(r=>r.name))
   await db.query('reset role')
-  if(step.assertion&&!(plan.mode===NATIVE_BINDING_MODE&&step===plan.steps.at(-1))){
+  if(step.assertion&&!deferredAssertion(plan.mode,step.path)){
    nativeStage='assertion_helper'
    await assertionHelper(db,schema,step.assertion_owner,expectedLogin,step.assertion)
    await db.query('savepoint native_boundary')
@@ -253,11 +262,12 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
  // backend final assertions and audit/C3 closure before the single COMMIT.
  const final=plan.steps.at(-1)
  nativeSource=final.path;nativeStage='final_helper'
- if(plan.mode===NATIVE_BINDING_MODE)await createNativeBindingVerifier(db,final,expectedLogin);
+ if(plan.mode===NATIVE_DISPLAY_MODE)await createNativeDisplayVerifier(db,final,expectedLogin);
+ else if(plan.mode===NATIVE_BINDING_MODE)await createNativeBindingVerifier(db,final,expectedLogin);
  else await assertionHelper(db,schema,final.assertion_owner,expectedLogin,final.assertion)
  nativeStage='final_cleanup'
  await cleanupCreator(db,creator,expectedLogin,created)
- if(plan.mode!==NATIVE_BINDING_MODE){
+ if(!outerVerifierMode(plan.mode)){
   nativeStage='final_assertion'
   await db.query('select '+quote(schema)+'.check_boundary()')
   nativeStage='final_helper_drop'
@@ -265,7 +275,7 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
   nativeStage='final_closure'
   await assertNativeGovernedClosure(db,{expectedLogin,operationId,nativeMode:plan.mode})
  }
- // v4's fixed zero-argument verifier is intentionally durable in the existing
+ // v4/v5 fixed zero-argument verifiers is intentionally durable in the existing
  // private install-receipt schema. It verifies the full current boundary after
  // OUTER creator cleanup and on fresh reconciliation without restoring any
  // owner memberships. It returns no data and accepts no SQL or arguments.
@@ -305,6 +315,37 @@ export async function verifyNativeBindingCurrentBoundary(db,plan,{expectedLogin,
   await assertNativeGovernedClosure(db,{expectedLogin,operationId,nativeMode:plan.mode})
  }catch(error){recordFailure(error,plan,stage,source,null);throw error}
 }
+async function createNativeDisplayVerifier(db,final,login){
+ const schema='mip_comparison_install',owner=final.assertion_owner
+ const prior=(await db.query("select has_schema_privilege($1,$2,'USAGE') u,has_schema_privilege($1,$2,'CREATE') c,to_regprocedure('mip_comparison_install.native_boundary_v5()') is not null collision",[owner,schema])).rows[0]
+ if(!prior||prior.u||prior.c||prior.collision)fail('assertion_helper_boundary')
+ await db.query('grant usage,create on schema '+schema+' to '+quote(owner))
+ await db.query('set role '+quote(owner))
+ await db.query('create function '+schema+'.native_boundary_v5() returns void language plpgsql security definer set search_path=\'\' as '+literal(bindingVerifierBody(final)))
+ // Remove provider defaults only on this newly created verification function.
+ await db.query('revoke all on function '+schema+'.native_boundary_v5() from public')
+ const grants=(await db.query("select distinct x.grantee::regrole::text role_name from pg_proc p cross join lateral aclexplode(p.proacl)x where p.oid='mip_comparison_install.native_boundary_v5()'::regprocedure and x.grantee<>0 and x.grantee<>p.proowner")).rows
+ for(const grant of grants)await db.query('revoke all on function '+schema+'.native_boundary_v5() from '+quote(grant.role_name))
+ await db.query('grant execute on function '+schema+'.native_boundary_v5() to '+quote(login))
+ await db.query('reset role')
+ await db.query('revoke usage,create on schema '+schema+' from '+quote(owner))
+}
+export async function verifyNativeDisplayCurrentBoundary(db,plan,{expectedLogin,operationId}){
+ let stage='display_verifier_plan';const source=plan?.steps?.at(-1)?.path??null
+ try{
+  if(!preparedPlans.has(plan)||plan.mode!==NATIVE_DISPLAY_MODE||!/^[0-9a-f]{32}$/.test(operationId)
+   ||plan.program_sha256!==hash(JSON.stringify(plan.steps)))fail('plan')
+  await identity(db,expectedLogin)
+  const final=plan.steps.at(-1)
+  stage='display_verifier_source'
+  const checked=(await db.query("select p.proowner=$1::regrole and p.prosecdef and p.pronargs=0 and p.prorettype='void'::regtype and p.prokind='f' and p.provolatile='v' and p.proconfig=$3::text[] and p.prosrc=$4 and not p.proleakproof and p.proparallel='u' and not exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where a.grantee not in($1::regrole,$2::regrole) or a.privilege_type<>'EXECUTE' or(a.grantee<>p.proowner and a.is_grantable)) and has_function_privilege($2,p.oid,'EXECUTE') and not has_schema_privilege($1,n.oid,'USAGE,CREATE') ok from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_comparison_install' and p.proname='native_boundary_v5'",[final.assertion_owner,expectedLogin,['search_path=""'],bindingVerifierBody(final)])).rows[0]
+  if(checked?.ok!==true)fail('assertion_helper_boundary')
+  stage='display_verifier_assertion'
+  await db.query('select mip_comparison_install.native_boundary_v5()')
+  stage='display_verifier_closure'
+  await assertNativeGovernedClosure(db,{expectedLogin,operationId,nativeMode:plan.mode})
+ }catch(error){recordFailure(error,plan,stage,source,null);throw error}
+}
 export async function assertNativeGovernedClosure(db,{expectedLogin,operationId,nativeMode=NATIVE_MODE}){
  if(!isNativeMode(nativeMode))fail('plan')
  await identity(db,expectedLogin)
@@ -313,16 +354,20 @@ export async function assertNativeGovernedClosure(db,{expectedLogin,operationId,
  if((await db.query("select exists(select 1 from pg_auth_members where roleid in(select oid from pg_roles where rolname=any($1)) or member in(select oid from pg_roles where rolname=any($1))) edges",[NATIVE_ROLES])).rows[0].edges)fail('final_role_edges')
  if((await db.query('select exists(select 1 from pg_roles where rolname=$1) or exists(select 1 from pg_namespace where nspname=$2) residue',['mip_nci_'+operationId,'mip_nca_'+operationId])).rows[0].residue)fail('final_scaffolding')
  const schemas=(await db.query("select nspname,pg_get_userbyid(nspowner) owner from pg_namespace where nspname=any($1) order by nspname",[schemasFor(nativeMode)])).rows
- if(JSON.stringify(schemas)!==JSON.stringify([{nspname:'mip_arc_native',owner:'mip_arc_native_owner'},...(nativeMode!==NATIVE_MODE?[{nspname:'mip_arc_projection_private',owner:'mip_arc_native_owner'}]:[]),{nspname:'mip_arc_qik_source',owner:'mip_arc_qik_source_owner'},{nspname:'mip_mentions',owner:'mip_mentions_owner'},...(nativeMode===NATIVE_BINDING_MODE?[{nspname:'mip_native_comparison',owner:'mip_arc_native_owner'}]:[])]))fail('final_schema_owners')
+ if(JSON.stringify(schemas)!==JSON.stringify([{nspname:'mip_arc_native',owner:'mip_arc_native_owner'},...(nativeMode!==NATIVE_MODE?[{nspname:'mip_arc_projection_private',owner:'mip_arc_native_owner'}]:[]),{nspname:'mip_arc_qik_source',owner:'mip_arc_qik_source_owner'},{nspname:'mip_mentions',owner:'mip_mentions_owner'},...(outerVerifierMode(nativeMode)?[{nspname:'mip_native_comparison',owner:'mip_arc_native_owner'}]:[]),...(nativeMode===NATIVE_DISPLAY_MODE?[{nspname:'mip_native_display',owner:'mip_arc_native_owner'}]:[])]))fail('final_schema_owners')
  const bad=(await db.query("select exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relkind='r' and (not c.relrowsecurity or not c.relforcerowsecurity or pg_get_userbyid(c.relowner) not in('mip_mentions_owner','mip_arc_qik_source_owner','mip_canonical_writer','mip_arc_native_owner','mip_arc_attachment_owner'))) bad",[schemasFor(nativeMode)])).rows[0].bad
  if(bad)fail('final_storage')
  if(nativeMode!==NATIVE_MODE){
   const privateShape=(await db.query("select count(*)::int n,bool_and(c.relowner=(select oid from pg_roles where rolname='mip_arc_native_owner') and c.relrowsecurity and c.relforcerowsecurity and not exists(select 1 from aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a where a.grantee<>c.relowner) and not exists(select 1 from pg_attribute at cross join lateral aclexplode(at.attacl) a where at.attrelid=c.oid and a.grantee<>c.relowner)) ok from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_arc_projection_private' and c.relkind='r'")).rows[0]
   if(privateShape?.n!==6||privateShape.ok!==true)fail('final_private_storage')
  }
- if(nativeMode===NATIVE_BINDING_MODE){
+ if(outerVerifierMode(nativeMode)){
   const shape=(await db.query("select count(*)::int n,bool_and(c.relowner='mip_arc_native_owner'::regrole and c.relrowsecurity and c.relforcerowsecurity and not exists(select 1 from aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a where a.grantee<>c.relowner) and not exists(select 1 from pg_attribute at cross join lateral aclexplode(at.attacl) a where at.attrelid=c.oid and a.grantee<>c.relowner)) ok from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_native_comparison' and c.relkind='r'")).rows[0];
   if(shape?.n!==2||shape.ok!==true)fail('final_private_storage');
+ }
+
+ if(nativeMode===NATIVE_DISPLAY_MODE){
+  if((await db.query("select exists(select 1 from pg_class where relnamespace='mip_native_display'::regnamespace) storage")).rows[0].storage)fail('final_private_storage');
  }
 
 }

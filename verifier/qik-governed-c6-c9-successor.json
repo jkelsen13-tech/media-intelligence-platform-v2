@@ -6,8 +6,8 @@
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
   "immediate_base": {
-    "commit": "436501b6819b1373a7a5bb483ac4fa9e6144a60c",
-    "tree": "082f4d0870fe5cf261c7f4198be333e35727e3c9"
+    "commit": "7cbcd91004e924c1335e7f347779e1df1b71e065",
+    "tree": "23a4cbbdd8e3872f59a01941c17baa75deb0667c"
   },
   "authorization": {
     "internal_source_and_synthetic_qualification": "User consolidation continuation amendment prospectively authorizes this distinct governed successor and installer mode into source review and synthetic internal qualification. Qualification receipts and actual external Cursor review bind the exact candidate; no individual owner field signature, historical acceptance, hosted installation or actual-material receiving authorization is represented.",
@@ -15,7 +15,7 @@
     "publication": "No automatic publication, broadened eligibility or release-policy bypass.",
     "spending": "At most $25 one-time and $10/month incremental on existing authorized services; no new service, plan upgrade or on-demand enablement."
   },
-  "scope": "Additive governed C6 canonical relation, C9 native scoring/review, explicit private membership and joint restricted-principal installation. Native article bytes are transient through restricted original-evidence validation; original capture/candidate/change history and prior manifest/hash assertions remain unchanged. Historical public C9/C10 projection, operating caller cutover and corpus disposition remain required consolidation dependencies, not completed by this package. This distinct revision adds generation-bound pending/private projection from original bound body/URL, reviewed citation spans and complete selected arc/node/milestone context; public installation/cutover remains required and unimplemented by this private contract. This distinct additive revision binds the same original capture set across native private scoring/projection and the accepted comparison event using separate generation/review/policy/release identities. It retains bounded identity/hash/span metadata only, calls both unchanged current readers, and introduces an explicit v4 ordered installer plus a code-only verifier consumed by final closure and fresh reconciliation. Source authored; not yet qualified, reviewed, hosted installed or accepted. This revision adds a strict server-only binding dispatch with one fresh exact-read ambiguity reconciliation and closes protected source-row visibility for the unchanged snapshot/release consumers. It does not install a host or complete private display composition/caller cutover.",
+  "scope": "Additive governed C6 canonical relation, C9 native scoring/review, explicit private membership and joint restricted-principal installation. Native article bytes are transient through restricted original-evidence validation; original capture/candidate/change history and prior manifest/hash assertions remain unchanged. Historical public C9/C10 projection, operating caller cutover and corpus disposition remain required consolidation dependencies, not completed by this package. This distinct revision adds generation-bound pending/private projection from original bound body/URL, reviewed citation spans and complete selected arc/node/milestone context; public installation/cutover remains required and unimplemented by this private contract. This distinct additive revision binds the same original capture set across native private scoring/projection and the accepted comparison event using separate generation/review/policy/release identities. It retains bounded identity/hash/span metadata only, calls both unchanged current readers, and introduces an explicit v4 ordered installer plus a code-only verifier consumed by final closure and fresh reconciliation. Source authored; not yet qualified, reviewed, hosted installed or accepted. This revision adds a strict server-only binding dispatch with one fresh exact-read ambiguity reconciliation and closes protected source-row visibility for the unchanged snapshot/release consumers. It does not install a host or complete private display composition/caller cutover. This successor adds a transient binding-keyed private display compositor consumed by explicit comparison/arc/timeline view models, with no new durable display table or source grant. Explicit v5 extends the same ordered installer and fixed current-boundary verification. Authenticated endpoint/UI cutover, hosted installation and operating proof remain incomplete.",
   "c6": {
     "semantic_kind": "reviewed_evidence_weight_v1",
     "meaning": "Explicit uncalibrated reviewer weight 0..1; no default, inferred probability, candidate rank or acceptance substitution.",
@@ -286,7 +286,11 @@
     ],
     "status_at_source_authorship": "NOT RUN; qualification receipts are separate and must identify actual candidate and environment.",
     "installer": "tests/nativeGovernedInstallerPostgres17.test.mjs",
-    "native_comparison_server": "tests/nativeComparisonServerCaller.test.mjs"
+    "native_comparison_server": "tests/nativeComparisonServerCaller.test.mjs",
+    "native_comparison_display": [
+      "tests/nativeComparisonDisplay.test.mjs",
+      "tests/nativeComparisonDisplayAssertions.mjs"
+    ]
   },
   "historical_protections": {
     "efta_manifest_sha256": "841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9",
@@ -1012,7 +1016,7 @@
     },
     "atomic_installer": {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "blob": "8ec5eb600bb849a675923b34d90c989519fee192"
+      "blob": "a9942e32cfeb4d807834bf64df5f496939105c18"
     },
     "catalog_preflight": {
       "path": "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs",
@@ -1058,7 +1062,7 @@
         "blob": "94dd9c7cbcf117767f5909fd9a6db0312f14ebe2"
       }
     ],
-    "full_sequence": "Pristine fixture catalog/real auth relations + pgcrypto/vector0.8.2/dblink → native reliability → C3 ordered disabled profile/actual synthetic receipt → prepareAtomicInstall native-governed-v2 complete comparison001–019/DOJ020 → C6 ordered001/003/004/qik001/005/qik002 → C9 001/002/003 BEFORE backend temporary creator cleanup → real final complete effective combined owner/role/membership/ACL/schema/RLS/source authority + original backend final closure → one COMMIT → real autonomous rejection-audit qualification. Original ordinary-mode fixture separately exercises full scorer/review/private reader dependencies; joint nonsuper installer test is actual installation principal proof for synthetic environment only. For explicit v3, append native private projection001 with selected context columns/RLS and same real006/007 source fences; exact protected private helper closure after real cleanup, then unchanged original backend closure and one COMMIT. Actual restricted-principal test exercises v2 then v3 in separately recreated pristine fixture. Explicit v4 appends exact native-comparison binding SQL after the v3 tenth stage. Its strict combined final assertion runs via a fixed verified code-only zero-argument function after BOTH real native and backend/publication temporary creator cleanup, then one COMMIT. Each v2/v3/v4 restricted-principal fixture uses separately recreated pristine substrate. Fresh v4 reconciliation reconstructs the same pinned source program before invoking current-boundary verification; no DDL replay or regranting owner rights. V4 additionally verifies protected owners' pre-existing SELECT/schema access and exact RLS source visibility for four kernel source relations and fifteen publication survivor relations. The installer must have actual policy-creation ownership/SET authority on every RLS-enabled affected relation; BYPASSRLS/SELECT alone is insufficient. Existing equivalent direct role policies, including factual_enforcement/explanations publication_rows, are reused. The fixed source-matching survivor relation list is checked through catalog metadata without execution.",
+    "full_sequence": "Pristine fixture catalog/real auth relations + pgcrypto/vector0.8.2/dblink → native reliability → C3 ordered disabled profile/actual synthetic receipt → prepareAtomicInstall native-governed-v2 complete comparison001–019/DOJ020 → C6 ordered001/003/004/qik001/005/qik002 → C9 001/002/003 BEFORE backend temporary creator cleanup → real final complete effective combined owner/role/membership/ACL/schema/RLS/source authority + original backend final closure → one COMMIT → real autonomous rejection-audit qualification. Original ordinary-mode fixture separately exercises full scorer/review/private reader dependencies; joint nonsuper installer test is actual installation principal proof for synthetic environment only. For explicit v3, append native private projection001 with selected context columns/RLS and same real006/007 source fences; exact protected private helper closure after real cleanup, then unchanged original backend closure and one COMMIT. Actual restricted-principal test exercises v2 then v3 in separately recreated pristine fixture. Explicit v4 appends exact native-comparison binding SQL after the v3 tenth stage. Its strict combined final assertion runs via a fixed verified code-only zero-argument function after BOTH real native and backend/publication temporary creator cleanup, then one COMMIT. Each v2/v3/v4 restricted-principal fixture uses separately recreated pristine substrate. Fresh v4 reconciliation reconstructs the same pinned source program before invoking current-boundary verification; no DDL replay or regranting owner rights. V4 additionally verifies protected owners' pre-existing SELECT/schema access and exact RLS source visibility for four kernel source relations and fifteen publication survivor relations. The installer must have actual policy-creation ownership/SET authority on every RLS-enabled affected relation; BYPASSRLS/SELECT alone is insufficient. Existing equivalent direct role policies, including factual_enforcement/explanations publication_rows, are reused. The fixed source-matching survivor relation list is checked through catalog metadata without execution. Explicit v5 appends fixed display SQL after v4 binding, compiles only known dual-owner lifecycle statements, then executes complete combined final native_display_final via source-checked native_boundary_v5 after both real creator cleanups and before one COMMIT. Earlier modes remain separately qualified.",
     "installation_principal_scope": "Real separately authenticated SCRAM NOSUPERUSER/CREATEROLE/CREATEDB/BYPASSRLS/INHERIT/LOGIN synthetic installer matches targeted observed qik principal attributes. Fixture administrator only bootstraps synthetic substrate/extensions/principals and independently inspects/cleans. Native source-only profile is jointly compiled with temporary owner authority and exact assertion helpers; no residual owner membership/helper/login remains. Does not claim hosted defaults/event trigger or secure route equivalence.",
     "assertions_after_complete_order": [
       "Object/function owners and protected role attributes",
@@ -1073,19 +1077,19 @@
     ],
     "native_joint_installer": {
       "path": "supabase/qualification/native-governed-install/install.mjs",
-      "blob": "ac4b715d295199a7fecec33a0adc5c609992a266",
-      "mode": "native-governed-v4",
-      "authorization": "owner-authorized-disabled-comparison-native-comparison-binding-install",
-      "source_base": "a43893801c5f2c8543e0c08b9bfa7b039899574c",
+      "blob": "7fbf4831d1bbdc5ffd33ac5d0c83aff124285e6c",
+      "mode": "native-governed-v5",
+      "authorization": "owner-authorized-disabled-comparison-native-comparison-display-install",
+      "source_base": "ec4670ade45c7ccff02f1403177f642bd402e019",
       "selection": "Current selected candidate bytes by exact curated Git blobs; no claim revised SQL exists at source_base; no arbitrary SQL/callback extension",
       "program_hash": "SHA256 JSON.stringify exact compiled native steps incl original assertion text/hash; nested native plan is immutable and WeakSet-bound to internal preparation",
       "outer_manifest": "Distinct complete SHA256 JSON.stringify atomic plan with native program; existing default-mode manifest and historical assertions preserved",
-      "temporary_assertion_helpers": "Existing v2/v3 fixed zero-argument temporary assertion helpers remain unchanged and are dropped before commit. V4 retains exactly one fixed zero-argument void verification function in existing private mip_comparison_install schema, owned by mip_arc_native_owner with trusted installer-only explicit EXEC. It contains the exact complete source assertion and runs only after real native and publication creator cleanup. Its body, owner, settings, ACL and schema access are checked before one COMMIT and on source-pinned fresh reconciliation; no payloads/SQL parameters/owner memberships are retained.",
-      "compatibility": "Default/v2/v3 authorization, descriptors and caller contracts remain supported; explicit closed enum v4 adds one eleventh stage. Only v4 fresh reconciliation requires the same trusted pinned-source reader; missing reader or source/program/manifest mismatch refuses without installation/replay."
+      "temporary_assertion_helpers": "Existing v2/v3 fixed zero-argument temporary assertion helpers remain unchanged and are dropped before commit. V4 retains exactly one fixed zero-argument void verification function in existing private mip_comparison_install schema, owned by mip_arc_native_owner with trusted installer-only explicit EXEC. It contains the exact complete source assertion and runs only after real native and publication creator cleanup. Its body, owner, settings, ACL and schema access are checked before one COMMIT and on source-pinned fresh reconciliation; no payloads/SQL parameters/owner memberships are retained. V5 retains its distinct native_boundary_v5() instead, containing the complete unchanged binding assertion and new four-function/zero-table display closure; only the selected mode's verifier is installed.",
+      "compatibility": "Default/v2/v3 authorization, descriptors and caller contracts remain supported; explicit closed enum v4 adds one eleventh stage. Only v4 fresh reconciliation requires the same trusted pinned-source reader; missing reader or source/program/manifest mismatch refuses without installation/replay. Explicit v5 appends the twelfth fixed private display stage; all earlier modes remain supported. V5 uses source-pinned fresh reconciliation with native_boundary_v5(), without DDL replay or owner regrant."
     },
     "native_joint_installer_documentation": {
       "path": "supabase/qualification/native-governed-install/README.md",
-      "blob": "88631e62e23ac662195f97e8556784da776c0e0a"
+      "blob": "dbf13c74c13099ec5b0948055adbd024a69d9493"
     },
     "attachment_assertions": {
       "path": "tests/nativeArcAttachmentAssertions.mjs",
@@ -1097,11 +1101,11 @@
     },
     "c9_postgres_fixture": {
       "path": "tests/nativeArcCohortPostgres17.test.mjs",
-      "blob": "47def44868d9a45a6fe2c2931114ec5426c96d60"
+      "blob": "dd6dbee189bb326cc26c9ba4eb4c7100810b691a"
     },
     "native_joint_installer_fixture": {
       "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
-      "blob": "3ec7017d6889891bf08df552a567f28239a488cd"
+      "blob": "4642e43efb1b7c7e240d64b6dd73350bc499da7b"
     },
     "native_installation_diagnostics": {
       "retained_fields": [
@@ -1149,7 +1153,7 @@
     ],
     "native_comparison_fixture": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "dfb23af8b17cdf95bbb4903156f68b28202a0aa6"
+      "blob": "11cfa89033431ab5e71ab0b89a6e3bd12a924ecf"
     },
     "native_comparison_assertions": {
       "path": "tests/nativeComparisonBindingAssertions.mjs",
@@ -1166,6 +1170,126 @@
     "native_comparison_server_tests": {
       "path": "tests/nativeComparisonServerCaller.test.mjs",
       "blob": "b8a46a5e5de9d953c6e8b770402bf2d33ca2bade"
+    },
+    "native_comparison_display_order": [
+      {
+        "path": "supabase/qualification/native-comparison-display/001_private_display.sql",
+        "blob": "6602515e55fe7cb70bba1e505a2d3e21b94398e5"
+      }
+    ],
+    "native_comparison_display_contract": {
+      "path": "supabase/qualification/native-comparison-display/contract.json",
+      "blob": "ab6dec0faad0ecc03370f6a7ad5cacf293993aa4"
+    },
+    "native_comparison_display_reader": {
+      "path": "supabase/qualification/native-comparison-display/serverRoute.mjs",
+      "blob": "94ecb69bf660563b7921a9991b4f1b4cb328e532"
+    },
+    "native_comparison_display_validator": {
+      "path": "supabase/qualification/native-comparison-display/displayContract.mjs",
+      "blob": "1bfd19145470aca6ccea34f461085ee9cc255960"
+    },
+    "native_comparison_display_assertions": {
+      "path": "tests/nativeComparisonDisplayAssertions.mjs",
+      "blob": "194ae7ec92349754e6dd27f04137307aadd28306"
+    },
+    "native_comparison_display_tests": {
+      "path": "tests/nativeComparisonDisplay.test.mjs",
+      "blob": "29006a483186fa0b09095421920d8c586ed7d6ab"
+    },
+    "native_comparison_display_documentation": {
+      "path": "supabase/qualification/native-comparison-display/README.md",
+      "blob": "499e7252dee0b3043dff54e3b11e701d85efacbd"
+    },
+    "native_display_full_order": [
+      {
+        "path": "supabase/qualification/entity-resolution/001_mentions.sql",
+        "blob": "3f86cfdfe0503ca5b4277afcf601c6a716531ca9",
+        "assertion_marker": null,
+        "assertion_owner": "mip_mentions_owner"
+      },
+      {
+        "path": "supabase/qualification/entity-resolution/native-capture-fields/003_native_fields.sql",
+        "blob": "ffc192276276cea2345690bccc7b65d54a0f0ab6",
+        "assertion_marker": "do $assert$",
+        "assertion_owner": "mip_mentions_native_validator"
+      },
+      {
+        "path": "supabase/qualification/entity-resolution/candidate-review/004_candidate_review.sql",
+        "blob": "e25930fb4552b7b0086d7d1c50414845df453dbc",
+        "assertion_marker": "do $boundary$",
+        "assertion_owner": "mip_mentions_owner"
+      },
+      {
+        "path": "supabase/qualification/arc-membership-qik-source/001_storage.sql",
+        "blob": "fc321af39e982e0cb1f06238c81f99d2dcc6fe8a",
+        "assertion_marker": "do $assert$",
+        "assertion_owner": "mip_arc_qik_source_owner"
+      },
+      {
+        "path": "supabase/qualification/entity-resolution/canonical-admission/005_canonical_admission.sql",
+        "blob": "b6487f76f4186a58e7f77d50eecca0a40fd76c27",
+        "assertion_marker": "do $boundary$",
+        "assertion_owner": "mip_mentions_owner"
+      },
+      {
+        "path": "supabase/qualification/arc-membership-qik-source/002_governed_writer.sql",
+        "blob": "7cac6a7cb8ab665886944bf5092edcf01a60cf3f",
+        "assertion_marker": "do $boundary$",
+        "assertion_owner": "mip_canonical_writer"
+      },
+      {
+        "path": "supabase/qualification/arc-membership-native/001_governed_cohort.sql",
+        "blob": "3097d03987aee00df912f913d41c6e0cad342b2d",
+        "assertion_marker": "do $final$",
+        "assertion_owner": "mip_arc_native_owner"
+      },
+      {
+        "path": "supabase/qualification/arc-membership-native/002_private_score_review.sql",
+        "blob": "92c4382b46c83027f4b9b1dd0a615462680083cd",
+        "assertion_marker": "do $final$",
+        "assertion_owner": "mip_arc_native_owner"
+      },
+      {
+        "path": "supabase/qualification/arc-membership-native/003_governed_attachment.sql",
+        "blob": "94dd9c7cbcf117767f5909fd9a6db0312f14ebe2",
+        "assertion_marker": "do $boundary$",
+        "assertion_owner": "mip_arc_native_owner"
+      },
+      {
+        "path": "supabase/qualification/arc-public-projection/001_native_private_projection.sql",
+        "blob": "bc58ef8143fdea209bdf91ad9edfb6e96a089657",
+        "assertion_marker": "do $private_projection_final$",
+        "assertion_owner": "mip_arc_native_owner"
+      },
+      {
+        "path": "supabase/qualification/native-comparison-binding/001_private_binding.sql",
+        "blob": "7bd78e703b1a81414e3a24b4049ea407d00435c8",
+        "assertion_marker": "do $native_comparison_final$",
+        "assertion_owner": "mip_arc_native_owner"
+      },
+      {
+        "path": "supabase/qualification/native-comparison-display/001_private_display.sql",
+        "blob": "6602515e55fe7cb70bba1e505a2d3e21b94398e5",
+        "assertion_marker": "do $native_display_final$",
+        "assertion_owner": "mip_arc_native_owner"
+      }
+    ],
+    "historical_executor_ordered_compatibility": {
+      "installer": {
+        "path": "supabase/qualification/historical-qik-executor/install.mjs",
+        "blob": "d58bc1098815d5fc25cf6cdc363f8be8aa7fbfae"
+      },
+      "sql": {
+        "path": "supabase/qualification/historical-qik-executor/candidate.sql",
+        "blob": "6fe6035223de1dac94fba6c238e33324bc0ca266"
+      },
+      "test": {
+        "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
+        "blob": "4642e43efb1b7c7e240d64b6dd73350bc499da7b"
+      },
+      "retention": "Private fixed acquisition helper is trusted installer-owned, UUID-only and source-checked. Existing main transport ownership/ACLs are unchanged; history owner receives neither raw transport nor Vault. No route qualification/real connection is implied.",
+      "qualification": "NOT RUN in this new combined candidate; separate core/preclosed historical72PASS receipt remains limited to its original scope."
     }
   },
   "qualification_groups": {
@@ -1197,8 +1321,8 @@
       "status_at_source_authorship": "NOT RUN",
       "environment": "MIP_NATIVE_GOVERNED_INSTALL_DISPOSABLE=synthetic-pg17-only; MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
       "invocation": "node --test tests/nativeGovernedInstallerPostgres17.test.mjs",
-      "fixture": "Pristine pinned PostgreSQL17.6 engine170006; pgvector0.8.2 binary installed; pgcrypto/dblink; fake loopback SCRAM sessions; full actual disabled C3 substrate/receipt, real atomic backend/audit and curated native C6/C9 profile; no dependency stubs. Beforeinstallation, independently observed restrictedprincipal asserts allfive source tables kindr, installerownership, RLStrue/FORCEfalse. Synthetic pipeline_config RLS now matches catalog-only qik observation; no configuration rows/material read. V4 is the complete eleven-stage additive binding program, not a reduced helper install. Complete protected kernel/source_snapshot and publication/survivor_context source-policy catalog prerequisite. Missing source-read policy and role-specific restrictive policy are independently introduced and rolled back during v4 fresh reconciliation.",
-      "expectation": "All actual restricted-principal installation, identity/authorization/program/manifest refusal, late restrictive-source failure and whole-transaction rollback, acknowledged and ambiguous COMMIT/ROLLBACK reconciliation, exact final effective owners/roles/ACL/schema/RLS/noedges/nohelpers, real autonomous audit and no collection/schedules/publication activation assertions pass. No skipped groups; every failure refuses qualification. Both v2 and v3 run sequentially with independently verified pristine teardown. V3 late source-authority failure occurs at actual tenth stage; ambiguous outcomes include private schema inventory. Exact combined final assertion and rolled-back forbidden private PUBLIC table grant are exercised. V4 runs after separately pristine v2/v3 with the eleventh stage and fixed current-boundary verifier executed after real outer cleanup; adds exact verifier-source/owner/schema/ACL checks and independently restored drift refusal on fresh reconciliation, including source-pinned reader dependency. Exact native_comparison_source_authority refusal when the kernel article policy is absent or restrictive; restore baseline and require current final closure after each mutation.",
+      "fixture": "Pristine pinned PostgreSQL17.6 engine170006; pgvector0.8.2 binary installed; pgcrypto/dblink; fake loopback SCRAM sessions; full actual disabled C3 substrate/receipt, real atomic backend/audit and curated native C6/C9 profile; no dependency stubs. Beforeinstallation, independently observed restrictedprincipal asserts allfive source tables kindr, installerownership, RLStrue/FORCEfalse. Synthetic pipeline_config RLS now matches catalog-only qik observation; no configuration rows/material read. V4 is the complete eleven-stage additive binding program, not a reduced helper install. Complete protected kernel/source_snapshot and publication/survivor_context source-policy catalog prerequisite. Missing source-read policy and role-specific restrictive policy are independently introduced and rolled back during v4 fresh reconciliation. V5 ordered-history test checks actual closed main transport followed by exact historical install(d58bc109,SQL6fe60352), in the same restricted installer's rollback-only transaction. The separate root-owned empty Vault shape is only a synthetic prerequisite; it is removed after actual rollback. Exact roles/edges/schema/transport baseline is restored and the v5 boundary rechecked. The unchanged autonomous main audit runs separately after rollback and is not claimed to observe uncommitted historical objects. No real Vault/material/source connection or capacity claim.",
+      "expectation": "All actual restricted-principal installation, identity/authorization/program/manifest refusal, late restrictive-source failure and whole-transaction rollback, acknowledged and ambiguous COMMIT/ROLLBACK reconciliation, exact final effective owners/roles/ACL/schema/RLS/noedges/nohelpers, real autonomous audit and no collection/schedules/publication activation assertions pass. No skipped groups; every failure refuses qualification. Both v2 and v3 run sequentially with independently verified pristine teardown. V3 late source-authority failure occurs at actual tenth stage; ambiguous outcomes include private schema inventory. Exact combined final assertion and rolled-back forbidden private PUBLIC table grant are exercised. V4 runs after separately pristine v2/v3 with the eleventh stage and fixed current-boundary verifier executed after real outer cleanup; adds exact verifier-source/owner/schema/ACL checks and independently restored drift refusal on fresh reconciliation, including source-pinned reader dependency. Exact native_comparison_source_authority refusal when the kernel article policy is absent or restrictive; restore baseline and require current final closure after each mutation. V5 is separately pristine with full twelfth stage, source-pinned complete current verifier and display/helper/schema/definer/verifier/policy/owner-edge drift refusal. Historical ordered compatibility is a distinct rollback-only actual main-to-historical test, not a hosted receipt.",
       "cleanup": "Independent client closure; verify exact expected created-role allowlist; destroy only armed pristine disposable database/recreate default and remove exact synthetic roles; compare baseline. Runner always removes container/volumes and checks absence. Any primary/rollback/close/cleanup failure fails qualification.",
       "resource_limits": "Existing verified-free public source/synthetic GitHub job; bounded5min test step/15min entire job, no hosted credentials, data, artifacts, new service, material transfer or plan upgrade."
     },
@@ -1230,6 +1354,18 @@
       "fixture": "Synthetic injected source/sink/checkpoint only, no live predecessor or qik connection. Exact existing planner allowlist and checkpointed batch orchestrator; no real-material adapter or transfer completion is claimed.",
       "expectation": "Collision-safe source lineage, stable membership/snapshot and exact retry; field exclusions, no blind overwrite or enqueue/publication, complete graph accounting; changed snapshots/hash/content/object integrity mismatch and unauthorized scope refuse; bounded retry/checkpoint failures remain accounted for.",
       "cleanup": "In-memory fixture state only. Actual private transfer temporary cleanup and usable restore remain unperformed requirements."
+    },
+    "native_comparison_display": {
+      "status_at_source_authorship": "NOT RUN",
+      "unit_file": "tests/nativeComparisonDisplay.test.mjs",
+      "unit_groups": 7,
+      "pg_helper": "tests/nativeComparisonDisplayAssertions.mjs",
+      "pg_groups": 5,
+      "parent": "tests/nativeArcCohortPostgres17.test.mjs",
+      "installation": "tests/nativeGovernedInstallerPostgres17.test.mjs",
+      "invocation": "Existing pinned synthetic-only combined workflow, full actual backend001–020/C3/journal/review/018/native/binding/display dependency closure; separate nonsuper installer profile and real SCRAM display route; never actual material.",
+      "cleanup": "Parent-owned pristine disposable database, roles, clients and container/volume absence; actual authority/drift mutations rolled back.",
+      "expectation": "All7 unit cases and5 actual integrated PG groups pass; same exact binding/retry/currentness, metadata/display recursive allowlists and spans, denial direct/wrapper/read authority, restored revocations, post-cleanup effective owner/ACL/function/source boundary and real SCRAM server no-data refusal. No forbidden publication or public fallback."
     }
   },
   "joint_installer_retention": {
@@ -1247,7 +1383,7 @@
     "purpose": "Exact curated native program and byte-identical source assertion receipt required to reconcile ambiguous installation outcome; no source/native payload or dynamic SQL retained.",
     "publication_allowed": false,
     "durable_verification_code": {
-      "function": "mip_comparison_install.native_boundary_v4()",
+      "function": "mip_comparison_install.native_boundary_v5()",
       "fields": "No arguments; returns void. Fixed source assertion body only; no record or data parameters.",
       "purpose": "Execute complete final effective owner/membership/ACL/RLS closure after actual native+backend creator cleanup and on later pinned-source fresh reconciliation without restoring protected memberships.",
       "owner": "mip_arc_native_owner",
@@ -2120,7 +2256,7 @@
     },
     "fixture_correction": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "dfb23af8b17cdf95bbb4903156f68b28202a0aa6",
+      "blob": "11cfa89033431ab5e71ab0b89a6e3bd12a924ecf",
       "status": "AUTHORED — NOT RUN",
       "reason": "Hosted compiler deliberately denies synthetic fallback. Exercise unchanged actual C3/020 resolver with synthetic feed-only material and explicit reviewed private seed membership; retain refusal. No production contract/grant/compiler change. Corrects disposable gate/source setup order required by the unchanged C3 enforcement trigger; final and failure cleanup still restore disabled gate/source. The isolated scope intentionally starts with reviewer can_decide=false. The corrected fixture requires the actual scope-access denial and zero scalar writes, then the existing administrator admits this synthetic reviewer through set_membership; finally restores can_decide=false independently, including failed/ambiguous setup. No role grants, original fixture scopes, real approvals or production permissions change. The distinct gateway begins can_decide=true in the separate setup; the existing administrator sets only this synthetic scope to read-only for the required denied admit/permitted read checks, then independently restores its original true value. Both actual principal roles, scope membership, production ACL/RLS and six binding test expectations remain unchanged.",
       "historical_receipt": {
@@ -2136,5 +2272,237 @@
       },
       "limits": "Source/synthetic only; not hosted installation, real DOJ policy approval, field signature, actual capture transfer or publication eligibility."
     }
+  },
+  "native_comparison_display_successor": {
+    "contract_file": {
+      "path": "supabase/qualification/native-comparison-display/contract.json",
+      "blob": "ab6dec0faad0ecc03370f6a7ad5cacf293993aa4"
+    },
+    "allowlist": {
+      "contract": "native-comparison-display-private-v1",
+      "source_ref": "ec4670ade45c7ccff02f1403177f642bd402e019",
+      "status": "source_authored_unrun",
+      "durable_tables": [],
+      "new_roles": [],
+      "new_source_grants": [],
+      "public_writes": false,
+      "publication_allowed": false,
+      "attachment_allowed": false,
+      "output_schema": {
+        "contract": "text",
+        "scope": "uuid",
+        "binding_id": "uuid",
+        "manifest_hash": "hash",
+        "identity": {
+          "native_generation_id": "uuid",
+          "projection_id": "uuid",
+          "projection_review_id": "uuid",
+          "comparison_generation_id": "uuid",
+          "comparison_event_id": "uuid",
+          "comparison_review_revision": "uuid",
+          "comparison_policy_revision": "uuid",
+          "release_request": "uuid"
+        },
+        "private_projection": {
+          "review": {
+            "review_id": "uuid",
+            "version": "number",
+            "disposition": "text",
+            "reason": "text"
+          },
+          "display": {
+            "contract": "text",
+            "projection_id": "uuid",
+            "candidate_id": "uuid",
+            "article_id": "uuid",
+            "arc_id": "uuid",
+            "node": {
+              "label": "text?",
+              "type": "text",
+              "description": "text",
+              "summary": "text",
+              "confidence": "number",
+              "occurred_at": "text?"
+            },
+            "source": {
+              "outlet": "text",
+              "headline": "text?",
+              "url": "url",
+              "published_at": "text?"
+            },
+            "event": {
+              "title": "text?",
+              "category": "text",
+              "confidence": "text",
+              "occurred_at": "text?",
+              "description": "text"
+            },
+            "edge": {
+              "$nullable": {
+                "source_id": "uuid",
+                "target_projection_id": "uuid",
+                "type": "text",
+                "weight": "text",
+                "label": "text",
+                "signal_source": "text",
+                "doc_strength": "text",
+                "claimed_by": "text",
+                "reliability": "number",
+                "counterfactual_test": "text"
+              }
+            },
+            "milestone_outcomes": [
+              {
+                "milestone_id": "uuid",
+                "outcome": "text"
+              },
+              64
+            ],
+            "vector": {
+              "state": "text",
+              "centroid_updated": "boolean"
+            },
+            "state": "text",
+            "approval_allowed": "boolean",
+            "publication_allowed": "boolean",
+            "attached": "boolean"
+          }
+        },
+        "comparison": {
+          "event": {
+            "id": "uuid",
+            "canonical_title": "text",
+            "status": "text",
+            "comparison_validation_state": "text"
+          },
+          "sources": [
+            {
+              "article_id": "uuid",
+              "capture_id": "uuid",
+              "content_hash": "hash",
+              "publisher_url": "url",
+              "publisher": "text?",
+              "publication": {
+                "kind": "text",
+                "at": "text?",
+                "source_field": "text"
+              }
+            },
+            32
+          ],
+          "claims": [
+            {
+              "event_id": "uuid",
+              "claim_key": "text",
+              "canonical_text": "text",
+              "thin_extraction": "boolean",
+              "status": "text",
+              "rule_version": "text"
+            },
+            128
+          ],
+          "evidence": [
+            {
+              "article_id": "uuid",
+              "claim_key": "text",
+              "capture_id": "uuid",
+              "content_hash": "hash",
+              "candidate_id": "uuid",
+              "source_field": "text",
+              "span_start": "number",
+              "span_end": "number",
+              "span_units": "text",
+              "excerpt": "passage",
+              "field_hash": "hash",
+              "extractor_version": "text",
+              "candidate_review_state": "text",
+              "review_revision": "uuid"
+            },
+            128
+          ],
+          "occurrence": {
+            "kind": "text",
+            "state": "text",
+            "start": "text?",
+            "end": "text?",
+            "precision": "text",
+            "reason": "text"
+          },
+          "retained_event_date_proxy": {
+            "kind": "text",
+            "basis": "text",
+            "occurrence_verified": "boolean",
+            "start": "text?",
+            "end": "text?",
+            "source_fields": [
+              "text",
+              2
+            ],
+            "precision": "text"
+          },
+          "observation": {
+            "kind": "text",
+            "at": "text?"
+          },
+          "explanations": [
+            {
+              "assertion_id": "text",
+              "assertion_type": "text",
+              "supporting_passage": "passage",
+              "rule_version": "text",
+              "provenance_class": "text",
+              "state": "text",
+              "review_status": "text",
+              "reviewed_at": "text?",
+              "remaining_uncertainty": "text?",
+              "falsification_condition": "text"
+            },
+            128
+          ],
+          "evidence_links": [
+            {
+              "id": "uuid",
+              "claim_key": "text",
+              "linked_from_article_id": "uuid",
+              "evidence_url": "url",
+              "evidence_type": "text?"
+            },
+            128
+          ],
+          "corrections": [
+            {
+              "id": "uuid",
+              "claim_key": "text",
+              "correcting_article_id": "uuid",
+              "correction_text": "text",
+              "occurred_at": "text?"
+            },
+            128
+          ]
+        },
+        "publication_allowed": "boolean",
+        "attachment_allowed": "boolean"
+      }
+    },
+    "retention": "Transient original bound source access and current approved excerpts/private display under the two unchanged readers' identity/hash/currentness checks. No table, durable response cache, journal, broker/credential copy or diagnostic material added. Required consumers are explicit private comparison, arc and news-record timeline view models. Existing deliberate private projection display remains one copy, unchanged.",
+    "installer_verifier": "mip_comparison_install.native_boundary_v5(): constant exact combined source, zero arguments, void; required consumer is after-cleanup effective permission verification and fresh exact installation reconciliation. No payload parameters.",
+    "qualification": {
+      "status_at_source_authorship": "NOT RUN",
+      "unit_file": "tests/nativeComparisonDisplay.test.mjs",
+      "unit_groups": 7,
+      "pg_helper": "tests/nativeComparisonDisplayAssertions.mjs",
+      "pg_groups": 5,
+      "parent": "tests/nativeArcCohortPostgres17.test.mjs",
+      "installation": "tests/nativeGovernedInstallerPostgres17.test.mjs",
+      "invocation": "Existing pinned synthetic-only combined workflow, full actual backend001–020/C3/journal/review/018/native/binding/display dependency closure; separate nonsuper installer profile and real SCRAM display route; never actual material.",
+      "cleanup": "Parent-owned pristine disposable database, roles, clients and container/volume absence; actual authority/drift mutations rolled back."
+    },
+    "byte_bounds": "Response and adapter preflight bounds plus fixed1000ms statement timeout. No whole legacy-reader CPU/hash or hosted Edge capacity claim.",
+    "remaining": "Authenticated deployed server endpoint, private UI consumer wiring, actual hosted TLS/service identity, unattended operating proof, full caller cutover and legacy disposition.",
+    "qualified": false,
+    "installed": false,
+    "accepted": false,
+    "publication_allowed": false,
+    "attachment_allowed": false
   }
 }

@@ -10,6 +10,7 @@ import {issueWorkloadSession} from '../supabase/qualification/mip-cutover-author
 import {runQikJournaledWorker} from '../supabase/functions/source-comparison-generation-candidate/qikWorkerJournal.js'
 import {scoreGovernedNativeInput} from '../supabase/qualification/arc-membership-native/runGovernedNativeArc.mjs'
 import {assertNativeComparisonBinding} from './nativeComparisonBindingAssertions.mjs'
+import {assertNativeComparisonDisplay} from './nativeComparisonDisplayAssertions.mjs'
 
 const sentence='Officials reportedly approved the council funding proposal on Tuesday.'
 const hash=x=>createHash('sha256').update(x,'utf8').digest('hex')
@@ -18,6 +19,7 @@ const value=async(c,q,args=[])=>(await c.query(q,args)).rows[0].result
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8')
 const fixtureFailures=new WeakMap()
 export const nativeComparisonFixtureDiagnostic=error=>error&&typeof error==='object'?fixtureFailures.get(error)??null:null
+const displayRefusal=/^native_display_check_[1-5] SQLSTATE=(?:[A-Z0-9]{5}|NONE) (?:nativeComparisonDisplayAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}(?: nativeComparisonDisplayAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}){0,2})?$/
 const bindingRefusal=/^native_comparison_check_[1-6]_(?:dual_authority_and_actual_binding|exact_retry_and_real_event_mismatch|metadata_only_original_identity|current_both_sides_refuse_real_revocation|direct_wrapper_and_final_acl_boundary|append_only_local_revocation_no_publication)_sqlstate_(?:[A-Z0-9]{5}|NONE)_frames_(?:(?:nativeComparisonBindingAssertions\.mjs|nativeArcCohortPostgres17\.test\.mjs):[0-9]{1,6}:[0-9]{1,6}(?:,(?:nativeComparisonBindingAssertions\.mjs|nativeArcCohortPostgres17\.test\.mjs):[0-9]{1,6}:[0-9]{1,6}){0,3})?$/
 // Exact non-format static exception messages from the complete installed source only.
 // Includes fixed operation-denial reasons; never accepts a prefix or arbitrary message.
@@ -47,7 +49,7 @@ export async function runNativeComparisonBindingFixture(fx){
  if(fx.syntheticFixture!==true||typeof fx.connect!=='function'||typeof fx.id!=='function')
   throw Error('native_comparison_fixture_guard')
  const {db,reviewer,sameReviewer,gateway,outsider,worker,admin,scope,id,connect,sentinel}=fx
- const owned=[];let stage='guard',primary=null,result,initialGate=null,sourceInitial=null,sourceInserted=false,reviewMembershipRestored=true,gatewayMembershipRestored=true;const cleanup=[]
+ const owned=[];let stage='guard',primary=null,result,displayResult=null,displayFailure=null,initialGate=null,sourceInitial=null,sourceInserted=false,reviewMembershipRestored=true,gatewayMembershipRestored=true;const cleanup=[]
  const freshRole=async role=>{
   const c=await connect();owned.push(c)
   const original=(await c.query('select session_user::text u,current_user::text e')).rows[0]
@@ -61,6 +63,9 @@ export async function runNativeComparisonBindingFixture(fx){
    assert.equal(process.env[key],'synthetic-pg17-only')
   assert.equal(process.env.MIP_DISPOSABLE_POSTGRES,'qik-persistent-install')
   assert.equal((await db.query("select current_setting('server_version_num') v,current_database() d")).rows[0].v,'170006')
+  // The parent atomic installer adds this exact stage after binding. Never run
+  // a committing migration inside the fixture's rollback-only role cleanup.
+  assert.equal((await db.query("select to_regprocedure('mip_native_display.read_current(uuid,uuid,text,uuid,text)') is not null installed")).rows[0].installed,true)
   const reviewerName=(await reviewer.query('select session_user::text u')).rows[0].u
   assert.equal((await sameReviewer.query('select session_user::text u')).rows[0].u,reviewerName)
   const workerLogins=[(await gateway.query('select session_user::text u')).rows[0].u,
@@ -504,6 +509,24 @@ export async function runNativeComparisonBindingFixture(fx){
      assert.deepEqual(seen,{admit:1,read:1,commit:2,lost:1})
      assert.equal(admitClients.size,1);assert.equal(readClients.size,1)
      assert.notEqual([...admitClients][0],[...readClients][0])
+     // Exact receipt comes from the unchanged binding admission above. Run
+     // compositor checks before the original helper reaches binding revocation.
+     stage='native_display_assertions'
+     try{
+      displayResult=await assertNativeComparisonDisplay({
+       syntheticFixture:true,db,reviewer,gateway,outsider,worker,binding:receipt,
+       broker:brokerContext,connection,withFinalBoundary,forbiddenBodySentinel:sentinel,
+       withRevokedComparisonSession:body=>rollbackMutation(c=>c.query('select mip_comparison_kernel_v1.revoke_session($1)',[publisherSession]),body),
+       withRevokedNativeAccess:body=>rollbackMutation(c=>c.query('update mip_arc_projection_private.source_access set allowed=false,version=version+1 where scope=$1 and binding=$2',[scope,sourceBinding]),body),
+       withInvalidatedComparison:body=>rollbackMutation(c=>c.query('update mip_identity.publication_review_heads set active=false where generation_id=$1',[comparisonGeneration]),body),
+       withRevokedBinding:body=>rollbackMutation(c=>c.query('insert into mip_native_comparison.revocations(scope,binding_id) values($1,$2)',[scope,receipt.binding_id]),body)
+      })
+      assert.deepEqual(displayResult,{checks:5,publication_allowed:false,attachment_allowed:false})
+     }catch(error){
+      displayFailure=displayRefusal.test(error?.message??'')?error.message:'native_display_fixture_failed'
+      throw error
+     }
+
     }else{
      const request={action:'revoke',scope,binding_id:id(7150)}
      confirm(await callNativeComparisonBinding({connection,request}),'revoked_private',null)
@@ -527,7 +550,7 @@ export async function runNativeComparisonBindingFixture(fx){
    withInvalidatedComparison:body=>rollbackMutation(c=>c.query('update mip_identity.publication_review_heads set active=false where generation_id=$1',[comparisonGeneration]),body)
   })
   assert.deepEqual(result,{checks:6,publication_allowed:false,attachment_allowed:false})
- }catch(error){primary=diagnostic(error,stage)}
+ }catch(error){primary={...diagnostic(error,stage),display_check:displayFailure}}
  finally{
   if(!gatewayMembershipRestored){
    try{await admin.query('select mip_mentions.set_membership($1,$2,true)',[scope,(await gateway.query('select session_user::text u')).rows[0].u]);gatewayMembershipRestored=true}catch{cleanup.push('synthetic_gateway_membership_restore')}
@@ -554,5 +577,5 @@ export async function runNativeComparisonBindingFixture(fx){
   fixtureFailures.set(failure,Object.freeze({primary:primary?Object.freeze({...primary,frames:Object.freeze([...primary.frames])}):null,cleanup:Object.freeze([...cleanup])}))
   throw failure
  }
- return {checks:result.checks,original_captures:4,accepted_events:2,publication_allowed:false,attachment_allowed:false}
+ return {checks:result.checks,display_checks:displayResult.checks,original_captures:4,accepted_events:2,publication_allowed:false,attachment_allowed:false}
 }

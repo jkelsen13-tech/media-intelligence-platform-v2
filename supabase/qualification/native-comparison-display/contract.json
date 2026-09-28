@@ -1,0 +1,206 @@
+{
+  "contract": "native-comparison-display-private-v1",
+  "source_ref": "ec4670ade45c7ccff02f1403177f642bd402e019",
+  "status": "source_authored_unrun",
+  "durable_tables": [],
+  "new_roles": [],
+  "new_source_grants": [],
+  "public_writes": false,
+  "publication_allowed": false,
+  "attachment_allowed": false,
+  "output_schema": {
+    "contract": "text",
+    "scope": "uuid",
+    "binding_id": "uuid",
+    "manifest_hash": "hash",
+    "identity": {
+      "native_generation_id": "uuid",
+      "projection_id": "uuid",
+      "projection_review_id": "uuid",
+      "comparison_generation_id": "uuid",
+      "comparison_event_id": "uuid",
+      "comparison_review_revision": "uuid",
+      "comparison_policy_revision": "uuid",
+      "release_request": "uuid"
+    },
+    "private_projection": {
+      "review": {
+        "review_id": "uuid",
+        "version": "number",
+        "disposition": "text",
+        "reason": "text"
+      },
+      "display": {
+        "contract": "text",
+        "projection_id": "uuid",
+        "candidate_id": "uuid",
+        "article_id": "uuid",
+        "arc_id": "uuid",
+        "node": {
+          "label": "text?",
+          "type": "text",
+          "description": "text",
+          "summary": "text",
+          "confidence": "number",
+          "occurred_at": "text?"
+        },
+        "source": {
+          "outlet": "text",
+          "headline": "text?",
+          "url": "url",
+          "published_at": "text?"
+        },
+        "event": {
+          "title": "text?",
+          "category": "text",
+          "confidence": "text",
+          "occurred_at": "text?",
+          "description": "text"
+        },
+        "edge": {
+          "$nullable": {
+            "source_id": "uuid",
+            "target_projection_id": "uuid",
+            "type": "text",
+            "weight": "text",
+            "label": "text",
+            "signal_source": "text",
+            "doc_strength": "text",
+            "claimed_by": "text",
+            "reliability": "number",
+            "counterfactual_test": "text"
+          }
+        },
+        "milestone_outcomes": [
+          {
+            "milestone_id": "uuid",
+            "outcome": "text"
+          },
+          64
+        ],
+        "vector": {
+          "state": "text",
+          "centroid_updated": "boolean"
+        },
+        "state": "text",
+        "approval_allowed": "boolean",
+        "publication_allowed": "boolean",
+        "attached": "boolean"
+      }
+    },
+    "comparison": {
+      "event": {
+        "id": "uuid",
+        "canonical_title": "text",
+        "status": "text",
+        "comparison_validation_state": "text"
+      },
+      "sources": [
+        {
+          "article_id": "uuid",
+          "capture_id": "uuid",
+          "content_hash": "hash",
+          "publisher_url": "url",
+          "publisher": "text?",
+          "publication": {
+            "kind": "text",
+            "at": "text?",
+            "source_field": "text"
+          }
+        },
+        32
+      ],
+      "claims": [
+        {
+          "event_id": "uuid",
+          "claim_key": "text",
+          "canonical_text": "text",
+          "thin_extraction": "boolean",
+          "status": "text",
+          "rule_version": "text"
+        },
+        128
+      ],
+      "evidence": [
+        {
+          "article_id": "uuid",
+          "claim_key": "text",
+          "capture_id": "uuid",
+          "content_hash": "hash",
+          "candidate_id": "uuid",
+          "source_field": "text",
+          "span_start": "number",
+          "span_end": "number",
+          "span_units": "text",
+          "excerpt": "passage",
+          "field_hash": "hash",
+          "extractor_version": "text",
+          "candidate_review_state": "text",
+          "review_revision": "uuid"
+        },
+        128
+      ],
+      "occurrence": {
+        "kind": "text",
+        "state": "text",
+        "start": "text?",
+        "end": "text?",
+        "precision": "text",
+        "reason": "text"
+      },
+      "retained_event_date_proxy": {
+        "kind": "text",
+        "basis": "text",
+        "occurrence_verified": "boolean",
+        "start": "text?",
+        "end": "text?",
+        "source_fields": [
+          "text",
+          2
+        ],
+        "precision": "text"
+      },
+      "observation": {
+        "kind": "text",
+        "at": "text?"
+      },
+      "explanations": [
+        {
+          "assertion_id": "text",
+          "assertion_type": "text",
+          "supporting_passage": "passage",
+          "rule_version": "text",
+          "provenance_class": "text",
+          "state": "text",
+          "review_status": "text",
+          "reviewed_at": "text?",
+          "remaining_uncertainty": "text?",
+          "falsification_condition": "text"
+        },
+        128
+      ],
+      "evidence_links": [
+        {
+          "id": "uuid",
+          "claim_key": "text",
+          "linked_from_article_id": "uuid",
+          "evidence_url": "url",
+          "evidence_type": "text?"
+        },
+        128
+      ],
+      "corrections": [
+        {
+          "id": "uuid",
+          "claim_key": "text",
+          "correcting_article_id": "uuid",
+          "correction_text": "text",
+          "occurred_at": "text?"
+        },
+        128
+      ]
+    },
+    "publication_allowed": "boolean",
+    "attachment_allowed": "boolean"
+  }
+}
