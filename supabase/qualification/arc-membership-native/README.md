@@ -137,8 +137,14 @@ prepareAtomicInstall/installComparisonAtomic and qualifies the real loopback
 audit connection before C6/C9 installation. It requires a pristine dedicated
 PostgreSQL17.6 cluster with official pgvector0.8.2 available, pgcrypto/dblink,
 SCRAM loopback authentication and the fixed synthetic fixture password.
-Set MIP_NATIVE_ARC_COHORT_DISPOSABLE=synthetic-pg17-only and run
+Set all three required environment markers externally:
+MIP_NATIVE_ARC_COHORT_DISPOSABLE=synthetic-pg17-only,
+MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only, and
+MIP_DISPOSABLE_POSTGRES=qik-persistent-install. Then run
 `node --test tests/nativeArcCohortPostgres17.test.mjs`.
+The atomic installer independently requires its own comparison marker; the
+native marker does not replace it. The fixture checks this prerequisite before
+connection/setup and never sets or bypasses any environment guard.
 Its complete catalog guard precedes setup and destructive cleanup; it restores
 the dedicated postgres database and removes only names proven newly created
 and explicitly allowed. It does not clean an existing application database.

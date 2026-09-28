@@ -43,6 +43,11 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
 },async t=>{
  let db,monitor,alice,admin,bob,guest,reviewer,wrong,armed=false,primaryFailed=false,stage='fixture',primaryState='none',primaryFrames=[],primaryPosition='none',primaryStage='fixture',checkIndex=0,baseline=[]
  try{
+  stage='atomic_environment';
+  if(process.env.MIP_QIK_COMPARISON_DISPOSABLE!=='synthetic-pg17-only'
+   ||process.env.MIP_DISPOSABLE_POSTGRES!=='qik-persistent-install')
+   throw Error('native_arc_atomic_environment_required');
+  stage='fixture';
   db=await connect();monitor=await connect();await assertPristineFixture(db);
   baseline=(await db.query('select rolname from pg_roles order by rolname')).rows.map(r=>r.rolname)
   const identity=(await db.query("select current_database() db,session_user::text principal,current_user::text effective,current_setting('server_version_num') version")).rows[0]

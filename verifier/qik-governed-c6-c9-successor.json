@@ -924,7 +924,7 @@
     },
     "c9_postgres": {
       "file": "tests/nativeArcCohortPostgres17.test.mjs",
-      "environment": "MIP_NATIVE_ARC_COHORT_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
+      "environment": "MIP_NATIVE_ARC_COHORT_DISPOSABLE=synthetic-pg17-only; MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
       "invocation": "node --test tests/nativeArcCohortPostgres17.test.mjs",
       "fixture": "Fresh pristinepostgrescluster, real full atomicbackend/audit/C3syntheticdisabledreceipt and C6/C9install order; synthetic sources only.",
       "expectation": "Complete dependency chain+finaleffectiveclosures; fullcurrentcohort; native originalcapture/latest-order/supersession/null-missing/sourceaccess/memberdrift; realwriter/scorer/journal/manualreview/currentreader; deterministicretry; nooverwrite/noautoactivation/noattachment/noeligibility.",
