@@ -28,6 +28,8 @@ const EXACT_DIAGNOSTICS=Object.freeze([
  "atomic_audit_membership",
  "atomic_audit_installer_path",
  "atomic_audit_configuration_failed",
+ "mip_audit_unavailable",
+ "mip_audit_rule_invalid",
  "atomic_source_boundary",
  "atomic_transaction_boundary",
  "atomic_assertion_boundary",
@@ -408,56 +410,73 @@ export async function installComparisonAtomic(config,readPinnedSource){
 }
 export async function reconcileComparisonInstall(config){
  const c=validateAtomicConfig(config)
- const db=await connectPersistentInstaller({connectionString:config.connectionString,
-  expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
+ let db=null,phase='connection'
  try{
+  db=await connectPersistentInstaller({connectionString:config.connectionString,
+   expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
   // Fresh authenticated session. Refuse to mistake a still-running install for absence.
+  phase='reconciliation_begin'
   await db.query('begin')
   const lock=(await db.query("select pg_try_advisory_xact_lock(hashtextextended('qik-comparison-atomic-v1',0)) acquired")).rows[0]
   if(lock?.acquired!==true)return safe('reconciliation_inflight',c,c.expectedManifestSha256,{needs_reconciliation:true})
+  phase='reconciliation_inventory'
   const exists=(await db.query("select to_regclass('mip_comparison_install.receipts') is not null present")).rows[0]
   if(!exists?.present){
    const remnants=(await db.query('select exists(select 1 from pg_namespace where nspname=any($1::text[])) or exists(select 1 from pg_roles where rolname=any($2::text[])) present',[[...schemas,RECEIPT_SCHEMA],[...RESERVED_ROLES,c.creator]])).rows[0]
    return safe(remnants?.present?'reconciliation_drift':'not_installed',c,c.expectedManifestSha256,{needs_reconciliation:remnants?.present!==false})
   }
+  phase='reconciliation_receipt'
   const r=(await db.query('select operation_id,installer,manifest_sha256,c3_baseline_sha256,collector_source,audit_login,state from mip_comparison_install.receipts where operation_id=$1',[c.operationId])).rows[0]
   if(!r||r.installer!==c.expectedLogin||r.manifest_sha256!==c.expectedManifestSha256
    ||r.collector_source!==c.collectorSource||r.audit_login!==c.auditLogin||r.state!=='installed_disabled_audit_pending'
    ||r.c3_baseline_sha256!==await c3(db,c))return safe('reconciliation_drift',c,c.expectedManifestSha256,{needs_reconciliation:true})
+  phase='reconciliation_audit_boundary'
   await db.query(auditBoundarySQL(c))
   return safe('installed_disabled_audit_pending',c,c.expectedManifestSha256,{needs_reconciliation:false,audit_qualified:false})
- }catch{return safe('reconciliation_unavailable',c,c.expectedManifestSha256,{needs_reconciliation:true})}
- finally{await db.query('rollback').catch(()=>{});await db.end().catch(()=>{})}
+ }catch(error){return safe('reconciliation_unavailable',c,c.expectedManifestSha256,{needs_reconciliation:true,phase,
+  sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null,diagnostic:sanitizeInstallDiagnostic(error)})}
+ finally{if(db){await db.query('rollback').catch(()=>{});await db.end().catch(()=>{})}}
 }
 
 export async function qualifyComparisonAudit(config){
  const c=validateAtomicConfig(config)
  const observed=await reconcileComparisonInstall(config)
  if(observed.state!=='installed_disabled_audit_pending')return observed
- const db=await connectPersistentInstaller({connectionString:config.connectionString,
-  expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
+ let db=null,phase='connection'
  try{
+  db=await connectPersistentInstaller({connectionString:config.connectionString,
+   expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
+  phase='audit_begin'
   await db.query('begin')
   const locked=(await db.query("select pg_try_advisory_xact_lock(hashtextextended('qik-comparison-audit-v1',0)) acquired")).rows[0]
   if(locked?.acquired!==true)return safe('audit_qualification_inflight',c,c.expectedManifestSha256,{needs_reconciliation:true})
+  phase='audit_existing_receipt'
   const already=(await db.query('select manifest_sha256 from mip_comparison_install.audit_qualifications where operation_id=$1',[c.operationId])).rows[0]
   if(already){
    if(already.manifest_sha256!==c.expectedManifestSha256)refuse('audit_receipt_drift')
    return safe('installed_disabled_audit_qualified',c,c.expectedManifestSha256,{needs_reconciliation:false,audit_qualified:true})
   }
+  phase='audit_write_probe'
   const written=(await db.query('select mip_comparison_install.audit_probe(true) verified')).rows[0]
   if(written?.verified!==true)refuse('audit_probe')
+  phase='audit_caller_rollback'
   await db.query('rollback')
   await db.query('begin')
+  phase='audit_readback_lock'
   const held=(await db.query("select pg_try_advisory_xact_lock(hashtextextended('qik-comparison-audit-v1',0)) acquired")).rows[0]
   if(held?.acquired!==true)refuse('audit_readback_inflight')
+  phase='audit_readback_probe'
   const retained=(await db.query('select mip_comparison_install.audit_probe(false) verified')).rows[0]
   if(retained?.verified!==true)refuse('audit_not_autonomous')
+  phase='audit_c3_preservation'
   await c3(db,c)
+  phase='audit_qualification_receipt'
   await db.query('insert into mip_comparison_install.audit_qualifications(operation_id,manifest_sha256) values($1,$2) on conflict(operation_id) do nothing',[c.operationId,c.expectedManifestSha256])
+  phase='audit_qualification_commit'
   await db.query('commit')
   return safe('installed_disabled_audit_qualified',c,c.expectedManifestSha256,{needs_reconciliation:false,audit_qualified:true})
- }catch{
-  return safe('installed_disabled_audit_unresolved',c,c.expectedManifestSha256,{needs_reconciliation:true,audit_qualified:false})
- }finally{await db.query('rollback').catch(()=>{});await db.end().catch(()=>{})}
+ }catch(error){
+  return safe('installed_disabled_audit_unresolved',c,c.expectedManifestSha256,{needs_reconciliation:true,audit_qualified:false,phase,
+   sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null,diagnostic:sanitizeInstallDiagnostic(error)})
+ }finally{if(db){await db.query('rollback').catch(()=>{});await db.end().catch(()=>{})}}
 }
