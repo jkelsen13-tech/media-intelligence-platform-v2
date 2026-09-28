@@ -1,9 +1,11 @@
 // Bounded TAP coverage for these pinned original worker roots, not generic TAP.
 const refuse=()=>{throw Error('qualification_shard_tap_refused')}
-export function parseQualificationShardTap(tap,{shard,workerRoot,commitRoot,directNames,aNames}){
+export function parseQualificationShardTap(tap,{shard,workerRoot,commitRoot,directNames,aNames,sourceLayout='original'}){
  if(typeof tap!=='string'||Buffer.byteLength(tap)>8388608||!['A','B','all'].includes(shard)||
  !Array.isArray(directNames)||directNames.length!==39||new Set(directNames).size!==39||
  !Array.isArray(aNames)||aNames.length!==2||aNames.some(n=>!directNames.includes(n)))refuse()
+ if(!['original','synthetic'].includes(sourceLayout))refuse()
+ const placeholder=sourceLayout==='original'?'verifier/hypothesis-worker/commitRecorder.test.mjs':'tests/qualificationShardCommit.fixture.mjs'
  const stack=[],completed=[],headers=[]
  for(const line of tap.split('\n')){
   let m=/^( *)# Subtest: (.+)$/.exec(line)
@@ -24,7 +26,7 @@ export function parseQualificationShardTap(tap,{shard,workerRoot,commitRoot,dire
   let node=stack[depth]
   // Node can emit a skipped result without an accompanying Subtest header.
   if(!node||node.done||node.name!==name){
-   if(!skipped)refuse()
+   if(!skipped&&!(depth===0&&name===placeholder&&shard==='A'))refuse()
    if(depth>stack.length)refuse()
    node={name,path:[...stack.slice(0,depth).map(x=>x.name),name],done:false};headers.push(node)
   }
@@ -35,7 +37,9 @@ export function parseQualificationShardTap(tap,{shard,workerRoot,commitRoot,dire
  }
  if(headers.some(x=>!x.done))refuse()
  if(completed.some(x=>!x.passed||x.todo))refuse()
- const roots=completed.filter(x=>x.path.length===1)
+ const placeholders=completed.filter(x=>x.path[0]===placeholder)
+ if(placeholders.length>1||placeholders.some(x=>x.path.length!==1||!x.passed||x.skipped)||placeholders.length&&shard!=='A')refuse()
+ const roots=completed.filter(x=>x.path.length===1&&x.path[0]!==placeholder)
  if(roots.some(x=>![workerRoot,commitRoot].includes(x.path[0]))||
   roots.filter(x=>x.path[0]===workerRoot&&!x.skipped).length!==1)refuse()
  const expected=shard==='all'?directNames:shard==='A'?aNames:directNames.filter(x=>!aNames.includes(x))
@@ -60,5 +64,6 @@ export function parseQualificationShardTap(tap,{shard,workerRoot,commitRoot,dire
   excluded_direct:excluded,explicitly_skipped_direct:explicitSkips,
   omitted_direct:excluded.filter(x=>!explicitSkips.includes(x)),
   commit_executed:shard!=='A',worker_root_executed:true,
+  filtered_commit_file_placeholder:placeholders.length===1,
   selected_descendants_completed:completed.filter(x=>x.path[0]===workerRoot&&x.path.length>2&&expected.includes(x.path[1])).length}
 }

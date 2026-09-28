@@ -3,7 +3,7 @@
   "status": "UNAPPROVED — SOURCE CANDIDATE ONLY — NOT AUTHORIZED FOR MATERIAL TRANSMISSION",
   "origin_commit": "cc8f1b19171917351548362f82f03fa2b1684831",
   "origin_tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9",
-  "integration_parent": "ca9d05d51cf59bf6c931c48ce61e4ca8216d17af",
+  "integration_parent": "658c2d992cf2daf5e38d7011c3be3052379d63e1",
   "internal_qualification_authority": {
     "reference": "User full-consolidation amendment, coherent source qualification with synthetic fixtures only",
     "owner_field_signature": null,
@@ -16,7 +16,7 @@
     },
     {
       "path": "supabase/qualification/native-semantic-integration/README.md",
-      "blob": "b4a9f2ea8b3486c0c0bdded3287a94af4dcb1f10"
+      "blob": "3ae3a2e2e4abcd9d7a80ce4e7d87584b0c6c49a4"
     },
     {
       "path": "supabase/qualification/hypothesis-assessments/handler.mjs",
@@ -547,15 +547,19 @@
     },
     {
       "path": "tests/qualificationShardSelection.fixture.mjs",
-      "blob": "536e9668499379451191b69808dca519bd37d02e"
+      "blob": "ad8661c63aea05168847ed2ab48a3b2aa6dc06a9"
     },
     {
       "path": "tests/qualificationShardSelection.tap.mjs",
-      "blob": "ad0102791575bfeee8de91c83914258efd40debc"
+      "blob": "c2f4ebda1c897585b5bdfc1ba9da9332cd6da314"
     },
     {
       "path": "tests/qualificationShardSelection.test.mjs",
-      "blob": "9c80deabfba74d871d5997513160a8a2413134c1"
+      "blob": "ac1417ff4b3e520b08dd6dd357aae20f479b18fe"
+    },
+    {
+      "path": "tests/qualificationShardCommit.fixture.mjs",
+      "blob": "932408bebb6a966ca652f191e4faf29825974d44"
     }
   ],
   "method_fixture_install_order": {
@@ -607,7 +611,7 @@
     "fixture_specific": "Original schema scaffolding, native synthetic data, rights/privacy heads, Auth/session/method/RPC/broker synthetic fixtures remain in exact fixture.mjs; no reduced stand-in install"
   },
   "method_fixture_qualification": {
-    "status": "Selection qualified; correctly partitioned original worker/commit qualification NOT RUN",
+    "status": "CorrectedB69PASS with coverage/source/cleanup; A running; separate-file coverage recheck AUTHORED — NOT RUN",
     "entrypoint": "node --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs",
     "host_node": "24.21.0",
     "isolated_image": "node:24-alpine (original suite)",
@@ -726,6 +730,94 @@
         "source_clean": true,
         "scope": "actual bounded Node subprocess selection/TAP proof, no original worker proof"
       }
+    },
+    "original_worker_receipts": {
+      "B": {
+        "candidate": "658c2d992cf2daf5e38d7011c3be3052379d63e1",
+        "tree": "01555deb8a2ad624b1d74b693c6d586b1f7915c8",
+        "source": "69bc8d434cb41c991d1cf69058fa2c831f9626df",
+        "source_tree": "8adbf10595e78a3ca7f1b7882dc9bc2a98f8a24f",
+        "workflow": "9ce0156ed15bd05fb73ed7424994efbbc45d0266",
+        "run": 36473957974,
+        "job": 109102887614,
+        "pass": 69,
+        "fail": 0,
+        "skip": 0,
+        "coverage": {
+          "contract": "qualification_shard_tap_v1",
+          "shard": "B",
+          "registered_in_source": 39,
+          "direct_reported_in_tap": 37,
+          "executed_direct": [
+            "consistent exported snapshot bootstrap isolation",
+            "actual pgoutput metadata-to-durable-recorder isolation",
+            "configured synthetic client-handler-store-worker-review path uses native gateway transactions",
+            "atomic real retained-input capture; no caller source body or input hash accepted",
+            "separate worker table/function ownership, FORCE RLS and no escalation",
+            "closed CC source scope and missing permission never enter generation",
+            "wrong audience/subject/runtime, expired identity and cross-runtime session denied",
+            "revoked mapping and stale replacement cannot reuse a retained generation",
+            "source and evaluated-implementation revocation during processing strand work",
+            "revoked reviewer membership denies completion and retains processing",
+            "revoked method denies completion and cannot be reactivated under old revision",
+            "ineligible and out-of-runtime work cannot obstruct eligible investigation",
+            "rotating investigation selection advances an eligible later investigation",
+            "database independently rejects output source, method, rating, review and argument escalation",
+            "permission acceptance first: output/revision/ack/receipt commit, revocation waits",
+            "permission revocation first: output/revision/ack/receipt all reject",
+            "source correction during processing rejects stale retained generation",
+            "exact completion retry requires current authority and identical output",
+            "worker method mismatch is explicitly failed without invented assessment",
+            "expired lease does not requeue, force-cancel or accept completion",
+            "real container computes over retained spans with no broad credentials or network",
+            "actual termination/restart before_complete_commit recovers exact durable completion",
+            "actual termination/restart after_complete_commit recovers exact durable completion",
+            "actual lost claim response preserves stranded work; fresh process cannot invent lease",
+            "encrypted remote exact-content journal, scoped runtime, no plaintext and protocol separation",
+            "generated reassessment resolves exact human causes atomically and stays unreviewed/private",
+            "unselected retained input permissions still protect generated history and create causes",
+            "private operational ledger binds exact generation records and never returns lease secrets or source text",
+            "expired session cannot commit an idle receipt after waiting on a permission fence",
+            "capture acknowledgement can be recovered after the generation has completed",
+            "method replacement retains a distinct pending cause and explicit new-version reassessment",
+            "rolled-back method removal leaves no cause; committed removal retains cause and unrelated history",
+            "fresh-generation recovery preserves expired attempt and commits exact linked retry",
+            "recovery refuses wrong owner, scope, completed job and revoked input permission",
+            "recovery is atomic on rollback and inaccessible to the worker role",
+            "private Markets shared graph retained reader",
+            "revoked signing key denies claim and completion despite an outstanding lease"
+          ],
+          "excluded_direct": [
+            "source-captured contiguous metadata coverage isolation",
+            "native marker boundary proof without source activation"
+          ],
+          "explicitly_skipped_direct": [],
+          "omitted_direct": [
+            "source-captured contiguous metadata coverage isolation",
+            "native marker boundary proof without source activation"
+          ],
+          "commit_executed": true,
+          "worker_root_executed": true,
+          "selected_descendants_completed": 24
+        },
+        "source_clean": true,
+        "cleanup": "owned worker/commit/PostgreSQL containers/volumes absent",
+        "hosted_qik": false,
+        "actual_material": false
+      },
+      "A": {
+        "run": 36473957974,
+        "job": 109102887374,
+        "status": "RUNNING"
+      }
+    },
+    "separate_file_recheck": {
+      "status": "AUTHORED — NOT RUN",
+      "tests": 6,
+      "command": "node --test --test-concurrency=1 tests/qualificationShardSelection.test.mjs",
+      "node": "24.21.0",
+      "meaning": "actual separate-file empty-file result is not commit execution; exact originalknownfile/A-only/no-descendant contract; targeted retained-TAP recheck permitted only after runtime/source/cleanup pass",
+      "runtime_changes": 0
     }
   }
 }

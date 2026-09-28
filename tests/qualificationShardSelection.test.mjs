@@ -7,14 +7,15 @@ import {readFile} from 'node:fs/promises'
 import {fileURLToPath} from 'node:url'
 import {workerRoot,commitRoot,directNames,aNames,skipA,skipB} from './qualificationShardSelection.fixture.mjs'
 const fixture=fileURLToPath(new URL('./qualificationShardSelection.fixture.mjs',import.meta.url))
-async function run(flags){
+async function run(flags,layout='one-file'){
  assert.equal(process.versions.node,'24.21.0','qualification requires exact Node24.21.0')
  return new Promise((resolve,reject)=>{
-  const env={...process.env,MIP_SHARD_SELECTION_CHILD:'synthetic-only'}
+  const env={...process.env,MIP_SHARD_SELECTION_CHILD:'synthetic-only',MIP_SHARD_SELECTION_LAYOUT:layout}
   // Prevent the parent test runner context/filters or NODE_OPTIONS overriding this proof.
   for(const key of Object.keys(env))if(key.startsWith('NODE_TEST_')||key==='NODE_OPTIONS')delete env[key]
-  const child=spawn(process.execPath,['--test','--test-concurrency=1','--test-reporter=tap',...flags,fixture],
-   {env,stdio:['ignore','pipe','pipe']})
+  const files=layout==='two-files'?['tests/qualificationShardSelection.fixture.mjs','tests/qualificationShardCommit.fixture.mjs']:[fixture]
+  const child=spawn(process.execPath,['--test','--test-concurrency=1','--test-reporter=tap',...flags,...files],
+   {env,cwd:fileURLToPath(new URL('../',import.meta.url)),stdio:['ignore','pipe','pipe']})
   let output='',bytes=0,failure=null,closed=false
   const timer=setTimeout(()=>{failure=Error('shard_selection_timeout');child.kill('SIGKILL')},20000)
   const accept=b=>{
@@ -45,7 +46,7 @@ function assertSelected({records},expected,withCommit){
  assert.equal(new Set(expected).size,expected.length)
  for(const kind of ['direct','nested','deep'])
   assert.deepEqual(records.filter(x=>x.kind===kind).map(x=>x.name),expected)
- assert.deepEqual(records.filter(x=>x.kind==='root').map(x=>x.name),withCommit?[workerRoot,commitRoot]:[workerRoot])
+ assert.deepEqual(records.filter(x=>x.kind==='root').map(x=>x.name).sort(),(withCommit?[workerRoot,commitRoot]:[workerRoot]).sort())
  assert.deepEqual(records.filter(x=>x.kind==='commit').map(x=>x.name),withCommit?['nested','deep']:[])
  assert.equal(records.length,1+3*expected.length+(withCommit?3:0))
 }
@@ -121,4 +122,25 @@ test('selection inventory matches actual original worker and commit test registr
  assert.deepEqual(names,directNames)
  assert.equal((worker.match(/await t\.test\(/g)??[]).length,38)
  assert.equal((commit.match(/^test\(/gm)??[]).length,1)
+})
+
+test('two-file wildcard geometry distinguishes filtered commit file from executed commit root',{timeout:45000},async()=>{
+ const a=await run(['--test-skip-pattern='+skipA],'two-files')
+ assertSelected(a,aNames,false)
+ const options={workerRoot,commitRoot,directNames,aNames,sourceLayout:'synthetic'}
+ const ac=parseQualificationShardTap(a.tap,{...options,shard:'A'})
+ assert.equal(ac.executed_direct.length,2)
+ assert.equal(ac.commit_executed,false)
+ // Record actual Node output behavior; never infer commit execution from a file result.
+ assert.equal(ac.filtered_commit_file_placeholder,/^ok [0-9]+ - tests\/qualificationShardCommit\.fixture\.mjs$/m.test(a.tap))
+ if(ac.filtered_commit_file_placeholder){
+  const unknown=a.tap.replaceAll('tests/qualificationShardCommit.fixture.mjs','tests/unknown.fixture.mjs')
+  assert.throws(()=>parseQualificationShardTap(unknown,{...options,shard:'A'}),/qualification_shard_tap_refused/)
+ }
+ const b=await run(['--test-skip-pattern='+skipB],'two-files')
+ assertSelected(b,directNames.filter(n=>!aNames.includes(n)),true)
+ const bc=parseQualificationShardTap(b.tap,{...options,shard:'B'})
+ assert.equal(bc.executed_direct.length,37)
+ assert.equal(bc.commit_executed,true)
+ assert.equal(bc.filtered_commit_file_placeholder,false)
 })

@@ -58,7 +58,7 @@ if(process.env.MIP_SHARD_SELECTION_CHILD==='synthetic-only'){
    })
   })
  })
- test(commitRoot,async t=>{
+ if(process.env.MIP_SHARD_SELECTION_LAYOUT!=='two-files')test(commitRoot,async t=>{
   mark('root',commitRoot)
   await t.test('synthetic commit nested assertion',async sub=>{
    mark('commit','nested')
