@@ -22,7 +22,7 @@ const bindingRefusal=/^native_comparison_check_[1-6]_(?:dual_authority_and_actua
 // Exact non-format static exception messages from the complete installed source only.
 // Includes fixed operation-denial reasons; never accepts a prefix or arbitrary message.
 // Never copy driver message/detail/context, arguments, SQL or payload into diagnostics.
-const stagedRefusals=new Set(["comparison completion conflict","comparison failure conflict","comparison input binding mismatch","doj_admin_excess_head_privilege","doj_existing_canonical_dependency","efta_assignment_not_authorized","efta_assignment_receipt_payload_mismatch","efta_authenticated_subject_mismatch","efta_authentication_key_not_authorized","efta_authentication_policy_not_authorized","efta_authentication_session_revoked","efta_decision_replaced","efta_exact_binding_denied","efta_gateway_credential_not_authorized","efta_identity_ambiguous","efta_identity_conflict","efta_identity_drift","efta_identity_not_owner_approved","efta_identity_origin_mismatch","efta_identity_parent_unresolved","efta_identity_predecessor","efta_identity_replaced","efta_identity_review_required","efta_identity_unresolved_or_stale","efta_live_auth_session_invalid","efta_live_authentication_required","efta_live_session_bad_request","efta_predecessor_conflict","efta_replaced_evidence","efta_replay_conflict","efta_review_binding_required","efta_review_required","efta_source_revision_missing","efta_stale_review","efta_stale_source","immutable comparison generation history","invalid comparison failure token","invalid comparison output","invalid comparison snapshot binding","invalid or expired comparison lease","invalid selection request","invalid source observation","mip_audit_rule_invalid","mip_audit_unavailable","mip_backlog_already_started","mip_broker_recovery_dependencies","mip_capture_requires_server_input","mip_claim_not_recorded","mip_collector_replay_owner","mip_collector_source_mismatch","mip_comparison_reader_prerequisites_missing","mip_factual_fresh_version_required","mip_factual_history_preserved","mip_factual_release_ineligible","mip_hosted_capture_requires_bound_producer","mip_identity_bad_request","mip_identity_claim_mismatch","mip_identity_expired","mip_identity_fresh_revision_required","mip_identity_key_revoked","mip_identity_mapping_revoked","mip_identity_session_revoked","mip_identity_stale_revision","mip_identity_token_replay","mip_journal_args","mip_journal_bad_key","mip_journal_binding","mip_journal_content_conflict","mip_journal_generation_binding","mip_journal_native_token_unavailable","mip_journal_output_shape","mip_journal_page_bounds","mip_journal_receipt_shape","mip_journal_request_missing","mip_journal_requires_scoped_queue","mip_journal_shape","mip_journal_token_binding","mip_native_capture_binding_missing","mip_native_capture_bytes_invalid","mip_native_capture_stale","mip_native_collector_duplicate_recorder","mip_native_collector_fence_topology","mip_native_collector_identity_missing","mip_native_collector_prerequisite_missing","mip_native_collector_recorder_topology","mip_native_collector_relation","mip_native_final_chain_membership","mip_native_final_chain_review_retention_trigger","mip_native_final_schema_usage","mip_native_generation_lineage_mismatch","mip_native_lineage_shape","mip_native_lineage_version","mip_native_output_binding","mip_native_output_shape","mip_native_review_evidence_missing","mip_native_review_kernel_privilege_drift","mip_native_review_policy_collision","mip_native_review_prerequisites_missing","mip_native_review_retention_shape","mip_native_review_span_unbound","mip_operation_denied_audience_denied","mip_operation_denied_authoritative_adapter_unbound","mip_operation_denied_domain_denied","mip_operation_denied_internal_admission_inactive","mip_operation_denied_internal_authorization_unbound","mip_operation_denied_material_version_mismatch","mip_operation_denied_missing_capture_binding","mip_operation_denied_missing_material_closure","mip_operation_denied_missing_operation_evidence","mip_operation_denied_missing_primary_evidence","mip_operation_denied_operation_denied","mip_operation_denied_permission_expired","mip_operation_denied_permission_not_effective","mip_operation_denied_privacy_admission_missing","mip_operation_denied_qualification_batch_closed","mip_operation_denied_revoked_operation_evidence","mip_operation_denied_synthetic_mechanism_only","mip_operation_denied_unfulfilled_permission_condition","mip_operation_denied_unsupported_evidence_reference","mip_operation_fresh_review_required","mip_permission_runtime_denied","mip_public_release_disabled","mip_publication_archive_missing","mip_publication_article_ineligible","mip_publication_authority_missing","mip_publication_binding","mip_publication_claim_ineligible","mip_publication_closure_mismatch","mip_publication_correction_ineligible","mip_publication_dependency_ineligible","mip_publication_dependency_missing","mip_publication_event_ineligible","mip_publication_evidence_missing","mip_publication_explanation_binding","mip_publication_explanation_ineligible","mip_publication_explanation_missing","mip_publication_link_ineligible","mip_publication_membership_missing","mip_publication_missing_input","mip_publication_policy_revoked","mip_publication_replay_conflict","mip_publication_retained_evidence_missing","mip_publication_source_mismatch","mip_publication_stale_source_context","mip_publication_stale_source_input","mip_reader_evidence_unbound","mip_reader_release_binding","mip_reader_release_missing","mip_reader_release_scope","mip_resume_journal_missing","mip_resume_key","mip_survivor_relation_missing","mip_survivor_relation_or_fence_missing","selection retry conflict","stale selection predecessor","unbound publication selection","unbound selection output","unknown comparison generation"])
+const stagedRefusals=new Set(["comparison completion conflict","comparison failure conflict","comparison input binding mismatch","doj_admin_excess_head_privilege","doj_existing_canonical_dependency","efta_assignment_not_authorized","efta_assignment_receipt_payload_mismatch","efta_authenticated_subject_mismatch","efta_authentication_key_not_authorized","efta_authentication_policy_not_authorized","efta_authentication_session_revoked","efta_decision_replaced","efta_exact_binding_denied","efta_gateway_credential_not_authorized","efta_identity_ambiguous","efta_identity_conflict","efta_identity_drift","efta_identity_not_owner_approved","efta_identity_origin_mismatch","efta_identity_parent_unresolved","efta_identity_predecessor","efta_identity_replaced","efta_identity_review_required","efta_identity_unresolved_or_stale","efta_live_auth_session_invalid","efta_live_authentication_required","efta_live_session_bad_request","efta_predecessor_conflict","efta_replaced_evidence","efta_replay_conflict","efta_review_binding_required","efta_review_required","efta_source_revision_missing","efta_stale_review","efta_stale_source","immutable comparison generation history","invalid comparison failure token","invalid comparison output","invalid comparison snapshot binding","invalid or expired comparison lease","invalid selection request","invalid source observation","mip_audit_rule_invalid","mip_audit_unavailable","mip_backlog_already_started","mip_broker_recovery_dependencies","mip_capture_requires_server_input","mip_claim_not_recorded","mip_collector_replay_owner","mip_collector_source_mismatch","mip_comparison_reader_prerequisites_missing","mip_factual_fresh_version_required","mip_factual_history_preserved","mip_factual_release_ineligible","mip_hosted_capture_requires_bound_producer","mip_identity_bad_request","mip_identity_claim_mismatch","mip_identity_expired","mip_identity_fresh_revision_required","mip_identity_key_revoked","mip_identity_mapping_revoked","mip_identity_session_revoked","mip_identity_stale_revision","mip_identity_token_replay","mip_journal_args","mip_journal_bad_key","mip_journal_binding","mip_journal_content_conflict","mip_journal_generation_binding","mip_journal_native_token_unavailable","mip_journal_output_shape","mip_journal_page_bounds","mip_journal_receipt_shape","mip_journal_request_missing","mip_journal_requires_scoped_queue","mip_journal_shape","mip_journal_token_binding","mip_native_capture_binding_missing","mip_native_capture_bytes_invalid","mip_native_capture_stale","mip_native_collector_duplicate_recorder","mip_native_collector_fence_topology","mip_native_collector_identity_missing","mip_native_collector_prerequisite_missing","mip_native_collector_recorder_topology","mip_native_collector_relation","mip_native_final_chain_membership","mip_native_final_chain_review_retention_trigger","mip_native_final_schema_usage","mip_native_generation_lineage_mismatch","mip_native_lineage_shape","mip_native_lineage_version","mip_native_output_binding","mip_native_output_shape","mip_native_review_evidence_missing","mip_native_review_kernel_privilege_drift","mip_native_review_policy_collision","mip_native_review_prerequisites_missing","mip_native_review_retention_shape","mip_native_review_span_unbound","mip_operation_denied_audience_denied","mip_operation_denied_authoritative_adapter_unbound","mip_operation_denied_doj_applicability_unverified","mip_operation_denied_doj_authority_unbound","mip_operation_denied_doj_material_stale_or_unavailable","mip_operation_denied_doj_operation_expired","mip_operation_denied_doj_operation_missing_or_revoked","mip_operation_denied_doj_policy_inactive","mip_operation_denied_doj_private_policy_bound","mip_operation_denied_doj_record_binding_mismatch","mip_operation_denied_doj_scope_denied","mip_operation_denied_domain_denied","mip_operation_denied_internal_admission_inactive","mip_operation_denied_internal_authorization_unbound","mip_operation_denied_material_version_mismatch","mip_operation_denied_missing_capture_binding","mip_operation_denied_missing_material_closure","mip_operation_denied_missing_operation_evidence","mip_operation_denied_missing_primary_evidence","mip_operation_denied_operation_denied","mip_operation_denied_permission_expired","mip_operation_denied_permission_not_effective","mip_operation_denied_privacy_admission_missing","mip_operation_denied_qualification_batch_closed","mip_operation_denied_revoked_operation_evidence","mip_operation_denied_synthetic_mechanism_only","mip_operation_denied_unfulfilled_permission_condition","mip_operation_denied_unsupported_evidence_reference","mip_operation_fresh_review_required","mip_permission_runtime_denied","mip_public_release_disabled","mip_publication_archive_missing","mip_publication_article_ineligible","mip_publication_authority_missing","mip_publication_binding","mip_publication_claim_ineligible","mip_publication_closure_mismatch","mip_publication_correction_ineligible","mip_publication_dependency_ineligible","mip_publication_dependency_missing","mip_publication_event_ineligible","mip_publication_evidence_missing","mip_publication_explanation_binding","mip_publication_explanation_ineligible","mip_publication_explanation_missing","mip_publication_link_ineligible","mip_publication_membership_missing","mip_publication_missing_input","mip_publication_policy_revoked","mip_publication_replay_conflict","mip_publication_retained_evidence_missing","mip_publication_source_mismatch","mip_publication_stale_source_context","mip_publication_stale_source_input","mip_reader_evidence_unbound","mip_reader_release_binding","mip_reader_release_missing","mip_reader_release_scope","mip_resume_journal_missing","mip_resume_key","mip_survivor_relation_missing","mip_survivor_relation_or_fence_missing","selection retry conflict","stale selection predecessor","unbound publication selection","unbound selection output","unknown comparison generation"])
 const diagnostic=(error,stage)=>({
  stage,staging_refusal:stage==='actual_staging_release_reader'&&stagedRefusals.has(error?.message)?error.message:null,sqlstate:/^[A-Z0-9]{5}$/.test(error?.code??'')?error.code:'NONE',
  binding_check:bindingRefusal.test(error?.message??'')?error.message:null,
@@ -45,7 +45,7 @@ export async function runNativeComparisonBindingFixture(fx){
  if(fx.syntheticFixture!==true||typeof fx.connect!=='function'||typeof fx.id!=='function')
   throw Error('native_comparison_fixture_guard')
  const {db,reviewer,sameReviewer,gateway,outsider,worker,admin,scope,id,connect,sentinel}=fx
- const owned=[];let stage='guard',primary=null,result;const cleanup=[]
+ const owned=[];let stage='guard',primary=null,result,initialGate=null,sourceInitial=null,sourceInserted=false;const cleanup=[]
  const freshRole=async role=>{
   const c=await connect();owned.push(c)
   const original=(await c.query('select session_user::text u,current_user::text e')).rows[0]
@@ -70,31 +70,67 @@ export async function runNativeComparisonBindingFixture(fx){
   const publisher=await freshRole('mip_projection_publisher_v1')
   const factualReviewer=await freshRole('mip_factual_reviewer_v3')
   const fieldOwner=await freshRole('mip_mentions_owner')
+  const ingestRuntime=await freshRole('qik_ingest_runtime')
+  const authorityAdmin=await freshRole('mip_cutover_authority_admin_v1')
+  const permissionReader=await freshRole('mip_publication_owner_v2')
   // Reserved identifiers are disjoint from all earlier c650 fixture objects.
   const eventIds=[id(7000),id(7001)],arc=id(7010),node=id(7011),milestone=id(7012),candidate=id(7013)
   const runtime='synthetic-native-comparison-binding',implementation='synthetic-native-comparison-binding-v1'
   const source=(await db.query('select source from mip_identity.collector_config where id')).rows[0].source
   assert.equal(source,'qik-fixture-v1')
-  const originalPayloads=[],captures=[]
-  stage='original_capture_pair_sets'
+  const originalPayloads=[],captures=[],observations=[]
+  const sourceId='1b4c6203-f6dc-4be7-a61e-5ee1c2e2866d'
+  const feedURL='https://www.justice.gov/news/rss?type=press_release&m=1'
+  const token='synthetic-native-comparison-c3-token-00000000000000',runId='synthetic-native-comparison-'+randomUUID(),outletId=id(7240)
+  // The installed hosted compiler deliberately denies the old synthetic permission
+  // fallback. Use the unchanged actual C3/020 mechanism with SYNTHETIC feed bytes;
+  // never restore a permissive adapter, fetch DOJ, or seed a real owner approval.
+  stage='synthetic_c3_feed_profile'
+  initialGate=(await db.query('select collection_authorized from qik_ingest.collection_gate where id')).rows[0].collection_authorized
+  assert.equal(initialGate,false)
+  sourceInitial=(await db.query('select outlet_id,feed_url,enabled,collection_enabled from public.ingest_sources where id=$1',[sourceId])).rows[0]??null
+  if(sourceInitial)assert.equal(sourceInitial.feed_url,feedURL)
+  await db.query("insert into public.outlets(id,name) values($1,'Binding synthetic outlet 0')",[outletId])
+  if(sourceInitial)await db.query('update public.ingest_sources set outlet_id=$2,enabled=true,collection_enabled=true where id=$1',[sourceId,outletId])
+  else{
+   await db.query('insert into public.ingest_sources(id,outlet_id,feed_url,enabled,collection_enabled) values($1,$2,$3,true,true)',[sourceId,outletId,feedURL])
+   sourceInserted=true
+  }
+  await db.query("insert into qik_ingest.runtime_credentials values($1,true,'synthetic fixture only')",[hash(token)])
+  await db.query('update qik_ingest.collection_gate set collection_authorized=true where id')
+  await value(ingestRuntime,'select public.mip_qik_ingest_begin_run($1,$2,null) result',[token,runId])
+  const native=async(action,input)=>value(ingestRuntime,'select public.mip_qik_ingest_native($1,$2,$3,$4::jsonb) result',[token,runId,action,JSON.stringify(input)])
   const extractionBackend=createRetainedExtractionBackend(db)
+  stage='original_capture_pair_sets'
   for(let index=0;index<4;index++){
-   const payload={url:'https://synthetic.invalid/native-comparison-'+index,
-    title:sentence,summary:sentence,outlet:'Binding synthetic outlet '+index,
-    body_text:sentence+' '+sentinel,published_at:'2026-01-02T00:00:00Z'}
-   originalPayloads.push(payload)
-   const job=await value(db,"select evidence_pipeline.enqueue('synthetic-native-comparison',$1::jsonb) result",[JSON.stringify(payload)])
-   const claim=await value(db,'select evidence_pipeline.claim_job() result')
+   await db.query('update public.outlets set name=$2 where id=$1',[outletId,'Binding synthetic outlet '+index])
+   const item={url:'https://www.justice.gov/synthetic/native-comparison-'+index+'?marker='+encodeURIComponent(sentinel),
+    title:sentence,summary:sentence,published_at:'2026-01-02T00:00:00Z'}
+   const observation=await value(ingestRuntime,'select public.mip_qik_ingest_retain_item($1,$2,$3,$4::jsonb) result',[token,runId,sourceId,JSON.stringify(item)])
+   assert.equal(observation.disposition,'observed')
+   observations.push(observation.id)
+   const job=await native('enqueue',{observation_id:observation.id})
+   assert.equal(await native('enqueue',{observation_id:observation.id}),job)
+   const claim=await native('claim',{job_ids:[job]})
    assert.equal(claim.id,job)
-   const done=await value(db,'select evidence_pipeline.finish_job($1,$2) result',[job,claim.lease_token])
+   const done=await native('finish',{job_id:job,lease_token:claim.lease_token})
    assert.equal(done.job_id,job)
-   const cap=(await db.query('select id,job_id,article_id,content_hash from evidence_pipeline.article_captures where id=$1',[done.capture_id])).rows[0]
-   assert.equal(cap.job_id,job);assert.equal(cap.article_id,done.article_id)
+   const cap=(await db.query('select id,job_id,article_id,content_hash,payload from evidence_pipeline.article_captures where id=$1',[done.capture_id])).rows[0]
+   assert.equal(cap.job_id,job);assert.equal(cap.article_id,done.article_id);assert.equal(cap.payload.body_text,null)
+   assert.ok(cap.payload.url.includes(sentinel))
+   originalPayloads.push(cap.payload)
+   delete cap.payload
    const extracted=await extractRetainedCapture({backend:extractionBackend,capture_id:cap.id})
    assert.equal(extracted.state,'candidates_retained');assert.ok(extracted.candidate_ids.length>0)
    captures.push(cap)
    await db.query("update public.articles set reader_state='eligible',source_status='active' where id=$1",[cap.article_id])
   }
+  await value(ingestRuntime,"select public.mip_qik_ingest_finish_run($1,$2,'completed','{}'::jsonb,null) result",[token,runId])
+  // Restore the disabled collection boundary before snapshots/readers. A source
+  // can remain disabled while its originally captured feed evidence is validated.
+  await db.query('update qik_ingest.collection_gate set collection_authorized=$1 where id',[initialGate])
+  await db.query('update public.ingest_sources set enabled=false,collection_enabled=false where id=$1',[sourceId])
+  assert.equal((await db.query('select collection_authorized from qik_ingest.collection_gate where id')).rows[0].collection_authorized,false)
   assert.equal(new Set(captures.map(c=>c.article_id)).size,4)
   for(let index=0;index<2;index++){
    await db.query("insert into public.events(id,canonical_title,status,comparison_validation_state,occurred_at_start,occurred_at_end) values($1,$2,'active','approved','2026-01-02','2026-01-02')",[eventIds[index],sentence])
@@ -105,8 +141,10 @@ export async function runNativeComparisonBindingFixture(fx){
   await db.query("insert into public.nodes(id,type) values($1,'institution')",[node])
   await db.query("insert into public.story_arcs(id,started_at,title,summary,last_update_at,root_node_id) values($1,'2026-01-01',$2,$2,'2026-01-02T00:00:00Z',$3)",[arc,sentence,node])
   await db.query("insert into public.arc_milestones(id,arc_id,milestone_key,status) values($1,$2,'ia_concludes','pending')",[milestone,arc])
-  await db.query('update public.articles set arc_id=$1 where id=$2',[arc,captures[1].article_id])
+  // DOJ material stays feed-only; public article.arc_id remains NULL. The native
+  // member is established by the existing reviewed PRIVATE attachment mechanism.
   await db.query("insert into public.arc_membership_candidates(id,article_id,arc_id,state,updated_at) values($1,$2,$3,'pending','2026-01-02T00:00:00Z')",[candidate,captures[0].article_id,arc])
+  await db.query("insert into public.arc_membership_candidates(id,article_id,arc_id,state,updated_at) values($1,$2,$3,'pending','2026-01-02T00:00:00Z')",[id(7014),captures[1].article_id,arc])
 
   stage='broker_configuration'
   await db.query('select mip_comparison_kernel_v1.bind_source_scope($1,$2)',[runtime,source])
@@ -204,6 +242,56 @@ export async function runNativeComparisonBindingFixture(fx){
     await db.query('insert into mip_identity.operation_evidence_heads values($1::jsonb,$2,true)',[JSON.stringify(permissionScope),revision])
    }
   }
+  const permissionScope=member=>({source_project:source,material_ref:'article:'+member.article.id,
+   material_version:null,operation:'retention',audience:'isolated_internal_review',domain:'rights'})
+  const firstMember=input.eventInputs[0].members[0],legacyScope=permissionScope(firstMember)
+  legacyScope.material_version=await value(db,'select mip_comparison_kernel_v1.argument_digest($1::jsonb) result',[JSON.stringify(firstMember.article)])
+  const legacyDecision=await value(permissionReader,'select mip_identity.operation_check($1::jsonb) result',[JSON.stringify(legacyScope)])
+  assert.equal(legacyDecision.allowed,false);assert.equal(legacyDecision.reason,'authoritative_adapter_unbound')
+  const authorityInsert=async(table,record)=>{
+   assert.ok(['doj_policy_versions','doj_policy_heads','doj_material_bindings','operation_evidence_versions'].includes(table))
+   await authorityAdmin.query('insert into mip_identity.'+table+' select x.* from jsonb_populate_record(null::mip_identity.'+table+',$1::jsonb) x',[JSON.stringify(record)])
+  }
+  const dojPolicy={revision:id(7260),source_project:source,source_id:sourceId,feed_url:feedURL,
+   policy_url:'https://www.justice.gov/legalpolicies',policy_version:'synthetic-policy-fixture-v1',
+   policy_document_hash:hash('synthetic primary-policy document'),policy_clause_hash:hash('synthetic conditional policy clause'),
+   policy_record_ref:'synthetic-policy-record',policy_observed_at:'2026-01-01T00:00:00Z',
+   owner_record_ref:'synthetic-owner-instruction',owner_instruction_hash:hash('synthetic private instruction'),owner_principal_ref:'synthetic-owner',
+   audience:'isolated_internal_review',operations:['retention','analysis','excerpt_display'],
+   fields:['source_identity','original_url','title','published_at','short_feed_summary','native_capture_bytes_hash'],
+   effective_at:'2020-01-01T00:00:00Z',expires_at:'2999-01-01T00:00:00Z',owner_field_signature:null}
+  await authorityInsert('doj_policy_versions',dojPolicy)
+  await authorityInsert('doj_policy_heads',{source_project:source,revision:dojPolicy.revision,active:true})
+  for(const event of input.eventInputs)for(const member of event.members){
+   const index=captures.findIndex(c=>c.article_id===member.article.id),cap=captures[index]
+   assert.ok(index>=0)
+   const materialVersion=await value(db,'select mip_comparison_kernel_v1.argument_digest($1::jsonb) result',[JSON.stringify(member.article)])
+   const sourceReceiptHash=await value(db,"select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex') result from evidence_pipeline.import_receipts r where job_id=$1 and run_id=$2",[cap.job_id,runId])
+   const binding={revision:randomUUID(),policy_revision:dojPolicy.revision,article_id:cap.article_id,capture_id:cap.id,
+    observation_id:observations[index],article_version:materialVersion,capture_hash:cap.content_hash,
+    source_receipt_ref:'synthetic-receipt:'+cap.job_id,source_receipt_hash:sourceReceiptHash,
+    selection_record_ref:'synthetic-selection:'+cap.article_id,selection_record_hash:hash('synthetic exception review:'+cap.article_id),
+    applicability:'verified_first_party_unmarked_doj_text'}
+   await authorityInsert('doj_material_bindings',binding)
+   const conditions=[
+    {status:'verified',evidence_ref:dojPolicy.policy_record_ref,document_hash:dojPolicy.policy_document_hash,clause_hash:dojPolicy.policy_clause_hash,policy_revision:dojPolicy.revision},
+    {status:'verified',evidence_ref:dojPolicy.owner_record_ref,instruction_hash:dojPolicy.owner_instruction_hash},
+    {status:'verified',evidence_ref:binding.selection_record_ref,selection_hash:binding.selection_record_hash,receipt_hash:binding.source_receipt_hash,binding_revision:binding.revision}]
+   for(const operation of ['retention','analysis','excerpt_display'])for(const domain of ['rights','privacy']){
+    const operationScope={source_project:source,material_ref:'article:'+member.article.id,material_version:materialVersion,operation,audience:'isolated_internal_review',domain}
+    const revision=randomUUID()
+    await authorityInsert('operation_evidence_versions',{revision,scope:operationScope,authority_adapter:'doj-private-policy-v1',
+     source_ref:feedURL,source_version:cap.id,source_hash:cap.content_hash,evidence_ref:dojPolicy.policy_record_ref,
+     approval_owner_ref:dojPolicy.owner_principal_ref,approval_record_ref:dojPolicy.owner_record_ref,
+     approval_status:'recorded',disposition:'allow',effective_at:dojPolicy.effective_at,expires_at:dojPolicy.expires_at,conditions,synthetic:false})
+    await authorityAdmin.query('update mip_identity.operation_evidence_heads set revision=$2,active=true where scope=$1::jsonb',[JSON.stringify(operationScope),revision])
+    const decision=await value(permissionReader,'select mip_identity.operation_check($1::jsonb) result',[JSON.stringify(operationScope)])
+    assert.equal(decision.allowed,true);assert.equal(decision.reason,'doj_private_policy_bound')
+    assert.equal(decision.public_release_allowed,false);assert.equal(decision.owner_field_signature,null)
+   }
+  }
+  // These records exercise the real 020 resolver with synthetic values only.
+  // synthetic:false selects that code path; it is NOT a real-material approval.
   const publicationPolicy=id(7030),publicationReview=id(7031),releaseRequest=id(7032)
   await db.query("insert into mip_identity.publication_policy_versions values($1,'synthetic-privacy','synthetic-rights','synthetic-publication','survivor-reader-v1','synthetic-only')",[publicationPolicy])
   await db.query('insert into mip_identity.publication_policy_heads values(true,$1,true)',[publicationPolicy])
@@ -246,6 +334,23 @@ export async function runNativeComparisonBindingFixture(fx){
   const previous=(await db.query('select id,version from mip_arc_native.selection_policies where scope=$1 order by version desc limit 1',[scope])).rows[0]
   const selection=id(7130),cohort=id(7131),nativeGeneration=id(7132),scoreReview=id(7133)
   await reviewer.query('select mip_arc_native.review_selection_policy($1,$2,$3,$4,0.7,true,31,128,4194304,125829120)',[scope,selection,(previous?.version??0)+1,previous?.id??null])
+  stage='reviewed_private_seed_member'
+  const bootstrapCohort=id(7250),bootstrapGeneration=id(7251),bootstrapReview=id(7252),bootstrapAttachment=id(7253)
+  const bootstrapRevision=(await db.query('select updated_at::text revision from public.arc_membership_candidates where id=$1',[id(7014)])).rows[0].revision
+  await reviewer.query('select mip_arc_native.review_cohort($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[
+   scope,bootstrapCohort,id(7014),bootstrapRevision,captures[1].article_id,arc,[],bindings.slice(4),[extractions[1]],selection])
+  const bootstrapSnapshot=await value(gateway,'select mip_arc_native.snapshot($1,$2,$3) result',[scope,bootstrapCohort,bootstrapGeneration])
+  const bootstrapWire=await value(gateway,'select mip_arc_native.read_scoring_input($1,$2,$3) result',[scope,bootstrapGeneration,bootstrapSnapshot.input_hash])
+  const bootstrapScore=scoreGovernedNativeInput(bootstrapWire)
+  assert.equal(bootstrapScore.score.decision,'candidate');assert.deepEqual(bootstrapScore.score.hard_rejections,[])
+  const bootstrapScored=await value(gateway,'select mip_arc_native.complete_score($1,$2,$3,$4::jsonb) result',[scope,bootstrapGeneration,bootstrapSnapshot.input_hash,JSON.stringify(bootstrapScore)])
+  await reviewer.query("select mip_arc_native.review_score($1,$2,$3,$4,$5,1,null,'accepted_private','reviewed_continuity')",[scope,bootstrapReview,bootstrapGeneration,bootstrapSnapshot.input_hash,bootstrapScored.output_hash])
+  const attachment=await value(reviewer,'select mip_arc_native.prepare_private_attachment($1,$2,$3,$4,$5) result',[scope,bootstrapGeneration,bootstrapSnapshot.input_hash,bootstrapScored.output_hash,bootstrapReview])
+  await value(reviewer,'select mip_arc_native.attach_private_membership($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) result',[
+   scope,bootstrapAttachment,bootstrapGeneration,bootstrapSnapshot.input_hash,bootstrapScored.output_hash,bootstrapReview,
+   attachment.version,attachment.expected_predecessor,attachment.private_arc_revision,attachment.private_set_digest])
+  assert.equal((await db.query('select arc_id from public.articles where id=$1',[captures[1].article_id])).rows[0].arc_id,null)
+
   const candidateRevision=(await db.query('select updated_at::text revision from public.arc_membership_candidates where id=$1',[candidate])).rows[0].revision
   await reviewer.query('select mip_arc_native.review_cohort($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[scope,cohort,candidate,candidateRevision,captures[0].article_id,arc,[captures[1].article_id],bindings,extractions,selection])
   stage='actual_native_score'
@@ -260,7 +365,7 @@ export async function runNativeComparisonBindingFixture(fx){
   stage='actual_private_projection'
   const sourceBinding=id(7140),citation=id(7141),context=id(7142),projection=id(7143),privateReview=id(7144)
   const meta=(await db.query("select encode(sha256(convert_to(jsonb_build_object('present',payload?'body_text','value',payload->'body_text')::text,'UTF8')),'hex') body_hash,encode(sha256(convert_to(jsonb_build_object('present',payload?'url','value',payload->'url')::text,'UTF8')),'hex') url_hash from evidence_pipeline.article_captures where id=$1",[captures[0].id])).rows[0]
-  await reviewer.query('select mip_arc_projection_private.review_source($1,$2,$3,$4,$5,$6,$7,$8,$9)',[scope,sourceBinding,captures[0].article_id,captures[0].id,captures[0].job_id,captures[0].content_hash,'string',meta.body_hash,meta.url_hash])
+  await reviewer.query('select mip_arc_projection_private.review_source($1,$2,$3,$4,$5,$6,$7,$8,$9)',[scope,sourceBinding,captures[0].article_id,captures[0].id,captures[0].job_id,captures[0].content_hash,'null',meta.body_hash,meta.url_hash])
   await reviewer.query('select mip_arc_projection_private.set_source_access($1,$2,true)',[scope,sourceBinding])
   await reviewer.query("select mip_arc_projection_private.review_citations($1,$2,$3,1,null,'reviewed_complete','[]'::jsonb)",[scope,citation,sourceBinding])
   const observed=await value(reviewer,'select mip_arc_projection_private.inspect_context($1,$2) result',[scope,arc])
@@ -409,6 +514,14 @@ export async function runNativeComparisonBindingFixture(fx){
   assert.deepEqual(result,{checks:6,publication_allowed:false,attachment_allowed:false})
  }catch(error){primary=diagnostic(error,stage)}
  finally{
+  if(initialGate!==null){
+   try{await db.query('update qik_ingest.collection_gate set collection_authorized=$1 where id',[initialGate])}catch{cleanup.push('collection_gate_restore')}
+   try{
+    if(sourceInitial)await db.query('update public.ingest_sources set outlet_id=$2,feed_url=$3,enabled=$4,collection_enabled=$5 where id=$1',[
+     '1b4c6203-f6dc-4be7-a61e-5ee1c2e2866d',sourceInitial.outlet_id,sourceInitial.feed_url,sourceInitial.enabled,sourceInitial.collection_enabled])
+    else if(sourceInserted)await db.query('update public.ingest_sources set enabled=false,collection_enabled=false where id=$1',['1b4c6203-f6dc-4be7-a61e-5ee1c2e2866d'])
+   }catch{cleanup.push('source_configuration_restore')}
+  }
   for(const c of owned){
    try{await c.query('rollback')}catch{cleanup.push('client_rollback')}
    try{await c.query('reset session authorization');await c.query('reset role')}catch{cleanup.push('client_identity')}
