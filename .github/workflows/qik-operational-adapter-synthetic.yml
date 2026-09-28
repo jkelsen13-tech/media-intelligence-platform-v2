@@ -23,11 +23,11 @@ jobs:
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='c5e0c43f90e844cf30f5fb569465bf009f7b9a15'
+          source='01c970a2d9e37ea889ee792a2ee366fd6b6a52b6'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='2d868ee8f1c20c642cd638ab9c8a825181a92644'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='cd5ca3e9e7dc8a934bfd6ab46cb9e9dc29968cb8'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
           subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-operational-adapter-synthetic.yml']
@@ -146,6 +146,7 @@ jobs:
           done
           exit 1
       - name: Build pinned pgvector 0.8.2 for the actual hosted shape
+        id: vector_build
         timeout-minutes: 5
         shell: bash
         run: |
@@ -173,6 +174,9 @@ jobs:
           MIP_DISPOSABLE_POSTGRES: qik-persistent-install
         run: node --test tests/nativeArcCohortPostgres17.test.mjs
       - name: Qualify joint governed installation as the actual restricted principal
+        # Independent synthetic fixture with its own pristine-cluster guard.
+        # A failed C9 check still fails the combined job and prevents acceptance.
+        if: ${{ !cancelled() && steps.vector_build.outcome == 'success' }}
         timeout-minutes: 5
         env:
           MIP_NATIVE_GOVERNED_INSTALL_DISPOSABLE: synthetic-pg17-only
