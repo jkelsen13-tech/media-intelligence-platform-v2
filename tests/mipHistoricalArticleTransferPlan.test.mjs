@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { fingerprintPayload } from '../scripts/mipLegacyGraphStaging.mjs'
 import { PROJECTS, VERSION, LIMITS, CATEGORIES, FIELD_CONTRACTS,
-  planHistoricalArticles, assertHistoricalRetry } from '../scripts/mipHistoricalArticleTransferPlan.mjs'
+  planHistoricalArticles, assertHistoricalRetry, MANIFEST_HARD_LIMITS, manifestLimits } from '../scripts/mipHistoricalArticleTransferPlan.mjs'
 
 const H = n => n.toString(16).padStart(64,'0')
 const U = n => '00000000-0000-4000-8000-'+n.toString(16).padStart(12,'0')
@@ -132,5 +132,65 @@ test('inherited table keys and non-string table selectors fail closed',()=>{
       project:PROJECTS.nie,table,source_id:H(88),version_sha256:H(89),
     }]
     throwsCode(()=>planHistoricalArticles(y),'unsupported_source_family')
+  }
+})
+
+test('expanded metadata ceiling covers large closure while execution defaults remain unchanged',()=>{
+  assert.equal(MANIFEST_HARD_LIMITS.records,250000)
+  assert.equal(manifestLimits({records:250000,objects:100000,bytes:LIMITS.bytes}).records,250000)
+  assert.equal(manifestLimits({records:160000,objects:100000,bytes:LIMITS.bytes}).records,160000)
+  throwsCode(()=>manifestLimits({records:250001,objects:1,bytes:1}),'manifest_limit')
+  assert.deepEqual(manifestLimits(),{records:10000,objects:10000,bytes:128*1024*1024})
+  assert.equal(LIMITS.page,100)
+})
+test('catalog additions remain source-specific and preserve complete dependency membership',()=>{
+  const x=fixture()
+  const expected={
+    [PROJECTS.nie]:{article_claims:13,article_entities:6,article_entities_canary_sweep_backup_20260809:6,
+      article_lineage_assertions:17,claims:9,claim_evidence_links:6,entities:8,authors:12,outlets:7,story_arcs:16,arc_events:7},
+    [PROJECTS.yhb]:{article_claims:17,article_entities:6,article_extraction_results:11,gdelt_staged_articles:21,
+      claims:9,claim_evidence_links:6,entities:8,authors:12,outlets:7,story_arcs:17,arc_events:8,gdelt_staging_runs:14},
+  }
+  let ordinal=100
+  for(const [project,tables] of Object.entries(expected)) {
+    const root=x.records.find(r=>r.identity.project===project)
+    for(const [table,count] of Object.entries(tables)) {
+      assert.equal(FIELD_CONTRACTS[project][table].length,count)
+      x.records.push({...structuredClone(root),identity:{project,table,source_id:H(ordinal++),version_sha256:H(ordinal++)},
+        dependencies:[structuredClone(root.identity)]})
+    }
+  }
+  const p=planHistoricalArticles(x)
+  assert.equal(p.gaps.length,0);assert.equal(p.executable,false)
+  assert.equal(p.pages.reduce((n,page)=>n+page.rows.length,0),25)
+  assert.ok(p.pages.every(page=>page.rows.length<=100))
+  const retry=structuredClone(x);retry.records.reverse()
+  assert.equal(assertHistoricalRetry(p,retry).manifest_sha256,p.manifest_sha256)
+  assert.deepEqual(FIELD_CONTRACTS[PROJECTS.yhb].article_claims.slice(13),
+    ['evidence_source_field','evidence_excerpt','auditability_state','auditability_note'])
+  assert.equal(FIELD_CONTRACTS[PROJECTS.nie].arc_events.includes('arc_membership_candidate_id'),false)
+})
+test('new graph-adjacent contracts cannot silently expand to unsupported graph families',()=>{
+  for(const project of [PROJECTS.yhb,PROJECTS.nie]) for(const table of ['nodes','arc_membership_candidates']) {
+    assert.equal(Object.hasOwn(FIELD_CONTRACTS[project],table),false)
+    const x=fixture(),root=x.records.find(r=>r.identity.project===project)
+    root.dependencies=[{project,table,source_id:H(777),version_sha256:H(778)}]
+    throwsCode(()=>planHistoricalArticles(x),'unsupported_graph_boundary')
+  }
+  const x=fixture(),root=x.records[0]
+  root.dependencies=[{project:root.identity.project,table:'story_arcs',source_id:H(779),version_sha256:H(780)}]
+  assert.ok(planHistoricalArticles(x).gaps.some(g=>g.code==='dependency_missing'))
+})
+test('unkeyed backup occurrences and cell history never collapse into a single source id',()=>{
+  for(const table of ['article_entities_canary_sweep_backup_20260809','articles_decode_backup_20260726_r3']) {
+    const x=fixture(),root=x.records.find(r=>r.identity.project===PROJECTS.nie)
+    for(const version of [800,801]) x.records.push({...structuredClone(root),
+      identity:{project:PROJECTS.nie,table,source_id:H(700),version_sha256:H(version)},
+      dependencies:[structuredClone(root.identity)]})
+    const p=planHistoricalArticles(x),page=p.pages.find(p=>p.table===table)
+    assert.equal(page.rows.length,2)
+    assert.notEqual(page.rows[0].identity.version_sha256,page.rows[1].identity.version_sha256)
+    x.records.push(structuredClone(x.records.at(-1)))
+    throwsCode(()=>planHistoricalArticles(x),'duplicate_identity')
   }
 })
