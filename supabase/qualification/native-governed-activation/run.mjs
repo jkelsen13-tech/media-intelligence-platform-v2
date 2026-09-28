@@ -7,8 +7,8 @@ import {BASE,CA_SHA256,verifySourceBlob} from '../native-governed-host/adapter.m
 import {validateActivationHostConfig,dispatchActivationHostAction,activationHostActionSatisfied} from './host.mjs'
 const exec=promisify(execFile)
 const CODE_PINS=Object.freeze({
-  "supabase/qualification/native-governed-activation/001_profile.sql": "779640b68e924f0ca0a8e94165ada0daa23b760d",
-  "supabase/qualification/native-governed-activation/prepare.mjs": "03489666d56ab51ee76af867dbc0e65ba1874805",
+  "supabase/qualification/native-governed-activation/001_profile.sql": "59e7dbfa5bb9925b4525aa1e3b3d5003d55610f9",
+  "supabase/qualification/native-governed-activation/prepare.mjs": "7a78b6ca14e74c0510a1cf7acdaaa8ea29f3147a",
   "supabase/qualification/native-governed-activation/activation.mjs": "7f209d3410cd69f7a1ae706ec4714a08515e6500",
   "supabase/qualification/native-governed-activation/audit.mjs": "51d316031c320e55fe1f88e6008bcae236e36bc1",
   "supabase/qualification/native-governed-install/install.mjs": "aa92f9e5003bbf12b19d4cfbf5871da1c496ce1c",

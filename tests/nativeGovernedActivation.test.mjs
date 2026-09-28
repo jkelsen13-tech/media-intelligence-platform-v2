@@ -233,3 +233,16 @@ test('SQLSTATE diagnostics do not convert a lost commit acknowledgement into a r
  assert.equal(db.calls.filter(c=>c.sql==='end').length,1);
  assert.equal(JSON.stringify(r).includes('SYNTHETIC_PRIVATE_COMMIT_'),false);
 });
+
+test('successor Auth check preserves the pinned caller live-session body without widening original EXECUTE',async()=>{
+ const callerBytes=await readFile(new URL('../supabase/qualification/native-comparison-caller/001_admission.sql',import.meta.url));
+ assert.equal(createHash('sha1').update('blob '+callerBytes.length+'\0').update(callerBytes).digest('hex'),'a9428d8b2120514a0d6ee13a53d801dba7b6e060');
+ const caller=callerBytes.toString('utf8'),profile=await readFile(new URL('../'+SQL_PATH,import.meta.url),'utf8');
+ const original=caller.split('create function mip_native_caller.assert_session(')[1].split('end $$;')[0];
+ const successor=profile.split('create function mip_native_activation.auth_current(')[1].split('end $f$;')[0];
+ const checks=original.slice(original.indexOf(' if u is null'));
+ assert.equal(successor.slice(successor.indexOf(' if u is null')),checks);
+ assert.ok(successor.indexOf('publication_fence where id for share')<successor.indexOf('select x.not_after'));
+ assert.equal(successor.includes('perform mip_native_caller.assert_session'),false);
+ assert.match(successor,/u uuid:=\(a->>'subject'\)::uuid;session_id uuid:=auth_session/);
+});

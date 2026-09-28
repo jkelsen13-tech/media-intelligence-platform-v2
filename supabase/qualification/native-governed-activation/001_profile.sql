@@ -202,10 +202,18 @@ grant usage,create on schema mip_native_activation to mip_efta_auth_session_owne
 set role mip_efta_auth_session_owner_v1;
 create function mip_native_activation.auth_current(a jsonb,auth_session uuid,token_exp bigint) returns void
 language plpgsql security definer set search_path='' as $f$
+declare deadline timestamptz;u uuid:=(a->>'subject')::uuid;session_id uuid:=auth_session;
 begin
  -- Match the existing publication-before-Auth lock order.
  perform 1 from mip_cutover_authority.publication_fence where id for share;
- perform mip_native_caller.assert_session((a->>'subject')::uuid,auth_session,token_exp);
+ -- Original caller revokes its Auth owner's own EXECUTE on assert_session.
+ -- Preserve that ACL; perform the identical live-session check with existing column rights.
+ if u is null or session_id is null or token_exp is null or token_exp<1 or token_exp>253402300799
+ or to_timestamp(token_exp)<=clock_timestamp() then raise exception 'native_caller_denied';end if;
+ select x.not_after into deadline from auth.sessions x
+ where x.id=session_id and x.user_id=u for share;
+ if not found or(deadline is not null and deadline<=clock_timestamp())
+ or to_timestamp(token_exp)<=clock_timestamp() then raise exception 'native_caller_denied';end if;
 end $f$;
 reset role;
 revoke usage,create on schema mip_native_activation from mip_efta_auth_session_owner_v1;

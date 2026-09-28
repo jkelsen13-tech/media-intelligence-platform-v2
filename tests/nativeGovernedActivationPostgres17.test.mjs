@@ -71,6 +71,23 @@ export async function runNativeActivationQualification(t,f){
   const rows=(await query(config,'select count(*)::int n from mip_native_activation.revisions')).rows[0]
   assert.equal(rows.n,0)
  })
+ await t.test('successor Auth helper uses existing live-session rights while original owner EXECUTE stays revoked',async()=>{
+  const rights=(await query(config,`select
+   has_schema_privilege('mip_efta_auth_session_owner_v1','mip_native_caller','USAGE') schema_usage,
+   has_function_privilege('mip_efta_auth_session_owner_v1','mip_native_caller.assert_session(uuid,uuid,bigint)','EXECUTE') original_execute,
+   (select p.proowner='mip_efta_auth_session_owner_v1'::regrole from pg_proc p
+    where p.oid='mip_native_activation.auth_current(jsonb,uuid,bigint)'::regprocedure) correct_owner`)).rows[0]
+  assert.deepEqual(rights,{schema_usage:true,original_execute:false,correct_owner:true})
+  const good=normalizeActivationRequest(pending)
+  const check=(authority,session,expiry)=>query(config,
+   'select mip_native_activation.auth_current($1::jsonb,$2::uuid,$3::bigint)',
+   [JSON.stringify(authority),session,expiry])
+  await check(good.authority,good.ephemeral.authSession,good.ephemeral.tokenExp)
+  await assert.rejects(check({...good.authority,subject:uuid(999)},good.ephemeral.authSession,good.ephemeral.tokenExp))
+  await assert.rejects(check(good.authority,uuid(999),good.ephemeral.tokenExp))
+  await assert.rejects(check(good.authority,good.ephemeral.authSession,1))
+  await assert.rejects(check(good.authority,null,good.ephemeral.tokenExp))
+ })
  await t.test('phase1 provisions only admin/gateway/broker after real current Auth/can_decide checks',async()=>{
   const bad=structuredClone(pending);bad.revision=uuid(901);bad.ephemeral.authSession=uuid(999)
   const denied=await transitionNativeActivation(config,bad,read)

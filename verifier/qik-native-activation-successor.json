@@ -56,11 +56,11 @@
   "sources": [
     {
       "path": "supabase/qualification/native-governed-activation/001_profile.sql",
-      "git_blob": "779640b68e924f0ca0a8e94165ada0daa23b760d"
+      "git_blob": "59e7dbfa5bb9925b4525aa1e3b3d5003d55610f9"
     },
     {
       "path": "supabase/qualification/native-governed-activation/prepare.mjs",
-      "git_blob": "03489666d56ab51ee76af867dbc0e65ba1874805"
+      "git_blob": "7a78b6ca14e74c0510a1cf7acdaaa8ea29f3147a"
     },
     {
       "path": "supabase/qualification/native-governed-activation/activation.mjs",
@@ -80,11 +80,11 @@
     },
     {
       "path": "tests/nativeGovernedActivation.test.mjs",
-      "git_blob": "1e41dc0f37d923f955d1c084ada87951d2401988"
+      "git_blob": "823883da8b0e75568a6c94f4fa6eaa83fb67b26e"
     },
     {
       "path": "tests/nativeGovernedActivationPostgres17.test.mjs",
-      "git_blob": "a589c9c6eb40ff3086aa5de3faf78396da3c60fc"
+      "git_blob": "e02d64534d5d36e2b4705771e75f255fd2a630e3"
     },
     {
       "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "414ae72bec78235bcb615f9338f9090abad6be1f"
+      "git_blob": "abec4ee461272f5714404027aefe0560afe1ca44"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -140,11 +140,15 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/README.md",
-      "git_blob": "fd4883a478034fb9e661808f34b42bd46e8a8a8b"
+      "git_blob": "c3829fd3c2b1857ed72c7c864997dabab7fb56b2"
     },
     {
       "path": ".github/workflows/qik-native-installer-held.yml",
       "git_blob": "3e64ec316ec90d5ca74679e385bdbe164b5bd58e"
+    },
+    {
+      "path": "supabase/qualification/native-comparison-caller/001_admission.sql",
+      "git_blob": "a9428d8b2120514a0d6ee13a53d801dba7b6e060"
     }
   ],
   "replaced_blobs": [
@@ -199,26 +203,35 @@
     "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
-  "integration_parent": "13ebf786fbd1a296c4f56d7d07bc9cda41802d45",
+  "integration_parent": "f3b9f2bdd24e44b3f98f8371a37d308f4fb7248e",
   "qualification": {
-    "status": "PENDING-TRANSITION DIAGNOSTIC AUTHORED — NOT RUN",
+    "status": "AUTH-OWNER PERMISSION DEPENDENCY REPAIR AUTHORED — NOT RUN",
     "synthetic_only": true,
     "actual_qik_installation": false,
     "actual_material": false,
-    "prior_failed_run": 36469939409,
-    "prior_failed_job": 109089348043,
-    "prior_failed_candidate": "13ebf786fbd1a296c4f56d7d07bc9cda41802d45",
+    "prior_failed_run": 36471380059,
+    "prior_failed_job": 109094202914,
+    "prior_failed_candidate": "f3b9f2bdd24e44b3f98f8371a37d308f4fb7248e",
     "prior_result": {
-      "source_pass": 51,
+      "source_pass": 53,
       "ordered_pg_pass": 58,
       "ordered_pg_fail": 9,
       "atomic_pg_pass": 2,
       "cleanup": "success",
       "source_clean_verification": "skipped"
     },
-    "metadata_audits": "Actual independent auditor and composed host passed",
-    "first_consequential_failure": "First pending transition returned unverified; later lifecycle failures cascade",
-    "diagnostic": "Fixed transition phase and validated SQLSTATE only; no permission/timeout/authority relaxation"
+    "first_failure": {
+      "phase": "transition",
+      "sqlstate": "42501",
+      "transaction": "not_committed",
+      "connection_cleanup_verified": true
+    },
+    "repair": "Identical pinned original live Auth session validation under same Auth owner and existing column rights, no original EXECUTE grant or ACL change",
+    "auth_check_dependency": {
+      "path": "supabase/qualification/native-comparison-caller/001_admission.sql",
+      "git_blob": "a9428d8b2120514a0d6ee13a53d801dba7b6e060"
+    },
+    "qualification_is_acceptance": false
   },
   "host_route": {
     "existing_environment": "qik-forward-controlled",
