@@ -1,6 +1,6 @@
 # Bounded historical capacity and role authority qualification
 
-SOURCE CANDIDATE — TESTS AUTHORED, NOT RUN.
+SOURCE CANDIDATE — 33 AFFECTED SYNTHETIC CHECKS PASSED; NOT HOSTED QUALIFIED.
 No qik installation, hosted capacity, source connection, or real-data batch is established by this package.
 
 Origin: cc8f1b19171917351548362f82f03fa2b1684831 / tree86a7df4a95894217e4a228e9eb918985a7e99cd9.
@@ -84,3 +84,25 @@ Synthetic metadata inventory returned generation order against the original cano
 The new fixture uses original planHistoricalArticles(...).manifest before measurement;32768records and budgets unchanged.
 Two new ordinary regression tests cover exact canonical inventory and finite sanitized failure diagnostics.
 Required frozen scope/hosted fit remain unproved. Repairs authored; NOT RUN as of this source candidate.
+
+## Repaired qualification receipt
+
+Candidate0d6c4bab5706113bedccf163a4f8c17af24357f6 / tree115353150dc06845d2a6e828a72e9b6b09802eeb,
+sourcef71c40ad872e3e88285f96a05200f311bacdeee7 / treed7c45f3020d7e6cb1752f13f066d4c90e47207b7,
+run36460265259/job109056778274 succeeded: groups5,14,14 =33PASS,0FAIL,0SKIP.
+Both actual historical profiles, frozen Deno lock/source invariance and owned cleanup passed.
+Unchanged role authority4PASS from run36459391029/job109053827943 was reused, not rerun.
+
+Standalone cold-process observations, bootstrap / closed-ordinary respectively:
+- Metadata32768records/two invocations: CPU4680/4730ms, peakRSS580460544/580800512bytes.
+- Transfer8MiB-plus original unit: CPU3820/3800ms, peakRSS739758080/666009600bytes.
+- Refusal had zero body queries; retry had zero new material/unit commits and preserved exact checkpoint.
+- Independent source custody/hash/byte/unit/mapping/checkpoint evidence and session cleanup passed.
+
+These measurements EXCEED documented Edge CPU/RSS thresholds. They are not hosted failure receipts,
+but the current Edge adapter cannot be admitted as ready from this evidence.
+Actual frozen scope, largest required unit, hosted Auth/TLS/Vault and secure source connections remain unproved.
+A dedicated protected migration job on the existing GitHub Actions service is a proposed named alternative.
+Its receiving real article material requires a separate explicit owner authorization; the source/synthetic
+qualification job remains prohibited from receiving real article material.
+Real article batches completed:0. No source data or predecessor project was deleted.

@@ -1,13 +1,13 @@
 {
   "version": "mip.history.capacity-and-role-authority.source.v1",
-  "status": "SOURCE CANDIDATE — QUALIFICATION PENDING — NOT HOSTED QUALIFIED",
+  "status": "SOURCE/SYNTHETIC QUALIFIED — NOT HOSTED QUALIFIED — REAL RECEIVING ROUTE UNAPPROVED",
   "origin": {
     "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
   "parent": {
-    "commit": "583fbda16c8db989539886125dc91e62f991a610",
-    "tree": "749adf5d14ccc1e02d8139eb47629be3035e3235"
+    "commit": "0d6c4bab5706113bedccf163a4f8c17af24357f6",
+    "tree": "115353150dc06845d2a6e828a72e9b6b09802eeb"
   },
   "authorization": {
     "record": "Continuation consolidation amendment and minimum qik-hosted migration executor amendment",
@@ -21,7 +21,7 @@
     "tests/historicalQikCapacityMetrics.test.mjs": "f3290b093e29c424d29374e7fccf4683a21cf1d6",
     "tests/qikRoleLifecyclePostgres17.test.mjs": "83705b16aceca48a4675d48bff7e84cde14076dd",
     "tests/historicalQikExecutorPostgres17.test.mjs": "7d9ba542c49cab82377bc8bbcd75afff8741769d",
-    "supabase/qualification/historical-qik-executor/capacity-qualification/README.md": "6f7f05e2d156b8fafa452fb233e74df0c64e81de"
+    "supabase/qualification/historical-qik-executor/capacity-qualification/README.md": "fd42d7f6db5bca7ac7b7ad6b41049a87aaf515b5"
   },
   "unchanged_dependencies": {
     "original_planner": "ad30cb603757888840e737694b333c3b6ae234e1",
@@ -34,7 +34,7 @@
     "native_manifest": "f5418a93bf74a922f017abedf6585ed6ffc759eb"
   },
   "qualification": {
-    "status": "REPAIR AUTHORED — NOT RUN",
+    "status": "33PASS — 0FAIL — 0SKIP — CLEANUP VERIFIED",
     "routes": [
       "Existing source/synthetic GitHub Ubuntu22.04 owned loopback PostgreSQL17.6",
       "Pinned standalone Deno2.5.2; not Supabase Edge"
@@ -79,6 +79,270 @@
       "fail": 0,
       "skip": 0,
       "blob": "83705b16aceca48a4675d48bff7e84cde14076dd"
+    },
+    "receipt": {
+      "candidate": "0d6c4bab5706113bedccf163a4f8c17af24357f6",
+      "tree": "115353150dc06845d2a6e828a72e9b6b09802eeb",
+      "source": "f71c40ad872e3e88285f96a05200f311bacdeee7",
+      "source_tree": "d7c45f3020d7e6cb1752f13f066d4c90e47207b7",
+      "run": 36460265259,
+      "job": 109056778274,
+      "conclusion": "success",
+      "groups": [
+        5,
+        14,
+        14
+      ],
+      "pass": 33,
+      "fail": 0,
+      "skip": 0,
+      "cleanup": "success",
+      "lock_and_source_unchanged": true,
+      "environment": {
+        "host": "Existing source/synthetic-only GitHub Ubuntu22.04 owned loopback SCRAM",
+        "postgres": "17.6",
+        "postgres_engine": 170006,
+        "node": "22.14.0",
+        "deno": "2.5.2"
+      },
+      "profiles": [
+        {
+          "status": "passed",
+          "scope": "synthetic_measurement_only",
+          "receipts": [
+            {
+              "status": "passed",
+              "scope": "metadata_two_invocations_one_process",
+              "records": 32768,
+              "units": 330,
+              "inventory_reads": 8,
+              "manifest_sha256": "a38e5f28c6a3736e79bf122e9d9518dc55913aa005725a7e1b5e7d5b4f3535e7",
+              "deterministic_retry": true,
+              "hosted_edge_qualified": false,
+              "measurement": {
+                "user_cpu_ms": 4050,
+                "system_cpu_ms": 630,
+                "peak_rss_bytes": 580460544,
+                "wall_ms": 3950,
+                "source": "GNU time wait4; Linux KiB RSS",
+                "scope": "whole fresh Deno process including startup,imports,stdin,connect,invocation,close",
+                "edge_threshold_exceeded": true
+              }
+            },
+            {
+              "status": "passed",
+              "scope": "refuse",
+              "prefix_verified": 10,
+              "state": "unit_exceeds_budget",
+              "verified": 0,
+              "material_bytes": 0,
+              "pending_unit_id": "4840b69b522d6b91fa7089af3e3dd3e01732962fde8d9e7abecf477e9f03c47d",
+              "pending_unit_bytes": 8390062,
+              "checkpoint_sha256": "46487287cf547de935881512776f4924dd9967d9a1e4fbec86d947b70959cab2",
+              "manifest_sha256": "79019ae099008fbc165ff328f7bdcbacac1b15a98b34166c79fc0af60b1a0446",
+              "body_queries": 0,
+              "hosted_edge_qualified": false,
+              "measurement": {
+                "user_cpu_ms": 150,
+                "system_cpu_ms": 40,
+                "peak_rss_bytes": 85749760,
+                "wall_ms": 230,
+                "source": "GNU time wait4; Linux KiB RSS",
+                "scope": "whole fresh Deno process including startup,imports,stdin,connect,invocation,close",
+                "edge_threshold_exceeded": false
+              }
+            },
+            {
+              "status": "passed",
+              "scope": "transfer",
+              "prefix_verified": 0,
+              "state": "readback_verified",
+              "verified": 6,
+              "material_bytes": 8391208,
+              "pending_unit_id": null,
+              "pending_unit_bytes": null,
+              "checkpoint_sha256": "e251290169afa999c78063afb05984a807c8fb4a577a66412dd316a5dbf750c3",
+              "manifest_sha256": "79019ae099008fbc165ff328f7bdcbacac1b15a98b34166c79fc0af60b1a0446",
+              "body_queries": 18,
+              "hosted_edge_qualified": false,
+              "measurement": {
+                "user_cpu_ms": 3280,
+                "system_cpu_ms": 540,
+                "peak_rss_bytes": 739758080,
+                "wall_ms": 3700,
+                "source": "GNU time wait4; Linux KiB RSS",
+                "scope": "whole fresh Deno process including startup,imports,stdin,connect,invocation,close",
+                "edge_threshold_exceeded": true
+              }
+            },
+            {
+              "status": "passed",
+              "scope": "retry",
+              "prefix_verified": 0,
+              "state": "readback_verified",
+              "verified": 0,
+              "material_bytes": 0,
+              "pending_unit_id": null,
+              "pending_unit_bytes": null,
+              "checkpoint_sha256": "e251290169afa999c78063afb05984a807c8fb4a577a66412dd316a5dbf750c3",
+              "manifest_sha256": "79019ae099008fbc165ff328f7bdcbacac1b15a98b34166c79fc0af60b1a0446",
+              "body_queries": 0,
+              "hosted_edge_qualified": false,
+              "measurement": {
+                "user_cpu_ms": 90,
+                "system_cpu_ms": 30,
+                "peak_rss_bytes": 83660800,
+                "wall_ms": 130,
+                "source": "GNU time wait4; Linux KiB RSS",
+                "scope": "whole fresh Deno process including startup,imports,stdin,connect,invocation,close",
+                "edge_threshold_exceeded": false
+              }
+            },
+            {
+              "scope": "independent_sql_readback",
+              "records": 18,
+              "largest_unit_bytes": 8390062,
+              "manifest_bytes": 14151,
+              "payload_digest": "c719a8763d3005002c1aae6a200129dbe55422bce45dec43814c8e15de4015bb",
+              "hosted_edge_qualified": false
+            }
+          ],
+          "session_cleanup_observed": true,
+          "hosted_edge_qualified": false,
+          "required_frozen_scope_fit": "unproved",
+          "limitations": [
+            "GNU time has centisecond CPU resolution; whole cold process is not hosted request CPU",
+            "metadata fixture exercises real engine planning/inventory/refusal twice; not PostgreSQL mapping at 32768 rows",
+            "8MiB-plus unit is measured; 128MiB unit and actual frozen largest unit remain unmeasured",
+            "existing fictional fixture admission is a branch prerequisite, never measured route qualification",
+            "acquisition/seal, hosted Auth/TLS/Vault, actual topology and object bodies are excluded"
+          ]
+        },
+        {
+          "status": "passed",
+          "scope": "synthetic_measurement_only",
+          "receipts": [
+            {
+              "status": "passed",
+              "scope": "metadata_two_invocations_one_process",
+              "records": 32768,
+              "units": 330,
+              "inventory_reads": 8,
+              "manifest_sha256": "a38e5f28c6a3736e79bf122e9d9518dc55913aa005725a7e1b5e7d5b4f3535e7",
+              "deterministic_retry": true,
+              "hosted_edge_qualified": false,
+              "measurement": {
+                "user_cpu_ms": 4090,
+                "system_cpu_ms": 640,
+                "peak_rss_bytes": 580800512,
+                "wall_ms": 3970,
+                "source": "GNU time wait4; Linux KiB RSS",
+                "scope": "whole fresh Deno process including startup,imports,stdin,connect,invocation,close",
+                "edge_threshold_exceeded": true
+              }
+            },
+            {
+              "status": "passed",
+              "scope": "refuse",
+              "prefix_verified": 10,
+              "state": "unit_exceeds_budget",
+              "verified": 0,
+              "material_bytes": 0,
+              "pending_unit_id": "bf6e95ee9df5bb8ce65ecc0baa71cc32cbf1882781377432e8843d994d1098f3",
+              "pending_unit_bytes": 8390062,
+              "checkpoint_sha256": "e590b1c7aa74d75f3936695d378d00f7c36916caac1dc448f57cbb00edd45174",
+              "manifest_sha256": "04f2f7f46520ab18914d0f0ba985e823628cb2d32f97d8138d2bc71715b6d918",
+              "body_queries": 0,
+              "hosted_edge_qualified": false,
+              "measurement": {
+                "user_cpu_ms": 150,
+                "system_cpu_ms": 50,
+                "peak_rss_bytes": 85630976,
+                "wall_ms": 230,
+                "source": "GNU time wait4; Linux KiB RSS",
+                "scope": "whole fresh Deno process including startup,imports,stdin,connect,invocation,close",
+                "edge_threshold_exceeded": false
+              }
+            },
+            {
+              "status": "passed",
+              "scope": "transfer",
+              "prefix_verified": 0,
+              "state": "readback_verified",
+              "verified": 6,
+              "material_bytes": 8391208,
+              "pending_unit_id": null,
+              "pending_unit_bytes": null,
+              "checkpoint_sha256": "377d63f83e78d71372b02ea9d7c7a534e07acee72827acba3cb78f04fc42f469",
+              "manifest_sha256": "04f2f7f46520ab18914d0f0ba985e823628cb2d32f97d8138d2bc71715b6d918",
+              "body_queries": 18,
+              "hosted_edge_qualified": false,
+              "measurement": {
+                "user_cpu_ms": 3230,
+                "system_cpu_ms": 570,
+                "peak_rss_bytes": 666009600,
+                "wall_ms": 3710,
+                "source": "GNU time wait4; Linux KiB RSS",
+                "scope": "whole fresh Deno process including startup,imports,stdin,connect,invocation,close",
+                "edge_threshold_exceeded": true
+              }
+            },
+            {
+              "status": "passed",
+              "scope": "retry",
+              "prefix_verified": 0,
+              "state": "readback_verified",
+              "verified": 0,
+              "material_bytes": 0,
+              "pending_unit_id": null,
+              "pending_unit_bytes": null,
+              "checkpoint_sha256": "377d63f83e78d71372b02ea9d7c7a534e07acee72827acba3cb78f04fc42f469",
+              "manifest_sha256": "04f2f7f46520ab18914d0f0ba985e823628cb2d32f97d8138d2bc71715b6d918",
+              "body_queries": 0,
+              "hosted_edge_qualified": false,
+              "measurement": {
+                "user_cpu_ms": 100,
+                "system_cpu_ms": 30,
+                "peak_rss_bytes": 83869696,
+                "wall_ms": 130,
+                "source": "GNU time wait4; Linux KiB RSS",
+                "scope": "whole fresh Deno process including startup,imports,stdin,connect,invocation,close",
+                "edge_threshold_exceeded": false
+              }
+            },
+            {
+              "scope": "independent_sql_readback",
+              "records": 18,
+              "largest_unit_bytes": 8390062,
+              "manifest_bytes": 14151,
+              "payload_digest": "c719a8763d3005002c1aae6a200129dbe55422bce45dec43814c8e15de4015bb",
+              "hosted_edge_qualified": false
+            }
+          ],
+          "session_cleanup_observed": true,
+          "hosted_edge_qualified": false,
+          "required_frozen_scope_fit": "unproved",
+          "limitations": [
+            "GNU time has centisecond CPU resolution; whole cold process is not hosted request CPU",
+            "metadata fixture exercises real engine planning/inventory/refusal twice; not PostgreSQL mapping at 32768 rows",
+            "8MiB-plus unit is measured; 128MiB unit and actual frozen largest unit remain unmeasured",
+            "existing fictional fixture admission is a branch prerequisite, never measured route qualification",
+            "acquisition/seal, hosted Auth/TLS/Vault, actual topology and object bodies are excluded"
+          ]
+        }
+      ],
+      "hosted_edge_qualified": false,
+      "real_transfer_records": 0,
+      "disposition": "Measurement and semantic assertions passed; observed CPU/RSS exceed documented Edge thresholds. Current Edge route cannot be admitted as ready. Full frozen real scope and hosted behavior remain unproved.",
+      "reused_role_proof": {
+        "candidate": "583fbda16c8db989539886125dc91e62f991a610",
+        "run": 36459391029,
+        "job": 109053827943,
+        "pass": 4,
+        "fail": 0,
+        "skip": 0,
+        "blob": "83705b16aceca48a4675d48bff7e84cde14076dd"
+      }
     }
   },
   "retention": {
@@ -100,5 +364,11 @@
     "Hosted Auth/TLS/Vault and secure source/destination connections",
     "Application active-profile final effective permission contract",
     "Real article transfer, content custody and restore"
-  ]
+  ],
+  "receiving_route": {
+    "current_edge_admitted": false,
+    "alternative": "Dedicated protected qik-history-migration job on existing GitHub Actions service",
+    "real_material_authorization": "PENDING explicit owner decision; source/synthetic GitHub does not receive actual material",
+    "no_actual_material_transmitted": true
+  }
 }
