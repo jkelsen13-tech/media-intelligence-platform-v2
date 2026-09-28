@@ -52,6 +52,7 @@ const EXACT_DIAGNOSTICS=Object.freeze([
  "atomic_c3_drift",
  "atomic_creator_owned_objects",
  "atomic_residual_memberships",
+ "atomic_catalog_inspection_permissions",
  "atomic_audit_receipt_drift",
  "atomic_audit_probe",
  "atomic_audit_readback_inflight",
@@ -106,6 +107,7 @@ const SHA=/^[a-f0-9]{64}$/
 const ID=/^[a-f0-9]{32}$/
 const LOGIN=/^[a-z][a-z0-9_]{0,62}$/
 const COMPATIBILITY_ROLES=Object.freeze(['mip_kernel_reader_compat_v1','mip_kernel_producer_compat_v1','mip_kernel_worker_compat_v1','mip_kernel_scheduler_compat_v1','mip_kernel_selector_compat_v1','mip_kernel_publisher_compat_v1','mip_kernel_scorer_compat_v1'].sort())
+const CATALOG_INSPECTION_SCHEMAS=Object.freeze(['mip_comparison_kernel_v1','mip_cutover_authority','mip_identity'])
 const schemas=RESERVED_SCHEMAS.filter(x=>x!=='comparison_qualification')
 const digest=x=>createHash('sha256').update(x).digest('hex')
 const quote=x=>{if(!LOGIN.test(x))throw Error('atomic_identifier');return '"'+x+'"'}
@@ -163,7 +165,7 @@ export async function prepareAtomicInstall(readPinnedSource){
  }
  // Full original attribute/ownership/membership assertions remain unchanged.
  const plan={version:INSTALL_VERSION,target_project:PROJECT,source_commit:compiled.source_commit,
-  doj_source_commit:DOJ_SOURCE_COMMIT,roles:[...roles.entries()].sort(([a],[b])=>a.localeCompare(b)),
+  doj_source_commit:DOJ_SOURCE_COMMIT,catalog_inspection_schemas:[...CATALOG_INSPECTION_SCHEMAS],roles:[...roles.entries()].sort(([a],[b])=>a.localeCompare(b)),
   body,dojBody,permissions,closure:closure.sql,assertions,dojAssertions,compatibility:compatibility.sql}
  return {...plan,manifest_sha256:digest(JSON.stringify(plan))}
 }
@@ -359,6 +361,11 @@ export async function installComparisonAtomic(config,readPinnedSource){
    [c.operationId,plan.manifest_sha256,baseline,c.collectorSource,c.auditLogin,'installed_disabled_audit_pending'])
   phase='c3_preservation'
   if(await c3(db,c)!==baseline)refuse('c3_drift')
+  // Explicit trusted-administrator name resolution survives isolated-owner cleanup.
+  // USAGE grants no table access, function execution, CREATE or owner membership.
+  phase='catalog_inspection_permissions'
+  for(const schema of plan.catalog_inspection_schemas)
+   await db.query('grant usage on schema '+quote(schema)+' to '+quote(c.expectedLogin))
   phase='temporary_creator_ownership'
   const creatorOwns=(await db.query("select exists(select 1 from pg_shdepend where refclassid='pg_authid'::regclass and refobjid=$1::regrole and deptype='o') owns_objects",[c.creator])).rows[0]
   if(creatorOwns?.owns_objects!==false)refuse('creator_owned_objects')
@@ -374,6 +381,12 @@ export async function installComparisonAtomic(config,readPinnedSource){
   if(edges?.n!==0)refuse('residual_memberships')
   phase='audit_secret_boundary'
   await db.query(auditBoundarySQL(c))
+  phase='catalog_inspection_assertions'
+  const inspection=(await db.query(
+   "select count(*)::integer n,bool_and(n.nspowner='mip_cutover_schema_owner_v1'::regrole and has_schema_privilege(current_user,n.oid,'USAGE') and not has_schema_privilege(current_user,n.oid,'CREATE') and "+
+   "(select count(*)=1 and bool_and(a.privilege_type='USAGE' and not a.is_grantable) from aclexplode(n.nspacl) a where a.grantee=current_user::regrole)) valid "+
+   "from pg_namespace n where n.nspname=any($1::text[])",[plan.catalog_inspection_schemas])).rows[0]
+  if(inspection?.n!==3||inspection.valid!==true)refuse('catalog_inspection_permissions')
   phase='final_assertions'
   await db.query(plan.assertions)
   phase='final_doj_assertions'
