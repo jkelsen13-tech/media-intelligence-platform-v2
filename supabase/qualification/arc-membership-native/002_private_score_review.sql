@@ -158,13 +158,66 @@ begin
   'review',case when head.id is null then null else jsonb_build_object('review_id',head.id,'version',head.version,'state',head.state,'reason',head.reason) end,
   'approval_allowed',false,'publication_allowed',false,'attached',false);
 end $reader$;
+-- Only the protected DAG walker supplies this stored attachment record.
+-- This check deliberately does not call read_current_score, whose full-set
+-- equality must fail after any new private member.
+create function mip_arc_native.assert_attachment_score(s uuid,origin_record jsonb) returns void
+language plpgsql set search_path='' as $origin_score$
+declare saved mip_arc_native.generations;score mip_arc_native.private_scores;head mip_arc_native.private_reviews;
+begin
+ select * into saved from mip_arc_native.generations where scope=s and id=(origin_record->>'generation_id')::uuid;
+ select * into score from mip_arc_native.private_scores where scope=s and generation=saved.id;
+ if not found or score.output_hash is distinct from origin_record->>'output_hash'
+ or saved.expanded_hash is distinct from origin_record->>'input_hash'
+ or saved.manifest_hash is distinct from origin_record->>'manifest_hash'
+ then raise exception 'arc_native_attachment_score_stale';end if;
+ perform mip_arc_native.validate_score(score.output,saved);
+ select * into head from mip_arc_native.private_reviews where scope=s and generation=saved.id order by version desc limit 1;
+ if head.id is distinct from(origin_record->>'review_id')::uuid or head.state is distinct from 'accepted_private'
+ or head.output_hash is distinct from score.output_hash or score.output->'score'->>'decision' is distinct from 'candidate'
+ then raise exception 'arc_native_attachment_review_stale';end if;
+end $origin_score$;
+create function mip_arc_native.prepare_attachment_input(s uuid,g uuid,h text,oh text,r uuid)
+returns jsonb language plpgsql security definer set search_path='' as $attachment_input$
+declare checked jsonb;saved mip_arc_native.generations;c mip_arc_native.cohorts;
+begin
+ perform mip_arc_native.context(s,true);
+ checked:=mip_arc_native.read_current_score(s,g,h,oh,r);
+ if checked->'review'->>'state' is distinct from 'accepted_private'
+ or checked->'output'->'score'->>'decision' is distinct from 'candidate'
+ then raise exception 'arc_native_attachment_review_stale';end if;
+ select * into strict saved from mip_arc_native.generations where scope=s and id=g;
+ select * into strict c from mip_arc_native.cohorts where scope=s and id=saved.cohort;
+ if not exists(select 1 from public.articles x where x.id=c.article and x.arc_id is null)
+ then raise exception 'arc_native_attachment_public_assignment';end if;
+ return jsonb_build_object('scope',s,'generation_id',g,'candidate_id',c.candidate,'article_id',c.article,
+ 'arc_id',c.arc,'review_id',r,'input_hash',h,'output_hash',oh,'manifest_hash',saved.manifest_hash,
+ 'dependency_head_ids',c.membership_binding->'private_head_ids',
+ 'private_arc_revision',c.membership_binding->'private_arc_revision','private_set_digest',c.membership_binding->'private_set_digest',
+ 'approval_allowed',false,'publication_allowed',false,'attached',false);
+end $attachment_input$;
+create function mip_arc_native.validate_attachment_set(s uuid,arc_key uuid,head_ids uuid[])
+returns jsonb language plpgsql security definer set search_path='' as $attachment_set$
+declare result jsonb;members jsonb;actual_ids uuid[];
+begin
+ perform mip_arc_native.context(s,false);
+ result:=mip_arc_native.expand_batch(s,arc_key,null::mip_arc_native.cohorts,null);
+ members:=result->'membership';
+ select coalesce(array_agg(value::uuid order by value::uuid),'{}'::uuid[]) into actual_ids
+ from jsonb_array_elements_text(members->'private_head_ids');
+ if head_ids is distinct from actual_ids then raise exception 'arc_native_attachment_set_stale';end if;
+ return jsonb_build_object('scope',s,'arc_id',arc_key,'arc_revision',members->'private_arc_revision',
+ 'head_ids',members->'private_head_ids','article_ids',members->'private_article_ids',
+ 'public_member_ids',members->'public_member_ids','member_ids',members->'member_ids',
+ 'set_digest',members->'private_set_digest','publication_allowed',false);
+end $attachment_set$;
 reset role;
 -- Default ACLs apply only to new objects; clean them before granting wrappers.
 do $acl$
 declare r record;a record;
 begin
  for r in select oid,oid::regprocedure sig,proowner from pg_proc where pronamespace='mip_arc_native'::regnamespace
- and proname in('exact_keys','validate_score','complete_score','review_score','read_current_score') loop
+ and proname in('exact_keys','validate_score','complete_score','review_score','read_current_score','assert_attachment_score','prepare_attachment_input','validate_attachment_set') loop
   execute format('revoke all on function %s from public',r.sig);
   for a in select distinct grantee from aclexplode((select proacl from pg_proc where oid=r.oid))
    where grantee<>r.proowner and grantee<>0 loop

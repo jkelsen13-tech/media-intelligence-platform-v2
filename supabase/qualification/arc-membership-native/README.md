@@ -3,8 +3,9 @@
 
 Source-only successor to the pinned recovered arc scorer
 `08ce23092cfbbe8dcb7eb7c26cf6e3943e177531`. Nothing in this directory installs
-itself, retrieves material, attaches an article, approves publication, enables a
-release policy, or claims production qualification.
+itself, retrieves material, approves publication, enables a release policy, or claims
+production qualification. The separately reviewed 003 adds explicit private
+membership only; it does not mutate public articles.arc_id or publish.
 
 The supported unit is one reviewed candidate and its complete arc membership,
 up to 31 members plus the candidate. Historical public members without original
@@ -20,7 +21,8 @@ collector/publication contracts (004 and 006 with their original dependency
 closure), then entity-resolution/001_mentions.sql, native-capture-fields/003_native_fields.sql,
 candidate-review/004_candidate_review.sql, qik-source/001_storage.sql,
 canonical-admission/005_canonical_admission.sql, qik-source/002_governed_writer.sql,
-and finally native/001_governed_cohort.sql then native/002_private_score_review.sql. The new canonical 005 must include the private complete-cohort
+and finally native/001_governed_cohort.sql, native/002_private_score_review.sql,
+then native/003_governed_attachment.sql. The new canonical 005 must include the private complete-cohort
 prelock and its capture/field/span byte receipt. The installer is a separately
 qualified protected database principal; source creation is not installation.
 
@@ -124,9 +126,10 @@ Actual PG17.6 invocation and environment are in
 `tests/nativeArcCohortPostgres17.test.mjs`; use only its guarded disposable
 database, real declared dependencies and cleanup, never a hosted URL.
 
-No automatic/manual public attachment is implemented here. Remaining integration
-is the qik guarded attachment writer tied to this exact current generation,
-current publication predicates and the actual atomic attachment dependencies.
+No automatic/manual public attachment is implemented here. The 003 successor
+implements explicitly reviewed private membership through the exact current
+score and source contracts below. Public publication/attachment remains separate;
+the recovered automatic release-policy path stays disabled.
 Historical `20260813_atomic_arc_attach.sql` alone does not supply those gates.
 The legacy approval function's weak ACL and release policy are not copied.
 Private actual-material connection, protected worker/reviewer provisioning,
@@ -181,7 +184,7 @@ There are ten new durable tables. The schema is private; none is a browser API.
 | scalar_access | scope, binding, allowed |
 | extraction_reviews | scope, id, article, capture, content_hash, version, predecessor, state, reason, article_set_digest, principal |
 | selection_policies | scope, id, version, predecessor, cutoff, active, max_members, max_fields, max_total_bytes, max_hash_work_bytes, principal |
-| cohorts | scope, id, candidate, candidate_revision, article, arc, members, bindings, extraction_reviews, policy, native_revision_digest, principal |
+| cohorts | scope, id, candidate, candidate_revision, article, arc, members, bindings, extraction_reviews, policy, native_revision_digest, membership_binding, principal |
 | cohort_revocations | scope, cohort, id, principal |
 | generations | scope, id, cohort, manifest, manifest_hash, expanded_hash |
 | source_revisions | sequence, source_contract, relation_name, operation, before_id, after_id, before_projection_hash, after_projection_hash, transaction_id |
@@ -281,3 +284,84 @@ exact PostgreSQL JSONB-text input hash; the unchanged claim_job/finish_job path
 then creates its article identity, immutable capture and job history. This is
 not evidence that standard enqueue preserves missing keys. No existing capture
 is rewritten, and missing/null field hashes must remain distinct.
+
+## Complete private membership successor
+
+The cohort's new `membership_binding` is exactly
+`{public_member_ids,private_head_ids,private_arc_revision,private_set_digest}`.
+The generation manifest changes to `arc-native-manifest-v2` and adds that
+same key; all other manifest fields and the expanded scorer contract remain
+unchanged. IDs are sorted, complete and explicitly reviewed. The digest of the
+private set is the 003 `private_arc_members_v1` PostgreSQL-JSONB-text digest,
+distinct from the full expanded-input hash. Every addition, replacement or
+revocation advances the private arc revision and invalidates ordinary current
+generation equality, even if the visible member IDs become equal again.
+
+New private functions `membership_now`, `resolve_union`, `expand_cached`
+and `expand_batch` are native-owner-only. They do not expose an injectable
+cache to workers, gateway callers or the attachment owner. The batch obtains
+the actual complete public/private set, loads each current attachment's
+protected stored origin once, and gathers all original binding IDs. All
+dependencies must already be exact current same-arc heads with earlier arc
+revisions. There is no recursive per-head expansion. One deduplicated union of
+at most 32 article/capture pairs, 128 scalar/native field slots and the existing
+independent C6 limits is validated and expanded transiently. Conflicting
+per-article binding or extraction versions refuse the whole operation.
+Each original generation is reconstructed from that cache and compared with
+its original manifest and expanded hash.
+
+Ordinary scoring still requires the exact complete current membership.
+The protected origin path preserves the original public member set and every
+original private dependency head. Later private additions can leave an older
+attachment valid; revoking or replacing one of its original dependencies cannot.
+A later unrelated head that was not in the original cohort can be revoked
+without falsifying that origin, but every remaining current head is validated.
+The original candidate must remain publicly unassigned. Scalar access,
+capture-currentness, native collector revisions, canonical mappings/heads,
+extraction attestations, current selection policy, candidate state/revision,
+arc context and accepted review remain exact. Nothing substitutes newer bytes,
+normalizes native drift or calls historical reproduction current authority.
+
+The union budget charges original payloads and transient values conservatively,
+then additionally charges the shared cache and reconstructed manifest/expanded
+input. Cumulative source hashing is charged once per shared union using the
+existing conservative C6 work bound; actual per-origin metadata/manifest/input
+hash work is added. Two complete passes are reserved for worker completion and
+private attachment prepare/post-state validation. These are bounded source
+limits, not a claim that every growing real arc fits the profile.
+
+Private native-owner helper `assert_attachment_score(scope,stored_origin)`
+checks the immutable score and current accepted review without recursively
+calling the ordinary current-score reader. It is never granted to a caller.
+Two native-owner SECURITY DEFINER helpers receive narrowly scoped EXECUTE
+grants to the protected attachment owner only when 003 is installed:
+
+- `prepare_attachment_input(scope,generation,input_hash,output_hash,review)`
+  returns exactly scope, generation_id, candidate_id, article_id, arc_id,
+  review_id, input_hash, output_hash, manifest_hash, dependency_head_ids,
+  private_arc_revision, private_set_digest, approval_allowed, publication_allowed,
+  attached. The last three are false.
+- `validate_attachment_set(scope,arc,head_ids)` returns exactly scope, arc_id,
+  arc_revision, head_ids, article_ids, public_member_ids, member_ids, set_digest,
+  publication_allowed. article_ids are private members; member_ids is the
+  complete sorted public/private union. publication_allowed is false.
+
+The new 003 durable tables, its exact caller receipts and explicit review/write
+rules are documented in its attachment notes. They contain metadata only.
+The sole upstream durable-column change is cohorts.membership_binding; no
+native text column or second expanded-input representation is added.
+
+The full PostgreSQL fixture installs 003 after 001/002 and imports
+`tests/nativeArcAttachmentAssertions.mjs`. It now defines 14 child checks.
+The additional real check builds two successive reviewed private additions,
+exercises a lock-observed concurrent exact retry, verifies original-origin
+continuity versus ordinary-score staleness, current access and canonical
+identity refusal, dependency revocation, complete public/private membership,
+metadata receipts, source non-mutation and protected ACLs. Its identity test
+commits a synthetic identity change then restores the exact synthetic value;
+it does not mistake another connection's lock timeout for source revalidation.
+It adds only a pure worker test login and a second connection for the same
+reviewer; cleanup includes both and the protected attachment role. The same
+three explicit environment guards and pristine full-backend qualification
+command above remain required. These source changes have not been run by the
+author; parent qualification and fresh consequential review are required.

@@ -76,6 +76,7 @@ create table mip_arc_native.cohorts(
  -- Exact scalar IDs in article UUID then title/summary/outlet/publication order
  bindings uuid[] not null,extraction_reviews uuid[] not null,policy uuid not null,
  native_revision_digest text not null check(length(native_revision_digest)=64),
+ membership_binding jsonb not null check(octet_length(membership_binding::text)<=8192),
  principal name not null default session_user,primary key(scope,id),
  foreign key(scope,policy) references mip_arc_native.selection_policies(scope,id),
  check(cardinality(members)<=31 and cardinality(bindings)<=128 and cardinality(extraction_reviews)<=32));
@@ -215,7 +216,128 @@ create trigger immutable_table before truncate on mip_arc_native.cohort_revocati
 
 -- Complete source read and exact current revalidation. One generation contains
 -- one candidate and its entire bounded arc cohort; audit population is exactly 1.
-create function mip_arc_native.expand(s uuid,chosen mip_arc_native.cohorts,g uuid)
+create function mip_arc_native.membership_now(s uuid,arc_key uuid,candidate_article uuid)
+returns jsonb language plpgsql set search_path='' as $membership$
+declare public_ids uuid[];private_set jsonb;union_ids uuid[];payload jsonb;
+begin
+ select coalesce(array_agg(q.id order by q.id),'{}'::uuid[]) into public_ids from
+ (select x.id from public.articles x where x.arc_id=arc_key and x.id is distinct from candidate_article order by x.id limit 33)q;
+ if to_regprocedure('mip_arc_native.attachment_members(uuid,uuid,uuid)') is null then
+  payload:=jsonb_build_object('contract','private_arc_members_v1','scope',s,'arc_id',arc_key,
+   'arc_revision',0,'head_ids','[]'::jsonb,'article_ids','[]'::jsonb);
+  private_set:=jsonb_build_object('arc_revision',0,'head_ids','[]'::jsonb,'article_ids','[]'::jsonb,
+   'set_digest',encode(sha256(convert_to(payload::text,'UTF8')),'hex'));
+ else
+  execute 'select mip_arc_native.attachment_members($1,$2,$3)' into private_set using s,arc_key,candidate_article;
+ end if;
+ select coalesce(array_agg(distinct x order by x),'{}'::uuid[]) into union_ids from
+ (select unnest(public_ids) x union all select value::uuid from jsonb_array_elements_text(private_set->'article_ids'))q;
+ if cardinality(union_ids)>32 or jsonb_array_length(private_set->'head_ids')>32 then raise exception 'arc_native_union_budget';end if;
+ return jsonb_build_object('public_member_ids',public_ids,'private_head_ids',private_set->'head_ids',
+ 'private_arc_revision',private_set->'arc_revision','private_set_digest',private_set->'set_digest',
+ 'private_article_ids',private_set->'article_ids','member_ids',union_ids);
+end $membership$;
+-- One transient source cache for the complete current dependency union. Private:
+-- callers cannot inject this cache or use it to bypass current source checks.
+create function mip_arc_native.resolve_union(s uuid,requested_bindings uuid[],requested_reviews uuid[],selection mip_arc_native.selection_policies)
+returns jsonb language plpgsql set search_path='' set timezone='UTC' set datestyle='ISO,YMD' as $union$
+declare articles uuid[];captures uuid[];a uuid;budget jsonb;
+ binding mip_arc_native.scalar_bindings;extraction mip_arc_native.extraction_reviews;
+ values_by_article jsonb:='{}';bound_fields jsonb;article_record jsonb;entity_states jsonb:='[]';
+ capture_bytes bigint:=0;hash_work_bytes bigint:=0;total_bytes bigint:=0;field_count integer:=0;
+ grp jsonb;projected jsonb;entity_list jsonb;field_value jsonb;receipt jsonb;result jsonb;
+ all_bindings uuid[]:='{}';all_reviews uuid[]:='{}';group_refs jsonb:='[]';
+begin
+ if cardinality(requested_reviews)>32 or cardinality(requested_bindings)>128 then raise exception 'arc_native_union_budget';end if;
+ select array_agg(x.article order by x.article) into articles from mip_arc_native.extraction_reviews x
+ where x.scope=s and x.id=any(requested_reviews);
+ if cardinality(articles) is distinct from cardinality(requested_reviews)
+ or cardinality(articles)<>(select count(distinct x) from unnest(articles)x)
+ or cardinality(requested_bindings)<>4*cardinality(articles)
+ then raise exception 'arc_native_union_binding';end if;
+ -- Determine only immutable metadata before prelocking the complete mention
+ -- union. No scalar access rows or bytes are touched before that union lock.
+ captures:='{}';
+ foreach a in array articles loop
+  select * into extraction from mip_arc_native.extraction_reviews where scope=s and article=a and id=any(requested_reviews);
+  if not found or extraction.state='revoked'
+   or exists(select 1 from mip_arc_native.extraction_reviews x where x.scope=s and x.article=a and x.version>extraction.version)
+   then raise exception 'arc_native_extraction_stale';end if;
+  perform mip_arc_native.require_current_capture(a,extraction.capture);
+  captures:=array_append(captures,extraction.capture);
+ end loop;
+ budget:=mip_mentions.canonical_prelock_articles(s,articles,captures);
+ field_count:=(budget->>'field_count')::integer;
+ total_bytes:=(budget->>'source_and_span_bytes')::bigint;
+ -- Memory/input charge counts each original capture once. Cumulative hash
+ -- work is a separate reviewed ceiling; scalar hashing visits each four times.
+ select coalesce(sum(octet_length(payload::text)),0) into capture_bytes
+ from evidence_pipeline.article_captures where id=any(captures);
+ -- Duplicate captures across mention/scalar paths are conservatively charged
+ -- twice; this is an upper bound, never an undercount.
+ total_bytes:=total_bytes+capture_bytes+coalesce((budget->>'native_capture_bytes_unique')::bigint,8388609);
+ -- A<=64 active admissions is enforced by the shared C6 prelock. Each
+ -- later field validation is a subset of that locked union. This deliberately
+ -- charges the upper bound even when the actual number is smaller.
+ hash_work_bytes:=4*capture_bytes
+  +coalesce((budget->>'native_capture_hash_bytes')::bigint,134217729)*(1+cardinality(articles)+4*64)
+  +coalesce((budget->>'selected_field_bytes')::bigint,134217729)*(1+cardinality(articles)+4*64)
+  +coalesce((budget->>'span_bytes')::bigint,134217729)*(1+cardinality(articles)+4*64)
+  +16384::bigint*2*64
+  +131072::bigint*(1+cardinality(articles)+4*64)+8388608;
+ -- The selected Node operation expands once to read and once again on private
+ -- completion. Reserve BOTH expansions before either can finish successfully.
+ -- Caller reserves two complete union passes and exact reconstruction work.
+ if hash_work_bytes>selection.max_hash_work_bytes then raise exception 'arc_native_hash_work_budget';end if;
+ if total_bytes>selection.max_total_bytes then raise exception 'arc_native_byte_budget';end if;
+ foreach a in array articles loop
+  select * into extraction from mip_arc_native.extraction_reviews where scope=s and article=a and id=any(requested_reviews);
+  all_reviews:=array_append(all_reviews,extraction.id);
+  receipt:=mip_arc_qik_source.prepare_governed_article(s,a,extraction.capture);
+  if receipt->>'article_set_digest' is distinct from extraction.article_set_digest
+   or(extraction.state='unavailable' and jsonb_array_length(receipt->'groups')<>0)
+   then raise exception 'arc_native_extraction_stale';end if;
+  entity_list:='[]';
+  for grp in select value from jsonb_array_elements(receipt->'groups') order by value->>'entity_id' loop
+   if grp->>'projection_status' is distinct from 'projected_current' then raise exception 'arc_native_relation_unprojected';end if;
+   projected:=mip_arc_qik_source.read_governed_relation(s,a,(grp->>'entity_id')::uuid,(grp->>'current_projection_id')::uuid);
+   if projected->>'set_digest' is distinct from grp->>'set_digest' or projected->>'semantic_kind' is distinct from 'reviewed_evidence_weight_v1'
+    then raise exception 'arc_native_relation_stale';end if;
+   entity_list:=entity_list||jsonb_build_array(jsonb_build_object('entity_id',projected->'entity_id',
+    'evidence_weight',projected->'evidence_weight','projection_id',projected->'projection_id'));
+   group_refs:=group_refs||jsonb_build_array(jsonb_build_object('article_id',a,'entity_id',projected->'entity_id',
+    'projection_id',projected->'projection_id','set_digest',projected->'set_digest'));
+  end loop;
+  entity_states:=entity_states||jsonb_build_array(jsonb_build_object('article_id',a,'state',extraction.state,'reason',extraction.reason,
+   'attestation_id',extraction.id,'article_set_digest',extraction.article_set_digest,'entities',entity_list));
+  bound_fields:='{}';
+  for binding in select * from mip_arc_native.scalar_bindings b where b.scope=s and b.article=a and b.id=any(requested_bindings) order by b.field loop
+   if binding.capture<>extraction.capture or binding.content_hash<>extraction.content_hash or bound_fields?binding.field
+    then raise exception 'arc_native_binding_set';end if;
+   field_count:=field_count+1;
+   if field_count>selection.max_fields then raise exception 'arc_native_field_budget';end if;
+   field_value:=mip_arc_native.scalar_value(binding);
+   total_bytes:=total_bytes+octet_length(coalesce(field_value->>'value',''));
+   if total_bytes>selection.max_total_bytes
+    or octet_length(coalesce(field_value->>'value',''))>65536
+    then raise exception 'arc_native_byte_budget';end if;
+   bound_fields:=bound_fields||jsonb_build_object(binding.field,field_value->'value');
+   all_bindings:=array_append(all_bindings,binding.id);
+  end loop;
+  if not(bound_fields?&array['title','summary','outlet','published_at']) then raise exception 'arc_native_binding_set';end if;
+  article_record:=jsonb_build_object('id',a)||bound_fields;
+  values_by_article:=values_by_article||jsonb_build_object(a::text,article_record);
+ end loop;
+ if cardinality(all_bindings)<>cardinality(requested_bindings) or cardinality(all_reviews)<>cardinality(requested_reviews)
+ then raise exception 'arc_native_binding_set';end if;
+
+ result:=jsonb_build_object('values',values_by_article,'entities',entity_states,'groups',group_refs,
+ 'source_bytes',total_bytes,'hash_work_bytes',hash_work_bytes);
+ if octet_length(result::text)>2097152 or total_bytes+octet_length(result::text)>selection.max_total_bytes
+ or 2*hash_work_bytes>selection.max_hash_work_bytes then raise exception 'arc_native_union_budget';end if;
+ return result;
+end $union$;
+create function mip_arc_native.expand_cached(s uuid,chosen mip_arc_native.cohorts,g uuid,cache jsonb,membership jsonb)
 returns jsonb language plpgsql set search_path='' set timezone='UTC' set datestyle='ISO,YMD' as $expand$
 declare policy_limits jsonb;budget jsonb;actual_members uuid[];articles uuid[];captures uuid[];
  selection mip_arc_native.selection_policies;candidate record;arc record;
@@ -243,11 +365,13 @@ begin
  if not found then raise exception 'arc_native_arc_missing';end if;
  observed_arc:=jsonb_build_object('id',arc.id,'title',arc.title,'summary',arc.summary,'started_at',arc.started_at,'last_update_at',arc.last_update_at);
  if octet_length(observed_arc::text)>131072 then raise exception 'arc_native_arc_budget';end if;
- select coalesce(array_agg(q.id order by q.id),'{}'::uuid[]) into actual_members
- from(select id from public.articles where arc_id=chosen.arc and id<>chosen.article order by id limit 32) q;
+ select coalesce(array_agg(value::uuid order by value::uuid),'{}'::uuid[]) into actual_members
+ from jsonb_array_elements_text(membership->'member_ids');
  if cardinality(actual_members)>selection.max_members or actual_members is distinct from chosen.members
-  or not exists(select 1 from public.articles where id=chosen.article) then raise exception 'arc_native_cohort_changed';end if;
- select array_agg(x order by x) into articles from unnest(actual_members||array[chosen.article]) x;
+ or chosen.membership_binding is distinct from (membership-array['private_article_ids','member_ids'])
+ or not exists(select 1 from public.articles where id=chosen.article)
+ then raise exception 'arc_native_cohort_changed';end if;
+ select array_agg(x order by x) into articles from unnest(actual_members||array[chosen.article])x;
  if cardinality(chosen.bindings)<>4*cardinality(articles) or cardinality(chosen.extraction_reviews)<>cardinality(articles)
  then raise exception 'arc_native_binding_set';end if;
  -- Determine only immutable metadata before prelocking the complete mention
@@ -279,77 +403,36 @@ begin
  if chosen.native_revision_digest is not null and chosen.native_revision_digest<>native_digest
  then raise exception 'arc_native_native_revision_stale';end if;
  select coalesce(array_agg((value->>'id')::uuid order by value->>'id'),'{}'::uuid[]) into native_change_ids from jsonb_array_elements(native_changes);
- budget:=mip_mentions.canonical_prelock_articles(s,articles,captures);
- field_count:=(budget->>'field_count')::integer;
- total_bytes:=(budget->>'source_and_span_bytes')::bigint;
- -- Memory/input charge counts each original capture once. Cumulative hash
- -- work is a separate reviewed ceiling; scalar hashing visits each four times.
- select coalesce(sum(octet_length(payload::text)),0) into capture_bytes
- from evidence_pipeline.article_captures where id=any(captures);
- -- Duplicate captures across mention/scalar paths are conservatively charged
- -- twice; this is an upper bound, never an undercount.
- total_bytes:=total_bytes+capture_bytes+coalesce((budget->>'native_capture_bytes_unique')::bigint,8388609);
- -- A<=64 active admissions is enforced by the shared C6 prelock. Each
- -- later field validation is a subset of that locked union. This deliberately
- -- charges the upper bound even when the actual number is smaller.
- hash_work_bytes:=4*capture_bytes
-  +coalesce((budget->>'native_capture_hash_bytes')::bigint,134217729)*(1+cardinality(articles)+4*64)
-  +coalesce((budget->>'selected_field_bytes')::bigint,134217729)*(1+cardinality(articles)+4*64)
-  +coalesce((budget->>'span_bytes')::bigint,134217729)*(1+cardinality(articles)+4*64)
-  +16384::bigint*2*64
-  +131072::bigint*(1+cardinality(articles)+4*64)+8388608;
- -- The selected Node operation expands once to read and once again on private
- -- completion. Reserve BOTH expansions before either can finish successfully.
- hash_work_bytes:=2*hash_work_bytes;
- if hash_work_bytes>selection.max_hash_work_bytes then raise exception 'arc_native_hash_work_budget';end if;
- if total_bytes>selection.max_total_bytes then raise exception 'arc_native_byte_budget';end if;
+
+ -- Each original generation must own its exact full field/review set; a
+ -- different origin's cache entries cannot fill omitted or duplicated bindings.
+ if (select count(*) from mip_arc_native.scalar_bindings b where b.scope=s and b.id=any(chosen.bindings)
+  and b.article=any(articles))<>cardinality(chosen.bindings)
+ or exists(select 1 from unnest(articles)article_key where
+  (select count(distinct b.field) from mip_arc_native.scalar_bindings b
+   join mip_arc_native.extraction_reviews e on e.scope=b.scope and e.article=b.article
+    and e.capture=b.capture and e.content_hash=b.content_hash and e.id=any(chosen.extraction_reviews)
+   where b.scope=s and b.article=article_key and b.id=any(chosen.bindings))<>4)
+ then raise exception 'arc_native_binding_set';end if;
+ -- Reconstruct only from the protected once-validated transient union cache.
  foreach a in array articles loop
-  select * into extraction from mip_arc_native.extraction_reviews where scope=s and article=a and id=any(chosen.extraction_reviews);
-  all_reviews:=array_append(all_reviews,extraction.id);
-  receipt:=mip_arc_qik_source.prepare_governed_article(s,a,extraction.capture);
-  if receipt->>'article_set_digest' is distinct from extraction.article_set_digest
-   or(extraction.state='unavailable' and jsonb_array_length(receipt->'groups')<>0)
-   then raise exception 'arc_native_extraction_stale';end if;
-  entity_list:='[]';
-  for grp in select value from jsonb_array_elements(receipt->'groups') order by value->>'entity_id' loop
-   if grp->>'projection_status' is distinct from 'projected_current' then raise exception 'arc_native_relation_unprojected';end if;
-   projected:=mip_arc_qik_source.read_governed_relation(s,a,(grp->>'entity_id')::uuid,(grp->>'current_projection_id')::uuid);
-   if projected->>'set_digest' is distinct from grp->>'set_digest' or projected->>'semantic_kind' is distinct from 'reviewed_evidence_weight_v1'
-    then raise exception 'arc_native_relation_stale';end if;
-   entity_list:=entity_list||jsonb_build_array(jsonb_build_object('entity_id',projected->'entity_id',
-    'evidence_weight',projected->'evidence_weight','projection_id',projected->'projection_id'));
-   group_refs:=group_refs||jsonb_build_array(jsonb_build_object('article_id',a,'entity_id',projected->'entity_id',
-    'projection_id',projected->'projection_id','set_digest',projected->'set_digest'));
-  end loop;
-  entity_states:=entity_states||jsonb_build_array(jsonb_build_object('article_id',a,'state',extraction.state,'reason',extraction.reason,
-   'attestation_id',extraction.id,'article_set_digest',extraction.article_set_digest,'entities',entity_list));
-  bound_fields:='{}';
-  for binding in select * from mip_arc_native.scalar_bindings b where b.scope=s and b.article=a and b.id=any(chosen.bindings) order by b.field loop
-   if binding.capture<>extraction.capture or binding.content_hash<>extraction.content_hash or bound_fields?binding.field
-    then raise exception 'arc_native_binding_set';end if;
-   field_count:=field_count+1;
-   if field_count>selection.max_fields then raise exception 'arc_native_field_budget';end if;
-   field_value:=mip_arc_native.scalar_value(binding);
-   total_bytes:=total_bytes+octet_length(coalesce(field_value->>'value',''));
-   if total_bytes>selection.max_total_bytes
-    or octet_length(coalesce(field_value->>'value',''))>65536
-    then raise exception 'arc_native_byte_budget';end if;
-   bound_fields:=bound_fields||jsonb_build_object(binding.field,field_value->'value');
-   all_bindings:=array_append(all_bindings,binding.id);
-  end loop;
-  if not(bound_fields?&array['title','summary','outlet','published_at']) then raise exception 'arc_native_binding_set';end if;
-  article_record:=jsonb_build_object('id',a)||bound_fields;
+  article_record:=cache->'values'->a::text;
+  if article_record is null then raise exception 'arc_native_union_binding';end if;
   if a=chosen.article then candidate_json:=article_record;else members_json:=members_json||jsonb_build_array(article_record);end if;
  end loop;
- if cardinality(all_bindings)<>cardinality(chosen.bindings) or cardinality(all_reviews)<>cardinality(chosen.extraction_reviews)
- then raise exception 'arc_native_binding_set';end if;
+ select coalesce(jsonb_agg(value order by value->>'article_id'),'[]'::jsonb) into entity_states
+ from jsonb_array_elements(cache->'entities') where(value->>'article_id')::uuid=any(articles);
+ select coalesce(jsonb_agg(value order by value->>'article_id',value->>'entity_id'),'[]'::jsonb) into group_refs
+ from jsonb_array_elements(cache->'groups') where(value->>'article_id')::uuid=any(articles);
+ total_bytes:=(cache->>'source_bytes')::bigint+octet_length(cache::text);
+ hash_work_bytes:=(cache->>'hash_work_bytes')::bigint;
 
- manifest:=jsonb_build_object('version','arc-native-manifest-v1','cohort',chosen.id,'candidate',chosen.candidate,
+ manifest:=jsonb_build_object('version','arc-native-manifest-v2','cohort',chosen.id,'candidate',chosen.candidate,
   'candidate_revision',candidate.revision,'candidate_state',candidate.state,
   'arc_source_revision',(select coalesce(max(sequence),0) from mip_arc_native.source_revisions where relation_name='public.story_arcs' and (before_id=chosen.arc or after_id=chosen.arc)),
   'candidate_source_revision',(select coalesce(max(sequence),0) from mip_arc_native.source_revisions where relation_name='public.arc_membership_candidates' and (before_id=chosen.candidate or after_id=chosen.candidate)),'article',chosen.article,'arc',observed_arc,
   'native_revision_digest',native_digest,'native_change_ids',native_change_ids,
-  'members',chosen.members,'scalar_binding_ids',chosen.bindings,'extraction_review_ids',chosen.extraction_reviews,
+  'members',chosen.members,'membership_binding',chosen.membership_binding,'scalar_binding_ids',chosen.bindings,'extraction_review_ids',chosen.extraction_reviews,
   'group_refs',group_refs,'selection_policy',selection.id,'cutoff',selection.cutoff,'max_members',selection.max_members,
   'max_fields',selection.max_fields,'max_total_bytes',selection.max_total_bytes,
   'max_hash_work_bytes',selection.max_hash_work_bytes,
@@ -362,14 +445,88 @@ begin
   'selection',jsonb_build_object('policy_id',selection.id,'domain','reviewed_evidence_weight_v1','cutoff',selection.cutoff),
   'audit',jsonb_build_object('low_confidence',0.70,'high_sample_size',1,
     'seed','arc-native:'||g::text||':arc-v1-membership-2026-08-23.2:'||selection.id::text));
- if total_bytes+octet_length(expanded::text)>selection.max_total_bytes
+ if total_bytes+octet_length(expanded::text)+octet_length(manifest::text)>selection.max_total_bytes
   or hash_work_bytes>selection.max_hash_work_bytes then raise exception 'arc_native_operation_budget';end if;
  if octet_length(expanded::text)>2097152 or octet_length(manifest::text)>1048576 then raise exception 'arc_native_generation_budget';end if;
- return jsonb_build_object('manifest',manifest,'expanded',expanded);
+ return jsonb_build_object('manifest',manifest,'expanded',expanded,'reconstruction_hash_bytes',octet_length(native_changes::text)+2*octet_length(manifest::text)+octet_length(expanded::text));
+end $expand$;
+-- Current set and every stored origin are validated as a bounded DAG without
+-- recursive calls. All dependencies must already be current heads in this set.
+create function mip_arc_native.expand_batch(s uuid,arc_key uuid,chosen mip_arc_native.cohorts,g uuid)
+returns jsonb language plpgsql set search_path='' set timezone='UTC' set datestyle='ISO,YMD' as $batch$
+declare full_membership jsonb;current_membership jsonb;origin_membership jsonb;origin_record jsonb;
+ ids uuid[];h uuid;origins jsonb:='[]';entry jsonb;cache jsonb;data jsonb;current_data jsonb;
+ original mip_arc_native.cohorts;saved mip_arc_native.generations;selection mip_arc_native.selection_policies;
+ bindings uuid[]:='{}';reviews uuid[]:='{}';hash_bytes bigint:=0;union_members uuid[];
+begin
+ perform mip_arc_native.context(s,false);perform mip_arc_native.fences();perform mip_arc_native.assert_source_authority();
+ select * into selection from mip_arc_native.selection_policies where scope=s order by version desc limit 1;
+ if not found or not selection.active then raise exception 'arc_native_selection_stale';end if;
+ full_membership:=mip_arc_native.membership_now(s,arc_key,null);
+ select coalesce(array_agg(value::uuid order by value::uuid),'{}'::uuid[]) into ids
+ from jsonb_array_elements_text(full_membership->'private_head_ids');
+ if chosen.id is not null then
+  current_membership:=mip_arc_native.membership_now(s,arc_key,chosen.article);
+  if chosen.scope is distinct from s or chosen.arc is distinct from arc_key or chosen.policy is distinct from selection.id
+  or chosen.membership_binding is distinct from(current_membership-array['private_article_ids','member_ids'])
+  then raise exception 'arc_native_cohort_changed';end if;
+  bindings:=chosen.bindings;reviews:=chosen.extraction_reviews;
+ end if;
+ foreach h in array ids loop
+  execute 'select mip_arc_native.attachment_origin_record($1,$2)' into origin_record using s,h;
+  if(origin_record->>'scope')::uuid is distinct from s or(origin_record->>'attachment_id')::uuid is distinct from h
+  or(origin_record->>'arc_id')::uuid is distinct from arc_key or origin_record->>'state' is distinct from 'attached_private'
+  or not exists(select 1 from public.articles x where x.id=(origin_record->>'article_id')::uuid and x.arc_id is null)
+  then raise exception 'arc_native_attachment_origin';end if;
+  select * into saved from mip_arc_native.generations where scope=s and id=(origin_record->>'generation_id')::uuid;
+  if not found or(saved.expanded_hash,saved.manifest_hash) is distinct from(origin_record->>'input_hash',origin_record->>'manifest_hash')
+  then raise exception 'arc_native_attachment_origin';end if;
+  select * into original from mip_arc_native.cohorts where scope=s and id=saved.cohort;
+  if not found or original.article is distinct from(origin_record->>'article_id')::uuid or original.arc is distinct from arc_key
+  or original.policy is distinct from selection.id
+  or original.membership_binding->'public_member_ids' is distinct from full_membership->'public_member_ids'
+  or original.membership_binding->'private_head_ids' is distinct from origin_record->'dependency_head_ids'
+  or exists(select 1 from jsonb_array_elements_text(origin_record->'dependency_head_ids')x where not(x.value::uuid=any(ids)))
+  then raise exception 'arc_native_attachment_dependency';end if;
+  execute 'select mip_arc_native.assert_attachment_score($1,$2)' using s,origin_record;
+  bindings:=bindings||original.bindings;reviews:=reviews||original.extraction_reviews;
+  origins:=origins||jsonb_build_array(origin_record);
+ end loop;
+ select coalesce(array_agg(distinct x order by x),'{}'::uuid[]) into bindings from unnest(bindings)x;
+ select coalesce(array_agg(distinct x order by x),'{}'::uuid[]) into reviews from unnest(reviews)x;
+ if cardinality(bindings)>128 or cardinality(reviews)>32 then raise exception 'arc_native_union_budget';end if;
+ if cardinality(reviews)>0 then
+  cache:=mip_arc_native.resolve_union(s,bindings,reviews,selection);
+  hash_bytes:=(cache->>'hash_work_bytes')::bigint;
+  for entry in select value from jsonb_array_elements(origins) loop
+   select * into strict saved from mip_arc_native.generations where scope=s and id=(entry->>'generation_id')::uuid;
+   select * into strict original from mip_arc_native.cohorts where scope=s and id=saved.cohort;
+   origin_membership:=original.membership_binding||jsonb_build_object('member_ids',original.members,'private_article_ids','[]'::jsonb);
+   data:=mip_arc_native.expand_cached(s,original,saved.id,cache,origin_membership);
+   hash_bytes:=hash_bytes+(data->>'reconstruction_hash_bytes')::bigint;
+   if 2*hash_bytes>selection.max_hash_work_bytes then raise exception 'arc_native_hash_work_budget';end if;
+   if data->'manifest' is distinct from saved.manifest
+   or encode(sha256(convert_to((data->'expanded')::text,'UTF8')),'hex')<>saved.expanded_hash
+   then raise exception 'arc_native_attachment_origin_stale';end if;
+  end loop;
+ end if;
+ if chosen.id is not null then
+  current_data:=mip_arc_native.expand_cached(s,chosen,g,cache,current_membership);
+  hash_bytes:=hash_bytes+(current_data->>'reconstruction_hash_bytes')::bigint;
+  if 2*hash_bytes>selection.max_hash_work_bytes then raise exception 'arc_native_hash_work_budget';end if;
+ end if;
+ return jsonb_build_object('current',current_data,'membership',full_membership);
+end $batch$;
+create function mip_arc_native.expand(s uuid,chosen mip_arc_native.cohorts,g uuid)
+returns jsonb language plpgsql set search_path='' as $expand$
+declare result jsonb;
+begin
+ result:=mip_arc_native.expand_batch(s,chosen.arc,chosen,g);
+ return result->'current';
 end $expand$;
 create function mip_arc_native.review_cohort(s uuid,i uuid,c uuid,rev text,a uuid,arc_id uuid,m uuid[],b uuid[],e uuid[],policy_id uuid)
 returns uuid language plpgsql security definer set search_path='' as $cohort$
-declare proposed mip_arc_native.cohorts;old mip_arc_native.cohorts;sorted uuid[];checked jsonb;
+declare proposed mip_arc_native.cohorts;old mip_arc_native.cohorts;sorted uuid[];checked jsonb;membership jsonb;
 begin
  perform mip_arc_native.context(s,true);
  if i is null or c is null or a is null or arc_id is null or rev is null or octet_length(rev)>80
@@ -378,7 +535,10 @@ begin
   or cardinality(m)>31 or cardinality(b)>128 or cardinality(e)>32 then raise exception 'arc_native_cohort_shape';end if;
  select coalesce(array_agg(distinct x order by x),'{}'::uuid[]) into sorted from unnest(m)x;
  if sorted<>m or a=any(m) then raise exception 'arc_native_cohort_shape';end if;
- proposed:=row(s,i,c,rev,a,arc_id,m,b,e,policy_id,null::text,session_user)::mip_arc_native.cohorts;
+ perform mip_arc_native.fences();perform mip_arc_native.assert_source_authority();
+ membership:=mip_arc_native.membership_now(s,arc_id,a);
+ proposed:=row(s,i,c,rev,a,arc_id,m,b,e,policy_id,null::text,
+ membership-array['private_article_ids','member_ids'],session_user)::mip_arc_native.cohorts;
  checked:=mip_arc_native.expand(s,proposed,i);
  proposed.native_revision_digest:=checked->'manifest'->>'native_revision_digest';
  select * into old from mip_arc_native.cohorts where scope=s and id=i;

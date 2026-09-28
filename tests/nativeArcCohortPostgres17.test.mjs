@@ -5,20 +5,22 @@ import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {createHash} from 'node:crypto'
 import pg from 'pg'
+import {assertNativeArcAttachments} from './nativeArcAttachmentAssertions.mjs'
 import {prepareAtomicInstall,installComparisonAtomic,qualifyComparisonAudit,DBLINK_PREFLIGHT_SQL} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
 import {REQUIRED_RELATIONS,RESERVED_ROLES} from '../supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs'
 import {LOAD_ORDER} from '../supabase/qualification/qik-ingest/installQikIngest.mjs'
 import {scoreGovernedNativeInput,runGovernedNativeArc} from '../supabase/qualification/arc-membership-native/runGovernedNativeArc.mjs'
 const frames=error=>String(error?.stack??'').split('\n').slice(1).flatMap(line=>{
- const match=line.match(/(?:nativeArcCohortPostgres17\.test\.mjs|atomicInstall\.mjs):(\d{1,6}):(\d{1,6})/);
+ const match=line.match(/(?:nativeArcCohortPostgres17\.test\.mjs|nativeArcAttachmentAssertions\.mjs|atomicInstall\.mjs):(\d{1,6}):(\d{1,6})/);
  return match?[match[0]]:[];
 }).slice(0,4);
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8')
 const database='postgres',password='mip-efta-disposable-ci-only'
 const aliceName='native_arc_alice',adminName='native_arc_admin'
+const workerName='native_arc_private_worker'
 const bobName='native_arc_bob',guestName='native_arc_guest',reviewerName='native_arc_reviewer'
-const names=['mip_cutover_schema_owner_v1','mip_collector_owner_v2','mip_arc_native_owner','mip_arc_native_worker','mip_arc_qik_source_owner','mip_canonical_writer','anon','authenticated','service_role','mip_mentions_owner','mip_mentions_gateway',
- 'mip_mentions_admin','mip_mentions_native_validator',aliceName,adminName,bobName,guestName,reviewerName]
+const names=['mip_cutover_schema_owner_v1','mip_collector_owner_v2','mip_arc_native_owner','mip_arc_attachment_owner','mip_arc_native_worker','mip_arc_qik_source_owner','mip_canonical_writer','anon','authenticated','service_role','mip_mentions_owner','mip_mentions_gateway',
+ 'mip_mentions_admin','mip_mentions_native_validator',aliceName,adminName,bobName,guestName,reviewerName,workerName]
 const id=n=>'c6500000-0000-4000-8000-'+String(n).padStart(12,'0')
 const s=id(1),otherScope=id(2),actor=id(3),actor2=id(4),candidate=id(5),decision=id(6)
 const fields=[id(10),id(11),id(12),id(13)],mentions=[id(20),id(21),id(22),id(23)]
@@ -41,7 +43,7 @@ async function connect(user='postgres',pass=password){
 test('native C9 complete cohort, unchanged private scoring and current exact review', {
  skip:process.env.MIP_NATIVE_ARC_COHORT_DISPOSABLE!=='synthetic-pg17-only',timeout:300000
 },async t=>{
- let db,monitor,alice,admin,bob,guest,reviewer,wrong,armed=false,primaryFailed=false,stage='fixture',primaryState='none',primaryFrames=[],primaryPosition='none',primaryStage='fixture',checkIndex=0,baseline=[]
+ let db,monitor,alice,admin,bob,guest,reviewer,wrong,sameReviewer,privateWorker,armed=false,primaryFailed=false,stage='fixture',primaryState='none',primaryFrames=[],primaryPosition='none',primaryStage='fixture',checkIndex=0,baseline=[]
  try{
   stage='atomic_environment';
   if(process.env.MIP_QIK_COMPARISON_DISPOSABLE!=='synthetic-pg17-only'
@@ -107,6 +109,7 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   for(const name of [aliceName,adminName,bobName,guestName,reviewerName])
    await db.query('create role "'+name+'" login password \''+password+'\'')
   for(const name of [aliceName,bobName,reviewerName])await db.query('grant mip_mentions_gateway to "'+name+'"')
+  await db.query('create role "'+workerName+'" login password \''+password+'\'');
   await db.query('grant mip_mentions_admin to "'+adminName+'"')
   for(const name of [aliceName,adminName,bobName,guestName,reviewerName]){
    await db.query('grant usage on schema canonical_admission_fixture to "'+name+'"')
@@ -192,9 +195,11 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   stage='native_install';
   const recorderBaseline=(await db.query("select p.oid,pg_get_functiondef(p.oid) definition from pg_proc p where p.oid in('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure,'mip_identity.collector_lock()'::regprocedure) order by p.oid")).rows;
   for(const path of ['supabase/qualification/arc-membership-native/001_governed_cohort.sql',
-   'supabase/qualification/arc-membership-native/002_private_score_review.sql'])await db.query(await read(path));
+   'supabase/qualification/arc-membership-native/002_private_score_review.sql',
+   'supabase/qualification/arc-membership-native/003_governed_attachment.sql'])await db.query(await read(path));
   assert.deepEqual((await db.query("select p.oid,pg_get_functiondef(p.oid) definition from pg_proc p where p.oid in('mip_identity.collector_change()'::regprocedure,'mip_identity.collector_native_change()'::regprocedure,'mip_identity.collector_lock()'::regprocedure) order by p.oid")).rows,recorderBaseline);
-  await db.query('grant mip_arc_native_worker to "'+aliceName+'"');
+  await db.query('grant mip_arc_native_worker to "'+aliceName+'", "'+workerName+'"');
+  privateWorker=await connect(workerName);sameReviewer=await connect(reviewerName);
   await db.query("set timezone='UTC'");
   const arc=id(400),arcCandidate=id(401),selection=id(402),cohort=id(403),generation=id(404),reviewId=id(405);
   await db.query('insert into public.story_arcs(id,started_at,title,summary,last_update_at) values($1,$2,$3,$4,$5)',[arc,'2026-01-01',title,summary,'2026-01-02T00:00:00Z']);
@@ -433,6 +438,14 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
    // Arc text is an intentional retained canonical context, not a native payload
    // copy. The native lexical/body sentinel must still never enter a manifest.
    assert.equal((await db.query("select manifest->'arc'->>'title' title from mip_arc_native.generations where scope=$1 and id=$2",[s,generation])).rows[0].title,title);
+   const bound=(await db.query("select manifest->>'version' version,manifest->'membership_binding' binding from mip_arc_native.generations where scope=$1 and id=$2",[s,generation])).rows[0];
+   assert.equal(bound.version,'arc-native-manifest-v2');
+   assert.deepEqual(Object.keys(bound.binding).sort(),['public_member_ids','private_head_ids','private_arc_revision','private_set_digest'].sort());
+   assert.deepEqual(bound.binding.public_member_ids,[conflictCap.article_id]);
+   assert.deepEqual(bound.binding.private_head_ids,[]);
+   assert.equal(bound.binding.private_arc_revision,0);
+   assert.match(bound.binding.private_set_digest,/^[0-9a-f]{64}$/);
+
   });
   await checkNative('actual_worker_adapter_returns_only_private_receipt',async()=>{
    const r=await runGovernedNativeArc({connection:{connectionString:'postgresql://'+aliceName+':'+password+'@127.0.0.1:5432/'+database,ssl:false},
@@ -459,6 +472,57 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
    assert.ok(journal.length>0);assert.doesNotMatch(JSON.stringify(journal),new RegExp(sentinel+'|Jo spoke|Li replied'));
   });
 
+  await checkNative('private_attachment_complete_union_two_successors_and_current_dependency_revalidation',async()=>{
+   const buildReviewed=async({capture:original,candidateId,cohortId,generationId,reviewKey,memberIds,bindingIds,extractionIds})=>{
+    const candidateRevision=(await db.query('select updated_at::text revision from public.arc_membership_candidates where id=$1',[candidateId])).rows[0].revision;
+    await reviewer.query('select mip_arc_native.review_cohort($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
+     [s,cohortId,candidateId,candidateRevision,original.article_id,arc,memberIds.sort(),bindingIds,extractionIds,selection]);
+    const snap=await call(alice,'select mip_arc_native.snapshot($1,$2,$3) result',[s,cohortId,generationId]);
+    const wire=await call(alice,'select mip_arc_native.read_scoring_input($1,$2,$3) result',[s,generationId,snap.input_hash]);
+    const scoredOutput=scoreGovernedNativeInput(wire);
+    assert.equal(scoredOutput.score.decision,'candidate');
+    const completed=await call(alice,'select mip_arc_native.complete_score($1,$2,$3,$4::jsonb) result',
+     [s,generationId,snap.input_hash,JSON.stringify(scoredOutput)]);
+    await reviewer.query("select mip_arc_native.review_score($1,$2,$3,$4,$5,1,null,'accepted_private','reviewed_continuity')",
+     [s,reviewKey,generationId,snap.input_hash,completed.output_hash]);
+    return {generation_id:generationId,input_hash:snap.input_hash,output_hash:completed.output_hash,review_id:reviewKey};
+   };
+   const first=await buildReviewed({capture:cap,candidateId:arcCandidate,cohortId:id(1000),generationId:id(1001),reviewKey:id(1002),
+    memberIds:[conflictCap.article_id],bindingIds:bindings,extractionIds:extractions});
+   await assertNativeArcAttachments({
+    syntheticFixture:true,db,reviewer,sameReviewer,gateway:alice,outsider:guest,worker:privateWorker,
+    scope:s,sentinel,ids:[id(1010),id(1011),id(1012),id(1013)],first,
+    async makeNextReviewedInput({privateHeadIds}){
+     assert.deepEqual(privateHeadIds,[id(1010)]);
+     const next=await capture('Synthetic new private member '+sentinel,'https://synthetic.invalid/private-next');
+     const nextBindings=[];
+     for(const [j,field]of ['title','summary','outlet','published_at'].entries()){
+      const bid=id(1030+j);
+      const meta=(await db.query("select case when not(payload?$2) then 'missing' when payload->$2='null'::jsonb then 'null' else jsonb_typeof(payload->$2) end kind,encode(sha256(convert_to(jsonb_build_object('present',payload?$2,'value',payload->$2)::text,'UTF8')),'hex') hash from evidence_pipeline.article_captures where id=$1",[next.id,field])).rows[0];
+      await reviewer.query('select mip_arc_native.review_scalar($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+       [s,bid,next.article_id,next.id,next.job_id,next.content_hash,field,meta.kind,meta.hash]);
+      await admin.query('select mip_arc_native.set_scalar_access($1,$2,true)',[s,bid]);nextBindings.push(bid);
+     }
+     const prepared=await call(alice,'select mip_arc_qik_source.prepare_governed_article($1,$2,$3) result',[s,next.article_id,next.id]);
+     assert.equal(prepared.input_status,'no_admissions_not_extraction_complete');
+     await reviewer.query("select mip_arc_native.review_extraction($1,$2,$3,$4,$5,1,null,'completed','reviewed_complete',$6)",
+      [s,id(1040),next.article_id,next.id,next.content_hash,prepared.article_set_digest]);
+     await db.query("insert into public.arc_membership_candidates(id,article_id,arc_id,state,updated_at) values($1,$2,$3,'pending','2026-01-02 00:00:00.123456+00')",[id(1041),next.article_id,arc]);
+     return buildReviewed({capture:next,candidateId:id(1041),cohortId:id(1042),generationId:id(1043),reviewKey:id(1044),
+      memberIds:[cap.article_id,conflictCap.article_id],bindingIds:[...bindings,...nextBindings],extractionIds:[...extractions,id(1040)]});
+    },
+    async withRevokedScalarAccess(body){
+     await admin.query('select mip_arc_native.set_scalar_access($1,$2,false)',[s,bindings[0]]);
+     try{await body()}finally{await admin.query('select mip_arc_native.set_scalar_access($1,$2,true)',[s,bindings[0]])}
+    },
+    async withIdentityMutation(body){
+     const original=(await db.query('select canonical_name from public.entities where id=$1',[entity])).rows[0].canonical_name;
+     await db.query('update public.entities set canonical_name=$2 where id=$1',[entity,'Changed synthetic canonical identity']);
+     try{await body()}finally{await db.query('update public.entities set canonical_name=$2 where id=$1',[entity,original])}
+    },
+   });
+  });
+
  }catch(error){
   if(!primaryFailed){
    primaryState=/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:'none';primaryFrames=frames(error);
@@ -469,7 +533,7 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
  }finally{
   const failures=[];
   const attempt=async(label,action)=>{try{await action()}catch{failures.push(label)}};
-  for(const [name,c]of Object.entries({wrong,bob,guest,reviewer,monitor,alice,admin}))if(c)await attempt('close_'+name,()=>c.end());
+  for(const [name,c]of Object.entries({wrong,bob,guest,reviewer,sameReviewer,privateWorker,monitor,alice,admin}))if(c)await attempt('close_'+name,()=>c.end());
   if(db)await attempt('close_fixture',()=>db.end());
   if(armed){
    // Only a fully pristine cluster/database baseline arms destruction. Close

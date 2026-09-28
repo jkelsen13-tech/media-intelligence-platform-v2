@@ -10,12 +10,12 @@
     "tree": "eecf21975b4e975b5a8d98f715dbd167bdbae3d6"
   },
   "authorization": {
-    "internal_source_and_synthetic_qualification": "User consolidation continuation amendment authorizes this distinct successor into internal qualification after applicable source review. No individual field signature or prior historical approval is represented.",
+    "internal_source_and_synthetic_qualification": "User consolidation continuation amendment prospectively authorizes this distinct governed successor and installer mode into source review and synthetic internal qualification. Qualification receipts and actual external Cursor review bind the exact candidate; no individual owner field signature, historical acceptance, hosted installation or actual-material receiving authorization is represented.",
     "actual_material_receiving_route": "Existing qualified private execution route and qik only; Cursor and public CI remain source/synthetic only; route currently unavailable.",
     "publication": "No automatic publication, broadened eligibility or release-policy bypass.",
     "spending": "At most $25 one-time and $10/month incremental on existing authorized services; no new service, plan upgrade or on-demand enablement."
   },
-  "scope": "Only additive governed C6 canonical relation and C9 native arc paths. Historical captures, native source rows, article/event/membership stores, old approvals and historical hash assertions are preserved. This is not whole-platform store minimization.",
+  "scope": "Additive governed C6 canonical relation, C9 native scoring/review, explicit private membership and joint restricted-principal installation. Native article bytes are transient through restricted original-evidence validation; original capture/candidate/change history and prior manifest/hash assertions remain unchanged. Historical public C9/C10 projection, operating caller cutover and corpus disposition remain required consolidation dependencies, not completed by this package.",
   "c6": {
     "semantic_kind": "reviewed_evidence_weight_v1",
     "meaning": "Explicit uncalibrated reviewer weight 0..1; no default, inferred probability, candidate rank or acceptance substitution.",
@@ -278,9 +278,11 @@
     "c6": "tests/nativeCanonicalAdmissionPostgres17.test.mjs",
     "c9": [
       "tests/nativeArcCohortPostgres17.test.mjs",
-      "tests/nativeArcScoring.test.mjs"
+      "tests/nativeArcScoring.test.mjs",
+      "tests/nativeArcAttachmentAssertions.mjs"
     ],
-    "status_at_source_authorship": "NOT RUN; qualification receipts are separate and must identify actual candidate and environment."
+    "status_at_source_authorship": "NOT RUN; qualification receipts are separate and must identify actual candidate and environment.",
+    "installer": "tests/nativeGovernedInstallerPostgres17.test.mjs"
   },
   "historical_protections": {
     "efta_manifest_sha256": "841e0fe52244c224330efd546965f57571549fd7ae08bc07d19853134241c6f9",
@@ -318,15 +320,15 @@
   },
   "c9": {
     "native_only_first_route": true,
-    "complete_cohort": "Explicit reviewed candidate plus every attached arc member, complete ID and source-access validation; RLS-hidden/inaccessible/added/removed members refuse the whole cohort.",
+    "complete_cohort": "Exact complete sorted public articles.arc_id membership plus every current private attachment head, with explicit candidate exclusion and reviewed membership_binding. Added/revoked/replaced private heads invalidate ordinary current generation equality. Stored original attachment generations are validated as a same-arc strictly-earlier dependency DAG through one deduplicated transient evidence union; original public memberships, private dependencies, identity/hash/access/current-capture/candidate/policy/review remain exact.",
     "current_capture_rule": "Same inherited comparison native lineage order: captured_at DESC,id DESC across all article captures. Originally reviewed capture must still be selected; newest inaccessible/excluded capture refuses, never replaces bytes under old identity.",
     "historical_replay": "Append-only original references and recorded scores survive. Exact byte replay uses originally bound evidence under current access; successful reproducibility alone does not confer current eligibility after supersession/invalidation.",
     "canonical_semantics": "Explicit reviewed_evidence_weight_v1 with a distinct reviewed selection-cutoff policy; old resolver defaults/acceptance/rank do not establish probability or canonical equivalence.",
     "extraction": "Exact reviewed completed versus unavailable attestation; complete import job or empty entity list is not evidence of extraction completion.",
     "copy_justification": "Selected arc context (id,title,summary,started_at,last_update) may be durably retained to reproduce deterministic scoring after mutable arc source changes because no authoritative old arc-context version exists. Native article title/summary/outlet/published_at bytes are transient and re-resolved from exact original scalar bindings.",
-    "ordered_installation": "Full selected atomic comparison/journal/review/accepted-reader profile and audit closure, then actual C6 dependencies and C9 files, then final effective permissions assertions. No stub fences or helper-only proof.",
-    "publication": "Private score/audit/manual review/current reader only; release-policy remains closed and no attachment or auto-publication authority is claimed.",
-    "budget": "Separate max_total_bytes<=8388608 and max_hash_work_bytes<=134217728. Charge conservative actual repeated work H*(1+N+4*A) plus scalar/field/span/identity and expanded-input hashing; whole overflow refuses, no truncation.",
+    "ordered_installation": "Full real comparison/native/journal/review/accepted-reader and DOJ source program plus disabled C3 baseline. Joint native-governed-v2 executes C6 and C9 001/002/003 before existing temporary backend creator cleanup, exact stage assertions after savepoint cleanup, and complete final effective combined closure after real cleanup. Separate authenticated NOSUPERUSER synthetic principal exercises actual ordered installation/audit/ambiguity/reconciliation; no hosted receipt follows from it.",
+    "publication": "Private score accepted_private remains separate from explicit reviewer attached_private membership decision. No public articles.arc_id/candidate/release-policy/graph mutation, auto approval, public eligibility or publication. Current private Timeline/Arc membership reader validates every head and original dependency; historical public approval/projector remains a required separate integration dependency.",
+    "budget": "At most32 unique article/capture pairs (candidate+31 members),128 scalar slots and existing C6 whole-union limits. One deduplicated transient source union reserves two conservative complete source-validation passes plus cumulative per-origin native delta/manifest/expanded-input hash work. max_total_bytes<=8388608, max_hash_work_bytes<=134217728, source cache/expanded wire<=2097152, manifest<=1048576. Overflow refuses the whole operation; no truncation, recursive per-head evidence expansion or artificial one-private-member cap.",
     "durable_tables": [
       {
         "table": "mip_arc_native.scalar_bindings",
@@ -397,6 +399,7 @@
           "extraction_reviews",
           "policy",
           "native_revision_digest",
+          "membership_binding",
           "principal"
         ]
       },
@@ -457,6 +460,44 @@
           "reason",
           "principal"
         ]
+      },
+      {
+        "table": "mip_arc_native.attachment_revisions",
+        "fields": [
+          "scope",
+          "id",
+          "article_id",
+          "arc_id",
+          "generation_id",
+          "review_id",
+          "input_hash",
+          "output_hash",
+          "manifest_hash",
+          "version",
+          "predecessor",
+          "arc_revision",
+          "state",
+          "reason",
+          "dependency_head_ids",
+          "prior_set_digest",
+          "principal"
+        ]
+      },
+      {
+        "table": "mip_arc_native.attachment_article_heads",
+        "fields": [
+          "scope",
+          "article_id",
+          "revision"
+        ]
+      },
+      {
+        "table": "mip_arc_native.attachment_arc_clocks",
+        "fields": [
+          "scope",
+          "arc_id",
+          "revision"
+        ]
       }
     ],
     "retained_manifest_fields": [
@@ -472,6 +513,7 @@
       "native_revision_digest",
       "native_change_ids",
       "members",
+      "membership_binding",
       "scalar_binding_ids",
       "extraction_review_ids",
       "group_refs",
@@ -625,11 +667,14 @@
       "scalar_bindings": "Restricted re-resolution of exactly original capture/job/article/content/nullable-field identity; no source bytes",
       "extraction_reviews": "Distinguish reviewed completion/zero from authoritative unavailability and bind whole C6 head set",
       "selection_policies": "Explicit cutoff and operation bounds; no legacy default substitution",
-      "cohorts": "Complete member enumeration and exact candidate/scalar/extraction/policy references, source delta binding",
+      "cohorts": "Complete current public/private member IDs and exact reviewed membership_binding, candidate/scalar/extraction/policy references and native source-delta digest; no native bytes.",
       "generations": "Exact deterministic replay manifest and separate expanded-input digest; arc selected-context deliberate copy described above",
       "source_revisions": "Transaction/sequence/operation/selected-digest invalidation metadata only",
       "private_scores": "Typed numerical/enum score and audit output required for exact retry and manual review; no lexical material",
-      "private_reviews": "Append-only exact generation/output review history and current-state decisions; no publication rights"
+      "private_reviews": "Append-only exact generation/output review history and current-state decisions; no publication rights",
+      "attachment_revisions": "Append-only explicit private reviewer decision bound to exact generation/review/input/output/manifest hashes and original dependency head IDs; supports exact retries, revocation, collision-safe history and original evidence revalidation. No payload/excerpt copy.",
+      "attachment_article_heads": "Current per-scope/article revision selects exact immutable private decision; no overwrite or reparent substitution.",
+      "attachment_arc_clocks": "Monotone private per-arc revision invalidates ordinary current generation equality even when membership IDs later match; no public source mutation."
     },
     "returned_fields": {
       "snapshot": [
@@ -697,7 +742,117 @@
       "audit_item": [
         "candidate_id",
         "stratum"
+      ],
+      "prepare_private_attachment": [
+        "scope",
+        "generation_id",
+        "candidate_id",
+        "article_id",
+        "arc_id",
+        "review_id",
+        "input_hash",
+        "output_hash",
+        "manifest_hash",
+        "dependency_head_ids",
+        "private_arc_revision",
+        "private_set_digest",
+        "approval_allowed",
+        "publication_allowed",
+        "attached",
+        "expected_predecessor",
+        "version",
+        "membership_kind",
+        "record_kind",
+        "public_attachment",
+        "auto_approval_enabled",
+        "production_qualified"
+      ],
+      "private_attachment": [
+        "scope",
+        "attachment_id",
+        "article_id",
+        "arc_id",
+        "generation_id",
+        "review_id",
+        "input_hash",
+        "output_hash",
+        "manifest_hash",
+        "version",
+        "predecessor",
+        "arc_revision",
+        "state",
+        "dependency_head_ids",
+        "current_arc_revision",
+        "current_set_digest",
+        "current_head_ids",
+        "current_article_ids",
+        "current_member_ids",
+        "public_member_ids",
+        "membership_kind",
+        "record_kind",
+        "public_attachment",
+        "publication_allowed",
+        "auto_approval_enabled",
+        "production_qualified"
+      ],
+      "private_arc_membership": [
+        "scope",
+        "arc_id",
+        "arc_revision",
+        "head_ids",
+        "article_ids",
+        "public_member_ids",
+        "member_ids",
+        "set_digest",
+        "membership_kind",
+        "record_kind",
+        "public_attachment",
+        "publication_allowed",
+        "auto_approval_enabled",
+        "production_qualified"
+      ],
+      "private_attachment_revocation": [
+        "scope",
+        "attachment_id",
+        "predecessor",
+        "version",
+        "arc_revision",
+        "state",
+        "membership_kind",
+        "record_kind",
+        "public_attachment",
+        "publication_allowed",
+        "auto_approval_enabled",
+        "production_qualified"
       ]
+    },
+    "retained_manifest_version": "arc-native-manifest-v2",
+    "membership_binding_fields": [
+      "public_member_ids",
+      "private_head_ids",
+      "private_arc_revision",
+      "private_set_digest"
+    ],
+    "private_attachment_flags": {
+      "membership_kind": "reviewed_private_membership_v1",
+      "record_kind": "news_record",
+      "public_attachment": false,
+      "publication_allowed": false,
+      "auto_approval_enabled": false,
+      "production_qualified": false
+    },
+    "private_membership_digest": "private_arc_members_v1; SHA256 UTF8 PostgreSQL JSONB object exactly contract,scope,arc_id,arc_revision,head_ids,article_ids, sorted IDs; candidate exclusion is explicit. Different from historical full-row native change hashes, original manifest hash and expanded-input hash.",
+    "final_effective_assertion": {
+      "file": "supabase/qualification/arc-membership-native/003_governed_attachment.sql",
+      "marker": "do $boundary$",
+      "functions": 39,
+      "tables": 13,
+      "sequences": 1,
+      "protected_roles": 9,
+      "assertion_context": "mip_arc_native_owner via fixed zero-argument temporary assertion helper after real installer cleanup; no persistent grant/helper/owner login",
+      "guc_normalization": "Only case-fold GUC names and remove spaces in DateStyle; exact ordered values/settings required",
+      "incoming_role_edges": "At final installation no nine protected-role edges. Source boundary preserves authorized incoming LOGIN→gateway/admin; all outgoing edges and owner/private-worker incoming edges denied.",
+      "tables_rls": "Exact owner and owner-only policy, ENABLE+FORCE RLS, no outside table/column ACL; exact existence inventories, no vacuous loops."
     }
   },
   "dependencies": {
@@ -853,7 +1008,7 @@
     },
     "atomic_installer": {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "blob": "0cfaf06969881b8c4983c752d893b9f08a84ae3e"
+      "blob": "cc04f6f7bbf5a119adbe0ac178538d7d785cdde6"
     },
     "catalog_preflight": {
       "path": "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs",
@@ -888,15 +1043,19 @@
     "c9_order": [
       {
         "path": "supabase/qualification/arc-membership-native/001_governed_cohort.sql",
-        "blob": "ff213eb4420ebd3b42a75ece4fd0bf656e2978de"
+        "blob": "3097d03987aee00df912f913d41c6e0cad342b2d"
       },
       {
         "path": "supabase/qualification/arc-membership-native/002_private_score_review.sql",
-        "blob": "f2f950cf2822576e5687c795146bc3f9ceaa630f"
+        "blob": "92c4382b46c83027f4b9b1dd0a615462680083cd"
+      },
+      {
+        "path": "supabase/qualification/arc-membership-native/003_governed_attachment.sql",
+        "blob": "94dd9c7cbcf117767f5909fd9a6db0312f14ebe2"
       }
     ],
-    "full_sequence": "Pristine fixture catalog/real auth relations + extensions → native reliability → C3 ordereddisabledprofile/actualreceipt → prepareAtomicInstall/installComparisonAtomic fullcompiledcomparison001–019 plusDOJ020 → real auditqualification/finalclosure → C6 ordered001/003/004/qik001/005/qik002 → C9 001/002 → new finaleffectiveowner/role/membership/schema/functionACL/RLS/sourceauthorityassertions.",
-    "installation_principal_scope": "Atomic backend runs with actual nonsuper synthetic installer and real loopback audit; C6/C9 are installed by separately protected synthetic substrate administrator. This does not qualify a hosted qik installer principal.",
+    "full_sequence": "Pristine fixture catalog/real auth relations + pgcrypto/vector0.8.2/dblink → native reliability → C3 ordered disabled profile/actual synthetic receipt → prepareAtomicInstall native-governed-v2 complete comparison001–019/DOJ020 → C6 ordered001/003/004/qik001/005/qik002 → C9 001/002/003 BEFORE backend temporary creator cleanup → real final complete effective combined owner/role/membership/ACL/schema/RLS/source authority + original backend final closure → one COMMIT → real autonomous rejection-audit qualification. Original ordinary-mode fixture separately exercises full scorer/review/private reader dependencies; joint nonsuper installer test is actual installation principal proof for synthetic environment only.",
+    "installation_principal_scope": "Real separately authenticated SCRAM NOSUPERUSER/CREATEROLE/CREATEDB/BYPASSRLS/INHERIT/LOGIN synthetic installer matches targeted observed qik principal attributes. Fixture administrator only bootstraps synthetic substrate/extensions/principals and independently inspects/cleans. Native source-only profile is jointly compiled with temporary owner authority and exact assertion helpers; no residual owner membership/helper/login remains. Does not claim hosted defaults/event trigger or secure route equivalence.",
     "assertions_after_complete_order": [
       "Object/function owners and protected role attributes",
       "No owner/worker incoming or outgoing memberships after installer cleanup",
@@ -904,7 +1063,38 @@
       "Named direct/wrapper EXEC privileges, PUBLIC/default ACL and inherited rights",
       "FORCE RLS/session principal scope and complete source-view authority, including restrictive policy refusal",
       "Unchanged public/native recorders and closed release/publication fences"
-    ]
+    ],
+    "native_joint_installer": {
+      "path": "supabase/qualification/native-governed-install/install.mjs",
+      "blob": "d49102a7ebd79d836dec082fd102f4ea334cd37a",
+      "mode": "native-governed-v2",
+      "authorization": "owner-authorized-disabled-comparison-native-install",
+      "source_base": "79f25d3519d26fd0dbda37fd0728e5783c04834a",
+      "selection": "Current selected candidate bytes by exact curated Git blobs; no claim revised SQL exists at source_base; no arbitrary SQL/callback extension",
+      "program_hash": "SHA256 JSON.stringify exact compiled native steps incl original assertion text/hash; nested native plan is immutable and WeakSet-bound to internal preparation",
+      "outer_manifest": "Distinct complete SHA256 JSON.stringify atomic plan with native program; existing default-mode manifest and historical assertions preserved",
+      "temporary_assertion_helpers": "Fixed exact source assertion, zero arguments/void/empty search_path, owner-owned SECURITY DEFINER, explicit installer-only EXEC; intermediate source stage assertions with all native edges removed in savepoint; final exact003 combined closure after real creator removal. Helpers/schema all dropped before commit."
+    },
+    "native_joint_installer_documentation": {
+      "path": "supabase/qualification/native-governed-install/README.md",
+      "blob": "14f23909813cba1ad97b4cf343e4eb4f9afd8a44"
+    },
+    "attachment_assertions": {
+      "path": "tests/nativeArcAttachmentAssertions.mjs",
+      "blob": "ef80add4ae0f480f23b895658431a82907bbf5a1"
+    },
+    "attachment_contract": {
+      "path": "supabase/qualification/arc-membership-native/ATTACHMENT.md",
+      "blob": "53d93da1ff00aed03acc7c45ba3335a8cbb39df7"
+    },
+    "c9_postgres_fixture": {
+      "path": "tests/nativeArcCohortPostgres17.test.mjs",
+      "blob": "7c0cbfa4ed733eb47a5c49524540729d63adda59"
+    },
+    "native_joint_installer_fixture": {
+      "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",
+      "blob": "4dbde7da52ee7a4333e2d7cbbb1bb9455da40590"
+    }
   },
   "qualification_groups": {
     "c6": {
@@ -927,8 +1117,33 @@
       "environment": "MIP_NATIVE_ARC_COHORT_DISPOSABLE=synthetic-pg17-only; MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
       "invocation": "node --test tests/nativeArcCohortPostgres17.test.mjs",
       "fixture": "Fresh pristinepostgrescluster, real full atomicbackend/audit/C3syntheticdisabledreceipt and C6/C9install order; synthetic sources only.",
-      "expectation": "Complete dependency chain+finaleffectiveclosures; fullcurrentcohort; native originalcapture/latest-order/supersession/null-missing/sourceaccess/memberdrift; realwriter/scorer/journal/manualreview/currentreader; deterministicretry; nooverwrite/noautoactivation/noattachment/noeligibility.",
+      "expectation": "All14 C9 authored child groups pass, no skips: complete real dependency chain and final effective closure; exact native evidence/capture/null-missing/currentness/access/member drift; deterministic scorer/retry, complete ordinary score binding and explicit private attachment, two additions/concurrent retry/origin continuity/revocation/source non-mutation/exact nested metadata receipts; no public assignment/eligibility/activation.",
       "cleanup": "Restore independently guarded disposable database/role baseline, independently end clients; always remove container+volumes and assertabsence. Any primary/cleanup failure failsqualification."
+    },
+    "native_joint_install": {
+      "file": "tests/nativeGovernedInstallerPostgres17.test.mjs",
+      "status_at_source_authorship": "NOT RUN",
+      "environment": "MIP_NATIVE_GOVERNED_INSTALL_DISPOSABLE=synthetic-pg17-only; MIP_QIK_COMPARISON_DISPOSABLE=synthetic-pg17-only; MIP_DISPOSABLE_POSTGRES=qik-persistent-install",
+      "invocation": "node --test tests/nativeGovernedInstallerPostgres17.test.mjs",
+      "fixture": "Pristine pinned PostgreSQL17.6 engine170006; pgvector0.8.2 binary installed; pgcrypto/dblink; fake loopback SCRAM sessions; full actual disabled C3 substrate/receipt, real atomic backend/audit and curated native C6/C9 profile; no dependency stubs.",
+      "expectation": "All actual restricted-principal installation, identity/authorization/program/manifest refusal, late restrictive-source failure and whole-transaction rollback, acknowledged and ambiguous COMMIT/ROLLBACK reconciliation, exact final effective owners/roles/ACL/schema/RLS/noedges/nohelpers, real autonomous audit and no collection/schedules/publication activation assertions pass. No skipped groups; every failure refuses qualification.",
+      "cleanup": "Independent client closure; verify exact expected created-role allowlist; destroy only armed pristine disposable database/recreate default and remove exact synthetic roles; compare baseline. Runner always removes container/volumes and checks absence. Any primary/rollback/close/cleanup failure fails qualification.",
+      "resource_limits": "Existing verified-free public source/synthetic GitHub job; bounded5min test step/15min entire job, no hosted credentials, data, artifacts, new service, material transfer or plan upgrade."
     }
+  },
+  "joint_installer_retention": {
+    "table": "mip_comparison_install.native_programs",
+    "fields": [
+      "operation_id",
+      "mode",
+      "program_sha256",
+      "stage_assertions"
+    ],
+    "stage_assertion_fields": [
+      "path",
+      "sha256"
+    ],
+    "purpose": "Exact curated native program and byte-identical source assertion receipt required to reconcile ambiguous installation outcome; no source/native payload or dynamic SQL retained.",
+    "publication_allowed": false
   }
 }
