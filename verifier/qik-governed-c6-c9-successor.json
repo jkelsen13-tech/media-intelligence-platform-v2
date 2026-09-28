@@ -1426,7 +1426,7 @@
       },
       "supabase/qualification/native-governed-host/README.md": {
         "path": "supabase/qualification/native-governed-host/README.md",
-        "blob": "a323c15282e168ef35bdbb5a8a3bc601d306daf9"
+        "blob": "4c99ca24ec49f28c6ce904062605867490796228"
       },
       "tests/nativeGovernedHost.test.mjs": {
         "path": "tests/nativeGovernedHost.test.mjs",
@@ -2932,7 +2932,30 @@
       "real_material": false,
       "hosted": false
     },
-    "scope": "Actual synthetic-only initial qualification; independent review, frozen integration recheck and hosted conditions remain open. No historical acceptance or owner field signature."
+    "scope": "Actual synthetic-only initial qualification; independent review, frozen integration recheck and hosted conditions remain open. No historical acceptance or owner field signature.",
+    "frozen_integrated": {
+      "candidate": "c6d3d7b21108fd9993a1e990fdff79cdf63ac6da",
+      "tree": "8152c09d4d80b5fc7b7de294cd5b839d5772ffc4",
+      "run": 36451184785,
+      "job": 109026077851,
+      "conclusion": "success",
+      "pass": 57,
+      "fail": 0,
+      "skipped": 0,
+      "groups": [
+        15,
+        16,
+        13,
+        13
+      ],
+      "frozen_lock_unchanged": true,
+      "cleanup": "success",
+      "reused_combined_run": 36449315760,
+      "reused_historical_run": 36449393457,
+      "environment": "Existing source/synthetic-only GitHub Ubuntu22.04, Node22.14.0, loopback PostgreSQL17.6/170006 SCRAM, vector0.8.2, standalone Deno2.5.2; not hosted qik",
+      "actual_material": false,
+      "hosted_installation": false
+    }
   },
   "semantic_authority_foundation": {
     "label": "UNAPPROVED bounded source foundation; no operational C12/C13 closure",
@@ -2947,13 +2970,34 @@
     "tests": {
       "file": "tests/semanticAuthorityEnvelope.test.mjs",
       "groups": 15,
-      "status": "NOT RUN",
+      "status": "15 synthetic PASS in exact c6d3 qualification; unused foundation, no operational C12/C13 closure",
       "command": "node --test tests/semanticAuthorityEnvelope.test.mjs",
       "dependencies": "Node22.14.0 WebCrypto only; no new package, SQL installation or provider",
-      "cleanup": "No I/O, persistence or runtime resources created."
+      "cleanup": "No I/O, persistence or runtime resources created.",
+      "status_at_source_authorship": "NOT RUN"
     },
     "installed": false,
     "operational": false,
     "accepted": false
+  },
+  "external_source_review": {
+    "route": "Actual existing Cursor Cloud source-review-only connection",
+    "job": "bc-24fbba5a-0f83-41ff-978e-ec92e0bbf485",
+    "url": "https://cursor.com/agents/bc-24fbba5a-0f83-41ff-978e-ec92e0bbf485",
+    "candidate": "c6d3d7b21108fd9993a1e990fdff79cdf63ac6da",
+    "tree": "8152c09d4d80b5fc7b7de294cd5b839d5772ffc4",
+    "changed_files": 52,
+    "model": "cursor-grok-4.6-xhigh",
+    "independence": "Fresh reviewer context did not implement the candidate; read-only source inspection only",
+    "status": "Completed, actual result retrieved and inspected; no required source defects",
+    "material": "Source, synthetic fixtures and sanitized qualification only",
+    "unwaived": [
+      "Secure installer/audit/source Vault/executor/invoker configuration",
+      "Hosted Auth/TLS/JWT/Vault/resource capacity",
+      "Qualified activation profile",
+      "Actual caller/worker/unattended operation and recovery",
+      "Real historical transfer and object-byte custody"
+    ],
+    "historical_acceptance_changed": false
   }
 }

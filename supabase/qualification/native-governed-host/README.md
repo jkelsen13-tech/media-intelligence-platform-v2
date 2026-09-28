@@ -1,6 +1,6 @@
 # Existing-service native installer host — source candidate
 
-Authored against exact source d706609405906c51ddf521acbd5eabb4617b6b41 / tree 9cc8a0b187fa492ed94dd2d0df1d91916f98ce57. The parent reported 197 checks for that underlying v5 candidate. This synchronized v6 adapter selects new unreferenced installer/caller integration source; v6 itself is NOT RUN. These NEW adapter/workflow/test files are NOT RUN, not deployed, not an independent review, and do not establish secure credential availability. Applicable adapter qualification and fresh review follow parent integration.
+The integrated source/synthetic candidate c6d3d7b21108fd9993a1e990fdff79cdf63ac6da / tree 8152c09d4d80b5fc7b7de294cd5b839d5772ffc4 incorporates the qualified v6 installer, caller and this metadata-only host. Its applicable qualification receipts are recorded below. This workflow has not been dispatched against qik; secure configuration, hosted transport, installation, audit and operation remain unproved. Source/synthetic qualification does not establish those prerequisites.
 
 ## Scope and route
 
@@ -14,7 +14,7 @@ This is an installer, reconciliation and isolated synthetic audit route only. It
 
 run.mjs fixes native-governed-v6. It pins all transitive installer JS files and package-lock.json by Git blob, checks the exact reviewed release HEAD and clean checkout, requires it to descend from d706, checks Node 22.14.0 and the exact public qik CA, then compiles the existing plan and compares BOTH supplied manifest and native-program SHA256 BEFORE a database connection. Source reads are only git cat-file of the compiler/native module's existing fixed Git blobs. Unknown path/ref pairs, missing objects, non-UTF8 bytes and more than 8MiB of unique source refuse. Fetch-depth 0 supplies source history; missing historical blobs refuse rather than fetch arbitrary URLs. The workflow runs npm ci --omit=dev --ignore-scripts before credential injection. No shell SQL or replacement installer is used.
 
-Actual imported installer is supabase/qualification/qik-comparison-adapter/atomicInstall.mjs blob a97cd41a30216ad6561fc21088099c1bf75e2afd:
+Actual imported installer is supabase/qualification/qik-comparison-adapter/atomicInstall.mjs blob b73fcfa4782bd56ec220a2744aa749e8f50830a7:
 - prepareAtomicInstall constructs pinned source only.
 - installComparisonAtomic lines 295–440 calls catalog preflight, dblink catalog validation, closed C3 config digests, role/ACL checks, pinned DDL/final assertions and insertion of installation metadata. It does not invoke capture, claim, publication-review, accepted comparison or private-display readers.
 - C3_SQL hashes gate/schedule/credential/source/receipt configuration inside PostgreSQL. Only digest and closed-state booleans return; no feed URL, notes, runtime token hash, capture or article payload is exported.
@@ -26,7 +26,7 @@ Actual imported installer is supabase/qualification/qik-comparison-adapter/atomi
 The installer principal has powerful existing authority, including required source relation SELECT/ownership checks. That authority is not authorization to export rows: this fixed route never selects those values. Source metadata and error sanitization are therefore essential; do not expose an arbitrary SQL/callback/browser endpoint. Pinned source installation can execute source-defined DDL and catalog assertions within qik; describing the receiver as source/metadata-only does not describe installation as read-only.
 
 Underlying module pins:
-- atomicInstall a97cd41a30216ad6561fc21088099c1bf75e2afd
+- atomicInstall b73fcfa4782bd56ec220a2744aa749e8f50830a7
 - catalogPreflight a591c92b10d174bd2937e9634f8d491b4c34567b
 - compileSource cd87eb0a0bc758315246e74675339f3ea2972a19
 - native install c56aa3e050fdb9342ef90dc71dca44f2810782ea
@@ -76,9 +76,9 @@ Success exit requires verified cleanup, no reconciliation demand and the request
 
 ## Tests and installation order
 
-Parent invocation: node --test tests/nativeGovernedHost.test.mjs on Node22.14.0. Sixteen authored synthetic tests cover exact config, target/TLS refusals, source bytes, exact operation dispatch, no replay after ambiguity/drift, audit separation, result identity/allowlist, payload/secret error suppression and fail-closed cleanup evidence including absent reconciliation, acknowledged/ambiguous commits, audit and legacy receipts. Injected API methods are a trusted internal orchestration test seam, never workflow config or an arbitrary SQL seam. These tests are NOT RUN and do not qualify real pg transport, existing environment credentials or hosted install.
+Parent invocation: node --test tests/nativeGovernedHost.test.mjs on Node22.14.0. Sixteen authored synthetic tests cover exact config, target/TLS refusals, source bytes, exact operation dispatch, no replay after ambiguity/drift, audit separation, result identity/allowlist, payload/secret error suppression and fail-closed cleanup evidence including absent reconciliation, acknowledged/ambiguous commits, audit and legacy receipts. Injected API methods are a trusted internal orchestration test seam, never workflow config or an arbitrary SQL seam. These sixteen tests passed in the combined source/synthetic qualification recorded below. They do not qualify real qik pg transport, existing environment credentials or hosted install.
 
-Add source files only after parent inspection of workflow event effects. The selected original installation SQL and historical assertions remain unchanged; the atomic lifecycle and host receipt interpretation are separately revised and source-pinned. First run synthetic adapter checks and applicable combined regression, then fresh review; finally verify existing route/config/prerequisite metadata and secure injection before executing an already authorized operation. Do not invoke the existing destructive disposable PG harness against qik. Runner cleanup removes only its public CA staging file; database cleanup/reversal, source mutation, payload transfer and activation are not adapter actions.
+Add source files only after parent inspection of workflow event effects. The selected original installation SQL and historical assertions remain unchanged; the atomic lifecycle and host receipt interpretation are separately revised and source-pinned. The applicable synthetic adapter checks, combined regression and fresh review are recorded below. Verify the existing route/config/prerequisite metadata and secure injection before executing an already authorized operation. Do not invoke the existing destructive disposable PG harness against qik. Runner cleanup removes only its public CA staging file; database cleanup/reversal, source mutation, payload transfer and activation are not adapter actions.
 
 The new v6 final prerequisite/caller/bootstrap assertions resolve exact schema, relation and function identities using pg_catalog OIDs, because the native verifier owner deliberately lacks Auth and caller schema USAGE. Their effective owner/ACL/RLS/shape checks remain complete. No Auth/caller schema or payload-read grant is added to the verifier; the restricted-principal fixture explicitly checks that denial after success.
 
@@ -91,5 +91,17 @@ the other loses close acknowledgement after an acknowledged install. Fault injec
 awaits actual pg.Client.end() before a static error, restores the prototype in finally,
 and independently checks pg_stat_activity returns to baseline. Reconciliation absence
 and audit cleanup failures must block progress while exact committed receipt state is
-preserved. These new checks are NOT RUN at source authorship. Only the existing
-source/synthetic runner may execute the disposable fixture; never point it at qik.
+preserved. These checks passed in the combined source/synthetic qualification recorded below.
+Only the existing source/synthetic runner may execute the disposable fixture;
+never point it at qik.
+
+
+## Actual source/synthetic qualification
+
+- Combined candidate 5f3fb644c9bdc7554d36375ac7fa5098e901769b / tree 09a7a5c94f4c34a6e2e9e79c16a0fe8236791a37: [run 36449315760](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/36449315760), job 109019669886, 266 PASS / 0 FAIL / 0 SKIP. Includes the sixteen host tests, twelve atomic lifecycle tests, two actual separate atomic PostgreSQL lifecycle profiles, full selected journal/review/accepted-reader dependencies and 55 restricted ordered-install v2-v6 assertions. Browser build and owned-session/container/volume cleanup passed.
+- Candidate c6d3d7b21108fd9993a1e990fdff79cdf63ac6da / tree 8152c09d4d80b5fc7b7de294cd5b839d5772ffc4: [run 36451184785](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/36451184785), job 109026077851, 57 PASS / 0 FAIL / 0 SKIP. Targeted integration recheck used the exact generated Deno lock unchanged, exercised the native/current-reader path and both historical custody profiles, and checked the separate unused semantic foundation. Earlier 266-check evidence is reused only for unchanged code.
+- Actual environment: existing source/synthetic-only remote GitHub Actions, Ubuntu22.04, Node22.14.0, owned loopback PostgreSQL17.6 (170006), pgvector0.8.2, standalone Deno2.5.2. Synthetic Auth and loopback SCRAM are distinct from hosted qik Auth, verified TLS, secure injection or unattended operation. No credentials or actual article material entered these jobs.
+
+These receipts qualify the named source/synthetic candidates. They are not a hosted qik installation receipt, resource-headroom observation, activation receipt, owner field-by-field signature or historical acceptance. The original installation and acceptance evidence remains unchanged.
+
+Fresh non-implementing Cursor source review [bc-24fbba5a-0f83-41ff-978e-ec92e0bbf485](https://cursor.com/agents/bc-24fbba5a-0f83-41ff-978e-ec92e0bbf485) inspected exact c6d3d7b21108fd9993a1e990fdff79cdf63ac6da / tree 8152c09d4d80b5fc7b7de294cd5b839d5772ffc4 and its 52 changed files/transitive dependencies. Exposed model: cursor-grok-4.6-xhigh. The actual result was retrieved: no required source defects. Hosted assumptions and secure-access, activation and capacity gaps remain unwaived. This subsequent documentation correction synchronizes the atomic pin and records existing qualification facts; no runtime code or fixture changes, and no unchanged tests are claimed rerun.
