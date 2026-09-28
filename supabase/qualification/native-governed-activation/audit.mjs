@@ -17,21 +17,28 @@ select r.oid::text oid,session_user::text login,current_user::text effective,
  and not exists(select 1 from pg_proc p cross join lateral aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
   where (a.grantee=r.oid and a.privilege_type='EXECUTE') or
    (a.grantee in(select oid from pg_roles where rolname=any($1)) and has_function_privilege(r.oid,p.oid,'EXECUTE')))
+
+ -- CASE guards the function call itself. AND predicate order is not an
+ -- execution barrier: PostgreSQL may otherwise test nonsequences/other columns.
  and not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
-  where n.nspname<>'information_schema' and n.nspname !~ '^pg_' and c.relkind in('r','p','v','m','f')
-  and ((n.nspname<>'mip_native_activation' or c.relname not in('bootstrap','head','revisions'))
-   and (has_table_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')
-    or has_any_column_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES'))))
+  where n.nspname<>'information_schema' and n.nspname !~ '^pg_'
+   and case when c.relkind in('r','p','v','m','f')
+    and (n.nspname<>'mip_native_activation' or c.relname not in('bootstrap','head','revisions'))
+   then has_table_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')
+    or has_any_column_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')
+   else false end)
  and not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
-  where n.nspname<>'information_schema' and n.nspname !~ '^pg_' and c.relkind='S'
-   and has_sequence_privilege(r.oid,c.oid,'USAGE,SELECT,UPDATE'))
+  where n.nspname<>'information_schema' and n.nspname !~ '^pg_'
+   and case when c.relkind='S' then has_sequence_privilege(r.oid,c.oid,'USAGE,SELECT,UPDATE')
+    else false end)
  and not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
-  where n.nspname='mip_native_activation' and c.relkind='r'
-   and (has_table_privilege(r.oid,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')
-    or has_any_column_privilege(r.oid,c.oid,'INSERT,UPDATE,REFERENCES')))
+  where case when n.nspname='mip_native_activation' and c.relkind='r'
+   then has_table_privilege(r.oid,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')
+    or has_any_column_privilege(r.oid,c.oid,'INSERT,UPDATE,REFERENCES')
+   else false end)
  and not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
-  where n.nspname='mip_native_activation' and c.relname='revisions'
-   and has_column_privilege(r.oid,c.oid,'authority','SELECT'))
+  where case when n.nspname='mip_native_activation' and c.relname='revisions' and c.relkind='r'
+   then has_column_privilege(r.oid,c.oid,'authority','SELECT') else false end)
  as safe
 from pg_roles r where rolname=session_user;
 `
@@ -120,7 +127,7 @@ export async function auditNativeActivationMetadata(config,readPinnedSource){
     if(extra?.bad!==false)fail()
    }
    phase='runtime_rights'
-   const rights=(await db.query("select not exists(select 1 from pg_namespace n where n.nspname<>'information_schema' and n.nspname !~ '^pg_' and (has_schema_privilege($1::oid,n.oid,'CREATE') or($2 and has_schema_privilege($1::oid,n.oid,'USAGE') is distinct from has_schema_privilege($3::oid,n.oid,'USAGE')))) and not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname<>'information_schema' and n.nspname !~ '^pg_' and $2 and has_function_privilege($1::oid,p.oid,'EXECUTE') is distinct from has_function_privilege($3::oid,p.oid,'EXECUTE')) and not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_arc_projection_private','mip_native_comparison','mip_native_caller','mip_comparison_kernel_v1','mip_cutover_authority','mip_identity','mip_factual','evidence_pipeline','auth') and c.relkind in('r','p','v','m','f','S') and case when c.relkind='S' then has_sequence_privilege($1::oid,c.oid,'USAGE,SELECT,UPDATE') else has_table_privilege($1::oid,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN') or has_any_column_privilege($1::oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES') end) ok",[m.oid,enabled,m.group_oid??b.issuer_oid])).rows[0]
+   const rights=(await db.query("select not exists(select 1 from pg_namespace n where n.nspname<>'information_schema' and n.nspname !~ '^pg_' and (has_schema_privilege($1::oid,n.oid,'CREATE') or($2 and has_schema_privilege($1::oid,n.oid,'USAGE') is distinct from has_schema_privilege($3::oid,n.oid,'USAGE')))) and not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname<>'information_schema' and n.nspname !~ '^pg_' and $2 and has_function_privilege($1::oid,p.oid,'EXECUTE') is distinct from has_function_privilege($3::oid,p.oid,'EXECUTE')) and not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('mip_mentions','mip_arc_native','mip_arc_qik_source','mip_arc_projection_private','mip_native_comparison','mip_native_caller','mip_comparison_kernel_v1','mip_cutover_authority','mip_identity','mip_factual','evidence_pipeline','auth') and c.relkind in('r','p','v','m','f','S') and case when c.relkind='S' then has_sequence_privilege($1::oid,c.oid,'USAGE,SELECT,UPDATE') when c.relkind in('r','p','v','m','f') then has_table_privilege($1::oid,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN') or has_any_column_privilege($1::oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES') else false end) ok",[m.oid,enabled,m.group_oid??b.issuer_oid])).rows[0]
    if(rights?.ok!==true)fail()
   }
   phase='catalog_final'

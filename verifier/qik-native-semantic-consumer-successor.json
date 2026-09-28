@@ -3,7 +3,7 @@
   "status": "UNAPPROVED — SOURCE CANDIDATE ONLY — NOT AUTHORIZED FOR MATERIAL TRANSMISSION",
   "origin_commit": "cc8f1b19171917351548362f82f03fa2b1684831",
   "origin_tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9",
-  "integration_parent": "f89c1d8b243e580140f0e4736d30075f347f2236",
+  "integration_parent": "3376fa53e8ee5b715d57f21b46e72bb8b5634a76",
   "internal_qualification_authority": {
     "reference": "User full-consolidation amendment, coherent source qualification with synthetic fixtures only",
     "owner_field_signature": null,
@@ -16,7 +16,7 @@
     },
     {
       "path": "supabase/qualification/native-semantic-integration/README.md",
-      "blob": "dd1fa1d94cbf85681b9dcbbf968ec3162d89cdd7"
+      "blob": "f4070acb09f78826a571c2589a65e97a6a76795e"
     },
     {
       "path": "supabase/qualification/hypothesis-assessments/handler.mjs",
@@ -53,6 +53,10 @@
     {
       "path": "verifier/hypothesis-worker/worker.test.mjs",
       "blob": "53b7b42cf19944ef2564c80a2e31542ef97be509"
+    },
+    {
+      "path": "verifier/hypothesis-worker/fixture.mjs",
+      "blob": "9338af2ca2639e08c5a8195b227df75413a3406a"
     }
   ],
   "dependencies": [
@@ -232,7 +236,7 @@
       "tests/nativeSemanticHandlerIntegration.test.mjs",
       "verifier/hypothesisPostgresConcurrency.py"
     ],
-    "method_change_consumer_success": "AUTHORED — NOT RUN; original full worker suite with actual pending and resolved method cause consumed by new reader",
+    "method_change_consumer_success": "NOT RUN; failed full wildcard timed out before consumer; exhaustive repaired fixture shards required",
     "not_proved": [
       "hosted Auth/TLS",
       "qik installation",
@@ -319,7 +323,7 @@
     },
     {
       "path": "verifier/hypothesis-worker/fixture.mjs",
-      "blob": "6d58c445a9a787868e8c6c2987a5fd0518f9e77d"
+      "blob": "9338af2ca2639e08c5a8195b227df75413a3406a"
     },
     {
       "path": "verifier/hypothesis-worker/incarnationCases.mjs",
@@ -543,7 +547,7 @@
     }
   ],
   "method_fixture_install_order": {
-    "host_prepare": "Original prepareLogical.mjs before creating fixtures; exact owned disposable PostgreSQL container only",
+    "host_prepare": "Original prepareLogical.mjs before creating fixtures; exact owned disposable PostgreSQL container only; fixture installs/validates public pgcrypto after creating owned broker database",
     "comparison": [
       "supabase/qualification/comparison-generations/contract.sql",
       "supabase/qualification/comparison-generations/selection.sql",
@@ -591,12 +595,12 @@
     "fixture_specific": "Original schema scaffolding, native synthetic data, rights/privacy heads, Auth/session/method/RPC/broker synthetic fixtures remain in exact fixture.mjs; no reduced stand-in install"
   },
   "method_fixture_qualification": {
-    "status": "NOT RUN",
+    "status": "FIXTURE/SHARD REPAIR AUTHORED — NOT RUN",
     "entrypoint": "node --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs",
     "host_node": "24",
     "isolated_image": "node:24-alpine (original suite)",
     "postgres": "17.6/170006",
-    "extensions": "Built-in pgoutput logical WAL and exactly the extension/function dependencies in the pinned original SQL fixture; no additional vector/dblink/pg_trgm provisioning or claimed helper-only coverage.",
+    "extensions": "Actual pgcrypto WITH SCHEMA public, verified public.digest(bytea,text) and fixed synthetic SHA256; built-in pgoutput logical WAL; no vector/dblink/pg_trgm requirement found in original selected fixture",
     "source_guard": "MIP_DISPOSABLE_POSTGRES=comparison-qualification; GITHUB_ACTIONS=true; actual hex MIP_POSTGRES_SERVICE_ID",
     "roles": "Original synthetic superuser fixture scaffolding; new random bare ordinary LOGIN inherits only mip_hypothesis_gateway with SET FALSE; fixed synthetic authenticator",
     "assertions": [
@@ -607,6 +611,51 @@
       "browser identity injection400",
       "no new journal rows/sessions/runtime copies/authority/publication"
     ],
-    "cleanup": "Existing owned database/logical snapshot cleanup plus outer independently verified isolated worker/commit/PostgreSQL container and anonymous volume removal; no artifacts; no actual material"
+    "cleanup": "Existing owned database/logical snapshot cleanup plus outer independently verified isolated worker/commit/PostgreSQL container and anonymous volume removal; no artifacts; no actual material",
+    "failed_attempt": {
+      "candidate": "7d07eb03cffc148aad94588d45b1dba92a934dcd",
+      "tree": "ef5be039d6f473802f86c514f0a1cb6e187e4eb0",
+      "source": "917864251143f976b132a972f0f1c296fbefc6b6",
+      "source_tree": "5218c87837d4385381ea7244a0b29da7d6dc2b9d",
+      "workflow": "39c7e62f1b711822db430b4126661182f947dba4",
+      "run": 36466906536,
+      "job": 109079157846,
+      "conclusion": "failure",
+      "environment": {
+        "node": "24.21.0",
+        "postgres": "17.6/170006",
+        "host": "Existing source/synthetic-only GitHub Ubuntu22.04 owned loopback SCRAM",
+        "isolatedImage": "node24-alpine"
+      },
+      "timed_out_after_minutes": 13,
+      "no_final_counts": true,
+      "method_consumer_reached": false,
+      "consequential_failure": "exact canonical field citation integration SQLSTATE42883 via mip_citation_plan",
+      "cleanup": "success verified owned worker/commit/PostgreSQL containers and volumes absent",
+      "source_clean_step": "skipped",
+      "realMaterial": false
+    },
+    "shards": [
+      {
+        "name": "continuity_marker",
+        "pattern": "^isolated hypothesis generation authority, retained computation and restart package(?:$| (?:source-captured contiguous metadata coverage isolation|native marker boundary proof without source activation)(?: .*)?)$",
+        "worker_direct_children": 2,
+        "subtrees": [
+          "source-captured contiguous metadata coverage isolation",
+          "native marker boundary proof without source activation"
+        ],
+        "test_limit_minutes": 30,
+        "job_limit_minutes": 35
+      },
+      {
+        "name": "core_method_commit",
+        "pattern": "^(?:isolated hypothesis generation authority, retained computation and restart package(?:$| (?!(?:source-captured contiguous metadata coverage isolation|native marker boundary proof without source activation)(?: |$)).+)|synthetic commit recorder uses existing encrypted remote journal and actual isolated process restart(?: .*)?)$",
+        "worker_direct_children": 37,
+        "commit_recorder_root": true,
+        "test_limit_minutes": 17,
+        "job_limit_minutes": 20
+      }
+    ],
+    "coverage": "Exact original39 direct worker children partition2+37; each selected complete subtree executes all descendants. Verify direct source names in TAP for each shard; do not double-count repeated root or treat filtered omission/zeroSKIP as coverage."
   }
 }

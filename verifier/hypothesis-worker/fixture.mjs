@@ -13,6 +13,12 @@ export async function setup(t) {
  await raw('postgres',"alter system set log_min_error_statement='panic';alter system set log_min_messages='panic';alter system set log_statement='none';select pg_reload_conf();")
  await raw('postgres',"do $$begin if not exists(select 1 from pg_roles where rolname='anon') then create role anon;create role authenticated;create role service_role bypassrls;end if;end $$;")
  const f=await brokerFixture(t)
+ // Exact citation plan/derive use public.digest; install the real dependency
+ // only in this newly owned synthetic database, before later citation setup.
+ await f.admin('create extension pgcrypto with schema public')
+ const cryptoBoundary=JSON.parse(await f.admin("select jsonb_build_object('namespace',n.nspname,'digest',to_regprocedure('public.digest(bytea,text)') is not null,'value',encode(public.digest(convert_to('mip-hypothesis-pgcrypto-synthetic-v1','UTF8'),'sha256'),'hex')) from pg_extension e join pg_namespace n on n.oid=e.extnamespace where e.extname='pgcrypto'"))
+ if(!cryptoBoundary||cryptoBoundary.namespace!=='public'||cryptoBoundary.digest!==true||
+  cryptoBoundary.value!==sha('mip-hypothesis-pgcrypto-synthetic-v1'))throw Error('mip_fixture_pgcrypto_boundary')
  const source='synthetic-hypothesis-worker',implementation='synthetic-hypothesis-method-v1',method=randomUUID()
  const read=p=>readFile(new URL(p,base),'utf8')
  await f.admin("alter table public.articles alter column id set default gen_random_uuid();alter table public.articles add unique(url);alter table public.articles add feed text default 'synthetic';alter table public.articles add fetched_at timestamptz default now();alter table public.articles add ingestion_run_id text;alter table public.articles add reader_state text default 'pending_review';alter table public.articles add source_status text default 'active';")

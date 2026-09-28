@@ -68,7 +68,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/audit.mjs",
-      "git_blob": "a01901d27a26dfb704b652c3ce8a14b75f816f50"
+      "git_blob": "51d316031c320e55fe1f88e6008bcae236e36bc1"
     },
     {
       "path": "supabase/qualification/native-governed-install/install.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "ba7cb2dc62b8bb1e783a24ea0a65c0ebaa3063c9"
+      "git_blob": "2d70db1dc582c82d3538dc7777f261cd28b47488"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -140,7 +140,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/README.md",
-      "git_blob": "666bbe1d01c2c190fd55e3a5747a8bf3e016137f"
+      "git_blob": "c13b22f8d355cc330c64b32320b723a67e2fa4f5"
     },
     {
       "path": ".github/workflows/qik-native-installer-held.yml",
@@ -199,15 +199,15 @@
     "commit": "cc8f1b19171917351548362f82f03fa2b1684831",
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
-  "integration_parent": "7d07eb03cffc148aad94588d45b1dba92a934dcd",
+  "integration_parent": "3376fa53e8ee5b715d57f21b46e72bb8b5634a76",
   "qualification": {
-    "status": "AUDIT REPAIR AUTHORED — NOT RUN",
+    "status": "TYPE-SAFE AUDIT REPAIR AUTHORED — NOT RUN",
     "synthetic_only": true,
     "actual_qik_installation": false,
     "actual_material": false,
-    "prior_failed_run": 36466906536,
-    "prior_failed_job": 109079158368,
-    "prior_failed_candidate": "7d07eb03cffc148aad94588d45b1dba92a934dcd",
+    "prior_failed_run": 36467783328,
+    "prior_failed_job": 109084632683,
+    "prior_failed_candidate": "3376fa53e8ee5b715d57f21b46e72bb8b5634a76",
     "prior_result": {
       "source_pass": 51,
       "original_ordered_pg_pass": 55,
@@ -216,16 +216,12 @@
       "cleanup": "success",
       "source_clean_verification": "skipped"
     },
-    "reached": [
-      "successor installed_disabled_audit_pending",
-      "fresh disabled reconciliation",
-      "autonomous base audit qualified"
-    ],
-    "not_reached": [
-      "independent composed metadata audit success",
-      "activation lifecycle"
-    ],
-    "defect": "Independent catalog JSON must use the installed hash function's empty search_path; no changed digest meaning"
+    "direct_audit_failure": {
+      "phase": "auditor_identity",
+      "sqlstate": "42809",
+      "connection_cleanup_verified": true
+    },
+    "defect": "Guard type-specific privilege predicates using CASE; no lowered privilege or hash assertion"
   },
   "host_route": {
     "existing_environment": "qik-forward-controlled",
