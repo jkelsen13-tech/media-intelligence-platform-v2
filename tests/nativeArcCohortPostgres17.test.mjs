@@ -41,10 +41,7 @@ async function connect(user='postgres',pass=password){
 test('native C9 complete cohort, unchanged private scoring and current exact review', {
  skip:process.env.MIP_NATIVE_ARC_COHORT_DISPOSABLE!=='synthetic-pg17-only',timeout:300000
 },async t=>{
- let db,monitor,alice,admin,bob,guest,reviewer,wrong,armed=false,primaryFailed=false,stage='fixture',primaryState='none',primaryFrames=[],baseline=[]
- const check=(name,body)=>t.test(name,async()=>{
-  try{await body()}catch{throw Error('native_canonical_admission_check_failed')}
- })
+ let db,monitor,alice,admin,bob,guest,reviewer,wrong,armed=false,primaryFailed=false,stage='fixture',primaryState='none',primaryFrames=[],primaryPosition='none',primaryStage='fixture',checkIndex=0,baseline=[]
  try{
   db=await connect();monitor=await connect();await assertPristineFixture(db);
   baseline=(await db.query('select rolname from pg_roles order by rolname')).rows.map(r=>r.rolname)
@@ -160,7 +157,6 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   const admissionSQL='select mip_mentions.review_canonical_admission($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) result'
   const prep=(client=alice)=>call(client,'select mip_arc_qik_source.prepare_governed_relation($1,$2,$3) result',[s,cap.article_id,entity])
   const articlePrep=(client=alice,captureId=cap.id)=>call(client,'select mip_arc_qik_source.prepare_governed_article($1,$2,$3) result',[s,cap.article_id,captureId])
-  const current=(client=alice,pid=projection)=>call(client,'select mip_arc_qik_source.read_governed_relation($1,$2,$3,$4) result',[s,cap.article_id,entity,pid])
   const project=(receipt,pid,client=alice)=>call(client,'select mip_arc_qik_source.write_governed_relation($1,$2,$3,$4,$5,$6::uuid[],$7) result',
    [s,pid,cap.article_id,entity,receipt.expected_predecessor,receipt.admission_ids,receipt.set_digest])
   const admissionArgs=(aid,mid,did,w,v=1,prev=null,st='active',map=mappingHead)=>
@@ -228,7 +224,20 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   let receipt=await snap(),output,scored;
   const wire=()=>call(alice,'select mip_arc_native.read_scoring_input($1,$2,$3) result',[s,generation,receipt.input_hash]);
   const current=(rid=null)=>call(alice,'select mip_arc_native.read_current_score($1,$2,$3,$4,$5) result',[s,generation,receipt.input_hash,scored.output_hash,rid]);
-  const checkNative=async(name,body)=>t.test(name,async()=>{stage=name;try{await body()}catch(e){primaryFailed=true;primaryState=/^[0-9A-Z]{5}$/.test(e?.code??'')?e.code:'none';primaryFrames=frames(e);throw Error('native_arc_stage_'+name+'_sqlstate_'+primaryState+'_frames_'+primaryFrames.join(','))}});
+  const checkNative=async(name,body)=>{
+   const index=++checkIndex;
+   return t.test(name,async()=>{
+    stage='check_'+index;
+    try{await body()}catch(e){
+     const state=/^[0-9A-Z]{5}$/.test(e?.code??'')?e.code:'none';
+     const position=/^[0-9]{1,8}$/.test(String(e?.internalPosition??e?.position??''))?String(e.internalPosition??e.position):'none';
+     const locations=frames(e);
+     if(!primaryFailed){primaryState=state;primaryFrames=locations;primaryPosition=position;primaryStage=stage}
+     primaryFailed=true;
+     throw Error('native_arc_'+stage+'_sqlstate_'+state+'_position_'+position+'_frames_'+locations.join(','));
+    }
+   });
+  };
   await checkNative('exact_snapshot_scoring_retry_and_private_review',async()=>{
    assert.deepEqual(await snap(),receipt);
    const input=await wire();output=scoreGovernedNativeInput(input);
@@ -406,7 +415,7 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
    await db.query('begin');
    await db.query("update public.arc_membership_candidates set updated_at=updated_at+interval '1 microsecond' where id=$1",[arcCandidate]);
    const pid=(await alice.query('select pg_backend_pid() pid')).rows[0].pid;
-   const pending=current(reviewId).then(()=>({ok:true}),e=>({ok:false,code:e.message}));
+   const pending=current(reviewId).then(()=>({ok:true}),e=>({ok:false,code:e?.message==='arc_native_candidate_stale'?'arc_native_candidate_stale':'operation_failed'}));
    let waiting=false;
    for(let i=0;i<40;i++){
     await monitor.query('select pg_stat_clear_snapshot()');
@@ -423,7 +432,11 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
   });
 
  }catch(error){
-  if(!primaryFailed){primaryState=/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:'none';primaryFrames=frames(error)}
+  if(!primaryFailed){
+   primaryState=/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:'none';primaryFrames=frames(error);
+   primaryPosition=/^[0-9]{1,8}$/.test(String(error?.internalPosition??error?.position??''))?String(error.internalPosition??error.position):'none';
+   primaryStage=stage;
+  }
   primaryFailed=true;
  }finally{
   const failures=[];
@@ -449,10 +462,13 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
    }catch{failures.push('owned_cluster_cleanup')}
    finally{if(clean)await attempt('close_cleanup',()=>clean.end())}
   }
-  if(primaryFailed||failures.length)throw new AggregateError([
-   ...(primaryFailed?[Error('native_arc_stage_'+stage+'_sqlstate_'+primaryState+'_frames_'+primaryFrames.join(','))]:[]),
-   ...failures.map(code=>Error('native_arc_'+code)),
-  ],'native_arc_synthetic_qualification_failed');
+  if(primaryFailed||failures.length){
+   const diagnostics=[
+    ...(primaryFailed?['native_arc_stage_'+primaryStage+'_sqlstate_'+primaryState+'_position_'+primaryPosition+'_frames_'+primaryFrames.join(',')]:[]),
+    ...failures.map(code=>'native_arc_'+code),
+   ];
+   throw new AggregateError(diagnostics.map(code=>Error(code)),'native_arc_synthetic_qualification_failed:'+diagnostics.join('|'));
+  }
  }
 });
 
