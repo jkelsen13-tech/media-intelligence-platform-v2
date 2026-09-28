@@ -1092,7 +1092,7 @@
     },
     "c9_postgres_fixture": {
       "path": "tests/nativeArcCohortPostgres17.test.mjs",
-      "blob": "8eefc91982966fba551f02a4feb23660ab2052fd"
+      "blob": "3617bcdffed6e03c144a88651002b4220bf79204"
     },
     "native_joint_installer_fixture": {
       "path": "tests/nativeGovernedInstallerPostgres17.test.mjs",

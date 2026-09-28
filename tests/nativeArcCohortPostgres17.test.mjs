@@ -255,7 +255,9 @@ test('native C9 complete cohort, unchanged private scoring and current exact rev
      if(!primaryFailed){primaryState=state;primaryFrames=locations;primaryPosition=position;primaryStage=stage}
      primaryFailed=true;
      const refusal=nativeRefusalNames.has(e.message)?e.message:'none';
-     throw Error('native_arc_'+stage+'_sqlstate_'+state+'_refusal_'+refusal+'_position_'+position+'_frames_'+locations.join(','));
+     // Nested fixture failures expose only a closed synthetic check/code/line descriptor.
+     const privateDiagnostic=/^arc_private_projection_check_[1-5]_sqlstate_(?:[A-Z0-9]{5}|none)_position_(?:[0-9]{1,8}|none)_frames_(?:nativeArcPublicProjectionAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}(?:,nativeArcPublicProjectionAssertions\.mjs:[0-9]{1,6}:[0-9]{1,6}){0,2})?$/.test(e.message??'')?e.message:'none';
+     throw Error('native_arc_'+stage+'_sqlstate_'+state+'_refusal_'+refusal+'_position_'+position+'_private_'+privateDiagnostic+'_frames_'+locations.join(','));
     }
    });
   };
