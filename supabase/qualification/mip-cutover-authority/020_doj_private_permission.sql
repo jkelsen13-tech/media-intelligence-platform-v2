@@ -106,8 +106,8 @@ language sql stable security definer set search_path='' as $$
     'id','feed','outlet','title','url','summary','body_text','published_at',
     'fetched_at','ingestion_run_id','reader_state','source_status','claims']) extra
     where extra.value not in ('null'::jsonb,'""'::jsonb,'[]'::jsonb,'{}'::jsonb))
-   and c.payload=jsonb_build_object('url',evidence_pipeline.canonical_url(a.url),'title',btrim(a.title),'outlet',btrim(a.outlet),
-    'summary',nullif(a.summary,''),'body_text',null,'published_at',a.published_at))
+   and c.payload=jsonb_build_object('url',a.url,'title',a.title,'outlet',a.outlet,
+    'summary',a.summary,'body_text',null,'published_at',a.published_at))
  from qik_ingest.observed_items o join public.ingest_sources s on s.id=o.source_id
  join evidence_pipeline.import_jobs j on j.id=o.native_job_id
  join evidence_pipeline.import_receipts r on r.job_id=j.id and r.run_id=o.run_id
@@ -184,6 +184,7 @@ declare r record;t text;n integer;role_name text;rel regclass;
  actual_using text;actual_check text;expected_using text;expected_check text;
  denied text[]:=array['anon','authenticated','service_role','mip_comparison_worker_v1','mip_comparison_producer_v1','mip_projection_publisher_v1','qik_ingest_runtime','qik_ingest_fn_owner'];
 begin
+ perform set_config('search_path','',true);
  foreach role_name in array array['mip_cutover_authority_admin_v1','mip_cutover_schema_owner_v1','mip_publication_owner_v2','qik_ingest_fn_owner'] loop
   if not exists(select 1 from pg_roles where rolname=role_name and not rolsuper and not rolbypassrls) then raise exception 'doj_role_boundary: %',role_name;end if;
  end loop;
@@ -257,23 +258,32 @@ begin
  for r in select * from (values
   ('operation_evidence_versions','operation_reader','*','mip_publication_owner_v2','true','true'),
   ('operation_evidence_heads','operation_reader','*','mip_publication_owner_v2','true','true'),
-  ('operation_evidence_versions','doj_admin_evidence_read','r','mip_cutover_authority_admin_v1',$e$authority_adapter='doj-private-policy-v1' and not synthetic and exists(select 1 from mip_identity.doj_policy_versions p where p.source_project=scope->>'source_project')$e$,null),
-  ('operation_evidence_versions','doj_admin_evidence_insert','a','mip_cutover_authority_admin_v1',null,$e$authority_adapter='doj-private-policy-v1' and not synthetic and exists(select 1 from mip_identity.doj_policy_versions p where p.source_project=scope->>'source_project')$e$),
-  ('operation_evidence_heads','doj_admin_heads_read','r','mip_cutover_authority_admin_v1',$e$exists(select 1 from mip_identity.doj_policy_versions p where p.source_project=scope->>'source_project')$e$,null),
-  ('operation_evidence_heads','doj_admin_heads_insert','a','mip_cutover_authority_admin_v1',null,$e$exists(select 1 from mip_identity.operation_evidence_versions v where v.scope=operation_evidence_heads.scope and v.revision=operation_evidence_heads.revision and v.authority_adapter='doj-private-policy-v1' and not v.synthetic)$e$),
-  ('operation_evidence_heads','doj_admin_heads_update','w','mip_cutover_authority_admin_v1',$e$exists(select 1 from mip_identity.doj_policy_versions p where p.source_project=scope->>'source_project')$e$,$e$exists(select 1 from mip_identity.operation_evidence_versions v where v.scope=operation_evidence_heads.scope and v.revision=operation_evidence_heads.revision and v.authority_adapter='doj-private-policy-v1' and not v.synthetic)$e$)
+  ('operation_evidence_versions','doj_admin_evidence_read','r','mip_cutover_authority_admin_v1',$e$((authority_adapter = 'doj-private-policy-v1'::text) AND (NOT synthetic) AND (EXISTS ( SELECT 1
+   FROM mip_identity.doj_policy_versions p
+  WHERE (p.source_project = (operation_evidence_versions.scope ->> 'source_project'::text)))))$e$,null),
+  ('operation_evidence_versions','doj_admin_evidence_insert','a','mip_cutover_authority_admin_v1',null,$e$((authority_adapter = 'doj-private-policy-v1'::text) AND (NOT synthetic) AND (EXISTS ( SELECT 1
+   FROM mip_identity.doj_policy_versions p
+  WHERE (p.source_project = (operation_evidence_versions.scope ->> 'source_project'::text)))))$e$),
+  ('operation_evidence_heads','doj_admin_heads_read','r','mip_cutover_authority_admin_v1',$e$(EXISTS ( SELECT 1
+   FROM mip_identity.doj_policy_versions p
+  WHERE (p.source_project = (operation_evidence_heads.scope ->> 'source_project'::text))))$e$,null),
+  ('operation_evidence_heads','doj_admin_heads_insert','a','mip_cutover_authority_admin_v1',null,$e$(EXISTS ( SELECT 1
+   FROM mip_identity.operation_evidence_versions v
+  WHERE ((v.scope = operation_evidence_heads.scope) AND (v.revision = operation_evidence_heads.revision) AND (v.authority_adapter = 'doj-private-policy-v1'::text) AND (NOT v.synthetic))))$e$),
+  ('operation_evidence_heads','doj_admin_heads_update','w','mip_cutover_authority_admin_v1',$e$(EXISTS ( SELECT 1
+   FROM mip_identity.doj_policy_versions p
+  WHERE (p.source_project = (operation_evidence_heads.scope ->> 'source_project'::text))))$e$,$e$(EXISTS ( SELECT 1
+   FROM mip_identity.operation_evidence_versions v
+  WHERE ((v.scope = operation_evidence_heads.scope) AND (v.revision = operation_evidence_heads.revision) AND (v.authority_adapter = 'doj-private-policy-v1'::text) AND (NOT v.synthetic))))$e$)
  ) expected(table_name,policy_name,command,grantee,using_expr,check_expr) loop
   rel:=('mip_identity.'||r.table_name)::regclass;
   select pg_get_expr(p.polqual,p.polrelid),pg_get_expr(p.polwithcheck,p.polrelid)
    into actual_using,actual_check from pg_policy p where p.polrelid=rel and p.polname=r.policy_name and p.polcmd::text=r.command and p.polpermissive and p.polroles=array[r.grantee::regrole::oid];
   if not found then raise exception 'doj_operation_policy_shape: %, %',r.table_name,r.policy_name;end if;
-  -- These predicates contain only conjunctions/EXISTS, never OR. Ignore
-  -- deparser whitespace, grouping, text casts and outer-table qualification;
-  -- compare every remaining token, including complete subquery restrictions.
-  actual_using:=regexp_replace(replace(regexp_replace(lower(coalesce(actual_using,'@null@')),'operation_evidence_(versions|heads)\.','','g'),'::text',''),'[()[:space:]]','','g');
-  actual_check:=regexp_replace(replace(regexp_replace(lower(coalesce(actual_check,'@null@')),'operation_evidence_(versions|heads)\.','','g'),'::text',''),'[()[:space:]]','','g');
-  expected_using:=regexp_replace(replace(regexp_replace(lower(coalesce(r.using_expr,'@null@')),'operation_evidence_(versions|heads)\.','','g'),'::text',''),'[()[:space:]]','','g');
-  expected_check:=regexp_replace(replace(regexp_replace(lower(coalesce(r.check_expr,'@null@')),'operation_evidence_(versions|heads)\.','','g'),'::text',''),'[()[:space:]]','','g');
+  -- Exact PostgreSQL 17.6 deparser forms with a fixed search_path.
+  -- Do not discard grouping, case, quoted whitespace, casts or qualification.
+  expected_using:=r.using_expr;
+  expected_check:=r.check_expr;
   if actual_using is distinct from expected_using or actual_check is distinct from expected_check then raise exception 'doj_operation_policy_expression: %, %',r.table_name,r.policy_name;end if;
  end loop;
  for r in select * from (values
