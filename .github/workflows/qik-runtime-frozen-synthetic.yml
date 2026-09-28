@@ -1,4 +1,4 @@
-name: Qik bounded historical capacity and role authority synthetic qualification
+name: Qik governed semantic consumer synthetic qualification
 on:
   push:
     branches: [codex/qik-operational-integration-20260927]
@@ -18,20 +18,20 @@ jobs:
         with:
           fetch-depth: 2
           persist-credentials: false
-      - name: Verify candidate dependency tree and synthetic authority
+      - name: Verify exact candidate and closed synthetic dependency tree
         shell: bash
         run: |
           python3 -I -B - <<'PY'
           import hashlib,os,pathlib,subprocess
-          source='f71c40ad872e3e88285f96a05200f311bacdeee7'
+          source='30921561c962b498369151388a79169c68cbc62a'
           assert os.environ['GITHUB_EVENT_NAME']=='push'
           assert os.environ['GITHUB_REPOSITORY']=='jkelsen13-tech/media-intelligence-platform-v2'
           assert os.environ['GITHUB_REF']=='refs/heads/codex/qik-operational-integration-20260927'
-          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='d7c45f3020d7e6cb1752f13f066d4c90e47207b7'
+          assert subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()=='6b01310f7930f41877eaaa6dfb50146a0b53916b'
           assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA']
           subprocess.run(['git','merge-base','--is-ancestor',source,'HEAD'],check=True)
           assert subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines()==['.github/workflows/qik-runtime-frozen-synthetic.yml']
-          pins={".github/workflows/qik-historical-executor-synthetic.yml":"9d2eef226fb77976c430c01b3562b70066f36a0a",".github/workflows/qik-native-installer-held.yml":"d59e0e063518ccabd455e4a0be0b2ae365348a93",".github/workflows/qik-operational-adapter-synthetic.yml":"44a44e032ed935edf3c7d2f6835378fff405bd2e","docs/native-comparison-deno-runtime-qualification.md":"f212b261d0de7cbd4ec4d06796ec20b542755b85","docs/native-private-browser-consumer.md":"91f35a89055aebc0457efc7c6824ddc04767d5b7","docs/semantic-authority-envelope-contract.md":"e488b36973f835b08d6c4b829494879abacd7faf","src/components/NativePrivateComparisonWorkspace.jsx":"c3f104544fa9a31200b5f6bbddd068e82dd2aa68","src/components/PrivateInvestigationWorkspace.jsx":"1cb1bd52db17191674083f8b93f4bbeb77b3134b","src/lib/nativePrivateComparisonRead.js":"d2b22e92f3e8240a13d5478773e177f0b1990871","src/lib/semanticAuthorityEnvelope.js":"27d44e70227f53080ef7ff18bb07d7afc326cd77","supabase/functions/native-comparison-display/README.md":"17aed1a4c628fa340db1eb36cb0ae6df878e7c76","supabase/functions/native-comparison-display/adapter.mjs":"a6d113c25d284fa296c9816adae2dc17d9b0ca7f","supabase/functions/native-comparison-display/config.fragment.toml":"3295db2df6bb45efe884b8b3b4d0b5c6aa81101d","supabase/functions/native-comparison-display/deno.json":"9126bd3e8ddc618bfbdc8239f14c84295ed662af","supabase/functions/native-comparison-display/deno.lock":"11d5e1328c2a0b273f5085dc0a9946881adac3ee","supabase/functions/native-comparison-display/dependency-closure.json":"b93ec062b7b34aa83c04966de50f950c233e681f","supabase/functions/native-comparison-display/index.ts":"ff4998b69ae0ca40be166a7437210cba5170f73d","supabase/qualification/historical-qik-executor/DENO_RUNTIME.md":"88b4b8e7ac1b736e2a06fd9d2b25df08eb7a986a","supabase/qualification/historical-qik-executor/README.md":"573f1564dca5894f4c59523a5b4e5f09d6ef27b2","supabase/qualification/historical-qik-executor/executor.mjs":"fa2e6a6f04287f45ce75ee0ae79e66afea5a3e1a","supabase/qualification/historical-qik-executor/handler.mjs":"d00b3d331e161f0fb269ed26b173d5c7bcc3cb29","supabase/qualification/native-comparison-caller/001_admission.sql":"a9428d8b2120514a0d6ee13a53d801dba7b6e060","supabase/qualification/native-comparison-caller/README.md":"1b50091ac71a2a6c4b46290d49ffb0bd11328e05","supabase/qualification/native-comparison-caller/host.mjs":"b258b01e701ce18a0c6c91d34e85063bb3ee77aa","supabase/qualification/native-comparison-display/displayContract.mjs":"e5975cf78bfe875c17a8e5ce3be2bc39f248a20a","supabase/qualification/native-governed-host/README.md":"4c99ca24ec49f28c6ce904062605867490796228","supabase/qualification/native-governed-host/adapter.mjs":"47622a1729351d0cabda279d63855b9309e490b0","supabase/qualification/native-governed-host/run.mjs":"d713431e63d62cbfdddd8e196e7d7b4000a9d3b1","supabase/qualification/native-governed-install/README.md":"08277b4d5dd28652794db38cd9d48b904ac9de39","supabase/qualification/native-governed-install/install.mjs":"c56aa3e050fdb9342ef90dc71dca44f2810782ea","supabase/qualification/qik-comparison-adapter/atomicInstall.mjs":"b73fcfa4782bd56ec220a2744aa749e8f50830a7","tests/historicalQikDenoRuntime.mjs":"66eea36fee9ee43d412adcddbf023007f7242a94","tests/historicalQikExecutor.mjs":"bb80465876c7c7c62dd261da260079244445ffa9","tests/historicalQikExecutorHandler.test.mjs":"f1780203995e5efc6b65aa86beb87d4946e5eaa4","tests/historicalQikExecutorPostgres17.test.mjs":"7d9ba542c49cab82377bc8bbcd75afff8741769d","tests/nativeArcCohortPostgres17.test.mjs":"2118e37d75ea0a9b0fdedc1ad87023e7ed3997e1","tests/nativeComparisonBindingFixture.mjs":"f325d80133e9a152ae94b00ffa1e65714e199470","tests/nativeComparisonCaller.test.mjs":"79d65fcab37dff7c987cedac7aded4bd5d8ee346","tests/nativeComparisonCallerPostgresAssertions.mjs":"80a8632a5bd749742c97ff4c4b3c4685376a206a","tests/nativeComparisonDenoRuntime.mjs":"a313f47a040e6bf24326c8fa731b68fc44ff9868","tests/nativeComparisonDenoRuntimePin.json":"82305814e17a4fa749c6e7a4c5ea2ba284045722","tests/nativeComparisonEdgePackaging.test.mjs":"db97133693c14f198d3566a02d25c34a9fde6e44","tests/nativeGovernedHost.test.mjs":"d3325ee764c41fb3d40613d9ec9fb708561b0a17","tests/nativeGovernedInstallerPostgres17.test.mjs":"4a01cf7ff02a31093fe27cf72ce57621d272bd2f","tests/nativePrivateUiFixture.mjs":"cfc7fd58016db965850bacbf424e97321592785c","tests/nativePrivateUiRead.test.mjs":"4cc9a7699f835b1c2457ae78cbc0af6c6f200c65","tests/qikComparisonAtomicInstall.test.mjs":"b855762ad64da0234dc17849477891f21ae46b94","tests/semanticAuthorityEnvelope.test.mjs":"962033f773d5e845a3bc4d1a1ca29be3f6716806","verifier/qik-governed-c6-c9-successor.json":"f5418a93bf74a922f017abedf6585ed6ffc759eb","verifier/qik-history-bounded-adapter-successor.json":"d5253906f80267934a72f745201b1847b14a0792","verifier/qikComparisonAtomicInstallPostgres17.mjs":"00de8b575dca2c485e4ea6c75a615efb499b5e61","tests/historicalQikCapacity.mjs":"87c1c6bde5dd753536d7f34d03a92b28eed49167","tests/historicalQikCapacityDeno.mjs":"a96c7585703005def71df16fde2132eb5b7e698d","tests/historicalQikCapacityMetrics.mjs":"6802054c1bfbaa4d04c662bdcc654b534e4b4673","tests/historicalQikCapacityMetrics.test.mjs":"f3290b093e29c424d29374e7fccf4683a21cf1d6","tests/qikRoleLifecyclePostgres17.test.mjs":"83705b16aceca48a4675d48bff7e84cde14076dd","supabase/qualification/historical-qik-executor/capacity-qualification/README.md":"6f7f05e2d156b8fafa452fb233e74df0c64e81de","verifier/qik-history-capacity-source-candidate.json":"1a83d30870aa9106deaa1b3f58a7ee4f40a880e3"}
+          pins={"package-lock.json":"2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0","package.json":"68caf5625166966005fff9cd702b3bc6c5fa49ad","src/lib/hypothesisAssessment.js":"4ce4979a85c2388d9f181b0599fab960ecad7d69","src/lib/semanticAuthorityEnvelope.js":"27d44e70227f53080ef7ff18bb07d7afc326cd77","supabase/migrations/20260905082406_evidence_pipeline_reliability.sql":"e7beb22b9a4dd2e38076b5554c7f5b4e6e0e4e77","supabase/migrations/20260906042413_evidence_change_queue_v1.sql":"1b93f947f5351097e629adc718659a1125fdfe1f","supabase/migrations/20260906051224_evidence_assessment_dependencies_v1.sql":"d6092de9540550c4d126c91494cfe3374f02a721","supabase/migrations/20260906071525_investigation_change_briefings_v1.sql":"78b1bdce25432ef7e8194a764c585e7836ef943e","supabase/migrations/20260906075718_investigation_workspace_batch_v1.sql":"1eaf8bac441fee856f7f3e1b6723662d0408dcad","supabase/qualification/collector-native-capture/authenticatedPgDriver.mjs":"af0f3b69c34695f9241934fae89ac00cedd08515","supabase/qualification/collector-native-capture/credentialDelivery.mjs":"354679fadc48eb9f8a8154456f3d38e7faab3e61","supabase/qualification/comparison-generations/contract.sql":"2cd760316e01b8ff6f06bf44cfa91aed37e606a8","supabase/qualification/hypothesis-assessments/001_revision_store.sql":"6218ce921561821dc8f2e624f7fa4697785d3faf","supabase/qualification/hypothesis-assessments/002_retained_observation_reader.sql":"a118cc404f39d37bb382012eaa4b945814da44ac","supabase/qualification/hypothesis-assessments/003_bound_acceptance.sql":"036320a9c837ec9c139297bac18c88a0af857f99","supabase/qualification/hypothesis-assessments/004_bound_history.sql":"8fbcf8686327f7ab74485436135d3fd540617bd5","supabase/qualification/hypothesis-assessments/005_reassessment_causes.sql":"908e72584d14f937292d554c8a9e0a497034be0b","supabase/qualification/hypothesis-assessments/006_reassessment_completion.sql":"e86b7da084beb9ae0fb723d00153e66a20b21bc3","supabase/qualification/hypothesis-assessments/007_human_reconsideration.sql":"5ae00ef13ce49c29884503b2cb5501bdc442be42","supabase/qualification/hypothesis-assessments/008_authoring_reads.sql":"510ba8865e209b93b926e26a7e1eee32d3bf3f83","supabase/qualification/hypothesis-assessments/014_review_acknowledgements.sql":"a733bc58255cce6b89aac4cc2dac2a99fb2ff430","supabase/qualification/hypothesis-assessments/015_committed_observations.sql":"984a51f370d4e41a58008ee61e387706b06f5dac","supabase/qualification/hypothesis-assessments/016_observation_delivery.sql":"5365db95cc0ac133990d35cbe41c5acd576c5e68","supabase/qualification/hypothesis-assessments/017_external_observation_epoch.sql":"9b2fb4b297d1598d4315e26d8e2d9a66951b43cc","supabase/qualification/mip-cutover-authority/004_publication_staging.sql":"38379113e73d5fea1f3a3dba8647f374ed2733fe","supabase/qualification/mip-cutover-authority/008_operation_evidence.sql":"a1c9f2fb236e7069e80c5a1cfe6b58274c537ee6","tests/changeQueueFixture.sql":"235f92e0ce285cbf5426444b06b576a39adb1e38","tests/hypothesisAssessmentFixture.mjs":"da57f4423665ac422a28ec500b939440e782387e","verifier/comparisonPostgresConcurrency.py":"815902d79aa8986a54d33de1f4b9432eca181278","supabase/qualification/native-semantic-integration/reader.mjs":"949baaf0401f5352a0be04545c1288f3c2354fc7","supabase/qualification/native-semantic-integration/README.md":"341dc09493bd007b3b58ffcc1697d0f8568f16ef","supabase/qualification/hypothesis-assessments/handler.mjs":"551e7dd61a1ba856f281a144fb1423c07af44b44","supabase/qualification/hypothesis-assessments/store.mjs":"286c88ffb8f6fba62900cc532236febca5430d34","tests/nativeSemanticIntegration.test.mjs":"fd0eed9d871882c544013e146bba0de917a9afb4","tests/nativeSemanticIntegrationPostgres17.test.mjs":"0afd47e34511e024d704c00ac92cebee1b53d08d","tests/nativeSemanticIntegrationHttpBridge.mjs":"e1bc8746da0d4f2cfec40838214622e025a98c08","tests/nativeSemanticHandlerIntegration.test.mjs":"2977db312970274b441a5096026941ff2d4dd191","verifier/hypothesisPostgresConcurrency.py":"9b3d914b7f403ca606fa3ab0857e3c44f14aac96","verifier/qik-native-semantic-consumer-successor.json":"7b5f568276e75485369dcdc802dcfd16fcf18993"}
           for name,blob in pins.items():
               body=pathlib.Path(name).read_bytes()
               assert hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()==blob
@@ -40,7 +40,7 @@ jobs:
               assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
           config=subprocess.run(['git','config','--get-regexp','http.*.extraheader'],capture_output=True)
           assert config.returncode==1 and not config.stdout
-          print('Bounded source/synthetic capacity and PG17 role authority qualification only. Existing combined266/history83/frozen57 receipts retained; no unchanged full runtime rerun, hosted installation, actual source material or route acceptance. Complete fixed source pins and historical SHA assertions checked.')
+          print('New semantic consumer source/synthetic qualification only. Unchanged combined266/history83/frozen57/capacity33 receipts retained. No hosted install, Auth/TLS or actual material.')
           PY
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -48,97 +48,77 @@ jobs:
           package-manager-cache: false
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Prepare verified pinned Deno and actual frozen source dependencies
-        timeout-minutes: 5
+      - name: Qualify exact semantic requests, HTTP composition and affected existing handlers
+        timeout-minutes: 2
+        run: node --test tests/semanticAuthorityEnvelope.test.mjs tests/nativeSemanticIntegration.test.mjs tests/nativeSemanticHandlerIntegration.test.mjs tests/hypothesisHandler.test.mjs tests/hypothesisEvidenceBindingStore.test.mjs tests/hypothesisReassessment.test.mjs tests/hypothesisReview.test.mjs
+      - name: Start pristine PostgreSQL 17.6 assessment fixture
+        timeout-minutes: 2
         shell: bash
         run: |
           set -euo pipefail
-          test "$(uname -s)" = Linux
-          test "$(uname -m)" = x86_64
-          probe_dir="$(mktemp -d "$RUNNER_TEMP/native-comparison-deno.XXXXXX")"
-          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 --max-filesize 50000000 \
-            'https://github.com/denoland/deno/releases/download/v2.5.2/deno-x86_64-unknown-linux-gnu.zip' -o "$probe_dir/deno.zip"
-          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 --connect-timeout 10 --max-time 30 --max-filesize 1024 \
-            'https://github.com/denoland/deno/releases/download/v2.5.2/deno-x86_64-unknown-linux-gnu.zip.sha256sum' -o "$probe_dir/vendor.sha256sum"
-          printf '%s  %s\n' '520fd4bc2d18b50b6ac2ea8b7d0f7f6a35588e412754a081e8c6afd4b15264c4' "$probe_dir/deno.zip" | sha256sum --check --status
-          printf '%s  %s\n' '4c0fc62463955fa32e56d43d4d14b37424251e4ab78f14beb33e7092fd083cda' "$probe_dir/vendor.sha256sum" | sha256sum --check --status
-          test "$(awk 'NR==1 {print $1}' "$probe_dir/vendor.sha256sum")" = '520fd4bc2d18b50b6ac2ea8b7d0f7f6a35588e412754a081e8c6afd4b15264c4'
-          unzip -q "$probe_dir/deno.zip" deno -d "$probe_dir"
-          chmod 700 "$probe_dir/deno"
-          export DENO_BINARY="$probe_dir/deno"
-          export DENO_DIR="$probe_dir/cache"
-          export DENO_NO_UPDATE_CHECK=1
-          test "$("$DENO_BINARY" --version | head -n 1)" = 'deno 2.5.2 (stable, release, x86_64-unknown-linux-gnu)'
-          cfg='supabase/functions/native-comparison-display/deno.json'
-          lock='supabase/functions/native-comparison-display/deno.lock'
-          test "$(sha256sum "$lock" | awk '{print $1}')" = 'df06499a54915068be7976853021d67c0b6598927c552cf5e6f19b99c404dbe3'
-          timeout --signal=KILL 90s "$DENO_BINARY" cache --config="$cfg" --lock="$lock" --frozen --node-modules-dir=none \
-            supabase/functions/native-comparison-display/index.ts \
-            supabase/qualification/native-comparison-caller/host.mjs \
-            tests/nativeComparisonDenoRuntime.mjs \
-            tests/historicalQikDenoRuntime.mjs \
-            tests/historicalQikCapacityDeno.mjs \
-            supabase/qualification/historical-qik-executor/index.ts
-          timeout --signal=KILL 90s "$DENO_BINARY" check --config="$cfg" --lock="$lock" --frozen --node-modules-dir=none \
-            supabase/functions/native-comparison-display/index.ts \
-            supabase/qualification/historical-qik-executor/index.ts
-          lock_before="$(sha256sum "$lock" | awk '{print $1}')"
-          timeout --signal=KILL 30s "$DENO_BINARY" check --config="$cfg" --lock="$lock" --frozen --node-modules-dir=none \
-            supabase/functions/native-comparison-display/index.ts \
-            supabase/qualification/historical-qik-executor/index.ts
-          test "$(sha256sum "$lock" | awk '{print $1}')" = "$lock_before"
-          printf 'DENO_BINARY=%s\nDENO_DIR=%s\nDENO_NO_UPDATE_CHECK=1\n' "$DENO_BINARY" "$DENO_DIR" >> "$GITHUB_ENV"
-      - name: Qualify capacity metric parsing and refusal
-        timeout-minutes: 1
-        run: node --test tests/historicalQikCapacityMetrics.test.mjs
-      - name: Start pristine PostgreSQL 17.6 for the full ordered installation
-        shell: bash
-        run: |
+          command -v psql >/dev/null
           docker run --detach --name qik-op-qualification --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=mip-efta-disposable-ci-only -e POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
           for attempt in $(seq 1 30); do
-            if docker exec qik-op-qualification pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then exit 0; fi
+            if docker exec qik-op-qualification pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then
+              test "$(docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification psql -X -h 127.0.0.1 -U postgres -Atc "show server_version_num")" = 170006
+              exit 0
+            fi
             sleep 2
           done
           exit 1
-      - name: Verify exact database version and retain unchanged scoped role proof
+      - name: Qualify actual authenticated assessment producer and retained retry
+        timeout-minutes: 3
+        env:
+          MIP_NATIVE_SEMANTIC_DISPOSABLE: synthetic-pg17-only
+        run: node --test tests/nativeSemanticIntegrationPostgres17.test.mjs
+      - name: Remove first fixture before separate original hypothesis setup
+        shell: bash
+        run: |
+          set -euo pipefail
+          volumes=$(docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{println .Name}}{{end}}{{end}}' qik-op-qualification)
+          docker rm --force --volumes qik-op-qualification
+          for volume in $volumes; do
+            if docker volume inspect "$volume" >/dev/null 2>&1; then exit 1; fi
+          done
+          if docker container inspect qik-op-qualification >/dev/null 2>&1; then exit 1; fi
+      - name: Start pristine original hypothesis PostgreSQL 17.6 fixture
         timeout-minutes: 2
-        env:
-          MIP_QIK_ROLE_LIFECYCLE_DISPOSABLE: synthetic-pg17-only
         shell: bash
         run: |
           set -euo pipefail
-          test "$(docker exec -e PGPASSWORD=mip-efta-disposable-ci-only qik-op-qualification psql -X -h 127.0.0.1 -U postgres -Atc "show server_version_num")" = 170006
-          echo 'Unchanged scoped role source83705b retained; actual4PASS run36459391029/job109053827943 reused.'
-      - name: Measure bounded capacity with bootstrap transport and verify exact custody
-        timeout-minutes: 8
+          docker run --detach --name qik-semantic-hypothesis --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=mip-disposable-ci-only -e POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+          for attempt in $(seq 1 30); do
+            if docker exec qik-semantic-hypothesis pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then
+              test "$(docker exec -e PGPASSWORD=mip-disposable-ci-only qik-semantic-hypothesis psql -X -h 127.0.0.1 -U postgres -Atc "show server_version_num")" = 170006
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+      - name: Qualify real retained permission change and HTTP read, preserve existing refusals
+        timeout-minutes: 4
         env:
-          MIP_HISTORICAL_CAPACITY_DISPOSABLE: synthetic-pg17-only
-          MIP_HISTORICAL_EXECUTOR_DISPOSABLE: synthetic-pg17-only
-        run: node --test tests/historicalQikExecutorPostgres17.test.mjs
-      - name: Repeat capacity and custody with closed ordinary installer
-        timeout-minutes: 8
-        env:
-          MIP_HISTORICAL_CAPACITY_DISPOSABLE: synthetic-pg17-only
-          MIP_HISTORICAL_EXECUTOR_DISPOSABLE: synthetic-pg17-only
-          MIP_HISTORICAL_EXECUTOR_INSTALL_PROFILE: closed-ordinary
-        run: node --test tests/historicalQikExecutorPostgres17.test.mjs
-      - name: Verify the pinned lock and tracked source remained unchanged
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+          PYTHONPATH: verifier
+        run: python3 -B -m unittest -v hypothesisPostgresConcurrency.Hypothesis.test_native_semantic_http_reader_with_real_retained_permission_cause hypothesisPostgresConcurrency.Hypothesis.test_retained_method_change_has_exact_receipt_without_new_source_capture hypothesisPostgresConcurrency.Hypothesis.test_permission_revocation_records_each_affected_operation_without_body_text hypothesisPostgresConcurrency.Hypothesis.test_observation_is_user_scoped_and_rechecks_membership_on_retry_and_read
+      - name: Verify source and historical assertions remained unchanged
         shell: bash
         run: |
           set -euo pipefail
-          test "$(sha256sum supabase/functions/native-comparison-display/deno.lock | awk '{print $1}')" = 'df06499a54915068be7976853021d67c0b6598927c552cf5e6f19b99c404dbe3'
           git diff --exit-code --quiet
-          echo 'Pinned source/lock unchanged; bounded synthetic measurements and authority semantics only, no hosted qualification or actual-material transfer.'
-      - name: Remove disposable database and verify no container or volume remains
+          echo 'Source unchanged. Synthetic authenticated PostgreSQL and Request/Response composition only, not hosted Auth/TLS, installation or operation.'
+      - name: Remove both owned fixtures and verify no container or volume remains
         if: always()
         shell: bash
         run: |
-          if docker container inspect qik-op-qualification >/dev/null 2>&1; then
-            volumes=$(docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{println .Name}}{{end}}{{end}}' qik-op-qualification)
-            docker rm --force --volumes qik-op-qualification
-            for volume in $volumes; do
-              if docker volume inspect "$volume" >/dev/null 2>&1; then echo 'Disposable volume remains'; exit 1; fi
-            done
-          fi
-          if docker container inspect qik-op-qualification >/dev/null 2>&1; then exit 1; fi
-
+          set -euo pipefail
+          for container in qik-op-qualification qik-semantic-hypothesis; do
+            if docker container inspect "$container" >/dev/null 2>&1; then
+              volumes=$(docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{println .Name}}{{end}}{{end}}' "$container")
+              docker rm --force --volumes "$container"
+              for volume in $volumes; do
+                if docker volume inspect "$volume" >/dev/null 2>&1; then echo 'Disposable volume remains'; exit 1; fi
+              done
+            fi
+            if docker container inspect "$container" >/dev/null 2>&1; then exit 1; fi
+          done
