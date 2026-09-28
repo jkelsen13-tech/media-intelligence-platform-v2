@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { transferHistoricalArticles, TRANSFER_VERSION, SOURCE_CAPABILITIES, SINK_CAPABILITIES } from '../scripts/mipHistoricalArticleTransfer.mjs'
+import { transferHistoricalArticles, planHistoricalTransferUnits, TRANSFER_VERSION, SOURCE_CAPABILITIES, SINK_CAPABILITIES } from '../scripts/mipHistoricalArticleTransfer.mjs'
 import { planHistoricalArticles, FIELD_CONTRACTS, PROJECTS, VERSION, CATEGORIES, LIMITS, MANIFEST_HARD_LIMITS, manifestLimits } from '../scripts/mipHistoricalArticleTransferPlan.mjs'
 import { fingerprintPayload, parseJsonLossless, stableStringify } from '../scripts/mipLegacyGraphStaging.mjs'
 
@@ -145,7 +145,7 @@ test('unit and byte ceilings pause and resume the exact frozen manifest without 
   assert.equal(h.counts.put,before.put);assert.equal(h.counts.record,before.record)
   assert.equal(h.counts.object,before.object);assert.equal(h.counts.read,before.read)
   const small=harness(),paused=await small.run({max_material_bytes:1})
-  assert.equal(paused.state,'budget_paused');assert.equal(small.counts.put,0)
+  assert.equal(paused.state,'unit_exceeds_budget');assert.equal(small.counts.put,0)
 })
 test('lost commit and checkpoint acknowledgments reconcile exact readback',async()=>{
   const h=harness();h.hooks.losePutAck=true;h.hooks.loseCheckpointAck=true
@@ -279,10 +279,50 @@ test('expanded aggregate metadata capacity does not silently expand invocation b
   assert.throws(()=>planHistoricalArticles(f.input),/byte_limit/)
   const limits={records:10000,objects:10000,bytes:LIMITS.bytes*2}
   const h=harness(f,limits),r=await h.run()
-  assert.equal(r.state,'budget_paused');assert.equal(h.counts.put,0)
+  assert.equal(r.state,'unsupported_unit_capacity');assert.equal(h.counts.put,0)
   const mismatch=harness(f,limits);mismatch.grant.manifest_totals.bytes--
   const rejected=await mismatch.run()
   assert.equal(rejected.code,'route_capacity_mismatch');assert.equal(mismatch.counts.inventory,0)
   await assert.rejects(()=>h.run({max_material_bytes:LIMITS.bytes+1}),/invocation_budget/)
   assert.throws(()=>manifestLimits({...limits,records:MANIFEST_HARD_LIMITS.records+1}),/manifest_limit/)
+})
+
+test('byte-aware record units retain deterministic membership independently of invocation ceiling',async()=>{
+  const f=fixture(),a=f.input.records[0]
+  a.payload_bytes=80*1024*1024
+  const b=copy(a);b.identity.version_sha256=H('second-large-record')
+  f.input.records.push(b)
+  const limits={records:10000,objects:10000,bytes:LIMITS.bytes*2}
+  const h=harness(f,limits),seen=[]
+  const units=planHistoricalTransferUnits(f.input,limits)
+  const rows=units.filter(u=>u.kind==='records').flatMap(u=>u.rows)
+  assert.deepEqual(rows.map(r=>stableStringify(r.identity)).sort(),
+    h.plan.manifest.records.map(r=>stableStringify(r.identity)).sort())
+  assert.equal(new Set(units.map(u=>u.unit_id)).size,units.length)
+  assert.ok(units.filter(u=>u.kind==='records').every(u=>u.bytes<=LIMITS.bytes))
+  const reordered=copy(f.input);reordered.records.reverse()
+  assert.deepEqual(planHistoricalTransferUnits(reordered,limits),units)
+  // Metadata-only probe stops before reading or allocating oversized synthetic
+  // payload bytes. The sink observes the exact next-unit digest and byte bound.
+  h.options.sink.readUnit=async request=>{seen.push(copy({...request,signal:undefined}));throw Error('probe stop')}
+  const r=await h.run()
+  assert.equal(r.code,'adapter_operation_failed')
+  assert.equal(seen[0].max_bytes,80*1024*1024)
+  assert.equal(h.plan.pages[0].rows.length,2)
+  assert.equal(h.plan.pages[0].rows.reduce((n,r)=>n+r.payload_bytes,0),160*1024*1024)
+  const firstUnit=seen[0].unit_id
+  const again=await h.run({max_material_bytes:100*1024*1024})
+  assert.equal(again.code,'adapter_operation_failed');assert.equal(seen[1].unit_id,firstUnit)
+  const small=await h.run({max_material_bytes:70*1024*1024})
+  assert.equal(small.state,'unit_exceeds_budget');assert.equal(small.pending_unit_id,firstUnit)
+  assert.equal(seen.length,2);assert.equal(h.counts.record,0);assert.equal(h.counts.put,0)
+})
+test('an indivisible oversized object returns actionable capacity state without allocating its bytes',async()=>{
+  const f=fixture();f.input.objects[0].bytes=LIMITS.bytes+1
+  const h=harness(f,{records:10000,objects:10000,bytes:LIMITS.bytes*2})
+  const r=await h.run()
+  assert.equal(r.state,'unsupported_unit_capacity')
+  assert.equal(r.checkpoint.verified_units.length,2)
+  assert.equal(h.counts.object,0);assert.equal(h.counts.put,2)
+  assert.ok(r.pending_unit_id);assert.ok(r.remaining_units>0);metadataOnly(r)
 })
