@@ -9,6 +9,98 @@ export const INSTALL_VERSION='qik-comparison-atomic-v1'
 export const DOJ_SOURCE_COMMIT='53355765bcc579930130f16ac4bff9a5fe498e92'
 export const DOJ_PATH='supabase/qualification/mip-cutover-authority/020_doj_private_permission.sql'
 export const DOJ_BLOB='0e0b3d2f3ae200b551b98ce66bc3c90d277ff333'
+// Return only static codes owned by this source/pinned assertions. Dynamic SQL
+// error suffixes, credentials, server details and arbitrary messages never escape.
+const EXACT_DIAGNOSTICS=Object.freeze([
+ "atomic_audit_transport_configuration",
+ "atomic_audit_storage_owner",
+ "atomic_audit_column_acl",
+ "atomic_audit_table_acl",
+ "atomic_audit_policy",
+ "atomic_audit_effective_table",
+ "atomic_audit_login_table",
+ "atomic_audit_schema_owner",
+ "atomic_audit_schema_acl",
+ "atomic_audit_transport_owner",
+ "atomic_audit_function_configuration",
+ "atomic_audit_function_acl",
+ "atomic_audit_effective_execute",
+ "atomic_audit_membership",
+ "atomic_audit_installer_path",
+ "atomic_audit_configuration_failed",
+ "atomic_source_boundary",
+ "atomic_transaction_boundary",
+ "atomic_assertion_boundary",
+ "atomic_doj_source_digest",
+ "atomic_role_contract",
+ "atomic_role_inventory",
+ "atomic_schema_contract",
+ "atomic_compiler_contract",
+ "atomic_compatibility_role_boundary",
+ "atomic_compatibility_creation_boundary",
+ "atomic_configuration",
+ "atomic_audit_login",
+ "atomic_audit_target",
+ "atomic_disposable_target",
+ "atomic_c3_baseline",
+ "atomic_preinstalled_dblink_dependency",
+ "atomic_audit_identity",
+ "atomic_manifest_mismatch",
+ "atomic_catalog_preflight",
+ "atomic_installation_collision",
+ "atomic_existing_c3_owner_transfer",
+ "atomic_c3_drift",
+ "atomic_creator_owned_objects",
+ "atomic_residual_memberships",
+ "atomic_audit_receipt_drift",
+ "atomic_audit_probe",
+ "atomic_audit_readback_inflight",
+ "atomic_audit_not_autonomous"
+])
+const PREFIX_DIAGNOSTICS=Object.freeze([
+ "mip_native_final_role_attributes_or_inheritance",
+ "mip_native_final_owner_membership",
+ "mip_native_final_function_owner_or_configuration",
+ "mip_native_final_function_acl",
+ "mip_native_final_effective_execute",
+ "mip_native_final_required_execute",
+ "mip_native_final_schema_owner",
+ "mip_native_final_schema_create",
+ "mip_native_final_schema_usage",
+ "mip_native_final_native_rls",
+ "mip_native_final_native_read",
+ "mip_native_final_runtime_native_access",
+ "mip_native_final_recorder",
+ "mip_native_final_fence",
+ "mip_native_final_retention_storage",
+ "mip_native_final_retention_acl",
+ "mip_native_final_chain_role_attributes",
+ "mip_native_final_chain_membership",
+ "mip_native_final_chain_function_configuration",
+ "mip_native_final_chain_function_acl",
+ "mip_native_final_chain_effective_execute",
+ "mip_native_final_chain_required_path",
+ "mip_native_final_chain_table_configuration",
+ "mip_native_final_chain_table_grant_option",
+ "mip_native_final_chain_table_acl",
+ "mip_native_final_chain_column_acl",
+ "mip_native_final_chain_effective_table",
+ "mip_native_final_chain_policy",
+ "mip_native_final_chain_immutable",
+ "mip_native_final_chain_review_retention_trigger",
+ "mip_hosted_compat_membership",
+ "mip_hosted_compat_ownership",
+ "mip_hosted_compat_schema",
+ "mip_hosted_compat_execute",
+ "mip_hosted_compat_sequence",
+ "mip_hosted_compat_relation"
+])
+export const INSTALL_DIAGNOSTICS=Object.freeze([...EXACT_DIAGNOSTICS,...PREFIX_DIAGNOSTICS])
+export function sanitizeInstallDiagnostic(error){
+ const message=typeof error?.message==='string'?error.message:''
+ if(EXACT_DIAGNOSTICS.includes(message))return message
+ return PREFIX_DIAGNOSTICS.find(code=>message===code||message.startsWith(code+':'))??null
+}
 const RECEIPT_SCHEMA='mip_comparison_install'
 const SHA=/^[a-f0-9]{64}$/
 const ID=/^[a-f0-9]{32}$/
@@ -284,7 +376,9 @@ export async function installComparisonAtomic(config,readPinnedSource){
   await db.query(auditBoundarySQL(c))
   phase='final_assertions'
   await db.query(plan.assertions)
+  phase='final_doj_assertions'
   await db.query(plan.dojAssertions)
+  phase='final_compatibility_assertions'
   await db.query(plan.compatibility)
   phase='commit'
   commitAttempted=true
@@ -295,7 +389,8 @@ export async function installComparisonAtomic(config,readPinnedSource){
   // Never send a replay or claim rollback once COMMIT may have reached the server.
   return safe(commitAttempted?'commit_ambiguous':'installation_refused',c,plan.manifest_sha256,
    {needs_reconciliation:commitAttempted,audit_qualified:false,phase,
-    sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null})
+    sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null,
+    diagnostic:sanitizeInstallDiagnostic(error)})
  }finally{await db.end().catch(()=>{})}
 }
 export async function reconcileComparisonInstall(config){
