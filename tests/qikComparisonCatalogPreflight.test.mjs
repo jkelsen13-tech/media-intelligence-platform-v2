@@ -38,11 +38,20 @@ test('collisions, identity, role elevation and facade drift fail',()=>{
 test('malformed and duplicate metadata fail',()=>{
  assert.equal(validateCatalog(null).catalog_compatible,false);const c=fixture();c.relations.push({...c.relations[0]});assert.equal(validateCatalog(c).catalog_compatible,false)
 })
+const mutationPattern=/\b(insert|update|delete|alter|create|drop|truncate|pg_get_functiondef)\b/i
+const applicationReadPattern=/\bfrom\s+(public|auth|qik_ingest|evidence_pipeline)\./i
+
+test('safety patterns reject positive mutation and application-read controls',()=>{
+ assert.match('UPDATE public.articles SET title=title',mutationPattern)
+ assert.match('SELECT * FROM public.articles',applicationReadPattern)
+ assert.match('select * from evidence_pipeline.article_captures',applicationReadPattern)
+ assert.doesNotMatch(CATALOG_SQL,mutationPattern)
+ assert.doesNotMatch(CATALOG_SQL,applicationReadPattern)
+})
+
 test('one fixed parameterized catalog query; no application row or definition reads',async()=>{
  const c=fixture(),calls=[];const db={query:async(sql,parameters)=>{calls.push({sql,parameters});return{rows:[{catalog:c}]}}}
  assert.deepEqual(await collectCatalog(db),c);assert.equal(calls.length,1);assert.equal(calls[0].sql,CATALOG_SQL);assert.equal(calls[0].parameters.length,4)
- assert.doesNotMatch(CATALOG_SQL,/(insert|update|delete|alter|create|drop|truncate|pg_get_functiondef)/i)
- assert.doesNotMatch(CATALOG_SQL,/froms+(public|auth|qik_ingest|evidence_pipeline)./i)
 })
 test('catalog query executes against empty synthetic database and refuses missing substrate',async()=>{
  const db=new PGlite();try{
