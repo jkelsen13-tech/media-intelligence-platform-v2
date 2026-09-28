@@ -3,7 +3,7 @@
   "status": "UNAPPROVED — SOURCE CANDIDATE ONLY — NOT AUTHORIZED FOR MATERIAL TRANSMISSION",
   "origin_commit": "cc8f1b19171917351548362f82f03fa2b1684831",
   "origin_tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9",
-  "integration_parent": "ddc3170954b916571bc34b964358b561a95e5de7",
+  "integration_parent": "d2b0963211d3402d8576b09f4a81ddd613b842e4",
   "internal_qualification_authority": {
     "reference": "User full-consolidation amendment, coherent source qualification with synthetic fixtures only",
     "owner_field_signature": null,
@@ -16,7 +16,7 @@
     },
     {
       "path": "supabase/qualification/native-semantic-integration/README.md",
-      "blob": "0fc477889f1bb774380361bda77b68f3461bd608"
+      "blob": "c6382e4c0868f96a018cf0cd84fdadbf8fc48998"
     },
     {
       "path": "supabase/qualification/hypothesis-assessments/handler.mjs",
@@ -227,7 +227,7 @@
     "validation": "originally bound producer under current permissions; two identical READ COMMITTED reads; fixed selected identity/hash; close before output; no fresh fetch/replacement"
   },
   "qualification": {
-    "status": "67 PASS — 0 FAIL — 0 SKIP; synthetic only",
+    "status": "Earlier unchanged67-check narrow semantic receipt plus now complete original worker/journal/method-consumer qualification and targeted coverage replay; separately recorded exact scopes.",
     "environment": "existing source/synthetic-only remote GitHub Actions, Ubuntu22.04, Node22.14.0, PostgreSQL17.6 SCRAM loopback owned disposable containers",
     "tests": [
       "tests/nativeSemanticIntegration.test.mjs",
@@ -619,7 +619,7 @@
     "fixture_specific": "Original schema scaffolding, native synthetic data, rights/privacy heads, Auth/session/method/RPC/broker synthetic fixtures remain in exact fixture.mjs; no reduced stand-in install"
   },
   "method_fixture_qualification": {
-    "status": "A78 runtimePASS/sourceclean/cleanup; B69 fullPASS; six selector checksPASS. A retained-TAP coverage replay AUTHORED — NOT RUN.",
+    "status": "COMPLETE bounded source/synthetic qualification: original A78 runtimePASS and B69 fullPASS; exact2+37 completed coverage rechecked by4PASS retained-TAP checks; selector6PASS; no hosted proof.",
     "entrypoint": "node --test --test-concurrency=1 verifier/hypothesis-worker/*.test.mjs",
     "host_node": "24.21.0",
     "isolated_image": "node:24-alpine (original suite)",
@@ -682,7 +682,7 @@
         "skip_pattern": "^(?:source-captured contiguous metadata coverage isolation|native marker boundary proof without source activation)$"
       }
     ],
-    "coverage": "Checked original source inventory39; completed TAP ok/not ok plus SKIP/TODO classification provesexact2/37executedchildren, no selected-descendant skips, completecommitrootB, no repeatedrootdoublecount. Comments/zeroSKIP alonearenotcoverage.",
+    "coverage": "Exact original39 direct worker children partition2+37, disjoint complete union, all selected descendants execute, full B commitroot, A exact filtered emptyfile does not count as commit. Original worker root repeats across fixtures; no aggregate independent-test count inferred. A original runtime/source/cleanup valid; original failed coverage conclusion preserved and targeted parser correction requalified.",
     "failed_selection_attempts": [
       {
         "candidate": "13ebf786fbd1a296c4f56d7d07bc9cda41802d45",
@@ -811,7 +811,16 @@
         "source_clean": true,
         "cleanup": "owned worker/commit/PostgreSQL containers/volumes absent",
         "hosted_qik": false,
-        "actual_material": false
+        "actual_material": false,
+        "coverage_recheck": {
+          "run": 36476689133,
+          "job": 109112076437,
+          "conclusion": "success",
+          "executed_direct": 37,
+          "selected_descendants_completed": 24,
+          "filtered_commit_file_placeholder": false,
+          "commit_executed": true
+        }
       },
       "A": {
         "candidate": "658c2d992cf2daf5e38d7011c3be3052379d63e1",
@@ -831,7 +840,19 @@
         "source_clean": true,
         "cleanup": "owned worker/commit/PostgreSQL containers/volumes and temporaryTAP removed",
         "hosted_qik": false,
-        "actual_material": false
+        "actual_material": false,
+        "coverage_recheck": {
+          "run": 36476689133,
+          "job": 109112076437,
+          "candidate": "d2b0963211d3402d8576b09f4a81ddd613b842e4",
+          "tree": "38ab2eea02cd4b67a81bf59918ded2c708611633",
+          "conclusion": "success",
+          "executed_direct": 2,
+          "selected_descendants_completed": 74,
+          "filtered_commit_file_placeholder": true,
+          "commit_executed": false,
+          "original_job_conclusion_preserved": "failure"
+        }
       }
     },
     "separate_file_recheck": {
@@ -898,13 +919,65 @@
       }
     },
     "retained_tap_replay": {
-      "status": "AUTHORED — NOT RUN",
+      "status": "4 PASS — 0 FAIL — 0 SKIP",
       "tests": 4,
       "command": "node --test --test-concurrency=1 tests/qualificationShardRetainedTap.test.mjs",
       "node": "24.21.0",
       "source_material": "tests/qualificationShardRetainedTap.receipt.json; strictly synthetic TAP headings, completed outcomes, plans and counts only, exact run36473957974/jobs A/B",
       "scope": "Coverage-parser replay; no worker, PostgreSQL, journal, Auth or application re-execution. Original A workflow conclusion remains failure.",
-      "reason": "Reuse successful unchanged worker runtime/source/cleanup; correct metadata coverage parser only."
+      "reason": "Reuse successful unchanged worker runtime/source/cleanup; correct metadata coverage parser only.",
+      "receipt": {
+        "source": "a93155e0ae8f029668d854478208a115a0b62429",
+        "source_tree": "629935c7b493c92f51e419ab0928440308358b9b",
+        "parent": "ddc3170954b916571bc34b964358b561a95e5de7",
+        "files": [
+          {
+            "path": "tests/qualificationShardRetainedTap.test.mjs",
+            "sha": "1fe040e9d2256a716593813b7a882335bf06225c",
+            "mode": "100644",
+            "type": "blob"
+          },
+          {
+            "path": "tests/qualificationShardRetainedTap.receipt.json",
+            "sha": "54ad819bcbafc1d0920074e4ca633b97f42d68f5",
+            "mode": "100644",
+            "type": "blob"
+          },
+          {
+            "path": "supabase/qualification/native-semantic-integration/README.md",
+            "sha": "0fc477889f1bb774380361bda77b68f3461bd608",
+            "mode": "100644",
+            "type": "blob"
+          },
+          {
+            "path": "verifier/qik-native-semantic-consumer-successor.json",
+            "sha": "8a68b8c904f25493615059719016c95b2e0d5517",
+            "mode": "100644",
+            "type": "blob"
+          }
+        ],
+        "candidate": "d2b0963211d3402d8576b09f4a81ddd613b842e4",
+        "tree": "38ab2eea02cd4b67a81bf59918ded2c708611633",
+        "workflow": "08ca65d252bcb2e276b916878d5f7c14e09bca4e",
+        "status": "Bounded source/synthetic metadata replay dispatched; no worker reexecution or hosted proof",
+        "run": 36476689133,
+        "job": 109112076437,
+        "conclusion": "success",
+        "pass": 4,
+        "fail": 0,
+        "skip": 0,
+        "source_clean": true,
+        "node": "24.21.0",
+        "scope": "Actual coverage metadata recheck of original unchanged worker A/B; not new worker/PG execution",
+        "combined_coverage": "Exact original39directchildren disjoint2+37 and all selected74/24descendants; fullBcommitroot; Aknownemptyfile notcommit",
+        "original_worker_candidate": "658c2d992cf2daf5e38d7011c3be3052379d63e1",
+        "original_worker_run": 36473957974,
+        "original_A_job": 109102887374,
+        "original_B_job": 109102887614,
+        "original_A_conclusion_unchanged": "failure",
+        "hosted_qik": false,
+        "actual_material": false
+      }
     }
   }
 }
