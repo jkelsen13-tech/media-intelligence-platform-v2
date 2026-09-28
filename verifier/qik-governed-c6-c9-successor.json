@@ -6,8 +6,8 @@
     "tree": "86a7df4a95894217e4a228e9eb918985a7e99cd9"
   },
   "immediate_base": {
-    "commit": "603b7ab71ab9a3958da8ba8f9dff7689f69c9b71",
-    "tree": "bf7f4e62a1bf676217d537901824c84f935c1743"
+    "commit": "88fa3aeef08471be1bf2dc8bf0a2ef6ace5cbc4d",
+    "tree": "dadd7eaa296afcedd9681ea2ba05c5899d2d5a61"
   },
   "authorization": {
     "internal_source_and_synthetic_qualification": "User consolidation continuation amendment prospectively authorizes this distinct governed successor and installer mode into source review and synthetic internal qualification. Qualification receipts and actual external Cursor review bind the exact candidate; no individual owner field signature, historical acceptance, hosted installation or actual-material receiving authorization is represented.",
@@ -1149,7 +1149,7 @@
     ],
     "native_comparison_fixture": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "fc68b75264e6426cc948fd496c0829a456449179"
+      "blob": "44a08e088f35d24905ada28a80e362698c3e21b0"
     },
     "native_comparison_assertions": {
       "path": "tests/nativeComparisonBindingAssertions.mjs",
@@ -2120,15 +2120,17 @@
     },
     "fixture_correction": {
       "path": "tests/nativeComparisonBindingFixture.mjs",
-      "blob": "fc68b75264e6426cc948fd496c0829a456449179",
+      "blob": "44a08e088f35d24905ada28a80e362698c3e21b0",
       "status": "AUTHORED — NOT RUN",
-      "reason": "Hosted compiler deliberately denies synthetic fallback. Exercise unchanged actual C3/020 resolver with synthetic feed-only material and explicit reviewed private seed membership; retain refusal. No production contract/grant/compiler change.",
+      "reason": "Hosted compiler deliberately denies synthetic fallback. Exercise unchanged actual C3/020 resolver with synthetic feed-only material and explicit reviewed private seed membership; retain refusal. No production contract/grant/compiler change. Corrects disposable gate/source setup order required by the unchanged C3 enforcement trigger; final and failure cleanup still restore disabled gate/source.",
       "historical_receipt": {
-        "candidate": "603b7ab71ab9a3958da8ba8f9dff7689f69c9b71",
-        "run": 36423404168,
+        "candidate": "88fa3aeef08471be1bf2dc8bf0a2ef6ace5cbc4d",
+        "run": 36426831822,
         "pass": 176,
         "fail": 2,
-        "refusal": "mip_operation_denied_authoritative_adapter_unbound"
+        "stage": "synthetic_c3_feed_profile",
+        "sqlstate": "42501",
+        "source_line": 96
       },
       "limits": "Source/synthetic only; not hosted installation, real DOJ policy approval, field signature, actual capture transfer or publication eligibility."
     }

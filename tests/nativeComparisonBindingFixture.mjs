@@ -91,13 +91,15 @@ export async function runNativeComparisonBindingFixture(fx){
   sourceInitial=(await db.query('select outlet_id,feed_url,enabled,collection_enabled from public.ingest_sources where id=$1',[sourceId])).rows[0]??null
   if(sourceInitial)assert.equal(sourceInitial.feed_url,feedURL)
   await db.query("insert into public.outlets(id,name) values($1,'Binding synthetic outlet 0')",[outletId])
+  // The real source trigger requires the authorized disposable gate BEFORE
+  // collection_enabled can become true; no trigger/permission bypass.
+  await db.query('update qik_ingest.collection_gate set collection_authorized=true where id')
   if(sourceInitial)await db.query('update public.ingest_sources set outlet_id=$2,enabled=true,collection_enabled=true where id=$1',[sourceId,outletId])
   else{
    await db.query('insert into public.ingest_sources(id,outlet_id,feed_url,enabled,collection_enabled) values($1,$2,$3,true,true)',[sourceId,outletId,feedURL])
    sourceInserted=true
   }
   await db.query("insert into qik_ingest.runtime_credentials values($1,true,'synthetic fixture only')",[hash(token)])
-  await db.query('update qik_ingest.collection_gate set collection_authorized=true where id')
   await value(ingestRuntime,'select public.mip_qik_ingest_begin_run($1,$2,null) result',[token,runId])
   const native=async(action,input)=>value(ingestRuntime,'select public.mip_qik_ingest_native($1,$2,$3,$4::jsonb) result',[token,runId,action,JSON.stringify(input)])
   const extractionBackend=createRetainedExtractionBackend(db)
