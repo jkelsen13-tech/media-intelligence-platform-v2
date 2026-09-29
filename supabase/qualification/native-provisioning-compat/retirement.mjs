@@ -12,8 +12,12 @@ export function managedRetirementDDL(c){
  singleton boolean primary key check(singleton),operation_id text not null,provisioning_operation_id text not null,
  state text not null check(state='auditors_retired'),recorded_at timestamptz not null default clock_timestamp());
  revoke all on mip_managed_retirement.receipt from public,anon,authenticated,service_role;
+ create function mip_managed_retirement.reject_change() returns trigger language plpgsql set search_path='' as $immutable$
+ begin raise exception 'managed_retirement_immutable';end $immutable$;
+ revoke all on function mip_managed_retirement.reject_change() from public,anon,authenticated,service_role;
+ create trigger immutable before update or delete or truncate on mip_managed_retirement.receipt for each statement execute function mip_managed_retirement.reject_change();
  create function mip_managed_retirement.guard() returns void language plpgsql security definer set search_path='' as $guard$
- declare b mip_native_activation.bootstrap;h uuid;
+ declare b record;h uuid;
  begin
  if session_user<>'postgres' or current_user<>'postgres' then raise exception 'managed_retirement_identity';end if;
  perform pg_advisory_xact_lock(hashtextextended('qik-comparison-atomic-v1',0));
