@@ -85,10 +85,10 @@ export async function qualifySessionLocks({provider,connect}){
   const seed=async c=>{
    await c.query(`insert into mip_identity.key_versions values(${q(ids.key)},${q(issuer)},${q(kid)},'{}','2020-01-01','2999-01-01','mechanism-only');
     insert into mip_identity.key_heads values(${q(issuer)},${q(kid)},${q(ids.key)},true);
-    with x as(select ${q(ids.credential)}::uuid revision,'session-lock-fixture'::text gateway_id,repeat('a',64)::text fingerprint,null::uuid predecessor,'current'::text state,'2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
+    with x as(select ${q(ids.credential)}::uuid revision,'efta-private-gateway-v1'::text gateway_id,repeat('a',64)::text fingerprint,null::uuid predecessor,'current'::text state,'2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
     insert into mip_identity.efta_gateway_credential_versions
     select revision,gateway_id,fingerprint,predecessor,state,'owner_approved',repeat('b',64),${digest}(jsonb_build_object('revision',revision,'gateway_id',gateway_id,'credential_fingerprint_hash',fingerprint,'predecessor',predecessor,'state',state,'valid_from',valid_from,'valid_until',valid_until)),valid_from,valid_until,clock_timestamp() from x;
-    insert into mip_identity.efta_gateway_credential_heads values('session-lock-fixture',${q(ids.credential)},true);
+    insert into mip_identity.efta_gateway_credential_heads values('efta-private-gateway-v1',${q(ids.credential)},true);
     with x as(select ${q(ids.policy)}::uuid revision,${q(issuer)}::text issuer,'authenticated'::text audience,'ES256'::text algorithm,${q(kid)}::text kid,${q(ids.key)}::uuid key_revision,repeat('9',64)::text jwks_sha256,null::uuid predecessor,'current'::text state,'2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
     insert into mip_identity.efta_authentication_policy_versions(revision,issuer,audience,algorithm,kid,key_revision,jwks_sha256,predecessor,state,approval_state,owner_approval_receipt_hash,owner_approval_payload_hash,valid_from,valid_until)
     select revision,issuer,audience,algorithm,kid,key_revision,jwks_sha256,predecessor,state,'owner_approved',repeat('8',64),${digest}(jsonb_build_object('revision',revision,'issuer',issuer,'audience',audience,'algorithm',algorithm,'kid',kid,'key_revision',key_revision,'jwks_sha256',jwks_sha256,'predecessor',predecessor,'state',state,'valid_from',valid_from,'valid_until',valid_until)),valid_from,valid_until from x;
@@ -117,7 +117,7 @@ export async function qualifySessionLocks({provider,connect}){
     ["update mip_comparison_kernel_v1.principal_sessions set expires_at=clock_timestamp()-interval '1 second' where session_id="+q(ids.broker),'mip_identity_session_revoked'],
     ["update mip_identity.efta_authentication_policy_heads set active=false where policy_id='supabase-user-access-v1'",'efta_authentication_policy_not_authorized'],
     ["update mip_identity.efta_authority_assignment_heads set active=false where subject_id="+q(u),'efta_assignment_not_authorized'],
-    ["update mip_identity.efta_gateway_credential_heads set active=false where gateway_id='session-lock-fixture'",'efta_gateway_credential_not_authorized']
+    ["update mip_identity.efta_gateway_credential_heads set active=false where gateway_id='efta-private-gateway-v1'",'efta_gateway_credential_not_authorized']
    ]){
     await efta.query('savepoint refused');await efta.query(change);await efta.query('set local role mip_efta_authenticator_v1')
     await assert.rejects(()=>realEfta(efta,randomUUID()),e=>e.code==='P0001'&&e.message===reason)
