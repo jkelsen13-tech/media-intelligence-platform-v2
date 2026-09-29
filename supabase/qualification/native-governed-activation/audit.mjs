@@ -1,3 +1,4 @@
+import {auditorEdgePredicate,managedSnapshotSQL} from '../native-provisioning-compat/managedPolicy.mjs'
 // Independent read-only catalog auditor. No installer credential, SQL callback,
 // AUTH row, captured content, session token, or currentness waiver.
 import pg from 'pg'
@@ -46,7 +47,7 @@ export async function auditNativeActivationMetadata(config,readPinnedSource){
  let db=null,begun=false,verified=false,result,phase='source'
  try{
  const plan=await prepareNativeActivation(readPinnedSource,{expectedLogin:config.expectedLogin,operationId:config.operationId,
-  expectedMetadataAuditor:config.expectedMetadataAuditor})
+  expectedMetadataAuditor:config.expectedMetadataAuditor,...(config.provisioningProfile?{provisioningProfile:config.provisioningProfile,provisioningOperationId:config.provisioningOperationId}:{})})
  phase='configuration'
  if(plan.program_sha256!==config.expectedSuccessorProgram)fail()
  if(config.disposable&&process.env.MIP_NATIVE_ACTIVATION_ARM!=='synthetic-pg17-only')fail()
@@ -63,7 +64,7 @@ export async function auditNativeActivationMetadata(config,readPinnedSource){
   await db.query("set local search_path=''")
   await db.query('select pg_advisory_xact_lock_shared(171903,7001)')
   phase='auditor_identity'
-  const id=(await db.query(AUDITOR_SQL,[GROUPS])).rows[0]
+  const id=(await db.query(config.provisioningProfile?AUDITOR_SQL.replace('not exists(select 1 from pg_auth_members where roleid=r.oid or member=r.oid)',auditorEdgePredicate('r.oid')):AUDITOR_SQL,[GROUPS])).rows[0]
   if(id?.login!==config.expectedMetadataAuditor||id.effective!==id.login||id.safe!==true)fail()
   phase='bootstrap'
   const b=(await db.query('select * from mip_native_activation.bootstrap where singleton')).rows[0]
@@ -71,6 +72,11 @@ export async function auditNativeActivationMetadata(config,readPinnedSource){
    ||String(b.metadata_auditor_oid)!==id.oid||b.metadata_auditor!==id.login
    ||b.install_manifest!==config.expectedInstallManifest||b.native_program!==config.expectedNativeProgram
    ||b.successor_program!==plan.program_sha256)fail()
+  if(config.provisioningProfile){
+   phase='managed_catalog'
+   const actual=(await db.query(managedSnapshotSQL(config))).rows[0]?.metadata
+   if(!same(actual,b.managed_metadata))fail()
+  }
   phase='head'
   const h=(await db.query('select revision from mip_native_activation.head where singleton')).rows[0]
   const v=h?.revision?(await db.query('select revision,predecessor,operation_id,action,members,request_hash from mip_native_activation.revisions where revision=$1',[h.revision])).rows[0]:null
