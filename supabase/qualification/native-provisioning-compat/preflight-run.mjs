@@ -9,7 +9,7 @@ const exec=promisify(execFile)
 const ROOT=new URL('../../../',import.meta.url)
 const SHA=/^[a-f0-9]{40}$/
 const PINS=Object.freeze({
- 'supabase/qualification/native-provisioning-compat/preflight.mjs':'8c6edf186e2c7a6efbc04a720eafaf2d72155a96',
+ 'supabase/qualification/native-provisioning-compat/preflight.mjs':'1a1639b9cb4ab4f82ad490a472f8b135f2999ce7',
  'supabase/qualification/collector-native-capture/authenticatedPgDriver.mjs':'af0f3b69c34695f9241934fae89ac00cedd08515',
  'supabase/qualification/collector-native-capture/credentialDelivery.mjs':'354679fadc48eb9f8a8154456f3d38e7faab3e61',
  'supabase/qualification/native-governed-host/adapter.mjs':'47622a1729351d0cabda279d63855b9309e490b0',
@@ -32,7 +32,8 @@ export function validatePreflightHostEnvironment(e,version,argc){
  ||e.QIK_NATIVE_AUDIT_DATABASE_URL||e.QIK_NATIVE_METADATA_AUDIT_DATABASE_URL)fail()
  if(typeof e.MIP_PREFLIGHT_CONFIG_JSON!=='string'||Buffer.byteLength(e.MIP_PREFLIGHT_CONFIG_JSON)>1024)fail()
  let c;try{c=JSON.parse(e.MIP_PREFLIGHT_CONFIG_JSON)}catch{fail()}
- if(!c||Array.isArray(c)||Object.keys(c).sort().join()!=='c3ManifestSha256,c3OperationId,expectedLogin'
+ if(!c||Array.isArray(c)||!['c3ManifestSha256,c3OperationId,expectedLogin','c3ManifestSha256,c3OperationId,expectedLogin,provisioningProfile'].includes(Object.keys(c).sort().join())
+ ||('provisioningProfile' in c&&(c.provisioningProfile!=='supabase-managed-v1'||c.expectedLogin!=='postgres'))
  ||!/^[a-z][a-z0-9_]{0,62}$/.test(c.expectedLogin??'')
  ||!/^[a-f0-9]{32}$/.test(c.c3OperationId??'')||!/^[a-f0-9]{64}$/.test(c.c3ManifestSha256??''))fail()
  return Object.freeze({release:e.QIK_NATIVE_PREFLIGHT_APPROVED_SHA,config:c})
