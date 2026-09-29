@@ -1,3 +1,4 @@
+import {managedOptions} from '../native-provisioning-compat/managedPolicy.mjs'
 import {captureActivationBootstrapCreation,createActivationOperationalGroup,retireActivationIssuerCreationAuthority,installActivationPreparationInTransaction,dropActivationIssuerForHistoricalCheckpoint} from '../native-governed-activation/prepare.mjs'
 // Source-only joint installer. No connection creation, commit, retry, or CLI.
 // Only prepareNativeGovernedInstall's fixed source program is executable.
@@ -312,7 +313,7 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
  // backend final assertions and audit/C3 closure before the single COMMIT.
  const final=plan.steps.at(-1)
  nativeSource=final.path;nativeStage='final_helper'
- if(plan.mode===NATIVE_CALLER_MODE)await createNativeCallerVerifier(db,final,expectedLogin,bootstrapAtCreation);
+ if(plan.mode===NATIVE_CALLER_MODE)await createNativeCallerVerifier(db,final,expectedLogin,bootstrapAtCreation,activationPlan??{});
  else if(plan.mode===NATIVE_DISPLAY_MODE)await createNativeDisplayVerifier(db,final,expectedLogin);
  else if(plan.mode===NATIVE_BINDING_MODE)await createNativeBindingVerifier(db,final,expectedLogin);
  else await assertionHelper(db,schema,final.assertion_owner,expectedLogin,final.assertion)
@@ -345,12 +346,13 @@ async function callerBootstrapEdges(db,login,expectedRoles=CALLER_BOOTSTRAP_ROLE
  if(rows.length!==expectedRoles.length||rows.some((r,n)=>r.role_name!==expectedRoles[n]||r.member_name!==login||r.admin_option!==true||r.inherit_option!==false||r.set_option!==false||![r.role_oid,r.member_oid,r.grantor_oid].every(v=>/^[1-9][0-9]*$/.test(v))))fail('bootstrap_topology');
  return rows;
 }
-function callerBootstrapAssertion(login,edges){
+function callerBootstrapAssertion(login,edges,options={}){
+ const managed=managedOptions({...options,expectedLogin:login});
  if(!identifier.test(login))fail('identifier');
  return "do $native_caller_bootstrap$ declare observed jsonb;begin "+
  "select coalesce(jsonb_agg(jsonb_build_object('role_name',p.rolname,'role_oid',p.oid::text,'member_name',m.rolname,'member_oid',m.oid::text,'grantor_oid',g.oid::text,'admin_option',a.admin_option,'inherit_option',a.inherit_option,'set_option',a.set_option) order by p.rolname,m.rolname,g.oid),'[]'::jsonb) into observed from pg_auth_members a join pg_roles p on p.oid=a.roleid join pg_roles m on m.oid=a.member join pg_roles g on g.oid=a.grantor where p.rolname in('mip_mentions_admin','mip_mentions_gateway') or m.rolname in('mip_mentions_admin','mip_mentions_gateway'); "+
  "if observed is distinct from "+literal(JSON.stringify(edges))+"::jsonb "+
- "or not exists(select 1 from pg_roles where rolname="+literal(login)+" and rolcanlogin and not rolsuper and rolcreaterole and rolcreatedb and rolbypassrls and rolinherit and not rolreplication) "+
+ "or not exists(select 1 from pg_roles where rolname="+literal(login)+" and rolcanlogin and not rolsuper and rolcreaterole and rolcreatedb and rolbypassrls and rolinherit and "+(managed?"rolreplication":"not rolreplication")+") "+
  "or pg_has_role("+literal(login)+",'mip_mentions_admin','USAGE') or pg_has_role("+literal(login)+",'mip_mentions_admin','SET') "+
  "or pg_has_role("+literal(login)+",'mip_mentions_gateway','USAGE') or pg_has_role("+literal(login)+",'mip_mentions_gateway','SET') "+
  "or has_schema_privilege("+literal(login)+",(select oid from pg_catalog.pg_namespace where nspname='mip_native_caller'),'USAGE,CREATE') "+
@@ -358,7 +360,7 @@ function callerBootstrapAssertion(login,edges){
  "or has_function_privilege("+literal(login)+",(select p.oid from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_native_caller' and p.proname='read_current'),'EXECUTE') "+
  "then raise exception 'native_install_bootstrap_topology';end if;end $native_caller_bootstrap$;";
 }
-const callerVerifierBody=(final,login,edges)=>bindingVerifierBody({assertion:final.assertion+'\n'+callerBootstrapAssertion(login,edges)});
+const callerVerifierBody=(final,login,edges,options={})=>bindingVerifierBody({assertion:final.assertion+'\n'+callerBootstrapAssertion(login,edges,options)});
 const bindingVerifierBody=final=>'begin execute '+literal(final.assertion)+'; end'
 async function createNativeBindingVerifier(db,final,login){
  const schema='mip_comparison_install',owner=final.assertion_owner
@@ -422,14 +424,14 @@ export async function verifyNativeDisplayCurrentBoundary(db,plan,{expectedLogin,
   await assertNativeGovernedClosure(db,{expectedLogin,operationId,nativeMode:plan.mode})
  }catch(error){recordFailure(error,plan,stage,source,null);throw error}
 }
-async function createNativeCallerVerifier(db,final,login,atCreation){
+async function createNativeCallerVerifier(db,final,login,atCreation,options={}){
  const schema='mip_comparison_install',owner=final.assertion_owner,edges=await callerBootstrapEdges(db,login)
  if(JSON.stringify(edges)!==JSON.stringify(atCreation))fail('bootstrap_topology');
  const prior=(await db.query("select has_schema_privilege($1,$2,'USAGE') u,has_schema_privilege($1,$2,'CREATE') c,to_regprocedure('mip_comparison_install.native_boundary_v6()') is not null collision",[owner,schema])).rows[0]
  if(!prior||prior.u||prior.c||prior.collision)fail('assertion_helper_boundary')
  await db.query('grant usage,create on schema '+schema+' to '+quote(owner))
  await db.query('set role '+quote(owner))
- await db.query('create function '+schema+'.native_boundary_v6() returns void language plpgsql security definer set search_path=\'\' as '+literal(callerVerifierBody(final,login,edges)))
+ await db.query('create function '+schema+'.native_boundary_v6() returns void language plpgsql security definer set search_path=\'\' as '+literal(callerVerifierBody(final,login,edges,options)))
  // Remove provider defaults only on this newly created verification function.
  await db.query('revoke all on function '+schema+'.native_boundary_v6() from public')
  const grants=(await db.query("select distinct x.grantee::regrole::text role_name from pg_proc p cross join lateral aclexplode(p.proacl)x where p.oid='mip_comparison_install.native_boundary_v6()'::regprocedure and x.grantee<>0 and x.grantee<>p.proowner")).rows
@@ -438,7 +440,8 @@ async function createNativeCallerVerifier(db,final,login,atCreation){
  await db.query('reset role')
  await db.query('revoke usage,create on schema '+schema+' from '+quote(owner))
 }
-export async function verifyNativeCallerCurrentBoundary(db,plan,{expectedLogin,operationId}){
+export async function verifyNativeCallerCurrentBoundary(db,plan,config){
+ const {expectedLogin,operationId}=config;
  let stage='caller_verifier_plan';const source=plan?.steps?.at(-1)?.path??null
  try{
   if(!preparedPlans.has(plan)||plan.mode!==NATIVE_CALLER_MODE||!/^[0-9a-f]{32}$/.test(operationId)
@@ -446,7 +449,7 @@ export async function verifyNativeCallerCurrentBoundary(db,plan,{expectedLogin,o
   await identity(db,expectedLogin)
   const final=plan.steps.at(-1),edges=await callerBootstrapEdges(db,expectedLogin)
   stage='caller_verifier_source'
-  const checked=(await db.query("select p.proowner=$1::regrole and p.prosecdef and p.pronargs=0 and p.prorettype='void'::regtype and p.prokind='f' and p.provolatile='v' and p.proconfig=$3::text[] and p.prosrc=$4 and not p.proleakproof and p.proparallel='u' and not exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where a.grantee not in($1::regrole,$2::regrole) or a.privilege_type<>'EXECUTE' or(a.grantee<>p.proowner and a.is_grantable)) and has_function_privilege($2,p.oid,'EXECUTE') and not has_schema_privilege($1,n.oid,'USAGE,CREATE') ok from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_comparison_install' and p.proname='native_boundary_v6'",[final.assertion_owner,expectedLogin,['search_path=""'],callerVerifierBody(final,expectedLogin,edges)])).rows[0]
+  const checked=(await db.query("select p.proowner=$1::regrole and p.prosecdef and p.pronargs=0 and p.prorettype='void'::regtype and p.prokind='f' and p.provolatile='v' and p.proconfig=$3::text[] and p.prosrc=$4 and not p.proleakproof and p.proparallel='u' and not exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where a.grantee not in($1::regrole,$2::regrole) or a.privilege_type<>'EXECUTE' or(a.grantee<>p.proowner and a.is_grantable)) and has_function_privilege($2,p.oid,'EXECUTE') and not has_schema_privilege($1,n.oid,'USAGE,CREATE') ok from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_comparison_install' and p.proname='native_boundary_v6'",[final.assertion_owner,expectedLogin,['search_path=""'],callerVerifierBody(final,expectedLogin,edges,config)])).rows[0]
   if(checked?.ok!==true)fail('assertion_helper_boundary')
   stage='caller_verifier_assertion'
   await db.query('select mip_comparison_install.native_boundary_v6()')

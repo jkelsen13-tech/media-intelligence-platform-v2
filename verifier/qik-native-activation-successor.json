@@ -72,7 +72,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-install/install.mjs",
-      "git_blob": "aa92f9e5003bbf12b19d4cfbf5871da1c496ce1c"
+      "git_blob": "0027642195438efa5c25e4ae5a17f92f48f4abac"
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "a9434984f8a13e851a77073c530f86988b914c3d"
+      "git_blob": "4a7f9541027eb931ed52fde011fd668ed640deba"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -337,6 +337,7 @@
     "independent_audit": "Direct source-authored catalog permission and identity checks using the separate authenticated metadata auditor",
     "pre_launch_gate": "Explicit owner trust review before public launch, external users or sensitive user material; stronger isolation and open Support request remain hardening",
     "post_install_rotation": "Enforced refusal; not lifecycle-complete after installation",
-    "hosted_missing_prerequisite": "Provider-owned auth.sessions.id UPDATE WITH GRANT OPTION for existing trusted postgres; current qik privilege query false; no hosted mutation applied. Fixture provider explicitly supplies this prerequisite, not customer provisioning."
+    "hosted_missing_prerequisite": "Provider-owned auth.sessions.id UPDATE WITH GRANT OPTION for existing trusted postgres; current qik privilege query false; no hosted mutation applied. Fixture provider explicitly supplies this prerequisite, not customer provisioning.",
+    "caller_helper_attribute_contract": "Generated source-authored bootstrap helper now uses approved managed installer REPLICATION contract under explicit managed selection. Original source assertions and optionless historical NOREPLICATION remain unchanged."
   }
 }
