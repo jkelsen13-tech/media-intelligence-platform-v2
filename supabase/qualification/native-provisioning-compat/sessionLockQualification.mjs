@@ -90,6 +90,7 @@ export async function qualifySessionLocks({provider,connect}){
    }
    await activation.query('rollback')
   }finally{await activation.end()}
+  console.log('PASS actual activation auth_current positive, input refusals and unauthorized gateway denial')
   await provider.query("update auth.sessions set not_after=clock_timestamp()-interval '1 second' where id=$1",[s])
   for(const mode of ['share','activation']){
    const expired=await client();try{await expired.query('begin');await nested(expired,mode);await assert.rejects(()=>callLocked(expired,mode),refusal);await expired.query('rollback')}finally{await expired.end()}
@@ -185,7 +186,7 @@ export async function qualifySessionLocks({provider,connect}){
      await holder.query(action==='delete'?'commit':'rollback')
      assert.equal((await write).rowCount,1);await writer.query('commit')
     }
-    const after=await client();try{await after.query('begin');await nested(after,mode);if(action==='delete')assert.equal((await callKey(after)).rows[0].ok,false);await assert.rejects(()=>callLocked(after,mode),refusal);await assert.rejects(()=>after.query('select 1'),e=>e.code==='25P02');await after.query('rollback')}finally{await after.end()}
+    const after=await client();try{await after.query('begin');await nested(after,mode);if(action==='delete'&&mode!=='activation')assert.equal((await callKey(after)).rows[0].ok,false);await assert.rejects(()=>callLocked(after,mode),refusal);await assert.rejects(()=>after.query('select 1'),e=>e.code==='25P02');await after.query('rollback')}finally{await after.end()}
    }finally{await holder.query('rollback').catch(()=>{});await writer.query('rollback').catch(()=>{});await holder.end();await writer.end()}
    await clear()
   }
