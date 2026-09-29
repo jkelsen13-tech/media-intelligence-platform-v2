@@ -64,3 +64,42 @@ The separate protected owner remains outside customer ADMIN. Provider-only
 final harness cleanup is labeled and verifies the original role baseline.
 This proof does not authorize or claim production protected-owner retirement,
 predecessor deletion, actual material processing, or installation.
+
+## Managed prerequisite successor — held, not hosted
+
+The separate secure delivery canary passed run 36510586597, job 109221577048,
+at source 76e96de8a9589cf87287455aea9e7c828ecfd3ff. It used the owned disposable
+Supabase PG17 image with managed logging defaults and scanned actual server
+logs and pg_stat_statements without returning either. This evidence covers
+that synthetic bound-SCRAM delivery proof; it is not a hosted provisioning receipt.
+
+The new provision.mjs composes two fixed restricted auditor logins, explicit
+trusted postgres ADMIN membership, and provider-owned dblink 1.2 isolated in
+installer-only mip_factual_transport_raw. Creation, extension isolation and
+one immutable metadata receipt commit together under the existing install
+advisory/table locks. Its config supplies the exact prerequisite operation,
+C3 operation/manifest and managed profile; no replacement operation is generated.
+The receipt contains role/edge/catalog identities and nonsecret configuration
+hash only. Authentication is separately verified with both secure bindings.
+An unknown COMMIT acknowledgment requires reconciliation of the same operation;
+this component never rotates credentials or retries an uncertain operation.
+
+The trusted managed installer must match observed provider attributes, including
+REPLICATION and effective USAGE of supabase_privileged_role. Auditors remain
+NOREPLICATION, NOINHERIT and without runtime authority. Client TLS must be
+verified even when a session pooler uses a separate backend transport.
+
+run.mjs and .github/workflows/qik-managed-prerequisites-held.yml are a held,
+manual-only route with exact approved release/checkout identity, code pins,
+configuration digest, pinned public CA, shared installer concurrency and
+existing resource admission. Secure environment bindings enter only its final
+step. No artifact, cache, actual article, runtime activation or publication
+route exists. Source presence does not register or authorize dispatch.
+
+provision.test.mjs is a disposable actual-component proof with synthetic C3
+metadata stand-ins; host.test.mjs proves early host refusal and source binding.
+These new component/host tests have no completed receipt recorded here yet.
+Applicable fresh review and qualification remain required before provisioning.
+Production cleanup, auditor retirement and installed protected-owner lifecycle
+must follow the separately integrated exact-operation contracts; disposable
+provider teardown is not customer retirement authority.
