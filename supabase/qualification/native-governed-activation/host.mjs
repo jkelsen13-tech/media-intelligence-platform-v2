@@ -1,3 +1,4 @@
+import {managedOptions} from '../native-provisioning-compat/managedPolicy.mjs'
 // Metadata-only host successor. No source bytes, activation, SQL or material callback.
 import {validateHostConfig,sanitizeApiResult} from '../native-governed-host/adapter.mjs'
 import {PROFILE,ROLES} from './prepare.mjs'
@@ -9,18 +10,20 @@ const fail=()=>{throw Error('native_activation_host_configuration_refused')}
 export function validateActivationHostConfig(raw,secrets){
  if(typeof raw!=='string'||Buffer.byteLength(raw)>4096)fail()
  let input;try{input=JSON.parse(raw)}catch{fail()}
- if(!input||Array.isArray(input)||Object.keys(input).sort().join()!==[...fields].sort().join()
+ const managed=managedOptions(input??{})
+ const additional=managed?['provisioningProfile','provisioningOperationId']:[]
+ if(!input||Array.isArray(input)||Object.keys(input).sort().join()!==[...fields,...additional].sort().join()
   ||!/^[0-9a-f]{64}$/.test(input.expectedSuccessorProgram??'')
   ||!/^[a-z][a-z0-9_]{0,62}$/.test(input.expectedMetadataAuditor??'')
   ||[input.expectedLogin,input.auditLogin,'postgres','service_role','authenticator','supabase_admin',...ROLES].includes(input.expectedMetadataAuditor)
   ||['service_role','authenticator','supabase_admin',...ROLES].includes(input.expectedLogin))fail()
  if(!secrets||Object.keys(secrets).sort().join()!=='audit,installer,metadataAudit')fail()
- const common=Object.fromEntries(Object.entries(input).filter(([k])=>!extra.includes(k)))
+ const common=Object.fromEntries(Object.entries(input).filter(([k])=>![...extra,...additional].includes(k)))
  const validated=validateHostConfig(JSON.stringify(common),{installer:secrets.installer,audit:secrets.audit})
  // The independent metadata auditor uses the same exact qik/session-TLS target validation.
  validateHostConfig(JSON.stringify({...common,expectedLogin:input.expectedMetadataAuditor}),
   {installer:secrets.metadataAudit,audit:secrets.audit})
- return Object.freeze({...validated,activationProfile:PROFILE,
+ return Object.freeze({...validated,...(managed?{provisioningProfile:input.provisioningProfile,provisioningOperationId:input.provisioningOperationId}:{}),activationProfile:PROFILE,
   authorization:'owner-authorized-native-governed-activation-bootstrap-install',
   expectedMetadataAuditor:input.expectedMetadataAuditor,expectedSuccessorProgram:input.expectedSuccessorProgram,
   metadataAuditConnectionString:secrets.metadataAudit})
@@ -62,7 +65,7 @@ export async function dispatchActivationHostAction(action,c,read,api){
    expectedLogin:c.expectedLogin,operationId:c.operationId,expectedMetadataAuditor:c.expectedMetadataAuditor,
    expectedInstallManifest:c.expectedManifestSha256,expectedNativeProgram:c.expectedNativeProgramSha256,
    expectedSuccessorProgram:c.expectedSuccessorProgram,metadataAuditConnectionString:c.metadataAuditConnectionString,
-   sessionPoolerHost:c.sessionPoolerHost,disposable:c.disposable===true
+   sessionPoolerHost:c.sessionPoolerHost,disposable:c.disposable===true,...(c.provisioningProfile?{provisioningProfile:c.provisioningProfile,provisioningOperationId:c.provisioningOperationId}:{})
   },read),c,true)
  }catch{return closed(null,c)}
 }
