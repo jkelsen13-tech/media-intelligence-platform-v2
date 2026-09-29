@@ -112,6 +112,29 @@ jobs:
           MIP_CUSTODIAN_LIFECYCLE_ARM: synthetic-pg17-local-only
           MIP_DISPOSABLE_POSTGRES: qik-persistent-install
         run: node --test --test-concurrency=1 supabase/qualification/native-provisioning-compat/managedDblink.test.mjs supabase/qualification/native-provisioning-compat/trustedInstallerAuditorLifecycle.test.mjs
+      - name: Prepare representative customer logging defaults
+        if: inputs.mode == 'credentials'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import pg from 'pg';
+          const db=new pg.Client({host:'127.0.0.1',port:5432,user:'supabase_admin',password:process.env.MIP_COMPAT_ADMIN_PASSWORD,database:'postgres'});
+          try {
+            await db.connect();
+            const defaults={log_statement:'ddl',log_min_error_statement:'error',log_parameter_max_length:'-1',log_parameter_max_length_on_error:'0',log_min_duration_statement:'-1',log_min_duration_sample:'-1',log_transaction_sample_rate:'0','pg_stat_statements.track':'top','pg_stat_statements.track_utility':'on','pgaudit.log':'none','pgaudit.log_parameter':'off','auto_explain.log_min_duration':'10000','auto_explain.log_nested_statements':'off','auto_explain.log_parameter_max_length':'-1'};
+            for(const [name,value] of Object.entries(defaults))await db.query("ALTER ROLE postgres SET "+name+" TO '"+value+"'");
+            console.log('PASS provider fixture mirrors qik customer logging defaults; customer cannot change provider logging');
+          } catch(e) {console.error('FAIL representative logging preparation '+(/^[A-Z0-9]{5}$/.test(e.code??'')?e.code:'bounded'));process.exitCode=1;}
+          finally {await db.end();}
+          JS
+      - name: Bound credential delivery and private log canary qualification
+        if: inputs.mode == 'credentials'
+        timeout-minutes: 3
+        env:
+          MIP_SECURE_DELIVERY_ARM: synthetic-managed-logging-only
+          MIP_DISPOSABLE_POSTGRES: qik-persistent-install
+        run: node --test supabase/qualification/native-provisioning-compat/secureCredentialDelivery.test.mjs
       - name: Verify unchanged checkout
         if: always()
         run: git diff --exit-code
