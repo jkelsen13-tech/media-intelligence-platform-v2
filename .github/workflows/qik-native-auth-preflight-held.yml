@@ -1,0 +1,78 @@
+name: Qik installer authentication metadata preflight (held)
+# Distinct successor route. Manual only; source/metadata only; no installation.
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        type: choice
+        description: Release only the reviewed authentication metadata preflight
+        options: [held, run-auth-metadata-preflight]
+        default: held
+        required: true
+      release_sha:
+        type: string
+        description: Exact reviewed preflight release; must equal dispatch ref SHA
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: qik-native-atomic-install
+  cancel-in-progress: false
+jobs:
+  installer-auth-preflight:
+    if: github.repository == 'jkelsen13-tech/media-intelligence-platform-v2' && inputs.execute == 'run-auth-metadata-preflight'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    environment: qik-forward-controlled
+    steps:
+      - name: Verify protected admission and exact dispatch release
+        env:
+          ROUTE: ${{ vars.QIK_NATIVE_PREFLIGHT_HOST_ADMISSION }}
+          BUDGET: ${{ vars.QIK_NATIVE_INSTALL_BUDGET_ADMISSION }}
+          APPROVED: ${{ vars.QIK_NATIVE_PREFLIGHT_APPROVED_SHA }}
+          REQUESTED: ${{ inputs.release_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test "$ROUTE" = qualified-installer-auth-metadata-preflight-v1
+          test "$BUDGET" = within-existing-25-once-10-monthly
+          [[ "$APPROVED" =~ ^[a-f0-9]{40}$ ]]
+          test "$REQUESTED" = "$APPROVED"
+          test "$GITHUB_SHA" = "$APPROVED"
+          test "${ACTIONS_STEP_DEBUG:-false}" != true
+          test "${ACTIONS_RUNNER_DEBUG:-false}" != true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.release_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.14.0
+      - name: Install locked source dependencies before credential injection
+        run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+      - name: Acquire and verify Dashboard-linked public qik root certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          curl --proto '=https' --tlsv1.2 --connect-timeout 10 --max-time 30 --max-filesize 16384 --fail --silent --show-error --output "$RUNNER_TEMP/qik-preflight-ca.crt" 'https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt'
+          echo '700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7  '"$RUNNER_TEMP/qik-preflight-ca.crt" | sha256sum -c -
+      - name: Authenticate installer and inspect metadata read-only
+        timeout-minutes: 3
+        env:
+          NODE_EXTRA_CA_CERTS: ${{ runner.temp }}/qik-preflight-ca.crt
+          NODE_NO_WARNINGS: '1'
+          MIP_PREFLIGHT_HOST_ADMISSION: ${{ vars.QIK_NATIVE_PREFLIGHT_HOST_ADMISSION }}
+          MIP_PREFLIGHT_BUDGET_ADMISSION: ${{ vars.QIK_NATIVE_INSTALL_BUDGET_ADMISSION }}
+          QIK_NATIVE_PREFLIGHT_APPROVED_SHA: ${{ vars.QIK_NATIVE_PREFLIGHT_APPROVED_SHA }}
+          MIP_PREFLIGHT_RELEASE_SHA: ${{ inputs.release_sha }}
+          MIP_PREFLIGHT_EXECUTE: ${{ inputs.execute }}
+          MIP_PREFLIGHT_CONFIG_JSON: ${{ vars.QIK_NATIVE_PREFLIGHT_CONFIG_JSON }}
+          QIK_NATIVE_INSTALLER_DATABASE_URL: ${{ secrets.QIK_NATIVE_INSTALLER_DATABASE_URL }}
+        run: node supabase/qualification/native-provisioning-compat/preflight-run.mjs
+      - name: Remove public certificate staging
+        if: always()
+        run: rm -f -- "$RUNNER_TEMP/qik-preflight-ca.crt"
+# No audit credentials, raw SQL input, installation, activation, source material or artifacts.
