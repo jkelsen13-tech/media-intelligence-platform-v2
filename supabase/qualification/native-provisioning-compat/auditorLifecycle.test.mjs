@@ -23,6 +23,27 @@ async function denied(c,sql,codes=['42501']){
  try{await c.query(sql)}catch(e){assert.ok(codes.includes(e.code),'bounded expected SQLSTATE');return}
  assert.fail('operation unexpectedly authorized')
 }
+async function assertCredentialLogging(c){
+ const rows=(await c.query("select name,setting from pg_settings where name=any($1::text[])",[[
+  'log_statement','log_min_error_statement','log_min_duration_statement','log_min_duration_sample',
+  'log_transaction_sample_rate','log_duration','log_parameter_max_length','log_parameter_max_length_on_error',
+  'pgaudit.log','pgaudit.log_parameter','auto_explain.log_min_duration','pg_stat_statements.track','pg_stat_statements.track_utility'
+ ]])).rows
+ const v=Object.fromEntries(rows.map(r=>[r.name,r.setting]))
+ assert.equal(v.log_statement,'none')
+ assert.equal(v.log_min_error_statement,'panic')
+ assert.equal(v.log_min_duration_statement,'-1')
+ assert.equal(v.log_min_duration_sample,'-1')
+ assert.equal(v.log_transaction_sample_rate,'0')
+ assert.equal(v.log_duration,'off')
+ assert.equal(v.log_parameter_max_length,'0')
+ assert.equal(v.log_parameter_max_length_on_error,'0')
+ assert.ok([undefined,'none',''].includes(v['pgaudit.log']))
+ assert.ok([undefined,'off'].includes(v['pgaudit.log_parameter']))
+ assert.ok([undefined,'-1'].includes(v['auto_explain.log_min_duration']))
+ // Verifiers are sensitive too: SQL utility text must not enter statement stats.
+ assert.ok([undefined,'none'].includes(v['pg_stat_statements.track']) || v['pg_stat_statements.track_utility']==='off')
+}
 async function one(c,sql){return (await c.query(sql)).rows[0]}
 const safe="nologin noinherit nosuperuser nocreatedb noreplication nobypassrls"
 test('sealed custodian candidate: real PG17 role lifecycle and protected policy dependency',async()=>{
@@ -43,6 +64,7 @@ test('sealed custodian candidate: real PG17 role lifecycle and protected policy 
   installer=await connect(names.installer,process.env.MIP_COMPAT_CUSTOMER_PASSWORD)
   const customer=await one(installer,'select session_user,current_user,rolsuper,rolcreaterole,rolcreatedb from pg_roles where rolname=current_user')
   assert.equal(customer.session_user,'postgres');assert.equal(customer.current_user,'postgres');assert.equal(customer.rolsuper,false);assert.equal(customer.rolcreaterole,true);assert.equal(customer.rolcreatedb,true)
+  await assertCredentialLogging(installer)
   phase='rollback'
   // Atomic rollback proves temporary issuer creation leaves no role residue.
   await installer.query('begin')
@@ -62,11 +84,14 @@ test('sealed custodian candidate: real PG17 role lifecycle and protected policy 
   await installer.query('set local role '+qi(names.installer))
   await installer.query('grant usage,create on schema '+schema+' to '+qi(names.custodian)+','+qi(names.owner))
   await installer.query('set local role '+qi(names.custodian))
+  await assertCredentialLogging(installer)
   for(const k of ['audit','metadata']) await installer.query('create role '+qi(names[k])+' login noinherit nosuperuser nocreatedb nocreaterole noreplication nobypassrls password '+ql(verifier(passwords[k])))
   // Installer can revoke login and attempt exact role drop; cannot set/reset
   // passwords, grant memberships, select a role name, or issue arbitrary SQL.
   await installer.query("create function mip_lcp.revoke_audit() returns void language plpgsql security definer set search_path='' as $$begin if session_user<>'postgres' then raise exception 'denied' using errcode='42501';end if; alter role mip_lcp_audit nologin;end$$")
   await installer.query("create function mip_lcp.drop_audit() returns void language plpgsql security definer set search_path='' as $$begin if session_user<>'postgres' then raise exception 'denied' using errcode='42501';end if; if exists(select 1 from pg_roles where rolname='mip_lcp_audit' and rolcanlogin) then raise exception 'login still enabled' using errcode='42501';end if; if exists(select 1 from pg_roles where rolname='mip_lcp_audit') then drop role mip_lcp_audit;end if;end$$")
+  await installer.query("create function mip_lcp.revoke_metadata() returns void language plpgsql security definer set search_path='' as $$begin if session_user<>'postgres' then raise exception 'denied' using errcode='42501';end if; alter role mip_lcp_metadata nologin;end$$")
+  await installer.query("create function mip_lcp.drop_metadata() returns void language plpgsql security definer set search_path='' as $$begin if session_user<>'postgres' then raise exception 'denied' using errcode='42501';end if; if exists(select 1 from pg_roles where rolname='mip_lcp_metadata' and rolcanlogin) then raise exception 'login still enabled' using errcode='42501';end if; if exists(select 1 from pg_roles where rolname='mip_lcp_metadata') then drop role mip_lcp_metadata;end if;end$$")
   await installer.query('set local role '+qi(names.owner))
   await installer.query('create table mip_lcp.synthetic_rejection(id integer)')
   await installer.query('alter table mip_lcp.synthetic_rejection enable row level security')
@@ -79,8 +104,8 @@ test('sealed custodian candidate: real PG17 role lifecycle and protected policy 
   await installer.query('revoke all on function mip_lcp.remove_policy() from public')
   await installer.query('grant execute on function mip_lcp.remove_policy() to postgres')
   await installer.query('set local role '+qi(names.custodian))
-  await installer.query('revoke all on function mip_lcp.revoke_audit(),mip_lcp.drop_audit() from public')
-  await installer.query('grant execute on function mip_lcp.revoke_audit(),mip_lcp.drop_audit() to postgres')
+  await installer.query('revoke all on function mip_lcp.revoke_audit(),mip_lcp.drop_audit(),mip_lcp.revoke_metadata(),mip_lcp.drop_metadata() from public')
+  await installer.query('grant execute on function mip_lcp.revoke_audit(),mip_lcp.drop_audit(),mip_lcp.revoke_metadata(),mip_lcp.drop_metadata() to postgres')
   await installer.query('set local role '+qi(names.installer))
   await installer.query('revoke create on schema mip_lcp from mip_lcp_custodian,mip_lcp_owner')
   // Revoke explicitly issued temporary SET paths using the exact issuer.
@@ -106,6 +131,7 @@ test('sealed custodian candidate: real PG17 role lifecycle and protected policy 
   // Authenticated auditor native self-rotation, no SECURITY DEFINER EXECUTE.
   phase='rotation'
   const rotated=randomBytes(32).toString('base64url')
+  await assertCredentialLogging(audit)
   await audit.query('alter role mip_lcp_audit password '+ql(verifier(rotated)))
   await audit.end();audit=null
   let oldAccepted=false
@@ -131,6 +157,31 @@ test('sealed custodian candidate: real PG17 role lifecycle and protected policy 
   await installer.query('select mip_lcp.drop_audit()') // exact absent retry
   assert.equal((await one(root,"select count(*)::int n from pg_roles where rolname='mip_lcp_audit'")).n,0)
   await denied(metadata,'select mip_lcp.remove_policy()')
+  phase='metadata-lifecycle'
+  await denied(installer,'set role mip_lcp_metadata')
+  await denied(installer,'alter role mip_lcp_metadata password null')
+  await denied(metadata,'select mip_lcp.revoke_metadata()')
+  const metadataRotated=randomBytes(32).toString('base64url')
+  await assertCredentialLogging(metadata)
+  await metadata.query('alter role mip_lcp_metadata password '+ql(verifier(metadataRotated)))
+  await metadata.end();metadata=null
+  let metadataOldAccepted=false
+  try{const c=await connect(names.metadata,passwords.metadata);await c.end();metadataOldAccepted=true}catch(e){assert.equal(e.code,'28P01')}
+  assert.equal(metadataOldAccepted,false)
+  metadata=await connect(names.metadata,metadataRotated)
+  await denied(installer,'select mip_lcp.drop_metadata()')
+  await installer.query('select mip_lcp.revoke_metadata()')
+  assert.equal((await one(metadata,'select session_user')).session_user,names.metadata)
+  await metadata.end();metadata=null
+  let metadataDisabledAccepted=false
+  try{const c=await connect(names.metadata,metadataRotated);await c.end();metadataDisabledAccepted=true}catch(e){assert.ok(['28000','28P01'].includes(e.code))}
+  assert.equal(metadataDisabledAccepted,false)
+  await installer.query('select mip_lcp.drop_metadata()')
+  await installer.query('select mip_lcp.drop_metadata()')
+  assert.equal((await one(root,"select count(*)::int n from pg_roles where rolname in('mip_lcp_audit','mip_lcp_metadata')")).n,0)
+  phase='custodian-retirement-boundary'
+  await denied(installer,'drop role mip_lcp_custodian')
+
  }catch(e){failure=true;failureCode=/^[A-Z0-9]{5}$/.test(e.code??'')?e.code:null}
  finally{
   for(const c of [audit,metadata,installer])if(c)try{await c.query('rollback');await c.end()}catch{failure=true}
