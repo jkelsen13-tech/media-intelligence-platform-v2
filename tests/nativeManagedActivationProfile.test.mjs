@@ -207,6 +207,9 @@ test('complete managed successor manifest and both real host source inventories 
  const manifest=JSON.parse((await read('verifier/qik-native-activation-successor.json')).toString())
  const blob=b=>createHash('sha1').update(Buffer.concat([Buffer.from('blob '+b.length),Buffer.from([0]),b])).digest('hex')
  for(const entry of manifest.sources)assert.equal(blob(await read(entry.path)),entry.git_blob,entry.path)
+ const maintenance=manifest.post_install_audit_route_maintenance
+ for(const entry of [maintenance.maintenance_sql,maintenance.combined_fixture])
+  assert.equal(blob(await read(entry.path)),entry.git_blob,entry.path)
  for(const path of ['supabase/qualification/native-governed-activation/run.mjs','supabase/qualification/native-provisioning-compat/preflight-run.mjs']){
   const source=(await read(path)).toString()
   const object=source.match(/const (?:CODE_PINS|PINS)=Object.freeze\((\{[\s\S]*?\})\)/)[1]
