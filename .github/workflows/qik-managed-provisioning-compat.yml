@@ -80,7 +80,7 @@ jobs:
         env:
           MIP_CUSTODIAN_LIFECYCLE_ARM: synthetic-pg17-local-only
           MIP_DISPOSABLE_POSTGRES: qik-persistent-install
-        run: node --test supabase/qualification/native-provisioning-compat/auditorLifecycle.test.mjs
+        run: node --test --test-concurrency=1 supabase/qualification/native-provisioning-compat/managedDblink.test.mjs supabase/qualification/native-provisioning-compat/auditorLifecycle.test.mjs
       - name: Verify unchanged checkout
         if: always()
         run: git diff --exit-code
