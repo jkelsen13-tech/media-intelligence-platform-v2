@@ -76,7 +76,7 @@
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "git_blob": "cb103fe363ecb6f833c502a777c9c3c036bd07c5c"
+      "git_blob": "cb103fe363ecb6f833c502a777c9c3c036bd07c5"
     },
     {
       "path": "tests/nativeGovernedActivation.test.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "bfc9f6cd6e19b546afdeb4d346b1795c67ef3b88"
+      "git_blob": "d35733187758029e8435310d50b56ad0e611ccec"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
