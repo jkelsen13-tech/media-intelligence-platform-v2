@@ -56,6 +56,11 @@ async function prepareSourcePrerequisites(root,selectedMode,step){
     for(const[n,t]of Object.entries(relation.requiredColumns))if(!cols.has(n))await owner.query('alter table '+relation.qualified+' add column '+ident(n)+' '+t);
    }
   }
+  // Mirrors independently observed qik provider baseline, not a customer
+  // provisioning operation: supabase_auth_admin owns sessions and postgres
+  // already has table-level SELECT WITH GRANT OPTION.
+  step('fixture-provider-auth-grant');
+  await owner.query('grant select on auth.sessions to postgres with grant option');
   step('fixture-pipeline');
   await owner.query(await read('supabase/migrations/20260905082406_evidence_pipeline_reliability.sql'));
   for(const file of LOAD_ORDER){
