@@ -206,3 +206,8 @@ Ownership is limited to trusted postgres (observed qik) or bootstrap supabase_ad
 (observed pinned disposable image), with identical extension/view owner. The
 exact current owner OIDs remain bound and independently reconciled; no ownership
 change is performed or claimed by this compatibility admission.
+
+Independent DEV audit uses fixed catalog OID lookups for private relations and
+transport functions, never namespace-resolution operations requiring private
+schema USAGE. No private schema privilege, installed callback, credential-table
+read or installer connection is supplied to the metadata auditor.

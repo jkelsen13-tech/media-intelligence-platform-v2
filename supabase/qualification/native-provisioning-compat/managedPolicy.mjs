@@ -71,6 +71,21 @@ export function managedStatisticsCatalogSQL(){
  'views',(select jsonb_agg(jsonb_build_object('class',to_jsonb(c),'rules',(select jsonb_agg(to_jsonb(stats_rule) order by stats_rule.oid) from pg_catalog.pg_rewrite stats_rule where stats_rule.ev_class=c.oid)) order by c.relname)
  from pg_catalog.pg_class c where ${managedStatisticsViewPredicate()}))`
 }
+// Source-authored catalog lookup for an independent auditor with no private
+// schema USAGE. regprocedure/regclass name resolution can require that USAGE;
+// granting it is unnecessary. These fixed signatures resolve directly by OID.
+export function catalogOnlyManagedSQL(sql){
+ const types={text:25,jsonb:3802,boolean:16}
+ const proc=(schema,name,args)=>{
+  const keys=args?args.split(','):[]
+  if(keys.some(t=>!Object.hasOwn(types,t)))fail()
+  return "(select cbp.oid from pg_catalog.pg_proc cbp join pg_catalog.pg_namespace cbn on cbn.oid=cbp.pronamespace where cbn.nspname="+lit(schema)+" and cbp.proname="+lit(name)+" and cbp.proargtypes="+lit(keys.map(t=>types[t]).join(' '))+"::oidvector)"
+ }
+ sql=sql.replace(/to_regprocedure\\('([a-z_0-9]+)\\.([a-z_0-9]+)\\(([^']*)\\)'\\)/g,(all,ns,name,args)=>ns.startsWith('mip_')?proc(ns,name,args):all)
+ sql=sql.replace(/'([a-z_0-9]+)\\.([a-z_0-9]+)\\(([^']*)\\)'::regprocedure/g,(all,ns,name,args)=>ns.startsWith('mip_')?proc(ns,name,args):all)
+ sql=sql.replace(/'([a-z_0-9]+)\\.([a-z_0-9]+)'::regclass/g,(all,ns,name)=>ns.startsWith('mip_')?"(select cbc.oid from pg_catalog.pg_class cbc join pg_catalog.pg_namespace cbn on cbn.oid=cbc.relnamespace where cbn.nspname="+lit(ns)+" and cbc.relname="+lit(name)+")":all)
+ return sql
+}
 export const RAW_SCHEMA='mip_factual_transport_raw'
 export const AUDIT_LOGIN='mip_native_audit_v1'
 export const METADATA_LOGIN='mip_native_metadata_audit_v1'
