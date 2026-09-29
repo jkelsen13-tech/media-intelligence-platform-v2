@@ -244,9 +244,12 @@ test('complete managed successor manifest and both real host source inventories 
  const plan=await prepareAtomicInstall(read,options);
  const predecessor='revoke execute on function mip_identity.operation_check_pre_doj_v1(jsonb) from mip_efta_owner_v1;';
  assert.equal(plan.dojBody.split(predecessor).length,2);
+ const ownerAcl='set role qik_ingest_fn_owner;\nrevoke all on function qik_ingest.check_doj_material(uuid,uuid,uuid) from public,anon,authenticated,service_role,qik_ingest_runtime,mip_cutover_authority_admin_v1,mip_comparison_worker_v1,mip_comparison_producer_v1,mip_projection_publisher_v1,postgres,mip_efta_owner_v1;\nreset role;';
+ assert.equal(plan.dojBody.split(ownerAcl).length,2);
  assert.match(plan.dojBody,/grant execute on function mip_identity\.operation_check\(jsonb\) to mip_efta_owner_v1/);
  assert.match(plan.dojAssertions,/\('mip_identity\.operation_check_pre_doj_v1\(jsonb\)','mip_publication_owner_v2','v',array\['mip_publication_owner_v2'\]\)/);
  const old=await prepareAtomicInstall(read,{...options,provisioningProfile:DEVELOPMENT_PROFILE});
  assert.equal(old.dojBody.includes(predecessor),false);
+ assert.equal(old.dojBody.includes(ownerAcl),false);
  assert.notEqual(plan.manifest_sha256,old.manifest_sha256);
 });
