@@ -1,5 +1,5 @@
 import {auditBoundarySQL} from '../qik-comparison-adapter/atomicInstall.mjs'
-import {auditorEdgePredicate,managedSnapshotSQL,developmentProfile,AUDIT_LOGIN} from '../native-provisioning-compat/managedPolicy.mjs'
+import {auditorEdgePredicate,managedSnapshotSQL,developmentProfile,managedStatisticsViewPredicate,AUDIT_LOGIN} from '../native-provisioning-compat/managedPolicy.mjs'
 // Independent read-only catalog auditor. No installer credential, SQL callback,
 // AUTH row, captured content, session token, or currentness waiver.
 import pg from 'pg'
@@ -44,6 +44,17 @@ select r.oid::text oid,session_user::text login,current_user::text effective,
  as safe
 from pg_roles r where rolname=session_user;
 `
+function auditorIdentitySQL(config){
+ let sql=config.provisioningProfile?AUDITOR_SQL.replace('not exists(select 1 from pg_auth_members where roleid=r.oid or member=r.oid)',auditorEdgePredicate('r.oid')):AUDITOR_SQL
+ if(developmentProfile(config)){
+  const needle="has_table_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')\n    or has_any_column_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')"
+  const replacement="has_table_privilege(r.oid,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN') or has_any_column_privilege(r.oid,c.oid,'INSERT,UPDATE,REFERENCES') or (not "+managedStatisticsViewPredicate()+" and (has_table_privilege(r.oid,c.oid,'SELECT') or has_any_column_privilege(r.oid,c.oid,'SELECT')))"
+  if(sql.split(needle).length!==2)fail()
+  sql=sql.replace(needle,()=>replacement)
+  sql=sql.replace('as safe', "and not pg_has_role(r.oid,'pg_read_all_stats','USAGE') and not pg_has_role(r.oid,'pg_read_all_stats','SET') as safe")
+ }
+ return sql
+}
 export async function auditNativeActivationMetadata(config,readPinnedSource){
  let db=null,begun=false,verified=false,result,phase='source'
  try{
@@ -66,8 +77,14 @@ export async function auditNativeActivationMetadata(config,readPinnedSource){
   await db.query("set local search_path=''")
   await db.query('select pg_advisory_xact_lock_shared(171903,7001)')
   phase='auditor_identity'
-  const id=(await db.query(config.provisioningProfile?AUDITOR_SQL.replace('not exists(select 1 from pg_auth_members where roleid=r.oid or member=r.oid)',auditorEdgePredicate('r.oid')):AUDITOR_SQL,[GROUPS])).rows[0]
+  const id=(await db.query(auditorIdentitySQL(config),[GROUPS])).rows[0]
   if(id?.login!==config.expectedMetadataAuditor||id.effective!==id.login||id.safe!==true)fail()
+  if(developmentProfile(config)){
+   phase='provider_statistics_privacy'
+   // Only boolean output; no other role's SQL text or queryid leaves SQL.
+   const privacy=(await db.query("select not exists(select 1 from extensions.pg_stat_statements where userid<>current_user::regrole and (queryid is not null or query is distinct from '<insufficient privilege>')) ok")).rows[0]
+   if(privacy?.ok!==true)fail()
+  }
   phase='bootstrap'
   const b=(await db.query('select * from mip_native_activation.bootstrap where singleton')).rows[0]
   if(!b||b.operation_id!==config.operationId||b.installer!==config.expectedLogin

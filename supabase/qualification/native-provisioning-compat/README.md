@@ -189,3 +189,16 @@ caller helper still refuses CREATE, API function EXECUTE and effective
 USAGE/SET of either caller group. This provides no data-read isolation from the
 trusted installer; no new installer privilege or runtime privilege is granted.
 The strict managed and optionless historical schema-USAGE veto is preserved.
+
+### Managed provider statistics metadata
+
+The development metadata auditor acknowledges the existing PUBLIC SELECT on
+only the two supabase_admin-owned pg_stat_statements 1.11 extension views in
+extensions. The catalog snapshot binds their exact definitions and identities.
+All write privileges, any extra relation SELECT, and pg_read_all_stats USAGE/SET
+remain forbidden. Independent audit verifies other principals' SQL text is
+redacted and queryid absent, returning only a boolean. The disposable fixture
+requires a nonempty postgres statistics sample and tests an unrelated SELECT
+grant refusal and exact cleanup. No provider ACL is changed, no captured rows or
+statement text are emitted. Strict managed and historical profiles are unchanged.
+Reference: https://www.postgresql.org/docs/17/pgstatstatements.html

@@ -57,6 +57,20 @@ export function providerBoundarySQL(o){
  end $provider_boundary$;`
 }
 
+// Provider aggregate statistics are metadata. Only the two provider-owned
+// extension views are admitted; statement privacy is independently verified.
+export function managedStatisticsViewPredicate(alias='c'){
+ return `(${alias}.relkind='v' and ${alias}.relowner=10 and ${alias}.relname in('pg_stat_statements','pg_stat_statements_info')
+ and ${alias}.relnamespace=(select oid from pg_catalog.pg_namespace where nspname='extensions')
+ and exists(select 1 from pg_catalog.pg_depend d join pg_catalog.pg_extension e on e.oid=d.refobjid
+ where d.classid='pg_class'::regclass and d.objid=${alias}.oid and d.refclassid='pg_extension'::regclass
+ and d.deptype='e' and e.extname='pg_stat_statements' and e.extowner=10 and e.extversion='1.11'))`
+}
+export function managedStatisticsCatalogSQL(){
+ return `select jsonb_build_object('extension',(select to_jsonb(e) from pg_catalog.pg_extension e where extname='pg_stat_statements'),
+ 'views',(select jsonb_agg(jsonb_build_object('class',to_jsonb(c),'definition',pg_catalog.pg_get_viewdef(c.oid,true)) order by c.relname)
+ from pg_catalog.pg_class c where ${managedStatisticsViewPredicate()}))`
+}
 export const RAW_SCHEMA='mip_factual_transport_raw'
 export const AUDIT_LOGIN='mip_native_audit_v1'
 export const METADATA_LOGIN='mip_native_metadata_audit_v1'
@@ -105,7 +119,7 @@ const definitionsSQL=`select encode(sha256(convert_to(coalesce(jsonb_agg(jsonb_b
 export function managedSnapshotSQL(o){
  managedOptions(o)
  return `select jsonb_build_object('profile','${o.provisioningProfile}'${developmentProfile(o)?",'trusted_provider_metadata',("+providerSnapshotSQL()+")":''},'provisioning_operation_id',${lit(o.provisioningOperationId)},
- 'installer_oid','postgres'::regrole::oid::text,${developmentProfile(o)?"'installer_read_all_edge',("+edgeQuery("'pg_read_all_data'::regrole")+"),":''}
+ 'installer_oid','postgres'::regrole::oid::text,${developmentProfile(o)?"'installer_read_all_edge',("+edgeQuery("'pg_read_all_data'::regrole")+"),\'provider_statistics\',("+managedStatisticsCatalogSQL()+"),":''}
  'audit_edge',(${edgeQuery(lit(AUDIT_LOGIN)+'::regrole')}),
  'metadata_edge',(${edgeQuery(lit(METADATA_LOGIN)+'::regrole')}),
  'extension',(select jsonb_build_object('oid',e.oid::text,'owner',e.extowner::text,'version',e.extversion,

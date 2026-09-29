@@ -10,7 +10,7 @@ const CODE_PINS=Object.freeze({
   "supabase/qualification/native-governed-activation/001_profile.sql": "59e7dbfa5bb9925b4525aa1e3b3d5003d55610f9",
   "supabase/qualification/native-governed-activation/prepare.mjs": "47b03aa4dcc577f6d837ba4eb80ba76913f650d3",
   "supabase/qualification/native-governed-activation/activation.mjs": "83a2695e06699999bda39c4b98f9f36e1a6c3e08",
-  "supabase/qualification/native-governed-activation/audit.mjs": "579ab5945b7a2c83d474dbfd8e136819733f5c9a",
+  "supabase/qualification/native-governed-activation/audit.mjs": "efe2c8abecb2d3e1a1bf562c48cf9df239ca9c81",
   "supabase/qualification/native-governed-install/install.mjs": "b64b1854163071858e166639b9d02cf1cdf7e5c2",
   "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "4f9ab9c5a931e1cb7c9a4426a1c8444e0a162cb5",
   "supabase/qualification/qik-comparison-adapter/compileSource.mjs": "cd87eb0a0bc758315246e74675339f3ea2972a19",
@@ -23,7 +23,7 @@ const CODE_PINS=Object.freeze({
   "package-lock.json": "2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0",
   "supabase/qualification/native-governed-host/adapter.mjs": "47622a1729351d0cabda279d63855b9309e490b0",
   "supabase/qualification/native-governed-activation/host.mjs": "378d11df2922836e237006723ee4731df885310c",
-  "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "8c4d6a105f33b401aa924aea931509d83c8fad95",
+  "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "61d3adff482958a422c63d737142ad4fc728ec08",
   "supabase/qualification/native-provisioning-compat/provision.mjs": "3bd3ea29702306943b53751e3be42a92cb0839fa",
   "supabase/qualification/native-provisioning-compat/retirement.mjs": "c12018a7d78a3df8714104475eac29ccd06cc2b0"
 })

@@ -221,6 +221,11 @@ test('managed provision, full disabled installation, independent audits and term
    }
   }finally{await publisher.end()}
   const audit={...options,expectedInstallManifest:plan.manifest_sha256,expectedNativeProgram:plan.native.program_sha256,expectedSuccessorProgram:plan.activation.program_sha256,metadataAuditConnectionString:secrets.metadataAudit,disposable:true}
+  phase='statistics-privacy-nonvacuous'
+  const statsReader=await connect(provision.expectedMetadataAuditor,new URL(secrets.metadataAudit).password)
+  try{
+   assert.equal((await statsReader.query("select count(*)>0 and bool_and(queryid is null and query='<insufficient privilege>') ok from extensions.pg_stat_statements where userid='postgres'::regrole")).rows[0].ok,true)
+  }finally{await statsReader.end()}
   phase='independent-metadata-audit'
   const originalAuditQuery=pg.Client.prototype.query
   pg.Client.prototype.query=async function(...args){
@@ -243,6 +248,16 @@ test('managed provision, full disabled installation, independent audits and term
   assert.equal(observed.permission_boundary_current,true);assert.equal(observed.state,'disabled_bootstrap')
   // Development approval acknowledges provider access; it never trusts the
   // shared pg_read_all_data capability or any other LOGIN that reaches it.
+  phase='metadata-extra-relation-refused'
+  await provider.query('create table public.fixture_metadata_extra(id integer)')
+  try{
+   await provider.query('grant select on public.fixture_metadata_extra to mip_native_metadata_audit_v1')
+   observed=await auditNativeActivationMetadata(audit,read)
+   assert.equal(observed.permission_boundary_current,false);assert.equal(observed.phase,'auditor_identity')
+  }finally{await provider.query('drop table public.fixture_metadata_extra')}
+  phase='independent-after-extra-relation-cleanup'
+  observed=await auditNativeActivationMetadata(audit,read)
+  assert.equal(observed.permission_boundary_current,true)
   phase='trusted-provider-effective-access'
   for(const name of ['supabase_etl_admin','supabase_read_only_user']){
    assert.equal((await provider.query("select has_table_privilege($1,'mip_factual.audit_connection','SELECT') allowed",[name])).rows[0].allowed,true)
