@@ -193,7 +193,7 @@ The strict managed and optionless historical schema-USAGE veto is preserved.
 ### Managed provider statistics metadata
 
 The development metadata auditor acknowledges the existing PUBLIC SELECT on
-only the two supabase_admin-owned pg_stat_statements 1.11 extension views in
+only the two trusted-postgres-owned pg_stat_statements 1.11 extension views in
 extensions. The catalog snapshot binds their exact definitions and identities.
 All write privileges, any extra relation SELECT, and pg_read_all_stats USAGE/SET
 remain forbidden. Independent audit verifies other principals' SQL text is
