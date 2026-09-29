@@ -29,8 +29,26 @@ test('managed prerequisite component creates, authenticates and reconciles same 
   phase='before'
   observed=await reconcileManagedPrerequisites(cfg,secrets)
   assert.equal(observed.state,'not_provisioned');assert.equal(observed.connection_cleanup_verified,true)
-  phase='provision'
-  observed=await provisionManagedPrerequisites(cfg,secrets)
+  phase='lost-commit-acknowledgment'
+  // Actual PostgreSQL COMMIT completes, then only its client acknowledgment is
+  // withheld. Source receives no extra callback or alternate executor.
+  const originalQuery=pg.Client.prototype.query
+  let lost=false
+  pg.Client.prototype.query=async function(...args){
+   const result=await originalQuery.apply(this,args)
+   if(!lost&&typeof args[0]==='string'&&args[0].toLowerCase()==='commit'){
+    lost=true;throw Error('synthetic_lost_commit_acknowledgment')
+   }
+   return result
+  }
+  try{observed=await provisionManagedPrerequisites(cfg,secrets)}
+  finally{pg.Client.prototype.query=originalQuery}
+  assert.equal(lost,true)
+  assert.equal(observed.state,'commit_outcome_unknown')
+  assert.equal(observed.needs_reconciliation,true)
+  assert.equal(observed.connection_cleanup_verified,true)
+  phase='same-operation-after-lost-ack'
+  observed=await reconcileManagedPrerequisites(cfg,secrets)
   assert.equal(observed.state,'provisioned_authentication_verified');assert.equal(observed.connection_cleanup_verified,true)
   const receipt=(await customer.query('select to_jsonb(r) r from mip_managed_provisioning.receipts r')).rows[0].r
   assert.equal(receipt.operation_id,cfg.operationId)
