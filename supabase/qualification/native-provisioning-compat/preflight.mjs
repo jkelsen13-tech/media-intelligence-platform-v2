@@ -57,6 +57,7 @@ select encode(sha256(convert_to(jsonb_build_object(
  (select count(*)=1 and bool_and(not collection_authorized) from qik_ingest.collection_gate where id) gate_closed,
  not exists(select 1 from qik_ingest.schedule_intent where active) schedule_closed,
  not exists(select 1 from public.ingest_sources where enabled and collection_enabled) sources_closed,
+ not exists(select 1 from qik_ingest.runtime_credentials) credentials_empty,
  exists(select 1 from qik_ingest_operation.persistent_install_receipt
  where id and operation_id=$1 and sql_manifest_sha256=$2) receipt_matches`
 
@@ -90,7 +91,7 @@ export function createInstallerAuthPreflight({makeClient,loadCa}){
    const cr=(await db.query(C3_SQL,[c.c3OperationId,c.c3ManifestSha256])).rows
    const x=cr?.[0]
    if(cr?.length!==1||x.gate_closed!==true||x.schedule_closed!==true||x.sources_closed!==true
-    ||x.receipt_matches!==true||!HASH.test(x.baseline??''))fail('prerequisite')
+    ||x.credentials_empty!==true||x.receipt_matches!==true||!HASH.test(x.baseline??''))fail('prerequisite')
    baseline=x.baseline;qualified=true
   }catch(error){diagnostic=classify(error,phase)}
   finally{
