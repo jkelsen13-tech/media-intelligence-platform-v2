@@ -4,7 +4,7 @@ import {createInstallerAuthPreflight,validateInstallerPreflightConfig,loadPinned
 const c={expectedLogin:'postgres',c3OperationId:'a'.repeat(32),c3ManifestSha256:'b'.repeat(64)}
 const secrets={installer:'postgresql://postgres:synthetic-only-password@db.qikvmopbtijoebdqosyq.supabase.co:5432/postgres'}
 const identity={login:'postgres',effective:'postgres',rolsuper:false,rolcanlogin:true,rolcreaterole:true,rolcreatedb:true,rolbypassrls:true,rolinherit:true,rolreplication:false,database_owner:true,read_only:true,tls:true,postgres_supported:true,vector_supported:true}
-const c3={baseline:'c'.repeat(64),gate_closed:true,schedule_closed:true,sources_closed:true,receipt_matches:true}
+const c3={baseline:'c'.repeat(64),gate_closed:true,schedule_closed:true,sources_closed:true,credentials_empty:true,receipt_matches:true}
 function fixture(change={}){
  const calls=[],options=[];let closed=0
  const client={async connect(){if(change.connect)throw change.connect},
@@ -95,7 +95,7 @@ test('server-side TLS and selected version checks cannot be inferred from config
  }
 })
 test('C3 mismatch/open gate/schedule/source or invalid digest refuses',async()=>{
- for(const patch of [{gate_closed:false},{schedule_closed:false},{sources_closed:false},{receipt_matches:false},{baseline:'invalid'}]){
+ for(const patch of [{gate_closed:false},{schedule_closed:false},{sources_closed:false},{credentials_empty:false},{receipt_matches:false},{baseline:'invalid'}]){
   const f=fixture({c3:patch}),r=await f.run(c,secrets);assert.equal(r.diagnostic,'prerequisite');assert.equal(r.c3_baseline_sha256,null)
  }
 })
