@@ -43,7 +43,7 @@ async function connect(t){
 }
 async function identity(db,c){
  const r=(await db.query("select session_user::text login,current_user::text effective,r.oid::text oid,r.rolsuper,r.rolcreaterole,r.rolcreatedb,r.rolbypassrls,r.rolinherit,r.rolreplication,current_database() database,current_setting('server_version_num') version,current_setting('supautils.privileged_role',true) privileged,current_setting('supautils.superuser',true) provider,pg_has_role(current_user,'supabase_privileged_role','USAGE') privileged_usage,(select ssl from pg_stat_ssl where pid=pg_backend_pid()) tls from pg_roles r where r.rolname=current_user")).rows[0]
- if(!r||r.login!==INSTALLER||r.effective!==INSTALLER||r.rolsuper||!r.rolcreaterole||!r.rolcreatedb||!r.rolbypassrls||!r.rolinherit||r.rolreplication||r.database!=='postgres'||r.version!=='170006'||r.privileged!=='supabase_privileged_role'||r.privileged_usage!==true||r.provider!==PROVIDER||(!c.disposable&&(db.connection?.stream?.encrypted!==true||db.connection?.stream?.authorized!==true)))fail()
+ if(!r||r.login!==INSTALLER||r.effective!==INSTALLER||r.rolsuper||!r.rolcreaterole||!r.rolcreatedb||!r.rolbypassrls||!r.rolinherit||r.rolreplication!==true||r.database!=='postgres'||r.version!=='170006'||r.privileged!=='supabase_privileged_role'||r.privileged_usage!==true||r.provider!==PROVIDER||(!c.disposable&&(db.connection?.stream?.encrypted!==true||db.connection?.stream?.authorized!==true)))fail()
  const p=(await db.query("select oid::text oid from pg_roles where rolname=$1 and rolsuper",[PROVIDER])).rows[0]
  if(!p)fail()
  return {installer_oid:r.oid,provider_oid:p.oid}
