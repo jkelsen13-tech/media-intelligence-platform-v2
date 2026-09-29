@@ -161,6 +161,22 @@
     {
       "path": "supabase/qualification/native-provisioning-compat/retirement.mjs",
       "git_blob": "c12018a7d78a3df8714104475eac29ccd06cc2b0"
+    },
+    {
+      "path": ".github/workflows/qik-managed-prerequisites-held.yml",
+      "git_blob": "4f45574181bc1c04f3da326a0b624e43d2c2eee3"
+    },
+    {
+      "path": "supabase/qualification/native-provisioning-compat/host.test.mjs",
+      "git_blob": "7d9b1281e64cc6442a46506659f076ff72237792"
+    },
+    {
+      "path": "supabase/qualification/native-provisioning-compat/run.mjs",
+      "git_blob": "ab7fd62684243917f311ccc2870a2a12587062d6"
+    },
+    {
+      "path": "supabase/qualification/native-provisioning-compat/hostConfig.mjs",
+      "git_blob": "d9e00d9bad2e43a92214b0aab1cd4fbc16b9e976"
     }
   ],
   "replaced_blobs": [

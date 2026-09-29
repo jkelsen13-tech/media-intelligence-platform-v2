@@ -57,3 +57,16 @@ test('real activation host passes exact source and manifest gates before refusin
   assert.equal(child.status,1);assert.equal(JSON.parse(child.stdout).phase,'manifest_integrity')
  }finally{rmSync(dir,{recursive:true,force:true})}
 })
+
+test('held prerequisite workflow is manual, exact-release, restricted and shares install serialization',()=>{
+ const workflow=readFileSync(new URL('../../../.github/workflows/qik-managed-prerequisites-held.yml',import.meta.url),'utf8')
+ assert.match(workflow,/workflow_dispatch:/)
+ assert.doesNotMatch(workflow,/^  (push|pull_request|schedule|workflow_run):/m)
+ assert.match(workflow,/group: qik-native-atomic-install/)
+ assert.match(workflow,/cancel-in-progress: false/)
+ assert.match(workflow,/environment: qik-forward-controlled/)
+ assert.match(workflow,/contents: read/)
+ assert.match(workflow,/test "\$GITHUB_SHA" = "\$APPROVED"/)
+ assert.match(workflow,/persist-credentials: false/)
+ assert.doesNotMatch(workflow,/upload-artifact|actions\/cache|curl|psql|supabase .*deploy/)
+})
