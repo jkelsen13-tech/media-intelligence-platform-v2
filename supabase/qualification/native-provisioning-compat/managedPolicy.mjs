@@ -33,7 +33,7 @@ export function edgeQuery(role){
 export function auditorEdgePredicate(role){
  return `(select count(*)=1 and bool_and(a.roleid=${role} and a.member='postgres'::regrole
  and a.admin_option and not a.inherit_option and not a.set_option
- and a.grantor=10 and g.rolname in('postgres','supabase_admin'))
+ and a.grantor=10 and g.rolname='supabase_admin')
  from pg_catalog.pg_auth_members a join pg_catalog.pg_roles g on g.oid=a.grantor
  where a.roleid=${role} or a.member=${role})`
 }
@@ -66,7 +66,7 @@ export function managedSnapshotSQL(o){
 function validEdge(edge,name,installer,recorded){
  return edge?.role_name===name&&edge.member_name==='postgres'&&edge.member_oid===String(installer)
  &&edge.admin_option===true&&edge.inherit_option===false&&edge.set_option===false
- &&edge.grantor_oid==='10'&&['postgres','supabase_admin'].includes(edge.grantor_name)
+ &&edge.grantor_oid==='10'&&edge.grantor_name==='supabase_admin'
  &&JSON.stringify(Object.entries(edge).sort())===JSON.stringify(Object.entries(recorded??{}).sort())
 }
 export async function verifyManagedPrerequisites(db,c,originalDblinkQuery){
