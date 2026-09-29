@@ -6,6 +6,15 @@ on:
         description: Exact compatibility fixture commit
         required: true
         type: string
+      mode:
+        description: Bounded qualification scope
+        required: true
+        default: managed
+        type: choice
+        options:
+          - managed
+          - preflight
+          - credentials
 permissions:
   contents: read
 concurrency:
@@ -37,6 +46,7 @@ jobs:
       - name: Locked test driver
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Resolve exact managed image and create isolated instance
+        if: inputs.mode != 'preflight'
         timeout-minutes: 5
         shell: bash
         run: |
@@ -58,6 +68,7 @@ jobs:
           echo 'Managed instance readiness failed; no raw database logs emitted'
           exit 1
       - name: Provider-only customer credential setup
+        if: inputs.mode != 'preflight'
         shell: bash
         run: |
           set -euo pipefail
@@ -76,14 +87,26 @@ jobs:
           finally {await db.end();}
           JS
       - name: Require password authentication for synthetic loopback
+        if: inputs.mode != 'preflight'
         shell: bash
         run: |
           set -euo pipefail
           docker exec -u root qik-managed-compat sed -i -E '/^host[[:space:]]+all[[:space:]]+all[[:space:]]+(127\.0\.0\.1\/32|::1\/128)[[:space:]]+trust/s/trust/scram-sha-256/' /etc/postgresql/pg_hba.conf
           docker kill --signal HUP qik-managed-compat
+      - name: Verify provider public CA identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          cert="$RUNNER_TEMP/qik-public-ca.crt"
+          trap 'rm -f "$cert"' EXIT
+          curl --proto '=https' --tlsv1.2 --connect-timeout 10 --max-time 30 --max-filesize 16384 --fail --silent --show-error --output "$cert" 'https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt'
+          test "$(sha256sum "$cert" | cut -d' ' -f1)" = '700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7'
+          echo 'PASS public provider CA matches existing pin'
       - name: Installer preflight source tests
-        run: node --test tests/nativeProvisioningInstallerPreflight.test.mjs
+        run: node --test tests/nativeProvisioningInstallerPreflight.test.mjs tests/nativeProvisioningPreflightHost.test.mjs
       - name: Restricted customer lifecycle qualification
+        if: inputs.mode == 'managed'
         timeout-minutes: 5
         env:
           MIP_CUSTODIAN_LIFECYCLE_ARM: synthetic-pg17-local-only
