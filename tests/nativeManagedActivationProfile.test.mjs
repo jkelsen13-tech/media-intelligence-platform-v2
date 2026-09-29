@@ -143,3 +143,35 @@ test('activation host preserves only bounded atomic failure evidence and never a
  const ok=await dispatchActivationHostAction('reconcile',c,()=>{},{reconcileComparisonInstall:async()=>({...base('not_installed'),phase:canary,sqlstate:canary,diagnostic:canary})});
  assert.equal(activationHostActionSatisfied('reconcile',ok),true);assert.equal(Object.hasOwn(ok,'failure_phase'),false);assert.equal(JSON.stringify(ok).includes(canary),false);
 });
+
+test('activation host independently bounds existing native failure evidence',async()=>{
+ const hash='a'.repeat(64),operation='1'.repeat(32),canary='PRIVATE_NATIVE_FAILURE_CANARY';
+ const cfg={releaseSha:'b'.repeat(40),operationId:operation,expectedLogin:'postgres',auditLogin:'mip_native_audit_v1',
+ c3OperationId:'2'.repeat(32),c3ManifestSha256:hash,expectedManifestSha256:hash,expectedNativeProgramSha256:hash,
+ dblinkMetadataSha256:hash,collectorSource:'qik-synthetic',expectedMetadataAuditor:'mip_native_metadata_audit_v1',expectedSuccessorProgram:hash};
+ const dsn=login=>'postgresql://'+login+'.qikvmopbtijoebdqosyq:SYNTHETIC_ONLY@aws-0-us-west-1.pooler.supabase.com:5432/postgres';
+ const c=validateActivationHostConfig(JSON.stringify(cfg),{installer:dsn('postgres'),audit:dsn(cfg.auditLogin)+'?connect_timeout=5&sslmode=verify-full&sslrootcert=system',metadataAudit:dsn(cfg.expectedMetadataAuditor)});
+ const base={state:'installation_refused',operation_id:operation,manifest_sha256:hash,native_mode:'native-governed-v6',
+ native_program_sha256:hash,activation_profile:'native-governed-activation-v1',successor_program_sha256:hash,
+ activation_allowed:false,needs_reconciliation:false,audit_qualified:false,connection_cleanup_verified:true,cleanup_diagnostic:null,
+ phase:'native_joint_install',sqlstate:'P0001',diagnostic:null};
+ const run=changed=>dispatchActivationHostAction('reconcile',c,()=>{},{reconcileComparisonInstall:async()=>({...base,...changed})});
+ const allowed={stage:'checkpoint_assertion',source:'supabase/qualification/entity-resolution/candidate-review/004_candidate_review.sql',object:'auth.sessions',name:'candidate review owner boundary failed'};
+ const r=await run({native_failure:{...allowed,query:canary,detail:canary,position:canary,frames:[canary],internal_source:{sha256:canary}}});
+ assert.deepEqual(r.failure_native,allowed);assert.equal(JSON.stringify(r).includes(canary),false);
+ assert.equal(activationHostActionSatisfied('install',r),false);
+ const core=await run({native_failure:{...allowed,name:'native_install_existing_owner_path'}});
+ assert.equal(core.failure_native.name,'native_install_existing_owner_path');
+ for(const changed of [{stage:canary,source:canary,object:canary,name:canary},
+ {stage:'checkpoint_assertion:'+canary,source:allowed.source+'/'+canary,object:'auth.sessions.'+canary,name:allowed.name+':'+canary}]){
+  const refused=await run({native_failure:changed});
+  assert.deepEqual(refused.failure_native,{stage:null,source:null,object:null,name:null});
+  assert.equal(JSON.stringify(refused).includes(canary),false);
+ }
+ for(const changed of [{native_failure:canary},{native_failure:[allowed]},{phase:'catalog_preflight',native_failure:allowed},
+ {state:'not_installed',native_failure:allowed},{operation_id:'3'.repeat(32),native_failure:allowed},
+ {manifest_sha256:'0'.repeat(64),native_failure:allowed},{successor_program_sha256:'0'.repeat(64),native_failure:allowed}]){
+  const refused=await run(changed);assert.equal(Object.hasOwn(refused,'failure_native'),false);
+ }
+ for(const field of ['activation_allowed','publication_allowed','material_access_allowed','production_qualified'])assert.equal(r[field],false);
+});

@@ -124,11 +124,11 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/host.mjs",
-      "git_blob": "f0ac06ba0ae8c5541eae7960a89f70ed25a7737e"
+      "git_blob": "d07774d764ec08ad0bacf68e75f2ed48eb7a195f"
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "b3762ea45ab0ef52ba56753b14edbfb687cad3a5"
+      "git_blob": "19d62ab763477b5f47e64166fa009c5131262463"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -188,7 +188,7 @@
     },
     {
       "path": "tests/nativeManagedActivationProfile.test.mjs",
-      "git_blob": "149071f930a959ac9e157cc4cbb90b1fbd779e8d"
+      "git_blob": "282eb48822d69bba5398a054c800b945e5a6bb90"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLock.mjs",
@@ -381,6 +381,7 @@
   "install_failure_diagnostic_successor": {
     "scope": "Host-only independently allowlisted failure phases, standard SQLSTATE codes and existing static atomic diagnostics; no raw messages, credentials, exception details, SQL or arbitrary paths",
     "state": "AUTHORED / pending targeted qualification and independent review / not deployed",
-    "unchanged": "SQL programs, permissions, credential delivery, acceptance and recovery contracts unchanged; existing failed hosted receipt preserved"
+    "unchanged": "SQL programs, permissions, credential delivery, acceptance and recovery contracts unchanged; existing failed hosted receipt preserved",
+    "native_failure": "Only existing native API fixed stages, exact pinned native source paths, fixed relation objects and exact static refusal names; no raw context, query, frame, position or input. Independently bounded after identity sanitizer, only native_joint_install failure. No SQL, permissions or recovery changes."
   }
 }
