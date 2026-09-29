@@ -23,7 +23,7 @@ async function connect(user='postgres',pass=password,database='postgres'){
  await db.connect();return db
 }
 async function transferSyntheticOwnership(provider){
- const schemas=['public','auth','evidence_pipeline','qik_ingest','qik_ingest_operation']
+ const schemas=['public','evidence_pipeline','qik_ingest','qik_ingest_operation']
  // Only source-fixture objects owned by the synthetic provider are reassigned.
  // Extension members and objects already owned by protected source roles stay unchanged.
  const relations=(await provider.query("select n.nspname,c.relname,c.relkind from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relowner=current_user::regrole and c.relkind in('r','p','S','v','m') and not exists(select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e')",[schemas])).rows
@@ -107,8 +107,11 @@ test('managed provision, full disabled installation, independent audits and term
   assert.equal((await provider.query("select current_setting('server_version_num') v")).rows[0].v,'170006')
   phase='pristine-schemas'
   assert.equal((await provider.query("select count(*)::int n from pg_namespace where nspname in('evidence_pipeline','qik_ingest','qik_ingest_operation','mip_managed_provisioning','mip_native_activation')")).rows[0].n,0)
-  phase='pristine-auth-relations'
-  assert.equal((await provider.query("select count(*)::int n from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='auth'")).rows[0].n,0)
+  // The managed image includes provider Auth infrastructure. It is not
+  // application residue and must not be dropped or customer-reowned.
+  phase='provider-auth-baseline'
+  assert.equal((await provider.query("select count(*)::int n from pg_class c join pg_namespace n on n.oid=c.relnamespace join pg_roles r on r.oid=c.relowner where n.nspname='auth' and r.rolname not in('supabase_auth_admin','supabase_admin')")).rows[0].n,0)
+
   phase='pristine-application-relations'
   assert.equal((await provider.query("select count(*)::int n from pg_class c where relnamespace='public'::regnamespace and not exists(select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e')")).rows[0].n,0)
   phase='pristine-dblink'
@@ -174,7 +177,9 @@ test('managed provision, full disabled installation, independent audits and term
   assert.deepEqual((await provider.query(historySQL)).rows[0].value,retained)
   assert.equal((await provider.query("select count(*)::int n from pg_roles where rolname in('mip_native_audit_v1','mip_native_metadata_audit_v1')")).rows[0].n,0)
   assert.equal((await provider.query("select collection_authorized from qik_ingest.collection_gate")).rows[0].collection_authorized,false)
- }catch{failed=true}
+ }catch(error){failed=true
+  if(observed===null)observed={diagnostic:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:'fixture_assertion'}
+ }
  finally{
   await provider.end()
   if(owned){
