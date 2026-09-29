@@ -144,6 +144,9 @@ export async function captureManagedFinal(db,c,reference){
 }
 export function transformManagedActivation(sql,o){
  if(!managedOptions(o))return sql
+ const installerReplication="and rolcreaterole and rolcreatedb and rolbypassrls and rolinherit and not rolreplication)"
+ if(sql.split(installerReplication).length!==4)fail()
+ sql=sql.replaceAll(installerReplication,"and rolcreaterole and rolcreatedb and rolbypassrls and rolinherit and rolreplication)")
  sql=once(sql,"catalog_hash text not null check(catalog_hash~'^[0-9a-f]{64}$')","catalog_hash text not null check(catalog_hash~'^[0-9a-f]{64}$'),managed_metadata jsonb not null")
  const old="or exists(select 1 from pg_auth_members where roleid=b.metadata_auditor_oid or member=b.metadata_auditor_oid)"
  if(sql.split(old).length!==4)fail()
