@@ -8,11 +8,11 @@ import {validateActivationHostConfig,dispatchActivationHostAction,activationHost
 const exec=promisify(execFile)
 const CODE_PINS=Object.freeze({
   "supabase/qualification/native-governed-activation/001_profile.sql": "59e7dbfa5bb9925b4525aa1e3b3d5003d55610f9",
-  "supabase/qualification/native-governed-activation/prepare.mjs": "ff5e7647aa574dda8ffdc3b838ff1e05b35990e5",
+  "supabase/qualification/native-governed-activation/prepare.mjs": "47b03aa4dcc577f6d837ba4eb80ba76913f650d3",
   "supabase/qualification/native-governed-activation/activation.mjs": "faf62ea50047f7ac9ac85d8299497e7a853bf969",
-  "supabase/qualification/native-governed-activation/audit.mjs": "dc85998ccf7056b33b42e53df6a2795799da44fa",
+  "supabase/qualification/native-governed-activation/audit.mjs": "4b9a82fe30adb8bf5951e8a45b2ce39ea4c8ac3b",
   "supabase/qualification/native-governed-install/install.mjs": "aa92f9e5003bbf12b19d4cfbf5871da1c496ce1c",
-  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "37b1efd545dc4ae7eebf2a81e4edcdb7ea01629a",
+  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "8781c0357bcbb8ab45186e430eda424e4f3e95d7",
   "supabase/qualification/qik-comparison-adapter/compileSource.mjs": "cd87eb0a0bc758315246e74675339f3ea2972a19",
   "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs": "a591c92b10d174bd2937e9634f8d491b4c34567b",
   "supabase/qualification/qik-ingest/persistentInstall.mjs": "24625b8382399db71e9dba6e3ddb88a936ade33f",
@@ -23,8 +23,9 @@ const CODE_PINS=Object.freeze({
   "package-lock.json": "2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0",
   "supabase/qualification/native-governed-host/adapter.mjs": "47622a1729351d0cabda279d63855b9309e490b0",
   "supabase/qualification/native-governed-activation/host.mjs": "378d11df2922836e237006723ee4731df885310c",
-  "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "ada40467076ad0a076fd5b567f0ab503ab0892d7",
-  "supabase/qualification/native-provisioning-compat/provision.mjs": "409db6167b227678147eca249340cb381117c4cf"
+  "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "899539b61ca1ff624bb603656aae45839c32cd22",
+  "supabase/qualification/native-provisioning-compat/provision.mjs": "74a1e2e22ecbea6300d76aade7aa60658701e1aa",
+  "supabase/qualification/native-provisioning-compat/retirement.mjs": "c12018a7d78a3df8714104475eac29ccd06cc2b0"
 })
 let emitted=false
 function stop(){
