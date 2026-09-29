@@ -7,7 +7,7 @@ const identity={login:'postgres',effective:'postgres',rolsuper:false,rolcanlogin
 const c3={baseline:'c'.repeat(64),gate_closed:true,schedule_closed:true,sources_closed:true,credentials_empty:true,receipt_matches:true}
 function fixture(change={}){
  const calls=[],options=[];let closed=0
- const client={async connect(){if(change.connect)throw change.connect},
+ const client={connection:{stream:{encrypted:true,authorized:true,...change.socket}},async connect(){if(change.connect)throw change.connect},
  async query(sql,params){
   calls.push({sql,params})
   if(sql==='rollback'&&change.rollback)throw change.rollback
@@ -89,8 +89,8 @@ test('genuine session/effective principal, safe attributes and read-only mode ar
   assert.equal(f.calls.at(-1).sql,'rollback');assert.equal(f.closed(),1)
  }
 })
-test('server-side TLS and selected version checks cannot be inferred from configuration',async()=>{
- for(const [patch,why] of [[{tls:false},'tls'],[{postgres_supported:false},'prerequisite'],[{vector_supported:false},'prerequisite']]){
+test('selected database versions remain mandatory',async()=>{
+ for(const [patch,why] of [[{postgres_supported:false},'prerequisite'],[{vector_supported:false},'prerequisite']]){
   const f=fixture({identity:patch}),r=await f.run(c,secrets);assert.equal(r.diagnostic,why)
  }
 })
@@ -117,4 +117,15 @@ test('rollback or close failure overrides success and withholds baseline',async(
   assert.equal(r.state,'preflight_refused');assert.equal(r.c3_baseline_sha256,null)
   assert.equal(f.closed(),1)
  }
+})
+
+test('actual client TLS must be encrypted and authorized even with safe configuration',async()=>{
+ for(const socket of [{encrypted:false},{authorized:false},{encrypted:undefined},{authorized:undefined}]){
+  const f=fixture({socket}),r=await f.run(c,secrets)
+  assert.equal(r.diagnostic,'tls');assert.equal(f.calls.length,0);assert.equal(f.closed(),1)
+ }
+})
+test('pooler backend hop SSL is metadata, never substituted for verified client TLS',async()=>{
+ const f=fixture({identity:{tls:false}}),r=await f.run(c,secrets)
+ assert.equal(r.state,'installer_authenticated_c3_current');assert.equal(r.backend_tls_observed,false)
 })
