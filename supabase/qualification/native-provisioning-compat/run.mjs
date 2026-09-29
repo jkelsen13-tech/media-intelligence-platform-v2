@@ -8,7 +8,7 @@ const pins={
  'supabase/qualification/native-provisioning-compat/sessionLock.mjs':'5f9dd6f9ee979481be580cf197fe985ea66103aa',
  'supabase/qualification/native-provisioning-compat/managedPolicy.mjs':'31493d9a42db676b39fc60e7a70e5a15192d9ec3',
  'supabase/qualification/native-provisioning-compat/hostConfig.mjs':'5ade01ebdcae8c77caa6311f11fe4bb6dbfa9eca',
- 'supabase/qualification/native-provisioning-compat/provision.mjs':'9fcfc0eaaebf0375804558c5cdee789d45bf474f',
+ 'supabase/qualification/native-provisioning-compat/provision.mjs':'19c26d3ad41dfe7d5a28e8c53ed70b4d8713d8bb',
  'supabase/qualification/collector-native-capture/credentialDelivery.mjs':'354679fadc48eb9f8a8154456f3d38e7faab3e61',
  'package.json':'68caf5625166966005fff9cd702b3bc6c5fa49ad',
  'package-lock.json':'2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0'
@@ -65,6 +65,11 @@ try{
  if(r?.contract!=='qik-managed-prerequisites-v1'||!states.includes(r.state)||!phases.includes(r.phase))fail()
  const safe={...denied(),state:r.state,phase:r.phase,release_sha:release,operation_id:/^[a-f0-9]{32}$/.test(c.operationId??'')?c.operationId:null,
  needs_reconciliation:r.needs_reconciliation===true,connection_cleanup_verified:r.connection_cleanup_verified===true}
+ const diagnostics=['secure_bindings_missing','installer_binding_refused','audit_binding_refused','metadata_binding_refused','audit_password_policy_refused','metadata_password_policy_refused','distinct_passwords_required']
+ if(r.diagnostic!==undefined){
+  if(r.state!=='provisioning_refused'||r.phase!=='configuration'||!diagnostics.includes(r.diagnostic))fail()
+  safe.diagnostic=r.diagnostic
+ }
  if(r.receipt&&/^[a-f0-9]{64}$/.test(r.receipt.extension_metadata_sha256??'')){
   safe.extension_metadata_sha256=r.receipt.extension_metadata_sha256
   for(const k of ['audit_oid','metadata_auditor_oid','extension_oid'])if(/^[0-9]+$/.test(r.receipt[k]??''))safe[k]=r.receipt[k]

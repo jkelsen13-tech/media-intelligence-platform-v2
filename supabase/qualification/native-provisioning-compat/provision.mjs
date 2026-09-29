@@ -13,6 +13,9 @@ const CA='700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7'
 const qi=s=>'"'+s.replaceAll('"','""')+'"'
 const hash=s=>createHash('sha256').update(s).digest('hex')
 const fail=()=>{throw Error('managed_provisioning_refused')}
+const BINDING_DIAGNOSTICS=new Set(['secure_bindings_missing','installer_binding_refused','audit_binding_refused','metadata_binding_refused','audit_password_policy_refused','metadata_password_policy_refused','distinct_passwords_required'])
+const bindingFail=code=>{const e=Error('managed_provisioning_refused');e.bindingDiagnostic=code;throw e}
+
 const C3_SQL="\nselect encode(sha256(convert_to(jsonb_build_object(\n 'gate',(select jsonb_agg(to_jsonb(t) order by id) from qik_ingest.collection_gate t),\n 'schedule',(select jsonb_agg(to_jsonb(t) order by jobname) from qik_ingest.schedule_intent t),\n 'credentials',(select jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text) from qik_ingest.runtime_credentials t),\n 'sources',(select jsonb_agg(to_jsonb(t) order by id) from public.ingest_sources t),\n 'receipt',(select jsonb_agg(to_jsonb(t) order by id) from qik_ingest_operation.persistent_install_receipt t)\n )::text,'UTF8')),'hex') baseline,\n (select count(*)=1 and bool_and(not collection_authorized) from qik_ingest.collection_gate where id) gate_closed,\n not exists(select 1 from qik_ingest.runtime_credentials) credentials_empty,\n not exists(select 1 from qik_ingest.schedule_intent where active) schedule_closed,\n not exists(select 1 from public.ingest_sources where enabled and collection_enabled) sources_closed,\n exists(select 1 from qik_ingest_operation.persistent_install_receipt\n where id and operation_id=$1 and sql_manifest_sha256=$2) receipt_matches\n"
 export const DBLINK_PREREQUISITE_SQL="\nwith ext as (\n select e.oid,e.extversion,e.extowner,n.nspname from pg_extension e\n join pg_namespace n on n.oid=e.extnamespace where e.extname='dblink'\n), members as (\n select d.classid,d.objid,d.objsubid from pg_depend d,ext e\n where d.refclassid='pg_extension'::regclass and d.refobjid=e.oid and d.deptype='e'\n), inventory as (\n select coalesce(jsonb_agg(jsonb_build_object(\n 'class',m.classid::regclass::text,'oid',m.objid,'subid',m.objsubid,\n 'proc',(select to_jsonb(p)-'proacl'||jsonb_build_object('acl',p.proacl::text) from pg_proc p where m.classid='pg_proc'::regclass and p.oid=m.objid),\n 'fdw',(select to_jsonb(f) from pg_foreign_data_wrapper f where m.classid='pg_foreign_data_wrapper'::regclass and f.oid=m.objid)\n ) order by m.classid,m.objid,m.objsubid),'[]'::jsonb) value from members m\n)\nselect e.extversion='1.2' and e.nspname='extensions' and e.extowner=current_user::regrole as expected,\n not exists(select 1 from pg_depend d join members m on d.refclassid=m.classid and d.refobjid=m.objid\n where d.deptype not in ('i','a') and not exists(select 1 from members own where own.classid=d.classid and own.objid=d.objid)) as unused,\n not exists(select 1 from members m join pg_proc p on m.classid='pg_proc'::regclass and p.oid=m.objid where p.proowner<>current_user::regrole) as owns_functions,\n not exists(select 1 from pg_foreign_server s join members m on m.classid='pg_foreign_data_wrapper'::regclass and m.objid=s.srvfdw) as no_servers,\n encode(sha256(convert_to(jsonb_build_object('version',e.extversion,'owner',e.extowner,'schema',e.nspname,'members',i.value)::text,'UTF8')),'hex') metadata_sha256\nfrom ext e cross join inventory i\n"
 const EDGE_SQL="select r.rolname role_name,r.oid::text role_oid,m.rolname member_name,m.oid::text member_oid,g.rolname grantor_name,g.oid::text grantor_oid,a.admin_option,a.inherit_option,a.set_option from pg_auth_members a join pg_roles r on r.oid=a.roleid join pg_roles m on m.oid=a.member join pg_roles g on g.oid=a.grantor where r.rolname=$1 or m.rolname=$1"
@@ -143,9 +146,15 @@ async function run(action,input,secrets){
  let c,db,phase='configuration',commitAttempted=false,committed=false,result,clean=true
  try{
   c=config(input)
-  if(!secrets||Object.keys(secrets).sort().join()!=='audit,caPem,installer,metadataAudit')fail()
-  const targets={installer:target(secrets.installer,INSTALLER,false,c.disposable,secrets.caPem),audit:target(secrets.audit,AUDIT_LOGIN,true,c.disposable,secrets.caPem),metadata:target(secrets.metadataAudit,METADATA_LOGIN,false,c.disposable,secrets.caPem)}
-  if(!/^[\x21-\x7e]{24,256}$/.test(targets.audit.password)||!/^[\x21-\x7e]{24,256}$/.test(targets.metadata.password)||new Set([targets.installer.password,targets.audit.password,targets.metadata.password]).size!==3)fail()
+  if(!secrets||Object.keys(secrets).sort().join()!=='audit,caPem,installer,metadataAudit')bindingFail('secure_bindings_missing')
+  // Static labels only: never reflect a URL, password, verifier, exception or input fragment.
+  const checkedTarget=(value,login,audit,diagnostic)=>{
+   try{return target(value,login,audit,c.disposable,secrets.caPem)}catch{bindingFail(diagnostic)}
+  }
+  const targets={installer:checkedTarget(secrets.installer,INSTALLER,false,'installer_binding_refused'),audit:checkedTarget(secrets.audit,AUDIT_LOGIN,true,'audit_binding_refused'),metadata:checkedTarget(secrets.metadataAudit,METADATA_LOGIN,false,'metadata_binding_refused')}
+  if(!/^[\x21-\x7e]{24,256}$/.test(targets.audit.password))bindingFail('audit_password_policy_refused')
+  if(!/^[\x21-\x7e]{24,256}$/.test(targets.metadata.password))bindingFail('metadata_password_policy_refused')
+  if(new Set([targets.installer.password,targets.audit.password,targets.metadata.password]).size!==3)bindingFail('distinct_passwords_required')
   phase='installer_connection';db=await connect(targets.installer)
   phase='installer_identity';const ids=await identity(db,c)
   phase='provider_boundary'
@@ -182,6 +191,7 @@ async function run(action,input,secrets){
  }catch(e){
   if(e?.cleanup_unverified===true)clean=false
   result=outcome(committed?'provisioned_authentication_unverified':commitAttempted?'commit_outcome_unknown':'provisioning_refused',c,phase,commitAttempted)
+  if(phase==='configuration'&&BINDING_DIAGNOSTICS.has(e?.bindingDiagnostic))result.diagnostic=e.bindingDiagnostic
   if(db&&!commitAttempted)try{await db.query('rollback')}catch{clean=false;result.needs_reconciliation=true}
  }finally{
   if(db)try{await db.end()}catch{clean=false}

@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "ebdf774f50bd724bd6838bb2f90f6d6e48e244de"
+      "git_blob": "046671e85ad304100e80b2b6c75f2e429c1f9e2f"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -156,7 +156,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/provision.mjs",
-      "git_blob": "9fcfc0eaaebf0375804558c5cdee789d45bf474f"
+      "git_blob": "19c26d3ad41dfe7d5a28e8c53ed70b4d8713d8bb"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/retirement.mjs",
@@ -168,11 +168,11 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/host.test.mjs",
-      "git_blob": "7d9b1281e64cc6442a46506659f076ff72237792"
+      "git_blob": "cb8216091def6f3a6695e3aad8d5c7cbed9fb5de"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/run.mjs",
-      "git_blob": "f4861b7b1d9d9cf16feb24d00192f2324afc2fcb"
+      "git_blob": "0e79970d91f3447db6daa41001d9d8d8b8545945"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/hostConfig.mjs",
@@ -371,5 +371,11 @@
     "qualification": "actual customer combined path without disputed delegation; real coordinated owned-fixture lock tests; independent catalog body/owner/config/dependency/ACL checks",
     "historical_receiving_exception": "WITHHELD",
     "activation_consumer": "auth_current fixed SHARE through same locked-expiry helper; source-defined pre/post expiry and publication-fence order preserved; targeted installed-disabled consumer tests, no pending/active result inferred"
+  },
+  "secure_binding_diagnostic_successor": {
+    "scope": "Static bounded configuration-refusal labels only; exact existing URL, credential, role, TLS and operation policies unchanged",
+    "state": "AUTHORED / pending affected qualification and targeted independent review / no hosted effects",
+    "receipt": "Only allowlisted binding or credential-policy labels; never URL, password, verifier, error or input fragments",
+    "historical_qualification": "Retain c3bb98b helper/combined qualification and actual Cursor scope; diagnostic delta independently qualified and reviewed before hosted use"
   }
 }
