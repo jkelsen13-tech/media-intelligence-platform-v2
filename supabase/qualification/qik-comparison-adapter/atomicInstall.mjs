@@ -341,6 +341,7 @@ export async function installComparisonAtomic(config,readPinnedSource){
  if(plan.manifest_sha256!==c.expectedManifestSha256||(plan.native&&plan.native.program_sha256!==c.expectedNativeProgramSha256)||(plan.activation&&plan.activation.program_sha256!==c.expectedSuccessorProgram))refuse('manifest_mismatch')
  const db=await connectPersistentInstaller({connectionString:config.connectionString,
   expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
+ if(c.provisioningProfile&&!config.disposable&&(db.connection?.stream?.encrypted!==true||db.connection?.stream?.authorized!==true)){await db.end().catch(()=>{});refuse('managed_tls_identity')}
  let begun=false,commitAttempted=false,phase='begin',result=null,rollbackFailed=false
  try{
   await db.query('begin');begun=true
@@ -525,6 +526,7 @@ export async function reconcileComparisonInstall(config,readPinnedSource){
  try{
   db=await connectPersistentInstaller({connectionString:config.connectionString,
    expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
+ if(c.provisioningProfile&&!config.disposable&&(db.connection?.stream?.encrypted!==true||db.connection?.stream?.authorized!==true)){await db.end().catch(()=>{});refuse('managed_tls_identity')}
   // Fresh authenticated session. Refuse to mistake a still-running install for absence.
   phase='reconciliation_begin'
   await db.query('begin')
@@ -573,6 +575,7 @@ export async function qualifyComparisonAudit(config,readPinnedSource){
  try{
   db=await connectPersistentInstaller({connectionString:config.connectionString,
    expectedLogin:c.expectedLogin,sessionPoolerHost:config.sessionPoolerHost,disposable:config.disposable===true})
+ if(c.provisioningProfile&&!config.disposable&&(db.connection?.stream?.encrypted!==true||db.connection?.stream?.authorized!==true)){await db.end().catch(()=>{});refuse('managed_tls_identity')}
   phase='audit_begin'
   await db.query('begin')
   const locked=(await db.query("select pg_try_advisory_xact_lock(hashtextextended('qik-comparison-audit-v1',0)) acquired")).rows[0]
