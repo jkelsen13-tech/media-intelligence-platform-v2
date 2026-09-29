@@ -127,7 +127,7 @@ export async function activationTransaction(db,c,request,{reconcile=false}={}){
  return Object.freeze(result)
 }
 async function run(configInput,request,readPinnedSource,reconcile){
- const plan=await prepareNativeActivation(readPinnedSource,{expectedLogin:configInput.expectedLogin,operationId:configInput.operationId,expectedMetadataAuditor:configInput.expectedMetadataAuditor})
+ const plan=await prepareNativeActivation(readPinnedSource,{expectedLogin:configInput.expectedLogin,operationId:configInput.operationId,expectedMetadataAuditor:configInput.expectedMetadataAuditor,...(configInput.provisioningProfile?{provisioningProfile:configInput.provisioningProfile,provisioningOperationId:configInput.provisioningOperationId}:{})})
  const c=config(configInput,plan)
  // Validate before connecting or passing any context to PostgreSQL.
  const copied=structuredClone(request)
