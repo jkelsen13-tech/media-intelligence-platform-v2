@@ -15,6 +15,7 @@ on:
           - managed
           - preflight
           - credentials
+          - provisioning
 permissions:
   contents: read
 concurrency:
@@ -113,7 +114,7 @@ jobs:
           MIP_DISPOSABLE_POSTGRES: qik-persistent-install
         run: node --test --test-concurrency=1 supabase/qualification/native-provisioning-compat/managedDblink.test.mjs supabase/qualification/native-provisioning-compat/trustedInstallerAuditorLifecycle.test.mjs
       - name: Prepare representative customer logging defaults
-        if: inputs.mode == 'credentials'
+        if: inputs.mode == 'credentials' || inputs.mode == 'provisioning'
         shell: bash
         run: |
           set -euo pipefail
@@ -128,6 +129,36 @@ jobs:
           } catch(e) {console.error('FAIL representative logging preparation '+(/^[A-Z0-9]{5}$/.test(e.code??'')?e.code:'bounded'));process.exitCode=1;}
           finally {await db.end();}
           JS
+      - name: Prepare observed managed privilege defaults for provisioning fixture
+        if: inputs.mode == 'provisioning'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import pg from 'pg';
+          const db=new pg.Client({host:'127.0.0.1',port:5432,user:'supabase_admin',password:process.env.MIP_COMPAT_ADMIN_PASSWORD,database:'postgres'});
+          try {
+            await db.connect();
+            if((await db.query("select current_user='supabase_admin' and session_user='supabase_admin' and (select rolsuper from pg_roles where rolname=current_user) ok")).rows[0].ok!==true)throw Error('provider_identity');
+            if(!(await db.query("select exists(select 1 from pg_roles where rolname='supabase_privileged_role') present")).rows[0].present)await db.query('CREATE ROLE supabase_privileged_role NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS');
+            if((await db.query("select rolcanlogin or rolsuper or rolcreatedb or rolcreaterole or rolreplication or rolbypassrls unsafe from pg_roles where rolname='supabase_privileged_role'")).rows[0].unsafe)throw Error('privileged_group_shape');
+            await db.query('GRANT supabase_privileged_role TO postgres WITH ADMIN FALSE, INHERIT TRUE, SET FALSE');
+            await db.query('ALTER ROLE postgres REPLICATION');
+            await db.query("ALTER ROLE postgres SET supautils.privileged_role TO 'supabase_privileged_role'");
+            console.log('PASS disposable provider defaults prepared; no auditor, extension or customer provisioning performed');
+          } catch(e) {console.error('FAIL provider privilege preparation '+(/^[A-Z0-9]{5}$/.test(e.code??'')?e.code:'bounded'));process.exitCode=1;}
+          finally {await db.end();}
+          JS
+      - name: Managed successor source and held host tests
+        if: inputs.mode == 'provisioning'
+        run: node --test tests/nativeManagedActivationProfile.test.mjs supabase/qualification/native-provisioning-compat/host.test.mjs
+      - name: Actual managed prerequisite component qualification
+        if: inputs.mode == 'provisioning'
+        timeout-minutes: 3
+        env:
+          MIP_MANAGED_PROVISIONING_ARM: synthetic-pg17-only
+          MIP_DISPOSABLE_POSTGRES: qik-persistent-install
+        run: node --test supabase/qualification/native-provisioning-compat/provision.test.mjs
       - name: Bound credential delivery and private log canary qualification
         if: inputs.mode == 'credentials'
         timeout-minutes: 3
