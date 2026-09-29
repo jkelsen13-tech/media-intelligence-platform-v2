@@ -36,10 +36,10 @@ begin
     or pg_catalog.current_setting('log_min_duration_sample') <> '-1'
     or pg_catalog.current_setting('log_transaction_sample_rate')::numeric <> 0
     or pg_catalog.current_setting('log_parameter_max_length_on_error') <> '0'
-    or pg_catalog.coalesce(pg_catalog.current_setting('pgaudit.log',true),'none') not in ('none','')
-    or pg_catalog.coalesce(pg_catalog.current_setting('pgaudit.log_parameter',true),'off') <> 'off'
-    or pg_catalog.coalesce(pg_catalog.current_setting('auto_explain.log_nested_statements',true),'off') <> 'off'
-    or pg_catalog.coalesce(pg_catalog.current_setting('pg_stat_statements.track',true),'top') = 'all'
+    or coalesce(pg_catalog.current_setting('pgaudit.log',true),'none') not in ('none','')
+    or coalesce(pg_catalog.current_setting('pgaudit.log_parameter',true),'off') <> 'off'
+    or coalesce(pg_catalog.current_setting('auto_explain.log_nested_statements',true),'off') <> 'off'
+    or coalesce(pg_catalog.current_setting('pg_stat_statements.track',true),'top') = 'all'
     or exists(select 1 from pg_catalog.pg_settings
        where name='auto_explain.log_min_duration' and setting::integer >= 0
          and setting::integer < 7000)
