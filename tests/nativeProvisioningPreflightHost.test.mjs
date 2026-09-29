@@ -44,3 +44,9 @@ test('managed preflight profile is explicit, postgres-only and does not accept u
  for(const patch of [{provisioningProfile:'other'},{provisioningProfile:'supabase-managed-v1',expectedLogin:'other'}])
  assert.throws(()=>validatePreflightHostEnvironment({...env,MIP_PREFLIGHT_CONFIG_JSON:JSON.stringify({...c,...patch})},'v22.14.0',2))
 })
+
+test('session-lock successor host admits only explicit postgres metadata preflight',()=>{
+ const c={...JSON.parse(env.MIP_PREFLIGHT_CONFIG_JSON),provisioningProfile:'supabase-managed-solo-session-lock-v1'}
+ assert.equal(validatePreflightHostEnvironment({...env,MIP_PREFLIGHT_CONFIG_JSON:JSON.stringify(c)},'v22.14.0',2).config.provisioningProfile,c.provisioningProfile)
+ assert.throws(()=>validatePreflightHostEnvironment({...env,MIP_PREFLIGHT_CONFIG_JSON:JSON.stringify({...c,expectedLogin:'other'})},'v22.14.0',2))
+})

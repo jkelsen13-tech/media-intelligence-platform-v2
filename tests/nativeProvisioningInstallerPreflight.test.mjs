@@ -20,6 +20,7 @@ function fixture(change={}){
    if(change.c3Error)throw change.c3Error
    return {rows:[{...c3,...change.c3}]}
   }
+  if(sql.includes("n.nspname='auth'"))return {rows:[{ok:change.sessionLock!==false}]}
   return {rows:[]}
  },async end(){closed++;if(change.close)throw change.close}}
  const run=createInstallerAuthPreflight({makeClient:o=>{options.push(o);return client},
@@ -144,4 +145,20 @@ test('explicit managed successor binds existing trusted postgres REPLICATION wit
   assert.equal((await f.run({...managed,...patch},secrets)).diagnostic,'configuration')
   assert.equal(f.options.length,0)
  }
+})
+
+test('session-lock successor checks existing customer privileges without Auth delegation and refuses unavailable evidence',async()=>{
+ const config={...c,provisioningProfile:'supabase-managed-solo-session-lock-v1'}
+ const yes=fixture({identity:{rolreplication:true}})
+ const r=await yes.run(config,secrets)
+ assert.equal(r.state,'installer_authenticated_c3_current');assert.equal(r.installation_ready,false)
+ const lock=yes.calls.find(x=>x.sql.includes("n.nspname='auth'")).sql
+ assert.ok(lock.includes("has_column_privilege(current_user,c.oid,'id','UPDATE')"))
+ assert.ok(lock.includes("not pg_has_role(current_user,'supabase_auth_admin','SET')"))
+ assert.ok(!lock.includes('WITH GRANT OPTION'))
+ assert.ok(yes.calls.every(x=>/^(select|set local|begin read only|rollback)/.test(x.sql.trim())))
+ const no=fixture({identity:{rolreplication:true},sessionLock:false}),denied=await no.run(config,secrets)
+ assert.equal(denied.state,'preflight_refused');assert.equal(denied.phase,'session_lock_prerequisite')
+ assert.equal(denied.diagnostic,'prerequisite');assert.equal(denied.c3_baseline_sha256,null)
+ assert.equal(no.calls.at(-1).sql,'rollback');assert.equal(no.closed(),1)
 })
