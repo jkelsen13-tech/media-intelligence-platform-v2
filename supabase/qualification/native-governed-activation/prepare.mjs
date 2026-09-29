@@ -103,7 +103,7 @@ export async function installActivationPreparationInTransaction(db,plan){
  await db.query('savepoint native_activation_preparation')
  const id=(await db.query("select session_user::text s,current_user::text c,rolsuper,rolcanlogin,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit,rolreplication from pg_roles where rolname=current_user")).rows[0]
  if(id?.s!==plan.expectedLogin||id.c!==plan.expectedLogin||id.rolsuper||!id.rolcanlogin||!id.rolcreaterole
-  ||!id.rolcreatedb||!id.rolbypassrls||!id.rolinherit||id.rolreplication)fail('installer')
+  ||!id.rolcreatedb||!id.rolbypassrls||!id.rolinherit||id.rolreplication!==(plan.provisioningProfile!==undefined))fail('installer')
  if((await db.query("select exists(select 1 from pg_namespace where nspname='mip_native_activation') collision")).rows[0]?.collision!==false)fail('collision')
  const auditor=(await db.query(`select oid::text oid from pg_roles r where rolname=$1 and rolcanlogin and not(rolsuper or rolcreaterole or rolcreatedb or rolreplication or rolbypassrls or rolinherit) and ${plan.provisioningProfile?auditorEdgePredicate('r.oid'):'not exists(select 1 from pg_auth_members where roleid=r.oid or member=r.oid)'} and not exists(select 1 from pg_shdepend where refclassid='pg_authid'::regclass and refobjid=r.oid and deptype in('o','a','i','r') ${plan.provisioningProfile?"and classid<>'pg_auth_members'::regclass":''})`,[plan.expectedMetadataAuditor])).rows
  if(auditor.length!==1)fail('metadata_auditor')
