@@ -76,7 +76,7 @@
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "git_blob": "37d25ac471dbd11d7926ceb0658cf2bf718790ef"
+      "git_blob": "0d3789e54dddb36dd64672415efb7d2a7779175c"
     },
     {
       "path": "tests/nativeGovernedActivation.test.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "2d4578c2cf136f22869025e0bb95a8ed3694b4ed"
+      "git_blob": "0f71ed1b9a936ab9cfbeb455e562d14a88253b41"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -180,7 +180,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/integration.test.mjs",
-      "git_blob": "dce59aa4b30f04ca90d8a0426146d95d18cae869"
+      "git_blob": "4b9e61e6413574bb52498e3855b7c1b0860e05ff"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/README.md",
@@ -188,7 +188,7 @@
     },
     {
       "path": "tests/nativeManagedActivationProfile.test.mjs",
-      "git_blob": "f2a21cd67f17901fd060e32ef56be6548e45637e"
+      "git_blob": "1901a0cafd69c9f9509cb98488d667929342dfa6"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLock.mjs",
@@ -463,5 +463,18 @@
       "rollback_verified": true
     },
     "sensitive_suffix_policy": "Only three fixed source-owned signature codes; arbitrary dynamic suffix discarded"
+  },
+  "doj_material_owner_acl_successor": {
+    "scope": "Managed session-lock profile only: qik existing customer SET-only non-inherited membership requires owner-scoped function ACL normalization for qik_ingest.check_doj_material; final pinned020 assertion unchanged",
+    "state": "AUTHORED / affected combined qualification and independent review pending / NOT INSTALLED",
+    "qik_failure": {
+      "candidate": "0908c806a11652416822a632c453f9836b63b154",
+      "run": 36610458715,
+      "job": 109550246667,
+      "diagnostic": "doj_function_acl:qik_ingest.check_doj_material(uuid,uuid,uuid)",
+      "rollback_verified": true
+    },
+    "provider_fixture": "Existing qik_ingest_fn_owner edge is ADMIN false, INHERIT false, SET true; fixture reproduces and asserts customer non-inheritance",
+    "trust": "No provider-role impersonation, Auth privilege or runtime broadening; owner-scoped REVOKE as existing application owner only"
   }
 }
