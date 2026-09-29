@@ -60,7 +60,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/prepare.mjs",
-      "git_blob": "47b03aa4dcc577f6d837ba4eb80ba76913f650d3"
+      "git_blob": "7c7be46fe1dd30763469bf5d654d2aa32f28a19c"
     },
     {
       "path": "supabase/qualification/native-governed-activation/activation.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "13df28511495066098ff698a8b4a912c5e27f128"
+      "git_blob": "ebdf774f50bd724bd6838bb2f90f6d6e48e244de"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -172,7 +172,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/run.mjs",
-      "git_blob": "50864f69c09a07b9fa04df4fc42b3814ec07b013"
+      "git_blob": "f4861b7b1d9d9cf16feb24d00192f2324afc2fcb"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/hostConfig.mjs",
@@ -188,15 +188,15 @@
     },
     {
       "path": "tests/nativeManagedActivationProfile.test.mjs",
-      "git_blob": "2a10b5e493f12342fdb3e4c10555538e99eb8f60"
+      "git_blob": "efa9004a066ee3c232fc042c9c115dfc9bcd456b"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLock.mjs",
-      "git_blob": "14897d98eec36f86cab03111585ae0aaa436c8e7"
+      "git_blob": "5f9dd6f9ee979481be580cf197fe985ea66103aa"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLockQualification.mjs",
-      "git_blob": "d9a5ae4e1b14fb23be90bc7bd70d95a8937a226d"
+      "git_blob": "2ee0c8b8c92c6afd2d7647a09f074a512f0160ef"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/preflight.mjs",
@@ -204,7 +204,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/preflight-run.mjs",
-      "git_blob": "0a06aae272cbadd7a4de74fa98ad246abbedfdce"
+      "git_blob": "846b235f6b4ccff4f2feefecd6e3a58e38e12733"
     }
   ],
   "replaced_blobs": [
@@ -369,6 +369,7 @@
     "restricted_consumer": "mip_efta_auth_session_owner_v1 remains NOLOGIN/no memberships/no direct Auth SELECT or UPDATE",
     "trust": "existing approved development provider access only; no new provider memberships/privileges",
     "qualification": "actual customer combined path without disputed delegation; real coordinated owned-fixture lock tests; independent catalog body/owner/config/dependency/ACL checks",
-    "historical_receiving_exception": "WITHHELD"
+    "historical_receiving_exception": "WITHHELD",
+    "activation_consumer": "auth_current fixed SHARE through same locked-expiry helper; source-defined pre/post expiry and publication-fence order preserved; targeted installed-disabled consumer tests, no pending/active result inferred"
   }
 }

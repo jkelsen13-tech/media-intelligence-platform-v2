@@ -50,6 +50,15 @@ export function transformSessionLockCaller(sql,o){
  "or has_column_privilege('"+owner+"',auth_table,'not_after','SELECT')")
  return sql
 }
+// The activation permission checker uses the same restricted owner and original
+// publication-fence-before-Auth SHARE/expiry checks as the native caller.
+export function transformSessionLockActivation(sql,o){
+ if(!sessionLockProfile(o))return sql
+ sql=once(sql,'select x.not_after into deadline from auth.sessions x\n where x.id=session_id and x.user_id=u for share;',
+ 'select x.deadline into deadline from mip_auth_session_lock.share(u,session_id) x;')
+ return once(sql,'-- Preserve that ACL; perform the identical live-session check with existing column rights.',
+ '-- Preserve that ACL; use the fixed locked-expiry helper without direct Auth privileges.')
+}
 // Exact canonical deparser text is source-defined, not captured from an installed
 // helper and then trusted. Direct catalog audit resolves OIDs without USAGE.
 const bodies={

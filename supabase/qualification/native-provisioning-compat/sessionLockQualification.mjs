@@ -22,9 +22,11 @@ export async function qualifySessionLocks({provider,connect}){
   const c=await connect('supabase_admin',process.env.MIP_COMPAT_ADMIN_PASSWORD)
   await c.query('set statement_timeout=8000');return c
  }
- const nested=async c=>c.query('set local role mip_mentions_gateway')
+ const nested=async(c,mode='share')=>c.query(mode==='activation'?'set local role postgres':'set local role mip_mentions_gateway')
  const callKey=(c,subject=u,session=s)=>c.query('select mip_session_lock_fixture.key_check($1,$2) ok',[subject,session])
  const callShare=(c,subject=u,session=s,expiry=exp)=>c.query('select mip_native_caller.assert_session($1,$2,$3)',[subject,session,expiry])
+ const callActivation=(c,subject=u,session=s,expiry=exp)=>c.query('select mip_native_activation.auth_current($1::jsonb,$2,$3)',[{subject},session,expiry])
+ const callLocked=(c,mode,subject=u,session=s,expiry=exp)=>mode==='activation'?callActivation(c,subject,session,expiry):callShare(c,subject,session,expiry)
  const helpersBefore=(await provider.query("select oid,proowner,proacl,prosqlbody::text body,proconfig from pg_proc where pronamespace='mip_auth_session_lock'::regnamespace order by oid")).rows
  assert.equal((await provider.query("select has_column_privilege('postgres','auth.sessions','id','UPDATE') yes,has_column_privilege('postgres','auth.sessions','id','UPDATE WITH GRANT OPTION') delegated,has_any_column_privilege('mip_efta_auth_session_owner_v1','auth.sessions','SELECT,UPDATE') direct,pg_has_role('postgres','supabase_auth_admin','SET') auth_owner_set")).rows[0].yes,true)
  assert.equal((await provider.query("select has_column_privilege('postgres','auth.sessions','id','UPDATE WITH GRANT OPTION') delegated")).rows[0].delegated,false)
@@ -53,6 +55,9 @@ export async function qualifySessionLocks({provider,connect}){
    await assert.rejects(()=>c.query('select mip_auth_session_lock.key_share($1,$2)',[u,s]),e=>e.code==='42501')
    await c.query('rollback')
    await c.query('begin');await nested(c)
+   await assert.rejects(()=>callActivation(c),e=>e.code==='42501')
+   await c.query('rollback')
+   await c.query('begin');await nested(c)
    await c.query('create temp table sessions(id uuid,user_id uuid,not_after timestamptz)')
    assert.equal((await callKey(c)).rows[0].ok,true)
    await callShare(c)
@@ -71,9 +76,28 @@ export async function qualifySessionLocks({provider,connect}){
    await c.query('rollback to reader_refusal');await c.query('release reader_refusal')
    await c.query('rollback')
   }finally{await c.end()}
+  // Actual installed activation auth_current, invoked as its intended installer.
+  // SECURITY DEFINER changes to the restricted Auth owner; no direct Auth rights.
+  const activation=await client()
+  try{
+   await activation.query('begin');await nested(activation,'activation')
+   await callActivation(activation)
+   for(const [subject,session] of [[null,s],[u,null],[other,s],[u,randomUUID()]]){
+    await activation.query('savepoint invalid');await assert.rejects(()=>callActivation(activation,subject,session),refusal);await activation.query('rollback to invalid');await activation.query('release invalid')
+   }
+   for(const expiry of [null,0,1,253402300800]){
+    await activation.query('savepoint invalid');await assert.rejects(()=>callActivation(activation,u,s,expiry),refusal);await activation.query('rollback to invalid');await activation.query('release invalid')
+   }
+   await activation.query('rollback')
+  }finally{await activation.end()}
   await provider.query("update auth.sessions set not_after=clock_timestamp()-interval '1 second' where id=$1",[s])
-  const expired=await client();try{await expired.query('begin');await nested(expired);await assert.rejects(()=>callShare(expired),refusal);await expired.query('rollback')}finally{await expired.end()}
-  await clear();const missing=await client();try{await missing.query('begin');await nested(missing);assert.equal((await callKey(missing)).rows[0].ok,false);await assert.rejects(()=>callShare(missing),refusal);await missing.query('rollback')}finally{await missing.end()}
+  for(const mode of ['share','activation']){
+   const expired=await client();try{await expired.query('begin');await nested(expired,mode);await assert.rejects(()=>callLocked(expired,mode),refusal);await expired.query('rollback')}finally{await expired.end()}
+  }
+  await clear()
+  for(const mode of ['share','activation']){
+   const missing=await client();try{await missing.query('begin');await nested(missing,mode);if(mode==='share')assert.equal((await callKey(missing)).rows[0].ok,false);await assert.rejects(()=>callLocked(missing,mode),refusal);await missing.query('rollback')}finally{await missing.end()}
+  }
 
   // Real EFTA consumer, not the narrow key-lock probe: source-authored synthetic
   // policy/key/assignment/broker rows are private to this transaction and rolled
@@ -139,13 +163,13 @@ export async function qualifySessionLocks({provider,connect}){
   // After helper return, DELETE waits on both original lock modes. SHARE also
   // blocks expiry UPDATE. KEY SHARE permits non-key expiry UPDATE, exactly as
   // the preserved original EFTA mode; it does NOT claim expiry linearization.
-  for(const mode of ['key','share'])for(const action of ['delete','expiry']){
+  for(const mode of ['key','share','activation'])for(const action of ['delete','expiry']){
    await row(null)
    const holder=await client(),writer=await client()
    try{
     const hp=(await holder.query('select pg_backend_pid() p')).rows[0].p,wp=(await writer.query('select pg_backend_pid() p')).rows[0].p
-    await holder.query('begin');await nested(holder)
-    if(mode==='key')assert.equal((await callKey(holder)).rows[0].ok,true);else await callShare(holder)
+    await holder.query('begin');await nested(holder,mode)
+    if(mode==='key')assert.equal((await callKey(holder)).rows[0].ok,true);else await callLocked(holder,mode)
     // Function has returned. Caller transaction is still open.
     await writer.query('begin')
     let completed=false
@@ -161,21 +185,21 @@ export async function qualifySessionLocks({provider,connect}){
      await holder.query(action==='delete'?'commit':'rollback')
      assert.equal((await write).rowCount,1);await writer.query('commit')
     }
-    const after=await client();try{await after.query('begin');await nested(after);if(action==='delete')assert.equal((await callKey(after)).rows[0].ok,false);await assert.rejects(()=>callShare(after),refusal);await assert.rejects(()=>after.query('select 1'),e=>e.code==='25P02');await after.query('rollback')}finally{await after.end()}
+    const after=await client();try{await after.query('begin');await nested(after,mode);if(action==='delete')assert.equal((await callKey(after)).rows[0].ok,false);await assert.rejects(()=>callLocked(after,mode),refusal);await assert.rejects(()=>after.query('select 1'),e=>e.code==='25P02');await after.query('rollback')}finally{await after.end()}
    }finally{await holder.query('rollback').catch(()=>{});await writer.query('rollback').catch(()=>{});await holder.end();await writer.end()}
    await clear()
   }
   // Auth writer gets the row first. Reader blocks on that exact PID, then
   // rechecks the committed deletion/expiry and refuses, never emits success.
-  for(const mode of ['key','share'])for(const action of ['delete','expiry']){
+  for(const mode of ['key','share','activation'])for(const action of ['delete','expiry']){
    if(mode==='key'&&action==='expiry')continue
    await row(null);const writer=await client(),reader=await client()
    try{
     const wp=(await writer.query('select pg_backend_pid() p')).rows[0].p,rp=(await reader.query('select pg_backend_pid() p')).rows[0].p
     await writer.query('begin')
     await writer.query(action==='delete'?'delete from auth.sessions where id=$1':"update auth.sessions set not_after=clock_timestamp()-interval '1 second' where id=$1",[s])
-    await reader.query('begin');await nested(reader)
-    const read=(mode==='key'?callKey(reader):callShare(reader)).then(r=>({r}),e=>({e}))
+    await reader.query('begin');await nested(reader,mode)
+    const read=(mode==='key'?callKey(reader):callLocked(reader,mode)).then(r=>({r}),e=>({e}))
     await blocked(provider,rp,wp);await writer.query('commit')
     const answer=await read
     if(mode==='key')assert.equal(answer.r?.rows[0].ok,false);else assert.ok(refusal(answer.e))
@@ -185,36 +209,40 @@ export async function qualifySessionLocks({provider,connect}){
   }
   // Token expires while SHARE is waiting; post-lock check must reject even
   // when writer rolls back and the original nullable session expiry is valid.
+  for(const mode of ['share','activation']){
   await row(null)
   const tokenWriter=await client(),tokenReader=await client()
   try{
    const wp=(await tokenWriter.query('select pg_backend_pid() p')).rows[0].p,rp=(await tokenReader.query('select pg_backend_pid() p')).rows[0].p
    await tokenWriter.query('begin');await tokenWriter.query("update auth.sessions set not_after=clock_timestamp()+interval '1 hour' where id=$1",[s])
-   await tokenReader.query('begin');await nested(tokenReader)
+   await tokenReader.query('begin');await nested(tokenReader,mode)
    const shortExp=Math.floor(Number((await provider.query('select extract(epoch from clock_timestamp()) n')).rows[0].n))+2
-   const answer=callShare(tokenReader,u,s,shortExp).then(r=>({r}),e=>({e}))
+   const answer=callLocked(tokenReader,mode,u,s,shortExp).then(r=>({r}),e=>({e}))
    await blocked(provider,rp,wp)
    while(Number((await provider.query('select extract(epoch from clock_timestamp()) n')).rows[0].n)<=shortExp)await pause()
    await tokenWriter.query('rollback')
    assert.ok(refusal((await answer).e));await tokenReader.query('rollback')
   }finally{await tokenWriter.query('rollback').catch(()=>{});await tokenReader.query('rollback').catch(()=>{});await tokenWriter.end();await tokenReader.end()}
   await clear()
+  }
   // Failure/connection disappearance releases the still-held row lock. The
   // interrupted caller cannot provide a committed authentication/reader result.
+  for(const mode of ['share','activation']){
   await row(null);const failed=await client(),writer=await client()
   try{
    const hp=(await failed.query('select pg_backend_pid() p')).rows[0].p,wp=(await writer.query('select pg_backend_pid() p')).rows[0].p
-   await failed.query('begin');await nested(failed);await callShare(failed)
+   await failed.query('begin');await nested(failed,mode);await callLocked(failed,mode)
    await writer.query('begin');const write=writer.query('delete from auth.sessions where id=$1',[s])
    await blocked(provider,wp,hp)
    await failed.end()
    assert.equal((await write).rowCount,1);await writer.query('commit')
   }finally{await failed.end().catch(()=>{});await writer.query('rollback').catch(()=>{});await writer.end()}
+  }
  }finally{
   await clear()
   await provider.query('delete from auth.users where id=$1 or id=$2',[u,other])
   await provider.query('drop schema mip_session_lock_fixture cascade')
  }
  assert.deepEqual((await provider.query("select oid,proowner,proacl,prosqlbody::text body,proconfig from pg_proc where pronamespace='mip_auth_session_lock'::regnamespace order by oid")).rows,helpersBefore)
- console.log('PASS fixed session helpers: original coordinated locks, expiry/refusal, nested owner, rollback/connection loss; owned fixture cleanup')
+ console.log('PASS fixed session helpers and actual activation auth_current: original coordinated locks, expiry/refusal, nested owner, rollback/connection loss; owned fixture cleanup')
 }

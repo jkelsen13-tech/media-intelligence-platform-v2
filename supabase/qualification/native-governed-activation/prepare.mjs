@@ -1,3 +1,4 @@
+import {transformSessionLockActivation} from '../native-provisioning-compat/sessionLock.mjs'
 import {managedOptions,transformManagedActivation,captureManagedFinal,auditorEdgePredicate} from '../native-provisioning-compat/managedPolicy.mjs'
 // Source-only successor preparation. Not installed, activated, or qualified.
 // Parent transaction must retain its exact original historical checkpoints.
@@ -77,7 +78,7 @@ export async function prepareNativeActivation(read,options){
  sql=once(sql,'__PROTECTED_ROLES__','array['+ROLES.map(literal).join(',')+']')
  sql=sql.replaceAll('__INSTALLER__',()=>quote(expectedLogin)).replaceAll('__ISSUER__',()=>issuer).replaceAll('__AUDITOR__',()=>quote(expectedMetadataAuditor)).replaceAll('__AUDITOR_NAME__',()=>expectedMetadataAuditor)
  if(/__[A-Z_]+__/.test(sql))fail('compiler_boundary')
- sql=transformManagedActivation(sql,options)
+ sql=transformSessionLockActivation(transformManagedActivation(sql,options),options)
  const plan=Object.freeze({...(managed?{provisioningProfile:options.provisioningProfile,provisioningOperationId:options.provisioningOperationId}:{}),profile:PROFILE,expectedLogin,operationId,expectedMetadataAuditor,issuer,sql,program_sha256:digest(sql),sql_blob:SQL_BLOB})
  prepared.add(plan);creation.set(plan,new Map());return plan
 }

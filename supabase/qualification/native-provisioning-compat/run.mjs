@@ -5,7 +5,7 @@ import {execFile} from 'node:child_process'
 import {promisify} from 'node:util'
 const exec=promisify(execFile)
 const pins={
- 'supabase/qualification/native-provisioning-compat/sessionLock.mjs':'14897d98eec36f86cab03111585ae0aaa436c8e7',
+ 'supabase/qualification/native-provisioning-compat/sessionLock.mjs':'5f9dd6f9ee979481be580cf197fe985ea66103aa',
  'supabase/qualification/native-provisioning-compat/managedPolicy.mjs':'31493d9a42db676b39fc60e7a70e5a15192d9ec3',
  'supabase/qualification/native-provisioning-compat/hostConfig.mjs':'5ade01ebdcae8c77caa6311f11fe4bb6dbfa9eca',
  'supabase/qualification/native-provisioning-compat/provision.mjs':'9fcfc0eaaebf0375804558c5cdee789d45bf474f',

@@ -8,7 +8,7 @@ import {validateActivationHostConfig,dispatchActivationHostAction,activationHost
 const exec=promisify(execFile)
 const CODE_PINS=Object.freeze({
   "supabase/qualification/native-governed-activation/001_profile.sql": "59e7dbfa5bb9925b4525aa1e3b3d5003d55610f9",
-  "supabase/qualification/native-governed-activation/prepare.mjs": "47b03aa4dcc577f6d837ba4eb80ba76913f650d3",
+  "supabase/qualification/native-governed-activation/prepare.mjs": "7c7be46fe1dd30763469bf5d654d2aa32f28a19c",
   "supabase/qualification/native-governed-activation/activation.mjs": "83a2695e06699999bda39c4b98f9f36e1a6c3e08",
   "supabase/qualification/native-governed-activation/audit.mjs": "5c71d14e162ae3a5ad1a54cf6eae4e87457b17fb",
   "supabase/qualification/native-governed-install/install.mjs": "be48ebead2edb1f62ef4137d077d9da50383292e",
@@ -26,7 +26,7 @@ const CODE_PINS=Object.freeze({
   "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "31493d9a42db676b39fc60e7a70e5a15192d9ec3",
   "supabase/qualification/native-provisioning-compat/provision.mjs": "9fcfc0eaaebf0375804558c5cdee789d45bf474f",
   "supabase/qualification/native-provisioning-compat/retirement.mjs": "c12018a7d78a3df8714104475eac29ccd06cc2b0",
-  "supabase/qualification/native-provisioning-compat/sessionLock.mjs": "14897d98eec36f86cab03111585ae0aaa436c8e7"
+  "supabase/qualification/native-provisioning-compat/sessionLock.mjs": "5f9dd6f9ee979481be580cf197fe985ea66103aa"
 })
 let emitted=false,phase='host_admission'
 function stop(){
