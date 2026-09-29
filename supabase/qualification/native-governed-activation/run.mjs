@@ -12,7 +12,7 @@ const CODE_PINS=Object.freeze({
   "supabase/qualification/native-governed-activation/activation.mjs": "83a2695e06699999bda39c4b98f9f36e1a6c3e08",
   "supabase/qualification/native-governed-activation/audit.mjs": "bdf5aa53c5e188372462497a65f096fa1b00b31e",
   "supabase/qualification/native-governed-install/install.mjs": "c37481dff88cc06ecb6de985420a408475ffab73",
-  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "ef2e729f92efcac7ba7de240bc4062fc3e0e1d6c",
+  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "97f0f1c165627104b00e8db57b350923bd187ed4",
   "supabase/qualification/qik-comparison-adapter/compileSource.mjs": "cd87eb0a0bc758315246e74675339f3ea2972a19",
   "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs": "a591c92b10d174bd2937e9634f8d491b4c34567b",
   "supabase/qualification/qik-ingest/persistentInstall.mjs": "24625b8382399db71e9dba6e3ddb88a936ade33f",

@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto'
 import {CANONICAL_ENTITY_SOURCE,CANONICAL_ENTITY_CONTRACT,transformCanonicalEntitySource,ENTITY_CATALOG_SQL} from '../supabase/qualification/native-provisioning-compat/canonicalEntity.mjs'
 import {validateActivationHostConfig,dispatchActivationHostAction,activationHostActionSatisfied} from '../supabase/qualification/native-governed-activation/host.mjs'
 import {SESSION_LOCK_PROFILE,SESSION_LOCK_DDL,sessionLockBoundarySQL} from '../supabase/qualification/native-provisioning-compat/sessionLock.mjs'
-import {prepareAtomicInstall} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
+import {prepareAtomicInstall,sanitizeInstallDiagnostic,INSTALL_DIAGNOSTICS,DOJ_PATH} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
 import {NATIVE_CALLER_MODE} from '../supabase/qualification/native-governed-install/install.mjs'
 import {activationTransaction} from '../supabase/qualification/native-governed-activation/activation.mjs'
 import {GROUPS} from '../supabase/qualification/native-governed-activation/prepare.mjs'
@@ -215,3 +215,19 @@ test('complete managed successor manifest and both real host source inventories 
   for(const [p,pin] of Object.entries(pins))assert.equal(blob(await read(p)),pin,p)
  }
 })
+
+ test('pinned DOJ final refusals expose only exact static labels and never server suffixes',async()=>{
+ const source=(await read(DOJ_PATH)).toString(),tail=source.slice(source.indexOf('do $final_doj_permissions$'));
+ const labels=[...new Set([...tail.matchAll(/raise exception '(doj_[a-z0-9_]+)(?::[^']*)?'/g)].map(x=>x[1]))];
+ assert.equal(labels.length,25);
+ const canary='PRIVATE_DOJ_SUFFIX_CANARY';
+ for(const code of labels){
+  assert.ok(INSTALL_DIAGNOSTICS.includes(code),code);
+  for(const message of [code,code+': '+canary,code+':\\n'+canary]){
+   const result=sanitizeInstallDiagnostic({message,detail:canary,query:canary});
+   assert.equal(result,code);assert.equal(JSON.stringify(result).includes(canary),false);
+  }
+  for(const message of [code+'_'+canary,code+' '+canary,canary+code])assert.equal(sanitizeInstallDiagnostic({message}),null);
+ }
+ for(const message of ['doj_unlisted:'+canary,canary,'postgresql://'+canary,null])assert.equal(sanitizeInstallDiagnostic({message}),null);
+});

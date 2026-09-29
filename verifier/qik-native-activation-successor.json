@@ -76,7 +76,7 @@
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "git_blob": "ef2e729f92efcac7ba7de240bc4062fc3e0e1d6c"
+      "git_blob": "97f0f1c165627104b00e8db57b350923bd187ed4"
     },
     {
       "path": "tests/nativeGovernedActivation.test.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "2012ca4952a33c569004cf481ab2250c44d75f4a"
+      "git_blob": "b21e95397ee45b7d254ed0ef0dec2ec29b5bb697"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -188,7 +188,7 @@
     },
     {
       "path": "tests/nativeManagedActivationProfile.test.mjs",
-      "git_blob": "4ef43185110de7daffdab5ac3b7c43e6af393fa4"
+      "git_blob": "740bd88a9d0806631bd0ddfb52d9fc99d78fe530"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLock.mjs",
@@ -416,5 +416,21 @@
     "credential_changes": false,
     "qualification_is_hosted_proof": false,
     "independent_catalog_resolution": "Private relation/function identities resolved only by fixed catalog namespace/name/signature; no metadata-auditor schema USAGE or execution grant"
+  },
+  "doj_final_failure_diagnostic_successor": {
+    "scope": "Exact static refusal labels from unchanged pinned020 final assertions; suffixes and raw server data discarded by existing sanitizer/host allowlist",
+    "state": "AUTHORED / focused qualification and actual independent review pending / NOT DEPLOYED",
+    "sql_programs_changed": false,
+    "permissions_changed": false,
+    "credentials_changed": false,
+    "hosted_refusal": {
+      "candidate": "4d944bd5940ff2a0c4bfc944db2cc1f6f2f50e35",
+      "run": 36599296362,
+      "job": 109512223423,
+      "phase": "final_doj_assertions",
+      "sqlstate": "P0001",
+      "rollback_verified": true
+    },
+    "reuse": "Final combined36596773950 applies unchanged compiled SQL, permissions and lifecycle; diagnostic source delta separately qualified and reviewed"
   }
 }
