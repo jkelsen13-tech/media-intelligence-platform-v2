@@ -229,6 +229,13 @@ test('complete managed successor manifest and both real host source inventories 
   }
   for(const message of [code+'_'+canary,code+' '+canary,canary+code])assert.equal(sanitizeInstallDiagnostic({message}),null);
  }
+ for(const signature of ['mip_identity.operation_check(jsonb)','mip_identity.operation_check_pre_doj_v1(jsonb)','qik_ingest.check_doj_material(uuid,uuid,uuid)']){
+  const bounded='doj_function_acl:'+signature;
+  assert.ok(INSTALL_DIAGNOSTICS.includes(bounded));
+  assert.equal(sanitizeInstallDiagnostic({message:'doj_function_acl: '+signature}),bounded);
+  assert.equal(sanitizeInstallDiagnostic({message:bounded}),bounded);
+  assert.equal(sanitizeInstallDiagnostic({message:'doj_function_acl: '+signature+':'+canary}),'doj_function_acl');
+ }
  for(const message of ['doj_unlisted:'+canary,canary,'postgresql://'+canary,null])assert.equal(sanitizeInstallDiagnostic({message}),null);
 });
 
