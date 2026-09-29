@@ -20,6 +20,8 @@ test('managed prerequisite component creates, authenticates and reconciles same 
  const before=(await provider.query('select rolname from pg_roles order by rolname')).rows.map(r=>r.rolname)
  try{
   assert.ok(!before.includes(AUDIT_LOGIN)&&!before.includes(METADATA_LOGIN))
+  assert.equal((await customer.query("select current_setting('supautils.privileged_role') setting,pg_has_role(current_user,'supabase_privileged_role','USAGE') usable")).rows[0].setting,'supabase_privileged_role')
+  assert.equal((await customer.query("select pg_has_role(current_user,'supabase_privileged_role','USAGE') usable")).rows[0].usable,true)
   assert.equal((await provider.query("select count(*)::int n from pg_namespace where nspname in('qik_ingest','qik_ingest_operation','mip_managed_provisioning','mip_factual_transport_raw')")).rows[0].n,0)
   assert.equal((await provider.query("select to_regclass('public.ingest_sources') present")).rows[0].present,null)
   assert.equal((await provider.query("select count(*)::int n from pg_extension where extname='dblink'")).rows[0].n,0)
