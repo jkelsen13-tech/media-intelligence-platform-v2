@@ -16,6 +16,7 @@ on:
           - preflight
           - credentials
           - provisioning
+          - combined
 permissions:
   contents: read
 concurrency:
@@ -46,12 +47,21 @@ jobs:
           package-manager-cache: false
       - name: Locked test driver
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Managed successor source and held host tests
+        if: inputs.mode == 'provisioning' || inputs.mode == 'combined'
+        run: node --test tests/nativeManagedActivationProfile.test.mjs supabase/qualification/native-provisioning-compat/host.test.mjs
       - name: Resolve exact managed image and create isolated instance
         if: inputs.mode != 'preflight'
         timeout-minutes: 5
+        env:
+          QUALIFICATION_MODE: ${{ inputs.mode }}
         shell: bash
         run: |
           set -euo pipefail
+          provider_args=()
+          if [ "$QUALIFICATION_MODE" = provisioning ] || [ "$QUALIFICATION_MODE" = combined ]; then
+            provider_args=(-c supautils.privileged_role=supabase_privileged_role)
+          fi
           docker pull supabase/postgres@sha256:b3bfedb107413abb3b8cb0d0874b0414a1dceb3d55bc0c778de6ad22d1f7dc86
           image=$(docker image inspect supabase/postgres@sha256:b3bfedb107413abb3b8cb0d0874b0414a1dceb3d55bc0c778de6ad22d1f7dc86 --format '{{index .RepoDigests 0}}')
           [[ "$image" =~ ^supabase/postgres@sha256:[a-f0-9]{64}$ ]]
@@ -61,7 +71,7 @@ jobs:
           printf '::add-mask::%s\n' "$admin"
           printf '::add-mask::%s\n' "$customer"
           printf 'MIP_COMPAT_ADMIN_PASSWORD=%s\nMIP_COMPAT_CUSTOMER_PASSWORD=%s\n' "$admin" "$customer" >> "$GITHUB_ENV"
-          docker run --detach --name qik-managed-compat --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD="$admin" "$image" postgres -D /etc/postgresql -c log_statement=none -c log_min_error_statement=panic -c log_parameter_max_length=0 -c log_parameter_max_length_on_error=0 -c pgaudit.log=none -c pgaudit.log_parameter=off -c pg_stat_statements.track=none -c log_min_duration_statement=-1 -c log_min_duration_sample=-1 -c log_transaction_sample_rate=0 -c log_duration=off -c auto_explain.log_min_duration=-1
+          docker run --detach --name qik-managed-compat --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD="$admin" "$image" postgres -D /etc/postgresql -c log_statement=none -c log_min_error_statement=panic -c log_parameter_max_length=0 -c log_parameter_max_length_on_error=0 -c pgaudit.log=none -c pgaudit.log_parameter=off -c pg_stat_statements.track=none -c log_min_duration_statement=-1 -c log_min_duration_sample=-1 -c log_transaction_sample_rate=0 -c log_duration=off -c auto_explain.log_min_duration=-1 "${provider_args[@]}"
           for attempt in $(seq 1 45); do
             if docker exec qik-managed-compat pg_isready -h 127.0.0.1 -U supabase_admin >/dev/null 2>&1; then exit 0; fi
             sleep 2
@@ -114,7 +124,7 @@ jobs:
           MIP_DISPOSABLE_POSTGRES: qik-persistent-install
         run: node --test --test-concurrency=1 supabase/qualification/native-provisioning-compat/managedDblink.test.mjs supabase/qualification/native-provisioning-compat/trustedInstallerAuditorLifecycle.test.mjs
       - name: Prepare representative customer logging defaults
-        if: inputs.mode == 'credentials' || inputs.mode == 'provisioning'
+        if: inputs.mode == 'credentials' || inputs.mode == 'provisioning' || inputs.mode == 'combined'
         shell: bash
         run: |
           set -euo pipefail
@@ -130,7 +140,7 @@ jobs:
           finally {await db.end();}
           JS
       - name: Prepare observed managed privilege defaults for provisioning fixture
-        if: inputs.mode == 'provisioning'
+        if: inputs.mode == 'provisioning' || inputs.mode == 'combined'
         shell: bash
         run: |
           set -euo pipefail
@@ -144,14 +154,11 @@ jobs:
             if((await db.query("select rolcanlogin or rolsuper or rolcreatedb or rolcreaterole or rolreplication or rolbypassrls unsafe from pg_roles where rolname='supabase_privileged_role'")).rows[0].unsafe)throw Error('privileged_group_shape');
             await db.query('GRANT supabase_privileged_role TO postgres WITH ADMIN FALSE, INHERIT TRUE, SET FALSE');
             await db.query('ALTER ROLE postgres REPLICATION');
-            await db.query("ALTER ROLE postgres SET supautils.privileged_role TO 'supabase_privileged_role'");
+            if((await db.query("select current_setting('supautils.privileged_role') role,(select context from pg_settings where name='supautils.privileged_role') context")).rows[0].role!=='supabase_privileged_role')throw Error('provider_launch_setting');
             console.log('PASS disposable provider defaults prepared; no auditor, extension or customer provisioning performed');
           } catch(e) {console.error('FAIL provider privilege preparation '+(/^[A-Z0-9]{5}$/.test(e.code??'')?e.code:'bounded'));process.exitCode=1;}
           finally {await db.end();}
           JS
-      - name: Managed successor source and held host tests
-        if: inputs.mode == 'provisioning'
-        run: node --test tests/nativeManagedActivationProfile.test.mjs supabase/qualification/native-provisioning-compat/host.test.mjs
       - name: Actual managed prerequisite component qualification
         if: inputs.mode == 'provisioning'
         timeout-minutes: 3
@@ -159,6 +166,14 @@ jobs:
           MIP_MANAGED_PROVISIONING_ARM: synthetic-pg17-only
           MIP_DISPOSABLE_POSTGRES: qik-persistent-install
         run: node --test supabase/qualification/native-provisioning-compat/provision.test.mjs
+      - name: Combined managed installation audit and retirement qualification
+        if: inputs.mode == 'combined'
+        timeout-minutes: 5
+        env:
+          MIP_MANAGED_PROVISIONING_ARM: synthetic-pg17-only
+          MIP_NATIVE_ACTIVATION_ARM: synthetic-pg17-only
+          MIP_DISPOSABLE_POSTGRES: qik-persistent-install
+        run: node --test supabase/qualification/native-provisioning-compat/integration.test.mjs
       - name: Bound credential delivery and private log canary qualification
         if: inputs.mode == 'credentials'
         timeout-minutes: 3
