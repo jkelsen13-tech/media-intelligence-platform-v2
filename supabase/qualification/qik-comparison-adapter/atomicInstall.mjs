@@ -132,10 +132,20 @@ const PREFIX_DIAGNOSTICS=Object.freeze([
  "mip_hosted_compat_sequence",
  "mip_hosted_compat_relation"
 ])
-export const INSTALL_DIAGNOSTICS=Object.freeze([...EXACT_DIAGNOSTICS,...PREFIX_DIAGNOSTICS])
+const DOJ_FUNCTION_ACL_SIGNATURES=Object.freeze([
+ 'mip_identity.operation_check(jsonb)',
+ 'mip_identity.operation_check_pre_doj_v1(jsonb)',
+ 'qik_ingest.check_doj_material(uuid,uuid,uuid)'
+])
+const DOJ_FUNCTION_ACL_DIAGNOSTICS=Object.freeze(DOJ_FUNCTION_ACL_SIGNATURES.map(signature=>'doj_function_acl:'+signature))
+export const INSTALL_DIAGNOSTICS=Object.freeze([...EXACT_DIAGNOSTICS,...PREFIX_DIAGNOSTICS,...DOJ_FUNCTION_ACL_DIAGNOSTICS])
 export function sanitizeInstallDiagnostic(error){
  const message=typeof error?.message==='string'?error.message:''
  if(EXACT_DIAGNOSTICS.includes(message))return message
+ // Pinned 020 has exactly these three final ACL assertions. Expose only a
+ // recognized fixed signature; never forward an arbitrary server suffix.
+ const acl=DOJ_FUNCTION_ACL_DIAGNOSTICS.find(code=>message===code.replace(':',': ')||message===code)
+ if(acl)return acl
  return PREFIX_DIAGNOSTICS.find(code=>message===code||message.startsWith(code+':'))??null
 }
 const RECEIPT_SCHEMA='mip_comparison_install'
