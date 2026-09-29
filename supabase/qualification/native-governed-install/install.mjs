@@ -1,3 +1,4 @@
+import {sessionLockProfile,transformSessionLockCaller} from '../native-provisioning-compat/sessionLock.mjs'
 import {managedOptions,developmentProfile,installerReadAllPredicate} from '../native-provisioning-compat/managedPolicy.mjs'
 import {captureActivationBootstrapCreation,createActivationOperationalGroup,retireActivationIssuerCreationAuthority,installActivationPreparationInTransaction,dropActivationIssuerForHistoricalCheckpoint} from '../native-governed-activation/prepare.mjs'
 // Source-only joint installer. No connection creation, commit, retry, or CLI.
@@ -144,14 +145,14 @@ function outer(s){
   ||!/^commit;\s*$/.test(s.slice(s.lastIndexOf('\ncommit;')+1)))fail('transaction_boundary')
  return s.replace(/^begin;[ \t]*$/m,'').replace(/^commit;[ \t]*$/m,'')
 }
-export async function prepareNativeGovernedInstall(read,mode=NATIVE_MODE){
+export async function prepareNativeGovernedInstall(read,mode=NATIVE_MODE,options={}){
  const steps=[],roles=[]
  for(const entry of orderFor(mode)){
   const bytes=Buffer.from(await read(entry.path))
   if(blob(bytes)!==entry.blob)fail('source_digest')
   const text=bytes.toString('utf8')
   if(!Buffer.from(text).equals(bytes))fail('source_encoding')
-  let sql=outer(text),assertion=null
+  let sql=(entry.path===NATIVE_CALLER_ORDER.at(-1).path?transformSessionLockCaller(outer(text),options):outer(text)),assertion=null
   if(entry.assertion_marker){
    if(sql.split(entry.assertion_marker).length!==2)fail('assertion_boundary')
    const at=sql.indexOf(entry.assertion_marker)
@@ -259,7 +260,7 @@ export async function installNativeGovernedInTransaction(db,plan,{expectedLogin,
  }
  if(plan.mode===NATIVE_CALLER_MODE){
   nativeStage='caller_authority_preflight';nativeObject='auth.sessions';
-  const authority=(await db.query("select has_column_privilege(current_user,'auth.sessions','not_after','SELECT WITH GRANT OPTION') grantable,pg_has_role(current_user,'mip_efta_auth_session_owner_v1','SET') owner_set")).rows[0];
+  const authority=(await db.query("select has_column_privilege(current_user,'auth.sessions','not_after',"+(sessionLockProfile(activationPlan??{})?"'SELECT'":"'SELECT WITH GRANT OPTION'")+") grantable,pg_has_role(current_user,'mip_efta_auth_session_owner_v1','SET') owner_set")).rows[0];
   if(authority?.grantable!==true||authority.owner_set!==true)fail('caller_authority_prerequisite');
  }
  nativeObject=null;nativeStage='creator_setup'

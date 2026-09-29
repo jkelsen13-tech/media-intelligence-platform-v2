@@ -5,9 +5,10 @@ import {execFile} from 'node:child_process'
 import {promisify} from 'node:util'
 const exec=promisify(execFile)
 const pins={
- 'supabase/qualification/native-provisioning-compat/managedPolicy.mjs':'57496e43cc9a609f7a48ce674d66ff77e2b51c83',
- 'supabase/qualification/native-provisioning-compat/hostConfig.mjs':'76e94f926a9f21114eac6eceb0d46c5e7ead7f2b',
- 'supabase/qualification/native-provisioning-compat/provision.mjs':'3bd3ea29702306943b53751e3be42a92cb0839fa',
+ 'supabase/qualification/native-provisioning-compat/sessionLock.mjs':'e9a1d4a562abf6bca2040f055d84c0c45ad2a0ec',
+ 'supabase/qualification/native-provisioning-compat/managedPolicy.mjs':'3818be644b1823197c078249cdb7739ae8af7839',
+ 'supabase/qualification/native-provisioning-compat/hostConfig.mjs':'5ade01ebdcae8c77caa6311f11fe4bb6dbfa9eca',
+ 'supabase/qualification/native-provisioning-compat/provision.mjs':'9fcfc0eaaebf0375804558c5cdee789d45bf474f',
  'supabase/qualification/collector-native-capture/credentialDelivery.mjs':'354679fadc48eb9f8a8154456f3d38e7faab3e61',
  'package.json':'68caf5625166966005fff9cd702b3bc6c5fa49ad',
  'package-lock.json':'2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0'

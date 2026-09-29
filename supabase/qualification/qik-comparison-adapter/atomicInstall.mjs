@@ -1,3 +1,4 @@
+import {transformSessionLockBackend,sessionLockProfile} from '../native-provisioning-compat/sessionLock.mjs'
 import {managedRetirementDDL} from '../native-provisioning-compat/retirement.mjs'
 import {managedOptions,managedTransportSQL,managedBoundarySQL,auditorEdgePredicate,developmentProfile,untrustedCallerSQL,verifyManagedPrerequisites} from '../native-provisioning-compat/managedPolicy.mjs'
 import {assertManagedCredentialLogging} from '../native-provisioning-compat/provision.mjs'
@@ -145,7 +146,7 @@ export async function prepareAtomicInstall(readPinnedSource,options={}){
   roles.set(m[1],m[0])
  }
  if(roles.size!==RESERVED_ROLES.length||RESERVED_ROLES.some(r=>!roles.has(r)))refuse('role_inventory')
- const steps=compiled.steps.map(s=>({...s}))
+ const steps=compiled.steps.map(s=>({...s,sql:transformSessionLockBackend(s.sql,s.path,options)}))
  const assertionStep=steps.find(s=>s.path.endsWith('/019_native_retention_permissions.sql'))
  const [permissions,assertions]=split(assertionStep.sql,'do $final_native_permissions$')
  const [dojBody,dojAssertions]=split(doj,'do $final_doj_permissions$')
@@ -181,7 +182,7 @@ export async function prepareAtomicInstall(readPinnedSource,options={}){
  const plan={...(managed?{managedRetirementDDL:managedRetirementDDL(options)}:{}),version:INSTALL_VERSION,target_project:PROJECT,source_commit:compiled.source_commit,
   doj_source_commit:DOJ_SOURCE_COMMIT,catalog_inspection_schemas:[...CATALOG_INSPECTION_SCHEMAS],credential_statement_timeout_max_ms:1000,roles:[...roles.entries()].sort(([a],[b])=>a.localeCompare(b)),
   body,dojBody,permissions,closure:closure.sql,assertions,dojAssertions,compatibility:compatibility.sql}
- if(isNativeMode(options.nativeMode))plan.native=await prepareNativeGovernedInstall(readPinnedSource,options.nativeMode)
+ if(isNativeMode(options.nativeMode))plan.native=await prepareNativeGovernedInstall(readPinnedSource,options.nativeMode,options)
  if(options.activationProfile){
   assertActivationRoleInventory([...roles.keys(),...NATIVE_ROLES]);
   plan.activation=await prepareNativeActivation(readPinnedSource,options);
@@ -358,6 +359,7 @@ export async function installComparisonAtomic(config,readPinnedSource){
   if(!checked.catalog_compatible)refuse('catalog_preflight')
   const collision=(await db.query('select exists(select 1 from pg_namespace where nspname=$1) or exists(select 1 from pg_roles where rolname=$2) collision',[RECEIPT_SCHEMA,c.creator])).rows[0]
   if(collision?.collision!==false)refuse('installation_collision')
+  if(sessionLockProfile(c)&&(await db.query("select exists(select 1 from pg_namespace where nspname='mip_auth_session_lock') present")).rows[0]?.present!==false)refuse('installation_collision')
   await db.query('lock table public.ingest_sources,qik_ingest.collection_gate,qik_ingest.schedule_intent,qik_ingest.runtime_credentials,qik_ingest_operation.persistent_install_receipt in share row exclusive mode')
   phase='c3_baseline'
   const baseline=await c3(db,c)
@@ -539,7 +541,7 @@ export async function reconcileComparisonInstall(config,readPinnedSource){
   phase='reconciliation_inventory'
   const exists=(await db.query("select to_regclass('mip_comparison_install.receipts') is not null present")).rows[0]
   if(!exists?.present){
-   const remnants=(await db.query('select exists(select 1 from pg_namespace where nspname=any($1::text[])) or exists(select 1 from pg_roles where rolname=any($2::text[])) present',[[...schemas,RECEIPT_SCHEMA,...(c.activationProfile?['mip_native_activation']:[]),...(c.nativeMode?['mip_mentions','mip_arc_qik_source','mip_arc_native','mip_nca_'+c.operationId,...(c.nativeMode!==NATIVE_MODE?['mip_arc_projection_private']:[]),...((c.nativeMode===NATIVE_BINDING_MODE||c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?['mip_native_comparison']:[]),...((c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?['mip_native_display']:[]),...(c.nativeMode===NATIVE_CALLER_MODE?['mip_native_caller']:[])]:[])],[...RESERVED_ROLES,c.creator,...(c.activationProfile?['mip_agi_'+c.operationId]:[]),...(c.nativeMode?[...NATIVE_ROLES,'mip_nci_'+c.operationId]:[])]])).rows[0]
+   const remnants=(await db.query('select exists(select 1 from pg_namespace where nspname=any($1::text[])) or exists(select 1 from pg_roles where rolname=any($2::text[])) present',[[...schemas,RECEIPT_SCHEMA,...(sessionLockProfile(c)?['mip_auth_session_lock']:[]),...(c.activationProfile?['mip_native_activation']:[]),...(c.nativeMode?['mip_mentions','mip_arc_qik_source','mip_arc_native','mip_nca_'+c.operationId,...(c.nativeMode!==NATIVE_MODE?['mip_arc_projection_private']:[]),...((c.nativeMode===NATIVE_BINDING_MODE||c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?['mip_native_comparison']:[]),...((c.nativeMode===NATIVE_DISPLAY_MODE||c.nativeMode===NATIVE_CALLER_MODE)?['mip_native_display']:[]),...(c.nativeMode===NATIVE_CALLER_MODE?['mip_native_caller']:[])]:[])],[...RESERVED_ROLES,c.creator,...(c.activationProfile?['mip_agi_'+c.operationId]:[]),...(c.nativeMode?[...NATIVE_ROLES,'mip_nci_'+c.operationId]:[])]])).rows[0]
    return result=safe(remnants?.present?'reconciliation_drift':'not_installed',c,c.expectedManifestSha256,{needs_reconciliation:remnants?.present!==false})
   }
   phase='reconciliation_receipt'

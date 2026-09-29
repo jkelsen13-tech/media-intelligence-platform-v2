@@ -1,3 +1,4 @@
+import {SESSION_LOCK_PROFILE,sessionLockProfile} from './sessionLock.mjs'
 // Installer authentication/metadata preflight only. Never install, provision or activate.
 // The production export fixes its transport; the factory is an in-process synthetic test seam.
 import {createHash} from 'node:crypto'
@@ -21,7 +22,7 @@ function classify(error,phase){
 }
 export function validateInstallerPreflightConfig(c,secrets){
  if(!c||Array.isArray(c)||!['c3ManifestSha256,c3OperationId,expectedLogin','c3ManifestSha256,c3OperationId,expectedLogin,provisioningProfile'].includes(Object.keys(c).sort().join())
- ||('provisioningProfile' in c&&(c.provisioningProfile!=='supabase-managed-v1'||c.expectedLogin!=='postgres'))
+ ||('provisioningProfile' in c&&(!['supabase-managed-v1',SESSION_LOCK_PROFILE].includes(c.provisioningProfile)||c.expectedLogin!=='postgres'))
  ||!LOGIN.test(c.expectedLogin??'')||['service_role','authenticator','supabase_admin'].includes(c.expectedLogin)
  ||!ID.test(c.c3OperationId??'')||!HASH.test(c.c3ManifestSha256??'')
  ||!secrets||Object.keys(secrets).join()!=='installer'||typeof secrets.installer!=='string'
@@ -88,10 +89,15 @@ export function createInstallerAuthPreflight({makeClient,loadCa}){
    const rows=(await db.query(IDENTITY_SQL)).rows,r=rows?.[0]
    if(rows?.length!==1||r.login!==c.expectedLogin||r.effective!==c.expectedLogin
     ||r.rolsuper!==false||r.rolcanlogin!==true||r.rolcreaterole!==true||r.rolcreatedb!==true
-    ||r.rolbypassrls!==true||r.rolinherit!==true||r.rolreplication!==(c.provisioningProfile==='supabase-managed-v1')
+    ||r.rolbypassrls!==true||r.rolinherit!==true||r.rolreplication!==(c.provisioningProfile!==undefined)
     ||r.database_owner!==true||r.read_only!==true)fail('identity')
    backendTls=typeof r.tls==='boolean'?r.tls:null
    if(r.postgres_supported!==true||r.vector_supported!==true)fail('prerequisite')
+   if(sessionLockProfile(c)){
+    phase='session_lock_prerequisite'
+    const lock=(await db.query("select c.relkind='r' and c.relowner='supabase_auth_admin'::regrole and has_column_privilege(current_user,c.oid,'id','SELECT') and has_column_privilege(current_user,c.oid,'user_id','SELECT') and has_column_privilege(current_user,c.oid,'not_after','SELECT') and has_column_privilege(current_user,c.oid,'id','UPDATE') and not pg_has_role(current_user,'supabase_auth_admin','SET') ok from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='auth' and c.relname='sessions'")).rows
+    if(lock.length!==1||lock[0]?.ok!==true)fail('prerequisite')
+   }
    phase='c3'
    const cr=(await db.query(C3_SQL,[c.c3OperationId,c.c3ManifestSha256])).rows
    const x=cr?.[0]

@@ -11,8 +11,8 @@ const CODE_PINS=Object.freeze({
   "supabase/qualification/native-governed-activation/prepare.mjs": "47b03aa4dcc577f6d837ba4eb80ba76913f650d3",
   "supabase/qualification/native-governed-activation/activation.mjs": "83a2695e06699999bda39c4b98f9f36e1a6c3e08",
   "supabase/qualification/native-governed-activation/audit.mjs": "5c71d14e162ae3a5ad1a54cf6eae4e87457b17fb",
-  "supabase/qualification/native-governed-install/install.mjs": "b64b1854163071858e166639b9d02cf1cdf7e5c2",
-  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "4f9ab9c5a931e1cb7c9a4426a1c8444e0a162cb5",
+  "supabase/qualification/native-governed-install/install.mjs": "be48ebead2edb1f62ef4137d077d9da50383292e",
+  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "ef2e729f92efcac7ba7de240bc4062fc3e0e1d6c",
   "supabase/qualification/qik-comparison-adapter/compileSource.mjs": "cd87eb0a0bc758315246e74675339f3ea2972a19",
   "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs": "a591c92b10d174bd2937e9634f8d491b4c34567b",
   "supabase/qualification/qik-ingest/persistentInstall.mjs": "24625b8382399db71e9dba6e3ddb88a936ade33f",
@@ -23,9 +23,10 @@ const CODE_PINS=Object.freeze({
   "package-lock.json": "2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0",
   "supabase/qualification/native-governed-host/adapter.mjs": "47622a1729351d0cabda279d63855b9309e490b0",
   "supabase/qualification/native-governed-activation/host.mjs": "378d11df2922836e237006723ee4731df885310c",
-  "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "57496e43cc9a609f7a48ce674d66ff77e2b51c83",
-  "supabase/qualification/native-provisioning-compat/provision.mjs": "3bd3ea29702306943b53751e3be42a92cb0839fa",
-  "supabase/qualification/native-provisioning-compat/retirement.mjs": "c12018a7d78a3df8714104475eac29ccd06cc2b0"
+  "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "3818be644b1823197c078249cdb7739ae8af7839",
+  "supabase/qualification/native-provisioning-compat/provision.mjs": "9fcfc0eaaebf0375804558c5cdee789d45bf474f",
+  "supabase/qualification/native-provisioning-compat/retirement.mjs": "c12018a7d78a3df8714104475eac29ccd06cc2b0",
+  "supabase/qualification/native-provisioning-compat/sessionLock.mjs": "e9a1d4a562abf6bca2040f055d84c0c45ad2a0ec"
 })
 let emitted=false,phase='host_admission'
 function stop(){

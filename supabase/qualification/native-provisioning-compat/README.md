@@ -143,71 +143,46 @@ The current combined fixture and real host source-gate tests are under targeted
 qualification. Passing source checks or authored fixtures do not establish
 hosted installation, activation, full operating lifecycle or publication.
 
-## Private solo-development successor — owner decision 2026-09-29
+## Explicit narrow session-lock successor — 2026-09-29 owner amendment
 
-Explicit `supabase-managed-solo-development-v1` acknowledges EXISTING access by
-`supabase_etl_admin` and `supabase_read_only_user` to the autonomous credential,
-audit records and raw transport. It provides no isolation from these trusted
-provider principals. No provider role or grant is changed by provisioning.
+New selection `supabase-managed-solo-session-lock-v1` preserves both older
+profiles and source SQL bytes. It replaces only the exact Auth row read/lock in
+012 and native caller admission; the surrounding EFTA policies, identities,
+receipts, reader and authorization functions retain restricted owners.
+Customer postgres uses existing SELECT and UPDATE(id), with NO UPDATE grant
+option and no Auth-owner SET path. It installs two fixed postgres-owned,
+VOLATILE/PARALLEL UNSAFE/SECURITY DEFINER SQL-standard functions in private
+mip_auth_session_lock in the same joint transaction as CREATE/REVOKE/GRANT.
+Only the protected NOLOGIN session owner gets schema USAGE and EXECUTE; no new
+Auth-column access or postgres membership is given to that owner/runtime.
 
-The original `supabase-managed-v1` and optionless historical profiles retain
-their strict policies. The development profile checks the two role attribute
-contracts and exactly five existing supabase_admin OID10-issued membership
-edges; the immutable provisioning and activation receipts bind their catalog
-identities. Extra edges, attribute drift and any untrusted LOGIN reaching shared
-capabilities remain refused by installation/reconciliation and independent audit.
+key_share returns only a boolean for the exact subject/session with FOR KEY SHARE.
+share returns only the locked nullable expiry, zero rows when absent, with FOR SHARE;
+the original wrapper preserves pre/post-lock token and session expiry checks.
+Locks stay in the caller transaction. KEY SHARE allows concurrent non-key
+expiry updates exactly as the original EFTA path; it is not SHARE and must not
+be described as providing session-expiry linearization. Native SHARE blocks
+expiry updates until the transaction completes. No DML, arbitrary SQL, lock-mode
+parameter, cached response, separate connection or Auth row/token result.
 
-State: AUTHORED, NOT QUALIFIED, NOT INSTALLED. Development authorization does not
-permit publication, external onboarding, sensitive user material or historical
-transfer. Before those boundaries, explicit owner review is required. Stronger
-provider-account isolation and the open Support request remain pre-launch
-hardening. Post-install credential rotation remains refused pending a separately
-qualified bounded maintenance path; pre-install lifecycle evidence is narrower.
+Independent catalog boundary checks owner, signature, exact canonical parsed
+SQL body, SQL language, volatility/security/config, dependency on auth.sessions,
+effective runtime ACLs, absence of protected-role Auth grants/memberships and
+absence of broader postgres paths. Activation catalog hash also binds all new
+objects; the independent auditor uses fixed source SQL, never a helper claim.
+Old provider delegation prerequisite stays with older profiles. This successor
+requires existing installer lock privilege and the exact helper after creation.
 
-### Demonstrated provider Auth prerequisite
+Managed combined fixture must not supply UPDATE WITH GRANT OPTION. Customer
+installs helpers through actual joint installation. Provider prepares only
+representative infrastructure and owned synthetic Auth rows/test wrappers.
+Coordinated real transactions inspect actual blocking PIDs, then release/commit
+and verify final outcomes; a timeout alone is not a lock proof.
+Nested test wrapper isolates EFTA session-owner context, not a replacement for
+its surrounding policy/receipt machinery. Actual native assert_session is tested.
+Fixture-only DML/connection failure tests never run on live qik sessions.
 
-The first development combined run passed provisioning/audit-secret checks but
-failed the unchanged native caller prerequisite. qik metadata confirms trusted
-postgres can UPDATE auth.sessions.id but lacks UPDATE WITH GRANT OPTION. The
-pinned live-session definer needs UPDATE(id) for FOR KEY SHARE. This requirement
-is preserved. Development provisioning now refuses before effects unless the
-exact column grant authority exists.
-
-A supported table owner/provider operation must supply:
-`GRANT UPDATE(id) ON auth.sessions TO postgres WITH GRANT OPTION;`
-Do not impersonate supabase_auth_admin or modify catalogs. The disposable provider
-may supply this explicit prerequisite to qualify the conditional customer path;
-that is not proof of customer ability or current hosted readiness. No other
-Auth columns, runtime accounts, owner changes or blanket table UPDATE grants.
-
-### Existing trusted-installer global read capability
-
-qik and the managed fixture already give trusted postgres a bootstrap-issued
-pg_read_all_data ADMIN/INHERIT/SET edge. The development profile acknowledges
-its implied schema USAGE, binding and verifying that exact edge. The generated
-caller helper still refuses CREATE, API function EXECUTE and effective
-USAGE/SET of either caller group. This provides no data-read isolation from the
-trusted installer; no new installer privilege or runtime privilege is granted.
-The strict managed and optionless historical schema-USAGE veto is preserved.
-
-### Managed provider statistics passive ACLs
-
-The development metadata auditor acknowledges existing PUBLIC SELECT ACLs on
-only the two already-trusted installer/provider-owned pg_stat_statements 1.11 extension views in
-extensions, while independently requiring no extensions schema USAGE. Their
-catalog identities and rewrite definitions are bound in the managed snapshot.
-The fixture directly attempts both SELECTs as the auditor and requires SQLSTATE
-42501. This profile provides no effective statistics access; PUBLIC relation
-ACLs alone do not establish read access. Unrelated relation ACLs, all write
-rights and pg_read_all_stats USAGE/SET remain forbidden. No provider ACL changes.
-Strict managed and historical profiles remain unchanged.
-
-Ownership is limited to trusted postgres (observed qik) or bootstrap supabase_admin
-(observed pinned disposable image), with identical extension/view owner. The
-exact current owner OIDs remain bound and independently reconciled; no ownership
-change is performed or claimed by this compatibility admission.
-
-Independent DEV audit uses fixed catalog OID lookups for private relations and
-transport functions, never namespace-resolution operations requiring private
-schema USAGE. No private schema privilege, installed callback, credential-table
-read or installer connection is supplied to the metadata auditor.
+State: AUTHORED / NOT YET QUALIFIED OR REVIEWED / NOT HOSTED.
+Existing 7c combined qualification and review retain their narrower historical
+scope, and do not qualify this amendment. No hosted operation/release promoted,
+credential change, support duplication, material transfer or publication.

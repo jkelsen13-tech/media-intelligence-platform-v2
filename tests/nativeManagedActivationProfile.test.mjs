@@ -1,3 +1,6 @@
+import {SESSION_LOCK_PROFILE,SESSION_LOCK_DDL,sessionLockBoundarySQL} from '../supabase/qualification/native-provisioning-compat/sessionLock.mjs'
+import {prepareAtomicInstall} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
+import {NATIVE_CALLER_MODE} from '../supabase/qualification/native-governed-install/install.mjs'
 import {activationTransaction} from '../supabase/qualification/native-governed-activation/activation.mjs'
 import {GROUPS} from '../supabase/qualification/native-governed-activation/prepare.mjs'
 import test from 'node:test'
@@ -79,4 +82,25 @@ test('solo development profile preserves strict output and binds only existing p
  assert.match(guard,/managed_provider_edges/)
  assert.doesNotMatch(guard,/grant |revoke |alter role|create role/i)
  assert.equal(providerBoundarySQL(managed),'')
+})
+
+test('session-lock successor replaces both exact lock sites without rewriting historical source or owners',async()=>{
+ const options={...managed,provisioningProfile:SESSION_LOCK_PROFILE,nativeMode:NATIVE_CALLER_MODE,activationProfile:'native-governed-activation-v1'}
+ const plan=await prepareAtomicInstall(read,options)
+ const backend=plan.body.find(s=>s.path.endsWith('/012_efta_live_authentication.sql')).sql
+ const caller=plan.native.steps.at(-1)
+ assert.match(backend,/mip_auth_session_lock.key_share\(p_subject,p_auth_session\)/)
+ assert.match(backend,/owner to mip_efta_auth_session_owner_v1/)
+ assert.doesNotMatch(backend,/grant (?:select\(id,user_id\)|update\(id\)) on auth.sessions to mip_efta_auth_session_owner_v1/)
+ assert.match(caller.body,/mip_auth_session_lock.share\(u,session_id\)/)
+ assert.match(caller.body,/to_timestamp\(token_exp\)<=clock_timestamp\(\)/)
+ assert.match(caller.assertion,/if actual is not null/)
+ assert.doesNotMatch(SESSION_LOCK_DDL,/insert into|update auth\\.|delete from|execute format/i)
+ assert.match(SESSION_LOCK_DDL,/for key share/)
+ assert.match(SESSION_LOCK_DDL,/for share/)
+ assert.match(sessionLockBoundarySQL(options),/pg_get_function_sqlbody/)
+ assert.match(sessionLockBoundarySQL(options),/pg_catalog.pg_depend/)
+ const historical=await prepareAtomicInstall(read,{...options,provisioningProfile:DEVELOPMENT_PROFILE})
+ assert.match(historical.body.find(s=>s.path.endsWith('/012_efta_live_authentication.sql')).sql,/grant update\(id\) on auth.sessions to mip_efta_auth_session_owner_v1/)
+ assert.notEqual(historical.manifest_sha256,plan.manifest_sha256)
 })

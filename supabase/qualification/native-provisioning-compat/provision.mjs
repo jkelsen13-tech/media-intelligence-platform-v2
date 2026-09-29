@@ -1,3 +1,4 @@
+import {SESSION_LOCK_PROFILE} from './sessionLock.mjs'
 // Held prerequisite provisioning, never installation/activation/material processing.
 // Explicit trusted-installer ADMIN profile. Secure inputs remain memory-only.
 import {createHash,randomBytes,createHmac,pbkdf2Sync} from 'node:crypto'
@@ -17,7 +18,7 @@ export const DBLINK_PREREQUISITE_SQL="\nwith ext as (\n select e.oid,e.extversio
 const EDGE_SQL="select r.rolname role_name,r.oid::text role_oid,m.rolname member_name,m.oid::text member_oid,g.rolname grantor_name,g.oid::text grantor_oid,a.admin_option,a.inherit_option,a.set_option from pg_auth_members a join pg_roles r on r.oid=a.roleid join pg_roles m on m.oid=a.member join pg_roles g on g.oid=a.grantor where r.rolname=$1 or m.rolname=$1"
 function config(c){
  if(!c||Object.keys(c).sort().join()!==['auditLogin','c3ManifestSha256','c3OperationId','disposable','expectedLogin','expectedMetadataAuditor','operationId','provisioningProfile'].sort().join())fail()
- if(![PROFILE,DEVELOPMENT_PROFILE].includes(c.provisioningProfile)||c.expectedLogin!==INSTALLER||c.auditLogin!==AUDIT_LOGIN||c.expectedMetadataAuditor!==METADATA_LOGIN||typeof c.disposable!=='boolean')fail()
+ if(![PROFILE,DEVELOPMENT_PROFILE,SESSION_LOCK_PROFILE].includes(c.provisioningProfile)||c.expectedLogin!==INSTALLER||c.auditLogin!==AUDIT_LOGIN||c.expectedMetadataAuditor!==METADATA_LOGIN||typeof c.disposable!=='boolean')fail()
  if(!/^[a-f0-9]{32}$/.test(c.operationId)||!/^[a-f0-9]{32}$/.test(c.c3OperationId)||!/^[a-f0-9]{64}$/.test(c.c3ManifestSha256))fail()
  if(c.disposable&&(process.env.MIP_MANAGED_PROVISIONING_ARM!=='synthetic-pg17-only'||process.env.MIP_DISPOSABLE_POSTGRES!=='qik-persistent-install'))fail()
  return Object.freeze({...c,request_sha256:hash(JSON.stringify(Object.fromEntries(Object.entries(c).sort(([a],[b])=>a.localeCompare(b)))))})

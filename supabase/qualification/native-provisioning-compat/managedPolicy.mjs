@@ -1,9 +1,10 @@
+import {SESSION_LOCK_PROFILE,sessionLockProfile,sessionLockBoundarySQL} from './sessionLock.mjs'
 // Explicit provider compatibility policy. Optionless historical profiles never call these transforms.
 export const MANAGED_PROFILE='supabase-managed-v1'
 
 export const DEVELOPMENT_PROFILE='supabase-managed-solo-development-v1'
 export const TRUSTED_PROVIDER_LOGINS=['supabase_etl_admin','supabase_read_only_user']
-export function developmentProfile(o){return o.provisioningProfile===DEVELOPMENT_PROFILE}
+export function developmentProfile(o){return o.provisioningProfile===DEVELOPMENT_PROFILE||sessionLockProfile(o)}
 // Exclude approved LOGIN callers only. Shared NOLOGIN capabilities remain checked
 // whenever any untrusted LOGIN can reach them. No grants or role mutation here.
 export function untrustedCallerSQL(o,alias='caller'){
@@ -28,7 +29,7 @@ export function providerSnapshotSQL(){
 // UPDATE(id) grant. A provider operation is needed if grant authority is absent.
 export async function verifyManagedCallerAuthPrerequisite(db,o){
  if(!developmentProfile(o))return
- const r=(await db.query("select c.relkind='r' and c.relowner='supabase_auth_admin'::regrole and (select count(*) from pg_catalog.pg_attribute where attrelid=c.oid and attnum>0 and not attisdropped and ((attname in('id','user_id') and atttypid='uuid'::regtype) or(attname='not_after' and atttypid='timestamptz'::regtype)))=3 and has_column_privilege('postgres',c.oid,'id','SELECT WITH GRANT OPTION') and has_column_privilege('postgres',c.oid,'user_id','SELECT WITH GRANT OPTION') and has_column_privilege('postgres',c.oid,'id','UPDATE WITH GRANT OPTION') ok from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='auth' and c.relname='sessions'")).rows
+ const r=(await db.query("select c.relkind='r' and c.relowner='supabase_auth_admin'::regrole and (select count(*) from pg_catalog.pg_attribute where attrelid=c.oid and attnum>0 and not attisdropped and ((attname in('id','user_id') and atttypid='uuid'::regtype) or(attname='not_after' and atttypid='timestamptz'::regtype)))=3 and has_column_privilege('postgres',c.oid,'id',"+(sessionLockProfile(o)?"'SELECT'":"'SELECT WITH GRANT OPTION'")+") and has_column_privilege('postgres',c.oid,'user_id',"+(sessionLockProfile(o)?"'SELECT'":"'SELECT WITH GRANT OPTION'")+") and has_column_privilege('postgres',c.oid,'id',"+(sessionLockProfile(o)?"'UPDATE'":"'UPDATE WITH GRANT OPTION'")+" )"+(sessionLockProfile(o)?" and has_column_privilege('postgres',c.oid,'not_after','SELECT') and not pg_has_role('postgres','supabase_auth_admin','SET')":"")+" ok from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='auth' and c.relname='sessions'")).rows
  if(r.length!==1||r[0]?.ok!==true)fail()
 }
 export function installerReadAllPredicate(){
@@ -97,7 +98,7 @@ export function managedOptions(o){
   if(o.provisioningOperationId!==undefined)fail()
   return false
  }
- if(![MANAGED_PROFILE,DEVELOPMENT_PROFILE].includes(o.provisioningProfile)||!ID.test(o.provisioningOperationId??'')
+ if(![MANAGED_PROFILE,DEVELOPMENT_PROFILE,SESSION_LOCK_PROFILE].includes(o.provisioningProfile)||!ID.test(o.provisioningOperationId??'')
  ||o.expectedLogin!=='postgres'||o.expectedMetadataAuditor!==METADATA_LOGIN
  ||(o.auditLogin!==undefined&&o.auditLogin!==AUDIT_LOGIN))fail()
  return true
@@ -232,7 +233,7 @@ export function managedBoundarySQL(o={}){
  end loop;
  if has_schema_privilege(factual_oid,raw_oid,'USAGE,CREATE') then raise exception 'managed_factual_raw_access';end if;
  if not ${auditorEdgePredicate(lit(AUDIT_LOGIN)+'::regrole')} or not ${auditorEdgePredicate(lit(METADATA_LOGIN)+'::regrole')} then raise exception 'managed_auditor_edges';end if;
- end $managed_boundary$;`
+ end $managed_boundary$;`+sessionLockBoundarySQL(o)
 }
 export async function captureManagedFinal(db,c,reference){
  await db.query(managedBoundarySQL(c))

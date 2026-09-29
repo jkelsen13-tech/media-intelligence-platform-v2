@@ -1,3 +1,4 @@
+import {qualifySessionLocks} from './sessionLockQualification.mjs'
 // Actual managed successor integration. Only fresh armed disposable PG17.6.
 // Synthetic source substrate reuses the historical ordered dependency files;
 // provider setup is distinct from genuine nonsuper provision/install/audit/retirement.
@@ -122,7 +123,7 @@ test('managed provision, full disabled installation, independent audits and term
  const provider=await connect('supabase_admin',process.env.MIP_COMPAT_ADMIN_PASSWORD)
  let owned=false,phase='pristine',observed=null,failed=false
  const before=(await provider.query('select rolname from pg_roles order by rolname')).rows.map(r=>r.rolname)
- const provision={provisioningProfile:'supabase-managed-solo-development-v1',operationId:'4'.repeat(32),expectedLogin:'postgres',auditLogin:'mip_native_audit_v1',expectedMetadataAuditor:'mip_native_metadata_audit_v1',c3OperationId:'3'.repeat(32),c3ManifestSha256:'1'.repeat(64),disposable:true}
+ const provision={provisioningProfile:'supabase-managed-solo-session-lock-v1',operationId:'4'.repeat(32),expectedLogin:'postgres',auditLogin:'mip_native_audit_v1',expectedMetadataAuditor:'mip_native_metadata_audit_v1',c3OperationId:'3'.repeat(32),c3ManifestSha256:'1'.repeat(64),disposable:true}
  const secrets={installer:uri('postgres',password),audit:uri(provision.auditLogin,randomBytes(36).toString('base64url')),metadataAudit:uri(provision.expectedMetadataAuditor,randomBytes(36).toString('base64url')),caPem:''}
  try{
   assert.equal((await provider.query("select current_setting('server_version_num') v")).rows[0].v,'170006')
@@ -144,17 +145,10 @@ test('managed provision, full disabled installation, independent audits and term
   // so the provider supplies its observed service edge as infrastructure only.
   phase='fixture-provider-existing-service-edge'
   await provider.query('grant supabase_privileged_role to supabase_etl_admin with admin false,inherit true,set true')
-  phase='missing-provider-auth-grant-refuses-before-effects'
-  const unprepared=await provisionManagedPrerequisites(provision,secrets)
-  assert.equal(unprepared.state,'provisioning_refused')
-  assert.equal(unprepared.phase,'caller_auth_prerequisite')
-  assert.equal(unprepared.connection_cleanup_verified,true)
-  assert.equal((await provider.query("select exists(select 1 from pg_roles where rolname in('mip_native_audit_v1','mip_native_metadata_audit_v1')) or exists(select 1 from pg_extension where extname='dblink') or exists(select 1 from pg_namespace where nspname='mip_managed_provisioning') present")).rows[0].present,false)
-  // Explicit provider-only prerequisite, NOT part of observed qik baseline.
-  // qik currently lacks this grant authority. This conditional fixture cannot
-  // establish that the customer can perform the provider operation.
-  phase='fixture-provider-required-auth-grant'
-  await provider.query('grant update(id) on auth.sessions to postgres with grant option')
+  phase='provider-existing-auth-lock-privilege-only'
+  await provider.query('grant update(id) on auth.sessions to postgres')
+  assert.equal((await provider.query("select has_column_privilege('postgres','auth.sessions','id','UPDATE WITH GRANT OPTION') delegated,pg_has_role('postgres','supabase_auth_admin','SET') owner_set")).rows[0].delegated,false)
+  assert.equal((await provider.query("select pg_has_role('postgres','supabase_auth_admin','SET') owner_set")).rows[0].owner_set,false)
   phase='actual-managed-provision'
   observed=await provisionManagedPrerequisites(provision,secrets)
   assert.equal(observed.state,'provisioned_authentication_verified')
@@ -325,6 +319,11 @@ test('managed provision, full disabled installation, independent audits and term
   observed=await auditNativeActivationMetadata(audit,read);assert.equal(observed.permission_boundary_current,true)
   const historySQL="select jsonb_build_object('bootstrap',(select jsonb_agg(to_jsonb(t)) from mip_native_activation.bootstrap t),'revisions',(select jsonb_agg(to_jsonb(t)) from mip_native_activation.revisions t),'rejections',(select jsonb_agg(to_jsonb(t)) from mip_factual.rejection_audit t),'receipts',(select jsonb_agg(to_jsonb(t)) from mip_comparison_install.receipts t)) value"
   const retained=(await provider.query(historySQL)).rows[0].value
+  phase='fixed-session-lock-successor-semantics'
+  await qualifySessionLocks({provider,connect})
+  phase='independent-after-session-fixture-cleanup'
+  observed=await auditNativeActivationMetadata(audit,read)
+  assert.equal(observed.permission_boundary_current,true)
   phase='terminal-retirement-lost-ack'
   const original=pg.Client.prototype.query;let lost=false
   pg.Client.prototype.query=async function(...args){const answer=await original.apply(this,args);if(!lost&&args[0]==='commit'){lost=true;throw Error('synthetic_lost_ack')}return answer}
