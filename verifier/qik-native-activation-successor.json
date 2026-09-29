@@ -180,7 +180,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/integration.test.mjs",
-      "git_blob": "969c500421eaa2b9b01944b93b99a5ac59461f8d"
+      "git_blob": "22e82f7efc8bc41062a8b2979ae1d16c26b22bb9"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/README.md",

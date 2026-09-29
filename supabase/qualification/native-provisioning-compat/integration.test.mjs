@@ -199,14 +199,21 @@ test('managed provision, full disabled installation, independent audits and term
   try{
    // Synthetic fixture source only, never a hosted article or publication.
    const source=randomUUID()
+   phase='publication-fixture-source'
    await publisher.query("insert into public.articles(id,feed,outlet,title,url,reader_state,source_status) values($1,'fixture','fixture','fixture','https://news.example/guard/'||$1::text,'eligible','active')",[source])
    for(const rule of ['provenance','source_state','human_review']){
     const id=randomUUID(),assertion='fixture-managed-guard:'+id
     const sources=rule==='source_state'?[randomUUID()]:[source]
+    phase='publication-'+rule+'-guard'
     await publisher.query('begin')
     try{
-     await assert.rejects(publisher.query("insert into public.explanations(id,assertion_id,review_status,is_current,state,supporting_passage,archived_sources,falsification_condition,source_ids) values($1,$2,'published',true,'ok',$3,jsonb_build_array(jsonb_build_object('status','retained')),'synthetic counterexample',$4::uuid[])",[id,assertion,rule==='provenance'?'':'synthetic passage',sources]),e=>e.code==='P0001'&&e.message==='mip_factual_rejected_'+rule)
+     let rejection=null
+     try{await publisher.query("insert into public.explanations(id,assertion_id,review_status,is_current,state,supporting_passage,archived_sources,falsification_condition,source_ids) values($1,$2,'published',true,'ok',$3,jsonb_build_array(jsonb_build_object('status','retained')),'synthetic counterexample',$4::uuid[])",[id,assertion,rule==='provenance'?'':'synthetic passage',sources])}
+     catch(e){rejection={sqlstate:/^[0-9A-Z]{5}$/.test(e.code??'')?e.code:null,guard:['mip_factual_rejected_provenance','mip_factual_rejected_source_state','mip_factual_rejected_human_review','mip_audit_unavailable'].includes(e.message)?e.message:null}}
+     observed={...observed,fixture_rejection:rejection}
+     assert.deepEqual(rejection,{sqlstate:'P0001',guard:'mip_factual_rejected_'+rule})
     }finally{await publisher.query('rollback')}
+    phase='publication-'+rule+'-rollback-readback'
     assert.equal((await provider.query('select count(*)::int n from public.explanations where id=$1',[id])).rows[0].n,0)
     const retained=(await provider.query("select rule,attempted_transition,assertion_digest=mip_comparison_kernel_v1.argument_digest(jsonb_build_object('assertion_id',$2::text)) bound from mip_factual.rejection_audit where explanation_id=$1",[id,assertion])).rows
     assert.equal(retained.length,1)
@@ -295,6 +302,7 @@ test('managed provision, full disabled installation, independent audits and term
   assert.equal((await provider.query("select count(*)::int n from pg_roles where rolname in('mip_native_audit_v1','mip_native_metadata_audit_v1')")).rows[0].n,0)
   assert.equal((await provider.query("select collection_authorized from qik_ingest.collection_gate")).rows[0].collection_authorized,false)
  }catch(error){failed=true
+  observed={...(observed??{}),fixture_sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null}
   if(observed===null)observed={diagnostic:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code+':'+(/^[A-Za-z_0-9]{1,100}$/.test(error?.routine??'')?error.routine:'unknown'):'fixture_assertion'}
  }
  finally{
@@ -311,6 +319,6 @@ test('managed provision, full disabled installation, independent audits and term
    }catch{failed=true;phase+=':cleanup'}finally{await cleanup.end()}
   }
  }
- const safe=observed?{state:observed.state,phase:observed.phase,sqlstate:observed.sqlstate,diagnostic:observed.diagnostic,native_failure:observed.native_failure}:null
+ const safe=observed?{state:observed.state,phase:observed.phase,sqlstate:observed.sqlstate,diagnostic:observed.diagnostic,native_failure:observed.native_failure,fixture_sqlstate:observed.fixture_sqlstate,fixture_rejection:observed.fixture_rejection}:null
  assert.equal(failed,false,'managed integration failed at '+phase+' '+JSON.stringify(safe)+'; raw errors withheld')
 })
