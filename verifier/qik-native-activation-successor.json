@@ -478,12 +478,13 @@
     "trust": "No provider-role impersonation, Auth privilege or runtime broadening; owner-scoped REVOKE as existing application owner only"
   },
   "post_install_audit_route_maintenance": {
-    "status": "REVISED — HELD — AFFECTED QUALIFICATION/REVIEW PENDING — NOT APPLIED",
+    "status": "SYNTHETIC COMBINED QUALIFIED — HELD FOR REVIEW AND PROVIDER GRANT — NOT APPLIED",
     "installed_base_commit": "2eea6531caa86c95f32ade0f9a6583195abb78ca",
     "installed_operation_id": "a382dcdbf2924852b711b6a8b0c713eb",
     "prior_integration_test_blob": "8be86df9d2aba68ffd2cdfff73cfd46002150943",
     "maintenance_sql": {"path": "supabase/qualification/native-provisioning-compat/qikAuditRouteMaintenance.sql", "git_blob": "28ef18e1c535860500b2525615f53f7b8e04d9ad"},
     "combined_fixture": {"path": "supabase/qualification/native-provisioning-compat/integration.test.mjs", "git_blob": "a2be7f555204602b11a351f5513eb7254cd59279"},
+    "combined_synthetic_receipt": {"run": 36627109197, "job": 109606823891, "result": "PASS", "scope": "substituted exact maintenance body with synthetic probe; not hosted direct TLS or write proof"},
     "hosted_effect": "none",
     "provider_prerequisite": "temporary UPDATE(connection_string) TO postgres on mip_factual.audit_connection, revoked before audits",
     "credential_handling": "existing stored credential transformed server-side, no value emitted",
