@@ -53,15 +53,19 @@ async function c3(db,c){
  if(!r||!r.gate_closed||!r.schedule_closed||!r.sources_closed||!r.receipt_matches||!/^[a-f0-9]{64}$/.test(r.baseline))fail()
  return r.baseline
 }
-async function extension(db,ids){
+async function extension(db,ids,expectedSchema='mip_factual_transport_raw'){
  const r=(await db.query("select e.oid::text oid,e.extversion,e.extowner::text owner,n.nspname from pg_extension e join pg_namespace n on n.oid=e.extnamespace where e.extname='dblink'")).rows[0]
- if(!r||r.extversion!=='1.2'||r.owner!==ids.provider_oid||r.nspname!=='extensions')fail()
+ if(!r||r.extversion!=='1.2'||r.owner!==ids.provider_oid||r.nspname!==expectedSchema)fail()
  const v=(await db.query(DBLINK_PREREQUISITE_SQL)).rows[0]
  if(!v?.unused||!v.no_servers||!/^[a-f0-9]{64}$/.test(v.metadata_sha256))fail()
  const wrong=(await db.query("select exists(select 1 from pg_depend d join pg_proc p on d.classid='pg_proc'::regclass and p.oid=d.objid where d.refclassid='pg_extension'::regclass and d.refobjid=$1::oid and d.deptype='e' and p.proowner<>$2::oid) bad",[r.oid,ids.provider_oid])).rows[0]
  if(wrong?.bad!==false)fail()
- const privilege=(await db.query("select has_function_privilege(current_user,'extensions.dblink_exec(text,text)','EXECUTE WITH GRANT OPTION') allowed")).rows[0]
+ const privilege=(await db.query("select has_function_privilege(current_user,($1||'.dblink_exec(text,text)')::regprocedure,'EXECUTE WITH GRANT OPTION') allowed",[expectedSchema])).rows[0]
  if(privilege?.allowed!==true)fail()
+ if(expectedSchema==='mip_factual_transport_raw'){
+  const isolated=(await db.query("select nspowner=current_user::regrole and not exists(select 1 from aclexplode(coalesce(nspacl,acldefault('n',nspowner))) a where a.grantee<>nspowner) ok from pg_namespace where nspname=$1",[expectedSchema])).rows[0]
+  if(isolated?.ok!==true)fail()
+ }
  return {extension_oid:r.oid,extension_metadata_sha256:v.metadata_sha256}
 }
 async function auditor(db,name,ids,allowInstalled=false){
@@ -144,9 +148,11 @@ async function run(action,input,secrets){
    if(action==='reconcile'){await db.query('rollback');result=outcome('not_provisioned',c,phase);return result}
    phase='collision'
    if((await db.query("select exists(select 1 from pg_roles where rolname=any($1::text[])) present",[[AUDIT_LOGIN,METADATA_LOGIN]])).rows[0].present)fail()
-   if((await db.query("select exists(select 1 from pg_namespace where nspname in('mip_comparison_install','mip_native_activation')) present")).rows[0].present)fail()
+   if((await db.query("select exists(select 1 from pg_namespace where nspname in('mip_comparison_install','mip_native_activation','mip_factual_transport_raw')) present")).rows[0].present)fail()
    phase='provider_extension'
    if(!(await db.query("select exists(select 1 from pg_extension where extname='dblink') present")).rows[0].present)await db.query('create extension dblink with schema extensions')
+   await extension(db,ids,'extensions')
+   await db.query('create schema mip_factual_transport_raw;revoke all on schema mip_factual_transport_raw from public,anon,authenticated,service_role;alter extension dblink set schema mip_factual_transport_raw')
    const d=await extension(db,ids)
    phase='secure_auditor_creation';await createAuditors(db,targets)
    const a=await auditor(db,AUDIT_LOGIN,ids),m=await auditor(db,METADATA_LOGIN,ids)
