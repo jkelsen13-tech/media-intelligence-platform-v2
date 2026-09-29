@@ -39,7 +39,7 @@ async function prepareSourcePrerequisites(root,selectedMode){
   await owner.query('create schema if not exists extensions;create extension if not exists pgcrypto with schema extensions;create extension if not exists vector with schema public');
   assert.equal((await owner.query("select extversion from pg_extension where extname='vector'")).rows[0].extversion,'0.8.2');
   await owner.query(await read('supabase/qualification/qik-ingest/fixture_substrate.sql'));
-  await owner.query('create schema auth');
+  await owner.query('create schema if not exists auth');
   for(const relation of REQUIRED_RELATIONS.filter(r=>['public','auth'].includes(r.schema_name))){
    const exists=(await owner.query('select to_regclass($1) name',[relation.qualified])).rows[0].name;
    if(!exists){
@@ -106,7 +106,9 @@ test('managed provision, full disabled installation, independent audits and term
  try{
   assert.equal((await provider.query("select current_setting('server_version_num') v")).rows[0].v,'170006')
   phase='pristine-schemas'
-  assert.equal((await provider.query("select count(*)::int n from pg_namespace where nspname in('auth','evidence_pipeline','qik_ingest','qik_ingest_operation','mip_managed_provisioning','mip_native_activation')")).rows[0].n,0)
+  assert.equal((await provider.query("select count(*)::int n from pg_namespace where nspname in('evidence_pipeline','qik_ingest','qik_ingest_operation','mip_managed_provisioning','mip_native_activation')")).rows[0].n,0)
+  phase='pristine-auth-relations'
+  assert.equal((await provider.query("select count(*)::int n from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='auth'")).rows[0].n,0)
   phase='pristine-application-relations'
   assert.equal((await provider.query("select count(*)::int n from pg_class c where relnamespace='public'::regnamespace and not exists(select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e')")).rows[0].n,0)
   phase='pristine-dblink'
