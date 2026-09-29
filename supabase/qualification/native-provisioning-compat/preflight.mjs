@@ -64,7 +64,7 @@ select encode(sha256(convert_to(jsonb_build_object(
 // This factory is for source/synthetic tests; never select dependencies from a host input.
 export function createInstallerAuthPreflight({makeClient,loadCa}){
  return async function preflight(c,secrets){
-  let db=null,transaction=false,phase='configuration',qualified=false,diagnostic=null,baseline=null
+  let db=null,transaction=false,phase='configuration',qualified=false,diagnostic=null,baseline=null,backendTls=null
   let cleanup=true
   try{
    const url=validateInstallerPreflightConfig(c,secrets)
@@ -74,6 +74,10 @@ export function createInstallerAuthPreflight({makeClient,loadCa}){
     connectionTimeoutMillis:5000,statement_timeout:5000,query_timeout:7000,
     application_name:'mip-installer-auth-metadata-preflight'})
    await db.connect()
+   phase='tls'
+   // pg8.23.0 upgrades connection.stream to the actual Node TLS socket.
+   // pg_stat_ssl below describes the DB-side hop, which can differ behind Supavisor.
+   if(db.connection?.stream?.encrypted!==true||db.connection.stream.authorized!==true)fail('tls')
    phase='read_only'
    // Mark before BEGIN acknowledgement, so a lost acknowledgement still triggers rollback.
    transaction=true;await db.query('begin read only')
@@ -85,7 +89,7 @@ export function createInstallerAuthPreflight({makeClient,loadCa}){
     ||r.rolsuper!==false||r.rolcanlogin!==true||r.rolcreaterole!==true||r.rolcreatedb!==true
     ||r.rolbypassrls!==true||r.rolinherit!==true||r.rolreplication!==false
     ||r.database_owner!==true||r.read_only!==true)fail('identity')
-   if(r.tls!==true)fail('tls')
+   backendTls=typeof r.tls==='boolean'?r.tls:null
    if(r.postgres_supported!==true||r.vector_supported!==true)fail('prerequisite')
    phase='c3'
    const cr=(await db.query(C3_SQL,[c.c3OperationId,c.c3ManifestSha256])).rows
@@ -104,7 +108,7 @@ export function createInstallerAuthPreflight({makeClient,loadCa}){
   return Object.freeze({contract:'installer-auth-metadata-preflight-v1',
    state:qualified?'installer_authenticated_c3_current':'preflight_refused',
    diagnostic,phase:qualified?'complete':phase,connection_cleanup_verified:cleanup,
-   c3_baseline_sha256:qualified?baseline:null,installation_ready:false,
+   c3_baseline_sha256:qualified?baseline:null,backend_tls_observed:qualified?backendTls:null,installation_ready:false,
    installation_performed:false,activation_allowed:false,publication_allowed:false,
    material_access_allowed:false,production_qualified:false})
  }
