@@ -20,7 +20,7 @@ test('managed prerequisite component creates, authenticates and reconciles same 
  const before=(await provider.query('select rolname from pg_roles order by rolname')).rows.map(r=>r.rolname)
  try{
   assert.ok(!before.includes(AUDIT_LOGIN)&&!before.includes(METADATA_LOGIN))
-  assert.equal((await provider.query("select count(*)::int n from pg_namespace where nspname in('qik_ingest','qik_ingest_operation','mip_managed_provisioning')")).rows[0].n,0)
+  assert.equal((await provider.query("select count(*)::int n from pg_namespace where nspname in('qik_ingest','qik_ingest_operation','mip_managed_provisioning','mip_factual_transport_raw')")).rows[0].n,0)
   assert.equal((await provider.query("select to_regclass('public.ingest_sources') present")).rows[0].present,null)
   assert.equal((await provider.query("select count(*)::int n from pg_extension where extname='dblink'")).rows[0].n,0)
   owned=true;phase='synthetic-c3'
@@ -54,6 +54,8 @@ test('managed prerequisite component creates, authenticates and reconciles same 
   assert.equal(receipt.operation_id,cfg.operationId)
   assert.equal(receipt.audit_edge.grantor_oid,'10');assert.equal(receipt.audit_edge.grantor_name,'supabase_admin')
   assert.equal(receipt.metadata_edge.grantor_oid,'10')
+  assert.equal((await customer.query("select nspname from pg_extension e join pg_namespace n on n.oid=e.extnamespace where extname='dblink'")).rows[0].nspname,'mip_factual_transport_raw')
+  for(const name of [AUDIT_LOGIN,METADATA_LOGIN])assert.equal((await customer.query("select has_schema_privilege($1,'mip_factual_transport_raw','USAGE,CREATE') allowed",[name])).rows[0].allowed,false)
   assert.equal(JSON.stringify(receipt).includes('SCRAM'),false)
   phase='exact-reconcile'
   observed=await reconcileManagedPrerequisites(cfg,secrets);assert.equal(observed.state,'provisioned_authentication_verified')
@@ -79,7 +81,7 @@ test('managed prerequisite component creates, authenticates and reconciles same 
   try{
    if(owned){
     await provider.query('drop schema if exists mip_managed_provisioning cascade;drop schema if exists qik_ingest cascade;drop schema if exists qik_ingest_operation cascade;drop table if exists public.ingest_sources')
-    await provider.query('drop extension if exists dblink')
+    await provider.query('drop extension if exists dblink;drop schema if exists mip_factual_transport_raw')
     for(const r of [AUDIT_LOGIN,METADATA_LOGIN])if((await provider.query('select 1 from pg_roles where rolname=$1',[r])).rowCount){await provider.query('drop owned by '+qi(r));await provider.query('drop role '+qi(r))}
     assert.deepEqual((await provider.query('select rolname from pg_roles order by rolname')).rows.map(r=>r.rolname),before)
    }
