@@ -1,3 +1,5 @@
+import {activationTransaction} from '../supabase/qualification/native-governed-activation/activation.mjs'
+import {GROUPS} from '../supabase/qualification/native-governed-activation/prepare.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
@@ -33,4 +35,33 @@ test('shim is fixed bound SQL and does not change provider extension ACL or relo
  const snapshot=managedSnapshotSQL(managed)
  for(const expected of ['pg_catalog.pg_extension','pg_catalog.pg_depend','definitions_sha256','provisioning_operation_id','prosqlbody','inherit_option','set_option'])
   assert.ok(snapshot.includes(expected),expected)
+})
+
+test('managed transient context reaches only the bounded returning-status wrapper and refusal rolls back',async()=>{
+ const calls=[],secret='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+ const settings={log_statement:'ddl',log_min_duration_statement:'-1',log_min_duration_sample:'-1',log_transaction_sample_rate:'0',log_parameter_max_length_on_error:'0',statement_timeout:'1000',lock_timeout:'500','auto_explain.log_min_duration':'10000','auto_explain.log_nested_statements':'off','pg_stat_statements.track':'top'}
+ const db={async query(sql,args){
+  calls.push({sql,args})
+  if(sql.includes('from pg_settings'))return {rows:args[0].filter(k=>settings[k]!==undefined).map(name=>({name,setting:settings[name]}))}
+  if(sql.includes('from mip_native_activation.bootstrap'))return {rows:[{matches:true}]}
+  if(sql.startsWith('select pg_temp.managed_activation_transition'))return {rows:[{state:'refused'}]}
+  return {rows:[]}
+ },async end(){calls.push({sql:'end'})}}
+ const req={revision:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',predecessor:null,action:'pending',
+ members:GROUPS.map((group,i)=>({group,group_oid:String(100+i),name:'fixture_runtime_'+i,oid:String(200+i)})),
+ authority:{scope:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',subject:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',valid_until:'2099-01-01T00:00:00.000Z'},
+ ephemeral:{authSession:secret,tokenExp:4070908800}}
+ const result=await activationTransaction(db,{...managed,expectedInstallManifest:'a'.repeat(64),expectedNativeProgram:'b'.repeat(64),expectedSuccessorProgram:'c'.repeat(64)},req)
+ assert.equal(result.permissions_current,false)
+ assert.equal(result.transaction,'not_committed')
+ assert.equal(result.connection_cleanup_verified,true)
+ assert.equal(calls.filter(c=>c.args?.includes(secret)).length,1)
+ assert.ok(calls.find(c=>c.args?.includes(secret)).sql.startsWith('select pg_temp.managed_activation_transition'))
+ assert.ok(calls.some(c=>c.sql==="set local lock_timeout='500ms'"))
+ assert.ok(calls.some(c=>c.sql==='rollback'))
+ assert.equal(calls.some(c=>c.sql.includes(secret)),false)
+ assert.equal(JSON.stringify(result).includes(secret),false)
+ const wrappers=calls.filter(c=>c.sql.startsWith('create function pg_temp.managed_activation'))
+ assert.equal(wrappers.length,2)
+ for(const w of wrappers){assert.match(w.sql,/when query_canceled or assert_failure/);assert.doesNotMatch(w.sql,/raise exception/)}
 })
