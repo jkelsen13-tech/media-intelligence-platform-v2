@@ -1,3 +1,4 @@
+import {assertManagedCredentialLogging} from '../native-provisioning-compat/provision.mjs'
 // Concrete successor client. No CLI, SQL callback, issuer argument, automatic retry,
 // captured payload, publication, or reuse-eligibility authority.
 import {createHash} from 'node:crypto'
@@ -65,7 +66,7 @@ function config(c,plan){
   ||c.authorization!=='owner-authorized-native-governed-permission-transition'
   ||![c.expectedInstallManifest,c.expectedNativeProgram,c.expectedSuccessorProgram].every(h=>HASH.test(h??''))
   ||plan.program_sha256!==c.expectedSuccessorProgram)fail('configuration')
- return {expectedLogin:c.expectedLogin,operationId:c.operationId,expectedInstallManifest:c.expectedInstallManifest,
+ return {...(c.provisioningProfile?{provisioningProfile:c.provisioningProfile,provisioningOperationId:c.provisioningOperationId}:{}),expectedLogin:c.expectedLogin,operationId:c.operationId,expectedInstallManifest:c.expectedInstallManifest,
   expectedNativeProgram:c.expectedNativeProgram,expectedSuccessorProgram:c.expectedSuccessorProgram}
 }
 const baselineSQL="select operation_id=$1 and installer=$2 and installer_oid=session_user::regrole::oid and install_manifest=$3 and native_program=$4 and successor_program=$5 matches from mip_native_activation.bootstrap where singleton"
@@ -79,7 +80,7 @@ export async function activationTransaction(db,c,request,{reconcile=false}={}){
   phase='begin'
   await db.query('begin');begun=true
   phase='transaction_settings'
-  await db.query("set local lock_timeout='5000ms'")
+  await db.query(c.provisioningProfile?"set local lock_timeout='500ms'":"set local lock_timeout='5000ms'")
   await db.query("set local statement_timeout='1000ms'")
   phase='lock'
   await db.query('select pg_advisory_xact_lock(171903,7001)')
@@ -88,18 +89,24 @@ export async function activationTransaction(db,c,request,{reconcile=false}={}){
   if(b?.matches!==true)fail('bootstrap_mismatch')
   // Reuse the concrete no-credential-logging boundary before transient parameters.
   phase='credential_logging'
-  await assertCredentialLogging(db)
+  if(c.provisioningProfile)await assertManagedCredentialLogging(db);else await assertCredentialLogging(db)
+  if(c.provisioningProfile){
+   await db.query("create function pg_temp.managed_activation_current(a text,r uuid,b uuid,w uuid,s uuid,t bigint) returns boolean language plpgsql security invoker set search_path='' as $guard$ begin begin perform mip_native_activation.assert_current(a,r,b,w,s,t);return true;exception when query_canceled or assert_failure then return false;when others then return false;end;end $guard$")
+   await db.query("create function pg_temp.managed_activation_transition(r uuid,p uuid,a text,m jsonb,x jsonb,b uuid,w uuid,s uuid,t bigint) returns text language plpgsql security invoker set search_path='' as $guard$ begin begin return mip_native_activation.transition(r,p,a,m,x,b,w,s,t);exception when query_canceled or assert_failure then return 'refused';when others then return 'refused';end;end $guard$")
+   await db.query('revoke all on function pg_temp.managed_activation_current(text,uuid,uuid,uuid,uuid,bigint),pg_temp.managed_activation_transition(uuid,uuid,text,jsonb,jsonb,uuid,uuid,uuid,bigint) from public')
+  }
   if(reconcile){
    phase='reconciliation_revision'
    const exact=(await db.query("select predecessor is not distinct from $2::uuid and action=$3 and members=$4::jsonb and authority=$5::jsonb and operation_id=$6 matches from mip_native_activation.revisions where revision=$1",
     [r.revision,r.predecessor,r.action,JSON.stringify(r.members),JSON.stringify(r.authority),c.operationId])).rows[0]
    if(exact?.matches!==true)fail('reconciliation_mismatch')
    phase='reconciliation_current'
-   await db.query('select mip_native_activation.assert_current($1,$2,$3,$4,$5,$6)',
+   const checked=await db.query(c.provisioningProfile?'select pg_temp.managed_activation_current($1,$2,$3,$4,$5,$6) ok':'select mip_native_activation.assert_current($1,$2,$3,$4,$5,$6)',
     [r.action,r.revision,e.brokerSession,e.workerSession,e.authSession,e.tokenExp])
+   if(c.provisioningProfile&&checked.rows[0]?.ok!==true)fail('current_refused')
   }else{
    phase='transition'
-   const changed=(await db.query('select mip_native_activation.transition($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7,$8,$9) state',
+   const changed=(await db.query(c.provisioningProfile?'select pg_temp.managed_activation_transition($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7,$8,$9) state':'select mip_native_activation.transition($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7,$8,$9) state',
     [r.revision,r.predecessor,r.action,JSON.stringify(r.members),JSON.stringify(r.authority),
      e.brokerSession,e.workerSession,e.authSession,e.tokenExp])).rows[0]
    if(changed?.state!==r.action)fail('transition_unconfirmed')
@@ -134,6 +141,7 @@ async function run(configInput,request,readPinnedSource,reconcile){
  normalizeActivationRequest(copied)
  const db=await connectPersistentInstaller({connectionString:configInput.connectionString,expectedLogin:c.expectedLogin,
   sessionPoolerHost:configInput.sessionPoolerHost,disposable:configInput.disposable===true})
+ if(c.provisioningProfile&&!configInput.disposable&&(db.connection?.stream?.encrypted!==true||db.connection?.stream?.authorized!==true)){await db.end().catch(()=>{});fail('tls_identity')}
  return activationTransaction(db,c,copied,{reconcile})
 }
 export const transitionNativeActivation=(config,request,readPinnedSource)=>run(config,request,readPinnedSource,false)
