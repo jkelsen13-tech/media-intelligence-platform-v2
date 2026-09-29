@@ -37,10 +37,9 @@ begin
  if old_uri !~ '^postgresql://mip_native_audit_v1[.]qikvmopbtijoebdqosyq:[^@]+@aws-0-us-west-1[.]pooler[.]supabase[.]com:5432/postgres[?]'
    or pg_catalog.regexp_count(old_uri,'@') <> 1
    or pg_catalog.regexp_count(old_uri,'[?]') <> 1
-   or pg_catalog.regexp_count(old_uri,'sslrootcert=system') <> 1
-   or pg_catalog.regexp_count(old_uri,'sslmode=verify-full') <> 1
-   or pg_catalog.regexp_count(old_uri,'connect_timeout=5') <> 1
    or pg_catalog.array_length(pg_catalog.string_to_array(pg_catalog.split_part(old_uri,'?',2),'&'),1) <> 3
+   or not pg_catalog.string_to_array(pg_catalog.split_part(old_uri,'?',2),'&')
+      @> array['sslrootcert=system','sslmode=verify-full','connect_timeout=5']
  then raise exception 'qik_audit_route_source_refused'; end if;
  new_uri := pg_catalog.replace(
   pg_catalog.replace(
@@ -55,10 +54,9 @@ begin
    or new_uri !~ '^postgresql://mip_native_audit_v1:[^@]+@db[.]qikvmopbtijoebdqosyq[.]supabase[.]co:5432/postgres[?]'
    or pg_catalog.regexp_count(new_uri,'@') <> 1
    or pg_catalog.regexp_count(new_uri,'[?]') <> 1
-   or pg_catalog.regexp_count(new_uri,'sslmode=verify-full') <> 1
-   or pg_catalog.regexp_count(new_uri,'connect_timeout=5') <> 1
-   or pg_catalog.regexp_count(new_uri,'sslrootcert='||pg_catalog.replace(ca_path,'/','%2F')) <> 1
    or pg_catalog.array_length(pg_catalog.string_to_array(pg_catalog.split_part(new_uri,'?',2),'&'),1) <> 3
+   or not pg_catalog.string_to_array(pg_catalog.split_part(new_uri,'?',2),'&')
+      @> array['sslrootcert='||pg_catalog.replace(ca_path,'/','%2F'),'sslmode=verify-full','connect_timeout=5']
  then raise exception 'qik_audit_route_target_refused'; end if;
  -- Authenticate the distinct auditor over the exact target before changing the row.
  if not exists(
