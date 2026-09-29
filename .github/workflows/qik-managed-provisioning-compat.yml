@@ -79,8 +79,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker exec -u root qik-managed-compat sed -i -E '/^host[[:space:]]+all[[:space:]]+all[[:space:]]+(127\\.0\\.0\\.1\/32|::1\/128)[[:space:]]+trust/s/trust/scram-sha-256/' /etc/postgresql/pg_hba.conf
+          docker exec -u root qik-managed-compat sed -i -E '/^host[[:space:]]+all[[:space:]]+all[[:space:]]+(127\.0\.0\.1\/32|::1\/128)[[:space:]]+trust/s/trust/scram-sha-256/' /etc/postgresql/pg_hba.conf
           docker kill --signal HUP qik-managed-compat
+      - name: Installer preflight source tests
+        run: node --test tests/nativeProvisioningInstallerPreflight.test.mjs
       - name: Restricted customer lifecycle qualification
         timeout-minutes: 5
         env:
