@@ -71,6 +71,8 @@ function validEdge(edge,name,installer,recorded){
 }
 export async function verifyManagedPrerequisites(db,c,originalDblinkQuery){
  managedOptions(c)
+ const control=(await db.query("select (select count(*)=1 from mip_managed_provisioning.receipts) and exists(select 1 from pg_namespace n where n.nspname='mip_managed_provisioning' and n.nspowner='postgres'::regrole and not exists(select 1 from aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a where a.grantee<>n.nspowner)) and exists(select 1 from pg_class c where c.oid='mip_managed_provisioning.receipts'::regclass and c.relowner='postgres'::regrole and not exists(select 1 from aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a where a.grantee<>c.relowner) and not exists(select 1 from pg_attribute a where a.attrelid=c.oid and a.attacl is not null)) ok")).rows[0]
+ if(control?.ok!==true)fail()
  const rows=(await db.query('select * from mip_managed_provisioning.receipts where operation_id=$1',[c.provisioningOperationId])).rows
  const r=rows[0]
  if(rows.length!==1||r.installer!=='postgres'||r.audit_login!==AUDIT_LOGIN||r.metadata_auditor!==METADATA_LOGIN
@@ -91,7 +93,7 @@ export async function verifyManagedPrerequisites(db,c,originalDblinkQuery){
  const definitionHash=Object.values((await db.query(definitionsSQL)).rows[0]??{})[0]
  if(!HASH.test(definitionHash??''))fail()
  return Object.freeze({extensionOid:String(r.extension_oid),providerOid:String(r.provider_oid),definitionHash,
-  auditEdge:r.audit_edge,metadataEdge:r.metadata_edge,installerOid:String(r.installer_oid)})
+  auditEdge:r.audit_edge,metadataEdge:r.metadata_edge,installerOid:String(r.installer_oid),c3Baseline:r.c3_baseline_sha256})
 }
 export function managedTransportSQL(){
  return `create function mip_factual_transport.dblink_exec(conn text,command text) returns text
