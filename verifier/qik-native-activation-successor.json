@@ -60,7 +60,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/prepare.mjs",
-      "git_blob": "ff5e7647aa574dda8ffdc3b838ff1e05b35990e5"
+      "git_blob": "47b03aa4dcc577f6d837ba4eb80ba76913f650d3"
     },
     {
       "path": "supabase/qualification/native-governed-activation/activation.mjs",
@@ -68,7 +68,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/audit.mjs",
-      "git_blob": "dc85998ccf7056b33b42e53df6a2795799da44fa"
+      "git_blob": "4b9a82fe30adb8bf5951e8a45b2ce39ea4c8ac3b"
     },
     {
       "path": "supabase/qualification/native-governed-install/install.mjs",
@@ -76,7 +76,7 @@
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "git_blob": "37b1efd545dc4ae7eebf2a81e4edcdb7ea01629a"
+      "git_blob": "8781c0357bcbb8ab45186e430eda424e4f3e95d7"
     },
     {
       "path": "tests/nativeGovernedActivation.test.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "66a9bc964cbaf1c522fc29d1d137d3957551d4a8"
+      "git_blob": "f1d9448f02c1deae1605c61a47cd353573a46dd6"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -152,11 +152,15 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/managedPolicy.mjs",
-      "git_blob": "ada40467076ad0a076fd5b567f0ab503ab0892d7"
+      "git_blob": "899539b61ca1ff624bb603656aae45839c32cd22"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/provision.mjs",
-      "git_blob": "409db6167b227678147eca249340cb381117c4cf"
+      "git_blob": "74a1e2e22ecbea6300d76aade7aa60658701e1aa"
+    },
+    {
+      "path": "supabase/qualification/native-provisioning-compat/retirement.mjs",
+      "git_blob": "c12018a7d78a3df8714104475eac29ccd06cc2b0"
     }
   ],
   "replaced_blobs": [
@@ -289,6 +293,6 @@
     "auditors": "Two fixed independent safe LOGINs, each exactly one captured supabase_admin OID10-issued ADMIN-only edge to genuine postgres; no INHERIT or SET",
     "transport": "Provider-owned dblink 1.2 already isolated in installer-only mip_factual_transport_raw; fixed installer-owned SECURITY DEFINER shim is the only factual-owner execution path",
     "binding": "Provisioning receipt, exact source program, raw extension/member/dependency/shim metadata and independent auditor catalog verification",
-    "retirement": "Postinstallation auditor policy cleanup remains a required separate bounded implementation; bare prerequisite role cleanup does not qualify it"
+    "retirement": "Held separately authorized terminal API and fixed protected-owner dependency helper; current disabled-state check, no CASCADE/no history deletion, immutable same-operation terminal receipt; NOT YET QUALIFIED"
   }
 }
