@@ -1,0 +1,73 @@
+name: Qik managed prerequisites source and metadata only (held)
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        type: choice
+        options: [held, run-source-metadata-prerequisites]
+        default: held
+        required: true
+      action:
+        type: choice
+        options: [reconcile, provision]
+        default: reconcile
+        required: true
+      release_sha:
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: qik-native-atomic-install
+  cancel-in-progress: false
+jobs:
+  prerequisites:
+    if: github.repository == 'jkelsen13-tech/media-intelligence-platform-v2' && inputs.execute == 'run-source-metadata-prerequisites'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    environment: qik-forward-controlled
+    steps:
+      - name: Verify exact release and existing resource admission
+        env:
+          APPROVED: ${{ vars.QIK_APPROVED_RELEASE_SHA }}
+          REQUESTED: ${{ inputs.release_sha }}
+          ADMISSION: ${{ vars.QIK_MANAGED_PROVISIONING_HOST_ADMISSION }}
+          BUDGET: ${{ vars.QIK_NATIVE_INSTALL_BUDGET_ADMISSION }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          [[ "$APPROVED" =~ ^[a-f0-9]{40}$ ]]
+          test "$APPROVED" = "$REQUESTED"
+          test "$GITHUB_SHA" = "$APPROVED"
+          test "$ADMISSION" = qualified-source-metadata-managed-prerequisites-v1
+          test "$BUDGET" = within-existing-25-once-10-monthly
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.release_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.14.0
+      - name: Install locked runtime without lifecycle scripts
+        run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+      - name: One bounded operation with secure injection
+        timeout-minutes: 3
+        env:
+          NODE_NO_WARNINGS: '1'
+          QIK_APPROVED_RELEASE_SHA: ${{ vars.QIK_APPROVED_RELEASE_SHA }}
+          MIP_MANAGED_RELEASE_SHA: ${{ inputs.release_sha }}
+          MIP_MANAGED_PROVISIONING_ACTION: ${{ inputs.action }}
+          QIK_MANAGED_PROVISIONING_HOST_ADMISSION: ${{ vars.QIK_MANAGED_PROVISIONING_HOST_ADMISSION }}
+          QIK_NATIVE_INSTALL_BUDGET_ADMISSION: ${{ vars.QIK_NATIVE_INSTALL_BUDGET_ADMISSION }}
+          QIK_MANAGED_PROVISIONING_CONFIG_JSON: ${{ vars.QIK_MANAGED_PROVISIONING_CONFIG_JSON }}
+          QIK_MANAGED_PROVISIONING_CONFIG_SHA256: ${{ vars.QIK_MANAGED_PROVISIONING_CONFIG_SHA256 }}
+          QIK_CA_PEM_BASE64: ${{ vars.QIK_CA_PEM_BASE64 }}
+          QIK_NATIVE_INSTALLER_DATABASE_URL: ${{ secrets.QIK_NATIVE_INSTALLER_DATABASE_URL }}
+          QIK_NATIVE_AUDIT_DATABASE_URL: ${{ secrets.QIK_NATIVE_AUDIT_DATABASE_URL }}
+          QIK_NATIVE_METADATA_AUDIT_DATABASE_URL: ${{ secrets.QIK_NATIVE_METADATA_AUDIT_DATABASE_URL }}
+        run: node supabase/qualification/native-provisioning-compat/run.mjs
+# No push, pull_request, schedule, cache, artifact, material or activation route.
+# Admission labels require actual prior qualification, owner policy and remaining budget.
+# Unknown commit result requires same-operation reconcile; never rerun an uncertain provision.
