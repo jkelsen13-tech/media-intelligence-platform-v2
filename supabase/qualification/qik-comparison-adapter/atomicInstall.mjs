@@ -1,3 +1,4 @@
+import {managedRetirementDDL} from '../native-provisioning-compat/retirement.mjs'
 import {managedOptions,managedTransportSQL,managedBoundarySQL,auditorEdgePredicate,verifyManagedPrerequisites} from '../native-provisioning-compat/managedPolicy.mjs'
 import {assertManagedCredentialLogging} from '../native-provisioning-compat/provision.mjs'
 import {PROFILE as ACTIVATION_PROFILE,prepareNativeActivation,assertActivationRoleInventory,createActivationIssuerInTransaction,createActivationOperationalGroup,dropActivationIssuerForHistoricalCheckpoint,sealActivationBootstrapInTransaction} from '../native-governed-activation/prepare.mjs'
@@ -177,7 +178,7 @@ export async function prepareAtomicInstall(readPinnedSource,options={}){
    'alter role '+role+' noinherit;')
  }
  // Full original attribute/ownership/membership assertions remain unchanged.
- const plan={version:INSTALL_VERSION,target_project:PROJECT,source_commit:compiled.source_commit,
+ const plan={...(managed?{managedRetirementDDL:managedRetirementDDL(options)}:{}),version:INSTALL_VERSION,target_project:PROJECT,source_commit:compiled.source_commit,
   doj_source_commit:DOJ_SOURCE_COMMIT,catalog_inspection_schemas:[...CATALOG_INSPECTION_SCHEMAS],credential_statement_timeout_max_ms:1000,roles:[...roles.entries()].sort(([a],[b])=>a.localeCompare(b)),
   body,dojBody,permissions,closure:closure.sql,assertions,dojAssertions,compatibility:compatibility.sql}
  if(isNativeMode(options.nativeMode))plan.native=await prepareNativeGovernedInstall(readPinnedSource,options.nativeMode)
@@ -359,6 +360,7 @@ export async function installComparisonAtomic(config,readPinnedSource){
   await db.query('lock table public.ingest_sources,qik_ingest.collection_gate,qik_ingest.schedule_intent,qik_ingest.runtime_credentials,qik_ingest_operation.persistent_install_receipt in share row exclusive mode')
   phase='c3_baseline'
   const baseline=await c3(db,c)
+  if(c.provisioningProfile&&managedReference.c3Baseline!==baseline)refuse('managed_c3_drift')
   phase='audit_prerequisite'
   await auditRole(db,c)
   const owner=(await db.query("select pg_has_role(current_user,'qik_ingest_fn_owner','SET') can_transfer,has_schema_privilege('qik_ingest_fn_owner','qik_ingest','CREATE') had_create")).rows[0]
@@ -424,6 +426,7 @@ export async function installComparisonAtomic(config,readPinnedSource){
   phase='final_permission_functions'
   await db.query(plan.permissions)
   // New-schema CREATE grants are installer scaffolding, never runtime authority.
+  if(plan.managedRetirementDDL)await db.query(plan.managedRetirementDDL)
   phase='temporary_schema_create_revoke'
   for(const schema of schemas)await db.query('revoke create on schema '+quote(schema)+' from '+plan.roles.map(([r])=>quote(r)).join(','))
   const alterRoles=plan.closure.split('\n').filter(line=>line.startsWith('alter role '))
