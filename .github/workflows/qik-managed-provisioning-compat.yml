@@ -41,8 +41,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker pull supabase/postgres:17.6.1.166
-          image=$(docker image inspect supabase/postgres:17.6.1.166 --format '{{index .RepoDigests 0}}')
+          docker pull supabase/postgres@sha256:b3bfedb107413abb3b8cb0d0874b0414a1dceb3d55bc0c778de6ad22d1f7dc86
+          image=$(docker image inspect supabase/postgres@sha256:b3bfedb107413abb3b8cb0d0874b0414a1dceb3d55bc0c778de6ad22d1f7dc86 --format '{{index .RepoDigests 0}}')
           [[ "$image" =~ ^supabase/postgres@sha256:[a-f0-9]{64}$ ]]
           printf 'Managed image: %s\n' "$image"
           admin=$(openssl rand -hex 32)
