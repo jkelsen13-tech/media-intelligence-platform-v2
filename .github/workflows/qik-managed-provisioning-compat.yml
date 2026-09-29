@@ -147,16 +147,23 @@ jobs:
           node --input-type=module <<'JS'
           import pg from 'pg';
           const db=new pg.Client({host:'127.0.0.1',port:5432,user:'supabase_admin',password:process.env.MIP_COMPAT_ADMIN_PASSWORD,database:'postgres'});
+          let phase='connect';
           try {
             await db.connect();
+            phase='provider_identity';
             if((await db.query("select current_user='supabase_admin' and session_user='supabase_admin' and (select rolsuper from pg_roles where rolname=current_user) ok")).rows[0].ok!==true)throw Error('provider_identity');
+            phase='group_exists';
             if(!(await db.query("select exists(select 1 from pg_roles where rolname='supabase_privileged_role') present")).rows[0].present)await db.query('CREATE ROLE supabase_privileged_role NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS');
+            phase='group_shape';
             if((await db.query("select rolcanlogin or rolsuper or rolcreatedb or rolcreaterole or rolreplication or rolbypassrls unsafe from pg_roles where rolname='supabase_privileged_role'")).rows[0].unsafe)throw Error('privileged_group_shape');
+            phase='group_membership';
             await db.query('GRANT supabase_privileged_role TO postgres WITH ADMIN FALSE, INHERIT TRUE, SET FALSE');
+            phase='replication_attribute';
             await db.query('ALTER ROLE postgres REPLICATION');
+            phase='launch_setting';
             if((await db.query("select current_setting('supautils.privileged_role') role,(select context from pg_settings where name='supautils.privileged_role') context")).rows[0].role!=='supabase_privileged_role')throw Error('provider_launch_setting');
             console.log('PASS disposable provider defaults prepared; no auditor, extension or customer provisioning performed');
-          } catch(e) {console.error('FAIL provider privilege preparation '+(/^[A-Z0-9]{5}$/.test(e.code??'')?e.code:'bounded'));process.exitCode=1;}
+          } catch(e) {console.error('FAIL provider privilege preparation '+phase+' '+(/^[A-Z0-9]{5}$/.test(e.code??'')?e.code:'bounded'));process.exitCode=1;}
           finally {await db.end();}
           JS
       - name: Actual managed prerequisite component qualification
