@@ -78,7 +78,8 @@ async function prepareSourcePrerequisites(root,selectedMode,step){
   }
   await owner.query('create table qik_ingest_operation.persistent_install_receipt(id boolean primary key,operation_id text,installer name,sql_manifest_sha256 text,runtime_login name,runtime_token_hash text,runtime_creator_grantor name,installed_at timestamptz default now())');
   await owner.query('insert into qik_ingest_operation.persistent_install_receipt(id,operation_id,installer,sql_manifest_sha256) values(true,$1,$2,$3)',['3'.repeat(32),backendInstaller,'1'.repeat(64)]);
-  await owner.query('grant qik_ingest_fn_owner to '+ident(backendInstaller)+' with admin false,inherit true,set true');
+  // Match qik's observed customer SET-only, non-inherited C3 owner edge.
+  await owner.query('grant qik_ingest_fn_owner to '+ident(backendInstaller)+' with admin false,inherit false,set true');
   await root.query('alter function public.mip_pipeline_v1(text,jsonb) owner to postgres');
   step('fixture-source-ownership');
   await transferSyntheticOwnership(root);
