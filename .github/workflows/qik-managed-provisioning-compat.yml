@@ -75,6 +75,12 @@ jobs:
           } catch(e) {console.error('FAIL provider preparation '+(/^[A-Z0-9]{5}$/.test(e.code??'')?e.code:'bounded'));process.exitCode=1;}
           finally {await db.end();}
           JS
+      - name: Require password authentication for synthetic loopback
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -u root qik-managed-compat sed -i -E '/^host[[:space:]]+all[[:space:]]+all[[:space:]]+(127\\.0\\.0\\.1\/32|::1\/128)[[:space:]]+trust/s/trust/scram-sha-256/' /etc/postgresql/pg_hba.conf
+          docker kill --signal HUP qik-managed-compat
       - name: Restricted customer lifecycle qualification
         timeout-minutes: 5
         env:
