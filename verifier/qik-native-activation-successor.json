@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "bc59aad6b6d79fa0cabcc9fa292179bb7fe81b7f"
+      "git_blob": "b13f71043fbf699379981373978f1ae79f0a04ae"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -448,6 +448,6 @@
       "rollback_verified": true
     },
     "permission_effect": "Removes only direct predecessor function EXECUTE from mip_efta_owner_v1; governed wrapper remains executable; no Auth/article/material or public grant",
-    "status": "AUTHORED / first qualification source syntax failure repaired; affected combined recheck pending / NOT INSTALLED"
+    "status": "AUTHORED / source-inventory pin corrected; affected combined recheck pending / NOT INSTALLED"
   }
 }
