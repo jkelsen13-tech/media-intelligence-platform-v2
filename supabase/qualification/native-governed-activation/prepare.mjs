@@ -1,3 +1,4 @@
+import {managedOptions,transformManagedActivation,captureManagedFinal,auditorEdgePredicate} from '../native-provisioning-compat/managedPolicy.mjs'
 // Source-only successor preparation. Not installed, activated, or qualified.
 // Parent transaction must retain its exact original historical checkpoints.
 import {createHash} from 'node:crypto'
@@ -34,7 +35,9 @@ const digest=s=>createHash('sha256').update(s).digest('hex')
 const quote=x=>{if(!LOGIN.test(x))fail('identifier');return '"'+x+'"'}
 const literal=x=>"'"+x.replaceAll("'","''")+"'"
 function once(s,needle,value){if(s.split(needle).length!==2)fail('compiler_boundary');return s.replace(needle,()=>value)}
-export async function prepareNativeActivation(read,{expectedLogin,operationId,expectedMetadataAuditor}){
+export async function prepareNativeActivation(read,options){
+ const {expectedLogin,operationId,expectedMetadataAuditor}=options
+ const managed=managedOptions(options)
  quote(expectedLogin);quote(expectedMetadataAuditor)
  if(expectedLogin===expectedMetadataAuditor||ROLES.includes(expectedMetadataAuditor))fail('metadata_auditor')
  if(!/^[0-9a-f]{32}$/.test(operationId??''))fail('operation')
@@ -74,7 +77,8 @@ export async function prepareNativeActivation(read,{expectedLogin,operationId,ex
  sql=once(sql,'__PROTECTED_ROLES__','array['+ROLES.map(literal).join(',')+']')
  sql=sql.replaceAll('__INSTALLER__',()=>quote(expectedLogin)).replaceAll('__ISSUER__',()=>issuer).replaceAll('__AUDITOR__',()=>quote(expectedMetadataAuditor)).replaceAll('__AUDITOR_NAME__',()=>expectedMetadataAuditor)
  if(/__[A-Z_]+__/.test(sql))fail('compiler_boundary')
- const plan=Object.freeze({profile:PROFILE,expectedLogin,operationId,expectedMetadataAuditor,issuer,sql,program_sha256:digest(sql),sql_blob:SQL_BLOB})
+ sql=transformManagedActivation(sql,options)
+ const plan=Object.freeze({...(managed?{provisioningProfile:options.provisioningProfile,provisioningOperationId:options.provisioningOperationId}:{}),profile:PROFILE,expectedLogin,operationId,expectedMetadataAuditor,issuer,sql,program_sha256:digest(sql),sql_blob:SQL_BLOB})
  prepared.add(plan);creation.set(plan,new Map());return plan
 }
 function check(plan){if(!prepared.has(plan)||plan.program_sha256!==digest(plan.sql))fail('plan')}
@@ -101,7 +105,7 @@ export async function installActivationPreparationInTransaction(db,plan){
  if(id?.s!==plan.expectedLogin||id.c!==plan.expectedLogin||id.rolsuper||!id.rolcanlogin||!id.rolcreaterole
   ||!id.rolcreatedb||!id.rolbypassrls||!id.rolinherit||id.rolreplication)fail('installer')
  if((await db.query("select exists(select 1 from pg_namespace where nspname='mip_native_activation') collision")).rows[0]?.collision!==false)fail('collision')
- const auditor=(await db.query("select oid::text oid from pg_roles r where rolname=$1 and rolcanlogin and not(rolsuper or rolcreaterole or rolcreatedb or rolreplication or rolbypassrls or rolinherit) and not exists(select 1 from pg_auth_members where roleid=r.oid or member=r.oid) and not exists(select 1 from pg_shdepend where refclassid='pg_authid'::regclass and refobjid=r.oid and deptype in('o','a','i','r'))",[plan.expectedMetadataAuditor])).rows
+ const auditor=(await db.query(`select oid::text oid from pg_roles r where rolname=$1 and rolcanlogin and not(rolsuper or rolcreaterole or rolcreatedb or rolreplication or rolbypassrls or rolinherit) and ${plan.provisioningProfile?auditorEdgePredicate('r.oid'):'not exists(select 1 from pg_auth_members where roleid=r.oid or member=r.oid)'} and not exists(select 1 from pg_shdepend where refclassid='pg_authid'::regclass and refobjid=r.oid and deptype in('o','a','i','r') ${plan.provisioningProfile?"and classid<>'pg_auth_members'::regclass":''})`,[plan.expectedMetadataAuditor])).rows
  if(auditor.length!==1)fail('metadata_auditor')
  await db.query(plan.sql)
  // Default ACLs belong to the provider. Remove them only on our new objects.
@@ -112,7 +116,7 @@ export async function installActivationPreparationInTransaction(db,plan){
  await db.query('release savepoint native_activation_preparation')
  installed.add(plan)
 }
-export async function sealActivationBootstrapInTransaction(db,plan,{operationId,installManifest,nativeProgram}){
+export async function sealActivationBootstrapInTransaction(db,plan,{operationId,installManifest,nativeProgram,managedReference}){
  check(plan)
  if(!installed.has(plan)||!issuers.has(plan)||operationId!==plan.operationId||creation.get(plan).size!==GROUPS.length||!/^[0-9a-f]{32}$/.test(operationId)
   ||!HASH.test(installManifest)||!HASH.test(nativeProgram))fail('bootstrap_plan')
@@ -134,8 +138,9 @@ export async function sealActivationBootstrapInTransaction(db,plan,{operationId,
  }
  const helper=(await db.query("select count(*)::int n,bool_and(p.proconfig=array['search_path=\"\"'] and not p.proleakproof and p.proparallel='u' and not exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where a.grantee not in(p.proowner,$1::regrole) or a.privilege_type<>'EXECUTE' or(a.grantee<>p.proowner and a.is_grantable))) ok from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_native_activation'",[plan.expectedLogin])).rows[0]
  if(helper?.n!==16||helper.ok!==true)fail('helper_boundary')
- await db.query("insert into mip_native_activation.bootstrap select true,$1,session_user,session_user::regrole::oid,$6::name,$6::regrole::oid,$7::jsonb,$8::name,$8::regrole::oid,$2,$3,$4,$5::jsonb,mip_native_activation.role_catalog(),mip_native_activation.catalog_hash()",
- [operationId,installManifest,nativeProgram,plan.program_sha256,JSON.stringify(expected),plan.issuer,JSON.stringify(issuerEdges),plan.expectedMetadataAuditor])
+ const managedMetadata=plan.provisioningProfile?await captureManagedFinal(db,plan,managedReference):null
+ await db.query(`insert into mip_native_activation.bootstrap select true,$1,session_user,session_user::regrole::oid,$6::name,$6::regrole::oid,$7::jsonb,$8::name,$8::regrole::oid,$2,$3,$4,$5::jsonb,mip_native_activation.role_catalog(),mip_native_activation.catalog_hash()${plan.provisioningProfile?',$9::jsonb':''}`,
+ [operationId,installManifest,nativeProgram,plan.program_sha256,JSON.stringify(expected),plan.issuer,JSON.stringify(issuerEdges),plan.expectedMetadataAuditor,...(plan.provisioningProfile?[JSON.stringify(managedMetadata)]:[])])
  await db.query("select mip_native_activation.assert_current('disabled_bootstrap',null)")
  await db.query('release savepoint native_activation_seal')
  return Object.freeze({profile:PROFILE,state:'disabled_bootstrap',program_sha256:plan.program_sha256,committed:false,publication_allowed:false,production_qualified:false})
