@@ -71,12 +71,14 @@ async function prepareSourcePrerequisites(root,selectedMode,step){
   await transferSyntheticOwnership(root);
   owner=null;
   // Match the observed native source ownership/RLS shape before installation.
+  step('fixture-customer-native-shape');
   const nativeBase=await connect(backendInstaller);
   try{
    await nativeBase.query("create table public.entities(id uuid primary key,canonical_name text,normalized_name text,type text,aliases text[],mention_count integer default 0,last_seen timestamptz);alter table public.story_arcs add column started_at date not null,add column title text,add column summary text,add column last_update_at timestamptz;alter table public.arc_membership_candidates add column article_id uuid,add column arc_id uuid,add column state text,add column updated_at timestamptz");
    await nativeBase.query("alter table public.articles enable row level security;alter table public.entities enable row level security;alter table public.story_arcs enable row level security;alter table public.pipeline_config enable row level security;alter table public.arc_membership_candidates enable row level security");
   }finally{await nativeBase.end()}
   if(selectedMode!==NATIVE_MODE){
+   step('fixture-customer-selected-shape');
    const selected=await connect(backendInstaller)
    try{
     for(const [relation,columns] of [
@@ -95,8 +97,9 @@ async function prepareSourcePrerequisites(root,selectedMode,step){
    }finally{await selected.end()}
   }
   if(selectedMode===NATIVE_CALLER_MODE){
+   step('fixture-auth-prerequisite-readback');
    const shape=await connect(backendInstaller)
-   try{await shape.query('alter table auth.sessions add column if not exists not_after timestamptz')}
+   try{assert.equal((await shape.query("select format_type(atttypid,atttypmod) kind from pg_attribute where attrelid='auth.sessions'::regclass and attname='not_after' and not attisdropped")).rows[0]?.kind,'timestamp with time zone')}
    finally{await shape.end()}
   }
  }finally{}
