@@ -188,7 +188,7 @@
     },
     {
       "path": "tests/nativeManagedActivationProfile.test.mjs",
-      "git_blob": "17ad6572ea59810957799af981ddcac7bdcfd384"
+      "git_blob": "4ef43185110de7daffdab5ac3b7c43e6af393fa4"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLock.mjs",

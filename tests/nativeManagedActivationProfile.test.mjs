@@ -200,7 +200,8 @@ test('fixed entity column successor preserves raw005, identity key and historica
   assert.throws(()=>transformCanonicalEntitySource(raw.replace(needle,''),options),/canonical_entity_adapter_boundary/)
  assert.match(ENTITY_CATALOG_SQL,/pg_catalog.pg_trigger/)
  assert.match(ENTITY_CATALOG_SQL,/prosrc=/)
- assert.doesNotMatch(ENTITY_CATALOG_SQL,/from public.entities|select mip_mentions/i)
+ // Literal expected function bodies are evidence, not executed table reads.
+ assert.doesNotMatch(ENTITY_CATALOG_SQL.replace(/'(?:[^']|'')*'/g,"''"),/from public.entities|select mip_mentions/i)
 })
 test('complete managed successor manifest and both real host source inventories match actual blobs',async()=>{
  const manifest=JSON.parse((await read('verifier/qik-native-activation-successor.json')).toString())
