@@ -31,9 +31,13 @@ export async function verifyManagedCallerAuthPrerequisite(db,o){
  const r=(await db.query("select c.relkind='r' and c.relowner='supabase_auth_admin'::regrole and (select count(*) from pg_catalog.pg_attribute where attrelid=c.oid and attnum>0 and not attisdropped and ((attname in('id','user_id') and atttypid='uuid'::regtype) or(attname='not_after' and atttypid='timestamptz'::regtype)))=3 and has_column_privilege('postgres',c.oid,'id','SELECT WITH GRANT OPTION') and has_column_privilege('postgres',c.oid,'user_id','SELECT WITH GRANT OPTION') and has_column_privilege('postgres',c.oid,'id','UPDATE WITH GRANT OPTION') ok from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='auth' and c.relname='sessions'")).rows
  if(r.length!==1||r[0]?.ok!==true)fail()
 }
+export function installerReadAllPredicate(){
+ return "(select count(*)=1 and bool_and(a.grantor=10 and g.rolname='supabase_admin' and a.admin_option and a.inherit_option and a.set_option) from pg_catalog.pg_auth_members a join pg_catalog.pg_roles g on g.oid=a.grantor where a.roleid='pg_read_all_data'::regrole and a.member='postgres'::regrole)"
+}
 export function providerBoundarySQL(o){
  if(!developmentProfile(o))return ''
  return `do $provider_boundary$ begin
+ if not ${installerReadAllPredicate()} or not pg_has_role('postgres','pg_read_all_data','USAGE') then raise exception 'managed_installer_read_all_edge';end if;
  if(select count(*) from pg_catalog.pg_roles where rolname in('supabase_etl_admin','supabase_read_only_user')
  and rolcanlogin and not rolsuper and not rolcreaterole and not rolcreatedb and rolbypassrls and rolinherit
  and rolreplication=(rolname='supabase_etl_admin'))<>2 then raise exception 'managed_provider_attributes';end if;
@@ -101,7 +105,7 @@ const definitionsSQL=`select encode(sha256(convert_to(coalesce(jsonb_agg(jsonb_b
 export function managedSnapshotSQL(o){
  managedOptions(o)
  return `select jsonb_build_object('profile','${o.provisioningProfile}'${developmentProfile(o)?",'trusted_provider_metadata',("+providerSnapshotSQL()+")":''},'provisioning_operation_id',${lit(o.provisioningOperationId)},
- 'installer_oid','postgres'::regrole::oid::text,
+ 'installer_oid','postgres'::regrole::oid::text,${developmentProfile(o)?"'installer_read_all_edge',("+edgeQuery("'pg_read_all_data'::regrole")+"),":''}
  'audit_edge',(${edgeQuery(lit(AUDIT_LOGIN)+'::regrole')}),
  'metadata_edge',(${edgeQuery(lit(METADATA_LOGIN)+'::regrole')}),
  'extension',(select jsonb_build_object('oid',e.oid::text,'owner',e.extowner::text,'version',e.extversion,

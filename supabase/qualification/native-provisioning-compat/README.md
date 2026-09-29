@@ -179,3 +179,13 @@ Do not impersonate supabase_auth_admin or modify catalogs. The disposable provid
 may supply this explicit prerequisite to qualify the conditional customer path;
 that is not proof of customer ability or current hosted readiness. No other
 Auth columns, runtime accounts, owner changes or blanket table UPDATE grants.
+
+### Existing trusted-installer global read capability
+
+qik and the managed fixture already give trusted postgres a bootstrap-issued
+pg_read_all_data ADMIN/INHERIT/SET edge. The development profile acknowledges
+its implied schema USAGE, binding and verifying that exact edge. The generated
+caller helper still refuses CREATE, API function EXECUTE and effective
+USAGE/SET of either caller group. This provides no data-read isolation from the
+trusted installer; no new installer privilege or runtime privilege is granted.
+The strict managed and optionless historical schema-USAGE veto is preserved.

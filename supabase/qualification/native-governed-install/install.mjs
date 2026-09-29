@@ -1,4 +1,4 @@
-import {managedOptions} from '../native-provisioning-compat/managedPolicy.mjs'
+import {managedOptions,developmentProfile,installerReadAllPredicate} from '../native-provisioning-compat/managedPolicy.mjs'
 import {captureActivationBootstrapCreation,createActivationOperationalGroup,retireActivationIssuerCreationAuthority,installActivationPreparationInTransaction,dropActivationIssuerForHistoricalCheckpoint} from '../native-governed-activation/prepare.mjs'
 // Source-only joint installer. No connection creation, commit, retry, or CLI.
 // Only prepareNativeGovernedInstall's fixed source program is executable.
@@ -355,7 +355,8 @@ function callerBootstrapAssertion(login,edges,options={}){
  "or not exists(select 1 from pg_roles where rolname="+literal(login)+" and rolcanlogin and not rolsuper and rolcreaterole and rolcreatedb and rolbypassrls and rolinherit and "+(managed?"rolreplication":"not rolreplication")+") "+
  "or pg_has_role("+literal(login)+",'mip_mentions_admin','USAGE') or pg_has_role("+literal(login)+",'mip_mentions_admin','SET') "+
  "or pg_has_role("+literal(login)+",'mip_mentions_gateway','USAGE') or pg_has_role("+literal(login)+",'mip_mentions_gateway','SET') "+
- "or has_schema_privilege("+literal(login)+",(select oid from pg_catalog.pg_namespace where nspname='mip_native_caller'),'USAGE,CREATE') "+
+ "or has_schema_privilege("+literal(login)+",(select oid from pg_catalog.pg_namespace where nspname='mip_native_caller'),"+literal(developmentProfile(options)?'CREATE':'USAGE,CREATE')+") "+
+ (developmentProfile(options)?"or not "+installerReadAllPredicate()+" or not pg_has_role("+literal(login)+",'pg_read_all_data','USAGE') ":"")+
  "or has_function_privilege("+literal(login)+",(select p.oid from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_native_caller' and p.proname='configure_admission'),'EXECUTE') "+
  "or has_function_privilege("+literal(login)+",(select p.oid from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace where n.nspname='mip_native_caller' and p.proname='read_current'),'EXECUTE') "+
  "then raise exception 'native_install_bootstrap_topology';end if;end $native_caller_bootstrap$;";
