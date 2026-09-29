@@ -9,7 +9,7 @@ const exec=promisify(execFile)
 const ROOT=new URL('../../../',import.meta.url)
 const SHA=/^[a-f0-9]{40}$/
 const PINS=Object.freeze({
- 'supabase/qualification/native-provisioning-compat/preflight.mjs':'b326d10c083c887c1423cb059ccb6151cd884023',
+ 'supabase/qualification/native-provisioning-compat/preflight.mjs':'fe25ccc2c338dca5bac0bdd56fbde979e1af146b',
  'supabase/qualification/collector-native-capture/authenticatedPgDriver.mjs':'af0f3b69c34695f9241934fae89ac00cedd08515',
  'supabase/qualification/collector-native-capture/credentialDelivery.mjs':'354679fadc48eb9f8a8154456f3d38e7faab3e61',
  'supabase/qualification/native-governed-host/adapter.mjs':'47622a1729351d0cabda279d63855b9309e490b0',
