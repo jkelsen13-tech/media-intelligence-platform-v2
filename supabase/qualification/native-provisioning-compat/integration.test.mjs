@@ -234,6 +234,8 @@ test('managed provision, full disabled installation, independent audits and term
      (select count(*)::int from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname<>'information_schema' and n.nspname !~ '^pg_' and case when c.relkind in('r','p','v','m','f') and(n.nspname<>'mip_native_activation' or c.relname not in('bootstrap','head','revisions')) then has_table_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN') or has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,REFERENCES') else false end) outside_tables
     `,args[1])
     console.log('Synthetic metadata identity violation counts: '+JSON.stringify(checks.rows))
+    const relations=await originalAuditQuery.call(this,"select n.nspname,c.relname,c.relkind,has_table_privilege(current_user,c.oid,'SELECT') select_allowed,has_table_privilege(current_user,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN') writes_allowed,has_any_column_privilege(current_user,c.oid,'INSERT,UPDATE,REFERENCES') column_writes from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname<>'information_schema' and n.nspname !~ '^pg_' and case when c.relkind in('r','p','v','m','f') and(n.nspname<>'mip_native_activation' or c.relname not in('bootstrap','head','revisions')) then has_table_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN') or has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,REFERENCES') else false end")
+    console.log('Synthetic metadata exposed relation names/privileges: '+JSON.stringify(relations.rows))
    }
    return result
   }
