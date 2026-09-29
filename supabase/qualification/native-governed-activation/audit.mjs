@@ -74,6 +74,10 @@ export async function auditNativeActivationMetadata(config,readPinnedSource){
    ||b.install_manifest!==config.expectedInstallManifest||b.native_program!==config.expectedNativeProgram
    ||b.successor_program!==plan.program_sha256)fail()
   if(config.provisioningProfile){
+   // Independent catalog read: no installer credential or installed SQL callback.
+   phase='managed_installer'
+   const installer=(await db.query("select rolname=$2 and rolcanlogin and not rolsuper and rolcreaterole and rolcreatedb and rolbypassrls and rolinherit and rolreplication ok from pg_catalog.pg_roles where oid=$1::oid",[b.installer_oid,config.expectedLogin])).rows[0]
+   if(installer?.ok!==true)fail()
    phase='managed_catalog'
    const actual=(await db.query(managedSnapshotSQL(config))).rows[0]?.metadata
    if(!same(actual,b.managed_metadata))fail()

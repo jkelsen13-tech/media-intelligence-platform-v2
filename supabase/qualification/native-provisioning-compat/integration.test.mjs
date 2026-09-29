@@ -132,6 +132,23 @@ test('managed provision, full disabled installation, independent audits and term
   phase='independent-metadata-audit'
   observed=await auditNativeActivationMetadata(audit,read)
   assert.equal(observed.permission_boundary_current,true);assert.equal(observed.state,'disabled_bootstrap')
+  // Provider authority induces fixture drift only; customer provisioning remains unchanged.
+  phase='independent-installer-attribute-drift'
+  const roleBefore=(await provider.query("select rolcanlogin,rolsuper,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit,rolreplication from pg_roles where rolname='postgres'")).rows[0]
+  assert.equal(roleBefore.rolreplication,true)
+  try{
+   await provider.query('alter role postgres noreplication')
+   observed=await auditNativeActivationMetadata(audit,read)
+   assert.equal(observed.permission_boundary_current,false)
+   assert.equal(observed.phase,'managed_installer')
+   assert.equal(observed.connection_cleanup_verified,true)
+  }finally{
+   await provider.query('alter role postgres replication')
+   assert.deepEqual((await provider.query("select rolcanlogin,rolsuper,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit,rolreplication from pg_roles where rolname='postgres'")).rows[0],roleBefore)
+  }
+  phase='independent-audit-after-exact-restoration'
+  observed=await auditNativeActivationMetadata(audit,read)
+  assert.equal(observed.permission_boundary_current,true)
   const held=await connect(provision.expectedMetadataAuditor,new URL(secrets.metadataAudit).password)
   const retirement={...cfg,authorization:'owner-authorized-terminal-managed-auditor-retirement'}
   try{

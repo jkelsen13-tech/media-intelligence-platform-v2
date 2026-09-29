@@ -64,11 +64,11 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/activation.mjs",
-      "git_blob": "faf62ea50047f7ac9ac85d8299497e7a853bf969"
+      "git_blob": "83a2695e06699999bda39c4b98f9f36e1a6c3e08"
     },
     {
       "path": "supabase/qualification/native-governed-activation/audit.mjs",
-      "git_blob": "4b9a82fe30adb8bf5951e8a45b2ce39ea4c8ac3b"
+      "git_blob": "8b88abb0497b8adcf86b6d9e69ca4e8cebd10b2d"
     },
     {
       "path": "supabase/qualification/native-governed-install/install.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "f1d9448f02c1deae1605c61a47cd353573a46dd6"
+      "git_blob": "5bf5dcb4ad876b542931ee1b71e5e72339de852c"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -152,7 +152,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/managedPolicy.mjs",
-      "git_blob": "899539b61ca1ff624bb603656aae45839c32cd22"
+      "git_blob": "90c49faf517159c4c9b73e7413723dc14fffd44c"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/provision.mjs",

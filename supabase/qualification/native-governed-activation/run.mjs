@@ -9,8 +9,8 @@ const exec=promisify(execFile)
 const CODE_PINS=Object.freeze({
   "supabase/qualification/native-governed-activation/001_profile.sql": "59e7dbfa5bb9925b4525aa1e3b3d5003d55610f9",
   "supabase/qualification/native-governed-activation/prepare.mjs": "47b03aa4dcc577f6d837ba4eb80ba76913f650d3",
-  "supabase/qualification/native-governed-activation/activation.mjs": "faf62ea50047f7ac9ac85d8299497e7a853bf969",
-  "supabase/qualification/native-governed-activation/audit.mjs": "4b9a82fe30adb8bf5951e8a45b2ce39ea4c8ac3b",
+  "supabase/qualification/native-governed-activation/activation.mjs": "83a2695e06699999bda39c4b98f9f36e1a6c3e08",
+  "supabase/qualification/native-governed-activation/audit.mjs": "8b88abb0497b8adcf86b6d9e69ca4e8cebd10b2d",
   "supabase/qualification/native-governed-install/install.mjs": "aa92f9e5003bbf12b19d4cfbf5871da1c496ce1c",
   "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "8781c0357bcbb8ab45186e430eda424e4f3e95d7",
   "supabase/qualification/qik-comparison-adapter/compileSource.mjs": "cd87eb0a0bc758315246e74675339f3ea2972a19",
@@ -23,16 +23,16 @@ const CODE_PINS=Object.freeze({
   "package-lock.json": "2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0",
   "supabase/qualification/native-governed-host/adapter.mjs": "47622a1729351d0cabda279d63855b9309e490b0",
   "supabase/qualification/native-governed-activation/host.mjs": "378d11df2922836e237006723ee4731df885310c",
-  "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "899539b61ca1ff624bb603656aae45839c32cd22",
+  "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "90c49faf517159c4c9b73e7413723dc14fffd44c",
   "supabase/qualification/native-provisioning-compat/provision.mjs": "74a1e2e22ecbea6300d76aade7aa60658701e1aa",
   "supabase/qualification/native-provisioning-compat/retirement.mjs": "c12018a7d78a3df8714104475eac29ccd06cc2b0"
 })
-let emitted=false
+let emitted=false,phase='host_admission'
 function stop(){
  if(!emitted){emitted=true;process.stdout.write(JSON.stringify({contract:'native-activation-host-receipt-v1',
   state:'outcome_unknown',needs_reconciliation:true,activation_allowed:false,publication_allowed:false,
   material_access_allowed:false,production_qualified:false,connection_cleanup_verified:false,
-  diagnostic:'native_activation_host_refused'})+'\n')}
+  diagnostic:'native_activation_host_refused',phase})+'\n')}
  process.exitCode=1
 }
 process.on('uncaughtException',()=>{stop();process.exit(1)})
@@ -53,12 +53,15 @@ try{
   ||!['install','reconcile','audit'].includes(e.MIP_NATIVE_HOST_ACTION)
   ||e.NODE_OPTIONS||e.NODE_DEBUG||e.NODE_DEBUG_NATIVE||e.DEBUG||e.SSLKEYLOGFILE||e.NODE_TLS_REJECT_UNAUTHORIZED
   ||e.PGOPTIONS||e.PGPASSWORD||e.PGHOST||e.ACTIONS_STEP_DEBUG==='true'||e.ACTIONS_RUNNER_DEBUG==='true')fail()
+ phase='release_identity'
  const release=e.QIK_APPROVED_RELEASE_SHA
  if(!/^[0-9a-f]{40}$/.test(release??'')||e.GITHUB_SHA!==release||e.MIP_NATIVE_HOST_RELEASE_SHA!==release)fail()
  if((await git(['rev-parse','HEAD'])).toString().trim()!==release)fail()
  await git(['merge-base','--is-ancestor',BASE,release])
  if((await git(['status','--porcelain','--untracked-files=normal'])).length)fail()
+ phase='source_integrity'
  for(const [path,pin] of Object.entries(CODE_PINS))verifySourceBlob(await readFile(new URL('../../../'+path,import.meta.url)),pin)
+ phase='manifest_integrity'
  const manifestBytes=await readFile(new URL('../../../verifier/qik-native-activation-successor.json',import.meta.url))
  if(!/^[0-9a-f]{64}$/.test(e.QIK_NATIVE_ACTIVATION_MANIFEST_SHA256??'')
   ||createHash('sha256').update(manifestBytes).digest('hex')!==e.QIK_NATIVE_ACTIVATION_MANIFEST_SHA256)fail()
@@ -68,7 +71,9 @@ try{
   if(typeof entry.path!=='string'||entry.path.startsWith('/')||entry.path.includes('..')||entry.path.includes('\\'))fail()
   verifySourceBlob(await readFile(new URL('../../../'+entry.path,import.meta.url)),entry.git_blob)
  }
+ phase='ca_identity'
  if(!e.NODE_EXTRA_CA_CERTS||createHash('sha256').update(await readFile(e.NODE_EXTRA_CA_CERTS)).digest('hex')!==CA_SHA256)fail()
+ phase='configuration'
  const config=validateActivationHostConfig(e.MIP_NATIVE_HOST_CONFIG_JSON,{
   installer:e.QIK_NATIVE_INSTALLER_DATABASE_URL,audit:e.QIK_NATIVE_AUDIT_DATABASE_URL,
   metadataAudit:e.QIK_NATIVE_METADATA_AUDIT_DATABASE_URL})
