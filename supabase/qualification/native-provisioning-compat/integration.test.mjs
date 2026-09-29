@@ -178,6 +178,14 @@ test('managed provision, full disabled installation, independent audits and term
      throw e
     }
    }
+   if(args[0]===plan.dojBody){
+    try{return await originalQuery.apply(this,args)}catch(e){
+     const offset=Number.isInteger(Number(e.position))?Number(e.position)-1:null
+     const category=/permission denied for schema qik_ingest/i.test(e.message??'')?'schema_qik_ingest':/permission denied for function/i.test(e.message??'')?'function':/must be member of role|permission denied to set role/i.test(e.message??'')?'set_role':/permission denied/i.test(e.message??'')?'permission_other':'other'
+     console.log('Synthetic DOJ unit failure: '+JSON.stringify({sqlstate:/^[0-9A-Z]{5}$/.test(e.code??'')?e.code:null,category,position:offset,excerpt:offset!==null?plan.dojBody.slice(Math.max(0,offset-100),offset+120):null}))
+     throw e
+    }
+   }
    return originalQuery.apply(this,args)
   }
   try{observed=await installComparisonAtomic(cfg,read)}finally{pg.Client.prototype.query=originalQuery}
