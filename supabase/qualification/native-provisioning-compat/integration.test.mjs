@@ -133,6 +133,11 @@ test('managed provision, full disabled installation, independent audits and term
   assert.equal((await provider.query("select count(*)::int n from pg_extension where extname='dblink'")).rows[0].n,0)
   owned=true;phase='real-ordered-source-prerequisites'
   await prepareSourcePrerequisites(provider,NATIVE_CALLER_MODE,step=>{phase=step})
+  // Hosted qik already has this exact provider-issued service membership.
+  // The disposable image's privileged group is created by provider setup,
+  // so the provider supplies its observed service edge as infrastructure only.
+  phase='fixture-provider-existing-service-edge'
+  await provider.query('grant supabase_privileged_role to supabase_etl_admin with admin false,inherit true,set true')
   phase='actual-managed-provision'
   observed=await provisionManagedPrerequisites(provision,secrets)
   assert.equal(observed.state,'provisioned_authentication_verified')
