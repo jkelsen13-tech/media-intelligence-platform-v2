@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "5dc15940c1f966eb2d337009dd284502f213e159"
+      "git_blob": "2012ca4952a33c569004cf481ab2250c44d75f4a"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -204,11 +204,11 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/preflight-run.mjs",
-      "git_blob": "413bcca30b6023b60efc78cf2806715a2f8de13e"
+      "git_blob": "a84bd5570ebdb55cd08b1f8cb3c2f0f9704a887a"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/canonicalEntity.mjs",
-      "git_blob": "0bac6d56cc18280ff41644f07ba00890aef91e60"
+      "git_blob": "5f69aa6f2306dbee153d642ca3f31a2240fd1488"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/canonicalEntityQualification.mjs",
@@ -414,6 +414,7 @@
     },
     "database_column_changes": false,
     "credential_changes": false,
-    "qualification_is_hosted_proof": false
+    "qualification_is_hosted_proof": false,
+    "independent_catalog_resolution": "Private relation/function identities resolved only by fixed catalog namespace/name/signature; no metadata-auditor schema USAGE or execution grant"
   }
 }
