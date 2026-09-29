@@ -221,10 +221,12 @@ test('managed provision, full disabled installation, independent audits and term
    }
   }finally{await publisher.end()}
   const audit={...options,expectedInstallManifest:plan.manifest_sha256,expectedNativeProgram:plan.native.program_sha256,expectedSuccessorProgram:plan.activation.program_sha256,metadataAuditConnectionString:secrets.metadataAudit,disposable:true}
-  phase='statistics-privacy-nonvacuous'
+  phase='statistics-schema-isolation'
   const statsReader=await connect(provision.expectedMetadataAuditor,new URL(secrets.metadataAudit).password)
   try{
-   assert.equal((await statsReader.query("select count(*)>0 and bool_and(queryid is null and query='<insufficient privilege>') ok from extensions.pg_stat_statements where userid='postgres'::regrole")).rows[0].ok,true)
+   assert.equal((await statsReader.query("select has_schema_privilege(session_user,'extensions','USAGE') allowed")).rows[0].allowed,false)
+   await assert.rejects(()=>statsReader.query('select count(*) from extensions.pg_stat_statements'),e=>e.code==='42501')
+   await assert.rejects(()=>statsReader.query('select count(*) from extensions.pg_stat_statements_info'),e=>e.code==='42501')
   }finally{await statsReader.end()}
   phase='independent-metadata-audit'
   const originalAuditQuery=pg.Client.prototype.query

@@ -190,15 +190,14 @@ USAGE/SET of either caller group. This provides no data-read isolation from the
 trusted installer; no new installer privilege or runtime privilege is granted.
 The strict managed and optionless historical schema-USAGE veto is preserved.
 
-### Managed provider statistics metadata
+### Managed provider statistics passive ACLs
 
-The development metadata auditor acknowledges the existing PUBLIC SELECT on
+The development metadata auditor acknowledges existing PUBLIC SELECT ACLs on
 only the two trusted-postgres-owned pg_stat_statements 1.11 extension views in
-extensions. The catalog snapshot binds their exact definitions and identities.
-All write privileges, any extra relation SELECT, and pg_read_all_stats USAGE/SET
-remain forbidden. Independent audit verifies other principals' SQL text is
-redacted and queryid absent, returning only a boolean. The disposable fixture
-requires a nonempty postgres statistics sample and tests an unrelated SELECT
-grant refusal and exact cleanup. No provider ACL is changed, no captured rows or
-statement text are emitted. Strict managed and historical profiles are unchanged.
-Reference: https://www.postgresql.org/docs/17/pgstatstatements.html
+extensions, while independently requiring no extensions schema USAGE. Their
+catalog identities and rewrite definitions are bound in the managed snapshot.
+The fixture directly attempts both SELECTs as the auditor and requires SQLSTATE
+42501. This profile provides no effective statistics access; PUBLIC relation
+ACLs alone do not establish read access. Unrelated relation ACLs, all write
+rights and pg_read_all_stats USAGE/SET remain forbidden. No provider ACL changes.
+Strict managed and historical profiles remain unchanged.

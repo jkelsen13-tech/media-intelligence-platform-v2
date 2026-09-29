@@ -48,7 +48,7 @@ function auditorIdentitySQL(config){
  let sql=config.provisioningProfile?AUDITOR_SQL.replace('not exists(select 1 from pg_auth_members where roleid=r.oid or member=r.oid)',auditorEdgePredicate('r.oid')):AUDITOR_SQL
  if(developmentProfile(config)){
   const needle="has_table_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')\n    or has_any_column_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')"
-  const replacement="has_table_privilege(r.oid,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN') or has_any_column_privilege(r.oid,c.oid,'INSERT,UPDATE,REFERENCES') or (not "+managedStatisticsViewPredicate()+" and (has_table_privilege(r.oid,c.oid,'SELECT') or has_any_column_privilege(r.oid,c.oid,'SELECT')))"
+  const replacement="has_table_privilege(r.oid,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN') or has_any_column_privilege(r.oid,c.oid,'INSERT,UPDATE,REFERENCES') or ((not "+managedStatisticsViewPredicate()+" or has_schema_privilege(r.oid,c.relnamespace,\'USAGE\')) and (has_table_privilege(r.oid,c.oid,'SELECT') or has_any_column_privilege(r.oid,c.oid,'SELECT')))"
   if(sql.split(needle).length!==2)fail()
   sql=sql.replace(needle,()=>replacement)
   sql=sql.replace('as safe', "and not pg_has_role(r.oid,'pg_read_all_stats','USAGE') and not pg_has_role(r.oid,'pg_read_all_stats','SET') as safe")
@@ -81,8 +81,8 @@ export async function auditNativeActivationMetadata(config,readPinnedSource){
   if(id?.login!==config.expectedMetadataAuditor||id.effective!==id.login||id.safe!==true)fail()
   if(developmentProfile(config)){
    phase='provider_statistics_privacy'
-   // Only boolean output; no other role's SQL text or queryid leaves SQL.
-   const privacy=(await db.query("select not exists(select 1 from extensions.pg_stat_statements where userid<>current_user::regrole and (queryid is not null or query is distinct from '<insufficient privilege>')) ok")).rows[0]
+   // Passive PUBLIC relation ACL is not effective read access without schema USAGE.
+   const privacy=(await db.query("select not has_schema_privilege(session_user,'extensions','USAGE') ok")).rows[0]
    if(privacy?.ok!==true)fail()
   }
   phase='bootstrap'
