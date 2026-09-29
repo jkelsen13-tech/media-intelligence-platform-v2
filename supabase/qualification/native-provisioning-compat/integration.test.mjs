@@ -200,7 +200,7 @@ test('managed provision, full disabled installation, independent audits and term
    // Synthetic fixture source only, never a hosted article or publication.
    const source=randomUUID()
    phase='publication-fixture-source'
-   await publisher.query("insert into public.articles(id,feed,outlet,title,url,reader_state,source_status) values($1,'fixture','fixture','fixture','https://news.example/guard/'||$1::text,'eligible','active')",[source])
+   await publisher.query("insert into public.articles(id,feed,outlet,title,url,reader_state,source_status) values($1::uuid,'fixture','fixture','fixture','https://news.example/guard/'||$1::text,'eligible','active')",[source])
    for(const rule of ['provenance','source_state','human_review']){
     const id=randomUUID(),assertion='fixture-managed-guard:'+id
     const sources=rule==='source_state'?[randomUUID()]:[source]
