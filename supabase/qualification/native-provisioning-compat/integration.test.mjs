@@ -5,7 +5,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import {readFile} from 'node:fs/promises'
-import {randomBytes} from 'node:crypto'
+import {randomBytes,randomUUID} from 'node:crypto'
 import {REQUIRED_RELATIONS} from '../qik-comparison-adapter/catalogPreflight.mjs'
 import {LOAD_ORDER} from '../qik-ingest/installQikIngest.mjs'
 import {NATIVE_MODE,NATIVE_CALLER_MODE} from '../native-governed-install/install.mjs'
@@ -26,11 +26,12 @@ async function transferSyntheticOwnership(provider){
  const schemas=['public','evidence_pipeline','qik_ingest','qik_ingest_operation']
  // Only source-fixture objects owned by the synthetic provider are reassigned.
  // Extension members and objects already owned by protected source roles stay unchanged.
- const relations=(await provider.query("select n.nspname,c.relname,c.relkind from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relowner=current_user::regrole and c.relkind in('r','p','S','v','m') and not exists(select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e')",[schemas])).rows
+ const relations=(await provider.query("select n.nspname,c.relname,c.relkind from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relowner=current_user::regrole and c.relkind in('r','p','S','v','m') and not exists(select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e') and (c.relkind<>'S' or not exists(select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.refclassid='pg_class'::regclass and d.deptype in('a','i')))",[schemas])).rows
  for(const r of relations)await provider.query('alter '+({S:'sequence',v:'view',m:'materialized view'}[r.relkind]??'table')+' '+ident(r.nspname)+'.'+ident(r.relname)+' owner to postgres')
  const functions=(await provider.query("select p.oid::regprocedure::text signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname=any($1) and p.proowner=current_user::regrole and p.prokind='f' and not exists(select 1 from pg_depend d where d.classid='pg_proc'::regclass and d.objid=p.oid and d.deptype='e')",[schemas])).rows
  for(const r of functions)await provider.query('alter function '+r.signature+' owner to postgres')
  for(const name of schemas)await provider.query('alter schema '+ident(name)+' owner to postgres')
+ assert.equal((await provider.query("select count(*)::int n from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relowner=current_user::regrole and c.relkind in('r','p','S','v','m') and not exists(select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e')",[schemas])).rows[0].n,0)
 }
 async function prepareSourcePrerequisites(root,selectedMode,step){
  let owner;
@@ -150,6 +151,25 @@ test('managed provision, full disabled installation, independent audits and term
   assert.equal((await provider.query("select encode(sha256(convert_to(connection_string,'UTF8')),'hex') digest from mip_factual.audit_connection where id")).rows[0].digest,connectionBefore)
   phase='autonomous-audit'
   observed=await qualifyComparisonAudit(cfg,read);assert.equal(observed.audit_qualified,true)
+  phase='rejected-publication-autonomous-persistence'
+  const publisher=await connect()
+  try{
+   // Synthetic fixture source only, never a hosted article or publication.
+   const source=randomUUID()
+   await publisher.query("insert into public.articles(id,feed,outlet,title,url,reader_state,source_status) values($1,'fixture','fixture','fixture','https://news.example/guard/'||$1::text,'eligible','active')",[source])
+   for(const rule of ['provenance','source_state','human_review']){
+    const id=randomUUID(),assertion='fixture-managed-guard:'+id
+    const sources=rule==='source_state'?[randomUUID()]:[source]
+    await publisher.query('begin')
+    try{
+     await assert.rejects(publisher.query("insert into public.explanations(id,assertion_id,review_status,is_current,state,supporting_passage,archived_sources,falsification_condition,source_ids) values($1,$2,'published',true,'ok',$3,jsonb_build_array(jsonb_build_object('status','retained')),'synthetic counterexample',$4::uuid[])",[id,assertion,rule==='provenance'?'':'synthetic passage',sources]),e=>e.code==='P0001'&&e.message==='mip_factual_rejected_'+rule)
+    }finally{await publisher.query('rollback')}
+    assert.equal((await provider.query('select count(*)::int n from public.explanations where id=$1',[id])).rows[0].n,0)
+    const retained=(await provider.query("select rule,attempted_transition,assertion_digest=mip_comparison_kernel_v1.argument_digest(jsonb_build_object('assertion_id',$2::text)) bound from mip_factual.rejection_audit where explanation_id=$1",[id,assertion])).rows
+    assert.equal(retained.length,1)
+    assert.deepEqual(retained[0],{rule,attempted_transition:'published',bound:true})
+   }
+  }finally{await publisher.end()}
   const audit={...options,expectedInstallManifest:plan.manifest_sha256,expectedNativeProgram:plan.native.program_sha256,expectedSuccessorProgram:plan.activation.program_sha256,metadataAuditConnectionString:secrets.metadataAudit,disposable:true}
   phase='independent-metadata-audit'
   observed=await auditNativeActivationMetadata(audit,read)
