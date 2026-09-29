@@ -8,11 +8,11 @@ import {validateActivationHostConfig,dispatchActivationHostAction,activationHost
 const exec=promisify(execFile)
 const CODE_PINS=Object.freeze({
   "supabase/qualification/native-governed-activation/001_profile.sql": "59e7dbfa5bb9925b4525aa1e3b3d5003d55610f9",
-  "supabase/qualification/native-governed-activation/prepare.mjs": "7a78b6ca14e74c0510a1cf7acdaaa8ea29f3147a",
-  "supabase/qualification/native-governed-activation/activation.mjs": "7f209d3410cd69f7a1ae706ec4714a08515e6500",
-  "supabase/qualification/native-governed-activation/audit.mjs": "51d316031c320e55fe1f88e6008bcae236e36bc1",
+  "supabase/qualification/native-governed-activation/prepare.mjs": "ff5e7647aa574dda8ffdc3b838ff1e05b35990e5",
+  "supabase/qualification/native-governed-activation/activation.mjs": "faf62ea50047f7ac9ac85d8299497e7a853bf969",
+  "supabase/qualification/native-governed-activation/audit.mjs": "dc85998ccf7056b33b42e53df6a2795799da44fa",
   "supabase/qualification/native-governed-install/install.mjs": "aa92f9e5003bbf12b19d4cfbf5871da1c496ce1c",
-  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "49fb974fcfcbd745cc05201552fdfbd8af9360ae",
+  "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "37b1efd545dc4ae7eebf2a81e4edcdb7ea01629a",
   "supabase/qualification/qik-comparison-adapter/compileSource.mjs": "cd87eb0a0bc758315246e74675339f3ea2972a19",
   "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs": "a591c92b10d174bd2937e9634f8d491b4c34567b",
   "supabase/qualification/qik-ingest/persistentInstall.mjs": "24625b8382399db71e9dba6e3ddb88a936ade33f",
@@ -22,7 +22,9 @@ const CODE_PINS=Object.freeze({
   "package.json": "68caf5625166966005fff9cd702b3bc6c5fa49ad",
   "package-lock.json": "2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0",
   "supabase/qualification/native-governed-host/adapter.mjs": "47622a1729351d0cabda279d63855b9309e490b0",
-  "supabase/qualification/native-governed-activation/host.mjs": "49042ca3b039dd6a3d253609850a786f747f952e"
+  "supabase/qualification/native-governed-activation/host.mjs": "378d11df2922836e237006723ee4731df885310c",
+  "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "ada40467076ad0a076fd5b567f0ab503ab0892d7",
+  "supabase/qualification/native-provisioning-compat/provision.mjs": "409db6167b227678147eca249340cb381117c4cf"
 })
 let emitted=false
 function stop(){
@@ -91,7 +93,7 @@ try{
  }
  const plan=await api.prepareAtomicInstall(readPinnedSource,{
   nativeMode:config.nativeMode,activationProfile:config.activationProfile,expectedLogin:config.expectedLogin,
-  operationId:config.operationId,expectedMetadataAuditor:config.expectedMetadataAuditor})
+  operationId:config.operationId,expectedMetadataAuditor:config.expectedMetadataAuditor,...(config.provisioningProfile?{provisioningProfile:config.provisioningProfile,provisioningOperationId:config.provisioningOperationId}:{})})
  if(plan.manifest_sha256!==config.expectedManifestSha256||plan.native.program_sha256!==config.expectedNativeProgramSha256
   ||plan.activation.program_sha256!==config.expectedSuccessorProgram)fail()
  const result=await dispatchActivationHostAction(e.MIP_NATIVE_HOST_ACTION,config,readPinnedSource,{
