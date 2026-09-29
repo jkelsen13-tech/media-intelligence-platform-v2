@@ -21,6 +21,7 @@ function fixture(change={}){
    return {rows:[{...c3,...change.c3}]}
   }
   if(sql.includes("n.nspname='auth'"))return {rows:[{ok:change.sessionLock!==false}]}
+  if(sql.includes("'public.entities'::regclass"))return {rows:[{ok:change.entityShape!==false}]}
   return {rows:[]}
  },async end(){closed++;if(change.close)throw change.close}}
  const run=createInstallerAuthPreflight({makeClient:o=>{options.push(o);return client},
@@ -161,4 +162,15 @@ test('session-lock successor checks existing customer privileges without Auth de
  assert.equal(denied.state,'preflight_refused');assert.equal(denied.phase,'session_lock_prerequisite')
  assert.equal(denied.diagnostic,'prerequisite');assert.equal(denied.c3_baseline_sha256,null)
  assert.equal(no.calls.at(-1).sql,'rollback');assert.equal(no.closed(),1)
+})
+
+test('managed column successor refuses wrong entity metadata without data reads or installation',async()=>{
+ const config={...c,provisioningProfile:'supabase-managed-solo-session-lock-v1'}
+ const f=fixture({identity:{rolreplication:true},entityShape:false}),r=await f.run(config,secrets)
+ assert.equal(r.state,'preflight_refused');assert.equal(r.phase,'canonical_entity_prerequisite')
+ assert.equal(r.diagnostic,'prerequisite');assert.equal(r.c3_baseline_sha256,null)
+ assert.equal(f.calls.at(-1).sql,'rollback');assert.equal(f.closed(),1)
+ const q=f.calls.find(x=>x.sql.includes("'public.entities'::regclass")).sql
+ assert.match(q,/pg_catalog.pg_attribute/);assert.match(q,/entity_type/)
+ assert.doesNotMatch(q,/from public.entities|alter table|update public.entities/i)
 })

@@ -1,3 +1,5 @@
+import {ENTITY_CATALOG_SQL} from '../native-provisioning-compat/canonicalEntity.mjs'
+import {sessionLockProfile} from '../native-provisioning-compat/sessionLock.mjs'
 import {auditBoundarySQL} from '../qik-comparison-adapter/atomicInstall.mjs'
 import {auditorEdgePredicate,managedSnapshotSQL,developmentProfile,catalogOnlyManagedSQL,managedStatisticsViewPredicate,AUDIT_LOGIN} from '../native-provisioning-compat/managedPolicy.mjs'
 // Independent read-only catalog auditor. No installer credential, SQL callback,
@@ -103,6 +105,11 @@ export async function auditNativeActivationMetadata(config,readPinnedSource){
    phase='managed_catalog'
    const actual=(await db.query(developmentProfile(config)?catalogOnlyManagedSQL(managedSnapshotSQL(config)):managedSnapshotSQL(config))).rows[0]?.metadata
    if(!same(actual,b.managed_metadata))fail()
+  }
+  if(sessionLockProfile(config)){
+   phase='canonical_entity_contract'
+   const entity=(await db.query(ENTITY_CATALOG_SQL)).rows
+   if(entity.length!==1||entity[0]?.ok!==true)fail()
   }
   phase='head'
   const h=(await db.query('select revision from mip_native_activation.head where singleton')).rows[0]

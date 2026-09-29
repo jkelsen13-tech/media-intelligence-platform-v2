@@ -1,3 +1,4 @@
+import {ENTITY_SHAPE_SQL} from './canonicalEntity.mjs'
 import {SESSION_LOCK_PROFILE,sessionLockProfile} from './sessionLock.mjs'
 // Installer authentication/metadata preflight only. Never install, provision or activate.
 // The production export fixes its transport; the factory is an in-process synthetic test seam.
@@ -97,6 +98,11 @@ export function createInstallerAuthPreflight({makeClient,loadCa}){
     phase='session_lock_prerequisite'
     const lock=(await db.query("select c.relkind='r' and c.relowner='supabase_auth_admin'::regrole and has_column_privilege(current_user,c.oid,'id','SELECT') and has_column_privilege(current_user,c.oid,'user_id','SELECT') and has_column_privilege(current_user,c.oid,'not_after','SELECT') and has_column_privilege(current_user,c.oid,'id','UPDATE') and not pg_has_role(current_user,'supabase_auth_admin','SET') ok from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='auth' and c.relname='sessions'")).rows
     if(lock.length!==1||lock[0]?.ok!==true)fail('prerequisite')
+   }
+   if(sessionLockProfile(c)){
+    phase='canonical_entity_prerequisite'
+    const entity=(await db.query(ENTITY_SHAPE_SQL)).rows
+    if(entity.length!==1||entity[0]?.ok!==true)fail('prerequisite')
    }
    phase='c3'
    const cr=(await db.query(C3_SQL,[c.c3OperationId,c.c3ManifestSha256])).rows

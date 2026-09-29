@@ -1,0 +1,36 @@
+// Fixed column-contract successor for explicit managed session-lock selection.
+// Historical005 bytes and identity JSON key "type" remain unchanged.
+// No database connection, DDL execution, source data read or column fallback.
+import {sessionLockProfile} from './sessionLock.mjs'
+export const CANONICAL_ENTITY_CONTRACT='qik-entity-type-column-v1'
+export const CANONICAL_ENTITY_SOURCE='supabase/qualification/entity-resolution/canonical-admission/005_canonical_admission.sql'
+export const ENTITY_SHAPE_SQL="select exists(select 1 from pg_catalog.pg_class c where c.oid='public.entities'::regclass\n and c.relkind='r' and c.relrowsecurity and c.relowner='postgres'::regrole)\n and not exists(select 1 from pg_catalog.pg_attribute where attrelid='public.entities'::regclass and attname='type' and not attisdropped)\n and (select count(*)=5 from pg_catalog.pg_attribute where attrelid='public.entities'::regclass\n and not attisdropped and attnotnull and ((attname='id' and atttypid='uuid'::regtype)\n or(attname in('canonical_name','normalized_name','entity_type') and atttypid='text'::regtype)\n or(attname='aliases' and atttypid='text[]'::regtype)))\n and exists(select 1 from pg_catalog.pg_constraint c where c.conrelid='public.entities'::regclass and c.contype='p'\n and c.conkey=array[(select attnum from pg_catalog.pg_attribute where attrelid=c.conrelid and attname='id' and not attisdropped)]::smallint[]) ok"
+export const ENTITY_CATALOG_SQL="select exists(select 1 from pg_catalog.pg_class c where c.oid='public.entities'::regclass\n and c.relkind='r' and c.relrowsecurity and c.relowner='postgres'::regrole)\n and not exists(select 1 from pg_catalog.pg_attribute where attrelid='public.entities'::regclass and attname='type' and not attisdropped)\n and (select count(*)=5 from pg_catalog.pg_attribute where attrelid='public.entities'::regclass\n and not attisdropped and attnotnull and ((attname='id' and atttypid='uuid'::regtype)\n or(attname in('canonical_name','normalized_name','entity_type') and atttypid='text'::regtype)\n or(attname='aliases' and atttypid='text[]'::regtype)))\n and exists(select 1 from pg_catalog.pg_constraint c where c.conrelid='public.entities'::regclass and c.contype='p'\n and c.conkey=array[(select attnum from pg_catalog.pg_attribute where attrelid=c.conrelid and attname='id' and not attisdropped)]::smallint[])\n and (select count(*)=2 from pg_catalog.pg_proc p where p.pronamespace='mip_mentions'::regnamespace\n and p.proowner='mip_mentions_owner'::regrole and p.prolang=(select oid from pg_catalog.pg_language where lanname='plpgsql')\n and p.provolatile='v' and p.proparallel='u' and not p.proisstrict and not p.proleakproof\n and p.proconfig=array['search_path=\"\"']\n and not exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where a.grantee<>p.proowner or a.privilege_type<>'EXECUTE')\n and ((p.oid='mip_mentions.canonical_entity_digest(uuid)'::regprocedure and not p.prosecdef and p.prorettype='text'::regtype and p.prosrc='\ndeclare identity jsonb;\nbegin\n select jsonb_build_object(''id'',id,''canonical_name'',canonical_name,''normalized_name'',normalized_name,''type'',entity_type,''aliases'',aliases)\n into identity from public.entities where id=e;\n if not found or octet_length(identity::text)>16384\n  or (identity->''aliases''<>''null''::jsonb and jsonb_array_length(identity->''aliases'')>64)\n then raise exception ''canonical_entity_unavailable'';end if;\n return encode(sha256(convert_to(identity::text,''UTF8'')),''hex'');\nend ')\n or(p.oid='mip_mentions.canonical_entity_mutation()'::regprocedure and p.prosecdef and p.prorettype='trigger'::regtype and p.prosrc='\nbegin\n perform 1 from mip_mentions.policy_head where singleton for update;\n return null;\nend ')))\n and (select count(*)=2 from pg_catalog.pg_trigger t where t.tgrelid='public.entities'::regclass\n and t.tgfoid='mip_mentions.canonical_entity_mutation()'::regprocedure and t.tgenabled='A'\n and not t.tgisinternal and t.tgconstraint=0 and t.tgnargs=0 and t.tgqual is null\n and ((t.tgname='canonical_entity_identity_fence' and t.tgtype=46 and cardinality(t.tgattr::smallint[])=0)\n or(t.tgname='canonical_entity_update_fence' and t.tgtype=18\n and (select array_agg(a.attname::text order by a.attname) from pg_catalog.pg_attribute a\n where a.attrelid=t.tgrelid and a.attnum=any(t.tgattr::smallint[]))\n =array['aliases','canonical_name','entity_type','id','normalized_name']::text[])))\n and not has_table_privilege('mip_mentions_owner','public.entities','SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')\n and not exists(select 1 from pg_catalog.pg_attribute a where a.attrelid='public.entities'::regclass and a.attnum>0 and not a.attisdropped\n and (has_column_privilege('mip_mentions_owner',a.attrelid,a.attnum,'SELECT') is distinct from (a.attname in('id','canonical_name','normalized_name','entity_type','aliases'))\n or has_column_privilege('mip_mentions_owner',a.attrelid,a.attnum,'INSERT,UPDATE,REFERENCES')))\n and not has_any_column_privilege('mip_mentions_gateway','public.entities','SELECT,INSERT,UPDATE,REFERENCES')\n ok"
+const REPLACEMENTS=Object.freeze([
+ [
+  "array['canonical_name','normalized_name','type']",
+  "array['canonical_name','normalized_name','entity_type']"
+ ],
+ [
+  "grant select(id,canonical_name,normalized_name,type,aliases)",
+  "grant select(id,canonical_name,normalized_name,entity_type,aliases)"
+ ],
+ [
+  "'type',type,'aliases'",
+  "'type',entity_type,'aliases'"
+ ],
+ [
+  "before update of id,canonical_name,normalized_name,type,aliases",
+  "before update of id,canonical_name,normalized_name,entity_type,aliases"
+ ]
+].map(Object.freeze))
+export function transformCanonicalEntitySource(sql,options){
+ if(!sessionLockProfile(options))return sql
+ for(const [before,after] of REPLACEMENTS){
+  if(sql.split(before).length!==2)throw Error('canonical_entity_adapter_boundary')
+  sql=sql.replace(before,()=>after)
+ }
+ // Executed with the original protected assertion owner after creator cleanup.
+ // The same fixed catalog SELECT is independently run by the metadata auditor.
+ return sql+"\ndo $canonical_entity_column_boundary$\nbegin\n if not coalesce(("+ENTITY_CATALOG_SQL.replace(/ ok$/,'')+"),false) then raise exception 'canonical_entity_privilege_boundary';end if;\nend $canonical_entity_column_boundary$;\n"
+}

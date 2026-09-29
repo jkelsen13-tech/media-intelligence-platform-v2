@@ -186,3 +186,28 @@ State: AUTHORED / NOT YET QUALIFIED OR REVIEWED / NOT HOSTED.
 Existing 7c combined qualification and review retain their narrower historical
 scope, and do not qualify this amendment. No hosted operation/release promoted,
 credential change, support duplication, material transfer or publication.
+
+## Canonical entity column successor — qik-entity-type-column-v1
+
+The exact reviewed447 hosted refusal named canonical_entity_shape. Independent
+metadata established qik public.entities.entity_type text NOTNULL and no type
+column. The fixed canonicalEntity.mjs adapter applies ONLY under explicit
+supabase-managed-solo-session-lock-v1 at this successor release. It preserves
+raw historical005 and all older profile compilation, and binds the unchanged
+identity JSON key type to entity_type. Column SELECT and UPDATE-fence lists
+change together. There is no column rename/addition, fallback, backfill or
+new source-data access. Complete native program/install hashes change.
+
+The metadata-only preflight verifies the actual source shape. The protected
+native assertion and separately authenticated independent auditor verify
+fixed digest/mutation bodies, restricted owners/config/ACLs, exact always-on
+statement trigger types/columns, and column-only access. Existing activation
+catalog hash continues to bind the whole catalog. The owned managed fixture
+matches the hosted columns, proves deterministic/change-bound digest behavior,
+unauthorized refusal, actual policy-head blocking and rollback, and induces
+bounded permission/trigger drift with exact restoration. Provider exercises
+protected-owner fixture semantics only; actual customer performs provisioning
+and installation without disputed Auth delegation.
+
+AUTHORED / pending affected combined qualification and actual review.
+No hosted installed-disabled or operating result is claimed by authoring.

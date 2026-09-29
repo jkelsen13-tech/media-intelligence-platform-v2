@@ -1,3 +1,4 @@
+import {CANONICAL_ENTITY_SOURCE,transformCanonicalEntitySource} from '../native-provisioning-compat/canonicalEntity.mjs'
 import {sessionLockProfile,transformSessionLockCaller} from '../native-provisioning-compat/sessionLock.mjs'
 import {managedOptions,developmentProfile,installerReadAllPredicate} from '../native-provisioning-compat/managedPolicy.mjs'
 import {captureActivationBootstrapCreation,createActivationOperationalGroup,retireActivationIssuerCreationAuthority,installActivationPreparationInTransaction,dropActivationIssuerForHistoricalCheckpoint} from '../native-governed-activation/prepare.mjs'
@@ -152,7 +153,7 @@ export async function prepareNativeGovernedInstall(read,mode=NATIVE_MODE,options
   if(blob(bytes)!==entry.blob)fail('source_digest')
   const text=bytes.toString('utf8')
   if(!Buffer.from(text).equals(bytes))fail('source_encoding')
-  let sql=(entry.path===NATIVE_CALLER_ORDER.at(-1).path?transformSessionLockCaller(outer(text),options):outer(text)),assertion=null
+  let sql=(entry.path===NATIVE_CALLER_ORDER.at(-1).path?transformSessionLockCaller(outer(text),options):entry.path===CANONICAL_ENTITY_SOURCE?transformCanonicalEntitySource(outer(text),options):outer(text)),assertion=null
   if(entry.assertion_marker){
    if(sql.split(entry.assertion_marker).length!==2)fail('assertion_boundary')
    const at=sql.indexOf(entry.assertion_marker)

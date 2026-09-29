@@ -10,8 +10,8 @@ const CODE_PINS=Object.freeze({
   "supabase/qualification/native-governed-activation/001_profile.sql": "59e7dbfa5bb9925b4525aa1e3b3d5003d55610f9",
   "supabase/qualification/native-governed-activation/prepare.mjs": "7c7be46fe1dd30763469bf5d654d2aa32f28a19c",
   "supabase/qualification/native-governed-activation/activation.mjs": "83a2695e06699999bda39c4b98f9f36e1a6c3e08",
-  "supabase/qualification/native-governed-activation/audit.mjs": "5c71d14e162ae3a5ad1a54cf6eae4e87457b17fb",
-  "supabase/qualification/native-governed-install/install.mjs": "be48ebead2edb1f62ef4137d077d9da50383292e",
+  "supabase/qualification/native-governed-activation/audit.mjs": "bdf5aa53c5e188372462497a65f096fa1b00b31e",
+  "supabase/qualification/native-governed-install/install.mjs": "c37481dff88cc06ecb6de985420a408475ffab73",
   "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs": "ef2e729f92efcac7ba7de240bc4062fc3e0e1d6c",
   "supabase/qualification/qik-comparison-adapter/compileSource.mjs": "cd87eb0a0bc758315246e74675339f3ea2972a19",
   "supabase/qualification/qik-comparison-adapter/catalogPreflight.mjs": "a591c92b10d174bd2937e9634f8d491b4c34567b",
@@ -26,7 +26,8 @@ const CODE_PINS=Object.freeze({
   "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "31493d9a42db676b39fc60e7a70e5a15192d9ec3",
   "supabase/qualification/native-provisioning-compat/provision.mjs": "19c26d3ad41dfe7d5a28e8c53ed70b4d8713d8bb",
   "supabase/qualification/native-provisioning-compat/retirement.mjs": "c12018a7d78a3df8714104475eac29ccd06cc2b0",
-  "supabase/qualification/native-provisioning-compat/sessionLock.mjs": "5f9dd6f9ee979481be580cf197fe985ea66103aa"
+  "supabase/qualification/native-provisioning-compat/sessionLock.mjs": "5f9dd6f9ee979481be580cf197fe985ea66103aa",
+  "supabase/qualification/native-provisioning-compat/canonicalEntity.mjs": "0bac6d56cc18280ff41644f07ba00890aef91e60"
 })
 let emitted=false,phase='host_admission'
 function stop(){

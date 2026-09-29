@@ -1,3 +1,5 @@
+import {createHash} from 'node:crypto'
+import {CANONICAL_ENTITY_SOURCE,CANONICAL_ENTITY_CONTRACT,transformCanonicalEntitySource,ENTITY_CATALOG_SQL} from '../supabase/qualification/native-provisioning-compat/canonicalEntity.mjs'
 import {validateActivationHostConfig,dispatchActivationHostAction,activationHostActionSatisfied} from '../supabase/qualification/native-governed-activation/host.mjs'
 import {SESSION_LOCK_PROFILE,SESSION_LOCK_DDL,sessionLockBoundarySQL} from '../supabase/qualification/native-provisioning-compat/sessionLock.mjs'
 import {prepareAtomicInstall} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
@@ -175,3 +177,40 @@ test('activation host independently bounds existing native failure evidence',asy
  }
  for(const field of ['activation_allowed','publication_allowed','material_access_allowed','production_qualified'])assert.equal(r[field],false);
 });
+
+test('fixed entity column successor preserves raw005, identity key and historical compilation',async()=>{
+ const raw=(await read(CANONICAL_ENTITY_SOURCE)).toString()
+ const options={...managed,provisioningProfile:SESSION_LOCK_PROFILE,nativeMode:NATIVE_CALLER_MODE,activationProfile:'native-governed-activation-v1'}
+ const plan=await prepareAtomicInstall(read,options)
+ const step=plan.native.steps.find(s=>s.path===CANONICAL_ENTITY_SOURCE)
+ assert.equal(CANONICAL_ENTITY_CONTRACT,'qik-entity-type-column-v1')
+ assert.equal(step.blob,'b6487f76f4186a58e7f77d50eecca0a40fd76c27')
+ assert.match(step.body,/grant select\(id,canonical_name,normalized_name,entity_type,aliases\)/)
+ assert.match(step.body,/'type',entity_type,'aliases'/)
+ assert.match(step.body,/before update of id,canonical_name,normalized_name,entity_type,aliases/)
+ assert.match(step.assertion,/canonical_entity_column_boundary/)
+ assert.equal(transformCanonicalEntitySource(raw,managed),raw)
+ const historical=await prepareAtomicInstall(read,{...options,provisioningProfile:DEVELOPMENT_PROFILE})
+ const old=historical.native.steps.find(s=>s.path===CANONICAL_ENTITY_SOURCE)
+ assert.match(old.body,/'type',type,'aliases'/)
+ assert.doesNotMatch(old.assertion,/canonical_entity_column_boundary/)
+ assert.notEqual(plan.native.program_sha256,historical.native.program_sha256)
+ assert.notEqual(plan.manifest_sha256,historical.manifest_sha256)
+ for(const needle of ["'type',type,'aliases'","before update of id,canonical_name,normalized_name,type,aliases"])
+  assert.throws(()=>transformCanonicalEntitySource(raw.replace(needle,''),options),/canonical_entity_adapter_boundary/)
+ assert.match(ENTITY_CATALOG_SQL,/pg_catalog.pg_trigger/)
+ assert.match(ENTITY_CATALOG_SQL,/prosrc=/)
+ assert.doesNotMatch(ENTITY_CATALOG_SQL,/from public.entities|select mip_mentions/i)
+})
+test('complete managed successor manifest and both real host source inventories match actual blobs',async()=>{
+ const manifest=JSON.parse((await read('verifier/qik-native-activation-successor.json')).toString())
+ const blob=b=>createHash('sha1').update(Buffer.concat([Buffer.from('blob '+b.length),Buffer.from([0]),b])).digest('hex')
+ for(const entry of manifest.sources)assert.equal(blob(await read(entry.path)),entry.git_blob,entry.path)
+ for(const path of ['supabase/qualification/native-governed-activation/run.mjs','supabase/qualification/native-provisioning-compat/preflight-run.mjs']){
+  const source=(await read(path)).toString()
+  const object=source.match(/const (?:CODE_PINS|PINS)=Object.freeze\((\{[\s\S]*?\})\)/)[1]
+  const pins=Function('return ('+object+')')()
+  assert.ok(pins['supabase/qualification/native-provisioning-compat/canonicalEntity.mjs'])
+  for(const [p,pin] of Object.entries(pins))assert.equal(blob(await read(p)),pin,p)
+ }
+})

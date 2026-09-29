@@ -68,11 +68,11 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/audit.mjs",
-      "git_blob": "5c71d14e162ae3a5ad1a54cf6eae4e87457b17fb"
+      "git_blob": "bdf5aa53c5e188372462497a65f096fa1b00b31e"
     },
     {
       "path": "supabase/qualification/native-governed-install/install.mjs",
-      "git_blob": "be48ebead2edb1f62ef4137d077d9da50383292e"
+      "git_blob": "c37481dff88cc06ecb6de985420a408475ffab73"
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "19d62ab763477b5f47e64166fa009c5131262463"
+      "git_blob": "5dc15940c1f966eb2d337009dd284502f213e159"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -180,15 +180,15 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/integration.test.mjs",
-      "git_blob": "75338a1bd310e27b5b63e7ee5d479fecc019bb45"
+      "git_blob": "f2d86fed78c8ef2c507c6bbf3f8f8a767cd00c7d"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/README.md",
-      "git_blob": "26e8db036cf0f19dadae5cf5c371f0fe4d6923bb"
+      "git_blob": "32421dddbcaa53b21cb3dd9974c31b2ac7c6243c"
     },
     {
       "path": "tests/nativeManagedActivationProfile.test.mjs",
-      "git_blob": "282eb48822d69bba5398a054c800b945e5a6bb90"
+      "git_blob": "17ad6572ea59810957799af981ddcac7bdcfd384"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLock.mjs",
@@ -200,11 +200,23 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/preflight.mjs",
-      "git_blob": "96172ea7e2567c84ff6ca00263fb474089312c36"
+      "git_blob": "97b2debdf6a2d0c6389f4b9c71e98e5de7a587f1"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/preflight-run.mjs",
-      "git_blob": "846b235f6b4ccff4f2feefecd6e3a58e38e12733"
+      "git_blob": "413bcca30b6023b60efc78cf2806715a2f8de13e"
+    },
+    {
+      "path": "supabase/qualification/native-provisioning-compat/canonicalEntity.mjs",
+      "git_blob": "0bac6d56cc18280ff41644f07ba00890aef91e60"
+    },
+    {
+      "path": "supabase/qualification/native-provisioning-compat/canonicalEntityQualification.mjs",
+      "git_blob": "3e535d3261d51e0f2dec0973b5efc2fe1a5d2dcc"
+    },
+    {
+      "path": "tests/nativeProvisioningInstallerPreflight.test.mjs",
+      "git_blob": "05da32d73c6b1f563867d6f4ed95b30bdb2b934b"
     }
   ],
   "replaced_blobs": [
@@ -383,5 +395,25 @@
     "state": "AUTHORED / pending targeted qualification and independent review / not deployed",
     "unchanged": "SQL programs, permissions, credential delivery, acceptance and recovery contracts unchanged; existing failed hosted receipt preserved",
     "native_failure": "Only existing native API fixed stages, exact pinned native source paths, fixed relation objects and exact static refusal names; no raw context, query, frame, position or input. Independently bounded after identity sanitizer, only native_joint_install failure. No SQL, permissions or recovery changes."
+  },
+  "canonical_entity_column_successor": {
+    "contract": "qik-entity-type-column-v1",
+    "selection": "Explicit supabase-managed-solo-session-lock-v1 at this successor release; historical005 and older profile compilation unchanged",
+    "source_column": "public.entities.entity_type",
+    "identity_json_key": "type",
+    "historical_source_blob": "b6487f76f4186a58e7f77d50eecca0a40fd76c27",
+    "scope": "Fixed shape, restricted SELECT, digest value, statement UPDATE fence; source-authored independent catalog assertions",
+    "state": "AUTHORED / affected combined qualification and actual review pending / NOT INSTALLED",
+    "hosted_refusal": {
+      "candidate": "447ca87150f3c3b968c195ef477e3e19786003fd",
+      "run": 36593889462,
+      "job": 109493768811,
+      "conclusion": "failure",
+      "refusal": "canonical_entity_shape",
+      "rollback_verified": true
+    },
+    "database_column_changes": false,
+    "credential_changes": false,
+    "qualification_is_hosted_proof": false
   }
 }

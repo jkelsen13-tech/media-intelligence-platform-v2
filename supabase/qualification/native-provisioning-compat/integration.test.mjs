@@ -1,3 +1,4 @@
+import {qualifyCanonicalEntity} from './canonicalEntityQualification.mjs'
 import {qualifySessionLocks} from './sessionLockQualification.mjs'
 // Actual managed successor integration. Only fresh armed disposable PG17.6.
 // Synthetic source substrate reuses the historical ordered dependency files;
@@ -86,7 +87,7 @@ async function prepareSourcePrerequisites(root,selectedMode,step){
   step('fixture-customer-native-shape');
   const nativeBase=await connect(backendInstaller);
   try{
-   await nativeBase.query("create table public.entities(id uuid primary key,canonical_name text,normalized_name text,type text,aliases text[],mention_count integer default 0,last_seen timestamptz);alter table public.story_arcs add column started_at date not null,add column title text,add column summary text,add column last_update_at timestamptz;alter table public.arc_membership_candidates add column article_id uuid,add column arc_id uuid,add column state text,add column updated_at timestamptz");
+   await nativeBase.query("create table public.entities(id uuid primary key,canonical_name text not null,normalized_name text not null,entity_type text not null,aliases text[] not null,mention_count integer not null default 0,created_at timestamptz not null default now(),last_seen timestamptz not null default now());alter table public.story_arcs add column started_at date not null,add column title text,add column summary text,add column last_update_at timestamptz;alter table public.arc_membership_candidates add column article_id uuid,add column arc_id uuid,add column state text,add column updated_at timestamptz");
    await nativeBase.query("alter table public.articles enable row level security;alter table public.entities enable row level security;alter table public.story_arcs enable row level security;alter table public.pipeline_config enable row level security;alter table public.arc_membership_candidates enable row level security");
   }finally{await nativeBase.end()}
   if(selectedMode!==NATIVE_MODE){
@@ -250,6 +251,33 @@ test('managed provision, full disabled installation, independent audits and term
   }
   try{observed=await auditNativeActivationMetadata(audit,read)}finally{pg.Client.prototype.query=originalAuditQuery}
   assert.equal(observed.permission_boundary_current,true);assert.equal(observed.state,'disabled_bootstrap')
+  phase='canonical-entity-successor-semantics'
+  await qualifyCanonicalEntity({provider,connect})
+  const entityBefore=(await provider.query("select attname,attacl from pg_attribute where attrelid='public.entities'::regclass and attnum>0 order by attnum")).rows
+  phase='independent-canonical-column-permission-drift'
+  try{
+   await provider.query('revoke select(entity_type) on public.entities from mip_mentions_owner')
+   observed=await auditNativeActivationMetadata(audit,read)
+   assert.equal(observed.permission_boundary_current,false)
+   assert.equal(observed.phase,'canonical_entity_contract')
+  }finally{
+   await provider.query('grant select(entity_type) on public.entities to mip_mentions_owner')
+   assert.deepEqual((await provider.query("select attname,attacl from pg_attribute where attrelid='public.entities'::regclass and attnum>0 order by attnum")).rows,entityBefore)
+  }
+  phase='independent-canonical-update-fence-drift'
+  const fenceBefore=(await provider.query("select oid,tgenabled,tgtype,tgattr::text attrs from pg_trigger where tgrelid='public.entities'::regclass order by oid")).rows
+  try{
+   await provider.query('alter table public.entities disable trigger canonical_entity_update_fence')
+   observed=await auditNativeActivationMetadata(audit,read)
+   assert.equal(observed.permission_boundary_current,false)
+   assert.equal(observed.phase,'canonical_entity_contract')
+  }finally{
+   await provider.query('alter table public.entities enable always trigger canonical_entity_update_fence')
+   assert.deepEqual((await provider.query("select oid,tgenabled,tgtype,tgattr::text attrs from pg_trigger where tgrelid='public.entities'::regclass order by oid")).rows,fenceBefore)
+  }
+  phase='independent-canonical-after-exact-restoration'
+  observed=await auditNativeActivationMetadata(audit,read)
+  assert.equal(observed.permission_boundary_current,true)
   // Development approval acknowledges provider access; it never trusts the
   // shared pg_read_all_data capability or any other LOGIN that reaches it.
   phase='metadata-extra-relation-refused'
