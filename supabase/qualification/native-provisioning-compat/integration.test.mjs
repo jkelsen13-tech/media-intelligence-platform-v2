@@ -217,7 +217,7 @@ test('managed provision, full disabled installation, independent audits and term
   // checks the transformed URI and injects an error without exposing a secret.
   // Actual qik-to-direct-host TLS was separately proven read-only on qik.
   const maintenance=(await read('supabase/qualification/native-provisioning-compat/qikAuditRouteMaintenance.sql')).toString()
-   .replace('a382dcdbf2924852b711b6a8b0c713eb',options.operationId)
+   .replaceAll('a382dcdbf2924852b711b6a8b0c713eb',options.operationId)
    .replaceAll('221fb2f848b1bbea11e80057b0ad21e5349c8370a35531e2bdc48b6f95449320',plan.manifest_sha256)
    .replace("ca_path := pg_catalog.current_setting('ssl_ca_file',true);","ca_path := '/fixture/provider-ca.pem';")
    .replace('mip_factual_transport_raw.dblink(','mip_fixture_route.dblink(')
