@@ -23,6 +23,14 @@ export function providerSnapshotSQL(){
  where p.rolname in('supabase_etl_admin','supabase_read_only_user')
  or m.rolname in('supabase_etl_admin','supabase_read_only_user'))) metadata`
 }
+// The pinned live Auth-session helper uses FOR KEY SHARE. PostgreSQL requires
+// UPDATE privilege for this read lock; customer must be able to issue the exact
+// UPDATE(id) grant. A provider operation is needed if grant authority is absent.
+export async function verifyManagedCallerAuthPrerequisite(db,o){
+ if(!developmentProfile(o))return
+ const r=(await db.query("select c.relkind='r' and c.relowner='supabase_auth_admin'::regrole and (select count(*) from pg_catalog.pg_attribute where attrelid=c.oid and attnum>0 and not attisdropped and ((attname in('id','user_id') and atttypid='uuid'::regtype) or(attname='not_after' and atttypid='timestamptz'::regtype)))=3 and has_column_privilege('postgres',c.oid,'id','SELECT WITH GRANT OPTION') and has_column_privilege('postgres',c.oid,'user_id','SELECT WITH GRANT OPTION') and has_column_privilege('postgres',c.oid,'id','UPDATE WITH GRANT OPTION') ok from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='auth' and c.relname='sessions'")).rows
+ if(r.length!==1||r[0]?.ok!==true)fail()
+}
 export function providerBoundarySQL(o){
  if(!developmentProfile(o))return ''
  return `do $provider_boundary$ begin
@@ -116,6 +124,7 @@ function validEdge(edge,name,installer,recorded){
 }
 export async function verifyManagedPrerequisites(db,c,originalDblinkQuery){
  managedOptions(c)
+ await verifyManagedCallerAuthPrerequisite(db,c)
  const control=(await db.query("select (select count(*)=1 from mip_managed_provisioning.receipts) and exists(select 1 from pg_namespace n where n.nspname='mip_managed_provisioning' and n.nspowner='postgres'::regrole and not exists(select 1 from aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a where a.grantee<>n.nspowner)) and exists(select 1 from pg_class c where c.oid='mip_managed_provisioning.receipts'::regclass and c.relowner='postgres'::regrole and not exists(select 1 from aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a where a.grantee<>c.relowner) and not exists(select 1 from pg_attribute a where a.attrelid=c.oid and a.attacl is not null)) ok")).rows[0]
  if(control?.ok!==true)fail()
  const rows=(await db.query('select * from mip_managed_provisioning.receipts where operation_id=$1',[c.provisioningOperationId])).rows

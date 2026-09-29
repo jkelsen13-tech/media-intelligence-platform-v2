@@ -138,6 +138,17 @@ test('managed provision, full disabled installation, independent audits and term
   // so the provider supplies its observed service edge as infrastructure only.
   phase='fixture-provider-existing-service-edge'
   await provider.query('grant supabase_privileged_role to supabase_etl_admin with admin false,inherit true,set true')
+  phase='missing-provider-auth-grant-refuses-before-effects'
+  const unprepared=await provisionManagedPrerequisites(provision,secrets)
+  assert.equal(unprepared.state,'provisioning_refused')
+  assert.equal(unprepared.phase,'caller_auth_prerequisite')
+  assert.equal(unprepared.connection_cleanup_verified,true)
+  assert.equal((await provider.query("select exists(select 1 from pg_roles where rolname in('mip_native_audit_v1','mip_native_metadata_audit_v1')) or exists(select 1 from pg_extension where extname='dblink') or exists(select 1 from pg_namespace where nspname='mip_managed_provisioning') present")).rows[0].present,false)
+  // Explicit provider-only prerequisite, NOT part of observed qik baseline.
+  // qik currently lacks this grant authority. This conditional fixture cannot
+  // establish that the customer can perform the provider operation.
+  phase='fixture-provider-required-auth-grant'
+  await provider.query('grant update(id) on auth.sessions to postgres with grant option')
   phase='actual-managed-provision'
   observed=await provisionManagedPrerequisites(provision,secrets)
   assert.equal(observed.state,'provisioned_authentication_verified')

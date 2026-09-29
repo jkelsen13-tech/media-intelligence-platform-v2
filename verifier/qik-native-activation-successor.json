@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "2aa6bf103d978b40d8489aee6c3d4bb5ca4e7428"
+      "git_blob": "a9434984f8a13e851a77073c530f86988b914c3d"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -152,11 +152,11 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/managedPolicy.mjs",
-      "git_blob": "f356b9f99c40f6c2a891e680f22edec435271485"
+      "git_blob": "496e19e3bf33b5e6e8eba6bcc084d898c0fa7603"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/provision.mjs",
-      "git_blob": "d227de090a4274b7fd8ac335f9fa693131df2b0b"
+      "git_blob": "3bd3ea29702306943b53751e3be42a92cb0839fa"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/retirement.mjs",
@@ -172,7 +172,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/run.mjs",
-      "git_blob": "8d3d40971c64c5ca3d758c12d918a53c5880a6ea"
+      "git_blob": "1632cb05c5ffc4ae844bb0f338518a7d9e9fe42e"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/hostConfig.mjs",
@@ -180,11 +180,11 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/integration.test.mjs",
-      "git_blob": "37dafe092b8a9b06c690720e449d79bc698de819"
+      "git_blob": "5d0cfb6e52ae7ea54ae6668146854d43fb690f35"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/README.md",
-      "git_blob": "56bedd85b2536dfd3d7820f2eb77597f081ff56e"
+      "git_blob": "23c66c6f2607b0f267f597deb5c105c95733d67a"
     },
     {
       "path": "tests/nativeManagedActivationProfile.test.mjs",
@@ -336,6 +336,7 @@
     "contract": "Exact existing attributes and five bootstrap-issued endpoint edges; immutable provisioning and activation catalog identity binding; untrusted caller reachability remains checked, including shared pg_read_all_data",
     "independent_audit": "Direct source-authored catalog permission and identity checks using the separate authenticated metadata auditor",
     "pre_launch_gate": "Explicit owner trust review before public launch, external users or sensitive user material; stronger isolation and open Support request remain hardening",
-    "post_install_rotation": "Enforced refusal; not lifecycle-complete after installation"
+    "post_install_rotation": "Enforced refusal; not lifecycle-complete after installation",
+    "hosted_missing_prerequisite": "Provider-owned auth.sessions.id UPDATE WITH GRANT OPTION for existing trusted postgres; current qik privilege query false; no hosted mutation applied. Fixture provider explicitly supplies this prerequisite, not customer provisioning."
   }
 }

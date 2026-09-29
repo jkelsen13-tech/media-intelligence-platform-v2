@@ -163,3 +163,19 @@ transfer. Before those boundaries, explicit owner review is required. Stronger
 provider-account isolation and the open Support request remain pre-launch
 hardening. Post-install credential rotation remains refused pending a separately
 qualified bounded maintenance path; pre-install lifecycle evidence is narrower.
+
+### Demonstrated provider Auth prerequisite
+
+The first development combined run passed provisioning/audit-secret checks but
+failed the unchanged native caller prerequisite. qik metadata confirms trusted
+postgres can UPDATE auth.sessions.id but lacks UPDATE WITH GRANT OPTION. The
+pinned live-session definer needs UPDATE(id) for FOR KEY SHARE. This requirement
+is preserved. Development provisioning now refuses before effects unless the
+exact column grant authority exists.
+
+A supported table owner/provider operation must supply:
+`GRANT UPDATE(id) ON auth.sessions TO postgres WITH GRANT OPTION;`
+Do not impersonate supabase_auth_admin or modify catalogs. The disposable provider
+may supply this explicit prerequisite to qualify the conditional customer path;
+that is not proof of customer ability or current hosted readiness. No other
+Auth columns, runtime accounts, owner changes or blanket table UPDATE grants.

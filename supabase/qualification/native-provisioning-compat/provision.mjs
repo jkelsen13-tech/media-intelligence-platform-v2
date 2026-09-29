@@ -3,7 +3,7 @@
 import {createHash,randomBytes,createHmac,pbkdf2Sync} from 'node:crypto'
 import pg from 'pg'
 import {assertCredentialLogging} from '../collector-native-capture/credentialDelivery.mjs'
-import {DEVELOPMENT_PROFILE,developmentProfile,providerBoundarySQL,providerSnapshotSQL} from './managedPolicy.mjs'
+import {DEVELOPMENT_PROFILE,developmentProfile,providerBoundarySQL,providerSnapshotSQL,verifyManagedCallerAuthPrerequisite} from './managedPolicy.mjs'
 export const PROFILE='supabase-managed-v1'
 export const AUDIT_LOGIN='mip_native_audit_v1'
 export const METADATA_LOGIN='mip_native_metadata_audit_v1'
@@ -149,6 +149,8 @@ async function run(action,input,secrets){
   phase='installer_identity';const ids=await identity(db,c)
   phase='provider_boundary'
   if(developmentProfile(c))await db.query(providerBoundarySQL(c))
+  phase='caller_auth_prerequisite'
+  await verifyManagedCallerAuthPrerequisite(db,c)
   phase='serialization';await lock(db)
   phase='c3_boundary';const baseline=await c3(db,c)
   // This phase owns initial creation only, never post-install credential maintenance.
