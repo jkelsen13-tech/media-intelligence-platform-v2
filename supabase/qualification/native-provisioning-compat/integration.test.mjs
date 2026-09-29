@@ -105,8 +105,11 @@ test('managed provision, full disabled installation, independent audits and term
  const secrets={installer:uri('postgres',password),audit:uri(provision.auditLogin,randomBytes(36).toString('base64url')),metadataAudit:uri(provision.expectedMetadataAuditor,randomBytes(36).toString('base64url')),caPem:''}
  try{
   assert.equal((await provider.query("select current_setting('server_version_num') v")).rows[0].v,'170006')
+  phase='pristine-schemas'
   assert.equal((await provider.query("select count(*)::int n from pg_namespace where nspname in('auth','evidence_pipeline','qik_ingest','qik_ingest_operation','mip_managed_provisioning','mip_native_activation')")).rows[0].n,0)
-  assert.equal((await provider.query("select count(*)::int n from pg_class where relnamespace='public'::regnamespace")).rows[0].n,0)
+  phase='pristine-application-relations'
+  assert.equal((await provider.query("select count(*)::int n from pg_class c where relnamespace='public'::regnamespace and not exists(select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e')")).rows[0].n,0)
+  phase='pristine-dblink'
   assert.equal((await provider.query("select count(*)::int n from pg_extension where extname='dblink'")).rows[0].n,0)
   owned=true;phase='real-ordered-source-prerequisites'
   await prepareSourcePrerequisites(provider,NATIVE_CALLER_MODE)
