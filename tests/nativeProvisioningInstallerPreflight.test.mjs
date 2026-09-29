@@ -129,3 +129,19 @@ test('pooler backend hop SSL is metadata, never substituted for verified client 
  const f=fixture({identity:{tls:false}}),r=await f.run(c,secrets)
  assert.equal(r.state,'installer_authenticated_c3_current');assert.equal(r.backend_tls_observed,false)
 })
+
+test('explicit managed successor binds existing trusted postgres REPLICATION without changing original contract',async()=>{
+ const managed={...c,provisioningProfile:'supabase-managed-v1'}
+ const yes=fixture({identity:{rolreplication:true}}),r=await yes.run(managed,secrets)
+ assert.equal(r.state,'installer_authenticated_c3_current')
+ assert.ok(yes.calls.every(x=>/^(select|set local|begin read only|rollback)/.test(x.sql.trim())))
+ for(const rolreplication of [false,undefined,null]){
+  const f=fixture({identity:{rolreplication}})
+  assert.equal((await f.run(managed,secrets)).diagnostic,'identity')
+ }
+ for(const patch of [{provisioningProfile:'unknown'},{expectedLogin:'other'}]){
+  const f=fixture()
+  assert.equal((await f.run({...managed,...patch},secrets)).diagnostic,'configuration')
+  assert.equal(f.options.length,0)
+ }
+})

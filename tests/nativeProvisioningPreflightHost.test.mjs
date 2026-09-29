@@ -37,3 +37,10 @@ test('config admits no arbitrary SQL, route or secret fields',()=>{
  JSON.stringify({...JSON.parse(env.MIP_PREFLIGHT_CONFIG_JSON),installer:'synthetic-password'})])
  assert.throws(()=>validatePreflightHostEnvironment({...env,MIP_PREFLIGHT_CONFIG_JSON:value},'v22.14.0',2))
 })
+
+test('managed preflight profile is explicit, postgres-only and does not accept unknown successors',()=>{
+ const c=JSON.parse(env.MIP_PREFLIGHT_CONFIG_JSON)
+ assert.equal(validatePreflightHostEnvironment({...env,MIP_PREFLIGHT_CONFIG_JSON:JSON.stringify({...c,provisioningProfile:'supabase-managed-v1'})},'v22.14.0',2).config.provisioningProfile,'supabase-managed-v1')
+ for(const patch of [{provisioningProfile:'other'},{provisioningProfile:'supabase-managed-v1',expectedLogin:'other'}])
+ assert.throws(()=>validatePreflightHostEnvironment({...env,MIP_PREFLIGHT_CONFIG_JSON:JSON.stringify({...c,...patch})},'v22.14.0',2))
+})

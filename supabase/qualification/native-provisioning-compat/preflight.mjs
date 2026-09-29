@@ -20,7 +20,8 @@ function classify(error,phase){
  return phase==='connect'?'connection':'query'
 }
 export function validateInstallerPreflightConfig(c,secrets){
- if(!c||Array.isArray(c)||Object.keys(c).sort().join()!=='c3ManifestSha256,c3OperationId,expectedLogin'
+ if(!c||Array.isArray(c)||!['c3ManifestSha256,c3OperationId,expectedLogin','c3ManifestSha256,c3OperationId,expectedLogin,provisioningProfile'].includes(Object.keys(c).sort().join())
+ ||('provisioningProfile' in c&&(c.provisioningProfile!=='supabase-managed-v1'||c.expectedLogin!=='postgres'))
  ||!LOGIN.test(c.expectedLogin??'')||['service_role','authenticator','supabase_admin'].includes(c.expectedLogin)
  ||!ID.test(c.c3OperationId??'')||!HASH.test(c.c3ManifestSha256??'')
  ||!secrets||Object.keys(secrets).join()!=='installer'||typeof secrets.installer!=='string'
@@ -87,7 +88,7 @@ export function createInstallerAuthPreflight({makeClient,loadCa}){
    const rows=(await db.query(IDENTITY_SQL)).rows,r=rows?.[0]
    if(rows?.length!==1||r.login!==c.expectedLogin||r.effective!==c.expectedLogin
     ||r.rolsuper!==false||r.rolcanlogin!==true||r.rolcreaterole!==true||r.rolcreatedb!==true
-    ||r.rolbypassrls!==true||r.rolinherit!==true||r.rolreplication!==false
+    ||r.rolbypassrls!==true||r.rolinherit!==true||r.rolreplication!==(c.provisioningProfile==='supabase-managed-v1')
     ||r.database_owner!==true||r.read_only!==true)fail('identity')
    backendTls=typeof r.tls==='boolean'?r.tls:null
    if(r.postgres_supported!==true||r.vector_supported!==true)fail('prerequisite')
