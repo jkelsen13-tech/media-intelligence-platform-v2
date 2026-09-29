@@ -73,6 +73,8 @@ async function auditor(db,name,ids,allowInstalled=false){
  if(e.role_name!==name||e.role_oid!==r.oid||e.member_name!==INSTALLER||e.member_oid!==ids.installer_oid||e.grantor_name!==PROVIDER||e.grantor_oid!==ids.provider_oid||e.grantor_oid!=='10'||e.admin_option!==true||e.inherit_option!==false||e.set_option!==false)fail()
  const right=(await db.query("select pg_has_role($1::oid,$2::oid,'USAGE') or pg_has_role($1::oid,$2::oid,'SET') elevated,exists(select 1 from pg_shdepend where refclassid='pg_authid'::regclass and refobjid=$1::oid and (deptype='o' or(deptype in('a','i','r') and classid<>'pg_auth_members'::regclass))) direct_dependency",[r.oid,ids.installer_oid])).rows[0]
  if(right?.elevated!==false||(!allowInstalled&&right.direct_dependency!==false))fail()
+ const material=(await db.query("select exists(select 1 from pg_class t join pg_namespace n on n.oid=t.relnamespace where n.nspname in('public','auth','evidence_pipeline','qik_ingest') and case when t.relkind in('r','p','v','m','f') then has_table_privilege($1::oid,t.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') or has_any_column_privilege($1::oid,t.oid,'SELECT,INSERT,UPDATE,REFERENCES') else false end) allowed",[r.oid])).rows[0]
+ if(material?.allowed!==false)fail()
  return {oid:r.oid,edge:e}
 }
 function verifier(password){
