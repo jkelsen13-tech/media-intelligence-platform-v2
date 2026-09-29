@@ -164,6 +164,6 @@ export function transformManagedActivation(sql,o){
  if(sql.split(anchor).length!==4)fail()
  sql=sql.replaceAll(anchor,anchor+"\n if b.managed_metadata is distinct from ("+managedSnapshotSQL(o)+") then raise exception 'managed_provisioning_drift';end if;")
  const tail="select 'rewrite',r.oid::text,to_jsonb(r) from pg_catalog.pg_rewrite r\n join pg_catalog.pg_class c on c.oid=r.ev_class join ns n on n.oid=c.relnamespace"
- sql=once(sql,tail,tail+"\n union all\n select 'managed_extension',e.oid::text,to_jsonb(e) from pg_catalog.pg_extension e where e.extname='dblink'\n union all\n select 'managed_extension_dependency',d.classid::text||':'||d.objid||':'||d.objsubid||':'||d.refclassid||':'||d.refobjid||':'||d.refobjsubid||':'||d.deptype,to_jsonb(d) from pg_catalog.pg_depend d where d.refclassid='pg_extension'::regclass and d.refobjid=(select oid from pg_catalog.pg_extension where extname='dblink')")
+ sql=once(sql,tail,tail+"\n union all\n select 'managed_extension',e.oid::text,to_jsonb(e) from pg_catalog.pg_extension e where e.extname='dblink'\n union all\n select 'managed_extension_dependency',d.classid::text||':'||d.objid||':'||d.objsubid||':'||d.refclassid||':'||d.refobjid||':'||d.refobjsubid||':'||d.deptype::text,to_jsonb(d) from pg_catalog.pg_depend d where d.refclassid='pg_extension'::regclass and d.refobjid=(select oid from pg_catalog.pg_extension where extname='dblink')")
  return sql
 }
