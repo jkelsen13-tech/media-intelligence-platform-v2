@@ -222,7 +222,22 @@ test('managed provision, full disabled installation, independent audits and term
   }finally{await publisher.end()}
   const audit={...options,expectedInstallManifest:plan.manifest_sha256,expectedNativeProgram:plan.native.program_sha256,expectedSuccessorProgram:plan.activation.program_sha256,metadataAuditConnectionString:secrets.metadataAudit,disposable:true}
   phase='independent-metadata-audit'
-  observed=await auditNativeActivationMetadata(audit,read)
+  const originalAuditQuery=pg.Client.prototype.query
+  pg.Client.prototype.query=async function(...args){
+   const result=await originalAuditQuery.apply(this,args)
+   if(typeof args[0]==='string'&&args[0].startsWith('\nselect r.oid::text oid,session_user::text login')&&result.rows[0]?.safe!==true){
+    const checks=await originalAuditQuery.call(this,`select
+     (select count(*)::int from pg_namespace n where n.nspname<>'information_schema' and n.nspname !~ '^pg_' and has_schema_privilege(current_user,n.oid,'CREATE')) schema_create,
+     (select count(*)::int from pg_shdepend where refclassid='pg_authid'::regclass and refobjid=current_user::regrole and deptype='o') ownership,
+     (select count(*)::int from pg_proc p cross join lateral aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where a.grantee=current_user::regrole and a.privilege_type='EXECUTE') direct_execute,
+     (select count(*)::int from pg_proc p cross join lateral aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where a.grantee in(select oid from pg_roles where rolname=any($1)) and has_function_privilege(current_user,p.oid,'EXECUTE')) group_execute,
+     (select count(*)::int from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname<>'information_schema' and n.nspname !~ '^pg_' and case when c.relkind in('r','p','v','m','f') and(n.nspname<>'mip_native_activation' or c.relname not in('bootstrap','head','revisions')) then has_table_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN') or has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,REFERENCES') else false end) outside_tables
+    `,args[1])
+    console.log('Synthetic metadata identity violation counts: '+JSON.stringify(checks.rows))
+   }
+   return result
+  }
+  try{observed=await auditNativeActivationMetadata(audit,read)}finally{pg.Client.prototype.query=originalAuditQuery}
   assert.equal(observed.permission_boundary_current,true);assert.equal(observed.state,'disabled_bootstrap')
   // Development approval acknowledges provider access; it never trusts the
   // shared pg_read_all_data capability or any other LOGIN that reaches it.
