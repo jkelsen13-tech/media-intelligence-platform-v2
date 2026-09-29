@@ -76,7 +76,7 @@
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "git_blob": "a3f8e980748d1442ddf5d42289c89d4495e58e51"
+      "git_blob": "37d25ac471dbd11d7926ceb0658cf2bf718790ef"
     },
     {
       "path": "tests/nativeGovernedActivation.test.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "b13f71043fbf699379981373978f1ae79f0a04ae"
+      "git_blob": "2d4578c2cf136f22869025e0bb95a8ed3694b4ed"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -188,7 +188,7 @@
     },
     {
       "path": "tests/nativeManagedActivationProfile.test.mjs",
-      "git_blob": "cc630013dc523d1cdd2a799a2423fc8b80208ec2"
+      "git_blob": "f2a21cd67f17901fd060e32ef56be6548e45637e"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLock.mjs",
@@ -449,5 +449,19 @@
     },
     "permission_effect": "Removes only direct predecessor function EXECUTE from mip_efta_owner_v1; governed wrapper remains executable; no Auth/article/material or public grant",
     "status": "AUTHORED / source-inventory pin corrected; affected combined recheck pending / NOT INSTALLED"
+  },
+  "doj_acl_signature_diagnostic_successor": {
+    "scope": "Source/host diagnostic only: reveal which of pinned 020's three exact final function ACL signatures refused on qik; no SQL, permission, credential, operation, or acceptance change",
+    "status": "AUTHORED / targeted qualification and independent review pending / NOT INSTALLED",
+    "prior_hosted_refusal": {
+      "candidate": "79fcd32c96a6d2020728a062c902a648d188e7c5",
+      "run": 36607225326,
+      "job": 109539218660,
+      "phase": "final_doj_assertions",
+      "sqlstate": "P0001",
+      "diagnostic": "doj_function_acl",
+      "rollback_verified": true
+    },
+    "sensitive_suffix_policy": "Only three fixed source-owned signature codes; arbitrary dynamic suffix discarded"
   }
 }
