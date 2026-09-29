@@ -90,6 +90,8 @@ export async function verifyManagedPrerequisites(db,c,originalDblinkQuery){
  }
  const memberOwners=(await db.query("select not exists(select 1 from pg_depend d join pg_proc p on d.classid='pg_proc'::regclass and p.oid=d.objid where d.refclassid='pg_extension'::regclass and d.refobjid=$1::oid and d.deptype='e' and p.proowner<>$2::oid) ok",[r.extension_oid,r.provider_oid])).rows[0]
  if(memberOwners?.ok!==true)fail()
+ const extraOwners=(await db.query("select not exists(select 1 from pg_depend d left join pg_type t on d.classid='pg_type'::regclass and t.oid=d.objid left join pg_foreign_data_wrapper f on d.classid='pg_foreign_data_wrapper'::regclass and f.oid=d.objid where d.refclassid='pg_extension'::regclass and d.refobjid=$1::oid and d.deptype='e' and(coalesce(t.typowner,$2::oid)<>$2::oid or coalesce(f.fdwowner,$2::oid)<>$2::oid)) ok",[r.extension_oid,r.provider_oid])).rows[0]
+ if(extraOwners?.ok!==true)fail()
  const definitionHash=Object.values((await db.query(definitionsSQL)).rows[0]??{})[0]
  if(!HASH.test(definitionHash??''))fail()
  return Object.freeze({extensionOid:String(r.extension_oid),providerOid:String(r.provider_oid),definitionHash,
@@ -116,6 +118,11 @@ export function managedBoundarySQL(){
  if exists(select 1 from pg_depend d join pg_proc p on d.classid='pg_proc'::regclass and p.oid=d.objid
  where d.refclassid='pg_extension'::regclass and d.refobjid=(select oid from pg_extension where extname='dblink') and d.deptype='e'
  and(p.proowner<>provider_oid or p.pronamespace<>raw_oid)) then raise exception 'managed_extension_members';end if;
+ if exists(select 1 from pg_depend d left join pg_type t on d.classid='pg_type'::regclass and t.oid=d.objid
+ left join pg_foreign_data_wrapper f on d.classid='pg_foreign_data_wrapper'::regclass and f.oid=d.objid
+ where d.refclassid='pg_extension'::regclass and d.refobjid=(select oid from pg_extension where extname='dblink') and d.deptype='e'
+ and(coalesce(t.typowner,provider_oid)<>provider_oid or coalesce(t.typnamespace,raw_oid)<>raw_oid or coalesce(f.fdwowner,provider_oid)<>provider_oid))
+ then raise exception 'managed_extension_type_owner';end if;
  shim_oid:=to_regprocedure('mip_factual_transport.dblink_exec(text,text)');
  if shim_oid is null or not exists(select 1 from pg_proc where oid=shim_oid and proowner=installer_oid and prosecdef
  and prolang=(select oid from pg_language where lanname='sql') and prorettype='text'::regtype and proargtypes='25 25'::oidvector
