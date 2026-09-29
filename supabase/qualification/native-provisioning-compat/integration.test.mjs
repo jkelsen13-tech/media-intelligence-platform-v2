@@ -212,32 +212,56 @@ test('managed provision, full disabled installation, independent audits and term
   assert.equal((await provider.query("select encode(sha256(convert_to(connection_string,'UTF8')),'hex') digest from mip_factual.audit_connection where id")).rows[0].digest,connectionBefore)
   phase='post-install-customer-route-permission-boundary'
   const originalColumnAcl=(await provider.query("select a.attacl::text acl from pg_attribute a where a.attrelid='mip_factual.audit_connection'::regclass and a.attname='connection_string'")).rows[0].acl
-  const beforeGrant=await connect()
-  try{
-   assert.equal((await beforeGrant.query("select has_column_privilege(current_user,'mip_factual.audit_connection','connection_string','UPDATE') allowed")).rows[0].allowed,false)
-   await assert.rejects(beforeGrant.query("update mip_factual.audit_connection set connection_string=connection_string where id"),e=>e.code==='42501')
-  }finally{await beforeGrant.end()}
-  // The provider fixture supplies ONLY the disputed temporary column privilege;
-  // the intended nonsuper customer performs both rollback and committed updates.
-  phase='provider-temporary-route-grant'
-  await provider.query('grant update(connection_string) on mip_factual.audit_connection to postgres')
+  // Execute the held SQL body in the disposable installation. Only fixed qik
+  // identities, the CA path and the dblink endpoint are substituted. The stub
+  // checks the transformed URI and injects an error without exposing a secret.
+  // Actual qik-to-direct-host TLS was separately proven read-only on qik.
+  const maintenance=(await read('supabase/qualification/native-provisioning-compat/qikAuditRouteMaintenance.sql')).toString()
+   .replace('a382dcdbf2924852b711b6a8b0c713eb',options.operationId)
+   .replaceAll('221fb2f848b1bbea11e80057b0ad21e5349c8370a35531e2bdc48b6f95449320',plan.manifest_sha256)
+   .replace("ca_path := pg_catalog.current_setting('ssl_ca_file',true);","ca_path := '/fixture/provider-ca.pem';")
+   .replace('mip_factual_transport_raw.dblink(','mip_fixture_route.dblink(')
+  assert.notEqual(maintenance,(await read('supabase/qualification/native-provisioning-compat/qikAuditRouteMaintenance.sql')).toString())
+  const poolUri='postgresql://mip_native_audit_v1.qikvmopbtijoebdqosyq:'+new URL(secrets.audit).password+'@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslrootcert=system&sslmode=verify-full&connect_timeout=5'
+  await provider.query('update mip_factual.audit_connection set connection_string=$1 where id',[poolUri])
+  await provider.query("create schema mip_fixture_route;create function mip_fixture_route.dblink(conn text,statement text) returns setof record language plpgsql security invoker set search_path='' as $f$ begin if current_user<>'postgres' or session_user<>'postgres' or conn !~ '^postgresql://mip_native_audit_v1:[^@]+@db[.]qikvmopbtijoebdqosyq[.]supabase[.]co:5432/postgres[?]' or position('sslrootcert=%2Ffixture%2Fprovider-ca.pem' in conn)=0 or position('sslmode=verify-full' in conn)=0 or position('connect_timeout=5' in conn)=0 or statement<>'select current_user::text,(select ssl from pg_catalog.pg_stat_ssl where pid=pg_catalog.pg_backend_pid())' then raise exception 'fixture_route_refused';end if;if current_setting('mip_fixture.fail_probe',true)='on' then raise exception 'SYNTHETIC_SECRET_CANARY';end if;return query select 'mip_native_audit_v1'::text,true;end $f$;grant usage on schema mip_fixture_route to postgres;grant execute on function mip_fixture_route.dblink(text,text) to postgres")
   const routeCustomer=await connect()
   try{
-   assert.equal((await routeCustomer.query("select current_user='postgres' and session_user='postgres' and not (select rolsuper from pg_roles where rolname=current_user) and has_column_privilege(current_user,'mip_factual.audit_connection','connection_string','UPDATE') ok")).rows[0].ok,true)
-   phase='customer-route-rollback'
+   assert.equal((await routeCustomer.query("select current_user='postgres' and session_user='postgres' and not (select rolsuper from pg_roles where rolname=current_user) and not has_column_privilege(current_user,'mip_factual.audit_connection','connection_string','UPDATE') ok")).rows[0].ok,true)
+   phase='maintenance-grant-missing'
    await routeCustomer.query('begin')
-   assert.equal((await routeCustomer.query("update mip_factual.audit_connection set connection_string=connection_string||'?application_name=mip-audit-route-fixture' where id and connection_string like 'postgresql://mip_native_audit_v1:%@127.0.0.1:5432/postgres'")).rowCount,1)
+   await assert.rejects(routeCustomer.query(maintenance),e=>e.message==='qik_audit_route_grant_missing')
    await routeCustomer.query('rollback')
-   assert.equal((await provider.query("select encode(sha256(convert_to(connection_string,'UTF8')),'hex') digest from mip_factual.audit_connection where id")).rows[0].digest,connectionBefore)
-   phase='customer-route-commit'
+   phase='provider-temporary-route-grant'
+   await provider.query('grant update(connection_string) on mip_factual.audit_connection to postgres')
+   phase='maintenance-probe-failure-redaction'
    await routeCustomer.query('begin')
-   assert.equal((await routeCustomer.query("update mip_factual.audit_connection set connection_string=connection_string||'?application_name=mip-audit-route-fixture' where id and connection_string like 'postgresql://mip_native_audit_v1:%@127.0.0.1:5432/postgres'")).rowCount,1)
+   await routeCustomer.query("set local mip_fixture.fail_probe='on'")
+   await assert.rejects(routeCustomer.query(maintenance),e=>e.message==='qik_audit_route_probe_refused'&&!JSON.stringify(e).includes('SYNTHETIC_SECRET_CANARY'))
+   await routeCustomer.query('rollback')
+   phase='maintenance-rollback'
+   await routeCustomer.query('begin')
+   await routeCustomer.query(maintenance)
+   await routeCustomer.query('rollback')
+   assert.equal((await provider.query("select connection_string=$1 unchanged from mip_factual.audit_connection where id",[poolUri])).rows[0].unchanged,true)
+   phase='maintenance-commit'
+   await routeCustomer.query('begin')
+   await routeCustomer.query(maintenance)
    await routeCustomer.query('commit')
+   assert.equal((await provider.query("select connection_string like 'postgresql://mip_native_audit_v1:%@db.qikvmopbtijoebdqosyq.supabase.co:5432/postgres?%' transformed from mip_factual.audit_connection where id")).rows[0].transformed,true)
+   phase='maintenance-already-applied'
+   await routeCustomer.query('begin')
+   await assert.rejects(routeCustomer.query(maintenance),e=>e.message==='qik_audit_route_already_applied')
+   await routeCustomer.query('rollback')
   }finally{await routeCustomer.end()}
   phase='provider-route-grant-revocation'
   await provider.query('revoke update(connection_string) on mip_factual.audit_connection from postgres')
   assert.equal((await provider.query("select has_column_privilege('postgres','mip_factual.audit_connection','connection_string','UPDATE') allowed")).rows[0].allowed,false)
   assert.equal((await provider.query("select a.attacl::text acl from pg_attribute a where a.attrelid='mip_factual.audit_connection'::regclass and a.attname='connection_string'")).rows[0].acl,originalColumnAcl)
+  await provider.query('drop schema mip_fixture_route cascade')
+  // The disposable auditor uses its local loopback route for the existing
+  // real dblink audit; this provider fixture reset is not qik route evidence.
+  await provider.query("update mip_factual.audit_connection set connection_string=$1 where id",[secrets.audit+'?application_name=mip-audit-route-fixture'])
   assert.notEqual((await provider.query("select encode(sha256(convert_to(connection_string,'UTF8')),'hex') digest from mip_factual.audit_connection where id")).rows[0].digest,connectionBefore)
   observed=await reconcileComparisonInstall(cfg,read);assert.equal(observed.state,'installed_disabled_audit_pending')
   phase='autonomous-audit'
