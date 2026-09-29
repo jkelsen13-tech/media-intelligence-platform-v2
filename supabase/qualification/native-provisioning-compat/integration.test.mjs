@@ -60,6 +60,12 @@ async function prepareSourcePrerequisites(root,selectedMode,step){
   // provisioning operation: supabase_auth_admin owns sessions and postgres
   // already has table-level SELECT WITH GRANT OPTION.
   step('fixture-provider-auth-grant');
+  const authOwner=(await owner.query("select pg_get_userbyid(relowner) owner from pg_class where oid='auth.sessions'::regclass")).rows[0].owner
+  assert.ok(['supabase_admin','supabase_auth_admin'].includes(authOwner))
+  // A sessions table newly created by this disposable source fixture must
+  // reproduce qik's independently observed provider Auth ownership.
+  if(authOwner==='supabase_admin')await owner.query('alter table auth.sessions owner to supabase_auth_admin')
+  assert.equal((await owner.query("select pg_get_userbyid(relowner) owner from pg_class where oid='auth.sessions'::regclass")).rows[0].owner,'supabase_auth_admin')
   await owner.query('grant select on auth.sessions to postgres with grant option');
   step('fixture-pipeline');
   await owner.query(await read('supabase/migrations/20260905082406_evidence_pipeline_reliability.sql'));
