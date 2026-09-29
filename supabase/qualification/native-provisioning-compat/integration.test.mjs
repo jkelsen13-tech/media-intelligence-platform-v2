@@ -145,6 +145,11 @@ test('managed provision, full disabled installation, independent audits and term
   const cfg={...options,authorization:'owner-authorized-native-governed-activation-bootstrap-install',connectionString:secrets.installer,auditLogin:provision.auditLogin,auditConnectionString:secrets.audit,c3OperationId:provision.c3OperationId,c3ManifestSha256:provision.c3ManifestSha256,expectedManifestSha256:plan.manifest_sha256,expectedNativeProgramSha256:plan.native.program_sha256,expectedSuccessorProgram:plan.activation.program_sha256,dblinkMetadataSha256:receipt.extension_metadata_sha256,collectorSource:'qik-fixture-v1',disposable:true}
   phase='full-managed-install'
   observed=await installComparisonAtomic(cfg,read)
+  // Only exact compiler-authored static SQL, never server context, args or error text.
+  if(observed.native_failure?.stage==='successor_preparation'&&Number.isInteger(observed.native_failure.position)){
+   const offset=observed.native_failure.position-1
+   console.log('Bound static successor source excerpt: '+JSON.stringify(plan.activation.sql.slice(Math.max(0,offset-120),offset+180)))
+  }
   assert.equal(observed.state,'installed_disabled_audit_pending')
   assert.equal(observed.connection_cleanup_verified,true)
   phase='same-install-reconcile'
