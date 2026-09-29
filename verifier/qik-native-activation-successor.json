@@ -124,11 +124,11 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/host.mjs",
-      "git_blob": "378d11df2922836e237006723ee4731df885310c"
+      "git_blob": "f0ac06ba0ae8c5541eae7960a89f70ed25a7737e"
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "046671e85ad304100e80b2b6c75f2e429c1f9e2f"
+      "git_blob": "b3762ea45ab0ef52ba56753b14edbfb687cad3a5"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -188,7 +188,7 @@
     },
     {
       "path": "tests/nativeManagedActivationProfile.test.mjs",
-      "git_blob": "efa9004a066ee3c232fc042c9c115dfc9bcd456b"
+      "git_blob": "149071f930a959ac9e157cc4cbb90b1fbd779e8d"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLock.mjs",
@@ -377,5 +377,10 @@
     "state": "AUTHORED / pending affected qualification and targeted independent review / no hosted effects",
     "receipt": "Only allowlisted binding or credential-policy labels; never URL, password, verifier, error or input fragments",
     "historical_qualification": "Retain c3bb98b helper/combined qualification and actual Cursor scope; diagnostic delta independently qualified and reviewed before hosted use"
+  },
+  "install_failure_diagnostic_successor": {
+    "scope": "Host-only independently allowlisted failure phases, standard SQLSTATE codes and existing static atomic diagnostics; no raw messages, credentials, exception details, SQL or arbitrary paths",
+    "state": "AUTHORED / pending targeted qualification and independent review / not deployed",
+    "unchanged": "SQL programs, permissions, credential delivery, acceptance and recovery contracts unchanged; existing failed hosted receipt preserved"
   }
 }

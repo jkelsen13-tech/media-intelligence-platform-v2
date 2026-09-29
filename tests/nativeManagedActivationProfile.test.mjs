@@ -1,3 +1,4 @@
+import {validateActivationHostConfig,dispatchActivationHostAction,activationHostActionSatisfied} from '../supabase/qualification/native-governed-activation/host.mjs'
 import {SESSION_LOCK_PROFILE,SESSION_LOCK_DDL,sessionLockBoundarySQL} from '../supabase/qualification/native-provisioning-compat/sessionLock.mjs'
 import {prepareAtomicInstall} from '../supabase/qualification/qik-comparison-adapter/atomicInstall.mjs'
 import {NATIVE_CALLER_MODE} from '../supabase/qualification/native-governed-install/install.mjs'
@@ -108,3 +109,37 @@ test('session-lock successor replaces both exact lock sites without rewriting hi
  assert.match(historical.activation.sql,/select x\.not_after into deadline from auth\.sessions x/)
  assert.notEqual(historical.manifest_sha256,plan.manifest_sha256)
 })
+
+test('activation host preserves only bounded atomic failure evidence and never authorizes failed installation',async()=>{
+ const hash='a'.repeat(64),release='b'.repeat(40),operation='1'.repeat(32),canary='PRIVATE_FAILURE_CANARY';
+ const cfg={releaseSha:release,operationId:operation,expectedLogin:'postgres',auditLogin:'mip_native_audit_v1',
+ c3OperationId:'2'.repeat(32),c3ManifestSha256:hash,expectedManifestSha256:hash,expectedNativeProgramSha256:hash,
+ dblinkMetadataSha256:hash,collectorSource:'qik-synthetic',expectedMetadataAuditor:'mip_native_metadata_audit_v1',expectedSuccessorProgram:hash};
+ const dsn=login=>'postgresql://'+login+'.qikvmopbtijoebdqosyq:SYNTHETIC_ONLY@aws-0-us-west-1.pooler.supabase.com:5432/postgres';
+ const c=validateActivationHostConfig(JSON.stringify(cfg),{installer:dsn('postgres'),audit:dsn(cfg.auditLogin)+'?connect_timeout=5&sslmode=verify-full&sslrootcert=system',metadataAudit:dsn(cfg.expectedMetadataAuditor)});
+ const base=state=>({state,operation_id:operation,manifest_sha256:hash,native_mode:'native-governed-v6',
+ native_program_sha256:hash,activation_profile:'native-governed-activation-v1',successor_program_sha256:hash,
+ activation_allowed:false,needs_reconciliation:false,audit_qualified:false,connection_cleanup_verified:true,cleanup_diagnostic:null});
+ for(const state of ['installation_refused','reconciliation_unavailable','installed_disabled_audit_unresolved']){
+  const r=await dispatchActivationHostAction('reconcile',c,()=>{},{
+   reconcileComparisonInstall:async()=>({...base(state),phase:'source:supabase/qualification/mip-cutover-authority/012_efta_live_authentication.sql',
+    sqlstate:'42501',diagnostic:'atomic_existing_c3_owner_transfer',message:canary,detail:canary,query:canary,stack:canary,connectionString:canary})});
+  assert.equal(r.state,state);assert.equal(r.failure_phase,'source:supabase/qualification/mip-cutover-authority/012_efta_live_authentication.sql');
+  assert.equal(r.failure_sqlstate,'42501');assert.equal(r.failure_diagnostic,'atomic_existing_c3_owner_transfer');
+  assert.equal(JSON.stringify(r).includes(canary),false);
+  for(const action of ['install','reconcile','audit'])assert.equal(activationHostActionSatisfied(action,r),false);
+  for(const field of ['activation_allowed','publication_allowed','material_access_allowed','production_qualified'])assert.equal(r[field],false);
+ }
+ for(const changed of [{phase:canary,sqlstate:'ABCDE',diagnostic:canary},
+  {phase:'source:'+canary,sqlstate:'password',diagnostic:'atomic_existing_c3_owner_transfer:'+canary}]){
+  const r=await dispatchActivationHostAction('reconcile',c,()=>{},{reconcileComparisonInstall:async()=>({...base('installation_refused'),...changed})});
+  assert.equal(r.failure_phase,null);assert.equal(r.failure_sqlstate,null);assert.equal(r.failure_diagnostic,null);
+  assert.equal(JSON.stringify(r).includes(canary),false);
+ }
+ for(const changed of [{operation_id:'3'.repeat(32)},{manifest_sha256:'0'.repeat(64)},{successor_program_sha256:'0'.repeat(64)}]){
+  const r=await dispatchActivationHostAction('reconcile',c,()=>{},{reconcileComparisonInstall:async()=>({...base('installation_refused'),phase:'catalog_preflight',sqlstate:'42501',diagnostic:'atomic_catalog_preflight',...changed})});
+  assert.equal(r.state,'outcome_unknown');assert.equal(Object.hasOwn(r,'failure_phase'),false);
+ }
+ const ok=await dispatchActivationHostAction('reconcile',c,()=>{},{reconcileComparisonInstall:async()=>({...base('not_installed'),phase:canary,sqlstate:canary,diagnostic:canary})});
+ assert.equal(activationHostActionSatisfied('reconcile',ok),true);assert.equal(Object.hasOwn(ok,'failure_phase'),false);assert.equal(JSON.stringify(ok).includes(canary),false);
+});

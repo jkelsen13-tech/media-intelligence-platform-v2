@@ -1,3 +1,5 @@
+import {INSTALL_DIAGNOSTICS} from '../qik-comparison-adapter/atomicInstall.mjs'
+import {SOURCE_PINS} from '../qik-comparison-adapter/compileSource.mjs'
 import {managedOptions} from '../native-provisioning-compat/managedPolicy.mjs'
 // Metadata-only host successor. No source bytes, activation, SQL or material callback.
 import {validateHostConfig,sanitizeApiResult} from '../native-governed-host/adapter.mjs'
@@ -28,6 +30,18 @@ export function validateActivationHostConfig(raw,secrets){
   expectedMetadataAuditor:input.expectedMetadataAuditor,expectedSuccessorProgram:input.expectedSuccessorProgram,
   metadataAuditConnectionString:secrets.metadataAudit})
 }
+// Independently bounded failure fields from the already-sanitized pinned atomic API.
+// Unknown fields, raw exceptions and arbitrary source paths never reach the receipt.
+const FAILURE_STATES=new Set(['installation_refused','reconciliation_unavailable','installed_disabled_audit_unresolved'])
+const FAILURE_PHASES=new Set(["begin","catalog_preflight","c3_baseline","audit_prerequisite","temporary_creator","credential_timeout_bound","credential_logging_assertion","credential_configuration","credential_timeout_restore","doj_permission_unit","final_permission_functions","temporary_schema_create_revoke","compatibility_role_attributes","compatibility_acl_revoke","installation_receipt","c3_preservation","catalog_inspection_permissions","native_joint_install","temporary_creator_ownership","temporary_role_grants_revoke","temporary_creator_drop","temporary_membership_assertions","audit_secret_boundary","catalog_inspection_assertions","final_assertions","final_doj_assertions","final_compatibility_assertions","native_final_joint_closure","successor_final_boundary","commit","connection","reconciliation_begin","reconciliation_inventory","reconciliation_receipt","reconciliation_audit_boundary","native_reconciliation","audit_begin","audit_existing_receipt","audit_write_probe","audit_caller_rollback","audit_readback_lock","audit_readback_probe","audit_c3_preservation","audit_qualification_receipt","audit_qualification_commit"])
+for(const [path] of SOURCE_PINS)FAILURE_PHASES.add('source:'+path)
+const FAILURE_SQLSTATES=new Set(['42501','42710','P0001','23514','55000','57014','55P03','42704','21000','42809','42P01','42703','25006','25P02','40P01','40001'])
+function failureDetails(r,safe){
+ if(!FAILURE_STATES.has(safe.state))return {}
+ return {failure_phase:FAILURE_PHASES.has(r?.phase)?r.phase:null,
+  failure_sqlstate:FAILURE_SQLSTATES.has(r?.sqlstate)?r.sqlstate:null,
+  failure_diagnostic:INSTALL_DIAGNOSTICS.includes(r?.diagnostic)?r.diagnostic:null}
+}
 function closed(r,c,metadata=false){
  const base={contract:'native-activation-host-receipt-v1',profile:PROFILE,operation_id:c.operationId,
   release_sha:c.releaseSha,install_manifest_sha256:c.expectedManifestSha256,
@@ -45,7 +59,7 @@ function closed(r,c,metadata=false){
  if(r?.activation_profile!==PROFILE||r.successor_program_sha256!==c.expectedSuccessorProgram)return base
  const safe=sanitizeApiResult(r,c)
  return {...base,state:safe.state,needs_reconciliation:safe.needs_reconciliation,
-  base_audit_qualified:safe.audit_qualified,connection_cleanup_verified:safe.connection_cleanup_verified}
+  base_audit_qualified:safe.audit_qualified,connection_cleanup_verified:safe.connection_cleanup_verified,...failureDetails(r,safe)}
 }
 // Fixed in-process orchestration seam for synthetic tests. Production runner binds actual APIs.
 export async function dispatchActivationHostAction(action,c,read,api){
