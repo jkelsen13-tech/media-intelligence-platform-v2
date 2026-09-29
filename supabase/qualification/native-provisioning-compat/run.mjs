@@ -5,6 +5,7 @@ import {execFile} from 'node:child_process'
 import {promisify} from 'node:util'
 const exec=promisify(execFile)
 const pins={
+ 'supabase/qualification/native-provisioning-compat/hostConfig.mjs':'d9e00d9bad2e43a92214b0aab1cd4fbc16b9e976',
  'supabase/qualification/native-provisioning-compat/provision.mjs':'74a1e2e22ecbea6300d76aade7aa60658701e1aa',
  'supabase/qualification/collector-native-capture/credentialDelivery.mjs':'354679fadc48eb9f8a8154456f3d38e7faab3e61',
  'package.json':'68caf5625166966005fff9cd702b3bc6c5fa49ad',
@@ -12,6 +13,8 @@ const pins={
 }
 const digest=b=>createHash('sha256').update(b).digest('hex')
 const fail=()=>{throw Error('managed_provisioning_host_refused')}
+const injected={installer:process.env.QIK_NATIVE_INSTALLER_DATABASE_URL,audit:process.env.QIK_NATIVE_AUDIT_DATABASE_URL,metadataAudit:process.env.QIK_NATIVE_METADATA_AUDIT_DATABASE_URL}
+delete process.env.QIK_NATIVE_INSTALLER_DATABASE_URL;delete process.env.QIK_NATIVE_AUDIT_DATABASE_URL;delete process.env.QIK_NATIVE_METADATA_AUDIT_DATABASE_URL
 let emitted=false,phase='host_admission'
 const denied=()=>({contract:'qik-managed-provisioning-host-v1',state:'outcome_unknown',phase,needs_reconciliation:true,connection_cleanup_verified:false,installation_allowed:false,activation_allowed:false,material_access_allowed:false,publication_allowed:false})
 function emit(r){if(!emitted){emitted=true;process.stdout.write(JSON.stringify(r)+'\n')}}
@@ -45,11 +48,11 @@ try{
  phase='configuration_identity'
  const raw=e.QIK_MANAGED_PROVISIONING_CONFIG_JSON
  if(typeof raw!=='string'||Buffer.byteLength(raw)>4096||! /^[a-f0-9]{64}$/.test(e.QIK_MANAGED_PROVISIONING_CONFIG_SHA256??'')||digest(raw)!==e.QIK_MANAGED_PROVISIONING_CONFIG_SHA256)fail()
- const c=JSON.parse(raw)
- if(c.disposable!==false)fail()
+ const {validateProvisioningHostConfig}=await import('./hostConfig.mjs')
+ const c=validateProvisioningHostConfig(raw,e.QIK_MANAGED_PROVISIONING_CONFIG_SHA256)
  const ca=Buffer.from(e.QIK_CA_PEM_BASE64??'','base64').toString('utf8')
  if(digest(ca)!=='700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7')fail()
- const secrets={installer:e.QIK_NATIVE_INSTALLER_DATABASE_URL,audit:e.QIK_NATIVE_AUDIT_DATABASE_URL,metadataAudit:e.QIK_NATIVE_METADATA_AUDIT_DATABASE_URL,caPem:ca}
+ const secrets={...injected,caPem:ca}
  delete e.QIK_NATIVE_INSTALLER_DATABASE_URL;delete e.QIK_NATIVE_AUDIT_DATABASE_URL;delete e.QIK_NATIVE_METADATA_AUDIT_DATABASE_URL
  phase='bounded_prerequisite_operation'
  const api=await import('./provision.mjs')
@@ -58,7 +61,7 @@ try{
  const states=['not_provisioned','provisioned_authentication_verified','provisioned_authentication_unverified','commit_outcome_unknown','provisioning_refused']
  const phases=['configuration','installer_connection','installer_identity','serialization','c3_boundary','collision','provider_extension','secure_auditor_creation','immutable_receipt','receipt_readback','commit','distinct_auditor_authentication']
  if(r?.contract!=='qik-managed-prerequisites-v1'||!states.includes(r.state)||!phases.includes(r.phase))fail()
- const safe={...denied(),state:r.state,phase:r.phase,release_sha:release,operation_id:c.operationId,
+ const safe={...denied(),state:r.state,phase:r.phase,release_sha:release,operation_id:/^[a-f0-9]{32}$/.test(c.operationId??'')?c.operationId:null,
  needs_reconciliation:r.needs_reconciliation===true,connection_cleanup_verified:r.connection_cleanup_verified===true}
  if(r.receipt&&/^[a-f0-9]{64}$/.test(r.receipt.extension_metadata_sha256??'')){
   safe.extension_metadata_sha256=r.receipt.extension_metadata_sha256
