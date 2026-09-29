@@ -166,7 +166,15 @@ test('managed provision, full disabled installation, independent audits and term
   const plan=await prepareAtomicInstall(read,options)
   const cfg={...options,authorization:'owner-authorized-native-governed-activation-bootstrap-install',connectionString:secrets.installer,auditLogin:provision.auditLogin,auditConnectionString:secrets.audit,c3OperationId:provision.c3OperationId,c3ManifestSha256:provision.c3ManifestSha256,expectedManifestSha256:plan.manifest_sha256,expectedNativeProgramSha256:plan.native.program_sha256,expectedSuccessorProgram:plan.activation.program_sha256,dblinkMetadataSha256:receipt.extension_metadata_sha256,collectorSource:'qik-fixture-v1',disposable:true}
   phase='full-managed-install'
-  observed=await installComparisonAtomic(cfg,read)
+  const originalQuery=pg.Client.prototype.query
+  pg.Client.prototype.query=async function(...args){
+   if(args[0]==='select mip_comparison_install.native_boundary_v6()'){
+    const evidence=await originalQuery.call(this,"select (select rolreplication from pg_roles where rolname='postgres') replication,pg_has_role('postgres','mip_mentions_admin','USAGE') admin_usage,pg_has_role('postgres','mip_mentions_admin','SET') admin_set,pg_has_role('postgres','mip_mentions_gateway','USAGE') gateway_usage,pg_has_role('postgres','mip_mentions_gateway','SET') gateway_set,has_schema_privilege('postgres','mip_native_caller','USAGE,CREATE') caller_schema,has_function_privilege('postgres',(select oid from pg_proc where pronamespace='mip_native_caller'::regnamespace and proname='configure_admission'),'EXECUTE') configure_execute,has_function_privilege('postgres',(select oid from pg_proc where pronamespace='mip_native_caller'::regnamespace and proname='read_current'),'EXECUTE') read_execute,(select position('and rolinherit and rolreplication)' in prosrc)>0 from pg_proc where oid='mip_comparison_install.native_boundary_v6()'::regprocedure) managed_helper")
+    console.log('Synthetic caller bootstrap booleans: '+JSON.stringify(evidence.rows))
+   }
+   return originalQuery.apply(this,args)
+  }
+  try{observed=await installComparisonAtomic(cfg,read)}finally{pg.Client.prototype.query=originalQuery}
   // Only exact compiler-authored static SQL, never server context, args or error text.
   if(observed.native_failure?.stage==='successor_preparation'&&Number.isInteger(observed.native_failure.position)){
    const offset=observed.native_failure.position-1
