@@ -178,6 +178,7 @@ jobs:
         timeout-minutes: 5
         env:
           MIP_MANAGED_PROVISIONING_ARM: synthetic-pg17-only
+          MIP_QIK_COMPARISON_DISPOSABLE: synthetic-pg17-only
           MIP_NATIVE_ACTIVATION_ARM: synthetic-pg17-only
           MIP_DISPOSABLE_POSTGRES: qik-persistent-install
         run: node --test supabase/qualification/native-provisioning-compat/integration.test.mjs
