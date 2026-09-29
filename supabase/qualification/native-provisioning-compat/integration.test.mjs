@@ -144,7 +144,115 @@ test('managed provision, full disabled installation, independent audits and term
   const plan=await prepareAtomicInstall(read,options)
   const cfg={...options,authorization:'owner-authorized-native-governed-activation-bootstrap-install',connectionString:secrets.installer,auditLogin:provision.auditLogin,auditConnectionString:secrets.audit,c3OperationId:provision.c3OperationId,c3ManifestSha256:provision.c3ManifestSha256,expectedManifestSha256:plan.manifest_sha256,expectedNativeProgramSha256:plan.native.program_sha256,expectedSuccessorProgram:plan.activation.program_sha256,dblinkMetadataSha256:receipt.extension_metadata_sha256,collectorSource:'qik-fixture-v1',disposable:true}
   phase='full-managed-install'
-  observed=await installComparisonAtomic(cfg,read)
+  const originalInstallQuery=pg.Client.prototype.query
+  pg.Client.prototype.query=async function(...args){
+   if(typeof args[0]==='string'&&args[0].startsWith('\ndo $audit_boundary
+  // Only exact compiler-authored static SQL, never server context, args or error text.
+  if(observed.native_failure?.stage==='successor_preparation'&&Number.isInteger(observed.native_failure.position)){
+   const offset=observed.native_failure.position-1
+   console.log('Bound static successor source excerpt: '+JSON.stringify(plan.activation.sql.slice(Math.max(0,offset-120),offset+180)))
+  }
+  assert.equal(observed.state,'installed_disabled_audit_pending')
+  assert.equal(observed.connection_cleanup_verified,true)
+  phase='same-install-reconcile'
+  observed=await reconcileComparisonInstall(cfg,read);assert.equal(observed.state,'installed_disabled_audit_pending')
+  phase='post-install-credential-maintenance-refused'
+  const connectionBefore=(await provider.query("select encode(sha256(convert_to(connection_string,'UTF8')),'hex') digest from mip_factual.audit_connection where id")).rows[0].digest
+  for(const input of [secrets,{...secrets,audit:uri(provision.auditLogin,randomBytes(36).toString('base64url'))}]){
+   observed=await provisionManagedPrerequisites(provision,input)
+   assert.equal(observed.state,'provisioning_refused');assert.equal(observed.phase,'installed_phase')
+   assert.equal(observed.connection_cleanup_verified,true)
+  }
+  assert.equal((await provider.query("select encode(sha256(convert_to(connection_string,'UTF8')),'hex') digest from mip_factual.audit_connection where id")).rows[0].digest,connectionBefore)
+  phase='autonomous-audit'
+  observed=await qualifyComparisonAudit(cfg,read);assert.equal(observed.audit_qualified,true)
+  phase='rejected-publication-autonomous-persistence'
+  const publisher=await connect()
+  try{
+   // Synthetic fixture source only, never a hosted article or publication.
+   const source=randomUUID()
+   await publisher.query("insert into public.articles(id,feed,outlet,title,url,reader_state,source_status) values($1,'fixture','fixture','fixture','https://news.example/guard/'||$1::text,'eligible','active')",[source])
+   for(const rule of ['provenance','source_state','human_review']){
+    const id=randomUUID(),assertion='fixture-managed-guard:'+id
+    const sources=rule==='source_state'?[randomUUID()]:[source]
+    await publisher.query('begin')
+    try{
+     await assert.rejects(publisher.query("insert into public.explanations(id,assertion_id,review_status,is_current,state,supporting_passage,archived_sources,falsification_condition,source_ids) values($1,$2,'published',true,'ok',$3,jsonb_build_array(jsonb_build_object('status','retained')),'synthetic counterexample',$4::uuid[])",[id,assertion,rule==='provenance'?'':'synthetic passage',sources]),e=>e.code==='P0001'&&e.message==='mip_factual_rejected_'+rule)
+    }finally{await publisher.query('rollback')}
+    assert.equal((await provider.query('select count(*)::int n from public.explanations where id=$1',[id])).rows[0].n,0)
+    const retained=(await provider.query("select rule,attempted_transition,assertion_digest=mip_comparison_kernel_v1.argument_digest(jsonb_build_object('assertion_id',$2::text)) bound from mip_factual.rejection_audit where explanation_id=$1",[id,assertion])).rows
+    assert.equal(retained.length,1)
+    assert.deepEqual(retained[0],{rule,attempted_transition:'published',bound:true})
+   }
+  }finally{await publisher.end()}
+  const audit={...options,expectedInstallManifest:plan.manifest_sha256,expectedNativeProgram:plan.native.program_sha256,expectedSuccessorProgram:plan.activation.program_sha256,metadataAuditConnectionString:secrets.metadataAudit,disposable:true}
+  phase='independent-metadata-audit'
+  observed=await auditNativeActivationMetadata(audit,read)
+  assert.equal(observed.permission_boundary_current,true);assert.equal(observed.state,'disabled_bootstrap')
+  // Provider authority induces fixture drift only; customer provisioning remains unchanged.
+  phase='independent-installer-attribute-drift'
+  const roleBefore=(await provider.query("select rolcanlogin,rolsuper,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit,rolreplication from pg_roles where rolname='postgres'")).rows[0]
+  assert.equal(roleBefore.rolreplication,true)
+  try{
+   await provider.query('alter role postgres noreplication')
+   observed=await auditNativeActivationMetadata(audit,read)
+   assert.equal(observed.permission_boundary_current,false)
+   assert.equal(observed.phase,'managed_installer')
+   assert.equal(observed.connection_cleanup_verified,true)
+  }finally{
+   await provider.query('alter role postgres replication')
+   assert.deepEqual((await provider.query("select rolcanlogin,rolsuper,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit,rolreplication from pg_roles where rolname='postgres'")).rows[0],roleBefore)
+  }
+  phase='independent-audit-after-exact-restoration'
+  observed=await auditNativeActivationMetadata(audit,read)
+  assert.equal(observed.permission_boundary_current,true)
+  const held=await connect(provision.expectedMetadataAuditor,new URL(secrets.metadataAudit).password)
+  const retirement={...cfg,authorization:'owner-authorized-terminal-managed-auditor-retirement'}
+  try{
+   phase='retirement-refuses-live-auditor'
+   observed=await retireManagedAuditors(retirement);assert.equal(observed.state,'refused')
+  }finally{await held.end()}
+  phase='unchanged-after-refusal'
+  observed=await auditNativeActivationMetadata(audit,read);assert.equal(observed.permission_boundary_current,true)
+  const historySQL="select jsonb_build_object('bootstrap',(select jsonb_agg(to_jsonb(t)) from mip_native_activation.bootstrap t),'revisions',(select jsonb_agg(to_jsonb(t)) from mip_native_activation.revisions t),'rejections',(select jsonb_agg(to_jsonb(t)) from mip_factual.rejection_audit t),'receipts',(select jsonb_agg(to_jsonb(t)) from mip_comparison_install.receipts t)) value"
+  const retained=(await provider.query(historySQL)).rows[0].value
+  phase='terminal-retirement-lost-ack'
+  const original=pg.Client.prototype.query;let lost=false
+  pg.Client.prototype.query=async function(...args){const answer=await original.apply(this,args);if(!lost&&args[0]==='commit'){lost=true;throw Error('synthetic_lost_ack')}return answer}
+  try{observed=await retireManagedAuditors(retirement)}finally{pg.Client.prototype.query=original}
+  assert.equal(lost,true);assert.equal(observed.state,'outcome_unknown')
+  phase='same-terminal-operation-reconcile'
+  observed=await retireManagedAuditors(retirement);assert.equal(observed.state,'auditors_retired');assert.equal(observed.needs_reconciliation,false)
+  assert.deepEqual((await provider.query(historySQL)).rows[0].value,retained)
+  assert.equal((await provider.query("select count(*)::int n from pg_roles where rolname in('mip_native_audit_v1','mip_native_metadata_audit_v1')")).rows[0].n,0)
+  assert.equal((await provider.query("select collection_authorized from qik_ingest.collection_gate")).rows[0].collection_authorized,false)
+ }catch(error){failed=true
+  if(observed===null)observed={diagnostic:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code+':'+(/^[A-Za-z_0-9]{1,100}$/.test(error?.routine??'')?error.routine:'unknown'):'fixture_assertion'}
+ }
+ finally{
+  await provider.end()
+  if(owned){
+   const cleanup=await connect('supabase_admin',process.env.MIP_COMPAT_ADMIN_PASSWORD,'template1')
+   try{
+    await cleanup.query("select pg_terminate_backend(pid) from pg_stat_activity where datname='postgres' and pid<>pg_backend_pid()")
+    const created=(await cleanup.query('select rolname from pg_roles order by rolname')).rows.map(r=>r.rolname).filter(r=>!before.includes(r))
+    assert.ok(created.every(r=>r.startsWith('mip_')||r.startsWith('qik_')||['anon','authenticated','service_role'].includes(r)))
+    await cleanup.query('drop database postgres');await cleanup.query('create database postgres owner postgres')
+    for(const name of created)await cleanup.query('drop role '+ident(name))
+    assert.deepEqual((await cleanup.query('select rolname from pg_roles order by rolname')).rows.map(r=>r.rolname),before)
+   }catch{failed=true;phase+=':cleanup'}finally{await cleanup.end()}
+  }
+ }
+ const safe=observed?{state:observed.state,phase:observed.phase,sqlstate:observed.sqlstate,diagnostic:observed.diagnostic,native_failure:observed.native_failure}:null
+ assert.equal(failed,false,'managed integration failed at '+phase+' '+JSON.stringify(safe)+'; raw errors withheld')
+})
+)){
+    const evidence=await originalInstallQuery.call(this,"select r.rolname, t::regclass::text relation from pg_roles r cross join unnest(array['mip_factual.audit_connection'::regclass::oid,'mip_factual.rejection_audit'::regclass::oid]) t where not r.rolsuper and r.rolname not in('postgres','mip_cutover_schema_owner_v1','mip_factual_owner_v3','mip_native_audit_v1') and exists(select 1 from pg_roles caller where caller.rolcanlogin and not caller.rolsuper and caller.rolname<>'postgres' and pg_has_role(caller.oid,r.oid,'SET')) and (has_table_privilege(r.oid,t,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') or has_any_column_privilege(r.oid,t,'SELECT,INSERT,UPDATE,REFERENCES'))")
+    console.log('Synthetic effective audit table principals: '+JSON.stringify(evidence.rows))
+   }
+   return originalInstallQuery.apply(this,args)
+  }
+  try{observed=await installComparisonAtomic(cfg,read)}finally{pg.Client.prototype.query=originalInstallQuery}
   // Only exact compiler-authored static SQL, never server context, args or error text.
   if(observed.native_failure?.stage==='successor_preparation'&&Number.isInteger(observed.native_failure.position)){
    const offset=observed.native_failure.position-1
