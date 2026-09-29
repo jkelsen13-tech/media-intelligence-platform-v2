@@ -60,15 +60,15 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/prepare.mjs",
-      "git_blob": "7a78b6ca14e74c0510a1cf7acdaaa8ea29f3147a"
+      "git_blob": "ff5e7647aa574dda8ffdc3b838ff1e05b35990e5"
     },
     {
       "path": "supabase/qualification/native-governed-activation/activation.mjs",
-      "git_blob": "7f209d3410cd69f7a1ae706ec4714a08515e6500"
+      "git_blob": "faf62ea50047f7ac9ac85d8299497e7a853bf969"
     },
     {
       "path": "supabase/qualification/native-governed-activation/audit.mjs",
-      "git_blob": "51d316031c320e55fe1f88e6008bcae236e36bc1"
+      "git_blob": "dc85998ccf7056b33b42e53df6a2795799da44fa"
     },
     {
       "path": "supabase/qualification/native-governed-install/install.mjs",
@@ -76,7 +76,7 @@
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "git_blob": "49fb974fcfcbd745cc05201552fdfbd8af9360ae"
+      "git_blob": "37b1efd545dc4ae7eebf2a81e4edcdb7ea01629a"
     },
     {
       "path": "tests/nativeGovernedActivation.test.mjs",
@@ -124,11 +124,11 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/host.mjs",
-      "git_blob": "49042ca3b039dd6a3d253609850a786f747f952e"
+      "git_blob": "378d11df2922836e237006723ee4731df885310c"
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "3075e0216fd36453bf1dd09f7478b63b42d57b76"
+      "git_blob": "66a9bc964cbaf1c522fc29d1d137d3957551d4a8"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -149,6 +149,14 @@
     {
       "path": "supabase/qualification/native-comparison-caller/001_admission.sql",
       "git_blob": "a9428d8b2120514a0d6ee13a53d801dba7b6e060"
+    },
+    {
+      "path": "supabase/qualification/native-provisioning-compat/managedPolicy.mjs",
+      "git_blob": "ada40467076ad0a076fd5b567f0ab503ab0892d7"
+    },
+    {
+      "path": "supabase/qualification/native-provisioning-compat/provision.mjs",
+      "git_blob": "409db6167b227678147eca249340cb381117c4cf"
     }
   ],
   "replaced_blobs": [
@@ -273,5 +281,14 @@
     "qualification_scope": "Exact changed source/manifest integrity and focused host unit checks; complete ordered original v2-v6 plus successor PostgreSQL and atomic regression scope in the existing synthetic route. No execution performed.",
     "database_changes": false,
     "host_success": false
+  },
+  "managed_provisioning_successor": {
+    "profile": "supabase-managed-v1",
+    "selection": "explicit provisioningProfile and immutable provisioningOperationId; optionless strict historical profile unchanged",
+    "state": "AUTHORED / NOT QUALIFIED / NOT INSTALLED",
+    "auditors": "Two fixed independent safe LOGINs, each exactly one captured supabase_admin OID10-issued ADMIN-only edge to genuine postgres; no INHERIT or SET",
+    "transport": "Provider-owned dblink 1.2 already isolated in installer-only mip_factual_transport_raw; fixed installer-owned SECURITY DEFINER shim is the only factual-owner execution path",
+    "binding": "Provisioning receipt, exact source program, raw extension/member/dependency/shim metadata and independent auditor catalog verification",
+    "retirement": "Postinstallation auditor policy cleanup remains a required separate bounded implementation; bare prerequisite role cleanup does not qualify it"
   }
 }
