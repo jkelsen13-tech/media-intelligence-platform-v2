@@ -361,6 +361,7 @@ test('managed provision, full disabled installation, independent audits and term
   assert.equal((await provider.query("select count(*)::int n from pg_roles where rolname in('mip_native_audit_v1','mip_native_metadata_audit_v1')")).rows[0].n,0)
   assert.equal((await provider.query("select collection_authorized from qik_ingest.collection_gate")).rows[0].collection_authorized,false)
  }catch(error){failed=true
+  if(phase==='fixed-session-lock-successor-semantics'&&/^[a-z_0-9]{1,100}$/.test(error?.constraint??''))console.log('Synthetic session fixture constraint: '+error.constraint)
   observed={...(observed??{}),fixture_sqlstate:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:null}
   if(observed===null)observed={diagnostic:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code+':'+(/^[A-Za-z_0-9]{1,100}$/.test(error?.routine??'')?error.routine:'unknown'):'fixture_assertion'}
  }

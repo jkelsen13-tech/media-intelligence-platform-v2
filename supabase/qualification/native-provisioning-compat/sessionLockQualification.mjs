@@ -95,7 +95,7 @@ export async function qualifySessionLocks({provider,connect}){
     insert into mip_identity.efta_authentication_policy_heads values('supabase-user-access-v1',${q(ids.policy)},true);
     insert into mip_identity.mapping_versions values(${q(ids.mapping)},${q(runtime)},'mip_efta_reviewer_v1',${q(issuer)},'authenticated',${q('auth_user:'+u)},${q(ids.key)},600,'mechanism-only');
     insert into mip_identity.mapping_heads values(${q(runtime)},'mip_efta_reviewer_v1',${q(ids.mapping)},true);
-    insert into mip_comparison_kernel_v1.principal_sessions(session_id,principal,runtime_id,expires_at) values(${q(ids.broker)},'mip_efta_reviewer_v1',${q(runtime)},'2999-01-01');
+    insert into mip_comparison_kernel_v1.principal_sessions(session_id,principal,runtime_id,issued_at,expires_at) values(${q(ids.broker)},'mip_efta_reviewer_v1',${q(runtime)},'2020-01-01','2999-01-01');
     insert into mip_identity.sessions values(${q(ids.broker)},${q(ids.auth)},repeat('1',64),${q(ids.mapping)},${q(ids.key)},'2999-01-01','mechanism-only');
     with x as(select ${q(ids.assignment)}::uuid revision,${q(u)}::uuid subject_id,'mip_efta_reviewer_v1'::text principal,${q(ids.mapping)}::uuid mapping_revision,${q(ids.key)}::uuid key_revision,${q(ids.credential)}::uuid credential_revision,null::uuid predecessor,'2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
     insert into mip_identity.efta_authority_assignment_versions(revision,subject_id,database_principal,scope,mapping_revision,key_revision,credential_revision,predecessor,approval_state,owner_approval_receipt_hash,owner_approval_payload_hash,reason,valid_from,valid_until,created_at)

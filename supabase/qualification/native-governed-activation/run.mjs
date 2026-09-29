@@ -23,7 +23,7 @@ const CODE_PINS=Object.freeze({
   "package-lock.json": "2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0",
   "supabase/qualification/native-governed-host/adapter.mjs": "47622a1729351d0cabda279d63855b9309e490b0",
   "supabase/qualification/native-governed-activation/host.mjs": "378d11df2922836e237006723ee4731df885310c",
-  "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "3818be644b1823197c078249cdb7739ae8af7839",
+  "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "31493d9a42db676b39fc60e7a70e5a15192d9ec3",
   "supabase/qualification/native-provisioning-compat/provision.mjs": "9fcfc0eaaebf0375804558c5cdee789d45bf474f",
   "supabase/qualification/native-provisioning-compat/retirement.mjs": "c12018a7d78a3df8714104475eac29ccd06cc2b0",
   "supabase/qualification/native-provisioning-compat/sessionLock.mjs": "14897d98eec36f86cab03111585ae0aaa436c8e7"

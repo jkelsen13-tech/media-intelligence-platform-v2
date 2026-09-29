@@ -6,7 +6,7 @@ import {promisify} from 'node:util'
 const exec=promisify(execFile)
 const pins={
  'supabase/qualification/native-provisioning-compat/sessionLock.mjs':'14897d98eec36f86cab03111585ae0aaa436c8e7',
- 'supabase/qualification/native-provisioning-compat/managedPolicy.mjs':'3818be644b1823197c078249cdb7739ae8af7839',
+ 'supabase/qualification/native-provisioning-compat/managedPolicy.mjs':'31493d9a42db676b39fc60e7a70e5a15192d9ec3',
  'supabase/qualification/native-provisioning-compat/hostConfig.mjs':'5ade01ebdcae8c77caa6311f11fe4bb6dbfa9eca',
  'supabase/qualification/native-provisioning-compat/provision.mjs':'9fcfc0eaaebf0375804558c5cdee789d45bf474f',
  'supabase/qualification/collector-native-capture/credentialDelivery.mjs':'354679fadc48eb9f8a8154456f3d38e7faab3e61',

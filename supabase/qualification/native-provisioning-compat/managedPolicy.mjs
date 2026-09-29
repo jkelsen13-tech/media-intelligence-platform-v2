@@ -24,9 +24,9 @@ export function providerSnapshotSQL(){
  where p.rolname in('supabase_etl_admin','supabase_read_only_user')
  or m.rolname in('supabase_etl_admin','supabase_read_only_user'))) metadata`
 }
-// The pinned live Auth-session helper uses FOR KEY SHARE. PostgreSQL requires
-// UPDATE privilege for this read lock; customer must be able to issue the exact
-// UPDATE(id) grant. A provider operation is needed if grant authority is absent.
+// Historical managed profiles delegate Auth lock privileges. The explicit
+// session-lock successor instead verifies existing customer read/UPDATE rights
+// for its fixed postgres-owned helpers, with no Auth-owner SET path.
 export async function verifyManagedCallerAuthPrerequisite(db,o){
  if(!developmentProfile(o))return
  const r=(await db.query("select c.relkind='r' and c.relowner='supabase_auth_admin'::regrole and (select count(*) from pg_catalog.pg_attribute where attrelid=c.oid and attnum>0 and not attisdropped and ((attname in('id','user_id') and atttypid='uuid'::regtype) or(attname='not_after' and atttypid='timestamptz'::regtype)))=3 and has_column_privilege('postgres',c.oid,'id',"+(sessionLockProfile(o)?"'SELECT'":"'SELECT WITH GRANT OPTION'")+") and has_column_privilege('postgres',c.oid,'user_id',"+(sessionLockProfile(o)?"'SELECT'":"'SELECT WITH GRANT OPTION'")+") and has_column_privilege('postgres',c.oid,'id',"+(sessionLockProfile(o)?"'UPDATE'":"'UPDATE WITH GRANT OPTION'")+" )"+(sessionLockProfile(o)?" and has_column_privilege('postgres',c.oid,'not_after','SELECT') and not pg_has_role('postgres','supabase_auth_admin','SET')":"")+" ok from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='auth' and c.relname='sessions'")).rows
