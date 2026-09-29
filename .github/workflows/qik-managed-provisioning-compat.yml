@@ -1,0 +1,100 @@
+name: Qik managed provisioning compatibility (synthetic only)
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact compatibility fixture commit
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: qik-managed-provisioning-compat
+  cancel-in-progress: false
+jobs:
+  compatibility:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Validate source identity
+        env:
+          EXPECTED: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED" =~ ^[a-f0-9]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$EXPECTED"
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          git diff --exit-code
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.14.0
+          package-manager-cache: false
+      - name: Locked test driver
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Resolve exact managed image and create isolated instance
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull supabase/postgres:17.6.1.166
+          image=$(docker image inspect supabase/postgres:17.6.1.166 --format '{{index .RepoDigests 0}}')
+          [[ "$image" =~ ^supabase/postgres@sha256:[a-f0-9]{64}$ ]]
+          printf 'Managed image: %s\n' "$image"
+          admin=$(openssl rand -hex 32)
+          customer=$(openssl rand -hex 32)
+          printf '::add-mask::%s\n' "$admin"
+          printf '::add-mask::%s\n' "$customer"
+          printf 'MIP_COMPAT_ADMIN_PASSWORD=%s\nMIP_COMPAT_CUSTOMER_PASSWORD=%s\n' "$admin" "$customer" >> "$GITHUB_ENV"
+          docker run --detach --name qik-managed-compat --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD="$admin" "$image" postgres -D /etc/postgresql -c log_statement=none -c log_min_error_statement=panic -c log_parameter_max_length=0 -c log_parameter_max_length_on_error=0 -c pgaudit.log=none
+          for attempt in $(seq 1 45); do
+            if docker exec qik-managed-compat pg_isready -h 127.0.0.1 -U supabase_admin >/dev/null 2>&1; then exit 0; fi
+            sleep 2
+          done
+          echo 'Managed instance readiness failed; no raw database logs emitted'
+          exit 1
+      - name: Provider-only customer credential setup
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import pg from 'pg';
+          const db=new pg.Client({host:'127.0.0.1',port:5432,user:'supabase_admin',password:process.env.MIP_COMPAT_ADMIN_PASSWORD,database:'postgres'});
+          try {
+            await db.connect();
+            const r=(await db.query("select current_user,session_user,current_setting('server_version_num') version,(select rolsuper from pg_roles where rolname='postgres') customer_super,current_setting('session_preload_libraries') preload")).rows[0];
+            if(r.current_user!=='supabase_admin'||r.session_user!=='supabase_admin'||r.version!=='170006'||r.customer_super!==false||!r.preload.includes('supautils'))throw Error('managed_identity');
+            const secret=process.env.MIP_COMPAT_CUSTOMER_PASSWORD;
+            if(!/^[a-f0-9]{64}$/.test(secret))throw Error('credential_shape');
+            await db.query("ALTER ROLE postgres PASSWORD '"+secret+"'");
+            console.log('PASS provider customer-credential preparation; disputed customer steps not performed');
+          } catch(e) {console.error('FAIL provider preparation '+(/^[A-Z0-9]{5}$/.test(e.code??'')?e.code:'bounded'));process.exitCode=1;}
+          finally {await db.end();}
+          JS
+      - name: Restricted customer lifecycle qualification
+        timeout-minutes: 5
+        env:
+          MIP_CUSTODIAN_LIFECYCLE_ARM: synthetic-pg17-local-only
+          MIP_DISPOSABLE_POSTGRES: qik-persistent-install
+        run: node --test supabase/qualification/native-provisioning-compat/auditorLifecycle.test.mjs
+      - name: Verify unchanged checkout
+        if: always()
+        run: git diff --exit-code
+      - name: Owned disposable cleanup
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if docker container inspect qik-managed-compat >/dev/null 2>&1; then
+            volumes=$(docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{println .Name}}{{end}}{{end}}' qik-managed-compat)
+            docker rm --force --volumes qik-managed-compat
+            for volume in $volumes; do
+              if docker volume inspect "$volume" >/dev/null 2>&1; then echo 'Owned volume remains'; exit 1; fi
+            done
+          fi
+          if docker container inspect qik-managed-compat >/dev/null 2>&1; then exit 1; fi
+# Manual source/synthetic-only qualification. No hosted secrets, artifacts, caches, material or deployment.
