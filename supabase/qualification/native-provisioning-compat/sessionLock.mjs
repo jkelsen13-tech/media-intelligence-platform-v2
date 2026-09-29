@@ -53,8 +53,8 @@ export function transformSessionLockCaller(sql,o){
 // Exact canonical deparser text is source-defined, not captured from an installed
 // helper and then trusted. Direct catalog audit resolves OIDs without USAGE.
 const bodies={
- key_share:'beginatomicselecttruefromauth.sessionsxwhere((x.id=s)and(x.user_id=u))forkeyshare;end',
- share:'beginatomicselectx.not_afterfromauth.sessionsxwhere((x.id=s)and(x.user_id=u))forshare;end'
+ key_share:'beginatomicselecttruefromauth.sessionsxwhere((x.id=key_share.s)and(x.user_id=key_share.u))forkeyshareofx;end',
+ share:'beginatomicselectx.not_afterfromauth.sessionsxwhere((x.id=share.s)and(x.user_id=share.u))forshareofx;end'
 }
 const lit=s=>"'"+s.replaceAll("'","''")+"'"
 export function sessionLockBoundarySQL(o){

@@ -26,7 +26,7 @@ const CODE_PINS=Object.freeze({
   "supabase/qualification/native-provisioning-compat/managedPolicy.mjs": "3818be644b1823197c078249cdb7739ae8af7839",
   "supabase/qualification/native-provisioning-compat/provision.mjs": "9fcfc0eaaebf0375804558c5cdee789d45bf474f",
   "supabase/qualification/native-provisioning-compat/retirement.mjs": "c12018a7d78a3df8714104475eac29ccd06cc2b0",
-  "supabase/qualification/native-provisioning-compat/sessionLock.mjs": "dc3f0944469bf1302260182615c83ee37d21b30f"
+  "supabase/qualification/native-provisioning-compat/sessionLock.mjs": "14897d98eec36f86cab03111585ae0aaa436c8e7"
 })
 let emitted=false,phase='host_admission'
 function stop(){

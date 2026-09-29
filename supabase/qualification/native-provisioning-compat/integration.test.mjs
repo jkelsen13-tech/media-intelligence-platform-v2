@@ -327,6 +327,24 @@ test('managed provision, full disabled installation, independent audits and term
   observed=await auditNativeActivationMetadata(audit,read);assert.equal(observed.permission_boundary_current,true)
   const historySQL="select jsonb_build_object('bootstrap',(select jsonb_agg(to_jsonb(t)) from mip_native_activation.bootstrap t),'revisions',(select jsonb_agg(to_jsonb(t)) from mip_native_activation.revisions t),'rejections',(select jsonb_agg(to_jsonb(t)) from mip_factual.rejection_audit t),'receipts',(select jsonb_agg(to_jsonb(t)) from mip_comparison_install.receipts t)) value"
   const retained=(await provider.query(historySQL)).rows[0].value
+  phase='independent-session-helper-drift'
+  const helperDef=(await provider.query("select pg_get_functiondef('mip_auth_session_lock.key_share(uuid,uuid)'::regprocedure) d")).rows[0].d
+  const helperBefore=(await provider.query("select proowner,proacl,prosqlbody::text body,proconfig from pg_proc where oid='mip_auth_session_lock.key_share(uuid,uuid)'::regprocedure")).rows[0]
+  for(const drift of ['execution','configuration','body']){
+   try{
+    if(drift==='execution')await provider.query('grant execute on function mip_auth_session_lock.key_share(uuid,uuid) to anon')
+    if(drift==='configuration')await provider.query("alter function mip_auth_session_lock.key_share(uuid,uuid) set search_path=public")
+    if(drift==='body')await provider.query("create or replace function mip_auth_session_lock.key_share(u uuid,s uuid) returns bool language sql volatile security definer parallel unsafe set search_path='' begin atomic select false;end")
+    observed=await auditNativeActivationMetadata(audit,read)
+    assert.equal(observed.permission_boundary_current,false)
+   }finally{
+    if(drift==='execution')await provider.query('revoke execute on function mip_auth_session_lock.key_share(uuid,uuid) from anon')
+    else await provider.query(helperDef)
+    assert.deepEqual((await provider.query("select proowner,proacl,prosqlbody::text body,proconfig from pg_proc where oid='mip_auth_session_lock.key_share(uuid,uuid)'::regprocedure")).rows[0],helperBefore)
+   }
+   observed=await auditNativeActivationMetadata(audit,read)
+   assert.equal(observed.permission_boundary_current,true)
+  }
   phase='fixed-session-lock-successor-semantics'
   await qualifySessionLocks({provider,connect})
   phase='independent-after-session-fixture-cleanup'

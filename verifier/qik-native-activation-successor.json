@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "fb97a7ebcd3e439dfe4f1f19caf5cff3db2df61f"
+      "git_blob": "b8294bf6f47daedd50a5af12a9f638decc68a67b"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -172,7 +172,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/run.mjs",
-      "git_blob": "5085db51a3fe97a3d4242d70e05f05d76dddeed2"
+      "git_blob": "fd2fe5b90f8d8a1eac15dfc4248dfa8e62ee9ebb"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/hostConfig.mjs",
@@ -180,7 +180,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/integration.test.mjs",
-      "git_blob": "f6dd9f5dffa8c497954fdaaf9db479b85d76ee4a"
+      "git_blob": "d4dadc6f9ae13e380d5f5e3d67b2cbc432f88a75"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/README.md",
@@ -192,11 +192,11 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLock.mjs",
-      "git_blob": "dc3f0944469bf1302260182615c83ee37d21b30f"
+      "git_blob": "14897d98eec36f86cab03111585ae0aaa436c8e7"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLockQualification.mjs",
-      "git_blob": "d9ea94d93eda47637e14532cd2c00f6e9a59d8d5"
+      "git_blob": "ffc3449285b6045cd679b5a341ef4df44a5bdec6"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/preflight.mjs",
@@ -204,7 +204,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/preflight-run.mjs",
-      "git_blob": "68abcccaeae8331ed76f3a37b6743cfa01d345c6"
+      "git_blob": "0a06aae272cbadd7a4de74fa98ad246abbedfdce"
     }
   ],
   "replaced_blobs": [

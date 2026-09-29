@@ -75,6 +75,67 @@ export async function qualifySessionLocks({provider,connect}){
   const expired=await client();try{await expired.query('begin');await nested(expired);await assert.rejects(()=>callShare(expired),refusal);await expired.query('rollback')}finally{await expired.end()}
   await clear();const missing=await client();try{await missing.query('begin');await nested(missing);assert.equal((await callKey(missing)).rows[0].ok,false);await assert.rejects(()=>callShare(missing),refusal);await missing.query('rollback')}finally{await missing.end()}
 
+  // Real EFTA consumer, not the narrow key-lock probe: source-authored synthetic
+  // policy/key/assignment/broker rows are private to this transaction and rolled
+  // back exactly, including live receipts. No article material or publication.
+  const ids=Object.fromEntries(['key','credential','policy','mapping','broker','auth','assignment'].map(k=>[k,randomUUID()]))
+  const q=v=>"'"+String(v).replaceAll("'","''")+"'"
+  const issuer='https://qikvmopbtijoebdqosyq.supabase.co/auth/v1',kid=randomUUID(),runtime='session-helper-fixture'
+  const digest='mip_comparison_kernel_v1.argument_digest'
+  const seed=async c=>{
+   await c.query(`insert into mip_identity.key_versions values(${q(ids.key)},${q(issuer)},${q(kid)},'{}','2020-01-01','2999-01-01','mechanism-only');
+    insert into mip_identity.key_heads values(${q(issuer)},${q(kid)},${q(ids.key)},true);
+    with x as(select ${q(ids.credential)}::uuid revision,'session-lock-fixture'::text gateway_id,repeat('a',64)::text fingerprint,null::uuid predecessor,'current'::text state,'2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
+    insert into mip_identity.efta_gateway_credential_versions
+    select revision,gateway_id,fingerprint,predecessor,state,'owner_approved',repeat('b',64),${digest}(jsonb_build_object('revision',revision,'gateway_id',gateway_id,'credential_fingerprint_hash',fingerprint,'predecessor',predecessor,'state',state,'valid_from',valid_from,'valid_until',valid_until)),valid_from,valid_until,clock_timestamp() from x;
+    insert into mip_identity.efta_gateway_credential_heads values('session-lock-fixture',${q(ids.credential)},true);
+    with x as(select ${q(ids.policy)}::uuid revision,${q(issuer)}::text issuer,'authenticated'::text audience,'ES256'::text algorithm,${q(kid)}::text kid,${q(ids.key)}::uuid key_revision,repeat('9',64)::text jwks_sha256,null::uuid predecessor,'current'::text state,'2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
+    insert into mip_identity.efta_authentication_policy_versions(revision,issuer,audience,algorithm,kid,key_revision,jwks_sha256,predecessor,state,approval_state,owner_approval_receipt_hash,owner_approval_payload_hash,valid_from,valid_until)
+    select revision,issuer,audience,algorithm,kid,key_revision,jwks_sha256,predecessor,state,'owner_approved',repeat('8',64),${digest}(jsonb_build_object('revision',revision,'issuer',issuer,'audience',audience,'algorithm',algorithm,'kid',kid,'key_revision',key_revision,'jwks_sha256',jwks_sha256,'predecessor',predecessor,'state',state,'valid_from',valid_from,'valid_until',valid_until)),valid_from,valid_until from x;
+    insert into mip_identity.efta_authentication_policy_heads values('supabase-user-access-v1',${q(ids.policy)},true);
+    insert into mip_identity.mapping_versions values(${q(ids.mapping)},${q(runtime)},'mip_efta_reviewer_v1',${q(issuer)},'authenticated',${q('auth_user:'+u)},${q(ids.key)},600,'mechanism-only');
+    insert into mip_identity.mapping_heads values(${q(runtime)},'mip_efta_reviewer_v1',${q(ids.mapping)},true);
+    insert into mip_comparison_kernel_v1.principal_sessions(session_id,principal,runtime_id,expires_at) values(${q(ids.broker)},'mip_efta_reviewer_v1',${q(runtime)},'2999-01-01');
+    insert into mip_identity.sessions values(${q(ids.broker)},${q(ids.auth)},repeat('1',64),${q(ids.mapping)},${q(ids.key)},'2999-01-01','mechanism-only');
+    with x as(select ${q(ids.assignment)}::uuid revision,${q(u)}::uuid subject_id,'mip_efta_reviewer_v1'::text principal,${q(ids.mapping)}::uuid mapping_revision,${q(ids.key)}::uuid key_revision,${q(ids.credential)}::uuid credential_revision,null::uuid predecessor,'2020-01-01'::timestamptz valid_from,'2999-01-01'::timestamptz valid_until)
+    insert into mip_identity.efta_authority_assignment_versions(revision,subject_id,database_principal,scope,mapping_revision,key_revision,credential_revision,predecessor,approval_state,owner_approval_receipt_hash,owner_approval_payload_hash,reason,valid_from,valid_until,created_at)
+    select revision,subject_id,principal,'efta-bounded-demo-v1',mapping_revision,key_revision,credential_revision,predecessor,'owner_approved',repeat('c',64),${digest}(jsonb_build_object('revision',revision,'subject_id',subject_id,'database_principal',principal,'scope','efta-bounded-demo-v1','mapping_revision',mapping_revision,'key_revision',key_revision,'credential_revision',credential_revision,'predecessor',predecessor,'valid_from',valid_from,'valid_until',valid_until)),'owned helper fixture',valid_from,valid_until,clock_timestamp() from x;
+    insert into mip_identity.efta_authority_assignment_heads values(${q(u)},'mip_efta_reviewer_v1',${q(ids.assignment)},true);`)
+  }
+  const realEfta=(c,receipt,subject=u,session=s)=>c.query('select mip_identity.efta_assert_live_auth_session($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) receipt',[receipt,session,subject,ids.policy,ids.broker,runtime,ids.assignment,'1'.repeat(64),issuer,'authenticated','ES256',kid,ids.key,'9'.repeat(64)])
+  await row(null)
+  const efta=await client(),signout=await client(),receiptId=randomUUID()
+  try{
+   await efta.query('begin');await seed(efta)
+   for(const [subject,session] of [[null,s],[u,null],[other,s],[u,randomUUID()]]){
+    await efta.query('savepoint invalid');await efta.query('set local role mip_efta_authenticator_v1')
+    await assert.rejects(()=>realEfta(efta,randomUUID(),subject,session),refusal)
+    await efta.query('rollback to invalid');await efta.query('release invalid')
+   }
+   for(const [change,reason] of [
+    ["update mip_comparison_kernel_v1.principal_sessions set revoked_at=clock_timestamp() where session_id="+q(ids.broker),'mip_identity_session_revoked'],
+    ["update mip_comparison_kernel_v1.principal_sessions set expires_at=clock_timestamp()-interval '1 second' where session_id="+q(ids.broker),'mip_identity_session_revoked'],
+    ["update mip_identity.efta_authentication_policy_heads set active=false where policy_id='supabase-user-access-v1'",'efta_authentication_policy_not_authorized'],
+    ["update mip_identity.efta_authority_assignment_heads set active=false where subject_id="+q(u),'efta_assignment_not_authorized'],
+    ["update mip_identity.efta_gateway_credential_heads set active=false where gateway_id='session-lock-fixture'",'efta_gateway_credential_not_authorized']
+   ]){
+    await efta.query('savepoint refused');await efta.query(change);await efta.query('set local role mip_efta_authenticator_v1')
+    await assert.rejects(()=>realEfta(efta,randomUUID()),e=>e.code==='P0001'&&e.message===reason)
+    await efta.query('rollback to refused');await efta.query('release refused')
+   }
+   await efta.query('set local role mip_efta_authenticator_v1')
+   assert.equal((await realEfta(efta,receiptId)).rows[0].receipt,receiptId)
+   const hp=(await efta.query('select pg_backend_pid() p')).rows[0].p,wp=(await signout.query('select pg_backend_pid() p')).rows[0].p
+   await signout.query('begin');const deleted=signout.query('delete from auth.sessions where id=$1',[s])
+   await blocked(provider,wp,hp);await efta.query('rollback')
+   assert.equal((await deleted).rowCount,1);await signout.query('commit')
+   assert.equal((await provider.query('select count(*)::int n from mip_identity.efta_live_auth_receipts where receipt_id=$1',[receiptId])).rows[0].n,0)
+   await efta.query('begin');await seed(efta);await efta.query('set local role mip_efta_authenticator_v1')
+   await assert.rejects(()=>realEfta(efta,randomUUID()),e=>e.code==='P0001'&&e.message==='efta_live_auth_session_invalid')
+   await efta.query('rollback')
+  }finally{await efta.query('rollback').catch(()=>{});await signout.query('rollback').catch(()=>{});await efta.end();await signout.end()}
+  assert.equal((await provider.query('select count(*)::int n from mip_identity.key_versions where revision=$1',[ids.key])).rows[0].n,0)
+
   // After helper return, DELETE waits on both original lock modes. SHARE also
   // blocks expiry UPDATE. KEY SHARE permits non-key expiry UPDATE, exactly as
   // the preserved original EFTA mode; it does NOT claim expiry linearization.
