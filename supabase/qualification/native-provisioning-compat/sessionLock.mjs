@@ -10,7 +10,7 @@ export const SESSION_LOCK_DDL=`
 create schema mip_auth_session_lock authorization postgres;
 revoke all on schema mip_auth_session_lock from public,anon,authenticated,service_role,supabase_admin,supabase_etl_admin,supabase_read_only_user,authenticator;
 create function mip_auth_session_lock.key_share(u pg_catalog.uuid,s pg_catalog.uuid)
-returns pg_catalog.boolean language sql volatile security definer parallel unsafe
+returns pg_catalog.bool language sql volatile security definer parallel unsafe
 set search_path='' begin atomic
  select true from auth.sessions x where x.id=s and x.user_id=u for key share;
 end;
