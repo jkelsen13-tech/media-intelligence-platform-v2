@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "5bf5dcb4ad876b542931ee1b71e5e72339de852c"
+      "git_blob": "32be22add8b15ea37bd5d3635688fd0334de652d"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -156,7 +156,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/provision.mjs",
-      "git_blob": "74a1e2e22ecbea6300d76aade7aa60658701e1aa"
+      "git_blob": "2f85bf2e1bc99fe1d327ee846bf0dc459fc9724c"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/retirement.mjs",

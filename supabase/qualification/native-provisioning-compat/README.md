@@ -103,3 +103,42 @@ Applicable fresh review and qualification remain required before provisioning.
 Production cleanup, auditor retirement and installed protected-owner lifecycle
 must follow the separately integrated exact-operation contracts; disposable
 provider teardown is not customer retirement authority.
+
+## Managed integration and credential phase boundary (successor)
+
+The owner explicitly approved trusted-installer ADMIN in this successor;
+this is not isolation from postgres. Provider-owned raw dblink objects remain
+behind an installer-only schema. Independent metadata audit directly checks
+the same managed installer identity and role attributes as SQL currentness.
+
+Post-install credential rotation is **unsupported in this installation phase**.
+The prerequisite host refuses both provision and reconcile once installation
+or activation schemas exist; it never treats a changed secure binding as
+permission to alter an existing database password. The combined fixture must
+prove this refusal leaves the stored audit connection unchanged.
+
+Credential consumers are distinct: provision.mjs authenticates the two initial
+bindings; atomicInstall.mjs stores the autonomous URI in the protected
+mip_factual.audit_connection row; log_rejection uses that row for server-side
+dblink; audit.mjs uses the independent metadata binding directly; held hosts
+receive the corresponding environment bindings. Terminal retirement removes
+only authorized policy/ACL dependencies and roles, and is not rotation.
+
+An operating maintenance procedure would have to coordinate the database
+password, protected stored URI, secure host bindings, quiescence/owned sessions,
+uncertain outcomes and fresh autonomous verification. No such post-install
+procedure is claimed by the standalone role-lifecycle fixture. Do not alter
+any real binding/password or route under that narrower evidence. If maintenance
+is needed before a qualified procedure exists, hold the affected operation.
+
+qualifyComparisonAudit's initial audit_probe(true), outer rollback and
+audit_probe(false) readback prove autonomous persistence in that invocation.
+Its existing-receipt shortcut is historical qualification, **not a fresh
+connection test**, and must never be reused as connection proof after a
+credential or route change. A transport probe alone is not publication-guard
+coverage. Hosted proof remains absent until exact installation prerequisites
+and actual server-side TLS/authentication and rejected-publication checks pass.
+
+The current combined fixture and real host source-gate tests are under targeted
+qualification. Passing source checks or authored fixtures do not establish
+hosted installation, activation, full operating lifecycle or publication.

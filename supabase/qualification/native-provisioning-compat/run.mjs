@@ -6,7 +6,7 @@ import {promisify} from 'node:util'
 const exec=promisify(execFile)
 const pins={
  'supabase/qualification/native-provisioning-compat/hostConfig.mjs':'d9e00d9bad2e43a92214b0aab1cd4fbc16b9e976',
- 'supabase/qualification/native-provisioning-compat/provision.mjs':'74a1e2e22ecbea6300d76aade7aa60658701e1aa',
+ 'supabase/qualification/native-provisioning-compat/provision.mjs':'2f85bf2e1bc99fe1d327ee846bf0dc459fc9724c',
  'supabase/qualification/collector-native-capture/credentialDelivery.mjs':'354679fadc48eb9f8a8154456f3d38e7faab3e61',
  'package.json':'68caf5625166966005fff9cd702b3bc6c5fa49ad',
  'package-lock.json':'2b1796f9fa6bf6490f8d935863c8b6dd0a41a7f0'
@@ -59,7 +59,7 @@ try{
  const r=await (e.MIP_MANAGED_PROVISIONING_ACTION==='provision'?api.provisionManagedPrerequisites:api.reconcileManagedPrerequisites)(c,secrets)
  // Explicit allow-list: neither SQL/errors nor input configuration/credentials can escape.
  const states=['not_provisioned','provisioned_authentication_verified','provisioned_authentication_unverified','commit_outcome_unknown','provisioning_refused']
- const phases=['configuration','installer_connection','installer_identity','serialization','c3_boundary','collision','provider_extension','secure_auditor_creation','immutable_receipt','receipt_readback','commit','distinct_auditor_authentication']
+ const phases=['configuration','installer_connection','installer_identity','serialization','c3_boundary','installed_phase','collision','provider_extension','secure_auditor_creation','immutable_receipt','receipt_readback','commit','distinct_auditor_authentication']
  if(r?.contract!=='qik-managed-prerequisites-v1'||!states.includes(r.state)||!phases.includes(r.phase))fail()
  const safe={...denied(),state:r.state,phase:r.phase,release_sha:release,operation_id:/^[a-f0-9]{32}$/.test(c.operationId??'')?c.operationId:null,
  needs_reconciliation:r.needs_reconciliation===true,connection_cleanup_verified:r.connection_cleanup_verified===true}

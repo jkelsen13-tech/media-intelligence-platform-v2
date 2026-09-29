@@ -32,15 +32,18 @@ async function transferSyntheticOwnership(provider){
  for(const r of functions)await provider.query('alter function '+r.signature+' owner to postgres')
  for(const name of schemas)await provider.query('alter schema '+ident(name)+' owner to postgres')
 }
-async function prepareSourcePrerequisites(root,selectedMode){
+async function prepareSourcePrerequisites(root,selectedMode,step){
  let owner;
  try{
   owner=root;
+  step('fixture-provider-extensions');
   await owner.query('create schema if not exists extensions;create extension if not exists pgcrypto with schema extensions;create extension if not exists vector with schema public');
   assert.equal((await owner.query("select extversion from pg_extension where extname='vector'")).rows[0].extversion,'0.8.2');
+  step('fixture-source-substrate');
   await owner.query(await read('supabase/qualification/qik-ingest/fixture_substrate.sql'));
   await owner.query('create schema if not exists auth');
   for(const relation of REQUIRED_RELATIONS.filter(r=>['public','auth'].includes(r.schema_name))){
+   step('fixture-required-'+relation.qualified);
    const exists=(await owner.query('select to_regclass($1) name',[relation.qualified])).rows[0].name;
    if(!exists){
     const columns=Object.entries(relation.requiredColumns);
@@ -52,8 +55,10 @@ async function prepareSourcePrerequisites(root,selectedMode){
     for(const[n,t]of Object.entries(relation.requiredColumns))if(!cols.has(n))await owner.query('alter table '+relation.qualified+' add column '+ident(n)+' '+t);
    }
   }
+  step('fixture-pipeline');
   await owner.query(await read('supabase/migrations/20260905082406_evidence_pipeline_reliability.sql'));
   for(const file of LOAD_ORDER){
+   step('fixture-ordered-'+file);
    await owner.query(await read('supabase/qualification/qik-ingest/'+file));
    if(file!=='05_operation_ledger.sql')await owner.query('select qik_ingest_operation.capture_step($1)',[file]);
   }
@@ -61,6 +66,7 @@ async function prepareSourcePrerequisites(root,selectedMode){
   await owner.query('insert into qik_ingest_operation.persistent_install_receipt(id,operation_id,installer,sql_manifest_sha256) values(true,$1,$2,$3)',['3'.repeat(32),backendInstaller,'1'.repeat(64)]);
   await owner.query('grant qik_ingest_fn_owner to '+ident(backendInstaller)+' with admin false,inherit true,set true');
   await root.query('alter function public.mip_pipeline_v1(text,jsonb) owner to postgres');
+  step('fixture-source-ownership');
   await transferSyntheticOwnership(root);
   owner=null;
   // Match the observed native source ownership/RLS shape before installation.
@@ -117,7 +123,7 @@ test('managed provision, full disabled installation, independent audits and term
   phase='pristine-dblink'
   assert.equal((await provider.query("select count(*)::int n from pg_extension where extname='dblink'")).rows[0].n,0)
   owned=true;phase='real-ordered-source-prerequisites'
-  await prepareSourcePrerequisites(provider,NATIVE_CALLER_MODE)
+  await prepareSourcePrerequisites(provider,NATIVE_CALLER_MODE,step=>{phase=step})
   phase='actual-managed-provision'
   observed=await provisionManagedPrerequisites(provision,secrets)
   assert.equal(observed.state,'provisioned_authentication_verified')
@@ -134,6 +140,14 @@ test('managed provision, full disabled installation, independent audits and term
   assert.equal(observed.connection_cleanup_verified,true)
   phase='same-install-reconcile'
   observed=await reconcileComparisonInstall(cfg,read);assert.equal(observed.state,'installed_disabled_audit_pending')
+  phase='post-install-credential-maintenance-refused'
+  const connectionBefore=(await provider.query("select encode(sha256(convert_to(connection_string,'UTF8')),'hex') digest from mip_factual.audit_connection where id")).rows[0].digest
+  for(const input of [secrets,{...secrets,audit:uri(provision.auditLogin,randomBytes(36).toString('base64url'))}]){
+   observed=await provisionManagedPrerequisites(provision,input)
+   assert.equal(observed.state,'provisioning_refused');assert.equal(observed.phase,'installed_phase')
+   assert.equal(observed.connection_cleanup_verified,true)
+  }
+  assert.equal((await provider.query("select encode(sha256(convert_to(connection_string,'UTF8')),'hex') digest from mip_factual.audit_connection where id")).rows[0].digest,connectionBefore)
   phase='autonomous-audit'
   observed=await qualifyComparisonAudit(cfg,read);assert.equal(observed.audit_qualified,true)
   const audit={...options,expectedInstallManifest:plan.manifest_sha256,expectedNativeProgram:plan.native.program_sha256,expectedSuccessorProgram:plan.activation.program_sha256,metadataAuditConnectionString:secrets.metadataAudit,disposable:true}
@@ -178,7 +192,7 @@ test('managed provision, full disabled installation, independent audits and term
   assert.equal((await provider.query("select count(*)::int n from pg_roles where rolname in('mip_native_audit_v1','mip_native_metadata_audit_v1')")).rows[0].n,0)
   assert.equal((await provider.query("select collection_authorized from qik_ingest.collection_gate")).rows[0].collection_authorized,false)
  }catch(error){failed=true
-  if(observed===null)observed={diagnostic:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code:'fixture_assertion'}
+  if(observed===null)observed={diagnostic:/^[0-9A-Z]{5}$/.test(error?.code??'')?error.code+':'+(/^[A-Za-z_0-9]{1,100}$/.test(error?.routine??'')?error.routine:'unknown'):'fixture_assertion'}
  }
  finally{
   await provider.end()

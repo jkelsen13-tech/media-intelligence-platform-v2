@@ -143,6 +143,10 @@ async function run(action,input,secrets){
   phase='installer_identity';const ids=await identity(db,c)
   phase='serialization';await lock(db)
   phase='c3_boundary';const baseline=await c3(db,c)
+  // This phase owns initial creation only, never post-install credential maintenance.
+  // Installed audit_connection and protected policies require a separate qualified procedure.
+  phase='installed_phase'
+  if((await db.query("select exists(select 1 from pg_namespace where nspname in('mip_comparison_install','mip_native_activation')) present")).rows[0].present)fail()
   const exists=(await db.query("select exists(select 1 from pg_namespace where nspname='mip_managed_provisioning') present")).rows[0].present
   if(!exists){
    if(action==='reconcile'){await db.query('rollback');result=outcome('not_provisioned',c,phase);return result}
