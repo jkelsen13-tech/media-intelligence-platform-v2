@@ -76,7 +76,7 @@
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "git_blob": "345994403d313b3bda28df957b51454ae6638985"
+      "git_blob": "a3f8e980748d1442ddf5d42289c89d4495e58e51"
     },
     {
       "path": "tests/nativeGovernedActivation.test.mjs",
@@ -447,6 +447,7 @@
       "diagnostic": "doj_function_acl",
       "rollback_verified": true
     },
-    "permission_effect": "Removes only direct predecessor function EXECUTE from mip_efta_owner_v1; governed wrapper remains executable; no Auth/article/material or public grant"
+    "permission_effect": "Removes only direct predecessor function EXECUTE from mip_efta_owner_v1; governed wrapper remains executable; no Auth/article/material or public grant",
+    "status": "AUTHORED / first qualification source syntax failure repaired; affected combined recheck pending / NOT INSTALLED"
   }
 }
