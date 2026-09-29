@@ -81,9 +81,9 @@ export function catalogOnlyManagedSQL(sql){
   if(keys.some(t=>!Object.hasOwn(types,t)))fail()
   return "(select cbp.oid from pg_catalog.pg_proc cbp join pg_catalog.pg_namespace cbn on cbn.oid=cbp.pronamespace where cbn.nspname="+lit(schema)+" and cbp.proname="+lit(name)+" and cbp.proargtypes="+lit(keys.map(t=>types[t]).join(' '))+"::oidvector)"
  }
- sql=sql.replace(/to_regprocedure\\('([a-z_0-9]+)\\.([a-z_0-9]+)\\(([^']*)\\)'\\)/g,(all,ns,name,args)=>ns.startsWith('mip_')?proc(ns,name,args):all)
- sql=sql.replace(/'([a-z_0-9]+)\\.([a-z_0-9]+)\\(([^']*)\\)'::regprocedure/g,(all,ns,name,args)=>ns.startsWith('mip_')?proc(ns,name,args):all)
- sql=sql.replace(/'([a-z_0-9]+)\\.([a-z_0-9]+)'::regclass/g,(all,ns,name)=>ns.startsWith('mip_')?"(select cbc.oid from pg_catalog.pg_class cbc join pg_catalog.pg_namespace cbn on cbn.oid=cbc.relnamespace where cbn.nspname="+lit(ns)+" and cbc.relname="+lit(name)+")":all)
+ sql=sql.replace(/to_regprocedure\('([a-z_0-9]+)\.([a-z_0-9]+)\(([^']*)\)'\)/g,(all,ns,name,args)=>ns.startsWith('mip_')?proc(ns,name,args):all)
+ sql=sql.replace(/'([a-z_0-9]+)\.([a-z_0-9]+)\(([^']*)\)'::regprocedure/g,(all,ns,name,args)=>ns.startsWith('mip_')?proc(ns,name,args):all)
+ sql=sql.replace(/'([a-z_0-9]+)\.([a-z_0-9]+)'::regclass/g,(all,ns,name)=>ns.startsWith('mip_')?"(select cbc.oid from pg_catalog.pg_class cbc join pg_catalog.pg_namespace cbn on cbn.oid=cbc.relnamespace where cbn.nspname="+lit(ns)+" and cbc.relname="+lit(name)+")":all)
  return sql
 }
 export const RAW_SCHEMA='mip_factual_transport_raw'
