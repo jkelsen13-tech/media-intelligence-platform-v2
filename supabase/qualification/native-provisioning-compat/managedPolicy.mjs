@@ -68,7 +68,7 @@ export function managedStatisticsViewPredicate(alias='c'){
 }
 export function managedStatisticsCatalogSQL(){
  return `select jsonb_build_object('extension',(select to_jsonb(e) from pg_catalog.pg_extension e where extname='pg_stat_statements'),
- 'views',(select jsonb_agg(jsonb_build_object('class',to_jsonb(c),'definition',pg_catalog.pg_get_viewdef(c.oid,true)) order by c.relname)
+ 'views',(select jsonb_agg(jsonb_build_object('class',to_jsonb(c),'rules',(select jsonb_agg(to_jsonb(r) order by r.oid) from pg_catalog.pg_rewrite r where r.ev_class=c.oid)) order by c.relname)
  from pg_catalog.pg_class c where ${managedStatisticsViewPredicate()}))`
 }
 export const RAW_SCHEMA='mip_factual_transport_raw'
