@@ -193,7 +193,7 @@ The strict managed and optionless historical schema-USAGE veto is preserved.
 ### Managed provider statistics passive ACLs
 
 The development metadata auditor acknowledges existing PUBLIC SELECT ACLs on
-only the two trusted-postgres-owned pg_stat_statements 1.11 extension views in
+only the two already-trusted installer/provider-owned pg_stat_statements 1.11 extension views in
 extensions, while independently requiring no extensions schema USAGE. Their
 catalog identities and rewrite definitions are bound in the managed snapshot.
 The fixture directly attempts both SELECTs as the auditor and requires SQLSTATE
@@ -201,3 +201,8 @@ The fixture directly attempts both SELECTs as the auditor and requires SQLSTATE
 ACLs alone do not establish read access. Unrelated relation ACLs, all write
 rights and pg_read_all_stats USAGE/SET remain forbidden. No provider ACL changes.
 Strict managed and historical profiles remain unchanged.
+
+Ownership is limited to trusted postgres (observed qik) or bootstrap supabase_admin
+(observed pinned disposable image), with identical extension/view owner. The
+exact current owner OIDs remain bound and independently reconciled; no ownership
+change is performed or claimed by this compatibility admission.

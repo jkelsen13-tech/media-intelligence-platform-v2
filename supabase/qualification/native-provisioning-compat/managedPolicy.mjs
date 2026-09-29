@@ -60,11 +60,11 @@ export function providerBoundarySQL(o){
 // Provider aggregate statistics are metadata. Only the two provider-owned
 // extension views are admitted; statement privacy is independently verified.
 export function managedStatisticsViewPredicate(alias='c'){
- return `(${alias}.relkind='v' and ${alias}.relowner='postgres'::regrole and ${alias}.relname in('pg_stat_statements','pg_stat_statements_info')
+ return `(${alias}.relkind='v' and ${alias}.relowner in(10,'postgres'::regrole) and ${alias}.relname in('pg_stat_statements','pg_stat_statements_info')
  and ${alias}.relnamespace=(select oid from pg_catalog.pg_namespace where nspname='extensions')
  and exists(select 1 from pg_catalog.pg_depend d join pg_catalog.pg_extension e on e.oid=d.refobjid
  where d.classid='pg_class'::regclass and d.objid=${alias}.oid and d.refclassid='pg_extension'::regclass
- and d.deptype='e' and e.extname='pg_stat_statements' and e.extowner='postgres'::regrole and e.extversion='1.11'))`
+ and d.deptype='e' and e.extname='pg_stat_statements' and e.extowner=${alias}.relowner and e.extversion='1.11'))`
 }
 export function managedStatisticsCatalogSQL(){
  return `select jsonb_build_object('extension',(select to_jsonb(e) from pg_catalog.pg_extension e where extname='pg_stat_statements'),
