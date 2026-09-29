@@ -196,7 +196,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLockQualification.mjs",
-      "git_blob": "287fba164448ef7b3e331442969508c659151475"
+      "git_blob": "d9a5ae4e1b14fb23be90bc7bd70d95a8937a226d"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/preflight.mjs",

@@ -161,7 +161,7 @@ export async function qualifySessionLocks({provider,connect}){
      await holder.query(action==='delete'?'commit':'rollback')
      assert.equal((await write).rowCount,1);await writer.query('commit')
     }
-    const after=await client();try{await after.query('begin');await nested(after);await assert.rejects(()=>callShare(after),refusal);if(action==='delete')assert.equal((await callKey(after)).rows[0].ok,false);await after.query('rollback')}finally{await after.end()}
+    const after=await client();try{await after.query('begin');await nested(after);if(action==='delete')assert.equal((await callKey(after)).rows[0].ok,false);await assert.rejects(()=>callShare(after),refusal);await assert.rejects(()=>after.query('select 1'),e=>e.code==='25P02');await after.query('rollback')}finally{await after.end()}
    }finally{await holder.query('rollback').catch(()=>{});await writer.query('rollback').catch(()=>{});await holder.end();await writer.end()}
    await clear()
   }
