@@ -19,8 +19,14 @@ async function connect(user,password){
  const c=new Client({host:'127.0.0.1',port:5432,database:'postgres',user,password,connectionTimeoutMillis:5000,statement_timeout:10000})
  try{await c.connect();return c}catch(e){try{await c.end()}catch{};const error=Error('synthetic connection refused');if(/^[A-Z0-9]{5}$/.test(e.code??''))error.code=e.code;throw error}
 }
+let denialEvidence=null
 async function denied(c,sql,codes=['42501']){
- try{await c.query(sql)}catch(e){assert.ok(codes.includes(e.code),'bounded expected SQLSTATE');return}
+ try{await c.query(sql)}catch(e){
+  const actual=/^[A-Z0-9]{5}$/.test(e.code??'')?e.code:null
+  denialEvidence={expected:codes,actual,unexpectedly_authorized:false}
+  assert.ok(codes.includes(actual),'bounded expected SQLSTATE');return
+ }
+ denialEvidence={expected:codes,actual:null,unexpectedly_authorized:true}
  assert.fail('operation unexpectedly authorized')
 }
 async function assertCredentialLogging(c){
@@ -120,13 +126,21 @@ test('sealed custodian candidate: real PG17 role lifecycle and protected policy 
   assert.equal(edges.length,2)
   for(const e of edges){assert.equal(e.member,names.custodian);assert.equal(e.admin_option,true);assert.equal(e.inherit_option,false);assert.equal(e.set_option,false)}
   phase='identity-denials'
-  audit=await connect(names.audit,passwords.audit);metadata=await connect(names.metadata,passwords.metadata)
-  for(const c of [installer,audit,metadata]){
+  phase='connect-audit'
+  audit=await connect(names.audit,passwords.audit)
+  phase='connect-metadata'
+  metadata=await connect(names.metadata,passwords.metadata)
+  for(const [label,c] of [['installer',installer],['audit',audit],['metadata',metadata]]){
+   phase='deny-'+label+'-set-custodian'
    await denied(c,'set role mip_lcp_custodian')
+   phase='deny-'+label+'-set-owner'
    await denied(c,'set role mip_lcp_owner')
+   phase='deny-'+label+'-grant-audit'
    await denied(c,'grant mip_lcp_audit to '+qi(c===installer?names.installer:c===audit?names.audit:names.metadata))
   }
+  phase='deny-installer-set-audit'
   await denied(installer,'set role mip_lcp_audit')
+  phase='deny-installer-reset-audit'
   await denied(installer,"alter role mip_lcp_audit password null")
   // Authenticated auditor native self-rotation, no SECURITY DEFINER EXECUTE.
   phase='rotation'
@@ -201,5 +215,5 @@ test('sealed custodian candidate: real PG17 role lifecycle and protected policy 
   }catch{failure=true}
   await root.end()
  }
- assert.equal(failure,false,'candidate lifecycle proof failed at '+phase+' SQLSTATE '+(failureCode??'none')+'; raw database errors withheld')
+ assert.equal(failure,false,'candidate lifecycle proof failed at '+phase+' SQLSTATE '+(failureCode??'none')+' denial '+JSON.stringify(denialEvidence)+'; raw database errors withheld')
 })
