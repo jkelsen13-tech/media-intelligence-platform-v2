@@ -57,6 +57,7 @@ export async function auditNativeActivationMetadata(config,readPinnedSource){
   connectionTimeoutMillis:5000,statement_timeout:10000,query_timeout:15000,application_name:'mip-native-activation-metadata-audit'})
   phase='connect'
   await db.connect()
+  if(config.provisioningProfile&&!config.disposable&&(db.connection?.stream?.encrypted!==true||db.connection?.stream?.authorized!==true))fail()
   phase='transaction'
   await db.query('begin read only');begun=true
   await db.query("set local statement_timeout='10000ms'")
