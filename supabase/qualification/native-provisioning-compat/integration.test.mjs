@@ -88,6 +88,8 @@ async function prepareSourcePrerequisites(root,selectedMode,step){
   step('fixture-customer-native-shape');
   const nativeBase=await connect(backendInstaller);
   try{
+   const edge=(await nativeBase.query("select pg_has_role(current_user,'qik_ingest_fn_owner','SET') can_set,pg_has_role(current_user,'qik_ingest_fn_owner','USAGE') can_inherit")).rows[0];
+   assert.equal(edge.can_set,true);assert.equal(edge.can_inherit,false);
    await nativeBase.query("create table public.entities(id uuid primary key,canonical_name text not null,normalized_name text not null,entity_type text not null,aliases text[] not null,mention_count integer not null default 0,created_at timestamptz not null default now(),last_seen timestamptz not null default now());alter table public.story_arcs add column started_at date not null,add column title text,add column summary text,add column last_update_at timestamptz;alter table public.arc_membership_candidates add column article_id uuid,add column arc_id uuid,add column state text,add column updated_at timestamptz");
    await nativeBase.query("alter table public.articles enable row level security;alter table public.entities enable row level security;alter table public.story_arcs enable row level security;alter table public.pipeline_config enable row level security;alter table public.arc_membership_candidates enable row level security");
   }finally{await nativeBase.end()}
