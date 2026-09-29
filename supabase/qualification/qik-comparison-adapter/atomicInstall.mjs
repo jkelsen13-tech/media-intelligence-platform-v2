@@ -189,9 +189,15 @@ export async function prepareAtomicInstall(readPinnedSource,options={}){
  // The 011 EFTA wrapper grant follows the renamed function into 020's
  // pre-DOJ predecessor. The new wrapper retains EFTA access; its predecessor
  // must be owner-only under 020's unchanged final ACL assertion.
- const dojBody=sessionLockProfile(options)?once(rawDojBody,
+ let dojBody=sessionLockProfile(options)?once(rawDojBody,
   'alter function mip_identity.operation_check(jsonb) rename to operation_check_pre_doj_v1;',
   'alter function mip_identity.operation_check(jsonb) rename to operation_check_pre_doj_v1;\nrevoke execute on function mip_identity.operation_check_pre_doj_v1(jsonb) from mip_efta_owner_v1;'):rawDojBody
+ if(sessionLockProfile(options)){
+  // qik's existing postgres -> qik_ingest_fn_owner membership permits SET but
+  // does not inherit owner rights. Revoke as the exact application owner.
+  const revoke='revoke all on function qik_ingest.check_doj_material(uuid,uuid,uuid) from public,anon,authenticated,service_role,qik_ingest_runtime,mip_cutover_authority_admin_v1,mip_comparison_worker_v1,mip_comparison_producer_v1,mip_projection_publisher_v1;'
+  dojBody=once(dojBody,revoke,'set role qik_ingest_fn_owner;\n'+revoke.slice(0,-1)+',postgres,mip_efta_owner_v1;\nreset role;')
+ }
  const body=steps.filter(s=>s!==assertionStep&&!s.path.startsWith('adapter:'))
  // Inject temporary CREATE immediately after new schema declaration, before owner transfers.
  // Revoke before the final assertions. These schemas provably did not exist at preflight.
