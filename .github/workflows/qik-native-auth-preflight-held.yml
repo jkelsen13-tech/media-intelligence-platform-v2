@@ -52,16 +52,12 @@ jobs:
           node-version: 22.14.0
       - name: Install locked source dependencies before credential injection
         run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
-      - name: Stage and verify existing public qik root certificate
-        env:
-          QIK_CA_PEM_BASE64: ${{ vars.QIK_CA_PEM_BASE64 }}
+      - name: Acquire and verify Dashboard-linked public qik root certificate
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$QIK_CA_PEM_BASE64"
-          test "${#QIK_CA_PEM_BASE64}" -le 16384
           umask 077
-          printf '%s' "$QIK_CA_PEM_BASE64" | base64 -d > "$RUNNER_TEMP/qik-preflight-ca.crt"
+          curl --proto '=https' --tlsv1.2 --connect-timeout 10 --max-time 30 --max-filesize 16384 --fail --silent --show-error --output "$RUNNER_TEMP/qik-preflight-ca.crt" 'https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt'
           echo '700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7  '"$RUNNER_TEMP/qik-preflight-ca.crt" | sha256sum -c -
       - name: Authenticate installer and inspect metadata read-only
         timeout-minutes: 3
