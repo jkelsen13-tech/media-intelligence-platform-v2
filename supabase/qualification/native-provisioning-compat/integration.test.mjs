@@ -210,6 +210,36 @@ test('managed provision, full disabled installation, independent audits and term
    assert.equal(observed.connection_cleanup_verified,true)
   }
   assert.equal((await provider.query("select encode(sha256(convert_to(connection_string,'UTF8')),'hex') digest from mip_factual.audit_connection where id")).rows[0].digest,connectionBefore)
+  phase='post-install-customer-route-permission-boundary'
+  const originalColumnAcl=(await provider.query("select a.attacl::text acl from pg_attribute a where a.attrelid='mip_factual.audit_connection'::regclass and a.attname='connection_string'")).rows[0].acl
+  const beforeGrant=await connect()
+  try{
+   assert.equal((await beforeGrant.query("select has_column_privilege(current_user,'mip_factual.audit_connection','connection_string','UPDATE') allowed")).rows[0].allowed,false)
+   await assert.rejects(beforeGrant.query("update mip_factual.audit_connection set connection_string=connection_string where id"),e=>e.code==='42501')
+  }finally{await beforeGrant.end()}
+  // The provider fixture supplies ONLY the disputed temporary column privilege;
+  // the intended nonsuper customer performs both rollback and committed updates.
+  phase='provider-temporary-route-grant'
+  await provider.query('grant update(connection_string) on mip_factual.audit_connection to postgres')
+  const routeCustomer=await connect()
+  try{
+   assert.equal((await routeCustomer.query("select current_user='postgres' and session_user='postgres' and not (select rolsuper from pg_roles where rolname=current_user) and has_column_privilege(current_user,'mip_factual.audit_connection','connection_string','UPDATE') ok")).rows[0].ok,true)
+   phase='customer-route-rollback'
+   await routeCustomer.query('begin')
+   assert.equal((await routeCustomer.query("update mip_factual.audit_connection set connection_string=connection_string||'?application_name=mip-audit-route-fixture' where id and connection_string like 'postgresql://mip_native_audit_v1:%@127.0.0.1:5432/postgres'")).rowCount,1)
+   await routeCustomer.query('rollback')
+   assert.equal((await provider.query("select encode(sha256(convert_to(connection_string,'UTF8')),'hex') digest from mip_factual.audit_connection where id")).rows[0].digest,connectionBefore)
+   phase='customer-route-commit'
+   await routeCustomer.query('begin')
+   assert.equal((await routeCustomer.query("update mip_factual.audit_connection set connection_string=connection_string||'?application_name=mip-audit-route-fixture' where id and connection_string like 'postgresql://mip_native_audit_v1:%@127.0.0.1:5432/postgres'")).rowCount,1)
+   await routeCustomer.query('commit')
+  }finally{await routeCustomer.end()}
+  phase='provider-route-grant-revocation'
+  await provider.query('revoke update(connection_string) on mip_factual.audit_connection from postgres')
+  assert.equal((await provider.query("select has_column_privilege('postgres','mip_factual.audit_connection','connection_string','UPDATE') allowed")).rows[0].allowed,false)
+  assert.equal((await provider.query("select a.attacl::text acl from pg_attribute a where a.attrelid='mip_factual.audit_connection'::regclass and a.attname='connection_string'")).rows[0].acl,originalColumnAcl)
+  assert.notEqual((await provider.query("select encode(sha256(convert_to(connection_string,'UTF8')),'hex') digest from mip_factual.audit_connection where id")).rows[0].digest,connectionBefore)
+  observed=await reconcileComparisonInstall(cfg,read);assert.equal(observed.state,'installed_disabled_audit_pending')
   phase='autonomous-audit'
   observed=await qualifyComparisonAudit(cfg,read);assert.equal(observed.audit_qualified,true)
   phase='rejected-publication-autonomous-persistence'
