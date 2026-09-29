@@ -116,7 +116,7 @@ test('managed provision, full disabled installation, independent audits and term
  const provider=await connect('supabase_admin',process.env.MIP_COMPAT_ADMIN_PASSWORD)
  let owned=false,phase='pristine',observed=null,failed=false
  const before=(await provider.query('select rolname from pg_roles order by rolname')).rows.map(r=>r.rolname)
- const provision={provisioningProfile:'supabase-managed-v1',operationId:'4'.repeat(32),expectedLogin:'postgres',auditLogin:'mip_native_audit_v1',expectedMetadataAuditor:'mip_native_metadata_audit_v1',c3OperationId:'3'.repeat(32),c3ManifestSha256:'1'.repeat(64),disposable:true}
+ const provision={provisioningProfile:'supabase-managed-solo-development-v1',operationId:'4'.repeat(32),expectedLogin:'postgres',auditLogin:'mip_native_audit_v1',expectedMetadataAuditor:'mip_native_metadata_audit_v1',c3OperationId:'3'.repeat(32),c3ManifestSha256:'1'.repeat(64),disposable:true}
  const secrets={installer:uri('postgres',password),audit:uri(provision.auditLogin,randomBytes(36).toString('base64url')),metadataAudit:uri(provision.expectedMetadataAuditor,randomBytes(36).toString('base64url')),caPem:''}
  try{
   assert.equal((await provider.query("select current_setting('server_version_num') v")).rows[0].v,'170006')
@@ -144,15 +144,7 @@ test('managed provision, full disabled installation, independent audits and term
   const plan=await prepareAtomicInstall(read,options)
   const cfg={...options,authorization:'owner-authorized-native-governed-activation-bootstrap-install',connectionString:secrets.installer,auditLogin:provision.auditLogin,auditConnectionString:secrets.audit,c3OperationId:provision.c3OperationId,c3ManifestSha256:provision.c3ManifestSha256,expectedManifestSha256:plan.manifest_sha256,expectedNativeProgramSha256:plan.native.program_sha256,expectedSuccessorProgram:plan.activation.program_sha256,dblinkMetadataSha256:receipt.extension_metadata_sha256,collectorSource:'qik-fixture-v1',disposable:true}
   phase='full-managed-install'
-  const originalInstallQuery=pg.Client.prototype.query
-  pg.Client.prototype.query=async function(...args){
-   if(typeof args[0]==='string'&&args[0].startsWith('\ndo $audit_boundary$')){
-    const evidence=await originalInstallQuery.call(this,"select r.rolname, t::regclass::text relation from pg_roles r cross join unnest(array['mip_factual.audit_connection'::regclass::oid,'mip_factual.rejection_audit'::regclass::oid]) t where not r.rolsuper and r.rolname not in('postgres','mip_cutover_schema_owner_v1','mip_factual_owner_v3','mip_native_audit_v1') and exists(select 1 from pg_roles caller where caller.rolcanlogin and not caller.rolsuper and caller.rolname<>'postgres' and pg_has_role(caller.oid,r.oid,'SET')) and (has_table_privilege(r.oid,t,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') or has_any_column_privilege(r.oid,t,'SELECT,INSERT,UPDATE,REFERENCES'))")
-    console.log('Synthetic effective audit table principals: '+JSON.stringify(evidence.rows))
-   }
-   return originalInstallQuery.apply(this,args)
-  }
-  try{observed=await installComparisonAtomic(cfg,read)}finally{pg.Client.prototype.query=originalInstallQuery}
+  observed=await installComparisonAtomic(cfg,read)
   // Only exact compiler-authored static SQL, never server context, args or error text.
   if(observed.native_failure?.stage==='successor_preparation'&&Number.isInteger(observed.native_failure.position)){
    const offset=observed.native_failure.position-1
@@ -195,6 +187,46 @@ test('managed provision, full disabled installation, independent audits and term
   phase='independent-metadata-audit'
   observed=await auditNativeActivationMetadata(audit,read)
   assert.equal(observed.permission_boundary_current,true);assert.equal(observed.state,'disabled_bootstrap')
+  // Development approval acknowledges provider access; it never trusts the
+  // shared pg_read_all_data capability or any other LOGIN that reaches it.
+  phase='trusted-provider-effective-access'
+  for(const name of ['supabase_etl_admin','supabase_read_only_user']){
+   assert.equal((await provider.query("select has_table_privilege($1,'mip_factual.audit_connection','SELECT') allowed",[name])).rows[0].allowed,true)
+  }
+  phase='untrusted-shared-capability-drift'
+  await provider.query('create role fixture_untrusted_reader login noinherit')
+  try{
+   await provider.query('grant pg_read_all_data to fixture_untrusted_reader with admin false,inherit true,set true')
+   observed=await reconcileComparisonInstall(cfg,read)
+   assert.equal(observed.state,'reconciliation_unavailable')
+   assert.equal(observed.diagnostic,'atomic_audit_effective_table')
+   observed=await auditNativeActivationMetadata(audit,read)
+   assert.equal(observed.permission_boundary_current,false)
+   assert.equal(observed.phase,'managed_effective_boundary')
+   assert.equal(observed.connection_cleanup_verified,true)
+  }finally{
+   await provider.query('revoke pg_read_all_data from fixture_untrusted_reader')
+   await provider.query('drop role fixture_untrusted_reader')
+  }
+  phase='trusted-provider-extra-edge-drift'
+  const edgesBefore=(await provider.query("select * from pg_auth_members where roleid='supabase_etl_admin'::regrole or member='supabase_etl_admin'::regrole order by roleid,member,grantor")).rows
+  await provider.query('create role fixture_provider_extra nologin')
+  try{
+   await provider.query('grant fixture_provider_extra to supabase_etl_admin with admin false,inherit true,set true')
+   observed=await reconcileComparisonInstall(cfg,read)
+   assert.equal(observed.state,'reconciliation_unavailable')
+   observed=await auditNativeActivationMetadata(audit,read)
+   assert.equal(observed.permission_boundary_current,false)
+   assert.equal(observed.phase,'managed_effective_boundary')
+   assert.equal(observed.connection_cleanup_verified,true)
+  }finally{
+   await provider.query('revoke fixture_provider_extra from supabase_etl_admin')
+   await provider.query('drop role fixture_provider_extra')
+   assert.deepEqual((await provider.query("select * from pg_auth_members where roleid='supabase_etl_admin'::regrole or member='supabase_etl_admin'::regrole order by roleid,member,grantor")).rows,edgesBefore)
+  }
+  phase='independent-after-provider-exact-restoration'
+  observed=await auditNativeActivationMetadata(audit,read)
+  assert.equal(observed.permission_boundary_current,true)
   // Provider authority induces fixture drift only; customer provisioning remains unchanged.
   phase='independent-installer-attribute-drift'
   const roleBefore=(await provider.query("select rolcanlogin,rolsuper,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit,rolreplication from pg_roles where rolname='postgres'")).rows[0]

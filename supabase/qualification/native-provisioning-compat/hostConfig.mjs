@@ -6,7 +6,7 @@ export function validateProvisioningHostConfig(raw,expectedHash){
  if(typeof raw!=='string'||Buffer.byteLength(raw)>4096||!/^[a-f0-9]{64}$/.test(expectedHash??'')||createHash('sha256').update(raw).digest('hex')!==expectedHash)fail()
  let c;try{c=JSON.parse(raw)}catch{fail()}
  if(!c||Array.isArray(c)||Object.keys(c).sort().join()!==keys||c.disposable!==false
- ||c.provisioningProfile!=='supabase-managed-v1'||c.expectedLogin!=='postgres'
+ ||!['supabase-managed-v1','supabase-managed-solo-development-v1'].includes(c.provisioningProfile)||c.expectedLogin!=='postgres'
  ||c.auditLogin!=='mip_native_audit_v1'||c.expectedMetadataAuditor!=='mip_native_metadata_audit_v1'
  ||!/^[a-f0-9]{32}$/.test(c.operationId??'')||!/^[a-f0-9]{32}$/.test(c.c3OperationId??'')
  ||!/^[a-f0-9]{64}$/.test(c.c3ManifestSha256??''))fail()

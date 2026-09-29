@@ -1,4 +1,5 @@
-import {auditorEdgePredicate,managedSnapshotSQL} from '../native-provisioning-compat/managedPolicy.mjs'
+import {auditBoundarySQL} from '../qik-comparison-adapter/atomicInstall.mjs'
+import {auditorEdgePredicate,managedSnapshotSQL,developmentProfile,AUDIT_LOGIN} from '../native-provisioning-compat/managedPolicy.mjs'
 // Independent read-only catalog auditor. No installer credential, SQL callback,
 // AUTH row, captured content, session token, or currentness waiver.
 import pg from 'pg'
@@ -78,6 +79,10 @@ export async function auditNativeActivationMetadata(config,readPinnedSource){
    phase='managed_installer'
    const installer=(await db.query("select rolname=$2 and rolcanlogin and not rolsuper and rolcreaterole and rolcreatedb and rolbypassrls and rolinherit and rolreplication ok from pg_catalog.pg_roles where oid=$1::oid",[b.installer_oid,config.expectedLogin])).rows[0]
    if(installer?.ok!==true)fail()
+   if(developmentProfile(config)){
+    phase='managed_effective_boundary'
+    await db.query(auditBoundarySQL({...config,auditLogin:AUDIT_LOGIN}))
+   }
    phase='managed_catalog'
    const actual=(await db.query(managedSnapshotSQL(config))).rows[0]?.metadata
    if(!same(actual,b.managed_metadata))fail()

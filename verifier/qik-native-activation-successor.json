@@ -68,7 +68,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/audit.mjs",
-      "git_blob": "8b88abb0497b8adcf86b6d9e69ca4e8cebd10b2d"
+      "git_blob": "579ab5945b7a2c83d474dbfd8e136819733f5c9a"
     },
     {
       "path": "supabase/qualification/native-governed-install/install.mjs",
@@ -76,7 +76,7 @@
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "git_blob": "8781c0357bcbb8ab45186e430eda424e4f3e95d7"
+      "git_blob": "4f9ab9c5a931e1cb7c9a4426a1c8444e0a162cb5"
     },
     {
       "path": "tests/nativeGovernedActivation.test.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "e1bb1413ff5efe6cbc2a5845a16e251e03b194a7"
+      "git_blob": "2aa6bf103d978b40d8489aee6c3d4bb5ca4e7428"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -152,11 +152,11 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/managedPolicy.mjs",
-      "git_blob": "f7905dbc5c28ce4e9c877e4719b6c294654e1754"
+      "git_blob": "f356b9f99c40f6c2a891e680f22edec435271485"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/provision.mjs",
-      "git_blob": "2f85bf2e1bc99fe1d327ee846bf0dc459fc9724c"
+      "git_blob": "d227de090a4274b7fd8ac335f9fa693131df2b0b"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/retirement.mjs",
@@ -172,11 +172,23 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/run.mjs",
-      "git_blob": "ab7fd62684243917f311ccc2870a2a12587062d6"
+      "git_blob": "8d3d40971c64c5ca3d758c12d918a53c5880a6ea"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/hostConfig.mjs",
-      "git_blob": "d9e00d9bad2e43a92214b0aab1cd4fbc16b9e976"
+      "git_blob": "76e94f926a9f21114eac6eceb0d46c5e7ead7f2b"
+    },
+    {
+      "path": "supabase/qualification/native-provisioning-compat/integration.test.mjs",
+      "git_blob": "f8685ad5b1560f693d94cc463d01a178332c5edf"
+    },
+    {
+      "path": "supabase/qualification/native-provisioning-compat/README.md",
+      "git_blob": "56bedd85b2536dfd3d7820f2eb77597f081ff56e"
+    },
+    {
+      "path": "tests/nativeManagedActivationProfile.test.mjs",
+      "git_blob": "b3abffc27a00ecfd1d5bcbe2da67f5de1eb4eff3"
     }
   ],
   "replaced_blobs": [
@@ -310,5 +322,20 @@
     "transport": "Provider-owned dblink 1.2 already isolated in installer-only mip_factual_transport_raw; fixed installer-owned SECURITY DEFINER shim is the only factual-owner execution path",
     "binding": "Provisioning receipt, exact source program, raw extension/member/dependency/shim metadata and independent auditor catalog verification",
     "retirement": "Held separately authorized terminal API and fixed protected-owner dependency helper; current disabled-state check, no CASCADE/no history deletion, immutable same-operation terminal receipt; NOT YET QUALIFIED"
+  },
+  "managed_solo_development_successor": {
+    "profile": "supabase-managed-solo-development-v1",
+    "state": "AUTHORED / NOT QUALIFIED / NOT INSTALLED",
+    "owner_decision": "2026-09-29 explicit private solo-development trust correction; supersedes earlier refusal",
+    "trusted_existing_provider_logins": [
+      "supabase_etl_admin",
+      "supabase_read_only_user"
+    ],
+    "provider_account_changes": false,
+    "provider_account_isolation": false,
+    "contract": "Exact existing attributes and five bootstrap-issued endpoint edges; immutable provisioning and activation catalog identity binding; untrusted caller reachability remains checked, including shared pg_read_all_data",
+    "independent_audit": "Direct source-authored catalog permission and identity checks using the separate authenticated metadata auditor",
+    "pre_launch_gate": "Explicit owner trust review before public launch, external users or sensitive user material; stronger isolation and open Support request remain hardening",
+    "post_install_rotation": "Enforced refusal; not lifecycle-complete after installation"
   }
 }

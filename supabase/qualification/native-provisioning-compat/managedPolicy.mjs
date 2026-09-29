@@ -1,5 +1,50 @@
 // Explicit provider compatibility policy. Optionless historical profiles never call these transforms.
 export const MANAGED_PROFILE='supabase-managed-v1'
+
+export const DEVELOPMENT_PROFILE='supabase-managed-solo-development-v1'
+export const TRUSTED_PROVIDER_LOGINS=['supabase_etl_admin','supabase_read_only_user']
+export function developmentProfile(o){return o.provisioningProfile===DEVELOPMENT_PROFILE}
+// Exclude approved LOGIN callers only. Shared NOLOGIN capabilities remain checked
+// whenever any untrusted LOGIN can reach them. No grants or role mutation here.
+export function untrustedCallerSQL(o,alias='caller'){
+ return developmentProfile(o)?` and ${alias}.rolname not in('supabase_etl_admin','supabase_read_only_user')`:''
+}
+export function providerSnapshotSQL(){
+ return `select jsonb_build_object('roles',(select jsonb_agg(jsonb_build_object(
+ 'oid',oid::text,'name',rolname,'login',rolcanlogin,'super',rolsuper,'create_role',rolcreaterole,
+ 'create_db',rolcreatedb,'bypass',rolbypassrls,'inherit',rolinherit,'replication',rolreplication) order by rolname)
+ from pg_catalog.pg_roles where rolname in('supabase_etl_admin','supabase_read_only_user')),
+ 'edges',(select coalesce(jsonb_agg(jsonb_build_object('role',p.rolname,'role_oid',p.oid::text,
+ 'member',m.rolname,'member_oid',m.oid::text,'grantor',g.rolname,'grantor_oid',g.oid::text,
+ 'admin',a.admin_option,'inherit',a.inherit_option,'set',a.set_option)
+ order by p.rolname,m.rolname,g.rolname),'[]'::jsonb) from pg_catalog.pg_auth_members a
+ join pg_catalog.pg_roles p on p.oid=a.roleid join pg_catalog.pg_roles m on m.oid=a.member
+ join pg_catalog.pg_roles g on g.oid=a.grantor
+ where p.rolname in('supabase_etl_admin','supabase_read_only_user')
+ or m.rolname in('supabase_etl_admin','supabase_read_only_user'))) metadata`
+}
+export function providerBoundarySQL(o){
+ if(!developmentProfile(o))return ''
+ return `do $provider_boundary$ begin
+ if(select count(*) from pg_catalog.pg_roles where rolname in('supabase_etl_admin','supabase_read_only_user')
+ and rolcanlogin and not rolsuper and not rolcreaterole and not rolcreatedb and rolbypassrls and rolinherit
+ and rolreplication=(rolname='supabase_etl_admin'))<>2 then raise exception 'managed_provider_attributes';end if;
+ if(select count(*) from pg_catalog.pg_auth_members a
+ join pg_catalog.pg_roles p on p.oid=a.roleid join pg_catalog.pg_roles m on m.oid=a.member
+ where p.rolname in('supabase_etl_admin','supabase_read_only_user')
+ or m.rolname in('supabase_etl_admin','supabase_read_only_user'))<>5
+ or exists(select 1 from pg_catalog.pg_auth_members a
+ join pg_catalog.pg_roles p on p.oid=a.roleid join pg_catalog.pg_roles m on m.oid=a.member
+ join pg_catalog.pg_roles g on g.oid=a.grantor
+ where(p.rolname in('supabase_etl_admin','supabase_read_only_user')
+ or m.rolname in('supabase_etl_admin','supabase_read_only_user'))
+ and not(g.oid=10 and g.rolname='supabase_admin' and not a.admin_option and a.inherit_option and a.set_option
+ and ((p.rolname in('pg_monitor','pg_read_all_data') and m.rolname in('supabase_etl_admin','supabase_read_only_user'))
+ or(p.rolname='supabase_privileged_role' and m.rolname='supabase_etl_admin'))))
+ then raise exception 'managed_provider_edges';end if;
+ end $provider_boundary$;`
+}
+
 export const RAW_SCHEMA='mip_factual_transport_raw'
 export const AUDIT_LOGIN='mip_native_audit_v1'
 export const METADATA_LOGIN='mip_native_metadata_audit_v1'
@@ -11,7 +56,7 @@ export function managedOptions(o){
   if(o.provisioningOperationId!==undefined)fail()
   return false
  }
- if(o.provisioningProfile!==MANAGED_PROFILE||!ID.test(o.provisioningOperationId??'')
+ if(![MANAGED_PROFILE,DEVELOPMENT_PROFILE].includes(o.provisioningProfile)||!ID.test(o.provisioningOperationId??'')
  ||o.expectedLogin!=='postgres'||o.expectedMetadataAuditor!==METADATA_LOGIN
  ||(o.auditLogin!==undefined&&o.auditLogin!==AUDIT_LOGIN))fail()
  return true
@@ -47,7 +92,7 @@ const definitionsSQL=`select encode(sha256(convert_to(coalesce(jsonb_agg(jsonb_b
  and d.refobjid=(select oid from pg_catalog.pg_extension where extname='dblink') and d.deptype='e'`
 export function managedSnapshotSQL(o){
  managedOptions(o)
- return `select jsonb_build_object('profile','${MANAGED_PROFILE}','provisioning_operation_id',${lit(o.provisioningOperationId)},
+ return `select jsonb_build_object('profile','${o.provisioningProfile}'${developmentProfile(o)?",'trusted_provider_metadata',("+providerSnapshotSQL()+")":''},'provisioning_operation_id',${lit(o.provisioningOperationId)},
  'installer_oid','postgres'::regrole::oid::text,
  'audit_edge',(${edgeQuery(lit(AUDIT_LOGIN)+'::regrole')}),
  'metadata_edge',(${edgeQuery(lit(METADATA_LOGIN)+'::regrole')}),
@@ -78,6 +123,11 @@ export async function verifyManagedPrerequisites(db,c,originalDblinkQuery){
  if(rows.length!==1||r.installer!=='postgres'||r.audit_login!==AUDIT_LOGIN||r.metadata_auditor!==METADATA_LOGIN
  ||r.provider_role!=='supabase_admin'||r.c3_operation_id!==c.c3OperationId||r.c3_manifest_sha256!==c.c3ManifestSha256
  ||r.extension_metadata_sha256!==c.dblinkMetadataSha256||!HASH.test(r.extension_metadata_sha256??''))fail()
+ if(developmentProfile(c)){
+  await db.query(providerBoundarySQL(c))
+  const actual=(await db.query(providerSnapshotSQL())).rows[0]?.metadata
+  if(!r.provider_metadata||JSON.stringify(actual)!==JSON.stringify(r.provider_metadata))fail()
+ }
  const metadata=(await db.query(originalDblinkQuery)).rows
  const d=metadata[0]
  if(metadata.length!==1||d.unused!==true||d.no_servers!==true||d.metadata_sha256!==c.dblinkMetadataSha256)fail()
@@ -95,7 +145,7 @@ export async function verifyManagedPrerequisites(db,c,originalDblinkQuery){
  const definitionHash=Object.values((await db.query(definitionsSQL)).rows[0]??{})[0]
  if(!HASH.test(definitionHash??''))fail()
  return Object.freeze({extensionOid:String(r.extension_oid),providerOid:String(r.provider_oid),definitionHash,
-  auditEdge:r.audit_edge,metadataEdge:r.metadata_edge,installerOid:String(r.installer_oid),c3Baseline:r.c3_baseline_sha256})
+  auditEdge:r.audit_edge,metadataEdge:r.metadata_edge,installerOid:String(r.installer_oid),c3Baseline:r.c3_baseline_sha256,providerMetadata:r.provider_metadata})
 }
 export function managedTransportSQL(){
  return `create function mip_factual_transport.dblink_exec(conn text,command text) returns text
@@ -104,8 +154,8 @@ export function managedTransportSQL(){
  end;
  revoke all on function mip_factual_transport.dblink_exec(text,text) from public,anon,authenticated,service_role;`
 }
-export function managedBoundarySQL(){
- return `do $managed_boundary$
+export function managedBoundarySQL(o={}){
+ return providerBoundarySQL(o)+`do $managed_boundary$
  declare raw_oid oid;shim_oid oid;provider_oid oid;installer_oid oid;factual_oid oid;x record;
  begin
  select oid into strict provider_oid from pg_roles where rolname='supabase_admin' and rolsuper;
@@ -134,7 +184,7 @@ export function managedBoundarySQL(){
  or not has_function_privilege(factual_oid,shim_oid,'EXECUTE') then raise exception 'managed_shim_acl';end if;
  if not has_function_privilege(installer_oid,to_regprocedure('${RAW_SCHEMA}.dblink_exec(text,text)'),'EXECUTE') then raise exception 'managed_shim_raw_execution';end if;
  for x in select target.oid from pg_roles target where not target.rolsuper and target.oid<>installer_oid
- and exists(select 1 from pg_roles caller where caller.rolcanlogin and not caller.rolsuper and caller.oid<>installer_oid
+ and exists(select 1 from pg_roles caller where caller.rolcanlogin and not caller.rolsuper and caller.oid<>installer_oid${untrustedCallerSQL(o)}
  and pg_has_role(caller.oid,target.oid,'SET')) loop
  if has_schema_privilege(x.oid,raw_oid,'USAGE,CREATE') then raise exception 'managed_raw_effective_access';end if;
  end loop;
@@ -143,8 +193,9 @@ export function managedBoundarySQL(){
  end $managed_boundary$;`
 }
 export async function captureManagedFinal(db,c,reference){
- await db.query(managedBoundarySQL())
+ await db.query(managedBoundarySQL(c))
  const m=(await db.query(managedSnapshotSQL(c))).rows[0]?.metadata
+ if(developmentProfile(c)&&JSON.stringify(m?.trusted_provider_metadata)!==JSON.stringify(reference?.providerMetadata))fail()
  if(!m||!reference||m.extension?.oid!==reference.extensionOid||m.extension.owner!==reference.providerOid
  ||m.definitions_sha256!==reference.definitionHash||m.installer_oid!==reference.installerOid
  ||!Array.isArray(m.audit_edge)||m.audit_edge.length!==1||!validEdge(m.audit_edge[0],AUDIT_LOGIN,reference.installerOid,reference.auditEdge)

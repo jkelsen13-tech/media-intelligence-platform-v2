@@ -142,3 +142,24 @@ and actual server-side TLS/authentication and rejected-publication checks pass.
 The current combined fixture and real host source-gate tests are under targeted
 qualification. Passing source checks or authored fixtures do not establish
 hosted installation, activation, full operating lifecycle or publication.
+
+## Private solo-development successor — owner decision 2026-09-29
+
+Explicit `supabase-managed-solo-development-v1` acknowledges EXISTING access by
+`supabase_etl_admin` and `supabase_read_only_user` to the autonomous credential,
+audit records and raw transport. It provides no isolation from these trusted
+provider principals. No provider role or grant is changed by provisioning.
+
+The original `supabase-managed-v1` and optionless historical profiles retain
+their strict policies. The development profile checks the two role attribute
+contracts and exactly five existing supabase_admin OID10-issued membership
+edges; the immutable provisioning and activation receipts bind their catalog
+identities. Extra edges, attribute drift and any untrusted LOGIN reaching shared
+capabilities remain refused by installation/reconciliation and independent audit.
+
+State: AUTHORED, NOT QUALIFIED, NOT INSTALLED. Development authorization does not
+permit publication, external onboarding, sensitive user material or historical
+transfer. Before those boundaries, explicit owner review is required. Stronger
+provider-account isolation and the open Support request remain pre-launch
+hardening. Post-install credential rotation remains refused pending a separately
+qualified bounded maintenance path; pre-install lifecycle evidence is narrower.

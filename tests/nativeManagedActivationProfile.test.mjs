@@ -4,7 +4,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {prepareNativeActivation,SQL_PATH} from '../supabase/qualification/native-governed-activation/prepare.mjs'
-import {managedOptions,managedTransportSQL,managedSnapshotSQL} from '../supabase/qualification/native-provisioning-compat/managedPolicy.mjs'
+import {managedOptions,managedTransportSQL,managedSnapshotSQL,DEVELOPMENT_PROFILE,providerBoundarySQL,untrustedCallerSQL} from '../supabase/qualification/native-provisioning-compat/managedPolicy.mjs'
 const read=path=>readFile(new URL('../'+path,import.meta.url))
 const original={expectedLogin:'postgres',operationId:'1'.repeat(32),expectedMetadataAuditor:'mip_native_metadata_audit_v1'}
 const managed={...original,provisioningProfile:'supabase-managed-v1',provisioningOperationId:'2'.repeat(32)}
@@ -64,4 +64,19 @@ test('managed transient context reaches only the bounded returning-status wrappe
  const wrappers=calls.filter(c=>c.sql.startsWith('create function pg_temp.managed_activation'))
  assert.equal(wrappers.length,2)
  for(const w of wrappers){assert.match(w.sql,/when query_canceled or assert_failure/);assert.doesNotMatch(w.sql,/raise exception/)}
+})
+
+test('solo development profile preserves strict output and binds only existing provider identities',async()=>{
+ const dev={...managed,provisioningProfile:DEVELOPMENT_PROFILE}
+ const strict=await prepareNativeActivation(read,managed),development=await prepareNativeActivation(read,dev)
+ assert.notEqual(strict.program_sha256,development.program_sha256)
+ assert.doesNotMatch(strict.sql,/trusted_provider_metadata/)
+ assert.match(development.sql,/trusted_provider_metadata/)
+ assert.equal(untrustedCallerSQL(managed),'')
+ assert.equal(untrustedCallerSQL(dev)," and caller.rolname not in('supabase_etl_admin','supabase_read_only_user')")
+ const guard=providerBoundarySQL(dev)
+ assert.match(guard,/managed_provider_attributes/)
+ assert.match(guard,/managed_provider_edges/)
+ assert.doesNotMatch(guard,/grant |revoke |alter role|create role/i)
+ assert.equal(providerBoundarySQL(managed),'')
 })

@@ -3,6 +3,7 @@
 import {createHash,randomBytes,createHmac,pbkdf2Sync} from 'node:crypto'
 import pg from 'pg'
 import {assertCredentialLogging} from '../collector-native-capture/credentialDelivery.mjs'
+import {DEVELOPMENT_PROFILE,developmentProfile,providerBoundarySQL,providerSnapshotSQL} from './managedPolicy.mjs'
 export const PROFILE='supabase-managed-v1'
 export const AUDIT_LOGIN='mip_native_audit_v1'
 export const METADATA_LOGIN='mip_native_metadata_audit_v1'
@@ -16,7 +17,7 @@ export const DBLINK_PREREQUISITE_SQL="\nwith ext as (\n select e.oid,e.extversio
 const EDGE_SQL="select r.rolname role_name,r.oid::text role_oid,m.rolname member_name,m.oid::text member_oid,g.rolname grantor_name,g.oid::text grantor_oid,a.admin_option,a.inherit_option,a.set_option from pg_auth_members a join pg_roles r on r.oid=a.roleid join pg_roles m on m.oid=a.member join pg_roles g on g.oid=a.grantor where r.rolname=$1 or m.rolname=$1"
 function config(c){
  if(!c||Object.keys(c).sort().join()!==['auditLogin','c3ManifestSha256','c3OperationId','disposable','expectedLogin','expectedMetadataAuditor','operationId','provisioningProfile'].sort().join())fail()
- if(c.provisioningProfile!==PROFILE||c.expectedLogin!==INSTALLER||c.auditLogin!==AUDIT_LOGIN||c.expectedMetadataAuditor!==METADATA_LOGIN||typeof c.disposable!=='boolean')fail()
+ if(![PROFILE,DEVELOPMENT_PROFILE].includes(c.provisioningProfile)||c.expectedLogin!==INSTALLER||c.auditLogin!==AUDIT_LOGIN||c.expectedMetadataAuditor!==METADATA_LOGIN||typeof c.disposable!=='boolean')fail()
  if(!/^[a-f0-9]{32}$/.test(c.operationId)||!/^[a-f0-9]{32}$/.test(c.c3OperationId)||!/^[a-f0-9]{64}$/.test(c.c3ManifestSha256))fail()
  if(c.disposable&&(process.env.MIP_MANAGED_PROVISIONING_ARM!=='synthetic-pg17-only'||process.env.MIP_DISPOSABLE_POSTGRES!=='qik-persistent-install'))fail()
  return Object.freeze({...c,request_sha256:hash(JSON.stringify(Object.fromEntries(Object.entries(c).sort(([a],[b])=>a.localeCompare(b)))))})
@@ -112,7 +113,12 @@ const RECEIPT_DDL="create schema mip_managed_provisioning;revoke all on schema m
 async function receipt(db,c,ids,baseline){
  const rows=(await db.query('select * from mip_managed_provisioning.receipts')).rows
  if(rows.length!==1)fail()
- const r=rows[0],a=await auditor(db,AUDIT_LOGIN,ids),m=await auditor(db,METADATA_LOGIN,ids),d=await extension(db,ids)
+ const r=rows[0]
+ if(developmentProfile(c)){
+  await db.query(providerBoundarySQL(c))
+  if(JSON.stringify(r.provider_metadata)!==JSON.stringify((await db.query(providerSnapshotSQL())).rows[0]?.metadata))fail()
+ }
+ const a=await auditor(db,AUDIT_LOGIN,ids),m=await auditor(db,METADATA_LOGIN,ids),d=await extension(db,ids)
  if(r.operation_id!==c.operationId||r.request_sha256!==c.request_sha256||r.installer!==INSTALLER||String(r.installer_oid)!==ids.installer_oid||r.audit_login!==AUDIT_LOGIN||String(r.audit_oid)!==a.oid||r.metadata_auditor!==METADATA_LOGIN||String(r.metadata_auditor_oid)!==m.oid||r.provider_role!==PROVIDER||String(r.provider_oid)!==ids.provider_oid||String(r.extension_oid)!==d.extension_oid||r.extension_metadata_sha256!==d.extension_metadata_sha256||r.c3_operation_id!==c.c3OperationId||r.c3_manifest_sha256!==c.c3ManifestSha256||r.c3_baseline_sha256!==baseline)fail()
  for(const [left,right] of [[r.audit_edge,a.edge],[r.metadata_edge,m.edge]])if(Object.keys(right).some(k=>left?.[k]!==right[k])||Object.keys(left??{}).length!==Object.keys(right).length)fail()
  const safe=(await db.query("select n.nspowner=current_user::regrole and t.relowner=current_user::regrole and t.relkind='r' and not exists(select 1 from aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a where a.grantee<>n.nspowner) and not exists(select 1 from aclexplode(coalesce(t.relacl,acldefault('r',t.relowner))) a where a.grantee<>t.relowner) ok from pg_namespace n join pg_class t on t.relnamespace=n.oid where n.nspname='mip_managed_provisioning' and t.relname='receipts'")).rows[0]
@@ -141,6 +147,8 @@ async function run(action,input,secrets){
   if(!/^[\x21-\x7e]{24,256}$/.test(targets.audit.password)||!/^[\x21-\x7e]{24,256}$/.test(targets.metadata.password)||new Set([targets.installer.password,targets.audit.password,targets.metadata.password]).size!==3)fail()
   phase='installer_connection';db=await connect(targets.installer)
   phase='installer_identity';const ids=await identity(db,c)
+  phase='provider_boundary'
+  if(developmentProfile(c))await db.query(providerBoundarySQL(c))
   phase='serialization';await lock(db)
   phase='c3_boundary';const baseline=await c3(db,c)
   // This phase owns initial creation only, never post-install credential maintenance.
@@ -160,8 +168,8 @@ async function run(action,input,secrets){
    const d=await extension(db,ids)
    phase='secure_auditor_creation';await createAuditors(db,targets)
    const a=await auditor(db,AUDIT_LOGIN,ids),m=await auditor(db,METADATA_LOGIN,ids)
-   phase='immutable_receipt';await db.query(RECEIPT_DDL)
-   await db.query("insert into mip_managed_provisioning.receipts(operation_id,request_sha256,installer,installer_oid,audit_login,audit_oid,metadata_auditor,metadata_auditor_oid,audit_edge,metadata_edge,provider_role,provider_oid,extension_oid,extension_metadata_sha256,c3_operation_id,c3_manifest_sha256,c3_baseline_sha256) values($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,$13,$14,$15,$16,$17)",[c.operationId,c.request_sha256,INSTALLER,ids.installer_oid,AUDIT_LOGIN,a.oid,METADATA_LOGIN,m.oid,JSON.stringify(a.edge),JSON.stringify(m.edge),PROVIDER,ids.provider_oid,d.extension_oid,d.extension_metadata_sha256,c.c3OperationId,c.c3ManifestSha256,baseline])
+   phase='immutable_receipt';await db.query(developmentProfile(c)?RECEIPT_DDL.replace('created_at timestamptz','provider_metadata jsonb not null,created_at timestamptz'):RECEIPT_DDL)
+   await db.query("insert into mip_managed_provisioning.receipts(operation_id,request_sha256,installer,installer_oid,audit_login,audit_oid,metadata_auditor,metadata_auditor_oid,audit_edge,metadata_edge,provider_role,provider_oid,extension_oid,extension_metadata_sha256,c3_operation_id,c3_manifest_sha256,c3_baseline_sha256"+(developmentProfile(c)?",provider_metadata":"")+") values($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,$13,$14,$15,$16,$17"+(developmentProfile(c)?",$18::jsonb":"")+")",[c.operationId,c.request_sha256,INSTALLER,ids.installer_oid,AUDIT_LOGIN,a.oid,METADATA_LOGIN,m.oid,JSON.stringify(a.edge),JSON.stringify(m.edge),PROVIDER,ids.provider_oid,d.extension_oid,d.extension_metadata_sha256,c.c3OperationId,c.c3ManifestSha256,baseline,...(developmentProfile(c)?[JSON.stringify((await db.query(providerSnapshotSQL())).rows[0]?.metadata)]:[])])
   }
   phase='receipt_readback';const r=await receipt(db,c,ids,baseline)
   phase='commit';commitAttempted=true;await db.query('commit');committed=true

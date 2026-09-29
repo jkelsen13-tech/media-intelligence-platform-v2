@@ -1,5 +1,5 @@
 import {managedRetirementDDL} from '../native-provisioning-compat/retirement.mjs'
-import {managedOptions,managedTransportSQL,managedBoundarySQL,auditorEdgePredicate,verifyManagedPrerequisites} from '../native-provisioning-compat/managedPolicy.mjs'
+import {managedOptions,managedTransportSQL,managedBoundarySQL,auditorEdgePredicate,developmentProfile,untrustedCallerSQL,verifyManagedPrerequisites} from '../native-provisioning-compat/managedPolicy.mjs'
 import {assertManagedCredentialLogging} from '../native-provisioning-compat/provision.mjs'
 import {PROFILE as ACTIVATION_PROFILE,prepareNativeActivation,assertActivationRoleInventory,createActivationIssuerInTransaction,createActivationOperationalGroup,dropActivationIssuerForHistoricalCheckpoint,sealActivationBootstrapInTransaction} from '../native-governed-activation/prepare.mjs'
 // Source-only until separately qualified. No CLI, activation or automatic retry.
@@ -302,7 +302,7 @@ function auditProbeDDL(c){
  const uid=op.slice(0,8)+'-'+op.slice(8,12)+'-'+op.slice(12,16)+'-'+op.slice(16,20)+'-'+op.slice(20)
  return "\n create table mip_comparison_install.audit_qualifications(\n operation_id text primary key references mip_comparison_install.receipts,\n manifest_sha256 text not null,qualified_at timestamptz not null default clock_timestamp());\n revoke all on mip_comparison_install.audit_qualifications from public,anon,authenticated,service_role;\n create trigger immutable before update or delete or truncate on mip_comparison_install.audit_qualifications\n for each statement execute function mip_comparison_install.reject_change();\n grant usage,create on schema mip_comparison_install to mip_factual_owner_v3;\n create function mip_comparison_install.audit_probe(p_write boolean) returns boolean\n language plpgsql security definer set search_path='' as $probe$\n declare n integer;\n begin\n select count(*) into n from mip_factual.rejection_audit\n where explanation_id='__UID__'::uuid\n and assertion_digest=mip_comparison_kernel_v1.argument_digest(jsonb_build_object('assertion_id','install-audit:__OP__'))\n and rule='provenance' and attempted_transition='published';\n if n=0 and p_write then\n  perform mip_factual.log_rejection(jsonb_build_object('id','__UID__','assertion_id','install-audit:__OP__'),'provenance');\n  return true;\n end if;\n return n=1;\n end $probe$;\n alter function mip_comparison_install.audit_probe(boolean) owner to mip_factual_owner_v3;\n revoke create on schema mip_comparison_install from mip_factual_owner_v3;\n revoke all on function mip_comparison_install.audit_probe(boolean) from public,anon,authenticated,service_role;\n grant execute on function mip_comparison_install.audit_probe(boolean) to __LOGIN__;\n".replaceAll('__UID__',uid).replaceAll('__OP__',op).replaceAll('__LOGIN__',quote(c.expectedLogin))
 }
-function auditBoundarySQL(c){
+export function auditBoundarySQL(c){
  // Database installer and true superusers remain the trusted administration boundary.
  // pg_has_role(...,'SET') computes transitive SET reachability from untrusted
  // LOGIN principals, including reachable NOLOGIN roles and their inherited rights.
@@ -311,7 +311,8 @@ function auditBoundarySQL(c){
  if(c.provisioningProfile){
   sql=once(sql,"e.extowner=installer and n.nspname='mip_factual_transport'","e.extowner='supabase_admin'::regrole and n.nspname='mip_factual_transport_raw'")
   sql=once(sql,"exists(select 1 from pg_auth_members where roleid in(factual,owner_role,audit_role) or member in(factual,owner_role,audit_role))","exists(select 1 from pg_auth_members where roleid in(factual,owner_role) or member in(factual,owner_role)) or not "+auditorEdgePredicate('audit_role'))
-  sql+=managedBoundarySQL()
+  if(developmentProfile(c))sql=sql.replaceAll('caller.oid<>installer','caller.oid<>installer'+untrustedCallerSQL(c))
+  sql+=managedBoundarySQL(c)
  }
  return sql
 }
