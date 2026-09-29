@@ -185,6 +185,10 @@ test('managed provision, full disabled installation, independent audits and term
   }
   assert.equal(observed.state,'installed_disabled_audit_pending')
   assert.equal(observed.connection_cleanup_verified,true)
+  phase='doj-predecessor-execution-boundary'
+  const dojAcl=(await provider.query("select has_function_privilege('mip_efta_owner_v1','mip_identity.operation_check_pre_doj_v1(jsonb)','EXECUTE') old_direct,has_function_privilege('mip_efta_owner_v1','mip_identity.operation_check(jsonb)','EXECUTE') governed_wrapper")).rows[0]
+  assert.equal(dojAcl.old_direct,false)
+  assert.equal(dojAcl.governed_wrapper,true)
   phase='same-install-reconcile'
   observed=await reconcileComparisonInstall(cfg,read);assert.equal(observed.state,'installed_disabled_audit_pending')
   phase='post-install-credential-maintenance-refused'

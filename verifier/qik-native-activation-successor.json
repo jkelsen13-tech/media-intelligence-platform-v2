@@ -76,7 +76,7 @@
     },
     {
       "path": "supabase/qualification/qik-comparison-adapter/atomicInstall.mjs",
-      "git_blob": "97f0f1c165627104b00e8db57b350923bd187ed4"
+      "git_blob": "345994403d313b3bda28df957b51454ae6638985"
     },
     {
       "path": "tests/nativeGovernedActivation.test.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "supabase/qualification/native-governed-activation/run.mjs",
-      "git_blob": "b21e95397ee45b7d254ed0ef0dec2ec29b5bb697"
+      "git_blob": "bc59aad6b6d79fa0cabcc9fa292179bb7fe81b7f"
     },
     {
       "path": "tests/nativeGovernedActivationHost.test.mjs",
@@ -180,7 +180,7 @@
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/integration.test.mjs",
-      "git_blob": "f2d86fed78c8ef2c507c6bbf3f8f8a767cd00c7d"
+      "git_blob": "dce59aa4b30f04ca90d8a0426146d95d18cae869"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/README.md",
@@ -188,7 +188,7 @@
     },
     {
       "path": "tests/nativeManagedActivationProfile.test.mjs",
-      "git_blob": "740bd88a9d0806631bd0ddfb52d9fc99d78fe530"
+      "git_blob": "cc630013dc523d1cdd2a799a2423fc8b80208ec2"
     },
     {
       "path": "supabase/qualification/native-provisioning-compat/sessionLock.mjs",
@@ -432,5 +432,21 @@
       "rollback_verified": true
     },
     "reuse": "Final combined36596773950 applies unchanged compiled SQL, permissions and lifecycle; diagnostic source delta separately qualified and reviewed"
+  },
+  "doj_predecessor_acl_successor": {
+    "scope": "Explicit managed session-lock successor only: revoke stale direct EFTA EXECUTE on renamed pre-DOJ operation_check predecessor; preserve governed new wrapper EXECUTE and unchanged original pinned020 final ACL assertion",
+    "state": "AUTHORED / affected combined qualification and actual independent review pending / NOT INSTALLED",
+    "raw_020_changed": false,
+    "earlier_profiles_changed": false,
+    "prior_hosted_refusal": {
+      "candidate": "7598a6d267307622a67ebb959815651550bbda01",
+      "run": 36601656873,
+      "job": 109520296642,
+      "phase": "final_doj_assertions",
+      "sqlstate": "P0001",
+      "diagnostic": "doj_function_acl",
+      "rollback_verified": true
+    },
+    "permission_effect": "Removes only direct predecessor function EXECUTE from mip_efta_owner_v1; governed wrapper remains executable; no Auth/article/material or public grant"
   }
 }

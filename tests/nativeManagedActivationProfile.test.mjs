@@ -231,3 +231,15 @@ test('complete managed successor manifest and both real host source inventories 
  }
  for(const message of ['doj_unlisted:'+canary,canary,'postgresql://'+canary,null])assert.equal(sanitizeInstallDiagnostic({message}),null);
 });
+
+ test('managed DOJ predecessor drops stale EFTA direct grant while wrapper keeps governed execution',async()=>{
+ const options={...managed,provisioningProfile:SESSION_LOCK_PROFILE,nativeMode:NATIVE_CALLER_MODE,activationProfile:'native-governed-activation-v1'};
+ const plan=await prepareAtomicInstall(read,options);
+ const predecessor='revoke execute on function mip_identity.operation_check_pre_doj_v1(jsonb) from mip_efta_owner_v1;';
+ assert.equal(plan.dojBody.split(predecessor).length,2);
+ assert.match(plan.dojBody,/grant execute on function mip_identity\.operation_check\(jsonb\) to mip_efta_owner_v1/);
+ assert.match(plan.dojAssertions,/\('mip_identity\.operation_check_pre_doj_v1\(jsonb\)','mip_publication_owner_v2','v',array\['mip_publication_owner_v2'\]\)/);
+ const old=await prepareAtomicInstall(read,{...options,provisioningProfile:DEVELOPMENT_PROFILE});
+ assert.equal(old.dojBody.includes(predecessor),false);
+ assert.notEqual(plan.manifest_sha256,old.manifest_sha256);
+});
