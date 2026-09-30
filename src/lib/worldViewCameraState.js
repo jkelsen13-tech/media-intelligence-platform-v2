@@ -162,7 +162,8 @@ export function parseCameraState(serialized, { precisionClass = null } = {}) {
 // shortest signed difference so wrap-boundary roundoff is not camera motion.
 function periodicAngleDifferenceDegrees(a, b) {
   if (!Number.isFinite(a) || !Number.isFinite(b)) return Infinity
-  return Math.abs(normalizeLongitudeDegrees(a - b))
+  const difference = normalizeLongitudeDegrees(a - b)
+  return difference === null ? Infinity : Math.abs(difference)
 }
 
 /** Camera-pose equality within a small epsilon (degrees/meters). */

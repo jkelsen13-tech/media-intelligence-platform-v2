@@ -86,4 +86,5 @@ test('pose equality uses shortest periodic differences at dateline, heading and 
   assert.equal(cameraStatesEqual(upright, { ...upright, pitchDegrees: 32 }), false)
   assert.equal(cameraStatesEqual(upright, { ...upright, rollDegrees: NaN }), false)
   assert.equal(cameraStatesEqual(upright, { ...upright, version: 2 }), false)
+  assert.equal(cameraStatesEqual({ ...upright, rollDegrees: 1e308 }, { ...upright, rollDegrees: -1e308 }), false)
 })
