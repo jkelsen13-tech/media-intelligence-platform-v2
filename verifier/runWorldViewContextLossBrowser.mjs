@@ -119,7 +119,8 @@ async function loseRunningContext(page) {
   }))
 }
 
-// Pause an ACTUAL observed lazy adapter response, then destroy its pending host.
+// Vite's current manualChunks puts the adapter and Cesium in cesium-globe.
+// Pause that ACTUAL observed lazy chunk response, then destroy its pending host.
 // This exercises public browser/network scheduling, not a fabricated lifecycle.
 async function delayedBootJourney(browser) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
@@ -140,7 +141,7 @@ async function delayedBootJourney(browser) {
   })
   await page.route('**/assets/*.js', async intercepted => {
     const asset = new URL(intercepted.request().url()).pathname.split('/').at(-1)
-    if (held || !/^worldViewCesiumEllipsoidRendererAdapter-[^.]+\.js$/.test(asset)) {
+    if (held || !/^cesium-globe-[^.]+\.js$/.test(asset)) {
       await intercepted.continue(); return
     }
     held = true
@@ -317,8 +318,8 @@ try {
   }
   assert.ok(ready, 'built preview is reachable')
   browser = await chromium.launch({ headless: true })
-  await delayedBootJourney(browser)
   const failures = []
+  try { await delayedBootJourney(browser) } catch (error) { failures.push({ journey: 'delayed-boot', error: error.message }) }
   for (const width of [1280, 390]) {
     try { await journey(browser, width) } catch (error) { failures.push({ width, error: error.message }) }
   }
