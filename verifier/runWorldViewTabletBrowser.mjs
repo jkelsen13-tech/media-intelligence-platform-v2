@@ -26,6 +26,13 @@ const sourceFields=page=>page.getByRole('complementary',{name:'Selected-event in
   const keep=new Set(['When','Valid-time precision','Location','Precision class','Geometry status','Uncertainty','Uncertainty note','Review','Release'])
   return Object.fromEntries([...node.querySelectorAll('.wv-field')].map(n=>[n.querySelector('dt')?.textContent,n.querySelector('dd')?.textContent]).filter(([key])=>keep.has(key)))
 })
+const touchEvents=page=>page.evaluate(()=>({...window.__MIP_TABLET_VERIFIER_TOUCH_EVENTS__}))
+function assertTrustedTouchPair(before,after,label){
+  assert.ok(after.start>before.start&&after.end>before.end,label+' delivers actual touchstart/touchend')
+  assert.ok(after.trustedStart>before.trustedStart&&after.trustedEnd>before.trustedEnd,label+' delivers trusted browser touch events')
+  assert.ok(after.maximumTouches>=1,label+' uses an actual touch contact')
+  return{start:after.start-before.start,end:after.end-before.end,trustedStart:after.trustedStart-before.trustedStart,trustedEnd:after.trustedEnd-before.trustedEnd}
+}
 const recordedTime=page=>page.locator('.wv-scrubber .wv-section-head .num').innerText()
 const setCamera=async(page,value)=>assert.equal(await page.evaluate(s=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(JSON.stringify(s)),value),true)
 const angularGap=(a,b)=>Math.abs(((a-b+180)%360+360)%360-180)
@@ -135,7 +142,9 @@ async function assertLayout(page,label){
 }
 async function switchMode(page,name){
   const tab=page.getByRole('tablist',{name:'World View mode',exact:true}).getByRole('tab',{name,exact:true})
+  const beforeTouch=await touchEvents(page)
   await tab.tap()
+  const deliveredTouch=assertTrustedTouchPair(beforeTouch,await touchEvents(page),name+' tab tap')
   assert.equal(await tab.getAttribute('aria-selected'),'true','actual touch tap activates '+name+' tab')
   if(name==='Graph'){
     assert.equal(await page.locator('.wv-map-host').count(),0,'Graph disposes hidden map host')
@@ -145,6 +154,7 @@ async function switchMode(page,name){
     assert.equal(await page.locator('[data-map-stack]').getAttribute('data-map-stack'),'ellipsoid-globe','normal tablet journey uses real globe')
     await settle(page)
   }
+  return deliveredTouch
 }
 async function fidelityJourney(page,baseline){
   const panel=page.getByRole('region',{name:'Visual Fidelity',exact:true})
@@ -206,12 +216,16 @@ async function touchSurface(page,engine,baseline){
   assert.ok(right-left>80&&bottom-top>80,'touch surface is actually inside the viewport')
   // Use an empty off-center area rather than activating a canonical marker.
   const x=left+(right-left)*0.78,y=top+(bottom-top)*0.72
+  const beforeTap=await touchEvents(page)
   await page.touchscreen.tap(x,y);await delay(150)
+  const deliveredTap=assertTrustedTouchPair(beforeTap,await touchEvents(page),'canvas tap')
   await assertEvidence(page,baseline,'canvas touch tap')
   let dragVerified=false
   const scroll=()=>page.evaluate(()=>({x:scrollX,y:scrollY,view:document.querySelector('.wv-view').scrollTop}))
   const scrollBefore=await scroll(),before=parseCameraState(await camera(page))
+  let deliveredDrag=null
   if(engine==='chromium'){
+    const beforeDrag=await touchEvents(page)
     const cdp=await page.context().newCDPSession(page)
     try{
       await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]})
@@ -221,6 +235,9 @@ async function touchSurface(page,engine,baseline){
       await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]})
     }finally{await cdp.detach()}
     await delay(700)
+    const afterDrag=await touchEvents(page)
+    deliveredDrag=assertTrustedTouchPair(beforeDrag,afterDrag,'CDP touch drag')
+    assert.ok(afterDrag.trustedMove>beforeDrag.trustedMove,'CDP drag delivers trusted browser touchmove events')
     assert.equal(cameraStatesEqual(parseCameraState(await camera(page)),before,1e-6),false,'actual touch drag navigates globe')
     assert.deepEqual(await scroll(),scrollBefore,'active touch drag does not scroll the page/shared view')
     await assertCameraGovernance(page,engine+'-touch-drag',false)
@@ -228,21 +245,32 @@ async function touchSurface(page,engine,baseline){
     dragVerified=true
   }
   if(needsActivation)await page.getByRole('button',{name:'Done — scroll page',exact:true}).tap()
-  return{tapVerified:true,dragVerified,nativeDragLimitation:dragVerified?null:'WebKit driver supports actual tap; native touch drag is not exercised. Mouse movement is not substituted.',hardware:'Touch-enabled desktop browser emulation; physical iPad, Safari hardware/GPU and native multi-touch are not qualified.'}
+  return{tapVerified:true,deliveredTap,dragVerified,deliveredDrag,nativeDragLimitation:dragVerified?null:'WebKit driver supports actual tap; native touch drag is not exercised. Mouse movement is not substituted.',hardware:'Touch-enabled desktop browser emulation; physical iPad, Safari hardware/GPU and native multi-touch are not qualified.'}
 }
 async function journey(browser,engine,initialViewport){
   const other=orientations.find(v=>v.width!==initialViewport.width)
   const page=await browser.newPage({viewport:initialViewport,hasTouch:true}),verifyBoundary=observeBackendBoundary(page),errors=[]
   page.on('pageerror',e=>errors.push(e.message))
   const label=engine+'_'+initialViewport.width+'x'+initialViewport.height
+  // Observe driver-delivered native DOM events only. This does not fabricate
+  // input, alter application event handling, or impersonate a physical device.
+  await page.addInitScript(()=>{
+    const counts={start:0,end:0,move:0,trustedStart:0,trustedEnd:0,trustedMove:0,maximumTouches:0}
+    window.__MIP_TABLET_VERIFIER_TOUCH_EVENTS__=counts
+    for(const [name,key] of [['touchstart','start'],['touchend','end'],['touchmove','move']])
+      window.addEventListener(name,event=>{
+        counts[key]++
+        if(event.isTrusted)counts['trusted'+key[0].toUpperCase()+key.slice(1)]++
+        counts.maximumTouches=Math.max(counts.maximumTouches,event.touches.length,event.changedTouches.length)
+      },{capture:true,passive:true})
+  })
   try{
     await page.goto(route)
     await page.getByRole('complementary',{name:'Selected-event inspector'}).getByText('coarsened_to_precision_class',{exact:true}).waitFor({timeout:60000})
     await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState(),{},{timeout:45000})
     await delay(1800);await settle(page)
     assert.equal(await page.locator('[data-map-stack]').getAttribute('data-map-stack'),'ellipsoid-globe')
-    const capability=await page.evaluate(()=>({maxTouchPoints:navigator.maxTouchPoints,coarsePointer:matchMedia('(pointer:coarse)').matches}))
-    assert.ok(capability.maxTouchPoints>0,'browser actually exposes touch input')
+    const capability=await page.evaluate(()=>({maxTouchPoints:Number.isFinite(navigator.maxTouchPoints)?navigator.maxTouchPoints:null,coarsePointer:matchMedia('(pointer:coarse)').matches}))
     assert.ok((await state(page)).markers.length>0,'original reader creates actual evidence markers')
     const baseline={context:await context(page),fields:await sourceFields(page),recordedTime:await recordedTime(page),url:page.url()}
     assert.equal(Object.keys(baseline.fields).length,9)
@@ -262,14 +290,14 @@ async function journey(browser,engine,initialViewport){
     const manualGovernance=await assertCameraGovernance(page,label+'-manual')
     const lifecycle=[]
     for(const mode of ['Graph','Split','Map']){
-      await switchMode(page,mode)
+      const deliveredTouch=await switchMode(page,mode)
       await assertEvidence(page,baseline,'touch mode '+mode)
       const layout=await assertLayout(page,mode)
       if(mode!=='Graph'){
         assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6),mode+' restores saved camera across map lifecycle')
         await assertCameraGovernance(page,label+'-'+mode,false)
       }
-      lifecycle.push({mode,layout,savedCameraRetained:mode==='Graph'?null:true})
+      lifecycle.push({mode,deliveredTouch,layout,savedCameraRetained:mode==='Graph'?null:true})
     }
     const canvas=await page.locator('.wv-map-host canvas').first().elementHandle(),beforeResize=await state(page),viewports=[]
     for(const viewport of [initialViewport,other,initialViewport]){
@@ -296,13 +324,14 @@ async function journey(browser,engine,initialViewport){
     assert.deepEqual(errors,[])
     console.log('MIP_WORLD_TABLET_PASS='+JSON.stringify({evidenceLayer:'representative-built-actions',engine,initialViewport,touchCapability:capability,
       canonicalContext:baseline.context,recordedTime:baseline.recordedTime,originalRowFieldCount:9,sourceRowFieldsRetained:true,
-      bootCamera,bootGovernance,manualGovernance,savedCamera:saved,lifecycle,viewports,fidelity,touch,idle,backend:verifyBoundary(),
+      bootCamera,bootGovernance,manualGovernance,savedCamera:saved,lifecycle,viewports,fidelity,touch,touchEvents:await touchEvents(page),idle,backend:verifyBoundary(),
       limitations:['Original row, no synthetic geography or new reader request. Mode/navigation does not activate a different source row.',
+        'Navigator touch capability scalars are reported, not treated as physical hardware proof. Trusted DOM touch events and actual UI response qualify emulated taps.',
         'No hosted preview or deployed live site is exercised. No physical iPad/hardware performance claim. Shared shell/source styles are unchanged.']}))
   }catch(error){
     const failureCamera=await camera(page).then(parseCameraState).catch(()=>null)
     const failureGovernance=await state(page).then(s=>s?.cameraGovernance??null).catch(()=>null)
-    console.log('MIP_WORLD_TABLET_FAILURE='+JSON.stringify({engine,initialViewport,error:error.message,pageErrors:errors,camera:failureCamera,cameraGovernance:failureGovernance}))
+    console.log('MIP_WORLD_TABLET_FAILURE='+JSON.stringify({engine,initialViewport,error:error.message,pageErrors:errors,camera:failureCamera,cameraGovernance:failureGovernance,touchEvents:await touchEvents(page).catch(()=>null)}))
     console.log('MIP_WORLD_TABLET_FAILURE_IMAGE_'+label+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
     throw error
   }finally{await page.close()}

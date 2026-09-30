@@ -27,6 +27,62 @@ function assertLabelStats(stats,count){
   assert.equal(stats.points,count,'all flattened evidence points are retained, including offscreen members')
   assert.ok(stats.labels<=stats.points&&stats.passes>0)
 }
+
+function assertMapControlBoxes(actual,label){
+  const boxes=[actual.navigation,actual.scale,actual.attribution]
+  const fits=(box,bounds)=>box.left>=bounds.left-0.75&&box.right<=bounds.right+0.75
+    &&box.top>=bounds.top-0.75&&box.bottom<=bounds.bottom+0.75
+  for(const [index,box] of boxes.entries()){
+    assert.ok(box?.visible&&box.width>0&&box.height>0,label+' control '+index+' is painted')
+    assert.ok(fits(box,actual.mapViewport)&&fits(box,actual.browserViewport),label+' control '+index+' fits map and browser viewports')
+    for(const other of boxes.slice(index+1))assert.ok(box.right<=other.left||other.right<=box.left
+      ||box.bottom<=other.top||other.bottom<=box.top,label+' navigation, scale and expanded copyright do not overlap')
+  }
+  assert.equal(actual.compact,false,label+' copyright remains fully expanded')
+  assert.ok(actual.innerVisible,label+' attribution text is painted')
+  assert.match(actual.attributionText,/OpenFreeMap/)
+  assert.match(actual.attributionText,/OpenMapTiles/)
+  assert.match(actual.attributionText,/OpenStreetMap/)
+  for(const provider of ['openfreemap.org','openmaptiles.org','openstreetmap.org']){
+    const links=actual.links.filter(link=>link.host===provider||link.host==='www.'+provider)
+    assert.ok(links.length>0,label+' retains '+provider+' copyright link')
+    for(const link of links)assert.ok(link.visible&&link.text&&link.protocol==='https:'
+      &&fits(link,actual.attribution)&&fits(link,actual.mapViewport),label+' copyright link is visible inside its control')
+  }
+}
+async function qualifyMapControls(page,label){
+  await page.locator('.wv-map-host').scrollIntoViewIfNeeded()
+  await page.evaluate(()=>document.fonts.ready)
+  const actual=await page.locator('.wv-map-host').evaluate(host=>{
+    const painted=node=>{
+      if(!node)return false
+      const style=getComputedStyle(node)
+      return style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)>0
+    }
+    const box=node=>{
+      if(!node)return null
+      const r=node.getBoundingClientRect()
+      return{left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,visible:painted(node)}
+    }
+    const attribution=host.querySelector('.maplibregl-ctrl-attrib'),inner=host.querySelector('.maplibregl-ctrl-attrib-inner')
+    return{
+      mapViewport:box(host.querySelector('.maplibregl-canvas')),
+      browserViewport:{left:0,top:0,right:innerWidth,bottom:innerHeight},
+      navigation:box(host.querySelector('.maplibregl-ctrl-top-left .maplibregl-ctrl-group')),
+      scale:box(host.querySelector('.maplibregl-ctrl-scale')),
+      attribution:box(attribution),
+      compact:attribution?.classList.contains('maplibregl-compact')??true,
+      innerVisible:painted(inner),attributionText:inner?.textContent??'',
+      links:[...host.querySelectorAll('.maplibregl-ctrl-attrib-inner a')].map(node=>{
+        const url=new URL(node.href)
+        return{...box(node),text:node.textContent.trim(),host:url.hostname,protocol:url.protocol}
+      }),
+    }
+  })
+  assertMapControlBoxes(actual,label)
+  return actual
+}
+
 async function settleFallback(page){
   await page.locator('.wv-map-host').scrollIntoViewIfNeeded()
   await page.waitForLoadState('networkidle',{timeout:30000})
@@ -61,7 +117,7 @@ async function mapLabelJourney(browser,kind){
     assertLabelStats(initial.labelLayout,fixture.coordinateCount)
     if(kind==='dense')assert.equal(initial.labelLayout.labels,1,'selected overlapping dense scene retains one legible label')
     else assert.ok(initial.labelLayout.labels>1,'local sparse scene displays multiple independent labels')
-    const viewports=[{width:1280,state:initial}]
+    const viewports=[{width:1280,state:initial,controls:await qualifyMapControls(page,kind+' 1280')}]
     const resizeStarted=Date.now()
     for(const width of [390,320,1280]){
       await page.setViewportSize({width,height:900});await settleFallback(page)
@@ -72,7 +128,7 @@ async function mapLabelJourney(browser,kind){
       assert.deepEqual(await publicContext(page),originalContext);assert.equal(page.url(),route)
       if(kind==='dense')assert.equal(actual.labelLayout.labels,1,'dense selected label survives responsive layout')
       if(width===1280)assert.equal(actual.labelLayout.labels,initial.labelLayout.labels,'round trip restores deterministic label count')
-      viewports.push({width,state:actual})
+      viewports.push({width,state:actual,controls:await qualifyMapControls(page,kind+' '+width)})
     }
     const resizeElapsedMs=Date.now()-resizeStarted
     assert.ok(viewports.at(-1).state.labelLayout.passes>initial.labelLayout.passes,'responsive layout actually recomputes')
@@ -302,6 +358,7 @@ try{
         && window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState(),{},{timeout:45000})
       await page.locator('.maplibregl-ctrl-attrib').waitFor()
       await delay(500)
+      const controls=await qualifyMapControls(page,'saved-camera fallback '+width)
       const initial=(await raw()).mapCamera
       for(const key of ['lon','lat','zoom','bearing','pitch','bridgeHeightMeters','viewportWidthPx','minZoom','maxZoom'])assert.ok(Number.isFinite(initial[key]),key+' real raw map field')
       assert.ok(Math.abs(initial.lon-saved.lon)<1e-6,'fallback preserves longitude')
@@ -336,7 +393,7 @@ try{
       if(width===390)await page.getByRole('button',{name:'Done — scroll page',exact:true}).click()
       assert.deepEqual(errors,[])
       console.log('MIP_WORLD_FALLBACK_CONTEXT_'+width+'='+(await contextScreenshot(page)).toString('base64'))
-      console.log('MIP_WORLD_FALLBACK_PASS='+JSON.stringify({engine:'chromium',width,savedGlobeCamera:saved,initialFallback:initial,cases,canonicalSubject:subject,backend:verifyBoundary(),
+      console.log('MIP_WORLD_FALLBACK_PASS='+JSON.stringify({engine:'chromium',width,savedGlobeCamera:saved,initialFallback:initial,controls,cases,canonicalSubject:subject,backend:verifyBoundary(),
         limitation:'Qualifies a saved globe view restored through Graph and a Cesium startup failure. Does not inject a fatal draw failure into an already running globe.'}))
     }catch(error){
       console.log('MIP_WORLD_FALLBACK_FAILURE='+JSON.stringify({width,error:error.message,errors,renderState:await raw().catch(()=>null)}))

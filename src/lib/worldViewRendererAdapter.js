@@ -600,7 +600,8 @@ function createMapLibreWorldViewRendererAdapter({
     }
 
     localMap.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-left')
-    localMap.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-left')
+    // Keep the scale away from expanded multi-line copyright on phones.
+    localMap.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'top-right')
     localMap.addControl(
       new maplibregl.AttributionControl({ compact: false, customAttribution: stackAttribution(stackId) }),
       'bottom-right',
