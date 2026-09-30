@@ -13,6 +13,9 @@ import { CLUSTER_SCENES, installClusteringFixture, installClusteringGraphFixture
 
 const require=createRequire(process.env.MIP_BROWSER_PACKAGE+'/package.json')
 const {chromium,webkit}=require('playwright')
+const fallbackMode=process.env.MIP_WORLD_CLUSTER_FALLBACK_ONLY
+assert.ok(fallbackMode===undefined||fallbackMode==='1','MIP_WORLD_CLUSTER_FALLBACK_ONLY accepts only explicit1 or omission')
+const fallbackOnly=fallbackMode==='1'
 const candidate=process.env.MIP_CANDIDATE_SHA||spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout?.trim()
 assert.match(candidate??'',/^[0-9a-f]{40}$/,'qualification identifies exact checked-out candidate')
 const origin='http://127.0.0.1:4173',base=origin+'/media-intelligence-platform-v2/'
@@ -212,7 +215,11 @@ async function expandGroup(page,group){
   if(await summary.count()){
     if(!await summary.evaluate(node=>node.parentElement.open))await summary.click()
   }else if(await panel.getByRole('button',{name:'Spatial groups',exact:true}).count())await panel.getByRole('button',{name:'Spatial groups',exact:true}).click()
-  const target=panel.getByRole('button',{name:'Inspect group: '+group.rowCount+' projection rows, '+group.locationCount+' display locations',exact:true}).first()
+  const buttons=await panel.locator('button[data-cluster-id]').all()
+  let target=null
+  for(const button of buttons)if(await button.getAttribute('data-cluster-id')===group.id){target=button;break}
+  assert.ok(target,'inspection binds exact current group identity')
+  assert.equal(await target.getAttribute('aria-label'),'Inspect group: '+group.rowCount+' projection rows, '+group.locationCount+' display locations')
   const beforeContext=await context(page),beforeCamera=await camera(page),beforeUrl=page.url()
   await target.focus();await target.press('Enter')
   assert.deepEqual(await context(page),beforeContext,'group inspection does not commit a member')
@@ -462,16 +469,25 @@ async function projectionRowButton(scope,row){
   assert.fail('current accessible row button must bind exact original object/revision tuple')
 }
 
-async function independentJourney(browser,engine,scene,width=1280){
-  const page=await browser.newPage({viewport:{width,height:900},hasTouch:width<900}),counts=observeRequests(page),verifyBoundary=observeBackendBoundary(page),errors=[]
+async function independentJourney(browser,engine,scene,width=1280,{fault=null}={}){
+  const journeyStarted=Date.now()
+  assert.ok(fault===null||fault==='map'||fault==='atlas','only existing authorized startup fallback faults are available')
+  const page=await browser.newPage({viewport:{width,height:900},hasTouch:width<900||Boolean(fault)}),counts=observeRequests(page),verifyBoundary=observeBackendBoundary(page),errors=[]
   page.on('pageerror',error=>errors.push(error.name))
-  if(width<900)await page.addInitScript(()=>{
+  if(fault)await page.addInitScript(mode=>{
+    const original=HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext=function(kind,...args){
+      if(/webgl/i.test(kind)&&(mode==='atlas'||this.closest('.cesium-widget')))return null
+      return original.call(this,kind,...args)
+    }
+  },fault)
+  if(width<900||fault)await page.addInitScript(()=>{
     const counts={trustedStart:0,trustedEnd:0}
     window.__MIP_CLUSTER_TOUCH_EVENTS__=counts
     for(const [type,key] of [['touchstart','trustedStart'],['touchend','trustedEnd']])
       addEventListener(type,event=>{if(event.isTrusted)counts[key]++},{capture:true,passive:true})
   })
-  const fixture=await installClusteringFixture(page,scene.name,{isolatedContractRows:true}),graphFixture=await installClusteringGraphFixture(page,{isolatedContractRows:true}),label=engine+'_'+scene.name+'_'+width
+  const fixture=await installClusteringFixture(page,scene.name,{isolatedContractRows:true}),graphFixture=await installClusteringGraphFixture(page,{isolatedContractRows:true}),label=engine+'_'+scene.name+'_'+width+(fault?'_'+fault:'')
   try{
     // Subjectless deep links deliberately open News. Enter World View through
     // the existing public tab so no subject identity or route is invented.
@@ -482,9 +498,19 @@ async function independentJourney(browser,engine,scene,width=1280){
     assert.equal(fixture.receipt.syntheticContractRows,48)
     assert.ok(!(await context(page))['canonical-subject-id'],'independent browse has no fabricated auto-selection')
     const sourceFingerprint=JSON.stringify(fixture.getRows()),scales=[]
-    for(const [scale,height] of [['local',100000],['regional',800000],['continental',12000000]]){
+    if(fault){
+      assert.equal((await state(page)).rendererKind,fault==='atlas'?'atlas-fallback':'maplibre-deck.gl','startup fault reaches actual expected renderer')
+      assert.equal(await page.locator('.cesium-widget').count(),0,'startup-failed globe is removed')
+    }
+    if(fault==='atlas'){
+      assert.equal(await camera(page),null,'overview has no fabricated mutable camera')
+      assert.equal(await page.locator('.wv-camera-controls').count(),0,'static overview exposes no unsupported camera controls')
+      assert.equal(await page.evaluate(value=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(JSON.stringify(value)),cameraTarget(...scene.center,100000)),false,'static overview honestly rejects unsupported camera state')
+    }
+    const samples=fault==='atlas'?[['static-overview',null]]:fault==='map'?[['governed-map-view',100000]]:[['local',100000],['regional',800000],['continental',12000000]]
+    for(const [scale,height] of samples){
       const beforeContext=await context(page)
-      await setCamera(page,cameraTarget(...scene.center,height))
+      if(fault!=='atlas')await setCamera(page,cameraTarget(...scene.center,height))
       const before=await state(page),raw=before.markers.filter(marker=>marker.eligible),actualTargets=await actualGroupTargets(page,before)
       const baseline={scale,eligible:raw.length,originalContractRows:new Set(raw.map(marker=>marker.rowKey)).size,
         rawMarkerOverlapPairs:overlapPairs(raw),targets:before.layout.stats.targetCount,
@@ -496,22 +522,42 @@ async function independentJourney(browser,engine,scene,width=1280){
       assert.ok(baseline.paintedTargetOverlapPairs<baseline.rawMarkerOverlapPairs)
       assert.equal(actualTargets.hitOverlapPairs,0,'actual44px cluster hit boxes do not collide')
       assert.deepEqual(await context(page),beforeContext)
-      const saved=parseCameraState(await camera(page))
-      await setCamera(page,cameraTarget(scene.center[0]+0.2,scene.center[1],height))
-      await setCamera(page,saved)
-      assertLayoutRoundTrip(await state(page),before,'pan roundtrip')
+      baseline.camera=fault==='atlas'?{kind:'static-overview',serialized:null,rawMapCamera:null}:{
+        kind:fault==='map'?'precision-governed-mercator':'globe',requested:cameraTarget(...scene.center,height),
+        serialized:parseCameraState(await camera(page)),rawMapCamera:(await fidelity(page))?.mapCamera??null}
+      if(fault==='map'){
+        const rawCamera=baseline.camera.rawMapCamera,logical=baseline.camera.serialized
+        assert.ok(rawCamera&&logical,'native fallback exposes actual raw and logical camera receipts')
+        const floor=heightMetersForPrecisionClass(rawCamera.precisionClass)
+        assert.ok(rawCamera.bridgeHeightMeters>=floor-0.1,'actual fallback view respects its current precision floor')
+        assert.ok(rawCamera.zoom<=rawCamera.maxZoom+1e-9,'actual native fallback view respects its current width-derived zoom cap')
+        assert.ok(Math.abs(logical.heightMeters-rawCamera.bridgeHeightMeters)<=0.01,'logical fallback camera agrees with actual native bridge')
+        baseline.camera.precisionFloorMeters=floor
+      }
+      if(fault!=='atlas'){
+        const saved=parseCameraState(await camera(page))
+        await setCamera(page,cameraTarget(scene.center[0]+0.2,scene.center[1],height))
+        await setCamera(page,saved)
+        assertLayoutRoundTrip(await state(page),before,'pan roundtrip')
+      }else{
+        await settle(page)
+        assertLayoutRoundTrip(await state(page),before,'unchanged static overview')
+      }
       assert.equal(JSON.stringify(fixture.getRows()),sourceFingerprint,'camera/grouping never rewrites any source fixture field')
       const relationships=await actualRelationshipLines(page,graphFixture,fixture)
-      if(scale==='local')assert.ok(relationships.displayed>0,'distributed independent rows qualify actual documented relationship paths before narrowing selection')
-      if(engine==='chromium'&&scene.name==='US-local'&&width===1280&&scale==='continental')
+      if(!fault&&scale==='local')assert.ok(relationships.displayed>0,'distributed independent rows qualify actual documented relationship paths before narrowing selection')
+      if(engine==='chromium'&&scene.name==='US-local'&&width===1280
+        &&(scale==='continental'||(fault==='atlas'&&before.layout.clusters.length===1&&before.layout.singles.length===0&&raw.length===48)))
         relationships.groupedRecord=await inspectGroupedRelationshipRecord(page,graphFixture,label)
       baseline.relationships=relationships
       scales.push(baseline);await image(page,label+'_'+scale)
     }
-    await setCamera(page,cameraTarget(...scene.center,100000))
-    const resizes=await modesAndResize(page),group=(await state(page)).layout.clusters.find(value=>value.rowCount>1)
-    const panel=await expandGroup(page,group)
-    const source=fixture.getRows()[1],member=await projectionRowButton(panel,source)
+    if(fault!=='atlas')await setCamera(page,cameraTarget(...scene.center,100000))
+    const resizes=fault?[]:await modesAndResize(page)
+    const source=fixture.getRows()[1],sourceRowKey=projectionRowDisplayKey(source)
+    const group=(await state(page)).layout.clusters.find(value=>value.rowCount>1&&value.rowKeys.includes(sourceRowKey))
+    assert.ok(group,'deliberate original row belongs to a currently inspectable multi-row group')
+    const panel=await expandGroup(page,group),member=await projectionRowButton(panel,source)
     await member.waitFor()
     const rowKey=await member.getAttribute('data-row-key')
     assert.ok(group.rowKeys.includes(rowKey),'member binds an original contract row in the current group')
@@ -566,7 +612,7 @@ async function independentJourney(browser,engine,scene,width=1280){
     assert.equal(page.url(),pickedUrl)
     assert.deepEqual(await evidenceFields(page),pickedFields,'repeated member selection retains exact source fields')
     let trustedTouch=null
-    if(width<900){
+    if(width<900||fault){
       const before=await page.evaluate(()=>({...window.__MIP_CLUSTER_TOUCH_EVENTS__}))
       await repeat.tap();await settle(page)
       const after=await page.evaluate(()=>({...window.__MIP_CLUSTER_TOUCH_EVENTS__}))
@@ -587,9 +633,14 @@ async function independentJourney(browser,engine,scene,width=1280){
         outsideTime=true
       }
     }
-    await idle(page,counts,label)
+    const idleQualification=await idle(page,counts,label)
+    assert.equal(JSON.stringify(fixture.getRows()),sourceFingerprint,'member/time inspection never changes original published fixture rows')
+    if(fault==='atlas'){
+      assert.equal(await camera(page),null,'static overview retains unavailable camera after source/time changes')
+      assert.equal(await page.locator('.wv-camera-controls').count(),0,'source narrowing never fabricates overview camera controls')
+    }
     assert.deepEqual(errors,[])
-    console.log('MIP_WORLD_CLUSTER_INDEPENDENT_PASS='+JSON.stringify({candidate,label,synthetic:true,evidenceLayer:'isolated-contract-fixture',
+    console.log('MIP_WORLD_CLUSTER_INDEPENDENT_PASS='+JSON.stringify({candidate,label,fault,journeyElapsedMs:Date.now()-journeyStarted,idle:idleQualification,synthetic:true,evidenceLayer:'isolated-contract-fixture',
       originalReaderRows:fixture.receipt.originalReaderRows,syntheticContractRows:48,displayLocations:48,scales,resizes,
       memberPick:{sourceIdentity:source.subject_graph_node_id,rowKey,keyboard:['Space','Enter'],keyboardScroll,sourceBoundContext:true,repeatedIdempotent:true,staleBrowseMembershipRemoved:true,outsideTime,trustedTouch},
       relationships:relationshipQualification,backend:verifyBoundary(),
@@ -612,7 +663,15 @@ try{
     pureLayoutHistoricalBaseline:{viewport:[960,480],scalePixelsPerDegree:1600,sparse:{rows:1,eligibleLocations:4,overlapPairs:0,labels:2},
       dense:{rows:1,locations:500,overlapPairs:124750,pickTargets:500,labels:1}},
     historicalRuntimeBaseline:'not captured by this verifier; historical numbers above are pure layout, not observed browser rendering'}))
-  for(const engine of ['chromium','webkit']){
+  if(fallbackOnly){
+    browser=await chromium.launch({headless:true})
+    for(const fault of ['map','atlas'])await independentJourney(browser,'chromium',CLUSTER_SCENES[0],1280,{fault})
+    await browser.close();browser=null
+    console.log('MIP_WORLD_CLUSTER_FALLBACK_BROWSER_PASS='+JSON.stringify({candidate,journeys:2,
+      scene:'US-local',syntheticContractRowsPerJourney:48,originalRelationshipsPerJourney:88,
+      renderers:['maplibre-deck.gl','atlas-fallback'],atlasCamera:'Static extent; no camera controls or mutable camera contract.',
+      limitations:'Two bounded startup fallback fixture journeys; full geography/globe/lifecycle gates run separately.'}))
+  }else for(const engine of ['chromium','webkit']){
     browser=await {chromium,webkit}[engine].launch({headless:true})
     for(const kind of ['dense','sparse'])await originalJourney(browser,engine,kind)
     if(engine==='chromium'){
@@ -622,7 +681,7 @@ try{
     }else await independentJourney(browser,engine,CLUSTER_SCENES[0])
     await browser.close();browser=null
   }
-  console.log('MIP_WORLD_CLUSTER_BROWSER_PASS='+JSON.stringify({candidate,
+  if(!fallbackOnly)console.log('MIP_WORLD_CLUSTER_BROWSER_PASS='+JSON.stringify({candidate,
     postStartupContextLoss:'existing separate runWorldViewContextLossBrowser.mjs gate; this script qualifies startup fallback/unmount',
     nativeTouchDrag:'existing runWorldViewTabletBrowser.mjs gate; this script qualifies accessible keyboard member picking in touch-enabled responsive viewports'}))
 }finally{await browser?.close();server.kill('SIGTERM')}
