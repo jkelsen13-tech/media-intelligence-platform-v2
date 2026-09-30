@@ -14,31 +14,71 @@ export function atlasLabelText(marker) {
   return { label, detail, accessibleName: [label, detail].filter(Boolean).join(' — ') }
 }
 
-function measuredLabelBox(marker, measureBounds) {
+export function atlasDisplayMetrics(screenScale = 1) {
+  const scale = Number.isFinite(screenScale) && screenScale > 0
+    ? Math.min(8, Math.max(0.125, screenScale)) : 1
+  return {
+    scale, sansFontSize: 11 / scale, monoFontSize: 9 / scale,
+    labelOffsetX: 11 / scale, labelOffsetY: -2 / scale, detailOffsetY: 12 / scale,
+    pointRadius: 7 / scale, hitRadius: 22 / scale,
+    strokeWidth: 3 / scale, pointStrokeWidth: 1.5 / scale, labelPadding: 2 / scale,
+  }
+}
+
+export function atlasScreenScale(matrix, previousScale = 1) {
+  const x = Math.hypot(matrix?.a, matrix?.b)
+  const y = Math.hypot(matrix?.c, matrix?.d)
+  const determinant = matrix ? matrix.a * matrix.d - matrix.b * matrix.c : NaN
+  return Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(determinant)
+    && Math.abs(determinant) > 1e-12 && x > 0 && y > 0
+    ? atlasDisplayMetrics(Math.min(x, y)).scale : atlasDisplayMetrics(previousScale).scale
+}
+
+export function activateAtlasMarker(event, row, onSelectRow) {
+  if (!row || typeof onSelectRow !== 'function') return false
+  if (event?.type === 'keydown') {
+    if (event.key !== 'Enter' && event.key !== ' ') return false
+    event.preventDefault?.()
+  } else if (event?.type !== 'click') return false
+  onSelectRow(row)
+  return true
+}
+
+function measuredLabelBox(marker, measureBounds, mode, metrics) {
   try {
-    const box = measureBounds?.(marker)
+    const box = measureBounds?.(marker, mode)
     if (box && ['x', 'y', 'width', 'height'].every(key => Number.isFinite(box[key]))
       && box.width > 0 && box.height > 0) {
       // getBBox excludes the 3px paint stroke. Include its half-width plus
       // conservative rounding, so neither line's stroke can overlap or clip.
-      return { left: box.x - 2, right: box.x + box.width + 2,
-        top: box.y - 2, bottom: box.y + box.height + 2 }
+      const padding = metrics.labelPadding
+      return { left: box.x - padding, right: box.x + box.width + padding,
+        top: box.y - padding, bottom: box.y + box.height + padding }
     }
   } catch { /* SVG text measurement can be unavailable while hidden. */ }
   const text = atlasLabelText(marker)
   // CSS fonts are 11px sans and 9px mono. Without SVG metrics use full,
   // uncapped strings and deliberately wider/taller bounds for both lines.
-  const width = Math.max(40, String(text.label).length * 12, String(text.detail ?? '').length * 12)
-  return { left: marker.x + 9, right: marker.x + 13 + width,
-    top: marker.y - 18, bottom: marker.y + (text.detail ? 18 : 4) }
+  const detail = mode === 'full' ? text.detail : null
+  const width = Math.max(40, String(text.label).length * 12, String(detail ?? '').length * 12) / metrics.scale
+  return { left: marker.x + metrics.labelOffsetX - metrics.labelPadding,
+    right: marker.x + metrics.labelOffsetX + width + metrics.labelPadding,
+    top: marker.y - 18 / metrics.scale, bottom: marker.y + (detail ? 18 : 4) / metrics.scale }
 }
 
-export function visibleAtlasLabelIds(markers, { width = 960, height = 480, measureBounds } = {}) {
+export function atlasLabelLayout(markers, { width = 960, height = 480, measureBounds, screenScale = 1 } = {}) {
+  const metrics = atlasDisplayMetrics(screenScale)
+  const detailCandidates = new Set()
+  const fits = box => box.left >= 0 && box.right <= width && box.top >= 0 && box.bottom <= height
   const candidates = markers.map(marker => {
-    const box = measuredLabelBox(marker, measureBounds)
+    const id = atlasMarkerId(marker)
+    const text = atlasLabelText(marker)
+    let box = measuredLabelBox(marker, measureBounds, 'full', metrics)
+    if (text.detail && !fits(box)) box = measuredLabelBox(marker, measureBounds, 'main', metrics)
+    else if (text.detail) detailCandidates.add(id)
     const labelHeight = box.bottom - box.top
     return {
-      id: atlasMarkerId(marker), selected: marker.selected,
+      id, selected: marker.selected,
       visible: Number.isFinite(marker.x) && Number.isFinite(marker.y)
         && marker.x >= 0 && marker.x <= width && marker.y >= 0 && marker.y <= height,
       // The shared renderer-neutral helper expects left=x+14 and a box
@@ -47,5 +87,10 @@ export function visibleAtlasLabelIds(markers, { width = 960, height = 480, measu
       labelWidth: box.right - box.left, labelHeight,
     }
   })
-  return visibleLabelIds(candidates, { width, height })
+  const labels = visibleLabelIds(candidates, { width, height })
+  return { labels, details: new Set([...labels].filter(id => detailCandidates.has(id))) }
+}
+
+export function visibleAtlasLabelIds(markers, options) {
+  return atlasLabelLayout(markers, options).labels
 }

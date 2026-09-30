@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { atlasLabelText, atlasMarkerId, visibleAtlasLabelIds } from '../src/lib/worldViewAtlasLabelLayout.js'
+import { activateAtlasMarker, atlasDisplayMetrics, atlasLabelLayout, atlasLabelText, atlasMarkerId, atlasScreenScale, visibleAtlasLabelIds } from '../src/lib/worldViewAtlasLabelLayout.js'
 
 function marker(id, x, y, options = {}) {
   const coordinate = Object.freeze([-81.7, 41.4])
@@ -62,7 +62,10 @@ test('long labels and coordinate lines are never truncated to fit; unavailable m
   const source = marker('source', 70, 100, { label: 'Source-native place '.repeat(100), selected: true })
   assert.equal(visibleAtlasLabelIds([source]).size, 0)
   const coords = marker('coords', 70, 100, { coords: '[-81.7, 41.4]; '.repeat(100), selected: true })
-  assert.equal(visibleAtlasLabelIds([coords]).size, 0, 'coordinate line full width participates')
+  const layout = atlasLabelLayout([coords])
+  assert.deepEqual([...layout.labels], [atlasMarkerId(coords)], 'main source label can fit when full detail cannot')
+  assert.equal(layout.details.size, 0, 'full coordinate/status line is hidden, never truncated')
+  assert.ok(atlasLabelText(coords).accessibleName.includes(coords.coords))
   const normal = marker('normal', 70, 100)
   const fallback = [...visibleAtlasLabelIds([normal])]
   assert.deepEqual([...visibleAtlasLabelIds([normal], { measureBounds: () => { throw Error('SVG unavailable') } })], fallback)
@@ -79,4 +82,72 @@ test('every retained point has meaningful source text even when its visual label
   assert.equal(atlasMarkerId(point), 'revision-a-0')
   const withoutDetail = marker('b', 70, 100, { coords: null, label: null })
   assert.deepEqual(atlasLabelText(withoutDetail), { label: 'city', detail: null, accessibleName: 'city' })
+})
+
+test('screen scale compensation retains the existing font, symbol, stroke and touch sizes across desktop/phone', () => {
+  for (const scale of [1, 1280 / 960, 334 / 960, 264 / 960]) {
+    const matrix = { a: scale, b: 0, c: 0, d: scale }
+    const detected = atlasScreenScale(matrix)
+    const metrics = atlasDisplayMetrics(detected)
+    assert.ok(Math.abs(metrics.sansFontSize * scale - 11) < 1e-9)
+    assert.ok(Math.abs(metrics.monoFontSize * scale - 9) < 1e-9)
+    assert.ok(Math.abs(metrics.labelOffsetX * scale - 11) < 1e-9)
+    assert.ok(Math.abs(metrics.detailOffsetY * scale - 12) < 1e-9)
+    assert.ok(Math.abs(metrics.pointRadius * scale - 7) < 1e-9)
+    assert.ok(Math.abs(metrics.hitRadius * 2 * scale - 44) < 1e-9)
+    assert.ok(Math.abs(metrics.strokeWidth * scale - 3) < 1e-9)
+    assert.ok(Math.abs(metrics.labelPadding * scale - 2) < 1e-9)
+  }
+  assert.equal(atlasScreenScale(null, 0.35), 0.35)
+  assert.equal(atlasScreenScale({ a: 0, b: 0, c: 0, d: 0 }, 0.35), 0.35)
+  assert.equal(atlasScreenScale({ a: 1, b: 0, c: 1, d: 0 }, 0.35), 0.35)
+  assert.equal(atlasDisplayMetrics(NaN).scale, 1)
+  assert.equal(atlasDisplayMetrics(0.001).scale, 0.125)
+  assert.equal(atlasDisplayMetrics(100).scale, 8)
+})
+
+test('phone prefers readable main text when full detail cannot fit, desktop restores the complete block', () => {
+  const point = marker('selected', 480, 240, { selected: true, label: 'Cleveland, Ohio' })
+  const layoutAt = scale => atlasLabelLayout([point], {
+    screenScale: scale,
+    measureBounds: (m, mode) => ({
+      x: m.x + 11 / scale, y: m.y - 12 / scale,
+      width: (mode === 'full' ? 300 : 90) / scale,
+      height: (mode === 'full' ? 27 : 11) / scale,
+    }),
+  })
+  const desktop = layoutAt(1)
+  assert.deepEqual([...desktop.labels], [atlasMarkerId(point)])
+  assert.deepEqual([...desktop.details], [atlasMarkerId(point)])
+  for (const scale of [334 / 960, 264 / 960]) {
+    const phone = layoutAt(scale)
+    assert.deepEqual([...phone.labels], [atlasMarkerId(point)])
+    assert.equal(phone.details.size, 0)
+    assert.deepEqual([...layoutAt(1).details], [...desktop.details], 'resize restoration is deterministic')
+  }
+  assert.equal(point.x, 480)
+  assert.equal(point.y, 240)
+  assert.equal(point.row.display_geometry.coordinates, point.positions[0])
+  assert.ok(atlasLabelText(point).accessibleName.includes('coarsened_to_precision_class'))
+})
+
+test('actual activation helper delivers Enter, Space and click to the exact retained row, rejecting other keys', () => {
+  const point = marker('selected', 480, 240)
+  const calls = []
+  let prevented = 0
+  const onSelectRow = row => calls.push(row)
+  for (const key of ['Enter', ' ']) {
+    assert.equal(activateAtlasMarker({ type: 'keydown', key, preventDefault: () => prevented++ }, point.row, onSelectRow), true)
+  }
+  assert.equal(activateAtlasMarker({ type: 'click' }, point.row, onSelectRow), true)
+  assert.equal(calls.length, 3)
+  assert.ok(calls.every(row => row === point.row))
+  assert.equal(prevented, 2)
+  for (const key of ['Tab', 'ArrowDown', 'Escape']) {
+    assert.equal(activateAtlasMarker({ type: 'keydown', key, preventDefault: () => prevented++ }, point.row, onSelectRow), false)
+  }
+  assert.equal(activateAtlasMarker({ type: 'keyup', key: 'Enter' }, point.row, onSelectRow), false)
+  assert.equal(activateAtlasMarker({ type: 'click' }, null, onSelectRow), false)
+  assert.equal(calls.length, 3)
+  assert.equal(prevented, 2)
 })

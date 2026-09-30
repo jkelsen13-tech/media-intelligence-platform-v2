@@ -18,7 +18,7 @@ import { createWorldViewRendererAdapter, projectionMarkerRecords } from '../lib/
 import { visualFidelityCapabilities, resolveVisualFidelityProfile } from '../lib/worldViewVisualFidelity.js'
 import { createCameraFraming } from '../lib/worldViewCameraFraming'
 import { createCameraMemory, northAmericaCameraState } from '../lib/worldViewCameraMemory.js'
-import { atlasLabelText, atlasMarkerId, visibleAtlasLabelIds } from '../lib/worldViewAtlasLabelLayout.js'
+import { activateAtlasMarker, atlasDisplayMetrics, atlasLabelLayout, atlasLabelText, atlasMarkerId, atlasScreenScale } from '../lib/worldViewAtlasLabelLayout.js'
 
 const MAP_W = 960
 const MAP_H = 480
@@ -33,7 +33,10 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
   const features = useMemo(() => projectionMarkerRecords(rows, selectedKeys), [rows, selectedKeys])
   const svgRef = useRef(null)
   const labelRefs = useRef(new Map())
-  const [visibleLabels, setVisibleLabels] = useState(() => new Set())
+  const mainLabelRefs = useRef(new Map())
+  const [screenScale, setScreenScale] = useState(1)
+  const metrics = atlasDisplayMetrics(screenScale)
+  const [labelLayout, setLabelLayout] = useState(() => ({ labels: new Set(), details: new Set() }))
   const geometry = useMemo(() => {
     const projection = geoMercator()
     const positions = features.flatMap((f) => f.positions)
@@ -71,29 +74,39 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
   useLayoutEffect(() => {
     let disposed = false
     const svg = svgRef.current
+    const checkScale = () => {
+      if (disposed) return false
+      const next = atlasScreenScale(svg?.getScreenCTM?.(), screenScale)
+      if (Math.abs(next - screenScale) <= 1e-6) return false
+      setScreenScale(next)
+      return true
+    }
     const update = () => {
-      if (disposed) return
-      const next = visibleAtlasLabelIds(geometry.markers, {
-        width: MAP_W, height: MAP_H,
-        measureBounds: marker => labelRefs.current.get(atlasMarkerId(marker))?.getBBox(),
+      if (disposed || checkScale()) return
+      // Inline fonts/offsets have reached the SVG before this layout effect.
+      const next = atlasLabelLayout(geometry.markers, {
+        width: MAP_W, height: MAP_H, screenScale,
+        measureBounds: (marker, mode) => (mode === 'main' ? mainLabelRefs : labelRefs)
+          .current.get(atlasMarkerId(marker))?.getBBox(),
       })
-      setVisibleLabels(current => current.size === next.size && [...current].every(id => next.has(id)) ? current : next)
+      const same = (a, b) => a.size === b.size && [...a].every(id => b.has(id))
+      setLabelLayout(current => same(current.labels, next.labels) && same(current.details, next.details) ? current : next)
     }
     update()
     const view = svg?.ownerDocument?.defaultView
     const fonts = svg?.ownerDocument?.fonts
-    const observer = view?.ResizeObserver ? new view.ResizeObserver(update) : null
+    const observer = view?.ResizeObserver ? new view.ResizeObserver(checkScale) : null
     if (svg) observer?.observe(svg)
-    if (!observer) view?.addEventListener('resize', update)
+    if (!observer) view?.addEventListener('resize', checkScale)
     fonts?.addEventListener?.('loadingdone', update)
     void fonts?.ready?.then(() => { if (!disposed) update() }).catch(() => {})
     return () => {
       disposed = true
       observer?.disconnect()
-      if (!observer) view?.removeEventListener('resize', update)
+      if (!observer) view?.removeEventListener('resize', checkScale)
       fonts?.removeEventListener?.('loadingdone', update)
     }
-  }, [geometry.markers])
+  }, [geometry.markers, screenScale])
 
   return (
     <div
@@ -117,29 +130,38 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
               role="button"
               aria-label={text.accessibleName}
               tabIndex={0}
-              onClick={() => onSelectRow(marker.row)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  onSelectRow(marker.row)
-                }
-              }}
+              onClick={event => activateAtlasMarker(event, marker.row, onSelectRow)}
+              onKeyDown={event => activateAtlasMarker(event, marker.row, onSelectRow)}
             >
-              <circle cx={marker.x} cy={marker.y} r={7} />
+              <circle className="wv-atlas-hit-target" cx={marker.x} cy={marker.y} r={metrics.hitRadius}
+                fill="transparent" stroke="none" pointerEvents="all" aria-hidden="true" />
+              <circle className="wv-atlas-point" cx={marker.x} cy={marker.y} r={metrics.pointRadius}
+                style={{ strokeWidth: metrics.pointStrokeWidth }} aria-hidden="true" />
               <g
                 ref={element => {
                   if (element) labelRefs.current.set(id, element)
                   else labelRefs.current.delete(id)
                 }}
                 className="wv-atlas-labels"
-                visibility={visibleLabels.has(id) ? 'visible' : 'hidden'}
+                visibility={labelLayout.labels.has(id) ? 'visible' : 'hidden'}
                 aria-hidden="true"
               >
-                <text className="wv-map-label" x={marker.x + 11} y={marker.y - 2}>
+                <text
+                  ref={element => {
+                    if (element) mainLabelRefs.current.set(id, element)
+                    else mainLabelRefs.current.delete(id)
+                  }}
+                  className="wv-map-label" x={marker.x + metrics.labelOffsetX} y={marker.y + metrics.labelOffsetY}
+                  style={{ fontSize: metrics.sansFontSize, strokeWidth: metrics.strokeWidth }}
+                >
                   {text.label}
                 </text>
                 {text.detail && (
-                  <text className="wv-map-coords num" x={marker.x + 11} y={marker.y + 12}>
+                  <text className="wv-map-coords num"
+                    x={marker.x + metrics.labelOffsetX} y={marker.y + metrics.detailOffsetY}
+                    visibility={labelLayout.details.has(id) ? 'inherit' : 'hidden'}
+                    style={{ fontSize: metrics.monoFontSize, strokeWidth: metrics.strokeWidth }}
+                  >
                     {text.detail}
                   </text>
                 )}
