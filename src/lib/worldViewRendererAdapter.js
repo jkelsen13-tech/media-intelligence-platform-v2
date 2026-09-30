@@ -31,6 +31,7 @@ import {
   serializeCameraState,
 } from './worldViewCameraState.js'
 import { overlayAllowed } from './worldViewPrivacyLock.js'
+import { createMarkerLabelMeasurer, visibleLabelIds } from './worldViewMarkerLayout.js'
 
 // ---- Stage C: renderer-neutral camera-state contract (2D/2.5D side) ----
 //
@@ -200,13 +201,151 @@ export function projectionMarkerRecords(rows, selectedKeys) {
   })
 }
 
-export function deckProjectionLayers({ ScatterplotLayer, TextLayer }, features, onSelectRow, selectedKeys) {
-  const data = features.flatMap((f) =>
-    f.positions.map((position) => ({
-      ...f,
+// The drawn deck font and measurement font must stay identical. These are
+// renderer-local display records; each point retains its row and position.
+const MAP_LABEL_FONT_FAMILY = 'sans-serif'
+const MAP_LABEL_FONT = 'normal 12px ' + MAP_LABEL_FONT_FAMILY
+const MAP_LABEL_ATLAS_SIZE = 64
+const mapProjectionLabelText = d => String(d.label || d.row.precision_class || 'projected location').replace(/\r\n?|\n/g, '\n')
+
+function mapProjectionPointRecords(features, selectedKeys) {
+  return (features ?? []).flatMap((feature, featureIndex) =>
+    feature.positions.map((position, positionIndex) => ({
+      ...feature,
       position,
+      selected: selectedKeys
+        ? selectedKeys.has(String(feature.row.mip_object_id)) || selectedKeys.has(String(feature.row.subject_graph_node_id))
+        : Boolean(feature.selected),
+      // Never exposed as a canonical identity or written back to a row.
+      labelLayoutId: JSON.stringify([feature.row.revision_id ?? null,
+        feature.row.mip_object_id ?? null, feature.row.subject_graph_node_id ?? null,
+        featureIndex, positionIndex]),
     })),
   )
+}
+
+/**
+ * Renderer-owned MapLibre screen-space label pass. Reproject on every real
+ * render/camera/resize event, even subpixel movement; unchanged membership
+ * never requests another frame. No timers or continuous animation loop.
+ */
+export function createMapMarkerLabelLayout(map, {
+  onChange, isCancelled = () => false,
+  createContext = () => map?.getCanvas?.()?.ownerDocument?.createElement('canvas').getContext('2d'),
+  now = () => globalThis.performance?.now?.() ?? Date.now(),
+} = {}) {
+  // TextLayer 9.4 lays out individual glyph advances at the atlas font size,
+  // then scales them to CSS pixels. Whole-string measureText at 12px would
+  // introduce kerning/ligatures that deck does not draw. Feed those actual
+  // advances to the shared bounded full-label measurer instead.
+  const measurer = createMarkerLabelMeasurer(() => {
+    const context = createContext?.()
+    if (!context) return null
+    const glyphs = new Map()
+    const scale = 12 / MAP_LABEL_ATLAS_SIZE
+    return {
+      set font(_font) { context.font = 'normal ' + MAP_LABEL_ATLAS_SIZE + 'px ' + MAP_LABEL_FONT_FAMILY },
+      measureText(text) {
+        let advance = 0, right = 0, ascent = 0, descent = 0
+        for (const character of Array.from(text)) {
+          let metrics = glyphs.get(character)
+          if (!metrics) {
+            const measured = context.measureText(character)
+            const hasBounds = Boolean(measured.actualBoundingBoxAscent)
+            metrics = {
+              advance: measured.width,
+              width: hasBounds && Number.isFinite(measured.actualBoundingBoxRight - measured.actualBoundingBoxLeft)
+                ? Math.ceil(measured.actualBoundingBoxRight - measured.actualBoundingBoxLeft) : measured.width,
+              ascent: hasBounds ? Math.ceil(measured.actualBoundingBoxAscent) : MAP_LABEL_ATLAS_SIZE * 0.9,
+              descent: hasBounds ? Math.ceil(measured.actualBoundingBoxDescent || 0) : MAP_LABEL_ATLAS_SIZE * 0.3,
+            }
+            if (glyphs.size >= 512) glyphs.delete(glyphs.keys().next().value)
+            glyphs.set(character, metrics)
+          }
+          right = Math.max(right, advance + metrics.width)
+          advance += metrics.advance
+          ascent = Math.max(ascent, metrics.ascent)
+          descent = Math.max(descent, metrics.descent)
+        }
+        return { width: Math.max(advance, right) * scale,
+          actualBoundingBoxAscent: ascent * scale, actualBoundingBoxDescent: descent * scale }
+      },
+    }
+  })
+  let points = [], labels = [], accepted = new Set()
+  let destroyed = false, updating = false
+  const stats = { points: 0, labels: 0, passes: 0, lastMs: 0, maxMs: 0 }
+
+  function update(notify = true) {
+    if (destroyed || updating || isCancelled()) return false
+    updating = true
+    const started = now()
+    try {
+      const canvas = map?.getCanvas?.()
+      const width = canvas?.clientWidth, height = canvas?.clientHeight
+      const zoom = map?.getZoom?.(), lat = map?.getCenter?.()?.lat
+      const nominalHeight = heightMetersFromMapZoom(zoom, lat)
+      // Use the same display-scale bridge as the camera contract, without
+      // precision clamping or rounding away actual small camera movements.
+      const cameraHeightMeters = nominalHeight === null
+        ? Infinity : nominalHeight * mapBridgeWidth(width) / NOMINAL_MAP_WIDTH
+      const candidates = points.map(point => {
+        let screen
+        try { screen = map?.project?.([Number(point.position[0]), Number(point.position[1])]) }
+        catch { /* unavailable projection cannot place a label */ }
+        const label = mapProjectionLabelText(point)
+        return {
+          id: point.labelLayoutId, selected: point.selected, label,
+          ...measurer.measure(label, MAP_LABEL_FONT),
+          x: screen?.x, y: screen?.y,
+          visible: Number.isFinite(screen?.x) && Number.isFinite(screen?.y)
+            && screen.x >= 0 && screen.x <= width && screen.y >= 0 && screen.y <= height,
+        }
+      })
+      const next = visibleLabelIds(candidates, { width, height, cameraHeightMeters })
+      const changed = next.size !== accepted.size || [...next].some(id => !accepted.has(id))
+      accepted = next
+      // Retain the exact point objects for deck accessors and row picking.
+      labels = points.filter(point => accepted.has(point.labelLayoutId))
+      stats.points = points.length
+      stats.labels = labels.length
+      stats.passes += 1
+      stats.lastMs = Math.max(0, now() - started)
+      stats.maxMs = Math.max(stats.maxMs, stats.lastMs)
+      if (changed && notify && !destroyed && !isCancelled()) onChange?.()
+      return changed
+    } finally { updating = false }
+  }
+
+  const refresh = () => update()
+  for (const event of ['render', 'move', 'resize']) map?.on?.(event, refresh)
+  return {
+    update,
+    setFeatures(features, selectedKeys) {
+      if (destroyed || isCancelled()) return false
+      points = mapProjectionPointRecords(features, selectedKeys)
+      return update(false)
+    },
+    getLayerData: () => ({ pointData: points, labelData: labels }),
+    getStats: () => ({ ...stats }),
+    destroy() {
+      if (destroyed) return
+      destroyed = true
+      for (const event of ['render', 'move', 'resize']) map?.off?.(event, refresh)
+      points = []
+      labels = []
+      accepted.clear()
+      measurer.clear()
+      stats.points = 0
+      stats.labels = 0
+    },
+  }
+}
+
+export function deckProjectionLayers({ ScatterplotLayer, TextLayer }, features, onSelectRow, selectedKeys, {
+  pointData = mapProjectionPointRecords(features, selectedKeys), labelData = pointData,
+} = {}) {
+  const data = pointData
 
   return [
     new ScatterplotLayer({
@@ -232,10 +371,16 @@ export function deckProjectionLayers({ ScatterplotLayer, TextLayer }, features, 
     }),
     new TextLayer({
       id: 'mip-projection-labels',
-      data,
+      data: labelData,
       getPosition: (d) => [Number(d.position[0]), Number(d.position[1])],
-      getText: (d) => d.label || d.row.precision_class || 'projected location',
+      getText: mapProjectionLabelText,
       getSize: 12,
+      sizeUnits: 'pixels',
+      fontFamily: MAP_LABEL_FONT_FAMILY,
+      fontWeight: 'normal',
+      fontSettings: { fontSize: MAP_LABEL_ATLAS_SIZE },
+      lineHeight: 1.5,
+      characterSet: 'auto',
       getColor: [26, 26, 23, 230],
       getPixelOffset: [14, -8],
       getTextAnchor: 'start',
@@ -370,6 +515,8 @@ function createMapLibreWorldViewRendererAdapter({
   let currentOnSelectRow = onSelectRow
   let localCancelled = false
   let precisionGovernor = null
+  let labelLayout = null
+  const lifecycleListeners = []
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
 
@@ -378,7 +525,7 @@ function createMapLibreWorldViewRendererAdapter({
   const activePrecisionClass = () => getPrecisionClass?.() ?? precisionClass
 
   async function mount() {
-    if (mounted) return
+    if (mounted || cancelledNow()) return
     mounted = true
 
     // Atlas fallback is handled by the React UI layer.
@@ -466,6 +613,7 @@ function createMapLibreWorldViewRendererAdapter({
         initialFeatures,
         currentOnSelectRow,
         getSelectedKeys?.() ?? new Set(),
+        { labelData: [] },
       ),
     })
     localMap.addControl(localOverlay)
@@ -493,26 +641,46 @@ function createMapLibreWorldViewRendererAdapter({
       onUnavailable: () => { if (!cancelledNow()) onStackIdChange?.(FALLBACK_MAP_STACK_ID) },
     })
     precisionGovernor.update()
+    if (cancelledNow()) return
+    const publishLayers = () => {
+      if (cancelledNow() || !overlay || !deckLayerCtors || !labelLayout) return
+      overlay.setProps({
+        layers: deckProjectionLayers(deckLayerCtors, [], currentOnSelectRow,
+          getSelectedKeys?.() ?? new Set(), labelLayout.getLayerData()),
+      })
+    }
+    labelLayout = createMapMarkerLabelLayout(map, {
+      isCancelled: cancelledNow,
+      onChange: () => { publishLayers(); requestRepaint(map) },
+    })
+    labelLayout.setFeatures(initialFeatures, getSelectedKeys?.() ?? new Set())
+    publishLayers()
 
     const handleError = () => {
+      if (cancelledNow()) return
       errorCount += 1
       const next = nextStackAfterRendererError(stackId, errorCount)
       if (next) onStackIdChange?.(next)
     }
-    map.on('error', handleError)
-
-    map.on('load', () => {
-      if (!shouldFlyTo?.()) return
+    const handleLoad = () => {
+      if (cancelledNow() || !shouldFlyTo?.()) return
       const ok = flyToSubject(map, coordinate, precisionClass)
       if (ok) markFlew?.()
-    })
+    }
+    for (const [event, listener] of [['error', handleError], ['load', handleLoad]]) {
+      map.on(event, listener)
+      lifecycleListeners.push([event, listener])
+    }
   }
 
   async function setFeatures(nextFeatures, nextSelectedKeys = getSelectedKeys?.()) {
+    if (cancelledNow()) return
     precisionGovernor?.update()
-    if (!overlay || !deckLayerCtors || stackId === FALLBACK_MAP_STACK_ID) return
+    if (!overlay || !deckLayerCtors || !labelLayout || stackId === FALLBACK_MAP_STACK_ID) return
+    labelLayout.setFeatures(nextFeatures, nextSelectedKeys ?? new Set())
     overlay.setProps({
-      layers: deckProjectionLayers(deckLayerCtors, nextFeatures, currentOnSelectRow, nextSelectedKeys ?? new Set()),
+      layers: deckProjectionLayers(deckLayerCtors, nextFeatures, currentOnSelectRow,
+        nextSelectedKeys ?? new Set(), labelLayout.getLayerData()),
     })
     requestRepaint(map)
   }
@@ -580,6 +748,9 @@ function createMapLibreWorldViewRendererAdapter({
 
   function destroy() {
     localCancelled = true
+    labelLayout?.destroy()
+    labelLayout = null
+    for (const [event, listener] of lifecycleListeners.splice(0)) map?.off?.(event, listener)
     precisionGovernor?.destroy()
     precisionGovernor = null
     destroyRendererResources({ overlay, map })
@@ -598,7 +769,10 @@ function createMapLibreWorldViewRendererAdapter({
     cancelCameraFlight: () => cancelMapCameraFlight(map),
     getCameraState,
     setCameraState,
-    getVisualFidelityRenderState: () => mapCameraRenderState(map, activePrecisionClass(), precisionGovernor?.width()),
+    getVisualFidelityRenderState: () => {
+      const state = mapCameraRenderState(map, activePrecisionClass(), precisionGovernor?.width())
+      return state ? { ...state, labelLayout: labelLayout?.getStats() ?? null } : null
+    },
     requestRender,
     destroy,
   }

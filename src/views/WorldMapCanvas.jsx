@@ -299,17 +299,17 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
         </div>
       )}
       {stackId === ELLIPSOID_GLOBE_STACK_ID && (
-        <p className="wv-map-attrib" data-terrain-status={terrainStatus?.status ?? 'idle'}>
-          {TERRAIN_DISCLOSURE_TEXT}
-          {terrainStatus?.status === 'unavailable' ? ` — ${TERRAIN_UNAVAILABLE_TEXT}` : ''}
-        </p>
-      )}
-      {stackId === ELLIPSOID_GLOBE_STACK_ID && (
         <p className="wv-map-attrib wv-map-relief-toggle">
           {reliefShadingOn ? TERRAIN_RELIEF_LEGEND_TEXT : 'Terrain relief shading off'}
         </p>
       )}
     </div>
+      {stackId === ELLIPSOID_GLOBE_STACK_ID && (
+        <p className="wv-terrain-disclosure" data-terrain-status={terrainStatus?.status ?? 'idle'}>
+          {TERRAIN_DISCLOSURE_TEXT}
+          {terrainStatus?.status === 'unavailable' ? ` — ${TERRAIN_UNAVAILABLE_TEXT}` : ''}
+        </p>
+      )}
     </div>
   )
 }

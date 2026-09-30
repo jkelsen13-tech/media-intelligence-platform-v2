@@ -25,6 +25,7 @@ import {
 } from './worldViewMapStack.js'
 import {
   makeCameraState,
+  normalizeLongitudeDegrees,
   parseCameraState,
   serializeCameraState,
 } from './worldViewCameraState.js'
@@ -116,6 +117,11 @@ export function frameGlobeOnSubject(Cesium, viewer, cam, duration = 0) {
 export function cameraStateFromGlobeCamera(math, camera, precisionClass) {
   const carto = camera?.positionCartographic
   if (!math || !carto) return null
+  // Cesium reports roll in [0, 2π); near-zero roundoff can be near 2π.
+  // Wrap that physical angle before the external-input clamp, otherwise
+  // an upright camera would be serialized as a 180-degree reversal.
+  const rollDegrees = normalizeLongitudeDegrees(math.toDegrees(camera.roll))
+  if (rollDegrees === null) return null
   return makeCameraState(
     {
       lon: math.toDegrees(carto.longitude),
@@ -123,7 +129,7 @@ export function cameraStateFromGlobeCamera(math, camera, precisionClass) {
       heightMeters: carto.height,
       headingDegrees: math.toDegrees(camera.heading),
       pitchDegrees: math.toDegrees(camera.pitch),
-      rollDegrees: math.toDegrees(camera.roll),
+      rollDegrees,
     },
     precisionClass,
   )

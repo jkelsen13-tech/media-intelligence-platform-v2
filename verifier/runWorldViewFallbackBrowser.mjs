@@ -44,6 +44,7 @@ try{
       const target={version:1,lon:-81.7,lat:41.4,heightMeters:150000,headingDegrees:23,pitchDegrees:-65,rollDegrees:0}
       assert.equal(await page.evaluate(s=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(JSON.stringify(s)),target),true)
       const saved=parseCameraState(await camera()),modes=page.getByRole('tablist',{name:'World View mode',exact:true})
+      assert.ok(Math.abs(saved.rollDegrees)<1e-6,'manual globe capture cannot invent a 180-degree roll')
       await modes.getByRole('tab',{name:'Graph',exact:true}).click()
       await page.evaluate(()=>{window.__MIP_VERIFIER_FAIL_GLOBE__=true})
       await modes.getByRole('tab',{name:'Map',exact:true}).click()
