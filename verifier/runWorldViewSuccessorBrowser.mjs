@@ -89,9 +89,11 @@ async function assertGlobeCredits(page,engine,width){
     await credits.scrollIntoViewIfNeeded()
   }
   const unobscured=await attribution.evaluate(node=>{
-    const r=node.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2
-    const hit=document.elementFromPoint(x,y)
-    return r.width>0&&r.height>0&&x>=0&&x<innerWidth&&y>=0&&y<innerHeight&&(hit===node||node.contains(hit))
+    const fragments=[...node.getClientRects()]
+    return fragments.length>0&&fragments.every(r=>{
+      const x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y)
+      return r.width>0&&r.height>0&&x>=0&&x<innerWidth&&y>=0&&y<innerHeight&&(hit===node||node.contains(hit))
+    })
   })
   assert.equal(unobscured,true,'actual imagery rights text is visible and unobscured')
   if(activateTouch)await page.getByRole('button',{name:'Done — scroll page',exact:true}).click()
