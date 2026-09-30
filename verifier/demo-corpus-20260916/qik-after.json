@@ -1,0 +1,53 @@
+{
+  "runs": [
+    {
+      "run_id": "demo-epstein-20260916",
+      "captures": 30,
+      "candidates": 30,
+      "nonpending": 0,
+      "hash_mismatches": 0,
+      "span_mismatches": 0
+    },
+    {
+      "run_id": "demo-iran-20260916",
+      "captures": 30,
+      "candidates": 30,
+      "nonpending": 0,
+      "hash_mismatches": 0,
+      "span_mismatches": 0
+    },
+    {
+      "run_id": "demo-project2025-20260916",
+      "captures": 33,
+      "candidates": 33,
+      "nonpending": 0,
+      "hash_mismatches": 0,
+      "span_mismatches": 0
+    }
+  ],
+  "counts": {
+    "arcs": 0,
+    "edges": 0,
+    "nodes": 1,
+    "articles": 98,
+    "captures": 95,
+    "candidates": 96,
+    "spatial_rows": 1,
+    "comparison_rows": 1,
+    "eligible_articles": 3
+  },
+  "observed_at": "2026-09-16T20:26:53.093116+00:00",
+  "idempotence": {
+    "repeated": 90,
+    "identical_receipts": true
+  },
+  "near_duplicate_analysis": {
+    "method": "NFKC lowercase Unicode-token Jaccard >=0.8; minimum8 distinct tokens; bounded retained excerpts only",
+    "retained_captures": 93,
+    "compared_pairs": 4278,
+    "pairs": [],
+    "limitations": "Short excerpts cannot rule out full-document syndication or detect semantic paraphrase. Source origin/dependency annotations remain conservative, not independent corroboration.",
+    "hash_recomputations": 93,
+    "hash_mismatches": 0
+  }
+}
