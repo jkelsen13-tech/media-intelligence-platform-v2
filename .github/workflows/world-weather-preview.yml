@@ -74,9 +74,13 @@ on:
       - 'verifier/runRetainedDateBrowser.mjs'
       - 'src/lib/worldViewCameraFraming.js'
       - 'src/lib/worldViewCameraMemory.js'
+      - 'src/lib/worldViewCameraState.js'
+      - 'src/lib/worldViewAtlasLabelLayout.js'
+      - 'tests/worldView*.test.mjs'
       - 'src/lib/worldViewMarkerLayout.js'
       - 'verifier/runWorldViewSuccessorBrowser.mjs'
       - 'verifier/runWorldViewFallbackBrowser.mjs'
+      - 'verifier/runWorldViewContextLossBrowser.mjs'
       - 'verifier/worldViewRasterEvidence.mjs'
       - 'verifier/worldViewProjectionFixture.mjs'
       - 'src/lib/worldViewRendererAdapter.js'
@@ -203,3 +207,30 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runWorldViewFallbackBrowser.mjs
+
+
+  lifecycle-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      VITE_SUPABASE_URL: https://qikvmopbtijoebdqosyq.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_7EVSYlCWYiE6YL0bDBYr_w_iwB9tve_
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build
+      - name: Install isolated lifecycle verifier
+        run: |
+          npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
+          node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Qualify interrupted startup and actual running globe context loss
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: |
+          node --check verifier/runWorldViewContextLossBrowser.mjs
+          node verifier/runWorldViewContextLossBrowser.mjs

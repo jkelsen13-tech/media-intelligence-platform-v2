@@ -11,7 +11,7 @@ export function qualificationCoordinates(kind){
   return [center,[-81.4,41.4],[-82,41.4],[-81.7,41.6],[98.3,-41.4]]
 }
 export async function installProjectionFixture(page,kind){
-  const coordinates=qualificationCoordinates(kind), receipt={kind,coordinateCount:coordinates.length,readerRequests:0,matchedRows:0}
+  const coordinates=qualificationCoordinates(kind), receipt={kind,coordinateCount:coordinates.length,readerRequests:0,matchedRows:0,selectionRows:[]}
   const serialized=JSON.stringify(coordinates)
   await page.route(url=>url.origin==='https://qikvmopbtijoebdqosyq.supabase.co'&&url.pathname==='/rest/v1/spatial_projection_v1',async route=>{
     const request=route.request(),url=new URL(request.url())
@@ -25,6 +25,11 @@ export async function installProjectionFixture(page,kind){
     const fixtureRows=rows.map(row=>{
       if(row.subject_graph_node_id!==QUALIFICATION_SUBJECT)return row
       receipt.matchedRows++
+      // Detached existing-row scalars qualify explicit selection. No added
+      // reader column, source payload, geometry or provider request.
+      receipt.selectionRows.push(Object.freeze(Object.fromEntries(
+        ['subject_graph_node_id','spatial_role','parent_event_id','valid_from_utc','valid_to_utc','revision_id']
+          .map(key=>[key,row[key]??null]))))
       const result={...row,display_geometry:{type:'MultiPoint',coordinates:JSON.parse(serialized)}}
       assert.deepEqual(Object.keys(result),Object.keys(row),'no invented reader columns')
       for(const key of columns.filter(key=>key!=='display_geometry'))assert.deepEqual(result[key],row[key])

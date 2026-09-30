@@ -484,7 +484,7 @@ export function createCesiumEllipsoidRendererAdapter({
     // Constrain "zoom in" so the camera can't reach fake finer precision.
     // minimumZoomDistance is a height in meters above the ellipsoid surface.
     viewer.scene.screenSpaceCameraController.minimumZoomDistance =
-      heightMetersForPrecisionClass(precisionClass)
+      heightMetersForPrecisionClass(activePrecisionClass())
 
     // Picking: clicking a marker returns the original projection row reference.
     eventHandler = new Cesium.ScreenSpaceEventHandler(viewer.canvas)
@@ -546,7 +546,7 @@ export function createCesiumEllipsoidRendererAdapter({
 
     // Initial camera framing: local camera only.
     if (shouldFlyTo?.()) {
-      const cam = subjectEllipsoidCamera(coordinate, precisionClass)
+      const cam = subjectEllipsoidCamera(coordinate, activePrecisionClass())
       if (cam) {
         frameGlobeOnSubject(Cesium, viewer, cam)
         viewer.scene.requestRender?.()
@@ -783,6 +783,19 @@ export function createCesiumEllipsoidRendererAdapter({
     mounted = false
   }
 
+  // Detached display scalars: expose the actual controller floor and raw
+  // camera height so qualification cannot be masked by serialization clamps.
+  function cameraGovernanceState() {
+    const precision = activePrecisionClass()
+    const floor = viewer?.scene?.screenSpaceCameraController?.minimumZoomDistance
+    const height = viewer?.camera?.positionCartographic?.height
+    return {
+      precisionClass: typeof precision === 'string' ? precision : null,
+      minimumZoomDistanceMeters: Number.isFinite(floor) ? floor : null,
+      rawHeightMeters: Number.isFinite(height) ? height : null,
+    }
+  }
+
   // Adapter interface.
   return {
     getAttribution: () => mapStackById(stackId)?.attribution ?? '',
@@ -800,7 +813,7 @@ export function createCesiumEllipsoidRendererAdapter({
     setVisualFidelityProfile,
     setRecordedTimeInstant: value => recordedLighting.setTime(value),
     getVisualFidelityCapabilities,
-    getVisualFidelityRenderState: () => ({ renderedFrames, layoutTiming: { ...layoutTiming }, markers: entities.map(e => ({ id: e.id, visible: e.show, labelVisible: e.label?.show?.getValue(viewer.clock.currentTime) === true, selected: e.__mipSelected })), refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
+    getVisualFidelityRenderState: () => ({ cameraGovernance: cameraGovernanceState(), renderedFrames, layoutTiming: { ...layoutTiming }, markers: entities.map(e => ({ id: e.id, visible: e.show, labelVisible: e.label?.show?.getValue(viewer.clock.currentTime) === true, selected: e.__mipSelected })), refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }

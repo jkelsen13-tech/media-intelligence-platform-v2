@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
+import { heightMetersForPrecisionClass } from '../src/lib/worldViewMapStack.js'
 import { cameraStatesEqual, parseCameraState } from '../src/lib/worldViewCameraState.js'
 import { sameCameraPose } from './cameraPoseComparison.mjs'
 import { observeBackendBoundary } from './backendBoundary.mjs'
@@ -66,6 +67,21 @@ async function openWorld(page){
   assert.equal(await identity(page),QUALIFICATION_SUBJECT,'qualification binds the actual nonempty canonical subject')
   assert.ok((await state(page)).markers.length>0,'real reader creates marker evidence')
 }
+async function assertCameraGovernance(page,tag,log=true){
+  const actual=(await state(page)).cameraGovernance
+  const expectedClass=await page.getByRole('complementary',{name:'Selected-event inspector'}).evaluate(node=>
+    [...node.querySelectorAll('.wv-field')].find(n=>n.querySelector('dt')?.textContent==='Precision class')?.querySelector('dd')?.textContent?.trim())
+  assert.ok(expectedClass,'original selected row has a published precision class')
+  assert.equal(actual?.precisionClass,expectedClass,'actual globe governance binds the original precision class')
+  const floor=heightMetersForPrecisionClass(expectedClass)
+  assert.ok(Number.isFinite(actual.minimumZoomDistanceMeters)&&Number.isFinite(actual.rawHeightMeters),'controller floor/raw height are actual finite scalars')
+  assert.ok(Math.abs(actual.minimumZoomDistanceMeters-floor)<1e-8,'actual controller floor matches the class meter floor')
+  assert.ok(actual.rawHeightMeters>=floor-0.01,'raw ellipsoid height cannot hide below-floor zoom through serialized camera clamping')
+  if(log)console.log('MIP_WORLD_GLOBE_GOVERNANCE='+JSON.stringify({tag,precisionClass:actual.precisionClass,floorMeters:floor,
+    actualControllerFloorMeters:actual.minimumZoomDistanceMeters,rawHeightMeters:actual.rawHeightMeters,evidenceLayer:'representative-built-actions'}))
+  return actual
+}
+
 async function assertGlobeCredits(page,engine,width){
   const credits=page.locator('.cesium-widget-credits'),disclosure=page.locator('.wv-terrain-disclosure')
   await credits.scrollIntoViewIfNeeded()
@@ -124,6 +140,7 @@ async function appearanceAblations(page,engine,width,counts){
     for(const control of Object.values(controls))await control.uncheck()
     await setCamera(page,target);await settle(page)
     const fixed=await camera(page),fixedState=await state(page),fogPolicy=fixedState.atmosphere.fogPolicy
+    const fixedGovernance=await assertCameraGovernance(page,engine+'-'+width+'-'+sceneName+'-appearance')
     assertOrientation(parseCameraState(fixed),target,sceneName)
     assert.equal(fixedState.recordedLighting.available,true,'lighting has a real recorded instant')
     assert.equal(fixedState.recordedLighting.frozen,true)
@@ -132,6 +149,9 @@ async function appearanceAblations(page,engine,width,counts){
       await delay(250)
       const actual=await state(page)
       assert.ok(sameCameraPose(actual.cameraPose,fixedState.cameraPose),name+' preserves position/orientation')
+      const actualGovernance=await assertCameraGovernance(page,sceneName+'-'+name,false)
+      assert.equal(actualGovernance.minimumZoomDistanceMeters,fixedGovernance.minimumZoomDistanceMeters,'appearance keeps the actual controller floor')
+      assert.ok(Math.abs(actualGovernance.rawHeightMeters-fixedGovernance.rawHeightMeters)<1e-8,'appearance keeps raw ellipsoid height')
       assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),parseCameraState(fixed),1e-9))
       assert.equal(await canvas.evaluate(node=>node.isConnected),true)
       assert.deepEqual(actual.atmosphere.fogPolicy,fogPolicy)
@@ -170,18 +190,21 @@ async function realJourney(browser,engine,width){
   page.on('pageerror',e=>errors.push(e.message))
   try{
     await openWorld(page)
+    await assertCameraGovernance(page,engine+'-'+width+'-selected-ready')
     const initial=parseCameraState(await camera(page))
     assert.ok(Math.abs(initial.pitchDegrees+90)<0.01,'selected reset is nadir')
     assert.ok(Math.min(initial.headingDegrees,360-initial.headingDegrees)<0.01,'selected reset is north-up')
     const beforeContext=await context(page),beforeRoute=page.url()
     const free={...cameraState(-80,42,700000),headingDegrees:23,pitchDegrees:-65}
     await setCamera(page,free)
+    await assertCameraGovernance(page,engine+'-'+width+'-manual-free')
     const saved=parseCameraState(await camera(page)),modes=page.getByRole('tablist',{name:'World View mode',exact:true})
     assertOrientation(saved,free,'manual globe camera')
     await modes.getByRole('tab',{name:'Graph',exact:true}).click()
     await modes.getByRole('tab',{name:'Map',exact:true}).click()
     await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState())
     await delay(300)
+    await assertCameraGovernance(page,engine+'-'+width+'-graph-restoration')
     assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6),'Graph round trip keeps manual camera')
     await modes.getByRole('tab',{name:'Split',exact:true}).click()
     assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6),'Split preserves camera')
@@ -200,6 +223,7 @@ async function realJourney(browser,engine,width){
     for(const [name,lon,lat] of(width===1280?cases:cases.filter(c=>['Canada','Mexico'].includes(c[0])))){
       await setCamera(page,cameraState(lon,lat));await delay(150)
       const actual=parseCameraState(await camera(page))
+      await assertCameraGovernance(page,engine+'-'+width+'-'+name)
       assert.ok(Math.abs(actual.lat-lat)<0.001,name+' latitude')
       if(Math.abs(lat)<90)assert.ok(Math.abs(actual.lon-lon)<0.001,name+' longitude')
       assert.ok(Math.abs(actual.pitchDegrees+90)<0.01,name+' nadir')
@@ -229,6 +253,7 @@ async function realJourney(browser,engine,width){
       console.log('MIP_WORLD_TOUCH='+JSON.stringify({engine,width,tapVerified:true,dragVerified,limitation:dragVerified?null:'WebKit exposes tap; native multi-touch drag is not qualified by this driver.'}))
     }
     await page.getByRole('button',{name:'Return to selected location',exact:true}).click();await delay(1800)
+    await assertCameraGovernance(page,engine+'-'+width+'-selected-reset')
     await appearanceAblations(page,engine,width,counts)
     const layout=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}))
     assert.ok(layout.scroll<=layout.width+1,'controls fit viewport')
