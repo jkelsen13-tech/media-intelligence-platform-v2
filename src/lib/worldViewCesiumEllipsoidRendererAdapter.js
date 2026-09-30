@@ -1,3 +1,4 @@
+import { createMarkerLabelMeasurer, dispatchGlobeMarkerPick, updateGlobeMarkerLayout } from './worldViewMarkerLayout.js'
 import { createCesiumRefinementController } from './worldViewCesiumRefinement.js'
 import { createRecordedLightingController } from './worldViewCesiumRecordedLighting.js'
 import { atmosphereAvailable, setAtmosphereEffect, atmosphereState } from './worldViewCesiumAtmosphere.js'
@@ -24,6 +25,7 @@ import {
 } from './worldViewMapStack.js'
 import {
   makeCameraState,
+  normalizeLongitudeDegrees,
   parseCameraState,
   serializeCameraState,
 } from './worldViewCameraState.js'
@@ -115,6 +117,11 @@ export function frameGlobeOnSubject(Cesium, viewer, cam, duration = 0) {
 export function cameraStateFromGlobeCamera(math, camera, precisionClass) {
   const carto = camera?.positionCartographic
   if (!math || !carto) return null
+  // Cesium reports roll in [0, 2π); near-zero roundoff can be near 2π.
+  // Wrap that physical angle before the external-input clamp, otherwise
+  // an upright camera would be serialized as a 180-degree reversal.
+  const rollDegrees = normalizeLongitudeDegrees(math.toDegrees(camera.roll))
+  if (rollDegrees === null) return null
   return makeCameraState(
     {
       lon: math.toDegrees(carto.longitude),
@@ -122,7 +129,7 @@ export function cameraStateFromGlobeCamera(math, camera, precisionClass) {
       heightMeters: carto.height,
       headingDegrees: math.toDegrees(camera.heading),
       pitchDegrees: math.toDegrees(camera.pitch),
-      rollDegrees: math.toDegrees(camera.roll),
+      rollDegrees,
     },
     precisionClass,
   )
@@ -184,6 +191,66 @@ export function destroyCesiumResources({ eventHandler, viewer }) {
     viewer?.destroy?.()
   } catch {
     /* ignore */
+  }
+}
+
+// Renderer-owned failure lifetime. Cesium raises renderError from inside draw;
+// destroying its Scene there can resume the draw against destroyed resources.
+// Capture synchronously, stop new frames, then tear down after this stack exits.
+export function createGlobeFailureLifecycle({
+  viewer,
+  isCancelled = () => false,
+  onFatalFailure,
+  destroyResources,
+  enqueue = callback => queueMicrotask(callback),
+}) {
+  let failed = false
+  let disposed = false
+  let queued = false
+  const removers = []
+  function removeListeners() {
+    for (const remove of removers.splice(0)) remove?.()
+  }
+  function dispose() {
+    if (disposed) return
+    disposed = true
+    removeListeners()
+    destroyResources?.()
+  }
+  function deferDispose() {
+    if (queued || disposed) return
+    queued = true
+    enqueue(dispose)
+  }
+  function fail(kind, error) {
+    if (failed || disposed || isCancelled() || viewer?.isDestroyed?.()) return false
+    failed = true
+    // Public Viewer governance; native loss can otherwise leave an alive loop
+    // which issues draws against the lost context.
+    viewer.useDefaultRenderLoop = false
+    removeListeners()
+    deferDispose()
+    // The owner reads the still-live camera before any destruction. Even a
+    // synchronous owner cleanup must respect the deferred failure boundary.
+    onFatalFailure?.(kind, error)
+    return true
+  }
+  const canvas = viewer?.canvas
+  const onContextLost = () => fail('context-lost')
+  if (canvas?.addEventListener) {
+    canvas.addEventListener('webglcontextlost', onContextLost)
+    removers.push(() => canvas.removeEventListener('webglcontextlost', onContextLost))
+  }
+  const renderError = viewer?.scene?.renderError
+  const removeRenderError = typeof renderError?.addEventListener === 'function'
+    ? renderError.addEventListener((scene, error) => fail('render-error', error))
+    : null
+  if (typeof removeRenderError === 'function') removers.push(removeRenderError)
+  return {
+    destroy() {
+      if (failed) deferDispose()
+      else dispose()
+    },
   }
 }
 
@@ -260,10 +327,17 @@ export function createCesiumEllipsoidRendererAdapter({
   }
 
   let viewer = null
+  let failureLifecycle = null
   let ownedHost = null
   let eventHandler = null
   let entities = []
   let mounted = false
+  const labelMeasurements = createMarkerLabelMeasurer(() => document.createElement('canvas').getContext('2d'))
+  const measureLabel = labelMeasurements.measure
+  let renderedFrames = 0
+  // CPU time for display arbitration only, not GPU or full-frame timing.
+  const layoutTiming = { lastMs: 0, maxMs: 0, passes: 0, entityCount: 0 }
+  const removeLayoutListeners = []
   let currentOnSelectRow = onSelectRow
   let localCancelled = false
   let Cesium = null
@@ -327,8 +401,6 @@ export function createCesiumEllipsoidRendererAdapter({
 
     if (cancelledNow()) return
 
-    const stack = mapStackById(stackId)
-    const attributionText = stack?.attribution ?? '© OpenStreetMap contributors'
 
     // Stage D: bounded display-only terrain. The provider enforces the
     // approved Cleveland/Ohio coverage and approved-source policy itself;
@@ -367,7 +439,10 @@ export function createCesiumEllipsoidRendererAdapter({
     // explicit ImageryLayer passed as `baseLayer`.
     const imageryProvider = new Cesium.UrlTemplateImageryProvider({
       url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-      credit: new Cesium.Credit(attributionText),
+      credit: new Cesium.Credit(
+        '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>',
+        true,
+      ),
       maximumLevel: 19,
     })
 
@@ -416,18 +491,22 @@ export function createCesiumEllipsoidRendererAdapter({
       /* ignore */
     }
 
-    viewer.scene.renderError.addEventListener((scene, renderError) => {
-      // eslint-disable-next-line no-console
-      console.error('Cesium render failure; falling back to MapLibre:', renderError?.message ?? renderError)
-      if (cancelledNow() || !viewer) return
-      destroyCesiumResources({ eventHandler, viewer })
-      terrainPlan?.destroy?.()
-      ownedHost?.destroy()
-      ownedHost = null
-      viewer = null
-      eventHandler = null
-      entities = []
-      onStackIdChange?.('openfreemap-positron')
+    failureLifecycle = createGlobeFailureLifecycle({
+      viewer,
+      isCancelled: cancelledNow,
+      onFatalFailure: (kind, error) => {
+        localCancelled = true
+        for (const remove of removeLayoutListeners.splice(0)) remove?.()
+        // Native loss is a distinct actual browser failure, not a synthesized
+        // Scene.renderError. Report it honestly and transition only once.
+        // eslint-disable-next-line no-console
+        if (kind === 'context-lost') console.error('Cesium WebGL context lost; falling back to MapLibre.')
+        // eslint-disable-next-line no-console
+        else console.error('Cesium render failure; falling back to MapLibre:', error?.message ?? error)
+        // WorldMapCanvas captures the camera here before deferred teardown.
+        onStackIdChange?.('openfreemap-positron')
+      },
+      destroyResources: destroyRendererResources,
     })
 
     // The widget otherwise rewrites canAnimate on every data-source tick.
@@ -436,6 +515,20 @@ export function createCesiumEllipsoidRendererAdapter({
 
     // Request-only rendering governance: only redraw on camera/props changes.
     viewer.scene.requestRenderMode = true
+    removeLayoutListeners.push(viewer.scene.postRender.addEventListener(() => {
+      renderedFrames += 1
+      if (!viewer || cancelledNow()) return
+      // Every actual frame includes small camera moves and responsive resizes.
+      // Only a changed visibility result requests one correction frame.
+      const started = performance.now()
+      const changed = updateGlobeMarkerLayout(Cesium, viewer, entities, measureLabel)
+      const elapsed = Math.max(0, performance.now() - started)
+      layoutTiming.lastMs = elapsed
+      layoutTiming.maxMs = Math.max(layoutTiming.maxMs, elapsed)
+      layoutTiming.passes += 1
+      layoutTiming.entityCount = entities.length
+      if (changed) viewer.scene.requestRender?.()
+    }))
 
     // Stage D visual-continuity repair: apply the labeled relief shading
     // (default ON). Derived only from actual approved terrain heights; the
@@ -455,16 +548,12 @@ export function createCesiumEllipsoidRendererAdapter({
     // Constrain "zoom in" so the camera can't reach fake finer precision.
     // minimumZoomDistance is a height in meters above the ellipsoid surface.
     viewer.scene.screenSpaceCameraController.minimumZoomDistance =
-      heightMetersForPrecisionClass(precisionClass)
+      heightMetersForPrecisionClass(activePrecisionClass())
 
     // Picking: clicking a marker returns the original projection row reference.
     eventHandler = new Cesium.ScreenSpaceEventHandler(viewer.canvas)
     eventHandler.setInputAction((click) => {
-      if (cancelledNow()) return
-      const picked = viewer.scene.pick(click.position)
-      const entity = picked?.id
-      const row = entity?.__mipRow
-      if (row) currentOnSelectRow?.(row)
+      dispatchGlobeMarkerPick(viewer, click.position, currentOnSelectRow, cancelledNow)
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
 
     // Attach features.
@@ -484,15 +573,21 @@ export function createCesiumEllipsoidRendererAdapter({
         color,
         outlineColor: new Cesium.Color(21 / 255, 110 / 255, 191 / 255, 1),
         outlineWidth: 1.5,
+        // Screen symbol at the retained lon/lat; explicit horizon arbitration
+        // prevents far-side picking without inventing an evidence altitude.
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
       }
 
       const label = d.label || d.precisionClass || 'projected location'
 
       const entity = viewer.entities.add({
+        // The first layout pass must approve a symbol before it can be drawn.
+        show: false,
         id: d.id,
         position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
         point,
         label: {
+          show: true,
           text: label,
           font: '12px sans-serif',
           fillColor: new Cesium.Color(26 / 255, 26 / 255, 23 / 255, 0.9),
@@ -507,6 +602,7 @@ export function createCesiumEllipsoidRendererAdapter({
 
       // Custom field used by pick handler.
       entity.__mipRow = d.row
+      entity.__mipSelected = isSelected
       entities.push(entity)
     }
 
@@ -514,7 +610,7 @@ export function createCesiumEllipsoidRendererAdapter({
 
     // Initial camera framing: local camera only.
     if (shouldFlyTo?.()) {
-      const cam = subjectEllipsoidCamera(coordinate, precisionClass)
+      const cam = subjectEllipsoidCamera(coordinate, activePrecisionClass())
       if (cam) {
         frameGlobeOnSubject(Cesium, viewer, cam)
         viewer.scene.requestRender?.()
@@ -555,15 +651,21 @@ export function createCesiumEllipsoidRendererAdapter({
         color,
         outlineColor: new Cesium.Color(21 / 255, 110 / 255, 191 / 255, 1),
         outlineWidth: 1.5,
+        // Screen symbol at the retained lon/lat; explicit horizon arbitration
+        // prevents far-side picking without inventing an evidence altitude.
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
       }
 
       const label = d.label || d.precisionClass || 'projected location'
 
       const entity = viewer.entities.add({
+        // The first layout pass must approve a symbol before it can be drawn.
+        show: false,
         id: d.id,
         position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
         point,
         label: {
+          show: true,
           text: label,
           font: '12px sans-serif',
           fillColor: new Cesium.Color(26 / 255, 26 / 255, 23 / 255, 0.9),
@@ -577,10 +679,11 @@ export function createCesiumEllipsoidRendererAdapter({
       })
 
       entity.__mipRow = d.row
+      entity.__mipSelected = isSelected
       entities.push(entity)
     }
 
-    // Trigger a render in requestRenderMode.
+    // Arbitration runs only after actual camera/feature renders, never an idle loop.
     viewer.scene.requestRender?.()
   }
 
@@ -724,11 +827,13 @@ export function createCesiumEllipsoidRendererAdapter({
     if (!viewer || !Cesium) return false
     const parsed = parseCameraState(serialized, { precisionClass: activePrecisionClass() })
     if (!parsed) return false
+    viewer.scene.screenSpaceCameraController.minimumZoomDistance = heightMetersForPrecisionClass(activePrecisionClass())
     return applyCameraStateToGlobeViewer(Cesium, viewer, parsed)
   }
 
-  function destroy() {
-    localCancelled = true
+  function destroyRendererResources() {
+    for (const remove of removeLayoutListeners.splice(0)) remove?.()
+    labelMeasurements.clear()
     terrainPlan?.destroy?.()
     destroyCesiumResources({ eventHandler, viewer })
     ownedHost?.destroy()
@@ -738,7 +843,26 @@ export function createCesiumEllipsoidRendererAdapter({
     entities = []
     terrainPlan = null
     terrainDegraded = false
+  }
+
+  function destroy() {
+    localCancelled = true
+    if (failureLifecycle) failureLifecycle.destroy()
+    else destroyRendererResources()
     mounted = false
+  }
+
+  // Detached display scalars: expose the actual controller floor and raw
+  // camera height so qualification cannot be masked by serialization clamps.
+  function cameraGovernanceState() {
+    const precision = activePrecisionClass()
+    const floor = viewer?.scene?.screenSpaceCameraController?.minimumZoomDistance
+    const height = viewer?.camera?.positionCartographic?.height
+    return {
+      precisionClass: typeof precision === 'string' ? precision : null,
+      minimumZoomDistanceMeters: Number.isFinite(floor) ? floor : null,
+      rawHeightMeters: Number.isFinite(height) ? height : null,
+    }
   }
 
   // Adapter interface.
@@ -758,7 +882,7 @@ export function createCesiumEllipsoidRendererAdapter({
     setVisualFidelityProfile,
     setRecordedTimeInstant: value => recordedLighting.setTime(value),
     getVisualFidelityCapabilities,
-    getVisualFidelityRenderState: () => ({ refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
+    getVisualFidelityRenderState: () => ({ cameraGovernance: cameraGovernanceState(), renderedFrames, layoutTiming: { ...layoutTiming }, markers: entities.map(e => ({ id: e.id, visible: e.show, labelVisible: e.label?.show?.getValue(viewer.clock.currentTime) === true, selected: e.__mipSelected })), refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }

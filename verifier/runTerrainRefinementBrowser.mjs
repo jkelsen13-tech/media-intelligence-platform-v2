@@ -4,6 +4,7 @@ import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { tileApproval } from '../src/lib/worldViewCesiumTerrariumTerrainProvider.js'
+import { cameraStatesEqual, parseCameraState } from '../src/lib/worldViewCameraState.js'
 import { sameCameraPose } from './cameraPoseComparison.mjs'
 import { observeBackendBoundary } from './backendBoundary.mjs'
 const require = createRequire(process.env.MIP_BROWSER_PACKAGE + '/package.json')
@@ -103,7 +104,8 @@ try {
         await settle()
         assert.equal(await control.inputValue(),'fine')
         assert.equal((await profile()).categories.terrain.refinement,'fine')
-        assert.equal(await camera(),originalCamera)
+        // Reconstruction across renderer instances changes sub-millimetre floating-point values.
+        assert.ok(cameraStatesEqual(parseCameraState(await camera()),parseCameraState(originalCamera),1e-9),'remount preserves serialized camera within numerical round-trip tolerance')
         assert.equal(page.url(),route)
         assert.equal((await page.evaluate(()=>window.__MIP_WORLD_VIEW_TERRAIN_PROBE__.getTerrainStatus())).status,'active')
         console.log('MIP_REFINEMENT_REMOUNT_'+engine+'_'+width+'='+(await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:70})).toString('base64'))

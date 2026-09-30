@@ -95,7 +95,7 @@ test('camera contract: serialize/parse round-trips the Cleveland subject camera'
   // Stable key order, version pinned.
   assert.equal(
     serialized,
-    `{"version":1,"lon":${state.lon},"lat":${state.lat},"heightMeters":${state.heightMeters},"headingDegrees":346,"pitchDegrees":-32,"rollDegrees":0}`,
+    `{"version":1,"lon":${state.lon},"lat":${state.lat},"heightMeters":${state.heightMeters},"headingDegrees":0,"pitchDegrees":-90,"rollDegrees":0}`,
   )
   const parsed = parseCameraState(serialized, { precisionClass: 'city' })
   assert.ok(cameraStatesEqual(state, parsed))
@@ -208,7 +208,7 @@ test('map camera: state round-trips and restore is capped at the precision ceili
   assert.ok(state)
   assert.ok(Math.abs(state.lon - -81.7) < 1e-9)
   assert.ok(Math.abs(state.headingDegrees - 346) < 1e-9)
-  assert.equal(state.pitchDegrees, -32)
+  assert.equal(state.pitchDegrees, -58)
   const cam = mapCameraForCameraState(state, 'city')
   assert.ok(Math.abs(cam.center[0] - -81.7) < 1e-9)
   assert.ok(Math.abs(cam.center[1] - 41.4) < 1e-9)
@@ -285,7 +285,7 @@ test('adapter wiring: both renderers and the dispatcher expose the camera contra
   assert.match(ADAPTER, /getCameraState:\s*\(\)\s*=>\s*impl\?\.getCameraState/)
   assert.match(ADAPTER, /setCameraState:\s*\(serialized\)\s*=>\s*impl\?\.setCameraState/)
   // MapLibre adapter restores via jumpTo with the precision-capped camera.
-  assert.match(ADAPTER, /mapCameraForCameraState\(parsed, activePrecisionClass\(\)\)/)
+  assert.match(ADAPTER, /mapCameraForCameraState\(parsed, activePrecisionClass\(\), precisionGovernor\?\.width\(\)\)/)
   assert.match(ADAPTER, /map\.jumpTo/)
   // Globe adapter parses through the shared contract and applies via setView.
   assert.match(GLOBE_ADAPTER, /parseCameraState\(serialized, \{ precisionClass: activePrecisionClass\(\) \}\)/)
@@ -299,7 +299,7 @@ test('ceiling clamp: Cesium minimumZoomDistance is the meter ceiling above the s
   // back out — the ~5 km city ceiling became unreachable and ceiling restores
   // were bounced to planetary height. minimumZoomDistance is a HEIGHT in
   // meters above the ellipsoid surface, not a distance from Earth center.
-  assert.match(GLOBE_ADAPTER, /minimumZoomDistance =\s*\n\s*heightMetersForPrecisionClass\(precisionClass\)/)
+  assert.match(GLOBE_ADAPTER, /minimumZoomDistance =\s*\n\s*heightMetersForPrecisionClass\(activePrecisionClass\(\)\)/)
   assert.doesNotMatch(GLOBE_ADAPTER, /minimumZoomDistance =\s*\n\s*minCameraDistanceFromCenterMetersForPrecisionClass/)
   const cam = subjectEllipsoidCamera([-81.7, 41.4], 'city')
   assert.ok(Math.abs(cam.minZoomDistanceMeters - heightMetersForPrecisionClass('city')) < 1e-6)

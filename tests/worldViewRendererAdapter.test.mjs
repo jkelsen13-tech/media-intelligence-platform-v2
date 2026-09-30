@@ -138,3 +138,19 @@ test('requestRepaint and destroyRendererResources are safe without a real render
   assert.doesNotThrow(() => destroyRendererResources({ overlay: {}, map: {} }))
 })
 
+
+test('deck layers derive current selection without modifying feature or coordinate references', () => {
+  const row = Object.freeze({ mip_object_id: 'original', subject_graph_node_id: 'node-original', precision_class: 'city' })
+  const position = Object.freeze([-81.7, 41.4])
+  const feature = Object.freeze({ row, positions: Object.freeze([position]), selected: false, label: 'Original location' })
+  class Layer { constructor(props) { this.props = props } }
+  const [points, labels] = deckProjectionLayers(
+    { ScatterplotLayer: Layer, TextLayer: Layer }, [feature], () => {}, new Set(['node-original']),
+  )
+  assert.equal(points.props.data[0].selected, true, 'current selected keys override the prior display snapshot')
+  assert.equal(feature.selected, false, 'feature objects remain untouched')
+  assert.equal(points.props.data[0].position, position)
+  assert.equal(points.props.data[0].row, row)
+  assert.equal(labels.props.data[0], points.props.data[0])
+  assert.equal(labels.props.getText(labels.props.data[0]), 'Original location')
+})

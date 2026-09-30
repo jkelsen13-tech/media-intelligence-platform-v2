@@ -16,6 +16,7 @@ import {
   mapStackById,
   mapLibreStyleForStack,
   heightMetersFromMapZoom,
+  heightMetersForPrecisionClass,
   mapZoomForHeightMeters,
   maxZoomForPrecisionClass,
   minZoom,
@@ -30,6 +31,7 @@ import {
   serializeCameraState,
 } from './worldViewCameraState.js'
 import { overlayAllowed } from './worldViewPrivacyLock.js'
+import { createMarkerLabelMeasurer, visibleLabelIds } from './worldViewMarkerLayout.js'
 
 // ---- Stage C: renderer-neutral camera-state contract (2D/2.5D side) ----
 //
@@ -39,9 +41,108 @@ import { overlayAllowed } from './worldViewPrivacyLock.js'
 // down). Restore is clamped to the precision-class zoom cap so it can never
 // reach finer-than-recorded precision.
 
+// The existing bridge is calibrated at 800 CSS pixels. Smaller viewports need
+// a tighter cap; wider viewports retain that approved bound. This remains an
+// approximate display-scale contract, not a physical MapLibre camera altitude.
+const NOMINAL_MAP_WIDTH = 800
+const MERCATOR_MAX_LATITUDE = 85.05112878
+
+function mapBridgeWidth(width) {
+  return Number.isFinite(width) && width > 0 ? Math.min(width, NOMINAL_MAP_WIDTH) : NOMINAL_MAP_WIDTH
+}
+
+export function maxMapZoomForPrecisionClassAtLatitude(precisionClass, lat, viewportWidthPx = NOMINAL_MAP_WIDTH) {
+  if (!Number.isFinite(lat)) return null
+  const latitude = Math.min(MERCATOR_MAX_LATITUDE, Math.max(-MERCATOR_MAX_LATITUDE, lat))
+  const floorZoom = mapZoomForHeightMeters(heightMetersForPrecisionClass(precisionClass), latitude, mapBridgeWidth(viewportWidthPx))
+  return floorZoom === null ? null : Math.min(maxZoomForPrecisionClass(precisionClass), floorZoom)
+}
+
+function applyMapPrecisionLimit(map, cap) {
+  if (!map || !Number.isFinite(cap) || cap < -2) return false
+  const lower = Math.min(minZoom(), cap)
+  const currentMin = map.getMinZoom?.() ?? minZoom()
+  // MapLibre requires min <= max. Lower min first; raise max before min.
+  if (lower < currentMin) map.setMinZoom?.(lower)
+  if (Math.abs((map.getMaxZoom?.() ?? Infinity) - cap) > 1e-9) map.setMaxZoom?.(cap)
+  if (lower > currentMin) map.setMinZoom?.(lower)
+  return true
+}
+
+export function createMapPrecisionGovernor(map, { getPrecisionClass, onUnavailable } = {}) {
+  let updating = false
+  let refreshPending = false
+  let lastWidth = NOMINAL_MAP_WIDTH
+  function width() {
+    const measured = map?.getCanvas?.()?.clientWidth
+    if (Number.isFinite(measured) && measured > 0) lastWidth = mapBridgeWidth(measured)
+    return lastWidth
+  }
+  function update(lat) {
+    if (updating) { refreshPending = true; return true }
+    updating = true
+    let applied = true
+    let passes = 0
+    try {
+      do {
+        refreshPending = false
+        const currentLat = lat ?? map?.getCenter?.()?.lat
+        const cap = maxMapZoomForPrecisionClassAtLatitude(getPrecisionClass?.(), currentLat, width())
+        applied = applyMapPrecisionLimit(map, cap)
+        passes += 1
+        // A zoom clamp can also constrain center latitude. Re-read that live
+        // center after synchronous move events, without recursive callbacks.
+      } while (applied && refreshPending && lat === undefined && passes < 4)
+      if (!applied || (refreshPending && lat === undefined)) {
+        onUnavailable?.()
+        return false
+      }
+      return true
+    } finally { updating = false; refreshPending = false }
+  }
+  // Zoom setters can emit move synchronously; the guard prevents recursion.
+  // Event callbacks receive an event object, not a latitude.
+  const refresh = () => update()
+  map?.on?.('move', refresh)
+  map?.on?.('resize', refresh)
+  return {
+    width, update,
+    destroy() { map?.off?.('move', refresh); map?.off?.('resize', refresh) },
+  }
+}
+
+// Scalars only for display/runtime qualification. The raw bridge height is
+// intentionally not precision-clamped, so a broken live cap cannot be hidden.
+export function mapCameraRenderState(map, precisionClass, viewportWidthPx = NOMINAL_MAP_WIDTH) {
+  if (!map) return null
+  try {
+    const center = map.getCenter?.()
+    const zoom = map.getZoom?.()
+    if (!center || !Number.isFinite(center.lng) || !Number.isFinite(center.lat) || !Number.isFinite(zoom)) return null
+    const viewportWidth = mapBridgeWidth(viewportWidthPx)
+    const nominalHeight = heightMetersFromMapZoom(zoom, center.lat)
+    if (nominalHeight === null) return null
+    const finiteOrNull = value => Number.isFinite(value) ? value : null
+    return {
+      rendererKind: 'maplibre-deck.gl',
+      mapCamera: {
+        lon: center.lng, lat: center.lat, zoom,
+        bearing: finiteOrNull(map.getBearing?.()),
+        pitch: finiteOrNull(map.getPitch?.()),
+        bridgeHeightMeters: nominalHeight * viewportWidth / NOMINAL_MAP_WIDTH,
+        viewportWidthPx: viewportWidth,
+        minZoom: finiteOrNull(map.getMinZoom?.()),
+        maxZoom: finiteOrNull(map.getMaxZoom?.()),
+        precisionClass: typeof precisionClass === 'string' ? precisionClass : null,
+      },
+    }
+  } catch { return null }
+}
+
 /** Build a normalized camera state from a 2D/2.5D map camera snapshot. */
-export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 0 }, precisionClass) {
-  const heightMeters = heightMetersFromMapZoom(zoom, lat)
+export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 0 }, precisionClass, viewportWidthPx = NOMINAL_MAP_WIDTH) {
+  const nominalHeight = heightMetersFromMapZoom(zoom, lat)
+  const heightMeters = nominalHeight === null ? null : nominalHeight * mapBridgeWidth(viewportWidthPx) / NOMINAL_MAP_WIDTH
   if (heightMeters === null) return null
   return makeCameraState(
     {
@@ -49,7 +150,7 @@ export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 
       lat,
       heightMeters,
       headingDegrees: bearing,
-      pitchDegrees: -pitch,
+      pitchDegrees: Math.min(85, Math.max(0, pitch)) - 90,
       rollDegrees: 0,
     },
     precisionClass,
@@ -57,17 +158,20 @@ export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 
 }
 
 /** Convert a normalized camera state into 2D/2.5D map camera parameters. */
-export function mapCameraForCameraState(cameraState, precisionClass) {
+export function mapCameraForCameraState(cameraState, precisionClass, viewportWidthPx = NOMINAL_MAP_WIDTH) {
   if (!cameraState) return null
-  const cap = maxZoomForPrecisionClass(precisionClass)
-  const zoomRaw = mapZoomForHeightMeters(cameraState.heightMeters, cameraState.lat)
-  const zoom = Math.min(zoomRaw ?? cap, cap)
+  const cap = maxMapZoomForPrecisionClassAtLatitude(precisionClass, cameraState.lat, viewportWidthPx)
+  if (cap === null || cap < -2) return null
+  // Mercator cannot represent the poles; constrain only the fallback camera.
+  const lat = Math.min(MERCATOR_MAX_LATITUDE, Math.max(-MERCATOR_MAX_LATITUDE, cameraState.lat))
+  const zoomRaw = mapZoomForHeightMeters(cameraState.heightMeters, lat, mapBridgeWidth(viewportWidthPx))
+  const zoom = Math.max(Math.min(minZoom(), cap), Math.min(zoomRaw ?? cap, cap))
   const heading = cameraState.headingDegrees
   return Object.freeze({
-    center: Object.freeze([cameraState.lon, cameraState.lat]),
+    center: Object.freeze([cameraState.lon, lat]),
     zoom,
     bearing: heading > 180 ? heading - 360 : heading,
-    pitch: -cameraState.pitchDegrees,
+    pitch: Math.min(85, Math.max(0, 90 + cameraState.pitchDegrees)),
   })
 }
 
@@ -97,13 +201,151 @@ export function projectionMarkerRecords(rows, selectedKeys) {
   })
 }
 
-export function deckProjectionLayers({ ScatterplotLayer, TextLayer }, features, onSelectRow, selectedKeys) {
-  const data = features.flatMap((f) =>
-    f.positions.map((position) => ({
-      ...f,
+// The drawn deck font and measurement font must stay identical. These are
+// renderer-local display records; each point retains its row and position.
+const MAP_LABEL_FONT_FAMILY = 'sans-serif'
+const MAP_LABEL_FONT = 'normal 12px ' + MAP_LABEL_FONT_FAMILY
+const MAP_LABEL_ATLAS_SIZE = 64
+const mapProjectionLabelText = d => String(d.label || d.row.precision_class || 'projected location').replace(/\r\n?|\n/g, '\n')
+
+function mapProjectionPointRecords(features, selectedKeys) {
+  return (features ?? []).flatMap((feature, featureIndex) =>
+    feature.positions.map((position, positionIndex) => ({
+      ...feature,
       position,
+      selected: selectedKeys
+        ? selectedKeys.has(String(feature.row.mip_object_id)) || selectedKeys.has(String(feature.row.subject_graph_node_id))
+        : Boolean(feature.selected),
+      // Never exposed as a canonical identity or written back to a row.
+      labelLayoutId: JSON.stringify([feature.row.revision_id ?? null,
+        feature.row.mip_object_id ?? null, feature.row.subject_graph_node_id ?? null,
+        featureIndex, positionIndex]),
     })),
   )
+}
+
+/**
+ * Renderer-owned MapLibre screen-space label pass. Reproject on every real
+ * render/camera/resize event, even subpixel movement; unchanged membership
+ * never requests another frame. No timers or continuous animation loop.
+ */
+export function createMapMarkerLabelLayout(map, {
+  onChange, isCancelled = () => false,
+  createContext = () => map?.getCanvas?.()?.ownerDocument?.createElement('canvas').getContext('2d'),
+  now = () => globalThis.performance?.now?.() ?? Date.now(),
+} = {}) {
+  // TextLayer 9.4 lays out individual glyph advances at the atlas font size,
+  // then scales them to CSS pixels. Whole-string measureText at 12px would
+  // introduce kerning/ligatures that deck does not draw. Feed those actual
+  // advances to the shared bounded full-label measurer instead.
+  const measurer = createMarkerLabelMeasurer(() => {
+    const context = createContext?.()
+    if (!context) return null
+    const glyphs = new Map()
+    const scale = 12 / MAP_LABEL_ATLAS_SIZE
+    return {
+      set font(_font) { context.font = 'normal ' + MAP_LABEL_ATLAS_SIZE + 'px ' + MAP_LABEL_FONT_FAMILY },
+      measureText(text) {
+        let advance = 0, right = 0, ascent = 0, descent = 0
+        for (const character of Array.from(text)) {
+          let metrics = glyphs.get(character)
+          if (!metrics) {
+            const measured = context.measureText(character)
+            const hasBounds = Boolean(measured.actualBoundingBoxAscent)
+            metrics = {
+              advance: measured.width,
+              width: hasBounds && Number.isFinite(measured.actualBoundingBoxRight - measured.actualBoundingBoxLeft)
+                ? Math.ceil(measured.actualBoundingBoxRight - measured.actualBoundingBoxLeft) : measured.width,
+              ascent: hasBounds ? Math.ceil(measured.actualBoundingBoxAscent) : MAP_LABEL_ATLAS_SIZE * 0.9,
+              descent: hasBounds ? Math.ceil(measured.actualBoundingBoxDescent || 0) : MAP_LABEL_ATLAS_SIZE * 0.3,
+            }
+            if (glyphs.size >= 512) glyphs.delete(glyphs.keys().next().value)
+            glyphs.set(character, metrics)
+          }
+          right = Math.max(right, advance + metrics.width)
+          advance += metrics.advance
+          ascent = Math.max(ascent, metrics.ascent)
+          descent = Math.max(descent, metrics.descent)
+        }
+        return { width: Math.max(advance, right) * scale,
+          actualBoundingBoxAscent: ascent * scale, actualBoundingBoxDescent: descent * scale }
+      },
+    }
+  })
+  let points = [], labels = [], accepted = new Set()
+  let destroyed = false, updating = false
+  const stats = { points: 0, labels: 0, passes: 0, lastMs: 0, maxMs: 0 }
+
+  function update(notify = true) {
+    if (destroyed || updating || isCancelled()) return false
+    updating = true
+    const started = now()
+    try {
+      const canvas = map?.getCanvas?.()
+      const width = canvas?.clientWidth, height = canvas?.clientHeight
+      const zoom = map?.getZoom?.(), lat = map?.getCenter?.()?.lat
+      const nominalHeight = heightMetersFromMapZoom(zoom, lat)
+      // Use the same display-scale bridge as the camera contract, without
+      // precision clamping or rounding away actual small camera movements.
+      const cameraHeightMeters = nominalHeight === null
+        ? Infinity : nominalHeight * mapBridgeWidth(width) / NOMINAL_MAP_WIDTH
+      const candidates = points.map(point => {
+        let screen
+        try { screen = map?.project?.([Number(point.position[0]), Number(point.position[1])]) }
+        catch { /* unavailable projection cannot place a label */ }
+        const label = mapProjectionLabelText(point)
+        return {
+          id: point.labelLayoutId, selected: point.selected, label,
+          ...measurer.measure(label, MAP_LABEL_FONT),
+          x: screen?.x, y: screen?.y,
+          visible: Number.isFinite(screen?.x) && Number.isFinite(screen?.y)
+            && screen.x >= 0 && screen.x <= width && screen.y >= 0 && screen.y <= height,
+        }
+      })
+      const next = visibleLabelIds(candidates, { width, height, cameraHeightMeters })
+      const changed = next.size !== accepted.size || [...next].some(id => !accepted.has(id))
+      accepted = next
+      // Retain the exact point objects for deck accessors and row picking.
+      labels = points.filter(point => accepted.has(point.labelLayoutId))
+      stats.points = points.length
+      stats.labels = labels.length
+      stats.passes += 1
+      stats.lastMs = Math.max(0, now() - started)
+      stats.maxMs = Math.max(stats.maxMs, stats.lastMs)
+      if (changed && notify && !destroyed && !isCancelled()) onChange?.()
+      return changed
+    } finally { updating = false }
+  }
+
+  const refresh = () => update()
+  for (const event of ['render', 'move', 'resize']) map?.on?.(event, refresh)
+  return {
+    update,
+    setFeatures(features, selectedKeys) {
+      if (destroyed || isCancelled()) return false
+      points = mapProjectionPointRecords(features, selectedKeys)
+      return update(false)
+    },
+    getLayerData: () => ({ pointData: points, labelData: labels }),
+    getStats: () => ({ ...stats }),
+    destroy() {
+      if (destroyed) return
+      destroyed = true
+      for (const event of ['render', 'move', 'resize']) map?.off?.(event, refresh)
+      points = []
+      labels = []
+      accepted.clear()
+      measurer.clear()
+      stats.points = 0
+      stats.labels = 0
+    },
+  }
+}
+
+export function deckProjectionLayers({ ScatterplotLayer, TextLayer }, features, onSelectRow, selectedKeys, {
+  pointData = mapProjectionPointRecords(features, selectedKeys), labelData = pointData,
+} = {}) {
+  const data = pointData
 
   return [
     new ScatterplotLayer({
@@ -129,10 +371,16 @@ export function deckProjectionLayers({ ScatterplotLayer, TextLayer }, features, 
     }),
     new TextLayer({
       id: 'mip-projection-labels',
-      data,
+      data: labelData,
       getPosition: (d) => [Number(d.position[0]), Number(d.position[1])],
-      getText: (d) => d.label || d.row.precision_class || 'projected location',
+      getText: mapProjectionLabelText,
       getSize: 12,
+      sizeUnits: 'pixels',
+      fontFamily: MAP_LABEL_FONT_FAMILY,
+      fontWeight: 'normal',
+      fontSettings: { fontSize: MAP_LABEL_ATLAS_SIZE },
+      lineHeight: 1.5,
+      characterSet: 'auto',
       getColor: [26, 26, 23, 230],
       getPixelOffset: [14, -8],
       getTextAnchor: 'start',
@@ -167,10 +415,13 @@ export function flyToSubject(map, coordinate, precisionClass) {
   if (!map) return false
   const cam = subjectCamera(coordinate, precisionClass)
   if (!cam) return false
-  map.setMaxZoom?.(maxZoomForPrecisionClass(precisionClass))
+  const width = mapBridgeWidth(map.getCanvas?.()?.clientWidth)
+  const lat = Math.min(MERCATOR_MAX_LATITUDE, Math.max(-MERCATOR_MAX_LATITUDE, cam.center[1]))
+  const cap = maxMapZoomForPrecisionClassAtLatitude(precisionClass, lat, width)
+  if (!applyMapPrecisionLimit(map, cap)) return false
   map.flyTo({
-    center: cam.center,
-    zoom: cam.zoom,
+    center: [cam.center[0], lat],
+    zoom: Math.min(cam.zoom, cap),
     pitch: cam.pitch,
     bearing: cam.bearing,
     duration: 1600,
@@ -263,6 +514,9 @@ function createMapLibreWorldViewRendererAdapter({
   let mounted = false
   let currentOnSelectRow = onSelectRow
   let localCancelled = false
+  let precisionGovernor = null
+  let labelLayout = null
+  const lifecycleListeners = []
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
 
@@ -271,7 +525,7 @@ function createMapLibreWorldViewRendererAdapter({
   const activePrecisionClass = () => getPrecisionClass?.() ?? precisionClass
 
   async function mount() {
-    if (mounted) return
+    if (mounted || cancelledNow()) return
     mounted = true
 
     // Atlas fallback is handled by the React UI layer.
@@ -314,6 +568,11 @@ function createMapLibreWorldViewRendererAdapter({
     let errorCount = 0
     try {
       const start = worldCamera()
+      const cap = maxMapZoomForPrecisionClassAtLatitude(activePrecisionClass(), start.center[1], hostEl.clientWidth)
+      if (cap === null || cap < -2) {
+        if (!cancelledNow()) onStackIdChange?.(FALLBACK_MAP_STACK_ID)
+        return
+      }
       localMap = new maplibregl.Map({
         container: hostEl,
         style: mapLibreStyleForStack(stackId),
@@ -321,8 +580,8 @@ function createMapLibreWorldViewRendererAdapter({
         zoom: start.zoom,
         pitch: start.pitch,
         bearing: start.bearing,
-        minZoom: minZoom(),
-        maxZoom: maxZoomForPrecisionClass(precisionClass),
+        minZoom: Math.min(minZoom(), cap),
+        maxZoom: cap,
         attributionControl: false,
         cooperativeGestures: false,
       })
@@ -341,7 +600,8 @@ function createMapLibreWorldViewRendererAdapter({
     }
 
     localMap.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-left')
-    localMap.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-left')
+    // Keep the scale away from expanded multi-line copyright on phones.
+    localMap.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'top-right')
     localMap.addControl(
       new maplibregl.AttributionControl({ compact: false, customAttribution: stackAttribution(stackId) }),
       'bottom-right',
@@ -354,6 +614,7 @@ function createMapLibreWorldViewRendererAdapter({
         initialFeatures,
         currentOnSelectRow,
         getSelectedKeys?.() ?? new Set(),
+        { labelData: [] },
       ),
     })
     localMap.addControl(localOverlay)
@@ -376,25 +637,51 @@ function createMapLibreWorldViewRendererAdapter({
     map = localMap
     overlay = localOverlay
     deckLayerCtors = { ScatterplotLayer, TextLayer }
+    precisionGovernor = createMapPrecisionGovernor(map, {
+      getPrecisionClass: activePrecisionClass,
+      onUnavailable: () => { if (!cancelledNow()) onStackIdChange?.(FALLBACK_MAP_STACK_ID) },
+    })
+    precisionGovernor.update()
+    if (cancelledNow()) return
+    const publishLayers = () => {
+      if (cancelledNow() || !overlay || !deckLayerCtors || !labelLayout) return
+      overlay.setProps({
+        layers: deckProjectionLayers(deckLayerCtors, [], currentOnSelectRow,
+          getSelectedKeys?.() ?? new Set(), labelLayout.getLayerData()),
+      })
+    }
+    labelLayout = createMapMarkerLabelLayout(map, {
+      isCancelled: cancelledNow,
+      onChange: () => { publishLayers(); requestRepaint(map) },
+    })
+    labelLayout.setFeatures(initialFeatures, getSelectedKeys?.() ?? new Set())
+    publishLayers()
 
     const handleError = () => {
+      if (cancelledNow()) return
       errorCount += 1
       const next = nextStackAfterRendererError(stackId, errorCount)
       if (next) onStackIdChange?.(next)
     }
-    map.on('error', handleError)
-
-    map.on('load', () => {
-      if (!shouldFlyTo?.()) return
+    const handleLoad = () => {
+      if (cancelledNow() || !shouldFlyTo?.()) return
       const ok = flyToSubject(map, coordinate, precisionClass)
       if (ok) markFlew?.()
-    })
+    }
+    for (const [event, listener] of [['error', handleError], ['load', handleLoad]]) {
+      map.on(event, listener)
+      lifecycleListeners.push([event, listener])
+    }
   }
 
   async function setFeatures(nextFeatures, nextSelectedKeys = getSelectedKeys?.()) {
-    if (!overlay || !deckLayerCtors || stackId === FALLBACK_MAP_STACK_ID) return
+    if (cancelledNow()) return
+    precisionGovernor?.update()
+    if (!overlay || !deckLayerCtors || !labelLayout || stackId === FALLBACK_MAP_STACK_ID) return
+    labelLayout.setFeatures(nextFeatures, nextSelectedKeys ?? new Set())
     overlay.setProps({
-      layers: deckProjectionLayers(deckLayerCtors, nextFeatures, currentOnSelectRow, nextSelectedKeys ?? new Set()),
+      layers: deckProjectionLayers(deckLayerCtors, nextFeatures, currentOnSelectRow,
+        nextSelectedKeys ?? new Set(), labelLayout.getLayerData()),
     })
     requestRepaint(map)
   }
@@ -434,6 +721,7 @@ function createMapLibreWorldViewRendererAdapter({
             pitch: map.getPitch?.() ?? 0,
           },
           activePrecisionClass(),
+          precisionGovernor?.width(),
         ),
         activePrecisionClass(),
       )
@@ -450,9 +738,10 @@ function createMapLibreWorldViewRendererAdapter({
     if (!map) return false
     const parsed = parseCameraState(serialized, { precisionClass: activePrecisionClass() })
     if (!parsed) return false
-    const cam = mapCameraForCameraState(parsed, activePrecisionClass())
+    const cam = mapCameraForCameraState(parsed, activePrecisionClass(), precisionGovernor?.width())
     if (!cam) return false
     cancelMapCameraFlight(map)
+    if (!precisionGovernor?.update(cam.center[1])) return false
     map.jumpTo({ center: cam.center, zoom: cam.zoom, bearing: cam.bearing, pitch: cam.pitch })
     requestRepaint(map)
     return true
@@ -460,6 +749,11 @@ function createMapLibreWorldViewRendererAdapter({
 
   function destroy() {
     localCancelled = true
+    labelLayout?.destroy()
+    labelLayout = null
+    for (const [event, listener] of lifecycleListeners.splice(0)) map?.off?.(event, listener)
+    precisionGovernor?.destroy()
+    precisionGovernor = null
     destroyRendererResources({ overlay, map })
     overlay = null
     map = null
@@ -476,6 +770,10 @@ function createMapLibreWorldViewRendererAdapter({
     cancelCameraFlight: () => cancelMapCameraFlight(map),
     getCameraState,
     setCameraState,
+    getVisualFidelityRenderState: () => {
+      const state = mapCameraRenderState(map, activePrecisionClass(), precisionGovernor?.width())
+      return state ? { ...state, labelLayout: labelLayout?.getStats() ?? null } : null
+    },
     requestRender,
     destroy,
   }

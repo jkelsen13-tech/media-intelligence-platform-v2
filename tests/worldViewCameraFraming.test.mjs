@@ -1,9 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createCameraFraming, selectedCameraTarget } from '../src/lib/worldViewCameraFraming.js'
-import { createWorldViewRendererAdapter, flyToSubject } from '../src/lib/worldViewRendererAdapter.js'
+import { createWorldViewRendererAdapter, flyToSubject, maxMapZoomForPrecisionClassAtLatitude } from '../src/lib/worldViewRendererAdapter.js'
 import { mapRowsForSelection } from '../src/lib/spatialProjection.js'
-import { maxZoomForPrecisionClass } from '../src/lib/worldViewMapStack.js'
+import { heightMetersForPrecisionClass, heightMetersFromMapZoom, maxZoomForPrecisionClass } from '../src/lib/worldViewMapStack.js'
 
 const feature = (id, coordinate = [-81.7, 41.4], precision = 'city') => ({
   selected: true, positions: [coordinate], row: { mip_object_id: id, precision_class: precision },
@@ -84,7 +84,10 @@ test('MapLibre zoom limit follows the selected location precision before flying'
   const map = { setMaxZoom: (limit) => calls.push(['limit', limit]), flyTo: (args) => calls.push(['fly', args]) }
   for (const precision of ['city', 'country']) {
     assert.equal(flyToSubject(map, [-81.7, 41.4], precision), true)
-    assert.deepEqual(calls.at(-2), ['limit', maxZoomForPrecisionClass(precision)])
+    const cap = calls.at(-2)[1]
+    assert.deepEqual(calls.at(-2), ['limit', maxMapZoomForPrecisionClassAtLatitude(precision, 41.4)])
+    assert.ok(cap <= maxZoomForPrecisionClass(precision))
+    assert.ok(heightMetersFromMapZoom(cap, 41.4) >= heightMetersForPrecisionClass(precision) - 1e-6)
     assert.ok(calls.at(-1)[1].zoom <= calls.at(-2)[1])
   }
 })

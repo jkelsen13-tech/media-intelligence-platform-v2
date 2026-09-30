@@ -532,3 +532,9 @@
 }
 
 .wv-fidelity-resolution { flex-wrap: wrap; max-width: 100%; }
+
+.wv-camera-controls { display: flex; flex-wrap: wrap; gap: 6px; }
+.wv-camera-controls button { min-height: 44px; white-space: normal; }
+
+/* Keep source disclosure in document flow, clear of native imagery credits. */
+.wv-terrain-disclosure { flex: 0 0 auto; margin: 0; padding: 6px 8px; font-size: 11px; line-height: 1.4; color: var(--text-secondary); background: var(--bg-panel); overflow-wrap: anywhere; }

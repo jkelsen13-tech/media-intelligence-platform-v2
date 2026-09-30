@@ -73,6 +73,19 @@ on:
       - 'src/components/InvestigationAssessmentTrail.jsx'
       - 'verifier/runRetainedDateBrowser.mjs'
       - 'src/lib/worldViewCameraFraming.js'
+      - 'src/lib/worldViewCameraMemory.js'
+      - 'src/lib/worldViewCameraState.js'
+      - 'src/lib/worldViewAtlasLabelLayout.js'
+      - 'tests/worldView*.test.mjs'
+      - 'src/lib/worldViewMarkerLayout.js'
+      - 'verifier/runWorldViewSuccessorBrowser.mjs'
+      - 'verifier/runWorldViewFallbackBrowser.mjs'
+      - 'verifier/runWorldViewContextLossBrowser.mjs'
+      - 'verifier/runWorldViewTabletBrowser.mjs'
+      - 'verifier/checkWorldViewBundleIsolation.mjs'
+      - 'vite.config.js'
+      - 'verifier/worldViewRasterEvidence.mjs'
+      - 'verifier/worldViewProjectionFixture.mjs'
       - 'src/lib/worldViewRendererAdapter.js'
       - 'src/lib/worldViewCesiumEllipsoidRendererAdapter.js'
       - 'src/views/WorldMapCanvas.jsx'
@@ -101,6 +114,8 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run build
+      - name: Verify actual World View bundle isolation
+        run: node verifier/checkWorldViewBundleIsolation.mjs
       - name: Verify spatial writer anonymous boundary
         run: node verifier/checkSpatialRuntimeAnonymous.mjs
       - name: Install isolated browser verifier
@@ -161,7 +176,7 @@ jobs:
 
   refinement-preview:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 20
     permissions:
       contents: read
     env:
@@ -174,6 +189,8 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run build
+      - name: Verify actual World View bundle isolation
+        run: node verifier/checkWorldViewBundleIsolation.mjs
       - name: Install isolated browser verifier
         run: |
           npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
@@ -187,3 +204,70 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runDynamicAtmosphereBrowser.mjs
+
+      - name: Qualify World View successor navigation and same-camera appearance
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWorldViewSuccessorBrowser.mjs
+
+      - name: Qualify retained fallback camera and actual map precision limits
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWorldViewFallbackBrowser.mjs
+
+
+  lifecycle-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      VITE_SUPABASE_URL: https://qikvmopbtijoebdqosyq.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_7EVSYlCWYiE6YL0bDBYr_w_iwB9tve_
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build
+      - name: Verify actual World View bundle isolation
+        run: node verifier/checkWorldViewBundleIsolation.mjs
+      - name: Install isolated lifecycle verifier
+        run: |
+          npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
+          node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Qualify interrupted startup and actual running globe context loss
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: |
+          node --check verifier/runWorldViewContextLossBrowser.mjs
+          node verifier/runWorldViewContextLossBrowser.mjs
+
+  tablet-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      VITE_SUPABASE_URL: https://qikvmopbtijoebdqosyq.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_7EVSYlCWYiE6YL0bDBYr_w_iwB9tve_
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build
+      - name: Verify actual World View bundle isolation
+        run: node verifier/checkWorldViewBundleIsolation.mjs
+      - name: Install isolated tablet verifier
+        run: |
+          npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
+          node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
+      - name: Qualify iPad-sized World View navigation and display invariants
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: |
+          node --check verifier/runWorldViewTabletBrowser.mjs
+          node verifier/runWorldViewTabletBrowser.mjs
