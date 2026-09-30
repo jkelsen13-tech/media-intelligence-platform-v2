@@ -180,11 +180,26 @@ export function runBundleIsolationSelfTests() {
 export function checkWorldViewBundleIsolation(directory = 'dist') {
   const root = resolve(directory)
   const readAsset = name => readFileSync(resolve(root, fileName(name)), 'utf8')
-  return assertWorldViewBundleIsolation({
-    html: readAsset('index.html'),
-    graph: JSON.parse(readAsset('world-view-bundle-graph.json')),
-    readAsset,
-  })
+  const graph = JSON.parse(readAsset('world-view-bundle-graph.json'))
+  const emittedChunkGraph = graph.chunks.map(chunk => ({
+    fileName: chunk.fileName,
+    isEntry: chunk.isEntry,
+    imports: chunk.imports,
+    dynamicImports: chunk.dynamicImports,
+    containsCesiumVendor: chunk.containsCesiumVendor,
+    containsGlobeAdapter: chunk.containsGlobeAdapter,
+    moduleCount: chunk.moduleCount,
+    bytes: readFileSync(resolve(root, fileName(chunk.fileName))).length,
+  }))
+  try {
+    return {
+      ...assertWorldViewBundleIsolation({ html: readAsset('index.html'), graph, readAsset }),
+      emittedChunkGraph,
+    }
+  } catch (error) {
+    error.emittedChunkGraph = emittedChunkGraph
+    throw error
+  }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -196,6 +211,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     console.log(JSON.stringify(result, null, 2))
   } catch (error) {
     console.error(error.message)
+    if (error.emittedChunkGraph) console.error(JSON.stringify({ emittedChunkGraph: error.emittedChunkGraph }, null, 2))
     process.exitCode = 1
   }
 }

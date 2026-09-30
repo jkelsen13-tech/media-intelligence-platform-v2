@@ -79,6 +79,9 @@ export default defineConfig({
     target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
     rollupOptions: {
       output: {
+        // Keep shared support dependencies automatic so an eager map import
+        // cannot pull the entire lazy Cesium manual chunk into the shell.
+        onlyExplicitManualChunks: true,
         // Keep MapLibre + deck.gl + luma.gl in one chunk so the WebGL
         // adapter is not split across circular re-exports.
         manualChunks(id) {
