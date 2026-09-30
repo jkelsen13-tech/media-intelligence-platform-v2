@@ -99,6 +99,7 @@ async function appearanceAblations(page,engine,width,counts){
       return {decoded,metrics,handle}
     }
     const baseline=await capture('neutral'),results=[]
+    if(sceneName==='nadir')console.log('MIP_WORLD_CONTEXT_'+engine+'_'+width+'='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
     for(const name of ['relief','ground','haze','sun','combined']){
       for(const control of Object.values(controls))await control.uncheck()
       await delay(250)
@@ -217,6 +218,7 @@ async function fixtureJourney(browser,engine,kind){
     assert.ok(smallLayout.scroll<=smallLayout.width+1)
     console.log('MIP_WORLD_FIXTURE_IMAGE_'+engine+'_'+kind+'_320='+(await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:75})).toString('base64'))
     await page.setViewportSize({width:1280,height:900});await settle(page)
+    const resizeElapsedMs=Date.now()-start
     assert.deepEqual((await state(page)).markers,baseline.markers,'resize round trip restores marker/label arbitration')
     await idleSample(page,counts,engine+'-'+kind+'-resize')
     // Locate one marker's real viewport edge, then cross it with less than
@@ -246,7 +248,8 @@ async function fixtureJourney(browser,engine,kind){
     assert.deepEqual(errors,[])
     console.log('MIP_WORLD_FIXTURE_PASS='+JSON.stringify({engine,kind,synthetic:true,receipt,
       baseline:{markers:baseline.markers.length,visible:visible.length,labels:labels.length},
-      resize:{width:320,visible:small.markers.filter(m=>m.visible).length,labels:small.markers.filter(m=>m.labelVisible).length,elapsedMs:Date.now()-start},
+      resize:{width:320,visible:small.markers.filter(m=>m.visible).length,labels:small.markers.filter(m=>m.labelVisible).length,elapsedMs:resizeElapsedMs},
+      layoutTiming:(await state(page)).layoutTiming??null,
       smallMotion:{deltaLongitude:outside-inside,frames:afterMotion.renderedFrames-beforeMotion.renderedFrames},
       requests:counts,backend:verifyBoundary(),
       limitation:'MultiPoint members of one selected row exercise marker density. Independent-row selection and coordinate values are not observable through the current probe.'}))
