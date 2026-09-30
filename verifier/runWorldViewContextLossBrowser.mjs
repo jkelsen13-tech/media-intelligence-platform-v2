@@ -119,7 +119,8 @@ async function loseRunningContext(page) {
   }))
 }
 
-// Vite's current manualChunks puts the adapter and Cesium in cesium-globe.
+// Vite keeps Cesium vendor code in cesium-globe; the MIP adapter is separate.
+// The build guard verifies that this vendor chunk is lazy.
 // Pause that ACTUAL observed lazy chunk response, then destroy its pending host.
 // This exercises public browser/network scheduling, not a fabricated lifecycle.
 // Inspect the actual built entry over the public preview HTTP interface. This
