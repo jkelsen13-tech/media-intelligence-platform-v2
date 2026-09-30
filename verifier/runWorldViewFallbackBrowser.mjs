@@ -107,10 +107,19 @@ async function atlasLabelJourney(browser,kind){
   })
   const atlas=page.locator('[data-map-stack="atlas-fallback"]')
   const snapshot=()=>atlas.evaluate(node=>{
-    const svg=node.querySelector('svg'),labels=[...node.querySelectorAll('.wv-atlas-labels[visibility="visible"]')]
-    return{viewBox:svg.getAttribute('viewBox'),
-      points:[...node.querySelectorAll('.wv-feature')].map(n=>({x:n.querySelector('circle').getAttribute('cx'),y:n.querySelector('circle').getAttribute('cy'),role:n.getAttribute('role'),tabIndex:n.getAttribute('tabindex'),name:n.getAttribute('aria-label')})),
-      labels:labels.map(n=>{const r=n.getBoundingClientRect(),b=n.getBBox();return{left:r.left,right:r.right,top:r.top,bottom:r.bottom,svgBox:{x:b.x,y:b.y,width:b.width,height:b.height},text:n.textContent}})}
+    const svg=node.querySelector('svg'),groups=[...node.querySelectorAll('.wv-atlas-labels[visibility="visible"]')]
+    const scale=n=>{const m=n.getScreenCTM();return Math.hypot(m.c,m.d)}
+    const labels=groups.map(group=>{
+      const texts=[...group.querySelectorAll('text')].filter(n=>getComputedStyle(n).visibility==='visible')
+      const boxes=texts.map(n=>n.getBoundingClientRect())
+      return{left:Math.min(...boxes.map(r=>r.left))-1.5,right:Math.max(...boxes.map(r=>r.right))+1.5,
+        top:Math.min(...boxes.map(r=>r.top))-1.5,bottom:Math.max(...boxes.map(r=>r.bottom))+1.5,
+        texts:texts.map(n=>({detail:n.classList.contains('wv-map-coords'),text:n.textContent,fontCssPx:parseFloat(getComputedStyle(n).fontSize)*scale(n)}))}
+    })
+    const firstPoint=node.querySelector('.wv-atlas-point')
+    return{viewBox:svg.getAttribute('viewBox'),pointRadiusCssPx:Number(firstPoint.getAttribute('r'))*scale(firstPoint),
+      points:[...node.querySelectorAll('.wv-feature')].map(n=>({x:n.querySelector('.wv-atlas-point').getAttribute('cx'),y:n.querySelector('.wv-atlas-point').getAttribute('cy'),role:n.getAttribute('role'),tabIndex:n.getAttribute('tabindex'),name:n.getAttribute('aria-label')})),
+      labels}
   })
   const validate=actual=>{
     assert.equal(actual.points.length,fixture.coordinateCount,'Atlas retains every original geometry member')
@@ -121,9 +130,11 @@ async function atlasLabelJourney(browser,kind){
       assert.match(point.name,/city/);assert.match(point.name,/coarsened_to_precision_class/)
       assert.ok(Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)))
     }
+    assert.ok(Math.abs(actual.pointRadiusCssPx-7)<0.1,'Atlas point radius remains7 CSS pixels without moving its center')
     for(let i=0;i<actual.labels.length;i++){
       const a=actual.labels[i]
-      assert.ok(a.svgBox.width>0&&a.svgBox.height>0,'visible text was actually measured')
+      assert.ok(a.right>a.left&&a.bottom>a.top&&a.texts.length>0,'only actually painted text is measured')
+      for(const text of a.texts)assert.ok(Math.abs(text.fontCssPx-(text.detail?9:11))<0.1,'responsive Atlas keeps main11px/detail9px CSS font size')
       for(const b of actual.labels.slice(i+1))assert.ok(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top,'accepted Atlas label/coordinate unions do not overlap')
     }
   }
@@ -136,7 +147,7 @@ async function atlasLabelJourney(browser,kind){
     assert.equal(originalContext['canonical-subject-id'],subject);validate(original)
     const cameraBefore=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState())
     assert.equal(cameraBefore,null,'static overview truthfully has no interactive camera')
-    const viewports=[{width:1280,labels:original.labels.length}]
+    const viewports=[{width:1280,labels:original.labels.length,fontCssPx:original.labels.flatMap(l=>l.texts.map(t=>t.fontCssPx))}]
     for(const width of [390,320,1280]){
       await page.setViewportSize({width,height:900});await atlas.scrollIntoViewIfNeeded();await delay(250)
       const actual=await snapshot();validate(actual)
@@ -144,7 +155,7 @@ async function atlasLabelJourney(browser,kind){
       assert.equal(actual.viewBox,original.viewBox)
       assert.deepEqual(await publicContext(page),originalContext);assert.equal(page.url(),route)
       assert.equal(await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState()),cameraBefore)
-      viewports.push({width,labels:actual.labels.length})
+      viewports.push({width,labels:actual.labels.length,fontCssPx:actual.labels.flatMap(l=>l.texts.map(t=>t.fontCssPx))})
       if(width===390)console.log('MIP_WORLD_ATLAS_CONTEXT_'+kind+'_390='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
     }
     await page.mouse.move(0,0);await delay(250)
