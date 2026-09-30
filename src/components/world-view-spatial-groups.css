@@ -1,0 +1,33 @@
+/* Current viewport overlay; original row picking remains in document flow. */
+.wv-display-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.wv-display-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+.wv-display-relation line { stroke: var(--text-secondary); stroke-width: 1.2; opacity: 0.55; }
+.wv-display-relation.is-selected line { stroke: var(--accent); stroke-width: 2; opacity: 0.9; }
+.wv-display-relation text { fill: var(--text-secondary); stroke: var(--bg-panel); stroke-width: 3px; paint-order: stroke; font-size: 11px; font-family: var(--font-sans); }
+.wv-display-relation.is-selected text { fill: var(--text-primary); }
+.wv-display-group-hit { position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; padding: 6px; display: grid; place-items: center; border: 0; background: transparent; cursor: pointer; pointer-events: auto; touch-action: manipulation; font: inherit; }
+.wv-display-group-badge { box-sizing: border-box; width: 32px; height: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-strong); border-radius: 50%; background: var(--bg-panel); color: var(--text-primary); font-size: 11px; line-height: 1.05; }
+.wv-display-group-badge small { font-size: 9px; color: var(--text-secondary); }
+.wv-display-group-hit.is-selected .wv-display-group-badge { border: 2px solid var(--accent); }
+.wv-display-group-hit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 50%; }
+.wv-spatial-groups { min-width: 0; padding: var(--card-pad-y) var(--card-pad-x); border: var(--border-width) solid var(--border-color); border-radius: var(--card-radius); background: var(--bg-panel); color: var(--text-body); font-size: var(--fs-body); overflow-wrap: anywhere; }
+.wv-spatial-groups > summary { cursor: pointer; min-height: 44px; align-content: center; font-size: var(--fs-meta); color: var(--text-primary); }
+.wv-spatial-groups > summary span { display: inline-block; margin-left: 8px; color: var(--text-secondary); }
+.wv-spatial-groups p { margin: 8px 0; color: var(--text-secondary); line-height: 1.45; }
+.wv-spatial-groups h4 { margin: 12px 0 8px; font-size: var(--fs-meta); }
+.wv-spatial-group-list, .wv-spatial-row-list { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
+.wv-spatial-groups button { min-height: 44px; max-width: 100%; padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--bg-panel); color: var(--text-primary); font: inherit; cursor: pointer; text-align: left; overflow-wrap: anywhere; }
+.wv-spatial-groups button.is-selected { border-color: var(--accent); }
+.wv-spatial-groups button:disabled { opacity: 0.6; cursor: default; }
+.wv-spatial-selected { margin-left: 8px; color: var(--accent); font-size: var(--fs-meta); }
+.wv-spatial-groups .wv-spatial-selected-row { font-size: var(--fs-meta); }
+.wv-spatial-groups :is(button, summary, h4):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.wv-spatial-members { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border-color); }
+.wv-spatial-pages { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+@media (max-width: 767px) {
+  .wv-spatial-groups { padding: 12px; }
+  .wv-spatial-groups > summary span { display: block; margin: 4px 0; }
+}
+
+.wv-spatial-row-metadata { display: block; margin-top: 4px; color: var(--text-secondary); font-size: var(--fs-meta); line-height: 1.4; }
+.wv-spatial-row-metadata > span { display: block; }

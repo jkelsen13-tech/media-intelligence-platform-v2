@@ -19,6 +19,23 @@ const server=spawn('npm',['run','preview','--','--host','127.0.0.1','--port','41
 const publicContext=page=>page.locator('.ws-canonical[data-investigation-context]').evaluate(node=>
   Object.fromEntries(['canonical-subject-type','canonical-subject-id','parent-event-id','as-of-time','selected-time-range','temporal-assessment-reference'].map(key=>[key,node.getAttribute('data-'+key)])))
 const fallbackState=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getRenderState())
+
+const groupingState=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__?.getState()??null)
+async function assertDenseGrouping(page){
+  const actual=await groupingState(page)
+  assert.ok(actual?.layout,'dense fallback exposes actual grouping membership')
+  assert.equal(actual.markers.length,500,'all original dense coordinate records are retained')
+  assert.equal(actual.markers.filter(marker=>marker.eligible).length,500)
+  assert.equal(new Set(actual.markers.map(marker=>marker.rowKey)).size,1,'500 coordinates remain one original projection row')
+  assert.equal(actual.layout.singles.length,0,'dense overlap draws no individual original symbols')
+  assert.equal(actual.layout.clusters.length,1)
+  assert.equal(actual.layout.clusters[0].rowCount,1)
+  assert.equal(actual.layout.clusters[0].locationCount,500)
+  assert.equal(actual.layout.stats.targetCount,1,'group badge replaces500 overlapping pick targets')
+  assert.ok(actual.layout.clusters[0].selected,'original selected row remains discoverable')
+  return actual
+}
+
 function assertMapPose(actual,expected,label){
   for(const key of ['lon','lat','zoom','bearing','pitch'])assert.ok(Math.abs(actual[key]-expected[key])<1e-9,label+' retains raw '+key)
 }
@@ -115,7 +132,7 @@ async function mapLabelJourney(browser,kind){
     await page.mouse.move(0,0);await settleFallback(page)
     const initial=await fallbackState(page),canvas=await page.locator('.wv-map-host canvas').first().elementHandle()
     assertLabelStats(initial.labelLayout,fixture.coordinateCount)
-    if(kind==='dense')assert.equal(initial.labelLayout.labels,1,'selected overlapping dense scene retains one legible label')
+    if(kind==='dense')await assertDenseGrouping(page)
     else assert.ok(initial.labelLayout.labels>1,'local sparse scene displays multiple independent labels')
     const viewports=[{width:1280,state:initial,controls:await qualifyMapControls(page,kind+' 1280')}]
     const resizeStarted=Date.now()
@@ -126,7 +143,7 @@ async function mapLabelJourney(browser,kind){
       assertMapPose(actual.mapCamera,initial.mapCamera,'responsive resize')
       assert.equal(await canvas.evaluate(node=>node.isConnected),true,'resize retains the same renderer canvas')
       assert.deepEqual(await publicContext(page),originalContext);assert.equal(page.url(),route)
-      if(kind==='dense')assert.equal(actual.labelLayout.labels,1,'dense selected label survives responsive layout')
+      if(kind==='dense')await assertDenseGrouping(page)
       if(width===1280)assert.equal(actual.labelLayout.labels,initial.labelLayout.labels,'round trip restores deterministic label count')
       viewports.push({width,state:actual,controls:await qualifyMapControls(page,kind+' '+width)})
     }
@@ -180,7 +197,8 @@ async function atlasLabelJourney(browser,kind){
   const atlas=page.locator('[data-map-stack="atlas-fallback"]')
   const snapshot=()=>atlas.evaluate(node=>{
     const svg=node.querySelector('svg'),groups=[...node.querySelectorAll('.wv-atlas-labels[visibility="visible"]')]
-    const scale=n=>{const m=n.getScreenCTM();return Math.hypot(m.c,m.d)}
+      .filter(group=>group.getClientRects().length>0&&getComputedStyle(group).visibility==='visible'&&getComputedStyle(group).display!=='none'&&group.getBoundingClientRect().width>0)
+    const scale=n=>{const m=n.getScreenCTM()??svg.getScreenCTM();return Math.hypot(m.c,m.d)}
     const labels=groups.map(group=>{
       const texts=[...group.querySelectorAll('text')].filter(n=>getComputedStyle(n).visibility==='visible')
       const boxes=texts.map(n=>n.getBoundingClientRect())
@@ -191,15 +209,17 @@ async function atlasLabelJourney(browser,kind){
     const firstPoint=node.querySelector('.wv-atlas-point')
     const viewport=svg.getBoundingClientRect()
     return{viewport:{left:viewport.left,right:viewport.right,top:viewport.top,bottom:viewport.bottom},viewBox:svg.getAttribute('viewBox'),pointRadiusCssPx:Number(firstPoint.getAttribute('r'))*scale(firstPoint),
-      points:[...node.querySelectorAll('.wv-feature')].map(n=>({x:n.querySelector('.wv-atlas-point').getAttribute('cx'),y:n.querySelector('.wv-atlas-point').getAttribute('cy'),role:n.getAttribute('role'),tabIndex:n.getAttribute('tabindex'),name:n.getAttribute('aria-label')})),
+      points:[...node.querySelectorAll('.wv-feature')].map(n=>({x:n.querySelector('.wv-atlas-point').getAttribute('cx'),y:n.querySelector('.wv-atlas-point').getAttribute('cy'),role:n.getAttribute('role'),tabIndex:n.getAttribute('tabindex'),name:n.getAttribute('aria-label'),painted:n.getClientRects().length>0&&getComputedStyle(n).visibility==='visible'&&getComputedStyle(n).display!=='none'&&Number(getComputedStyle(n).opacity)>0})),
       labels}
   })
   const validate=actual=>{
     assert.equal(actual.points.length,fixture.coordinateCount,'Atlas retains every original geometry member')
     assert.ok(actual.labels.length>=0&&actual.labels.length<=actual.points.length,'painted Atlas labels form a bounded subset; clipping may hide every sparse label')
-    if(kind==='dense')assert.equal(actual.labels.length,1,'dense selected Atlas overlap has one readable label')
+    if(kind==='dense')assert.equal(actual.labels.length,0,'grouped dense original labels yield to one inspectable group badge')
     for(const point of actual.points){
-      assert.equal(point.role,'button');assert.equal(point.tabIndex,'0')
+      assert.equal(point.role,'button')
+      if(point.painted)assert.equal(point.tabIndex,'0')
+      else assert.ok(point.tabIndex==='-1'||point.tabIndex===null,'hidden clustered original does not duplicate the accessible group target')
       assert.match(point.name,/city/);assert.match(point.name,/coarsened_to_precision_class/)
       assert.ok(Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)))
     }
@@ -219,13 +239,16 @@ async function atlasLabelJourney(browser,kind){
     await page.evaluate(()=>document.fonts.ready);await atlas.scrollIntoViewIfNeeded();await delay(500)
     const originalContext=await publicContext(page),original=await snapshot()
     assert.equal(originalContext['canonical-subject-id'],subject);validate(original)
+    if(kind==='dense')await assertDenseGrouping(page)
     const cameraBefore=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState())
     assert.equal(cameraBefore,null,'static overview truthfully has no interactive camera')
     const viewports=[{width:1280,labels:original.labels.length,allLabelsHidden:original.labels.length===0,fontCssPx:original.labels.flatMap(l=>l.texts.map(t=>t.fontCssPx))}]
     for(const width of [390,320,1280]){
       await page.setViewportSize({width,height:900});await atlas.scrollIntoViewIfNeeded();await delay(250)
       const actual=await snapshot();validate(actual)
-      assert.deepEqual(actual.points,original.points,'responsive Atlas never moves SVG evidence coordinates or changes accessible row bindings')
+      if(kind==='dense')await assertDenseGrouping(page)
+      const sourceBindings=points=>points.map(({x,y,role,name})=>({x,y,role,name}))
+      assert.deepEqual(sourceBindings(actual.points),sourceBindings(original.points),'responsive Atlas never moves SVG evidence coordinates or changes source row bindings')
       assert.equal(actual.viewBox,original.viewBox)
       assert.deepEqual(await publicContext(page),originalContext);assert.equal(page.url(),route)
       assert.equal(await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState()),cameraBefore)
@@ -239,7 +262,20 @@ async function atlasLabelJourney(browser,kind){
     const idleElapsedMs=Date.now()-start
     assert.deepEqual(after,before,'idle Atlas retains label membership and exact point layout')
     assert.equal(comparison.whole.changedPixels,0,'idle Atlas retains rendered pixels')
-    const point=atlas.locator('.wv-feature[role="button"]').first(),name=await point.getAttribute('aria-label')
+    let point=atlas.locator('.wv-feature[role="button"]').first()
+    const currentGrouping=await groupingState(page)
+    if(currentGrouping?.layout.clusters.length){
+      const groups=page.getByRole('region',{name:'Spatial groups',exact:true}),summary=groups.locator('summary')
+      if(!await summary.evaluate(node=>node.parentElement.open))await summary.click()
+      const group=kind==='dense'?(await assertDenseGrouping(page)).layout.clusters[0]:currentGrouping.layout.clusters[0]
+      const inspect=groups.getByRole('button',{name:'Inspect group: '+group.rowCount+' projection rows, '+group.locationCount+' display locations',exact:true})
+      const beforeInspect=await publicContext(page),beforeInspectUrl=page.url()
+      await inspect.focus();await inspect.press('Enter')
+      assert.deepEqual(await publicContext(page),beforeInspect,'group inspection preserves source context until deliberate row pick')
+      assert.equal(page.url(),beforeInspectUrl)
+      point=groups.getByRole('button',{name:/^Select projection row: /}).first()
+    }
+    const name=await point.getAttribute('aria-label')
     const inspector=page.getByRole('complementary',{name:'Selected-event inspector'})
     const inspectorFields=()=>inspector.evaluate(node=>{
       const keep=new Set(['When','Valid-time precision','Location','Precision class','Geometry status','Uncertainty','Uncertainty note','Review','Release'])
@@ -281,7 +317,7 @@ async function atlasLabelJourney(browser,kind){
     let pickedContext=null,pickedUrl=null
     const keyResults=[]
     for(const key of ['Enter','Space']){
-      await point.focus();assert.equal(await point.evaluate(n=>n===document.activeElement),true,'original point is keyboard focusable')
+      await point.focus();assert.equal(await point.evaluate(n=>n===document.activeElement),true,'original row or group member is keyboard focusable')
       const scrollBefore=await page.evaluate(()=>({x:scrollX,y:scrollY}))
       await point.press(key);await delay(250)
       assert.deepEqual(await page.evaluate(()=>({x:scrollX,y:scrollY})),scrollBefore,'Enter/Space activation prevents unintended page scrolling')
@@ -297,8 +333,9 @@ async function atlasLabelJourney(browser,kind){
       await page.waitForURL(url=>url.href===expectedSelectionUrl,{timeout:10000})
       if(pickedUrl)assert.equal(page.url(),pickedUrl,'repeated same-row activation retains its serialized source-bound URL')
       pickedUrl=page.url()
-      assert.equal(await point.getAttribute('aria-label'),name,'keyboard picking preserves original source label/coordinate detail')
+      assert.equal(await point.getAttribute('aria-label'),name,'keyboard picking preserves original accessible source-row binding')
       assert.equal(await atlas.locator('.wv-feature.is-selected').count(),fixture.coordinateCount,'original selected projection remains bound to all geometry members')
+      if(kind==='dense')await assertDenseGrouping(page)
       keyResults.push({key,canonicalSubject:subject,selectedPoints:fixture.coordinateCount,preventedScroll:true,originalRowFieldsRetained:true,derivedTitleCompared:false,
         sourceContext:actualContext,selectionUrl:pickedUrl,changedFromRouteSeed:Object.keys(actualContext).filter(field=>actualContext[field]!==originalContext[field])})
     }

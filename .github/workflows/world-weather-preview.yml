@@ -78,6 +78,14 @@ on:
       - 'src/lib/worldViewAtlasLabelLayout.js'
       - 'tests/worldView*.test.mjs'
       - 'src/lib/worldViewMarkerLayout.js'
+      - 'src/lib/worldViewDisplayClusters.js'
+      - 'src/lib/worldViewDisplayPresentation.js'
+      - 'src/lib/worldViewRelationshipLayout.js'
+      - 'src/components/WorldViewSpatialGroupPanel.jsx'
+      - 'src/components/WorldViewRelationshipPanel.jsx'
+      - 'src/components/world-view-spatial-groups.css'
+      - 'src/components/world-view-relationships.css'
+      - 'verifier/runWorldViewClusteringBrowser.mjs'
       - 'verifier/runWorldViewSuccessorBrowser.mjs'
       - 'verifier/runWorldViewFallbackBrowser.mjs'
       - 'verifier/runWorldViewContextLossBrowser.mjs'
@@ -215,6 +223,11 @@ jobs:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runWorldViewFallbackBrowser.mjs
 
+
+      - name: Qualify measured clustering and documented relationship presentation
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWorldViewClusteringBrowser.mjs
 
   lifecycle-preview:
     runs-on: ubuntu-latest
