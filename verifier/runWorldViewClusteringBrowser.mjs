@@ -494,6 +494,12 @@ async function independentJourney(browser,engine,scene,width=1280,{fault=null}={
     await page.goto(unselectedEntry)
     assert.ok(!(await context(page))['canonical-subject-id'],'fresh entry has no seeded canonical subject')
     await page.getByRole('tablist',{name:'Evidence views',exact:true}).getByRole('tab',{name:'World View',exact:true}).click()
+    if(fault)await page.waitForFunction(expected=>{
+      const current=window.__MIP_WORLD_VIEW_CLUSTER_PROBE__?.getState()
+      return current?.rendererKind===expected&&current.layout?.stats?.inputCount===48
+    },fault==='atlas'?'atlas-fallback':'maplibre-deck.gl',{timeout:60000})
+    // Startup can replace the initial map host with its fallback. Scroll only
+    // after that real renderer publishes this fixture's original48 locations.
     await settle(page)
     assert.equal(fixture.receipt.syntheticContractRows,48)
     assert.ok(!(await context(page))['canonical-subject-id'],'independent browse has no fabricated auto-selection')
