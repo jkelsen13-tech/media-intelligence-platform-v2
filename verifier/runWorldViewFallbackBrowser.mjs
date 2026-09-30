@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
+import { temporalAssessmentReferenceFor } from '../src/lib/investigationContext.js'
 import { parseCameraState } from '../src/lib/worldViewCameraState.js'
 import { heightMetersForPrecisionClass } from '../src/lib/worldViewMapStack.js'
 import { observeBackendBoundary } from './backendBoundary.mjs'
@@ -106,6 +107,18 @@ async function atlasLabelJourney(browser,kind){
       return original.call(this,kind,...args)
     }
   })
+  const selectionNodes=[],pendingNodeReads=[]
+  let nodeReadFailures=0
+  page.on('response',response=>{
+    const url=new URL(response.url())
+    if(url.origin!=='https://qikvmopbtijoebdqosyq.supabase.co'||url.pathname!=='/rest/v1/nodes'||response.status()!==200)return
+    pendingNodeReads.push((async()=>{
+      const rows=await response.json()
+      if(!Array.isArray(rows))return
+      for(const node of rows)if(String(node.id??node.slug)===subject)
+        selectionNodes.push({id:node.id??node.slug,type:node.type??null,parent_event_id:node.parent_event_id??null})
+    })().catch(()=>{nodeReadFailures++}))
+  })
   const atlas=page.locator('[data-map-stack="atlas-fallback"]')
   const snapshot=()=>atlas.evaluate(node=>{
     const svg=node.querySelector('svg'),groups=[...node.querySelectorAll('.wv-atlas-labels[visibility="visible"]')]
@@ -176,6 +189,23 @@ async function atlasLabelJourney(browser,kind){
     const inspectorBefore=await inspectorFields()
     assert.equal(Object.keys(inspectorBefore).length,9,'selected inspector exposes the original row fields')
     const changedInspectorFields=[]
+    await Promise.all(pendingNodeReads)
+    assert.equal(nodeReadFailures,0,'public graph type response is readable')
+    assert.equal(fixture.selectionRows.length,1,'qualification binds the one original projection row')
+    assert.ok(selectionNodes.length>0,'qualification observes the existing public graph node type without another request')
+    const sourceRow=fixture.selectionRows[0],node=selectionNodes[0]
+    assert.ok(selectionNodes.every(n=>n.type===node.type&&n.parent_event_id===node.parent_event_id),'reader graph type/parent is consistent')
+    const expectedContext={
+      'canonical-subject-type':node.type||sourceRow.spatial_role||'',
+      'canonical-subject-id':sourceRow.subject_graph_node_id,
+      'parent-event-id':sourceRow.parent_event_id??node.parent_event_id??'',
+      'as-of-time':sourceRow.valid_from_utc??'',
+      'selected-time-range':sourceRow.valid_from_utc!=null||sourceRow.valid_to_utc!=null
+        ?(sourceRow.valid_from_utc??'')+'..'+(sourceRow.valid_to_utc??''):'',
+      'temporal-assessment-reference':temporalAssessmentReferenceFor(sourceRow.subject_graph_node_id),
+    }
+    assert.equal(expectedContext['canonical-subject-id'],subject)
+    let pickedContext=null
     const keyResults=[]
     for(const key of ['Enter','Space']){
       await point.focus();assert.equal(await point.evaluate(n=>n===document.activeElement),true,'original point is keyboard focusable')
@@ -185,19 +215,24 @@ async function atlasLabelJourney(browser,kind){
       const inspectorAfter=await inspectorFields()
       changedInspectorFields.push(...Object.keys(inspectorBefore).filter(key=>inspectorAfter[key]!==inspectorBefore[key]))
       assert.ok(changedInspectorFields.length===0,'keyboard activation retains original row fields; changed fields: '+changedInspectorFields.join(', '))
-      assert.ok(JSON.stringify(await publicContext(page))===JSON.stringify(originalContext),'keyboard picking retains the original canonical and temporal context')
+      const actualContext=await publicContext(page)
+      const invalidContextFields=Object.keys(expectedContext).filter(key=>actualContext[key]!==expectedContext[key])
+      assert.ok(invalidContextFields.length===0,'explicit map pick obeys source-derived canonical/time contract; invalid fields: '+invalidContextFields.join(', '))
+      if(pickedContext)assert.ok(JSON.stringify(actualContext)===JSON.stringify(pickedContext),'repeated same-row keyboard pick is exactly idempotent')
+      pickedContext=actualContext
       assert.equal(await publicContext(page).then(c=>c['canonical-subject-id']),subject,'keyboard picking retains original canonical row identity')
       assert.equal(page.url(),route)
       assert.equal(await point.getAttribute('aria-label'),name,'keyboard picking preserves original source label/coordinate detail')
       assert.equal(await atlas.locator('.wv-feature.is-selected').count(),fixture.coordinateCount,'original selected projection remains bound to all geometry members')
-      keyResults.push({key,canonicalSubject:subject,selectedPoints:fixture.coordinateCount,preventedScroll:true,originalRowFieldsRetained:true,derivedTitleCompared:false})
+      keyResults.push({key,canonicalSubject:subject,selectedPoints:fixture.coordinateCount,preventedScroll:true,originalRowFieldsRetained:true,derivedTitleCompared:false,
+        sourceContext:actualContext,changedFromRouteSeed:Object.keys(actualContext).filter(field=>actualContext[field]!==originalContext[field])})
     }
     assert.ok(fixture.readerRequests>0&&fixture.matchedRows>0)
     assert.deepEqual(errors,[])
     console.log('MIP_WORLD_ATLAS_CONTEXT_'+kind+'_1280='+(await contextScreenshot(page)).toString('base64'))
     console.log('MIP_WORLD_ATLAS_LABEL_PASS='+JSON.stringify({engine:'chromium',kind,fixture,viewports,keyResults,
       idle:{elapsedMs:Date.now()-start,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
-      limitation:'SVG overview fits the entire synthetic geometry, so separated local points may cluster at world scale and all sparse labels may be hidden when original edge anchors cannot fit. Zero painted labels is reported explicitly, not described as readable. Keyboard activation exercises the already selected original row. Exact source row fields and context are retained; graph-node matching may expand its derived title. This does not prove a distinct subject transition. No interactive camera or GPU timing is fabricated.'}))
+      limitation:'SVG overview fits the entire synthetic geometry, so separated local points may cluster at world scale and all sparse labels may be hidden when original edge anchors cannot fit. Zero painted labels is reported explicitly, not described as readable. Keyboard activation exercises the already selected original row. Exact source row fields are retained. First activation binds source-derived graph type/parent and recorded valid-time bounds, which may differ from a named route seed. The repeated same-row activation is idempotent. Graph-node matching may expand its derived title; no distinct subject transition is claimed. No interactive camera or GPU timing is fabricated.'}))
   }catch(error){
     console.log('MIP_WORLD_ATLAS_LABEL_FAILURE='+JSON.stringify({kind,error:error.message,errors}))
     console.log('MIP_WORLD_ATLAS_LABEL_FAILURE_IMAGE_'+kind+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
