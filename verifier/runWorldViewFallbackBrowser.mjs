@@ -168,26 +168,35 @@ async function atlasLabelJourney(browser,kind){
     assert.equal(comparison.whole.changedPixels,0,'idle Atlas retains rendered pixels')
     const point=atlas.locator('.wv-feature[role="button"]').first(),name=await point.getAttribute('aria-label')
     const inspector=page.getByRole('complementary',{name:'Selected-event inspector'})
-    const inspectorBefore=await inspector.innerText()
+    const inspectorFields=()=>inspector.evaluate(node=>{
+      const keep=new Set(['When','Valid-time precision','Location','Precision class','Geometry status','Uncertainty','Uncertainty note','Review','Release'])
+      return Object.fromEntries([...node.querySelectorAll('.wv-field')].map(n=>[n.querySelector('dt')?.textContent,n.querySelector('dd')?.textContent]).filter(([key])=>keep.has(key)))
+    })
+    const inspectorBefore=await inspectorFields()
+    assert.equal(Object.keys(inspectorBefore).length,9,'selected inspector exposes the original row fields')
+    const changedInspectorFields=[]
     const keyResults=[]
     for(const key of ['Enter','Space']){
       await point.focus();assert.equal(await point.evaluate(n=>n===document.activeElement),true,'original point is keyboard focusable')
       const scrollBefore=await page.evaluate(()=>({x:scrollX,y:scrollY}))
       await point.press(key);await delay(250)
       assert.deepEqual(await page.evaluate(()=>({x:scrollX,y:scrollY})),scrollBefore,'Enter/Space activation prevents unintended page scrolling')
-      assert.equal(await inspector.innerText(),inspectorBefore,'keyboard activation retains the original selected projection inspector')
+      const inspectorAfter=await inspectorFields()
+      changedInspectorFields.push(...Object.keys(inspectorBefore).filter(key=>inspectorAfter[key]!==inspectorBefore[key]))
+      assert.ok(changedInspectorFields.length===0,'keyboard activation retains original row fields; changed fields: '+changedInspectorFields.join(', '))
+      assert.ok(JSON.stringify(await publicContext(page))===JSON.stringify(originalContext),'keyboard picking retains the original canonical and temporal context')
       assert.equal(await publicContext(page).then(c=>c['canonical-subject-id']),subject,'keyboard picking retains original canonical row identity')
       assert.equal(page.url(),route)
       assert.equal(await point.getAttribute('aria-label'),name,'keyboard picking preserves original source label/coordinate detail')
       assert.equal(await atlas.locator('.wv-feature.is-selected').count(),fixture.coordinateCount,'original selected projection remains bound to all geometry members')
-      keyResults.push({key,canonicalSubject:subject,selectedPoints:fixture.coordinateCount,preventedScroll:true,originalInspectorRetained:true})
+      keyResults.push({key,canonicalSubject:subject,selectedPoints:fixture.coordinateCount,preventedScroll:true,originalRowFieldsRetained:true,derivedTitleCompared:false})
     }
     assert.ok(fixture.readerRequests>0&&fixture.matchedRows>0)
     assert.deepEqual(errors,[])
     console.log('MIP_WORLD_ATLAS_CONTEXT_'+kind+'_1280='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
     console.log('MIP_WORLD_ATLAS_LABEL_PASS='+JSON.stringify({engine:'chromium',kind,fixture,viewports,keyResults,
       idle:{elapsedMs:Date.now()-start,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
-      limitation:'SVG overview fits the entire synthetic geometry, so separated local points may cluster at world scale and all sparse labels may be hidden when original edge anchors cannot fit. Zero painted labels is reported explicitly, not described as readable. Keyboard activation exercises the already selected original row; unchanged selection alone does not prove a distinct subject transition. No interactive camera or GPU timing is fabricated.'}))
+      limitation:'SVG overview fits the entire synthetic geometry, so separated local points may cluster at world scale and all sparse labels may be hidden when original edge anchors cannot fit. Zero painted labels is reported explicitly, not described as readable. Keyboard activation exercises the already selected original row. Exact source row fields and context are retained; graph-node matching may expand its derived title. This does not prove a distinct subject transition. No interactive camera or GPU timing is fabricated.'}))
   }catch(error){
     console.log('MIP_WORLD_ATLAS_LABEL_FAILURE='+JSON.stringify({kind,error:error.message,errors}))
     console.log('MIP_WORLD_ATLAS_LABEL_FAILURE_IMAGE_'+kind+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
