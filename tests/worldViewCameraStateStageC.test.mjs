@@ -285,7 +285,7 @@ test('adapter wiring: both renderers and the dispatcher expose the camera contra
   assert.match(ADAPTER, /getCameraState:\s*\(\)\s*=>\s*impl\?\.getCameraState/)
   assert.match(ADAPTER, /setCameraState:\s*\(serialized\)\s*=>\s*impl\?\.setCameraState/)
   // MapLibre adapter restores via jumpTo with the precision-capped camera.
-  assert.match(ADAPTER, /mapCameraForCameraState\(parsed, activePrecisionClass\(\)\)/)
+  assert.match(ADAPTER, /mapCameraForCameraState\(parsed, activePrecisionClass\(\), precisionGovernor\?\.width\(\)\)/)
   assert.match(ADAPTER, /map\.jumpTo/)
   // Globe adapter parses through the shared contract and applies via setView.
   assert.match(GLOBE_ADAPTER, /parseCameraState\(serialized, \{ precisionClass: activePrecisionClass\(\) \}\)/)

@@ -1,4 +1,4 @@
-import { updateGlobeMarkerLayout } from './worldViewMarkerLayout.js'
+import { createMarkerLabelMeasurer, dispatchGlobeMarkerPick, updateGlobeMarkerLayout } from './worldViewMarkerLayout.js'
 import { createCesiumRefinementController } from './worldViewCesiumRefinement.js'
 import { createRecordedLightingController } from './worldViewCesiumRecordedLighting.js'
 import { atmosphereAvailable, setAtmosphereEffect, atmosphereState } from './worldViewCesiumAtmosphere.js'
@@ -265,21 +265,11 @@ export function createCesiumEllipsoidRendererAdapter({
   let eventHandler = null
   let entities = []
   let mounted = false
-  let labelContext = null
-  const labelMeasurements = new Map()
-  const measureLabel = (text, font) => {
-    const key = font + '\n' + text
-    if (labelMeasurements.has(key)) return labelMeasurements.get(key)
-    labelContext ??= document.createElement('canvas').getContext('2d')
-    if (!labelContext) return {}
-    labelContext.font = font
-    const metrics = labelContext.measureText(text)
-    const size = { labelWidth: Math.ceil(metrics.width), labelHeight: Math.max(12, Math.ceil((metrics.actualBoundingBoxAscent || 9) + (metrics.actualBoundingBoxDescent || 3))) }
-    if (labelMeasurements.size >= 512) labelMeasurements.delete(labelMeasurements.keys().next().value)
-    labelMeasurements.set(key, size)
-    return size
-  }
+  const labelMeasurements = createMarkerLabelMeasurer(() => document.createElement('canvas').getContext('2d'))
+  const measureLabel = labelMeasurements.measure
   let renderedFrames = 0
+  // CPU time for display arbitration only, not GPU or full-frame timing.
+  const layoutTiming = { lastMs: 0, maxMs: 0, passes: 0, entityCount: 0 }
   const removeLayoutListeners = []
   let currentOnSelectRow = onSelectRow
   let localCancelled = false
@@ -459,7 +449,14 @@ export function createCesiumEllipsoidRendererAdapter({
       if (!viewer || cancelledNow()) return
       // Every actual frame includes small camera moves and responsive resizes.
       // Only a changed visibility result requests one correction frame.
-      if (updateGlobeMarkerLayout(Cesium, viewer, entities, measureLabel)) viewer.scene.requestRender?.()
+      const started = performance.now()
+      const changed = updateGlobeMarkerLayout(Cesium, viewer, entities, measureLabel)
+      const elapsed = Math.max(0, performance.now() - started)
+      layoutTiming.lastMs = elapsed
+      layoutTiming.maxMs = Math.max(layoutTiming.maxMs, elapsed)
+      layoutTiming.passes += 1
+      layoutTiming.entityCount = entities.length
+      if (changed) viewer.scene.requestRender?.()
     }))
 
     // Stage D visual-continuity repair: apply the labeled relief shading
@@ -485,11 +482,7 @@ export function createCesiumEllipsoidRendererAdapter({
     // Picking: clicking a marker returns the original projection row reference.
     eventHandler = new Cesium.ScreenSpaceEventHandler(viewer.canvas)
     eventHandler.setInputAction((click) => {
-      if (cancelledNow()) return
-      const picked = viewer.scene.pick(click.position)
-      const entity = picked?.id
-      const row = entity?.__mipRow
-      if (row) currentOnSelectRow?.(row)
+      dispatchGlobeMarkerPick(viewer, click.position, currentOnSelectRow, cancelledNow)
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
 
     // Attach features.
@@ -517,6 +510,8 @@ export function createCesiumEllipsoidRendererAdapter({
       const label = d.label || d.precisionClass || 'projected location'
 
       const entity = viewer.entities.add({
+        // The first layout pass must approve a symbol before it can be drawn.
+        show: false,
         id: d.id,
         position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
         point,
@@ -593,6 +588,8 @@ export function createCesiumEllipsoidRendererAdapter({
       const label = d.label || d.precisionClass || 'projected location'
 
       const entity = viewer.entities.add({
+        // The first layout pass must approve a symbol before it can be drawn.
+        show: false,
         id: d.id,
         position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
         point,
@@ -766,6 +763,7 @@ export function createCesiumEllipsoidRendererAdapter({
   function destroy() {
     for (const remove of removeLayoutListeners.splice(0)) remove?.()
     localCancelled = true
+    labelMeasurements.clear()
     terrainPlan?.destroy?.()
     destroyCesiumResources({ eventHandler, viewer })
     ownedHost?.destroy()
@@ -795,7 +793,7 @@ export function createCesiumEllipsoidRendererAdapter({
     setVisualFidelityProfile,
     setRecordedTimeInstant: value => recordedLighting.setTime(value),
     getVisualFidelityCapabilities,
-    getVisualFidelityRenderState: () => ({ renderedFrames, markers: entities.map(e => ({ id: e.id, visible: e.show, labelVisible: e.label?.show?.getValue(viewer.clock.currentTime) === true, selected: e.__mipSelected })), refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
+    getVisualFidelityRenderState: () => ({ renderedFrames, layoutTiming: { ...layoutTiming }, markers: entities.map(e => ({ id: e.id, visible: e.show, labelVisible: e.label?.show?.getValue(viewer.clock.currentTime) === true, selected: e.__mipSelected })), refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }

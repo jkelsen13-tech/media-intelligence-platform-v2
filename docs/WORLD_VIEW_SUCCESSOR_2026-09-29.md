@@ -39,7 +39,7 @@ historical status; source and new runtime receipts control current claims.
 ## Coherent wave
 
 Camera session memory lives above transient canvases and holds normalized JSON
-only, keyed to the accepted location/precision and renderer. Changed subjects
+only, keyed to the accepted location/precision. Renderer adapters constrain fallback restoration to their supported limits. Changed subjects
 cannot inherit a saved view. Invalid captures do not erase good state. Remounts
 restore matching views and suppress redundant auto-framing. It is intentionally
 session-local: no localStorage, route/Investigation Context field or persistence.
@@ -48,7 +48,7 @@ Selected-location reset is north-up/nadir in Cesium and pitch zero in MapLibre.
 The renderer-neutral pitch convention is now bridged correctly: MapLibre's zero
 is Cesium's -90, not zero at the horizon. Manual tilt survives serialization.
 Mercator clamps its own unsupported pole latitude and pitch, never projection
-geometry; globe poles remain valid. Precision limits refresh before restoration.
+geometry; globe poles remain valid. Precision limits refresh before restoration. MapLibre uses a conservative CSS-width/latitude-aware bound during user zoom, pan, resize and late precision arrival; its meter bridge remains an approximate display scale. Raw scalar metadata lets browser qualification inspect the actual limit.
 
 North America overview is a display camera only. Stop flight uses the existing
 cancel/stop methods. Neither changes selected evidence, time, coordinates or
@@ -81,3 +81,27 @@ continental higher-detail terrain and admitted contextual observations, with
 exact rights/coverage/temporal/availability gates. Backend-dependent: authorized
 public projections only; consolidation is not changed. Later news-driven:
 story-relevant context packages rather than a global feed collection.
+
+## Parallel implementation checkpoint
+
+The parent integrated exclusive remote file packages from camera worker f0becd0,
+marker worker 32910f5 and qualification worker e09fd8f. Worker camera Golden
+36662066942 passed 1,627 tests and builds on Node 22/24. Marker predecessor
+218d9ba Golden 36661739474 passed 1,627 tests and builds on both; latest scalar
+CPU timing delta is still qualifying. Worker C's earlier Golden passed both
+Node versions; the corrected terrain remount journey passed before subsequent
+journeys. These are package receipts, not an integrated acceptance claim.
+
+The owner requested GPT-6.1 Sol implementation specialists. Spawn requests used
+that model; collaboration results did not expose the actual configured model.
+Workers authored source/tests on GitHub and exercised memory/remote Actions only.
+14_ASTRA_AGENT_ORCHESTRATION.md and the attached successor staged workflow v3
+were read in memory. The exact v2 file was not located in the attachment; the
+owner's current routing and ownership amendments govern. No local files written.
+
+The earlier failed CI is retained: initial stale diagonal assertion/vendor-comment
+scan, nadir haze pixel comparison, and exact remount string comparisons. Tests now
+use an explicit oblique haze camera and tolerate numerical reconstruction only at
+remount; same-viewer fidelity switches retain their strict pose/string checks.
+Integrated runtime, measured appearance interpretation and external review remain
+pending. A separate MapLibre label arbitration package is next safe frontend work.

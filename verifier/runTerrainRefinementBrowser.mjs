@@ -67,7 +67,7 @@ try {
           await settle()
           const actual=await state()
           assert.ok(sameCameraPose(actual.cameraPose,before.cameraPose),'detail choice must not move the camera')
-          assert.ok(cameraStatesEqual(parseCameraState(await camera()),parseCameraState(originalCamera),1e-9),'remount preserves serialized camera within numerical round-trip tolerance')
+          assert.equal(await camera(),originalCamera)
           assert.equal(page.url(),route)
           assert.equal(actual.requestRenderMode,true)
           assert.deepEqual(actual.recordedLighting,before.recordedLighting)
@@ -104,7 +104,8 @@ try {
         await settle()
         assert.equal(await control.inputValue(),'fine')
         assert.equal((await profile()).categories.terrain.refinement,'fine')
-        assert.equal(await camera(),originalCamera)
+        // Reconstruction across renderer instances changes sub-millimetre floating-point values.
+        assert.ok(cameraStatesEqual(parseCameraState(await camera()),parseCameraState(originalCamera),1e-9),'remount preserves serialized camera within numerical round-trip tolerance')
         assert.equal(page.url(),route)
         assert.equal((await page.evaluate(()=>window.__MIP_WORLD_VIEW_TERRAIN_PROBE__.getTerrainStatus())).status,'active')
         console.log('MIP_REFINEMENT_REMOUNT_'+engine+'_'+width+'='+(await page.locator('.wv-map-host').screenshot({type:'jpeg',quality:70})).toString('base64'))

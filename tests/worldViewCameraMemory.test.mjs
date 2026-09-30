@@ -7,16 +7,16 @@ import { subjectCamera, subjectEllipsoidCamera, heightMetersForPrecisionClass } 
 import { cameraStateFromMapCamera, mapCameraForCameraState } from '../src/lib/worldViewRendererAdapter.js'
 
 const camera = serializeCameraState({ lon:-100,lat:45,heightMeters:2000000,headingDegrees:25,pitchDegrees:-60,rollDegrees:0 })
-test('Map/Graph/Map memory restores only a matching subject and renderer; invalid capture retains good state',()=>{
+test('Map/Graph/Map memory restores only a matching subject across renderers; invalid capture retains good state',()=>{
   const memory=createCameraMemory(), calls=[]
   const adapter={setCameraState:state=>{calls.push(state);return true}}
   assert.equal(memory.restore(adapter,'a','ellipsoid-globe'),false)
   assert.equal(memory.remember(camera,'a','ellipsoid-globe'),true)
   assert.equal(memory.remember(null,'a','ellipsoid-globe'),false)
   assert.equal(memory.restore(adapter,'b','ellipsoid-globe'),false)
-  assert.equal(memory.restore(adapter,'a','osm'),false)
+  assert.equal(memory.restore(adapter,'a','osm'),true)
   assert.equal(memory.restore(adapter,'a','ellipsoid-globe'),true)
-  assert.deepEqual(calls,[camera])
+  assert.deepEqual(calls,[camera,camera])
   assert.equal(memory.restore({setCameraState:()=>false},'a','ellipsoid-globe'),false)
 })
 test('restored framing does not undo a manual camera; changed geometry still frames',()=>{

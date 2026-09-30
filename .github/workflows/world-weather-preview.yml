@@ -73,6 +73,12 @@ on:
       - 'src/components/InvestigationAssessmentTrail.jsx'
       - 'verifier/runRetainedDateBrowser.mjs'
       - 'src/lib/worldViewCameraFraming.js'
+      - 'src/lib/worldViewCameraMemory.js'
+      - 'src/lib/worldViewMarkerLayout.js'
+      - 'verifier/runWorldViewSuccessorBrowser.mjs'
+      - 'verifier/runWorldViewFallbackBrowser.mjs'
+      - 'verifier/worldViewRasterEvidence.mjs'
+      - 'verifier/worldViewProjectionFixture.mjs'
       - 'src/lib/worldViewRendererAdapter.js'
       - 'src/lib/worldViewCesiumEllipsoidRendererAdapter.js'
       - 'src/views/WorldMapCanvas.jsx'
@@ -161,7 +167,7 @@ jobs:
 
   refinement-preview:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     permissions:
       contents: read
     env:
@@ -192,3 +198,8 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runWorldViewSuccessorBrowser.mjs
+
+      - name: Qualify retained fallback camera and actual map precision limits
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWorldViewFallbackBrowser.mjs
