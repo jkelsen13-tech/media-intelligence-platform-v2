@@ -182,10 +182,10 @@ export function mapZoomForHeightMeters(heightMeters, latDegrees, viewportWidthPx
 // This updates only renderer-local camera framing; it does not rewrite projection
 // coordinates or precision_class.
 export function subjectOrientationDegrees() {
-  // MapLibre contract: pitch=32deg, bearing=-14deg.
+  // Deterministic north-up nadir reset. Manual tilt remains available.
   return Object.freeze({
-    headingDegrees: 346, // (-14 + 360) % 360
-    pitchDegrees: -32, // opposite sign for "look down" convention
+    headingDegrees: 0,
+    pitchDegrees: -90, // Cesium nadir; MapLibre pitch 0
     rollDegrees: 0,
   })
 }
@@ -268,8 +268,8 @@ export function subjectCamera(coordinate, precisionClass) {
   return Object.freeze({
     center: Object.freeze([lon, lat]),
     zoom: zoomForPrecisionClass(precisionClass),
-    pitch: 32,
-    bearing: -14,
+    pitch: 0,
+    bearing: 0,
     maxZoom: maxZoomForPrecisionClass(precisionClass),
   })
 }

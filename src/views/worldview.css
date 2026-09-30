@@ -532,3 +532,6 @@
 }
 
 .wv-fidelity-resolution { flex-wrap: wrap; max-width: 100%; }
+
+.wv-camera-controls { display: flex; flex-wrap: wrap; gap: 6px; }
+.wv-camera-controls button { min-height: 44px; white-space: normal; }

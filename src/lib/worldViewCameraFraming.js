@@ -22,6 +22,9 @@ export function createCameraFraming() {
       target = selectedCameraTarget(features)
     },
     resetRenderer() { framedKey = null },
+    getTargetKey: () => target?.key ?? null,
+    getFramedKey: () => framedKey,
+    acceptRestoredView() { framedKey = target?.key ?? null },
     apply(adapter, { force = false } = {}) {
       if (!target) {
         // Clear only after the renderer accepts cancellation. A temporarily

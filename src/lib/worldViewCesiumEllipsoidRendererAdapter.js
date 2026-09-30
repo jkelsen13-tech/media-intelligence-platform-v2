@@ -1,3 +1,4 @@
+import { updateGlobeMarkerLayout } from './worldViewMarkerLayout.js'
 import { createCesiumRefinementController } from './worldViewCesiumRefinement.js'
 import { createRecordedLightingController } from './worldViewCesiumRecordedLighting.js'
 import { atmosphereAvailable, setAtmosphereEffect, atmosphereState } from './worldViewCesiumAtmosphere.js'
@@ -264,6 +265,9 @@ export function createCesiumEllipsoidRendererAdapter({
   let eventHandler = null
   let entities = []
   let mounted = false
+  let markerLayoutDirty = true
+  let renderedFrames = 0
+  const removeLayoutListeners = []
   let currentOnSelectRow = onSelectRow
   let localCancelled = false
   let Cesium = null
@@ -420,6 +424,8 @@ export function createCesiumEllipsoidRendererAdapter({
       // eslint-disable-next-line no-console
       console.error('Cesium render failure; falling back to MapLibre:', renderError?.message ?? renderError)
       if (cancelledNow() || !viewer) return
+      // Capture the live display camera synchronously before fatal teardown.
+      onStackIdChange?.('openfreemap-positron')
       destroyCesiumResources({ eventHandler, viewer })
       terrainPlan?.destroy?.()
       ownedHost?.destroy()
@@ -427,7 +433,6 @@ export function createCesiumEllipsoidRendererAdapter({
       viewer = null
       eventHandler = null
       entities = []
-      onStackIdChange?.('openfreemap-positron')
     })
 
     // The widget otherwise rewrites canAnimate on every data-source tick.
@@ -436,6 +441,16 @@ export function createCesiumEllipsoidRendererAdapter({
 
     // Request-only rendering governance: only redraw on camera/props changes.
     viewer.scene.requestRenderMode = true
+    const invalidateMarkerLayout = () => { markerLayoutDirty = true; viewer?.scene.requestRender?.() }
+    viewer.camera.percentageChanged = 0.01
+    removeLayoutListeners.push(viewer.camera.changed.addEventListener(invalidateMarkerLayout))
+    removeLayoutListeners.push(viewer.camera.moveEnd.addEventListener(invalidateMarkerLayout))
+    removeLayoutListeners.push(viewer.scene.postRender.addEventListener(() => {
+      renderedFrames += 1
+      if (!markerLayoutDirty || !viewer || cancelledNow()) return
+      markerLayoutDirty = false
+      if (updateGlobeMarkerLayout(Cesium, viewer, entities)) viewer.scene.requestRender?.()
+    }))
 
     // Stage D visual-continuity repair: apply the labeled relief shading
     // (default ON). Derived only from actual approved terrain heights; the
@@ -484,6 +499,9 @@ export function createCesiumEllipsoidRendererAdapter({
         color,
         outlineColor: new Cesium.Color(21 / 255, 110 / 255, 191 / 255, 1),
         outlineWidth: 1.5,
+        // Screen symbol at the retained lon/lat; explicit horizon arbitration
+        // prevents far-side picking without inventing an evidence altitude.
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
       }
 
       const label = d.label || d.precisionClass || 'projected location'
@@ -493,6 +511,7 @@ export function createCesiumEllipsoidRendererAdapter({
         position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
         point,
         label: {
+          show: true,
           text: label,
           font: '12px sans-serif',
           fillColor: new Cesium.Color(26 / 255, 26 / 255, 23 / 255, 0.9),
@@ -507,6 +526,7 @@ export function createCesiumEllipsoidRendererAdapter({
 
       // Custom field used by pick handler.
       entity.__mipRow = d.row
+      entity.__mipSelected = isSelected
       entities.push(entity)
     }
 
@@ -555,6 +575,9 @@ export function createCesiumEllipsoidRendererAdapter({
         color,
         outlineColor: new Cesium.Color(21 / 255, 110 / 255, 191 / 255, 1),
         outlineWidth: 1.5,
+        // Screen symbol at the retained lon/lat; explicit horizon arbitration
+        // prevents far-side picking without inventing an evidence altitude.
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
       }
 
       const label = d.label || d.precisionClass || 'projected location'
@@ -564,6 +587,7 @@ export function createCesiumEllipsoidRendererAdapter({
         position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
         point,
         label: {
+          show: true,
           text: label,
           font: '12px sans-serif',
           fillColor: new Cesium.Color(26 / 255, 26 / 255, 23 / 255, 0.9),
@@ -577,10 +601,12 @@ export function createCesiumEllipsoidRendererAdapter({
       })
 
       entity.__mipRow = d.row
+      entity.__mipSelected = isSelected
       entities.push(entity)
     }
 
-    // Trigger a render in requestRenderMode.
+    // Arbitration runs only after actual camera/feature renders, never an idle loop.
+    markerLayoutDirty = true
     viewer.scene.requestRender?.()
   }
 
@@ -724,10 +750,12 @@ export function createCesiumEllipsoidRendererAdapter({
     if (!viewer || !Cesium) return false
     const parsed = parseCameraState(serialized, { precisionClass: activePrecisionClass() })
     if (!parsed) return false
+    viewer.scene.screenSpaceCameraController.minimumZoomDistance = heightMetersForPrecisionClass(activePrecisionClass())
     return applyCameraStateToGlobeViewer(Cesium, viewer, parsed)
   }
 
   function destroy() {
+    for (const remove of removeLayoutListeners.splice(0)) remove?.()
     localCancelled = true
     terrainPlan?.destroy?.()
     destroyCesiumResources({ eventHandler, viewer })
@@ -758,7 +786,7 @@ export function createCesiumEllipsoidRendererAdapter({
     setVisualFidelityProfile,
     setRecordedTimeInstant: value => recordedLighting.setTime(value),
     getVisualFidelityCapabilities,
-    getVisualFidelityRenderState: () => ({ refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
+    getVisualFidelityRenderState: () => ({ renderedFrames, markers: entities.map(e => ({ id: e.id, visible: e.show, labelVisible: e.label?.show?.getValue(viewer.clock.currentTime) === true, selected: e.__mipSelected })), refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }

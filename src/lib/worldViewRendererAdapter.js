@@ -49,7 +49,7 @@ export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 
       lat,
       heightMeters,
       headingDegrees: bearing,
-      pitchDegrees: -pitch,
+      pitchDegrees: Math.min(85, Math.max(0, pitch)) - 90,
       rollDegrees: 0,
     },
     precisionClass,
@@ -60,14 +60,16 @@ export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 
 export function mapCameraForCameraState(cameraState, precisionClass) {
   if (!cameraState) return null
   const cap = maxZoomForPrecisionClass(precisionClass)
-  const zoomRaw = mapZoomForHeightMeters(cameraState.heightMeters, cameraState.lat)
-  const zoom = Math.min(zoomRaw ?? cap, cap)
+  // Mercator cannot represent the poles; constrain only the fallback camera.
+  const lat = Math.min(85.05112878, Math.max(-85.05112878, cameraState.lat))
+  const zoomRaw = mapZoomForHeightMeters(cameraState.heightMeters, lat)
+  const zoom = Math.max(minZoom(), Math.min(zoomRaw ?? cap, cap))
   const heading = cameraState.headingDegrees
   return Object.freeze({
-    center: Object.freeze([cameraState.lon, cameraState.lat]),
+    center: Object.freeze([cameraState.lon, lat]),
     zoom,
     bearing: heading > 180 ? heading - 360 : heading,
-    pitch: -cameraState.pitchDegrees,
+    pitch: Math.min(85, Math.max(0, 90 + cameraState.pitchDegrees)),
   })
 }
 
@@ -453,6 +455,7 @@ function createMapLibreWorldViewRendererAdapter({
     const cam = mapCameraForCameraState(parsed, activePrecisionClass())
     if (!cam) return false
     cancelMapCameraFlight(map)
+    map.setMaxZoom?.(maxZoomForPrecisionClass(activePrecisionClass()))
     map.jumpTo({ center: cam.center, zoom: cam.zoom, bearing: cam.bearing, pitch: cam.pitch })
     requestRepaint(map)
     return true

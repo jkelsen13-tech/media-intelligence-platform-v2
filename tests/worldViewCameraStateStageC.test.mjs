@@ -95,7 +95,7 @@ test('camera contract: serialize/parse round-trips the Cleveland subject camera'
   // Stable key order, version pinned.
   assert.equal(
     serialized,
-    `{"version":1,"lon":${state.lon},"lat":${state.lat},"heightMeters":${state.heightMeters},"headingDegrees":346,"pitchDegrees":-32,"rollDegrees":0}`,
+    `{"version":1,"lon":${state.lon},"lat":${state.lat},"heightMeters":${state.heightMeters},"headingDegrees":0,"pitchDegrees":-90,"rollDegrees":0}`,
   )
   const parsed = parseCameraState(serialized, { precisionClass: 'city' })
   assert.ok(cameraStatesEqual(state, parsed))
@@ -208,7 +208,7 @@ test('map camera: state round-trips and restore is capped at the precision ceili
   assert.ok(state)
   assert.ok(Math.abs(state.lon - -81.7) < 1e-9)
   assert.ok(Math.abs(state.headingDegrees - 346) < 1e-9)
-  assert.equal(state.pitchDegrees, -32)
+  assert.equal(state.pitchDegrees, -58)
   const cam = mapCameraForCameraState(state, 'city')
   assert.ok(Math.abs(cam.center[0] - -81.7) < 1e-9)
   assert.ok(Math.abs(cam.center[1] - 41.4) < 1e-9)

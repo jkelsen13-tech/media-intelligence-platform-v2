@@ -161,7 +161,7 @@ jobs:
 
   refinement-preview:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     permissions:
       contents: read
     env:
@@ -187,3 +187,8 @@ jobs:
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runDynamicAtmosphereBrowser.mjs
+
+      - name: Qualify World View successor navigation and same-camera appearance
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWorldViewSuccessorBrowser.mjs

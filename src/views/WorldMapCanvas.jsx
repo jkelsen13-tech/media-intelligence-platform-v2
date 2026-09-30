@@ -17,6 +17,7 @@ import {
 import { createWorldViewRendererAdapter, projectionMarkerRecords } from '../lib/worldViewRendererAdapter'
 import { visualFidelityCapabilities, resolveVisualFidelityProfile } from '../lib/worldViewVisualFidelity.js'
 import { createCameraFraming } from '../lib/worldViewCameraFraming'
+import { createCameraMemory, northAmericaCameraState } from '../lib/worldViewCameraMemory.js'
 
 const MAP_W = 960
 const MAP_H = 480
@@ -115,7 +116,10 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
   )
 }
 
-export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyMessage, recordedTimeInstant, visualFidelity, onVisualFidelityCapabilities }) {
+export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSelectRow, emptyMessage, recordedTimeInstant, visualFidelity, onVisualFidelityCapabilities }) {
+  const localMemoryRef = useRef(null)
+  if (!localMemoryRef.current) localMemoryRef.current = createCameraMemory()
+  const memory = cameraMemory ?? localMemoryRef.current
   const hostRef = useRef(null)
   const fidelityRef = useRef(visualFidelity)
   fidelityRef.current = visualFidelity
@@ -123,7 +127,7 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
   const framingRef = useRef(null)
   if (!framingRef.current) framingRef.current = createCameraFraming()
   const adapterRef = useRef(null)
-  const [stackId, setStackId] = useState(DEFAULT_MAP_STACK_ID)
+  const [stackId, setStackId] = useState(() => memory.getStackId() ?? DEFAULT_MAP_STACK_ID)
   const [terrainStatus, setTerrainStatus] = useState(null)
   const [rendererReady, setRendererReady] = useState(false)
   const stack = mapStackById(stackId)
@@ -155,6 +159,7 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
       onSelectRow,
       onStackIdChange: (next) => {
         if (cancelled) return
+        memory.remember(adapter.getCameraState?.(), framingRef.current.getFramedKey(), stackId)
         setStackId(next)
       },
       onTerrainStatusChange: (next) => {
@@ -169,10 +174,13 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
     void adapter.mount().then(() => {
       if (!cancelled) {
         setRendererReady(true)
-        framingRef.current.apply(adapter)
+        const framing = framingRef.current
+        if (memory.restore(adapter, framing.getTargetKey(), stackId)) framing.acceptRestoredView()
+        else if (!framing.apply(adapter) && framing.getTargetKey() === null) adapter.setCameraState?.(northAmericaCameraState())
       }
     })
     return () => {
+      memory.remember(adapter.getCameraState?.(), framingRef.current.getFramedKey(), stackId)
       cancelled = true
       adapter.destroy()
       adapterRef.current = null
@@ -265,7 +273,15 @@ export default function WorldMapCanvas({ rows, selectedKeys, onSelectRow, emptyM
 
   return (
     <div className="wv-map-panel">
-      <div className="wv-camera-controls">
+      <div className="wv-camera-controls" role="group" aria-label="Map navigation">
+        <button type="button" disabled={!rendererReady}
+          onClick={() => adapterRef.current?.setCameraState?.(northAmericaCameraState())}>
+          North America overview
+        </button>
+        <button type="button" disabled={!rendererReady}
+          onClick={() => adapterRef.current?.cancelCameraFlight?.()}>
+          Stop camera flight
+        </button>
         <button
           type="button"
           disabled={!first || !rendererReady}

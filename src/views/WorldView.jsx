@@ -15,6 +15,7 @@ import { mipBackend } from '../lib/mipBackend.js'
 import GraphView from '../graph/GraphView'
 import TrustFooter from '../components/TrustFooter'
 import WorldMapCanvas from './WorldMapCanvas'
+import { createCameraMemory } from '../lib/worldViewCameraMemory.js'
 import WorldViewVisualFidelityPanel from '../components/WorldViewVisualFidelityPanel'
 import { defaultVisualFidelityProfile, reduceVisualFidelityProfile, visualFidelityCapabilities } from '../lib/worldViewVisualFidelity.js'
 import {
@@ -400,6 +401,8 @@ export default function WorldView({
   onInvestigationAsOfTime,
   backend = mipBackend.publicData.spatial,
 }) {
+  const cameraMemoryRef = useRef(null)
+  if (!cameraMemoryRef.current) cameraMemoryRef.current = createCameraMemory()
   const [mode, setMode] = useState('map')
   const [visualFidelity, setVisualFidelity] = useState(defaultVisualFidelityProfile)
   const [fidelityCapabilities, setFidelityCapabilities] = useState(visualFidelityCapabilities)
@@ -603,6 +606,7 @@ export default function WorldView({
           <div className={`wv-stage wv-stage-${mode}${touchInteraction ? ' wv-touch-active' : ''}`}>
             {showMap && (
               <WorldMapCanvas
+                cameraMemory={cameraMemoryRef.current}
                 recordedTimeInstant={['selected', 'default'].includes(recordedTime.kind) ? recordedTime.atIso : null}
                 visualFidelity={visualFidelity}
                 onVisualFidelityCapabilities={setFidelityCapabilities}
