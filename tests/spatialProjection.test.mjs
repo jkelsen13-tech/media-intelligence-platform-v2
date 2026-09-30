@@ -289,7 +289,10 @@ test('World View graph never falls back to the bundled demo dataset', () => {
 })
 
 test('App wires World View as a core tab sharing selected / handleSelectProjection', () => {
-  assert.match(APP, /import WorldView from '\.\/views\/WorldView'/)
+  assert.match(APP, /import WorldView from '\.\/components\/LazyWorldView\.jsx'/)
+  const lazyWorld = readFileSync(new URL('../src/components/LazyWorldView.jsx', import.meta.url), 'utf8')
+  assert.match(lazyWorld, /const loadWorldView = \(\) => import\('\.\.\/views\/WorldView\.jsx'\)/)
+  assert.doesNotMatch(APP, /import WorldView from '\.\/views\/WorldView'/)
   assert.match(APP, /view === 'world'/)
   assert.match(APP, /handleSelectProjection/)
   assert.match(APP, /selected=\{selected\}/)
