@@ -70,21 +70,34 @@ function applyMapPrecisionLimit(map, cap) {
 
 export function createMapPrecisionGovernor(map, { getPrecisionClass, onUnavailable } = {}) {
   let updating = false
+  let refreshPending = false
   let lastWidth = NOMINAL_MAP_WIDTH
   function width() {
     const measured = map?.getCanvas?.()?.clientWidth
     if (Number.isFinite(measured) && measured > 0) lastWidth = mapBridgeWidth(measured)
     return lastWidth
   }
-  function update(lat = map?.getCenter?.()?.lat) {
-    if (updating) return true
-    const cap = maxMapZoomForPrecisionClassAtLatitude(getPrecisionClass?.(), lat, width())
+  function update(lat) {
+    if (updating) { refreshPending = true; return true }
     updating = true
+    let applied = true
+    let passes = 0
     try {
-      const applied = applyMapPrecisionLimit(map, cap)
-      if (!applied) onUnavailable?.()
-      return applied
-    } finally { updating = false }
+      do {
+        refreshPending = false
+        const currentLat = lat ?? map?.getCenter?.()?.lat
+        const cap = maxMapZoomForPrecisionClassAtLatitude(getPrecisionClass?.(), currentLat, width())
+        applied = applyMapPrecisionLimit(map, cap)
+        passes += 1
+        // A zoom clamp can also constrain center latitude. Re-read that live
+        // center after synchronous move events, without recursive callbacks.
+      } while (applied && refreshPending && lat === undefined && passes < 4)
+      if (!applied || (refreshPending && lat === undefined)) {
+        onUnavailable?.()
+        return false
+      }
+      return true
+    } finally { updating = false; refreshPending = false }
   }
   // Zoom setters can emit move synchronously; the guard prevents recursion.
   // Event callbacks receive an event object, not a latitude.

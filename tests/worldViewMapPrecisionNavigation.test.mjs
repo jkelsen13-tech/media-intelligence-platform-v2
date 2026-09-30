@@ -104,3 +104,17 @@ test('subject flight constrains only fallback presentation, retaining canonical 
   assert.equal(mapCameraForCameraState(state, 'city', 390).center[1], 85.05112878)
   assert.equal(state.lat, 90)
 })
+
+test('synchronous zoom constraints changing latitude cannot leave a stale unsafe cap', () => {
+  const map = fakeMap()
+  const originalSetMaxZoom = map.setMaxZoom.bind(map)
+  let first = true
+  map.setMaxZoom = cap => {
+    if (first) { map.lat = 85.05112878; first = false }
+    originalSetMaxZoom(cap)
+  }
+  const governor = createMapPrecisionGovernor(map, { getPrecisionClass: () => 'city' })
+  assert.equal(governor.update(), true)
+  assert.ok(rawHeight(map.zoom, map.lat, map.width) >= heightMetersForPrecisionClass('city') - 1e-6)
+  governor.destroy()
+})
