@@ -47,3 +47,15 @@ source coverage is implied.
 Four engine/width combinations hit-tested native OSM links without a dialog and
 confirmed no overlap with the terrain disclosure. These images preserve the
 current scrolled view; the phone captures are actual viewports, not full pages.
+
+## Qualified responsive and selection evidence — 59dcfea5
+
+These 390 × 900 viewport images come from the actual built candidate `59dcfea572ff648eee8052dee7b516d6c6b0d52a`, World View Actions run [36670712678](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/36670712678), successful refinement job `109744904020`. Weather also passed; the separate lifecycle job failed before inducing native context loss. This is representative built-browser evidence, not hosted-preview or production verification.
+
+| Capture | What was observed |
+| --- | --- |
+| [Phone source credits](59dcfea5/phone-credits.jpg) | Native visible © OpenStreetMap contributors link and terrain source/Canada rights below the canvas, retained recorded time. |
+| [Dense atlas phone](59dcfea5/atlas-dense-phone.jpg) | 500 original geometry members, one readable 11 CSS px label; original coordinates and full accessible names retained. |
+| [Sparse atlas phone](59dcfea5/atlas-sparse-phone.jpg) | Five original geometry members, two readable 11 CSS px labels; actual viewport/stroke bounds and point centers retained. |
+
+Atlas retained those counts across 1280 → 390 → 320 → 1280 widths. First Enter obeyed independently source-derived Investigation Context and exact deep-link serialization; only `as-of-time` and `selected-time-range` changed from the route seed. Repeated Space retained the same exact context/URL and all nine original inspector fields. This journey selects an already-selected original row; it does not prove a distinct-subject transition. Static background attribution is Natural Earth via world-atlas 110m. Fixture geometry is synthetic browser test context, never admitted evidence; source identity, revision, privacy/release and recorded-time fields stay original.

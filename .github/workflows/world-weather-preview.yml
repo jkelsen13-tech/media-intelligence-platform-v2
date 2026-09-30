@@ -81,6 +81,9 @@ on:
       - 'verifier/runWorldViewSuccessorBrowser.mjs'
       - 'verifier/runWorldViewFallbackBrowser.mjs'
       - 'verifier/runWorldViewContextLossBrowser.mjs'
+      - 'verifier/runWorldViewTabletBrowser.mjs'
+      - 'verifier/checkWorldViewBundleIsolation.mjs'
+      - 'vite.config.js'
       - 'verifier/worldViewRasterEvidence.mjs'
       - 'verifier/worldViewProjectionFixture.mjs'
       - 'src/lib/worldViewRendererAdapter.js'
@@ -111,6 +114,8 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run build
+      - name: Verify actual World View bundle isolation
+        run: node verifier/checkWorldViewBundleIsolation.mjs
       - name: Verify spatial writer anonymous boundary
         run: node verifier/checkSpatialRuntimeAnonymous.mjs
       - name: Install isolated browser verifier
@@ -184,6 +189,8 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run build
+      - name: Verify actual World View bundle isolation
+        run: node verifier/checkWorldViewBundleIsolation.mjs
       - name: Install isolated browser verifier
         run: |
           npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
@@ -224,6 +231,8 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run build
+      - name: Verify actual World View bundle isolation
+        run: node verifier/checkWorldViewBundleIsolation.mjs
       - name: Install isolated lifecycle verifier
         run: |
           npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
@@ -234,3 +243,31 @@ jobs:
         run: |
           node --check verifier/runWorldViewContextLossBrowser.mjs
           node verifier/runWorldViewContextLossBrowser.mjs
+
+  tablet-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      VITE_SUPABASE_URL: https://qikvmopbtijoebdqosyq.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_7EVSYlCWYiE6YL0bDBYr_w_iwB9tve_
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build
+      - name: Verify actual World View bundle isolation
+        run: node verifier/checkWorldViewBundleIsolation.mjs
+      - name: Install isolated tablet verifier
+        run: |
+          npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
+          node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
+      - name: Qualify iPad-sized World View navigation and display invariants
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: |
+          node --check verifier/runWorldViewTabletBrowser.mjs
+          node verifier/runWorldViewTabletBrowser.mjs
