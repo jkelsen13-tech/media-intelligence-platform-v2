@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { createCesiumEllipsoidRendererAdapter } from '../src/lib/worldViewCesiumEllipsoidRendererAdapter.js'
 import { updateGlobeMarkerLayout, dispatchGlobeMarkerPick } from '../src/lib/worldViewMarkerLayout.js'
 
 function fixture() {
@@ -64,4 +65,16 @@ test('an unapproved first-frame symbol, cancelled pick or renderer destroyed dur
  assert.equal(dispatchGlobeMarkerPick(next.viewer,{x:20,y:50},select),false)
  assert.equal(selected.length,0)
  assert.equal(updateGlobeMarkerLayout(next.C,next.viewer,[next.entity],next.measure),false)
+})
+
+test('layout timing probe exposes detached, JSON-serializable scalar metadata',()=>{
+ const adapter=createCesiumEllipsoidRendererAdapter({stackId:'ellipsoid-globe'})
+ const timing=adapter.getVisualFidelityRenderState().layoutTiming
+ assert.deepEqual(Object.keys(timing).sort(),['entityCount','lastMs','maxMs','passes'])
+ for(const value of Object.values(timing))assert.equal(typeof value,'number')
+ assert.deepEqual(JSON.parse(JSON.stringify(timing)),{lastMs:0,maxMs:0,passes:0,entityCount:0})
+ // Consumers cannot alter renderer counters by mutating their probe snapshot.
+ timing.passes=999;timing.lastMs=NaN
+ assert.deepEqual(adapter.getVisualFidelityRenderState().layoutTiming,{lastMs:0,maxMs:0,passes:0,entityCount:0})
+ adapter.destroy()
 })

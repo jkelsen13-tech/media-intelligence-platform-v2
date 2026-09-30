@@ -268,6 +268,8 @@ export function createCesiumEllipsoidRendererAdapter({
   const labelMeasurements = createMarkerLabelMeasurer(() => document.createElement('canvas').getContext('2d'))
   const measureLabel = labelMeasurements.measure
   let renderedFrames = 0
+  // CPU time for display arbitration only, not GPU or full-frame timing.
+  const layoutTiming = { lastMs: 0, maxMs: 0, passes: 0, entityCount: 0 }
   const removeLayoutListeners = []
   let currentOnSelectRow = onSelectRow
   let localCancelled = false
@@ -447,7 +449,14 @@ export function createCesiumEllipsoidRendererAdapter({
       if (!viewer || cancelledNow()) return
       // Every actual frame includes small camera moves and responsive resizes.
       // Only a changed visibility result requests one correction frame.
-      if (updateGlobeMarkerLayout(Cesium, viewer, entities, measureLabel)) viewer.scene.requestRender?.()
+      const started = performance.now()
+      const changed = updateGlobeMarkerLayout(Cesium, viewer, entities, measureLabel)
+      const elapsed = Math.max(0, performance.now() - started)
+      layoutTiming.lastMs = elapsed
+      layoutTiming.maxMs = Math.max(layoutTiming.maxMs, elapsed)
+      layoutTiming.passes += 1
+      layoutTiming.entityCount = entities.length
+      if (changed) viewer.scene.requestRender?.()
     }))
 
     // Stage D visual-continuity repair: apply the labeled relief shading
@@ -784,7 +793,7 @@ export function createCesiumEllipsoidRendererAdapter({
     setVisualFidelityProfile,
     setRecordedTimeInstant: value => recordedLighting.setTime(value),
     getVisualFidelityCapabilities,
-    getVisualFidelityRenderState: () => ({ renderedFrames, markers: entities.map(e => ({ id: e.id, visible: e.show, labelVisible: e.label?.show?.getValue(viewer.clock.currentTime) === true, selected: e.__mipSelected })), refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
+    getVisualFidelityRenderState: () => ({ renderedFrames, layoutTiming: { ...layoutTiming }, markers: entities.map(e => ({ id: e.id, visible: e.show, labelVisible: e.label?.show?.getValue(viewer.clock.currentTime) === true, selected: e.__mipSelected })), refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,
   }
