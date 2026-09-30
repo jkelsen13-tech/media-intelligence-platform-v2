@@ -400,6 +400,7 @@ async function loadMapResizeAdapter(t, fixture) {
   const prefix = '\0mip-test-container-resize:'
   const server = await createServer({
     configFile: false, optimizeDeps: { noDiscovery: true, include: [] },
+    ssr: { noExternal: ['maplibre-gl', '@deck.gl/maplibre', '@deck.gl/layers'] },
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom',
     plugins: [{
       name: 'test-container-resize-vendors', enforce: 'pre',
@@ -475,6 +476,7 @@ test('actual map adapter owns deferred host resize while preserving precision, r
   const adapter = make()
   t.after(() => adapter.destroy())
   await adapter.mount()
+  assert.equal(options.length, 1, 'the fake Map constructor must be reached; unexpected fallback: ' + JSON.stringify(fallbacks))
   assert.equal(options[0].trackResize, false, 'supported owner scheduling must disable the vendor synchronous resize path')
   const map = maps[0]
   map.zoom = map.maxZoom

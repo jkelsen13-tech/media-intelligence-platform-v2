@@ -14,7 +14,7 @@ const {chromium,webkit}=require('playwright')
 const candidate=process.env.MIP_CANDIDATE_SHA||spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout?.trim()
 assert.match(candidate??'',/^[0-9a-f]{40}$/,'qualification identifies exact checked-out candidate')
 const origin='http://127.0.0.1:4173',base=origin+'/media-intelligence-platform-v2/'
-const selectedRoute=base+'#/event/'+QUALIFICATION_SUBJECT+'/world',browseRoute=base+'#/world'
+const selectedRoute=base+'#/event/'+QUALIFICATION_SUBJECT+'/world',unselectedEntry=base
 const server=spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
 const state=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__?.getState()??null)
 const fidelity=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()??null)
@@ -355,7 +355,12 @@ async function independentJourney(browser,engine,scene,width=1280){
   })
   const fixture=await installClusteringFixture(page,scene.name,{isolatedContractRows:true}),graphFixture=await installClusteringGraphFixture(page,{isolatedContractRows:true}),label=engine+'_'+scene.name+'_'+width
   try{
-    await page.goto(browseRoute);await settle(page)
+    // Subjectless deep links deliberately open News. Enter World View through
+    // the existing public tab so no subject identity or route is invented.
+    await page.goto(unselectedEntry)
+    assert.ok(!(await context(page))['canonical-subject-id'],'fresh entry has no seeded canonical subject')
+    await page.getByRole('tablist',{name:'Evidence views',exact:true}).getByRole('tab',{name:'World View',exact:true}).click()
+    await settle(page)
     assert.equal(fixture.receipt.syntheticContractRows,48)
     assert.ok(!(await context(page))['canonical-subject-id'],'independent browse has no fabricated auto-selection')
     const sourceFingerprint=JSON.stringify(fixture.getRows()),scales=[]
