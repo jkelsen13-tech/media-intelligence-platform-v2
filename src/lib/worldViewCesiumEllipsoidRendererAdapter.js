@@ -194,6 +194,63 @@ export function destroyCesiumResources({ eventHandler, viewer }) {
   }
 }
 
+// Renderer-owned failure lifetime. Cesium raises renderError from inside draw;
+// destroying its Scene there can resume the draw against destroyed resources.
+// Capture synchronously, stop new frames, then tear down after this stack exits.
+export function createGlobeFailureLifecycle({
+  viewer,
+  isCancelled = () => false,
+  onFatalFailure,
+  destroyResources,
+  enqueue = callback => queueMicrotask(callback),
+}) {
+  let failed = false
+  let disposed = false
+  let queued = false
+  const removers = []
+  function removeListeners() {
+    for (const remove of removers.splice(0)) remove?.()
+  }
+  function dispose() {
+    if (disposed) return
+    disposed = true
+    removeListeners()
+    destroyResources?.()
+  }
+  function deferDispose() {
+    if (queued || disposed) return
+    queued = true
+    enqueue(dispose)
+  }
+  function fail(kind, error) {
+    if (failed || disposed || isCancelled() || viewer?.isDestroyed?.()) return false
+    failed = true
+    // Public Viewer governance; native loss can otherwise leave an alive loop
+    // which issues draws against the lost context.
+    viewer.useDefaultRenderLoop = false
+    removeListeners()
+    deferDispose()
+    // The owner reads the still-live camera before any destruction. Even a
+    // synchronous owner cleanup must respect the deferred failure boundary.
+    onFatalFailure?.(kind, error)
+    return true
+  }
+  const canvas = viewer?.canvas
+  const onContextLost = () => fail('context-lost')
+  if (canvas?.addEventListener) {
+    canvas.addEventListener('webglcontextlost', onContextLost)
+    removers.push(() => canvas.removeEventListener('webglcontextlost', onContextLost))
+  }
+  const removeRenderError = viewer?.scene?.renderError?.addEventListener?.((scene, error) => fail('render-error', error))
+  if (typeof removeRenderError === 'function') removers.push(removeRenderError)
+  return {
+    destroy() {
+      if (failed) deferDispose()
+      else dispose()
+    },
+  }
+}
+
 // Normalize the Vite deployment base into the URL Cesium uses to resolve
 // its static Workers/Assets/Widgets directories.
 //
@@ -267,6 +324,7 @@ export function createCesiumEllipsoidRendererAdapter({
   }
 
   let viewer = null
+  let failureLifecycle = null
   let ownedHost = null
   let eventHandler = null
   let entities = []
@@ -430,19 +488,22 @@ export function createCesiumEllipsoidRendererAdapter({
       /* ignore */
     }
 
-    viewer.scene.renderError.addEventListener((scene, renderError) => {
-      // eslint-disable-next-line no-console
-      console.error('Cesium render failure; falling back to MapLibre:', renderError?.message ?? renderError)
-      if (cancelledNow() || !viewer) return
-      // Capture the live display camera synchronously before fatal teardown.
-      onStackIdChange?.('openfreemap-positron')
-      destroyCesiumResources({ eventHandler, viewer })
-      terrainPlan?.destroy?.()
-      ownedHost?.destroy()
-      ownedHost = null
-      viewer = null
-      eventHandler = null
-      entities = []
+    failureLifecycle = createGlobeFailureLifecycle({
+      viewer,
+      isCancelled: cancelledNow,
+      onFatalFailure: (kind, error) => {
+        localCancelled = true
+        for (const remove of removeLayoutListeners.splice(0)) remove?.()
+        // Native loss is a distinct actual browser failure, not a synthesized
+        // Scene.renderError. Report it honestly and transition only once.
+        // eslint-disable-next-line no-console
+        if (kind === 'context-lost') console.error('Cesium WebGL context lost; falling back to MapLibre.')
+        // eslint-disable-next-line no-console
+        else console.error('Cesium render failure; falling back to MapLibre:', error?.message ?? error)
+        // WorldMapCanvas captures the camera here before deferred teardown.
+        onStackIdChange?.('openfreemap-positron')
+      },
+      destroyResources: destroyRendererResources,
     })
 
     // The widget otherwise rewrites canAnimate on every data-source tick.
@@ -767,9 +828,8 @@ export function createCesiumEllipsoidRendererAdapter({
     return applyCameraStateToGlobeViewer(Cesium, viewer, parsed)
   }
 
-  function destroy() {
+  function destroyRendererResources() {
     for (const remove of removeLayoutListeners.splice(0)) remove?.()
-    localCancelled = true
     labelMeasurements.clear()
     terrainPlan?.destroy?.()
     destroyCesiumResources({ eventHandler, viewer })
@@ -780,6 +840,12 @@ export function createCesiumEllipsoidRendererAdapter({
     entities = []
     terrainPlan = null
     terrainDegraded = false
+  }
+
+  function destroy() {
+    localCancelled = true
+    if (failureLifecycle) failureLifecycle.destroy()
+    else destroyRendererResources()
     mounted = false
   }
 

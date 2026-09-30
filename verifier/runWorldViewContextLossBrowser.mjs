@@ -217,12 +217,14 @@ async function delayedBootJourney(browser) {
 async function journey(browser, width) {
   const page = await browser.newPage({ viewport: { width, height: 900 }, hasTouch: width < 600 })
   const verifyBoundary = observeBackendBoundary(page), errors = [], transitions = []
-  const counts = { imagery: 0, terrain: 0, renderFailures: 0 }
+  const counts = { imagery: 0, terrain: 0, renderFailures: 0, contextLossFailures: 0 }
   let lossReceipt = null, before = null, saved = null, originalContext = null
   page.on('pageerror', error => errors.push({ name: error.name, message: error.message }))
   page.on('console', message => {
     if (message.type() === 'error' && message.text().startsWith('Cesium render failure; falling back to MapLibre:'))
       counts.renderFailures++
+    if (message.type() === 'error' && message.text() === 'Cesium WebGL context lost; falling back to MapLibre.')
+      counts.contextLossFailures++
   })
   page.on('request', request => {
     const url = new URL(request.url())
@@ -241,7 +243,7 @@ async function journey(browser, width) {
     assert.ok(before.renderedFrames > 0 && before.globeTilesLoaded && before.markers.length > 0,
       'real globe has completed rendered frames, terrain/imagery tiles, and original markers')
     assert.equal(before.requestRenderMode, true)
-    assert.equal(counts.renderFailures, 0); assert.deepEqual(errors, [])
+    assert.equal(counts.renderFailures, 0); assert.equal(counts.contextLossFailures, 0); assert.deepEqual(errors, [])
     originalContext = await publicContext(page)
     const originalEvidence = await evidenceFields(page), precisionClass = originalEvidence['Precision class']
     assert.equal(originalContext['canonical-subject-id'], QUALIFICATION_SUBJECT)
@@ -275,7 +277,8 @@ async function journey(browser, width) {
       throw new Error('UNQUALIFIED: native context loss did not reach fatal fallback; renderFailures=' +
         counts.renderFailures + ', postLossFrames=' + ((diagnostic?.renderedFrames ?? 0) - before.renderedFrames))
     }
-    assert.ok(counts.renderFailures > 0, 'observed actual application render failure activates fallback')
+    assert.equal(counts.contextLossFailures, 1, 'actual native context-loss handler activates one truthful fallback')
+    assert.equal(counts.renderFailures, 0, 'native loss is handled before a failed draw; no synthetic or repeated renderError')
     assert.ok(['openfreemap-positron', 'osm'].includes(current),
       'interactive camera continuity requires supported MapLibre fallback; static Atlas cannot attest it')
     await settleMap(page)
@@ -305,7 +308,8 @@ async function journey(browser, width) {
     assert.equal(idleAfter.labelLayout.passes, idleBefore.labelLayout.passes, 'settled fallback has no layout/repaint loop')
     assert.equal(idleRaster.whole.changedPixels, 0, 'settled replacement pixels remain stable')
     assert.equal(counts.imagery, requestsBefore.imagery); assert.equal(counts.terrain, requestsBefore.terrain)
-    assert.equal(counts.renderFailures, requestsBefore.renderFailures, 'no repeated fatal transition')
+    assert.equal(counts.renderFailures, requestsBefore.renderFailures, 'no repeated render-error transition')
+    assert.equal(counts.contextLossFailures, requestsBefore.contextLossFailures, 'no repeated native-loss transition')
     assert.equal(await fallbackCanvas.evaluate(canvas => canvas.isConnected), true, 'settled fallback does not remount')
     assert.equal(await stack(page), current); assertRetainedMapCamera(idleAfter.mapCamera, saved, precisionClass)
     assert.deepEqual(await publicContext(page), originalContext); assert.deepEqual(await evidenceFields(page), originalEvidence)
