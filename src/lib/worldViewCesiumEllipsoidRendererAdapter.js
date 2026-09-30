@@ -1,3 +1,5 @@
+import { createDisplayPresentation, displayPresentationSignature, globeDisplayMarkers, applyGlobeDisplayPresentation } from './worldViewDisplayPresentation.js'
+import { displayMarkerKey } from './worldViewDisplayClusters.js'
 import { createMarkerLabelMeasurer, dispatchGlobeMarkerPick, updateGlobeMarkerLayout } from './worldViewMarkerLayout.js'
 import { createCesiumRefinementController } from './worldViewCesiumRefinement.js'
 import { createRecordedLightingController } from './worldViewCesiumRecordedLighting.js'
@@ -171,7 +173,7 @@ export function cesiumMarkerEntityDescriptors(features = []) {
     return positions.map((position, i) => ({
       id: `${row.revision_id ?? row.mip_object_id}-${i}`,
       row,
-      position,
+      position, positionIndex: i,
       selected: Boolean(f.selected),
       label: f.label ?? null,
       coords: f.coords ?? null,
@@ -319,6 +321,7 @@ export function createCesiumEllipsoidRendererAdapter({
   initialFeatures,
   recordedTimeInstant,
   isCancelled,
+  relationships = [], onDisplayLayout,
 }) {
   // Ensure this adapter is only used for the ellipsoid globe stack id.
   if (stackId !== ELLIPSOID_GLOBE_STACK_ID && stackId !== undefined) {
@@ -339,6 +342,8 @@ export function createCesiumEllipsoidRendererAdapter({
   const layoutTiming = { lastMs: 0, maxMs: 0, passes: 0, entityCount: 0 }
   const removeLayoutListeners = []
   let currentOnSelectRow = onSelectRow
+  let currentRelationships = relationships, currentSelectedKeys = getSelectedKeys?.() ?? new Set()
+  let displayPresentation = null, displaySignature = ''
   let localCancelled = false
   let Cesium = null
   // Stage D: bounded terrain state. `terrainPlan` holds the MIP-owned
@@ -521,7 +526,7 @@ export function createCesiumEllipsoidRendererAdapter({
       // Every actual frame includes small camera moves and responsive resizes.
       // Only a changed visibility result requests one correction frame.
       const started = performance.now()
-      const changed = updateGlobeMarkerLayout(Cesium, viewer, entities, measureLabel)
+      const changed = refreshDisplayLayout()
       const elapsed = Math.max(0, performance.now() - started)
       layoutTiming.lastMs = elapsed
       layoutTiming.maxMs = Math.max(layoutTiming.maxMs, elapsed)
@@ -603,6 +608,8 @@ export function createCesiumEllipsoidRendererAdapter({
       // Custom field used by pick handler.
       entity.__mipRow = d.row
       entity.__mipSelected = isSelected
+      entity.__mipMarker = { id: displayMarkerKey(d.row, d.positionIndex), row: d.row,
+        position: d.position, positionIndex: d.positionIndex, label, selected: isSelected }
       entities.push(entity)
     }
 
@@ -619,8 +626,29 @@ export function createCesiumEllipsoidRendererAdapter({
     }
   }
 
+  function refreshDisplayLayout() {
+    if (!viewer || !Cesium || cancelledNow()) return false
+    const scene = viewer.scene
+    const markers = globeDisplayMarkers(Cesium, viewer, entities, measureLabel)
+    displayPresentation = createDisplayPresentation(markers, {
+      width: scene.canvas.clientWidth, height: scene.canvas.clientHeight,
+      cameraHeightMeters: viewer.camera.positionCartographic.height,
+      relationships: currentRelationships, selectedKeys: currentSelectedKeys,
+    })
+    const changed = applyGlobeDisplayPresentation(viewer, entities, displayPresentation)
+    const signature = displayPresentationSignature(displayPresentation)
+    if (signature !== displaySignature) {
+      displaySignature = signature
+      onDisplayLayout?.(displayPresentation)
+    }
+    return changed
+  }
+
   async function setFeatures(nextFeatures, nextSelectedKeys = getSelectedKeys?.()) {
     if (!viewer || !Cesium) return
+    currentSelectedKeys = nextSelectedKeys ?? new Set()
+    displaySignature = ''
+    displayPresentation = null
     const descriptors = cesiumMarkerEntityDescriptors(nextFeatures ?? [])
 
     // Update selection visuals without rewriting row identity.
@@ -680,6 +708,8 @@ export function createCesiumEllipsoidRendererAdapter({
 
       entity.__mipRow = d.row
       entity.__mipSelected = isSelected
+      entity.__mipMarker = { id: displayMarkerKey(d.row, d.positionIndex), row: d.row,
+        position: d.position, positionIndex: d.positionIndex, label, selected: isSelected }
       entities.push(entity)
     }
 
@@ -834,6 +864,8 @@ export function createCesiumEllipsoidRendererAdapter({
   function destroyRendererResources() {
     for (const remove of removeLayoutListeners.splice(0)) remove?.()
     labelMeasurements.clear()
+    displayPresentation = null
+    displaySignature = ''
     terrainPlan?.destroy?.()
     destroyCesiumResources({ eventHandler, viewer })
     ownedHost?.destroy()
@@ -871,6 +903,14 @@ export function createCesiumEllipsoidRendererAdapter({
     mount,
     setFeatures,
     setOnSelectRow,
+    setRelationships: edges => {
+      if (cancelledNow()) return
+      currentRelationships = edges ?? []
+      displaySignature = ''
+      if (refreshDisplayLayout()) viewer?.scene?.requestRender?.()
+    },
+    getDisplayLayout: () => { if (refreshDisplayLayout()) viewer?.scene?.requestRender?.(); return displayPresentation },
+    getDisplayTiming: () => ({ ...layoutTiming }),
     flyToSubjectCamera,
     cancelCameraFlight: () => cancelGlobeCameraFlight(viewer),
     getCameraState,

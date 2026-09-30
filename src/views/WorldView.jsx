@@ -16,6 +16,7 @@ import GraphView from '../graph/GraphView'
 import TrustFooter from '../components/TrustFooter'
 import WorldMapCanvas from './WorldMapCanvas'
 import { createCameraMemory } from '../lib/worldViewCameraMemory.js'
+import WorldViewRelationshipPanel from '../components/WorldViewRelationshipPanel'
 import WorldViewVisualFidelityPanel from '../components/WorldViewVisualFidelityPanel'
 import { defaultVisualFidelityProfile, reduceVisualFidelityProfile, visualFidelityCapabilities } from '../lib/worldViewVisualFidelity.js'
 import {
@@ -404,6 +405,8 @@ export default function WorldView({
   const cameraMemoryRef = useRef(null)
   if (!cameraMemoryRef.current) cameraMemoryRef.current = createCameraMemory()
   const [mode, setMode] = useState('map')
+  const [relationshipDisplay, setRelationshipDisplay] = useState(null)
+  useEffect(() => { if (mode === 'graph') setRelationshipDisplay(null) }, [mode])
   const [visualFidelity, setVisualFidelity] = useState(defaultVisualFidelityProfile)
   const [fidelityCapabilities, setFidelityCapabilities] = useState(visualFidelityCapabilities)
   const [touchInteraction, setTouchInteraction] = useState(false)
@@ -613,6 +616,8 @@ export default function WorldView({
                 rows={mapRows}
                 selectedKeys={selectedKeys}
                 onSelectRow={handleMapSelect}
+                relationships={worldGraph.edges}
+                onRelationshipDisplay={setRelationshipDisplay}
                 emptyMessage={emptyMessage}
               />
             )}
@@ -647,6 +652,12 @@ export default function WorldView({
               </div>
             )}
           </div>
+          {worldGraph.status === 'loading' ? <p className="wv-meta">Loading relationship records…</p> : (
+            <WorldViewRelationshipPanel edges={worldGraph.edges} nodes={worldGraph.nodes}
+              selectedKeys={selectedKeys} displaySummary={relationshipDisplay}
+              edgesUnavailable={worldGraph.edgesUnavailable ?? (worldGraph.status === 'unavailable' ? worldGraph.reason ?? 'unavailable' : null)}
+              onSelectNode={onSelectGraphNode} />
+          )}
           <TimelineScrubber
             stamps={stamps}
             time={recordedTime}

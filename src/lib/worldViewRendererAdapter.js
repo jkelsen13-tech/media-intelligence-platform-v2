@@ -1,3 +1,5 @@
+import { createDisplayPresentation, displayPresentationSignature } from './worldViewDisplayPresentation.js'
+import { displayMarkerKey } from './worldViewDisplayClusters.js'
 import { normalizeVisualFidelityProfile, visualFidelityCapabilities } from './worldViewVisualFidelity.js'
 // R4 World View — renderer adapter seam (MapLibre + deck.gl 2D/2.5D).
 //
@@ -208,11 +210,12 @@ const MAP_LABEL_FONT = 'normal 12px ' + MAP_LABEL_FONT_FAMILY
 const MAP_LABEL_ATLAS_SIZE = 64
 const mapProjectionLabelText = d => String(d.label || d.row.precision_class || 'projected location').replace(/\r\n?|\n/g, '\n')
 
-function mapProjectionPointRecords(features, selectedKeys) {
+export function mapProjectionPointRecords(features, selectedKeys) {
   return (features ?? []).flatMap((feature, featureIndex) =>
     feature.positions.map((position, positionIndex) => ({
       ...feature,
-      position,
+      position, positionIndex,
+      id: displayMarkerKey(feature.row, positionIndex),
       selected: selectedKeys
         ? selectedKeys.has(String(feature.row.mip_object_id)) || selectedKeys.has(String(feature.row.subject_graph_node_id))
         : Boolean(feature.selected),
@@ -233,6 +236,8 @@ export function createMapMarkerLabelLayout(map, {
   onChange, isCancelled = () => false,
   createContext = () => map?.getCanvas?.()?.ownerDocument?.createElement('canvas').getContext('2d'),
   now = () => globalThis.performance?.now?.() ?? Date.now(),
+  displayClustering = false, getRelationships = () => [], getSelectedKeys = () => new Set(),
+  onDisplayLayout,
 } = {}) {
   // TextLayer 9.4 lays out individual glyph advances at the atlas font size,
   // then scales them to CSS pixels. Whole-string measureText at 12px would
@@ -272,7 +277,7 @@ export function createMapMarkerLabelLayout(map, {
       },
     }
   })
-  let points = [], labels = [], accepted = new Set()
+  let points = [], labels = [], accepted = new Set(), presentation = null, presentationSignature = ''
   let destroyed = false, updating = false
   const stats = { points: 0, labels: 0, passes: 0, lastMs: 0, maxMs: 0 }
 
@@ -295,23 +300,35 @@ export function createMapMarkerLabelLayout(map, {
         catch { /* unavailable projection cannot place a label */ }
         const label = mapProjectionLabelText(point)
         return {
-          id: point.labelLayoutId, selected: point.selected, label,
+          ...point, id: displayClustering ? point.id : point.labelLayoutId, selected: point.selected, label,
           ...measurer.measure(label, MAP_LABEL_FONT),
           x: screen?.x, y: screen?.y,
           visible: Number.isFinite(screen?.x) && Number.isFinite(screen?.y)
             && screen.x >= 0 && screen.x <= width && screen.y >= 0 && screen.y <= height,
         }
       })
-      const next = visibleLabelIds(candidates, { width, height, cameraHeightMeters })
+      if (displayClustering) {
+        presentation = createDisplayPresentation(candidates, {
+          width, height, cameraHeightMeters,
+          relationships: getRelationships(), selectedKeys: getSelectedKeys(),
+        })
+      }
+      const next = displayClustering ? presentation.labels
+        : visibleLabelIds(candidates, { width, height, cameraHeightMeters })
+      const signature = displayClustering ? displayPresentationSignature(presentation) : ''
       const changed = next.size !== accepted.size || [...next].some(id => !accepted.has(id))
+        || (displayClustering && signature !== presentationSignature)
+      presentationSignature = signature
       accepted = next
       // Retain the exact point objects for deck accessors and row picking.
-      labels = points.filter(point => accepted.has(point.labelLayoutId))
+      labels = displayClustering ? presentation.layout.singles.filter(point => accepted.has(point.id))
+        : points.filter(point => accepted.has(point.labelLayoutId))
       stats.points = points.length
       stats.labels = labels.length
       stats.passes += 1
       stats.lastMs = Math.max(0, now() - started)
       stats.maxMs = Math.max(stats.maxMs, stats.lastMs)
+      if (displayClustering && changed && !destroyed && !isCancelled()) onDisplayLayout?.(presentation)
       if (changed && notify && !destroyed && !isCancelled()) onChange?.()
       return changed
     } finally { updating = false }
@@ -324,9 +341,18 @@ export function createMapMarkerLabelLayout(map, {
     setFeatures(features, selectedKeys) {
       if (destroyed || isCancelled()) return false
       points = mapProjectionPointRecords(features, selectedKeys)
+      if (displayClustering) presentationSignature = ''
       return update(false)
     },
-    getLayerData: () => ({ pointData: points, labelData: labels }),
+    refreshRelationships() {
+      if (destroyed || isCancelled()) return false
+      // New reader snapshots may retain all edge IDs and display positions.
+      // Publish the current original records without serializing their payloads.
+      if (displayClustering) presentationSignature = ''
+      return update()
+    },
+    getLayerData: () => ({ pointData: displayClustering ? presentation?.layout.singles ?? [] : points, labelData: labels }),
+    getDisplayLayout: () => presentation,
     getStats: () => ({ ...stats }),
     destroy() {
       if (destroyed) return
@@ -334,6 +360,8 @@ export function createMapMarkerLabelLayout(map, {
       for (const event of ['render', 'move', 'resize']) map?.off?.(event, refresh)
       points = []
       labels = []
+      presentation = null
+      presentationSignature = ''
       accepted.clear()
       measurer.clear()
       stats.points = 0
@@ -438,6 +466,63 @@ export function requestRepaint(map) {
   // Else: MapLibre will still repaint on its own; this is a best-effort.
 }
 
+function mapResizeOwnerWindow(host) {
+  const view = host?.ownerDocument?.defaultView
+  return view && typeof view.requestAnimationFrame === 'function'
+    && typeof view.cancelAnimationFrame === 'function'
+    && (typeof view.ResizeObserver === 'function'
+      || (typeof view.addEventListener === 'function' && typeof view.removeEventListener === 'function'))
+    ? view : null
+}
+
+/**
+ * MapLibre 6's native resize throttle can write canvas dimensions during a
+ * ResizeObserver delivery. Observe the same host, but do that renderer work
+ * once on the next frame. Normal resize events still update precision/labels.
+ */
+export function createMapContainerResizeScheduler(map, host, { isCancelled = () => false } = {}) {
+  const view = mapResizeOwnerWindow(host)
+  if (!view) return null
+  let disposed = false, frame = null, observer = null
+  const dimensions = () => ({
+    width: host.clientWidth, height: host.clientHeight, pixelRatio: view.devicePixelRatio ?? 1,
+  })
+  let applied = dimensions()
+  const schedule = () => {
+    if (disposed || isCancelled() || frame !== null) return
+    frame = view.requestAnimationFrame(() => {
+      frame = null
+      if (disposed || isCancelled()) return
+      const next = dimensions()
+      if (next.width === applied.width && next.height === applied.height && next.pixelRatio === applied.pixelRatio) return
+      applied = next
+      map.resize()
+      if (disposed || isCancelled()) return
+      if (typeof map.redraw === 'function') map.redraw()
+      else requestRepaint(map)
+    })
+  }
+  const destroy = () => {
+    if (disposed) return
+    disposed = true
+    observer?.disconnect()
+    view.removeEventListener?.('resize', schedule)
+    if (frame !== null) view.cancelAnimationFrame(frame)
+    frame = null
+  }
+  try {
+    if (typeof view.ResizeObserver === 'function') {
+      observer = new view.ResizeObserver(schedule)
+      observer.observe(host)
+    }
+    view.addEventListener?.('resize', schedule)
+  } catch (error) {
+    destroy()
+    throw error
+  }
+  return { destroy }
+}
+
 export function destroyRendererResources({ overlay, map }) {
   if (overlay) {
     try {
@@ -507,6 +592,7 @@ function createMapLibreWorldViewRendererAdapter({
   markFlew,
   initialFeatures,
   isCancelled,
+  relationships = [], onDisplayLayout,
 }) {
   let map = null
   let overlay = null
@@ -515,7 +601,9 @@ function createMapLibreWorldViewRendererAdapter({
   let currentOnSelectRow = onSelectRow
   let localCancelled = false
   let precisionGovernor = null
+  let containerResize = null
   let labelLayout = null
+  let currentRelationships = relationships, currentSelectedKeys = getSelectedKeys?.() ?? new Set()
   const lifecycleListeners = []
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
@@ -584,6 +672,7 @@ function createMapLibreWorldViewRendererAdapter({
         maxZoom: cap,
         attributionControl: false,
         cooperativeGestures: false,
+        trackResize: !mapResizeOwnerWindow(hostEl),
       })
     } catch {
       if (!cancelledNow()) onStackIdChange?.(nextMapStackOnFailure(stackId))
@@ -614,7 +703,7 @@ function createMapLibreWorldViewRendererAdapter({
         initialFeatures,
         currentOnSelectRow,
         getSelectedKeys?.() ?? new Set(),
-        { labelData: [] },
+        { pointData: [], labelData: [] },
       ),
     })
     localMap.addControl(localOverlay)
@@ -637,6 +726,14 @@ function createMapLibreWorldViewRendererAdapter({
     map = localMap
     overlay = localOverlay
     deckLayerCtors = { ScatterplotLayer, TextLayer }
+    try {
+      containerResize = createMapContainerResizeScheduler(map, hostEl, { isCancelled: cancelledNow })
+    } catch {
+      const canFallback = !cancelledNow()
+      destroy()
+      if (canFallback) onStackIdChange?.(nextMapStackOnFailure(stackId))
+      return
+    }
     precisionGovernor = createMapPrecisionGovernor(map, {
       getPrecisionClass: activePrecisionClass,
       onUnavailable: () => { if (!cancelledNow()) onStackIdChange?.(FALLBACK_MAP_STACK_ID) },
@@ -652,6 +749,8 @@ function createMapLibreWorldViewRendererAdapter({
     }
     labelLayout = createMapMarkerLabelLayout(map, {
       isCancelled: cancelledNow,
+      displayClustering: true, getRelationships: () => currentRelationships,
+      getSelectedKeys: () => currentSelectedKeys, onDisplayLayout,
       onChange: () => { publishLayers(); requestRepaint(map) },
     })
     labelLayout.setFeatures(initialFeatures, getSelectedKeys?.() ?? new Set())
@@ -678,7 +777,8 @@ function createMapLibreWorldViewRendererAdapter({
     if (cancelledNow()) return
     precisionGovernor?.update()
     if (!overlay || !deckLayerCtors || !labelLayout || stackId === FALLBACK_MAP_STACK_ID) return
-    labelLayout.setFeatures(nextFeatures, nextSelectedKeys ?? new Set())
+    currentSelectedKeys = nextSelectedKeys ?? new Set()
+    labelLayout.setFeatures(nextFeatures, currentSelectedKeys)
     overlay.setProps({
       layers: deckProjectionLayers(deckLayerCtors, nextFeatures, currentOnSelectRow,
         nextSelectedKeys ?? new Set(), labelLayout.getLayerData()),
@@ -749,6 +849,8 @@ function createMapLibreWorldViewRendererAdapter({
 
   function destroy() {
     localCancelled = true
+    containerResize?.destroy()
+    containerResize = null
     labelLayout?.destroy()
     labelLayout = null
     for (const [event, listener] of lifecycleListeners.splice(0)) map?.off?.(event, listener)
@@ -766,6 +868,9 @@ function createMapLibreWorldViewRendererAdapter({
     mount,
     setFeatures,
     setOnSelectRow,
+    setRelationships: edges => { currentRelationships = edges ?? []; labelLayout?.refreshRelationships() },
+    getDisplayLayout: () => { labelLayout?.update(false); return labelLayout?.getDisplayLayout() ?? null },
+    getDisplayTiming: () => labelLayout?.getStats() ?? {},
     flyToSubjectCamera: flyToSubjectCamera,
     cancelCameraFlight: () => cancelMapCameraFlight(map),
     getCameraState,
@@ -798,6 +903,7 @@ export function createWorldViewRendererAdapter(args, {
   let features = args?.initialFeatures ?? []
   let selectedKeys = args?.getSelectedKeys?.() ?? new Set()
   let onSelectRow = args?.onSelectRow
+  let relationships = args?.relationships ?? []
   let reliefShadingEnabled
   let visualFidelityProfile
   let recordedTimeInstant = args?.recordedTimeInstant ?? null
@@ -809,6 +915,7 @@ export function createWorldViewRendererAdapter(args, {
     const currentArgs = () => ({
       ...args,
       initialFeatures: features,
+      relationships,
       recordedTimeInstant,
       getSelectedKeys: () => selectedKeys,
       onSelectRow,
@@ -836,12 +943,21 @@ export function createWorldViewRendererAdapter(args, {
     if (cancelled()) return
     // Updates can arrive during either dynamic import or renderer startup.
     // Replay the latest snapshot only once the renderer can accept layers.
-    ready = true
     impl?.setOnSelectRow?.(onSelectRow)
     if (reliefShadingEnabled !== undefined) impl?.setReliefShadingEnabled?.(reliefShadingEnabled)
     impl?.setRecordedTimeInstant?.(recordedTimeInstant)
+    let replayedFeatures, replayedSelectedKeys
+    do {
+      replayedFeatures = features
+      replayedSelectedKeys = selectedKeys
+      await impl?.setFeatures?.(replayedFeatures, replayedSelectedKeys)
+      if (cancelled()) return
+    } while (replayedFeatures !== features || replayedSelectedKeys !== selectedKeys)
+    impl?.setRelationships?.(relationships)
+    // Replay retained effects after asynchronous layer startup. There must be
+    // no awaited work between enabling them and the canvas readiness publisher.
     if (visualFidelityProfile) impl?.setVisualFidelityProfile?.(visualFidelityProfile)
-    await impl?.setFeatures?.(features, selectedKeys)
+    if (!cancelled()) ready = true
   }
 
   function mount() {
@@ -864,6 +980,13 @@ export function createWorldViewRendererAdapter(args, {
       onSelectRow = nextOnSelectRow
       if (ready) impl?.setOnSelectRow?.(onSelectRow)
     },
+    setRelationships: edges => {
+      if (cancelled()) return
+      relationships = edges ?? []
+      if (ready) impl?.setRelationships?.(relationships)
+    },
+    getDisplayLayout: () => !cancelled() ? impl?.getDisplayLayout?.() ?? null : null,
+    getDisplayTiming: () => impl?.getDisplayTiming?.() ?? {},
     flyToSubjectCamera: (opts) => ready && !cancelled() ? impl?.flyToSubjectCamera?.(opts) ?? false : false,
     cancelCameraFlight: () => ready && !cancelled() ? impl?.cancelCameraFlight?.() ?? false : false,
     getCameraState: () => impl?.getCameraState?.() ?? null,

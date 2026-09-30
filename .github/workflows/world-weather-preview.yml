@@ -78,6 +78,14 @@ on:
       - 'src/lib/worldViewAtlasLabelLayout.js'
       - 'tests/worldView*.test.mjs'
       - 'src/lib/worldViewMarkerLayout.js'
+      - 'src/lib/worldViewDisplayClusters.js'
+      - 'src/lib/worldViewDisplayPresentation.js'
+      - 'src/lib/worldViewRelationshipLayout.js'
+      - 'src/components/WorldViewSpatialGroupPanel.jsx'
+      - 'src/components/WorldViewRelationshipPanel.jsx'
+      - 'src/components/world-view-spatial-groups.css'
+      - 'src/components/world-view-relationships.css'
+      - 'verifier/runWorldViewClusteringBrowser.mjs'
       - 'verifier/runWorldViewSuccessorBrowser.mjs'
       - 'verifier/runWorldViewFallbackBrowser.mjs'
       - 'verifier/runWorldViewContextLossBrowser.mjs'
@@ -195,25 +203,17 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/mip-browser" --no-package-lock --ignore-scripts playwright@1.63.0
           node "$RUNNER_TEMP/mip-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
-      - name: Qualify bounded terrain refinement
+      - name: Qualify measured clustering and documented relationship presentation
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
-        run: node verifier/runTerrainRefinementBrowser.mjs
+        run: node verifier/runWorldViewClusteringBrowser.mjs
 
-      - name: Qualify recorded dynamic atmosphere lighting
-        env:
-          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
-        run: node verifier/runDynamicAtmosphereBrowser.mjs
+
 
       - name: Qualify World View successor navigation and same-camera appearance
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runWorldViewSuccessorBrowser.mjs
-
-      - name: Qualify retained fallback camera and actual map precision limits
-        env:
-          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
-        run: node verifier/runWorldViewFallbackBrowser.mjs
 
 
   lifecycle-preview:
@@ -271,3 +271,25 @@ jobs:
         run: |
           node --check verifier/runWorldViewTabletBrowser.mjs
           node verifier/runWorldViewTabletBrowser.mjs
+
+      # Retained gates redistributed after the measured refinement job timeout.
+      - name: Qualify bounded terrain refinement
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runTerrainRefinementBrowser.mjs
+
+      - name: Qualify recorded dynamic atmosphere lighting
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runDynamicAtmosphereBrowser.mjs
+
+      - name: Qualify retained fallback camera and actual map precision limits
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWorldViewFallbackBrowser.mjs
+
+      - name: Qualify original rows and documented relationships on native fallbacks
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+          MIP_WORLD_CLUSTER_FALLBACK_ONLY: '1'
+        run: node verifier/runWorldViewClusteringBrowser.mjs

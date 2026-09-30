@@ -1,0 +1,35 @@
+/* Document-flow disclosure, using the existing World View token vocabulary. */
+.wv-relationships {
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--card-pad-y) var(--card-pad-x);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--card-radius);
+  background: var(--bg-panel);
+  color: var(--text-body);
+  font-size: var(--fs-body);
+  overflow-wrap: anywhere;
+}
+.wv-relationships > summary { font-size: var(--fs-meta); color: var(--text-primary); }
+.wv-relationships summary { cursor: pointer; min-height: 44px; align-content: center; }
+.wv-relationships-count { display: inline-block; margin-left: 10px; color: var(--text-secondary); font-size: var(--fs-meta); }
+.wv-relationships-copy { margin: 8px 0; color: var(--text-secondary); line-height: 1.45; }
+.wv-relationships-list { margin: 12px 0 0; padding-left: 22px; }
+.wv-relationships-list > li { padding: 4px 8px; border-top: 1px solid var(--border-color); }
+.wv-relationships-list > li.is-selected { border-left: 2px solid var(--accent); }
+.wv-relationship-record summary > span { margin-right: 10px; }
+.wv-relationship-type { color: var(--text-secondary); font-size: var(--fs-meta); }
+.wv-relationship-selected { color: var(--accent); font-size: var(--fs-meta); }
+.wv-relationship-fields { margin: 8px 0 12px; display: grid; gap: 8px; }
+.wv-relationship-fields dt { color: var(--text-muted); font-size: var(--fs-label); }
+.wv-relationship-fields dd { margin: 2px 0 0; min-width: 0; }
+.wv-relationship-fields pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-mono); font-size: var(--fs-meta); }
+.wv-relationship-actions, .wv-relationship-pages { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.wv-relationships button { min-height: 44px; padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--bg-panel); color: var(--text-primary); font: inherit; cursor: pointer; }
+.wv-relationships button:disabled { opacity: 0.6; cursor: default; }
+.wv-relationships :is(button, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 767px) {
+  .wv-relationships { padding: 12px; }
+  .wv-relationships-count { display: block; margin: 4px 0; }
+  .wv-relationship-record summary > span { display: block; }
+}

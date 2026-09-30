@@ -16,7 +16,7 @@ export function pointVisibleAboveEllipsoid(camera, point, radii) {
   return !(first>0&&first<1-1e-7)
 }
 
-export function visibleLabelIds(markers,{width,height,cameraHeightMeters}={}) {
+export function visibleLabelIds(markers,{width,height,cameraHeightMeters,reservedBoxes=[]}={}) {
   if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)return new Set()
   const cells=new Map(), ids=new Set()
   const cellSize=64
@@ -25,6 +25,17 @@ export function visibleLabelIds(markers,{width,height,cameraHeightMeters}={}) {
     for(let x=Math.floor((box.left-6)/cellSize);x<=Math.floor((box.right+6)/cellSize);x++)
       for(let y=Math.floor((box.top-4)/cellSize);y<=Math.floor((box.bottom+4)/cellSize);y++)keys.push(x+','+y)
     return keys
+  }
+  for (const box of reservedBoxes) {
+    if (!['left','right','top','bottom'].every(key => Number.isFinite(box?.[key]))
+      || box.right <= box.left || box.bottom <= box.top) continue
+    const clipped = { left: Math.max(0, box.left), right: Math.min(width, box.right),
+      top: Math.max(0, box.top), bottom: Math.min(height, box.bottom) }
+    if (clipped.right <= clipped.left || clipped.bottom <= clipped.top) continue
+    for (const key of keysFor(clipped)) {
+      if (!cells.has(key)) cells.set(key, [])
+      cells.get(key).push(clipped)
+    }
   }
   const ordered=[...markers].sort((a,b)=>Number(Boolean(b.selected))-Number(Boolean(a.selected))
     || String(a.id).localeCompare(String(b.id),'en'))

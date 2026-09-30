@@ -66,7 +66,7 @@ function measuredLabelBox(marker, measureBounds, mode, metrics) {
     top: marker.y - 18 / metrics.scale, bottom: marker.y + (detail ? 18 : 4) / metrics.scale }
 }
 
-export function atlasLabelLayout(markers, { width = 960, height = 480, measureBounds, screenScale = 1 } = {}) {
+export function atlasLabelLayout(markers, { width = 960, height = 480, measureBounds, screenScale = 1, reservedBoxes = [] } = {}) {
   const metrics = atlasDisplayMetrics(screenScale)
   const detailCandidates = new Set()
   const fits = box => box.left >= 0 && box.right <= width && box.top >= 0 && box.bottom <= height
@@ -87,7 +87,7 @@ export function atlasLabelLayout(markers, { width = 960, height = 480, measureBo
       labelWidth: box.right - box.left, labelHeight,
     }
   })
-  const labels = visibleLabelIds(candidates, { width, height })
+  const labels = visibleLabelIds(candidates, { width, height, reservedBoxes })
   return { labels, details: new Set([...labels].filter(id => detailCandidates.has(id))) }
 }
 
