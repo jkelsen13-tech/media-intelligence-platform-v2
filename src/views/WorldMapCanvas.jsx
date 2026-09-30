@@ -238,11 +238,42 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   pickRef.current = onSelectRow
   const relationshipCallback = useRef(onRelationshipDisplay)
   relationshipCallback.current = onRelationshipDisplay
-  const receiveDisplayLayout = useCallback(next => {
-    presentationRef.current = next
-    setPresentation(next)
-    relationshipCallback.current?.(next?.relationshipSummary ?? null)
+  const displayPublication = useRef(null)
+  const cancelDisplayPublication = useCallback(() => {
+    const pending = displayPublication.current
+    displayPublication.current = null
+    if (pending) pending.view.cancelAnimationFrame?.(pending.frame)
   }, [])
+  const receiveDisplayLayout = useCallback(next => {
+    // Picks and probes must always read the current canonical presentation.
+    presentationRef.current = next
+    if (!next) {
+      cancelDisplayPublication()
+      setPresentation(null)
+      relationshipCallback.current?.(null)
+      return
+    }
+    const view = hostRef.current?.ownerDocument?.defaultView
+      ?? (typeof window === 'undefined' ? null : window)
+    if (!view?.requestAnimationFrame) {
+      setPresentation(next)
+      relationshipCallback.current?.(next.relationshipSummary ?? null)
+      return
+    }
+    if (displayPublication.current) return
+    const pending = { view, frame: null }
+    displayPublication.current = pending
+    // MapLibre can notify synchronously from its native ResizeObserver. Commit
+    // document-flow UI after that delivery, once for the latest presentation.
+    pending.frame = view.requestAnimationFrame(() => {
+      if (displayPublication.current !== pending) return
+      displayPublication.current = null
+      const current = presentationRef.current
+      setPresentation(current)
+      relationshipCallback.current?.(current?.relationshipSummary ?? null)
+    })
+  }, [cancelDisplayPublication])
+  useEffect(() => cancelDisplayPublication, [cancelDisplayPublication])
   const selectCurrentRow = useCallback(row => {
     if (row && currentRows.current?.includes(row)) pickRef.current?.(row)
   }, [])
@@ -290,7 +321,9 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       getPrecisionClass: () => firstRef.current?.row?.precision_class,
       getSelectedKeys: () => selectedKeys,
       onSelectRow: selectCurrentRow,
-      relationships, onDisplayLayout: receiveDisplayLayout,
+      relationships, onDisplayLayout: next => {
+        if (!cancelled && adapterRef.current === adapter) receiveDisplayLayout(next)
+      },
       onStackIdChange: (next) => {
         if (cancelled) return
         memory.remember(adapter.getCameraState?.(), framingRef.current.getFramedKey(), stackId)
@@ -326,6 +359,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       cancelled = true
       adapter.destroy()
       adapterRef.current = null
+      cancelDisplayPublication()
       presentationRef.current = null
     }
     // Reboot only when the stack changes. Layer updates happen in the next effect.

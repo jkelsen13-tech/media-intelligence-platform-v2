@@ -4,6 +4,8 @@ import assert from 'node:assert/strict'
 import React from 'react'
 import TestRenderer, { act } from 'react-test-renderer'
 import { createServer } from 'vite'
+import { createDisplayPresentation } from '../src/lib/worldViewDisplayPresentation.js'
+import { displayMarkerKey } from '../src/lib/worldViewDisplayClusters.js'
 import { createWorldViewRendererAdapter } from '../src/lib/worldViewRendererAdapter.js'
 import {
   defaultVisualFidelityProfile, reduceVisualFidelityProfile, resolveVisualFidelityProfile,
@@ -221,4 +223,77 @@ test('atlas resize reprojects unchanged-scale viewport translation and extent, a
   const count = received.length
   observerCallback()
   assert.equal(received.length, count); assert.equal(disconnects, 1)
+})
+
+
+test('renderer observer delivery publishes only the latest presentation after delivery and cancels stale UI frames', async t => {
+  let root
+  const previousWindow = globalThis.window
+  let frameNumber = 0, insideObserver = false, adapterArgs
+  const frames = new Map(), cancelled = [], received = []
+  const view = {
+    requestAnimationFrame(callback) { const id = ++frameNumber; frames.set(id, callback); return id },
+    cancelAnimationFrame(id) { cancelled.push(id); frames.delete(id) },
+  }
+  globalThis.window = view
+  t.after(() => {
+    root?.unmount()
+    if (previousWindow === undefined) delete globalThis.window
+    else globalThis.window = previousWindow
+  })
+  const { Canvas } = await loadCanvas(t, {
+    createAdapter: args => {
+      adapterArgs = args
+      return {
+        mount: async () => {}, setFeatures: async () => {}, setOnSelectRow() {}, setRelationships() {},
+        setRecordedTimeInstant() {}, setVisualFidelityProfile() {}, destroy() {},
+        getVisualFidelityCapabilities: () => visualFidelityCapabilities(),
+      }
+    },
+  })
+  const row = Object.freeze({
+    projection_contract_version: 'spatial_projection_v1', mip_object_id: 'observer-row', revision_id: 'observer-version',
+    precision_class: 'city', display_geometry: Object.freeze({ type: 'Point', coordinates: Object.freeze([-81, 41]) }),
+  })
+  const marker = Object.freeze({
+    id: displayMarkerKey(row, 0), row, positionIndex: 0, x: 120, y: 140, visible: true, label: 'Recorded place',
+  })
+  const first = createDisplayPresentation([marker], { width: 800, height: 500 })
+  const latest = createDisplayPresentation([marker], { width: 1000, height: 600 })
+  const memory = { getStackId: () => 'openfreemap-positron', remember() {}, restore: () => true }
+  await act(async () => {
+    root = TestRenderer.create(React.createElement(Canvas, {
+      rows: [row], selectedKeys: new Set(), onSelectRow() {}, emptyMessage: '', cameraMemory: memory,
+      visualFidelity: defaultVisualFidelityProfile(),
+      onRelationshipDisplay: summary => {
+        assert.equal(insideObserver, false, 'parent state publication must leave native observer delivery')
+        received.push(summary)
+      },
+    }), { createNodeMock: node => node.props.className === 'wv-map-host' ? { ownerDocument: { defaultView: view } } : null })
+  })
+  received.length = 0
+  await act(async () => {
+    insideObserver = true
+    try { adapterArgs.onDisplayLayout(first); adapterArgs.onDisplayLayout(latest) }
+    finally { insideObserver = false }
+  })
+  assert.equal(received.length, 0)
+  assert.equal(frames.size, 1, 'observer bursts must schedule one UI frame')
+  assert.equal(view.__MIP_WORLD_VIEW_CLUSTER_PROBE__.getState().markers[0].id, marker.id,
+    'the current canonical presentation must be available before deferred UI publication')
+  assert.equal(root.root.findAllByProps({ className: 'wv-display-overlay' }).length, 0)
+  const frame = [...frames.values()][0]; frames.clear()
+  await act(async () => frame())
+  assert.equal(received.length, 1); assert.equal(received[0], latest.relationshipSummary)
+  assert.equal(root.root.findByProps({ className: 'wv-display-overlay' }).props.style.width, '1000px')
+  assert.equal(latest.layout.singles[0], marker); assert.equal(marker.row, row)
+  await act(async () => adapterArgs.onDisplayLayout(first))
+  const staleFrame = [...frames.values()][0]
+  assert.equal(frames.size, 1)
+  await act(async () => root.unmount())
+  assert.equal(frames.size, 0); assert.equal(cancelled.length, 1)
+  const count = received.length
+  await act(async () => { staleFrame(); adapterArgs.onDisplayLayout(latest) })
+  assert.equal(received.length, count, 'cancelled frames and disposed renderer callbacks must not publish')
+  assert.equal(view.__MIP_WORLD_VIEW_CLUSTER_PROBE__, undefined)
 })

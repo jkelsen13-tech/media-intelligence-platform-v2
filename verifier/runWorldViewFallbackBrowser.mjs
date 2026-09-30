@@ -132,8 +132,57 @@ async function mapLabelJourney(browser,kind){
     await page.mouse.move(0,0);await settleFallback(page)
     const initial=await fallbackState(page),canvas=await page.locator('.wv-map-host canvas').first().elementHandle()
     assertLabelStats(initial.labelLayout,fixture.coordinateCount)
+    let sparseScaleQualification=null
     if(kind==='dense')await assertDenseGrouping(page)
-    else assert.ok(initial.labelLayout.labels>1,'local sparse scene displays multiple independent labels')
+    else{
+      // The shared64 CSS-pixel grouping radius admits these four local positions
+      // at100000m in MapLibre. Qualify that group before testing finer-scale labels.
+      const coarse=await groupingState(page),eligible=coarse?.markers.filter(marker=>marker.eligible)
+      assert.equal(coarse?.markers.length,fixture.coordinateCount,'sparse grouping retains every original geometry location')
+      assert.equal(eligible?.length,4,'four local sparse locations are admitted while the opposite-hemisphere member stays clipped')
+      assert.equal(new Set(coarse.markers.map(marker=>marker.rowKey)).size,1,'five sparse locations remain one original projection row')
+      assert.equal(coarse.layout.singles.length,0)
+      assert.equal(coarse.layout.clusters.length,1)
+      const coarseGroup=coarse.layout.clusters[0]
+      assert.equal(coarseGroup.rowCount,1);assert.equal(coarseGroup.locationCount,4)
+      assert.deepEqual([...coarseGroup.memberIds].sort(),eligible.map(marker=>marker.id).sort(),'coarse group preserves exact admitted original membership')
+      assert.equal(coarse.layout.stats.targetCount,1);assert.ok(coarseGroup.selected,'selected sparse row remains discoverable through the group')
+      assert.equal(initial.labelLayout.labels,0,'grouped original labels yield to the inspectable badge')
+      const inspector=page.getByRole('complementary',{name:'Selected-event inspector'})
+      const fields=()=>inspector.evaluate(node=>{
+        const keep=new Set(['When','Valid-time precision','Location','Precision class','Geometry status','Uncertainty','Uncertainty note','Review','Release'])
+        return Object.fromEntries([...node.querySelectorAll('.wv-field')].map(n=>[n.querySelector('dt')?.textContent,n.querySelector('dd')?.textContent]).filter(([key])=>keep.has(key)))
+      })
+      const originalFields=await fields()
+      assert.equal(Object.keys(originalFields).length,9,'scale qualification binds all original selected-row fields')
+      const separatedCamera={...local,heightMeters:50000}
+      assert.ok(separatedCamera.heightMeters>=heightMetersForPrecisionClass(initial.mapCamera.precisionClass),'closer sparse camera respects the original precision floor')
+      assert.equal(await page.evaluate(s=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(JSON.stringify(s)),separatedCamera),true)
+      await settleFallback(page)
+      const separated=await fallbackState(page),fine=await groupingState(page)
+      assertLabelStats(separated.labelLayout,fixture.coordinateCount)
+      assert.ok(Math.abs(separated.mapCamera.bridgeHeightMeters-separatedCamera.heightMeters)<1,'sparse readability uses the requested legal camera height')
+      assert.equal(fine.markers.filter(marker=>marker.eligible).length,4)
+      assert.equal(fine.layout.clusters.length,0,'legal zoom separates the four original local positions')
+      assert.equal(fine.layout.singles.length,4);assert.equal(fine.layout.stats.targetCount,4)
+      assert.equal(fine.markers.filter(marker=>marker.visible&&marker.displayed).length,4,'separated original symbols are actually drawn')
+      assert.ok(separated.labelLayout.labels>1,'separated sparse scene displays multiple independent labels')
+      assert.deepEqual(await fields(),originalFields,'zoom never changes original geometry, precision or source fields')
+      assert.deepEqual(await publicContext(page),originalContext);assert.equal(page.url(),route)
+      assert.equal(await canvas.evaluate(node=>node.isConnected),true)
+      console.log('MIP_WORLD_MAP_LABEL_SPARSE_SEPARATED_CONTEXT='+(await contextScreenshot(page)).toString('base64'))
+      sparseScaleQualification={coarse:{camera:initial.mapCamera,originalLocations:coarse.markers.length,eligibleLocations:eligible.length,
+        projectionRows:coarseGroup.rowCount,groupLocations:coarseGroup.locationCount,targets:coarse.layout.stats.targetCount,labels:initial.labelLayout.labels},
+        separated:{camera:separated.mapCamera,originalLocations:fine.markers.length,eligibleLocations:4,targets:fine.layout.stats.targetCount,labels:separated.labelLayout.labels}}
+      assert.equal(await page.evaluate(s=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(JSON.stringify(s)),local),true)
+      await settleFallback(page)
+      const restored=await fallbackState(page),restoredGrouping=await groupingState(page)
+      assertMapPose(restored.mapCamera,initial.mapCamera,'sparse scale round trip')
+      assert.equal(restored.labelLayout.labels,initial.labelLayout.labels)
+      assert.deepEqual(restoredGrouping.layout.clusters.map(({id,memberIds,rowKeys})=>({id,memberIds,rowKeys})),
+        coarse.layout.clusters.map(({id,memberIds,rowKeys})=>({id,memberIds,rowKeys})),'returning to the same camera restores exact group membership and identity')
+      assert.deepEqual(await fields(),originalFields);assert.deepEqual(await publicContext(page),originalContext);assert.equal(page.url(),route)
+    }
     const viewports=[{width:1280,state:initial,controls:await qualifyMapControls(page,kind+' 1280')}]
     const resizeStarted=Date.now()
     for(const width of [390,320,1280]){
@@ -161,7 +210,7 @@ async function mapLabelJourney(browser,kind){
     assert.ok(fixture.matchedRows>0&&fixture.readerRequests>0,'fixture exercised the exact anonymous reader contract')
     assert.deepEqual(errors,[])
     console.log('MIP_WORLD_MAP_LABEL_CONTEXT_'+kind+'='+(await contextScreenshot(page)).toString('base64'))
-    console.log('MIP_WORLD_MAP_LABEL_PASS='+JSON.stringify({engine:'chromium',kind,fixture,viewports,resizeElapsedMs,
+    console.log('MIP_WORLD_MAP_LABEL_PASS='+JSON.stringify({engine:'chromium',kind,fixture,sparseScaleQualification,viewports,resizeElapsedMs,
       idle:{elapsedMs:idleElapsedMs,passes:after.labelLayout.passes-before.labelLayout.passes,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
       limitation:'Synthetic display geometry clones one real reader row without changing its identity/time. Points includes offscreen members. Timing measures layout CPU, not GPU/FPS. Probe exposes counts, so unchanged passes plus pixels qualify idle membership rather than reporting hidden label IDs.'}))
   }catch(error){
