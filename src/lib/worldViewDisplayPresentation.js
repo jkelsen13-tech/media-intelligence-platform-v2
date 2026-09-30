@@ -19,13 +19,34 @@ export function createDisplayPresentation(markers, {
   // A wrapped screen copy is not a second original endpoint. Retain one
   // canonical location, preferring the copy admitted to the display layout;
   // hidden originals still explain a hidden-endpoint disposition.
+  // Membership belongs to this admitted layout only. Canonical geometry keys
+  // make wrapped copies agree without carrying a previous pose's group ID.
+  const displayGroups = new Map()
+  for (const group of layout.clusters) {
+    for (const member of group.members) {
+      const key = displayMarkerKey(member.row, member.positionIndex ?? member.i ?? 0)
+      if (key !== null) displayGroups.set(key, group.id)
+    }
+  }
   const endpointMarkers = new Map()
   for (const marker of markers) {
     const key = displayMarkerKey(marker.row, marker.positionIndex ?? marker.i ?? 0)
     if (key === null) continue
     if (!endpointMarkers.has(key) || admitted.has(marker)) endpointMarkers.set(key, marker)
   }
-  const relationshipSummary = projectRelationshipDisplay(relationships, [...endpointMarkers.values()], {
+  const relationshipMarkers = [...endpointMarkers].map(([key, marker]) => {
+    const displayGroupId = displayGroups.get(key)
+    if (displayGroupId) return Object.freeze({ ...marker, displayGroupId })
+    // Reused endpoint DTOs must not retain an obsolete group after regrouping,
+    // viewport admission changes, or renderer fallback.
+    if ('displayGroupId' in marker) {
+      const current = { ...marker }
+      delete current.displayGroupId
+      return Object.freeze(current)
+    }
+    return marker
+  })
+  const relationshipSummary = projectRelationshipDisplay(relationships, relationshipMarkers, {
     width, height, selectedKeys,
   })
   // Relationship labels share the marker label arbitration so a busy line

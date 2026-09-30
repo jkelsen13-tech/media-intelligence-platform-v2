@@ -28,6 +28,11 @@ function compareMarkers(a, b) {
     || a.x - b.x || a.y - b.y
 }
 
+function shareDisplayGroup(source, target) {
+  const group = source.displayGroupId
+  return typeof group === 'string' && group.trim() !== '' && group === target.displayGroupId
+}
+
 function drawable(marker, width, height) {
   return marker.visible !== false && marker.farSide !== true
     && Number.isFinite(marker.x) && Number.isFinite(marker.y)
@@ -44,7 +49,10 @@ function drawable(marker, width, height) {
  *
  * Returns exact original edge and marker references; one visible original
  * endpoint per side, deterministic by marker id/revision/position. Never
- * expands MultiPoints into an endpoint Cartesian product. Endpoint counts
+ * expands MultiPoints into an endpoint Cartesian product. Optional displayGroupId
+ * on the chosen original marker DTOs suppresses a line when both endpoints are
+ * in the same nonempty display group; a group anchor never replaces endpoints.
+ * Endpoint counts
  * disclose when this bounded presentation uses one of several locations.
  * Geometry and graph temporal validity are independent: no time is inferred.
  */
@@ -70,7 +78,7 @@ export function projectRelationshipDisplay(edges = [], markers = [], options = {
   for (const endpoint of endpoints.values()) endpoint.visible.sort(compareMarkers)
 
   const sourceEdges = Array.isArray(edges) ? edges : []
-  const counts = { unmapped: 0, hiddenEndpoints: 0, budget: 0, hypothesis: 0, coincidentEndpoints: 0, invalidEdge: 0 }
+  const counts = { unmapped: 0, hiddenEndpoints: 0, groupedEndpoints: 0, budget: 0, hypothesis: 0, coincidentEndpoints: 0, invalidEdge: 0 }
   const lines = []
   const dispositions = new Array(sourceEdges.length)
   let multipleEndpointEdges = 0
@@ -96,6 +104,7 @@ export function projectRelationshipDisplay(edges = [], markers = [], options = {
     else if (edge.claimed_by === 'MIP_inferred') reason = 'hypothesis'
     else if (!source || !target) reason = 'unmapped'
     else if (!source.visible.length || !target.visible.length) reason = 'hiddenEndpoints'
+    else if (shareDisplayGroup(source.visible[0], target.visible[0])) reason = 'groupedEndpoints'
     else if (source.visible[0].x === target.visible[0].x && source.visible[0].y === target.visible[0].y) reason = 'coincidentEndpoints'
     else if (lines.length >= maxLines) reason = 'budget'
 

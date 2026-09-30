@@ -135,3 +135,29 @@ test('destroyed and cancelled relationship refreshes reject publication, repaint
     h.layout.destroy()
   }
 })
+
+
+test('map current grouping suppresses same-badge edges and restores exact paths after display regrouping without camera writes', () => {
+  const edge = relationship(), h = harness([edge])
+  const close = Object.freeze([feature('a', 100, 100), feature('b', 130, 100)])
+  const before = JSON.stringify(close)
+  h.layout.setFeatures(close, new Set())
+  const grouped = h.publications.at(-1)
+  assert.equal(grouped.layout.clusters.length, 1)
+  assert.equal(grouped.relationshipSummary.displayed, 0)
+  assert.equal(grouped.relationshipSummary.dispositions[0].reason, 'groupedEndpoints')
+  assert.equal(grouped.relationshipSummary.dispositions[0].edge, edge)
+  const firstPass = h.counts()
+  h.emit('render'); h.emit('resize')
+  assert.equal(h.counts().repaints, firstPass.repaints, 'stable grouped state must not start a repaint loop')
+  const separated = Object.freeze([close[0], Object.freeze({ ...close[1], positions: Object.freeze([Object.freeze([600, 100])]) })])
+  h.layout.setFeatures(separated, new Set())
+  const current = h.publications.at(-1), line = current.relationshipSummary.lines[0]
+  assert.equal(current.relationshipSummary.counts.groupedEndpoints, 0)
+  assert.equal(line.edge, edge); assert.equal(line.sourceMarker.row, close[0].row); assert.equal(line.targetMarker.row, close[1].row)
+  assert.equal('displayGroupId' in line.sourceMarker, false); assert.equal('displayGroupId' in line.targetMarker, false)
+  assert.deepEqual([line.x1, line.y1, line.x2, line.y2], [100, 100, 600, 100])
+  assert.notEqual(displayPresentationSignature(current), displayPresentationSignature(grouped))
+  assert.equal(JSON.stringify(close), before); assert.deepEqual(h.cameraWrites, [])
+  h.layout.destroy()
+})

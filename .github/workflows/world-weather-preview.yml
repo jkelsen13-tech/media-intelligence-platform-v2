@@ -208,26 +208,12 @@ jobs:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runWorldViewClusteringBrowser.mjs
 
-      - name: Qualify bounded terrain refinement
-        env:
-          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
-        run: node verifier/runTerrainRefinementBrowser.mjs
 
-      - name: Qualify recorded dynamic atmosphere lighting
-        env:
-          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
-        run: node verifier/runDynamicAtmosphereBrowser.mjs
 
       - name: Qualify World View successor navigation and same-camera appearance
         env:
           MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
         run: node verifier/runWorldViewSuccessorBrowser.mjs
-
-      - name: Qualify retained fallback camera and actual map precision limits
-        env:
-          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
-        run: node verifier/runWorldViewFallbackBrowser.mjs
-
 
 
   lifecycle-preview:
@@ -285,3 +271,19 @@ jobs:
         run: |
           node --check verifier/runWorldViewTabletBrowser.mjs
           node verifier/runWorldViewTabletBrowser.mjs
+
+      # Retained gates redistributed after the measured refinement job timeout.
+      - name: Qualify bounded terrain refinement
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runTerrainRefinementBrowser.mjs
+
+      - name: Qualify recorded dynamic atmosphere lighting
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runDynamicAtmosphereBrowser.mjs
+
+      - name: Qualify retained fallback camera and actual map precision limits
+        env:
+          MIP_BROWSER_PACKAGE: ${{ runner.temp }}/mip-browser
+        run: node verifier/runWorldViewFallbackBrowser.mjs

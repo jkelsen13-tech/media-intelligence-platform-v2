@@ -169,3 +169,71 @@ test('an explicitly unavailable viewport never draws relationship lines', () => 
     assert.equal(result.counts.hiddenEndpoints, 1)
   }
 })
+
+test('original edges within one explicit display group are counted and inspectable, with no visible line claim', () => {
+  const original = edge('grouped')
+  const source = Object.freeze({ ...a, displayGroupId: 'display-group-one' })
+  const target = Object.freeze({ ...b, displayGroupId: 'display-group-one' })
+  const before = JSON.stringify({ original, source, target })
+  const result = projectRelationshipDisplay([original], [source, target])
+  assert.equal(result.displayed, 0)
+  assert.equal(result.hidden, 1)
+  assert.equal(result.counts.groupedEndpoints, 1)
+  assert.equal(result.dispositions[0].reason, 'groupedEndpoints')
+  assert.equal(result.dispositions[0].edge, original)
+  assert.equal(result.dispositions[0].edge.source, 'a')
+  assert.equal(result.dispositions[0].edge.target, 'b')
+  assert.equal(result.dispositions[0].edge.type, 'sequence')
+  assert.equal(result.dispositions[0].edge.metadata, original.metadata)
+  assert.deepEqual(result.dispositions[0].endpointCounts, { source: 1, target: 1, visibleSource: 1, visibleTarget: 1 })
+  assert.equal(JSON.stringify({ original, source, target }), before)
+})
+
+test('different groups or absent/empty group IDs preserve the legacy original endpoint line', () => {
+  for (const [sourceGroup, targetGroup] of [
+    ['one', 'two'], [undefined, undefined], ['one', undefined],
+    ['', ''], [' ', ' '], ['one', ' one'], [123, 123],
+  ]) {
+    const source = { ...a, displayGroupId: sourceGroup }
+    const target = { ...b, displayGroupId: targetGroup }
+    const original = edge()
+    const result = projectRelationshipDisplay([original], [source, target])
+    assert.equal(result.displayed, 1)
+    assert.equal(result.counts.groupedEndpoints, 0)
+    assert.equal(result.lines[0].edge, original)
+    assert.equal(result.lines[0].sourceMarker, source)
+    assert.equal(result.lines[0].targetMarker, target)
+  }
+})
+
+test('group membership applies only to deterministically chosen original visible endpoints', () => {
+  const source = { ...a, displayGroupId: 'shared' }
+  const target = { ...b, displayGroupId: 'other' }
+  const additionalTarget = marker('b', 'z-secondary', 90, 80, { displayGroupId: 'shared' })
+  const original = edge()
+  const result = projectRelationshipDisplay([original], [source, additionalTarget, target])
+  assert.equal(result.displayed, 1)
+  assert.equal(result.lines[0].sourceMarker, source)
+  assert.equal(result.lines[0].targetMarker, target)
+  assert.equal(result.lines[0].endpointCounts.target, 2)
+  assert.equal(result.counts.groupedEndpoints, 0)
+})
+
+test('hypotheses and hidden endpoints remain distinct; grouped lines do not consume the visibility budget', () => {
+  const source = { ...a, displayGroupId: 'shared' }
+  const target = { ...b, displayGroupId: 'shared' }
+  const c = marker('c', 'marker-c', 90, 90, { displayGroupId: 'elsewhere' })
+  const grouped = edge('a-grouped')
+  const visible = edge('z-visible', { target: 'c' })
+  const result = projectRelationshipDisplay([grouped, visible], [source, target, c], { maxLines: 1 })
+  assert.equal(result.lines[0].edge, visible)
+  assert.equal(result.counts.groupedEndpoints, 1)
+  assert.equal(result.counts.budget, 0)
+  const zeroBudget = projectRelationshipDisplay([grouped, visible], [source, target, c], { maxLines: 0 })
+  assert.deepEqual(zeroBudget.dispositions.map(d => d.reason), ['groupedEndpoints', 'budget'])
+  const hypothesis = edge('hypothesis', { claimed_by: 'MIP_inferred' })
+  assert.equal(projectRelationshipDisplay([hypothesis], [source, target]).dispositions[0].reason, 'hypothesis')
+  assert.equal(projectRelationshipDisplay([grouped], [source, { ...target, visible: false }]).dispositions[0].reason, 'hiddenEndpoints')
+  assert.equal(projectRelationshipDisplay([grouped], [source]).dispositions[0].reason, 'unmapped')
+  assert.equal(projectRelationshipDisplay([grouped], [source, { ...target, x: source.x, y: source.y }]).dispositions[0].reason, 'groupedEndpoints')
+})

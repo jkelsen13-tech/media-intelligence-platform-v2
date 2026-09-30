@@ -6,6 +6,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { cameraStatesEqual, parseCameraState } from '../src/lib/worldViewCameraState.js'
 import { heightMetersForPrecisionClass } from '../src/lib/worldViewMapStack.js'
+import { projectionRowDisplayKey } from '../src/lib/worldViewDisplayClusters.js'
 import { subjectFromWorldViewSelection } from '../src/lib/investigationContext.js'
 import { observeBackendBoundary } from './backendBoundary.mjs'
 import { CLUSTER_SCENES, installClusteringFixture, installClusteringGraphFixture, installProjectionFixture, QUALIFICATION_SUBJECT } from './worldViewProjectionFixture.mjs'
@@ -285,17 +286,94 @@ function expectedContext(row,node=null){
 
 
 
-async function actualRelationshipLines(page,fixture){
-  const summary=(await state(page)).relationshipSummary
+function fixtureRelationshipDispositions(edges,rows,current){
+  // This independent oracle is bounded to the known Point-per-row fixture.
+  // Joins use the original subject_graph_node_id, never marker/place proximity.
+  const byRow=new Map(current.markers.map(marker=>[marker.rowKey,marker]))
+  const groups=new Map()
+  for(const group of current.layout.clusters)for(const rowKey of group.rowKeys)groups.set(rowKey,group.id)
+  const endpoints=new Map()
+  for(const row of rows){
+    assert.equal(row.display_geometry.type,'Point','relationship oracle receives one original fixture location per row')
+    const rowKey=projectionRowDisplayKey(row),marker=byRow.get(rowKey)
+    endpoints.set(String(row.subject_graph_node_id),{marker,groupId:groups.get(rowKey)??null})
+  }
+  const counts={unmapped:0,hiddenEndpoints:0,groupedEndpoints:0,budget:0,hypothesis:0,coincidentEndpoints:0,invalidEdge:0}
+  const dispositions=[],displayedIds=[],groupedIds=[],crossGroupCandidates=[]
+  for(const edge of [...edges].sort((a,b)=>String(a.id).localeCompare(String(b.id)))){
+    const source=endpoints.get(String(edge.source_id)),target=endpoints.get(String(edge.target_id))
+    let reason=null
+    if(edge.source_id==null||edge.target_id==null)reason='invalidEdge'
+    else if(edge.claimed_by==='MIP_inferred')reason='hypothesis'
+    else if(!source?.marker||!target?.marker)reason='unmapped'
+    else if(!source.marker.eligible||!target.marker.eligible)reason='hiddenEndpoints'
+    else if(source.groupId&&source.groupId===target.groupId)reason='groupedEndpoints'
+    else if(source.marker.x===target.marker.x&&source.marker.y===target.marker.y)reason='coincidentEndpoints'
+    else{
+      crossGroupCandidates.push(edge.id)
+      if(displayedIds.length>=80)reason='budget'
+    }
+    dispositions.push({id:edge.id,reason,displayed:reason===null})
+    if(reason){counts[reason]++;if(reason==='groupedEndpoints')groupedIds.push(edge.id)}
+    else displayedIds.push(edge.id)
+  }
+  return {counts,dispositions,displayedIds,groupedIds,crossGroupCandidates}
+}
+
+async function actualRelationshipLines(page,graphFixture,projectionFixture){
+  const current=await state(page),summary=current.relationshipSummary
   assert.ok(summary,'actual mapped relationship summary is available')
+  assert.ok(!current.selectedRowKey,'scale disposition qualification precedes deliberate source selection')
   const lines=await page.locator('.wv-display-overlay [data-edge-id]').evaluateAll(nodes=>nodes.map(node=>({
     id:node.getAttribute('data-edge-id'),directionArrow:Boolean(node.querySelector('[marker-end]')?.getAttribute('marker-end'))
   })))
-  const ids=new Set(fixture.getEdges().map(edge=>edge.id))
+  const edges=graphFixture.getEdges(),ids=new Set(edges.map(edge=>edge.id))
+  const expected=fixtureRelationshipDispositions(edges,projectionFixture.getRows(),current)
+  assert.equal(summary.total,edges.length,'all original relationship records remain counted')
   assert.equal(lines.length,summary.displayed,'reported count matches actual rendered relationship paths')
   assert.ok(lines.length<=80,'actual visible relationship path count respects budget')
-  for(const line of lines){assert.ok(ids.has(line.id),'rendered path retains original source edge identity');assert.equal(line.directionArrow,true,'actual path preserves directed arrow')}
-  return {displayed:lines.length,summary}
+  assert.deepEqual(lines.map(line=>line.id).sort(),[...expected.displayedIds].sort(),'only eligible cross-group original edges render, with the bounded original-ID budget')
+  assert.deepEqual(summary.counts,expected.counts,'each hidden original edge has its current truthful display disposition')
+  for(const line of lines){
+    assert.ok(ids.has(line.id),'rendered path retains original source edge identity')
+    assert.ok(!expected.groupedIds.includes(line.id),'same-group original edges do not claim a visible map line')
+    assert.equal(line.directionArrow,true,'actual cross-group path preserves directed arrow')
+  }
+  if(current.layout.clusters.length===1&&current.layout.singles.length===0
+    &&current.markers.every(marker=>marker.eligible)){
+    assert.equal(lines.length,0,'one badge covering all original endpoints has no internal map lines')
+    assert.equal(expected.counts.groupedEndpoints,edges.length-expected.counts.hypothesis,'all non-hypothesis original records within one group remain inspector-only')
+  }
+  return {displayed:lines.length,summary,dispositionsVerified:true,
+    sameGroupOriginalEdgesHidden:expected.groupedIds.length,crossGroupOriginalCandidates:expected.crossGroupCandidates.length}
+}
+
+
+async function inspectGroupedRelationshipRecord(page,graphFixture,label){
+  const current=await state(page)
+  // Continental qualification admits all fixture endpoints under one group.
+  assert.equal(current.layout.clusters.length,1);assert.equal(current.layout.singles.length,0)
+  const edge=graphFixture.getEdges().find(edge=>edge.claimed_by!=='MIP_inferred')
+  assert.ok(edge);assert.match(edge.id,/^[0-9a-f-]{36}$/)
+  const beforeContext=await context(page),beforeCamera=await camera(page),beforeUrl=page.url()
+  const panel=page.getByLabel('Documented relationships',{exact:true}),summary=panel.locator('summary').first()
+  const wasOpen=await summary.evaluate(node=>node.parentElement.open)
+  if(!wasOpen)await summary.click()
+  assert.match(await summary.innerText(),/88 records/)
+  const record=panel.locator('li[data-edge-id="'+edge.id+'"]')
+  assert.equal(await record.count(),1,'same-group original record remains on the bounded first inspector page')
+  const detail=record.locator('details')
+  if(!await detail.evaluate(node=>node.open))await detail.locator('summary').click()
+  assert.match(await detail.locator('.wv-relationships-copy').first().innerText(),
+    /Both endpoints are within the same display group; original record remains inspectable\./,
+    'inspector truthfully describes hidden internal group edges instead of claiming a shown map line')
+  const fields=await detail.evaluate(node=>Object.fromEntries([...node.querySelectorAll('dt')].map(dt=>[dt.textContent,dt.nextElementSibling?.textContent])))
+  assert.equal(fields.id,edge.id);assert.equal(fields.source,edge.source_id);assert.equal(fields.target,edge.target_id);assert.equal(fields.type,edge.type)
+  if(graphFixture.receipt.evidenceColumns)assert.deepEqual(JSON.parse(await detail.locator('pre').innerText()),edge.metadata)
+  console.log('MIP_WORLD_CLUSTER_GROUPED_RECORD_IMAGE_'+label+'='+(await panel.screenshot({type:'jpeg',quality:65})).toString('base64'))
+  if(!wasOpen)await summary.click()
+  assert.deepEqual(await context(page),beforeContext);assert.equal(await camera(page),beforeCamera);assert.equal(page.url(),beforeUrl)
+  return {id:edge.id,reason:'groupedEndpoints',originalEndpointsTypeAndEvidenceRetained:true}
 }
 
 async function qualifyRelationships(page,fixture,label){
@@ -362,6 +440,11 @@ async function qualifyRelationships(page,fixture,label){
   const current=(await state(page)).relationshipSummary
   assert.ok(current,'same grouping probe exposes actual relationship summary')
   assert.ok(current.displayed<=80,'map relationship paths respect the bounded budget')
+  assert.equal(current.displayed,0,'a narrowed single source row cannot retain old browse relationship paths')
+  assert.equal(current.counts.groupedEndpoints,0,'old grouped-endpoint dispositions disappear after source narrowing')
+  assert.equal(current.counts.hypothesis,edges.filter(edge=>edge.claimed_by==='MIP_inferred').length)
+  assert.equal(current.counts.unmapped,edges.length-current.counts.hypothesis,'other exact original endpoints are truthfully unmapped after source narrowing')
+
   await image(page,label+'_relationships')
   return {synthetic:true,nodes:receipt.nodesFulfilled,edges:receipt.edgesFulfilled,evidenceColumns:receipt.evidenceColumns,
     exactEndpointsAndType:true,evidenceVerified,pagination:{total:seen.size,pageCounts},summary:current,readerFailures:receipt.readerFailures,
@@ -418,8 +501,10 @@ async function independentJourney(browser,engine,scene,width=1280){
       await setCamera(page,saved)
       assertLayoutRoundTrip(await state(page),before,'pan roundtrip')
       assert.equal(JSON.stringify(fixture.getRows()),sourceFingerprint,'camera/grouping never rewrites any source fixture field')
-      const relationships=await actualRelationshipLines(page,graphFixture)
+      const relationships=await actualRelationshipLines(page,graphFixture,fixture)
       if(scale==='local')assert.ok(relationships.displayed>0,'distributed independent rows qualify actual documented relationship paths before narrowing selection')
+      if(engine==='chromium'&&scene.name==='US-local'&&width===1280&&scale==='continental')
+        relationships.groupedRecord=await inspectGroupedRelationshipRecord(page,graphFixture,label)
       baseline.relationships=relationships
       scales.push(baseline);await image(page,label+'_'+scale)
     }

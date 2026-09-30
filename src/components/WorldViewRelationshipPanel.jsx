@@ -10,6 +10,7 @@ const EMPTY = Object.freeze([])
 const REASONS = {
   unmapped: 'An endpoint has no admitted projection marker.',
   hiddenEndpoints: 'An endpoint is hidden by the current renderer or outside the viewport.',
+  groupedEndpoints: 'Both endpoints are within the same display group; original record remains inspectable.',
   budget: 'Hidden by the map line limit.',
   hypothesis: 'Stored hypothesis; not drawn as a documented relationship.',
   coincidentEndpoints: 'Endpoints share the same displayed point; the record remains inspectable.',
@@ -87,6 +88,7 @@ export default function WorldViewRelationshipPanel({
               {' '}{displaySummary.counts.unmapped} without mapped endpoints;
               {' '}{displaySummary.counts.hiddenEndpoints} with hidden endpoints;
               {' '}{displaySummary.counts.budget} hidden by the line limit.
+              {displaySummary.counts.groupedEndpoints > 0 && ` ${displaySummary.counts.groupedEndpoints} with both endpoints within the same display group.`}
               {displaySummary.counts.hypothesis > 0 && ` ${displaySummary.counts.hypothesis} stored hypotheses are not drawn.`}
               {displaySummary.counts.coincidentEndpoints > 0 && ` ${displaySummary.counts.coincidentEndpoints} have coincident endpoints.`}
               {displaySummary.counts.invalidEdge > 0 && ` ${displaySummary.counts.invalidEdge} lack endpoint identities.`}

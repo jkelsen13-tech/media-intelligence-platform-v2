@@ -335,3 +335,87 @@ test('a selected relationship label cannot cover an unselected singleton label t
   const withoutEdge = createDisplayPresentation([left, right, middle], viewport)
   assert.deepEqual([...state.labels], [...withoutEdge.labels])
 })
+
+
+test('same current display group suppresses a path while retaining the exact recorded edge and original member rows', () => {
+  const source = marker(projectionRow('group-source'), 100, 100)
+  const target = marker(projectionRow('group-target'), 130, 110)
+  const outside = marker(projectionRow('group-outside'), 600, 100)
+  const internal = Object.freeze({ id: 'inside-badge', source: 'node-group-source', target: 'node-group-target',
+    type: 'sequence', metadata: Object.freeze({ evidence_snapshot_id: 'recorded-evidence' }) })
+  const external = Object.freeze({ id: 'outside-badge', source: 'node-group-source', target: 'node-group-outside', type: 'association' })
+  const originals = Object.freeze([source, target, outside]), before = JSON.stringify(originals)
+  const state = createDisplayPresentation(originals, { ...viewport, relationships: [internal, external] })
+  assert.equal(state.layout.clusters.length, 1)
+  assert.equal(state.relationshipSummary.total, 2); assert.equal(state.relationshipSummary.displayed, 1)
+  assert.equal(state.relationshipSummary.counts.groupedEndpoints, 1)
+  assert.equal(state.relationshipSummary.dispositions[0].reason, 'groupedEndpoints')
+  assert.equal(state.relationshipSummary.dispositions[0].edge, internal)
+  assert.equal(state.relationshipSummary.dispositions[0].edge.metadata, internal.metadata)
+  const line = state.relationshipSummary.lines[0]
+  assert.equal(line.edge, external); assert.equal(line.sourceMarker.row, source.row)
+  assert.equal(line.sourceMarker.position, source.position)
+  assert.equal(line.sourceMarker.displayGroupId, state.layout.clusters[0].id)
+  assert.equal(Object.isFrozen(line.sourceMarker), true); assert.notEqual(line.sourceMarker, source)
+  assert.equal(line.targetMarker, outside); assert.equal('displayGroupId' in line.targetMarker, false)
+  assert.deepEqual([line.x1, line.y1, line.x2, line.y2], [source.x, source.y, outside.x, outside.y],
+    'display grouping must not move a recorded relationship endpoint to the badge anchor')
+  assert.ok(state.layout.clusters[0].members.includes(source)); assert.ok(state.layout.clusters[0].members.includes(target))
+  assert.equal(JSON.stringify(originals), before)
+  const probe = displayPresentationProbe(state, 'maplibre-deck.gl')
+  assert.equal(probe.relationshipSummary.displayed, 1); assert.equal(probe.relationshipSummary.counts.groupedEndpoints, 1)
+})
+
+test('different groups keep exact edge coordinates, and regrouping clears endpoint group annotations without reusing old membership', () => {
+  const a = marker(projectionRow('regroup-a'), 100, 100), aPeer = marker(projectionRow('regroup-a-peer'), 130, 100)
+  const b = marker(projectionRow('regroup-b'), 500, 100), bPeer = marker(projectionRow('regroup-b-peer'), 530, 100)
+  const edge = Object.freeze({ id: 'between-groups', source: 'node-regroup-a', target: 'node-regroup-b', type: 'sequence' })
+  const state = createDisplayPresentation([a, aPeer, b, bPeer], { ...viewport, relationships: [edge] })
+  assert.equal(state.layout.clusters.length, 2); assert.equal(state.relationshipSummary.displayed, 1)
+  const line = state.relationshipSummary.lines[0]
+  assert.equal(line.edge, edge); assert.equal(line.sourceMarker.row, a.row); assert.equal(line.targetMarker.row, b.row)
+  assert.notEqual(line.sourceMarker.displayGroupId, line.targetMarker.displayGroupId)
+  assert.deepEqual([line.x1, line.y1, line.x2, line.y2], [100, 100, 500, 100])
+  const singleton = createDisplayPresentation([line.sourceMarker, line.targetMarker], { ...viewport, relationships: [edge] })
+  assert.equal(singleton.layout.clusters.length, 0); assert.equal(singleton.relationshipSummary.displayed, 1)
+  const restored = singleton.relationshipSummary.lines[0]
+  assert.equal('displayGroupId' in restored.sourceMarker, false); assert.equal('displayGroupId' in restored.targetMarker, false)
+  assert.equal(restored.sourceMarker.row, a.row); assert.equal(restored.targetMarker.position, b.position)
+  assert.deepEqual([restored.x1, restored.y1, restored.x2, restored.y2], [100, 100, 500, 100])
+  assert.equal(line.sourceMarker.displayGroupId, state.layout.clusters[0].id,
+    'previous immutable display snapshot must remain untouched')
+  const closeEdge = Object.freeze({ id: 'regrouped-line', source: 'node-regroup-a', target: 'node-regroup-a-peer', type: 'sequence' })
+  const close = createDisplayPresentation([a, aPeer], { ...viewport, relationships: [closeEdge] })
+  assert.equal(close.relationshipSummary.dispositions[0].reason, 'groupedEndpoints')
+  const separated = createDisplayPresentation([a, aPeer], { ...viewport, radiusPx: 8, relationships: [closeEdge] })
+  assert.equal(separated.relationshipSummary.displayed, 1); assert.equal(separated.relationshipSummary.lines[0].edge, closeEdge)
+  assert.equal(separated.relationshipSummary.lines[0].sourceMarker, a)
+  const offscreen = createDisplayPresentation([a, aPeer], { ...viewport, width: 110, relationships: [closeEdge] })
+  assert.equal(offscreen.relationshipSummary.dispositions[0].reason, 'hiddenEndpoints')
+  assert.equal(offscreen.relationshipSummary.counts.groupedEndpoints, 0)
+})
+
+test('wrapped canonical admission and current row revisions determine group suppression without counting hidden copies', () => {
+  const sourceRow = projectionRow('current-wrap-source'), targetRow = projectionRow('current-wrap-target')
+  const source = marker(sourceRow, 400, 100), target = marker(targetRow, 430, 100)
+  const farther = marker(sourceRow, 100, 100), hidden = marker(sourceRow, 400, 100, { visible: false })
+  const stale = marker(projectionRow('current-wrap-source', { revision_id: 'older-revision' }), 700, 100, { visible: false })
+  const edge = Object.freeze({ id: 'wrapped-inside', source: sourceRow.subject_graph_node_id, target: targetRow.subject_graph_node_id, type: 'sequence' })
+  const originals = [hidden, farther, stale, source, target]
+  const state = createDisplayPresentation(originals, { ...viewport, relationships: [edge] })
+  assert.equal(state.relationshipSummary.dispositions[0].reason, 'groupedEndpoints')
+  assert.deepEqual(state.relationshipSummary.dispositions[0].endpointCounts,
+    { source: 2, target: 1, visibleSource: 1, visibleTarget: 1 })
+  assert.equal(state.layout.clusters[0].members.find(item => item.row === sourceRow), source)
+  const reversed = createDisplayPresentation([...originals].reverse(), { ...viewport, relationships: [edge] })
+  assert.equal(reversed.relationshipSummary.dispositions[0].reason, 'groupedEndpoints')
+  assert.deepEqual(reversed.relationshipSummary.dispositions[0].endpointCounts, state.relationshipSummary.dispositions[0].endpointCounts)
+  const revised = marker(projectionRow('current-wrap-source', { revision_id: 'newer-revision' }), 650, 100)
+  const now = createDisplayPresentation([revised, marker(sourceRow, 400, 100, { visible: false }), target],
+    { ...viewport, relationships: [edge] })
+  assert.equal(now.relationshipSummary.displayed, 1)
+  assert.equal(now.relationshipSummary.lines[0].sourceMarker.row, revised.row)
+  assert.equal('displayGroupId' in now.relationshipSummary.lines[0].sourceMarker, false)
+  assert.deepEqual([now.relationshipSummary.lines[0].x1, now.relationshipSummary.lines[0].x2], [650, 430])
+  assert.equal(state.relationshipSummary.dispositions[0].edge, edge); assert.equal(now.relationshipSummary.lines[0].edge, edge)
+})

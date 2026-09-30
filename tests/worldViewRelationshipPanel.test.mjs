@@ -174,4 +174,37 @@ test('map counts and visibility require the exact current ordered edge snapshot'
   assert.match(renderedText(renderer.toJSON()), /25 of 25 records drawn/)
   assert.match(renderedText(renderer.toJSON()), /25 map lines/)
   assert.doesNotMatch(renderedText(renderer.toJSON()), /Map line visibility is unavailable/)
+
+  const groupedMarkers = markers.map(marker => ({ ...marker, displayGroupId: 'dense-display-group' }))
+  const groupedSummary = projectRelationshipDisplay(refreshedMany, groupedMarkers)
+  assert.equal(groupedSummary.counts.groupedEndpoints, 25)
+  await update(refreshedMany, groupedSummary)
+  assert.match(renderedText(renderer.toJSON()), /0 of 25 records drawn/)
+  assert.match(renderedText(renderer.toJSON()), /25 with both endpoints within the same display group/)
+  assert.doesNotMatch(renderedText(renderer.toJSON()), /Shown on the map/)
+  for (const row of rows()) {
+    assert.match(renderedText(row), /Both endpoints are within the same display group; original record remains inspectable\./)
+    assert.match(renderedText(row), /Source A → Target B/)
+    assert.match(renderedText(row), /sequence/)
+  }
+  assert.match(renderedText(renderer.toJSON()), /All 25 supplied records remain inspectable/)
+
+  const replacementRecords = refreshedMany.map(edge => ({
+    ...edge, metadata: { evidence: ['fresh-grouped-evidence-' + edge.id] },
+  }))
+  await update(replacementRecords, groupedSummary)
+  assertUnavailable()
+  assert.doesNotMatch(renderedText(renderer.toJSON()), /25 with both endpoints within the same display group/)
+  assert.equal(rows().length, 20)
+  assert.match(renderedText(renderer.toJSON()), /fresh-grouped-evidence-many-0/)
+  await update(replacementRecords, projectRelationshipDisplay(replacementRecords, groupedMarkers))
+  assert.match(renderedText(renderer.toJSON()), /0 of 25 records drawn/)
+  assert.match(renderedText(renderer.toJSON()), /25 with both endpoints within the same display group/)
+  assert.match(renderedText(renderer.toJSON()), /fresh-grouped-evidence-many-0/)
+
+  const separatedMarkers = markers.map((marker, index) => ({ ...marker, displayGroupId: 'display-group-' + index }))
+  await update(replacementRecords, projectRelationshipDisplay(replacementRecords, separatedMarkers))
+  assert.match(renderedText(renderer.toJSON()), /25 of 25 records drawn/)
+  assert.doesNotMatch(renderedText(renderer.toJSON()), /Both endpoints are within the same display group/)
+  for (const row of rows()) assert.match(renderedText(row), /Shown on the map\./)
 })
