@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   createMapPrecisionGovernor, maxMapZoomForPrecisionClassAtLatitude,
-  cameraStateFromMapCamera, mapCameraForCameraState, flyToSubject,
+  cameraStateFromMapCamera, mapCameraForCameraState, flyToSubject, mapCameraRenderState,
 } from '../src/lib/worldViewRendererAdapter.js'
 import { heightMetersForPrecisionClass, heightMetersFromMapZoom, maxZoomForPrecisionClass } from '../src/lib/worldViewMapStack.js'
 import { makeCameraState } from '../src/lib/worldViewCameraState.js'
@@ -18,6 +18,7 @@ function fakeMap({ lat = 41.4, width = 800, zoom = 10 } = {}) {
     getCenter: () => ({ lng: -81.7, lat: map.lat }),
     getCanvas: () => ({ clientWidth: map.width }),
     getMinZoom: () => minimum, getMaxZoom: () => maximum,
+    getZoom: () => map.zoom, getBearing: () => 0, getPitch: () => 0,
     on(type, fn) { if (!handlers.has(type)) handlers.set(type, new Set()); handlers.get(type).add(fn) },
     off(type, fn) { handlers.get(type)?.delete(fn) },
     emit(type) { for (const fn of [...(handlers.get(type) ?? [])]) fn({ type }) },
@@ -116,5 +117,25 @@ test('synchronous zoom constraints changing latitude cannot leave a stale unsafe
   const governor = createMapPrecisionGovernor(map, { getPrecisionClass: () => 'city' })
   assert.equal(governor.update(), true)
   assert.ok(rawHeight(map.zoom, map.lat, map.width) >= heightMetersForPrecisionClass('city') - 1e-6)
+  governor.destroy()
+})
+
+test('fallback render metadata is a scalar snapshot and reports an unsafe raw zoom without masking it', () => {
+  const map = fakeMap({ width: 390, zoom: 10 })
+  const before = mapCameraRenderState(map, 'city', 390)
+  assert.equal(before.rendererKind, 'maplibre-deck.gl')
+  assert.ok(before.mapCamera.bridgeHeightMeters < heightMetersForPrecisionClass('city'))
+  assert.equal(before.mapCamera.precisionClass, 'city')
+  assert.equal(before.mapCamera.viewportWidthPx, 390)
+  assert.deepEqual(JSON.parse(JSON.stringify(before)), before)
+  map.zoom = 1
+  assert.equal(before.mapCamera.zoom, 10, 'snapshot retains no mutable map handle')
+  assert.equal(mapCameraRenderState(null, 'city'), null)
+  assert.equal(mapCameraRenderState({ getCenter: () => { throw Error('destroyed') } }, 'city'), null)
+  const governor = createMapPrecisionGovernor(map, { getPrecisionClass: () => 'city' })
+  governor.update(); map.userZoom(20)
+  const after = mapCameraRenderState(map, 'city', governor.width())
+  assert.ok(after.mapCamera.bridgeHeightMeters >= heightMetersForPrecisionClass('city') - 1e-6)
+  assert.ok(after.mapCamera.zoom <= after.mapCamera.maxZoom)
   governor.destroy()
 })

@@ -110,6 +110,34 @@ export function createMapPrecisionGovernor(map, { getPrecisionClass, onUnavailab
   }
 }
 
+// Scalars only for display/runtime qualification. The raw bridge height is
+// intentionally not precision-clamped, so a broken live cap cannot be hidden.
+export function mapCameraRenderState(map, precisionClass, viewportWidthPx = NOMINAL_MAP_WIDTH) {
+  if (!map) return null
+  try {
+    const center = map.getCenter?.()
+    const zoom = map.getZoom?.()
+    if (!center || !Number.isFinite(center.lng) || !Number.isFinite(center.lat) || !Number.isFinite(zoom)) return null
+    const viewportWidth = mapBridgeWidth(viewportWidthPx)
+    const nominalHeight = heightMetersFromMapZoom(zoom, center.lat)
+    if (nominalHeight === null) return null
+    const finiteOrNull = value => Number.isFinite(value) ? value : null
+    return {
+      rendererKind: 'maplibre-deck.gl',
+      mapCamera: {
+        lon: center.lng, lat: center.lat, zoom,
+        bearing: finiteOrNull(map.getBearing?.()),
+        pitch: finiteOrNull(map.getPitch?.()),
+        bridgeHeightMeters: nominalHeight * viewportWidth / NOMINAL_MAP_WIDTH,
+        viewportWidthPx: viewportWidth,
+        minZoom: finiteOrNull(map.getMinZoom?.()),
+        maxZoom: finiteOrNull(map.getMaxZoom?.()),
+        precisionClass: typeof precisionClass === 'string' ? precisionClass : null,
+      },
+    }
+  } catch { return null }
+}
+
 /** Build a normalized camera state from a 2D/2.5D map camera snapshot. */
 export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 0 }, precisionClass, viewportWidthPx = NOMINAL_MAP_WIDTH) {
   const nominalHeight = heightMetersFromMapZoom(zoom, lat)
@@ -570,6 +598,7 @@ function createMapLibreWorldViewRendererAdapter({
     cancelCameraFlight: () => cancelMapCameraFlight(map),
     getCameraState,
     setCameraState,
+    getVisualFidelityRenderState: () => mapCameraRenderState(map, activePrecisionClass(), precisionGovernor?.width()),
     requestRender,
     destroy,
   }
