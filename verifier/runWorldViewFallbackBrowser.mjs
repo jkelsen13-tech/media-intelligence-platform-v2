@@ -79,6 +79,7 @@ async function mapLabelJourney(browser,kind){
     const before=await fallbackState(page),pixels=decodeScreenshotPng(await page.locator('.wv-map-host').screenshot({type:'png'})),start=Date.now()
     await delay(1000)
     const after=await fallbackState(page),comparison=rasterSummary(decodeScreenshotPng(await page.locator('.wv-map-host').screenshot({type:'png'})),pixels)
+    const idleElapsedMs=Date.now()-start
     assert.equal(after.labelLayout.passes,before.labelLayout.passes,'settled idle has no new layout/repaint passes')
     assert.equal(after.labelLayout.labels,before.labelLayout.labels)
     assert.equal(comparison.whole.changedPixels,0,'settled idle retains rendered label membership and map pixels')
@@ -88,7 +89,7 @@ async function mapLabelJourney(browser,kind){
     assert.deepEqual(errors,[])
     console.log('MIP_WORLD_MAP_LABEL_CONTEXT_'+kind+'='+(await contextScreenshot(page)).toString('base64'))
     console.log('MIP_WORLD_MAP_LABEL_PASS='+JSON.stringify({engine:'chromium',kind,fixture,viewports,resizeElapsedMs,
-      idle:{elapsedMs:Date.now()-start,passes:after.labelLayout.passes-before.labelLayout.passes,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
+      idle:{elapsedMs:idleElapsedMs,passes:after.labelLayout.passes-before.labelLayout.passes,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
       limitation:'Synthetic display geometry clones one real reader row without changing its identity/time. Points includes offscreen members. Timing measures layout CPU, not GPU/FPS. Probe exposes counts, so unchanged passes plus pixels qualify idle membership rather than reporting hidden label IDs.'}))
   }catch(error){
     console.log('MIP_WORLD_MAP_LABEL_FAILURE='+JSON.stringify({kind,error:error.message,errors,renderState:await fallbackState(page).catch(()=>null)}))
@@ -179,6 +180,7 @@ async function atlasLabelJourney(browser,kind){
     const pixels=decodeScreenshotPng(await atlas.screenshot({type:'png'})),before=await snapshot(),start=Date.now()
     await delay(1000)
     const after=await snapshot(),comparison=rasterSummary(decodeScreenshotPng(await atlas.screenshot({type:'png'})),pixels)
+    const idleElapsedMs=Date.now()-start
     assert.deepEqual(after,before,'idle Atlas retains label membership and exact point layout')
     assert.equal(comparison.whole.changedPixels,0,'idle Atlas retains rendered pixels')
     const point=atlas.locator('.wv-feature[role="button"]').first(),name=await point.getAttribute('aria-label')
@@ -248,7 +250,7 @@ async function atlasLabelJourney(browser,kind){
     assert.deepEqual(errors,[])
     console.log('MIP_WORLD_ATLAS_CONTEXT_'+kind+'_1280='+(await contextScreenshot(page)).toString('base64'))
     console.log('MIP_WORLD_ATLAS_LABEL_PASS='+JSON.stringify({engine:'chromium',kind,fixture,viewports,keyResults,
-      idle:{elapsedMs:Date.now()-start,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
+      idle:{elapsedMs:idleElapsedMs,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
       limitation:'SVG overview fits the entire synthetic geometry, so separated local points may cluster at world scale and all sparse labels may be hidden when original edge anchors cannot fit. Zero painted labels is reported explicitly, not described as readable. Keyboard activation exercises the already selected original row. Exact source row fields are retained. First activation binds source-derived graph type/parent and recorded valid-time bounds, which may differ from a named route seed. The URL serializes the same subject/world with source time bounds and picked graph node. The repeated same-row activation is idempotent. Graph-node matching may expand its derived title; no distinct subject transition is claimed. No interactive camera or GPU timing is fabricated.'}))
   }catch(error){
     console.log('MIP_WORLD_ATLAS_LABEL_FAILURE='+JSON.stringify({kind,error:error.message,errors}))
