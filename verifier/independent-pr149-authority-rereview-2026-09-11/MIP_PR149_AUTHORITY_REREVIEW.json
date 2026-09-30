@@ -1,0 +1,404 @@
+{
+  "schema": "MIP_PR149_AUTHORITY_INDEPENDENT_REREVIEW_v1",
+  "document": "MIP_PR149_AUTHORITY_REREVIEW",
+  "companion_markdown": "verifier/independent-pr149-authority-rereview-2026-09-11/MIP_PR149_AUTHORITY_REREVIEW.md",
+  "review_kind": "independent_re_review",
+  "production_cutover": "ON_HOLD",
+  "pr_149": {
+    "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/149",
+    "draft": true,
+    "merged": false,
+    "state": "open",
+    "head_ref": "cursor/cutover-finding-reconciliation-cd2e",
+    "head_sha": "6c716619d3b312682dba2c4c8211936f7f911895",
+    "base_ref": "main",
+    "base_sha": "1dc317200b7a928fad85d06b43351b60e2a50d92",
+    "issue_comments_on_pr": 0,
+    "reviews_on_pr": 0
+  },
+  "reviewer_identity": {
+    "bcId": "bc-01a08f0e-3fb8-78c0-bd37-deba2549320f",
+    "run_name": "Pr 149 authority re-review",
+    "url": "https://cursor.com/agents/bc-01a08f0e-3fb8-78c0-bd37-deba2549320f",
+    "original_model_name": "cursor-grok-4.6-xhigh",
+    "source": "mobile",
+    "environment_public_id": "3352140b-a740-11f1-a7d1-d6b4613131ce",
+    "boot_build_id": "bld-20260910-0375746c-9c08-4e43-8444-b4fa112c0583",
+    "git_setup": "reuse",
+    "this_run_authored_implementation": false,
+    "this_run_authored_reconciliation": false,
+    "this_run_authored_corrections": false,
+    "excluded_correction_run_label": "codex-root-pr149-authority-543e423-20260911",
+    "excluded_earlier_review_reconciliation_run": "bc-01a08bf7-3dc0-7367-b4ff-8299823ccd2e",
+    "identity_distinct_from_excluded_runs": true,
+    "transcripts_of_excluded_runs_fetched": false
+  },
+  "candidate": {
+    "frozen_head": "6c716619d3b312682dba2c4c8211936f7f911895",
+    "disclosed_content_commit": "e62de90c28fbc3f2a1ab250ebaf454a9c2d3f398",
+    "tree": "67e17702f01867569aa133acf629dbc46c842842",
+    "stamp_parent_equals_content_commit": true,
+    "stamp_diff_only": "verifier/mip-production-cutover-review-v1/disclosure-manifest.json review_packet_commit null -> e62de90c28fbc3f2a1ab250ebaf454a9c2d3f398",
+    "original_inspected_candidate": "543e423928ecb1134c0981ed8d708f1b9ae25608",
+    "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
+    "synthetic_pr_test_checkout_from_receipt": "cd434ffb51a437a46a7f001989dd1b9f42becb28",
+    "synthetic_checkout_independently_verified": false,
+    "synthetic_checkout_note": "Named in the sanitized PR receipt; this run verified HEAD, tree, and content commit, not the synthetic checkout object cd434ffb51a437a46a7f001989dd1b9f42becb28."
+  },
+  "disclosure": {
+    "manifest_path": "verifier/mip-production-cutover-review-v1/disclosure-manifest.json",
+    "manifest_git_blob": "d081d7a1f91a84437ca4a4f4d2407c33e47484e2",
+    "manifest_sha256": "04d28b676f15bd63acf5e96d01622d1f9d06aa4f79d68b7b6dae42e3b63f858f",
+    "manifest_bytes": 13118,
+    "hashed_file_count": 61,
+    "hashed_files_sha256_and_bytes": "all_61_match",
+    "mismatches": [],
+    "missing": [],
+    "manifest_excludes_itself": true,
+    "disclosure_status": "proposed_not_transmitted",
+    "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
+    "baseline_sql_git_blob_equals_543e423_capability": "cf3ad7270e31f717535dbcb21160725662a489ff",
+    "baseline_sql_sha256": "a3785a59fff944d0ee1fd6af0974e85de1f7efa9686c9ac677317d018bd2c711",
+    "corrected_capability_sha256": "27a3c6dbe1344932d6a64a7016abf143ea992f1d0a4fed8541a953f45137c282",
+    "corrected_capability_git_blob": "07777c1463dba6b20de37ed08d4fe4aefd70da1d",
+    "original_grok_review_bytes": "UNCHANGED_SINCE_COPY_COMMIT_09cfae7",
+    "original_grok_sha256": {
+      "verifier/independent-cutover-review-v1/MIP_PRODUCTION_CUTOVER_REVIEW_v1.md": "3bedb192385a8c47f44efb00e650eb5242b296b938ab5a140c6f4c09d36937d9",
+      "verifier/independent-cutover-review-v1/MIP_PRODUCTION_CUTOVER_REVIEW_v1.json": "a869298baa7125a65a818decb6d2fbcef0ff72badde7c5f447714815fe2b26ba",
+      "verifier/independent-cutover-review-v1/README.md": "d4da264472f0cbe4c277c9b7976879e480f1039e13fce2a99c8c1a8ea7b2c855"
+    },
+    "access_scope": {
+      "authorized": [
+        "61 hashed_files",
+        "disclosure-manifest.json",
+        "sanitized PR #149 verification receipt (PR body + check-run conclusions without raw logs)"
+      ],
+      "test_implied_extra_material": "Executing disclosed tests/cutoverReviewPacket.test.mjs and tests/mutableV16IsNotQualifiedArchitecture.test.mjs listed/read supabase/migrations/ only to assert qualification SQL is absent from production migrations. That directory is not in the 61-file allowlist.",
+      "not_accessed": [
+        "production systems",
+        "credentials/Vault/JWT/session contents",
+        "Auth records and private payloads",
+        "raw CI logs and screenshots",
+        "owner decision brief body (NOT_RECOVERED)",
+        "excluded-run transcripts"
+      ]
+    }
+  },
+  "conclusions": {
+    "A_bounded_authority_replay_corrections": {
+      "verdict": "SEQUENTIAL_ISOLATED_CONTRACTS_CLOSED_WITHIN_TESTED_SCOPE; CONCURRENT_NATIVE_POSTGRES_ORDERING_NOT_INDEPENDENTLY_RUN; PRODUCTION_ORDERING_POLICY_STILL_OPEN",
+      "pass": null,
+      "not": [
+        "production JWT/Auth/IAM qualification",
+        "owner approval of ordering/recovery policy",
+        "independent native PostgreSQL 17.6 concurrent reproduction",
+        "production cutover authorization"
+      ],
+      "summary": "Source inspection and independent sequential PGlite execution confirm that corrected comparison_qualification SQL rejects foreign replay before returning retained input, generation, receipts or success; rejects changed arguments; keeps same-owner retries including renewed sessions; omits claim tokens on retry; and rejects a new completion after principal revocation despite an outstanding lease. Default isolation observed on PGlite was read committed. Concurrent in-transaction revocation and first-use races that require two native PostgreSQL backends were not independently executed because the harness refuses any environment other than GitHub Actions plus MIP_DISPOSABLE_POSTGRES=comparison-qualification. This run did not set those variables. Supplied CI on the exact HEAD is implementation-agent evidence, not this review's reproduction. The production ordering/recovery policy remains a proposal."
+    },
+    "B_overall_production_cutover_readiness": {
+      "verdict": "BLOCKED",
+      "production_cutover": "ON_HOLD",
+      "owner_acceptance": "NOT_SUBMITTED",
+      "independent_review_of_this_candidate": "THIS_DOCUMENT",
+      "summary": "Known unfinished production work F1, F3 and F6 remains accurately represented as OPEN. Ambient service_role.complete still acknowledges after bound principal revocation. mip_* identities remain EXECUTE-only unprovisioned stubs. Disclosed v16 remains a mutable rebuild that does not call comparison_qualification. Publication fingerprints, including explicit absence, are not survivor eligibility. Semantic thresholds remain null. PR #149 is draft and unmerged. Bounded sequential corrections, even if later accepted for isolated SQL, do not make cutover ready."
+    }
+  },
+  "findings": [
+    {
+      "id": "R1_paused_completion_then_committed_revocation",
+      "scope": "revocation_ordering",
+      "disposition": "BLOCKED_FROM_VERIFICATION",
+      "independent_runtime": "NOT_INDEPENDENTLY_RUN",
+      "source_inspection": "worker_complete calls unlocked require_bound, then replay, then complete() which inserts outputs then updates jobs, then record_run -> require_bound_final (FOR SHARE on runtime_bindings ordered by rpc_name, then FOR SHARE on the session, then require_bound). Baseline record_run inserted with no final fence. revoke_principal now takes FOR UPDATE on those binding rows before setting revoked_at. The Python pause uses a synthetic BEFORE INSERT trigger and session-level advisory lock 987149; that trigger is not a production object.",
+      "supplied_ci": "GitHub check concurrent-transactions job 103142194267 conclusion=success on 6c716619d3b312682dba2c4c8211936f7f911895; step 'Verify corrected PR149 authority ordering and replay' conclusion=success. Raw logs not retrieved.",
+      "limitation": "Independent native concurrent execution was refused by verifier/comparisonPostgresConcurrency.py without bypassing the guard."
+    },
+    {
+      "id": "R2_reject_before_final_acceptance_rolls_back_together",
+      "scope": "revocation_ordering",
+      "disposition": "BLOCKED_FROM_VERIFICATION",
+      "independent_runtime": "NOT_INDEPENDENTLY_RUN",
+      "source_inspection": "complete() and record_run run in the caller statement transaction. If require_bound_final raises, PostgreSQL aborts the statement and rolls back the output insert, job completed update, and request_runs insert together. The Python corrected branch asserts outputs=0, jobs.state=processing, and zero worker_complete request_runs.",
+      "supplied_ci": "same job 103142194267 success, logs not retrieved",
+      "limitation": "Requires the paused concurrent fixture on native PostgreSQL."
+    },
+    {
+      "id": "R3_acceptance_first_delays_revocation",
+      "scope": "revocation_ordering",
+      "disposition": "BLOCKED_FROM_VERIFICATION",
+      "independent_runtime": "NOT_INDEPENDENTLY_RUN",
+      "source_inspection": "require_bound_final FOR SHARE vs revoke_principal FOR UPDATE on the same runtime_bindings rows, same rpc_name order, then session lock/update. Under PostgreSQL 17 locking, FOR UPDATE waits for FOR SHARE holders. The Python test is skipIf(BASELINE).",
+      "supplied_ci": "job 103142194267 success, logs not retrieved",
+      "limitation": "PGlite sequential probe cannot hold a second backend. Policy that this serial order is the desired production recovery behavior is still owner-gated."
+    },
+    {
+      "id": "R4_outstanding_lease_is_not_continuing_authority",
+      "scope": "revocation_ordering",
+      "disposition": "CLOSED_WITHIN_TESTED_SCOPE",
+      "tested_scope": "sequential isolated PGlite plus disclosed Node test; not production lease recovery",
+      "independent_runtime": "After revoke_principal, worker_complete with the still-valid-looking lease token raised mip_authz_revoked_session; jobs.state remained processing; outputs count 0.",
+      "source_inspection": "Initial require_bound and require_bound_final both consult revoked_at on sessions and bindings. Holding jobs.lease_token is not an authorization predicate on bound RPCs.",
+      "still_open_outside_scope": "Production lease recovery, force-cancellation of database sessions, and what should happen to stranded processing jobs after principal revoke."
+    },
+    {
+      "id": "R5_new_and_replay_enforce_current_authority",
+      "scope": "revocation_ordering",
+      "disposition": "CLOSED_WITHIN_TESTED_SCOPE",
+      "tested_scope": "sequential PGlite: new complete after revoke; same-owner replay of an already-committed complete before revoke. Concurrent in-flight new vs replay was not independently run.",
+      "independent_runtime": "Replay path in corrected SQL calls require_bound_final before returning an existing receipt. New path calls it from record_run before inserting the receipt. Sequential post-revoke new complete failed closed.",
+      "source_inspection": "replay() requires owner match then require_bound_final when a row exists; record_run always require_bound_final before insert."
+    },
+    {
+      "id": "R6_read_committed_only",
+      "scope": "revocation_ordering",
+      "disposition": "CLOSED_WITHIN_TESTED_SCOPE",
+      "tested_scope": "PGlite SHOW transaction_isolation = read committed; native harness does not SET TRANSACTION ISOLATION LEVEL",
+      "independent_runtime": "PGlite default isolation was 'read committed'.",
+      "not_claimed": [
+        "REPEATABLE READ",
+        "SERIALIZABLE",
+        "production JWT/Auth integration",
+        "native PostgreSQL 17.6 isolation independently executed by this run"
+      ]
+    },
+    {
+      "id": "R7_production_ordering_policy_not_owner_approved",
+      "scope": "revocation_ordering",
+      "disposition": "STILL_OPEN",
+      "evidence": "docs/PR149_AUTHORITY_ORDERING_2026-09-11.md states the serial lock interpretation is subject to owner review. REVIEW_RESULT.json owner_decision_brief_body is NOT_RECOVERED_FROM_GITHUB_OR_REPOSITORY. OWNER_ACCEPTANCE.json status NOT_SUBMITTED, production_cutover_authorized false. Isolated tests passing do not constitute owner approval."
+    },
+    {
+      "id": "R8_foreign_replay_rejected_before_payload",
+      "scope": "replay_ownership",
+      "disposition": "CLOSED_WITHIN_TESTED_SCOPE",
+      "tested_scope": "sequential PGlite on frozen baseline SQL vs corrected SQL; not concurrent first-use",
+      "independent_runtime": {
+        "baseline_543e423_sql": "runtime-b reusing runtime-a worker_claim request received the same generation_id and input_text; reusing worker_complete request with null token returned completed",
+        "corrected_sql": "foreign worker_claim raised mip_request_replay_owner; runtime-b request_runs count 0; foreign worker_complete with null token raised mip_request_replay_owner; producer_enqueue foreign reuse raised mip_request_replay_owner"
+      },
+      "source_inspection": "replay() compares stored principal and runtime_id and raises mip_request_replay_owner before returning the request_runs row to worker_claim/worker_complete. claim_payload (which includes input_text) is only reached after that check on the claim replay path."
+    },
+    {
+      "id": "R9_concurrent_first_use_ownership_boundary",
+      "scope": "replay_ownership",
+      "disposition": "BLOCKED_FROM_VERIFICATION",
+      "independent_runtime": "NOT_INDEPENDENTLY_RUN",
+      "source_inspection": "pg_advisory_xact_lock(hashtextextended(request||':'||rpc, 149)) is taken in replay() and held for the transaction, covering first-use insert via later record_run. Hash collisions wait extra; owner/argument checks remain exact. Python tests cover same-owner concurrent retry and foreign waiter.",
+      "supplied_ci": "job 103142194267 success, logs not retrieved"
+    },
+    {
+      "id": "R10_identical_same_owner_retries",
+      "scope": "replay_ownership",
+      "disposition": "CLOSED_WITHIN_TESTED_SCOPE",
+      "independent_runtime": "Same-owner worker_claim retry returned the same generation_id. Same-owner worker_complete retry returned completed. Same-owner producer_enqueue retry returned the same generation id.",
+      "source_inspection": "If owner matches and argument_hash matches, replay returns the existing row; worker_complete returns existing.outcome without calling complete() again."
+    },
+    {
+      "id": "R11_session_renewal_does_not_change_owner",
+      "scope": "replay_ownership",
+      "disposition": "CLOSED_WITHIN_TESTED_SCOPE",
+      "independent_runtime": "A new issue_session for runtime-a / qual_comparison_producer reused producer_enqueue request id with identical arguments and received the original generation id. runtime-b with its own session was still mip_request_replay_owner.",
+      "source_inspection": "Owner identity is (runtime_id, principal) on request_runs, not session_id. require_bound_final still requires the presented session to be currently authorized for that owner."
+    },
+    {
+      "id": "R12_changed_arguments_rejected",
+      "scope": "replay_ownership",
+      "disposition": "CLOSED_WITHIN_TESTED_SCOPE",
+      "independent_runtime": "Same-owner worker_complete retry with claims:['B'] raised mip_request_replay_conflict; durable output remained {claims:[]}. Disclosed Node test of producer payload A vs B and complete A vs B also passed in this run.",
+      "source_inspection": "replay() compares argument_hash after the owner check. worker_complete hashes generation_id, input_hash, implementation, output; not the lease token."
+    },
+    {
+      "id": "R13_claim_retry_omits_token",
+      "scope": "replay_ownership",
+      "disposition": "CLOSED_WITHIN_TESTED_SCOPE",
+      "tested_scope": "sequential retry; concurrent extra-work assertion not independently run on native PG",
+      "independent_runtime": "Same-owner claim retry had lease_token null and diagnostic_code mip_request_replay_omits_token. Disclosed Node test asserts a single request_runs row after claim+replay.",
+      "source_inspection": "worker_claim replay calls claim_payload(..., true, 'mip_request_replay_omits_token') and does not call claim(). request_runs never stores lease tokens."
+    },
+    {
+      "id": "R14_regression_generation_lease_retry_failure_scheduler_selection_withdrawal",
+      "scope": "regression_and_evidence",
+      "disposition": "CLOSED_WITHIN_TESTED_SCOPE",
+      "tested_scope": "disclosed PGlite/Node tests in the 61-file set only; not the full 1622-test CI matrix; not native 14-test harness",
+      "independent_runtime": {
+        "disclosed_node_tests": {
+          "files": 8,
+          "tests": 50,
+          "pass": 50,
+          "fail": 0,
+          "skipped": 0,
+          "duration_ms": 17542.553509
+        }
+      },
+      "source_inspection": "comparisonPostgresConcurrency.py still contains 14 test_* methods. scheduler_claim still raises mip_scheduler_not_a_worker without calling claim(). selector_select null generation still follows publication to withdrawn/revoked. publication_release_enabled defaults false.",
+      "supplied_ci_not_this_run": {
+        "native_14_plus_authority": {
+          "run": 34560544898,
+          "job": 103142194267,
+          "conclusion": "success",
+          "steps_success": [
+            "Qualify independent PostgreSQL connections",
+            "Reproduce frozen PR149 authority counterexamples",
+            "Verify corrected PR149 authority ordering and replay"
+          ],
+          "claimed_counts_in_pr_body": {
+            "existing_passed": 14,
+            "corrected_passed": 7,
+            "corrected_skipped": 0,
+            "baseline_scenarios_passed": 3,
+            "baseline_correction_only_skipped": 4
+          },
+          "claimed_counts_independently_verified": false
+        },
+        "regression_node": {
+          "run": 34560544869,
+          "jobs": [103142194090, 103142193916],
+          "conclusions": ["success", "success"],
+          "claimed_tests_each": 1622,
+          "claimed_counts_independently_verified": false
+        },
+        "browser": {
+          "run": 34560544868,
+          "jobs": [103142193868, 103142193992],
+          "conclusions": ["success", "success"],
+          "claimed_markers_independently_verified": false,
+          "screenshots_not_retrieved": true
+        }
+      }
+    },
+    {
+      "id": "F1_production_apis_workload_identity_custody",
+      "scope": "known_open_production_work",
+      "disposition": "STILL_OPEN",
+      "independent_runtime": "mip_comparison_worker_v1 is NOLOGIN without BYPASSRLS; worker_complete stub raises mip_cutover_authority_not_provisioned. After bound revoke_principal, set role service_role; comparison_qualification.complete(...) still returned completed.",
+      "source_inspection": "001_execute_only_identities.sql is commented as not a migration and not provisioned. capability.sql still grants unbound complete() to service_role. runtime-permission-proposal.json bind-live-workers.chosen is null. Packet remaining-dependencies F1 remains OPEN.",
+      "not_completion": "Stubs, role names, and EXECUTE-only fingerprints are not production APIs, verified workload identity, least-privilege runtime authority, or credential custody."
+    },
+    {
+      "id": "F3_generation_safe_worker_integration",
+      "scope": "known_open_production_work",
+      "disposition": "STILL_OPEN",
+      "independent_runtime": "Source inspection of disclosed v16 index.ts: rebuildProjection, acknowledgeProjectionQueue, SUPABASE_SERVICE_ROLE_KEY, Bearer ${serviceKey}, no comparison_qualification. Disclosed mutableV16 tests passed.",
+      "not_completion": "Architecture notes and snapshot fingerprints are not actual generation-safe worker integration, recovery, conditional acknowledgement, or operational/data parity. Live v15 vs repo v16 bytes remain NOT_TESTED."
+    },
+    {
+      "id": "F6_publication_eligibility_and_dependency_revocation",
+      "scope": "known_open_production_work",
+      "disposition": "STILL_OPEN",
+      "independent_runtime": "Disclosed Node test still asserts mip_private.reader_claim_surfaces:absent in publication_closure_relations and fixture article mutation raises mip_publication_closure_mismatch with zero released rows. Gates default false.",
+      "source_inspection": "relation_fingerprint records name||':absent' when to_regclass is null. Packet text states isolated hash is not live survivor eligibility.",
+      "not_completion": "Stable fingerprints, including stable absence fingerprints, are not full publication eligibility, transitive privacy/rights enforcement, or dependency-revocation integration."
+    },
+    {
+      "id": "F2_semantic_policy_still_unfrozen",
+      "scope": "known_open_production_work",
+      "disposition": "STILL_OPEN",
+      "independent_runtime": "evaluation-policy.json status proposed_not_approved, qualification not_assessed, all measures.thresholds null, critical_error_threshold null, minimum_cases null. recordCandidateEvaluation tests still report qualification not_assessed.",
+      "not_invented": "This review invented no semantic thresholds, labels, or production identities."
+    },
+    {
+      "id": "E1_node_test_title_overclaims_in_flight",
+      "scope": "evidence_quality",
+      "disposition": "NEWLY_IDENTIFIED",
+      "severity": "documentation_test_label",
+      "not_a_demonstrated_sql_defect": true,
+      "evidence": "tests/comparisonCapabilitySeparation.test.mjs title 'revoke_principal blocks in-flight worker_complete' revokes, then calls worker_complete on a new statement. That is the outstanding-lease sequential case, not an already-executing completion transaction. The concurrent paused-completion case exists only in verifier/pr149AuthorityOrdering.py."
+    },
+    {
+      "id": "E2_workflow_path_filter_omits_authority_harness",
+      "scope": "evidence_quality",
+      "disposition": "NEWLY_IDENTIFIED",
+      "severity": "verification_process_gap",
+      "not_a_demonstrated_sql_defect": true,
+      "evidence": ".github/workflows/comparison-postgres.yml pull_request paths list comparison-generations/**, comparisonPostgresConcurrency.py, and the workflow file, but not verifier/pr149AuthorityOrdering.py or verifier/pr149-authority-baseline.sql. This PR still ran concurrent-transactions because capability.sql changed. A later harness-only commit might not."
+    }
+  ],
+  "independent_execution": {
+    "native_postgresql_17_6_github_actions_disposable": {
+      "status": "NOT_INDEPENDENTLY_RUN",
+      "guard": "verifier/comparisonPostgresConcurrency.py exits unless GITHUB_ACTIONS=true and MIP_DISPOSABLE_POSTGRES=comparison-qualification",
+      "this_run_GITHUB_ACTIONS": null,
+      "this_run_MIP_DISPOSABLE_POSTGRES": null,
+      "guard_rehearsal": {
+        "command": "python3 -B verifier/pr149AuthorityOrdering.py",
+        "cwd": "/tmp/pr149-candidate",
+        "exit_code": 1,
+        "stderr": "Only the explicit disposable GitHub Actions PostgreSQL service is allowed"
+      },
+      "psql_binary_present": false,
+      "bypass_attempted": false,
+      "assertions_weakened": false
+    },
+    "sequential_pglite_probe": {
+      "engine": "@electric-sql/pglite 0.5.8",
+      "not": "PostgreSQL 17.6 two-backend qualification",
+      "total": 17,
+      "passed": 17,
+      "failed": [],
+      "results": [
+        {"id": "f3_v16_mutable_rebuild_present", "ok": true},
+        {"id": "baseline_foreign_claim_replay_leaks_input", "ok": true, "note": "defect reproduction on frozen 543e423 SQL"},
+        {"id": "baseline_foreign_complete_replay_without_token", "ok": true, "note": "defect reproduction on frozen 543e423 SQL"},
+        {"id": "corrected_default_isolation", "ok": true, "isolation": "read committed"},
+        {"id": "corrected_same_owner_claim_retry_omits_token", "ok": true},
+        {"id": "corrected_foreign_claim_replay_rejected_before_success", "ok": true, "error": "mip_request_replay_owner"},
+        {"id": "corrected_foreign_claim_creates_no_receipt", "ok": true},
+        {"id": "corrected_same_owner_complete_retry", "ok": true},
+        {"id": "corrected_foreign_complete_replay_rejected", "ok": true, "error": "mip_request_replay_owner"},
+        {"id": "corrected_changed_output_conflicts", "ok": true, "error": "mip_request_replay_conflict"},
+        {"id": "corrected_durable_output_unchanged_after_conflict", "ok": true},
+        {"id": "corrected_session_renewal_same_owner", "ok": true},
+        {"id": "corrected_producer_foreign_replay_rejected", "ok": true, "error": "mip_request_replay_owner"},
+        {"id": "corrected_outstanding_lease_not_authority_after_revoke", "ok": true, "error": "mip_authz_revoked_session"},
+        {"id": "corrected_ambient_service_role_complete_still_bypasses_revoke", "ok": true, "note": "documented F1 hole"},
+        {"id": "f1_stub_nologin_nobypass", "ok": true},
+        {"id": "f1_stub_refuses_as_unprovisioned", "ok": true, "error": "mip_cutover_authority_not_provisioned"}
+      ]
+    },
+    "disclosed_node_tests": {
+      "status": "independently_executed",
+      "pass": 50,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "evidence_classes_used": [
+    "artifact_inspection",
+    "independently_reproduced_this_run",
+    "supplied_implementation_agent_result",
+    "NOT_INDEPENDENTLY_RUN",
+    "missing_evidence",
+    "NOT_TESTED",
+    "BLOCKED"
+  ],
+  "owner_decisions_still_required": [
+    "Approve or replace the proposed production revocation ordering and lease-recovery policy; the 10 September 2026 brief body remains NOT_RECOVERED.",
+    "Decide whether implementation-agent native CI plus this sequential independent review is enough to accept concurrent ordering, or require a later independent run inside the authorized GitHub Actions disposable Postgres service without weakening the guard.",
+    "Freeze semantic policy, split, and independent source-grounded labels before any held-out qualification (thresholds remain null).",
+    "Choose production workload identity and custody; chosen is still null; do not treat qual_* or mip_* stubs as live workers.",
+    "Submit OWNER_ACCEPTANCE.json separately after reading this review; packet preparation and CI are not acceptance.",
+    "Separately authorize any later provisioning, trial, schedule, publication, or cutover. None follows from this review."
+  ],
+  "next_necessary_implementation_steps": [
+    "Keep PR #149 draft and unmerged. No production writes, grants, schedules, publication, trials, or legacy retirement.",
+    "F1: replace mip_cutover_authority stubs with implemented producer/worker/publisher APIs bound to verified least-privilege workload identities; remove ambient service_role complete/claim/enqueue from the production execution boundary; add negative identity and revocation tests against those identities. Do not rename comparison_qualification.qual_* onto live service_role.",
+    "F3: integrate atomic real-input capture, evaluated claim/compute, durable generation-bound outputs, conditional acknowledgement, failure/recovery, and backlog/delta parity into the actual worker. Do not treat v16 rebuildProjection/acknowledgeProjectionQueue as that worker.",
+    "F6: evaluate complete survivor privacy/rights/publication predicates and transitive dependencies; bind approved immutable selection; fail closed on missing/ineligible/revoked evidence; serialize dependency revocation. Do not treat isolated fingerprints as eligibility.",
+    "If concurrent native ordering must be independently qualified, run the existing unmodified verifier/pr149AuthorityOrdering.py in the authorized disposable GitHub Actions Postgres 17.6 service (both --baseline and corrected) without setting GITHUB_ACTIONS in non-CI environments and without weakening assertions.",
+    "Optional process fix on a later engineering branch: add verifier/pr149AuthorityOrdering.py and verifier/pr149-authority-baseline.sql to comparison-postgres.yml path filters. Not required to freeze this candidate.",
+    "Do not populate frozen REVIEW_RESULT.json or OWNER_ACCEPTANCE.json from this review; those remain packet slots. This document is the independent result for candidate 6c716619d3b312682dba2c4c8211936f7f911895."
+  ],
+  "frozen_packet_files_modified_by_this_review": false,
+  "actions_not_taken": [
+    "no merge",
+    "no production writes",
+    "no provisioning",
+    "no schedule changes",
+    "no publication activation",
+    "no trials",
+    "no legacy retirement",
+    "no raw CI log retrieval",
+    "no owner-acceptance edit"
+  ]
+}
