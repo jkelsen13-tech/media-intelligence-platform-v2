@@ -126,8 +126,8 @@ test('subjectEllipsoidCamera returns correct fields for Cleveland city', () => {
   assert.equal(cam.lon, -81.7)
   assert.equal(cam.lat, 41.4)
   assert.ok(cam.heightMeters > 0)
-  assert.equal(cam.headingDegrees, 346)
-  assert.equal(cam.pitchDegrees, -32)
+  assert.equal(cam.headingDegrees, 0)
+  assert.equal(cam.pitchDegrees, -90)
   assert.equal(cam.rollDegrees, 0)
   // Cesium minimumZoomDistance is height above the ellipsoid in meters,
   // not distance from Earth center (live-verified regression: R4.9 Stage C).

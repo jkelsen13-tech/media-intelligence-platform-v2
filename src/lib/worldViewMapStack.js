@@ -185,7 +185,7 @@ export function subjectOrientationDegrees() {
   // Deterministic north-up nadir reset. Manual tilt remains available.
   return Object.freeze({
     headingDegrees: 0,
-    pitchDegrees: -90, // Cesium nadir; MapLibre pitch 0
+    pitchDegrees: -90, // Globe nadir; flat-map pitch 0
     rollDegrees: 0,
   })
 }

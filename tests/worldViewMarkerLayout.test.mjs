@@ -26,3 +26,12 @@ test('sparse labels remain legible but clipped/offscreen labels and malformed sc
  assert.equal(visibleLabelIds([{id:'a',x:399,y:50,visible:true,label:'place'}],opts).size,0)
  assert.equal(visibleLabelIds([{id:'a',x:NaN,y:50,visible:true,label:'place'}],opts).size,0)
 })
+
+test('measured long labels never understate their collision or viewport bounds',()=>{
+ const options={width:800,height:500,cameraHeightMeters:100000}
+ const markers=[{id:'a',x:20,y:50,visible:true,label:'i'.repeat(80),labelWidth:1000,labelHeight:16},
+ {id:'b',x:20,y:100,visible:true,label:'W',labelWidth:120,labelHeight:16},
+ {id:'z',x:20,y:100,visible:true,label:'selected',selected:true,labelWidth:80,labelHeight:16}]
+ assert.deepEqual([...visibleLabelIds(markers,options)],['z'])
+ assert.deepEqual([...visibleLabelIds(markers,{...options,width:1200})],['z','a'])
+})

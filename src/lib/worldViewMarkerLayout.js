@@ -18,30 +18,40 @@ export function pointVisibleAboveEllipsoid(camera, point, radii) {
 
 export function visibleLabelIds(markers,{width,height,cameraHeightMeters}={}) {
   if(!Number.isFinite(width)||!Number.isFinite(height))return new Set()
-  const accepted=[], ids=new Set()
-  const ordered=[...markers].sort((a,b)=>Number(b.selected)-Number(a.selected)
+  const cells=new Map(), ids=new Set()
+  const cellSize=64
+  const keysFor=box=>{
+    const keys=[]
+    for(let x=Math.floor((box.left-6)/cellSize);x<=Math.floor((box.right+6)/cellSize);x++)
+      for(let y=Math.floor((box.top-4)/cellSize);y<=Math.floor((box.bottom+4)/cellSize);y++)keys.push(x+','+y)
+    return keys
+  }
+  const ordered=[...markers].sort((a,b)=>Number(Boolean(b.selected))-Number(Boolean(a.selected))
     || String(a.id).localeCompare(String(b.id),'en'))
   for(const m of ordered){
     if(!m.visible||!Number.isFinite(m.x)||!Number.isFinite(m.y))continue
     if(!m.selected&&cameraHeightMeters>2500000)continue
-    const w=Math.min(320,Math.max(40,String(m.label??'').length*7))
-    const box={left:m.x+12,right:m.x+12+w,top:m.y-18,bottom:m.y+2}
+    const w=Number.isFinite(m.labelWidth)?m.labelWidth:Math.max(40,String(m.label??'').length*12)
+    const h=Number.isFinite(m.labelHeight)?m.labelHeight:16
+    const box={left:m.x+14,right:m.x+14+w,top:m.y-8-h/2,bottom:m.y-8+h/2}
     if(box.left<0||box.right>width||box.top<0||box.bottom>height)continue
-    if(accepted.some(a=>box.left<a.right+6&&box.right+6>a.left
+    const keys=keysFor(box), nearby=new Set(keys.flatMap(key=>cells.get(key)??[]))
+    if([...nearby].some(a=>box.left<a.right+6&&box.right+6>a.left
       &&box.top<a.bottom+4&&box.bottom+4>a.top))continue
-    accepted.push(box);ids.add(m.id)
+    for(const key of keys){if(!cells.has(key))cells.set(key,[]);cells.get(key).push(box)}
+    ids.add(m.id)
   }
   return ids
 }
 
-export function updateGlobeMarkerLayout(C,viewer,entities) {
+export function updateGlobeMarkerLayout(C,viewer,entities,measureLabel) {
   if(!viewer||viewer.isDestroyed?.()||!C?.SceneTransforms)return false
   const scene=viewer.scene, camera=viewer.camera, time=viewer.clock.currentTime
   const items=entities.map(entity=>{
     const point=entity.position.getValue(time)
     const screen=point&&C.SceneTransforms.worldToWindowCoordinates(scene,point)
     return {id:entity.id,entity,selected:entity.__mipSelected,
-      label:entity.label.text.getValue(time),x:screen?.x,y:screen?.y,
+      label:entity.label.text.getValue(time),...measureLabel?.(entity.label.text.getValue(time),entity.label.font.getValue(time)),x:screen?.x,y:screen?.y,
       visible:Boolean(point&&screen&&pointVisibleAboveEllipsoid(camera.positionWC,point,scene.globe.ellipsoid.radii))}
   })
   const labels=visibleLabelIds(items,{width:scene.canvas.clientWidth,height:scene.canvas.clientHeight,

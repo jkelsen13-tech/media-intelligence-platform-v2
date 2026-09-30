@@ -265,7 +265,20 @@ export function createCesiumEllipsoidRendererAdapter({
   let eventHandler = null
   let entities = []
   let mounted = false
-  let markerLayoutDirty = true
+  let labelContext = null
+  const labelMeasurements = new Map()
+  const measureLabel = (text, font) => {
+    const key = font + '\n' + text
+    if (labelMeasurements.has(key)) return labelMeasurements.get(key)
+    labelContext ??= document.createElement('canvas').getContext('2d')
+    if (!labelContext) return {}
+    labelContext.font = font
+    const metrics = labelContext.measureText(text)
+    const size = { labelWidth: Math.ceil(metrics.width), labelHeight: Math.max(12, Math.ceil((metrics.actualBoundingBoxAscent || 9) + (metrics.actualBoundingBoxDescent || 3))) }
+    if (labelMeasurements.size >= 512) labelMeasurements.delete(labelMeasurements.keys().next().value)
+    labelMeasurements.set(key, size)
+    return size
+  }
   let renderedFrames = 0
   const removeLayoutListeners = []
   let currentOnSelectRow = onSelectRow
@@ -441,15 +454,12 @@ export function createCesiumEllipsoidRendererAdapter({
 
     // Request-only rendering governance: only redraw on camera/props changes.
     viewer.scene.requestRenderMode = true
-    const invalidateMarkerLayout = () => { markerLayoutDirty = true; viewer?.scene.requestRender?.() }
-    viewer.camera.percentageChanged = 0.01
-    removeLayoutListeners.push(viewer.camera.changed.addEventListener(invalidateMarkerLayout))
-    removeLayoutListeners.push(viewer.camera.moveEnd.addEventListener(invalidateMarkerLayout))
     removeLayoutListeners.push(viewer.scene.postRender.addEventListener(() => {
       renderedFrames += 1
-      if (!markerLayoutDirty || !viewer || cancelledNow()) return
-      markerLayoutDirty = false
-      if (updateGlobeMarkerLayout(Cesium, viewer, entities)) viewer.scene.requestRender?.()
+      if (!viewer || cancelledNow()) return
+      // Every actual frame includes small camera moves and responsive resizes.
+      // Only a changed visibility result requests one correction frame.
+      if (updateGlobeMarkerLayout(Cesium, viewer, entities, measureLabel)) viewer.scene.requestRender?.()
     }))
 
     // Stage D visual-continuity repair: apply the labeled relief shading
@@ -606,7 +616,6 @@ export function createCesiumEllipsoidRendererAdapter({
     }
 
     // Arbitration runs only after actual camera/feature renders, never an idle loop.
-    markerLayoutDirty = true
     viewer.scene.requestRender?.()
   }
 

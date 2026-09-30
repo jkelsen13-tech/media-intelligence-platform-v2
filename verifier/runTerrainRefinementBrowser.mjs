@@ -4,6 +4,7 @@ import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { tileApproval } from '../src/lib/worldViewCesiumTerrariumTerrainProvider.js'
+import { cameraStatesEqual, parseCameraState } from '../src/lib/worldViewCameraState.js'
 import { sameCameraPose } from './cameraPoseComparison.mjs'
 import { observeBackendBoundary } from './backendBoundary.mjs'
 const require = createRequire(process.env.MIP_BROWSER_PACKAGE + '/package.json')
@@ -66,7 +67,7 @@ try {
           await settle()
           const actual=await state()
           assert.ok(sameCameraPose(actual.cameraPose,before.cameraPose),'detail choice must not move the camera')
-          assert.equal(await camera(),originalCamera)
+          assert.ok(cameraStatesEqual(parseCameraState(await camera()),parseCameraState(originalCamera),1e-9),'remount preserves serialized camera within numerical round-trip tolerance')
           assert.equal(page.url(),route)
           assert.equal(actual.requestRenderMode,true)
           assert.deepEqual(actual.recordedLighting,before.recordedLighting)

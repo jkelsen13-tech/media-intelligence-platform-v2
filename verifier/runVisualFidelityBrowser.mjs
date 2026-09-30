@@ -240,7 +240,8 @@ try {
       for(const [effect,control] of Object.entries(atmosphereControls)){
         assert.equal(await control.isChecked(),false,'atmosphere defaults off')
         const target=effect==='groundAtmosphere'
-          ? JSON.stringify({...JSON.parse(localCamera),heightMeters:12000000,pitchDegrees:-90,rollDegrees:0}) : localCamera
+          ? JSON.stringify({...JSON.parse(localCamera),heightMeters:12000000,pitchDegrees:-90,rollDegrees:0})
+          : JSON.stringify({...JSON.parse(localCamera),headingDegrees:346,pitchDegrees:-32,rollDegrees:0})
         assert.equal(await page.evaluate(value=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(value),target),true)
         await page.locator('.wv-map-host').scrollIntoViewIfNeeded()
         await delay(1000)
