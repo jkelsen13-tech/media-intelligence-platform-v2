@@ -189,6 +189,7 @@ async function atlasLabelJourney(browser,kind){
     const inspectorBefore=await inspectorFields()
     assert.equal(Object.keys(inspectorBefore).length,9,'selected inspector exposes the original row fields')
     const changedInspectorFields=[]
+    await page.waitForLoadState('networkidle',{timeout:30000})
     await Promise.all(pendingNodeReads)
     assert.equal(nodeReadFailures,0,'public graph type response is readable')
     assert.equal(fixture.selectionRows.length,1,'qualification binds the one original projection row')
