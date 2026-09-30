@@ -14,6 +14,13 @@ const {chromium,webkit}=require('playwright')
 const origin='http://127.0.0.1:4173',route=origin+'/media-intelligence-platform-v2/#/event/'+QUALIFICATION_SUBJECT+'/world'
 const server=spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
 const cameraState=(lon,lat,heightMeters=200000)=>({version:1,lon,lat,heightMeters,headingDegrees:0,pitchDegrees:-90,rollDegrees:0})
+const angularGap=(a,b)=>Math.abs(((a-b+180)%360+360)%360-180)
+function assertOrientation(actual,target,label){
+  assert.ok(actual,label+' valid camera capture')
+  assert.ok(angularGap(actual.headingDegrees,target.headingDegrees)<1e-6,label+' captures requested heading')
+  assert.ok(Math.abs(actual.pitchDegrees-target.pitchDegrees)<1e-6,label+' captures requested pitch')
+  assert.ok(angularGap(actual.rollDegrees,target.rollDegrees)<1e-6,label+' captures requested roll without a spurious half-turn')
+}
 const camera=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.getCameraState())
 const state=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getRenderState())
 const identity=page=>page.locator('.ws-canonical[data-investigation-context]').getAttribute('data-canonical-subject-id')
@@ -81,6 +88,7 @@ async function appearanceAblations(page,engine,width,counts){
     for(const control of Object.values(controls))await control.uncheck()
     await setCamera(page,target);await settle(page)
     const fixed=await camera(page),fixedState=await state(page),fogPolicy=fixedState.atmosphere.fogPolicy
+    assertOrientation(parseCameraState(fixed),target,sceneName)
     assert.equal(fixedState.recordedLighting.available,true,'lighting has a real recorded instant')
     assert.equal(fixedState.recordedLighting.frozen,true)
     const canvas=await page.locator('.wv-map-host canvas').first().elementHandle()
@@ -132,6 +140,7 @@ async function realJourney(browser,engine,width){
     const free={...cameraState(-80,42,700000),headingDegrees:23,pitchDegrees:-65}
     await setCamera(page,free)
     const saved=parseCameraState(await camera(page)),modes=page.getByRole('tablist',{name:'World View mode',exact:true})
+    assertOrientation(saved,free,'manual globe camera')
     await modes.getByRole('tab',{name:'Graph',exact:true}).click()
     await modes.getByRole('tab',{name:'Map',exact:true}).click()
     await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState())
@@ -204,6 +213,11 @@ async function fixtureJourney(browser,engine,kind){
     await setCamera(page,cameraState(-81.7,41.4,100000));await settle(page)
     const original=await camera(page),originalContext=await context(page),canvas=await page.locator('.wv-map-host canvas').first().elementHandle()
     const baseline=await state(page),visible=baseline.markers.filter(m=>m.visible),labels=baseline.markers.filter(m=>m.labelVisible)
+    if(baseline.layoutTiming){
+      assert.equal(baseline.layoutTiming.entityCount,receipt.coordinateCount)
+      for(const key of ['lastMs','maxMs','passes'])assert.ok(Number.isFinite(baseline.layoutTiming[key])&&baseline.layoutTiming[key]>=0)
+      assert.ok(baseline.layoutTiming.passes>0)
+    }
     assert.equal(baseline.markers.length,receipt.coordinateCount,'no marker deduplication/coordinate relocation')
     if(kind==='dense'){assert.equal(visible.length,500);assert.equal(labels.length,1,'colliding dense labels are deterministically suppressed')}
     else{assert.equal(visible.length,4,'far hemisphere point suppressed');assert.ok(labels.length>=2,'separate sparse labels remain readable')}
