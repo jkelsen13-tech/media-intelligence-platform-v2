@@ -1,0 +1,59 @@
+{
+  "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
+  "evidence_class": "implementation_agent_inspected_CI_not_independent_review",
+  "records": [
+    {
+      "status": "FAILED_SUPERSEDED",
+      "head": "3b810b538e409ad023e66deb83299d6092462636",
+      "run_id": 34446067879,
+      "job_id": 102771017141,
+      "tests": 14,
+      "errors": 1,
+      "detail": "Expected withdrawal rejection terminated psql under ON_ERROR_STOP. Resetting that exited waiter raised BrokenPipeError after withdrawn-head and zero-released-row assertions. Run remains failed."
+    },
+    {
+      "status": "PASSED_BEFORE_PACKET_FINALIZATION",
+      "head": "e0d240b05b245be551d70c5c2f4a2b9c517e8ae5",
+      "checkout": "4b5bcdeb6519687e91e4e56574b209d2bc6a2d83",
+      "tree": "c05c401e9b83291d405e2a2ef43aadafd772f5fc",
+      "native": {
+        "run": 34447509933,
+        "job": 102775451496,
+        "tests": 14,
+        "seconds": 6.906,
+        "observed_lock_barriers": 13
+      },
+      "regression": {
+        "run": 34447509920,
+        "jobs": [
+          102775451483,
+          102775451800
+        ],
+        "node": [
+          22,
+          24
+        ],
+        "tests_each": 1610,
+        "failures": 0,
+        "skipped_tests": 0,
+        "build": "PASS",
+        "audit_node24_total": 0,
+        "audit_node22": "SKIPPED_BY_WORKFLOW"
+      },
+      "preview": {
+        "run": 34447509946,
+        "jobs": [
+          102775451514,
+          102775451706
+        ],
+        "status": "BOTH_COMPLETE_PASS",
+        "full_pass_markers": 118
+      },
+      "correction": "Removed reset-role reuse of exited waiter; added explicit exited-session guard. Lock, rejection, withdrawn-head and zero-released assertions retained. No production change."
+    }
+  ],
+  "finalization": "This history precedes the final documentation/hash commit. Final exact-head rerun receipt belongs in PR #147 body and owner handoff; do not represent earlier runs as execution of later commits.",
+  "logs": "GitHub Actions job URLs, retained remotely; raw logs and screenshots are NOT part of the disclosure set. They can contain public article text. Owner must review any additional disclosure.",
+  "independent_review": "PENDING",
+  "owner_acceptance": "PENDING"
+}
