@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
+import { formatTimeQuery, serializeDeepLink } from '../src/lib/deepLinks.js'
 import { temporalAssessmentReferenceFor } from '../src/lib/investigationContext.js'
 import { parseCameraState } from '../src/lib/worldViewCameraState.js'
 import { heightMetersForPrecisionClass } from '../src/lib/worldViewMapStack.js'
@@ -206,7 +207,20 @@ async function atlasLabelJourney(browser,kind){
       'temporal-assessment-reference':temporalAssessmentReferenceFor(sourceRow.subject_graph_node_id),
     }
     assert.equal(expectedContext['canonical-subject-id'],subject)
-    let pickedContext=null
+    const sourceIc={
+      canonical_subject_type:expectedContext['canonical-subject-type'],
+      canonical_subject_id:sourceRow.subject_graph_node_id,
+      parent_event_id:expectedContext['parent-event-id']||null,
+      as_of_time:sourceRow.valid_from_utc??null,
+      selected_time_range:sourceRow.valid_from_utc!=null||sourceRow.valid_to_utc!=null
+        ?{from:sourceRow.valid_from_utc,to:sourceRow.valid_to_utc}:null,
+      active_view:'world',
+      temporal_assessment_reference:expectedContext['temporal-assessment-reference'],
+    }
+    const expectedSelectionUrl=new URL(serializeDeepLink(sourceIc,{
+      entity:node.id,time:formatTimeQuery(sourceIc.as_of_time,sourceIc.selected_time_range),
+    }),route).href
+    let pickedContext=null,pickedUrl=null
     const keyResults=[]
     for(const key of ['Enter','Space']){
       await point.focus();assert.equal(await point.evaluate(n=>n===document.activeElement),true,'original point is keyboard focusable')
@@ -222,18 +236,20 @@ async function atlasLabelJourney(browser,kind){
       if(pickedContext)assert.ok(JSON.stringify(actualContext)===JSON.stringify(pickedContext),'repeated same-row keyboard pick is exactly idempotent')
       pickedContext=actualContext
       assert.equal(await publicContext(page).then(c=>c['canonical-subject-id']),subject,'keyboard picking retains original canonical row identity')
-      assert.equal(page.url(),route)
+      await page.waitForURL(url=>url.href===expectedSelectionUrl,{timeout:10000})
+      if(pickedUrl)assert.equal(page.url(),pickedUrl,'repeated same-row activation retains its serialized source-bound URL')
+      pickedUrl=page.url()
       assert.equal(await point.getAttribute('aria-label'),name,'keyboard picking preserves original source label/coordinate detail')
       assert.equal(await atlas.locator('.wv-feature.is-selected').count(),fixture.coordinateCount,'original selected projection remains bound to all geometry members')
       keyResults.push({key,canonicalSubject:subject,selectedPoints:fixture.coordinateCount,preventedScroll:true,originalRowFieldsRetained:true,derivedTitleCompared:false,
-        sourceContext:actualContext,changedFromRouteSeed:Object.keys(actualContext).filter(field=>actualContext[field]!==originalContext[field])})
+        sourceContext:actualContext,selectionUrl:pickedUrl,changedFromRouteSeed:Object.keys(actualContext).filter(field=>actualContext[field]!==originalContext[field])})
     }
     assert.ok(fixture.readerRequests>0&&fixture.matchedRows>0)
     assert.deepEqual(errors,[])
     console.log('MIP_WORLD_ATLAS_CONTEXT_'+kind+'_1280='+(await contextScreenshot(page)).toString('base64'))
     console.log('MIP_WORLD_ATLAS_LABEL_PASS='+JSON.stringify({engine:'chromium',kind,fixture,viewports,keyResults,
       idle:{elapsedMs:Date.now()-start,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
-      limitation:'SVG overview fits the entire synthetic geometry, so separated local points may cluster at world scale and all sparse labels may be hidden when original edge anchors cannot fit. Zero painted labels is reported explicitly, not described as readable. Keyboard activation exercises the already selected original row. Exact source row fields are retained. First activation binds source-derived graph type/parent and recorded valid-time bounds, which may differ from a named route seed. The repeated same-row activation is idempotent. Graph-node matching may expand its derived title; no distinct subject transition is claimed. No interactive camera or GPU timing is fabricated.'}))
+      limitation:'SVG overview fits the entire synthetic geometry, so separated local points may cluster at world scale and all sparse labels may be hidden when original edge anchors cannot fit. Zero painted labels is reported explicitly, not described as readable. Keyboard activation exercises the already selected original row. Exact source row fields are retained. First activation binds source-derived graph type/parent and recorded valid-time bounds, which may differ from a named route seed. The URL serializes the same subject/world with source time bounds and picked graph node. The repeated same-row activation is idempotent. Graph-node matching may expand its derived title; no distinct subject transition is claimed. No interactive camera or GPU timing is fabricated.'}))
   }catch(error){
     console.log('MIP_WORLD_ATLAS_LABEL_FAILURE='+JSON.stringify({kind,error:error.message,errors}))
     console.log('MIP_WORLD_ATLAS_LABEL_FAILURE_IMAGE_'+kind+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
