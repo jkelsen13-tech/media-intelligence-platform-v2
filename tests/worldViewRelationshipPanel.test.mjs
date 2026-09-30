@@ -3,13 +3,22 @@ import assert from 'node:assert/strict'
 import React from 'react'
 import TestRenderer, { act } from 'react-test-renderer'
 import { createServer } from 'vite'
-import react from '@vitejs/plugin-react'
 import { projectRelationshipDisplay } from '../src/lib/worldViewRelationshipLayout.js'
+
+function renderedText(node) {
+  if (node == null || typeof node === 'boolean') return ''
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(renderedText).join('')
+  return renderedText(node.children)
+}
 
 test('relationship disclosure retains direction, all authorized pages, provenance and exact node actions', async t => {
   const server = await createServer({
-    configFile: false, plugins: [react()],
-    server: { middlewareMode: true }, appType: 'custom',
+    configFile: false,
+    esbuild: { jsx: 'automatic', jsxImportSource: 'react' },
+    optimizeDeps: { noDiscovery: true, include: [] },
+    server: { middlewareMode: true, hmr: false, watch: null },
+    appType: 'custom',
   })
   t.after(() => server.close())
   const { default: Panel } = await server.ssrLoadModule('/src/components/WorldViewRelationshipPanel.jsx')
@@ -37,11 +46,11 @@ test('relationship disclosure retains direction, all authorized pages, provenanc
   const rows = () => renderer.root.findAll(node => node.type === 'li' && node.props['data-edge-id'] != null)
   assert.equal(rows().length, 20)
   assert.equal(rows()[0].props['data-edge-id'], 'edge-44')
-  assert.match(JSON.stringify(renderer.toJSON()), /Selected source → Target B/)
-  assert.match(JSON.stringify(renderer.toJSON()), /sequence: after/)
-  assert.match(JSON.stringify(renderer.toJSON()), /evidence-44/)
-  assert.match(JSON.stringify(renderer.toJSON()), /does not supply relationship valid-time bounds/)
-  assert.match(JSON.stringify(renderer.toJSON()), /All 45 supplied records remain inspectable/)
+  assert.match(renderedText(renderer.toJSON()), /Selected source → Target B/)
+  assert.match(renderedText(renderer.toJSON()), /sequence: after/)
+  assert.match(renderedText(renderer.toJSON()), /evidence-44/)
+  assert.match(renderedText(renderer.toJSON()), /does not supply relationship valid-time bounds/)
+  assert.match(renderedText(renderer.toJSON()), /All 45 supplied records remain inspectable/)
   const actions = renderer.root.findAll(node => node.type === 'button' && node.props['aria-label'] === 'Inspect Source: Selected source')
   await act(async () => actions[0].props.onClick())
   assert.equal(selectedNode, nodes[2], 'selection must receive the exact authorized graph node')
@@ -60,9 +69,9 @@ test('relationship disclosure retains direction, all authorized pages, provenanc
   await act(async () => renderer.update(React.createElement(Panel, {
     edges: [], nodes, edgesUnavailable: 'reader unavailable',
   })))
-  assert.match(JSON.stringify(renderer.toJSON()), /Relationship records are unavailable in the current authorized read/)
+  assert.match(renderedText(renderer.toJSON()), /Relationship records are unavailable in the current authorized read/)
   assert.equal(renderer.root.findAll(node => node.type === 'li').length, 0)
-  assert.doesNotMatch(JSON.stringify(renderer.toJSON()), /No relationship records were returned/)
+  assert.doesNotMatch(renderedText(renderer.toJSON()), /No relationship records were returned/)
   await act(async () => renderer.update(React.createElement(Panel, { edges: [], nodes })))
-  assert.match(JSON.stringify(renderer.toJSON()), /No relationship records were returned by the current authorized graph read/)
+  assert.match(renderedText(renderer.toJSON()), /No relationship records were returned by the current authorized graph read/)
 })

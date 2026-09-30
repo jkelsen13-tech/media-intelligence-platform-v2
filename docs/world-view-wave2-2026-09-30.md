@@ -31,8 +31,8 @@ The supplied Library workflow filenames were searched in accessible Pages with n
 ## Qualification ledger — first integrated checkpoint
 
 - In-memory V8 checks: cluster and relationship helpers, randomized clustering oracle, presentation integration, and fixture syntax/identity logic were exercised. These are not Node or browser PASS receipts.
-- Actual Node 22/24 regression/build: PENDING for the combined candidate.
-- Exact-candidate representative remote browser build: PENDING via the existing World View Actions jobs.
+- First exact integrated candidate `17b9d357e553f162bdf59b38ad418ae544114dd7`, draft PR #191: Golden run `36758755840` exercised Node22/24; each passed 1,720 of 1,722 tests. Two new React panel text assertions incorrectly compared split text children as serialized JSON. Test repairs preserve the exact rendered directions, counts and actions; actual build and combined qualification remain PENDING.
+- Exact-candidate representative remote browser build: PENDING via the existing World View Actions jobs. Draft-PR opening did not queue the PR browser workflow; a push trigger restricted to this successor branch reuses its existing four jobs and unchanged budgets.
 - Hosted candidate preview: NOT EXERCISED; no preview service is created.
 - Independent non-implementing Cursor review: REQUIRED / NOT EXERCISED. Browser/Computer/Cursor execution controls are not exposed in this session, so the existing outside review route is unavailable. Internal implementation checks do not substitute for it.
 - Live deployment: NOT EXERCISED. Wave 2 merge/deployment is not authorized.

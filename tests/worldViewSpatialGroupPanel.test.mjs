@@ -3,11 +3,23 @@ import assert from 'node:assert/strict'
 import React from 'react'
 import TestRenderer, { act } from 'react-test-renderer'
 import { createServer } from 'vite'
-import react from '@vitejs/plugin-react'
 import { projectionRowDisplayKey } from '../src/lib/worldViewDisplayClusters.js'
 
+function renderedText(node) {
+  if (node == null || typeof node === 'boolean') return ''
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(renderedText).join('')
+  return renderedText(node.children)
+}
+
 test('spatial groups inspect separately from exact row picks, count rows/locations, retain selected rows and discard stale inspections', async t => {
-  const server = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, appType: 'custom' })
+  const server = await createServer({
+    configFile: false,
+    esbuild: { jsx: 'automatic', jsxImportSource: 'react' },
+    optimizeDeps: { noDiscovery: true, include: [] },
+    server: { middlewareMode: true, hmr: false, watch: null },
+    appType: 'custom',
+  })
   t.after(() => server.close())
   const { default: Panel, WorldViewDisplayOverlay: Overlay } = await server.ssrLoadModule('/src/components/WorldViewSpatialGroupPanel.jsx')
   const rows = Array.from({length: 25}, (_, i) => Object.freeze({
@@ -58,12 +70,12 @@ test('spatial groups inspect separately from exact row picks, count rows/locatio
   assert.equal(renderedLine.props.x2,70)
   assert.equal(renderedLine.props.y2,80)
   assert.ok(renderedLine.props.markerEnd)
-  assert.match(JSON.stringify(overlay.toJSON()),/sequence/)
+  assert.match(renderedText(overlay.toJSON()),/sequence/)
   assert.equal(panel.root.findByProps({'aria-label':'Spatial groups'}).type,'details')
-  assert.match(JSON.stringify(panel.toJSON()),/Display groups. Counts refer to projection rows and their display locations/)
-  assert.match(JSON.stringify(panel.toJSON()),/25 rows/)
-  assert.match(JSON.stringify(panel.toJSON()),/Selected projection row: Recorded place 24/)
-  assert.match(JSON.stringify(panel.toJSON()),/26 individual rows/,'single rows must deduplicate multiple locations of one version')
+  assert.match(renderedText(panel.toJSON()),/Display groups. Counts refer to projection rows and their display locations/)
+  assert.match(renderedText(panel.toJSON()),/25 rows/)
+  assert.match(renderedText(panel.toJSON()),/Selected projection row: Recorded place 24/)
+  assert.match(renderedText(panel.toJSON()),/26 individual rows/,'single rows must deduplicate multiple locations of one version')
 
   await act(async()=>panel.update(React.createElement(Panel,props('group'))))
   assert.equal(detailsMock.open,true)
@@ -84,9 +96,9 @@ test('spatial groups inspect separately from exact row picks, count rows/locatio
   assert.equal(selectedMember.props.type,'button','native buttons provide keyboard activation')
   assert.equal(selectedMember.findAll(node=>node.type==='span'&&node.children.includes('Selected')).length,1)
   assert.ok(selectedMember.props['aria-describedby'])
-  assert.match(JSON.stringify(panel.toJSON()),/object-24/)
-  assert.match(JSON.stringify(panel.toJSON()),/revision-24/)
-  assert.match(JSON.stringify(panel.toJSON()),/display locations/)
+  assert.match(renderedText(panel.toJSON()),/object-24/)
+  assert.match(renderedText(panel.toJSON()),/revision-24/)
+  assert.match(renderedText(panel.toJSON()),/display locations/)
   await act(async()=>selectedMember.props.onClick())
   assert.deepEqual(memberPicks,[['group',projectionRowDisplayKey(rows[24])]])
   assert.deepEqual(singlePicks,[])
@@ -125,7 +137,7 @@ test('spatial groups inspect separately from exact row picks, count rows/locatio
   presentation = {...presentation,layout:{clusters:[],singles:[members[24]]}}
   await act(async()=>panel.update(React.createElement(Panel,props('group'))))
   assert.equal(panel.root.findAll(node=>node.props['aria-label']==='Inspected group projection rows').length,0)
-  assert.match(JSON.stringify(panel.toJSON()),/no longer in the current display/)
+  assert.match(renderedText(panel.toJSON()),/no longer in the current display/)
   const retained = rowButtons(individualRegion())[0]
   assert.equal(retained.props['aria-label'],'Select projection row: Recorded place 24')
   await act(async()=>retained.props.onClick())

@@ -376,9 +376,40 @@ async function independentJourney(browser,engine,scene,width=1280){
     assert.ok(group.rowKeys.includes(rowKey),'member binds an original contract row in the current group')
     const originalSubject=(await context(page))['canonical-subject-id']
     await member.focus()
-    const scrollBefore=await page.evaluate(()=>({x:scrollX,y:scrollY}))
-    await member.press('Space');await settle(page)
-    assert.deepEqual(await page.evaluate(()=>({x:scrollX,y:scrollY})),scrollBefore,'Space member activation does not scroll the page')
+    // Observe browser-delivered keyboard events on the actual native member
+    // button. Native Space activation need not set event.defaultPrevented;
+    // its default action activates the button instead of scrolling the page.
+    await member.evaluate(node=>{
+      window.__MIP_CLUSTER_KEYBOARD_EVENTS__=[]
+      for(const type of ['keydown','keyup'])node.addEventListener(type,event=>{
+        if(event.code!=='Space')return
+        queueMicrotask(()=>window.__MIP_CLUSTER_KEYBOARD_EVENTS__.push({
+          type:event.type,trusted:event.isTrusted,defaultPrevented:event.defaultPrevented,
+          nativeButton:node.tagName==='BUTTON',targetIsButton:event.target===node,
+        }))
+      },{once:true})
+    })
+    const scrollSnapshot=()=>page.evaluate(()=>{
+      const root=document.scrollingElement
+      return {x:scrollX,y:scrollY,maxX:Math.max(0,root.scrollWidth-root.clientWidth),
+        maxY:Math.max(0,root.scrollHeight-root.clientHeight)}
+    })
+    const scrollBefore=await scrollSnapshot()
+    await member.press('Space')
+    // Read before settle(), which intentionally scrolls the renderer into view.
+    // Legitimate selection narrows the member list and may reduce document
+    // height; the browser can clamp the previous scroll position to its new end.
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(resolve)))
+    const scrollAfter=await scrollSnapshot(),keyboardEvents=await page.evaluate(()=>window.__MIP_CLUSTER_KEYBOARD_EVENTS__)
+    assert.deepEqual(keyboardEvents.map(event=>event.type),['keydown','keyup'],'actual member receives native Space key pair')
+    assert.ok(keyboardEvents.every(event=>event.trusted&&event.nativeButton&&event.targetIsButton),'Space acts on the trusted native member button')
+    assert.ok(Math.abs(scrollAfter.x-Math.min(scrollBefore.x,scrollAfter.maxX))<=1
+      &&Math.abs(scrollAfter.y-Math.min(scrollBefore.y,scrollAfter.maxY))<=1,
+      'native Space adds no page scrolling beyond legitimate document-size clamping')
+    const keyboardScroll={before:scrollBefore,after:scrollAfter,
+      defaultPrevented:keyboardEvents.map(event=>event.defaultPrevented),trustedNativeButton:true,
+      measuredBeforeVerifierScroll:true}
+    await settle(page)
     assert.notEqual((await context(page))['canonical-subject-id'],originalSubject,'deliberate member pick changes to its exact source subject')
     assert.deepEqual(await context(page),expectedContext(source,graphFixture.getNodes().find(node=>node.id===source.subject_graph_node_id)),'first pick binds source-derived graph type/time/revision context')
     const pickedUrl=page.url(),pickedContext=await context(page),pickedState=await state(page),pickedFields=await evidenceFields(page)
@@ -419,7 +450,7 @@ async function independentJourney(browser,engine,scene,width=1280){
     assert.deepEqual(errors,[])
     console.log('MIP_WORLD_CLUSTER_INDEPENDENT_PASS='+JSON.stringify({candidate,label,synthetic:true,evidenceLayer:'isolated-contract-fixture',
       originalReaderRows:fixture.receipt.originalReaderRows,syntheticContractRows:48,displayLocations:48,scales,resizes,
-      memberPick:{sourceIdentity:source.subject_graph_node_id,rowKey,keyboard:['Space','Enter'],sourceBoundContext:true,repeatedIdempotent:true,staleBrowseMembershipRemoved:true,outsideTime,trustedTouch},
+      memberPick:{sourceIdentity:source.subject_graph_node_id,rowKey,keyboard:['Space','Enter'],keyboardScroll,sourceBoundContext:true,repeatedIdempotent:true,staleBrowseMembershipRemoved:true,outsideTime,trustedTouch},
       relationships:relationshipQualification,backend:verifyBoundary(),
       limitations:['Independent identities and geometry are isolated synthetic contract fixtures, not authoritative observations.',
         'Graph identities and88 relationships are isolated synthetic contract rows fulfilled only after exact existing authorized GET200; no source facts or backend records are created.',
