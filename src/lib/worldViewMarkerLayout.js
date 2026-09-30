@@ -88,7 +88,7 @@ export function createMarkerLabelMeasurer(createContext) {
         const lines = text.split(/\r\n|\r|\n/)
         const metrics = lines.map(line => context.measureText(line))
         const labelWidth = Math.ceil(Math.max(...metrics.map(m => m.width)))
-        // Cesium renders multiline labels. Font size also protects against
+        // Globe labels can span multiple lines. Font size also protects against
         // unusually small actual glyph bounds such as a line of punctuation.
         const fontHeight = Number.parseFloat(font.match(/([\d.]+)px/)?.[1]) || 12
         const lineHeight = Math.max(16, fontHeight * 1.5,
