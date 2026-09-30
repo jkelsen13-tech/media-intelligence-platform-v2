@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { geoMercator, geoPath, geoGraticule10 } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
 import worldAtlas from 'world-atlas/countries-110m.json'
@@ -134,15 +135,15 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
     update()
     const view = svg?.ownerDocument?.defaultView
     const fonts = svg?.ownerDocument?.fonts
-    const observer = view?.ResizeObserver ? new view.ResizeObserver(checkScale) : null
+    const observer = view?.ResizeObserver ? new view.ResizeObserver(update) : null
     if (svg) observer?.observe(svg)
-    if (!observer) view?.addEventListener('resize', checkScale)
+    if (!observer) view?.addEventListener('resize', update)
     fonts?.addEventListener?.('loadingdone', update)
     void fonts?.ready?.then(() => { if (!disposed) update() }).catch(() => {})
     return () => {
       disposed = true
       observer?.disconnect()
-      if (!observer) view?.removeEventListener('resize', checkScale)
+      if (!observer) view?.removeEventListener('resize', update)
       fonts?.removeEventListener?.('loadingdone', update)
     }
   }, [geometry.markers, screenScale, relationships, selectedKeys, onDisplayLayout])
@@ -251,6 +252,8 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   const hostRef = useRef(null)
   const fidelityRef = useRef(visualFidelity)
   fidelityRef.current = visualFidelity
+  const fidelityCapabilitiesCallback = useRef(onVisualFidelityCapabilities)
+  fidelityCapabilitiesCallback.current = onVisualFidelityCapabilities
 
   const framingRef = useRef(null)
   if (!framingRef.current) framingRef.current = createCameraFraming()
@@ -303,12 +306,20 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     })
     adapterRef.current = adapter
     void adapter.mount().then(() => {
-      if (!cancelled) {
-        setRendererReady(true)
-        const framing = framingRef.current
-        if (memory.restore(adapter, framing.getTargetKey(), stackId)) framing.acceptRestoredView()
-        else if (!framing.apply(adapter) && framing.getTargetKey() === null) adapter.setCameraState?.(northAmericaCameraState())
-      }
+      if (cancelled || adapterRef.current !== adapter) return
+      // Startup restores retained effects before resolving. Publish their current
+      // capability metadata and readiness in one committed UI update, so the
+      // controls cannot lag an already enabled renderer until a passive effect.
+      flushSync(() => {
+        fidelityCapabilitiesCallback.current?.(
+          adapter.getVisualFidelityCapabilities?.() ?? visualFidelityCapabilities(),
+        )
+        if (!cancelled && adapterRef.current === adapter) setRendererReady(true)
+      })
+      if (cancelled || adapterRef.current !== adapter) return
+      const framing = framingRef.current
+      if (memory.restore(adapter, framing.getTargetKey(), stackId)) framing.acceptRestoredView()
+      else if (!framing.apply(adapter) && framing.getTargetKey() === null) adapter.setCameraState?.(northAmericaCameraState())
     })
     return () => {
       memory.remember(adapter.getCameraState?.(), framingRef.current.getFramedKey(), stackId)

@@ -454,7 +454,7 @@ async function independentJourney(browser,engine,scene,width=1280){
       relationships:relationshipQualification,backend:verifyBoundary(),
       limitations:['Independent identities and geometry are isolated synthetic contract fixtures, not authoritative observations.',
         'Graph identities and88 relationships are isolated synthetic contract rows fulfilled only after exact existing authorized GET200; no source facts or backend records are created.',
-        'Software browser layout latency and idle allocation counters are measured; no hardware FPS/physical phone/tablet claim.']}))
+        'Software browser layout latency and idle layout-pass counts are measured; no heap-allocation, hardware FPS or physical phone/tablet claim.']}))
   }catch(error){
     console.log('MIP_WORLD_CLUSTER_FAILURE='+JSON.stringify({candidate,label,error:error.message,pageErrors:errors,qualification:fixture.receipt.qualification}))
     console.log('MIP_WORLD_CLUSTER_FAILURE_IMAGE_'+label+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))

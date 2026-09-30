@@ -25,6 +25,7 @@ function assertOrientation(actual,target,label){
 }
 const camera=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.getCameraState())
 const state=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getRenderState())
+const clusterState=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__?.getState()??null)
 const identity=page=>page.locator('.ws-canonical[data-investigation-context]').getAttribute('data-canonical-subject-id')
 const context=page=>page.locator('.ws-canonical[data-investigation-context]').evaluate(node=>
   Object.fromEntries(['canonical-subject-type','canonical-subject-id','parent-event-id','as-of-time','selected-time-range','temporal-assessment-reference']
@@ -274,8 +275,11 @@ async function fixtureJourney(browser,engine,kind){
     await openWorld(page);assert.ok(receipt.matchedRows>0,'synthetic fixture actually applied')
     await setCamera(page,cameraState(-81.7,41.4,100000));await settle(page)
     const original=await camera(page),originalContext=await context(page),canvas=await page.locator('.wv-map-host canvas').first().elementHandle()
-    const baseline=await state(page),visible=baseline.markers.filter(m=>m.eligible??m.visible),labels=baseline.markers.filter(m=>m.labelVisible)
-    const grouping=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__?.getState()?.layout??null)
+    const baseline=await state(page),clusterBaseline=await clusterState(page),labels=baseline.markers.filter(m=>m.labelVisible)
+    assert.ok(clusterBaseline?.layout,'canonical grouping probe supplies separate eligibility metadata')
+    assert.equal(clusterBaseline.markers.length,receipt.coordinateCount,'canonical location records retain original geometry count')
+    const visible=clusterBaseline.markers.filter(marker=>marker.eligible),grouping=clusterBaseline.layout
+    assert.equal(new Set(clusterBaseline.markers.map(marker=>marker.id)).size,receipt.coordinateCount,'each canonical geometry location has one versioned display ID')
     if(baseline.layoutTiming){
       assert.equal(baseline.layoutTiming.entityCount,receipt.coordinateCount)
       for(const key of ['lastMs','maxMs','passes'])assert.ok(Number.isFinite(baseline.layoutTiming[key])&&baseline.layoutTiming[key]>=0)
@@ -311,13 +315,25 @@ async function fixtureJourney(browser,engine,kind){
     // Locate one marker's real viewport edge, then cross it with less than
     // 0.0001 degrees of motion. This exercises changes below the former 1%
     // camera.changed threshold, using public visibility results only.
-    const anchor=baseline.markers.find(m=>m.eligible??m.visible).id,visibleAt=async lon=>{
+    const anchorMarker=visible[0],anchor=anchorMarker.id
+    const markerTuple=JSON.parse(anchor),positionIndex=markerTuple[1]
+    assert.ok(Number.isSafeInteger(positionIndex)&&positionIndex>=0,'canonical marker ID supplies its original geometry index')
+    const originalSource=receipt.selectionRows[0]
+    assert.equal(JSON.parse(anchorMarker.rowKey)[3],originalSource.revision_id,'canonical anchor binds the retained original revision')
+    // The unchanged Fidelity probe uses actual Cesium entity IDs, not canonical
+    // display IDs. Bridge only the published revision/index naming contract to
+    // retain the original entity's drawn/label assertions without inventing an
+    // eligibility field on that historical probe.
+    const fidelityAnchorId=originalSource.revision_id+'-'+positionIndex
+    assert.ok(baseline.markers.some(marker=>marker.id===fidelityAnchorId),'original retained entity exists for the canonical anchor')
+    const visibleAt=async lon=>{
       const before=(await state(page)).renderedFrames
       await setCamera(page,cameraState(lon,41.4,100000))
       await page.waitForFunction(frames=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getRenderState().renderedFrames>frames,before)
       await delay(70)
-      const marker=(await state(page)).markers.find(m=>m.id===anchor)
-      return marker.eligible??marker.visible
+      const marker=(await clusterState(page)).markers.find(marker=>marker.id===anchor)
+      assert.ok(marker,'canonical geometry member remains retained during clipping')
+      return marker.eligible
     }
     let inside=-81.7,outside=-79.7
     assert.equal(await visibleAt(inside),true);assert.equal(await visibleAt(outside),false)
@@ -327,7 +343,12 @@ async function fixtureJourney(browser,engine,kind){
     const beforeMotion=await state(page)
     assert.equal(await visibleAt(outside),false,'small motion updates clipping without stale marker visibility')
     const afterMotion=await state(page)
-    assert.equal(afterMotion.markers.find(m=>m.id===anchor).labelVisible,false,'clipped marker cannot retain a label')
+    const clipped=(await clusterState(page)).markers.find(marker=>marker.id===anchor)
+    assert.equal(clipped.eligible,false,'canonical geometry member crosses its actual viewport boundary')
+    assert.equal(clipped.displayed,false,'clipped canonical geometry member supplies no drawn target')
+    const clippedEntity=afterMotion.markers.find(marker=>marker.id===fidelityAnchorId)
+    assert.equal(clippedEntity.visible,false,'clipped original Cesium entity is not drawn')
+    assert.equal(clippedEntity.labelVisible,false,'clipped original Cesium entity cannot retain a label')
     assert.ok(afterMotion.renderedFrames>beforeMotion.renderedFrames)
     await idleSample(page,counts,engine+'-'+kind+'-small-motion')
     await setCamera(page,parseCameraState(original));await settle(page)

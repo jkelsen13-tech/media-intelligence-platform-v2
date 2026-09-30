@@ -1,10 +1,6 @@
 name: World View weather preview
 
 on:
-  # This bounded successor branch also qualifies when connector-created PR
-  # events do not queue Actions. Reuse the existing four jobs and budgets.
-  push:
-    branches: ['codex/world-view-wave2-20260930']
   pull_request:
     paths:
       - 'verifier/comparisonPostgresConcurrency.py'

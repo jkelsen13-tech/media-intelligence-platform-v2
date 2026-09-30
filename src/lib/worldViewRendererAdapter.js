@@ -874,13 +874,21 @@ export function createWorldViewRendererAdapter(args, {
     if (cancelled()) return
     // Updates can arrive during either dynamic import or renderer startup.
     // Replay the latest snapshot only once the renderer can accept layers.
-    ready = true
     impl?.setOnSelectRow?.(onSelectRow)
     if (reliefShadingEnabled !== undefined) impl?.setReliefShadingEnabled?.(reliefShadingEnabled)
     impl?.setRecordedTimeInstant?.(recordedTimeInstant)
-    if (visualFidelityProfile) impl?.setVisualFidelityProfile?.(visualFidelityProfile)
-    await impl?.setFeatures?.(features, selectedKeys)
+    let replayedFeatures, replayedSelectedKeys
+    do {
+      replayedFeatures = features
+      replayedSelectedKeys = selectedKeys
+      await impl?.setFeatures?.(replayedFeatures, replayedSelectedKeys)
+      if (cancelled()) return
+    } while (replayedFeatures !== features || replayedSelectedKeys !== selectedKeys)
     impl?.setRelationships?.(relationships)
+    // Replay retained effects after asynchronous layer startup. There must be
+    // no awaited work between enabling them and the canvas readiness publisher.
+    if (visualFidelityProfile) impl?.setVisualFidelityProfile?.(visualFidelityProfile)
+    if (!cancelled()) ready = true
   }
 
   function mount() {
