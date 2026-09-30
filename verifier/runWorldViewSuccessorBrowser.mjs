@@ -13,6 +13,7 @@ const require=createRequire(process.env.MIP_BROWSER_PACKAGE+'/package.json')
 const {chromium,webkit}=require('playwright')
 const origin='http://127.0.0.1:4173',route=origin+'/media-intelligence-platform-v2/#/event/'+QUALIFICATION_SUBJECT+'/world'
 const server=spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
+const contextScreenshot=page=>(page.viewportSize().width<600?page:page.locator('.wv-view')).screenshot({type:'jpeg',quality:65})
 const cameraState=(lon,lat,heightMeters=200000)=>({version:1,lon,lat,heightMeters,headingDegrees:0,pitchDegrees:-90,rollDegrees:0})
 const angularGap=(a,b)=>Math.abs(((a-b+180)%360+360)%360-180)
 function assertOrientation(actual,target,label){
@@ -143,7 +144,7 @@ async function appearanceAblations(page,engine,width,counts){
     }
     const baseline=await capture('neutral'),results=[]
     if(sceneName==='nadir')await assertGlobeCredits(page,engine,width)
-    if(sceneName==='nadir')console.log('MIP_WORLD_CONTEXT_'+engine+'_'+width+'='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
+    if(sceneName==='nadir')console.log('MIP_WORLD_CONTEXT_'+engine+'_'+width+'='+(await contextScreenshot(page)).toString('base64'))
     for(const name of ['relief','ground','haze','sun','combined']){
       for(const control of Object.values(controls))await control.uncheck()
       await delay(250)

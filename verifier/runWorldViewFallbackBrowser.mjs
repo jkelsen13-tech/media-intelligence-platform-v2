@@ -12,6 +12,7 @@ import { decodeScreenshotPng, rasterSummary, verifyRasterEvidence } from './worl
 const require=createRequire(process.env.MIP_BROWSER_PACKAGE+'/package.json'),{chromium}=require('playwright')
 const origin='http://127.0.0.1:4173',subject='acc55cb2-5ac2-4aed-be36-3f576d2bc443'
 const route=origin+'/media-intelligence-platform-v2/#/event/'+subject+'/world'
+const contextScreenshot=page=>(page.viewportSize().width<600?page:page.locator('.wv-view')).screenshot({type:'jpeg',quality:65})
 const server=spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
 const publicContext=page=>page.locator('.ws-canonical[data-investigation-context]').evaluate(node=>
   Object.fromEntries(['canonical-subject-type','canonical-subject-id','parent-event-id','as-of-time','selected-time-range','temporal-assessment-reference'].map(key=>[key,node.getAttribute('data-'+key)])))
@@ -83,7 +84,7 @@ async function mapLabelJourney(browser,kind){
     assert.deepEqual(await publicContext(page),originalContext);assert.equal(page.url(),route)
     assert.ok(fixture.matchedRows>0&&fixture.readerRequests>0,'fixture exercised the exact anonymous reader contract')
     assert.deepEqual(errors,[])
-    console.log('MIP_WORLD_MAP_LABEL_CONTEXT_'+kind+'='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
+    console.log('MIP_WORLD_MAP_LABEL_CONTEXT_'+kind+'='+(await contextScreenshot(page)).toString('base64'))
     console.log('MIP_WORLD_MAP_LABEL_PASS='+JSON.stringify({engine:'chromium',kind,fixture,viewports,resizeElapsedMs,
       idle:{elapsedMs:Date.now()-start,passes:after.labelLayout.passes-before.labelLayout.passes,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
       limitation:'Synthetic display geometry clones one real reader row without changing its identity/time. Points includes offscreen members. Timing measures layout CPU, not GPU/FPS. Probe exposes counts, so unchanged passes plus pixels qualify idle membership rather than reporting hidden label IDs.'}))
@@ -158,7 +159,7 @@ async function atlasLabelJourney(browser,kind){
       assert.deepEqual(await publicContext(page),originalContext);assert.equal(page.url(),route)
       assert.equal(await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState()),cameraBefore)
       viewports.push({width,labels:actual.labels.length,allLabelsHidden:actual.labels.length===0,fontCssPx:actual.labels.flatMap(l=>l.texts.map(t=>t.fontCssPx))})
-      if(width===390)console.log('MIP_WORLD_ATLAS_CONTEXT_'+kind+'_390='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
+      if(width===390)console.log('MIP_WORLD_ATLAS_CONTEXT_'+kind+'_390='+(await contextScreenshot(page)).toString('base64'))
     }
     await page.mouse.move(0,0);await delay(250)
     const pixels=decodeScreenshotPng(await atlas.screenshot({type:'png'})),before=await snapshot(),start=Date.now()
@@ -193,7 +194,7 @@ async function atlasLabelJourney(browser,kind){
     }
     assert.ok(fixture.readerRequests>0&&fixture.matchedRows>0)
     assert.deepEqual(errors,[])
-    console.log('MIP_WORLD_ATLAS_CONTEXT_'+kind+'_1280='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
+    console.log('MIP_WORLD_ATLAS_CONTEXT_'+kind+'_1280='+(await contextScreenshot(page)).toString('base64'))
     console.log('MIP_WORLD_ATLAS_LABEL_PASS='+JSON.stringify({engine:'chromium',kind,fixture,viewports,keyResults,
       idle:{elapsedMs:Date.now()-start,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
       limitation:'SVG overview fits the entire synthetic geometry, so separated local points may cluster at world scale and all sparse labels may be hidden when original edge anchors cannot fit. Zero painted labels is reported explicitly, not described as readable. Keyboard activation exercises the already selected original row. Exact source row fields and context are retained; graph-node matching may expand its derived title. This does not prove a distinct subject transition. No interactive camera or GPU timing is fabricated.'}))
@@ -280,7 +281,7 @@ try{
       }
       if(width===390)await page.getByRole('button',{name:'Done — scroll page',exact:true}).click()
       assert.deepEqual(errors,[])
-      console.log('MIP_WORLD_FALLBACK_CONTEXT_'+width+'='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
+      console.log('MIP_WORLD_FALLBACK_CONTEXT_'+width+'='+(await contextScreenshot(page)).toString('base64'))
       console.log('MIP_WORLD_FALLBACK_PASS='+JSON.stringify({engine:'chromium',width,savedGlobeCamera:saved,initialFallback:initial,cases,canonicalSubject:subject,backend:verifyBoundary(),
         limitation:'Qualifies a saved globe view restored through Graph and a Cesium startup failure. Does not inject a fatal draw failure into an already running globe.'}))
     }catch(error){
