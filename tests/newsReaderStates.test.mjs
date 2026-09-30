@@ -66,7 +66,7 @@ test('mobile discovery dialog exposes modal semantics and Escape closes it', asy
   try {
     await act(async () => r.root.findByProps({ className: 'news-filters-btn' }).props.onClick())
     const dialog = r.root.findByProps({ role: 'dialog', 'aria-label': 'Discovery filters' })
-    assert.equal(dialog.props['aria-modal'], true)
+    assert.equal(dialog.props['aria-modal'], 'true')
     await act(async () => dialog.props.onKeyDown({ key: 'Escape' }))
     assert.equal(r.root.findAllByProps({ role: 'dialog' }).length, 0)
   } finally { await act(async () => r.unmount()) }

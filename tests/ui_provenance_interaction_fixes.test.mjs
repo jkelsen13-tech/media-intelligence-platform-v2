@@ -8,6 +8,7 @@ const modePanel = readFileSync(new URL('../src/graph/GraphModePanel.jsx', import
 const arcEvidence = readFileSync(new URL('../src/components/ArcEvidencePanel.jsx', import.meta.url), 'utf8')
 const arcs = readFileSync(new URL('../src/views/ArcsView.jsx', import.meta.url), 'utf8')
 const news = readFileSync(new URL('../src/views/NewsView.jsx', import.meta.url), 'utf8')
+const storyPresentation = readFileSync(new URL('../src/lib/newsStoryPresentation.js', import.meta.url), 'utf8')
 const supabaseReadPath = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8')
 const articleDetailReadPath = supabaseReadPath.slice(
   supabaseReadPath.indexOf('export async function loadArticleDetail'),
@@ -50,7 +51,7 @@ test('Arc Overview contains status context while Evidence remains an attached so
 
 test('News makes publisher records and extraction gaps visible without fabricating claim-level metadata', () => {
   assert.match(news, /Publisher source record/)
-  assert.match(news, /Publisher source URL recorded/)
+  assert.match(storyPresentation, /Publisher source URL recorded/)
   assert.match(news, /No author byline is stored\. This is a metadata gap/)
   assert.match(news, /No structured substantive claims have been extracted yet/)
   assert.match(news, /No structured framing markers have been extracted yet/)

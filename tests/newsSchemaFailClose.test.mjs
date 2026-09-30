@@ -441,7 +441,10 @@ test('News paints permission-denied as an honest notice, not a red Failed to loa
   assert.match(NEWS, /permission denied/)
   assert.match(NEWS, /0 articles; no rows are invented/)
   assert.match(NEWS, /!articlesUnavailable && articles\.length === 0/)
-  assert.match(NEWS, /\{error && <div className="notice error">Failed to load articles: \{error\}<\/div>\}/)
+  assert.match(NEWS, /className="notice error" role="alert"/)
+  assert.match(NEWS, /News could not be loaded/)
+  assert.match(NEWS, /Try again/)
+  assert.doesNotMatch(NEWS, /Failed to load articles: \{error\}/)
   assert.match(NEWS, /className="notice">/)
 })
 
