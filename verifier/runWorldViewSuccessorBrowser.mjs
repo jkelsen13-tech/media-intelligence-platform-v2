@@ -65,6 +65,41 @@ async function openWorld(page){
   assert.equal(await identity(page),QUALIFICATION_SUBJECT,'qualification binds the actual nonempty canonical subject')
   assert.ok((await state(page)).markers.length>0,'real reader creates marker evidence')
 }
+async function assertGlobeCredits(page,engine,width){
+  const credits=page.locator('.cesium-widget-credits'),disclosure=page.locator('.wv-terrain-disclosure')
+  await credits.scrollIntoViewIfNeeded()
+  await credits.waitFor({state:'visible'})
+  const rights=await disclosure.innerText()
+  for(const source of ['USGS 3DEP/SRTM/GMTED2010','NOAA ETOPO1','NRCan CDEM','Mapzen/AWS Terrain Tiles','Open Government Licence – Canada','never evidence'])
+    assert.ok(rights.includes(source),'terrain disclosure retains '+source)
+  const geometry=await page.evaluate(()=>{
+    const c=document.querySelector('.cesium-widget-credits'),d=document.querySelector('.wv-terrain-disclosure')
+    const rect=n=>{const r=n.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}}
+    return{credits:rect(c),terrain:rect(d)}
+  })
+  const a=geometry.credits,b=geometry.terrain
+  assert.ok(a.width>0&&a.height>0,'native imagery credit has a visible rectangle')
+  assert.ok(a.right<=b.x||b.right<=a.x||a.bottom<=b.y||b.bottom<=a.y,'terrain disclosure never covers native imagery credit')
+  const attribution=credits.locator('a[href="https://www.openstreetmap.org/copyright"]').first()
+  await attribution.waitFor({state:'visible'})
+  assert.match(await attribution.innerText(),/OpenStreetMap.*contributors/i,'imagery rights text is visible without opening a dialog')
+  const activateTouch=width===390&&!(await page.locator('.wv-stage').getAttribute('class')).includes('wv-touch-active')
+  if(activateTouch){
+    await page.getByRole('button',{name:'Interact with map',exact:true}).click()
+    await credits.scrollIntoViewIfNeeded()
+  }
+  const unobscured=await attribution.evaluate(node=>{
+    const fragments=[...node.getClientRects()]
+    return fragments.length>0&&fragments.every(r=>{
+      const x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y)
+      return r.width>0&&r.height>0&&x>=0&&x<innerWidth&&y>=0&&y<innerHeight&&(hit===node||node.contains(hit))
+    })
+  })
+  assert.equal(unobscured,true,'actual imagery rights text is visible and unobscured')
+  if(activateTouch)await page.getByRole('button',{name:'Done — scroll page',exact:true}).click()
+  console.log('MIP_WORLD_CREDITS='+JSON.stringify({engine,width,geometry,imagery:'©OpenStreetMap contributors',visibleWithoutDialog:true,terrainRightsPreserved:true}))
+}
+
 async function appearanceAblations(page,engine,width,counts){
   const panel=page.getByRole('region',{name:'Visual Fidelity',exact:true})
   await panel.getByRole('button',{name:'Visual Fidelity settings',exact:true}).click()
@@ -107,6 +142,7 @@ async function appearanceAblations(page,engine,width,counts){
       return {decoded,metrics,handle}
     }
     const baseline=await capture('neutral'),results=[]
+    if(sceneName==='nadir')await assertGlobeCredits(page,engine,width)
     if(sceneName==='nadir')console.log('MIP_WORLD_CONTEXT_'+engine+'_'+width+'='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
     for(const name of ['relief','ground','haze','sun','combined']){
       for(const control of Object.values(controls))await control.uncheck()

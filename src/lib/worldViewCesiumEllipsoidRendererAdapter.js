@@ -340,8 +340,6 @@ export function createCesiumEllipsoidRendererAdapter({
 
     if (cancelledNow()) return
 
-    const stack = mapStackById(stackId)
-    const attributionText = stack?.attribution ?? '© OpenStreetMap contributors'
 
     // Stage D: bounded display-only terrain. The provider enforces the
     // approved Cleveland/Ohio coverage and approved-source policy itself;
@@ -380,7 +378,10 @@ export function createCesiumEllipsoidRendererAdapter({
     // explicit ImageryLayer passed as `baseLayer`.
     const imageryProvider = new Cesium.UrlTemplateImageryProvider({
       url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-      credit: new Cesium.Credit(attributionText),
+      credit: new Cesium.Credit(
+        '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>',
+        true,
+      ),
       maximumLevel: 19,
     })
 

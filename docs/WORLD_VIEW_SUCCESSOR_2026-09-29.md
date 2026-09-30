@@ -3,8 +3,8 @@
 Starting application source: 1a9f7bbe99676ca535c21dd6e68d3de7da62e69e.
 Isolated branch: codex/world-view-successor-20260929. No backend branch merge,
 qik query/write, role/ACL, credential, ingestion, publication or deployment.
-The private checkpoint was refreshed read-only: held 948f83d, installed-disabled
-operation a382dcdbf2924852b711b6a8b0c713eb and ticket SU-488436 are outside this lane.
+The separate private consolidation checkpoint was refreshed read-only. Its held,
+installed-disabled and externally authority-dependent state remains outside this lane.
 Source stays on GitHub; execution/visual artifacts use existing ephemeral CI.
 
 Product authority: owner-supplied MIP_World_View_Work_Plan_Updated_2026-09-29.docx
@@ -75,8 +75,9 @@ lighting and interactions; request counts and render governance must be recorded
 No arbitrary color grading/default aesthetics change is made. Visual verification
 and independent Cursor review are pending until actual results are recorded.
 
-Remaining safe frontend: broader clustering/connection arbitration, further
-touch/fallback journeys and complete attribution coverage. Data/provider:
+Remaining later frontend: broader clustering and relationship/connection arbitration.
+This wave now covers actual touch/fallback journeys and visible attribution; it does
+not fabricate graph relationships or relocate evidence coordinates. Data/provider:
 continental higher-detail terrain and admitted contextual observations, with
 exact rights/coverage/temporal/availability gates. Backend-dependent: authorized
 public projections only; consolidation is not changed. Later news-driven:
@@ -104,4 +105,69 @@ scan, nadir haze pixel comparison, and exact remount string comparisons. Tests n
 use an explicit oblique haze camera and tolerate numerical reconstruction only at
 remount; same-viewer fidelity switches retain their strict pose/string checks.
 Integrated runtime, measured appearance interpretation and external review remain
-pending. A separate MapLibre label arbitration package is next safe frontend work.
+pending. MapLibre label arbitration is now integrated and qualified on c5cd259e. Static atlas
+label arbitration is integrated in the next combined candidate and requires its actual
+browser recheck before acceptance.
+
+## Integrated camera/renderer checkpoint
+
+Application source c5cd259e7c926720b93c93f21fa6480499852643 passed Golden run
+36663892567 on Node22/24: 1,650 tests, zero failures, production builds and audit.
+World View run36663892554 passed both jobs109724329212/109724329456: existing VF,
+weather availability, Graph/Timeline/workspace, terrain/refinement/dynamic atmosphere,
+successor geography/appearance and retained fallback camera journeys.
+
+The candidate includes periodic live-globe roll capture, preserving upright
+near-2π getter values instead of incorrectly clamping them to180°. External malformed
+state clamping is unchanged. Same-viewer fidelity invariants remain strict; remount
+numeric pose comparison uses only small reconstruction tolerance.
+
+MapLibre declutters measured full native text using public map.project and deck's
+64px glyph atlas advances scaled to12px. Every point and original row remains.
+Membership changes request a correction frame; idle causes no new passes.
+The further atlas package compensates viewBox scale to keep main text11px,
+coordinate/status text9px, points7px radius and44px hit targets in screen pixels.
+Both lines form one measured box when they fit; otherwise the full main source
+label may remain while complete details stay in accessible text and inspector.
+No text is truncated or canonical precision/coordinates changed. Every point
+retains a named keyboard button and exact original row activation.
+
+Native terrain disclosure moved below the canvas to avoid covering credits.
+The further combined candidate makes OSM's copyright link visible without a popup,
+following the [official raster tile policy](https://operations.osmfoundation.org/policies/tiles/).
+Native brand and terrain/source credits are preserved. The stricter combined
+attribution/MapLibre/atlas runtime qualification is still pending here.
+
+### Controlled appearance evidence
+
+The [image index](world-view-evidence/2026-09-29/README.md) records immutable source,
+camera and source-credit context. At the same local nadir pose, relief's central
+mean absolute RGB-channel delta was43.892/255; ground atmosphere and sun produced
+zero central change and haze zero central change. At the same oblique pose,
+relief delta45.051 exceeded haze3.215. Base imagery already contains park greens;
+relief's approved elevation tint accounts for the larger muted olive/tan wash.
+No default palette or arbitrary grading was changed. These are display effects,
+not observed weather or historical terrain/imagery claims.
+
+Each settled single-leaf ablation rendered1frame and added zero terrain/imagery
+requests; four-leaf combined application rendered4. Fog enabled/density/culling
+policy remained identical, requestRenderMode remained true, and settled1second
+idle windows had zero new frames/requests. Whole-image metrics include overlays;
+causal conclusions above use the central raster region to avoid legend text.
+
+Synthetic500-member MultiPoint fixtures retained500 symbols and displayed one
+overlap label. Sparse5-member fixtures displayed4 near-side points,4 desktop labels
+and2 at320px. Latest layout CPU passes were2.7ms Chromium/1ms WebKit dense, with
+cumulative startup maxima40.9/32ms; these are CI CPU observations, not GPU/FPS or
+maximum supported scene-size promises. A0.000015258789-degree camera motion
+caused two frames and updated visibility. Full resize timings include settling.
+
+Fallback desktop/phone and latitude41.4/62.5 real wheel zoom reached but did not
+cross the existing34,641.016m city floor in the declared approximate display bridge.
+Restored heading23°, pitch25° and upright roll0 were observed. This injects a
+startup failure after a saved globe→Graph transition, not a fatal draw failure
+inside an already running globe. Chromium phone drag and tap passed; WebKit
+phone tap passed, with drag injection explicitly unqualified.
+
+Fresh non-implementing Cursor/Grok review remains pending until the final combined
+runtime candidate is qualified. Internal specialist passes do not substitute for it.

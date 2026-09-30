@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { geoMercator, geoPath, geoGraticule10 } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
 import worldAtlas from 'world-atlas/countries-110m.json'
@@ -18,6 +18,7 @@ import { createWorldViewRendererAdapter, projectionMarkerRecords } from '../lib/
 import { visualFidelityCapabilities, resolveVisualFidelityProfile } from '../lib/worldViewVisualFidelity.js'
 import { createCameraFraming } from '../lib/worldViewCameraFraming'
 import { createCameraMemory, northAmericaCameraState } from '../lib/worldViewCameraMemory.js'
+import { activateAtlasMarker, atlasDisplayMetrics, atlasLabelLayout, atlasLabelText, atlasMarkerId, atlasScreenScale } from '../lib/worldViewAtlasLabelLayout.js'
 
 const MAP_W = 960
 const MAP_H = 480
@@ -30,6 +31,12 @@ const BORDERS = worldObjects.countries
 
 function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attribution }) {
   const features = useMemo(() => projectionMarkerRecords(rows, selectedKeys), [rows, selectedKeys])
+  const svgRef = useRef(null)
+  const labelRefs = useRef(new Map())
+  const mainLabelRefs = useRef(new Map())
+  const [screenScale, setScreenScale] = useState(1)
+  const metrics = atlasDisplayMetrics(screenScale)
+  const [labelLayout, setLabelLayout] = useState(() => ({ labels: new Set(), details: new Set() }))
   const geometry = useMemo(() => {
     const projection = geoMercator()
     const positions = features.flatMap((f) => f.positions)
@@ -64,43 +71,101 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
     }
   }, [features])
 
+  useLayoutEffect(() => {
+    let disposed = false
+    const svg = svgRef.current
+    const checkScale = () => {
+      if (disposed) return false
+      const next = atlasScreenScale(svg?.getScreenCTM?.(), screenScale)
+      if (Math.abs(next - screenScale) <= 1e-6) return false
+      setScreenScale(next)
+      return true
+    }
+    const update = () => {
+      if (disposed || checkScale()) return
+      // Inline fonts/offsets have reached the SVG before this layout effect.
+      const next = atlasLabelLayout(geometry.markers, {
+        width: MAP_W, height: MAP_H, screenScale,
+        measureBounds: (marker, mode) => (mode === 'main' ? mainLabelRefs : labelRefs)
+          .current.get(atlasMarkerId(marker))?.getBBox(),
+      })
+      const same = (a, b) => a.size === b.size && [...a].every(id => b.has(id))
+      setLabelLayout(current => same(current.labels, next.labels) && same(current.details, next.details) ? current : next)
+    }
+    update()
+    const view = svg?.ownerDocument?.defaultView
+    const fonts = svg?.ownerDocument?.fonts
+    const observer = view?.ResizeObserver ? new view.ResizeObserver(checkScale) : null
+    if (svg) observer?.observe(svg)
+    if (!observer) view?.addEventListener('resize', checkScale)
+    fonts?.addEventListener?.('loadingdone', update)
+    void fonts?.ready?.then(() => { if (!disposed) update() }).catch(() => {})
+    return () => {
+      disposed = true
+      observer?.disconnect()
+      if (!observer) view?.removeEventListener('resize', checkScale)
+      fonts?.removeEventListener?.('loadingdone', update)
+    }
+  }, [geometry.markers, screenScale])
+
   return (
     <div
       className="wv-map wv-map-fallback"
-      role="img"
+      role="group"
       aria-label="Spatial projection map. Only display_geometry from the live view is drawn."
       data-map-stack={FALLBACK_MAP_STACK_ID}
     >
-      <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} className="wv-map-svg">
+      <svg ref={svgRef} viewBox={`0 0 ${MAP_W} ${MAP_H}`} className="wv-map-svg">
         {geometry.spherePath && <path className="wv-map-sea" d={geometry.spherePath} />}
         {geometry.graticulePath && <path className="wv-graticule" d={geometry.graticulePath} />}
         {geometry.landPath && <path className="wv-map-land" d={geometry.landPath} />}
         {geometry.bordersPath && <path className="wv-map-borders" d={geometry.bordersPath} />}
         {geometry.markers.map((marker) => {
-          const id = `${marker.row.revision_id ?? marker.row.mip_object_id}-${marker.i}`
+          const id = atlasMarkerId(marker)
+          const text = atlasLabelText(marker)
           return (
             <g
               key={id}
               className={`wv-feature${marker.selected ? ' is-selected' : ''}`}
               role="button"
+              aria-label={text.accessibleName}
               tabIndex={0}
-              onClick={() => onSelectRow(marker.row)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  onSelectRow(marker.row)
-                }
-              }}
+              onClick={event => activateAtlasMarker(event, marker.row, onSelectRow)}
+              onKeyDown={event => activateAtlasMarker(event, marker.row, onSelectRow)}
             >
-              <circle cx={marker.x} cy={marker.y} r={7} />
-              <text className="wv-map-label" x={marker.x + 11} y={marker.y - 2}>
-                {marker.label || marker.row.precision_class || 'projected location'}
-              </text>
-              {marker.coords && (
-                <text className="wv-map-coords num" x={marker.x + 11} y={marker.y + 12}>
-                  {marker.coords} · {marker.row.precision_class} · {marker.row.geometry_status}
+              <circle className="wv-atlas-hit-target" cx={marker.x} cy={marker.y} r={metrics.hitRadius}
+                fill="transparent" stroke="none" pointerEvents="all" aria-hidden="true" />
+              <circle className="wv-atlas-point" cx={marker.x} cy={marker.y} r={metrics.pointRadius}
+                style={{ strokeWidth: metrics.pointStrokeWidth }} aria-hidden="true" />
+              <g
+                ref={element => {
+                  if (element) labelRefs.current.set(id, element)
+                  else labelRefs.current.delete(id)
+                }}
+                className="wv-atlas-labels"
+                visibility={labelLayout.labels.has(id) ? 'visible' : 'hidden'}
+                aria-hidden="true"
+              >
+                <text
+                  ref={element => {
+                    if (element) mainLabelRefs.current.set(id, element)
+                    else mainLabelRefs.current.delete(id)
+                  }}
+                  className="wv-map-label" x={marker.x + metrics.labelOffsetX} y={marker.y + metrics.labelOffsetY}
+                  style={{ fontSize: metrics.sansFontSize, strokeWidth: metrics.strokeWidth }}
+                >
+                  {text.label}
                 </text>
-              )}
+                {text.detail && (
+                  <text className="wv-map-coords num"
+                    x={marker.x + metrics.labelOffsetX} y={marker.y + metrics.detailOffsetY}
+                    visibility={labelLayout.details.has(id) ? 'inherit' : 'hidden'}
+                    style={{ fontSize: metrics.monoFontSize, strokeWidth: metrics.strokeWidth }}
+                  >
+                    {text.detail}
+                  </text>
+                )}
+              </g>
             </g>
           )
         })}
