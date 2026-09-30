@@ -25,6 +25,7 @@ import {
 } from './worldViewMapStack.js'
 import {
   makeCameraState,
+  normalizeLongitudeDegrees,
   parseCameraState,
   serializeCameraState,
 } from './worldViewCameraState.js'
@@ -123,7 +124,10 @@ export function cameraStateFromGlobeCamera(math, camera, precisionClass) {
       heightMeters: carto.height,
       headingDegrees: math.toDegrees(camera.heading),
       pitchDegrees: math.toDegrees(camera.pitch),
-      rollDegrees: math.toDegrees(camera.roll),
+      // Cesium reports roll in [0, 2π); near-zero roundoff can be near 2π.
+      // Wrap that physical angle before the external-input clamp, otherwise
+      // an upright camera would be serialized as a 180-degree reversal.
+      rollDegrees: normalizeLongitudeDegrees(math.toDegrees(camera.roll)),
     },
     precisionClass,
   )

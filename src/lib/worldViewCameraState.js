@@ -158,16 +158,23 @@ export function parseCameraState(serialized, { precisionClass = null } = {}) {
   return makeCameraState(raw, precisionClass)
 }
 
-/** Structural equality within a small epsilon (degrees/meters). */
+// Longitude, heading and roll are periodic physical angles. Compare their
+// shortest signed difference so wrap-boundary roundoff is not camera motion.
+function periodicAngleDifferenceDegrees(a, b) {
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return Infinity
+  return Math.abs(normalizeLongitudeDegrees(a - b))
+}
+
+/** Camera-pose equality within a small epsilon (degrees/meters). */
 export function cameraStatesEqual(a, b, epsilon = 1e-6) {
   if (!a || !b) return false
   return (
     a.version === b.version &&
-    Math.abs(a.lon - b.lon) <= epsilon &&
+    periodicAngleDifferenceDegrees(a.lon, b.lon) <= epsilon &&
     Math.abs(a.lat - b.lat) <= epsilon &&
     Math.abs(a.heightMeters - b.heightMeters) <= Math.max(epsilon, Math.abs(a.heightMeters) * 1e-9) &&
-    Math.abs(a.headingDegrees - b.headingDegrees) <= epsilon &&
+    periodicAngleDifferenceDegrees(a.headingDegrees, b.headingDegrees) <= epsilon &&
     Math.abs(a.pitchDegrees - b.pitchDegrees) <= epsilon &&
-    Math.abs(a.rollDegrees - b.rollDegrees) <= epsilon
+    periodicAngleDifferenceDegrees(a.rollDegrees, b.rollDegrees) <= epsilon
   )
 }
