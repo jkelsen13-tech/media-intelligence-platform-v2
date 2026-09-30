@@ -37,6 +37,11 @@ test('globe roll capture preserves signed physical angles and the existing preci
     assert.equal(state.heightMeters, heightMetersForPrecisionClass('city'))
     assert.equal(JSON.stringify(camera), before, 'capture cannot mutate the live camera')
   }
+  for (const invalid of [NaN, Infinity, undefined]) {
+    const camera = globeCamera(0)
+    camera.roll = invalid
+    assert.equal(cameraStateFromGlobeCamera(math, camera, 'city'), null, 'invalid capture cannot default a null normalized roll to upright')
+  }
   assert.equal(clampRollDegrees(400), 180)
   assert.equal(clampRollDegrees(-400), -180)
   const external = parseCameraState({ version: 1, lon: 0, lat: 0, heightMeters: 2000000, rollDegrees: 360 })
