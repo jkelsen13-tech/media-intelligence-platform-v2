@@ -75,3 +75,103 @@ test('relationship disclosure retains direction, all authorized pages, provenanc
   await act(async () => renderer.update(React.createElement(Panel, { edges: [], nodes })))
   assert.match(renderedText(renderer.toJSON()), /No relationship records were returned by the current authorized graph read/)
 })
+
+test('map counts and visibility require the exact current ordered edge snapshot', async t => {
+  const server = await createServer({
+    configFile: false,
+    esbuild: { jsx: 'automatic', jsxImportSource: 'react' },
+    optimizeDeps: { noDiscovery: true, include: [] },
+    server: { middlewareMode: true, hmr: false, watch: null },
+    appType: 'custom',
+  })
+  t.after(() => server.close())
+  const { default: Panel } = await server.ssrLoadModule('/src/components/WorldViewRelationshipPanel.jsx')
+  const nodes = [{ id: 'a', label: 'Source A' }, { id: 'b', label: 'Target B' }]
+  const markers = [
+    { id: 'marker-a', row: { subject_graph_node_id: 'a' }, x: 20, y: 30, visible: true },
+    { id: 'marker-b', row: { subject_graph_node_id: 'b' }, x: 80, y: 70, visible: true },
+  ]
+  const original = [
+    { id: 'edge-one', source: 'a', target: 'b', type: 'sequence', label: 'Recorded sequence', claimed_by: 'source_document', metadata: { evidence: ['old-evidence'] } },
+    { id: 'edge-two', source: 'b', target: 'a', type: 'actor', claimed_by: 'MIP_inferred', metadata: { evidence: ['old-hypothesis'] } },
+  ]
+  const stale = projectRelationshipDisplay(original, markers)
+  assert.equal(stale.displayed, 1)
+  assert.equal(stale.counts.hypothesis, 1)
+  // Same IDs and count, but fresh original objects and current provenance.
+  const current = original.map((edge, index) => ({
+    ...edge, claimed_by: 'source_document',
+    metadata: { evidence: ['current-evidence-' + index] },
+  }))
+  const currentSummary = projectRelationshipDisplay(current, markers)
+  let renderer
+  const update = async (edges, displaySummary) => {
+    await act(async () => {
+      const props = React.createElement(Panel, { edges, nodes, displaySummary })
+      if (renderer) renderer.update(props)
+      else renderer = TestRenderer.create(props)
+    })
+  }
+  t.after(() => renderer?.unmount())
+  const rows = () => renderer.root.findAll(node => node.type === 'li' && node.props['data-edge-id'] != null)
+  const assertUnavailable = () => {
+    const text = renderedText(renderer.toJSON())
+    assert.match(text, /Map line visibility is unavailable for the current relationship records/)
+    assert.doesNotMatch(text, /\d+ of \d+ records drawn/)
+    assert.doesNotMatch(text, /\d+ map lines/)
+    assert.doesNotMatch(text, /\d+ stored hypotheses are not drawn/)
+    for (const row of rows()) assert.match(renderedText(row), /Map line visibility is unavailable\./)
+  }
+
+  await update(current, stale)
+  assertUnavailable()
+  assert.equal(rows().length, 2)
+  assert.match(renderedText(renderer.toJSON()), /Source A → Target B/)
+  assert.match(renderedText(renderer.toJSON()), /Target B → Source A/)
+  assert.match(renderedText(renderer.toJSON()), /sequence/)
+  assert.match(renderedText(renderer.toJSON()), /current-evidence-0/)
+  assert.doesNotMatch(renderedText(renderer.toJSON()), /old-evidence/)
+  assert.match(renderedText(renderer.toJSON()), /does not supply relationship valid-time bounds/)
+
+  await update(current, currentSummary)
+  assert.match(renderedText(renderer.toJSON()), /2 of 2 records drawn/)
+  assert.match(renderedText(renderer.toJSON()), /2 map lines/)
+  assert.doesNotMatch(renderedText(renderer.toJSON()), /Map line visibility is unavailable/)
+  for (const row of rows()) assert.match(renderedText(row), /Shown on the map\./)
+
+  const reordered = [...current].reverse()
+  await update(reordered, currentSummary)
+  assertUnavailable()
+  assert.deepEqual(rows().map(row => row.props['data-edge-id']), ['edge-two', 'edge-one'])
+
+  await update(current, {
+    ...currentSummary,
+    dispositions: currentSummary.dispositions.map((entry, index) => ({ ...entry, edgeIndex: 1 - index })),
+  })
+  assertUnavailable()
+  await update(current, { ...currentSummary, dispositions: currentSummary.dispositions.slice(0, 1) })
+  assertUnavailable()
+
+  // A changed record beyond the first page invalidates aggregate counts even
+  // when every currently visible row still matches the previous publication.
+  const many = Array.from({ length: 25 }, (_, index) => ({
+    id: 'many-' + index, source: 'a', target: 'b', type: 'sequence',
+    claimed_by: index === 24 ? 'MIP_inferred' : 'source_document',
+  }))
+  const oldManySummary = projectRelationshipDisplay(many, markers)
+  const refreshedMany = [...many]
+  refreshedMany[24] = { ...many[24], claimed_by: 'source_document' }
+  await update(refreshedMany, oldManySummary)
+  assertUnavailable()
+  assert.equal(rows().length, 20)
+  assert.equal(rows()[0].props['data-edge-id'], 'many-0')
+  const next = renderer.root.findAll(node => node.type === 'button' && node.children.includes('Next'))[0]
+  await act(async () => next.props.onClick())
+  assert.equal(rows().length, 5)
+  assert.equal(rows().at(-1).props['data-edge-id'], 'many-24')
+  assertUnavailable()
+  await update(refreshedMany, projectRelationshipDisplay(refreshedMany, markers))
+  assert.match(renderedText(renderer.toJSON()), /25 of 25 records drawn/)
+  assert.match(renderedText(renderer.toJSON()), /25 map lines/)
+  assert.doesNotMatch(renderedText(renderer.toJSON()), /Map line visibility is unavailable/)
+})

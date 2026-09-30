@@ -38,6 +38,22 @@ function overlapPairs(points,radius=7){
 }
 const stableLayout=value=>({singles:value.layout.singles,clusters:value.layout.clusters})
 
+function assertLayoutRoundTrip(actual,expected,label){
+  // Recreating the same governed camera can change the final projected doubles
+  // by machine epsilon. IDs, membership, ordering and selection remain exact.
+  const identity=value=>({
+    singles:value.layout.singles.map(({x,y,...point})=>point),
+    clusters:value.layout.clusters.map(({x,y,...group})=>group),
+  })
+  assert.deepEqual(identity(actual),identity(expected),label+' preserves exact IDs, membership, ordering and selection')
+  for(const kind of ['singles','clusters'])for(let i=0;i<expected.layout[kind].length;i++){
+    const a=actual.layout[kind][i],b=expected.layout[kind][i]
+    assert.ok(Number.isFinite(a.x)&&Number.isFinite(a.y))
+    assert.ok(Math.abs(a.x-b.x)<=1e-6&&Math.abs(a.y-b.y)<=1e-6,label+' retains projected anchor within one millionth of a CSS pixel')
+  }
+}
+
+
 async function actualGroupTargets(page,value){
   const groups=await page.locator('.wv-display-overlay [data-cluster-id]').evaluateAll(nodes=>nodes.map(node=>{
     const r=node.getBoundingClientRect()
@@ -123,7 +139,7 @@ async function idle(page,counts,label){
   const sample={elapsedMs:Date.now()-start,layoutTimingObserved:timingObserved,layoutPasses:timingObserved?after.layout.stats.passes-before.layout.stats.passes:null,
     renderedFrames:Number.isFinite(beforeFidelity?.renderedFrames)&&Number.isFinite(afterFidelity?.renderedFrames)?afterFidelity.renderedFrames-beforeFidelity.renderedFrames:null,
     requests:Object.fromEntries(Object.keys(counts).map(key=>[key,counts[key]-requests[key]]))}
-  if(timingObserved)assert.equal(sample.layoutPasses,0,'fixed-camera idle allocates no new observed layout pass')
+  if(timingObserved)assert.equal(sample.layoutPasses,0,'fixed-camera idle computes no new observed layout pass')
   if(sample.renderedFrames!=null)assert.equal(sample.renderedFrames,0,'fixed-camera idle has no renderer loop')
   assert.deepEqual(sample.requests,{backend:0,imagery:0,terrain:0})
   assert.deepEqual(stableLayout(after),stableLayout(before))
@@ -141,7 +157,7 @@ async function modesAndResize(page){
   assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6))
   await modes.getByRole('tab',{name:'Map',exact:true}).click();await settle(page)
   assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6))
-  assert.deepEqual(stableLayout(await state(page)),stableLayout(before),'mode remount restores deterministic membership')
+  assertLayoutRoundTrip(await state(page),before,'mode remount')
   const originalViewport=page.viewportSize(),resizes=[]
   for(const width of [390,834,320,originalViewport.width]){
     await page.setViewportSize({width,height:900});await settle(page)
@@ -152,7 +168,7 @@ async function modesAndResize(page){
     assert.ok(overflow.document<=overflow.viewport+1,'group UI fits phone/tablet viewport')
     resizes.push({width,targets:current.layout.stats.targetCount,labels:current.layout.stats.labelCount})
   }
-  assert.deepEqual(stableLayout(await state(page)),stableLayout(before),'resize roundtrip restores stable IDs and membership')
+  assertLayoutRoundTrip(await state(page),before,'resize roundtrip')
   return resizes
 }
 async function expandGroup(page,group){
@@ -360,7 +376,7 @@ async function independentJourney(browser,engine,scene,width=1280){
       const saved=parseCameraState(await camera(page))
       await setCamera(page,cameraTarget(scene.center[0]+0.2,scene.center[1],height))
       await setCamera(page,saved)
-      assert.deepEqual(stableLayout(await state(page)),stableLayout(before),'pan roundtrip has stable membership and IDs')
+      assertLayoutRoundTrip(await state(page),before,'pan roundtrip')
       assert.equal(JSON.stringify(fixture.getRows()),sourceFingerprint,'camera/grouping never rewrites any source fixture field')
       const relationships=await actualRelationshipLines(page,graphFixture)
       if(scale==='local')assert.ok(relationships.displayed>0,'distributed independent rows qualify actual documented relationship paths before narrowing selection')

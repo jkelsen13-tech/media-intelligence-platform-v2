@@ -466,6 +466,63 @@ export function requestRepaint(map) {
   // Else: MapLibre will still repaint on its own; this is a best-effort.
 }
 
+function mapResizeOwnerWindow(host) {
+  const view = host?.ownerDocument?.defaultView
+  return view && typeof view.requestAnimationFrame === 'function'
+    && typeof view.cancelAnimationFrame === 'function'
+    && (typeof view.ResizeObserver === 'function'
+      || (typeof view.addEventListener === 'function' && typeof view.removeEventListener === 'function'))
+    ? view : null
+}
+
+/**
+ * MapLibre 6's native resize throttle can write canvas dimensions during a
+ * ResizeObserver delivery. Observe the same host, but do that renderer work
+ * once on the next frame. Normal resize events still update precision/labels.
+ */
+export function createMapContainerResizeScheduler(map, host, { isCancelled = () => false } = {}) {
+  const view = mapResizeOwnerWindow(host)
+  if (!view) return null
+  let disposed = false, frame = null, observer = null
+  const dimensions = () => ({
+    width: host.clientWidth, height: host.clientHeight, pixelRatio: view.devicePixelRatio ?? 1,
+  })
+  let applied = dimensions()
+  const schedule = () => {
+    if (disposed || isCancelled() || frame !== null) return
+    frame = view.requestAnimationFrame(() => {
+      frame = null
+      if (disposed || isCancelled()) return
+      const next = dimensions()
+      if (next.width === applied.width && next.height === applied.height && next.pixelRatio === applied.pixelRatio) return
+      applied = next
+      map.resize()
+      if (disposed || isCancelled()) return
+      if (typeof map.redraw === 'function') map.redraw()
+      else requestRepaint(map)
+    })
+  }
+  const destroy = () => {
+    if (disposed) return
+    disposed = true
+    observer?.disconnect()
+    view.removeEventListener?.('resize', schedule)
+    if (frame !== null) view.cancelAnimationFrame(frame)
+    frame = null
+  }
+  try {
+    if (typeof view.ResizeObserver === 'function') {
+      observer = new view.ResizeObserver(schedule)
+      observer.observe(host)
+    }
+    view.addEventListener?.('resize', schedule)
+  } catch (error) {
+    destroy()
+    throw error
+  }
+  return { destroy }
+}
+
 export function destroyRendererResources({ overlay, map }) {
   if (overlay) {
     try {
@@ -544,6 +601,7 @@ function createMapLibreWorldViewRendererAdapter({
   let currentOnSelectRow = onSelectRow
   let localCancelled = false
   let precisionGovernor = null
+  let containerResize = null
   let labelLayout = null
   let currentRelationships = relationships, currentSelectedKeys = getSelectedKeys?.() ?? new Set()
   const lifecycleListeners = []
@@ -614,6 +672,7 @@ function createMapLibreWorldViewRendererAdapter({
         maxZoom: cap,
         attributionControl: false,
         cooperativeGestures: false,
+        trackResize: !mapResizeOwnerWindow(hostEl),
       })
     } catch {
       if (!cancelledNow()) onStackIdChange?.(nextMapStackOnFailure(stackId))
@@ -667,6 +726,14 @@ function createMapLibreWorldViewRendererAdapter({
     map = localMap
     overlay = localOverlay
     deckLayerCtors = { ScatterplotLayer, TextLayer }
+    try {
+      containerResize = createMapContainerResizeScheduler(map, hostEl, { isCancelled: cancelledNow })
+    } catch {
+      const canFallback = !cancelledNow()
+      destroy()
+      if (canFallback) onStackIdChange?.(nextMapStackOnFailure(stackId))
+      return
+    }
     precisionGovernor = createMapPrecisionGovernor(map, {
       getPrecisionClass: activePrecisionClass,
       onUnavailable: () => { if (!cancelledNow()) onStackIdChange?.(FALLBACK_MAP_STACK_ID) },
@@ -782,6 +849,8 @@ function createMapLibreWorldViewRendererAdapter({
 
   function destroy() {
     localCancelled = true
+    containerResize?.destroy()
+    containerResize = null
     labelLayout?.destroy()
     labelLayout = null
     for (const [event, listener] of lifecycleListeners.splice(0)) map?.off?.(event, listener)

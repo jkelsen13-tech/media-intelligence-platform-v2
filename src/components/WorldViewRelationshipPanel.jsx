@@ -47,7 +47,13 @@ export default function WorldViewRelationshipPanel({
   const pageCount = Math.max(1, Math.ceil(ordered.length / PAGE_SIZE))
   const currentPage = Math.min(page, pageCount - 1)
   const shown = ordered.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
-  const hasSummary = displaySummary?.total === edges.length && Array.isArray(displaySummary?.dispositions)
+  // A renderer publication can lag behind a same-length graph refresh. Counts
+  // and per-record visibility belong only to this exact ordered edge snapshot.
+  const hasSummary = displaySummary?.total === edges.length
+    && Array.isArray(displaySummary?.dispositions)
+    && displaySummary.dispositions.length === edges.length
+    && edges.every((edge, index) => displaySummary.dispositions[index]?.edge === edge
+      && displaySummary.dispositions[index]?.edgeIndex === index)
   const label = key => nodeById.get(String(key))?.label || String(key ?? 'Endpoint not supplied')
   const endpointButton = (key, endpoint) => {
     const node = nodeById.get(String(key))
@@ -85,6 +91,11 @@ export default function WorldViewRelationshipPanel({
               {displaySummary.counts.coincidentEndpoints > 0 && ` ${displaySummary.counts.coincidentEndpoints} have coincident endpoints.`}
               {displaySummary.counts.invalidEdge > 0 && ` ${displaySummary.counts.invalidEdge} lack endpoint identities.`}
               {displaySummary.multipleEndpointEdges > 0 && ' For records with several admitted locations, each line uses one original visible marker per endpoint. Endpoint counts are included below.'}
+            </p>
+          )}
+          {!hasSummary && edges.length > 0 && (
+            <p className="wv-relationships-copy" role="status">
+              Map line visibility is unavailable for the current relationship records.
             </p>
           )}
           {edges.length === 0 ? (
