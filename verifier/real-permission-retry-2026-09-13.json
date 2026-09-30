@@ -1,0 +1,460 @@
+{
+  "schema": "mip-bounded-cc-retry-evidence-v1",
+  "baseline": "b50de0130a2498ddd121a7e223ce1e1b3e34e149",
+  "activation_commit": "0da8b5a0a4f9540160b71a39a1bbba3d655bcc95",
+  "activation_subject": "Run bounded CC Definitions admission batch v1 attempt 3",
+  "attempt": 3,
+  "max_attempts": 3,
+  "owner_authorization": {
+    "source": "Current owner instruction: proceed with the already-authorized single Creative Commons retry only after required same-candidate regressions pass.",
+    "admission_record": "cc-by-4-en-legalcode-text-only-admission-v1",
+    "scope_change": false,
+    "signature": null,
+    "production_principal": null
+  },
+  "historical_evidence": {
+    "failed_selection": {
+      "commit": "014b5aa2e56d6b711febf8c062cb3d3891d0a154",
+      "run": 34735898738,
+      "job": 103667156199,
+      "status": "FAIL_CLOSED",
+      "diagnostic": "selection_discrepancy",
+      "preserved": true
+    },
+    "inactive_parser_candidate": {
+      "commit": "b50de0130a2498ddd121a7e223ce1e1b3e34e149",
+      "run": 34737859180,
+      "job": 103672342808,
+      "tests": 53,
+      "pass": 53,
+      "batch": "MIP_PERMISSION_BATCH_NOT_ACTIVATED",
+      "preserved": true
+    }
+  },
+  "regressions": {
+    "integrated": {
+      "run": 34772418826,
+      "job": 103764309816,
+      "tests": 53,
+      "pass": 53,
+      "fail": 0
+    },
+    "golden": {
+      "run": 34772418822,
+      "jobs": {
+        "node22": 103764309795,
+        "node24": 103764309872
+      },
+      "tests_per_node": 1663,
+      "pass_per_node": 1663,
+      "builds": "PASS"
+    },
+    "native": {
+      "run": 34772418828,
+      "job": 103764309847,
+      "original": 14,
+      "baseline": {
+        "tests": 7,
+        "skipped": 4,
+        "counterexamples_preserved": 3
+      },
+      "corrected_authority": 7,
+      "interfaces": 6,
+      "result": "PASS"
+    },
+    "extension": {
+      "run": 34772418838,
+      "job": 103764309841,
+      "tests": 8,
+      "pass": 8
+    }
+  },
+  "regression_gate": {
+    "observed_at": "2026-09-13T17:46:01.9020582Z",
+    "head": "0da8b5a0a4f9540160b71a39a1bbba3d655bcc95",
+    "result": "PASS",
+    "public_read_only_api": true,
+    "new_credentials": false
+  },
+  "batch_result": {
+    "schema": "mip-real-permission-verification-v1",
+    "batch": "cc-definition-batch-v1",
+    "head": "0da8b5a0a4f9540160b71a39a1bbba3d655bcc95",
+    "activation_attempt": 3,
+    "positive": [
+      {
+        "operation": "ingestion",
+        "audience": "isolated_internal_review",
+        "result": "allow",
+        "reason": "real_evidence_bound"
+      },
+      {
+        "operation": "retention",
+        "audience": "isolated_internal_review",
+        "result": "allow",
+        "reason": "real_evidence_bound"
+      },
+      {
+        "operation": "analysis",
+        "audience": "isolated_internal_review",
+        "result": "allow",
+        "reason": "real_evidence_bound"
+      },
+      {
+        "operation": "excerpt_display",
+        "audience": "isolated_internal_review",
+        "result": "allow",
+        "reason": "real_evidence_bound"
+      }
+    ],
+    "negative_tests": [
+      {
+        "simulated": true,
+        "case": {
+          "material_ref": "different-material"
+        },
+        "result": "deny",
+        "reason": "material_version_mismatch"
+      },
+      {
+        "simulated": true,
+        "case": {
+          "material_version": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "result": "deny",
+        "reason": "material_version_mismatch"
+      },
+      {
+        "simulated": true,
+        "case": {
+          "source_version": "different-version"
+        },
+        "result": "deny",
+        "reason": "material_version_mismatch"
+      },
+      {
+        "simulated": true,
+        "case": {
+          "operation": "full_content_display"
+        },
+        "result": "deny",
+        "reason": "operation_denied"
+      },
+      {
+        "simulated": true,
+        "case": {
+          "operation": "redistribution"
+        },
+        "result": "deny",
+        "reason": "operation_denied"
+      },
+      {
+        "simulated": true,
+        "case": {
+          "operation": "external_model_disclosure"
+        },
+        "result": "deny",
+        "reason": "operation_denied"
+      },
+      {
+        "simulated": true,
+        "case": {
+          "audience": "public"
+        },
+        "result": "deny",
+        "reason": "audience_denied"
+      },
+      {
+        "simulated": true,
+        "case": {
+          "audience": "external_model"
+        },
+        "result": "deny",
+        "reason": "audience_denied"
+      },
+      {
+        "simulated": true,
+        "case": {
+          "domain": null
+        },
+        "result": "deny",
+        "reason": "domain_denied"
+      },
+      {
+        "simulated": true,
+        "case": "evidence_missing",
+        "result": "deny",
+        "reason": "evidence_missing"
+      },
+      {
+        "simulated": true,
+        "case": "evidence_conflicting",
+        "result": "deny",
+        "reason": "evidence_conflicting"
+      },
+      {
+        "simulated": true,
+        "case": "evidence_unbound",
+        "result": "deny",
+        "reason": "evidence_unbound"
+      },
+      {
+        "simulated": true,
+        "case": "suspended_internal_admission",
+        "result": "deny",
+        "old_revision_reactivation": "denied",
+        "fresh_authorization_required": true,
+        "publisher_revocation": false,
+        "committed": false
+      },
+      {
+        "simulated": true,
+        "case": "rights_without_internal_privacy_admission",
+        "result": "deny",
+        "committed": false
+      }
+    ],
+    "actual_publisher_revocations": 0,
+    "parser": {
+      "synthetic_parser_tests": 27,
+      "pass": 27,
+      "legacy_reproduced": true,
+      "legacy_error": "selection_section_marker_detected",
+      "original_equivalent_error": "selection_discrepancy",
+      "network_requests": 0,
+      "cases": [
+        {
+          "case": "cross_reference",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "actual_heading_terminates",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "later_references",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "literal_url_in_definition",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "at_character_in_definition",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "nav_toc_before_body",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "toc_container_before_body",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "section_wrappers",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "outside_contact_not_retained",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "missing_start",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "missing_end",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "duplicate_start",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "duplicate_end",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "malformed_start",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "malformed_end",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "heading_level",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "reversed_bounds",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "unexpected_subheading",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "missing_list",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "wrong_definition_count",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "navigation_inside_range",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "contact_block_inside_range",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "image_inside_range",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "unexpected_text",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "malformed_markup",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "unexpected_table",
+          "result": "pass",
+          "synthetic": true
+        },
+        {
+          "case": "wrong_material_title",
+          "result": "pass",
+          "synthetic": true
+        }
+      ]
+    },
+    "capture": {
+      "url": "https://creativecommons.org/licenses/by/4.0/legalcode.en",
+      "final_url": "https://creativecommons.org/licenses/by/4.0/legalcode.en",
+      "observed_at": "2026-09-13T17:46:02.115642+00:00",
+      "document_sha256": "6d55b998ed5c54f43426d059a8c549ed58a3321e5463e6a6af1c6b56ab78c333",
+      "bytes": 48970,
+      "network_attempts": 1,
+      "selection": {
+        "method": "heading-range-dom-text-v2",
+        "start": "Section 1: Definitions",
+        "end_exclusive": "Section 2: Scope",
+        "definition_count": 11,
+        "normalization": "HTML entities decoded; block boundaries to whitespace; NFC; NBSP to space; whitespace collapsed; trimmed; UTF-8, no trailing newline; generated list markers omitted",
+        "raw_selected_text_sha256": "72939b59244fc079ab634757660f958c81d6aca93bd7f27d21e5e96c53bf839c",
+        "bytes": 2925,
+        "sha256": "ab25e84228711f827ae10decc41a6c02c64ba33698e51694b4586db062c6d535",
+        "forbidden_elements": false
+      },
+      "material_ref": "https://creativecommons.org/licenses/by/4.0/legalcode.en#section-1-definitions",
+      "source_version": "4.0-English-Section-1"
+    },
+    "rights": [
+      {
+        "url": "https://creativecommons.org/policies/",
+        "final_url": "https://creativecommons.org/policies/",
+        "observed_at": "2026-09-13T17:46:02.144602+00:00",
+        "document_sha256": "4df86fbc8a93618528567485e6cfd81e9686df2508a71053f1a59945f7e895b1",
+        "bytes": 58603,
+        "network_attempts": 1,
+        "kind": "policies",
+        "clause_sha256": "30f381d7e4ad552e1378c7a22dc26770751aafd409c09e70955b2f788beb7e3c",
+        "effective_date_observed": null
+      },
+      {
+        "url": "https://creativecommons.org/terms/",
+        "final_url": "https://creativecommons.org/terms/",
+        "observed_at": "2026-09-13T17:46:02.173798+00:00",
+        "document_sha256": "e25156004a9057fa558ce0db71b6de44af4ea1a7dded5324b8b0a9e99e7aa493",
+        "bytes": 64889,
+        "network_attempts": 1,
+        "kind": "terms",
+        "clause_sha256": "f51acde4ddfe1116ff656cf247f76608f14d6634b097b1ebc47d07555ec1b732",
+        "effective_date_observed": "26 August 2020"
+      },
+      {
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/legalcode.en",
+        "final_url": "https://creativecommons.org/publicdomain/zero/1.0/legalcode.en",
+        "observed_at": "2026-09-13T17:46:02.204404+00:00",
+        "document_sha256": "001e3d1c905c18b1d034b34200cc952026abb38457c2294c23eaef7f6bda64df",
+        "bytes": 32451,
+        "network_attempts": 1,
+        "kind": "cc0",
+        "clause_sha256": "067a8b0405d140e266c6257c56a757699c2d8834f0f3be392ab5cc521ab904a9",
+        "effective_date_observed": null
+      }
+    ],
+    "admission": {
+      "record_id": "cc-by-4-en-legalcode-text-only-admission-v1",
+      "record_sha256": "81b8614c8cf9194573a9b6053091260aae8c090d17f51325d9c265a1f7567a1e",
+      "source": "Owner message in this conversation: MIP — APPROVE BOUNDED REAL-MATERIAL PERMISSION TEST",
+      "owner_designation": "MIP platform owner",
+      "signature": null,
+      "production_principal": null,
+      "effective_date": null
+    },
+    "analysis_digest": "d4f3e7e094c4cef61dd81fc27e6d178f5880e03c690037c6ef5f22d036232ce4",
+    "internal_display": {
+      "passed": true,
+      "output_disclosed": false
+    },
+    "worker_writes_denied": 3,
+    "downstream": {
+      "multi_outlet": "not_qualified_single_document",
+      "human_review": "unchanged",
+      "factual_publication": "not_qualified",
+      "public_release": "disabled",
+      "F2": "not_run",
+      "historical_articles": "not_authorized"
+    },
+    "status": "PERMISSION_COMPONENT_PASS",
+    "cleanup": {
+      "disposable_database_absent": true,
+      "material_files_written": false,
+      "public_content_artifacts_created": false,
+      "transient_process_memory": "released_on_process_exit",
+      "physical_secure_erasure_claimed": false
+    }
+  },
+  "closure": {
+    "activation_status": "closed_permission_component_passed",
+    "commit_subject": null,
+    "attempt": 3,
+    "max_attempts": 3,
+    "retrieval_disabled": true
+  },
+  "coherent_independent_review_boundary": false,
+  "production_cutover": "ON_HOLD"
+}

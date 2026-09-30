@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { privateWorkspacePublicNode, savedInvestigationHandoffVisible } from '../src/lib/privateWorkspacePublicHandoff.js'
+import { privateWorkspacePublicNode, savedInvestigationHandoffVisible, publicWorkspaceEntry, retainWorkspaceEntry, preservesPublicWorkspaceEntry } from '../src/lib/privateWorkspacePublicHandoff.js'
 import { commitNewSubject } from '../src/lib/newSubjectPropagation.js'
 import { emptyInvestigationContext, setInvestigationActiveView } from '../src/lib/investigationContext.js'
 
@@ -35,4 +35,29 @@ test('saved-version handoff disclosure does not survive changed user, version or
   for(const patch of [{userId:'user-b'},{userId:null},{status:'access_denied'},{subjectId:'other'},{view:'investigations'},{bundle:{investigation_id:'private-id',version:{id:'version-2'}}},{bundle:null}]) {
     assert.equal(savedInvestigationHandoffVisible({...state,...patch}),false)
   }
+})
+
+test('public entry is exact, and private selection stays latched through denial/logout',()=>{
+ const context={canonical_subject_id:'public-a',canonical_subject_type:'event'}
+ const entry=publicWorkspaceEntry(context)
+ assert.equal(preservesPublicWorkspaceEntry(entry,context),true)
+ for(const changed of [null,{...context,canonical_subject_id:'public-b'},{...context,canonical_subject_type:'actor'}])
+  assert.equal(preservesPublicWorkspaceEntry(entry,changed),false)
+ for(const state of [{selectedInvestigationId:'private-a'},{bundle:{investigation_id:'private-a'}}]){
+  const privateEntry=retainWorkspaceEntry(entry,state)
+  assert.equal(preservesPublicWorkspaceEntry(retainWorkspaceEntry(privateEntry,{}),context),false)
+  assert.equal(preservesPublicWorkspaceEntry(retainWorkspaceEntry(privateEntry,{bundle:null,selectedInvestigationId:null}),context),false)
+ }
+ assert.equal(preservesPublicWorkspaceEntry(publicWorkspaceEntry(null),context),false)
+})
+
+test('explicit public route owns identity despite an already-loaded private question',()=>{
+ const context={canonical_subject_id:'new-public',canonical_subject_type:'event'}
+ const entry=publicWorkspaceEntry(context,{routeOwned:true})
+ for(const state of [{selectedInvestigationId:'old-private'},{bundle:{investigation_id:'old-private'}},{bundle:null}]){
+  assert.equal(retainWorkspaceEntry(entry,state),entry)
+  assert.equal(preservesPublicWorkspaceEntry(retainWorkspaceEntry(entry,state),context),true)
+ }
+ const explicitlyPrivate=publicWorkspaceEntry(null)
+ assert.equal(preservesPublicWorkspaceEntry(retainWorkspaceEntry(explicitlyPrivate,{}),context),false)
 })

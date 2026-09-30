@@ -1,0 +1,36 @@
+name: Hypothesis PostgreSQL concurrency
+on:
+  pull_request:
+    paths:
+      - 'supabase/qualification/hypothesis-assessments/**'
+      - 'verifier/hypothesisPostgresConcurrency.py'
+      - 'tests/hypothesisAssessmentFixture.mjs'
+      - 'supabase/migrations/**'
+      - '.github/workflows/hypothesis-postgres.yml'
+permissions:
+  contents: read
+jobs:
+  hypothesis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: mip-disposable-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+      - name: Qualify bound hypothesis acceptance and process loss
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+        run: python3 -B verifier/hypothesisPostgresConcurrency.py

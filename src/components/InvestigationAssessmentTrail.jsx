@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import HypothesisAssessmentPanel from './HypothesisAssessmentPanel.jsx'
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
 import { savedAssessmentTrail, selectedContextUsers, retainedInputDates, retainedDateDisplay } from '../lib/investigationEvidenceTrail.js'
 import { assessmentOutcomeCopy, safeWorkspaceHttpUrl, snapshotInputPayload } from '../lib/investigationWorkspaceSession.js'
@@ -17,6 +18,7 @@ function PagedRecords({ rows, children, label }) {
 
 export function AssessmentSavedReasoning({ assessment }) {
   return <>
+    {assessment.hypothesis_assessment ? <HypothesisAssessmentPanel assessment={assessment.hypothesis_assessment} dependencyChanged={assessment.stale === true} /> : null}
     <p>{assessmentOutcomeCopy(assessment.outcome)}</p>
     <p>{assessment.rationale}</p>
     {assessment.stale ? <p className="piw-note">This recorded assessment has a changed dependency. That is not a completed reassessment.</p> : null}

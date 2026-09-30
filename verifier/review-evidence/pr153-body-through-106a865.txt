@@ -1,0 +1,357 @@
+Exact-head verification for 7c524988590a418c56d722c9bb8cf5e2252c090c: Golden run 34806311371 passed **1,790/1,790 on Node 22 and Node 24**, with both builds successful (jobs 103858765372 and 103858765338). Worker/restart run 34806311318/job 103858765065 passed **34/34**. Integrated run 34806311277/job 103858765088 passed **53/53**. Native hypothesis 34806311259, comparison 34806311303 and authority extension 34806311340 passed. Browser interaction PASS and scope are below. Separate World View run 34806311305 remains in progress at observation. The Stage1 controller received these references directly; no owner courier or new credential is needed. The coherent review boundary remains open.
+
+## Authoring browser qualification — 7c524988590a418c56d722c9bb8cf5e2252c090c
+
+[Browser run 34806311273](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34806311273), job 103858765018: PASS in Chromium and WebKit at 1280/768/390/320px. Actual composer and saved-panel components select an exact synthetic Unicode passage, reject a wrong digest, link its bounded claim and inferential limitation, save privately, recover an intentionally lost acknowledgement with identical request arguments, and display the saved result. The synthetic receipt transport counts one accepted request; it is explicitly an in-memory test fixture, not durable-store, Auth or database evidence. Existing native acceptance/restart suites remain separate. No page network request escaped the intercepted synthetic document; no real material, credential or production endpoint was used.
+
+The browser exposed an accessible-name issue and a WebKit native select overflow/contrast issue. Explicit selector names and themed select rendering fix them. Reversible diagnostic trials established the final appearance:none plus control clipping correction; the surrounding form still passes its original no-overflow assertion. Full comparison wording and stored states remain unchanged. Form and saved-result WebKit screenshots were inspected. Failed attempts and the diagnostic failure remain preserved in verifier/hypothesis-browser/README.md and their runs; none is reinterpreted as success.
+
+Current finite feature register:
+- Implemented/tested in isolation: immutable retained-input acceptance; permission-bound evidence reads; method/source reconsideration causes; generation claim/completion/failure and encrypted restart recovery; explicit fresh-generation recovery links; manual authoring and saved reasoning. Current browser scope is composer/ledger/panel with synthetic transport.
+- Still engineering work: exact-version human review interaction; full history-to-recovery interaction qualification; trusted historical commit visibility; complete configured transport/runtime integration. This browser result does not replace those requirements.
+- Owner-gated: approved substantive estimation/methodology and F2 qualification; actual material-specific permission bindings; production identity/custody/configuration and separately authorized deployment/verification. No new credential or owner choice was needed for this batch.
+- Coherent independent-review boundary: NOT reached. Stage1 controller handoff remains established; no broad review commissioned for these corrections.
+
+Exact-head Golden, worker/restart and integrated runs are still completing at this update. Native hypothesis 34806311259, comparison 34806311303 and authority extension 34806311340 passed. World View 34806311305 remains separate. PR stays draft/unmerged. Cutover/publication hold and CC closed 3/3 remain unchanged. All project edits and execution were remote.
+
+---
+
+Exact-head verification update for e2aadaf4978b48c6b58c000b69759e8f71203e12: Golden run 34804652033 passed **1,790/1,790 on Node 22 and Node 24**, both builds passed (jobs 103854015832 and 103854015523). Worker/native/restart run 34804652028/job 103854015525 passed **34/34**. Integrated 34804652074, hypothesis PostgreSQL 34804652032, comparison 34804652072, authority extension 34804652043 and synthetic handoff 34804652029 passed. Browser component evidence is below. Separate World View run 34804652030 remains in progress at this observation. No independent MIP PASS or coherent-boundary completion is claimed.
+
+## Latest verified browser candidate: e2aadaf4978b48c6b58c000b69759e8f71203e12
+
+Synthetic Chromium/WebKit run [34804652113](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34804652113), job 103854015604: PASS at 1280/768/390/320px, zero page network requests. Keyboard inspection, exact recovery links, duplicate recovery suppression, denied-access/logout clearing, separate missing estimates, saved alternatives, source clocks and pending reassessment passed. A bounded scroll host and viewport assertions prove the final saved revision details are reachable. Chromium and WebKit revision screenshots were inspected. This is component/system-font-fallback qualification, not full application-shell, production Auth, source rights or semantic qualification.
+
+The prior 79ba9c7 test PASS is preserved with its documented screenshot/scroll-host limitation; the corrective test does not retroactively expand that evidence. Exact-head Golden, integrated and worker tests are still running at this update; native hypothesis, comparison and authority extension passed. World View coverage remains separate.
+
+No new credential or owner decision was required for this batch. All project edits/execution remain remote. The broader coherent review boundary is NOT reached; remaining requirements and holds below still apply.
+
+---
+
+## Current interface qualification — 79ba9c7903c75fa38bf3f1684d54b6e4dbdfdbc1
+
+The new remote-only Chromium/WebKit verifier bundles actual components with explicitly synthetic fixtures and blocks all page network requests. It exercises explicit ledger reads, reciprocal recovery links, suppression of duplicate recovery preparation, keyboard actions, denied-access/logout clearing and 1280/768/390/320px layouts. The continuation adds saved alternatives, separate missing estimates, microsecond clocks, pending-reassessment notices, application CSS with system-font fallback and a 44px recovery control. No backend/worker invocation, source retrieval, credential or local project storage is involved.
+
+Ledger-only predecessor dfb3830dfabe46f918d705f307c871e35523a87b: browser PASS in both engines (34804238540/job 103852806079), zero page requests. Golden 34804238504, hypothesis native 34804238432, worker/restart 34804238453, integrated 34804238632, comparison 34804238532 and authority extension 34804238430 all passed. Expanded candidate 79ba9c7903c75fa38bf3f1684d54b6e4dbdfdbc1 requires its own CI results; do not transfer predecessor PASS to it.
+
+Remaining feature work: complete author/reviewer/version interaction qualification; trusted historical commit visibility; full configured Auth/runtime end-to-end qualification; approved assessment methodology/F2 and real feature-material permission bindings. Existing relevance triage and workspace “marked reviewed” receipts are not hypothesis approval or factual/publication authorization. The synthetic method remains unqualified for substantive assessments. Production identities/custody/configuration and any deployment remain separately owner-gated; no new credential is needed for these browser tests.
+
+The supervised independent-review handoff is established with preserved synthetic FAIL/correction/PASS/BLOCKED evidence. A real review request will use a frozen exact packet at the material boundary; this small continuation does not commission one. Production cutover/publication remain ON HOLD; CC remains closed 3/3 with no activation. PR stays draft/unmerged.
+
+---
+
+Latest isolated feature checkpoint: `518beb031324ccc02b63dd3a5e66f3e3098f2ddf`.
+
+Private worker ledger now exposes reciprocal retained recovery lineage, rejects malformed/cyclic/cross-ledger links, and suppresses sibling recovery preparation once a fresh generation is linked. The original job remains retained. No source text or lease secrets are added to metadata.
+
+[Golden34803605235](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34803605235): Node22/24 tests/builds passed; Node24 decoded result1790/1790. [Native worker34803605228](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34803605228):34/34. Hypothesis PostgreSQL34803605222, comparison34803605179 and authority extension34803605341 passed. Integrated34803605181/browser34803605187 remain running at observation. Prior UI candidate integrated34803164777 is now confirmed successful.
+
+Existing human-review records in docs/INVESTIGATION_EVIDENCE_REVIEWS_BACKEND_2026-09-06.md are relevance triage, expressly not factual verdicts or analytical qualification; they cannot silently become approval of a hypothesis assessment. Preserve that distinction while continuing remaining review/version, temporal-view and visual engineering. Actual analytical methods/F2 and production identity/custody remain separately owner-gated. No new owner answer is needed to continue current isolated work. No real independent review or production readiness is claimed.
+
+---
+
+Latest isolated checkpoint: `cfa3468e79c3ad522cc18ac21b783d4714ca648b`.
+
+Private recovery preparation now connects retained worker attempts to a fresh authoring context and the trusted recover_generation adapter. It freezes the prior-generation binding and exact retry request; the database remains authoritative for current access, ownership, method/source permissions and stranded state. No cancellation, review approval or publication is introduced.
+
+Verification: [Golden34803164758](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34803164758) passed1788/1788 on both Node22 and24, builds successful. Native worker34803164732, hypothesis PostgreSQL34803164735, comparison34803164751 and authority extension34803164727 passed. Integrated34803164777/browser34803164706 were still running at last observation.
+
+Remaining engineering: durable recovery-link display/reconciliation, complete human review/version flow, historical commit visibility, rendered visual qualification and complete feature review package. Owner-gated information remains: an explicitly authorized analytical/estimation method and its evaluation policy (no invented F2 thresholds/splits/labels/sample minima); production runtime issuer/audience/subject mapping, credential custody/rotation configuration and separately authorized production-shaped verification. None blocks continued isolated engineering. Existing source operations remain default-denied where unsupported.
+
+Owner has instructed agents to use the established direct independent-review handoff at a material boundary, record exact missing credentials/information, and continue unrelated work. Supervised synthetic FAIL/correction/PASS and missing-policy BLOCKED routing are demonstrated separately; they do not qualify this MIP candidate. No real review requested yet. Cutover remains ON HOLD; draft/unmerged.
+
+---
+
+Current isolated feature checkpoint: `93d4322343ec230a7a5192f66e2b4a0ecc9c077f`.
+
+Authoritative method changes now retain explicit reassessment causes and appear distinctly in private history. Explicit database recovery creates a new generation linked to a failed/expired attempt, with current owner/runtime/method/permission checks, exact retries and atomic rollback; the original job remains retained. Private recovery form/transport integration is still outstanding.
+
+Verification: [Golden Node22/24 tests and builds](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34802707536) passed (Node24 decoded log:1784/1784); [native worker/restart/recovery](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34802707568) passed34/34; hypothesis PostgreSQL34802707508, comparison34802707523 and authority extension34802707522 passed. Integrated34802707515 and browser34802707517 remained running at observation. Method-test fixture-order failure34802094316 is preserved:28 prior subtests passed; new tests were incorrectly placed after terminal signing-key revocation, then reordered without weakening assertions.
+
+Coherent feature review remains incomplete. No production readiness, publication, credentials, source retrieval, merge or retirement authorization. CC batch remains closed. Separate supervised synthetic Cursor/Grok review evidence is not a review of this candidate.
+
+---
+
+## Private hypothesis generation, durable recovery and controls
+
+Current engineering candidate: `49e36308b6564896fc86b30dd8409e9fcf5da90d` on `codex/isolated-authority-worker-publication-20260912`. [Frontend/backend plan](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/49e36308b6564896fc86b30dd8409e9fcf5da90d/docs/HYPOTHESIS_ASSESSMENT_PLAN_2026-09-13.md). Production cutover remains **ON HOLD**; this PR stays draft and unmerged.
+
+The private composer now offers a separate retained-input worker request. It sends competing definitions and selected span references, without human-written rationale, source text, scores, runtime selection or caller identity. The trusted handler defaults closed and takes a runtime/method only from explicit server configuration. The private job ledger shows exact attempt/input/method/completion references without passages, session data or lease secrets. Frozen requests, current Auth checks, mismatched-receipt rejection and account/scope/unmount guards protect ambiguous requests and delayed responses.
+
+009 captures actual retained database inputs into an immutable generation, pins workload mapping/key and method revisions, and checks the complete operation permission closure. Its queue is separate from the comparison data plane and requires current reviewer delegation plus broker/session, runtime/RPC, evaluated implementation/source and method authority. Database-side output validation binds the question, competing definitions, evidence identities/spans/clocks, method and argument structure; it requires private/unreviewed state and separate missing estimates. Numerical and qualitative estimation are not enabled in this worker path.
+
+Completion atomically commits the generated output, existing immutable assessment acceptance, any cause resolutions, job acknowledgement and exact request receipt. Full generation permissions protect saved history, including undisplayed inputs. Revoked mappings, keys, methods, reviewer access, source/evaluation authority and permissions deny sensitive acceptance. Old method revisions cannot be reactivated. Processing/expired/ambiguous work is retained without lease recycling or force cancellation.
+
+The existing AES-GCM runtime-scoped PostgreSQL journal is reused with a separate hypothesis protocol namespace. Native tests use actual termination and fresh containers before/after completion commit and after lost claim response. Containers run without network access, writable filesystem, broad credentials or journal keys; only the trusted disposable test host holds its synthetic custody material. This proves the isolated boundary, not production custody or live Auth closure.
+
+Exact-head verification:
+- [Golden: **1,782/1,782** on each Node 22 and 24, both builds passed](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34799748198).
+- [Hypothesis worker/native/restart: **29/29**](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34799748109), including the enclosing test; exact-content journal, full closure, privilege denial, queue ordering, process loss, atomic rollback, current-authority retry, session expiry while waiting on a permission fence and capture acknowledgement recovery after completion.
+- [Existing hypothesis PostgreSQL concurrency: **57/57**](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34799748165).
+- [Integrated isolated candidate: **53/53**](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34799748222); `MIP_PERMISSION_BATCH_NOT_ACTIVATED`.
+- [Inherited comparison/authority/interface concurrency](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34799748121) and [authority extension](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34799748108) passed.
+- [Existing browser/World View run 34799748106](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34799748106) remains running at observation. [Previous run 34799060177](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34799060177) passed. These inherited browser tests do not visually qualify the new hypothesis controls.
+
+Relevant code: [generation/authority SQL](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/49e36308b6564896fc86b30dd8409e9fcf5da90d/supabase/qualification/hypothesis-assessments/009_generation_worker.sql), [durable worker](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/49e36308b6564896fc86b30dd8409e9fcf5da90d/supabase/qualification/hypothesis-assessments/worker.mjs), [private ledger](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/49e36308b6564896fc86b30dd8409e9fcf5da90d/supabase/qualification/hypothesis-assessments/010_generation_ledger.sql), [native/restart suite](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/49e36308b6564896fc86b30dd8409e9fcf5da90d/verifier/hypothesis-worker/worker.test.mjs), [private controls regressions](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/49e36308b6564896fc86b30dd8409e9fcf5da90d/tests/hypothesisGenerationControls.test.mjs).
+
+Remaining finite feature requirements:
+1. **Implemented and tested, not independently reviewed:** manual retained-evidence composition; immutable history; human reconsideration requests; full-closure cause completion; broker-bound generation/worker acceptance; durable remote worker restart; private request/ledger controls.
+2. **Not implemented:** explicit fresh-generation reconciliation authoring; authoritative method-change cause propagation (revocation currently denies acceptance and marks generated history stale); separate human review completion controls; full rendered workflow qualification; trustworthy historical commit-visibility views.
+3. **Owner-gated:** approved analytical/estimation method and F2 labels, thresholds, splits, minima and adjudication. The installed tests use a clearly fictional deterministic method; they are not semantic qualification or a completed qualified hypothesis-scoring engine.
+4. **Production decision/access gated:** exact workload configuration, custody/rotation, Auth transport and separately authorized production-shaped verification. No live endpoints, methods, credentials or schedules were provisioned.
+
+The coherent independent-review boundary is **not reached**. No new broad review was commissioned. Queue fairness is a finite eligible-pending ordering guarantee; no latency guarantee is made for unbounded arrivals, locked transactions or unavailable authority.
+
+Preserved evidence: `0bafbcd3c24a38b61752a0e5f2923da86d212ed0` passed worker 26/26 and inherited regressions; `f60b8e79f0b67fc654cb5e0cf6bc08bb96b32848` passed worker 27/27 plus Golden 1,782, native 57 and integrated 53. Earlier runs [34798636844](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34798636844), [34798747577](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34798747577), and [34798890786](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34798890786) remain failed: incomplete synthetic baseline, SQL alias ambiguity, then incomplete synthetic closure receipts. Corrections preserve strict permission enforcement and do not reinterpret failures as success. Prior frozen candidates, reviews, manifests, D4/D5 and World View safeguards remain preserved.
+
+Continues isolated F1/F3/F6 engineering and adds deadline-driven backend consolidation evidence. Production cutover remains **ON HOLD**. PRs #149–#153 remain draft/unmerged.
+
+Prior consolidation evidence checkpoint: `d9ccc76a2001c0cef16a8977c21f18030911a570`; tested engineering commit: `8403f9a5a644dfb0dcecad115de0d9971b3aac69`. That historical consolidation follow-up changed documentation and sanitized JSON evidence only; the hypothesis feature changes are described above.
+
+- [Per-backend dependency record, October 3 plan and concrete owner/access decisions](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/d9ccc76a2001c0cef16a8977c21f18030911a570/docs/BACKEND_CONSOLIDATION_DEADLINE_2026-09-13.md)
+- [Current finite requirement register](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/d9ccc76a2001c0cef16a8977c21f18030911a570/verifier/backend-consolidation-2026-09-13/requirements.json)
+- [Read-only observations and exact reconciliation](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/d9ccc76a2001c0cef16a8977c21f18030911a570/verifier/backend-consolidation-2026-09-13/observations.json)
+- [Verification references](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/d9ccc76a2001c0cef16a8977c21f18030911a570/verifier/backend-consolidation-2026-09-13/verification.json)
+
+Inventoried 312 application tables across all four connected backends, plus Auth/storage, function/grant/RLS/trigger metadata, Edge Functions, cron and migration/configuration references. Collector source/archive SHA-256 matches 4,775 runs, 4,755 source-run records and seven source-register records; 985 later runs plus 985 source-run records remain outside the retained range at observation. Spatial SHA-256 matches 45 rows across 21 relations, while release semantics, configuration, caller and restore dependencies remain explicit.
+
+New collector reconciliation module and 12 regressions reject missing relations/digests, wrong source/range bindings, equal counts with different content and omitted deltas. Matching ranges never authorize retirement or whole-backend parity.
+
+Hosted tested-commit results: Golden 1,675/1,675 on each Node 22/24 with both builds passing; integrated 53/53; native original 14, corrected authority seven, candidate interfaces six, preserved baseline counterexamples; extension eight. No independent review commissioned.
+
+CC permission component remains closed 3/3, null activation subject. Tested activation `0da8b5a0a4f9540160b71a39a1bbba3d655bcc95` and closure `cc48e4ba37af89264f7dc308cc82956e9ef80701` are preserved. CI emitted MIP_PERMISSION_BATCH_NOT_ACTIVATED. No source retrieval, new admission or expansion. Prior failed/inactive attempts, native independent review and frozen manifests remain unchanged.
+
+The coherent review boundary is **not reached**. Open dependencies include protected whole-backend restore and exact deltas, original Auth mapping/session transition, deployed runtime/caller/configuration access, production-shaped verification and billing-specific evidence. Isolated F1/F3/F6 tests are not live parity or production approval. Unsupported historical source operations remain denied; F2 and production identity/custody decisions remain owner-gated.
+
+No production writes, worker invocations, schedules, credentials, deployment, publication, automatic approval, paid activation, retirement, history rewriting or project-file storage on the owner's physical device.
+
+### Exact-version review acknowledgement verification — 2026-09-14
+Candidate `375408e7b22b9474967c768171416f652f251303` implements append-only per-user exact-version review receipts with current authority, predecessor CAS, exact retry, readback confirmation and withheld-target clearing. This is acknowledgement only; it does not approve an assessment, resolve source changes or authorize publication.
+
+Verified GitHub-hosted evidence:
+- [Golden Node 22/24](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34807698017): each 1801/1801, builds PASS.
+- [Native hypothesis PostgreSQL](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34807697971): 69/69 PASS.
+- [Durable worker/restart](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34807697937): 34/34 PASS.
+- [Integrated isolated](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34807698011): 53/53 PASS.
+- [Synthetic browser](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34807697952): Chromium/WebKit at 1280/768/390/320 PASS, zero outbound page requests. In-memory browser receipts are explicitly synthetic, not durable/Auth proof.
+
+The initial [Golden failure](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34807394264) remains preserved: an unawaited React act scope in a deferred logout test interfered with the next test. The correction preserves the assertions. World View weather-preview verification is still running; no success inferred. Coherent independent-review boundary remains open: historical commit visibility, configured runtime/Auth integration and owner-gated methodology/production decisions remain distinct. No production change, real-material retrieval or new independent review.
+
+### Historical boundary and configured internal-path verification — 2026-09-14
+
+Current implementation candidate: `18a0a0c310c565d49ae04486ea7413b7b680ca20` (tree `3b7111bf5e679abfe698f35b45e555b15e75c0c4`), following `2bb961b114ee6434f83345ac011eda41842168ea`.
+
+The shared as_known_then selector now rejects unqualified historical visibility instead of inferring commit visibility from completed_at. Native held-transaction and rollback counterexamples preserve the evidence for this distinction. Retained latest-version selection is preserved. This corrects the earlier pure-selector behavior described in the September13 plan; it does not claim that historical-time delivery is implemented.
+
+The configured synthetic client → Request/Response handler → parameterized native gateway → durable worker → retained history → exact review acknowledgement path now passes as one integration test. It includes pre-query rejection of wrong Auth/origin/caller identity, cross-investigation rejection, committed lost-ack retry, immutable assessment readback, and later rights/membership denial. Authentication is explicitly synthetic; no provider-token or live network verification is implied. Fixture errors preserve only SQLSTATE in addition to their existing sanitized diagnostic.
+
+Exact-head evidence:
+- [Golden](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34808344598): Node22 and24 each 1802/1802, both builds PASS.
+- [Native hypothesis](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34808344701): 71/71 PASS.
+- [Durable worker + configured path](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34808344629): 35/35 PASS.
+- [Integrated isolated](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34808344604): 53/53 PASS; MIP_PERMISSION_BATCH_NOT_ACTIVATED.
+- [Synthetic browser](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34808344664), [comparison concurrency](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34808344611), [authority extension](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34808344586), and [synthetic handoff protocol](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34808344596): PASS.
+- [World View](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34808344613) is still running at this observation; no pass claimed.
+
+Current remaining requirements: (1) trustworthy historical commit visibility — engineering open; (2) full rendered/configured network/Auth integration — internal client/native path now qualified synthetically, actual provider and deployed runtime not qualified; (3) owner-approved analytical methodology/F2 — gated; (4) production custody/runtime/deployment and consolidation recovery/access/billing proposals — separately recorded in docs/BACKEND_CONSOLIDATION_DEADLINE_2026-09-13.md. No new credential or owner decision blocks current isolated engineering. The major independent-review boundary remains open; no broad review requested.
+
+See docs/HYPOTHESIS_HISTORICAL_VISIBILITY_2026-09-14.md and docs/HYPOTHESIS_CONFIGURED_NATIVE_PATH_2026-09-14.md. All prior frozen candidates/failures/manifests remain intact. No material retrieval, production change, local project-file storage, merge or cutover.
+
+### Saved revision comparison — verified 2026-09-14
+
+Current candidate `9ae97efe9c97cda3492202bf781d0fd530195162`, tree `3539885d2cb061f84cfc1a5c7dfa13aea7b22e17`, adds an expandable field-by-field comparison of each completed assessment and its exact predecessor. It reuses current permission-checked backend history/backlog, compares reasoning/evidence/methods and separate estimates without recomputing them, distinguishes omitted references from source deletion, and withholds both sides for a permission change affecting either. It performs no write, review acknowledgement or reassessment.
+
+The direct panel as_known_then property now fails closed, complementing the shared-selector correction. Historical commit visibility remains unimplemented; a presentation property cannot qualify it.
+
+[Implementation and scope](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/9ae97efe9c97cda3492202bf781d0fd530195162/docs/HYPOTHESIS_REVISION_COMPARISON_2026-09-14.md).
+
+Exact-head evidence:
+- [Golden](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34809338329): Node22/24 each 1815/1815, builds PASS; 13 additional regressions.
+- [Native hypothesis](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34809338261): 71/71 PASS.
+- [Worker/restart/internal transport](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34809338252): 35/35 PASS.
+- [Integrated](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34809338314): 53/53 PASS; closed CC batch emitted MIP_PERMISSION_BATCH_NOT_ACTIVATED.
+- [Browser](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34809338282): Chromium/WebKit at 1280/768/390/320 PASS, zero outbound page requests, permission-race clearing and saved comparison tested. Phone comparison screenshots were directly inspected in memory; no local files. The earlier c7ae71d browser pass is retained; its explanatory layout was refined without weakening assertions.
+- [Comparison concurrency](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34809338248), [authority extension](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34809338330), [synthetic handoff protocol](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34809338398): PASS.
+- Prior candidate18a0a0c WorldView [34808344613](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34808344613) is now PASS. Current WorldView [34809338234](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34809338234) remains running at observation.
+
+The finite open items remain trustworthy historical visibility, full browser/network/provider/runtime qualification and owner-approved analytical methods/F2. Existing production custody/access/restore/billing proposals remain separately recorded, with no new credential required for isolated work. The coherent independent-review boundary has not been reached and no broad review has been commissioned. Cutover stays ON HOLD; draft/unmerged state and prior frozen evidence preserved.
+
+### Explicit HTTP transport — verified 2026-09-14
+
+Current candidate `6a4b2ea17576dffec22b332102e353ba6817d4ca`, tree `c01dea1f58366b94ff30e19f026a0d77259572ba`.
+
+Added createHypothesisHttpTransport with explicit HTTPS endpoint/token callback, exact arguments captured before token lookup, fresh token per call, bounded UTF-8 response, no cookies/referrer/cache/redirect following and no automatic retry. Irreversible dispose aborts pending work and discards late responses; caller must dispose on account/configuration transition. No production endpoint, credential, session provider or live app wiring is activated.
+
+[Contract and limits](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/6a4b2ea17576dffec22b332102e353ba6817d4ca/docs/HYPOTHESIS_HTTP_TRANSPORT_2026-09-14.md).
+
+Exact-head evidence:
+- [Golden](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34810059033): Node22/24 each 1827/1827 and builds PASS. Twelve new transport tests include cancellation during token/fetch/body stages, uncertain-write non-retry, malformed/oversized responses, redirects and diagnostic suppression.
+- [Native hypothesis](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34810058998): 71/71 PASS.
+- [Worker/native integration](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34810059024): 35/35 PASS. The configured client-handler-store-worker-review path now uses the new HTTP adapter through an explicitly in-process synthetic fetch bridge.
+- [Integrated](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34810059069): 53/53 PASS; MIP_PERMISSION_BATCH_NOT_ACTIVATED.
+- [Browser](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34810059048): Chromium/WebKit four widths PASS. Actual browser fetch uses the adapter against in-process intercepted synthetic URLs; tests require the synthetic bearer header, absent cookies/referrer and denied/permission-race clearing. All other network requests are aborted. This is not a deployed-network or provider-identity test.
+- [Comparison concurrency](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34810058982), [authority extension](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34810059426), [synthetic handoff](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34810059021): PASS.
+- Prior9ae97ef WorldView [34809338234](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34809338234) is now PASS. Current [34810058991](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34810058991) is still running at observation.
+
+This closes the missing HTTP request adapter in isolation. Historical commit visibility, actual provider/network/runtime/custody verification, owner-approved analytical methods/F2 and corresponding production authorization remain open. Large-history pagination/scale must be qualified if the intended workload exceeds the explicit transport bounds. No owner decision or new credential blocks present isolated work. No new independent review requested; coherent boundary not yet reached. Prior frozen evidence and closed CC accounting preserved; no production change or local project-file storage.
+
+### Committed-observation backend foundation — verified 2026-09-14
+
+Current candidate `8fc52cd5f6d75db76ca443f6b1ebc3e19b7cd617`, tree `39bfa6574db4917ef8c8ca27be93e9c9555738c8`.
+
+015 records append-only top-level revision transaction provenance and captures a fixed set of committed revision references under the existing fences. It rejects own uncommitted/subtransaction revisions, requires separate committed readback for the observation itself, preserves an old observation's membership after later revisions, and repeats current permission checks before returning any saved reasoning. It copies reference metadata only. Personal observation ownership and execute-only gateway/worker separation are tested.
+
+The epoch installs disabled; only synthetic disposable fixtures enable it. Missing legacy provenance is not backfilled. Epoch rotation/disable blocks old qualification; this is not automatic restore detection. The API does not accept arbitrary as-of timestamps. The frontend observation UI, full temporal coverage and legacy/restore qualification remain open. This foundation does not complete historical visibility or qualify production.
+
+[Design and exact limitations](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/8fc52cd5f6d75db76ca443f6b1ebc3e19b7cd617/docs/HYPOTHESIS_COMMITTED_OBSERVATIONS_2026-09-14.md).
+
+Exact-head evidence:
+- [Native hypothesis](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34811283604): 82/82 PASS, including eleven new observation cases and actual direct-grant denial.
+- [Worker/native HTTP integration](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34811283545): 35/35 PASS; observation capture/readback and later permission withholding exercised, caller-supplied reference lists rejected, worker privileges remain denied.
+- [Golden](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34811283634): Node22/24 each 1827/1827 with builds PASS.
+- [Integrated](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34811283565): 53/53 PASS; MIP_PERMISSION_BATCH_NOT_ACTIVATED.
+- [Existing browser regression](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34811283649), [comparison concurrency](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34811283591), [authority extension](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34811283552), [synthetic handoff](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34811283500): PASS.
+- Current [WorldView34811283501](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34811283501) remains running at observation; prior6a4b2ea [34810058991](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34810058991) is now PASS.
+
+Initial deecaf8 [native run34811084428](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34811084428) remains failed at81/82: two interactive psql privilege-test commands lacked terminators and did not execute the intended denied SQL. The correction adds terminators, retains all assertions and changes no grants.
+
+Coherent review boundary not reached. Next independent work includes the explicit observation frontend/readback flow and temporal coverage design. Production provider/runtime/custody and approved methodology/F2 remain separately gated; no new credential or owner decision blocks this isolated continuation. Cutover ON HOLD; no live changes, source retrieval, local project files, merges or history rewriting. Prior frozen evidence preserved.
+
+
+## Committed-observation interface checkpoint — 2026-09-14
+
+Current candidate: `9b5f0e3026dc451f9f7ebfed5c8f722fddf986ca`, following `9a9c7bca331627b6ab6ca82db786594f85ff5cab`, on this existing draft branch.
+
+Personal saved views now require explicit capture, exact-request retry after an ambiguous acknowledgement, fresh committed readback, and SHA-256 verification of retained revision-reference bytes. A current-user/current-epoch server list recovers receipts after restart without browser persistence or recapture. Current withholding clears displayed content and propagates access denial. Native tests kill the committed client's process; browser restart tests explicitly use an in-process synthetic store and recreated transport. Observation epochs still install disabled.
+
+[Implementation and remaining gates](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/9b5f0e3026dc451f9f7ebfed5c8f722fddf986ca/docs/HYPOTHESIS_OBSERVATION_INTERFACE_2026-09-14.md) · [10 new contract/UI tests](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/9b5f0e3026dc451f9f7ebfed5c8f722fddf986ca/tests/hypothesisObservations.test.mjs) · [narrow observation delivery SQL](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/9b5f0e3026dc451f9f7ebfed5c8f722fddf986ca/supabase/qualification/hypothesis-assessments/016_observation_delivery.sql).
+
+Final-candidate verification:
+- [Golden Node 22/24](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34812929211): each 1837/1837 and build PASS.
+- [Native hypothesis](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34812929095): 85/85 PASS, including three new committed list/restart/access/epoch tests.
+- [Durable worker/native HTTP integration](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34812929302): 35/35 PASS, now checking actual observation list and v2 reference hash through the client/handler/store path.
+- [Chromium/WebKit](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34812929240): PASS at1280/768/390/320, same-request lost-ack recovery, list after component/transport restart, fresh readback and current-denial clearing. Inspected390px screenshots; corrected native WebKit selector contrast with the existing explicit select treatment and added keyboard/style assertions.
+- [Comparison](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34812929271), [authority extension](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34812929267), and [synthetic review protocol](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34812929293): PASS.
+
+The predecessor9a9c7bc passed1837/1837 on both Node versions,85 native,35 worker and browser behavior; visual inspection still identified unreadable WebKit select text. The correction is retained as a separate commit, not a rewritten result. The older8fc52cd World View run34811283501 completed PASS. Prior native failure, frozen candidates, manifests and independent reviews remain unchanged.
+
+Coherent independent-review boundary is not reached: restore/clone/import epoch qualification, legacy provenance coverage and the actual configured runtime/Auth/provider boundary remain open. Arbitrary historical-time qualification is still refused. Production configuration/custody and F2 remain owner-gated; no new credential is needed for isolated continuation. Existing concrete consolidation decisions remain in [the dependency/decision record](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/9b5f0e3026dc451f9f7ebfed5c8f722fddf986ca/docs/BACKEND_CONSOLIDATION_DEADLINE_2026-09-13.md).
+
+Cutover ON HOLD. No live changes, merges, history rewriting, local project files, source retrieval or new disclosure. CC remains closed3/3 without activation subject. No broad independent review requested.
+
+- Final-candidate [integrated isolation](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34812929120):53/53 PASS; MIP_PERMISSION_BATCH_NOT_ACTIVATED.
+- Final-candidate [World View](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34812929231): still running at evidence update; no PASS claim. Continue observing this exact run, not a duplicate.
+
+
+## Optional application/session wiring — 2026-09-14
+
+Candidate `7c6ce6a06fa47b519f9e738e8721e9d8beb72ff3` on the existing draft branch closes a concrete application-wiring gap: App previously never passed the optional hypothesis client into PrivateInvestigationWorkspace. An explicit hypothesisEndpoint prop now creates a current-session client only in the active private view. Its default is null; no live endpoint is configured.
+
+The effect-owned transport retires on logout, account/token/endpoint/view changes and session expiry. Old clients refuse requests, pending requests are aborted and descriptor checks suppress stale results. Browser session fields do not grant database authority: trusted server token verification and current assignment checks remain mandatory.
+
+[Implementation boundaries](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/7c6ce6a06fa47b519f9e738e8721e9d8beb72ff3/docs/HYPOTHESIS_APPLICATION_AUTH_SEAM_2026-09-14.md) · [six synthetic session tests](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/7c6ce6a06fa47b519f9e738e8721e9d8beb72ff3/tests/hypothesisSessionClient.test.mjs).
+
+Exact-candidate results:
+- [Golden Node22/24](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34813591474): each1843/1843 and build PASS.
+- [Native hypothesis](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34813591425):85/85 PASS.
+- [Worker/native HTTP/restart](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34813591423):35/35 PASS.
+- [Integrated isolation](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34813591488):53/53 PASS; MIP_PERMISSION_BATCH_NOT_ACTIVATED.
+- [Browser](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34813591520), [comparison](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34813591414), [authority extension](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34813591484) and [synthetic handoff](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34813591466):PASS.
+- [Current World View](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34813591432):still running; no PASS claim. Prior9b5f0e3 World View34812929231 now completed PASS.
+
+Coherent independent-review boundary remains open. The existing Auth provider's initialization/event ordering needs verification; the intended-host provider/account/runtime configuration and bounded trial remain owner-gated. Restore/epoch/legacy temporal coverage and approved methods/F2 remain separate. No new credential or owner input is needed for remaining isolated engineering. No review was commissioned. Production cutover stays ON HOLD; no live changes, material retrieval, local project files, merges or history rewriting. Preserve all earlier evidence and closed CC3/3.
+
+## Auth initialization ordering checkpoint — 2026-09-14
+
+Candidate `31cf40f2b7179527859b3201e0d238b644434bcf` corrects the existing useAuthSession initial-lookup/provider-event race. Subscribe first; later provider events outrank the lookup, settle loading, and cannot be overwritten by an old result or lookup failure. Cleanup suppresses both callback and lookup updates.
+
+Eight [synthetic ordering tests](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/31cf40f2b7179527859b3201e0d238b644434bcf/tests/authSessionOrdering.test.mjs) preserve the exact prior hook as a counterexample and verify logout, account changes, normal initialization, failed lookup, synchronous callback, unmount and integration with the actual optional hypothesis session client. The old-hook test deliberately demonstrates the old bug; it is not evidence of a safe baseline. The corrected client remains retired after late credentials arrive. [Scope and limits](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/31cf40f2b7179527859b3201e0d238b644434bcf/docs/HYPOTHESIS_AUTH_INITIALIZATION_ORDER_2026-09-14.md).
+
+Exact-candidate evidence:
+- [Golden Node22/24](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34814207079): each1851/1851, both builds PASS. Native counterexample and corrected logout tests executed.
+- [Hypothesis PostgreSQL](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34814207208):85/85 PASS.
+- [Worker/native HTTP/restart](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34814207082):35/35 PASS.
+- [Integrated isolated candidate](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34814207100):53/53 PASS; MIP_PERMISSION_BATCH_NOT_ACTIVATED.
+- [Browser](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34814207125), [comparison concurrency](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34814207265), [authority extension](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34814207081) and [synthetic handoff](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34814207087):PASS.
+- Current World View run34814207103 remains to be observed to completion. Prior7c6ce6a World View34813591432 completed PASS.
+
+This closes the isolated client initialization-order gap, not actual provider attestation, production Auth migration or the coherent independent-review boundary. Restore/epoch/legacy temporal coverage, intended provider/account/runtime/custody verification and owner-approved methods/F2 remain open. No new credential is needed for independent isolated work. No new broad review commissioned, live configuration, source retrieval, local project file, merge or history rewrite. Cutover ON HOLD; CC closed3/3 and all prior evidence preserved.
+
+
+## Finite feature audit and executable provider verifier — 2026-09-14
+
+Current candidate `e6b10fd8edc996e4adb0e21244be1562cd38b67c`. [Full requirement audit](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/e6b10fd8edc996e4adb0e21244be1562cd38b67c/docs/HYPOTHESIS_FEATURE_COMPLETION_AUDIT_2026-09-14.md) distinguishes implemented isolated behavior, incomplete arbitrary historical-time/restore evidence, independent review, and owner-gated methodology/provider/material decisions. No original requirement is waived.
+
+[Provider verifier](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/e6b10fd8edc996e4adb0e21244be1562cd38b67c/supabase/qualification/hypothesis-assessments/supabaseAuthenticator.mjs) now uses the installed SDK's explicit-token getUser call through a pinned endpoint, publishable-key-only configuration, strict response/claim binding, bounded body/deadline, no session persistence and no repeated network attempt. Only verified UUID/non-anonymous status is returned. Its default is closed. [Scope and primary references](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/e6b10fd8edc996e4adb0e21244be1562cd38b67c/docs/HYPOTHESIS_SUPABASE_AUTH_VERIFIER_2026-09-14.md).
+
+Seven [new tests](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/e6b10fd8edc996e4adb0e21244be1562cd38b67c/tests/hypothesisAuthProvider.test.mjs) use ephemeral RSA signatures and an in-process synthetic provider. Native client/handler/store/worker integration uses the actual adapter/SDK rather than the previous string-matching success callback; invalid/provider-denied credentials cannot query PostgreSQL. Synthetic provider revocation is explicitly not proof of immediate production logout/JWT invalidation.
+
+Exact-candidate results:
+- [Golden Node22/24](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34815433737):each1858/1858 and builds PASS.
+- [Native hypothesis](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34815433738):85/85 PASS.
+- [Worker/native integration/restart](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34815433744):35/35 PASS.
+- [Integrated](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34815433766):53/53 PASS; MIP_PERMISSION_BATCH_NOT_ACTIVATED.
+- [Browser](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34815433780), [comparison](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34815433763), [authority extension](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34815433748), [synthetic handoff](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34815433756):PASS.
+- Current World View34815433802 remains pending observation to completion. Prior31cf40f World View34814207103 passed.
+
+Preserved failures: f9ca87b worker34815144220 failed before tests because the workflow did not install the SDK dependency; locked npm ci with scripts disabled corrected setup. Its Golden34815144212 passed1857/1858, all seven verifier tests passing, with sole failure from audit labels colliding with reserved vocabulary codes. Labels were renamed; canonical vocabulary and guard assertions were not changed. Intermediate candidates and runs remain intact.
+
+AUTH engineering advances to executable isolated provider integration. TEMPORAL arbitrary-time/restore/legacy completeness remains the next material engineering task. Actual intended provider/project/clock/revocation/runtime/custody trial, approved methodology/F2 and actual material permission remain separately gated. No new credential needed for independent engineering. The coherent independent-review boundary is not reached and no broad review was requested.
+
+Cutover ON HOLD; PRs remain draft/unmerged; no live Auth request, production change, source retrieval, local project file, new infrastructure, paid activation or history rewrite. CC remains closed3/3 and all frozen review evidence is preserved.
+
+
+## Prepared-restore observation fence — 2026-09-14
+
+Candidate `daad33251fcad49c0fd46a5f72ff3a64b1556e59` adds [017 external observation epoch](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/daad33251fcad49c0fd46a5f72ff3a64b1556e59/supabase/qualification/hypothesis-assessments/017_external_observation_epoch.sql). Capture/read/list require the trusted handler's independently configured expected epoch. Missing configuration denies only these operations; ordinary history keeps its existing access checks. Caller-supplied epoch/identity fields reject before SQL. Old unpinned gateway function grants are removed. Epoch changes serialize with in-flight observation transactions.
+
+[Prepared-restore scope and limits](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/daad33251fcad49c0fd46a5f72ff3a64b1556e59/docs/HYPOTHESIS_PREPARED_RESTORE_EPOCH_2026-09-14.md). Five new native cases include actual disposable logical pg_dump/psql restore using matching PostgreSQL17 clients. The restored copy retains its old enabled marker and receipt; a new synthetic pin outside the restored DB rejects capture/read/list while retaining the receipt unchanged. Dump contents stay in remote process memory, not logs/artifacts. Three handler tests cover default closure, immutable configuration/SQL parameter binding and caller injection. Existing worker/native integration uses an explicit synthetic pin and retains denial tests.
+
+Exact-candidate evidence:
+- [Golden Node22/24](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34816447396):each1861/1861 and builds PASS.
+- [Hypothesis PostgreSQL](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34816447389):90/90 PASS, including restore and both epoch orderings.
+- [Worker/native HTTP/restart](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34816447414):35/35 PASS.
+- [Integrated](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34816447393):53/53 PASS; MIP_PERMISSION_BATCH_NOT_ACTIVATED.
+- [Browser](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34816447390), [comparison](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34816447408), [authority extension](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34816447384), [synthetic handoff](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34816447385):PASS.
+- Current World View34816447485 still running. Prior e6b10fd World View34815433802 PASS.
+
+This is prepared-restore enforcement, not automatic detection of an unprepared database/configuration rollback. All old gateways must be closed/drained and the independent configuration advanced before a real restore can reopen. No production pin, custodian, restore or activation is supplied. Missing old provenance is not backfilled. Arbitrary historical-time/clock/completeness evidence remains engineering; the coherent independent-review boundary is not reached. Production trial/custody, methodology/F2 and actual materials remain separately gated. No new credential blocks continued isolated engineering.
+
+Cutover ON HOLD. No production changes, material retrieval, local project files, merges, paid activation or history rewriting. CC closed3/3, prior failures and frozen review evidence preserved.
+
+
+## Native temporal commit-stream evidence — 2026-09-14
+
+Candidate `d2d7a9724adf17dc4e6ae548818bd1cfe5675812` adds four feasibility cases against actual isolated hypothesis acceptance. The same disposable PostgreSQL service is guarded/restarted with logical decoding before fixture setup. No production setting, slot or replication grant is changed.
+
+[Temporal design/evidence boundary](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/d2d7a9724adf17dc4e6ae548818bd1cfe5675812/docs/HYPOTHESIS_TEMPORAL_COMMIT_STREAM_2026-09-14.md). Native evidence shows open/rolled-back assessments are not emitted as committed revisions; two investigations can commit in reverse transaction-allocation order; a killed consumer before acknowledgement receives the same stream again; and a newly created slot does not recover existing pre-slot history. Only synthetic data is decoded in remote memory. Slots are cleaned up. test_decoding is not the proposed production export interface.
+
+Exact-candidate checks:
+- [Hypothesis PostgreSQL](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34817450401):94/94 PASS, including all four new cases.
+- [Golden Node22/24](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34817450387):each1861/1861 and builds PASS.
+- [Worker/native HTTP/restart](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34817450405):35/35 PASS.
+- [Integrated](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34817450390):53/53 PASS; MIP_PERMISSION_BATCH_NOT_ACTIVATED.
+- [Browser](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34817450409), [comparison](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34817450396), [authority extension](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34817450376), [synthetic handoff](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34817450400):PASS.
+- Current World View34817450386 still running. Prior daad332 World View34816447485 PASS.
+
+The next dependency is durable metadata checkpointing with exact duplicate/conflict handling and a consistent initial snapshot/coverage boundary. Commit clocks, observed availability and restore continuity must remain distinct. This evidence does not establish arbitrary wall-clock availability or enable as_known_then. The coherent independent-review boundary is not reached. No new credential blocks isolated engineering; intended-host replication/custody/clock authorization remains owner-gated. All production/CC/storage/merge/history constraints and earlier evidence remain unchanged.
+
+
+## Durable commit metadata component — 2026-09-14
+
+Candidate `106a865379061bc85bf8c1b07eb2916c46c6502b` on the existing draft branch; no merge or production authorization.
+
+Implemented metadata-only source/stream/LSN/xid/revision binding, committed exact-content journal put/readback before acknowledgement, strict malformed/extra-content denial, and synthetic actual process termination/replay through the existing encrypted remote journal. Separate synthetic recorder runtime/key has no application enqueue capability; comparison-worker runtime cannot read it. Current mapping revocation denies replay without discarding stranded evidence. All new material and source acknowledgement fixtures are synthetic.
+
+- [Golden Node 22 and 24](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34818896299): each 1865/1865 PASS, both builds PASS.
+- [Native hypothesis](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34818896769): 94/94 PASS.
+- [Worker/native/restart](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34818896306): 42/42 PASS, including six new native subtests plus their enclosing test.
+- [Integrated](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34818896515): 53/53 PASS; MIP_PERMISSION_BATCH_NOT_ACTIVATED.
+- [Browser](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34818896421), [comparison](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34818896294), [authority](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34818896308), [synthetic handoff](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34818896457): PASS.
+- [World View](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/34818896847): still in progress when this evidence was recorded; no replacement run dispatched. Prior d2d7a97 World View 34817450386 completed PASS.
+
+History preserved: initial ed06e5c worker run 34818596907 passed 42/42 but fixture startup depended on file ordering. Serial full-fixture correction 86646c4 run 34818694252 failed after recorder tests because the second fixture re-created hypothesis roles (42710). Final candidate initializes only journal prerequisite roles and serializes shared-cluster file setup; assertions unchanged. Failed run remains failed.
+
+[Implementation contract and remaining requirements](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/blob/106a865379061bc85bf8c1b07eb2916c46c6502b/docs/HYPOTHESIS_DURABLE_COMMIT_RECORDER_2026-09-14.md). New tests: tests/hypothesisCommitRecorder.test.mjs and verifier/hypothesis-worker/commitRecorder.test.mjs.
+
+Open engineering: real decoder-to-recorder adapter, consistent snapshot bootstrap, contiguous coverage/gap detection, restore/incarnation invalidation and current-authority-fenced source acknowledgement. Historical-time qualification remains false. Production consumer identity/custody/restore and live-trial authorization remain owner-gated; no new credentials needed for this isolated batch. Coherent independent-review boundary not yet reached; no broad review commissioned. Existing D4/D5, F2, rights/privacy and cutover holds remain; CC closed 3/3. No project files written to owner's device.

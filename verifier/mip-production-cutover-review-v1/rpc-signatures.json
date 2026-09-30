@@ -1,0 +1,109 @@
+{
+  "environment": "isolated_qualification_only",
+  "schema": "comparison_qualification",
+  "load_order": [
+    "supabase/qualification/comparison-generations/contract.sql",
+    "supabase/qualification/comparison-generations/selection.sql",
+    "supabase/qualification/comparison-generations/capability.sql"
+  ],
+  "not_a_production_grant": true,
+  "bound_rpcs": [
+    {
+      "name": "producer_enqueue",
+      "signature": "producer_enqueue(p_request uuid, p_session uuid, p_runtime text, p_source text, p_payload jsonb, p_implementation text, p_observed timestamptz) returns uuid",
+      "grant": "qual_comparison_producer",
+      "not_granted_to": ["service_role", "anon", "authenticated", "qual_comparison_worker", "qual_publisher"],
+      "requires": "runtime_source_scope + evaluated_implementations for p_runtime; mip_source_not_in_scope / mip_implementation_not_evaluated otherwise",
+      "replay": "Identical arguments return the same generation_id. Changed source/payload/implementation/observed raise mip_request_replay_conflict."
+    },
+    {
+      "name": "retain_parity",
+      "signature": "retain_parity(p_request uuid, p_session uuid, p_runtime text, p_archive text, p_source text) returns integer",
+      "grant": "qual_comparison_producer",
+      "behavior": "Copies generation/job hashes and operational state. Pending remains pending. Does not acknowledge live Manus work."
+    },
+    {
+      "name": "worker_claim",
+      "signature": "worker_claim(p_request uuid, p_session uuid, p_runtime text) returns jsonb",
+      "grant": "qual_comparison_worker",
+      "replay": "Same request_id returns the generation without lease_token (mip_request_replay_omits_token)."
+    },
+    {
+      "name": "worker_complete",
+      "signature": "worker_complete(p_request uuid, p_session uuid, p_runtime text, p_generation uuid, p_token uuid, p_input_hash text, p_implementation text, p_output jsonb) returns text",
+      "grant": "qual_comparison_worker",
+      "replay": "Identical arguments return completed. Changed output raises mip_request_replay_conflict; durable output is unchanged."
+    },
+    {
+      "name": "worker_fail",
+      "signature": "worker_fail(p_request uuid, p_session uuid, p_runtime text, p_generation uuid, p_token uuid, p_input_hash text, p_implementation text) returns text",
+      "grant": "qual_comparison_worker"
+    },
+    {
+      "name": "scheduler_claim",
+      "signature": "scheduler_claim(p_request uuid, p_session uuid, p_runtime text) returns jsonb",
+      "grant": "qual_comparison_scheduler",
+      "cannot": "worker_claim / worker_complete / worker_fail / claim()",
+      "behavior": "After a valid scheduler binding, raises mip_scheduler_not_a_worker. Does not issue a lease_token."
+    },
+    {
+      "name": "selector_select",
+      "signature": "selector_select(p_request uuid, p_session uuid, p_runtime text, p_action uuid, p_source text, p_expected uuid, p_generation uuid, p_output_hash text, p_context jsonb) returns uuid",
+      "grant": "qual_selector",
+      "withdrawal": "p_generation null follows publication to withdrawn, or revoked if the prior publication head was released. There is no separate publisher_withdraw RPC."
+    },
+    {
+      "name": "publisher_propose",
+      "signature": "publisher_propose(p_request uuid, p_session uuid, p_runtime text, p_source text) returns uuid",
+      "grant": "qual_publisher"
+    },
+    {
+      "name": "publisher_release",
+      "signature": "publisher_release(p_request uuid, p_session uuid, p_runtime text, p_source text) returns text",
+      "grant": "qual_publisher",
+      "gate": "operating_gates.publication_release_enabled defaults false. Gate is re-read after locking publication_heads. dependency_hash must still match publication_dependency_hash (generation identity plus named survivor-closure relation fingerprints, absence explicit). Isolated fixture flips are not production publication authorization."
+    },
+    {
+      "name": "membership_auto_approve",
+      "signature": "membership_auto_approve(p_request uuid, p_session uuid, p_runtime text, p_source text) returns text",
+      "grant": "qual_membership_scorer",
+      "gate": "operating_gates.membership_auto_approval_enabled defaults false. Even if flipped, there is no isolated release path."
+    }
+  ],
+  "owner_fixtures_not_granted_to_capability_roles": [
+    "issue_session(p_principal text, p_runtime_id text, p_expires timestamptz) returns uuid",
+    "revoke_session(p_session uuid) returns text",
+    "bind_runtime(p_runtime text, p_principal text, p_rpc text) returns text",
+    "revoke_binding(p_runtime text, p_principal text, p_rpc text) returns text",
+    "revoke_principal(p_runtime text, p_principal text) returns text",
+    "bind_source_scope(p_runtime text, p_source text) returns text",
+    "revoke_source_scope(p_runtime text, p_source text) returns text",
+    "bind_evaluated_implementation(p_runtime text, p_implementation text) returns text",
+    "revoke_evaluated_implementation(p_runtime text, p_implementation text) returns text"
+  ],
+  "diagnosis": [
+    "diagnose_authorization(p_rpc text) returns jsonb — SECURITY INVOKER; reports GRANT/bypassrls for current_user",
+    "diagnose_bound_call(p_rpc text, p_principal text, p_session_id uuid, p_runtime_id text) returns jsonb — returns mip_authz_* or ok without executing the target RPC",
+    "effective_authority() returns jsonb — alias of diagnose_authorization('effective_authority')",
+    "bound_code(p_principal text, p_rpc text, p_session_id uuid, p_runtime_id text) returns text — shared checker"
+  ],
+  "unbound_ambient_apis_still_granted_to_service_role": [
+    "enqueue(text, jsonb, text, timestamptz)",
+    "claim()",
+    "complete(uuid, uuid, text, text, jsonb)",
+    "fail(uuid, uuid, text, text)",
+    "select_output(uuid, text, uuid, uuid, text, jsonb)"
+  ],
+  "rls": {
+    "qual_public_reader": "SELECT publication_history/heads only where state=released",
+    "capability_tables": "RLS enabled; no DML grants to capability roles; service_role SELECT only on the new tables"
+  },
+  "revocation": {
+    "session": "revoke_session sets principal_sessions.revoked_at; subsequent bound RPCs raise mip_authz_revoked_session immediately",
+    "binding": "revoke_binding sets runtime_bindings.revoked_at for one RPC; subsequent calls of that RPC raise mip_authz_revoked_principal. Unbinding worker_claim does not unbind worker_complete.",
+    "principal": "revoke_principal revokes every binding and session for that runtime principal; in-flight worker_complete raises mip_authz_revoked_session",
+    "catalog": "missing GRANT remains PostgreSQL permission denied, not an mip_authz_* code",
+    "ambient": "service_role complete() ignores session revocation — that is the application vs runtime distinction"
+  },
+  "unresolved_live_bindings": "Isolated roles are not production runtime-to-principal bindings. See runtime-permission-proposal.json."
+}

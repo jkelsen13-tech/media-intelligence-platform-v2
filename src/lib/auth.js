@@ -106,12 +106,22 @@ export function useAuthSession() {
   const [loading, setLoading] = useState(true)
   useEffect(() => {
     let active = true
-    getSession().then((s) => {
+    let eventObserved = false
+    const apply = (s) => {
       if (!active) return
-      setSession(s)
+      setSession(s ?? null)
       setLoading(false)
+    }
+    // Subscribe first; a newer provider event outranks the initial lookup.
+    const unsub = onAuthChange((s) => {
+      if (!active) return
+      eventObserved = true
+      apply(s)
     })
-    const unsub = onAuthChange((s) => setSession(s))
+    getSession().then(
+      (s) => { if (!eventObserved) apply(s) },
+      () => { if (!eventObserved) apply(null) },
+    )
     return () => {
       active = false
       unsub()

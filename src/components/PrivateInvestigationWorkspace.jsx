@@ -1,3 +1,5 @@
+import PrivateMarketsWorkspace from './PrivateMarketsWorkspace.jsx'
+import HypothesisAssessmentHistory from './HypothesisAssessmentHistory.jsx'
 import AssessmentEvidenceTrail, { RetainedInputRecord, RetainedInputDates } from './InvestigationAssessmentTrail.jsx'
 import InvestigationSourceHistory from './InvestigationSourceHistory.jsx'
 import { mipBackend } from '../lib/mipBackend.js'
@@ -1668,6 +1670,9 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
 
 export default function PrivateInvestigationWorkspace({
   workspace,
+  hypothesisClient = null,
+  privateMarketsEndpoint = null,
+  privateMarketsAuth = null,
   inputImpactClient = defaultInputImpactClient,
   sourceSpansClient = defaultSourceSpansClient,
   onSignIn,
@@ -1827,6 +1832,7 @@ export default function PrivateInvestigationWorkspace({
               </button>
             ))}
           </nav>
+          <PrivateMarketsWorkspace workspace={workspace} endpoint={privateMarketsEndpoint} auth={privateMarketsAuth}/>
           <OverviewSection
             panels={panels}
             bundle={bundle}
@@ -1850,6 +1856,10 @@ export default function PrivateInvestigationWorkspace({
             onInspectRemovedRecord={actions.inspectComparedRecords}
             onOpenCitation={openCitation}
           />
+          {hypothesisClient ? <HypothesisAssessmentHistory client={hypothesisClient}
+            investigationId={bundle.investigation_id} workspaceVersionId={bundle.version.id}
+            userScopeKey={workspace.userId} canReconcile={bundle.access_role === 'reviewer'}
+            onAccessFailure={code => actions.rejectInputImpactAccess?.(code,bundle)} /> : null}
           <HypothesesSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <CommitmentsSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <GapsSection panels={panels} bundle={bundle} onOpenInput={(selection, sourceBundle) => {

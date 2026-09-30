@@ -1,0 +1,97 @@
+{
+  "schema": "mip-real-permission-qualification-proposal-v1",
+  "status": "PROPOSED_NOT_ADMITTED_NOT_QUALIFIED",
+  "proposal_id": "cc-by-4-en-legalcode-text-only",
+  "material": {
+    "title": "Attribution 4.0 International — Legal Code",
+    "url": "https://creativecommons.org/licenses/by/4.0/legalcode.en",
+    "version": "4.0, English legal code",
+    "selection": "Section 1 — Definitions, text only; exclude navigation, logos, images and personal/contact information",
+    "database_article_id": null,
+    "retained_content_hash": null,
+    "version_binding": "Named legal-code version verified; exact selected-byte hash must be captured only after admission"
+  },
+  "permission_evidence": [
+    {
+      "url": "https://creativecommons.org/policies/",
+      "section": "CC’s Licensing Statement for Content and Software Code",
+      "observation": "CC expressly dedicates its legal-code text to CC0; marks remain reserved",
+      "policy_effective_date": null
+    },
+    {
+      "url": "https://creativecommons.org/terms/",
+      "version": "Effective 2020-08-26",
+      "section": "5 — Content Available through the Services",
+      "observation": "Confirms CC-owned legal tools are CC0; distinct from general CC BY website content"
+    },
+    {
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/legalcode.en",
+      "version": "CC0 1.0 English",
+      "section": "2–4; About Creative Commons",
+      "observation": "Waiver/fallback and reserved rights; does not supply MIP admission or privacy approval"
+    }
+  ],
+  "required_operations": [
+    "ingestion",
+    "retention",
+    "analysis",
+    "excerpt_display"
+  ],
+  "requested_audience": "isolated_internal_review",
+  "proposed_processing_boundary": "One-time GitHub-hosted disposable qualification process; no article text in public repository, logs or artifacts; retain only redacted evidence and hashes. No external-model processing.",
+  "blocked_operations": [
+    "public_display",
+    "full_content_display",
+    "redistribution",
+    "external_model_disclosure"
+  ],
+  "obligations": [
+    "Keep material title, canonical URL and CC0 evidence references",
+    "Exclude CC logos/branding and do not imply endorsement",
+    "Distinguish extracted test excerpts from the operative license; no modified legal instrument presented as an official CC license",
+    "Verify exact source selection/version and applicable terms at authorized capture",
+    "Preserve MIP privacy/access rules; source license alone is insufficient"
+  ],
+  "privacy": {
+    "assessment": "Proposed normative definitions contain no described private individuals or investigations; this is an evidence-backed recommendation, not an authoritative classification.",
+    "approval_record": null,
+    "eligible": false,
+    "reason": "source_admission_and_privacy_review_pending"
+  },
+  "adapter_records": {
+    "target": "008 operation_evidence_versions / operation_evidence_heads reference adapter; no records inserted",
+    "scope_fields": [
+      "source_project",
+      "material_ref",
+      "material_version",
+      "operation",
+      "audience",
+      "domain"
+    ],
+    "real_authority_adapter": "UNBOUND_PENDING_VERIFIED_RECEIPT_READER",
+    "approval_status": "proposed",
+    "approval_owner_designation": "MIP platform owner",
+    "approval_record_ref": null,
+    "source_hash": null,
+    "actual_positive_grants": 0,
+    "checks": [
+      "CC legal-code content scope rather than whole-domain inference",
+      "copyright permission distinct from source admission/privacy",
+      "exact retained-content hash and source version",
+      "separate operation/audience checks",
+      "fulfilled obligations and effective authority",
+      "revocation/fresh-review fencing",
+      "no synthetic fallback",
+      "no public release"
+    ]
+  },
+  "exact_owner_choice": "Approve or decline this one text-only legal-code section for one-time remote isolated ingestion/retention/analysis/internal excerpt tests, including processing by the GitHub-hosted test runner. No external-model disclosure, public release or historical publisher rights are requested.",
+  "scope_separation": [
+    "Not one of the 11 reconciled historical articles",
+    "Not a synthetic fixture",
+    "Not F2 held-out semantic qualification",
+    "Not a launch-corpus admission",
+    "Not multi-outlet comparison qualification"
+  ],
+  "executed_material_actions": []
+}

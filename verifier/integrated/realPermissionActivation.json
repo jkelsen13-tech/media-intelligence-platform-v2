@@ -1,0 +1,24 @@
+{
+  "status": "closed_permission_component_passed",
+  "proposal": "cc-by-4-en-legalcode-text-only",
+  "attempt": 3,
+  "max_attempts": 3,
+  "commit_subject": null,
+  "expected_material_sha256": "ab25e84228711f827ae10decc41a6c02c64ba33698e51694b4586db062c6d535",
+  "retries": "Only explicit bounded corrective commits; refuse Actions reruns; close after completion.",
+  "prior_attempt": {
+    "commit": "a2489a11ffc9a78073ac8320cb64e17f7e2c2f36",
+    "run": 34735698788,
+    "result": "activation_failed_before_capture",
+    "material_captured": false
+  },
+  "disposition": "Single authorized attempt 3 completed; permission component passed. Disposable database removed; no further material retrieval authorized by this activation.",
+  "completed_attempt": {
+    "commit": "0da8b5a0a4f9540160b71a39a1bbba3d655bcc95",
+    "run": 34772418826,
+    "job": 103764309816,
+    "result": "PERMISSION_COMPONENT_PASS",
+    "material_sha256": "ab25e84228711f827ae10decc41a6c02c64ba33698e51694b4586db062c6d535",
+    "material_bytes": 2925
+  }
+}

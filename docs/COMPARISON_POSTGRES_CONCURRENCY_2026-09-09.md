@@ -4,11 +4,12 @@ This extends the isolated PGlite qualification with independent PostgreSQL 17.6
 connections in a disposable GitHub Actions service. It executes the exact
 checked-in qualification contract, without installing it on any Supabase project.
 
-Six scenarios exercise duplicate enqueue convergence after a real lock wait,
-SKIP LOCKED progress and claim rollback, uncommitted output/acknowledgement
-visibility with concurrent exact completion, completion rollback followed by
-the waiting completion, stale completion after committed lease replacement,
-and an independently locked exhausted generation alongside unrelated work.
+The harness in `verifier/comparisonPostgresConcurrency.py` contains **fourteen**
+`test_*` methods (generation lease/complete/fail races, source-capture snapshot
+atomicity, selection predecessor races, and bound publication withdrawal vs
+release). An older six-scenario summary described only the first generation
+block; the file is the contract. Locally this harness is **NOT TESTED** unless
+`GITHUB_ACTIONS=true` and `MIP_DISPOSABLE_POSTGRES=comparison-qualification`.
 
 Persistent psql sessions hold explicit transactions. An observer requires
 pg_blocking_pids to name the expected holder before releasing blocked races;
