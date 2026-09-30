@@ -241,7 +241,10 @@ export function createGlobeFailureLifecycle({
     canvas.addEventListener('webglcontextlost', onContextLost)
     removers.push(() => canvas.removeEventListener('webglcontextlost', onContextLost))
   }
-  const removeRenderError = viewer?.scene?.renderError?.addEventListener?.((scene, error) => fail('render-error', error))
+  const renderError = viewer?.scene?.renderError
+  const removeRenderError = typeof renderError?.addEventListener === 'function'
+    ? renderError.addEventListener((scene, error) => fail('render-error', error))
+    : null
   if (typeof removeRenderError === 'function') removers.push(removeRenderError)
   return {
     destroy() {
