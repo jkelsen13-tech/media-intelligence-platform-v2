@@ -1,173 +1,94 @@
-# September 29 World View successor lane
+# World View successor wave — September 29, 2026
 
-Starting application source: 1a9f7bbe99676ca535c21dd6e68d3de7da62e69e.
-Isolated branch: codex/world-view-successor-20260929. No backend branch merge,
-qik query/write, role/ACL, credential, ingestion, publication or deployment.
-The separate private consolidation checkpoint was refreshed read-only. Its held,
-installed-disabled and externally authority-dependent state remains outside this lane.
-Source stays on GitHub; execution/visual artifacts use existing ephemeral CI.
+## Result and authority
 
-Product authority: owner-supplied MIP_World_View_Work_Plan_Updated_2026-09-29.docx
-inside Media intelligence platform version 5.zip, read in memory without extraction.
-The September 8 plan is historical architecture; MIP-GEV-INTEGRATION.md's proposed
-live tracking/client replacement directions are superseded by the September 29
-news-driven context policy. No GEV code/data is copied.
+This isolated frontend wave improves camera continuity and precision-constrained navigation, globe/MapLibre/atlas label legibility, North American acceptance coverage, source attribution, lazy globe loading and native-loss recovery. It preserves the existing renderer-neutral Visual Fidelity system and identifies the source of the Cleveland olive/hazy appearance through controlled comparisons.
 
-## Reconciliation before mutation
+Application base: `1a9f7bbe99676ca535c21dd6e68d3de7da62e69e`. Branch: `codex/world-view-successor-20260929`; [draft PR 184](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/184). Qualified application/build candidate: **1f8ed7571379d5ebe96133aa5ef038836c2605d4**. Documentation checkpoint may follow without changing that qualified source tree. No merge or deployment.
 
-| Capability | Current evidence and classification |
+Product authority is the owner-supplied `MIP_World_View_Work_Plan_Updated_2026-09-29.docx`, read from the attached archive in memory. September 8 remains historical architecture evidence. September 29 supersedes conflicting tracking/provider-replacement directions in `MIP-GEV-INTEGRATION.md`. Current repository source determines implemented status. No GEV code or dataset was copied.
+
+Source, tests and visual artifacts were authored on GitHub or executed in existing remote CI. No checkout, extracted archive, build, temporary file or screenshot was written to the owner's physical device. Backend consolidation remains isolated: no database objects, roles, ACLs, SQL, credentials, receipts, held candidates, ingestion, publication, migration, caller cutover or retirement changed. Existing anonymous readers were used without introducing a second backend.
+
+## Current capability reconciliation
+
+| Capability | Status after this wave |
 | --- | --- |
-| Serializable VF master/categories/presets | COMPLETE for existing approved leaves in source and earlier browser journeys; current wave regression still required. WorldView owns profile above transient renderer. |
-| Terrain relief and provider | PARTIAL geographically: approved, source-header-checked frozen Mapzen tiles within Cleveland/Ohio; reference ellipsoid elsewhere. No continental high-detail terrain claim. |
-| Recorded-time lighting/dynamic atmosphere | COMPLETE for frozen exact timestamp, date-only/unavailable denied. Sun-directed atmosphere remains PREREQUISITE-DEPENDENT. |
-| Ground atmosphere/distance haze | COMPLETE existing conservative wiring: fog.renderable changes appearance, fog.enabled/density/culling stay fixed. Not volumetric weather. Requalification and controlled green-haze diagnosis remain. |
-| FXAA/resolution/refinement | COMPLETE bounded opt-in source and existing browser verifiers. Presets do not activate unmeasured defaults; no finer data is invented. |
-| Shadows/AO/material/water/volumetric effects | PREREQUISITE-DEPENDENT on truthful geometry, comparisons and safe measurements. Not permanently excluded. |
-| Camera/cancellation/framing | PARTIAL: prior cancellation/startup fixes exist; oblique reset, Map/Graph camera loss and fallback pitch-convention mismatch remain. This wave addresses them. |
-| Marker legibility | PARTIAL: pick preserves row; all-distance labels bypass horizon and dense labels overlap. This wave adds display arbitration; clustering and richer connection visibility remain. |
-| Shared canonical selection/time | COMPLETE current public reader and Investigation Context seams; private/public and unavailable geography guards remain required regressions. |
-| North America baseline | PARTIAL: globally navigable keyless basemap exists; empty/default camera is global, acceptance concentrated on Cleveland. This wave adds regional overview plus representative navigation acceptance. |
-| Weather/imagery/buildings/hazards/infrastructure | DATA/PROVIDER-DEPENDENT: no new service or source admission here. Weather route remains blocked; synthetic/offline context contracts do not confer rights. |
-| Continuous tracking/cables/neural/streamed rendering | INTENTIONALLY EXCLUDED by successor policy; no baseline activation. |
+| Visual Fidelity master/category memory, deterministic presets and truthful renderer capabilities | COMPLETE for existing approved supported leaves; display preferences stay above transient renderers. |
+| Terrain relief/provider | PARTIAL geographically. Existing source-header-checked, frozen Mapzen elevation within approved Ohio coverage; reference ellipsoid elsewhere. No continental detail claim. |
+| Exact recorded-time lighting and dynamic atmosphere | COMPLETE existing implementation, requalified. Imprecise/unavailable timestamps remain denied. Sun-directed atmosphere is PREREQUISITE-DEPENDENT. |
+| Ground atmosphere and distance haze | COMPLETE existing conservative implementation, requalified. Haze changes `Scene.fog.renderable`; density, enabled/culling policy stay fixed. |
+| FXAA, bounded resolution and terrain refinement | COMPLETE existing approved bounds, requalified. Refinement cannot invent elevation detail. |
+| Shadows, AO, enhanced materials, water effects and volumetric weather/fog | PREREQUISITE-DEPENDENT; neither advertised active nor permanently rejected. |
+| Camera restoration, framing, cancellation and fallback precision | COMPLETE for the qualified session/remount/startup-fallback journeys below. Running native WebGL loss and interrupted lazy-startup recovery are COMPLETE only for the tested browser journeys; physical GPU/all-fault recovery is unqualified. WebKit drag remains unqualified. |
+| Lazy globe build isolation | COMPLETE for the actual initial static/preload/CSS graph guard and vendor-script interrupted-startup journey. |
+| Marker/label arbitration and picking | COMPLETE for qualified ellipsoid horizon, deterministic overlap and original-row picking in this wave. Broader clustering and richer relationship arbitration remain PARTIAL. |
+| Graph/Timeline/Investigation Context identity and time seams | COMPLETE existing contracts preserved and regression-qualified; contextual observations do not become canonical evidence. |
+| North America operating baseline | PARTIAL: regional overview and representative navigation acceptance added; detailed data/provider coverage remains progressive. Architecture is globally navigable. |
+| Hazard/weather, infrastructure, buildings and dated imagery/context expansion | DATA/PROVIDER-DEPENDENT. No source admission or new provider in this wave. Existing unavailable weather stays unavailable. |
+| Continuous aircraft/vessel/person/CCTV tracking, restricted submarine cables, neural/streamed frames | INTENTIONALLY EXCLUDED from the launch baseline. |
 
-Read source: package/lock, WorldView/WorldMapCanvas/CSS/VF panel and profile,
-renderer adapters, map-stack/privacy, camera framing/state, Terrarium provider,
-relief material, recorded lighting, atmosphere, bounded resolution/refinement,
-spatial projection/backend and Investigation Context. Current closeouts carry
-historical status; source and new runtime receipts control current claims.
+## Integrated behavior
 
-## Coherent wave
+Camera memory is session-local normalized JSON above transient canvases, keyed to accepted location and precision. Same-target remounts restore the view and suppress redundant fly-to. Different targets frame themselves; invalid captures retain the last good snapshot. No graphics object, localStorage or Investigation Context field stores camera preferences.
 
-Camera session memory lives above transient canvases and holds normalized JSON
-only, keyed to the accepted location/precision. Renderer adapters constrain fallback restoration to their supported limits. Changed subjects
-cannot inherit a saved view. Invalid captures do not erase good state. Remounts
-restore matching views and suppress redundant auto-framing. It is intentionally
-session-local: no localStorage, route/Investigation Context field or persistence.
+Reset frames north-up and nadir. Stop flight uses existing cancellation. The initial North America overview is a display pose, with no geographic data boundary. Globe poles and dateline remain navigable; MapLibre constrains only its unsupported Mercator camera latitude and pitch. Map pitch 0 maps to globe pitch −90. Its CSS-width/latitude-aware precision governor applies before restore and during manual zoom, pan, resize and late precision updates. The meter bridge is explicitly an approximate display scale.
 
-Selected-location reset is north-up/nadir in Cesium and pitch zero in MapLibre.
-The renderer-neutral pitch convention is now bridged correctly: MapLibre's zero
-is Cesium's -90, not zero at the horizon. Manual tilt survives serialization.
-Mercator clamps its own unsupported pole latitude and pitch, never projection
-geometry; globe poles remain valid. Precision limits refresh before restoration. MapLibre uses a conservative CSS-width/latitude-aware bound during user zoom, pan, resize and late precision arrival; its meter bridge remains an approximate display scale. Raw scalar metadata lets browser qualification inspect the actual limit.
+Cesium's live roll getter can return a value near 2π for an upright view. Capture now wraps periodic angles before the external-state clamp, preventing an accidental 180° inverted restoration. External malformed-state clamping remains unchanged. Periodic equality handles longitude/heading/roll without treating 0° and 180° as equivalent.
 
-North America overview is a display camera only. Stop flight uses the existing
-cancel/stop methods. Neither changes selected evidence, time, coordinates or
-the canonical subject. Globe navigation remains global.
+Globe points retain canonical coordinates. Reference-ellipsoid horizon checks govern visibility and picking; they do not assert terrain occlusion or evidence altitude. Selected-first full measured text boxes suppress overlap, with fewer unselected labels at continental scale. Every actual render, including tiny camera movement and resize, recomputes visibility. Changed membership requests one correction frame; settled idle creates no loop.
 
-Marker points stay at recorded longitude/latitude. Screen symbols are explicitly
-arbitrated against the reference ellipsoid horizon to prevent far-side visibility
-and picking. This is not an asserted terrain line of sight or event altitude.
-Labels prioritize selection, suppress overlap and reduce unselected labels at
-continental scale. No point/cluster relocation or synthetic relationship is made.
-Layout work follows actual camera/feature renders; it cannot request idle frames
-without a visibility change. Existing source/precision inspector remains authoritative.
+MapLibre uses public projection and deck.gl's glyph atlas advances at the actual font scale. Bounded caches, listener cleanup and exact original-row picking remain renderer-local. Decluttering hides labels rather than removing points. Static atlas arbitration measures the complete two-line block and keeps main text 11 CSS px, detail text 9 px, points 7 px radius and hit targets 44 px diameter across responsive sizes. If details cannot fit, a complete main label may fit while full detail remains accessible and in the inspector. If no anchored text fits, zero labels is reported honestly. Evidence points and viewBox never move to accommodate text. All points retain named keyboard buttons; Enter/Space invoke the original row.
 
-## Acceptance and remaining scope
+Terrain disclosure now sits below the canvas. MapLibre's scale uses the top-right control position so expanded copyright can wrap on phones without overlapping it; navigation stays top-left and source links remain expanded at bottom-right. Native OSM imagery credit is an on-screen copyright link, following the [official raster tile policy](https://operations.osmfoundation.org/policies/tiles/). Existing brand/source and Canada terrain rights remain visible.
 
-Targeted camera/memory/pitch/horizon/label tests plus complete frontend regression
-and built application verifiers are required. Representative navigation classes:
-Great Lakes, coastal metro, mountain/fire, desert, Plains, hurricane coast,
-Canada/high latitude, Mexico, border, dateline and poles. Tests do not prove
-terrain/source coverage outside the approved Ohio provider.
+Boot controller floors and optional initial framing resolve the existing live precision getter, including source rows arriving during imports. Behavioral mount tests execute the adapter with replaced vendor/terrain boundaries and retain real local dependencies. Detached `cameraGovernance` scalars report the actual controller floor and unclamped ellipsoid height; built browser checks therefore cannot be satisfied only by a clamped serialized camera value.
 
-Controlled same-camera comparisons isolate relief, ground atmosphere, haze,
-lighting and interactions; request counts and render governance must be recorded.
-No arbitrary color grading/default aesthetics change is made. Visual verification
-and independent Cursor review are pending until actual results are recorded.
+The build uses vendor-only Cesium chunk matching and Rollup's `onlyExplicitManualChunks` option to prevent implicit shared-dependency capture. Locked Rollup is 4.62.2; dependency manifests and lockfiles were not changed. Existing MapLibre/deck chunk assignments, deployment base/targets, license notices and Cesium Workers/Assets/Widgets copying remain intact. A build-only public Rollup output hook emits a sanitized chunk graph without source-module paths; the verifier traverses actual HTML entry/modulepreloads, transitive static imports and stylesheets, then requires dynamically reachable globe adapter/vendor chunks. One positive and eleven semantic-negative cases verify the guard, independently of config text.
 
-Remaining later frontend: broader clustering and relationship/connection arbitration.
-This wave now covers actual touch/fallback journeys and visible attribution; it does
-not fabricate graph relationships or relocate evidence coordinates. Data/provider:
-continental higher-detail terrain and admitted contextual observations, with
-exact rights/coverage/temporal/availability gates. Backend-dependent: authorized
-public projections only; consolidation is not changed. Later news-driven:
-story-relevant context packages rather than a global feed collection.
+On exact `3f821777`, the initial static JS graph had one entry (1,730,292 bytes / 307 modules), with neither Cesium vendor nor globe adapter flags and no initial Widgets stylesheet. The globe adapter was 26,843 bytes / 8 modules; vendor was 4,195,574 bytes / 1,356 modules plus 731,777 bytes of shared support. MapLibre/deck was a separate dynamically loaded 1,991,780-byte / 733-module chunk. Those are emitted file sizes and graph observations, not transfer, parse-time or startup-speed guarantees. Independent Cursor production-build verification agreed on the isolation; its different environment produced different hashed filenames.
 
-## Parallel implementation checkpoint
+A renderer-owned fatal-failure lifetime listens to the public canvas `webglcontextlost` event and public Scene `renderError`. It stops the default render loop, detaches failure listeners, hands the still-live camera to the existing owner synchronously and defers one teardown until the synchronous failure stack exits. Repeated and already queued callbacks cannot cause another fallback or disposal; ordinary unmount cleans up without manufacturing a failure. Nine GPU-free tests exercise ordering, stale/reentrant callbacks, cancellation, cleanup and default microtask scheduling. Native browser loss qualification is separately recorded below.
 
-The parent integrated exclusive remote file packages from camera worker f0becd0,
-marker worker 32910f5 and qualification worker e09fd8f. Worker camera Golden
-36662066942 passed 1,627 tests and builds on Node 22/24. Marker predecessor
-218d9ba Golden 36661739474 passed 1,627 tests and builds on both; latest scalar
-CPU timing delta is still qualifying. Worker C's earlier Golden passed both
-Node versions; the corrected terrain remount journey passed before subsequent
-journeys. These are package receipts, not an integrated acceptance claim.
+## Qualification
 
-The owner requested GPT-6.1 Sol implementation specialists. Spawn requests used
-that model; collaboration results did not expose the actual configured model.
-Workers authored source/tests on GitHub and exercised memory/remote Actions only.
-14_ASTRA_AGENT_ORCHESTRATION.md and the attached successor staged workflow v3
-were read in memory. The exact v2 file was not located in the attachment; the
-owner's current routing and ownership amendments govern. No local files written.
+| Evidence layer | Result |
+| --- | --- |
+| Source/tests | Golden Node 22 and 24 each passed 1,671 tests and production builds; Node 24 audit reported zero vulnerabilities (Node 22 audit is configured to skip). |
+| Representative built browsers in remote Actions | All four World View Actions jobs passed: existing cross-view/weather/VF baseline, terrain/lighting/successor/fallback, interrupted startup/native loss, and four tablet-sized journeys. |
+| Exact remotely hosted candidate preview | NOT YET EXERCISED; no verified matching preview URL was available in this lane. |
+| Actual deployed MIP UI | NOT YET EXERCISED; candidate remains draft/unmerged. No deployment was made merely to test. |
 
-The earlier failed CI is retained: initial stale diagonal assertion/vendor-comment
-scan, nadir haze pixel comparison, and exact remount string comparisons. Tests now
-use an explicit oblique haze camera and tolerate numerical reconstruction only at
-remount; same-viewer fidelity switches retain their strict pose/string checks.
-Integrated runtime, measured appearance interpretation and external review remain
-pending. MapLibre label arbitration is now integrated and qualified on c5cd259e. Static atlas
-label arbitration is integrated in the next combined candidate and requires its actual
-browser recheck before acceptance.
+Exact source receipts: [Golden run 36676898741](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/36676898741) and [World View run 36676898743](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/36676898743). Jobs: weather `109763697651`, refinement/successor/fallback `109763697957`, native lifecycle `109763697902`, tablet `109763697897`. Actions checked out synthetic PR merge `716e2ef1138513cad10d02e124e97d99eefabdab` of the source head into unchanged main `1a9f7bbe99676ca535c21dd6e68d3de7da62e69e`; a direct GitHub comparison confirmed zero changed files versus the source head. These are representative built Actions receipts, not hosted-preview or live-site observations.
 
-## Integrated camera/renderer checkpoint
+Representative navigation covers dense coastal, Great Lakes, mountain/wildfire, desert, Plains, hurricane-coast, Canadian/high-latitude, Mexican and border classes, plus dateline/poles. These are camera and display acceptance classes, not claims of uniform source coverage.
 
-Application source c5cd259e7c926720b93c93f21fa6480499852643 passed Golden run
-36663892567 on Node22/24: 1,650 tests, zero failures, production builds and audit.
-World View run36663892554 passed both jobs109724329212/109724329456: existing VF,
-weather availability, Graph/Timeline/workspace, terrain/refinement/dynamic atmosphere,
-successor geography/appearance and retained fallback camera journeys.
+Deterministic browser fixtures clone only MultiPoint geometry from an existing anonymous-reader row while retaining its identity, revision, dates, privacy, release and evidence keys. They obey the existing reader select/order/limit contract and never write hosted state or admitted history. Dense 500-member and sparse five-member scenes test legibility; their synthetic geometry is explicitly contextual test data.
 
-The candidate includes periodic live-globe roll capture, preserving upright
-near-2π getter values instead of incorrectly clamping them to180°. External malformed
-state clamping is unchanged. Same-viewer fidelity invariants remain strict; remount
-numeric pose comparison uses only small reconstruction tolerance.
+Twenty one-second settled globe windows in the final 1f8 qualification added zero frames, imagery or terrain requests. Dense 500-member last CPU layout was 1.9 ms in Chromium and 2 ms in WebKit; observed lifetime maxima were 14.6 ms and 19 ms respectively. The earlier 59dc WebKit run had a 127 ms lifetime outlier, which remains disclosed rather than erased by the later sample. These CI CPU samples are not GPU/FPS, smoothness or maximum supported scene-size guarantees. MapLibre settled windows added zero layout passes or changed pixels. Fallback qualification includes startup after a retained globe → Graph view. Interrupted vendor startup was paused at an actual HTTP-200 JavaScript request after the shell loaded; Graph cancellation produced no stale visible viewer/request work, and Map return initialized normally. On already rendered Chromium globe canvases at 1280 and 390 px, `WEBGL_lose_context` produced a trusted native loss event, disconnected the old canvas and reached actual MapLibre once. The 100 km / heading 346° / pitch −32° / roll 0° saved pose retained its approved display bridge and raw precision floor, with exactly one native-loss diagnostic, zero draw-error diagnostics and zero page errors. Real wheel navigation reached ~50 km while respecting the ~34.641 km city floor; settled fallback had zero extra layout passes/pixel changes/imagery/terrain requests. The original canonical/time context, nine source fields and route remained intact. This simulates browser context loss and does not qualify physical GPU failure or every possible renderer fault. Chromium phone drag and tap passed; WebKit tap passed, with drag unqualified. MapLibre wheel/precision-floor qualification is Chromium only. Its globe-to-map bridge preserves serialized camera cartographic coordinates; it does not establish a terrain look-at-target equivalence. Atlas keyboard runtime verifies independently source-bound Investigation Context and deep-link serialization on the first explicit original-row pick, exact field-value idempotence on repeat, original nine source fields, focus and prevented scroll. Display-only resize/layout retains pre-pick context; explicit selection follows the existing App contract. Unit tests separately verify exact original-row callback delivery; that runtime alone does not prove a distinct-subject transition.
 
-MapLibre declutters measured full native text using public map.project and deck's
-64px glyph atlas advances scaled to12px. Every point and original row remains.
-Membership changes request a correction frame; idle causes no new passes.
-The further atlas package compensates viewBox scale to keep main text11px,
-coordinate/status text9px, points7px radius and44px hit targets in screen pixels.
-Both lines form one measured box when they fit; otherwise the full main source
-label may remain while complete details stay in accessible text and inspector.
-No text is truncated or canonical precision/coordinates changed. Every point
-retains a named keyboard button and exact original row activation.
+Historical failures remain available as evidence. In particular, green early CI did not hide the real near-2π roll defect subsequently corrected. The final fallback verifier compares original fields rather than a derived title that Graph legitimately expands. Same-viewer Visual Fidelity camera checks stay strict; only remount reconstruction uses a small numerical tolerance.
 
-Native terrain disclosure moved below the canvas to avoid covering credits.
-The further combined candidate makes OSM's copyright link visible without a popup,
-following the [official raster tile policy](https://operations.osmfoundation.org/policies/tiles/).
-Native brand and terrain/source credits are preserved. The stricter combined
-attribution/MapLibre/atlas runtime qualification is still pending here.
+## Controlled appearance evidence
 
-### Controlled appearance evidence
+The [remote image index](world-view-evidence/2026-09-29/README.md) gives immutable source, source credits and camera context. At identical Cleveland nadir pose, relief produced central mean absolute RGB-channel delta 43.892/255; ground atmosphere, sun lighting and conservative haze produced zero central change. At the controlled oblique pose, relief delta 45.051 exceeded haze 3.215. Base OSM imagery already contains park greens; the approved relief elevation tint accounts for the larger olive/tan wash. No arbitrary color grading or default palette change was applied.
 
-The [image index](world-view-evidence/2026-09-29/README.md) records immutable source,
-camera and source-credit context. At the same local nadir pose, relief's central
-mean absolute RGB-channel delta was43.892/255; ground atmosphere and sun produced
-zero central change and haze zero central change. At the same oblique pose,
-relief delta45.051 exceeded haze3.215. Base imagery already contains park greens;
-relief's approved elevation tint accounts for the larger muted olive/tan wash.
-No default palette or arbitrary grading was changed. These are display effects,
-not observed weather or historical terrain/imagery claims.
+Each settled single-leaf ablation rendered one frame with zero extra terrain/imagery requests; the four-leaf combined application rendered four. Fog enabled/density/culling and requestRenderMode remained fixed, as did camera and canonical/time context. Central raster metrics avoid legend contamination; whole-image metrics include UI overlays. Aesthetic effects imply no observed atmospheric/weather condition.
 
-Each settled single-leaf ablation rendered1frame and added zero terrain/imagery
-requests; four-leaf combined application rendered4. Fog enabled/density/culling
-policy remained identical, requestRenderMode remained true, and settled1second
-idle windows had zero new frames/requests. Whole-image metrics include overlays;
-causal conclusions above use the central raster region to avoid legend text.
+## Independent review and remaining boundaries
 
-Synthetic500-member MultiPoint fixtures retained500 symbols and displayed one
-overlap label. Sparse5-member fixtures displayed4 near-side points,4 desktop labels
-and2 at320px. Latest layout CPU passes were2.7ms Chromium/1ms WebKit dense, with
-cumulative startup maxima40.9/32ms; these are CI CPU observations, not GPU/FPS or
-maximum supported scene-size promises. A0.000015258789-degree camera motion
-caused two frames and updated visibility. Full resize timings include settling.
+Four built tablet-sized journeys passed in Chromium and WebKit at 768×1024 and 1024×768: Map → Graph → Split → Map restoration of the manual 150 km / heading 23° / pitch −65° / roll 0° pose, orientation round trips, source/context/clock/URL retention, actual controller floor, and FXAA leaf/master application with the same canvas and raw camera. Native OSM credit was visible and hit-tested; below-canvas terrain rights remained intact. Split stacked at 768 px and used separate panes at 1024 px without intersection; document width matched the viewport.
 
-Fallback desktop/phone and latitude41.4/62.5 real wheel zoom reached but did not
-cross the existing34,641.016m city floor in the declared approximate display bridge.
-Restored heading23°, pitch25° and upright roll0 were observed. This injects a
-startup failure after a saved globe→Graph transition, not a fatal draw failure
-inside an already running globe. Chromium phone drag and tap passed; WebKit
-phone tap passed, with drag injection explicitly unqualified.
+Each mode/canvas tap had observed trusted `touchstart`/`touchend` and an actual UI response. Chromium additionally had trusted moves, actual camera change and no page scroll during drag. WebKit reported `maxTouchPoints: 0` despite delivered trusted taps, so the qualifier observes browser events rather than treating a navigator scalar as hardware proof. WebKit native drag remains unqualified. Four ~one-second settled windows added zero frames. These are desktop-browser touch emulations, not physical iPad/Safari hardware or native multitouch qualification. FXAA changed measured raster pixels while enabled/ready, but no minimum visual magnitude or GPU performance is claimed.
 
-Fresh non-implementing Cursor/Grok review remains pending until the final combined
-runtime candidate is qualified. Internal specialist passes do not substitute for it.
+A fresh, non-implementing [Cursor review context](https://cursor.com/agents/bc-8e1c2623-a659-462f-a679-4628ba0df216?branch=codex%2Fworld-view-successor-20260929) challenged the coherent source candidate and its matching build/runtime receipts. Configured UI model was **Grok 4.6 Extra High**; the report identified **Cursor Grok 4.6**, with no exposed underlying runtime identifier. Final reviewed source is the qualified SHA above. No unresolved consequential defect was reported after source repairs and requalification.
+
+The parent reconciled findings rather than applying them mechanically. Initial atlas whole-context/title assertions were replaced with exact source-bound explicit-selection contracts and URL/field comparisons, preserving App/Investigation Context semantics. Live boot floors/raw probes were repaired, actual static Cesium payload capture was corrected and guarded, and trusted native-loss testing exposed then closed the synchronous Scene-teardown leak. The speculative post-construction async mount claim was withdrawn after source ordering inspection; real interrupted-startup qualification now covers the tested vendor-await boundary. Phone copyright overlap was corrected from visual evidence.
+
+Two unchanged legacy source-token/handler-span guards remain brittle and nonblocking; the nine behavioral lifecycle tests and actual native-loss browser receipts provide failure-order/wiring evidence. The parent also corrected receipt attribution: phone MapLibre control tests ran in the refinement job's fallback step; Chromium MapLibre wheel was exercised, WebKit wheel was not. Test success alone does not establish live deployment, physical hardware performance or unadmitted geographic coverage.
+
+The owner supplied five September 30 reference images for the shared MIP shell and cross-view composition. They guide navigation, event-header and inspector coherence without replacing the approved World View upgrades or admitting their example data.
+
+The parent assigned non-overlapping implementation source/tests to same-session specialists and inspected their deltas before integration. GPT-6.1 Sol was explicitly requested for worker routing; the collaboration runtime did not expose actual configured-model confirmation. Library orchestration 14 and the attached staged workflow successor v3 were read in memory; exact v2 was not located. The owner's current routing and ownership amendments governed.
+
+Remaining progressive work includes measured clustering and relationship arbitration, admitted news-driven hazard/infrastructure context, and broader truthful terrain/source coverage. They do not justify accumulating feeds or changing canonical evidence. Paid providers, new privacy/product boundaries and major aesthetic/control changes require a real owner decision. No such boundary was crossed here.
