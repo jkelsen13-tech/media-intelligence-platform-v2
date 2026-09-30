@@ -80,24 +80,22 @@ async function assertGlobeCredits(page,engine,width){
   const a=geometry.credits,b=geometry.terrain
   assert.ok(a.width>0&&a.height>0,'native imagery credit has a visible rectangle')
   assert.ok(a.right<=b.x||b.right<=a.x||a.bottom<=b.y||b.bottom<=a.y,'terrain disclosure never covers native imagery credit')
-  let attribution=credits.getByText(/OpenStreetMap.*contributors/i).first(),dialogUsed=false
-  if(!await attribution.isVisible()){
-    const expand=credits.locator('.cesium-credit-expand-link')
-    await expand.waitFor({state:'visible'})
-    await expand.click()
-    attribution=page.locator('.cesium-credit-lightbox').getByText(/OpenStreetMap.*contributors/i).first()
-    dialogUsed=true
-  }
+  const attribution=credits.locator('a[href="https://www.openstreetmap.org/copyright"]').first()
   await attribution.waitFor({state:'visible'})
-  assert.match(await attribution.innerText(),/OpenStreetMap.*contributors/i,'actual imagery rights text is accessible')
+  assert.match(await attribution.innerText(),/OpenStreetMap.*contributors/i,'imagery rights text is visible without opening a dialog')
+  const activateTouch=width===390&&!(await page.locator('.wv-stage').getAttribute('class')).includes('wv-touch-active')
+  if(activateTouch){
+    await page.getByRole('button',{name:'Interact with map',exact:true}).click()
+    await credits.scrollIntoViewIfNeeded()
+  }
   const unobscured=await attribution.evaluate(node=>{
     const r=node.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2
     const hit=document.elementFromPoint(x,y)
     return r.width>0&&r.height>0&&x>=0&&x<innerWidth&&y>=0&&y<innerHeight&&(hit===node||node.contains(hit))
   })
   assert.equal(unobscured,true,'actual imagery rights text is visible and unobscured')
-  if(dialogUsed)await page.locator('.cesium-credit-lightbox-close').click()
-  console.log('MIP_WORLD_CREDITS='+JSON.stringify({engine,width,geometry,imagery:'©OpenStreetMap contributors',dialogUsed,terrainRightsPreserved:true}))
+  if(activateTouch)await page.getByRole('button',{name:'Done — scroll page',exact:true}).click()
+  console.log('MIP_WORLD_CREDITS='+JSON.stringify({engine,width,geometry,imagery:'©OpenStreetMap contributors',visibleWithoutDialog:true,terrainRightsPreserved:true}))
 }
 
 async function appearanceAblations(page,engine,width,counts){
