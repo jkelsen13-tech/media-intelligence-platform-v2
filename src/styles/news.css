@@ -939,3 +939,16 @@
 @media (max-width: 767px) {
   .news-intake-note { font-size: 13px; }
 }
+
+/* Frontend reader lane: retain the approved tokens and card anatomy. */
+.news-list[hidden] { display: none; }
+.news-card h3, .news-card .ep-src, .news-group-title { overflow-wrap: anywhere; }
+.news-reference-filter-row, .news-card, .news-group-member { min-width: 0; }
+.news-filter-select:focus-within, .news-source-order:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.news-load-more:disabled { cursor: wait; opacity: .7; }
+@media (max-width: 767px) {
+  .news-action-button { min-height: 44px; }
+}

@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { mipBackend } from '../lib/mipBackend.js'
 import {
-  PROVENANCE_LABELS,
   groupArticlesByEvent,
-  provenanceBasis,
   readThenAdvanceLastVisit,
 } from '../lib/newsFeedModel'
 import EpistemicBanner from '../components/EpistemicBanner'
 import SourceAttributionLine from '../components/SourceAttributionLine'
+import NewsStoryCard from '../components/NewsStoryCard.jsx'
+import { buildNewsStoryPresentation, validateNewsPage } from '../lib/newsStoryPresentation.js'
 import SkyBadge from '../panels/SkyBadge'
 import { buildSourceMetrics, enrichOutletsWithMetrics, sortOutletsBySourceMetric } from '../lib/sourceMetrics.js'
 import {
@@ -19,6 +19,9 @@ import {
   EXPLORE_A11Y,
   SEARCH_DEBOUNCE_MS,
   filterChipA11y,
+  exploreFocusOpen,
+  exploreFocusClose,
+  handleExploreDialogKeyDown,
 } from '../lib/investigationJoinState.js'
 
 // News Feed (Track B Step 4, addendum Screen 1): title block with the
@@ -159,6 +162,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [reloadToken, setReloadToken] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [loadMoreError, setLoadMoreError] = useState(false)
   const [articlesUnavailable, setArticlesUnavailable] = useState(null)
   const [expanded, setExpanded] = useState(null) // article id
   const [detail, setDetail] = useState(null)
@@ -174,6 +180,13 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const [comparisonEvents, setComparisonEvents] = useState([])
   // Mobile: filters collapse into a bottom sheet behind a single button.
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const filterTriggerRef = useRef(null)
+  const filterDialogRef = useRef(null)
+  useEffect(() => {
+    if (!filtersOpen) return undefined
+    exploreFocusOpen(filterDialogRef.current)
+    return () => exploreFocusClose(filterTriggerRef.current)
+  }, [filtersOpen])
   // Step 4 display-model inputs (read-path joins; each degrades to an empty
   // Map/null on failure so a join outage never blanks the feed).
   const [citationMap, setCitationMap] = useState(() => new Map())
@@ -192,28 +205,45 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const requestRef = useRef(0)
   const loadingMoreRef = useRef(false)
   const detailRequestRef = useRef(0)
-  useEffect(() => () => { detailRequestRef.current += 1 }, [])
+  useEffect(() => {
+    detailRequestRef.current += 1
+    setExpanded(null)
+    setDetail(null)
+    setGraphLinks([])
+    setSky(null)
+    setTimelineKey(null)
+    setComparisonEvents([])
+    return () => { detailRequestRef.current += 1 }
+  }, [backend])
 
   useEffect(() => {
-    backend.loadOutletDirectory().then(setOutlets).catch(() => {})
-  }, [])
+    let cancelled = false
+    setOutlets([])
+    backend.loadOutletDirectory().then((rows) => { if (!cancelled) setOutlets(rows) }).catch(() => {})
+    return () => { cancelled = true }
+  }, [backend])
 
   // Step 4 mount loads: corpus meta, the last-visit count, and the three
   // feed-wide join maps. Each is independent and failure-isolated.
   // Drawer skip last-visit so opening Explore does not advance the page marker.
   useEffect(() => {
-    backend.loadCorpusMeta().then(setCorpusMeta).catch(() => {})
-    backend.loadArticleCitationMap().then(setCitationMap).catch(() => {})
-    backend.loadEventGrouping().then(setEventMap).catch(() => {})
-    backend.loadOutletRegions().then(setOutletRegions).catch(() => {})
-    if (isDrawer) return
-    const prev = readThenAdvanceLastVisit(window.localStorage, Date.now())
-    if (prev != null) {
-      backend.loadNewSinceCount(new Date(prev).toISOString())
-        .then(setNewSinceCount)
-        .catch(() => {})
+    let cancelled = false
+    const receive = (setter) => (value) => { if (!cancelled) setter(value) }
+    setCorpusMeta(null)
+    setCitationMap(new Map())
+    setEventMap(new Map())
+    setOutletRegions(new Map())
+    backend.loadCorpusMeta().then(receive(setCorpusMeta)).catch(() => {})
+    backend.loadArticleCitationMap().then(receive(setCitationMap)).catch(() => {})
+    backend.loadEventGrouping().then(receive(setEventMap)).catch(() => {})
+    backend.loadOutletRegions().then(receive(setOutletRegions)).catch(() => {})
+    if (!isDrawer) {
+      const prev = readThenAdvanceLastVisit(window.localStorage, Date.now())
+      if (prev != null) backend.loadNewSinceCount(new Date(prev).toISOString())
+        .then(receive(setNewSinceCount)).catch(() => {})
     }
-  }, [isDrawer])
+    return () => { cancelled = true }
+  }, [backend, isDrawer])
 
   useEffect(() => {
     clearTimeout(debounceRef.current)
@@ -258,7 +288,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       .then((rows) => { if (!cancelled) setSourceMetricRows(rows) })
       .catch(() => { if (!cancelled) setSourceMetricRows([]) })
     return () => { cancelled = true }
-  }, [sourceMetricContext])
+  }, [backend, sourceMetricContext])
 
   const sourceMetrics = useMemo(() => buildSourceMetrics(sourceMetricRows, eventMap), [sourceMetricRows, eventMap])
   const orderedOutlets = useMemo(() => {
@@ -276,6 +306,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     setLoading(true)
     setError(null)
     setArticlesUnavailable(null)
+    setLoadMoreError(false)
     backend.loadArticles({
       q: debouncedQ,
       outlet,
@@ -288,6 +319,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       limit: PAGE_SIZE,
       offset: 0,
     })
+      .then(validateNewsPage)
       .then(({ articles, total, articlesUnavailable: reason }) => {
         if (seq !== requestRef.current) return // stale response — drop
         setArticles(articles)
@@ -302,7 +334,8 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         if (seq !== requestRef.current) return
         setLoading(false)
       })
-  }, [debouncedQ, outlet, status, evidenceBasis, selectedRegionOutlets, selectedTopicTerms, publicationBounds])
+    return () => { requestRef.current += 1 }
+  }, [backend, debouncedQ, outlet, status, evidenceBasis, selectedRegionOutlets, selectedTopicTerms, publicationBounds, reloadToken])
 
   const expandArticle = (id) => {
     const seq = ++detailRequestRef.current
@@ -382,6 +415,8 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     // twice.
     if (loadingMoreRef.current) return
     loadingMoreRef.current = true
+    setLoadingMore(true)
+    setLoadMoreError(false)
     const seq = requestRef.current
     backend.loadArticles({
       q: debouncedQ,
@@ -395,6 +430,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       limit: PAGE_SIZE,
       offset: articles.length,
     })
+      .then(validateNewsPage)
       .then(({ articles: more, articlesUnavailable: reason }) => {
         if (seq !== requestRef.current) return
         if (reason) {
@@ -405,10 +441,11 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       })
       .catch((err) => {
         if (seq !== requestRef.current) return
-        setError(err.message)
+        setLoadMoreError(true)
       })
       .finally(() => {
         loadingMoreRef.current = false
+        setLoadingMore(false)
       })
   }
 
@@ -480,74 +517,19 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     </div>
   )
 
-  // Every card discloses the publisher record when a URL exists. Structured
-  // citation classes remain additive and never substitute for a source URL.
-  const provenanceLine = (a) => {
-    const basis = provenanceBasis(a, citationMap.get(a.id)?.citedTypes)
-    const label = basis
-      ? PROVENANCE_LABELS[basis]
-      : a.url
-        ? 'Publisher source URL recorded'
-        : 'Publisher source URL not recorded'
-    return <div className="news-prov">{label}</div>
-  }
-
-  // Per-card cross-navigation is a true button group, rendered only where the
-  // underlying live destination is present. The card body is a separate button
-  // so controls never become invalid nested interactive elements.
-  const cardChips = (a) => {
-    const cit = citationMap.get(a.id)
-    const hasArc = Boolean(a.arc_id && a.arc_title)
-    const hasGraph = Boolean(cit?.hasGraphLink && cit.firstNodeId)
-    if (!hasArc && !hasGraph) return null
-    return (
-      <div className="news-card-chips" aria-label="Open linked views">
-        {hasArc && (
-          <button
-            type="button"
-            className="news-action-button"
-            title={`Open story arc “${a.arc_title ?? ''}”`}
-            onClick={() => onOpenArc?.(a.arc_id)}
-          >
-            ◈ Open arc
-          </button>
-        )}
-        {hasGraph && (
-          <button
-            type="button"
-            className="news-action-button secondary"
-            title="Open the cited node in the knowledge graph"
-            onClick={() => onOpenNode?.(cit.firstNodeId)}
-          >
-            ⌘ Open graph
-          </button>
-        )}
-      </div>
-    )
-  }
-
-  const articleCard = (a, { inGroup = false } = {}) => (
-    <article className={`news-card${inGroup ? ' in-group' : ''}`}>
-      <button
-        type="button"
-        className="news-card-trigger"
-        onClick={() => toggleExpand(a.id)}
-        aria-expanded={expanded === a.id}
-      >
-        <div className="news-card-top">
-          <span className="news-date accent">{fmtDate(a.published_at)}</span>
-        </div>
-        <h3>{a.title}</h3>
-        <SourceAttributionLine
-          outlet={a.outlet}
-          region={outletRegions.get(a.outlet) ?? null}
-          badge={null}
-        />
-        {a.summary && <p className="news-summary">{a.summary}</p>}
-      </button>
-      {cardChips(a)}
-      {provenanceLine(a)}
-    </article>
+  // Existing public reader -> validated presentation model -> pure card.
+  const detailId = expanded ? `news-detail-${encodeURIComponent(expanded)}` : undefined
+  const articleCard = (article, { inGroup = false } = {}) => (
+    <NewsStoryCard
+      story={buildNewsStoryPresentation(article, {
+        citation: citationMap.get(article.id),
+        region: outletRegions.get(article.outlet),
+        canOpenArc: typeof onOpenArc === 'function',
+        canOpenNode: typeof onOpenNode === 'function',
+      })}
+      expanded={expanded === article.id} inGroup={inGroup} detailId={detailId}
+      onToggle={toggleExpand} onOpenArc={onOpenArc} onOpenNode={onOpenNode}
+    />
   )
 
   const articleUnavailableNotice = (reason) =>
@@ -558,7 +540,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     ) : null
 
   const expandedDetail = (
-    <div className="news-detail">
+    <div className="news-detail" id={detailId}>
       {detailUnavailable && articleUnavailableNotice(detailUnavailable)}
       {detailMissing && (
         <div className="notice">
@@ -809,7 +791,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
               </>
             )}
           </span>
-          <button className="news-filters-btn" onClick={() => setFiltersOpen(true)} aria-haspopup="dialog" aria-expanded={filtersOpen} aria-label={EXPLORE_A11Y.filtersLabel}>
+          <button type="button" ref={filterTriggerRef} className="news-filters-btn" onClick={() => setFiltersOpen(true)} aria-haspopup="dialog" aria-expanded={filtersOpen} aria-label={EXPLORE_A11Y.filtersLabel}>
             Discovery filters
           </button>
         </div>
@@ -862,7 +844,11 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         <div className="sheet-backdrop" onClick={() => setFiltersOpen(false)}>
           <div
             className="sheet filter-sheet"
+            ref={filterDialogRef}
+            tabIndex={-1}
             role="dialog"
+            aria-modal="true"
+            onKeyDown={(event) => handleExploreDialogKeyDown(event, { dialogEl: filterDialogRef.current, onDismiss: () => setFiltersOpen(false) })}
             aria-label="Discovery filters"
             data-filter-family="discovery"
             onClick={(e) => e.stopPropagation()}
@@ -900,14 +886,15 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       )}
 
       {articlesUnavailable && articleUnavailableNotice(articlesUnavailable)}
-      {error && <div className="notice error">Failed to load articles: {error}</div>}
+      {loading && <div className="notice" role="status" aria-live="polite">Loading news…</div>}
+      {error && <div className="notice error" role="alert">News could not be loaded. <button type="button" className="news-action-button" onClick={() => setReloadToken((token) => token + 1)}>Try again</button></div>}
       {!loading && !error && !articlesUnavailable && articles.length === 0 && !focusedMissing && (
         <div className="notice">
           No eligible articles to display. Pending-review and withheld records remain retained. No rows are invented.
         </div>
       )}
 
-      <ol className="news-list">
+      <ol className="news-list" aria-label="News stories" aria-busy={loading} hidden={loading || Boolean(error) || Boolean(articlesUnavailable)}>
         {feedEntries.map((entry) =>
           entry.kind === 'group' ? (
             <li key={`ev-${entry.eventId}`} className="news-item">
@@ -941,7 +928,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
       </ol>
 
       {focusedMissing && (
-        <div className="news-detail">
+        <div className="news-detail" id={detailId}>
           {detailUnavailable && articleUnavailableNotice(detailUnavailable)}
           {detailMissing && (
             <div className="notice">
@@ -982,9 +969,10 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         </div>
       )}
 
-      {articles.length < total && !loading && (
-        <button className="news-load-more" onClick={loadMore}>
-          Load more (<span className="num">{total - articles.length}</span> remaining)
+      {loadMoreError && <div className="notice error" role="alert">More stories could not be loaded. Try loading them again.</div>}
+      {articles.length < total && !loading && !error && !articlesUnavailable && (
+        <button type="button" className="news-load-more" onClick={loadMore} disabled={loadingMore} aria-busy={loadingMore}>
+          {loadingMore ? 'Loading more…' : <>Load more (<span className="num">{total - articles.length}</span> remaining)</>}
         </button>
       )}
 
