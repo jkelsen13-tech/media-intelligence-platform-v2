@@ -7,12 +7,184 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { parseCameraState } from '../src/lib/worldViewCameraState.js'
 import { heightMetersForPrecisionClass } from '../src/lib/worldViewMapStack.js'
 import { observeBackendBoundary } from './backendBoundary.mjs'
+import { installProjectionFixture, QUALIFICATION_SUBJECT } from './worldViewProjectionFixture.mjs'
+import { decodeScreenshotPng, rasterSummary, verifyRasterEvidence } from './worldViewRasterEvidence.mjs'
 const require=createRequire(process.env.MIP_BROWSER_PACKAGE+'/package.json'),{chromium}=require('playwright')
 const origin='http://127.0.0.1:4173',subject='acc55cb2-5ac2-4aed-be36-3f576d2bc443'
 const route=origin+'/media-intelligence-platform-v2/#/event/'+subject+'/world'
 const server=spawn('npm',['run','preview','--','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'ignore'})
+const publicContext=page=>page.locator('.ws-canonical[data-investigation-context]').evaluate(node=>
+  Object.fromEntries(['canonical-subject-type','canonical-subject-id','parent-event-id','as-of-time','selected-time-range','temporal-assessment-reference'].map(key=>[key,node.getAttribute('data-'+key)])))
+const fallbackState=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getRenderState())
+function assertMapPose(actual,expected,label){
+  for(const key of ['lon','lat','zoom','bearing','pitch'])assert.ok(Math.abs(actual[key]-expected[key])<1e-9,label+' retains raw '+key)
+}
+function assertLabelStats(stats,count){
+  for(const key of ['points','labels','passes','lastMs','maxMs'])assert.ok(Number.isFinite(stats?.[key])&&stats[key]>=0,key+' detached layout measurement')
+  assert.equal(stats.points,count,'all flattened evidence points are retained, including offscreen members')
+  assert.ok(stats.labels<=stats.points&&stats.passes>0)
+}
+async function settleFallback(page){
+  await page.locator('.wv-map-host').scrollIntoViewIfNeeded()
+  await page.waitForLoadState('networkidle',{timeout:30000})
+  await page.evaluate(()=>document.fonts.ready)
+  let previous=(await fallbackState(page)).labelLayout.passes,stable=0
+  for(let i=0;i<40&&stable<4;i++){await delay(100);const next=(await fallbackState(page)).labelLayout.passes;stable=next===previous?stable+1:0;previous=next}
+  assert.equal(stable,4,'settled fallback stops repaint/layout passes')
+}
+async function mapLabelJourney(browser,kind){
+  const page=await browser.newPage({viewport:{width:1280,height:900},hasTouch:true}),errors=[]
+  const verifyBoundary=observeBackendBoundary(page),fixture=await installProjectionFixture(page,kind)
+  page.on('pageerror',e=>errors.push(e.message))
+  await page.addInitScript(()=>{
+    const original=HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext=function(kind,...args){
+      if(/webgl/i.test(kind)&&this.closest('.cesium-widget'))return null
+      return original.call(this,kind,...args)
+    }
+  })
+  try{
+    await page.goto(route)
+    await page.getByRole('complementary',{name:'Selected-event inspector'}).getByText('coarsened_to_precision_class',{exact:true}).waitFor({timeout:60000})
+    await page.waitForFunction(()=>document.querySelector('[data-map-stack]')?.dataset.mapStack==='openfreemap-positron'
+      &&window.__MIP_WORLD_VIEW_FIDELITY_PROBE__?.getRenderState()?.labelLayout?.points>0,{},{timeout:45000})
+    assert.equal(subject,QUALIFICATION_SUBJECT)
+    const originalContext=await publicContext(page)
+    assert.equal(originalContext['canonical-subject-id'],subject)
+    const local={version:1,lon:-81.7,lat:41.4,heightMeters:100000,headingDegrees:0,pitchDegrees:-90,rollDegrees:0}
+    assert.equal(await page.evaluate(s=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(JSON.stringify(s)),local),true)
+    await page.mouse.move(0,0);await settleFallback(page)
+    const initial=await fallbackState(page),canvas=await page.locator('.wv-map-host canvas').first().elementHandle()
+    assertLabelStats(initial.labelLayout,fixture.coordinateCount)
+    if(kind==='dense')assert.equal(initial.labelLayout.labels,1,'selected overlapping dense scene retains one legible label')
+    else assert.ok(initial.labelLayout.labels>1,'local sparse scene displays multiple independent labels')
+    const viewports=[{width:1280,state:initial}]
+    const resizeStarted=Date.now()
+    for(const width of [390,320,1280]){
+      await page.setViewportSize({width,height:900});await settleFallback(page)
+      const actual=await fallbackState(page)
+      assertLabelStats(actual.labelLayout,fixture.coordinateCount)
+      assertMapPose(actual.mapCamera,initial.mapCamera,'responsive resize')
+      assert.equal(await canvas.evaluate(node=>node.isConnected),true,'resize retains the same renderer canvas')
+      assert.deepEqual(await publicContext(page),originalContext);assert.equal(page.url(),route)
+      if(kind==='dense')assert.equal(actual.labelLayout.labels,1,'dense selected label survives responsive layout')
+      if(width===1280)assert.equal(actual.labelLayout.labels,initial.labelLayout.labels,'round trip restores deterministic label count')
+      viewports.push({width,state:actual})
+    }
+    const resizeElapsedMs=Date.now()-resizeStarted
+    assert.ok(viewports.at(-1).state.labelLayout.passes>initial.labelLayout.passes,'responsive layout actually recomputes')
+    const before=await fallbackState(page),pixels=decodeScreenshotPng(await page.locator('.wv-map-host').screenshot({type:'png'})),start=Date.now()
+    await delay(1000)
+    const after=await fallbackState(page),comparison=rasterSummary(decodeScreenshotPng(await page.locator('.wv-map-host').screenshot({type:'png'})),pixels)
+    assert.equal(after.labelLayout.passes,before.labelLayout.passes,'settled idle has no new layout/repaint passes')
+    assert.equal(after.labelLayout.labels,before.labelLayout.labels)
+    assert.equal(comparison.whole.changedPixels,0,'settled idle retains rendered label membership and map pixels')
+    assertMapPose(after.mapCamera,before.mapCamera,'idle')
+    assert.deepEqual(await publicContext(page),originalContext);assert.equal(page.url(),route)
+    assert.ok(fixture.matchedRows>0&&fixture.readerRequests>0,'fixture exercised the exact anonymous reader contract')
+    assert.deepEqual(errors,[])
+    console.log('MIP_WORLD_MAP_LABEL_CONTEXT_'+kind+'='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
+    console.log('MIP_WORLD_MAP_LABEL_PASS='+JSON.stringify({engine:'chromium',kind,fixture,viewports,resizeElapsedMs,
+      idle:{elapsedMs:Date.now()-start,passes:after.labelLayout.passes-before.labelLayout.passes,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
+      limitation:'Synthetic display geometry clones one real reader row without changing its identity/time. Points includes offscreen members. Timing measures layout CPU, not GPU/FPS. Probe exposes counts, so unchanged passes plus pixels qualify idle membership rather than reporting hidden label IDs.'}))
+  }catch(error){
+    console.log('MIP_WORLD_MAP_LABEL_FAILURE='+JSON.stringify({kind,error:error.message,errors,renderState:await fallbackState(page).catch(()=>null)}))
+    console.log('MIP_WORLD_MAP_LABEL_FAILURE_IMAGE_'+kind+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+    throw error
+  }finally{await page.close()}
+}
+
+async function atlasLabelJourney(browser,kind){
+  const page=await browser.newPage({viewport:{width:1280,height:900},hasTouch:true}),errors=[]
+  const verifyBoundary=observeBackendBoundary(page),fixture=await installProjectionFixture(page,kind)
+  page.on('pageerror',e=>errors.push(e.message))
+  await page.addInitScript(()=>{
+    const original=HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext=function(kind,...args){
+      if(/webgl/i.test(kind))return null
+      return original.call(this,kind,...args)
+    }
+  })
+  const atlas=page.locator('[data-map-stack="atlas-fallback"]')
+  const snapshot=()=>atlas.evaluate(node=>{
+    const svg=node.querySelector('svg'),labels=[...node.querySelectorAll('.wv-atlas-labels[visibility="visible"]')]
+    return{viewBox:svg.getAttribute('viewBox'),
+      points:[...node.querySelectorAll('.wv-feature')].map(n=>({x:n.querySelector('circle').getAttribute('cx'),y:n.querySelector('circle').getAttribute('cy'),role:n.getAttribute('role'),tabIndex:n.getAttribute('tabindex'),name:n.getAttribute('aria-label')})),
+      labels:labels.map(n=>{const r=n.getBoundingClientRect(),b=n.getBBox();return{left:r.left,right:r.right,top:r.top,bottom:r.bottom,svgBox:{x:b.x,y:b.y,width:b.width,height:b.height},text:n.textContent}})}
+  })
+  const validate=actual=>{
+    assert.equal(actual.points.length,fixture.coordinateCount,'Atlas retains every original geometry member')
+    assert.ok(actual.labels.length>=1&&actual.labels.length<=actual.points.length,'measured Atlas scene has a bounded visible label subset')
+    if(kind==='dense')assert.equal(actual.labels.length,1,'dense selected Atlas overlap has one readable label')
+    for(const point of actual.points){
+      assert.equal(point.role,'button');assert.equal(point.tabIndex,'0')
+      assert.match(point.name,/city/);assert.match(point.name,/coarsened_to_precision_class/)
+      assert.ok(Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)))
+    }
+    for(let i=0;i<actual.labels.length;i++){
+      const a=actual.labels[i]
+      assert.ok(a.svgBox.width>0&&a.svgBox.height>0,'visible text was actually measured')
+      for(const b of actual.labels.slice(i+1))assert.ok(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top,'accepted Atlas label/coordinate unions do not overlap')
+    }
+  }
+  try{
+    await page.goto(route)
+    await atlas.waitFor({timeout:45000})
+    await page.getByRole('complementary',{name:'Selected-event inspector'}).getByText('coarsened_to_precision_class',{exact:true}).waitFor({timeout:60000})
+    await page.evaluate(()=>document.fonts.ready);await atlas.scrollIntoViewIfNeeded();await delay(500)
+    const originalContext=await publicContext(page),original=await snapshot()
+    assert.equal(originalContext['canonical-subject-id'],subject);validate(original)
+    const cameraBefore=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState())
+    assert.equal(cameraBefore,null,'static overview truthfully has no interactive camera')
+    const viewports=[{width:1280,labels:original.labels.length}]
+    for(const width of [390,320,1280]){
+      await page.setViewportSize({width,height:900});await atlas.scrollIntoViewIfNeeded();await delay(250)
+      const actual=await snapshot();validate(actual)
+      assert.deepEqual(actual.points,original.points,'responsive Atlas never moves SVG evidence coordinates or changes accessible row bindings')
+      assert.equal(actual.viewBox,original.viewBox)
+      assert.deepEqual(await publicContext(page),originalContext);assert.equal(page.url(),route)
+      assert.equal(await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState()),cameraBefore)
+      viewports.push({width,labels:actual.labels.length})
+      if(width===390)console.log('MIP_WORLD_ATLAS_CONTEXT_'+kind+'_390='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
+    }
+    await page.mouse.move(0,0);await delay(250)
+    const pixels=decodeScreenshotPng(await atlas.screenshot({type:'png'})),before=await snapshot(),start=Date.now()
+    await delay(1000)
+    const after=await snapshot(),comparison=rasterSummary(decodeScreenshotPng(await atlas.screenshot({type:'png'})),pixels)
+    assert.deepEqual(after,before,'idle Atlas retains label membership and exact point layout')
+    assert.equal(comparison.whole.changedPixels,0,'idle Atlas retains rendered pixels')
+    const point=atlas.locator('.wv-feature[role="button"]').first(),name=await point.getAttribute('aria-label')
+    const inspector=page.getByRole('complementary',{name:'Selected-event inspector'})
+    const inspectorBefore=await inspector.innerText()
+    const keyResults=[]
+    for(const key of ['Enter','Space']){
+      await point.focus();assert.equal(await point.evaluate(n=>n===document.activeElement),true,'original point is keyboard focusable')
+      const scrollBefore=await page.evaluate(()=>({x:scrollX,y:scrollY}))
+      await point.press(key);await delay(250)
+      assert.deepEqual(await page.evaluate(()=>({x:scrollX,y:scrollY})),scrollBefore,'Enter/Space activation prevents unintended page scrolling')
+      assert.equal(await inspector.innerText(),inspectorBefore,'keyboard activation retains the original selected projection inspector')
+      assert.equal(await publicContext(page).then(c=>c['canonical-subject-id']),subject,'keyboard picking retains original canonical row identity')
+      assert.equal(page.url(),route)
+      assert.equal(await point.getAttribute('aria-label'),name,'keyboard picking preserves original source label/coordinate detail')
+      assert.equal(await atlas.locator('.wv-feature.is-selected').count(),fixture.coordinateCount,'original selected projection remains bound to all geometry members')
+      keyResults.push({key,canonicalSubject:subject,selectedPoints:fixture.coordinateCount,preventedScroll:true,originalInspectorRetained:true})
+    }
+    assert.ok(fixture.readerRequests>0&&fixture.matchedRows>0)
+    assert.deepEqual(errors,[])
+    console.log('MIP_WORLD_ATLAS_CONTEXT_'+kind+'_1280='+(await page.locator('.wv-view').screenshot({type:'jpeg',quality:65})).toString('base64'))
+    console.log('MIP_WORLD_ATLAS_LABEL_PASS='+JSON.stringify({engine:'chromium',kind,fixture,viewports,keyResults,
+      idle:{elapsedMs:Date.now()-start,changedPixels:comparison.whole.changedPixels},backend:verifyBoundary(),
+      limitation:'SVG overview fits the entire synthetic geometry, so separated local points may still cluster at world scale. Keyboard activation exercises the already selected original row; unchanged selection alone does not prove a distinct subject transition. No interactive camera or GPU timing is fabricated.'}))
+  }catch(error){
+    console.log('MIP_WORLD_ATLAS_LABEL_FAILURE='+JSON.stringify({kind,error:error.message,errors}))
+    console.log('MIP_WORLD_ATLAS_LABEL_FAILURE_IMAGE_'+kind+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
+    throw error
+  }finally{await page.close()}
+}
+
 let browser
 try{
+  verifyRasterEvidence()
   let ready=false
   for(let i=0;i<40;i++){try{ready=(await fetch(origin+'/media-intelligence-platform-v2/')).ok}catch{}if(ready)break;await delay(250)}
   assert.ok(ready)
@@ -95,4 +267,6 @@ try{
       throw error
     }finally{await page.close()}
   }
+  for(const kind of ['dense','sparse'])await mapLabelJourney(browser,kind)
+  for(const kind of ['dense','sparse'])await atlasLabelJourney(browser,kind)
 }finally{await browser?.close();server.kill('SIGTERM')}
