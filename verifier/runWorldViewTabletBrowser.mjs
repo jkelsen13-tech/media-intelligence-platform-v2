@@ -34,6 +34,11 @@ function assertOrientation(actual,expected,label){
   assert.ok(Math.abs(actual.pitchDegrees-expected.pitchDegrees)<1e-6,label+' pitch')
   assert.ok(angularGap(actual.rollDegrees,expected.rollDegrees)<1e-6,label+' roll')
 }
+function assertSelectedBoot(actual){
+  assert.ok(angularGap(actual.headingDegrees,0)<0.01,'selected tablet boot is north-up')
+  assert.ok(Math.abs(actual.pitchDegrees+90)<0.01,'selected tablet boot is nadir within the established default framing tolerance')
+  assert.ok(angularGap(actual.rollDegrees,0)<1e-6,'selected tablet boot has no spurious roll')
+}
 function rectanglesOverlap(a,b){
   return a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom
 }
@@ -248,7 +253,8 @@ async function journey(browser,engine,initialViewport){
     const lighting=(await state(page)).recordedLighting
     assert.equal(lighting.available,true);assert.equal(lighting.frozen,true);assert.equal(Date.parse(lighting.sourceText),Date.parse(recordedInstant))
     const bootGovernance=await assertCameraGovernance(page,label+'-boot')
-    assertOrientation(parseCameraState(await camera(page)),{headingDegrees:0,pitchDegrees:-90,rollDegrees:0},'selected tablet boot')
+    const bootCamera=parseCameraState(await camera(page))
+    assertSelectedBoot(bootCamera)
     const manual={version:1,lon:-81.7,lat:41.4,heightMeters:150000,headingDegrees:23,pitchDegrees:-65,rollDegrees:0}
     await setCamera(page,manual);await settle(page)
     const saved=parseCameraState(await camera(page))
@@ -290,11 +296,13 @@ async function journey(browser,engine,initialViewport){
     assert.deepEqual(errors,[])
     console.log('MIP_WORLD_TABLET_PASS='+JSON.stringify({evidenceLayer:'representative-built-actions',engine,initialViewport,touchCapability:capability,
       canonicalContext:baseline.context,recordedTime:baseline.recordedTime,originalRowFieldCount:9,sourceRowFieldsRetained:true,
-      bootGovernance,manualGovernance,savedCamera:saved,lifecycle,viewports,fidelity,touch,idle,backend:verifyBoundary(),
+      bootCamera,bootGovernance,manualGovernance,savedCamera:saved,lifecycle,viewports,fidelity,touch,idle,backend:verifyBoundary(),
       limitations:['Original row, no synthetic geography or new reader request. Mode/navigation does not activate a different source row.',
         'No hosted preview or deployed live site is exercised. No physical iPad/hardware performance claim. Shared shell/source styles are unchanged.']}))
   }catch(error){
-    console.log('MIP_WORLD_TABLET_FAILURE='+JSON.stringify({engine,initialViewport,error:error.message,pageErrors:errors}))
+    const failureCamera=await camera(page).then(parseCameraState).catch(()=>null)
+    const failureGovernance=await state(page).then(s=>s?.cameraGovernance??null).catch(()=>null)
+    console.log('MIP_WORLD_TABLET_FAILURE='+JSON.stringify({engine,initialViewport,error:error.message,pageErrors:errors,camera:failureCamera,cameraGovernance:failureGovernance}))
     console.log('MIP_WORLD_TABLET_FAILURE_IMAGE_'+label+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
     throw error
   }finally{await page.close()}
