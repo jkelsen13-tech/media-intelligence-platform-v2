@@ -17,7 +17,7 @@ export function pointVisibleAboveEllipsoid(camera, point, radii) {
 }
 
 export function visibleLabelIds(markers,{width,height,cameraHeightMeters}={}) {
-  if(!Number.isFinite(width)||!Number.isFinite(height))return new Set()
+  if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)return new Set()
   const cells=new Map(), ids=new Set()
   const cellSize=64
   const keysFor=box=>{
@@ -33,6 +33,7 @@ export function visibleLabelIds(markers,{width,height,cameraHeightMeters}={}) {
     if(!m.selected&&cameraHeightMeters>2500000)continue
     const w=Number.isFinite(m.labelWidth)?m.labelWidth:Math.max(40,String(m.label??'').length*12)
     const h=Number.isFinite(m.labelHeight)?m.labelHeight:16
+    if(w<0||h<=0)continue
     const box={left:m.x+14,right:m.x+14+w,top:m.y-8-h/2,bottom:m.y-8+h/2}
     if(box.left<0||box.right>width||box.top<0||box.bottom>height)continue
     const keys=keysFor(box), nearby=new Set(keys.flatMap(key=>cells.get(key)??[]))
@@ -51,7 +52,7 @@ export function updateGlobeMarkerLayout(C,viewer,entities,measureLabel) {
     const point=entity.position.getValue(time)
     const screen=point&&C.SceneTransforms.worldToWindowCoordinates(scene,point)
     return {id:entity.id,entity,selected:entity.__mipSelected,
-      label:entity.label.text.getValue(time),...measureLabel?.(entity.label.text.getValue(time),entity.label.font.getValue(time)),x:screen?.x,y:screen?.y,
+      label:entity.label.text.getValue(time),...measureLabel?.(entity.label.text.getValue(time),entity.label.font?.getValue(time) ?? '12px sans-serif'),x:screen?.x,y:screen?.y,
       visible:Boolean(point&&screen&&pointVisibleAboveEllipsoid(camera.positionWC,point,scene.globe.ellipsoid.radii))}
   })
   const labels=visibleLabelIds(items,{width:scene.canvas.clientWidth,height:scene.canvas.clientHeight,
@@ -64,4 +65,55 @@ export function updateGlobeMarkerLayout(C,viewer,entities,measureLabel) {
     if(m.entity.label.show.getValue(time)!==labelVisible){m.entity.label.show=labelVisible;changed=true}
   }
   return changed
+}
+
+// A single renderer-owned 2D context and bounded cache measure the exact drawn
+// text. Keeping full label bounds prevents source-native labels from colliding
+// merely because they exceed an arbitrary display-width cap.
+export function createMarkerLabelMeasurer(createContext) {
+  let context = null, contextAttempted = false
+  const cache = new Map()
+  return {
+    measure(text, font = '12px sans-serif') {
+      text = String(text ?? '')
+      const key = font + '\n' + text
+      if (cache.has(key)) return cache.get(key)
+      if (!contextAttempted) {
+        contextAttempted = true
+        try { context = createContext?.() ?? null } catch { context = null }
+      }
+      if (!context) return {}
+      try {
+        context.font = font
+        const lines = text.split(/\r\n|\r|\n/)
+        const metrics = lines.map(line => context.measureText(line))
+        const labelWidth = Math.ceil(Math.max(...metrics.map(m => m.width)))
+        // Cesium renders multiline labels. Font size also protects against
+        // unusually small actual glyph bounds such as a line of punctuation.
+        const fontHeight = Number.parseFloat(font.match(/([\d.]+)px/)?.[1]) || 12
+        const lineHeight = Math.max(16, fontHeight * 1.5,
+          ...metrics.map(m => (m.actualBoundingBoxAscent || 9) + (m.actualBoundingBoxDescent || 3)))
+        const labelHeight = Math.ceil(lineHeight * lines.length)
+        if (!Number.isFinite(labelWidth) || !Number.isFinite(labelHeight)) return {}
+        const size = Object.freeze({ labelWidth, labelHeight })
+        if (cache.size >= 512) cache.delete(cache.keys().next().value)
+        cache.set(key, size)
+        return size
+      } catch { return {} }
+    },
+    clear() { cache.clear(); context = null; contextAttempted = false },
+  }
+}
+
+// A rendered primitive may lag the latest camera pose by one correction frame.
+// Recheck visibility at pick time so such a primitive can never select a
+// far-side or obsolete marker. Successful picks return the retained row object.
+export function dispatchGlobeMarkerPick(viewer, screenPosition, onSelectRow, isCancelled = () => false) {
+  if (!viewer || viewer.isDestroyed?.() || isCancelled() || typeof onSelectRow !== 'function') return false
+  const entity = viewer.scene.pick(screenPosition)?.id
+  if (isCancelled() || viewer.isDestroyed?.() || !entity?.show || !entity.__mipRow) return false
+  const position = entity.position?.getValue?.(viewer.clock.currentTime)
+  if (!pointVisibleAboveEllipsoid(viewer.camera.positionWC, position, viewer.scene.globe.ellipsoid.radii)) return false
+  onSelectRow(entity.__mipRow)
+  return true
 }
