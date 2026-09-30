@@ -43,8 +43,8 @@ function harness({ width = 800, height = 400, zoom = 8, measureWidth = 60 } = {}
         measureText(text) {
           measurements++
           fonts.push(this.font)
-          return { width: typeof measureWidth === 'function' ? measureWidth(text) : measureWidth,
-            actualBoundingBoxAscent: 9, actualBoundingBoxDescent: 3 }
+          return { width: (typeof measureWidth === 'function' ? measureWidth(text) : text.length * measureWidth / 8) * 64 / 12,
+            actualBoundingBoxAscent: 48, actualBoundingBoxDescent: 16 }
         },
       }
     },
@@ -114,8 +114,8 @@ test('resize and subpixel movement reproject full label bounds with one correcti
   h.emit('render')
   assert.equal(h.counts().repaints, 2)
   assert.equal(h.counts().contextCount, 1)
-  assert.equal(h.counts().measurements, 1, 'stable text is measured once across actual layout passes')
-  assert.deepEqual(h.fonts, ['normal 12px sans-serif'])
+  assert.equal(h.counts().measurements, 7, 'glyphs and stable full labels remain cached across actual passes')
+  assert.ok(h.fonts.every(font => font === 'normal 64px sans-serif'))
   assert.ok(h.projected.length >= 6, 'each event reprojects, without a rounded camera cache')
   assert.deepEqual(h.layout.getStats(), { points: 1, labels: 1, passes: 6, lastMs: 1, maxMs: 1 })
   h.layout.destroy()
@@ -147,14 +147,14 @@ test('projection failures, offscreen points and absent viewport cannot place lab
 
 test('dense large passes keep a bounded measurement cache and stable accepted membership', () => {
   const h = harness({ measureWidth: 60 })
-  const features = Array.from({ length: 1000 }, (_, i) => feature(String(i), 100, 100, 'Label-' + i))
+  const features = Array.from({ length: 1000 }, (_, i) => feature(String(i), 100, 100, String.fromCodePoint(0x400 + i)))
   h.layout.setFeatures(features, new Set(['999']))
   assert.deepEqual(h.labels(), ['999'])
   assert.equal(h.layout.getLayerData().pointData.length, 1000)
   assert.equal(h.counts().contextCount, 1)
   assert.equal(h.counts().measurements, 1000)
   h.emit('render')
-  assert.equal(h.counts().measurements, 2000, 'a FIFO cache of 512 cannot retain all 1000 unique labels')
+  assert.equal(h.counts().measurements, 2000, 'the bounded glyph and full-label caches cannot retain 1000 unique characters')
   assert.equal(h.counts().repaints, 0, 'dense stable layouts cannot start an idle repaint loop')
   h.layout.destroy()
 })
@@ -207,6 +207,7 @@ test('deck label subset and exact font keep full point identity and picking', ()
   assert.equal(labels.props.data[0], points.props.data[1])
   assert.equal(labels.props.fontFamily, 'sans-serif')
   assert.equal(labels.props.fontWeight, 'normal')
+  assert.deepEqual(labels.props.fontSettings, { fontSize: 64 })
   assert.equal(labels.props.lineHeight, 1.5)
   assert.equal(labels.props.sizeUnits, 'pixels')
   assert.equal(labels.props.getSize, 12)
@@ -217,4 +218,31 @@ test('deck label subset and exact font keep full point identity and picking', ()
     assert.deepEqual(points.props.getPosition(point), point.position)
   }
   h.layout.destroy()
+})
+
+test('deck atlas advance measurement excludes whole-string kerning and preserves unicode glyphs', () => {
+  let font, calls = []
+  const map = {
+    getCanvas: () => ({ clientWidth: 100, clientHeight: 100 }),
+    getZoom: () => 8, getCenter: () => ({ lat: 0 }),
+    project: () => ({ x: 66, y: 50 }), on() {}, off() {},
+  }
+  const layout = createMapMarkerLabelLayout(map, {
+    createContext: () => ({
+      set font(value) { font = value },
+      measureText(text) {
+        calls.push(text)
+        return { width: text.length > 1 ? 16 : 64, actualBoundingBoxAscent: 48, actualBoundingBoxDescent: 16 }
+      },
+    }),
+  })
+  layout.setFeatures([feature('a', 0, 0, 'AV')], new Set())
+  assert.equal(layout.getLayerData().labelData.length, 0, '24px glyph advances cannot fit the 20px remaining width')
+  assert.deepEqual(calls, ['A', 'V'], 'deck does not draw the whole-string kerned 3px width')
+  assert.equal(font, 'normal 64px sans-serif')
+  calls = []
+  layout.setFeatures([feature('b', 0, 0, '😀')], new Set())
+  assert.equal(layout.getLayerData().labelData.length, 1)
+  assert.deepEqual(calls, ['😀'], 'a surrogate pair remains one atlas character')
+  layout.destroy()
 })

@@ -205,7 +205,8 @@ export function projectionMarkerRecords(rows, selectedKeys) {
 // renderer-local display records; each point retains its row and position.
 const MAP_LABEL_FONT_FAMILY = 'sans-serif'
 const MAP_LABEL_FONT = 'normal 12px ' + MAP_LABEL_FONT_FAMILY
-const mapProjectionLabelText = d => d.label || d.row.precision_class || 'projected location'
+const MAP_LABEL_ATLAS_SIZE = 64
+const mapProjectionLabelText = d => String(d.label || d.row.precision_class || 'projected location').replace(/\r\n?|\n/g, '\n')
 
 function mapProjectionPointRecords(features, selectedKeys) {
   return (features ?? []).flatMap((feature, featureIndex) =>
@@ -233,7 +234,44 @@ export function createMapMarkerLabelLayout(map, {
   createContext = () => map?.getCanvas?.()?.ownerDocument?.createElement('canvas').getContext('2d'),
   now = () => globalThis.performance?.now?.() ?? Date.now(),
 } = {}) {
-  const measurer = createMarkerLabelMeasurer(createContext)
+  // TextLayer 9.4 lays out individual glyph advances at the atlas font size,
+  // then scales them to CSS pixels. Whole-string measureText at 12px would
+  // introduce kerning/ligatures that deck does not draw. Feed those actual
+  // advances to the shared bounded full-label measurer instead.
+  const measurer = createMarkerLabelMeasurer(() => {
+    const context = createContext?.()
+    if (!context) return null
+    const glyphs = new Map()
+    const scale = 12 / MAP_LABEL_ATLAS_SIZE
+    return {
+      set font(_font) { context.font = 'normal ' + MAP_LABEL_ATLAS_SIZE + 'px ' + MAP_LABEL_FONT_FAMILY },
+      measureText(text) {
+        let advance = 0, right = 0, ascent = 0, descent = 0
+        for (const character of Array.from(text)) {
+          let metrics = glyphs.get(character)
+          if (!metrics) {
+            const measured = context.measureText(character)
+            const hasBounds = Boolean(measured.actualBoundingBoxAscent)
+            metrics = {
+              advance: measured.width,
+              width: hasBounds && Number.isFinite(measured.actualBoundingBoxRight - measured.actualBoundingBoxLeft)
+                ? Math.ceil(measured.actualBoundingBoxRight - measured.actualBoundingBoxLeft) : measured.width,
+              ascent: hasBounds ? Math.ceil(measured.actualBoundingBoxAscent) : MAP_LABEL_ATLAS_SIZE * 0.9,
+              descent: hasBounds ? Math.ceil(measured.actualBoundingBoxDescent || 0) : MAP_LABEL_ATLAS_SIZE * 0.3,
+            }
+            if (glyphs.size >= 512) glyphs.delete(glyphs.keys().next().value)
+            glyphs.set(character, metrics)
+          }
+          right = Math.max(right, advance + metrics.width)
+          advance += metrics.advance
+          ascent = Math.max(ascent, metrics.ascent)
+          descent = Math.max(descent, metrics.descent)
+        }
+        return { width: Math.max(advance, right) * scale,
+          actualBoundingBoxAscent: ascent * scale, actualBoundingBoxDescent: descent * scale }
+      },
+    }
+  })
   let points = [], labels = [], accepted = new Set()
   let destroyed = false, updating = false
   const stats = { points: 0, labels: 0, passes: 0, lastMs: 0, maxMs: 0 }
@@ -340,6 +378,7 @@ export function deckProjectionLayers({ ScatterplotLayer, TextLayer }, features, 
       sizeUnits: 'pixels',
       fontFamily: MAP_LABEL_FONT_FAMILY,
       fontWeight: 'normal',
+      fontSettings: { fontSize: MAP_LABEL_ATLAS_SIZE },
       lineHeight: 1.5,
       characterSet: 'auto',
       getColor: [26, 26, 23, 230],
