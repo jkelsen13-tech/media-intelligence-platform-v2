@@ -16,6 +16,7 @@ import {
   mapStackById,
   mapLibreStyleForStack,
   heightMetersFromMapZoom,
+  heightMetersForPrecisionClass,
   mapZoomForHeightMeters,
   maxZoomForPrecisionClass,
   minZoom,
@@ -39,9 +40,67 @@ import { overlayAllowed } from './worldViewPrivacyLock.js'
 // down). Restore is clamped to the precision-class zoom cap so it can never
 // reach finer-than-recorded precision.
 
+// The existing bridge is calibrated at 800 CSS pixels. Smaller viewports need
+// a tighter cap; wider viewports retain that approved bound. This remains an
+// approximate display-scale contract, not a physical MapLibre camera altitude.
+const NOMINAL_MAP_WIDTH = 800
+const MERCATOR_MAX_LATITUDE = 85.05112878
+
+function mapBridgeWidth(width) {
+  return Number.isFinite(width) && width > 0 ? Math.min(width, NOMINAL_MAP_WIDTH) : NOMINAL_MAP_WIDTH
+}
+
+export function maxMapZoomForPrecisionClassAtLatitude(precisionClass, lat, viewportWidthPx = NOMINAL_MAP_WIDTH) {
+  if (!Number.isFinite(lat)) return null
+  const latitude = Math.min(MERCATOR_MAX_LATITUDE, Math.max(-MERCATOR_MAX_LATITUDE, lat))
+  const floorZoom = mapZoomForHeightMeters(heightMetersForPrecisionClass(precisionClass), latitude, mapBridgeWidth(viewportWidthPx))
+  return floorZoom === null ? null : Math.min(maxZoomForPrecisionClass(precisionClass), floorZoom)
+}
+
+function applyMapPrecisionLimit(map, cap) {
+  if (!map || !Number.isFinite(cap) || cap < -2) return false
+  const lower = Math.min(minZoom(), cap)
+  const currentMin = map.getMinZoom?.() ?? minZoom()
+  // MapLibre requires min <= max. Lower min first; raise max before min.
+  if (lower < currentMin) map.setMinZoom?.(lower)
+  if (Math.abs((map.getMaxZoom?.() ?? Infinity) - cap) > 1e-9) map.setMaxZoom?.(cap)
+  if (lower > currentMin) map.setMinZoom?.(lower)
+  return true
+}
+
+export function createMapPrecisionGovernor(map, { getPrecisionClass, onUnavailable } = {}) {
+  let updating = false
+  let lastWidth = NOMINAL_MAP_WIDTH
+  function width() {
+    const measured = map?.getCanvas?.()?.clientWidth
+    if (Number.isFinite(measured) && measured > 0) lastWidth = mapBridgeWidth(measured)
+    return lastWidth
+  }
+  function update(lat = map?.getCenter?.()?.lat) {
+    if (updating) return true
+    const cap = maxMapZoomForPrecisionClassAtLatitude(getPrecisionClass?.(), lat, width())
+    updating = true
+    try {
+      const applied = applyMapPrecisionLimit(map, cap)
+      if (!applied) onUnavailable?.()
+      return applied
+    } finally { updating = false }
+  }
+  // Zoom setters can emit move synchronously; the guard prevents recursion.
+  // Event callbacks receive an event object, not a latitude.
+  const refresh = () => update()
+  map?.on?.('move', refresh)
+  map?.on?.('resize', refresh)
+  return {
+    width, update,
+    destroy() { map?.off?.('move', refresh); map?.off?.('resize', refresh) },
+  }
+}
+
 /** Build a normalized camera state from a 2D/2.5D map camera snapshot. */
-export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 0 }, precisionClass) {
-  const heightMeters = heightMetersFromMapZoom(zoom, lat)
+export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 0 }, precisionClass, viewportWidthPx = NOMINAL_MAP_WIDTH) {
+  const nominalHeight = heightMetersFromMapZoom(zoom, lat)
+  const heightMeters = nominalHeight === null ? null : nominalHeight * mapBridgeWidth(viewportWidthPx) / NOMINAL_MAP_WIDTH
   if (heightMeters === null) return null
   return makeCameraState(
     {
@@ -57,13 +116,14 @@ export function cameraStateFromMapCamera({ lng, lat, zoom, bearing = 0, pitch = 
 }
 
 /** Convert a normalized camera state into 2D/2.5D map camera parameters. */
-export function mapCameraForCameraState(cameraState, precisionClass) {
+export function mapCameraForCameraState(cameraState, precisionClass, viewportWidthPx = NOMINAL_MAP_WIDTH) {
   if (!cameraState) return null
-  const cap = maxZoomForPrecisionClass(precisionClass)
+  const cap = maxMapZoomForPrecisionClassAtLatitude(precisionClass, cameraState.lat, viewportWidthPx)
+  if (cap === null || cap < -2) return null
   // Mercator cannot represent the poles; constrain only the fallback camera.
-  const lat = Math.min(85.05112878, Math.max(-85.05112878, cameraState.lat))
-  const zoomRaw = mapZoomForHeightMeters(cameraState.heightMeters, lat)
-  const zoom = Math.max(minZoom(), Math.min(zoomRaw ?? cap, cap))
+  const lat = Math.min(MERCATOR_MAX_LATITUDE, Math.max(-MERCATOR_MAX_LATITUDE, cameraState.lat))
+  const zoomRaw = mapZoomForHeightMeters(cameraState.heightMeters, lat, mapBridgeWidth(viewportWidthPx))
+  const zoom = Math.max(Math.min(minZoom(), cap), Math.min(zoomRaw ?? cap, cap))
   const heading = cameraState.headingDegrees
   return Object.freeze({
     center: Object.freeze([cameraState.lon, lat]),
@@ -169,10 +229,13 @@ export function flyToSubject(map, coordinate, precisionClass) {
   if (!map) return false
   const cam = subjectCamera(coordinate, precisionClass)
   if (!cam) return false
-  map.setMaxZoom?.(maxZoomForPrecisionClass(precisionClass))
+  const width = mapBridgeWidth(map.getCanvas?.()?.clientWidth)
+  const lat = Math.min(MERCATOR_MAX_LATITUDE, Math.max(-MERCATOR_MAX_LATITUDE, cam.center[1]))
+  const cap = maxMapZoomForPrecisionClassAtLatitude(precisionClass, lat, width)
+  if (!applyMapPrecisionLimit(map, cap)) return false
   map.flyTo({
-    center: cam.center,
-    zoom: cam.zoom,
+    center: [cam.center[0], lat],
+    zoom: Math.min(cam.zoom, cap),
     pitch: cam.pitch,
     bearing: cam.bearing,
     duration: 1600,
@@ -265,6 +328,7 @@ function createMapLibreWorldViewRendererAdapter({
   let mounted = false
   let currentOnSelectRow = onSelectRow
   let localCancelled = false
+  let precisionGovernor = null
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
 
@@ -316,6 +380,11 @@ function createMapLibreWorldViewRendererAdapter({
     let errorCount = 0
     try {
       const start = worldCamera()
+      const cap = maxMapZoomForPrecisionClassAtLatitude(activePrecisionClass(), start.center[1], hostEl.clientWidth)
+      if (cap === null || cap < -2) {
+        if (!cancelledNow()) onStackIdChange?.(FALLBACK_MAP_STACK_ID)
+        return
+      }
       localMap = new maplibregl.Map({
         container: hostEl,
         style: mapLibreStyleForStack(stackId),
@@ -323,8 +392,8 @@ function createMapLibreWorldViewRendererAdapter({
         zoom: start.zoom,
         pitch: start.pitch,
         bearing: start.bearing,
-        minZoom: minZoom(),
-        maxZoom: maxZoomForPrecisionClass(precisionClass),
+        minZoom: Math.min(minZoom(), cap),
+        maxZoom: cap,
         attributionControl: false,
         cooperativeGestures: false,
       })
@@ -378,6 +447,11 @@ function createMapLibreWorldViewRendererAdapter({
     map = localMap
     overlay = localOverlay
     deckLayerCtors = { ScatterplotLayer, TextLayer }
+    precisionGovernor = createMapPrecisionGovernor(map, {
+      getPrecisionClass: activePrecisionClass,
+      onUnavailable: () => { if (!cancelledNow()) onStackIdChange?.(FALLBACK_MAP_STACK_ID) },
+    })
+    precisionGovernor.update()
 
     const handleError = () => {
       errorCount += 1
@@ -394,6 +468,7 @@ function createMapLibreWorldViewRendererAdapter({
   }
 
   async function setFeatures(nextFeatures, nextSelectedKeys = getSelectedKeys?.()) {
+    precisionGovernor?.update()
     if (!overlay || !deckLayerCtors || stackId === FALLBACK_MAP_STACK_ID) return
     overlay.setProps({
       layers: deckProjectionLayers(deckLayerCtors, nextFeatures, currentOnSelectRow, nextSelectedKeys ?? new Set()),
@@ -436,6 +511,7 @@ function createMapLibreWorldViewRendererAdapter({
             pitch: map.getPitch?.() ?? 0,
           },
           activePrecisionClass(),
+          precisionGovernor?.width(),
         ),
         activePrecisionClass(),
       )
@@ -452,10 +528,10 @@ function createMapLibreWorldViewRendererAdapter({
     if (!map) return false
     const parsed = parseCameraState(serialized, { precisionClass: activePrecisionClass() })
     if (!parsed) return false
-    const cam = mapCameraForCameraState(parsed, activePrecisionClass())
+    const cam = mapCameraForCameraState(parsed, activePrecisionClass(), precisionGovernor?.width())
     if (!cam) return false
     cancelMapCameraFlight(map)
-    map.setMaxZoom?.(maxZoomForPrecisionClass(activePrecisionClass()))
+    if (!precisionGovernor?.update(cam.center[1])) return false
     map.jumpTo({ center: cam.center, zoom: cam.zoom, bearing: cam.bearing, pitch: cam.pitch })
     requestRepaint(map)
     return true
@@ -463,6 +539,8 @@ function createMapLibreWorldViewRendererAdapter({
 
   function destroy() {
     localCancelled = true
+    precisionGovernor?.destroy()
+    precisionGovernor = null
     destroyRendererResources({ overlay, map })
     overlay = null
     map = null
