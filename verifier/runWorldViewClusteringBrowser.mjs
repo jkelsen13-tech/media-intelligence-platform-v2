@@ -5,6 +5,7 @@ import { createRequire } from 'node:module'
 import { spawn, spawnSync } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { cameraStatesEqual, parseCameraState } from '../src/lib/worldViewCameraState.js'
+import { heightMetersForPrecisionClass } from '../src/lib/worldViewMapStack.js'
 import { subjectFromWorldViewSelection } from '../src/lib/investigationContext.js'
 import { observeBackendBoundary } from './backendBoundary.mjs'
 import { CLUSTER_SCENES, installClusteringFixture, installClusteringGraphFixture, installProjectionFixture, QUALIFICATION_SUBJECT } from './worldViewProjectionFixture.mjs'
@@ -147,26 +148,59 @@ async function idle(page,counts,label){
   console.log('MIP_WORLD_CLUSTER_IDLE='+JSON.stringify({candidate,label,...sample}))
   return sample
 }
+
+function assertMapResizePose(actual,expected,logical,label){
+  assert.ok(actual&&expected&&logical,label+' retains actual raw MapLibre camera metadata')
+  for(const key of ['lon','lat','zoom','bearing','pitch']){
+    assert.ok(Number.isFinite(actual[key])&&Number.isFinite(expected[key]))
+    assert.ok(Math.abs(actual[key]-expected[key])<=1e-9,label+' retains raw '+key)
+  }
+  assert.equal(actual.precisionClass,expected.precisionClass,label+' retains original precision class')
+  assert.ok(Number.isFinite(actual.viewportWidthPx)&&actual.viewportWidthPx>0&&actual.viewportWidthPx<=800)
+  assert.ok(Number.isFinite(actual.bridgeHeightMeters)&&actual.bridgeHeightMeters>=heightMetersForPrecisionClass(actual.precisionClass)-0.1,
+    label+' actual raw display-scale bridge remains above the recorded precision floor')
+  assert.ok(Number.isFinite(actual.maxZoom)&&actual.zoom<=actual.maxZoom+1e-9,label+' actual live zoom respects the width-governed cap')
+  assert.ok(Math.abs(actual.bridgeHeightMeters/actual.viewportWidthPx-expected.bridgeHeightMeters/expected.viewportWidthPx)<=1e-6,
+    label+' bridge changes only by its documented canvas-width calibration')
+  assert.ok(Math.abs(logical.heightMeters-actual.bridgeHeightMeters)<=0.01,label+' serialized camera agrees with actual raw bridge height')
+}
+
 async function modesAndResize(page){
   const originalContext=await context(page),saved=parseCameraState(await camera(page)),before=await state(page)
+  const originalMapCamera=(await fidelity(page))?.mapCamera??null,mapFallback=Boolean(originalMapCamera)
   const modes=page.getByRole('tablist',{name:'World View mode',exact:true})
   await modes.getByRole('tab',{name:'Graph',exact:true}).click()
   assert.equal(await page.locator('.wv-map-host').count(),0,'Graph unmounts map renderer')
   assert.equal(await state(page),null,'unmounted map clears public grouping metadata')
   await modes.getByRole('tab',{name:'Split',exact:true}).click();await settle(page)
-  assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6))
+  assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6),'Split remount restores the saved renderer-neutral camera')
+  const splitMapCamera=mapFallback?(await fidelity(page)).mapCamera:null
   await modes.getByRole('tab',{name:'Map',exact:true}).click();await settle(page)
-  assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6))
-  assertLayoutRoundTrip(await state(page),before,'mode remount')
+  // Split→Map keeps this live MapLibre canvas. Its native pose stays fixed
+  // while the documented approximate height bridge follows canvas width.
+  const splitToMapCamera=mapFallback?(await fidelity(page)).mapCamera:null
+  if(mapFallback){
+    assertMapResizePose(splitToMapCamera,splitMapCamera,parseCameraState(await camera(page)),'Split→Map resize')
+    // Group anchors are compared only at the same input and governed view.
+    // Explicitly restore that original view after qualifying native resize.
+    await setCamera(page,saved)
+    assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6),'explicit original Map view restores the saved logical camera')
+    assertMapResizePose((await fidelity(page)).mapCamera,originalMapCamera,parseCameraState(await camera(page)),'explicit original Map view')
+  }else assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6))
+  const mapModeCamera=mapFallback?(await fidelity(page)).mapCamera:null
+  assertLayoutRoundTrip(await state(page),before,'same-view mode roundtrip')
   const originalViewport=page.viewportSize(),resizes=[]
   for(const width of [390,834,320,originalViewport.width]){
     await page.setViewportSize({width,height:900});await settle(page)
     const current=await state(page)
-    assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6),'resize retains camera')
+    const resizedMapCamera=mapFallback?(await fidelity(page)).mapCamera:null
+    if(mapFallback)assertMapResizePose(resizedMapCamera,mapModeCamera,parseCameraState(await camera(page)),'responsive MapLibre resize')
+    else assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),saved,1e-6),'resize retains camera')
     assert.deepEqual(await context(page),originalContext)
     const overflow=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth}))
     assert.ok(overflow.document<=overflow.viewport+1,'group UI fits phone/tablet viewport')
-    resizes.push({width,targets:current.layout.stats.targetCount,labels:current.layout.stats.labelCount})
+    resizes.push({width,targets:current.layout.stats.targetCount,labels:current.layout.stats.labelCount,
+      ...(mapFallback?{mapCamera:resizedMapCamera,restoredSplitCamera:splitMapCamera,splitToMapCamera,explicitlyRestoredMapCamera:mapModeCamera}: {})})
   }
   assertLayoutRoundTrip(await state(page),before,'resize roundtrip')
   return resizes
@@ -235,7 +269,8 @@ async function originalJourney(browser,engine,kind,{fault=null}={}){
       sourceFieldsRetained:true,coordinateCount:receipt.coordinateCount,resizes,backend:verifyBoundary(),
       limitation:'The fixture changes only display geometry of a real returned row. The measured before state uses original projected anchors; no old-build runtime, GPU FPS, deployed site or physical device claim.'}))
   }catch(error){
-    console.log('MIP_WORLD_CLUSTER_FAILURE='+JSON.stringify({candidate,label,error:error.message,pageErrors:errors,readerRequests:receipt.readerRequests}))
+    console.log('MIP_WORLD_CLUSTER_FAILURE='+JSON.stringify({candidate,label,error:error.message,pageErrors:errors,readerRequests:receipt.readerRequests,
+      camera:await camera(page).catch(()=>null),renderState:await fidelity(page).then(value=>value?{rendererKind:value.rendererKind,mapCamera:value.mapCamera,labelLayout:value.labelLayout,renderedFrames:value.renderedFrames}:null).catch(()=>null)}))
     console.log('MIP_WORLD_CLUSTER_FAILURE_IMAGE_'+label+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))
     throw error
   }finally{await page.close()}
