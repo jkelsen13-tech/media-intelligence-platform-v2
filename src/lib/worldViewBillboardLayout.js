@@ -8,6 +8,10 @@ const overlaps = (a, b, gap = 6) => a.x - a.width / 2 < b.x + b.width / 2 + gap
   && a.x + a.width / 2 + gap > b.x - b.width / 2
   && a.y - a.height / 2 < b.y + b.height / 2 + gap
   && a.y + a.height / 2 + gap > b.y - b.height / 2
+const fitsRect = (marker, rect) => marker.x-marker.width/2 >= rect.left
+  && marker.x+marker.width/2 <= rect.right
+  && marker.y-marker.height/2 >= rect.top
+  && marker.y+marker.height/2 <= rect.bottom
 
 function safeRect(viewport) {
   if (!finite(viewport?.width) || !finite(viewport?.height)
@@ -47,7 +51,8 @@ function selectedEnvelope(item, rect, viewport) {
   }
   return {key:item.key, anchor, card,
     tether:{x1:anchor.x,y1:anchor.y,x2,y2},
-    occluded:item.occluded === true, canonicalCoordinates:item.canonicalCoordinates}
+    occluded:Object.hasOwn(item, 'canonicalOccluded') ? item.canonicalOccluded === true : item.occluded === true,
+    canonicalCoordinates:item.canonicalCoordinates}
 }
 
 function markerFor(item) {
@@ -92,8 +97,7 @@ export function layoutWorldBillboards({items = [], viewport, selectedKey = null}
   const markers = []
   for (const item of ordered) {
     const candidate = markerFor(item)
-    if (candidate.x-candidate.width/2 < rect.left || candidate.x+candidate.width/2 > rect.right
-      || candidate.y-candidate.height/2 < rect.top || candidate.y+candidate.height/2 > rect.bottom) continue
+    if (!fitsRect(candidate,rect)) continue
     // Distant clusters collect nearby records without making world-space
     // proximity or shared coordinates a factual relationship.
     const existing = markers.find(marker=>overlaps(marker,candidate)
@@ -119,17 +123,21 @@ export function layoutWorldBillboards({items = [], viewport, selectedKey = null}
       markers.splice(j,1); merged=true; break
     }
   }
+  // Admission must use final painted dimensions: either direct promotion or
+  // fixed-point merging can enlarge a safe 24px icon into an unsafe 44px group.
+  // Omit that display target instead of moving its immutable projected anchor.
+  const finalized = markers.filter(marker=>fitsRect(marker,rect))
   // Group targets have DISPLAY identities separate from original row keys.
   // Inspecting a group must never be mistaken for selecting its anchor row.
   // JSON encoding avoids collisions from delimiters within original keys.
-  for (const marker of markers) if (marker.state === 'cluster') {
+  for (const marker of finalized) if (marker.state === 'cluster') {
     marker.anchorKey=marker.key
     marker.key='cluster:'+JSON.stringify(marker.memberKeys)
   }
   // One expanded selection takes visual priority. Hide markers underneath
   // that card rather than detaching them from their world anchors.
-  const visible = selected ? markers.filter(marker=>!overlaps(marker,{
+  const visible = selected ? finalized.filter(marker=>!overlaps(marker,{
     x:selected.card.x+selected.card.width/2,y:selected.card.y+selected.card.height/2,
-    width:selected.card.width,height:selected.card.height},0)) : markers
+    width:selected.card.width,height:selected.card.height},0)) : finalized
   return {markers:visible, selected}
 }

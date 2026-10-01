@@ -125,3 +125,54 @@ test('native display-stem projection positions markers while the selected tether
  const invalid=item('c',{markerAnchor:{x:NaN,y:175}})
  assert.deepEqual(layoutWorldBillboards({items:[invalid],viewport}).markers,[])
 })
+
+for (const [insetsName,safeInsets] of [['default',undefined],['custom',{left:40,right:64,top:100,bottom:96}]]) {
+ for (const edge of ['left','right','top','bottom']) {
+  for (const promotion of ['initial','fixed-point']) {
+   test(`${promotion} icon promotion omits final group beyond ${edge} ${insetsName} safe inset without moving anchors`,()=>{
+    const view={...viewport,...(safeInsets?{safeInsets}:{})}
+    const bounds={left:safeInsets?.left??16,right:viewport.width-(safeInsets?.right??16),top:safeInsets?.top??72,bottom:viewport.height-(safeInsets?.bottom??44)}
+    const horizontal=edge==='left'||edge==='right'
+    const direction=edge==='left'||edge==='top'?1:-1
+    const coordinate=bounds[edge]+direction*12
+    const anchorAt=offset=>horizontal?{x:coordinate+direction*offset,y:400}:{x:600,y:coordinate+direction*offset}
+    const icon=(key,offset)=>item(key,{anchor:anchorAt(offset),distanceMeters:50000,importance:1})
+    const rows=deepFreeze(promotion==='initial'?[icon('a',0),icon('b',0)]:[icon('a',0),icon('b',32),icon('c',40)])
+    const before=JSON.stringify(rows)
+    // Every original icon fits. The first two fixed-point icons are separated
+    // until b+c promotes; the enlarged group then reaches earlier a.
+    assert.equal(layoutWorldBillboards({items:[rows[0]],viewport:view}).markers.length,1)
+    if(promotion==='fixed-point')assert.equal(layoutWorldBillboards({items:rows.slice(0,2),viewport:view}).markers.length,2)
+    const control=item('safe',{anchor:{x:horizontal?850:900,y:horizontal?650:400},distanceMeters:50000,importance:1})
+    const {markers}=layoutWorldBillboards({items:[...rows,control],viewport:view})
+    assert.deepEqual(markers.map(marker=>marker.key),['safe'])
+    assert.deepEqual([markers[0].x,markers[0].y],[control.anchor.x,control.anchor.y])
+    assert.equal(JSON.stringify(rows),before)
+   })
+  }
+ }
+}
+
+test('selected tether uses explicit canonical occlusion while marker admission uses display occlusion',()=>{
+ for(const [canonicalOccluded,occluded,visible] of [[true,false,true],[false,true,false]]){
+  const row=deepFreeze(item('a',{canonicalOccluded,occluded,markerAnchor:{x:220,y:175}}))
+  const {markers,selected}=layoutWorldBillboards({items:[row],viewport,selectedKey:'a'})
+  assert.equal(selected.occluded,canonicalOccluded)
+  assert.equal(markers.length,visible?1:0)
+  assert.deepEqual(selected.anchor,row.anchor)
+  assert.deepEqual([selected.tether.x1,selected.tether.y1],[row.anchor.x,row.anchor.y])
+  assert.equal(selected.canonicalCoordinates,row.canonicalCoordinates)
+ }
+})
+
+test('canonical occlusion fallback applies only when the field is absent',()=>{
+ for(const occluded of [true,false]){
+  const legacy=item('legacy',{occluded})
+  assert.equal(layoutWorldBillboards({items:[legacy],viewport,selectedKey:legacy.key}).selected.occluded,occluded)
+  for(const canonicalOccluded of [false,undefined,null,'true',1]){
+   const explicit=item('explicit',{occluded,canonicalOccluded})
+   assert.equal(layoutWorldBillboards({items:[explicit],viewport,selectedKey:explicit.key}).selected.occluded,false,
+    'present field uses strict true rather than falling back to display occlusion')
+  }
+ }
+})

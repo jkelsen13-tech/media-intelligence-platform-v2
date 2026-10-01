@@ -67,7 +67,7 @@ export default function WorldViewBillboardPrototype() {
       interactionEnabled={enabled} onInteractionChange={setEnabled} onExploreChange={setActive}
       status="No source imagery · procedural fixture geometry" attribution="Native renderer credits remain accessible.">
       <div className="wv-billboard-runtime" data-explore-active={active}>
-        <div ref={host} className="wv-billboard-scene" aria-label="Three dimensional synthetic World View"/>
+        <div ref={host} className="wv-billboard-scene" data-interaction-enabled={enabled} aria-label="Three dimensional synthetic World View"/>
         <div className="wv-billboard-fixture-banner">DISPLAY FIXTURE · city evidence stays city precision</div>
         {error?<p role="alert" className="wv-billboard-error">Scene unavailable: {error}</p>:null}
         <WorldViewBillboardOverlay layout={layout} items={items} selectedKey={selectedKey} model={model} onSelect={setSelectedKey} onClose={()=>setSelectedKey(null)} onInspect={()=>{setEnabled(false);setInspectorRequest(value=>value+1)}} interactionEnabled={enabled}/>
