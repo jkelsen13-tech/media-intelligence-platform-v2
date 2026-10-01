@@ -95,23 +95,37 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
   useLayoutEffect(() => { paintAttachment.current?.() })
   useLayoutEffect(() => {
     if (!selected?.card || cluster || typeof window === 'undefined') return
-    let frame = null, stopped = false
-    const started = performance.now()
-    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    let frame = null, stopped = false, deadline = 0
+    const node = cardRef.current
+    const reduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     const paint = now => {
       frame=null
       if (stopped || document.hidden) return
       paintAttachment.current?.()
-      if (!reduced && now-started < 260) frame=requestAnimationFrame(paint)
+      if (!reduced() && now < deadline) frame=requestAnimationFrame(paint)
     }
-    const visibility = () => {
+    const restart = () => {
       if (frame != null) cancelAnimationFrame(frame)
       frame=null
-      if (!document.hidden) paintAttachment.current?.()
+      if (stopped || document.hidden) return
+      paintAttachment.current?.()
+      // Visibility may interrupt the 220ms entrance or 160ms relocation.
+      // Resume attachment sampling for one fresh bounded window, never idle.
+      deadline=performance.now()+260
+      if (!reduced()) frame=requestAnimationFrame(paint)
     }
-    if (!document.hidden) frame=requestAnimationFrame(paint)
-    document.addEventListener('visibilitychange',visibility)
-    return () => { stopped=true;if(frame != null) cancelAnimationFrame(frame);document.removeEventListener('visibilitychange',visibility) }
+    const terminal = event => {
+      if (event.target === node && !stopped && !document.hidden) paintAttachment.current?.()
+    }
+    restart()
+    document.addEventListener('visibilitychange',restart)
+    node?.addEventListener('animationend',terminal)
+    node?.addEventListener('transitionend',terminal)
+    return () => {
+      stopped=true;if(frame != null) cancelAnimationFrame(frame)
+      document.removeEventListener('visibilitychange',restart)
+      node?.removeEventListener('animationend',terminal);node?.removeEventListener('transitionend',terminal)
+    }
   }, [selectedKey, card?.x, card?.y, card?.width, card?.height, Boolean(cluster), tab])
   const activate = callback => callback?.()
   const closeOnEscape = event => {

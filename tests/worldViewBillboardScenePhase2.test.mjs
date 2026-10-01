@@ -13,7 +13,7 @@ const moduleSource=source.replace("from './worldViewCameraState.js'",`from '${ne
 const {createWorldBillboardScene}=await import('data:text/javascript;base64,'+Buffer.from(moduleSource).toString('base64'))
 
 function rendererDouble({poseFailure=false,mutatingCameraGetters=false}={}){
- const listeners=new Map(),probe={viewers:[],handlers:[],collections:[],rays:[],hitPattern:[],renderRequests:0,postRender:null,liveGetterReads:0,cloneGetterReads:0,cameraClones:[]}
+ const listeners=new Map(),probe={viewers:[],handlers:[],collections:[],rays:[],hitPattern:[],renderRequests:0,postRender:null,pendingRender:false,deliveredFrames:0,liveGetterReads:0,cloneGetterReads:0,cameraClones:[]}
  globalThis.document={hidden:false,addEventListener:(type,fn)=>listeners.set(type,fn),removeEventListener:(type,fn)=>{if(listeners.get(type)===fn)listeners.delete(type)}}
  class Vector {constructor(x=0,y=0,z=0){Object.assign(this,{x,y,z})}
   static fromDegrees(x,y,z=0){return new Vector(x,y,z)}
@@ -51,21 +51,27 @@ function rendererDouble({poseFailure=false,mutatingCameraGetters=false}={}){
  }}
  class Viewer {constructor(){this.clock={shouldAnimate:true,currentTime:'INITIAL_ONLY'};this.destroyed=false;this.useDefaultRenderLoop=true
    this.camera={positionWC:new Vector(0,0,1000),directionWC:new Vector(0,0,-1),rightWC:new Vector(1,0,0),upWC:new Vector(0,1,0),frustum:{fovy:1},positionCartographic:{longitude:0,latitude:0,height:1000},heading:0,pitch:0,roll:0,
-    lookAt:()=>{if(poseFailure)throw new Error('synthetic pose failure')},lookAtTransform:()=>{},setView:()=>{}}
+    lookAt:(_target,pose)=>{if(poseFailure)throw new Error('synthetic pose failure');this.camera.positionCartographic.height=pose.range;if(!mutatingCameraGetters){this.camera.heading=pose.heading;this.camera.pitch=pose.pitch}},lookAtTransform:()=>{},
+    setView:({destination,orientation})=>{this.camera.positionWC=new Vector(destination.x,destination.y,destination.z);this.camera.positionCartographic={longitude:destination.x*Math.PI/180,latitude:destination.y*Math.PI/180,height:destination.z};if(!mutatingCameraGetters)Object.assign(this.camera,{heading:orientation.heading,pitch:orientation.pitch,roll:orientation.roll})},
+    moveRight:x=>{this.camera.positionWC.x+=x;this.camera.positionCartographic.longitude+=x*1e-6},
+    moveUp:y=>{this.camera.positionWC.y+=y;this.camera.positionCartographic.latitude+=y*1e-6},
+    zoomIn:amount=>{this.camera.positionWC.z-=amount;this.camera.positionCartographic.height-=amount},
+    zoomOut:amount=>{this.camera.positionWC.z+=amount;this.camera.positionCartographic.height+=amount}}
    installCameraGetters(this.camera,true)
    this.scene={canvas:{},fog:{},camera:this.camera,globe:{pick:ray=>{probe.rays.push(ray);return probe.hitPattern.shift()?new Vector(0,0,999):undefined}},primitives:{add:v=>v},screenSpaceCameraController:{},
-    postRender:{addEventListener:fn=>{probe.postRender=fn;return()=>{probe.postRender=null}}},requestRender:()=>{probe.renderRequests++},pick:()=>null}
+    postRender:{addEventListener:fn=>{probe.postRender=fn;return()=>{probe.postRender=null}}},requestRender:()=>{probe.renderRequests++;probe.pendingRender=true},pick:()=>null}
    probe.viewers.push(this)}destroy(){this.destroyed=true}isDestroyed(){return this.destroyed}}
  class Handler {constructor(){this.destroyed=false;probe.handlers.push(this)}setInputAction(){}destroy(){this.destroyed=true}}
  const C={Viewer,Camera,Cartesian3:Vector,Matrix4:Matrix,BillboardCollection:Collection,ScreenSpaceEventHandler:Handler,
   Color:{fromCssColorString:x=>x},Transforms:{eastNorthUpToFixedFrame:x=>x},Primitive:class{constructor(o){Object.assign(this,o)}},GeometryInstance:class{constructor(o){Object.assign(this,o)}},
   BoxGeometry:{fromDimensions:o=>o},PerInstanceColorAppearance:class{static VERTEX_FORMAT={}},ColorGeometryInstanceAttribute:{fromColor:c=>c},
   EllipsoidTerrainProvider:class{},JulianDate:{fromIso8601:value=>'RECORDED:'+value},
-  HeadingPitchRange:class{},Math:{toDegrees:r=>r*180/Math.PI,toRadians:d=>d*Math.PI/180,clamp:(v,a,b)=>Math.min(b,Math.max(a,v))},VerticalOrigin:{CENTER:0},
+  HeadingPitchRange:class{constructor(heading,pitch,range){Object.assign(this,{heading,pitch,range})}},Math:{toDegrees:r=>r*180/Math.PI,toRadians:d=>d*Math.PI/180,clamp:(v,a,b)=>Math.min(b,Math.max(a,v))},VerticalOrigin:{CENTER:0},
   ScreenSpaceEventType:{LEFT_CLICK:0},SceneTransforms:{worldToWindowCoordinates:(_s,p)=>({x:p.x,y:p.y})},
   Ray:class{constructor(origin,direction){Object.assign(this,{origin,direction})}},Ellipsoid:{WGS84:{}},EllipsoidalOccluder:class{isPointVisible(){return true}}}
  globalThis.__phase2SceneDouble={C}
- return {probe,listeners,host:{isConnected:true,clientWidth:1280,clientHeight:900}}
+ const deliverFrame=()=>{const viewer=probe.viewers.at(-1);if(!viewer||viewer.destroyed||!viewer.useDefaultRenderLoop||!probe.pendingRender)return false;probe.pendingRender=false;probe.deliveredFrames++;probe.postRender?.();return true}
+ return {probe,listeners,deliverFrame,host:{isConnected:true,clientWidth:1280,clientHeight:900}}
 }
 const record=(key,coordinates)=>Object.freeze({key,label:key,family:'events',coordinates:Object.freeze(coordinates),precision:'synthetic point'})
 const records=Object.freeze([record('a',[-81.7,41.4,0]),record('b',[-81.701,41.401,0])])
@@ -233,4 +239,64 @@ test('repeated hidden frame requests stay blocked; one resume request preserves 
  assert.equal(probe.viewers[0].clock.currentTime,clock)
  assert.equal(probe.viewers[0].clock.shouldAnimate,false)
  scene.dispose()
+})
+
+
+test('hidden direct mutators coalesce one pending render flag and resume delivers latest logical/camera/time state rather than queued frames',async()=>{
+ const {host,probe,listeners,deliverFrame}=rendererDouble()
+ const scene=await createWorldBillboardScene(host,{items:records,onFrame:()=>{}})
+ deliverFrame()
+ document.hidden=true;listeners.get('visibilitychange')()
+ const deliveredBefore=probe.deliveredFrames
+ scene.setItems([records[1]])
+ scene.setPresentation(cluster('b'))
+ scene.setSelected('b')
+ scene.setRecordedTime('2026-10-01T11:00:00Z')
+ scene.setCameraState({version:1,lon:-81.701,lat:41.401,heightMeters:5000,headingDegrees:20,pitchDegrees:-40,rollDegrees:0})
+ scene.setPose('medium');scene.orbit(15);scene.pitch(5);scene.pan(10,5);scene.zoom(0.85)
+ const latestCamera={version:1,lon:-81.702,lat:41.402,heightMeters:6000,headingDegrees:35,pitchDegrees:-50,rollDegrees:0}
+ scene.setCameraState(latestCamera)
+ for(let i=0;i<50;i++)scene.requestFrame()
+ assert.equal(probe.viewers[0].useDefaultRenderLoop,false)
+ assert.equal(probe.pendingRender,true,'Cesium explicit requests are a coalesced pending flag, not a GPU-frame queue')
+ assert.equal(deliverFrame(),false)
+ assert.equal(probe.deliveredFrames,deliveredBefore,'paused loop must not deliver synthetic frames')
+ const latest=scene.getProbe()
+ assert.equal(latest.selected,'b')
+ assert.equal(latest.itemCount,1)
+ assert.deepEqual(latest.selectedCanonicalCoordinates,records[1].coordinates)
+ assert.equal(latest.recordedTime,'2026-10-01T11:00:00Z')
+ assert.ok(Math.abs(latest.camera.lon-latestCamera.lon)<1e-10)
+ assert.ok(Math.abs(latest.camera.lat-latestCamera.lat)<1e-10)
+ assert.equal(latest.camera.heightMeters,6000)
+ document.hidden=false;listeners.get('visibilitychange')()
+ assert.equal(deliverFrame(),true)
+ assert.equal(probe.deliveredFrames,deliveredBefore+1)
+ assert.equal(deliverFrame(),false,'many hidden requests cannot turn into a resume frame queue')
+ const resumed=scene.getProbe()
+ assert.equal(resumed.selected,latest.selected)
+ assert.equal(resumed.recordedTime,latest.recordedTime)
+ assert.deepEqual(resumed.camera,latest.camera)
+ scene.dispose()
+})
+
+test('disposed mutators cannot request renders or access camera inputs after scene ownership is released',async()=>{
+ const {host,probe,listeners}=rendererDouble()
+ const scene=await createWorldBillboardScene(host,{items:records})
+ scene.setInteractionEnabled(false)
+ scene.dispose()
+ const inputs=probe.viewers[0].scene.screenSpaceCameraController.enableInputs
+ const calls=probe.renderRequests
+ const operations=[
+  ()=>scene.setItems([records[1]]),()=>scene.setPresentation(cluster('b')),()=>scene.setSelected('b'),
+  ()=>scene.setRecordedTime('2026-10-01T11:00:00Z'),
+  ()=>scene.setCameraState({version:1,lon:-81.7,lat:41.4,heightMeters:6000,headingDegrees:0,pitchDegrees:-35,rollDegrees:0}),
+  ()=>scene.setPose('medium'),()=>scene.orbit(15),()=>scene.pitch(5),()=>scene.pan(10,5),()=>scene.zoom(.85),()=>scene.setInteractionEnabled(true),()=>scene.requestFrame(),
+ ]
+ for(const operation of operations)operation()
+ assert.equal(probe.renderRequests,calls,'mutator closures must stop using released native scene resources')
+ assert.equal(probe.viewers[0].scene.screenSpaceCameraController.enableInputs,inputs)
+ assert.equal(listeners.size,0)
+ assert.equal(probe.postRender,null)
+ assert.equal(probe.handlers[0].destroyed,true)
 })
