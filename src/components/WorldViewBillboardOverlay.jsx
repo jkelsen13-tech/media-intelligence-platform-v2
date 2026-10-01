@@ -117,13 +117,19 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
     const terminal = event => {
       if (event.target === node && !stopped && !document.hidden) paintAttachment.current?.()
     }
+    // A headed compositor can begin motion after the visibility-return budget
+    // has already expired. Track the card's real motion start, still bounded.
+    const motionStart = event => { if (event.target === node) restart() }
+    const startEvents = ['animationstart','transitionrun','transitionstart']
     restart()
     document.addEventListener('visibilitychange',restart)
+    for (const name of startEvents) node?.addEventListener(name,motionStart)
     node?.addEventListener('animationend',terminal)
     node?.addEventListener('transitionend',terminal)
     return () => {
       stopped=true;if(frame != null) cancelAnimationFrame(frame)
       document.removeEventListener('visibilitychange',restart)
+      for (const name of startEvents) node?.removeEventListener(name,motionStart)
       node?.removeEventListener('animationend',terminal);node?.removeEventListener('transitionend',terminal)
     }
   }, [selectedKey, card?.x, card?.y, card?.width, card?.height, Boolean(cluster), tab])
