@@ -329,6 +329,8 @@ test('src has no globe-vendor / 3D-tile strings; map pick goes through commitNew
   const bannedPaidImageryKeyStrings = /api[_-]?key|apikey|accessToken\b|access[_-]?token/i
 
   const allowedCesiumFiles = [
+    // Isolated billboard pause boundary preserves native renderer credits.
+    /\/src\/styles\/world-view-billboard-runtime\.css$/,
     // Explicit lazy synthetic billboard route; provider/token bans still apply.
     /\/src\/lib\/worldViewBillboardScene\.js$/,
     /\/src\/lib\/worldViewCesiumRefinement\.js$/,
