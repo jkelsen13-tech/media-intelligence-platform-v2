@@ -26,7 +26,7 @@ export async function createWorldBillboardScene(host, { items = [], onFrame, onS
   const collection = scene.primitives.add(new C.BillboardCollection({ scene }))
   const fixturePrimitives = []
   const fixtureBounds = []
-  let current = [], selected = null, enabled = true, presentation = null
+  let current = [], selected = null, enabled = true, presentation = null, snapshotCamera = null
   let target = C.Cartesian3.fromDegrees(-81.7, 41.4, 0)
   const telemetry = { recordedTime:null, visibilityPauses:0, frames: 0, orbit: 0, pan: 0, zoom: 0, picks: 0, blockedPicks: 0, pose: 'close', fixture: true }
   function box(lon, lat, width, depth, height, color, name) {
@@ -79,7 +79,9 @@ export async function createWorldBillboardScene(host, { items = [], onFrame, onS
     if(typeof value !== 'string' || !Number.isFinite(Date.parse(value))) {telemetry.recordedTime=null;return false}
     try {viewer.clock.currentTime=C.JulianDate.fromIso8601(value);telemetry.recordedTime=value;scene.requestRender();return true} catch {telemetry.recordedTime=null;return false}
   }
-  function getCameraState() { const c = viewer.camera, p = c.positionCartographic;return makeCameraState({ lon: C.Math.toDegrees(p.longitude), lat: C.Math.toDegrees(p.latitude), heightMeters: p.height,
+  // Cesium HPR getters round-trip transforms. Read a reusable detached clone
+  // so serialization cannot perturb the live camera and schedule idle renders.
+  function getCameraState() { const c = C.Camera.clone(viewer.camera, snapshotCamera ?? undefined);snapshotCamera=c;const p = c.positionCartographic;return makeCameraState({ lon: C.Math.toDegrees(p.longitude), lat: C.Math.toDegrees(p.latitude), heightMeters: p.height,
     headingDegrees: C.Math.toDegrees(c.heading), pitchDegrees: C.Math.toDegrees(c.pitch), rollDegrees: ((C.Math.toDegrees(c.roll) + 180) % 360) - 180 }) }
   function setCameraState(raw) { const s = parseCameraState(raw); if (!s) return false; if (s.position && s.direction && s.up) viewer.camera.setView({ destination: s.position, orientation: { direction: s.direction, up: s.up } });
     else viewer.camera.setView({ destination: C.Cartesian3.fromDegrees(s.lon ?? -81.7, s.lat ?? 41.4, s.heightMeters ?? 550), orientation: { heading: C.Math.toRadians(s.headingDegrees ?? 0), pitch: C.Math.toRadians(s.pitchDegrees ?? -35), roll: C.Math.toRadians(s.rollDegrees ?? 0) } });scene.requestRender();return true }

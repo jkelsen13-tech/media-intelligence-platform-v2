@@ -12,8 +12,8 @@ const moduleSource=source.replace("from './worldViewCameraState.js'",`from '${ne
  .replace("import('cesium/Build/Cesium/Widgets/widgets.css')",'Promise.resolve()')
 const {createWorldBillboardScene}=await import('data:text/javascript;base64,'+Buffer.from(moduleSource).toString('base64'))
 
-function rendererDouble({poseFailure=false}={}){
- const listeners=new Map(),probe={viewers:[],handlers:[],collections:[],rays:[],hitPattern:[],renderRequests:0,postRender:null}
+function rendererDouble({poseFailure=false,mutatingCameraGetters=false}={}){
+ const listeners=new Map(),probe={viewers:[],handlers:[],collections:[],rays:[],hitPattern:[],renderRequests:0,postRender:null,liveGetterReads:0,cloneGetterReads:0,cameraClones:[]}
  globalThis.document={hidden:false,addEventListener:(type,fn)=>listeners.set(type,fn),removeEventListener:(type,fn)=>{if(listeners.get(type)===fn)listeners.delete(type)}}
  class Vector {constructor(x=0,y=0,z=0){Object.assign(this,{x,y,z})}
   static fromDegrees(x,y,z=0){return new Vector(x,y,z)}
@@ -31,14 +31,33 @@ function rendererDouble({poseFailure=false}={}){
   static multiplyByPointAsVector(_m,p,out=new Vector()){return Object.assign(out,p)}}
  class Collection {constructor(){this.items=[];probe.collections.push(this)}get length(){return this.items.length}
   removeAll(){this.items=[]}add(options){const value={...options,show:true,rotation:0,computeScreenSpacePosition:()=>({x:options.position.x,y:options.position.y})};this.items.push(value);return value}get(i){return this.items[i]}}
+ function installCameraGetters(camera,live){
+  if(!mutatingCameraGetters)return camera
+  for(const name of ['heading','pitch','roll'])Object.defineProperty(camera,name,{configurable:true,get(){
+   camera.rightWC.x+=1e-15;camera.upWC.y+=2e-15
+   if(live){probe.liveGetterReads++;probe.renderRequests++}else probe.cloneGetterReads++
+   return 0
+  }})
+  return camera
+ }
+ const Camera={clone:(camera,result)=>{
+  const clone=result??{heading:0,pitch:0,roll:0}
+  Object.assign(clone,{positionWC:new Vector(camera.positionWC.x,camera.positionWC.y,camera.positionWC.z),
+   directionWC:new Vector(camera.directionWC.x,camera.directionWC.y,camera.directionWC.z),
+   rightWC:new Vector(camera.rightWC.x,camera.rightWC.y,camera.rightWC.z),
+   upWC:new Vector(camera.upWC.x,camera.upWC.y,camera.upWC.z),
+   frustum:{...camera.frustum},positionCartographic:{...camera.positionCartographic}})
+  installCameraGetters(clone,false);probe.cameraClones.push(clone);return clone
+ }}
  class Viewer {constructor(){this.clock={shouldAnimate:true,currentTime:'INITIAL_ONLY'};this.destroyed=false;this.useDefaultRenderLoop=true
    this.camera={positionWC:new Vector(0,0,1000),directionWC:new Vector(0,0,-1),rightWC:new Vector(1,0,0),upWC:new Vector(0,1,0),frustum:{fovy:1},positionCartographic:{longitude:0,latitude:0,height:1000},heading:0,pitch:0,roll:0,
     lookAt:()=>{if(poseFailure)throw new Error('synthetic pose failure')},lookAtTransform:()=>{},setView:()=>{}}
+   installCameraGetters(this.camera,true)
    this.scene={canvas:{},fog:{},camera:this.camera,globe:{pick:ray=>{probe.rays.push(ray);return probe.hitPattern.shift()?new Vector(0,0,999):undefined}},primitives:{add:v=>v},screenSpaceCameraController:{},
     postRender:{addEventListener:fn=>{probe.postRender=fn;return()=>{probe.postRender=null}}},requestRender:()=>{probe.renderRequests++},pick:()=>null}
    probe.viewers.push(this)}destroy(){this.destroyed=true}isDestroyed(){return this.destroyed}}
  class Handler {constructor(){this.destroyed=false;probe.handlers.push(this)}setInputAction(){}destroy(){this.destroyed=true}}
- const C={Viewer,Cartesian3:Vector,Matrix4:Matrix,BillboardCollection:Collection,ScreenSpaceEventHandler:Handler,
+ const C={Viewer,Camera,Cartesian3:Vector,Matrix4:Matrix,BillboardCollection:Collection,ScreenSpaceEventHandler:Handler,
   Color:{fromCssColorString:x=>x},Transforms:{eastNorthUpToFixedFrame:x=>x},Primitive:class{constructor(o){Object.assign(this,o)}},GeometryInstance:class{constructor(o){Object.assign(this,o)}},
   BoxGeometry:{fromDimensions:o=>o},PerInstanceColorAppearance:class{static VERTEX_FORMAT={}},ColorGeometryInstanceAttribute:{fromColor:c=>c},
   EllipsoidTerrainProvider:class{},JulianDate:{fromIso8601:value=>'RECORDED:'+value},
@@ -172,5 +191,46 @@ test('unchanged camera sampling footprint is independent of shown, absent or gro
   assert.equal(frame.items[0].occlusionSamples,2)
   assert.equal(frame.items[0].canonicalOccluded,true)
  }
+ scene.dispose()
+})
+
+
+test('serialization/getProbe/frame reads isolate mutating orientation getters from every live camera vector and render requests',async()=>{
+ const {host,probe}=rendererDouble({mutatingCameraGetters:true})
+ const scene=await createWorldBillboardScene(host,{items:[records[0]],onFrame:()=>{}})
+ const live=probe.viewers[0].camera
+ const vectors=()=>Object.fromEntries(['positionWC','directionWC','upWC','rightWC'].map(key=>[key,{...live[key]}]))
+ const before=vectors(),requests=probe.renderRequests
+ for(let i=0;i<40;i++){
+  scene.getCameraState();scene.getProbe();probe.postRender()
+ }
+ assert.deepEqual(vectors(),before,'read-only serialization cannot introduce even tiny world-vector drift')
+ assert.equal(probe.liveGetterReads,0,'orientation getters must be evaluated only on a deep camera clone')
+ assert.ok(probe.cloneGetterReads>=120,'mutating clone getters are actually exercised')
+ assert.ok(probe.cameraClones.length>=120)
+ assert.equal(probe.renderRequests,requests,'serialization cannot induce a native-render feedback request')
+ assert.notEqual(probe.cameraClones[0].rightWC,live.rightWC)
+ assert.notEqual(probe.cameraClones[0].upWC,live.upWC)
+ scene.dispose()
+})
+
+test('repeated hidden frame requests stay blocked; one resume request preserves recorded time and selected canonical identity',async()=>{
+ const {host,probe,listeners}=rendererDouble()
+ const scene=await createWorldBillboardScene(host,{items:[records[0]]})
+ scene.setSelected('a');scene.setRecordedTime('2026-10-01T10:00:00Z')
+ const before=scene.getProbe(),clock=probe.viewers[0].clock.currentTime
+ document.hidden=true;listeners.get('visibilitychange')()
+ const pausedRequests=probe.renderRequests
+ for(let i=0;i<50;i++)scene.requestFrame()
+ assert.equal(probe.renderRequests,pausedRequests)
+ assert.equal(probe.viewers[0].useDefaultRenderLoop,false)
+ document.hidden=false;listeners.get('visibilitychange')()
+ assert.equal(probe.renderRequests,pausedRequests+1,'resume schedules one bounded render request')
+ const after=scene.getProbe()
+ assert.equal(after.selected,before.selected)
+ assert.deepEqual(after.selectedCanonicalCoordinates,before.selectedCanonicalCoordinates)
+ assert.equal(after.recordedTime,before.recordedTime)
+ assert.equal(probe.viewers[0].clock.currentTime,clock)
+ assert.equal(probe.viewers[0].clock.shouldAnimate,false)
  scene.dispose()
 })
