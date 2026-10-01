@@ -85,11 +85,13 @@ export default function WorldViewVisualFidelityPanel({ profile, capabilities, on
     <section className="wv-fidelity" aria-label="Visual Fidelity" data-fidelity-version={profile.version}>
       <div className="wv-fidelity-row">
         <label><input type="checkbox" checked={profile.enabled}
+          aria-describedby="wv-fidelity-source-limit"
           onChange={event => onAction({ type: 'master', enabled: event.target.checked })} />Photoreal</label>
         <span>{[effective.dynamicAtmosphere && 'Dynamic atmosphere lighting on', effective.refinement !== 'neutral' && `Terrain refinement: ${effective.refinement}`, effective.sunLighting && 'Calculated sun lighting on', effective.reliefShading && 'Terrain relief on', effective.fxaa && 'FXAA on', effective.groundAtmosphere && 'Ground atmosphere on', effective.distanceHaze && 'Distance haze on', effective.resolutionScale !== 1 && `Resolution ${effective.resolutionScale.toFixed(2)}×`].filter(Boolean).join(' · ') || 'No additional effects active'}</span>
         <button type="button" aria-expanded={expanded} aria-controls="wv-fidelity-settings"
           onClick={() => setExpanded(value => !value)}>Visual Fidelity settings</button>
       </div>
+      <p id="wv-fidelity-source-limit" className="wv-meta">Display enhancements requested here. Active sources are reported separately; this preference does not load photographic imagery or 3D buildings.</p>
       <div id="wv-fidelity-settings" hidden={!expanded}>
         <p>Display-only enhancements. Source detail, evidence and recorded time stay the same.
           Preferences last while this World View is open.</p>

@@ -64,6 +64,10 @@ import { launchOverlayCatalog } from '../lib/worldViewPrivacyLock'
 import './worldview.css'
 import WorkspaceTechnicalDisclosure from '../components/WorkspaceTechnicalDisclosure'
 import { CALM_RELATIONSHIP_UNAVAILABLE } from '../lib/workspacePresentation'
+import WorldViewExploreShell from '../components/WorldViewExploreShell.jsx'
+import WorldViewSpatialContextCard, { WorldViewContextLayerControls } from '../components/WorldViewSpatialContextCard.jsx'
+import { buildWorldViewSpatialContext, DEFAULT_WORLD_VIEW_CONTEXT_LAYERS } from '../lib/worldViewSpatialContext.js'
+import { northAmericaCameraState } from '../lib/worldViewCameraMemory.js'
 
 const MODES = [
   { key: 'map', label: 'Map' },
@@ -407,6 +411,23 @@ export default function WorldView({
   const [visualFidelity, setVisualFidelity] = useState(defaultVisualFidelityProfile)
   const [fidelityCapabilities, setFidelityCapabilities] = useState(visualFidelityCapabilities)
   const [touchInteraction, setTouchInteraction] = useState(false)
+  const cameraControlsRef = useRef(null)
+  const cameraBridge = useMemo(() => ({
+    getCameraState: () => cameraControlsRef.current?.getCameraState?.() ?? null,
+    setCameraState: value => cameraControlsRef.current?.setCameraState?.(value) ?? false,
+  }), [])
+  const [sourceStatus, setSourceStatus] = useState(null)
+  const [exploring, setExploring] = useState(false)
+  const [exploreContextRequest, setExploreContextRequest] = useState(0)
+  const handleExploreChange = useCallback(active => {
+    setExploring(active)
+    if (!active) setExploreContextRequest(0)
+  }, [])
+  const [contextOpen, setContextOpen] = useState(false)
+  const [contextLayers, setContextLayers] = useState(DEFAULT_WORLD_VIEW_CONTEXT_LAYERS)
+  const inspectorRef = useRef(null)
+  const prototypeEnabled = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('worldViewPrototype') === '1'
   const [loadStatus, setLoadStatus] = useState({
     status: 'loading',
     reason: null,
@@ -542,6 +563,7 @@ export default function WorldView({
             : 'No display_geometry available to plot.'
 
   const handleMapSelect = useCallback((row) => {
+    setContextOpen(true)
     const node = graphNodeMatchingProjection(graphNodes, row)
     onSelectProjection(node ?? selectionStubFromProjection(row), row)
   }, [graphNodes, onSelectProjection])
@@ -553,6 +575,38 @@ export default function WorldView({
     worldGraph.status === 'unavailable' ||
     (demoGraphBlocked && worldGraph.status !== 'ok')
   const activeTitle = inspectorTitle(visibleRow, selectedForMatch)
+  const contextModel = useMemo(() => buildWorldViewSpatialContext({ visibleRow, selected: selectedForMatch,
+    investigationContext, weather, layerVisibility: contextLayers }), [visibleRow, selectedForMatch, investigationContext, weather, contextLayers])
+  const exploreToken = useMemo(() => ({ subjectKey: String(investigationContext?.canonical_subject_id ?? selectedForMatch?.id ?? visibleRow?.subject_graph_node_id ?? ''),
+    version: String(visibleRow?.revision_id ?? ''),
+    investigationKey: JSON.stringify({ subjectType: investigationContext?.canonical_subject_type ?? null,
+      parentEvent: investigationContext?.parent_event_id ?? null,
+      temporalAssessment: investigationContext?.temporal_assessment_reference ?? null }),
+    timeToken: JSON.stringify({ asOf: investigationContext?.as_of_time ?? null,
+      range: investigationContext?.selected_time_range ?? null }) }),
+  [selectedForMatch?.id, visibleRow?.subject_graph_node_id, visibleRow?.revision_id, investigationContext])
+  const inspectContext = useCallback(() => {
+    if (exploring) {
+      setExploreContextRequest(value => value + 1)
+      return
+    }
+    inspectorRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
+    inspectorRef.current?.querySelector?.('aside')?.focus?.({ preventScroll: true })
+  }, [exploring])
+  const sourceSummary = sourceStatus ? [sourceStatus.imagery, sourceStatus.elevation, sourceStatus.buildings]
+    .map(source => `${source.label}: ${source.status.toLowerCase()}`).join(' · ')
+    : 'Active sources not yet confirmed'
+  const fidelityControls = <>
+    <WorldViewVisualFidelityPanel profile={visualFidelity}
+      recordedTimeInstant={['selected', 'default'].includes(recordedTime.kind) ? recordedTime.atIso : null}
+      capabilities={mode === 'graph' ? visualFidelityCapabilities({ reason: 'Map is hidden in Graph mode; preferences are retained.' }) : fidelityCapabilities}
+      onAction={action => setVisualFidelity(profile => reduceVisualFidelityProfile(profile, action,
+        mode === 'graph' ? visualFidelityCapabilities() : fidelityCapabilities))} />
+    {exploring && <div className="wv-camera-controls" role="group" aria-label="Explore navigation">
+      <button type="button" onClick={() => cameraBridge.setCameraState(northAmericaCameraState())}>North America overview</button>
+      <button type="button" onClick={() => cameraControlsRef.current?.cancelCameraFlight?.()}>Stop camera flight</button>
+    </div>}
+  </>
 
   return (
     <div className="wv-view" data-wv-mode={mode} {...investigationContextDomProps(investigationContext)}>
@@ -592,17 +646,36 @@ export default function WorldView({
 
       <div className={`wv-layout wv-layout-${mode}`}>
         <div className="wv-main">
-          <WorldViewVisualFidelityPanel profile={visualFidelity}
-            recordedTimeInstant={['selected', 'default'].includes(recordedTime.kind) ? recordedTime.atIso : null}
-            capabilities={mode === 'graph' ? visualFidelityCapabilities({ reason: 'Map is hidden in Graph mode; preferences are retained.' }) : fidelityCapabilities}
-            onAction={action => setVisualFidelity(profile => reduceVisualFidelityProfile(profile, action,
-              mode === 'graph' ? visualFidelityCapabilities() : fidelityCapabilities))} />
+          <section className="wv-source-status" aria-label="Active World View sources">
+            <p>{sourceSummary}</p>
+            <details><summary>Source status and time</summary>
+              {sourceStatus && <>
+                {[sourceStatus.imagery, sourceStatus.elevation, sourceStatus.buildings].map((source, index) =>
+                  <p key={index} data-source-classification={source.status}><strong>{source.label}</strong> · {source.status}. {source.detail}</p>)}
+                <p>{sourceStatus.sourceCapture.detail} {sourceStatus.background.detail}</p>
+              </>}
+            </details>
+          </section>
+          <WorldViewContextLayerControls value={contextLayers} onChange={setContextLayers} />
           <div className="wv-touch-controls">
             <button type="button" aria-pressed={touchInteraction} onClick={() => setTouchInteraction((active) => !active)}>
               {touchInteraction ? 'Done — scroll page' : `Interact with ${mode === 'split' ? 'map and graph' : mode}`}
             </button>
             <p>{touchInteraction ? 'Drag to explore. Use Done or the side scroll control to continue down the page.' : 'Swipe anywhere on the map or graph to scroll the page.'}</p>
           </div>
+          <WorldViewExploreShell prototypeEnabled={prototypeEnabled && showMap}
+            contextRequest={exploreContextRequest}
+            controls={fidelityControls} status={<p>{sourceSummary}. Capture dates unknown; background context only.</p>}
+            attribution={<p>© OpenStreetMap contributors. Approved Ohio terrain: USGS 3DEP/SRTM/GMTED2010, NOAA ETOPO1, NRCan CDEM via Mapzen/AWS Terrain Tiles. Contains information licensed under the Open Government Licence – Canada.</p>}
+            contextToken={exploreToken} recordedTimeLabel={recordedTime.atIso ? `Inspection time: ${recordedTime.atIso}` : 'Recorded time unavailable'}
+            cameraAdapter={cameraBridge} interactionEnabled={touchInteraction} onInteractionChange={setTouchInteraction}
+            onExploreChange={handleExploreChange} preview={<span>{activeTitle} · {visibleRow?.precision_class ?? 'geography unavailable'}</span>}
+            context={<div className="wv-explore-evidence-summary">{contextModel.modules.map(module =>
+              <section key={module.id}><h4>{module.title}</h4><p>{module.classification} · {module.status}</p>
+                <dl>{module.fields.map((field, index) => <div key={index}><dt>{field.label}</dt><dd>{field.value}</dd></div>)}</dl>
+                {(module.references.length > 0 || module.provenance) && <details><summary>Supplied sources and provenance</summary>
+                  <pre>{JSON.stringify({ references: module.references, provenance: module.provenance }, null, 2)}</pre></details>}
+              </section>)}</div>}>
           <div className={`wv-stage wv-stage-${mode}${touchInteraction ? ' wv-touch-active' : ''}`}>
             {showMap && (
               <WorldMapCanvas
@@ -610,6 +683,17 @@ export default function WorldView({
                 recordedTimeInstant={['selected', 'default'].includes(recordedTime.kind) ? recordedTime.atIso : null}
                 visualFidelity={visualFidelity}
                 onVisualFidelityCapabilities={setFidelityCapabilities}
+                cameraControlsRef={cameraControlsRef}
+                onSourceStatus={setSourceStatus}
+                explorationActive={exploring && touchInteraction}
+                contextOverlay={anchor => contextModel.indicator.exists && contextModel.indicator.eligible && <>
+                  {!contextOpen && anchor.visible && <button type="button" className="wv-spatial-context-icon"
+                    style={{ left: anchor.x, top: anchor.y }} aria-label="Open selected spatial context"
+                    onClick={() => setContextOpen(true)}>i</button>}
+                  {contextOpen && <WorldViewSpatialContextCard model={contextModel} anchor={anchor}
+                    viewport={{ width: anchor.width ?? 0, height: anchor.height ?? 0 }}
+                    onClose={() => setContextOpen(false)} onInspect={inspectContext} />}
+                </>}
                 rows={mapRows}
                 selectedKeys={selectedKeys}
                 onSelectRow={handleMapSelect}
@@ -647,6 +731,7 @@ export default function WorldView({
               </div>
             )}
           </div>
+          </WorldViewExploreShell>
           <TimelineScrubber
             stamps={stamps}
             time={recordedTime}
@@ -663,7 +748,7 @@ export default function WorldView({
             }
           />
         </div>
-        <EventInspector
+        <div ref={inspectorRef} className="wv-inspector-container"><EventInspector
           loadStatus={loadStatus}
           selected={selectedForMatch}
           visibleRow={visibleRow}
@@ -672,7 +757,7 @@ export default function WorldView({
           temporalAssessment={temporalAssessment}
           investigationContext={investigationContext}
           weather={weather}
-        />
+        /></div>
       </div>
 
       <TrustFooter

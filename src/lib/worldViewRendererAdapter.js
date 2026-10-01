@@ -503,6 +503,8 @@ function createMapLibreWorldViewRendererAdapter({
   getSelectedKeys,
   onSelectRow,
   onStackIdChange,
+  onSourceStatusChange,
+  onSelectedAnchorChange,
   shouldFlyTo,
   markFlew,
   initialFeatures,
@@ -516,6 +518,10 @@ function createMapLibreWorldViewRendererAdapter({
   let localCancelled = false
   let precisionGovernor = null
   let labelLayout = null
+  let activityState = 'visible-idle'
+  let imageryStatus = { status: 'loading' }
+  let anchorFeatures = initialFeatures ?? []
+  let lastAnchor = null
   const lifecycleListeners = []
 
   const cancelledNow = () => localCancelled || Boolean(isCancelled?.())
@@ -668,7 +674,22 @@ function createMapLibreWorldViewRendererAdapter({
       const ok = flyToSubject(map, coordinate, precisionClass)
       if (ok) markFlew?.()
     }
-    for (const [event, listener] of [['error', handleError], ['load', handleLoad]]) {
+    const handleRender = () => {
+      if (cancelledNow() || activityState === 'hidden') return
+      // Style/tile settling can also follow failed requests. It is not proof
+      // that photographic or cartographic content successfully loaded.
+      const feature = anchorFeatures.find(item => item.selected)
+      const coordinate = feature?.positions?.[0]
+      const width = map.getCanvas?.()?.clientWidth, height = map.getCanvas?.()?.clientHeight
+      const screen = coordinate ? map.project(coordinate) : null
+      const visible = Boolean(screen && screen.x >= 0 && screen.y >= 0 && screen.x <= width && screen.y <= height)
+      const next = { visible, x: visible ? screen.x : null, y: visible ? screen.y : null, width, height }
+      if (!lastAnchor || lastAnchor.visible !== visible || lastAnchor.width !== width || lastAnchor.height !== height
+        || visible && (Math.abs(lastAnchor.x - next.x) >= 0.5 || Math.abs(lastAnchor.y - next.y) >= 0.5)) {
+        lastAnchor = next; onSelectedAnchorChange?.(next)
+      }
+    }
+    for (const [event, listener] of [['error', handleError], ['load', handleLoad], ['render', handleRender]]) {
       map.on(event, listener)
       lifecycleListeners.push([event, listener])
     }
@@ -676,6 +697,7 @@ function createMapLibreWorldViewRendererAdapter({
 
   async function setFeatures(nextFeatures, nextSelectedKeys = getSelectedKeys?.()) {
     if (cancelledNow()) return
+    anchorFeatures = nextFeatures ?? []
     precisionGovernor?.update()
     if (!overlay || !deckLayerCtors || !labelLayout || stackId === FALLBACK_MAP_STACK_ID) return
     labelLayout.setFeatures(nextFeatures, nextSelectedKeys ?? new Set())
@@ -769,6 +791,14 @@ function createMapLibreWorldViewRendererAdapter({
     flyToSubjectCamera: flyToSubjectCamera,
     cancelCameraFlight: () => cancelMapCameraFlight(map),
     getCameraState,
+    getSourceStatus: () => ({ ...imageryStatus }),
+    setActivityState: next => {
+      if (!['visible-active', 'visible-idle', 'hidden'].includes(next)) return false
+      activityState = next
+      if (next === 'hidden') { lastAnchor = null; map?.stop?.(); onSelectedAnchorChange?.({ visible: false }) }
+      else { map?.resize?.(); requestRepaint(map) }
+      return Boolean(map)
+    },
     setCameraState,
     getVisualFidelityRenderState: () => {
       const state = mapCameraRenderState(map, activePrecisionClass(), precisionGovernor?.width())
@@ -801,6 +831,7 @@ export function createWorldViewRendererAdapter(args, {
   let reliefShadingEnabled
   let visualFidelityProfile
   let recordedTimeInstant = args?.recordedTimeInstant ?? null
+  let activityState = 'visible-idle'
   const cancelled = () => destroyed || Boolean(args?.isCancelled?.())
 
   async function start() {
@@ -810,6 +841,7 @@ export function createWorldViewRendererAdapter(args, {
       ...args,
       initialFeatures: features,
       recordedTimeInstant,
+      initialActivityState: activityState,
       getSelectedKeys: () => selectedKeys,
       onSelectRow,
       isCancelled: cancelled,
@@ -837,6 +869,7 @@ export function createWorldViewRendererAdapter(args, {
     // Updates can arrive during either dynamic import or renderer startup.
     // Replay the latest snapshot only once the renderer can accept layers.
     ready = true
+    impl?.setActivityState?.(activityState)
     impl?.setOnSelectRow?.(onSelectRow)
     if (reliefShadingEnabled !== undefined) impl?.setReliefShadingEnabled?.(reliefShadingEnabled)
     impl?.setRecordedTimeInstant?.(recordedTimeInstant)
@@ -867,6 +900,12 @@ export function createWorldViewRendererAdapter(args, {
     flyToSubjectCamera: (opts) => ready && !cancelled() ? impl?.flyToSubjectCamera?.(opts) ?? false : false,
     cancelCameraFlight: () => ready && !cancelled() ? impl?.cancelCameraFlight?.() ?? false : false,
     getCameraState: () => impl?.getCameraState?.() ?? null,
+    getSourceStatus: () => impl?.getSourceStatus?.() ?? null,
+    setActivityState: next => {
+      if (cancelled() || !['visible-active', 'visible-idle', 'hidden'].includes(next)) return false
+      activityState = next
+      return impl?.setActivityState?.(next) ?? false
+    },
     setCameraState: (serialized) => impl?.setCameraState?.(serialized) ?? false,
     getTerrainStatus: () => impl?.getTerrainStatus?.() ?? null,
     sampleTerrainHeights: (pairs, level) => impl?.sampleTerrainHeights?.(pairs, level) ?? null,
@@ -893,7 +932,7 @@ export function createWorldViewRendererAdapter(args, {
       ? impl?.getVisualFidelityCapabilities?.() ?? visualFidelityCapabilities({ reason: 'Effects unavailable on this fallback renderer.' })
       : visualFidelityCapabilities(),
     getVisualFidelityRenderState: () => impl?.getVisualFidelityRenderState?.() ?? null,
-    requestRender: () => impl?.requestRender?.(),
+    requestRender: () => activityState !== 'hidden' && impl?.requestRender?.(),
     destroy: () => {
       if (destroyed) return
       destroyed = true

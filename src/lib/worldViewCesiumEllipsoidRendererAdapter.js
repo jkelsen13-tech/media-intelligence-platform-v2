@@ -4,6 +4,7 @@ import { createRecordedLightingController } from './worldViewCesiumRecordedLight
 import { atmosphereAvailable, setAtmosphereEffect, atmosphereState } from './worldViewCesiumAtmosphere.js'
 import { createCesiumResolutionController, cesiumResolutionState } from './worldViewCesiumResolution.js'
 import { resolveVisualFidelityProfile, visualFidelityCapabilities, createVisualFidelityEffect } from './worldViewVisualFidelity.js'
+import { observeWorldViewImagery } from './worldViewRuntimeObservation.js'
 // R4 World View — ellipsoid globe renderer adapter (CesiumJS).
 //
 // DISPLAY-only: this module never rewrites Investigation Context,
@@ -314,6 +315,9 @@ export function createCesiumEllipsoidRendererAdapter({
   onSelectRow,
   onStackIdChange,
   onTerrainStatusChange,
+  onSourceStatusChange,
+  onSelectedAnchorChange,
+  initialActivityState = 'visible-idle',
   shouldFlyTo,
   markFlew,
   initialFeatures,
@@ -340,6 +344,9 @@ export function createCesiumEllipsoidRendererAdapter({
   const removeLayoutListeners = []
   let currentOnSelectRow = onSelectRow
   let localCancelled = false
+  let activityState = initialActivityState
+  let imageryObservation = null
+  let lastAnchor = null
   let Cesium = null
   // Stage D: bounded terrain state. `terrainPlan` holds the MIP-owned
   // provider; `terrainDegraded` records the honest ellipsoid fallback.
@@ -445,6 +452,9 @@ export function createCesiumEllipsoidRendererAdapter({
       ),
       maximumLevel: 19,
     })
+    // Observe actual image completion through the provider's public seam.
+    // Renderer readiness alone is not proof that imagery loaded.
+    imageryObservation = observeWorldViewImagery(imageryProvider, { onStatus: onSourceStatusChange, isCancelled: cancelledNow })
 
     // Minimal Viewer UI: bounded display-only terrain, no 3D tiles.
     try {
@@ -461,6 +471,7 @@ export function createCesiumEllipsoidRendererAdapter({
         sceneMode: Cesium.SceneMode.SCENE3D,
         infoBox: false,
         selectionIndicator: false,
+        useDefaultRenderLoop: activityState !== 'hidden',
         baseLayer: new Cesium.ImageryLayer(imageryProvider),
         ...(terrainPlan ? { terrainProvider: terrainPlan.provider } : {}),
       })
@@ -476,6 +487,7 @@ export function createCesiumEllipsoidRendererAdapter({
       return
     }
 
+    ownedHost.element.querySelector?.('.cesium-widget-credits')?.setAttribute('data-world-credits', 'true')
     // Fatal render/boot failure handling: never leave a black canvas with
     // Cesium's raw error modal. Log the real diagnostic, tear the viewer
     // down, and advance honestly to the MapLibre fallback stack. No pins or
@@ -515,6 +527,7 @@ export function createCesiumEllipsoidRendererAdapter({
 
     // Request-only rendering governance: only redraw on camera/props changes.
     viewer.scene.requestRenderMode = true
+    setActivityState(activityState)
     removeLayoutListeners.push(viewer.scene.postRender.addEventListener(() => {
       renderedFrames += 1
       if (!viewer || cancelledNow()) return
@@ -527,6 +540,7 @@ export function createCesiumEllipsoidRendererAdapter({
       layoutTiming.maxMs = Math.max(layoutTiming.maxMs, elapsed)
       layoutTiming.passes += 1
       layoutTiming.entityCount = entities.length
+      publishSelectedAnchor()
       if (changed) viewer.scene.requestRender?.()
     }))
 
@@ -704,7 +718,33 @@ export function createCesiumEllipsoidRendererAdapter({
   }
 
   function requestRender() {
-    viewer?.scene?.requestRender?.()
+    if (activityState !== 'hidden') viewer?.scene?.requestRender?.()
+  }
+
+  function setActivityState(next) {
+    if (!['visible-active', 'visible-idle', 'hidden'].includes(next)) return false
+    activityState = next
+    if (!viewer || cancelledNow()) return false
+    // Stop deliberate globe updates while hidden. In-flight network completion
+    // may still arrive; no provider billing or high-cost resource is activated.
+    viewer.useDefaultRenderLoop = next !== 'hidden'
+    if (next !== 'hidden') { viewer.resize?.(); viewer.scene.requestRender?.() }
+    else { lastAnchor = null; onSelectedAnchorChange?.({ visible: false }) }
+    return true
+  }
+
+  function publishSelectedAnchor() {
+    if (!onSelectedAnchorChange || !viewer || !Cesium) return
+    const entity = entities.find(item => item.__mipSelected && item.show)
+    const width = viewer.canvas.clientWidth, height = viewer.canvas.clientHeight
+    const position = entity?.position?.getValue?.(viewer.clock.currentTime)
+    const screen = position ? viewer.scene.cartesianToCanvasCoordinates(position) : null
+    const visible = Boolean(screen && screen.x >= 0 && screen.y >= 0 && screen.x <= width && screen.y <= height)
+    const next = { visible, x: visible ? screen.x : null, y: visible ? screen.y : null, width, height }
+    if (lastAnchor && lastAnchor.visible === visible && lastAnchor.width === width && lastAnchor.height === height
+      && (!visible || Math.abs(lastAnchor.x - next.x) < 0.5 && Math.abs(lastAnchor.y - next.y) < 0.5)) return
+    lastAnchor = next
+    onSelectedAnchorChange(next)
   }
 
   // Stage D visual-continuity repair: user-facing relief shading toggle.
@@ -835,6 +875,8 @@ export function createCesiumEllipsoidRendererAdapter({
     for (const remove of removeLayoutListeners.splice(0)) remove?.()
     labelMeasurements.clear()
     terrainPlan?.destroy?.()
+    imageryObservation?.dispose()
+    imageryObservation = null
     destroyCesiumResources({ eventHandler, viewer })
     ownedHost?.destroy()
     ownedHost = null
@@ -882,6 +924,8 @@ export function createCesiumEllipsoidRendererAdapter({
     setVisualFidelityProfile,
     setRecordedTimeInstant: value => recordedLighting.setTime(value),
     getVisualFidelityCapabilities,
+    getSourceStatus: () => imageryObservation?.snapshot() ?? null,
+    setActivityState,
     getVisualFidelityRenderState: () => ({ cameraGovernance: cameraGovernanceState(), renderedFrames, layoutTiming: { ...layoutTiming }, markers: entities.map(e => ({ id: e.id, visible: e.show, labelVisible: e.label?.show?.getValue(viewer.clock.currentTime) === true, selected: e.__mipSelected })), refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     destroy,

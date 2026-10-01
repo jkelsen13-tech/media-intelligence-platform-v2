@@ -19,6 +19,9 @@ import { visualFidelityCapabilities, resolveVisualFidelityProfile } from '../lib
 import { createCameraFraming } from '../lib/worldViewCameraFraming'
 import { createCameraMemory, northAmericaCameraState } from '../lib/worldViewCameraMemory.js'
 import { activateAtlasMarker, atlasDisplayMetrics, atlasLabelLayout, atlasLabelText, atlasMarkerId, atlasScreenScale } from '../lib/worldViewAtlasLabelLayout.js'
+import { resolveWorldViewSourceStatus } from '../lib/worldViewSourceStatus.js'
+import { createWorldViewPilotBookmarks } from '../lib/worldViewPilotBookmarks.js'
+import { createWorldViewUsage, worldViewResourceObservation } from '../lib/worldViewResourcePolicy.js'
 
 const MAP_W = 960
 const MAP_H = 480
@@ -29,12 +32,13 @@ const BORDERS = worldObjects.countries
   ? mesh(worldAtlas, worldObjects.countries, (a, b) => a !== b)
   : null
 
-function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attribution }) {
+function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attribution, contextOverlay }) {
   const features = useMemo(() => projectionMarkerRecords(rows, selectedKeys), [rows, selectedKeys])
   const svgRef = useRef(null)
   const labelRefs = useRef(new Map())
   const mainLabelRefs = useRef(new Map())
   const [screenScale, setScreenScale] = useState(1)
+  const [contextAnchor, setContextAnchor] = useState({ visible: false })
   const metrics = atlasDisplayMetrics(screenScale)
   const [labelLayout, setLabelLayout] = useState(() => ({ labels: new Set(), details: new Set() }))
   const geometry = useMemo(() => {
@@ -83,6 +87,14 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
     }
     const update = () => {
       if (disposed || checkScale()) return
+      const selected = geometry.markers.find(marker => marker.selected)
+      const matrix = svg?.getScreenCTM?.(), bounds = svg?.parentElement?.getBoundingClientRect?.()
+      if (selected && matrix && bounds) {
+        const x = matrix.a * selected.x + matrix.c * selected.y + matrix.e - bounds.x
+        const y = matrix.b * selected.x + matrix.d * selected.y + matrix.f - bounds.y
+        setContextAnchor({ visible: x >= 0 && y >= 0 && x <= bounds.width && y <= bounds.height,
+          x, y, width: bounds.width, height: bounds.height })
+      } else setContextAnchor({ visible: false })
       // Inline fonts/offsets have reached the SVG before this layout effect.
       const next = atlasLabelLayout(geometry.markers, {
         width: MAP_W, height: MAP_H, screenScale,
@@ -170,6 +182,7 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
           )
         })}
       </svg>
+      {contextOverlay?.(contextAnchor)}
       {features.length === 0 && (
         <div className="wv-map-empty">
           <p>{emptyMessage}</p>
@@ -181,7 +194,8 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
   )
 }
 
-export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSelectRow, emptyMessage, recordedTimeInstant, visualFidelity, onVisualFidelityCapabilities }) {
+export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSelectRow, emptyMessage, recordedTimeInstant, visualFidelity,
+  onVisualFidelityCapabilities, cameraControlsRef, onSourceStatus, contextOverlay, explorationActive = false }) {
   const localMemoryRef = useRef(null)
   if (!localMemoryRef.current) localMemoryRef.current = createCameraMemory()
   const memory = cameraMemory ?? localMemoryRef.current
@@ -195,6 +209,11 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   const [stackId, setStackId] = useState(() => memory.getStackId() ?? DEFAULT_MAP_STACK_ID)
   const [terrainStatus, setTerrainStatus] = useState(null)
   const [rendererReady, setRendererReady] = useState(false)
+  const [imageryStatus, setImageryStatus] = useState(null)
+  const [contextAnchor, setContextAnchor] = useState({ visible: false })
+  const [bookmarkDisclosure, setBookmarkDisclosure] = useState(null)
+  const usageRef = useRef(null)
+  if (!usageRef.current) usageRef.current = createWorldViewUsage()
   const stack = mapStackById(stackId)
   const features = useMemo(() => projectionMarkerRecords(rows, selectedKeys), [rows, selectedKeys])
   const first = features.find((feature) => feature.selected)
@@ -212,6 +231,8 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     let cancelled = false
     setRendererReady(false)
     setTerrainStatus(null)
+    setImageryStatus(null)
+    setContextAnchor({ visible: false })
     adapterRef.current?.destroy?.()
     framingRef.current.resetRenderer()
     const adapter = createWorldViewRendererAdapter({
@@ -231,11 +252,14 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
         if (cancelled) return
         setTerrainStatus(next)
       },
+      onSourceStatusChange: next => { if (!cancelled) setImageryStatus(next) },
+      onSelectedAnchorChange: next => { if (!cancelled) setContextAnchor(next) },
       initialFeatures: features,
       recordedTimeInstant,
       isCancelled: () => cancelled,
     })
     adapterRef.current = adapter
+    adapter.setActivityState?.(document.hidden ? 'hidden' : 'visible-idle')
     void adapter.mount().then(() => {
       if (!cancelled) {
         setRendererReady(true)
@@ -253,6 +277,61 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     // Reboot only when the stack changes. Layer updates happen in the next effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stackId])
+
+  // Application-owned camera seam, separate from the acceptance-only probes.
+  useEffect(() => {
+    if (!cameraControlsRef) return undefined
+    const controls = {
+      getCameraState: () => adapterRef.current?.getCameraState?.() ?? null,
+      setCameraState: value => adapterRef.current?.setCameraState?.(value) ?? false,
+      cancelCameraFlight: () => adapterRef.current?.cancelCameraFlight?.() ?? false,
+    }
+    cameraControlsRef.current = controls
+    return () => { if (cameraControlsRef.current === controls) cameraControlsRef.current = null }
+  }, [cameraControlsRef])
+
+  useEffect(() => {
+    if (usageRef.current.snapshot().state === 'disposed') usageRef.current = createWorldViewUsage()
+    const usage = usageRef.current
+    const update = () => {
+      const state = document.hidden ? 'hidden' : explorationActive ? 'visible-active' : 'visible-idle'
+      usage.transition(state)
+      adapterRef.current?.setActivityState?.(state)
+    }
+    update()
+    document.addEventListener('visibilitychange', update)
+    return () => document.removeEventListener('visibilitychange', update)
+  }, [explorationActive, stackId, rendererReady])
+
+  useEffect(() => {
+    let observer
+    try {
+      observer = new PerformanceObserver(list => {
+        for (const entry of list.getEntries()) {
+          const observation = worldViewResourceObservation(entry)
+          if (observation) usageRef.current.observeRequest(observation)
+        }
+      })
+      observer.observe({ type: 'resource' })
+    } catch { /* unavailable timing remains unobserved */ }
+    const probe = { snapshot: () => usageRef.current.snapshot(),
+      device: () => ({ deviceMemoryGb: navigator.deviceMemory ?? null,
+        networkClass: navigator.connection?.effectiveType ?? null,
+        javascriptHeapBytes: performance.memory?.usedJSHeapSize ?? null,
+        evidenceLayer: 'browser-observation', highCostProviderActive: false }) }
+    window.__MIP_WORLD_VIEW_USAGE_PROBE__ = probe
+    return () => {
+      observer?.disconnect()
+      usageRef.current.transition('disposed')
+      if (window.__MIP_WORLD_VIEW_USAGE_PROBE__ === probe) delete window.__MIP_WORLD_VIEW_USAGE_PROBE__
+    }
+  }, [])
+
+  const sourceStatus = useMemo(() => resolveWorldViewSourceStatus({ stackId,
+    rendererReady: stackId === FALLBACK_MAP_STACK_ID || rendererReady, terrainStatus,
+    requestedProfile: visualFidelity, imageryStatus }), [stackId, rendererReady, terrainStatus, visualFidelity, imageryStatus])
+  useEffect(() => { onSourceStatus?.(sourceStatus) }, [sourceStatus, onSourceStatus])
+  const pilotBookmarks = createWorldViewPilotBookmarks({ coordinate, precisionClass: first?.row?.precision_class })
 
   useEffect(() => {
     const adapter = adapterRef.current
@@ -332,6 +411,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
         onSelectRow={onSelectRow}
         emptyMessage={emptyMessage}
         attribution={stack.attribution}
+        contextOverlay={contextOverlay}
       />
     )
   }
@@ -343,6 +423,18 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
           onClick={() => adapterRef.current?.setCameraState?.(northAmericaCameraState())}>
           North America overview
         </button>
+        <details className="wv-pilot-bookmarks">
+          <summary>Pilot camera bookmarks</summary>
+          <div role="group" aria-label="Pilot camera bookmarks">
+            {pilotBookmarks.map(bookmark => <button type="button" key={bookmark.id} disabled={!rendererReady}
+              onClick={() => {
+                if (adapterRef.current?.setCameraState?.(bookmark.cameraState)) {
+                  usageRef.current.explore(); setBookmarkDisclosure(bookmark.disclosure)
+                }
+              }}>{bookmark.label}</button>)}
+          </div>
+          {bookmarkDisclosure && <p className="wv-meta" role="status">{bookmarkDisclosure}</p>}
+        </details>
         <button type="button" disabled={!rendererReady}
           onClick={() => adapterRef.current?.cancelCameraFlight?.()}>
           Stop camera flight
@@ -357,6 +449,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       </div>
     <div className="wv-map wv-map-gl" data-map-stack={stackId}>
       <div ref={hostRef} className="wv-map-host" />
+      {contextOverlay?.(contextAnchor)}
       {features.length === 0 && (
         <div className="wv-map-empty">
           <p>{emptyMessage}</p>

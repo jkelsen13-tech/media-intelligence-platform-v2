@@ -2,6 +2,22 @@
 
 .wv-touch-controls { display: none; }
 
+.wv-source-status { padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: var(--fs-meta); }
+.wv-source-status p { margin: 4px 0; line-height: 1.4; overflow-wrap: anywhere; }
+.wv-source-status summary, .wv-pilot-bookmarks summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+.wv-camera-controls { display: flex; flex-wrap: wrap; gap: 6px; }
+.wv-pilot-bookmarks { width: 100%; }
+.wv-pilot-bookmarks > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.wv-spatial-context-icon { position: absolute; z-index: 3; width: 44px; height: 44px; transform: translate(-50%, -50%); border: 2px solid var(--accent); border-radius: 50%; color: var(--accent); background: var(--bg-panel); font: bold 18px Georgia, serif; cursor: pointer; }
+.wv-explore-shell .wv-spatial-context-icon { border-radius: 50%; padding: 0; color: var(--accent); }
+.wv-stage [data-world-credits] { pointer-events: auto; }
+.wv-inspector-container { min-width: 0; }
+.wv-inspector-container > .wv-inspector { height: 100%; }
+.wv-explore-open .wv-explore-map .wv-camera-controls, .wv-explore-open .wv-explore-map .wv-terrain-disclosure { display: none; }
+.wv-explore-evidence-summary dl > div { padding: 5px 0; border-bottom: 1px solid var(--border-color); }
+.wv-explore-evidence-summary dt { font-weight: 600; font-size: 12px; }
+.wv-explore-evidence-summary dd { margin: 2px 0; overflow-wrap: anywhere; font-size: 12px; }
+
 .wv-map-panel { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; }
 .wv-map-panel > .wv-map { flex: 1; }
 .wv-camera-controls button {

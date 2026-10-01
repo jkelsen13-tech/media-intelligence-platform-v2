@@ -1,0 +1,33 @@
+/* Selected-only overlay: parent map container supplies position: relative. */
+.wv-spatial-context { position: absolute; inset: 0; z-index: 4; pointer-events: none; font-family: var(--font-sans); color: var(--text-primary); }
+.wv-context-leader { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.wv-context-leader line { stroke: var(--accent); stroke-width: 1.5; }
+.wv-context-leader circle { fill: var(--bg-panel); stroke: var(--accent); stroke-width: 2; }
+.wv-context-card, .wv-context-sheet { position: absolute; box-sizing: border-box; pointer-events: auto; overflow: auto; overscroll-behavior: contain; background: var(--bg-panel); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.2); padding: 12px; font-size: var(--fs-meta); line-height: 1.45; }
+.wv-context-card header, .wv-context-sheet header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.wv-context-card h3, .wv-context-sheet h3 { margin: 0 0 8px; font-size: var(--fs-title); overflow-wrap: anywhere; }
+.wv-context-eyebrow, .wv-context-kind { color: var(--text-secondary); font-size: 11px; }
+.wv-context-card button, .wv-context-sheet button, .wv-context-selected-affordance { min-height: 44px; border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px; color: var(--text-primary); background: var(--bg-elevated); font: inherit; cursor: pointer; }
+.wv-spatial-context button:focus-visible, .wv-spatial-context a:focus-visible, .wv-context-layers input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+.wv-context-card .wv-context-close, .wv-context-sheet .wv-context-close { min-width: 44px; flex: 0 0 44px; font-size: 22px; line-height: 1; }
+.wv-context-module { border-top: 1px solid var(--border-color); }
+.wv-context-module h4 { margin: 0; }
+.wv-context-module h4 button { width: 100%; display: flex; align-items: center; gap: 8px; justify-content: space-between; border: 0; border-radius: 0; background: transparent; text-align: left; }
+.wv-context-module dl { margin: 4px 0 12px; }
+.wv-context-module dl > div { margin-top: 8px; }
+.wv-context-module dt { color: var(--text-secondary); font-size: 11px; }
+.wv-context-module dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.wv-context-module h5 { margin: 12px 0 4px; }
+.wv-context-module ul { padding-left: 18px; }
+.wv-context-module pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.5 var(--font-mono); margin: 4px 0 12px; }
+.wv-context-module a { color: var(--accent); overflow-wrap: anywhere; }
+.wv-context-sheet { inset: auto 8px 48px; max-height: min(48%, 360px); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+.wv-context-note { color: var(--text-secondary); margin: 0 0 8px; }
+.wv-context-selected-affordance { position: absolute; bottom: 48px; left: 12px; pointer-events: auto; }
+.wv-context-inspect { width: 100%; margin-top: 8px; }
+.wv-context-layers { min-width: 0; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); background: var(--bg-panel); font-size: var(--fs-meta); }
+.wv-context-layers legend { padding: 0 4px; font-weight: 600; }
+.wv-context-layers p { margin: 0 0 6px; color: var(--text-secondary); }
+.wv-context-layers > div { display: flex; flex-wrap: wrap; gap: 2px 12px; }
+.wv-context-layers label { display: inline-flex; align-items: center; min-height: 44px; gap: 6px; cursor: pointer; }
+.wv-context-layers input { accent-color: var(--accent); }

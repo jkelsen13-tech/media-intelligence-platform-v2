@@ -1,0 +1,409 @@
+{
+  "evidenceLayer": "cloud-chromium-isolated-display-fixture",
+  "sourceCoverageQualified": false,
+  "actualLiveVerified": false,
+  "physicalDeviceQualified": false,
+  "journeys": [
+    {
+      "width": 1180,
+      "height": 900,
+      "screenshots": [
+        {
+          "direction": "immersive",
+          "file": "explore-immersive-1180.png",
+          "globeViewport": {
+            "x": 19,
+            "y": 87,
+            "width": 1142,
+            "height": 754
+          }
+        },
+        {
+          "direction": "immersive",
+          "expanded": true,
+          "file": "explore-immersive-expanded-1180.png"
+        },
+        {
+          "direction": "dock",
+          "file": "explore-dock-1180.png",
+          "globeViewport": {
+            "x": 123,
+            "y": 87,
+            "width": 778,
+            "height": 754
+          }
+        },
+        {
+          "direction": "dock",
+          "expanded": true,
+          "file": "explore-dock-expanded-1180.png"
+        }
+      ],
+      "errors": [],
+      "requests": {
+        "imagery": 181,
+        "terrain": 9,
+        "backendWrites": 0
+      },
+      "usage": {
+        "productSessions": 1,
+        "state": "visible-idle",
+        "visibleMinutes": 0.27674499999999536,
+        "explorationMinutes": 0.0038683333333348856,
+        "highFidelityMinutes": 0,
+        "highCostActive": false,
+        "explorationActions": 7,
+        "observedRequests": 190,
+        "observableBytes": 0,
+        "unknownByteRequests": 190,
+        "providers": [
+          {
+            "provider": "openstreetmap",
+            "kind": "imagery",
+            "requests": 181,
+            "observableBillableUnits": null,
+            "billableUnitObservations": 0,
+            "observableCostUsd": null,
+            "costObservations": 0
+          },
+          {
+            "provider": "mapzen-aws",
+            "kind": "terrain",
+            "requests": 9,
+            "observableBillableUnits": null,
+            "billableUnitObservations": 0,
+            "observableCostUsd": null,
+            "costObservations": 0
+          }
+        ],
+        "externalAnalytics": false,
+        "authoritativeBudgetEnforcement": false,
+        "device": {
+          "deviceMemoryGb": 16,
+          "networkClass": "4g",
+          "javascriptHeapBytes": 37473742,
+          "evidenceLayer": "browser-observation",
+          "highCostProviderActive": false
+        }
+      },
+      "idleObservation": {
+        "durationMs": 400,
+        "frameDelta": 1,
+        "requestRenderMode": true,
+        "layoutTiming": {
+          "lastMs": 0,
+          "maxMs": 1.599999999627471,
+          "passes": 97,
+          "entityCount": 1
+        }
+      },
+      "cameraRestoration": "PASS",
+      "canonicalAndTimePreserved": "PASS",
+      "selectedContext": "PASS",
+      "nativeAttribution": "PASS",
+      "closeObliquePoiInViewport": "PASS",
+      "syntheticVisibilitySuspendResume": "PASS"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "screenshots": [
+        {
+          "direction": "immersive",
+          "file": "explore-immersive-390.png",
+          "globeViewport": {
+            "x": 9,
+            "y": 119,
+            "width": 372,
+            "height": 616
+          }
+        },
+        {
+          "direction": "immersive",
+          "expanded": true,
+          "file": "explore-immersive-expanded-390.png"
+        },
+        {
+          "direction": "dock",
+          "file": "explore-dock-390.png",
+          "globeViewport": {
+            "x": 9,
+            "y": 119,
+            "width": 306,
+            "height": 555
+          }
+        },
+        {
+          "direction": "dock",
+          "expanded": true,
+          "file": "explore-dock-expanded-390.png"
+        }
+      ],
+      "errors": [],
+      "requests": {
+        "imagery": 113,
+        "terrain": 14,
+        "backendWrites": 0
+      },
+      "usage": {
+        "productSessions": 1,
+        "state": "visible-idle",
+        "visibleMinutes": 0.19567833333332868,
+        "explorationMinutes": 0.003935000000001552,
+        "highFidelityMinutes": 0,
+        "highCostActive": false,
+        "explorationActions": 7,
+        "observedRequests": 127,
+        "observableBytes": 0,
+        "unknownByteRequests": 127,
+        "providers": [
+          {
+            "provider": "openstreetmap",
+            "kind": "imagery",
+            "requests": 113,
+            "observableBillableUnits": null,
+            "billableUnitObservations": 0,
+            "observableCostUsd": null,
+            "costObservations": 0
+          },
+          {
+            "provider": "mapzen-aws",
+            "kind": "terrain",
+            "requests": 14,
+            "observableBillableUnits": null,
+            "billableUnitObservations": 0,
+            "observableCostUsd": null,
+            "costObservations": 0
+          }
+        ],
+        "externalAnalytics": false,
+        "authoritativeBudgetEnforcement": false,
+        "device": {
+          "deviceMemoryGb": 16,
+          "networkClass": "4g",
+          "javascriptHeapBytes": 36068060,
+          "evidenceLayer": "browser-observation",
+          "highCostProviderActive": false
+        }
+      },
+      "idleObservation": {
+        "durationMs": 400,
+        "frameDelta": 1,
+        "requestRenderMode": true,
+        "layoutTiming": {
+          "lastMs": 0,
+          "maxMs": 3.1000000000931323,
+          "passes": 83,
+          "entityCount": 1
+        }
+      },
+      "cameraRestoration": "PASS",
+      "canonicalAndTimePreserved": "PASS",
+      "selectedContext": "PASS",
+      "nativeAttribution": "PASS",
+      "closeObliquePoiInViewport": "PASS",
+      "syntheticVisibilitySuspendResume": "PASS"
+    },
+    {
+      "width": 834,
+      "height": 900,
+      "screenshots": [
+        {
+          "direction": "immersive",
+          "file": "explore-immersive-834.png",
+          "globeViewport": {
+            "x": 19,
+            "y": 87,
+            "width": 796,
+            "height": 740
+          }
+        },
+        {
+          "direction": "immersive",
+          "expanded": true,
+          "file": "explore-immersive-expanded-834.png"
+        },
+        {
+          "direction": "dock",
+          "file": "explore-dock-834.png",
+          "globeViewport": {
+            "x": 123,
+            "y": 87,
+            "width": 432,
+            "height": 740
+          }
+        },
+        {
+          "direction": "dock",
+          "expanded": true,
+          "file": "explore-dock-expanded-834.png"
+        }
+      ],
+      "errors": [],
+      "requests": {
+        "imagery": 136,
+        "terrain": 11,
+        "backendWrites": 0
+      },
+      "usage": {
+        "productSessions": 1,
+        "state": "visible-idle",
+        "visibleMinutes": 0.253661666666662,
+        "explorationMinutes": 0.0035716666666635623,
+        "highFidelityMinutes": 0,
+        "highCostActive": false,
+        "explorationActions": 7,
+        "observedRequests": 147,
+        "observableBytes": 0,
+        "unknownByteRequests": 147,
+        "providers": [
+          {
+            "provider": "openstreetmap",
+            "kind": "imagery",
+            "requests": 136,
+            "observableBillableUnits": null,
+            "billableUnitObservations": 0,
+            "observableCostUsd": null,
+            "costObservations": 0
+          },
+          {
+            "provider": "mapzen-aws",
+            "kind": "terrain",
+            "requests": 11,
+            "observableBillableUnits": null,
+            "billableUnitObservations": 0,
+            "observableCostUsd": null,
+            "costObservations": 0
+          }
+        ],
+        "externalAnalytics": false,
+        "authoritativeBudgetEnforcement": false,
+        "device": {
+          "deviceMemoryGb": 16,
+          "networkClass": "4g",
+          "javascriptHeapBytes": 35642532,
+          "evidenceLayer": "browser-observation",
+          "highCostProviderActive": false
+        }
+      },
+      "idleObservation": {
+        "durationMs": 400,
+        "frameDelta": 1,
+        "requestRenderMode": true,
+        "layoutTiming": {
+          "lastMs": 0,
+          "maxMs": 1.6000000000931323,
+          "passes": 85,
+          "entityCount": 1
+        }
+      },
+      "cameraRestoration": "PASS",
+      "canonicalAndTimePreserved": "PASS",
+      "selectedContext": "PASS",
+      "nativeAttribution": "PASS",
+      "closeObliquePoiInViewport": "PASS",
+      "syntheticVisibilitySuspendResume": "PASS"
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "screenshots": [
+        {
+          "direction": "immersive",
+          "file": "explore-immersive-844.png",
+          "globeViewport": {
+            "x": 19,
+            "y": 79,
+            "width": 806,
+            "height": 238
+          }
+        },
+        {
+          "direction": "immersive",
+          "expanded": true,
+          "file": "explore-immersive-expanded-844.png"
+        },
+        {
+          "direction": "dock",
+          "file": "explore-dock-844.png",
+          "globeViewport": {
+            "x": 123,
+            "y": 79,
+            "width": 442,
+            "height": 238
+          }
+        },
+        {
+          "direction": "dock",
+          "expanded": true,
+          "file": "explore-dock-expanded-844.png"
+        }
+      ],
+      "errors": [],
+      "requests": {
+        "imagery": 124,
+        "terrain": 16,
+        "backendWrites": 0
+      },
+      "usage": {
+        "productSessions": 1,
+        "state": "visible-idle",
+        "visibleMinutes": 0.21516666666666667,
+        "explorationMinutes": 0.0021683333333271243,
+        "highFidelityMinutes": 0,
+        "highCostActive": false,
+        "explorationActions": 7,
+        "observedRequests": 140,
+        "observableBytes": 0,
+        "unknownByteRequests": 140,
+        "providers": [
+          {
+            "provider": "openstreetmap",
+            "kind": "imagery",
+            "requests": 124,
+            "observableBillableUnits": null,
+            "billableUnitObservations": 0,
+            "observableCostUsd": null,
+            "costObservations": 0
+          },
+          {
+            "provider": "mapzen-aws",
+            "kind": "terrain",
+            "requests": 16,
+            "observableBillableUnits": null,
+            "billableUnitObservations": 0,
+            "observableCostUsd": null,
+            "costObservations": 0
+          }
+        ],
+        "externalAnalytics": false,
+        "authoritativeBudgetEnforcement": false,
+        "device": {
+          "deviceMemoryGb": 16,
+          "networkClass": "4g",
+          "javascriptHeapBytes": 35162460,
+          "evidenceLayer": "browser-observation",
+          "highCostProviderActive": false
+        }
+      },
+      "idleObservation": {
+        "durationMs": 400,
+        "frameDelta": 1,
+        "requestRenderMode": true,
+        "layoutTiming": {
+          "lastMs": 0.09999999962747097,
+          "maxMs": 1.6000000000931323,
+          "passes": 87,
+          "entityCount": 1
+        }
+      },
+      "cameraRestoration": "PASS",
+      "canonicalAndTimePreserved": "PASS",
+      "selectedContext": "PASS",
+      "nativeAttribution": "PASS",
+      "closeObliquePoiInViewport": "PASS",
+      "syntheticVisibilitySuspendResume": "PASS"
+    }
+  ],
+  "status": "passed"
+}
