@@ -1,12 +1,9 @@
-import { useId, useRef, useState } from 'react'
-import { ArrowSquareOut, FileText, LinkSimple, Stack, X } from '@phosphor-icons/react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { ArrowSquareOut, Buildings, CalendarBlank, ChartLineUp, Clock, FileText, Leaf, LinkSimple, MapPin, Stack, Users, X } from '@phosphor-icons/react'
 import '../styles/world-view-billboard-prototype.css'
+import { worldBillboardModuleTabs } from '../lib/worldViewBillboardModules.js'
 
-const TABS = [
-  { key: 'evidence', label: 'Evidence', Icon: FileText },
-  { key: 'context', label: 'Context', Icon: Stack },
-  { key: 'sources', label: 'Sources', Icon: LinkSimple },
-]
+const MODULE_ICONS = { evidence:FileText, context:Stack, sources:LinkSimple, event:CalendarBlank, people:Users, place:MapPin, market:ChartLineUp, environment:Leaf, infrastructure:Buildings, timelineRelationships:Clock }
 const suppliedText = value => typeof value === 'string' || typeof value === 'number' ? String(value) : null
 const safeUrl = value => typeof value === 'string' && /^https?:\/\//i.test(value) ? value : null
 const itemKey = item => item?.key ?? item?.id
@@ -55,8 +52,12 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
   const prefix = useId()
   const tabRefs = useRef({})
   const entrance = useRef({ key: null, origin: null })
+  const overlayRef = useRef(null), cardRef = useRef(null), tetherRef = useRef(null), attachmentRef = useRef(null), gradientRef = useRef(null)
+  const latestPaint = useRef(null), paintAttachment = useRef(null)
   const [tabState, setTabState] = useState({ key: selectedKey, tab: 'evidence' })
-  const tab = tabState.key === selectedKey ? tabState.tab : 'evidence'
+  const tabs = worldBillboardModuleTabs(model).map(entry => ({ ...entry, key:entry.id, Icon:MODULE_ICONS[entry.id] ?? Stack }))
+  const tabScope = tabs.map(entry => entry.id).join('|')
+  const tab = tabState.key === selectedKey && tabState.scope === tabScope && tabs.some(entry => entry.id === tabState.tab) ? tabState.tab : 'evidence'
   const selected = layout?.selected?.key === selectedKey ? layout.selected : null
   // Capture the renderer's projected canonical anchor at selection time. Frame,
   // camera and tab updates neither restart this entrance nor move its origin.
@@ -69,42 +70,90 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
   }
   const cluster = layout?.markers?.find(marker => marker.key === selectedKey && marker.state === 'cluster')
   const members = cluster ? asEntries(cluster.memberKeys).map(key => items.find(item => itemKey(item) === key)).filter(Boolean) : []
+  const card = selected?.card
+  latestPaint.current = { selected, cluster }
+  // Measure only the painted card endpoint. The canonical projected anchor is
+  // always the renderer's current value; no camera/time/selection is changed.
+  paintAttachment.current = () => {
+    const value = latestPaint.current
+    if (!value?.selected?.tether || value.cluster || !cardRef.current || !overlayRef.current || !tetherRef.current) return
+    const bounds = cardRef.current.getBoundingClientRect(), origin = overlayRef.current.getBoundingClientRect()
+    const anchor = value.selected.anchor
+    if (!Number.isFinite(anchor?.x) || !Number.isFinite(anchor?.y) || !bounds.width || !bounds.height) return
+    const left = bounds.left-origin.left, top = bounds.top-origin.top, right = bounds.right-origin.left, bottom = bounds.bottom-origin.top
+    let x = Math.min(right,Math.max(left,anchor.x)), y = Math.min(bottom,Math.max(top,anchor.y))
+    if (anchor.x >= left && anchor.x <= right && anchor.y >= top && anchor.y <= bottom) {
+      const edges = [{distance:anchor.x-left,x:left,y:anchor.y},{distance:right-anchor.x,x:right,y:anchor.y},
+        {distance:anchor.y-top,x:anchor.x,y:top},{distance:bottom-anchor.y,x:anchor.x,y:bottom}].sort((a,b)=>a.distance-b.distance)
+      x=edges[0].x;y=edges[0].y
+    }
+    tetherRef.current.setAttribute('x2',x);tetherRef.current.setAttribute('y2',y)
+    attachmentRef.current?.setAttribute('cx',x);attachmentRef.current?.setAttribute('cy',y)
+    gradientRef.current?.setAttribute('x2',x);gradientRef.current?.setAttribute('y2',y)
+  }
+  // Anchor/frame updates get one synchronous paint without restarting motion.
+  useLayoutEffect(() => { paintAttachment.current?.() })
+  useLayoutEffect(() => {
+    if (!selected?.card || cluster || typeof window === 'undefined') return
+    let frame = null, stopped = false
+    const started = performance.now()
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const paint = now => {
+      frame=null
+      if (stopped || document.hidden) return
+      paintAttachment.current?.()
+      if (!reduced && now-started < 260) frame=requestAnimationFrame(paint)
+    }
+    const visibility = () => {
+      if (frame != null) cancelAnimationFrame(frame)
+      frame=null
+      if (!document.hidden) paintAttachment.current?.()
+    }
+    if (!document.hidden) frame=requestAnimationFrame(paint)
+    document.addEventListener('visibilitychange',visibility)
+    return () => { stopped=true;if(frame != null) cancelAnimationFrame(frame);document.removeEventListener('visibilitychange',visibility) }
+  }, [selectedKey, card?.x, card?.y, card?.width, card?.height, Boolean(cluster), tab])
   const activate = callback => callback?.()
   const closeOnEscape = event => {
     if (event.key === 'Escape') { event.stopPropagation(); onClose?.() }
   }
   const moveTab = (event, key) => {
-    const index = TABS.findIndex(candidate => candidate.key === key)
+    const index = tabs.findIndex(candidate => candidate.key === key)
     let next
-    if (event.key === 'ArrowRight') next = (index + 1) % TABS.length
-    if (event.key === 'ArrowLeft') next = (index + TABS.length - 1) % TABS.length
+    if (event.key === 'ArrowRight') next = (index + 1) % tabs.length
+    if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length
     if (event.key === 'Home') next = 0
-    if (event.key === 'End') next = TABS.length - 1
+    if (event.key === 'End') next = tabs.length - 1
     if (next == null) return
     event.preventDefault(); event.stopPropagation()
-    const nextKey = TABS[next].key
-    setTabState({ key: selectedKey, tab: nextKey }); tabRefs.current[nextKey]?.focus()
+    const nextKey = tabs[next].key
+    setTabState({ key: selectedKey, tab: nextKey, scope:tabScope }); tabRefs.current[nextKey]?.focus({preventScroll:true}); tabRefs.current[nextKey]?.scrollIntoView?.({block:'nearest',inline:'nearest'})
   }
   if (!cluster && (!selected?.card || !model || (model.key != null && model.key !== selectedKey))) return null
-  const card = selected?.card
   const clusterPosition = cluster && { left: cluster.x, top: cluster.y }
-  const module = Array.isArray(model?.modules)
-    ? model.modules.filter(entry => (entry.kind ?? entry.classification ?? entry.id) === tab)
-    : model?.modules?.[tab]
+  const module = tabs.find(entry => entry.id === tab)?.content
   const metadata = Array.isArray(model?.metadata) ? model.metadata : []
   const media = model?.media
   const title = suppliedText(model?.title)
   const mediaSource = safeUrl(media?.sourceUrl)
   const compact = card?.height < 280
+  const gradientId = `${prefix.replaceAll(':', '')}-tether-gradient`
+  const tetherLength = selected?.tether ? Math.hypot(selected.tether.x2-selected.tether.x1,selected.tether.y2-selected.tether.y1) : 0
+  const tetherOpacity = tetherLength > 600 ? .58 : tetherLength > 300 ? .72 : .88
   const summary = <div className="wv-billboard-summary">
     {typeof media?.src === 'string' && media.src && suppliedText(media.sourceLabel) && <figure><img src={media.src} alt={suppliedText(media.alt) ?? ''} />
       {suppliedText(media.sourceLabel) && <figcaption>{mediaSource ? <a href={mediaSource} target="_blank" rel="noreferrer">{media.sourceLabel}</a> : media.sourceLabel}</figcaption>}
     </figure>}
     {metadata.length > 0 && <dl>{metadata.map((field, index) => <div key={field.id ?? index}><dt>{suppliedText(field.label)}</dt><dd>{suppliedText(field.value)}</dd></div>)}</dl>}
   </div>
-  return <div className="wv-billboard-overlay" data-interaction-enabled={interactionEnabled} onKeyDown={closeOnEscape}>
-    {!cluster && selected?.tether && <svg className="wv-billboard-tether" aria-hidden="true" width="100%" height="100%" data-occluded={selected.occluded === true}>
-      <line x1={selected.tether.x1} y1={selected.tether.y1} x2={selected.tether.x2} y2={selected.tether.y2} />
+  return <div ref={overlayRef} className="wv-billboard-overlay" data-interaction-enabled={interactionEnabled} onKeyDown={closeOnEscape}>
+    {!cluster && selected?.tether && <svg className="wv-billboard-tether" aria-hidden="true" width="100%" height="100%" data-occluded={selected.occluded === true} style={{'--wv-tether-opacity':tetherOpacity}}>
+      <defs><linearGradient ref={gradientRef} id={gradientId} gradientUnits="userSpaceOnUse" x1={selected.tether.x1} y1={selected.tether.y1} x2={selected.tether.x2} y2={selected.tether.y2}>
+        <stop offset="0%" stopColor="#97e5df" stopOpacity=".88"/><stop offset="38%" stopColor="#97e5df" stopOpacity=".14"/><stop offset="62%" stopColor="#97e5df" stopOpacity=".14"/><stop offset="100%" stopColor="#97e5df" stopOpacity=".88"/>
+      </linearGradient></defs>
+      <line ref={tetherRef} style={{stroke:`url(#${gradientId})`}} x1={selected.tether.x1} y1={selected.tether.y1} x2={selected.tether.x2} y2={selected.tether.y2} />
+      <circle className="wv-billboard-tether-anchor" cx={selected.tether.x1} cy={selected.tether.y1} r="3"/>
+      <circle ref={attachmentRef} className="wv-billboard-tether-attachment" cx={selected.tether.x2} cy={selected.tether.y2} r="2.5"/>
     </svg>}
     {cluster ? <aside className="wv-billboard-cluster" style={clusterPosition} aria-labelledby={`${prefix}-cluster-title`}>
       <header><div><span className="wv-billboard-eyebrow">Inspect group</span><h3 id={`${prefix}-cluster-title`}>Choose a recorded member</h3></div>
@@ -113,15 +162,15 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
         <span>{suppliedText(item.title ?? item.label ?? itemKey(item))}</span>{suppliedText(item.precision) && <small>{suppliedText(item.precision)}</small>}
       </button></li>)}</ul>
       {!members.length && <p className="wv-billboard-empty">No supplied members available.</p>}
-    </aside> : <aside key={selectedKey} className="wv-billboard-card" style={{ left: card.x, top: card.y, width: card.width, maxHeight: card.height,
+    </aside> : <aside ref={cardRef} key={selectedKey} className="wv-billboard-card" style={{ left: card.x, top: card.y, width: card.width, maxHeight: card.height,
       transformOrigin: entrance.current.origin ? `${entrance.current.origin.x}px ${entrance.current.origin.y}px` : undefined }}
       aria-labelledby={`${prefix}-title`} data-selected-key={selectedKey} data-compact={compact} data-anchor-entrance={Boolean(entrance.current.origin)}>
-      <header><div>{suppliedText(model.chip) && <span className="wv-billboard-eyebrow">{suppliedText(model.chip)}</span>}<h3 id={`${prefix}-title`}>{title}</h3></div>
+      <header><div>{suppliedText(model.chip) && <span className="wv-billboard-eyebrow">{suppliedText(model.chip)}</span>}<h3 id={`${prefix}-title`}>{title}</h3>{selected.occluded && <span className="wv-billboard-occlusion-cue" title="The canonical ground anchor is occluded. Display stem visibility is a separate test.">Canonical anchor occluded</span>}{typeof selected.displayOccluded === 'boolean' && <span className="wv-billboard-stem-cue">{selected.displayOccluded ? 'Display marker occluded' : 'Display marker visible'}</span>}</div>
         <button type="button" className="wv-billboard-icon-button" aria-label="Close selected card" onClick={() => activate(onClose)}><X aria-hidden="true" size={18} /></button></header>
       {!compact && summary}
-      <div className="wv-billboard-tabs" role="tablist" aria-label="Selected record modules">{TABS.map(({ key, label, Icon }) => <button key={key} ref={element => { tabRefs.current[key] = element }}
+      <div className="wv-billboard-tabs" role="tablist" aria-label="Selected record modules">{tabs.map(({ key, label, Icon }) => <button key={key} ref={element => { tabRefs.current[key] = element }}
         type="button" role="tab" id={`${prefix}-${key}-tab`} aria-controls={`${prefix}-module-panel`} aria-selected={tab === key} tabIndex={tab === key ? 0 : -1}
-        onClick={() => activate(() => setTabState({ key: selectedKey, tab: key }))} onKeyDown={event => moveTab(event, key)}><Icon aria-hidden="true" size={15} />{label}</button>)}</div>
+        onClick={() => activate(() => setTabState({ key: selectedKey, tab: key, scope:tabScope }))} onKeyDown={event => moveTab(event, key)}><Icon aria-hidden="true" size={15} />{label}</button>)}</div>
       <div className="wv-billboard-module-body" role="tabpanel" id={`${prefix}-module-panel`} aria-labelledby={`${prefix}-${tab}-tab`} tabIndex={0}>
         {compact && tab === 'evidence' && summary}
         <ModuleContent content={module} interactionEnabled />

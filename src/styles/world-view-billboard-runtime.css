@@ -31,3 +31,7 @@
    Explore. Preserve accessible native attribution while releasing the canvas. */
 .wv-billboard-scene[data-interaction-enabled="false"] {pointer-events:none;}
 .wv-billboard-scene .cesium-widget-credits {pointer-events:auto;}
+/* Meaningful context/time warnings remain visible until the reviewed shell clears
+   them; compact treatment reduces obstruction without dismissing stale state. */
+.wv-billboard-prototype-page .wv-explore-notice {max-width:230px;font-size:10px;line-height:1.25;padding:5px 8px;border-left:2px solid #a89959;}
+@media(max-width:600px){.wv-billboard-prototype-page .wv-explore-notice{max-width:185px;font-size:9px;}}

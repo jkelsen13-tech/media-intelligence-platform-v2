@@ -6,13 +6,15 @@ const item=(key,extra={})=>({key,anchor:{x:200,y:200},distanceMeters:1000,label:
 const deepFreeze=value=>{if(value&&typeof value==='object'){Object.values(value).forEach(deepFreeze);Object.freeze(value)}return value}
 const collision=(a,b)=>Math.abs(a.x-b.x)<(a.width+b.width)/2 && Math.abs(a.y-b.y)<(a.height+b.height)/2
 
-test('distance transitions retain world anchor and only admit regional importance labels/icons',()=>{
+test('distance alone controls default plaque/ribbon/icon hierarchy independent of importance',()=>{
  const states=[1000,5000,50000,300000].map(distanceMeters=>layoutWorldBillboards({items:[item('a',{distanceMeters,importance:1})],viewport}).markers[0].state)
- assert.deepEqual(states,['ribbon','label','icon','cluster'])
- assert.equal(layoutWorldBillboards({items:[item('a',{distanceMeters:50000})],viewport}).markers[0].state,'cluster')
- for(const distanceMeters of [0,3000,30000,250000,300001]){
-  const marker=layoutWorldBillboards({items:[item('a',{distanceMeters})],viewport}).markers[0]
-  assert.deepEqual([marker.x,marker.y],[200,200])
+ assert.deepEqual(states,['plaque','ribbon','icon','cluster'])
+ for(const [distanceMeters,state] of [[0,'plaque'],[1200,'plaque'],[1200.01,'ribbon'],[12000,'ribbon'],[12000.01,'icon'],[250000,'icon'],[250000.01,'cluster']]){
+  for(const importance of [0,0.7,1]){
+   const marker=layoutWorldBillboards({items:[item('a',{distanceMeters,importance})],viewport}).markers[0]
+   assert.equal(marker.state,state)
+   assert.deepEqual([marker.x,marker.y],[200,200])
+  }
  }
 })
 
@@ -175,4 +177,89 @@ test('canonical occlusion fallback applies only when the field is absent',()=>{
     'present field uses strict true rather than falling back to display occlusion')
   }
  }
+})
+
+test('supplied presentation states are respected without letting importance change hierarchy or override continent aggregation',()=>{
+ for(const presentationState of ['plaque','ribbon','icon']){
+  const row=deepFreeze(item('a',{distanceMeters:5000,presentationState,importance:1,label:'A long supplied title '.repeat(20)}))
+  const marker=layoutWorldBillboards({items:[row],viewport:{width:2200,height:1800}}).markers[0]
+  assert.equal(marker.state,presentationState)
+  assert.equal(marker.height,presentationState==='plaque'?56:presentationState==='ribbon'?32:24)
+  assert.ok(marker.width<=(presentationState==='plaque'?200:presentationState==='ribbon'?152:24))
+  assert.deepEqual([marker.x,marker.y],[row.anchor.x,row.anchor.y])
+  const distant=layoutWorldBillboards({items:[{...row,distanceMeters:250001}],viewport}).markers[0]
+  assert.equal(distant.state,'cluster')
+  assert.deepEqual(distant.memberKeys,['a'])
+ }
+ for(const presentationState of ['label','cluster',null,undefined,1]){
+  assert.equal(layoutWorldBillboards({items:[item('a',{distanceMeters:5000,presentationState})],viewport}).markers[0].state,'ribbon')
+ }
+})
+
+test('collision priority is selected then focused then relevant-important then ordinary, preserving winning anchors',()=>{
+ const ordinary=item('ordinary',{importance:100,anchor:{x:205,y:205},distanceMeters:50000})
+ const relevant=item('relevant',{relevant:true,importance:0.8,anchor:{x:210,y:210},distanceMeters:50000})
+ const focused=item('focused',{focused:true,importance:0,anchor:{x:215,y:215},distanceMeters:50000})
+ for(const [rows,selectedKey,winner] of [
+  [[ordinary,relevant],null,relevant],
+  [[ordinary,relevant,focused],null,focused],
+  [[ordinary,relevant,focused],'ordinary',ordinary],
+ ]){
+  const frozen=deepFreeze(rows),before=JSON.stringify(frozen)
+  const result=layoutWorldBillboards({items:frozen,viewport,selectedKey})
+  assert.deepEqual(result,layoutWorldBillboards({items:[...frozen].reverse(),viewport,selectedKey}))
+  assert.equal(result.markers.length,1)
+  assert.equal(result.markers[0].anchorKey,winner.key)
+  assert.deepEqual([result.markers[0].x,result.markers[0].y],[winner.anchor.x,winner.anchor.y])
+  assert.deepEqual(result.markers[0].memberKeys,rows.map(row=>row.key).sort())
+  assert.equal(JSON.stringify(frozen),before)
+ }
+ const lowRelevance=item('low',{relevant:true,importance:0.2,distanceMeters:50000})
+ const nonRelevant=item('priority',{relevant:false,importance:1,distanceMeters:50000})
+ assert.equal(layoutWorldBillboards({items:[lowRelevance,nonRelevant],viewport}).markers[0].anchorKey,'priority')
+})
+
+test('dense near and medium scenes bound plaques, ribbons and total targets while retaining only admitted membership',()=>{
+ const view={width:2200,height:1800}
+ for(const [distanceMeters,presentationState] of [[1000,'plaque'],[5000,'ribbon'],[50000,'icon']]){
+  const rows=deepFreeze(Array.from({length:48},(_,i)=>item(`k${String(i).padStart(2,'0')}`,{distanceMeters,presentationState,
+   anchor:{x:150+i%8*250,y:150+Math.floor(i/8)*180},focused:i===47,relevant:i===46,importance:i===46?1:0})))
+  const hidden=item('hidden',{distanceMeters,occluded:true,anchor:{x:150,y:150}})
+  const outside=item('outside',{distanceMeters,anchor:{x:-200,y:150}})
+  const result=layoutWorldBillboards({items:[...rows,hidden,outside],viewport:view,selectedKey:rows[45].key})
+  assert.ok(result.markers.length<=24)
+  assert.ok(result.markers.filter(marker=>marker.state==='plaque').length<=4)
+  assert.ok(result.markers.filter(marker=>marker.state==='ribbon').length<=10)
+  assert.equal(result.selected.key,rows[45].key)
+  assert.equal(result.markers.some(marker=>Object.hasOwn(marker,'card')),false,'only selected exposes expanded reading card')
+  const members=result.markers.flatMap(marker=>marker.memberKeys??[marker.key])
+  assert.deepEqual([...members].sort(),rows.map(row=>row.key).sort())
+  assert.equal(new Set(members).size,rows.length)
+  for(const marker of result.markers){
+   const anchorRow=rows.find(row=>row.key===(marker.anchorKey??marker.key))
+   assert.deepEqual([marker.x,marker.y],[anchorRow.anchor.x,anchorRow.anchor.y])
+   assert.ok(marker.x-marker.width/2>=16&&marker.x+marker.width/2<=view.width-16)
+   assert.ok(marker.y-marker.height/2>=72&&marker.y+marker.height/2<=view.height-44)
+  }
+  assert.deepEqual(result,layoutWorldBillboards({items:[outside,hidden,...rows].reverse(),viewport:view,selectedKey:rows[45].key}))
+ }
+})
+
+test('continent scene has at most eight broad display groups, preserves anchors and exposes exact inspectable eligible member counts',()=>{
+ const view={width:2200,height:1800}
+ const rows=deepFreeze(Array.from({length:40},(_,i)=>item(`b${String(i).padStart(2,'0')}`,{distanceMeters:300000,presentationState:'plaque',
+  anchor:{x:150+i%8*250,y:150+Math.floor(i/8)*180}})))
+ const result=layoutWorldBillboards({items:rows,viewport:view})
+ assert.ok(result.markers.length<=8)
+ assert.equal(result.selected,null)
+ assert.deepEqual(result.markers.flatMap(marker=>marker.memberKeys).sort(),rows.map(row=>row.key).sort())
+ for(const marker of result.markers){
+  assert.equal(marker.state,'cluster')
+  assert.equal(marker.count,marker.memberKeys.length)
+  assert.equal(marker.key,'cluster:'+JSON.stringify(marker.memberKeys))
+  const source=rows.find(row=>row.key===marker.anchorKey)
+  assert.deepEqual([marker.x,marker.y],[source.anchor.x,source.anchor.y])
+  assert.equal(marker.canonicalCoordinates,source.canonicalCoordinates)
+ }
+ assert.deepEqual(result,layoutWorldBillboards({items:[...rows].reverse(),viewport:view}))
 })

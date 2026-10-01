@@ -1,6 +1,7 @@
 // Renderer-neutral DISPLAY layout. Screen anchors are projections of immutable
 // world locations; grouping and the selected envelope never rewrite those data.
 export const BILLBOARD_IMPORTANCE_THRESHOLD = 0.7
+export const BILLBOARD_DISPLAY_CAPS = Object.freeze({ plaque:4, ribbon:10, targets:24, broadGroups:8 })
 const finite = Number.isFinite
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
 const compareKey = (a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0
@@ -56,21 +57,24 @@ function selectedEnvelope(item, rect, viewport) {
 }
 
 function markerFor(item) {
-  const important = (finite(item.importance) ? item.importance : 0) >= BILLBOARD_IMPORTANCE_THRESHOLD
   const distance = item.distanceMeters
-  const state = distance > 250000 || (distance > 30000 && !important) ? 'cluster'
-    : distance > 30000 ? 'icon'
-      : distance > 3000 ? important && item.label ? 'label' : 'icon' : 'ribbon'
-  const width = state === 'ribbon' ? Math.min(180, Math.max(88, String(item.label ?? '').length*7+28))
-    : state === 'label' ? Math.min(132, Math.max(52, String(item.label).length*7+24))
+  const supplied = ['icon','ribbon','plaque'].includes(item.presentationState) ? item.presentationState : null
+  const state = distance > 250000 ? 'cluster' : supplied ?? (distance <= 1200 ? 'plaque' : distance <= 12000 ? 'ribbon' : 'icon')
+  const width = state === 'plaque' ? Math.min(200, Math.max(112, String(item.label ?? '').length*7+36))
+    : state === 'ribbon' ? Math.min(152, Math.max(72, String(item.label ?? '').length*6+24))
       : state === 'cluster' ? 44 : 24
   const markerAnchor=item.markerAnchor ?? item.anchor
   return {key:item.key, x:markerAnchor.x, y:markerAnchor.y, width,
-    height:state === 'ribbon' ? 44 : state === 'label' ? 32 : state === 'cluster' ? 44 : 24,
+    height:state === 'plaque' ? 56 : state === 'ribbon' ? 32 : state === 'cluster' ? 44 : 24,
     state, occluded:false, family:item.family, label:item.label,
     canonicalCoordinates:item.canonicalCoordinates,
     ...(state === 'cluster' ? {memberKeys:[item.key],count:1} : {})}
 }
+
+const priority = (item, selectedKey) => item.key === selectedKey ? 3 : item.focused === true ? 2
+  : item.relevant === true && finite(item.importance) && item.importance >= BILLBOARD_IMPORTANCE_THRESHOLD ? 1 : 0
+const nearest = (markers, candidate) => markers.reduce((best, marker) => !best
+  || Math.hypot(marker.x-candidate.x,marker.y-candidate.y) < Math.hypot(best.x-candidate.x,best.y-candidate.y) ? marker : best,null)
 
 /**
  * Marker x/y are markerAnchor centers (native display stem projection),
@@ -92,17 +96,31 @@ export function layoutWorldBillboards({items = [], viewport, selectedKey = null}
   const selected = selectedEnvelope(valid.find(item=>item.key === selectedKey),rect,viewport)
   const ordered = valid.filter(item=>!item.occluded && finite(item.distanceMeters) && item.distanceMeters >= 0
     && finite((item.markerAnchor ?? item.anchor)?.x) && finite((item.markerAnchor ?? item.anchor)?.y))
-    .sort((a,b)=>Number(b.key === selectedKey)-Number(a.key === selectedKey)
+    .sort((a,b)=>priority(b,selectedKey)-priority(a,selectedKey)
       || (finite(b.importance)?b.importance:0)-(finite(a.importance)?a.importance:0) || compareKey(a,b))
   const markers = []
   for (const item of ordered) {
     const candidate = markerFor(item)
+    // Rich near plaques and medium ribbons have independent display budgets.
+    // Overflow becomes a small icon, never a second expanded inspector/card.
+    if ((candidate.state === 'plaque' || candidate.state === 'ribbon')
+      && markers.filter(marker=>marker.state === candidate.state).length >= BILLBOARD_DISPLAY_CAPS[candidate.state]) {
+      candidate.state='icon'; candidate.width=24; candidate.height=24
+    }
     if (!fitsRect(candidate,rect)) continue
     // Distant clusters collect nearby records without making world-space
     // proximity or shared coordinates a factual relationship.
-    const existing = markers.find(marker=>overlaps(marker,candidate)
+    let existing = markers.find(marker=>overlaps(marker,candidate)
       || (marker.state === 'cluster' && candidate.state === 'cluster'
         && Math.hypot(marker.x-candidate.x,marker.y-candidate.y) <= 64))
+    // Broad-distance aggregation and a hard target budget avoid a wall of
+    // labels. Membership describes this display operation only. The existing
+    // selected/focused/relevant-priority world anchor is never averaged/moved.
+    if (!existing && candidate.state === 'cluster') {
+      const broad = markers.filter(marker=>marker.state === 'cluster')
+      if (broad.length >= BILLBOARD_DISPLAY_CAPS.broadGroups) existing=nearest(broad,candidate)
+    }
+    if (!existing && markers.length >= BILLBOARD_DISPLAY_CAPS.targets) existing=nearest(markers,candidate)
     if (existing) {
       existing.memberKeys = [...(existing.memberKeys ?? [existing.key]),item.key].sort()
       existing.count = existing.memberKeys.length
@@ -111,7 +129,7 @@ export function layoutWorldBillboards({items = [], viewport, selectedKey = null}
   }
   // Promoting a 24px icon to a 44px group can create a new collision with
   // an earlier target. Reconcile to a fixed point, always retaining the
-  // earlier selection/importance-priority anchor and every original key.
+  // earlier selection/focus/relevance-priority anchor and every original key.
   let merged = true
   while (merged) {
     merged = false
