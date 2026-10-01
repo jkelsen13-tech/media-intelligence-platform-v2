@@ -33,6 +33,7 @@ import {
   applySubject,
   subjectFromWorldViewSelection,
   subjectFromGraphNode,
+  subjectFromGraphInspection,
   graphNodeMatchingInvestigation,
 } from './lib/investigationContext'
 import { commitNewSubject } from './lib/newSubjectPropagation'
@@ -483,7 +484,7 @@ export default function App({
         setPinned(false)
         setPolicyNode(data)
         setInvestigationContext((ic) => {
-          const subject = subjectFromGraphNode(data)
+          const subject = subjectFromGraphInspection(data, ic)
           rememberPriorSubject(ic, subject.canonical_subject_id)
           return applySubject(ic, subject)
         })
@@ -491,7 +492,7 @@ export default function App({
         setPolicyNode(null)
         setSelected(data)
         setInvestigationContext((ic) => {
-          const subject = subjectFromGraphNode(data)
+          const subject = subjectFromGraphInspection(data, ic)
           rememberPriorSubject(ic, subject.canonical_subject_id)
           return applySubject(ic, subject)
         })

@@ -563,6 +563,19 @@ async function independentJourney(browser,engine,scene,width=1280,{fault=null}={
     const source=fixture.getRows()[1],sourceRowKey=projectionRowDisplayKey(source)
     const group=(await state(page)).layout.clusters.find(value=>value.rowCount>1&&value.rowKeys.includes(sourceRowKey))
     assert.ok(group,'deliberate original row belongs to a currently inspectable multi-row group')
+    if(fault==='atlas'){
+      const before=await context(page),url=page.url()
+      const hidden=page.locator('.wv-feature[aria-hidden="true"]')
+      assert.ok(await hidden.count()>0,'grouped original Atlas rows exist as hidden retained geometry')
+      await hidden.evaluateAll(nodes=>{for(const node of nodes){
+        node.dispatchEvent(new MouseEvent('click',{bubbles:true}))
+        for(const key of ['Enter',' '])node.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}))
+      }})
+      await delay(250)
+      assert.deepEqual(await context(page),before,'actual hidden original click/Enter/Space cannot commit any grouped row')
+      assert.equal(page.url(),url,'hidden originals cannot navigate')
+      assert.ok(await hidden.evaluateAll(nodes=>nodes.every(node=>node.tabIndex===-1)),'hidden originals are not keyboard focus targets')
+    }
     const panel=await expandGroup(page,group),member=await projectionRowButton(panel,source)
     await member.waitFor()
     const rowKey=await member.getAttribute('data-row-key')
@@ -626,6 +639,22 @@ async function independentJourney(browser,engine,scene,width=1280,{fault=null}={
       assert.deepEqual(await context(page),pickedContext);assert.equal(page.url(),pickedUrl)
       trustedTouch={start:after.trustedStart-before.trustedStart,end:after.trustedEnd-before.trustedEnd}
     }
+    const timeSlider=page.getByRole('slider',{name:'Recorded time',exact:true})
+    if(await timeSlider.count()) { await timeSlider.focus(); await timeSlider.press('Home'); await delay(250) }
+    const boundContext=await context(page)
+    assert.equal(boundContext['canonical-subject-id'],source.subject_graph_node_id)
+    assert.ok(boundContext['as-of-time'],'member/time journey binds a recorded time')
+    assert.equal(boundContext['selected-time-range'],pickedContext['selected-time-range'])
+    const relationshipsPanel=page.getByLabel('Documented relationships',{exact:true})
+    const relationshipsSummary=relationshipsPanel.locator('summary').first()
+    if(!await relationshipsSummary.evaluate(node=>node.parentElement.open))await relationshipsSummary.click()
+    const firstRecord=relationshipsPanel.locator('li[data-edge-id]').first().locator('details')
+    if(!await firstRecord.evaluate(node=>node.open))await firstRecord.locator('summary').click()
+    const sourceNode=graphFixture.getNodes().find(node=>node.id===source.subject_graph_node_id)
+    assert.equal(sourceNode.occurred_at,null,'same-endpoint fixture has no invented graph time')
+    await firstRecord.getByRole('button',{name:new RegExp('^Inspect (Source|Target): '+sourceNode.label+'$')}).click()
+    await delay(350)
+    assert.deepEqual(await context(page),boundContext,'mounted member-pick/time/same-endpoint inspection preserves recorded context with null graph occurred_at')
     const relationshipQualification=await qualifyRelationships(page,graphFixture,label)
     const timeline=page.getByRole('slider',{name:'Recorded time',exact:true})
     let outsideTime=false
@@ -670,7 +699,7 @@ try{
       dense:{rows:1,locations:500,overlapPairs:124750,pickTargets:500,labels:1}},
     historicalRuntimeBaseline:'not captured by this verifier; historical numbers above are pure layout, not observed browser rendering'}))
   if(fallbackOnly){
-    browser=await chromium.launch({headless:true})
+    browser=await chromium.launch({headless:true, ...(process.env.MIP_CHROMIUM_EXECUTABLE ? {executablePath:process.env.MIP_CHROMIUM_EXECUTABLE} : {}), ...(process.env.MIP_BROWSER_PROXY ? {proxy:{server:process.env.MIP_BROWSER_PROXY,bypass:"127.0.0.1,localhost"}} : {})})
     for(const fault of ['map','atlas'])await independentJourney(browser,'chromium',CLUSTER_SCENES[0],1280,{fault})
     await browser.close();browser=null
     console.log('MIP_WORLD_CLUSTER_FALLBACK_BROWSER_PASS='+JSON.stringify({candidate,journeys:2,

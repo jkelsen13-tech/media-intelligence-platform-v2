@@ -158,3 +158,9 @@ export function resolveCurrentClusterMember(layout, clusterId, rowKey) {
   const cluster = layout?.clusters?.find(item => item.id === clusterId)
   return cluster?.rowMembers?.find(row => projectionRowDisplayKey(row) === rowKey) ?? null
 }
+
+/** Direct marker picks must still be admitted singleton rows at dispatch time. */
+export function isCurrentSingletonRow(layout, row, currentRows) {
+  return Boolean(row && currentRows?.includes(row)
+    && layout?.singles?.some(marker => marker.row === row))
+}

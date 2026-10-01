@@ -23,7 +23,7 @@ import { activateAtlasMarker, atlasDisplayMetrics, atlasLabelLayout, atlasLabelT
 
 import WorldViewSpatialGroupPanel, { WorldViewDisplayOverlay } from '../components/WorldViewSpatialGroupPanel'
 import { createDisplayPresentation, displayPresentationSignature, displayPresentationProbe } from '../lib/worldViewDisplayPresentation.js'
-import { projectionRowDisplayKey, resolveCurrentClusterMember } from '../lib/worldViewDisplayClusters.js'
+import { isCurrentSingletonRow, projectionRowDisplayKey, resolveCurrentClusterMember } from '../lib/worldViewDisplayClusters.js'
 
 const MAP_W = 960
 const MAP_H = 480
@@ -174,8 +174,8 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
               tabIndex={drawn ? 0 : -1}
               aria-hidden={!drawn}
               style={{ visibility: drawn ? 'visible' : 'hidden' }}
-              onClick={event => activateAtlasMarker(event, marker.row, onSelectRow)}
-              onKeyDown={event => activateAtlasMarker(event, marker.row, onSelectRow)}
+              onClick={drawn ? event => activateAtlasMarker(event, marker.row, onSelectRow) : undefined}
+              onKeyDown={drawn ? event => activateAtlasMarker(event, marker.row, onSelectRow) : undefined}
             >
               <circle className="wv-atlas-hit-target" cx={marker.x} cy={marker.y} r={metrics.hitRadius}
                 fill="transparent" stroke="none" pointerEvents="all" aria-hidden="true" />
@@ -275,7 +275,8 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   }, [cancelDisplayPublication])
   useEffect(() => cancelDisplayPublication, [cancelDisplayPublication])
   const selectCurrentRow = useCallback(row => {
-    if (row && currentRows.current?.includes(row)) pickRef.current?.(row)
+    const current = adapterRef.current?.getDisplayLayout?.() ?? presentationRef.current
+    if (isCurrentSingletonRow(current?.layout, row, currentRows.current)) pickRef.current?.(row)
   }, [])
   const localMemoryRef = useRef(null)
   if (!localMemoryRef.current) localMemoryRef.current = createCameraMemory()
@@ -393,7 +394,10 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   }
   const chooseClusterMember = (id, rowKey) => {
     const current = currentPresentation()
-    selectCurrentRow(resolveCurrentClusterMember(current?.layout, id, rowKey))
+    const row = resolveCurrentClusterMember(current?.layout, id, rowKey)
+    // An explicit member choice is allowed after group inspection; direct
+    // marker activation is restricted to the currently visible singletons.
+    if (row && currentRows.current?.includes(row)) pickRef.current?.(row)
   }
   const chooseSingle = rowKey => {
     const current = currentPresentation()
