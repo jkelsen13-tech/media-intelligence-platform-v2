@@ -1,0 +1,15 @@
+{
+  "reviewedCandidate": "bc96caab4d4bd5f7502e898ac665fc402183f1b4",
+  "viewport": {
+    "width": 844,
+    "height": 390
+  },
+  "direction": "A immersive expanded",
+  "bodyClientHeight": 2,
+  "bodyRectHeight": 2.40625,
+  "bodyScrollHeight": 1521,
+  "screenshot": "before-A-844.png",
+  "method": "Playwright reading the reviewed cloud Chromium fixture before rebuilding",
+  "sourceCoverageQualified": false,
+  "physicalDeviceQualified": false
+}

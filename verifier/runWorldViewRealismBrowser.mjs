@@ -20,8 +20,65 @@ const creditsUnobscured = page => page.locator('[data-world-credits]').evaluate(
       const front = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
       return Boolean(front && (front === link || link.contains(front)))
     })))
+const readableEvidenceText = node => {
+  const body = node.closest('.wv-explore-context-body')
+  const clip = body.getBoundingClientRect()
+  const range = document.createRange()
+  range.selectNodeContents(node)
+  return [...range.getClientRects()].filter(rect => rect.width > 0 && rect.height > 0).some(rect => {
+    const front = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
+    return rect.top >= Math.max(0, clip.top) && rect.bottom <= Math.min(innerHeight, clip.bottom)
+      && rect.left >= Math.max(0, clip.left) && rect.right <= Math.min(innerWidth, clip.right)
+      && Boolean(front && body.contains(front))
+  })
+}
+const unobscuredControl = node => {
+  const rect = node.getBoundingClientRect()
+  return rect.top >= 0 && rect.bottom <= innerHeight && rect.left >= 0 && rect.right <= innerWidth
+    && [[0.5, 0.5], [0.25, 0.25], [0.75, 0.75]].every(([x, y]) => {
+      const front = document.elementFromPoint(rect.x + rect.width * x, rect.y + rect.height * y)
+      return Boolean(front && (front === node || node.contains(front)))
+    })
+}
+async function qualifyExpandedEvidence(page) {
+  const body = page.locator('.wv-explore-context-body')
+  await body.evaluate(node => { node.scrollTop = 0 })
+  const globeViewport = await page.locator('.wv-explore-map').boundingBox()
+  const viewport = page.viewportSize()
+  assert.ok(globeViewport.width > viewport.width * 0.4 && globeViewport.height > Math.min(300, viewport.height * 0.35),
+    'expanded evidence retains a substantial globe viewport')
+  const geometry = await body.evaluate(node => ({ clientHeight: node.clientHeight, scrollHeight: node.scrollHeight,
+    rect: node.getBoundingClientRect().toJSON(), overflowY: getComputedStyle(node).overflowY }))
+  assert.ok(geometry.clientHeight >= 64, 'expanded evidence needs room for several readable text lines')
+  assert.equal(geometry.overflowY, 'auto', 'long evidence has its own bounded scroll surface')
+  assert.ok(geometry.scrollHeight > geometry.clientHeight, 'qualification fixture exercises scrolling evidence')
+  assert.equal(await body.locator('h4').first().evaluate(readableEvidenceText), true, 'evidence heading is visibly readable')
+  assert.equal(await body.locator('p').first().evaluate(readableEvidenceText), true, 'evidence availability is visibly readable')
+  for (const field of [body.locator('dd').first(), body.locator('dd').last()]) {
+    await field.evaluate(node => {
+      const scrollBody = node.closest('.wv-explore-context-body')
+      scrollBody.scrollTop += node.getBoundingClientRect().top - scrollBody.getBoundingClientRect().top - 8
+    })
+    assert.equal(await field.evaluate(readableEvidenceText), true, 'evidence values remain readable throughout the bounded scroll surface')
+  }
+  await body.evaluate(node => { node.scrollTop = 0 })
+  for (const name of ['Interact', 'Options', 'Collapse evidence']) {
+    assert.equal(await page.getByRole('button', { name, exact: true }).evaluate(unobscuredControl), true,
+      `${name} remains accessible with expanded evidence`)
+  }
+  await page.getByRole('button', { name: 'Interact', exact: true }).click()
+  assert.equal(await page.getByRole('button', { name: 'Done — scroll', exact: true }).evaluate(unobscuredControl), true,
+    'expanded evidence preserves the gesture release control')
+  assert.equal(await page.getByRole('button', { name: 'Options', exact: true }).evaluate(unobscuredControl), true)
+  await page.getByRole('button', { name: 'Done — scroll', exact: true }).click()
+  assert.equal(await page.getByRole('button', { name: 'Return to page and resume scrolling', exact: true }).evaluate(unobscuredControl), true,
+    'expanded evidence preserves access to page restoration')
+  assert.equal(await creditsUnobscured(page), true, 'expanded evidence preserves unobscured native attribution')
+  return { ...geometry, readableHeading: true, readableAvailability: true, firstAndLastValuesReadable: true,
+    globeViewport, controlsAndGestureReleaseAccessible: true, nativeAttribution: true }
+}
 try {
-  for (const [width, height] of [[1180, 900], [390, 844], [834, 900], [844, 390]]) {
+  for (const [width, height] of [[1180, 900], [390, 844], [834, 900], [844, 390], [667, 375], [740, 360], [568, 320]]) {
     const page = await browser.newPage({ viewport: { width, height }, hasTouch: width < 900 })
     page.setDefaultTimeout(15000)
     console.log(`Starting ${width}px runtime journey`)
@@ -65,9 +122,10 @@ try {
       await page.getByRole('button', { name: 'Evidence & context', exact: true }).click()
       await page.getByRole('button', { name: 'Collapse evidence', exact: true }).waitFor()
       assert.match(await page.locator('.wv-explore-context-body').innerText(), /city/)
+      const evidenceGeometry = await qualifyExpandedEvidence(page)
       const expandedFile = `${output}/explore-${direction}-expanded-${width}.png`
       await page.screenshot({ path: expandedFile })
-      screenshots.push({ direction, expanded: true, file: expandedFile })
+      screenshots.push({ direction, expanded: true, file: expandedFile, evidenceGeometry })
       await page.getByRole('button', { name: 'Collapse evidence', exact: true }).click()
     }
     await page.getByRole('button', { name: 'Interact', exact: true }).click()
