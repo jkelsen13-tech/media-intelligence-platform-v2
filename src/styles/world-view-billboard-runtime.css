@@ -1,0 +1,28 @@
+.wv-billboard-prototype-page {max-width:1440px;margin:auto;padding:20px;color:#e8eeec;}
+.wv-billboard-prototype-page h1 {font-size:24px; margin:0 0 6px;}
+.wv-billboard-prototype-page>p {font-size:13px;opacity:.8;}
+.wv-billboard-runtime {height:660px;position:relative;overflow:hidden;background:#1d302f;}
+.wv-explore-open .wv-billboard-runtime {height:100%;min-height:0;}
+.wv-billboard-scene {position:absolute;inset:0;}
+.wv-billboard-fixture-banner {position:absolute;top:12px;left:12px;max-width:55%;padding:5px 8px;background:#102326d9;color:#d8ebe7;font-size:10px;pointer-events:none;z-index:3;}
+.wv-billboard-options fieldset {border:1px solid #526769;display:flex;flex-wrap:wrap;gap:12px;padding:10px;}
+.wv-billboard-options label {display:inline-flex;align-items:center;gap:5px;margin:6px;}
+.wv-billboard-camera-controls {display:flex;flex-wrap:wrap;gap:6px;margin:8px;}
+.wv-billboard-options button {margin:3px;padding:6px 10px;}
+.wv-billboard-options p {font-size:12px;}
+.wv-billboard-deep-inspector dl {display:grid;grid-template-columns:1fr 1.4fr;gap:8px;font-size:12px;}
+.wv-billboard-deep-inspector dd {margin:0;overflow-wrap:anywhere;}
+.wv-billboard-error {position:absolute;top:80px;left:20px;right:20px;background:#382923;padding:14px;z-index:15;}
+/* The selected spatial card is primary; the conventional sheet opens only
+   through its explicit inspector action, retaining the reviewed shell logic. */
+.wv-billboard-prototype-page .wv-explore-context:has(.wv-explore-context-body[hidden]) {display:none;}
+.wv-billboard-prototype-page .wv-explore-surface:has(.wv-explore-context-body:not([hidden])) .wv-billboard-overlay {visibility:hidden;}
+.wv-billboard-prototype-page .wv-explore-directions {display:none;}
+.wv-billboard-prototype-page .wv-explore-launch span {font-size:0;}
+.wv-billboard-prototype-page .wv-explore-launch span::after {content:'Selected A Immersive · bounded billboard prototype';font-size:12px;}
+@media(max-width:600px){.wv-billboard-prototype-page{padding:8px;}.wv-billboard-runtime{height:610px;}.wv-billboard-fixture-banner{max-width:65%;font-size:9px;}}
+
+.wv-billboard-prototype-page {color:#203b36;}
+.wv-billboard-prototype-page .wv-explore-notice {left:16px;right:auto;top:154px;max-width:280px;font-size:11px;pointer-events:none;}
+@media(max-width:600px){.wv-billboard-prototype-page .wv-explore-notice {top:168px;max-width:210px;font-size:10px;}}
+.wv-billboard-options .wv-billboard-camera-controls {position:static;max-width:none;}

@@ -329,6 +329,8 @@ test('src has no globe-vendor / 3D-tile strings; map pick goes through commitNew
   const bannedPaidImageryKeyStrings = /api[_-]?key|apikey|accessToken\b|access[_-]?token/i
 
   const allowedCesiumFiles = [
+    // Explicit lazy synthetic billboard route; provider/token bans still apply.
+    /\/src\/lib\/worldViewBillboardScene\.js$/,
     /\/src\/lib\/worldViewCesiumRefinement\.js$/,
     // VF-2: adapter-owned frozen clock and calculated lighting; provider/token bans still apply.
     /\/src\/lib\/worldViewCesiumRecordedLighting\.js$/,

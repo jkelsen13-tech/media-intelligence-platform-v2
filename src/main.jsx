@@ -9,6 +9,13 @@ import { applyThemeFlag } from './lib/themeFlag'
 // see a dark-then-light flash when the light theme is enabled. Withhold
 // posture: any flag-read failure still renders, in the default dark theme.
 applyThemeFlag().finally(() => {
+  const billboardPrototype = new URLSearchParams(window.location.search).get('worldBillboardPrototype') === '1'
+  if (billboardPrototype) {
+    import('./prototypes/WorldViewBillboardPrototype.jsx').then(({ default: Prototype }) => {
+      ReactDOM.createRoot(document.getElementById('root')).render(<Prototype />)
+    })
+    return
+  }
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
       <App />
