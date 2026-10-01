@@ -533,7 +533,7 @@ export default function App({
           setSelected(next)
           setPolicyNode(null)
           setInvestigationContext((ic) => {
-            const subject = subjectFromGraphNode(next)
+            const subject = subjectFromGraphInspection(next, ic)
             rememberPriorSubject(ic, subject.canonical_subject_id)
             return applySubject(ic, subject)
           })

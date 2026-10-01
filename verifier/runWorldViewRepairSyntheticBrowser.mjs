@@ -19,9 +19,10 @@ const row={mip_object_id:'synthetic-a',revision_id:'revision-a',spatial_role:'ev
 const other={...row,mip_object_id:'synthetic-b',revision_id:'revision-b',subject_graph_node_id:'event-b'};
 const rows=[row,other],nodes=[{id:'event-a',type:'event',label:'Synthetic A',occurred_at:null},{id:'event-b',type:'event',label:'Synthetic B',occurred_at:null}],edges=[{id:'edge-a',source:'event-a',target:'event-b',type:'association'}];
 const memory={getStackId:()=> 'atlas-fallback'};const keys=new Set();
-function Harness(){const[ic,setIc]=useState(emptyInvestigationContext('world'));const[picks,setPicks]=useState(0);return <div>
+function Harness(){const[displayRows,setDisplayRows]=useState(rows);const[ic,setIc]=useState(emptyInvestigationContext('world'));const[picks,setPicks]=useState(0);return <div>
 <div id="context" {...investigationContextDomProps(ic)} data-picks={picks}/>
-<WorldMapCanvas cameraMemory={memory} rows={rows} selectedKeys={keys} onSelectRow={value=>{setPicks(n=>n+1);setIc(current=>applySubject(current,subjectFromWorldViewSelection({row:value})))}}/>
+<WorldMapCanvas cameraMemory={memory} rows={displayRows} selectedKeys={keys} onSelectRow={value=>{setPicks(n=>n+1);setIc(current=>applySubject(current,subjectFromWorldViewSelection({row:value})))}}/>
+<button onClick={()=>setDisplayRows([row,{...other,display_geometry:{type:'Point',coordinates:[90,-25]}}])}>Show sparse native targets</button>
 <button onClick={()=>setIc(current=>setInvestigationAsOfTime(current,'2026-01-01T12:00:00Z'))}>Scrub recorded time</button>
 <WorldViewRelationshipPanel nodes={nodes} edges={edges} onSelectNode={node=>setIc(current=>applySubject(current,subjectFromGraphInspection(node,current)))}/></div>};createRoot(document.getElementById('root')).render(<Harness/>);
 `)
@@ -43,6 +44,24 @@ try{
   assert.equal(await hidden.count(),2)
   const context=()=>page.locator('#context').evaluate(n=>Object.fromEntries([...n.attributes].filter(a=>a.name.startsWith('data-')).map(a=>[a.name,a.value])))
   const empty=await context()
+  await page.locator('.wv-map-svg').scrollIntoViewIfNeeded()
+  const hitPoint=await hidden.first().locator('.wv-atlas-hit-target').evaluate(circle=>{
+    const point=new DOMPoint(circle.cx.baseVal.value,circle.cy.baseVal.value).matrixTransform(circle.getScreenCTM())
+    return {x:point.x,y:point.y}
+  })
+  // Temporarily disable the deliberate group badge covering this location;
+  // the underlying actual SVG map must receive the native pointer hit.
+  await page.locator('.wv-display-group-hit').evaluateAll(nodes=>nodes.forEach(node=>node.style.pointerEvents='none'))
+  await page.evaluate(()=>{window.__MIP_NATIVE_HIDDEN_HIT__=null;document.addEventListener('click',event=>{
+    window.__MIP_NATIVE_HIDDEN_HIT__={trusted:event.isTrusted,original:Boolean(event.target.closest('.wv-feature')),map:Boolean(event.target.closest('.wv-map-svg'))}
+  },{once:true,capture:true})})
+  await page.mouse.click(hitPoint.x,hitPoint.y)
+  const hiddenPointerHit=await page.evaluate(()=>window.__MIP_NATIVE_HIDDEN_HIT__)
+  assert.equal(hiddenPointerHit.trusted,true)
+  assert.equal(hiddenPointerHit.original,false,'hidden original circles must not intercept native map pointer hits')
+  assert.equal(hiddenPointerHit.map,true,'native pointer reaches the underlying SVG map')
+  await page.locator('.wv-display-group-hit').evaluateAll(nodes=>nodes.forEach(node=>node.style.pointerEvents=''))
+
   await hidden.evaluateAll(nodes=>{for(const node of nodes){node.dispatchEvent(new MouseEvent('click',{bubbles:true}));for(const key of ['Enter',' '])node.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}))}})
   assert.deepEqual(await context(),empty,'hidden grouped original click/Enter/Space cannot activate')
   await page.getByRole('button',{name:'Inspect group: 2 projection rows, 2 display locations',exact:true}).click()
@@ -58,8 +77,15 @@ try{
   assert.deepEqual(await context(),bound,'same endpoint inspection retains bound recorded time/range')
   await page.getByRole('button',{name:'Inspect Target: Synthetic B',exact:true}).click()
   const changed=await context();assert.equal(changed['data-canonical-subject-id'],'event-b');assert.equal(changed['data-as-of-time'],'');assert.equal(changed['data-selected-time-range'],'')
+  await page.getByRole('button',{name:'Show sparse native targets',exact:true}).click()
+  const singleton=page.locator('.wv-feature[aria-hidden="false"]').first()
+  await singleton.waitFor({state:'visible'})
+  await singleton.locator('.wv-atlas-hit-target').click()
+  const afterPointer=await context();assert.equal(afterPointer['data-picks'],'2');assert.equal(afterPointer['data-canonical-subject-id'],'event-a')
+  await singleton.focus();await singleton.press('Enter')
+  const afterKeyboard=await context();assert.equal(afterKeyboard['data-picks'],'3');assert.equal(afterKeyboard['data-canonical-subject-id'],'event-a')
   assert.deepEqual(errors,[])
-  receipts.push({viewport,hiddenOriginalEvents:['click','Enter','Space'],inspectThenChoose:true,memberNativeSpace:true,boundTimeSameEndpoint:true,newEndpointTimeReset:true,pageErrors:errors})
+  receipts.push({viewport,hiddenPointerHit,visibleSingletonNativePointer:true,visibleSingletonNativeEnter:true,hiddenOriginalEvents:['click','Enter','Space'],inspectThenChoose:true,memberNativeSpace:true,boundTimeSameEndpoint:true,newEndpointTimeReset:true,pageErrors:errors})
   await page.close()
  }
  console.log(JSON.stringify({candidate,evidenceLayer:'synthetic-mounted-production-components',receipts,liveAppReaderQualified:false,backendRequestsAllowed:false}))

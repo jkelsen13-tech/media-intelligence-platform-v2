@@ -173,12 +173,12 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
               aria-label={text.accessibleName}
               tabIndex={drawn ? 0 : -1}
               aria-hidden={!drawn}
-              style={{ visibility: drawn ? 'visible' : 'hidden' }}
+              style={{ visibility: drawn ? 'visible' : 'hidden', pointerEvents: drawn ? 'auto' : 'none' }}
               onClick={drawn ? event => activateAtlasMarker(event, marker.row, onSelectRow) : undefined}
               onKeyDown={drawn ? event => activateAtlasMarker(event, marker.row, onSelectRow) : undefined}
             >
               <circle className="wv-atlas-hit-target" cx={marker.x} cy={marker.y} r={metrics.hitRadius}
-                fill="transparent" stroke="none" pointerEvents="all" aria-hidden="true" />
+                fill="transparent" stroke="none" pointerEvents={drawn ? 'all' : 'none'} aria-hidden="true" />
               <circle className="wv-atlas-point" cx={marker.x} cy={marker.y} r={metrics.pointRadius}
                 style={{ strokeWidth: metrics.pointStrokeWidth }} aria-hidden="true" />
               <g
