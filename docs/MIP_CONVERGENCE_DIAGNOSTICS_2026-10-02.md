@@ -1,0 +1,38 @@
+# Retained observation provenance and collection diagnostics — 2026-10-02
+
+## Bounded owner omission
+
+Selected Library requirements `libfile_953c9013cec08191be2e9bef847b753f.txt`, section 3, accepted foundation extension 6, require collection-aware gaps: not reported, not retained, not extracted, not searched, unavailable, rights/privacy blocked, rejected and unresolved can coexist. Unknown collection coverage does not establish zero reporting or real-world absence. The full 04 consultation reconciliation and 07 News contracts reinforce existing owners, independent invalidation routes and explicit collection limits. `MIP_CONVERGENCE_FOUNDATIONS_2026-10-02.md` explicitly identified the frontend's missing additive declaration provenance.
+
+Base `0d378f5` retained `snapshot.relevance_declarations` through the existing private observation and workspace RPC. The immutable tuple has candidate identity, exact decimal-string change position, selection method/reference/rationale and declared time. The existing panel mapping omitted that field; Overview never rendered it. An existing watched input could become relevant to a different candidate without entering the observation again. The old consumer also had only a generic label for the additive declaration event.
+
+Source-owner dependencies `f790ad9fbaaecfa66e54a7d4b69e065e8f3c8b4d` and ancestor-closure correction `f2c33829b2b099b496c5773fb8e8f0ff3055dc10` separately extend the existing observation diff to emit `relevant_input_declared` with `candidate_id`, `position`, `selection_method`, `selection_ref`, `rationale`, and `declared_at`. This consumer does not manufacture that event, infer it from context membership, create a backend shape, or change any SQL. Its integration requires that source-owner amendment. The declaration is a retained selection, not new source arrival, independent sourcing, support, reassessment or truth.
+
+## Consumer repair
+
+Overview renders saved declaration records independently of selected assessment context, so declarations remain visible for already-watched inputs. Declarations are validated against unambiguous retained snapshot candidate closure, including assessment ancestors. A retained dependency candidate outside selected scope is explicitly labeled; displaying its provenance does not change selected scope or public admission. Each record names candidate, exact retained input, selection provenance and observation pointer. Input inspection uses the existing private saved-input inspector without a fetch or write. Lists disclose ten records at a time. Missing additive arrays remain unavailable; an actual empty array remains empty. Duplicate or incomplete tuples are excluded rather than choosing a record. Changes renders the authoritative event with its provenance, using candidate plus exact input position for identity so declarations from different candidates over one input remain distinct.
+
+Evidence Gaps adds typed, scoped diagnostic provenance from existing retained owners:
+
+| Disposition | Supported basis | Limit |
+| --- | --- | --- |
+| `not_retained` | Nonblank body_text missing from a uniquely identified saved capture/article record | Only that field in that observation; no claim about publisher text, extraction failure or all source bytes |
+| `not_searched` | Analyst coverage `search_status: not_run` | Explicit analyst declaration with named coverage/version pointer; no measured retrieval claim |
+| `not_searched` | Private check response `status: not_run`, or saved check report `external_retrieval: not_run` | Only that check/version or external retrieval in that report; independent of other searches |
+| `rejected` | Validated assigned-reviewer `not_relevant` target with a retained latest event | Report/target/event/revision plus retained rationale preview; relevance decision for that investigation, not factual verdict |
+| `unavailable` | Saved input inventory cannot be resolved | Inventory unavailable, not source absence or a count of zero |
+| `unknown` | No typed reporting/extraction/rights disposition receipt in these owners | No inferred `not_reported`, `not_extracted` or `rights_blocked`; collection coverage and real-world absence unknown |
+
+Partial and completed analyst declarations remain in existing Collection Declarations with their limits; neither becomes a measured coverage figure or a `not_searched` claim. Evidence-check and review responses must match the displayed investigation/version/observation/report through existing validators before diagnostic consumption. No backend client, auth, schema, queue, public payload, score, LLM, extraction or retrieval engine changed.
+
+## Reproduction and qualification
+
+`tests/investigationObservationProvenanceFixture.mjs` creates synthetic local rows using actual PGlite migrations and the relevance source proposal, creates a selected child assessment with an ancestor assessment for a different candidate, and saved observations, records a review baseline, then declares the same already-watched input relevant for two distinct candidates. The before/after retained inputs remain byte-equal and no evidence arrival event is emitted. It reads the actual workspace RPC through the real authenticated HTTP handler and browser client. Existing saved check and assigned-reviewer RPCs supply diagnostic receipts.
+
+`tests/investigationObservationProvenance.test.mjs` checks that real response, typed scopes, absent receipt handling, duplicate and bigint identities, and a mounted production hook/Workspace/Inspector journey. Viewing and inspecting provenance cannot run checks, decide relevance or mark reviewed. Historical selection clears the inspector and excludes later declarations; sign-out removes private records. A replay against the unchanged base Workspace reproduced the omitted-declaration failure, with the same real source-owner response. The native ancestor fixture additionally reproduced the original source guard rejection, then passed with the source owner’s retained-candidate-closure correction; selected scope remains unchanged.
+
+`verifier/runInvestigationObservationProvenanceBrowser.mjs` independently produces the real local fixture and compiles the actual production consumer/hook. System Chromium 151.0.7922.173 checks keyboard inspection, exact saved input, immutable baseline, private-state clearing and document overflow at 1280×900, 390×844 and 640×360. Nonlocal browser requests are blocked; this is synthetic local qualification. It does not claim live backend reader success, real publisher bytes/rights, screen-reader output or physical-device behavior.
+
+Four new tests and 89 adjacent existing tests passed (93 total). Production build passed with the existing chunk-size advisory. The browser verifier passed all three viewport journeys. Local receipts are kept in `/workspace/mip-lane-diagnostics-receipts/` and not uploaded: baseline-red.txt, ancestor-sql-red.txt, focused-green.txt, adjacent-tests.txt, browser-qualification.txt, browser/report.json, actual private-owner-fixture.json and nine browser screenshots. `MIP_RELEVANCE_PROPOSAL` selects the source-owner candidate for pre-integration tests; after integration the default is the repository proposal. `MIP_DIAGNOSTICS_RECEIPTS` selects an independent receipt directory. `MIP_WORKSPACE_COMPONENT` is a test-only source override for reproducible baseline RED.
+
+No live SQL was applied. The relevance proposal remains nondeployed. Adding stronger reporting/extraction/rights dispositions requires real retained typed receipts in their existing owners; the current UI faithfully shows unknown where they are absent.

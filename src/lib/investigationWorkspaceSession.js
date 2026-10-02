@@ -47,6 +47,7 @@ export const COMPARISON_MODE_COPY = Object.freeze({
 })
 
 export const EVIDENCE_CHANGE_COPY = Object.freeze({
+  relevant_input_declared: 'Relevance declaration newly recorded for a retained input.',
   evidence_entered_observation: 'Evidence entered the observation. Presence here does not by itself confirm, contradict, or complete a claim.',
   assessment_added: 'Assessment added. A new recorded decision is not an overall answer.',
   assessment_dependency_change: 'Dependency state changed. A stale or updated dependency is not a completed reassessment.',

@@ -6,6 +6,7 @@ import InvestigationDefinitionRevisions from './InvestigationDefinitionRevisions
 import InvestigationVersionNavigation from './InvestigationVersionNavigation.jsx'
 import { RetainedInputInspector } from './InvestigationRetainedInputs.jsx'
 import InvestigationTextAvailability from './InvestigationTextAvailability.jsx'
+import { RelevanceDeclarationRecords, CollectionDiagnosticRecords } from './InvestigationObservationProvenance.jsx'
 
 import RemainingUncertaintyBlock from './RemainingUncertaintyBlock.jsx'
 import {
@@ -752,7 +753,7 @@ function citationsAtPosition(bundle, position) {
   return refs
 }
 
-function OverviewSection({ panels, bundle, onOpenPublicGraphNode, publicNode }) {
+function OverviewSection({ panels, bundle, onOpenPublicGraphNode, publicNode, onOpenInput }) {
   const assessments = panels.assessments ?? []
   const subject = panels.canonicalSubject
   return (
@@ -795,6 +796,7 @@ function OverviewSection({ panels, bundle, onOpenPublicGraphNode, publicNode }) 
           ))}
         </ul>
       )}
+      <RelevanceDeclarationRecords key={`${bundle.version.id}:${bundle.observation.id}`} bundle={bundle} onOpenInput={onOpenInput} />
       <h3>Unresolved questions</h3>
       {panels.unresolvedQuestions?.length ? (
         <ul className="piw-list">
@@ -886,11 +888,20 @@ function ChangedSection({
       {evidenceChanges?.length > 0 && (
         <ul className="piw-cards">
           {evidenceChanges.map((change, index) => (
-            <li key={`${change.kind}:${change.position ?? change.assessment_id ?? index}`} className="piw-card">
+            <li key={`${change.kind}:${change.candidate_id ?? ''}:${change.position ?? change.assessment_id ?? index}`} className="piw-card">
               <p>{evidenceChangeLabel(change.kind)}</p>
               {change.position != null && <p className="piw-mono">Position {String(change.position)}</p>}
               {change.assessment_id && <p className="piw-mono">Assessment {change.assessment_id}</p>}
               {change.candidate_id && <p className="piw-mono">Candidate {change.candidate_id}</p>}
+              {change.kind === 'relevant_input_declared' && (
+                <>
+                  <p>Selection method: {change.selection_method}</p>
+                  <p>Selection reference: {change.selection_ref}</p>
+                  <p>Selection rationale: {change.rationale}</p>
+                  <p>Declared at: {formatWorkspaceDate(change.declared_at)}</p>
+                  <p className="piw-note">This candidate-to-input declaration was newly recorded since the comparison baseline. The input may already have been watched. It is not a new source arrival, completed reassessment or truth judgment.</p>
+                </>
+              )}
               {change.kind === 'assessment_dependency_change' && (
                 <p>Before stale: {String(change.before_stale)}. After stale: {String(change.after_stale)}. A stale dependency is not completed recalculation.</p>
               )}
@@ -1032,11 +1043,12 @@ function CommitmentsSection({ panels, bundle, onOpenCitation }) {
   )
 }
 
-function GapsSection({ panels, bundle, onOpenInput }) {
+function GapsSection({ panels, bundle, onOpenInput, checks, reviews }) {
   return (
     <section className="piw-section" id="piw-gaps" tabIndex={-1}>
       <h2>Evidence Gaps</h2>
       <InvestigationTextAvailability bundle={bundle} onOpenInput={onOpenInput} />
+      <CollectionDiagnosticRecords key={`${bundle.version.id}:${bundle.observation.id}`} bundle={bundle} checks={checks} reviews={reviews} />
       <h3>Collection declarations</h3>
       <p className="piw-note">Collection records are analyst declarations with explicit limits. Observation gaps are shown separately from conflicting evidence. A completed bounded search is not independently measured global coverage.</p>
       {!panels.coverage?.length ? <EmptySection kind="coverage" /> : null}
@@ -1832,6 +1844,9 @@ export default function PrivateInvestigationWorkspace({
             bundle={bundle}
             publicNode={publicNode}
             onOpenPublicGraphNode={onOpenPublicGraphNode}
+            onOpenInput={(selection, sourceBundle) => {
+              if (sourceBundle === bundle) actions.setInspector({ kind: 'retained-input', selection })
+            }}
           />
           <ChangedSection
             panels={panels}
@@ -1852,7 +1867,7 @@ export default function PrivateInvestigationWorkspace({
           />
           <HypothesesSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
           <CommitmentsSection panels={panels} bundle={bundle} onOpenCitation={openCitation} />
-          <GapsSection panels={panels} bundle={bundle} onOpenInput={(selection, sourceBundle) => {
+          <GapsSection panels={panels} bundle={bundle} checks={state.checks} reviews={state.reviews} onOpenInput={(selection, sourceBundle) => {
             if (sourceBundle !== bundle) return
             actions.setInspector({ kind: 'retained-input', selection })
           }} />
