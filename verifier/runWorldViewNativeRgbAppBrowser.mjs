@@ -49,15 +49,15 @@ try{
     await page.addInitScript(({source,packet})=>{
       let scope=null,listener=null
       window.__MIP_RGB_TEST__={source,packet,services:{sources:[source],getRequest:()=>scope,subscribeRequestChanges:callback=>{listener=callback;return()=>{listener=null}}},
-        events:[],decodeWitness:[],scope(value){scope=value;listener?.()},stats(){return {events:this.events,decodeWitness:this.decodeWitness}}}
+        events:[],decodeWitness:[],reservations:[],scope(value){scope=value;listener?.()},stats(){return {events:this.events,decodeWitness:this.decodeWitness,reservations:this.reservations}}}
     },{source:scenario==='genuine-unapproved'?original.source:source,packet})
     await page.route('**/*',async route=>{
       const request=route.request(),url=new URL(request.url())
       if(url.origin===base.origin){
         if(payloads.has(url.pathname)){
-          const state=await page.evaluate(()=>window.__MIP_WORLD_VIEW_USAGE_PROBE__?.snapshot())
-          reservations.push({path:url.pathname,localBudget:state?.localSourceResource?.localBudget??null})
-          assert.ok(state?.localSourceResource?.localBudget?.pendingRequests>0,'actual reservation precedes PNG GET')
+          // The before-fetch owner witness is collected synchronously in the
+          // transport observation below. Never pause an intercepted GET on a
+          // second browser evaluation: that can delay the protected read.
           gets.push(url.pathname);return route.fulfill({status:200,contentType:'image/png',headers:{'content-length':String(payloads.get(url.pathname).length)},body:payloads.get(url.pathname)})
         }
         if(url.pathname.endsWith('/src/views/WorldView.jsx')){
@@ -69,7 +69,7 @@ const transport=createTestTransport({packets:[bridge.packet],origin:location.ori
 const image=await createImageBitmap(blob,options);const canvas=new OffscreenCanvas(image.width,image.height);const context=canvas.getContext('2d',{willReadFrequently:true});context.drawImage(image,0,0);
 const rgba=context.getImageData(0,0,image.width,image.height).data;const rgb=new Uint8Array(image.width*image.height*3);let alphaOpaque=true;for(let i=0,j=0;i<rgba.length;i+=4){rgb[j++]=rgba[i];rgb[j++]=rgba[i+1];rgb[j++]=rgba[i+2];alphaOpaque&&=rgba[i+3]===255;}
 const rgbSha256=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',rgb)),b=>b.toString(16).padStart(2,'0')).join('');bridge.decodeWitness.push({width:image.width,height:image.height,rgbSha256,alphaOpaque});return image;
-},onEvent:event=>{bridge.events.push(event);if(bridge.events.length>128)bridge.events.shift()}});
+},onEvent:event=>{bridge.events.push(event);if(bridge.events.length>128)bridge.events.shift();if(event.type==='fetch-start'){const state=window.__MIP_WORLD_VIEW_USAGE_PROBE__?.snapshot();bridge.reservations.push({tileKey:event.tileKey,localBudget:state?.localSourceResource?.localBudget??null,observedBeforeFetch:true});}}});
 bridge.services.transport=transport;bridge.services.estimateBytes=descriptor=>transport.estimateBytes(descriptor);
 `
           return route.fulfill({response,body:setup+body.replace('cameraMemory: cameraMemoryRef.current,','realismServices: window.__MIP_RGB_TEST__.services, cameraMemory: cameraMemoryRef.current,')})
@@ -138,6 +138,12 @@ bridge.services.transport=transport;bridge.services.estimateBytes=descriptor=>tr
       const refused=await page.evaluate(()=>window.__MIP_WORLD_VIEW_USAGE_PROBE__.snapshot())
       assert.equal(gets.length,8);assert.equal(refused.nativeSourceImagery.ownedPhotoLayerCount,0)
       const events=await page.evaluate(()=>window.__MIP_RGB_TEST__.stats())
+      reservations.push(...events.reservations)
+      assert.equal(reservations.length,gets.length)
+      assert.deepEqual(reservations.map(item=>'/mip-native-rgb-test/'+item.tileKey),gets)
+      assert.ok(reservations.every(item=>item.observedBeforeFetch&&item.localBudget?.pendingRequests>0
+        &&item.localBudget.pendingEstimatedBytes>=packet.localResourceEstimate
+        &&item.localBudget.pendingEstimatedBytes+item.localBudget.allowanceConsumedBytes<=item.localBudget.maxBytes),'actual bounded reservation precedes every PNG GET')
       assert.equal(events.events.filter(event=>event.type==='encoded-sha-verified').length,8)
       assert.equal(events.decodeWitness.length,8);assert.ok(events.decodeWitness.every(item=>item.width===512&&item.height===512&&item.alphaOpaque))
       receipts.push({scenario,status:'PASS_NATIVE_OBSERVATION_PENDING_PIXEL_COMPARISON',authority:'SIMULATED_TEST_AUTHORITY_ONLY',genuinePayload:true,genuineApplicationAdmitted:false,
