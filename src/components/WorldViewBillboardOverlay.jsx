@@ -53,17 +53,20 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
   const tabRefs = useRef({})
   const entrance = useRef({ key: null, origin: null })
   const overlayRef = useRef(null), cardRef = useRef(null), tetherRef = useRef(null), attachmentRef = useRef(null), gradientRef = useRef(null)
+  const closeRef = useRef(null)
   const latestPaint = useRef(null), paintAttachment = useRef(null)
   const [tabState, setTabState] = useState({ key: selectedKey, tab: 'evidence' })
   const tabs = worldBillboardModuleTabs(model).map(entry => ({ ...entry, key:entry.id, Icon:MODULE_ICONS[entry.id] ?? Stack }))
   const tabScope = tabs.map(entry => entry.id).join('|')
-  const tab = tabState.key === selectedKey && tabState.scope === tabScope && tabs.some(entry => entry.id === tabState.tab) ? tabState.tab : 'evidence'
-  const selected = layout?.selected?.key === selectedKey ? layout.selected : null
+  const readingScope = model?.readingKey ?? selectedKey
+  const tab = tabState.key === readingScope && tabState.scope === tabScope && tabs.some(entry => entry.id === tabState.tab) ? tabState.tab : 'evidence'
+  const modelCurrent = model && (model.key == null || model.key === selectedKey)
+  const selected = modelCurrent && layout?.selected?.key === selectedKey ? layout.selected : null
   // Capture the renderer's projected canonical anchor at selection time. Frame,
   // camera and tab updates neither restart this entrance nor move its origin.
   if (!selected) entrance.current = { key: null, origin: null }
-  else if (entrance.current.key !== selectedKey) entrance.current = {
-    key: selectedKey,
+  else if (entrance.current.key !== readingScope) entrance.current = {
+    key: readingScope,
     origin: Number.isFinite(selected.anchor?.x) && Number.isFinite(selected.anchor?.y)
       && Number.isFinite(selected.card?.x) && Number.isFinite(selected.card?.y)
       ? { x: selected.anchor.x - selected.card.x, y: selected.anchor.y - selected.card.y } : null,
@@ -93,6 +96,16 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
   }
   // Anchor/frame updates get one synchronous paint without restarting motion.
   useLayoutEffect(() => { paintAttachment.current?.() })
+  useLayoutEffect(() => {
+    if ((!selected?.card && !cluster) || typeof document === 'undefined') return
+    const previous = document.activeElement
+    closeRef.current?.focus?.({preventScroll:true})
+    return () => {
+      // Closing the reader keeps canonical selection and the native plaque.
+      // Restore an extant opener, without scrolling the camera or the page.
+      if (previous?.isConnected && typeof previous.focus === 'function') previous.focus({preventScroll:true})
+    }
+  }, [readingScope, Boolean(selected?.card), Boolean(cluster)])
   useLayoutEffect(() => {
     if (!selected?.card || cluster || typeof window === 'undefined') return
     let frame = null, stopped = false, deadline = 0
@@ -132,7 +145,7 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
       for (const name of startEvents) node?.removeEventListener(name,motionStart)
       node?.removeEventListener('animationend',terminal);node?.removeEventListener('transitionend',terminal)
     }
-  }, [selectedKey, card?.x, card?.y, card?.width, card?.height, Boolean(cluster), tab])
+  }, [readingScope, card?.x, card?.y, card?.width, card?.height, Boolean(cluster), tab])
   const activate = callback => callback?.()
   const closeOnEscape = event => {
     if (event.key === 'Escape') { event.stopPropagation(); onClose?.() }
@@ -147,7 +160,7 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
     if (next == null) return
     event.preventDefault(); event.stopPropagation()
     const nextKey = tabs[next].key
-    setTabState({ key: selectedKey, tab: nextKey, scope:tabScope }); tabRefs.current[nextKey]?.focus({preventScroll:true}); tabRefs.current[nextKey]?.scrollIntoView?.({block:'nearest',inline:'nearest'})
+    setTabState({ key: readingScope, tab: nextKey, scope:tabScope }); tabRefs.current[nextKey]?.focus({preventScroll:true}); tabRefs.current[nextKey]?.scrollIntoView?.({block:'nearest',inline:'nearest'})
   }
   if (!cluster && (!selected?.card || !model || (model.key != null && model.key !== selectedKey))) return null
   const clusterPosition = cluster && { left: cluster.x, top: cluster.y }
@@ -177,20 +190,20 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
     </svg>}
     {cluster ? <aside className="wv-billboard-cluster" style={clusterPosition} aria-labelledby={`${prefix}-cluster-title`}>
       <header><div><span className="wv-billboard-eyebrow">Inspect group</span><h3 id={`${prefix}-cluster-title`}>Choose a recorded member</h3></div>
-        <button type="button" className="wv-billboard-icon-button" aria-label="Close group choices" onClick={() => activate(onClose)}><X aria-hidden="true" size={18} /></button></header>
+        <button ref={closeRef} type="button" className="wv-billboard-icon-button" aria-label="Close group choices" onClick={() => activate(onClose)}><X aria-hidden="true" size={18} /></button></header>
       <ul>{members.map(item => <li key={itemKey(item)}><button type="button" disabled={typeof onSelect !== 'function'} onClick={() => onSelect?.(itemKey(item))}>
         <span>{suppliedText(item.title ?? item.label ?? itemKey(item))}</span>{suppliedText(item.precision) && <small>{suppliedText(item.precision)}</small>}
       </button></li>)}</ul>
       {!members.length && <p className="wv-billboard-empty">No supplied members available.</p>}
-    </aside> : <aside ref={cardRef} key={selectedKey} className="wv-billboard-card" style={{ left: card.x, top: card.y, width: card.width, maxHeight: card.height,
+    </aside> : <aside ref={cardRef} key={readingScope} className="wv-billboard-card" style={{ left: card.x, top: card.y, width: card.width, maxHeight: card.height,
       transformOrigin: entrance.current.origin ? `${entrance.current.origin.x}px ${entrance.current.origin.y}px` : undefined }}
       aria-labelledby={`${prefix}-title`} data-selected-key={selectedKey} data-compact={compact} data-anchor-entrance={Boolean(entrance.current.origin)}>
-      <header><div>{suppliedText(model.chip) && <span className="wv-billboard-eyebrow">{suppliedText(model.chip)}</span>}<h3 id={`${prefix}-title`}>{title}</h3>{selected.occluded && <span className="wv-billboard-occlusion-cue" title="The canonical ground anchor is occluded. Display stem visibility is a separate test.">Canonical anchor occluded</span>}{typeof selected.displayOccluded === 'boolean' && <span className="wv-billboard-stem-cue">{selected.displayOccluded ? 'Display marker occluded' : 'Display marker visible'}</span>}</div>
-        <button type="button" className="wv-billboard-icon-button" aria-label="Close selected card" onClick={() => activate(onClose)}><X aria-hidden="true" size={18} /></button></header>
+      <header><div>{suppliedText(model.chip) && <span className="wv-billboard-eyebrow">{suppliedText(model.chip)}</span>}<h3 id={`${prefix}-title`}>{title}</h3>{suppliedText(model.locationScope) && <span className="wv-billboard-scope-cue" title={suppliedText(model.scopeCue) ?? undefined}>{suppliedText(model.locationScope)}</span>}{selected.occluded && <span className="wv-billboard-occlusion-cue" title="The canonical anchor is occluded. The selected reader retains its geographic tether.">Canonical anchor occluded</span>}{typeof selected.displayOccluded === 'boolean' && <span className="wv-billboard-stem-cue">{selected.displayOccluded ? 'Display marker occluded' : 'Display marker visible'}</span>}</div>
+        <button ref={closeRef} type="button" className="wv-billboard-icon-button" aria-label="Close selected card" onClick={() => activate(onClose)}><X aria-hidden="true" size={18} /></button></header>
       {!compact && summary}
       <div className="wv-billboard-tabs" role="tablist" aria-label="Selected record modules">{tabs.map(({ key, label, Icon }) => <button key={key} ref={element => { tabRefs.current[key] = element }}
         type="button" role="tab" id={`${prefix}-${key}-tab`} aria-controls={`${prefix}-module-panel`} aria-selected={tab === key} tabIndex={tab === key ? 0 : -1}
-        onClick={() => activate(() => setTabState({ key: selectedKey, tab: key, scope:tabScope }))} onKeyDown={event => moveTab(event, key)}><Icon aria-hidden="true" size={15} />{label}</button>)}</div>
+        onClick={() => activate(() => setTabState({ key: readingScope, tab: key, scope:tabScope }))} onKeyDown={event => moveTab(event, key)}><Icon aria-hidden="true" size={15} />{label}</button>)}</div>
       <div className="wv-billboard-module-body" role="tabpanel" id={`${prefix}-module-panel`} aria-labelledby={`${prefix}-${tab}-tab`} tabIndex={0}>
         {compact && tab === 'evidence' && summary}
         <ModuleContent content={module} interactionEnabled />

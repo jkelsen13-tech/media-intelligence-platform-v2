@@ -1,5 +1,6 @@
-import { layoutWorldBillboards } from './worldViewBillboardLayout.js'
+import { BILLBOARD_DISPLAY_CAPS, layoutWorldBillboards } from './worldViewBillboardLayout.js'
 import { resolveBillboardDistanceStates, updateSelectedBillboardEnvelope } from './worldViewBillboardPresentation.js'
+import { worldBillboardScopeLabel } from './worldViewBillboardModules.js'
 import { createDisplayPresentation, displayPresentationSignature, globeDisplayMarkers, applyGlobeDisplayPresentation } from './worldViewDisplayPresentation.js'
 import { displayMarkerKey } from './worldViewDisplayClusters.js'
 import { createMarkerLabelMeasurer, dispatchGlobeMarkerPick, updateGlobeMarkerLayout } from './worldViewMarkerLayout.js'
@@ -656,7 +657,19 @@ export function createCesiumEllipsoidRendererAdapter({
   function refreshDisplayLayout() {
     if (!viewer || !Cesium || cancelledNow()) return false
     const scene = viewer.scene
-    const markers = globeDisplayMarkers(Cesium, viewer, entities, measureLabel)
+    const entityByKey=new Map(entities.map(entity=>[entity.__mipMarker.id,entity]))
+    const canonicalMarkers = globeDisplayMarkers(Cesium, viewer, entities, measureLabel)
+    const ground = billboardEnabled ? new Map(canonicalMarkers.map(marker=>[marker.id,worldViewBillboardDisplayGround(Cesium,viewer,marker)])) : null
+    const markers = billboardEnabled ? canonicalMarkers.map(marker=>{
+      const display=ground.get(marker.id)
+      const screen=Cesium.SceneTransforms.worldToWindowCoordinates(scene,display.worldPosition)
+      const displayOccluded=worldViewBillboardTerrainOccluded(Cesium,viewer,display.worldPosition)
+      const canonicalPosition=entityByKey.get(marker.id)?.position.getValue(viewer.clock.currentTime)
+      return {...marker,canonicalAnchor:{x:marker.x,y:marker.y},x:screen?.x,y:screen?.y,
+        visible:marker.visible&&!displayOccluded,displayOccluded,
+        canonicalOccluded:!marker.visible||worldViewBillboardTerrainOccluded(Cesium,viewer,canonicalPosition),
+        displayHeightMeters:display.displayHeightMeters}
+    }) : canonicalMarkers
     displayPresentation = createDisplayPresentation(markers, {
       width: scene.canvas.clientWidth, height: scene.canvas.clientHeight,
       cameraHeightMeters: viewer.camera.positionCartographic.height,
@@ -666,29 +679,41 @@ export function createCesiumEllipsoidRendererAdapter({
     if (billboardEnabled) displayPresentation.labels = new Set()
     let changed = applyGlobeDisplayPresentation(viewer, entities, displayPresentation)
     if (billboardEnabled) {
-      const items = markers.map(marker => ({ key: marker.id, anchor: {x:marker.x,y:marker.y},
-        distanceMeters: Cesium.Cartesian3.distance(viewer.camera.positionWC, entities.find(e=>e.__mipMarker.id===marker.id)?.position.getValue(viewer.clock.currentTime)),
-        occluded: !marker.visible, canonicalCoordinates: marker.position, label:marker.label }))
+      const cameraHeightMeters=viewer.camera.positionCartographic.height
+      const items = markers.map(marker => ({ key: marker.id, anchor: marker.canonicalAnchor,
+        markerAnchor:{x:marker.x,y:marker.y},canonicalOccluded:marker.canonicalOccluded,displayOccluded:marker.displayOccluded,
+        distanceMeters: Cesium.Cartesian3.distance(viewer.camera.positionWC, entityByKey.get(marker.id)?.position.getValue(viewer.clock.currentTime)),
+        occluded: !marker.visible, canonicalCoordinates: marker.position, label:marker.label,
+        precision:marker.row?.precision_class ?? null,precisionFloorMeters:heightMetersForPrecisionClass(marker.row?.precision_class),
+        cameraHeightMeters,scopePlaques:true }))
       const selectedKey = markers.find(marker=>marker.selected)?.id ?? null
-      const distance = resolveBillboardDistanceStates({items,previous:distanceMemory,datasetKey:entities.map(e=>e.id).join('|'),selectedKey})
+      const distance = resolveBillboardDistanceStates({items,previous:distanceMemory,
+        datasetKey:JSON.stringify(markers.map(m=>[m.id,m.row?.revision_id,m.row?.precision_class,m.position])),
+        selectedKey,cameraHeightMeters,scopePlaques:true})
       distanceMemory = distance.memory
+      for(const item of items){item.presentationState=distance.states[item.key];item.nearDetailKind=distance.nearDetails[item.key]?.kind}
       const layout = layoutWorldBillboards({items,viewport:{width:scene.canvas.clientWidth,height:scene.canvas.clientHeight},selectedKey})
       const envelope = updateSelectedBillboardEnvelope({selected:layout.selected,previous:envelopeMemory,
         viewport:{width:scene.canvas.clientWidth,height:scene.canvas.clientHeight},cameraSignature:JSON.parse(getCameraState() ?? 'null')})
-      envelopeMemory=envelope.memory;selectedBillboard=envelope.selected ? {...envelope.selected,occlusionBasis:'ellipsoid-horizon-only'} : null
-      const singles = new Set(displayPresentation.layout.singles.map(marker=>marker.id))
-      const signature = worldViewNativeBillboardSignature(markers,singles,distance.states)
+      envelopeMemory=envelope.memory;selectedBillboard=envelope.selected ? {...envelope.selected,occlusionBasis:'ellipsoid-and-observed-terrain-center'} : null
+      const admittedSingles = new Set(displayPresentation.layout.singles.map(marker=>marker.id))
+      // Reuse observed source terrain at the admitted lon/lat without adding
+      // a guessed 18m stem or evidence altitude. Canonical coordinates/tether
+      // remain unchanged; the sampled background surface is display-only.
+      const {singles,states:nativeStates}=worldViewBillboardNativeTargets(markers,admittedSingles,distance.states,
+        {width:scene.canvas.clientWidth,height:scene.canvas.clientHeight})
+      const signature = worldViewNativeBillboardSignature(markers,singles,nativeStates,ground)
       for(const entity of entities) entity.point.show=false
       if(nativeBillboards && signature!==billboardSignature){
         billboardSignature=signature;nativeBillboards.removeAll()
         for(const entity of entities){
           const marker=entity.__mipMarker
           if(!singles.has(marker.id))continue
-          const state=distance.states[marker.id] ?? 'icon', coords=marker.position
+          const state=nativeStates[marker.id] ?? 'icon'
           const width=state==='plaque'?180:state==='ribbon'?132:24,height=state==='plaque'?56:state==='ribbon'?32:24
-          nativeBillboards.add({position:Cesium.Cartesian3.fromDegrees(coords[0],coords[1],18),
+          nativeBillboards.add({position:ground.get(marker.id).worldPosition,
             image:worldViewNativeBillboardTexture(marker.label,state,entity.__mipRow.precision_class),width,height,
-            verticalOrigin:Cesium.VerticalOrigin.CENTER,heightReference:Cesium.HeightReference.RELATIVE_TO_GROUND,disableDepthTestDistance:0,id:entity})
+            verticalOrigin:Cesium.VerticalOrigin.CENTER,disableDepthTestDistance:0,id:entity})
         }
         changed=true
       }
@@ -815,7 +840,8 @@ export function createCesiumEllipsoidRendererAdapter({
     const position = entity?.position?.getValue?.(viewer.clock.currentTime)
     const screen = position ? viewer.scene.cartesianToCanvasCoordinates(position) : null
     const visible = Boolean(screen && screen.x >= 0 && screen.y >= 0 && screen.x <= width && screen.y <= height)
-    const next = { visible, x: screen?.x ?? null, y: screen?.y ?? null, width, height, billboardSelected: selectedBillboard }
+    const billboardMarkerVisible=Boolean(nativeBillboards&&entity&&Array.from({length:nativeBillboards.length},(_,i)=>nativeBillboards.get(i)).some(b=>b.id===entity&&b.show!==false))
+    const next = { visible, x: screen?.x ?? null, y: screen?.y ?? null, width, height, billboardSelected: selectedBillboard,billboardMarkerVisible }
     if (!billboardEnabled && lastAnchor && lastAnchor.visible === visible && lastAnchor.width === width && lastAnchor.height === height
       && (!visible || Math.abs(lastAnchor.x - next.x) < 0.5 && Math.abs(lastAnchor.y - next.y) < 0.5)) return
     lastAnchor = next
@@ -1025,11 +1051,60 @@ export function worldViewNativeBillboardTexture(label,state,precision) {
   const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]))
   const wide=state!=='icon',width=wide?360:48,height=state==='plaque'?112:64
   const title=wide?`<text x="42" y="39" font-size="23" fill="#fff4dd">${escape(String(label??'').slice(0,24))}</text>`:''
-  const detail=state==='plaque'?`<text x="12" y="86" font-size="18" fill="#b6cec4">${escape(precision??'Precision unavailable')}</text>`:''
+  const detail=state==='plaque'?`<text x="12" y="86" font-size="17" fill="#b6cec4">${escape(worldBillboardScopeLabel(precision))}</text>`:''
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="${width}" height="${height}" rx="10" fill="#243b39" stroke="#efe6cc" stroke-width="2"/><circle cx="22" cy="30" r="8" fill="#fff4dd"/>${title}${detail}</svg>`
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 
-export function worldViewNativeBillboardSignature(markers,singles,states) {
-  return JSON.stringify(markers.map(marker=>[marker.id,singles.has(marker.id),states[marker.id],marker.label,marker.position,marker.row?.revision_id,marker.row?.precision_class]))
+export function worldViewNativeBillboardSignature(markers,singles,states,ground=null) {
+  return JSON.stringify(markers.map(marker=>[marker.id,singles.has(marker.id),states[marker.id],marker.label,marker.position,marker.row?.revision_id,marker.row?.precision_class,ground?.get(marker.id)?.displayHeightMeters ?? null]))
+}
+
+/** Existing source terrain samples affect DISPLAY altitude only. No request,
+ * geometry rewrite, uncertainty radius or evidence elevation is supplied. */
+export function worldViewBillboardDisplayGround(C,viewer,marker) {
+  const coordinates=marker.position
+  let displayHeightMeters=0
+  try {
+    const height=viewer.scene.globe.getHeight?.(C.Cartographic.fromDegrees(coordinates[0],coordinates[1]))
+    if(Number.isFinite(height))displayHeightMeters=height
+  } catch { /* unavailable background terrain retains the reference ellipsoid */ }
+  return {worldPosition:C.Cartesian3.fromDegrees(coordinates[0],coordinates[1],displayHeightMeters),
+    displayHeightMeters,canonicalCoordinates:coordinates}
+}
+
+// Terrain intersection only, using the renderer's already-owned source data.
+// GPU depth still masks the full painted glyph; no through-geometry override.
+export function worldViewBillboardTerrainOccluded(C,viewer,point) {
+  if(!point||!viewer?.scene?.globe?.pick||!C?.Ray)return false
+  try {
+    const origin=viewer.camera.positionWC
+    const direction=C.Cartesian3.subtract(point,origin,new C.Cartesian3())
+    const distance=C.Cartesian3.magnitude(direction)
+    if(!Number.isFinite(distance)||distance<=0)return false
+    const hit=viewer.scene.globe.pick(new C.Ray(origin,C.Cartesian3.normalize(direction,direction)),viewer.scene)
+    return Boolean(hit&&C.Cartesian3.distance(origin,hit)<distance-0.5)
+  } catch { return true }
+}
+
+/** Native singleton glyphs share the existing explicit display-group chooser.
+ * Bounds and density suppress/downgrade display targets, never relocate them.
+ * The current visible row list remains the accessible route to omitted targets.
+ */
+export function worldViewBillboardNativeTargets(markers,admittedSingles,states,viewport) {
+  const singles=new Set(),nativeStates={...states},counts={plaque:0,ribbon:0}
+  if(!Number.isFinite(viewport?.width)||!Number.isFinite(viewport?.height))return {singles,states:nativeStates}
+  const ordered=[...markers].sort((a,b)=>Number(b.selected)-Number(a.selected)||(String(a.id)<String(b.id)?-1:String(a.id)>String(b.id)?1:0))
+  for(const marker of ordered){
+    if(!admittedSingles.has(marker.id)||singles.size>=BILLBOARD_DISPLAY_CAPS.targets)continue
+    let state=nativeStates[marker.id] ?? 'icon'
+    if((state==='plaque'||state==='ribbon')&&counts[state]>=BILLBOARD_DISPLAY_CAPS[state])state='icon'
+    const width=state==='plaque'?180:state==='ribbon'?132:24,height=state==='plaque'?56:state==='ribbon'?32:24
+    if(!Number.isFinite(marker.x)||!Number.isFinite(marker.y)||marker.x-width/2<16||marker.x+width/2>viewport.width-16
+      ||marker.y-height/2<72||marker.y+height/2>viewport.height-44)continue
+    nativeStates[marker.id]=state
+    if(state==='plaque'||state==='ribbon')counts[state]++
+    singles.add(marker.id)
+  }
+  return {singles,states:nativeStates}
 }

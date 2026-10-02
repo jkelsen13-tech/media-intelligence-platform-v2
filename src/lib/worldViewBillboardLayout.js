@@ -1,5 +1,6 @@
 // Renderer-neutral DISPLAY layout. Screen anchors are projections of immutable
 // world locations; grouping and the selected envelope never rewrite those data.
+import { worldBillboardNearDetail } from './worldViewBillboardPresentation.js'
 export const BILLBOARD_IMPORTANCE_THRESHOLD = 0.7
 export const BILLBOARD_DISPLAY_CAPS = Object.freeze({ plaque:4, ribbon:10, targets:24, broadGroups:8 })
 const finite = Number.isFinite
@@ -53,13 +54,19 @@ function selectedEnvelope(item, rect, viewport) {
   return {key:item.key, anchor, card,
     tether:{x1:anchor.x,y1:anchor.y,x2,y2},
     occluded:Object.hasOwn(item, 'canonicalOccluded') ? item.canonicalOccluded === true : item.occluded === true,
-    canonicalCoordinates:item.canonicalCoordinates}
+    canonicalCoordinates:item.canonicalCoordinates,
+    ...(item.precision?{precision:item.precision}:{}),
+    ...(item.nearDetailKind?{nearDetailKind:item.nearDetailKind}:{}),
+    ...(typeof item.displayOccluded==='boolean'?{displayOccluded:item.displayOccluded}:{})}
 }
 
 function markerFor(item) {
   const distance = item.distanceMeters
   const supplied = ['icon','ribbon','plaque'].includes(item.presentationState) ? item.presentationState : null
-  const state = distance > 250000 ? 'cluster' : supplied ?? (distance <= 1200 ? 'plaque' : distance <= 12000 ? 'ribbon' : 'icon')
+  let state = distance > 250000 ? 'cluster' : supplied ?? (distance <= 1200 ? 'plaque' : distance <= 12000 ? 'ribbon' : 'icon')
+  const detail=worldBillboardNearDetail(item,{cameraHeightMeters:item.cameraHeightMeters,scopePlaques:item.scopePlaques===true,
+    previousKind:item.nearDetailKind==='scope'?'scope':null})
+  if(state==='plaque'&&!detail.physicalAllowed&&!detail.scopeAllowed)state='ribbon'
   const width = state === 'plaque' ? Math.min(200, Math.max(112, String(item.label ?? '').length*7+36))
     : state === 'ribbon' ? Math.min(152, Math.max(72, String(item.label ?? '').length*6+24))
       : state === 'cluster' ? 44 : 24
@@ -67,7 +74,8 @@ function markerFor(item) {
   return {key:item.key, x:markerAnchor.x, y:markerAnchor.y, width,
     height:state === 'plaque' ? 56 : state === 'ribbon' ? 32 : state === 'cluster' ? 44 : 24,
     state, occluded:false, family:item.family, label:item.label,
-    canonicalCoordinates:item.canonicalCoordinates,
+    canonicalCoordinates:item.canonicalCoordinates,precision:item.precision,
+    ...(state==='plaque'?{nearDetailKind:detail.scopeAllowed?'scope':'physical'}:{}),
     ...(state === 'cluster' ? {memberKeys:[item.key],count:1} : {})}
 }
 

@@ -1,19 +1,51 @@
-// Pure DISPLAY controller: camera distance determines presentation; importance
-// and evidence content do not. All caller-owned rows/coordinates stay immutable.
+// Pure DISPLAY controller: camera distance and its admitted precision envelope
+// determine density; importance and content do not. Source data stay immutable.
+import { heightMetersForPrecisionClass } from './worldViewMapStack.js'
 const finite=Number.isFinite
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v))
 const validCard=c=>c&&['x','y','width','height'].every(k=>finite(c[k]))&&c.width>0&&c.height>0
 const validAnchor=a=>a&&finite(a.x)&&finite(a.y)
 const statesAllowed=new Set(['icon','ribbon','plaque'])
 
-export function resolveBillboardDistanceStates({items=[],previous=null,datasetKey=null,selectedKey=null,thresholds={},hysteresisFraction=0.12}={}) {
+/** The closest legal camera view may show a scope plaque, not an exact point.
+ * The physical 1,200m band remains unchanged. The camera's existing precision
+ * floor supplies this separate density boundary; it is never lowered here.
+ * Unknown precision and a live camera below its floor fail closed. Legacy
+ * renderer-neutral fixtures without a precision contract retain their bands.
+ */
+export function worldBillboardNearDetail(item, {nearMeters=1200,cameraHeightMeters,
+  scopePlaques=false,previousKind=null,hysteresisFraction=0.12}={}) {
+  const precision=item?.precision ?? item?.precision_class
+  const constrained=scopePlaques || Object.hasOwn(item ?? {},'precision')
+    || Object.hasOwn(item ?? {},'precision_class') || Object.hasOwn(item ?? {},'precisionFloorMeters')
+  if(!constrained)return {kind:'physical',physicalAllowed:true,scopeAllowed:false,precision:null,floorMeters:null}
+  const known=['country','region','city','area','facility'].includes(precision)
+  if(!known)return {kind:null,physicalAllowed:false,scopeAllowed:false,precision:precision ?? null,floorMeters:null,reason:'precision-unavailable'}
+  const floor=heightMetersForPrecisionClass(precision)
+  // A caller-supplied stricter floor is preserved; a lower one cannot waive
+  // the canonical class floor. Scope never gets a fabricated uncertainty radius.
+  const floorMeters=Math.max(floor,finite(item.precisionFloorMeters)&&item.precisionFloorMeters>=0?item.precisionFloorMeters:floor)
+  const height=item.cameraHeightMeters ?? cameraHeightMeters
+  const epsilon=Math.max(1e-6,floorMeters*1e-10)
+  const supported=['city','area','facility'].includes(precision)
+  const legal=finite(height)&&height>=floorMeters-epsilon
+  const band=clamp(finite(hysteresisFraction)?hysteresisFraction:0.12,0,0.15)
+  const scopeAllowed=scopePlaques&&supported&&legal
+    && height<=floorMeters*(previousKind==='scope'?1+band:1)+epsilon
+  const physicalAllowed=legal&&floorMeters<=nearMeters
+  return {kind:scopeAllowed?'scope':physicalAllowed?'physical':null,physicalAllowed,scopeAllowed,
+    precision,floorMeters,reason:scopeAllowed?'scope-at-admitted-floor':physicalAllowed?'physical-near-supported'
+      :!legal?'camera-floor-unavailable':!supported?'coarse-scope':'physical-near-unsupported'}
+}
+
+export function resolveBillboardDistanceStates({items=[],previous=null,datasetKey=null,selectedKey=null,thresholds={},hysteresisFraction=0.12,cameraHeightMeters,scopePlaques=false}={}) {
   const near=finite(thresholds.nearMeters)&&thresholds.nearMeters>0?thresholds.nearMeters:1200
   const far=finite(thresholds.farMeters)&&thresholds.farMeters>near?thresholds.farMeters:Math.max(12000,near*2)
   const band=clamp(finite(hysteresisFraction)?hysteresisFraction:0.12,0,0.15)
   const sameDataset=previous?.datasetKey===datasetKey
   const counts=new Map()
   for(const item of items)if(typeof item?.key==='string'&&item.key)counts.set(item.key,(counts.get(item.key)??0)+1)
-  const pairs=[]
+  const pairs=[],detailPairs=[]
   for(const item of [...items].sort((a,b)=>String(a?.key)<String(b?.key)?-1:String(a?.key)>String(b?.key)?1:0)){
     if(counts.get(item?.key)!==1||!finite(item.distanceMeters)||item.distanceMeters<0)continue
     const d=item.distanceMeters
@@ -23,10 +55,17 @@ export function resolveBillboardDistanceStates({items=[],previous=null,datasetKe
     else if(state==='icon')state=d<near*(1-band)?'plaque':d<far*(1-band)?'ribbon':'icon'
     else if(state==='plaque')state=d>far*(1+band)?'icon':d>near*(1+band)?'ribbon':'plaque'
     else state=d>far*(1+band)?'icon':d<near*(1-band)?'plaque':'ribbon'
+    const priorDetail=sameDataset&&Object.hasOwn(previous?.nearDetails??{},item.key)?previous.nearDetails[item.key]:null
+    const previousKind=priorDetail?.precision===(item.precision ?? item.precision_class ?? null)?priorDetail?.kind:null
+    const detail=worldBillboardNearDetail(item,{nearMeters:near,cameraHeightMeters,scopePlaques,previousKind,hysteresisFraction:band})
+    if(detail.scopeAllowed && d<=250000)state='plaque'
+    else if(state==='plaque'&&!detail.physicalAllowed)state='ribbon'
+    detailPairs.push([item.key,{...detail,kind:state==='plaque'?detail.kind:null}])
     pairs.push([item.key,state])
   }
   const states=Object.fromEntries(pairs)
-  return {states,memory:{datasetKey,selectedKey,states,thresholds:{nearMeters:near,farMeters:far},hysteresisFraction:band}}
+  const nearDetails=Object.fromEntries(detailPairs)
+  return {states,nearDetails,memory:{datasetKey,selectedKey,states,nearDetails,thresholds:{nearMeters:near,farMeters:far},hysteresisFraction:band}}
 }
 
 function safeBounds(viewport){
@@ -122,7 +161,10 @@ export function updateSelectedBillboardEnvelope({selected=null,key=selected?.key
   }
   const settling=!restored&&Math.max(Math.hypot(card.x-target.x,card.y-target.y),Math.abs(card.width-target.width),Math.abs(card.height-target.height))>0.01&&reason!=='stable'
   const projectedAnchor={x:anchor.x,y:anchor.y}
-  const result={key,anchor:projectedAnchor,card,tether:tether(projectedAnchor,card),occluded:canonicalOccluded===true,canonicalCoordinates}
+  const result={key,anchor:projectedAnchor,card,tether:tether(projectedAnchor,card),occluded:canonicalOccluded===true,canonicalCoordinates,
+    ...(selected?.nearDetailKind?{nearDetailKind:selected.nearDetailKind}:{}),
+    ...(selected?.precision?{precision:selected.precision}:{}),
+    ...(typeof selected?.displayOccluded==='boolean'?{displayOccluded:selected.displayOccluded}:{})}
   return {selected:result,memory:{key,card:{...card},viewport:{width:viewport.width,height:viewport.height},
     cameraSignature:cameraSignature&&typeof cameraSignature==='object'?{...cameraSignature}:cameraSignature,
     canonicalOccluded:canonicalOccluded===true,settling},reason,stable:reason==='stable',restored,settling}

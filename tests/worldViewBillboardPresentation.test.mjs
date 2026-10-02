@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {resolveBillboardDistanceStates,updateSelectedBillboardEnvelope} from '../src/lib/worldViewBillboardPresentation.js'
+import {heightMetersForPrecisionClass} from '../src/lib/worldViewMapStack.js'
 const viewport={width:1280,height:900}
 const selected={key:'released-a',anchor:{x:180,y:200},card:{x:820,y:550,width:360,height:240},canonicalCoordinates:[-81.7,41.4],occluded:false}
 const camera={lon:-81.7,lat:41.4,heightMeters:10000,headingDegrees:0,pitchDegrees:-45,rollDegrees:0}
@@ -156,4 +157,52 @@ test('small dateline/heading wrap is slow camera motion rather than a false full
  const next=updateSelectedBillboardEnvelope({selected:{...selected,card:{...selected.card,x:100}},viewport,previous:first.memory,cameraSignature:{...camera,lon:-179,headingDegrees:1}})
  assert.equal(next.reason,'stable')
  assert.deepEqual(next.selected.card,first.selected.card)
+})
+
+test('supported scope plaques enter at the existing legal floor and retain the original physical distance thresholds',()=>{
+ for(const precision of ['city','area','facility']){
+  const floor=heightMetersForPrecisionClass(precision)
+  const item={key:'scope',distanceMeters:floor*1.5,precision,precisionFloorMeters:floor,canonicalCoordinates:[-81.7,41.4]}
+  const before=JSON.stringify(item)
+  const atFloor=resolveBillboardDistanceStates({items:[freeze(item)],datasetKey:'admitted',cameraHeightMeters:floor,scopePlaques:true})
+  assert.equal(atFloor.states.scope,'plaque')
+  assert.equal(atFloor.nearDetails.scope.kind,'scope')
+  assert.deepEqual(atFloor.memory.thresholds,{nearMeters:1200,farMeters:12000})
+  assert.equal(atFloor.nearDetails.scope.floorMeters,floor)
+  assert.equal(JSON.stringify(item),before)
+  const retained=resolveBillboardDistanceStates({items:[item],datasetKey:'admitted',previous:atFloor.memory,cameraHeightMeters:floor*1.1,scopePlaques:true})
+  assert.equal(retained.states.scope,'plaque','legal slow zoom retains density without changing evidence precision')
+  const exited=resolveBillboardDistanceStates({items:[item],datasetKey:'admitted',previous:retained.memory,cameraHeightMeters:floor*1.13,scopePlaques:true})
+  assert.notEqual(exited.states.scope,'plaque')
+  assert.equal(exited.nearDetails.scope.kind,null)
+  const approach=resolveBillboardDistanceStates({items:[item],datasetKey:'admitted',cameraHeightMeters:floor*1.001,scopePlaques:true})
+  assert.notEqual(approach.states.scope,'plaque','a fresh approach must reach the floor rather than borrow the exit band')
+ }
+})
+
+test('below-floor, missing, malformed and coarse precision cannot produce a near plaque or lower an existing floor',()=>{
+ for(const precision of [null,undefined,'building','City','country','region','city','area','facility']){
+  const floor=heightMetersForPrecisionClass(precision)
+  const next=resolveBillboardDistanceStates({items:[{key:'a',distanceMeters:900,precision,precisionFloorMeters:0}],cameraHeightMeters:floor-1,scopePlaques:true})
+  assert.equal(next.states.a,'ribbon')
+  assert.equal(next.nearDetails.a.kind,null)
+ }
+ for(const precision of ['country','region']){
+  const floor=heightMetersForPrecisionClass(precision)
+  assert.notEqual(resolveBillboardDistanceStates({items:[{key:'a',distanceMeters:floor,precision}],cameraHeightMeters:floor,scopePlaques:true}).states.a,'plaque')
+ }
+ const city=heightMetersForPrecisionClass('city')
+ assert.equal(resolveBillboardDistanceStates({items:[{key:'a',distanceMeters:900,precision:'city',precisionFloorMeters:city*2}],cameraHeightMeters:city,scopePlaques:true}).states.a,'ribbon')
+})
+
+test('precision or dataset corrections and large camera jumps cannot reuse a stale scope plaque',()=>{
+ const floor=heightMetersForPrecisionClass('city')
+ const run=extra=>resolveBillboardDistanceStates({items:[{key:'a',distanceMeters:80000,precision:'city'}],datasetKey:'r1',cameraHeightMeters:floor,scopePlaques:true,...extra})
+ const first=run({})
+ assert.equal(first.states.a,'plaque')
+ assert.equal(run({previous:first.memory,cameraHeightMeters:floor*10}).states.a,'icon')
+ assert.equal(run({previous:first.memory,datasetKey:'r2',cameraHeightMeters:floor*1.05}).states.a,'icon')
+ const changed=run({previous:first.memory,items:[{key:'a',distanceMeters:10000,precision:'facility'}],cameraHeightMeters:heightMetersForPrecisionClass('facility')*1.05})
+ assert.equal(changed.states.a,'ribbon')
+ assert.equal(changed.nearDetails.a.kind,null)
 })

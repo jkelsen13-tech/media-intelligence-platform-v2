@@ -593,6 +593,7 @@ export default function WorldView({
       range: investigationContext?.selected_time_range ?? null }) }),
   [selectedForMatch?.id, visibleRow?.subject_graph_node_id, visibleRow?.revision_id, investigationContext])
   const inspectContext = useCallback(() => {
+    setContextOpen(false)
     if (exploring) {
       setExploreContextRequest(value => value + 1)
       return
@@ -712,12 +713,12 @@ export default function WorldView({
                 explorationActive={exploring && touchInteraction}
                 billboardEnabled={prototypeEnabled}
                 contextOverlay={anchor => (prototypeEnabled && visibleRow && anchor.billboardSelected || contextModel.indicator.exists && contextModel.indicator.eligible) && <>
-                  {!contextOpen && anchor.visible && <button type="button" className="wv-spatial-context-icon"
+                  {!contextOpen && anchor.visible && (!prototypeEnabled || !anchor.billboardMarkerVisible) && <button type="button" className="wv-spatial-context-icon"
                     style={{ left: anchor.x, top: anchor.y }} aria-label="Open selected spatial context"
                     onClick={() => setContextOpen(true)}>i</button>}
                   {contextOpen && prototypeEnabled && anchor.billboardSelected && <WorldViewBillboardOverlay
                     layout={{markers:[],selected:anchor.billboardSelected}} selectedKey={anchor.billboardSelected.key}
-                    model={buildWorldBillboardModel({key:anchor.billboardSelected.key,label:inspectorTitle(visibleRow),
+                    model={buildWorldBillboardModel({key:anchor.billboardSelected.key,revisionKey:visibleRow?.revision_id,label:inspectorTitle(visibleRow),
                       canonicalCoordinates:anchor.billboardSelected.canonicalCoordinates,precision:visibleRow?.precision_class,
                       sourceNativeTime:visibleRow?.source_native_time,validityTimeRange:visibleRow?.valid_from_utc && visibleRow?.valid_to_utc ? [visibleRow.valid_from_utc,visibleRow.valid_to_utc] : null,
                       sourceRefs:normalizeEvidenceRefs(visibleRow?.evidence_refs),suppliedModules:admitWorldViewContextModules({suppliedModules:visibleRow?.supplied_modules},{admittedSourceIds:[]})},

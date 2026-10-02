@@ -12,6 +12,11 @@ export const WORLD_BILLBOARD_CORE_TABS = Object.freeze([
 const text = value => typeof value === 'string' && value.trim() ? value : null
 const scalar = value => typeof value === 'number' && Number.isFinite(value) ? value : text(value)
 
+export function worldBillboardScopeLabel(precision) {
+  return ['country','region','city','area','facility'].includes(precision)
+    ? `${precision} scope · not exact position` : 'Evidence precision unavailable'
+}
+
 /** Preserve exact supplied payloads. Duplicate IDs are ambiguous and omitted.
  * No relation, eligibility, dates, facts or sources are derived from membership.
  */
@@ -63,8 +68,13 @@ export function buildWorldBillboardModel(record, {
   if (record.sourceNativeTime != null) metadata.push({label:'Source native time provenance',
     value:typeof record.sourceNativeTime==='object' ? JSON.stringify(record.sourceNativeTime) : scalar(record.sourceNativeTime) ?? 'Unavailable'})
   const supplied = suppliedWorldBillboardModules(record.suppliedModules)
-  return { key: record.key ?? record.id, title: text(record.label) ?? text(record.title) ?? 'Untitled supplied record',
+  const key=record.key ?? record.id
+  return { key, readingKey:JSON.stringify([key,record.revisionKey ?? record.revision_id ?? null,inspectionTime,record.validityTimeRange ?? null]),
+    title: text(record.label) ?? text(record.title) ?? 'Untitled supplied record',
     chip: text(record.precision) ? `${record.precision} evidence precision` : 'Evidence precision unavailable',
+    locationScope:worldBillboardScopeLabel(record.precision),
+    scopeCue:['country','region','city','area','facility'].includes(record.precision)
+      ? 'Representative scope anchor; not a surveyed feature or building position.' : null,
     canonicalCoordinates: coordinates, precision: scalar(record.precision), metadata,
     moduleTabs: worldBillboardModuleTabs({ moduleTabs: supplied }),
     sourceRefs: record.sourceRefs ?? record.references ?? [],
