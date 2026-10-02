@@ -4,8 +4,8 @@ import {mkdir} from 'node:fs/promises'
 import {build} from 'esbuild'
 import React from 'react'
 import TestRenderer,{act} from 'react-test-renderer'
-await mkdir(new URL('../.compiled/',import.meta.url),{recursive:true})
-const output=new URL('../.compiled/world-view-500-source-access.mjs',import.meta.url)
+await mkdir(new URL('./.compiled/',import.meta.url),{recursive:true})
+const output=new URL('./.compiled/world-view-500-source-access.mjs',import.meta.url)
 await build({entryPoints:[new URL('../src/components/WorldViewExploreShell.jsx',import.meta.url).pathname],outfile:output.pathname,bundle:true,platform:'node',format:'esm',jsx:'automatic',packages:'external',loader:{'.css':'empty'}})
 const {default:Shell}=await import(output.href)
 
