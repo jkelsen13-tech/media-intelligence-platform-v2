@@ -694,7 +694,7 @@ export function createCesiumEllipsoidRendererAdapter({
       distanceMemory = distance.memory
       for(const item of items){item.presentationState=distance.states[item.key];item.nearDetailKind=distance.nearDetails[item.key]?.kind}
       const viewport={width:scene.canvas.clientWidth,height:scene.canvas.clientHeight}
-      if(selectedKey && viewport.width>=480 && viewport.width>viewport.height && viewport.height<480){
+      if(selectedKey && viewport.width>=400 && viewport.width>viewport.height && viewport.height<480){
         const surface=scene.canvas.closest?.('.wv-explore-surface')
         if(surface){
           const rect=node=>{const r=node.getBoundingClientRect();return {left:r.left,top:r.top,width:r.width,height:r.height}}

@@ -1,7 +1,7 @@
 // DISPLAY-only inset receipt for the selected reader. These measured controls
 // never change the admission rectangle or canonical anchors of world markers.
 export function selectedCardInsetsForControls({viewport,canvasBounds,controlBounds=[]}={}) {
-  if (!viewport || viewport.height<=0 || viewport.width<480 || viewport.width<=viewport.height || viewport.height>=480
+  if (!viewport || viewport.height<=0 || viewport.width<400 || viewport.width<=viewport.height || viewport.height>=480
     || ![viewport.width,viewport.height,canvasBounds?.left,canvasBounds?.top,canvasBounds?.width,canvasBounds?.height].every(Number.isFinite)
     || canvasBounds.width<=0 || canvasBounds.height<=0) return null
   const scaleX=viewport.width/canvasBounds.width,scaleY=viewport.height/canvasBounds.height

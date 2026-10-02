@@ -70,7 +70,7 @@ export function resolveBillboardDistanceStates({items=[],previous=null,datasetKe
 
 function safeBounds(viewport){
   if(!finite(viewport?.width)||!finite(viewport?.height)||viewport.width<=0||viewport.height<=0)return null
-  const landscape=viewport.width>=480&&viewport.width>viewport.height&&viewport.height<480
+  const landscape=viewport.width>=400&&viewport.width>viewport.height&&viewport.height<480
   const inset=(k,defaultValue,size)=>clamp(finite(viewport.safeInsets?.[k])?viewport.safeInsets[k]:defaultValue,0,size*0.4)
   const selectedInset=(side)=>landscape&&finite(viewport.selectedCardInsets?.[side])?clamp(viewport.selectedCardInsets[side],0,viewport.width):0
   return {heightFraction:landscape?1:0.95,left:Math.max(selectedInset('left'),inset('left',16,viewport.width)),right:viewport.width-Math.max(selectedInset('right'),inset('right',landscape?40:16,viewport.width)),

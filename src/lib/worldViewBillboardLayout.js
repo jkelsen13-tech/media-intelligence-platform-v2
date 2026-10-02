@@ -28,7 +28,7 @@ function safeRect(viewport) {
 
 function selectedEnvelope(item, rect, viewport) {
   if (!item) return null
-  const narrowLandscape = viewport.width >= 480 && viewport.width > viewport.height && viewport.height < 480
+  const narrowLandscape = viewport.width >= 400 && viewport.width > viewport.height && viewport.height < 480
   // A selected reader may use the free right column above the left gesture
   // controls; reserve the reviewed Page strip and native attribution.
   if (narrowLandscape) rect = {...rect,top:clamp(finite(viewport.safeInsets?.top)?viewport.safeInsets.top:8,0,viewport.height*0.4),right:Math.min(rect.right,viewport.width-40)}

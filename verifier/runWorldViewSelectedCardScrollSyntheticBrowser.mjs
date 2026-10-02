@@ -153,7 +153,8 @@ for(const viewport of viewports){
   const entrance=await read();await page.waitForTimeout(450);return entrance
  }
  const modeReceipts=[]
- for(const [name,button] of [['immersive',/A · Immersive/],['dock',/B · Split dock/]]){
+ const directions=(process.env.MIP_CARD_DIRECTIONS??'immersive,dock').split(',');assert.ok(directions.length&&directions.every(v=>['immersive','dock'].includes(v)))
+ for(const [name,button] of [['immersive',/A · Immersive/],['dock',/B · Split dock/]].filter(([name])=>directions.includes(name))){
   if(await tabs.count())await page.getByRole('button',{name:'Close selected card',exact:true}).click()
   await page.getByRole('button',{name:button}).click();await page.waitForTimeout(450)
   const entrance=await openNative(),entry=await capture(name+'-selected')

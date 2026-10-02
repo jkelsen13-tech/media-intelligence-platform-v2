@@ -5,7 +5,7 @@ import {updateSelectedBillboardEnvelope} from '../src/lib/worldViewBillboardPres
 const row=Object.freeze({key:'released',anchor:Object.freeze({x:190,y:110}),canonicalCoordinates:Object.freeze([-81.7,41.4]),precision:'city',distanceMeters:100000,displayOccluded:false,canonicalOccluded:true})
 
 test('short native card allocation survives Presentation with safe top and attribution floor, including a dock-sized canvas',()=>{
- for(const width of [480,554,620]){
+ for(const width of [400,414,442,480,554,620]){
   const viewport={width,height:224}
   const initial=layoutWorldBillboards({items:[row],viewport,selectedKey:row.key}).selected
   const {selected,memory}=updateSelectedBillboardEnvelope({selected:initial,viewport})
@@ -39,7 +39,7 @@ test('portrait and desktop allocation stay unchanged; explicit safe insets const
 
 test('measured controls constrain only the selected reader; outside dock controls do not consume the canvas',async()=>{
  const {selectedCardInsetsForControls}=await import('../src/lib/worldViewSelectedCardViewport.js')
- for(const width of [480,554,620]){
+ for(const width of [400,414,442,480,554,620]){
   const viewport={width,height:224},canvasBounds={left:10,top:62,width,height:224}
   const action={left:145,top:80,width:74,height:44}
   const selectedCardInsets=selectedCardInsetsForControls({viewport,canvasBounds,controlBounds:[action]})
