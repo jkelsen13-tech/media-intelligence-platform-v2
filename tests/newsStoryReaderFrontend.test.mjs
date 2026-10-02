@@ -240,12 +240,12 @@ test('selected superseded Story sources stay readable with an explicit notice an
 test('verified Following access denial withholds the public snapshot; authentication expiry preserves public evidence', async () => {
   for (const code of ['access_denied', 'authentication_required']) {
     const c = context(), reads = []
-    const backend = { ...createNewsBackend(null), loadStoryStateContext: async () => {reads.push('public');return {data:c,error:null}} }
+    const backend = { ...createNewsBackend(null), loadStoryStateContext: async () => {reads.push('public');return {data:code === 'access_denied' && reads.length > 1 ? null : c,error:null}} }
     const followingBackend = { read: async () => ({data:null,error:{code}}) }
     const renderer = await mount({ backend, followingBackend, focusStoryId:c.story.story_id, publicVersionId:c.story.public_version_id,
       readerActorId:fixtureUuid(90), sessionReady:true })
     try {
-      assert.equal(reads.length, 1)
+      assert.equal(reads.length, code === 'access_denied' ? 2 : 1)
       if (code === 'authentication_required') {
         assert.match(serialized(renderer), /Retained source headline|Your account session has ended/)
       } else {
@@ -254,4 +254,41 @@ test('verified Following access denial withholds the public snapshot; authentica
       }
     } finally { await act(async()=>renderer.unmount()) }
   }
+})
+
+
+test('private head revocation rechecks authorized history once and later displayed-source withdrawal clears it', async () => {
+  const c = context(), reads = [], followingReads = []
+  let sourceVisible = true
+  const backend = { ...createNewsBackend(null), loadStoryStateContext: async (storyId, options) => {
+    reads.push({storyId,options});return {data:sourceVisible ? c : null,error:null}
+  } }
+  const followingBackend = { read: async () => {followingReads.push('read');return {data:null,error:{code:'access_denied'}}} }
+  const renderer = await mount({backend,followingBackend,focusStoryId:c.story.story_id,publicVersionId:c.story.public_version_id,
+    readerActorId:fixtureUuid(90),sessionReady:true})
+  try {
+    assert.equal(reads.length, 2)
+    assert.equal(followingReads.length, 1, 'the controller does not remount or auto-retry after public restoration')
+    assert.ok(reads.every(read=>read.options.publicVersionId === c.story.public_version_id))
+    assert.match(serialized(renderer), /Retained source headline/)
+    assert.match(serialized(renderer), /Story Following is unavailable/)
+    sourceVisible = false
+    const reload = renderer.root.findAllByType('button').find(button=>button.children.includes('Reload story Following'))
+    await act(async()=>reload.props.onClick())
+    assert.equal(reads.length, 3); assert.equal(followingReads.length, 2)
+    assert.doesNotMatch(serialized(renderer), /Retained source headline|Retained source summary|Reviewed exact claim/)
+    assert.match(serialized(renderer), /exact story version is unavailable/)
+  } finally {await act(async()=>renderer.unmount())}
+})
+
+
+test('revocation rechecks the exact displayed version even when the initial route selected current head', async () => {
+  const c = context(), reads = []
+  const backend = { ...createNewsBackend(null), loadStoryStateContext: async (storyId, options) => {reads.push(options.publicVersionId);return {data:c,error:null}} }
+  const followingBackend = {read:async()=>({data:null,error:{code:'access_denied'}})}
+  const renderer = await mount({backend,followingBackend,focusStoryId:c.story.story_id,readerActorId:fixtureUuid(90),sessionReady:true})
+  try {
+    assert.deepEqual(reads, [null,c.story.public_version_id])
+    assert.match(serialized(renderer), /Retained source headline/)
+  } finally {await act(async()=>renderer.unmount())}
 })

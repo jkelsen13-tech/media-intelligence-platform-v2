@@ -251,6 +251,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
   const [articleStory, setArticleStory] = useState(null)
   const [storyResponse, setStoryResponse] = useState(null)
   const [storyLoading, setStoryLoading] = useState(false)
+  const [followingStoryBinding, setFollowingStoryBinding] = useState(null)
   const [storyReadEpoch, setStoryReadEpoch] = useState(0)
   const [feedReadEpoch, setFeedReadEpoch] = useState(0)
   const [storyClock, setStoryClock] = useState(() => clockNow ?? Date.now())
@@ -284,6 +285,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
   const requestRef = useRef(0)
   const loadingMoreRef = useRef(false)
   const detailRequestRef = useRef(0)
+  const followingStoryBindingRef = useRef(null)
+  const recheckVersionRef = useRef(null)
+  followingStoryBindingRef.current = followingStoryBinding
   useEffect(() => () => { detailRequestRef.current += 1 }, [])
 
   useEffect(() => {
@@ -300,12 +304,15 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
       setStoryLoading(false)
       return
     }
-    backend.loadStoryStateContext(focusStoryId, { publicVersionId })
+    const recheck = recheckVersionRef.current
+    const requestedVersion = recheck?.storyId === focusStoryId && recheck.versionScope === publicVersionId && recheck.backend === backend ? recheck.publicVersionId : publicVersionId
+    backend.loadStoryStateContext(focusStoryId, { publicVersionId: requestedVersion })
       .then(result => {
         if (cancelled) return
         const parsed = !result?.error && normalizePublicStoryContext(result?.data)
         const data = parsed?.story.story_id === focusStoryId
-          && (!publicVersionId || parsed.story.public_version_id === publicVersionId) ? parsed : null
+          && (!requestedVersion || parsed.story.public_version_id === requestedVersion) ? parsed : null
+        if (data) setFollowingStoryBinding({ storyId: focusStoryId, versionId: publicVersionId, backend, story: data.story })
         setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data })
       })
       .catch(() => { if (!cancelled) setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data: null }) })
@@ -344,16 +351,24 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
   const onStoryAccessFailure = useCallback(code => {
     if (code !== 'access_denied') return
     // A verified private read has refused this Story's access. Withhold the
-    // stale public snapshot immediately; only an explicit public-owner retry
-    // can restore it. Session expiry alone does not revoke public evidence.
+    // stale public snapshot immediately, then recheck its exact public owner.
+    // Private revocation may concern a newer head while history stays public.
+    // Keep the same private controller mounted to prevent an auto-reload loop.
+    // Session expiry alone does not revoke public evidence.
+    const binding = followingStoryBindingRef.current
+    if (binding?.storyId === focusStoryId && binding.versionId === publicVersionId && binding.backend === backend) {
+      recheckVersionRef.current = { storyId: focusStoryId, versionScope: publicVersionId, backend, publicVersionId: binding.story.public_version_id }
+    }
     setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data: null })
-    setStoryLoading(false)
+    setStoryLoading(true)
+    setStoryReadEpoch(value => value + 1)
     detailRequestRef.current += 1; requestRef.current += 1
     setExpanded(null); setDetail(null); setArticleStory(null); setGraphLinks([])
     setSky(null); setTimelineKey(null); setComparisonEvents([])
     setArticles([]); setTotal(0); setSourceMetricRows([]); setCitationMap(new Map()); setEventMap(new Map())
     setFeedReadEpoch(value => value + 1)
-  }, [focusStoryId, publicVersionId])
+  }, [focusStoryId, publicVersionId, backend])
+  const followingStory = followingStoryBinding?.storyId === focusStoryId && followingStoryBinding?.versionId === publicVersionId && followingStoryBinding.backend === backend ? followingStoryBinding.story : null
   const evaluationNow = clockNow ?? storyClock
   const storyState = useMemo(() => evaluateNewsStoryState(storyContext, evaluationNow), [storyContext, evaluationNow])
   const storyHistory = useMemo(() => reconstructNewsStateHistory(storyContext, evaluationNow), [storyContext, evaluationNow])
@@ -1121,9 +1136,10 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
       </>}
 
       {focusStoryId && (storyContext ? <NewsStoryReader context={storyContext} state={storyState} history={storyHistory} reports={sourceReports}
-        onCloseStory={onCloseStory} onOpenNode={onOpenNode} onOpenArticle={expandArticle}
-        followingControls={<StoryFollowingControls story={storyContext.story} userId={readerActorId} sessionReady={sessionReady} backend={followingBackend} onAccessFailure={onStoryAccessFailure} />} />
+        onCloseStory={onCloseStory} onOpenNode={onOpenNode} onOpenArticle={expandArticle} />
         : <section className="news-story-reader" aria-label="Story reader"><p>{storyLoading ? 'Loading reviewed story…' : 'This exact story version is unavailable. No latest-version or private-source fallback is displayed.'}</p>{!storyLoading && <button type="button" className="news-chip" onClick={() => setStoryReadEpoch(value => value + 1)}>Reload reviewed story</button>}{onCloseStory && <button type="button" className="news-chip" onClick={onCloseStory}>Back to news</button>}</section>)}
+
+      {focusStoryId && followingStory && <div hidden={!storyContext} aria-hidden={!storyContext}><StoryFollowingControls story={followingStory} userId={readerActorId} sessionReady={sessionReady} backend={followingBackend} onAccessFailure={onStoryAccessFailure} /></div>}
 
       {articlesUnavailable && articleUnavailableNotice(articlesUnavailable)}
       {error && <div className="notice error">Failed to load articles: {error}</div>}
