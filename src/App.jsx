@@ -1591,6 +1591,7 @@ export default function App({
                     <div className="graph-search">
                       <input
                         type="search"
+                        aria-label="Search graph nodes"
                         placeholder="Search nodes…"
                         value={nodeQuery}
                         onChange={(e) => setNodeQuery(e.target.value)}

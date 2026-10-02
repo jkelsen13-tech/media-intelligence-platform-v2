@@ -77,6 +77,12 @@ const hash = async value => {
 const unmount = async () => { if (renderer) { await act(async () => renderer.unmount()); renderer = null } }
 test.afterEach(unmount)
 
+test('graph search has an accessible name independent of its placeholder', async () => {
+  await mount()
+  const search = renderer.root.findByProps({ placeholder: 'Search nodes…' })
+  assert.equal(search.props['aria-label'], 'Search graph nodes')
+})
+
 test('Explore selection clears the previous entity instead of restoring an unrelated inspector', async () => {
   await mount()
   assert.equal(probe('ArticlePanel').props.node.id, 'entity-a')
