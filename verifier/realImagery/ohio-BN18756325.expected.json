@@ -1,0 +1,162 @@
+{
+  "schema": "mip.real-imagery-source-expectations.v1",
+  "source": {
+    "id": "ohio-2023-BN18756325",
+    "memberName": "BN18756325.tif",
+    "sha256": "cdd20d732dca52f94edf0eaf0e1afbd544c50886a9b131a9fcc18accf140a17c",
+    "byteLength": 100364809,
+    "width": 5000,
+    "height": 5000,
+    "bandCount": 4,
+    "colorInterpretations": [
+      "Red",
+      "Green",
+      "Blue",
+      "Undefined"
+    ],
+    "dataTypes": [
+      "Byte",
+      "Byte",
+      "Byte",
+      "Byte"
+    ],
+    "epsg": 3753,
+    "geotransform": [
+      2187500,
+      0.25,
+      0,
+      633750,
+      0,
+      -0.25
+    ],
+    "bounds": [
+      2187500,
+      632500,
+      2188750,
+      633750
+    ]
+  },
+  "originalArchive": {
+    "sha256": "b3f24dc5e24c4ff682310ee77c9e18feaed98c5920d3b0aa7536921dcc185e78",
+    "byteLength": 93325315
+  },
+  "outerLibrary": {
+    "fileId": "libfile_46b6f72f95e88191ae48240e4eb3ce13",
+    "backingFileId": "file_000000008824820cb2c2b03218147d22",
+    "version": 0,
+    "byteLength": 93644524,
+    "sha256": "31484438471e3f04ebc46de362757b65d73072b61a800e6ad7f8f2ca6a037f46",
+    "locallyVerified": false
+  },
+  "metadata": {
+    "sha256": "5c45fc70e2380c94696a517eb16759614b44821627db6abb9b8119dc47e000ad",
+    "bindings": [
+      {
+        "id": "rights",
+        "path": "./idinfo/accconst",
+        "expectedText": "This data set is in the public domain, and the recipient may not assert any proprietary rights thereto nor represent it to any one as other than a data set produced by Cuyahoga County and the Ohio Statewide Imagery Program."
+      },
+      {
+        "id": "attribution",
+        "path": "./idinfo/accconst",
+        "expectedText": "This data set is in the public domain, and the recipient may not assert any proprietary rights thereto nor represent it to any one as other than a data set produced by Cuyahoga County and the Ohio Statewide Imagery Program."
+      },
+      {
+        "id": "use_constraints",
+        "path": "./idinfo/useconst",
+        "expectedText": "This data is for planning purposes only and should not be used for legal or cadastral purposes. This data set is provided \"as-is\" without warranty of any kind, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. User must assume responsibility for determining the suitability of these data for their purposes."
+      },
+      {
+        "id": "capture_start",
+        "path": "./idinfo/timeperd/timeinfo/sngdate/caldate",
+        "expectedText": "20230307"
+      },
+      {
+        "id": "capture_basis",
+        "path": "./idinfo/timeperd/current",
+        "expectedText": "ground condition"
+      },
+      {
+        "id": "accuracy_specification",
+        "path": "./dataqual/posacc/horizpa/horizpar",
+        "expectedText": "The 7.5cm (3-inch) orthoimagery was produced by Woolpert to meet ASPRS Positional Accuracy Standards for Digital Geospatial Data (2014) for a 11cm RMSEx / RMSEy Horizontal Accuracy Class which equates to Positional Horizontal Accuracy = +/- 27.6cm (+/- 0.9ft) at a 95% confidence level."
+      },
+      {
+        "id": "production_provenance",
+        "path": "./dataqual/lineage/procstep[1]/proccont/cntinfo/cntorgp/cntorg",
+        "expectedText": "Woolpert"
+      }
+    ]
+  },
+  "capture": {
+    "start": "2023-03-07",
+    "precision": "day"
+  },
+  "rightsInterpretation": {
+    "classification": "asset XML public domain; no proprietary claim or source misrepresentation; planning-only/noncadastral compatibility remains open before MIP admission",
+    "notices": [
+      "planning-only",
+      "noncadastral"
+    ],
+    "applicationPermissionReceipt": null
+  },
+  "accuracySpecification": {
+    "horizontalRmseMetres": 0.11,
+    "horizontal95PercentMetres": 0.276,
+    "basis": "exact original XML horizontal accuracy class specification; not locally measured registration",
+    "combinedWithOperationError": false
+  },
+  "evidencePoint": {
+    "coordinates": [
+      -81.7,
+      41.4
+    ],
+    "synthetic": true,
+    "datum": "unknown",
+    "registrationQualified": false
+  },
+  "receivedDerivative": {
+    "library_file_id": "libfile_1fd01270717881919b844e6b347d3122",
+    "file_id": "file_0000000083c8820c9f61eeb56a5200a3",
+    "version": 0,
+    "received_bytes": 5400912,
+    "received_sha256": "db846c2628464e175a0edcea4282da29809e0416c70b93689abdfbf17bda1cca",
+    "manifestSha256": "56f6e9f97637838b885cffa10ee1774de8686fc751b52050a6cb19a5cfd042f5",
+    "previewName": "BN18756325-RGB-1024-preview.png",
+    "xmlName": "ORIGINAL_SOURCE_METADATA_BN18756325.tif.xml",
+    "raster": {
+      "id": "ohio-BN18756325-received-native-RGB-research",
+      "memberName": "BN18756325-RGB-1024-research.tif",
+      "sha256": "3fb5a148cbef43d06a580ec8263be13f007eb52bb93ca9ad66b52cdff4f9c8ba",
+      "byteLength": 3147703,
+      "width": 1024,
+      "height": 1024,
+      "bandCount": 3,
+      "colorInterpretations": [
+        "Red",
+        "Green",
+        "Blue"
+      ],
+      "dataTypes": [
+        "Byte",
+        "Byte",
+        "Byte"
+      ],
+      "epsg": 3753,
+      "geotransform": [
+        2187500,
+        1.220703125,
+        0,
+        633750,
+        0,
+        -1.220703125
+      ],
+      "bounds": [
+        2187500,
+        632500,
+        2188750,
+        633750
+      ]
+    }
+  }
+}

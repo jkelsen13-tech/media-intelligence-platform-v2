@@ -1,0 +1,57 @@
+# Bounded Ohio photographic RGB derivative qualification
+
+This source lane starts at `f8ca4e26536f22c34254ffc27f1af884ce640cf4`. It implements offline preprocessing and consumer qualification in new scripts, verifier helpers and tests. It does not change the App source registry, published evidence, provider services or admission owner. The governed distinction remains: photographic orthophotos are visual context; they do not supply terrain, building heights, facades or improved evidence precision.
+
+The original large Library transfer remains blocked. No denied URL was retried and no raw archive shards were requested or assembled. A separate, genuinely downsampled 1024×1024 RGB research derivative was delivered through the ordinary supported Library route. The verifier hashes and decodes those received bytes. Full original TIFF decoding and its nearest-sample proof remain upstream producer claims.
+
+## Exact inputs and verification scope
+
+| Input | Identity | Current consumer proof |
+| --- | --- | --- |
+| Original ZIP | 93,325,315 bytes; SHA-256 `b3f24dc5e24c4ff682310ee77c9e18feaed98c5920d3b0aa7536921dcc185e78` | Producer claim; no original archive bytes read here |
+| Original `BN18756325.tif` | 100,364,809 bytes; SHA-256 `cdd20d732dca52f94edf0eaf0e1afbd544c50886a9b131a9fcc18accf140a17c` | Producer claim; no original TIFF decoded here |
+| Original asset XML | 11,340 bytes; SHA-256 `5c45fc70e2380c94696a517eb16759614b44821627db6abb9b8119dc47e000ad` | Actual received XML hash, exact field bindings and notices verified |
+| Received RGB TIFF | 3,147,703 bytes; SHA-256 `3fb5a148cbef43d06a580ec8263be13f007eb52bb93ca9ad66b52cdff4f9c8ba` | Actual bytes, GDAL header/CRS/affine/bands/masks and all preview channel values verified |
+| Received preview PNG | 2,509,090 bytes; SHA-256 `8ef0f117b17a5ad64ee09e48791c04fb01f70d83abc7ce208ce9436e3924ef43` | Actual RGB decode; 3,145,728 TIFF↔PNG channel values, zero mismatches |
+| Bounded Library ZIP | 5,400,912 bytes; SHA-256 `db846c2628464e175a0edcea4282da29809e0416c70b93689abdfbf17bda1cca` | Coordinator's supported-transfer CRC/path receipt matched; all 15 extracted artifact hashes independently verified here |
+
+The original outer Library identity is `libfile_46b6f72f95e88191ae48240e4eb3ce13`, backing `file_000000008824820cb2c2b03218147d22`, version 0, 93,644,524 bytes, SHA-256 `31484438471e3f04ebc46de362757b65d73072b61a800e6ad7f8f2ca6a037f46`. The bounded derivative has its own Library identity: `libfile_1fd01270717881919b844e6b347d3122`, backing `file_0000000083c8820c9f61eeb56a5200a3`, version 0. These are distinct artifacts. Producer paths, commands and original sampling proof are preserved in `upstream-provenance.json`; received executable scripts are hashed but never executed.
+
+The original source expectation is RGB bands 1/2/3 and fourth band Undefined. Undefined does not establish alpha or near infrared. The received native derivative contains three Byte RGB bands, 1024×1024, no nodata/coverage-hole mask, EPSG:3753 NAD83(HARN) Ohio North US survey feet. Its affine is `[2187500,1.220703125,0,633750,0,-1.220703125]` and native extent is `[2187500,632500,2188750,633750]`. Its native spacing is 0.372071057 metres; the original 0.25-foot spacing is 0.076200152 metres. Neither spacing is positional accuracy.
+
+Exact XML selectors bind the public-domain/source-attribution notice, planning-only/noncadastral use constraint, `20230307` ground-condition day, Woolpert production provenance and horizontal accuracy specification. The original capture remains `2023-03-07` at day precision. Publication date, fetch time and current date do not supply an acquisition instant or timezone. The 11cm RMSEx/RMSEy class and 27.6cm at 95% are source specifications, not locally measured registration. Asset-specific public-domain evidence is positive, but compatibility of public MIP use with the planning-only notice remains open before admission. The package grants no application permission.
+
+## Deterministic preprocessing and transform
+
+`scripts/realImageryDerivative.py` has four explicit modes: `produce` requires the actual complete TIFF/XML, `prepare-received` verifies the supported bounded native derivative, `verify` proves received runtime PNG/XML bytes and producer lineage without claiming original verification, and `export-research` creates a private planar pixel inspection. Missing source bytes refuse before decoding or output. Metadata alone never qualifies pixels. Changed hashes, dimensions, affine, CRS, RGB semantics, nodata/masks, XML fields, producer lineage, tiles, package shape or runtime bounds refuse.
+
+Native output retains exact source windows and per-tile affine/bounds. Optional WGS84 output requires an explicit operation tolerance and policy reference. The qualified detached background policy allows the selected operation's reported accuracy of at most 1 metre; it grants no evidence registration. GDAL 3.10.3, pyproj 3.7.1 and PROJ 9.6.0 select the available EPSG HARN→WGS84 (3) operation, report 1 metre accuracy, require no grids, prohibit ballpark, and disable PROJ network. Missing best-operation grids, unknown accuracy, an exceeded tolerance or an unknown/outside operation area refuse. No fallback to the separate 2-metre operation occurs.
+
+The pipeline pins source/target CRS, longitude/latitude axis convention, exact PROJ pipeline/hash, GDAL's explicit final EPSG:4326 axis swap/hash, operation area, availability and tolerance. Synthetic exact RGB comparisons caught the initial GDAL/pyproj axis-order mismatch and now guard it. The selected 2D datum operation does not establish a WGS84 realization/epoch or measured scene registration. No vertical data or vertical transformation is supplied.
+
+The projected native rectangle is not an exact geographic rectangle. WGS84 output uses an explicit reduced inscribed rectangle with one received-native-pixel inset, samples the transformed edges, and inverse-checks every bounded output pixel centre against the actual received native extent. All 1,048,576 output centres are inside; 36 independent output RGB samples match inverse-mapped received native pixels. Nearest resampling uses no stretch, enhancement, alpha or invented border fill. Original→received nearest sampling remains an upstream claim; received→WGS84 checks are local.
+
+For the acquired derivative, reduced WGS84 bounds are `[-81.70168427944155,41.40000413102843,-81.69717870180786,41.403396541317306]`. The unchanged synthetic point `[-81.7,41.4]` has unknown datum and no registration receipt. Its position relative to that display rectangle does not establish an event location or precision upgrade. Operation error and source accuracy specifications remain separate; no combined accuracy is fabricated.
+
+Runtime tiles are opaque RGB PNGs, at most 512×512 each and total edge at most 1024. The deterministic stored ZIP retains original XML, exact upstream provenance, source and derivative hashes, capture/rights/notices, affine/windows, explicit reduced coverage, operation receipts and inverse sample checks. It forbids duplicate entries, traversal, symlinks, encrypted entries, compressed bombs and unbound files. It checks dimension bounds before decoding and never extracts received scripts.
+
+The generated WGS84 package is 2,918,432 bytes, SHA-256 `ebc0599832575409a56088af66c6d284993c69871331252291d1d743af5d862c`. Conservative retained decoded RGBA is 4,194,304 bytes, giving 7,112,736 bytes below the 16,777,216-byte local runtime ceiling. Repeated preprocessing produces identical package bytes in the pinned environment. The cap covers transport artifacts plus decoded runtime resources and inspection document/provenance; it is not a claim that Python/GDAL/Chromium process RSS or GPU overhead is below 16MiB. Hashing uses 1MiB chunks, GDAL cache is 2MiB, warp workspace is 2MiB and threads are fixed to one. No provider billing claim is made.
+
+## Consumer and browser boundary
+
+`verifier/realImageryQualification.mjs` reuses `evaluateWorldViewRealismAdmission` and `resolveWorldViewRealismLayer`. It describes actual derivative byte/decode proof, retains original verification as false, and keeps rights/CRS/coverage/admission authority closed. The existing predicate returns `source-not-admitted`; renderer status remains UNKNOWN. A supplied admission boolean cannot override this gate. No App services or registry are modified.
+
+`verifier/runRealImageryQualification.mjs` reproduces the 15 artifact hashes, full TIFF/PNG comparison, pinned cropped transform, all-centre and RGB sample checks, independent runtime consumer verification, deterministic repeat, private export and existing admission gate. Its external `qualification.json` binds Git head, clean state, source/contract hashes, runtime and exact measured counts. `verifier/runRealImageryPlanarBrowser.mjs` serves only allowlisted private inspection artifacts at loopback, blocks nonlocal requests, bounds served bytes plus decoded RGBA, decodes the actual four RGB PNGs and captures Chromium pixels with rights/date/resolution captions. This is planar DOM image evidence, not geographic native renderer, App activation, physical-device/GPU qualification or public-source admission.
+
+Commands (new output directories are required; existing evidence is retained):
+
+```sh
+node verifier/runRealImageryQualification.mjs --evidence /workspace/mip-real-imagery-evidence/exact-head
+MIP_REAL_IMAGERY_INSPECTION=/workspace/mip-real-imagery-evidence/exact-head/planar-inspection node verifier/runRealImageryPlanarBrowser.mjs
+node --test verifier/runRealImagerySyntheticTests.mjs
+node --test tests/realImageryQualification.test.mjs tests/worldViewRealismAdmission.test.mjs tests/worldViewLocalResourceBudget.test.mjs
+```
+
+The synthetic Python suite has 19 tests, including actual synthetic GDAL values, nearest decimation, tile adjacency, axis/inverse RGB checks, missing source, malformed source/XML/CRS/masks, grid/ballpark/accuracy defaultdeny, dishonest lineage, consumer resource/ZIP rejection, supported-transfer adaptation and retained inspection gates. It is an explicit mandatory local-runtime verifier outside the ordinary Node test discovery: public CI is not presumed to have GDAL/Python geospatial packages, and this lane adds no skip, dependency install or workflow change. Pure JavaScript receipt/admission tests remain in the ordinary suite. Synthetic tests establish implementation behavior; acquired derivative receipts establish this exact received asset. Geographic Cesium research, source-owner admission/use compatibility, accepted acquisition AOI/current coverage, device appearance and any public activation remain separate gates.
+
+Implementation references: GDAL's [`coordinateOperation` axis-order requirements](https://gdal.org/en/stable/programs/gdalwarp.html#cmdoption-gdalwarp-ct), pyproj's [`TransformerGroup` availability and ballpark controls](https://pyproj4.github.io/pyproj/stable/api/transformer.html#pyproj.transformer.TransformerGroup), and [PROJ coordinate operations](https://proj.org/en/stable/usage/transformation.html). Installed versions and actual local operations are recorded separately from those current documentation versions.
