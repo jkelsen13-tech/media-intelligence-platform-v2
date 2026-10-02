@@ -27,11 +27,13 @@ test('actual installed SDK executes reviewed native list/detail/Story projection
           else if(name==='read_reviewed_public_article_v1') data=await f.readArticle(p.p_article_id,p.p_public_version_id)
           else if(name==='read_reviewed_public_story_for_article_v1') data=await f.scalar('select public.read_reviewed_public_story_for_article_v1($1)',[p.p_article_id])
           else if(name==='read_reviewed_public_story_directory_v1') data=await f.scalar('select public.read_reviewed_public_story_directory_v1($1,$2)',[p.p_after,p.p_limit])
+          else if(name==='search_reviewed_public_article_ids_v1') data=await f.scalar('select public.search_reviewed_public_article_ids_v1($1,$2)',[p.p_query,p.p_limit])
           else throw Error('unsupported synthetic SDK endpoint')
         }else{
           assert.equal(name,'news_reviewed_articles_public')
-          const id=url.searchParams.get('id')?.slice(3)
-          const rows=(await f.db.query('select id,public_version_id,public_version,published_at,fetched_at from public.news_reviewed_articles_public where ($1::uuid is null or id=$1) order by published_at desc nulls last,fetched_at desc',[id??null])).rows
+          const idFilter=url.searchParams.get('id'),id=idFilter?.startsWith('eq.')?idFilter.slice(3):null
+          const ids=idFilter?.startsWith('in.')?idFilter.slice(4,-1).split(','):null
+          const rows=(await f.db.query('select id,public_version_id,public_version,published_at,fetched_at from public.news_reviewed_articles_public where ($1::uuid is null or id=$1) and ($2::uuid[] is null or id=any($2)) order by published_at desc nulls last,fetched_at desc',[id,ids])).rows
           count=rows.length
           const single=request.headers.get('accept')?.includes('vnd.pgrst.object')
           if(single && rows.length!==1) return new Response(JSON.stringify({code:'PGRST116',message:'No visible reviewed version',details:'The result contains 0 rows'}),{status:406,headers:{'content-type':'application/json'}})
@@ -65,6 +67,8 @@ test('actual installed SDK executes reviewed native list/detail/Story projection
     assert.equal(directory.status,'available')
     assert.equal(directory.stories[0].story_id,storyId)
     assert.equal(directory.has_more,false)
+    assert.equal((await loadArticles({q:'source reports',supabaseClient:client})).articles[0].id,f.first.article_id)
+    assert.equal((await loadArticles({q:'PRIVATE_BODY_ONLY_TOKEN',supabaseClient:client})).total,0)
   }
   await f.ingest({...f.article,title:'PRIVATE_CORRECTION'},'synthetic-private-correction')
   const detail=await loadArticleDetail(f.first.article_id,{supabaseClient:client})

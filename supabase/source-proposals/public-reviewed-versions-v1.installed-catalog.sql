@@ -41,7 +41,7 @@ select jsonb_build_object(
         'bind_reviewed_public_article_version','require_reviewed_public_article_version','public_story_version_is_visible',
         'bind_reviewed_public_story_version','reviewed_public_article_payload','reviewed_public_story_payload'))
       or (n.nspname='public' and p.proname in ('read_reviewed_public_article_v1','read_reviewed_public_story_v1',
-        'read_reviewed_public_story_for_article_v1','read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1')))
+        'read_reviewed_public_story_for_article_v1','read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1','search_reviewed_public_article_ids_v1')))
   ) 
 )
 select jsonb_build_object('base',base.jsonb_build_object,
@@ -61,5 +61,5 @@ select jsonb_build_object('base',base.jsonb_build_object,
    where (n.nspname='mip_private' and p.proname in ('public_article_evidence_is_visible','public_article_version_is_visible','bind_reviewed_public_article_version',
     'require_reviewed_public_article_version','public_story_version_is_visible','bind_reviewed_public_story_version','reviewed_public_article_payload','reviewed_public_story_payload'))
    or (n.nspname='public' and p.proname in ('read_reviewed_public_article_v1','read_reviewed_public_story_v1','read_reviewed_public_story_for_article_v1',
-    'read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1')))) from base;
+    'read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1','search_reviewed_public_article_ids_v1')))) from base;
 rollback;

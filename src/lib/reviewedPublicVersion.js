@@ -40,6 +40,8 @@ export function normalizeReviewedPublicVersion(row) {
     || !(row.summary === null || typeof row.summary === 'string') || !nullableInstant(row.published_at)
     || !instant(row.fetched_at) || row.fetched_at_semantics !== 'article_original_fetch' || !instant(row.captured_at)
     || compare(row.reviewed_at,row.captured_at) < 0n || !text(row.remaining_uncertainty)
+    || typeof row.is_current_source_version !== 'boolean' || !nullableUuid(row.superseded_by_public_version_id)
+    || (row.is_current_source_version && row.superseded_by_public_version_id !== null)
     || typeof row.pending_revision !== 'boolean' || !Array.isArray(row.evidence) || row.evidence.length > 100) return null
   const seen = new Set(), evidence = []
   for (const e of row.evidence) {
@@ -67,6 +69,7 @@ export function normalizeReviewedPublicVersion(row) {
     title: row.title, summary: row.summary, published_at: row.published_at, fetched_at: row.fetched_at,
     fetched_at_semantics: 'article_original_fetch', captured_at: row.captured_at,
     remaining_uncertainty: row.remaining_uncertainty, pending_revision: row.pending_revision, evidence,
+    is_current_source_version: row.is_current_source_version, superseded_by_public_version_id: row.superseded_by_public_version_id,
     display_metadata: { author_name: m.author_name ?? null, arc_id: m.arc_id ?? null, feed: m.feed ?? null,
       monoculture: m.monoculture ?? null, unattributed: m.unattributed ?? null } }
   // Report permission is separate from proposition publication. These names
@@ -77,6 +80,7 @@ export function normalizeReviewedPublicVersion(row) {
     report_time: row.published_at, fetch_time: null, article_original_fetched_at: row.fetched_at,
     capture_retained_at: row.captured_at, review_uncertainty: row.remaining_uncertainty,
     predecessor_public_version_id: row.predecessor_public_version_id, correction_reason: row.correction_reason,
+    is_current_source_version: row.is_current_source_version, superseded_by_public_version_id: row.superseded_by_public_version_id,
     review_ref: row.review_ref, policy_version: row.policy_version,
   }
   return freeze(result)
@@ -91,6 +95,7 @@ export function reviewedVersionToNewsArticle(version) {
     monoculture: displayMetadata.monoculture === true, unattributed: displayMetadata.unattributed === true,
     arc_id: displayMetadata.arc_id ?? null, author_name: displayMetadata.author_name ?? null, arc_title: null,
     public_version_id: version.public_version_id, public_version: version, source_report: version.source_report ?? null,
+    is_current_source_version: version.is_current_source_version, superseded_by_public_version_id: version.superseded_by_public_version_id,
     claims: version.evidence.map(e => ({ kind: 'substantive', text: e.surface_text, stance: 'asserts',
       loaded_language: [], provenance: 'reviewed_claim_record', auditability_state: 'verified_retained_source',
       evidence_source_field: e.source_field, evidence_excerpt: e.excerpt, capture_id: e.capture_id,

@@ -68,6 +68,11 @@ test('actual retained-capture/publication owners bind immutable source and Story
     assert.deepEqual(row.evidence,[])
     assert.equal(row.source_report.fetch_time,null)
     assert.equal(row.source_report.source_version_id,correction.capture_id)
+    assert.equal(row.is_current_source_version,true)
+    assert.equal(row.superseded_by_public_version_id,null)
+    const older=normalizeReviewedPublicVersion(await f.readArticle(f.first.article_id,version))
+    assert.equal(older.is_current_source_version,false)
+    assert.equal(older.superseded_by_public_version_id,report)
     assert.notEqual(row.source_report.article_original_fetched_at,row.source_report.capture_retained_at)
     await assert.rejects(f.scalar('select mip_private.require_reviewed_public_article_version($1,$2,$3)',[report,correction.capture_id,correction.capture_hash]), /reviewed admitted public capture/)
   })
@@ -103,6 +108,25 @@ test('actual retained-capture/publication owners bind immutable source and Story
     assert.equal(await f.scalar('select count(*)::int from evidence_pipeline.article_captures where article_id=$1',[f.first.article_id]),2)
     assert.equal(await f.scalar('select count(*)::int from mip_private.reviewed_public_article_versions where article_id=$1',[f.first.article_id]),2)
   })
+})
+
+test('public search covers frozen public fields and exact reviewed excerpts; private body and truncated negatives are denied',async t=>{
+  const f=await createReviewedVersionFixture()
+  t.after(()=>f.db.close())
+  const excerpt='ReviewedBodySpanToken reports a recorded observation.'
+  const sourceStart=Array.from(f.article.body_text.slice(0,f.article.body_text.indexOf(excerpt))).length
+  const claim=await f.scalar("insert into public.claims(event_id,canonical_text,status,rule_version) values($1,$2,'active','sc-v2-event-projection') returning id",[f.event_id,excerpt])
+  const surface=await f.scalar("insert into public.article_claims(article_id,claim_id,surface_text,char_start,char_end,evidence_source_field,evidence_excerpt,auditability_state) values($1,$2,$3,$4,$5,'body_text',$3,'verified_retained_source') returning id",[f.first.article_id,claim,excerpt,sourceStart,sourceStart+Array.from(excerpt).length])
+  await f.bindArticle(f.first,{claims:[surface]})
+  const search=query=>f.scalar('select public.search_reviewed_public_article_ids_v1($1,100)',[query])
+  assert.deepEqual((await search('ReviewedBodySpanToken')).article_ids,[f.first.article_id])
+  assert.deepEqual((await search('PRIVATE_BODY_ONLY_TOKEN')).article_ids,[])
+  assert.equal((await search('PRIVATE_BODY_ONLY_TOKEN')).complete,true)
+  await f.bindArticle(f.second,{kind:'source_report',claims:[],review:'second-report'})
+  const exceeded=await f.scalar('select public.search_reviewed_public_article_ids_v1($1,1)',['source report'])
+  assert.equal(exceeded.complete,false)
+  assert.deepEqual(exceeded.article_ids,[])
+  assert.deepEqual((await search('ReviewedBodySpanToken')).article_ids,[f.first.article_id])
 })
 
 test('invalidated latest Story/source head never resurrects older visible Source Report history', async t => {

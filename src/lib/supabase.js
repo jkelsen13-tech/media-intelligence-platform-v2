@@ -10,6 +10,7 @@ import {
 import { canonicalizeTimelineEvents, remapTimelineEdges } from './timelineDedup.js'
 import { isSafeSupabaseBrowserKey, resolveV2SupabaseUrl } from './supabaseOrigin.js'
 import { normalizeReviewedPublicVersion, reviewedVersionToNewsArticle } from './reviewedPublicVersion.js'
+import { createReviewedPublicVersionBackend } from './reviewedPublicVersionBackend.js'
 
 // Sandbox safety: V2 only connects to the explicit environment target. When
 // either value is absent, makeClient() returns null and the application follows
@@ -1184,6 +1185,14 @@ export async function loadPublicAuthorNameMap(authorIds, { supabaseClient } = {}
 export async function loadArticles({ q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore, limit = 30, offset = 0, supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return { articles: [], total: 0, articlesUnavailable: null }
+  const term = sanitizeSearch(q)
+  let searchIds = null
+  if (term) {
+    const search = await createReviewedPublicVersionBackend(client).loadArticleSearchIds(term)
+    if (search.status !== 'available') return { articles: [], total: 0, articlesUnavailable: search.reason }
+    if (search.articleIds.length === 0) return { articles: [], total: 0, articlesUnavailable: null }
+    searchIds = search.articleIds
+  }
   // The snapshot owner selects the latest explicit reviewed public version.
   // Bare article eligibility or newest pending captures confer no version.
   let query = client
@@ -1196,7 +1205,8 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
     .order('fetched_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
-  query = applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore }, { reviewed: true })
+  query = applyNewsArticleFilters(query, { outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore }, { reviewed: true })
+  if (searchIds !== null) query = query.in('id', searchIds)
 
   const { data, error, count } = await query
   if (error) {

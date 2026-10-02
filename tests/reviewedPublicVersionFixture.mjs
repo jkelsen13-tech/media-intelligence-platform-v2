@@ -16,7 +16,7 @@ export async function createReviewedVersionFixture() {
     return { ...result, capture_hash }
   }
   const article = { url: 'https://example.invalid/vessel', title: 'Recorded vessel source report', outlet: 'Synthetic source A',
-    summary: '😀 A source reports a vessel arrival.', published_at: '2026-10-01T10:00:00.123456Z' }
+    summary: '😀 A source reports a vessel arrival.', body_text: 'PRIVATE_BODY_ONLY_TOKEN. ReviewedBodySpanToken reports a recorded observation.', published_at: '2026-10-01T10:00:00.123456Z' }
   const first = await ingest(article)
   const second = await ingest({ ...article, url: 'https://example.invalid/vessel-secondary', outlet: 'Synthetic source B' })
   // Explicit disposable administrator publication; no genuine reviewer or

@@ -52,7 +52,7 @@ select jsonb_build_object(
         'bind_reviewed_public_article_version','require_reviewed_public_article_version','public_story_version_is_visible',
         'bind_reviewed_public_story_version','reviewed_public_article_payload','reviewed_public_story_payload'))
       or (n.nspname='public' and p.proname in ('read_reviewed_public_article_v1','read_reviewed_public_story_v1',
-        'read_reviewed_public_story_for_article_v1','read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1')))
+        'read_reviewed_public_story_for_article_v1','read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1','search_reviewed_public_article_ids_v1')))
   ) 
 )
 select jsonb_build_object('base',base.jsonb_build_object,
@@ -72,7 +72,7 @@ select jsonb_build_object('base',base.jsonb_build_object,
    where (n.nspname='mip_private' and p.proname in ('public_article_evidence_is_visible','public_article_version_is_visible','bind_reviewed_public_article_version',
     'require_reviewed_public_article_version','public_story_version_is_visible','bind_reviewed_public_story_version','reviewed_public_article_payload','reviewed_public_story_payload'))
    or (n.nspname='public' and p.proname in ('read_reviewed_public_article_v1','read_reviewed_public_story_v1','read_reviewed_public_story_for_article_v1',
-    'read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1')))) into actual from base;
+    'read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1','search_reviewed_public_article_ids_v1')))) into actual from base;
  -- END REVIEWED VERSION INSTALLED BASELINE
  if actual is distinct from expected_text::jsonb then raise exception 'reviewed public version rollback catalog drift'; end if;
  if (select pg_get_userbyid(relowner) from pg_class where oid='public.articles'::regclass) is distinct from current_user
@@ -120,6 +120,7 @@ drop function public.read_reviewed_public_story_v1(uuid,uuid);
 drop function public.read_reviewed_public_story_for_article_v1(uuid);
 drop function public.read_reviewed_public_stories_for_article_v1(uuid);
 drop function public.read_reviewed_public_story_directory_v1(uuid,integer);
+drop function public.search_reviewed_public_article_ids_v1(text,integer);
 drop function mip_private.bind_reviewed_public_article_version(uuid,uuid,text,text,text,text,text,uuid[],uuid,text);
 drop function mip_private.require_reviewed_public_article_version(uuid,uuid,text);
 drop function mip_private.bind_reviewed_public_story_version(text,uuid,uuid[],text,text,uuid,text);

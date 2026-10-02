@@ -49,7 +49,7 @@ begin
         'bind_reviewed_public_article_version','require_reviewed_public_article_version','public_story_version_is_visible',
         'bind_reviewed_public_story_version','reviewed_public_article_payload','reviewed_public_story_payload'))
       or (n.nspname='public' and p.proname in ('read_reviewed_public_article_v1','read_reviewed_public_story_v1',
-        'read_reviewed_public_story_for_article_v1','read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1')))
+        'read_reviewed_public_story_for_article_v1','read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1','search_reviewed_public_article_ids_v1')))
   ) into actual;
   -- END REVIEWED VERSION BASELINE
   if nullif(expected,'') is null or actual is distinct from expected::jsonb then raise exception 'reviewed public version catalog baseline missing or drifted'; end if;
@@ -332,6 +332,9 @@ language sql stable security invoker set search_path='' as $$
     'display_metadata',jsonb_build_object('feed',v.source_snapshot->'feed','monoculture',v.source_snapshot->'monoculture',
       'unattributed',v.source_snapshot->'unattributed','arc_id',v.source_snapshot->'arc_id','author_name',v.source_snapshot->'author_name'),
     'review_state','reviewed','visibility_state','public',
+    'is_current_source_version',v.sequence=(select max(head.sequence) from mip_private.reviewed_public_article_versions head where head.article_id=v.article_id),
+    'superseded_by_public_version_id',(select case when head.public_version_id<>v.public_version_id and mip_private.public_article_version_is_visible(head.public_version_id)
+      then head.public_version_id else null end from mip_private.reviewed_public_article_versions head where head.article_id=v.article_id order by head.sequence desc limit 1),
     'pending_revision',exists(select 1 from evidence_pipeline.article_captures cap
       where cap.article_id=v.article_id and cap.captured_at>(v.source_snapshot->>'captured_at')::timestamptz
       and not exists(select 1 from mip_private.reviewed_public_article_versions admitted where admitted.capture_id=cap.id)),
@@ -405,6 +408,7 @@ end $$;
 -- missing mapping or newly ineligible head is unavailable; no older fallback.
 create view public.news_reviewed_articles_public with (security_barrier=true,security_invoker=false) as
 select v.article_id as id,v.public_version_id,case when v.admission_kind='reviewed_proposition' then 'proposition' else 'source_report' end as admission,
+  true as is_current_source_version,null::uuid as superseded_by_public_version_id,
   v.source_snapshot->>'title' as title,v.source_snapshot->>'url' as url,
   v.source_snapshot->>'summary' as summary,v.source_snapshot->>'outlet' as outlet,v.source_snapshot->>'feed' as feed,
   (v.source_snapshot->>'published_at')::timestamptz as published_at,(v.source_snapshot->>'fetched_at')::timestamptz as fetched_at,
@@ -416,6 +420,21 @@ where v.sequence=(select max(head.sequence) from mip_private.reviewed_public_art
   and public.read_reviewed_public_article_v1(v.article_id,v.public_version_id) is not null;
 revoke all on public.news_reviewed_articles_public from public,anon,authenticated,service_role;
 grant select on public.news_reviewed_articles_public to anon,authenticated,service_role;
+create function public.search_reviewed_public_article_ids_v1(p_query text,p_limit integer default 100) returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+declare result jsonb;
+begin
+  if p_query is null or length(btrim(p_query)) not between 1 and 200 or p_limit is null or p_limit not between 1 and 100 then raise exception 'bounded public search query required'; end if;
+  with matches as (select a.id from public.news_reviewed_articles_public a
+    where strpos(lower(coalesce(a.title,'')||' '||coalesce(a.summary,'')),lower(btrim(p_query)))>0
+      or (a.admission='proposition' and exists(select 1 from mip_private.public_reviewed_article_evidence e
+        where e.public_version_id=a.public_version_id and strpos(lower(e.excerpt),lower(btrim(p_query)))>0))
+    order by a.id limit p_limit+1)
+  select jsonb_build_object('contract','mip-reviewed-public-article-search-v1','query',btrim(p_query),'limit',p_limit,
+    'complete',count(*)<=p_limit,'article_ids',case when count(*)>p_limit then '[]'::jsonb else coalesce(jsonb_agg(id order by id),'[]') end)
+    into result from matches;
+  return result;
+end $$;
 
 -- Close the predecessor API path as part of this exact installation. Base
 -- table and column SELECT are both revoked; RLS alone cannot bind a version.
@@ -465,9 +484,10 @@ do $acl$ declare t text; f record; begin
       'public.read_reviewed_public_story_v1(uuid,uuid)'::regprocedure,
       'public.read_reviewed_public_story_for_article_v1(uuid)'::regprocedure,
       'public.read_reviewed_public_stories_for_article_v1(uuid)'::regprocedure,
-      'public.read_reviewed_public_story_directory_v1(uuid,integer)'::regprocedure]) loop
+      'public.read_reviewed_public_story_directory_v1(uuid,integer)'::regprocedure,
+      'public.search_reviewed_public_article_ids_v1(text,integer)'::regprocedure]) loop
     execute format('revoke all on function %s from public,anon,authenticated,service_role',f.signature);
-    if f.proname like 'read_reviewed_public_%' then execute format('grant execute on function %s to anon,authenticated,service_role',f.signature);
+    if f.proname like 'read_reviewed_public_%' or f.proname='search_reviewed_public_article_ids_v1' then execute format('grant execute on function %s to anon,authenticated,service_role',f.signature);
     elsif f.proname in ('public_article_evidence_is_visible','public_article_version_is_visible','public_story_version_is_visible',
       'reviewed_public_article_payload','reviewed_public_story_payload') then execute format('grant execute on function %s to service_role',f.signature); end if;
   end loop;
