@@ -205,7 +205,8 @@ export default function WorldViewExploreShell({
             {context || <p>No evidence context available.</p>}
           </div>
         </section>
-        <footer className="wv-explore-source" hidden={!active} aria-label="Active sources and attribution">
+        <footer className="wv-explore-source" hidden={!active} role={active ? 'region' : undefined}
+          tabIndex={active ? 0 : undefined} aria-label="Active sources and attribution">
           <div>{status || 'Active source status unavailable'}</div>
           <div>{attribution || 'Source credits remain on the map.'}</div>
         </footer>

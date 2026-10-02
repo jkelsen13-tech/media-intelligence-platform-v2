@@ -42,6 +42,7 @@
 .wv-explore-panel-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .wv-explore-source { grid-area: source; z-index: 3; padding: 6px 12px; font-size: 10px; line-height: 1.4; color: var(--text-secondary, #b9c6be); background: var(--bg-panel, #17211e); max-height: 100px; overflow: auto; overflow-wrap: anywhere; touch-action: pan-y; }
 .wv-explore-source p { margin: 0; }
+.wv-explore-source:focus-visible { outline: 2px solid var(--accent, #83d2ad); outline-offset: -3px; }
 .wv-explore-page-strip { position: absolute; z-index: 5; right: 3px; top: 45%; width: 32px; padding: 8px 4px !important; writing-mode: vertical-rl; font-size: 11px !important; }
 .wv-explore-notice { position: absolute; z-index: 7; top: 122px; left: 10px; right: 10px; margin: 0; padding: 8px 10px; border-radius: 8px; background: var(--bg-panel, #17211e); border: 1px solid var(--border-strong, #68716e); font-size: 12px; line-height: 1.4; }
 .wv-explore-exit-notice { margin: 8px 0; color: var(--text-secondary); font-size: 12px; line-height: 1.4; }
@@ -146,6 +147,10 @@
      retains the existing 400px selected-reader canvas budget after the shell
      borders/insets; smaller surfaces are unchanged. */
   .wv-explore-open > .wv-explore-surface { --wv-compact-action-rail: min(66px, calc(100vw - 420px)); }
+  /* Keep the combined scope/title/occlusion header and one readable module
+     line above the 44px Inspector. Source text retains its own named keyboard
+     and touch scroll surface instead of consuming the map's reader budget. */
+  .wv-explore-open .wv-explore-source { max-height: 48px; }
   .wv-explore-open > .wv-explore-immersive {
     grid-template-areas: 'toolbar toolbar' 'map actions' 'source source';
     grid-template-columns: minmax(0, 1fr) var(--wv-compact-action-rail);

@@ -32,6 +32,8 @@ const receipts=[]
 try{
  for(const caseSpec of [
   {width:500,height:360,nativeWidth:414,nativeHeight:224,coarse:true,title:"Recorded city observation"},
+  {width:500,height:360,nativeWidth:414,nativeHeight:240,coarse:true,title:'Recorded regional observation with supplied provenance',precision:'region',occluded:true},
+  {width:480,height:360,nativeWidth:400,nativeHeight:240,coarse:true,title:'Recorded city observation with supplied provenance',occluded:true},
   {width:480,height:360,nativeWidth:400,nativeHeight:224,coarse:true,title:"Recorded regional observation",precision:"region",occluded:true},
   {width:640,height:360,nativeWidth:620,nativeHeight:224,coarse:false,title:'Synthetic clustering fixture row 2'},
   {width:640,height:360,nativeWidth:620,nativeHeight:224,coarse:true,title:'Recorded regional observation',precision:'region',occluded:true},
