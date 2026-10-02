@@ -338,7 +338,10 @@ declare story jsonb; selected_sequence bigint; changes jsonb:='[]'; evidence jso
   n integer:=0; additional integer; truncated boolean:=false; result jsonb;
 begin
   story:=public.read_reviewed_public_story_v1(p_story_id,p_public_version_id);
-  if story is null or public.read_reviewed_public_story_v1(p_story_id,null) is null then return null; end if;
+  -- The canonical owner checks the exact requested version. A default read
+  -- still selects the newest sequence before permission, without fallback;
+  -- a separately admitted historical version does not inherit head denial.
+  if story is null then return null; end if;
   selected_sequence:=(story->>'sequence')::bigint;
   for c in select material_change_id,story_id,subject_type,subject_id,public_version_id,previous_public_version_id,sequence,
     effective_at,declared_at,reason,evidence_refs,review_refs,policy_version,kind,importance,novelty,event_state

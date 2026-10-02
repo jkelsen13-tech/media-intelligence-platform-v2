@@ -1,0 +1,71 @@
+TAP version 13
+# Subtest: production App/account/Story/Following journeys preserve display ownership across route and auth events
+    # Subtest: auth event wins slow initial session; historical Story displays reviewed source and preserves Inspector/time
+    ok 1 - auth event wins slow initial session; historical Story displays reviewed source and preserves Inspector/time
+      ---
+      duration_ms: 151.364611
+      type: 'test'
+      ...
+    # Subtest: historical acknowledgement is bound to displayed version while head has later material change
+    ok 2 - historical acknowledgement is bound to displayed version while head has later material change
+      ---
+      duration_ms: 182.72267
+      type: 'test'
+      ...
+    # Subtest: World and Inspector return retain exact Story version and independent canonical context
+    ok 3 - World and Inspector return retain exact Story version and independent canonical context
+      ---
+      duration_ms: 352.080397
+      type: 'test'
+      ...
+    # Subtest: native Following list drops an old actor response after App account changes
+    ok 4 - native Following list drops an old actor response after App account changes
+      ---
+      duration_ms: 160.796745
+      type: 'test'
+      ...
+    # Subtest: late mutation cannot paint account A into B; actual account sheet logout clears private state
+    ok 5 - late mutation cannot paint account A into B; actual account sheet logout clears private state
+      ---
+      duration_ms: 53.117591
+      type: 'test'
+      ...
+    # Subtest: late personal read is dropped through logout and same-account re-entry; expiry removes actions
+    ok 6 - late personal read is dropped through logout and same-account re-entry; expiry removes actions
+      ---
+      duration_ms: 252.694896
+      type: 'test'
+      ...
+    # Subtest: stale public-version response cannot replace selected historical Story or its acknowledge target
+    ok 7 - stale public-version response cannot replace selected historical Story or its acknowledge target
+      ---
+      duration_ms: 213.633362
+      type: 'test'
+      ...
+    # Subtest: private head revocation cannot block an independently authorized historical public Story
+    ok 8 - private head revocation cannot block an independently authorized historical public Story
+      ---
+      duration_ms: 150.090556
+      type: 'test'
+      ...
+    # Subtest: confirmed withdrawal clears private updates and the withdrawn displayed source from the reader
+    ok 9 - confirmed withdrawal clears private updates and the withdrawn displayed source from the reader
+      ---
+      duration_ms: 19.583019
+      type: 'test'
+      ...
+    1..9
+ok 1 - production App/account/Story/Following journeys preserve display ownership across route and auth events
+  ---
+  duration_ms: 3653.944104
+  type: 'test'
+  ...
+1..1
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3899.65185

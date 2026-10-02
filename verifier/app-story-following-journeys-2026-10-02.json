@@ -1,0 +1,166 @@
+{
+  "qualification": "mip-app-story-following-journeys-2026-10-02",
+  "status": "source_qualified_not_installed_or_deployed",
+  "base_revision": "9f7dd891a267fcda968a154c30ae12fa7ebd9494",
+  "source_change": "Context read defers exact historical permission to canonical public owner; default newest-head read remains fail-closed without fallback. News coordinates private revocation with an exact public owner recheck while preserving its controller.",
+  "covered": [
+    "production App and auth/account sheet integration",
+    "exact reviewed Story and historical acknowledgement",
+    "World/Inspector return and microsecond context preservation",
+    "native Following list actor switches",
+    "stale mutation, stale read, logout, same-account re-entry, session expiry",
+    "stale public response and unknown version refusal",
+    "token/expected-actor mismatch refused before SQL mutation",
+    "private head revocation with authorized historical body",
+    "displayed-source withdrawal and durable revocation",
+    "no personal Following browser storage",
+    "exact unapplied install/rollback and unrelated overload preservation"
+  ],
+  "boundaries": [
+    "Restored disposable PGlite database only; no live installation, account creation, reviewer admission, external delivery, merge, paid activation or deployment.",
+    "Auth HTTP responses and browser session events are controlled fixtures; hosted Auth provider, magic-link delivery and callback origin behavior are not qualified by these runs.",
+    "Graph, World, Inspector, workspace chrome and unrelated private investigation renderers are probes; actual App callbacks and context transitions execute.",
+    "Real NewsView, NewsStoryReader, auth hooks, AccountPanel, StoryFollowingControls, StoryFollowingPanel, Supabase SDK, gateway handler and exact SQL proposals execute.",
+    "Unrelated feed loaders return controlled empty results. No physical browser or pixel/accessibility claim; parent owns final browser qualification."
+  ],
+  "runs": [
+    {
+      "runtime": "Node 22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test --test-reporter=tap tests/appStoryFollowingJourneys.test.mjs",
+      "exit_code": 0,
+      "tests": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "receipt": {
+        "path": "verifier/app-story-following-journeys-node22-2026-10-02.tap",
+        "sha256": "0ed0fdd6a3975241d7ed0ec6b6dd3493672af0a118da3779d5d4fcda05f0ff2c"
+      }
+    },
+    {
+      "runtime": "Node 22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test --test-reporter=tap tests/storyFollowingPackage.test.mjs",
+      "exit_code": 0,
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "receipt": {
+        "path": "verifier/app-story-following-package-node22-2026-10-02.tap",
+        "sha256": "daf7196d14a47bf604b9dc85a13986283a0fb3b4d6119aaae54386412662fba7"
+      }
+    },
+    {
+      "runtime": "Node 24.19.0",
+      "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node --test --test-reporter=tap tests/appStoryFollowingJourneys.test.mjs",
+      "exit_code": 0,
+      "tests": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "receipt": {
+        "path": "verifier/app-story-following-journeys-node24-2026-10-02.tap",
+        "sha256": "1e1918599b47f922337c078d69becc8c31eca6f55f65f6418b9ebae8cae31dc5"
+      }
+    },
+    {
+      "runtime": "Node 24.19.0",
+      "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node --test --test-reporter=tap tests/storyFollowingPackage.test.mjs",
+      "exit_code": 0,
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "receipt": {
+        "path": "verifier/app-story-following-package-node24-2026-10-02.tap",
+        "sha256": "54d3121f1c4fd68dccb08be0aa40826b8007ec17d762da009179883222ad5976"
+      }
+    }
+  ],
+  "source_files": [
+    {
+      "path": "src/App.jsx",
+      "sha256": "6516c6b44a22ef16e8e313d58d3237df92a82eb79bae9ea47413123762994720"
+    },
+    {
+      "path": "src/lib/auth.js",
+      "sha256": "32881f7c159b2ab83b57f48ebb10f0dd8e39b8e847f40bd5f3ed53fb39289e5c"
+    },
+    {
+      "path": "src/views/NewsView.jsx",
+      "sha256": "55e5acd766cfd8430c0666bfd208029585f343707a54e53b887d6a6a263ddc4d"
+    },
+    {
+      "path": "src/views/NewsStoryReader.jsx",
+      "sha256": "8c12242067ce7d55ca1123effc84e4d5f00aaf12f9cffabe7ea4b9c189da2d38"
+    },
+    {
+      "path": "src/lib/useStoryFollowing.js",
+      "sha256": "61701073905f0a96051b7fa395c9d0d35c91dc2b2d2a0f5417dabe2e696d66ff"
+    },
+    {
+      "path": "src/components/StoryFollowingControls.jsx",
+      "sha256": "f80f91ca0bdf4cc2b9b7c4ef1216a4f6b5eefc7c3e3ac54d57aee20cccd8b527"
+    },
+    {
+      "path": "src/components/StoryFollowingPanel.jsx",
+      "sha256": "4b5f6ffcb82df87ab42fb275f949a4462cd3f111aea9fb62b02455887ce14ac5"
+    },
+    {
+      "path": "src/lib/storyFollowingClient.js",
+      "sha256": "8f61a8891a87a1e2ee776712105b3e4f95c6fbc43c319b3d8c55816c1ad2df0b"
+    },
+    {
+      "path": "src/lib/investigationBackend.js",
+      "sha256": "fae09604e2640e71f69024dcd29719311214fae6cd3ece3c5752f65e20668c18"
+    },
+    {
+      "path": "src/lib/reviewedPublicVersion.js",
+      "sha256": "850ffbd8d26d4b565bdbd065e85d8f5914b04bd90b1185689434ba9b20a1f23c"
+    },
+    {
+      "path": "src/lib/reviewedPublicVersionBackend.js",
+      "sha256": "edfe9abe08728af16a41c6b207fc90ba3fb75f4b8f8910767182cfb6ac78b937"
+    },
+    {
+      "path": "supabase/functions/investigation-api/handler.mjs",
+      "sha256": "c847594714aac59b053f38b613de7ed8eb788c2b66f0e59878c04998afa080da"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.sql",
+      "sha256": "a9711252fb6429637c05774ca1eb76722a46aecec5d5ab1019e5e68856aa7404"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.sql",
+      "sha256": "8e7895c435125779a145fa42ab6e5579a8bc70f4db4bc0fbd38f7eed52b5ea49"
+    },
+    {
+      "path": "scripts/storyFollowingPackage.mjs",
+      "sha256": "193947fb01f1ec616abce61def98d61bee1606d0d2a008e015c559649ab81b00"
+    },
+    {
+      "path": "scripts/reviewedPublicVersionPackage.mjs",
+      "sha256": "0ab7d66295cc8b8381c754194355adb00281cb4032d2361d9d50dfecd63661d9"
+    },
+    {
+      "path": "tests/appStoryFollowingJourneys.test.mjs",
+      "sha256": "4f27937bb8c9c7054868b6233242ca3fda659c36b0bfeba29244f02912cd9808"
+    },
+    {
+      "path": "tests/fixtures/appStoryFollowingJourney.mjs",
+      "sha256": "5fbcea4b00758c6c9c6b3bf9d6a08df5344fffbd32dd4c71568b4ebbb6172640"
+    },
+    {
+      "path": "tests/reviewedPublicVersionFixture.mjs",
+      "sha256": "33e78ed482ddb5a6307a369d188dd0ce3107c3b140740c8a796d3cfa4c4ffb45"
+    },
+    {
+      "path": "tests/storyFollowingPackage.test.mjs",
+      "sha256": "ea4fd9f0fd286103bfd4b83776438035aa49878b56225bdb4111d0e03ef7d129"
+    },
+    {
+      "path": "tests/storyFollowingFixture.mjs",
+      "sha256": "aa1b1819cb4b4f50bff8c887fa3ce0a97d8b4cd468999904ccaa78a6e507e864"
+    }
+  ]
+}
