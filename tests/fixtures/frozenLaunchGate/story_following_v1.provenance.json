@@ -1,0 +1,11 @@
+{
+  "contract": "mip-frozen-story-following-sql-fixture-v1",
+  "source_commit": "670efb8ebd6b4d7fb09368d399fe5a2afbc03a77",
+  "source_path": "supabase/source-proposals/story_following_v1.sql",
+  "source_git_blob": "7a7706793a0d854a2f3a9aebd0854ef835e348a9",
+  "sha256": "2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e",
+  "byte_length": 39594,
+  "purpose": "Hermetic local reproduction of the frozen public material-history phase-reset defect. Historical fixture only; never installation authority.",
+  "copied_at": "2026-10-02",
+  "copy_method": "Exact git show bytes from the full authoritative source commit, without edits."
+}

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
 import { createMaterialHistoryFixture } from './storyMaterialHistoryFixture.mjs'
 import { createReviewedVersionFixture } from './reviewedPublicVersionFixture.mjs'
 import { installStoryFollowingFixture } from '../scripts/storyFollowingPackage.mjs'
@@ -12,7 +12,16 @@ const ago = hours => new Date(Date.now() - hours * hour).toISOString()
 const complete = 'mip_private.public_story_material_history_is_complete($1,$2)'
 
 test('frozen670 actual public SQL/SDK reproduces the unsafe phase reset', async t => {
-  const proposalSource = execFileSync('git', ['show', '670efb8:supabase/source-proposals/story_following_v1.sql'], { cwd: new URL('..', import.meta.url), encoding: 'utf8' })
+  const bytes = await readFile(new URL('./fixtures/frozenLaunchGate/story_following_v1.sql', import.meta.url))
+  const provenance = JSON.parse(await readFile(new URL('./fixtures/frozenLaunchGate/story_following_v1.provenance.json', import.meta.url), 'utf8'))
+  assert.equal(provenance.contract, 'mip-frozen-story-following-sql-fixture-v1')
+  assert.equal(provenance.source_commit, '670efb8ebd6b4d7fb09368d399fe5a2afbc03a77')
+  assert.equal(provenance.source_path, 'supabase/source-proposals/story_following_v1.sql')
+  assert.equal(provenance.sha256, '2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e')
+  assert.equal(createHash('sha256').update(bytes).digest('hex'), provenance.sha256)
+  assert.equal(createHash('sha1').update(`blob ${bytes.byteLength}\0`).update(bytes).digest('hex'), provenance.source_git_blob)
+  assert.equal(bytes.byteLength, provenance.byte_length)
+  const proposalSource = bytes.toString('utf8')
   const f = await createMaterialHistoryFixture(t, { proposalSource })
   const origin = Date.now() - 6.5 * hour
   await f.append(0, { effectiveAt: new Date(origin).toISOString() })
