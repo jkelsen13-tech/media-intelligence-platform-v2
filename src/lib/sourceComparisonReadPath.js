@@ -127,6 +127,7 @@ export function buildClaimView(claim, surfaces, ctx) {
     return {
       id: s.id,
       articleId: s.article_id,
+      ...(s.sourceVersion ? { sourceVersion: s.sourceVersion } : {}),
       outlet: article.outlet ?? 'unknown',
       surfaceText: s.surface_text,
       publishedAt: article.published_at ?? null,
@@ -325,6 +326,7 @@ function projectionEventView(row) {
     arc_title: article.arc_title ?? null,
     timeline_key: article.timeline_key ?? null,
     has_extracted_claim: article.has_extracted_claim === true,
+    sourceVersion: comparisonSourceVersion(article),
   }))
   const articlesById = new Map(articles.map((article) => [article.id, article]))
   const memberRows = articles.map((article) => ({ article_id: article.id }))
@@ -344,18 +346,21 @@ function projectionEventView(row) {
         surface_text: surface.surface_text,
         loaded_language: Array.isArray(surface.loaded_language) ? surface.loaded_language : [],
         explanation: comparisonExplanationForReader(surface.explanation),
+        sourceVersion: comparisonSourceVersion(surface),
       }))
       const evidenceLinks = (Array.isArray(claim.evidence_links) ? claim.evidence_links : []).map((link, index) => ({
         id: `${claim.claim_key}:evidence:${index}`,
         claim_id: claim.claim_key,
         evidence_url: link.evidence_url,
         evidence_type: link.evidence_type,
+        ...(comparisonSourceVersion(link) ? { sourceVersion: comparisonSourceVersion(link) } : {}),
       }))
       const corrections = (Array.isArray(claim.corrections) ? claim.corrections : []).map((correction, index) => ({
         id: `${claim.claim_key}:correction:${index}`,
         claim_id: claim.claim_key,
         correction_text: correction.correction_text,
         occurred_at: correction.occurred_at,
+        ...(comparisonSourceVersion(correction) ? { sourceVersion: comparisonSourceVersion(correction) } : {}),
       }))
       const explanationsByArticle = new Map(
         surfaces.filter((surface) => surface.explanation).map((surface) => [surface.article_id, surface.explanation]),
@@ -395,6 +400,25 @@ function projectionEventView(row) {
   }
 }
 
+// Native UUIDs/version IDs are retained separately from the existing opaque
+// presentation keys. No ID is derived from a grouping key or source URL.
+function comparisonSourceVersion(value) {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  if (!uuid.test(value?.public_version_id ?? '') || !uuid.test(value?.capture_id ?? '')
+    || !/^[0-9a-f]{64}$/.test(value?.capture_hash ?? '')) return null
+  return {
+    articleId: uuid.test(value.article_id ?? '') ? value.article_id : null,
+    publicVersionId: value.public_version_id,
+    captureId: value.capture_id,
+    captureHash: value.capture_hash,
+    articleClaimId: uuid.test(value.article_claim_id ?? '') ? value.article_claim_id : null,
+    sourceField: value.source_field ?? null,
+    spanStart: value.span_start ?? null,
+    spanEnd: value.span_end ?? null,
+    excerptHash: value.excerpt_hash ?? null,
+  }
+}
+
 /**
  * Comparison cards keep opaque article_key values as `articleId`.
  * News detail is article-id keyed, so Open-in-News must carry the already
@@ -406,7 +430,7 @@ export function newsNavigationFromComparisonSurface(surface) {
   const articleKey = surface.articleId ?? surface.article_key ?? null
   const url = surface.url ?? surface.article_url ?? null
   if (!articleKey && !url) return null
-  return { articleKey, url }
+  return { articleKey, url, ...(surface.sourceVersion ? { sourceVersion: surface.sourceVersion } : {}) }
 }
 
 /**
