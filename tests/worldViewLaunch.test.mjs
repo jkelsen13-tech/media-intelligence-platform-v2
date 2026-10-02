@@ -10,6 +10,7 @@ import assert from 'node:assert/strict'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { rgbVendorGuardText, assertBoundedRgbTransportSafety, assertRgbGuardNegativeControls } from './helpers/worldViewRgbSafetyGuard.mjs'
 
 import { CLEVELAND_CANONICAL_EVENT_ID, CLEVELAND_ASSESSMENT_KEY } from '../src/lib/temporalAssessment.js'
 import {
@@ -347,19 +348,22 @@ test('src has no globe-vendor / 3D-tile strings; map pick goes through commitNew
     // Stage D visual-continuity repair: relief-shading material (adapter seam).
     /\/src\/lib\/worldViewCesiumTerrainReliefShading\.js$/,
   ]
-  for (const file of files) {
-    const text = readFileSync(file, 'utf8')
+  const assertSourceGuard = (file, text) => {
     assert.doesNotMatch(text, bannedIonTokenStrings, file)
     assert.doesNotMatch(text, bannedIonAndProviders, file)
+    assertBoundedRgbTransportSafety(file, text)
 
     const isAllowedCesiumFile = allowedCesiumFiles.some((re) => re.test(file.replaceAll('\\', '/')))
     if (!isAllowedCesiumFile) {
-      assert.doesNotMatch(text, bannedCesiumWord, file)
+      assert.doesNotMatch(rgbVendorGuardText(file, text), bannedCesiumWord, file)
     } else {
       // Paid imagery keys (e.g. provider access tokens) must not be used by the globe adapter.
       assert.doesNotMatch(text, bannedPaidImageryKeyStrings, file)
     }
+    assert.doesNotMatch(text, /Port Meridian/, file)
   }
+  for (const file of files) assertSourceGuard(file, readFileSync(file, 'utf8'))
+  assertRgbGuardNegativeControls(assertSourceGuard, readFileSync(new URL('../src/lib/worldViewBoundedRgbImagery.js', import.meta.url), 'utf8'), {paidAdapterToken:true})
   assert.match(APP, /handleSelectProjection[\s\S]*commitNewSubjectFromApp/)
   void EVENT_FROM_MS
   void applySubject

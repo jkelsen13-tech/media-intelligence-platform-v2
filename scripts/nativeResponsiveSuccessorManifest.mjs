@@ -23,6 +23,8 @@ const qualificationFiles = [
   'tests/worldMapCanvasRealismLifecycle.test.mjs', 'tests/worldViewBoundedRgbImagery.test.mjs',
   'tests/worldViewNativeRgbAttachment.test.mjs', 'tests/worldViewNativeRgbSession.test.mjs',
   'tests/worldViewNativeRgbMountedSession.test.mjs', 'tests/worldView500SourceAccess.test.mjs',
+  'tests/r475Step8Closeout.test.mjs', 'tests/worldViewLaunch.test.mjs',
+  'tests/helpers/worldViewRgbSafetyGuard.mjs',
   'tests/worldView500Responsive.browser.mjs', 'verifier/runWorldViewNativeRgbAppBrowser.mjs',
   'verifier/qualifyWorldViewNativeRgbPixels.py', 'verifier/runWorldView500ResponsiveSyntheticBrowser.mjs',
   'docs/world-view-native-rgb-attachment-2026-10-02.md',

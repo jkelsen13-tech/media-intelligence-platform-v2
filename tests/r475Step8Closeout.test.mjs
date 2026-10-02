@@ -10,6 +10,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { rgbVendorGuardText, assertBoundedRgbTransportSafety, assertRgbGuardNegativeControls } from './helpers/worldViewRgbSafetyGuard.mjs'
+import { createWorldViewBoundedRgbTransport, validateWorldViewBoundedRgbLoaded } from '../src/lib/worldViewBoundedRgbImagery.js'
 
 import {
   emptyInvestigationContext,
@@ -315,19 +317,48 @@ test('Step 1–7 test files exist; R4.75 src stays DISPLAY-only; no R5 product i
     // renderer-vendor module by design; same bans apply.
     /\/src\/lib\/worldViewCesiumTerrainReliefShading\.js$/,
   ]
-  for (const file of srcFiles) {
-    const text = readFileSync(file, 'utf8')
+  const assertSourceGuard = (file, text) => {
     assert.doesNotMatch(text, bannedIonTokenStrings, file)
     assert.doesNotMatch(text, bannedIonAndProviders, file)
+    assertBoundedRgbTransportSafety(file, text)
 
     const isAllowedCesiumFile = allowedCesiumFiles.some((re) => re.test(file))
     if (!isAllowedCesiumFile) {
-      assert.doesNotMatch(text, bannedCesiumWord, file)
+      assert.doesNotMatch(rgbVendorGuardText(file, text), bannedCesiumWord, file)
     }
     assert.doesNotMatch(text, /Port Meridian/, file)
   }
+  for (const file of srcFiles) assertSourceGuard(file, readFileSync(file, 'utf8'))
+  assertRgbGuardNegativeControls(assertSourceGuard, readFileSync(new URL('../src/lib/worldViewBoundedRgbImagery.js', import.meta.url), 'utf8'))
 
   assert.match(CLOSEOUT, /§17/)
   assert.match(CLOSEOUT, /inherits/)
   assert.doesNotMatch(CLOSEOUT, /this package starts R5|implements R5/)
+})
+
+test('bounded RGB orientation contract retains injected, permission-denying and private loaded-handle boundaries', async () => {
+  let calls = 0
+  const unexpected = () => { calls++; throw Error('unreserved transport work') }
+  const packet = {
+    sourceId:'synthetic-closeout-guard', registeredAssetSha256:'a'.repeat(64),
+    runtimeProvenanceSha256:'b'.repeat(64), sourceMetadataXmlSha256:'c'.repeat(64), permissionGrant:false,
+    capture:{precision:'day', start:'2023-03-07'}, coverage:{crs:'EPSG:4326', bounds:[0,0,1,1]},
+    localResourceEstimate:64,
+    tiles:[{key:'synthetic', route:'/fixture/rgb.png', sha256:'d'.repeat(64), byteLength:1, width:1, height:1, crs:'EPSG:4326', bounds:[0,0,1,1]}],
+  }
+  const options = {origin:'https://closeout-guard.invalid', fetchImpl:unexpected, decodeImageBitmap:unexpected, digest:unexpected}
+  const transport = createWorldViewBoundedRgbTransport({...options, packets:[packet]})
+  const descriptor = {sourceId:packet.sourceId, kind:'imagery', level:0, requestedLevel:0, ancestry:'direct',
+    bounds:packet.coverage.bounds, metadata:{assetSha256:packet.registeredAssetSha256, capture:packet.capture, coverage:packet.coverage}}
+  assert.equal(transport.estimateBytes(descriptor),64)
+  for (const permissionGrant of [true, undefined]) {
+    assert.throws(() => createWorldViewBoundedRgbTransport({...options, packets:[{...packet, permissionGrant}]}), /rgb-packet-identity-invalid/)
+  }
+  for (const route of ['https://provider.invalid/rgb.png', '//provider.invalid/rgb.png']) {
+    assert.throws(() => createWorldViewBoundedRgbTransport({...options, packets:[{...packet, tiles:[{...packet.tiles[0], route}]}]}), /rgb-tile-pin-invalid/)
+  }
+  assert.equal(validateWorldViewBoundedRgbLoaded({contract:'mip-bounded-rgb-imagery-v1', sourceId:packet.sourceId,
+    assetSha256:packet.registeredAssetSha256, nativeTextureOrientation:'cesium-imagebitmap-preflip-y-v1', tiles:[]}, descriptor),false)
+  await assert.rejects(transport.load(descriptor, {maxBytes:63}), /rgb-reservation-bound-invalid/)
+  assert.equal(calls,0)
 })

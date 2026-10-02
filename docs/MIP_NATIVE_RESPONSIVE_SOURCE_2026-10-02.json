@@ -76,7 +76,7 @@
     },
     {
       "path": "scripts/nativeResponsiveSuccessorManifest.mjs",
-      "sha256": "a514e570d7b437cd31b7a7b229ca3057001d48567ee8835aad48ae782272a02b"
+      "sha256": "39881ec0a1297f94016ee0949bfab0890fcb6c7fb38cba05161c89cef02a0084"
     },
     {
       "path": "scripts/reviewedPublicVersionPackage.mjs",
@@ -480,7 +480,11 @@
     },
     {
       "path": "tests/helpers/worldViewNativeRgbMountedSessionFixture.mjs",
-      "sha256": "112e102de6c44042bf8e40bca0ec8a6e40e47883383988ad069c9cb2b31da614"
+      "sha256": "28348f67a9599aea444e16158edd4864e73bd754596f6eb022c98174e379b8e1"
+    },
+    {
+      "path": "tests/helpers/worldViewRgbSafetyGuard.mjs",
+      "sha256": "1fbd8a4eec5466f01f34518f71fd1793f6b9927e2674660889a907462b850c50"
     },
     {
       "path": "tests/investigationApi.test.mjs",
@@ -501,6 +505,10 @@
     {
       "path": "tests/legacyOwnerTransferFixture.mjs",
       "sha256": "3a71deaf9b9970562f34ab42531f3f9e84938b1dead8f42262b5e3489afe61a0"
+    },
+    {
+      "path": "tests/r475Step8Closeout.test.mjs",
+      "sha256": "e9343129cc90aa40d61b164158e74e0e7a72933f070fa8687f8b515e7519a39a"
     },
     {
       "path": "tests/storyArticleExactVersionBrowser.mjs",
@@ -539,12 +547,16 @@
       "sha256": "1723bda24b38bfae0654278b78f32b79c029ec8da831e1ea9e3011582374e946"
     },
     {
+      "path": "tests/worldViewLaunch.test.mjs",
+      "sha256": "b0f9f474abaf30050eb2e57a67d5ab19b9c6ea4cc4cf676e0ed9ee4a12275589"
+    },
+    {
       "path": "tests/worldViewNativeRgbAttachment.test.mjs",
       "sha256": "ef62838e325dbc003727acab45d8287da2a3d2e2df5ef2c1945807f1fe026850"
     },
     {
       "path": "tests/worldViewNativeRgbMountedSession.test.mjs",
-      "sha256": "f630e8bf6249e17ae9af6c33e761ccd2a48c7a1e9c4a6672c65dd390077b16c1"
+      "sha256": "7ee2ef9d7fe83d187e071df167c3c3368ff48a515acd93c12262bb94e717dd2e"
     },
     {
       "path": "tests/worldViewNativeRgbSession.test.mjs",
@@ -576,7 +588,7 @@
     },
     {
       "path": "verifier/runWorldViewNativeRgbAppBrowser.mjs",
-      "sha256": "76de96b1e2b26d9b6ff3a5fe22a6fc6d68bcce05ba53ee56cc5f99e623fd1e6d"
+      "sha256": "88d750d4317c30bbf03b30f42a97372d1620c7f18f3f4dadd57312e33052748b"
     },
     {
       "path": "verifier/runWorldViewSelectedCardScrollSyntheticBrowser.mjs",

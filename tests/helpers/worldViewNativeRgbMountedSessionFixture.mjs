@@ -1,5 +1,5 @@
-import {createWorldViewRealismSession} from '/workspace/mip-native-imagery-attachment/src/lib/worldViewRealismController.js'
-import {WORLD_VIEW_REALISM_RIGHTS} from '/workspace/mip-native-imagery-attachment/src/lib/worldViewRealismAdmission.js'
+import {createWorldViewRealismSession} from '../../src/lib/worldViewRealismController.js'
+import {WORLD_VIEW_REALISM_RIGHTS} from '../../src/lib/worldViewRealismAdmission.js'
 export const request={kind:'imagery',bounds:[-81.8,41.1,-81.2,41.8],level:10}
 export const scope={subjectType:'article',subjectId:'qualification-subject',revision:'qualification-revision',at:'2026-10-02T00:00:00.000000001Z'}
 export const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return {promise,resolve,reject}}

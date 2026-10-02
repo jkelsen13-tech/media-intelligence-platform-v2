@@ -6,8 +6,8 @@ import {build} from 'esbuild'
 import React from 'react'
 import TestRenderer,{act} from 'react-test-renderer'
 import {fixture,request} from './helpers/worldViewNativeRgbMountedSessionFixture.mjs'
-const output=new URL(`./.native-rgb-compiled/Canvas-node${process.versions.node.split('.')[0]}.mjs`,import.meta.url)
-await mkdir(new URL('./.native-rgb-compiled/',import.meta.url),{recursive:true})
+const output=new URL(`./.compiled/native-rgb-Canvas-node${process.versions.node.split('.')[0]}.mjs`,import.meta.url)
+await mkdir(new URL('./.compiled/',import.meta.url),{recursive:true})
 await build({entryPoints:[new URL('../src/views/WorldMapCanvas.jsx',import.meta.url).pathname],outfile:output.pathname,
  bundle:true,platform:'node',format:'esm',jsx:'automatic',packages:'external',plugins:[{name:'explicit-lifecycle-renderer-probe',setup(b){
   b.onResolve({filter:/^\.\.\/lib\/worldViewRendererAdapter$/},()=>({path:'renderer',namespace:'probe'}))
@@ -49,4 +49,3 @@ test('mounted production Canvas cannot treat retained active Explore state on re
 })
 
 await rm(output,{force:true})
-await rm(new URL('./.native-rgb-compiled/',import.meta.url),{recursive:true,force:true})
