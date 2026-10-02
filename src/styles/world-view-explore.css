@@ -91,6 +91,11 @@
   .wv-explore-context { max-height: 40%; }
 }
 @media (orientation: landscape) and (max-height: 600px) {
+  /* A collapsed evidence banner can cover the canonical glyph in a short
+     viewport. Interact gives that space to the map; Done restores the same
+     banner. display:none also removes its button from focus and accessibility
+     navigation. Expanded Inspector content remains available. */
+  .wv-explore-open .wv-explore-interacting > .wv-explore-context:has(> .wv-explore-context-body[hidden]) { display: none; }
   /* In short landscape, the stacked preview/button consumed the entire 45%
      sheet allowance. Expand beside the interaction row, with one compact
      header and a real bounded scroll viewport, still above native credits. */
