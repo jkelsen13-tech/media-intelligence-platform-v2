@@ -54,6 +54,9 @@ export function temporalAssessmentConfigKey(canonicalEventId) {
 }
 
 export function canonicalEventIdFromWorldView(selected, visibleRow) {
+  const selectedId = selected?.subject_graph_node_id ?? selected?.id ?? null
+  if (visibleRow?.subject_graph_node_id != null && selectedId != null
+    && visibleRow.subject_graph_node_id !== selectedId) return null
   return (
     visibleRow?.subject_graph_node_id ??
     selected?.subject_graph_node_id ??
@@ -119,6 +122,9 @@ export function temporalAssessmentViewFromValue(value, { key = null, sha256 = nu
   if (value == null || typeof value !== 'object' || Array.isArray(value)) {
     return unavailableView('unreadable', { key, sha256 })
   }
+  if (key !== null && temporalAssessmentConfigKey(value.canonical_event_id) !== key) {
+    return unavailableView('subject_key_mismatch', { key, sha256 })
+  }
   if (Object.hasOwn(value, 'truth_probability') || Object.hasOwn(value.display ?? {}, 'truth_probability')) {
     return unavailableView('forbidden_field', { key, sha256 })
   }
@@ -145,6 +151,7 @@ export function temporalAssessmentViewFromValue(value, { key = null, sha256 = nu
 }
 
 export async function pinFetchedAssessment(value, key, { hashFn } = {}) {
+  if (key !== CLEVELAND_ASSESSMENT_KEY) return unavailableView('assessment_key_not_pinned', { key })
   try {
     const text = encodePostgresJsonbText(value)
     const digest = await (hashFn ?? sha256HexUtf8)(text)
@@ -184,6 +191,7 @@ export async function loadTemporalAssessment(canonicalEventId, options = {}) {
   }
 
   if (!row || row.value == null) return unavailableView('missing_row', { key, canonicalEventId })
+  if (row.key !== key) return unavailableView('returned_key_mismatch', { key, canonicalEventId })
   return pinFetchedAssessment(row.value, key)
 }
 

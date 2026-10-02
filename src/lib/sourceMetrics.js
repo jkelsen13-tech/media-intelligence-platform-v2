@@ -7,6 +7,8 @@
 // remains unavailable until verified source-lineage records exist, because
 // multiple outlets in an event grouping do not establish independence.
 
+import { comparisonPublicationTiming } from './comparisonPublicationTiming.js'
+
 const emptyMetric = () => ({
   volume: 0,
   firstToReportCount: 0,
@@ -15,7 +17,7 @@ const emptyMetric = () => ({
 
 export function buildSourceMetrics(rows, eventMap) {
   const metrics = new Map()
-  const eventOutlets = new Map()
+  const eventArticles = new Map()
 
   for (const row of rows ?? []) {
     const outlet = String(row?.outlet ?? '').trim()
@@ -24,23 +26,18 @@ export function buildSourceMetrics(rows, eventMap) {
     metrics.get(outlet).volume += 1
 
     const eventId = eventMap?.get(row.id)?.eventId
-    const publishedAt = Date.parse(row.published_at ?? '')
-    if (!eventId || Number.isNaN(publishedAt)) continue
-    if (!eventOutlets.has(eventId)) eventOutlets.set(eventId, new Map())
-    const byOutlet = eventOutlets.get(eventId)
-    const prior = byOutlet.get(outlet)
-    // One outlet can contribute multiple publisher records to a recorded event.
-    // Its earliest retained timestamp is the only timestamp eligible here.
-    if (prior == null || publishedAt < prior) byOutlet.set(outlet, publishedAt)
+    if (!eventId) continue
+    if (!eventArticles.has(eventId)) eventArticles.set(eventId, [])
+    // Unknown clocks remain in the group: they can precede a qualified record.
+    eventArticles.get(eventId).push({ outlet, published_at: row.published_at })
   }
 
-  for (const byOutlet of eventOutlets.values()) {
-    if (byOutlet.size < 2) continue
-    const coverage = [...byOutlet.entries()].sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]))
-    // Ties are deliberately not called first-to-report: neither outlet predates
-    // the other in the retained event grouping.
-    if (coverage[0][1] >= coverage[1][1]) continue
-    metrics.get(coverage[0][0]).firstToReportCount += 1
+  for (const articles of eventArticles.values()) {
+    if (new Set(articles.map(row => row.outlet)).size < 2) continue
+    // Reuse Source Comparison's precision intervals, explicit UTC offsets,
+    // retained microseconds, and complete-corpus-clock requirement.
+    const { firstOutlet } = comparisonPublicationTiming(articles)
+    if (firstOutlet !== null) metrics.get(firstOutlet).firstToReportCount += 1
   }
 
   return metrics

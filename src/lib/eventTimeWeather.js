@@ -11,6 +11,7 @@
 
 import { plotDecision, collectPositions, revisionCoverageAt } from './spatialProjection.js'
 import { weatherSourcePermission } from './weatherSourceRights.js'
+import { inspectionInstantMilliseconds } from './inspectionTime.js'
 
 export const EVENT_TIME_WEATHER_PROVIDER = 'Open-Meteo'
 export const EVENT_TIME_WEATHER_MODEL = 'era5'
@@ -52,14 +53,13 @@ export function unavailableWeather(reason, copy) {
 }
 
 export function parseUtcMs(value) {
-  if (value == null || value === '') return null
-  const raw = String(value).trim()
-  const normalized =
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(raw) && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(raw)
-      ? `${raw}Z`
-      : raw
-  const ms = Date.parse(normalized)
-  return Number.isFinite(ms) ? ms : null
+  if (typeof value !== 'string') return null
+  // This parser is scoped to archive hourly.time with requested timezone=GMT.
+  // Its native zone-free hours have that documented meaning; general source
+  // and inspection timestamps must still carry their own explicit offsets.
+  const withZone = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$/.test(value) ? `${value}Z` : value
+  const normalized = withZone.replace(/(T\d{2}:\d{2})(Z|[+-]\d{2}(?::?\d{2})?)$/i, '$1:00$2')
+  return inspectionInstantMilliseconds(normalized)
 }
 
 export function utcDayStamp(ms) {
@@ -123,26 +123,34 @@ export function buildArchiveUrl({ latitude, longitude, day }) {
 
 function hourIndexFor(times, atMs) {
   if (!Array.isArray(times) || times.length === 0 || !Number.isFinite(atMs)) return -1
-  let best = -1
+  const requestedHour = Math.floor(atMs / 3600000) * 3600000
+  let match = -1
   for (let i = 0; i < times.length; i++) {
     const ms = parseUtcMs(times[i])
-    if (ms == null) continue
-    if (ms <= atMs) best = i
-    else break
+    if (ms !== requestedHour) continue
+    if (match !== -1) return -1 // Duplicate samples are ambiguous.
+    match = i
   }
-  return best
+  return match
+}
+
+function numericWeatherValue(value) {
+  if (typeof value !== 'number' && !(typeof value === 'string' && value.trim())) return null
+  const number = Number(value)
+  return Number.isFinite(number) ? number : null
 }
 
 function formatNumber(value, unit) {
-  if (value == null || !Number.isFinite(Number(value))) return null
-  const n = Number(value)
+  const n = numericWeatherValue(value)
+  if (n === null) return null
   const text = Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10)
   return unit ? `${text} ${unit}` : text
 }
 
 function formatWindDirection(degrees) {
-  if (degrees == null || !Number.isFinite(Number(degrees))) return null
-  return `${Math.round(Number(degrees))}°`
+  const n = numericWeatherValue(degrees)
+  if (n === null) return null
+  return `${Math.round(n)}°`
 }
 
 export function weatherFromArchivePayload(payload, atMs) {
@@ -157,10 +165,10 @@ export function weatherFromArchivePayload(payload, atMs) {
   if (index < 0) return unavailableWeather('hour_not_in_archive')
 
   const units = payload.hourly_units ?? {}
-  const temperature = hourly.temperature_2m?.[index]
-  const precipitation = hourly.precipitation?.[index]
-  const windSpeed = hourly.wind_speed_10m?.[index]
-  const windDirection = hourly.wind_direction_10m?.[index]
+  const temperature = numericWeatherValue(hourly.temperature_2m?.[index])
+  const precipitation = numericWeatherValue(hourly.precipitation?.[index])
+  const windSpeed = numericWeatherValue(hourly.wind_speed_10m?.[index])
+  const windDirection = numericWeatherValue(hourly.wind_direction_10m?.[index])
   const missing =
     temperature == null && precipitation == null && windSpeed == null && windDirection == null
   if (missing) return unavailableWeather('hour_values_missing')
@@ -170,7 +178,7 @@ export function weatherFromArchivePayload(payload, atMs) {
   return Object.freeze({
     status: 'ok',
     reason: null,
-    copy: 'ERA5 reanalysis at recorded event time. Not present-day weather.',
+    copy: 'ERA5 hourly reanalysis for the selected observation hour. Not present-day weather or an exact event-time observation.',
     fields: Object.freeze({
       temperature: formatNumber(temperature, units.temperature_2m ?? '°C'),
       precipitation: formatNumber(precipitation, units.precipitation ?? 'mm'),
@@ -179,7 +187,7 @@ export function weatherFromArchivePayload(payload, atMs) {
     }),
     provenance: Object.freeze({
       provider: EVENT_TIME_WEATHER_PROVIDER,
-      timestamp: timestamp ? `${timestamp}Z`.replace(/ZZ$/, 'Z') : null,
+      timestamp: /(?:Z|[+-]\d{2}(?::?\d{2})?)$/i.test(timestamp) ? timestamp : `${timestamp}Z`,
       resolution: payload.hourly_units ? 'hourly' : null,
       observationType: EVENT_TIME_WEATHER_OBSERVATION_TYPE,
       model: typeof model === 'string' ? model : EVENT_TIME_WEATHER_MODEL,

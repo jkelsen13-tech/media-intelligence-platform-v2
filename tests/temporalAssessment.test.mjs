@@ -202,6 +202,18 @@ test('loadTemporalAssessment displays the pinned Cleveland object and does not w
   assert.equal(client.fromCalls(), 1)
 })
 
+test('a composer hash cannot attach Cleveland assessment to another subject or returned row key', async () => {
+  const otherId = '00000000-0000-4000-8000-000000000001'
+  const otherKey = temporalAssessmentConfigKey(otherId)
+  assert.equal((await pinFetchedAssessment(CLEVELAND_VALUE, otherKey)).status, 'unavailable')
+  assert.equal(temporalAssessmentViewFromValue(CLEVELAND_VALUE, { key: otherKey }).status, 'unavailable')
+  const client = fakePipelineClient({ [otherKey]: { key: otherKey, value: CLEVELAND_VALUE } })
+  assert.equal((await loadTemporalAssessment(otherId, { supabaseClient: client })).status, 'unavailable')
+  const misbound = fakePipelineClient({ [CLEVELAND_ASSESSMENT_KEY]: { key: otherKey, value: CLEVELAND_VALUE } })
+  assert.equal((await loadTemporalAssessment(CLEVELAND_CANONICAL_EVENT_ID, { supabaseClient: misbound })).status, 'unavailable')
+  assert.equal(canonicalEventIdFromWorldView({ id: otherId }, { subject_graph_node_id: CLEVELAND_CANONICAL_EVENT_ID }), null)
+})
+
 test('no canonical event omits a fetch and returns unavailable', async () => {
   const client = fakePipelineClient({})
   const view = await loadTemporalAssessment(null, { supabaseClient: client })

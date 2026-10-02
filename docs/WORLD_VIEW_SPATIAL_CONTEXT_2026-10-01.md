@@ -71,10 +71,12 @@ Dates retain date precision. Instants require the existing explicit-offset times
 | Population | `place` and `population`; optional `unit`. The supplied population reference date remains visible, including zero when actually supplied. |
 | Weather | Explicit `temporalMode: 'current'` or `'event-time'`; supplied temperature, precipitation, wind speed or direction. Optional observation type, resolution and model. CURRENT and EVENT-TIME labels remain separate. |
 | Infrastructure | `name` and `documentedRelevance`; optional `type`, `description`. No facilities or detail are derived from map backgrounds. |
-| Hazards | `name` and `type`; optional `description`, `status`. The source's time and geography remain visible. |
+| Hazards | Explicit `temporalMode: 'current'` or `'event-time'`, plus `name` and `type`; optional `description`, `status`. The source's time and geography remain visible. |
 | Relationships | `from`, `to`, `documentedRelationship`. No edge is created from co-location, chronology or module availability. |
 
 Event-time weather additionally requires a recorded instant inside the row's valid range. For an exact inspection instant it must match that instant; a date-only inspection requires the same UTC date. The seam does not interpolate weather or assign an earlier observation to a later inspection instant. Legacy `weather.status: 'unavailable'` contributes only the existing explicit source-path availability state, without retaining stale weather fields.
+
+October 2 convergence tightens that seam: event-time observations require a recorded inspection scope, preserve nanoseconds for equality and half-open validity, and reject invalid/reversed validity bounds. Event-time hazards follow the same instant checks; a supplied date-only hazard reference retains date precision and must match the selected UTC date. Both current and event-time hazard meaning are explicit. Module identity also preserves temporal mode, classification, availability, geography, source references and provenance, so matching field values do not merge different kinds of context or evidence. See [the convergence qualification](MIP_CONVERGENCE_TEMPORAL_CONTEXT_2026-10-02.md).
 
 The inspected `eventTimeWeather.js` successful parser contract has `status: 'ok'`, the four core weather fields and provenance `{provider, timestamp, resolution, observationType, model}`. It describes event-time reanalysis but does **not** return observation geography, subject binding, intake admission or context/evidence classification. The active loader presently returns unavailable. A raw successful parser result therefore remains absent: its geography must not be inferred from the selected spatial row, and missing fields must not be invented.
 

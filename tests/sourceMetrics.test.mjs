@@ -59,3 +59,18 @@ test('source order selects one literal field at a time and does not blend metric
   // volume is not blended into the ordering.
   assert.deepEqual(sortOutletsBySourceMetric(rows, 'name').map((row) => row.name), ['Alpha', 'Bravo', 'Charlie'])
 })
+
+test('first-to-report follows qualified corpus chronology and never drops unknown clocks', () => {
+  const counts = stamps => {
+    const rows = stamps.map(([outlet, published_at], index) => ({ id: String(index), outlet, published_at }))
+    return [...buildSourceMetrics(rows, new Map(rows.map(row => [row.id, { eventId: 'event' }]))).values()]
+      .map(metric => metric.firstToReportCount)
+  }
+  for (const unknown of ['2024-04-08', '2024-04-08T09:00:00', '2024-02-30T09:00:00Z', null, 'invalid']) {
+    assert.deepEqual(counts([['Alpha', unknown], ['Beta', '2024-04-08T12:00:00Z']]), [0, 0], String(unknown))
+    assert.deepEqual(counts([['Alpha', '2024-04-08T10:00:00Z'], ['Beta', '2024-04-08T12:00:00Z'], ['Beta', unknown]]), [0, 0])
+  }
+  assert.deepEqual(counts([['Alpha', '2024-04-08T10:00Z'], ['Beta', '2024-04-08T10:00:30Z']]), [0, 0], 'overlapping precision')
+  assert.deepEqual(counts([['Alpha', '2024-04-08T09:00:00-04:00'], ['Beta', '2024-04-08T12:00:00Z']]), [0, 1])
+  assert.deepEqual(counts([['Alpha', '2024-04-08T10:00:00.000001Z'], ['Beta', '2024-04-08T10:00:00.000002Z']]), [1, 0], 'retained microseconds')
+})

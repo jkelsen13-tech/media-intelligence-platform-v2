@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { parseInspectionInstant, inspectionInstantMilliseconds } from '../src/lib/inspectionTime.js'
+import { parseInspectionInstant, inspectionInstantMilliseconds, inspectionInstantNanoseconds } from '../src/lib/inspectionTime.js'
 import { worldViewRecordedTime, recordedTimestampsForRows, revisionAtTime } from '../src/lib/spatialProjection.js'
 import { hydrateDeepLink, serializeDeepLink } from '../src/lib/deepLinks.js'
 
@@ -46,4 +46,12 @@ test('SQL compatibility never admits rollover dates, local times or malformed of
     assert.equal(inspectionInstantMilliseconds(value),null,String(value))
   }
   assert.equal(parseInspectionInstant('2024-02-29 12:00:00+00'),'2024-02-29 12:00:00+00')
+})
+
+test('semantic clocks preserve nanoseconds across offsets and before the Unix epoch', () => {
+  assert.equal(inspectionInstantNanoseconds('1970-01-01T00:00:00.000000001Z'), 1n)
+  assert.equal(inspectionInstantNanoseconds('1969-12-31T23:59:59.999999999Z'), -1n)
+  assert.equal(inspectionInstantNanoseconds('2024-04-08 14:00:00.123456789-04'), inspectionInstantNanoseconds('2024-04-08T18:00:00.123456789Z'))
+  assert.equal(inspectionInstantNanoseconds('2024-04-08'), null)
+  assert.equal(inspectionInstantNanoseconds('2024-02-30T18:00:00Z'), null)
 })

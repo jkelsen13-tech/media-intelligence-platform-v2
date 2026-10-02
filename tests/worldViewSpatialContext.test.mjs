@@ -92,7 +92,7 @@ test('global layers alter eligibility without deleting explanation or canonical 
 })
 
 test('each admitted family uses only supplied sourced fields and records temporal geography limits', () => {
-  const admittedContext = Object.fromEntries(Object.entries(familyFields).map(([key, fields]) => [key, [intake(fields, key === 'weather' ? { temporalMode: 'current' } : {})]]))
+  const admittedContext = Object.fromEntries(Object.entries(familyFields).map(([key, fields]) => [key, [intake(fields, ['weather', 'hazards'].includes(key) ? { temporalMode: 'current' } : {})]]))
   const before = JSON.stringify(admittedContext), model = buildModel({ ...base, admittedContext })
   for (const key of Object.keys(familyFields)) {
     const module = model.modules.find(item => item.family === key && item.id !== 'event')
@@ -125,6 +125,35 @@ test('CURRENT and EVENT-TIME weather never borrow each other or invent unavailab
   const unavailable = buildModel({ ...base, weather: { status: 'unavailable', reason: 'adapter_not_implemented', copy: 'Weather not sourced', fields: { temperature: 'stale invented value' } } })
   assert.doesNotMatch(JSON.stringify(unavailable), /stale invented value/)
   assert.equal(unavailable.modules.find(item => item.family === 'weather').status, 'unavailable')
+})
+
+test('event-time weather requires recorded inspection scope and exact sub-millisecond correspondence', () => {
+  const supplied = intake(familyFields.weather, { temporalMode: 'event-time', referenceTime: '2024-04-08T18:00:00.000001Z' })
+  const weatherModules = (as_of_time, referenceTime = supplied.referenceTime, visibleRow = row) => buildModel({
+    ...base, visibleRow, investigationContext: { ...ic, as_of_time }, admittedContext: { weather: [{ ...supplied, referenceTime }] },
+  }).modules.filter(item => item.family === 'weather')
+  assert.equal(weatherModules(null).length, 0, 'no inspection clock is not an event time')
+  assert.equal(weatherModules('2024-04-08T18:00:00.000002Z').length, 0, 'distinct microseconds')
+  assert.equal(weatherModules('2024-04-08T14:00:00.000001-04:00').length, 1, 'equivalent explicit offsets')
+  assert.equal(weatherModules('2024-04-08').length, 1, 'a recorded date remains a date scope')
+  assert.equal(weatherModules('2024-04-08T18:00:00.000001Z', supplied.referenceTime, { ...row, valid_from_utc: '2024-04-08T18:00:00.000002Z' }).length, 0, 'exact lower validity bound')
+  assert.equal(weatherModules('2024-04-08T18:00:00.000001Z', supplied.referenceTime, { ...row, valid_to_utc: supplied.referenceTime }).length, 0, 'exclusive upper validity bound')
+})
+
+test('hazards require explicit temporal meaning and context identity never merges evidence or clocks', () => {
+  const hazard = intake(familyFields.hazards)
+  assert.equal(buildModel({ ...base, admittedContext: { hazards: [hazard] } }).modules.some(module => module.family === 'hazards'), false)
+  const source = { label: '', url: 'https://example.test/hazard' }
+  const eventHazard = { ...hazard, source, temporalMode: 'event-time' }
+  const model = buildModel({ ...base, admittedContext: { hazards: [eventHazard, { ...eventHazard, temporalMode: 'current' }, { ...eventHazard, classification: 'evidence' }] } })
+  const hazards = model.modules.filter(module => module.family === 'hazards')
+  assert.equal(hazards.length, 3)
+  assert.deepEqual(hazards.map(module => module.fields[0].value), ['EVENT-TIME hazard context', 'CURRENT hazard context', 'EVENT-TIME hazard context'])
+  assert.equal(hazards[0].fields.find(field => field.label === 'Source').value, source.url)
+  assert.equal(hazards[2].classification, 'evidence')
+  assert.equal(buildModel({ ...base, admittedContext: { hazards: [{ ...eventHazard, referenceTime: '2024-04-07' }] } }).modules.some(module => module.family === 'hazards'), false)
+  const weather = intake(familyFields.weather, { temporalMode: 'event-time', referenceTime: ic.as_of_time })
+  assert.equal(buildModel({ ...base, admittedContext: { weather: [weather, { ...weather, temporalMode: 'current' }] } }).modules.filter(module => module.family === 'weather').length, 2)
 })
 
 test('legacy successful weather requires explicitly supplied geography, subject admission and classification', () => {

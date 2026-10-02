@@ -27,7 +27,7 @@ import {
   workspaceEvidenceDimensions,
 } from '../src/lib/workspacePresentation.js'
 import { emptyInvestigationContext, applySubject, subjectFromGraphNode } from '../src/lib/investigationContext.js'
-import { pinFetchedAssessment } from '../src/lib/temporalAssessment.js'
+import { CLEVELAND_ASSESSMENT_KEY, pinFetchedAssessment } from '../src/lib/temporalAssessment.js'
 
 const APP = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
 const GRAPH = readFileSync(new URL('../src/graph/GraphView.jsx', import.meta.url), 'utf8')
@@ -139,7 +139,7 @@ test('optional denied arc metadata is distinguished from unexpected server error
 })
 
 test('failed assessment hashing withholds with hash_unavailable and still enforces integrity', async () => {
-  const withheld = await pinFetchedAssessment({ display: { status: 'ok', copy: 'insufficient history', panel: 'temporal assessment unavailable' } }, 'k', {
+  const withheld = await pinFetchedAssessment({ display: { status: 'ok', copy: 'insufficient history', panel: 'temporal assessment unavailable' } }, CLEVELAND_ASSESSMENT_KEY, {
     hashFn: async () => {
       throw new Error('subtle digest failed')
     },

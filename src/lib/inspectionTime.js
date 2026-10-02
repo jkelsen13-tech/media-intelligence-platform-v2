@@ -28,6 +28,16 @@ export function inspectionInstantMilliseconds(value) {
   return Number.isFinite(ms) ? ms : null
 }
 
+// Use the display millisecond clock only for rendering. Semantic equality and
+// half-open validity comparisons retain all supplied sub-millisecond digits.
+export function inspectionInstantNanoseconds(value) {
+  const milliseconds = inspectionInstantMilliseconds(value)
+  if (milliseconds === null) return null
+  const fraction = /\.(\d{1,9})/.exec(value)?.[1] ?? ''
+  const remainder = BigInt(fraction.padEnd(9, '0')) % 1000000n
+  return BigInt(milliseconds) * 1000000n + remainder
+}
+
 export function parseInspectionInstant(value) {
   return inspectionInstantMilliseconds(value) === null ? null : value
 }

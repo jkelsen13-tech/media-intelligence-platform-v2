@@ -10,7 +10,7 @@ export const WORLD_BILLBOARD_CORE_TABS = Object.freeze([
   Object.freeze({ id: 'sources', label: 'Sources' }),
 ])
 const text = value => typeof value === 'string' && value.trim() ? value : null
-const scalar = value => typeof value === 'string' || typeof value === 'number' ? value : null
+const scalar = value => typeof value === 'number' && Number.isFinite(value) ? value : text(value)
 
 /** Preserve exact supplied payloads. Duplicate IDs are ambiguous and omitted.
  * No relation, eligibility, dates, facts or sources are derived from membership.

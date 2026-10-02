@@ -27,6 +27,16 @@ test('missing event time never borrows inspection or background/current dates', 
   const model=buildWorldBillboardModel({eventTime:null,occurred_at:null},{inspectionTime:'2026-10-01',backgroundCaptureTime:'2019',currentContextTime:'2026'})
   assert.equal(model.metadata.find(x=>x.label==='Event evidence time').value,'Unavailable')
 })
+
+test('blank and nonfinite scalar clocks remain explicitly unavailable', () => {
+  const model = buildWorldBillboardModel({ eventTime: ' ', precision: NaN, eventTimeRange: ['', '2024-04-08'] }, { inspectionTime: Infinity, currentContextTime: '' })
+  const fields = Object.fromEntries(model.metadata.map(field => [field.label, field.value]))
+  assert.equal(fields['Event evidence time'], 'Unavailable')
+  assert.equal(fields['Recorded inspection time'], 'Unavailable')
+  assert.equal(fields['Evidence precision'], 'Unavailable')
+  assert.equal(fields['Current context reference time'], 'Unavailable — no current context supplied')
+  assert.equal(Object.hasOwn(fields, 'Event evidence range'), false)
+})
 test('canonical coordinates and precision are copied exactly without elevating city evidence', () => {
   const record={key:'city',coordinates:[-81.7,41.4,0],precision:'city',suppliedModules:[{id:'place',label:'Place',content:[{text:'Explicit place evidence'}]}]}
   const before=JSON.stringify(record),model=buildWorldBillboardModel(record)

@@ -1,5 +1,5 @@
-import { inspectionInstantMilliseconds } from './inspectionTime.js'
-import { confidenceTextDimension, inspectorTitle, labeledG2Dimensions, normalizeEvidenceRefs, plotDecision, revisionCoverageAt, sourceNativeTimeRecord } from './spatialProjection.js'
+import { inspectionInstantMilliseconds, inspectionInstantNanoseconds } from './inspectionTime.js'
+import { confidenceTextDimension, inspectorTitle, labeledG2Dimensions, normalizeEvidenceRefs, plotDecision, sourceNativeTimeRecord } from './spatialProjection.js'
 
 // DISPLAY only. Optional records are an intake seam for already admitted,
 // sourced context; this module does not discover, fetch, or infer information.
@@ -36,6 +36,15 @@ function referenceTime(value) {
 }
 function hasSource(source) {
   return Boolean(source && (text(source.label) || text(source.url) || text(source.referenceId)))
+}
+
+function exactCoverageAt(row, instant) {
+  if (instant === null) return false
+  const from = inspectionInstantNanoseconds(row?.valid_from_utc)
+  const to = inspectionInstantNanoseconds(row?.valid_to_utc)
+  if ((row?.valid_from_utc != null && from === null) || (row?.valid_to_utc != null && to === null)
+    || (from === null && to === null) || (from !== null && to !== null && to <= from)) return false
+  return (from === null || instant >= from) && (to === null || instant < to)
 }
 
 export function worldViewSpatialContextKey({ visibleRow = null, investigationContext = null } = {}) {
@@ -81,15 +90,19 @@ function admittedModule(record, family, subjectId, row, asOfTime) {
     || !text(record.geography?.label) || !text(record.geography?.precision)
     || !['context', 'evidence'].includes(record.classification)
     || !['available', 'unavailable'].includes(record.status)) return null
-  if (family === 'weather' && !['current', 'event-time'].includes(record.temporalMode)) return null
+  const environment = family === 'weather' || family === 'hazards'
+  if (environment && !['current', 'event-time'].includes(record.temporalMode)) return null
   const values = record.fields ?? {}
   if (record.status === 'unavailable' ? !text(record.unavailableReason) : !relevant(family, values)) return null
-  if (family === 'weather' && record.status === 'available' && record.temporalMode === 'event-time') {
-    const time = inspectionInstantMilliseconds(record.referenceTime)
-    const selectedTime = inspectionInstantMilliseconds(asOfTime)
-    if (time === null || revisionCoverageAt(row, time) !== 'covers'
+  if (environment && record.status === 'available' && record.temporalMode === 'event-time') {
+    const time = inspectionInstantNanoseconds(record.referenceTime)
+    const selectedTime = inspectionInstantNanoseconds(asOfTime)
+    const hazardDate = family === 'hazards' && /^\d{4}-\d{2}-\d{2}$/.test(record.referenceTime)
+    const inspectionDate = selectedTime === null ? asOfTime : new Date(inspectionInstantMilliseconds(asOfTime)).toISOString().slice(0, 10)
+    if (hazardDate ? referenceTime(asOfTime) === null || record.referenceTime !== inspectionDate
+      : referenceTime(asOfTime) === null || time === null || !exactCoverageAt(row, time)
       || (selectedTime !== null && time !== selectedTime)
-      || (/^\d{4}-\d{2}-\d{2}$/.test(asOfTime ?? '') && new Date(time).toISOString().slice(0, 10) !== asOfTime)) return null
+      || (/^\d{4}-\d{2}-\d{2}$/.test(asOfTime ?? '') && new Date(inspectionInstantMilliseconds(record.referenceTime)).toISOString().slice(0, 10) !== asOfTime)) return null
   }
   const label = WORLD_VIEW_CONTEXT_FAMILIES.find(item => item.key === family).label
   const fields = record.status === 'unavailable'
@@ -97,10 +110,14 @@ function admittedModule(record, family, subjectId, row, asOfTime) {
     : FAMILY_FIELDS[family].filter(([key]) => scalar(values[key]) !== null).map(([key, label]) => field(label, values[key]))
   fields.push(field(family === 'population' ? 'Population reference date' : 'Reference time', record.referenceTime),
     field('Geography', record.geography.label), field('Context precision', record.geography.precision),
-    field('Availability', record.status), field('Source', record.source.label ?? record.source.url ?? record.source.referenceId))
-  if (family === 'weather') fields.unshift(field('Temporal meaning', record.temporalMode === 'current' ? 'CURRENT weather context' : 'EVENT-TIME weather'))
+    field('Availability', record.status), field('Source', text(record.source.label) ?? text(record.source.url) ?? text(record.source.referenceId)))
+  if (environment) fields.unshift(field('Temporal meaning', family === 'weather'
+    ? record.temporalMode === 'current' ? 'CURRENT weather context' : 'EVENT-TIME weather'
+    : record.temporalMode === 'current' ? 'CURRENT hazard context' : 'EVENT-TIME hazard context'))
   return {
-    id: `${family}:${JSON.stringify([record.id ?? record.source.referenceId ?? record.source.url ?? record.source.label, record.version ?? null, record.referenceTime, ...FAMILY_FIELDS[family].map(([key]) => scalar(values[key]))])}`, family, title: text(record.title) ?? label,
+    id: `${family}:${JSON.stringify(clone([record.id ?? null, record.version ?? null, record.source, record.referenceTime,
+      record.temporalMode ?? null, record.classification, record.status, record.unavailableReason ?? null, record.geography,
+      ...FAMILY_FIELDS[family].map(([key]) => scalar(values[key])), record.references ?? null, record.provenance ?? null]))}`, family, title: text(record.title) ?? label,
     classification: record.classification, status: record.status,
     fields, references: clone([record.source, ...normalizeEvidenceRefs(record.references)]),
     provenance: clone(record.provenance ?? null),
@@ -152,14 +169,17 @@ export function buildWorldViewSpatialContext({ visibleRow = null, selected = nul
   const subjectId = investigationContext?.canonical_subject_id ?? visibleRow?.subject_graph_node_id ?? null
   const asOfTime = investigationContext?.as_of_time ?? null
   const mismatched = subjectId != null && String(visibleRow?.subject_graph_node_id ?? '') !== String(subjectId)
-  const time = inspectionInstantMilliseconds(asOfTime)
+  const time = inspectionInstantNanoseconds(asOfTime)
   const invalidTime = asOfTime != null && referenceTime(asOfTime) === null
-  const outsideTime = time !== null && revisionCoverageAt(visibleRow, time) !== 'covers'
+  const outsideTime = time !== null && !exactCoverageAt(visibleRow, time)
   const dateScope = typeof asOfTime === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(asOfTime)
-  const dayStart = dateScope ? inspectionInstantMilliseconds(`${asOfTime}T00:00:00Z`) : null
-  const from = inspectionInstantMilliseconds(visibleRow?.valid_from_utc)
-  const to = inspectionInstantMilliseconds(visibleRow?.valid_to_utc)
-  const outsideDate = dateScope && (from === null && to === null || from !== null && from >= dayStart + 86400000 || to !== null && to <= dayStart)
+  const dayStart = dateScope ? inspectionInstantNanoseconds(`${asOfTime}T00:00:00Z`) : null
+  const from = inspectionInstantNanoseconds(visibleRow?.valid_from_utc)
+  const to = inspectionInstantNanoseconds(visibleRow?.valid_to_utc)
+  const outsideDate = dateScope && (dayStart === null || from === null && to === null
+    || visibleRow?.valid_from_utc != null && from === null || visibleRow?.valid_to_utc != null && to === null
+    || from !== null && to !== null && to <= from
+    || from !== null && from >= dayStart + 86400000000000n || to !== null && to <= dayStart)
   const plot = plotDecision(visibleRow)
   const reason = !visibleRow ? 'no_visible_row' : mismatched ? 'subject_mismatch' : invalidTime ? 'inspection_time_unavailable' : outsideTime || outsideDate ? 'recorded_time_unavailable' : plot.reason
   const modules = []
