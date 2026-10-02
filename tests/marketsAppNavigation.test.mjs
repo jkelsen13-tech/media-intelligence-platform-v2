@@ -4,6 +4,8 @@ import { createRequire } from 'node:module'
 import { mkdirSync } from 'node:fs'
 import { createElement } from 'react'
 import TestRenderer, { act } from 'react-test-renderer'
+import { createClient } from '@supabase/supabase-js'
+import { createPublicDataBackend } from '../src/lib/publicDataBackend.js'
 import { temporalAssessmentConfigKey } from '../src/lib/temporalAssessment.js'
 
 const require = createRequire(import.meta.url)
@@ -175,4 +177,69 @@ test('asset context removes only the default event assessment and preserves supp
   automatic.temporal_assessment_reference = temporalAssessmentConfigKey(base.canonical_subject_id)
   assert.equal(marketContextWithoutInventedAssessment(automatic).temporal_assessment_reference, null)
   assert.equal(marketContextWithoutInventedAssessment({ ...explicit, canonical_subject_type: 'event' }).temporal_assessment_reference, explicit.temporal_assessment_reference)
+})
+
+
+const settle = async () => { for (let n = 0; n < 6; n++) await act(async () => { await new Promise(resolve => setImmediate(resolve)); await flush() }) }
+test('actual App uses the bound installed SDK reader; a missing endpoint finishes unavailable without synthetic assets', async () => {
+  const publicData = globalThis.__navigationBackend.publicData, previous = publicData.marketSourceSnapshot, calls = []
+  const client = createClient('https://market-route-fixture.invalid', 'synthetic-browser-key', {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: { fetch: async (url, init) => {
+      const request = new Request(url, init); calls.push({ path: new URL(request.url).pathname, body: await request.json() })
+      return new Response(JSON.stringify({ code: 'PGRST202', message: 'Synthetic missing RPC' }), { status: 404, headers: { 'content-type': 'application/json' } })
+    } },
+  })
+  publicData.marketSourceSnapshot = null; publicData.markets = createPublicDataBackend(client).markets
+  try {
+    await act(async () => { renderer = TestRenderer.create(createElement(App, { marketSourceSnapshot: marketsSourceFixture() })); await flush() }); await settle()
+    assert.equal(calls.length, 0)
+    assert.equal(renderer.root.findAllByProps({ className: 'market-reporting-record' }).length, 3)
+    await act(async () => { renderer.update(createElement(App)); await flush() }); await settle()
+    assert.equal(calls.length, 1); assert.equal(calls[0].path, '/rest/v1/rpc/read_markets_source_directory_v1')
+    assert.deepEqual(calls[0].body, { p_at: '2024-04-08T18:00:00.000001Z' })
+    assert.equal(market().props['data-markets-source-status'], 'unavailable')
+    assert.match(visibleText(market()), /Asset directory unavailable/)
+    assert.equal(renderer.root.findAllByProps({ className: 'market-reporting-record' }).length, 0)
+    assert.equal(ic().canonical_subject_type, 'equity')
+  } finally { await unmount(); publicData.marketSourceSnapshot = previous; delete publicData.markets }
+})
+
+test('actual installed SDK source transfer binds reporting, rejects late account/clock responses and retains navigation hints while loading', async () => {
+  const publicData = globalThis.__navigationBackend.publicData, previous = publicData.marketSourceSnapshot, pending = []
+  let token = 'synthetic-account-a'
+  const client = createClient('https://market-route-fixture.invalid', 'synthetic-browser-key', {
+    accessToken: async () => token,
+    global: { fetch: async (url, init) => {
+      const request = new Request(url, init), body = await request.json()
+      return new Promise(resolve => pending.push({ body, headers: request.headers, resolve }))
+    } },
+  })
+  publicData.marketSourceSnapshot = null; publicData.markets = createPublicDataBackend(client).markets
+  const response = data => new Response(JSON.stringify(data), { status: 200, headers: { 'content-type': 'application/json' } })
+  let props = { authSessionOverride: { user: { id: 'synthetic-account-a' }, loading: false } }
+  try {
+    articlePending = []
+    await act(async () => { renderer = TestRenderer.create(createElement(App, props)); await flush() }); await settle()
+    assert.equal(pending.length, 1); assert.match(visibleText(market()), /Loading market sources/)
+    token = 'synthetic-account-b'; props = { authSessionOverride: { user: { id: 'synthetic-account-b' }, loading: false } }
+    await act(async () => { renderer.update(createElement(App, props)); await flush() }); await settle()
+    assert.equal(pending.length, 2)
+    pending[0].resolve(response(marketsSourceFixture())); await settle()
+    assert.equal(market().props['data-markets-source-status'], 'unavailable')
+    assert.equal(renderer.root.findAllByProps({ className: 'market-reporting-record' }).length, 0)
+    pending[1].resolve(response(marketsSourceFixture())); await settle()
+    assert.equal(market().props['data-markets-source-status'], 'available')
+    assert.equal(renderer.root.findAllByProps({ className: 'market-reporting-record' }).length, 3)
+    assert.equal(pending[1].headers.get('authorization'), 'Bearer synthetic-account-b')
+    const scoped = `#/event/${marketFixtureId(1)}/markets?subject_type=equity&source=${marketFixtureId(300)}&at=2024-04-08T18%3A00%3A00.000002Z&time=2024-04-08T18%3A00%3A00.000002Z`
+    await hash(scoped); await settle()
+    assert.equal(pending.length, 3); assert.equal(renderer.root.findAllByProps({ className: 'market-reporting-record' }).length, 0)
+    assert.match(location.hash, /source=/)
+    pending[2].resolve(response(marketsSourceFixture())); await settle()
+    assert.equal(renderer.root.findAllByProps({ className: 'market-reporting-record' }).length, 0)
+    assert.doesNotMatch(location.hash, /source=/)
+    assert.equal(ic().as_of_time, '2024-04-08T18:00:00.000002Z')
+    assert.match(visibleText(market()), /Prices unavailable/)
+  } finally { await unmount(); publicData.marketSourceSnapshot = previous; delete publicData.markets }
 })

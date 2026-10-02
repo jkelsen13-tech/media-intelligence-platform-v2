@@ -43,7 +43,7 @@ function ReportingRecord({ record, onOpenEvent, onOpenArticle }) {
 
 /** The backend owner supplies an authorized typed projection. There is no
  * built-in asset list, ticker guessing, provider request or browser admission. */
-export default function MarketsView({ sourceSnapshot = null, investigationContext = null,
+export default function MarketsView({ sourceSnapshot = null, sourceLoadStatus = 'unavailable', investigationContext = null,
   onSelectAsset, onOpenEvent, onOpenArticle, onOpenTimeline, onExploreConnections } = {}) {
   const source = useMemo(() => createMarketSourceLookup(sourceSnapshot), [sourceSnapshot])
   const [query, setQuery] = useState(''), [kind, setKind] = useState(''), [submitted, setSubmitted] = useState(false)
@@ -67,7 +67,7 @@ export default function MarketsView({ sourceSnapshot = null, investigationContex
     </form>
     <p className="market-search-note">A symbol is a search term. Select the full identity, exchange or network to start an investigation. Browsing results leaves your current investigation unchanged.</p>
     <div role="status" className="market-source-state">
-      {source.status !== 'available' ? <><strong>Asset directory unavailable</strong><p>No authorized typed asset directory is supplied here. Asset identity and related reporting cannot be inferred from symbols or nearby companies.</p>{submitted && <p>{MARKET_CONTEXT_COPY.unmapped}</p>}</>
+      {source.status !== 'available' && sourceLoadStatus === 'loading' ? <><strong>Loading market sources</strong><p>Loading the asset directory and related reporting.</p></> : source.status !== 'available' ? <><strong>Asset directory unavailable</strong><p>No authorized typed asset directory is supplied here. Asset identity and related reporting cannot be inferred from symbols or nearby companies.</p>{submitted && <p>{MARKET_CONTEXT_COPY.unmapped}</p>}</>
         : <><strong>Mapped asset source available</strong><p>Directory version {source.version} · Valid time {source.validAt} · MIP observation {source.observedAt}</p></>}
     </div>
     {source.status === 'available' && query.trim() && <section aria-label="Asset search results" className="market-results">

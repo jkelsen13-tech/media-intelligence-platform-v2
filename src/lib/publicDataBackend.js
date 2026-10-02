@@ -12,6 +12,7 @@ import { createSpatialBackend } from './spatialBackend.js'
 import { createEvidenceBackend } from './evidenceBackend.js'
 import { createChronologyBackend } from './chronologyBackend.js'
 import { createNewsBackend } from './newsBackend.js'
+import { createMarketsBackend } from './marketsBackend.js'
 import { loadInvestigationSurface } from './investigationSurface.js'
 
 // Public projections retain the browser client's current session and RLS.
@@ -21,6 +22,7 @@ export function createPublicDataBackend(supabaseClient = null) {
   const options = Object.freeze({ supabaseClient })
   return Object.freeze({
     news: createNewsBackend(supabaseClient),
+    markets: createMarketsBackend(supabaseClient),
     evidence: createEvidenceBackend(supabaseClient),
     curated: createCuratedBackend(supabaseClient),
     spatial: createSpatialBackend(supabaseClient),

@@ -20,6 +20,7 @@ import SourceComparisonView from './views/SourceComparisonView'
 import WorldView from './views/WorldView'
 import MarketsView from './views/MarketsView'
 import { createMarketSourceLookup } from './lib/marketSourceLookup.js'
+import { useMarketSourceSnapshot } from './lib/useMarketSourceSnapshot.js'
 import { temporalAssessmentConfigKey } from './lib/temporalAssessment.js'
 import { buildNavViews, buildMoreEntries, isMoreViewKey } from './lib/navViews'
 import { supabase } from './lib/supabase'
@@ -332,7 +333,12 @@ export default function App({
     }
   }, [privateInvestigationPreview, investigationWorkspaceClient, investigationEvidenceChecksClient, investigationEvidenceReviewsClient, authSessionOverride])
   const auth = authSessionOverride ?? devPreview?.auth ?? liveAuth
-  const suppliedMarketSnapshot = marketSourceSnapshot ?? mipBackend.publicData.marketSourceSnapshot ?? null
+  const marketSourceRead = useMarketSourceSnapshot({
+    supplied: marketSourceSnapshot ?? mipBackend.publicData.marketSourceSnapshot ?? null,
+    reader: mipBackend.publicData.markets ?? null, active: view === 'markets',
+    actorId: auth.user?.id ?? null, sessionReady: auth.loading !== true, at: investigationContext.as_of_time ?? null,
+  })
+  const suppliedMarketSnapshot = marketSourceRead.snapshot
   const marketSource = useMemo(() => createMarketSourceLookup(suppliedMarketSnapshot), [suppliedMarketSnapshot])
   useEffect(() => { setMarketReturnContext(null); setMarketReturnSelection(null) }, [auth.user?.id])
   const workspaceClient = investigationWorkspaceClient
@@ -424,8 +430,12 @@ export default function App({
         .flatMap(record => record.path).flatMap(hop => hop.supports).map(support => support.captureId))
       return { entity: [], place: [], claim: [], arc: [], source: [...sourceIds].map(sourceId => ({ id: sourceId, parentId: id })) }
     }
+    if (['equity', 'cryptoasset'].includes(kind)) {
+      if (marketSourceRead.status === 'loading') return null
+      return { entity: [], place: [], claim: [], arc: [], source: [] }
+    }
     return graphSelectionCatalog(graph, recordedGeography(graph?.nodes ?? [], locationMentions), id)
-  }, [graph, locationMentions, marketSource])
+  }, [graph, locationMentions, marketSource, marketSourceRead.status])
   const deepLinkCatalog = useMemo(() => deepLinkCatalogForSubject(investigationContext.canonical_subject_id,
     investigationContext.canonical_subject_type, investigationContext.as_of_time),
     [deepLinkCatalogForSubject, investigationContext.canonical_subject_id, investigationContext.canonical_subject_type, investigationContext.as_of_time])
@@ -2012,6 +2022,7 @@ export default function App({
         {view === 'markets' && <MarketsView
           key={auth.user?.id ?? 'public'}
           sourceSnapshot={suppliedMarketSnapshot}
+          sourceLoadStatus={marketSourceRead.status}
           investigationContext={investigationContext}
           onSelectAsset={selectMarketAsset}
           onOpenEvent={openMarketEvent}
