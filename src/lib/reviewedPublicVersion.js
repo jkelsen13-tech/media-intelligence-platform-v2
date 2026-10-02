@@ -56,12 +56,19 @@ export function normalizeReviewedPublicVersion(row) {
   }
   if ((row.admission_kind === 'source_report' && evidence.length !== 0)
     || (row.admission_kind === 'reviewed_proposition' && evidence.length === 0)) return null
+  const m = row.display_metadata ?? {}
+  if (!m || Array.isArray(m) || typeof m !== 'object'
+    || !(m.author_name == null || typeof m.author_name === 'string') || !(m.arc_id == null || publicVersionUuid(m.arc_id))
+    || !(m.feed == null || typeof m.feed === 'string') || !(m.monoculture == null || typeof m.monoculture === 'boolean')
+    || !(m.unattributed == null || typeof m.unattributed === 'boolean')) return null
   const result = { contract: REVIEWED_ARTICLE_CONTRACT, ...reviewFields(row), article_id: row.article_id,
     capture_id: row.capture_id, source_version_id: row.capture_id, capture_hash: row.capture_hash,
     admission_kind: row.admission_kind, source_url: row.source_url, source_outlet: row.source_outlet,
     title: row.title, summary: row.summary, published_at: row.published_at, fetched_at: row.fetched_at,
     fetched_at_semantics: 'article_original_fetch', captured_at: row.captured_at,
-    remaining_uncertainty: row.remaining_uncertainty, pending_revision: row.pending_revision, evidence }
+    remaining_uncertainty: row.remaining_uncertainty, pending_revision: row.pending_revision, evidence,
+    display_metadata: { author_name: m.author_name ?? null, arc_id: m.arc_id ?? null, feed: m.feed ?? null,
+      monoculture: m.monoculture ?? null, unattributed: m.unattributed ?? null } }
   // Report permission is separate from proposition publication. These names
   // deliberately retain the absence of an exact capture-fetch observation.
   if (row.admission_kind === 'source_report') result.source_report = {
@@ -73,6 +80,24 @@ export function normalizeReviewedPublicVersion(row) {
     review_ref: row.review_ref, policy_version: row.policy_version,
   }
   return freeze(result)
+}
+
+export function reviewedVersionToNewsArticle(version) {
+  if (!version) return null
+  const displayMetadata = version.display_metadata
+  return freeze({ id: version.article_id, title: version.title, url: version.source_url,
+    summary: version.summary, outlet: version.source_outlet, published_at: version.published_at,
+    fetched_at: version.fetched_at, reader_state: 'eligible', source_status: 'active',
+    monoculture: displayMetadata.monoculture === true, unattributed: displayMetadata.unattributed === true,
+    arc_id: displayMetadata.arc_id ?? null, author_name: displayMetadata.author_name ?? null, arc_title: null,
+    public_version_id: version.public_version_id, public_version: version, source_report: version.source_report ?? null,
+    claims: version.evidence.map(e => ({ kind: 'substantive', text: e.surface_text, stance: 'asserts',
+      loaded_language: [], provenance: 'reviewed_claim_record', auditability_state: 'verified_retained_source',
+      evidence_source_field: e.source_field, evidence_excerpt: e.excerpt, capture_id: e.capture_id,
+      capture_hash: e.capture_hash, article_claim_id: e.article_claim_id, claim_id: e.claim_id,
+      public_version_id: version.public_version_id, span_start: e.span_start, span_end: e.span_end })),
+    citations: [], evidenceRecords: [],
+  })
 }
 
 export function normalizeReviewedPublicStoryVersion(row) {

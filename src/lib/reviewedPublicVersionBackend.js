@@ -40,5 +40,36 @@ export function createReviewedPublicVersionBackend(supabaseClient = null) {
     loadArticleVersion: (articleId, { publicVersionId = null } = {}) => read('article', articleId, publicVersionId),
     loadStoryVersion: (storyId, { publicVersionId = null } = {}) => read('story', storyId, publicVersionId),
     loadStoryForArticle: articleId => read('article_story', articleId, null),
+    async loadStoryDirectory({ limit = 30, after = null } = {}) {
+      const miss = reason => Object.freeze({ status: 'unavailable', reason, stories: [], has_more: false, next_after: null })
+      if (!Number.isInteger(limit) || limit < 1 || limit > 30 || !(after === null || publicVersionUuid(after))) return miss('invalid_directory_scope')
+      if (typeof supabaseClient?.rpc !== 'function') return miss('client_not_configured')
+      let response, timer
+      const controller = new AbortController()
+      try {
+        const request = supabaseClient.rpc('read_reviewed_public_story_directory_v1', { p_after: after, p_limit: limit })
+        if (typeof request?.abortSignal !== 'function') return miss('reader_unavailable')
+        response = await Promise.race([request.abortSignal(controller.signal), new Promise(resolve => {
+          timer = setTimeout(() => { resolve({ timeout: true }); controller.abort() }, 15000)
+        })])
+      } catch { return miss('reader_failed') }
+      finally { if (timer !== undefined) clearTimeout(timer) }
+      if (response?.timeout) return miss('reader_timeout')
+      if (response?.error || response?.data == null) return miss('reader_unavailable')
+      let row
+      try {
+        const encoded = JSON.stringify(response.data)
+        if (new TextEncoder().encode(encoded).length > 2 * 1024 * 1024) return miss('invalid_directory')
+        row = JSON.parse(encoded)
+      } catch { return miss('invalid_directory') }
+      if (row?.contract !== 'mip-reviewed-public-story-directory-v1' || !Array.isArray(row.stories) || row.stories.length > limit
+        || typeof row.complete !== 'boolean' || !(row.next_after === null || publicVersionUuid(row.next_after))) return miss('invalid_directory')
+      const stories = row.stories.map(normalizeReviewedPublicStoryVersion)
+      if (stories.some(story => !story) || new Set(stories.map(story => story.story_id)).size !== stories.length
+        || stories.some(story => after !== null && story.story_id <= after)
+        || (!row.complete && (stories.length !== limit || row.next_after !== stories.at(-1)?.story_id))
+        || (row.complete && row.next_after !== null)) return miss('directory_scope_mismatch')
+      return Object.freeze({ status: 'available', reason: null, stories: Object.freeze(stories), has_more: !row.complete, next_after: row.next_after })
+    },
   })
 }

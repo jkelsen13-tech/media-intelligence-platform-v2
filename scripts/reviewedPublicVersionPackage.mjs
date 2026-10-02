@@ -6,6 +6,10 @@ export async function reviewedVersionCatalogQuery() {
   if (!body) throw new Error('reviewed version baseline markers missing')
   return body.replace('into actual;', ';').trim()
 }
+export async function reviewedVersionInstalledCatalogQuery() {
+  const source = await readFile(new URL('../supabase/source-proposals/public-reviewed-versions-v1.installed-catalog.sql', import.meta.url), 'utf8')
+  return source.slice(source.indexOf('with base as ('),source.lastIndexOf('rollback;')).trim()
+}
 // Disposable local fixture installer. No environment/credential/remote client.
 export async function installReviewedPublicVersionFixture(db) {
   await db.exec('set search_path=pg_catalog')

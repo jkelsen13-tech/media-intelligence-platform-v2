@@ -27,7 +27,8 @@ begin
       from pg_class c where c.oid=any(array['public.articles'::regclass,'public.nodes'::regclass,
         'evidence_pipeline.article_captures'::regclass,'public.article_claims'::regclass,'public.claims'::regclass,
         'public.event_articles'::regclass,'public.events'::regclass,'public.citations'::regclass,
-        'mip_private.reader_claim_surfaces'::regclass])),
+        'mip_private.reader_claim_surfaces'::regclass,'public.news_detail_public'::regclass,
+        'public.comparison_public'::regclass,'public.authors_public'::regclass])),
     'roles',(select jsonb_agg(jsonb_build_object('name',r.rolname,'superuser',r.rolsuper,'bypass_rls',r.rolbypassrls,
       'memberships',(select coalesce(jsonb_agg(p.rolname order by p.rolname),'[]') from pg_roles p
         where p.oid<>r.oid and pg_has_role(r.oid,p.oid,'MEMBER'))) order by r.rolname)
@@ -153,7 +154,7 @@ create function mip_private.bind_reviewed_public_article_version(
   p_correction_reason text default null) returns uuid
 language plpgsql security invoker set search_path='' as $$
 declare a public.articles; cap evidence_pipeline.article_captures; head mip_private.reviewed_public_article_versions;
-  v uuid; ac record; n integer:=0; stamp timestamptz:=clock_timestamp(); snap jsonb;
+  prior mip_private.reviewed_public_article_versions; v uuid; ac record; n integer:=0; stamp timestamptz; snap jsonb;
 begin
   if current_user in ('anon','authenticated','service_role') or current_user is distinct from
     (select pg_get_userbyid(relowner) from pg_class where oid='public.articles'::regclass) then raise exception 'existing article publication owner required'; end if;
@@ -172,12 +173,30 @@ begin
   if p_admission_kind='reviewed_proposition' and (cap.payload->>'title' is distinct from a.title
     or cap.payload->>'summary' is distinct from a.summary
     or (cap.payload->>'published_at')::timestamptz is distinct from a.published_at) then raise exception 'proposition capture must match existing published source version'; end if;
+  select * into prior from mip_private.reviewed_public_article_versions where article_id=a.id and review_ref=p_review_ref;
+  if found then
+    if prior.capture_id is distinct from p_capture_id or prior.capture_hash is distinct from p_capture_hash
+      or prior.admission_kind is distinct from p_admission_kind or prior.policy_version is distinct from p_policy_version
+      or prior.remaining_uncertainty is distinct from p_remaining_uncertainty
+      or prior.predecessor_public_version_id is distinct from p_predecessor_public_version_id
+      or prior.correction_reason is distinct from p_correction_reason
+      or (select coalesce(array_agg(article_claim_id order by article_claim_id),'{}'::uuid[]) from mip_private.reviewed_public_article_evidence where public_version_id=prior.public_version_id)
+        is distinct from (select coalesce(array_agg(x order by x),'{}'::uuid[]) from unnest(p_article_claim_ids)x)
+      then raise exception 'reviewed public article idempotency conflict'; end if;
+    if not mip_private.public_article_version_is_visible(prior.public_version_id) then raise exception 'existing admission no longer visible'; end if;
+    return prior.public_version_id;
+  end if;
   select * into head from mip_private.reviewed_public_article_versions where article_id=a.id order by sequence desc limit 1;
   if head.public_version_id is distinct from p_predecessor_public_version_id then raise exception 'public article predecessor conflict'; end if;
   if (head.public_version_id is null and p_correction_reason is not null)
     or (head.public_version_id is not null and nullif(btrim(p_correction_reason),'') is null) then raise exception 'correction lineage reason required'; end if;
   snap:=jsonb_build_object('url',cap.payload->>'url','outlet',cap.payload->>'outlet','title',cap.payload->>'title',
-    'summary',cap.payload->>'summary','published_at',(cap.payload->>'published_at')::timestamptz,'fetched_at',a.fetched_at,'captured_at',cap.captured_at);
+    'summary',cap.payload->>'summary','published_at',(cap.payload->>'published_at')::timestamptz,'fetched_at',a.fetched_at,'captured_at',cap.captured_at,
+    'feed',a.feed,'monoculture',case when p_admission_kind='reviewed_proposition' then a.monoculture else null end,
+    'unattributed',case when p_admission_kind='reviewed_proposition' then a.unattributed else null end,
+    'arc_id',case when p_admission_kind='reviewed_proposition' then a.arc_id else null end,
+    'author_name',case when p_admission_kind='reviewed_proposition' then (select name from public.authors_public where id=a.author_id) else null end);
+  stamp:=clock_timestamp();
   insert into mip_private.reviewed_public_article_versions(article_id,capture_id,capture_hash,sequence,admission_kind,review_ref,
     reviewed_by,reviewed_at,visible_at,policy_version,predecessor_public_version_id,correction_reason,remaining_uncertainty,source_snapshot)
   values(a.id,cap.id,cap.content_hash,coalesce(head.sequence,0)+1,p_admission_kind,p_review_ref,current_user,stamp,stamp,
@@ -203,13 +222,16 @@ create function mip_private.require_reviewed_public_article_version(p_version uu
 language plpgsql security invoker set search_path='' as $$
 declare v mip_private.reviewed_public_article_versions;
 begin
+  if current_user in ('anon','authenticated','service_role') or current_user is distinct from
+    (select pg_get_userbyid(relowner) from pg_class where oid='public.articles'::regclass) then raise exception 'existing article publication owner required'; end if;
   select * into v from mip_private.reviewed_public_article_versions where public_version_id=p_version;
   if not found then raise exception 'reviewed public version required'; end if;
   perform 1 from public.articles where id=v.article_id for update;
   perform 1 from mip_private.reviewed_public_article_versions where public_version_id=p_version for key share;
   perform 1 from evidence_pipeline.article_captures where id=v.capture_id for key share;
   if v.capture_id is distinct from p_capture or v.capture_hash is distinct from p_hash
-    or v.admission_kind<>'reviewed_proposition' or not mip_private.public_article_version_is_visible(v.public_version_id) then
+    or v.admission_kind<>'reviewed_proposition' or v.sequence<>(select max(sequence) from mip_private.reviewed_public_article_versions where article_id=v.article_id)
+    or not mip_private.public_article_version_is_visible(v.public_version_id) then
     raise exception 'exact reviewed admitted public capture required'; end if;
   return v.article_id;
 end $$;
@@ -229,7 +251,7 @@ create function mip_private.bind_reviewed_public_story_version(p_subject_type te
   p_correction_reason text default null) returns uuid
 language plpgsql security invoker set search_path='' as $$
 declare s mip_private.reviewed_public_stories; head mip_private.reviewed_public_story_versions; v uuid; member uuid; pos integer:=0;
-  stamp timestamptz:=clock_timestamp(); member_article uuid;
+  prior mip_private.reviewed_public_story_versions; stamp timestamptz; member_article uuid;
 begin
   if current_user in ('anon','authenticated','service_role') or current_user is distinct from
     (select pg_get_userbyid(relowner) from pg_class where oid='public.articles'::regclass)
@@ -259,10 +281,20 @@ begin
     case when p_subject_type='article' then 'article' else (select type from public.nodes where id=p_subject_id) end)
     on conflict(subject_type,subject_id) do nothing;
   select * into s from mip_private.reviewed_public_stories where subject_type=p_subject_type and subject_id=p_subject_id;
+  select * into prior from mip_private.reviewed_public_story_versions where story_id=s.story_id and review_ref=p_review_ref;
+  if found then
+    if prior.policy_version is distinct from p_policy_version or prior.predecessor_public_version_id is distinct from p_predecessor_public_version_id
+      or prior.correction_reason is distinct from p_correction_reason
+      or (select array_agg(article_public_version_id order by ordinal) from mip_private.reviewed_public_story_members where public_version_id=prior.public_version_id)
+        is distinct from p_article_public_version_ids then raise exception 'reviewed public story idempotency conflict'; end if;
+    if not mip_private.public_story_version_is_visible(prior.public_version_id) then raise exception 'existing story admission no longer visible'; end if;
+    return prior.public_version_id;
+  end if;
   select * into head from mip_private.reviewed_public_story_versions where story_id=s.story_id order by sequence desc limit 1;
   if head.public_version_id is distinct from p_predecessor_public_version_id then raise exception 'public story predecessor conflict'; end if;
   if (head.public_version_id is null and p_correction_reason is not null)
     or (head.public_version_id is not null and nullif(btrim(p_correction_reason),'') is null) then raise exception 'story correction lineage reason required'; end if;
+  stamp:=clock_timestamp();
   insert into mip_private.reviewed_public_story_versions(story_id,sequence,predecessor_public_version_id,review_ref,reviewed_by,
     reviewed_at,visible_at,policy_version,correction_reason) values(s.story_id,coalesce(head.sequence,0)+1,head.public_version_id,
     p_review_ref,current_user,stamp,stamp,p_policy_version,p_correction_reason) returning public_version_id into v;
@@ -284,6 +316,8 @@ language sql stable security invoker set search_path='' as $$
     'review_ref',v.review_ref,'reviewed_by',v.reviewed_by,'reviewed_at',v.reviewed_at,'visible_at',v.visible_at,
     'policy_version',v.policy_version,'predecessor_public_version_id',v.predecessor_public_version_id,
     'correction_reason',v.correction_reason,'remaining_uncertainty',v.remaining_uncertainty,
+    'display_metadata',jsonb_build_object('feed',v.source_snapshot->'feed','monoculture',v.source_snapshot->'monoculture',
+      'unattributed',v.source_snapshot->'unattributed','arc_id',v.source_snapshot->'arc_id','author_name',v.source_snapshot->'author_name'),
     'review_state','reviewed','visibility_state','public',
     'pending_revision',exists(select 1 from evidence_pipeline.article_captures cap
       where cap.article_id=v.article_id and cap.captured_at>(v.source_snapshot->>'captured_at')::timestamptz
@@ -337,6 +371,62 @@ language sql stable security definer set search_path='' as $$
     order by h.story_id limit 101)
   select case when count(*)>100 then null else coalesce(jsonb_agg(mip_private.reviewed_public_story_payload(public_version_id) order by story_id),'[]') end from matches
 $$;
+create function public.read_reviewed_public_story_directory_v1(p_after uuid default null,p_limit integer default 30) returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+declare result jsonb;
+begin
+  if p_limit is null or p_limit not between 1 and 30 then raise exception 'story directory limit must be 1..30'; end if;
+  with heads as (select distinct on (v.story_id) v.* from mip_private.reviewed_public_story_versions v order by v.story_id,v.sequence desc),
+  candidates as (select h.* from heads h where (p_after is null or h.story_id>p_after)
+    and mip_private.public_story_version_is_visible(h.public_version_id) order by h.story_id limit p_limit+1),
+  page as (select * from candidates order by story_id limit p_limit)
+  select jsonb_build_object('contract','mip-reviewed-public-story-directory-v1',
+    'stories',coalesce((select jsonb_agg(mip_private.reviewed_public_story_payload(public_version_id) order by story_id) from page),'[]'),
+    'complete',(select count(*)<=p_limit from candidates),
+    'next_after',case when (select count(*)>p_limit from candidates) then (select max(story_id::text) from page) else null end)
+    into result;
+  return result;
+end $$;
+
+-- Ordinary News list/detail fields come from this same reviewed snapshot. A
+-- missing mapping or newly ineligible head is unavailable; no older fallback.
+create view public.news_reviewed_articles_public with (security_barrier=true,security_invoker=false) as
+select v.article_id as id,v.public_version_id,v.source_snapshot->>'title' as title,v.source_snapshot->>'url' as url,
+  v.source_snapshot->>'summary' as summary,v.source_snapshot->>'outlet' as outlet,v.source_snapshot->>'feed' as feed,
+  (v.source_snapshot->>'published_at')::timestamptz as published_at,(v.source_snapshot->>'fetched_at')::timestamptz as fetched_at,
+  (v.source_snapshot->>'monoculture')::boolean as monoculture,(v.source_snapshot->>'unattributed')::boolean as unattributed,
+  (v.source_snapshot->>'arc_id')::uuid as arc_id,v.source_snapshot->>'author_name' as author_name,
+  'eligible'::text as reader_state,'active'::text as source_status,public.read_reviewed_public_article_v1(v.article_id,v.public_version_id) as public_version
+from mip_private.reviewed_public_article_versions v
+where v.sequence=(select max(head.sequence) from mip_private.reviewed_public_article_versions head where head.article_id=v.article_id)
+  and public.read_reviewed_public_article_v1(v.article_id,v.public_version_id) is not null;
+revoke all on public.news_reviewed_articles_public from public,anon,authenticated,service_role;
+grant select on public.news_reviewed_articles_public to anon,authenticated,service_role;
+
+-- Close the predecessor API path as part of this exact installation. Base
+-- table and column SELECT are both revoked; RLS alone cannot bind a version.
+revoke select on public.articles from anon,authenticated;
+do $columns$ declare c record; begin
+  for c in select attname from pg_attribute where attrelid='public.articles'::regclass and attnum>0 and not attisdropped loop
+    execute format('revoke select(%I) on public.articles from anon,authenticated',c.attname);
+  end loop;
+  if has_table_privilege('anon','public.articles','SELECT') or has_table_privilege('authenticated','public.articles','SELECT')
+    or exists(select 1 from pg_attribute a where a.attrelid='public.articles'::regclass and a.attnum>0 and not a.attisdropped
+      and (has_column_privilege('anon','public.articles',a.attname,'SELECT') or has_column_privilege('authenticated','public.articles',a.attname,'SELECT'))) then
+    raise exception 'reader SELECT inherited or granted by another role; exact prior-owner ACL repair required';
+  end if;
+end $columns$;
+create or replace view public.news_detail_public with (security_barrier=true,security_invoker=false) as
+select a.id as article_id,coalesce((select jsonb_agg(jsonb_build_object('surface_text',e->>'surface_text',
+  'canonical_text',e->>'canonical_text','auditability_state','verified_retained_source','auditability_note',null,
+  'evidence_source_field',e->>'source_field','evidence_excerpt',e->>'excerpt','evidence_records','[]'::jsonb,
+  'capture_id',e->>'capture_id','capture_hash',e->>'capture_hash','public_version_id',a.public_version_id,
+  'article_claim_id',e->>'article_claim_id','claim_id',e->>'claim_id','span_start',e->'span_start','span_end',e->'span_end'))
+  from jsonb_array_elements(a.public_version->'evidence') e),'[]') as reviewed_claims
+from public.news_reviewed_articles_public a;
+-- Comparison's separately owned legacy nested projection is preserved but
+-- denied until its exact immutable-version successor package is installed.
+revoke select on public.comparison_public from anon,authenticated;
 
 do $acl$ declare t text; f record; begin
   foreach t in array array['reviewed_public_article_versions','reviewed_public_article_evidence','reviewed_public_stories',
@@ -351,7 +441,7 @@ do $acl$ declare t text; f record; begin
     where (n.nspname='mip_private' and p.proname in ('public_article_evidence_is_visible','public_article_version_is_visible',
       'bind_reviewed_public_article_version','require_reviewed_public_article_version','public_story_version_is_visible',
       'bind_reviewed_public_story_version','reviewed_public_article_payload','reviewed_public_story_payload'))
-      or (n.nspname='public' and p.proname in ('read_reviewed_public_article_v1','read_reviewed_public_story_v1','read_reviewed_public_story_for_article_v1','read_reviewed_public_stories_for_article_v1')) loop
+      or (n.nspname='public' and p.proname in ('read_reviewed_public_article_v1','read_reviewed_public_story_v1','read_reviewed_public_story_for_article_v1','read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1')) loop
     execute format('revoke all on function %s from public,anon,authenticated,service_role',f.signature);
     if f.proname like 'read_reviewed_public_%' then execute format('grant execute on function %s to anon,authenticated,service_role',f.signature);
     elsif f.proname in ('public_article_evidence_is_visible','public_article_version_is_visible','public_story_version_is_visible',

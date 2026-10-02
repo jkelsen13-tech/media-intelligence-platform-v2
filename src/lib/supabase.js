@@ -9,6 +9,7 @@ import {
 } from '../data/demoData.js'
 import { canonicalizeTimelineEvents, remapTimelineEdges } from './timelineDedup.js'
 import { isSafeSupabaseBrowserKey, resolveV2SupabaseUrl } from './supabaseOrigin.js'
+import { normalizeReviewedPublicVersion, reviewedVersionToNewsArticle } from './reviewedPublicVersion.js'
 
 // Sandbox safety: V2 only connects to the explicit environment target. When
 // either value is absent, makeClient() returns null and the application follows
@@ -179,6 +180,7 @@ export function isPostgrestPermissionDenied(error) {
 
 export function articlesUnavailableReason(error) {
   if (isPostgrestPermissionDenied(error)) return 'permission_denied'
+  if (['42P01','PGRST205'].includes(String(error?.code ?? ''))) return 'reviewed_version_reader_unavailable'
   return null
 }
 
@@ -1116,7 +1118,7 @@ export async function loadOutletDirectory({ supabaseClient } = {}) {
 // Applies the concrete News filters shared by the paged feed and its separate
 // source-metric read. Source metrics intentionally omit a selected outlet so
 // their list remains a comparison of the current non-vendor filter context.
-function applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore } = {}) {
+function applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore } = {}, { reviewed = false } = {}) {
   // Reader eligibility is a quality gate, not a source-reliability score. The
   // withheld/pending rows remain retained in the base table for review but do
   // not affect reader counts, filters, or source metrics.
@@ -1124,7 +1126,7 @@ function applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, top
   const term = sanitizeSearch(q)
   if (term) {
     query = query.or(
-      `title.ilike.%${term}%,summary.ilike.%${term}%,body_text.ilike.%${term}%`,
+      `title.ilike.%${term}%,summary.ilike.%${term}%${reviewed ? '' : `,body_text.ilike.%${term}%`}`,
     )
   }
   if (outlet) query = query.eq('outlet', outlet)
@@ -1182,39 +1184,33 @@ export async function loadPublicAuthorNameMap(authorIds, { supabaseClient } = {}
 export async function loadArticles({ q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore, limit = 30, offset = 0, supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return { articles: [], total: 0, articlesUnavailable: null }
-  // Trust may GRANT SELECT + eligible-only RLS on public.articles. A future
-  // GRANT miss still fail-closes here (42501 → empty + permission_denied).
-  // A successful 0-row eligible read is honest empty, not an error. NASA
-  // pending_review stays withheld: never invent, never mutate reader_state.
-  // Do not join story_arcs for title. Live V2 story_arcs is an id-only stub;
-  // stub arcs are no-arc and arc_title stays null.
+  // The snapshot owner selects the latest explicit reviewed public version.
+  // Bare article eligibility or newest pending captures confer no version.
   let query = client
-    .from('articles')
+    .from('news_reviewed_articles_public')
     .select(
-      'id, title, url, summary, published_at, fetched_at, outlet, monoculture, unattributed, arc_id, author_id',
+      'id, published_at, fetched_at, public_version_id, public_version',
       { count: 'exact' },
     )
     .order('published_at', { ascending: false, nullsFirst: false })
     .order('fetched_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
-  query = applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore })
+  query = applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, topicTerms, publishedAfter, publishedBefore }, { reviewed: true })
 
   const { data, error, count } = await query
   if (error) {
-    if (isPostgrestPermissionDenied(error)) return emptyArticlesUnavailable(error)
+    if (articlesUnavailableReason(error)) return emptyArticlesUnavailable(error)
     throw error
   }
   const rows = data ?? []
-  const authorNames = await loadPublicAuthorNameMap(rows.map((article) => article.author_id), { supabaseClient: client })
+  const articles = rows.map(row => {
+    const version = normalizeReviewedPublicVersion(row.public_version)
+    return version?.article_id === row.id && version.public_version_id === row.public_version_id ? reviewedVersionToNewsArticle(version) : null
+  })
+  if (articles.some(article => article === null)) return { articles: [], total: 0, articlesUnavailable: 'reviewed_version_invalid' }
   return {
-    articles: rows.map((a) => ({
-      ...a,
-      author_name: authorNames.get(a.author_id) ?? null,
-      author_id: undefined,
-      arc_title: null,
-      story_arcs: undefined,
-    })),
+    articles,
     total: count ?? rows.length,
     articlesUnavailable: null,
   }
@@ -1224,79 +1220,18 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
 export async function loadArticleDetail(id, { supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return null
-  const [artRes, citRes, newsDetailRes] = await Promise.all([
-    client
-      .from('articles')
-      .select('id, title, url, summary, published_at, fetched_at, outlet, monoculture, unattributed, author_id')
-      .eq('id', id)
-      .eq('reader_state', 'eligible').eq('source_status', 'active')
-      .single(),
-    client
-      .from('citations')
-      .select('cited_entity, cited_type, documentation_strength')
-      .eq('article_id', id)
-      .order('documentation_strength', { ascending: false, nullsFirst: false }),
-    // The security-barrier projection is the only anonymous contract for
-    // reviewed claim text and linked evidence in an expanded News record.
-    client
-      .from('news_detail_public')
-      .select('article_id, reviewed_claims')
-      .eq('article_id', id)
-      .maybeSingle(),
-  ])
-  if (artRes.error) {
-    if (isPostgrestPermissionDenied(artRes.error)) {
-      return { articlesUnavailable: articlesUnavailableReason(artRes.error) }
-    }
-    if (isPostgrestNoRow(artRes.error)) {
-      return { articleMissing: true, articlesUnavailable: null }
-    }
-    throw artRes.error
+  const { data, error } = await client.from('news_reviewed_articles_public')
+    .select('id, public_version_id, public_version').eq('id', id).single()
+  if (error) {
+    if (articlesUnavailableReason(error)) return { articlesUnavailable: articlesUnavailableReason(error) }
+    if (isPostgrestNoRow(error)) return { articleMissing: true, articlesUnavailable: null }
+    throw error
   }
-  if (citRes.error) throw citRes.error
-  if (newsDetailRes.error) throw newsDetailRes.error
-  const authorNames = await loadPublicAuthorNameMap([artRes.data.author_id], { supabaseClient: client })
-
-  // Article-local extraction JSON has no admission/review contract. Only the
-  // public projection may supply reader-facing analytical claims.
-  const admittedClaimRows = (newsDetailRes.data?.reviewed_claims ?? [])
-    .filter(row => row?.auditability_state === 'verified_retained_source')
-  const reviewedClaims = admittedClaimRows.map((row) => ({
-    kind: 'substantive',
-    text: row.surface_text || row.canonical_text || 'Reviewed claim text not recorded.',
-    stance: 'asserts',
-    loaded_language: [],
-    provenance: 'reviewed_claim_record',
-    auditability_state: row.auditability_state ?? 'unverified_against_retained_source',
-    auditability_note: row.auditability_note ?? 'No exact retained publisher excerpt supports this public claim surface.',
-    evidence_source_field: row.evidence_source_field ?? null,
-    evidence_excerpt: row.evidence_excerpt ?? null,
-  }))
-  const seenClaimText = new Set()
-  const claims = reviewedClaims.filter((claim) => {
-    const key = `${claim.kind ?? 'substantive'}|${String(claim.text ?? '').trim().toLowerCase()}`
-    if (!key || seenClaimText.has(key)) return false
-    seenClaimText.add(key)
-    return true
-  })
-  const seenEvidence = new Set()
-  const evidenceRecords = admittedClaimRows
-    .flatMap((row) => (Array.isArray(row.evidence_records) ? row.evidence_records : []))
-    .filter((row) => {
-      const key = `${row.evidence_type ?? ''}|${row.evidence_url ?? ''}`
-      if (!row.evidence_url || seenEvidence.has(key)) return false
-      seenEvidence.add(key)
-      return true
-    })
-  return {
-    ...artRes.data,
-    claims,
-    author_name: authorNames.get(artRes.data.author_id) ?? null,
-    author_id: undefined,
-    arc_title: null,
-    citations: citRes.data ?? [],
-    evidenceRecords,
+  const version = normalizeReviewedPublicVersion(data?.public_version)
+  if (!version || version.article_id !== id || version.article_id !== data.id || version.public_version_id !== data.public_version_id) {
+    return { articlesUnavailable: 'reviewed_version_invalid' }
   }
+  return reviewedVersionToNewsArticle(version)
 }
 
 // ---------- Cross-view graph integration ----------
