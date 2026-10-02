@@ -353,6 +353,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       fence:()=>adapterRef.current?.fenceSourceImagery?.()}
     const unbind=ownerSession.bindAttachment(binding,snapshot=>{
       if(!alive)return
+      if(snapshot.bridgeFailure==='native-source-fence-failed')setStackId(FALLBACK_MAP_STACK_ID)
       setLocalSourceResource({...snapshot,bridgeFailure:snapshot.bridgeFailure??(configured?null:'source-service-configuration-changed')})
       const shouldPoll=snapshot.localBudget?.requests>0&&!snapshot.disposed&&snapshot.lifecycle!=='hidden'
       if(!shouldPoll&&timer!==null){view?.clearInterval(timer);timer=null}
