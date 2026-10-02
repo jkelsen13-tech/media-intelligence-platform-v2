@@ -1,0 +1,833 @@
+{
+  "id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
+  "artifact_kind": "independent_reviewer_result",
+  "status": "REVIEW_PERFORMED",
+  "outcome": "BLOCKED",
+  "pass": false,
+  "fail": false,
+  "blocked": true,
+  "outcome_scope": {
+    "limited_technical_review": "BLOCKED",
+    "limited_technical_review_meaning": "Isolated Stage A contracts were inspectable and partially independently reproduced; production-cutover invariants cannot be closed from this disclosure. Demonstrated contract gaps are recorded as findings, not as a live-system FAIL. This is not a conditional PASS.",
+    "production_cutover_readiness": "BLOCKED",
+    "production_cutover_authorized": false,
+    "owner_acceptance": null,
+    "not_a_merge_authorization": true
+  },
+  "independence": {
+    "reviewer_identity": "Cursor Grok 4.6, owner-designated independent technical evaluator for this run only",
+    "model_as_available": {
+      "product_name": "Cursor Grok 4.6",
+      "cloud_run_original_model_name": "cursor-grok-4.6-xhigh",
+      "cloud_run_bc_id": "bc-01a08bf7-3dc0-7367-b4ff-8299823ccd2e",
+      "cloud_run_url": "https://cursor.com/agents/bc-01a08bf7-3dc0-7367-b4ff-8299823ccd2e",
+      "xai_api_grok_4_6_xhigh_verified": false,
+      "xai_api_zero_retention_verified": false,
+      "note": "This run used Cursor Cloud Agent Grok 4.6 launched as cursor-grok-4.6-xhigh. That is not independent verification of xAI API grok-4.6 with xhigh, nor of xAI API retention settings. Consumer/Cursor settings are not assumed equivalent to API settings."
+    },
+    "implementation_separation": "This reviewer did not author PR #147. PR commits are by Cursor Agent and jkelsen13-tech.",
+    "production_write_credentials": false,
+    "release_authority": false,
+    "label_adjudicator": false,
+    "github_mcp_login": "jkelsen13-tech",
+    "github_mcp_login_is_owner_account": true,
+    "independence_limitation": "GitHub inspection used the owner GitHub identity via MCP. No GitHub writes were performed. This is not a separate reviewer GitHub account."
+  },
+  "reviewed_at": "2026-09-10T15:45:00Z",
+  "candidate": {
+    "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+    "pr": 147,
+    "operational_baseline_commit": "1dc317200b7a928fad85d06b43351b60e2a50d92",
+    "disclosed_content_commit": "60914115f22009722c0cb47cb81ddea206a38620",
+    "frozen_candidate_head": "47075711ff78393ac3b1690ddbffca615e8f20ce",
+    "synthetic_pr_checkout": "288b476c8b2bda449527ed7a65df5fcd13787539",
+    "independently_observed_trees": {
+      "frozen_candidate_head": "af4d590697c716cbdc4ef355b3c99bd7b614f0ab",
+      "synthetic_pr_checkout": "af4d590697c716cbdc4ef355b3c99bd7b614f0ab",
+      "trees_equal_head_and_pr_checkout": true,
+      "disclosed_content_commit": "32615f1d053eecc50b7194bca42dfd48e116fbdb",
+      "content_commit_tree_differs_from_head": true,
+      "content_commit_tree_difference_explanation": "Git trees differ; all 48 hashed file bytes are identical. Difference is consistent with later manifest-only stamp/order commits."
+    }
+  },
+  "disclosure": {
+    "packet_id": "MIP_PRODUCTION_CUTOVER_REVIEW_v1",
+    "manifest_sha256": "ae896f578c2a239491a31dfc7133ef065c3c7fb272f28f9fd494f2e785b74f86",
+    "manifest_bytes": 10633,
+    "manifest_git_blob": "e29978d7b368526831789033ae909873cd1fd47e",
+    "hashed_files_retrieved_full": 48,
+    "hashed_files_hash_mismatches": 0,
+    "hashed_files_identical_to_content_commit": 48,
+    "pr_claimed_manifest_sha256": "ae896f578c2a239491a31dfc7133ef065c3c7fb272f28f9fd494f2e785b74f86",
+    "pr_claimed_manifest_sha256_match": true,
+    "owner_decision_brief": {
+      "in_48_file_manifest": false,
+      "packet_status": "NOT_RECOVERED_FROM_GITHUB_OR_REPOSITORY",
+      "this_review": "supplied_in_owner_prompt_as_supplement_not_a_manifest_file",
+      "file_hash": "NOT_PERFORMED_prompt_text_not_a_repo_file"
+    }
+  },
+  "tools_used": [
+    "Cursor Cloud Agent local git fetch of specified SHAs",
+    "git show of allowlisted paths only for hashing and reading",
+    "Python SHA-256 of full file bytes",
+    "GitHub MCP get_file_contents, pull_request_read (get, get_commits, get_status, get_check_runs), get_me",
+    "cursor-cloud run-info",
+    "Node.js v22.14.0 node:test and PGlite 0.5.8 from disclosed package-lock.json via npm ci in an isolated 48-file tree",
+    "Independent PGlite probes of bound RPC replay/scheduler/revocation behavior",
+    "python3 comparisonPostgresConcurrency.py guard check only (refused as designed)"
+  ],
+  "tools_not_used": [
+    "Supabase MCP / live SQL against qikvmopbtijoebdqosyq, yhbwnrtlqbjtcrrlpbge, niejaejtbxgakyrsntxm, jfnzyvzthzqtczlxhjll",
+    "Raw GitHub Actions logs or screenshots",
+    "Auth records, Vault, credentials",
+    "Browser against production or Pages",
+    "Files outside the 48-file allowlist except git name-only diff for missing-dependency identification"
+  ],
+  "frozen_acceptance_policy": {
+    "identifier": "mip-semantic-evaluation-policy-proposal-1",
+    "file": "verifier/mip-production-cutover-review-v1/evaluation-policy.json",
+    "sha256": "7dbf83d21ea736430e07663753bcd55341fd6bfd3d754c8305b010c7cc7b598d",
+    "bytes": 7948,
+    "companion_doc": "docs/MIP_SEMANTIC_EVALUATION_POLICY_PROPOSAL_2026-09-10.md",
+    "companion_doc_sha256": "edd0b8c3681c5b2ca3db118559da9bc7a03dfd6c0355c175ae668d2f57acfdec",
+    "companion_doc_bytes": 7657,
+    "status": "proposed_not_approved",
+    "qualification": "not_assessed",
+    "thresholds": "all_null",
+    "critical_error_threshold": null,
+    "minimum_cases": null,
+    "held_out_split": "not_frozen",
+    "independently_adjudicated_labels": "absent",
+    "semantic_metrics": "NOT_PERFORMED"
+  },
+  "corpus_label_prediction_hashes": {
+    "rights_cleared_real_corpus": "ABSENT",
+    "reference_labels": "ABSENT",
+    "heldout_predictions": "ABSENT",
+    "baseline_predictions": "ABSENT",
+    "reviewer_did_not_invent_labels": true
+  },
+  "artifact_access_inventory": {
+    "allowlist_files": [
+      {
+        "path": "docs/COMPARISON_CAPABILITY_SEPARATION_2026-09-10.md",
+        "access": "FULL_FILE",
+        "bytes": 5633,
+        "sha256": "4c3fba968c7b834a32e1c2908cb141a918d83a32d9e7e9a711d7052afde7a3b3",
+        "hash_match": true
+      },
+      {
+        "path": "docs/COMPARISON_GENERATION_TRANSACTION_2026-09-09.md",
+        "access": "FULL_FILE",
+        "bytes": 4094,
+        "sha256": "cb283d5435a7051f51f68b3efb459ac9451ad46598e2d237b79a398a734e550f",
+        "hash_match": true
+      },
+      {
+        "path": "docs/COMPARISON_POSTGRES_CONCURRENCY_2026-09-09.md",
+        "access": "FULL_FILE",
+        "bytes": 2225,
+        "sha256": "4f80a0c01c05c0ffd682f4c582bba7841ab93f7cad9dbd2e7c7c442b9dfc364d",
+        "hash_match": true
+      },
+      {
+        "path": "docs/COMPARISON_SELECTION_2026-09-10.md",
+        "access": "FULL_FILE",
+        "bytes": 3446,
+        "sha256": "effc1ae5fad3c4fbcee3940023427e78690bdb37f81c640ba12dacad59add06b",
+        "hash_match": true
+      },
+      {
+        "path": "docs/COMPARISON_SOURCE_SNAPSHOT_2026-09-09.md",
+        "access": "FULL_FILE",
+        "bytes": 3581,
+        "sha256": "d2b972919c10bb81f2537dca87b7189cc7b600cd98c413d7b96f029d545cca6f",
+        "hash_match": true
+      },
+      {
+        "path": "docs/COMPARISON_RELEASE_THRESHOLD_2026-09-08.md",
+        "access": "FULL_FILE",
+        "bytes": 2368,
+        "sha256": "7a747b21ee16fe7851c33a56bddd446ec9fe8224fcf591c3e3ac637bd451e6a9",
+        "hash_match": true
+      },
+      {
+        "path": "docs/EVIDENCE_DISCOVERY_EVALUATION_V1.md",
+        "access": "FULL_FILE",
+        "bytes": 6771,
+        "sha256": "9516eb22d41d7fbc00fff69a83cb634dbe25ab91ea821883c2b4af276321e37d",
+        "hash_match": true
+      },
+      {
+        "path": "docs/MIP_CUTOVER_STAGING_PROPOSAL_2026-09-10.md",
+        "access": "FULL_FILE",
+        "bytes": 4399,
+        "sha256": "4970490d8cb7284c436c74d81b064203c21677e1fc085387a1ec890b6e3dff3e",
+        "hash_match": true
+      },
+      {
+        "path": "docs/MIP_PRODUCTION_CUTOVER_REVIEW_PACKET_2026-09-10.md",
+        "access": "FULL_FILE",
+        "bytes": 6104,
+        "sha256": "de2dec8b0d56f26a873e515274788404bb06e027b47c24ce6ad164567caad563",
+        "hash_match": true
+      },
+      {
+        "path": "docs/MIP_SEMANTIC_EVALUATION_POLICY_PROPOSAL_2026-09-10.md",
+        "access": "FULL_FILE",
+        "bytes": 7657,
+        "sha256": "edd0b8c3681c5b2ca3db118559da9bc7a03dfd6c0355c175ae668d2f57acfdec",
+        "hash_match": true
+      },
+      {
+        "path": "docs/RECORD_CANDIDATE_EVALUATION_2026-09-08.md",
+        "access": "FULL_FILE",
+        "bytes": 4086,
+        "sha256": "f2f034a401a4129faadd4f77a8469354607c18d991f7d96630c4bd9e0e748680",
+        "hash_match": true
+      },
+      {
+        "path": "docs/UNCERTAINTY_VOCABULARY.md",
+        "access": "FULL_FILE",
+        "bytes": 16623,
+        "sha256": "22aa0128fc45c8aa563a05c7cf89c619f0dd3eee215f2c321cd038f0dee3c47a",
+        "hash_match": true
+      },
+      {
+        "path": "package.json",
+        "access": "FULL_FILE",
+        "bytes": 1329,
+        "sha256": "2575ce3f1b097d576b9e3da0306c85f1e3acbc76c64f912968558ef32ec4f7a0",
+        "hash_match": true
+      },
+      {
+        "path": "package-lock.json",
+        "access": "FULL_FILE",
+        "bytes": 118411,
+        "sha256": "1f12bc7e116a262d7cfad8693fea9e271cb0e409d8ca3993a9737b42f24fe255",
+        "hash_match": true
+      },
+      {
+        "path": "scripts/buildCutoverReviewPacket.mjs",
+        "access": "FULL_FILE",
+        "bytes": 6720,
+        "sha256": "1f02254bf1e0032c0a5fb015e812eca7fe19d9eec1917127af2b287854d3e34a",
+        "hash_match": true
+      },
+      {
+        "path": "scripts/evaluateRecordCandidates.mjs",
+        "access": "FULL_FILE",
+        "bytes": 8383,
+        "sha256": "e43c390ce3e1b9727f11a7e0eb08dd2809d5d3290fd98a1801b37fed0b00624e",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/qualification/comparison-generations/capability.sql",
+        "access": "FULL_FILE",
+        "bytes": 34380,
+        "sha256": "69e6544cb304c5e510a678da75e5e9a0ba6bda9f7da753ca4ee5ac144e14eff6",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/qualification/comparison-generations/contract.sql",
+        "access": "FULL_FILE",
+        "bytes": 12529,
+        "sha256": "650a70f5dd8d5acacc74b73cd225d1c1755e822062e0ba88648e5a9e43715776",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/qualification/comparison-generations/selection.sql",
+        "access": "FULL_FILE",
+        "bytes": 4975,
+        "sha256": "a910c8da881593c4e2d5689c6acbac0d81882531f4b1fb78589008254a416e81",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/qualification/comparison-generations/source-fixture.sql",
+        "access": "FULL_FILE",
+        "bytes": 1883,
+        "sha256": "80b165977c67f92a107ceb8fc9fb46c53ef880d816d08789cce96c59de45a805",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/qualification/comparison-generations/source-snapshot.sql",
+        "access": "FULL_FILE",
+        "bytes": 2795,
+        "sha256": "7bef311c9f551f88ca6bbb51f57b71593c64017e0931d9db4c275885c42dc968",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/qualification/membership-prepared/deployment.json",
+        "access": "FULL_FILE",
+        "bytes": 162,
+        "sha256": "03d0a27004ee570e70b8a5f9b405085767cd03d9e31fd90e8b9fd8af8579dc8f",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/runtime-snapshots/source-comparison-run-v16/articleInputReadback.js",
+        "access": "FULL_FILE",
+        "bytes": 830,
+        "sha256": "ebd5e6a4969d679b7801a6180897ad1bcabdcd08af61af9bc1fec8ea02cf2be8",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/runtime-snapshots/source-comparison-run-v16/index.ts",
+        "access": "FULL_FILE",
+        "bytes": 22152,
+        "sha256": "3e274d14499194cc2f89b88b9fe0f14a721d311eca6c874e4d7dde40c28602b8",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/runtime-snapshots/source-comparison-run-v16/lib.js",
+        "access": "FULL_FILE",
+        "bytes": 46876,
+        "sha256": "1c3cc8b6148097417bf4b47b0425ee637062796b657310ad0d42eb96d3021c89",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/runtime-snapshots/source-comparison-run-v16/loadedLanguageLexicon.json",
+        "access": "FULL_FILE",
+        "bytes": 1920,
+        "sha256": "45954bc43de3a13abaf4eeff1ebd350d9fd4c186638820f05908b62d3e9b01a7",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/runtime-snapshots/source-comparison-run-v16/membershipFingerprint.js",
+        "access": "FULL_FILE",
+        "bytes": 2751,
+        "sha256": "9869fe113aefa062855e55122ee02678a709ae149a5e0f3a10be25843d8fbcc0",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/runtime-snapshots/source-comparison-run-v16/membershipScoreReadback.js",
+        "access": "FULL_FILE",
+        "bytes": 1946,
+        "sha256": "f3ccd1a51a6a01ed7669bc92e017f61ce09c7b64070d73086251c91a8636e6b8",
+        "hash_match": true
+      },
+      {
+        "path": "supabase/runtime-snapshots/source-comparison-run-v16/projectionConfig.js",
+        "access": "FULL_FILE",
+        "bytes": 796,
+        "sha256": "7454052144d13ad1067f5cce77b97767339c4c261a052f001162d4cf4979a893",
+        "hash_match": true
+      },
+      {
+        "path": "tests/comparisonCapabilitySeparation.test.mjs",
+        "access": "FULL_FILE",
+        "bytes": 15757,
+        "sha256": "be33e651c8f618707de60acc66e663d6aaf746831d1d635c8c5fa732692e5bf6",
+        "hash_match": true
+      },
+      {
+        "path": "tests/comparisonGenerationTransaction.test.mjs",
+        "access": "FULL_FILE",
+        "bytes": 16304,
+        "sha256": "f66b6e8eca431c564a8d006c98cb1bcb1e9811c1b51ff05ef22c4c9ca685d44f",
+        "hash_match": true
+      },
+      {
+        "path": "tests/comparisonSelection.test.mjs",
+        "access": "FULL_FILE",
+        "bytes": 6468,
+        "sha256": "bf9dbff39f30d47feb67b3cca3e23078ab102d416903bc10d23373d47edc8918",
+        "hash_match": true
+      },
+      {
+        "path": "tests/comparisonSourceSnapshot.test.mjs",
+        "access": "FULL_FILE",
+        "bytes": 5979,
+        "sha256": "72132d551bef6c4d829714dfb134e14d3e0df8f05f663a45a741761112c1db28",
+        "hash_match": true
+      },
+      {
+        "path": "tests/cutoverReviewPacket.test.mjs",
+        "access": "FULL_FILE",
+        "bytes": 4912,
+        "sha256": "0bb38bbf1e24ba4b16d3c18c5f8171297c04cbed48d838037593d110f665e840",
+        "hash_match": true
+      },
+      {
+        "path": "tests/recordCandidateEvaluation.test.mjs",
+        "access": "FULL_FILE",
+        "bytes": 5729,
+        "sha256": "13ca62a28073141c993011885065feb1afc8984721471418123245a63b841d41",
+        "hash_match": true
+      },
+      {
+        "path": "verifier/comparisonPostgresConcurrency.py",
+        "access": "FULL_FILE",
+        "bytes": 21526,
+        "sha256": "b74ee42533583e5550f1ff09b63d4267df5f18d353b06c380363820d68c161f2",
+        "hash_match": true
+      },
+      {
+        "path": ".github/workflows/comparison-postgres.yml",
+        "access": "FULL_FILE",
+        "bytes": 950,
+        "sha256": "6b4b5772e5cec681723339eebc9566e4db57782760544ee76af911ecb2196770",
+        "hash_match": true
+      },
+      {
+        "path": ".github/workflows/deploy-cloud-run.yml",
+        "access": "FULL_FILE",
+        "bytes": 1213,
+        "sha256": "2f01b077c304e28efa820d46fe589ca7b4d29af7af633bb0fa5a360513665040",
+        "hash_match": true
+      },
+      {
+        "path": "verifier/mip-production-cutover-review-v1/README.md",
+        "access": "FULL_FILE",
+        "bytes": 3056,
+        "sha256": "1e15dd0be4a46b335365e202a7ef4286d24f908064dd6e3409fbb45c3e9c0f94",
+        "hash_match": true
+      },
+      {
+        "path": "verifier/mip-production-cutover-review-v1/verification-history.json",
+        "access": "FULL_FILE",
+        "bytes": 2240,
+        "sha256": "017628fe257727cf85febe094a6f30fdb72a83a8562c88df90df05c54ca8f304",
+        "hash_match": true
+      },
+      {
+        "path": "verifier/mip-production-cutover-review-v1/REVIEW_RESULT.json",
+        "access": "FULL_FILE",
+        "bytes": 1694,
+        "sha256": "5b6e20cde110838453e0139a0195d70564d89f94a9cded2e0bb69a95c71a1ae3",
+        "hash_match": true
+      },
+      {
+        "path": "verifier/mip-production-cutover-review-v1/OWNER_ACCEPTANCE.json",
+        "access": "FULL_FILE",
+        "bytes": 620,
+        "sha256": "408d377bdd691d0d49e13e5f580aa2c43fb6cd551e3bae8daddf3da0ba861253",
+        "hash_match": true
+      },
+      {
+        "path": "verifier/mip-production-cutover-review-v1/evaluation-policy.json",
+        "access": "FULL_FILE",
+        "bytes": 7948,
+        "sha256": "7dbf83d21ea736430e07663753bcd55341fd6bfd3d754c8305b010c7cc7b598d",
+        "hash_match": true
+      },
+      {
+        "path": "verifier/mip-production-cutover-review-v1/runtime-inventory.json",
+        "access": "FULL_FILE",
+        "bytes": 8184,
+        "sha256": "26a6c43d713df427d9eb231122898ad0387bcf2d282af707159fd306f4dec0b4",
+        "hash_match": true
+      },
+      {
+        "path": "verifier/mip-production-cutover-review-v1/runtime-permission-proposal.json",
+        "access": "FULL_FILE",
+        "bytes": 4518,
+        "sha256": "242f6891255cbb5e135252a6d89171a07f9756c189183948411b2124ffb5de87",
+        "hash_match": true
+      },
+      {
+        "path": "verifier/mip-production-cutover-review-v1/rpc-signatures.json",
+        "access": "FULL_FILE",
+        "bytes": 5563,
+        "sha256": "dca018698d673dbd49641949ca2a139e3bf8269e777336ac7816e916c4257fd2",
+        "hash_match": true
+      },
+      {
+        "path": "verifier/mip-production-cutover-review-v1/remaining-dependencies.json",
+        "access": "FULL_FILE",
+        "bytes": 3829,
+        "sha256": "af49e483e80662c2d2be4414b30fbcd8f2adbd1b1594aa5fbcef8024a35e2964",
+        "hash_match": true
+      },
+      {
+        "path": "verifier/mip-production-cutover-review-v1/known-limitations.json",
+        "access": "FULL_FILE",
+        "bytes": 2519,
+        "sha256": "3d100ad1349fcc6e78baf55a70a77373531a8e587779fdf4ee469a2a00284628",
+        "hash_match": true
+      }
+    ],
+    "manifest": {
+      "path": "verifier/mip-production-cutover-review-v1/disclosure-manifest.json",
+      "access": "FULL_FILE",
+      "bytes": 10633,
+      "sha256": "ae896f578c2a239491a31dfc7133ef065c3c7fb272f28f9fd494f2e785b74f86",
+      "in_hashed_files": false
+    },
+    "sanitized_pr_verification_summary": {
+      "access": "FULL_PR_BODY_AND_CHECK_CONCLUSIONS",
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/pull/147",
+      "raw_ci_logs": "NOT_FETCHED",
+      "screenshots": "NOT_FETCHED"
+    },
+    "inaccessible_or_not_retrieved": [
+      {
+        "path": "supabase/migrations/**",
+        "reason": "required by tests/cutoverReviewPacket.test.mjs; not in 48-file list; not fetched"
+      },
+      {
+        "path": "tests/golden/fixtures/uncertainty_vocabulary.json",
+        "reason": "cited by docs/UNCERTAINTY_VOCABULARY.md as machine-checkable encoding; not in allowlist"
+      },
+      {
+        "path": "tests/golden/CHANGELOG.md",
+        "reason": "cited by loadedLanguageLexicon.json and UNCERTAINTY_VOCABULARY.md; not in allowlist"
+      },
+      {
+        "path": "services/extraction/**",
+        "reason": "referenced by deploy-cloud-run.yml; not in allowlist"
+      },
+      {
+        "path": "live Edge Function bodies",
+        "reason": "excluded"
+      },
+      {
+        "path": "mip_source_comparison_schedule_authorized and original_source_import_credentials",
+        "reason": "referenced by v16 index.ts; not in allowlist"
+      },
+      {
+        "path": "survivor publication predicates / RLS / grants",
+        "reason": "not in allowlist; live inventory is implementation-agent supplied"
+      },
+      {
+        "path": "CI raw logs and screenshots",
+        "reason": "owner excluded"
+      }
+    ]
+  },
+  "independent_reproduction": {
+    "environment": "isolated /tmp tree containing only the 48 hashed files plus authorized disclosure-manifest.json; Node v22.14.0; npm ci from disclosed package-lock.json; @electric-sql/pglite 0.5.8",
+    "executed": [
+      {
+        "command": "node --test tests/comparisonGenerationTransaction.test.mjs tests/comparisonSelection.test.mjs tests/comparisonSourceSnapshot.test.mjs tests/comparisonCapabilitySeparation.test.mjs tests/recordCandidateEvaluation.test.mjs",
+        "result": "PASS",
+        "tests": 34,
+        "failures": 0,
+        "evidence_class": "independently_reproduced"
+      }
+    ],
+    "attempted_incomplete": [
+      {
+        "command": "node --test tests/cutoverReviewPacket.test.mjs",
+        "result": "NOT_A_PASS",
+        "passed_subtests": 3,
+        "failed_subtests": 1,
+        "failure": "ENOENT supabase/migrations",
+        "evidence_class": "failed_restricted_packet_reproduction",
+        "note": "Subtests 1-3 passed. Subtest 4 was not rewritten, skipped, or supplied with undisclosed migrations. The file is not reported as passing."
+      },
+      {
+        "command": "python3 -B verifier/comparisonPostgresConcurrency.py",
+        "result": "NOT_TESTED",
+        "exit": "Only the explicit disposable GitHub Actions PostgreSQL service is allowed",
+        "evidence_class": "not_tested_by_this_reviewer"
+      }
+    ],
+    "independent_probes": [
+      {
+        "id": "scheduler_claim_takes_shared_lease",
+        "result": "CONFIRMED",
+        "evidence_class": "independently_reproduced",
+        "detail": "qual_comparison_scheduler.scheduler_claim obtained a lease_token; subsequent worker_claim returned null while that lease was held."
+      },
+      {
+        "id": "worker_complete_replay_ignores_changed_output",
+        "result": "CONFIRMED",
+        "evidence_class": "independently_reproduced",
+        "detail": "Same p_request with output claims id A then B both returned completed; durable output remained A."
+      },
+      {
+        "id": "per_rpc_revocation_leaves_complete_enabled",
+        "result": "CONFIRMED",
+        "evidence_class": "independently_reproduced",
+        "detail": "revoke_binding(worker_claim) left worker_complete successful with the existing lease."
+      },
+      {
+        "id": "producer_enqueue_replay_ignores_changed_payload",
+        "result": "CONFIRMED",
+        "evidence_class": "independently_reproduced",
+        "detail": "Same p_request with a different payload and implementation returned the first generation id; retained payload remained the first."
+      },
+      {
+        "id": "anon_bound_code_without_schema_usage",
+        "result": "PERMISSION_DENIED",
+        "evidence_class": "independently_reproduced",
+        "detail": "GRANT EXECUTE on bound_code to anon is ineffective without schema USAGE. Anon received permission denied for schema comparison_qualification."
+      }
+    ]
+  },
+  "supplied_ci": {
+    "evidence_class": "supplied_implementation_agent_inspected_CI_not_independent_review",
+    "pr_head": "47075711ff78393ac3b1690ddbffca615e8f20ce",
+    "github_combined_status_state": "pending",
+    "github_legacy_status_count": 0,
+    "check_runs_conclusions_only": [
+      {
+        "name": "weather-preview",
+        "conclusion": "success",
+        "id": 102780270885
+      },
+      {
+        "name": "test (22)",
+        "conclusion": "success",
+        "id": 102780270851
+      },
+      {
+        "name": "test (24)",
+        "conclusion": "success",
+        "id": 102780270548
+      },
+      {
+        "name": "refinement-preview",
+        "conclusion": "success",
+        "id": 102780270384
+      },
+      {
+        "name": "concurrent-transactions",
+        "conclusion": "success",
+        "id": 102780269856
+      },
+      {
+        "name": "push test (24)",
+        "conclusion": "success",
+        "id": 102780258949
+      },
+      {
+        "name": "push test (22)",
+        "conclusion": "success",
+        "id": 102780258513
+      }
+    ],
+    "raw_logs_inspected": false,
+    "pr_body_claims_not_re-executed": [
+      "Native PostgreSQL 17.6 14 tests in 5.980 s, 13 observed lock barriers",
+      "1610 Node tests each on 22/24",
+      "118 browser PASS markers"
+    ]
+  },
+  "invariants": [
+    {
+      "id": "atomic_source_capture",
+      "result": "PASS_ISOLATED_PGLITE_NOT_NATIVE",
+      "inspected": true,
+      "independently_reproduced": "PGlite sequential capture/rollback/precision tests only",
+      "supplied": "CI native concurrent capture claimed in PR body; logs not read",
+      "failed": false,
+      "not_tested": [
+        "native multi-connection atomic capture by this reviewer",
+        "live relation column/type/size closure",
+        "full public dependency closure"
+      ]
+    },
+    {
+      "id": "generation_lease_output_ack",
+      "result": "PASS_UNBOUND_COMPLETE_PGLITE_WITH_BOUND_RPC_GAP",
+      "inspected": true,
+      "independently_reproduced": true,
+      "gap": "worker_complete request-id replay does not bind output arguments"
+    },
+    {
+      "id": "failure_recovery",
+      "result": "PASS_ISOLATED_PGLITE",
+      "inspected": true,
+      "independently_reproduced": true,
+      "not_tested": [
+        "native concurrent fail vs complete by this reviewer",
+        "live crash/timeout",
+        "Auth session mapping"
+      ]
+    },
+    {
+      "id": "concurrent_withdrawal_publication",
+      "result": "NOT_TESTED_BY_THIS_REVIEWER",
+      "inspected": true,
+      "independently_reproduced": "PGlite sequential withdrawal/revoked-head tests only",
+      "supplied": "CI concurrent-transactions conclusion success; logs not read",
+      "not_tested": "independent native withdrawal vs release"
+    },
+    {
+      "id": "principal_implementation_session_revocation",
+      "result": "FAIL_PRODUCTION_SCOPE_PASS_BOUND_PATH_PGLITE",
+      "inspected": true,
+      "independently_reproduced": true,
+      "detail": "Bound worker_complete fails after session revoke. Unbound service_role.complete still succeeds. Per-RPC revoke of worker_claim does not block worker_complete. No evaluated-implementation allowlist. Caller-supplied source and implementation on producer_enqueue."
+    },
+    {
+      "id": "effective_runtime_authority",
+      "result": "FAIL_VS_OWNER_BRIEF",
+      "inspected": true,
+      "independently_reproduced": "isolated diagnose/effective_authority and v16 source inspection",
+      "supplied": "runtime-inventory.json live metadata; not independently reproduced",
+      "detail": "Isolated and proposed live workers remain compatible with ambient SUPABASE_SERVICE_ROLE_KEY / service_role BYPASSRLS. Owner brief forbids shared service_role worker credentials. Proposed mip_* principals do not exist. v16 snapshot is not wired to comparison_qualification."
+    },
+    {
+      "id": "source_temporal_provenance_publication",
+      "result": "PASS_NARROW_ISOLATED_SELECTION_FAIL_PUBLICATION_PARITY",
+      "inspected": true,
+      "independently_reproduced": "PGlite selection/publication-disabled/withdrawn-head tests",
+      "detail": "Isolated selection does not restore withdrawn heads on stale retry. Isolated publication does not implement survivor stronger-source/explanation/correction gates. dependency_hash is not the complete public closure."
+    },
+    {
+      "id": "semantic_fidelity",
+      "result": "BLOCKED",
+      "inspected": true,
+      "independently_reproduced": "synthetic harness mechanics only; qualification remains not_assessed",
+      "not_tested": "all real-corpus semantic measures"
+    },
+    {
+      "id": "reconciliation",
+      "result": "BLOCKED",
+      "inspected": true,
+      "detail": "No in-scope source key/version reconciliation manifest for live systems. v15 vs v16 byte equality NOT TESTED. Version-number differences recorded as reconciliation questions."
+    },
+    {
+      "id": "end_to_end_intended_runtime",
+      "result": "NOT_TESTED",
+      "detail": "No authorized ingestion/worker/review/publication/withdrawal/signed-in journey on the intended runtime. Public anonymous tests were not independently run and would be insufficient."
+    }
+  ],
+  "findings": [
+    {
+      "rank": 1,
+      "severity": "high",
+      "kind": "design_noncompliance_missing_production_package",
+      "title": "Proposed runtime/permission choices do not satisfy the owner identity brief; production principals and RPCs do not exist",
+      "affected": [
+        "verifier/mip-production-cutover-review-v1/runtime-permission-proposal.json",
+        "verifier/mip-production-cutover-review-v1/rpc-signatures.json",
+        "supabase/qualification/comparison-generations/capability.sql",
+        "supabase/runtime-snapshots/source-comparison-run-v16/index.ts"
+      ],
+      "evidence": "Owner brief requires dedicated mip_* capability identities, NOLOGIN function owners, EXECUTE-only APIs, and no shared service_role worker credentials. Isolated SQL creates qual_* roles only. runtime-permission-proposal.json alternative_a keeps live workers on unbound service_role. v16 Deno.serve uses Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') and authorizeWriter accepts Bearer serviceKey. qualification schema is recorded absent on live projects. chosen bindings are null.",
+      "impact": "An isolated passing contract cannot be installed as the production package. Ambient privileged credentials remain the effective runtime authority.",
+      "confidence": "high",
+      "violated_requirement": "Owner Decision Brief \u00a7\u00a73\u20134; producer/worker authority PASS condition",
+      "proposed_verification": "A later production grant/RLS/RPC manifest that names exact mip_* roles, JWT iss/aud/sub, credential custodians, and proves workers cannot SET ROLE service_role or hold SUPABASE_SERVICE_ROLE_KEY. Do not treat renaming qual_* as sufficient."
+    },
+    {
+      "rank": 2,
+      "severity": "high",
+      "kind": "missing_evidence",
+      "title": "No frozen semantic acceptance policy, split, or independently adjudicated labels",
+      "affected": [
+        "verifier/mip-production-cutover-review-v1/evaluation-policy.json",
+        "docs/MIP_SEMANTIC_EVALUATION_POLICY_PROPOSAL_2026-09-10.md",
+        "scripts/evaluateRecordCandidates.mjs"
+      ],
+      "evidence": "evaluation-policy.json status=proposed_not_approved; all measure thresholds null; critical_error_threshold null; minimum_cases null. No corpus, labels, or predictions in the packet. Harness always returns qualification=not_assessed. This reviewer did not invent labels.",
+      "impact": "Semantic fidelity cannot be scored. Owner PASS is impossible. BLOCKED, not a fitted PASS.",
+      "confidence": "high",
+      "violated_requirement": "Owner brief independent evaluation semantic fidelity and PASS criteria; evaluation-policy.json authority that owner must freeze before held-out measurement",
+      "proposed_verification": "Owner-frozen policy hash, split id-list hash, dual-adjudicated labels with rationales, baseline and candidate predictions for every held-out case, then metrics with numerators/denominators. Extend or map the harness to policy error categories before scoring."
+    },
+    {
+      "rank": 3,
+      "severity": "high",
+      "kind": "implementation_gap",
+      "title": "Disclosed v16 worker is a mutable rebuild plus broad queue acknowledgement, not the isolated generation contract",
+      "affected": [
+        "supabase/runtime-snapshots/source-comparison-run-v16/index.ts",
+        "supabase/qualification/comparison-generations/contract.sql",
+        "docs/COMPARISON_SOURCE_SNAPSHOT_2026-09-09.md"
+      ],
+      "evidence": "index.ts rebuildProjection deletes current claims/explanations then inserts; acknowledgeProjectionQueue updates all pending source_comparison_enrichment_queue rows to succeeded; buildEventInputs uses separate pagedSelect calls. Isolated capture_source/enqueue/complete are never called. Live Manus is recorded as v15; byte equality vs repo v16 is NOT TESTED.",
+      "impact": "Qualifying isolated SQL does not qualify the disclosed comparison runtime. Mixed source reads and pending-ack remain the live-style behavior.",
+      "confidence": "high",
+      "violated_requirement": "Atomic inputs; durable outputs and acknowledgement; current paginated mutable reads cannot supply that proof (COMPARISON_GENERATION_TRANSACTION doc)",
+      "proposed_verification": "A worker that only claims a retained generation, writes comparison_qualification.complete, and never acknowledges a sibling pending row. Hash-only compare of live v15 vs repo v16 if owner authorizes private compare."
+    },
+    {
+      "rank": 4,
+      "severity": "medium",
+      "kind": "contract_gap",
+      "title": "Bound RPC request-id replay acknowledges without binding arguments",
+      "affected": [
+        "supabase/qualification/comparison-generations/capability.sql functions worker_complete, producer_enqueue, selector_select, publisher_release"
+      ],
+      "evidence": "Independent PGlite probe: worker_complete same p_request with output A then B both returned completed; durable output stayed A. producer_enqueue same p_request with a different payload/implementation returned the first generation id.",
+      "impact": "Durable history is not overwritten, but the RPC reports success for a changed output/payload. That is incorrect acknowledgement at the bound API layer.",
+      "confidence": "high",
+      "violated_requirement": "Durable outputs and acknowledgement: a changed output cannot be acknowledged accidentally",
+      "proposed_verification": "Reject replay unless p_generation, hashes, implementation, and output/payload match the recorded request; add a regression in tests/comparisonCapabilitySeparation.test.mjs."
+    },
+    {
+      "rank": 5,
+      "severity": "medium",
+      "kind": "contract_gap",
+      "title": "scheduler_claim shares claim() and can hold the worker lease; per-RPC revocation is not principal-wide",
+      "affected": [
+        "supabase/qualification/comparison-generations/capability.sql functions scheduler_claim, worker_claim, worker_complete, revoke_binding"
+      ],
+      "evidence": "Independent PGlite probe: scheduler obtained lease_token and worker_claim returned null. After revoke_binding(worker_claim), worker_complete still returned completed with the existing lease. Owner brief: existing record-worker revocation does not retroactively cancel a granted lease and must be explicitly evaluated.",
+      "impact": "A scheduler principal can strand comparison work until expiry. Revoking claim authority does not stop completion. Session revoke on the bound path is stricter and was independently reproduced.",
+      "confidence": "high",
+      "violated_requirement": "Producer/worker authority; recovery: after revocation, new protected operations must fail; collector scheduler must not complete or claim comparison work",
+      "proposed_verification": "Separate scheduler enqueue-cycle from worker claim; principal-wide revoke that covers all RPCs for that principal; tests for revoke-claim-then-complete and scheduler-vs-worker lease isolation."
+    },
+    {
+      "rank": 6,
+      "severity": "medium",
+      "kind": "contract_gap",
+      "title": "Isolated producer capture is not server-bound; publication is not survivor-gate parity",
+      "affected": [
+        "supabase/qualification/comparison-generations/capability.sql producer_enqueue",
+        "supabase/qualification/comparison-generations/source-snapshot.sql",
+        "supabase/qualification/comparison-generations/capability.sql follow_publication, publisher_release"
+      ],
+      "evidence": "producer_enqueue accepts caller p_source, p_payload, p_implementation. capture_source is granted to service_role, not the producer role, and uses synthetic namespace qualification-source. publisher_release checks operating_gates and proposed state only. dependency_hash is sha256 of input/output/implementation/context, not events/membership/articles/claims/explanations/evidence/corrections/nodes/arcs.",
+      "impact": "Caller-fabricated source/implementation is allowed in the isolated producer API. Isolated publication cannot claim survivor publication predicates remain effective.",
+      "confidence": "high",
+      "violated_requirement": "Atomic inputs include every required binding; only designated/evaluated implementation; publication only of independently authorized immutable public payload with survivor gates",
+      "proposed_verification": "Server-bound source and evaluated package allowlist on producer capture; publication RPC that invokes current survivor predicates; versioned public-closure hash tests."
+    },
+    {
+      "rank": 7,
+      "severity": "low",
+      "kind": "packet_completeness",
+      "title": "Hashed verification-history and REVIEW_RESULT do not bind the final HEAD receipt",
+      "affected": [
+        "verifier/mip-production-cutover-review-v1/verification-history.json",
+        "verifier/mip-production-cutover-review-v1/REVIEW_RESULT.json",
+        "docs/COMPARISON_POSTGRES_CONCURRENCY_2026-09-09.md"
+      ],
+      "evidence": "verification-history.json records 3b810b5 FAILED and e0d240b PASSED_BEFORE_PACKET_FINALIZATION. REVIEW_RESULT.review_packet_commit is null while disclosure-manifest.review_packet_commit is 60914115. COMPARISON_POSTGRES_CONCURRENCY doc describes six scenarios; the harness contains fourteen tests.",
+      "impact": "Final CI is in the PR body, which is supplied evidence, not a hashed packet file. Not a code defect.",
+      "confidence": "high",
+      "violated_requirement": "Complete input/version binding of evidence to the frozen HEAD",
+      "proposed_verification": "Stamp final run/job IDs and review_packet_commit into hashed files on a new packet version if the owner wants the receipt inside the allowlist."
+    },
+    {
+      "rank": 8,
+      "severity": "low",
+      "kind": "reconciliation_not_auth_change",
+      "title": "Version-number and verify_jwt differences are reconciliation questions, not authorization to flip flags",
+      "affected": [
+        "verifier/mip-production-cutover-review-v1/runtime-inventory.json",
+        "supabase/runtime-snapshots/source-comparison-run-v16/",
+        ".github/workflows/deploy-cloud-run.yml"
+      ],
+      "evidence": "Inventory records Manus source-comparison-run ACTIVE v15 verify_jwt=true vs repo snapshot v16; original source-comparison-run v17 and batch-intake v14 and Manus import-original-source v12 verify_jwt=false. v16 authorizeWriter still has service, scheduler-token, and original-import-key paths. deploy-cloud-run.yml uses --allow-unauthenticated. Folder v16 vs lib.js RULE_VERSION sc-v1 vs EVENT_PROJECTION_RULE_VERSION sc-v2-event-projection.",
+      "impact": "Do not enable JWT or redeploy Cloud Run from this review. Confirm intended application-auth contracts before any flag change.",
+      "confidence": "high",
+      "violated_requirement": "Owner instruction not to recommend authentication flag changes without examining the contract; version numbers are not proof of different code",
+      "proposed_verification": "Hash-only live vs snapshot compare; readback of intended auth for each function; Cloud Run IAM inventory if owner later authorizes."
+    }
+  ],
+  "principal_grant_deployment_manifest_recommended": null,
+  "principal_grant_deployment_manifest_note": "None. Isolated qual_* RPCs must not be renamed and granted to live service_role. Owner-proposed mip_* identities remain unprovisioned.",
+  "owner_acceptance_record": {
+    "status": "NOT_SUBMITTED",
+    "this_reviewer_did_not_populate": true,
+    "frozen_packet_OWNER_ACCEPTANCE_json": "unchanged"
+  },
+  "this_review_artifacts": {
+    "readable_report": {
+      "path": "MIP_PRODUCTION_CUTOVER_REVIEW_v1.md",
+      "bytes": 22863,
+      "sha256": "3bedb192385a8c47f44efb00e650eb5242b296b938ab5a140c6f4c09d36937d9"
+    },
+    "note": "Frozen packet files were not modified. Machine-readable JSON hash is of this object including this field except its own sha256.",
+    "machine_readable_sha256_excluding_self_hash_fields": "7b0163227b0f57a1739386a09fc4763f6497fcea67c73b5c6cf0c7925b8444bf",
+    "machine_readable_bytes_excluding_self_hash_fields": 40083
+  }
+}

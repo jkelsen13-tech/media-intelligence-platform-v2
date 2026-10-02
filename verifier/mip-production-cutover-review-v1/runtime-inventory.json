@@ -1,0 +1,157 @@
+{
+  "observed_at": "2026-09-10T07:10:00Z",
+  "evidence_class": "independently_reproduced_this_run",
+  "exclusions": [
+    "No credential values, JWT contents, Vault secrets, Auth emails, session IP/user-agent, or source payloads were read or copied.",
+    "auth.sessions column names that identify refresh-token material are omitted from this public inventory.",
+    "cron.job command text is omitted.",
+    "Live Edge Function source bodies were not downloaded."
+  ],
+  "projects": [
+    {
+      "ref": "qikvmopbtijoebdqosyq",
+      "role": "intended_survivor",
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-1",
+      "postgres": "17.6",
+      "has_comparison_queue": false,
+      "has_ingestion_runs": false,
+      "has_qualification_schema": false,
+      "has_cron_job": false,
+      "has_pg_cron_extension": false,
+      "has_vault_schema": true,
+      "vault_contents": "EXCLUDED",
+      "auth_users": 2,
+      "auth_sessions": 3,
+      "auth_sessions_revoked_column": false,
+      "auth_sessions_not_after_column": true,
+      "edge_functions": [
+        {"slug": "spatial-runtime", "version": 6, "verify_jwt": true, "ezbr_sha256": "1f15a3947525158d4f6477b73d036b71ba614008652655a066f8400bc2638c50"},
+        {"slug": "investigation-workspace", "version": 1, "verify_jwt": true, "ezbr_sha256": "12ca7453392abfc9ebbe52217df401f961cfd6a961c4bdc45deeb3efb43a4fae"},
+        {"slug": "investigation-evidence-checks", "version": 1, "verify_jwt": true, "ezbr_sha256": "48f2dc387c1a0803aaba3f3371c258b60f4880e24d411a241f16d4972dfb6156"},
+        {"slug": "investigation-evidence-reviews", "version": 1, "verify_jwt": true, "ezbr_sha256": "6b86e0161b27e3d66266f196f69c7a9b1679a9dd97c26c86dd817d832f6d7c54"},
+        {"slug": "investigation-input-impact", "version": 2, "verify_jwt": true, "ezbr_sha256": "a12f62d609995805199bd717899d50361f2570fc5380c3baa02489c235ffd898"},
+        {"slug": "investigation-source-spans", "version": 1, "verify_jwt": true, "ezbr_sha256": "3946403b8ab63bed442a1c32ae0bff75344495e1ccc139b4df3f2a3a7c7486a9"},
+        {"slug": "investigation-api", "version": 3, "verify_jwt": true, "ezbr_sha256": "ca36cb9f1c9895b8e826a6b64555bbb20f51b446f1c98bb5a92adfbe37ea56a8"},
+        {"slug": "capture-retrieval", "version": 6, "verify_jwt": true, "ezbr_sha256": "8ecd7ad65608f324b39b87e820d619605b9562843d93a378bff26fbb4786eda9"}
+      ]
+    },
+    {
+      "ref": "yhbwnrtlqbjtcrrlpbge",
+      "role": "manus_legacy_collector",
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-1",
+      "postgres": "17.6",
+      "has_comparison_queue": true,
+      "comparison_queue_relation": "public.source_comparison_enrichment_queue",
+      "comparison_queue_state_counts": {"succeeded": 8},
+      "has_ingestion_runs": true,
+      "ingestion_runs_count": 4786,
+      "ingestion_run_payloads": "EXCLUDED",
+      "has_qualification_schema": false,
+      "has_cron_job": true,
+      "has_vault_schema": true,
+      "vault_contents": "EXCLUDED",
+      "auth_users": 0,
+      "auth_sessions": 0,
+      "auth_sessions_revoked_column": false,
+      "auth_sessions_not_after_column": true,
+      "cron": [
+        {"jobname": "mip-ingest-rss-hourly", "schedule": "*/5 * * * *", "active": true},
+        {"jobname": "mip-source-comparison-enrichment", "schedule": "*/5 * * * *", "active": true}
+      ],
+      "edge_functions": [
+        {"slug": "ingest-rss", "version": 8, "verify_jwt": true, "ezbr_sha256": "ace39d46b2b6970b57f01c76dae8480fe4e8c7a164fccf7868d4b2870ae6ddc2"},
+        {"slug": "backfill-legacy", "version": 9, "verify_jwt": true, "ezbr_sha256": "5cd76641e068fb512c9d0815f9d35325a9806be11593829df1daf62f87de8f68"},
+        {"slug": "import-original-source", "version": 12, "verify_jwt": false, "ezbr_sha256": "2c53ae3bf56d89f5f1196c204a9e3cdd7b225526fc581fe398c10bfe2ef3cf91"},
+        {"slug": "source-comparison-run", "version": 15, "verify_jwt": true, "ezbr_sha256": "4ea9f61ac94965b4ed00635c0e0b26e7375961e9cc5c17414f6e197fc7c3db18"},
+        {"slug": "arc-membership-run", "version": 5, "verify_jwt": true, "ezbr_sha256": "81b97c4315ae97b6d91180a83d5f1e0383ea891d0b1277d70e933fcd548feff3"},
+        {"slug": "membership-qualification", "version": 1, "verify_jwt": true, "ezbr_sha256": "f01a914a31de7f85a7414e86b9763dc5f9947205bd69f329a12c1bb7a4b75d49"}
+      ]
+    },
+    {
+      "ref": "niejaejtbxgakyrsntxm",
+      "role": "original_legacy",
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-2",
+      "postgres": "17.6",
+      "has_comparison_queue": false,
+      "has_ingestion_runs": false,
+      "has_qualification_schema": false,
+      "has_cron_job": true,
+      "auth_users": 3,
+      "auth_sessions": 4,
+      "auth_sessions_revoked_column": false,
+      "auth_sessions_not_after_column": true,
+      "cron": [
+        {"jobname": "mip-backfill-legacy", "schedule": "*/15 * * * *", "active": false},
+        {"jobname": "mip-ingest-rss-daily", "schedule": "23 3 * * *", "active": false}
+      ],
+      "edge_functions": [
+        {"slug": "ingest-rss", "version": 41, "verify_jwt": true, "ezbr_sha256": "0f8be050ad11842269a7bf8ad0385f8b0f2db2ac196cd0420e59f37e40e45bee"},
+        {"slug": "debug-parse", "version": 16, "verify_jwt": true, "ezbr_sha256": "05e36eff041fd39a5f6ca8d13dd8c2515eced1c41175d7eda2d3b3e3120cac0b"},
+        {"slug": "policy-ingest", "version": 16, "verify_jwt": true, "ezbr_sha256": "f18ec228daf35dd5001a436c1299a1229bab32fcc1657179bf44d0ef5c6143ef"},
+        {"slug": "graph-analysis-run", "version": 16, "verify_jwt": true, "ezbr_sha256": "46c022f3de7ee08426dbc18e4898fbb0daca154f64d9427384b0caa96945d622"},
+        {"slug": "source-comparison-run", "version": 17, "verify_jwt": false, "ezbr_sha256": "85fee3d94d0494d630a2e460e8eff4de44b596fc7819eff58664689f0badbafa"},
+        {"slug": "batch-intake", "version": 14, "verify_jwt": false, "ezbr_sha256": "38fb688240b242b4d58338e78946c4ff501e578b1d4ca38a4078444eb3f80dc6"}
+      ]
+    },
+    {
+      "ref": "jfnzyvzthzqtczlxhjll",
+      "role": "spatial_sandbox",
+      "status": "ACTIVE_HEALTHY",
+      "region": "us-west-1",
+      "postgres": "17.6",
+      "has_comparison_queue": false,
+      "has_ingestion_runs": false,
+      "has_qualification_schema": false,
+      "has_cron_schema": false,
+      "has_cron_job": false,
+      "auth_users": 0,
+      "auth_sessions": 0,
+      "auth_sessions_revoked_column": false,
+      "auth_sessions_not_after_column": true,
+      "edge_functions": []
+    }
+  ],
+  "external_runtimes": [
+    {
+      "kind": "github_pages",
+      "evidence_class": "artifact_inspection",
+      "notes": "Frontend host. Not a comparison worker.",
+      "current_deployed_bundle": "NOT_TESTED this run"
+    },
+    {
+      "kind": "github_actions",
+      "evidence_class": "artifact_inspection",
+      "workflows": [".github/workflows/golden.yml", ".github/workflows/comparison-postgres.yml", ".github/workflows/deploy-cloud-run.yml"],
+      "deploy_cloud_run": {
+        "trigger": "workflow_dispatch_only",
+        "project": "mop-extraction",
+        "region": "us-central1",
+        "service": "mop-extraction",
+        "secret_name_only": "GCP_SA_KEY",
+        "current_service_state": "NOT_TESTED this run"
+      }
+    },
+    {
+      "kind": "edge_function_cdn_import",
+      "evidence_class": "supplied_implementation_agent_result",
+      "notes": "Prior reports record esm.sh/@supabase/supabase-js@2 in recovered Manus comparison bundles. Live v15 source was not downloaded this run."
+    }
+  ],
+  "candidate_differences_versus_historical_docs": [
+    {
+      "item": "Manus source-comparison-run version",
+      "historical_docs": "v11 then v13 in September 8-9 reports",
+      "this_run": "ACTIVE v15 verify_jwt=true ezbr_sha256=4ea9f61ac94965b4ed00635c0e0b26e7375961e9cc5c17414f6e197fc7c3db18",
+      "repo_snapshot_at_baseline": "supabase/runtime-snapshots/source-comparison-run-v16/",
+      "byte_equality_live_v15_vs_repo_v16": "NOT_TESTED"
+    },
+    {
+      "item": "survivor capture-retrieval version",
+      "historical_docs": "v5 in HOSTED_CAPTURE_WORKER_2026-09-07.md",
+      "this_run": "ACTIVE v6 verify_jwt=true ezbr_sha256=8ecd7ad65608f324b39b87e820d619605b9562843d93a378bff26fbb4786eda9"
+    }
+  ]
+}

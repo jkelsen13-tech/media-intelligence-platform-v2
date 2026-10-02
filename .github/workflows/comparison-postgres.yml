@@ -31,3 +31,13 @@ jobs:
         env:
           MIP_DISPOSABLE_POSTGRES: comparison-qualification
         run: python3 -B verifier/comparisonPostgresConcurrency.py
+
+      - name: Reproduce frozen PR149 authority counterexamples
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+        run: python3 -B verifier/pr149AuthorityOrdering.py --baseline
+
+      - name: Verify corrected PR149 authority ordering and replay
+        env:
+          MIP_DISPOSABLE_POSTGRES: comparison-qualification
+        run: python3 -B verifier/pr149AuthorityOrdering.py

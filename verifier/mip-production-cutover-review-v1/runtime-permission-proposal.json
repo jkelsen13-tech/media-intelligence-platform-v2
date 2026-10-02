@@ -1,0 +1,81 @@
+{
+  "status": "design_starting_point_not_authorization_to_provision",
+  "smallest_viable_design": "Reuse existing Supabase projects, pg_cron, Edge Functions, Vault, and GitHub Actions. No parallel authoritative backend. No paid service.",
+  "application_level_restrictions": {
+    "bound_rpcs": "Session + runtime_bindings + GRANT EXECUTE to a single capability role per RPC.",
+    "operating_gates": {
+      "publication_release_enabled": false,
+      "membership_auto_approval_enabled": false
+    }
+  },
+  "effective_runtime_authority": {
+    "isolated": "A process that can SET ROLE service_role still executes unbound enqueue/claim/complete/select_output (bypassrls). Bound RPC grants are not issued to service_role.",
+    "live_survivor_qikvmopbtijoebdqosyq": [
+      "service_role on hosted Postgres",
+      "MIP_PIPELINE_SERVICE_KEY name exists in operator docs; value EXCLUDED",
+      "vault.secrets table present; contents EXCLUDED",
+      "authenticated browser JWT sessions (2 users / 3 sessions observed this run)",
+      "Edge Functions with verify_jwt=true still run with the function's ambient secrets"
+    ],
+    "live_manus_yhbwnrtlqbjtcrrlpbge": [
+      "service_role",
+      "vault.secrets present; contents EXCLUDED",
+      "pg_cron mip-ingest-rss-hourly and mip-source-comparison-enrichment both */5 active",
+      "source-comparison-run v15 JWT-verified",
+      "import-original-source v12 verify_jwt=false"
+    ],
+    "live_original_niejaejtbxgakyrsntxm": [
+      "service_role",
+      "source-comparison-run v17 verify_jwt=false",
+      "batch-intake v14 verify_jwt=false",
+      "3 users / 4 sessions",
+      "cron present but ingest-daily and backfill inactive"
+    ]
+  },
+  "credential_exposure": {
+    "isolated_request_runs": "Stores request_id, runtime_id, principal, rpc, generation/selection/publication ids, outcome. Never lease tokens.",
+    "claim_replay": "Omits lease_token.",
+    "packet": "No credential values."
+  },
+  "revocation_behavior_isolated": {
+    "session": "Immediate mip_authz_revoked_session on bound RPCs.",
+    "binding": "Immediate mip_authz_revoked_principal on that runtime/principal/rpc.",
+    "live_auth_sessions": "No revoked column. not_after exists. Mapping isolated revoked_at onto Auth is unresolved."
+  },
+  "unresolved_bindings_owner_decision": [
+    {
+      "id": "bind-live-workers",
+      "conflict": "Isolated qual_* roles do not exist in live databases. Live workers authenticate as service_role / function secrets, not as qual_comparison_worker.",
+      "alternative_a": "Keep live workers on unbound service_role until a later authorized trial creates database roles and issues sessions from an owner-controlled fixture. Smallest; leaves ambient hole unchanged.",
+      "alternative_b": "Create the same role names on a disposable Supabase branch of the survivor (paid-branch risk: confirm_cost required; not done). Still not production.",
+      "chosen": null
+    },
+    {
+      "id": "auth-session-model",
+      "conflict": "Isolated principal_sessions.revoked_at has no column twin on auth.sessions (has not_after only). Survivor 2/3 vs original 3/4 vs Manus 0/0.",
+      "alternative_a": "Treat Auth not_after as expiry only; revocation remains a private MIP table, not Auth.",
+      "alternative_b": "Require owner-directed Auth user merge before any cutover; do not invent a mapping here.",
+      "chosen": null
+    },
+    {
+      "id": "comparison-bundle",
+      "conflict": "Live Manus source-comparison-run is ACTIVE v15. Repo snapshot at baseline is v16. Byte equality NOT TESTED (live source not downloaded into the packet).",
+      "alternative_a": "Freeze v16 as the qualification candidate; treat live v15 as a later live-trial compare.",
+      "alternative_b": "Owner authorizes a private hash-only compare of live v15 bytes against v16 without placing source in GitHub.",
+      "chosen": null
+    },
+    {
+      "id": "verify-jwt-false",
+      "conflict": "Manus import-original-source v12 and original source-comparison-run v17 / batch-intake v14 have verify_jwt=false.",
+      "alternative_a": "Leave unchanged until cutover (no production permission change is authorized now).",
+      "alternative_b": "Owner later authorizes JWT enablement on those functions as a separate change, with readback.",
+      "chosen": null
+    }
+  ],
+  "constraints": {
+    "no_parallel_authoritative_backend": true,
+    "no_paid_services": true,
+    "no_legacy_retirement": true,
+    "publication_and_auto_approval_remain_disabled": true
+  }
+}
