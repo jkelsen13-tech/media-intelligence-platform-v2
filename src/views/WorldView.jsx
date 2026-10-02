@@ -15,6 +15,7 @@ import { buildWorldBillboardModel } from '../lib/worldViewBillboardModules.js'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { mipBackend } from '../lib/mipBackend.js'
+import { safeExternalHttpUrl } from '../lib/externalUrls.js'
 import GraphView from '../graph/GraphView'
 import TrustFooter from '../components/TrustFooter'
 import WorldMapCanvas from './WorldMapCanvas'
@@ -282,9 +283,9 @@ function EventInspector({
                       <div className="wv-field" key={f.key}>
                         <dt>Source</dt>
                         <dd>
-                          <a href={f.value} target="_blank" rel="noreferrer">
+                          {safeExternalHttpUrl(f.value) ? <a href={safeExternalHttpUrl(f.value)} target="_blank" rel="noopener noreferrer">
                             {f.value}
-                          </a>
+                          </a> : <span>{f.value}</span>}
                         </dd>
                       </div>
                     ) : (
@@ -310,7 +311,7 @@ function EventInspector({
   }
 
   return (
-    <aside className="wv-inspector" aria-label="Selected-event inspector">
+    <aside className="wv-inspector" tabIndex={-1} aria-label="Selected-event inspector">
       <header className="wv-section-head">
         <h2>Event inspector</h2>
       </header>
@@ -638,9 +639,25 @@ export default function WorldView({
               key={m.key}
               type="button"
               role="tab"
+              id={`wv-mode-${m.key}`}
               aria-selected={mode === m.key}
+              aria-controls="wv-mode-panel"
+              tabIndex={mode === m.key ? 0 : -1}
               className={`wv-mode-btn${mode === m.key ? ' active' : ''}`}
               onClick={() => { setMode(m.key); setTouchInteraction(false) }}
+              onKeyDown={(event) => {
+                const index = MODES.findIndex((item) => item.key === m.key)
+                let next
+                if (event.key === 'ArrowRight') next = (index + 1) % MODES.length
+                else if (event.key === 'ArrowLeft') next = (index - 1 + MODES.length) % MODES.length
+                else if (event.key === 'Home') next = 0
+                else if (event.key === 'End') next = MODES.length - 1
+                else return
+                event.preventDefault()
+                setMode(MODES[next].key)
+                setTouchInteraction(false)
+                event.currentTarget.parentElement?.querySelectorAll('[role="tab"]')[next]?.focus()
+              }}
             >
               {m.label}
             </button>
@@ -683,7 +700,7 @@ export default function WorldView({
                 {(module.references.length > 0 || module.provenance) && <details><summary>Supplied sources and provenance</summary>
                   <pre>{JSON.stringify({ references: module.references, provenance: module.provenance }, null, 2)}</pre></details>}
               </section>)}</div>}>
-          <div className={`wv-stage wv-stage-${mode}${touchInteraction ? ' wv-touch-active' : ''}`}>
+          <div id="wv-mode-panel" role="tabpanel" aria-labelledby={`wv-mode-${mode}`} className={`wv-stage wv-stage-${mode}${touchInteraction ? ' wv-touch-active' : ''}`}>
             {showMap && (
               <WorldMapCanvas
                 cameraMemory={cameraMemoryRef.current}

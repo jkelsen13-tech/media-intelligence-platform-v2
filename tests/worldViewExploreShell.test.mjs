@@ -131,3 +131,26 @@ test('renderer restore error closes Explore and releases document ownership; def
     assert.match(JSON.stringify(renderer.toJSON()), /earlier camera could not be restored/)
   } finally { if (renderer) act(() => renderer.unmount()); dom.cleanup() }
 })
+
+test('Explore restores keyboard focus after the entry becomes visible and page scroll unlocks', () => {
+  const dom = fakeDocument(); let renderer, launch, originalFocus, blockedFocus = 0
+  try {
+    act(() => { renderer = TestRenderer.create(React.createElement(ExploreShell, { prototypeEnabled: true, contextToken, cameraAdapter: { getCameraState: () => cameraState, setCameraState: () => true } }, React.createElement('div', null, 'globe')), { createNodeMock: dom.createNodeMock }) })
+    launch = dom.doc.activeElement; originalFocus = launch.focus
+    launch.focus = (...args) => {
+      // Browsers ignore focus() on a display-none/hidden entry. The previous
+      // mocks accepted that call while React still showed the active surface.
+      if (renderer.root.findByProps({ className: 'wv-explore-launch' }).props.hidden) { blockedFocus++; return }
+      assert.equal(dom.doc.body.style.overflow, 'auto')
+      assert.equal(dom.doc.documentElement.style.overflow, '')
+      originalFocus(...args)
+    }
+    click(renderer, 'Explore World View')
+    assert.notEqual(dom.doc.activeElement, launch)
+    act(() => dom.key('Escape'))
+    assert.equal(blockedFocus, 0)
+    assert.equal(dom.doc.activeElement, launch)
+    launch.focus = originalFocus
+    act(() => renderer.unmount()); renderer = null
+  } finally { if (launch && originalFocus) launch.focus = originalFocus; if (renderer) act(() => renderer.unmount()); dom.cleanup() }
+})

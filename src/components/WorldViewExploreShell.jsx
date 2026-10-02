@@ -38,6 +38,7 @@ export default function WorldViewExploreShell({
   const entryRef = useRef(null)
   const closeRef = useRef(null)
   const returnFocusRef = useRef(null)
+  const returnFocusPendingRef = useRef(false)
   const scrollAncestorsRef = useRef([])
   const sessionRef = useRef(null)
   if (!sessionRef.current) sessionRef.current = createExploreSession()
@@ -64,9 +65,9 @@ export default function WorldViewExploreShell({
     setNotice(restoreMessages[result.reason] ?? '')
     latest.onExploreChange?.(false)
     latest.onRestoreResult?.(result)
-    // Restore after layout returns to document flow; scroll lock cleanup also
-    // uses this snapshot. Returning focus must not move the saved viewport.
-    returnFocusRef.current?.focus?.({ preventScroll: true })
+    // The entry control is hidden until the inactive layout commits. Focus
+    // it from the inactive effect after scroll ownership has been released.
+    returnFocusPendingRef.current = true
   }, [setInteraction])
 
   const enter = () => {
@@ -145,6 +146,12 @@ export default function WorldViewExploreShell({
   // Keep document ownership for the visit. Keyboard reads the current UI via a
   // separate ref so expanding a panel cannot unlock/relock or shift the page.
   }, [active]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (active || !returnFocusPendingRef.current) return
+    returnFocusPendingRef.current = false
+    returnFocusRef.current?.focus?.({ preventScroll: true })
+  }, [active])
 
   const keyboardRef = useRef(null)
   keyboardRef.current = { controlsExpanded, contextExpanded, interacting, exit, setInteraction }

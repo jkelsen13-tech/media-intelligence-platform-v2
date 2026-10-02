@@ -39,3 +39,33 @@ App-owned About/More modal entry, focus trap/restore and modal semantics were re
 This lane preserves nonmodal docked inspector behavior rather than imposing a modal focus trap on analytical panels. Existing App Escape dismissal, Explore helper hooks, shared mobile navigation hooks and qualified Graph/Map/Split contracts were inspected; dedicated adjacent tests remain passing. Real screen-reader testing, physical touch devices, signed-in account paths, populated live backends, and complete Graph/Map/Split browser qualification remain separate gates. The final integrated suite and production build belong to the parent convergence check.
 
 No credentials, account creation, live backend mutation, paid activation, merge, push, deployment, or release operation was performed. The Playwright CDN download attempt returned HTTP 403 (domain forbidden); installed system Chromium subsequently supplied the successful browser run, so this is not a remaining browser blocker.
+
+## Follow-on: World View controls and actual application journey
+
+The parent authorized a targeted WorldView source follow-on after the first seven repairs. The actual local App with only its backend composition module replaced by synthetic contract rows reproduced:
+
+1. ArrowRight on the Map mode tab leaves both focus and mode on Map. All three mode tabs are independent tab stops without tab/panel association.
+2. Open inspector focuses the selected-event inspector on desktop through Chromium's scroll-container behavior, but leaves focus on the originating button at 390×844 and 640×360. The inspector has no explicit programmatic-focus contract.
+3. Explore World View → Escape closes the sheet but fails to return focus to the entry button. `exit()` calls `focus()` while React still renders the entry inside a hidden launch container. The old mock accepts focus on hidden elements, masking this actual-browser failure.
+4. World View source-native URL records bypass the shared safe-link guard.
+
+WorldView now supplies mode ArrowLeft/ArrowRight/Home/End behavior, one mode tab stop, associated mode panel semantics, explicit `tabIndex=-1` on the existing inspector and safe-link/plaintext source handling. Explore records pending return focus and applies it after the inactive layout commits and document scroll ownership is released. This is a newly reproduced functional exception to the frozen Explore source, not a redesign. No canvas renderer, projection geometry, source admission, resource budget, camera restoration or document-listener ownership behavior was changed.
+
+Three new WorldView rendered regressions fail against the frozen archive and pass the candidate. A fourth added Explore regression models a browser refusing focus while the entry remains hidden; it fails the frozen source and passes the candidate. The focused follow-on command passes **24 tests, 0 failures**:
+
+```sh
+node --test tests/worldViewAccessibility.test.mjs tests/spatialBackendFrontend.test.mjs tests/worldViewExploreShell.test.mjs tests/worldViewExploreState.test.mjs
+```
+
+`verifier/runConvergenceAccessibilityBrowser.mjs` is the reproducible actual-App verifier. It uses three explicit synthetic projection/node records and one synthetic association through the existing backend composition import. All nonlocal requests are aborted, so failed or absent map-provider content is not claimed qualified. It exercises desktop, portrait and narrow landscape Graph/Map/Split mode transitions, arrow focus, selected reader tabs, explicit inspector focus, keyboard Explore entry/exit/focus restore and, by default, World View → mobile hub/node selection → Graph → World View canonical-context continuity. It captures screenshots before making functional assertions; screenshots do not establish imagery, terrain, source-rights or physical-device qualification.
+
+```sh
+# Launch the integrated candidate with its existing Vite config, then run:
+MIP_A11Y_ORIGIN=http://127.0.0.1:4183 MIP_A11Y_RECEIPTS=/workspace/mip-lane-a11y-receipts/integrated-world node verifier/runConvergenceAccessibilityBrowser.mjs
+```
+
+The initial lane still has the frozen App's already-repaired same-subject hub time/range reset. The default whole-journey verifier correctly detects that existing mismatch there; it must run against the integrated semantics candidate for the final convergence result. `MIP_A11Y_CROSS_VIEW=0` isolates the newly repaired WorldView/Explore controls on this lane and is explicitly recorded in its receipt; it does not qualify cross-view continuity. The isolated-control actual-App run passed **1280×900, 390×844 and 640×360**, including mode keyboard focus, selected inspector focus, Explore return focus, no document horizontal overflow and no page errors. Receipts are `world-focus-fixed/report.json`, nine mode screenshots and `world-focus-fixed.txt`. Parent owns the final integrated run and the reported App graph-search accessible-name repair.
+
+Markets remains required initial-release work under the supplied *MIP Markets Intelligence v0.1* and current whole-platform requirements. This source lane has no admitted supported-asset directory, mapped disambiguated stock/token identities or dedicated asset viewer. The integrated context lane's disabled price-display primitive is a foundation, not the required Markets journey. Directory/identity eligibility, reporting joins and viewer interaction are distinct from TradingView/crypto provider rights, price endpoints, historical samples and provider accessibility gates. An empty Markets tab or fabricated asset list would not satisfy those requirements. No Markets implementation, provider activation or live financial-data claim is made here.
+
+Cold-portrait performance RED remains unchanged. Browser desktop/phone sizes are emulator evidence, not physical hardware evidence or performance qualification.
