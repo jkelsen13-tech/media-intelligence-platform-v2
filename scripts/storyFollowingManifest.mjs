@@ -22,7 +22,9 @@ export async function buildStoryFollowingManifest() {
   }
   await visit('supabase/functions/investigation-api/index.ts')
   const hashPaths=paths=>Promise.all(paths.map(async path=>({path,sha256:digest(await readFile(new URL(path,root)))})))
-  const sqlPaths=[...previous.sql_source_proposals.map(p=>p.path),'supabase/source-proposals/public-reviewed-versions-v1.sql','supabase/source-proposals/story_following_v1.sql']
+  const sqlPaths=[...previous.sql_source_proposals.map(p=>p.path),'supabase/source-proposals/public-reviewed-versions-v1.sql','supabase/source-proposals/story_following_v1.sql',
+    'supabase/source-proposals/selective_intake_execution_v1.sql','supabase/source-proposals/markets-directory-v2.sql',
+    'supabase/source-proposals/legacy-atomic-completion-v1.sql','supabase/source-proposals/comparison-reviewed-versions-v1.sql']
   const files=await hashPaths([...retained].sort())
   const sql_source_proposals=(await hashPaths(sqlPaths)).map(p=>({...p,status:'not_applied'}))
   return {...previous,previous_manifests:[...previous.previous_manifests,{path:oldPath,sha256:digest(historical),status:'preserved'}],

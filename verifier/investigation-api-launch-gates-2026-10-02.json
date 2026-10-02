@@ -32,7 +32,7 @@
     },
     {
       "path": "src/lib/reviewedPublicVersion.js",
-      "sha256": "9ab1c9e48e32c13a5bb6961065bf17c785b9a6d7f779ce259c744f7f8047d846"
+      "sha256": "850ffbd8d26d4b565bdbd065e85d8f5914b04bd90b1185689434ba9b20a1f23c"
     },
     {
       "path": "src/lib/storyFollowingClient.js",
@@ -106,17 +106,37 @@
     },
     {
       "path": "supabase/source-proposals/investigation_selective_intake_v1.sql",
-      "sha256": "19ae74d4c603685dfb19eff7f124d42b0ab7e94cefca991b5586ecedf9e93047",
+      "sha256": "77fe363ce52794455779e8cbd79934e5f8c28be583de869c28f46e48d5691703",
       "status": "not_applied"
     },
     {
       "path": "supabase/source-proposals/public-reviewed-versions-v1.sql",
-      "sha256": "b0060d9b660a8b35169bdd830decf9069ec6f485b4ec2f186cd6242a93bb8ebd",
+      "sha256": "8e7895c435125779a145fa42ab6e5579a8bc70f4db4bc0fbd38f7eed52b5ea49",
       "status": "not_applied"
     },
     {
       "path": "supabase/source-proposals/story_following_v1.sql",
-      "sha256": "be7c82b26313ef0ef67900f33ecd3a649cc13b97a583076fc5ca05ce0fd19739",
+      "sha256": "a9711252fb6429637c05774ca1eb76722a46aecec5d5ab1019e5e68856aa7404",
+      "status": "not_applied"
+    },
+    {
+      "path": "supabase/source-proposals/selective_intake_execution_v1.sql",
+      "sha256": "edb2987cd091ec592249366dacfeb243295700ed2b4243663e5608dd035fa73f",
+      "status": "not_applied"
+    },
+    {
+      "path": "supabase/source-proposals/markets-directory-v2.sql",
+      "sha256": "e8cbc68c61f68975f613dafcec8c9f3a54fa5da0b50ff8176309b0958d13019b",
+      "status": "not_applied"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-completion-v1.sql",
+      "sha256": "ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066",
+      "status": "not_applied"
+    },
+    {
+      "path": "supabase/source-proposals/comparison-reviewed-versions-v1.sql",
+      "sha256": "5ba7f54fb58cac6291b6ce7af9f939d7daadba3763232643fcded7df30a711f7",
       "status": "not_applied"
     }
   ],
