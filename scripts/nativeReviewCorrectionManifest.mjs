@@ -27,6 +27,10 @@ const addedPaths = [
   'tests/worldViewNativeFenceFallback.test.mjs',
   'tests/helpers/worldViewNativeFenceFallbackFixture.mjs',
   'docs/MIP_NATIVE_FENCE_ATLAS_FALLBACK_2026-10-02.md',
+  'tests/worldViewBillboardNativeAdapter.test.mjs',
+  'tests/worldViewCameraStateStageC.test.mjs',
+  'tests/worldViewReadyPublication.test.mjs',
+  'docs/MIP_NATIVE_INHERITED_FIXTURE_CONTRACTS_2026-10-02.md',
 ]
 
 // Preserve the reviewed historical candidate's bindings. New source identities

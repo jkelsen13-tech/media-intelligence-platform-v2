@@ -37,8 +37,12 @@
       "sha256": "ba4841095f7b95856e29c4938762d1d125dc1fff51c500e3b90896e0ecee88d4"
     },
     {
+      "path": "docs/MIP_NATIVE_INHERITED_FIXTURE_CONTRACTS_2026-10-02.md",
+      "sha256": "616f2846246a049a7a6307824713a56526ae857449e4e8bdf54ce8b94c1cef93"
+    },
+    {
       "path": "docs/MIP_NATIVE_REVIEW_CORRECTIONS_2026-10-02.md",
-      "sha256": "2c7e78909d584c43d5d2eabfbdf9b99d76ed32eb0a8a2f9bb1d48891f50301d1"
+      "sha256": "3c63f0715e917bb5312635669b95bafeed0a2b5fcbd014673523c3fdf886551e"
     },
     {
       "path": "docs/MIP_WHOLE_INSTALL_APPROVAL_2026-10-02.md",
@@ -106,7 +110,7 @@
     },
     {
       "path": "scripts/nativeReviewCorrectionManifest.mjs",
-      "sha256": "64dc5c62628bba16476f07a1ef3541758304e84aa8547b4beecc26fb8544212b"
+      "sha256": "33882117708d796b256650c65f17127113b1086bc2d1b33788745ca77228fbc0"
     },
     {
       "path": "scripts/reviewedPublicVersionPackage.mjs",
@@ -585,8 +589,16 @@
       "sha256": "8329ab8ab9abbe2da4779afbd3a6b954fcfb0d1bb39963b1589a0f2f82172066"
     },
     {
+      "path": "tests/worldViewBillboardNativeAdapter.test.mjs",
+      "sha256": "df8895029ae2b89c20ed1c6923d6603b4d9563c0eaf832fd40c519441ce2b8ab"
+    },
+    {
       "path": "tests/worldViewBoundedRgbImagery.test.mjs",
       "sha256": "1723bda24b38bfae0654278b78f32b79c029ec8da831e1ea9e3011582374e946"
+    },
+    {
+      "path": "tests/worldViewCameraStateStageC.test.mjs",
+      "sha256": "09a5a88954373e97e482241df76e6603647affabf7f68aae95933868342084d3"
     },
     {
       "path": "tests/worldViewLaunch.test.mjs",
@@ -623,6 +635,10 @@
     {
       "path": "tests/worldViewNativeRgbSession.test.mjs",
       "sha256": "cf12f180c85e4ff2d57d7d2c8d04241da0ff8301ae7e9087db11cc0e21066813"
+    },
+    {
+      "path": "tests/worldViewReadyPublication.test.mjs",
+      "sha256": "b135beb7048c25dcd9d3405450df0dcd70544837cee76fc126b8356c7844b7e5"
     },
     {
       "path": "tests/worldViewSelectedCardAllocation.test.mjs",

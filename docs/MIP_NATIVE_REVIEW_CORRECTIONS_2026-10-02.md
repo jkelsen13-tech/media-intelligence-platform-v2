@@ -29,6 +29,13 @@ unbind and App-owner release; pending requests still abort and late images close
 No provider request, allowance reset or native reallocation can follow the
 failed fence. The historical RED and corrected qualification stay separate.
 
+Exact CI of intermediate `b829d0fe9f92ebe47d8572da817d22f5a92f3843`
+reproduced four obsolete fixture contracts. The bounded successor models DOM
+removal idempotently, gives healthy renderer doubles explicit teardown proof,
+and exercises camera delegation before destruction and refusal afterward.
+The existing orientation, canonical tether, FXAA-ready publication order and
+stale observer assertions remain intact; no production contract is loosened.
+
 Cartographic/elevation capture-unknown wording is explicitly scoped to that
 baseline; a separately verified photographic capture remains its own dated
 background observation and never becomes the selected event time.
