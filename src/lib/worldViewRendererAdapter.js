@@ -1000,6 +1000,7 @@ export function createWorldViewRendererAdapter(args, {
   }
 
   return {
+    getBillboardState: () => impl?.getBillboardState?.() ?? null,
     getRendererKind: () => rendererKind ?? rendererKindForStackId(args?.stackId),
     getAttribution: () => impl?.getAttribution?.() ?? stackAttribution(args?.stackId),
     mount,

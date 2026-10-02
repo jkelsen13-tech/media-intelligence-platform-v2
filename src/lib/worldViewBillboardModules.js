@@ -58,6 +58,10 @@ export function buildWorldBillboardModel(record, {
     && record.eventTimeRange.every(value => scalar(value) != null)) {
     metadata.push({ label: 'Event evidence range', value: record.eventTimeRange.join(' → ') })
   }
+  if (Array.isArray(record.validityTimeRange) && record.validityTimeRange.length === 2
+    && record.validityTimeRange.every(value=>scalar(value)!=null)) metadata.push({label:'Recorded validity range',value:record.validityTimeRange.join(' → ')})
+  if (record.sourceNativeTime != null) metadata.push({label:'Source native time provenance',
+    value:typeof record.sourceNativeTime==='object' ? JSON.stringify(record.sourceNativeTime) : scalar(record.sourceNativeTime) ?? 'Unavailable'})
   const supplied = suppliedWorldBillboardModules(record.suppliedModules)
   return { key: record.key ?? record.id, title: text(record.label) ?? text(record.title) ?? 'Untitled supplied record',
     chip: text(record.precision) ? `${record.precision} evidence precision` : 'Evidence precision unavailable',

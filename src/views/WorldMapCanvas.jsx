@@ -1,3 +1,5 @@
+import { resolveWorldViewRealismLayer } from '../lib/worldViewRealismAdmission.js'
+import { createWorldViewResourceGovernance } from '../lib/worldViewResourceGovernance.js'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { geoMercator, geoPath, geoGraticule10 } from 'd3-geo'
@@ -309,7 +311,10 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   const [rendererReady, setRendererReady] = useState(false)
   const [imageryStatus, setImageryStatus] = useState(null)
   const [contextAnchor, setContextAnchor] = useState({ visible: false })
+  const contextAnchorLive=useRef(contextAnchor);contextAnchorLive.current=contextAnchor
   const [bookmarkDisclosure, setBookmarkDisclosure] = useState(null)
+  const governanceRef = useRef(null)
+  if (!governanceRef.current) governanceRef.current = createWorldViewResourceGovernance()
   const usageRef = useRef(null)
   if (!usageRef.current) usageRef.current = createWorldViewUsage()
   const stack = mapStackById(stackId)
@@ -411,6 +416,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     const update = () => {
       const state = doc.hidden ? 'hidden' : explorationActive ? 'visible-active' : 'visible-idle'
       usage.transition(state)
+      governanceRef.current.transition(state)
       adapterRef.current?.setActivityState?.(state)
     }
     update()
@@ -420,6 +426,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    governanceRef.current.openSession()
     let observer
     try {
       observer = new PerformanceObserver(list => {
@@ -430,7 +437,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       })
       observer.observe({ type: 'resource' })
     } catch { /* unavailable timing remains unobserved */ }
-    const probe = { snapshot: () => usageRef.current.snapshot(),
+    const probe = { snapshot: () => ({...usageRef.current.snapshot(),paidDetail:governanceRef.current.poll()}),
       device: () => ({ deviceMemoryGb: navigator.deviceMemory ?? null,
         networkClass: navigator.connection?.effectiveType ?? null,
         javascriptHeapBytes: performance.memory?.usedJSHeapSize ?? null,
@@ -443,9 +450,16 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     }
   }, [])
 
-  const sourceStatus = useMemo(() => resolveWorldViewSourceStatus({ stackId,
-    rendererReady: stackId === FALLBACK_MAP_STACK_ID || rendererReady, terrainStatus,
-    requestedProfile: visualFidelity, imageryStatus }), [stackId, rendererReady, terrainStatus, visualFidelity, imageryStatus])
+  const sourceStatus = useMemo(() => {
+    const observed = resolveWorldViewSourceStatus({ stackId,
+      rendererReady: stackId === FALLBACK_MAP_STACK_ID || rendererReady, terrainStatus,
+      requestedProfile: visualFidelity, imageryStatus })
+    // No photographic/building asset has passed byte, rights and coverage admission.
+    // Report the actually observed cheap cartographic fallback independently.
+    return {...observed,qualifiedRealism:resolveWorldViewRealismLayer({kind:'imagery',sources:[],
+      observation:observed.imagery.status==='ACTIVE' || stackId===FALLBACK_MAP_STACK_ID
+        ? {rendered:true,fallbackKind:stackId===FALLBACK_MAP_STACK_ID?'atlas':'cartographic'} : null})}
+  }, [stackId, rendererReady, terrainStatus, visualFidelity, imageryStatus])
   useEffect(() => { onSourceStatus?.(sourceStatus) }, [sourceStatus, onSourceStatus])
   const pilotBookmarks = createWorldViewPilotBookmarks({ coordinate, precisionClass: first?.row?.precision_class })
 
@@ -510,6 +524,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
     const clusterProbe = {
+      getBillboardState: () => ({native:adapterRef.current?.getBillboardState?.() ?? null,publishedAnchor:contextAnchorLive.current}),
       getState: () => displayPresentationProbe(presentationRef.current,
         stackId === FALLBACK_MAP_STACK_ID ? 'atlas-fallback' : adapterRef.current?.getRendererKind?.() ?? 'unavailable',
         adapterRef.current?.getDisplayTiming?.() ?? presentationRef.current?.timing ?? {}),

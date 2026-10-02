@@ -1,3 +1,4 @@
+import { admitWorldViewContextModules } from '../lib/worldViewRealismAdmission.js'
 import WorldViewBillboardOverlay from '../components/WorldViewBillboardOverlay.jsx'
 import { buildWorldBillboardModel } from '../lib/worldViewBillboardModules.js'
 // R4 World View launch spine (DISPLAY / client UI).
@@ -657,6 +658,7 @@ export default function WorldView({
               {sourceStatus && <>
                 {[sourceStatus.imagery, sourceStatus.elevation, sourceStatus.buildings].map((source, index) =>
                   <p key={index} data-source-classification={source.status}><strong>{source.label}</strong> · {source.status}. {source.detail}</p>)}
+                <p>Qualified photographic source: {sourceStatus.qualifiedRealism?.status ?? 'UNKNOWN'}. No photographic asset admission is confirmed.</p>
                 <p>{sourceStatus.sourceCapture.detail} {sourceStatus.background.detail}</p>
               </>}
             </details>
@@ -692,7 +694,7 @@ export default function WorldView({
                 onSourceStatus={setSourceStatus}
                 explorationActive={exploring && touchInteraction}
                 billboardEnabled={prototypeEnabled}
-                contextOverlay={anchor => contextModel.indicator.exists && contextModel.indicator.eligible && <>
+                contextOverlay={anchor => (prototypeEnabled && visibleRow && anchor.billboardSelected || contextModel.indicator.exists && contextModel.indicator.eligible) && <>
                   {!contextOpen && anchor.visible && <button type="button" className="wv-spatial-context-icon"
                     style={{ left: anchor.x, top: anchor.y }} aria-label="Open selected spatial context"
                     onClick={() => setContextOpen(true)}>i</button>}
@@ -700,8 +702,8 @@ export default function WorldView({
                     layout={{markers:[],selected:anchor.billboardSelected}} selectedKey={anchor.billboardSelected.key}
                     model={buildWorldBillboardModel({key:anchor.billboardSelected.key,label:inspectorTitle(visibleRow),
                       canonicalCoordinates:anchor.billboardSelected.canonicalCoordinates,precision:visibleRow?.precision_class,
-                      eventTime:visibleRow?.source_native_time,eventTimeRange:visibleRow?.valid_from_utc && visibleRow?.valid_to_utc ? [visibleRow.valid_from_utc,visibleRow.valid_to_utc] : null,
-                      sourceRefs:normalizeEvidenceRefs(visibleRow?.evidence_refs),suppliedModules:visibleRow?.supplied_modules},
+                      sourceNativeTime:visibleRow?.source_native_time,validityTimeRange:visibleRow?.valid_from_utc && visibleRow?.valid_to_utc ? [visibleRow.valid_from_utc,visibleRow.valid_to_utc] : null,
+                      sourceRefs:normalizeEvidenceRefs(visibleRow?.evidence_refs),suppliedModules:admitWorldViewContextModules({suppliedModules:visibleRow?.supplied_modules},{admittedSourceIds:[]})},
                       {inspectionTime:recordedTime.atIso ?? null})}
                     onClose={()=>setContextOpen(false)} onInspect={inspectContext} interactionEnabled={touchInteraction} />}
                   {contextOpen && (!prototypeEnabled || !anchor.billboardSelected) && <WorldViewSpatialContextCard model={contextModel} anchor={anchor}

@@ -670,8 +670,8 @@ export function createCesiumEllipsoidRendererAdapter({
       distanceMemory = distance.memory
       const layout = layoutWorldBillboards({items,viewport:{width:scene.canvas.clientWidth,height:scene.canvas.clientHeight},selectedKey})
       const envelope = updateSelectedBillboardEnvelope({selected:layout.selected,previous:envelopeMemory,
-        viewport:{width:scene.canvas.clientWidth,height:scene.canvas.clientHeight}})
-      envelopeMemory=envelope.memory;selectedBillboard=envelope.selected
+        viewport:{width:scene.canvas.clientWidth,height:scene.canvas.clientHeight},cameraSignature:JSON.parse(getCameraState() ?? 'null')})
+      envelopeMemory=envelope.memory;selectedBillboard=envelope.selected ? {...envelope.selected,occlusionBasis:'ellipsoid-horizon-only'} : null
       const singles = new Set(displayPresentation.layout.singles.map(marker=>marker.id))
       const signature = worldViewNativeBillboardSignature(markers,singles,distance.states)
       for(const entity of entities) entity.point.show=false
@@ -684,7 +684,7 @@ export function createCesiumEllipsoidRendererAdapter({
           const width=state==='plaque'?180:state==='ribbon'?132:24,height=state==='plaque'?56:state==='ribbon'?32:24
           nativeBillboards.add({position:Cesium.Cartesian3.fromDegrees(coords[0],coords[1],18),
             image:worldViewNativeBillboardTexture(marker.label,state,entity.__mipRow.precision_class),width,height,
-            verticalOrigin:Cesium.VerticalOrigin.CENTER,disableDepthTestDistance:0,id:entity})
+            verticalOrigin:Cesium.VerticalOrigin.CENTER,heightReference:Cesium.HeightReference.RELATIVE_TO_GROUND,disableDepthTestDistance:0,id:entity})
         }
         changed=true
       }
@@ -956,6 +956,7 @@ export function createCesiumEllipsoidRendererAdapter({
     viewer = null
     eventHandler = null
     entities = []
+    nativeBillboards=null;selectedBillboard=null;envelopeMemory=null;distanceMemory=null
     terrainPlan = null
     terrainDegraded = false
   }
@@ -993,6 +994,8 @@ export function createCesiumEllipsoidRendererAdapter({
       if (refreshDisplayLayout()) viewer?.scene?.requestRender?.()
     },
     getDisplayLayout: () => { if (refreshDisplayLayout()) viewer?.scene?.requestRender?.(); return displayPresentation },
+    getBillboardState: () => ({enabled:billboardEnabled,selected:selectedBillboard ? JSON.parse(JSON.stringify(selectedBillboard)) : null,
+      markers:nativeBillboards ? Array.from({length:nativeBillboards.length},(_,i)=>{const b=nativeBillboards.get(i),screen=b.computeScreenSpacePosition(viewer.scene);return {key:b.id.__mipMarker.id,declaredWorldPosition:{x:b.position.x,y:b.position.y,z:b.position.z},screen:screen?{x:screen.x,y:screen.y}:null,width:b.width,height:b.height,heightReference:b.heightReference,disableDepthTestDistance:b.disableDepthTestDistance}}):[]}),
     getDisplayTiming: () => ({ ...layoutTiming }),
     flyToSubjectCamera,
     cancelCameraFlight: () => cancelGlobeCameraFlight(viewer),

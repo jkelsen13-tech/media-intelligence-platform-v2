@@ -290,7 +290,8 @@ test('adapter wiring: both renderers and the dispatcher expose the camera contra
   // Globe adapter parses through the shared contract and applies via setView.
   assert.match(GLOBE_ADAPTER, /parseCameraState\(serialized, \{ precisionClass: activePrecisionClass\(\) \}\)/)
   assert.match(GLOBE_ADAPTER, /applyCameraStateToGlobeViewer\(Cesium, viewer, parsed\)/)
-  assert.match(GLOBE_ADAPTER, /cameraStateFromGlobeCamera\(Cesium\.Math, viewer\.camera, activePrecisionClass\(\)\)/)
+  assert.match(GLOBE_ADAPTER, /Cesium\.Camera\.clone\(viewer\.camera,cameraSnapshot/,'serialization uses a detached public camera clone')
+  assert.match(GLOBE_ADAPTER, /cameraStateFromGlobeCamera\(Cesium\.Math,/)
 })
 
 test('ceiling clamp: Cesium minimumZoomDistance is the meter ceiling above the surface', () => {
