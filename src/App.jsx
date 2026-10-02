@@ -15,6 +15,7 @@ import PolicyPanel from './panels/PolicyPanel'
 import TimelineView from './views/TimelineView'
 import ArcsView from './views/ArcsView'
 import NewsView from './views/NewsView'
+import { parseStoryReaderRoute, serializeStoryReaderRoute } from './lib/storyReaderRoute.js'
 import Phase3View from './views/Phase3View'
 import SourceComparisonView from './views/SourceComparisonView'
 import WorldView from './views/WorldView'
@@ -158,6 +159,7 @@ function readInitialDeepLink() {
 }
 
 const INITIAL_DEEP_LINK = readInitialDeepLink()
+const INITIAL_STORY_ROUTE = parseStoryReaderRoute(typeof window === 'undefined' ? '' : window.location.hash)
 
 function useMediaQuery(query) {
   const [matches, setMatches] = useState(() =>
@@ -233,6 +235,9 @@ export default function App({
   const [selected, setSelected] = useState(null) // selected node data
   const [pinned, setPinned] = useState(false)
   const [view, setView] = useState(INITIAL_DEEP_LINK.view)
+  // A reviewed Story collection has its own reader route. It is not an event
+  // ID and browsing it does not silently replace Investigation Context.
+  const [storyReaderRoute, setStoryReaderRoute] = useState(INITIAL_STORY_ROUTE)
   const [savedInvestigationHandoff, setSavedInvestigationHandoff] = useState(null)
   const [marketReturnContext, setMarketReturnContext] = useState(null)
   const [marketReturnSelection, setMarketReturnSelection] = useState(null)
@@ -903,6 +908,7 @@ export default function App({
       resetJumpContext()
       clearInvalidNewSubjectSubSelections()
       setFocusArticle(articleId)
+      setStoryReaderRoute({ storyId: null, publicVersionId: null })
       setView('news')
       setInvestigationContext((ic) =>
         commitNewSubjectFromApp(ic, { type: 'article', id: articleId }, { landingView: 'news' }),
@@ -913,6 +919,22 @@ export default function App({
     // an eligible articles row before loadArticleDetail runs.
     void mipBackend.publicData.resolveEligibleArticleForNews(target).then(applyResolvedArticle).catch(() => {})
   }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
+
+  const openPublicStory = useCallback((route) => {
+    const hash = serializeStoryReaderRoute(route)
+    if (!hash) return
+    navigationIntentRef.current += 1
+    setStoryReaderRoute(parseStoryReaderRoute(hash))
+    setFocusArticle(null)
+    setExploreOpen(false)
+    setView('news')
+    setInvestigationContext(ic => setInvestigationActiveView(ic, 'news'))
+  }, [])
+
+  const closePublicStory = useCallback(() => {
+    navigationIntentRef.current += 1
+    setStoryReaderRoute({ storyId: null, publicVersionId: null })
+  }, [])
 
   const selectMarketAsset = useCallback(({ asset, at }) => {
     // Recheck the supplied canonical identity through the same authorized
@@ -1169,7 +1191,7 @@ export default function App({
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const nextHash = serializeDeepLink(investigationContext, {
+    const nextHash = (view === 'news' && serializeStoryReaderRoute(storyReaderRoute)) || serializeDeepLink(investigationContext, {
       ...linkSelection,
       entity: selected && (String(selected.subject_graph_node_id ?? selected.id ?? selected.slug) === String(investigationContext.canonical_subject_id)
         || String(selected.id ?? selected.slug) === String(linkSelection.entity))
@@ -1181,7 +1203,7 @@ export default function App({
     const current = `${window.location.pathname}${window.location.search}${window.location.hash || ''}`
     if (desired === current) return
     window.history.replaceState(null, '', desired)
-  }, [investigationContext, selected, activeLocationKey, linkSelection])
+  }, [investigationContext, selected, activeLocationKey, linkSelection, storyReaderRoute, view])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -1190,6 +1212,15 @@ export default function App({
       // including clears and routes that cannot commit an investigation.
       navigationIntentRef.current += 1
       const hash = window.location.hash
+      const story = parseStoryReaderRoute(hash)
+      if (story.storyId) {
+        setStoryReaderRoute(story)
+        setFocusArticle(null)
+        setView('news')
+        setInvestigationContext(ic => setInvestigationActiveView(ic, 'news'))
+        return
+      }
+      setStoryReaderRoute({ storyId: null, publicVersionId: null })
       if (!isInvestigationDeepLink(hash) && parseDeepLink(hash).subjectId == null) {
         return
       }
@@ -1600,6 +1631,7 @@ export default function App({
             </p>
             <NewsView
               variant="drawer"
+              onOpenStory={openPublicStory}
               initialSearch={exploreQuery}
               onOpenArc={closeExploreThen(openArcInView)}
               onOpenNode={closeExploreThen(openNodeInGraph)}
@@ -1637,6 +1669,12 @@ export default function App({
             onOpenArc={openArcInView}
             onOpenNode={openNodeInGraph}
             focusArticleId={focusArticle}
+            focusStoryId={storyReaderRoute.storyId}
+            publicVersionId={storyReaderRoute.publicVersionId}
+            onOpenStory={openPublicStory}
+            onCloseStory={closePublicStory}
+            readerActorId={auth.user?.id ?? null}
+            sessionReady={auth.loading !== true}
             onOpenTimeline={openEventInTimeline}
             // Pair 5 degrades honestly when the destination tab is gated off.
             onOpenComparison={sourceComparisonBeta ? openComparisonEvent : undefined}

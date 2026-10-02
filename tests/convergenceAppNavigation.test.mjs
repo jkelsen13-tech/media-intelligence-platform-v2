@@ -83,6 +83,30 @@ test('graph search has an accessible name independent of its placeholder', async
   assert.equal(search.props['aria-label'], 'Search graph nodes')
 })
 
+test('public Story route restores exact reviewed identity without manufacturing an event or replacing browsing context', async () => {
+  await mount()
+  const before = { id: ic().canonical_subject_id, type: ic().canonical_subject_type }
+  const storyId = '10000000-0000-4000-8000-000000000011'
+  const publicVersionId = '20000000-0000-4000-8000-000000000011'
+  await hash(`#/story/${storyId}?version=${publicVersionId}`)
+  assert.equal(probe('NewsView').props.focusStoryId, storyId)
+  assert.equal(probe('NewsView').props.publicVersionId, publicVersionId)
+  assert.deepEqual({ id: ic().canonical_subject_id, type: ic().canonical_subject_type }, before)
+  assert.equal(location.hash, `#/story/${storyId}?version=${publicVersionId}`)
+  await act(async () => { selectView('world'); await flush() })
+  assert.equal(probe('WorldView').props.investigationContext.canonical_subject_id, before.id)
+  await act(async () => { selectView('news'); await flush() })
+  assert.equal(probe('NewsView').props.publicVersionId, publicVersionId)
+  await act(async () => { probe('NewsView').props.onCloseStory(); await flush() })
+  assert.equal(probe('NewsView').props.focusStoryId, null)
+  assert.doesNotMatch(location.hash, /\/story\//)
+  await hash(`#/story/${storyId}?version=${publicVersionId}`)
+  await hash('#/event/event-b/graph')
+  await act(async () => { selectView('news'); await flush() })
+  assert.equal(probe('NewsView').props.focusStoryId, null)
+  assert.equal(ic().canonical_subject_id, 'event-b')
+})
+
 test('Explore selection clears the previous entity instead of restoring an unrelated inspector', async () => {
   await mount()
   assert.equal(probe('ArticlePanel').props.node.id, 'entity-a')
