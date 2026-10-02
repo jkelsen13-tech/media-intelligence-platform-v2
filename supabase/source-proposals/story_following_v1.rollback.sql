@@ -21,6 +21,7 @@ drop trigger public_story_material_no_truncate on mip_private.public_story_mater
 drop trigger public_story_follow_event_immutable on mip_private.public_story_follow_events;
 drop trigger public_story_follow_event_no_truncate on mip_private.public_story_follow_events;
 drop function public.read_reviewed_public_story_context_v1(uuid,uuid);
+drop function mip_private.public_story_material_history_is_complete(uuid,uuid);
 drop function public.mip_public_story_following_v1(text,jsonb);
 drop function mip_private.revoke_ineligible_story_follows();
 drop function mip_private.read_public_story_follow(uuid,uuid,integer);

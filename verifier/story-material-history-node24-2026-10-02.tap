@@ -1,0 +1,149 @@
+TAP version 13
+# Subtest: reviewed correction of a superseded claim remains an unread admitted successor without predecessor payload
+ok 1 - reviewed correction of a superseded claim remains an unread admitted successor without predecessor payload
+  ---
+  duration_ms: 2702.941597
+  type: 'test'
+  ...
+# Subtest: withdrawn predecessor source cannot suppress admitted correction or expose predecessor fields
+ok 2 - withdrawn predecessor source cannot suppress admitted correction or expose predecessor fields
+  ---
+  duration_ms: 2350.790657
+  type: 'test'
+  ...
+# Subtest: canonical lineage, successor permission, publication owner and account boundaries refuse forged correction
+ok 3 - canonical lineage, successor permission, publication owner and account boundaries refuse forged correction
+  ---
+  duration_ms: 1795.389665
+  type: 'test'
+  ...
+# Subtest: source-report correction remains attributed instead of admitting a proposition
+ok 4 - source-report correction remains attributed instead of admitting a proposition
+  ---
+  duration_ms: 1819.234222
+  type: 'test'
+  ...
+# Subtest: a follow already revoked before successor admission never resumes through a correction declaration
+ok 5 - a follow already revoked before successor admission never resumes through a correction declaration
+  ---
+  duration_ms: 1799.039149
+  type: 'test'
+  ...
+# Subtest: exact unapplied Following pack restores dependency catalogue and preserves canonical rows
+ok 6 - exact unapplied Following pack restores dependency catalogue and preserves canonical rows
+  ---
+  duration_ms: 2374.407477
+  type: 'test'
+  ...
+# Subtest: rollback refuses populated history and leaves all preferences intact
+ok 7 - rollback refuses populated history and leaves all preferences intact
+  ---
+  duration_ms: 1658.803614
+  type: 'test'
+  ...
+# Subtest: same-name unrelated overloads retain their owners, ACLs and definitions through install and rollback
+ok 8 - same-name unrelated overloads retain their owners, ACLs and definitions through install and rollback
+  ---
+  duration_ms: 1531.331545
+  type: 'test'
+  ...
+# Subtest: frozen670 actual public SQL/SDK reproduces the unsafe phase reset
+ok 9 - frozen670 actual public SQL/SDK reproduces the unsafe phase reset
+  ---
+  duration_ms: 2345.919603
+  type: 'test'
+  ...
+# {"witness":"frozen670 actual SQL→public SDK→production policy","full":"Developing","omitted":"Breaking","has_more":false}
+# Subtest: withdrawn first declaration cannot reset the production Breaking phase
+ok 10 - withdrawn first declaration cannot reset the production Breaking phase
+  ---
+  duration_ms: 1716.210347
+  type: 'test'
+  ...
+# Subtest: withdrawn intermediate declaration makes retained public history incomplete without hidden fields
+ok 11 - withdrawn intermediate declaration makes retained public history incomplete without hidden fields
+  ---
+  duration_ms: 1719.510164
+  type: 'test'
+  ...
+# Subtest: mixed exact evidence refuses the entire withdrawn successor envelope without leaking its still-public member
+ok 12 - mixed exact evidence refuses the entire withdrawn successor envelope without leaking its still-public member
+  ---
+  duration_ms: 1722.360542
+  type: 'test'
+  ...
+# Subtest: actual mixed-evidence byte-shape cap preserves incomplete coverage when fewer than 100 declarations exceed 100 evidence versions
+ok 13 - actual mixed-evidence byte-shape cap preserves incomplete coverage when fewer than 100 declarations exceed 100 evidence versions
+  ---
+  duration_ms: 2225.650042
+  type: 'test'
+  ...
+# Subtest: private completeness proof and public context both stop at 100 relevant declarations
+ok 14 - private completeness proof and public context both stop at 100 relevant declarations
+  ---
+  duration_ms: 2581.301444
+  type: 'test'
+  ...
+# Subtest: no declaration is honest unknown coverage and undeclared version gaps are not missing declared history
+ok 15 - no declaration is honest unknown coverage and undeclared version gaps are not missing declared history
+  ---
+  duration_ms: 1808.993775
+  type: 'test'
+  ...
+# Subtest: selected historical scope excludes later withdrawn declarations and current head never falls back
+ok 16 - selected historical scope excludes later withdrawn declarations and current head never falls back
+  ---
+  duration_ms: 1892.857374
+  type: 'test'
+  ...
+# Subtest: source-report correction with withheld predecessor identity retains attribution and complete declared coverage
+ok 17 - source-report correction with withheld predecessor identity retains attribution and complete declared coverage
+  ---
+  duration_ms: 1688.506869
+  type: 'test'
+  ...
+# Subtest: source-report correction cannot hide a withdrawn earlier declaration or acquire Breaking
+ok 18 - source-report correction cannot hide a withdrawn earlier declaration or acquire Breaking
+  ---
+  duration_ms: 1638.726292
+  type: 'test'
+  ...
+# Subtest: boolean helper denies unknown, mismatched and withdrawn selected versions without a private-state oracle
+ok 19 - boolean helper denies unknown, mismatched and withdrawn selected versions without a private-state oracle
+  ---
+  duration_ms: 1791.544958
+  type: 'test'
+  ...
+# Subtest: checked publication owner proves completeness under FORCE RLS without superuser or bypass privileges
+ok 20 - checked publication owner proves completeness under FORCE RLS without superuser or bypass privileges
+  ---
+  duration_ms: 1575.274391
+  type: 'test'
+  ...
+# Subtest: exact helper ACL/ownership and unrelated overload survive empty-package rollback
+ok 21 - exact helper ACL/ownership and unrelated overload survive empty-package rollback
+  ---
+  duration_ms: 2276.980211
+  type: 'test'
+  ...
+# Subtest: installed helper authority drift refuses rollback before any package mutation
+ok 22 - installed helper authority drift refuses rollback before any package mutation
+  ---
+  duration_ms: 1921.904432
+  type: 'test'
+  ...
+# Subtest: an existing exact helper signature refuses install without replacing its owner or ACL
+ok 23 - an existing exact helper signature refuses install without replacing its owner or ACL
+  ---
+  duration_ms: 1744.678635
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 45204.815159

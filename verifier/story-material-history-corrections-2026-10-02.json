@@ -1,0 +1,74 @@
+{
+  "contract": "mip-story-material-history-source-qualification-v1",
+  "date": "2026-10-02",
+  "base_commit": "670efb8ebd6b4d7fb09368d399fe5a2afbc03a77",
+  "status": "source_only_qualified",
+  "frozen_reproduction": {
+    "sql_sha256": "2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e",
+    "transport": "actual PGlite public RPC \u2192 real Supabase SDK/normalizer \u2192 production News policy",
+    "changes_effective_hours": [
+      0,
+      5.5
+    ],
+    "evaluation_hours": 6.5,
+    "complete_state": "Developing",
+    "withdrawn_first_state": "Breaking",
+    "withdrawn_first_has_more": false
+  },
+  "repair": {
+    "context_security": "invoker",
+    "helper": "mip_private.public_story_material_history_is_complete(uuid,uuid)",
+    "helper_security": "definer, exact checked publication owner, empty search_path",
+    "signal": "boolean only; authorized selected-version scope; no hidden count or identity",
+    "maximum_relevant_declarations": 100,
+    "maximum_evidence_versions": 100,
+    "current_public_nested_predicates_preserved": true,
+    "historical_predecessor_identity_correction_repair_preserved": true,
+    "production_news_policy_changed": false
+  },
+  "qualification": {
+    "node22": {
+      "runtime": "v22.23.3",
+      "tests": 23,
+      "passed": 23,
+      "failed": 0,
+      "tap": "verifier/story-material-history-node22-2026-10-02.tap"
+    },
+    "node24": {
+      "runtime": "v24.19.0",
+      "tests": 23,
+      "passed": 23,
+      "failed": 0,
+      "tap": "verifier/story-material-history-node24-2026-10-02.tap"
+    },
+    "non_bypass_owner_force_rls_actual_install": true,
+    "includes_prior_correction_and_rollback_regressions": true
+  },
+  "scope_exclusions": [
+    "No live installation or protected mutation",
+    "No App, NewsView, NewsStoryReader, or canonical reviewed-owner source changes",
+    "No native PostgreSQL or full-network transfer-cap claim",
+    "No change to prior journey/frozen receipts",
+    "Combined integration manifest remains parent-owned"
+  ],
+  "sha256": {
+    "supabase/source-proposals/story_following_v1.sql": "bf61df7baf65a467f3e73c63b4d7789c72cf06fbe9c71e7523761f12b0f49ad7",
+    "supabase/source-proposals/story_following_v1.catalog.sql": "3ad363d53155444b07d674068057cd3dfbcedddd802799b5a6b2a92eebcd8115",
+    "supabase/source-proposals/story_following_v1.rollback.sql": "2561d42397bbb11a03a82f182d2a8fd0dceb132d41774c29cf4a3c11a228247d",
+    "supabase/source-proposals/public-reviewed-versions-v1.sql": "8e7895c435125779a145fa42ab6e5579a8bc70f4db4bc0fbd38f7eed52b5ea49",
+    "scripts/storyFollowingPackage.mjs": "193947fb01f1ec616abce61def98d61bee1606d0d2a008e015c559649ab81b00",
+    "tests/storyMaterialHistoryFixture.mjs": "06f8c43c765c1cc669808aa07dd4168c468875085707151db3f91fe4bad3f01f",
+    "tests/storyMaterialHistory.test.mjs": "c6edf95c1ab903e9265e962d734e8cbdf02e6bd5580dec5eefc5091bad2cc980",
+    "tests/storyMaterialHistoryPackage.test.mjs": "fda20ae6b9ea955b34219bc294d488afa644b60ec56f8945bb411e5a31d1e2ed",
+    "tests/storyFollowingCorrections.test.mjs": "1a4b193e2b5bd0c3e4e7eff87b84414586875fd37543c8e28d19176c2e7b3a70",
+    "tests/storyFollowingPackage.test.mjs": "ea4fd9f0fd286103bfd4b83776438035aa49878b56225bdb4111d0e03ef7d129",
+    "src/lib/newsStoryState.js": "1d1357f226cef21a2dfda6b991b6d25497a7b4a0f66b4438ff5535ca4a5105ed",
+    "src/lib/newsStatePolicy.js": "042eb3e98917454a9465ad5ba702109bf1bdc19a5bd883ad5008c955466f3aa5",
+    "src/lib/storyFollowingClient.js": "8f61a8891a87a1e2ee776712105b3e4f95c6fbc43c319b3d8c55816c1ad2df0b",
+    "src/lib/reviewedPublicVersion.js": "850ffbd8d26d4b565bdbd065e85d8f5914b04bd90b1185689434ba9b20a1f23c",
+    "docs/story-material-history-corrections-2026-10-02.md": "b221c960bce29f56378866396bbbd213c6e370151b3a90a723e3b70a244b0221",
+    "package-lock.json": "73bb2ac5f829a987d05fbf26cce161f2c66a453ad914f02fd657033232b895aa",
+    "verifier/story-material-history-node22-2026-10-02.tap": "117b7d84f4e03fa00fc0f44b79e6bcf0b7dfbc4095efcffdc0dc3e8d4a05a294",
+    "verifier/story-material-history-node24-2026-10-02.tap": "f01983f298c686f8d9c3c73bf6ea7179d73534c29b1c2093e787d2717b43f595"
+  }
+}

@@ -34,12 +34,16 @@ begin
       'memberships',(select coalesce(jsonb_agg(jsonb_build_object('role',pg_get_userbyid(m.roleid),'grantor',pg_get_userbyid(m.grantor),
         'admin',m.admin_option,'inherit',m.inherit_option,'set',m.set_option) order by m.roleid,m.grantor),'[]') from pg_auth_members m where m.member=r.oid)) order by r.rolname)
       from pg_roles r where r.rolname in ('anon','authenticated','service_role')),
+    'history_completeness_helper',(select jsonb_build_object('identity',p.oid::regprocedure::text,'owner',pg_get_userbyid(p.proowner),
+      'acl',p.proacl::text,'definition',pg_get_functiondef(p.oid)) from pg_proc p
+      where p.oid=to_regprocedure('mip_private.public_story_material_history_is_complete(uuid,uuid)')),
     'new_objects',(select coalesce(jsonb_agg(n.nspname||'.'||c.relname order by c.relname),'[]') from pg_class c join pg_namespace n on n.oid=c.relnamespace
       where n.nspname='mip_private' and c.relname in ('public_story_material_changes','public_story_follows','public_story_follow_events'))
   ) into actual;
   -- END STORY FOLLOWING BASELINE
   if nullif(expected,'') is null or actual is distinct from expected::jsonb then raise exception 'Story Following catalog baseline missing or drifted'; end if;
-  if actual->'new_objects'<>'[]'::jsonb then raise exception 'Story Following package already installed'; end if;
+  if actual->'new_objects'<>'[]'::jsonb or actual->'history_completeness_helper'<>'null'::jsonb
+    then raise exception 'Story Following package already installed'; end if;
   if current_user in ('anon','authenticated','service_role') or actual->>'schema_owner' is distinct from current_user
     or exists(select 1 from jsonb_array_elements(actual->'relations') r where r->>'owner' is distinct from current_user)
     then raise exception 'exact existing public story, profile and publication owner required'; end if;
@@ -357,6 +361,30 @@ alter table mip_private.public_story_follow_events force row level security;
 create policy public_story_follow_service on mip_private.public_story_follows for all to service_role using (true) with check (true);
 create policy public_story_follow_event_service on mip_private.public_story_follow_events for all to service_role using (true) with check (true);
 
+-- A coarse continuity proof, not a payload reader or arbitrary-count oracle.
+-- Invoker RLS can hide a declaration before the context loop sees it. Only the
+-- checked publication owner may inspect the immutable declaration ledger here.
+-- The exact selected version must remain independently public; declarations
+-- beyond it, personal follows, and withheld identities/content are not exposed.
+create function mip_private.public_story_material_history_is_complete(p_story_id uuid,p_public_version_id uuid) returns boolean
+language plpgsql stable security definer set search_path = '' as $$
+declare selected jsonb; selected_sequence bigint; head_visible boolean;
+begin
+  selected:=public.read_reviewed_public_story_v1(p_story_id,p_public_version_id);
+  if selected is null then return false; end if;
+  selected_sequence:=(selected->>'sequence')::bigint;
+  -- The public context's 100-declaration limit also bounds this private proof;
+  -- more admitted declarations mean incomplete coverage, even if all are public.
+  if exists(select 1 from mip_private.public_story_material_changes c
+    where c.story_id=p_story_id and c.sequence<=selected_sequence offset 100 limit 1)
+    then return false; end if;
+  head_visible:=public.read_reviewed_public_story_v1(p_story_id,null) is not null;
+  return not exists(select 1 from mip_private.public_story_material_changes c
+    where c.story_id=p_story_id and c.sequence<=selected_sequence
+      -- Match the public material-row policy, including its current-head gate.
+      and (not head_visible or public.read_reviewed_public_story_v1(p_story_id,c.public_version_id) is null));
+end $$;
+
 create function public.read_reviewed_public_story_context_v1(p_story_id uuid,p_public_version_id uuid default null) returns jsonb
 language plpgsql stable security invoker set search_path = '' as $$
 declare story jsonb; selected_sequence bigint; changes jsonb:='[]'; evidence jsonb:='[]'; c record; envelope jsonb; member jsonb;
@@ -368,12 +396,18 @@ begin
   -- a separately admitted historical version does not inherit head denial.
   if story is null then return null; end if;
   selected_sequence:=(story->>'sequence')::bigint;
+  truncated:=not mip_private.public_story_material_history_is_complete(p_story_id,(story->>'public_version_id')::uuid);
   for c in select material_change_id,story_id,subject_type,subject_id,public_version_id,previous_public_version_id,sequence,
     effective_at,declared_at,reason,evidence_refs,review_refs,policy_version,kind,importance,novelty,event_state
     from mip_private.public_story_material_changes where story_id=p_story_id and sequence<=selected_sequence order by sequence desc limit 101 loop
     n:=n+1; if n>100 then truncated:=true; exit; end if;
     envelope:=public.read_reviewed_public_story_v1(p_story_id,c.public_version_id);
-    if envelope is null then continue; end if;
+    if envelope is null then truncated:=true; continue; end if;
+    -- Missing exact evidence is also incomplete. Never append a declaration
+    -- whose authorized envelope cannot supply every selected evidence ref.
+    if exists(select 1 from unnest(c.evidence_refs) ref where not exists(
+      select 1 from jsonb_array_elements(envelope->'members') x where x->>'public_version_id'=ref::text))
+      then truncated:=true; continue; end if;
     select count(*)::integer into additional from unnest(c.evidence_refs) ref
       where not exists(select 1 from jsonb_array_elements(evidence) x where x->>'public_version_id'=ref::text);
     if jsonb_array_length(evidence)+additional>100 then truncated:=true; exit; end if;
@@ -398,12 +432,14 @@ grant select,insert,update on mip_private.public_story_follows to service_role;
 grant select,insert on mip_private.public_story_follow_events to service_role;
 revoke all on function mip_private.declare_public_story_material_change_v1(jsonb),mip_private.public_story_material_payload(mip_private.public_story_material_changes),
   mip_private.public_story_follow_payload(mip_private.public_story_follows),mip_private.revoke_public_story_follow(uuid,uuid),
-  mip_private.read_public_story_follow(uuid,uuid,integer),public.mip_public_story_following_v1(text,jsonb),public.read_reviewed_public_story_context_v1(uuid,uuid)
+  mip_private.read_public_story_follow(uuid,uuid,integer),mip_private.public_story_material_history_is_complete(uuid,uuid),
+  public.mip_public_story_following_v1(text,jsonb),public.read_reviewed_public_story_context_v1(uuid,uuid)
   from public,anon,authenticated,service_role;
 grant execute on function mip_private.public_story_material_payload(mip_private.public_story_material_changes),mip_private.public_story_follow_payload(mip_private.public_story_follows),
   mip_private.revoke_public_story_follow(uuid,uuid),mip_private.read_public_story_follow(uuid,uuid,integer),public.mip_public_story_following_v1(text,jsonb),
   mip_private.public_story_version_is_visible(uuid) to service_role;
-grant execute on function public.read_reviewed_public_story_context_v1(uuid,uuid) to anon,authenticated,service_role;
+grant execute on function mip_private.public_story_material_history_is_complete(uuid,uuid),public.read_reviewed_public_story_context_v1(uuid,uuid)
+  to anon,authenticated,service_role;
 create function mip_private.reject_public_story_material_mutation() returns trigger
 language plpgsql security invoker set search_path='' as $$ begin
   raise exception using errcode='42501',message='material declarations are immutable';

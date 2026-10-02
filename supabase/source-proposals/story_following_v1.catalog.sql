@@ -25,6 +25,9 @@ select jsonb_build_object(
       'memberships',(select coalesce(jsonb_agg(jsonb_build_object('role',pg_get_userbyid(m.roleid),'grantor',pg_get_userbyid(m.grantor),
         'admin',m.admin_option,'inherit',m.inherit_option,'set',m.set_option) order by m.roleid,m.grantor),'[]') from pg_auth_members m where m.member=r.oid)) order by r.rolname)
       from pg_roles r where r.rolname in ('anon','authenticated','service_role')),
+    'history_completeness_helper',(select jsonb_build_object('identity',p.oid::regprocedure::text,'owner',pg_get_userbyid(p.proowner),
+      'acl',p.proacl::text,'definition',pg_get_functiondef(p.oid)) from pg_proc p
+      where p.oid=to_regprocedure('mip_private.public_story_material_history_is_complete(uuid,uuid)')),
     'new_objects',(select coalesce(jsonb_agg(n.nspname||'.'||c.relname order by c.relname),'[]') from pg_class c join pg_namespace n on n.oid=c.relnamespace
       where n.nspname='mip_private' and c.relname in ('public_story_material_changes','public_story_follows','public_story_follow_events'))
   ) ;
