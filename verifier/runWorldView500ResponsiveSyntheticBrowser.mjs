@@ -10,6 +10,7 @@ const require=createRequire((process.env.MIP_BROWSER_PACKAGE ?? '/tmp/mip-browse
 const output=process.env.MIP_INTEGRATION_EVIDENCE ?? '/tmp/mip-500-responsive'
 await mkdir(output,{recursive:true})
 const base=process.env.MIP_INTEGRATION_BASE ?? 'http://127.0.0.1:4178/media-intelligence-platform-v2/'
+const touchTaps=process.env.MIP_500_TOUCH_TAPS==='1'
 const candidate=process.env.MIP_INTEGRATION_CANDIDATE ?? spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim()
 assert.match(candidate,/^[a-f0-9]{40}$/)
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex')
@@ -155,7 +156,9 @@ for(const viewport of viewports){
   if(await controls.getByRole('button',{name:'Interact',exact:true}).count())await controls.getByRole('button',{name:'Interact',exact:true}).click()
   const n=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__.getBillboardState()?.native),m=n.markers.find(m=>m.key===n.selected?.key),b=await page.locator('.cesium-widget canvas').boundingBox()
   assert.ok(m?.screen&&m.key===n.selected?.key,'selected admitted native marker retains its projected pick pixel')
-  await page.mouse.click(b.x+m.screen.x,b.y+m.screen.y);await tabs.waitFor({state:'visible'})
+  if(touchTaps&&viewport.coarse)await page.touchscreen.tap(b.x+m.screen.x,b.y+m.screen.y)
+  else await page.mouse.click(b.x+m.screen.x,b.y+m.screen.y)
+  await tabs.waitFor({state:'visible'})
   const entrance=await read();await page.waitForTimeout(450);return entrance
  }
  const modeReceipts=[]
@@ -180,7 +183,10 @@ for(const viewport of viewports){
   const keyboardClose=await capture(name+'-keyboard-Close');assert.equal(keyboardClose.close.computed.outline.includes('solid'),true)
   await page.keyboard.press('Enter');await tabs.waitFor({state:'hidden'})
   const reopenedEntrance=await openNative(),reopened=await capture(name+'-native-reopened');assertPaint(reopened,name+' reopen')
-  const close=reopened.close.rect;await page.mouse.click(close.x+close.width/2,close.y+close.height/2);await tabs.waitFor({state:'hidden'})
+  const close=reopened.close.rect
+  if(touchTaps&&viewport.coarse)await page.touchscreen.tap(close.x+close.width/2,close.y+close.height/2)
+  else await page.mouse.click(close.x+close.width/2,close.y+close.height/2)
+  await tabs.waitFor({state:'hidden'})
   const pointerClosed=await capture(name+'-pointer-closed')
   await controls.getByRole('button',{name:'Done — scroll',exact:true}).click();assert.equal(await controls.getByRole('button',{name:'Interact',exact:true}).count(),1,'Done releases gesture ownership');
   await controls.getByRole('button',{name:'Options',exact:true}).click();const options=page.locator('.wv-explore-options');await options.waitFor({state:'visible'});const optionGeometry=await capture(name+'-options');assert.equal(optionGeometry.options.full,true,'Options fully painted in owned Surface');assert.ok(optionGeometry.options.clientHeight>=44);assert.equal(optionGeometry.options.computed.overflow,'auto');await controls.getByRole('button',{name:'Options',exact:true}).click();
@@ -200,7 +206,7 @@ for(const viewport of viewports){
  console.log(JSON.stringify({viewport,status:'PASS'}))
  await page.close()
 }
- await writeFile(output+'/500-responsive-full-app.json',JSON.stringify({candidate,tree,harnessSha256,provenance,runtime:process.version,status:'PASS',qualification:'controlled full-App actual native centered pointer and ordinary keyboard selected-reader flow; full viewport screenshots only',receipts,measurements},null,2)+'\n')
+ await writeFile(output+'/500-responsive-full-app.json',JSON.stringify({candidate,tree,harnessSha256,provenance,touchTaps,runtime:process.version,status:'PASS',qualification:'controlled full-App actual native centered pointer/touch and ordinary keyboard selected-reader flow; full viewport screenshots only',receipts,measurements},null,2)+'\n')
 }catch(e){
  await writeFile(output+'/500-responsive-partial.json',JSON.stringify({candidate,tree,harnessSha256,provenance,status:'FAILED_INCOMPLETE',error:e.message,receipts,measurements},null,2)+'\n')
  if(activePage)await activePage.screenshot({path:output+'/failure.png',fullPage:false});throw e
