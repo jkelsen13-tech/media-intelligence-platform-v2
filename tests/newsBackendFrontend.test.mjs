@@ -69,3 +69,32 @@ test('late failure cannot overwrite the current article or survive close and reo
     assert.match(text(renderer), /current detail failure/)
   } finally { await act(async () => renderer.unmount()) }
 })
+
+test('mounted News reader publishes admitted claims and safe locators only', async () => {
+  const { newsBackendFixture } = await import('./newsBackendFixture.mjs')
+  const article = { ...articles[0], reader_state: 'eligible', source_status: 'active', url: 'javascript:unsafe()', claims: [{ kind: 'substantive', text: 'PRIVATE_RAW_EXTRACTION' }] }
+  const f = newsBackendFixture({ tables: { articles: [article], news_detail_public: [{ article_id: 'A', reviewed_claims: [
+    { surface_text: 'Published retained-source claim', auditability_state: 'verified_retained_source', evidence_records: [{ evidence_url: 'data:text/html,unsafe', evidence_type: 'primary' }] },
+    { surface_text: 'PRIVATE_UNVERIFIED_PROJECTION', auditability_state: 'unverified_against_retained_source' },
+  ] }] } }); let renderer
+  await act(async () => { renderer = TestRenderer.create(React.createElement(NewsView, props(f.backend))) })
+  try {
+    await act(async () => clickArticle(renderer, 'A'))
+    assert.match(text(renderer), /Published retained-source claim/)
+    assert.doesNotMatch(text(renderer), /PRIVATE_RAW_EXTRACTION|PRIVATE_UNVERIFIED_PROJECTION/)
+    assert.match(text(renderer), /data:text\/html,unsafe/)
+    assert.ok(renderer.root.findAllByType('a').every(a => /^https?:\/\//.test(a.props.href ?? '')))
+  } finally { await act(async () => renderer.unmount()) }
+})
+
+test('mounted News grouping identifies loaded-page counts without claiming persistent full-story coverage', async () => {
+  const backend = { ...createNewsBackend(null),
+    loadArticles: async () => ({ articles, total: 300 }),
+    loadEventGrouping: async () => new Map(articles.map(a => [a.id, { eventId: 'public-comparison', title: 'Recorded group' }])),
+  }; let renderer
+  await act(async () => { renderer = TestRenderer.create(React.createElement(NewsView, props(backend))) })
+  try {
+    const group = renderer.root.findByProps({ className: 'news-group-outlets num' })
+    assert.match(group.children.join(''), /2 outlets on this page/)
+  } finally { await act(async () => renderer.unmount()) }
+})

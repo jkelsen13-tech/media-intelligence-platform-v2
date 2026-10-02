@@ -61,3 +61,21 @@ test('RPC enforces V2 origin and keeps raw server messages out of errors', async
   const rpc = createPipelineRpc({ url: PIPELINE_TARGET, key: 'test', fetchImpl: async () => new Response(JSON.stringify({ code: '23514', message: 'secret contents' }), { status: 400 }) })
   await assert.rejects(rpc('claim'), error => error.code === '23514' && !error.message.includes('secret'))
 })
+
+test('manifest validation binds submitted bytes before asynchronous enqueue can change later inputs', async () => {
+  const second = { ...article, title: 'Validated second article' }
+  const manifest = { run_id: 'snapshot', articles: [article, second] }
+  const submitted = []
+  await enqueueManifest(async (action, input) => {
+    submitted.push(structuredClone(input.article))
+    if (submitted.length === 1) {
+      second.reader_state = 'eligible'
+      second.title = ''
+      manifest.articles.push({ ...article, reader_state: 'eligible' })
+    }
+    return `job-${submitted.length}`
+  }, manifest, { apply: true })
+  assert.equal(submitted.length, 2)
+  assert.equal(submitted[1].title, 'Validated second article')
+  assert.equal(submitted[1].reader_state, undefined)
+})

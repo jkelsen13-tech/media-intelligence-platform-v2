@@ -7,7 +7,7 @@ import { createNewsBackend } from '../src/lib/newsBackend.js'
 import { newsBackendFixture } from './newsBackendFixture.mjs'
 
 const id = '10000000-0000-4000-8000-000000000001'
-const article = { id, title: 'Published article', url: 'https://example.invalid/one', reader_state: 'eligible', author_id: 'byline', outlet: 'Outlet A', published_at: '2026-08-03T10:00:00Z', fetched_at: '2026-08-03T12:00:00Z', claims: [] }
+const article = { id, title: 'Published article', url: 'https://example.invalid/one', reader_state: 'eligible', source_status: 'active', author_id: 'byline', outlet: 'Outlet A', published_at: '2026-08-03T10:00:00Z', fetched_at: '2026-08-03T12:00:00Z', claims: [] }
 
 test('all News capabilities respect explicit null even with a configured global client', async () => {
   globalThis.__newsBackendEscapes = 0
@@ -38,7 +38,7 @@ test('all News capabilities respect explicit null even with a configured global 
 test('feed and detail use the bound browser session, public bylines and reviewed provenance', async () => {
   const f = newsBackendFixture({ tables: { articles: [article, { ...article, id: 'pending', reader_state: 'pending_review', author_id: 'private' }], authors_public: [{ id: 'byline', name: 'Recorded byline' }],
     citations: [{ id: 'citation', article_id: id, cited_entity: 'Filed record', cited_type: 'court_doc', documentation_strength: 2 }],
-    news_detail_public: [{ article_id: id, reviewed_claims: [{ surface_text: 'Reviewed claim', evidence_excerpt: 'Exact retained words', evidence_source_field: 'body_text', evidence_records: [{ evidence_type: 'record', evidence_url: 'https://example.invalid/evidence' }] }] }],
+    news_detail_public: [{ article_id: id, reviewed_claims: [{ surface_text: 'Reviewed claim', auditability_state: 'verified_retained_source', evidence_excerpt: 'Exact retained words', evidence_source_field: 'body_text', evidence_records: [{ evidence_type: 'record', evidence_url: 'https://example.invalid/evidence' }] }] }],
   } })
   assert.equal(f.calls.length, 0)
   const page = await f.backend.loadArticles({ limit: 1, offset: 0, supabaseClient: { from() { throw Error('override') } } })

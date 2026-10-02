@@ -21,7 +21,7 @@ test('comparison view renders the shared projection and preserves all destinatio
     onOpenArticle: t => destinations.push(['news', t]), onOpenArc: t => destinations.push(['arc', t]), onOpenTimeline: t => destinations.push(['timeline', t]),
   })) })
   try {
-    assert.match(text(renderer), /Retained supporting passage/)
+    assert.doesNotMatch(text(renderer), /Retained supporting passage/)
     assert.match(text(renderer), /Grouping awaits review/)
     const buttons = renderer.root.findAllByType('button')
     for (const label of ['Open in News', 'Arc:', 'Causal Timeline']) {
@@ -177,7 +177,7 @@ test('comparison methods are optional while scope and evidence limits remain out
     assert.equal(methods.findAllByProps({ className: 'sc-evidence-notice' }).length, 0)
     assert.equal(renderer.root.findAllByProps({ className: 'sc-scope' }).length, 1)
     assert.match(text(renderer), /Missing evidence is not a contradiction/)
-    assert.match(text(renderer), /Retained supporting passage/)
+    assert.doesNotMatch(text(renderer), /Retained supporting passage/)
   } finally { await act(async () => renderer.unmount()) }
 })
 
@@ -198,4 +198,14 @@ test('comparison event bounds use retained date precision and explicit unknown s
       assert.equal(label, 'Recorded event time: ' + expected)
     }
   } finally { if (renderer) await act(async () => renderer.unmount()) }
+})
+
+
+test('mounted comparison preserves published grounding while excluding unreviewed passages', async () => {
+  const row = comparisonRow()
+  row.claims[0].surfaces[0].explanation = { ...row.claims[0].surfaces[0].explanation, review_status: 'published', state: 'ok', supporting_passage: 'PUBLISHED_COMPARISON_GROUNDING' }
+  const f = comparisonBackendFixture({ tables: { comparison_public: [row] } }); let renderer
+  await act(async () => { renderer = TestRenderer.create(React.createElement(View, { backend: f.backend })) })
+  try { assert.match(text(renderer), /PUBLISHED_COMPARISON_GROUNDING/) }
+  finally { await act(async () => renderer.unmount()) }
 })

@@ -72,7 +72,9 @@ function hasText(value) {
 // A required provenance field carries an explicit missing state when the archived
 // source record says so (02B: explicit missing states, never silent fabrication).
 function hasMissingArchivedSource(archivedSources) {
-  if (!Array.isArray(archivedSources)) return false
+  // Mirror the recorded SQL projection: non-array archives are unavailable.
+  // Legacy object missing-states must not pass as a complete source archive.
+  if (!Array.isArray(archivedSources)) return true
   return archivedSources.some(
     (entry) => entry && typeof entry === 'object' && entry.status === 'missing',
   )
@@ -89,7 +91,7 @@ function hasMissingArchivedSource(archivedSources) {
  *   AND state = 'ok'
  *   AND a non-blank supporting_passage
  *   AND a falsification_condition that is present and not an explicit missing state
- *   AND no required archived_sources entry with status 'missing'
+ *   AND archived_sources is an array with no entry with status 'missing'
  *   AND the row is current (is_current !== false)
  *
  * D5 integration: source_corrected / source_withdrawn rows are excluded no matter

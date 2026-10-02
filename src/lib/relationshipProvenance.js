@@ -17,7 +17,7 @@
 //      "no contradictions exist".
 
 import { EDGE_TYPES, edgePlainLabel } from '../graph/theme.js'
-import { reviewStatusBadge } from './explanationEligibility.js'
+import { presentationFailureState, reviewStatusBadge } from './explanationEligibility.js'
 
 // Axis value tones: 'value' = real recorded data; 'unverified' = exists in
 // principle but not verified for this edge; 'unavailable' = not recorded at
@@ -53,7 +53,9 @@ function reliabilityLabel(value) {
     3: 'moderate reliability',
     4: 'limited reliability',
   }
-  return Number.isFinite(value) && tiers[value] ? `${value} of 4 — ${tiers[value]}` : null
+  const scalar = typeof value === 'number' || (typeof value === 'string' && value.trim().length > 0)
+  const tier = scalar ? Number(value) : NaN
+  return Number.isFinite(tier) && tiers[tier] ? `${tier} of 4 — ${tiers[tier]}` : null
 }
 
 /**
@@ -71,6 +73,8 @@ function reliabilityLabel(value) {
  *   panel withholds provenance entirely (02B posture).
  */
 export function buildRelationshipPanelView({ edge, explanation = null, sources = [], enabled = false } = {}) {
+  const failureState = presentationFailureState(explanation)
+  const eligible = failureState === null
   const typeMeta = EDGE_TYPES?.[edge?.type]
   const plain = edgePlainLabel(edge)
 
@@ -88,7 +92,7 @@ export function buildRelationshipPanelView({ edge, explanation = null, sources =
     meaning,
     plainPhrase: plain,
     rawLabel: hasText(edge?.label) ? String(edge.label) : null,
-    provenanceEnabled: Boolean(enabled),
+    provenanceEnabled: enabled === true,
     hasExplanation: Boolean(explanation),
     reviewBadge: null,
     sources: [],
@@ -110,7 +114,7 @@ export function buildRelationshipPanelView({ edge, explanation = null, sources =
     view.extraction.push({ label: 'Counterfactual test', value: edge.counterfactual_test })
   }
 
-  if (!enabled) return view
+  if (enabled !== true) return view
 
   // --- Review status (from the explanation row when present) -------------
   view.reviewBadge = explanation
@@ -118,22 +122,22 @@ export function buildRelationshipPanelView({ edge, explanation = null, sources =
     : { label: 'No provenance recorded yet', tone: 'muted' }
 
   // --- Sources (named list; never a bare count as a quality signal) ------
-  view.sources = (sources ?? []).map((s) => ({ ...s }))
+  view.sources = eligible ? (sources ?? []).map((s) => ({ ...s })) : []
 
   // --- Grounding excerpt (supporting passage) ----------------------------
-  if (explanation && hasText(explanation.supporting_passage)) {
+  if (eligible && hasText(explanation.supporting_passage)) {
     view.grounding = { text: explanation.supporting_passage, recorded: true }
   } else {
     view.grounding = {
       text: explanation
-        ? 'No grounding excerpt recorded for this relationship yet.'
+        ? `Grounding withheld — ${humanize(failureState)}.`
         : 'No provenance recorded for this relationship yet — grounding not yet available.',
       recorded: false,
     }
   }
 
   // --- The six G2 axes ----------------------------------------------------
-  const rel = Number(edge?.reliability)
+  const rel = edge?.reliability
   const axes = []
 
   // 1. Source reliability (R): legacy 1–4 scale carried on the edge. The
@@ -159,7 +163,7 @@ export function buildRelationshipPanelView({ edge, explanation = null, sources =
 
   // 3. Authentication (A): archived source records only. Live rows carry an
   //    explicit 'missing' status — render that honestly.
-  const archived = explanation?.archived_sources
+  const archived = eligible ? explanation?.archived_sources : null
   const archiveEmpty = archived == null || (typeof archived === 'object' && Object.keys(archived).length === 0)
   const authValue = !explanation
     ? 'Not yet available — no provenance recorded'
@@ -177,7 +181,7 @@ export function buildRelationshipPanelView({ edge, explanation = null, sources =
   // edge-specific provenance. A missing explanation never erases or
   // contradicts the recorded visual relationship type.
   const recordedType = hasText(edge?.type) ? humanize(edge.type) : plain
-  const provenanceType = hasText(explanation?.relationship_type)
+  const provenanceType = eligible && hasText(explanation?.relationship_type)
     ? `Edge-specific provenance classification: ${humanize(explanation.relationship_type)} — recorded`
     : 'Edge-specific provenance classification: not yet recorded'
   axes.push({
@@ -211,7 +215,7 @@ export function buildRelationshipPanelView({ edge, explanation = null, sources =
 
   // --- Falsification condition / correction history / contradictions -----
   const fals = explanation?.falsification_condition
-  if (hasText(fals) && !fals.trim().toLowerCase().startsWith('missing:')) {
+  if (eligible && hasText(fals) && !fals.trim().toLowerCase().startsWith('missing:')) {
     view.falsificationCondition = fals
   }
   if (Array.isArray(explanation?.correction_history) && explanation.correction_history.length > 0) {
@@ -219,7 +223,7 @@ export function buildRelationshipPanelView({ edge, explanation = null, sources =
   }
   // Missing evidence is not contradicting evidence (locked correction 3):
   // an explicit 'missing' status means "not checked", never "none exist".
-  const contra = explanation?.contradicting_evidence
+  const contra = eligible ? explanation?.contradicting_evidence : null
   if (explanation) {
     view.contradicting = isExplicitMissing(contra) || contra == null
       ? 'Not checked — contradicting evidence not yet examined'

@@ -31,7 +31,7 @@ import { partitionByEligibility } from './explanationEligibility.js'
  *   failure-state renderers. Input rows are never mutated.
  */
 export function buildExplanationReadView(rows, { enabled } = {}) {
-  if (!enabled) return { enabled: false, eligible: [], excluded: [] }
+  if (enabled !== true) return { enabled: false, eligible: [], excluded: [] }
   const { eligible, excluded } = partitionByEligibility(rows)
   return { enabled: true, eligible, excluded }
 }

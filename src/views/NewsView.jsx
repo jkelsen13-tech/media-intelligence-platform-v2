@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { mipBackend } from '../lib/mipBackend.js'
+import { safeExternalHttpUrl } from '../lib/externalUrls.js'
 import {
   PROVENANCE_LABELS,
   groupArticlesByEvent,
@@ -129,11 +130,11 @@ function PublisherSourceRecord({ article, region }) {
           ? `Byline recorded: ${article.author_name}.`
           : 'No author byline is stored. This is a metadata gap, not an absence of publisher attribution.'}
       </p>
-      {article.url && (
-        <a className="news-source-record-link" href={article.url} target="_blank" rel="noreferrer">
+      {safeExternalHttpUrl(article.url) ? (
+        <a className="news-source-record-link" href={safeExternalHttpUrl(article.url)} target="_blank" rel="noreferrer">
           Open publisher record at {outlet} →
         </a>
-      )}
+      ) : article.url ? <span>{article.url}</span> : null}
     </section>
   )
 }
@@ -673,15 +674,17 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
               {detail.evidenceRecords.map((record, i) => (
                 <li key={`${record.evidence_type}-${record.evidence_url}-${i}`}>
                   <span className="news-cit-type">{String(record.evidence_type ?? 'evidence record').replace(/_/g, ' ')}</span>
-                  <a className="news-source-record-link" href={record.evidence_url} target="_blank" rel="noreferrer">
-                    Open linked evidence record →
-                  </a>
+                  {safeExternalHttpUrl(record.evidence_url) ? (
+                    <a className="news-source-record-link" href={safeExternalHttpUrl(record.evidence_url)} target="_blank" rel="noreferrer">
+                      Open linked evidence record →
+                    </a>
+                  ) : <span>{record.evidence_url}</span>}
                 </li>
               ))}
             </ul>
           )}
-          {detail.url && (
-            <a className="news-read-link" href={detail.url} target="_blank" rel="noreferrer">
+          {safeExternalHttpUrl(detail.url) && (
+            <a className="news-read-link" href={safeExternalHttpUrl(detail.url)} target="_blank" rel="noreferrer">
               Read original at {detail.outlet ?? 'source'} →
             </a>
           )}
@@ -915,7 +918,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
                 <div className="news-group-head">
                   <span className="news-date accent">{fmtDate(entry.latest)}</span>
                   <span className="news-group-outlets num">
-                    {entry.outlets.length} outlet{entry.outlets.length === 1 ? '' : 's'} reporting
+                    {entry.outlets.length} outlet{entry.outlets.length === 1 ? '' : 's'} on this page
                   </span>
                 </div>
                 <h3 className="news-group-title">
@@ -972,8 +975,8 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
                   </div>
                 </div>
               )}
-              {detail.url && (
-                <a className="news-read-link" href={detail.url} target="_blank" rel="noreferrer">
+              {safeExternalHttpUrl(detail.url) && (
+                <a className="news-read-link" href={safeExternalHttpUrl(detail.url)} target="_blank" rel="noreferrer">
                   Read original at {detail.outlet ?? 'source'} →
                 </a>
               )}

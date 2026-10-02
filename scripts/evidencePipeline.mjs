@@ -26,12 +26,15 @@ export function createPipelineRpc(options) {
 export async function enqueueManifest(rpc, { run_id, articles }, { apply = false } = {}) {
   if (typeof run_id !== 'string' || !run_id.trim() || run_id.length > 120) throw new Error('run_id required')
   if (!Array.isArray(articles) || !articles.length || articles.length > 100) throw new Error('manifest must contain 1–100 articles')
-  // Validate the entire manifest before its first write.
-  articles.forEach(validateArticle)
-  if (!apply) return { dry_run: true, validated: articles.length, note: 'Shape validation only; database deduplication runs on enqueue.' }
+  // Bind every record before the first asynchronous write. Callers may mutate
+  // their original array/records while an earlier enqueue is awaiting its RPC.
+  const intakeArticles = articles.map(article => validateArticle(
+    article && !Array.isArray(article) && typeof article === 'object' ? { ...article } : article,
+  ))
+  if (!apply) return { dry_run: true, validated: intakeArticles.length, note: 'Shape validation only; database deduplication runs on enqueue.' }
   const jobIds = []
-  for (const article of articles) jobIds.push(await rpc('enqueue', { run_id, article }))
-  return { run_id, received: articles.length, unique_jobs: new Set(jobIds).size, job_ids: jobIds }
+  for (const article of intakeArticles) jobIds.push(await rpc('enqueue', { run_id, article }))
+  return { run_id, received: intakeArticles.length, unique_jobs: new Set(jobIds).size, job_ids: jobIds }
 }
 
 export async function runWorker(rpc, { maxJobs = 10 } = {}) {

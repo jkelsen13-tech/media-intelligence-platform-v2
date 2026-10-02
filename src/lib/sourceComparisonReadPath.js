@@ -297,6 +297,24 @@ async function projectionAll(supabase, pageSize = 100) {
   }
 }
 
+// The public projection intentionally omits private D4 fields. Apply its
+// published/ok grounding contract without treating partial payloads as full
+// explanation rows. Failure/review diagnostics may remain visible.
+export function comparisonExplanationForReader(explanation) {
+  if (!explanation || typeof explanation !== 'object' || Array.isArray(explanation)) return null
+  const eligible = explanation.review_status === 'published' && explanation.state === 'ok'
+    && typeof explanation.supporting_passage === 'string' && explanation.supporting_passage.trim().length > 0
+  return {
+    supporting_passage: eligible ? explanation.supporting_passage : null,
+    rule_version: explanation.rule_version ?? null,
+    provenance_class: explanation.provenance_class ?? null,
+    reviewed_at: explanation.reviewed_at ?? null,
+    review_status: explanation.review_status ?? null,
+    state: explanation.state ?? 'explanation_pending',
+    remaining_uncertainty: explanation.remaining_uncertainty ?? null,
+  }
+}
+
 function projectionEventView(row) {
   const articles = (Array.isArray(row.articles) ? row.articles : []).map((article) => ({
     id: article.article_key,
@@ -325,7 +343,7 @@ function projectionEventView(row) {
         article_id: surface.article_key,
         surface_text: surface.surface_text,
         loaded_language: Array.isArray(surface.loaded_language) ? surface.loaded_language : [],
-        explanation: surface.explanation ?? null,
+        explanation: comparisonExplanationForReader(surface.explanation),
       }))
       const evidenceLinks = (Array.isArray(claim.evidence_links) ? claim.evidence_links : []).map((link, index) => ({
         id: `${claim.claim_key}:evidence:${index}`,

@@ -8,7 +8,7 @@ import {
   demoArcEvents,
 } from '../data/demoData.js'
 import { canonicalizeTimelineEvents, remapTimelineEdges } from './timelineDedup.js'
-import { resolveV2SupabaseUrl } from './supabaseOrigin.js'
+import { isSafeSupabaseBrowserKey, resolveV2SupabaseUrl } from './supabaseOrigin.js'
 
 // Sandbox safety: V2 only connects to the explicit environment target. When
 // either value is absent, makeClient() returns null and the application follows
@@ -52,6 +52,7 @@ const anonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY
 // without a WebSocket implementation); fall back to the demo-data path.
 function makeClient() {
   if (!url || !anonKey) return null
+  if (!isSafeSupabaseBrowserKey(anonKey)) return null
   if (isForbiddenSupabaseUrl(url)) return null
   if (!resolveV2SupabaseUrl(url).ok) return null
   try {
@@ -311,9 +312,13 @@ export async function loadGraph({ supabaseClient } = {}) {
     }
   }
 
+  // Relationships cannot manufacture hidden or unavailable endpoint facts.
+  const publicNodeIds = new Set(nodesRes.data.map(node => node.id))
+  const publicEdges = edgesRead.edgesUnavailable ? [] : mapGraphEdgeRows(edgesRead.data)
+    .filter(edge => publicNodeIds.has(edge.source) && publicNodeIds.has(edge.target))
   return {
     nodes: nodesRes.data,
-    edges: edgesRead.edgesUnavailable ? [] : mapGraphEdgeRows(edgesRead.data),
+    edges: publicEdges,
     source: 'supabase',
     edgesUnavailable: edgesRead.edgesUnavailable,
   }
@@ -546,6 +551,8 @@ export async function loadEdgeSources(sourceIds, { supabaseClient } = {}) {
     client
       .from('articles')
       .select('id, outlet, title, url, published_at')
+      .eq('reader_state', 'eligible')
+      .eq('source_status', 'active')
       .filter('id', 'in', `(${quoted})`),
     client
       .from('policy_documents')
@@ -798,7 +805,7 @@ export async function resolveEligibleArticleForNews(target, { supabaseClient } =
       .from('articles')
       .select('id')
       .eq('url', url)
-      .eq('reader_state', 'eligible')
+      .eq('reader_state', 'eligible').eq('source_status', 'active')
       .maybeSingle()
     if (error || !data?.id) return null
     return data.id
@@ -955,11 +962,11 @@ export async function loadCorpusMeta({ supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return { count: null, latestFetchedAt: null }
   const [countRes, latestRes] = await Promise.all([
-    client.from('articles').select('id', { count: 'exact', head: true }).eq('reader_state', 'eligible'),
+    client.from('articles').select('id', { count: 'exact', head: true }).eq('reader_state', 'eligible').eq('source_status', 'active'),
     client
       .from('articles')
       .select('fetched_at')
-      .eq('reader_state', 'eligible')
+      .eq('reader_state', 'eligible').eq('source_status', 'active')
       .order('fetched_at', { ascending: false, nullsFirst: false })
       .limit(1),
   ])
@@ -985,7 +992,7 @@ export async function loadNewSinceCount(isoTs, { supabaseClient } = {}) {
   const { count, error } = await client
     .from('articles')
     .select('id', { count: 'exact', head: true })
-    .eq('reader_state', 'eligible')
+    .eq('reader_state', 'eligible').eq('source_status', 'active')
     .gt('fetched_at', isoTs)
   if (error) {
     if (await confirmArticlesPermissionDenied(client, error)) return null
@@ -1065,7 +1072,7 @@ export async function loadOutlets({ supabaseClient } = {}) {
   // Doc 13: the outlet filter list read keyset-paginates past the 1000-row
   // ceiling; dedupe/sort happen client-side below, unchanged.
   const { data, error } = await keysetAll(client, 'articles', 'id, outlet', {
-    filter: (q) => q.eq('reader_state', 'eligible').not('outlet', 'is', null),
+    filter: (q) => q.eq('reader_state', 'eligible').eq('source_status', 'active').not('outlet', 'is', null),
   })
   if (error) throw error
   const names = [...new Set(data.map((r) => r.outlet))]
@@ -1081,7 +1088,7 @@ export async function loadOutletDirectory({ supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return []
   const [articlesRes, outletsRes] = await Promise.all([
-    keysetAll(client, 'articles', 'id, outlet', { filter: (q) => q.eq('reader_state', 'eligible').not('outlet', 'is', null) }),
+    keysetAll(client, 'articles', 'id, outlet', { filter: (q) => q.eq('reader_state', 'eligible').eq('source_status', 'active').not('outlet', 'is', null) }),
     keysetAll(client, 'outlets', 'id, name, country, parent_ownership'),
   ])
   if (articlesRes.error) {
@@ -1113,7 +1120,7 @@ function applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, top
   // Reader eligibility is a quality gate, not a source-reliability score. The
   // withheld/pending rows remain retained in the base table for review but do
   // not affect reader counts, filters, or source metrics.
-  query = query.eq('reader_state', 'eligible')
+  query = query.eq('reader_state', 'eligible').eq('source_status', 'active')
   const term = sanitizeSearch(q)
   if (term) {
     query = query.or(
@@ -1220,9 +1227,9 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
   const [artRes, citRes, newsDetailRes] = await Promise.all([
     client
       .from('articles')
-      .select('id, title, url, summary, published_at, outlet, claims, monoculture, unattributed, author_id')
+      .select('id, title, url, summary, published_at, outlet, monoculture, unattributed, author_id')
       .eq('id', id)
-      .eq('reader_state', 'eligible')
+      .eq('reader_state', 'eligible').eq('source_status', 'active')
       .single(),
     client
       .from('citations')
@@ -1250,8 +1257,11 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
   if (newsDetailRes.error) throw newsDetailRes.error
   const authorNames = await loadPublicAuthorNameMap([artRes.data.author_id], { supabaseClient: client })
 
-  const storedClaims = Array.isArray(artRes.data.claims) ? artRes.data.claims : []
-  const reviewedClaims = (newsDetailRes.data?.reviewed_claims ?? []).map((row) => ({
+  // Article-local extraction JSON has no admission/review contract. Only the
+  // public projection may supply reader-facing analytical claims.
+  const admittedClaimRows = (newsDetailRes.data?.reviewed_claims ?? [])
+    .filter(row => row?.auditability_state === 'verified_retained_source')
+  const reviewedClaims = admittedClaimRows.map((row) => ({
     kind: 'substantive',
     text: row.surface_text || row.canonical_text || 'Reviewed claim text not recorded.',
     stance: 'asserts',
@@ -1263,14 +1273,14 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
     evidence_excerpt: row.evidence_excerpt ?? null,
   }))
   const seenClaimText = new Set()
-  const claims = [...reviewedClaims, ...storedClaims].filter((claim) => {
+  const claims = reviewedClaims.filter((claim) => {
     const key = `${claim.kind ?? 'substantive'}|${String(claim.text ?? '').trim().toLowerCase()}`
     if (!key || seenClaimText.has(key)) return false
     seenClaimText.add(key)
     return true
   })
   const seenEvidence = new Set()
-  const evidenceRecords = (newsDetailRes.data?.reviewed_claims ?? [])
+  const evidenceRecords = admittedClaimRows
     .flatMap((row) => (Array.isArray(row.evidence_records) ? row.evidence_records : []))
     .filter((row) => {
       const key = `${row.evidence_type ?? ''}|${row.evidence_url ?? ''}`
@@ -1309,7 +1319,8 @@ export async function loadArticleGraphLinks(articleId, { supabaseClient } = {}) 
     .in('id', ids)
   if (nErr) throw nErr
   const byId = new Map((nodes ?? []).map((n) => [n.id, n]))
-  return cits.map((c) => ({
+  // A retained citation is not permission to publish an unresolved node.
+  return cits.filter(c => byId.has(c.resolved_node_id)).map((c) => ({
     nodeId: c.resolved_node_id,
     label: byId.get(c.resolved_node_id)?.label ?? c.cited_entity,
     type: byId.get(c.resolved_node_id)?.type ?? null,
@@ -1339,6 +1350,8 @@ export async function loadNodeArticles(nodeId, { supabaseClient } = {}) {
     const { data: arcArts, error: aErr } = await client
       .from('articles')
       .select('id')
+      .eq('reader_state', 'eligible')
+      .eq('source_status', 'active')
       .in('arc_id', arcIds)
     if (aErr) throw aErr
     for (const a of arcArts ?? []) ids.add(a.id)
@@ -1348,6 +1361,8 @@ export async function loadNodeArticles(nodeId, { supabaseClient } = {}) {
   const { data, error } = await client
     .from('articles')
     .select('id, title, outlet, published_at, url')
+    .eq('reader_state', 'eligible')
+    .eq('source_status', 'active')
     .in('id', [...ids])
     .order('published_at', { ascending: false, nullsFirst: false })
     .limit(30)

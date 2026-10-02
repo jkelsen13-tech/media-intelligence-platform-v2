@@ -36,3 +36,12 @@ test('ArticlePanel renders labelled node evidence instead of a composite confide
   assert.doesNotMatch(panel, /ap-confidence-value/)
   assert.doesNotMatch(panel, /<span className="ap-label">Confidence<\/span>/)
 })
+
+test('node reliability never coerces booleans, arrays or objects into recorded quality', () => {
+  for (const reliability of [true, false, [1], ['2'], { valueOf: () => 3 }, '', ' ', 1.5, 5]) {
+    assert.equal(buildNodeEvidenceAxes({ reliability }).find(a => a.key === 'source_reliability').tone, 'unavailable')
+  }
+  for (const reliability of [1, 4, '2']) {
+    assert.equal(buildNodeEvidenceAxes({ reliability }).find(a => a.key === 'source_reliability').tone, 'value')
+  }
+})

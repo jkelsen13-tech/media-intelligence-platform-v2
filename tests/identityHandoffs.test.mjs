@@ -51,7 +51,7 @@ const ELIGIBLE = Object.freeze({
   monoculture: false,
   unattributed: false,
   author_id: null,
-  reader_state: 'eligible',
+  source_status: 'active', reader_state: 'eligible',
 })
 
 const PENDING = Object.freeze({

@@ -57,7 +57,7 @@ test('explicitly unconfigured public backend cannot escape to a configured globa
     const compiled = await build({
       stdin: { contents: "export * from './src/lib/publicDataBackend.js'; export { loadGraph } from './src/lib/supabase.js'", resolveDir: fileURLToPath(new URL('..', import.meta.url)) },
       bundle: true, format: 'esm', platform: 'node', write: false,
-      define: { 'import.meta.env': JSON.stringify({ VITE_SUPABASE_URL: 'https://qikvmopbtijoebdqosyq.supabase.co', VITE_SUPABASE_ANON_KEY: 'fixture-only-key' }) },
+      define: { 'import.meta.env': JSON.stringify({ VITE_SUPABASE_URL: 'https://qikvmopbtijoebdqosyq.supabase.co', VITE_SUPABASE_ANON_KEY: 'sb_publishable_fixture' }) },
       plugins: [{ name: 'configured-global-client', setup(b) {
         b.onResolve({ filter: /^@supabase\/supabase-js$/ }, () => ({ path: 'client', namespace: 'fixture' }))
         b.onLoad({ filter: /.*/, namespace: 'fixture' }, () => ({ contents: 'export const createClient = () => globalThis.__mipPublicBackendTestClient', loader: 'js' }))
@@ -119,7 +119,7 @@ test('shared public reads retain pagination, recorded provenance and live sessio
 
 test('corpus and URL joins exclude pending and withheld records; direct IDs remain navigation hints', async () => {
   const f = fixture({ tables: { articles: [
-    { id: articleId, url: 'https://example.invalid/eligible', reader_state: 'eligible', fetched_at: '2026-08-03T10:00:00Z' },
+    { id: articleId, url: 'https://example.invalid/eligible', source_status: 'active', reader_state: 'eligible', fetched_at: '2026-08-03T10:00:00Z' },
     { id: 'pending', url: 'https://example.invalid/pending', reader_state: 'pending_review', fetched_at: '2026-09-01T10:00:00Z' },
     { id: 'withheld', url: 'https://example.invalid/withheld', reader_state: 'withheld', fetched_at: '2026-09-02T10:00:00Z' },
   ] } })

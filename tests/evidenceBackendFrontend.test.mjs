@@ -73,3 +73,18 @@ test('policy reliability renders only recorded tiers one through four', async ()
     } finally { await act(async () => renderer.unmount()) }
   }
 })
+
+
+test('mounted relationship panel withholds excluded grounding while preserving failure and review labels', async () => {
+  for (const patch of [{ review_status: 'awaiting_review' }, { state: 'insufficient_evidence' }, { state: 'source_unavailable' }, { archived_sources: { status: 'missing' } }]) {
+    const tables = evidenceTables()
+    tables.explanations[0] = { ...tables.explanations[0], ...patch, supporting_passage: 'PRIVATE_UNREVIEWED_GROUNDING' }
+    const f = evidenceBackendFixture({ tables }); let renderer
+    await act(async () => { renderer = TestRenderer.create(React.createElement(panels.RelationshipPanel, { ...props.RelationshipPanel, backend: f.backend })) })
+    try {
+      assert.doesNotMatch(text(renderer), /PRIVATE_UNREVIEWED_GROUNDING|Backing article title|Recorded policy document/)
+      assert.match(text(renderer), /Grounding withheld/)
+      assert.match(text(renderer), /Independent lineage remains unverified/)
+    } finally { await act(async () => renderer.unmount()) }
+  }
+})

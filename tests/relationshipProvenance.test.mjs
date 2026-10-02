@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 
 import { buildRelationshipPanelView } from '../src/lib/relationshipProvenance.js'
 
-// A sourced, human-reviewed edge (mirrors the 3 live rows with real sourcing).
+// A published explanation with complete provenance is the positive control.
 const SOURCED_EDGE = {
   id: 'a209ab4f-3345-4c9c-9f3e-845c51d3ae77',
   type: 'actor',
@@ -14,11 +14,11 @@ const SOURCED_EDGE = {
   reliability: 1,
 }
 const SOURCED_EXPLANATION = {
-  review_status: 'reviewed',
+  review_status: 'published',
   relationship_type: 'inferred',
   source_ids: ['9065c820-2e60-4cf9-a82a-9d5a96deef16'],
   supporting_passage: 'Recovered source (retrieval pass 2026-07-29): Federal Register document …',
-  archived_sources: { status: 'missing', note: 'source records not archived at assertion creation' },
+  archived_sources: [],
   contradicting_evidence: { status: 'missing', note: 'contradicting evidence not checked at creation' },
   falsification_condition: 'Falsified if the Federal Register document names an issuing agency other than the MSPB.',
   correction_history: [{ decision: 'needs-source-first', reason: 'owner deferred confirmation', at: '2026-07-29T07:52:08Z' }],
@@ -70,7 +70,7 @@ test('sourced edge: named sources, grounding, and real axis values render', () =
   assert.equal(axes.source_reliability.value, '1 of 4 — highest reliability')
   assert.equal(axes.source_reliability.tone, 'value')
   assert.equal(axes.evidence_strength.value, 'documented')
-  assert.equal(axes.review_status.value, 'Reviewed — human confirmed')
+  assert.equal(axes.review_status.value, 'Published')
   assert.equal(axes.relationship_type.value, 'Stored graph type: actor; Edge-specific provenance classification: inferred — recorded')
   assert.equal(axes.remaining_uncertainty.tone, 'value')
   assert.ok(v.falsificationCondition)
@@ -108,15 +108,16 @@ test('unsourced machine edge: every gap is an explicit honest state', () => {
     enabled: true,
   })
   assert.equal(v.sources.length, 0)
-  // Grounding passage exists on machine rows and is shown as recorded text.
-  assert.equal(v.grounding.recorded, true)
+  // An excluded explanation is a diagnostic, never public grounding.
+  assert.equal(v.grounding.recorded, false)
+  assert.match(v.grounding.text, /insufficient evidence/)
   const axes = Object.fromEntries(v.axes.map((a) => [a.key, a]))
   assert.match(axes.source_reliability.value, /Not yet available/)
   assert.equal(axes.source_reliability.tone, 'unavailable')
   assert.match(axes.evidence_strength.value, /Not yet available/)
   assert.equal(axes.review_status.value, 'Awaiting review')
   assert.equal(axes.review_status.tone, 'unverified')
-  assert.equal(axes.relationship_type.value, 'Stored graph type: sequence; Edge-specific provenance classification: sequential — recorded')
+  assert.equal(axes.relationship_type.value, 'Stored graph type: sequence; Edge-specific provenance classification: not yet recorded')
   assert.equal(axes.relationship_type.tone, 'value')
   // A 'missing:' falsification condition is never rendered as a real one.
   assert.equal(v.falsificationCondition, null)

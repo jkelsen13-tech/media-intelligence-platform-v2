@@ -13,7 +13,8 @@ function reliabilityLabel(value) {
     3: 'moderate reliability',
     4: 'limited reliability',
   }
-  return Number.isFinite(Number(value)) && tiers[Number(value)]
+  const scalar = typeof value === 'number' || (typeof value === 'string' && value.trim().length > 0)
+  return scalar && Number.isFinite(Number(value)) && tiers[Number(value)]
     ? `${Number(value)} of 4 — ${tiers[Number(value)]}`
     : null
 }

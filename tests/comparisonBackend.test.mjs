@@ -27,7 +27,7 @@ test('shared comparison read preserves every projected card and current session 
 
 test('comparison provenance, missing extraction, and opaque navigation identities survive the shared root', async () => {
   const row = comparisonRow(), f = comparisonBackendFixture({ tables: { comparison_public: [row], articles: [
-    { id: 'eligible-news-id', url: row.articles[0].article_url, reader_state: 'eligible' },
+    { id: 'eligible-news-id', url: row.articles[0].article_url, source_status: 'active', reader_state: 'eligible' },
   ] } })
   const event = (await f.backend.loadSourceComparisonView()).events[0], claim = event.claims[0]
   assert.equal(event.id, row.event_key)
