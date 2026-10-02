@@ -1,3 +1,7 @@
+import { layoutWorldBillboards } from './worldViewBillboardLayout.js'
+import { resolveBillboardDistanceStates, updateSelectedBillboardEnvelope } from './worldViewBillboardPresentation.js'
+import { createDisplayPresentation, displayPresentationSignature, globeDisplayMarkers, applyGlobeDisplayPresentation } from './worldViewDisplayPresentation.js'
+import { displayMarkerKey } from './worldViewDisplayClusters.js'
 import { createMarkerLabelMeasurer, dispatchGlobeMarkerPick, updateGlobeMarkerLayout } from './worldViewMarkerLayout.js'
 import { createCesiumRefinementController } from './worldViewCesiumRefinement.js'
 import { createRecordedLightingController } from './worldViewCesiumRecordedLighting.js'
@@ -172,7 +176,7 @@ export function cesiumMarkerEntityDescriptors(features = []) {
     return positions.map((position, i) => ({
       id: `${row.revision_id ?? row.mip_object_id}-${i}`,
       row,
-      position,
+      position, positionIndex: i,
       selected: Boolean(f.selected),
       label: f.label ?? null,
       coords: f.coords ?? null,
@@ -323,6 +327,7 @@ export function createCesiumEllipsoidRendererAdapter({
   initialFeatures,
   recordedTimeInstant,
   isCancelled,
+  relationships = [], onDisplayLayout, billboardEnabled = false,
 }) {
   // Ensure this adapter is only used for the ellipsoid globe stack id.
   if (stackId !== ELLIPSOID_GLOBE_STACK_ID && stackId !== undefined) {
@@ -330,11 +335,13 @@ export function createCesiumEllipsoidRendererAdapter({
     console.warn('createCesiumEllipsoidRendererAdapter called with non-ellipsoid stack id', stackId)
   }
 
+  let cameraSnapshot = null
   let viewer = null
   let failureLifecycle = null
   let ownedHost = null
   let eventHandler = null
   let entities = []
+  let nativeBillboards = null, billboardSignature = null, distanceMemory = null, envelopeMemory = null, selectedBillboard = null
   let mounted = false
   const labelMeasurements = createMarkerLabelMeasurer(() => document.createElement('canvas').getContext('2d'))
   const measureLabel = labelMeasurements.measure
@@ -343,6 +350,8 @@ export function createCesiumEllipsoidRendererAdapter({
   const layoutTiming = { lastMs: 0, maxMs: 0, passes: 0, entityCount: 0 }
   const removeLayoutListeners = []
   let currentOnSelectRow = onSelectRow
+  let currentRelationships = relationships, currentSelectedKeys = getSelectedKeys?.() ?? new Set()
+  let displayPresentation = null, displaySignature = ''
   let localCancelled = false
   let activityState = initialActivityState
   let imageryObservation = null
@@ -487,6 +496,11 @@ export function createCesiumEllipsoidRendererAdapter({
       return
     }
 
+    if (billboardEnabled) {
+      nativeBillboards = viewer.scene.primitives.add(new Cesium.BillboardCollection({ scene: viewer.scene }))
+      viewer.scene.globe.depthTestAgainstTerrain = true
+    }
+
     ownedHost.element.querySelector?.('.cesium-widget-credits')?.setAttribute('data-world-credits', 'true')
     // Fatal render/boot failure handling: never leave a black canvas with
     // Cesium's raw error modal. Log the real diagnostic, tear the viewer
@@ -534,7 +548,7 @@ export function createCesiumEllipsoidRendererAdapter({
       // Every actual frame includes small camera moves and responsive resizes.
       // Only a changed visibility result requests one correction frame.
       const started = performance.now()
-      const changed = updateGlobeMarkerLayout(Cesium, viewer, entities, measureLabel)
+      const changed = refreshDisplayLayout()
       const elapsed = Math.max(0, performance.now() - started)
       layoutTiming.lastMs = elapsed
       layoutTiming.maxMs = Math.max(layoutTiming.maxMs, elapsed)
@@ -617,6 +631,8 @@ export function createCesiumEllipsoidRendererAdapter({
       // Custom field used by pick handler.
       entity.__mipRow = d.row
       entity.__mipSelected = isSelected
+      entity.__mipMarker = { id: displayMarkerKey(d.row, d.positionIndex), row: d.row,
+        position: d.position, positionIndex: d.positionIndex, label, selected: isSelected }
       entities.push(entity)
     }
 
@@ -633,8 +649,61 @@ export function createCesiumEllipsoidRendererAdapter({
     }
   }
 
+  function refreshDisplayLayout() {
+    if (!viewer || !Cesium || cancelledNow()) return false
+    const scene = viewer.scene
+    const markers = globeDisplayMarkers(Cesium, viewer, entities, measureLabel)
+    displayPresentation = createDisplayPresentation(markers, {
+      width: scene.canvas.clientWidth, height: scene.canvas.clientHeight,
+      cameraHeightMeters: viewer.camera.positionCartographic.height,
+      relationships: currentRelationships, selectedKeys: currentSelectedKeys,
+      radiusPx: billboardEnabled ? 192 : 64,
+    })
+    if (billboardEnabled) displayPresentation.labels = new Set()
+    let changed = applyGlobeDisplayPresentation(viewer, entities, displayPresentation)
+    if (billboardEnabled) {
+      const items = markers.map(marker => ({ key: marker.id, anchor: {x:marker.x,y:marker.y},
+        distanceMeters: Cesium.Cartesian3.distance(viewer.camera.positionWC, entities.find(e=>e.__mipMarker.id===marker.id)?.position.getValue(viewer.clock.currentTime)),
+        occluded: !marker.visible, canonicalCoordinates: marker.position, label:marker.label }))
+      const selectedKey = markers.find(marker=>marker.selected)?.id ?? null
+      const distance = resolveBillboardDistanceStates({items,previous:distanceMemory,datasetKey:entities.map(e=>e.id).join('|'),selectedKey})
+      distanceMemory = distance.memory
+      const layout = layoutWorldBillboards({items,viewport:{width:scene.canvas.clientWidth,height:scene.canvas.clientHeight},selectedKey})
+      const envelope = updateSelectedBillboardEnvelope({selected:layout.selected,previous:envelopeMemory,
+        viewport:{width:scene.canvas.clientWidth,height:scene.canvas.clientHeight}})
+      envelopeMemory=envelope.memory;selectedBillboard=envelope.selected
+      const singles = new Set(displayPresentation.layout.singles.map(marker=>marker.id))
+      const signature = worldViewNativeBillboardSignature(markers,singles,distance.states)
+      for(const entity of entities) entity.point.show=false
+      if(nativeBillboards && signature!==billboardSignature){
+        billboardSignature=signature;nativeBillboards.removeAll()
+        for(const entity of entities){
+          const marker=entity.__mipMarker
+          if(!singles.has(marker.id))continue
+          const state=distance.states[marker.id] ?? 'icon', coords=marker.position
+          const width=state==='plaque'?180:state==='ribbon'?132:24,height=state==='plaque'?56:state==='ribbon'?32:24
+          nativeBillboards.add({position:Cesium.Cartesian3.fromDegrees(coords[0],coords[1],18),
+            image:worldViewNativeBillboardTexture(marker.label,state,entity.__mipRow.precision_class),width,height,
+            verticalOrigin:Cesium.VerticalOrigin.CENTER,disableDepthTestDistance:0,id:entity})
+        }
+        changed=true
+      }
+      if(envelope.settling)changed=true
+    }
+    const signature = displayPresentationSignature(displayPresentation)
+    if (signature !== displaySignature) {
+      displaySignature = signature
+      onDisplayLayout?.(displayPresentation)
+    }
+    return changed
+  }
+
   async function setFeatures(nextFeatures, nextSelectedKeys = getSelectedKeys?.()) {
     if (!viewer || !Cesium) return
+    currentSelectedKeys = nextSelectedKeys ?? new Set()
+    displaySignature = ''
+    displayPresentation = null
+    billboardSignature=null
     const descriptors = cesiumMarkerEntityDescriptors(nextFeatures ?? [])
 
     // Update selection visuals without rewriting row identity.
@@ -694,6 +763,8 @@ export function createCesiumEllipsoidRendererAdapter({
 
       entity.__mipRow = d.row
       entity.__mipSelected = isSelected
+      entity.__mipMarker = { id: displayMarkerKey(d.row, d.positionIndex), row: d.row,
+        position: d.position, positionIndex: d.positionIndex, label, selected: isSelected }
       entities.push(entity)
     }
 
@@ -735,13 +806,13 @@ export function createCesiumEllipsoidRendererAdapter({
 
   function publishSelectedAnchor() {
     if (!onSelectedAnchorChange || !viewer || !Cesium) return
-    const entity = entities.find(item => item.__mipSelected && item.show)
+    const entity = entities.find(item => item.__mipSelected)
     const width = viewer.canvas.clientWidth, height = viewer.canvas.clientHeight
     const position = entity?.position?.getValue?.(viewer.clock.currentTime)
     const screen = position ? viewer.scene.cartesianToCanvasCoordinates(position) : null
     const visible = Boolean(screen && screen.x >= 0 && screen.y >= 0 && screen.x <= width && screen.y <= height)
-    const next = { visible, x: visible ? screen.x : null, y: visible ? screen.y : null, width, height }
-    if (lastAnchor && lastAnchor.visible === visible && lastAnchor.width === width && lastAnchor.height === height
+    const next = { visible, x: screen?.x ?? null, y: screen?.y ?? null, width, height, billboardSelected: selectedBillboard }
+    if (!billboardEnabled && lastAnchor && lastAnchor.visible === visible && lastAnchor.width === width && lastAnchor.height === height
       && (!visible || Math.abs(lastAnchor.x - next.x) < 0.5 && Math.abs(lastAnchor.y - next.y) < 0.5)) return
     lastAnchor = next
     onSelectedAnchorChange(next)
@@ -851,7 +922,7 @@ export function createCesiumEllipsoidRendererAdapter({
     if (!viewer || !Cesium) return null
     try {
       return serializeCameraState(
-        cameraStateFromGlobeCamera(Cesium.Math, viewer.camera, activePrecisionClass()),
+        cameraStateFromGlobeCamera(Cesium.Math, Cesium.Camera?.clone ? (cameraSnapshot = Cesium.Camera.clone(viewer.camera,cameraSnapshot ?? undefined)) : viewer.camera, activePrecisionClass()),
         activePrecisionClass(),
       )
     } catch {
@@ -874,6 +945,8 @@ export function createCesiumEllipsoidRendererAdapter({
   function destroyRendererResources() {
     for (const remove of removeLayoutListeners.splice(0)) remove?.()
     labelMeasurements.clear()
+    displayPresentation = null
+    displaySignature = ''
     terrainPlan?.destroy?.()
     imageryObservation?.dispose()
     imageryObservation = null
@@ -913,6 +986,14 @@ export function createCesiumEllipsoidRendererAdapter({
     mount,
     setFeatures,
     setOnSelectRow,
+    setRelationships: edges => {
+      if (cancelledNow()) return
+      currentRelationships = edges ?? []
+      displaySignature = ''
+      if (refreshDisplayLayout()) viewer?.scene?.requestRender?.()
+    },
+    getDisplayLayout: () => { if (refreshDisplayLayout()) viewer?.scene?.requestRender?.(); return displayPresentation },
+    getDisplayTiming: () => ({ ...layoutTiming }),
     flyToSubjectCamera,
     cancelCameraFlight: () => cancelGlobeCameraFlight(viewer),
     getCameraState,
@@ -930,4 +1011,18 @@ export function createCesiumEllipsoidRendererAdapter({
     requestRender,
     destroy,
   }
+}
+
+/** Display texture only: supplied label/precision, no inferred facts. */
+export function worldViewNativeBillboardTexture(label,state,precision) {
+  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]))
+  const wide=state!=='icon',width=wide?360:48,height=state==='plaque'?112:64
+  const title=wide?`<text x="42" y="39" font-size="23" fill="#fff4dd">${escape(String(label??'').slice(0,24))}</text>`:''
+  const detail=state==='plaque'?`<text x="12" y="86" font-size="18" fill="#b6cec4">${escape(precision??'Precision unavailable')}</text>`:''
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="${width}" height="${height}" rx="10" fill="#243b39" stroke="#efe6cc" stroke-width="2"/><circle cx="22" cy="30" r="8" fill="#fff4dd"/>${title}${detail}</svg>`
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
+export function worldViewNativeBillboardSignature(markers,singles,states) {
+  return JSON.stringify(markers.map(marker=>[marker.id,singles.has(marker.id),states[marker.id],marker.label,marker.position,marker.row?.revision_id,marker.row?.precision_class]))
 }

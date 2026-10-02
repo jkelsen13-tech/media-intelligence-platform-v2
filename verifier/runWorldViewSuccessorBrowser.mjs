@@ -25,6 +25,7 @@ function assertOrientation(actual,target,label){
 }
 const camera=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.getCameraState())
 const state=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getRenderState())
+const clusterState=page=>page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__?.getState()??null)
 const identity=page=>page.locator('.ws-canonical[data-investigation-context]').getAttribute('data-canonical-subject-id')
 const context=page=>page.locator('.ws-canonical[data-investigation-context]').evaluate(node=>
   Object.fromEntries(['canonical-subject-type','canonical-subject-id','parent-event-id','as-of-time','selected-time-range','temporal-assessment-reference']
@@ -274,20 +275,34 @@ async function fixtureJourney(browser,engine,kind){
     await openWorld(page);assert.ok(receipt.matchedRows>0,'synthetic fixture actually applied')
     await setCamera(page,cameraState(-81.7,41.4,100000));await settle(page)
     const original=await camera(page),originalContext=await context(page),canvas=await page.locator('.wv-map-host canvas').first().elementHandle()
-    const baseline=await state(page),visible=baseline.markers.filter(m=>m.visible),labels=baseline.markers.filter(m=>m.labelVisible)
+    const baseline=await state(page),clusterBaseline=await clusterState(page),labels=baseline.markers.filter(m=>m.labelVisible)
+    assert.ok(clusterBaseline?.layout,'canonical grouping probe supplies separate eligibility metadata')
+    assert.equal(clusterBaseline.markers.length,receipt.coordinateCount,'canonical location records retain original geometry count')
+    const visible=clusterBaseline.markers.filter(marker=>marker.eligible),grouping=clusterBaseline.layout
+    assert.equal(new Set(clusterBaseline.markers.map(marker=>marker.id)).size,receipt.coordinateCount,'each canonical geometry location has one versioned display ID')
     if(baseline.layoutTiming){
       assert.equal(baseline.layoutTiming.entityCount,receipt.coordinateCount)
       for(const key of ['lastMs','maxMs','passes'])assert.ok(Number.isFinite(baseline.layoutTiming[key])&&baseline.layoutTiming[key]>=0)
       assert.ok(baseline.layoutTiming.passes>0)
     }
     assert.equal(baseline.markers.length,receipt.coordinateCount,'no marker deduplication/coordinate relocation')
-    if(kind==='dense'){assert.equal(visible.length,500);assert.equal(labels.length,1,'colliding dense labels are deterministically suppressed')}
+    if(kind==='dense'){
+      assert.equal(visible.length,500,'all original dense locations remain eligible')
+      assert.ok(grouping,'dense marker grouping exposes actual target membership')
+      assert.equal(grouping.clusters.length,1,'dense original locations form one inspectable group')
+      assert.equal(grouping.clusters[0].rowCount,1,'500 display locations remain one original row')
+      assert.equal(grouping.clusters[0].locationCount,500)
+      assert.equal(grouping.stats.targetCount,1,'grouping reduces500 eligible locations to one actual target')
+      assert.equal(baseline.markers.filter(m=>m.visible).length,0,'group badge replaces original overlapping symbols')
+      assert.ok(grouping.clusters[0].selected,'selected original row remains discoverable')
+    }
     else{assert.equal(visible.length,4,'far hemisphere point suppressed');assert.ok(labels.length>=2,'separate sparse labels remain readable')}
     const beforeResizeFrames=baseline.renderedFrames,start=Date.now()
     await page.setViewportSize({width:320,height:900});await settle(page)
     const small=await state(page)
     assert.ok(small.renderedFrames>beforeResizeFrames,'responsive resize causes actual renderer update')
-    assert.ok(small.markers.some(m=>m.visible&&m.labelVisible),'resize keeps an on-screen selected label')
+    const smallGrouping=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__?.getState()?.layout??null)
+    assert.ok(small.markers.some(m=>m.visible&&m.labelVisible)||smallGrouping?.clusters.some(group=>group.selected),'resize keeps an on-screen selected label or inspectable selected group')
     assert.ok(cameraStatesEqual(parseCameraState(await camera(page)),parseCameraState(original),1e-9),'resize retains camera')
     assert.equal(await canvas.evaluate(n=>n.isConnected),true,'resize retains viewer')
     const smallLayout=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}))
@@ -300,12 +315,25 @@ async function fixtureJourney(browser,engine,kind){
     // Locate one marker's real viewport edge, then cross it with less than
     // 0.0001 degrees of motion. This exercises changes below the former 1%
     // camera.changed threshold, using public visibility results only.
-    const anchor=baseline.markers.find(m=>m.visible).id,visibleAt=async lon=>{
+    const anchorMarker=visible[0],anchor=anchorMarker.id
+    const markerTuple=JSON.parse(anchor),positionIndex=markerTuple[1]
+    assert.ok(Number.isSafeInteger(positionIndex)&&positionIndex>=0,'canonical marker ID supplies its original geometry index')
+    const originalSource=receipt.selectionRows[0]
+    assert.equal(JSON.parse(anchorMarker.rowKey)[3],originalSource.revision_id,'canonical anchor binds the retained original revision')
+    // The unchanged Fidelity probe uses actual Cesium entity IDs, not canonical
+    // display IDs. Bridge only the published revision/index naming contract to
+    // retain the original entity's drawn/label assertions without inventing an
+    // eligibility field on that historical probe.
+    const fidelityAnchorId=originalSource.revision_id+'-'+positionIndex
+    assert.ok(baseline.markers.some(marker=>marker.id===fidelityAnchorId),'original retained entity exists for the canonical anchor')
+    const visibleAt=async lon=>{
       const before=(await state(page)).renderedFrames
       await setCamera(page,cameraState(lon,41.4,100000))
       await page.waitForFunction(frames=>window.__MIP_WORLD_VIEW_FIDELITY_PROBE__.getRenderState().renderedFrames>frames,before)
       await delay(70)
-      return (await state(page)).markers.find(m=>m.id===anchor).visible
+      const marker=(await clusterState(page)).markers.find(marker=>marker.id===anchor)
+      assert.ok(marker,'canonical geometry member remains retained during clipping')
+      return marker.eligible
     }
     let inside=-81.7,outside=-79.7
     assert.equal(await visibleAt(inside),true);assert.equal(await visibleAt(outside),false)
@@ -315,7 +343,12 @@ async function fixtureJourney(browser,engine,kind){
     const beforeMotion=await state(page)
     assert.equal(await visibleAt(outside),false,'small motion updates clipping without stale marker visibility')
     const afterMotion=await state(page)
-    assert.equal(afterMotion.markers.find(m=>m.id===anchor).labelVisible,false,'clipped marker cannot retain a label')
+    const clipped=(await clusterState(page)).markers.find(marker=>marker.id===anchor)
+    assert.equal(clipped.eligible,false,'canonical geometry member crosses its actual viewport boundary')
+    assert.equal(clipped.displayed,false,'clipped canonical geometry member supplies no drawn target')
+    const clippedEntity=afterMotion.markers.find(marker=>marker.id===fidelityAnchorId)
+    assert.equal(clippedEntity.visible,false,'clipped original Cesium entity is not drawn')
+    assert.equal(clippedEntity.labelVisible,false,'clipped original Cesium entity cannot retain a label')
     assert.ok(afterMotion.renderedFrames>beforeMotion.renderedFrames)
     await idleSample(page,counts,engine+'-'+kind+'-small-motion')
     await setCamera(page,parseCameraState(original));await settle(page)
@@ -323,12 +356,12 @@ async function fixtureJourney(browser,engine,kind){
     assert.deepEqual(await context(page),originalContext);assert.equal(page.url(),route)
     assert.deepEqual(errors,[])
     console.log('MIP_WORLD_FIXTURE_PASS='+JSON.stringify({engine,kind,synthetic:true,receipt,
-      baseline:{markers:baseline.markers.length,visible:visible.length,labels:labels.length},
+      baseline:{markers:baseline.markers.length,eligible:visible.length,drawnOriginals:baseline.markers.filter(m=>m.visible).length,labels:grouping?.stats.labelCount??labels.length,groupTargets:grouping?.stats.targetCount??null},
       resize:{width:320,visible:small.markers.filter(m=>m.visible).length,labels:small.markers.filter(m=>m.labelVisible).length,elapsedMs:resizeElapsedMs},
       layoutTiming:(await state(page)).layoutTiming??null,
       smallMotion:{deltaLongitude:outside-inside,frames:afterMotion.renderedFrames-beforeMotion.renderedFrames},
       requests:counts,backend:verifyBoundary(),
-      limitation:'MultiPoint members of one selected row exercise marker density. Independent-row selection and coordinate values are not observable through the current probe.'}))
+      limitation:'MultiPoint members of one selected original row exercise marker density. Group targets reduce drawn overlap; original coordinate records remain retained. Independent-row selection is qualified separately by the isolated clustering contract verifier.'}))
   }catch(error){
     console.log('MIP_WORLD_FIXTURE_FAILURE='+JSON.stringify({engine,kind,error:error.message,receipt,errors,requests:counts}))
     console.log('MIP_WORLD_FIXTURE_FAILURE_IMAGE_'+engine+'_'+kind+'='+(await page.screenshot({type:'jpeg',quality:65})).toString('base64'))

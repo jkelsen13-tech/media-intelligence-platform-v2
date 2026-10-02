@@ -1,3 +1,5 @@
+import WorldViewBillboardOverlay from '../components/WorldViewBillboardOverlay.jsx'
+import { buildWorldBillboardModel } from '../lib/worldViewBillboardModules.js'
 // R4 World View launch spine (DISPLAY / client UI).
 // Spec: MIP_WORLD_VIEW_LAUNCH_v0.1_2026-09-03.
 //
@@ -16,6 +18,7 @@ import GraphView from '../graph/GraphView'
 import TrustFooter from '../components/TrustFooter'
 import WorldMapCanvas from './WorldMapCanvas'
 import { createCameraMemory } from '../lib/worldViewCameraMemory.js'
+import WorldViewRelationshipPanel from '../components/WorldViewRelationshipPanel'
 import WorldViewVisualFidelityPanel from '../components/WorldViewVisualFidelityPanel'
 import { defaultVisualFidelityProfile, reduceVisualFidelityProfile, visualFidelityCapabilities } from '../lib/worldViewVisualFidelity.js'
 import {
@@ -408,6 +411,8 @@ export default function WorldView({
   const cameraMemoryRef = useRef(null)
   if (!cameraMemoryRef.current) cameraMemoryRef.current = createCameraMemory()
   const [mode, setMode] = useState('map')
+  const [relationshipDisplay, setRelationshipDisplay] = useState(null)
+  useEffect(() => { if (mode === 'graph') setRelationshipDisplay(null) }, [mode])
   const [visualFidelity, setVisualFidelity] = useState(defaultVisualFidelityProfile)
   const [fidelityCapabilities, setFidelityCapabilities] = useState(visualFidelityCapabilities)
   const [touchInteraction, setTouchInteraction] = useState(false)
@@ -686,17 +691,28 @@ export default function WorldView({
                 cameraControlsRef={cameraControlsRef}
                 onSourceStatus={setSourceStatus}
                 explorationActive={exploring && touchInteraction}
+                billboardEnabled={prototypeEnabled}
                 contextOverlay={anchor => contextModel.indicator.exists && contextModel.indicator.eligible && <>
                   {!contextOpen && anchor.visible && <button type="button" className="wv-spatial-context-icon"
                     style={{ left: anchor.x, top: anchor.y }} aria-label="Open selected spatial context"
                     onClick={() => setContextOpen(true)}>i</button>}
-                  {contextOpen && <WorldViewSpatialContextCard model={contextModel} anchor={anchor}
+                  {contextOpen && prototypeEnabled && anchor.billboardSelected && <WorldViewBillboardOverlay
+                    layout={{markers:[],selected:anchor.billboardSelected}} selectedKey={anchor.billboardSelected.key}
+                    model={buildWorldBillboardModel({key:anchor.billboardSelected.key,label:inspectorTitle(visibleRow),
+                      canonicalCoordinates:anchor.billboardSelected.canonicalCoordinates,precision:visibleRow?.precision_class,
+                      eventTime:visibleRow?.source_native_time,eventTimeRange:visibleRow?.valid_from_utc && visibleRow?.valid_to_utc ? [visibleRow.valid_from_utc,visibleRow.valid_to_utc] : null,
+                      sourceRefs:normalizeEvidenceRefs(visibleRow?.evidence_refs),suppliedModules:visibleRow?.supplied_modules},
+                      {inspectionTime:recordedTime.atIso ?? null})}
+                    onClose={()=>setContextOpen(false)} onInspect={inspectContext} interactionEnabled={touchInteraction} />}
+                  {contextOpen && (!prototypeEnabled || !anchor.billboardSelected) && <WorldViewSpatialContextCard model={contextModel} anchor={anchor}
                     viewport={{ width: anchor.width ?? 0, height: anchor.height ?? 0 }}
                     onClose={() => setContextOpen(false)} onInspect={inspectContext} />}
                 </>}
                 rows={mapRows}
                 selectedKeys={selectedKeys}
                 onSelectRow={handleMapSelect}
+                relationships={worldGraph.edges}
+                onRelationshipDisplay={setRelationshipDisplay}
                 emptyMessage={emptyMessage}
               />
             )}
@@ -732,6 +748,12 @@ export default function WorldView({
             )}
           </div>
           </WorldViewExploreShell>
+          {worldGraph.status === 'loading' ? <p className="wv-meta">Loading relationship records…</p> : (
+            <WorldViewRelationshipPanel edges={worldGraph.edges} nodes={worldGraph.nodes}
+              selectedKeys={selectedKeys} displaySummary={relationshipDisplay}
+              edgesUnavailable={worldGraph.edgesUnavailable ?? (worldGraph.status === 'unavailable' ? worldGraph.reason ?? 'unavailable' : null)}
+              onSelectNode={onSelectGraphNode} />
+          )}
           <TimelineScrubber
             stamps={stamps}
             time={recordedTime}

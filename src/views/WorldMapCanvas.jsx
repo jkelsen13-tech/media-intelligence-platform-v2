@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { geoMercator, geoPath, geoGraticule10 } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
 import worldAtlas from 'world-atlas/countries-110m.json'
@@ -23,8 +24,13 @@ import { resolveWorldViewSourceStatus } from '../lib/worldViewSourceStatus.js'
 import { createWorldViewPilotBookmarks } from '../lib/worldViewPilotBookmarks.js'
 import { createWorldViewUsage, worldViewResourceObservation } from '../lib/worldViewResourcePolicy.js'
 
+import WorldViewSpatialGroupPanel, { WorldViewDisplayOverlay } from '../components/WorldViewSpatialGroupPanel'
+import { createDisplayPresentation, displayPresentationSignature, displayPresentationProbe } from '../lib/worldViewDisplayPresentation.js'
+import { isCurrentSingletonRow, projectionRowDisplayKey, resolveCurrentClusterMember } from '../lib/worldViewDisplayClusters.js'
+
 const MAP_W = 960
 const MAP_H = 480
+const EMPTY_RELATIONSHIPS = Object.freeze([])
 
 const worldObjects = worldAtlas.objects ?? {}
 const LAND = worldObjects.land ? feature(worldAtlas, worldObjects.land) : null
@@ -32,13 +38,15 @@ const BORDERS = worldObjects.countries
   ? mesh(worldAtlas, worldObjects.countries, (a, b) => a !== b)
   : null
 
-function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attribution, contextOverlay }) {
+function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attribution, contextOverlay, relationships, onDisplayLayout, onInspectCluster }) {
   const features = useMemo(() => projectionMarkerRecords(rows, selectedKeys), [rows, selectedKeys])
   const svgRef = useRef(null)
   const labelRefs = useRef(new Map())
   const mainLabelRefs = useRef(new Map())
   const [screenScale, setScreenScale] = useState(1)
   const [contextAnchor, setContextAnchor] = useState({ visible: false })
+  const [presentation, setPresentation] = useState(null)
+  const atlasTiming = useRef({ passes: 0, lastMs: 0, maxMs: 0 })
   const metrics = atlasDisplayMetrics(screenScale)
   const [labelLayout, setLabelLayout] = useState(() => ({ labels: new Set(), details: new Set() }))
   const geometry = useMemo(() => {
@@ -68,7 +76,7 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
           f.positions.map((coordinate, i) => {
             const point = projection(coordinate)
             if (!point) return null
-            return { ...f, i, x: point[0], y: point[1] }
+            return { ...f, i, positionIndex: i, position: coordinate, id: atlasMarkerId({ ...f, i }), x: point[0], y: point[1] }
           }),
         )
         .filter(Boolean),
@@ -88,37 +96,69 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
     const update = () => {
       if (disposed || checkScale()) return
       const selected = geometry.markers.find(marker => marker.selected)
-      const matrix = svg?.getScreenCTM?.(), bounds = svg?.parentElement?.getBoundingClientRect?.()
-      if (selected && matrix && bounds) {
-        const x = matrix.a * selected.x + matrix.c * selected.y + matrix.e - bounds.x
-        const y = matrix.b * selected.x + matrix.d * selected.y + matrix.f - bounds.y
+      const contextMatrix = svg?.getScreenCTM?.(), bounds = svg?.parentElement?.getBoundingClientRect?.()
+      if (selected && contextMatrix && bounds) {
+        const x = contextMatrix.a * selected.x + contextMatrix.c * selected.y + contextMatrix.e - bounds.x
+        const y = contextMatrix.b * selected.x + contextMatrix.d * selected.y + contextMatrix.f - bounds.y
         setContextAnchor({ visible: x >= 0 && y >= 0 && x <= bounds.width && y <= bounds.height,
           x, y, width: bounds.width, height: bounds.height })
       } else setContextAnchor({ visible: false })
+      const started = performance.now()
       // Inline fonts/offsets have reached the SVG before this layout effect.
-      const next = atlasLabelLayout(geometry.markers, {
+      const matrix = svg?.getScreenCTM?.(), rect = svg?.getBoundingClientRect?.()
+      const width = rect?.width || MAP_W * screenScale, height = rect?.height || MAP_H * screenScale
+      const projected = geometry.markers.map(marker => {
+        let box
+        try { box = labelRefs.current.get(marker.id)?.getBBox() } catch { /* fallback bounds */ }
+        return {
+          ...marker, svgX: marker.x, svgY: marker.y,
+          x: matrix && rect ? matrix.a * marker.x + matrix.c * marker.y + matrix.e - rect.left : marker.x * screenScale,
+          y: matrix && rect ? matrix.b * marker.x + matrix.d * marker.y + matrix.f - rect.top : marker.y * screenScale,
+          labelWidth: box ? (box.width + 4) * screenScale : undefined,
+          labelHeight: box ? (box.height + 4) * screenScale : undefined,
+          visible: true,
+        }
+      })
+      const display = createDisplayPresentation(projected, { width, height, relationships, selectedKeys, radiusPx: 64 })
+      const admitted = new Set(display.layout.singles.map(marker => marker.id))
+      const next = atlasLabelLayout(geometry.markers.filter(marker => admitted.has(marker.id)), {
         width: MAP_W, height: MAP_H, screenScale,
+        reservedBoxes: display.layout.clusters.map(group => ({
+          left: group.anchor.svgX - 22 / screenScale, right: group.anchor.svgX + 22 / screenScale,
+          top: group.anchor.svgY - 22 / screenScale, bottom: group.anchor.svgY + 22 / screenScale,
+        })),
         measureBounds: (marker, mode) => (mode === 'main' ? mainLabelRefs : labelRefs)
           .current.get(atlasMarkerId(marker))?.getBBox(),
       })
+      display.labels = next.labels
+      // Atlas uses separately measured two-line SVG labels. Relationship types
+      // remain inspectable in the exact-edge panel rather than overlap them.
+      display.relationshipLabels = new Set()
+      const elapsed = Math.max(0, performance.now() - started)
+      atlasTiming.current.passes += 1
+      atlasTiming.current.lastMs = elapsed
+      atlasTiming.current.maxMs = Math.max(atlasTiming.current.maxMs, elapsed)
+      display.timing = { ...atlasTiming.current }
+      setPresentation(current => displayPresentationSignature(current) === displayPresentationSignature(display) ? current : display)
+      onDisplayLayout?.(display)
       const same = (a, b) => a.size === b.size && [...a].every(id => b.has(id))
       setLabelLayout(current => same(current.labels, next.labels) && same(current.details, next.details) ? current : next)
     }
     update()
     const view = svg?.ownerDocument?.defaultView
     const fonts = svg?.ownerDocument?.fonts
-    const observer = view?.ResizeObserver ? new view.ResizeObserver(checkScale) : null
+    const observer = view?.ResizeObserver ? new view.ResizeObserver(update) : null
     if (svg) observer?.observe(svg)
-    if (!observer) view?.addEventListener('resize', checkScale)
+    if (!observer) view?.addEventListener('resize', update)
     fonts?.addEventListener?.('loadingdone', update)
     void fonts?.ready?.then(() => { if (!disposed) update() }).catch(() => {})
     return () => {
       disposed = true
       observer?.disconnect()
-      if (!observer) view?.removeEventListener('resize', checkScale)
+      if (!observer) view?.removeEventListener('resize', update)
       fonts?.removeEventListener?.('loadingdone', update)
     }
-  }, [geometry.markers, screenScale])
+  }, [geometry.markers, screenScale, relationships, selectedKeys, onDisplayLayout])
 
   return (
     <div
@@ -127,6 +167,7 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
       aria-label="Spatial projection map. Only display_geometry from the live view is drawn."
       data-map-stack={FALLBACK_MAP_STACK_ID}
     >
+      <div className="wv-atlas-stage">
       <svg ref={svgRef} viewBox={`0 0 ${MAP_W} ${MAP_H}`} className="wv-map-svg">
         {geometry.spherePath && <path className="wv-map-sea" d={geometry.spherePath} />}
         {geometry.graticulePath && <path className="wv-graticule" d={geometry.graticulePath} />}
@@ -135,18 +176,21 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
         {geometry.markers.map((marker) => {
           const id = atlasMarkerId(marker)
           const text = atlasLabelText(marker)
+          const drawn = presentation?.layout.singles.some(single => single.id === id) === true
           return (
             <g
               key={id}
               className={`wv-feature${marker.selected ? ' is-selected' : ''}`}
               role="button"
               aria-label={text.accessibleName}
-              tabIndex={0}
-              onClick={event => activateAtlasMarker(event, marker.row, onSelectRow)}
-              onKeyDown={event => activateAtlasMarker(event, marker.row, onSelectRow)}
+              tabIndex={drawn ? 0 : -1}
+              aria-hidden={!drawn}
+              style={{ visibility: drawn ? 'visible' : 'hidden', pointerEvents: drawn ? 'auto' : 'none' }}
+              onClick={drawn ? event => activateAtlasMarker(event, marker.row, onSelectRow) : undefined}
+              onKeyDown={drawn ? event => activateAtlasMarker(event, marker.row, onSelectRow) : undefined}
             >
               <circle className="wv-atlas-hit-target" cx={marker.x} cy={marker.y} r={metrics.hitRadius}
-                fill="transparent" stroke="none" pointerEvents="all" aria-hidden="true" />
+                fill="transparent" stroke="none" pointerEvents={drawn ? 'all' : 'none'} aria-hidden="true" />
               <circle className="wv-atlas-point" cx={marker.x} cy={marker.y} r={metrics.pointRadius}
                 style={{ strokeWidth: metrics.pointStrokeWidth }} aria-hidden="true" />
               <g
@@ -183,6 +227,8 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
         })}
       </svg>
       {contextOverlay?.(contextAnchor)}
+      <WorldViewDisplayOverlay presentation={presentation} onInspectCluster={onInspectCluster} />
+      </div>
       {features.length === 0 && (
         <div className="wv-map-empty">
           <p>{emptyMessage}</p>
@@ -195,13 +241,65 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
 }
 
 export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSelectRow, emptyMessage, recordedTimeInstant, visualFidelity,
-  onVisualFidelityCapabilities, cameraControlsRef, onSourceStatus, contextOverlay, explorationActive = false }) {
+  onVisualFidelityCapabilities, cameraControlsRef, onSourceStatus, contextOverlay, explorationActive = false, relationships = EMPTY_RELATIONSHIPS, onRelationshipDisplay, billboardEnabled = false }) {
+  const [presentation, setPresentation] = useState(null)
+  const [inspectedClusterId, setInspectedClusterId] = useState(null)
+  const [inspectionRevision, setInspectionRevision] = useState(0)
+  const presentationRef = useRef(null)
+  const currentRows = useRef(rows)
+  currentRows.current = rows
+  const pickRef = useRef(onSelectRow)
+  pickRef.current = onSelectRow
+  const relationshipCallback = useRef(onRelationshipDisplay)
+  relationshipCallback.current = onRelationshipDisplay
+  const displayPublication = useRef(null)
+  const cancelDisplayPublication = useCallback(() => {
+    const pending = displayPublication.current
+    displayPublication.current = null
+    if (pending) pending.view.cancelAnimationFrame?.(pending.frame)
+  }, [])
+  const receiveDisplayLayout = useCallback(next => {
+    // Picks and probes must always read the current canonical presentation.
+    presentationRef.current = next
+    if (!next) {
+      cancelDisplayPublication()
+      setPresentation(null)
+      relationshipCallback.current?.(null)
+      return
+    }
+    const view = hostRef.current?.ownerDocument?.defaultView
+      ?? (typeof window === 'undefined' ? null : window)
+    if (!view?.requestAnimationFrame) {
+      setPresentation(next)
+      relationshipCallback.current?.(next.relationshipSummary ?? null)
+      return
+    }
+    if (displayPublication.current) return
+    const pending = { view, frame: null }
+    displayPublication.current = pending
+    // MapLibre can notify synchronously from its native ResizeObserver. Commit
+    // document-flow UI after that delivery, once for the latest presentation.
+    pending.frame = view.requestAnimationFrame(() => {
+      if (displayPublication.current !== pending) return
+      displayPublication.current = null
+      const current = presentationRef.current
+      setPresentation(current)
+      relationshipCallback.current?.(current?.relationshipSummary ?? null)
+    })
+  }, [cancelDisplayPublication])
+  useEffect(() => cancelDisplayPublication, [cancelDisplayPublication])
+  const selectCurrentRow = useCallback(row => {
+    const current = adapterRef.current?.getDisplayLayout?.() ?? presentationRef.current
+    if (isCurrentSingletonRow(current?.layout, row, currentRows.current)) pickRef.current?.(row)
+  }, [])
   const localMemoryRef = useRef(null)
   if (!localMemoryRef.current) localMemoryRef.current = createCameraMemory()
   const memory = cameraMemory ?? localMemoryRef.current
   const hostRef = useRef(null)
   const fidelityRef = useRef(visualFidelity)
   fidelityRef.current = visualFidelity
+  const fidelityCapabilitiesCallback = useRef(onVisualFidelityCapabilities)
+  fidelityCapabilitiesCallback.current = onVisualFidelityCapabilities
 
   const framingRef = useRef(null)
   if (!framingRef.current) framingRef.current = createCameraFraming()
@@ -233,6 +331,8 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     setTerrainStatus(null)
     setImageryStatus(null)
     setContextAnchor({ visible: false })
+    receiveDisplayLayout(null)
+    setInspectedClusterId(null)
     adapterRef.current?.destroy?.()
     framingRef.current.resetRenderer()
     const adapter = createWorldViewRendererAdapter({
@@ -242,7 +342,10 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       precisionClass: first?.row?.precision_class,
       getPrecisionClass: () => firstRef.current?.row?.precision_class,
       getSelectedKeys: () => selectedKeys,
-      onSelectRow,
+      onSelectRow: selectCurrentRow, billboardEnabled,
+      relationships, onDisplayLayout: next => {
+        if (!cancelled && adapterRef.current === adapter) receiveDisplayLayout(next)
+      },
       onStackIdChange: (next) => {
         if (cancelled) return
         memory.remember(adapter.getCameraState?.(), framingRef.current.getFramedKey(), stackId)
@@ -261,18 +364,28 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     adapterRef.current = adapter
     adapter.setActivityState?.(document.hidden ? 'hidden' : 'visible-idle')
     void adapter.mount().then(() => {
-      if (!cancelled) {
-        setRendererReady(true)
-        const framing = framingRef.current
-        if (memory.restore(adapter, framing.getTargetKey(), stackId)) framing.acceptRestoredView()
-        else if (!framing.apply(adapter) && framing.getTargetKey() === null) adapter.setCameraState?.(northAmericaCameraState())
-      }
+      if (cancelled || adapterRef.current !== adapter) return
+      // Startup restores retained effects before resolving. Publish their current
+      // capability metadata and readiness in one committed UI update, so the
+      // controls cannot lag an already enabled renderer until a passive effect.
+      flushSync(() => {
+        fidelityCapabilitiesCallback.current?.(
+          adapter.getVisualFidelityCapabilities?.() ?? visualFidelityCapabilities(),
+        )
+        if (!cancelled && adapterRef.current === adapter) setRendererReady(true)
+      })
+      if (cancelled || adapterRef.current !== adapter) return
+      const framing = framingRef.current
+      if (memory.restore(adapter, framing.getTargetKey(), stackId)) framing.acceptRestoredView()
+      else if (!framing.apply(adapter) && framing.getTargetKey() === null) adapter.setCameraState?.(northAmericaCameraState())
     })
     return () => {
       memory.remember(adapter.getCameraState?.(), framingRef.current.getFramedKey(), stackId)
       cancelled = true
       adapter.destroy()
       adapterRef.current = null
+      cancelDisplayPublication()
+      presentationRef.current = null
     }
     // Reboot only when the stack changes. Layer updates happen in the next effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -293,17 +406,20 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   useEffect(() => {
     if (usageRef.current.snapshot().state === 'disposed') usageRef.current = createWorldViewUsage()
     const usage = usageRef.current
+    const doc = hostRef.current?.ownerDocument ?? (typeof document === 'undefined' ? null : document)
+    if (!doc) return
     const update = () => {
-      const state = document.hidden ? 'hidden' : explorationActive ? 'visible-active' : 'visible-idle'
+      const state = doc.hidden ? 'hidden' : explorationActive ? 'visible-active' : 'visible-idle'
       usage.transition(state)
       adapterRef.current?.setActivityState?.(state)
     }
     update()
-    document.addEventListener('visibilitychange', update)
-    return () => document.removeEventListener('visibilitychange', update)
+    doc.addEventListener?.('visibilitychange', update)
+    return () => doc.removeEventListener?.('visibilitychange', update)
   }, [explorationActive, stackId, rendererReady])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
     let observer
     try {
       observer = new PerformanceObserver(list => {
@@ -336,9 +452,9 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   useEffect(() => {
     const adapter = adapterRef.current
     if (!adapter || stackId === FALLBACK_MAP_STACK_ID) return undefined
-    adapter.setOnSelectRow?.(onSelectRow)
+    adapter.setOnSelectRow?.(selectCurrentRow)
     void adapter.setFeatures(features, selectedKeys)
-  }, [features, onSelectRow, selectedKeys, stackId])
+  }, [features, selectCurrentRow, selectedKeys, stackId])
 
   useEffect(() => {
     const adapter = adapterRef.current
@@ -346,6 +462,30 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     if (!adapter || stackId === FALLBACK_MAP_STACK_ID) return
     framingRef.current.apply(adapter)
   }, [features, stackId])
+
+  useEffect(() => {
+    adapterRef.current?.setRelationships?.(relationships)
+  }, [relationships, stackId, rendererReady])
+
+  const currentPresentation = () => adapterRef.current?.getDisplayLayout?.() ?? presentationRef.current
+  const inspectCluster = id => {
+    const current = currentPresentation()
+    if (!current?.layout.clusters.some(cluster => cluster.id === id)) return
+    setInspectedClusterId(id)
+    setInspectionRevision(current => current + 1)
+  }
+  const chooseClusterMember = (id, rowKey) => {
+    const current = currentPresentation()
+    const row = resolveCurrentClusterMember(current?.layout, id, rowKey)
+    // An explicit member choice is allowed after group inspection; direct
+    // marker activation is restricted to the currently visible singletons.
+    if (row && currentRows.current?.includes(row)) pickRef.current?.(row)
+  }
+  const chooseSingle = rowKey => {
+    const current = currentPresentation()
+    const marker = current?.layout.singles.find(item => projectionRowDisplayKey(item.row) === rowKey)
+    selectCurrentRow(marker?.row)
+  }
 
   // Reapply current preferences after startup/remount and after terrain degradation.
   // Capability updates contain metadata only, never renderer objects.
@@ -369,6 +509,12 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   // hash/deep-link route.
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
+    const clusterProbe = {
+      getState: () => displayPresentationProbe(presentationRef.current,
+        stackId === FALLBACK_MAP_STACK_ID ? 'atlas-fallback' : adapterRef.current?.getRendererKind?.() ?? 'unavailable',
+        adapterRef.current?.getDisplayTiming?.() ?? presentationRef.current?.timing ?? {}),
+    }
+    window.__MIP_WORLD_VIEW_CLUSTER_PROBE__ = clusterProbe
     const probe = {
       getCameraState: () => adapterRef.current?.getCameraState?.() ?? null,
       setCameraState: (serialized) => adapterRef.current?.setCameraState?.(serialized) ?? false,
@@ -393,6 +539,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     }
     window.__MIP_WORLD_VIEW_FIDELITY_PROBE__ = fidelityProbe
     return () => {
+      if (window.__MIP_WORLD_VIEW_CLUSTER_PROBE__ === clusterProbe) delete window.__MIP_WORLD_VIEW_CLUSTER_PROBE__
       if (window.__MIP_WORLD_VIEW_FIDELITY_PROBE__ === fidelityProbe) delete window.__MIP_WORLD_VIEW_FIDELITY_PROBE__
       if (window.__MIP_WORLD_VIEW_CAMERA_PROBE__ === probe) {
         delete window.__MIP_WORLD_VIEW_CAMERA_PROBE__
@@ -405,14 +552,21 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
 
   if (stackId === FALLBACK_MAP_STACK_ID) {
     return (
+      <div className="wv-map-panel">
       <AtlasFallbackMap
         rows={rows}
         selectedKeys={selectedKeys}
-        onSelectRow={onSelectRow}
+        onSelectRow={selectCurrentRow}
         emptyMessage={emptyMessage}
         attribution={stack.attribution}
         contextOverlay={contextOverlay}
+        relationships={relationships}
+        onDisplayLayout={receiveDisplayLayout}
+        onInspectCluster={inspectCluster}
       />
+      <WorldViewSpatialGroupPanel presentation={presentation} inspectedClusterId={inspectedClusterId} inspectionRevision={inspectionRevision}
+        onInspectCluster={inspectCluster} onSelectMember={chooseClusterMember} onSelectSingle={chooseSingle} />
+      </div>
     )
   }
 
@@ -450,6 +604,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     <div className="wv-map wv-map-gl" data-map-stack={stackId}>
       <div ref={hostRef} className="wv-map-host" />
       {contextOverlay?.(contextAnchor)}
+      <WorldViewDisplayOverlay presentation={presentation} onInspectCluster={inspectCluster} />
       {features.length === 0 && (
         <div className="wv-map-empty">
           <p>{emptyMessage}</p>
@@ -462,6 +617,8 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
         </p>
       )}
     </div>
+      <WorldViewSpatialGroupPanel presentation={presentation} inspectedClusterId={inspectedClusterId} inspectionRevision={inspectionRevision}
+        onInspectCluster={inspectCluster} onSelectMember={chooseClusterMember} onSelectSingle={chooseSingle} />
       {stackId === ELLIPSOID_GLOBE_STACK_ID && (
         <p className="wv-terrain-disclosure" data-terrain-status={terrainStatus?.status ?? 'idle'}>
           {TERRAIN_DISCLOSURE_TEXT}

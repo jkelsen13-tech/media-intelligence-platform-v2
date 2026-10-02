@@ -140,6 +140,19 @@ export function subjectFromGraphNode(node) {
   }
 }
 
+/** Inspecting the same canonical endpoint retains its recorded spatial
+ * context when the graph has no recorded occurrence. New identities reset. */
+export function subjectFromGraphInspection(node, ic) {
+  const subject = subjectFromGraphNode(node)
+  if (subject.canonical_subject_id != null
+    && String(subject.canonical_subject_id) === String(ic?.canonical_subject_id)
+    && node?.occurred_at == null && !node?.fromSpatialProjection) {
+    return { ...subject, as_of_time: ic.as_of_time ?? null,
+      selected_time_range: ic.selected_time_range ?? null }
+  }
+  return subject
+}
+
 export function subjectFromNamedTarget({ type, id, parentEventId = null } = {}) {
   const canonicalId = id ?? null
   return {
