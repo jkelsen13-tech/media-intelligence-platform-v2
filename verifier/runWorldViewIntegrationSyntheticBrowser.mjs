@@ -37,6 +37,7 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
  for(const mode of ['Graph','Split','Map']){await modes.getByRole('tab',{name:mode,exact:true}).click();await page.waitForTimeout(350)}
  await page.evaluate(kind=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.setCameraState(JSON.stringify({version:1,lon:-81.7,lat:41.4,heightMeters:kind==='facility'?9000:100000,headingDegrees:0,pitchDegrees:-90,rollDegrees:0})),scenario)
  await page.waitForTimeout(700)
+ await page.getByRole('button',{name:'Explore World View',exact:true}).click()
  const panel=page.getByRole('region',{name:'Spatial groups',exact:true})
  const summary=panel.locator('summary').first();if(await summary.count()&&!await summary.evaluate(n=>n.parentElement.open))await summary.click()
  const group=panel.locator('button[data-cluster-id]').first()
@@ -44,6 +45,9 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
  const member=panel.locator('button[data-row-key]').filter({hasText:rows[1].mip_object_id}).first()
  await member.press('Space')
  await page.waitForTimeout(1000)
+ const chosenHeight=await page.locator('.wv-explore-map .wv-map-host,.wv-explore-map .wv-map-svg').first().evaluate(n=>n.clientHeight)
+ assert.ok(chosenHeight>=80,'member choice inside bounded Explore chooser retains map viewport')
+ await page.getByRole('button',{name:'Close Explore World View',exact:true}).click()
  const selected=await page.locator('[data-canonical-subject-id]').first().getAttribute('data-canonical-subject-id')
  assert.ok(selected,'full App member choice commits canonical original endpoint')
  if(scenario!=='atlas')await page.getByRole('button',{name:'Stop camera flight',exact:true}).click()

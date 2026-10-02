@@ -134,7 +134,7 @@
 .wv-explore-open .wv-explore-map .wv-map-panel { position: relative; }
 .wv-explore-open .wv-explore-map .wv-map-panel > .wv-spatial-groups {
   position: absolute;
-  z-index: 2;
+  z-index: 5;
   left: 10px;
   top: 84px;
   width: min(320px, calc(100% - 56px));
