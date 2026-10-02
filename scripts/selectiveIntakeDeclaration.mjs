@@ -29,7 +29,8 @@ function snapshot(observation) {
   const scope = unique(s.scope_candidate_ids, value => id(value, 'scope candidate'), 'scope candidate')
   if (!Array.isArray(s.candidates) || !Array.isArray(s.inputs) || !Array.isArray(s.assessments)) fail('incomplete observation')
   const candidates = unique(s.candidates, row => id(row.id, 'candidate id'), 'candidate')
-  if (scope.size !== candidates.size || [...scope.keys()].some(key => !candidates.has(key))) fail('candidate scope mismatch')
+  // Native snapshots also retain candidates belonging to ancestor assessments.
+  if ([...scope.keys()].some(key => !candidates.has(key))) fail('candidate scope mismatch')
   const inputs = unique(s.inputs, row => position(row.position), 'input')
   for (const row of inputs.values()) {
     if (!!row.capture === !!row.record_version) fail('invalid retained input')
@@ -38,7 +39,7 @@ function snapshot(observation) {
   }
   const assessments = unique(s.assessments, row => id(row.id, 'assessment id'), 'assessment')
   const relevance = unique(s.relevance_declarations ?? [], row => `${id(row.candidate_id, 'relevance candidate')}:${position(row.change_position)}`, 'relevance declaration')
-  return { candidates, inputs, assessments, relevance }
+  return { scope, candidates, inputs, assessments, relevance }
 }
 const subject = input => input.capture ? `article:${input.capture.article_id}` : `${input.record_version.record_kind}:${input.record_version.record_key}`
 function inputAt(s, p) { const row = s.inputs.get(position(p)); if (!row) fail('unknown retained input'); return row }
@@ -78,6 +79,7 @@ export function declareSelectiveIntake(observation, declaration) {
   if (id(declaration.observation_id, 'observation id') !== observation.id) fail('observation mismatch')
   const candidate = s.candidates.get(id(declaration.candidate_id, 'candidate id'))
   if (!candidate) fail('unknown candidate')
+  if (!s.scope.has(candidate.id)) fail('candidate outside explicit scope')
   const input = inputAt(s, declaration.input_position)
   if (!input.capture || candidate.capture_id !== id(declaration.capture_id, 'capture id') || input.capture.id !== candidate.capture_id ||
       text(declaration.content_hash, 'content hash') !== input.capture.content_hash ||
