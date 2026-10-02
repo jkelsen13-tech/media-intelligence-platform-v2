@@ -1,0 +1,51 @@
+# Article raw extraction: source-only column privilege proposal
+
+Date: 2026-10-02. Isolated branch from `4e018c5d0f5c89586a2c2bea20777fe0a5d8365c`. **Not deployed, not an applied migration, not approval to execute against a live database.** No live article content, publication decision, runtime credentials or privileges were read or changed in this lane.
+
+## Requirement → existing foundation → missing boundary
+
+The complete consultation 04/07 reader contracts separate source retention, extraction, candidates, review and audience eligibility; document 07 explicitly says a frontend hidden state cannot be the authorization boundary. The existing foundation keeps candidate/capture tables private and uses governed public projections for admitted analytical claims. The repaired News DTO already ignores article-local extraction JSON (`src/lib/supabase.js:1260`); that fixes application composition, not direct Data API authorization.
+
+The restored source grants whole-table SELECT on `public.articles` to anon/authenticated (`scripts/mipConsolidationRestore.mjs:46`) and applies eligible+active RLS at `:47`. Revoking canonical claims/article_claims in `20260905181254_mip_public_surface_authenticated_review_revoke.sql` does not revoke the distinct `articles.claims` JSON column. The original eleven-check intake journey verifies DTO omission of `UNADMITTED_RAW_EXTRACTION`, not direct SQL denial of that column. Those historical sources and that verifier remain unchanged.
+
+The installed Supabase SDK direct `articles.select('id,claims')` request now reproduces that gap against actual restored SQL/RLS: both reader roles receive the synthetic raw extraction of an explicitly fixture-approved eligible active article, although the actual News DTO includes only the governed verified claim. Pending, withheld and withdrawn fixture rows remain hidden. A column-only `REVOKE SELECT(claims)` is also shown to leave the raw read available while whole-table SELECT exists. PostgreSQL table grants cover the corresponding column privileges; the table grant must be removed before a column allowlist can restrict access. [PostgreSQL GRANT documentation](https://www.postgresql.org/docs/current/sql-grant.html).
+
+The coordinator's fresh read-only metadata report at **09:01:55.942266 UTC** confirms live anon/authenticated effective SELECT on all 30 article columns, whole-table SELECT, `claims jsonb NOT NULL` with no column ACL, PUBLIC without read privilege, canonical claims/article_claims without table/column SELECT, and eligible+active RLS. That report contains **no row/API content read**. It confirms the privilege shape, not that a live raw extraction row exists or was accessed. This lane performs no live operation. The isolated fixture has 19 restored columns, with current claims NOT NULL enforced; it is not a replay of the complete live catalog, trigger functions, authentication or grantors.
+
+## Bounded source package
+
+Existing access foundation → reproduced direct-column gap → **EXTEND** with a forward source proposal:
+
+- `supabase/source-proposals/article_reader_column_privileges_v1.sql`: remove only the direct owner-granted anon/authenticated table SELECT and grant explicit SELECT on existing intentional consumer/filter columns.
+- `article_reader_column_privileges_v1.catalog.sql`: read-only catalog capture, no article rows; the query bytes match proposal and rollback, using the same search_path.
+- `article_reader_column_privileges_v1.rollback.sql`: separately reviewed inverse of those SELECT changes. Restoring table SELECT **reopens raw extraction access**; it is not a safe automatic incident response.
+- `verifier/runArticleReaderColumnBoundary.mjs` and `tests/articleReaderColumnBoundary.test.mjs`: installed SDK → bounded parameterized SQL transport → restored PGlite PostgreSQL/RLS, with actual bound `createPublicDataBackend` News readers and governed views.
+
+The allowlist is exactly: `id`, `feed`, `outlet`, `title`, `url`, `summary`, `body_text`, `published_at`, `fetched_at`, `reader_state`, `source_status`, `arc_id`, `author_id`, `monoculture`, `unattributed`. `body_text` is needed by the existing News search filter (`src/lib/supabase.js:1127`), even though the normal DTO omits full body text. Both source clocks remain their existing facts. News list/detail uses `:1192`/`:1229`, metrics/counts uses `:965`, `:994`, `:1156`, article graph/excerpt reads use `:552`/`:1542`, and arc grouping uses `src/lib/arcGroupedTimeline.js:358`. No browser article consumer selects raw claims. The proposal does not assume the other live columns are intentional reader fields; none receives ordinary-reader SELECT.
+
+No row writes, capture/revision exposure, publication-rule change, grant to PUBLIC, view owner/invoker conversion, function/policy/trigger change, historical migration rewrite or blanket reader shutdown is included. Owner, RLS, governed projection definitions/ACLs and nonreader rights remain unchanged. Service/operator SELECT and selected-column INSERT grants are preserved in the fixture; this does not claim new or different live operator authority.
+
+## Preconditions, ordering and execution gate
+
+This package is deliberately outside automatic migrations. If separately approved later, apply after the already-recorded article/public-reader migration foundation and all current article schema additions, as a new forward privilege change. **Do not replay historical migrations or run the synthetic restore on production.** Subsequent migrations must preserve the column allowlist; a later table SELECT grant would undo it.
+
+Before any proposed execution, run the standalone read-only catalog capture as the reviewed owner, review the complete result and pin that exact JSON in `mip.article_reader_acl_expected_catalog` on the execution session. The package requires exact equality under a table lock and validates the owner, RLS, known field types, claims NOT NULL, reader roles, owner grantors/options and the eligible+active reader predicate, including inherited policy roles. The captured baseline includes all column names/types/nullability/defaults/ACLs, table ACL/owner, constraints, policies, reader memberships, trigger/function definitions and governed view owners/definitions/options/ACLs. Review must establish the remaining live columns have no intentional consumer requiring ordinary access. Missing baseline, any unexpected catalog drift, PUBLIC grant, other SELECT grantor/option, preexisting ordinary column grant, superuser/BYPASSRLS reader, widened reader RLS, or effective inherited broad/raw privileges aborts the transaction. No CASCADE or attempt to revoke unrelated role authority is used.
+
+The coordinator's summary is not that exact reviewed baseline or a deployment receipt. Full fresh metadata, field-consumer review and separate execution approval remain prerequisites. Use parameterized `set_config` in the approved execution wrapper; do not interpolate baseline JSON into shell/SQL. The verifier does this only in its disposable database. No execution wrapper connected to a live service is supplied.
+
+After a separately approved change, verify exact public field reads and counts/search, eligible+active RLS, denied direct raw/mixed/wildcard reads, private schemas/canonical tables/RPC, and positive governed reviewed projection reads. Verify all effective column privileges rather than treating table-level SELECT=false alone as sufficient. No actual live API probe is claimed here.
+
+Rollback also requires a fresh, separately reviewed exact **post-proposal** catalog and verified owner. It only revokes this package's explicit ordinary column grants and restores the prior owner table SELECT; it aborts on drift/unexpected grantor/authority. It preserves schema, policies, projections and nonreader privileges. PostgreSQL may normalize a previously NULL column ACL to an empty ACL, so rollback is semantic privilege restoration, not a promise of byte-identical catalog storage. The executable check demonstrates the raw read becomes available again after rollback; a subsequent reapplication needs a fresh baseline.
+
+## Isolated qualification and limits
+
+Run sequentially:
+
+```bash
+node --test --test-concurrency=1 tests/articleReaderColumnBoundary.test.mjs tests/canonicalIntakeReaderJourney.test.mjs
+node verifier/runArticleReaderColumnBoundary.mjs /tmp/article-column-boundary.json
+```
+
+The new regression contains eleven ordered executable checks plus a query-byte drift test: baseline SDK raw read/DTO omission; ineffective column-only revoke; missing/stale catalog abort; inherited RLS/table/column authority abort; PUBLIC/raw-column/grant-option/nullability/type rejection; effective allowlist and unchanged source/projection metadata; denied direct/wildcard/mixed/raw-filter/raw-order/JSON/whole-row reads; denied canonical/private/RPC reads; positive News list/detail/body search/metrics/counts and governed comparison/graph reads; future column denial; explicit rollback reopening; fresh-baseline reapplication. Both reader roles run the positive and negative reader requests. There is no inference of capture-version binding or complete publication qualification from these results.
+
+Actual PostgreSQL privilege/RLS execution and installed SDK request semantics are exercised. The fixture transport is a bounded SELECT/RPC translator, not a deployed PostgREST server, JWT authentication, browser session, concurrency or HTTP schema-cache qualification. Explicit synthetic administrator admission supplies the positive reviewed source and two-outlet event; it creates no new publication policy. After the proposal, the actual installed SDK/service-role native enqueue→claim→finish RPC also succeeds, retains a pending capture, and exposes no new reader article. Historical native intake behavior remains separately tested; no source pipeline modification is made. Final serial qualification passes **3 Node tests on Node 22.23.3 and Node 24.19.0**: the new eleven-check boundary, exact catalog-query drift check and unchanged original eleven-check native journey. This package changes no browser product source; no new browser build or whole-platform qualification is claimed. All receipts are under `/workspace/mip-raw-extraction-boundary-receipts`; no live operation, grant or migration was executed.
