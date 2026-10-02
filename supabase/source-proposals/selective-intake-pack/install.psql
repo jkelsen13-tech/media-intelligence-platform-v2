@@ -1,0 +1,11 @@
+-- UNEXECUTED. Exact file order, only after separate installation authority and accepted catalog baseline.
+\set ON_ERROR_STOP on
+-- Existing migrations and assessment_relevant_inputs_v1.sql MUST already be installed/qualified.
+-- The post-capture owner is a separate earlier proposal. Apply it only when its exact catalog owner is absent.
+select to_regprocedure('public.mip_investigation_selective_intake_v1(text,jsonb)') is null as needs_postcapture_owner \gset
+\if :needs_postcapture_owner
+\ir ../investigation_selective_intake_v1.sql
+\endif
+\ir ../selective_intake_execution_v1.sql
+\ir preflight.sql
+-- No registration/enablement/source HTTP, periodic task or source-register union follows installation.

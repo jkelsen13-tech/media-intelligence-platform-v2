@@ -6,6 +6,11 @@ const CONTRACTS = Object.freeze({
   changes: ['mip_evidence_changes_v1', ['status', 'input', 'reconcile', 'claim', 'finish', 'fail']],
   captureClaims: ['mip_evidence_change_claim_v1', ['claim']],
   retrieval: ['mip_capture_retrieval_v1', ['start', 'page', 'refresh', 'read', 'results', 'pair']],
+  selectiveExecution: ['mip_selective_execution_v1', ['select', 'permit', 'capture', 'read', 'annotate', 'reconsider']],
+  selectiveIntake: ['mip_investigation_selective_intake_v1', ['read', 'receipt', 'declare', 'reconsider']],
+  assessments: ['mip_assessments_v1', ['context', 'append', 'read']],
+  observations: ['mip_investigation_briefings_v1', ['observe', 'read']],
+  workspace: ['mip_investigation_workspace_v1', ['read', 'put']],
 })
 
 export function createOperatorBackend({ url, key, fetchImpl = fetch }) {

@@ -1,0 +1,18 @@
+{
+  "authorization_id": null,
+  "investigation_id": null,
+  "actor_id": null,
+  "criteria_key": "launch-selective-metadata",
+  "criteria_version": "1",
+  "source_url": null,
+  "format": "mip_article_json_v1",
+  "rights_ref": null,
+  "acquire_allowed": false,
+  "retain_allowed": false,
+  "analyze_allowed": false,
+  "enabled": false,
+  "expires_at": null,
+  "max_bytes": 240000,
+  "max_requests": 1,
+  "incremental_cost_usd": 0
+}

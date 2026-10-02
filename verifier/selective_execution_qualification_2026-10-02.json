@@ -1,0 +1,103 @@
+{
+  "contract": "selective-execution-source-qualification-1",
+  "date": "2026-10-02",
+  "base": "78541e522bae4b0db0256c5941f70f2ea6cfbede",
+  "branch": "codex/mip-launch-selective-20261002",
+  "scope": "unapplied source; disposable PGlite and controlled fixed-transport/source fixtures",
+  "new_tests": 21,
+  "runs": [
+    {
+      "runtime": "v24.19.0",
+      "command": "node --test tests/selectiveIntakeExecution.test.mjs tests/selectiveIntakeDeclaration.test.mjs tests/selectiveIntakeGatewayIntegration.test.mjs tests/operatorBackend.test.mjs tests/evidencePipeline.test.mjs",
+      "passed": 60,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "raw_receipt": "/workspace/mip-selective-qualification/node24-focused.tap",
+      "sha256": "c298eeb885c0dbdcb7066ed86b45fe6369e7bf86ab9d737ebaeecb3e0504236b"
+    },
+    {
+      "runtime": "v22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test tests/selectiveIntakeExecution.test.mjs tests/selectiveIntakeDeclaration.test.mjs tests/selectiveIntakeGatewayIntegration.test.mjs tests/operatorBackend.test.mjs tests/evidencePipeline.test.mjs",
+      "passed": 60,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "raw_receipt": "/workspace/mip-selective-qualification/node22-focused.tap",
+      "sha256": "a431d51f582e648586e466204e74c06613922c3588513a373f5aae01ea3eaf30"
+    }
+  ],
+  "sources": [
+    {
+      "path": "docs/MIP_SELECTIVE_EXECUTION_2026-10-02.md",
+      "sha256": "591a6609abf06174913023cb6d0108c680bad7056d96276f60a0a982393974d8"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "73bb2ac5f829a987d05fbf26cce161f2c66a453ad914f02fd657033232b895aa"
+    },
+    {
+      "path": "scripts/evidencePipeline.mjs",
+      "sha256": "791e9b7c4ebe132e89c8b210acd62bc13dd0a689daa7c58819024e70ca6129ac"
+    },
+    {
+      "path": "scripts/selectiveIntakeExecution.mjs",
+      "sha256": "5467a54113e6a2106c1eb7c303cb7e57a2b06269dade0ceee4fa1a8e71348404"
+    },
+    {
+      "path": "supabase/functions/_shared/operatorBackend.mjs",
+      "sha256": "da25675a3a92b305ce0628a641dd732e1b8124ddb8693f829f95cecdf06363e9"
+    },
+    {
+      "path": "supabase/source-proposals/investigation_selective_intake_v1.sql",
+      "sha256": "77fe363ce52794455779e8cbd79934e5f8c28be583de869c28f46e48d5691703"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/criteria-registration.json",
+      "sha256": "069e2c64fa33179fd1de26fcdef83bac6a2cd7a8d3343e47c2b01ae768372806"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/install.psql",
+      "sha256": "7fd8659ae9090b4628d7820e4decd2e021f90ecc143b8ef7cbb4dfb9cddad658"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/preflight.sql",
+      "sha256": "34dd384775e9e1071aa46642e9e548e9446f73ccba7ae36266f731ea623d4665"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/register.psql",
+      "sha256": "be3919b6b8e79c95e5ca129eb4082db2feca0eba298c3f5e7bcb3455ced9a35c"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/remove-empty-extension.sql",
+      "sha256": "14644bdaaf6a6784e430956fe83d380a1cc882d56104c33b9a6914bf77fce9c5"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/rollback.sql",
+      "sha256": "7a02f070ffdaf58dcdfb5864afc587237bc3064d973f3f1e50e100c8854077d7"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/run-preflight.psql",
+      "sha256": "c87770e6e083774a0691158a54e89700c75dec385904ff57fa72d50b065f2b18"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/source-authorization.json",
+      "sha256": "7829e4736bbcf5d985f9862423400f508a6c03e2be66959435ff1e5b44e24e2d"
+    },
+    {
+      "path": "supabase/source-proposals/selective_intake_execution_v1.sql",
+      "sha256": "edb2987cd091ec592249366dacfeb243295700ed2b4243663e5608dd035fa73f"
+    },
+    {
+      "path": "tests/selectiveIntakeExecution.test.mjs",
+      "sha256": "62360c35d99c396c2f0e92108b787562cd8067c813cb707952da05b6318a6b47"
+    }
+  ],
+  "dependencies": "Existing shared node_modules symlink; no dependency/lock changes in this lane",
+  "production_installation": false,
+  "source_authorization": false,
+  "live_source_requests": 0,
+  "paid_provider_activation": false,
+  "publication": false,
+  "release": false
+}

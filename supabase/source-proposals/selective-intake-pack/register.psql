@@ -1,0 +1,16 @@
+-- UNEXECUTED. Approved administrator-only immutable registration, never a producer action.
+-- Supply reviewed criteria_json and authorization_json as psql variables; JSON is quoted as SQL data.
+\set ON_ERROR_STOP on
+begin;
+set local lock_timeout='5s';
+set local statement_timeout='30s';
+select evidence_pipeline.workspace_keys(:'criteria_json'::jsonb,array['criteria_key','criteria_version','policy_version','acceptance_ref','rules']);
+select evidence_pipeline.workspace_keys(:'authorization_json'::jsonb,array['authorization_id','investigation_id','actor_id','criteria_key','criteria_version',
+  'source_url','format','rights_ref','acquire_allowed','retain_allowed','analyze_allowed','enabled','expires_at','max_bytes','max_requests','incremental_cost_usd']);
+insert into evidence_pipeline.selective_criteria_versions
+  select (jsonb_populate_record(null::evidence_pipeline.selective_criteria_versions,:'criteria_json'::jsonb)).*;
+insert into evidence_pipeline.selective_source_authorizations
+  select (jsonb_populate_record(null::evidence_pipeline.selective_source_authorizations,:'authorization_json'::jsonb)).*;
+commit;
+-- Both rows commit together. A null acceptance/rights/identity/expiry or unapproved rule fails.
+-- Append a new approved grant for later enablement/version changes; do not UPDATE registered history.

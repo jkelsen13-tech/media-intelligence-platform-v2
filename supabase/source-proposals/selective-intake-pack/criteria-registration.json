@@ -1,0 +1,12 @@
+{
+  "criteria_key": "launch-selective-metadata",
+  "criteria_version": "1",
+  "policy_version": "launch-selective-policy-1",
+  "acceptance_ref": null,
+  "rules": {
+    "contract_version": "selective-metadata-rules-1",
+    "religion_shared_scope": true,
+    "analyze_signals": ["explicit_scope", "primary_document", "public_safety", "institutional_accountability", "economy", "correction", "new_relevant_input"],
+    "low_value_domains": ["sports", "entertainment"]
+  }
+}

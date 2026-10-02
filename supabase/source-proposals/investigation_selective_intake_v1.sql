@@ -1,5 +1,8 @@
 -- NONDEPLOYED: append-only reviewer annotations on the existing assigned investigation owner.
 -- No source acquisition, automatic selection, analysis dispatch, policy registry or publication.
+-- Registered criteria/execution is an additive sibling proposal, selective_intake_execution_v1.sql.
+-- The immutable inner result below remains the historical declaration contract;
+-- registry/actual analysis linkage belongs to that sibling's outer execution receipt.
 begin;
 set local lock_timeout='5s';
 set local statement_timeout='30s';

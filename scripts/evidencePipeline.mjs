@@ -3,6 +3,8 @@ import { pathToFileURL } from 'node:url'
 
 // Server/operator module. Never import into src/ or expose its key through Vite.
 import { createOperatorBackend } from './operatorBackend.mjs'
+import { runSelectiveSource, runSelectiveReconsideration } from './selectiveIntakeExecution.mjs'
+export { runSelectiveSource, runSelectiveReconsideration } from './selectiveIntakeExecution.mjs'
 export { PIPELINE_TARGET } from './operatorBackend.mjs'
 const TRANSIENT = new Set(['40001', '40P01', '53300', '57014', '08000', '08006', 'network_error', 'invalid_response', 'http_429', 'http_502', 'http_503', 'http_504'])
 
@@ -63,11 +65,14 @@ export async function runWorker(rpc, { maxJobs = 10 } = {}) {
 async function main() {
   const [command, file, ...flags] = process.argv.slice(2)
   const apply = flags.includes('--apply') || file === '--apply'
-  if (!['enqueue', 'run', 'candidate', 'status', 'history', 'evidence'].includes(command)) throw new Error('Usage: evidencePipeline.mjs enqueue|run|candidate|status|history|evidence [input.json] [--apply]')
+  if (!['enqueue', 'run', 'candidate', 'status', 'history', 'evidence', 'select-source', 'reconsider-selective'].includes(command)) throw new Error('Usage: evidencePipeline.mjs enqueue|run|candidate|status|history|evidence|select-source|reconsider-selective [input.json] [--apply]')
   const input = file && file !== '--apply' ? JSON.parse(await readFile(file, 'utf8')) : {}
   if (command === 'enqueue' && !apply) return enqueueManifest(null, input)
-  if (['run', 'candidate'].includes(command) && !apply) throw new Error('Pass --apply to execute this write operation')
-  const rpc = createPipelineRpc({ url: process.env.MIP_PIPELINE_URL, key: process.env.MIP_PIPELINE_SERVICE_KEY })
+  if (['run', 'candidate', 'select-source', 'reconsider-selective'].includes(command) && !apply) throw new Error('Pass --apply to execute this write operation')
+  const backend = createOperatorBackend({ url: process.env.MIP_PIPELINE_URL, key: process.env.MIP_PIPELINE_SERVICE_KEY })
+  const rpc = backend.intake
+  if (command === 'select-source') return runSelectiveSource(backend, input)
+  if (command === 'reconsider-selective') return runSelectiveReconsideration(backend, input)
   if (command === 'enqueue') return enqueueManifest(rpc, input, { apply })
   if (command === 'run') return runWorker(rpc, input)
   return rpc(command, input)

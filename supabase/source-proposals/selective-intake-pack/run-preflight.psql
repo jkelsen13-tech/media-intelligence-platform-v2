@@ -1,0 +1,23 @@
+-- READ ONLY. Supply actor_id, investigation_id, version_id, authorization_id and metadata_json as psql variables.
+\set ON_ERROR_STOP on
+begin read only;
+select a.authorization_id,a.source_url,a.format,a.criteria_key,a.criteria_version,c.policy_version,c.acceptance_ref,a.rights_ref,
+  a.investigation_id=:'investigation_id'::uuid and a.actor_id=:'actor_id'::uuid as exact_assigned_scope,
+  m.access_role='reviewer' as assigned_reviewer,
+  i.current_version_id=:'version_id'::uuid as native_head_matches,
+  a.enabled and a.acquire_allowed and a.retain_allowed and a.analyze_allowed
+    and a.expires_at>clock_timestamp() and r.authorization_id is null as operation_rights_active,
+  a.incremental_cost_usd=0 as zero_incremental_cost,
+  (select count(*) from evidence_pipeline.selective_fetch_permits p where p.authorization_id=a.authorization_id)<a.max_requests as request_quota_available,
+  a.max_bytes,a.max_requests,a.expires_at,
+  :'metadata_json'::jsonb->>'url'=a.source_url as exact_endpoint_matches,
+  evidence_pipeline.selective_metadata_decision(c.rules,:'metadata_json'::jsonb) proposed_disposition,
+  false as publicly_eligible,0 as source_requests
+from evidence_pipeline.selective_source_authorizations a
+join evidence_pipeline.selective_criteria_versions c using(criteria_key,criteria_version)
+join evidence_pipeline.investigation_memberships m on m.investigation_id=a.investigation_id and m.user_id=a.actor_id
+join evidence_pipeline.investigations i on i.id=a.investigation_id
+left join evidence_pipeline.selective_authorization_revocations r using(authorization_id)
+where a.authorization_id=:'authorization_id'::uuid;
+-- An empty result or any false required predicate is HOLD. This preview does not consume a permit.
+commit;
