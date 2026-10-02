@@ -218,7 +218,7 @@ async function confirmArticlesPermissionDenied(client, errors) {
   const list = (Array.isArray(errors) ? errors : [errors]).filter(Boolean)
   if (list.some((error) => isPostgrestPermissionDenied(error))) return true
   if (!client || !list.some((error) => isEmptyPostgrestError(error))) return false
-  const probe = await client.from('articles').select('id').limit(1)
+  const probe = await client.from('news_reviewed_articles_public').select('id').limit(1)
   return isPostgrestPermissionDenied(probe.error)
 }
 
@@ -551,8 +551,8 @@ export async function loadEdgeSources(sourceIds, { supabaseClient } = {}) {
   const quoted = ids.map((id) => `"${id}"`).join(',')
   const [articlesRes, docsRes] = await Promise.all([
     client
-      .from('articles')
-      .select('id, outlet, title, url, published_at')
+      .from('news_reviewed_articles_public')
+      .select('id, outlet, title, url, published_at').eq('admission', 'proposition')
       .eq('reader_state', 'eligible')
       .eq('source_status', 'active')
       .filter('id', 'in', `(${quoted})`),
@@ -760,8 +760,8 @@ export async function loadArticleTimelineKey(articleId, { supabaseClient } = {})
     // arc, return the explicit article-record key instead of withholding the
     // Timeline destination. This creates no event assertion.
     const { data: article, error: articleError } = await client
-      .from('articles')
-      .select('id, arc_id')
+      .from('news_reviewed_articles_public')
+      .select('id, arc_id').eq('admission', 'proposition')
       .eq('id', articleId)
       .maybeSingle()
     if (articleError || !article?.arc_id) return null
@@ -804,8 +804,8 @@ export async function resolveEligibleArticleForNews(target, { supabaseClient } =
 
   try {
     const { data, error } = await client
-      .from('articles')
-      .select('id')
+      .from('news_reviewed_articles_public')
+      .select('id').eq('admission', 'proposition')
       .eq('url', url)
       .eq('reader_state', 'eligible').eq('source_status', 'active')
       .maybeSingle()
@@ -826,8 +826,8 @@ export async function loadArticleComparisonEvents(articleId, { supabaseClient } 
   if (!client || !articleId) return []
   try {
     const { data: article, error: articleError } = await client
-      .from('articles')
-      .select('url')
+      .from('news_reviewed_articles_public')
+      .select('url').eq('admission', 'proposition')
       .eq('id', articleId)
       .maybeSingle()
     if (articleError || !article?.url) return []
@@ -899,7 +899,7 @@ export async function loadTimeline({ supabaseClient } = {}) {
     // The same complete read supplies explicit News-record timeline entries
     // for every article carrying an arc assignment. Publication dates remain
     // publication dates; the UI labels these as News records, not events.
-    keysetAll(client, 'articles', 'id, title, summary, published_at, outlet, arc_id'),
+    keysetAll(client, 'news_reviewed_articles_public', 'id, title, summary, published_at, outlet, arc_id', { filter: q => q.eq('admission', 'proposition') }),
     // Never select story_arcs.title. Id-only stub rows are no-arc.
     keysetAll(client, 'story_arcs', STORY_ARCS_ID_ONLY),
   ])
@@ -964,9 +964,9 @@ export async function loadCorpusMeta({ supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return { count: null, latestFetchedAt: null }
   const [countRes, latestRes] = await Promise.all([
-    client.from('articles').select('id', { count: 'exact', head: true }).eq('reader_state', 'eligible').eq('source_status', 'active'),
+    client.from('news_reviewed_articles_public').select('id', { count: 'exact', head: true }).eq('reader_state', 'eligible').eq('source_status', 'active'),
     client
-      .from('articles')
+      .from('news_reviewed_articles_public')
       .select('fetched_at')
       .eq('reader_state', 'eligible').eq('source_status', 'active')
       .order('fetched_at', { ascending: false, nullsFirst: false })
@@ -992,7 +992,7 @@ export async function loadNewSinceCount(isoTs, { supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client || !isoTs) return null
   const { count, error } = await client
-    .from('articles')
+    .from('news_reviewed_articles_public')
     .select('id', { count: 'exact', head: true })
     .eq('reader_state', 'eligible').eq('source_status', 'active')
     .gt('fetched_at', isoTs)
@@ -1073,7 +1073,7 @@ export async function loadOutlets({ supabaseClient } = {}) {
   if (!client) return []
   // Doc 13: the outlet filter list read keyset-paginates past the 1000-row
   // ceiling; dedupe/sort happen client-side below, unchanged.
-  const { data, error } = await keysetAll(client, 'articles', 'id, outlet', {
+  const { data, error } = await keysetAll(client, 'news_reviewed_articles_public', 'id, outlet', {
     filter: (q) => q.eq('reader_state', 'eligible').eq('source_status', 'active').not('outlet', 'is', null),
   })
   if (error) throw error
@@ -1090,7 +1090,7 @@ export async function loadOutletDirectory({ supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return []
   const [articlesRes, outletsRes] = await Promise.all([
-    keysetAll(client, 'articles', 'id, outlet', { filter: (q) => q.eq('reader_state', 'eligible').eq('source_status', 'active').not('outlet', 'is', null) }),
+    keysetAll(client, 'news_reviewed_articles_public', 'id, outlet', { filter: (q) => q.eq('reader_state', 'eligible').eq('source_status', 'active').not('outlet', 'is', null) }),
     keysetAll(client, 'outlets', 'id, name, country, parent_ownership'),
   ])
   if (articlesRes.error) {
@@ -1155,8 +1155,8 @@ export async function loadFilteredSourceMetricRows(filters = {}, { supabaseClien
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return []
   const { outlet: _selectedOutlet, ...contextFilters } = filters
-  const { data, error } = await keysetAll(client, 'articles', 'id, outlet, published_at', {
-    filter: (query) => applyNewsArticleFilters(query, contextFilters),
+  const { data, error } = await keysetAll(client, 'news_reviewed_articles_public', 'id, outlet, published_at', {
+    filter: (query) => applyNewsArticleFilters(query, contextFilters, { reviewed: true }),
   })
   if (error) {
     if (isPostgrestPermissionDenied(error)) return []
@@ -1283,8 +1283,8 @@ export async function loadNodeArticles(nodeId, { supabaseClient } = {}) {
   const arcIds = (arcRes.data ?? []).map((r) => r.id)
   if (arcIds.length > 0) {
     const { data: arcArts, error: aErr } = await client
-      .from('articles')
-      .select('id')
+      .from('news_reviewed_articles_public')
+      .select('id').eq('admission', 'proposition')
       .eq('reader_state', 'eligible')
       .eq('source_status', 'active')
       .in('arc_id', arcIds)
@@ -1294,8 +1294,8 @@ export async function loadNodeArticles(nodeId, { supabaseClient } = {}) {
   if (ids.size === 0) return []
 
   const { data, error } = await client
-    .from('articles')
-    .select('id, title, outlet, published_at, url')
+    .from('news_reviewed_articles_public')
+    .select('id, title, outlet, published_at, url').eq('admission', 'proposition')
     .eq('reader_state', 'eligible')
     .eq('source_status', 'active')
     .in('id', [...ids])
@@ -1382,8 +1382,8 @@ export async function loadSkyVerificationForNode(nodeId, { supabaseClient } = {}
       const arcIds = (arcRes.data ?? []).map((r) => r.id)
       if (arcIds.length > 0) {
         const { data: arcArts, error } = await client
-          .from('articles')
-          .select('id')
+          .from('news_reviewed_articles_public')
+          .select('id').eq('admission', 'proposition')
           .in('arc_id', arcIds)
         if (!error) for (const a of arcArts ?? []) ids.add(a.id)
       }
@@ -1409,9 +1409,9 @@ export async function loadArcArticles(arcId, { supabaseClient } = {}) {
   if (!client || !arcId) return []
   const result = await keysetAll(
     client,
-    'articles',
+    'news_reviewed_articles_public',
     'id, title, summary, outlet, published_at, url, arc_id',
-    { filter: (query) => query.eq('arc_id', arcId) },
+    { filter: (query) => query.eq('admission', 'proposition').eq('arc_id', arcId) },
   )
   if (result.error) throw result.error
   return resortRows(result.data ?? [], 'published_at', { ascending: false, nullsFirst: false })
@@ -1474,8 +1474,8 @@ export async function loadArticleExcerpt(articleId, { supabaseClient } = {}) {
   if (!client || !articleId) return null
   try {
     const { data, error } = await client
-      .from('articles')
-      .select('id, summary, outlet, published_at')
+      .from('news_reviewed_articles_public')
+      .select('id, summary, outlet, published_at').eq('admission', 'proposition')
       .eq('id', articleId)
       .maybeSingle()
     if (error) return null
