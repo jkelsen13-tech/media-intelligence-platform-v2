@@ -144,7 +144,7 @@ export async function runArticleReaderColumnBoundary({receiptPath}={}) {
         const direct=await clients[role].from('articles').select('id,claims').eq('id',a).single()
         assert.equal(direct.error,null);assert.equal(direct.data.claims[0].text,RAW)
         const detail=await readers[role].news.loadArticleDetail(a)
-        assert.deepEqual(detail.claims.map(x=>x.text),['Exact retained statement.']);assert.doesNotMatch(JSON.stringify(detail),new RegExp(RAW))
+        assert.equal(detail.articlesUnavailable,'reviewed_version_reader_unavailable');assert.doesNotMatch(JSON.stringify(detail),new RegExp(RAW))
         assert.equal((await clients[role].from('articles').select('id')).data.length,2)
       }
       return {synthetic_raw_column_read:true,frontend_dto_private:true,live_row_read:false}
@@ -221,15 +221,16 @@ export async function runArticleReaderColumnBoundary({receiptPath}={}) {
         }
       }
     })
-    await check('ordinary SDK fields, News/search/metrics/counts and governed reviewed projections remain usable',async()=>{
+    await check('predecessor column package remains usable while current reader requires immutable version installation',async()=>{
       for(const role of ['anon','authenticated']){
         const direct=await clients[role].from('articles').select(ARTICLE_READER_COLUMNS.join(','));assert.equal(direct.error,null);assert.equal(direct.data.length,2)
-        const news=readers[role].news,page=await news.loadArticles();assert.equal(page.total,2);assert.equal(page.articlesUnavailable,null)
-        assert.equal((await news.loadArticles({q:'BodyOnlyToken'})).total,1)
-        assert.equal((await news.loadFilteredSourceMetricRows({q:'BodyOnlyToken'})).length,1)
-        assert.equal((await news.loadCorpusMeta()).count,2);assert.equal(await news.loadNewSinceCount('2026-09-30T10:04:00Z'),2)
-        const detail=await news.loadArticleDetail(a);assert.deepEqual(detail.claims.map(c=>c.text),['Exact retained statement.'])
-        assert.equal(detail.evidenceRecords[0].evidence_url,'https://first.example.invalid/source');assert.deepEqual((await news.loadArticleDetail(b)).claims,[])
+        const news=readers[role].news,page=await news.loadArticles();assert.equal(page.total,0);assert.equal(page.articlesUnavailable,'reviewed_version_reader_unavailable')
+        // Qualify the predecessor ACL package directly. Its broad source-text
+        // search is historical behavior, not an immutable launch-reader grant.
+        assert.equal((await clients[role].from('articles').select('id').or('body_text.ilike.%BodyOnlyToken%')).data.length,1)
+        const detail=await news.loadArticleDetail(a);assert.equal(detail.articlesUnavailable,'reviewed_version_reader_unavailable')
+        const retained=await clients[role].from('news_detail_public').select('article_id,reviewed_claims').eq('article_id',a).single()
+        assert.equal(retained.error,null);assert.equal(retained.data.reviewed_claims[0].surface_text,'Exact retained statement.')
         const comparison=await clients[role].from('comparison_public').select('event_key,articles,claims');assert.equal(comparison.error,null);assert.equal(comparison.data.length,1);assert.doesNotMatch(JSON.stringify(comparison.data),new RegExp(RAW+'|Unverified surface'))
         assert.equal((await clients[role].from('graph_coverage_public').select('*')).error,null)
       }
@@ -244,8 +245,8 @@ export async function runArticleReaderColumnBoundary({receiptPath}={}) {
       assert.equal(finished.outcome,'inserted');assert.ok(finished.capture_id)
       assert.equal((await db.query('select review_state from evidence_pipeline.article_captures where id=$1',[finished.capture_id])).rows[0].review_state,'pending')
       for(const role of ['anon','authenticated']){
-        assert.equal((await readers[role].news.loadArticles()).total,2)
-        assert.equal((await readers[role].news.loadArticleDetail(finished.article_id)).articleMissing,true)
+        assert.equal((await readers[role].news.loadArticles()).articlesUnavailable,'reviewed_version_reader_unavailable')
+        assert.equal((await readers[role].news.loadArticleDetail(finished.article_id)).articlesUnavailable,'reviewed_version_reader_unavailable')
       }
 
     })

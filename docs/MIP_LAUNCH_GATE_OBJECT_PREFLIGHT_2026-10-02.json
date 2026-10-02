@@ -1,7 +1,18 @@
 {
   "status": "provisional source object inventory for SELECT-only collision checks; not installation authority",
   "observed_date": "2026-10-02",
-  "new_roles": [],
+  "new_roles": [
+    {
+      "name": "mip_legacy_completion_owner",
+      "attributes": [
+        "NOLOGIN",
+        "NOINHERIT",
+        "NOSUPERUSER",
+        "NOBYPASSRLS"
+      ],
+      "status": "proposed source only; not created; no service membership"
+    }
+  ],
   "existing_roles_to_preserve": [
     "postgres",
     "anon",
@@ -255,6 +266,31 @@
           "kind": "function",
           "name": "public.read_markets_source_directory_v1",
           "regprocedure": "public.read_markets_source_directory_v1(text)"
+        }
+      ]
+    },
+    "legacy_atomic_completion": {
+      "status": "bounded implementation underway; exact final catalog pending",
+      "source_path": "supabase/source-proposals/legacy-extraction-completion-v1.sql",
+      "objects": [
+        {
+          "kind": "table",
+          "name": "mip_private.legacy_extraction_completions"
+        },
+        {
+          "kind": "function",
+          "name": "public.mip_legacy_extraction_v1",
+          "regprocedure": "public.mip_legacy_extraction_v1(text,jsonb)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.legacy_extraction_apply_v1",
+          "regprocedure": "mip_private.legacy_extraction_apply_v1(text,jsonb)"
+        },
+        {
+          "kind": "function",
+          "name": "public.mip_legacy_reviewed_completion_v1",
+          "regprocedure": "public.mip_legacy_reviewed_completion_v1(uuid,uuid,text,uuid,jsonb)"
         }
       ]
     }
